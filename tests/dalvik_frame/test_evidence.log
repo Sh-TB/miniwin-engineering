@@ -1,0 +1,118 @@
+EXP-034: Dalvik Register Frame Model — Test Suite
+=================================================
+
+========================================
+TEST A: Static method foo(int a, int b) -> int
+========================================
+
+FRAME CREATE  id=1 depth=0
+  method: LMain;->main ()V
+  register count: 4 (locals=4 ins=0 outs=2)
+  incoming []
+  locals [(empty)]
+  outgoing [(empty)]
+INVOKE  LFoo;->foo (II)I
+  args [a0=3, a1=7]
+FRAME CREATE  id=2 depth=1
+  method: LFoo;->foo (II)I
+  register count: 3 (locals=1 ins=2 outs=1)
+  incoming [p0=3, p1=7]
+  locals [(empty)]
+  outgoing [(empty)]
+  PASS: arg a == 3 (3 == 3)
+  PASS: arg b == 7 (7 == 7)
+RETURN  LFoo;->foo  value=10
+  PASS: return value == 10 (10 == 10)
+  PASS: caller v0 preserved == 3 (3 == 3)
+  PASS: caller v1 preserved == 7 (7 == 7)
+RETURN  LMain;->main  value=void
+
+
+========================================
+TEST B: Instance method object.method(int x)
+========================================
+
+FRAME CREATE  id=1 depth=0
+  method: LMain;->testInstance ()V
+  register count: 4 (locals=4 ins=0 outs=2)
+  incoming []
+  locals [(empty)]
+  outgoing [(empty)]
+INVOKE  LBar;->doIt (I)V
+  args [a0=ref(0xdeadbeefcafe0000), a1=42]
+FRAME CREATE  id=2 depth=1
+  method: LBar;->doIt (I)V
+  register count: 4 (locals=2 ins=2 outs=2)
+  incoming [p0=ref(0xdeadbeefcafe0000), p1=42]
+  locals [(empty)]
+  outgoing [(empty)]
+  PASS: ins[0] is ref type (2 == 2)
+  PASS: ins[0] == FAKE_OBJ_PTR (1 == 1)
+  PASS: ins[1] == 42 (42 == 42)
+  PASS: ins[1] is int type (1 == 1)
+  PASS: local[0] still has this ref (1 == 1)
+  PASS: local[1] still has x (42 == 42)
+RETURN  LBar;->doIt  value=void
+  PASS: caller v0 (this) preserved (1 == 1)
+  PASS: caller v1 (x) preserved (42 == 42)
+RETURN  LMain;->testInstance  value=void
+
+
+========================================
+TEST C: Nested call A -> B -> C
+========================================
+
+FRAME CREATE  id=1 depth=0
+  method: LA;->main ()V
+  register count: 4 (locals=4 ins=0 outs=2)
+  incoming []
+  locals [(empty)]
+  outgoing [(empty)]
+
+--- A calls B.add(3, 5) ---
+INVOKE  LB;->add (II)I
+  args [a0=3, a1=5]
+FRAME CREATE  id=2 depth=1
+  method: LB;->add (II)I
+  register count: 4 (locals=2 ins=2 outs=2)
+  incoming [p0=3, p1=5]
+  locals [(empty)]
+  outgoing [(empty)]
+  PASS: B: arg a == 3 (3 == 3)
+  PASS: B: arg b == 5 (5 == 5)
+
+--- B calls C.multiply(8, 2) ---
+INVOKE  LC;->multiply (II)I
+  args [a0=8, a1=2]
+FRAME CREATE  id=3 depth=2
+  method: LC;->multiply (II)I
+  register count: 4 (locals=2 ins=2 outs=1)
+  incoming [p0=8, p1=2]
+  locals [(empty)]
+  outgoing [(empty)]
+  PASS: C: arg a == 8 (8 == 8)
+  PASS: C: arg b == 2 (2 == 2)
+
+--- C returns to B ---
+RETURN  LC;->multiply  value=16
+  PASS: C return value == 16 (16 == 16)
+  PASS: B: local[0] (sum) still == 8 after C call (8 == 8)
+
+--- B returns to A ---
+RETURN  LB;->add  value=16
+  PASS: B return value == 16 (16 == 16)
+  PASS: A: v0 == 3 (uncorrupted) (3 == 3)
+  PASS: A: v1 == 5 (uncorrupted) (5 == 5)
+  PASS: A: v2 == 999 (uncorrupted) (999 == 999)
+  PASS: A: v3 == 16 (return value) (16 == 16)
+
+=== FRAME STACK DUMP (depth=1) ===
+[0] id=1 LA;->main  regs=4  ins=0  locals=4  outs=2
+=== END DUMP ===
+
+RETURN  LA;->main  value=void
+
+
+========================================
+RESULTS: 24 passed, 0 failed, 24 total
+========================================

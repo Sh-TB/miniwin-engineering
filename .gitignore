@@ -41,3 +41,4 @@ tmp/
 # Keep empty dirs
 !.gitkeep
 miniwin-results/
+tests/dalvik_frame/test_frame
