@@ -1,0 +1,42 @@
+# Build artifacts
+*.o
+*.elf
+minwin_loader
+minwin_loader_baseline
+minwin_loader_debug
+*.bin
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Evidence logs (large, regenerated)
+evidence/execution_logs/
+evidence/crash_logs/
+evidence/api_trace/
+
+# Sample binaries (too large for git, download separately)
+samples/
+
+# Rust target
+target/
+
+# Temporary
+tmp/
+*.tmp
+*.log
+
+# Keep empty dirs
+!.gitkeep
