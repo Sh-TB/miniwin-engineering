@@ -40,3 +40,4 @@ tmp/
 
 # Keep empty dirs
 !.gitkeep
+miniwin-results/

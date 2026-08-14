@@ -583,6 +583,7 @@ uint32_t g_cap_code = 0;
 uint32_t g_cap_flags = 0;
 uint32_t g_cap_nargs = 0;
 uint64_t g_cap_args = 0;
+static EXCEPTION_RECORD g_cap_er;
 
 /* RtlUnwindEx support — setjmp/longjmp for non-returning unwind.
  * Cannot be static because naked asm references them by symbol name. */
@@ -3058,6 +3059,8 @@ int main(int argc, char* argv[]) {
         const char* base = strrchr(exe_path, '/');
         base = base ? base + 1 : exe_path;
         snprintf(trace_path, sizeof(trace_path), "miniwin-results/%s/api_trace.json", base);
+        /* Create parent directory if needed */
+        mkdir("miniwin-results", 0755);
         /* Create directory if needed */
         char dir_path[512];
         snprintf(dir_path, sizeof(dir_path), "miniwin-results/%s", base);
@@ -3092,6 +3095,7 @@ int main(int argc, char* argv[]) {
 
     /* Jump to entry point */
     MW_TRACE("Jumping to EP=0x%lx", g_entry_point);
+    if (g_trace_log) fflush(g_trace_log);
     fflush(stdout);
     fflush(stderr);
 
@@ -3110,6 +3114,4 @@ int main(int argc, char* argv[]) {
 
     return ret;
 }
-const uint32_t EH_UNWINDING = 0x02;
-const uint32_t EH_UNWINDING = 0x02;
 const uint32_t EH_UNWINDING = 0x02;
