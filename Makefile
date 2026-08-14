@@ -1,9 +1,9 @@
 CC = gcc
-CFLAGS = -O2 -g -Wall -Wno-unused-function -no-pie
+CFLAGS = -O2 -g -Wall -Wno-unused-function -no-pie -Iinclude
 LDFLAGS = -no-pie -ldl -Wl,-Ttext-segment=0x2000000
 
 TARGET = minwin_loader
-SRC = src/loader.c
+SRC = src/loader/loader.c
 
 all: $(TARGET)
 
