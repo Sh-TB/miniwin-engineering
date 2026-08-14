@@ -2,7 +2,7 @@
 
 **Date**: 2026-08-14
 **Repository**: Sh-TB/miniwin-engineering
-**Commit**: (pending)
+**Commit**: clean-build-recovery-20260815
 
 ---
 
@@ -19,8 +19,10 @@ src/loader/loader.c:1177:13: error: 'g_cap_er' undeclared (first use in this fun
 `seh_dispatch_exception` to save the EXCEPTION_RECORD for RtlUnwindEx,
 but its declaration was never added to the global variable block.
 
-**Fix**: Added declaration `static EXCEPTION_RECORD g_cap_er;` at line 586,
-next to the other `g_cap_*` global variables.
+**Fix**: Added declaration `EXCEPTION_RECORD g_cap_er;` at line 586,
+next to the other `g_cap_*` global variables. Not `static` because the
+naked asm stub references globals by symbol name (same constraint
+as the other `g_cap_*` variables).
 
 ---
 
@@ -88,7 +90,7 @@ This matches the behavior of the pre-built binary that passes all tests.
 
 | File | Change | Lines | Why Safe |
 ------|--------|-------|----------|
-| `src/loader/loader.c` | Added `static EXCEPTION_RECORD g_cap_er;` | +1 | Declaration only, matches existing pattern |
+| `src/loader/loader.c` | Added `EXCEPTION_RECORD g_cap_er;` | +1 | Declaration only, non-static (asm-visible)
 | `src/loader/loader.c` | Removed 2 duplicate `EH_UNWINDING` | -2 | Identical constants, keep one |
 | `src/loader/loader.c` | Added `mkdir("miniwin-results", 0755);` | +1 | Trace directory creation, no runtime impact |
 | `src/loader/loader.c` | Added trace flush before EP jump | +1 | Preserves trace data on crash |
