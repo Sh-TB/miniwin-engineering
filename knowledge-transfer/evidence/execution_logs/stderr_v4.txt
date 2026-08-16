@@ -1,0 +1,7 @@
+[TRACE] Command line: samples/upx_decompressed.exe --version
+
+[CRASH] Signal 11 at RIP=0x49c9c6
+  RAX=0x49c9c0 RCX=0x9d5bb RDX=0x5fde74 R8=0x7df R9=0x9d560
+  RSP=0x7fff9d70c910
+  RVA=0x9c9c6 (inside loaded PE)
+  Bytes: 48 8b 11 8b 02 49 89 cc 89 c1 81 e1 ff ff ff 20 

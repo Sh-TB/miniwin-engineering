@@ -1,0 +1,3 @@
+3e9d08e0f32bc6606c5ecf04aebfdcbefc53460c9f82ea61946c9c80dbfafb34  src/loader.c
+302f2fabc1494d203eff1343cb69d20fb73510bdfb20a0074a49d9812b090c80  include/pe.h
+820faaff79d2de14b2a74fc4186f7b6593ccfaf6ce0dfdff374697abcaa89f4a  Makefile

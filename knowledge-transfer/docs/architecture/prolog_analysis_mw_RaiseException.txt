@@ -1,0 +1,197 @@
+================================================================
+PROLOG ANALYSIS & EVIDENCE CHAIN — mw_RaiseException
+================================================================
+Generated: 2026-08-07
+Status: EVIDENCE COMPLETE
+
+================================================================
+1. DISCOVERY: COMPILER PROLOG CHANGES WITH COMPILATION
+================================================================
+
+The compiler-generated prolog of mw_RaiseException changes size
+depending on optimization level, local variables, and compiler version.
+
+Checkpoint binary (older gcc): frame size = 0x208 bytes
+Current gcc 14.2.0:              frame size varies (0x208 to 0x218)
+
+HARD-CODING the frame offset is FUNDAMENTALLY UNSAFE.
+A __attribute__((naked)) stub is REQUIRED to capture registers
+before the compiler prolog executes.
+
+Evidence:
+  First attempt: hardcoded 0x208 → MISMATCH (frame was 0x218)
+  Naked stub:    captures at entry → MATCH (every time)
+
+================================================================
+2. NAKED STUB IMPLEMENTATION
+================================================================
+
+The naked stub mw_RaiseException captures:
+  - RIP = [RSP] at entry (return address)
+  - RSP = RSP_entry + 8 (caller's RSP before the CALL)
+  - All nonvolatile registers (RBX, RBP, RDI, RSI, R12-R15)
+  - Volatile registers (RCX, RDX, R8, R9) = original parameters
+
+Stack layout at naked entry:
+  RSP_entry + 0x000: return address (0x49d5b1)
+  RSP_entry + 0x008: caller's frame (caller's locals, parent ret addr)
+
+The stub allocates 0x290 bytes (CapturedCallState struct + alignment),
+saves all registers, then calls mw_RaiseException_impl via SysV ABI.
+
+Verification output:
+  [CAPTURED] RIP=0x49d5b1 RSP(entry)=0x7ffc... RSP(caller)=0x7ffc...
+  [PROOF] *[rsp_entry]=0x49d5b1 (expect ret_addr=0x49d5b1) MATCH
+
+================================================================
+3. REAL CALLER RSP
+================================================================
+
+For exception dispatch, CONTEXT.Rsp must be set to the caller's
+RSP at the point of the 'call [RaiseException_IAT]' instruction.
+
+The caller executed:
+  0x9d5ab: ff 15 cb 10 17 00   call [rip+0x1710cb]   ; call [IAT slot]
+  0x9d5b1: <return here>
+
+Before the CALL: caller RSP = X, [X] = caller's own return address
+The CALL pushes return address: [X-8] = 0x49d5b1, RSP becomes X-8
+Naked stub sees: rsp_entry = X-8, [rsp_entry] = 0x49d5b1
+
+For CONTEXT: RSP should be X (before the call instruction)
+  Therefore: CONTEXT.Rsp = rsp_entry + 8 = caller_rsp (from CapturedCallState)
+
+CONFIRMED: CONTEXT.Rsp = rsp_entry + 8 = cs->rsp (from naked stub)
+
+================================================================
+4. CALLER FUNCTION ANALYSIS
+================================================================
+
+RUNTIME_FUNCTION[2015]: begin=0x9d560 end=0x9d5bb unwind=0x2098b4
+
+Actual function bytes (at 0x9d560):
+  48 83 ec 28          sub rsp, 0x28
+  41 b8 01 00 00 00    mov r8d, 1
+  31 d2                xor edx, edx
+  48 89 4c 24 30       mov [rsp+0x30], rcx
+  ...
+  b9 43 43 47 20       mov ecx, 0x20474343  ; exception code
+  ff 15 cb 10 17 00    call [rip+0x1710cb] ; RaiseException
+  b8 05 00 00 00       mov eax, 5
+  48 83 c4 28          add rsp, 0x28
+  c3                   ret
+
+UNWIND_INFO at 0x2098b4:
+  Raw: 01 04 01 00 04 42 00 00
+  version=1, flags=0x0, prolog_size=4, count_codes=1
+  frame_reg=rax, frame_off=0
+  Code[0]: 0x4204 = SAVE_NONVOL rdx, offset=4
+
+KEY FINDING: The UNWIND_INFO is INCOMPLETE/MINIMAL.
+  - The function has 'sub rsp, 0x28' (ALLOC_SMALL) but NO alloc opcode
+  - count_codes=1 but SAVE_NONVOL needs 2 slots
+  - This is likely intentional (UPX internal wrapper function)
+
+IMPLICATION: Cannot rely on this frame's UNWIND_INFO for stack walk.
+The dispatcher must handle incomplete/unusual unwind data.
+
+================================================================
+5. CORRECT CONTEXT CONSTRUCTION
+================================================================
+
+From CapturedCallState (via naked stub):
+  CONTEXT.Rip = cs->rip           (0x49d5b1 = return address)
+  CONTEXT.Rsp = cs->rsp           (caller's pre-call RSP)
+  CONTEXT.Rbx = cs->rbx
+  CONTEXT.Rbp = cs->rbp
+  CONTEXT.Rdi = cs->rdi
+  CONTEXT.Rsi = cs->rsi
+  CONTEXT.R12 = cs->r12
+  CONTEXT.R13 = cs->r13
+  CONTEXT.R14 = cs->r14
+  CONTEXT.R15 = cs->r15
+  CONTEXT.Rcx = cs->rcx          (code parameter)
+  CONTEXT.Rdx = cs->rdx          (flags parameter)
+  CONTEXT.R8  = cs->r8           (nargs parameter)
+  CONTEXT.R9  = cs->r9           (args pointer)
+
+Volatile registers (R10, R11) cannot be captured — they're undefined
+after the CALL instruction. For exception dispatch, this is acceptable.
+
+================================================================
+6. EVIDENCE CHAIN: UNWIND RESULTS
+================================================================
+
+Frame[0]: RIP=0x49d5b1 RVA=0x9d5b1
+  RF begin=0x9d560 end=0x9d5bb unwind=0x2098b4
+  UNWIND_INFO: flags=0x0 (NO EHANDLER, NO UHANDLER, NO CHAININFO)
+  After unwind: RSP=0x...b48, RIP read from [RSP]
+  Parent RIP = 0x201e040 (g_argv — NOT in PE code!)
+  → Left PE code boundary
+
+The caller function (0x9d560) has NO exception handler.
+The parent frame is NOT in PE code (address 0x201e040 is in ELF BSS).
+This means we need to continue walking UP the stack to find
+a PE frame WITH an EHANDLER.
+
+However, since the immediate parent is outside PE code, the
+stack walk correctly terminates. The exception should have been
+caught by a C++ try/catch in an ANCESTOR frame that IS in PE code.
+
+The problem: the caller's UNWIND_INFO is incomplete, so the
+RSP after unwind is incorrect, and we read the wrong parent RIP.
+
+================================================================
+7. CRITICAL BUG: UNWIND_INFO INTEGRITY
+================================================================
+
+The function at 0x9d560 has 'sub rsp, 0x28' but its UNWIND_INFO
+lacks an ALLOC_SMALL opcode. This means:
+
+  1. RtlVirtualUnwind will NOT undo the 'sub rsp, 0x28'
+  2. The establisher frame will be WRONG
+  3. The parent RIP read from [establisher_frame] will be WRONG
+
+This is the ROOT CAUSE of the failed stack walk.
+
+HYPOTHESIS: This function is a UPX-generated wrapper that was
+compiled with minimal unwind info (perhaps /Oy or similar).
+The function is small enough that the compiler decided to not
+fully describe the prolog.
+
+RESOLUTION PATH: The exception dispatcher must be robust against
+incomplete UNWIND_INFO. For the specific case of RaiseException,
+the CONTEXT.Rsp is known exactly (from the naked stub), so we
+can bypass the first frame's unwind entirely and start the stack
+walk from the caller's caller.
+
+================================================================
+8. ARCHITECTURAL DECISION FOR EXCEPTION DISPATCHER
+================================================================
+
+Based on this evidence:
+
+1. Use the naked stub to capture EXACT register state at call entry
+2. For the FIRST frame (RaiseException caller), skip the unwind
+   since we already have the correct CONTEXT from the naked stub
+3. For subsequent frames, use .pdata + RtlVirtualUnwind normally
+4. The establisher frame for the first frame = CONTEXT.Rsp (from stub)
+5. Parent RIP for the first frame = *[CONTEXT.Rsp] (the caller's ret addr)
+6. Walk up from there to find the try/catch handler
+
+NEXT STEP: Implement the full dispatcher using these findings.
+
+================================================================
+9. ABI NOTE: ms_abi vs SysV
+================================================================
+
+When calling ms_abi functions (mw_RtlLookupFunctionEntry,
+mw_RtlVirtualUnwind) from our own code, we MUST use ABI shim
+functions or inline the logic. Direct calls from SysV code to
+ms_abi functions cause XMM alignment crashes (movaps on
+unaligned RSP).
+
+Solution: Internal SysV-only copies of the lookup/unwind logic
+(seh_internal_lookup) for use within the dispatcher.
+
+================================================================

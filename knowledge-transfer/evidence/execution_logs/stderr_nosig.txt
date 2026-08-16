@@ -1,0 +1,3 @@
+[TRACE] Command line: samples/upx_decompressed.exe --version
+[DBG] About to call load_pe
+[DBG] filedata=0x7fa0b99f8010 fsize=2140672

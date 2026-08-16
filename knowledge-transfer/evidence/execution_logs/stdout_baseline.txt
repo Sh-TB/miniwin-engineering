@@ -1,0 +1,6 @@
+[MiniWin] Loading samples/upx_decompressed.exe...
+[MiniWin] PE loaded at 0x400000 (2174976 bytes)
+[MiniWin] Entry point: 0x4014f0 (RVA 0x14f0)
+[MiniWin] TEB at 0x201b000, PEB at 0x201a000
+[MiniWin] Executing...
+---

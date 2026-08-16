@@ -1,0 +1,72 @@
+[API] [DISPATCH] === RtlDispatchException ===
+[API] [DISPATCH] ExceptionCode=0x20474343 RIP=0x49d5b1 RSP=0x7ffe1fdc4870
+[API] [EXC_STATE] EXCEPTION_BEGIN
+[API] [EXC_STATE] Code: 0x20474343
+[API] [EXC_STATE] Flags: 0x0
+[API] [EXC_STATE] Address: 0x49d5b1
+[API] [EXC_STATE] NumParams: 1
+[API] [EXC_STATE] Param[0]: 0x2a8f320
+[API] [EXC_STATE] Param[1]: 0x0
+[API] [EXC_STATE] Param[2]: 0x0
+[API] [EXC_STATE] Param[3]: 0x0
+[API] [EXC_STATE] g_cap_args ptr: 0x7ffe1fdc48a0
+[API] [EXC_STATE] Exception object @ 0x2a8f320 (first 32 bytes):
+[API] [EXC_STATE]   00 2b 2b 43 43 55 4e 47
+[API] [EXC_STATE]   10 f9 4a 00 00 00 00 00
+[API] [EXC_STATE]   00 00 00 00 00 00 00 00
+[API] [EXC_STATE]   00 00 00 00 00 00 00 00
+[API] [EXC_STATE] Exception class (u64): 0x474e5543432b2b00
+[API] [EXC_STATE] EXCEPTION_END
+[API] [DISPATCH] VEH chain: 0 handlers
+[API] [DISPATCH] Frame[0]: RIP=0x49d5b1 RVA=0x9d5b1
+[API] [DISPATCH] Frame[0]: RF begin=0x9d560 end=0x9d5bb ui=0x2098b4
+[API] [DISPATCH] Unwind: pc=0x49d5b1 begin=0x9d560 handler=0x0 est=0x7ffe1fdc4898
+[API] [DISPATCH] Frame[0]: no handler, parent RIP=0x4e0203 RVA=0xe0203
+[API] [DISPATCH] Frame[1]: RIP=0x4e0203 RVA=0xe0203
+[API] [DISPATCH] Frame[1]: RF begin=0xe0190 end=0xe0211 ui=0x20931c
+[API] [DISPATCH] Unwind: pc=0x4e0203 begin=0xe0190 handler=0x0 est=0x7ffe1fdc48d8
+[API] [DISPATCH] Frame[1]: no handler, parent RIP=0x4e02d9 RVA=0xe02d9
+[API] [DISPATCH] Frame[2]: RIP=0x4e02d9 RVA=0xe02d9
+[API] [DISPATCH] Frame[2]: RF begin=0xe0290 end=0xe02da ui=0x201270
+[API] [DISPATCH] Unwind: pc=0x4e02d9 begin=0xe0290 handler=0x0 est=0x7ffe1fdc4908
+[API] [DISPATCH] Frame[2]: no handler, parent RIP=0x401593 RVA=0x1593
+[API] [DISPATCH] Frame[3]: RIP=0x401593 RVA=0x1593
+[API] [DISPATCH] Frame[3]: RF begin=0x1570 end=0x15bb ui=0x20107c
+[API] [DISPATCH] Unwind: pc=0x401593 begin=0x1570 handler=0xe0220 est=0x7ffe1fdc4958
+[API] [DISPATCH] Frame[3]: EHANDLER at RVA 0xe0220 (VA 0x4e0220)
+[API] [DISPATCH] Frame[3]: establisher=0x7ffe1fdc4958 lsda=0x601088
+[API] [HANDLER_CALL] Frame[3] BEGIN
+[API] [HANDLER_CALL] RCX (EXCEPTION_RECORD*) = 0x7ffe1fdc4260
+[API] [HANDLER_CALL] RDX (EstablisherFrame) = 0x7ffe1fdc4958
+[API] [HANDLER_CALL] R8  (CONTEXT*)       = 0x7ffe1fdc4300
+[API] [HANDLER_CALL] R9  (DISPATCHER_CONTEXT*) = 0x7ffe1fdc4210
+[API] [HANDLER_CALL] Handler VA = 0x4e0220  RVA = 0xe0220
+[API] [HANDLER_CALL] HandlerData (LSDA) = 0x601088
+[API] [HANDLER_CALL] ER.Code=0x20474343 ER.Flags=0x0 ER.NumParams=1
+[API] [HANDLER_CALL] ER.Param[0]=0x2a8f320 ER.Param[1]=0x0 ER.Param[2]=0x0
+[API] [HANDLER_CALL] Handler bytes: 48 83 ec 38 48 8d 05 85 fb fc ff 48 89 44 24 20
+[API] [HANDLER_CALL] LSDA bytes: ff ff 01 08 20 03 35 00 45 06 00 00 01 00 00 00
+[API] [HANDLER_CALL] LSDA+16:  01 00 00 00 01 00 00 00 01 00 00 00 01 00 00 00
+[API] [HANDLER_CALL] calling...
+[API] [HANDLER_CALL] returned disposition=1 (0=Exec %1=Search %2=Nested %3=Collided)
+[API] [HANDLER_CALL] Frame[3] END
+[API] [DISPATCH] Handler returned ContinueSearch — walking to parent
+[API] [DISPATCH] Frame[3]: parent RIP=0x4032f2 RVA=0x32f2
+[API] [DISPATCH] Frame[4]: RIP=0x4032f2 RVA=0x32f2
+[API] [DISPATCH] Frame[4]: RF begin=0x32c0 end=0x3368 ui=0x2011f0
+[API] [DISPATCH] Unwind: pc=0x4032f2 begin=0x32c0 handler=0xe0220 est=0x7ffe1fdc49c8
+[API] [DISPATCH] Frame[4]: EHANDLER at RVA 0xe0220 (VA 0x4e0220)
+[API] [DISPATCH] Frame[4]: establisher=0x7ffe1fdc49c8 lsda=0x601200
+[API] [HANDLER_CALL] Frame[4] BEGIN
+[API] [HANDLER_CALL] RCX (EXCEPTION_RECORD*) = 0x7ffe1fdc4260
+[API] [HANDLER_CALL] RDX (EstablisherFrame) = 0x7ffe1fdc49c8
+[API] [HANDLER_CALL] R8  (CONTEXT*)       = 0x7ffe1fdc4300
+[API] [HANDLER_CALL] R9  (DISPATCHER_CONTEXT*) = 0x7ffe1fdc4210
+[API] [HANDLER_CALL] Handler VA = 0x4e0220  RVA = 0xe0220
+[API] [HANDLER_CALL] HandlerData (LSDA) = 0x601200
+[API] [HANDLER_CALL] ER.Code=0x20474343 ER.Flags=0x0 ER.NumParams=1
+[API] [HANDLER_CALL] ER.Param[0]=0x2a8f320 ER.Param[1]=0x0 ER.Param[2]=0x0
+[API] [HANDLER_CALL] Handler bytes: 48 83 ec 38 48 8d 05 85 fb fc ff 48 89 44 24 20
+[API] [HANDLER_CALL] LSDA bytes: ff 9b 15 01 04 2d 05 5c 05 02 00 01 7d 00 7d 00
+[API] [HANDLER_CALL] LSDA+16:  00 00 00 00 fc fd ed ff 01 06 02 00 06 32 02 c0
+[API] [HANDLER_CALL] calling...

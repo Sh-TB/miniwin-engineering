@@ -1,0 +1,243 @@
+[TRACE] Command line: samples/upx_decompressed.exe --version
+[TRACE] PE Loader: file=samples/upx_decompressed.exe size=2140672
+[TRACE] PE Loader: ImageBase=0x400000 EP=0x14f0 SizeOfImage=0x213000 Sections=10
+[TRACE] PE Loader: Mapped at 0x400000 (requested)
+[TRACE] Section [0] .text    VA=0x00001000 VS=0x000dfbb0 Raw=0x000dfc00 Ch=0x60500060
+[TRACE] Section [1] .data    VA=0x000e1000 VS=0x00000a50 Raw=0x00000c00 Ch=0xc0600040
+[TRACE] Section [2] .rdata   VA=0x000e2000 VS=0x00115800 Raw=0x00115800 Ch=0x40600040
+[TRACE] Section [3] .pdata   VA=0x001f8000 VS=0x00008e08 Raw=0x00009000 Ch=0x40300040
+[TRACE] Section [4] .xdata   VA=0x00201000 VS=0x0000937c Raw=0x00009400 Ch=0x40300040
+[TRACE] Section [5] .bss     VA=0x0020b000 VS=0x00002ec0 Raw=0x00000000 Ch=0xc0600080
+[TRACE] Section [6] .idata   VA=0x0020e000 VS=0x000016a8 Raw=0x00001800 Ch=0xc0300040
+[TRACE] Section [7] .CRT     VA=0x00210000 VS=0x00000070 Raw=0x00000200 Ch=0xc0400040
+[TRACE] Section [8] .tls     VA=0x00211000 VS=0x00000010 Raw=0x00000200 Ch=0xc0400040
+[TRACE] Section [9] .rsrc    VA=0x00212000 VS=0x000005d0 Raw=0x00000600 Ch=0xc0300040
+[TRACE] Import Directory: RVA=0x20e000 Size=0x16a8
+[TRACE] Import DLL: KERNEL32.DLL (IAT RVA=0x20e55c, ILT RVA=0x0)
+[TRACE]   [0] AddVectoredExceptionHandler -> 0x2004e30
+[TRACE]   [1] CloseHandle -> 0x200a0c0
+[TRACE]   [2] CreateEventA -> 0x2003860
+[TRACE]   [3] CreateSemaphoreA -> 0x2003970
+[TRACE]   [4] DebugBreak -> 0x200b040
+[TRACE]   [5] DeleteCriticalSection -> 0x200c720
+[TRACE]   [6] DuplicateHandle -> 0x2003a80
+[TRACE]   [7] EnterCriticalSection -> 0x200c840
+[TRACE]   [8] GetConsoleCursorInfo -> 0x2003c60
+[TRACE]   [9] GetConsoleMode -> 0x2003b70
+[TRACE]   [10] GetConsoleScreenBufferInfo -> 0x200c3c0
+[TRACE]   [11] GetCurrentProcess -> 0x2003800
+[TRACE]   [12] GetCurrentProcessId -> 0x2003810
+[TRACE]   [13] GetCurrentThread -> 0x2003820
+[TRACE]   [14] GetCurrentThreadId -> 0x2003830
+[TRACE]   [15] GetFileTime -> 0x200b120
+[TRACE]   [16] GetHandleInformation -> 0x200b210
+[TRACE]   [17] GetLastError -> 0x2003d50
+[TRACE]   [18] GetModuleHandleA -> 0x2003e30
+[TRACE]   [19] GetProcAddress -> 0x200a440
+[TRACE]   [20] GetProcessAffinityMask -> 0x2005180
+[TRACE]   [21] GetStartupInfoA -> 0x200c5e0
+[TRACE]   [22] GetStdHandle -> 0x2003f80
+[TRACE]   [23] GetSystemTimeAsFileTime -> 0x200ca80
+[TRACE]   [24] GetThreadContext -> 0x200b300
+[TRACE]   [25] GetThreadPriority -> 0x200b3f0
+[TRACE]   [26] GetTickCount -> 0x2005b40
+[TRACE]   [27] InitializeCriticalSection -> 0x20056c0
+[TRACE]   [28] IsDBCSLeadByteEx -> 0x2003840
+[TRACE]   [29] IsDebuggerPresent -> 0x200b4e0
+[TRACE]   [30] LeaveCriticalSection -> 0x200c970
+[TRACE]   [31] MultiByteToWideChar -> 0x2005d00
+[TRACE]   [32] OpenProcess -> 0x200b5d0
+[TRACE]   [33] OutputDebugStringA -> 0x200a530
+[TRACE]   [34] QueryPerformanceCounter -> 0x200cbb0
+[TRACE]   [35] QueryPerformanceFrequency -> 0x2005290
+[TRACE]   [36] RaiseException -> 0x2006010
+[TRACE]   [37] ReleaseSemaphore -> 0x20053a0
+[TRACE]   [38] RemoveVectoredExceptionHandler -> 0x2004f80
+[TRACE]   [39] ResetEvent -> 0x200b6c0
+[TRACE]   [40] ResumeThread -> 0x200b7b0
+[TRACE]   [41] RtlCaptureContext -> 0x200b8a0
+[TRACE]   [42] RtlLookupFunctionEntry -> 0x2004070
+[TRACE]   [43] RtlUnwindEx -> 0x200b980
+[TRACE]   [44] RtlVirtualUnwind -> 0x20041f0
+[TRACE]   [45] ScrollConsoleScreenBufferA -> 0x200ba60
+[TRACE]   [46] SetConsoleCursorInfo -> 0x200a1a0
+[TRACE]   [47] SetConsoleCursorPosition -> 0x200a280
+[TRACE]   [48] SetConsoleTextAttribute -> 0x200a360
+[TRACE]   [49] SetEvent -> 0x200bb50
+[TRACE]   [50] SetFileTime -> 0x200bc40
+[TRACE]   [51] SetLastError -> 0x200a680
+[TRACE]   [52] SetProcessAffinityMask -> 0x200bd30
+[TRACE]   [53] SetThreadContext -> 0x200be20
+[TRACE]   [54] SetThreadPriority -> 0x200bf10
+[TRACE]   [55] SetUnhandledExceptionFilter -> 0x2004480
+[TRACE]   [56] Sleep -> 0x200cce0
+[TRACE]   [57] SuspendThread -> 0x200c000
+[TRACE]   [58] TlsAlloc -> 0x2004570
+[TRACE]   [59] TlsGetValue -> 0x2004670
+[TRACE]   [60] TlsSetValue -> 0x200a760
+[TRACE]   [61] TryEnterCriticalSection -> 0x2005a00
+[TRACE]   [62] VirtualProtect -> 0x2006520
+[TRACE]   [63] VirtualQuery -> 0x2005810
+[TRACE]   [64] WaitForMultipleObjects -> 0x200a940
+[TRACE]   [65] WaitForSingleObject -> 0x200a860
+[TRACE]   [66] WideCharToMultiByte -> 0x2006710
+[TRACE]   [67] WriteConsoleOutputA -> 0x200c4e0
+[TRACE] Import DLL: msvcrt.dll (IAT RVA=0x20e784, ILT RVA=0x0)
+[TRACE]   [0] __C_specific_handler -> 0x200c0f0
+[TRACE]   [1] ___lc_codepage_func -> 0x200abe0
+[TRACE]   [2] ___mb_cur_max_func -> 0x200c1e0
+[TRACE]   [3] __getmainargs -> 0x2004760
+[TRACE]   [4] __initenv -> DATA 0x2018020
+[TRACE]   [5] __iob_func -> 0x2004a00
+[TRACE]   [6] __lconv_init -> 0x2006910
+[TRACE]   [7] __set_app_type -> 0x200aa20
+[TRACE]   [8] __setusermatherr -> 0x200ab00
+[TRACE]   [9] _acmdln -> DATA 0x2018028
+[TRACE]   [10] _amsg_exit -> 0x2006aa0
+[TRACE]   [11] _beginthreadex -> 0x20055c0
+[TRACE]   [12] _cexit -> 0x20054b0
+[TRACE]   [13] _commode -> DATA 0x201c02c
+[TRACE]   [14] _endthreadex -> 0x2009dd0
+[TRACE]   [15] _errno -> DATA 0x20162f0
+[TRACE]   [16] _fmode -> DATA 0x201c030
+[TRACE]   [17] _fstat64 -> 0x2008d50
+[TRACE]   [18] _get_osfhandle -> 0x2004d50
+[TRACE]   [19] _gmtime64 -> 0x20095f0
+[TRACE]   [20] _initterm -> 0x2004890
+[TRACE]   [21] _kbhit -> 0x2003850
+[TRACE]   [22] _localtime64 -> 0x2009690
+[TRACE]   [23] _lock -> 0x200ae80
+[TRACE]   [24] _lseeki64 -> 0x2009080
+[TRACE]   [25] _onexit -> 0x2009ce0
+[TRACE]   [26] _setjmp -> 0x2009960
+[TRACE]   [27] _stat64 -> 0x2008ee0
+[TRACE]   [28] _time64 -> 0x2009550
+[TRACE]   [29] _ultoa -> 0x200a010
+[TRACE]   [30] _unlock -> 0x200af60
+[TRACE]   [31] _wopen -> 0x2008750
+[TRACE]   [32] abort -> 0x2009730
+[TRACE]   [33] atoi -> 0x2007f40
+[TRACE]   [34] calloc -> 0x2007760
+[TRACE]   [35] clock -> 0x20083e0
+[TRACE]   [36] exit -> 0x2006b50
+[TRACE]   [37] fflush -> 0x2004b10
+[TRACE]   [38] fprintf -> 0x2006d40
+[TRACE]   [39] fputc -> 0x2007280
+[TRACE]   [40] fputs -> 0x2007160
+[TRACE]   [41] free -> 0x2007570
+[TRACE]   [42] fwrite -> 0x2007030
+[TRACE]   [43] getc -> 0x200c2d0
+[TRACE]   [44] getenv -> 0x2009a50
+[TRACE]   [45] islower -> 0x2008120
+[TRACE]   [46] isspace -> 0x20081d0
+[TRACE]   [47] isupper -> 0x2008280
+[TRACE]   [48] isxdigit -> 0x2008330
+[TRACE]   [49] localeconv -> 0x2006a00
+[TRACE]   [50] malloc -> 0x2007480
+[TRACE]   [51] memchr -> 0x2007e00
+[TRACE]   [52] memcmp -> 0x2007ea0
+[TRACE]   [53] memcpy -> 0x2005e60
+[TRACE]   [54] memmove -> 0x20050e0
+[TRACE]   [55] memset -> 0x2005960
+[TRACE]   [56] printf -> 0x2006c00
+[TRACE]   [57] qsort -> 0x2009af0
+[TRACE]   [58] rand -> 0x2009ba0
+[TRACE]   [59] realloc -> 0x2007660
+[TRACE]   [60] rename -> 0x2009180
+[TRACE]   [61] signal -> 0x20097d0
+[TRACE]   [62] srand -> 0x2009c40
+[TRACE]   [63] strchr -> 0x20079a0
+[TRACE]   [64] strcmp -> 0x2007860
+[TRACE]   [65] strcpy -> 0x2007900
+[TRACE]   [66] strcspn -> 0x2007b80
+[TRACE]   [67] strerror -> 0x7f2f1df8c810
+[TRACE]   [68] strlen -> 0x2005c60
+[TRACE]   [69] strncmp -> 0x2007c20
+[TRACE]   [70] strrchr -> 0x2007a40
+[TRACE]   [71] strstr -> 0x2007ae0
+[TRACE]   [72] strtol -> 0x2007fe0
+[TRACE]   [73] strtoul -> 0x2008080
+[TRACE]   [74] tolower -> 0x200cdd0
+[TRACE]   [75] ungetc -> 0x200acc0
+[TRACE]   [76] vfprintf -> 0x2006ea0
+[TRACE]   [77] wcslen -> 0x2006670
+[TRACE]   [78] wcstombs -> 0x2006870
+[TRACE]   [79] longjmp -> 0x20098c0
+[TRACE]   [80] _write -> 0x20089b0
+[TRACE]   [81] _unlink -> 0x2009270
+[TRACE]   [82] _stricmp -> 0x2007cc0
+[TRACE]   [83] _strdup -> 0x2007d60
+[TRACE]   [84] _sopen -> 0x2008650
+[TRACE]   [85] _setmode -> 0x200ada0
+[TRACE]   [86] _rmdir -> 0x2009360
+[TRACE]   [87] _read -> 0x20088b0
+[TRACE]   [88] _open -> 0x2008480
+[TRACE]   [89] _isatty -> 0x2008c70
+[TRACE]   [90] _fileno -> 0x2004c20
+[TRACE]   [91] _dup -> 0x2008b90
+[TRACE]   [92] _close -> 0x2008ab0
+[TRACE]   [93] _chmod -> 0x2009450
+[TRACE] Exception table: 3030 entries at RVA 0x1f8000
+[TRACE] Import resolution: 162 resolved, 0 unresolved (total 162)
+[TRACE] TLS: StartRaw=0x611000 EndRaw=0x611008 Callbacks=0x610040
+[TRACE] Executing entry point at 0x14f0
+[TRACE] _initterm(start=0x610018, end=0x610030)
+[TRACE] _initterm: calling 0x401010
+[TRACE] __set_app_type(1)
+[TRACE] _initterm: calling 0x49c1e0
+[TRACE] __lconv_init()
+[TRACE] _initterm(start=0x610000, end=0x610010)
+[TRACE] _initterm: calling 0x401140
+[TRACE] __getmainargs(argc=0x60b028, argv=0x60b020, envp=0x60b018)
+[TRACE] SetUnhandledExceptionFilter(handler=0x49c9c0)
+[TRACE] malloc(24) = 0x2412b20
+[TRACE] malloc(29) = 0x2412af0
+[TRACE] malloc(10) = 0x2412b40
+[TRACE] _onexit(func=0x401540)
+[TRACE] calloc(1, 48) = 0x2412b60
+[TRACE] calloc(1, 176) = 0x2412ba0
+[TRACE] CreateSemaphoreA(init=0, max=2147483647, name=NULL)
+[TRACE] CreateSemaphoreA(init=0, max=2147483647, name=NULL)
+[TRACE] InitializeCriticalSection(0x2412bb8)
+[TRACE] InitializeCriticalSection(0x2412c10)
+[TRACE] InitializeCriticalSection(0x2412be0)
+[TRACE] malloc(24) = 0x2412c60
+[TRACE] malloc(24) = 0x2412c80
+[TRACE] realloc((nil), 8) = 0x2412ca0
+[TRACE] _onexit(func=0x4e0260)
+[TRACE] malloc(74752) = 0x2412cc0
+[TRACE] _onexit(func=0x4e0240)
+[TRACE] _onexit(func=0x471fd0)
+[TRACE] _onexit(func=0x471fe0)
+[TRACE] _onexit(func=0x49c110)
+[TRACE] malloc(168) = 0x24250d0
+[TRACE] GetLastError() = 0
+[TRACE] calloc(1, 32) = 0x2412a20
+[TRACE] malloc(24) = 0x2425180
+[TRACE] TlsAlloc() = 0
+[TRACE] free(0x2425180)
+[TRACE] free(0x2412a20)
+[TRACE] TlsGetValue(0) = (nil)
+[TRACE] malloc(24) = 0x2425180
+[TRACE] calloc(1, 480) = 0x24251a0
+[TRACE] malloc(256) = 0x2425390
+[TRACE] CreateEventA(manual=1, init=0, name=NULL)
+[TRACE] DuplicateHandle(src_h=0xfffffffffffffffe, tgt_h=0x24251c8)
+[TRACE] GetThreadPriority()
+[TRACE] TlsSetValue(0, 0x24251a0)
+[TRACE] SetLastError(0)
+[TRACE] malloc(16) = 0x24254a0
+[TRACE] GetLastError() = 0
+[TRACE] TlsGetValue(0) = 0x24251a0
+[TRACE] realloc((nil), 8) = 0x24254c0
+[TRACE] realloc((nil), 1) = 0x24254e0
+[TRACE] SetLastError(0)
+[TRACE] RaiseException(code=0x20474343, flags=0x0, nargs=1)
+[TRACE] RtlLookupFunctionEntry(0x49d5b1) = .pdata[2015]
+[TRACE]   Frame 0: handler RVA 0x60b01
+
+[CRASH] Signal 11 at RIP=0x460b01
+  RAX=0x460b01 RCX=0x0 RDX=0x7ffee6f8a2c0 R8=0x0 R9=0x0
+  RSP=0x7ffee6f8a158
+  RVA=0x60b01 (inside loaded PE)
+  Bytes: 00 00 89 c2 0f 43 94 24 88 04 00 00 45 31 c0 e8 

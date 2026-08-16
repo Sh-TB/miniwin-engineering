@@ -1,0 +1,7 @@
+[TRACE] Command line: samples/upx_decompressed.exe --version
+
+[CRASH] Signal 6 at RIP=0x7f635801d95c
+  RAX=0x0 RCX=0x7f635801d95c RDX=0x6 R8=0x0 R9=0x0
+  RSP=0x7fff10ceaca0 RBP=0x1
+  g_image_base=0x400000 g_image_size=0x213000
+  (NOT inside loaded PE)
