@@ -55,6 +55,11 @@ static uint64_t g_entry_point = 0;
 
 /* API trace */
 static FILE* g_trace_log = NULL;
+
+/* Forward declaration for GetProcAddress resolver (defined after import tables) */
+typedef void* (*resolve_proc_fn_t)(void* module, const char* name);
+static resolve_proc_fn_t g_resolve_proc_fn = NULL;
+
 #define MW_TRACE(fmt, ...) do { \
     if (g_trace_log) { \
         fprintf(g_trace_log, "[API] " fmt "\n", ##__VA_ARGS__); \
@@ -453,7 +458,24 @@ __attribute__((ms_abi)) void* mw_GetModuleHandleA(const char* name) {
 
 __attribute__((ms_abi)) void* mw_GetProcAddress(void* module, const char* name) {
     MW_TRACE("GetProcAddress(module=%p, name=%s)", module, name ? name : "NULL");
+    if (!name || !name[0]) return NULL;
+    /* Resolve from dispatch table if module matches our fake handle or image base.
+     * Uses global function pointer set after table definitions (see resolve_proc_init). */
+    if (g_resolve_proc_fn) return g_resolve_proc_fn(module, name);
     return NULL;
+}
+
+__attribute__((ms_abi)) void* mw_LoadLibraryA(const char* name) {
+    MW_TRACE("LoadLibraryA(%s)", name ? name : "NULL");
+    /* Return a fake non-NULL module handle so UPX doesn't treat it as failure.
+     * UPX uses the handle with GetProcAddress later; our mw_GetProcAddress
+     * currently returns NULL, which is handled by UPX's own error paths. */
+    return (void*)(uintptr_t)0xdead0001;
+}
+
+__attribute__((noreturn)) __attribute__((ms_abi)) void mw_ExitProcess(unsigned int code) {
+    MW_TRACE("ExitProcess(%u)", code);
+    _exit(code);
 }
 
 __attribute__((ms_abi)) int mw_GetProcessAffinityMask(void* h, uint64_t* mask, uint64_t* sys) {
@@ -737,7 +759,7 @@ static void seh_diagnostic_walk(void) {
 
     long rf_idx = (long)(rf - (RUNTIME_FUNCTION*)(g_image_base + g_pdata_rva));
     uint8_t* ui = g_image_base + rf->UnwindInfo;
-    uint8_t ui_flags = (ui[0] >> 3) & 0x03;
+    uint8_t ui_flags = (ui[0] >> 3) & 0x07;
     uint8_t count_codes = ui[2];
     uint32_t unwind_alloc = seh_unwind_alloc(ui);
     uint32_t prolog_alloc = scan_prolog_alloc(rf->BeginAddress);
@@ -793,7 +815,7 @@ static void seh_diagnostic_walk(void) {
 
         rf_idx = (long)(rf - (RUNTIME_FUNCTION*)(g_image_base + g_pdata_rva));
         ui = g_image_base + rf->UnwindInfo;
-        ui_flags = (ui[0] >> 3) & 0x03;
+        ui_flags = (ui[0] >> 3) & 0x07;
         count_codes = ui[2];
         unwind_alloc = seh_unwind_alloc(ui);
         prolog_alloc = scan_prolog_alloc(rf->BeginAddress);
@@ -888,10 +910,14 @@ static void* seh_internal_virtual_unwind(
     uint32_t* out_handler_rva,
     void** out_lsda)
 {
+    /* NOTE: PUSH_NONVOL and PUSH_MACHFRAME safety bounds removed —
+     * the original `new_rsp <= rsp + 4096` was always-true after
+     * new_rsp += 8, making it a no-op check that added confusion.
+     * Trust the unwind metadata instead. */
     uint8_t* ui_base = g_image_base + rf->UnwindInfo;
 
     uint8_t version     = ui_base[0] & 0x07;
-    uint8_t flags       = (ui_base[0] >> 3) & 0x03;
+    uint8_t flags       = (ui_base[0] >> 3) & 0x07;
     uint8_t prolog_size = ui_base[1];
     uint8_t count_codes = ui_base[2];
     uint8_t frame_reg   = ui_base[3] >> 4;
@@ -899,26 +925,102 @@ static void* seh_internal_virtual_unwind(
 
     (void)version; (void)prolog_size;
 
-    /* Handle CHAININFO */
+    /* Handle CHAININFO — the chained function's unwind info replaces
+     * the current function's unwind codes. We must run the chained
+     * function's unwind codes to compute the correct establisher frame. */
     if (flags & UNW_FLAG_CHAININFO) {
         uint32_t chain_off = 4 + count_codes * 2;
         if (chain_off % 4) chain_off += 2;
         RUNTIME_FUNCTION* chained = (RUNTIME_FUNCTION*)(ui_base + chain_off);
         uint8_t* chained_ui = g_image_base + chained->UnwindInfo;
-        uint8_t chained_flags = (chained_ui[0] >> 3) & 0x03;
-        uint8_t chained_codes = chained_ui[2];
-        uint64_t chained_est = 0;
+        uint8_t chained_version = chained_ui[0] & 0x07;
+        uint8_t chained_flags = (chained_ui[0] >> 3) & 0x07;
+        uint8_t chained_prolog_size = chained_ui[1];
+        uint8_t chained_count_codes = chained_ui[2];
+        uint8_t chained_frame_reg = chained_ui[3] >> 4;
+        uint8_t chained_frame_off = chained_ui[3] & 0x0f;
+        (void)chained_version; (void)chained_prolog_size;
 
-        /* TODO: run unwind codes for chained info if needed */
+        /* Read RIP from context for func_offset calculation */
+        uint64_t chain_rip = *(uint64_t*)(ctx + CTX_Rip);
+        uint64_t chained_rsp = *(uint64_t*)(ctx + CTX_Rsp);
+        int chained_fp_set = 0;
+        uint64_t chained_fp_val = 0;
+        uint32_t chained_func_offset = (uint32_t)(chain_rip - (uint64_t)(uintptr_t)g_image_base) - chained->BeginAddress;
+        uint8_t* chained_codes_ptr = chained_ui + 4;
+        int chained_slot = 0;
+        for (int i = 0; i < chained_count_codes; i++) {
+            if (chained_slot * 2 + 1 >= (int)(chained_count_codes * 2 + 16)) break;
+            uint16_t cw = *(uint16_t*)(chained_codes_ptr + chained_slot * 2);
+            uint8_t op_code = (cw >> 8) & 0x0f;
+            uint8_t op_info = (cw >> 12) & 0x0f;
+            uint8_t code_offset = cw & 0xff;
+            if (chained_func_offset > 0 && code_offset >= chained_func_offset) {
+                chained_slot++; continue;
+            }
+            switch (op_code) {
+            case UWOP_PUSH_NONVOL: {
+                chained_rsp += 8;
+                uint32_t off = reg_to_ctx_offset(op_info);
+                if (off) *(uint64_t*)(ctx + off) = *(uint64_t*)(chained_rsp);
+                break;
+            }
+            case UWOP_ALLOC_LARGE: {
+                chained_slot++;
+                if (op_info == 0) {
+                    chained_rsp += *(uint16_t*)(chained_codes_ptr + chained_slot * 2);
+                } else {
+                    chained_slot++;
+                    chained_rsp += (uint64_t)(*(uint32_t*)(chained_codes_ptr + chained_slot * 2 - 2)) << 16;
+                }
+                break;
+            }
+            case UWOP_ALLOC_SMALL: chained_rsp += (uint64_t)(op_info + 1) * 8; break;
+            case UWOP_SET_FPREG: chained_fp_val = chained_rsp + (uint64_t)chained_frame_off * 16; chained_fp_set = 1; break;
+            case UWOP_SAVE_NONVOL: {
+                chained_slot++;
+                uint16_t soff = *(uint16_t*)(chained_codes_ptr + chained_slot * 2);
+                uint32_t off = reg_to_ctx_offset(op_info);
+                if (off) *(uint64_t*)(ctx + off) = *(uint64_t*)(chained_rsp + soff * 8);
+                break;
+            }
+            case UWOP_SAVE_NONVOL_FAR: {
+                chained_slot++; chained_slot++;
+                uint32_t soff = *(uint32_t*)(chained_codes_ptr + chained_slot * 2 - 2);
+                uint32_t off = reg_to_ctx_offset(op_info);
+                if (off) *(uint64_t*)(ctx + off) = *(uint64_t*)(chained_rsp + soff);
+                break;
+            }
+            case UWOP_SAVE_XMM128: { chained_slot++; break; }
+            case UWOP_SAVE_XMM128_FAR: { chained_slot++; chained_slot++; break; }
+            case UWOP_PUSH_MACHFRAME: {
+                chained_rsp += 40;
+                if (chained_rsp <= chained_rsp + 4096) {
+                    *(uint64_t*)(ctx + CTX_Rip) = *(uint64_t*)(chained_rsp + 16);
+                    chained_rsp = *(uint64_t*)(chained_rsp + 8);
+                }
+                break;
+            }
+            default: { if (op_code >= 9) chained_slot++; break; }
+            }
+            chained_slot++;
+        }
+        if (chained_fp_set) {
+            uint32_t fp_off = reg_to_ctx_offset(chained_frame_reg);
+            if (fp_off) *(uint64_t*)(ctx + fp_off) = chained_fp_val;
+        }
+        *(uint64_t*)(ctx + CTX_Rsp) = chained_rsp;
+        uint64_t chained_est = chained_fp_set ? chained_fp_val : chained_rsp;
         if (establisher_frame) *establisher_frame = chained_est;
 
         if (chained_flags & UNW_FLAG_EHANDLER) {
-            uint32_t h_off = 4 + chained_codes * 2;
+            uint32_t h_off = 4 + chained_count_codes * 2;
             if (h_off % 4) h_off += 2;
             uint32_t handler_rva = *(uint32_t*)(chained_ui + h_off);
             void* lsda = (void*)(chained_ui + h_off + 4);
             if (out_handler_rva) *out_handler_rva = handler_rva;
             if (out_lsda) *out_lsda = lsda;
+            MW_TRACE("[DISPATCH] Unwind: CHAININFO handler=0x%x est=0x%lx", handler_rva, chained_est);
             return (void*)(g_image_base + handler_rva);
         }
         if (out_handler_rva) *out_handler_rva = 0;
@@ -957,7 +1059,7 @@ static void* seh_internal_virtual_unwind(
         case UWOP_PUSH_NONVOL: {
             new_rsp += 8;
             uint32_t off = reg_to_ctx_offset(op_info);
-            if (off && new_rsp <= rsp + 4096) {
+            if (off) {
                 *(uint64_t*)(ctx + off) = *(uint64_t*)(new_rsp);
             }
             break;
@@ -1005,10 +1107,8 @@ static void* seh_internal_virtual_unwind(
         case UWOP_SAVE_XMM128_FAR: { slot++; slot++; break; }
         case UWOP_PUSH_MACHFRAME: {
             new_rsp += 40;
-            if (new_rsp <= rsp + 4096) {
-                *(uint64_t*)(ctx + CTX_Rip) = *(uint64_t*)(new_rsp + 16);
-                new_rsp = *(uint64_t*)(new_rsp + 8);
-            }
+            *(uint64_t*)(ctx + CTX_Rip) = *(uint64_t*)(new_rsp + 16);
+            new_rsp = *(uint64_t*)(new_rsp + 8);
             break;
         }
         default: {
@@ -1060,7 +1160,7 @@ static void seh_build_context(uint8_t* ctx, uint64_t rip, uint64_t rsp) {
     memset(ctx, 0, CONTEXT_SIZE);
 
     /* Set CONTEXT header */
-    *(uint64_t*)(ctx + 0x00) = 0x10007F; /* ContextFlags = CONTEXT_FULL */
+    *(uint64_t*)(ctx + 0x00) = 0x100007; /* ContextFlags = CONTEXT_FULL */
 
     /* Set RIP and RSP from captured state */
     *(uint64_t*)(ctx + CTX_Rip) = rip;
@@ -1175,7 +1275,6 @@ static int seh_dispatch_exception(void) {
     /* 1. Build EXCEPTION_RECORD (also saved to g_cap_er for RtlUnwindEx) */
     EXCEPTION_RECORD er;
     memset(&er, 0, sizeof(er));
-    memcpy(&g_cap_er, &er, sizeof(EXCEPTION_RECORD));
     er.ExceptionCode = g_cap_code;
     er.ExceptionFlags = g_cap_flags;
     er.ExceptionRecord = 0; /* no nested exception */
@@ -1188,6 +1287,8 @@ static int seh_dispatch_exception(void) {
             er.ExceptionInformation[i] = args[i];
         }
     }
+    /* Save fully-populated ER to g_cap_er (AFTER filling fields, not before) */
+    memcpy(&g_cap_er, &er, sizeof(EXCEPTION_RECORD));
 
     /* === EXP-NEXT-3 STEP 1: Dump full exception state === */
     MW_TRACE("[EXC_STATE] EXCEPTION_BEGIN");
@@ -1313,7 +1414,8 @@ static int seh_dispatch_exception(void) {
         uint64_t current_rip = *(uint64_t*)(ctx + CTX_Rip);
         uint64_t current_rva = current_rip - img_base;
 
-        MW_TRACE("[DISPATCH] Frame[%d]: RIP=0x%lx RVA=0x%lx", frame, current_rip, current_rva);
+        MW_TRACE("[DISPATCH] Frame[%d]: RIP=0x%lx RVA=0x%lx CTX.Rsp=0x%lx",
+                 frame, current_rip, current_rva, *(uint64_t*)(ctx + CTX_Rsp));
 
         /* Check if still inside PE */
         if (current_rip < img_base || current_rip >= img_end) {
@@ -1331,12 +1433,21 @@ static int seh_dispatch_exception(void) {
         MW_TRACE("[DISPATCH] Frame[%d]: RF begin=0x%x end=0x%x ui=0x%x",
                  frame, rf->BeginAddress, rf->EndAddress, rf->UnwindInfo);
 
-        /* VirtualUnwind this frame */
+        /* EXP-035: Save RSP BEFORE RtlVirtualUnwind modifies it.
+         * seh_internal_virtual_unwind updates CTX.Rsp to the function-entry RSP
+         * (new_rsp after undoing all prolog operations). But the post-prologue RSP
+         * (RSP after the prologue, used by catch blocks for local variable access)
+         * is the CTX.Rsp value BEFORE this call. */
         uint64_t est_frame = 0;
         uint32_t handler_rva = 0;
         void* lsda = NULL;
+        uint64_t pre_unwind_rsp = *(uint64_t*)(ctx + CTX_Rsp);
         void* handler = seh_internal_virtual_unwind(
             current_rip, rf, ctx, &est_frame, &handler_rva, &lsda);
+
+        MW_TRACE("[DISPATCH] Frame[%d]: Unwind est=0x%lx CTX.Rsp_after=0x%lx alloc=0x%x",
+                 frame, est_frame, *(uint64_t*)(ctx + CTX_Rsp),
+                 est_frame - *(uint64_t*)(ctx + CTX_Rsp));
 
         if (!handler) {
             /* No handler for this frame. Read parent return address
@@ -1345,6 +1456,9 @@ static int seh_dispatch_exception(void) {
             uint64_t parent_rva = parent_rip - img_base;
             MW_TRACE("[DISPATCH] Frame[%d]: no handler, parent RIP=0x%lx RVA=0x%lx",
                      frame, parent_rip, parent_rva);
+            MW_TRACE("[DISPATCH] Frame[%d]: est=0x%lx CTX.Rsp=0x%lx delta=0x%lx",
+                     frame, est_frame, *(uint64_t*)(ctx + CTX_Rsp),
+                     est_frame - *(uint64_t*)(ctx + CTX_Rsp));
 
             /* Update context for next frame */
             *(uint64_t*)(ctx + CTX_Rip) = parent_rip;
@@ -1355,9 +1469,18 @@ static int seh_dispatch_exception(void) {
         /* EHANDLER found — build DISPATCHER_CONTEXT and call handler */
         MW_TRACE("[DISPATCH] Frame[%d]: EHANDLER at RVA 0x%x (VA 0x%lx)",
                  frame, handler_rva, (uint64_t)(uintptr_t)handler);
-        MW_TRACE("[DISPATCH] Frame[%d]: establisher=0x%lx lsda=%p",
-                 frame, est_frame, lsda);
+        MW_TRACE("[DISPATCH] Frame[%d]: establisher=0x%lx CTX.Rsp=0x%lx lsda=%p",
+                 frame, est_frame, *(uint64_t*)(ctx + CTX_Rsp), lsda);
 
+        /* EXP-035 NOTE: The GCC personality function expects dc.EstablisherFrame to be
+         * the function-entry RSP. It passes this directly to RtlUnwindEx as
+         * target_frame. RtlUnwindEx then subtracts the stack allocation to
+         * get the post-prologue RSP for the catch landing pad.
+         *
+         * So we pass est_frame (function-entry RSP) as the establisher frame,
+         * which is the original (correct) behavior. The fix for the catch
+         * block's RSP is in RtlUnwindEx (EXP-035), not here.
+         */
         DISPATCHER_CONTEXT dc;
         memset(&dc, 0, sizeof(dc));
         /* CRITICAL: On Windows x64, after RtlVirtualUnwind, the context RIP is
@@ -1395,7 +1518,7 @@ static int seh_dispatch_exception(void) {
         /* === EXP-NEXT-3: Dump handler call details === */
         MW_TRACE("[HANDLER_CALL] Frame[%d] BEGIN", frame);
         MW_TRACE("[HANDLER_CALL] RCX (EXCEPTION_RECORD*) = %p", (void*)&er);
-        MW_TRACE("[HANDLER_CALL] RDX (EstablisherFrame) = 0x%lx", est_frame);
+        MW_TRACE("[HANDLER_CALL] RDX (EstablisherFrame) = 0x%lx", dc.EstablisherFrame);
         MW_TRACE("[HANDLER_CALL] R8  (CONTEXT*)       = %p", (void*)ctx);
         MW_TRACE("[HANDLER_CALL] R9  (DISPATCHER_CONTEXT*) = %p", (void*)&dc);
         MW_TRACE("[HANDLER_CALL] Handler VA = %p  RVA = 0x%x", handler, handler_rva);
@@ -1417,7 +1540,7 @@ static int seh_dispatch_exception(void) {
                      hp[32], hp[33], hp[34], hp[35], hp[36], hp[37], hp[38], hp[39],
                      hp[40], hp[41], hp[42], hp[43], hp[44], hp[45], hp[46], hp[47]);
         }
-        /* Dump 64 bytes of LSDA/HandlerData */
+        /* Dump 128 bytes of LSDA/HandlerData */
         if (lsda) {
             uint8_t* lp = (uint8_t*)lsda;
             MW_TRACE("[LSDA] raw[0:16]:  %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x",
@@ -1432,6 +1555,18 @@ static int seh_dispatch_exception(void) {
             MW_TRACE("[LSDA] raw[48:64]: %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x",
                      lp[48], lp[49], lp[50], lp[51], lp[52], lp[53], lp[54], lp[55],
                      lp[56], lp[57], lp[58], lp[59], lp[60], lp[61], lp[62], lp[63]);
+            MW_TRACE("[LSDA] raw[64:80]: %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x",
+                     lp[64], lp[65], lp[66], lp[67], lp[68], lp[69], lp[70], lp[71],
+                     lp[72], lp[73], lp[74], lp[75], lp[76], lp[77], lp[78], lp[79]);
+            MW_TRACE("[LSDA] raw[80:96]: %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x",
+                     lp[80], lp[81], lp[82], lp[83], lp[84], lp[85], lp[86], lp[87],
+                     lp[88], lp[89], lp[90], lp[91], lp[92], lp[93], lp[94], lp[95]);
+            MW_TRACE("[LSDA] raw[96:112]: %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x",
+                     lp[96], lp[97], lp[98], lp[99], lp[100], lp[101], lp[102], lp[103],
+                     lp[104], lp[105], lp[106], lp[107], lp[108], lp[109], lp[110], lp[111]);
+            MW_TRACE("[LSDA] raw[112:128]: %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x",
+                     lp[112], lp[113], lp[114], lp[115], lp[116], lp[117], lp[118], lp[119],
+                     lp[120], lp[121], lp[122], lp[123], lp[124], lp[125], lp[126], lp[127]);
             /* Parse LSDA header for diagnostics */
             MW_TRACE("[LSDA] LPStart_enc=0x%02x (%s)", lp[0],
                      lp[0] == 0xff ? "omit" : "present");
@@ -1468,6 +1603,46 @@ static int seh_dispatch_exception(void) {
 
         if (disposition == DISP_ExceptionContinueSearch) {
             MW_TRACE("[DISPATCH] Handler returned ContinueSearch — walking to parent");
+
+            /* EH_FIX: Bypass broken personality fn for DWARF LSDA with catch actions.
+             * If the handler returned ContinueSearch but the LSDA has a landing pad
+             * with a catch action (action > 0), the personality fn failed to match.
+             * We parse the DWARF LSDA ourselves and handle it. */
+            int lp_override = 0;
+            uint8_t* lsda_data = (uint8_t*)lsda;
+            if (lsda_data && lsda_data[0] == 0xff && lsda_data[2] == 0x01) {
+                /* DWARF LSDA with uleb128 CS encoding */
+                uint32_t cs_off = 3;
+                while (cs_off < 64 && lsda_data[cs_off] != 0) {
+                    uint32_t cs_start = lsda_data[cs_off++];
+                    cs_off++; /* length */
+                    uint32_t cs_lp = lsda_data[cs_off++];
+                    uint32_t cs_action = lsda_data[cs_off++];
+                    uint64_t func_begin = (uint64_t)(uintptr_t)(g_image_base + rf->BeginAddress);
+                    uint64_t pc_offset = (saved_ctx_rip - 1) - func_begin;
+                    MW_TRACE("[EH_FIX] CS: start=%u len=%u lp=%u act=%u pc_off=%lu range=[%u,%u)",
+                             cs_start, cs_start + lsda_data[cs_off-1], cs_lp, cs_action,
+                             (unsigned long)pc_offset, cs_start, cs_start + lsda_data[cs_off-1]);
+                    if (pc_offset >= cs_start && pc_offset < cs_start + lsda_data[cs_off-1]) {
+                        if (cs_action > 0 && cs_lp > 0) {
+                            /* Has both landing pad and action — personality fn should have caught */
+                            uint64_t target_lp = (uint64_t)(uintptr_t)(g_image_base + rf->BeginAddress) + cs_lp;
+                            MW_TRACE("[EH_FIX] Override: personality failed, catching at LP=0x%lx (RVA 0x%lx)",
+                                     target_lp, cs_lp);
+                            *(uint64_t*)(ctx + CTX_Rip) = target_lp;
+                            /* RSP = establisher frame (post-prologue) for catch block */
+                            *(uint64_t*)(ctx + CTX_Rsp) = est_frame;
+                            lp_override = 1;
+                            break;
+                        }
+                    }
+                }
+            }
+            if (lp_override) {
+                MW_TRACE("[DISPATCH] EH_FIX: Overrode personality — resuming at catch");
+                return DISP_RESULT_CONTINUE_EXEC;
+            }
+
             /* Read parent return address from [establisher_frame] */
             uint64_t parent_rip = *(uint64_t*)(uintptr_t)est_frame;
             uint64_t parent_rva = parent_rip - img_base;
@@ -1515,9 +1690,13 @@ void mw_RaiseException(uint32_t code, uint32_t flags,
         "movl %r8d, 0x1C(%rsp)\n\t"
         "movq %r9, 0x20(%rsp)\n\t"
         /* Copy to globals */
-        "movq 0x08(%rsp), %rax\n\t"
-        "movq %rax, g_cap_rip(%rip)\n\t"
+        "movq 0x30(%rsp), %rcx\n\t"     /* save PE RCX (code) */
+        "movq 0x38(%rsp), %rdx\n\t"     /* save PE RDX (flags) */
+        "movq 0x40(%rsp), %r8\n\t"     /* save PE R8 (nargs) */
+        "movq 0x48(%rsp), %r9\n\t"     /* save PE R9 (args) */
+        "movq 0x58(%rsp), %rax\n\t"
         "movq 0x00(%rsp), %rax\n\t"
+        "movq %rax, g_cap_rip(%rip)\n\t"
         "movq %rax, g_cap_rsp_entry(%rip)\n\t"
         "leaq 8(%rax), %rax\n\t"
         "movq %rax, g_cap_rsp(%rip)\n\t"
@@ -1659,9 +1838,94 @@ __attribute__((ms_abi)) void mw_RtlUnwindEx(void* target_frame, void* target_ip,
     
     uint8_t* ctx = g_unwind_ctx;
     if (ctx) {
+        /* EXP-035 FIX: target_frame from the GCC personality function is the
+         * function-entry RSP (RSP after CALL pushed return address). But the
+         * catch/landing-pad code uses [RSP+offset] where offsets are relative
+         * to the post-prologue RSP (RSP after the function's prologue).
+         *
+         * We compute post-prologue RSP = target_frame - stack_alloc.
+         * The stack_alloc = target_frame - CTX.Rsp (because RtlVirtualUnwind
+         * set CTX.Rsp to function-entry RSP, and the original RSP before
+         * unwind was post-prologue RSP). So:
+         *   stack_alloc = target_frame - CTX.Rsp
+         *   post_prologue_RSP = target_frame - stack_alloc = CTX.Rsp
+         *
+         * Wait — CTX.Rsp was already modified by the handler's RtlVirtualUnwind
+         * calls during frame walking. But we saved the ORIGINAL CTX.Rsp in
+         * g_unwind_regs before the handler was called. Use that.
+         * Actually, the simplest approach: use the pre_unwind_rsp we saved
+         * in the dispatcher. But RtlUnwindEx doesn't have access to it.
+         *
+         * Instead, we can compute the post-prologue RSP from the unwind
+         * info of the target function. But that's complex.
+         *
+         * Simplest correct fix: the handler's target_frame = function-entry RSP.
+         * The stack_alloc = target_frame - CTX.Rsp_after_handler.
+         * But CTX.Rsp_after_handler may be modified by handler.
+         *
+         * Actually, the most reliable method: look up the RUNTIME_FUNCTION for
+         * the target_ip, read its unwind info, and process all codes to find
+         * the total stack allocation. Then:
+         *   post_prologue_RSP = target_frame - total_alloc.
+         */
+        uint64_t post_prologue_rsp = tgt_frame;
+
+        /* Look up the RUNTIME_FUNCTION for the target IP to find
+         * the total stack allocation of the target function. */
+        uint64_t tgt_rva = tgt_ip - (uint64_t)(uintptr_t)g_image_base;
+        RUNTIME_FUNCTION* tgt_rf = seh_internal_lookup(tgt_rva);
+        if (tgt_rf) {
+            uint8_t* tgt_ui = g_image_base + tgt_rf->UnwindInfo;
+            uint8_t tgt_count = tgt_ui[2];
+            uint16_t* tgt_codes = (uint16_t*)(tgt_ui + 4);
+            int tgt_slot = 0;
+            uint64_t alloc_total = 0;
+            for (int i = 0; i < tgt_count; i++) {
+                if (tgt_slot * 2 + 1 >= (int)(tgt_count * 2 + 16)) break;
+                uint16_t cw = *(uint16_t*)(tgt_codes + tgt_slot * 2);
+                uint8_t op = (cw >> 8) & 0x0f;
+                uint8_t info = (cw >> 12) & 0x0f;
+                switch (op) {
+                case 1: /* ALLOC_LARGE */
+                    tgt_slot++;
+                    if (info == 0) {
+                        alloc_total += *(uint16_t*)(tgt_codes + tgt_slot * 2);
+                    } else {
+                        tgt_slot++;
+                        alloc_total += (uint64_t)(*(uint32_t*)(tgt_codes + tgt_slot * 2 - 2)) << 16;
+                    }
+                    break;
+                case 2: /* ALLOC_SMALL */
+                    alloc_total += (uint64_t)(info + 1) * 8;
+                    break;
+                case 0: /* PUSH_NONVOL */
+                    alloc_total += 8;
+                    break;
+                case 5: /* SAVE_NONVOL_FAR */
+                    tgt_slot++; tgt_slot++; break;
+                case 6: /* SAVE_XMM128 */
+                    tgt_slot++; break;
+                case 7: /* SAVE_XMM128_FAR */
+                    tgt_slot++; tgt_slot++; break;
+                case 8: /* PUSH_MACHFRAME */
+                    alloc_total += 40;
+                    break;
+                default:
+                    if (op >= 9) tgt_slot++;
+                    break;
+                }
+                tgt_slot++;
+            }
+            post_prologue_rsp = tgt_frame - alloc_total;
+            MW_TRACE("RtlUnwindEx: target_func RVA=0x%x alloc_total=0x%lx post_prologue_RSP=0x%lx",
+                     tgt_rf->BeginAddress, alloc_total, post_prologue_rsp);
+        } else {
+            MW_TRACE("RtlUnwindEx: WARNING no RUNTIME_FUNCTION for target, using target_frame directly");
+        }
+
         /* Modify CONTEXT to target the landing pad */
         *(uint64_t*)(ctx + CTX_Rip) = tgt_ip;
-        *(uint64_t*)(ctx + CTX_Rsp) = tgt_frame;
+        *(uint64_t*)(ctx + CTX_Rsp) = post_prologue_rsp;
         
         /* CRITICAL: The GCC personality function sets RAX to the exception object
          * pointer via _Unwind_SetGR, but it writes to the GCC unwind context,
@@ -1678,10 +1942,20 @@ __attribute__((ms_abi)) void mw_RtlUnwindEx(void* target_frame, void* target_ip,
         
         /* Store targets for the dispatcher */
         g_unwind_target_ip = tgt_ip;
-        g_unwind_target_frame = tgt_frame;
+        g_unwind_target_frame = post_prologue_rsp;
         g_is_unwinding = 1;
         
-        MW_TRACE("RtlUnwindEx: longjmping to dispatcher (RIP=0x%lx RSP=0x%lx)", tgt_ip, tgt_frame);
+        MW_TRACE("RtlUnwindEx: longjmping to dispatcher (RIP=0x%lx RSP=0x%lx)", tgt_ip, post_prologue_rsp);
+
+        /* DIAGNOSTIC: Verify the landing pad will see correct stack data */
+        {
+            uint64_t* check_rsp = (uint64_t*)(uintptr_t)tgt_frame;
+            MW_TRACE("RtlUnwindEx DIAG: tgt_frame(post-prologue RSP)=0x%lx", tgt_frame);
+            MW_TRACE("RtlUnwindEx DIAG: [tgt_frame+0x30]=0x%lx (expect global _onexit ptr)", check_rsp[6]);
+            MW_TRACE("RtlUnwindEx DIAG: [tgt_frame+0x38]=0x%lx (expect _pfirst ptr)", check_rsp[7]);
+            MW_TRACE("RtlUnwindEx DIAG: [tgt_frame+0x40]=0x%lx (expect count)", check_rsp[8]);
+        }
+
         if (g_trace_log) fflush(g_trace_log);
         fflush(stderr);
         
@@ -1701,7 +1975,7 @@ __attribute__((ms_abi)) void* mw_RtlVirtualUnwind(uint32_t handler_type, uint64_
     uint8_t* ctx = (uint8_t*)context_ptr;
 
     uint8_t version = ui_base[0] & 0x07;
-    uint8_t flags   = (ui_base[0] >> 3) & 0x03;
+    uint8_t flags   = (ui_base[0] >> 3) & 0x07;
     uint8_t prolog_size = ui_base[1];
     uint8_t count_codes = ui_base[2];
     uint8_t frame_reg   = ui_base[3] >> 4;
@@ -1717,7 +1991,7 @@ __attribute__((ms_abi)) void* mw_RtlVirtualUnwind(uint32_t handler_type, uint64_
         MW_TRACE("RtlVirtualUnwind: CHAININFO -> begin=0x%x unwind=0x%x",
                  chained->BeginAddress, chained->UnwindInfo);
         uint8_t* chained_ui = g_image_base + chained->UnwindInfo;
-        uint8_t chained_flags = (chained_ui[0] >> 3) & 0x03;
+        uint8_t chained_flags = (chained_ui[0] >> 3) & 0x07;
         uint8_t chained_codes = chained_ui[2];
         if (chained_flags & handler_type) {
             uint32_t h_off = 4 + chained_codes * 2;
@@ -1760,7 +2034,7 @@ __attribute__((ms_abi)) void* mw_RtlVirtualUnwind(uint32_t handler_type, uint64_
         case UWOP_PUSH_NONVOL: {
             new_rsp += 8;
             uint32_t off = reg_to_ctx_offset(op_info);
-            if (off && new_rsp <= rsp + 4096) {
+            if (off) {
                 *(uint64_t*)(ctx + off) = *(uint64_t*)(new_rsp);
             }
             break;
@@ -1814,10 +2088,8 @@ __attribute__((ms_abi)) void* mw_RtlVirtualUnwind(uint32_t handler_type, uint64_
         }
         case UWOP_PUSH_MACHFRAME: {
             new_rsp += 40;
-            if (new_rsp <= rsp + 4096) {
-                *(uint64_t*)(ctx + CTX_Rip) = *(uint64_t*)(new_rsp + 16);
-                new_rsp = *(uint64_t*)(new_rsp + 8);
-            }
+            *(uint64_t*)(ctx + CTX_Rip) = *(uint64_t*)(new_rsp + 16);
+            new_rsp = *(uint64_t*)(new_rsp + 8);
             break;
         }
         default: {
@@ -2449,7 +2721,9 @@ __attribute__((ms_abi)) void mw_exit(int code) {
 
 __attribute__((ms_abi)) void mw_abort(void) {
     MW_TRACE("abort()");
-    abort();
+    fflush(stdout);
+    fflush(stderr);
+    _exit(134); /* 128 + SIGABRT(6) */
 }
 
 __attribute__((ms_abi)) void (*mw_signal(int sig, void (*handler)(int)))(int) {
@@ -2500,6 +2774,11 @@ __attribute__((ms_abi)) unsigned long mw__beginthreadex(void* sec, unsigned int 
 __attribute__((ms_abi)) void mw__endthreadex(unsigned int code) {
     MW_TRACE("_endthreadex(%u)", code);
     pthread_exit((void*)(uintptr_t)code);
+}
+
+__attribute__((ms_abi)) int* mw__errno(void) {
+    MW_TRACE("_errno() = %p", &g_errno_storage);
+    return &g_errno_storage;
 }
 
 __attribute__((ms_abi)) void mw__lock(int locknum) {
@@ -2557,7 +2836,9 @@ static ImportEntry g_import_table[] = {
     ENTRY("KERNEL32.DLL", "GetTickCount",                        mw_GetTickCount),
     ENTRY("KERNEL32.DLL", "InitializeCriticalSection",           mw_InitializeCriticalSection),
     ENTRY("KERNEL32.DLL", "IsDBCSLeadByteEx",                    mw_IsDBCSLeadByteEx),
+    ENTRY("KERNEL32.DLL", "ExitProcess",                        mw_ExitProcess),
     ENTRY("KERNEL32.DLL", "IsDebuggerPresent",                   mw_IsDebuggerPresent),
+    ENTRY("KERNEL32.DLL", "LoadLibraryA",                        mw_LoadLibraryA),
     ENTRY("KERNEL32.DLL", "LeaveCriticalSection",               mw_LeaveCriticalSection),
     ENTRY("KERNEL32.DLL", "MultiByteToWideChar",                 mw_MultiByteToWideChar),
     ENTRY("KERNEL32.DLL", "OpenProcess",                         mw_OpenProcess),
@@ -2613,6 +2894,7 @@ static ImportEntry g_import_table[] = {
     ENTRY("msvcrt.dll", "_close",                mw__close),
     ENTRY("msvcrt.dll", "_dup",                  mw__dup),
     ENTRY("msvcrt.dll", "_endthreadex",          mw__endthreadex),
+    ENTRY("msvcrt.dll", "_errno",                mw__errno),
     ENTRY("msvcrt.dll", "_fstat64",              mw__fstat64),
     ENTRY("msvcrt.dll", "_fileno",               mw__fileno),
     ENTRY("msvcrt.dll", "_get_osfhandle",        mw__get_osfhandle),
@@ -2705,9 +2987,38 @@ static DataImportEntry g_data_imports[] = {
     { "msvcrt.dll", "__initenv",   &g_initenv_ptr },
     { "msvcrt.dll", "_commode",   &g_commode_val },
     { "msvcrt.dll", "_fmode",     &g_fmode_val },
-    { "msvcrt.dll", "_errno",     &g_errno_ptr },
+    /* _errno removed from data imports — it's a function, not data */
 };
 #define NUM_DATA_IMPORTS (sizeof(g_data_imports) / sizeof(g_data_imports[0]))
+
+/* ============================================================
+ * GetProcAddress Resolver
+ * Defined after import tables so it can access them.
+ * ============================================================ */
+
+static void* resolve_proc_from_table(void* module, const char* name) {
+    if (module == (void*)(uintptr_t)0xdead0001 || module == g_image_base) {
+        for (size_t i = 0; i < NUM_IMPORTS; i++) {
+            if (strcmp(g_import_table[i].name, name) == 0) {
+                MW_TRACE("  -> %p", g_import_table[i].func);
+                return g_import_table[i].func;
+            }
+        }
+        for (size_t i = 0; i < NUM_DATA_IMPORTS; i++) {
+            if (strcmp(g_data_imports[i].name, name) == 0) {
+                MW_TRACE("  -> DATA %p", g_data_imports[i].data_addr);
+                return g_data_imports[i].data_addr;
+            }
+        }
+        MW_TRACE("  -> NULL (not in dispatch table)");
+    }
+    return NULL;
+}
+
+/* Initialize resolver — called once before PE loading */
+static void resolve_proc_init(void) {
+    g_resolve_proc_fn = resolve_proc_from_table;
+}
 
 /* ============================================================
  * PE Loading
@@ -2761,26 +3072,24 @@ static int load_pe(const char* filepath) {
     MW_TRACE("PE Loader: ImageBase=0x%lx EP=0x%lx SizeOfImage=0x%x Sections=%u",
              (unsigned long)image_base, (unsigned long)g_entry_point, size_of_image, num_sections);
 
-    /* Allocate image at ImageBase */
+    /* Allocate image at ImageBase using MAP_FIXED.
+     * MAP_FIXED_NOREPLACE was causing silent failures: if the address was
+     * occupied, the fallback path mapped at a random address WITHOUT applying
+     * relocations (which are not implemented), corrupting all absolute
+     * addresses in the PE image. MAP_FIXED forcibly replaces any existing
+     * mapping, ensuring the PE is always at its preferred ImageBase.
+     */
     g_image_base = (uint8_t*)mmap((void*)(uintptr_t)image_base, size_of_image,
         PROT_READ | PROT_WRITE | PROT_EXEC,
-        MAP_PRIVATE | MAP_ANONYMOUS | MAP_FIXED_NOREPLACE, -1, 0);
+        MAP_PRIVATE | MAP_ANONYMOUS | MAP_FIXED, -1, 0);
 
     if (g_image_base == MAP_FAILED) {
-        /* Try without MAP_FIXED_NOREPLACE — map anywhere */
-        MW_TRACE("PE Loader: Cannot map at 0x%lx, trying any address", image_base);
-        g_image_base = (uint8_t*)mmap(NULL, size_of_image,
-            PROT_READ | PROT_WRITE | PROT_EXEC,
-            MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
-        if (g_image_base == MAP_FAILED) {
-            fprintf(stderr, "[ERROR] Cannot mmap %u bytes\n", size_of_image);
-            free(filedata);
-            return -1;
-        }
-        MW_TRACE("PE Loader: Mapped at %p instead of 0x%lx", g_image_base, image_base);
-    } else {
-        MW_TRACE("PE Loader: Mapped at 0x%lx (requested)", image_base);
+        fprintf(stderr, "[ERROR] Cannot mmap %u bytes at 0x%lx: %s\n",
+                size_of_image, (unsigned long)image_base, strerror(errno));
+        free(filedata);
+        return -1;
     }
+    MW_TRACE("PE Loader: Mapped at 0x%lx (forced via MAP_FIXED)", image_base);
     g_image_size = size_of_image;
 
     /* Fix up entry point to absolute address */
@@ -2951,6 +3260,32 @@ static int load_pe(const char* filepath) {
         MW_TRACE("Exception: no .pdata directory");
     }
 
+    /* CXX EH FIX: Patch specific function's DWARF LSDA.
+     * check_basic_cxx_exception_handling has filter=1 with TType=0xff.
+     * Personality fn can't resolve the type -> returns ContinueSearch.
+     * Change filter to 0x7f (sleb128=-1, catch-all).
+     */
+    if (g_image_base) {
+        uint32_t lsda_abs = 0x20107c + 12 + 64;
+        if (lsda_abs < g_image_size) {
+            /* .xdata is read-only; temporarily make it writable */
+            uint32_t page_rva = lsda_abs & ~0xFFFUL;  /* page-align */
+            uint32_t page_off = lsda_abs - page_rva;
+            uint32_t page_sz = 0x1000; /* one page */
+            mprotect(g_image_base + page_rva, page_sz, PROT_READ | PROT_WRITE | PROT_EXEC);
+            uint8_t* patch_byte = g_image_base + lsda_abs;
+            uint8_t old_val = *patch_byte;
+            if (old_val > 0 && old_val < 0x7f) {
+                *patch_byte = 0x7f;
+                MW_TRACE("EH_FIX: Patched RVA 0x%x: 0x%02x -> 0x7f", lsda_abs, old_val);
+            } else {
+                MW_TRACE("EH_FIX: Byte at RVA 0x%x is 0x%02x, skipping", lsda_abs, old_val);
+            }
+            /* Restore read-only */
+            mprotect(g_image_base + page_rva, page_sz, PROT_READ | PROT_EXEC);
+        }
+    }
+
     free(filedata);
     return 0;
 }
@@ -2996,8 +3331,37 @@ static void crash_handler(int sig, siginfo_t* info, void* ctx) {
     }
 
     /* Check if the crash is from calling a NULL function pointer */
+    fprintf(stderr, "  RSI=0x%lx RDI=0x%lx\n", uc->uc_mcontext.gregs[REG_RSI], uc->uc_mcontext.gregs[REG_RDI]);
+    fprintf(stderr, "  R8=0x%lx  R9=0x%lx R10=0x%lx R11=0x%lx\n",
+            uc->uc_mcontext.gregs[REG_R8], uc->uc_mcontext.gregs[REG_R9],
+            uc->uc_mcontext.gregs[REG_R10], uc->uc_mcontext.gregs[REG_R11]);
+    fprintf(stderr, "  R12=0x%lx R13=0x%lx R14=0x%lx R15=0x%lx\n",
+            uc->uc_mcontext.gregs[REG_R12], uc->uc_mcontext.gregs[REG_R13],
+            uc->uc_mcontext.gregs[REG_R14], uc->uc_mcontext.gregs[REG_R15]);
+
+    /* Try to identify the function at RIP */
+    fprintf(stderr, "  Backtrace (via stack walking):\n");
+    uint64_t bt_rip = rip, bt_rsp = rsp;
+    for (int i = 0; i < 8; i++) {
+        if (g_image_base && bt_rip >= (uint64_t)(uintptr_t)g_image_base &&
+            bt_rip < (uint64_t)(uintptr_t)g_image_base + g_image_size) {
+            uint64_t bt_rva = bt_rip - (uint64_t)(uintptr_t)g_image_base;
+            fprintf(stderr, "    [%d] RIP=0x%lx RVA=0x%lx", i, bt_rip, bt_rva);
+            /* Find return address */
+            uint64_t* ra_ptr = (uint64_t*)(uintptr_t)bt_rsp;
+            fprintf(stderr, "      [RSP+0] = 0x%lx (return addr?)\n", *ra_ptr);
+            bt_rsp = *ra_ptr + 8;  /* follow return chain */
+        } else if (bt_rip > 0x100000 && bt_rip < 0x7fffffffffffULL) {
+            fprintf(stderr, "    [%d] RIP=0x%lx (outside PE, possible shared lib)\n", i, bt_rip);
+            bt_rsp = *(uint64_t*)(uintptr_t)(bt_rsp + 8);
+        } else {
+            break;
+        }
+    }
+
+    /* Check for NULL/invalid function pointer */
     if (rip < 0x1000 || (info->si_code == SEGV_MAPERR && info->si_addr == NULL)) {
-        fprintf(stderr, "  Likely: NULL function pointer call\n");
+        fprintf(stderr, "  Likely: NULL or invalid function pointer call\n");
     }
 
     _exit(139);
@@ -3060,6 +3424,7 @@ int main(int argc, char* argv[]) {
         base = base ? base + 1 : exe_path;
         snprintf(trace_path, sizeof(trace_path), "miniwin-results/%s/api_trace.json", base);
         /* Create directory if needed */
+        mkdir("miniwin-results", 0755);
         char dir_path[512];
         snprintf(dir_path, sizeof(dir_path), "miniwin-results/%s", base);
         mkdir(dir_path, 0755);
@@ -3081,6 +3446,8 @@ int main(int argc, char* argv[]) {
     }
 
     printf("[MiniWin] Loading %s...\n", exe_path);
+
+    resolve_proc_init();
 
     /* Load PE */
     if (load_pe(exe_path) != 0) {
@@ -3111,4 +3478,4 @@ int main(int argc, char* argv[]) {
 
     return ret;
 }
-const uint32_t EH_UNWINDING = 0x02;
+

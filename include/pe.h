@@ -124,7 +124,7 @@ typedef struct {
     uint32_t UnwindInfo;
 } RUNTIME_FUNCTION;
 
-/* UNWIND_INFO flags */
+/* UNWIND_INFO flags — stored in bits [5:3] of byte 0 (3-bit field) */
 #define UNW_FLAG_EHANDLER  0x01
 #define UNW_FLAG_UHANDLER  0x02
 #define UNW_FLAG_CHAININFO 0x04
