@@ -1,0 +1,78 @@
+[HARNESS] EXP-NEXT-2: Loading /home/z/my-project/minwin/tests/exp_next2/synthetic_test.exe
+[LOAD] ImageBase=0x140000000 SizeOfImage=0x6000 EntryPoint=0x1050
+[LOAD] .pdata: RVA=0x0 size=0x0 entries=0
+[LOAD] Section .text: VA=0x1000 VSize=0x200 Raw=0x200
+[LOAD] Section .rdata: VA=0x2000 VSize=0x200 Raw=0x200
+[LOAD] Section .pdata: VA=0x3000 VSize=0x200 Raw=0x200
+[LOAD] Section .xdata: VA=0x4000 VSize=0x200 Raw=0x200
+[LOAD] Section .reloc: VA=0x5000 VSize=0x200 Raw=0x200
+[IMPORT] DLL: KERNEL32.DLL
+[IMPORT]   RaiseException -> raise_stub_entry (0x401840)
+
+[PDATA] Dumping RUNTIME_FUNCTION entries:
+  [0] begin=0x1000 end=0x1021 unwind=0x4000 flags=0x0
+       bytes: 53 48 83 ec 20 48 89 cb
+  [1] begin=0x1030 end=0x104f unwind=0x4008 flags=0x1
+       bytes: 55 53 48 83 ec 30 48 89
+  [2] begin=0x1050 end=0x105e unwind=0x401c flags=0x0
+       bytes: 48 83 ec 28 e8 d7 ff ff
+
+[EXEC] Jumping to PE entry point RVA=0x1050 (VA=0x7f548f571050)
+[EXEC] Call chain: func_A -> func_B -> func_C -> RaiseException(stub)
+[EXEC] Expecting: stub captures state, runs unwind walk, returns
+
+[EXEC] entry func ptr = 0x7f548f571050
+
+=================================================================
+EXP-NEXT-2: Controlled Exception Dispatch Validation
+=================================================================
+
+[STATE] Captured RIP=0x7f548f57101b (RVA=0x101b)
+[STATE] Captured RSP_entry=0x7ffc683de190
+[STATE] Caller RSP=0x7ffc683de198
+[STATE] Exception code=0xe0000003
+[STATE] *[RSP_entry]=0x7f548f57101b (expect RIP=0x7f548f57101b) MATCH
+
+--- FRAME 0 (RaiseException caller = func_C) ---
+[F0] RF[0] begin=0x1000 end=0x1021 unwind=0x4000
+[F0] UI: version=1 flags=0x0 prolog=9 codes=2 frame_reg=0
+[F0]   code[0]: op=0 info=3 offset=0 (0x0300)
+[F0]   code[1]: op=2 info=3 offset=1 (0x2301)
+  [UNWIND] pc=0x7f548f57101b begin=0x1000 end=0x1021 handler=0x0 est=0x7ffc683de1c0 rsp=0x7ffc683de198->0x7ffc683de1c0
+[F0] Parent: [0x7ffc683de1c0]=0x7f548f571046 (RVA 0x1046)
+
+--- FRAME 1 ---
+[F1] RIP=0x7f548f571046 RVA=0x1046 RSP=0x7ffc683de1c8
+[F1] RF[1] begin=0x1030 end=0x104f unwind=0x4008
+[F1] UI: flags=0x1 codes=3
+  [UNWIND] pc=0x7f548f571046 begin=0x1030 end=0x104f handler=0x1060 est=0x7ffc683de208 rsp=0x7ffc683de1c8->0x7ffc683de208
+[F1] *** EHANDLER FOUND at RVA 0x1060 (VA 0x7f548f571060) ***
+[F1] Handler section-relative offset: 0x60
+
+[RESULT] Handler discovered at Frame 1 — stopping walk.
+
+
+=================================================================
+FRAME TABLE
+=================================================================
+Idx  RIP             RVA     RF[idx] Begin    End      UI_RVA  Flags  Handler  Status
+---  -------------  ------  ------  -------  -------  ------  -----  -------  ----------------
+0    0x7f548f57101b  0x101b  0      0x01000  0x01021  0x4000  0x0    0x0000   no_handler
+1    0x7f548f571046  0x1046  1      0x01030  0x0104f  0x4008  0x1    0x1060   EHANDLER_FOUND
+
+=================================================================
+EXP-NEXT-2 SUMMARY
+=================================================================
+[CHECK] Frame 0: RVA=0x101b (expect func_C in 0x1000-0x1021 range)
+        PASS: Frame 0 is in func_C
+        PASS: Frame 0 has no EHANDLER
+[CHECK] Frame 1: RVA=0x1046 (expect func_B at 0x1030-0x104f)
+        PASS: Frame 1 is in func_B
+        PASS: Frame 1 has EHANDLER at RVA 0x1060
+        PASS: Handler RVA matches expected 0x1060
+
+RESULT: PASS — Handler discovery via RtlVirtualUnwind works correctly.
+        RaiseException -> CONTEXT -> Frame0(func_C,no_handler) -> Frame1(func_B,EHANDLER)
+=================================================================
+
+[EXEC] Returned from PE entry point.
