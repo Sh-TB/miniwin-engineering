@@ -1,0 +1,22 @@
+
+========================================
+DISPATCH TEST: test_b.exe
+========================================
+[LOAD] ImageBase=0x140000000 EP=0x1000 Size=0x7000
+
+[PDATA] 4 entries:
+  [0] begin=0x1000 end=0x1012 ui=0x4000 flags=0x0
+  [1] begin=0x1012 end=0x1024 ui=0x4008 flags=0x0
+  [2] begin=0x1024 end=0x1042 ui=0x4010 flags=0x1
+  [3] begin=0x1042 end=0x1045 ui=0x4020 flags=0x0
+
+[EXEC] Calling PE entry at RVA 0x1000
+[EXEC] About to call entry()...
+[EXEC] entry func ptr = 0x7f02051af000
+[EXEC] Returned from PE entry point.
+
+========================================
+RESULT: test_b.exe
+  Handler called: NO
+  Exception handled: YES (PASS)
+========================================

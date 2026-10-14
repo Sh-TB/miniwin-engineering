@@ -1,0 +1,56 @@
+
+========================================
+Exception Dispatch Unit Tests
+========================================
+
+--- Test 1: Single Frame Handler Discovery ---
+  PASS: func_b found in .pdata
+  PASS: func_b begin address (0x1010)
+  PASS: EHANDLER found for func_b
+  PASS: Handler RVA correct (0xaa00)
+  PASS: Establisher frame computed (non-zero)
+  PASS: Establisher frame equals unwound RSP (0x7fff62874d08)
+  PASS: RSP unwound correctly (0x7fff62874d08)
+  PASS: func_a found in .pdata
+  PASS: No handler for func_a
+  PASS: Handler RVA is 0 for func_a (0x0)
+
+--- Test 2: Nested Frames Walk ---
+  PASS: Frame 0: func_c found
+  PASS: Frame 0: func_c has no handler
+  PASS: Frame 0: RSP unwound to func_c_est (0x7fff62874c18)
+  PASS: Frame 1: func_b found
+  PASS: Frame 1: func_b has EHANDLER
+  PASS: Frame 1: handler RVA = 0xBB00 (0xbb00)
+  Nested walk: correctly found EHANDLER at frame 1
+
+--- Test 3: CONTEXT ContextFlags Value ---
+  PASS: ContextFlags = CONTEXT_FULL (0x100007) (0x100007)
+  PASS: ContextFlags is NOT 0x10007F (old bug)
+
+--- Test 4: g_cap_er Copy Order Fix ---
+  PASS: Old order: g_cap_er.Code is zero (BUG) (0x0)
+  PASS: New order: g_cap_er.Code correct (0x20474343)
+  PASS: New order: g_cap_er.Flags correct (0x1)
+  PASS: New order: g_cap_er.NumParams correct (0x2)
+  PASS: New order: g_cap_er.Param[0] correct (0xdeadbeef)
+  PASS: New order: g_cap_er.Param[1] correct (0xcafebabe)
+
+--- Test 5: CHAININFO Establisher Frame ---
+  PASS: CHAININFO function found in .pdata
+  PASS: CHAININFO: handler found
+  PASS: CHAININFO: handler RVA = 0xCC00 (0xcc00)
+  PASS: CHAININFO: establisher frame is NOT zero (was bug M1)
+  PASS: CHAININFO: RSP unwound by 32 bytes (0x7fff62874d10)
+  PASS: CHAININFO: establisher = unwound RSP (0x7fff62874d10)
+
+--- Test 6: RF Lookup Edge Cases ---
+  PASS: Lookup at exact begin
+  PASS: Lookup at end-1
+  PASS: Lookup at exact end (belongs to next RF)
+  PASS: Lookup before first RF
+  PASS: Lookup at/after last RF end
+
+========================================
+Results: 35 passed, 0 failed (of 35)
+========================================

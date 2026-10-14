@@ -5,28 +5,27 @@ loading and executing Windows PE applications on Linux without Wine.
 
 ## Target
 
-UPX 4.2.4 (upx_decompressed.exe) — `--version` should print "upx 4.2.4" and exit 0.
+UPX 4.2.4 (upx_decompressed.exe) — `--version` prints "upx 4.2.4" and exits 0.
+NOT ACHIEVED YET (2026-10-14: exit 134, no output; root cause BUG-026 verified).
+
+## Operating system (how this project runs)
+
+The owner sends CONTINUE. The agent executes .agent/CONTINUE_PROTOCOL.md:
+reads state, selects one bounded task from .agent/backlog.md, baselines,
+implements, tests, records evidence, updates state, commits, hands off.
 
 ## Execution Pipeline
 
-```
-PE file analysis
-    ↓
-PE loading (10 sections, relocations)
-    ↓
-Import resolution (162/162 KERNEL32 + msvcrt)
-    ↓
-Win32 API compatibility layer (162 stubs)
-    ↓
-Runtime execution (TEB/PEB, heap, CRT init)
-    ↓
-Exception handling (SEH/CFEH)
-    ↓
-Successful program execution
-```
+PE load (preferred base, no relocations) → import resolution (161 table)
+→ TEB/PEB → CRT init → exception dispatch (GCC C++ via SEH) → catch → output.
 
 ## Current Blocker
 
-M8: RtlUnwindEx context restoration incomplete. UPX reaches the catch landing
-pad (0x40331c) but crashes with SIGSEGV because nonvolatile registers and/or
-stack state are incorrect after the unwind.
+BUG-026: naked-stub g_cap_rip capture loads the stack pointer instead of the
+saved return address → CONTEXT.Rip outside PE → walk ends at Frame[0] →
+terminate/abort. Fix = one operand; see .agent/CURRENT_TASK.md.
+
+## Canonical documents
+
+docs/master/MASTER_PLAN.md (living plan) · .agent/state.md (canonical snapshot)
+· .agent/CONTINUE_PROTOCOL.md (workflow) · .agent/SESSION_HANDOFF.md (last session)

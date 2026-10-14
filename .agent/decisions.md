@@ -17,3 +17,7 @@ Must be implemented for real applications.
 ## D-004: GCC personality function delegation (2026-08-14)
 We call the GCC personality function directly and forward its
 EXCEPTION_DISPOSITION. We don't parse LSDA ourselves.
+
+## (2026-10-14 session) Decisions D-005+ moved to docs/master/ARCHITECTURE_DECISIONS.md
+Canonical ADR record now lives in docs/master/ARCHITECTURE_DECISIONS.md (ADR-000..ADR-009).
+Summary of new decisions this session: ADR-005 MAP_FIXED accepted with owed collision detection; ADR-006 naked stub design retained (BUG-026 is an operand regression, not a design failure); ADR-008 OriginalContext adoption proposed pending EXP-038; ADR-009 Rust runtime/ frozen out of C critical path.

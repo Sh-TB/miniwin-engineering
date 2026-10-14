@@ -1,0 +1,60 @@
+{
+  "meta": {
+    "produced_by": "TASK-002 reproducible baseline",
+    "date": "2026-10-14",
+    "repo_head": "39181aa9239216ce740b8d89ba990437f1d5e8ae",
+    "environment": {
+      "os": "Debian GNU/Linux x86_64 (5.10.134)",
+      "gcc": "14.2.0-19",
+      "python": "3.12.15",
+      "make": "GNU Make"
+    }
+  },
+  "build": {
+    "command": "make clean && make",
+    "exit_code": 0,
+    "errors": 0,
+    "warnings": 24,
+    "warning_classes": ["Wformat", "Wunused-variable", "Wunused-but-set-variable", "Wuse-after-free"],
+    "binary": {
+      "path": "minwin_loader",
+      "size_bytes": 291872,
+      "sha256": "afa7744c90a3eaabe88bdfe9eb0da1953998cbaf9ef69184959072d95fbcdf3c",
+      "format": "ELF 64-bit LSB executable x86-64, dynamically linked, not stripped",
+      "buildid": "39667a6a10110d935954fcb5618ef9c4e3ac3d14"
+    },
+    "source": {
+      "loader_c_sha256": "502ae5880350aaa325c28c49291d96fc8bc0521d2cdd51da9edff15a410d1953",
+      "include_pe_h_sha256": "928a780c688f5e4136a53caf2c22e3bb469f264570838fd2439c5f028291a9f2"
+    }
+  },
+  "sample": {
+    "name": "samples/upx_decompressed.exe",
+    "sha256": "14e07e294cb8aac61603c95e31b2c364ebd7d0887506a7e156044b262c0d147b",
+    "size_bytes": 2140672,
+    "recovery": "extracted from checkpoints/miniwin_checkpoint_bug023_recovery.zip; 4-way cross-verified; matches knowledge-transfer/evidence/hashes/checkpoint_hashes_20260806.txt",
+    "pe": {"machine": "x64", "sections": 10, "entry_rva": "0x14f0", "image_base": "0x400000", "subsystem": "console"}
+  },
+  "tests": [
+    {"id": "REG-SUITE", "tier": "E-regression", "command": "./tests/regression/test_pe_loader_regression.sh .", "result": "FAIL", "passed": 10, "failed": 2, "details": {"failures": ["RUNTIME_FUNCTION lookup NOT found", "exit code 134 (expected 139)"], "imports_resolved": 159, "pdata_entries": 3030}},
+    {"id": "EXP-NEXT-2", "tier": "B-synthetic (embedded dispatcher)", "command": "gcc tests/exp_next2/exp_next2_harness.c && ./exp_next2_harness synthetic_test.exe", "result": "PASS", "exit_code": 0, "caveat": "harness embeds own lookup/unwind/dispatch code; validates algorithms, not integrated loader path"},
+    {"id": "DISPATCH-A", "tier": "B-synthetic", "command": "./test_dispatch_harness test_a.exe", "result": "FAIL", "exit_code": 139, "assessment": "SIGSEGV inside PE entry; IAT never patched (import walk finds no RaiseException); call through null slot"},
+    {"id": "DISPATCH-B", "tier": "B-synthetic", "command": "./test_dispatch_harness test_b.exe", "result": "INVALID-VACUOUS", "exit_code": 0, "assessment": "no exception raised (IAT unpatched); verdict logic defaults to PASS"},
+    {"id": "DISPATCH-C", "tier": "B-synthetic", "command": "./test_dispatch_harness test_c.exe", "result": "INVALID-VACUOUS", "exit_code": 0, "assessment": "same as DISPATCH-B"},
+    {"id": "DISPATCH-D", "tier": "B-synthetic", "command": "./test_dispatch_harness test_d.exe", "result": "INVALID-VACUOUS", "exit_code": 0, "assessment": "same as DISPATCH-B"},
+    {"id": "UNWIND-UNIT", "tier": "A-unit (embedded copies)", "command": "source rebuild of working-tree/tests/exception_dispatch/test_unwind_unit.c", "result": "PASS", "passed": 35, "failed": 0, "caveat": "exercises embedded copies of lookup/unwind algorithms"},
+    {"id": "DALVIK-FRAME", "tier": "out-of-scope-preserve", "command": "gcc tests/dalvik_frame/test_frame.c src/dalvik/frame.c && ./test_frame", "result": "PASS", "passed": 24, "failed": 0, "note": "unrelated artifact preservation only"},
+    {"id": "UPX-ACCEPTANCE", "tier": "C-real-target", "command": "./minwin_loader samples/upx_decompressed.exe --version", "result": "FAIL", "exit_code": 134, "signal": "SIGABRT", "stdout": "terminate called after throwing an instance of 'unsigned long long'", "version_output": null, "trace": "evidence/master/api_trace_head_39181aa.json", "key_finding": "both RaiseException dispatches end at Frame[0] 'RIP outside PE' because CONTEXT.Rip = stack address (g_cap_rip capture bug)"}
+  ],
+  "gaps": [
+    "g_cap_rip capture bug in mw_RaiseException stub (loads [rsp+0x00] instead of saved rip at [rsp+0x08])",
+    "dispatch test PEs import patching never engages (import directory layout mismatch with harness walk)",
+    "dispatch harness verdict logic defaults to PASS without dispatch",
+    "MW_TRACE format warnings; realloc use-after-free smell in mw_realloc trace"
+  ],
+  "acceptance_criteria_status": {
+    "upx_version_output": "NOT MET",
+    "clean_source_build": "MET",
+    "regression_12_of_12": "NOT MET (10/12)"
+  }
+}

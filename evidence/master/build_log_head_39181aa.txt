@@ -1,0 +1,234 @@
+gcc -O2 -g -Wall -Wno-unused-function -no-pie -Iinclude -o minwin_loader src/loader/loader.c -no-pie -ldl -Wl,-Ttext-segment=0x2000000
+src/loader/loader.c: In function ‘scan_prolog_alloc’:
+src/loader/loader.c:65:30: warning: format ‘%d’ expects a matching ‘int’ argument [-Wformat=]
+   65 |         fprintf(g_trace_log, "[API] " fmt "\n", ##__VA_ARGS__); \
+      |                              ^~~~~~~~
+src/loader/loader.c:702:5: note: in expansion of macro ‘MW_TRACE’
+  702 |     MW_TRACE("[ALLOC_SCAN] i=%d after push skip");
+      |     ^~~~~~~~
+src/loader/loader.c:68:25: warning: format ‘%d’ expects a matching ‘int’ argument [-Wformat=]
+   68 |         fprintf(stderr, "[TRACE] " fmt "\n", ##__VA_ARGS__); \
+      |                         ^~~~~~~~~~
+src/loader/loader.c:702:5: note: in expansion of macro ‘MW_TRACE’
+  702 |     MW_TRACE("[ALLOC_SCAN] i=%d after push skip");
+      |     ^~~~~~~~
+src/loader/loader.c: In function ‘seh_dispatch_exception’:
+src/loader/loader.c:65:30: warning: format ‘%x’ expects argument of type ‘unsigned int’, but argument 6 has type ‘uint64_t’ {aka ‘long unsigned int’} [-Wformat=]
+   65 |         fprintf(g_trace_log, "[API] " fmt "\n", ##__VA_ARGS__); \
+      |                              ^~~~~~~~
+src/loader/loader.c:1448:9: note: in expansion of macro ‘MW_TRACE’
+ 1448 |         MW_TRACE("[DISPATCH] Frame[%d]: Unwind est=0x%lx CTX.Rsp_after=0x%lx alloc=0x%x",
+      |         ^~~~~~~~
+src/loader/loader.c:68:25: warning: format ‘%x’ expects argument of type ‘unsigned int’, but argument 6 has type ‘uint64_t’ {aka ‘long unsigned int’} [-Wformat=]
+   68 |         fprintf(stderr, "[TRACE] " fmt "\n", ##__VA_ARGS__); \
+      |                         ^~~~~~~~~~
+src/loader/loader.c:1448:9: note: in expansion of macro ‘MW_TRACE’
+ 1448 |         MW_TRACE("[DISPATCH] Frame[%d]: Unwind est=0x%lx CTX.Rsp_after=0x%lx alloc=0x%x",
+      |         ^~~~~~~~
+src/loader/loader.c:65:30: warning: unknown conversion type character ‘=’ in format [-Wformat=]
+   65 |         fprintf(g_trace_log, "[API] " fmt "\n", ##__VA_ARGS__); \
+      |                              ^~~~~~~~
+src/loader/loader.c:1593:9: note: in expansion of macro ‘MW_TRACE’
+ 1593 |         MW_TRACE("[HANDLER_CALL] returned disposition=%d (0=Exec %1=Search %2=Nested %3=Collided)", disposition);
+      |         ^~~~~~~~
+src/loader/loader.c:65:30: warning: unknown conversion type character ‘=’ in format [-Wformat=]
+   65 |         fprintf(g_trace_log, "[API] " fmt "\n", ##__VA_ARGS__); \
+      |                              ^~~~~~~~
+src/loader/loader.c:1593:9: note: in expansion of macro ‘MW_TRACE’
+ 1593 |         MW_TRACE("[HANDLER_CALL] returned disposition=%d (0=Exec %1=Search %2=Nested %3=Collided)", disposition);
+      |         ^~~~~~~~
+src/loader/loader.c:65:30: warning: unknown conversion type character ‘=’ in format [-Wformat=]
+   65 |         fprintf(g_trace_log, "[API] " fmt "\n", ##__VA_ARGS__); \
+      |                              ^~~~~~~~
+src/loader/loader.c:1593:9: note: in expansion of macro ‘MW_TRACE’
+ 1593 |         MW_TRACE("[HANDLER_CALL] returned disposition=%d (0=Exec %1=Search %2=Nested %3=Collided)", disposition);
+      |         ^~~~~~~~
+src/loader/loader.c:68:25: warning: unknown conversion type character ‘=’ in format [-Wformat=]
+   68 |         fprintf(stderr, "[TRACE] " fmt "\n", ##__VA_ARGS__); \
+      |                         ^~~~~~~~~~
+src/loader/loader.c:1593:9: note: in expansion of macro ‘MW_TRACE’
+ 1593 |         MW_TRACE("[HANDLER_CALL] returned disposition=%d (0=Exec %1=Search %2=Nested %3=Collided)", disposition);
+      |         ^~~~~~~~
+src/loader/loader.c:68:25: warning: unknown conversion type character ‘=’ in format [-Wformat=]
+   68 |         fprintf(stderr, "[TRACE] " fmt "\n", ##__VA_ARGS__); \
+      |                         ^~~~~~~~~~
+src/loader/loader.c:1593:9: note: in expansion of macro ‘MW_TRACE’
+ 1593 |         MW_TRACE("[HANDLER_CALL] returned disposition=%d (0=Exec %1=Search %2=Nested %3=Collided)", disposition);
+      |         ^~~~~~~~
+src/loader/loader.c:68:25: warning: unknown conversion type character ‘=’ in format [-Wformat=]
+   68 |         fprintf(stderr, "[TRACE] " fmt "\n", ##__VA_ARGS__); \
+      |                         ^~~~~~~~~~
+src/loader/loader.c:1593:9: note: in expansion of macro ‘MW_TRACE’
+ 1593 |         MW_TRACE("[HANDLER_CALL] returned disposition=%d (0=Exec %1=Search %2=Nested %3=Collided)", disposition);
+      |         ^~~~~~~~
+src/loader/loader.c:65:30: warning: format ‘%lx’ expects argument of type ‘long unsigned int’, but argument 4 has type ‘uint32_t’ {aka ‘unsigned int’} [-Wformat=]
+   65 |         fprintf(g_trace_log, "[API] " fmt "\n", ##__VA_ARGS__); \
+      |                              ^~~~~~~~
+src/loader/loader.c:1630:29: note: in expansion of macro ‘MW_TRACE’
+ 1630 |                             MW_TRACE("[EH_FIX] Override: personality failed, catching at LP=0x%lx (RVA 0x%lx)",
+      |                             ^~~~~~~~
+src/loader/loader.c:68:25: warning: format ‘%lx’ expects argument of type ‘long unsigned int’, but argument 4 has type ‘uint32_t’ {aka ‘unsigned int’} [-Wformat=]
+   68 |         fprintf(stderr, "[TRACE] " fmt "\n", ##__VA_ARGS__); \
+      |                         ^~~~~~~~~~
+src/loader/loader.c:1630:29: note: in expansion of macro ‘MW_TRACE’
+ 1630 |                             MW_TRACE("[EH_FIX] Override: personality failed, catching at LP=0x%lx (RVA 0x%lx)",
+      |                             ^~~~~~~~
+src/loader/loader.c:1444:18: warning: unused variable ‘pre_unwind_rsp’ [-Wunused-variable]
+ 1444 |         uint64_t pre_unwind_rsp = *(uint64_t*)(ctx + CTX_Rsp);
+      |                  ^~~~~~~~~~~~~~
+src/loader/loader.c: In function ‘mw_RtlLookupFunctionEntry’:
+src/loader/loader.c:65:30: warning: format ‘%lx’ expects argument of type ‘long unsigned int’, but argument 4 has type ‘unsigned int’ [-Wformat=]
+   65 |         fprintf(g_trace_log, "[API] " fmt "\n", ##__VA_ARGS__); \
+      |                              ^~~~~~~~
+src/loader/loader.c:1799:13: note: in expansion of macro ‘MW_TRACE’
+ 1799 |             MW_TRACE("RtlLookupFunctionEntry(pc=0x%lx rva=0x%lx) -> [%d] begin=0x%x end=0x%x unwind=0x%x",
+      |             ^~~~~~~~
+src/loader/loader.c:68:25: warning: format ‘%lx’ expects argument of type ‘long unsigned int’, but argument 4 has type ‘unsigned int’ [-Wformat=]
+   68 |         fprintf(stderr, "[TRACE] " fmt "\n", ##__VA_ARGS__); \
+      |                         ^~~~~~~~~~
+src/loader/loader.c:1799:13: note: in expansion of macro ‘MW_TRACE’
+ 1799 |             MW_TRACE("RtlLookupFunctionEntry(pc=0x%lx rva=0x%lx) -> [%d] begin=0x%x end=0x%x unwind=0x%x",
+      |             ^~~~~~~~
+src/loader/loader.c:65:30: warning: format ‘%lx’ expects argument of type ‘long unsigned int’, but argument 4 has type ‘unsigned int’ [-Wformat=]
+   65 |         fprintf(g_trace_log, "[API] " fmt "\n", ##__VA_ARGS__); \
+      |                              ^~~~~~~~
+src/loader/loader.c:1805:5: note: in expansion of macro ‘MW_TRACE’
+ 1805 |     MW_TRACE("RtlLookupFunctionEntry(pc=0x%lx rva=0x%lx) -> NULL", control_pc, (uint32_t)rva);
+      |     ^~~~~~~~
+src/loader/loader.c:68:25: warning: format ‘%lx’ expects argument of type ‘long unsigned int’, but argument 4 has type ‘unsigned int’ [-Wformat=]
+   68 |         fprintf(stderr, "[TRACE] " fmt "\n", ##__VA_ARGS__); \
+      |                         ^~~~~~~~~~
+src/loader/loader.c:1805:5: note: in expansion of macro ‘MW_TRACE’
+ 1805 |     MW_TRACE("RtlLookupFunctionEntry(pc=0x%lx rva=0x%lx) -> NULL", control_pc, (uint32_t)rva);
+      |     ^~~~~~~~
+src/loader/loader.c: In function ‘mw_RtlVirtualUnwind’:
+src/loader/loader.c:1979:13: warning: unused variable ‘prolog_size’ [-Wunused-variable]
+ 1979 |     uint8_t prolog_size = ui_base[1];
+      |             ^~~~~~~~~~~
+src/loader/loader.c: In function ‘load_pe’:
+src/loader/loader.c:3173:22: warning: variable ‘hint’ set but not used [-Wunused-but-set-variable]
+ 3173 |             uint16_t hint = 0;
+      |                      ^~~~
+src/loader/loader.c:3273:22: warning: unused variable ‘page_off’ [-Wunused-variable]
+ 3273 |             uint32_t page_off = lsda_abs - page_rva;
+      |                      ^~~~~~~~
+src/loader/loader.c: In function ‘crash_handler’:
+src/loader/loader.c:3334:32: warning: format ‘%lx’ expects argument of type ‘long unsigned int’, but argument 3 has type ‘greg_t’ {aka ‘long long int’} [-Wformat=]
+ 3334 |     fprintf(stderr, "  RSI=0x%lx RDI=0x%lx\n", uc->uc_mcontext.gregs[REG_RSI], uc->uc_mcontext.gregs[REG_RDI]);
+      |                              ~~^               ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+      |                                |                                    |
+      |                                long unsigned int                    greg_t {aka long long int}
+      |                              %llx
+src/loader/loader.c:3334:42: warning: format ‘%lx’ expects argument of type ‘long unsigned int’, but argument 4 has type ‘greg_t’ {aka ‘long long int’} [-Wformat=]
+ 3334 |     fprintf(stderr, "  RSI=0x%lx RDI=0x%lx\n", uc->uc_mcontext.gregs[REG_RSI], uc->uc_mcontext.gregs[REG_RDI]);
+      |                                        ~~^                                     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+      |                                          |                                                          |
+      |                                          long unsigned int                                          greg_t {aka long long int}
+      |                                        %llx
+src/loader/loader.c:3335:31: warning: format ‘%lx’ expects argument of type ‘long unsigned int’, but argument 3 has type ‘greg_t’ {aka ‘long long int’} [-Wformat=]
+ 3335 |     fprintf(stderr, "  R8=0x%lx  R9=0x%lx R10=0x%lx R11=0x%lx\n",
+      |                             ~~^
+      |                               |
+      |                               long unsigned int
+      |                             %llx
+ 3336 |             uc->uc_mcontext.gregs[REG_R8], uc->uc_mcontext.gregs[REG_R9],
+      |             ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+      |                                  |
+      |                                  greg_t {aka long long int}
+src/loader/loader.c:3335:41: warning: format ‘%lx’ expects argument of type ‘long unsigned int’, but argument 4 has type ‘greg_t’ {aka ‘long long int’} [-Wformat=]
+ 3335 |     fprintf(stderr, "  R8=0x%lx  R9=0x%lx R10=0x%lx R11=0x%lx\n",
+      |                                       ~~^
+      |                                         |
+      |                                         long unsigned int
+      |                                       %llx
+ 3336 |             uc->uc_mcontext.gregs[REG_R8], uc->uc_mcontext.gregs[REG_R9],
+      |                                            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+      |                                                                 |
+      |                                                                 greg_t {aka long long int}
+src/loader/loader.c:3335:51: warning: format ‘%lx’ expects argument of type ‘long unsigned int’, but argument 5 has type ‘greg_t’ {aka ‘long long int’} [-Wformat=]
+ 3335 |     fprintf(stderr, "  R8=0x%lx  R9=0x%lx R10=0x%lx R11=0x%lx\n",
+      |                                                 ~~^
+      |                                                   |
+      |                                                   long unsigned int
+      |                                                 %llx
+ 3336 |             uc->uc_mcontext.gregs[REG_R8], uc->uc_mcontext.gregs[REG_R9],
+ 3337 |             uc->uc_mcontext.gregs[REG_R10], uc->uc_mcontext.gregs[REG_R11]);
+      |             ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~         
+      |                                  |
+      |                                  greg_t {aka long long int}
+src/loader/loader.c:3335:61: warning: format ‘%lx’ expects argument of type ‘long unsigned int’, but argument 6 has type ‘greg_t’ {aka ‘long long int’} [-Wformat=]
+ 3335 |     fprintf(stderr, "  R8=0x%lx  R9=0x%lx R10=0x%lx R11=0x%lx\n",
+      |                                                           ~~^
+      |                                                             |
+      |                                                             long unsigned int
+      |                                                           %llx
+ 3336 |             uc->uc_mcontext.gregs[REG_R8], uc->uc_mcontext.gregs[REG_R9],
+ 3337 |             uc->uc_mcontext.gregs[REG_R10], uc->uc_mcontext.gregs[REG_R11]);
+      |                                             ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+      |                                                                  |
+      |                                                                  greg_t {aka long long int}
+src/loader/loader.c:3338:32: warning: format ‘%lx’ expects argument of type ‘long unsigned int’, but argument 3 has type ‘greg_t’ {aka ‘long long int’} [-Wformat=]
+ 3338 |     fprintf(stderr, "  R12=0x%lx R13=0x%lx R14=0x%lx R15=0x%lx\n",
+      |                              ~~^
+      |                                |
+      |                                long unsigned int
+      |                              %llx
+ 3339 |             uc->uc_mcontext.gregs[REG_R12], uc->uc_mcontext.gregs[REG_R13],
+      |             ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+      |                                  |
+      |                                  greg_t {aka long long int}
+src/loader/loader.c:3338:42: warning: format ‘%lx’ expects argument of type ‘long unsigned int’, but argument 4 has type ‘greg_t’ {aka ‘long long int’} [-Wformat=]
+ 3338 |     fprintf(stderr, "  R12=0x%lx R13=0x%lx R14=0x%lx R15=0x%lx\n",
+      |                                        ~~^
+      |                                          |
+      |                                          long unsigned int
+      |                                        %llx
+ 3339 |             uc->uc_mcontext.gregs[REG_R12], uc->uc_mcontext.gregs[REG_R13],
+      |                                             ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+      |                                                                  |
+      |                                                                  greg_t {aka long long int}
+src/loader/loader.c:3338:52: warning: format ‘%lx’ expects argument of type ‘long unsigned int’, but argument 5 has type ‘greg_t’ {aka ‘long long int’} [-Wformat=]
+ 3338 |     fprintf(stderr, "  R12=0x%lx R13=0x%lx R14=0x%lx R15=0x%lx\n",
+      |                                                  ~~^
+      |                                                    |
+      |                                                    long unsigned int
+      |                                                  %llx
+ 3339 |             uc->uc_mcontext.gregs[REG_R12], uc->uc_mcontext.gregs[REG_R13],
+ 3340 |             uc->uc_mcontext.gregs[REG_R14], uc->uc_mcontext.gregs[REG_R15]);
+      |             ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~          
+      |                                  |
+      |                                  greg_t {aka long long int}
+src/loader/loader.c:3338:62: warning: format ‘%lx’ expects argument of type ‘long unsigned int’, but argument 6 has type ‘greg_t’ {aka ‘long long int’} [-Wformat=]
+ 3338 |     fprintf(stderr, "  R12=0x%lx R13=0x%lx R14=0x%lx R15=0x%lx\n",
+      |                                                            ~~^
+      |                                                              |
+      |                                                              long unsigned int
+      |                                                            %llx
+ 3339 |             uc->uc_mcontext.gregs[REG_R12], uc->uc_mcontext.gregs[REG_R13],
+ 3340 |             uc->uc_mcontext.gregs[REG_R14], uc->uc_mcontext.gregs[REG_R15]);
+      |                                             ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+      |                                                                  |
+      |                                                                  greg_t {aka long long int}
+src/loader/loader.c: At top level:
+src/loader/loader.c:2283:13: warning: ‘g_errno_ptr’ defined but not used [-Wunused-variable]
+ 2283 | static int* g_errno_ptr = &g_errno_storage;
+      |             ^~~~~~~~~~~
+src/loader/loader.c: In function ‘mw_realloc’:
+src/loader/loader.c:65:9: warning: pointer ‘ptr’ may be used after ‘realloc’ [-Wuse-after-free]
+   65 |         fprintf(g_trace_log, "[API] " fmt "\n", ##__VA_ARGS__); \
+      |         ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+src/loader/loader.c:2469:5: note: in expansion of macro ‘MW_TRACE’
+ 2469 |     MW_TRACE("realloc(%p, %zu) = %p", ptr, size, p);
+      |     ^~~~~~~~
+src/loader/loader.c:2468:15: note: call to ‘realloc’ here
+ 2468 |     void* p = realloc(ptr, size);
+      |               ^~~~~~~~~~~~~~~~~~
+src/loader/loader.c:68:9: warning: pointer ‘ptr’ may be used after ‘realloc’ [-Wuse-after-free]
+   68 |         fprintf(stderr, "[TRACE] " fmt "\n", ##__VA_ARGS__); \
+      |         ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+src/loader/loader.c:2469:5: note: in expansion of macro ‘MW_TRACE’
+ 2469 |     MW_TRACE("realloc(%p, %zu) = %p", ptr, size, p);
+      |     ^~~~~~~~
+src/loader/loader.c:2468:15: note: call to ‘realloc’ here
+ 2468 |     void* p = realloc(ptr, size);
+      |               ^~~~~~~~~~~~~~~~~~

@@ -1,0 +1,14 @@
+{
+  "manifest_version": 1,
+  "updated": "2026-10-14",
+  "head_at_update": "39181aa9239216ce740b8d89ba990437f1d5e8ae (+ local foundation commit)",
+  "tests": [
+    {"id": "REG-SUITE", "tier": "E", "command": "./tests/regression/test_pe_loader_regression.sh .", "prereqs": ["minwin_loader built", "samples/upx_decompressed.exe (14e07e29...)"], "expected": "12/12 (will remain 10/12 until TASK-BUG-026 lands; test 10 exit-139 pin is historical)", "last_result": {"passed": 10, "failed": 2, "date": "2026-10-14"}, "evidence": "evidence/master/baseline_results.json"},
+    {"id": "EXP-NEXT-2", "tier": "B-alg", "command": "gcc -o exp_next2_harness tests/exp_next2/exp_next2_harness.c -O2 -no-pie -g && ./exp_next2_harness tests/exp_next2/synthetic_test.exe", "prereqs": ["gcc"], "expected": "exit 0, PASS summary", "last_result": {"exit_code": 0, "date": "2026-10-14"}, "evidence": "evidence/master/exp_next2_results_fresh.txt"},
+    {"id": "DISPATCH-A/B/C/D", "tier": "B", "command": "gcc -o test_dispatch_harness tests/dispatch_tests/test_dispatch_harness.c -O2 -g -no-pie && ./test_dispatch_harness tests/dispatch_tests/test_X.exe", "prereqs": ["gcc"], "expected": "INVALID until TASK-TEST-004 repairs import patching + verdicts", "last_result": {"a": "SIGSEGV", "b": "vacuous pass", "c": "vacuous pass", "d": "vacuous pass", "date": "2026-10-14"}, "evidence": "evidence/master/dispatch_test_logs/"},
+    {"id": "UNWIND-UNIT", "tier": "A-alg", "command": "source rebuild of working-tree/tests/exception_dispatch/test_unwind_unit.c (needs include/pe.h resolvable at ../../include)", "prereqs": ["gcc", "include path fix (TASK-TEST-001)"], "expected": "35/35", "last_result": {"passed": 35, "failed": 0, "date": "2026-10-14"}, "evidence": "evidence/master/unwind_unit_results_fresh.txt"},
+    {"id": "DALVIK-FRAME", "tier": "out-of-scope", "command": "gcc tests/dalvik_frame/test_frame.c src/dalvik/frame.c -I src/dalvik && ./a.out", "prereqs": ["gcc"], "expected": "24/24 (preserve only)", "last_result": {"passed": 24, "failed": 0, "date": "2026-10-14"}, "evidence": "evidence/master/dalvik_frame_results_fresh.txt"},
+    {"id": "UPX-ACCEPTANCE", "tier": "C", "command": "./minwin_loader samples/upx_decompressed.exe --version", "prereqs": ["minwin_loader", "samples/upx_decompressed.exe sha256=14e07e294cb8aac61603c95e31b2c364ebd7d0887506a7e156044b262c0d147b"], "expected": "stdout contains 'upx 4.2.4', exit 0 (G1)", "last_result": {"exit_code": 134, "output": "terminate called after throwing an instance of 'unsigned long long'", "date": "2026-10-14"}, "evidence": "evidence/master/api_trace_head_39181aa.json"}
+  ],
+  "notes": "A test that cannot run is BLOCKED, not PASS. Prebuilt committed binaries are provenance only and never count as source-build PASS."
+}
