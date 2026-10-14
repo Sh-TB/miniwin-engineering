@@ -1,42 +1,43 @@
 # CURRENT TASK
 
-**Task ID:** TASK-TEST-004
-**Title:** Fix dispatch tests (import patching + fail-if-not-dispatched)
+**Task ID:** TASK-TEST-004 (slice 2)
+**Title:** Fix the synthetic builder codegen (B-1/B-2/B-3) so all 4 dispatch tests reach dispatch
 **Status:** READY
-**Priority:** P1 (promoted — now blocks TEST-005 which must guard the G1 success)
+**Priority:** P1
 
 ## One-line description
-The dispatch test suite is broken/vacuous (it passes even when dispatch never happens,
-and patches imports in a way that no longer matches the loader's import resolution).
-Fix it so it genuinely exercises RaiseException->walk->personality on a synthetic PE,
-failing loudly when dispatch does not occur.
+The non-vacuous real-loader harness (tests/dispatch_tests/test_dispatch_v2.sh, slice 1)
+is green on load/run contracts; the next slice fixes the three builder defects it found
+so test_b/c/d actually raise and dispatch, and test_a's post-dispatch crash goes away.
 
-## Why this is the task (evidence)
-- state.md "Known repository inconsistencies" item (5): dispatch tests broken/vacuous (TEST-004).
-- G2 requires Tier-B green; TEST-005 (multi-frame EH case set) depends on this suite's
-  harness. With G1 met (EXP-039), the success state must be GUARDED by synthetic cases
-  (P-F/P-G in EXP-039 §9) — the flip class (compile-dependent phase-1) makes any loader.c
-  change suspect until re-pinned (also see TASK-G1-001).
+## The three defects (all found by slice 1 — evidence in the harness header)
+- **B-1 call-rel32 fixups wrong** (test_b/c/d never raise): the call rel32 patch math
+  uses wrong instruction offsets — calls land on the next function's `ret`
+  (disassembly: `call 0x140001023` = the `ret` itself). Fix: compute each call's
+  displacement from its REAL instruction address (emit position + 5).
+- **B-2 UNWIND_CODE nibble order**: the unwind byte is (CodeOffset << 4) | UnwindOp —
+  OpCode is the LOW nibble. The builder packs `(opinfo << 12) | (op << 8) | offset`
+  into a 16-bit LE word = swapped. Rewrite `_emit_xdata`'s code emission to the
+  canonical byte layout (op byte = (offset<<4)|op; opinfo lives in the second slot
+  byte for wide ops, not the word's high byte).
+- **B-3 ms_abi frame alignment**: push rbx + sub 0x28 leaves RSP%16 != 0 before the
+  RaiseException call → the dispatcher's aligned SSE spill faults (movdqa SIGSEGV at
+  0x200fdff, CONTINUE #5 live). Fix frames to sub 0x30 AND regenerate the matching
+  unwind codes (ALLOC_SMALL info=5) — must be done together with B-2.
 
-## Execution notes for the next agent (ordered steps)
-1. Baseline per protocol: clean build + 12/12 regression (test-10 now asserts G1 success),
-   binary hash from evidence/master/bug031/hashes.txt.
-2. Read tests/dispatch_tests/ + the loader's import resolution path; identify why the
-   tests are vacuous (likely: they patch a copy of the IAT the loader never uses, or the
-   assertion compares trace lines the loader no longer emits).
-3. Rebuild the harness on the synthetic PE builder (tests/synthetic_pe/) so dispatch
-   failure is a hard FAIL, not a vacuous PASS.
-4. Do NOT touch loader.c dispatch logic in this task; if a loader defect surfaces,
-   register a BUG with a trace and keep the task scoped to tests.
+## Execution notes
+1. Baseline: bash tests/dispatch_tests/test_dispatch_v2.sh (4/4 on current contracts) +
+   bash scripts/g1_accept.sh (G1 pin, 12/12). Hash: evidence/master/g1/<latest>.
+2. Fix B-1 first (pure fixup math) — verify test_b/c/d traces gain RaiseException +
+   [DISPATCH] lines. Then B-2+B-3 together — verify test_a runs to its handler without
+   the movdqa crash and test_b/c/d keep dispatching (unwind math must stay consistent).
+3. Evolve the harness rows from load/run contracts to dispatch contracts as each defect
+   closes (each upgrade = a real PASS).
+4. Do NOT touch loader.c dispatch logic; if a loader defect surfaces, register BUG-032
+   with a trace.
+5. Guardrail: bash scripts/g1_accept.sh must stay OK after every loader-adjacent change.
 
-## Verified facts you may rely on (this session)
-- G1 acceptance met: UPX --version exit 0 (5/5); regression 12/12; EXP-NEXT-2 PASS.
-- The GCC SEH chain (resume-command intercept + continuation unwind + raise-site
-  register pinning) is the code under test — ADR-011, EXP-039 §6.
-- MINWIN_EH_HACKS=1 restores legacy behavior exactly; tests must run with hacks OFF.
-
-## Boundaries
-- No loader.c changes in this task.
-- No sample-specific constants in tests: synthetic PEs only.
-- If G1 regresses at any point: STOP, register BUG-032 with full trace, revert to the
-  pinned binary evidence (hashes.txt).
+## Verified facts you may rely on
+- G1 acceptance MET (EXP-039); regression 12/12; IAT writability fix in the loader is
+  Windows-faithful (mprotect around the import pass, restore after).
+- The old harness (test_dispatch_harness.c) is superseded by test_dispatch_v2.sh.

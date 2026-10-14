@@ -5,17 +5,17 @@ prior snapshot; prior versions remain in git history.
 
 | Field | Value |
 |---|---|
-| Current HEAD (local) | `BUG-031/G1` commit (child of `24bb742`) — see `git log --oneline -3` |
-| Origin/main | `24bb742a…` (API-005/BUG-030 commit; push of the G1 commit happens this session; credentials in ~/.git-credentials, outside repo) |
-| Source SHA-256 (loader.c) | see `evidence/master/bug031/hashes.txt` (BUG-031: ADR-011 + raise-site register pinning + asm constraint fix) |
+| Current HEAD (local) | `52c0f8d` (TEST-004 slice 1; chain 954d1f0 G1 → 4a397e4 → 52c0f8d) |
+| Origin/main | `52c0f8d` (GitHub-verified via git push output this session; credentials in ~/.git-credentials, outside repo) |
+| Source SHA-256 (loader.c) | see `evidence/master/g1/20261014_221434/hashes.txt` (post API-002/006/TEST-004-slice-1) |
 | Source SHA-256 (include/pe.h) | `928a780c…` (unchanged) |
 | Build status | CLEAN — 0 errors; binary `e0bdbdcf…` |
 | Test status | Regression **12/12** (test 10 asserts the SUCCESS state: exit 0 + UPX banner + no crash); EXP-NEXT-2 PASS; MINWIN_EH_HACKS=1 legacy compat verified (134 + 'unsigned long long', byte-identical legacy); dispatch tests BROKEN/VACUOUS (TEST-004 pending); dalvik 24/24 |
 | Current target | UPX 4.2.4 decompressed — **G1 MET: full --version banner printed, exit 0, 5/5 deterministic, no crash dumps** |
-| Exact current blocker | none for G1. Next frontier = generalization hardening (TEST-004/005 synthetic EH suite) + continuation-walk generalization (BUG-033 note in EXP-039 §10) |
-| Active task ID | none (G1 milestone complete) |
+| Exact current blocker | none for G1. TEST-004 slice 2 = builder codegen B-1/B-2/B-3 (real-loader harness green on load/run contracts; dispatch contracts queued) |
+| Active task ID | TASK-TEST-004 slice 2 (builder codegen B-1/B-2/B-3) |
 | Last completed task ID | TASK-BUG-031 (CLOSED TESTED) — this session |
-| Next task ID | TASK-TEST-004 (fix dispatch tests) — P1 enabler for the synthetic EH suite (TEST-005) that must now guard G1 |
+| Next task ID | TASK-TEST-004 slice 2 |
 | Blocking dependencies | TEST-005 depends on TEST-004 |
 | Evidence links | docs/master/experiments/EXP-039-…md; docs/bugs/BUG-031.md (closed); evidence/master/bug031/* (trace 943 events, stdout, hashes, regression log); checkpoint_pre_task-bug031_20261015.zip |
 | Known repository inconsistencies | (1) ALLOC_LARGE scaling formulas wrong in 4 copies + windows_abi doc (TASK-API-006; ALLOC_SMALL already corrected by BUG-027); (2) dispatcher passes post-unwind ctx (Rsp=est) to handlers — Windows passes pre-unwind throw-site ctx (P-B variable, not needed so far); (3) dc-layout contract: the PE's personality/core read OUR dc layout (ImageBase@0x08/FunctionEntry@0x10/ContextRecord@0x28/HandlerData@0x38) — generalization audit vs OS canonical DISPATCHER_CONTEXT pending (BUG-031 risk note); (4) sample hash mis-stated as 254ac80d in BUG-001/NEW_AGENT_START (true: 14e07e29); (5) dispatch tests broken/vacuous (TEST-004) |

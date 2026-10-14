@@ -82,7 +82,7 @@ TASK-API-014 (format warnings), TASK-API-015 (realloc trace smell), TASK-API-016
 - Scope: `scripts/g1_accept.sh` — builds clean, runs UPX --version, asserts exit 0 + exact banner lines (byte-for-byte on `upx 4.2.4`), asserts no `[CRASH]` in stderr, asserts regression 12/12, records binary hash + trace into `evidence/master/g1/` with timestamp. Rationale: P-G (EXP-039 §9) — the phase-1 flip class makes any loader.c change suspect until re-pinned.
 
 ### TASK-TEST-004 — Fix dispatch tests (import patching + fail-if-not-dispatched) — now blocks TEST-005
-- Priority: P1 (promoted: TEST-005 must guard G1). Status: READY — independent.
+- Priority: P1 (promoted: TEST-005 must guard G1). Status: **IN_PROGRESS — slice 1 CLOSED (2026-10-15)**: non-vacuous real-loader harness `tests/dispatch_tests/test_dispatch_v2.sh` (4/4 on load/run contracts), builder import layout fixed (canonical PE32+ thunks), loader IAT-writability fix (Windows-faithful, G1 re-pinned). **Slice 2 = builder codegen defects B-1 (call-rel32 fixups), B-2 (UNWIND_CODE nibble order), B-3 (ms_abi frame alignment)** — see CURRENT_TASK.md.
 
 ### TASK-TEST-005 — Synthetic PE builder v2 + Tier-B multi-frame EH case set
 - Priority: P1 (promoted). Status: PENDING, dep TEST-004.
