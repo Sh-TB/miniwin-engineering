@@ -47,7 +47,9 @@ Implementation status and verification status are tracked separately (e.g. IMPLE
 ### TASK-EXP-038 (old task ID, RETIRED) — OriginalContext adoption / RDX selector propagation (MERGED into TASK-BUG-027 in CONTINUE #3; the experiment-report ID "EXP-038" was re-used in CONTINUE #4 for the API-005/BUG-030 experiment — the old task ID remains retired, the report is canonical)
 ### TASK-API-006 — ALLOC decode fixes: scale rule in 4 copies + windows_abi doc (BUG-027 confirmed the +8 defect ALSO hits ALLOC_SMALL in mw_RtlUnwindEx — extend scope to ALLOC_SMALL there)
 ### TASK-API-005 — Isolate EH_FIX + CXX-EH-FIX behind MINWIN_EH_HACKS flag, default OFF (**TESTED (CLOSED) 2026-10-15** — ADR-010; both hacks flag-guarded, nothing deleted; `MINWIN_EH_HACKS=1` restores legacy behavior exactly; details in the TASK-BUG-029/030 entries above)
-### TASK-API-002 — Trace flush in mw_ExitProcess (READY — independent, small)
+### TASK-API-002 — Trace flush in mw_ExitProcess
+- Priority: P1. Status: **TESTED (CLOSED, 2026-10-15)**. Dependencies: none.
+- Result: `mw_trace_shutdown_flush()` — trace JSON terminator + stdio flush on every _exit path (ExitProcess/abort direct; exit() via atexit at trace-open). api_trace.json now self-closing on all exit paths; G1 re-pinned OK.
 ### TASK-API-003 — Wire SetUnhandledExceptionFilter into walk-exhaustion (PENDING, dep BUG-026)
 ### TASK-TEST-001 — Port unwind unit tests to tests/unit/ with portable includes (READY — independent)
 ### TASK-TEST-002 — ALLOC_LARGE unit tests, spec vectors (PENDING, pairs TASK-API-006)
@@ -75,7 +77,8 @@ TASK-API-014 (format warnings), TASK-API-015 (realloc trace smell), TASK-API-016
 - Observed (EXP-039 §7/§10): the continuation walk logged `cont walk: RIP 0x0 outside PE — walk ends` — the start context for the walk came from the continue-helper's captured state with a zero RIP in this run; the target LP resume was still correct for this target. Generalize: validate/derive the walk start (OriginalContext at [arg5] vs g_unwind_ctx fallback), require non-zero in-image RIP, and add a trace line distinguishing "walk did nothing" from "walk ran N frames". Must NOT change the G1 behavior (guarded by test-10).
 
 ### TASK-G1-001 — G1 acceptance pin script (one command, evidence-producing)
-- Priority: P1. Status: READY (independent, small). Dependencies: none.
+- Priority: P1. Status: **TESTED (CLOSED, 2026-10-15)**. Dependencies: none.
+- Result: `scripts/g1_accept.sh` (clean build 0-errors enforced, banner byte-check, no-[CRASH] check, 12/12, evidence dir per run). Ran OK twice; second run re-pinned after API-006 (evidence/master/g1/20261014_215737 + 20261014_220048).
 - Scope: `scripts/g1_accept.sh` — builds clean, runs UPX --version, asserts exit 0 + exact banner lines (byte-for-byte on `upx 4.2.4`), asserts no `[CRASH]` in stderr, asserts regression 12/12, records binary hash + trace into `evidence/master/g1/` with timestamp. Rationale: P-G (EXP-039 §9) — the phase-1 flip class makes any loader.c change suspect until re-pinned.
 
 ### TASK-TEST-004 — Fix dispatch tests (import patching + fail-if-not-dispatched) — now blocks TEST-005
@@ -90,7 +93,8 @@ TASK-API-014 (format warnings), TASK-API-015 (realloc trace smell), TASK-API-016
 - Vectors: x64 unwinding spec prologues (ALLOC_LARGE info=0/1, ALLOC_SMALL 1..160, PUSH_MACHFRAME 0/1, chained info) decoded by BOTH `seh_total_prologue_alloc` (correct reference) and the mw_RtlUnwindEx/mw_RtlVirtualUnwind copies — the test must FAIL until API-006 lands.
 
 ### TASK-API-006 — ALLOC decode scale rule in 4 copies + windows_abi doc
-- Priority: P1 (P0-adjacent: latent defect now isolated from G1). Status: READY — independent.
+- Priority: P1. Status: **TESTED (CLOSED, 2026-10-15)**. Dependencies: —
+- Result: all 4 loader.c copies now spec-correct (ALLOC_LARGE info==0 ⇒ uint16×8; info==1 ⇒ uint32 no-shift; ALLOC_SMALL (info+1)*8 already BUG-027-correct); windows_abi doc corrected with a dated correction note; seh_total_prologue_alloc documented as the reference decoder. G1 re-pinned OK after the change. Remaining follow-up: the exp_next2/dalvik prototype decoders (research artifacts) + unit vectors = TASK-TEST-002/009.
 - Copies: mw_RtlUnwindEx decode loop, mw_RtlVirtualUnwind decode loop, exp_next2 harness decoder, dalvik prototype decoder + the windows_abi doc section. ALLOC_SMALL is already correct post-BUG-027 in mw_RtlUnwindEx; `seh_total_prologue_alloc` (BUG-031) is the spec-correct reference implementation — extract shared helper instead of a 5th copy.
 
 ## P2 — generalization enablers (second-target preparation)

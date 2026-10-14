@@ -3442,6 +3442,32 @@ static void resolve_proc_init(void) {
     g_resolve_proc_fn = resolve_proc_from_table;
 }
 
+/* TASK-TEST-004 (Windows-faithful IAT patching): the OS loader makes IAT
+ * pages writable for the import pass regardless of their section flags
+ * (UPX's IAT lives in the writable .idata; synthetic test PEs put it in
+ * read-only .rdata). Track touched pages, restore per-section prot after. */
+static struct { uint64_t rva; uint32_t size; int prot; } g_sec_prot[16];
+static int g_sec_prot_count = 0;
+static uint64_t g_iat_pages[64];
+static int g_iat_page_count = 0;
+static void iat_page_ensure_writable(uint8_t* addr) {
+    uint64_t page = (uint64_t)(uintptr_t)addr & ~0xFFFULL;
+    for (int i = 0; i < g_iat_page_count; i++)
+        if (g_iat_pages[i] == page) return;
+    if (g_iat_page_count < 64) g_iat_pages[g_iat_page_count++] = page;
+    mprotect((void*)(uintptr_t)page, 0x1000, PROT_READ | PROT_WRITE);
+}
+static void iat_pages_restore(void) {
+    for (int i = 0; i < g_iat_page_count; i++) {
+        uint64_t off = g_iat_pages[i] - (uint64_t)(uintptr_t)g_image_base;
+        int prot = PROT_READ; /* default for a restored image page */
+        for (int t = 0; t < g_sec_prot_count; t++)
+            if (off >= g_sec_prot[t].rva && off < g_sec_prot[t].rva + g_sec_prot[t].size) { prot = g_sec_prot[t].prot; break; }
+        mprotect((void*)(uintptr_t)g_iat_pages[i], 0x1000, prot);
+    }
+    g_iat_page_count = 0;
+}
+
 /* ============================================================
  * PE Loading
  * ============================================================ */
@@ -3550,6 +3576,12 @@ static int load_pe(const char* filepath) {
         if (sec->Characteristics & SCN_MEM_READ)    prot |= PROT_READ;
         mprotect(g_image_base + sec->VirtualAddress,
                  (sec->VirtualSize + section_align - 1) & ~(section_align - 1), prot);
+        if (g_sec_prot_count < 16) {
+            g_sec_prot[g_sec_prot_count].rva = sec->VirtualAddress;
+            g_sec_prot[g_sec_prot_count].size = (sec->VirtualSize + section_align - 1) & ~(section_align - 1);
+            g_sec_prot[g_sec_prot_count].prot = prot;
+            g_sec_prot_count++;
+        }
     }
 
     /* Parse and resolve imports */
@@ -3614,6 +3646,7 @@ static int load_pe(const char* filepath) {
                 if (strcmp(g_import_table[t].name, func_name) == 0) {
                     /* Found! Patch IAT */
                     void* patch_addr = g_image_base + iat_off + slot * 8;
+                    iat_page_ensure_writable((uint8_t*)(uintptr_t)patch_addr);
                     *(uint64_t*)patch_addr = (uint64_t)(uintptr_t)g_import_table[t].func;
                     found = 1;
                     total_resolved++;
@@ -3626,6 +3659,7 @@ static int load_pe(const char* filepath) {
                 for (size_t t = 0; t < NUM_DATA_IMPORTS; t++) {
                     if (strcmp(g_data_imports[t].name, func_name) == 0) {
                         void* patch_addr = g_image_base + iat_off + slot * 8;
+                        iat_page_ensure_writable((uint8_t*)(uintptr_t)patch_addr);
                         *(uint64_t*)patch_addr = (uint64_t)(uintptr_t)g_data_imports[t].data_addr;
                         found = 1;
                         total_resolved++;
@@ -3657,6 +3691,10 @@ static int load_pe(const char* filepath) {
 
     MW_TRACE("Import resolution: %d resolved, %d unresolved (total %d)",
              total_resolved, total_unresolved, total_resolved + total_unresolved);
+
+    /* TASK-TEST-004: restore the per-section protection on every page the
+     * IAT pass made writable (Windows restores IAT page protection too). */
+    iat_pages_restore();
 
     if (total_unresolved > 0) {
         fprintf(stderr, "[WARN] %d imports unresolved\n", total_unresolved);

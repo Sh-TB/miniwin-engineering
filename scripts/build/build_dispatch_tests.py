@@ -23,7 +23,7 @@ import sys
 import os
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
-OUTPUT_DIR = os.path.join(SCRIPT_DIR, '..', 'tests', 'dispatch_tests')
+OUTPUT_DIR = os.path.join(SCRIPT_DIR, '..', '..', 'tests', 'dispatch_tests')
 
 
 def align(v, a):
@@ -150,19 +150,28 @@ class SyntheticPEBuilder:
 
     def _build_imports(self):
         # Import: KERNEL32.dll!RaiseException
-        # Layout within .rdata:
+        # Layout within .rdata (TASK-TEST-004 fix, canonical PE32+ x64:
+        #   thunk arrays are 8-BYTE entries; ILT and IAT must be SEPARATE
+        #   arrays — the loader walks the ILT for names and patches the IAT,
+        #   so an overlap makes the patched IAT slot read as the next ILT
+        #   entry (the old layout put the IAT at 0x040 over the ILT
+        #   terminator, and pointed hint/name at the IAT terminator):
         #   0x000: Import Directory Entry (20 bytes)
         #   0x014: NULL terminator (20 bytes)
         #   0x028: DLL name "KERNEL32.dll\0"
-        #   0x038: ILT entry (4 bytes: hint/name RVA) + NULL
-        #   0x040: IAT slot (8 bytes) + NULL
+        #   0x038: ILT[0] qword (hint/name RVA)
+        #   0x040: ILT[1] qword = NULL terminator
+        #   0x048: IAT[0] qword (patched at runtime)
+        #   0x050: IAT[1] qword = NULL terminator
+        #   0x058: IMAGE_IMPORT_BY_NAME: hint p16 + "RaiseException\0"
 
         rdata = bytearray()
 
         # We'll place things at fixed offsets within .rdata
         dll_name_rva = self.RDATA_RVA + 0x028
         ilt_rva = self.RDATA_RVA + 0x038
-        iat_rva = self.RDATA_RVA + 0x040
+        iat_rva = self.RDATA_RVA + 0x048
+        hint_name_rva = self.RDATA_RVA + 0x058
 
         # Import Directory Entry
         rdata.extend(p32(ilt_rva))   # OriginalFirstThunk
@@ -182,24 +191,15 @@ class SyntheticPEBuilder:
         while len(rdata) < 0x038:
             rdata.append(0)
 
-        # ILT: hint/name entry for RaiseException
-        hint_name_rva = self.RDATA_RVA + 0x048
-        rdata.extend(p32(hint_name_rva))
-        rdata.extend(p32(0))  # NULL terminator
+        # ILT: qword thunk array (entry + NULL terminator)
+        rdata.extend(p64(hint_name_rva))
+        rdata.extend(p64(0))
 
-        # Pad to 0x040
-        while len(rdata) < 0x040:
-            rdata.append(0)
+        # IAT: qword thunk array, patched at runtime (separate from ILT)
+        rdata.extend(p64(hint_name_rva))  # pre-load value = same RVA (loader patches the func ptr)
+        rdata.extend(p64(0))              # NULL terminator
 
-        # IAT: will be patched at runtime
-        rdata.extend(p64(0))  # RaiseException IAT slot
-        rdata.extend(p64(0))  # NULL terminator
-
-        # Pad to 0x048
-        while len(rdata) < 0x048:
-            rdata.append(0)
-
-        # Hint/Name table
+        # Hint/Name table (canonical: 2-byte hint + name)
         rdata.extend(p16(0))  # hint
         rdata.extend(b'RaiseException\x00')
 
@@ -336,7 +336,7 @@ def make_test_a():
     # Each function pushes RBX, subs 0x20 (for shadow space + local), calls next.
 
     # IAT slot RVA = RDATA_RVA + 0x40 = 0x2040
-    IAT_RVA = 0x2040
+    IAT_RVA = 0x2048  # must match _build_imports() (RDATA_RVA + 0x048) — TASK-TEST-004
 
     # func_C: call RaiseException(0xE0000001, 0, 0, NULL) via IAT
     # Prolog: push rbx; sub rsp, 0x28
@@ -455,7 +455,7 @@ def make_test_b():
     Call chain: func_A(no handler) -> func_B(no handler) -> func_C(handler) -> call [IAT]
     Expected: handler discovered at Frame 2 (func_C has handler, Frame 0 is IAT caller)
     """
-    IAT_RVA = 0x2040
+    IAT_RVA = 0x2048  # must match _build_imports() (RDATA_RVA + 0x048) — TASK-TEST-004
 
     # handler_C code
     handler_C_code = bytearray(b'\x31\xc0\xc3')  # xor eax, eax; ret
@@ -518,7 +518,7 @@ def make_test_c():
     func_A(no handler) -> func_B(handler returns ContinueSearch) -> func_C(handler returns ContinueExec)
     Expected: walker skips func_B handler, finds func_C handler at Frame 0
     """
-    IAT_RVA = 0x2040
+    IAT_RVA = 0x2048  # must match _build_imports() (RDATA_RVA + 0x048) — TASK-TEST-004
 
     # handler_C: returns ContinueExecution
     handler_C_code = bytearray(b'\x31\xc0\xc3')  # xor eax, eax; ret
@@ -588,7 +588,7 @@ def make_test_d():
     Expected: execution resumes after handler returns 0.
     func_B's handler returns DISP_ExceptionContinueExecution.
     """
-    IAT_RVA = 0x2040
+    IAT_RVA = 0x2048  # must match _build_imports() (RDATA_RVA + 0x048) — TASK-TEST-004
 
     # handler_B: returns ContinueExecution (0)
     handler_B_code = bytearray(b'\x31\xc0\xc3')  # xor eax, eax; ret
@@ -647,7 +647,7 @@ def verify_func_calls():
     """Verify all call displacements are correct."""
     pass_count = 0
     fail_count = 0
-    for fname, make_fn, desc in [("test_a", make_test_a, ""), ("test_b", make_test_b, ""), ("test_c", make_test_c, ""), (test_d", make_test_d)]:
+    for fname, make_fn, desc in [("test_a", make_test_a, ""), ("test_b", make_test_b, ""), ("test_c", make_test_c, ""), ("test_d", make_test_d, "")]:
         functions, entry = make_fn()
         builder = SyntheticPEBuilder(desc, functions, entry)
         pe_data = builder.build()
@@ -676,7 +676,7 @@ def verify_func_calls():
                     if expected is None:
                         pass  # might be handler or IAT
                     elif target != expected and expected is not None:
-                        print(f'  FAIL {fname}: call at {name}+{j} targets RVA 0x{target:x} (func {name}) but expected 0x{expected:x} ({"name}")')
+                        print(f'  FAIL {fname}: call at {name}+{j} targets RVA 0x{target:x} but expected 0x{expected:x}')
                         fail_count += 1
                     else:
                         pass_count += 1
