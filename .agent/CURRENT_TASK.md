@@ -1,55 +1,49 @@
 # CURRENT TASK
 
-**Task ID:** TASK-BUG-029
-**Title:** terminate→abort after correct landing-pad resume (catch machinery)
-**Status:** READY (evidence complete; first step defined)
+**Task ID:** TASK-BUG-031
+**Title:** Execute intermediate-frame cleanups during unwind (catch protocol-state chain)
+**Status:** READY
 **Priority:** P0
 
 ## One-line description
-After BUG-027, the landing pad 0x4dcd24 resumes at the correct throw-site RSP
-and the catch machinery runs (TLS calls visible), then terminate → abort with
-`terminate called after throwing an instance of 'unsigned long long'` and NO
-new RtlDispatchException in the trace — terminate fires while the original
-exception is still in flight.
+With BUG-030 fixed (selector=1 in RDX, trace-verified), the landing pad 0x40331c takes the
+selector branch but fails its protocol-state validation: `check_var` must be 23 (0x17) but is 7,
+because the chain 1 →(A's cleanup) 5 →(B's catch LP) 23 requires Frame[3]'s cleanup LP 0x4015A5
+to run during the unwind — and `mw_RtlUnwindEx` skips intermediate-frame cleanups entirely.
 
 ## Why this is the task (evidence)
-- EXP-037 (trace-verified): `alloc_total=0x48`, `post_prologue_RSP = establisher−0x48`
-  = Frame[3]-entry RSP; resume `RIP=0x4dcd24 RSP=0x…5c70 RAX=0x303a320`; then
-  `TlsGetValue/SetLastError/GetLastError` sequence → `abort()`
-  (`evidence/master/bug027/upx_trace.json`).
-- The 'unsigned long long' machinery was built during **dispatch-1**, whose
-  personality legitimately returned ContinueSearch but was then **hijacked by
-  EH_FIX** (loader.c L~1607-1644: "Override: personality failed, catching at
-  LP=0x401573") — the fake catch built the message machinery and re-raised via
-  the helper chain (dispatch-2 from RIP=0x49d5b1), leaving GCC `__cxa`/TLS
-  state poisoned before dispatch-2's catch ran.
+- EXP-038 §4/§5: full ground truth of the catch (B 0x4032c0, LP 0x40331c disassembly), the GCC
+  core 0x4AFDB0, the 4-param ER protocol, and the post-fix trace (`evidence/master/bug030/upx_trace.json`).
+- A's cleanup LP 0x4015A5 (Frame[3] LSDA cs_lp=0x35 → 0x401570+0x35) runs `0x401550(&A_struct)` ⇒
+  `check_var = 1 + 4*1 = 5`, then `0x49d5c0` (continue-unwind). B's LP then computes 3+4*5=23 ✓.
+- Post-fix trace: selector branch taken, `0x4dfce0` runs, then `0x4dfef0` (exception discard,
+  `free(obj−0x60)`) → UPX assertion → terminate → abort (134).
 
 ## Execution notes for the next agent (ordered steps)
-1. **First step — TASK-API-005:** wrap EH_FIX (L~1607-1644) and CXX-EH-FIX
-   (L~3263-3287) in `MINWIN_EH_HACKS` env flag, default OFF. Do NOT delete them
-   (history preservation). Document in ADR + API-005 backlog entry.
-2. Rebuild, re-run regression (12/12 with the current test-10 expectation —
-   if the frontier moves again, evolve the expectation WITH an evidence comment
-   like test 10 has now).
-3. Re-run UPX with trace; compare against EXP-037 §7 predictions:
-   - P-A (expected): dispatch-1 → personality → GCC core → site A → RtlUnwindEx
-     → landing pad 0x401573 (dispatch-1's own catch) — no 'unsigned long long'
-     machinery, no re-raise chain, no terminate.
-   - P-B (if terminate persists): pass the PRE-unwind context (throw-site RSP,
-     Rip−1 rule preserved) to the handler instead of the post-unwind one —
-     a dispatcher change, now in-scope for this task.
-4. If a new failure point appears, register it as a new BUG with a full trace;
-   if UPX prints its version — G1 achieved, run the full release-criteria check.
+1. Baseline per protocol (clean build, 12/12, hashes from `evidence/master/bug030/hashes.txt`).
+2. Decide the design (EXP-038 §5.1): (a) dispatcher honors `{0x21474343, 0x120474343}` 4-param
+   records as resume commands (synthesized resume: Rip=param[2], Rax=obj, Rdx=param[3],
+   Rsp=param[1]−alloc(param[2])); or (b) mw_RtlUnwindEx walks intermediate cleanups directly
+   (personality calls with EH_UNWINDING flags) before resuming the target LP. Caution: re-raises
+   through the naked stub re-enter the walk from the C dispatcher stack (no PE RUNTIME_FUNCTION
+   for our C frames) — EXP-038 §5.1; P-E tests design (a).
+3. Implement minimally; do NOT touch the naked stub or BUG-026/027/030 resume logic unless a
+   trace implicates them.
+4. Re-run UPX (hacks OFF) with trace; verify EXP-038 §7 P-C (check_var converges to 23; the
+   `[rax]==1` state passes) — or register P-D (TLS state machine) as the next isolation.
+5. If a new failure point appears → BUG-032 with full trace; if UPX prints its version → G1,
+   run the full release-criteria check.
 
 ## Verified facts you may rely on (this session)
-- Push works: OWNER-001 closed; `~/.git-credentials` holds the token (outside the repo).
-- The personality disassembly ground truth (EXP-037 §2): site A call shape
-  `(EstablisherFrame, landing_pad, &ExceptionRecord, object, ms_orig_context, object)`;
-  Rdx=0 at raise (helper `xor edx,edx`); landing-pad `jne` branch is NORMAL.
-- Regression suite expects exit 134 + "terminate called after throwing" NOW;
-  if the frontier moves, update the expectation with an evidence comment.
+- The 4-param ER protocol `{obj, est, LP, selector}` is live-confirmed (fingerprint matched in
+  the trace; `sel=1 → CTX.Rdx=1`).
+- The personality/core read our dc layout: LSDA=[dc+0x38], func_start=[dc+0x10]+[dc+0x08],
+  blob[0]=ctx->Rsp via [dc+0x28]+0x98 (EXP-038 §4.2).
+- `MINWIN_EH_HACKS=1` restores the legacy hacks exactly (backward-compat proven); default OFF.
+- Regression test 10 now asserts the BUG-031 frontier (134 + dt_check assertion +
+  terminate-without-active) with an inline evidence comment.
 
 ## Boundaries
-- EH_FIX/CXX-EH-FIX: flag-guard ONLY (no deletion, no semantic edits).
-- Do not touch the RaiseException stub (BUG-026 scope) or the RtlUnwindEx
-  resume synthesis (BUG-027 scope) unless a trace implicates them.
+- EH_FIX/CXX-EH-FIX stay flag-guarded OFF (ADR-010); do not re-enable them to "fix" this.
+- No sample-specific constants: generalize via the PE's own protocol data (fingerprint guards).
+- ALLOC_LARGE scaling (TASK-API-006) remains out of scope unless a trace implicates it.

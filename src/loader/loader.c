@@ -69,6 +69,34 @@ static resolve_proc_fn_t g_resolve_proc_fn = NULL;
     } \
 } while(0)
 
+/* ============================================================
+ * TASK-API-005 (ADR-010): EH hack isolation flag
+ * ============================================================
+ * EH_FIX (dispatcher LSDA override in mw_RtlDispatchException) and
+ * CXX-EH-FIX (load_pe LSDA catch-all byte patch) are app-specific,
+ * target-modifying bypasses that violate the engineering rules
+ * ("forbidden substitutes": they hardcode this sample's addresses
+ * and fake a catch the personality did not grant). BUG-029 live
+ * evidence implicates the EH_FIX dispatch-1 hijack as the top
+ * suspect poisoning GCC __cxa/TLS exception state.
+ *
+ * Both hacks are now flag-guarded: they execute ONLY when the env
+ * var MINWIN_EH_HACKS is set to a non-empty value other than "0".
+ * Default = OFF so the PE's own personality path handles C++ EH.
+ * History preservation rule: the hack code is NOT deleted.
+ */
+static int g_eh_hacks_cache = -1;   /* -1 = not yet resolved */
+static int mw_eh_hacks_enabled(void) {
+    if (g_eh_hacks_cache < 0) {
+        const char* v = getenv("MINWIN_EH_HACKS");
+        g_eh_hacks_cache = (v && *v && strcmp(v, "0") != 0) ? 1 : 0;
+        MW_TRACE("[API-005] EH hacks %s (MINWIN_EH_HACKS=%s)",
+                 g_eh_hacks_cache ? "ENABLED" : "DISABLED (default)",
+                 (v && *v) ? v : "<unset>");
+    }
+    return g_eh_hacks_cache;
+}
+
 /* Handle table */
 #define MAX_HANDLES 64
 static void* g_handle_table[MAX_HANDLES];
@@ -1610,7 +1638,9 @@ static int seh_dispatch_exception(void) {
              * We parse the DWARF LSDA ourselves and handle it. */
             int lp_override = 0;
             uint8_t* lsda_data = (uint8_t*)lsda;
-            if (lsda_data && lsda_data[0] == 0xff && lsda_data[2] == 0x01) {
+            /* TASK-API-005 (ADR-010): gated behind MINWIN_EH_HACKS, default OFF.
+             * BUG-029 top suspect — see flag comment above. */
+            if (mw_eh_hacks_enabled() && lsda_data && lsda_data[0] == 0xff && lsda_data[2] == 0x01) {
                 /* DWARF LSDA with uleb128 CS encoding */
                 uint32_t cs_off = 3;
                 while (cs_off < 64 && lsda_data[cs_off] != 0) {
@@ -1952,6 +1982,28 @@ __attribute__((ms_abi)) void mw_RtlUnwindEx(void* target_frame, void* target_ip,
         if (exc_obj != 0) {
             *(uint64_t*)(ctx + CTX_Rax) = exc_obj;
             MW_TRACE("RtlUnwindEx: Set CTX.Rax = 0x%lx (exception object)", exc_obj);
+        }
+
+        /* BUG-030 fix (EXP-038): deliver the GCC/UPX catch selector in RDX.
+         * Ground truth (EXP-038 §2-§3): the GCC SEH bridge site A passes
+         * arg3 = &EXCEPTION_RECORD (NOT a CONTEXT — EXP-037 §2.2) carrying the
+         * 4-parameter protocol param = {object, target_est, landing_pad, selector}
+         * (bridge 0x49d4f6-0x49d528 copies its blob slots: blob[0]=object -> arg4,
+         * blob[1]=selector -> ER.param[3]; blob slots written by helper 0x49d270,
+         * selector stored by the core at obj-0x24 during phase 1).
+         * The landing pad consumes the selector in RDX — B's catch at 0x40331c:
+         * `mov rbx,rdx; ...; sub rbx,1; jne <assert-failure>` (selector must be 1).
+         * Fingerprint-guarded: applied only when arg3 really is the protocol ER. */
+        if (ctx_ptr) {
+            uint32_t er_nparams = *(uint32_t*)((uint8_t*)ctx_ptr + 0x18);
+            uint64_t* er_params = (uint64_t*)((uint8_t*)ctx_ptr + 0x20);
+            if (er_nparams == 4 && er_params[1] == tgt_frame && er_params[2] == tgt_ip) {
+                uint64_t selector = er_params[3];
+                *(uint64_t*)(ctx + CTX_Rdx) = selector;
+                MW_TRACE("RtlUnwindEx: 4-param protocol ER (obj=0x%lx est=0x%lx lp=0x%lx sel=%lu) -> CTX.Rdx=%lu",
+                         er_params[0], er_params[1], er_params[2],
+                         (unsigned long)selector, (unsigned long)selector);
+            }
         }
         
         /* Store targets for the dispatcher */
@@ -3279,7 +3331,7 @@ static int load_pe(const char* filepath) {
      * Personality fn can't resolve the type -> returns ContinueSearch.
      * Change filter to 0x7f (sleb128=-1, catch-all).
      */
-    if (g_image_base) {
+    if (g_image_base && mw_eh_hacks_enabled()) {
         uint32_t lsda_abs = 0x20107c + 12 + 64;
         if (lsda_abs < g_image_size) {
             /* .xdata is read-only; temporarily make it writable */
@@ -3298,6 +3350,10 @@ static int load_pe(const char* filepath) {
             /* Restore read-only */
             mprotect(g_image_base + page_rva, page_sz, PROT_READ | PROT_EXEC);
         }
+    } else if (g_image_base) {
+        /* TASK-API-005 (ADR-010): hack present but disabled by default. */
+        MW_TRACE("[API-005] CXX-EH-FIX (LSDA catch-all patch RVA 0x%x) skipped: MINWIN_EH_HACKS not set",
+                 0x20107c + 12 + 64);
     }
 
     free(filedata);

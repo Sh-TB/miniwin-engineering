@@ -1,48 +1,50 @@
-# SESSION HANDOFF — 2026-10-14 (CONTINUE #3: BUG-027 fixed + pushed; BUG-029 registered)
+# SESSION HANDOFF — 2026-10-15 (CONTINUE #4: API-005 + BUG-030 fixed; BUG-031 registered)
 
 ## What this session did
-- **OWNER-001 CLOSED:** GitHub token verified (user `Sh-TB`, push access), credential store
-  configured OUTSIDE the repo (`~/.git-credentials`). Pushed both pending commits:
-  `39181aa..4039b61 main→main`, GitHub-confirmed (`origin/main == 4039b61f…`).
-- **Protocol steps A–C:** synced at `4039b61` (clean); pre-edit baseline re-verified
-  (regression 12/12; loader.c `e1caa5d7…`, binary `c8472d04…`).
-- **Ground-truth reverse engineering (decisive):** disassembled the real personality
-  (wrapper `0xe0220` → core `0x49d340`, mingw GCC SEH bridge, UPX "CCt"-protocol aware).
-  Established: (a) RtlUnwindEx call site A passes `r8=&ExceptionRecord` (NOT a CONTEXT) —
-  EXP-036's "adopt r8/OriginalContext" direction RETRACTED; (b) raise helper does
-  `xor edx,edx` — carried Rdx=0 is normal, landing-pad `jne` branch is the normal path —
-  RDX-selector hypothesis WITHDRAWN.
-- **Step D (fix):** BUG-027's true defect = 4-byte slot STRIDE in the unwind-code loop
-  (`uint16_t* tgt_codes` + `tgt_slot*2` ⇒ byte offset slot×4 → read every other slot +
-  garbage → coincidental 0x40). Fix = one declaration (`uint8_t* tgt_codes = tgt_ui + 4;`).
-  loader.c → `bab5ea86…`, binary → `0c275159…`.
-- **Step E (verify):** trace-verified `alloc_total=0x48`, `post_prologue_RSP=est−0x48`
-  (= Frame[3]-entry RSP — exactly the throw-site RSP); landing pad 0x4dcd24 resumed;
-  catch TLS machinery ran; then terminate → abort (exit 134). Regression: test 10's
-  139-expectation was the BUG-026-era frontier — evolved to the verified frontier
-  (134 + terminate-message assertion) with an inline evidence comment; suite **12/12**.
-- **Registered BUG-029** (terminate after correct landing-pad resume; candidates ordered:
-  EH_FIX dispatch-1 hijack → GCC-core ctx-RSP dependency → site B/C audit).
+- **Step A sync:** origin/main == HEAD == `b843974` verified on GitHub (`git ls-remote`); baseline
+  reality check passed (binary `0c275159…` byte-identical, regression 12/12, hashes match state.md).
+- **TASK-API-005 (ADR-010):** EH_FIX (dispatcher LSDA override) and CXX-EH-FIX (load_pe byte patch)
+  flag-guarded behind `MINWIN_EH_HACKS`, default OFF; nothing deleted. `MINWIN_EH_HACKS=1` restores
+  the legacy BUG-029-era behavior byte-identically (verified: 'unsigned long long' message + 4
+  EH_FIX trace lines). Pre-task checkpoint: `checkpoint_pre_task-bug029_api005_20261015.zip`.
+- **Live re-run (hacks OFF):** EXP-037 P-A core prediction confirmed — single clean dispatch, no
+  re-raise chain, no fake machinery. **The PE now reaches its own dt_check.cpp assertion**
+  (`Assertion failed: cxx_exception_handling_works … : 362`): UPX's own C++ EH self-test executes.
+- **Ground truth (decisive):** reverse-engineered the full GCC catch protocol — catch owner B
+  (0x4032c0) + LP 0x40331c consumes the **catch selector in RDX**; GCC core 0x4AFDB0 computes it
+  (stashed at obj−0x24), phase-2 blob[1]=sel → **ER 4-param protocol `{obj, est, LP, selector}`**
+  at site A; bridge `flags&0x20` branch independently confirms `ctx->Rdx = param[3]`; the
+  personality/core read OUR dc layout (LSDA=[dc+0x38], func_start=[dc+0x10]+[dc+0x08]).
+- **BUG-030 found & fixed:** mw_RtlUnwindEx did not deliver the selector. Fix = fingerprint-guarded
+  `CTX.Rdx = ER.param[3]` (`nparams==4 && param[1]==tgt_frame && param[2]==tgt_ip`) — protocol-driven,
+  no hardcoded addresses. Trace-verified `sel=1 → CTX.Rdx=1`; selector branch then taken.
+- **Frontier moved again → BUG-031 registered:** the catch's protocol-state check (`check_var==0x17`)
+  fails because the chain 1→5→23 requires Frame[3]'s cleanup LP 0x4015A5 to run during the unwind;
+  mw_RtlUnwindEx skips intermediate cleanups (documented simplification). Full protocol map for the
+  unwind phase (0x21474343 / 0x120474343 re-raise codes + the C-stack-walk caution) recorded in
+  EXP-038 §5.1; predictions P-C/P-D/P-E in §7.
+- **Regression:** test-10 expectation evolved to the BUG-031 frontier (exit 134 + UPX dt_check
+  assertion + terminate-without-active) with an inline evidence comment; suite **12/12**.
 
 ## Commits
-- This session: `BUG-027: …` (loader.c fix + EXP-037 + BUG-027 closure + BUG-029 +
-  regression expectation evolution + .agent updates + evidence).
-- Chain: `39181aa` → `08d94ac` → `4039b61` (BUG-026) → BUG-027 commit (HEAD).
-- **Pushed: YES** (credentials now configured; origin/main will equal HEAD after this push).
+- This session: `API-005+BUG-030: …` (loader.c flag guards + selector fix, EXP-038, BUG-029/030/031
+  docs, ADR-010, regression expectation evolution, .agent updates, evidence).
+- Chain: `39181aa` → `08d94ac` → `4039b61` (BUG-026) → `b843974` (BUG-027) → this commit (HEAD).
+- **Pushed: YES** (credentials in ~/.git-credentials, outside repo; GitHub-verified).
 
 ## Current blocker
-BUG-029 (see `.agent/CURRENT_TASK.md`): terminate during catch processing after a
-correct landing-pad resume. First step = TASK-API-005 (flag-guard EH hacks, default OFF).
+BUG-031 (see `.agent/CURRENT_TASK.md`): intermediate-frame cleanup execution during unwind —
+design decision (a) dispatcher-honored resume commands vs (b) mw_RtlUnwindEx direct cleanup walk.
 
 ## Next
-Next task ID: **TASK-BUG-029** (starting with TASK-API-005). Exact next command from the
-owner: **CONTINUE**.
+Next task ID: **TASK-BUG-031**. Exact next command from the owner: **CONTINUE**.
 
 ## Unverified / unknown (honest list)
-- Whether EH_FIX removal from the dispatch-1 path lets the GCC core reach site A on
-  dispatch-1 (P-A) — the core returned non-INSTALL with our inputs; untested without the hack.
-- Dispatcher handler-call context semantics (post-unwind Rsp=est vs Windows' pre-unwind
-  throw-site RSP) — P-B variable, untested.
-- Personality site B/C (0x21474343 protocol) behavior under our loader — unexercised.
-- ALLOC_LARGE scaling formulas in this loop + 3 other copies (TASK-API-006) — latent.
+- Whether design (a) or (b) is correct for BUG-031 — untested; the C-stack-walk problem is
+  predicted, not yet observed.
+- Whether the TLS chain state (`cmp [rax],1` after 0x4dfce0) passes once the cleanup runs (P-D
+  variable) — untested.
+- Whether the dc layout we build matches the OS canonical DISPATCHER_CONTEXT (generalization
+  audit pending — the PE's personality reads OUR layout, which is what matters for this target).
+- ALLOC_LARGE scaling formulas (TASK-API-006) — latent, unexercised by this path.
 - Dispatch tests still broken/vacuous (TEST-004).

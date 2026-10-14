@@ -1,0 +1,3 @@
+[MiniWin] Loading samples/upx_decompressed.exe...
+Assertion failed: cxx_exception_handling_works (/home/mfx/code/github/upx/upx4/src/check/dt_check.cpp: check_basic_cxx_exception_handling: 362)
+terminate called without an active exception

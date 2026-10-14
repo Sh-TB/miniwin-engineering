@@ -45,3 +45,12 @@ Format: `ID | path | what it proves | session`
 - EV-035 | evidence/master/bug027/regression_12of12_post_bug027.txt | 12/12 with test-10 expectation evolved to verified frontier (134 + terminate-message) | 2026-10-14
 - EV-036 | docs/master/experiments/EXP-037-bug027-alloc-decode-fix-live-rerun.md | full report: stride root cause, retraction of EXP-036 §4.4/4.5 claims, BUG-029 candidates | 2026-10-14
 - EV-037 | docs/bugs/BUG-029.md | new frontier record: terminate after correct landing-pad resume | 2026-10-14
+
+## API-005 + BUG-030 + BUG-031 (CONTINUE #4, 2026-10-15)
+- EV-038 | evidence/master/bug030/upx_trace.json | hacks-OFF clean path: single dispatch, 4-param ER fingerprint matched (sel=1 -> CTX.Rdx=1), selector branch taken, then protocol-state failure | 2026-10-15
+- EV-039 | evidence/master/bug030/upx_trace_hacks_on.json + upx_stdout_hacks_on.txt | MINWIN_EH_HACKS=1 backward-compat: legacy BUG-029 behavior byte-identical ('unsigned long long' + EH_FIX hijack lines) | 2026-10-15
+- EV-040 | evidence/master/bug030/upx_stdout.txt | UPX's own dt_check assertion reached: "Assertion failed: cxx_exception_handling_works (...: 362)" + "terminate called without an active exception" | 2026-10-15
+- EV-041 | evidence/master/bug030/regression_12of12.txt | 12/12 with test-10 expectation evolved to BUG-031 frontier (inline evidence comment) | 2026-10-15
+- EV-042 | docs/master/experiments/EXP-038-api005-eh-hacks-bug030-selector.md | full experiment: API-005 gates, GCC catch protocol ground truth (core 0x4AFDB0, selector at obj-0x24, 4-param ER), BUG-030 fix+verify, BUG-031 protocol map + predictions | 2026-10-15
+- EV-043 | docs/bugs/BUG-030.md (closed) + docs/bugs/BUG-031.md (open) | defect records: selector delivery (fixed) and intermediate-cleanup chain (next) | 2026-10-15
+- EV-044 | checkpoints/checkpoint_pre_task-bug029_api005_20261015.zip | pre-task checkpoint (sha256 bc8617e6...) | 2026-10-15

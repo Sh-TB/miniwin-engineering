@@ -16,7 +16,7 @@
 | ID | Item | Justification | Acceptance criterion |
 |---|---|---|---|
 | API-004 | Adopt `OriginalContext` in `mw_RtlUnwindEx` (5th arg = [RSP+0x28]), or explicitly set RDX selector + all NV regs | N-4: landing pad `mov %rdx,%rbx; sub $1,%rbx; jne` reads garbage selector | Synthetic Tier-B test with selector-dependent landing pad passes |
-| API-005 | Disable/flag EH_FIX (dispatcher LSDA override) and CXX-EH-FIX (load_pe byte patch) behind `MINWIN_EH_HACKS=0/1` (default off) | N-2/N-3: app-specific, undocumented, target-modifying; violate engineering rules | Default-off run reaches landing pad via personality path; hacks only restore old behavior with flag |
+| API-005 | ~~Disable/flag EH_FIX (dispatcher LSDA override) and CXX-EH-FIX (load_pe byte patch) behind `MINWIN_EH_HACKS=0/1` (default off)~~ **DONE 2026-10-15** (ADR-010, EXP-038): both flag-guarded, default OFF, nothing deleted; `MINWIN_EH_HACKS=1` restores legacy behavior byte-identically; default-off run reaches the PE's own dt_check assertion via the clean personality path | N-2/N-3: app-specific, undocumented, target-modifying; violate engineering rules | ~~Default-off run reaches landing pad via personality path; hacks only restore old behavior with flag~~ MET (EXP-038 §3/§6) |
 | API-006 | Fix ALLOC_LARGE scaling ×4 copies (+ fix `docs/windows_abi/windows_x64_complete.md` table) | N-1: latent; blocks any target with >128-byte prolog allocs; doc propagated the bug | Tier-A unit test with ALLOC_LARGE(info=0/1) prologs computes exact RSP |
 | API-007 | Unresolved-import trap stub (replace "leave name RVA in IAT" policy) | BUG-025 crash mechanism: IAT slot with name RVA jumped as code | Tier-D test: PE importing unknown API gets loud diagnostic + controlled abort |
 

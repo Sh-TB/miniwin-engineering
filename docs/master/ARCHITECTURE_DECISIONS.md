@@ -29,3 +29,6 @@ After BUG-026, landing-pad correctness proceeds by adopting the personality-prov
 
 ## ADR-009 (2026-10-14, this session): Rust `runtime/` stays out of the C critical path
 ~5,600 lines of parallel Rust implementation exist; not referenced by the Makefile; never verified. Status: PRESERVED, FROZEN — no effort without an explicit owner decision (scope rule: MiniWin C loader is the mission).
+
+## ADR-010 (2026-10-15, this session): EH hacks isolated behind `MINWIN_EH_HACKS`, default OFF
+EH_FIX (dispatcher LSDA override) and CXX-EH-FIX (load_pe byte patch) violate the engineering rules (app-specific, target-modifying, undocumented) and EH_FIX's dispatch-1 hijack was live-implicated as BUG-029's poison. Decision: flag-guard both (default OFF), delete nothing (history preservation). `MINWIN_EH_HACKS=1` restores the legacy behavior exactly (verified). The clean default path must reach the catch through the PE's own personality; any future fix must generalize via the PE's own protocol data (e.g. BUG-030's fingerprint-guarded 4-param ER), never via hardcoded sample addresses. Status: ACTIVE (EXP-038).

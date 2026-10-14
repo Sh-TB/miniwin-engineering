@@ -1,0 +1,24 @@
+=======================================
+MiniWin Regression Test Suite
+Loader: ./minwin_loader
+Date:   2026-10-14T18:33:20+00:00
+=======================================
+
+---
+Test: UPX --version execution
+  [0;32mPASS[0m: Entry point reached
+  [0;32mPASS[0m: Imports resolved (158 entries)
+  [0;32mPASS[0m: CRT init (_initterm) executed
+  [0;32mPASS[0m: __getmainargs executed
+  [0;32mPASS[0m: SetUnhandledExceptionFilter called
+  [0;32mPASS[0m: RaiseException(0x20474343) reached
+  [0;32mPASS[0m: .pdata parsed (3030 entries)
+  [0;32mPASS[0m: RUNTIME_FUNCTION lookup succeeded
+  [0;32mPASS[0m: UNWIND_INFO parsed
+  [0;32mPASS[0m: Exit code 134 (verified BUG-031 frontier: UPX dt_check assertion reached, catch chain incomplete)
+  [0;32mPASS[0m: malloc calls succeed
+  [0;32mPASS[0m: InitializeCriticalSection works
+
+=======================================
+Results: [0;32m12 passed[0m, [0;31m0 failed[0m
+=======================================

@@ -23,10 +23,19 @@ Implementation status and verification status are tracked separately (e.g. IMPLE
 - Result (2026-10-14): executed in the same session as BUG-026; full report `docs/master/experiments/EXP-036-bug026-gcap-rip-fix-live-rerun.md` (§3 verification, §4 new-failure root cause, §7 falsifiable predictions P-1/P-2/P-3).
 
 ### TASK-BUG-029 — terminate→abort after correct landing-pad resume (catch machinery; 'unsigned long long' in flight)
-- Priority: P0. Status: **READY (next task)**. Dependencies: TASK-BUG-027 (done). First step: TASK-API-005 (isolate EH_FIX behind MINWIN_EH_HACKS, default OFF), then re-run and compare (EXP-037 §7 P-A/P-B).
-- Symptom: post-resume TLS calls run, then terminate→abort (exit 134) with NO new RtlDispatchException — terminate while the original exception is in flight.
-- Candidates (ordered): (1) EH_FIX dispatch-1 hijack poisoning __cxa/TLS state; (2) GCC-core input dependency — dispatcher passes post-unwind ctx (Rsp=est) to handlers, Windows passes pre-unwind throw-site ctx; (3) personality site B/C (0x21474343 protocol) unexercised.
-- Closure doc: `docs/bugs/BUG-029.md`.
+- Priority: P0. Status: **TESTED (CLOSED — root cause isolated & superseded, 2026-10-15)**. Dependencies: TASK-BUG-027 (done).
+- Result (EXP-038): first step TASK-API-005 executed (EH_FIX + CXX-EH-FIX flag-guarded behind `MINWIN_EH_HACKS`, default OFF, ADR-010). With hacks OFF the EH_FIX dispatch-1 hijack is confirmed as the poison: single clean dispatch, no re-raise chain, no fake machinery; the PE now reaches its own `dt_check.cpp` assertion. Remaining failure decomposed into BUG-030 (fixed) + BUG-031 (open).
+
+### TASK-BUG-030 — landing pad resumed without the catch selector in RDX (4-param protocol ER)
+- Priority: P0. Status: **TESTED (CLOSED, 2026-10-15)**. Dependencies: TASK-API-005 (done).
+- Ground truth (EXP-038 §4): GCC bridge site A passes arg3=&ER with `param={object, est, LP, selector}` (core 0x4AFDB0 stores selector at obj−0x24, phase-2 writes blob[1]=sel → ER.param[3]; bridge `flags&0x20` branch independently writes ctx->Rdx=param[3]); landing pad 0x40331c consumes it via `mov rbx,rdx; sub rbx,1; jne fail`.
+- Fix: fingerprint-guarded `CTX.Rdx = ER.param[3]` in mw_RtlUnwindEx (`nparams==4 && param[1]==tgt_frame && param[2]==tgt_ip`) — protocol-driven, no hardcoded addresses.
+- Verified: trace `sel=1 -> CTX.Rdx=1`; selector branch taken; regression 12/12 (test-10 expectation evolved with evidence comment); hacks-ON backward-compat exact. Closure: `docs/bugs/BUG-030.md`.
+
+### TASK-BUG-031 — catch protocol-state validation fails: intermediate-frame cleanup never runs
+- Priority: P0. Status: **READY (next task)**. Dependencies: TASK-BUG-030 (done).
+- Symptom: with sel=1 delivered, the catch's `check_var==0x17` check fails (chain 1→5→23 requires Frame[3]'s cleanup LP 0x4015A5 to run during the unwind; mw_RtlUnwindEx skips intermediate cleanups).
+- Protocol map + design candidates (a)/(b) and the C-stack-walk caution: EXP-038 §5.1; predictions P-C/P-D/P-E: EXP-038 §7. Closure doc: `docs/bugs/BUG-031.md`.
 
 ### TASK-BUG-028 (candidate, P3) — dead `movq 0x30/0x38/0x40/0x48(%rsp), rcx/rdx/r8/r9` loads in RaiseException stub
 - Miscommented leftover of an older no-push stub variant (absent in exp_next2_backup; offsets hold pushed RBP/R12/R13/R14 today). Benign; fold into TASK-API-016 dead-code cleanup. Discovered during BUG-026 (EXP-036 §2).
@@ -34,9 +43,9 @@ Implementation status and verification status are tracked separately (e.g. IMPLE
 ## P1 — landing-pad correctness (after EXP-036)
 
 ### TASK-EXP-037 (old task ID) — Verify EXP-035 post_prologue arithmetic live (SUPERSEDED — the live numbers landed inside the BUG-027 experiment, which is logged as experiment report EXP-037 to keep the experiment sequence chronological; this task ID is retired to avoid duplicate numbering)
-### TASK-EXP-038 — OriginalContext adoption / RDX selector propagation (MERGED into TASK-BUG-027 — live numbers now exist, ADR-008 governs; the separate experiment is no longer needed before the fix)
+### TASK-EXP-038 (old task ID, RETIRED) — OriginalContext adoption / RDX selector propagation (MERGED into TASK-BUG-027 in CONTINUE #3; the experiment-report ID "EXP-038" was re-used in CONTINUE #4 for the API-005/BUG-030 experiment — the old task ID remains retired, the report is canonical)
 ### TASK-API-006 — ALLOC decode fixes: scale rule in 4 copies + windows_abi doc (BUG-027 confirmed the +8 defect ALSO hits ALLOC_SMALL in mw_RtlUnwindEx — extend scope to ALLOC_SMALL there)
-### TASK-API-005 — Isolate EH_FIX + CXX-EH-FIX behind MINWIN_EH_HACKS flag, default OFF (READY — now the FIRST STEP of TASK-BUG-029; EH_FIX dispatch-1 hijack live-implicated in BUG-029)
+### TASK-API-005 — Isolate EH_FIX + CXX-EH-FIX behind MINWIN_EH_HACKS flag, default OFF (**TESTED (CLOSED) 2026-10-15** — ADR-010; both hacks flag-guarded, nothing deleted; `MINWIN_EH_HACKS=1` restores legacy behavior exactly; details in the TASK-BUG-029/030 entries above)
 ### TASK-API-002 — Trace flush in mw_ExitProcess (READY — independent, small)
 ### TASK-API-003 — Wire SetUnhandledExceptionFilter into walk-exhaustion (PENDING, dep BUG-026)
 ### TASK-TEST-001 — Port unwind unit tests to tests/unit/ with portable includes (READY — independent)
