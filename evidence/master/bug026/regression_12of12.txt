@@ -1,0 +1,25 @@
+=======================================
+MiniWin Regression Test Suite
+Loader: ./minwin_loader
+Date:   2026-10-14T16:12:08+00:00
+=======================================
+
+---
+Test: UPX --version execution
+./tests/regression/test_pe_loader_regression.sh: line 33:  2995 Segmentation fault      "$LOADER" "$SAMPLES/upx_decompressed.exe" --version 2> /tmp/minwin_stderr_test > /tmp/minwin_stdout_test
+  [0;32mPASS[0m: Entry point reached
+  [0;32mPASS[0m: Imports resolved (159 entries)
+  [0;32mPASS[0m: CRT init (_initterm) executed
+  [0;32mPASS[0m: __getmainargs executed
+  [0;32mPASS[0m: SetUnhandledExceptionFilter called
+  [0;32mPASS[0m: RaiseException(0x20474343) reached
+  [0;32mPASS[0m: .pdata parsed (3030 entries)
+  [0;32mPASS[0m: RUNTIME_FUNCTION lookup succeeded
+  [0;32mPASS[0m: UNWIND_INFO parsed
+  [0;32mPASS[0m: Exit code 139 (SIGSEGV after unhandled exception)
+  [0;32mPASS[0m: malloc calls succeed
+  [0;32mPASS[0m: InitializeCriticalSection works
+
+=======================================
+Results: [0;32m12 passed[0m, [0;31m0 failed[0m
+=======================================

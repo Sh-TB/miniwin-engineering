@@ -1694,9 +1694,15 @@ void mw_RaiseException(uint32_t code, uint32_t flags,
         "movq 0x38(%rsp), %rdx\n\t"     /* save PE RDX (flags) */
         "movq 0x40(%rsp), %r8\n\t"     /* save PE R8 (nargs) */
         "movq 0x48(%rsp), %r9\n\t"     /* save PE R9 (args) */
-        "movq 0x58(%rsp), %rax\n\t"
-        "movq 0x00(%rsp), %rax\n\t"
+        /* BUG-026 fix: g_cap_rip must receive the saved rip slot [rsp+0x08]
+         * (the return address captured at stub entry), NOT rsp_entry.
+         * Previously: stray "movq 0x58(%rsp), %rax" + "movq 0x00(%rsp), %rax"
+         * stored a stack address into g_cap_rip -> CONTEXT.Rip outside PE ->
+         * Frame[0] walk ended -> terminate -> exit 134. Matches
+         * loader.c.exp_next2_backup L842-843. */
+        "movq 0x08(%rsp), %rax\n\t"
         "movq %rax, g_cap_rip(%rip)\n\t"
+        "movq 0x00(%rsp), %rax\n\t"
         "movq %rax, g_cap_rsp_entry(%rip)\n\t"
         "leaq 8(%rax), %rax\n\t"
         "movq %rax, g_cap_rsp(%rip)\n\t"

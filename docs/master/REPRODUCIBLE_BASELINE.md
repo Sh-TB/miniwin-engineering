@@ -124,3 +124,13 @@ The committed prebuilt ELF also reports 35/35, but the source rebuild was requir
 ## 6. Baseline Verdict
 
 The **authoritative, reproducible baseline at HEAD 39181aa is: clean build OK; regression 10/12; UPX target fails with SIGABRT before any exception frame walk.** All historical "12/12 + exit 139 + landing-pad-reached" claims describe an older binary, not the current source. This baseline is the reference point for every subsequent task.
+
+## 7. Post-fix baseline update (2026-10-14, BUG-026 session)
+
+After the BUG-026 operand fix (loader.c `e1caa5d7…`, binary `c8472d04…`, fresh
+source build): **regression 12/12** (tests 8 & 10 restored — the §6 verdict's
+"10/12" describes pre-fix HEAD `08d94ac`/`39181aa` and remains the recorded
+baseline for those commits). UPX target moved from "SIGABRT, walk never starts"
+to "SIGSEGV at landing-pad resume" — machine-readable:
+`evidence/master/bug026_results.json`; raw: `evidence/master/bug026/`.
+Current blocker: BUG-027 (`docs/bugs/BUG-027.md`).

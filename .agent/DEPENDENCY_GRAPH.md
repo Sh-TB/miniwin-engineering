@@ -2,18 +2,28 @@
 
 ```
                         ┌────────────────────────────┐
-                        │ TASK-BUG-026 (READY, P0)   │
+                        │ TASK-BUG-026 (TESTED ✓)    │
                         │ g_cap_rip operand fix      │
+                        │ regression 12/12 restored  │
                         └──────────┬─────────────────┘
                                    │
                         ┌──────────▼─────────────────┐
-              ┌─────────│ TASK-EXP-036 live re-run   │─────────┐
+              ┌─────────│ TASK-EXP-036 (TESTED ✓)    │─────────┐
+              │         │ live re-run: new failure = │         │
+              │         │ BUG-027 (RSP+8, RDX sel.)  │         │
               │         └──────────┬─────────────────┘         │
+              │                    │                           │
+              │         ┌──────────▼─────────────────┐         │
+              │         │ TASK-BUG-027 (READY, P0)   │         │
+              │         │ landing-pad resume state   │         │
+              │         │ (subsumes EXP-037/038)     │         │
+              │         └──────────┬─────────────────┘         │
+              │                    │                           │
               ▼                    ▼                           ▼
  ┌────────────────────┐ ┌──────────────────────┐ ┌────────────────────────┐
- │ TASK-EXP-037       │ │ TASK-EXP-038         │ │ TASK-API-005           │
- │ EXP-035 arithmetic │ │ OriginalContext/RDX  │ │ EH hacks flag OFF      │
- │ live verify        │ │ (ADR-008)            │ │ (API-005)              │
+ │ TASK-API-006       │ │ TASK-API-005         │ │ TASK-API-003           │
+ │ ALLOC +8 rule fix  │ │ EH hacks flag OFF    │ │ UEF wiring (unblocked) │
+ │ (ALLOC_SMALL too)  │ │ (EH_FIX fired live)  │ │                        │
  └─────────┬──────────┘ └──────────┬───────────┘ └───────────┬────────────┘
            └──────────────┬────────┴──────────────────────────┘
                           ▼
@@ -23,8 +33,8 @@
         └───────┬─────────────────────┬───────────────┘
                 │                     │
    ┌────────────▼───────┐   ┌─────────▼──────────────────────┐
-   │ TASK-API-006       │   │ TASK-TEST-004/005              │
-   │ ALLOC_LARGE fix    │   │ dispatch tests + Tier-B builder│
+   │ TASK-TEST-002      │   │ TASK-TEST-004/005              │
+   │ ALLOC unit tests   │   │ dispatch tests + Tier-B builder│
    └────────────────────┘   └────────────────────────────────┘
 
  Independent small tasks (no upstream deps; runnable anytime):

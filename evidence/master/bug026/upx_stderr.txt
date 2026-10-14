@@ -1,0 +1,13 @@
+[TRACE] Command line: samples/upx_decompressed.exe --version
+
+[CRASH] Signal 11 at RIP=0x2004167
+  RAX=0x3bc8320 RCX=0x0 RDX=0xfffffffffffffffe R8=0x2024000 R9=0x3bb5c10
+  RSP=0x7ffe60f7dd48 RBP=0x1
+  g_image_base=0x400000 g_image_size=0x213000
+  (NOT inside loaded PE)
+  RSI=0x0 RDI=0x3bb32a0
+  R8=0x2024000  R9=0x3bb5c10 R10=0x3bc8320 R11=0x1
+  R12=0x4e1440 R13=0x4afba9 R14=0x0 R15=0x7ffe60f7de20
+  Backtrace (via stack walking):
+    [0] RIP=0x2004167 (outside PE, possible shared lib)
+    [1] RIP=0x2004167 (outside PE, possible shared lib)

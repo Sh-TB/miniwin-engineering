@@ -124,3 +124,21 @@ Real `RtlUnwindEx` (6-arg, ms_abi): `RCX=TargetFrame, RDX=TargetIp, R8=Exception
 | Disassembly | objdump -b pei-x86-64 of recovered sample (§3.1, §3.2) |
 | UNWIND_INFO decodes | Python parser, 12-byte RUNTIME_FUNCTION stride (§3.1, RF[9]/RF[10]/RF[76]) |
 | LSDA byte dumps | §4 N-2/N-3 (0x201088, 0x2011fc, 0x20113c) |
+
+## 7. Post-BUG-026 live status (2026-10-14, EXP-036)
+
+BUG-026 was fixed (single operand) and the failure point MOVED — this document's
+§1–§5 describe the pre-fix state and remain historically valid. Live post-fix
+state (full analysis: `docs/master/experiments/EXP-036-bug026-gcap-rip-fix-live-rerun.md`):
+
+- Regression 12/12 restored; UPX walk now completes 4 frames; Frame[3]
+  personality calls real `RtlUnwindEx(TargetIp=0x4dcd24)`; landing pad resumes
+  and then SIGSEGVs at heap RIP=0x2004167 (exit 139, no terminate).
+- New root cause (BUG-027): `mw_RtlUnwindEx` synthesizes landing-pad RSP via
+  alloc_total with the ALLOC_SMALL `+8` missing (0x40 vs true 0x48 → RSP
+  0x7ffe60f7deb8 instead of 0x7ffe60f7deb0) and does not propagate the RDX
+  selector from the personality's ContextRecord (§4 N-4 confirmed live).
+- N-1's "+8 missing" defect family is now proven to also hit ALLOC_SMALL in the
+  mw_RtlUnwindEx copy (not only ALLOC_LARGE ×4).
+- EH_FIX fired live on dispatch-1 (ContinueSearch → override → LP 0x401573) —
+  §4 N-2 confirmed in behavior; isolation (TASK-API-005) still mandatory.

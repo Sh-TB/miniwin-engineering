@@ -1,0 +1,41 @@
+{
+  "meta": {
+    "produced_by": "TASK-BUG-026 + TASK-EXP-036 (post-foundation CONTINUE #2)",
+    "date": "2026-10-14",
+    "baseline_commit": "08d94ac62fe9cfdb79d061b57d82ba3bc5c9d12d",
+    "note": "Post-fix results. Pre-fix baseline remains in baseline_results.json (pinned to 39181aa).",
+    "environment": {
+      "os": "Debian GNU/Linux x86_64",
+      "gcc": "14.2.0-19",
+      "python": "3.12.15"
+    }
+  },
+  "change": {
+    "file": "src/loader/loader.c",
+    "nature": "single operand: g_cap_rip now loaded from saved-rip slot [rsp+0x08] instead of rsp_entry [rsp+0x00] (stray 0x58 reload deleted)",
+    "pre_sha256": "502ae5880350aaa325c28c49291d96fc8bc0521d2cdd51da9edff15a410d1953",
+    "post_sha256": "e1caa5d7b0915750e49322c303cf144960245c7d95a840bb0df48c6c9f689864"
+  },
+  "build": {
+    "command": "make clean && make",
+    "exit_code": 0,
+    "errors": 0,
+    "binary_sha256": "c8472d04637550423e64d5cbb654b0b061de27f8c58f9a39f738cdd06ee09c75"
+  },
+  "tests": [
+    {"id": "REG-SUITE", "result": "PASS", "passed": 12, "failed": 0, "evidence": "evidence/master/bug026/regression_12of12.txt", "previously": "10/12 (tests 8 & 10 fail)"},
+    {"id": "UPX-ACCEPTANCE", "result": "FAIL-NEW-POINT", "exit_code": 139, "signal": "SIGSEGV", "crash_rip": "0x2004167 (heap, outside PE)", "stdout_has_version_output": false, "evidence": ["evidence/master/bug026/upx_stdout.txt", "evidence/master/bug026/upx_stderr.txt", "evidence/master/bug026/upx_trace.json"], "previously": "exit 134 SIGABRT, walk never started", "progress": "4-frame walk completes; Frame[3] personality calls RtlUnwindEx(TargetIp=0x4dcd24); PE resumed at landing pad then crashed"}
+  ],
+  "new_failure_analysis": {
+    "bug_id": "BUG-027",
+    "site": "mw_RtlUnwindEx landing-pad CONTEXT synthesis",
+    "rsp": {"used": "0x7ffe60f7deb8", "correct": "0x7ffe60f7deb0", "cause": "ALLOC_SMALL decoded OpInfo*8, missing +8; alloc_total 0x40 vs true 0x48"},
+    "rdx": {"used": "stale (restored -1 downstream)", "correct": "C++ selector (1)", "cause": "personality-prepared ContextRecord (r8) / OriginalContext (5th param) ignored"},
+    "evidence": "docs/master/experiments/EXP-036-bug026-gcap-rip-fix-live-rerun.md sections 4.1-4.5"
+  },
+  "acceptance_criteria_status": {
+    "upx_version_output": "NOT MET (unchanged)",
+    "clean_source_build": "MET",
+    "regression_12_of_12": "MET (fresh source build, fresh run)"
+  }
+}

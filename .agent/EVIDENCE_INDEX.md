@@ -29,3 +29,12 @@ Format: `ID | path | what it proves | session`
 ## Provenance notes
 - The forensic probe (EV-023) was built from a /tmp copy of loader.c with one added fprintf; repo source untouched (verified by git status at commit time).
 - Prebuilt committed ELFs (working-tree/tests/**) were never used as PASS evidence; all results are source builds.
+
+## BUG-026 fix + EXP-036 (CONTINUE #2, 2026-10-14)
+- EV-026 | evidence/master/bug026/upx_trace.json | post-fix live trace: 4-frame walk completes; personality calls RtlUnwindEx(0x4dcd24); landing-pad resume then crash | 2026-10-14
+- EV-027 | evidence/master/bug026/regression_12of12.txt | regression 12/12 PASS on fresh post-fix build | 2026-10-14
+- EV-028 | evidence/master/bug026/upx_stderr.txt | crash dump: SIGSEGV RIP=0x2004167 (heap, outside PE), RSP=0x7ffe60f7dd48, RDX=0xfffffffffffffffe | 2026-10-14
+- EV-029 | evidence/master/bug026/exp036_landing_pad_analysis.txt | disasm around 0x4dcd24 (landing pad = return addr of throw call); Frame[3] region | 2026-10-14
+- EV-030 | docs/master/experiments/EXP-036-bug026-gcap-rip-fix-live-rerun.md | full experiment: fix + verification + new-failure root cause (§4) + predictions (§7) | 2026-10-14
+- EV-031 | evidence/master/bug026_results.json | machine-readable post-fix results (12/12, exit 139, BUG-027 pointer) | 2026-10-14
+- EV-032 | docs/bugs/BUG-027.md | BUG-027 record: RSP +8 (ALLOC_SMALL +8 missing in mw_RtlUnwindEx) + RDX selector not propagated | 2026-10-14

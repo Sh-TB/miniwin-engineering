@@ -1,20 +1,54 @@
 # CURRENT TASK
 
-**Task ID:** TASK-BUG-026
-**Title:** Fix `g_cap_rip` capture operand in `mw_RaiseException` (naked stub)
-**Status:** READY (diagnosis complete; implementation deliberately not started this session)
+**Task ID:** TASK-BUG-027
+**Title:** Fix mw_RtlUnwindEx landing-pad resume state (RSP +8; RDX selector)
+**Status:** READY (evidence complete; implementation not started)
 **Priority:** P0
 
 ## One-line description
-In `src/loader/loader.c` L1697-1702, the sequence `movq 0x58(%rsp), %rax; movq 0x00(%rsp), %rax; movq %rax, g_cap_rip(%rip)` stores the stack pointer into `g_cap_rip`. It must store the saved return address (slot `[rsp+0x08]`, already populated by the stub's earlier code) — i.e. `movq 0x08(%rsp), %rax` immediately before `movq %rax, g_cap_rip(%rip)`, exactly as in `src/loader/loader.c.exp_next2_backup` L842-843.
+`mw_RtlUnwindEx` in `src/loader/loader.c` synthesizes the landing-pad CONTEXT:
+RSP = establisher − alloc_total (where ALLOC_SMALL is decoded as `OpInfo*8`,
+missing `+8` → RSP 8 bytes too high) and RDX is left stale (C++ selector not
+propagated). The PE resumes at the catch landing pad with a corrupted stack
+position and crashes at heap RIP=0x2004167.
 
-## Why this is the task (evidence)
-- Probe run (fresh build): `g_cap_rip == g_cap_rsp_entry` (stack address) while true return address `[rsp_entry] == 0x49d5b1` for both dispatches — `docs/master/UPX_FAILURE_FORENSICS.md` §1 F8.
-- Effect: CONTEXT.Rip outside PE → `Frame[0]: RIP outside PE — walk ends` (trace) → unhandled → `terminate` → exit 134.
-- Regression tests 8 & 10 fail for exactly this reason (baseline 10/12).
+## Why this is the task (evidence — EXP-036, live post-BUG-026 trace)
+- Walk is now correct: Frame[0..3] all resolved; Frame[3] personality called
+  `RtlUnwindEx(target_frame=0x7ffe60f7def8, target_ip=0x4dcd24, ctx=0x7ffe60f7d810, exc=0x3bc8320)`.
+- Target 0x4dcd24 = return address of the throw call `call 0x4a95a8` @0x4dcd1f
+  inside function 0xdcbf0..0xdcdaf → catch resumes with the function's frame
+  INTACT: correct RSP = carried walk RSP = `0x7ffe60f7deb0`.
+- Our impl used `post_prologue_RSP=0x7ffe60f7deb8` (alloc_total=0x40). True
+  prologue = PUSH R13, PUSH R12, PUSH RBX, ALLOC_SMALL 0x30 = **0x48**
+  (raw UNWIND_INFO @ RVA 0x209420: `19 09 04 00 | 09 52 | 05 30 | 04 c0 | 02 d0`,
+  OpCode = LOW nibble of byte1). `0x7ffe60f7def8 − 0x48 = 0x7ffe60f7deb0`.
+- Landing pad `sub rdx,1; jne 0x4dcd8f` requires RDX=selector(1); we restored
+  stale RDX (downstream −1 observed) → wrong branch/garbage path.
+- Cross-checks: Frames 0/1/2 est−ctx.rsp = 0x28 each — walk's establisher
+  math is right; only the RtlUnwindEx-side synthesis is wrong.
 
 ## Execution notes for the next agent
-- Follow `.agent/CONTINUE_PROTOCOL.md` steps C–F.
-- Change ONE line's operand (delete the stray `0x58` reload + change `0x00` → `0x08`); keep the naked stub otherwise untouched.
-- Predicted post-fix state: regression 12/12 (exit 139-era expectations), UPX proceeds into the documented 5-frame walk; a NEW failure at/near the landing pad is expected (see forensics §3–5) — that becomes TASK-EXP-036/037/038, NOT a reason to keep hacking inside this task.
-- Record the fresh trace in `evidence/master/` and write `docs/master/experiments/EXP-036-*.md`.
+- Follow `.agent/CONTINUE_PROTOCOL.md` steps C–F. Baseline first: `make clean && make`
+  + regression suite (must be 12/12 pre-edit) + record loader.c sha256.
+- Preferred fix (ADR-008): resume with the **personality-provided ContextRecord
+  (r8)** state — Rsp, Rdx, Rax, etc. as the personality prepared them —
+  overriding only `Rip=TargetIp` (keep `Rax=ReturnValue` for the non-C++ path).
+  Note the naked stub's unwind-return path consumes g_unwind_regs from the
+  longjmp CONTEXT — keep that plumbing consistent.
+- Minimal alternative (if r8 plumbing proves risky): fix ALLOC_SMALL
+  `(OpInfo+1)*8` in mw_RtlUnwindEx AND adopt RDX from OriginalContext —
+  but justify the remaining synthetic behavior in ADR-008.
+- Boundaries: do NOT touch EH_FIX (L~1607), CXX-EH-FIX (L~3263), the
+  RaiseException stub, or the frame walk.
+- Distinguish P-1 vs P-2 outcomes (EXP-036 §7) if you choose the minimal path.
+- Record: fresh UPX trace (landing-pad entry registers visible), regression
+  (must stay 12/12), experiment note `docs/master/experiments/EXP-037-*.md`,
+  closure `docs/bugs/BUG-027.md`, then update `.agent/` files per step F.
+
+## Verified facts you may rely on (this session)
+- Regression 12/12 at loader.c `e1caa5d7…` (post-BUG-026), binary `c8472d04…`.
+- UPX post-BUG-026: exit 139; full trace in `evidence/master/bug026/upx_trace.json`.
+- The buggy alloc_total decode lives in mw_RtlUnwindEx (trace line
+  `alloc_total=0x40`); the walk-side establisher values were correct, so there
+  are (at least) two decoders — fix only the RtlUnwindEx one in this task;
+  TASK-API-006 owns the repo-wide ALLOC rule.
