@@ -54,3 +54,12 @@ Format: `ID | path | what it proves | session`
 - EV-042 | docs/master/experiments/EXP-038-api005-eh-hacks-bug030-selector.md | full experiment: API-005 gates, GCC catch protocol ground truth (core 0x4AFDB0, selector at obj-0x24, 4-param ER), BUG-030 fix+verify, BUG-031 protocol map + predictions | 2026-10-15
 - EV-043 | docs/bugs/BUG-030.md (closed) + docs/bugs/BUG-031.md (open) | defect records: selector delivery (fixed) and intermediate-cleanup chain (next) | 2026-10-15
 - EV-044 | checkpoints/checkpoint_pre_task-bug029_api005_20261015.zip | pre-task checkpoint (sha256 bc8617e6...) | 2026-10-15
+
+## BUG-031 fix + G1 ACCEPTANCE (CONTINUE #5, 2026-10-15)
+- EV-045 | evidence/master/bug031/upx_trace_g1.json | G1 trace (943 events): first walk (EH_UNWINDING) → resume-cmd 0x21474343 (lp=0x4015a5 alloc=0x48) → continuation unwind → 4-param selector delivery (sel=1→CTX.Rdx) → catch LP 0x40331c (check_var 1→5→23) → PE banner | 2026-10-15
+- EV-046 | evidence/master/bug031/upx_stdout_g1.txt | full UPX --version banner (upx 4.2.4 + libraries + copyrights + no-warranty), exit 0, 5/5 deterministic | 2026-10-15
+- EV-047 | evidence/master/bug031/regression_12of12.txt | 12/12 with test-10 evolved to the SUCCESS state (exit 0 + banner + no crash) | 2026-10-15
+- EV-048 | evidence/master/bug031/hashes.txt | pinned binary sha256 e0bdbdcf… + loader.c hash | 2026-10-15
+- EV-049 | docs/master/experiments/EXP-039-bug031-cleanup-chain-g1.md | full report: reproduce-first table, early-clobber proof, E1–E5 bisection (compile-dependent phase-1 flip), rax/r10/r11 boundary pinning, G1 scorecard, P-F/P-G/P-H | 2026-10-15
+- EV-050 | docs/bugs/BUG-031.md (CLOSED) + docs/master/ARCHITECTURE_DECISIONS.md ADR-011 | defect closure + architecture decision (resume commands + raise-site register fidelity) | 2026-10-15
+- EV-051 | checkpoints/checkpoint_pre_task-bug031_20261015.zip | pre-task checkpoint from the interrupted session (WIP origin) | 2026-10-15

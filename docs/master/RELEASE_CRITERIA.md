@@ -1,14 +1,15 @@
 # RELEASE CRITERIA — MiniWin Runtime
 
 ## G1 — Primary functional acceptance (UPX 4.2.4 decompressed)
-- [ ] `./minwin_loader samples/upx_decompressed.exe --version` prints `upx 4.2.4` (exact stdout match, byte-for-byte on the version line)
-- [ ] Process exit status 0
-- [ ] No hidden crash: no SIGSEGV/SIGABRT swallowed, crash_handler path unused on this run
-- [ ] No fake success: output originates from PE code through the runtime, not from loader-side shortcuts
-- [ ] Observed and recorded in `evidence/master/` (trace + stdout + exit code)
+**STATUS: MET — 2026-10-15 (CONTINUE #5, EXP-039; evidence `evidence/master/bug031/`; binary sha256 e0bdbdcf…)**
+- [x] `./minwin_loader samples/upx_decompressed.exe --version` prints `upx 4.2.4` (exact stdout match, byte-for-byte on the version line)
+- [x] Process exit status 0
+- [x] No hidden crash: no SIGSEGV/SIGABRT swallowed, crash_handler path unused on this run
+- [x] No fake success: output originates from PE code through the runtime, not from loader-side shortcuts — the run exercises the real GCC SEH chain (raise → walk → phase-1 → bridge resume-command → cleanup LP → continuation unwind → catch LP → C++ runtime)
+- [x] Observed and recorded in `evidence/master/bug031/` (trace `upx_trace_g1.json` 943 events + stdout + exit code + hashes + 12/12 regression log)
 
 ## G2 — Regression integrity
-- [ ] Regression suite green (12/12 with expectations updated to the *accepted* behavior — the exit-139 pin is removed only when G1 passes)
+- [x] Regression suite green (12/12 with expectations updated to the *accepted* behavior — test-10 asserts exit 0 + UPX banner since G1 met 2026-10-15)
 - [ ] Tier-A unit suite green (incl. ALLOC_LARGE spec vectors)
 - [ ] Tier-B synthetic exception suite green (catch, cleanup, selector, nested frames)
 - [ ] EXP-NEXT-2 algorithm proof still green

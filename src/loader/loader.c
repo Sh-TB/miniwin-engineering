@@ -633,6 +633,15 @@ uint32_t g_cap_code = 0;
 uint32_t g_cap_flags = 0;
 uint32_t g_cap_nargs = 0;
 uint64_t g_cap_args = 0;
+/* BUG-031: true raise-site volatile registers (captured by the naked stub
+ * BEFORE any scratch use). seh_build_context previously read these from the
+ * current CPU state inside the C dispatcher — i.e. compiler-dependent
+ * garbage that changed with every loader recompilation and flipped the GCC
+ * personality's phase-1 decision (Frame[4] INSTALL vs ContinueSearch).
+ * Windows delivers the true raise-site context; now we do too. */
+uint64_t g_cap_rax = 0;
+uint64_t g_cap_r10 = 0;
+uint64_t g_cap_r11 = 0;
 EXCEPTION_RECORD g_cap_er;  /* saved EXCEPTION_RECORD for RtlUnwindEx */
 
 /* RtlUnwindEx support — setjmp/longjmp for non-returning unwind.
@@ -642,6 +651,18 @@ uint8_t* g_unwind_ctx = NULL;     /* CONTEXT buffer being used for dispatch */
 int g_is_unwinding = 0;           /* set when RtlUnwindEx longjmps back */
 uint64_t g_unwind_target_ip = 0;  /* target IP for unwind */
 uint64_t g_unwind_target_frame = 0; /* target frame (RSP) for unwind */
+/* BUG-031 (ADR-011): throw-site CONTEXT snapshot for the GCC unwind chain.
+ * Copied once per fresh throw (every dispatch that is not a resume command).
+ * The GCC bridge's unwind-phase re-raise (0x21474343) and later chain
+ * segments consume it because the original dispatcher C stack — including
+ * its stack-local CONTEXT — is abandoned once a landing pad resumes. */
+static uint8_t g_throw_ctx_snapshot[CONTEXT_SIZE];
+static int g_throw_ctx_valid = 0;
+/* BUG-031 helpers (defined next to mw_RtlUnwindEx; forward-declared because
+ * the dispatcher's resume-command intercept calls them). */
+static uint64_t seh_total_prologue_alloc(uint64_t ip_va);
+static void seh_walk_intermediate_cleanups(uint8_t* start_ctx, void* er_src,
+                                           uint64_t tgt_frame, const char* tag);
 /* CONTEXT register values saved by setjmp handler for naked stub access.
  * We copy from the stack-local CONTEXT to these globals to avoid the stack
  * being overwritten by function calls (MW_TRACE, fflush) before the naked
@@ -1194,20 +1215,26 @@ static void seh_build_context(uint8_t* ctx, uint64_t rip, uint64_t rsp) {
     *(uint64_t*)(ctx + CTX_Rip) = rip;
     *(uint64_t*)(ctx + CTX_Rsp) = rsp;
 
-    /* Read current nonvolatile registers from CPU state */
+    /* Read current nonvolatile registers from CPU state.
+     * BUG-031: volatile registers come from the stub's true raise-site
+     * captures — CPU-state reads here are compiler-dependent garbage that
+     * changes with every loader recompilation and flips the GCC
+     * personality's phase-1 decision (Frame[4] INSTALL vs ContinueSearch;
+     * EXP-039 §6.2 bisection: E1-E5 all carried this poison, E4/E5 showed
+     * the 'unsigned long long' BUG-029-era frontier with 727 events). */
     uint64_t rax, rbx, rcx, rdx, rbp, rsi, rdi;
     uint64_t r8, r9, r10, r11, r12, r13, r14, r15;
-    __asm__ volatile ("" : "=a"(rax));
+    rax = g_cap_rax;
+    rcx = g_cap_code;               /* ms_abi arg1 at raise: ExceptionCode */
+    rdx = g_cap_flags;              /* ms_abi arg2 at raise: ExceptionFlags */
+    r8  = g_cap_nargs;              /* ms_abi arg3 at raise: nargs */
+    r9  = g_cap_args;               /* ms_abi arg4 at raise: args ptr */
+    r10 = g_cap_r10;
+    r11 = g_cap_r11;
     __asm__ volatile ("" : "=b"(rbx));
-    __asm__ volatile ("" : "=c"(rcx));
-    __asm__ volatile ("" : "=d"(rdx));
     __asm__ volatile ("movq %%rbp, %0" : "=r"(rbp));
     __asm__ volatile ("" : "=S"(rsi));
     __asm__ volatile ("" : "=D"(rdi));
-    __asm__ volatile ("" : "=r"(r8));
-    __asm__ volatile ("" : "=r"(r9));
-    __asm__ volatile ("" : "=r"(r10));
-    __asm__ volatile ("" : "=r"(r11));
     __asm__ volatile ("" : "=r"(r12));
     __asm__ volatile ("" : "=r"(r13));
     __asm__ volatile ("" : "=r"(r14));
@@ -1275,19 +1302,21 @@ static int32_t call_handler_aligned(
         "movq %%rsp, %%rbp\n\t"
         "andq $-16, %%rsp\n\t"     /* Force 16-byte alignment */
         "subq $0x20, %%rsp\n\t"    /* 32-byte ms_abi shadow space */
-        /* Set up ms_abi register arguments */
         "movq %2, %%rcx\n\t"
         "movq %3, %%rdx\n\t"
         "movq %4, %%r8\n\t"
         "movq %5, %%r9\n\t"
+        "movq g_cap_rax(%%rip), %%rax\n\t"
+        "movq g_cap_r10(%%rip), %%r10\n\t"
+        "movq g_cap_r11(%%rip), %%r11\n\t"
         "call *%1\n\t"
         /* Restore stack frame */
         "leave\n\t"
-        : "=a"(disposition)
+        : "=&a"(disposition)
         : "r"(handler), "r"((uint64_t)(uintptr_t)er),
           "r"(est_frame), "r"((uint64_t)(uintptr_t)ctx),
           "r"((uint64_t)(uintptr_t)dc)
-        : "rcx", "rdx", "r8", "r9", "r10", "r11", "memory"
+        : "rcx", "rdx", "r8", "r9", "r10", "r11", "rdi", "rbp", "memory"
     );
     return disposition;
 }
@@ -1365,6 +1394,70 @@ static int seh_dispatch_exception(void) {
     g_is_unwinding = 0;
     g_unwind_target_ip = 0;
     g_unwind_target_frame = 0;
+
+    /* === BUG-031 (ADR-011): GCC bridge resume-command intercept ===
+     * Unwind-phase INSTALL at an intermediate frame makes the GCC bridge
+     * re-raise 0x21474343 (flags=1, nparams=4, params={object, establisher,
+     * landing_pad, selector}) — verified live (EXP-039: bridge core
+     * 0x49d3e9-0x49d413: mov r8d,4 / mov edx,1 / mov ecx,0x21474343).
+     * The raise re-enters this dispatcher through the naked stub from a C
+     * stack that has no PE RUNTIME_FUNCTIONs, so a fresh frame walk can
+     * never reach the matching establisher (EXP-038 §5.1 design caution).
+     * We honor the record directly as a resume command — exactly what the
+     * bridge's own est==param[1] match (0x49d420) + site-A' RtlUnwindEx
+     * produces on Windows: resume at the cleanup landing pad with
+     * RAX=object, RDX=selector, RSP=establisher − prologue_alloc(LP).
+     * Fingerprint: code==0x21474343 && nparams==4 && flags&NONCONTINUABLE
+     * && landing pad inside the image && a throw-site snapshot exists.
+     * The initial GCC throw (0x20474343, flags=0, nparams=1) never matches
+     * ([EXC_STATE] trace, evidence/master/bug030/upx_trace.json). */
+    if (er.ExceptionCode == 0x21474343u && er.NumberParameters == 4
+        && (er.ExceptionFlags & 0x1u) != 0
+        && g_throw_ctx_valid
+        && er.ExceptionInformation[2] >= img_base
+        && er.ExceptionInformation[2] < img_end) {
+        uint64_t lp_va  = er.ExceptionInformation[2];
+        uint64_t est_va = er.ExceptionInformation[1];
+        uint64_t alloc3 = seh_total_prologue_alloc(lp_va);
+        if (alloc3 != 0 && est_va != 0 && (est_va & 0x7ull) == 0) {
+            uint64_t resume_rsp = est_va - alloc3;
+            /* Registers: protocol values in RAX (object) / RDX (selector),
+             * everything else from the throw-site snapshot (the cleanup LP
+             * continues the frame that threw — its live callee-saved regs
+             * are the snapshot's; A's LP 0x4015A5 consumes only RAX+[rsp]). */
+            g_unwind_regs[UR_RAX] = er.ExceptionInformation[0];
+            g_unwind_regs[UR_RDX] = er.ExceptionInformation[3];
+            g_unwind_regs[UR_RCX] = *(uint64_t*)(g_throw_ctx_snapshot + CTX_Rcx);
+            g_unwind_regs[UR_RBX] = *(uint64_t*)(g_throw_ctx_snapshot + CTX_Rbx);
+            g_unwind_regs[UR_RBP] = *(uint64_t*)(g_throw_ctx_snapshot + CTX_Rbp);
+            g_unwind_regs[UR_RSI] = *(uint64_t*)(g_throw_ctx_snapshot + CTX_Rsi);
+            g_unwind_regs[UR_RDI] = *(uint64_t*)(g_throw_ctx_snapshot + CTX_Rdi);
+            g_unwind_regs[UR_R8]  = *(uint64_t*)(g_throw_ctx_snapshot + CTX_R8);
+            g_unwind_regs[UR_R9]  = *(uint64_t*)(g_throw_ctx_snapshot + CTX_R9);
+            g_unwind_regs[UR_R10] = *(uint64_t*)(g_throw_ctx_snapshot + CTX_R10);
+            g_unwind_regs[UR_R11] = *(uint64_t*)(g_throw_ctx_snapshot + CTX_R11);
+            g_unwind_regs[UR_R12] = *(uint64_t*)(g_throw_ctx_snapshot + CTX_R12);
+            g_unwind_regs[UR_R13] = *(uint64_t*)(g_throw_ctx_snapshot + CTX_R13);
+            g_unwind_regs[UR_R14] = *(uint64_t*)(g_throw_ctx_snapshot + CTX_R14);
+            g_unwind_regs[UR_R15] = *(uint64_t*)(g_throw_ctx_snapshot + CTX_R15);
+            g_unwind_regs[UR_RSP] = resume_rsp;
+            g_unwind_target_ip = lp_va;
+            g_unwind_target_frame = resume_rsp;
+            g_is_unwinding = 1;
+            MW_TRACE("[BUG-031] resume-cmd: 0x21474343 obj=0x%lx est=0x%lx lp=0x%lx sel=%lu alloc=0x%lx -> RIP=0x%lx RSP=0x%lx",
+                     er.ExceptionInformation[0], est_va, lp_va,
+                     (unsigned long)er.ExceptionInformation[3],
+                     (unsigned long)alloc3, lp_va, resume_rsp);
+            if (g_trace_log) fflush(g_trace_log);
+            return DISP_RESULT_CONTINUE_EXEC;
+        }
+        MW_TRACE("[BUG-031] resume-cmd fingerprint matched but alloc/est invalid (alloc=0x%lx est=0x%lx) — falling through to walk",
+                 (unsigned long)alloc3, est_va);
+    }
+    /* Fresh throw (not a resume command): snapshot the throw-site CONTEXT
+     * for the intercept and the intermediate-cleanup walk. */
+    memcpy(g_throw_ctx_snapshot, ctx, CONTEXT_SIZE);
+    g_throw_ctx_valid = 1;
     
     /* setjmp return point for RtlUnwindEx longjmp.
      * When the personality function calls RtlUnwindEx, RtlUnwindEx modifies
@@ -1708,6 +1801,11 @@ void mw_RaiseException(uint32_t code, uint32_t flags,
         "pushq %r14\n\t"
         "pushq %r15\n\t"
         "subq $0x28, %rsp\n\t"   /* 5 qwords for our data, 16-byte aligned */
+        /* BUG-031: capture true raise-site volatile regs BEFORE any scratch use.
+         * Direct global stores — the stub frame layout is unchanged. */
+        "movq %rax, g_cap_rax(%rip)\n\t"
+        "movq %r10, g_cap_r10(%rip)\n\t"
+        "movq %r11, g_cap_r11(%rip)\n\t"
         /* Save rsp_entry (RSP before our pushes + sub) */
         "leaq 0x58(%rsp), %rax\n\t"  /* 6*8 + 0x28 = 48+40 = 88 = 0x58 */
         "movq %rax, 0x00(%rsp)\n\t"  /* save rsp_entry */
@@ -1842,6 +1940,148 @@ __attribute__((ms_abi)) void* mw_RtlLookupFunctionEntry(uint64_t control_pc,
     return NULL;
 }
 
+/* ============================================================
+ * BUG-031 (ADR-011): GCC SEH unwind-chain support — helpers.
+ *
+ * Live-verified protocol (EXP-039, samples/upx_decompressed.exe):
+ *  - Unwind-phase INSTALL at an intermediate frame ⇒ the GCC bridge
+ *    re-raises RaiseException(0x21474343, flags=1, nparams=4,
+ *    params={object, establisher, landing_pad, selector})
+ *    (bridge core 0x49d3e9-0x49d413).
+ *  - A cleanup landing pad ends with the continue helper 0x49d5c0,
+ *    which calls RtlUnwindEx(est_target, lp_target, &ER, object,
+ *    OriginalContext, …) DIRECTLY (no raise): the ER is built as
+ *    {code=0x20474343, flags=1, nparams=4, same 4-param shape}
+ *    (0x49d610-0x49d663; the packed code|flags qword 0x120474343
+ *    that EXP-038 §5.1 read as a "continue-raise" code is really
+ *    {dword code=0x20474343, dword flags=1}).
+ *  - The bridge reacts to EH_UNWINDING personality calls by looking
+ *    up the frame's LSDA call site at ControlPc: a cleanup hit
+ *    re-raises (above); a pc inside a landing-pad region finds no
+ *    call site and returns ContinueSearch — so re-walking an
+ *    already-unwound frame is safe (no re-install, no loop).
+ * ============================================================ */
+
+/* Total prologue stack allocation of the function containing ip_va.
+ * Full decode (no func_offset filtering): landing pads run after the
+ * whole prologue. Slot addressing and ALLOC_SMALL use the BUG-027-
+ * corrected rules; ALLOC_LARGE uses the real ABI scaling (info==0 ⇒
+ * next uint16 * 8, info==1 ⇒ next uint32) — the pre-existing decode
+ * copies in mw_RtlUnwindEx/mw_RtlVirtualUnwind still carry the API-006
+ * deviation and are deliberately left untouched by this task.
+ * Returns 0 if the function cannot be resolved. */
+static uint64_t seh_total_prologue_alloc(uint64_t ip_va) {
+    if (g_image_base == NULL || ip_va < (uint64_t)(uintptr_t)g_image_base) return 0;
+    uint64_t rva = ip_va - (uint64_t)(uintptr_t)g_image_base;
+    RUNTIME_FUNCTION* rf = seh_internal_lookup(rva);
+    if (!rf) return 0;
+    uint8_t* ui = g_image_base + rf->UnwindInfo;
+    uint8_t count = ui[2];
+    uint8_t* codes = ui + 4;
+    int slot = 0;
+    uint64_t total = 0;
+    for (int i = 0; i < count; i++) {
+        if (slot * 2 + 1 >= (int)(count * 2 + 16)) break;
+        uint16_t cw = *(uint16_t*)(codes + slot * 2);
+        uint8_t op = (cw >> 8) & 0x0f;
+        uint8_t info = (cw >> 12) & 0x0f;
+        switch (op) {
+        case 0: /* PUSH_NONVOL */ total += 8; break;
+        case 1: /* ALLOC_LARGE */
+            slot++;
+            if (info == 0) total += (uint64_t)(*(uint16_t*)(codes + slot * 2)) * 8;
+            else { slot++; total += (uint64_t)(*(uint32_t*)(codes + slot * 2 - 2)); }
+            break;
+        case 2: /* ALLOC_SMALL */ total += (uint64_t)(info + 1) * 8; break;
+        case 4: /* SAVE_NONVOL */ slot++; break;
+        case 5: /* SAVE_NONVOL_FAR */ slot++; slot++; break;
+        case 6: /* SAVE_XMM128 */ slot++; break;
+        case 7: /* SAVE_XMM128_FAR */ slot++; slot++; break;
+        case 8: /* PUSH_MACHFRAME */ total += 40; break;
+        default: if (op >= 9) slot++; break;
+        }
+        slot++;
+    }
+    return total;
+}
+
+/* Windows-style RtlUnwindEx intermediate walk: from start_ctx up to (but
+ * excluding) the frame whose establisher == tgt_frame, call each frame's
+ * personality with ExceptionFlags |= EH_UNWINDING (0x2). The GCC bridge
+ * answers an unwind-phase cleanup hit by re-raising 0x21474343 (never
+ * returns — the dispatcher intercept resumes the cleanup LP); a pc in a
+ * landing-pad region finds no call site and returns ContinueSearch, so
+ * re-walking already-unwound frames is safe. */
+static void seh_walk_intermediate_cleanups(uint8_t* start_ctx, void* er_src,
+                                           uint64_t tgt_frame, const char* tag) {
+    uint8_t walk_ctx[CONTEXT_SIZE];
+    memcpy(walk_ctx, start_ctx, CONTEXT_SIZE);
+    EXCEPTION_RECORD er_u;
+    memcpy(&er_u, er_src, sizeof(EXCEPTION_RECORD));
+    er_u.ExceptionFlags |= 0x2; /* EXCEPTION_UNWINDING */
+
+    uint64_t img_base = (uint64_t)(uintptr_t)g_image_base;
+    uint64_t img_end = img_base + g_image_size;
+
+    for (int f = 0; f < DISPATCH_MAX_FRAMES; f++) {
+        uint64_t rip = *(uint64_t*)(walk_ctx + CTX_Rip);
+        if (rip < img_base || rip >= img_end) {
+            MW_TRACE("[BUG-031] %s walk: RIP 0x%lx outside PE — walk ends", tag, rip);
+            break;
+        }
+        RUNTIME_FUNCTION* rf = seh_internal_lookup(rip - img_base);
+        if (!rf) {
+            MW_TRACE("[BUG-031] %s walk: no RUNTIME_FUNCTION at 0x%lx — walk ends", tag, rip);
+            break;
+        }
+        uint64_t est = 0;
+        uint32_t h_rva = 0;
+        void* lsda = NULL;
+        void* handler = seh_internal_virtual_unwind(rip, rf, walk_ctx, &est, &h_rva, &lsda);
+        if (est == tgt_frame) {
+            MW_TRACE("[BUG-031] %s walk: reached target frame est=0x%lx — intermediate scan done", tag, est);
+            break;
+        }
+        if (!handler) {
+            uint64_t parent_rip = *(uint64_t*)(uintptr_t)est;
+            *(uint64_t*)(walk_ctx + CTX_Rip) = parent_rip;
+            *(uint64_t*)(walk_ctx + CTX_Rsp) = est + 8;
+            continue;
+        }
+        DISPATCHER_CONTEXT dc;
+        memset(&dc, 0, sizeof(dc));
+        dc.ControlPc = rip - 1;
+        dc.ImageBase = img_base;
+        dc.FunctionEntry = rf;
+        dc.EstablisherFrame = est;
+        dc.TargetIp = 0;
+        dc.ContextRecord = walk_ctx;
+        dc.LanguageHandler = handler;
+        dc.HandlerData = lsda;
+        dc.HistoryTable = 0;
+        dc.ScopeIndex = 0;
+        dc.Fill = 0;
+        uint64_t saved_rip = rip;
+        *(uint64_t*)(walk_ctx + CTX_Rip) = rip - 1;
+        MW_TRACE("[BUG-031] %s walk: personality fn=0x%lx est=0x%lx rip=0x%lx lsda=%p flags=0x%x (EH_UNWINDING)",
+                 tag, (uint64_t)(uintptr_t)handler, est, rip, lsda, er_u.ExceptionFlags);
+        if (g_trace_log) fflush(g_trace_log);
+        int32_t disp = call_handler_aligned(handler, &er_u, est, walk_ctx, &dc);
+        *(uint64_t*)(walk_ctx + CTX_Rip) = saved_rip;
+        MW_TRACE("[BUG-031] %s walk: personality returned %d", tag, disp);
+        if (disp == DISP_ExceptionContinueSearch) {
+            uint64_t parent_rip = *(uint64_t*)(uintptr_t)est;
+            *(uint64_t*)(walk_ctx + CTX_Rip) = parent_rip;
+            *(uint64_t*)(walk_ctx + CTX_Rsp) = est + 8;
+            continue;
+        }
+        /* Non-GCC dispositions (ExecuteHandler etc.) are outside the GCC
+         * protocol — record and stop; the caller resumes the target LP. */
+        MW_TRACE("[BUG-031] %s walk: unexpected disposition %d — stopping walk", tag, disp);
+        break;
+    }
+}
+
 __attribute__((ms_abi)) void mw_RtlUnwindEx(void* target_frame, void* target_ip, void* ctx_ptr, void* exc_record, void* history) {
     MW_TRACE("RtlUnwindEx(target_frame=%p, target_ip=%p, ctx=%p, exc=%p)",
              target_frame, target_ip, ctx_ptr, exc_record);
@@ -1850,6 +2090,114 @@ __attribute__((ms_abi)) void mw_RtlUnwindEx(void* target_frame, void* target_ip,
     uint64_t tgt_frame = (uint64_t)(uintptr_t)target_frame;
     
     MW_TRACE("RtlUnwindEx: TargetIp=0x%lx TargetFrame=0x%lx", tgt_ip, tgt_frame);
+
+    /* ============================================================
+     * BUG-031 (ADR-011): continuation unwind — a cleanup landing pad's
+     * continue helper (0x49d5c0) calls RtlUnwindEx DIRECTLY with the
+     * OriginalContext in arg5. The original dispatcher C frame (and its
+     * setjmp jmpbuf) is gone at this point, so this path walks the
+     * remaining intermediate cleanups from the continue helper's captured
+     * context and then resumes the target landing pad DIRECTLY (no
+     * longjmp). Never returns on success.
+     * ============================================================ */
+    if (g_is_unwinding) {
+        uint8_t* rctx = (uint8_t*)(uintptr_t)history;
+        if (!rctx) rctx = g_unwind_ctx;
+        MW_TRACE("[BUG-031] continuation unwind: orig_ctx=%p", (void*)rctx);
+        if (rctx && ctx_ptr) {
+            uint32_t er_code0 = *(uint32_t*)((uint8_t*)ctx_ptr);
+            if (er_code0 == 0x20474343u || er_code0 == 0x21474343u) {
+                seh_walk_intermediate_cleanups(rctx, ctx_ptr, tgt_frame, "cont");
+            }
+        }
+        if (rctx) {
+            uint64_t alloc_cont = seh_total_prologue_alloc(tgt_ip);
+            uint64_t post_prologue_rsp = (alloc_cont != 0) ? (tgt_frame - alloc_cont) : tgt_frame;
+            *(uint64_t*)(rctx + CTX_Rip) = tgt_ip;
+            *(uint64_t*)(rctx + CTX_Rsp) = post_prologue_rsp;
+            uint64_t exc_obj = (uint64_t)(uintptr_t)exc_record;
+            if (exc_obj != 0) *(uint64_t*)(rctx + CTX_Rax) = exc_obj;
+            /* BUG-030 selector delivery — same fingerprint as the site-A path */
+            if (ctx_ptr) {
+                uint32_t er_nparams = *(uint32_t*)((uint8_t*)ctx_ptr + 0x18);
+                uint64_t* er_params = (uint64_t*)((uint8_t*)ctx_ptr + 0x20);
+                if (er_nparams == 4 && er_params[1] == tgt_frame && er_params[2] == tgt_ip) {
+                    *(uint64_t*)(rctx + CTX_Rdx) = er_params[3];
+                    MW_TRACE("[BUG-031] continuation: 4-param ER obj=0x%lx est=0x%lx lp=0x%lx sel=%lu -> CTX.Rdx",
+                             er_params[0], er_params[1], er_params[2],
+                             (unsigned long)er_params[3]);
+                }
+            }
+            /* Copy the full resume context into the resume globals — mirrors
+             * the dispatcher's longjmp-return path. */
+            g_unwind_regs[UR_RAX] = *(uint64_t*)(rctx + CTX_Rax);
+            g_unwind_regs[UR_RCX] = *(uint64_t*)(rctx + CTX_Rcx);
+            g_unwind_regs[UR_RDX] = *(uint64_t*)(rctx + CTX_Rdx);
+            g_unwind_regs[UR_RBX] = *(uint64_t*)(rctx + CTX_Rbx);
+            g_unwind_regs[UR_RSP] = *(uint64_t*)(rctx + CTX_Rsp);
+            g_unwind_regs[UR_RBP] = *(uint64_t*)(rctx + CTX_Rbp);
+            g_unwind_regs[UR_RSI] = *(uint64_t*)(rctx + CTX_Rsi);
+            g_unwind_regs[UR_RDI] = *(uint64_t*)(rctx + CTX_Rdi);
+            g_unwind_regs[UR_R8]  = *(uint64_t*)(rctx + CTX_R8);
+            g_unwind_regs[UR_R9]  = *(uint64_t*)(rctx + CTX_R9);
+            g_unwind_regs[UR_R10] = *(uint64_t*)(rctx + CTX_R10);
+            g_unwind_regs[UR_R11] = *(uint64_t*)(rctx + CTX_R11);
+            g_unwind_regs[UR_R12] = *(uint64_t*)(rctx + CTX_R12);
+            g_unwind_regs[UR_R13] = *(uint64_t*)(rctx + CTX_R13);
+            g_unwind_regs[UR_R14] = *(uint64_t*)(rctx + CTX_R14);
+            g_unwind_regs[UR_R15] = *(uint64_t*)(rctx + CTX_R15);
+            g_unwind_target_ip = tgt_ip;
+            g_unwind_target_frame = post_prologue_rsp;
+            g_is_unwinding = 1;
+            MW_TRACE("[BUG-031] continuation resume: RIP=0x%lx RSP=0x%lx alloc=0x%lx",
+                     tgt_ip, post_prologue_rsp, (unsigned long)alloc_cont);
+            if (g_trace_log) fflush(g_trace_log);
+            fflush(stderr);
+            /* Direct resume — same register restore as the naked stub's
+             * unwind return path. "memory" clobber: the asm reads the
+             * globals written above. */
+            __asm__ volatile (
+                "movq g_unwind_regs+0(%%rip), %%rax\n\t"
+                "movq g_unwind_regs+8(%%rip), %%rcx\n\t"
+                "movq g_unwind_regs+16(%%rip), %%rdx\n\t"
+                "movq g_unwind_regs+24(%%rip), %%rbx\n\t"
+                "movq g_unwind_regs+40(%%rip), %%rbp\n\t"
+                "movq g_unwind_regs+48(%%rip), %%rsi\n\t"
+                "movq g_unwind_regs+56(%%rip), %%rdi\n\t"
+                "movq g_unwind_regs+64(%%rip), %%r8\n\t"
+                "movq g_unwind_regs+72(%%rip), %%r9\n\t"
+                "movq g_unwind_regs+80(%%rip), %%r10\n\t"
+                "movq g_unwind_regs+88(%%rip), %%r11\n\t"
+                "movq g_unwind_regs+96(%%rip), %%r12\n\t"
+                "movq g_unwind_regs+104(%%rip), %%r13\n\t"
+                "movq g_unwind_regs+112(%%rip), %%r14\n\t"
+                "movq g_unwind_regs+120(%%rip), %%r15\n\t"
+                "movq g_unwind_target_ip(%%rip), %%rcx\n\t"
+                "movq g_unwind_regs+32(%%rip), %%rsp\n\t"
+                "jmp *%%rcx\n\t"
+                : : : "memory",
+                  "rax", "rcx", "rdx", "rbx", "rbp", "rsi", "rdi",
+                  "r8", "r9", "r10", "r11", "r12", "r13", "r14", "r15"
+            );
+        }
+        MW_TRACE("[BUG-031] continuation unwind: no context — returning (caller aborts, fail-visible)");
+        return;
+    }
+
+    /* BUG-031 (ADR-011): first-call intermediate-cleanup walk — Windows
+     * RtlUnwindEx runs every frame's cleanup between the throw site and
+     * the target; the previous implementation jumped straight to the
+     * target LP (BUG-031 root cause). GCC protocol only (the ER code is
+     * STATUS_GCC_THROW/STATUS_GCC_UNWIND); start from the throw-site
+     * snapshot because g_unwind_ctx has already been walked to the target
+     * frame by the dispatcher. A cleanup hit re-raises 0x21474343 and
+     * never returns from this call. */
+    if (g_throw_ctx_valid && ctx_ptr) {
+        uint32_t er_code0 = *(uint32_t*)((uint8_t*)ctx_ptr);
+        if (er_code0 == 0x20474343u || er_code0 == 0x21474343u) {
+            seh_walk_intermediate_cleanups(g_throw_ctx_snapshot, ctx_ptr, tgt_frame, "first");
+        }
+    }
     
     /* Walk frames from current to target, calling cleanup handlers.
      * For each frame between the current frame and the target frame,

@@ -115,7 +115,7 @@ run_test() {
         fail_test "UNWIND_INFO NOT parsed"
     fi
 
-    # --- Test 10: Exit code matches the current verified failure frontier ---
+    # --- Test 10: Exit code matches the current verified execution frontier ---
     # History (each evolution carries live-trace evidence, see docs/master/experiments/):
     #   pre-BUG-026:  exit 134 (SIGABRT before any frame walk)
     #   post-BUG-026: exit 139 (SIGSEGV at landing-pad resume, RSP+8 bug)
@@ -132,12 +132,23 @@ run_test() {
     #                 chain not yet run: check_var 1->5->23 protocol, EXP-038 §5).
     #                 134 here is PROGRESS, not the old pre-walk abort: the old
     #                 abort printed neither message.
-    if [ "$exit_code" -eq 134 ] \
-       && grep -q "Assertion failed: cxx_exception_handling_works" /tmp/minwin_stdout_test 2>/dev/null \
-       && grep -q "terminate called without an active exception" /tmp/minwin_stdout_test 2>/dev/null; then
-        pass_test "Exit code 134 (verified BUG-031 frontier: UPX dt_check assertion reached, catch chain incomplete)"
+    #   post-BUG-031 (EXP-039): ACCEPTANCE G1 MET. The GCC-bridge resume command
+    #                 (0x21474343, 4-param ER) is honored as a direct landing-pad
+    #                 resume; the intermediate cleanup LP 0x4015A5 runs (check_var
+    #                 1->5); the continuation unwind resumes B's catch LP
+    #                 0x40331c with sel=1 in RDX (check_var -> 23). dt_check
+    #                 passes, UPX prints its full --version banner, exit 0.
+    #                 Verified live 5/5 deterministic runs (EXP-039 §7).
+    #                 Regression now asserts the SUCCESS state: exit 0 + UPX
+    #                 version banner + no crash dumps. Any regression to 134/139
+    #                 must fail here.
+    if [ "$exit_code" -eq 0 ] \
+       && grep -q "^upx 4\.2\.4$" /tmp/minwin_stdout_test 2>/dev/null \
+       && grep -q "UPX comes with ABSOLUTELY NO WARRANTY" /tmp/minwin_stdout_test 2>/dev/null \
+       && ! grep -q "\[CRASH\]" /tmp/minwin_stderr_test 2>/dev/null; then
+        pass_test "Exit code 0 + full UPX --version output (G1 acceptance: C++ EH chain complete)"
     else
-        fail_test "Exit code $exit_code (expected 134 + dt_check assertion + terminate-without-active = BUG-031 frontier)"
+        fail_test "Exit code $exit_code (expected 0 + UPX version banner, no crash = G1 acceptance)"
     fi
 
     # --- Test 11: malloc/calloc work (HeapAlloc regression) ---

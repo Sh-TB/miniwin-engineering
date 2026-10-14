@@ -55,7 +55,13 @@
  Gate chains:
    D-MAP-A/B/C ──► MAPPING-01..07 ──► G5 ──► PHASE 06 generalization
    API-007 ──► TEST-006 (Tier-D)
-   TEST-008 ──► RELEASE_CRITERIA G1
+   TEST-008 ──► RELEASE_CRITERIA G1   [G1 MET 2026-10-15 — EXP-039]
+
+ Post-G1 guard chain (new, CONTINUE #5):
+   TEST-004 ──► TEST-005 ──► G2 Tier-B ──► release
+   G1-001 (pin script) ──► any loader.c change
+   TEST-002 ──► API-006 ──► TEST-009 (decoder fuzz)
+   BUG-033 (continuation walk) ──► TEST-005 cases
 ```
 
 Rules: a task is READY only when all arrows into it are VERIFIED/TESTED. One task per CONTINUE by default.
