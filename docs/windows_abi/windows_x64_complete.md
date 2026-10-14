@@ -198,8 +198,16 @@ Bits [7:0]   = Code offset (within prolog)
 | Op | Name | Slots | Effect |
 |----|------|-------|--------|
 | 0 | UWOP_PUSH_NONVOL | 1 | RSP += 8 (push register on stack) |
-| 1 | UWOP_ALLOC_LARGE (info=0) | 2 | RSP += next uint16 |
-| 1 | UWOP_ALLOC_LARGE (info=1) | 3 | RSP += next uint32 |
+| 1 | UWOP_ALLOC_LARGE (info=0) | 2 | RSP += next uint16 **× 8** (spec: slot value is size/8) |
+| 1 | UWOP_ALLOC_LARGE (info=1) | 3 | RSP += next uint32 (two consecutive uint16 slots, little-endian, **no shift**) |
+
+> **TASK-API-006 correction (2026-10-15, EXP-039):** the two rows above previously
+> stated `RSP += next uint16` (missing ×8) and `RSP += next uint32 << 16` (spurious
+> shift). Both were wrong against the x64 SEH spec (MSDN "Unwind OpCodes":
+> UWOP_ALLOC_LARGE info=0 ⇒ size = next slot * 8; info=1 ⇒ size = next two slots as
+> a 32-bit value). The runtime copies in loader.c now match the spec-correct
+> reference decoder `seh_total_prologue_alloc` (added for BUG-031). ALLOC_SMALL
+> (info+1)*8 was already corrected by BUG-027.
 | 2 | UWOP_ALLOC_SMALL | 1 | RSP += (info+1)*8 |
 | 3 | UWOP_SET_FPREG | 1 | FP = RSP + frame_offset*16 |
 | 4 | UWOP_SAVE_NONVOL | 2 | Reg saved at [FP - offset*8] |

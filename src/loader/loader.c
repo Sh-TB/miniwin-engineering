@@ -501,8 +501,24 @@ __attribute__((ms_abi)) void* mw_LoadLibraryA(const char* name) {
     return (void*)(uintptr_t)0xdead0001;
 }
 
+/* TASK-API-002: shared flush for every _exit() path (ExitProcess, abort).
+ * MW_TRACE flushes per line, but the trace FILE lacks its JSON terminator and
+ * the stdout/stderr buffers would be silently dropped by _exit(). Closing the
+ * trace here makes every api_trace.json parseable without the append-']}'
+ * workaround. Idempotent (NULL check) so main()'s normal-return path is safe. */
+static void mw_trace_shutdown_flush(void) {
+    fflush(stdout);
+    fflush(stderr);
+    if (g_trace_log) {
+        fprintf(g_trace_log, "  ]\n}\n");
+        fclose(g_trace_log);
+        g_trace_log = NULL;
+    }
+}
+
 __attribute__((noreturn)) __attribute__((ms_abi)) void mw_ExitProcess(unsigned int code) {
     MW_TRACE("ExitProcess(%u)", code);
+    mw_trace_shutdown_flush();
     _exit(code);
 }
 
@@ -709,13 +725,13 @@ static uint32_t seh_unwind_alloc(uint8_t* ui) {
         uint16_t cw = *(uint16_t*)(codes + slot * 2);
         uint8_t op = (cw >> 8) & 0x0f;   /* UnwindOp: low nibble of byte 1 */
         uint8_t info = (cw >> 12) & 0x0f;  /* OpInfo: high nibble of byte 1 */
-        if (op == 1) { /* ALLOC_LARGE */
+        if (op == 1) { /* ALLOC_LARGE — TASK-API-006 spec rule (EXP-039): info==0 => next uint16 * 8; info==1 => next uint32 (two slots, no shift) */
             slot++;
             if (info == 0) {
-                total_alloc += *(uint16_t*)(codes + slot * 2);
+                total_alloc += (uint32_t)(*(uint16_t*)(codes + slot * 2)) * 8;
                 slot++;
             } else {
-                total_alloc += *(uint32_t*)(codes + slot * 2) << 16;
+                total_alloc += *(uint32_t*)(codes + slot * 2);
                 slot += 2;
             }
         } else if (op == 2) { /* ALLOC_SMALL */
@@ -1014,16 +1030,15 @@ static void* seh_internal_virtual_unwind(
                 if (off) *(uint64_t*)(ctx + off) = *(uint64_t*)(chained_rsp);
                 break;
             }
-            case UWOP_ALLOC_LARGE: {
+            case UWOP_ALLOC_LARGE: /* TASK-API-006 spec rule: info==0 => uint16 * 8; info==1 => uint32, no shift */
                 chained_slot++;
                 if (op_info == 0) {
-                    chained_rsp += *(uint16_t*)(chained_codes_ptr + chained_slot * 2);
+                    chained_rsp += (uint64_t)(*(uint16_t*)(chained_codes_ptr + chained_slot * 2)) * 8;
                 } else {
                     chained_slot++;
-                    chained_rsp += (uint64_t)(*(uint32_t*)(chained_codes_ptr + chained_slot * 2 - 2)) << 16;
+                    chained_rsp += (uint64_t)(*(uint32_t*)(chained_codes_ptr + chained_slot * 2 - 2));
                 }
                 break;
-            }
             case UWOP_ALLOC_SMALL: chained_rsp += (uint64_t)(op_info + 1) * 8; break;
             case UWOP_SET_FPREG: chained_fp_val = chained_rsp + (uint64_t)chained_frame_off * 16; chained_fp_set = 1; break;
             case UWOP_SAVE_NONVOL: {
@@ -1113,18 +1128,15 @@ static void* seh_internal_virtual_unwind(
             }
             break;
         }
-        case UWOP_ALLOC_LARGE: {
+        case UWOP_ALLOC_LARGE: /* TASK-API-006 spec rule: info==0 => uint16 * 8; info==1 => uint32, no shift */
             slot++;
             if (op_info == 0) {
-                uint16_t alloc = *(uint16_t*)(codes + slot * 2);
-                new_rsp += alloc;
+                new_rsp += (uint64_t)(*(uint16_t*)(codes + slot * 2)) * 8;
             } else {
                 slot++;
-                uint32_t alloc = *(uint32_t*)(codes + slot * 2 - 2);
-                new_rsp += (uint64_t)alloc << 16;
+                new_rsp += (uint64_t)(*(uint32_t*)(codes + slot * 2 - 2));
             }
             break;
-        }
         case UWOP_ALLOC_SMALL: {
             new_rsp += (uint64_t)(op_info + 1) * 8;
             break;
@@ -2453,18 +2465,15 @@ __attribute__((ms_abi)) void* mw_RtlVirtualUnwind(uint32_t handler_type, uint64_
             }
             break;
         }
-        case UWOP_ALLOC_LARGE: {
+        case UWOP_ALLOC_LARGE: /* TASK-API-006 spec rule: info==0 => uint16 * 8; info==1 => uint32, no shift */
             slot++;
             if (op_info == 0) {
-                uint16_t alloc = *(uint16_t*)(codes + slot * 2);
-                new_rsp += alloc;
+                new_rsp += (uint64_t)(*(uint16_t*)(codes + slot * 2)) * 8;
             } else {
                 slot++;
-                uint32_t alloc = *(uint32_t*)(codes + slot * 2 - 2);
-                new_rsp += (uint64_t)alloc << 16;
+                new_rsp += (uint64_t)(*(uint32_t*)(codes + slot * 2 - 2));
             }
             break;
-        }
         case UWOP_ALLOC_SMALL: {
             new_rsp += (op_info + 1) * 8;
             break;
@@ -3135,8 +3144,7 @@ __attribute__((ms_abi)) void mw_exit(int code) {
 
 __attribute__((ms_abi)) void mw_abort(void) {
     MW_TRACE("abort()");
-    fflush(stdout);
-    fflush(stderr);
+    mw_trace_shutdown_flush();
     _exit(134); /* 128 + SIGABRT(6) */
 }
 
@@ -3860,6 +3868,10 @@ int main(int argc, char* argv[]) {
         g_trace_log = fopen(trace_path, "w");
         if (g_trace_log) {
             fprintf(g_trace_log, "{\n  \"trace\": [\n");
+            /* TASK-API-002: exit() paths (mw_exit, CRT exit) run atexit
+             * handlers — close the trace JSON there. _exit() paths
+             * (ExitProcess/abort) call mw_trace_shutdown_flush directly. */
+            atexit(mw_trace_shutdown_flush);
         }
     }
 
