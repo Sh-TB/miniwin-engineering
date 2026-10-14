@@ -1,0 +1,415 @@
+{
+  "trace": [
+[API] PE Loader: file=./samples/upx_decompressed.exe size=2140672
+[API] PE Loader: ImageBase=0x400000 EP=0x14f0 SizeOfImage=0x213000 Sections=10
+[API] PE Loader: Mapped at 0x400000 (forced via MAP_FIXED)
+[API] Section [0] .text    VA=0x00001000 VS=0x000dfbb0 Raw=0x000dfc00 Ch=0x60500060
+[API] Section [1] .data    VA=0x000e1000 VS=0x00000a50 Raw=0x00000c00 Ch=0xc0600040
+[API] Section [2] .rdata   VA=0x000e2000 VS=0x00115800 Raw=0x00115800 Ch=0x40600040
+[API] Section [3] .pdata   VA=0x001f8000 VS=0x00008e08 Raw=0x00009000 Ch=0x40300040
+[API] Section [4] .xdata   VA=0x00201000 VS=0x0000937c Raw=0x00009400 Ch=0x40300040
+[API] Section [5] .bss     VA=0x0020b000 VS=0x00002ec0 Raw=0x00000000 Ch=0xc0600080
+[API] Section [6] .idata   VA=0x0020e000 VS=0x000016a8 Raw=0x00001800 Ch=0xc0300040
+[API] Section [7] .CRT     VA=0x00210000 VS=0x00000070 Raw=0x00000200 Ch=0xc0400040
+[API] Section [8] .tls     VA=0x00211000 VS=0x00000010 Raw=0x00000200 Ch=0xc0400040
+[API] Section [9] .rsrc    VA=0x00212000 VS=0x000005d0 Raw=0x00000600 Ch=0xc0300040
+[API] Import Directory: RVA=0x20e000 Size=0x16a8
+[API] Import DLL: KERNEL32.DLL (IAT RVA=0x20e55c, ILT RVA=0x0)
+[API]   [0] AddVectoredExceptionHandler -> 0x2005740
+[API]   [1] CloseHandle -> 0x200af40
+[API]   [2] CreateEventA -> 0x2003c60
+[API]   [3] CreateSemaphoreA -> 0x2003d70
+[API]   [4] DebugBreak -> 0x200bfb0
+[API]   [5] DeleteCriticalSection -> 0x200d5b0
+[API]   [6] DuplicateHandle -> 0x2003e80
+[API]   [7] EnterCriticalSection -> 0x200d6d0
+[API]   [8] GetConsoleCursorInfo -> 0x2004060
+[API]   [9] GetConsoleMode -> 0x2003f70
+[API]   [10] GetConsoleScreenBufferInfo -> 0x200d250
+[API]   [11] GetCurrentProcess -> 0x2003900
+[API]   [12] GetCurrentProcessId -> 0x2003910
+[API]   [13] GetCurrentThread -> 0x2003920
+[API]   [14] GetCurrentThreadId -> 0x2003930
+[API]   [15] GetFileTime -> 0x200c090
+[API]   [16] GetHandleInformation -> 0x200c180
+[API]   [17] GetLastError -> 0x2004150
+[API]   [18] GetModuleHandleA -> 0x2004230
+[API]   [19] GetProcAddress -> 0x2004380
+[API]   [20] GetProcessAffinityMask -> 0x2005a90
+[API]   [21] GetStartupInfoA -> 0x200d470
+[API]   [22] GetStdHandle -> 0x20044f0
+[API]   [23] GetSystemTimeAsFileTime -> 0x200d910
+[API]   [24] GetThreadContext -> 0x200c270
+[API]   [25] GetThreadPriority -> 0x200c360
+[API]   [26] GetTickCount -> 0x2006790
+[API]   [27] InitializeCriticalSection -> 0x20061b0
+[API]   [28] IsDBCSLeadByteEx -> 0x2003940
+[API]   [29] IsDebuggerPresent -> 0x200c450
+[API]   [30] LeaveCriticalSection -> 0x200d800
+[API]   [31] MultiByteToWideChar -> 0x2006950
+[API]   [32] OpenProcess -> 0x200c540
+[API]   [33] OutputDebugStringA -> 0x200b3b0
+[API]   [34] QueryPerformanceCounter -> 0x200da40
+[API]   [35] QueryPerformanceFrequency -> 0x2005ba0
+[API]   [36] RaiseException -> 0x2003b20
+[API]   [37] ReleaseSemaphore -> 0x2005e90
+[API]   [38] RemoveVectoredExceptionHandler -> 0x2005890
+[API]   [39] ResetEvent -> 0x200c630
+[API]   [40] ResumeThread -> 0x200c720
+[API]   [41] RtlCaptureContext -> 0x200c810
+[API]   [42] RtlLookupFunctionEntry -> 0x20045e0
+[API]   [43] RtlUnwindEx -> 0x2006ab0
+[API]   [44] RtlVirtualUnwind -> 0x20047c0
+[API]   [45] ScrollConsoleScreenBufferA -> 0x200c8f0
+[API]   [46] SetConsoleCursorInfo -> 0x200b020
+[API]   [47] SetConsoleCursorPosition -> 0x200b100
+[API]   [48] SetConsoleTextAttribute -> 0x200b1e0
+[API]   [49] SetEvent -> 0x200c9e0
+[API]   [50] SetFileTime -> 0x200cad0
+[API]   [51] SetLastError -> 0x200b500
+[API]   [52] SetProcessAffinityMask -> 0x200cbc0
+[API]   [53] SetThreadContext -> 0x200ccb0
+[API]   [54] SetThreadPriority -> 0x200cda0
+[API]   [55] SetUnhandledExceptionFilter -> 0x2004d90
+[API]   [56] Sleep -> 0x200db70
+[API]   [57] SuspendThread -> 0x200ce90
+[API]   [58] TlsAlloc -> 0x2004e80
+[API]   [59] TlsGetValue -> 0x2004f80
+[API]   [60] TlsSetValue -> 0x200b5e0
+[API]   [61] TryEnterCriticalSection -> 0x20064f0
+[API]   [62] VirtualProtect -> 0x2007030
+[API]   [63] VirtualQuery -> 0x2006300
+[API]   [64] WaitForMultipleObjects -> 0x200b7c0
+[API]   [65] WaitForSingleObject -> 0x200b6e0
+[API]   [66] WideCharToMultiByte -> 0x2007220
+[API]   [67] WriteConsoleOutputA -> 0x200d370
+[API] Import DLL: msvcrt.dll (IAT RVA=0x20e784, ILT RVA=0x0)
+[API]   [0] __C_specific_handler -> 0x200cf80
+[API]   [1] ___lc_codepage_func -> 0x200ba60
+[API]   [2] ___mb_cur_max_func -> 0x200d070
+[API]   [3] __getmainargs -> 0x2005070
+[API]   [4] __initenv -> DATA 0x20221b0
+[API]   [5] __iob_func -> 0x2005310
+[API]   [6] __lconv_init -> 0x2007420
+[API]   [7] __set_app_type -> 0x200b8a0
+[API]   [8] __setusermatherr -> 0x200b980
+[API]   [9] _acmdln -> DATA 0x20221b8
+[API]   [10] _amsg_exit -> 0x20075b0
+[API]   [11] _beginthreadex -> 0x20060b0
+[API]   [12] _cexit -> 0x2005fa0
+[API]   [13] _commode -> DATA 0x2026034
+[API]   [14] _endthreadex -> 0x200aa80
+[API]   [15] _errno -> 0x200bd00
+[API]   [16] _fmode -> DATA 0x2026038
+[API]   [17] _fstat64 -> 0x2009aa0
+[API]   [18] _get_osfhandle -> 0x2005660
+[API]   [19] _gmtime64 -> 0x200a340
+[API]   [20] _initterm -> 0x20051a0
+[API]   [21] _kbhit -> 0x2003c50
+[API]   [22] _localtime64 -> 0x200a3e0
+[API]   [23] _lock -> 0x200bdf0
+[API]   [24] _lseeki64 -> 0x2009dd0
+[API]   [25] _onexit -> 0x200a990
+[API]   [26] _setjmp -> 0x200a610
+[API]   [27] _stat64 -> 0x2009c30
+[API]   [28] _time64 -> 0x200a2a0
+[API]   [29] _ultoa -> 0x200ae90
+[API]   [30] _unlock -> 0x200bed0
+[API]   [31] _wopen -> 0x20094a0
+[API]   [32] abort -> 0x20066d0
+[API]   [33] atoi -> 0x2008c90
+[API]   [34] calloc -> 0x2008270
+[API]   [35] clock -> 0x2009130
+[API]   [36] exit -> 0x2007660
+[API]   [37] fflush -> 0x2005420
+[API]   [38] fprintf -> 0x2007850
+[API]   [39] fputc -> 0x2007d90
+[API]   [40] fputs -> 0x2007c70
+[API]   [41] free -> 0x2008080
+[API]   [42] fwrite -> 0x2007b40
+[API]   [43] getc -> 0x200d160
+[API]   [44] getenv -> 0x200a700
+[API]   [45] islower -> 0x2008e70
+[API]   [46] isspace -> 0x2008f20
+[API]   [47] isupper -> 0x2008fd0
+[API]   [48] isxdigit -> 0x2009080
+[API]   [49] localeconv -> 0x2007510
+[API]   [50] malloc -> 0x2007f90
+[API]   [51] memchr -> 0x2008ab0
+[API]   [52] memcmp -> 0x2008b50
+[API]   [53] memcpy -> 0x2008bf0
+[API]   [54] memmove -> 0x20059f0
+[API]   [55] memset -> 0x2006450
+[API]   [56] printf -> 0x2007710
+[API]   [57] qsort -> 0x200a7a0
+[API]   [58] rand -> 0x200a850
+[API]   [59] realloc -> 0x2008170
+[API]   [60] rename -> 0x2009ed0
+[API]   [61] signal -> 0x200a480
+[API]   [62] srand -> 0x200a8f0
+[API]   [63] strchr -> 0x2008650
+[API]   [64] strcmp -> 0x2008370
+[API]   [65] strcpy -> 0x20085b0
+[API]   [66] strcspn -> 0x2008830
+[API]   [67] strerror -> 0x7fe6b2e02550
+[API]   [68] strlen -> 0x20068b0
+[API]   [69] strncmp -> 0x20088d0
+[API]   [70] strrchr -> 0x20086f0
+[API]   [71] strstr -> 0x2008790
+[API]   [72] strtol -> 0x2008d30
+[API]   [73] strtoul -> 0x2008dd0
+[API]   [74] tolower -> 0x200dc60
+[API]   [75] ungetc -> 0x200bb40
+[API]   [76] vfprintf -> 0x20079b0
+[API]   [77] wcslen -> 0x2007180
+[API]   [78] wcstombs -> 0x2007380
+[API]   [79] longjmp -> 0x200a570
+[API]   [80] _write -> 0x2009700
+[API]   [81] _unlink -> 0x2009fc0
+[API]   [82] _stricmp -> 0x2008970
+[API]   [83] _strdup -> 0x2008a10
+[API]   [84] _sopen -> 0x20093a0
+[API]   [85] _setmode -> 0x200bc20
+[API]   [86] _rmdir -> 0x200a0b0
+[API]   [87] _read -> 0x2009600
+[API]   [88] _open -> 0x20091d0
+[API]   [89] _isatty -> 0x20099c0
+[API]   [90] _fileno -> 0x2005530
+[API]   [91] _dup -> 0x20098e0
+[API]   [92] _close -> 0x2009800
+[API]   [93] _chmod -> 0x200a1a0
+[API] Import resolution: 162 resolved, 0 unresolved (total 162)
+[API] TLS: StartRaw=0x611000 EndRaw=0x611008 Callbacks=0x610040
+[API] Exception: .pdata RVA=0x1f8000 Size=0x8e08 Entries=3030
+[API] EH_FIX: Patched RVA 0x2010c8: 0x01 -> 0x7f
+[API] Jumping to EP=0x4014f0
+[API] _initterm(start=0x610018, end=0x610030)
+[API] _initterm: calling 0x401010
+[API] __set_app_type(1)
+[API] _initterm: calling 0x49c1e0
+[API] __lconv_init()
+[API] _initterm(start=0x610000, end=0x610010)
+[API] _initterm: calling 0x401140
+[API] __getmainargs(argc=0x60b028, argv=0x60b020, envp=0x60b018)
+[API] SetUnhandledExceptionFilter(handler=0x49c9c0)
+[API] malloc(24) = 0x3b3ed10
+[API] malloc(31) = 0x3b3ece0
+[API] malloc(10) = 0x3b3ed30
+[API] _onexit(func=0x401540)
+[API] calloc(1, 48) = 0x3b3ed50
+[API] calloc(1, 176) = 0x3b3ed90
+[API] CreateSemaphoreA(init=0, max=2147483647, name=NULL)
+[API] CreateSemaphoreA(init=0, max=2147483647, name=NULL)
+[API] InitializeCriticalSection(0x3b3eda8)
+[API] InitializeCriticalSection(0x3b3ee00)
+[API] InitializeCriticalSection(0x3b3edd0)
+[API] malloc(24) = 0x3b3ee50
+[API] malloc(24) = 0x3b3ee70
+[API] realloc((nil), 8) = 0x3b3ee90
+[API] _onexit(func=0x4e0260)
+[API] malloc(74752) = 0x3b3eeb0
+[API] _onexit(func=0x4e0240)
+[API] _onexit(func=0x471fd0)
+[API] _onexit(func=0x471fe0)
+[API] _onexit(func=0x49c110)
+[API] malloc(168) = 0x3b512c0
+[API] GetLastError() = 0
+[API] calloc(1, 32) = 0x3b3ec10
+[API] malloc(24) = 0x3b51370
+[API] TlsAlloc() = 0
+[API] free(0x3b51370)
+[API] free(0x3b3ec10)
+[API] TlsGetValue(0) = (nil)
+[API] malloc(24) = 0x3b51370
+[API] calloc(1, 480) = 0x3b51390
+[API] malloc(256) = 0x3b51580
+[API] CreateEventA(manual=1, init=0, name=NULL)
+[API] DuplicateHandle(src_h=0xfffffffffffffffe, tgt_h=0x3b513b8)
+[API] GetThreadPriority()
+[API] TlsSetValue(0, 0x3b51390)
+[API] SetLastError(0)
+[API] malloc(16) = 0x3b51690
+[API] GetLastError() = 0
+[API] TlsGetValue(0) = 0x3b51390
+[API] realloc((nil), 8) = 0x3b516b0
+[API] realloc((nil), 1) = 0x3b516d0
+[API] SetLastError(0)
+[API] [DISPATCH] === RtlDispatchException ===
+[API] [DISPATCH] ExceptionCode=0x20474343 RIP=0x49d5b1 RSP=0x7fff69fbfda0
+[API] [EXC_STATE] EXCEPTION_BEGIN
+[API] [EXC_STATE] Code: 0x20474343
+[API] [EXC_STATE] Flags: 0x0
+[API] [EXC_STATE] Address: 0x49d5b1
+[API] [EXC_STATE] NumParams: 1
+[API] [EXC_STATE] Param[0]: 0x3b51320
+[API] [EXC_STATE] Param[1]: 0x0
+[API] [EXC_STATE] Param[2]: 0x0
+[API] [EXC_STATE] Param[3]: 0x0
+[API] [EXC_STATE] g_cap_args ptr: 0x7fff69fbfdd0
+[API] [EXC_STATE] Exception object @ 0x3b51320 (first 32 bytes):
+[API] [EXC_STATE]   00 2b 2b 43 43 55 4e 47
+[API] [EXC_STATE]   10 f9 4a 00 00 00 00 00
+[API] [EXC_STATE]   00 00 00 00 00 00 00 00
+[API] [EXC_STATE]   00 00 00 00 00 00 00 00
+[API] [EXC_STATE] Exception class (u64): 0x474e5543432b2b00
+[API] [EXC_STATE] EXCEPTION_END
+[API] [DISPATCH] VEH chain: 0 handlers
+[API] [DISPATCH] Frame[0]: RIP=0x49d5b1 RVA=0x9d5b1 CTX.Rsp=0x7fff69fbfda0
+[API] [DISPATCH] Frame[0]: RF begin=0x9d560 end=0x9d5bb ui=0x2098b4
+[API] [DISPATCH] Unwind: pc=0x49d5b1 begin=0x9d560 handler=0x0 est=0x7fff69fbfdc8
+[API] [DISPATCH] Frame[0]: Unwind est=0x7fff69fbfdc8 CTX.Rsp_after=0x7fff69fbfdc8 alloc=0x0
+[API] [DISPATCH] Frame[0]: no handler, parent RIP=0x4e0203 RVA=0xe0203
+[API] [DISPATCH] Frame[0]: est=0x7fff69fbfdc8 CTX.Rsp=0x7fff69fbfdc8 delta=0x0
+[API] [DISPATCH] Frame[1]: RIP=0x4e0203 RVA=0xe0203 CTX.Rsp=0x7fff69fbfdd0
+[API] [DISPATCH] Frame[1]: RF begin=0xe0190 end=0xe0211 ui=0x20931c
+[API] [DISPATCH] Unwind: pc=0x4e0203 begin=0xe0190 handler=0x0 est=0x7fff69fbfe08
+[API] [DISPATCH] Frame[1]: Unwind est=0x7fff69fbfe08 CTX.Rsp_after=0x7fff69fbfe08 alloc=0x0
+[API] [DISPATCH] Frame[1]: no handler, parent RIP=0x4e02d9 RVA=0xe02d9
+[API] [DISPATCH] Frame[1]: est=0x7fff69fbfe08 CTX.Rsp=0x7fff69fbfe08 delta=0x0
+[API] [DISPATCH] Frame[2]: RIP=0x4e02d9 RVA=0xe02d9 CTX.Rsp=0x7fff69fbfe10
+[API] [DISPATCH] Frame[2]: RF begin=0xe0290 end=0xe02da ui=0x201270
+[API] [DISPATCH] Unwind: pc=0x4e02d9 begin=0xe0290 handler=0x0 est=0x7fff69fbfe38
+[API] [DISPATCH] Frame[2]: Unwind est=0x7fff69fbfe38 CTX.Rsp_after=0x7fff69fbfe38 alloc=0x0
+[API] [DISPATCH] Frame[2]: no handler, parent RIP=0x401593 RVA=0x1593
+[API] [DISPATCH] Frame[2]: est=0x7fff69fbfe38 CTX.Rsp=0x7fff69fbfe38 delta=0x0
+[API] [DISPATCH] Frame[3]: RIP=0x401593 RVA=0x1593 CTX.Rsp=0x7fff69fbfe40
+[API] [DISPATCH] Frame[3]: RF begin=0x1570 end=0x15bb ui=0x20107c
+[API] [DISPATCH] Unwind: pc=0x401593 begin=0x1570 handler=0xe0220 est=0x7fff69fbfe88
+[API] [DISPATCH] Frame[3]: Unwind est=0x7fff69fbfe88 CTX.Rsp_after=0x7fff69fbfe88 alloc=0x0
+[API] [DISPATCH] Frame[3]: EHANDLER at RVA 0xe0220 (VA 0x4e0220)
+[API] [DISPATCH] Frame[3]: establisher=0x7fff69fbfe88 CTX.Rsp=0x7fff69fbfe88 lsda=0x601088
+[API] [HANDLER_CALL] Frame[3] BEGIN
+[API] [HANDLER_CALL] RCX (EXCEPTION_RECORD*) = 0x7fff69fbf790
+[API] [HANDLER_CALL] RDX (EstablisherFrame) = 0x7fff69fbfe88
+[API] [HANDLER_CALL] R8  (CONTEXT*)       = 0x7fff69fbf830
+[API] [HANDLER_CALL] R9  (DISPATCHER_CONTEXT*) = 0x7fff69fbf740
+[API] [HANDLER_CALL] Handler VA = 0x4e0220  RVA = 0xe0220
+[API] [HANDLER_CALL] HandlerData (LSDA) = 0x601088
+[API] [HANDLER_CALL] ER.Code=0x20474343 ER.Flags=0x0 ER.NumParams=1
+[API] [HANDLER_CALL] ER.Param[0]=0x3b51320 ER.Param[1]=0x0 ER.Param[2]=0x0
+[API] [HANDLER_CALL] Handler bytes [0:16]: 48 83 ec 38 48 8d 05 85 fb fc ff 48 89 44 24 20
+[API] [HANDLER_CALL] Handler bytes[16:32]: e8 0b d1 fb ff 48 83 c4 38 c3 90 90 90 90 90 90
+[API] [HANDLER_CALL] Handler bytes[32:48]: 48 83 ec 28 48 8d 0d 55 12 00 00 e8 20 a0 fc ff
+[API] [LSDA] raw[0:16]:  ff ff 01 08 20 03 35 00 45 06 00 00 01 00 00 00
+[API] [LSDA] raw[16:32]: 01 00 00 00 01 00 00 00 01 00 00 00 01 00 00 00
+[API] [LSDA] raw[32:48]: 01 00 00 00 01 00 00 00 01 00 00 00 01 00 00 00
+[API] [LSDA] raw[48:64]: 01 00 00 00 01 00 00 00 01 00 00 00 01 00 00 00
+[API] [LSDA] raw[64:80]: 7f 00 00 00 01 00 00 00 01 00 00 00 01 00 00 00
+[API] [LSDA] raw[80:96]: 01 00 00 00 01 00 00 00 01 00 00 00 01 00 00 00
+[API] [LSDA] raw[96:112]: 01 00 00 00 01 00 00 00 01 00 00 00 01 00 00 00
+[API] [LSDA] raw[112:128]: 01 00 00 00 01 00 00 00 01 00 00 00 01 00 00 00
+[API] [LSDA] LPStart_enc=0xff (omit)
+[API] [LSDA] TType_enc=0xff
+[API] [LSDA] CS_enc=0x01
+[API] [HANDLER_CALL] CTX.Rip=0x401592 CTX.Rsp=0x7fff69fbfe88 CTX.Rbp=0x1
+[API] [HANDLER_CALL] calling...
+[API] [HANDLER_CALL] returned disposition=1 (0=Exec %1=Search %2=Nested %3=Collided)
+[API] [HANDLER_CALL] Frame[3] END
+[API] [DISPATCH] Handler returned ContinueSearch — walking to parent
+[API] [EH_FIX] CS: start=8 len=61 lp=3 act=53 pc_off=34 range=[8,61)
+[API] [EH_FIX] Override: personality failed, catching at LP=0x401573 (RVA 0x3)
+[API] [DISPATCH] EH_FIX: Overrode personality — resuming at catch
+[API] GetLastError() = 0
+[API] TlsGetValue(0) = 0x3b51390
+[API] SetLastError(0)
+[API] GetLastError() = 0
+[API] TlsGetValue(0) = 0x3b51390
+[API] SetLastError(0)
+[API] realloc((nil), 32) = 0x3b3ec10
+[API] __iob_func() = 0x2022170
+[API] fwrite(sz=1, cnt=48)
+[API] __iob_func() = 0x2022170
+[API] fputs(str=unsigned long long)
+[API] __iob_func() = 0x2022170
+[API] fwrite(sz=1, cnt=2)
+[API] free(0x3b3ec10)
+[API] GetLastError() = 0
+[API] TlsGetValue(0) = 0x3b51390
+[API] SetLastError(0)
+[API] [DISPATCH] === RtlDispatchException ===
+[API] [DISPATCH] ExceptionCode=0x20474343 RIP=0x49d5b1 RSP=0x7fff69fbfc80
+[API] [EXC_STATE] EXCEPTION_BEGIN
+[API] [EXC_STATE] Code: 0x20474343
+[API] [EXC_STATE] Flags: 0x0
+[API] [EXC_STATE] Address: 0x49d5b1
+[API] [EXC_STATE] NumParams: 1
+[API] [EXC_STATE] Param[0]: 0x3b51320
+[API] [EXC_STATE] Param[1]: 0x0
+[API] [EXC_STATE] Param[2]: 0x0
+[API] [EXC_STATE] Param[3]: 0x0
+[API] [EXC_STATE] g_cap_args ptr: 0x7fff69fbfcb0
+[API] [EXC_STATE] Exception object @ 0x3b51320 (first 32 bytes):
+[API] [EXC_STATE]   00 2b 2b 43 43 55 4e 47
+[API] [EXC_STATE]   10 f9 4a 00 00 00 00 00
+[API] [EXC_STATE]   00 00 00 00 00 00 00 00
+[API] [EXC_STATE]   00 00 00 00 00 00 00 00
+[API] [EXC_STATE] Exception class (u64): 0x474e5543432b2b00
+[API] [EXC_STATE] EXCEPTION_END
+[API] [DISPATCH] VEH chain: 0 handlers
+[API] [DISPATCH] Frame[0]: RIP=0x49d5b1 RVA=0x9d5b1 CTX.Rsp=0x7fff69fbfc80
+[API] [DISPATCH] Frame[0]: RF begin=0x9d560 end=0x9d5bb ui=0x2098b4
+[API] [DISPATCH] Unwind: pc=0x49d5b1 begin=0x9d560 handler=0x0 est=0x7fff69fbfca8
+[API] [DISPATCH] Frame[0]: Unwind est=0x7fff69fbfca8 CTX.Rsp_after=0x7fff69fbfca8 alloc=0x0
+[API] [DISPATCH] Frame[0]: no handler, parent RIP=0x49d680 RVA=0x9d680
+[API] [DISPATCH] Frame[0]: est=0x7fff69fbfca8 CTX.Rsp=0x7fff69fbfca8 delta=0x0
+[API] [DISPATCH] Frame[1]: RIP=0x49d680 RVA=0x9d680 CTX.Rsp=0x7fff69fbfcb0
+[API] [DISPATCH] Frame[1]: RF begin=0x9d670 end=0x9d68c ui=0x2098cc
+[API] [DISPATCH] Unwind: pc=0x49d680 begin=0x9d670 handler=0x0 est=0x7fff69fbfcd8
+[API] [DISPATCH] Frame[1]: Unwind est=0x7fff69fbfcd8 CTX.Rsp_after=0x7fff69fbfcd8 alloc=0x0
+[API] [DISPATCH] Frame[1]: no handler, parent RIP=0x4e017e RVA=0xe017e
+[API] [DISPATCH] Frame[1]: est=0x7fff69fbfcd8 CTX.Rsp=0x7fff69fbfcd8 delta=0x0
+[API] [DISPATCH] Frame[2]: RIP=0x4e017e RVA=0xe017e CTX.Rsp=0x7fff69fbfce0
+[API] [DISPATCH] Frame[2]: RF begin=0xe0140 end=0xe0190 ui=0x209328
+[API] [DISPATCH] Unwind: pc=0x4e017e begin=0xe0140 handler=0x0 est=0x7fff69fbfd08
+[API] [DISPATCH] Frame[2]: Unwind est=0x7fff69fbfd08 CTX.Rsp_after=0x7fff69fbfd08 alloc=0x0
+[API] [DISPATCH] Frame[2]: no handler, parent RIP=0x4dccc1 RVA=0xdccc1
+[API] [DISPATCH] Frame[2]: est=0x7fff69fbfd08 CTX.Rsp=0x7fff69fbfd08 delta=0x0
+[API] [DISPATCH] Frame[3]: RIP=0x4dccc1 RVA=0xdccc1 CTX.Rsp=0x7fff69fbfd10
+[API] [DISPATCH] Frame[3]: RF begin=0xdcbf0 end=0xdcdaf ui=0x209420
+[API] [DISPATCH] Unwind: pc=0x4dccc1 begin=0xdcbf0 handler=0xe0220 est=0x7fff69fbfd58
+[API] [DISPATCH] Frame[3]: Unwind est=0x7fff69fbfd58 CTX.Rsp_after=0x7fff69fbfd58 alloc=0x0
+[API] [DISPATCH] Frame[3]: EHANDLER at RVA 0xe0220 (VA 0x4e0220)
+[API] [DISPATCH] Frame[3]: establisher=0x7fff69fbfd58 CTX.Rsp=0x7fff69fbfd58 lsda=0x609430
+[API] [HANDLER_CALL] Frame[3] BEGIN
+[API] [HANDLER_CALL] RCX (EXCEPTION_RECORD*) = 0x7fff69fbf670
+[API] [HANDLER_CALL] RDX (EstablisherFrame) = 0x7fff69fbfd58
+[API] [HANDLER_CALL] R8  (CONTEXT*)       = 0x7fff69fbf710
+[API] [HANDLER_CALL] R9  (DISPATCHER_CONTEXT*) = 0x7fff69fbf620
+[API] [HANDLER_CALL] Handler VA = 0x4e0220  RVA = 0xe0220
+[API] [HANDLER_CALL] HandlerData (LSDA) = 0x609430
+[API] [HANDLER_CALL] ER.Code=0x20474343 ER.Flags=0x0 ER.NumParams=1
+[API] [HANDLER_CALL] ER.Param[0]=0x3b51320 ER.Param[1]=0x0 ER.Param[2]=0x0
+[API] [HANDLER_CALL] Handler bytes [0:16]: 48 83 ec 38 48 8d 05 85 fb fc ff 48 89 44 24 20
+[API] [HANDLER_CALL] Handler bytes[16:32]: e8 0b d1 fb ff 48 83 c4 38 c3 90 90 90 90 90 90
+[API] [HANDLER_CALL] Handler bytes[32:48]: 48 83 ec 28 48 8d 0d 55 12 00 00 e8 20 a0 fc ff
+[API] [LSDA] raw[0:16]:  ff 9b 29 01 1a 51 6b 00 00 cc 01 05 b4 02 03 d1
+[API] [LSDA] raw[16:32]: 01 63 00 00 d3 02 42 ae 03 00 a4 03 1b 00 00 02
+[API] [LSDA] raw[32:48]: 00 01 7d 00 00 00 00 00 d8 7f ed ff 01 00 00 00
+[API] [LSDA] raw[48:64]: 01 00 00 00 01 06 02 00 06 32 02 c0 01 00 00 00
+[API] [LSDA] raw[64:80]: 01 00 00 00 01 06 03 00 06 42 02 30 01 60 00 00
+[API] [LSDA] raw[80:96]: 01 08 05 00 08 42 04 30 03 60 02 70 01 50 00 00
+[API] [LSDA] raw[96:112]: 01 02 02 00 02 30 01 60 01 06 02 00 06 32 02 c0
+[API] [LSDA] raw[112:128]: 01 05 02 00 05 32 01 30 01 05 02 00 05 32 01 30
+[API] [LSDA] LPStart_enc=0xff (omit)
+[API] [LSDA] TType_enc=0x9b
+[API] [LSDA] CS_enc=0x29
+[API] [HANDLER_CALL] CTX.Rip=0x4dccc0 CTX.Rsp=0x7fff69fbfd58 CTX.Rbp=0x1
+[API] [HANDLER_CALL] calling...
+[API] RtlUnwindEx(target_frame=0x7fff69fbfd58, target_ip=0x4dcd24, ctx=0x7fff69fbf670, exc=0x3b51320)
+[API] RtlUnwindEx: TargetIp=0x4dcd24 TargetFrame=0x7fff69fbfd58
+[API] RtlUnwindEx: target_func RVA=0xdcbf0 alloc_total=0x48 post_prologue_RSP=0x7fff69fbfd10
+[API] RtlUnwindEx: Set CTX.Rax = 0x3b51320 (exception object)
+[API] RtlUnwindEx: longjmping to dispatcher (RIP=0x4dcd24 RSP=0x7fff69fbfd10)
+[API] RtlUnwindEx DIAG: tgt_frame(post-prologue RSP)=0x7fff69fbfd58
+[API] RtlUnwindEx DIAG: [tgt_frame+0x30]=0x3b51360 (expect global _onexit ptr)
+[API] RtlUnwindEx DIAG: [tgt_frame+0x38]=0x3b51320 (expect _pfirst ptr)
+[API] RtlUnwindEx DIAG: [tgt_frame+0x40]=0x4df2d3 (expect count)
+[API] [DISPATCH] RtlUnwindEx longjmped back — unwind to RIP=0x4dcd24 RSP=0x7fff69fbfd10
+[API] [DISPATCH] CONTEXT after longjmp: Rax=0x3b51320 (saved to g_unwind_regs)
+[API] GetLastError() = 0
+[API] TlsGetValue(0) = 0x3b51390
+[API] SetLastError(0)
+[API] GetLastError() = 0
+[API] TlsGetValue(0) = 0x3b51390
+[API] SetLastError(0)
+[API] abort()

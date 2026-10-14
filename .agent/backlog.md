@@ -10,27 +10,33 @@ Implementation status and verification status are tracked separately (e.g. IMPLE
 - Scope was: `src/loader/loader.c` mw_RaiseException stub ONLY (single operand: `[rsp+0x00]` → `[rsp+0x08]`, stray `0x58` reload deleted; mirroring exp_next2_backup L842-843).
 - Result (2026-10-14): regression **12/12** (was 10/12); UPX progressed from walk-never-starts/exit-134 to full 4-frame walk → Frame[3] handler → real `RtlUnwindEx(TargetIp=0x4dcd24)` → landing-pad resume, then a NEW distinct failure (exit 139, RIP=0x2004167 heap) = **BUG-027**. Report: `docs/master/experiments/EXP-036-bug026-gcap-rip-fix-live-rerun.md`; closure: `docs/bugs/BUG-026.md`; evidence: `evidence/master/bug026/` + `evidence/master/bug026_results.json`.
 
-### TASK-BUG-027 — mw_RtlUnwindEx landing-pad resume state wrong (RSP +8 via ALLOC_SMALL decode; RDX selector not propagated)
-- Priority: P0. Status: **READY (next task)**. Dependencies: TASK-BUG-026 (done).
+### TASK-BUG-027 — mw_RtlUnwindEx landing-pad resume state wrong (slot-stride decode)
+- Priority: P0. Status: **TESTED (CLOSED)**. Dependencies: TASK-BUG-026 (done).
 - Scope: `mw_RtlUnwindEx` resume-state assembly ONLY. Preferred fix (ADR-008): resume with the personality-provided ContextRecord state (Rsp/Rdx from r8), override only Rip=TargetIp. Minimal alternative: fix ALLOC_SMALL `(OpInfo+1)*8` decode in mw_RtlUnwindEx AND adopt RDX from OriginalContext.
 - Evidence: EXP-036 §4 (alloc_total 0x40 vs true 0x48; correct RSP 0x7ffe60f7deb0 vs used 0x7ffe60f7deb8; landing pad = return address of throw call `call 0x4a95a8` @0x4dcd1f, selector switch `sub rdx,1; jne`).
 - Boundaries: do NOT touch EH_FIX, CXX-EH-FIX, the RaiseException stub, or the walk itself.
 - Acceptance: regression stays 12/12; fresh UPX trace shows landing-pad entry registers (RSP=0x7ffe60f7deb0, RDX=selector, RAX=0x3bc8320) and a NEW failure point further along (progress) or UPX `--version` output (completion).
-- Closure doc: `docs/bugs/BUG-027.md`.
+- Result (2026-10-14): actual root cause was a 4-byte slot STRIDE in the unwind-code loop (`uint16_t* tgt_codes` + `tgt_slot*2` => byte offset slot*4), not the ALLOC_SMALL formula. Fix = one declaration (`uint8_t* tgt_codes`). Trace-verified: alloc_total=0x48, post_prologue_RSP=establisher−0x48 (= Frame[3]-entry RSP), landing pad 0x4dcd24 resumed, catch TLS machinery ran, then terminate→abort (exit 134) = BUG-029. EXP-036's RDX-selector claim withdrawn (disassembly: raise helper `xor edx,edx`; jne branch is normal) and the "adopt r8 OriginalContext" direction retracted (personality passes r8=&ExceptionRecord). Report: `docs/master/experiments/EXP-037-…md`; closure: `docs/bugs/BUG-027.md`.
 
 ### TASK-EXP-036 — Live re-run of UPX dispatch path after BUG-026
 - Priority: P0. Status: **TESTED (CLOSED)**. Dependencies: TASK-BUG-026.
 - Result (2026-10-14): executed in the same session as BUG-026; full report `docs/master/experiments/EXP-036-bug026-gcap-rip-fix-live-rerun.md` (§3 verification, §4 new-failure root cause, §7 falsifiable predictions P-1/P-2/P-3).
+
+### TASK-BUG-029 — terminate→abort after correct landing-pad resume (catch machinery; 'unsigned long long' in flight)
+- Priority: P0. Status: **READY (next task)**. Dependencies: TASK-BUG-027 (done). First step: TASK-API-005 (isolate EH_FIX behind MINWIN_EH_HACKS, default OFF), then re-run and compare (EXP-037 §7 P-A/P-B).
+- Symptom: post-resume TLS calls run, then terminate→abort (exit 134) with NO new RtlDispatchException — terminate while the original exception is in flight.
+- Candidates (ordered): (1) EH_FIX dispatch-1 hijack poisoning __cxa/TLS state; (2) GCC-core input dependency — dispatcher passes post-unwind ctx (Rsp=est) to handlers, Windows passes pre-unwind throw-site ctx; (3) personality site B/C (0x21474343 protocol) unexercised.
+- Closure doc: `docs/bugs/BUG-029.md`.
 
 ### TASK-BUG-028 (candidate, P3) — dead `movq 0x30/0x38/0x40/0x48(%rsp), rcx/rdx/r8/r9` loads in RaiseException stub
 - Miscommented leftover of an older no-push stub variant (absent in exp_next2_backup; offsets hold pushed RBP/R12/R13/R14 today). Benign; fold into TASK-API-016 dead-code cleanup. Discovered during BUG-026 (EXP-036 §2).
 
 ## P1 — landing-pad correctness (after EXP-036)
 
-### TASK-EXP-037 — Verify EXP-035 post_prologue arithmetic live (SUPERSEDED by BUG-027 evidence: EXP-036 §4.2/4.3 measured alloc_total=0x40 vs true 0x48 live — arithmetic is WRONG, subsumed into TASK-BUG-027)
+### TASK-EXP-037 (old task ID) — Verify EXP-035 post_prologue arithmetic live (SUPERSEDED — the live numbers landed inside the BUG-027 experiment, which is logged as experiment report EXP-037 to keep the experiment sequence chronological; this task ID is retired to avoid duplicate numbering)
 ### TASK-EXP-038 — OriginalContext adoption / RDX selector propagation (MERGED into TASK-BUG-027 — live numbers now exist, ADR-008 governs; the separate experiment is no longer needed before the fix)
 ### TASK-API-006 — ALLOC decode fixes: scale rule in 4 copies + windows_abi doc (BUG-027 confirmed the +8 defect ALSO hits ALLOC_SMALL in mw_RtlUnwindEx — extend scope to ALLOC_SMALL there)
-### TASK-API-005 — Isolate EH_FIX + CXX-EH-FIX behind MINWIN_EH_HACKS flag, default OFF (PENDING, dep EXP-036)
+### TASK-API-005 — Isolate EH_FIX + CXX-EH-FIX behind MINWIN_EH_HACKS flag, default OFF (READY — now the FIRST STEP of TASK-BUG-029; EH_FIX dispatch-1 hijack live-implicated in BUG-029)
 ### TASK-API-002 — Trace flush in mw_ExitProcess (READY — independent, small)
 ### TASK-API-003 — Wire SetUnhandledExceptionFilter into walk-exhaustion (PENDING, dep BUG-026)
 ### TASK-TEST-001 — Port unwind unit tests to tests/unit/ with portable includes (READY — independent)

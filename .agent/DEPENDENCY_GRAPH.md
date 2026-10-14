@@ -14,16 +14,27 @@
               │         └──────────┬─────────────────┘         │
               │                    │                           │
               │         ┌──────────▼─────────────────┐         │
-              │         │ TASK-BUG-027 (READY, P0)   │         │
-              │         │ landing-pad resume state   │         │
-              │         │ (subsumes EXP-037/038)     │         │
+              │         │ TASK-BUG-027 (TESTED ✓)    │         │
+              │         │ slot-stride decode fix     │         │
+              │         │ landing pad resumes OK     │         │
+              │         └──────────┬─────────────────┘         │
+              │                    │                           │
+              │         ┌──────────▼─────────────────┐         │
+              │         │ TASK-BUG-029 (READY, P0)   │         │
+              │         │ terminate after correct    │         │
+              │         │ landing-pad resume         │         │
+              │         └──────────┬─────────────────┘         │
+              │                    │                           │
+              │         ┌──────────▼─────────────────┐         │
+              │         │ TASK-API-005 (first step)  │         │
+              │         │ EH hacks flag OFF          │         │
               │         └──────────┬─────────────────┘         │
               │                    │                           │
               ▼                    ▼                           ▼
  ┌────────────────────┐ ┌──────────────────────┐ ┌────────────────────────┐
- │ TASK-API-006       │ │ TASK-API-005         │ │ TASK-API-003           │
- │ ALLOC +8 rule fix  │ │ EH hacks flag OFF    │ │ UEF wiring (unblocked) │
- │ (ALLOC_SMALL too)  │ │ (EH_FIX fired live)  │ │                        │
+ │ TASK-API-006       │ │ TASK-API-003         │ │ TASK-TEST-004/005      │
+ │ ALLOC_LARGE rules  │ │ UEF wiring           │ │ dispatch tests +       │
+ │ (4 copies + −2)    │ │                      │ │ Tier-B builder         │
  └─────────┬──────────┘ └──────────┬───────────┘ └───────────┬────────────┘
            └──────────────┬────────┴──────────────────────────┘
                           ▼

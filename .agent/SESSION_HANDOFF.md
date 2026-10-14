@@ -1,33 +1,48 @@
-# SESSION HANDOFF — 2026-10-14 (CONTINUE #2: BUG-026 fixed + EXP-036 run)
+# SESSION HANDOFF — 2026-10-14 (CONTINUE #3: BUG-027 fixed + pushed; BUG-029 registered)
 
 ## What this session did
-- **Protocol steps A–B:** state synced at `08d94ac` (clean tree; binary hash matched the recorded baseline byte-for-byte — reality check passed). Selected the one READY P0 task: TASK-BUG-026.
-- **Step C (baseline):** clean build `afa7744c…`; regression **10/12** (tests 8 & 10 fail, as recorded).
-- **Step D (fix):** single-operand change in the mw_RaiseException naked stub — `g_cap_rip` now loaded from saved-rip slot `[rsp+0x08]` (stray `0x58` reload + `[rsp+0x00]` load deleted), mirroring `loader.c.exp_next2_backup` L842-843. loader.c: `502ae588…` → `e1caa5d7…`.
-- **Step E (verify):** clean build `c8472d04…` 0 errors; regression **12/12 PASS**; UPX run exit 139 (was 134).
-- **EXP-036 (live re-run, folded into this session):** new trace shows dispatch-1 (EH_FIX override → LP 0x401573 → catch machinery → re-throw), then dispatch-2 with a **fully correct 4-frame walk** → Frame[3] personality → **real RtlUnwindEx(TargetIp=0x4dcd24)** → landing-pad resume → **NEW failure**: SIGSEGV at heap 0x2004167.
-- **New-failure root cause identified** (static UNWIND_INFO decode + live numbers): mw_RtlUnwindEx synthesizes landing-pad RSP from alloc_total (ALLOC_SMALL decode missing `+8`: 0x40 vs true 0x48 → RSP 0x7ffe60f7deb8 instead of 0x7ffe60f7deb0) and does not propagate the RDX selector from the personality's ContextRecord. Registered as **BUG-027** (READY, next task).
+- **OWNER-001 CLOSED:** GitHub token verified (user `Sh-TB`, push access), credential store
+  configured OUTSIDE the repo (`~/.git-credentials`). Pushed both pending commits:
+  `39181aa..4039b61 main→main`, GitHub-confirmed (`origin/main == 4039b61f…`).
+- **Protocol steps A–C:** synced at `4039b61` (clean); pre-edit baseline re-verified
+  (regression 12/12; loader.c `e1caa5d7…`, binary `c8472d04…`).
+- **Ground-truth reverse engineering (decisive):** disassembled the real personality
+  (wrapper `0xe0220` → core `0x49d340`, mingw GCC SEH bridge, UPX "CCt"-protocol aware).
+  Established: (a) RtlUnwindEx call site A passes `r8=&ExceptionRecord` (NOT a CONTEXT) —
+  EXP-036's "adopt r8/OriginalContext" direction RETRACTED; (b) raise helper does
+  `xor edx,edx` — carried Rdx=0 is normal, landing-pad `jne` branch is the normal path —
+  RDX-selector hypothesis WITHDRAWN.
+- **Step D (fix):** BUG-027's true defect = 4-byte slot STRIDE in the unwind-code loop
+  (`uint16_t* tgt_codes` + `tgt_slot*2` ⇒ byte offset slot×4 → read every other slot +
+  garbage → coincidental 0x40). Fix = one declaration (`uint8_t* tgt_codes = tgt_ui + 4;`).
+  loader.c → `bab5ea86…`, binary → `0c275159…`.
+- **Step E (verify):** trace-verified `alloc_total=0x48`, `post_prologue_RSP=est−0x48`
+  (= Frame[3]-entry RSP — exactly the throw-site RSP); landing pad 0x4dcd24 resumed;
+  catch TLS machinery ran; then terminate → abort (exit 134). Regression: test 10's
+  139-expectation was the BUG-026-era frontier — evolved to the verified frontier
+  (134 + terminate-message assertion) with an inline evidence comment; suite **12/12**.
+- **Registered BUG-029** (terminate after correct landing-pad resume; candidates ordered:
+  EH_FIX dispatch-1 hijack → GCC-core ctx-RSP dependency → site B/C audit).
 
 ## Commits
-- This session: `BUG-026: restore g_cap_rip capture operand` (source + docs + evidence + .agent updates + checkpoint zip `miniwin_checkpoint_bug026_20261014.zip`).
-- Chain: `39181aa` → `08d94ac` (foundation) → BUG-026 commit (HEAD).
-- **Pushed: NO** — still no GitHub credentials. Owner action required.
+- This session: `BUG-027: …` (loader.c fix + EXP-037 + BUG-027 closure + BUG-029 +
+  regression expectation evolution + .agent updates + evidence).
+- Chain: `39181aa` → `08d94ac` → `4039b61` (BUG-026) → BUG-027 commit (HEAD).
+- **Pushed: YES** (credentials now configured; origin/main will equal HEAD after this push).
 
 ## Current blocker
-BUG-027 (see `.agent/CURRENT_TASK.md`): landing-pad resume state. UPX acceptance
-G1 (`--version` output) still NOT MET; the failure point has moved from
-"dispatch never walks" to "landing pad resume corrupts stack".
+BUG-029 (see `.agent/CURRENT_TASK.md`): terminate during catch processing after a
+correct landing-pad resume. First step = TASK-API-005 (flag-guard EH hacks, default OFF).
 
 ## Next
-Next task ID: **TASK-BUG-027**. Exact next command from the owner: **CONTINUE**.
+Next task ID: **TASK-BUG-029** (starting with TASK-API-005). Exact next command from the
+owner: **CONTINUE**.
 
 ## Unverified / unknown (honest list)
-- Whether the preferred fix (adopt personality ContextRecord) fully clears
-  0x4dcd24 — P-1/P-2 predictions in EXP-036 §7 are falsifiable, not proven.
-- EH_FIX still fires live on dispatch-1 (EXP-036 §3.4) — its isolation (API-005)
-  remains mandatory before any honest G-gate.
-- Whether dispatch-2's re-throw originates from UPX's own logic or from our
-  resume at LP=0x401573 being subtly wrong (EH_FIX dependency — related to above).
-- VEH chain empty at dispatch (R-31) — unchanged this session.
-- Dispatch tests still broken/vacuous (TEST-004 pending).
-- GitHub push still blocked on credentials (OWNER-001).
+- Whether EH_FIX removal from the dispatch-1 path lets the GCC core reach site A on
+  dispatch-1 (P-A) — the core returned non-INSTALL with our inputs; untested without the hack.
+- Dispatcher handler-call context semantics (post-unwind Rsp=est vs Windows' pre-unwind
+  throw-site RSP) — P-B variable, untested.
+- Personality site B/C (0x21474343 protocol) behavior under our loader — unexercised.
+- ALLOC_LARGE scaling formulas in this loop + 3 other copies (TASK-API-006) — latent.
+- Dispatch tests still broken/vacuous (TEST-004).

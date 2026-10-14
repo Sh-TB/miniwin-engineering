@@ -38,3 +38,10 @@ Format: `ID | path | what it proves | session`
 - EV-030 | docs/master/experiments/EXP-036-bug026-gcap-rip-fix-live-rerun.md | full experiment: fix + verification + new-failure root cause (§4) + predictions (§7) | 2026-10-14
 - EV-031 | evidence/master/bug026_results.json | machine-readable post-fix results (12/12, exit 139, BUG-027 pointer) | 2026-10-14
 - EV-032 | docs/bugs/BUG-027.md | BUG-027 record: RSP +8 (ALLOC_SMALL +8 missing in mw_RtlUnwindEx) + RDX selector not propagated | 2026-10-14
+
+## BUG-027 fix + EXP-037 + OWNER-001 (CONTINUE #3, 2026-10-14)
+- EV-033 | evidence/master/bug027/upx_trace.json | post-fix trace: alloc_total=0x48, post_prologue_RSP=est−0x48 (= Frame[3]-entry RSP), landing pad 0x4dcd24 resumed, catch TLS calls, abort | 2026-10-14
+- EV-034 | evidence/master/bug027_probe_personality_disasm.txt | personality ground truth: site A passes r8=&ExceptionRecord (NOT a CONTEXT); raise helper xor edx,edx; landing-pad jne branch is normal | 2026-10-14
+- EV-035 | evidence/master/bug027/regression_12of12_post_bug027.txt | 12/12 with test-10 expectation evolved to verified frontier (134 + terminate-message) | 2026-10-14
+- EV-036 | docs/master/experiments/EXP-037-bug027-alloc-decode-fix-live-rerun.md | full report: stride root cause, retraction of EXP-036 §4.4/4.5 claims, BUG-029 candidates | 2026-10-14
+- EV-037 | docs/bugs/BUG-029.md | new frontier record: terminate after correct landing-pad resume | 2026-10-14

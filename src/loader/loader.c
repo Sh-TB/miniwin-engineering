@@ -1883,7 +1883,15 @@ __attribute__((ms_abi)) void mw_RtlUnwindEx(void* target_frame, void* target_ip,
         if (tgt_rf) {
             uint8_t* tgt_ui = g_image_base + tgt_rf->UnwindInfo;
             uint8_t tgt_count = tgt_ui[2];
-            uint16_t* tgt_codes = (uint16_t*)(tgt_ui + 4);
+            /* BUG-027 fix: unwind code slots are 2 bytes each and must be
+             * addressed in BYTES. The previous declaration `uint16_t* tgt_codes`
+             * made `tgt_codes + tgt_slot * 2` advance 4 bytes per slot, so the
+             * loop read every other slot and then garbage past the codes array:
+             * for function 0xdcbf0 (codes 19 09 04 00 | 09 52 05 30 04 c0 02 d0 =
+             * ALLOC_SMALL 0x30 + PUSH R13/R12/RBX = 0x48 total) it computed
+             * alloc_total=0x40 instead of 0x48, resuming the landing pad with
+             * RSP 8 bytes too high -> SIGSEGV at heap RIP (EXP-036 §4). */
+            uint8_t* tgt_codes = tgt_ui + 4;
             int tgt_slot = 0;
             uint64_t alloc_total = 0;
             for (int i = 0; i < tgt_count; i++) {

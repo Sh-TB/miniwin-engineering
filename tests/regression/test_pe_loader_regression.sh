@@ -115,11 +115,20 @@ run_test() {
         fail_test "UNWIND_INFO NOT parsed"
     fi
 
-    # --- Test 10: Exit code is 139 (SIGSEGV after unhandled exception) ---
-    if [ "$exit_code" -eq 139 ]; then
-        pass_test "Exit code 139 (SIGSEGV after unhandled exception)"
+    # --- Test 10: Exit code matches the current verified failure frontier ---
+    # History:
+    #   pre-BUG-026:  exit 134 (SIGABRT before any frame walk)
+    #   post-BUG-026: exit 139 (SIGSEGV at landing-pad resume, RSP+8 bug)
+    #   post-BUG-027: exit 134 again, but at a LATER, verified point:
+    #                 landing pad 0x4dcd24 resumes with correct RSP
+    #                 (post_prologue_RSP = establisher - 0x48, trace-verified
+    #                 alloc_total=0x48), catch TLS machinery runs, then
+    #                 terminate -> abort (BUG-029, see docs/bugs/BUG-029.md).
+    #                 134 here is PROGRESS, not the old pre-walk abort.
+    if [ "$exit_code" -eq 134 ] && grep -q "terminate called after throwing" /tmp/minwin_stdout_test 2>/dev/null; then
+        pass_test "Exit code 134 (verified BUG-029 frontier: terminate after landing-pad resume)"
     else
-        fail_test "Exit code $exit_code (expected 139)"
+        fail_test "Exit code $exit_code (expected 134 = BUG-029 frontier; 139 was the BUG-026-era expectation)"
     fi
 
     # --- Test 11: malloc/calloc work (HeapAlloc regression) ---
