@@ -1,0 +1,16 @@
+[TRACE] Command line: /home/z/my-project/workspace/miniwin-engineering/tests/appcompat/t08_big_cpp_stl.exe
+
+[CRASH] Signal 11 at RIP=0x140015f3f
+  RAX=0xffffffff RCX=0x0 RDX=0x1400455a8 R8=0x140004bd0 R9=0x7fc597d16b20
+  RSP=0x7ffc77540148 RBP=0x7ffc77540250
+  g_image_base=0x140000000 g_image_size=0xa1000
+  RVA=0x15f3f (inside loaded PE)
+  Bytes: 48 8b 04 c1 48 8d 80 08 00 00 00 c3 cc cc cc cc 
+  Return addr: 0x140012cb5
+  RSI=0x140004bd0 RDI=0x1400455a8
+  R8=0x140004bd0  R9=0x7fc597d16b20 R10=0xf0 R11=0xb
+  R12=0x30c9e60 R13=0x30c9e60 R14=0x7ffc775402e0 R15=0x7ffc775402c8
+  Backtrace (via stack walking):
+    [0] RIP=0x140015f3f RVA=0x15f3f      [RSP+0] = 0x140012cb5 (return addr?)
+    [1] RIP=0x140015f3f RVA=0x15f3f      [RSP+0] = 0xfffeaae8f08949fa (return addr?)
+    [2] RIP=0x140015f3f RVA=0x15f3f

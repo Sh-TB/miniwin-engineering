@@ -63,3 +63,16 @@ Format: `ID | path | what it proves | session`
 - EV-049 | docs/master/experiments/EXP-039-bug031-cleanup-chain-g1.md | full report: reproduce-first table, early-clobber proof, E1–E5 bisection (compile-dependent phase-1 flip), rax/r10/r11 boundary pinning, G1 scorecard, P-F/P-G/P-H | 2026-10-15
 - EV-050 | docs/bugs/BUG-031.md (CLOSED) + docs/master/ARCHITECTURE_DECISIONS.md ADR-011 | defect closure + architecture decision (resume commands + raise-site register fidelity) | 2026-10-15
 - EV-051 | checkpoints/checkpoint_pre_task-bug031_20261015.zip | pre-task checkpoint from the interrupted session (WIP origin) | 2026-10-15
+
+## appcompat sweep (CONTINUE #6, 2026-10-15)
+- EV-052 | evidence/master/appcompat/run-20261015_053015/summary.csv | final sweep: t01..t07 PASS, t08 CRASH (BUG-037), t09 CRASH (wave-3 APIs) | 2026-10-15
+- EV-053 | evidence/master/appcompat/run-20261015_044710/summary.csv | FIRST sweep: 0/9 PASS — every PE died at `call [iat]` on unresolved CRT startup imports (RIP=raw RVA 0x92f8 signature) | 2026-10-15
+- EV-054 | docs/master/experiments/EXP-040-appcompat-sweep.md | full report: 8-stage fix trail, findings APP-F-01..08, BUG-037 ground truth + fix plan, wave-3 API list (44) | 2026-10-15
+- EV-055 | docs/bugs/BUG-032.md | iob FILE* stride-0x30 window; setvbuf(stream=base+0x60) live evidence | 2026-10-15
+- EV-056 | docs/bugs/BUG-033.md | printf ms->SysV repack; float crash + integer-luck explanation | 2026-10-15
+- EV-057 | docs/bugs/BUG-034.md | CS 40-byte contract; dtoa freelist[0]=1 corruption at CS@0x14000b178/freelist@+0x28 | 2026-10-15
+- EV-058 | docs/bugs/BUG-035.md | qsort comparator ABI; cmp_int NULL deref (RCX=0) | 2026-10-15
+- EV-059 | docs/bugs/BUG-036.md | jmp_buf ownership; t07 longjmp(val=1) infinite loop trace | 2026-10-15
+- EV-060 | docs/bugs/BUG-037.md | OPEN: unwind interpreter fault (R9=0x27) on UI RVA 0x50458; handler/disposition trace preceding it | 2026-10-15
+- EV-061 | evidence/master/appcompat/run-20261015_053015/t08_big_cpp_stl.stderr + api_trace | C++ EH machinery live: personality called, disposition=1, frames 2->3 walked, then loader fault | 2026-10-15
+- EV-062 | tests/appcompat/ (t01..t09 + run_sweep.sh) | reproducible sweep suite; every program self-verifying with deterministic exit codes | 2026-10-15

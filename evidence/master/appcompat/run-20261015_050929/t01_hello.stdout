@@ -1,0 +1,13 @@
+[MiniWin] Loading /home/z/my-project/workspace/miniwin-engineering/tests/appcompat/t01_hello.exe...
+t01: HELLO-FROM-MINIWIN
+plain: no specifier
+int=42 u=4000000000 neg=-7
+hex=0xDEADBEEF oct=644
+str=miniwin char=Z pct=%
+long=123456789 llong=-1234567890123
+width=[   99] pad=[ab    ] zero=[00042]
+float=3.14 sci=1.235e+04 g=0.0001
+ptr=0000000140001470
+count-me
+FAIL: printf returned 9, expected 10
+t01: FAIL (1)

@@ -1,0 +1,6 @@
+[MiniWin] Loading /home/z/my-project/workspace/miniwin-engineering/tests/appcompat/t02_math.exe...
+sum primes<1000 = 76127 OK
+fib(50) = 12586269025 OK
+check: 76127 0x8000000000000000 -4611686018427387904
+expect: 76127 0x8000000000000000 -4611686018427387904
+t02: PASS

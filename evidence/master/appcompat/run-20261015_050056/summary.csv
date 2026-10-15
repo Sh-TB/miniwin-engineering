@@ -1,0 +1,10 @@
+test,exit,signal,class
+t01_hello,139,,CRASH
+t02_math,0,,PASS
+t03_mem,0,,PASS
+t04_string,139,,CRASH
+t05_file,139,,CRASH
+t06_setjmp,1,,FAIL
+t07_big_c_app,124,,TIMEOUT
+t08_big_cpp_stl,139,,CRASH
+t09_big_cpp_iostream,139,,CRASH

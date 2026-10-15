@@ -1,0 +1,12 @@
+[TRACE] Command line: /home/z/my-project/workspace/miniwin-engineering/tests/appcompat/t09_big_cpp_iostream.exe
+[WARN] 75 imports unresolved
+
+[CRASH] Signal 11 at RIP=0xa8d3e
+  RAX=0x20231e0 RCX=0x20231e0 RDX=0x0 R8=0x4 R9=0x0
+  RSP=0x7ffd269d0648 RBP=0x2024001
+  g_image_base=0x140000000 g_image_size=0x126000
+  (NOT inside loaded PE)
+  RSI=0x0 RDI=0x7f96dcd1a7a0
+  R8=0x4  R9=0x0 R10=0x0 R11=0x202
+  R12=0x7ffd269d0b40 R13=0x2025000 R14=0x1400bd510 R15=0x20233e0
+  Backtrace (via stack walking):

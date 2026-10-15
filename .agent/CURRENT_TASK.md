@@ -1,43 +1,33 @@
 # CURRENT TASK
 
-**Task ID:** TASK-TEST-004 (slice 2)
-**Title:** Fix the synthetic builder codegen (B-1/B-2/B-3) so all 4 dispatch tests reach dispatch
-**Status:** READY
-**Priority:** P1
+**Task ID:** TASK-BUG-037
+**Title:** Unwind-code interpreter faults on CRT-startup UNWIND_INFO (blocks C++ EH)
+**Status:** READY (NEXT)
+**Priority:** P0
 
 ## One-line description
-The non-vacuous real-loader harness (tests/dispatch_tests/test_dispatch_v2.sh, slice 1)
-is green on load/run contracts; the next slice fixes the three builder defects it found
-so test_b/c/d actually raise and dispatch, and test_a's post-dispatch crash goes away.
+During t08's first C++ throw the dispatcher walks correctly through frames 2->3 and
+then the loader's opcode interpreter faults (`mov (%r9),%rbx`, R9=0x27 = raw slot
+offset used as an address) on the mingw CRT-startup frame's UNWIND_INFO
+(RF begin=0x1470 end=0x23d9, UI @ RVA 0x50458, v1, flags=0x03, 13 slots, frame 0x85).
 
-## The three defects (all found by slice 1 — evidence in the harness header)
-- **B-1 call-rel32 fixups wrong** (test_b/c/d never raise): the call rel32 patch math
-  uses wrong instruction offsets — calls land on the next function's `ret`
-  (disassembly: `call 0x140001023` = the `ret` itself). Fix: compute each call's
-  displacement from its REAL instruction address (emit position + 5).
-- **B-2 UNWIND_CODE nibble order**: the unwind byte is (CodeOffset << 4) | UnwindOp —
-  OpCode is the LOW nibble. The builder packs `(opinfo << 12) | (op << 8) | offset`
-  into a 16-bit LE word = swapped. Rewrite `_emit_xdata`'s code emission to the
-  canonical byte layout (op byte = (offset<<4)|op; opinfo lives in the second slot
-  byte for wide ops, not the word's high byte).
-- **B-3 ms_abi frame alignment**: push rbx + sub 0x28 leaves RSP%16 != 0 before the
-  RaiseException call → the dispatcher's aligned SSE spill faults (movdqa SIGSEGV at
-  0x200fdff, CONTINUE #5 live). Fix frames to sub 0x30 AND regenerate the matching
-  unwind codes (ALLOC_SMALL info=5) — must be done together with B-2.
+## Fix plan (evidence-first, per protocol)
+1. Standalone reference decoder (Python) for UNWIND_INFO; pin RVA 0x50458's exact
+   slot sequence as a golden vector in tests/ (decode by hand first, then match).
+2. Align the loader interpreter: SET_FPREG establishes the FP baseline (FP-relative
+   saves consume it); SAVE_XMM128 uses 16-byte slots; UWOP_EPILOGUE (0x06) is
+   version>=2-only and must not decode as v1; re-check cursor bookkeeping when
+   prologue_size (34) exceeds count*2.
+3. Verify: t08 reaches its own catch and prints `t08: PASS` (exit 0, 3/3
+   deterministic runs); regression 12/12; UPX G1 gate; then evaluate G2 (C++ EH).
 
-## Execution notes
-1. Baseline: bash tests/dispatch_tests/test_dispatch_v2.sh (4/4 on current contracts) +
-   bash scripts/g1_accept.sh (G1 pin, 12/12). Hash: evidence/master/g1/<latest>.
-2. Fix B-1 first (pure fixup math) — verify test_b/c/d traces gain RaiseException +
-   [DISPATCH] lines. Then B-2+B-3 together — verify test_a runs to its handler without
-   the movdqa crash and test_b/c/d keep dispatching (unwind math must stay consistent).
-3. Evolve the harness rows from load/run contracts to dispatch contracts as each defect
-   closes (each upgrade = a real PASS).
-4. Do NOT touch loader.c dispatch logic; if a loader defect surfaces, register BUG-032
-   with a trace.
-5. Guardrail: bash scripts/g1_accept.sh must stay OK after every loader-adjacent change.
+## Ground rules
+- Do not touch EH_FIX / CXX-EH-FIX (flag-guarded, default OFF), the RaiseException
+  stub, or call_handler_aligned's pinned-register block (EXP-039 lessons).
+- Every change keeps regression 12/12 + G1 gate green.
 
-## Verified facts you may rely on
-- G1 acceptance MET (EXP-039); regression 12/12; IAT writability fix in the loader is
-  Windows-faithful (mprotect around the import pass, restore after).
-- The old harness (test_dispatch_harness.c) is superseded by test_dispatch_v2.sh.
+## Context from CONTINUE #6 (this session)
+- Appcompat sweep landed: 7/9 PASS (all C programs incl. big t07; both small+big
+  C tiers). BUG-032..036 CLOSED TESTED; TASK-TLS-001 + TASK-API-007/008 CLOSED
+  TESTED (import table 162 -> 188). t09 blocked on wave-3 API set (TASK-API-009).
+- Backlog expanded with 31 new tasks (sweep-driven).

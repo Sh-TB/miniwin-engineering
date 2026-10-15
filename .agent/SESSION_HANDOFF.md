@@ -1,3 +1,33 @@
+# SESSION HANDOFF — 2026-10-15 (CONTINUE #6: appcompat sweep — 7/9 PASS, 5 bugs fixed, TLS implemented)
+
+## What this session did
+- **User directive:** continue + test real programs (small + two big) + grow the task count.
+- Built the appcompat infrastructure: llvm-mingw 20261006-msvcrt (clang 23.1.3) toolchain
+  pinned at /home/z/my-project/tools-mingw (NOT in repo); 9 deterministic self-verifying
+  programs in tests/appcompat/ (t01..t07 C, t08 C++ STL/EH, t09 iostream probe);
+  run_sweep.sh harness with PASS/VERIFY_FAIL/CRASH/TIMEOUT classification; pefile import audits.
+- Sweep result by stage (each stage = one root-caused fix + full gates):
+  0/9 -> wave-1 APIs (atexit/_exit/setvbuf/GetCPInfo/_XcptFilter) -> BUG-032 (iob FILE*
+  window, map_crt_stream) -> BUG-033 (printf ms->SysV fmt-aware repack) -> BUG-034
+  (CRITICAL_SECTION 40-byte contract, dtoa freelist corruption) -> BUG-035 (qsort_r ms_abi
+  bridge) -> BUG-036 (loader-owned jmp_buf: full ms reg file + rsp alignment) -> **7/9 PASS**
+  with wave-2 APIs (26 new: SRW/CV/Fls/InitOnce/RtlRestoreContext/wide CRT/aligned) and
+  **TASK-TLS-001** (native TLS: gs:0x58 ThreadLocalStoragePointer, static slot 0, callbacks).
+- t08 frontier = BUG-037 (OPEN): C++ EH machinery runs (handler called, dispositions OK,
+  0 unresolved imports) and dies decoding CRT-startup UNWIND_INFO (R9=0x27 raw offset as
+  address). t09 frontier = 44 missing APIs (TASK-API-009 wave 3 list recorded).
+- Gates held after EVERY change: regression 12/12, UPX --version exit 0 (G1).
+- Docs: EXP-040 report; BUG-032..037 docs; backlog +31 tasks; API table 162 -> 188;
+  state.md, CURRENT_TASK.md (TASK-BUG-037), this handoff, evidence
+  evidence/master/appcompat/run-20261015_053015/ + run-*.csv summaries.
+
+## Next session exact steps
+1. `CONTINUE` -> TASK-BUG-037 per CURRENT_TASK.md (reference decoder + golden vector first).
+2. After BUG-037: t08 3x determinism, then TASK-BUG-038 (G2 C++ EH acceptance sample).
+3. In parallel if time: TASK-API-009 (wave 3, t09) and TASK-TEST-013 (ABI boundary unit tests).
+4. Push state (credentials in ~/.git-credentials outside repo; OWNER-001 closed).
+
+---
 # SESSION HANDOFF — 2026-10-15 (CONTINUE #5: BUG-031 fixed — **ACCEPTANCE G1 MET**)
 
 ## What this session did

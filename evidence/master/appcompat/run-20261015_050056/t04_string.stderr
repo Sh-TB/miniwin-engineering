@@ -1,0 +1,27 @@
+[TRACE] Command line: /home/z/my-project/workspace/miniwin-engineering/tests/appcompat/t04_string.exe
+
+[CRASH] Signal 11 at RIP=0x140001740
+  RAX=0x1 RCX=0x0 RDX=0x0 R8=0x0 R9=0x140001740
+  RSP=0x7fffd47e8918 RBP=0x7fffd47e9030
+  g_image_base=0x140000000 g_image_size=0x35000
+  RVA=0x1740 (inside loaded PE)
+  Bytes: 8b 01 3b 02 0f 9c c0 0f 9f c1 28 c1 0f be c1 c3 
+  Return addr: 0x7f31a5c9b48a
+  RSI=0x7fffd47e9034 RDI=0x7fffd47e9030
+  R8=0x0  R9=0x140001740 R10=0x3 R11=0x7f31a5c9bac0
+  R12=0x1 R13=0x1 R14=0x7fffd47e8ac0 R15=0x140001740
+  Backtrace (via stack walking):
+    [0] RIP=0x140001740 RVA=0x1740      [RSP+0] = 0x7f31a5c9b48a (return addr?)
+    [1] RIP=0x140001740 RVA=0x1740      [RSP+0] = 0xf01ed834904c583 (return addr?)
+    [2] RIP=0x140001740 RVA=0x1740
+[CRASH] Signal 7 at RIP=0x200ad21
+  RAX=0x22 RCX=0x0 RDX=0x0 R8=0x0 R9=0x0
+  RSP=0x7fffd47e7b50 RBP=0xf01ed834904c58b
+  g_image_base=0x140000000 g_image_size=0x35000
+  (NOT inside loaded PE)
+  RSI=0x7fffd47e79a0 RDI=0x7fffd47e7970
+  R8=0x0  R9=0x0 R10=0x0 R11=0x202
+  R12=0x3 R13=0x2016a28 R14=0x7fffffeffffd R15=0x13ff0173f
+  Backtrace (via stack walking):
+    [0] RIP=0x200ad21 (outside PE, possible shared lib)
+    [1] RIP=0x200ad21 (outside PE, possible shared lib)
