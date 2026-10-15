@@ -41,3 +41,15 @@ so test_b/c/d actually raise and dispatch, and test_a's post-dispatch crash goes
 - G1 acceptance MET (EXP-039); regression 12/12; IAT writability fix in the loader is
   Windows-faithful (mprotect around the import pass, restore after).
 - The old harness (test_dispatch_harness.c) is superseded by test_dispatch_v2.sh.
+
+---
+## 2026-10-15 — Issue #1 Phase 1 executed (TASK-ISS1-P1): COMPLETE
+Read Issue #1 (1095 lines) in full; built 5 missing Phase-1 fixtures (t08–t12)
+with locally-installed mingw-w64; ran all 6 Phase-1 targets 3× each:
+**5/6 PASS** (upx_424, t09, t10, t11, t12), t08 PARTIAL (159/255, BUG-038
+lineage). Implemented WS-D file-I/O family in loader.c (fopen/fclose/fread/
+fseek/ftell/feof/fgetc/remove/_strtoi64/_strtoui64 + real ungetc + MSVCRT-
+layout FILE* registry + errno sync): t12 went SEGV → full PASS. Regression
+12/12 and UPX G1 stayed green throughout. x86/PE32 classification verified
+(explicit deterministic refusal, §4-compliant). Next root: BUG-038 catch
+selector (see .agent/NEXT_ACTION.md).

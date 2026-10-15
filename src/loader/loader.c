@@ -2802,14 +2802,47 @@ __attribute__((ms_abi)) int mw_printf(const char* fmt, ...) {
     return ret;
 }
 
+/* stdio FILE* registry — see full comment near mw_fopen (WS-D).
+ * Guest-visible FILE must match MSVCRT `struct _iobuf` layout because
+ * statically-linked guest CRT code introspects `_file`/`_flag`. */
+#define MW_MSVCRT_IOREAD 0x0001
+#define MW_MSVCRT_IOWRT  0x0002
+#define MW_MSVCRT_IORW   0x0004
+#define MW_MSVCRT_IOEOF  0x0010
+#define MW_FILE_MAX 32
+
+typedef struct MwFile {
+    char* _ptr;      /* next char (guest-visible; we keep 0 = unbuffered) */
+    int   _cnt;      /* buffered chars left (0) */
+    char* _base;
+    int   _flag;     /* MSVCRT flag bits */
+    int   _file;     /* real host fd — used by guest CRT lock indexing */
+    int   _charbuf;
+    int   _bufsiz;
+    char* _tmpfname;
+} MwFile;
+
+typedef struct { MwFile* mf; FILE* hf; } MwFileSlot;
+static MwFileSlot g_mwfile_tab[MW_FILE_MAX];
+
+static MwFile* mwfile_check(void* p);
+static FILE*   mwfile_hostfp(MwFile* mf);
+
 /* fprintf - variadic */
 __attribute__((ms_abi)) int mw_fprintf(void* file, const char* fmt, ...) {
     MW_TRACE("fprintf(file=%p, fmt=%s)", file, fmt ? fmt : "NULL");
     va_list ap;
     va_start(ap, fmt);
-    /* Use actual FILE* if it's a real glibc FILE */
-    FILE* f = (file == stdout || file == stderr || file == stdin) ? (FILE*)file : stdout;
-    int ret = vfprintf(f, fmt, ap);
+    int ret;
+    MwFile* mf = mwfile_check(file);
+    FILE* rhf = mf ? mwfile_hostfp(mf) : NULL;
+    if (rhf) {
+        ret = vfprintf(rhf, fmt, ap);
+    } else {
+        /* Use actual FILE* if it's a real glibc FILE */
+        FILE* f = (file == stdout || file == stderr || file == stdin) ? (FILE*)file : stdout;
+        ret = vfprintf(f, fmt, ap);
+    }
     va_end(ap);
     return ret;
 }
@@ -2817,13 +2850,14 @@ __attribute__((ms_abi)) int mw_fprintf(void* file, const char* fmt, ...) {
 /* vfprintf - the va_list is in MS ABI format */
 __attribute__((ms_abi)) int mw_vfprintf(void* file, const char* fmt, void* ap) {
     MW_TRACE("vfprintf(file=%p, fmt=%s)", file, fmt ? fmt : "NULL");
-    /* The ap argument is a pointer to ms_abi va_list.
-     * Since ms_abi va_list is just a char* pointing to stack args,
-     * and the first 4 args are in registers (already consumed by fmt),
-     * the remaining args are on the stack.
-     * For simple format strings (few args), this may work.
-     * For complex cases, we'd need to rebuild the va_list.
-     */
+    MwFile* mf = mwfile_check(file);
+    FILE* rhf = mf ? mwfile_hostfp(mf) : NULL;
+    if (rhf) {
+        char buf[8192];
+        int ret = vsnprintf(buf, sizeof(buf), fmt, *(va_list*)ap);
+        if (ret > 0) fwrite(buf, 1, ret, rhf);
+        return ret;
+    }
     FILE* f = (file == stdout || file == stderr || file == stdin) ? (FILE*)file : stdout;
     /* Use a workaround: format to buffer first */
     char buf[8192];
@@ -2835,8 +2869,12 @@ __attribute__((ms_abi)) int mw_vfprintf(void* file, const char* fmt, void* ap) {
 }
 
 /* stdio stubs */
+
 __attribute__((ms_abi)) int mw_fflush(void* file) {
     MW_TRACE("fflush(file=%p)", file);
+    MwFile* mf = mwfile_check(file);
+    FILE* rhf = mf ? mwfile_hostfp(mf) : NULL;
+    if (rhf) return fflush(rhf);
     FILE* f = (file == NULL) ? NULL :
               (file == stdout || file == stderr || file == stdin) ? (FILE*)file : stdout;
     return fflush(f);
@@ -2844,30 +2882,187 @@ __attribute__((ms_abi)) int mw_fflush(void* file) {
 
 __attribute__((ms_abi)) int mw_fputs(const char* str, void* file) {
     MW_TRACE("fputs(str=%s)", str ? str : "NULL");
+    MwFile* mf = mwfile_check(file);
+    FILE* rhf = mf ? mwfile_hostfp(mf) : NULL;
+    if (rhf) return fputs(str, rhf);
     FILE* f = (file == stdout || file == stderr || file == stdin) ? (FILE*)file : stdout;
     return fputs(str, f);
 }
 
 __attribute__((ms_abi)) int mw_fputc(int ch, void* file) {
     MW_TRACE("fputc(ch=0x%x)", ch);
+    MwFile* mf = mwfile_check(file);
+    FILE* rhf = mf ? mwfile_hostfp(mf) : NULL;
+    if (rhf) return fputc(ch, rhf);
     FILE* f = (file == stdout || file == stderr || file == stdin) ? (FILE*)file : stdout;
     return fputc(ch, f);
 }
 
 __attribute__((ms_abi)) size_t mw_fwrite(const void* buf, size_t sz, size_t cnt, void* file) {
     MW_TRACE("fwrite(sz=%zu, cnt=%zu)", sz, cnt);
+    MwFile* mf = mwfile_check(file);
+    FILE* rhf = mf ? mwfile_hostfp(mf) : NULL;
+    if (rhf) return fwrite(buf, sz, cnt, rhf);
     FILE* f = (file == stdout || file == stderr || file == stdin) ? (FILE*)file : stdout;
     return fwrite(buf, sz, cnt, f);
 }
 
 __attribute__((ms_abi)) int mw_getc(void* file) {
     MW_TRACE("getc()");
+    MwFile* mf = mwfile_check(file);
+    FILE* rhf = mf ? mwfile_hostfp(mf) : NULL;
+    if (rhf) {
+        if (mf->_charbuf != 0) {
+            int c = mf->_charbuf;
+            mf->_charbuf = 0;
+            return c;
+        }
+        return fgetc(rhf);
+    }
     return EOF;
 }
 
 __attribute__((ms_abi)) int mw_ungetc(int ch, void* file) {
     MW_TRACE("ungetc(ch=0x%x)", ch);
-    return EOF;
+    MwFile* mf = mwfile_check(file);
+    if (!mf || ch == EOF) return EOF;
+    /* Standard single-char pushback via MSVCRT `_charbuf`; clears EOF state. */
+    mf->_charbuf = (ch & 0xFF);
+    mf->_flag &= ~MW_MSVCRT_IOEOF;
+    return ch & 0xFF;
+}
+
+/* ============================================================
+ * Windows stdio FILE* family — host-backed file registry (WS-D).
+ * Semantic rule: a resolved API must perform its documented behavior.
+ *
+ * CRITICAL ABI CONSTRAINT (observed): the guest's statically-linked
+ * stdio machinery (mingw-w64 CRT) introspects FILE fields instead of
+ * treating the handle as opaque — e.g. it reads `_file` to index the
+ * CRT lock table and checks `_flag` bits. Therefore fopen must return
+ * an MSVCRT-layout `struct _iobuf` object with a small real fd in
+ * `_file` and sane `_flag` bits. The host FILE* lives in a side table;
+ * guest-visible struct stays zeroed beyond documented fields.
+ * ============================================================ */
+static MwFile* mwfile_check(void* p) {
+    for (int i = 0; i < MW_FILE_MAX; ++i)
+        if (g_mwfile_tab[i].mf == (MwFile*)p && p != NULL) return (MwFile*)p;
+    return NULL;
+}
+
+static FILE* mwfile_hostfp(MwFile* mf) {
+    for (int i = 0; i < MW_FILE_MAX; ++i)
+        if (g_mwfile_tab[i].mf == mf) return g_mwfile_tab[i].hf;
+    return NULL;
+}
+
+static int mwfile_unregister(MwFile* mf) {
+    for (int i = 0; i < MW_FILE_MAX; ++i)
+        if (g_mwfile_tab[i].mf == mf) { g_mwfile_tab[i].mf = NULL; g_mwfile_tab[i].hf = NULL; return 1; }
+    return 0;
+}
+
+static void mw_sync_errno(void) { g_errno_storage = errno; }
+
+__attribute__((ms_abi)) void* mw_fopen(const char* path, const char* mode) {
+    MW_TRACE("fopen(path=%s, mode=%s)", path ? path : "NULL", mode ? mode : "NULL");
+    if (!path || !mode) return NULL;
+    /* Unsupported wide/unicode mode forms: fail explicitly, never misbehave. */
+    if (strstr(mode, "ccs=") != NULL) { errno = EINVAL; mw_sync_errno(); return NULL; }
+    FILE* hf = fopen(path, mode);
+    if (!hf) { mw_sync_errno(); return NULL; }
+    int slot = -1;
+    for (int i = 0; i < MW_FILE_MAX; ++i) if (!g_mwfile_tab[i].mf) { slot = i; break; }
+    if (slot < 0) { fclose(hf); errno = EMFILE; mw_sync_errno(); return NULL; }
+    /* Zero-extended allocation: guest may read past documented fields. */
+    MwFile* mf = (MwFile*)calloc(1, sizeof(MwFile) + 32);
+    if (!mf) { fclose(hf); mw_sync_errno(); return NULL; }
+    mf->_file = fileno(hf);           /* small real fd for CRT lock indexing */
+    if (strchr(mode, '+'))      mf->_flag = MW_MSVCRT_IORW;
+    else if (mode[0] == 'r')    mf->_flag = MW_MSVCRT_IOREAD;
+    else                        mf->_flag = MW_MSVCRT_IOWRT;
+    g_mwfile_tab[slot].mf = mf;
+    g_mwfile_tab[slot].hf = hf;
+    return mf;
+}
+
+__attribute__((ms_abi)) int mw_fclose(void* file) {
+    MwFile* mf = mwfile_check(file);
+    if (!mf) return EOF;
+    FILE* hf = mwfile_hostfp(mf);
+    int r = hf ? fclose(hf) : EOF;
+    mwfile_unregister(mf);
+    free(mf);
+    return r;
+}
+
+__attribute__((ms_abi)) size_t mw_fread(void* buf, size_t sz, size_t cnt, void* file) {
+    MwFile* mf = mwfile_check(file);
+    if (!mf || !buf) return 0;
+    FILE* hf = mwfile_hostfp(mf);
+    if (!hf) return 0;
+    size_t r = fread(buf, sz, cnt, hf);
+    if (r < cnt && feof(hf)) mf->_flag |= MW_MSVCRT_IOEOF;
+    return r;
+}
+
+__attribute__((ms_abi)) int mw_fseek(void* file, long long off, int origin) {
+    MwFile* mf = mwfile_check(file);
+    if (!mf) return -1;
+    FILE* hf = mwfile_hostfp(mf);
+    if (!hf) return -1;
+    /* Windows SEEK_SET/CUR/END constants equal POSIX ones. */
+    int r = fseek(hf, (long)off, origin);
+    if (r == 0) mf->_flag &= ~MW_MSVCRT_IOEOF;  /* MSVCRT clears EOF on seek */
+    return r;
+}
+
+__attribute__((ms_abi)) long long mw_ftell(void* file) {
+    MwFile* mf = mwfile_check(file);
+    if (!mf) return -1LL;
+    FILE* hf = mwfile_hostfp(mf);
+    if (!hf) return -1LL;
+    return (long long)ftell(hf);
+}
+
+__attribute__((ms_abi)) int mw_feof(void* file) {
+    MwFile* mf = mwfile_check(file);
+    if (!mf) return 0;
+    FILE* hf = mwfile_hostfp(mf);
+    if (!hf) return 0;
+    if (feof(hf)) { mf->_flag |= MW_MSVCRT_IOEOF; return 1; }
+    return 0;
+}
+
+__attribute__((ms_abi)) int mw_fgetc(void* file) {
+    MwFile* mf = mwfile_check(file);
+    if (!mf) return EOF;
+    FILE* hf = mwfile_hostfp(mf);
+    if (!hf) return EOF;
+    /* Serve pushed-back char first (see mw_ungetc). */
+    if (mf->_charbuf != 0) {
+        int c = mf->_charbuf;
+        mf->_charbuf = 0;
+        return c;
+    }
+    int c = fgetc(hf);
+    if (c == EOF) mf->_flag |= MW_MSVCRT_IOEOF;
+    return c;
+}
+
+__attribute__((ms_abi)) int mw_remove(const char* path) {
+    MW_TRACE("remove(path=%s)", path ? path : "NULL");
+    int r = path ? remove(path) : -1;
+    if (r != 0) mw_sync_errno();
+    return r;
+}
+
+/* 64-bit string-to-integer conversions (UCRT/MSVCRT). */
+__attribute__((ms_abi)) long long mw__strtoi64(const char* s, char** end, int base) {
+    return strtoll(s, end, base);
+}
+__attribute__((ms_abi)) unsigned long long mw__strtoui64(const char* s, char** end, int base) {
+    return strtoull(s, end, base);
 }
 
 __attribute__((ms_abi)) int mw_puts(const char* str) {
@@ -3349,6 +3544,16 @@ static ImportEntry g_import_table[] = {
     ENTRY("msvcrt.dll", "calloc",                mw_calloc),
     ENTRY("msvcrt.dll", "clock",                 mw_clock),
     ENTRY("msvcrt.dll", "exit",                  mw_exit),
+    ENTRY("msvcrt.dll", "fclose",                mw_fclose),
+    ENTRY("msvcrt.dll", "feof",                  mw_feof),
+    ENTRY("msvcrt.dll", "fgetc",                 mw_fgetc),
+    ENTRY("msvcrt.dll", "fopen",                 mw_fopen),
+    ENTRY("msvcrt.dll", "fread",                 mw_fread),
+    ENTRY("msvcrt.dll", "fseek",                 mw_fseek),
+    ENTRY("msvcrt.dll", "ftell",                 mw_ftell),
+    ENTRY("msvcrt.dll", "remove",                mw_remove),
+    ENTRY("msvcrt.dll", "_strtoi64",             mw__strtoi64),
+    ENTRY("msvcrt.dll", "_strtoui64",            mw__strtoui64),
     ENTRY("msvcrt.dll", "fflush",                mw_fflush),
     ENTRY("msvcrt.dll", "fprintf",               mw_fprintf),
     ENTRY("msvcrt.dll", "fputc",                 mw_fputc),

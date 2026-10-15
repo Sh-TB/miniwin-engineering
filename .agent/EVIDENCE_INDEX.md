@@ -63,3 +63,15 @@ Format: `ID | path | what it proves | session`
 - EV-049 | docs/master/experiments/EXP-039-bug031-cleanup-chain-g1.md | full report: reproduce-first table, early-clobber proof, E1–E5 bisection (compile-dependent phase-1 flip), rax/r10/r11 boundary pinning, G1 scorecard, P-F/P-G/P-H | 2026-10-15
 - EV-050 | docs/bugs/BUG-031.md (CLOSED) + docs/master/ARCHITECTURE_DECISIONS.md ADR-011 | defect closure + architecture decision (resume commands + raise-site register fidelity) | 2026-10-15
 - EV-051 | checkpoints/checkpoint_pre_task-bug031_20261015.zip | pre-task checkpoint from the interrupted session (WIP origin) | 2026-10-15
+
+---
+## EV-ISS1 (2026-10-15) — Issue #1 Phase 0/1 slice: 6-target execution + WS-D file-I/O fix
+- evidence/master/g1/20261015_083825/ — G1 pin (clean build sha256 40646f4b…, UPX banner exact, regression 12/12)
+- evidence/master/issue1_run_20261015_084438/ — first full 6-target run (t12 SEGV captured: RIP=0x166a2, 9 unresolved imports)
+- evidence/master/issue1_final_*/ — final 3× runs: upx/t09/t10/t11/t12 exit 0 ×3; t08 exit 1 ×3 (159/255)
+- artifacts/audit/repository_state.md — repo audit (HEAD 17c024a, remote sync, mingw toolchain)
+- artifacts/audit/issue_reconciliation.md — BUG-025/026/027/030/031/037/038 + tXX reconciliation
+- artifacts/research/tooling_and_upstream_audit.md — mingw-w64 local install recipe + adoption decisions
+- artifacts/results/issue1_phase1_manifest.md — test manifest + compatibility matrix (§18)
+- tests/corpus/ — 5 recreated Phase-1 fixtures + 2 diagnostic probes (sources + bin/SHA256SUMS)
+- miniwin-results/t12_libc_io.exe/api_trace.json — trace proving fscanf machinery reaches our getc/ungetc primitives

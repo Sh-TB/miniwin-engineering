@@ -77,3 +77,13 @@ Next task ID: **TASK-TEST-004**. Exact next command from the owner: **CONTINUE**
 - Commits: 954d1f0 (BUG-031/G1) → 4a397e4 (G1-001+API-002+API-006) → 52c0f8d
   (TEST-004 slice 1) → this commit. All pushed; origin verified.
 - Next: TASK-TEST-004 slice 2 (B-1/B-2/B-3) — see CURRENT_TASK.md.
+
+---
+## Handoff note 2026-10-15 (Issue #1 Phase 1)
+- Loader now implements the stdio FILE* family host-backed with MSVCRT-layout
+  FILE objects (do NOT regress to opaque handles — guest CRT introspects
+  _file/_flag/_charbuf). Fixture toolchain: mingw-w64 debs under
+  scripts/mingw-debs/root (PATH recipe in artifacts/research/tooling_and_upstream_audit.md).
+- Fixture sources: tests/corpus/*.c|cpp → bin/ (rebuild via
+  scripts/build/build_issue1_corpus.sh; t11 needs -DHOST_PRESERVE_EXPECTED=1761356).
+- Deterministic results & hashes: artifacts/results/issue1_phase1_manifest.md.
