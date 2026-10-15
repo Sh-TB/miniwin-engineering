@@ -1,33 +1,48 @@
 # CURRENT TASK
 
-**Task ID:** TASK-BUG-037
-**Title:** Unwind-code interpreter faults on CRT-startup UNWIND_INFO (blocks C++ EH)
+**Task ID:** TASK-BUG-038
+**Title:** C++ EH target-frame delivery (barrier-cache landing pad installation)
 **Status:** READY (NEXT)
 **Priority:** P0
 
 ## One-line description
-During t08's first C++ throw the dispatcher walks correctly through frames 2->3 and
-then the loader's opcode interpreter faults (`mov (%r9),%rbx`, R9=0x27 = raw slot
-offset used as an address) on the mingw CRT-startup frame's UNWIND_INFO
-(RF begin=0x1470 end=0x23d9, UI @ RVA 0x50458, v1, flags=0x03, 13 slots, frame 0x85).
+After BUG-037's fix, t08's full 4-frame walk + intermediate cleanups complete
+correctly and the resume uses the correct body RSP — but the loader resumes at
+RtlUnwindEx's TargetIp, which llvm-mingw's libunwind fills with ControlPc as a
+PLACEHOLDER. The real landing pad (0x1c9d = the catch block, proven by full
+LSDA decode) lives in the exception object's barrier cache and is only
+installed by the personality at TARGET-FRAME DELIVERY (ExceptionFlags
+0x2|0x4, Info[1]=target_frame, returns ExceptionExecuteHandler=4).
 
 ## Fix plan (evidence-first, per protocol)
-1. Standalone reference decoder (Python) for UNWIND_INFO; pin RVA 0x50458's exact
-   slot sequence as a golden vector in tests/ (decode by hand first, then match).
-2. Align the loader interpreter: SET_FPREG establishes the FP baseline (FP-relative
-   saves consume it); SAVE_XMM128 uses 16-byte slots; UWOP_EPILOGUE (0x06) is
-   version>=2-only and must not decode as v1; re-check cursor bookkeeping when
-   prologue_size (34) exceeds count*2.
-3. Verify: t08 reaches its own catch and prints `t08: PASS` (exit 0, 3/3
-   deterministic runs); regression 12/12; UPX G1 gate; then evaluate G2 (C++ EH).
+1. mw_RtlUnwindEx: after the intermediate walk reaches the target frame,
+   deliver target-unwind to the target frame's personality with
+   dc.ContextRecord=&resume_ctx, dc.TargetIp=tgt_ip, dc.EstablisherFrame=
+   tgt_frame, ER flags UNWINDING|TARGET_UNWIND, NumberParameters=4,
+   Info[1]=tgt_frame.
+2. Honor the personality's context write (resume_ctx.Rip = real LP) / return 4;
+   resume with that context (Rax=exception object, Rdx=selector, Rsp=body RSP).
+3. Keep the GCC-style path (UPX G1) intact: GCC answers target delivery with
+   ContextRecord->Rdx = Info[3] and ContinueSearch; its TargetIp IS the real LP.
+4. Audit the double-decrement: our dc.ControlPc = rip-1 AND ctx.Rip -= 1 while
+   libcxxabi does `ip = _Unwind_GetIP(context) - 1` itself — real Windows
+   passes the FULL return address as ControlPc.
 
 ## Ground rules
-- Do not touch EH_FIX / CXX-EH-FIX (flag-guarded, default OFF), the RaiseException
-  stub, or call_handler_aligned's pinned-register block (EXP-039 lessons).
+- Do not touch EH_FIX / CXX-EH-FIX (flag-guarded, default OFF), the
+  RaiseException stub, or call_handler_aligned's pinned-register block.
 - Every change keeps regression 12/12 + G1 gate green.
 
-## Context from CONTINUE #6 (this session)
-- Appcompat sweep landed: 7/9 PASS (all C programs incl. big t07; both small+big
-  C tiers). BUG-032..036 CLOSED TESTED; TASK-TLS-001 + TASK-API-007/008 CLOSED
-  TESTED (import table 162 -> 188). t09 blocked on wave-3 API set (TASK-API-009).
-- Backlog expanded with 31 new tasks (sweep-driven).
+## Acceptance
+- t08 prints `t08: PASS`, exit 0, 3/3 deterministic runs.
+- regression 12/12; UPX G1 gate; sweep 11/12 (t09 = API frontier).
+
+## Context from CONTINUE #7 (this session)
+- BUG-037 CLOSED TESTED: three spec-level fixes (opcode numbering per current
+  MS/LLVM/.NET/ReactOS; CountOfCodes = slots; frame-register low-nibble) +
+  FP-frame resume RSP. EXP-041. Sweep 7/9 -> 10/12 PASS (t10/t11/t12 NEW).
+- UCRT wave landed: TASK-API-011/012 CLOSED TESTED (__stdio_common_v* bridges,
+  __acrt_iob_func, __p_* functions, FILE-level stdio, map_crt_stream
+  pass-through). Toolchain re-downloaded (TASK-INFRA-003 pending script).
+- Backlog expanded to 117 tasks (+BUG-038/039/040, API-013/014/015,
+  TEST-006/007, DOC-011, INFRA-003, RESEARCH-007, APP-013).

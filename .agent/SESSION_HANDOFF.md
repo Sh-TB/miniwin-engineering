@@ -107,3 +107,66 @@ Next task ID: **TASK-TEST-004**. Exact next command from the owner: **CONTINUE**
 - Commits: 954d1f0 (BUG-031/G1) → 4a397e4 (G1-001+API-002+API-006) → 52c0f8d
   (TEST-004 slice 1) → this commit. All pushed; origin verified.
 - Next: TASK-TEST-004 slice 2 (B-1/B-2/B-3) — see CURRENT_TASK.md.
+
+---
+
+## CONTINUE #7 (2026-10-15) — BUG-037 CLOSED, UCRT wave, sweep 10/12
+
+**User directive honored:** tested programs for real execution progress
+(several small + big), expanded the backlog (now 117 tasks), pushed.
+
+### What happened
+1. **Push verified:** origin/main == local 709b9ee at session start (the
+   "ahead 1" was a stale tracking ref). Token re-validated (Sh-TB).
+2. **BUG-037 root-caused and fixed (CLOSED TESTED):** three stacked spec
+   defects, all ours: (a) deprecated UWOP numbering (6/7/8) vs the current
+   spec 6=EPILOG/7=SPARE/8=XMM128/9=XMMFAR/10=MACHFRAME (MS doc + LLVM 19
+   Win64EH.h + .NET + ReactOS cross-confirmed); (b) CountOfCodes counts
+   SLOTS — five decode loops bounded on the code index and consumed
+   padding/handler bytes as phantom codes (standalone harness reproduced
+   alloc_total=0xff0191 vs correct 0x188); (c) frame byte nibbles swapped
+   (RBP/off8 misread as R8/off5). Plus: SET_FPREG re-anchors RSP from the
+   LIVE FP (ReactOS), skip-path advances full slot size (new shared
+   seh_unwind_op_slots helper), mw_RtlUnwindEx FP-frame body-RSP formula,
+   missing SAVE_NONVOL advance + ALLOC_LARGE u32 rule in the last deviating
+   copy. New scripts: bug037_ref_decode.py, bug037_scan_uis.py,
+   bug037_lsda_parse.py, bug037_alloc_harness.c.
+3. **t08 progress measured:** interpreter no longer faults; walk completes;
+   alloc_total=0x188; FP body RSP correct; resume attempted. NEW frontier =
+   **BUG-038** (registered, next task): llvm-mingw's libunwind passes
+   ControlPc as the RtlUnwindEx TargetIp placeholder; the real LP 0x1c9d
+   (catch block, proven by full LSDA decode — no entry has 0x813) installs
+   only at target-frame delivery via the barrier cache.
+4. **Toolchain re-downloaded** (environment reset had wiped tools/):
+   llvm-mingw 20240917 ucrt, clang 19.1.0.
+5. **Three NEW test programs authored, built, and driven to PASS:**
+   t10_float_math (floats/snprintf/sscanf), t11_abi_deep (structs by value,
+   recursion, fn pointers, qsort bridge), t12_libc_io (heap churn, FILE*-level
+   IO, time, atexit LIFO — exit-handler prints PASS).
+6. **UCRT API wave (TASK-API-011/012, CLOSED TESTED):** __acrt_iob_func,
+   _configure_narrow_argv, _initialize_narrow_environment, _set_new_mode,
+   _set_invalid_parameter_handler, signal stub, _tzset, _set_app_type apiset
+   alias, __stdio_common_vfprintf/vsprintf (real bridges via the proven
+   MS→SysV va_list repack), vsscanf (GP repack), vfwprintf (loud stub),
+   fopen/fclose/fread/fgets/fgetc/rewind/remove/strftime bridges, and ALL
+   UCRT __p__* as FUNCTIONS (three crash signatures 0x2039038/0x2039034/
+   0x2039050 proved fmode/commode/argc). map_crt_stream now passes unknown
+   pointers through (old unknown->stdout fallback ate fmemopen output).
+7. **Verification:** regression 12/12 at every build; G1 gate pinned 3x
+   (evidence/master/g1/20261015_{063340,064317,073727}); final sweep
+   evidence/master/appcompat/run-20261015_073729 = **10/12 PASS**.
+
+### Commits
+- CONTINUE #7 commit (this session) on top of 709b9ee. Push: YES (verified).
+
+### Next
+Next task ID: **TASK-BUG-038** (docs/bugs/BUG-038.md has the full design).
+Exact next command from the owner: **CONTINUE**.
+
+### Unverified / honest notes
+- __stdio_common_vfwprintf = returning stub (untested by design).
+- vsscanf repack assumes the uniform 8-byte MS slot model (same as printf).
+- t12 tz data = UTC stub; clock() resolved via an existing entry (verify which).
+- BUG-038's ControlPc double-decrement audit is folded into its fix plan.
+- The UI scanner's 40/98 "violations" = expected llvm-mingw FP-relative XMM
+  encodings; TASK-TEST-007 turns the count into a CI gate.

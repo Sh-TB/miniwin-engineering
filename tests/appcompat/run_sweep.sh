@@ -10,7 +10,7 @@ mkdir -p "$OUT_DIR"
 RUNDIR=$(mktemp -d /tmp/appcompat_run_XXXXXX)
 cd "$RUNDIR" || exit 1
 
-TESTS="t01_hello t02_math t03_mem t04_string t05_file t06_setjmp t07_big_c_app t08_big_cpp_stl t09_big_cpp_iostream"
+TESTS="t01_hello t02_math t03_mem t04_string t05_file t06_setjmp t07_big_c_app t08_big_cpp_stl t09_big_cpp_iostream t10_float_math t11_abi_deep t12_libc_io"
 echo "test,exit,signal,class" > "$OUT_DIR/summary.csv"
 
 for t in $TESTS; do

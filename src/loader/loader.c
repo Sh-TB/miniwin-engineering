@@ -41,6 +41,11 @@ static char g_cmdline_ansi[4096];
 static wchar_t g_cmdline_wide[4096];
 static char* g_argv[256];
 static int g_argc = 0;
+static char** g_argv_cell = g_argv;   /* TASK-API-011: __p___argv points here */
+static char** g_environ_cell = NULL;  /* TASK-API-011: __p__environ points here */
+static char* g_tzname[2] = { (char*)"UTC", (char*)"UTC" };
+static long g_timezone_val = 0;
+static int g_daylight_val = 0;
 static int g_app_type = 1;          /* _CONSOLE_APP */
 static int g_fmode_val = 0;           /* _O_TEXT */
 static int g_commode_val = 0;         /* default commode */
@@ -973,6 +978,26 @@ static void seh_diagnostic_walk(void) {
 #define DISP_RESULT_CONTINUE_EXEC 1
 #define DISP_RESULT_HANDLER_ERROR 2
 
+/* Slots consumed by one unwind code (the code word itself + operand slots).
+ * Per the Microsoft PE/COFF x64 spec table and ReactOS's
+ * UnwindOpExtraSlotTable (sdk/lib/rtl/amd64/unwind.c). Used by the skip
+ * path (codes above the fault RIP must be skipped WITH their operands,
+ * otherwise the cursor misaligns on every following code — BUG-037) and
+ * by any caller needing the byte size of the code array. */
+static int seh_unwind_op_slots(uint8_t op, uint8_t op_info) {
+    switch (op) {
+    case UWOP_ALLOC_LARGE:     return (op_info != 0) ? 3 : 2;
+    case UWOP_SAVE_NONVOL:     return 2;
+    case UWOP_SAVE_NONVOL_FAR: return 3;
+    case UWOP_EPILOG:          return 2;   /* v2 only */
+    case UWOP_SPARE_CODE:      return 3;
+    case UWOP_SAVE_XMM128:     return 2;
+    case UWOP_SAVE_XMM128_FAR: return 3;
+    case UWOP_PUSH_MACHFRAME:  return 1;
+    default:                   return 1; /* PUSH_NONVOL, ALLOC_SMALL, SET_FPREG, reserved */
+    }
+}
+
 /* Internal SysV RtlVirtualUnwind — operates on raw context buffer.
  * Returns: handler VA (or NULL if no handler for this frame).
  * Updates ctx in place (unwound registers).
@@ -995,10 +1020,16 @@ static void* seh_internal_virtual_unwind(
     uint8_t flags       = (ui_base[0] >> 3) & 0x07;
     uint8_t prolog_size = ui_base[1];
     uint8_t count_codes = ui_base[2];
-    uint8_t frame_reg   = ui_base[3] >> 4;
-    uint8_t frame_off   = ui_base[3] & 0x0f;
+    /* BUG-037: UNWIND_INFO byte 3 is two little-endian 4-bit fields —
+     * FrameRegister is the LOW nibble, the scaled FrameOffset the HIGH
+     * nibble (winnt.h: `UCHAR FrameRegister:4; UCHAR FrameOffset:4;`).
+     * The previous decode had them swapped, so mingw frames that use
+     * RBP (reg 5) with lea rbp,[rsp+0x80] (offset 8 -> byte 0x85) were
+     * misread as FP=R8/offset=5. */
+    uint8_t frame_reg   = ui_base[3] & 0x0f;
+    uint8_t frame_off   = (ui_base[3] >> 4) & 0x0f;
 
-    (void)version; (void)prolog_size;
+    (void)prolog_size;
 
     /* Handle CHAININFO — the chained function's unwind info replaces
      * the current function's unwind codes. We must run the chained
@@ -1012,9 +1043,10 @@ static void* seh_internal_virtual_unwind(
         uint8_t chained_flags = (chained_ui[0] >> 3) & 0x07;
         uint8_t chained_prolog_size = chained_ui[1];
         uint8_t chained_count_codes = chained_ui[2];
-        uint8_t chained_frame_reg = chained_ui[3] >> 4;
-        uint8_t chained_frame_off = chained_ui[3] & 0x0f;
-        (void)chained_version; (void)chained_prolog_size;
+        /* BUG-037: FrameRegister = LOW nibble (see comment above). */
+        uint8_t chained_frame_reg = chained_ui[3] & 0x0f;
+        uint8_t chained_frame_off = (chained_ui[3] >> 4) & 0x0f;
+        (void)chained_prolog_size;
 
         /* Read RIP from context for func_offset calculation */
         uint64_t chain_rip = *(uint64_t*)(ctx + CTX_Rip);
@@ -1025,13 +1057,29 @@ static void* seh_internal_virtual_unwind(
         uint8_t* chained_codes_ptr = chained_ui + 4;
         int chained_slot = 0;
         for (int i = 0; i < chained_count_codes; i++) {
-            if (chained_slot * 2 + 1 >= (int)(chained_count_codes * 2 + 16)) break;
+            /* BUG-037: CountOfCodes counts SLOTS (code words + operand
+             * slots, MS doc "2 or 3 nodes"; ReactOS advances i by
+             * UnwindOpSlots). Bound the walk on the slot cursor, not the
+             * code index, or padding/handler bytes decode as phantom
+             * codes past the array. */
+            if (chained_slot >= chained_count_codes ||
+                chained_slot * 2 + 1 >= (int)(chained_count_codes * 2 + 16)) break;
             uint16_t cw = *(uint16_t*)(chained_codes_ptr + chained_slot * 2);
             uint8_t op_code = (cw >> 8) & 0x0f;
             uint8_t op_info = (cw >> 12) & 0x0f;
             uint8_t code_offset = cw & 0xff;
             if (chained_func_offset > 0 && code_offset >= chained_func_offset) {
-                chained_slot++; continue;
+                /* BUG-037: skip the code WITH its operand slots, otherwise
+                 * the cursor lands on operand bytes and every following
+                 * code decodes from a misaligned position. */
+                chained_slot += seh_unwind_op_slots(op_code, op_info);
+                continue;
+            }
+            if (op_code == UWOP_EPILOG && chained_version < 2) {
+                /* Epilogue descriptors exist only in UNWIND_INFO v2; in a
+                 * v1 array op 6 is corruption — stop applying codes. */
+                MW_TRACE("[DISPATCH] chained UI v%d has EPILOG code — corrupt, stop", chained_version);
+                break;
             }
             switch (op_code) {
             case UWOP_PUSH_NONVOL: {
@@ -1050,7 +1098,24 @@ static void* seh_internal_virtual_unwind(
                 }
                 break;
             case UWOP_ALLOC_SMALL: chained_rsp += (uint64_t)(op_info + 1) * 8; break;
-            case UWOP_SET_FPREG: chained_fp_val = chained_rsp + (uint64_t)chained_frame_off * 16; chained_fp_set = 1; break;
+            case UWOP_SET_FPREG:
+                /* ReactOS semantics: RSP re-anchors to the frame-pointer
+                 * base (FP_value - FrameOffset*16) for all remaining codes;
+                 * the FP value is read from the LIVE context, where the
+                 * established anchor persists (BUG-037). */
+                if (chained_frame_reg) {
+                    uint32_t fp_off = reg_to_ctx_offset(chained_frame_reg);
+                    if (fp_off) {
+                        chained_fp_val = *(uint64_t*)(ctx + fp_off);
+                        chained_rsp = chained_fp_val - (uint64_t)chained_frame_off * 16;
+                    } else {
+                        chained_fp_val = chained_rsp + (uint64_t)chained_frame_off * 16;
+                    }
+                } else {
+                    chained_fp_val = chained_rsp + (uint64_t)chained_frame_off * 16;
+                }
+                chained_fp_set = 1;
+                break;
             case UWOP_SAVE_NONVOL: {
                 chained_slot++;
                 uint16_t soff = *(uint16_t*)(chained_codes_ptr + chained_slot * 2);
@@ -1067,6 +1132,8 @@ static void* seh_internal_virtual_unwind(
             }
             case UWOP_SAVE_XMM128: { chained_slot++; break; }
             case UWOP_SAVE_XMM128_FAR: { chained_slot++; chained_slot++; break; }
+            case UWOP_EPILOG: { chained_slot++; break; }          /* 2 slots total */
+            case UWOP_SPARE_CODE: { chained_slot++; chained_slot++; break; } /* 3 total */
             case UWOP_PUSH_MACHFRAME: {
                 chained_rsp += 40;
                 if (chained_rsp <= chained_rsp + 4096) {
@@ -1075,7 +1142,7 @@ static void* seh_internal_virtual_unwind(
                 }
                 break;
             }
-            default: { if (op_code >= 9) chained_slot++; break; }
+            default: { if (op_code >= 11) chained_slot++; break; } /* reserved */
             }
             chained_slot++;
         }
@@ -1117,16 +1184,27 @@ static void* seh_internal_virtual_unwind(
     uint8_t* codes = ui_base + 4;
     int slot = 0;
     for (int i = 0; i < count_codes; i++) {
-        if (slot * 2 + 1 >= (int)(count_codes * 2 + 16)) break;
+        /* BUG-037: CountOfCodes counts SLOTS — see chained-loop note. */
+        if (slot >= count_codes ||
+            slot * 2 + 1 >= (int)(count_codes * 2 + 16)) break;
         uint16_t code_word = *(uint16_t*)(codes + slot * 2);
         uint8_t op_code = (code_word >> 8) & 0x0f;   /* UnwindOp: low nibble of byte 1 */
         uint8_t op_info = (code_word >> 12) & 0x0f;  /* OpInfo: high nibble of byte 1 */
         uint8_t code_offset = code_word & 0xff;
 
-        /* Skip codes that haven't fully executed yet */
+        /* Skip codes that haven't fully executed yet — advancing by the
+         * FULL slot size so the cursor stays aligned (BUG-037). Boundary:
+         * a code whose END offset equals the RIP offset has executed
+         * (ReactOS skips strictly-greater offsets). */
         if (func_offset > 0 && code_offset >= func_offset) {
-            slot++;
+            slot += seh_unwind_op_slots(op_code, op_info);
             continue;
+        }
+        if (op_code == UWOP_EPILOG && version < 2) {
+            /* Epilogue descriptors exist only in UNWIND_INFO v2; in a v1
+             * array op 6 is corruption — stop applying codes. */
+            MW_TRACE("[DISPATCH] UI v1 has EPILOG code — corrupt, stop");
+            break;
         }
 
         switch (op_code) {
@@ -1152,7 +1230,22 @@ static void* seh_internal_virtual_unwind(
             break;
         }
         case UWOP_SET_FPREG: {
-            fp_reg_val = new_rsp + (uint64_t)frame_off * 16;
+            /* ReactOS semantics (sdk/lib/rtl/amd64/unwind.c): on unwind,
+             * RSP re-anchors to the frame-pointer base — the FP register
+             * value minus the scaled FrameOffset — and the FP value is
+             * read from the LIVE context, where the established anchor
+             * persists through the frame body (BUG-037). */
+            if (frame_reg) {
+                uint32_t fp_ctx_off = reg_to_ctx_offset(frame_reg);
+                if (fp_ctx_off) {
+                    fp_reg_val = *(uint64_t*)(ctx + fp_ctx_off);
+                    new_rsp = fp_reg_val - (uint64_t)frame_off * 16;
+                } else {
+                    fp_reg_val = new_rsp + (uint64_t)frame_off * 16;
+                }
+            } else {
+                fp_reg_val = new_rsp + (uint64_t)frame_off * 16;
+            }
             fp_set = 1;
             break;
         }
@@ -1176,6 +1269,8 @@ static void* seh_internal_virtual_unwind(
         }
         case UWOP_SAVE_XMM128: { slot++; break; }
         case UWOP_SAVE_XMM128_FAR: { slot++; slot++; break; }
+        case UWOP_EPILOG: { slot++; break; }          /* 2 slots total, no stack effect */
+        case UWOP_SPARE_CODE: { slot++; slot++; break; } /* 3 slots total */
         case UWOP_PUSH_MACHFRAME: {
             new_rsp += 40;
             *(uint64_t*)(ctx + CTX_Rip) = *(uint64_t*)(new_rsp + 16);
@@ -1183,7 +1278,7 @@ static void* seh_internal_virtual_unwind(
             break;
         }
         default: {
-            if (op_code >= 9) slot++;
+            if (op_code >= 11) slot++; /* reserved ops: skip code word only */
             break;
         }
         }
@@ -2003,24 +2098,29 @@ static uint64_t seh_total_prologue_alloc(uint64_t ip_va) {
     int slot = 0;
     uint64_t total = 0;
     for (int i = 0; i < count; i++) {
-        if (slot * 2 + 1 >= (int)(count * 2 + 16)) break;
+        /* BUG-037: CountOfCodes counts SLOTS — bound on the slot cursor. */
+        if (slot >= count || slot * 2 + 1 >= (int)(count * 2 + 16)) break;
         uint16_t cw = *(uint16_t*)(codes + slot * 2);
         uint8_t op = (cw >> 8) & 0x0f;
         uint8_t info = (cw >> 12) & 0x0f;
+        /* BUG-037: opcodes renumbered to the current spec (XMM=8/9,
+         * MACHFRAME=10, EPILOG=6 v2-only, SPARE=7). */
         switch (op) {
-        case 0: /* PUSH_NONVOL */ total += 8; break;
-        case 1: /* ALLOC_LARGE */
+        case UWOP_PUSH_NONVOL: total += 8; break;
+        case UWOP_ALLOC_LARGE: /* TASK-API-006 spec rule: info==0 => uint16 * 8; info==1 => uint32, no shift */
             slot++;
             if (info == 0) total += (uint64_t)(*(uint16_t*)(codes + slot * 2)) * 8;
             else { slot++; total += (uint64_t)(*(uint32_t*)(codes + slot * 2 - 2)); }
             break;
-        case 2: /* ALLOC_SMALL */ total += (uint64_t)(info + 1) * 8; break;
-        case 4: /* SAVE_NONVOL */ slot++; break;
-        case 5: /* SAVE_NONVOL_FAR */ slot++; slot++; break;
-        case 6: /* SAVE_XMM128 */ slot++; break;
-        case 7: /* SAVE_XMM128_FAR */ slot++; slot++; break;
-        case 8: /* PUSH_MACHFRAME */ total += 40; break;
-        default: if (op >= 9) slot++; break;
+        case UWOP_ALLOC_SMALL: total += (uint64_t)(info + 1) * 8; break;
+        case UWOP_SAVE_NONVOL: slot++; break;
+        case UWOP_SAVE_NONVOL_FAR: slot++; slot++; break;
+        case UWOP_SAVE_XMM128: slot++; break;
+        case UWOP_SAVE_XMM128_FAR: slot++; slot++; break;
+        case UWOP_EPILOG: slot++; break;               /* 2 slots total, 0 stack */
+        case UWOP_SPARE_CODE: slot++; slot++; break;   /* 3 slots total, 0 stack */
+        case UWOP_PUSH_MACHFRAME: total += 40; break;
+        default: if (op >= 11) slot++; break;
         }
         slot++;
     }
@@ -2295,42 +2395,74 @@ __attribute__((ms_abi)) void mw_RtlUnwindEx(void* target_frame, void* target_ip,
             int tgt_slot = 0;
             uint64_t alloc_total = 0;
             for (int i = 0; i < tgt_count; i++) {
-                if (tgt_slot * 2 + 1 >= (int)(tgt_count * 2 + 16)) break;
+                /* BUG-037: CountOfCodes counts SLOTS — bound on the slot
+                 * cursor, otherwise padding/handler bytes decode as
+                 * phantom codes (reproduced: alloc_total=0xff0191 came
+                 * from reading the handler RVA as ALLOC_LARGE). */
+                if (tgt_slot >= tgt_count ||
+                    tgt_slot * 2 + 1 >= (int)(tgt_count * 2 + 16)) break;
                 uint16_t cw = *(uint16_t*)(tgt_codes + tgt_slot * 2);
                 uint8_t op = (cw >> 8) & 0x0f;
                 uint8_t info = (cw >> 12) & 0x0f;
+                /* BUG-037: opcodes renumbered to the current spec
+                 * (XMM128=8, XMM128_FAR=9, MACHFRAME=10, EPILOG=6 v2-only,
+                 * SPARE=7); missing UWOP_SAVE_NONVOL slot advance added;
+                 * ALLOC_LARGE info==1 now unscaled u32 (TASK-API-006 rule). */
                 switch (op) {
-                case 1: /* ALLOC_LARGE */
+                case UWOP_ALLOC_LARGE:
                     tgt_slot++;
                     if (info == 0) {
-                        alloc_total += *(uint16_t*)(tgt_codes + tgt_slot * 2);
+                        alloc_total += (uint64_t)(*(uint16_t*)(tgt_codes + tgt_slot * 2)) * 8;
                     } else {
                         tgt_slot++;
-                        alloc_total += (uint64_t)(*(uint32_t*)(tgt_codes + tgt_slot * 2 - 2)) << 16;
+                        alloc_total += (uint64_t)(*(uint32_t*)(tgt_codes + tgt_slot * 2 - 2));
                     }
                     break;
-                case 2: /* ALLOC_SMALL */
+                case UWOP_ALLOC_SMALL:
                     alloc_total += (uint64_t)(info + 1) * 8;
                     break;
-                case 0: /* PUSH_NONVOL */
+                case UWOP_PUSH_NONVOL:
                     alloc_total += 8;
                     break;
-                case 5: /* SAVE_NONVOL_FAR */
-                    tgt_slot++; tgt_slot++; break;
-                case 6: /* SAVE_XMM128 */
+                case UWOP_SAVE_NONVOL:
                     tgt_slot++; break;
-                case 7: /* SAVE_XMM128_FAR */
+                case UWOP_SAVE_NONVOL_FAR:
                     tgt_slot++; tgt_slot++; break;
-                case 8: /* PUSH_MACHFRAME */
+                case UWOP_SAVE_XMM128:
+                    tgt_slot++; break;
+                case UWOP_SAVE_XMM128_FAR:
+                    tgt_slot++; tgt_slot++; break;
+                case UWOP_EPILOG:
+                    tgt_slot++; break;               /* 2 slots total, 0 stack */
+                case UWOP_SPARE_CODE:
+                    tgt_slot++; tgt_slot++; break;   /* 3 slots total, 0 stack */
+                case UWOP_PUSH_MACHFRAME:
                     alloc_total += 40;
                     break;
                 default:
-                    if (op >= 9) tgt_slot++;
+                    if (op >= 11) tgt_slot++;
                     break;
                 }
                 tgt_slot++;
             }
             post_prologue_rsp = tgt_frame - alloc_total;
+            /* BUG-037: for frames with a frame pointer the establisher is
+             * the FP register value (mid-frame anchor), not the frame's
+             * entry RSP. The body RSP is FP - FrameOffset*16 (establishment
+             * happens after the last stack change in the prologue).
+             * CRT-startup frame: FP=RBP=entry-0x108, off=8 -> body RSP =
+             * entry-0x188; the old tgt_frame-alloc formula would have
+             * produced entry-0x290. */
+            {
+                uint8_t tgt_framebyte = tgt_ui[3];
+                uint8_t tgt_framereg  = tgt_framebyte & 0x0f;
+                uint8_t tgt_frameoff  = (tgt_framebyte >> 4) & 0x0f;
+                if (tgt_framereg) {
+                    post_prologue_rsp = tgt_frame - (uint64_t)tgt_frameoff * 16;
+                    MW_TRACE("RtlUnwindEx: FP frame reg=%u off=%u -> body RSP=0x%lx",
+                             tgt_framereg, tgt_frameoff, post_prologue_rsp);
+                }
+            }
             MW_TRACE("RtlUnwindEx: target_func RVA=0x%x alloc_total=0x%lx post_prologue_RSP=0x%lx",
                      tgt_rf->BeginAddress, alloc_total, post_prologue_rsp);
         } else {
@@ -2414,10 +2546,12 @@ __attribute__((ms_abi)) void* mw_RtlVirtualUnwind(uint32_t handler_type, uint64_
     uint8_t flags   = (ui_base[0] >> 3) & 0x07;
     uint8_t prolog_size = ui_base[1];
     uint8_t count_codes = ui_base[2];
-    uint8_t frame_reg   = ui_base[3] >> 4;
-    uint8_t frame_off   = ui_base[3] & 0x0f;
+    /* BUG-037: FrameRegister = LOW nibble, scaled FrameOffset = HIGH nibble
+     * (little-endian C bitfields; see seh_internal_virtual_unwind). */
+    uint8_t frame_reg   = ui_base[3] & 0x0f;
+    uint8_t frame_off   = (ui_base[3] >> 4) & 0x0f;
 
-    (void)image_base; (void)context_pointers; (void)version;
+    (void)image_base; (void)context_pointers; (void)prolog_size;
 
     /* Handle CHAININFO */
     if (flags & UNW_FLAG_CHAININFO) {
@@ -2455,15 +2589,23 @@ __attribute__((ms_abi)) void* mw_RtlVirtualUnwind(uint32_t handler_type, uint64_
     uint8_t* codes = ui_base + 4;
     int slot = 0;
     for (int i = 0; i < count_codes; i++) {
+        /* BUG-037: CountOfCodes counts SLOTS — bound on the slot cursor. */
+        if (slot >= count_codes) break;
         uint16_t code_word = *(uint16_t*)(codes + slot * 2);
         uint8_t op_code = (code_word >> 8) & 0x0f;   /* UnwindOp: low nibble of byte 1 */
         uint8_t op_info = (code_word >> 12) & 0x0f;  /* OpInfo: high nibble of byte 1 */
         uint8_t code_offset = code_word & 0xff;
 
-        /* Skip codes that haven't fully executed yet */
+        /* Skip codes that haven't fully executed yet — full slot advance
+         * so the cursor stays aligned (BUG-037). */
         if (func_offset > 0 && code_offset >= func_offset) {
-            slot++;
+            slot += seh_unwind_op_slots(op_code, op_info);
             continue;
+        }
+        if (op_code == UWOP_EPILOG && version < 2) {
+            /* Epilogue descriptors exist only in UNWIND_INFO v2. */
+            MW_TRACE("RtlVirtualUnwind: UI v1 has EPILOG code — corrupt, stop");
+            break;
         }
 
         switch (op_code) {
@@ -2489,7 +2631,19 @@ __attribute__((ms_abi)) void* mw_RtlVirtualUnwind(uint32_t handler_type, uint64_
             break;
         }
         case UWOP_SET_FPREG: {
-            fp_reg = new_rsp + (uint64_t)frame_off * 16;
+            /* ReactOS semantics: re-anchor RSP from the LIVE FP register
+             * (BUG-037; see seh_internal_virtual_unwind). */
+            if (frame_reg) {
+                uint32_t fp_ctx_off = reg_to_ctx_offset(frame_reg);
+                if (fp_ctx_off) {
+                    fp_reg = *(uint64_t*)(ctx + fp_ctx_off);
+                    new_rsp = fp_reg - (uint64_t)frame_off * 16;
+                } else {
+                    fp_reg = new_rsp + (uint64_t)frame_off * 16;
+                }
+            } else {
+                fp_reg = new_rsp + (uint64_t)frame_off * 16;
+            }
             fp_set = 1;
             break;
         }
@@ -2519,6 +2673,14 @@ __attribute__((ms_abi)) void* mw_RtlVirtualUnwind(uint32_t handler_type, uint64_
             slot++; slot++;
             break;
         }
+        case UWOP_EPILOG: {
+            slot++;               /* 2 slots total, no stack effect */
+            break;
+        }
+        case UWOP_SPARE_CODE: {
+            slot++; slot++;       /* 3 slots total */
+            break;
+        }
         case UWOP_PUSH_MACHFRAME: {
             new_rsp += 40;
             *(uint64_t*)(ctx + CTX_Rip) = *(uint64_t*)(new_rsp + 16);
@@ -2527,11 +2689,11 @@ __attribute__((ms_abi)) void* mw_RtlVirtualUnwind(uint32_t handler_type, uint64_
         }
         default: {
             static int warned_unknown[7] = {0};
-            if (op_code >= 9 && op_code <= 15 && !warned_unknown[op_code - 9]) {
+            if (op_code >= 11 && !warned_unknown[op_code - 11]) {
                 MW_TRACE("RtlVirtualUnwind: unknown opcode %d (skipping)", op_code);
-                warned_unknown[op_code - 9] = 1;
+                warned_unknown[op_code - 11] = 1;
             }
-            if (op_code >= 9) slot++;
+            if (op_code >= 11) slot++; /* reserved ops: skip code word only */
             break;
         }
         }
@@ -2740,6 +2902,7 @@ __attribute__((ms_abi)) int mw___getmainargs(int* pargc, char*** pargv, char*** 
     if (pargc) *pargc = g_argc;
     if (pargv) *pargv = g_argv;
     if (penvp) *penvp = g_initenv_ptr;
+    g_environ_cell = g_initenv_ptr; /* TASK-API-011: __p__environ target */
     return 0;
 }
 
@@ -2800,6 +2963,121 @@ __attribute__((ms_abi)) void* mw___iob_func(void) {
     g_iob_array[2] = stderr;
     MW_TRACE("__iob_func() = %p", g_iob_array);
     return g_iob_array;
+}
+
+/* TASK-API-011 (UCRT wave, 2026-10-15): modern UCRT-flavored mingw binaries
+ * (llvm-mingw, MSVC) resolve std streams through __acrt_iob_func(index)
+ * instead of __iob_func(). Return the same backing streams by index. */
+__attribute__((ms_abi)) void* mw___acrt_iob_func(unsigned index) {
+    g_iob_array[0] = stdin;
+    g_iob_array[1] = stdout;
+    g_iob_array[2] = stderr;
+    void* r = (index < 3) ? g_iob_array[index] : NULL;
+    MW_TRACE("__acrt_iob_func(%u) = %p", index, r);
+    return r;
+}
+
+/* UCRT-flavored CRT startup calls these during init; the loader has already
+ * prepared argc/argv/env, so they are bookkeeping no-ops. */
+__attribute__((ms_abi)) int mw__configure_narrow_argv(int mode) {
+    (void)mode;
+    MW_TRACE("_configure_narrow_argv(mode=%d) -> 0", mode);
+    return 0;
+}
+
+__attribute__((ms_abi)) int mw__initialize_narrow_environment(void) {
+    MW_TRACE("_initialize_narrow_environment() -> 0");
+    return 0;
+}
+
+__attribute__((ms_abi)) int mw__set_new_mode(int mode) {
+    MW_TRACE("_set_new_mode(%d) -> 0", mode);
+    return 0;
+}
+
+__attribute__((ms_abi)) void* mw__set_invalid_parameter_handler(void* h) {
+    MW_TRACE("_set_invalid_parameter_handler(%p) -> NULL", h);
+    return NULL;
+}
+
+/* signal(): tests never install real handlers; record and return no old one.
+ * (Named _stub to avoid clashing with the host signal(2) declaration.) */
+__attribute__((ms_abi)) void* mw_signal_stub(int sig, void* handler) {
+    MW_TRACE("signal(%d, %p) -> NULL (stub)", sig, handler);
+    return NULL;
+}
+
+__attribute__((ms_abi)) void mw__tzset(void) {
+    MW_TRACE("_tzset() (stub, UTC)");
+}
+
+/* UCRT __p__fmode/__p__commode are FUNCTIONS returning &var (t10 crashes
+ * 0x2039038/0x2039034 proved call-style usage). */
+__attribute__((ms_abi)) unsigned int* mw___p__fmode(void) {
+    MW_TRACE("__p__fmode() = %p", &g_fmode_val);
+    return &g_fmode_val;
+}
+
+__attribute__((ms_abi)) unsigned int* mw___p__commode(void) {
+    MW_TRACE("__p__commode() = %p", &g_commode_val);
+    return &g_commode_val;
+}
+
+__attribute__((ms_abi)) int* mw___p___argc(void) {
+    MW_TRACE("__p___argc() = %p", &g_argc);
+    return &g_argc;
+}
+
+__attribute__((ms_abi)) char*** mw___p___argv(void) {
+    MW_TRACE("__p___argv() = %p", &g_argv_cell);
+    return &g_argv_cell;
+}
+
+__attribute__((ms_abi)) char*** mw___p__environ(void) {
+    MW_TRACE("__p__environ() = %p", &g_environ_cell);
+    return &g_environ_cell;
+}
+
+
+/* TASK-API-012 (2026-10-15): FILE-level stdio bridges. The PE's fopen
+ * returns a REAL glibc FILE* (map_crt_stream now passes unknown pointers
+ * through), so the rest are 1:1 wrappers. */
+__attribute__((ms_abi)) void* mw_fopen(const char* path, const char* mode) {
+    FILE* f = fopen(path, mode);
+    MW_TRACE("fopen(%s, %s) = %p", path ? path : "NULL", mode ? mode : "NULL", f);
+    return f;
+}
+
+__attribute__((ms_abi)) int mw_fclose(void* stream) {
+    MW_TRACE("fclose(%p)", stream);
+    return fclose((FILE*)stream);
+}
+
+__attribute__((ms_abi)) unsigned long long mw_fread(void* buf,
+        unsigned long long sz, unsigned long long n, void* stream) {
+    return fread(buf, (size_t)sz, (size_t)n, (FILE*)stream);
+}
+
+__attribute__((ms_abi)) char* mw_fgets(char* buf, int n, void* stream) {
+    return fgets(buf, n, (FILE*)stream);
+}
+
+__attribute__((ms_abi)) int mw_fgetc(void* stream) {
+    return fgetc((FILE*)stream);
+}
+
+__attribute__((ms_abi)) void mw_rewind(void* stream) {
+    rewind((FILE*)stream);
+}
+
+__attribute__((ms_abi)) int mw_remove(const char* path) {
+    MW_TRACE("remove(%s)", path ? path : "NULL");
+    return remove(path);
+}
+
+__attribute__((ms_abi)) size_t mw_strftime(char* buf, size_t max,
+        const char* fmt, const void* tmv) {
+    return strftime(buf, max, fmt, (const struct tm*)tmv);
 }
 
 /* Data accessor functions */
@@ -2959,6 +3237,67 @@ __attribute__((ms_abi)) int mw_vfprintf(void* file, const char* fmt, void* ap) {
     return mw_printf_emit(f, fmt, slots, nargs);
 }
 
+/* TASK-API-011: UCRT unified stdio core. Modern UCRT printf/snprintf are
+ * inline wrappers over the __stdio_common_v* family. The va_list argument is
+ * the PE's ms_abi slot stream — exactly what mw_vfprintf already repacks. */
+__attribute__((ms_abi)) int mw___stdio_common_vfprintf(
+    unsigned long long options, void* file, const char* fmt,
+    void* locale, void* ap) {
+    (void)options; (void)locale;
+    MW_TRACE("__stdio_common_vfprintf(file=%p, fmt=%s)", file, fmt ? fmt : "NULL");
+    return mw_vfprintf(file, fmt, ap);
+}
+
+__attribute__((ms_abi)) int mw___stdio_common_vsprintf(
+    unsigned long long options, char* buffer, size_t size,
+    const char* fmt, void* locale, void* ap) {
+    (void)options; (void)locale;
+    char tmp[16384];
+    FILE* mf = fmemopen(tmp, sizeof tmp, "w");
+    if (!mf) return -1;
+    int n = mw_vfprintf(mf, fmt, ap);
+    fclose(mf);
+    if (n < 0) return -1;
+    size_t copy = ((size_t)n >= size) ? (size ? size - 1 : 0) : (size_t)n;
+    if (buffer && size) { memcpy(buffer, tmp, copy); buffer[copy] = 0; }
+    MW_TRACE("__stdio_common_vsprintf(fmt=%s) = %d", fmt ? fmt : "NULL", n);
+    return n; /* UCRT: would-be length (may exceed size) */
+}
+
+__attribute__((ms_abi)) int mw___stdio_common_vfwprintf(
+    unsigned long long options, void* file, const short* fmt,
+    void* locale, void* ap) {
+    /* Wide print: no test exercises it; refuse loudly rather than misformat. */
+    (void)options; (void)file; (void)fmt; (void)locale; (void)ap;
+    MW_TRACE("__stdio_common_vfwprintf() -> -1 (wide print unsupported)");
+    return -1;
+}
+
+__attribute__((ms_abi)) int mw___stdio_common_vsscanf(
+    unsigned long long options, const char* buffer, size_t size,
+    const char* fmt, void* locale, void* ap) {
+    (void)options; (void)locale; (void)size;
+    if (!buffer) return -1;
+    /* All scanf varargs are pointers (GP-only). MS slot stream: slot[i] is
+     * an 8-byte uniform slot. Build the SysV va_list with the loader's
+     * proven reg_save trick (slot 0 reserved; first vararg at gp_offset 8). */
+    unsigned long long* slots = (unsigned long long*)ap;
+    unsigned long long reg_save[6 + 16];
+    reg_save[0] = 0; /* dummy rdi slot */
+    for (int i = 0; i < 5; i++) reg_save[1 + i] = slots[i];
+    memset(&reg_save[6], 0, 16 * 8);
+    va_list sva;                      /* glibc __va_list_tag[1] */
+    struct { unsigned int gp_offset, fp_offset; void* overflow; void* reg_save; }* sv =
+        (void*)sva;
+    sv->gp_offset = 8;
+    sv->fp_offset = 48; /* pointers only — never reads xmm */
+    sv->overflow = slots + 5;
+    sv->reg_save = reg_save;
+    int r = vsscanf(buffer, fmt, sva);
+    MW_TRACE("__stdio_common_vsscanf(fmt=%s) = %d", fmt ? fmt : "NULL", r);
+    return r;
+}
+
 /* BUG-032: classic msvcrt/mingw CRTs treat __iob_func()'s return value as a
  * FILE* into an ARRAY OF FILE STRUCTS with stride sizeof(FILE)=0x30 on x64:
  *   stdin = base+0x00, stdout = base+0x30, stderr = base+0x60.
@@ -2979,7 +3318,12 @@ static FILE* map_crt_stream(void* stream) {
                  idx == 0 ? "stdin" : idx == 1 ? "stdout" : "stderr");
         return mapped;
     }
-    return stdout; /* legacy fallback: unknown stream -> stdout */
+    /* TASK-API-011: pointers outside the synthetic iob window are REAL
+     * glibc FILE* (fmemopen/fopen-backed streams created by our own API
+     * implementations). Pass them through verbatim; the old "unknown ->
+     * stdout" fallback silently ate fmemopen output (snapt.exe repro:
+     * "%.3f" went to stdout and the caller's buffer stayed empty). */
+    return (FILE*)stream;
 }
 
 __attribute__((ms_abi)) int mw_fflush(void* file) {
@@ -3918,8 +4262,35 @@ static ImportEntry g_import_table[] = {
 
     /* msvcrt.dll — Code imports */
     ENTRY("msvcrt.dll", "__C_specific_handler",   mw___C_specific_handler),
+    ENTRY("api-ms-win-crt-runtime-l1-1-0.dll", "__C_specific_handler", mw___C_specific_handler),
     ENTRY("msvcrt.dll", "__getmainargs",         mw___getmainargs),
+    ENTRY("api-ms-win-crt-runtime-l1-1-0.dll", "_configure_narrow_argv", mw__configure_narrow_argv),
+    ENTRY("api-ms-win-crt-runtime-l1-1-0.dll", "_initialize_narrow_environment", mw__initialize_narrow_environment),
+    ENTRY("api-ms-win-crt-runtime-l1-1-0.dll", "_set_new_mode", mw__set_new_mode),
+    ENTRY("api-ms-win-crt-runtime-l1-1-0.dll", "_set_invalid_parameter_handler", mw__set_invalid_parameter_handler),
+    ENTRY("api-ms-win-crt-runtime-l1-1-0.dll", "_crt_atexit",   mw_atexit),
+    ENTRY("api-ms-win-crt-runtime-l1-1-0.dll", "signal",        mw_signal_stub),
+    ENTRY("api-ms-win-crt-runtime-l1-1-0.dll", "_set_app_type", mw___set_app_type),
     ENTRY("msvcrt.dll", "__iob_func",            mw___iob_func),
+    ENTRY("api-ms-win-crt-stdio-l1-1-0.dll", "__acrt_iob_func", mw___acrt_iob_func),
+    ENTRY("api-ms-win-crt-stdio-l1-1-0.dll", "__stdio_common_vfprintf", mw___stdio_common_vfprintf),
+    ENTRY("api-ms-win-crt-stdio-l1-1-0.dll", "__stdio_common_vsprintf", mw___stdio_common_vsprintf),
+    ENTRY("api-ms-win-crt-stdio-l1-1-0.dll", "__stdio_common_vfwprintf", mw___stdio_common_vfwprintf),
+    ENTRY("api-ms-win-crt-stdio-l1-1-0.dll", "__stdio_common_vsscanf",  mw___stdio_common_vsscanf),
+    ENTRY("api-ms-win-crt-time-l1-1-0.dll", "_tzset",           mw__tzset),
+    ENTRY("api-ms-win-crt-stdio-l1-1-0.dll", "fopen",           mw_fopen),
+    ENTRY("api-ms-win-crt-stdio-l1-1-0.dll", "fclose",          mw_fclose),
+    ENTRY("api-ms-win-crt-stdio-l1-1-0.dll", "fread",           mw_fread),
+    ENTRY("api-ms-win-crt-stdio-l1-1-0.dll", "fwrite",          mw_fwrite),
+    ENTRY("api-ms-win-crt-stdio-l1-1-0.dll", "fgets",           mw_fgets),
+    ENTRY("api-ms-win-crt-stdio-l1-1-0.dll", "fgetc",           mw_fgetc),
+    ENTRY("api-ms-win-crt-stdio-l1-1-0.dll", "rewind",          mw_rewind),
+    ENTRY("api-ms-win-crt-time-l1-1-0.dll", "strftime",         mw_strftime),
+    ENTRY("api-ms-win-crt-private-l1-1-0.dll", "__p__fmode",    mw___p__fmode),
+    ENTRY("api-ms-win-crt-private-l1-1-0.dll", "__p__commode",  mw___p__commode),
+    ENTRY("api-ms-win-crt-runtime-l1-1-0.dll", "__p___argc",    mw___p___argc),
+    ENTRY("api-ms-win-crt-runtime-l1-1-0.dll", "__p___argv",    mw___p___argv),
+    ENTRY("api-ms-win-crt-environment-l1-1-0.dll", "__p__environ", mw___p__environ),
     ENTRY("msvcrt.dll", "__lconv_init",          mw___lconv_init),
     ENTRY("msvcrt.dll", "___lc_codepage_func",    mw___lc_codepage_func),
     ENTRY("msvcrt.dll", "___mb_cur_max_func",     mw___mb_cur_max_func),
@@ -4009,6 +4380,7 @@ static ImportEntry g_import_table[] = {
     ENTRY("msvcrt.dll", "rand",                  mw_rand),
     ENTRY("msvcrt.dll", "realloc",               mw_realloc),
     ENTRY("msvcrt.dll", "rename",                mw_rename),
+    ENTRY("api-ms-win-crt-stdio-l1-1-0.dll", "remove",           mw_remove),
     ENTRY("msvcrt.dll", "signal",                mw_signal),
     ENTRY("msvcrt.dll", "srand",                 mw_srand),
     ENTRY("msvcrt.dll", "strchr",                mw_strchr),
@@ -4043,6 +4415,14 @@ static DataImportEntry g_data_imports[] = {
     { "msvcrt.dll", "__initenv",   &g_initenv_ptr },
     { "msvcrt.dll", "_commode",   &g_commode_val },
     { "msvcrt.dll", "_fmode",     &g_fmode_val },
+    /* TASK-API-011: UCRT-flavored data exports (__p_* return pointers to
+     * the variables; __tzname/__timezone/__daylight are the variables). */
+    /* ALL UCRT __p_* exports are FUNCTIONS returning &var — t10 crashes
+     * (0x2039038 __p__fmode, 0x2039034 __p__commode, 0x2039050 __p___argc)
+     * proved call-style usage for each. See mw___p__* below. */
+    { "api-ms-win-crt-time-l1-1-0.dll", "__tzname",   g_tzname },
+    { "api-ms-win-crt-time-l1-1-0.dll", "__timezone", &g_timezone_val },
+    { "api-ms-win-crt-time-l1-1-0.dll", "__daylight", &g_daylight_val },
     /* _errno removed from data imports — it's a function, not data */
 };
 #define NUM_DATA_IMPORTS (sizeof(g_data_imports) / sizeof(g_data_imports[0]))

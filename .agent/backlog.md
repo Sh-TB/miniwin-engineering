@@ -403,3 +403,62 @@ TASK-API-007/008 (CLOSED TESTED, table 162 -> 188).
 ### TASK-DOC-010 — toolchain usage guide (llvm-mingw) in tests/appcompat/README.md
 - Priority: P2. Status: PENDING. Deps: TASK-INFRA-004.
 - Scope: how to build each tXX, which flags, how imports were audited with pefile, how to add a new program (checklist mirroring t01's structure).
+
+## CONTINUE #7 additions (2026-10-15) — BUG-037 sweep + UCRT wave
+
+### TASK-BUG-038 — C++ EH target-frame delivery (barrier-cache LP installation)
+- Priority: P0. Status: **READY (NEXT)**. Deps: BUG-037 (done).
+- Symptom: t08 completes the whole walk + intermediate cleanups, resumes with the correct body RSP, and dies with SIGILL at 0x140001c85 — mid-instruction. Root cause proven: llvm-mingw's libunwind `_GCC_specific_handler` calls `RtlUnwindEx(frame, disp->ControlPc, ...)` in phase 1 — **TargetIp is a placeholder**; the real landing pad (0x1c9d, proven by scripts/bug037_lsda_parse.py: entry [0x806,0x829) lp=0x82d action=5) travels in the exception object's barrier cache and is installed via `set_registers()` only at TARGET-FRAME DELIVERY (ExceptionFlags 0x2|0x4, Info[1]=target_frame) after which the personality returns ExceptionExecuteHandler (4).
+- Fix: in mw_RtlUnwindEx, after the intermediate walk reaches the target frame, deliver target-unwind to the target frame's personality (dc.ContextRecord=&resume_ctx, TargetIp=tgt_ip, EstablisherFrame=tgt_frame) and honor its ctx.Rip write / return 4. GCC-style flow (UPX G1) must stay intact: GCC answers target delivery by setting Rdx and returning ContinueSearch, and its TargetIp IS the real LP.
+- Acceptance: t08 prints `t08: PASS` exit 0, 3/3 deterministic; regression 12/12; G1 gate; sweep 11/12.
+- Details: docs/bugs/BUG-038.md.
+
+### TASK-BUG-039 — PUSH_MACHFRAME arithmetic verification vs ReactOS
+- Priority: P2. Status: PENDING. Deps: none.
+- Scope: our three copies do `new_rsp += 40; rip=*(new_rsp+16); new_rsp=*(new_rsp+8)`. ReactOS does `rsp += OpInfo*8; Rip=*(rsp+0); Rsp=*(rsp+0x18)` (frame-relative). Never exercised by any current test; align to ReactOS + synthetic machframe test (TASK-BUG-040 fixture).
+
+### TASK-BUG-040 — v2 UNWIND_INFO / UWOP_EPILOG synthetic golden tests
+- Priority: P2. Status: PENDING. Deps: TASK-TEST-004 slice 2 (builder B-fixes).
+- Scope: extend build_synthetic_pe.py to emit a v2 UI with an EPILOG descriptor + SAVE_XMM128/SPARE codes; golden decode asserts; proves the EPILOG v1-corruption stop path and the 2-slot/3-slot accounting.
+
+### TASK-API-011 — UCRT startup + unified __stdio_common_v* wave (CARRY-OVER: DONE this session)
+- Priority: P0. Status: **TESTED (CLOSED)** (t10/t11 green). Note: vfwprintf is a returning stub; vsscanf uses the uniform-slot GP repack.
+
+### TASK-API-012 — FILE-level stdio + UCRT __p_* functions (CARRY-OVER: DONE this session)
+- Priority: P1. Status: **TESTED (CLOSED)** (t12 green). map_crt_stream pass-through fix included. __p__* are FUNCTIONS (three crash signatures proved it).
+
+### TASK-API-013 — UCRT environment access: getenv/_putenv/__p__wenviron
+- Priority: P2. Status: PENDING. Deps: TASK-API-011.
+- Scope: bridge getenv to the loader's env block; add __p__wenviron cell; t12b probe.
+
+### TASK-API-014 — time wave 2: clock/_timespec64/localtime_s, tz real data
+- Priority: P2. Status: PENDING. Deps: TASK-API-011.
+- Scope: clock() via clock_gettime(CLOCK_PROCESS_CPUTIME_ID); real TZ handling instead of the UTC stub; t12c probe asserting clock() monotonicity.
+
+### TASK-API-015 — wide stdio: __stdio_common_vfwprintf real implementation
+- Priority: P2. Status: PENDING. Deps: TASK-API-011.
+- Scope: replace the returning-stub with a wide bridge (fmemopen+wprintf or manual UTF-8 conversion); needs a wchar test (t13?).
+
+### TASK-TEST-006 — golden-vector UNWIND decode regression script
+- Priority: P1. Status: PENDING. Deps: none.
+- Scope: promote scripts/bug037_ref_decode.py + bug037_lsda_parse.py into tests/golden_unwind.sh: decode ALL test exes' UIs, assert descending END-offsets + handler positions + the pinned t08 CRT vector; fails the build on drift.
+
+### TASK-TEST-007 — full-image UI scanner as CI gate
+- Priority: P2. Status: PENDING. Deps: TASK-TEST-006.
+- Scope: run scripts/bug037_scan_uis.py over every tests/appcompat/*.exe each sweep; assert the violation count never increases (currently 40/98 known FP-relative-XMM shapes = expected llvm-mingw encodings, documented).
+
+### TASK-DOC-011 — API_COMPATIBILITY_DATABASE.md: UCRT apiset wave entry
+- Priority: P2. Status: PENDING. Deps: none.
+- Scope: record api-ms-win-crt-* name resolution (name-only matching), the __p_* function-vs-data lesson, and the map_crt_stream pass-through rule.
+
+### TASK-INFRA-003 — toolchain bootstrap script
+- Priority: P2. Status: PENDING. Deps: none.
+- Scope: scripts/get_toolchain.sh — download+extract llvm-mingw 20240917 ucrt (87,950,564 B) into /home/z/my-project/tools and verify clang version; environment resets wipe tools/ (happened twice).
+
+### TASK-RESEARCH-007 — libunwind vs libgcc resume-protocol differences
+- Priority: P1. Status: PENDING. Deps: TASK-BUG-038.
+- Scope: document the two resume protocols (GCC: private_[2]=ra → TargetIp=real LP; LLVM: TargetIp=ControlPc placeholder + barrier cache at target delivery) in docs/master/resume_protocols.md, with the UPX (GCC) and t08 (LLVM) traces as the two witnesses.
+
+### TASK-APP-013 — t13: mixed C library torture (stdio+env+time+locale)
+- Priority: P3. Status: PENDING. Deps: TASK-API-013/014.
+- Scope: next small program; gates the API-013/014 additions.

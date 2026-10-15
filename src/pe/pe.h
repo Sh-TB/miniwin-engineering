@@ -129,16 +129,20 @@ typedef struct {
 #define UNW_FLAG_UHANDLER  0x02
 #define UNW_FLAG_CHAININFO 0x04
 
-/* UNWIND_CODE opcodes */
+/* UNWIND_CODE opcodes — keep in sync with include/pe.h (BUG-037 numbering:
+ * UWOP_SAVE_XMM128=8, UWOP_SAVE_XMM128_FAR=9, UWOP_PUSH_MACHFRAME=10,
+ * UWOP_EPILOG=6 (v2 only), UWOP_SPARE_CODE=7). */
 #define UWOP_PUSH_NONVOL       0
 #define UWOP_ALLOC_LARGE       1
 #define UWOP_ALLOC_SMALL       2
 #define UWOP_SET_FPREG         3
 #define UWOP_SAVE_NONVOL       4
 #define UWOP_SAVE_NONVOL_FAR   5
-#define UWOP_SAVE_XMM128       6
-#define UWOP_SAVE_XMM128_FAR   7
-#define UWOP_PUSH_MACHFRAME    8
+#define UWOP_EPILOG            6   /* UNWIND_INFO version >= 2 only; 2 slots */
+#define UWOP_SPARE_CODE        7   /* 3 slots, no stack effect */
+#define UWOP_SAVE_XMM128       8   /* 2 slots, stack offset scaled by 16 */
+#define UWOP_SAVE_XMM128_FAR   9   /* 3 slots */
+#define UWOP_PUSH_MACHFRAME    10  /* 1 slot; info 0/1 = machine frame */
 
 /* x64 CONTEXT structure register offsets */
 /* CONTEXT is 0x4D0 bytes. Key offsets: */

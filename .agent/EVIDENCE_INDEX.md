@@ -76,3 +76,20 @@ Format: `ID | path | what it proves | session`
 - EV-060 | docs/bugs/BUG-037.md | OPEN: unwind interpreter fault (R9=0x27) on UI RVA 0x50458; handler/disposition trace preceding it | 2026-10-15
 - EV-061 | evidence/master/appcompat/run-20261015_053015/t08_big_cpp_stl.stderr + api_trace | C++ EH machinery live: personality called, disposition=1, frames 2->3 walked, then loader fault | 2026-10-15
 - EV-062 | tests/appcompat/ (t01..t09 + run_sweep.sh) | reproducible sweep suite; every program self-verifying with deterministic exit codes | 2026-10-15
+
+## CONTINUE #7 (2026-10-15)
+- EV-041a: t08 UI@0x50458 raw bytes + reference decode (13 slots, END-offsets,
+  handler 0x131b0@+32) — scripts/bug037_ref_decode.py output; root cause 1/2/3.
+- EV-041b: standalone alloc harness reproduce 0xff0191 → fixed 0x188 —
+  scripts/bug037_alloc_harness.c (CountOfCodes=slots proof).
+- EV-041c: full LSDA decode of t08 main frame — 73 entries; throw region
+  [0x806,0x829) lp=0x82d → VA 0x1c9d action=5; NO entry with lp=0x813 —
+  scripts/bug037_lsda_parse.py (BUG-038 ground truth).
+- EV-041d: __p__* function-vs-data crash signatures: __p__fmode=0x2039038,
+  __p__commode=0x2039034, __p___argc=0x2039050 (IAT value used as call target).
+- EV-041e: map_crt_stream fallback bug repro: /tmp/snapt.exe r=5 buf=[] →
+  r=5 buf=[3.142] after pass-through fix.
+- EV-041f: G1 pins: evidence/master/g1/20261015_{063340,064317,073727}/.
+- EV-041g: sweeps: evidence/master/appcompat/run-20261015_{071313,071634,073729}/
+  (final 10/12: t01..t07, t10, t11, t12 PASS).
+- EV-041h: toolchain re-download sha/size 87,950,564 B (llvm-mingw 20240917 ucrt).
