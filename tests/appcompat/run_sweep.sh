@@ -18,7 +18,13 @@ for t in $TESTS; do
     [ -f "$exe" ] || { echo "$t: MISSING BINARY" | tee -a "$OUT_DIR/summary.csv" >/dev/null; continue; }
     stdout_f="$OUT_DIR/${t}.stdout"
     stderr_f="$OUT_DIR/${t}.stderr"
-    timeout 90 "$LOADER" "$exe" >"$stdout_f" 2>"$stderr_f"
+    # t09 (iostream frontier) is a known TIMEOUT: its 90s run also balloons
+    # the loader's api_trace into multi-GB sizes and filled the root FS during
+    # the 20261015 evidence run (ENOSPC then corrupted the t12 result).
+    # Give it a bounded 20s slice — its classification (TIMEOUT) is unchanged;
+    # the full 90s bound is only needed when t09 itself is being debugged.
+    if [ "$t" = "t09_big_cpp_iostream" ]; then tmo=20; else tmo=90; fi
+    timeout $tmo "$LOADER" "$exe" >"$stdout_f" 2>"$stderr_f"
     rc=$?
     # classify
     if [ $rc -eq 0 ] && ! grep -q "FAIL:" "$stdout_f"; then class=PASS

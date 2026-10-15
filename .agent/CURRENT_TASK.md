@@ -2,7 +2,7 @@
 
 **Task ID:** TASK-BUG-038
 **Title:** C++ EH target-frame delivery (barrier-cache landing pad installation)
-**Status:** READY (NEXT)
+**Status:** SUPERSEDED (2026-10-15) — the GNU-mingw fixture family was fixed by BUG-039 (see docs/bugs/BUG-039.md, CLOSED TESTED): the real roots were (1) PUSH_NONVOL read-after-increment and (2) resume using the search-walk context. The target-frame delivery plan below remains the design for the llvm-mingw/MS-ER family (BUG-038, P2).
 **Priority:** P0
 
 ## One-line description

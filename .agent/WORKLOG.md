@@ -41,3 +41,26 @@ Work Log:
 Stage Summary:
 - Merge d9d2dc4+origin/main integrated with zero work lost; single stdio architecture (map_crt_stream + registry) now covers both fixture families.
 - Open roots unchanged: C++ EH multi-clause trivial catch (BUG-038) + iostream-family timeout.
+
+---
+Task ID: TASK-BUG-039
+Agent: Super Z (engineering agent)
+Task: Read GitHub Issue #1 line-by-line (re-fetch with authenticated API, 50972 chars, 738 lines); continue from .agent/NEXT_ACTION (BUG-038 target-frame delivery); fix the next general root cause; keep evidence.
+
+Work Log:
+- Re-fetched Issue #1 via GitHub API (anonymous API was 403 rate-limited — the Mission's 403 family; authenticated PAT call succeeded, 0 comments, OPEN) and read all 20 sections line-by-line: §2 audit artifacts exist (artifacts/audit/repository_state.md + issue_reconciliation.md); §7 (UNWIND_INFO) and §19 (report format A-F) drive this slice.
+- Baseline: HEAD 648b473 = origin/main (0/0), tree clean, build sha 0630d3ce, regression 12/12, UPX G1 exit 0.
+- Reproduced: t08_probe (p2 len=0, ok clobbered to heap ptr), t08_big_cpp_stl score=159/255, exit 1.
+- Live-trace investigation with temporary register dumps (added in allowed zones only): Frame[1] (__cxa_throw, RF 0x209f0, codes ALLOC_SMALL 0x20 + PUSH rbx/rsi/rdi) restored RDI=[E1]=RETURN ADDRESS instead of [E1-8]=saved rdi.
+- Root cause A (BUG-039/A): all three UWOP_PUSH_NONVOL replay sites incremented RSP BEFORE reading — the code array is in undo (descending-offset) order so the read must come first. Reference: ReactOS sdk/lib/rtl/amd64/unwind.c PopReg (read THEN +=8). Fixed in seh_internal_virtual_unwind (main + CHAININFO) and mw_RtlVirtualUnwind.
+- After fix A, probe p2 resumed at the CORRECT pad with RDX=2 but crashed: Frame[2] (main = TARGET frame) replay had replaced throw-time registers with the target's CALLER's values (RDI=0x370dd38 heap vs required &got).
+- Root cause B (BUG-039/B): the search-phase walk unwinds the live CONTEXT THROUGH the handler's frame; a landing pad must resume with the target frame's throw-time registers. Fix: per-frame pre-unwind snapshot in the dispatcher search loop -> g_target_frame_ctx; mw_RtlUnwindEx copies the 16 GPRs from it before the RIP/RSP/RAX/RDX protocol overrides.
+- Intermediate crash was my own temporary DBG dump dereferencing a leftover register value (RDI=0x64) at loader.c:2607 — removed before commit; never a semantic defect.
+- Results: t08_probe 3/3 OK exit 0 (x3 deterministic), t08_big_cpp_stl score=255/255 exit 0 (x3), regression 12/12, UPX G1 exit 0, corpus t09/t10/t11/t12 exit 0.
+- Sweep hygiene: t09's 90s timeout ballooned api_trace to 7.8GB and filled the root FS (ENOSPC corrupted the sweep's t12 result); bounded t09 to 20s in run_sweep.sh (classification unchanged) and rebuilt the stale sweep t08 binary from source with llvm-mingw. Final sweep: 11/12 PASS (was 10/12), t09 TIMEOUT = known TASK-API-009 frontier.
+- Evidence: evidence/master/bug039/{probe_trace_postfix.json,t08_trace_postfix.json,probe_stdout_final.txt,t08_stdout_final.txt,SHA256SUMS.txt}; docs/bugs/BUG-039.md (CLOSED TESTED).
+- BUG-038 stays OPEN re-scoped: the placeholder-TargetIp hypothesis applies to the llvm-mingw/MS-ER family, not the GNU-mingw fixtures fixed here.
+
+Stage Summary:
+- G2 C++ EH acceptance reached for the GNU-mingw family: t08 255/255 deterministic, probe 3/3, sweep 11/12.
+- Two general semantic laws fixed with ReactOS-verified references; both would fail visibly if reverted (t08/probe + any multi-frame unwinding that restores nonvolatives).

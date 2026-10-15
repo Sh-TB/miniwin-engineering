@@ -1,0 +1,695 @@
+{
+  "trace": [
+[API] PE Loader: file=tests/corpus/bin/t08_probe_exc.exe size=593642
+[API] PE Loader: ImageBase=0x140000000 EP=0x13f0 SizeOfImage=0x61000 Sections=18
+[API] PE Loader: Mapped at 0x140000000 (forced via MAP_FIXED)
+[API] Section [0] .text    VA=0x00001000 VS=0x00020630 Raw=0x00020800 Ch=0x60000020
+[API] Section [1] .data    VA=0x00022000 VS=0x00000220 Raw=0x00000400 Ch=0xc0000040
+[API] Section [2] .rdata   VA=0x00023000 VS=0x00006678 Raw=0x00006800 Ch=0x40000040
+[API] Section [3] .pdata   VA=0x0002a000 VS=0x000026f4 Raw=0x00002800 Ch=0x40000040
+[API] Section [4] .xdata   VA=0x0002d000 VS=0x00002218 Raw=0x00002400 Ch=0x40000040
+[API] Section [5] .bss     VA=0x00030000 VS=0x00000bf0 Raw=0x00000000 Ch=0xc0000080
+[API] Section [6] .idata   VA=0x00031000 VS=0x00000a6c Raw=0x00000c00 Ch=0x40000040
+[API] Section [7] .tls     VA=0x00032000 VS=0x00000010 Raw=0x00000200 Ch=0xc0000040
+[API] Section [8] .reloc   VA=0x00033000 VS=0x000006c0 Raw=0x00000800 Ch=0x42000040
+[API] Section [9] /4       VA=0x00034000 VS=0x000006b0 Raw=0x00000800 Ch=0x42000040
+[API] Section [10] /19      VA=0x00035000 VS=0x00012e13 Raw=0x00013000 Ch=0x42000040
+[API] Section [11] /31      VA=0x00048000 VS=0x000035a7 Raw=0x00003600 Ch=0x42000040
+[API] Section [12] /45      VA=0x0004c000 VS=0x00006fcc Raw=0x00007000 Ch=0x42000040
+[API] Section [13] /57      VA=0x00053000 VS=0x000017d8 Raw=0x00001800 Ch=0x42000040
+[API] Section [14] /70      VA=0x00055000 VS=0x0000039d Raw=0x00000400 Ch=0x42000040
+[API] Section [15] /81      VA=0x00056000 VS=0x00001818 Raw=0x00001a00 Ch=0x42000040
+[API] Section [16] /97      VA=0x00058000 VS=0x00007952 Raw=0x00007a00 Ch=0x42000040
+[API] Section [17] /113     VA=0x00060000 VS=0x00000541 Raw=0x00000600 Ch=0x42000040
+[API] Import Directory: RVA=0x31000 Size=0xa6c
+[API] Import DLL: KERNEL32.dll (IAT RVA=0x312a0, ILT RVA=0x31040)
+[API]   [0] CloseHandle -> 0x200d000
+[API]   [1] DeleteCriticalSection -> 0x200ff90
+[API]   [2] EnterCriticalSection -> 0x20100b0
+[API]   [3] UNRESOLVED: FormatMessageA
+[API]   [4] GetLastError -> 0x2005850
+[API]   [5] GetModuleHandleW -> 0x20070f0
+[API]   [6] GetProcAddress -> 0x2005a80
+[API]   [7] GetThreadId -> 0x200ba90
+[API]   [8] InitializeCriticalSection -> 0x200fd10
+[API]   [9] IsDBCSLeadByteEx -> 0x2004e00
+[API]   [10] LeaveCriticalSection -> 0x20101e0
+[API]   [11] UNRESOLVED: LoadLibraryW
+[API]   [12] UNRESOLVED: LocalFree
+[API]   [13] MultiByteToWideChar -> 0x2007cb0
+[API]   [14] RaiseException -> 0x2004fe0
+[API]   [15] RtlCaptureContext -> 0x200f100
+[API]   [16] RtlLookupFunctionEntry -> 0x2005ce0
+[API]   [17] RtlUnwindEx -> 0x2014180
+[API]   [18] RtlVirtualUnwind -> 0x2012c90
+[API]   [19] SetLastError -> 0x200d5c0
+[API]   [20] SetUnhandledExceptionFilter -> 0x2005ec0
+[API]   [21] Sleep -> 0x20109d0
+[API]   [22] TlsAlloc -> 0x2007300
+[API]   [23] UNRESOLVED: TlsFree
+[API]   [24] TlsGetValue -> 0x2005fb0
+[API]   [25] TlsSetValue -> 0x200d6a0
+[API]   [26] TryEnterCriticalSection -> 0x200fe50
+[API]   [27] VirtualProtect -> 0x2008290
+[API]   [28] VirtualQuery -> 0x20076b0
+[API]   [29] WideCharToMultiByte -> 0x20084f0
+[API] Import DLL: msvcrt.dll (IAT RVA=0x31398, ILT RVA=0x31138)
+[API]   [0] __C_specific_handler -> 0x200f870
+[API]   [1] ___lc_codepage_func -> 0x200e350
+[API]   [2] ___mb_cur_max_func -> 0x200fb30
+[API]   [3] __getmainargs -> 0x20060a0
+[API]   [4] __initenv -> DATA 0x2037840
+[API]   [5] __iob_func -> 0x2006340
+[API]   [6] __set_app_type -> 0x200d960
+[API]   [7] __setusermatherr -> 0x200da40
+[API]   [8] _amsg_exit -> 0x2008880
+[API]   [9] _cexit -> 0x2006fe0
+[API]   [10] _commode -> DATA 0x203c034
+[API]   [11] _errno -> 0x200e5f0
+[API]   [12] _fmode -> DATA 0x203c038
+[API]   [13] _initterm -> 0x20061d0
+[API]   [14] _lock -> 0x200e6e0
+[API]   [15] _onexit -> 0x200c0e0
+[API]   [16] _unlock -> 0x200e7c0
+[API]   [17] abort -> 0x2007a40
+[API]   [18] calloc -> 0x2008a80
+[API]   [19] exit -> 0x2008930
+[API]   [20] fprintf -> 0x2011980
+[API]   [21] fputc -> 0x2012140
+[API]   [22] fputs -> 0x2012040
+[API]   [23] free -> 0x2008e50
+[API]   [24] fwrite -> 0x2012230
+[API]   [25] getenv -> 0x2007e10
+[API]   [26] localeconv -> 0x20087e0
+[API]   [27] malloc -> 0x2009440
+[API]   [28] memchr -> 0x20099f0
+[API]   [29] memcmp -> 0x2009a90
+[API]   [30] memcpy -> 0x20081f0
+[API]   [31] memmove -> 0x2006a30
+[API]   [32] memset -> 0x2007800
+[API]   [33] realloc -> 0x2009530
+[API]   [34] signal -> 0x200ddc0
+[API]   [35] strchr -> 0x2008db0
+[API]   [36] strcmp -> 0x2007fa0
+[API]   [37] strerror -> 0x7fe2e8c1a550
+[API]   [38] strlen -> 0x2007c10
+[API]   [39] strncmp -> 0x2009810
+[API]   [40] strtoul -> 0x2009c70
+[API]   [41] vfprintf -> 0x2011bb0
+[API]   [42] wcslen -> 0x2008450
+[API]   [43] _read -> 0x200a480
+[API] Import resolution: 70 resolved, 4 unresolved (total 74)
+[API] TLS: StartRaw=0x140032000 EndRaw=0x140032008 Callbacks=0x140029650
+[API] TLS: static block 0x3d4f680 (8+0 bytes) -> slot 0
+[API] TLS: callback[0] = 0x14000cb90
+[API] InitializeCriticalSection(0x140030100)
+[API] TLS: callback[1] = 0x14000cb60
+[API] Exception: .pdata RVA=0x2a000 Size=0x26f4 Entries=831
+[API] [API-005] EH hacks DISABLED (default) (MINWIN_EH_HACKS=<unset>)
+[API] [API-005] CXX-EH-FIX (LSDA catch-all patch RVA 0x2010c8) skipped: MINWIN_EH_HACKS not set
+[API] Jumping to EP=0x1400013f0
+[API] _initterm(start=0x140029630, end=0x140029640)
+[API] _initterm: calling 0x140001010
+[API] __set_app_type(1)
+[API] _initterm(start=0x140029618, end=0x140029628)
+[API] _initterm: calling 0x140001130
+[API] __getmainargs(argc=0x140030028, argv=0x140030020, envp=0x140030018)
+[API] SetUnhandledExceptionFilter(handler=0x14000d2d0)
+[API] malloc(16) = 0x3d4fd30
+[API] malloc(35) = 0x3d4fd00
+[API] _onexit(func=0x140001440)
+[API] _onexit(func=0x140020aa0)
+[API] _onexit(func=0x140020ab0)
+[API] InitializeCriticalSection(0x140022160)
+[API] malloc(90112) = 0x3d4fd50
+[API] _onexit(func=0x140020a60)
+[API] _onexit(func=0x14000ca80)
+[API] malloc(164) = 0x3d65d60
+[API] InitializeCriticalSection(0x1400301a0)
+[API] TlsAlloc() = 1
+[API] calloc(1, 24) = 0x3d65e10
+[API] EnterCriticalSection(0x140030100)
+[API] LeaveCriticalSection(0x140030100)
+[API] EnterCriticalSection(0x1400301a0)
+[API] LeaveCriticalSection(0x1400301a0)
+[API] GetLastError() = 0
+[API] TlsGetValue(1) = (nil)
+[API] SetLastError(0)
+[API] calloc(34, 8) = 0x3d65e30
+[API] TlsSetValue(1, 0x3d65e30)
+[API] malloc(24) = 0x3d65f50
+[API] [DISPATCH] === RtlDispatchException ===
+[API] [DISPATCH] ExceptionCode=0x20474343 RIP=0x14000e151 RSP=0x7ffff5de5a30
+[API] [EXC_STATE] EXCEPTION_BEGIN
+[API] [EXC_STATE] Code: 0x20474343
+[API] [EXC_STATE] Flags: 0x0
+[API] [EXC_STATE] Address: 0x14000e151
+[API] [EXC_STATE] NumParams: 1
+[API] [EXC_STATE] Param[0]: 0x3d65dc0
+[API] [EXC_STATE] Param[1]: 0x0
+[API] [EXC_STATE] Param[2]: 0x0
+[API] [EXC_STATE] Param[3]: 0x0
+[API] [EXC_STATE] g_cap_args ptr: 0x7ffff5de5a60
+[API] [EXC_STATE] Exception object @ 0x3d65dc0 (first 32 bytes):
+[API] [EXC_STATE]   00 2b 2b 43 43 55 4e 47
+[API] [EXC_STATE]   10 44 01 40 01 00 00 00
+[API] [EXC_STATE]   00 00 00 00 00 00 00 00
+[API] [EXC_STATE]   00 00 00 00 00 00 00 00
+[API] [EXC_STATE] Exception class (u64): 0x474e5543432b2b00
+[API] [EXC_STATE] EXCEPTION_END
+[API] [DISPATCH] VEH chain: 0 handlers
+[API] [DISPATCH] Frame[0]: RIP=0x14000e151 RVA=0xe151 CTX.Rsp=0x7ffff5de5a30
+[API] [DISPATCH] Frame[0]: RF begin=0xe120 end=0xe15b ui=0x2eed8
+[API] [DISPATCH] Unwind: pc=0x14000e151 begin=0xe120 handler=0x0 est=0x7ffff5de5a58
+[API] [DISPATCH] Frame[0]: Unwind est=0x7ffff5de5a58 CTX.Rsp_after=0x7ffff5de5a58 alloc=0x0
+[API] [DISPATCH] Frame[0]: no handler, parent RIP=0x140020a29 RVA=0x20a29
+[API] [DISPATCH] Frame[0]: est=0x7ffff5de5a58 CTX.Rsp=0x7ffff5de5a58 delta=0x0
+[API] [DISPATCH] Frame[1]: RIP=0x140020a29 RVA=0x20a29 CTX.Rsp=0x7ffff5de5a60
+[API] [DISPATCH] Frame[1]: RF begin=0x209f0 end=0x20a37 ui=0x2d33c
+[API] [DISPATCH] Unwind: pc=0x140020a29 begin=0x209f0 handler=0x0 est=0x7ffff5de5a98
+[API] [DISPATCH] Frame[1]: Unwind est=0x7ffff5de5a98 CTX.Rsp_after=0x7ffff5de5a98 alloc=0x0
+[API] [DISPATCH] Frame[1]: no handler, parent RIP=0x140020af1 RVA=0x20af1
+[API] [DISPATCH] Frame[1]: est=0x7ffff5de5a98 CTX.Rsp=0x7ffff5de5a98 delta=0x0
+[API] [DISPATCH] Frame[2]: RIP=0x140020af1 RVA=0x20af1 CTX.Rsp=0x7ffff5de5aa0
+[API] [DISPATCH] Frame[2]: RF begin=0x20ac0 end=0x20cf3 ui=0x2d08c
+[API] [DISPATCH] Unwind: pc=0x140020af1 begin=0x20ac0 handler=0x20a40 est=0x7ffff5de5b08
+[API] [DISPATCH] Frame[2]: Unwind est=0x7ffff5de5b08 CTX.Rsp_after=0x7ffff5de5b08 alloc=0x0
+[API] [DISPATCH] Frame[2]: EHANDLER at RVA 0x20a40 (VA 0x140020a40)
+[API] [DISPATCH] Frame[2]: establisher=0x7ffff5de5b08 CTX.Rsp=0x7ffff5de5b08 lsda=0x14002d0a0
+[API] [HANDLER_CALL] Frame[2] BEGIN
+[API] [HANDLER_CALL] RCX (EXCEPTION_RECORD*) = 0x7ffff5de4f50
+[API] [HANDLER_CALL] RDX (EstablisherFrame) = 0x7ffff5de5b08
+[API] [HANDLER_CALL] R8  (CONTEXT*)       = 0x7ffff5de4ff0
+[API] [HANDLER_CALL] R9  (DISPATCHER_CONTEXT*) = 0x7ffff5de4f00
+[API] [HANDLER_CALL] Handler VA = 0x140020a40  RVA = 0x20a40
+[API] [HANDLER_CALL] HandlerData (LSDA) = 0x14002d0a0
+[API] [HANDLER_CALL] ER.Code=0x20474343 ER.Flags=0x0 ER.NumParams=1
+[API] [HANDLER_CALL] ER.Param[0]=0x3d65dc0 ER.Param[1]=0x0 ER.Param[2]=0x0
+[API] [HANDLER_CALL] Handler bytes [0:16]: 48 83 ec 38 48 8d 05 55 3d ff ff 48 89 44 24 20
+[API] [HANDLER_CALL] Handler bytes[16:32]: e8 9b d4 fe ff 48 83 c4 38 c3 90 90 90 90 90 90
+[API] [HANDLER_CALL] Handler bytes[32:48]: 48 83 ec 28 48 8b 05 85 5c 00 00 8b 00 85 c0 75
+[API] [LSDA] raw[0:16]:  ff 9b 45 01 2c 2c 05 31 01 65 05 00 00 ce 01 05
+[API] [LSDA] raw[16:32]: df 01 05 fa 01 05 83 03 00 ff 01 37 8d 03 00 e8
+[API] [LSDA] raw[32:48]: 02 05 a0 03 09 fe 02 05 b6 03 07 9b 03 85 01 00
+[API] [LSDA] raw[48:64]: 00 01 00 00 00 02 7d 03 00 00 7d 00 2c 4f ff ff
+[API] [LSDA] raw[64:80]: 20 4f ff ff 2c 4f ff ff 01 05 02 00 05 72 01 30
+[API] [LSDA] raw[80:96]: 01 00 00 00 01 00 00 00 01 05 02 00 05 32 01 30
+[API] [LSDA] raw[96:112]: 01 09 05 00 09 42 05 60 04 70 03 50 02 c0 00 00
+[API] [LSDA] raw[112:128]: 01 06 03 00 06 42 02 30 01 60 00 00 01 08 05 00
+[API] [LSDA] LPStart_enc=0xff (omit)
+[API] [LSDA] TType_enc=0x9b
+[API] [LSDA] CS_enc=0x45
+[API] [HANDLER_CALL] CTX.Rip=0x140020af0 CTX.Rsp=0x7ffff5de5b08 CTX.Rbp=0x3d4fd30
+[API] [HANDLER_CALL] calling...
+[API] RtlUnwindEx(target_frame=0x7ffff5de5b08, target_ip=0x140020af1, ctx=0x7ffff5de4f50, exc=0x3d65dc0)
+[API] RtlUnwindEx: TargetIp=0x140020af1 TargetFrame=0x7ffff5de5b08
+[API] [DISPATCH] Unwind: pc=0x14000e151 begin=0xe120 handler=0x0 est=0x7ffff5de5a58
+[API] [DISPATCH] Unwind: pc=0x140020a29 begin=0x209f0 handler=0x0 est=0x7ffff5de5a98
+[API] [DISPATCH] Unwind: pc=0x140020af1 begin=0x20ac0 handler=0x20a40 est=0x7ffff5de5b08
+[API] [BUG-031] first walk: reached target frame est=0x7ffff5de5b08 — intermediate scan done
+[API] RtlUnwindEx: BUG-039/B register base restored from target-frame snapshot (RDI=0x3d4fd38 RBP=0x3d4fd30 RSI=0x23 RBX=0x8)
+[API] RtlUnwindEx: target_func RVA=0x20ac0 alloc_total=0x68 post_prologue_RSP=0x7ffff5de5aa0
+[API] RtlUnwindEx: Set CTX.Rax = 0x3d65dc0 (exception object)
+[API] RtlUnwindEx: 4-param protocol ER (obj=0x3d65dc0 est=0x7ffff5de5b08 lp=0x140020af1 sel=1) -> CTX.Rdx=1
+[API] RtlUnwindEx: longjmping to dispatcher (RIP=0x140020af1 RSP=0x7ffff5de5aa0)
+[API] RtlUnwindEx DIAG: tgt_frame(post-prologue RSP)=0x7ffff5de5b08
+[API] RtlUnwindEx DIAG: [tgt_frame+0x30]=0x0 (expect global _onexit ptr)
+[API] RtlUnwindEx DIAG: [tgt_frame+0x38]=0x7fe2e8d587a0 (expect _pfirst ptr)
+[API] RtlUnwindEx DIAG: [tgt_frame+0x40]=0x203a000 (expect count)
+[API] [DISPATCH] RtlUnwindEx longjmped back — unwind to RIP=0x140020af1 RSP=0x7ffff5de5aa0
+[API] [DISPATCH] CONTEXT after longjmp: Rax=0x3d65dc0 (saved to g_unwind_regs)
+[API] GetLastError() = 0
+[API] TlsGetValue(1) = 0x3d65e30
+[API] SetLastError(0)
+[API] GetLastError() = 0
+[API] TlsGetValue(1) = 0x3d65e30
+[API] SetLastError(0)
+[API] free(0x3d65d60)
+[API] __iob_func() = 0x2037820
+[API] __iob_func() = 0x2037820
+[API] __iob_func() = 0x2037820
+[API] __iob_func() = 0x2037820
+[API] _lock(17)
+[API] _errno() = 0x2037838
+[API] fputc(ch=0x50)
+[API] map_crt_stream: iob+0x30 -> stdout
+[API] fputc(ch=0x52)
+[API] map_crt_stream: iob+0x30 -> stdout
+[API] fputc(ch=0x4f)
+[API] map_crt_stream: iob+0x30 -> stdout
+[API] fputc(ch=0x42)
+[API] map_crt_stream: iob+0x30 -> stdout
+[API] fputc(ch=0x45)
+[API] map_crt_stream: iob+0x30 -> stdout
+[API] fputc(ch=0x20)
+[API] map_crt_stream: iob+0x30 -> stdout
+[API] fputc(ch=0x70)
+[API] map_crt_stream: iob+0x30 -> stdout
+[API] fputc(ch=0x31)
+[API] map_crt_stream: iob+0x30 -> stdout
+[API] fputc(ch=0x5f)
+[API] map_crt_stream: iob+0x30 -> stdout
+[API] fputc(ch=0x69)
+[API] map_crt_stream: iob+0x30 -> stdout
+[API] fputc(ch=0x6e)
+[API] map_crt_stream: iob+0x30 -> stdout
+[API] fputc(ch=0x74)
+[API] map_crt_stream: iob+0x30 -> stdout
+[API] fputc(ch=0x20)
+[API] map_crt_stream: iob+0x30 -> stdout
+[API] fputc(ch=0x63)
+[API] map_crt_stream: iob+0x30 -> stdout
+[API] fputc(ch=0x61)
+[API] map_crt_stream: iob+0x30 -> stdout
+[API] fputc(ch=0x75)
+[API] map_crt_stream: iob+0x30 -> stdout
+[API] fputc(ch=0x67)
+[API] map_crt_stream: iob+0x30 -> stdout
+[API] fputc(ch=0x68)
+[API] map_crt_stream: iob+0x30 -> stdout
+[API] fputc(ch=0x74)
+[API] map_crt_stream: iob+0x30 -> stdout
+[API] fputc(ch=0x3d)
+[API] map_crt_stream: iob+0x30 -> stdout
+[API] fputc(ch=0x34)
+[API] map_crt_stream: iob+0x30 -> stdout
+[API] fputc(ch=0x32)
+[API] map_crt_stream: iob+0x30 -> stdout
+[API] fputc(ch=0x20)
+[API] map_crt_stream: iob+0x30 -> stdout
+[API] fputc(ch=0x65)
+[API] map_crt_stream: iob+0x30 -> stdout
+[API] fputc(ch=0x78)
+[API] map_crt_stream: iob+0x30 -> stdout
+[API] fputc(ch=0x70)
+[API] map_crt_stream: iob+0x30 -> stdout
+[API] fputc(ch=0x65)
+[API] map_crt_stream: iob+0x30 -> stdout
+[API] fputc(ch=0x63)
+[API] map_crt_stream: iob+0x30 -> stdout
+[API] fputc(ch=0x74)
+[API] map_crt_stream: iob+0x30 -> stdout
+[API] fputc(ch=0x65)
+[API] map_crt_stream: iob+0x30 -> stdout
+[API] fputc(ch=0x64)
+[API] map_crt_stream: iob+0x30 -> stdout
+[API] fputc(ch=0x3d)
+[API] map_crt_stream: iob+0x30 -> stdout
+[API] fputc(ch=0x34)
+[API] map_crt_stream: iob+0x30 -> stdout
+[API] fputc(ch=0x32)
+[API] map_crt_stream: iob+0x30 -> stdout
+[API] fputc(ch=0x20)
+[API] map_crt_stream: iob+0x30 -> stdout
+[API] fputc(ch=0x4f)
+[API] map_crt_stream: iob+0x30 -> stdout
+[API] fputc(ch=0x4b)
+[API] map_crt_stream: iob+0x30 -> stdout
+[API] fputc(ch=0xa)
+[API] map_crt_stream: iob+0x30 -> stdout
+[API] __iob_func() = 0x2037820
+[API] __iob_func() = 0x2037820
+[API] __iob_func() = 0x2037820
+[API] _unlock(17)
+[API] malloc(192) = 0x3d65f70
+[API] GetLastError() = 0
+[API] TlsGetValue(1) = 0x3d65e30
+[API] SetLastError(0)
+[API] [DISPATCH] === RtlDispatchException ===
+[API] [DISPATCH] ExceptionCode=0x20474343 RIP=0x14000e151 RSP=0x7ffff5de5a30
+[API] [EXC_STATE] EXCEPTION_BEGIN
+[API] [EXC_STATE] Code: 0x20474343
+[API] [EXC_STATE] Flags: 0x0
+[API] [EXC_STATE] Address: 0x14000e151
+[API] [EXC_STATE] NumParams: 1
+[API] [EXC_STATE] Param[0]: 0x3d65fd0
+[API] [EXC_STATE] Param[1]: 0x0
+[API] [EXC_STATE] Param[2]: 0x0
+[API] [EXC_STATE] Param[3]: 0x0
+[API] [EXC_STATE] g_cap_args ptr: 0x7ffff5de5a60
+[API] [EXC_STATE] Exception object @ 0x3d65fd0 (first 32 bytes):
+[API] [EXC_STATE]   00 2b 2b 43 43 55 4e 47
+[API] [EXC_STATE]   10 44 01 40 01 00 00 00
+[API] [EXC_STATE]   00 00 00 00 00 00 00 00
+[API] [EXC_STATE]   00 00 00 00 00 00 00 00
+[API] [EXC_STATE] Exception class (u64): 0x474e5543432b2b00
+[API] [EXC_STATE] EXCEPTION_END
+[API] [DISPATCH] VEH chain: 0 handlers
+[API] [DISPATCH] Frame[0]: RIP=0x14000e151 RVA=0xe151 CTX.Rsp=0x7ffff5de5a30
+[API] [DISPATCH] Frame[0]: RF begin=0xe120 end=0xe15b ui=0x2eed8
+[API] [DISPATCH] Unwind: pc=0x14000e151 begin=0xe120 handler=0x0 est=0x7ffff5de5a58
+[API] [DISPATCH] Frame[0]: Unwind est=0x7ffff5de5a58 CTX.Rsp_after=0x7ffff5de5a58 alloc=0x0
+[API] [DISPATCH] Frame[0]: no handler, parent RIP=0x140020a29 RVA=0x20a29
+[API] [DISPATCH] Frame[0]: est=0x7ffff5de5a58 CTX.Rsp=0x7ffff5de5a58 delta=0x0
+[API] [DISPATCH] Frame[1]: RIP=0x140020a29 RVA=0x20a29 CTX.Rsp=0x7ffff5de5a60
+[API] [DISPATCH] Frame[1]: RF begin=0x209f0 end=0x20a37 ui=0x2d33c
+[API] [DISPATCH] Unwind: pc=0x140020a29 begin=0x209f0 handler=0x0 est=0x7ffff5de5a98
+[API] [DISPATCH] Frame[1]: Unwind est=0x7ffff5de5a98 CTX.Rsp_after=0x7ffff5de5a98 alloc=0x0
+[API] [DISPATCH] Frame[1]: no handler, parent RIP=0x140020b93 RVA=0x20b93
+[API] [DISPATCH] Frame[1]: est=0x7ffff5de5a98 CTX.Rsp=0x7ffff5de5a98 delta=0x0
+[API] [DISPATCH] Frame[2]: RIP=0x140020b93 RVA=0x20b93 CTX.Rsp=0x7ffff5de5aa0
+[API] [DISPATCH] Frame[2]: RF begin=0x20ac0 end=0x20cf3 ui=0x2d08c
+[API] [DISPATCH] Unwind: pc=0x140020b93 begin=0x20ac0 handler=0x20a40 est=0x7ffff5de5b08
+[API] [DISPATCH] Frame[2]: Unwind est=0x7ffff5de5b08 CTX.Rsp_after=0x7ffff5de5b08 alloc=0x0
+[API] [DISPATCH] Frame[2]: EHANDLER at RVA 0x20a40 (VA 0x140020a40)
+[API] [DISPATCH] Frame[2]: establisher=0x7ffff5de5b08 CTX.Rsp=0x7ffff5de5b08 lsda=0x14002d0a0
+[API] [HANDLER_CALL] Frame[2] BEGIN
+[API] [HANDLER_CALL] RCX (EXCEPTION_RECORD*) = 0x7ffff5de4f50
+[API] [HANDLER_CALL] RDX (EstablisherFrame) = 0x7ffff5de5b08
+[API] [HANDLER_CALL] R8  (CONTEXT*)       = 0x7ffff5de4ff0
+[API] [HANDLER_CALL] R9  (DISPATCHER_CONTEXT*) = 0x7ffff5de4f00
+[API] [HANDLER_CALL] Handler VA = 0x140020a40  RVA = 0x20a40
+[API] [HANDLER_CALL] HandlerData (LSDA) = 0x14002d0a0
+[API] [HANDLER_CALL] ER.Code=0x20474343 ER.Flags=0x0 ER.NumParams=1
+[API] [HANDLER_CALL] ER.Param[0]=0x3d65fd0 ER.Param[1]=0x0 ER.Param[2]=0x0
+[API] [HANDLER_CALL] Handler bytes [0:16]: 48 83 ec 38 48 8d 05 55 3d ff ff 48 89 44 24 20
+[API] [HANDLER_CALL] Handler bytes[16:32]: e8 9b d4 fe ff 48 83 c4 38 c3 90 90 90 90 90 90
+[API] [HANDLER_CALL] Handler bytes[32:48]: 48 83 ec 28 48 8b 05 85 5c 00 00 8b 00 85 c0 75
+[API] [LSDA] raw[0:16]:  ff 9b 45 01 2c 2c 05 31 01 65 05 00 00 ce 01 05
+[API] [LSDA] raw[16:32]: df 01 05 fa 01 05 83 03 00 ff 01 37 8d 03 00 e8
+[API] [LSDA] raw[32:48]: 02 05 a0 03 09 fe 02 05 b6 03 07 9b 03 85 01 00
+[API] [LSDA] raw[48:64]: 00 01 00 00 00 02 7d 03 00 00 7d 00 2c 4f ff ff
+[API] [LSDA] raw[64:80]: 20 4f ff ff 2c 4f ff ff 01 05 02 00 05 72 01 30
+[API] [LSDA] raw[80:96]: 01 00 00 00 01 00 00 00 01 05 02 00 05 32 01 30
+[API] [LSDA] raw[96:112]: 01 09 05 00 09 42 05 60 04 70 03 50 02 c0 00 00
+[API] [LSDA] raw[112:128]: 01 06 03 00 06 42 02 30 01 60 00 00 01 08 05 00
+[API] [LSDA] LPStart_enc=0xff (omit)
+[API] [LSDA] TType_enc=0x9b
+[API] [LSDA] CS_enc=0x45
+[API] [HANDLER_CALL] CTX.Rip=0x140020b92 CTX.Rsp=0x7ffff5de5b08 CTX.Rbp=0x3d4fd30
+[API] [HANDLER_CALL] calling...
+[API] RtlUnwindEx(target_frame=0x7ffff5de5b08, target_ip=0x140020b9f, ctx=0x7ffff5de4f50, exc=0x3d65fd0)
+[API] RtlUnwindEx: TargetIp=0x140020b9f TargetFrame=0x7ffff5de5b08
+[API] [DISPATCH] Unwind: pc=0x14000e151 begin=0xe120 handler=0x0 est=0x7ffff5de5a58
+[API] [DISPATCH] Unwind: pc=0x140020a29 begin=0x209f0 handler=0x0 est=0x7ffff5de5a98
+[API] [DISPATCH] Unwind: pc=0x140020b93 begin=0x20ac0 handler=0x20a40 est=0x7ffff5de5b08
+[API] [BUG-031] first walk: reached target frame est=0x7ffff5de5b08 — intermediate scan done
+[API] RtlUnwindEx: BUG-039/B register base restored from target-frame snapshot (RDI=0x7ffff5de5ac0 RBP=0x1 RSI=0x14002302f RBX=0x3d66010)
+[API] RtlUnwindEx: target_func RVA=0x20ac0 alloc_total=0x68 post_prologue_RSP=0x7ffff5de5aa0
+[API] RtlUnwindEx: Set CTX.Rax = 0x3d65fd0 (exception object)
+[API] RtlUnwindEx: 4-param protocol ER (obj=0x3d65fd0 est=0x7ffff5de5b08 lp=0x140020b9f sel=2) -> CTX.Rdx=2
+[API] RtlUnwindEx: longjmping to dispatcher (RIP=0x140020b9f RSP=0x7ffff5de5aa0)
+[API] RtlUnwindEx DIAG: tgt_frame(post-prologue RSP)=0x7ffff5de5b08
+[API] RtlUnwindEx DIAG: [tgt_frame+0x30]=0x0 (expect global _onexit ptr)
+[API] RtlUnwindEx DIAG: [tgt_frame+0x38]=0x7fe2e8d587a0 (expect _pfirst ptr)
+[API] RtlUnwindEx DIAG: [tgt_frame+0x40]=0x203a000 (expect count)
+[API] [DISPATCH] RtlUnwindEx longjmped back — unwind to RIP=0x140020b9f RSP=0x7ffff5de5aa0
+[API] [DISPATCH] CONTEXT after longjmp: Rax=0x3d65fd0 (saved to g_unwind_regs)
+[API] GetLastError() = 0
+[API] TlsGetValue(1) = 0x3d65e30
+[API] SetLastError(0)
+[API] GetLastError() = 0
+[API] TlsGetValue(1) = 0x3d65e30
+[API] SetLastError(0)
+[API] free(0x3d65f70)
+[API] __iob_func() = 0x2037820
+[API] __iob_func() = 0x2037820
+[API] __iob_func() = 0x2037820
+[API] __iob_func() = 0x2037820
+[API] _lock(17)
+[API] _errno() = 0x2037838
+[API] fputc(ch=0x50)
+[API] map_crt_stream: iob+0x30 -> stdout
+[API] fputc(ch=0x52)
+[API] map_crt_stream: iob+0x30 -> stdout
+[API] fputc(ch=0x4f)
+[API] map_crt_stream: iob+0x30 -> stdout
+[API] fputc(ch=0x42)
+[API] map_crt_stream: iob+0x30 -> stdout
+[API] fputc(ch=0x45)
+[API] map_crt_stream: iob+0x30 -> stdout
+[API] fputc(ch=0x20)
+[API] map_crt_stream: iob+0x30 -> stdout
+[API] fputc(ch=0x70)
+[API] map_crt_stream: iob+0x30 -> stdout
+[API] fputc(ch=0x32)
+[API] map_crt_stream: iob+0x30 -> stdout
+[API] fputc(ch=0x5f)
+[API] map_crt_stream: iob+0x30 -> stdout
+[API] fputc(ch=0x73)
+[API] map_crt_stream: iob+0x30 -> stdout
+[API] fputc(ch=0x74)
+[API] map_crt_stream: iob+0x30 -> stdout
+[API] fputc(ch=0x72)
+[API] map_crt_stream: iob+0x30 -> stdout
+[API] fputc(ch=0x20)
+[API] map_crt_stream: iob+0x30 -> stdout
+[API] fputc(ch=0x6c)
+[API] map_crt_stream: iob+0x30 -> stdout
+[API] fputc(ch=0x65)
+[API] map_crt_stream: iob+0x30 -> stdout
+[API] fputc(ch=0x6e)
+[API] map_crt_stream: iob+0x30 -> stdout
+[API] fputc(ch=0x3d)
+[API] map_crt_stream: iob+0x30 -> stdout
+[API] fputc(ch=0x37)
+[API] map_crt_stream: iob+0x30 -> stdout
+[API] fputc(ch=0x20)
+[API] map_crt_stream: iob+0x30 -> stdout
+[API] fputc(ch=0x63)
+[API] map_crt_stream: iob+0x30 -> stdout
+[API] fputc(ch=0x6f)
+[API] map_crt_stream: iob+0x30 -> stdout
+[API] fputc(ch=0x6e)
+[API] map_crt_stream: iob+0x30 -> stdout
+[API] fputc(ch=0x74)
+[API] map_crt_stream: iob+0x30 -> stdout
+[API] fputc(ch=0x65)
+[API] map_crt_stream: iob+0x30 -> stdout
+[API] fputc(ch=0x6e)
+[API] map_crt_stream: iob+0x30 -> stdout
+[API] fputc(ch=0x74)
+[API] map_crt_stream: iob+0x30 -> stdout
+[API] fputc(ch=0x3d)
+[API] map_crt_stream: iob+0x30 -> stdout
+[API] fputc(ch=0x73)
+[API] map_crt_stream: iob+0x30 -> stdout
+[API] fputc(ch=0x74)
+[API] map_crt_stream: iob+0x30 -> stdout
+[API] fputc(ch=0x72)
+[API] map_crt_stream: iob+0x30 -> stdout
+[API] fputc(ch=0x2d)
+[API] map_crt_stream: iob+0x30 -> stdout
+[API] fputc(ch=0x65)
+[API] map_crt_stream: iob+0x30 -> stdout
+[API] fputc(ch=0x78)
+[API] map_crt_stream: iob+0x30 -> stdout
+[API] fputc(ch=0x63)
+[API] map_crt_stream: iob+0x30 -> stdout
+[API] fputc(ch=0x20)
+[API] map_crt_stream: iob+0x30 -> stdout
+[API] fputc(ch=0x4f)
+[API] map_crt_stream: iob+0x30 -> stdout
+[API] fputc(ch=0x4b)
+[API] map_crt_stream: iob+0x30 -> stdout
+[API] fputc(ch=0xa)
+[API] map_crt_stream: iob+0x30 -> stdout
+[API] __iob_func() = 0x2037820
+[API] __iob_func() = 0x2037820
+[API] __iob_func() = 0x2037820
+[API] _unlock(17)
+[API] malloc(176) = 0x3d66040
+[API] malloc(34) = 0x3d4fc30
+[API] GetLastError() = 0
+[API] TlsGetValue(1) = 0x3d65e30
+[API] SetLastError(0)
+[API] [DISPATCH] === RtlDispatchException ===
+[API] [DISPATCH] ExceptionCode=0x20474343 RIP=0x14000e151 RSP=0x7ffff5de5a30
+[API] [EXC_STATE] EXCEPTION_BEGIN
+[API] [EXC_STATE] Code: 0x20474343
+[API] [EXC_STATE] Flags: 0x0
+[API] [EXC_STATE] Address: 0x14000e151
+[API] [EXC_STATE] NumParams: 1
+[API] [EXC_STATE] Param[0]: 0x3d660a0
+[API] [EXC_STATE] Param[1]: 0x0
+[API] [EXC_STATE] Param[2]: 0x0
+[API] [EXC_STATE] Param[3]: 0x0
+[API] [EXC_STATE] g_cap_args ptr: 0x7ffff5de5a60
+[API] [EXC_STATE] Exception object @ 0x3d660a0 (first 32 bytes):
+[API] [EXC_STATE]   00 2b 2b 43 43 55 4e 47
+[API] [EXC_STATE]   10 44 01 40 01 00 00 00
+[API] [EXC_STATE]   00 00 00 00 00 00 00 00
+[API] [EXC_STATE]   00 00 00 00 00 00 00 00
+[API] [EXC_STATE] Exception class (u64): 0x474e5543432b2b00
+[API] [EXC_STATE] EXCEPTION_END
+[API] [DISPATCH] VEH chain: 0 handlers
+[API] [DISPATCH] Frame[0]: RIP=0x14000e151 RVA=0xe151 CTX.Rsp=0x7ffff5de5a30
+[API] [DISPATCH] Frame[0]: RF begin=0xe120 end=0xe15b ui=0x2eed8
+[API] [DISPATCH] Unwind: pc=0x14000e151 begin=0xe120 handler=0x0 est=0x7ffff5de5a58
+[API] [DISPATCH] Frame[0]: Unwind est=0x7ffff5de5a58 CTX.Rsp_after=0x7ffff5de5a58 alloc=0x0
+[API] [DISPATCH] Frame[0]: no handler, parent RIP=0x140020a29 RVA=0x20a29
+[API] [DISPATCH] Frame[0]: est=0x7ffff5de5a58 CTX.Rsp=0x7ffff5de5a58 delta=0x0
+[API] [DISPATCH] Frame[1]: RIP=0x140020a29 RVA=0x20a29 CTX.Rsp=0x7ffff5de5a60
+[API] [DISPATCH] Frame[1]: RF begin=0x209f0 end=0x20a37 ui=0x2d33c
+[API] [DISPATCH] Unwind: pc=0x140020a29 begin=0x209f0 handler=0x0 est=0x7ffff5de5a98
+[API] [DISPATCH] Frame[1]: Unwind est=0x7ffff5de5a98 CTX.Rsp_after=0x7ffff5de5a98 alloc=0x0
+[API] [DISPATCH] Frame[1]: no handler, parent RIP=0x140020c43 RVA=0x20c43
+[API] [DISPATCH] Frame[1]: est=0x7ffff5de5a98 CTX.Rsp=0x7ffff5de5a98 delta=0x0
+[API] [DISPATCH] Frame[2]: RIP=0x140020c43 RVA=0x20c43 CTX.Rsp=0x7ffff5de5aa0
+[API] [DISPATCH] Frame[2]: RF begin=0x20ac0 end=0x20cf3 ui=0x2d08c
+[API] [DISPATCH] Unwind: pc=0x140020c43 begin=0x20ac0 handler=0x20a40 est=0x7ffff5de5b08
+[API] [DISPATCH] Frame[2]: Unwind est=0x7ffff5de5b08 CTX.Rsp_after=0x7ffff5de5b08 alloc=0x0
+[API] [DISPATCH] Frame[2]: EHANDLER at RVA 0x20a40 (VA 0x140020a40)
+[API] [DISPATCH] Frame[2]: establisher=0x7ffff5de5b08 CTX.Rsp=0x7ffff5de5b08 lsda=0x14002d0a0
+[API] [HANDLER_CALL] Frame[2] BEGIN
+[API] [HANDLER_CALL] RCX (EXCEPTION_RECORD*) = 0x7ffff5de4f50
+[API] [HANDLER_CALL] RDX (EstablisherFrame) = 0x7ffff5de5b08
+[API] [HANDLER_CALL] R8  (CONTEXT*)       = 0x7ffff5de4ff0
+[API] [HANDLER_CALL] R9  (DISPATCHER_CONTEXT*) = 0x7ffff5de4f00
+[API] [HANDLER_CALL] Handler VA = 0x140020a40  RVA = 0x20a40
+[API] [HANDLER_CALL] HandlerData (LSDA) = 0x14002d0a0
+[API] [HANDLER_CALL] ER.Code=0x20474343 ER.Flags=0x0 ER.NumParams=1
+[API] [HANDLER_CALL] ER.Param[0]=0x3d660a0 ER.Param[1]=0x0 ER.Param[2]=0x0
+[API] [HANDLER_CALL] Handler bytes [0:16]: 48 83 ec 38 48 8d 05 55 3d ff ff 48 89 44 24 20
+[API] [HANDLER_CALL] Handler bytes[16:32]: e8 9b d4 fe ff 48 83 c4 38 c3 90 90 90 90 90 90
+[API] [HANDLER_CALL] Handler bytes[32:48]: 48 83 ec 28 48 8b 05 85 5c 00 00 8b 00 85 c0 75
+[API] [LSDA] raw[0:16]:  ff 9b 45 01 2c 2c 05 31 01 65 05 00 00 ce 01 05
+[API] [LSDA] raw[16:32]: df 01 05 fa 01 05 83 03 00 ff 01 37 8d 03 00 e8
+[API] [LSDA] raw[32:48]: 02 05 a0 03 09 fe 02 05 b6 03 07 9b 03 85 01 00
+[API] [LSDA] raw[48:64]: 00 01 00 00 00 02 7d 03 00 00 7d 00 2c 4f ff ff
+[API] [LSDA] raw[64:80]: 20 4f ff ff 2c 4f ff ff 01 05 02 00 05 72 01 30
+[API] [LSDA] raw[80:96]: 01 00 00 00 01 00 00 00 01 05 02 00 05 32 01 30
+[API] [LSDA] raw[96:112]: 01 09 05 00 09 42 05 60 04 70 03 50 02 c0 00 00
+[API] [LSDA] raw[112:128]: 01 06 03 00 06 42 02 30 01 60 00 00 01 08 05 00
+[API] [LSDA] LPStart_enc=0xff (omit)
+[API] [LSDA] TType_enc=0x9b
+[API] [LSDA] CS_enc=0x45
+[API] [HANDLER_CALL] CTX.Rip=0x140020c42 CTX.Rsp=0x7ffff5de5b08 CTX.Rbp=0x3d4fd30
+[API] [HANDLER_CALL] calling...
+[API] RtlUnwindEx(target_frame=0x7ffff5de5b08, target_ip=0x140020c76, ctx=0x7ffff5de4f50, exc=0x3d660a0)
+[API] RtlUnwindEx: TargetIp=0x140020c76 TargetFrame=0x7ffff5de5b08
+[API] [DISPATCH] Unwind: pc=0x14000e151 begin=0xe120 handler=0x0 est=0x7ffff5de5a58
+[API] [DISPATCH] Unwind: pc=0x140020a29 begin=0x209f0 handler=0x0 est=0x7ffff5de5a98
+[API] [DISPATCH] Unwind: pc=0x140020c43 begin=0x20ac0 handler=0x20a40 est=0x7ffff5de5b08
+[API] [BUG-031] first walk: reached target frame est=0x7ffff5de5b08 — intermediate scan done
+[API] RtlUnwindEx: BUG-039/B register base restored from target-frame snapshot (RDI=0x7ffff5de5ac0 RBP=0x14002305b RSI=0x2 RBX=0x3d65fd0)
+[API] RtlUnwindEx: target_func RVA=0x20ac0 alloc_total=0x68 post_prologue_RSP=0x7ffff5de5aa0
+[API] RtlUnwindEx: Set CTX.Rax = 0x3d660a0 (exception object)
+[API] RtlUnwindEx: 4-param protocol ER (obj=0x3d660a0 est=0x7ffff5de5b08 lp=0x140020c76 sel=3) -> CTX.Rdx=3
+[API] RtlUnwindEx: longjmping to dispatcher (RIP=0x140020c76 RSP=0x7ffff5de5aa0)
+[API] RtlUnwindEx DIAG: tgt_frame(post-prologue RSP)=0x7ffff5de5b08
+[API] RtlUnwindEx DIAG: [tgt_frame+0x30]=0x0 (expect global _onexit ptr)
+[API] RtlUnwindEx DIAG: [tgt_frame+0x38]=0x7fe2e8d587a0 (expect _pfirst ptr)
+[API] RtlUnwindEx DIAG: [tgt_frame+0x40]=0x203a000 (expect count)
+[API] [DISPATCH] RtlUnwindEx longjmped back — unwind to RIP=0x140020c76 RSP=0x7ffff5de5aa0
+[API] [DISPATCH] CONTEXT after longjmp: Rax=0x3d660a0 (saved to g_unwind_regs)
+[API] GetLastError() = 0
+[API] TlsGetValue(1) = 0x3d65e30
+[API] SetLastError(0)
+[API] GetLastError() = 0
+[API] TlsGetValue(1) = 0x3d65e30
+[API] SetLastError(0)
+[API] free(0x3d4fc30)
+[API] free(0x3d66040)
+[API] __iob_func() = 0x2037820
+[API] __iob_func() = 0x2037820
+[API] __iob_func() = 0x2037820
+[API] __iob_func() = 0x2037820
+[API] _lock(17)
+[API] _errno() = 0x2037838
+[API] fputc(ch=0x50)
+[API] map_crt_stream: iob+0x30 -> stdout
+[API] fputc(ch=0x52)
+[API] map_crt_stream: iob+0x30 -> stdout
+[API] fputc(ch=0x4f)
+[API] map_crt_stream: iob+0x30 -> stdout
+[API] fputc(ch=0x42)
+[API] map_crt_stream: iob+0x30 -> stdout
+[API] fputc(ch=0x45)
+[API] map_crt_stream: iob+0x30 -> stdout
+[API] fputc(ch=0x20)
+[API] map_crt_stream: iob+0x30 -> stdout
+[API] fputc(ch=0x70)
+[API] map_crt_stream: iob+0x30 -> stdout
+[API] fputc(ch=0x33)
+[API] map_crt_stream: iob+0x30 -> stdout
+[API] fputc(ch=0x5f)
+[API] map_crt_stream: iob+0x30 -> stdout
+[API] fputc(ch=0x77)
+[API] map_crt_stream: iob+0x30 -> stdout
+[API] fputc(ch=0x68)
+[API] map_crt_stream: iob+0x30 -> stdout
+[API] fputc(ch=0x61)
+[API] map_crt_stream: iob+0x30 -> stdout
+[API] fputc(ch=0x74)
+[API] map_crt_stream: iob+0x30 -> stdout
+[API] fputc(ch=0x20)
+[API] map_crt_stream: iob+0x30 -> stdout
+[API] fputc(ch=0x6d)
+[API] map_crt_stream: iob+0x30 -> stdout
+[API] fputc(ch=0x73)
+[API] map_crt_stream: iob+0x30 -> stdout
+[API] fputc(ch=0x67)
+[API] map_crt_stream: iob+0x30 -> stdout
+[API] fputc(ch=0x3d)
+[API] map_crt_stream: iob+0x30 -> stdout
+[API] fputc(ch=0x64)
+[API] map_crt_stream: iob+0x30 -> stdout
+[API] fputc(ch=0x65)
+[API] map_crt_stream: iob+0x30 -> stdout
+[API] fputc(ch=0x65)
+[API] map_crt_stream: iob+0x30 -> stdout
+[API] fputc(ch=0x70)
+[API] map_crt_stream: iob+0x30 -> stdout
+[API] fputc(ch=0x2d)
+[API] map_crt_stream: iob+0x30 -> stdout
+[API] fputc(ch=0x62)
+[API] map_crt_stream: iob+0x30 -> stdout
+[API] fputc(ch=0x6f)
+[API] map_crt_stream: iob+0x30 -> stdout
+[API] fputc(ch=0x6f)
+[API] map_crt_stream: iob+0x30 -> stdout
+[API] fputc(ch=0x6d)
+[API] map_crt_stream: iob+0x30 -> stdout
+[API] fputc(ch=0x20)
+[API] map_crt_stream: iob+0x30 -> stdout
+[API] fputc(ch=0x4f)
+[API] map_crt_stream: iob+0x30 -> stdout
+[API] fputc(ch=0x4b)
+[API] map_crt_stream: iob+0x30 -> stdout
+[API] fputc(ch=0xa)
+[API] map_crt_stream: iob+0x30 -> stdout
+[API] __iob_func() = 0x2037820
+[API] __iob_func() = 0x2037820
+[API] __iob_func() = 0x2037820
+[API] _unlock(17)
+[API] __iob_func() = 0x2037820
+[API] __iob_func() = 0x2037820
+[API] __iob_func() = 0x2037820
+[API] __iob_func() = 0x2037820
+[API] _lock(17)
+[API] _errno() = 0x2037838
+[API] fputc(ch=0x50)
+[API] map_crt_stream: iob+0x30 -> stdout
+[API] fputc(ch=0x52)
+[API] map_crt_stream: iob+0x30 -> stdout
+[API] fputc(ch=0x4f)
+[API] map_crt_stream: iob+0x30 -> stdout
+[API] fputc(ch=0x42)
+[API] map_crt_stream: iob+0x30 -> stdout
+[API] fputc(ch=0x45)
+[API] map_crt_stream: iob+0x30 -> stdout
+[API] fputc(ch=0x20)
+[API] map_crt_stream: iob+0x30 -> stdout
+[API] fputc(ch=0x6f)
+[API] map_crt_stream: iob+0x30 -> stdout
+[API] fputc(ch=0x6b)
+[API] map_crt_stream: iob+0x30 -> stdout
+[API] fputc(ch=0x3d)
+[API] map_crt_stream: iob+0x30 -> stdout
+[API] fputc(ch=0x33)
+[API] map_crt_stream: iob+0x30 -> stdout
+[API] fputc(ch=0x2f)
+[API] map_crt_stream: iob+0x30 -> stdout
+[API] fputc(ch=0x33)
+[API] map_crt_stream: iob+0x30 -> stdout
+[API] fputc(ch=0xa)
+[API] map_crt_stream: iob+0x30 -> stdout
+[API] __iob_func() = 0x2037820
+[API] __iob_func() = 0x2037820
+[API] __iob_func() = 0x2037820
+[API] _unlock(17)
+[API] exit(0)
+[API] DeleteCriticalSection(0x140022160)
+  ]
+}

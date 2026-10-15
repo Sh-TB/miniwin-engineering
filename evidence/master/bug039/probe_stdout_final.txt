@@ -1,0 +1,5 @@
+[MiniWin] Loading tests/corpus/bin/t08_probe_exc.exe...
+PROBE p1_int caught=42 expected=42 OK
+PROBE p2_str len=7 content=str-exc OK
+PROBE p3_what msg=deep-boom OK
+PROBE ok=3/3

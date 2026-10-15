@@ -689,6 +689,18 @@ uint64_t g_unwind_target_frame = 0; /* target frame (RSP) for unwind */
  * its stack-local CONTEXT — is abandoned once a landing pad resumes. */
 static uint8_t g_throw_ctx_snapshot[CONTEXT_SIZE];
 static int g_throw_ctx_valid = 0;
+/* BUG-039/B: TARGET-FRAME register snapshot. The dispatcher search loop
+ * unwinds the live CONTEXT through EVERY frame — including the frame that
+ * owns the handler — so by the time the personality calls RtlUnwindEx the
+ * live CONTEXT's nonvolatives hold the TARGET'S CALLER's values (live proof:
+ * t08_probe p2 unwind — Frame[1] restored RDI=&got/RSI=literal/RBP=ok
+ * correctly, then Frame[2] (main) replay clobbered them to CRT-startup
+ * values). Real Windows never resumes a landing pad from that state:
+ * RtlUnwindEx re-walks from its own machine state and stops AT the target
+ * frame. We capture the "returned into frame F" state before frame F's own
+ * codes are applied and use it as the register base for the resume. */
+static uint8_t g_target_frame_ctx[CONTEXT_SIZE];
+static int g_target_frame_ctx_valid = 0;
 /* BUG-031 helpers (defined next to mw_RtlUnwindEx; forward-declared because
  * the dispatcher's resume-command intercept calls them). */
 static uint64_t seh_total_prologue_alloc(uint64_t ip_va);
@@ -1083,9 +1095,19 @@ static void* seh_internal_virtual_unwind(
             }
             switch (op_code) {
             case UWOP_PUSH_NONVOL: {
-                chained_rsp += 8;
+                /* BUG-039 (ReactOS PopReg semantics): the unwind-code array is
+                 * stored in DESCENDING code-offset order, i.e. already in
+                 * undo (epilog) order — each push code therefore restores
+                 * from the CURRENT Rsp BEFORE advancing. Reading AFTER the
+                 * increment shifted every restored nonvolatile one slot up:
+                 * live proof (t08_probe p1 unwind, evidence master/bug038):
+                 * RDI got the RETURN ADDRESS slot [E1]=0x140020af1 while the
+                 * real saved rdi sits at [E1-8]. Correct order is
+                 * reg=[rsp]; rsp+=8  (ReactOS sdk/lib/rtl/amd64/unwind.c
+                 * PopReg: SetRegFromStackValue(Rsp) THEN Rsp+=8). */
                 uint32_t off = reg_to_ctx_offset(op_info);
                 if (off) *(uint64_t*)(ctx + off) = *(uint64_t*)(chained_rsp);
+                chained_rsp += 8;
                 break;
             }
             case UWOP_ALLOC_LARGE: /* TASK-API-006 spec rule: info==0 => uint16 * 8; info==1 => uint32, no shift */
@@ -1209,11 +1231,18 @@ static void* seh_internal_virtual_unwind(
 
         switch (op_code) {
         case UWOP_PUSH_NONVOL: {
-            new_rsp += 8;
+            /* BUG-039: restore from CURRENT rsp BEFORE advancing — the code
+             * array is in undo order (descending code offsets). The old
+             * increment-first order read the NEXT slot (one too high):
+             * t08_probe Frame[1] live trace showed RDI=[E1]=return address
+             * instead of [E1-8]=saved rdi. ReactOS PopReg: read then +=8.
+             * (Root cause of BUG-038 probe symptoms: catch by reference got
+             * garbage RDI; `ok` counter in RBP clobbered.) */
             uint32_t off = reg_to_ctx_offset(op_info);
             if (off) {
                 *(uint64_t*)(ctx + off) = *(uint64_t*)(new_rsp);
             }
+            new_rsp += 8;
             break;
         }
         case UWOP_ALLOC_LARGE: /* TASK-API-006 spec rule: info==0 => uint16 * 8; info==1 => uint32, no shift */
@@ -1508,6 +1537,7 @@ static int seh_dispatch_exception(void) {
     
     /* Register CONTEXT for RtlUnwindEx access and set up longjmp target */
     g_unwind_ctx = ctx;
+    g_target_frame_ctx_valid = 0; /* BUG-039/B: fresh dispatch, no snapshot yet */
     g_is_unwinding = 0;
     g_unwind_target_ip = 0;
     g_unwind_target_frame = 0;
@@ -1680,6 +1710,12 @@ static int seh_dispatch_exception(void) {
         uint32_t handler_rva = 0;
         void* lsda = NULL;
         uint64_t pre_unwind_rsp = *(uint64_t*)(ctx + CTX_Rsp);
+        /* BUG-039/B: snapshot the "returned into frame F" state BEFORE this
+         * frame's own unwind codes are applied. If frame F owns the handler,
+         * this snapshot — not the post-unwind context — is the correct
+         * register base for the eventual landing-pad resume. */
+        uint8_t pre_unwind_ctx[CONTEXT_SIZE];
+        memcpy(pre_unwind_ctx, ctx, CONTEXT_SIZE);
         void* handler = seh_internal_virtual_unwind(
             current_rip, rf, ctx, &est_frame, &handler_rva, &lsda);
 
@@ -1709,6 +1745,12 @@ static int seh_dispatch_exception(void) {
                  frame, handler_rva, (uint64_t)(uintptr_t)handler);
         MW_TRACE("[DISPATCH] Frame[%d]: establisher=0x%lx CTX.Rsp=0x%lx lsda=%p",
                  frame, est_frame, *(uint64_t*)(ctx + CTX_Rsp), lsda);
+
+        /* BUG-039/B: this frame owns the handler — keep the pre-unwind
+         * register state ("returned into frame F from below") as the
+         * landing-pad resume base for RtlUnwindEx. */
+        memcpy(g_target_frame_ctx, pre_unwind_ctx, CONTEXT_SIZE);
+        g_target_frame_ctx_valid = 1;
 
         /* EXP-035 NOTE: The GCC personality function expects dc.EstablisherFrame to be
          * the function-entry RSP. It passes this directly to RtlUnwindEx as
@@ -2344,6 +2386,28 @@ __attribute__((ms_abi)) void mw_RtlUnwindEx(void* target_frame, void* target_ip,
     
     uint8_t* ctx = g_unwind_ctx;
     if (ctx) {
+        /* BUG-039/B: rebuild the landing-pad register base from the
+         * target-frame snapshot ("returned into frame F from below"). The
+         * live ctx was unwound THROUGH the handler's frame by the search
+         * loop, so its nonvolatives hold the target's CALLER's values; the
+         * landing pad needs the target's THROW-TIME values (RDI=&catch-var,
+         * RBP=live counters, ...). RIP/RSP/RAX/RDX are overridden below by
+         * the landing-pad protocol, so copying them here is harmless. */
+        if (g_target_frame_ctx_valid) {
+            static const uint16_t gpr_offsets[] = {
+                CTX_Rax, CTX_Rcx, CTX_Rdx, CTX_Rbx, CTX_Rsp, CTX_Rbp,
+                CTX_Rsi, CTX_Rdi, CTX_R8, CTX_R9, CTX_R10, CTX_R11,
+                CTX_R12, CTX_R13, CTX_R14, CTX_R15
+            };
+            for (size_t gi = 0; gi < sizeof(gpr_offsets)/sizeof(gpr_offsets[0]); gi++) {
+                *(uint64_t*)(ctx + gpr_offsets[gi]) =
+                    *(uint64_t*)(g_target_frame_ctx + gpr_offsets[gi]);
+            }
+            g_target_frame_ctx_valid = 0;
+            MW_TRACE("RtlUnwindEx: BUG-039/B register base restored from target-frame snapshot (RDI=0x%lx RBP=0x%lx RSI=0x%lx RBX=0x%lx)",
+                     *(uint64_t*)(ctx + CTX_Rdi), *(uint64_t*)(ctx + CTX_Rbp),
+                     *(uint64_t*)(ctx + CTX_Rsi), *(uint64_t*)(ctx + CTX_Rbx));
+        }
         /* EXP-035 FIX: target_frame from the GCC personality function is the
          * function-entry RSP (RSP after CALL pushed return address). But the
          * catch/landing-pad code uses [RSP+offset] where offsets are relative
@@ -2610,11 +2674,13 @@ __attribute__((ms_abi)) void* mw_RtlVirtualUnwind(uint32_t handler_type, uint64_
 
         switch (op_code) {
         case UWOP_PUSH_NONVOL: {
-            new_rsp += 8;
+            /* BUG-039: restore from CURRENT rsp BEFORE advancing (undo order;
+             * ReactOS PopReg semantics) — mirrors seh_internal_virtual_unwind. */
             uint32_t off = reg_to_ctx_offset(op_info);
             if (off) {
                 *(uint64_t*)(ctx + off) = *(uint64_t*)(new_rsp);
             }
+            new_rsp += 8;
             break;
         }
         case UWOP_ALLOC_LARGE: /* TASK-API-006 spec rule: info==0 => uint16 * 8; info==1 => uint32, no shift */

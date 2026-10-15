@@ -1,0 +1,3 @@
+[MiniWin] Loading /home/z/my-project/workspace/miniwin-engineering/tests/appcompat/t06_setjmp.exe...
+nested longjmp: reached handler with 42 after 3 frames OK
+t06: PASS
