@@ -1,0 +1,143 @@
+artifacts/opensource/ffmpeg/ffmpeg-master-latest-win64-gpl/bin/ffmpeg.exe
+  Machine=0x8664 (x64) Magic=0x20b (PE32+) Subsystem=3 (console)
+  ImageBase=0x140000000 EntryPoint_RVA=0x14e0 SizeOfImage~0x0
+  IMPORT DESCRIPTOR RVA=0xad31000 size=0x9d3c
+  ADVAPI32.dll: 48 imports
+  AVRT.dll: 2 imports
+  bcrypt.dll: 3 imports
+  CFGMGR32.dll: 9 imports
+  CRYPT32.dll: 19 imports
+  d2d1.dll: 1 imports
+  DNSAPI.dll: 2 imports
+  DWrite.dll: 1 imports
+  GDI32.dll: 53 imports
+  IPHLPAPI.DLL: 6 imports
+  KERNEL32.dll: 295 imports
+  MSIMG32.dll: 1 imports
+  api-ms-win-crt-conio-l1-1-0.dll: 2 imports
+  api-ms-win-crt-convert-l1-1-0.dll: 23 imports
+  api-ms-win-crt-environment-l1-1-0.dll: 6 imports
+  api-ms-win-crt-filesystem-l1-1-0.dll: 37 imports
+  api-ms-win-crt-heap-l1-1-0.dll: 8 imports
+  api-ms-win-crt-locale-l1-1-0.dll: 7 imports
+  api-ms-win-crt-math-l1-1-0.dll: 80 imports
+  api-ms-win-crt-multibyte-l1-1-0.dll: 1 imports
+  api-ms-win-crt-private-l1-1-0.dll: 12 imports
+  api-ms-win-crt-process-l1-1-0.dll: 4 imports
+  api-ms-win-crt-runtime-l1-1-0.dll: 29 imports
+  api-ms-win-crt-stdio-l1-1-0.dll: 84 imports
+  api-ms-win-crt-string-l1-1-0.dll: 58 imports
+  api-ms-win-crt-time-l1-1-0.dll: 16 imports
+  api-ms-win-crt-utility-l1-1-0.dll: 6 imports
+  ncrypt.dll: 8 imports
+  Normaliz.dll: 2 imports
+  ntdll.dll: 6 imports
+  ole32.dll: 15 imports
+  OLEAUT32.dll: 1 imports
+  RPCRT4.dll: 1 imports
+  Secur32.dll: 12 imports
+  SHELL32.dll: 11 imports
+  SHLWAPI.dll: 4 imports
+  USER32.dll: 66 imports
+  USERENV.dll: 1 imports
+  USP10.dll: 4 imports
+  AVICAP32.dll: 2 imports
+  WINMM.dll: 17 imports
+  WS2_32.dll: 55 imports
+  api-ms-win-core-synch-l1-2-0.dll: 3 imports
+  bcryptprimitives.dll: 1 imports
+  ntdll.dll: 1 imports
+  ws2_32.dll: 3 imports
+  --- ADVAPI32.dll ---
+    ConvertSidToStringSidW CopySid CryptAcquireContextW CryptCreateHash CryptDecrypt CryptDestroyHash CryptDestroyKey CryptEnumProvidersW CryptExportKey CryptGenRandom CryptGetProvParam CryptGetUserKey CryptReleaseContext CryptSetHashParam CryptSignHashW DeregisterEventSource GetCurrentHwProfileW GetFileSecurityW GetLengthSid GetSecurityDescriptorGroup GetSecurityDescriptorOwner GetSidSubAuthority GetSidSubAuthorityCount GetTokenInformation GetUserNameA GetUserNameW InitializeSecurityDescriptor IsValidSid LookupAccountSidW OpenProcessToken RegCloseKey RegCreateKeyExW RegDeleteValueW RegEnumKeyExW RegEnumValueA RegEnumValueW RegGetValueW RegLoadMUIStringW RegNotifyChangeKeyValue RegOpenKeyExA RegOpenKeyExW RegQueryInfoKeyW RegQueryValueExA RegQueryValueExW RegSetValueExW RegisterEventSourceW ReportEventW SetSecurityDescriptorDacl
+  --- AVRT.dll ---
+    AvRevertMmThreadCharacteristics AvSetMmThreadCharacteristicsW
+  --- bcrypt.dll ---
+    BCryptCloseAlgorithmProvider BCryptGenRandom BCryptOpenAlgorithmProvider
+  --- CFGMGR32.dll ---
+    CM_Get_Child CM_Get_DevNode_Registry_PropertyW CM_Get_DevNode_Status CM_Get_Device_IDW CM_Get_Device_ID_ListW CM_Get_Device_ID_List_SizeW CM_Get_Sibling CM_Locate_DevNodeW CM_Open_DevNode_Key
+  --- CRYPT32.dll ---
+    CertCloseStore CertCreateCertificateContext CertCreateSelfSignCertificate CertDuplicateCertificateContext CertEnumCertificatesInStore CertFindCertificateInStore CertFreeCertificateContext CertGetCertificateContextProperty CertGetEnhancedKeyUsage CertGetIntendedKeyUsage CertOpenStore CertOpenSystemStoreA CertOpenSystemStoreW CertSetCertificateContextProperty CertStrToNameA CryptBinaryToStringA CryptEncodeObjectEx CryptHashCertificate2 CryptStringToBinaryA
+  --- d2d1.dll ---
+    D2D1CreateFactory
+  --- DNSAPI.dll ---
+    DnsFree DnsQuery_UTF8
+  --- DWrite.dll ---
+    DWriteCreateFactory
+  --- GDI32.dll ---
+    AddFontMemResourceEx BitBlt CombineRgn CreateCompatibleBitmap CreateCompatibleDC CreateDCA CreateDIBSection CreateFontIndirectW CreatePen CreateRectRgn CreateSolidBrush DeleteDC DeleteObject EnumFontFamiliesExW EnumFontFamiliesW ExtCreateRegion ExtSelectClipRgn ExtTextOutW GdiFlush GetCharWidth32A GetClipBox GetClipRgn GetDIBColorTable GetDeviceCaps GetFontData GetFontUnicodeRanges GetGlyphIndicesW GetGlyphOutlineA GetGlyphOutlineW GetGraphicsMode GetObjectA GetObjectW GetOutlineTextMetricsA GetStockObject GetTextFaceW GetTextMetricsA GetWorldTransform IntersectClipRect ModifyWorldTransform Polyline Rectangle RemoveFontMemResourceEx RestoreDC SaveDC SelectClipRgn SelectObject SetBkMode SetGraphicsMode SetMapMode SetTextAlign SetTextColor SetWorldTransform StretchDIBits
+  --- IPHLPAPI.DLL ---
+    CancelMibChangeNotify2 GetAdaptersAddresses GetIpForwardTable2 NotifyRouteChange2 if_indextoname if_nametoindex
+  --- KERNEL32.dll ---
+    AcquireSRWLockExclusive AcquireSRWLockShared AddVectoredExceptionHandler AllocConsole AreFileApisANSI AssignProcessToJobObject AttachConsole CancelIo CancelIoEx CloseHandle CloseThreadpoolWork CompareFileTime CompareStringOrdinal ConvertFiberToThread ConvertThreadToFiberEx CopyFileExW CopyFileW CreateDirectoryW CreateEventA CreateEventW CreateFiberEx CreateFileA CreateFileMappingA CreateFileMappingW CreateFileW CreateHardLinkW CreateIoCompletionPort CreateJobObjectW CreateMemoryResourceNotification CreateMutexA CreateMutexW CreatePipe CreateProcessW CreateSemaphoreA CreateSemaphoreW CreateSymbolicLinkW CreateThread CreateThreadpoolWork CreateToolhelp32Snapshot CreateWaitableTimerExW DebugBreak DeleteCriticalSection DeleteFiber DeleteFileW DeleteProcThreadAttributeList DeviceIoControl DuplicateHandle EnterCriticalSection ExitProcess ExitThread ExpandEnvironmentStringsW FileTimeToSystemTime FindClose FindFirstFileA FindFirstFileExW FindFirstFileW FindNextFileW FlsAlloc FlsFree FlsSetValue FlushFileBuffers FormatMessageA FormatMessageW FreeEnvironmentStringsW FreeLibrary GetACP GetActiveProcessorCount GetCPInfo GetCommandLineW GetComputerNameA GetComputerNameW GetConsoleMode GetConsoleOutputCP GetConsoleScreenBufferInfo GetCurrentDirectoryW GetCurrentProcess GetCurrentProcessId GetCurrentThread GetCurrentThreadId GetDateFormatW GetDiskFreeSpaceExW GetDriveTypeA GetDriveTypeW GetEnvironmentStringsW GetEnvironmentVariableA GetEnvironmentVariableW GetExitCodeProcess GetExitCodeThread GetFileAttributesA GetFileAttributesExA GetFileAttributesExW GetFileAttributesW GetFileInformationByHandle GetFileInformationByHandleEx GetFileSize GetFileSizeEx GetFileType GetFinalPathNameByHandleW GetFullPathNameA GetFullPathNameW GetHandleInformation GetLastError GetLocaleInfoEx GetLocaleInfoW GetLogicalDrives GetLongPathNameA GetLongPathNameW GetModuleFileNameA GetModuleFileNameW GetModuleHandleA GetModuleHandleExA GetModuleHandleExW GetModuleHandleW GetNativeSystemInfo GetNumaHighestNodeNumber GetNumaNodeProcessorMaskEx GetOverlappedResult GetProcAddress GetProcessAffinityMask GetProcessHeap GetProcessId GetProcessTimes GetQueuedCompletionStatusEx GetShortPathNameW GetStdHandle GetSystemDefaultLocaleName GetSystemDirectoryA GetSystemDirectoryW GetSystemInfo GetSystemTime GetSystemTimeAdjustment GetSystemTimeAsFileTime GetSystemTimePreciseAsFileTime GetSystemWow64DirectoryW GetTempFileNameW GetTempPathA GetTempPathW GetThreadContext GetThreadGroupAffinity GetThreadLocale GetThreadPriority GetThreadTimes GetTickCount GetTickCount64 GetTimeFormatW GetTimeZoneInformation GetUserDefaultLocaleName GetUserPreferredUILanguages GetVersion GetVersionExA GetVolumeInformationW GetVolumePathNameW GetWindowsDirectoryA GetWindowsDirectoryW HeapAlloc HeapFree HeapReAlloc InitOnceBeginInitialize InitOnceComplete InitOnceExecuteOnce InitializeConditionVariable InitializeCriticalSection InitializeCriticalSectionAndSpinCount InitializeCriticalSectionEx InitializeProcThreadAttributeList InitializeSRWLock IsDBCSLeadByteEx IsDebuggerPresent IsProcessorFeaturePresent IsThreadAFiber IsValidCodePage K32GetProcessMemoryInfo LeaveCriticalSection LoadLibraryA LoadLibraryExA LoadLibraryExW LoadLibraryW LocalFree LockFileEx MapViewOfFile Module32FirstW Module32NextW MoveFileExA MoveFileExW MulDiv MultiByteToWideChar OpenFileMappingA OpenFileMappingW OpenProcess OutputDebugStringA PeekConsoleInputA PeekConsoleInputW PeekNamedPipe QueryFullProcessImageNameW QueryMemoryResourceNotification QueryPerformanceCounter QueryPerformanceFrequency QueueUserWorkItem RaiseException ReadConsoleA ReadConsoleInputA ReadConsoleInputW ReadConsoleW ReadDirectoryChangesW ReadFile ReadFileEx RegisterWaitForSingleObject ReleaseMutex ReleaseSRWLockExclusive ReleaseSRWLockShared ReleaseSemaphore RemoveDirectoryW RemoveVectoredExceptionHandler ResetEvent ResumeThread RtlCaptureContext RtlCaptureStackBackTrace RtlLookupFunctionEntry RtlUnwindEx RtlVirtualUnwind SetConsoleCtrlHandler SetConsoleMode SetConsoleTextAttribute SetConsoleTitleW SetCurrentDirectoryW SetDllDirectoryA SetDllDirectoryW SetEnvironmentVariableW SetEvent SetFileAttributesW SetFileCompletionNotificationModes SetFileInformationByHandle SetFilePointer SetFilePointerEx SetFileTime SetHandleInformation SetInformationJobObject SetLastError SetProcessAffinityMask SetStdHandle SetSystemTime SetThreadAffinityMask SetThreadContext SetThreadDescription SetThreadErrorMode SetThreadGroupAffinity SetThreadPriority SetThreadStackGuarantee SetUnhandledExceptionFilter SetWaitableTimer SignalObjectAndWait Sleep SleepConditionVariableCS SleepConditionVariableSRW SleepEx SubmitThreadpoolWork SuspendThread SwitchToFiber SwitchToThread SystemTimeToFileTime TerminateProcess TerminateThread TlsAlloc TlsFree TlsGetValue TlsSetValue TryAcquireSRWLockExclusive TryAcquireSRWLockShared TryEnterCriticalSection UnlockFile UnlockFileEx UnmapViewOfFile UnregisterWait UpdateProcThreadAttribute VerSetConditionMask VerifyVersionInfoW VirtualAlloc VirtualFree VirtualLock VirtualProtect VirtualQuery WaitForMultipleObjects WaitForMultipleObjectsEx WaitForSingleObject WaitForSingleObjectEx WaitForThreadpoolWorkCallbacks WakeAllConditionVariable WakeConditionVariable WideCharToMultiByte Wow64DisableWow64FsRedirection Wow64RevertWow64FsRedirection WriteConsoleW WriteFile WriteFileEx lstrlenW
+  --- MSIMG32.dll ---
+    AlphaBlend
+  --- api-ms-win-crt-conio-l1-1-0.dll ---
+    _getch _getch
+  --- api-ms-win-crt-convert-l1-1-0.dll ---
+    _ui64toa_s atof atoi atol mbrtowc mbsrtowcs mbstowcs mbstowcs_s strtod strtof strtol strtoll strtoul strtoull strtoumax wcrtomb wcstol wcstoll wcstombs wcstombs_s wcstoul wcstoull wctomb
+  --- api-ms-win-crt-environment-l1-1-0.dll ---
+    __p__environ _wgetcwd _wgetenv _wputenv getenv getenv_s
+  --- api-ms-win-crt-filesystem-l1-1-0.dll ---
+    _fstat64 _access _findclose _findfirst64i32 _findnext64i32 _fullpath _getdrive _lock_file _rmdir _stat64 _stat64i32 _unlink _unlock_file _waccess _wchdir _wchmod _wfindfirst64i32 _wfindnext64i32 _wfullpath _wmkdir _wremove _wrename _wrmdir _wstat64 _wunlink remove rename _wstat64i32 _unlink _stat64i32 _stat64 _rmdir _mkdir _mkdir _fstat64i32 _fstat64 _chmod
+  --- api-ms-win-crt-heap-l1-1-0.dll ---
+    _aligned_free _aligned_malloc _aligned_realloc _set_new_mode calloc free malloc realloc
+  --- api-ms-win-crt-locale-l1-1-0.dll ---
+    ___lc_codepage_func ___mb_cur_max_func _configthreadlocale _create_locale _free_locale localeconv setlocale
+  --- api-ms-win-crt-math-l1-1-0.dll ---
+    __setusermatherr _fdopen _hypot _isnan acos acosf acosh asin asinf asinh asinhf atan atan2 atan2f atanf atanh cbrt cbrtf ceil ceilf cos cosf cosh erf erff exp exp2 exp2f expf expm1 fabs floor floorf fma fmaf fmax fmaxf fmin fminf fmod fmodf frexp hypot llrint llround llroundf log log10 log10f log1p log1pf log2 log2f logf lrint lrintf lround lroundf modf modff nextafter pow powf remainder round roundf sin sinf sinh sinhf sqrt sqrtf tan tanf tanh tanhf trunc truncf _j1 _fdopen
+  --- api-ms-win-crt-multibyte-l1-1-0.dll ---
+    _mbsrchr
+  --- api-ms-win-crt-private-l1-1-0.dll ---
+    longjmp memchr memcmp memcpy memmove strchr strrchr strstr wcschr wcsrchr wcsstr __intrinsic_setjmp
+  --- api-ms-win-crt-process-l1-1-0.dll ---
+    _wspawnv _wspawnve _wspawnvp _wspawnvpe
+  --- api-ms-win-crt-runtime-l1-1-0.dll ---
+    _set_app_type _seh_filter_exe __p___argc __p___argv _assert _beginthreadex _cexit _configure_narrow_argv _crt_atexit _endthreadex _errno _exit _get_errno _initialize_narrow_environment _initterm _initterm_e _register_thread_local_exe_atexit_callback _set_abort_behavior _set_errno _set_invalid_parameter_handler _wassert abort exit perror raise signal strerror strerror_s _getpid
+  --- api-ms-win-crt-stdio-l1-1-0.dll ---
+    __acrt_iob_func __p__commode __p__fmode __stdio_common_vfprintf __stdio_common_vfscanf __stdio_common_vfwprintf __stdio_common_vsnprintf_s __stdio_common_vsnwprintf_s __stdio_common_vsprintf __stdio_common_vsscanf __stdio_common_vswprintf __stdio_common_vswprintf_s _chsize_s _close _commit _dup2 _fflush_nolock _fileno _fsopen _ftelli64 _get_osfhandle _locking _lseeki64 _open _open_osfhandle _pipe _read _setmode _sopen _sopen_s _wcreat _wfopen _wfreopen _wopen _write _wsopen _wtmpnam_s clearerr fclose feof ferror fflush fgetc fgets fgetwc fopen_s fputc fputs fputwc fread freopen_s fseek ftell fwrite getc getchar getwc putc putchar puts putwc rewind setbuf setvbuf ungetc ungetwc freopen fopen _write _setmode _read _lseeki64 _lseek _kbhit _kbhit _isatty _isatty _ftelli64 _fseeki64 _fseeki64 _fileno _dup _close _chsize
+  --- api-ms-win-crt-string-l1-1-0.dll ---
+    iswctype _strnicmp _wcsicmp isalnum isalpha isblank iscntrl isdigit islower isprint isspace isupper isxdigit mbrlen memset strcat strcmp strcoll strcpy strcspn strlen strncat strncmp strncpy strncpy_s strnlen strpbrk strspn strtok strtok_s strxfrm tolower toupper towlower towupper wcscat wcscat_s wcscmp wcscoll wcscpy wcscpy_s wcslen wcsncmp wcsncpy wcsncpy_s wcsnlen wcsspn wcsxfrm wctype _wcsnicmp _wcsicmp _wcsdup _strnicmp _stricmp _stricmp _stricmp _strdup _strdup
+  --- api-ms-win-crt-time-l1-1-0.dll ---
+    _ctime64 _difftime64 _ftime64 _ftime64_s _gmtime64 _gmtime64_s _localtime64 _localtime64_s _mktime64 _time32 _time64 _utime64 _wutime64 clock strftime wcsftime
+  --- api-ms-win-crt-utility-l1-1-0.dll ---
+    bsearch div qsort rand rand_s srand
+  --- ncrypt.dll ---
+    NCryptCreatePersistedKey NCryptDeleteKey NCryptExportKey NCryptFinalizeKey NCryptFreeObject NCryptImportKey NCryptOpenStorageProvider NCryptSetProperty
+  --- Normaliz.dll ---
+    IdnToAscii IdnToUnicode
+  --- ntdll.dll ---
+    NtCreateFile NtCreateNamedPipeFile NtOpenFile NtReadFile NtSetInformationFile NtWriteFile
+  --- ole32.dll ---
+    CLSIDFromString CoAllowSetForegroundWindow CoCreateInstance CoGetMalloc CoInitialize CoInitializeEx CoTaskMemAlloc CoTaskMemFree CoUninitialize CreateBindCtx OleLoadFromStream OleSaveToStream PropVariantClear StringFromCLSID StringFromGUID2
+  --- OLEAUT32.dll ---
+    OleCreatePropertyFrame
+  --- RPCRT4.dll ---
+    UuidCreate
+  --- Secur32.dll ---
+    AcceptSecurityContext AcquireCredentialsHandleA ApplyControlToken DecryptMessage DeleteSecurityContext EncryptMessage FreeContextBuffer FreeCredentialsHandle InitSecurityInterfaceA InitializeSecurityContextA QueryContextAttributesA SetContextAttributesA
+  --- SHELL32.dll ---
+    CommandLineToArgvW SHBindToParent SHCreateShellItemArrayFromIDLists SHFileOperationW SHGetDesktopFolder SHGetFolderPathA SHGetFolderPathW SHGetKnownFolderPath SHGetSpecialFolderPathA SHParseDisplayName Shell_NotifyIconW
+  --- SHLWAPI.dll ---
+    PathRemoveFileSpecW SHCreateStreamOnFileA SHLoadIndirectString StrRetToStrW
+  --- USER32.dll ---
+    AdjustWindowRectEx AllowSetForegroundWindow BeginPaint CopyIcon CreateWindowExA CreateWindowExW DefWindowProcA DefWindowProcW DestroyCursor DestroyWindow DispatchMessageA DispatchMessageW DrawIcon EndPaint EnumDisplayMonitors EnumWindows FillRect FindWindowW FrameRect GetClassNameW GetClientRect GetCursorInfo GetDC GetDesktopWindow GetForegroundWindow GetIconInfo GetMessageA GetMessageW GetProcessWindowStation GetQueueStatus GetSystemMetrics GetUserObjectInformationW GetWindowLongPtrA GetWindowLongPtrW GetWindowRect GetWindowTextLengthW GetWindowTextW GetWindowThreadProcessId InflateRect IntersectRect IsIconic IsWindow IsWindowVisible LoadCursorA LoadIconW MapWindowPoints MessageBoxW MonitorFromWindow MsgWaitForMultipleObjectsEx PeekMessageA PeekMessageW PostMessageW PostQuitMessage PostThreadMessageA RegisterClassW RegisterWindowMessageW ReleaseDC SendMessageA SetLayeredWindowAttributes SetWindowLongPtrA SetWindowLongPtrW SetWindowRgn ShowWindow SystemParametersInfoA TranslateMessage UnregisterClassW
+  --- USERENV.dll ---
+    GetUserProfileDirectoryW
+  --- USP10.dll ---
+    ScriptFreeCache ScriptItemize ScriptPlace ScriptShape
+  --- AVICAP32.dll ---
+    capCreateCaptureWindowA capGetDriverDescriptionA
+  --- WINMM.dll ---
+    waveInAddBuffer waveInClose waveInGetDevCapsW waveInGetNumDevs waveInOpen waveInPrepareHeader waveInReset waveInStart waveInStop waveInUnprepareHeader waveOutClose waveOutGetDevCapsW waveOutGetNumDevs waveOutOpen waveOutPrepareHeader waveOutUnprepareHeader waveOutWrite
+  --- WS2_32.dll ---
+    WSACleanup WSACloseEvent WSACreateEvent WSAEnumNetworkEvents WSAEventSelect WSAGetLastError WSAGetOverlappedResult WSAIoctl WSAPoll WSARecv WSARecvFrom WSAResetEvent WSASend WSASendMsg WSASendTo WSASetEvent WSASetLastError WSASocketA WSAStartup WSAStringToAddressA WSAWaitForMultipleEvents __WSAFDIsSet accept bind closesocket connect freeaddrinfo getaddrinfo gethostbyaddr gethostbyname gethostname getnameinfo getpeername getservbyname getservbyport getsockname getsockopt htonl htons inet_addr inet_ntoa inet_ntop inet_pton ioctlsocket listen ntohl ntohs recv recvfrom select send sendto setsockopt shutdown socket
+  --- api-ms-win-core-synch-l1-2-0.dll ---
+    WaitOnAddress WakeByAddressAll WakeByAddressSingle
+  --- bcryptprimitives.dll ---
+    ProcessPrng
+  --- ntdll.dll ---
+    RtlNtStatusToDosError
+  --- ws2_32.dll ---
+    GetHostNameW WSADuplicateSocketW WSASocketW
+  TOTAL IMPORTS: 1026

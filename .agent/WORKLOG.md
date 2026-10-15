@@ -64,3 +64,31 @@ Work Log:
 Stage Summary:
 - G2 C++ EH acceptance reached for the GNU-mingw family: t08 255/255 deterministic, probe 3/3, sweep 11/12.
 - Two general semantic laws fixed with ReactOS-verified references; both would fail visibly if reverted (t08/probe + any multi-frame unwinding that restores nonvolatives).
+
+---
+Task ID: TASK-OPENSRC-1
+Agent: Super Z (engineering agent)
+Task: Download two famous open-source exes (ImageMagick portable, ffmpeg static), run them under MiniWin, and attempt real render outputs; fix every API/semantic gap encountered along the way.
+
+Work Log:
+- Downloads: ImageMagick 7.1.2-34 portable Q16 x64 (magick.exe, sha 1232979c..., 7z from download.imagemagick.org, extracted with a self-contained 7zz 25.01) + ffmpeg master-latest win64 GPL (ffmpeg.exe, sha 78f83187..., BtbN release zip).
+- PE analysis (scripts/pe_imports.py): magick = PE32+ x64 console, 461 imports over 15 DLLs; ffmpeg = PE32+ x64 console, 1026 imports over 30 DLLs.
+- Wave-3/3B/4/4C/4D/4E (~380 new APIs, all in clearly-marked ISS1-WAVE* blocks + table entries): heap/global/local, process/env/module/paths, files (CreateFile family on real fds), directory enumeration (FindFirstFileExW family), console, codepage/locale with REAL per-type values (LOCALE_IDEFAULTANSICODEPAGE="1252" etc.), time, SRW/condition/InitOnce/address-waits, threads (honest single-team), registry (honest ERROR_FILE_NOT_FOUND), BCrypt (real /dev/urandom for GenRandom), real .rsrc resource directory walk (FindResourceA/W + LoadResource/LockResource/SizeofResource), VCOMP single-team OpenMP (incl. _vcomp_fork fixed-arity dispatcher), CRT family (_initterm_e, _seh_filter_exe, atexit registry, time64, wide fs, findfirst64i32, math), pure-CRT bridges (~200 glibc-backed), WinSock2 (real host sockets; correct x64 WSADATA layout).
+- Real semantic fixes proven by live evidence:
+  (1) MultiByteToWideChar/WideCharToMultiByte size-query must return the count INCLUDING the null for srclen=-1 (old code returned the byte count → one-wchar heap overflow → ImageMagick "free(): invalid size").
+  (2) GetStartupInfoW: dwFlags is at +60, not +72 (old write clobbered lpReserved2).
+  (3) LCMapStringW/A sizing calls (dst=NULL) must not write.
+  (4) GetLocaleInfoW/A must return real per-type values and honor LOCALE_RETURN_NUMBER.
+  (5) GetACP=1252 (UTF-8 ACP breaks UCRT's 256-byte ctype-table conversion).
+  (6) GetLogicalProcessorInformationEx must implement the ERROR_INSUFFICIENT_BUFFER retry contract (a stub made the CRT loop forever).
+  (7) WSADATA is 408 bytes on x64 with a specific field order (a wrong 512-byte write smashed the caller's stack — ffmpeg __stack_chk_fail).
+  (8) atexit must NOT hand guest code pointers to the host atexit (glibc jumped into the PE during teardown); guest registry + run at ExitProcess.
+  (9) __intrinsic_setjmp must not write a 200-byte glibc jmp_buf into the guest's 128-byte mingw buffer; side-table implementation.
+- Diagnostics built: MINWIN_WATCHDOG (SIGALRM dumps tagged RIP+stack), crash_handler tagged stack scan, HeapFree/alloc-registry traps, MINWIN_HEAP_GUARD guard-page heap (catches overruns/UAF at the exact write).
+- Results: magick PARTIAL — 390→~150 unresolved; runs into config-path resolution; BLOCKED root: UCRT locale ctype-init path delivers a corrupted frame to GetStringTypeW (needs a dedicated session). ffmpeg PARTIAL — 678→~425 unresolved; full CRT init + library constructors (WSAStartup, vulkan probe, per-component CreateEvent/Mutex) execute; BLOCKED root: heap metadata corruption ("malloc(): invalid size (unsorted)") during late CRT init, before main.
+- Regression discipline maintained after every wave: 12/12, t08 255/255, probe 3/3, UPX G1 exit 0, sweep 11/12 (final).
+- Evidence: evidence/master/opensource/ (PE reports, unresolved lists, last stderr of both targets, SHA256SUMS).
+
+Stage Summary:
+- Two real famous open-source programs now execute hundreds of thousands of guest instructions into their CRT init under MiniWin; the API surface grew ~2.6x with semantics verified against the live traces of both targets.
+- Next session: (a) ffmpeg late-CRT heap corruption (use the guard/UAF tooling already in place), (b) magick locale ctype path, then the render commands.

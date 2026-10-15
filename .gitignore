@@ -43,3 +43,8 @@ tmp/
 miniwin-results/
 tests/dalvik_frame/test_frame
 tests/appcompat/*.exe
+artifacts/opensource/imagemagick/
+artifacts/opensource/ffmpeg/
+artifacts/opensource/*.7z
+artifacts/opensource/*.zip
+artifacts/opensource/run/

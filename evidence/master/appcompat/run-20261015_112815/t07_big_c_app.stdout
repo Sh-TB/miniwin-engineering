@@ -1,0 +1,91 @@
+[MiniWin] Loading /home/z/my-project/workspace/miniwin-engineering/tests/appcompat/t07_big_c_app.exe...
+t07 Inventory Manager (timestamp=1792063695)
+set_qty(9999) -> app_error 'not found' handled OK
+set_qty(-3) -> app_error 'negative' handled OK
+---- INITIAL (id order) ----
+  id name                     category        qty      unit(c)       value(c)
+   1 blue socket 01           furniture         1        83362          83362
+   2 dark motor 02            lighting         28        56887        1592836
+   3 bright lamp 03           electronics      45        33902        1525590
+   4 heavy panel 04           hardware         22        81592        1795024
+   5 light filter 05          furniture        49         3495         171255
+   6 smart cable 06           lighting         38        84255        3201690
+   7 classic sensor 07        electronics       5        25351         126755
+   8 red chair 08             hardware         11        19423         213653
+   9 blue socket 09           furniture        26        64888        1687088
+  10 dark motor 10            lighting         27        56926        1537002
+  11 bright lamp 11           electronics       1        74484          74484
+  12 heavy panel 12           hardware         45          771          34695
+  13 light filter 13          furniture        31         2758          85498
+  14 smart cable 14           lighting         27        50752        1370304
+  15 classic sensor 15        electronics       8        17175         137400
+  16 red chair 16             hardware         48        40538        1945824
+  17 blue socket 17           furniture        38        74274        2822412
+  18 dark motor 18            lighting         28        39883        1116724
+  19 bright lamp 19           electronics      30        82498        2474940
+  20 heavy panel 20           hardware         27         1029          27783
+  21 light filter 21          furniture        46        72663        3342498
+  22 smart cable 22           lighting         37         2050          75850
+  23 classic sensor 23        electronics      17        74396        1264732
+  24 red chair 24             hardware         24        24344         584256
+  25 blue socket 25           furniture        35        31400        1099000
+total value: 28390655 cents (283906.55) over 25 products
+---- BY VALUE DESC ----
+  id name                     category        qty      unit(c)       value(c)
+  21 light filter 21          furniture        46        72663        3342498
+   6 smart cable 06           lighting         38        84255        3201690
+  17 blue socket 17           furniture        38        74274        2822412
+  19 bright lamp 19           electronics      30        82498        2474940
+  16 red chair 16             hardware         48        40538        1945824
+   4 heavy panel 04           hardware         22        81592        1795024
+   9 blue socket 09           furniture        26        64888        1687088
+   2 dark motor 02            lighting         28        56887        1592836
+  10 dark motor 10            lighting         27        56926        1537002
+   3 bright lamp 03           electronics      45        33902        1525590
+  14 smart cable 14           lighting         27        50752        1370304
+  23 classic sensor 23        electronics      17        74396        1264732
+  18 dark motor 18            lighting         28        39883        1116724
+  25 blue socket 25           furniture        35        31400        1099000
+  24 red chair 24             hardware         24        24344         584256
+   8 red chair 08             hardware         11        19423         213653
+   5 light filter 05          furniture        49         3495         171255
+  15 classic sensor 15        electronics       8        17175         137400
+   7 classic sensor 07        electronics       5        25351         126755
+  13 light filter 13          furniture        31         2758          85498
+   1 blue socket 01           furniture         1        83362          83362
+  22 smart cable 22           lighting         37         2050          75850
+  11 bright lamp 11           electronics       1        74484          74484
+  12 heavy panel 12           hardware         45          771          34695
+  20 heavy panel 20           hardware         27         1029          27783
+total value: 28390655 cents (283906.55) over 25 products
+---- BY NAME ----
+  id name                     category        qty      unit(c)       value(c)
+   1 blue socket 01           furniture         1        83362          83362
+   9 blue socket 09           furniture        26        64888        1687088
+  17 blue socket 17           furniture        38        74274        2822412
+  25 blue socket 25           furniture        35        31400        1099000
+   3 bright lamp 03           electronics      45        33902        1525590
+  11 bright lamp 11           electronics       1        74484          74484
+  19 bright lamp 19           electronics      30        82498        2474940
+   7 classic sensor 07        electronics       5        25351         126755
+  15 classic sensor 15        electronics       8        17175         137400
+  23 classic sensor 23        electronics      17        74396        1264732
+   2 dark motor 02            lighting         28        56887        1592836
+  10 dark motor 10            lighting         27        56926        1537002
+  18 dark motor 18            lighting         28        39883        1116724
+   4 heavy panel 04           hardware         22        81592        1795024
+  12 heavy panel 12           hardware         45          771          34695
+  20 heavy panel 20           hardware         27         1029          27783
+   5 light filter 05          furniture        49         3495         171255
+  13 light filter 13          furniture        31         2758          85498
+  21 light filter 21          furniture        46        72663        3342498
+   8 red chair 08             hardware         11        19423         213653
+  16 red chair 16             hardware         48        40538        1945824
+  24 red chair 24             hardware         24        24344         584256
+   6 smart cable 06           lighting         38        84255        3201690
+  14 smart cable 14           lighting         27        50752        1370304
+  22 smart cable 22           lighting         37         2050          75850
+total value: 28390655 cents (283906.55) over 25 products
+hash before=2AF285DD84520998 after=2AF285DD84520998
+checks=18 failed=0 journal_lines=8
+t07: PASS
