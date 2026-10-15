@@ -92,3 +92,13 @@ Work Log:
 Stage Summary:
 - Two real famous open-source programs now execute hundreds of thousands of guest instructions into their CRT init under MiniWin; the API surface grew ~2.6x with semantics verified against the live traces of both targets.
 - Next session: (a) ffmpeg late-CRT heap corruption (use the guard/UAF tooling already in place), (b) magick locale ctype path, then the render commands.
+
+---
+Task ID: TASK-OPENSRC-1-PUSH
+Agent: Super Z
+Task: Push TASK-OPENSRC-1.
+Work Log:
+- First push attempt stalled: the commit accidentally included 946MB of downloaded/extracted binaries. Amended (pre-push, no history rewrite of pushed commits): artifacts/opensource/{imagemagick,ffmpeg}/*.zip/*.7z moved to .gitignore; evidence reports kept.
+- Push verified: 7d047a8..f75aa97 main -> main (0 ahead / 0 behind after fetch).
+Stage Summary:
+- Remote HEAD f75aa97 contains both milestones of the session (BUG-039 + OPENSRC-1).
