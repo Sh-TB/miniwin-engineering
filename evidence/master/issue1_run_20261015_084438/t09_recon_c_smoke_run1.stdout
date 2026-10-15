@@ -1,0 +1,3 @@
+[MiniWin] Loading /home/z/my-project/workspace/miniwin-engineering/tests/corpus/bin/t09_recon_c_smoke.exe...
+RESULT score=127 expected=127
+RESULT c_smoke=ok
