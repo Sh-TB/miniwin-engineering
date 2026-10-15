@@ -17,7 +17,7 @@ Auditor: MiniWin engineering agent (Issue #1 master campaign, Phase 0/1 slice)
 | Previously reported commit 4039b61 | EXISTS locally |
 | Build target | `minwin_loader` (gcc -O2 -no-pie -Wl,-Ttext-segment=0x2000000, from src/loader/loader.c + include/pe.h) |
 | Loader binary SHA-256 (pre-slice clean build) | 40646f4b973236af6e9e7fe5ac1917a66495048ad4578e8909583d35073348c3 |
-| Loader binary SHA-256 (post-slice, includes WS-D file-I/O fix) | dea39e83d01295a16d112921803a7df0d55b6402ff08344955f096bff1494013 |
+| Loader binary SHA-256 (final merged tree incl. upstream UCRT waves + ISS1 stdio contracts) | 0630d3ce2228c93f |
 | Compiler (host) | gcc 14.2.0-19, Debian x86_64 |
 | Cross toolchain (fixtures) | x86_64-w64-mingw32-gcc/g++ 14.2.0-win32, binutils-mingw-w64 2.44 (installed locally under scripts/mingw-debs/root, no root required) |
 | Python | 3.12.15 |

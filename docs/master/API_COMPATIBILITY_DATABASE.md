@@ -41,7 +41,14 @@ Counts: KERNEL32.DLL = 70 code imports; msvcrt.dll = 91 code imports; msvcrt dat
 | GetModuleHandleA | K32 | **STUB-FAKE** | returns fake handle | same risk class as LoadLibraryA |
 | printf/fprintf/fwrite/fputs/… (variadic) | msvcrt | **REAL** (via SysV trampolines, L208-231) | va_list ABI translation, routes to host stdio | printf-family is the trickiest ABI surface; verified by UPX output ("terminate called…" printed through it) |
 
-## Full inventory (161 code imports)
+## Full inventory (188 code imports; 162 at G1, +26 wave-2 appcompat 2026-10-15)
+
+
+### Wave 1+2 additions (2026-10-15, EXP-040 appcompat sweep)
+- msvcrt: atexit, _exit, setvbuf (mode mapping 0/64/4 -> glibc), _XcptFilter (CONTINUE_SEARCH stub), _aligned_malloc/_aligned_free, _assert, _strtoi64/_strtoui64, wcstol/wcstoul/_wcstoi64/_wcstoui64 (ASCII-safe UTF-16 passthrough), fputwc, fwprintf (wide fmt repack), FlsAlloc/FlsGetValue/FlsSetValue (__thread slot array).
+- kernel32: GetCPInfo (SBCS honest stub), SRW locks (Acquire/Try/Release Exclusive via pthread_rwlock registry), condition variables (Sleep/Wake/WakeAll, timed-wait semantics), InitOnceExecuteOnce, RtlRestoreContext (full GPR+XMM+RIP restore), GetModuleHandleW, GetThreadId, SwitchToThread, WaitForSingleObjectEx.
+- Native TLS (TASK-TLS-001): TEB+0x58 ThreadLocalStoragePointer, static TLS slot 0 (+ template copy, zero-fill, __tls_index, DLL_PROCESS_ATTACH callbacks), TlsAlloc/GetValue/SetValue share the slot array (dynamic from slot 1).
+
 
 **KERNEL32.DLL (70):** AddVectoredExceptionHandler, CloseHandle, CreateEventA, CreateSemaphoreA, DebugBreak, DeleteCriticalSection, DuplicateHandle, EnterCriticalSection, GetConsoleCursorInfo, GetConsoleMode, GetConsoleScreenBufferInfo, GetCurrentProcess, GetCurrentProcessId, GetCurrentThread, GetCurrentThreadId, GetFileTime, GetHandleInformation, GetLastError, GetModuleHandleA, GetProcAddress, GetProcessAffinityMask, GetStartupInfoA, GetStdHandle, GetSystemTimeAsFileTime, GetThreadContext, GetThreadPriority, GetTickCount, InitializeCriticalSection, IsDBCSLeadByteEx, ExitProcess, IsDebuggerPresent, LoadLibraryA, LeaveCriticalSection, MultiByteToWideChar, OpenProcess, OutputDebugStringA, QueryPerformanceCounter, QueryPerformanceFrequency, RaiseException, ReleaseSemaphore, RemoveVectoredExceptionHandler, ResetEvent, ResumeThread, RtlCaptureContext, RtlLookupFunctionEntry, RtlUnwindEx, RtlVirtualUnwind, ScrollConsoleScreenBufferA, SetConsoleCursorInfo, SetConsoleCursorPosition, SetConsoleTextAttribute, SetEvent, SetFileTime, SetLastError, SetProcessAffinityMask, SetThreadContext, SetThreadPriority, SetUnhandledExceptionFilter, Sleep, SuspendThread, TlsAlloc, TlsGetValue, TlsSetValue, TryEnterCriticalSection, VirtualProtect, VirtualQuery, WaitForMultipleObjects, WaitForSingleObject, WideCharToMultiByte, WriteConsoleOutputA
 

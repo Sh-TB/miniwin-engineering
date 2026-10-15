@@ -42,3 +42,4 @@ tmp/
 !.gitkeep
 miniwin-results/
 tests/dalvik_frame/test_frame
+tests/appcompat/*.exe

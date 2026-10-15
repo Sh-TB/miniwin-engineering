@@ -1,0 +1,27 @@
+[TRACE] Command line: /home/z/my-project/workspace/miniwin-engineering/tests/appcompat/t07_big_c_app.exe
+
+[CRASH] Signal 11 at RIP=0x7fb126bd6aa4
+  RAX=0x0 RCX=0x0 RDX=0x1 R8=0x0 R9=0x0
+  RSP=0x7ffef36941b0 RBP=0x2
+  g_image_base=0x140000000 g_image_size=0x37000
+  (NOT inside loaded PE)
+  RSI=0x0 RDI=0x0
+  R8=0x0  R9=0x0 R10=0x3 R11=0x7fb126bd6a70
+  R12=0x0 R13=0x7fb126b53740 R14=0x14000d268 R15=0x20233e0
+  Backtrace (via stack walking):
+    [0] RIP=0x7fb126bd6aa4 (outside PE, possible shared lib)
+    [1] RIP=0x7fb126bd6aa4 (outside PE, possible shared lib)
+    [2] RIP=0x7fb126bd6aa4 (outside PE, possible shared lib)
+    [3] RIP=0x7fb126bd6aa4 (outside PE, possible shared lib)
+
+[CRASH] Signal 7 at RIP=0x200ae44
+  RAX=0x3d RCX=0x0 RDX=0x0 R8=0x0 R9=0x0
+  RSP=0x7ffef36933d0 RBP=0x7473286675627674
+  g_image_base=0x140000000 g_image_size=0x37000
+  (NOT inside loaded PE)
+  RSI=0x7ffef3693220 RDI=0x7ffef36931f0
+  R8=0x0  R9=0x0 R10=0x0 R11=0x202
+  R12=0x4 R13=0x2015a60 R14=0x7fffffeffffd R15=0x7fb126ad6aa3
+  Backtrace (via stack walking):
+    [0] RIP=0x200ae44 (outside PE, possible shared lib)
+    [1] RIP=0x200ae44 (outside PE, possible shared lib)

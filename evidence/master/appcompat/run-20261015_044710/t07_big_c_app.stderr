@@ -1,0 +1,12 @@
+[TRACE] Command line: /home/z/my-project/workspace/miniwin-engineering/tests/appcompat/t07_big_c_app.exe
+[WARN] 5 imports unresolved
+
+[CRASH] Signal 11 at RIP=0xa984
+  RAX=0x20231e0 RCX=0x20231e0 RDX=0x0 R8=0x4 R9=0x0
+  RSP=0x7ffc0104e028 RBP=0x2024001
+  g_image_base=0x140000000 g_image_size=0x37000
+  (NOT inside loaded PE)
+  RSI=0x0 RDI=0x7f15cae587a0
+  R8=0x4  R9=0x0 R10=0x0 R11=0x202
+  R12=0x7ffc0104e520 R13=0x2025000 R14=0x14000d268 R15=0x20233e0
+  Backtrace (via stack walking):

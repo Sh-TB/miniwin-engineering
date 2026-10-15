@@ -1,0 +1,41 @@
+[TRACE] Command line: /home/z/my-project/workspace/miniwin-engineering/tests/appcompat/t08_big_cpp_stl.exe
+
+[CRASH] Signal 4 at RIP=0x140001c85
+  RAX=0x2ade2d0 RCX=0x140001c83 RDX=0x0 R8=0x1 R9=0x7ffff4bd6490
+  RSP=0x7ffff4bd6530 RBP=0x7ffff4bd65b0
+  g_image_base=0x140000000 g_image_size=0xa1000
+  RVA=0x1c85 (inside loaded PE)
+  Bytes: c7 48 8d 0d 9b 38 04 00 48 8d 15 32 36 04 00 e8 
+  Return addr: 0x7ffff4bd6540
+  RSI=0x2038040 RDI=0x0
+  R8=0x1  R9=0x7ffff4bd6490 R10=0xf0 R11=0xb
+  R12=0x1 R13=0x140056310 R14=0x1 R15=0x2036001
+  Backtrace (via stack walking):
+    [0] RIP=0x140001c85 RVA=0x1c85      [RSP+0] = 0x7ffff4bd6540 (return addr?)
+    [1] RIP=0x140001c85 RVA=0x1c85      [RSP+0] = 0x15 (return addr?)
+    [2] RIP=0x140001c85 RVA=0x1c85
+[CRASH] Signal 11 at RIP=0x200c731
+  RAX=0x22 RCX=0x0 RDX=0x0 R8=0x0 R9=0x0
+  RSP=0x7ffff4bd5750 RBP=0x1d
+  g_image_base=0x140000000 g_image_size=0xa1000
+  (NOT inside loaded PE)
+  RSI=0x7ffff4bd55a0 RDI=0x7ffff4bd5570
+  R8=0x0  R9=0x0 R10=0x0 R11=0x202
+  R12=0x3 R13=0x2019ae0 R14=0x7fffffeffffd R15=0x13ff01c84
+  Backtrace (via stack walking):
+    [0] RIP=0x200c731 (outside PE, possible shared lib)
+    [1] RIP=0x200c731 (outside PE, possible shared lib)
+    [2] RIP=0x200c731 (outside PE, possible shared lib)
+    [3] RIP=0x200c731 (outside PE, possible shared lib)
+
+[CRASH] Signal 7 at RIP=0x200c6f4
+  RAX=0x38 RCX=0x0 RDX=0x0 R8=0x0 R9=0x0
+  RSP=0x7ffff4bd4990 RBP=0x75a84aff48f03375
+  g_image_base=0x140000000 g_image_size=0xa1000
+  (NOT inside loaded PE)
+  RSI=0x7ffff4bd47e0 RDI=0x7ffff4bd47b0
+  R8=0x0  R9=0x0 R10=0x0 R11=0x202
+  R12=0x4 R13=0x2019ae0 R14=0x7fffffeffffd R15=0x1f0c730
+  Backtrace (via stack walking):
+    [0] RIP=0x200c6f4 (outside PE, possible shared lib)
+    [1] RIP=0x200c6f4 (outside PE, possible shared lib)

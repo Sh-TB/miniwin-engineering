@@ -1,0 +1,14 @@
+[TRACE] Command line: /home/z/my-project/workspace/miniwin-engineering/tests/appcompat/t08_big_cpp_stl.exe
+
+[CRASH] Signal 11 at RIP=0x201190b
+  RAX=0x78 RCX=0x1470 RDX=0x140001c84 R8=0x1 R9=0x27
+  RSP=0x7ffe0797cf90 RBP=0x140057018
+  g_image_base=0x140000000 g_image_size=0xa1000
+  (NOT inside loaded PE)
+  RSI=0x1 RDI=0x814
+  R8=0x1  R9=0x27 R10=0x7ffe0797d270 R11=0x20170ac
+  R12=0xd R13=0x14005045c R14=0x2a R15=0x0
+  Backtrace (via stack walking):
+    [0] RIP=0x201190b (outside PE, possible shared lib)
+    [1] RIP=0x201190b (outside PE, possible shared lib)
+    [2] RIP=0x201190b (outside PE, possible shared lib)

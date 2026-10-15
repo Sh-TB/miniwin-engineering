@@ -1,55 +1,48 @@
 # CURRENT TASK
 
-**Task ID:** TASK-TEST-004 (slice 2)
-**Title:** Fix the synthetic builder codegen (B-1/B-2/B-3) so all 4 dispatch tests reach dispatch
-**Status:** READY
-**Priority:** P1
+**Task ID:** TASK-BUG-038
+**Title:** C++ EH target-frame delivery (barrier-cache landing pad installation)
+**Status:** READY (NEXT)
+**Priority:** P0
 
 ## One-line description
-The non-vacuous real-loader harness (tests/dispatch_tests/test_dispatch_v2.sh, slice 1)
-is green on load/run contracts; the next slice fixes the three builder defects it found
-so test_b/c/d actually raise and dispatch, and test_a's post-dispatch crash goes away.
+After BUG-037's fix, t08's full 4-frame walk + intermediate cleanups complete
+correctly and the resume uses the correct body RSP — but the loader resumes at
+RtlUnwindEx's TargetIp, which llvm-mingw's libunwind fills with ControlPc as a
+PLACEHOLDER. The real landing pad (0x1c9d = the catch block, proven by full
+LSDA decode) lives in the exception object's barrier cache and is only
+installed by the personality at TARGET-FRAME DELIVERY (ExceptionFlags
+0x2|0x4, Info[1]=target_frame, returns ExceptionExecuteHandler=4).
 
-## The three defects (all found by slice 1 — evidence in the harness header)
-- **B-1 call-rel32 fixups wrong** (test_b/c/d never raise): the call rel32 patch math
-  uses wrong instruction offsets — calls land on the next function's `ret`
-  (disassembly: `call 0x140001023` = the `ret` itself). Fix: compute each call's
-  displacement from its REAL instruction address (emit position + 5).
-- **B-2 UNWIND_CODE nibble order**: the unwind byte is (CodeOffset << 4) | UnwindOp —
-  OpCode is the LOW nibble. The builder packs `(opinfo << 12) | (op << 8) | offset`
-  into a 16-bit LE word = swapped. Rewrite `_emit_xdata`'s code emission to the
-  canonical byte layout (op byte = (offset<<4)|op; opinfo lives in the second slot
-  byte for wide ops, not the word's high byte).
-- **B-3 ms_abi frame alignment**: push rbx + sub 0x28 leaves RSP%16 != 0 before the
-  RaiseException call → the dispatcher's aligned SSE spill faults (movdqa SIGSEGV at
-  0x200fdff, CONTINUE #5 live). Fix frames to sub 0x30 AND regenerate the matching
-  unwind codes (ALLOC_SMALL info=5) — must be done together with B-2.
+## Fix plan (evidence-first, per protocol)
+1. mw_RtlUnwindEx: after the intermediate walk reaches the target frame,
+   deliver target-unwind to the target frame's personality with
+   dc.ContextRecord=&resume_ctx, dc.TargetIp=tgt_ip, dc.EstablisherFrame=
+   tgt_frame, ER flags UNWINDING|TARGET_UNWIND, NumberParameters=4,
+   Info[1]=tgt_frame.
+2. Honor the personality's context write (resume_ctx.Rip = real LP) / return 4;
+   resume with that context (Rax=exception object, Rdx=selector, Rsp=body RSP).
+3. Keep the GCC-style path (UPX G1) intact: GCC answers target delivery with
+   ContextRecord->Rdx = Info[3] and ContinueSearch; its TargetIp IS the real LP.
+4. Audit the double-decrement: our dc.ControlPc = rip-1 AND ctx.Rip -= 1 while
+   libcxxabi does `ip = _Unwind_GetIP(context) - 1` itself — real Windows
+   passes the FULL return address as ControlPc.
 
-## Execution notes
-1. Baseline: bash tests/dispatch_tests/test_dispatch_v2.sh (4/4 on current contracts) +
-   bash scripts/g1_accept.sh (G1 pin, 12/12). Hash: evidence/master/g1/<latest>.
-2. Fix B-1 first (pure fixup math) — verify test_b/c/d traces gain RaiseException +
-   [DISPATCH] lines. Then B-2+B-3 together — verify test_a runs to its handler without
-   the movdqa crash and test_b/c/d keep dispatching (unwind math must stay consistent).
-3. Evolve the harness rows from load/run contracts to dispatch contracts as each defect
-   closes (each upgrade = a real PASS).
-4. Do NOT touch loader.c dispatch logic; if a loader defect surfaces, register BUG-032
-   with a trace.
-5. Guardrail: bash scripts/g1_accept.sh must stay OK after every loader-adjacent change.
+## Ground rules
+- Do not touch EH_FIX / CXX-EH-FIX (flag-guarded, default OFF), the
+  RaiseException stub, or call_handler_aligned's pinned-register block.
+- Every change keeps regression 12/12 + G1 gate green.
 
-## Verified facts you may rely on
-- G1 acceptance MET (EXP-039); regression 12/12; IAT writability fix in the loader is
-  Windows-faithful (mprotect around the import pass, restore after).
-- The old harness (test_dispatch_harness.c) is superseded by test_dispatch_v2.sh.
+## Acceptance
+- t08 prints `t08: PASS`, exit 0, 3/3 deterministic runs.
+- regression 12/12; UPX G1 gate; sweep 11/12 (t09 = API frontier).
 
----
-## 2026-10-15 — Issue #1 Phase 1 executed (TASK-ISS1-P1): COMPLETE
-Read Issue #1 (1095 lines) in full; built 5 missing Phase-1 fixtures (t08–t12)
-with locally-installed mingw-w64; ran all 6 Phase-1 targets 3× each:
-**5/6 PASS** (upx_424, t09, t10, t11, t12), t08 PARTIAL (159/255, BUG-038
-lineage). Implemented WS-D file-I/O family in loader.c (fopen/fclose/fread/
-fseek/ftell/feof/fgetc/remove/_strtoi64/_strtoui64 + real ungetc + MSVCRT-
-layout FILE* registry + errno sync): t12 went SEGV → full PASS. Regression
-12/12 and UPX G1 stayed green throughout. x86/PE32 classification verified
-(explicit deterministic refusal, §4-compliant). Next root: BUG-038 catch
-selector (see .agent/NEXT_ACTION.md).
+## Context from CONTINUE #7 (this session)
+- BUG-037 CLOSED TESTED: three spec-level fixes (opcode numbering per current
+  MS/LLVM/.NET/ReactOS; CountOfCodes = slots; frame-register low-nibble) +
+  FP-frame resume RSP. EXP-041. Sweep 7/9 -> 10/12 PASS (t10/t11/t12 NEW).
+- UCRT wave landed: TASK-API-011/012 CLOSED TESTED (__stdio_common_v* bridges,
+  __acrt_iob_func, __p_* functions, FILE-level stdio, map_crt_stream
+  pass-through). Toolchain re-downloaded (TASK-INFRA-003 pending script).
+- Backlog expanded to 117 tasks (+BUG-038/039/040, API-013/014/015,
+  TEST-006/007, DOC-011, INFRA-003, RESEARCH-007, APP-013).

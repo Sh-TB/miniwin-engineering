@@ -1,0 +1,4 @@
+[MiniWin] Loading /home/z/my-project/workspace/miniwin-engineering/tests/appcompat/t05_file.exe...
+FAIL: _read returned -1
+FAIL: read near EOF -> -1
+t05: FAIL (2)

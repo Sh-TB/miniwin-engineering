@@ -1,0 +1,28 @@
+[TRACE] Command line: /home/z/my-project/workspace/miniwin-engineering/tests/appcompat/t08_big_cpp_stl.exe
+[WARN] 26 imports unresolved
+
+[CRASH] Signal 11 at RIP=0x7fd6745f3aa4
+  RAX=0x0 RCX=0x0 RDX=0x1 R8=0x0 R9=0x0
+  RSP=0x7ffebadc0680 RBP=0x2
+  g_image_base=0x140000000 g_image_size=0xa1000
+  (NOT inside loaded PE)
+  RSI=0x0 RDI=0x0
+  R8=0x0  R9=0x0 R10=0x3 R11=0x7fd6745f3a70
+  R12=0x0 R13=0x7fd674570740 R14=0x140056310 R15=0x20233e0
+  Backtrace (via stack walking):
+    [0] RIP=0x7fd6745f3aa4 (outside PE, possible shared lib)
+    [1] RIP=0x7fd6745f3aa4 (outside PE, possible shared lib)
+    [2] RIP=0x7fd6745f3aa4 (outside PE, possible shared lib)
+    [3] RIP=0x7fd6745f3aa4 (outside PE, possible shared lib)
+
+[CRASH] Signal 7 at RIP=0x200ae44
+  RAX=0x3d RCX=0x0 RDX=0x0 R8=0x0 R9=0x0
+  RSP=0x7ffebadbf890 RBP=0x7473286675627674
+  g_image_base=0x140000000 g_image_size=0xa1000
+  (NOT inside loaded PE)
+  RSI=0x7ffebadbf6e0 RDI=0x7ffebadbf6b0
+  R8=0x0  R9=0x0 R10=0x0 R11=0x202
+  R12=0x4 R13=0x2015a60 R14=0x7fffffeffffd R15=0x7fd6744f3aa3
+  Backtrace (via stack walking):
+    [0] RIP=0x200ae44 (outside PE, possible shared lib)
+    [1] RIP=0x200ae44 (outside PE, possible shared lib)

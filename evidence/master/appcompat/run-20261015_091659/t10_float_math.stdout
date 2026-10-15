@@ -1,0 +1,4 @@
+[MiniWin] Loading /home/z/my-project/workspace/miniwin-engineering/tests/appcompat/t10_float_math.exe...
+t10 start
+d=3.00
+t10: PASS

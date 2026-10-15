@@ -23,3 +23,21 @@ Stage Summary:
 - 5/6 Phase-1 targets PASS deterministically; 1 PARTIAL with a precisely classified open root (BUG-038 lineage: multi-clause trivial-type catch selector + stack clobber).
 - General fix landed (WS-D stdio file I/O family), proven by t12 SEGV→PASS and unchanged 12/12 regression.
 - All evidence real: commands, exit codes, SHA-256s, traces under evidence/master/ and artifacts/.
+
+---
+Task ID: TASK-ISS1-P1-merge
+Agent: Super Z
+Task: Merge parallel upstream work (709b9ee, 9d0af32) without losing either side; re-validate.
+
+Work Log:
+- push rejected (remote ahead): fetched — remote had 2 new commits (appcompat sweep t01–t12, BUG-037 closed, BUG-038 registered, UCRT API waves, native TLS).
+- Merged; 4 conflicts (loader.c + 3 .agent files). Adopted upstream stdio architecture (map_crt_stream + UCRT __stdio_common_v* waves) — SUPERSEDED my interim MwFile-only design.
+- Discovered on merged tree: upstream's fopen returning RAW glibc FILE* crashes my t12 (guest static CRT does InitializeCriticalSection(fp+0x30) → heap corruption in libc). Restored registry-backed fopen (MSVCRT-strided handle + 0x40 slack) and routed EVERY FILE* API through map_crt_stream (registry → iob window → pass-through). This preserves upstream's iob/fmemopen behavior AND fixes the CRT-lock contract.
+- Contributed upstream-style additions: fseek/ftell/feof bridges + errno mirror sync (fopen/remove).
+- Found+fixed script bug in tests/appcompat/run_sweep.sh usage (relative BIN_DIR after cd — use absolute path).
+- Rebuilt missing sweep binaries (tests/appcompat/*.exe) with mingw-w64.
+- Final merged-tree validation: my 6 targets (5 PASS ×3, t08 159/255), sweep 10/12 (t08/t09 C++-EH family), regression 12/12, UPX G1 exit 0.
+
+Stage Summary:
+- Merge d9d2dc4+origin/main integrated with zero work lost; single stdio architecture (map_crt_stream + registry) now covers both fixture families.
+- Open roots unchanged: C++ EH multi-clause trivial catch (BUG-038) + iostream-family timeout.

@@ -1,0 +1,14 @@
+[TRACE] Command line: /home/z/my-project/workspace/miniwin-engineering/tests/appcompat/t05_file.exe
+
+[CRASH] Signal 11 at RIP=0x2008e75
+  RAX=0x0 RCX=0x0 RDX=0x100 R8=0x0 R9=0x0
+  RSP=0x7fff64748b20 RBP=0x140008078
+  g_image_base=0x140000000 g_image_size=0x35000
+  (NOT inside loaded PE)
+  RSI=0x1 RDI=0x2270380
+  R8=0x0  R9=0x0 R10=0x0 R11=0x202
+  R12=0x2029040 R13=0x1 R14=0x14000b0e8 R15=0x1
+  Backtrace (via stack walking):
+    [0] RIP=0x2008e75 (outside PE, possible shared lib)
+    [1] RIP=0x2008e75 (outside PE, possible shared lib)
+    [2] RIP=0x2008e75 (outside PE, possible shared lib)

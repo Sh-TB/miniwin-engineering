@@ -1,0 +1,12 @@
+[TRACE] Command line: /home/z/my-project/workspace/miniwin-engineering/tests/appcompat/t11_abi_deep.exe
+[WARN] 18 imports unresolved
+
+[CRASH] Signal 11 at RIP=0x3cd0
+  RAX=0x0 RCX=0x1 RDX=0xf8 R8=0x0 R9=0x0
+  RSP=0x7ffd80fdf288 RBP=0x140003700
+  g_image_base=0x140000000 g_image_size=0x1e000
+  (NOT inside loaded PE)
+  RSI=0x0 RDI=0x21c2380
+  R8=0x0  R9=0x0 R10=0x0 R11=0x202
+  R12=0x20171b4 R13=0x2019050 R14=0x140003710 R15=0x201edd8
+  Backtrace (via stack walking):

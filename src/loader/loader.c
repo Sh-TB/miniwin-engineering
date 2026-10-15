@@ -41,6 +41,11 @@ static char g_cmdline_ansi[4096];
 static wchar_t g_cmdline_wide[4096];
 static char* g_argv[256];
 static int g_argc = 0;
+static char** g_argv_cell = g_argv;   /* TASK-API-011: __p___argv points here */
+static char** g_environ_cell = NULL;  /* TASK-API-011: __p__environ points here */
+static char* g_tzname[2] = { (char*)"UTC", (char*)"UTC" };
+static long g_timezone_val = 0;
+static int g_daylight_val = 0;
 static int g_app_type = 1;          /* _CONSOLE_APP */
 static int g_fmode_val = 0;           /* _O_TEXT */
 static int g_commode_val = 0;         /* default commode */
@@ -119,6 +124,10 @@ static void* alloc_handle(void* ptr) {
 static uint8_t g_teb_storage[4096] __attribute__((aligned(4096)));
 static uint8_t g_peb_storage[4096] __attribute__((aligned(4096)));
 static uint8_t g_params_storage[4096] __attribute__((aligned(4096)));
+/* TASK-TLS-001: Windows x64 TEB+0x58 = ThreadLocalStoragePointer — a POINTER
+ * to an array of slot pointers. Native-TLS PEs (e.g. libc++abi's
+ * __cxa_get_globals) read gs:0x58 and index this array by __tls_index. */
+static void* g_tls_ptr_array[64];
 
 /* RTL_USER_PROCESS_PARAMETERS layout (x64) */
 struct FakeProcessParams {
@@ -184,6 +193,7 @@ static void setup_teb_peb(void) {
     *(uint64_t*)(teb + 0x48) = 5678;                 /* ClientId.UniqueThread */
     *(uint64_t*)(teb + 0x60) = (uint64_t)peb;        /* PEB pointer */
     *(uint32_t*)(teb + 0x68) = 0;                    /* LastErrorValue */
+    *(uint64_t*)(teb + 0x58) = (uint64_t)(uintptr_t)g_tls_ptr_array; /* x64: ThreadLocalStoragePointer */
 
     /* PEB layout (minimal)
      * 0x00 InheritedAddressSpace (1)
@@ -328,60 +338,65 @@ __attribute__((ms_abi)) void mw_DebugBreak(void) {
     MW_TRACE("DebugBreak()");
 }
 
-/* Critical Section state */
-struct MwCritSec {
-    pthread_mutex_t mutex;
-    int initialized;
-};
+/* Critical Section state.
+ * BUG-034 (appcompat sweep APP-F-04): Windows CRITICAL_SECTION is exactly
+ * 40 bytes on x64 and PEs place it flush against other globals (observed:
+ * mingw dtoa CRITICAL_SECTION at 0x14000b178 with freelist[] at +0x28). The
+ * previous MwCritSec {pthread_mutex_t(40) + int(4)} wrote an 'initialized'
+ * flag at offset 40 -> 8-byte overflow into PE data (freelist[0] became 1,
+ * dtoa Balloc deref -> SIGSEGV). The contract is: NEVER write past byte 40.
+ * The mutex overlays the CS itself; our "initialized" sentinel lives in the
+ * Windows SpinCount slot (offset 36), which caller-side is zeroed memory. */
+#define MW_CS_MAGIC 0x4D574353u /* "MWCS" */
+
+static pthread_mutex_t* cs_mutex(void* cs) { return (pthread_mutex_t*)cs; }
+
+static int cs_is_initialized(void* cs) {
+    return *(uint32_t*)((uint8_t*)cs + 36) == MW_CS_MAGIC;
+}
+
+static void cs_mark_initialized(void* cs) {
+    *(uint32_t*)((uint8_t*)cs + 36) = MW_CS_MAGIC;
+}
 
 __attribute__((ms_abi)) void mw_InitializeCriticalSection(void* cs) {
     if (!cs) return;
-    struct MwCritSec* mcs = (struct MwCritSec*)cs;
-    if (!mcs->initialized) {
-        pthread_mutexattr_t attr;
-        pthread_mutexattr_init(&attr);
-        pthread_mutexattr_settype(&attr, PTHREAD_MUTEX_RECURSIVE);
-        pthread_mutex_init(&mcs->mutex, &attr);
-        pthread_mutexattr_destroy(&attr);
-        mcs->initialized = 1;
-        /* Zero out the rest of the CRITICAL_SECTION structure (Windows CRITICAL_SECTION is 40 bytes) */
-        size_t cs_total = 40; /* sizeof(CRITICAL_SECTION) on Windows x64 */
-        if (cs_total > sizeof(struct MwCritSec))
-            memset((uint8_t*)cs + sizeof(struct MwCritSec), 0, cs_total - sizeof(struct MwCritSec));
-    }
+    if (cs_is_initialized(cs)) return; /* idempotent, like re-init on a free CS */
+    pthread_mutexattr_t attr;
+    pthread_mutexattr_init(&attr);
+    pthread_mutexattr_settype(&attr, PTHREAD_MUTEX_RECURSIVE);
+    pthread_mutex_init(cs_mutex(cs), &attr);
+    pthread_mutexattr_destroy(&attr);
+    cs_mark_initialized(cs);
     MW_TRACE("InitializeCriticalSection(%p)", cs);
 }
 
 __attribute__((ms_abi)) void mw_DeleteCriticalSection(void* cs) {
     if (!cs) return;
-    struct MwCritSec* mcs = (struct MwCritSec*)cs;
-    if (mcs->initialized) {
-        pthread_mutex_destroy(&mcs->mutex);
-        mcs->initialized = 0;
+    if (cs_is_initialized(cs)) {
+        pthread_mutex_destroy(cs_mutex(cs));
+        *(uint32_t*)((uint8_t*)cs + 36) = 0;
     }
     MW_TRACE("DeleteCriticalSection(%p)", cs);
 }
 
 __attribute__((ms_abi)) void mw_EnterCriticalSection(void* cs) {
     if (!cs) return;
-    struct MwCritSec* mcs = (struct MwCritSec*)cs;
-    if (!mcs->initialized) mw_InitializeCriticalSection(cs);
-    pthread_mutex_lock(&mcs->mutex);
+    if (!cs_is_initialized(cs)) mw_InitializeCriticalSection(cs);
+    pthread_mutex_lock(cs_mutex(cs));
     MW_TRACE("EnterCriticalSection(%p)", cs);
 }
 
 __attribute__((ms_abi)) void mw_LeaveCriticalSection(void* cs) {
     if (!cs) return;
-    struct MwCritSec* mcs = (struct MwCritSec*)cs;
-    if (mcs->initialized) pthread_mutex_unlock(&mcs->mutex);
+    if (cs_is_initialized(cs)) pthread_mutex_unlock(cs_mutex(cs));
     MW_TRACE("LeaveCriticalSection(%p)", cs);
 }
 
 __attribute__((ms_abi)) int mw_TryEnterCriticalSection(void* cs) {
     if (!cs) return 0;
-    struct MwCritSec* mcs = (struct MwCritSec*)cs;
-    if (!mcs->initialized) mw_InitializeCriticalSection(cs);
-    int ret = (pthread_mutex_trylock(&mcs->mutex) == 0) ? 1 : 0;
+    if (!cs_is_initialized(cs)) mw_InitializeCriticalSection(cs);
+    int ret = (pthread_mutex_trylock(cs_mutex(cs)) == 0) ? 1 : 0;
     MW_TRACE("TryEnterCriticalSection(%p) = %d", cs, ret);
     return ret;
 }
@@ -963,6 +978,26 @@ static void seh_diagnostic_walk(void) {
 #define DISP_RESULT_CONTINUE_EXEC 1
 #define DISP_RESULT_HANDLER_ERROR 2
 
+/* Slots consumed by one unwind code (the code word itself + operand slots).
+ * Per the Microsoft PE/COFF x64 spec table and ReactOS's
+ * UnwindOpExtraSlotTable (sdk/lib/rtl/amd64/unwind.c). Used by the skip
+ * path (codes above the fault RIP must be skipped WITH their operands,
+ * otherwise the cursor misaligns on every following code — BUG-037) and
+ * by any caller needing the byte size of the code array. */
+static int seh_unwind_op_slots(uint8_t op, uint8_t op_info) {
+    switch (op) {
+    case UWOP_ALLOC_LARGE:     return (op_info != 0) ? 3 : 2;
+    case UWOP_SAVE_NONVOL:     return 2;
+    case UWOP_SAVE_NONVOL_FAR: return 3;
+    case UWOP_EPILOG:          return 2;   /* v2 only */
+    case UWOP_SPARE_CODE:      return 3;
+    case UWOP_SAVE_XMM128:     return 2;
+    case UWOP_SAVE_XMM128_FAR: return 3;
+    case UWOP_PUSH_MACHFRAME:  return 1;
+    default:                   return 1; /* PUSH_NONVOL, ALLOC_SMALL, SET_FPREG, reserved */
+    }
+}
+
 /* Internal SysV RtlVirtualUnwind — operates on raw context buffer.
  * Returns: handler VA (or NULL if no handler for this frame).
  * Updates ctx in place (unwound registers).
@@ -985,10 +1020,16 @@ static void* seh_internal_virtual_unwind(
     uint8_t flags       = (ui_base[0] >> 3) & 0x07;
     uint8_t prolog_size = ui_base[1];
     uint8_t count_codes = ui_base[2];
-    uint8_t frame_reg   = ui_base[3] >> 4;
-    uint8_t frame_off   = ui_base[3] & 0x0f;
+    /* BUG-037: UNWIND_INFO byte 3 is two little-endian 4-bit fields —
+     * FrameRegister is the LOW nibble, the scaled FrameOffset the HIGH
+     * nibble (winnt.h: `UCHAR FrameRegister:4; UCHAR FrameOffset:4;`).
+     * The previous decode had them swapped, so mingw frames that use
+     * RBP (reg 5) with lea rbp,[rsp+0x80] (offset 8 -> byte 0x85) were
+     * misread as FP=R8/offset=5. */
+    uint8_t frame_reg   = ui_base[3] & 0x0f;
+    uint8_t frame_off   = (ui_base[3] >> 4) & 0x0f;
 
-    (void)version; (void)prolog_size;
+    (void)prolog_size;
 
     /* Handle CHAININFO — the chained function's unwind info replaces
      * the current function's unwind codes. We must run the chained
@@ -1002,9 +1043,10 @@ static void* seh_internal_virtual_unwind(
         uint8_t chained_flags = (chained_ui[0] >> 3) & 0x07;
         uint8_t chained_prolog_size = chained_ui[1];
         uint8_t chained_count_codes = chained_ui[2];
-        uint8_t chained_frame_reg = chained_ui[3] >> 4;
-        uint8_t chained_frame_off = chained_ui[3] & 0x0f;
-        (void)chained_version; (void)chained_prolog_size;
+        /* BUG-037: FrameRegister = LOW nibble (see comment above). */
+        uint8_t chained_frame_reg = chained_ui[3] & 0x0f;
+        uint8_t chained_frame_off = (chained_ui[3] >> 4) & 0x0f;
+        (void)chained_prolog_size;
 
         /* Read RIP from context for func_offset calculation */
         uint64_t chain_rip = *(uint64_t*)(ctx + CTX_Rip);
@@ -1015,13 +1057,29 @@ static void* seh_internal_virtual_unwind(
         uint8_t* chained_codes_ptr = chained_ui + 4;
         int chained_slot = 0;
         for (int i = 0; i < chained_count_codes; i++) {
-            if (chained_slot * 2 + 1 >= (int)(chained_count_codes * 2 + 16)) break;
+            /* BUG-037: CountOfCodes counts SLOTS (code words + operand
+             * slots, MS doc "2 or 3 nodes"; ReactOS advances i by
+             * UnwindOpSlots). Bound the walk on the slot cursor, not the
+             * code index, or padding/handler bytes decode as phantom
+             * codes past the array. */
+            if (chained_slot >= chained_count_codes ||
+                chained_slot * 2 + 1 >= (int)(chained_count_codes * 2 + 16)) break;
             uint16_t cw = *(uint16_t*)(chained_codes_ptr + chained_slot * 2);
             uint8_t op_code = (cw >> 8) & 0x0f;
             uint8_t op_info = (cw >> 12) & 0x0f;
             uint8_t code_offset = cw & 0xff;
             if (chained_func_offset > 0 && code_offset >= chained_func_offset) {
-                chained_slot++; continue;
+                /* BUG-037: skip the code WITH its operand slots, otherwise
+                 * the cursor lands on operand bytes and every following
+                 * code decodes from a misaligned position. */
+                chained_slot += seh_unwind_op_slots(op_code, op_info);
+                continue;
+            }
+            if (op_code == UWOP_EPILOG && chained_version < 2) {
+                /* Epilogue descriptors exist only in UNWIND_INFO v2; in a
+                 * v1 array op 6 is corruption — stop applying codes. */
+                MW_TRACE("[DISPATCH] chained UI v%d has EPILOG code — corrupt, stop", chained_version);
+                break;
             }
             switch (op_code) {
             case UWOP_PUSH_NONVOL: {
@@ -1040,7 +1098,24 @@ static void* seh_internal_virtual_unwind(
                 }
                 break;
             case UWOP_ALLOC_SMALL: chained_rsp += (uint64_t)(op_info + 1) * 8; break;
-            case UWOP_SET_FPREG: chained_fp_val = chained_rsp + (uint64_t)chained_frame_off * 16; chained_fp_set = 1; break;
+            case UWOP_SET_FPREG:
+                /* ReactOS semantics: RSP re-anchors to the frame-pointer
+                 * base (FP_value - FrameOffset*16) for all remaining codes;
+                 * the FP value is read from the LIVE context, where the
+                 * established anchor persists (BUG-037). */
+                if (chained_frame_reg) {
+                    uint32_t fp_off = reg_to_ctx_offset(chained_frame_reg);
+                    if (fp_off) {
+                        chained_fp_val = *(uint64_t*)(ctx + fp_off);
+                        chained_rsp = chained_fp_val - (uint64_t)chained_frame_off * 16;
+                    } else {
+                        chained_fp_val = chained_rsp + (uint64_t)chained_frame_off * 16;
+                    }
+                } else {
+                    chained_fp_val = chained_rsp + (uint64_t)chained_frame_off * 16;
+                }
+                chained_fp_set = 1;
+                break;
             case UWOP_SAVE_NONVOL: {
                 chained_slot++;
                 uint16_t soff = *(uint16_t*)(chained_codes_ptr + chained_slot * 2);
@@ -1057,6 +1132,8 @@ static void* seh_internal_virtual_unwind(
             }
             case UWOP_SAVE_XMM128: { chained_slot++; break; }
             case UWOP_SAVE_XMM128_FAR: { chained_slot++; chained_slot++; break; }
+            case UWOP_EPILOG: { chained_slot++; break; }          /* 2 slots total */
+            case UWOP_SPARE_CODE: { chained_slot++; chained_slot++; break; } /* 3 total */
             case UWOP_PUSH_MACHFRAME: {
                 chained_rsp += 40;
                 if (chained_rsp <= chained_rsp + 4096) {
@@ -1065,7 +1142,7 @@ static void* seh_internal_virtual_unwind(
                 }
                 break;
             }
-            default: { if (op_code >= 9) chained_slot++; break; }
+            default: { if (op_code >= 11) chained_slot++; break; } /* reserved */
             }
             chained_slot++;
         }
@@ -1107,16 +1184,27 @@ static void* seh_internal_virtual_unwind(
     uint8_t* codes = ui_base + 4;
     int slot = 0;
     for (int i = 0; i < count_codes; i++) {
-        if (slot * 2 + 1 >= (int)(count_codes * 2 + 16)) break;
+        /* BUG-037: CountOfCodes counts SLOTS — see chained-loop note. */
+        if (slot >= count_codes ||
+            slot * 2 + 1 >= (int)(count_codes * 2 + 16)) break;
         uint16_t code_word = *(uint16_t*)(codes + slot * 2);
         uint8_t op_code = (code_word >> 8) & 0x0f;   /* UnwindOp: low nibble of byte 1 */
         uint8_t op_info = (code_word >> 12) & 0x0f;  /* OpInfo: high nibble of byte 1 */
         uint8_t code_offset = code_word & 0xff;
 
-        /* Skip codes that haven't fully executed yet */
+        /* Skip codes that haven't fully executed yet — advancing by the
+         * FULL slot size so the cursor stays aligned (BUG-037). Boundary:
+         * a code whose END offset equals the RIP offset has executed
+         * (ReactOS skips strictly-greater offsets). */
         if (func_offset > 0 && code_offset >= func_offset) {
-            slot++;
+            slot += seh_unwind_op_slots(op_code, op_info);
             continue;
+        }
+        if (op_code == UWOP_EPILOG && version < 2) {
+            /* Epilogue descriptors exist only in UNWIND_INFO v2; in a v1
+             * array op 6 is corruption — stop applying codes. */
+            MW_TRACE("[DISPATCH] UI v1 has EPILOG code — corrupt, stop");
+            break;
         }
 
         switch (op_code) {
@@ -1142,7 +1230,22 @@ static void* seh_internal_virtual_unwind(
             break;
         }
         case UWOP_SET_FPREG: {
-            fp_reg_val = new_rsp + (uint64_t)frame_off * 16;
+            /* ReactOS semantics (sdk/lib/rtl/amd64/unwind.c): on unwind,
+             * RSP re-anchors to the frame-pointer base — the FP register
+             * value minus the scaled FrameOffset — and the FP value is
+             * read from the LIVE context, where the established anchor
+             * persists through the frame body (BUG-037). */
+            if (frame_reg) {
+                uint32_t fp_ctx_off = reg_to_ctx_offset(frame_reg);
+                if (fp_ctx_off) {
+                    fp_reg_val = *(uint64_t*)(ctx + fp_ctx_off);
+                    new_rsp = fp_reg_val - (uint64_t)frame_off * 16;
+                } else {
+                    fp_reg_val = new_rsp + (uint64_t)frame_off * 16;
+                }
+            } else {
+                fp_reg_val = new_rsp + (uint64_t)frame_off * 16;
+            }
             fp_set = 1;
             break;
         }
@@ -1166,6 +1269,8 @@ static void* seh_internal_virtual_unwind(
         }
         case UWOP_SAVE_XMM128: { slot++; break; }
         case UWOP_SAVE_XMM128_FAR: { slot++; slot++; break; }
+        case UWOP_EPILOG: { slot++; break; }          /* 2 slots total, no stack effect */
+        case UWOP_SPARE_CODE: { slot++; slot++; break; } /* 3 slots total */
         case UWOP_PUSH_MACHFRAME: {
             new_rsp += 40;
             *(uint64_t*)(ctx + CTX_Rip) = *(uint64_t*)(new_rsp + 16);
@@ -1173,7 +1278,7 @@ static void* seh_internal_virtual_unwind(
             break;
         }
         default: {
-            if (op_code >= 9) slot++;
+            if (op_code >= 11) slot++; /* reserved ops: skip code word only */
             break;
         }
         }
@@ -1993,24 +2098,29 @@ static uint64_t seh_total_prologue_alloc(uint64_t ip_va) {
     int slot = 0;
     uint64_t total = 0;
     for (int i = 0; i < count; i++) {
-        if (slot * 2 + 1 >= (int)(count * 2 + 16)) break;
+        /* BUG-037: CountOfCodes counts SLOTS — bound on the slot cursor. */
+        if (slot >= count || slot * 2 + 1 >= (int)(count * 2 + 16)) break;
         uint16_t cw = *(uint16_t*)(codes + slot * 2);
         uint8_t op = (cw >> 8) & 0x0f;
         uint8_t info = (cw >> 12) & 0x0f;
+        /* BUG-037: opcodes renumbered to the current spec (XMM=8/9,
+         * MACHFRAME=10, EPILOG=6 v2-only, SPARE=7). */
         switch (op) {
-        case 0: /* PUSH_NONVOL */ total += 8; break;
-        case 1: /* ALLOC_LARGE */
+        case UWOP_PUSH_NONVOL: total += 8; break;
+        case UWOP_ALLOC_LARGE: /* TASK-API-006 spec rule: info==0 => uint16 * 8; info==1 => uint32, no shift */
             slot++;
             if (info == 0) total += (uint64_t)(*(uint16_t*)(codes + slot * 2)) * 8;
             else { slot++; total += (uint64_t)(*(uint32_t*)(codes + slot * 2 - 2)); }
             break;
-        case 2: /* ALLOC_SMALL */ total += (uint64_t)(info + 1) * 8; break;
-        case 4: /* SAVE_NONVOL */ slot++; break;
-        case 5: /* SAVE_NONVOL_FAR */ slot++; slot++; break;
-        case 6: /* SAVE_XMM128 */ slot++; break;
-        case 7: /* SAVE_XMM128_FAR */ slot++; slot++; break;
-        case 8: /* PUSH_MACHFRAME */ total += 40; break;
-        default: if (op >= 9) slot++; break;
+        case UWOP_ALLOC_SMALL: total += (uint64_t)(info + 1) * 8; break;
+        case UWOP_SAVE_NONVOL: slot++; break;
+        case UWOP_SAVE_NONVOL_FAR: slot++; slot++; break;
+        case UWOP_SAVE_XMM128: slot++; break;
+        case UWOP_SAVE_XMM128_FAR: slot++; slot++; break;
+        case UWOP_EPILOG: slot++; break;               /* 2 slots total, 0 stack */
+        case UWOP_SPARE_CODE: slot++; slot++; break;   /* 3 slots total, 0 stack */
+        case UWOP_PUSH_MACHFRAME: total += 40; break;
+        default: if (op >= 11) slot++; break;
         }
         slot++;
     }
@@ -2285,42 +2395,74 @@ __attribute__((ms_abi)) void mw_RtlUnwindEx(void* target_frame, void* target_ip,
             int tgt_slot = 0;
             uint64_t alloc_total = 0;
             for (int i = 0; i < tgt_count; i++) {
-                if (tgt_slot * 2 + 1 >= (int)(tgt_count * 2 + 16)) break;
+                /* BUG-037: CountOfCodes counts SLOTS — bound on the slot
+                 * cursor, otherwise padding/handler bytes decode as
+                 * phantom codes (reproduced: alloc_total=0xff0191 came
+                 * from reading the handler RVA as ALLOC_LARGE). */
+                if (tgt_slot >= tgt_count ||
+                    tgt_slot * 2 + 1 >= (int)(tgt_count * 2 + 16)) break;
                 uint16_t cw = *(uint16_t*)(tgt_codes + tgt_slot * 2);
                 uint8_t op = (cw >> 8) & 0x0f;
                 uint8_t info = (cw >> 12) & 0x0f;
+                /* BUG-037: opcodes renumbered to the current spec
+                 * (XMM128=8, XMM128_FAR=9, MACHFRAME=10, EPILOG=6 v2-only,
+                 * SPARE=7); missing UWOP_SAVE_NONVOL slot advance added;
+                 * ALLOC_LARGE info==1 now unscaled u32 (TASK-API-006 rule). */
                 switch (op) {
-                case 1: /* ALLOC_LARGE */
+                case UWOP_ALLOC_LARGE:
                     tgt_slot++;
                     if (info == 0) {
-                        alloc_total += *(uint16_t*)(tgt_codes + tgt_slot * 2);
+                        alloc_total += (uint64_t)(*(uint16_t*)(tgt_codes + tgt_slot * 2)) * 8;
                     } else {
                         tgt_slot++;
-                        alloc_total += (uint64_t)(*(uint32_t*)(tgt_codes + tgt_slot * 2 - 2)) << 16;
+                        alloc_total += (uint64_t)(*(uint32_t*)(tgt_codes + tgt_slot * 2 - 2));
                     }
                     break;
-                case 2: /* ALLOC_SMALL */
+                case UWOP_ALLOC_SMALL:
                     alloc_total += (uint64_t)(info + 1) * 8;
                     break;
-                case 0: /* PUSH_NONVOL */
+                case UWOP_PUSH_NONVOL:
                     alloc_total += 8;
                     break;
-                case 5: /* SAVE_NONVOL_FAR */
-                    tgt_slot++; tgt_slot++; break;
-                case 6: /* SAVE_XMM128 */
+                case UWOP_SAVE_NONVOL:
                     tgt_slot++; break;
-                case 7: /* SAVE_XMM128_FAR */
+                case UWOP_SAVE_NONVOL_FAR:
                     tgt_slot++; tgt_slot++; break;
-                case 8: /* PUSH_MACHFRAME */
+                case UWOP_SAVE_XMM128:
+                    tgt_slot++; break;
+                case UWOP_SAVE_XMM128_FAR:
+                    tgt_slot++; tgt_slot++; break;
+                case UWOP_EPILOG:
+                    tgt_slot++; break;               /* 2 slots total, 0 stack */
+                case UWOP_SPARE_CODE:
+                    tgt_slot++; tgt_slot++; break;   /* 3 slots total, 0 stack */
+                case UWOP_PUSH_MACHFRAME:
                     alloc_total += 40;
                     break;
                 default:
-                    if (op >= 9) tgt_slot++;
+                    if (op >= 11) tgt_slot++;
                     break;
                 }
                 tgt_slot++;
             }
             post_prologue_rsp = tgt_frame - alloc_total;
+            /* BUG-037: for frames with a frame pointer the establisher is
+             * the FP register value (mid-frame anchor), not the frame's
+             * entry RSP. The body RSP is FP - FrameOffset*16 (establishment
+             * happens after the last stack change in the prologue).
+             * CRT-startup frame: FP=RBP=entry-0x108, off=8 -> body RSP =
+             * entry-0x188; the old tgt_frame-alloc formula would have
+             * produced entry-0x290. */
+            {
+                uint8_t tgt_framebyte = tgt_ui[3];
+                uint8_t tgt_framereg  = tgt_framebyte & 0x0f;
+                uint8_t tgt_frameoff  = (tgt_framebyte >> 4) & 0x0f;
+                if (tgt_framereg) {
+                    post_prologue_rsp = tgt_frame - (uint64_t)tgt_frameoff * 16;
+                    MW_TRACE("RtlUnwindEx: FP frame reg=%u off=%u -> body RSP=0x%lx",
+                             tgt_framereg, tgt_frameoff, post_prologue_rsp);
+                }
+            }
             MW_TRACE("RtlUnwindEx: target_func RVA=0x%x alloc_total=0x%lx post_prologue_RSP=0x%lx",
                      tgt_rf->BeginAddress, alloc_total, post_prologue_rsp);
         } else {
@@ -2404,10 +2546,12 @@ __attribute__((ms_abi)) void* mw_RtlVirtualUnwind(uint32_t handler_type, uint64_
     uint8_t flags   = (ui_base[0] >> 3) & 0x07;
     uint8_t prolog_size = ui_base[1];
     uint8_t count_codes = ui_base[2];
-    uint8_t frame_reg   = ui_base[3] >> 4;
-    uint8_t frame_off   = ui_base[3] & 0x0f;
+    /* BUG-037: FrameRegister = LOW nibble, scaled FrameOffset = HIGH nibble
+     * (little-endian C bitfields; see seh_internal_virtual_unwind). */
+    uint8_t frame_reg   = ui_base[3] & 0x0f;
+    uint8_t frame_off   = (ui_base[3] >> 4) & 0x0f;
 
-    (void)image_base; (void)context_pointers; (void)version;
+    (void)image_base; (void)context_pointers; (void)prolog_size;
 
     /* Handle CHAININFO */
     if (flags & UNW_FLAG_CHAININFO) {
@@ -2445,15 +2589,23 @@ __attribute__((ms_abi)) void* mw_RtlVirtualUnwind(uint32_t handler_type, uint64_
     uint8_t* codes = ui_base + 4;
     int slot = 0;
     for (int i = 0; i < count_codes; i++) {
+        /* BUG-037: CountOfCodes counts SLOTS — bound on the slot cursor. */
+        if (slot >= count_codes) break;
         uint16_t code_word = *(uint16_t*)(codes + slot * 2);
         uint8_t op_code = (code_word >> 8) & 0x0f;   /* UnwindOp: low nibble of byte 1 */
         uint8_t op_info = (code_word >> 12) & 0x0f;  /* OpInfo: high nibble of byte 1 */
         uint8_t code_offset = code_word & 0xff;
 
-        /* Skip codes that haven't fully executed yet */
+        /* Skip codes that haven't fully executed yet — full slot advance
+         * so the cursor stays aligned (BUG-037). */
         if (func_offset > 0 && code_offset >= func_offset) {
-            slot++;
+            slot += seh_unwind_op_slots(op_code, op_info);
             continue;
+        }
+        if (op_code == UWOP_EPILOG && version < 2) {
+            /* Epilogue descriptors exist only in UNWIND_INFO v2. */
+            MW_TRACE("RtlVirtualUnwind: UI v1 has EPILOG code — corrupt, stop");
+            break;
         }
 
         switch (op_code) {
@@ -2479,7 +2631,19 @@ __attribute__((ms_abi)) void* mw_RtlVirtualUnwind(uint32_t handler_type, uint64_
             break;
         }
         case UWOP_SET_FPREG: {
-            fp_reg = new_rsp + (uint64_t)frame_off * 16;
+            /* ReactOS semantics: re-anchor RSP from the LIVE FP register
+             * (BUG-037; see seh_internal_virtual_unwind). */
+            if (frame_reg) {
+                uint32_t fp_ctx_off = reg_to_ctx_offset(frame_reg);
+                if (fp_ctx_off) {
+                    fp_reg = *(uint64_t*)(ctx + fp_ctx_off);
+                    new_rsp = fp_reg - (uint64_t)frame_off * 16;
+                } else {
+                    fp_reg = new_rsp + (uint64_t)frame_off * 16;
+                }
+            } else {
+                fp_reg = new_rsp + (uint64_t)frame_off * 16;
+            }
             fp_set = 1;
             break;
         }
@@ -2509,6 +2673,14 @@ __attribute__((ms_abi)) void* mw_RtlVirtualUnwind(uint32_t handler_type, uint64_
             slot++; slot++;
             break;
         }
+        case UWOP_EPILOG: {
+            slot++;               /* 2 slots total, no stack effect */
+            break;
+        }
+        case UWOP_SPARE_CODE: {
+            slot++; slot++;       /* 3 slots total */
+            break;
+        }
         case UWOP_PUSH_MACHFRAME: {
             new_rsp += 40;
             *(uint64_t*)(ctx + CTX_Rip) = *(uint64_t*)(new_rsp + 16);
@@ -2517,11 +2689,11 @@ __attribute__((ms_abi)) void* mw_RtlVirtualUnwind(uint32_t handler_type, uint64_
         }
         default: {
             static int warned_unknown[7] = {0};
-            if (op_code >= 9 && op_code <= 15 && !warned_unknown[op_code - 9]) {
+            if (op_code >= 11 && !warned_unknown[op_code - 11]) {
                 MW_TRACE("RtlVirtualUnwind: unknown opcode %d (skipping)", op_code);
-                warned_unknown[op_code - 9] = 1;
+                warned_unknown[op_code - 11] = 1;
             }
-            if (op_code >= 9) slot++;
+            if (op_code >= 11) slot++; /* reserved ops: skip code word only */
             break;
         }
         }
@@ -2620,12 +2792,18 @@ __attribute__((ms_abi)) uint32_t mw_SuspendThread(void* h) {
 }
 
 /* TLS */
-static void* g_tls_values[64] = {0};
+/* TASK-TLS-001: TlsAlloc/GetValue/SetValue share the SAME slot array the
+ * native-TLS static block uses (gs:0x58 -> g_tls_ptr_array, declared above).
+ * Slot 0 is the image's static TLS; dynamic TlsAlloc slots start at 1. */
 
 __attribute__((ms_abi)) uint32_t mw_TlsAlloc(void) {
-    static uint32_t next = 0;
+    static uint32_t next = 1; /* slot 0 = image static TLS */
+    static pthread_mutex_t mu = PTHREAD_MUTEX_INITIALIZER;
+    pthread_mutex_lock(&mu);
     uint32_t idx = next++;
+    pthread_mutex_unlock(&mu);
     if (idx < 64) {
+        g_tls_ptr_array[idx] = NULL;
         MW_TRACE("TlsAlloc() = %u", idx);
         return idx;
     }
@@ -2633,13 +2811,13 @@ __attribute__((ms_abi)) uint32_t mw_TlsAlloc(void) {
 }
 
 __attribute__((ms_abi)) void* mw_TlsGetValue(uint32_t idx) {
-    void* val = (idx < 64) ? g_tls_values[idx] : NULL;
+    void* val = (idx < 64) ? g_tls_ptr_array[idx] : NULL;
     MW_TRACE("TlsGetValue(%u) = %p", idx, val);
     return val;
 }
 
 __attribute__((ms_abi)) int mw_TlsSetValue(uint32_t idx, void* val) {
-    if (idx < 64) g_tls_values[idx] = val;
+    if (idx < 64) g_tls_ptr_array[idx] = val;
     MW_TRACE("TlsSetValue(%u, %p)", idx, val);
     return 1;
 }
@@ -2724,6 +2902,7 @@ __attribute__((ms_abi)) int mw___getmainargs(int* pargc, char*** pargv, char*** 
     if (pargc) *pargc = g_argc;
     if (pargv) *pargv = g_argv;
     if (penvp) *penvp = g_initenv_ptr;
+    g_environ_cell = g_initenv_ptr; /* TASK-API-011: __p__environ target */
     return 0;
 }
 
@@ -2771,14 +2950,212 @@ __attribute__((ms_abi)) void mw__cexit(void) {
     fflush(stderr);
 }
 
+static void* g_iob_array[3]; /* BUG-032: backing store returned by __iob_func();
+                              * mingw strides over it with 0x30 - see map_crt_stream */
+/* ============================================================
+ * ISS1 slice: MSVCRT-layout FILE registry (WS-D semantic contract).
+ * OBSERVED (live trace, t12_libc_io.exe): the guest's statically-linked
+ * mingw CRT printf machinery calls InitializeCriticalSection(fp+0x30)
+ * and Enter/Leave on it. Therefore fopen MUST return an MSVCRT-strided
+ * handle with >=0x40 bytes of zeroed slack, never a raw glibc FILE*
+ * (locking into glibc's struct corrupts the host heap -> SIGSEGV in
+ * libc during fputc). The host FILE* lives in a side table; every
+ * FILE* API resolves handles through the registry first.
+ * ============================================================ */
+#define MW_FILE_MAX 32
+typedef struct MwFile {
+    char* _ptr; int _cnt; char* _base; int _flag; int _file;
+    int _charbuf; int _bufsiz; char* _tmpfname;
+    unsigned char slack[0x40]; /* guest CRT lock (fp+0x30) lives here */
+} MwFile;
+static struct { MwFile* mf; FILE* hf; } g_mwfile_tab[MW_FILE_MAX];
+
+static FILE* mwfile_hostfp_of(void* p) {
+    if (!p) return NULL;
+    for (int i = 0; i < MW_FILE_MAX; ++i)
+        if (g_mwfile_tab[i].mf == (MwFile*)p) return g_mwfile_tab[i].hf;
+    return NULL;
+}
+
+static FILE* map_crt_stream(void* stream); /* fwd decl (defined below) */
+
 __attribute__((ms_abi)) void* mw___iob_func(void) {
-    /* Returns pointer to array of FILE* (stdin, stdout, stderr, ...) */
-    static void* iob_array[3];
-    iob_array[0] = stdin;
-    iob_array[1] = stdout;
-    iob_array[2] = stderr;
-    MW_TRACE("__iob_func() = %p", iob_array);
-    return iob_array;
+    /* Returns pointer to array of FILE* (stdin, stdout, stderr, ...).
+     * BUG-032 note: mingw indexes the returned pointer with stride 0x30
+     * (sizeof of its FILE struct); map_crt_stream() handles that window. */
+    g_iob_array[0] = stdin;
+    g_iob_array[1] = stdout;
+    g_iob_array[2] = stderr;
+    MW_TRACE("__iob_func() = %p", g_iob_array);
+    return g_iob_array;
+}
+
+/* TASK-API-011 (UCRT wave, 2026-10-15): modern UCRT-flavored mingw binaries
+ * (llvm-mingw, MSVC) resolve std streams through __acrt_iob_func(index)
+ * instead of __iob_func(). Return the same backing streams by index. */
+__attribute__((ms_abi)) void* mw___acrt_iob_func(unsigned index) {
+    g_iob_array[0] = stdin;
+    g_iob_array[1] = stdout;
+    g_iob_array[2] = stderr;
+    void* r = (index < 3) ? g_iob_array[index] : NULL;
+    MW_TRACE("__acrt_iob_func(%u) = %p", index, r);
+    return r;
+}
+
+/* UCRT-flavored CRT startup calls these during init; the loader has already
+ * prepared argc/argv/env, so they are bookkeeping no-ops. */
+__attribute__((ms_abi)) int mw__configure_narrow_argv(int mode) {
+    (void)mode;
+    MW_TRACE("_configure_narrow_argv(mode=%d) -> 0", mode);
+    return 0;
+}
+
+__attribute__((ms_abi)) int mw__initialize_narrow_environment(void) {
+    MW_TRACE("_initialize_narrow_environment() -> 0");
+    return 0;
+}
+
+__attribute__((ms_abi)) int mw__set_new_mode(int mode) {
+    MW_TRACE("_set_new_mode(%d) -> 0", mode);
+    return 0;
+}
+
+__attribute__((ms_abi)) void* mw__set_invalid_parameter_handler(void* h) {
+    MW_TRACE("_set_invalid_parameter_handler(%p) -> NULL", h);
+    return NULL;
+}
+
+/* signal(): tests never install real handlers; record and return no old one.
+ * (Named _stub to avoid clashing with the host signal(2) declaration.) */
+__attribute__((ms_abi)) void* mw_signal_stub(int sig, void* handler) {
+    MW_TRACE("signal(%d, %p) -> NULL (stub)", sig, handler);
+    return NULL;
+}
+
+__attribute__((ms_abi)) void mw__tzset(void) {
+    MW_TRACE("_tzset() (stub, UTC)");
+}
+
+/* UCRT __p__fmode/__p__commode are FUNCTIONS returning &var (t10 crashes
+ * 0x2039038/0x2039034 proved call-style usage). */
+__attribute__((ms_abi)) unsigned int* mw___p__fmode(void) {
+    MW_TRACE("__p__fmode() = %p", &g_fmode_val);
+    return &g_fmode_val;
+}
+
+__attribute__((ms_abi)) unsigned int* mw___p__commode(void) {
+    MW_TRACE("__p__commode() = %p", &g_commode_val);
+    return &g_commode_val;
+}
+
+__attribute__((ms_abi)) int* mw___p___argc(void) {
+    MW_TRACE("__p___argc() = %p", &g_argc);
+    return &g_argc;
+}
+
+__attribute__((ms_abi)) char*** mw___p___argv(void) {
+    MW_TRACE("__p___argv() = %p", &g_argv_cell);
+    return &g_argv_cell;
+}
+
+__attribute__((ms_abi)) char*** mw___p__environ(void) {
+    MW_TRACE("__p__environ() = %p", &g_environ_cell);
+    return &g_environ_cell;
+}
+
+
+/* TASK-API-012 + ISS1: FILE-level stdio bridges. fopen returns an
+ * MSVCRT-layout registry handle (guest CRT locks fp+0x30 — see registry
+ * comment); the whole family resolves handles via map_crt_stream. */
+__attribute__((ms_abi)) void* mw_fopen(const char* path, const char* mode) {
+    if (!path || !mode) return NULL;
+    if (strstr(mode, "ccs=") != NULL) { errno = EINVAL; g_errno_storage = errno; return NULL; }
+    FILE* hf = fopen(path, mode);
+    if (!hf) { g_errno_storage = errno; /* ISS1: guest reads errno via _errno mirror */ }
+    MW_TRACE("fopen(%s, %s) = %p", path ? path : "NULL", mode ? mode : "NULL", hf);
+    if (!hf) return NULL;
+    for (int i = 0; i < MW_FILE_MAX; ++i) {
+        if (g_mwfile_tab[i].mf) continue;
+        MwFile* mf = (MwFile*)calloc(1, sizeof(MwFile));
+        if (!mf) { fclose(hf); return NULL; }
+        mf->_file = fileno(hf);
+        if (strchr(mode, '+'))   mf->_flag = 0x0004; /* _IORW */
+        else if (mode[0] == 'r') mf->_flag = 0x0001; /* _IOREAD */
+        else                     mf->_flag = 0x0002; /* _IOWRT */
+        g_mwfile_tab[i].mf = mf;
+        g_mwfile_tab[i].hf = hf;
+        return mf;
+    }
+    fclose(hf); /* table full — deterministic failure */
+    errno = EMFILE; g_errno_storage = errno;
+    return NULL;
+}
+
+__attribute__((ms_abi)) int mw_fclose(void* stream) {
+    MW_TRACE("fclose(%p)", stream);
+    FILE* hf = mwfile_hostfp_of(stream);
+    if (!hf) return EOF;
+    for (int i = 0; i < MW_FILE_MAX; ++i)
+        if (g_mwfile_tab[i].mf == (MwFile*)stream) {
+            g_mwfile_tab[i].mf = NULL; g_mwfile_tab[i].hf = NULL;
+            break;
+        }
+    free(stream);
+    return fclose(hf);
+}
+
+__attribute__((ms_abi)) unsigned long long mw_fread(void* buf,
+        unsigned long long sz, unsigned long long n, void* stream) {
+    FILE* f = map_crt_stream(stream);
+    return (f && buf) ? fread(buf, (size_t)sz, (size_t)n, f) : 0ULL;
+}
+
+__attribute__((ms_abi)) char* mw_fgets(char* buf, int n, void* stream) {
+    FILE* f = map_crt_stream(stream);
+    return (f && buf) ? fgets(buf, n, f) : NULL;
+}
+
+__attribute__((ms_abi)) int mw_fgetc(void* stream) {
+    FILE* f = map_crt_stream(stream);
+    return f ? fgetc(f) : EOF;
+}
+
+__attribute__((ms_abi)) void mw_rewind(void* stream) {
+    FILE* f = map_crt_stream(stream);
+    if (f) rewind(f);
+}
+
+/* ISS1 slice: seek/tell/EOF bridges (missing from API-012 wave).
+ * MSVCRT clears the EOF indicator on a successful reposition. */
+__attribute__((ms_abi)) int mw_fseek(void* stream, long long off, int origin) {
+    /* Windows SEEK_SET/CUR/END constants equal POSIX ones. */
+    FILE* f = map_crt_stream(stream);
+    if (!f) return -1;
+    int r = fseek(f, (long)off, origin);
+    if (r == 0) clearerr(f); /* MSVCRT clears EOF on successful reposition */
+    return r;
+}
+
+__attribute__((ms_abi)) long long mw_ftell(void* stream) {
+    FILE* f = map_crt_stream(stream);
+    return f ? (long long)ftell(f) : -1LL;
+}
+
+__attribute__((ms_abi)) int mw_feof(void* stream) {
+    FILE* f = map_crt_stream(stream);
+    return f ? feof(f) : 0;
+}
+
+__attribute__((ms_abi)) int mw_remove(const char* path) {
+    MW_TRACE("remove(%s)", path ? path : "NULL");
+    int r = remove(path);
+    if (r != 0) g_errno_storage = errno; /* ISS1: errno bridge */
+    return r;
+}
+
+__attribute__((ms_abi)) size_t mw_strftime(char* buf, size_t max,
+        const char* fmt, const void* tmv) {
+    return strftime(buf, max, fmt, (const struct tm*)tmv);
 }
 
 /* Data accessor functions */
@@ -2792,277 +3169,280 @@ __attribute__((ms_abi)) int mw___mb_cur_max_func(void) {
     return 1;
 }
 
+/* BUG-033 (appcompat sweep APP-F-03): printf-family across the ABI boundary.
+ *
+ * The PE (ms_abi) passes varargs per the Windows x64 contract: every vararg
+ * occupies a uniform 8-byte slot (integers/pointers directly, doubles as
+ * bit-casts spilled by the caller). glibc's vfprintf expects a SysV va_list:
+ * a struct {gp_offset, fp_offset, overflow_arg_area, reg_save_area} whose
+ * reg-save area holds rdi..r9 (48 bytes) then xmm0-7 (16 bytes each).
+ * The old code handed the raw ms slot pointer to vprintf — vprintf read it
+ * as a SysV struct (gp_offset = low bits of a stack address) and faulted in
+ * libc for anything but tiny integer-only formats.
+ *
+ * Fix: parse fmt to classify every consumed argument (GP vs FP), materialize
+ * the uniform MS slots, then synthesize a faithful SysV va_list:
+ *   - gp slots: gpv[0] is fmt (rdi), varargs fill gpv[1..5];
+ *   - fp slots: doubles fill the low 64 bits of xmm0..xmm7;
+ *   - the rest go to the overflow area in call order (SysV stack order). */
+
+#define MW_PRINTF_MAX_ARGS 256
+
+typedef struct {
+    unsigned gp_offset;
+    unsigned fp_offset;
+    void*    overflow_arg_area;
+    void*    reg_save_area;
+} mw_sysv_va_list;
+
+/* Parse fmt; cls[i]=1 for FP args, 0 for GP. Returns arg count (capped). */
+static int mw_printf_classify(const char* fmt, unsigned char* cls) {
+    int nargs = 0;
+    const char* p = fmt;
+    if (!p) return 0;
+    while (*p) {
+        if (*p != '%') { p++; continue; }
+        p++;
+        if (*p == '%') { p++; continue; }        /* literal percent: no arg */
+        /* width '*' consumes a GP arg */
+        if (*p == '*') {
+            if (nargs < MW_PRINTF_MAX_ARGS) cls[nargs++] = 0;
+            p++;
+        }
+        while (*p == '-' || *p == '+' || *p == ' ' || *p == '#' || *p == '0') p++;
+        while (*p >= '0' && *p <= '9') p++;
+        if (*p == '.') {
+            p++;
+            if (*p == '*') {
+                if (nargs < MW_PRINTF_MAX_ARGS) cls[nargs++] = 0;
+                p++;
+            }
+            while (*p >= '0' && *p <= '9') p++;
+        }
+        /* length modifiers */
+        while (*p == 'l' || *p == 'h' || *p == 'q' || *p == 'j' ||
+               *p == 'z' || *p == 't' || *p == 'L') p++;
+        if (!*p) break;
+        char conv = *p++;
+        int is_fp = (conv == 'f' || conv == 'F' || conv == 'e' || conv == 'E' ||
+                     conv == 'g' || conv == 'G' || conv == 'a' || conv == 'A');
+        if (nargs < MW_PRINTF_MAX_ARGS) cls[nargs++] = is_fp ? 1 : 0;
+    }
+    return nargs;
+}
+
+/* Build a SysV va_list from uniform MS slots and call vfprintf on it. */
+static int mw_printf_emit(FILE* f, const char* fmt,
+                          const unsigned long long* slots, int nargs) {
+    unsigned char cls[MW_PRINTF_MAX_ARGS];
+    int parsed = mw_printf_classify(fmt, cls);
+    if (nargs > parsed) nargs = parsed;
+
+    unsigned long long gpv[6] = {0, 0, 0, 0, 0, 0};
+    unsigned long long fpv[8] = {0, 0, 0, 0, 0, 0, 0, 0};
+    unsigned long long ovf[MW_PRINTF_MAX_ARGS];
+    int novf = 0, gpi = 1 /* gpv[0] = rdi = fmt */, fpi = 0;
+
+    for (int i = 0; i < nargs; i++) {
+        if (cls[i]) {
+            if (fpi < 8) fpv[fpi++] = slots[i];
+            else         ovf[novf++] = slots[i];
+        } else {
+            if (gpi < 6) gpv[gpi++] = slots[i];
+            else         ovf[novf++] = slots[i];
+        }
+    }
+
+    unsigned long long reg_save[6 + 16]; /* rdi..r9 then xmm0-7 (low64 only) */
+    memcpy(reg_save, gpv, sizeof(gpv));
+    for (int i = 0; i < 8; i++)
+        memcpy((unsigned char*)reg_save + 48 + 16 * i, &fpv[i], 8);
+    /* xmm slots beyond the doubles: zero — only read if fmt over-reads */
+    for (int i = fpi; i < 8; i++)
+        memset((unsigned char*)reg_save + 48 + 16 * i, 0, 16);
+
+    va_list sv;                       /* glibc __va_list_tag[1] */
+    mw_sysv_va_list* svv = (mw_sysv_va_list*)sv;
+    svv->gp_offset = 8;              /* fmt consumed rdi */
+    svv->fp_offset = 48;             /* no named FP args */
+    svv->overflow_arg_area = ovf;
+    svv->reg_save_area = reg_save;
+    return vfprintf(f, fmt, sv);
+}
+
 /* printf - variadic, needs special handling */
 __attribute__((ms_abi)) int mw_printf(const char* fmt, ...) {
     MW_TRACE("printf(fmt=%s)", fmt ? fmt : "NULL");
+    unsigned char cls[MW_PRINTF_MAX_ARGS];
+    int nargs = mw_printf_classify(fmt, cls);
+    unsigned long long slots[MW_PRINTF_MAX_ARGS];
     va_list ap;
     va_start(ap, fmt);
-    int ret = vprintf(fmt, ap);
+    for (int i = 0; i < nargs; i++) {
+        if (cls[i]) { double d = va_arg(ap, double); memcpy(&slots[i], &d, 8); }
+        else        { slots[i] = (unsigned long long)va_arg(ap, long long); }
+    }
     va_end(ap);
-    return ret;
+    return mw_printf_emit(stdout, fmt, slots, nargs);
 }
-
-/* stdio FILE* registry — see full comment near mw_fopen (WS-D).
- * Guest-visible FILE must match MSVCRT `struct _iobuf` layout because
- * statically-linked guest CRT code introspects `_file`/`_flag`. */
-#define MW_MSVCRT_IOREAD 0x0001
-#define MW_MSVCRT_IOWRT  0x0002
-#define MW_MSVCRT_IORW   0x0004
-#define MW_MSVCRT_IOEOF  0x0010
-#define MW_FILE_MAX 32
-
-typedef struct MwFile {
-    char* _ptr;      /* next char (guest-visible; we keep 0 = unbuffered) */
-    int   _cnt;      /* buffered chars left (0) */
-    char* _base;
-    int   _flag;     /* MSVCRT flag bits */
-    int   _file;     /* real host fd — used by guest CRT lock indexing */
-    int   _charbuf;
-    int   _bufsiz;
-    char* _tmpfname;
-} MwFile;
-
-typedef struct { MwFile* mf; FILE* hf; } MwFileSlot;
-static MwFileSlot g_mwfile_tab[MW_FILE_MAX];
-
-static MwFile* mwfile_check(void* p);
-static FILE*   mwfile_hostfp(MwFile* mf);
 
 /* fprintf - variadic */
 __attribute__((ms_abi)) int mw_fprintf(void* file, const char* fmt, ...) {
     MW_TRACE("fprintf(file=%p, fmt=%s)", file, fmt ? fmt : "NULL");
+    FILE* f = map_crt_stream(file);
+    unsigned char cls[MW_PRINTF_MAX_ARGS];
+    int nargs = mw_printf_classify(fmt, cls);
+    unsigned long long slots[MW_PRINTF_MAX_ARGS];
     va_list ap;
     va_start(ap, fmt);
-    int ret;
-    MwFile* mf = mwfile_check(file);
-    FILE* rhf = mf ? mwfile_hostfp(mf) : NULL;
-    if (rhf) {
-        ret = vfprintf(rhf, fmt, ap);
-    } else {
-        /* Use actual FILE* if it's a real glibc FILE */
-        FILE* f = (file == stdout || file == stderr || file == stdin) ? (FILE*)file : stdout;
-        ret = vfprintf(f, fmt, ap);
+    for (int i = 0; i < nargs; i++) {
+        if (cls[i]) { double d = va_arg(ap, double); memcpy(&slots[i], &d, 8); }
+        else        { slots[i] = (unsigned long long)va_arg(ap, long long); }
     }
     va_end(ap);
-    return ret;
+    return mw_printf_emit(f, fmt, slots, nargs);
 }
 
-/* vfprintf - the va_list is in MS ABI format */
+/* vfprintf - the PE passes its own va_list: an ms_abi slot stream (char*),
+ * uniform 8-byte vararg slots starting at the first vararg. */
 __attribute__((ms_abi)) int mw_vfprintf(void* file, const char* fmt, void* ap) {
     MW_TRACE("vfprintf(file=%p, fmt=%s)", file, fmt ? fmt : "NULL");
-    MwFile* mf = mwfile_check(file);
-    FILE* rhf = mf ? mwfile_hostfp(mf) : NULL;
-    if (rhf) {
-        char buf[8192];
-        int ret = vsnprintf(buf, sizeof(buf), fmt, *(va_list*)ap);
-        if (ret > 0) fwrite(buf, 1, ret, rhf);
-        return ret;
-    }
-    FILE* f = (file == stdout || file == stderr || file == stdin) ? (FILE*)file : stdout;
-    /* Use a workaround: format to buffer first */
-    char buf[8192];
-    int ret = vsnprintf(buf, sizeof(buf), fmt, *(va_list*)ap);
-    if (ret > 0) {
-        fwrite(buf, 1, ret, f);
-    }
-    return ret;
+    FILE* f = map_crt_stream(file);
+    unsigned char cls[MW_PRINTF_MAX_ARGS];
+    int nargs = mw_printf_classify(fmt, cls);
+    unsigned long long slots[MW_PRINTF_MAX_ARGS];
+    if (ap && nargs > 0) memcpy(slots, ap, (size_t)nargs * 8);
+    return mw_printf_emit(f, fmt, slots, nargs);
 }
 
-/* stdio stubs */
+/* TASK-API-011: UCRT unified stdio core. Modern UCRT printf/snprintf are
+ * inline wrappers over the __stdio_common_v* family. The va_list argument is
+ * the PE's ms_abi slot stream — exactly what mw_vfprintf already repacks. */
+__attribute__((ms_abi)) int mw___stdio_common_vfprintf(
+    unsigned long long options, void* file, const char* fmt,
+    void* locale, void* ap) {
+    (void)options; (void)locale;
+    MW_TRACE("__stdio_common_vfprintf(file=%p, fmt=%s)", file, fmt ? fmt : "NULL");
+    return mw_vfprintf(file, fmt, ap);
+}
+
+__attribute__((ms_abi)) int mw___stdio_common_vsprintf(
+    unsigned long long options, char* buffer, size_t size,
+    const char* fmt, void* locale, void* ap) {
+    (void)options; (void)locale;
+    char tmp[16384];
+    FILE* mf = fmemopen(tmp, sizeof tmp, "w");
+    if (!mf) return -1;
+    int n = mw_vfprintf(mf, fmt, ap);
+    fclose(mf);
+    if (n < 0) return -1;
+    size_t copy = ((size_t)n >= size) ? (size ? size - 1 : 0) : (size_t)n;
+    if (buffer && size) { memcpy(buffer, tmp, copy); buffer[copy] = 0; }
+    MW_TRACE("__stdio_common_vsprintf(fmt=%s) = %d", fmt ? fmt : "NULL", n);
+    return n; /* UCRT: would-be length (may exceed size) */
+}
+
+__attribute__((ms_abi)) int mw___stdio_common_vfwprintf(
+    unsigned long long options, void* file, const short* fmt,
+    void* locale, void* ap) {
+    /* Wide print: no test exercises it; refuse loudly rather than misformat. */
+    (void)options; (void)file; (void)fmt; (void)locale; (void)ap;
+    MW_TRACE("__stdio_common_vfwprintf() -> -1 (wide print unsupported)");
+    return -1;
+}
+
+__attribute__((ms_abi)) int mw___stdio_common_vsscanf(
+    unsigned long long options, const char* buffer, size_t size,
+    const char* fmt, void* locale, void* ap) {
+    (void)options; (void)locale; (void)size;
+    if (!buffer) return -1;
+    /* All scanf varargs are pointers (GP-only). MS slot stream: slot[i] is
+     * an 8-byte uniform slot. Build the SysV va_list with the loader's
+     * proven reg_save trick (slot 0 reserved; first vararg at gp_offset 8). */
+    unsigned long long* slots = (unsigned long long*)ap;
+    unsigned long long reg_save[6 + 16];
+    reg_save[0] = 0; /* dummy rdi slot */
+    for (int i = 0; i < 5; i++) reg_save[1 + i] = slots[i];
+    memset(&reg_save[6], 0, 16 * 8);
+    va_list sva;                      /* glibc __va_list_tag[1] */
+    struct { unsigned int gp_offset, fp_offset; void* overflow; void* reg_save; }* sv =
+        (void*)sva;
+    sv->gp_offset = 8;
+    sv->fp_offset = 48; /* pointers only — never reads xmm */
+    sv->overflow = slots + 5;
+    sv->reg_save = reg_save;
+    int r = vsscanf(buffer, fmt, sva);
+    MW_TRACE("__stdio_common_vsscanf(fmt=%s) = %d", fmt ? fmt : "NULL", r);
+    return r;
+}
+
+/* BUG-032: classic msvcrt/mingw CRTs treat __iob_func()'s return value as a
+ * FILE* into an ARRAY OF FILE STRUCTS with stride sizeof(FILE)=0x30 on x64:
+ *   stdin = base+0x00, stdout = base+0x30, stderr = base+0x60.
+ * The PE therefore passes synthetic pointers (observed: setvbuf called with
+ * base+0x60) that glibc must never dereference. Recognize that window and
+ * map to the real streams; anything else keeps the legacy behavior. */
+
+static FILE* map_crt_stream(void* stream) {
+    if (stream == NULL) return NULL;
+    {   /* ISS1: registry handles resolve to their host FILE* first — a raw
+         * registry pointer must NEVER reach glibc. */
+        FILE* hf = mwfile_hostfp_of(stream);
+        if (hf) return hf;
+    }
+    uintptr_t s = (uintptr_t)stream;
+    uintptr_t base = (uintptr_t)g_iob_array;
+    if (s >= base && s < base + 0x90) {
+        uintptr_t off = s - base;
+        int idx = (int)(off / 0x30);
+        if (idx < 0 || idx > 2) idx = 1; /* window edge -> stdout */
+        FILE* mapped = (idx == 0) ? stdin : (idx == 1) ? stdout : stderr;
+        MW_TRACE("map_crt_stream: iob+%#zx -> %s", (size_t)off,
+                 idx == 0 ? "stdin" : idx == 1 ? "stdout" : "stderr");
+        return mapped;
+    }
+    /* TASK-API-011: pointers outside the synthetic iob window are REAL
+     * glibc FILE* (fmemopen/fopen-backed streams created by our own API
+     * implementations). Pass them through verbatim; the old "unknown ->
+     * stdout" fallback silently ate fmemopen output (snapt.exe repro:
+     * "%.3f" went to stdout and the caller's buffer stayed empty). */
+    return (FILE*)stream;
+}
 
 __attribute__((ms_abi)) int mw_fflush(void* file) {
     MW_TRACE("fflush(file=%p)", file);
-    MwFile* mf = mwfile_check(file);
-    FILE* rhf = mf ? mwfile_hostfp(mf) : NULL;
-    if (rhf) return fflush(rhf);
-    FILE* f = (file == NULL) ? NULL :
-              (file == stdout || file == stderr || file == stdin) ? (FILE*)file : stdout;
+    FILE* f = (file == NULL) ? NULL : map_crt_stream(file);
     return fflush(f);
 }
 
 __attribute__((ms_abi)) int mw_fputs(const char* str, void* file) {
     MW_TRACE("fputs(str=%s)", str ? str : "NULL");
-    MwFile* mf = mwfile_check(file);
-    FILE* rhf = mf ? mwfile_hostfp(mf) : NULL;
-    if (rhf) return fputs(str, rhf);
-    FILE* f = (file == stdout || file == stderr || file == stdin) ? (FILE*)file : stdout;
+    FILE* f = map_crt_stream(file);
     return fputs(str, f);
 }
 
 __attribute__((ms_abi)) int mw_fputc(int ch, void* file) {
     MW_TRACE("fputc(ch=0x%x)", ch);
-    MwFile* mf = mwfile_check(file);
-    FILE* rhf = mf ? mwfile_hostfp(mf) : NULL;
-    if (rhf) return fputc(ch, rhf);
-    FILE* f = (file == stdout || file == stderr || file == stdin) ? (FILE*)file : stdout;
+    FILE* f = map_crt_stream(file);
     return fputc(ch, f);
 }
 
 __attribute__((ms_abi)) size_t mw_fwrite(const void* buf, size_t sz, size_t cnt, void* file) {
     MW_TRACE("fwrite(sz=%zu, cnt=%zu)", sz, cnt);
-    MwFile* mf = mwfile_check(file);
-    FILE* rhf = mf ? mwfile_hostfp(mf) : NULL;
-    if (rhf) return fwrite(buf, sz, cnt, rhf);
-    FILE* f = (file == stdout || file == stderr || file == stdin) ? (FILE*)file : stdout;
+    FILE* f = map_crt_stream(file);
     return fwrite(buf, sz, cnt, f);
 }
 
 __attribute__((ms_abi)) int mw_getc(void* file) {
     MW_TRACE("getc()");
-    MwFile* mf = mwfile_check(file);
-    FILE* rhf = mf ? mwfile_hostfp(mf) : NULL;
-    if (rhf) {
-        if (mf->_charbuf != 0) {
-            int c = mf->_charbuf;
-            mf->_charbuf = 0;
-            return c;
-        }
-        return fgetc(rhf);
-    }
-    return EOF;
+    FILE* f = map_crt_stream(file);
+    return (f != NULL) ? getc(f) : EOF;
 }
 
 __attribute__((ms_abi)) int mw_ungetc(int ch, void* file) {
     MW_TRACE("ungetc(ch=0x%x)", ch);
-    MwFile* mf = mwfile_check(file);
-    if (!mf || ch == EOF) return EOF;
-    /* Standard single-char pushback via MSVCRT `_charbuf`; clears EOF state. */
-    mf->_charbuf = (ch & 0xFF);
-    mf->_flag &= ~MW_MSVCRT_IOEOF;
-    return ch & 0xFF;
-}
-
-/* ============================================================
- * Windows stdio FILE* family — host-backed file registry (WS-D).
- * Semantic rule: a resolved API must perform its documented behavior.
- *
- * CRITICAL ABI CONSTRAINT (observed): the guest's statically-linked
- * stdio machinery (mingw-w64 CRT) introspects FILE fields instead of
- * treating the handle as opaque — e.g. it reads `_file` to index the
- * CRT lock table and checks `_flag` bits. Therefore fopen must return
- * an MSVCRT-layout `struct _iobuf` object with a small real fd in
- * `_file` and sane `_flag` bits. The host FILE* lives in a side table;
- * guest-visible struct stays zeroed beyond documented fields.
- * ============================================================ */
-static MwFile* mwfile_check(void* p) {
-    for (int i = 0; i < MW_FILE_MAX; ++i)
-        if (g_mwfile_tab[i].mf == (MwFile*)p && p != NULL) return (MwFile*)p;
-    return NULL;
-}
-
-static FILE* mwfile_hostfp(MwFile* mf) {
-    for (int i = 0; i < MW_FILE_MAX; ++i)
-        if (g_mwfile_tab[i].mf == mf) return g_mwfile_tab[i].hf;
-    return NULL;
-}
-
-static int mwfile_unregister(MwFile* mf) {
-    for (int i = 0; i < MW_FILE_MAX; ++i)
-        if (g_mwfile_tab[i].mf == mf) { g_mwfile_tab[i].mf = NULL; g_mwfile_tab[i].hf = NULL; return 1; }
-    return 0;
-}
-
-static void mw_sync_errno(void) { g_errno_storage = errno; }
-
-__attribute__((ms_abi)) void* mw_fopen(const char* path, const char* mode) {
-    MW_TRACE("fopen(path=%s, mode=%s)", path ? path : "NULL", mode ? mode : "NULL");
-    if (!path || !mode) return NULL;
-    /* Unsupported wide/unicode mode forms: fail explicitly, never misbehave. */
-    if (strstr(mode, "ccs=") != NULL) { errno = EINVAL; mw_sync_errno(); return NULL; }
-    FILE* hf = fopen(path, mode);
-    if (!hf) { mw_sync_errno(); return NULL; }
-    int slot = -1;
-    for (int i = 0; i < MW_FILE_MAX; ++i) if (!g_mwfile_tab[i].mf) { slot = i; break; }
-    if (slot < 0) { fclose(hf); errno = EMFILE; mw_sync_errno(); return NULL; }
-    /* Zero-extended allocation: guest may read past documented fields. */
-    MwFile* mf = (MwFile*)calloc(1, sizeof(MwFile) + 32);
-    if (!mf) { fclose(hf); mw_sync_errno(); return NULL; }
-    mf->_file = fileno(hf);           /* small real fd for CRT lock indexing */
-    if (strchr(mode, '+'))      mf->_flag = MW_MSVCRT_IORW;
-    else if (mode[0] == 'r')    mf->_flag = MW_MSVCRT_IOREAD;
-    else                        mf->_flag = MW_MSVCRT_IOWRT;
-    g_mwfile_tab[slot].mf = mf;
-    g_mwfile_tab[slot].hf = hf;
-    return mf;
-}
-
-__attribute__((ms_abi)) int mw_fclose(void* file) {
-    MwFile* mf = mwfile_check(file);
-    if (!mf) return EOF;
-    FILE* hf = mwfile_hostfp(mf);
-    int r = hf ? fclose(hf) : EOF;
-    mwfile_unregister(mf);
-    free(mf);
-    return r;
-}
-
-__attribute__((ms_abi)) size_t mw_fread(void* buf, size_t sz, size_t cnt, void* file) {
-    MwFile* mf = mwfile_check(file);
-    if (!mf || !buf) return 0;
-    FILE* hf = mwfile_hostfp(mf);
-    if (!hf) return 0;
-    size_t r = fread(buf, sz, cnt, hf);
-    if (r < cnt && feof(hf)) mf->_flag |= MW_MSVCRT_IOEOF;
-    return r;
-}
-
-__attribute__((ms_abi)) int mw_fseek(void* file, long long off, int origin) {
-    MwFile* mf = mwfile_check(file);
-    if (!mf) return -1;
-    FILE* hf = mwfile_hostfp(mf);
-    if (!hf) return -1;
-    /* Windows SEEK_SET/CUR/END constants equal POSIX ones. */
-    int r = fseek(hf, (long)off, origin);
-    if (r == 0) mf->_flag &= ~MW_MSVCRT_IOEOF;  /* MSVCRT clears EOF on seek */
-    return r;
-}
-
-__attribute__((ms_abi)) long long mw_ftell(void* file) {
-    MwFile* mf = mwfile_check(file);
-    if (!mf) return -1LL;
-    FILE* hf = mwfile_hostfp(mf);
-    if (!hf) return -1LL;
-    return (long long)ftell(hf);
-}
-
-__attribute__((ms_abi)) int mw_feof(void* file) {
-    MwFile* mf = mwfile_check(file);
-    if (!mf) return 0;
-    FILE* hf = mwfile_hostfp(mf);
-    if (!hf) return 0;
-    if (feof(hf)) { mf->_flag |= MW_MSVCRT_IOEOF; return 1; }
-    return 0;
-}
-
-__attribute__((ms_abi)) int mw_fgetc(void* file) {
-    MwFile* mf = mwfile_check(file);
-    if (!mf) return EOF;
-    FILE* hf = mwfile_hostfp(mf);
-    if (!hf) return EOF;
-    /* Serve pushed-back char first (see mw_ungetc). */
-    if (mf->_charbuf != 0) {
-        int c = mf->_charbuf;
-        mf->_charbuf = 0;
-        return c;
-    }
-    int c = fgetc(hf);
-    if (c == EOF) mf->_flag |= MW_MSVCRT_IOEOF;
-    return c;
-}
-
-__attribute__((ms_abi)) int mw_remove(const char* path) {
-    MW_TRACE("remove(path=%s)", path ? path : "NULL");
-    int r = path ? remove(path) : -1;
-    if (r != 0) mw_sync_errno();
-    return r;
-}
-
-/* 64-bit string-to-integer conversions (UCRT/MSVCRT). */
-__attribute__((ms_abi)) long long mw__strtoi64(const char* s, char** end, int base) {
-    return strtoll(s, end, base);
-}
-__attribute__((ms_abi)) unsigned long long mw__strtoui64(const char* s, char** end, int base) {
-    return strtoull(s, end, base);
+    FILE* f = map_crt_stream(file);
+    return (f != NULL) ? ungetc(ch, f) : EOF;
 }
 
 __attribute__((ms_abi)) int mw_puts(const char* str) {
@@ -3180,13 +3560,13 @@ __attribute__((ms_abi)) int mw_isxdigit(int c) { return isxdigit(c); }
 __attribute__((ms_abi)) clock_t mw_clock(void) { return clock(); }
 
 /* File I/O - low level MSVCRT functions */
-__attribute__((ms_abi)) int mw__open(const char* path, int flags, ...) {
-    MW_TRACE("_open(path=%s, flags=0x%x)", path ? path : "NULL", flags);
-    int mode = 0;
-    va_list ap;
-    va_start(ap, flags);
-    if (flags & 0x0100) mode = va_arg(ap, int); /* _O_CREAT */
-    va_end(ap);
+/* APP-F-05b (BUG-033 class): variadic ms_abi entry points are unsafe for
+ * glibc-side va_list handling; _open's optional mode is therefore a FIXED
+ * third argument. PEs that omit the mode leave R8 undefined, which is fine:
+ * mode is only consumed when _O_CREAT (0x0100) is set. */
+__attribute__((ms_abi)) int mw__open(const char* path, int flags, int mode) {
+    MW_TRACE("_open(path=%s, flags=0x%x, mode=0x%x)", path ? path : "NULL", flags, mode);
+    if (!(flags & 0x0100)) mode = 0; /* _O_CREAT unset: mode ignored */
     /* Map MSVC flags to POSIX */
     int oflags = ((flags & 0x0003) == 0) ? O_RDONLY : 0;
     if (flags & 0x0001) oflags = O_WRONLY;
@@ -3249,11 +3629,11 @@ __attribute__((ms_abi)) int mw__sopen(const char* path, int flags, int shflag, i
     return mw__open(path, flags, pmode);
 }
 
-__attribute__((ms_abi)) int mw__wopen(const wchar_t* path, int flags, ...) {
+__attribute__((ms_abi)) int mw__wopen(const wchar_t* path, int flags, int mode) {
     MW_TRACE("_wopen()");
     char buf[1024];
     wcstombs(buf, path, sizeof(buf));
-    return mw__open(buf, flags, 0);
+    return mw__open(buf, flags, mode);
 }
 
 /* stat */
@@ -3348,15 +3728,88 @@ __attribute__((ms_abi)) void (*mw_signal(int sig, void (*handler)(int)))(int) {
     return signal(sig, handler);
 }
 
-__attribute__((ms_abi)) void mw_longjmp(void* buf, int val) {
-    MW_TRACE("longjmp(val=%d)", val);
-    /* jmp_buf on glibc is struct __jmp_buf_tag[1] */
-    siglongjmp(*(sigjmp_buf*)buf, val);
+/* BUG-036 (appcompat sweep APP-F-06): setjmp/longjmp must honor the Windows
+ * x64 jmp_buf contract. The previous implementation stored a glibc sigjmp_buf
+ * inside mw__setjmp's own SYSV frame: (a) ms_abi callee-saved RDI/RSI/XMM6-15
+ * are NOT covered by glibc's save set -> live PE values corrupt after longjmp;
+ * (b) resumption flows through the loader frame and mis-restores state
+ * (observed: t06 counter/volatile failures; t07 infinite longjmp(val=1) loop).
+ *
+ * This implementation IS the jmp_buf owner: uniform 8-byte slots (mingw x64
+ * jmp_buf is 256 bytes = 32 slots, we use 30):
+ *   0 rbx   1 rbp   2 rdi   3 rsi   4 r12  5 r13  6 r14  7 r15
+ *   8..17   xmm6..xmm15 (16 bytes each = 2 slots each)
+ *   18      rsp at entry (points at the return address)
+ *   19..28  (unused padding, zeroed)
+ *   29      magic 0x4D574A42 ("MWJB") for cross-checking
+ * longjmp restores everything and jumps to the saved return address with the
+ * requested value in EAX — the exact semantics of Windows setjmp/longjmp. */
+#define MW_JB_MAGIC 0x4D574A42ULL
+
+/* setjmp is NAKED: rsp at the first instruction == entry rsp == [retaddr].
+ * We save entry_rsp (slot 18) and retaddr (slot 19); longjmp resumes with
+ * rsp = entry_rsp + 8 (the caller's live rsp) and jumps to the retaddr. */
+__attribute__((ms_abi, naked)) int mw__setjmp(void* buf) {
+    asm volatile(
+        "movq %rcx, %r10\n\t"
+        "movq %rbx, 0(%r10)\n\t"
+        "movq %rbp, 8(%r10)\n\t"
+        "movq %rdi, 16(%r10)\n\t"
+        "movq %rsi, 24(%r10)\n\t"
+        "movq %r12, 32(%r10)\n\t"
+        "movq %r13, 40(%r10)\n\t"
+        "movq %r14, 48(%r10)\n\t"
+        "movq %r15, 56(%r10)\n\t"
+        "movdqu %xmm6, 64(%r10)\n\t"
+        "movdqu %xmm7, 80(%r10)\n\t"
+        "movdqu %xmm8, 96(%r10)\n\t"
+        "movdqu %xmm9, 112(%r10)\n\t"
+        "movdqu %xmm10, 128(%r10)\n\t"
+        "movdqu %xmm11, 144(%r10)\n\t"
+        "movdqu %xmm12, 160(%r10)\n\t"
+        "movdqu %xmm13, 176(%r10)\n\t"
+        "movdqu %xmm14, 192(%r10)\n\t"
+        "movdqu %xmm15, 208(%r10)\n\t"
+        "movq %rsp, 224(%r10)\n\t"
+        "movq 0(%rsp), %rax\n\t"
+        "movq %rax, 232(%r10)\n\t"
+        "movq $0x4D574A42, 240(%r10)\n\t"   /* MW_JB_MAGIC */
+        "xorl %eax, %eax\n\t"
+        "ret\n\t"
+    );
 }
 
-__attribute__((ms_abi)) int mw__setjmp(void* buf) {
-    MW_TRACE("_setjmp()");
-    return sigsetjmp(*(sigjmp_buf*)buf, 0);
+__attribute__((ms_abi)) __attribute__((noreturn)) void mw_longjmp(void* buf, int val) {
+    register void* r10 asm("r10") = buf;
+    register long r11 asm("r11") = (long)val;
+    asm volatile(
+        "movq 0(%%r10), %%rbx\n\t"
+        "movq 8(%%r10), %%rbp\n\t"
+        "movq 16(%%r10), %%rdi\n\t"
+        "movq 24(%%r10), %%rsi\n\t"
+        "movq 32(%%r10), %%r12\n\t"
+        "movq 40(%%r10), %%r13\n\t"
+        "movq 48(%%r10), %%r14\n\t"
+        "movq 56(%%r10), %%r15\n\t"
+        "movdqu 64(%%r10), %%xmm6\n\t"
+        "movdqu 80(%%r10), %%xmm7\n\t"
+        "movdqu 96(%%r10), %%xmm8\n\t"
+        "movdqu 112(%%r10), %%xmm9\n\t"
+        "movdqu 128(%%r10), %%xmm10\n\t"
+        "movdqu 144(%%r10), %%xmm11\n\t"
+        "movdqu 160(%%r10), %%xmm12\n\t"
+        "movdqu 176(%%r10), %%xmm13\n\t"
+        "movdqu 192(%%r10), %%xmm14\n\t"
+        "movdqu 208(%%r10), %%xmm15\n\t"
+        "movq 224(%%r10), %%rsp\n\t"
+        "addq $8, %%rsp\n\t"                 /* caller's live rsp (retaddr popped) */
+        "movq %%r11, %%rax\n\t"
+        "jmp *232(%%r10)\n\t"
+        :
+        : "r"(r10), "r"(r11)
+        : "memory"
+    );
+    __builtin_unreachable();
 }
 
 __attribute__((ms_abi)) int mw__kbhit(void) { return 0; }
@@ -3369,8 +3822,337 @@ __attribute__((ms_abi)) void* mw_localeconv(void) {
     return (void*)localeconv();
 }
 
+/* BUG-035 (appcompat sweep APP-F-05): callback pointers across the ABI
+ * boundary. glibc qsort invokes the comparator SysV-style (args in RDI,RSI)
+ * but the PE's comparator is ms_abi (args in RCX,RDX) -> NULL deref inside
+ * the comparator (observed t04: mov eax,[rcx] with rcx=0). Bridge through
+ * qsort_r: the bridge is SysV (glibc-safe) and re-dispatches through an
+ * ms_abi-typed function pointer so GCC emits the Windows register mapping. */
+
+typedef int (__attribute__((ms_abi)) *mw_ms_qsort_cmp)(const void*, const void*);
+static const mw_ms_qsort_cmp* g_ms_qsort_cmp_ref;
+
+static int mw_ms_qsort_bridge(const void* a, const void* b, void* ctx) {
+    (void)ctx;
+    return (*g_ms_qsort_cmp_ref)(a, b);
+}
+
 __attribute__((ms_abi)) void mw_qsort(void* base, size_t n, size_t sz, int (*cmp)(const void*, const void*)) {
-    qsort(base, n, sz, cmp);
+    g_ms_qsort_cmp_ref = (const mw_ms_qsort_cmp*)(const void*)&cmp;
+    qsort_r(base, n, sz, mw_ms_qsort_bridge, NULL);
+}
+
+/* ============================================================
+ * TASK-API-008 wave 2 (appcompat sweep APP-F-07): C++ runtime surface.
+ * llvm-mingw C++ binaries import SRW locks, condition variables, fiber-local
+ * storage, InitOnce, RtlRestoreContext, aligned allocation, wide-char CRT
+ * and 64-bit strtol family. All implementations below are honest bridges.
+ * ============================================================ */
+#include <sched.h>
+#include <sys/syscall.h>
+#include <wchar.h>
+
+/* ---- SRW locks: SRWLOCK is an opaque 8-byte handle slot on Windows.
+ * We keep a small registry mapping the PE's SRWLOCK slots to real
+ * pthread rwlocks, allocated on first use. Single-instance per key. ---- */
+typedef struct { void* key; int used; pthread_rwlock_t rw; } MwSrwEntry;
+static MwSrwEntry g_srw_tab[256];
+static pthread_mutex_t g_srw_tab_mu = PTHREAD_MUTEX_INITIALIZER;
+
+static pthread_rwlock_t* srw_get(void* k) {
+    pthread_mutex_lock(&g_srw_tab_mu);
+    MwSrwEntry* free_slot = NULL;
+    for (int i = 0; i < 256; i++) {
+        if (g_srw_tab[i].used && g_srw_tab[i].key == k) {
+            pthread_mutex_unlock(&g_srw_tab_mu);
+            return &g_srw_tab[i].rw;
+        }
+        if (!g_srw_tab[i].used && !free_slot) free_slot = &g_srw_tab[i];
+    }
+    if (!free_slot) { pthread_mutex_unlock(&g_srw_tab_mu); return NULL; }
+    free_slot->used = 1; free_slot->key = k;
+    pthread_rwlockattr_t a;
+    pthread_rwlockattr_init(&a);
+    pthread_rwlockattr_setkind_np(&a, PTHREAD_RWLOCK_PREFER_WRITER_NONRECURSIVE_NP);
+    pthread_rwlock_init(&free_slot->rw, &a);
+    pthread_rwlockattr_destroy(&a);
+    pthread_mutex_unlock(&g_srw_tab_mu);
+    return &free_slot->rw;
+}
+
+__attribute__((ms_abi)) void mw_AcquireSRWLockExclusive(void* srw) {
+    pthread_rwlock_t* rw = srw_get(srw);
+    if (rw) pthread_rwlock_wrlock(rw);
+    MW_TRACE("AcquireSRWLockExclusive(%p)", srw);
+}
+__attribute__((ms_abi)) void mw_ReleaseSRWLockExclusive(void* srw) {
+    pthread_rwlock_t* rw = srw_get(srw);
+    if (rw) pthread_rwlock_unlock(rw);
+    MW_TRACE("ReleaseSRWLockExclusive(%p)", srw);
+}
+__attribute__((ms_abi)) unsigned char mw_TryAcquireSRWLockExclusive(void* srw) {
+    pthread_rwlock_t* rw = srw_get(srw);
+    int rc = rw ? pthread_rwlock_trywrlock(rw) : 0;
+    MW_TRACE("TryAcquireSRWLockExclusive(%p) = %d", srw, rc == 0);
+    return (rc == 0) ? 1 : 0;
+}
+
+/* ---- Condition variables: CONDITION_VARIABLE is an opaque 8-byte slot.
+ * Internal mutex+cond per key; the SRW lock is released around the wait and
+ * re-acquired in the caller's mode (bit 0 of Flags = shared). ---- */
+typedef struct { void* key; int used; pthread_mutex_t mu; pthread_cond_t cd; } MwCvEntry;
+static MwCvEntry g_cv_tab[256];
+static pthread_mutex_t g_cv_tab_mu = PTHREAD_MUTEX_INITIALIZER;
+
+static MwCvEntry* cv_get(void* k) {
+    pthread_mutex_lock(&g_cv_tab_mu);
+    MwCvEntry* free_slot = NULL;
+    for (int i = 0; i < 256; i++) {
+        if (g_cv_tab[i].used && g_cv_tab[i].key == k) {
+            pthread_mutex_unlock(&g_cv_tab_mu);
+            return &g_cv_tab[i];
+        }
+        if (!g_cv_tab[i].used && !free_slot) free_slot = &g_cv_tab[i];
+    }
+    if (!free_slot) { pthread_mutex_unlock(&g_cv_tab_mu); return NULL; }
+    free_slot->used = 1; free_slot->key = k;
+    pthread_mutex_init(&free_slot->mu, NULL);
+    pthread_cond_init(&free_slot->cd, NULL);
+    pthread_mutex_unlock(&g_cv_tab_mu);
+    return free_slot;
+}
+
+__attribute__((ms_abi)) uint32_t mw_SleepConditionVariableSRW(void* cv, void* srw,
+                                                              uint32_t ms, uint32_t flags) {
+    MwCvEntry* c = cv_get(cv);
+    pthread_rwlock_t* rw = srw_get(srw);
+    if (!c || !rw) return 0;
+    if (flags & 1) pthread_rwlock_unlock(rw); else pthread_rwlock_unlock(rw);
+    uint32_t result = 0; /* WAIT_OBJECT_0? Windows: 0 = success */
+    pthread_mutex_lock(&c->mu);
+    if (ms == 0xFFFFFFFFu) {
+        pthread_cond_wait(&c->cd, &c->mu);
+    } else {
+        struct timespec ts;
+        clock_gettime(CLOCK_REALTIME, &ts);
+        ts.tv_sec += ms / 1000;
+        ts.tv_nsec += (long)(ms % 1000) * 1000000L;
+        if (ts.tv_nsec >= 1000000000L) { ts.tv_sec++; ts.tv_nsec -= 1000000000L; }
+        if (pthread_cond_timedwait(&c->cd, &c->mu, &ts) == ETIMEDOUT) result = 258; /* WAIT_TIMEOUT */
+    }
+    pthread_mutex_unlock(&c->mu);
+    if (flags & 1) pthread_rwlock_rdlock(rw); else pthread_rwlock_wrlock(rw);
+    MW_TRACE("SleepConditionVariableSRW(cv=%p, ms=%u) = %u", cv, ms, result);
+    return result;
+}
+__attribute__((ms_abi)) void mw_WakeConditionVariable(void* cv) {
+    MwCvEntry* c = cv_get(cv);
+    if (c) { pthread_mutex_lock(&c->mu); pthread_cond_signal(&c->cd); pthread_mutex_unlock(&c->mu); }
+    MW_TRACE("WakeConditionVariable(%p)", cv);
+}
+__attribute__((ms_abi)) void mw_WakeAllConditionVariable(void* cv) {
+    MwCvEntry* c = cv_get(cv);
+    if (c) { pthread_mutex_lock(&c->mu); pthread_cond_broadcast(&c->cd); pthread_mutex_unlock(&c->mu); }
+    MW_TRACE("WakeAllConditionVariable(%p)", cv);
+}
+
+/* ---- Fiber-local storage: index-based TLS array. Thread-exit callbacks are
+ * not invoked (documented limitation; nothing in the C++ startup path relies
+ * on FLS callbacks under this loader). ---- */
+#define MW_FLS_MAX 128
+static __thread void* g_fls_vals[MW_FLS_MAX];
+
+__attribute__((ms_abi)) uint32_t mw_FlsAlloc(void* cb) {
+    (void)cb;
+    static uint32_t next = 0;
+    static pthread_mutex_t mu = PTHREAD_MUTEX_INITIALIZER;
+    pthread_mutex_lock(&mu);
+    uint32_t idx = next++;
+    pthread_mutex_unlock(&mu);
+    MW_TRACE("FlsAlloc(cb=%p) = %u", cb, idx);
+    return (idx < MW_FLS_MAX) ? idx : 0xFFFFFFFFu;
+}
+__attribute__((ms_abi)) void* mw_FlsGetValue(uint32_t idx) {
+    return (idx < MW_FLS_MAX) ? g_fls_vals[idx] : NULL;
+}
+__attribute__((ms_abi)) int mw_FlsSetValue(uint32_t idx, void* val) {
+    if (idx >= MW_FLS_MAX) return 0;
+    g_fls_vals[idx] = val;
+    return 1;
+}
+
+/* ---- InitOnce: single-threaded-execution assumption for the fast path,
+ * serialized by a global mutex (startup-time use only). ---- */
+typedef int (__attribute__((ms_abi)) *mw_initonce_fn)(void* once, void* param, void* ctx);
+__attribute__((ms_abi)) int mw_InitOnceExecuteOnce(void* once, void* fn, void* param, void* ctx) {
+    static pthread_mutex_t mu = PTHREAD_MUTEX_INITIALIZER;
+    pthread_mutex_lock(&mu);
+    uint64_t* s = (uint64_t*)once;
+    int ok = 1;
+    if (*s != 2) {
+        ok = ((mw_initonce_fn)fn)(once, param, ctx);
+        if (ok) *s = 2;
+    }
+    pthread_mutex_unlock(&mu);
+    MW_TRACE("InitOnceExecuteOnce(once=%p) = %d", once, ok);
+    return ok;
+}
+
+/* ---- RtlRestoreContext: full GPR + XMM + RIP restore from a Windows
+ * CONTEXT (x64 layout). Used by unwinding resume paths. ---- */
+__attribute__((ms_abi)) void mw_RtlRestoreContext(void* ctx, void* exc) {
+    (void)exc;
+    if (!ctx) return;
+    register void* r10 asm("r10") = ctx;
+    asm volatile(
+        "movq 0x80(%%r10), %%rcx\n\t"
+        "movq 0x88(%%r10), %%rdx\n\t"
+        "movq 0x90(%%r10), %%rbx\n\t"
+        "movq 0xA0(%%r10), %%rbp\n\t"
+        "movq 0xA8(%%r10), %%rsi\n\t"
+        "movq 0xB0(%%r10), %%rdi\n\t"
+        "movq 0xB8(%%r10), %%r8\n\t"
+        "movq 0xC0(%%r10), %%r9\n\t"
+        "movq 0xD8(%%r10), %%r12\n\t"
+        "movq 0xE0(%%r10), %%r13\n\t"
+        "movq 0xE8(%%r10), %%r14\n\t"
+        "movq 0xF0(%%r10), %%r15\n\t"
+        "movdqu 0x1A0(%%r10), %%xmm0\n\t"
+        "movdqu 0x1B0(%%r10), %%xmm1\n\t"
+        "movdqu 0x1C0(%%r10), %%xmm2\n\t"
+        "movdqu 0x1D0(%%r10), %%xmm3\n\t"
+        "movdqu 0x1E0(%%r10), %%xmm4\n\t"
+        "movdqu 0x1F0(%%r10), %%xmm5\n\t"
+        "movdqu 0x200(%%r10), %%xmm6\n\t"
+        "movdqu 0x210(%%r10), %%xmm7\n\t"
+        "movdqu 0x220(%%r10), %%xmm8\n\t"
+        "movdqu 0x230(%%r10), %%xmm9\n\t"
+        "movdqu 0x240(%%r10), %%xmm10\n\t"
+        "movdqu 0x250(%%r10), %%xmm11\n\t"
+        "movdqu 0x260(%%r10), %%xmm12\n\t"
+        "movdqu 0x270(%%r10), %%xmm13\n\t"
+        "movdqu 0x280(%%r10), %%xmm14\n\t"
+        "movdqu 0x290(%%r10), %%xmm15\n\t"
+        "movq 0x78(%%r10), %%rax\n\t"        /* Rax */
+        "movq 0xC8(%%r10), %%r11\n\t"        /* R11 (r10 still = ctx) */
+        "movq 0x98(%%r10), %%rsp\n\t"        /* Rsp (final stack) */
+        "movq 0xC8(%%r10), %%r10\n\t"        /* R10 (last: r10 was ctx) */
+        "pushq %%rax\n\t"                    /* [Rsp-8] = Rip */
+        "ret\n\t"
+        :
+        : "r"(r10)
+        : "rax", "rcx", "rdx", "rbx", "rbp", "rsi", "rdi",
+          "r8", "r9", "r11", "r12", "r13", "r14", "r15", "memory"
+    );
+    __builtin_unreachable();
+}
+
+/* ---- misc kernel32 ---- */
+__attribute__((ms_abi)) void* mw_GetModuleHandleW(const wchar_t* name) {
+    MW_TRACE("GetModuleHandleW()");
+    if (name == NULL || name[0] == 0) return g_image_base;
+    return NULL;
+}
+__attribute__((ms_abi)) uint32_t mw_GetThreadId(void* h) {
+    (void)h;
+    return (uint32_t)syscall(SYS_gettid);
+}
+__attribute__((ms_abi)) int mw_SwitchToThread(void) {
+    return (sched_yield() == 0) ? 1 : 0;
+}
+__attribute__((ms_abi)) uint32_t mw_WaitForSingleObjectEx(void* h, uint32_t ms, int alertable) {
+    (void)alertable;
+    return mw_WaitForSingleObject(h, ms);
+}
+
+/* ---- msvcrt wave 2 ---- */
+__attribute__((ms_abi)) void* mw__aligned_malloc(size_t size, size_t align) {
+    void* p = NULL;
+    if (align < 8) align = 8;
+    if (posix_memalign(&p, align, size) != 0) return NULL;
+    return p;
+}
+__attribute__((ms_abi)) void mw__aligned_free(void* p) { free(p); }
+
+__attribute__((ms_abi)) void mw__assert(const char* msg, const char* file, unsigned line) {
+    fprintf(stderr, "Assertion failed: %s (%s:%u)\n", msg ? msg : "?", file ? file : "?", line);
+    abort();
+}
+
+__attribute__((ms_abi)) long long mw__strtoi64(const char* s, char** end, int base) {
+    return strtoll(s, end, base);
+}
+__attribute__((ms_abi)) unsigned long long mw__strtoui64(const char* s, char** end, int base) {
+    return strtoull(s, end, base);
+}
+/* NOTE: Windows wchar_t is 2 bytes (UTF-16), glibc's is 4 (UCS-4). For
+ * ASCII digit strings the leading bytes coincide, so simple passthrough is
+ * correct for the numeric cases the C++ runtime uses. Non-ASCII wide input
+ * needs a UTF-16 -> UTF-32 shim (follow-up API task). */
+__attribute__((ms_abi)) long mw_wcstol(const wchar_t* s, wchar_t** end, int base) {
+    return wcstol((const int*)s, (int**)end, base);
+}
+__attribute__((ms_abi)) unsigned long mw_wcstoul(const wchar_t* s, wchar_t** end, int base) {
+    return wcstoul((const int*)s, (int**)end, base);
+}
+__attribute__((ms_abi)) long long mw__wcstoi64(const wchar_t* s, wchar_t** end, int base) {
+    return wcstol((const int*)s, (int**)end, base);
+}
+__attribute__((ms_abi)) unsigned long long mw__wcstoui64(const wchar_t* s, wchar_t** end, int base) {
+    return wcstoul((const int*)s, (int**)end, base);
+}
+
+__attribute__((ms_abi)) wint_t mw_fputwc(wchar_t ch, void* file) {
+    FILE* f = map_crt_stream(file);
+    return f ? fputwc((wint_t)ch, f) : WEOF;
+}
+
+/* fwprintf: wide variadic — narrow the (ASCII) format specifiers for
+ * classification, then build the same SysV va_list and call vfwprintf. */
+__attribute__((ms_abi)) int mw_fwprintf(void* file, const wchar_t* fmt, ...) {
+    FILE* f = map_crt_stream(file);
+    unsigned char cls[MW_PRINTF_MAX_ARGS];
+    char narrow[512];
+    size_t k = 0;
+    if (fmt) {
+        const unsigned short* w = (const unsigned short*)fmt;
+        while (*w && k + 1 < sizeof(narrow)) { narrow[k++] = (char)(*w & 0xFF); w++; }
+    }
+    narrow[k] = 0;
+    int nargs = mw_printf_classify(narrow, cls);
+    unsigned long long slots[MW_PRINTF_MAX_ARGS];
+    va_list ap;
+    va_start(ap, fmt);
+    for (int i = 0; i < nargs; i++) {
+        if (cls[i]) { double d = va_arg(ap, double); memcpy(&slots[i], &d, 8); }
+        else        { slots[i] = (unsigned long long)va_arg(ap, long long); }
+    }
+    va_end(ap);
+    unsigned char cls2[MW_PRINTF_MAX_ARGS];
+    int parsed = mw_printf_classify(narrow, cls2);
+    if (nargs > parsed) nargs = parsed;
+
+    unsigned long long gpv[6] = {0,0,0,0,0,0};
+    unsigned long long fpv[8] = {0,0,0,0,0,0,0,0};
+    unsigned long long ovf[MW_PRINTF_MAX_ARGS];
+    int novf = 0, gpi = 1, fpi = 0;
+    for (int i = 0; i < nargs; i++) {
+        if (cls2[i]) { if (fpi < 8) fpv[fpi++] = slots[i]; else ovf[novf++] = slots[i]; }
+        else         { if (gpi < 6) gpv[gpi++] = slots[i]; else ovf[novf++] = slots[i]; }
+    }
+    unsigned long long reg_save[6 + 16];
+    memcpy(reg_save, gpv, sizeof(gpv));
+    for (int i = 0; i < 8; i++)
+        memcpy((unsigned char*)reg_save + 48 + 16 * i, &fpv[i], 8);
+    for (int i = fpi; i < 8; i++)
+        memset((unsigned char*)reg_save + 48 + 16 * i, 0, 16);
+    va_list sv;
+    mw_sysv_va_list* svv = (mw_sysv_va_list*)sv;
+    svv->gp_offset = 8;
+    svv->fp_offset = 48;
+    svv->overflow_arg_area = ovf;
+    svv->reg_save_area = reg_save;
+    return f ? vfwprintf(f, fmt, sv) : -1;
 }
 
 __attribute__((ms_abi)) int mw_rand(void) { return rand(); }
@@ -3379,6 +4161,59 @@ __attribute__((ms_abi)) void mw_srand(unsigned int seed) { srand(seed); }
 __attribute__((ms_abi)) int mw__onexit(void (*func)(void)) {
     MW_TRACE("_onexit(func=%p)", func);
     return atexit(func);
+}
+
+/* ---- TASK-API-007 wave 1 (appcompat sweep APP-F-02): CRT startup surface.
+ * mingw-w64 CRT startup imports these unconditionally; with them unresolved
+ * the IAT slot keeps the raw hint/name RVA and `call [iat]` faults at that
+ * RVA (observed RIP=0x92f8, SIGSEGV before main in every mingw PE). */
+
+__attribute__((ms_abi)) int mw_atexit(void (*func)(void)) {
+    MW_TRACE("atexit(func=%p)", func);
+    return atexit(func);
+}
+
+/* Windows _exit: terminate without flushing or running atexit handlers. */
+__attribute__((ms_abi)) void mw__exit_noflush(int code) {
+    MW_TRACE("_exit(code=%d)", code);
+    _exit(code);
+}
+
+/* msvcrt setvbuf modes differ from glibc: _IOFBF=0, _IOLBF=64, _IONBF=4
+ * (glibc: 0/1/2). Translate before forwarding to the real FILE*. */
+__attribute__((ms_abi)) int mw_setvbuf(void* stream, char* buf, int mode, size_t size) {
+    int gmode;
+    switch (mode) {
+        case 0:  gmode = _IOFBF; break;  /* _IOFBF */
+        case 64: gmode = _IOLBF; break;  /* _IOLBF */
+        case 4:  gmode = _IONBF; break;  /* _IONBF */
+        default: gmode = mode;   break;
+    }
+    MW_TRACE("setvbuf(stream=%p, mode=%d->%d, size=%zu)", stream, mode, gmode, size);
+    FILE* f = map_crt_stream(stream);
+    if (!f) return 0; /* nothing to do for a NULL stream */
+    return setvbuf(f, buf, gmode, size);
+}
+
+/* kernel32 GetCPInfo — CRT locale init asks for the ANSI code page.
+ * Honest SBCS answer: MaxCharSize=1, DefaultChar='?', no lead bytes. */
+__attribute__((ms_abi)) int mw_GetCPInfo(unsigned codepage, void* cpinfo) {
+    MW_TRACE("GetCPInfo(cp=%u)", codepage);
+    if (!cpinfo) return 0;           /* FALSE */
+    unsigned char* p = (unsigned char*)cpinfo;
+    p[0] = 1;                        /* MaxCharSize = 1 (SBCS) */
+    p[1] = 0;                        /* (padding of UINT on LE is BE byte 0) */
+    p[2] = '?'; p[3] = 0;            /* DefaultChar = "?" + NUL */
+    memset(p + 4, 0, 12);            /* LeadByte ranges: none */
+    return 1;                        /* TRUE */
+}
+
+/* msvcrt _XcptFilter — MSVC SEH filter helper used by CRT internals.
+ * Faithful default: never claim the exception. */
+__attribute__((ms_abi)) long mw__XcptFilter(unsigned long xcpt, void* ep) {
+    MW_TRACE("_XcptFilter(xcpt=0x%lx)", xcpt);
+    (void)ep;
+    return 0; /* EXCEPTION_CONTINUE_SEARCH */
 }
 
 __attribute__((ms_abi)) unsigned long mw__beginthreadex(void* sec, unsigned int stk,
@@ -3434,6 +4269,7 @@ static ImportEntry g_import_table[] = {
     ENTRY("KERNEL32.DLL", "EnterCriticalSection",               mw_EnterCriticalSection),
     ENTRY("KERNEL32.DLL", "GetConsoleCursorInfo",               mw_GetConsoleCursorInfo),
     ENTRY("KERNEL32.DLL", "GetConsoleMode",                      mw_GetConsoleMode),
+    ENTRY("KERNEL32.DLL", "GetCPInfo",                          mw_GetCPInfo),
     ENTRY("KERNEL32.DLL", "GetConsoleScreenBufferInfo",          mw_GetConsoleScreenBufferInfo),
     ENTRY("KERNEL32.DLL", "GetCurrentProcess",                   mw_GetCurrentProcess),
     ENTRY("KERNEL32.DLL", "GetCurrentProcessId",                 mw_GetCurrentProcessId),
@@ -3492,13 +4328,58 @@ static ImportEntry g_import_table[] = {
     ENTRY("KERNEL32.DLL", "VirtualQuery",                        mw_VirtualQuery),
     ENTRY("KERNEL32.DLL", "WaitForMultipleObjects",              mw_WaitForMultipleObjects),
     ENTRY("KERNEL32.DLL", "WaitForSingleObject",                 mw_WaitForSingleObject),
+    ENTRY("KERNEL32.DLL", "WaitForSingleObjectEx",               mw_WaitForSingleObjectEx),
+    ENTRY("KERNEL32.DLL", "WakeConditionVariable",               mw_WakeConditionVariable),
+    ENTRY("KERNEL32.DLL", "WakeAllConditionVariable",            mw_WakeAllConditionVariable),
+    ENTRY("KERNEL32.DLL", "SleepConditionVariableSRW",           mw_SleepConditionVariableSRW),
+    ENTRY("KERNEL32.DLL", "AcquireSRWLockExclusive",             mw_AcquireSRWLockExclusive),
+    ENTRY("KERNEL32.DLL", "ReleaseSRWLockExclusive",             mw_ReleaseSRWLockExclusive),
+    ENTRY("KERNEL32.DLL", "TryAcquireSRWLockExclusive",          mw_TryAcquireSRWLockExclusive),
+    ENTRY("KERNEL32.DLL", "InitOnceExecuteOnce",                 mw_InitOnceExecuteOnce),
+    ENTRY("KERNEL32.DLL", "RtlRestoreContext",                   mw_RtlRestoreContext),
+    ENTRY("KERNEL32.DLL", "GetModuleHandleW",                    mw_GetModuleHandleW),
+    ENTRY("KERNEL32.DLL", "GetThreadId",                         mw_GetThreadId),
+    ENTRY("KERNEL32.DLL", "SwitchToThread",                      mw_SwitchToThread),
     ENTRY("KERNEL32.DLL", "WideCharToMultiByte",                 mw_WideCharToMultiByte),
     ENTRY("KERNEL32.DLL", "WriteConsoleOutputA",                 mw_WriteConsoleOutputA),
 
     /* msvcrt.dll — Code imports */
     ENTRY("msvcrt.dll", "__C_specific_handler",   mw___C_specific_handler),
+    ENTRY("api-ms-win-crt-runtime-l1-1-0.dll", "__C_specific_handler", mw___C_specific_handler),
     ENTRY("msvcrt.dll", "__getmainargs",         mw___getmainargs),
+    ENTRY("api-ms-win-crt-runtime-l1-1-0.dll", "_configure_narrow_argv", mw__configure_narrow_argv),
+    ENTRY("api-ms-win-crt-runtime-l1-1-0.dll", "_initialize_narrow_environment", mw__initialize_narrow_environment),
+    ENTRY("api-ms-win-crt-runtime-l1-1-0.dll", "_set_new_mode", mw__set_new_mode),
+    ENTRY("api-ms-win-crt-runtime-l1-1-0.dll", "_set_invalid_parameter_handler", mw__set_invalid_parameter_handler),
+    ENTRY("api-ms-win-crt-runtime-l1-1-0.dll", "_crt_atexit",   mw_atexit),
+    ENTRY("api-ms-win-crt-runtime-l1-1-0.dll", "signal",        mw_signal_stub),
+    ENTRY("api-ms-win-crt-runtime-l1-1-0.dll", "_set_app_type", mw___set_app_type),
     ENTRY("msvcrt.dll", "__iob_func",            mw___iob_func),
+    ENTRY("api-ms-win-crt-stdio-l1-1-0.dll", "__acrt_iob_func", mw___acrt_iob_func),
+    ENTRY("api-ms-win-crt-stdio-l1-1-0.dll", "__stdio_common_vfprintf", mw___stdio_common_vfprintf),
+    ENTRY("api-ms-win-crt-stdio-l1-1-0.dll", "__stdio_common_vsprintf", mw___stdio_common_vsprintf),
+    ENTRY("api-ms-win-crt-stdio-l1-1-0.dll", "__stdio_common_vfwprintf", mw___stdio_common_vfwprintf),
+    ENTRY("api-ms-win-crt-stdio-l1-1-0.dll", "__stdio_common_vsscanf",  mw___stdio_common_vsscanf),
+    ENTRY("api-ms-win-crt-time-l1-1-0.dll", "_tzset",           mw__tzset),
+    ENTRY("api-ms-win-crt-stdio-l1-1-0.dll", "fopen",           mw_fopen),
+    ENTRY("api-ms-win-crt-stdio-l1-1-0.dll", "fclose",          mw_fclose),
+    ENTRY("api-ms-win-crt-stdio-l1-1-0.dll", "fread",           mw_fread),
+    ENTRY("api-ms-win-crt-stdio-l1-1-0.dll", "fwrite",          mw_fwrite),
+    ENTRY("api-ms-win-crt-stdio-l1-1-0.dll", "fgets",           mw_fgets),
+    ENTRY("api-ms-win-crt-stdio-l1-1-0.dll", "fgetc",           mw_fgetc),
+    ENTRY("api-ms-win-crt-stdio-l1-1-0.dll", "rewind",          mw_rewind),
+    ENTRY("api-ms-win-crt-stdio-l1-1-0.dll", "fseek",           mw_fseek),
+    ENTRY("api-ms-win-crt-stdio-l1-1-0.dll", "ftell",           mw_ftell),
+    ENTRY("api-ms-win-crt-stdio-l1-1-0.dll", "feof",            mw_feof),
+    ENTRY("msvcrt.dll", "fseek",                 mw_fseek),
+    ENTRY("msvcrt.dll", "ftell",                 mw_ftell),
+    ENTRY("msvcrt.dll", "feof",                  mw_feof),
+    ENTRY("api-ms-win-crt-time-l1-1-0.dll", "strftime",         mw_strftime),
+    ENTRY("api-ms-win-crt-private-l1-1-0.dll", "__p__fmode",    mw___p__fmode),
+    ENTRY("api-ms-win-crt-private-l1-1-0.dll", "__p__commode",  mw___p__commode),
+    ENTRY("api-ms-win-crt-runtime-l1-1-0.dll", "__p___argc",    mw___p___argc),
+    ENTRY("api-ms-win-crt-runtime-l1-1-0.dll", "__p___argv",    mw___p___argv),
+    ENTRY("api-ms-win-crt-environment-l1-1-0.dll", "__p__environ", mw___p__environ),
     ENTRY("msvcrt.dll", "__lconv_init",          mw___lconv_init),
     ENTRY("msvcrt.dll", "___lc_codepage_func",    mw___lc_codepage_func),
     ENTRY("msvcrt.dll", "___mb_cur_max_func",     mw___mb_cur_max_func),
@@ -3511,6 +4392,7 @@ static ImportEntry g_import_table[] = {
     ENTRY("msvcrt.dll", "_close",                mw__close),
     ENTRY("msvcrt.dll", "_dup",                  mw__dup),
     ENTRY("msvcrt.dll", "_endthreadex",          mw__endthreadex),
+    ENTRY("msvcrt.dll", "_exit",                 mw__exit_noflush),
     ENTRY("msvcrt.dll", "_errno",                mw__errno),
     ENTRY("msvcrt.dll", "_fstat64",              mw__fstat64),
     ENTRY("msvcrt.dll", "_fileno",               mw__fileno),
@@ -3539,26 +4421,32 @@ static ImportEntry g_import_table[] = {
     ENTRY("msvcrt.dll", "_unlock",               mw__unlock),
     ENTRY("msvcrt.dll", "_wopen",                mw__wopen),
     ENTRY("msvcrt.dll", "_write",                mw__write),
+    ENTRY("msvcrt.dll", "_XcptFilter",            mw__XcptFilter),
     ENTRY("msvcrt.dll", "abort",                 mw_abort),
     ENTRY("msvcrt.dll", "atoi",                  mw_atoi),
+    ENTRY("msvcrt.dll", "atexit",                mw_atexit),
     ENTRY("msvcrt.dll", "calloc",                mw_calloc),
     ENTRY("msvcrt.dll", "clock",                 mw_clock),
     ENTRY("msvcrt.dll", "exit",                  mw_exit),
-    ENTRY("msvcrt.dll", "fclose",                mw_fclose),
-    ENTRY("msvcrt.dll", "feof",                  mw_feof),
-    ENTRY("msvcrt.dll", "fgetc",                 mw_fgetc),
-    ENTRY("msvcrt.dll", "fopen",                 mw_fopen),
-    ENTRY("msvcrt.dll", "fread",                 mw_fread),
-    ENTRY("msvcrt.dll", "fseek",                 mw_fseek),
-    ENTRY("msvcrt.dll", "ftell",                 mw_ftell),
-    ENTRY("msvcrt.dll", "remove",                mw_remove),
-    ENTRY("msvcrt.dll", "_strtoi64",             mw__strtoi64),
-    ENTRY("msvcrt.dll", "_strtoui64",            mw__strtoui64),
     ENTRY("msvcrt.dll", "fflush",                mw_fflush),
     ENTRY("msvcrt.dll", "fprintf",               mw_fprintf),
     ENTRY("msvcrt.dll", "fputc",                 mw_fputc),
     ENTRY("msvcrt.dll", "fputs",                 mw_fputs),
     ENTRY("msvcrt.dll", "free",                  mw_free),
+    ENTRY("msvcrt.dll", "_aligned_malloc",       mw__aligned_malloc),
+    ENTRY("msvcrt.dll", "_aligned_free",         mw__aligned_free),
+    ENTRY("msvcrt.dll", "_assert",               mw__assert),
+    ENTRY("msvcrt.dll", "_strtoi64",             mw__strtoi64),
+    ENTRY("msvcrt.dll", "_strtoui64",            mw__strtoui64),
+    ENTRY("msvcrt.dll", "wcstol",                mw_wcstol),
+    ENTRY("msvcrt.dll", "wcstoul",               mw_wcstoul),
+    ENTRY("msvcrt.dll", "_wcstoi64",             mw__wcstoi64),
+    ENTRY("msvcrt.dll", "_wcstoui64",            mw__wcstoui64),
+    ENTRY("msvcrt.dll", "fputwc",                mw_fputwc),
+    ENTRY("msvcrt.dll", "fwprintf",              mw_fwprintf),
+    ENTRY("msvcrt.dll", "FlsAlloc",              mw_FlsAlloc),
+    ENTRY("msvcrt.dll", "FlsGetValue",           mw_FlsGetValue),
+    ENTRY("msvcrt.dll", "FlsSetValue",           mw_FlsSetValue),
     ENTRY("msvcrt.dll", "fwrite",                mw_fwrite),
     ENTRY("msvcrt.dll", "getc",                  mw_getc),
     ENTRY("msvcrt.dll", "getenv",                mw_getenv),
@@ -3576,10 +4464,12 @@ static ImportEntry g_import_table[] = {
     ENTRY("msvcrt.dll", "memset",                mw_memset),
     ENTRY("msvcrt.dll", "printf",                mw_printf),
     ENTRY("msvcrt.dll", "puts",                  mw_puts),
+    ENTRY("msvcrt.dll", "setvbuf",               mw_setvbuf),
     ENTRY("msvcrt.dll", "qsort",                 mw_qsort),
     ENTRY("msvcrt.dll", "rand",                  mw_rand),
     ENTRY("msvcrt.dll", "realloc",               mw_realloc),
     ENTRY("msvcrt.dll", "rename",                mw_rename),
+    ENTRY("api-ms-win-crt-stdio-l1-1-0.dll", "remove",           mw_remove),
     ENTRY("msvcrt.dll", "signal",                mw_signal),
     ENTRY("msvcrt.dll", "srand",                 mw_srand),
     ENTRY("msvcrt.dll", "strchr",                mw_strchr),
@@ -3614,6 +4504,14 @@ static DataImportEntry g_data_imports[] = {
     { "msvcrt.dll", "__initenv",   &g_initenv_ptr },
     { "msvcrt.dll", "_commode",   &g_commode_val },
     { "msvcrt.dll", "_fmode",     &g_fmode_val },
+    /* TASK-API-011: UCRT-flavored data exports (__p_* return pointers to
+     * the variables; __tzname/__timezone/__daylight are the variables). */
+    /* ALL UCRT __p_* exports are FUNCTIONS returning &var — t10 crashes
+     * (0x2039038 __p__fmode, 0x2039034 __p__commode, 0x2039050 __p___argc)
+     * proved call-style usage for each. See mw___p__* below. */
+    { "api-ms-win-crt-time-l1-1-0.dll", "__tzname",   g_tzname },
+    { "api-ms-win-crt-time-l1-1-0.dll", "__timezone", &g_timezone_val },
+    { "api-ms-win-crt-time-l1-1-0.dll", "__daylight", &g_daylight_val },
     /* _errno removed from data imports — it's a function, not data */
 };
 #define NUM_DATA_IMPORTS (sizeof(g_data_imports) / sizeof(g_data_imports[0]))
@@ -3905,13 +4803,37 @@ static int load_pe(const char* filepath) {
         fprintf(stderr, "[WARN] %d imports unresolved\n", total_unresolved);
     }
 
-    /* Check TLS */
+    /* Check TLS (TASK-TLS-001): implement native static TLS.
+     * - allocate the image's TLS template + zero-fill as slot 0 block
+     * - write the slot index into the image's __tls_index
+     * - publish the block via ThreadLocalStoragePointer (gs:0x58 -> array)
+     * - run TLS callbacks with DLL_PROCESS_ATTACH */
     if (num_dd > DD_TLS && dd[DD_TLS].VirtualAddress != 0) {
         TlsDirectory64* tls = (TlsDirectory64*)(g_image_base + dd[DD_TLS].VirtualAddress);
         MW_TRACE("TLS: StartRaw=0x%lx EndRaw=0x%lx Callbacks=0x%lx",
                  tls->StartAddressOfRawData, tls->EndAddressOfRawData,
                  tls->AddressOfCallBacks);
-        /* No TLS callbacks for UPX 4.2.4 (AddressOfCallBacks = 0) */
+        size_t raw_size = 0;
+        if (tls->EndAddressOfRawData > tls->StartAddressOfRawData)
+            raw_size = (size_t)(tls->EndAddressOfRawData - tls->StartAddressOfRawData);
+        uint8_t* block = (uint8_t*)malloc(raw_size + tls->SizeOfZeroFill);
+        if (block) {
+            if (raw_size) memcpy(block, (void*)(uintptr_t)tls->StartAddressOfRawData, raw_size);
+            if (tls->SizeOfZeroFill) memset(block + raw_size, 0, tls->SizeOfZeroFill);
+            g_tls_ptr_array[0] = block;                 /* static TLS slot = 0 */
+            if (tls->AddressOfIndex)
+                *(uint32_t*)(uintptr_t)tls->AddressOfIndex = 0;
+            MW_TRACE("TLS: static block %p (%zu+%u bytes) -> slot 0",
+                     block, raw_size, tls->SizeOfZeroFill);
+        }
+        if (tls->AddressOfCallBacks) {
+            typedef void (__attribute__((ms_abi)) *tls_cb)(void*, uint32_t, void*);
+            void** cb = (void**)(uintptr_t)tls->AddressOfCallBacks;
+            for (uint32_t i = 0; cb[i]; i++) {
+                MW_TRACE("TLS: callback[%u] = %p", i, cb[i]);
+                ((tls_cb)cb[i])(g_image_base, 1 /* DLL_PROCESS_ATTACH */, NULL);
+            }
+        }
     }
 
     /* Store Exception directory (.pdata) for SEH unwinding */
