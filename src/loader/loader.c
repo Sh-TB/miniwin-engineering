@@ -37,6 +37,7 @@
 #include <sys/stat.h>
 #include <sys/statvfs.h>
 #include <dirent.h>
+#include <fnmatch.h>
 #include <libgen.h>
 #include <malloc.h>
 #include <sys/sysinfo.h>
@@ -6212,15 +6213,70 @@ __attribute__((ms_abi)) uint32_t mw_GetWindowsDirectoryW(wchar_t* out, uint32_t 
     return (uint32_t)n;
 }
 
-/* ---- directory enumeration (FindFirstFileExW family) ---- */
-typedef struct { DIR* d; char pattern[4096]; int first; } W3Find;
+/* ---- directory enumeration (FindFirstFile* family) ----
+ * BUG-049 (2026-10-17): the old fill_find_data wrote cFileName at +68 and
+ * the file size at +52/+56, but the real x64 WIN32_FIND_DATAW (592 bytes)
+ * is: attributes 0, ftCreation 4, ftLastAccess 12, ftLastWrite 20,
+ * nFileSizeHigh 28, nFileSizeLow 32, dwReserved0 36, dwReserved1 40,
+ * cFileName[260] @44, cAlternateFileName[14] @564. Guests read names/sizes
+ * from +44/+28 — every enumeration returned garbage names.
+ * Also fixed the contract: FindFirstFile{Ex}W now RETURNS the first match
+ * (buffer filled) and FindNextFileW continues from the second; wildcards
+ * (* ?) match via fnmatch; a non-wildcard pattern that does not exist fails
+ * with ERROR_FILE_NOT_FOUND(2), not ERROR_NO_MORE_FILES(18). */
+typedef struct { DIR* d; char pattern[4096]; char dirpart[4096]; int first; } W3Find;
 static W3Find g_finds[64];
 static int g_find_count = 0;
-__attribute__((ms_abi)) void* mw_FindFirstFileExW(const wchar_t* pattern, int level, void* data, int search_op, void* filter, uint32_t extra) {
-    char p8[4096];
-    if (!pattern || wcstombs(p8, pattern, sizeof(p8) - 1) == (size_t)-1) { mw_SetLastError(87); return (void*)-1; }
-    p8[sizeof(p8)-1] = '\0';
-    MW_TRACE("FindFirstFileExW(%s)", p8);
+
+static uint64_t ft_from_time_t(uint64_t t) {
+    return (t + 11644473600ULL) * 10000000ULL; /* 1601-01-01 epoch, 100ns */
+}
+
+static void fill_find_data(void* data, const char* name, const struct stat* st) {
+    if (!data) return;
+    uint8_t* p = (uint8_t*)data;
+    memset(p, 0, 592);
+    int is_dir = S_ISDIR(st->st_mode);
+    uint32_t attr = is_dir ? 0x10 /*DIRECTORY*/ : 0x20 /*ARCHIVE*/;
+    if (name[0] == '.') attr |= 0x2 /*HIDDEN*/;
+    *(uint32_t*)(p + 0) = attr;
+    *(uint64_t*)(p + 4)  = ft_from_time_t((uint64_t)st->st_ctime);
+    *(uint64_t*)(p + 12) = ft_from_time_t((uint64_t)st->st_atime);
+    *(uint64_t*)(p + 20) = ft_from_time_t((uint64_t)st->st_mtime);
+    uint64_t sz = is_dir ? 0 : (uint64_t)st->st_size;
+    *(uint32_t*)(p + 28) = (uint32_t)(sz >> 32);
+    *(uint32_t*)(p + 32) = (uint32_t)sz;
+    w3_utf8_to_utf16le(name, strlen(name), (uint16_t*)(p + 44), 259);
+    ((uint16_t*)(p + 44))[259] = 0;
+    /* cAlternateFileName left zeroed (no 8.3 names on this platform) */
+}
+
+static int find_has_wildcard(const char* s) {
+    return strchr(s, '*') != NULL || strchr(s, '?') != NULL;
+}
+
+/* Walk g_finds[*f] until the next entry matching f->pattern; fill data.
+ * Returns 1 on match, 0 when exhausted (caller sets the error code). */
+static int find_next_match(W3Find* f, void* data) {
+    struct dirent* de;
+    while ((de = readdir(f->d)) != NULL) {
+        if (strcmp(f->pattern, "*") != 0 &&
+            fnmatch(f->pattern, de->d_name, 0) != 0) continue;
+        struct stat st;
+        int dfd = dirfd(f->d);
+        if (fstatat(dfd >= 0 ? dfd : AT_FDCWD, de->d_name, &st,
+                    (dfd >= 0 ? 0 : AT_SYMLINK_NOFOLLOW)) != 0) continue;
+        char full[8192];
+        snprintf(full, sizeof(full), "%s/%s", f->dirpart, de->d_name);
+        (void)full;
+        fill_find_data(data, de->d_name, &st);
+        return 1;
+    }
+    return 0;
+}
+
+static void* find_first_impl(const char* p8, void* data) {
+    MW_TRACE("FindFirstFile(%s)", p8);
     if (g_find_count >= 64) { mw_SetLastError(4); return (void*)-1; }
     char dirpart[4096];
     snprintf(dirpart, sizeof(dirpart), "%s", p8);
@@ -6228,52 +6284,60 @@ __attribute__((ms_abi)) void* mw_FindFirstFileExW(const wchar_t* pattern, int le
     const char* fname = "*";
     if (slash) { *slash = '\0'; fname = slash + 1; if (!dirpart[0]) snprintf(dirpart, sizeof(dirpart), "%s", "/"); }
     else { snprintf(dirpart, sizeof(dirpart), "%s", "."); fname = p8; }
-    DIR* d = opendir(dirpart);
+    if (!fname[0]) fname = "*";
+    /* Non-wildcard: Windows stats the exact file and fails with 2 if absent */
+    if (!find_has_wildcard(fname)) {
+        struct stat st;
+        if (stat(p8, &st) != 0) { mw_SetLastError(2); return (void*)-1; }
+        DIR* d = opendir(dirpart[0] ? dirpart : ".");
+        if (!d) { mw_SetLastError(3); return (void*)-1; }
+        W3Find* f = &g_finds[g_find_count];
+        f->d = d; f->first = 1;
+        snprintf(f->pattern, sizeof(f->pattern), "%s", fname);
+        snprintf(f->dirpart, sizeof(f->dirpart), "%s", dirpart[0] ? dirpart : ".");
+        void* h = (void*)(uintptr_t)(4 + g_find_count++);
+        fill_find_data(data, fname, &st);
+        return h;
+    }
+    DIR* d = opendir(dirpart[0] ? dirpart : ".");
     if (!d) { mw_SetLastError(3); return (void*)-1; }
     W3Find* f = &g_finds[g_find_count];
     f->d = d;
     f->first = 1;
     snprintf(f->pattern, sizeof(f->pattern), "%s", fname);
-    return (void*)(uintptr_t)(4 + g_find_count++);
+    snprintf(f->dirpart, sizeof(f->dirpart), "%s", dirpart[0] ? dirpart : ".");
+    void* h = (void*)(uintptr_t)(4 + g_find_count++);
+    if (!find_next_match(f, data)) {
+        mw_SetLastError(2); /* nothing matched */
+        closedir(d);
+        f->d = NULL;
+        return (void*)-1;
+    }
+    return h;
 }
-static void fill_find_data(void* data, const char* name, int is_dir, uint64_t size) {
-    /* WIN32_FIND_DATAW layout: dwFileAttributes(0), ftCreation(4..20),
-     * ftLastAccess(20..36), ftLastWrite(36..52), file size(52..60),
-     * reserved(60..68), cFileName wchars at 68 */
-    if (!data) return;
-    uint8_t* p = (uint8_t*)data;
-    *(uint32_t*)(p + 0) = is_dir ? 0x10 : 0x20;
-    memset(p + 4, 0, 64);
-    *(uint32_t*)(p + 52) = (uint32_t)size;
-    *(uint32_t*)(p + 56) = (uint32_t)(size >> 32);
-    size_t n = utf8_to_utf16(name, (wchar_t*)(p + 68), 259);
-    ((wchar_t*)(p + 68))[n] = 0;
+
+__attribute__((ms_abi)) void* mw_FindFirstFileExW(const wchar_t* pattern, int level, void* data, int search_op, void* filter, uint32_t extra) {
+    char p8[4096];
+    if (!pattern || wcstombs(p8, pattern, sizeof(p8) - 1) == (size_t)-1) { mw_SetLastError(87); return (void*)-1; }
+    p8[sizeof(p8)-1] = '\0';
+    return find_first_impl(p8, data);
 }
+
 __attribute__((ms_abi)) int mw_FindNextFileW(void* h, void* data) {
     int idx = (int)(uintptr_t)h - 4;
-    if (idx < 0 || idx >= g_find_count) { mw_SetLastError(6); return 0; }
+    if (idx < 0 || idx >= g_find_count || !g_finds[idx].d) { mw_SetLastError(6); return 0; }
     W3Find* f = &g_finds[idx];
-    struct dirent* de;
-    while ((de = readdir(f->d))) {
-        if (strcmp(f->pattern, "*") == 0 || strcmp(f->pattern, de->d_name) == 0) {
-            char full[8192];
-            DIR* d = f->d;
-            int dfd = dirfd(d);
-            struct stat st;
-            if (dfd >= 0) fstatat(dfd, de->d_name, &st, 0);
-            else stat(de->d_name, &st);
-            fill_find_data(data, de->d_name, S_ISDIR(st.st_mode), S_ISDIR(st.st_mode) ? 0 : st.st_size);
-            return 1;
-        }
+    if (!find_next_match(f, data)) {
+        mw_SetLastError(18); /* ERROR_NO_MORE_FILES */
+        return 0;
     }
-    mw_SetLastError(18); /* ERROR_NO_MORE_FILES */
-    return 0;
+    return 1;
 }
+
 __attribute__((ms_abi)) int mw_FindClose(void* h) {
     int idx = (int)(uintptr_t)h - 4;
     if (idx < 0 || idx >= g_find_count) return 0;
-    if (g_finds[idx].d) closedir(g_finds[idx].d);
-    g_finds[idx].d = NULL;
+    if (g_finds[idx].d) { closedir(g_finds[idx].d); g_finds[idx].d = NULL; }
     return 1;
 }
 
