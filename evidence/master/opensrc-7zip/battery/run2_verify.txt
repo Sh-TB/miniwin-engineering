@@ -1,0 +1,2 @@
+f1.txt: OK
+f2.bin: OK

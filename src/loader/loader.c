@@ -36,6 +36,7 @@
  * waits, libgen for path transforms. */
 #include <sys/stat.h>
 #include <sys/statvfs.h>
+#include <sys/resource.h>
 #include <dirent.h>
 #include <fnmatch.h>
 #include <libgen.h>
@@ -3066,8 +3067,14 @@ __attribute__((ms_abi)) int mw_VirtualProtect(void* addr, size_t size, uint32_t 
     if (prot & 0x04) linux_prot |= PROT_WRITE;
     if (prot & 0x20) linux_prot |= PROT_EXEC;
     if (old) *old = 0x04; /* PAGE_READWRITE */
-    /* For --version, VirtualProtect on our own mapped memory should work */
-    if (mprotect(addr, size, linux_prot) == 0) return 1;
+    /* OPENSRC-7ZIP: Windows VirtualProtect accepts any address and rounds
+     * internally; mprotect demands page alignment (mingw CRT passes the raw
+     * TLS/stack address -> EINVAL -> "VirtualProtect failed" abort, t08). */
+    if (addr) {
+        uintptr_t page = (uintptr_t)addr & ~(uintptr_t)0xFFF;
+        size_t span = ((uintptr_t)addr - page) + size;
+        if (mprotect((void*)page, (span + 0xFFF) & ~(size_t)0xFFF, linux_prot) == 0) return 1;
+    }
     return 0;
 }
 
@@ -3149,6 +3156,34 @@ static int w3_w16_to_utf8_size(const uint16_t* s) {
     int got = w3_utf16le_to_utf8(s, (int)u, NULL, 0);
     return got < 0 ? -1 : got;
 }
+/* BUG-054 (2026-10-17): guest paths use Windows separators. 7-Zip builds
+ * "<posix-cwd>\<name>" because GetCurrentDirectoryW hands out the POSIX cwd
+ * and the guest appends '\' — the result must be normalized before any
+ * POSIX call: '\' -> '/', strip a single-letter drive prefix ("C:" -> "/"),
+ * collapse duplicate slashes. In-place, returns the pointer. */
+static char* w3_normalize_path(char* p) {
+    if (!p) return p;
+    for (char* q = p; *q; q++)
+        if (*q == '\\') *q = '/';
+    if (((p[0] >= 'A' && p[0] <= 'Z') || (p[0] >= 'a' && p[0] <= 'z')) && p[1] == ':') {
+        /* drive prefix: drop "X:" and make the rest absolute at '/' */
+        char* r = p + 2;
+        if (*r == '/') r++;
+        memmove(p, "/", 1);
+        /* move the remainder (already slash-normalized) */
+        size_t rest = strlen(r);
+        memmove(p + 1, r, rest + 1);
+    }
+    /* collapse '//' (not leading) */
+    char* w = p;
+    for (char* q = p; *q; ) {
+        if (*q == '/' && q[1] == '/' && w != p) { q++; continue; }
+        *w++ = *q++;
+    }
+    *w = '\0';
+    return p;
+}
+
 /* 2-byte wide string primitives (guest ABI) */
 static size_t w16len(const uint16_t* s) { size_t n = 0; if (s) while (s[n]) n++; return n; }
 static int w16cmp(const uint16_t* a, const uint16_t* b) {
@@ -3353,6 +3388,9 @@ static FILE* mwfile_hostfp_of(void* p) {
         if (g_mwfile_tab[i].mf == (MwFile*)p) return g_mwfile_tab[i].hf;
     return NULL;
 }
+
+/* OPENSRC-7ZIP: msvcrt _iob data window (3 x 0x30, guest FILE stride) */
+static uint8_t g_msvcrt_iob[3 * 0x30] __attribute__((aligned(16)));
 
 static FILE* map_crt_stream(void* stream); /* fwd decl (defined below) */
 
@@ -3778,6 +3816,18 @@ static FILE* map_crt_stream(void* stream) {
                  idx == 0 ? "stdin" : idx == 1 ? "stdout" : "stderr");
         return mapped;
     }
+    {   /* OPENSRC-7ZIP: msvcrt _iob data import window (same 0x30 stride) */
+        uintptr_t base2 = (uintptr_t)g_msvcrt_iob;
+        if (s >= base2 && s < base2 + 0x90) {
+            uintptr_t off = s - base2;
+            int idx = (int)(off / 0x30);
+            if (idx < 0 || idx > 2) idx = 1;
+            FILE* mapped = (idx == 0) ? stdin : (idx == 1) ? stdout : stderr;
+            MW_TRACE("map_crt_stream: _iob+%#zx -> %s", (size_t)off,
+                     idx == 0 ? "stdin" : idx == 1 ? "stdout" : "stderr");
+            return mapped;
+        }
+    }
     /* TASK-API-011: pointers outside the synthetic iob window are REAL
      * glibc FILE* (fmemopen/fopen-backed streams created by our own API
      * implementations). Pass them through verbatim; the old "unknown ->
@@ -4086,6 +4136,7 @@ __attribute__((ms_abi)) int mw__wopen(const wchar_t* path, int flags, int mode) 
     MW_TRACE("_wopen()");
     char buf[1024];
     w3_w16_to_utf8z((const uint16_t*)path, buf, sizeof(buf));
+w3_normalize_path(buf);
     return mw__open(buf, flags, mode);
 }
 
@@ -5936,6 +5987,10 @@ __attribute__((ms_abi)) void* mw_CreateFileA(const char* name, uint32_t access, 
     return w3_create_file(name, access, disp);
 }
 static void* w3_create_file(const char* name8, uint32_t access, uint32_t disp) {
+    char nn8[4096];
+    snprintf(nn8, sizeof(nn8), "%s", name8);
+    w3_normalize_path(nn8);
+    name8 = nn8;
     if (!g_w3files_ready) { memset(g_w3files, 0, sizeof(g_w3files)); g_w3files_ready = 1; }
     int slot = -1;
     for (int i = 0; i < MAX_HANDLES; i++) if (!g_w3files[i].in_use) { slot = i; break; }
@@ -6130,6 +6185,8 @@ __attribute__((ms_abi)) int mw_MoveFileExW(const wchar_t* from, const wchar_t* t
     char f8[4096], t8[4096];
     if (!from || !to || w3_w16_to_utf8z((const uint16_t*)from, f8, sizeof(f8)) < 0
         || w3_w16_to_utf8z((const uint16_t*)to, t8, sizeof(t8)) < 0) { mw_SetLastError(87); return 0; }
+    w3_normalize_path(f8);
+    w3_normalize_path(t8);
     f8[sizeof(f8)-1] = '\0'; t8[sizeof(t8)-1] = '\0';
     MW_TRACE("MoveFileExW(%s -> %s)", f8, t8);
     if (rename(f8, t8) != 0) { mw_SetLastError(2); return 0; }
@@ -6146,6 +6203,8 @@ __attribute__((ms_abi)) int mw_CopyFile2(const wchar_t* from, const wchar_t* to,
     char f8[4096], t8[4096];
     if (!from || !to || w3_w16_to_utf8z((const uint16_t*)from, f8, sizeof(f8)) < 0
         || w3_w16_to_utf8z((const uint16_t*)to, t8, sizeof(t8)) < 0) { mw_SetLastError(87); return 0x80070057u; }
+    w3_normalize_path(f8);
+    w3_normalize_path(t8);
     f8[sizeof(f8)-1] = '\0'; t8[sizeof(t8)-1] = '\0';
     MW_TRACE("CopyFile2(%s -> %s)", f8, t8);
     FILE* a = fopen(f8, "rb");
@@ -6235,7 +6294,9 @@ __attribute__((ms_abi)) uint32_t mw_GetTempPathW(uint32_t cap, wchar_t* out) {
 __attribute__((ms_abi)) uint32_t mw_GetTempFileNameW(const wchar_t* path, const wchar_t* prefix, uint32_t uniq, wchar_t* out) {
     char p8[2048], u8[64];
     if (path) w3_w16_to_utf8z((const uint16_t*)path, p8, sizeof(p8)); else snprintf(p8, sizeof(p8), "%s", "/tmp");
+w3_normalize_path(p8);
     if (prefix) w3_w16_to_utf8z((const uint16_t*)prefix, u8, sizeof(u8)); else u8[0] = '\0';
+w3_normalize_path(u8);
     char full[4096];
     snprintf(full, sizeof(full), "%s/%s%04x.tmp", p8, u8, (uint32_t)(time(NULL) & 0xffff) + uniq);
     FILE* f = fopen(full, "wb");
@@ -6275,6 +6336,7 @@ __attribute__((ms_abi)) uint32_t mw_GetVolumePathNameW(const wchar_t* name, wcha
 __attribute__((ms_abi)) int mw_SetCurrentDirectoryW(const wchar_t* dir) {
     char d8[4096];
     if (!dir || w3_w16_to_utf8z((const uint16_t*)dir, d8, sizeof(d8)) < 0) return 0;
+w3_normalize_path(d8);
     d8[sizeof(d8)-1] = '\0';
     MW_TRACE("SetCurrentDirectoryW(%s)", d8);
     if (chdir(d8) != 0) { mw_SetLastError(2); return 0; }
@@ -6370,6 +6432,10 @@ static int find_next_match(W3Find* f, void* data) {
 }
 
 static void* find_first_impl(const char* p8, void* data) {
+    char np8[4096];
+    snprintf(np8, sizeof(np8), "%s", p8);
+    w3_normalize_path(np8);
+    p8 = np8;
     MW_TRACE("FindFirstFile(%s)", p8);
     if (g_find_count >= 64) { mw_SetLastError(4); return (void*)-1; }
     char dirpart[4096];
@@ -6946,6 +7012,7 @@ __attribute__((ms_abi)) void mw__wassert(const wchar_t* msg, const wchar_t* file
     char m8[512], f8[512];
     if (msg) w3_w16_to_utf8z((const uint16_t*)msg, m8, sizeof(m8)), m8[sizeof(m8)-1] = 0; else m8[0] = 0;
     if (file) w3_w16_to_utf8z((const uint16_t*)file, f8, sizeof(f8)), f8[sizeof(f8)-1] = 0; else f8[0] = 0;
+    w3_normalize_path(f8);
     fprintf(stderr, "Assertion failed: %s (%s:%u)\n", m8, f8, line);
     abort();
 }
@@ -7117,6 +7184,7 @@ __attribute__((ms_abi)) char* mw__fullpath(char* abs, const char* rel, size_t n)
 __attribute__((ms_abi)) wchar_t* mw__wfullpath(wchar_t* abs, const wchar_t* rel, size_t n) {
     char r8[4096], buf[4096];
     if (!rel || w3_w16_to_utf8z((const uint16_t*)rel, r8, sizeof(r8)) < 0) return NULL;
+    w3_normalize_path(r8);
     r8[sizeof(r8)-1] = 0;
     if (r8[0] != '/') {
         char cwd[2048];
@@ -7151,6 +7219,8 @@ __attribute__((ms_abi)) int mw__wrename(const wchar_t* a, const wchar_t* b) {
     char a8[4096], b8[4096];
     if (!a || !b || w3_w16_to_utf8z((const uint16_t*)a, a8, sizeof(a8)) < 0
         || w3_w16_to_utf8z((const uint16_t*)b, b8, sizeof(b8)) < 0) return -1;
+    w3_normalize_path(a8);
+    w3_normalize_path(b8);
     a8[sizeof(a8)-1] = 0; b8[sizeof(b8)-1] = 0;
     return rename(a8, b8);
 }
@@ -7670,6 +7740,446 @@ __attribute__((ms_abi)) void* mw_LoadLibraryExA(const char* name, void* file, ui
     mw_SetLastError(126);
     return NULL;
 }
+
+/* ====================================================================
+ * OPENSRC-7ZIP wave A (2026-10-17): 45 imports required by 7-Zip 25.01
+ * x64 (7za.exe / 7z.exe). Registered under TASK-OPENSRC-7ZIP.
+ * ==================================================================== */
+
+/* ---- OLEAUT32: BSTR = [uint32 byte_len][UTF-16 data][NUL] ---- */
+static void* bstr_alloc_len(const uint16_t* src, uint32_t units) {
+    uint32_t bytes = units * 2;
+    uint8_t* raw = (uint8_t*)malloc(4 + bytes + 2);
+    if (!raw) return NULL;
+    *(uint32_t*)raw = bytes;
+    uint16_t* data = (uint16_t*)(raw + 4);
+    if (src) memcpy(data, src, bytes);
+    data[units] = 0;
+    return data;
+}
+__attribute__((ms_abi)) void* mw_SysAllocString(const uint16_t* str) {
+    if (!str) return NULL;
+    uint32_t n = 0; while (str[n]) n++;
+    return bstr_alloc_len(str, n);
+}
+__attribute__((ms_abi)) void* mw_SysAllocStringLen(const uint16_t* str, uint32_t len) {
+    return bstr_alloc_len(str, len);
+}
+__attribute__((ms_abi)) uint32_t mw_SysStringLen(const uint16_t* bstr) {
+    if (!bstr) return 0;
+    return *(uint32_t*)((uint8_t*)bstr - 4) / 2;
+}
+__attribute__((ms_abi)) uint32_t mw_SysStringByteLen(const uint16_t* bstr) {
+    if (!bstr) return 0;
+    return *(uint32_t*)((uint8_t*)bstr - 4);
+}
+__attribute__((ms_abi)) void mw_SysFreeString(uint16_t* bstr) {
+    if (!bstr) return;
+    free((uint8_t*)bstr - 4);
+}
+/* VARIANT x64: WORD vt; WORD r1,r2,r3; union { ... void* bstrVal @+8 } */
+__attribute__((ms_abi)) long mw_VariantClear(void* pvarg) {
+    if (!pvarg) return 0x80004003L; /* E_POINTER */
+    uint16_t vt = *(uint16_t*)pvarg;
+    if (vt == 8 /*VT_BSTR*/) {
+        void* b = *(void**)((uint8_t*)pvarg + 8);
+        if (b) mw_SysFreeString((uint16_t*)b);
+    }
+    *(uint16_t*)pvarg = 0; /* VT_EMPTY */
+    return 0; /* S_OK */
+}
+__attribute__((ms_abi)) long mw_VariantCopy(void* dest, const void* src) {
+    if (!dest || !src) return 0x80004003L;
+    uint16_t vt = *(const uint16_t*)src;
+    *(uint16_t*)dest = vt;
+    if (vt == 8 /*VT_BSTR*/) {
+        const uint16_t* b = *(const uint16_t* const*)((const uint8_t*)src + 8);
+        *(void**)((uint8_t*)dest + 8) = b ? mw_SysAllocString(b) : NULL;
+    } else {
+        memcpy((uint8_t*)dest + 8, (const uint8_t*)src + 8, 8);
+    }
+    return 0; /* S_OK */
+}
+
+/* ---- USER32 ---- */
+__attribute__((ms_abi)) uint16_t* mw_CharUpperW(uint16_t* s) {
+    if (!s) return NULL;
+    if ((uintptr_t)s < 0x10000) { /* single character in low word */
+        uint16_t c = (uint16_t)(uintptr_t)s;
+        if (c >= 'a' && c <= 'z') c -= 32;
+        return (uint16_t*)(uintptr_t)c;
+    }
+    for (uint16_t* p = s; *p; p++)
+        if (*p >= 'a' && *p <= 'z') *p -= 32;
+    return s;
+}
+__attribute__((ms_abi)) const char* mw_CharPrevExA(unsigned cp, const char* start, const char* cur, unsigned flags) {
+    (void)cp; (void)flags;
+    if (!start || !cur || cur <= start) return cur;
+    return cur - 1; /* single-byte codepages (7-Zip uses ASCII paths) */
+}
+
+/* ---- ADVAPI32 ---- */
+static int g_advapi_token_counter = 0;
+__attribute__((ms_abi)) int mw_OpenProcessToken(void* proc, uint32_t access, void** tok) {
+    (void)proc; (void)access;
+    if (!tok) { mw_SetLastError(87); return 0; }
+    *tok = alloc_handle((void*)(uintptr_t)(0x9000 + (g_advapi_token_counter++)));
+    return 1;
+}
+__attribute__((ms_abi)) int mw_AdjustTokenPrivileges(void* tok, int disable_all, void* newstate,
+        uint32_t buflen, void* prev, uint32_t* retlen) {
+    (void)tok; (void)disable_all; (void)newstate; (void)buflen; (void)prev; (void)retlen;
+    /* We never hold privileges: Windows sets ERROR_NOT_ALL_ASSIGNED and
+     * still returns TRUE. 7-Zip (large pages) treats this as "no privilege". */
+    mw_SetLastError(1300);
+    return 1;
+}
+__attribute__((ms_abi)) int mw_LookupPrivilegeValueW(const uint16_t* system, const uint16_t* name, void* luid) {
+    (void)system; (void)name;
+    if (luid) { *(uint64_t*)luid = 0x000000000000001Full; /* SeLockMemoryPrivilege */ }
+    return 1;
+}
+__attribute__((ms_abi)) int mw_SystemFunction036(void* buf, uint32_t len) {
+    /* RtlGenRandom */
+    uint8_t* p = (uint8_t*)buf;
+    uint32_t done = 0;
+    while (done < len) {
+        ssize_t r = syscall(SYS_getrandom, p + done, len - done, 0);
+        if (r <= 0) { if (errno == EINTR) continue; break; }
+        done += (uint32_t)r;
+    }
+    for (uint32_t i = done; i < len; i++) p[i] = (uint8_t)rand();
+    return 1;
+}
+__attribute__((ms_abi)) int mw_GetFileSecurityW(const uint16_t* name, uint32_t info, void* sd,
+        uint32_t sdlen, uint32_t* needed) {
+    (void)name; (void)info;
+    if (needed) *needed = 0;
+    mw_SetLastError(50); /* ERROR_NOT_SUPPORTED */
+    return 0;
+}
+__attribute__((ms_abi)) int mw_SetFileSecurityW(const uint16_t* name, uint32_t info, void* sd) {
+    (void)name; (void)info; (void)sd;
+    mw_SetLastError(50);
+    return 0;
+}
+
+/* ---- msvcrt ---- */
+__attribute__((ms_abi)) void mw__c_exit(void) {
+    MW_TRACE("_c_exit() (no-op: static-CRT bookkeeping)");
+}
+__attribute__((ms_abi)) void* mw___dllonexit(void* fn, void*** begin, void*** end) {
+    /* MS contract: insert fn at *end, bump *end. Static-CRT onexit tables
+     * are sized by the guest CRT — trust them like Windows does. */
+    if (begin && end && *begin && *end && *end >= *begin) {
+        *(*end) = (void**)fn;
+        (*end)++;
+    }
+    return fn;
+}
+__attribute__((ms_abi)) void mw_msvcrt_terminate(void) {
+    fprintf(stderr, "terminate called\n");
+    fflush(stderr);
+    abort();
+}
+__attribute__((ms_abi)) void mw_type_info_dtor(void* ti) {
+    (void)ti; /* virtual dtor: no owned resources in the guest type_info */
+}
+__attribute__((ms_abi)) int mw__purecall(void) {
+    fprintf(stderr, "R6025 - pure virtual function call\n");
+    fflush(stderr);
+    abort();
+}
+__attribute__((ms_abi)) int mw__CxxFrameHandler(void* er, void* est, void* ctx, void* dc) {
+    /* MSVC C++ EH: the full __CxxFrameHandler model is a registered future
+     * work item (TASK-API-018). Returning ContinueSearch is the honest
+     * answer for frames that do not own a catch of this exception. */
+    (void)er; (void)est; (void)ctx; (void)dc;
+    return 1; /* ExceptionContinueSearch */
+}
+__attribute__((ms_abi)) void mw__CxxThrowException(void* object, void* throwinfo) {
+    /* MS protocol: RaiseException(0xE06D7363, 0, 3, {magic, obj, throwinfo}) */
+    uint64_t args[3] = { 0x19930520ULL, (uint64_t)(uintptr_t)object, (uint64_t)(uintptr_t)throwinfo };
+    MW_TRACE("_CxxThrowException(obj=%p, ti=%p)", object, throwinfo);
+    mw_RaiseException(0xE06D7363, 0, 3, args);
+}
+
+/* msvcrt _iob: a 3-slot data window the guest indexes with ITS FILE stride
+ * (0x30 on x64); map_crt_stream recognizes the window like g_iob_array.
+ * Storage defined early (before map_crt_stream); see g_msvcrt_iob there. */
+/* ---- KERNEL32: VirtualAlloc/VirtualFree with region registry ---- */
+#define MAX_VALLOC 256
+typedef struct { void* base; size_t size; } VallocRegion;
+static VallocRegion g_valloc[MAX_VALLOC];
+static int g_valloc_count = 0;
+
+static int w32_prot_from(uint32_t p) {
+    switch (p & 0xFF) {
+        case 0x01: return PROT_NONE;                    /* PAGE_NOACCESS */
+        case 0x02: return PROT_READ;                    /* PAGE_READONLY */
+        case 0x04: return PROT_READ | PROT_WRITE;       /* PAGE_READWRITE */
+        case 0x08: return PROT_READ | PROT_WRITE;       /* PAGE_WRITECOPY */
+        case 0x10: return PROT_EXEC;                    /* PAGE_EXECUTE */
+        case 0x20: return PROT_READ | PROT_EXEC;        /* PAGE_EXECUTE_READ */
+        case 0x40: return PROT_READ | PROT_WRITE | PROT_EXEC; /* ERW */
+        case 0x80: return PROT_READ | PROT_WRITE | PROT_EXEC; /* WRITECOPY */
+        default:   return PROT_READ | PROT_WRITE;
+    }
+}
+static size_t page_round_up(size_t s) { return (s + 0xFFF) & ~(size_t)0xFFF; }
+
+__attribute__((ms_abi)) void* mw_VirtualAlloc(void* addr, size_t size, uint32_t type, uint32_t prot) {
+    MW_TRACE("VirtualAlloc(addr=%p, size=0x%zx, type=0x%x, prot=0x%x)", addr, size, type, prot);
+    if (!size) { mw_SetLastError(87); return NULL; }
+    size = page_round_up(size);
+    int lp = w32_prot_from(prot);
+    int flags = MAP_PRIVATE | MAP_ANONYMOUS;
+    void* base;
+    if (addr) {
+        if ((uintptr_t)addr & 0xFFF) { mw_SetLastError(87); return NULL; }
+        flags |= MAP_FIXED;
+        base = mmap(addr, size, lp, flags, -1, 0);
+    } else {
+        base = mmap(NULL, size, lp, flags, -1, 0);
+    }
+    if (base == MAP_FAILED) { mw_SetLastError(1455); return NULL; }
+    if (g_valloc_count < MAX_VALLOC) {
+        g_valloc[g_valloc_count].base = base;
+        g_valloc[g_valloc_count].size = size;
+        g_valloc_count++;
+    }
+    return base;
+}
+static VallocRegion* valloc_find(void* addr) {
+    for (int i = 0; i < g_valloc_count; i++)
+        if (g_valloc[i].base == addr) return &g_valloc[i];
+    return NULL;
+}
+__attribute__((ms_abi)) int mw_VirtualFree(void* addr, size_t size, uint32_t type) {
+    MW_TRACE("VirtualFree(addr=%p, size=0x%zx, type=0x%x)", addr, size, type);
+    if (!addr) { mw_SetLastError(87); return 0; }
+    if (type & 0x8000 /*MEM_RELEASE*/) {
+        VallocRegion* r = valloc_find(addr);
+        if (!r) { mw_SetLastError(158); return 0; }
+        munmap(addr, r->size);
+        *r = g_valloc[--g_valloc_count];
+        g_valloc[g_valloc_count] = (VallocRegion){0};
+        return 1;
+    }
+    if (type & 0x4000 /*MEM_DECOMMIT*/) {
+        size_t n = page_round_up(size ? size : 0x1000);
+        VallocRegion* r = valloc_find(addr);
+        if (r && n > r->size) n = r->size;
+        mprotect(addr, n, PROT_NONE);
+        return 1;
+    }
+    mw_SetLastError(87);
+    return 0;
+}
+
+/* ---- KERNEL32: file mapping family ---- */
+#define MAX_MAPVIEWS 64
+typedef struct { void* base; size_t size; } MapView;
+static MapView g_mapviews[MAX_MAPVIEWS];
+static int g_mapview_count = 0;
+
+__attribute__((ms_abi)) void* mw_MapViewOfFile(void* h, uint32_t access, uint32_t hi, uint32_t lo, size_t bytes) {
+    /* Without a mapping-object registry (no CreateFileMapping import from
+     * the current targets), named/unnamed mapping handles cannot be honored:
+     * fail faithfully instead of returning a bogus pointer. */
+    (void)h; (void)access; (void)hi; (void)lo; (void)bytes;
+    MW_TRACE("MapViewOfFile(h=%p, bytes=0x%zx) -> NULL (no mapping objects)", h, bytes);
+    mw_SetLastError(6); /* ERROR_INVALID_HANDLE */
+    return NULL;
+}
+__attribute__((ms_abi)) int mw_UnmapViewOfFile(void* base) {
+    for (int i = 0; i < g_mapview_count; i++) {
+        if (g_mapviews[i].base == base) {
+            munmap(base, g_mapviews[i].size);
+            g_mapviews[i] = g_mapviews[--g_mapview_count];
+            return 1;
+        }
+    }
+    mw_SetLastError(6);
+    return 0;
+}
+__attribute__((ms_abi)) void* mw_OpenFileMappingW(uint32_t access, int inherit, const uint16_t* name) {
+    (void)access; (void)inherit;
+    char n8[256];
+    if (name) w3_w16_to_utf8z(name, n8, sizeof(n8)); else n8[0] = 0;
+    MW_TRACE("OpenFileMappingW(%s) -> NULL", n8);
+    mw_SetLastError(2); /* named mapping objects unsupported */
+    return NULL;
+}
+
+/* ---- KERNEL32: FindFirstFileW (narrow sibling already shared) ---- */
+__attribute__((ms_abi)) void* mw_FindFirstFileW(const uint16_t* pattern, void* data) {
+    char p8[4096];
+    if (!pattern || w3_w16_to_utf8z(pattern, p8, sizeof(p8)) < 0) {
+        mw_SetLastError(87);
+        return (void*)-1;
+    }
+    return find_first_impl(p8, data);
+}
+__attribute__((ms_abi)) void* mw_FindFirstStreamW(const uint16_t* name, uint32_t info, void* data, uint32_t flags) {
+    (void)name; (void)info; (void)data; (void)flags;
+    MW_TRACE("FindFirstStreamW() -> none");
+    mw_SetLastError(38); /* ERROR_HANDLE_EOF: no alternate streams */
+    return (void*)-1;
+}
+__attribute__((ms_abi)) int mw_FindNextStreamW(void* h, void* data) {
+    (void)h; (void)data;
+    mw_SetLastError(38);
+    return 0;
+}
+
+/* ---- KERNEL32: move/copy family ---- */
+__attribute__((ms_abi)) int mw_MoveFileW(const uint16_t* from, const uint16_t* to) {
+    char f8[4096], t8[4096];
+    if (!from || !to || w3_w16_to_utf8z(from, f8, sizeof(f8)) < 0 ||
+        w3_w16_to_utf8z(to, t8, sizeof(t8)) < 0) { mw_SetLastError(87); return 0; }
+    MW_TRACE("MoveFileW(%s -> %s)", f8, t8);
+    if (access(t8, F_OK) == 0) { mw_SetLastError(183); return 0; } /* dest exists */
+    if (rename(f8, t8) != 0) { mw_SetLastError(5); return 0; }
+    return 1;
+}
+__attribute__((ms_abi)) int mw_MoveFileWithProgressW(const uint16_t* from, const uint16_t* to,
+        void* progress, void* data, uint32_t flags) {
+    char f8[4096], t8[4096];
+    if (!from || !to || w3_w16_to_utf8z(from, f8, sizeof(f8)) < 0 ||
+        w3_w16_to_utf8z(to, t8, sizeof(t8)) < 0) { mw_SetLastError(87); return 0; }
+    MW_TRACE("MoveFileWithProgressW(%s -> %s, flags=0x%x)", f8, t8, flags);
+    if (!(flags & 0x1 /*REPLACE_EXISTING*/) && access(t8, F_OK) == 0) {
+        mw_SetLastError(183); return 0;
+    }
+    if (rename(f8, t8) != 0) { mw_SetLastError(5); return 0; }
+    return 1;
+}
+
+/* ---- KERNEL32: semaphores / named event open ---- */
+#define MAX_SEMAS 64
+typedef struct { int count; int max; } MwSema;
+static MwSema g_semas[MAX_SEMAS];
+static int g_sema_count = 0;
+__attribute__((ms_abi)) void* mw_CreateSemaphoreW(void* attr, int32_t init, int32_t max, const uint16_t* name) {
+    (void)attr; (void)name;
+    MW_TRACE("CreateSemaphoreW(init=%d, max=%d)", init, max);
+    if (g_sema_count >= MAX_SEMAS || max <= 0 || init < 0 || init > max) {
+        mw_SetLastError(87); return NULL;
+    }
+    g_semas[g_sema_count].count = init;
+    g_semas[g_sema_count].max = max;
+    return alloc_handle((void*)(uintptr_t)(0x5000 + g_sema_count++));
+}
+__attribute__((ms_abi)) void* mw_OpenEventW(uint32_t access, int inherit, const uint16_t* name) {
+    (void)access; (void)inherit;
+    char n8[256];
+    if (name) w3_w16_to_utf8z(name, n8, sizeof(n8)); else n8[0] = 0;
+    MW_TRACE("OpenEventW(%s) -> NULL", n8);
+    mw_SetLastError(2); /* named events unsupported */
+    return NULL;
+}
+
+/* ---- KERNEL32: time conversion family ---- */
+static long w3_tz_offset_seconds(void) {
+    /* offset = mktime(gmtime(t)) - t  (POSIX-style west-negative inverse) */
+    time_t t = 0;
+    struct tm g;
+    gmtime_r(&t, &g);
+    return (long)mktime(&g) - (long)t;
+}
+static uint64_t ft_from_time_t_public(uint64_t t) { return ft_from_time_t(t); }
+__attribute__((ms_abi)) int mw_FileTimeToLocalFileTime(const uint64_t* utc, uint64_t* local) {
+    if (!utc || !local) { mw_SetLastError(87); return 0; }
+    *local = *utc - (uint64_t)w3_tz_offset_seconds() * 10000000ULL;
+    return 1;
+}
+__attribute__((ms_abi)) int mw_LocalFileTimeToFileTime(const uint64_t* local, uint64_t* utc) {
+    if (!local || !utc) { mw_SetLastError(87); return 0; }
+    *utc = *local + (uint64_t)w3_tz_offset_seconds() * 10000000ULL;
+    return 1;
+}
+__attribute__((ms_abi)) int mw_FileTimeToDosDateTime(const uint64_t* ft, uint16_t* date, uint16_t* time_) {
+    if (!ft || !date || !time_) { mw_SetLastError(87); return 0; }
+    uint64_t secs = *ft / 10000000ULL - 11644473600ULL;
+    time_t t = (time_t)secs;
+    struct tm tmv;
+    gmtime_r(&t, &tmv);
+    if (tmv.tm_year + 1900 < 1980) { *date = (1 << 5) | 1; *time_ = 0; return 1; }
+    *date = (uint16_t)(((tmv.tm_year + 1900 - 1980) << 9) | ((tmv.tm_mon + 1) << 5) | tmv.tm_mday);
+    *time_ = (uint16_t)((tmv.tm_hour << 11) | (tmv.tm_min << 5) | (tmv.tm_sec >> 1));
+    return 1;
+}
+__attribute__((ms_abi)) int mw_DosDateTimeToFileTime(uint16_t date, uint16_t time_, uint64_t* ft) {
+    if (!ft) { mw_SetLastError(87); return 0; }
+    int y = 1980 + ((date >> 9) & 0x7F);
+    int mo = (date >> 5) & 0xF;  if (mo < 1) mo = 1; if (mo > 12) mo = 12;
+    int d = date & 0x1F;         if (d < 1) d = 1;
+    int h = (time_ >> 11) & 0x1F;
+    int mi = (time_ >> 5) & 0x3F;
+    int s = (time_ & 0x1F) * 2;
+    struct tm tmv = { s, mi, h, d, mo - 1, y - 1900, 0, 0, 0 };
+    time_t t = timegm(&tmv);
+    *ft = ft_from_time_t_public((uint64_t)(t < 0 ? 0 : t));
+    return 1;
+}
+__attribute__((ms_abi)) long mw_CompareFileTime(const uint64_t* a, const uint64_t* b) {
+    if (!a || !b) { mw_SetLastError(87); return -2; }
+    if (*a < *b) return -1;
+    if (*a > *b) return 1;
+    return 0;
+}
+
+/* ---- KERNEL32: misc ---- */
+__attribute__((ms_abi)) int mw_GetDiskFreeSpaceW(const uint16_t* root, uint32_t* spc, uint32_t* bps,
+        uint32_t* free_clusters, uint32_t* total_clusters) {
+    char r8[1024] = "/";
+    if (root && w3_w16_to_utf8z(root, r8, sizeof(r8) - 1) >= 0) {
+        /* Windows passes "C:\", POSIX statvfs wants a dir; root always works */
+        if (r8[0] && r8[1] == ':' ) snprintf(r8, sizeof(r8), "%s", "/");
+    }
+    struct statvfs v;
+    if (statvfs(r8, &v) != 0) { mw_SetLastError(3); return 0; }
+    if (bps) *bps = (uint32_t)(v.f_frsize ? v.f_frsize : 512);
+    if (spc) *spc = 8;
+    uint64_t bpc = (uint64_t)(bps ? *bps : 512) * (spc ? *spc : 8);
+    if (total_clusters) *total_clusters = (uint32_t)((v.f_blocks * (uint64_t)v.f_frsize) / bpc);
+    if (free_clusters) *free_clusters = (uint32_t)((v.f_bavail * (uint64_t)v.f_frsize) / bpc);
+    MW_TRACE("GetDiskFreeSpaceW(%s) ok", r8);
+    return 1;
+}
+__attribute__((ms_abi)) uint32_t mw_GetLogicalDriveStringsW(uint32_t len, uint16_t* buf) {
+    /* Exactly one drive: "C:\" + NUL, plus the final terminating NUL */
+    if (!buf || len < 5) return 5;
+    buf[0] = 'C'; buf[1] = ':'; buf[2] = '\\'; buf[3] = 0; buf[4] = 0;
+    return 4;
+}
+__attribute__((ms_abi)) int mw_GetProcessTimes(void* h, uint64_t* create, uint64_t* exit,
+        uint64_t* kernel, uint64_t* user) {
+    (void)h;
+    struct rusage ru;
+    getrusage(RUSAGE_SELF, &ru);
+    uint64_t to_ft(const struct timeval* tv) {
+        return ft_from_time_t_public((uint64_t)tv->tv_sec) + (uint64_t)tv->tv_usec * 10ULL;
+    }
+    if (create) *create = ft_from_time_t_public(0); /* process epoch */
+    if (exit) *exit = 0;
+    if (kernel) *kernel = to_ft(&ru.ru_stime);
+    if (user) *user = to_ft(&ru.ru_utime);
+    return 1;
+}
+__attribute__((ms_abi)) void* mw_SetThreadAffinityMask(void* h, uintptr_t mask) {
+    (void)h; (void)mask;
+    return (void*)(uintptr_t)1; /* previous mask */
+}
+__attribute__((ms_abi)) size_t mw_GetLargePageMinimum(void) {
+    return 0x200000; /* 2 MiB */
+}
+__attribute__((ms_abi)) void mw_SetFileApisToOEM(void) {
+    MW_TRACE("SetFileApisToOEM() (no-op: cp65001 identity)");
+}
+
 static ImportEntry g_import_table[] = {
     /* KERNEL32.DLL */
     ENTRY("KERNEL32.DLL", "AddVectoredExceptionHandler",        mw_AddVectoredExceptionHandler),
@@ -8420,6 +8930,53 @@ ENTRY("msvcrt.dll", "wctype", mw_wctype),
     ENTRY("ws2_32.dll", "WSAIoctl", mw_WSAIoctl),
     ENTRY("msvcrt.dll", "__WSAFDIsSet", mw_select), /* shim: FD_ISSET helper */
     ENTRY("KERNEL32.DLL", "LoadLibraryExA", mw_LoadLibraryExA),
+    /* ---- OPENSRC-7ZIP wave A (TASK-OPENSRC-7ZIP, BUG-052 era) ---- */
+    ENTRY("OLEAUT32.DLL", "SysAllocString",                     mw_SysAllocString),
+    ENTRY("OLEAUT32.DLL", "SysAllocStringLen",                  mw_SysAllocStringLen),
+    ENTRY("OLEAUT32.DLL", "SysStringLen",                       mw_SysStringLen),
+    ENTRY("OLEAUT32.DLL", "SysStringByteLen",                   mw_SysStringByteLen),
+    ENTRY("OLEAUT32.DLL", "SysFreeString",                      mw_SysFreeString),
+    ENTRY("OLEAUT32.DLL", "VariantClear",                       mw_VariantClear),
+    ENTRY("OLEAUT32.DLL", "VariantCopy",                        mw_VariantCopy),
+    ENTRY("USER32.DLL", "CharUpperW",                           mw_CharUpperW),
+    ENTRY("USER32.DLL", "CharPrevExA",                          mw_CharPrevExA),
+    ENTRY("ADVAPI32.DLL", "OpenProcessToken",                   mw_OpenProcessToken),
+    ENTRY("ADVAPI32.DLL", "AdjustTokenPrivileges",              mw_AdjustTokenPrivileges),
+    ENTRY("ADVAPI32.DLL", "LookupPrivilegeValueW",              mw_LookupPrivilegeValueW),
+    ENTRY("ADVAPI32.DLL", "SystemFunction036",                  mw_SystemFunction036),
+    ENTRY("ADVAPI32.DLL", "GetFileSecurityW",                   mw_GetFileSecurityW),
+    ENTRY("ADVAPI32.DLL", "SetFileSecurityW",                   mw_SetFileSecurityW),
+    ENTRY("msvcrt.dll", "_c_exit",                              mw__c_exit),
+    ENTRY("msvcrt.dll", "__dllonexit",                          mw___dllonexit),
+    ENTRY("msvcrt.dll", "?terminate@@YAXXZ",                    mw_msvcrt_terminate),
+    ENTRY("msvcrt.dll", "??1type_info@@UEAA@XZ",                mw_type_info_dtor),
+    ENTRY("msvcrt.dll", "_purecall",                            mw__purecall),
+    ENTRY("msvcrt.dll", "__CxxFrameHandler",                    mw__CxxFrameHandler),
+    ENTRY("msvcrt.dll", "_CxxThrowException",                   mw__CxxThrowException),
+    ENTRY("KERNEL32.DLL", "VirtualAlloc",                       mw_VirtualAlloc),
+    ENTRY("KERNEL32.DLL", "VirtualFree",                        mw_VirtualFree),
+    ENTRY("KERNEL32.DLL", "MapViewOfFile",                      mw_MapViewOfFile),
+    ENTRY("KERNEL32.DLL", "UnmapViewOfFile",                    mw_UnmapViewOfFile),
+    ENTRY("KERNEL32.DLL", "OpenFileMappingW",                   mw_OpenFileMappingW),
+    ENTRY("KERNEL32.DLL", "FindFirstFileW",                     mw_FindFirstFileW),
+    ENTRY("KERNEL32.DLL", "FindFirstStreamW",                   mw_FindFirstStreamW),
+    ENTRY("KERNEL32.DLL", "FindNextStreamW",                    mw_FindNextStreamW),
+    ENTRY("KERNEL32.DLL", "MoveFileW",                          mw_MoveFileW),
+    ENTRY("KERNEL32.DLL", "MoveFileWithProgressW",              mw_MoveFileWithProgressW),
+    ENTRY("KERNEL32.DLL", "CreateSemaphoreW",                   mw_CreateSemaphoreW),
+    ENTRY("KERNEL32.DLL", "OpenEventW",                         mw_OpenEventW),
+    ENTRY("KERNEL32.DLL", "FileTimeToLocalFileTime",            mw_FileTimeToLocalFileTime),
+    ENTRY("KERNEL32.DLL", "LocalFileTimeToFileTime",            mw_LocalFileTimeToFileTime),
+    ENTRY("KERNEL32.DLL", "FileTimeToDosDateTime",              mw_FileTimeToDosDateTime),
+    ENTRY("KERNEL32.DLL", "DosDateTimeToFileTime",              mw_DosDateTimeToFileTime),
+    ENTRY("KERNEL32.DLL", "CompareFileTime",                    mw_CompareFileTime),
+    ENTRY("KERNEL32.DLL", "GetDiskFreeSpaceW",                  mw_GetDiskFreeSpaceW),
+    ENTRY("KERNEL32.DLL", "GetLogicalDriveStringsW",            mw_GetLogicalDriveStringsW),
+    ENTRY("KERNEL32.DLL", "GetProcessTimes",                    mw_GetProcessTimes),
+    ENTRY("KERNEL32.DLL", "SetThreadAffinityMask",              mw_SetThreadAffinityMask),
+    ENTRY("KERNEL32.DLL", "GetLargePageMinimum",                mw_GetLargePageMinimum),
+    ENTRY("KERNEL32.DLL", "SetFileApisToOEM",                   mw_SetFileApisToOEM),
+
 };
 
 #define NUM_IMPORTS (sizeof(g_import_table) / sizeof(g_import_table[0]))
@@ -8436,6 +8993,7 @@ static DataImportEntry g_data_imports[] = {
     { "msvcrt.dll", "__initenv",   &g_initenv_ptr },
     { "msvcrt.dll", "_commode",   &g_commode_val },
     { "msvcrt.dll", "_fmode",     &g_fmode_val },
+    { "msvcrt.dll", "_iob",        g_msvcrt_iob },   /* OPENSRC-7ZIP: 3-slot FILE window */
     /* TASK-API-011: UCRT-flavored data exports (__p_* return pointers to
      * the variables; __tzname/__timezone/__daylight are the variables). */
     /* ALL UCRT __p_* exports are FUNCTIONS returning &var — t10 crashes
@@ -8667,12 +9225,43 @@ static int load_pe(const char* filepath) {
                 hint = *(uint16_t*)(g_image_base + name_rva);
                 func_name = (const char*)(g_image_base + name_rva + 2);
             } else {
-                /* Import by ordinal */
+                /* Import by ordinal — OPENSRC-7ZIP (BUG-052): 7-Zip's MSVC
+                 * import lib binds OLEAUT32 by FIXED ordinal (2/4/6/7/9/10).
+                 * Resolve through a small known-ordinal map; unknown
+                 * (dll, ordinal) pairs remain honestly unresolved. */
                 uint16_t ordinal = (uint16_t)(entry & 0xFFFF);
-                MW_TRACE("  [%d] Ordinal %u (not supported)", slot, ordinal);
-                total_unresolved++;
-                slot++;
-                continue;
+                static const struct { const char* dll; uint16_t ord; const char* name; } ole_ord[] = {
+                    { "OLEAUT32", 2,  "SysAllocString" },
+                    { "OLEAUT32", 4,  "SysAllocStringLen" },
+                    { "OLEAUT32", 6,  "SysFreeString" },
+                    { "OLEAUT32", 7,  "SysStringLen" },
+                    { "OLEAUT32", 8,  "SysStringByteLen" },
+                    { "OLEAUT32", 149, "SysStringByteLen" }, /* 7z.exe binds this one */
+                    { "OLEAUT32", 9,  "VariantClear" },
+                    { "OLEAUT32", 10, "VariantCopy" },
+                };
+                const char* ord_name = NULL;
+                char up_dll[16];
+                { const char* s = dll_name; size_t k = 0;
+                  for (; s[k] && k < sizeof(up_dll) - 1; k++)
+                      up_dll[k] = (s[k] >= 'a' && s[k] <= 'z') ? (char)(s[k] - 32) : s[k];
+                  up_dll[k] = '\0'; }
+                for (size_t k = 0; k < sizeof(ole_ord)/sizeof(ole_ord[0]); k++) {
+                    if (strncmp(up_dll, ole_ord[k].dll, strlen(ole_ord[k].dll)) == 0 &&
+                        ordinal == ole_ord[k].ord) {
+                        ord_name = ole_ord[k].name;
+                        break;
+                    }
+                }
+                if (ord_name) {
+                    func_name = ord_name;
+                    MW_TRACE("  [%d] Ordinal %u -> %s (OLEAUT32 fixed)", slot, ordinal, ord_name);
+                } else {
+                    MW_TRACE("  [%d] Ordinal %u (not supported)", slot, ordinal);
+                    total_unresolved++;
+                    slot++;
+                    continue;
+                }
             }
 
             /* Search our dispatch table */
@@ -8706,6 +9295,10 @@ static int load_pe(const char* filepath) {
 
             if (!found) {
                 MW_TRACE("  [%d] UNRESOLVED: %s", slot, func_name);
+                /* OPENSRC-7ZIP diagnosability: surface the missing names on
+                 * the summary line's neighbor so a run without MINWIN_TRACE
+                 * still identifies them. */
+                fprintf(stderr, "[WARN]   unresolved: %s\n", func_name);
                 total_unresolved++;
             } else {
                 /* Only log code imports here (data imports logged above) */
