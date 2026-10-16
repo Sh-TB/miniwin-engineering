@@ -1,0 +1,15 @@
+[MiniWin] Loading /home/z/my-project/workspace/miniwin-engineering/artifacts/opensource/7zip/x64/7za.exe...
+
+7-Zip (a) 25.01 (x64) : Copyright (c) 1999-2025 Igor Pavlov : 2025-08-03
+
+Scanning the drive:
+2 files, 2076 bytes (3 KiB)
+
+Creating archive: r.7z
+
+Add new data to archive: 2 files, 2076 bytes (3 KiB)
+
+
+Files read from disk: 2
+Archive size: 2231 bytes (3 KiB)
+Everything is Ok

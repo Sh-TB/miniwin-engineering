@@ -1,0 +1,22 @@
+[MiniWin] Loading /home/z/my-project/workspace/miniwin-engineering/artifacts/opensource/7zip/x64/7za.exe...
+
+7-Zip (a) 25.01 (x64) : Copyright (c) 1999-2025 Igor Pavlov : 2025-08-03
+
+Scanning the drive for archives:
+1 file, 2231 bytes (3 KiB)
+
+Extracting archive: r.7z
+--
+Path = r.7z
+Type = 7z
+Physical Size = 2231
+Headers Size = 151
+Method = LZMA2:12
+Solid = +
+Blocks = 1
+
+Everything is Ok
+
+Files: 2
+Size:       2076
+Compressed: 2231

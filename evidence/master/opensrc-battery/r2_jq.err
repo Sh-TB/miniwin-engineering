@@ -1,0 +1,2 @@
+[TRACE] Command line: /home/z/my-project/workspace/miniwin-engineering/artifacts/opensource/jq/jq.exe -r .k j.json
+[TRACE] Command line: /home/z/my-project/workspace/miniwin-engineering/artifacts/opensource/jq/jq.exe -r .arr[2] j.json

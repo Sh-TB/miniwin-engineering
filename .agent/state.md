@@ -1,6 +1,9 @@
 # Engineering State — CANONICAL COMPACT SNAPSHOT
 
-**Updated:** 2026-10-15 (CONTINUE #7: **BUG-037 CLOSED TESTED** — 3 spec fixes; sweep **10/12 PASS**
+**Updated:** 2026-10-17 (CONTINUE #9 — OPENSRC battery wave: **7-Zip 25.01
+full round trip 3x, sqlite3 3.50.4 file-DB round trip 3x, jq 1.7.1 filters
+3x** — BUG-049..060 closed; BUG-053/OPENSRC-7ZIP-3/OPENSRC-CURL-1 open;
+backlog expanded). Prior snapshot (CONTINUE #7): **BUG-037 CLOSED TESTED** — 3 spec fixes; sweep **10/12 PASS**
 (+t10/t11/t12 NEW); UCRT wave TASK-API-011/012 CLOSED TESTED; **BUG-038 registered** (next);
 EXP-041; backlog 117 tasks). Supersedes prior snapshots.
 

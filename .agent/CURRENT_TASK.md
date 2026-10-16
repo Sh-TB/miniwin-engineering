@@ -1,24 +1,33 @@
 # CURRENT TASK
 
-**Task ID:** TASK-OPENSRC-2 (P1) — ffmpeg PNG frontier
-**Status:** READY (2026-10-16, commit 6140184)
-**Priority:** P1
+**Task ID:** TASK-OPENSRC-BATTERY (P1) — 7-Zip + sqlite3 + jq + curl
+**Status:** 3 of 4 programs GREEN (2026-10-17, wave W3+W4); curl = frontier
 
-## Milestone reached this session
-- **`ffmpeg.exe -version` prints the FULL banner through the real loader, exit 0,
-  3/3 deterministic** (evidence/master/bug041-048/) — the OPENSRC-class "G1 moment".
-- BUG-040..048 closed (build repair, realloc-on-guard, wchar 2↔4 family x2,
-  console struct overrun, console-mode fidelity, aligned-heap family, registry
-  linear probing). All gates green: G1 pin (12/12), dispatch 4/4.
-- llvm-mingw toolchain + ffmpeg + ImageMagick corpora restored in-container.
-- Local commits 394f6d4 (merge) -> 3c1fea9 (BUG-040) -> 6140184 (BUG-041..048).
-  PUSH BLOCKED: ~/.git-credentials lost between sessions (OWNER-004) — needs the
-  token re-supplied by the owner; never store it in the repo.
+## Achieved (all evidence in evidence/master/)
+- **7-Zip 25.01 (7za.exe, x64, official)**: banner/i/a/x/t/l all exit 0;
+  archive create -> extract -> SHA-256 round trip **3/3 deterministic**.
+  46-import surface closed (BUG-052) incl. OLEAUT32 fixed ordinals
+  (2/4/6/7/9/10/149); BUG-054 path normalization. 7z.exe+7z.dll banner OK
+  (0 unresolved); full ops need LoadLibraryW = OPENSRC-7ZIP-3 (open).
+- **sqlite3 3.50.4 (official)**: --version banner; file-DB create/insert/
+  SELECT round trip **3/3 deterministic**. Closed: BUG-055 (strdup registry),
+  BUG-056 (GetStdHandle registry handles), BUG-057 (WCTMB fixed-length +
+  LoadLibrary api-ms-win-* pseudo-handles + GetModuleHandleExW +
+  InitializeCriticalSectionEx), BUG-058 (OVERLAPPED offsets).
+- **jq 1.7.1 (official)**: --version + filters **3/3 deterministic**.
+- **curl 8.17.0 (official)**: IAT page-crossing fix (BUG-059) + InitOnce
+  nesting deadlock fix (BUG-060); remaining = UCRT state-pointer crash,
+  OPENSRC-CURL-1 (open, next micro-steps listed).
 
-## Next micro-tasks (see backlog for full detail)
-1. TASK-OPENSRC-2: ffmpeg frame-thread NULL deref (RVA 0x8070d2d, after
-   CreateEventW x4) — the PNG-pipeline acceptance.
-2. TASK-TEST-014: rebuild sweep t01..t12 with the restored toolchain, re-pin 11/12.
-3. TASK-OPENSRC-3: magick silent -version (trace the output path).
-4. TASK-OPENSRC-4: magick coder SIGSEGV.
-5. Queued: TEST-004-C1 (real ContinueSearch chain), TEST-004-D1 (dedupe test_d).
+## Gates kept green after every wave
+G1 PIN OK (UPX banner, regression 12/12); sweep t01..t07+t10..t12 PASS
+(t08 = BUG-038 G2 frontier, t09 = API-009 frontier — unchanged);
+t13_wide_abi PASS; t14_file_read PASS; dispatch 4/4.
+
+## Next micro-tasks
+1. TASK-OPENSRC-CURL: OPENSRC-CURL-1 micro-steps (UCRT state layout).
+2. TASK-LOADER-DLL: PE DLL loading (unblocks 7z.exe full ops; also
+   ffmpeg PNG pipeline uses avcodec DLLs? no — ffmpeg build is static).
+3. BUG-053: wprintf/wide-%s output path (7za `i` Formats table mojibake).
+4. TASK-TEST-014 remainder: pin the sweep binary set in-repo (gitignore
+   policy decision) + add t13/t14 to run_sweep.sh TESTS list.

@@ -1,0 +1,80 @@
+[TRACE] Command line: /home/z/my-project/workspace/miniwin-engineering/tests/appcompat/t09_big_cpp_iostream.exe
+[WARN]   unresolved: __pctype_func
+[WARN]   unresolved: _filelengthi64
+[WARN]   unresolved: _iswalpha_l
+[WARN]   unresolved: _iswcntrl_l
+[WARN]   unresolved: _iswdigit_l
+[WARN]   unresolved: _iswlower_l
+[WARN]   unresolved: _iswprint_l
+[WARN]   unresolved: _iswpunct_l
+[WARN]   unresolved: _iswspace_l
+[WARN]   unresolved: _iswupper_l
+[WARN]   unresolved: _iswxdigit_l
+[WARN]   unresolved: _mbtowc_l
+[WARN]   unresolved: _strcoll_l
+[WARN]   unresolved: _strtod_l
+[WARN]   unresolved: _strxfrm_l
+[WARN]   unresolved: _sys_nerr
+[WARN]   unresolved: _tolower_l
+[WARN]   unresolved: _toupper_l
+[WARN]   unresolved: _towlower_l
+[WARN]   unresolved: _towupper_l
+[WARN]   unresolved: _vscprintf
+[WARN]   unresolved: _vsnprintf
+[WARN]   unresolved: _wcscoll_l
+[WARN]   unresolved: _wcsxfrm_l
+[WARN]   unresolved: fgetpos
+[WARN]   unresolved: fsetpos
+[WARN]   unresolved: wcrtomb_s
+[WARN] 27 imports unresolved
+
+[CRASH] Signal 11 at RIP=0xa899c
+  RAX=0x1400968f8 RCX=0x0 RDX=0x8 R8=0x8 R9=0x1e
+  RSP=0x7fffd9890278 RBP=0x2145001
+  g_image_base=0x140000000 g_image_size=0x126000
+  (NOT inside loaded PE)
+  [RIP-MAP] no mapping contains RIP
+  RSI=0x1400be8d0 RDI=0x1400be3a0
+  R8=0x8  R9=0x1e R10=0x0 R11=0x202
+  R12=0x1400bead0 R13=0x1 R14=0x2142d80 R15=0x14009b0d8
+  [SCAN rsp+000] 0x140021948 <PE>
+  [SCAN rsp+032] 0x200a79d <LOADER>
+  [SCAN rsp+056] 0x1400bea70 <PE>
+  [SCAN rsp+064] 0x1400be3a0 <PE>
+  [SCAN rsp+072] 0x1400be8d0 <PE>
+  [SCAN rsp+080] 0x140024221 <PE>
+  [SCAN rsp+096] 0x1400bea70 <PE>
+  [SCAN rsp+112] 0x1400be3a0 <PE>
+  [SCAN rsp+120] 0x1400bea70 <PE>
+  [SCAN rsp+128] 0x140028f88 <PE>
+  [SCAN rsp+168] 0x1400bea68 <PE>
+  [SCAN rsp+176] 0x14004ff4c <PE>
+  [SCAN rsp+200] 0x1400bd518 <PE>
+  [SCAN rsp+224] 0x1400bd518 <PE>
+  [SCAN rsp+240] 0x1400a7f78 <PE>
+  [SCAN rsp+256] 0x1400547f0 <PE>
+  [SCAN rsp+272] 0x14004fae1 <PE>
+  [SCAN rsp+304] 0x14005e936 <PE>
+  [SCAN rsp+320] 0x1400bd518 <PE>
+  [SCAN rsp+344] 0x1400a7f78 <PE>
+  [SCAN rsp+368] 0x1400bd510 <PE>
+  [SCAN rsp+384] 0x14005131b <PE>
+  [SCAN rsp+424] 0x1400a7f78 <PE>
+  [SCAN rsp+432] 0x140052e7a <PE>
+  [SCAN rsp+448] 0x1400bd518 <PE>
+  [SCAN rsp+496] 0x140001350 <PE>
+  [SCAN rsp+520] 0x1400a7f48 <PE>
+  [SCAN rsp+608] 0x1400a7f48 <PE>
+  [SCAN rsp+624] 0x200741b <LOADER>
+  [SCAN rsp+648] 0x1400c5000 <PE>
+  [SCAN rsp+656] 0x1400a8920 <PE>
+  [SCAN rsp+664] 0x140000000 <PE>
+  [SCAN rsp+992] 0x20025f7 <LOADER>
+  [SCAN rsp+1000] 0x2002010 <LOADER>
+  [SCAN rsp+2448] 0x20063b0 <LOADER>
+  [SCAN rsp+2600] 0x20063b0 <LOADER>
+  [SCAN rsp+2640] 0x2007a30 <LOADER>
+  [SCAN rsp+2672] 0x2007a51 <LOADER>
+  [SCAN rsp+3144] 0x2000040 <LOADER>
+  [SCAN rsp+3224] 0x2007a30 <LOADER>
+  Backtrace (via stack walking):
