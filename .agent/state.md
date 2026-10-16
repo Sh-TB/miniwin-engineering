@@ -1,39 +1,54 @@
 # Engineering State — CANONICAL COMPACT SNAPSHOT
 
-**Updated:** 2026-10-15 (CONTINUE #5: **BUG-031 fixed — ACCEPTANCE G1 MET**; EXP-039; ADR-011). Supersedes the
-prior snapshot; prior versions remain in git history.
+**Updated:** 2026-10-15 (CONTINUE #7: **BUG-037 CLOSED TESTED** — 3 spec fixes; sweep **10/12 PASS**
+(+t10/t11/t12 NEW); UCRT wave TASK-API-011/012 CLOSED TESTED; **BUG-038 registered** (next);
+EXP-041; backlog 117 tasks). Supersedes prior snapshots.
 
 | Field | Value |
 |---|---|
-| Current HEAD (local) | `52c0f8d` (TEST-004 slice 1; chain 954d1f0 G1 → 4a397e4 → 52c0f8d) |
-| Origin/main | `52c0f8d` (GitHub-verified via git push output this session; credentials in ~/.git-credentials, outside repo) |
-| Source SHA-256 (loader.c) | see `evidence/master/g1/20261014_221434/hashes.txt` (post API-002/006/TEST-004-slice-1) |
-| Source SHA-256 (include/pe.h) | `928a780c…` (unchanged) |
-| Build status | CLEAN — 0 errors; binary `e0bdbdcf…` |
-| Test status | Regression **12/12** (test 10 asserts the SUCCESS state: exit 0 + UPX banner + no crash); EXP-NEXT-2 PASS; MINWIN_EH_HACKS=1 legacy compat verified (134 + 'unsigned long long', byte-identical legacy); dispatch tests BROKEN/VACUOUS (TEST-004 pending); dalvik 24/24 |
-| Current target | UPX 4.2.4 decompressed — **G1 MET: full --version banner printed, exit 0, 5/5 deterministic, no crash dumps** |
-| Exact current blocker | none for G1. TEST-004 slice 2 = builder codegen B-1/B-2/B-3 (real-loader harness green on load/run contracts; dispatch contracts queued) |
-| Active task ID | TASK-TEST-004 slice 2 (builder codegen B-1/B-2/B-3) |
-| Last completed task ID | TASK-BUG-031 (CLOSED TESTED) — this session |
-| Next task ID | TASK-TEST-004 slice 2 |
-| Blocking dependencies | TEST-005 depends on TEST-004 |
-| Evidence links | docs/master/experiments/EXP-039-…md; docs/bugs/BUG-031.md (closed); evidence/master/bug031/* (trace 943 events, stdout, hashes, regression log); checkpoint_pre_task-bug031_20261015.zip |
-| Known repository inconsistencies | (1) ALLOC_LARGE scaling formulas wrong in 4 copies + windows_abi doc (TASK-API-006; ALLOC_SMALL already corrected by BUG-027); (2) dispatcher passes post-unwind ctx (Rsp=est) to handlers — Windows passes pre-unwind throw-site ctx (P-B variable, not needed so far); (3) dc-layout contract: the PE's personality/core read OUR dc layout (ImageBase@0x08/FunctionEntry@0x10/ContextRecord@0x28/HandlerData@0x38) — generalization audit vs OS canonical DISPATCHER_CONTEXT pending (BUG-031 risk note); (4) sample hash mis-stated as 254ac80d in BUG-001/NEW_AGENT_START (true: 14e07e29); (5) dispatch tests broken/vacuous (TEST-004) |
+| Current HEAD (local) | CONTINUE #7 commit (see git log) |
+| Origin/main | 17c024a at session start; push executed this session (credentials in ~/.git-credentials, outside repo) |
+| Source SHA-256 (loader.c) | changed this session — see evidence/master/appcompat/run-20261015_053015/ + g1_accept run |
+| Build status | CLEAN — 0 errors |
+| Test status | Regression **12/12**; G1 UPX --version exit 0; **appcompat sweep 10/12 PASS** (t01..t07 + NEW t10/t11/t12; t08 = BUG-038 frontier, walk completes, resumes; t09 = wave-3 API frontier) |
+| Current target | G2 (C++ EH acceptance) via TASK-BUG-038 |
+| Exact current blocker | BUG-038: llvm-mingw libunwind passes ControlPc as RtlUnwindEx TargetIp PLACEHOLDER; real LP (0x1c9d) must be installed via target-frame delivery (ExceptionFlags 0x2|0x4, barrier cache) — docs/bugs/BUG-038.md |
+| Active task ID | TASK-BUG-038 (READY) |
+| Last completed task ID | TASK-BUG-037 + TASK-API-011 + TASK-API-012 (all CLOSED TESTED) — CONTINUE #7 |
+| Next task ID | TASK-BUG-038 |
+| Blocking dependencies | t08/G2 = TASK-BUG-038; t09 depends on TASK-API-009 |
+| Evidence links | docs/master/experiments/EXP-041-bug037-unwind-opcode-spec.md; docs/bugs/BUG-037.md (CLOSED), BUG-038.md (OPEN); evidence/master/appcompat/run-20261015_073729/; evidence/master/g1/20261015_073727/ |
+| Known repository inconsistencies | (1) _O_NOINHERIT(0x0080) mapped to O_APPEND — TASK-API-012; (2) mw_qsort comparator slot single-threaded — TASK-API-010 audit; (3) dispatcher passes post-unwind ctx to handlers (P-B variable, not needed so far); (4) dc-layout generalization audit vs OS canonical DISPATCHER_CONTEXT pending; (5) wchar_t 2↔4 byte passthrough only ASCII-safe (TASK-API-009 note) |
 
-**Key architectural facts established this session (GCC catch protocol, EXP-038 §4):**
-- GCC bridge site A: `RtlUnwindEx(est, LP, &ER, object, ctx, …)` with the ER upgraded to **4 params
-  `{object, est, landing_pad, selector}`**; the selector is computed by the core (0x4AFDB0), stashed at
-  `obj−0x24`, and reaches the landing pad in **RDX** (`mov rbx,rdx; sub rbx,1; jne fail` at 0x40331c).
-- The personality/core read our DISPATCHER_CONTEXT layout (LSDA via [dc+0x38], func_start via
-  [dc+0x10]+[dc+0x08]) — our dc construction is the live contract for this PE.
-- Unwind-phase protocol (for BUG-031): intermediate INSTALL → re-raise `0x21474343` (4 params,
-  flags=1); cleanup LPs end with `0x49d5c0` → continue-raise `0x120474343` (low dword = 0x20474343)
-  with `{?, est, LP, sel}` — the chain resumes each segment until the target catch LP.
+**Key facts established this session (EXP-040):**
+- mingw CRT startup imports atexit/_exit/setvbuf/GetCPInfo/_XcptFilter unconditionally;
+  an unresolved IAT slot keeps the raw hint/name RVA and `call [iat]` faults at that RVA.
+- `__iob_func()` return is indexed with stride 0x30 (mingw FILE struct size) — the loader
+  must map that window to real streams (map_crt_stream).
+- printf-family must repack MS slots into a SysV va_list via fmt-aware GP/FP classification;
+  integer-only formats "work" by accident, float reads fault.
+- CRITICAL_SECTION is exactly 40 bytes on x64 and PEs place it flush against other globals —
+  never write past byte 40 (sentinel in the SpinCount slot).
+- glibc-side callbacks (qsort today, signal/threads next) need ms_abi bridges.
+- setjmp/longjmp: loader-owned jmp_buf with the full ms_abi register file; resume at
+  rsp = entry_rsp + 8.
+- Native TLS: gs:0x58 = ThreadLocalStoragePointer; static TLS = slot 0; __tls_index written
+  by the loader; TLS callbacks run with DLL_PROCESS_ATTACH.
+- Unresolved-import crash signature: RIP = small RVA (< image size), "(NOT inside loaded PE)".
 
-**Rule honored:** the BUG-031 fix is protocol-driven (fingerprint: code+nparams+NONCONTINUABLE+LP-inside-image — no sample-specific constants); regression expectation evolution carries inline evidence comments; the whole E1–E5 bisection is documented (EXP-039 §4) including the compile-dependent-behavior finding.
-
-**Key facts established this session (EXP-039):**
-- The GCC bridge's unwind-phase re-raise (`0x21474343`, 4-param ER) is a RESUME COMMAND, not an exception: the dispatcher synthesizes the landing-pad resume (Rip=param[2], Rax=param[0], Rdx=param[3], Rsp=param[1]−alloc(param[2])) — ADR-011 design (a).
-- The cleanup LP's continue helper (0x49d5c0) calls RtlUnwindEx DIRECTLY with the OriginalContext; the dispatcher's setjmp frame is gone, so this path walks remaining cleanups from the captured context and resumes the target LP without longjmp.
-- CONTEXT volatile GPRs must come from the true raise-site captures (stub `g_cap_*`), and `call_handler_aligned` must pin rax/r10/r11 to them: with CPU-state garbage, phase-1 INSTALL vs ContinueSearch flips per recompile (E4/E5) and the GCC core can crash (0x4af733). Inline-asm constraints: `"=&a"` + `rdi`/`rbp` clobbers; the below-RSP poison block is REMOVED (early-clobber proof: ER←RAX).
-- `%rip` in inline-asm templates must be written `%%rip` (single % = operand modifier).
+**Key facts established in CONTINUE #7 (EXP-041):**
+- Correct x64 unwind opcode numbering (current MS doc = LLVM = .NET = ReactOS):
+  6=EPILOG(v2), 7=SPARE, 8=SAVE_XMM128, 9=SAVE_XMM128_FAR, 10=PUSH_MACHFRAME.
+  The old 6/7/8 table in pe.h never shipped in any retail Windows.
+- CountOfCodes counts SLOTS (code words + operand slots); loop bounds must be
+  the slot cursor (ReactOS advances by UnwindOpSlots). t08 CRT frame: 13 slots.
+- UNWIND_INFO byte 3: FrameRegister = LOW nibble, FrameOffset = HIGH nibble
+  (little-endian C bitfields). mingw lea rbp,[rsp+0x80] => 0x85.
+- FP-frame landing-pad RSP = tgt_frame - FrameOffset*16 (body RSP), NOT
+  tgt_frame - alloc_total.
+- ALL UCRT __p__* exports are FUNCTIONS returning &var (crash signatures
+  0x2039038/0x2039034/0x2039050 proved fmode/commode/argc call-style).
+- map_crt_stream must PASS THROUGH unknown pointers (fmemopen/fopen-backed
+  real FILE*); the old unknown->stdout fallback ate buffered output.
+- llvm-mingw libunwind: RtlUnwindEx TargetIp from the personality = ControlPc
+  PLACEHOLDER; real LP delivered at target frame via barrier cache (BUG-038).

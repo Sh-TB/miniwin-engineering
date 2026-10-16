@@ -1,0 +1,50 @@
+artifacts/opensource/imagemagick/magick.exe
+  Machine=0x8664 (x64) Magic=0x20b (PE32+) Subsystem=3 (console)
+  ImageBase=0x140000000 EntryPoint_RVA=0x34f000 SizeOfImage~0x0
+  IMPORT DESCRIPTOR RVA=0x1d26bfc size=0x140
+  KERNEL32.dll: 256 imports
+  USER32.dll: 19 imports
+  ADVAPI32.dll: 27 imports
+  VCOMP140.DLL: 25 imports
+  WS2_32.dll: 34 imports
+  gdiplus.dll: 22 imports
+  urlmon.dll: 1 imports
+  GDI32.dll: 47 imports
+  SHELL32.dll: 5 imports
+  ole32.dll: 3 imports
+  MSIMG32.dll: 1 imports
+  bcrypt.dll: 13 imports
+  api-ms-win-core-synch-l1-2-0.dll: 3 imports
+  DNSAPI.dll: 2 imports
+  IPHLPAPI.DLL: 3 imports
+  --- KERNEL32.dll ---
+    CreateThread GetLogicalDrives OutputDebugStringA GetFileSize GetDriveTypeA ReadDirectoryChangesW GetLongPathNameW GetSystemDirectoryA GetModuleHandleExA GetVolumePathNameW GetVolumeInformationW ReadConsoleInputW GetNumberOfConsoleInputEvents TzSpecificLocalTimeToSystemTime RemoveDirectoryW GetConsoleCP FreeLibraryAndExitThread ExitThread CompareStringEx LCMapStringEx DecodePointer GetSystemTimePreciseAsFileTime RtlCaptureStackBackTrace CloseThreadpoolWork SubmitThreadpoolWork CreateThreadpoolWork FreeLibraryWhenCallbackReturns GetTickCount64 GetLogicalProcessorInformationEx SwitchToThread CreateSymbolicLinkW CreateHardLinkW CopyFile2 CreateDirectoryExW AreFileApisANSI SetFileInformationByHandle GetDiskFreeSpaceExW GetLocaleInfoEx GetCurrentThreadId MultiByteToWideChar SystemTimeToFileTime MoveFileExW FindResourceA GetStartupInfoA CreateFileMappingA FormatMessageA LocalFree SizeofResource LockResource LoadResource LoadLibraryExW GetProcAddress GlobalAlloc GlobalSize GlobalUnlock GlobalLock GlobalFree SetEnvironmentVariableA GetCurrentProcessId InitializeSListHead GetStartupInfoW GetModuleHandleW RtlUnwindEx InterlockedPushEntrySList InterlockedFlushSList RtlUnwind SetLastError FlsAlloc FlsGetValue FlsSetValue FlsFree EnterCriticalSection LeaveCriticalSection InitializeCriticalSectionEx DeleteCriticalSection RtlLookupFunctionEntry EncodePointer RaiseException RtlPcToFileHeader GetCurrentProcess ExitProcess TerminateProcess GetModuleHandleExW GetConsoleMode ReadConsoleW SetFilePointerEx GetModuleHandleA SetConsoleCtrlHandler WriteFile GetConsoleOutputCP GetDriveTypeW GetFileType SystemTimeToTzSpecificLocalTime FileTimeToSystemTime DuplicateHandle CreateProcessW DeleteFileW GetFileAttributesExW SetStdHandle GetTimeZoneInformation FlushFileBuffers GetStdHandle GetCommandLineA GetCommandLineW RtlCaptureContext RtlVirtualUnwind IsDebuggerPresent UnhandledExceptionFilter HeapAlloc HeapFree GetTempPathW IsThreadAFiber VirtualProtect GetDateFormatW GetTimeFormatW CompareStringW LCMapStringW GetLocaleInfoW IsValidLocale GetUserDefaultLCID EnumSystemLocalesW GetCurrentThread GetCPInfo GetStringTypeW IsValidCodePage GetACP GetOEMCP GetFileSizeEx HeapReAlloc HeapSize HeapQueryInformation SetCurrentDirectoryW GetCurrentDirectoryW CreateDirectoryW OutputDebugStringW FindFirstFileExW GetEnvironmentStringsW FreeEnvironmentStringsW SetEnvironmentVariableW GetProcessHeap WriteConsoleW GetTempFileNameW InitializeCriticalSection TryEnterCriticalSection InitOnceBeginInitialize InitOnceComplete FormatMessageW GetVersionExA CreateEventA SignalObjectAndWait TerminateThread QueueUserWorkItem LoadLibraryW ReleaseSRWLockExclusive AcquireSRWLockExclusive CreateFile2 LocalAlloc lstrlenA ReplaceFileW GetNativeSystemInfo InitOnceExecuteOnce DebugBreak ReleaseSemaphore CreateSemaphoreA InitializeSRWLock ReleaseSRWLockShared AcquireSRWLockShared TryAcquireSRWLockExclusive TryAcquireSRWLockShared InitializeConditionVariable WakeConditionVariable WakeAllConditionVariable SleepConditionVariableSRW SetThreadPriority GetThreadPriority ResumeThread TlsAlloc TlsGetValue TlsSetValue ExpandEnvironmentStringsW GetFileInformationByHandleEx SetConsoleMode GetSystemDirectoryW GetWindowsDirectoryW VirtualQuery GetComputerNameW GetProcessAffinityMask AddVectoredExceptionHandler RemoveVectoredExceptionHandler GetVersion GetLocaleInfoA GetThreadLocale AllocConsole AttachConsole LoadLibraryA IsDBCSLeadByteEx SetEvent ResetEvent ReadConsoleInputA PeekConsoleInputA GetConsoleWindow DeviceIoControl WaitForSingleObjectEx WaitForMultipleObjectsEx CreateEventW WaitForMultipleObjects GetExitCodeThread ReleaseMutex CreateMutexA CreateFileA TlsFree RegisterWaitForSingleObject UnregisterWait SetFileAttributesW GetTickCount GetFileTime GetModuleFileNameW GetModuleFileNameA FreeResource FreeLibrary UnmapViewOfFile MapViewOfFile GetSystemTimeAsFileTime GetSystemTime GetSystemInfo GlobalMemoryStatusEx CreateProcessA GetExitCodeProcess WaitForSingleObject QueryPerformanceFrequency QueryPerformanceCounter PeekNamedPipe CreatePipe SetErrorMode GetLastError SetHandleInformation CloseHandle SetFileTime SetFilePointer SetEndOfFile ReadFile GetShortPathNameW GetFullPathNameW GetFinalPathNameByHandleW GetFileInformationByHandle GetFileAttributesW FindNextFileW FindFirstFileW FindClose CreateFileW GetEnvironmentVariableW WideCharToMultiByte Sleep SetConsoleOutputCP IsProcessorFeaturePresent SetUnhandledExceptionFilter
+  --- USER32.dll ---
+    EnumDisplayDevicesA IsClipboardFormatAvailable EmptyClipboard GetClipboardData IntersectRect CloseClipboard OpenClipboard GetDC MessageBoxA ReleaseDC SystemParametersInfoA LoadStringW MsgWaitForMultipleObjectsEx FillRect PeekMessageA InflateRect PostMessageA IsWindow SetClipboardData
+  --- ADVAPI32.dll ---
+    GetSecurityDescriptorGroup RegEnumValueW CryptGenRandom CryptReleaseContext CryptAcquireContextA RegQueryValueExW RegQueryValueExA RegOpenKeyExA RegEnumKeyA RegCloseKey ReportEventA RegisterEventSourceA DeregisterEventSource RegNotifyChangeKeyValue RegDeleteValueW RegCreateKeyExW GetFileSecurityW RegQueryInfoKeyW RegEnumKeyExW GetSecurityInfo RegGetValueW RegLoadMUIStringW RegOpenKeyExW GetUserNameW LookupAccountSidW GetSecurityDescriptorOwner RegSetValueExW
+  --- VCOMP140.DLL ---
+    omp_get_thread_num omp_destroy_lock omp_get_max_threads omp_unset_lock _vcomp_reduction_r8 _vcomp_leave_critsect _vcomp_atomic_add_i8 _vcomp_for_static_end _vcomp_for_static_simple_init_i8 _vcomp_for_dynamic_init _vcomp_for_dynamic_next _vcomp_for_static_simple_init _vcomp_atomic_add_i4 omp_set_lock omp_init_lock _vcomp_set_num_threads _vcomp_fork omp_set_nested _vcomp_for_static_init_i8 _vcomp_for_dynamic_next_i8 _vcomp_for_dynamic_init_i8 _vcomp_single_end _vcomp_single_begin _vcomp_barrier _vcomp_enter_critsect
+  --- WS2_32.dll ---
+    #ordinal8 #ordinal9 #ordinal55 WSASetEvent WSAEventSelect WSAEnumNetworkEvents #ordinal15 #ordinal14 #ordinal1 #ordinal2 #ordinal3 #ordinal4 #ordinal13 #ordinal112 #ordinal16 #ordinal19 #ordinal21 #ordinal23 WSACreateEvent WSACloseEvent #ordinal7 #ordinal10 inet_ntop #ordinal115 #ordinal11 #ordinal12 #ordinal51 #ordinal52 inet_pton #ordinal116 freeaddrinfo getaddrinfo #ordinal111 #ordinal56
+  --- gdiplus.dll ---
+    GdipGraphicsClear GdipAlloc GdipFree GdiplusStartup GdiplusShutdown GdipLoadImageFromFile GdipCloneImage GdipDisposeImage GdipGetImageGraphicsContext GdipGetImageWidth GdipGetImageHeight GdipDrawImageRectI GdipSetInterpolationMode GdipSetTextRenderingHint GdipSetSmoothingMode GdipDeleteGraphics GdipBitmapUnlockBits GdipBitmapLockBits GdipCreateBitmapFromScan0 GdipGetImageHorizontalResolution GdipLoadImageFromFileICM GdipGetImageVerticalResolution
+  --- urlmon.dll ---
+    URLDownloadToFileA
+  --- GDI32.dll ---
+    GetClipRgn GetGraphicsMode IntersectClipRect SelectClipRgn ExtSelectClipRgn GetWorldTransform GdiFlush ExtTextOutW GetObjectW StretchDIBits CreateFontIndirectA EnumFontFamiliesExW CreatePen GetGlyphOutlineA GetStockObject Rectangle Polyline ModifyWorldTransform SetWorldTransform GetTextMetricsA ExtCreateRegion CreateCompatibleDC CreateDCA DeleteDC DeleteObject GetDeviceCaps SelectObject CreateDIBSection CreateFontIndirectW GetCharWidth32A GetFontData GetGlyphOutlineW GetOutlineTextMetricsA GetFontUnicodeRanges GetGlyphIndicesW RestoreDC SaveDC SetBkMode SetGraphicsMode SetMapMode SetTextColor CreateRectRgn GetClipBox BitBlt CreateCompatibleBitmap CreateSolidBrush SetTextAlign
+  --- SHELL32.dll ---
+    SHFileOperationW SHGetFileInfoW CommandLineToArgvW SHGetSpecialFolderLocation SHGetPathFromIDListW
+  --- ole32.dll ---
+    CoInitializeEx CoCreateInstance CoTaskMemFree
+  --- MSIMG32.dll ---
+    AlphaBlend
+  --- bcrypt.dll ---
+    BCryptDeriveKeyPBKDF2 BCryptDestroyHash BCryptFinishHash BCryptHashData BCryptGenRandom BCryptDestroyKey BCryptEncrypt BCryptGenerateSymmetricKey BCryptCloseAlgorithmProvider BCryptSetProperty BCryptGetProperty BCryptOpenAlgorithmProvider BCryptCreateHash
+  --- api-ms-win-core-synch-l1-2-0.dll ---
+    WakeByAddressAll WakeByAddressSingle WaitOnAddress
+  --- DNSAPI.dll ---
+    DnsFree DnsQuery_A
+  --- IPHLPAPI.DLL ---
+    CancelMibChangeNotify2 NotifyRouteChange2 GetIpForwardTable2
+  TOTAL IMPORTS: 461

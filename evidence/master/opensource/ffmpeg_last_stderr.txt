@@ -1,0 +1,89 @@
+[TRACE] Command line: artifacts/opensource/ffmpeg/ffmpeg-master-latest-win64-gpl/bin/ffmpeg.exe -hide_banner -loglevel error -f lavfi -i testsrc2=size=64x48:rate=1 -frames:v 1 -y /home/z/ffmpeg_test.png
+[WARN] 424 imports unresolved
+malloc(): invalid size (unsorted)
+
+[CRASH] Signal 6 at RIP=0x7fb89873a69c
+  RAX=0x0 RCX=0x7fb89873a69c RDX=0x6 R8=0xffffffff R9=0x0
+  RSP=0x7ffea88b0400 RBP=0x1000
+  g_image_base=0x140000000 g_image_size=0xadb8000
+  (NOT inside loaded PE)
+  RSI=0x26e3 RDI=0x26e3
+  R8=0xffffffff  R9=0x0 R10=0x22 R11=0x246
+  R12=0x7ffea88b0560 R13=0x6 R14=0x7ffea88b0560 R15=0x7ffea88b0560
+  [SCAN rsp+168] 0x14a8a8428 <PE>
+  [SCAN rsp+712] 0x141916d10 <PE>
+  [SCAN rsp+792] 0x141916d10 <PE>
+  [SCAN rsp+808] 0x14a8a8428 <PE>
+  [SCAN rsp+824] 0x201238d <LOADER>
+  [SCAN rsp+1000] 0x149c0a030 <PE>
+  [SCAN rsp+1016] 0x148102c81 <PE>
+  [SCAN rsp+1032] 0x14a8a8428 <PE>
+  [SCAN rsp+1064] 0x1426b9903 <PE>
+  [SCAN rsp+1080] 0x14a8a8420 <PE>
+  [SCAN rsp+1112] 0x14a8a8420 <PE>
+  [SCAN rsp+1128] 0x140001448 <PE>
+  [SCAN rsp+1184] 0x149c0a4c0 <PE>
+  [SCAN rsp+1272] 0x149c0a4c0 <PE>
+  [SCAN rsp+1280] 0x203f7a8 <LOADER>
+  [SCAN rsp+1288] 0x20072ff <LOADER>
+  [SCAN rsp+1304] 0x14ad3b000 <PE>
+  [SCAN rsp+1336] 0x140000000 <PE>
+  [SCAN rsp+1544] 0x2000002 <LOADER>
+  [SCAN rsp+1656] 0x20026c2 <LOADER>
+  [SCAN rsp+1664] 0x20020d0 <LOADER>
+  [SCAN rsp+3112] 0x2006410 <LOADER>
+  [SCAN rsp+3264] 0x2006410 <LOADER>
+  [SCAN rsp+3304] 0x2007910 <LOADER>
+  [SCAN rsp+3336] 0x2007931 <LOADER>
+  [SCAN rsp+3896] 0x2000040 <LOADER>
+  [SCAN rsp+3976] 0x2007910 <LOADER>
+  Backtrace (via stack walking):
+    [0] RIP=0x7fb89873a69c (outside PE, possible shared lib)
+    [1] RIP=0x7fb89873a69c (outside PE, possible shared lib)
+
+[CRASH] Signal 11 at RIP=0x201b184
+  RAX=0x3d RCX=0x0 RDX=0x0 R8=0x0 R9=0x0
+  RSP=0x7ffea88af610 RBP=0x7fb89873a69c
+  g_image_base=0x140000000 g_image_size=0xadb8000
+  (NOT inside loaded PE)
+  RSI=0x7ffea88af460 RDI=0x7ffea88af430
+  R8=0x0  R9=0x0 R10=0x0 R11=0x202
+  R12=0x6a4ab4c99a26f400 R13=0x2 R14=0x7fffffeffffd R15=0x7fb89863a69b
+  [SCAN rsp+344] 0x2002181 <LOADER>
+  [SCAN rsp+352] 0x2000b58 <LOADER>
+  [SCAN rsp+568] 0x1426c41a7 <PE>
+  [SCAN rsp+2480] 0x1495766eb <PE>
+  [SCAN rsp+2488] 0x14957bdf4 <PE>
+  [SCAN rsp+2496] 0x149572527 <PE>
+  [SCAN rsp+2504] 0x14957be4f <PE>
+  [SCAN rsp+2512] 0x149576790 <PE>
+  [SCAN rsp+2520] 0x149579373 <PE>
+  [SCAN rsp+2528] 0x14957676b <PE>
+  [SCAN rsp+2544] 0x14957bcf9 <PE>
+  [SCAN rsp+2552] 0x14957bd2c <PE>
+  [SCAN rsp+2560] 0x14957b400 <PE>
+  [SCAN rsp+2568] 0x14957935a <PE>
+  [SCAN rsp+2576] 0x1495733cd <PE>
+  [SCAN rsp+2584] 0x149576720 <PE>
+  [SCAN rsp+2592] 0x14957bd33 <PE>
+  [SCAN rsp+2600] 0x14957bd51 <PE>
+  [SCAN rsp+2608] 0x14957be11 <PE>
+  [SCAN rsp+2616] 0x14957bdbb <PE>
+  [SCAN rsp+2624] 0x14957bd86 <PE>
+  [SCAN rsp+2632] 0x14957bda0 <PE>
+  [SCAN rsp+2640] 0x149575e2b <PE>
+  [SCAN rsp+2648] 0x14957be2e <PE>
+  [SCAN rsp+2656] 0x1495766f7 <PE>
+  [SCAN rsp+2664] 0x1495766a0 <PE>
+  [SCAN rsp+2736] 0x14996faaa <PE>
+  [SCAN rsp+2752] 0x14996fab0 <PE>
+  [SCAN rsp+2768] 0x14996fab6 <PE>
+  [SCAN rsp+2784] 0x14996fac0 <PE>
+  [SCAN rsp+3264] 0x14996fab0 <PE>
+  [SCAN rsp+3456] 0x148a65a99 <PE>
+  [SCAN rsp+3488] 0x148a65a99 <PE>
+  [SCAN rsp+3512] 0x2035539 <LOADER>
+  [SCAN rsp+3736] 0x14a8a8428 <PE>
+  Backtrace (via stack walking):
+    [0] RIP=0x201b184 (outside PE, possible shared lib)
+    [1] RIP=0x201b184 (outside PE, possible shared lib)

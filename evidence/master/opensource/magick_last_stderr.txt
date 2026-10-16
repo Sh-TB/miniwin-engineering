@@ -1,0 +1,51 @@
+[WATCHDOG] armed for 40s
+[TRACE] Command line: artifacts/opensource/imagemagick/magick.exe rose: rose.png
+[WARN] 162 imports unresolved
+
+[CRASH] Signal 11 at RIP=0x20162d0
+  RAX=0x7f RCX=0x0 RDX=0x1 R8=0x7f R9=0x6200000061
+  RSP=0x7ffe8e9447e0 RBP=0x1
+  g_image_base=0x140000000 g_image_size=0x1fdf000
+  (NOT inside loaded PE)
+  RSI=0x0 RDI=0x1
+  R8=0x7f  R9=0x6200000061 R10=0x3 R11=0x7fb4a8d42fb0
+  R12=0x0 R13=0x7ffe8e944920 R14=0x6200000061 R15=0x7fb4a8bcf26c
+  [SCAN rsp+216] 0x1417241e0 <PE>
+  [SCAN rsp+248] 0x1403d88e0 <PE>
+  [SCAN rsp+256] 0x1417241e0 <PE>
+  [SCAN rsp+856] 0x1403a05b4 <PE>
+  [SCAN rsp+1544] 0x1403a11ba <PE>
+  [SCAN rsp+1640] 0x141d9f0c0 <PE>
+  [SCAN rsp+1912] 0x2013f4e <LOADER>
+  [SCAN rsp+2120] 0x141649a0b <PE>
+  [SCAN rsp+2136] 0x14039f866 <PE>
+  [SCAN rsp+2184] 0x14039fda7 <PE>
+  [SCAN rsp+2264] 0x141649a0b <PE>
+  [SCAN rsp+2280] 0x14039fa15 <PE>
+  [SCAN rsp+2288] 0x141d9f0c0 <PE>
+  [SCAN rsp+2328] 0x1403a0d73 <PE>
+  [SCAN rsp+2440] 0x14039f4b6 <PE>
+  [SCAN rsp+2552] 0x14039f375 <PE>
+  [SCAN rsp+2584] 0x14017ed30 <PE>
+  [SCAN rsp+2600] 0x14039f7b6 <PE>
+  [SCAN rsp+2624] 0x140004a87 <PE>
+  [SCAN rsp+2680] 0x14017e5d4 <PE>
+  [SCAN rsp+2696] 0x141649a0b <PE>
+  [SCAN rsp+2728] 0x140020402 <PE>
+  [SCAN rsp+2744] 0x141660f20 <PE>
+  [SCAN rsp+2752] 0x141649a20 <PE>
+  [SCAN rsp+2792] 0x140014c1a <PE>
+  [SCAN rsp+2800] 0x2031cb0 <LOADER>
+  [SCAN rsp+2832] 0x141660730 <PE>
+  [SCAN rsp+2848] 0x14017ed30 <PE>
+  [SCAN rsp+2864] 0x141660730 <PE>
+  [SCAN rsp+2984] 0x140016e12 <PE>
+  [SCAN rsp+3464] 0x2001719 <LOADER>
+  [SCAN rsp+3472] 0x2001188 <LOADER>
+  [SCAN rsp+3608] 0x2001719 <LOADER>
+  [SCAN rsp+3880] 0x2002b00 <LOADER>
+  [SCAN rsp+3888] 0x2041460 <LOADER>
+  [SCAN rsp+3904] 0x2031cb0 <LOADER>
+  Backtrace (via stack walking):
+    [0] RIP=0x20162d0 (outside PE, possible shared lib)
+    [1] RIP=0x20162d0 (outside PE, possible shared lib)

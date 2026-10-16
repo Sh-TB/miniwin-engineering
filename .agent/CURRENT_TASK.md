@@ -1,41 +1,33 @@
 # CURRENT TASK
 
-**Task ID:** TASK-TEST-004-C1 (+D1 queued behind it)
-**Title:** test_c: real ContinueSearch chain (two-handler walk)
-**Status:** READY
-**Priority:** P2
+**Task ID:** TASK-OPENSRC-1 (canonical, P1 — see `.agent/NEXT_ACTION.md`)
+**Title:** Unblock ffmpeg.exe and magick.exe (real famous open-source targets)
+**Status:** READY — merged state (2026-10-16): parallel appcompat/ISS1/OPENSRC-1 line + TEST-004 slice 2 line integrated
+**Priority:** P1
 
-## One-line description
-Slice 2 closed B-1/B-2/B-3: all 4 synthetic tests now raise through the real IAT call,
-reach RtlDispatchException, get a handler invoked, and resume cleanly (suite 4/4 on
-dispatch contracts, 3x deterministic; G1 pin OK; loader.c untouched). Next micro-task:
-test_c's ContinueSearch handler is dead code — restructure so the walk really continues.
+## Canonical frontier (from NEXT_ACTION.md @ f75aa97/00898fe, re-verified at merge)
+- **ffmpeg.exe** (BtbN win64 GPL): ~425 unresolved imports; deep into CRT init (WSAStartup,
+  vulkan probe, per-library constructors). BLOCKED root: heap metadata corruption
+  ("malloc(): invalid size (unsorted)") during late CRT init, before main.
+  Next command: `timeout 150 ./minwin_loader artifacts/opensource/ffmpeg/ffmpeg-master-latest-win64-gpl/bin/ffmpeg.exe -hide_banner -loglevel error -f lavfi -i "testsrc2=size=64x48:rate=1" -frames:v 1 -y /tmp/out.png`
+  Tooling: MINWIN_HEAP_GUARD diagnostics already in the tree.
+- **magick.exe** (ImageMagick 7.1.2-34 portable): BLOCKED root: UCRT locale ctype-init
+  delivers a corrupted frame to GetStringTypeW (R9 = string data as out-ptr).
+  Next: decode the caller at RVA 0x3d87b2 frame + the locale struct layout.
+- Acceptance: ffmpeg reaches main() and produces a valid PNG; magick produces rose.png;
+  regression 12/12 + sweep 11/12 stay green.
 
-## Where slice 2 landed (facts you may rely on)
-- B-1: test_b/c/d call fixups were off-by-one (disp measured from func_rva+13 instead
-  of +12; call sits at offset 7). Fixed in make_test_b/c/d; verifier rewritten to be
-  non-vacuous (12 calls verified: every e8 target = a function entry, every ff15
-  target = IAT 0x2048).
-- B-2: UNWIND_CODEs now canonical — byte0=CodeOffset, byte1=(OpInfo<<4)|Op, array in
-  REVERSE prolog execution order, offsets = end-of-instruction boundaries (push=1,
-  alloc=5). Byte-proof in built PE: `09 05 02 00 | 05 52 | 01 30`.
-- B-3: all frames `push rbx; sub rsp,0x30` (ms_abi aligned, ALLOC_SMALL opinfo=5);
-  no movdqa SIGSEGV anywhere.
-- Exit-code contract: after ContinueExecution resume the RaiseException stub's EAX(1)
-  is the EP return -> loader exit 1 (trace-evidenced "Entry point returned 1");
-  harness rows assert ec=1 as SUCCESS.
-- Hashes: builder `64735e05…`, harness `19cc822a…`, test_a/d `048f6d27…`,
-  test_b `8fd829f7…`, test_c `17ca43ea…`, loader binary `40646f4b…` (unchanged).
+## Also completed in this merge (TEST-004 slice 2, commit 824230f)
+- Builder B-1/B-2/B-3 closed: all 4 synthetic dispatch tests raise through the real IAT
+  call, reach RtlDispatchException, get a handler invoked, resume cleanly (4/4, 3x
+  deterministic; byte-proof `09 05 02 00 | 05 52 | 01 30`); verifier non-vacuous.
+- Queued micro-tasks: TASK-TEST-004-C1 (real ContinueSearch two-handler walk) and
+  TASK-TEST-004-D1 (test_d is a byte-identical duplicate of test_a — differentiate).
+- TASK-BUG-038 design (target-frame delivery) remains in backlog/history — P2,
+  llvm-mingw/MS-ER family only.
 
-## C-1 scope
-- make_test_c: func_C handler -> ContinueSearch (mov eax,1; ret); func_B handler ->
-  ContinueExecution (xor eax,eax; ret). Expected: TWO HANDLER_CALL events
-  (disposition=1 at frame 0, then disposition=0 at frame 1) + clean resume, ec=1.
-- Evolve the test_c row to assert both dispositions.
-- Builder-only. If a loader defect surfaces in the ContinueSearch-continue path,
-  register BUG-032 with a trace; do NOT touch loader.c in this task.
-- Guardrail: bash scripts/g1_accept.sh must stay OK; test_a/b/d rows stay green.
-
-## Then: TASK-TEST-004-D1 (see backlog)
-test_a.exe == test_d.exe (sha256 048f6d27…) — differentiate test_d (prefer a deeper
-no-handler chain: handler discovered at frame 3).
+## Ground rules
+- Loader changes must keep: regression 12/12, UPX G1 (exit 0 + banner), sweep 11/12,
+  dispatch suite 4/4. Every fix = separate report + evidence dir + 3x runs.
+- Credentials: ~/.git-credentials LOST between sessions (OWNER-004) — push blocked until
+  the user re-supplies the token; never store it in the repo.

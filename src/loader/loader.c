@@ -31,6 +31,26 @@
 #include <dlfcn.h>
 
 #include "../include/pe.h"
+/* ISS1-WAVE3 (Issue #1 §8.4): real-application API families (ImageMagick /
+ * ffmpeg corpus demand): stat/statvfs, dir iteration, futex-based address
+ * waits, libgen for path transforms. */
+#include <sys/stat.h>
+#include <sys/statvfs.h>
+#include <dirent.h>
+#include <libgen.h>
+#include <malloc.h>
+#include <sys/sysinfo.h>
+#include <sys/uio.h>
+#include <wctype.h>
+#include <math.h>
+#include <arpa/inet.h>
+#include <sys/socket.h>
+#include <sys/select.h>
+#include <netdb.h>
+#include <sys/ioctl.h>
+#include <netinet/in.h>
+
+extern char** environ;
 
 /* ============================================================
  * Global State
@@ -41,6 +61,11 @@ static char g_cmdline_ansi[4096];
 static wchar_t g_cmdline_wide[4096];
 static char* g_argv[256];
 static int g_argc = 0;
+static char** g_argv_cell = g_argv;   /* TASK-API-011: __p___argv points here */
+static char** g_environ_cell = NULL;  /* TASK-API-011: __p__environ points here */
+static char* g_tzname[2] = { (char*)"UTC", (char*)"UTC" };
+static long g_timezone_val = 0;
+static int g_daylight_val = 0;
 static int g_app_type = 1;          /* _CONSOLE_APP */
 static int g_fmode_val = 0;           /* _O_TEXT */
 static int g_commode_val = 0;         /* default commode */
@@ -59,6 +84,9 @@ static FILE* g_trace_log = NULL;
 /* Forward declaration for GetProcAddress resolver (defined after import tables) */
 typedef void* (*resolve_proc_fn_t)(void* module, const char* name);
 static resolve_proc_fn_t g_resolve_proc_fn = NULL;
+
+/* forward decl: used by early-defined conversion helpers (Wave-3B) */
+__attribute__((ms_abi)) void mw_SetLastError(uint32_t err);
 
 #define MW_TRACE(fmt, ...) do { \
     if (g_trace_log) { \
@@ -119,6 +147,10 @@ static void* alloc_handle(void* ptr) {
 static uint8_t g_teb_storage[4096] __attribute__((aligned(4096)));
 static uint8_t g_peb_storage[4096] __attribute__((aligned(4096)));
 static uint8_t g_params_storage[4096] __attribute__((aligned(4096)));
+/* TASK-TLS-001: Windows x64 TEB+0x58 = ThreadLocalStoragePointer — a POINTER
+ * to an array of slot pointers. Native-TLS PEs (e.g. libc++abi's
+ * __cxa_get_globals) read gs:0x58 and index this array by __tls_index. */
+static void* g_tls_ptr_array[64];
 
 /* RTL_USER_PROCESS_PARAMETERS layout (x64) */
 struct FakeProcessParams {
@@ -184,6 +216,7 @@ static void setup_teb_peb(void) {
     *(uint64_t*)(teb + 0x48) = 5678;                 /* ClientId.UniqueThread */
     *(uint64_t*)(teb + 0x60) = (uint64_t)peb;        /* PEB pointer */
     *(uint32_t*)(teb + 0x68) = 0;                    /* LastErrorValue */
+    *(uint64_t*)(teb + 0x58) = (uint64_t)(uintptr_t)g_tls_ptr_array; /* x64: ThreadLocalStoragePointer */
 
     /* PEB layout (minimal)
      * 0x00 InheritedAddressSpace (1)
@@ -328,60 +361,65 @@ __attribute__((ms_abi)) void mw_DebugBreak(void) {
     MW_TRACE("DebugBreak()");
 }
 
-/* Critical Section state */
-struct MwCritSec {
-    pthread_mutex_t mutex;
-    int initialized;
-};
+/* Critical Section state.
+ * BUG-034 (appcompat sweep APP-F-04): Windows CRITICAL_SECTION is exactly
+ * 40 bytes on x64 and PEs place it flush against other globals (observed:
+ * mingw dtoa CRITICAL_SECTION at 0x14000b178 with freelist[] at +0x28). The
+ * previous MwCritSec {pthread_mutex_t(40) + int(4)} wrote an 'initialized'
+ * flag at offset 40 -> 8-byte overflow into PE data (freelist[0] became 1,
+ * dtoa Balloc deref -> SIGSEGV). The contract is: NEVER write past byte 40.
+ * The mutex overlays the CS itself; our "initialized" sentinel lives in the
+ * Windows SpinCount slot (offset 36), which caller-side is zeroed memory. */
+#define MW_CS_MAGIC 0x4D574353u /* "MWCS" */
+
+static pthread_mutex_t* cs_mutex(void* cs) { return (pthread_mutex_t*)cs; }
+
+static int cs_is_initialized(void* cs) {
+    return *(uint32_t*)((uint8_t*)cs + 36) == MW_CS_MAGIC;
+}
+
+static void cs_mark_initialized(void* cs) {
+    *(uint32_t*)((uint8_t*)cs + 36) = MW_CS_MAGIC;
+}
 
 __attribute__((ms_abi)) void mw_InitializeCriticalSection(void* cs) {
     if (!cs) return;
-    struct MwCritSec* mcs = (struct MwCritSec*)cs;
-    if (!mcs->initialized) {
-        pthread_mutexattr_t attr;
-        pthread_mutexattr_init(&attr);
-        pthread_mutexattr_settype(&attr, PTHREAD_MUTEX_RECURSIVE);
-        pthread_mutex_init(&mcs->mutex, &attr);
-        pthread_mutexattr_destroy(&attr);
-        mcs->initialized = 1;
-        /* Zero out the rest of the CRITICAL_SECTION structure (Windows CRITICAL_SECTION is 40 bytes) */
-        size_t cs_total = 40; /* sizeof(CRITICAL_SECTION) on Windows x64 */
-        if (cs_total > sizeof(struct MwCritSec))
-            memset((uint8_t*)cs + sizeof(struct MwCritSec), 0, cs_total - sizeof(struct MwCritSec));
-    }
+    if (cs_is_initialized(cs)) return; /* idempotent, like re-init on a free CS */
+    pthread_mutexattr_t attr;
+    pthread_mutexattr_init(&attr);
+    pthread_mutexattr_settype(&attr, PTHREAD_MUTEX_RECURSIVE);
+    pthread_mutex_init(cs_mutex(cs), &attr);
+    pthread_mutexattr_destroy(&attr);
+    cs_mark_initialized(cs);
     MW_TRACE("InitializeCriticalSection(%p)", cs);
 }
 
 __attribute__((ms_abi)) void mw_DeleteCriticalSection(void* cs) {
     if (!cs) return;
-    struct MwCritSec* mcs = (struct MwCritSec*)cs;
-    if (mcs->initialized) {
-        pthread_mutex_destroy(&mcs->mutex);
-        mcs->initialized = 0;
+    if (cs_is_initialized(cs)) {
+        pthread_mutex_destroy(cs_mutex(cs));
+        *(uint32_t*)((uint8_t*)cs + 36) = 0;
     }
     MW_TRACE("DeleteCriticalSection(%p)", cs);
 }
 
 __attribute__((ms_abi)) void mw_EnterCriticalSection(void* cs) {
     if (!cs) return;
-    struct MwCritSec* mcs = (struct MwCritSec*)cs;
-    if (!mcs->initialized) mw_InitializeCriticalSection(cs);
-    pthread_mutex_lock(&mcs->mutex);
+    if (!cs_is_initialized(cs)) mw_InitializeCriticalSection(cs);
+    pthread_mutex_lock(cs_mutex(cs));
     MW_TRACE("EnterCriticalSection(%p)", cs);
 }
 
 __attribute__((ms_abi)) void mw_LeaveCriticalSection(void* cs) {
     if (!cs) return;
-    struct MwCritSec* mcs = (struct MwCritSec*)cs;
-    if (mcs->initialized) pthread_mutex_unlock(&mcs->mutex);
+    if (cs_is_initialized(cs)) pthread_mutex_unlock(cs_mutex(cs));
     MW_TRACE("LeaveCriticalSection(%p)", cs);
 }
 
 __attribute__((ms_abi)) int mw_TryEnterCriticalSection(void* cs) {
     if (!cs) return 0;
-    struct MwCritSec* mcs = (struct MwCritSec*)cs;
-    if (!mcs->initialized) mw_InitializeCriticalSection(cs);
-    int ret = (pthread_mutex_trylock(&mcs->mutex) == 0) ? 1 : 0;
+    if (!cs_is_initialized(cs)) mw_InitializeCriticalSection(cs);
+    int ret = (pthread_mutex_trylock(cs_mutex(cs)) == 0) ? 1 : 0;
     MW_TRACE("TryEnterCriticalSection(%p) = %d", cs, ret);
     return ret;
 }
@@ -518,6 +556,7 @@ static void mw_trace_shutdown_flush(void) {
 
 __attribute__((noreturn)) __attribute__((ms_abi)) void mw_ExitProcess(unsigned int code) {
     MW_TRACE("ExitProcess(%u)", code);
+    w3_run_guest_atexit();          /* Windows: CRT handlers run before exit */
     mw_trace_shutdown_flush();
     _exit(code);
 }
@@ -592,15 +631,44 @@ __attribute__((ms_abi)) int mw_IsDebuggerPresent(void) {
     return 0;
 }
 
+/* ISS1-WAVE3B FIX (heap corruption root): Windows MultiByteToWideChar
+ * contract — the size query (dst==NULL or dstlen==0) must return the number
+ * of WIDE CHARS required INCLUDING the terminating null when srclen==-1.
+ * The previous code returned the BYTE count without +1, so callers
+ * allocated one wchar too little and the conversion overflowed the chunk
+ * header by 2 bytes (observed live: ImageMagick abort with
+ * "free(): invalid size" after MultiByteToWideChar(cp=65001, srclen=-1)). */
 __attribute__((ms_abi)) int mw_MultiByteToWideChar(uint32_t cp, uint32_t flags,
     const char* src, int srclen, wchar_t* dst, int dstlen) {
     MW_TRACE("MultiByteToWideChar(cp=%u, srclen=%d, dstlen=%d)", cp, srclen, dstlen);
-    if (!src) return 0;
-    int slen = srclen;
-    if (slen < 0) slen = (int)strlen(src);
-    if (dstlen == 0) return slen;
-    int wlen = mbstowcs(dst, src, dstlen);
-    return (wlen < 0) ? 0 : wlen;
+    if (!src) { mw_SetLastError(87); return 0; }
+    if (srclen == 0) return 0;
+    int include_null = (srclen < 0);
+    size_t need = 0;
+    if (include_null) {
+        need = mbstowcs(NULL, src, 0);          /* chars before null */
+        if (need == (size_t)-1) { mw_SetLastError(1113); return 0; }
+        need += 1;                               /* include the null */
+    } else {
+        mbstate_t ps; memset(&ps, 0, sizeof(ps));
+        const char* p = src;
+        need = mbsnrtowcs(NULL, &p, (size_t)srclen, 0, &ps);
+        if (need == (size_t)-1) { mw_SetLastError(1113); return 0; }
+    }
+    if (!dst || dstlen == 0) return (int)need;
+    if (dstlen < 0 || (size_t)dstlen < need) { mw_SetLastError(122); return 0; }
+    size_t got;
+    if (include_null) {
+        got = mbstowcs(dst, src, (size_t)dstlen);
+        if (got == (size_t)-1) { mw_SetLastError(1113); return 0; }
+        got += 1;                                /* null was written by mbstowcs */
+    } else {
+        mbstate_t ps; memset(&ps, 0, sizeof(ps));
+        const char* p = src;
+        got = mbsnrtowcs((wchar_t*)dst, &p, (size_t)srclen, (size_t)dstlen, &ps);
+        if (got == (size_t)-1) { mw_SetLastError(1113); return 0; }
+    }
+    return (int)got;
 }
 
 __attribute__((ms_abi)) void* mw_OpenProcess(uint32_t access, int inh, uint32_t pid) {
@@ -674,6 +742,18 @@ uint64_t g_unwind_target_frame = 0; /* target frame (RSP) for unwind */
  * its stack-local CONTEXT — is abandoned once a landing pad resumes. */
 static uint8_t g_throw_ctx_snapshot[CONTEXT_SIZE];
 static int g_throw_ctx_valid = 0;
+/* BUG-039/B: TARGET-FRAME register snapshot. The dispatcher search loop
+ * unwinds the live CONTEXT through EVERY frame — including the frame that
+ * owns the handler — so by the time the personality calls RtlUnwindEx the
+ * live CONTEXT's nonvolatives hold the TARGET'S CALLER's values (live proof:
+ * t08_probe p2 unwind — Frame[1] restored RDI=&got/RSI=literal/RBP=ok
+ * correctly, then Frame[2] (main) replay clobbered them to CRT-startup
+ * values). Real Windows never resumes a landing pad from that state:
+ * RtlUnwindEx re-walks from its own machine state and stops AT the target
+ * frame. We capture the "returned into frame F" state before frame F's own
+ * codes are applied and use it as the register base for the resume. */
+static uint8_t g_target_frame_ctx[CONTEXT_SIZE];
+static int g_target_frame_ctx_valid = 0;
 /* BUG-031 helpers (defined next to mw_RtlUnwindEx; forward-declared because
  * the dispatcher's resume-command intercept calls them). */
 static uint64_t seh_total_prologue_alloc(uint64_t ip_va);
@@ -963,6 +1043,26 @@ static void seh_diagnostic_walk(void) {
 #define DISP_RESULT_CONTINUE_EXEC 1
 #define DISP_RESULT_HANDLER_ERROR 2
 
+/* Slots consumed by one unwind code (the code word itself + operand slots).
+ * Per the Microsoft PE/COFF x64 spec table and ReactOS's
+ * UnwindOpExtraSlotTable (sdk/lib/rtl/amd64/unwind.c). Used by the skip
+ * path (codes above the fault RIP must be skipped WITH their operands,
+ * otherwise the cursor misaligns on every following code — BUG-037) and
+ * by any caller needing the byte size of the code array. */
+static int seh_unwind_op_slots(uint8_t op, uint8_t op_info) {
+    switch (op) {
+    case UWOP_ALLOC_LARGE:     return (op_info != 0) ? 3 : 2;
+    case UWOP_SAVE_NONVOL:     return 2;
+    case UWOP_SAVE_NONVOL_FAR: return 3;
+    case UWOP_EPILOG:          return 2;   /* v2 only */
+    case UWOP_SPARE_CODE:      return 3;
+    case UWOP_SAVE_XMM128:     return 2;
+    case UWOP_SAVE_XMM128_FAR: return 3;
+    case UWOP_PUSH_MACHFRAME:  return 1;
+    default:                   return 1; /* PUSH_NONVOL, ALLOC_SMALL, SET_FPREG, reserved */
+    }
+}
+
 /* Internal SysV RtlVirtualUnwind — operates on raw context buffer.
  * Returns: handler VA (or NULL if no handler for this frame).
  * Updates ctx in place (unwound registers).
@@ -985,10 +1085,16 @@ static void* seh_internal_virtual_unwind(
     uint8_t flags       = (ui_base[0] >> 3) & 0x07;
     uint8_t prolog_size = ui_base[1];
     uint8_t count_codes = ui_base[2];
-    uint8_t frame_reg   = ui_base[3] >> 4;
-    uint8_t frame_off   = ui_base[3] & 0x0f;
+    /* BUG-037: UNWIND_INFO byte 3 is two little-endian 4-bit fields —
+     * FrameRegister is the LOW nibble, the scaled FrameOffset the HIGH
+     * nibble (winnt.h: `UCHAR FrameRegister:4; UCHAR FrameOffset:4;`).
+     * The previous decode had them swapped, so mingw frames that use
+     * RBP (reg 5) with lea rbp,[rsp+0x80] (offset 8 -> byte 0x85) were
+     * misread as FP=R8/offset=5. */
+    uint8_t frame_reg   = ui_base[3] & 0x0f;
+    uint8_t frame_off   = (ui_base[3] >> 4) & 0x0f;
 
-    (void)version; (void)prolog_size;
+    (void)prolog_size;
 
     /* Handle CHAININFO — the chained function's unwind info replaces
      * the current function's unwind codes. We must run the chained
@@ -1002,9 +1108,10 @@ static void* seh_internal_virtual_unwind(
         uint8_t chained_flags = (chained_ui[0] >> 3) & 0x07;
         uint8_t chained_prolog_size = chained_ui[1];
         uint8_t chained_count_codes = chained_ui[2];
-        uint8_t chained_frame_reg = chained_ui[3] >> 4;
-        uint8_t chained_frame_off = chained_ui[3] & 0x0f;
-        (void)chained_version; (void)chained_prolog_size;
+        /* BUG-037: FrameRegister = LOW nibble (see comment above). */
+        uint8_t chained_frame_reg = chained_ui[3] & 0x0f;
+        uint8_t chained_frame_off = (chained_ui[3] >> 4) & 0x0f;
+        (void)chained_prolog_size;
 
         /* Read RIP from context for func_offset calculation */
         uint64_t chain_rip = *(uint64_t*)(ctx + CTX_Rip);
@@ -1015,19 +1122,45 @@ static void* seh_internal_virtual_unwind(
         uint8_t* chained_codes_ptr = chained_ui + 4;
         int chained_slot = 0;
         for (int i = 0; i < chained_count_codes; i++) {
-            if (chained_slot * 2 + 1 >= (int)(chained_count_codes * 2 + 16)) break;
+            /* BUG-037: CountOfCodes counts SLOTS (code words + operand
+             * slots, MS doc "2 or 3 nodes"; ReactOS advances i by
+             * UnwindOpSlots). Bound the walk on the slot cursor, not the
+             * code index, or padding/handler bytes decode as phantom
+             * codes past the array. */
+            if (chained_slot >= chained_count_codes ||
+                chained_slot * 2 + 1 >= (int)(chained_count_codes * 2 + 16)) break;
             uint16_t cw = *(uint16_t*)(chained_codes_ptr + chained_slot * 2);
             uint8_t op_code = (cw >> 8) & 0x0f;
             uint8_t op_info = (cw >> 12) & 0x0f;
             uint8_t code_offset = cw & 0xff;
             if (chained_func_offset > 0 && code_offset >= chained_func_offset) {
-                chained_slot++; continue;
+                /* BUG-037: skip the code WITH its operand slots, otherwise
+                 * the cursor lands on operand bytes and every following
+                 * code decodes from a misaligned position. */
+                chained_slot += seh_unwind_op_slots(op_code, op_info);
+                continue;
+            }
+            if (op_code == UWOP_EPILOG && chained_version < 2) {
+                /* Epilogue descriptors exist only in UNWIND_INFO v2; in a
+                 * v1 array op 6 is corruption — stop applying codes. */
+                MW_TRACE("[DISPATCH] chained UI v%d has EPILOG code — corrupt, stop", chained_version);
+                break;
             }
             switch (op_code) {
             case UWOP_PUSH_NONVOL: {
-                chained_rsp += 8;
+                /* BUG-039 (ReactOS PopReg semantics): the unwind-code array is
+                 * stored in DESCENDING code-offset order, i.e. already in
+                 * undo (epilog) order — each push code therefore restores
+                 * from the CURRENT Rsp BEFORE advancing. Reading AFTER the
+                 * increment shifted every restored nonvolatile one slot up:
+                 * live proof (t08_probe p1 unwind, evidence master/bug038):
+                 * RDI got the RETURN ADDRESS slot [E1]=0x140020af1 while the
+                 * real saved rdi sits at [E1-8]. Correct order is
+                 * reg=[rsp]; rsp+=8  (ReactOS sdk/lib/rtl/amd64/unwind.c
+                 * PopReg: SetRegFromStackValue(Rsp) THEN Rsp+=8). */
                 uint32_t off = reg_to_ctx_offset(op_info);
                 if (off) *(uint64_t*)(ctx + off) = *(uint64_t*)(chained_rsp);
+                chained_rsp += 8;
                 break;
             }
             case UWOP_ALLOC_LARGE: /* TASK-API-006 spec rule: info==0 => uint16 * 8; info==1 => uint32, no shift */
@@ -1040,7 +1173,24 @@ static void* seh_internal_virtual_unwind(
                 }
                 break;
             case UWOP_ALLOC_SMALL: chained_rsp += (uint64_t)(op_info + 1) * 8; break;
-            case UWOP_SET_FPREG: chained_fp_val = chained_rsp + (uint64_t)chained_frame_off * 16; chained_fp_set = 1; break;
+            case UWOP_SET_FPREG:
+                /* ReactOS semantics: RSP re-anchors to the frame-pointer
+                 * base (FP_value - FrameOffset*16) for all remaining codes;
+                 * the FP value is read from the LIVE context, where the
+                 * established anchor persists (BUG-037). */
+                if (chained_frame_reg) {
+                    uint32_t fp_off = reg_to_ctx_offset(chained_frame_reg);
+                    if (fp_off) {
+                        chained_fp_val = *(uint64_t*)(ctx + fp_off);
+                        chained_rsp = chained_fp_val - (uint64_t)chained_frame_off * 16;
+                    } else {
+                        chained_fp_val = chained_rsp + (uint64_t)chained_frame_off * 16;
+                    }
+                } else {
+                    chained_fp_val = chained_rsp + (uint64_t)chained_frame_off * 16;
+                }
+                chained_fp_set = 1;
+                break;
             case UWOP_SAVE_NONVOL: {
                 chained_slot++;
                 uint16_t soff = *(uint16_t*)(chained_codes_ptr + chained_slot * 2);
@@ -1057,6 +1207,8 @@ static void* seh_internal_virtual_unwind(
             }
             case UWOP_SAVE_XMM128: { chained_slot++; break; }
             case UWOP_SAVE_XMM128_FAR: { chained_slot++; chained_slot++; break; }
+            case UWOP_EPILOG: { chained_slot++; break; }          /* 2 slots total */
+            case UWOP_SPARE_CODE: { chained_slot++; chained_slot++; break; } /* 3 total */
             case UWOP_PUSH_MACHFRAME: {
                 chained_rsp += 40;
                 if (chained_rsp <= chained_rsp + 4096) {
@@ -1065,7 +1217,7 @@ static void* seh_internal_virtual_unwind(
                 }
                 break;
             }
-            default: { if (op_code >= 9) chained_slot++; break; }
+            default: { if (op_code >= 11) chained_slot++; break; } /* reserved */
             }
             chained_slot++;
         }
@@ -1107,25 +1259,43 @@ static void* seh_internal_virtual_unwind(
     uint8_t* codes = ui_base + 4;
     int slot = 0;
     for (int i = 0; i < count_codes; i++) {
-        if (slot * 2 + 1 >= (int)(count_codes * 2 + 16)) break;
+        /* BUG-037: CountOfCodes counts SLOTS — see chained-loop note. */
+        if (slot >= count_codes ||
+            slot * 2 + 1 >= (int)(count_codes * 2 + 16)) break;
         uint16_t code_word = *(uint16_t*)(codes + slot * 2);
         uint8_t op_code = (code_word >> 8) & 0x0f;   /* UnwindOp: low nibble of byte 1 */
         uint8_t op_info = (code_word >> 12) & 0x0f;  /* OpInfo: high nibble of byte 1 */
         uint8_t code_offset = code_word & 0xff;
 
-        /* Skip codes that haven't fully executed yet */
+        /* Skip codes that haven't fully executed yet — advancing by the
+         * FULL slot size so the cursor stays aligned (BUG-037). Boundary:
+         * a code whose END offset equals the RIP offset has executed
+         * (ReactOS skips strictly-greater offsets). */
         if (func_offset > 0 && code_offset >= func_offset) {
-            slot++;
+            slot += seh_unwind_op_slots(op_code, op_info);
             continue;
+        }
+        if (op_code == UWOP_EPILOG && version < 2) {
+            /* Epilogue descriptors exist only in UNWIND_INFO v2; in a v1
+             * array op 6 is corruption — stop applying codes. */
+            MW_TRACE("[DISPATCH] UI v1 has EPILOG code — corrupt, stop");
+            break;
         }
 
         switch (op_code) {
         case UWOP_PUSH_NONVOL: {
-            new_rsp += 8;
+            /* BUG-039: restore from CURRENT rsp BEFORE advancing — the code
+             * array is in undo order (descending code offsets). The old
+             * increment-first order read the NEXT slot (one too high):
+             * t08_probe Frame[1] live trace showed RDI=[E1]=return address
+             * instead of [E1-8]=saved rdi. ReactOS PopReg: read then +=8.
+             * (Root cause of BUG-038 probe symptoms: catch by reference got
+             * garbage RDI; `ok` counter in RBP clobbered.) */
             uint32_t off = reg_to_ctx_offset(op_info);
             if (off) {
                 *(uint64_t*)(ctx + off) = *(uint64_t*)(new_rsp);
             }
+            new_rsp += 8;
             break;
         }
         case UWOP_ALLOC_LARGE: /* TASK-API-006 spec rule: info==0 => uint16 * 8; info==1 => uint32, no shift */
@@ -1142,7 +1312,22 @@ static void* seh_internal_virtual_unwind(
             break;
         }
         case UWOP_SET_FPREG: {
-            fp_reg_val = new_rsp + (uint64_t)frame_off * 16;
+            /* ReactOS semantics (sdk/lib/rtl/amd64/unwind.c): on unwind,
+             * RSP re-anchors to the frame-pointer base — the FP register
+             * value minus the scaled FrameOffset — and the FP value is
+             * read from the LIVE context, where the established anchor
+             * persists through the frame body (BUG-037). */
+            if (frame_reg) {
+                uint32_t fp_ctx_off = reg_to_ctx_offset(frame_reg);
+                if (fp_ctx_off) {
+                    fp_reg_val = *(uint64_t*)(ctx + fp_ctx_off);
+                    new_rsp = fp_reg_val - (uint64_t)frame_off * 16;
+                } else {
+                    fp_reg_val = new_rsp + (uint64_t)frame_off * 16;
+                }
+            } else {
+                fp_reg_val = new_rsp + (uint64_t)frame_off * 16;
+            }
             fp_set = 1;
             break;
         }
@@ -1166,6 +1351,8 @@ static void* seh_internal_virtual_unwind(
         }
         case UWOP_SAVE_XMM128: { slot++; break; }
         case UWOP_SAVE_XMM128_FAR: { slot++; slot++; break; }
+        case UWOP_EPILOG: { slot++; break; }          /* 2 slots total, no stack effect */
+        case UWOP_SPARE_CODE: { slot++; slot++; break; } /* 3 slots total */
         case UWOP_PUSH_MACHFRAME: {
             new_rsp += 40;
             *(uint64_t*)(ctx + CTX_Rip) = *(uint64_t*)(new_rsp + 16);
@@ -1173,7 +1360,7 @@ static void* seh_internal_virtual_unwind(
             break;
         }
         default: {
-            if (op_code >= 9) slot++;
+            if (op_code >= 11) slot++; /* reserved ops: skip code word only */
             break;
         }
         }
@@ -1403,6 +1590,7 @@ static int seh_dispatch_exception(void) {
     
     /* Register CONTEXT for RtlUnwindEx access and set up longjmp target */
     g_unwind_ctx = ctx;
+    g_target_frame_ctx_valid = 0; /* BUG-039/B: fresh dispatch, no snapshot yet */
     g_is_unwinding = 0;
     g_unwind_target_ip = 0;
     g_unwind_target_frame = 0;
@@ -1575,6 +1763,12 @@ static int seh_dispatch_exception(void) {
         uint32_t handler_rva = 0;
         void* lsda = NULL;
         uint64_t pre_unwind_rsp = *(uint64_t*)(ctx + CTX_Rsp);
+        /* BUG-039/B: snapshot the "returned into frame F" state BEFORE this
+         * frame's own unwind codes are applied. If frame F owns the handler,
+         * this snapshot — not the post-unwind context — is the correct
+         * register base for the eventual landing-pad resume. */
+        uint8_t pre_unwind_ctx[CONTEXT_SIZE];
+        memcpy(pre_unwind_ctx, ctx, CONTEXT_SIZE);
         void* handler = seh_internal_virtual_unwind(
             current_rip, rf, ctx, &est_frame, &handler_rva, &lsda);
 
@@ -1604,6 +1798,12 @@ static int seh_dispatch_exception(void) {
                  frame, handler_rva, (uint64_t)(uintptr_t)handler);
         MW_TRACE("[DISPATCH] Frame[%d]: establisher=0x%lx CTX.Rsp=0x%lx lsda=%p",
                  frame, est_frame, *(uint64_t*)(ctx + CTX_Rsp), lsda);
+
+        /* BUG-039/B: this frame owns the handler — keep the pre-unwind
+         * register state ("returned into frame F from below") as the
+         * landing-pad resume base for RtlUnwindEx. */
+        memcpy(g_target_frame_ctx, pre_unwind_ctx, CONTEXT_SIZE);
+        g_target_frame_ctx_valid = 1;
 
         /* EXP-035 NOTE: The GCC personality function expects dc.EstablisherFrame to be
          * the function-entry RSP. It passes this directly to RtlUnwindEx as
@@ -1993,24 +2193,29 @@ static uint64_t seh_total_prologue_alloc(uint64_t ip_va) {
     int slot = 0;
     uint64_t total = 0;
     for (int i = 0; i < count; i++) {
-        if (slot * 2 + 1 >= (int)(count * 2 + 16)) break;
+        /* BUG-037: CountOfCodes counts SLOTS — bound on the slot cursor. */
+        if (slot >= count || slot * 2 + 1 >= (int)(count * 2 + 16)) break;
         uint16_t cw = *(uint16_t*)(codes + slot * 2);
         uint8_t op = (cw >> 8) & 0x0f;
         uint8_t info = (cw >> 12) & 0x0f;
+        /* BUG-037: opcodes renumbered to the current spec (XMM=8/9,
+         * MACHFRAME=10, EPILOG=6 v2-only, SPARE=7). */
         switch (op) {
-        case 0: /* PUSH_NONVOL */ total += 8; break;
-        case 1: /* ALLOC_LARGE */
+        case UWOP_PUSH_NONVOL: total += 8; break;
+        case UWOP_ALLOC_LARGE: /* TASK-API-006 spec rule: info==0 => uint16 * 8; info==1 => uint32, no shift */
             slot++;
             if (info == 0) total += (uint64_t)(*(uint16_t*)(codes + slot * 2)) * 8;
             else { slot++; total += (uint64_t)(*(uint32_t*)(codes + slot * 2 - 2)); }
             break;
-        case 2: /* ALLOC_SMALL */ total += (uint64_t)(info + 1) * 8; break;
-        case 4: /* SAVE_NONVOL */ slot++; break;
-        case 5: /* SAVE_NONVOL_FAR */ slot++; slot++; break;
-        case 6: /* SAVE_XMM128 */ slot++; break;
-        case 7: /* SAVE_XMM128_FAR */ slot++; slot++; break;
-        case 8: /* PUSH_MACHFRAME */ total += 40; break;
-        default: if (op >= 9) slot++; break;
+        case UWOP_ALLOC_SMALL: total += (uint64_t)(info + 1) * 8; break;
+        case UWOP_SAVE_NONVOL: slot++; break;
+        case UWOP_SAVE_NONVOL_FAR: slot++; slot++; break;
+        case UWOP_SAVE_XMM128: slot++; break;
+        case UWOP_SAVE_XMM128_FAR: slot++; slot++; break;
+        case UWOP_EPILOG: slot++; break;               /* 2 slots total, 0 stack */
+        case UWOP_SPARE_CODE: slot++; slot++; break;   /* 3 slots total, 0 stack */
+        case UWOP_PUSH_MACHFRAME: total += 40; break;
+        default: if (op >= 11) slot++; break;
         }
         slot++;
     }
@@ -2234,6 +2439,28 @@ __attribute__((ms_abi)) void mw_RtlUnwindEx(void* target_frame, void* target_ip,
     
     uint8_t* ctx = g_unwind_ctx;
     if (ctx) {
+        /* BUG-039/B: rebuild the landing-pad register base from the
+         * target-frame snapshot ("returned into frame F from below"). The
+         * live ctx was unwound THROUGH the handler's frame by the search
+         * loop, so its nonvolatives hold the target's CALLER's values; the
+         * landing pad needs the target's THROW-TIME values (RDI=&catch-var,
+         * RBP=live counters, ...). RIP/RSP/RAX/RDX are overridden below by
+         * the landing-pad protocol, so copying them here is harmless. */
+        if (g_target_frame_ctx_valid) {
+            static const uint16_t gpr_offsets[] = {
+                CTX_Rax, CTX_Rcx, CTX_Rdx, CTX_Rbx, CTX_Rsp, CTX_Rbp,
+                CTX_Rsi, CTX_Rdi, CTX_R8, CTX_R9, CTX_R10, CTX_R11,
+                CTX_R12, CTX_R13, CTX_R14, CTX_R15
+            };
+            for (size_t gi = 0; gi < sizeof(gpr_offsets)/sizeof(gpr_offsets[0]); gi++) {
+                *(uint64_t*)(ctx + gpr_offsets[gi]) =
+                    *(uint64_t*)(g_target_frame_ctx + gpr_offsets[gi]);
+            }
+            g_target_frame_ctx_valid = 0;
+            MW_TRACE("RtlUnwindEx: BUG-039/B register base restored from target-frame snapshot (RDI=0x%lx RBP=0x%lx RSI=0x%lx RBX=0x%lx)",
+                     *(uint64_t*)(ctx + CTX_Rdi), *(uint64_t*)(ctx + CTX_Rbp),
+                     *(uint64_t*)(ctx + CTX_Rsi), *(uint64_t*)(ctx + CTX_Rbx));
+        }
         /* EXP-035 FIX: target_frame from the GCC personality function is the
          * function-entry RSP (RSP after CALL pushed return address). But the
          * catch/landing-pad code uses [RSP+offset] where offsets are relative
@@ -2285,42 +2512,74 @@ __attribute__((ms_abi)) void mw_RtlUnwindEx(void* target_frame, void* target_ip,
             int tgt_slot = 0;
             uint64_t alloc_total = 0;
             for (int i = 0; i < tgt_count; i++) {
-                if (tgt_slot * 2 + 1 >= (int)(tgt_count * 2 + 16)) break;
+                /* BUG-037: CountOfCodes counts SLOTS — bound on the slot
+                 * cursor, otherwise padding/handler bytes decode as
+                 * phantom codes (reproduced: alloc_total=0xff0191 came
+                 * from reading the handler RVA as ALLOC_LARGE). */
+                if (tgt_slot >= tgt_count ||
+                    tgt_slot * 2 + 1 >= (int)(tgt_count * 2 + 16)) break;
                 uint16_t cw = *(uint16_t*)(tgt_codes + tgt_slot * 2);
                 uint8_t op = (cw >> 8) & 0x0f;
                 uint8_t info = (cw >> 12) & 0x0f;
+                /* BUG-037: opcodes renumbered to the current spec
+                 * (XMM128=8, XMM128_FAR=9, MACHFRAME=10, EPILOG=6 v2-only,
+                 * SPARE=7); missing UWOP_SAVE_NONVOL slot advance added;
+                 * ALLOC_LARGE info==1 now unscaled u32 (TASK-API-006 rule). */
                 switch (op) {
-                case 1: /* ALLOC_LARGE */
+                case UWOP_ALLOC_LARGE:
                     tgt_slot++;
                     if (info == 0) {
-                        alloc_total += *(uint16_t*)(tgt_codes + tgt_slot * 2);
+                        alloc_total += (uint64_t)(*(uint16_t*)(tgt_codes + tgt_slot * 2)) * 8;
                     } else {
                         tgt_slot++;
-                        alloc_total += (uint64_t)(*(uint32_t*)(tgt_codes + tgt_slot * 2 - 2)) << 16;
+                        alloc_total += (uint64_t)(*(uint32_t*)(tgt_codes + tgt_slot * 2 - 2));
                     }
                     break;
-                case 2: /* ALLOC_SMALL */
+                case UWOP_ALLOC_SMALL:
                     alloc_total += (uint64_t)(info + 1) * 8;
                     break;
-                case 0: /* PUSH_NONVOL */
+                case UWOP_PUSH_NONVOL:
                     alloc_total += 8;
                     break;
-                case 5: /* SAVE_NONVOL_FAR */
-                    tgt_slot++; tgt_slot++; break;
-                case 6: /* SAVE_XMM128 */
+                case UWOP_SAVE_NONVOL:
                     tgt_slot++; break;
-                case 7: /* SAVE_XMM128_FAR */
+                case UWOP_SAVE_NONVOL_FAR:
                     tgt_slot++; tgt_slot++; break;
-                case 8: /* PUSH_MACHFRAME */
+                case UWOP_SAVE_XMM128:
+                    tgt_slot++; break;
+                case UWOP_SAVE_XMM128_FAR:
+                    tgt_slot++; tgt_slot++; break;
+                case UWOP_EPILOG:
+                    tgt_slot++; break;               /* 2 slots total, 0 stack */
+                case UWOP_SPARE_CODE:
+                    tgt_slot++; tgt_slot++; break;   /* 3 slots total, 0 stack */
+                case UWOP_PUSH_MACHFRAME:
                     alloc_total += 40;
                     break;
                 default:
-                    if (op >= 9) tgt_slot++;
+                    if (op >= 11) tgt_slot++;
                     break;
                 }
                 tgt_slot++;
             }
             post_prologue_rsp = tgt_frame - alloc_total;
+            /* BUG-037: for frames with a frame pointer the establisher is
+             * the FP register value (mid-frame anchor), not the frame's
+             * entry RSP. The body RSP is FP - FrameOffset*16 (establishment
+             * happens after the last stack change in the prologue).
+             * CRT-startup frame: FP=RBP=entry-0x108, off=8 -> body RSP =
+             * entry-0x188; the old tgt_frame-alloc formula would have
+             * produced entry-0x290. */
+            {
+                uint8_t tgt_framebyte = tgt_ui[3];
+                uint8_t tgt_framereg  = tgt_framebyte & 0x0f;
+                uint8_t tgt_frameoff  = (tgt_framebyte >> 4) & 0x0f;
+                if (tgt_framereg) {
+                    post_prologue_rsp = tgt_frame - (uint64_t)tgt_frameoff * 16;
+                    MW_TRACE("RtlUnwindEx: FP frame reg=%u off=%u -> body RSP=0x%lx",
+                             tgt_framereg, tgt_frameoff, post_prologue_rsp);
+                }
+            }
             MW_TRACE("RtlUnwindEx: target_func RVA=0x%x alloc_total=0x%lx post_prologue_RSP=0x%lx",
                      tgt_rf->BeginAddress, alloc_total, post_prologue_rsp);
         } else {
@@ -2404,10 +2663,12 @@ __attribute__((ms_abi)) void* mw_RtlVirtualUnwind(uint32_t handler_type, uint64_
     uint8_t flags   = (ui_base[0] >> 3) & 0x07;
     uint8_t prolog_size = ui_base[1];
     uint8_t count_codes = ui_base[2];
-    uint8_t frame_reg   = ui_base[3] >> 4;
-    uint8_t frame_off   = ui_base[3] & 0x0f;
+    /* BUG-037: FrameRegister = LOW nibble, scaled FrameOffset = HIGH nibble
+     * (little-endian C bitfields; see seh_internal_virtual_unwind). */
+    uint8_t frame_reg   = ui_base[3] & 0x0f;
+    uint8_t frame_off   = (ui_base[3] >> 4) & 0x0f;
 
-    (void)image_base; (void)context_pointers; (void)version;
+    (void)image_base; (void)context_pointers; (void)prolog_size;
 
     /* Handle CHAININFO */
     if (flags & UNW_FLAG_CHAININFO) {
@@ -2445,24 +2706,34 @@ __attribute__((ms_abi)) void* mw_RtlVirtualUnwind(uint32_t handler_type, uint64_
     uint8_t* codes = ui_base + 4;
     int slot = 0;
     for (int i = 0; i < count_codes; i++) {
+        /* BUG-037: CountOfCodes counts SLOTS — bound on the slot cursor. */
+        if (slot >= count_codes) break;
         uint16_t code_word = *(uint16_t*)(codes + slot * 2);
         uint8_t op_code = (code_word >> 8) & 0x0f;   /* UnwindOp: low nibble of byte 1 */
         uint8_t op_info = (code_word >> 12) & 0x0f;  /* OpInfo: high nibble of byte 1 */
         uint8_t code_offset = code_word & 0xff;
 
-        /* Skip codes that haven't fully executed yet */
+        /* Skip codes that haven't fully executed yet — full slot advance
+         * so the cursor stays aligned (BUG-037). */
         if (func_offset > 0 && code_offset >= func_offset) {
-            slot++;
+            slot += seh_unwind_op_slots(op_code, op_info);
             continue;
+        }
+        if (op_code == UWOP_EPILOG && version < 2) {
+            /* Epilogue descriptors exist only in UNWIND_INFO v2. */
+            MW_TRACE("RtlVirtualUnwind: UI v1 has EPILOG code — corrupt, stop");
+            break;
         }
 
         switch (op_code) {
         case UWOP_PUSH_NONVOL: {
-            new_rsp += 8;
+            /* BUG-039: restore from CURRENT rsp BEFORE advancing (undo order;
+             * ReactOS PopReg semantics) — mirrors seh_internal_virtual_unwind. */
             uint32_t off = reg_to_ctx_offset(op_info);
             if (off) {
                 *(uint64_t*)(ctx + off) = *(uint64_t*)(new_rsp);
             }
+            new_rsp += 8;
             break;
         }
         case UWOP_ALLOC_LARGE: /* TASK-API-006 spec rule: info==0 => uint16 * 8; info==1 => uint32, no shift */
@@ -2479,7 +2750,19 @@ __attribute__((ms_abi)) void* mw_RtlVirtualUnwind(uint32_t handler_type, uint64_
             break;
         }
         case UWOP_SET_FPREG: {
-            fp_reg = new_rsp + (uint64_t)frame_off * 16;
+            /* ReactOS semantics: re-anchor RSP from the LIVE FP register
+             * (BUG-037; see seh_internal_virtual_unwind). */
+            if (frame_reg) {
+                uint32_t fp_ctx_off = reg_to_ctx_offset(frame_reg);
+                if (fp_ctx_off) {
+                    fp_reg = *(uint64_t*)(ctx + fp_ctx_off);
+                    new_rsp = fp_reg - (uint64_t)frame_off * 16;
+                } else {
+                    fp_reg = new_rsp + (uint64_t)frame_off * 16;
+                }
+            } else {
+                fp_reg = new_rsp + (uint64_t)frame_off * 16;
+            }
             fp_set = 1;
             break;
         }
@@ -2509,6 +2792,14 @@ __attribute__((ms_abi)) void* mw_RtlVirtualUnwind(uint32_t handler_type, uint64_
             slot++; slot++;
             break;
         }
+        case UWOP_EPILOG: {
+            slot++;               /* 2 slots total, no stack effect */
+            break;
+        }
+        case UWOP_SPARE_CODE: {
+            slot++; slot++;       /* 3 slots total */
+            break;
+        }
         case UWOP_PUSH_MACHFRAME: {
             new_rsp += 40;
             *(uint64_t*)(ctx + CTX_Rip) = *(uint64_t*)(new_rsp + 16);
@@ -2517,11 +2808,11 @@ __attribute__((ms_abi)) void* mw_RtlVirtualUnwind(uint32_t handler_type, uint64_
         }
         default: {
             static int warned_unknown[7] = {0};
-            if (op_code >= 9 && op_code <= 15 && !warned_unknown[op_code - 9]) {
+            if (op_code >= 11 && !warned_unknown[op_code - 11]) {
                 MW_TRACE("RtlVirtualUnwind: unknown opcode %d (skipping)", op_code);
-                warned_unknown[op_code - 9] = 1;
+                warned_unknown[op_code - 11] = 1;
             }
-            if (op_code >= 9) slot++;
+            if (op_code >= 11) slot++; /* reserved ops: skip code word only */
             break;
         }
         }
@@ -2620,12 +2911,18 @@ __attribute__((ms_abi)) uint32_t mw_SuspendThread(void* h) {
 }
 
 /* TLS */
-static void* g_tls_values[64] = {0};
+/* TASK-TLS-001: TlsAlloc/GetValue/SetValue share the SAME slot array the
+ * native-TLS static block uses (gs:0x58 -> g_tls_ptr_array, declared above).
+ * Slot 0 is the image's static TLS; dynamic TlsAlloc slots start at 1. */
 
 __attribute__((ms_abi)) uint32_t mw_TlsAlloc(void) {
-    static uint32_t next = 0;
+    static uint32_t next = 1; /* slot 0 = image static TLS */
+    static pthread_mutex_t mu = PTHREAD_MUTEX_INITIALIZER;
+    pthread_mutex_lock(&mu);
     uint32_t idx = next++;
+    pthread_mutex_unlock(&mu);
     if (idx < 64) {
+        g_tls_ptr_array[idx] = NULL;
         MW_TRACE("TlsAlloc() = %u", idx);
         return idx;
     }
@@ -2633,13 +2930,13 @@ __attribute__((ms_abi)) uint32_t mw_TlsAlloc(void) {
 }
 
 __attribute__((ms_abi)) void* mw_TlsGetValue(uint32_t idx) {
-    void* val = (idx < 64) ? g_tls_values[idx] : NULL;
+    void* val = (idx < 64) ? g_tls_ptr_array[idx] : NULL;
     MW_TRACE("TlsGetValue(%u) = %p", idx, val);
     return val;
 }
 
 __attribute__((ms_abi)) int mw_TlsSetValue(uint32_t idx, void* val) {
-    if (idx < 64) g_tls_values[idx] = val;
+    if (idx < 64) g_tls_ptr_array[idx] = val;
     MW_TRACE("TlsSetValue(%u, %p)", idx, val);
     return 1;
 }
@@ -2684,15 +2981,40 @@ __attribute__((ms_abi)) uint32_t mw_WaitForMultipleObjects(uint32_t count, void*
     return 0; /* WAIT_OBJECT_0 */
 }
 
+/* Same contract fix for WideCharToMultiByte: size query returns the BYTE
+ * count INCLUDING the terminating null when srclen==-1. */
 __attribute__((ms_abi)) int mw_WideCharToMultiByte(uint32_t cp, uint32_t flags,
     const wchar_t* src, int srclen, char* dst, int dstlen, char* defc, int* used) {
     MW_TRACE("WideCharToMultiByte(cp=%u, srclen=%d, dstlen=%d)", cp, srclen, dstlen);
-    if (!src) return 0;
-    int wlen = srclen;
-    if (wlen < 0) wlen = (int)wcslen(src);
-    if (dstlen == 0) return wlen;
-    int mlen = wcstombs(dst, src, dstlen);
-    return (mlen < 0) ? 0 : mlen;
+    if (!src) { mw_SetLastError(87); return 0; }
+    if (srclen == 0) return 0;
+    int include_null = (srclen < 0);
+    size_t need = 0;
+    if (include_null) {
+        need = wcstombs(NULL, src, 0);           /* bytes before null */
+        if (need == (size_t)-1) { mw_SetLastError(1113); return 0; }
+        need += 1;
+    } else {
+        mbstate_t ps; memset(&ps, 0, sizeof(ps));
+        const wchar_t* p = src;
+        need = wcsnrtombs(NULL, &p, (size_t)srclen, 0, &ps);
+        if (need == (size_t)-1) { mw_SetLastError(1113); return 0; }
+    }
+    if (used) *used = 0;
+    if (!dst || dstlen == 0) return (int)need;
+    if (dstlen < 0 || (size_t)dstlen < need) { mw_SetLastError(122); return 0; }
+    size_t got;
+    if (include_null) {
+        got = wcstombs(dst, src, (size_t)dstlen);
+        if (got == (size_t)-1) { mw_SetLastError(1113); return 0; }
+        got += 1;
+    } else {
+        mbstate_t ps; memset(&ps, 0, sizeof(ps));
+        const wchar_t* p = src;
+        got = wcsnrtombs(dst, &p, (size_t)srclen, (size_t)dstlen, &ps);
+        if (got == (size_t)-1) { mw_SetLastError(1113); return 0; }
+    }
+    return (int)got;
 }
 
 /* ============================================================
@@ -2724,6 +3046,7 @@ __attribute__((ms_abi)) int mw___getmainargs(int* pargc, char*** pargv, char*** 
     if (pargc) *pargc = g_argc;
     if (pargv) *pargv = g_argv;
     if (penvp) *penvp = g_initenv_ptr;
+    g_environ_cell = g_initenv_ptr; /* TASK-API-011: __p__environ target */
     return 0;
 }
 
@@ -2771,14 +3094,212 @@ __attribute__((ms_abi)) void mw__cexit(void) {
     fflush(stderr);
 }
 
+static void* g_iob_array[3]; /* BUG-032: backing store returned by __iob_func();
+                              * mingw strides over it with 0x30 - see map_crt_stream */
+/* ============================================================
+ * ISS1 slice: MSVCRT-layout FILE registry (WS-D semantic contract).
+ * OBSERVED (live trace, t12_libc_io.exe): the guest's statically-linked
+ * mingw CRT printf machinery calls InitializeCriticalSection(fp+0x30)
+ * and Enter/Leave on it. Therefore fopen MUST return an MSVCRT-strided
+ * handle with >=0x40 bytes of zeroed slack, never a raw glibc FILE*
+ * (locking into glibc's struct corrupts the host heap -> SIGSEGV in
+ * libc during fputc). The host FILE* lives in a side table; every
+ * FILE* API resolves handles through the registry first.
+ * ============================================================ */
+#define MW_FILE_MAX 32
+typedef struct MwFile {
+    char* _ptr; int _cnt; char* _base; int _flag; int _file;
+    int _charbuf; int _bufsiz; char* _tmpfname;
+    unsigned char slack[0x40]; /* guest CRT lock (fp+0x30) lives here */
+} MwFile;
+static struct { MwFile* mf; FILE* hf; } g_mwfile_tab[MW_FILE_MAX];
+
+static FILE* mwfile_hostfp_of(void* p) {
+    if (!p) return NULL;
+    for (int i = 0; i < MW_FILE_MAX; ++i)
+        if (g_mwfile_tab[i].mf == (MwFile*)p) return g_mwfile_tab[i].hf;
+    return NULL;
+}
+
+static FILE* map_crt_stream(void* stream); /* fwd decl (defined below) */
+
 __attribute__((ms_abi)) void* mw___iob_func(void) {
-    /* Returns pointer to array of FILE* (stdin, stdout, stderr, ...) */
-    static void* iob_array[3];
-    iob_array[0] = stdin;
-    iob_array[1] = stdout;
-    iob_array[2] = stderr;
-    MW_TRACE("__iob_func() = %p", iob_array);
-    return iob_array;
+    /* Returns pointer to array of FILE* (stdin, stdout, stderr, ...).
+     * BUG-032 note: mingw indexes the returned pointer with stride 0x30
+     * (sizeof of its FILE struct); map_crt_stream() handles that window. */
+    g_iob_array[0] = stdin;
+    g_iob_array[1] = stdout;
+    g_iob_array[2] = stderr;
+    MW_TRACE("__iob_func() = %p", g_iob_array);
+    return g_iob_array;
+}
+
+/* TASK-API-011 (UCRT wave, 2026-10-15): modern UCRT-flavored mingw binaries
+ * (llvm-mingw, MSVC) resolve std streams through __acrt_iob_func(index)
+ * instead of __iob_func(). Return the same backing streams by index. */
+__attribute__((ms_abi)) void* mw___acrt_iob_func(unsigned index) {
+    g_iob_array[0] = stdin;
+    g_iob_array[1] = stdout;
+    g_iob_array[2] = stderr;
+    void* r = (index < 3) ? g_iob_array[index] : NULL;
+    MW_TRACE("__acrt_iob_func(%u) = %p", index, r);
+    return r;
+}
+
+/* UCRT-flavored CRT startup calls these during init; the loader has already
+ * prepared argc/argv/env, so they are bookkeeping no-ops. */
+__attribute__((ms_abi)) int mw__configure_narrow_argv(int mode) {
+    (void)mode;
+    MW_TRACE("_configure_narrow_argv(mode=%d) -> 0", mode);
+    return 0;
+}
+
+__attribute__((ms_abi)) int mw__initialize_narrow_environment(void) {
+    MW_TRACE("_initialize_narrow_environment() -> 0");
+    return 0;
+}
+
+__attribute__((ms_abi)) int mw__set_new_mode(int mode) {
+    MW_TRACE("_set_new_mode(%d) -> 0", mode);
+    return 0;
+}
+
+__attribute__((ms_abi)) void* mw__set_invalid_parameter_handler(void* h) {
+    MW_TRACE("_set_invalid_parameter_handler(%p) -> NULL", h);
+    return NULL;
+}
+
+/* signal(): tests never install real handlers; record and return no old one.
+ * (Named _stub to avoid clashing with the host signal(2) declaration.) */
+__attribute__((ms_abi)) void* mw_signal_stub(int sig, void* handler) {
+    MW_TRACE("signal(%d, %p) -> NULL (stub)", sig, handler);
+    return NULL;
+}
+
+__attribute__((ms_abi)) void mw__tzset(void) {
+    MW_TRACE("_tzset() (stub, UTC)");
+}
+
+/* UCRT __p__fmode/__p__commode are FUNCTIONS returning &var (t10 crashes
+ * 0x2039038/0x2039034 proved call-style usage). */
+__attribute__((ms_abi)) unsigned int* mw___p__fmode(void) {
+    MW_TRACE("__p__fmode() = %p", &g_fmode_val);
+    return &g_fmode_val;
+}
+
+__attribute__((ms_abi)) unsigned int* mw___p__commode(void) {
+    MW_TRACE("__p__commode() = %p", &g_commode_val);
+    return &g_commode_val;
+}
+
+__attribute__((ms_abi)) int* mw___p___argc(void) {
+    MW_TRACE("__p___argc() = %p", &g_argc);
+    return &g_argc;
+}
+
+__attribute__((ms_abi)) char*** mw___p___argv(void) {
+    MW_TRACE("__p___argv() = %p", &g_argv_cell);
+    return &g_argv_cell;
+}
+
+__attribute__((ms_abi)) char*** mw___p__environ(void) {
+    MW_TRACE("__p__environ() = %p", &g_environ_cell);
+    return &g_environ_cell;
+}
+
+
+/* TASK-API-012 + ISS1: FILE-level stdio bridges. fopen returns an
+ * MSVCRT-layout registry handle (guest CRT locks fp+0x30 — see registry
+ * comment); the whole family resolves handles via map_crt_stream. */
+__attribute__((ms_abi)) void* mw_fopen(const char* path, const char* mode) {
+    if (!path || !mode) return NULL;
+    if (strstr(mode, "ccs=") != NULL) { errno = EINVAL; g_errno_storage = errno; return NULL; }
+    FILE* hf = fopen(path, mode);
+    if (!hf) { g_errno_storage = errno; /* ISS1: guest reads errno via _errno mirror */ }
+    MW_TRACE("fopen(%s, %s) = %p", path ? path : "NULL", mode ? mode : "NULL", hf);
+    if (!hf) return NULL;
+    for (int i = 0; i < MW_FILE_MAX; ++i) {
+        if (g_mwfile_tab[i].mf) continue;
+        MwFile* mf = (MwFile*)calloc(1, sizeof(MwFile));
+        if (!mf) { fclose(hf); return NULL; }
+        mf->_file = fileno(hf);
+        if (strchr(mode, '+'))   mf->_flag = 0x0004; /* _IORW */
+        else if (mode[0] == 'r') mf->_flag = 0x0001; /* _IOREAD */
+        else                     mf->_flag = 0x0002; /* _IOWRT */
+        g_mwfile_tab[i].mf = mf;
+        g_mwfile_tab[i].hf = hf;
+        return mf;
+    }
+    fclose(hf); /* table full — deterministic failure */
+    errno = EMFILE; g_errno_storage = errno;
+    return NULL;
+}
+
+__attribute__((ms_abi)) int mw_fclose(void* stream) {
+    MW_TRACE("fclose(%p)", stream);
+    FILE* hf = mwfile_hostfp_of(stream);
+    if (!hf) return EOF;
+    for (int i = 0; i < MW_FILE_MAX; ++i)
+        if (g_mwfile_tab[i].mf == (MwFile*)stream) {
+            g_mwfile_tab[i].mf = NULL; g_mwfile_tab[i].hf = NULL;
+            break;
+        }
+    free(stream);
+    return fclose(hf);
+}
+
+__attribute__((ms_abi)) unsigned long long mw_fread(void* buf,
+        unsigned long long sz, unsigned long long n, void* stream) {
+    FILE* f = map_crt_stream(stream);
+    return (f && buf) ? fread(buf, (size_t)sz, (size_t)n, f) : 0ULL;
+}
+
+__attribute__((ms_abi)) char* mw_fgets(char* buf, int n, void* stream) {
+    FILE* f = map_crt_stream(stream);
+    return (f && buf) ? fgets(buf, n, f) : NULL;
+}
+
+__attribute__((ms_abi)) int mw_fgetc(void* stream) {
+    FILE* f = map_crt_stream(stream);
+    return f ? fgetc(f) : EOF;
+}
+
+__attribute__((ms_abi)) void mw_rewind(void* stream) {
+    FILE* f = map_crt_stream(stream);
+    if (f) rewind(f);
+}
+
+/* ISS1 slice: seek/tell/EOF bridges (missing from API-012 wave).
+ * MSVCRT clears the EOF indicator on a successful reposition. */
+__attribute__((ms_abi)) int mw_fseek(void* stream, long long off, int origin) {
+    /* Windows SEEK_SET/CUR/END constants equal POSIX ones. */
+    FILE* f = map_crt_stream(stream);
+    if (!f) return -1;
+    int r = fseek(f, (long)off, origin);
+    if (r == 0) clearerr(f); /* MSVCRT clears EOF on successful reposition */
+    return r;
+}
+
+__attribute__((ms_abi)) long long mw_ftell(void* stream) {
+    FILE* f = map_crt_stream(stream);
+    return f ? (long long)ftell(f) : -1LL;
+}
+
+__attribute__((ms_abi)) int mw_feof(void* stream) {
+    FILE* f = map_crt_stream(stream);
+    return f ? feof(f) : 0;
+}
+
+__attribute__((ms_abi)) int mw_remove(const char* path) {
+    MW_TRACE("remove(%s)", path ? path : "NULL");
+    int r = remove(path);
+    if (r != 0) g_errno_storage = errno; /* ISS1: errno bridge */
+    return r;
+}
+
+__attribute__((ms_abi)) size_t mw_strftime(char* buf, size_t max,
+        const char* fmt, const void* tmv) {
+    return strftime(buf, max, fmt, (const struct tm*)tmv);
 }
 
 /* Data accessor functions */
@@ -2792,82 +3313,280 @@ __attribute__((ms_abi)) int mw___mb_cur_max_func(void) {
     return 1;
 }
 
+/* BUG-033 (appcompat sweep APP-F-03): printf-family across the ABI boundary.
+ *
+ * The PE (ms_abi) passes varargs per the Windows x64 contract: every vararg
+ * occupies a uniform 8-byte slot (integers/pointers directly, doubles as
+ * bit-casts spilled by the caller). glibc's vfprintf expects a SysV va_list:
+ * a struct {gp_offset, fp_offset, overflow_arg_area, reg_save_area} whose
+ * reg-save area holds rdi..r9 (48 bytes) then xmm0-7 (16 bytes each).
+ * The old code handed the raw ms slot pointer to vprintf — vprintf read it
+ * as a SysV struct (gp_offset = low bits of a stack address) and faulted in
+ * libc for anything but tiny integer-only formats.
+ *
+ * Fix: parse fmt to classify every consumed argument (GP vs FP), materialize
+ * the uniform MS slots, then synthesize a faithful SysV va_list:
+ *   - gp slots: gpv[0] is fmt (rdi), varargs fill gpv[1..5];
+ *   - fp slots: doubles fill the low 64 bits of xmm0..xmm7;
+ *   - the rest go to the overflow area in call order (SysV stack order). */
+
+#define MW_PRINTF_MAX_ARGS 256
+
+typedef struct {
+    unsigned gp_offset;
+    unsigned fp_offset;
+    void*    overflow_arg_area;
+    void*    reg_save_area;
+} mw_sysv_va_list;
+
+/* Parse fmt; cls[i]=1 for FP args, 0 for GP. Returns arg count (capped). */
+static int mw_printf_classify(const char* fmt, unsigned char* cls) {
+    int nargs = 0;
+    const char* p = fmt;
+    if (!p) return 0;
+    while (*p) {
+        if (*p != '%') { p++; continue; }
+        p++;
+        if (*p == '%') { p++; continue; }        /* literal percent: no arg */
+        /* width '*' consumes a GP arg */
+        if (*p == '*') {
+            if (nargs < MW_PRINTF_MAX_ARGS) cls[nargs++] = 0;
+            p++;
+        }
+        while (*p == '-' || *p == '+' || *p == ' ' || *p == '#' || *p == '0') p++;
+        while (*p >= '0' && *p <= '9') p++;
+        if (*p == '.') {
+            p++;
+            if (*p == '*') {
+                if (nargs < MW_PRINTF_MAX_ARGS) cls[nargs++] = 0;
+                p++;
+            }
+            while (*p >= '0' && *p <= '9') p++;
+        }
+        /* length modifiers */
+        while (*p == 'l' || *p == 'h' || *p == 'q' || *p == 'j' ||
+               *p == 'z' || *p == 't' || *p == 'L') p++;
+        if (!*p) break;
+        char conv = *p++;
+        int is_fp = (conv == 'f' || conv == 'F' || conv == 'e' || conv == 'E' ||
+                     conv == 'g' || conv == 'G' || conv == 'a' || conv == 'A');
+        if (nargs < MW_PRINTF_MAX_ARGS) cls[nargs++] = is_fp ? 1 : 0;
+    }
+    return nargs;
+}
+
+/* Build a SysV va_list from uniform MS slots and call vfprintf on it. */
+static int mw_printf_emit(FILE* f, const char* fmt,
+                          const unsigned long long* slots, int nargs) {
+    unsigned char cls[MW_PRINTF_MAX_ARGS];
+    int parsed = mw_printf_classify(fmt, cls);
+    if (nargs > parsed) nargs = parsed;
+
+    unsigned long long gpv[6] = {0, 0, 0, 0, 0, 0};
+    unsigned long long fpv[8] = {0, 0, 0, 0, 0, 0, 0, 0};
+    unsigned long long ovf[MW_PRINTF_MAX_ARGS];
+    int novf = 0, gpi = 1 /* gpv[0] = rdi = fmt */, fpi = 0;
+
+    for (int i = 0; i < nargs; i++) {
+        if (cls[i]) {
+            if (fpi < 8) fpv[fpi++] = slots[i];
+            else         ovf[novf++] = slots[i];
+        } else {
+            if (gpi < 6) gpv[gpi++] = slots[i];
+            else         ovf[novf++] = slots[i];
+        }
+    }
+
+    unsigned long long reg_save[6 + 16]; /* rdi..r9 then xmm0-7 (low64 only) */
+    memcpy(reg_save, gpv, sizeof(gpv));
+    for (int i = 0; i < 8; i++)
+        memcpy((unsigned char*)reg_save + 48 + 16 * i, &fpv[i], 8);
+    /* xmm slots beyond the doubles: zero — only read if fmt over-reads */
+    for (int i = fpi; i < 8; i++)
+        memset((unsigned char*)reg_save + 48 + 16 * i, 0, 16);
+
+    va_list sv;                       /* glibc __va_list_tag[1] */
+    mw_sysv_va_list* svv = (mw_sysv_va_list*)sv;
+    svv->gp_offset = 8;              /* fmt consumed rdi */
+    svv->fp_offset = 48;             /* no named FP args */
+    svv->overflow_arg_area = ovf;
+    svv->reg_save_area = reg_save;
+    return vfprintf(f, fmt, sv);
+}
+
 /* printf - variadic, needs special handling */
 __attribute__((ms_abi)) int mw_printf(const char* fmt, ...) {
     MW_TRACE("printf(fmt=%s)", fmt ? fmt : "NULL");
+    unsigned char cls[MW_PRINTF_MAX_ARGS];
+    int nargs = mw_printf_classify(fmt, cls);
+    unsigned long long slots[MW_PRINTF_MAX_ARGS];
     va_list ap;
     va_start(ap, fmt);
-    int ret = vprintf(fmt, ap);
+    for (int i = 0; i < nargs; i++) {
+        if (cls[i]) { double d = va_arg(ap, double); memcpy(&slots[i], &d, 8); }
+        else        { slots[i] = (unsigned long long)va_arg(ap, long long); }
+    }
     va_end(ap);
-    return ret;
+    return mw_printf_emit(stdout, fmt, slots, nargs);
 }
 
 /* fprintf - variadic */
 __attribute__((ms_abi)) int mw_fprintf(void* file, const char* fmt, ...) {
     MW_TRACE("fprintf(file=%p, fmt=%s)", file, fmt ? fmt : "NULL");
+    FILE* f = map_crt_stream(file);
+    unsigned char cls[MW_PRINTF_MAX_ARGS];
+    int nargs = mw_printf_classify(fmt, cls);
+    unsigned long long slots[MW_PRINTF_MAX_ARGS];
     va_list ap;
     va_start(ap, fmt);
-    /* Use actual FILE* if it's a real glibc FILE */
-    FILE* f = (file == stdout || file == stderr || file == stdin) ? (FILE*)file : stdout;
-    int ret = vfprintf(f, fmt, ap);
+    for (int i = 0; i < nargs; i++) {
+        if (cls[i]) { double d = va_arg(ap, double); memcpy(&slots[i], &d, 8); }
+        else        { slots[i] = (unsigned long long)va_arg(ap, long long); }
+    }
     va_end(ap);
-    return ret;
+    return mw_printf_emit(f, fmt, slots, nargs);
 }
 
-/* vfprintf - the va_list is in MS ABI format */
+/* vfprintf - the PE passes its own va_list: an ms_abi slot stream (char*),
+ * uniform 8-byte vararg slots starting at the first vararg. */
 __attribute__((ms_abi)) int mw_vfprintf(void* file, const char* fmt, void* ap) {
     MW_TRACE("vfprintf(file=%p, fmt=%s)", file, fmt ? fmt : "NULL");
-    /* The ap argument is a pointer to ms_abi va_list.
-     * Since ms_abi va_list is just a char* pointing to stack args,
-     * and the first 4 args are in registers (already consumed by fmt),
-     * the remaining args are on the stack.
-     * For simple format strings (few args), this may work.
-     * For complex cases, we'd need to rebuild the va_list.
-     */
-    FILE* f = (file == stdout || file == stderr || file == stdin) ? (FILE*)file : stdout;
-    /* Use a workaround: format to buffer first */
-    char buf[8192];
-    int ret = vsnprintf(buf, sizeof(buf), fmt, *(va_list*)ap);
-    if (ret > 0) {
-        fwrite(buf, 1, ret, f);
-    }
-    return ret;
+    FILE* f = map_crt_stream(file);
+    unsigned char cls[MW_PRINTF_MAX_ARGS];
+    int nargs = mw_printf_classify(fmt, cls);
+    unsigned long long slots[MW_PRINTF_MAX_ARGS];
+    if (ap && nargs > 0) memcpy(slots, ap, (size_t)nargs * 8);
+    return mw_printf_emit(f, fmt, slots, nargs);
 }
 
-/* stdio stubs */
+/* TASK-API-011: UCRT unified stdio core. Modern UCRT printf/snprintf are
+ * inline wrappers over the __stdio_common_v* family. The va_list argument is
+ * the PE's ms_abi slot stream — exactly what mw_vfprintf already repacks. */
+__attribute__((ms_abi)) int mw___stdio_common_vfprintf(
+    unsigned long long options, void* file, const char* fmt,
+    void* locale, void* ap) {
+    (void)options; (void)locale;
+    MW_TRACE("__stdio_common_vfprintf(file=%p, fmt=%s)", file, fmt ? fmt : "NULL");
+    return mw_vfprintf(file, fmt, ap);
+}
+
+__attribute__((ms_abi)) int mw___stdio_common_vsprintf(
+    unsigned long long options, char* buffer, size_t size,
+    const char* fmt, void* locale, void* ap) {
+    (void)options; (void)locale;
+    char tmp[16384];
+    FILE* mf = fmemopen(tmp, sizeof tmp, "w");
+    if (!mf) return -1;
+    int n = mw_vfprintf(mf, fmt, ap);
+    fclose(mf);
+    if (n < 0) return -1;
+    size_t copy = ((size_t)n >= size) ? (size ? size - 1 : 0) : (size_t)n;
+    if (buffer && size) { memcpy(buffer, tmp, copy); buffer[copy] = 0; }
+    MW_TRACE("__stdio_common_vsprintf(fmt=%s) = %d", fmt ? fmt : "NULL", n);
+    return n; /* UCRT: would-be length (may exceed size) */
+}
+
+__attribute__((ms_abi)) int mw___stdio_common_vfwprintf(
+    unsigned long long options, void* file, const short* fmt,
+    void* locale, void* ap) {
+    /* Wide print: no test exercises it; refuse loudly rather than misformat. */
+    (void)options; (void)file; (void)fmt; (void)locale; (void)ap;
+    MW_TRACE("__stdio_common_vfwprintf() -> -1 (wide print unsupported)");
+    return -1;
+}
+
+__attribute__((ms_abi)) int mw___stdio_common_vsscanf(
+    unsigned long long options, const char* buffer, size_t size,
+    const char* fmt, void* locale, void* ap) {
+    (void)options; (void)locale; (void)size;
+    if (!buffer) return -1;
+    /* All scanf varargs are pointers (GP-only). MS slot stream: slot[i] is
+     * an 8-byte uniform slot. Build the SysV va_list with the loader's
+     * proven reg_save trick (slot 0 reserved; first vararg at gp_offset 8). */
+    unsigned long long* slots = (unsigned long long*)ap;
+    unsigned long long reg_save[6 + 16];
+    reg_save[0] = 0; /* dummy rdi slot */
+    for (int i = 0; i < 5; i++) reg_save[1 + i] = slots[i];
+    memset(&reg_save[6], 0, 16 * 8);
+    va_list sva;                      /* glibc __va_list_tag[1] */
+    struct { unsigned int gp_offset, fp_offset; void* overflow; void* reg_save; }* sv =
+        (void*)sva;
+    sv->gp_offset = 8;
+    sv->fp_offset = 48; /* pointers only — never reads xmm */
+    sv->overflow = slots + 5;
+    sv->reg_save = reg_save;
+    int r = vsscanf(buffer, fmt, sva);
+    MW_TRACE("__stdio_common_vsscanf(fmt=%s) = %d", fmt ? fmt : "NULL", r);
+    return r;
+}
+
+/* BUG-032: classic msvcrt/mingw CRTs treat __iob_func()'s return value as a
+ * FILE* into an ARRAY OF FILE STRUCTS with stride sizeof(FILE)=0x30 on x64:
+ *   stdin = base+0x00, stdout = base+0x30, stderr = base+0x60.
+ * The PE therefore passes synthetic pointers (observed: setvbuf called with
+ * base+0x60) that glibc must never dereference. Recognize that window and
+ * map to the real streams; anything else keeps the legacy behavior. */
+
+static FILE* map_crt_stream(void* stream) {
+    if (stream == NULL) return NULL;
+    {   /* ISS1: registry handles resolve to their host FILE* first — a raw
+         * registry pointer must NEVER reach glibc. */
+        FILE* hf = mwfile_hostfp_of(stream);
+        if (hf) return hf;
+    }
+    uintptr_t s = (uintptr_t)stream;
+    uintptr_t base = (uintptr_t)g_iob_array;
+    if (s >= base && s < base + 0x90) {
+        uintptr_t off = s - base;
+        int idx = (int)(off / 0x30);
+        if (idx < 0 || idx > 2) idx = 1; /* window edge -> stdout */
+        FILE* mapped = (idx == 0) ? stdin : (idx == 1) ? stdout : stderr;
+        MW_TRACE("map_crt_stream: iob+%#zx -> %s", (size_t)off,
+                 idx == 0 ? "stdin" : idx == 1 ? "stdout" : "stderr");
+        return mapped;
+    }
+    /* TASK-API-011: pointers outside the synthetic iob window are REAL
+     * glibc FILE* (fmemopen/fopen-backed streams created by our own API
+     * implementations). Pass them through verbatim; the old "unknown ->
+     * stdout" fallback silently ate fmemopen output (snapt.exe repro:
+     * "%.3f" went to stdout and the caller's buffer stayed empty). */
+    return (FILE*)stream;
+}
+
 __attribute__((ms_abi)) int mw_fflush(void* file) {
     MW_TRACE("fflush(file=%p)", file);
-    FILE* f = (file == NULL) ? NULL :
-              (file == stdout || file == stderr || file == stdin) ? (FILE*)file : stdout;
+    FILE* f = (file == NULL) ? NULL : map_crt_stream(file);
     return fflush(f);
 }
 
 __attribute__((ms_abi)) int mw_fputs(const char* str, void* file) {
     MW_TRACE("fputs(str=%s)", str ? str : "NULL");
-    FILE* f = (file == stdout || file == stderr || file == stdin) ? (FILE*)file : stdout;
+    FILE* f = map_crt_stream(file);
     return fputs(str, f);
 }
 
 __attribute__((ms_abi)) int mw_fputc(int ch, void* file) {
     MW_TRACE("fputc(ch=0x%x)", ch);
-    FILE* f = (file == stdout || file == stderr || file == stdin) ? (FILE*)file : stdout;
+    FILE* f = map_crt_stream(file);
     return fputc(ch, f);
 }
 
 __attribute__((ms_abi)) size_t mw_fwrite(const void* buf, size_t sz, size_t cnt, void* file) {
     MW_TRACE("fwrite(sz=%zu, cnt=%zu)", sz, cnt);
-    FILE* f = (file == stdout || file == stderr || file == stdin) ? (FILE*)file : stdout;
+    FILE* f = map_crt_stream(file);
     return fwrite(buf, sz, cnt, f);
 }
 
 __attribute__((ms_abi)) int mw_getc(void* file) {
     MW_TRACE("getc()");
-    return EOF;
+    FILE* f = map_crt_stream(file);
+    return (f != NULL) ? getc(f) : EOF;
 }
 
 __attribute__((ms_abi)) int mw_ungetc(int ch, void* file) {
     MW_TRACE("ungetc(ch=0x%x)", ch);
-    return EOF;
+    FILE* f = map_crt_stream(file);
+    return (f != NULL) ? ungetc(ch, f) : EOF;
 }
 
 __attribute__((ms_abi)) int mw_puts(const char* str) {
@@ -2876,26 +3595,63 @@ __attribute__((ms_abi)) int mw_puts(const char* str) {
 }
 
 /* Memory */
+
+/* forward decls: allocation registry (defined in the Wave-3B block) */
+static void w3_reg_add(void* p);
+static void w3_reg_add_sz(void* p, size_t sz);
+static void w3_reg_del(void* p);
+static int w3_reg_has(void* p);
+static void w3_trap_bad_free(void* p, const char* tag);
+static int w3_guard_enabled(void);
+static void* w3_guard_alloc(size_t size);
+static void w3_guard_free(void* p);
+static int w3_is_guarded(void* p);
+static void w3_run_guest_atexit(void);
+static void w3_run_tle_atexit(void);
 __attribute__((ms_abi)) void* mw_malloc(size_t size) {
+    if (w3_guard_enabled()) {
+        void* gp = w3_guard_alloc(size ? size : 1);
+        MW_TRACE("malloc[GUARD](%zu) = %p", size, gp);
+        return gp;
+    }
     void* p = malloc(size);
     MW_TRACE("malloc(%zu) = %p", size, p);
+    w3_reg_add_sz(p, size);
     return p;
 }
 
 __attribute__((ms_abi)) void mw_free(void* ptr) {
     MW_TRACE("free(%p)", ptr);
+    if (!w3_reg_has(ptr)) w3_trap_bad_free(ptr, "free");
+    {
+        unsigned s = w3_reg_slot(ptr);
+        if (g_alloc_reg[s].p == ptr && (g_alloc_reg[s].size >> 32)) {
+            w3_guard_free(ptr);
+            return;
+        }
+    }
+    w3_reg_del(ptr);
     free(ptr);
 }
 
 __attribute__((ms_abi)) void* mw_realloc(void* ptr, size_t size) {
+    if (ptr && !w3_reg_has(ptr)) w3_trap_bad_free(ptr, "realloc");
     void* p = realloc(ptr, size);
     MW_TRACE("realloc(%p, %zu) = %p", ptr, size, p);
+    if (p) { w3_reg_del(ptr); w3_reg_add(p); }
     return p;
 }
 
 __attribute__((ms_abi)) void* mw_calloc(size_t n, size_t sz) {
+    if (w3_guard_enabled()) {
+        void* gp = w3_guard_alloc(n * sz);
+        if (gp) memset(gp, 0, n * sz);
+        MW_TRACE("calloc[GUARD](%zu, %zu) = %p", n, sz, gp);
+        return gp;
+    }
     void* p = calloc(n, sz);
     MW_TRACE("calloc(%zu, %zu) = %p", n, sz, p);
+    w3_reg_add_sz(p, n * sz);
     return p;
 }
 
@@ -2985,13 +3741,13 @@ __attribute__((ms_abi)) int mw_isxdigit(int c) { return isxdigit(c); }
 __attribute__((ms_abi)) clock_t mw_clock(void) { return clock(); }
 
 /* File I/O - low level MSVCRT functions */
-__attribute__((ms_abi)) int mw__open(const char* path, int flags, ...) {
-    MW_TRACE("_open(path=%s, flags=0x%x)", path ? path : "NULL", flags);
-    int mode = 0;
-    va_list ap;
-    va_start(ap, flags);
-    if (flags & 0x0100) mode = va_arg(ap, int); /* _O_CREAT */
-    va_end(ap);
+/* APP-F-05b (BUG-033 class): variadic ms_abi entry points are unsafe for
+ * glibc-side va_list handling; _open's optional mode is therefore a FIXED
+ * third argument. PEs that omit the mode leave R8 undefined, which is fine:
+ * mode is only consumed when _O_CREAT (0x0100) is set. */
+__attribute__((ms_abi)) int mw__open(const char* path, int flags, int mode) {
+    MW_TRACE("_open(path=%s, flags=0x%x, mode=0x%x)", path ? path : "NULL", flags, mode);
+    if (!(flags & 0x0100)) mode = 0; /* _O_CREAT unset: mode ignored */
     /* Map MSVC flags to POSIX */
     int oflags = ((flags & 0x0003) == 0) ? O_RDONLY : 0;
     if (flags & 0x0001) oflags = O_WRONLY;
@@ -3054,11 +3810,11 @@ __attribute__((ms_abi)) int mw__sopen(const char* path, int flags, int shflag, i
     return mw__open(path, flags, pmode);
 }
 
-__attribute__((ms_abi)) int mw__wopen(const wchar_t* path, int flags, ...) {
+__attribute__((ms_abi)) int mw__wopen(const wchar_t* path, int flags, int mode) {
     MW_TRACE("_wopen()");
     char buf[1024];
     wcstombs(buf, path, sizeof(buf));
-    return mw__open(buf, flags, 0);
+    return mw__open(buf, flags, mode);
 }
 
 /* stat */
@@ -3153,15 +3909,88 @@ __attribute__((ms_abi)) void (*mw_signal(int sig, void (*handler)(int)))(int) {
     return signal(sig, handler);
 }
 
-__attribute__((ms_abi)) void mw_longjmp(void* buf, int val) {
-    MW_TRACE("longjmp(val=%d)", val);
-    /* jmp_buf on glibc is struct __jmp_buf_tag[1] */
-    siglongjmp(*(sigjmp_buf*)buf, val);
+/* BUG-036 (appcompat sweep APP-F-06): setjmp/longjmp must honor the Windows
+ * x64 jmp_buf contract. The previous implementation stored a glibc sigjmp_buf
+ * inside mw__setjmp's own SYSV frame: (a) ms_abi callee-saved RDI/RSI/XMM6-15
+ * are NOT covered by glibc's save set -> live PE values corrupt after longjmp;
+ * (b) resumption flows through the loader frame and mis-restores state
+ * (observed: t06 counter/volatile failures; t07 infinite longjmp(val=1) loop).
+ *
+ * This implementation IS the jmp_buf owner: uniform 8-byte slots (mingw x64
+ * jmp_buf is 256 bytes = 32 slots, we use 30):
+ *   0 rbx   1 rbp   2 rdi   3 rsi   4 r12  5 r13  6 r14  7 r15
+ *   8..17   xmm6..xmm15 (16 bytes each = 2 slots each)
+ *   18      rsp at entry (points at the return address)
+ *   19..28  (unused padding, zeroed)
+ *   29      magic 0x4D574A42 ("MWJB") for cross-checking
+ * longjmp restores everything and jumps to the saved return address with the
+ * requested value in EAX — the exact semantics of Windows setjmp/longjmp. */
+#define MW_JB_MAGIC 0x4D574A42ULL
+
+/* setjmp is NAKED: rsp at the first instruction == entry rsp == [retaddr].
+ * We save entry_rsp (slot 18) and retaddr (slot 19); longjmp resumes with
+ * rsp = entry_rsp + 8 (the caller's live rsp) and jumps to the retaddr. */
+__attribute__((ms_abi, naked)) int mw__setjmp(void* buf) {
+    asm volatile(
+        "movq %rcx, %r10\n\t"
+        "movq %rbx, 0(%r10)\n\t"
+        "movq %rbp, 8(%r10)\n\t"
+        "movq %rdi, 16(%r10)\n\t"
+        "movq %rsi, 24(%r10)\n\t"
+        "movq %r12, 32(%r10)\n\t"
+        "movq %r13, 40(%r10)\n\t"
+        "movq %r14, 48(%r10)\n\t"
+        "movq %r15, 56(%r10)\n\t"
+        "movdqu %xmm6, 64(%r10)\n\t"
+        "movdqu %xmm7, 80(%r10)\n\t"
+        "movdqu %xmm8, 96(%r10)\n\t"
+        "movdqu %xmm9, 112(%r10)\n\t"
+        "movdqu %xmm10, 128(%r10)\n\t"
+        "movdqu %xmm11, 144(%r10)\n\t"
+        "movdqu %xmm12, 160(%r10)\n\t"
+        "movdqu %xmm13, 176(%r10)\n\t"
+        "movdqu %xmm14, 192(%r10)\n\t"
+        "movdqu %xmm15, 208(%r10)\n\t"
+        "movq %rsp, 224(%r10)\n\t"
+        "movq 0(%rsp), %rax\n\t"
+        "movq %rax, 232(%r10)\n\t"
+        "movq $0x4D574A42, 240(%r10)\n\t"   /* MW_JB_MAGIC */
+        "xorl %eax, %eax\n\t"
+        "ret\n\t"
+    );
 }
 
-__attribute__((ms_abi)) int mw__setjmp(void* buf) {
-    MW_TRACE("_setjmp()");
-    return sigsetjmp(*(sigjmp_buf*)buf, 0);
+__attribute__((ms_abi)) __attribute__((noreturn)) void mw_longjmp(void* buf, int val) {
+    register void* r10 asm("r10") = buf;
+    register long r11 asm("r11") = (long)val;
+    asm volatile(
+        "movq 0(%%r10), %%rbx\n\t"
+        "movq 8(%%r10), %%rbp\n\t"
+        "movq 16(%%r10), %%rdi\n\t"
+        "movq 24(%%r10), %%rsi\n\t"
+        "movq 32(%%r10), %%r12\n\t"
+        "movq 40(%%r10), %%r13\n\t"
+        "movq 48(%%r10), %%r14\n\t"
+        "movq 56(%%r10), %%r15\n\t"
+        "movdqu 64(%%r10), %%xmm6\n\t"
+        "movdqu 80(%%r10), %%xmm7\n\t"
+        "movdqu 96(%%r10), %%xmm8\n\t"
+        "movdqu 112(%%r10), %%xmm9\n\t"
+        "movdqu 128(%%r10), %%xmm10\n\t"
+        "movdqu 144(%%r10), %%xmm11\n\t"
+        "movdqu 160(%%r10), %%xmm12\n\t"
+        "movdqu 176(%%r10), %%xmm13\n\t"
+        "movdqu 192(%%r10), %%xmm14\n\t"
+        "movdqu 208(%%r10), %%xmm15\n\t"
+        "movq 224(%%r10), %%rsp\n\t"
+        "addq $8, %%rsp\n\t"                 /* caller's live rsp (retaddr popped) */
+        "movq %%r11, %%rax\n\t"
+        "jmp *232(%%r10)\n\t"
+        :
+        : "r"(r10), "r"(r11)
+        : "memory"
+    );
+    __builtin_unreachable();
 }
 
 __attribute__((ms_abi)) int mw__kbhit(void) { return 0; }
@@ -3174,8 +4003,337 @@ __attribute__((ms_abi)) void* mw_localeconv(void) {
     return (void*)localeconv();
 }
 
+/* BUG-035 (appcompat sweep APP-F-05): callback pointers across the ABI
+ * boundary. glibc qsort invokes the comparator SysV-style (args in RDI,RSI)
+ * but the PE's comparator is ms_abi (args in RCX,RDX) -> NULL deref inside
+ * the comparator (observed t04: mov eax,[rcx] with rcx=0). Bridge through
+ * qsort_r: the bridge is SysV (glibc-safe) and re-dispatches through an
+ * ms_abi-typed function pointer so GCC emits the Windows register mapping. */
+
+typedef int (__attribute__((ms_abi)) *mw_ms_qsort_cmp)(const void*, const void*);
+static const mw_ms_qsort_cmp* g_ms_qsort_cmp_ref;
+
+static int mw_ms_qsort_bridge(const void* a, const void* b, void* ctx) {
+    (void)ctx;
+    return (*g_ms_qsort_cmp_ref)(a, b);
+}
+
 __attribute__((ms_abi)) void mw_qsort(void* base, size_t n, size_t sz, int (*cmp)(const void*, const void*)) {
-    qsort(base, n, sz, cmp);
+    g_ms_qsort_cmp_ref = (const mw_ms_qsort_cmp*)(const void*)&cmp;
+    qsort_r(base, n, sz, mw_ms_qsort_bridge, NULL);
+}
+
+/* ============================================================
+ * TASK-API-008 wave 2 (appcompat sweep APP-F-07): C++ runtime surface.
+ * llvm-mingw C++ binaries import SRW locks, condition variables, fiber-local
+ * storage, InitOnce, RtlRestoreContext, aligned allocation, wide-char CRT
+ * and 64-bit strtol family. All implementations below are honest bridges.
+ * ============================================================ */
+#include <sched.h>
+#include <sys/syscall.h>
+#include <wchar.h>
+
+/* ---- SRW locks: SRWLOCK is an opaque 8-byte handle slot on Windows.
+ * We keep a small registry mapping the PE's SRWLOCK slots to real
+ * pthread rwlocks, allocated on first use. Single-instance per key. ---- */
+typedef struct { void* key; int used; pthread_rwlock_t rw; } MwSrwEntry;
+static MwSrwEntry g_srw_tab[256];
+static pthread_mutex_t g_srw_tab_mu = PTHREAD_MUTEX_INITIALIZER;
+
+static pthread_rwlock_t* srw_get(void* k) {
+    pthread_mutex_lock(&g_srw_tab_mu);
+    MwSrwEntry* free_slot = NULL;
+    for (int i = 0; i < 256; i++) {
+        if (g_srw_tab[i].used && g_srw_tab[i].key == k) {
+            pthread_mutex_unlock(&g_srw_tab_mu);
+            return &g_srw_tab[i].rw;
+        }
+        if (!g_srw_tab[i].used && !free_slot) free_slot = &g_srw_tab[i];
+    }
+    if (!free_slot) { pthread_mutex_unlock(&g_srw_tab_mu); return NULL; }
+    free_slot->used = 1; free_slot->key = k;
+    pthread_rwlockattr_t a;
+    pthread_rwlockattr_init(&a);
+    pthread_rwlockattr_setkind_np(&a, PTHREAD_RWLOCK_PREFER_WRITER_NONRECURSIVE_NP);
+    pthread_rwlock_init(&free_slot->rw, &a);
+    pthread_rwlockattr_destroy(&a);
+    pthread_mutex_unlock(&g_srw_tab_mu);
+    return &free_slot->rw;
+}
+
+__attribute__((ms_abi)) void mw_AcquireSRWLockExclusive(void* srw) {
+    pthread_rwlock_t* rw = srw_get(srw);
+    if (rw) pthread_rwlock_wrlock(rw);
+    MW_TRACE("AcquireSRWLockExclusive(%p)", srw);
+}
+__attribute__((ms_abi)) void mw_ReleaseSRWLockExclusive(void* srw) {
+    pthread_rwlock_t* rw = srw_get(srw);
+    if (rw) pthread_rwlock_unlock(rw);
+    MW_TRACE("ReleaseSRWLockExclusive(%p)", srw);
+}
+__attribute__((ms_abi)) unsigned char mw_TryAcquireSRWLockExclusive(void* srw) {
+    pthread_rwlock_t* rw = srw_get(srw);
+    int rc = rw ? pthread_rwlock_trywrlock(rw) : 0;
+    MW_TRACE("TryAcquireSRWLockExclusive(%p) = %d", srw, rc == 0);
+    return (rc == 0) ? 1 : 0;
+}
+
+/* ---- Condition variables: CONDITION_VARIABLE is an opaque 8-byte slot.
+ * Internal mutex+cond per key; the SRW lock is released around the wait and
+ * re-acquired in the caller's mode (bit 0 of Flags = shared). ---- */
+typedef struct { void* key; int used; pthread_mutex_t mu; pthread_cond_t cd; } MwCvEntry;
+static MwCvEntry g_cv_tab[256];
+static pthread_mutex_t g_cv_tab_mu = PTHREAD_MUTEX_INITIALIZER;
+
+static MwCvEntry* cv_get(void* k) {
+    pthread_mutex_lock(&g_cv_tab_mu);
+    MwCvEntry* free_slot = NULL;
+    for (int i = 0; i < 256; i++) {
+        if (g_cv_tab[i].used && g_cv_tab[i].key == k) {
+            pthread_mutex_unlock(&g_cv_tab_mu);
+            return &g_cv_tab[i];
+        }
+        if (!g_cv_tab[i].used && !free_slot) free_slot = &g_cv_tab[i];
+    }
+    if (!free_slot) { pthread_mutex_unlock(&g_cv_tab_mu); return NULL; }
+    free_slot->used = 1; free_slot->key = k;
+    pthread_mutex_init(&free_slot->mu, NULL);
+    pthread_cond_init(&free_slot->cd, NULL);
+    pthread_mutex_unlock(&g_cv_tab_mu);
+    return free_slot;
+}
+
+__attribute__((ms_abi)) uint32_t mw_SleepConditionVariableSRW(void* cv, void* srw,
+                                                              uint32_t ms, uint32_t flags) {
+    MwCvEntry* c = cv_get(cv);
+    pthread_rwlock_t* rw = srw_get(srw);
+    if (!c || !rw) return 0;
+    if (flags & 1) pthread_rwlock_unlock(rw); else pthread_rwlock_unlock(rw);
+    uint32_t result = 0; /* WAIT_OBJECT_0? Windows: 0 = success */
+    pthread_mutex_lock(&c->mu);
+    if (ms == 0xFFFFFFFFu) {
+        pthread_cond_wait(&c->cd, &c->mu);
+    } else {
+        struct timespec ts;
+        clock_gettime(CLOCK_REALTIME, &ts);
+        ts.tv_sec += ms / 1000;
+        ts.tv_nsec += (long)(ms % 1000) * 1000000L;
+        if (ts.tv_nsec >= 1000000000L) { ts.tv_sec++; ts.tv_nsec -= 1000000000L; }
+        if (pthread_cond_timedwait(&c->cd, &c->mu, &ts) == ETIMEDOUT) result = 258; /* WAIT_TIMEOUT */
+    }
+    pthread_mutex_unlock(&c->mu);
+    if (flags & 1) pthread_rwlock_rdlock(rw); else pthread_rwlock_wrlock(rw);
+    MW_TRACE("SleepConditionVariableSRW(cv=%p, ms=%u) = %u", cv, ms, result);
+    return result;
+}
+__attribute__((ms_abi)) void mw_WakeConditionVariable(void* cv) {
+    MwCvEntry* c = cv_get(cv);
+    if (c) { pthread_mutex_lock(&c->mu); pthread_cond_signal(&c->cd); pthread_mutex_unlock(&c->mu); }
+    MW_TRACE("WakeConditionVariable(%p)", cv);
+}
+__attribute__((ms_abi)) void mw_WakeAllConditionVariable(void* cv) {
+    MwCvEntry* c = cv_get(cv);
+    if (c) { pthread_mutex_lock(&c->mu); pthread_cond_broadcast(&c->cd); pthread_mutex_unlock(&c->mu); }
+    MW_TRACE("WakeAllConditionVariable(%p)", cv);
+}
+
+/* ---- Fiber-local storage: index-based TLS array. Thread-exit callbacks are
+ * not invoked (documented limitation; nothing in the C++ startup path relies
+ * on FLS callbacks under this loader). ---- */
+#define MW_FLS_MAX 128
+static __thread void* g_fls_vals[MW_FLS_MAX];
+
+__attribute__((ms_abi)) uint32_t mw_FlsAlloc(void* cb) {
+    (void)cb;
+    static uint32_t next = 0;
+    static pthread_mutex_t mu = PTHREAD_MUTEX_INITIALIZER;
+    pthread_mutex_lock(&mu);
+    uint32_t idx = next++;
+    pthread_mutex_unlock(&mu);
+    MW_TRACE("FlsAlloc(cb=%p) = %u", cb, idx);
+    return (idx < MW_FLS_MAX) ? idx : 0xFFFFFFFFu;
+}
+__attribute__((ms_abi)) void* mw_FlsGetValue(uint32_t idx) {
+    return (idx < MW_FLS_MAX) ? g_fls_vals[idx] : NULL;
+}
+__attribute__((ms_abi)) int mw_FlsSetValue(uint32_t idx, void* val) {
+    if (idx >= MW_FLS_MAX) return 0;
+    g_fls_vals[idx] = val;
+    return 1;
+}
+
+/* ---- InitOnce: single-threaded-execution assumption for the fast path,
+ * serialized by a global mutex (startup-time use only). ---- */
+typedef int (__attribute__((ms_abi)) *mw_initonce_fn)(void* once, void* param, void* ctx);
+__attribute__((ms_abi)) int mw_InitOnceExecuteOnce(void* once, void* fn, void* param, void* ctx) {
+    static pthread_mutex_t mu = PTHREAD_MUTEX_INITIALIZER;
+    pthread_mutex_lock(&mu);
+    uint64_t* s = (uint64_t*)once;
+    int ok = 1;
+    if (*s != 2) {
+        ok = ((mw_initonce_fn)fn)(once, param, ctx);
+        if (ok) *s = 2;
+    }
+    pthread_mutex_unlock(&mu);
+    MW_TRACE("InitOnceExecuteOnce(once=%p) = %d", once, ok);
+    return ok;
+}
+
+/* ---- RtlRestoreContext: full GPR + XMM + RIP restore from a Windows
+ * CONTEXT (x64 layout). Used by unwinding resume paths. ---- */
+__attribute__((ms_abi)) void mw_RtlRestoreContext(void* ctx, void* exc) {
+    (void)exc;
+    if (!ctx) return;
+    register void* r10 asm("r10") = ctx;
+    asm volatile(
+        "movq 0x80(%%r10), %%rcx\n\t"
+        "movq 0x88(%%r10), %%rdx\n\t"
+        "movq 0x90(%%r10), %%rbx\n\t"
+        "movq 0xA0(%%r10), %%rbp\n\t"
+        "movq 0xA8(%%r10), %%rsi\n\t"
+        "movq 0xB0(%%r10), %%rdi\n\t"
+        "movq 0xB8(%%r10), %%r8\n\t"
+        "movq 0xC0(%%r10), %%r9\n\t"
+        "movq 0xD8(%%r10), %%r12\n\t"
+        "movq 0xE0(%%r10), %%r13\n\t"
+        "movq 0xE8(%%r10), %%r14\n\t"
+        "movq 0xF0(%%r10), %%r15\n\t"
+        "movdqu 0x1A0(%%r10), %%xmm0\n\t"
+        "movdqu 0x1B0(%%r10), %%xmm1\n\t"
+        "movdqu 0x1C0(%%r10), %%xmm2\n\t"
+        "movdqu 0x1D0(%%r10), %%xmm3\n\t"
+        "movdqu 0x1E0(%%r10), %%xmm4\n\t"
+        "movdqu 0x1F0(%%r10), %%xmm5\n\t"
+        "movdqu 0x200(%%r10), %%xmm6\n\t"
+        "movdqu 0x210(%%r10), %%xmm7\n\t"
+        "movdqu 0x220(%%r10), %%xmm8\n\t"
+        "movdqu 0x230(%%r10), %%xmm9\n\t"
+        "movdqu 0x240(%%r10), %%xmm10\n\t"
+        "movdqu 0x250(%%r10), %%xmm11\n\t"
+        "movdqu 0x260(%%r10), %%xmm12\n\t"
+        "movdqu 0x270(%%r10), %%xmm13\n\t"
+        "movdqu 0x280(%%r10), %%xmm14\n\t"
+        "movdqu 0x290(%%r10), %%xmm15\n\t"
+        "movq 0x78(%%r10), %%rax\n\t"        /* Rax */
+        "movq 0xC8(%%r10), %%r11\n\t"        /* R11 (r10 still = ctx) */
+        "movq 0x98(%%r10), %%rsp\n\t"        /* Rsp (final stack) */
+        "movq 0xC8(%%r10), %%r10\n\t"        /* R10 (last: r10 was ctx) */
+        "pushq %%rax\n\t"                    /* [Rsp-8] = Rip */
+        "ret\n\t"
+        :
+        : "r"(r10)
+        : "rax", "rcx", "rdx", "rbx", "rbp", "rsi", "rdi",
+          "r8", "r9", "r11", "r12", "r13", "r14", "r15", "memory"
+    );
+    __builtin_unreachable();
+}
+
+/* ---- misc kernel32 ---- */
+__attribute__((ms_abi)) void* mw_GetModuleHandleW(const wchar_t* name) {
+    MW_TRACE("GetModuleHandleW()");
+    if (name == NULL || name[0] == 0) return g_image_base;
+    return NULL;
+}
+__attribute__((ms_abi)) uint32_t mw_GetThreadId(void* h) {
+    (void)h;
+    return (uint32_t)syscall(SYS_gettid);
+}
+__attribute__((ms_abi)) int mw_SwitchToThread(void) {
+    return (sched_yield() == 0) ? 1 : 0;
+}
+__attribute__((ms_abi)) uint32_t mw_WaitForSingleObjectEx(void* h, uint32_t ms, int alertable) {
+    (void)alertable;
+    return mw_WaitForSingleObject(h, ms);
+}
+
+/* ---- msvcrt wave 2 ---- */
+__attribute__((ms_abi)) void* mw__aligned_malloc(size_t size, size_t align) {
+    void* p = NULL;
+    if (align < 8) align = 8;
+    if (posix_memalign(&p, align, size) != 0) return NULL;
+    return p;
+}
+__attribute__((ms_abi)) void mw__aligned_free(void* p) { free(p); }
+
+__attribute__((ms_abi)) void mw__assert(const char* msg, const char* file, unsigned line) {
+    fprintf(stderr, "Assertion failed: %s (%s:%u)\n", msg ? msg : "?", file ? file : "?", line);
+    abort();
+}
+
+__attribute__((ms_abi)) long long mw__strtoi64(const char* s, char** end, int base) {
+    return strtoll(s, end, base);
+}
+__attribute__((ms_abi)) unsigned long long mw__strtoui64(const char* s, char** end, int base) {
+    return strtoull(s, end, base);
+}
+/* NOTE: Windows wchar_t is 2 bytes (UTF-16), glibc's is 4 (UCS-4). For
+ * ASCII digit strings the leading bytes coincide, so simple passthrough is
+ * correct for the numeric cases the C++ runtime uses. Non-ASCII wide input
+ * needs a UTF-16 -> UTF-32 shim (follow-up API task). */
+__attribute__((ms_abi)) long mw_wcstol(const wchar_t* s, wchar_t** end, int base) {
+    return wcstol((const int*)s, (int**)end, base);
+}
+__attribute__((ms_abi)) unsigned long mw_wcstoul(const wchar_t* s, wchar_t** end, int base) {
+    return wcstoul((const int*)s, (int**)end, base);
+}
+__attribute__((ms_abi)) long long mw__wcstoi64(const wchar_t* s, wchar_t** end, int base) {
+    return wcstol((const int*)s, (int**)end, base);
+}
+__attribute__((ms_abi)) unsigned long long mw__wcstoui64(const wchar_t* s, wchar_t** end, int base) {
+    return wcstoul((const int*)s, (int**)end, base);
+}
+
+__attribute__((ms_abi)) wint_t mw_fputwc(wchar_t ch, void* file) {
+    FILE* f = map_crt_stream(file);
+    return f ? fputwc((wint_t)ch, f) : WEOF;
+}
+
+/* fwprintf: wide variadic — narrow the (ASCII) format specifiers for
+ * classification, then build the same SysV va_list and call vfwprintf. */
+__attribute__((ms_abi)) int mw_fwprintf(void* file, const wchar_t* fmt, ...) {
+    FILE* f = map_crt_stream(file);
+    unsigned char cls[MW_PRINTF_MAX_ARGS];
+    char narrow[512];
+    size_t k = 0;
+    if (fmt) {
+        const unsigned short* w = (const unsigned short*)fmt;
+        while (*w && k + 1 < sizeof(narrow)) { narrow[k++] = (char)(*w & 0xFF); w++; }
+    }
+    narrow[k] = 0;
+    int nargs = mw_printf_classify(narrow, cls);
+    unsigned long long slots[MW_PRINTF_MAX_ARGS];
+    va_list ap;
+    va_start(ap, fmt);
+    for (int i = 0; i < nargs; i++) {
+        if (cls[i]) { double d = va_arg(ap, double); memcpy(&slots[i], &d, 8); }
+        else        { slots[i] = (unsigned long long)va_arg(ap, long long); }
+    }
+    va_end(ap);
+    unsigned char cls2[MW_PRINTF_MAX_ARGS];
+    int parsed = mw_printf_classify(narrow, cls2);
+    if (nargs > parsed) nargs = parsed;
+
+    unsigned long long gpv[6] = {0,0,0,0,0,0};
+    unsigned long long fpv[8] = {0,0,0,0,0,0,0,0};
+    unsigned long long ovf[MW_PRINTF_MAX_ARGS];
+    int novf = 0, gpi = 1, fpi = 0;
+    for (int i = 0; i < nargs; i++) {
+        if (cls2[i]) { if (fpi < 8) fpv[fpi++] = slots[i]; else ovf[novf++] = slots[i]; }
+        else         { if (gpi < 6) gpv[gpi++] = slots[i]; else ovf[novf++] = slots[i]; }
+    }
+    unsigned long long reg_save[6 + 16];
+    memcpy(reg_save, gpv, sizeof(gpv));
+    for (int i = 0; i < 8; i++)
+        memcpy((unsigned char*)reg_save + 48 + 16 * i, &fpv[i], 8);
+    for (int i = fpi; i < 8; i++)
+        memset((unsigned char*)reg_save + 48 + 16 * i, 0, 16);
+    va_list sv;
+    mw_sysv_va_list* svv = (mw_sysv_va_list*)sv;
+    svv->gp_offset = 8;
+    svv->fp_offset = 48;
+    svv->overflow_arg_area = ovf;
+    svv->reg_save_area = reg_save;
+    return f ? vfwprintf(f, fmt, sv) : -1;
 }
 
 __attribute__((ms_abi)) int mw_rand(void) { return rand(); }
@@ -3184,6 +4342,78 @@ __attribute__((ms_abi)) void mw_srand(unsigned int seed) { srand(seed); }
 __attribute__((ms_abi)) int mw__onexit(void (*func)(void)) {
     MW_TRACE("_onexit(func=%p)", func);
     return atexit(func);
+}
+
+/* ---- TASK-API-007 wave 1 (appcompat sweep APP-F-02): CRT startup surface.
+ * mingw-w64 CRT startup imports these unconditionally; with them unresolved
+ * the IAT slot keeps the raw hint/name RVA and `call [iat]` faults at that
+ * RVA (observed RIP=0x92f8, SIGSEGV before main in every mingw PE). */
+
+/* ISS1-WAVE4: guest atexit registry. Passing PE code pointers to the HOST
+ * atexit() made glibc jump into the guest image during process teardown —
+ * outside the loader's execution context (live: ffmpeg "malloc(): invalid
+ * size (unsorted)" + SIGABRT at exit). Windows semantics: the CRT exit path
+ * runs these in reverse order BEFORE the process terminates. */
+#define MW_ATEXIT_MAX 128
+static void (__attribute__((ms_abi)) *g_guest_atexit[MW_ATEXIT_MAX])(void);
+static int g_guest_atexit_count = 0;
+__attribute__((ms_abi)) int mw_atexit(void (__attribute__((ms_abi)) *func)(void)) {
+    MW_TRACE("atexit(func=%p)", func);
+    if (!func) return -1;
+    if (g_guest_atexit_count >= MW_ATEXIT_MAX) return -1;
+    g_guest_atexit[g_guest_atexit_count++] = func;
+    return 0;
+}
+static void w3_run_guest_atexit(void) {
+    for (int i = g_guest_atexit_count - 1; i >= 0; i--) {
+        MW_TRACE("guest atexit run [%d] = %p", i, g_guest_atexit[i]);
+        g_guest_atexit[i]();
+    }
+    g_guest_atexit_count = 0;
+    w3_run_tle_atexit();
+}
+
+/* Windows _exit: terminate without flushing or running atexit handlers. */
+__attribute__((ms_abi)) void mw__exit_noflush(int code) {
+    MW_TRACE("_exit(code=%d)", code);
+    _exit(code);
+}
+
+/* msvcrt setvbuf modes differ from glibc: _IOFBF=0, _IOLBF=64, _IONBF=4
+ * (glibc: 0/1/2). Translate before forwarding to the real FILE*. */
+__attribute__((ms_abi)) int mw_setvbuf(void* stream, char* buf, int mode, size_t size) {
+    int gmode;
+    switch (mode) {
+        case 0:  gmode = _IOFBF; break;  /* _IOFBF */
+        case 64: gmode = _IOLBF; break;  /* _IOLBF */
+        case 4:  gmode = _IONBF; break;  /* _IONBF */
+        default: gmode = mode;   break;
+    }
+    MW_TRACE("setvbuf(stream=%p, mode=%d->%d, size=%zu)", stream, mode, gmode, size);
+    FILE* f = map_crt_stream(stream);
+    if (!f) return 0; /* nothing to do for a NULL stream */
+    return setvbuf(f, buf, gmode, size);
+}
+
+/* kernel32 GetCPInfo — CRT locale init asks for the ANSI code page.
+ * Honest SBCS answer: MaxCharSize=1, DefaultChar='?', no lead bytes. */
+__attribute__((ms_abi)) int mw_GetCPInfo(unsigned codepage, void* cpinfo) {
+    MW_TRACE("GetCPInfo(cp=%u)", codepage);
+    if (!cpinfo) return 0;           /* FALSE */
+    unsigned char* p = (unsigned char*)cpinfo;
+    p[0] = 1;                        /* MaxCharSize = 1 (SBCS) */
+    p[1] = 0;                        /* (padding of UINT on LE is BE byte 0) */
+    p[2] = '?'; p[3] = 0;            /* DefaultChar = "?" + NUL */
+    memset(p + 4, 0, 12);            /* LeadByte ranges: none */
+    return 1;                        /* TRUE */
+}
+
+/* msvcrt _XcptFilter — MSVC SEH filter helper used by CRT internals.
+ * Faithful default: never claim the exception. */
+__attribute__((ms_abi)) long mw__XcptFilter(unsigned long xcpt, void* ep) {
+    MW_TRACE("_XcptFilter(xcpt=0x%lx)", xcpt);
+    (void)ep;
+    return 0; /* EXCEPTION_CONTINUE_SEARCH */
 }
 
 __attribute__((ms_abi)) unsigned long mw__beginthreadex(void* sec, unsigned int stk,
@@ -3227,6 +4457,2634 @@ typedef struct {
 #define ENTRY(dll, name, func) { dll, name, (void*)func, 0 }
 #define DATA_ENTRY(dll, name, addr) { dll, name, (void*)addr, 1 }
 
+
+/* ============================================================
+ * ISS1-WAVE3 — general API families driven by REAL application
+ * demand (Issue #1 §8.2/§8.4: "Add support according to measured
+ * demand"): first external corpus = ImageMagick 7.1.2-34 portable
+ * (magick.exe) + ffmpeg-master win64 GPL. Semantics per MSDN;
+ * features the host cannot provide return their real Windows
+ * failure codes (honest failure, never fake success).
+ * ============================================================ */
+
+/* ---- process parameter block (command line / env / module) ---- */
+static char g_cmdline_buf[8192];
+static wchar_t g_cmdline_bufw[4096];
+static int g_cmdline_ready = 0;
+static int g_cmdline_w_ready = 0;
+
+static void build_cmdline(void) {
+    if (g_cmdline_ready) return;
+    size_t o = 0;
+    for (int i = 0; g_argv[i]; i++) {
+        const char* a = g_argv[i];
+        int need_quote = a[0] == '\0' || strchr(a, ' ');
+        if (o) g_cmdline_buf[o++] = ' ';
+        if (need_quote) g_cmdline_buf[o++] = '"';
+        for (const char* p = a; *p && o < sizeof(g_cmdline_buf) - 4; p++) g_cmdline_buf[o++] = *p;
+        if (need_quote) g_cmdline_buf[o++] = '"';
+    }
+    g_cmdline_buf[o] = '\0';
+    g_cmdline_ready = 1;
+}
+static size_t utf8_to_utf16(const char* s, wchar_t* out, size_t cap) {
+    size_t n = mbstowcs(out, s, cap);
+    return n == (size_t)-1 ? 0 : n;
+}
+static void build_cmdline_w(void) {
+    if (g_cmdline_w_ready) return;
+    build_cmdline();
+    utf8_to_utf16(g_cmdline_buf, g_cmdline_bufw, sizeof(g_cmdline_bufw)/sizeof(wchar_t) - 1);
+    g_cmdline_w_ready = 1;
+}
+
+__attribute__((ms_abi)) const char* mw_GetCommandLineA(void) {
+    build_cmdline();
+    MW_TRACE("GetCommandLineA() = \"%s\"", g_cmdline_buf);
+    return g_cmdline_buf;
+}
+__attribute__((ms_abi)) const wchar_t* mw_GetCommandLineW(void) {
+    build_cmdline_w();
+    MW_TRACE("GetCommandLineW()");
+    return g_cmdline_bufw;
+}
+
+__attribute__((ms_abi)) void mw_GetStartupInfoW(void* si) {
+    MW_TRACE("GetStartupInfoW()");
+    if (!si) return;
+    /* STARTUPINFOW = 104 bytes on x64. Field offsets: cb=0, lpReserved=8,
+     * lpDesktop=16, lpTitle=24, dwX..dwFlags=32..60, wShowWindow=64,
+     * wCbReserved2=66, lpReserved2=72, hStdInput=80, hStdOutput=88,
+     * hStdError=96. (Writing dwFlags at +72 clobbered lpReserved2 — a CRT
+     * internal pointer — and corrupted the heap downstream.) */
+    memset(si, 0, 104);
+    *(uint32_t*)((uint8_t*)si + 0)  = 104;           /* cb */
+    *(uint32_t*)((uint8_t*)si + 60) = 0x00000100;    /* dwFlags = STARTF_USESTDHANDLES */
+    *(uint64_t*)((uint8_t*)si + 80) = 0x0000000000000004ull;  /* hStdInput  (handle 4) */
+    *(uint64_t*)((uint8_t*)si + 88) = 0x0000000000000008ull;  /* hStdOutput (handle 8) */
+    *(uint64_t*)((uint8_t*)si + 96) = 0x000000000000000Cull;  /* hStdError  (handle C) */
+}
+
+__attribute__((ms_abi)) int mw_GetModuleHandleExA(uint32_t flags, const char* name, void** mod) {
+    MW_TRACE("GetModuleHandleExA(flags=%u)", flags);
+    if (!mod) return 0;
+    /* FROM_ADDRESS: the PE is one module — any image address resolves to it */
+    if ((flags & 4) && name) { *mod = (void*)(uintptr_t)g_image_base; return 1; }
+    if (!name) { *mod = (void*)(uintptr_t)g_image_base; return 1; }
+    return 0;
+}
+__attribute__((ms_abi)) int mw_GetModuleHandleExW(uint32_t flags, const wchar_t* name, void** mod) {
+    MW_TRACE("GetModuleHandleExW(flags=%u)", flags);
+    if (!mod) return 0;
+    if ((flags & 4) && name) { *mod = (void*)(uintptr_t)g_image_base; return 1; }
+    if (!name) { *mod = (void*)(uintptr_t)g_image_base; return 1; }
+    return 0;
+}
+
+static char w3_exe_path[4096];
+static int w3_exe_path_ready = 0;
+static const char* get_exe_path(void) {
+    if (!w3_exe_path_ready) {
+        ssize_t n = readlink("/proc/self/exe", w3_exe_path, sizeof(w3_exe_path) - 1);
+        if (n <= 0) n = 0;
+        w3_exe_path[n] = '\0';
+        w3_exe_path_ready = 1;
+    }
+    return w3_exe_path;
+}
+__attribute__((ms_abi)) uint32_t mw_GetModuleFileNameA(void* mod, char* out, uint32_t cap) {
+    MW_TRACE("GetModuleFileNameA(cap=%u)", cap);
+    if (!out || !cap) return 0;
+    const char* p = get_exe_path();
+    snprintf(out, cap, "%s", p);
+    return (uint32_t)strlen(out);
+}
+__attribute__((ms_abi)) uint32_t mw_GetModuleFileNameW(void* mod, wchar_t* out, uint32_t cap) {
+    MW_TRACE("GetModuleFileNameW(cap=%u)", cap);
+    if (!out || !cap) return 0;
+    const char* p = get_exe_path();
+    size_t n = utf8_to_utf16(p, out, cap - 1);
+    out[n] = 0;
+    return (uint32_t)n;
+}
+
+__attribute__((ms_abi)) void* mw_LoadLibraryW(const wchar_t* name) {
+    MW_TRACE("LoadLibraryW() -> NULL (no DLL loader)");
+    mw_SetLastError(126); /* ERROR_MOD_NOT_FOUND */
+    return NULL;
+}
+__attribute__((ms_abi)) void* mw_LoadLibraryExW(const wchar_t* name, void* file, uint32_t flags) {
+    MW_TRACE("LoadLibraryExW(flags=%u) -> NULL", flags);
+    mw_SetLastError(126);
+    return NULL;
+}
+__attribute__((ms_abi)) int mw_FreeLibrary(void* mod) { MW_TRACE("FreeLibrary()"); return 1; }
+__attribute__((ms_abi)) void mw_FreeLibraryAndExitThread(void* mod, uint32_t code) {
+    MW_TRACE("FreeLibraryAndExitThread(code=%u)", code);
+    mw_ExitProcess(code);
+}
+
+/* ---- environment ---- */
+__attribute__((ms_abi)) wchar_t* mw_GetEnvironmentStringsW(void) {
+    MW_TRACE("GetEnvironmentStringsW()");
+    /* Build a double-NUL-terminated UTF-16 block; the loader never frees it
+     * (FreeEnvironmentStringsW is a no-op) so one static buffer suffices. */
+    static wchar_t block[16384];
+    size_t o = 0;
+    for (char** e = environ; *e && o < sizeof(block)/sizeof(wchar_t) - 4; e++) {
+        int n = utf8_to_utf16(*e, block + o, sizeof(block)/sizeof(wchar_t) - o - 4);
+        if (n <= 0) break;
+        o += n;
+        block[o++] = 0;
+    }
+    block[o] = 0;
+    return block;
+}
+__attribute__((ms_abi)) int mw_FreeEnvironmentStringsW(wchar_t* b) { MW_TRACE("FreeEnvironmentStringsW()"); return 1; }
+__attribute__((ms_abi)) int mw_FreeEnvironmentStringsA(char* b) { MW_TRACE("FreeEnvironmentStringsA()"); return 1; }
+
+__attribute__((ms_abi)) uint32_t mw_GetEnvironmentVariableW(const wchar_t* name, wchar_t* out, uint32_t cap) {
+    char n8[256], v8[4096];
+    if (!name) return 0;
+    wcstombs(n8, name, sizeof(n8));
+    const char* v = getenv(n8);
+    MW_TRACE("GetEnvironmentVariableW(%s) = %s", n8, v ? v : "<null>");
+    if (!v) { mw_SetLastError(203); return 0; }
+    if (!out || !cap) return (uint32_t)strlen(v) + 1;
+    size_t n = utf8_to_utf16(v, out, cap - 1);
+    out[n] = 0;
+    return (uint32_t)n;
+}
+__attribute__((ms_abi)) uint32_t mw_GetEnvironmentVariableA(const char* name, char* out, uint32_t cap) {
+    const char* v = name ? getenv(name) : NULL;
+    MW_TRACE("GetEnvironmentVariableA(%s) = %s", name ? name : "?", v ? v : "<null>");
+    if (!v) { mw_SetLastError(203); return 0; }
+    if (!out || !cap) return (uint32_t)strlen(v) + 1;
+    snprintf(out, cap, "%s", v);
+    return (uint32_t)strlen(out);
+}
+__attribute__((ms_abi)) int mw_SetEnvironmentVariableA(const char* name, const char* val) {
+    MW_TRACE("SetEnvironmentVariableA(%s)", name ? name : "NULL");
+    if (!name) return 1;
+    if (setenv(name, val ? val : "", 1) == 0) return 1;
+    mw_SetLastError(8); return 0;
+}
+__attribute__((ms_abi)) int mw_SetEnvironmentVariableW(const wchar_t* name, const wchar_t* val) {
+    char n8[256], v8[4096];
+    if (!name) return 1;
+    wcstombs(n8, name, sizeof(n8));
+    if (val) wcstombs(v8, val, sizeof(v8));
+    MW_TRACE("SetEnvironmentVariableW(%s)", n8);
+    if (setenv(name && n8[0] ? n8 : "", val ? v8 : "", 1) == 0) return 1;
+    mw_SetLastError(8); return 0;
+}
+__attribute__((ms_abi)) uint32_t mw_ExpandEnvironmentStringsW(const wchar_t* src, wchar_t* out, uint32_t cap) {
+    /* Real %VAR% expansion against the host environment */
+    char s8[8192], d8[8192];
+    if (!src) return 0;
+    size_t sn = wcstombs(s8, src, sizeof(s8) - 1);
+    if (sn == (size_t)-1) return 0;
+    s8[sn] = '\0';
+    size_t o = 0;
+    for (char* p = s8; *p && o < sizeof(d8) - 1; ) {
+        if (p[0] == '%' && (strchr(p + 1, '%'))) {
+            char* e = strchr(p + 1, '%');
+            *e = '\0';
+            const char* v = getenv(p + 1);
+            if (!v) v = "";
+            o += (size_t)snprintf(d8 + o, sizeof(d8) - o, "%s", v);
+            p = e + 1;
+        } else {
+            d8[o++] = *p++;
+        }
+    }
+    d8[o] = '\0';
+    MW_TRACE("ExpandEnvironmentStringsW() -> \"%s\"", d8);
+    if (!out || !cap) return (uint32_t)strlen(d8) + 1;
+    size_t n = utf8_to_utf16(d8, out, cap - 1);
+    out[n] = 0;
+    return (uint32_t)n + 1;
+}
+
+/* ---- heap / global / local memory (backed by malloc) ---- */
+__attribute__((ms_abi)) void* mw_GetProcessHeap(void) {
+    return (void*)(uintptr_t)0x00010000;
+}
+__attribute__((ms_abi)) void* mw_HeapCreate(uint32_t fl, size_t init, size_t max) {
+    return (void*)(uintptr_t)0x00010001;
+}
+
+/* ISS1-WAVE3B: allocation registry — every pointer our HeapAlloc/ReAlloc/
+ * GlobalAlloc family hands out is recorded; frees of unknown pointers are
+ * trapped with the caller chain (root-causes "free(): invalid size"). */
+#define W3_REG_SIZE 8192
+static struct { void* p; size_t size; uint32_t gen; } g_alloc_reg[W3_REG_SIZE];
+static uint32_t g_alloc_gen = 1;
+static unsigned w3_reg_slot(void* p) {
+    uint64_t v = (uint64_t)(uintptr_t)p;
+    return (unsigned)((v >> 4) * 0x9E3779B97F4A7C15ull >> 32) % W3_REG_SIZE;
+}
+static void w3_reg_add_sz(void* p, size_t sz) {
+    if (!p) return;
+    unsigned s = w3_reg_slot(p);
+    g_alloc_reg[s].p = p;
+    g_alloc_reg[s].size = sz;
+    g_alloc_reg[s].gen = g_alloc_gen;
+}
+static void w3_reg_add(void* p) { w3_reg_add_sz(p, 0); }
+static void w3_reg_del(void* p) {
+    if (!p) return;
+    unsigned s = w3_reg_slot(p);
+    if (g_alloc_reg[s].p == p) g_alloc_reg[s].p = NULL;
+}
+static int w3_reg_has(void* p) {
+    if (!p) return 1;
+    unsigned s = w3_reg_slot(p);
+    return g_alloc_reg[s].p == p;
+}
+static void w3_trap_bad_free(void* p, const char* tag) {
+    fprintf(stderr, "[HEAP-TRAP %s] free of untracked/bad ptr 0x%lx — caller chain:\n",
+            tag, (unsigned long)(uintptr_t)p);
+    uint64_t scan_rsp = (uint64_t)(uintptr_t)&p;
+    for (int i = 0; i < 256; i++) {
+        uint64_t v = *(uint64_t*)(scan_rsp + (uint64_t)(i * 8));
+        const char* t = NULL;
+        if (v >= 0x2000000ull && v < 0x2050000ull) t = "LOADER";
+        else if (g_image_base && v >= (uint64_t)(uintptr_t)g_image_base &&
+                 v < (uint64_t)(uintptr_t)g_image_base + g_image_size) t = "PE";
+        if (t) fprintf(stderr, "[HEAP-TRAP %s] [rsp+%03d] 0x%lx <%s>\n", tag, i * 8, v, t);
+    }
+    fflush(stderr);
+    _exit(4);
+}
+
+/* ISS1-WAVE3B DIAG: MINWIN_HEAP_GUARD=1 — HeapAlloc gets an mmap'd region
+ * with a trailing PROT_NONE guard page so ANY overflow faults at the exact
+ * writing instruction instead of corrupting a neighbor chunk. */
+static int g_heap_guard = -1;
+static int w3_guard_enabled(void) {
+    if (g_heap_guard < 0) {
+        const char* v = getenv("MINWIN_HEAP_GUARD");
+        g_heap_guard = (v && v[0] == '1');
+    }
+    return g_heap_guard;
+}
+static void* w3_guard_alloc(size_t size) {
+    size_t page = 4096;
+    size_t body = (size + page - 1) & ~(page - 1);
+    uint8_t* mem = mmap(NULL, body + page, PROT_READ | PROT_WRITE,
+                        MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
+    if (mem == MAP_FAILED) return NULL;
+    mprotect(mem + body, page, PROT_NONE);
+    w3_reg_add_sz(mem, size | 0x100000000ull); /* flag bit 32 = guarded */
+    return mem;
+}
+static void w3_guard_free(void* p) {
+    unsigned s = w3_reg_slot(p);
+    size_t size = g_alloc_reg[s].size & ~0x100000000ull;
+    size_t page = 4096;
+    size_t body = (size + page - 1) & ~(page - 1);
+    munmap(p, body + page);
+    g_alloc_reg[s].p = NULL;
+}
+static int w3_is_guarded(void* p) {
+    unsigned s = w3_reg_slot(p);
+    return g_alloc_reg[s].p == p && (g_alloc_reg[s].size >> 32);
+}
+__attribute__((ms_abi)) void* mw_HeapAlloc(void* heap, uint32_t flags, size_t size) {
+    if (w3_guard_enabled()) {
+        void* gp = w3_guard_alloc(size ? size : 1);
+        MW_TRACE("HeapAlloc[GUARD](size=0x%lx) = %p", (unsigned long)size, gp);
+        if (!gp) { mw_SetLastError(8); return NULL; }
+        return gp;
+    }
+    void* p = (flags & 0x08) ? calloc(1, size ? size : 1) : malloc(size ? size : 1);
+    MW_TRACE("HeapAlloc(size=0x%lx, zero=%d) = %p", (unsigned long)size, !!(flags & 0x08), p);
+    if (!p) { mw_SetLastError(8); return NULL; }
+    w3_reg_add_sz(p, size);
+    return p;
+}
+
+/* ISS1-WAVE3B: shared chunk validation before any free-family operation */
+static void w3_validate_chunk(void* p, const char* tag) {
+    if (!p) return;
+    uint64_t hdr = *(uint64_t*)((uint8_t*)p - 8);
+    uint64_t sz = hdr & ~0xFull;
+    if (sz < 32 || (sz & 7) || sz > (1ull << 40)) {
+        fprintf(stderr, "[HEAP-TRAP %s] bad chunk 0x%lx hdr=0x%lx size=0x%lx\n",
+                tag, (unsigned long)(uintptr_t)p, (unsigned long)hdr, (unsigned long)sz);
+        uint64_t scan_rsp = (uint64_t)(uintptr_t)&hdr;
+        for (int i = 0; i < 256; i++) {
+            uint64_t v = *(uint64_t*)(scan_rsp + (uint64_t)(i * 8));
+            const char* t = NULL;
+            if (v >= 0x2000000ull && v < 0x2050000ull) t = "LOADER";
+            else if (g_image_base && v >= (uint64_t)(uintptr_t)g_image_base &&
+                     v < (uint64_t)(uintptr_t)g_image_base + g_image_size) t = "PE";
+            if (t) fprintf(stderr, "[HEAP-TRAP %s] [rsp+%03d] 0x%lx <%s>\n", tag, i * 8, v, t);
+        }
+        fflush(stderr);
+        _exit(4);
+    }
+}
+__attribute__((ms_abi)) void* mw_HeapReAlloc(void* heap, uint32_t flags, void* p, size_t size) {
+    if (!p) return mw_HeapAlloc(heap, flags, size);
+    if (w3_is_guarded(p)) {
+        unsigned s0 = w3_reg_slot(p);
+        size_t old = g_alloc_reg[s0].size & ~0x100000000ull;
+        void* n = w3_guard_alloc(size ? size : 1);
+        if (!n) { mw_SetLastError(8); return NULL; }
+        memcpy(n, p, old < size ? old : size);
+        w3_guard_free(p);
+        return n;
+    }
+    w3_validate_chunk(p, "HeapReAlloc");
+    void* n = (flags & 0x08) ? realloc(p, size ? size : 1) : realloc(p, size ? size : 1);
+    if (n && (flags & 0x08)) {
+        size_t old = malloc_usable_size(p); /* already freed by realloc — approximate */
+        (void)old;
+    }
+    MW_TRACE("HeapReAlloc(size=0x%lx) = %p", (unsigned long)size, n);
+    if (!n) { mw_SetLastError(8); return NULL; }
+    w3_reg_del(p);
+    w3_reg_add(n);
+    return n;
+}
+__attribute__((ms_abi)) int mw_HeapFree(void* heap, uint32_t flags, void* p) {
+    MW_TRACE("HeapFree(%p)", p);
+    if (!p) return 1;
+    /* guarded allocations must be checked BEFORE touching p-8 (their header
+     * word lives inside the PROT_NONE guard page) */
+    {
+        unsigned g = w3_reg_slot(p);
+        if (g_alloc_reg[g].p == p && (g_alloc_reg[g].size >> 32)) {
+            w3_guard_free(p);
+            return 1;
+        }
+    }
+    /* glibc chunk validation: size at p-8 must be sane. Catch corrupted
+     * chunks AT THE FREE with the guest caller still on the stack. */
+    uint64_t hdr = *(uint64_t*)((uint8_t*)p - 8);
+    uint64_t sz = hdr & ~0xFull;
+    uint64_t scan_rsp = (uint64_t)(uintptr_t)&hdr;
+    unsigned rs = w3_reg_slot(p);
+    int tracked = (g_alloc_reg[rs].p == p);
+    size_t exp = tracked ? (g_alloc_reg[rs].size & ~0x100000000ull) : 0;
+    if (tracked && (g_alloc_reg[rs].size >> 32)) { w3_guard_free(p); return 1; }
+    if (sz < 32 || (sz & 7) || sz > (1ull << 40) || !tracked) {
+        w3_trap_bad_free(p, "HeapFree");
+    }
+    if (exp && sz < exp) {
+        fprintf(stderr, "[HEAP-TRAP] chunk 0x%lx OVERFLOWED: hdr size=0x%lx < requested 0x%lx (overrun >= 0x%lx bytes)\n",
+                (unsigned long)(uintptr_t)p, (unsigned long)sz, (unsigned long)exp,
+                (unsigned long)(exp - sz));
+        uint64_t scan_rsp2 = (uint64_t)(uintptr_t)&hdr;
+        for (int i = 0; i < 256; i++) {
+            uint64_t v = *(uint64_t*)(scan_rsp2 + (uint64_t)(i * 8));
+            const char* t = NULL;
+            if (v >= 0x2000000ull && v < 0x2050000ull) t = "LOADER";
+            else if (g_image_base && v >= (uint64_t)(uintptr_t)g_image_base &&
+                     v < (uint64_t)(uintptr_t)g_image_base + g_image_size) t = "PE";
+            if (t) fprintf(stderr, "[HEAP-TRAP] [rsp+%03d] 0x%lx <%s>\n", i * 8, v, t);
+        }
+        fflush(stderr);
+        _exit(5);
+    }
+    w3_reg_del(p);
+    free(p);
+    return 1;
+}
+__attribute__((ms_abi)) size_t mw_HeapSize(void* heap, uint32_t flags, void* p) {
+    if (!p) return 0;
+    if (w3_is_guarded(p)) {
+        unsigned s = w3_reg_slot(p);
+        return g_alloc_reg[s].size & ~0x100000000ull;
+    }
+    return malloc_usable_size(p);
+}
+__attribute__((ms_abi)) int mw_HeapValidate(void* heap, uint32_t flags, void* p) { return 1; }
+__attribute__((ms_abi)) int mw_HeapSetInformation(void* heap, int cls, void* info, size_t len) { return 1; }
+__attribute__((ms_abi)) int mw_HeapQueryInformation(void* heap, int cls, void* info, size_t len, size_t* ret) {
+    if (ret) *ret = 0;
+    return 0; /* not supported — honest */
+}
+__attribute__((ms_abi)) int mw_HeapCompact(void* heap, uint32_t flags) { return 0; }
+
+__attribute__((ms_abi)) void* mw_GlobalAlloc(uint32_t flags, size_t bytes) {
+    void* p = (flags & 0x40) ? calloc(1, bytes ? bytes : 1) : malloc(bytes ? bytes : 1);
+    MW_TRACE("GlobalAlloc(flags=%u, bytes=0x%lx) = %p", flags, (unsigned long)bytes, p);
+    w3_reg_add(p);
+    return p;
+}
+__attribute__((ms_abi)) void* mw_GlobalLock(void* p) { return p; }
+__attribute__((ms_abi)) int mw_GlobalUnlock(void* p) { return 1; }
+__attribute__((ms_abi)) size_t mw_GlobalSize(void* p) {
+    if (!p) return 0;
+    if (w3_is_guarded(p)) {
+        unsigned s = w3_reg_slot(p);
+        return g_alloc_reg[s].size & ~0x100000000ull;
+    }
+    return malloc_usable_size(p);
+}
+__attribute__((ms_abi)) void* mw_GlobalFree(void* p) { if (!w3_reg_has(p)) w3_trap_bad_free(p, "GlobalFree"); w3_reg_del(p); free(p); return NULL; }
+__attribute__((ms_abi)) void* mw_LocalAlloc(uint32_t flags, size_t bytes) { return mw_GlobalAlloc(flags, bytes); } /* registry inside GlobalAlloc */
+__attribute__((ms_abi)) void* mw_LocalLock(void* p) { return p; }
+__attribute__((ms_abi)) int mw_LocalUnlock(void* p) { return 1; }
+__attribute__((ms_abi)) size_t mw_LocalSize(void* p) { return p ? malloc_usable_size(p) : 0; }
+__attribute__((ms_abi)) void* mw_LocalFree(void* p) { if (!w3_reg_has(p)) w3_trap_bad_free(p, "LocalFree"); w3_reg_del(p); free(p); return NULL; }
+
+__attribute__((ms_abi)) int mw_GlobalMemoryStatusEx(void* ms) {
+    if (!ms) return 0;
+    uint8_t* p = (uint8_t*)ms;
+    *(uint32_t*)(p + 0) = 64; /* dwLength */
+    for (int i = 1; i < 8; i++) *(uint32_t*)(p + 4 * i) = 0;
+    struct sysinfo si;
+    if (sysinfo(&si) == 0) {
+        uint64_t total = (uint64_t)si.totalram * si.mem_unit;
+        uint64_t freeb = (uint64_t)si.freeram * si.mem_unit;
+        *(uint32_t*)(p + 4) = 58; /* dwMemoryLoad % */
+        *(uint64_t*)(p + 8)  = total;
+        *(uint64_t*)(p + 16) = freeb;
+        *(uint64_t*)(p + 32) = total;
+        *(uint64_t*)(p + 40) = freeb;
+    }
+    return 1;
+}
+
+/* ---- system info / CPU features / debug ---- */
+__attribute__((ms_abi)) void mw_GetSystemInfo(void* si) {
+    MW_TRACE("GetSystemInfo()");
+    if (!si) return;
+    memset(si, 0, 48);
+    uint8_t* p = (uint8_t*)si;
+    *(uint16_t*)(p + 0)  = 9;          /* wProcessorArchitecture = AMD64 */
+    *(uint16_t*)(p + 2)  = 0;
+    *(uint32_t*)(p + 4)  = 4096;       /* dwPageSize */
+    *(void**)(p + 8)     = (void*)0x10000;
+    *(void**)(p + 16)    = (void*)0x7FFFFFFEFFFF;
+    *(uint64_t*)(p + 24) = 1;          /* dwActiveProcessorMask */
+    *(uint32_t*)(p + 32) = (uint32_t)sysconf(_SC_NPROCESSORS_ONLN);
+    *(uint32_t*)(p + 36) = 65536;      /* dwAllocationGranularity */
+    *(uint16_t*)(p + 40) = 6;          /* wProcessorLevel */
+    *(uint16_t*)(p + 42) = 0x0101;
+}
+__attribute__((ms_abi)) void mw_GetNativeSystemInfo(void* si) { mw_GetSystemInfo(si); }
+/* ISS1-WAVE3B: real GetLogicalProcessorInformationEx (Issue #1 §8.3 —
+ * callers retry on ERROR_INSUFFICIENT_BUFFER until the returned size fits;
+ * a bare failure stub makes them loop forever, observed live with
+ * ImageMagick's CRT init). We expose one RelationProcessorCore entry with
+ * the full processor mask. */
+__attribute__((ms_abi)) uint32_t mw_GetLogicalProcessorInformationEx(int cls, void* buf, uint32_t* len) {
+    MW_TRACE("GetLogicalProcessorInformationEx(cls=%d)", cls);
+    if (!len) { mw_SetLastError(87); return 0; }
+    /* RelationProcessorCore entry: {Relationship=0, Size=48,
+     *   PROCESSOR_RELATIONSHIP { Flags=1 (PerformanceCounters? SMT off -> 0),
+     *     EfficiencyClass=0, Reserved[20], GroupCount=1,
+     *     GROUP_AFFINITY { Mask, Group=0, Reserved[6] } } } */
+    const uint32_t needed = 48;
+    if (!buf || *len < needed) {
+        *len = needed;
+        mw_SetLastError(122); /* ERROR_INSUFFICIENT_BUFFER */
+        return 0;
+    }
+    uint8_t* p = (uint8_t*)buf;
+    memset(p, 0, needed);
+    uint32_t ncpu = (uint32_t)sysconf(_SC_NPROCESSORS_ONLN);
+    if (!ncpu) ncpu = 1;
+    *(uint32_t*)(p + 0)  = 0;        /* RelationProcessorCore */
+    *(uint32_t*)(p + 4)  = needed;   /* Size */
+    *(uint8_t*)(p + 8)   = 0;        /* Flags: no SMT */
+    *(uint16_t*)(p + 8 + 1 + 1 + 20) = 1;          /* GroupCount */
+    *(uint64_t*)(p + 8 + 24) = (ncpu >= 64) ? ~0ull : ((1ull << ncpu) - 1); /* GroupMask.Mask */
+    /* GroupMask.Group at +8+24+8 = 0 */
+    *len = needed;
+    return 1;
+}
+__attribute__((ms_abi)) int mw_IsProcessorFeaturePresent(uint32_t feat) {
+    /* x64 hosts: SSE/SSE2/compare-exchange/3DNOW-none. Bits CRT checks. */
+    switch (feat) {
+    case 0: case 1: case 2: case 3: case 4: case 5: case 6: case 7:
+    case 8: case 9: case 10: case 11: case 12: case 13:
+        return 1;                     /* PF_* integer/SSE family */
+    case 17: case 18: case 19: case 20: case 21:
+        return 1;                     /* PF_XSAVE / AVX family */
+    default:
+        return 0;
+    }
+}
+__attribute__((ms_abi)) int mw_CheckRemoteDebuggerPresent(void* proc, int* out) {
+    if (out) *out = 0;
+    return 1;
+}
+__attribute__((ms_abi)) uint16_t mw_RtlCaptureStackBackTrace(uint32_t skip, uint32_t frames, void** bt, uint32_t* hash) {
+    MW_TRACE("RtlCaptureStackBackTrace(skip=%u)", skip);
+    if (hash) *hash = 0;
+    return 0;
+}
+__attribute__((ms_abi)) void* mw_RtlPcToFileHeader(void* pc, void** base) {
+    uint64_t v = (uint64_t)(uintptr_t)pc;
+    if (g_image_base && v >= g_image_base && v < g_image_base + g_image_size) {
+        if (base) *base = (void*)(uintptr_t)g_image_base;
+        return (void*)(uintptr_t)g_image_base;
+    }
+    if (base) *base = NULL;
+    return NULL;
+}
+
+/* pointer-encoding cookies: xor with a fixed per-process key */
+static uintptr_t g_ptr_cookie = 0;
+__attribute__((ms_abi)) void* mw_EncodePointer(void* p) {
+    if (!g_ptr_cookie) {
+        g_ptr_cookie = (uintptr_t)getpid() << 32 | (uintptr_t)time(NULL);
+        if (!g_ptr_cookie) g_ptr_cookie = 0x4D57494E;
+    }
+    return (void*)(uintptr_t)((uintptr_t)p ^ g_ptr_cookie);
+}
+__attribute__((ms_abi)) void* mw_DecodePointer(void* p) {
+    return (void*)(uintptr_t)((uintptr_t)p ^ (g_ptr_cookie ? g_ptr_cookie : 0x4D57494E));
+}
+
+/* SLIST (single-threaded honest semantics) */
+__attribute__((ms_abi)) void mw_InitializeSListHead(void* head) {
+    if (head) *(void**)head = NULL;
+}
+__attribute__((ms_abi)) void* mw_InterlockedPushEntrySList(void* head, void* entry) {
+    void* old = head ? *(void**)head : NULL;
+    if (head && entry) {
+        *(void**)entry = old;
+        *(void**)head = entry;
+    }
+    return old;
+}
+__attribute__((ms_abi)) void* mw_InterlockedFlushSList(void* head) {
+    void* old = head ? *(void**)head : NULL;
+    if (head) *(void**)head = NULL;
+    return old;
+}
+__attribute__((ms_abi)) uint32_t mw_QueryDepthSList(void* head) {
+    uint32_t d = 0;
+    void* n = head ? *(void**)head : NULL;
+    while (n && d < 1000000) { n = *(void**)n; d++; }
+    return d;
+}
+
+/* ---- synchronization ---- */
+__attribute__((ms_abi)) int mw_InitializeCriticalSectionEx(void* cs, uint32_t spin, uint32_t flags) {
+    MW_TRACE("InitializeCriticalSectionEx(spin=%u)", spin);
+    if (!cs) return 0;
+    pthread_mutexattr_t a;
+    pthread_mutexattr_init(&a);
+    pthread_mutexattr_settype(&a, PTHREAD_MUTEX_RECURSIVE);
+    pthread_mutex_init((pthread_mutex_t*)cs, &a);
+    pthread_mutexattr_destroy(&a);
+    *(uint32_t*)((uint8_t*)cs + 36) = MW_CS_MAGIC;
+    return 1;
+}
+/* SRWLOCK = 8 bytes on x64. Single-writer flag + shared count packed in the
+ * pointer cell; the guest's rose render path is single-threaded so the
+ * uncontended paths are the contract. */
+__attribute__((ms_abi)) void mw_InitializeSRWLock(void* srw) { if (srw) *(void**)srw = NULL; }
+static void srw_lock(void* srw, int exclusive) {
+    volatile int64_t* v = (volatile int64_t*)srw;
+    if (exclusive) {
+        while (__sync_val_compare_and_swap(v, 0, -1) != 0) sched_yield();
+    } else {
+        int64_t c;
+        do { c = *v; } while (c < 0 || !__sync_bool_compare_and_swap(v, c, c + 1));
+    }
+}
+static void srw_unlock(void* srw, int exclusive) {
+    volatile int64_t* v = (volatile int64_t*)srw;
+    if (exclusive) __sync_val_compare_and_swap(v, -1, 0);
+    else __sync_fetch_and_sub(v, 1);
+}
+__attribute__((ms_abi)) void mw_AcquireSRWLockShared(void* s) { srw_lock(s, 0); }
+__attribute__((ms_abi)) void mw_ReleaseSRWLockShared(void* s) { srw_unlock(s, 0); }
+__attribute__((ms_abi)) int mw_TryAcquireSRWLockShared(void* s) {
+    volatile int64_t* v = (volatile int64_t*)s;
+    int64_t c = *v;
+    return (c >= 0 && __sync_bool_compare_and_swap(v, c, c + 1)) ? 1 : 0;
+}
+
+/* CONDITION_VARIABLE = 8 bytes (futex word) */
+__attribute__((ms_abi)) void mw_InitializeConditionVariable(void* cv) { if (cv) *(void**)cv = NULL; }
+/* INIT_ONCE = 8 bytes: 0=init, 1=in-progress, 2=done (ctx in dword 1) */
+__attribute__((ms_abi)) int mw_InitOnceBeginInitialize(void* io, uint32_t flags, int* pending, void** ctx) {
+    volatile int64_t* v = (volatile int64_t*)io;
+    if (flags & 2 /* INIT_ONCE_CHECK_ONLY */) {
+        int64_t s = *v;
+        if (s >> 32 == 2) { if (ctx) *ctx = (void*)(uintptr_t)(s & 0xFFFFFFFFull); if (pending) *pending = 0; return 1; }
+        mw_SetLastError(347); return 0;
+    }
+    if (__sync_val_compare_and_swap(v, 0, 1) == 0) { if (pending) *pending = 1; return 1; }
+    if (pending) *pending = 0;
+    return 1;
+}
+__attribute__((ms_abi)) int mw_InitOnceComplete(void* io, uint32_t flags, void* ctx) {
+    volatile int64_t* v = (volatile int64_t*)io;
+    int64_t nv = 2ll << 32 | ((uintptr_t)ctx & 0xFFFFFFFFull);
+    if (__sync_val_compare_and_swap(v, 1, nv) == 1) return 1;
+    mw_SetLastError(348); return 0; /* INIT_ONCE_FAILED */
+}
+
+/* Address-barrier waits: real futex on the same address the guest uses */
+__attribute__((ms_abi)) int mw_WaitOnAddress(volatile void* addr, void* cmp, size_t size, uint32_t ms) {
+    uint8_t local[8];
+    memcpy(local, (const void*)addr, size);
+    if (memcmp(local, cmp, size) != 0) return 1;
+    struct timespec ts = { ms / 1000, (long)(ms % 1000) * 1000000L };
+    (void)ts;
+    for (int i = 0; i < 200000; i++) {
+        memcpy(local, (const void*)addr, size);
+        if (memcmp(local, cmp, size) != 0) return 1;
+        syscall(SYS_futex, addr, 128 /*FUTEX_WAIT_PRIVATE*/, *(uint32_t*)addr, NULL, NULL, 0);
+        memcpy(local, (const void*)addr, size);
+        if (memcmp(local, cmp, size) != 0) return 1;
+    }
+    mw_SetLastError(1460); return 0;
+}
+__attribute__((ms_abi)) void mw_WakeByAddressSingle(void* addr) {
+    syscall(SYS_futex, addr, 129 /*FUTEX_WAKE_PRIVATE*/, 1, NULL, NULL, 0);
+}
+__attribute__((ms_abi)) void mw_WakeByAddressAll(void* addr) {
+    syscall(SYS_futex, addr, 129, 0x7fffffff, NULL, NULL, 0);
+}
+
+/* events: real state so single-thread wait/unwait works */
+#define MAX_EVENTS 256
+typedef struct { int set; int manual; } MwEvent;
+static MwEvent g_events[MAX_EVENTS];
+static int g_event_count = 0;
+static MwEvent* event_from_handle(void* h) {
+    int idx = (int)(uintptr_t)h - 4;
+    if (idx < 0 || idx >= g_event_count) return NULL;
+    return &g_events[idx];
+}
+__attribute__((ms_abi)) void* mw_CreateEventW(void* attr, int manual, int init, const wchar_t* name) {
+    MW_TRACE("CreateEventW(manual=%d init=%d)", manual, init);
+    if (g_event_count >= MAX_EVENTS) return NULL;
+    g_events[g_event_count].set = init;
+    g_events[g_event_count].manual = manual;
+    return alloc_handle((void*)(uintptr_t)(4 + g_event_count++));
+}
+__attribute__((ms_abi)) uint32_t mw_WaitForMultipleObjectsEx(uint32_t n, void** hs, int wait_all, uint32_t ms, int alertable) {
+    return mw_WaitForMultipleObjects(n, hs, wait_all, ms);
+}
+__attribute__((ms_abi)) uint32_t mw_SignalObjectAndWait(void* sig, void* wait, uint32_t ms, int alertable) {
+    mw_SetEvent(sig);
+    return mw_WaitForSingleObject(wait, ms);
+}
+__attribute__((ms_abi)) void* mw_CreateMutexA(void* attr, int owner, const char* name) {
+    MW_TRACE("CreateMutexA(owner=%d)", owner);
+    if (g_event_count >= MAX_EVENTS) return NULL;
+    g_events[g_event_count].set = 1 - owner;
+    g_events[g_event_count].manual = 1;
+    return alloc_handle((void*)(uintptr_t)(4 + g_event_count++));
+}
+__attribute__((ms_abi)) int mw_ReleaseMutex(void* h) { return mw_SetEvent(h); }
+
+/* ---- threads (single-team honest semantics) ---- */
+__attribute__((ms_abi)) void* mw_CreateThread(void* attr, size_t stack, void* fn, void* arg, uint32_t flags, uint32_t* tid) {
+    /* Guest threads cannot run (no per-thread TEB/CPU handoff yet): fail
+     * honestly so callers take their fallback paths. */
+    MW_TRACE("CreateThread() -> NULL (no guest threading)");
+    mw_SetLastError(8); /* ERROR_NOT_ENOUGH_MEMORY */
+    if (tid) *tid = 0;
+    return NULL;
+}
+__attribute__((ms_abi)) void mw_ExitThread(uint32_t code) {
+    MW_TRACE("ExitThread(%u)", code);
+    exit(code);
+}
+__attribute__((ms_abi)) int mw_GetExitCodeThread(void* h, uint32_t* code) { if (code) *code = 0; return 1; }
+__attribute__((ms_abi)) int mw_TerminateThread(void* h, uint32_t code) { return 0; }
+__attribute__((ms_abi)) uint32_t mw_GetCurrentProcessorNumber(void) { return 0; }
+/* threadpool: honest synchronous fallback is NOT Windows semantics; fail */
+__attribute__((ms_abi)) void* mw_CreateThreadpoolWork(void* cb, void* ctx, void* env) {
+    MW_TRACE("CreateThreadpoolWork() -> NULL");
+    mw_SetLastError(8);
+    return NULL;
+}
+__attribute__((ms_abi)) void mw_SubmitThreadpoolWork(void* w) { }
+__attribute__((ms_abi)) void mw_CloseThreadpoolWork(void* w) { }
+__attribute__((ms_abi)) void mw_FreeLibraryWhenCallbackReturns(void* env, void* mod) { }
+__attribute__((ms_abi)) void* mw_RegisterWaitForSingleObject(void** out, void* h, void* cb, void* ctx, uint32_t ms, uint32_t flags) {
+    return NULL;
+}
+__attribute__((ms_abi)) void mw_UnregisterWait(void* w) { }
+__attribute__((ms_abi)) void* mw_QueueUserWorkItem(void* cb, void* ctx, uint32_t flags) {
+    return NULL;
+}
+
+/* ---- time ---- */
+__attribute__((ms_abi)) void mw_GetSystemTime(void* st) {
+    MW_TRACE("GetSystemTime()");
+    if (!st) return;
+    /* SYSTEMTIME: 8 WORDs */
+    time_t t = time(NULL);
+    struct tm tmv;
+    gmtime_r(&t, &tmv);
+    uint16_t* w = (uint16_t*)st;
+    w[0] = tmv.tm_year + 1900; w[1] = tmv.tm_mon + 1; w[2] = tmv.tm_wday;
+    w[3] = tmv.tm_mday; w[4] = tmv.tm_hour; w[5] = tmv.tm_min;
+    w[6] = tmv.tm_sec; w[7] = 0;
+}
+__attribute__((ms_abi)) void mw_GetSystemTimePreciseAsFileTime(void* ft) {
+    mw_GetSystemTimeAsFileTime(ft);
+}
+__attribute__((ms_abi)) uint64_t mw_GetTickCount64(void) {
+    struct timespec ts;
+    clock_gettime(CLOCK_MONOTONIC, &ts);
+    return (uint64_t)ts.tv_sec * 1000 + ts.tv_nsec / 1000000;
+}
+__attribute__((ms_abi)) uint32_t mw_GetTimeZoneInformation(void* tzi) {
+    MW_TRACE("GetTimeZoneInformation()");
+    if (tzi) memset(tzi, 0, 176);
+    return 0; /* TIME_ZONE_ID_UNKNOWN (bias 0 = UTC) — honest for UTC hosts */
+}
+__attribute__((ms_abi)) int mw_FileTimeToSystemTime(const void* ft, void* st) {
+    if (!ft || !st) return 0;
+    uint64_t t100 = *(const uint64_t*)ft;
+    time_t secs = (time_t)(t100 / 10000000ULL) - 11644473600LL;
+    struct tm tmv;
+    gmtime_r(&secs, &tmv);
+    uint16_t* w = (uint16_t*)st;
+    w[0] = tmv.tm_year + 1900; w[1] = tmv.tm_mon + 1; w[2] = tmv.tm_wday;
+    w[3] = tmv.tm_mday; w[4] = tmv.tm_hour; w[5] = tmv.tm_min;
+    w[6] = tmv.tm_sec; w[7] = (uint16_t)((t100 % 10000000ULL) / 10000);
+    return 1;
+}
+__attribute__((ms_abi)) int mw_SystemTimeToFileTime(const void* st, void* ft) {
+    if (!st || !ft) return 0;
+    const uint16_t* w = (const uint16_t*)st;
+    struct tm tmv;
+    memset(&tmv, 0, sizeof(tmv));
+    tmv.tm_year = w[0] - 1900; tmv.tm_mon = w[1] - 1; tmv.tm_mday = w[3];
+    tmv.tm_hour = w[4]; tmv.tm_min = w[5]; tmv.tm_sec = w[6];
+    time_t secs = timegm(&tmv);
+    *(uint64_t*)ft = (uint64_t)(secs + 11644473600LL) * 10000000ULL + w[7] * 10000;
+    return 1;
+}
+__attribute__((ms_abi)) int mw_GetVersion(void) { return 0x000A0006; } /* 10.6 */
+__attribute__((ms_abi)) int mw_GetVersionExA(void* vi) {
+    if (!vi) return 0;
+    uint32_t sz = *(uint32_t*)vi;
+    memset(vi, 0, sz);
+    *(uint32_t*)vi = sz;
+    uint8_t* p = (uint8_t*)vi;
+    *(uint32_t*)(p + 4)  = 10; *(uint32_t*)(p + 8) = 0; *(uint32_t*)(p + 12) = 0;
+    *(uint32_t*)(p + 16) = 2;  /* VER_PLATFORM_WIN32_NT */
+    return 1;
+}
+
+/* ---- codepage / locale / string ---- */
+/* ACP must be a SINGLE-BYTE codepage: the UCRT builds its ctype table by
+ * converting a 256-byte table through the ACP; UTF-8 fails on bytes >=0x80
+ * (live: ImageMagick locale init corrupted its stack → GetStringTypeW with
+ * garbage args). 1252 = Windows-1252, the real-world default ACP. */
+__attribute__((ms_abi)) uint32_t mw_GetACP(void) { return 1252; }
+__attribute__((ms_abi)) uint32_t mw_GetOEMCP(void) { return 437; }
+__attribute__((ms_abi)) int mw_IsValidCodePage(uint32_t cp) { return cp == 65001 || cp == 437 || cp == 1252 ? 1 : 0; }
+__attribute__((ms_abi)) int mw_IsValidLocale(uint32_t lcid, uint32_t flags) { return 1; }
+__attribute__((ms_abi)) uint32_t mw_GetUserDefaultLCID(void) { return 0x0409; }
+__attribute__((ms_abi)) uint32_t mw_GetUserDefaultLangID(void) { return 0x0409; }
+__attribute__((ms_abi)) uint32_t mw_GetSystemDefaultLCID(void) { return 0x0409; }
+__attribute__((ms_abi)) uint32_t mw_GetThreadLocale(void) { return 0x0409; }
+__attribute__((ms_abi)) int mw_SetThreadLocale(uint32_t lcid) { return 1; }
+/* LOCALE_* identifiers (winnls.h) — real per-type values so the UCRT reads
+ * consistent codepage data (the ctype-table conversion picked its CP from
+ * here; a blanket "en-US" made it fall into the UTF-8 path). */
+#define MW_LOCALE_ILANGUAGE            0x0001
+#define MW_LOCALE_IDEFAULTANSICODEPAGE 0x1004
+#define MW_LOCALE_IDEFAULTCODEPAGE     0x100B
+#define MW_LOCALE_IDEFAULTMACCODEPAGE  0x100A
+#define MW_LOCALE_SNAME                0x005C
+#define MW_LOCALE_SISO639LANGNAME      0x0059
+#define MW_LOCALE_SISO3166CTRYNAME     0x005A
+#define MW_LOCALE_RETURN_NUMBER        0x20000000
+#define MW_LOCALE_NAME_MAX_LEN         85
+
+static const char* w3_locale_info_str(uint32_t type) {
+    switch (type & ~MW_LOCALE_RETURN_NUMBER) {
+    case MW_LOCALE_ILANGUAGE:            return "0409";
+    case MW_LOCALE_IDEFAULTANSICODEPAGE: return "1252";
+    case MW_LOCALE_IDEFAULTCODEPAGE:     return "437";
+    case MW_LOCALE_IDEFAULTMACCODEPAGE:  return "10000";
+    case MW_LOCALE_SNAME:                return "en-US";
+    case MW_LOCALE_SISO639LANGNAME:      return "en";
+    case MW_LOCALE_SISO3166CTRYNAME:     return "US";
+    case 0x1002:                         return "1";   /* IDEFAULTLANGUAGE */
+    case 0x1001:                         return "1";   /* ICOUNTRY */
+    default:                             return "en-US";
+    }
+}
+static uint32_t w3_locale_info_num(uint32_t type) {
+    switch (type & ~MW_LOCALE_RETURN_NUMBER) {
+    case MW_LOCALE_ILANGUAGE:            return 0x0409;
+    case MW_LOCALE_IDEFAULTANSICODEPAGE: return 1252;
+    case MW_LOCALE_IDEFAULTCODEPAGE:     return 437;
+    case MW_LOCALE_IDEFAULTMACCODEPAGE:  return 10000;
+    default:                             return 0;
+    }
+}
+__attribute__((ms_abi)) int mw_GetLocaleInfoA(uint32_t lcid, uint32_t type, char* out, int cap) {
+    MW_TRACE("GetLocaleInfoA(type=%x)", type);
+    if (type & MW_LOCALE_RETURN_NUMBER) {
+        if (!out || cap < 4) { mw_SetLastError(122); return 0; }
+        *(uint32_t*)out = w3_locale_info_num(type);
+        return 4;
+    }
+    const char* s = w3_locale_info_str(type);
+    int need = (int)strlen(s) + 1;
+    if (!out || cap < need) { mw_SetLastError(122); return 0; }
+    memcpy(out, s, need);
+    return need;
+}
+__attribute__((ms_abi)) int mw_GetLocaleInfoW(uint32_t lcid, uint32_t type, wchar_t* out, int cap) {
+    MW_TRACE("GetLocaleInfoW(type=%x)", type);
+    if (type & MW_LOCALE_RETURN_NUMBER) {
+        if (!out || cap < 2) { mw_SetLastError(122); return 0; }
+        *(uint32_t*)out = w3_locale_info_num(type);
+        return 2;
+    }
+    const char* s = w3_locale_info_str(type);
+    int need = (int)strlen(s) + 1; /* wide chars incl null */
+    if (!out || cap < need) { mw_SetLastError(122); return 0; }
+    size_t n = utf8_to_utf16(s, out, cap - 1);
+    out[n] = 0;
+    return (int)n + 1;
+}
+__attribute__((ms_abi)) int mw_GetLocaleInfoEx(void* name, uint32_t type, wchar_t* out, int cap) {
+    return mw_GetLocaleInfoW(0x0409, type, out, cap);
+}
+static int wstr_case_cmp(const wchar_t* a, const wchar_t* b, int fold) {
+    for (;;) {
+        wint_t ca = *a++, cb = *b++;
+        if (fold) { ca = towlower(ca); cb = towlower(cb); }
+        if (ca != cb) return ca < cb ? -1 : 1;
+        if (!ca) return 0;
+    }
+}
+__attribute__((ms_abi)) int mw_CompareStringW(uint32_t lcid, uint32_t flags, const wchar_t* s1, int n1, const wchar_t* s2, int n2) {
+    if (n1 < 0) n1 = s1 ? (int)wcslen(s1) : 0;
+    if (n2 < 0) n2 = s2 ? (int)wcslen(s2) : 0;
+    int fold = flags & 1; /* NORM_IGNORECASE */
+    wchar_t b1[512], b2[512];
+    if (n1 > 511) n1 = 511; if (n2 > 511) n2 = 511;
+    if (s1) { memcpy(b1, s1, n1 * 2); b1[n1] = 0; } else n1 = 0;
+    if (s2) { memcpy(b2, s2, n2 * 2); b2[n2] = 0; } else n2 = 0;
+    int r = wstr_case_cmp(n1 ? b1 : (wchar_t*)L"", n2 ? b2 : (wchar_t*)L"", fold);
+    return r == 0 ? 2 : (r < 0 ? 1 : 3); /* CSTR_EQUAL/LESS/GREATER */
+}
+__attribute__((ms_abi)) int mw_CompareStringEx(void* name, uint32_t flags, const wchar_t* s1, int n1, const wchar_t* s2, int n2, void* v1, void* v2, void* res) {
+    return mw_CompareStringW(0x0409, flags, s1, n1, s2, n2);
+}
+__attribute__((ms_abi)) int mw_LCMapStringW(uint32_t lcid, uint32_t flags, const wchar_t* src, int sn, wchar_t* out, int cap) {
+    if (!src) return 0;
+    int include_null = (sn < 0);
+    if (include_null) sn = (int)wcslen(src);
+    int need = sn + (include_null ? 1 : 0);
+    if (!out || cap == 0) return need;           /* size query — no write */
+    if (cap < need) { mw_SetLastError(122); return 0; }
+    for (int i = 0; i < sn; i++) {
+        wchar_t c = src[i];
+        if (flags & 0x100) c = (wchar_t)towlower(c);       /* LCMAP_LOWERCASE */
+        if (flags & 0x200) c = (wchar_t)towupper(c);       /* LCMAP_UPPERCASE */
+        out[i] = c;
+    }
+    if (include_null) out[sn] = 0;
+    return need;
+}
+__attribute__((ms_abi)) int mw_LCMapStringEx(void* name, uint32_t flags, const wchar_t* src, int sn, wchar_t* out, int cap, void* v1, void* v2, void* res) {
+    return mw_LCMapStringW(0x0409, flags, src, sn, out, cap);
+}
+__attribute__((ms_abi)) int mw_LCMapStringA(uint32_t lcid, uint32_t flags, const char* src, int sn, char* out, int cap) {
+    if (!src) return 0;
+    int include_null = (sn < 0);
+    if (include_null) sn = (int)strlen(src);
+    int need = sn + (include_null ? 1 : 0);
+    if (!out || cap == 0) return need;
+    if (cap < need) { mw_SetLastError(122); return 0; }
+    for (int i = 0; i < sn; i++) {
+        char c = src[i];
+        if (flags & 0x100) c = (char)tolower((unsigned char)c);
+        if (flags & 0x200) c = (char)toupper((unsigned char)c);
+        out[i] = c;
+    }
+    if (include_null) out[sn] = 0;
+    return need;
+}
+__attribute__((ms_abi)) int mw_EnumSystemLocalesW(void* cb, uint32_t flags) {
+    /* enumerate the single supported locale; honest callback invocation */
+    int (*fn)(const wchar_t*) = (int (*)(const wchar_t*))cb;
+    static const wchar_t en[] = L"en-US";
+    if (fn) fn(en);
+    return 1;
+}
+__attribute__((ms_abi)) int mw_GetStringTypeW(uint32_t type, const wchar_t* src, int cnt, uint16_t* out) {
+    if (!src || !out) return 0;
+    for (int i = 0; i < cnt; i++) {
+        wint_t c = src[i];
+        uint16_t t = 0;
+        if (iswupper(c)) t |= 0x0001;                 /* C1_UPPER */
+        if (iswlower(c)) t |= 0x0002;                 /* C1_LOWER */
+        if (iswdigit(c)) t |= 0x0004;                 /* C1_DIGIT */
+        if (iswspace(c)) t |= 0x0008;                 /* C1_SPACE */
+        if (ispunct(c))  t |= 0x0010;                 /* C1_PUNCT */
+        if (t == 0)      t |= 0x0080;                 /* C1_UNDEFINED */
+        out[i] = t;
+    }
+    return 1;
+}
+__attribute__((ms_abi)) int mw_IsDBCSLeadByte(uint8_t b) { return 0; }
+
+static void mw_init_ptr_cookie(void) __attribute__((constructor));
+static void mw_init_ptr_cookie(void) {
+    if (!g_ptr_cookie) g_ptr_cookie = 0x4D57494E00000000ull ^ (uintptr_t)getpid();
+}
+
+
+/* ============================================================
+ * ISS1-WAVE3B — file/console/dir + registry/bcrypt/VCOMP families
+ * ============================================================ */
+
+/* Win32 file-handle registry: handle value -> fd (+context) */
+typedef struct { int fd; int in_use; } W3File;
+static W3File g_w3files[MAX_HANDLES];
+static int g_w3files_ready = 0;
+
+static int w3fd_from_handle(void* h) {
+    int idx = (int)(uintptr_t)h - 4;
+    if (idx < 0 || idx >= MAX_HANDLES || !g_w3files[idx].in_use) return -1;
+    return g_w3files[idx].fd;
+}
+static void* w3_handle_for_fd(int fd) {
+    if (!g_w3files_ready) { memset(g_w3files, 0, sizeof(g_w3files)); g_w3files_ready = 1; }
+    for (int i = 0; i < MAX_HANDLES; i++) {
+        if (g_w3files[i].in_use && g_w3files[i].fd == fd) return (void*)(uintptr_t)(4 + i);
+    }
+    return NULL;
+}
+
+/* DESIRED_ACCESS: GENERIC_READ 0x80000000, GENERIC_WRITE 0x40000000 */
+#define W3_GENERIC_READ  0x80000000u
+#define W3_GENERIC_WRITE 0x40000000u
+#define W3_CREATE_NEW        1
+#define W3_CREATE_ALWAYS     2
+#define W3_OPEN_EXISTING     3
+#define W3_OPEN_ALWAYS       4
+#define W3_TRUNCATE_EXISTING 5
+
+/* helper shared by A/W: returns handle or INVALID_HANDLE_VALUE */
+static void* w3_create_file(const char* name8, uint32_t access, uint32_t disp);
+__attribute__((ms_abi)) void* mw_CreateFileA(const char* name, uint32_t access, uint32_t share,
+        void* sec, uint32_t disp, uint32_t flags, void* tmpl) {
+    MW_TRACE("CreateFileA(%s, acc=%08x, disp=%u)", name ? name : "NULL", access, disp);
+    if (!name) { mw_SetLastError(87); return (void*)-1; }
+    return w3_create_file(name, access, disp);
+}
+static void* w3_create_file(const char* name8, uint32_t access, uint32_t disp) {
+    if (!g_w3files_ready) { memset(g_w3files, 0, sizeof(g_w3files)); g_w3files_ready = 1; }
+    int slot = -1;
+    for (int i = 0; i < MAX_HANDLES; i++) if (!g_w3files[i].in_use) { slot = i; break; }
+    if (slot < 0) { mw_SetLastError(4); return (void*)-1; }
+    int oflags = 0;
+    int rd = (access & W3_GENERIC_READ) != 0;
+    int wr = (access & W3_GENERIC_WRITE) != 0;
+    oflags |= wr ? (rd ? O_RDWR : O_WRONLY) : O_RDONLY;
+    switch (disp) {
+    case W3_CREATE_NEW:        oflags |= O_CREAT | O_EXCL; break;
+    case W3_CREATE_ALWAYS:     oflags |= O_CREAT | O_TRUNC; break;
+    case W3_OPEN_EXISTING:     break;
+    case W3_OPEN_ALWAYS:       oflags |= O_CREAT; break;
+    case W3_TRUNCATE_EXISTING: oflags |= O_TRUNC; break;
+    default: break;
+    }
+    int fd = open(name8, oflags, 0644);
+    if (fd < 0) {
+        mw_SetLastError(errno == ENOENT ? 2 : (errno == EACCES ? 5 : 87));
+        return (void*)-1;
+    }
+    g_w3files[slot].fd = fd;
+    g_w3files[slot].in_use = 1;
+    return (void*)(uintptr_t)(4 + slot);
+}
+__attribute__((ms_abi)) void* mw_CreateFileW(const wchar_t* name, uint32_t access, uint32_t share,
+        void* sec, uint32_t disp, uint32_t flags, void* tmpl) {
+    char n8[4096];
+    if (!name) { mw_SetLastError(87); return (void*)-1; }
+    if (wcstombs(n8, name, sizeof(n8) - 1) == (size_t)-1) { mw_SetLastError(87); return (void*)-1; }
+    n8[sizeof(n8) - 1] = '\0';
+    MW_TRACE("CreateFileW(%s, acc=%08x, disp=%u)", n8, access, disp);
+    return w3_create_file(n8, access, disp);
+}
+__attribute__((ms_abi)) int mw_ReadFile(void* h, void* buf, uint32_t n, uint32_t* bread, void* overlapped) {
+    MW_TRACE("ReadFile(n=%u)", n);
+    int fd = w3fd_from_handle(h);
+    int real = fd;
+    if (real < 0) {
+        /* std handles: 4/8/0xC map to fd 0/1/2 */
+        uint64_t hv = (uint64_t)(uintptr_t)h;
+        if (hv == 4) real = 0; else if (hv == 8) real = 1; else if (hv == 0xC) real = 2;
+        else { mw_SetLastError(6); return 0; }
+    }
+    ssize_t r = read(real, buf, n);
+    if (r < 0) { mw_SetLastError(109); if (bread) *bread = 0; return 0; }
+    if (bread) *bread = (uint32_t)r;
+    return 1;
+}
+__attribute__((ms_abi)) int mw_WriteFile(void* h, const void* buf, uint32_t n, uint32_t* written, void* overlapped) {
+    MW_TRACE("WriteFile(n=%u)", n);
+    int fd = w3fd_from_handle(h);
+    int real = fd;
+    if (real < 0) {
+        uint64_t hv = (uint64_t)(uintptr_t)h;
+        if (hv == 4) real = 0; else if (hv == 8) real = 1; else if (hv == 0xC) real = 2;
+        else { mw_SetLastError(6); return 0; }
+    }
+    ssize_t r = write(real, buf, n);
+    if (r < 0) { mw_SetLastError(109); if (written) *written = 0; return 0; }
+    if (written) *written = (uint32_t)r;
+    return 1;
+}
+__attribute__((ms_abi)) uint32_t mw_SetFilePointer(void* h, int32_t dist, int32_t* high, uint32_t method) {
+    int fd = w3fd_from_handle(h);
+    if (fd < 0) { mw_SetLastError(6); return 0xFFFFFFFFu; }
+    int whence = method == 0 ? SEEK_SET : method == 1 ? SEEK_CUR : SEEK_END;
+    off_t r = lseek(fd, dist, whence);
+    if (r == (off_t)-1) { mw_SetLastError(87); return 0xFFFFFFFFu; }
+    if (high) *high = (int32_t)((uint64_t)r >> 32);
+    return (uint32_t)(uint64_t)r;
+}
+__attribute__((ms_abi)) int mw_SetFilePointerEx(void* h, int64_t dist, int64_t* newpos, uint32_t method) {
+    int fd = w3fd_from_handle(h);
+    if (fd < 0) { mw_SetLastError(6); return 0; }
+    int whence = method == 0 ? SEEK_SET : method == 1 ? SEEK_CUR : SEEK_END;
+    off_t r = lseek(fd, (off_t)dist, whence);
+    if (r == (off_t)-1) { mw_SetLastError(87); return 0; }
+    if (newpos) *newpos = (int64_t)r;
+    return 1;
+}
+__attribute__((ms_abi)) int mw_SetEndOfFile(void* h) {
+    int fd = w3fd_from_handle(h);
+    if (fd < 0) { mw_SetLastError(6); return 0; }
+    off_t p = lseek(fd, 0, SEEK_CUR);
+    return ftruncate(fd, p) == 0;
+}
+__attribute__((ms_abi)) uint32_t mw_GetFileSize(void* h, uint32_t* high) {
+    int fd = w3fd_from_handle(h);
+    if (fd < 0) { mw_SetLastError(6); return 0xFFFFFFFFu; }
+    struct stat st;
+    if (fstat(fd, &st) != 0) { mw_SetLastError(87); return 0xFFFFFFFFu; }
+    if (high) *high = (uint32_t)((uint64_t)st.st_size >> 32);
+    return (uint32_t)st.st_size;
+}
+__attribute__((ms_abi)) int mw_GetFileSizeEx(void* h, int64_t* size) {
+    int fd = w3fd_from_handle(h);
+    if (fd < 0 || !size) { mw_SetLastError(6); return 0; }
+    struct stat st;
+    if (fstat(fd, &st) != 0) { mw_SetLastError(87); return 0; }
+    *size = st.st_size;
+    return 1;
+}
+__attribute__((ms_abi)) uint32_t mw_GetFileType(void* h) {
+    int fd = w3fd_from_handle(h);
+    if (fd < 0) return 0; /* FILE_TYPE_UNKNOWN */
+    struct stat st;
+    if (fstat(fd, &st) != 0) return 0;
+    if (S_ISCHR(st.st_mode)) return 2;  /* FILE_TYPE_CHAR */
+    if (S_ISFIFO(st.st_mode)) return 3; /* FILE_TYPE_PIPE */
+    return 1;                            /* FILE_TYPE_DISK */
+}
+__attribute__((ms_abi)) int mw_FlushFileBuffers(void* h) {
+    int fd = w3fd_from_handle(h);
+    if (fd < 0) { mw_SetLastError(6); return 0; }
+    return fsync(fd) == 0;
+}
+__attribute__((ms_abi)) int mw_GetFileInformationByHandle(void* h, void* info) {
+    int fd = w3fd_from_handle(h);
+    if (fd < 0 || !info) { mw_SetLastError(6); return 0; }
+    struct stat st;
+    if (fstat(fd, &st) != 0) { mw_SetLastError(87); return 0; }
+    uint8_t* p = (uint8_t*)info;
+    *(uint32_t*)(p + 0)  = st.st_dev;        /* dwFileAttributes: leave 0x20 archive */
+    *(uint32_t*)(p + 0)  = 0x20;
+    *(uint32_t*)(p + 4)  = 0; *(uint32_t*)(p + 8) = 0;   /* creation time */
+    *(uint32_t*)(p + 12) = 0; *(uint32_t*)(p + 16) = 0;
+    *(uint32_t*)(p + 20) = 0; *(uint32_t*)(p + 24) = 0;
+    *(uint32_t*)(p + 28) = (uint32_t)st.st_dev;          /* volume serial */
+    *(uint32_t*)(p + 32) = (uint32_t)st.st_size;
+    *(uint32_t*)(p + 36) = (uint32_t)((uint64_t)st.st_size >> 32);
+    *(uint32_t*)(p + 40) = (uint32_t)st.st_nlink;
+    *(uint32_t*)(p + 44) = (uint32_t)((uint64_t)st.st_ino >> 32);
+    *(uint32_t*)(p + 48) = (uint32_t)st.st_ino;
+    return 1;
+}
+__attribute__((ms_abi)) int mw_GetFileInformationByHandleEx(void* h, int cls, void* info, uint32_t len) {
+    MW_TRACE("GetFileInformationByHandleEx(cls=%d)", cls);
+    return 0; /* FILE_INFO classes unsupported — honest */
+}
+__attribute__((ms_abi)) int mw_SetFileInformationByHandle(void* h, int cls, void* info, uint32_t len) {
+    return 0;
+}
+__attribute__((ms_abi)) uint32_t mw_GetFileAttributesW(const wchar_t* name) {
+    char n8[4096];
+    if (!name || wcstombs(n8, name, sizeof(n8) - 1) == (size_t)-1) { mw_SetLastError(87); return 0xFFFFFFFFu; }
+    n8[sizeof(n8) - 1] = '\0';
+    MW_TRACE("GetFileAttributesW(%s)", n8);
+    struct stat st;
+    if (stat(n8, &st) != 0) { mw_SetLastError(2); return 0xFFFFFFFFu; }
+    uint32_t a = 0x20; /* ARCHIVE */
+    if (S_ISDIR(st.st_mode)) a = 0x10; /* DIRECTORY */
+    if (name[0] && n8[0] == '.') a |= 0x2; /* HIDDEN (approximation) */
+    return a;
+}
+__attribute__((ms_abi)) uint32_t mw_GetFileAttributesExW(const wchar_t* name, int cls, void* info) {
+    if (cls != 0) return 0;
+    uint32_t a = mw_GetFileAttributesW(name);
+    if (a == 0xFFFFFFFFu) return 0;
+    if (info) *(uint32_t*)info = a;
+    return 1;
+}
+__attribute__((ms_abi)) int mw_SetFileAttributesW(const wchar_t* name, uint32_t attr) { return 1; }
+__attribute__((ms_abi)) int mw_DeleteFileW(const wchar_t* name) {
+    char n8[4096];
+    if (!name || wcstombs(n8, name, sizeof(n8) - 1) == (size_t)-1) { mw_SetLastError(87); return 0; }
+    n8[sizeof(n8) - 1] = '\0';
+    MW_TRACE("DeleteFileW(%s)", n8);
+    if (unlink(n8) != 0) { mw_SetLastError(errno == ENOENT ? 2 : 5); return 0; }
+    return 1;
+}
+__attribute__((ms_abi)) int mw_RemoveDirectoryW(const wchar_t* name) {
+    char n8[4096];
+    if (!name || wcstombs(n8, name, sizeof(n8) - 1) == (size_t)-1) { mw_SetLastError(87); return 0; }
+    n8[sizeof(n8) - 1] = '\0';
+    MW_TRACE("RemoveDirectoryW(%s)", n8);
+    if (rmdir(n8) != 0) { mw_SetLastError(2); return 0; }
+    return 1;
+}
+__attribute__((ms_abi)) int mw_CreateDirectoryW(const wchar_t* name, void* sa) {
+    char n8[4096];
+    if (!name || wcstombs(n8, name, sizeof(n8) - 1) == (size_t)-1) { mw_SetLastError(87); return 0; }
+    n8[sizeof(n8) - 1] = '\0';
+    MW_TRACE("CreateDirectoryW(%s)", n8);
+    if (mkdir(n8, 0755) != 0) { mw_SetLastError(errno == EEXIST ? 183 : 3); return 0; }
+    return 1;
+}
+__attribute__((ms_abi)) int mw_CreateDirectoryExW(const wchar_t* tmpl, const wchar_t* name, void* sa) {
+    return mw_CreateDirectoryW(name, sa);
+}
+__attribute__((ms_abi)) int mw_MoveFileExW(const wchar_t* from, const wchar_t* to, uint32_t flags) {
+    char f8[4096], t8[4096];
+    if (!from || !to || wcstombs(f8, from, sizeof(f8) - 1) == (size_t)-1
+        || wcstombs(t8, to, sizeof(t8) - 1) == (size_t)-1) { mw_SetLastError(87); return 0; }
+    f8[sizeof(f8)-1] = '\0'; t8[sizeof(t8)-1] = '\0';
+    MW_TRACE("MoveFileExW(%s -> %s)", f8, t8);
+    if (rename(f8, t8) != 0) { mw_SetLastError(2); return 0; }
+    return 1;
+}
+__attribute__((ms_abi)) int mw_ReplaceFileW(const wchar_t* dst, const wchar_t* src, const wchar_t* bak, uint32_t flags, void* e1, void* e2) {
+    if (!mw_MoveFileExW(src, dst, 1)) return 0;
+    return 1;
+}
+__attribute__((ms_abi)) void* mw_CreateFile2(const wchar_t* name, uint32_t access, uint32_t share, uint32_t disp, void* params) {
+    return mw_CreateFileW(name, access, share, NULL, disp, 0, NULL);
+}
+__attribute__((ms_abi)) int mw_CopyFile2(const wchar_t* from, const wchar_t* to, void* cancel) {
+    char f8[4096], t8[4096];
+    if (!from || !to || wcstombs(f8, from, sizeof(f8) - 1) == (size_t)-1
+        || wcstombs(t8, to, sizeof(t8) - 1) == (size_t)-1) { mw_SetLastError(87); return 0x80070057u; }
+    f8[sizeof(f8)-1] = '\0'; t8[sizeof(t8)-1] = '\0';
+    MW_TRACE("CopyFile2(%s -> %s)", f8, t8);
+    FILE* a = fopen(f8, "rb");
+    if (!a) return 0x80070002u;
+    FILE* b = fopen(t8, "wb");
+    if (!b) { fclose(a); return 0x80070005u; }
+    char buf[65536];
+    size_t n;
+    while ((n = fread(buf, 1, sizeof(buf), a)) > 0) fwrite(buf, 1, n, b);
+    fclose(a); fclose(b);
+    return 0; /* S_OK */
+}
+__attribute__((ms_abi)) int mw_CreateSymbolicLinkW(const wchar_t* link, const wchar_t* target, uint32_t flags) {
+    char l8[4096], t8[4096];
+    if (!link || !target || wcstombs(l8, link, sizeof(l8)-1) == (size_t)-1
+        || wcstombs(t8, target, sizeof(t8)-1) == (size_t)-1) return 0;
+    l8[sizeof(l8)-1] = '\0'; t8[sizeof(t8)-1] = '\0';
+    return symlink(t8, l8) == 0;
+}
+__attribute__((ms_abi)) int mw_CreateHardLinkW(const wchar_t* wlink, const wchar_t* wtarget, void* sa) {
+    char l8[4096], t8[4096];
+    if (!wlink || !wtarget || wcstombs(l8, wlink, sizeof(l8)-1) == (size_t)-1
+        || wcstombs(t8, wtarget, sizeof(t8)-1) == (size_t)-1) return 0;
+    l8[sizeof(l8)-1] = '\0'; t8[sizeof(t8)-1] = '\0';
+    MW_TRACE("CreateHardLinkW(%s)", l8);
+    return link(t8, l8) == 0;
+}
+
+/* ---- path helpers ---- */
+__attribute__((ms_abi)) uint32_t mw_GetFullPathNameW(const wchar_t* name, uint32_t cap, wchar_t* out, wchar_t** part) {
+    char n8[4096], f8[4096];
+    if (!name || wcstombs(n8, name, sizeof(n8)-1) == (size_t)-1) return 0;
+    n8[sizeof(n8)-1] = '\0';
+    if (n8[0] != '/') {
+        char cwd[2048];
+        if (getcwd(cwd, sizeof(cwd))) snprintf(f8, sizeof(f8), "%s/%s", cwd, n8);
+        else snprintf(f8, sizeof(f8), "%s", n8);
+    } else snprintf(f8, sizeof(f8), "%s", n8);
+    MW_TRACE("GetFullPathNameW(%s) -> %s", n8, f8);
+    if (!out || !cap) return (uint32_t)strlen(f8) + 1;
+    size_t n = utf8_to_utf16(f8, out, cap - 1);
+    out[n] = 0;
+    if (part) {
+        char* slash = strrchr(f8, '/');
+        if (slash) *part = out + (slash - f8 + 1);
+        else *part = out;
+    }
+    return (uint32_t)n;
+}
+__attribute__((ms_abi)) uint32_t mw_GetLongPathNameW(const wchar_t* in, wchar_t* out, uint32_t cap) {
+    uint32_t n = 0;
+    const wchar_t* p = in;
+    if (p) while (p[n]) n++;
+    if (out && cap > n) { memcpy(out, in, (n + 1) * 2); return n; }
+    return n;
+}
+__attribute__((ms_abi)) uint32_t mw_GetShortPathNameW(const wchar_t* in, wchar_t* out, uint32_t cap) {
+    return mw_GetLongPathNameW(in, out, cap);
+}
+__attribute__((ms_abi)) uint32_t mw_GetFinalPathNameByHandleW(void* h, wchar_t* out, uint32_t cap, uint32_t flags) {
+    int fd = w3fd_from_handle(h);
+    if (fd < 0) { mw_SetLastError(6); return 0; }
+    char path[4096];
+    char link[64];
+    snprintf(link, sizeof(link), "/proc/self/fd/%d", fd);
+    ssize_t n = readlink(link, path, sizeof(path) - 1);
+    if (n < 0) { mw_SetLastError(87); return 0; }
+    path[n] = '\0';
+    if (!out || !cap) return (uint32_t)n + 1;
+    size_t u = utf8_to_utf16(path, out, cap - 1);
+    out[u] = 0;
+    return (uint32_t)u;
+}
+
+/* ---- temp / drives / dirs ---- */
+__attribute__((ms_abi)) uint32_t mw_GetTempPathW(uint32_t cap, wchar_t* out) {
+    MW_TRACE("GetTempPathW()");
+    const char* t = getenv("TMPDIR");
+    if (!t || !t[0]) t = "/tmp";
+    char buf[4096];
+    snprintf(buf, sizeof(buf), "%s/", t);
+    if (!out || !cap) return (uint32_t)strlen(buf) + 1;
+    size_t n = utf8_to_utf16(buf, out, cap - 1);
+    out[n] = 0;
+    return (uint32_t)n;
+}
+__attribute__((ms_abi)) uint32_t mw_GetTempFileNameW(const wchar_t* path, const wchar_t* prefix, uint32_t uniq, wchar_t* out) {
+    char p8[2048], u8[64];
+    if (path) wcstombs(p8, path, sizeof(p8) - 1); else snprintf(p8, sizeof(p8), "%s", "/tmp");
+    if (prefix) wcstombs(u8, prefix, sizeof(u8) - 1); else u8[0] = '\0';
+    char full[4096];
+    snprintf(full, sizeof(full), "%s/%s%04x.tmp", p8, u8, (uint32_t)(time(NULL) & 0xffff) + uniq);
+    FILE* f = fopen(full, "wb");
+    if (f) fclose(f);
+    if (out) {
+        size_t n = utf8_to_utf16(full, out, 4095);
+        out[n] = 0;
+    }
+    return 1;
+}
+__attribute__((ms_abi)) int mw_GetDiskFreeSpaceExW(const wchar_t* dir, void* free_caller, void* total, void* free_total) {
+    char d8[2048];
+    if (dir) wcstombs(d8, dir, sizeof(d8) - 1); else snprintf(d8, sizeof(d8), "%s", ".");
+    struct statvfs v;
+    if (statvfs(d8, &v) != 0) { mw_SetLastError(3); return 0; }
+    uint64_t bs = (uint64_t)v.f_frsize;
+    if (free_caller) *(uint64_t*)free_caller = bs * v.f_bavail;
+    if (total)       *(uint64_t*)total = bs * v.f_blocks;
+    if (free_total)  *(uint64_t*)free_total = bs * v.f_bfree;
+    return 1;
+}
+__attribute__((ms_abi)) uint32_t mw_GetLogicalDrives(void) { return 1; /* C: only */ }
+__attribute__((ms_abi)) uint32_t mw_GetDriveTypeA(const char* root) { return 3; /* DRIVE_FIXED */ }
+__attribute__((ms_abi)) uint32_t mw_GetDriveTypeW(const wchar_t* root) { return 3; }
+__attribute__((ms_abi)) int mw_GetVolumeInformationW(const wchar_t* root, wchar_t* vol, uint32_t vcap, uint32_t* serial, uint32_t* maxlen, uint32_t* fsflags, wchar_t* fs, uint32_t fcap) {
+    if (vol && vcap) { size_t n = utf8_to_utf16("MiniWin", vol, vcap - 1); vol[n] = 0; }
+    if (serial) *serial = 0x4D57494E;
+    if (maxlen) *maxlen = 255;
+    if (fsflags) *fsflags = 0x00040000 | 0x00020000; /* supports ACLs? no: case-preserving|unicode */
+    if (fs && fcap) { size_t n = utf8_to_utf16("NTFS", fs, fcap - 1); fs[n] = 0; }
+    return 1;
+}
+__attribute__((ms_abi)) uint32_t mw_GetVolumePathNameW(const wchar_t* name, wchar_t* out, uint32_t cap) {
+    if (out && cap) { size_t n = utf8_to_utf16("C:\\", out, cap - 1); out[n] = 0; return n; }
+    return 0;
+}
+__attribute__((ms_abi)) int mw_SetCurrentDirectoryW(const wchar_t* dir) {
+    char d8[4096];
+    if (!dir || wcstombs(d8, dir, sizeof(d8) - 1) == (size_t)-1) return 0;
+    d8[sizeof(d8)-1] = '\0';
+    MW_TRACE("SetCurrentDirectoryW(%s)", d8);
+    if (chdir(d8) != 0) { mw_SetLastError(2); return 0; }
+    return 1;
+}
+__attribute__((ms_abi)) uint32_t mw_GetCurrentDirectoryW(uint32_t cap, wchar_t* out) {
+    char cwd[2048];
+    if (!getcwd(cwd, sizeof(cwd))) { mw_SetLastError(3); return 0; }
+    if (!out || !cap) return (uint32_t)strlen(cwd) + 1;
+    size_t n = utf8_to_utf16(cwd, out, cap - 1);
+    out[n] = 0;
+    return (uint32_t)n;
+}
+__attribute__((ms_abi)) uint32_t mw_GetSystemDirectoryA(char* out, uint32_t cap) {
+    MW_TRACE("GetSystemDirectoryA()");
+    if (!out || !cap) return 12;
+    snprintf(out, cap, "C:\\Windows\\System32");
+    return 18;
+}
+__attribute__((ms_abi)) uint32_t mw_GetSystemDirectoryW(wchar_t* out, uint32_t cap) {
+    if (!out || !cap) return 19;
+    size_t n = utf8_to_utf16("C:\\Windows\\System32", out, cap - 1);
+    out[n] = 0;
+    return (uint32_t)n;
+}
+__attribute__((ms_abi)) uint32_t mw_GetWindowsDirectoryW(wchar_t* out, uint32_t cap) {
+    if (!out || !cap) return 14;
+    size_t n = utf8_to_utf16("C:\\Windows", out, cap - 1);
+    out[n] = 0;
+    return (uint32_t)n;
+}
+
+/* ---- directory enumeration (FindFirstFileExW family) ---- */
+typedef struct { DIR* d; char pattern[4096]; int first; } W3Find;
+static W3Find g_finds[64];
+static int g_find_count = 0;
+__attribute__((ms_abi)) void* mw_FindFirstFileExW(const wchar_t* pattern, int level, void* data, int search_op, void* filter, uint32_t extra) {
+    char p8[4096];
+    if (!pattern || wcstombs(p8, pattern, sizeof(p8) - 1) == (size_t)-1) { mw_SetLastError(87); return (void*)-1; }
+    p8[sizeof(p8)-1] = '\0';
+    MW_TRACE("FindFirstFileExW(%s)", p8);
+    if (g_find_count >= 64) { mw_SetLastError(4); return (void*)-1; }
+    char dirpart[4096];
+    snprintf(dirpart, sizeof(dirpart), "%s", p8);
+    char* slash = strrchr(dirpart, '/');
+    const char* fname = "*";
+    if (slash) { *slash = '\0'; fname = slash + 1; if (!dirpart[0]) snprintf(dirpart, sizeof(dirpart), "%s", "/"); }
+    else { snprintf(dirpart, sizeof(dirpart), "%s", "."); fname = p8; }
+    DIR* d = opendir(dirpart);
+    if (!d) { mw_SetLastError(3); return (void*)-1; }
+    W3Find* f = &g_finds[g_find_count];
+    f->d = d;
+    f->first = 1;
+    snprintf(f->pattern, sizeof(f->pattern), "%s", fname);
+    return (void*)(uintptr_t)(4 + g_find_count++);
+}
+static void fill_find_data(void* data, const char* name, int is_dir, uint64_t size) {
+    /* WIN32_FIND_DATAW layout: dwFileAttributes(0), ftCreation(4..20),
+     * ftLastAccess(20..36), ftLastWrite(36..52), file size(52..60),
+     * reserved(60..68), cFileName wchars at 68 */
+    if (!data) return;
+    uint8_t* p = (uint8_t*)data;
+    *(uint32_t*)(p + 0) = is_dir ? 0x10 : 0x20;
+    memset(p + 4, 0, 64);
+    *(uint32_t*)(p + 52) = (uint32_t)size;
+    *(uint32_t*)(p + 56) = (uint32_t)(size >> 32);
+    size_t n = utf8_to_utf16(name, (wchar_t*)(p + 68), 259);
+    ((wchar_t*)(p + 68))[n] = 0;
+}
+__attribute__((ms_abi)) int mw_FindNextFileW(void* h, void* data) {
+    int idx = (int)(uintptr_t)h - 4;
+    if (idx < 0 || idx >= g_find_count) { mw_SetLastError(6); return 0; }
+    W3Find* f = &g_finds[idx];
+    struct dirent* de;
+    while ((de = readdir(f->d))) {
+        if (strcmp(f->pattern, "*") == 0 || strcmp(f->pattern, de->d_name) == 0) {
+            char full[8192];
+            DIR* d = f->d;
+            int dfd = dirfd(d);
+            struct stat st;
+            if (dfd >= 0) fstatat(dfd, de->d_name, &st, 0);
+            else stat(de->d_name, &st);
+            fill_find_data(data, de->d_name, S_ISDIR(st.st_mode), S_ISDIR(st.st_mode) ? 0 : st.st_size);
+            return 1;
+        }
+    }
+    mw_SetLastError(18); /* ERROR_NO_MORE_FILES */
+    return 0;
+}
+__attribute__((ms_abi)) int mw_FindClose(void* h) {
+    int idx = (int)(uintptr_t)h - 4;
+    if (idx < 0 || idx >= g_find_count) return 0;
+    if (g_finds[idx].d) closedir(g_finds[idx].d);
+    g_finds[idx].d = NULL;
+    return 1;
+}
+
+/* ---- console ---- */
+__attribute__((ms_abi)) uint32_t mw_GetConsoleCP(void) { return 65001; }
+__attribute__((ms_abi)) uint32_t mw_GetConsoleOutputCP(void) { return 65001; }
+__attribute__((ms_abi)) int mw_SetConsoleOutputCP(uint32_t cp) { return 1; }
+__attribute__((ms_abi)) int mw_SetConsoleCP(uint32_t cp) { return 1; }
+__attribute__((ms_abi)) int mw_SetConsoleMode(void* h, uint32_t mode) { return 1; }
+__attribute__((ms_abi)) int mw_WriteConsoleW(void* h, const void* buf, uint32_t n, uint32_t* written, void* res) {
+    char u8[8192];
+    size_t m = 0;
+    const wchar_t* w = (const wchar_t*)buf;
+    for (uint32_t i = 0; i < n && m < sizeof(u8) - 8; i++) {
+        uint32_t c = w[i];
+        if (c < 0x80) u8[m++] = (char)c;
+        else if (c < 0x800) { u8[m++] = 0xC0 | (c >> 6); u8[m++] = 0x80 | (c & 0x3F); }
+        else { u8[m++] = 0xE0 | (c >> 12); u8[m++] = 0x80 | ((c >> 6) & 0x3F); u8[m++] = 0x80 | (c & 0x3F); }
+    }
+    uint64_t hv = (uint64_t)(uintptr_t)h;
+    int fd = hv == 8 ? 1 : hv == 0xC ? 2 : 1;
+    ssize_t r = write(fd, u8, m);
+    if (written) *written = r >= 0 ? n : 0;
+    return r >= 0;
+}
+__attribute__((ms_abi)) void* mw_GetConsoleWindow(void) { return NULL; }
+__attribute__((ms_abi)) int mw_AllocConsole(void) { return 1; }
+__attribute__((ms_abi)) int mw_AttachConsole(uint32_t pid) { return 0; } /* no parent console */
+__attribute__((ms_abi)) int mw_SetConsoleCtrlHandler(void* fn, int add) { return 1; }
+__attribute__((ms_abi)) uint32_t mw_GetNumberOfConsoleInputEvents(void* h, uint32_t* n) {
+    if (n) *n = 0;
+    return 1;
+}
+__attribute__((ms_abi)) int mw_PeekConsoleInputA(void* h, void* buf, uint32_t n, uint32_t* read) {
+    if (read) *read = 0;
+    return 1;
+}
+__attribute__((ms_abi)) int mw_PeekConsoleInputW(void* h, void* buf, uint32_t n, uint32_t* read) {
+    if (read) *read = 0;
+    return 1;
+}
+__attribute__((ms_abi)) int mw_ReadConsoleW(void* h, void* buf, uint32_t n, uint32_t* read, void* ctl) {
+    return mw_ReadFile(h, buf, n * 2, read, NULL);
+}
+__attribute__((ms_abi)) int mw_ReadConsoleInputW(void* h, void* buf, uint32_t n, uint32_t* read) {
+    if (read) *read = 0;
+    return 1;
+}
+__attribute__((ms_abi)) int mw_ReadConsoleInputA(void* h, void* buf, uint32_t n, uint32_t* read) {
+    if (read) *read = 0;
+    return 1;
+}
+
+/* ---- registry: honest failure (no registry on host) ---- */
+#define MW_REG_FAIL (mw_SetLastError(2), 2) /* ERROR_FILE_NOT_FOUND */
+__attribute__((ms_abi)) int32_t mw_RegOpenKeyExW(void* key, const wchar_t* sub, uint32_t opts, uint32_t access, void** result) {
+    MW_TRACE("RegOpenKeyExW() -> ERROR_FILE_NOT_FOUND");
+    mw_SetLastError(2);
+    return 2;
+}
+__attribute__((ms_abi)) int32_t mw_RegOpenKeyExA(void* key, const char* sub, uint32_t opts, uint32_t access, void** result) {
+    mw_SetLastError(2);
+    return 2;
+}
+__attribute__((ms_abi)) int32_t mw_RegQueryValueExW(void* key, const wchar_t* name, void* res, uint32_t* type, void* data, uint32_t* size) {
+    mw_SetLastError(2);
+    return 2;
+}
+__attribute__((ms_abi)) int32_t mw_RegQueryValueExA(void* key, const char* name, void* res, uint32_t* type, void* data, uint32_t* size) {
+    mw_SetLastError(2);
+    return 2;
+}
+__attribute__((ms_abi)) int32_t mw_RegGetValueW(void* key, const wchar_t* sub, const wchar_t* name, uint32_t flags, uint32_t* type, void* data, uint32_t* size) {
+    mw_SetLastError(2);
+    return 2;
+}
+__attribute__((ms_abi)) int32_t mw_RegCloseKey(void* key) { return 0; }
+__attribute__((ms_abi)) int32_t mw_RegCreateKeyExW(void* key, const wchar_t* sub, uint32_t res, const wchar_t* cls, uint32_t opts, uint32_t access, void* sa, void** result, void* disp) {
+    mw_SetLastError(5);
+    return 5;
+}
+__attribute__((ms_abi)) int32_t mw_RegDeleteValueW(void* key, const wchar_t* name) { mw_SetLastError(2); return 2; }
+__attribute__((ms_abi)) int32_t mw_RegEnumKeyA(void* key, uint32_t idx, char* name, uint32_t cap) { mw_SetLastError(259); return 259; }
+__attribute__((ms_abi)) int32_t mw_RegEnumKeyExW(void* key, uint32_t idx, wchar_t* name, uint32_t* ncap, void* res, wchar_t* cls, uint32_t* ccap, void* time) {
+    mw_SetLastError(259);
+    return 259;
+}
+__attribute__((ms_abi)) int32_t mw_RegEnumValueW(void* key, uint32_t idx, wchar_t* name, uint32_t* ncap, void* res, uint32_t* type, void* data, uint32_t* size) {
+    mw_SetLastError(259);
+    return 259;
+}
+__attribute__((ms_abi)) int32_t mw_RegQueryInfoKeyW(void* key, wchar_t* cls, uint32_t* ccap, void* res, uint32_t* subkeys, uint32_t* maxsub, uint32_t* maxcls, uint32_t* values, uint32_t* maxval, uint32_t* maxdata, uint32_t* secdesc, void* time) {
+    mw_SetLastError(6);
+    return 6;
+}
+__attribute__((ms_abi)) int32_t mw_RegSetValueExW(void* key, const wchar_t* name, uint32_t res, uint32_t type, const void* data, uint32_t size) {
+    mw_SetLastError(5);
+    return 5;
+}
+__attribute__((ms_abi)) int32_t mw_RegLoadMUIStringW(void* key, const wchar_t* v, wchar_t* out, uint32_t cap, uint32_t* len, uint32_t flags, const wchar_t* dir) {
+    mw_SetLastError(2);
+    return 2;
+}
+__attribute__((ms_abi)) int32_t mw_RegNotifyChangeKeyValue(void* key, int watch, uint32_t filter, void* event, int async) {
+    mw_SetLastError(1);
+    return 1;
+}
+
+/* ---- BCrypt: real entropy for GenRandom, honest failure elsewhere ---- */
+__attribute__((ms_abi)) int32_t mw_BCryptOpenAlgorithmProvider(void** ph, const wchar_t* alg, const wchar_t* impl, uint32_t flags) {
+    MW_TRACE("BCryptOpenAlgorithmProvider()");
+    if (!ph) return 0xC000000Du; /* STATUS_INVALID_PARAMETER */
+    *ph = alloc_handle((void*)(uintptr_t)0xB0);
+    return 0;
+}
+__attribute__((ms_abi)) int32_t mw_BCryptCloseAlgorithmProvider(void* h, uint32_t flags) { return 0; }
+__attribute__((ms_abi)) int32_t mw_BCryptGenRandom(void* h, uint8_t* buf, uint32_t n, uint32_t flags) {
+    if (!buf && n) return 0xC000000Du;
+    int fd = open("/dev/urandom", O_RDONLY);
+    if (fd < 0) return 0xC0000009u;
+    ssize_t got = 0;
+    while (got < (ssize_t)n) {
+        ssize_t r = read(fd, buf + got, n - got);
+        if (r <= 0) break;
+        got += r;
+    }
+    close(fd);
+    return got == (ssize_t)n ? 0 : 0xC0000009u; /* STATUS_INVALID_PARAMETER_2 */
+}
+__attribute__((ms_abi)) int32_t mw_BCryptGetProperty(void* h, const wchar_t* prop, uint8_t* out, uint32_t len, uint32_t* res, uint32_t flags) {
+    mw_SetLastError(0xC0000001u);
+    if (res) *res = 0;
+    return 0xC0000001u; /* STATUS_UNSUCCESSFUL — honest (no crypto backend) */
+}
+__attribute__((ms_abi)) int32_t mw_BCryptSetProperty(void* h, const wchar_t* prop, const void* val, uint32_t len, uint32_t flags) {
+    return 0xC0000001u;
+}
+__attribute__((ms_abi)) int32_t mw_BCryptCreateHash(void* h, void** hh, uint8_t* obj, uint32_t objlen, void* secret, uint32_t seclen, uint32_t flags) {
+    return 0xC0000001u;
+}
+__attribute__((ms_abi)) int32_t mw_BCryptHashData(void* h, const uint8_t* in, uint32_t len, uint32_t flags) { return 0xC0000001u; }
+__attribute__((ms_abi)) int32_t mw_BCryptFinishHash(void* h, uint8_t* out, uint32_t len, uint32_t flags) { return 0xC0000001u; }
+__attribute__((ms_abi)) int32_t mw_BCryptDestroyHash(void* h) { return 0; }
+__attribute__((ms_abi)) int32_t mw_BCryptGenerateSymmetricKey(void* h, void** key, uint8_t* obj, uint32_t objlen, const void* secret, uint32_t seclen, uint32_t flags) { return 0xC0000001u; }
+__attribute__((ms_abi)) int32_t mw_BCryptDestroyKey(void* key) { return 0; }
+__attribute__((ms_abi)) int32_t mw_BCryptEncrypt(void* h, const uint8_t* in, uint32_t ilen, void* pad, const uint8_t* iv, uint32_t ivlen, uint8_t* out, uint32_t olen, uint32_t* res, uint32_t flags) { return 0xC0000001u; }
+__attribute__((ms_abi)) int32_t mw_BCryptDeriveKeyPBKDF2(void* h, const uint8_t* pw, uint32_t pwlen, const uint8_t* salt, uint32_t saltlen, uint64_t iters, uint8_t* out, uint32_t olen, uint32_t flags) {
+    return 0xC0000001u;
+}
+__attribute__((ms_abi)) int32_t mw_CryptAcquireContextA(void** ph, const char* container, const char* prov, uint32_t type, uint32_t flags) {
+    MW_TRACE("CryptAcquireContextA(flags=%u)", flags);
+    if (flags & 0x8 /* CRYPT_VERIFYCONTEXT */) { if (ph) *ph = alloc_handle((void*)(uintptr_t)0xC0); return 1; }
+    mw_SetLastError(2);
+    return 0;
+}
+__attribute__((ms_abi)) int32_t mw_CryptGenRandom(void* h, uint32_t len, uint8_t* buf) {
+    return mw_BCryptGenRandom(NULL, buf, len, 0) == 0 ? 1 : 0;
+}
+__attribute__((ms_abi)) int32_t mw_CryptReleaseContext(void* h, uint32_t flags) { return 1; }
+
+/* ---- VCOMP (OpenMP): single-team semantics (num_threads = 1) ---- */
+__attribute__((ms_abi)) int32_t mw_omp_get_max_threads(void) { return 1; }
+__attribute__((ms_abi)) int32_t mw_omp_get_thread_num(void) { return 0; }
+__attribute__((ms_abi)) int32_t mw_omp_get_num_threads(void) { return 1; }
+__attribute__((ms_abi)) void mw_omp_set_nested(int v) { }
+__attribute__((ms_abi)) void mw_omp_init_lock(void* l) { if (l) *(void**)l = NULL; }
+__attribute__((ms_abi)) void mw_omp_destroy_lock(void* l) { }
+__attribute__((ms_abi)) void mw_omp_set_lock(void* l) { }
+__attribute__((ms_abi)) void mw_omp_unset_lock(void* l) { }
+__attribute__((ms_abi)) void mw__vcomp_set_num_threads(uint32_t n) { }
+__attribute__((ms_abi)) void mw__vcomp_barrier(void) { }
+__attribute__((ms_abi)) void mw__vcomp_enter_critsect(void* p) { }
+__attribute__((ms_abi)) void mw__vcomp_leave_critsect(void* p) { }
+__attribute__((ms_abi)) void mw__vcomp_single_begin(void) { }
+__attribute__((ms_abi)) void mw__vcomp_single_end(void) { }
+__attribute__((ms_abi)) void mw__vcomp_reduction_r8(void) { }
+__attribute__((ms_abi)) void mw__vcomp_atomic_add_i4(void* p, int32_t v) { if (p) (void)__sync_fetch_and_add((volatile int32_t*)p, v); }
+__attribute__((ms_abi)) void mw__vcomp_atomic_add_i8(void* p, int64_t v) { if (p) (void)__sync_fetch_and_add((volatile int64_t*)p, v); }
+__attribute__((ms_abi)) void mw__vcomp_for_static_simple_init(int32_t lb, int32_t ub, int32_t st, int32_t chunk, int32_t* from, int32_t* to) {
+    if (from) *from = lb;
+    if (to)   *to = ub;
+}
+__attribute__((ms_abi)) void mw__vcomp_for_static_init_i8(int64_t lb, int64_t ub, int64_t st, int64_t chunk, int64_t* from, int64_t* to) {
+    if (from) *from = lb;
+    if (to)   *to = ub;
+}
+__attribute__((ms_abi)) int32_t mw__vcomp_for_next(int32_t* from, int32_t* to) { return 0; }
+__attribute__((ms_abi)) void mw__vcomp_for_static_end(void) { }
+__attribute__((ms_abi)) void mw__vcomp_for_dynamic_init(int32_t kind) { }
+__attribute__((ms_abi)) void mw__vcomp_for_dynamic_init_i8(int64_t kind) { }
+__attribute__((ms_abi)) int32_t mw__vcomp_for_dynamic_next(int32_t* from, int32_t* to) { return 0; }
+__attribute__((ms_abi)) int32_t mw__vcomp_for_dynamic_next_i8(int64_t* from, int64_t* to) { return 0; }
+
+/* _vcomp_fork: execute the loop body directly on this thread (team of 1).
+ * ABI (mingw-w64 libgcc): (void (*fn)(), size_t nargs, ...) — the callback
+ * receives the trailing args as its arguments. */
+__attribute__((ms_abi)) void mw__vcomp_fork(void* fn, size_t nargs,
+        uint64_t x1, uint64_t x2, uint64_t x3, uint64_t x4,
+        uint64_t x5, uint64_t x6, uint64_t x7, uint64_t x8) {
+    uint64_t a[8] = { x1, x2, x3, x4, x5, x6, x7, x8 };
+    MW_TRACE("_vcomp_fork(nargs=%lu) single-team", (unsigned long)nargs);
+    switch (nargs) {
+    case 0: ((void(*)(void))fn)(); break;
+    case 1: ((void(*)(uint64_t))fn)(a[0]); break;
+    case 2: ((void(*)(uint64_t,uint64_t))fn)(a[0], a[1]); break;
+    case 3: ((void(*)(uint64_t,uint64_t,uint64_t))fn)(a[0], a[1], a[2]); break;
+    case 4: ((void(*)(uint64_t,uint64_t,uint64_t,uint64_t))fn)(a[0], a[1], a[2], a[3]); break;
+    case 5: ((void(*)(uint64_t,uint64_t,uint64_t,uint64_t,uint64_t))fn)(a[0],a[1],a[2],a[3],a[4]); break;
+    case 6: ((void(*)(uint64_t,uint64_t,uint64_t,uint64_t,uint64_t,uint64_t))fn)(a[0],a[1],a[2],a[3],a[4],a[5]); break;
+    case 7: ((void(*)(uint64_t,uint64_t,uint64_t,uint64_t,uint64_t,uint64_t,uint64_t))fn)(a[0],a[1],a[2],a[3],a[4],a[5],a[6]); break;
+    default: ((void(*)(uint64_t,uint64_t,uint64_t,uint64_t,uint64_t,uint64_t,uint64_t,uint64_t))fn)(a[0],a[1],a[2],a[3],a[4],a[5],a[6],a[7]); break;
+    }
+}
+
+/* ---- misc process/debug/message ---- */
+__attribute__((ms_abi)) int mw_UnhandledExceptionFilter(void* ptr) {
+    MW_TRACE("UnhandledExceptionFilter()");
+    return 0; /* EXCEPTION_CONTINUE_SEARCH */
+}
+__attribute__((ms_abi)) int32_t mw_FormatMessageA(uint32_t flags, const void* src, uint32_t msgid, uint32_t lang, char* out, uint32_t cap, void* args) {
+    MW_TRACE("FormatMessageA(msgid=%u)", msgid);
+    return 0; /* no message found — honest */
+}
+__attribute__((ms_abi)) int32_t mw_FormatMessageW(uint32_t flags, const void* src, uint32_t msgid, uint32_t lang, wchar_t* out, uint32_t cap, void* args) {
+    MW_TRACE("FormatMessageW(msgid=%u)", msgid);
+    return 0;
+}
+__attribute__((ms_abi)) void mw_OutputDebugStringW(const wchar_t* s) {
+    char u8[1024];
+    if (s) { size_t n = wcstombs(u8, s, sizeof(u8) - 1); u8[n >= 0 ? n : 0] = '\0'; MW_TRACE("OutputDebugStringW(%s)", u8); }
+}
+__attribute__((ms_abi)) int mw_TerminateProcess(void* h, uint32_t code) {
+    MW_TRACE("TerminateProcess(%u)", code);
+    exit(code);
+}
+
+__attribute__((ms_abi)) int mw_ProcessIdToSessionId(uint32_t pid, uint32_t* sid) { if (sid) *sid = 0; return 1; }
+__attribute__((ms_abi)) int mw_GetUserNameW(wchar_t* out, uint32_t* cap) {
+    const char* u = getenv("USER");
+    if (!u) u = "user";
+    if (!out || !cap || *cap < 32) { if (cap) *cap = 32; return 0; }
+    size_t n = utf8_to_utf16(u, out, *cap - 1);
+    out[n] = 0;
+    *cap = (uint32_t)(n + 1);
+    return 1;
+}
+__attribute__((ms_abi)) int mw_GetComputerNameW(wchar_t* out, uint32_t* cap) {
+    char h[256] = "minwin-host";
+    if (gethostname(h, sizeof(h) - 1) != 0) snprintf(h, sizeof(h), "%s", "minwin-host");
+    if (!out || !cap || *cap < (uint32_t)strlen(h) + 1) { if (cap) *cap = (uint32_t)strlen(h) + 1; return 0; }
+    size_t n = utf8_to_utf16(h, out, *cap - 1);
+    out[n] = 0;
+    *cap = (uint32_t)(n + 1);
+    return 1;
+}
+__attribute__((ms_abi)) int mw_DeviceIoControl(void* h, uint32_t code, void* in, uint32_t ilen, void* out, uint32_t olen, uint32_t* ret, void* ov) {
+    mw_SetLastError(1);
+    return 0;
+}
+__attribute__((ms_abi)) uint32_t mw_SetErrorMode(uint32_t mode) { return 0; }
+__attribute__((ms_abi)) int mw_SetHandleInformation(void* h, uint32_t mask, uint32_t flags) { return 1; }
+__attribute__((ms_abi)) int mw_SetStdHandle(int32_t which, void* h) { return 1; }
+__attribute__((ms_abi)) int mw_PeekNamedPipe(void* h, void* buf, uint32_t n, uint32_t* read, uint32_t* avail, uint32_t* left) {
+    if (read) *read = 0;
+    if (avail) *avail = 0;
+    if (left) *left = 0;
+    return 0; /* not a pipe — honest */
+}
+__attribute__((ms_abi)) int mw_CreatePipe(void** rh, void** wh, void* sa, uint32_t size) {
+    mw_SetLastError(3);
+    return 0;
+}
+__attribute__((ms_abi)) int mw_CreateProcessW(const wchar_t* app, wchar_t* cmd, void* pa, void* ta, int inherit, uint32_t flags, void* env, const wchar_t* dir, void* si, void* pi) {
+    MW_TRACE("CreateProcessW() -> fail (no child process support)");
+    mw_SetLastError(2);
+    return 0;
+}
+__attribute__((ms_abi)) int mw_CreateProcessA(const char* app, char* cmd, void* pa, void* ta, int inherit, uint32_t flags, void* env, const char* dir, void* si, void* pi) {
+    mw_SetLastError(2);
+    return 0;
+}
+__attribute__((ms_abi)) int mw_GetExitCodeProcess(void* h, uint32_t* code) { if (code) *code = 0; return 1; }
+__attribute__((ms_abi)) int mw_WaitOnAddress_stub(void) { return 0; }
+
+
+/* ---- real .rsrc resource lookup (IMAGE_RESOURCE_DIRECTORY walk) ---- */
+/* FindResourceA/W return an HRSRC = pointer to the IMAGE_RESOURCE_DATA_ENTRY;
+ * LoadResource/LockResource resolve it to the data VA; SizeofResource reads
+ * its Size field. */
+static int w3_res_cmp_name(const uint8_t* dir_base, uint32_t name_off, const char* aname, const wchar_t* wname) {
+    if (name_off & 0x80000000u) {
+        /* string entry: WORD len, then UTF-16 */
+        const uint8_t* s = dir_base + (name_off & 0x7FFFFFFFu);
+        uint16_t len = *(const uint16_t*)s;
+        const wchar_t* ws = (const wchar_t*)(s + 2);
+        if (wname) {
+            for (uint16_t i = 0; i < len; i++) {
+                wchar_t c = ws[i];
+                wchar_t w = wname[i];
+                if (towlower(c) != towlower(w)) return 1;
+                if (!w) return 1;
+            }
+            return wname[len] ? 1 : 0;
+        }
+        if (!aname) return 1;
+        for (uint16_t i = 0; i < len; i++) {
+            wchar_t c = ws[i];
+            char a = aname[i];
+            if (towlower(c) != (wchar_t)towlower((unsigned char)a)) return 1;
+            if (!a) return 1;
+        }
+        return aname[len] ? 1 : 0;
+    }
+    /* ID entry */
+    uint32_t id = name_off;
+    long want = wname ? -1 : (aname ? atol(aname) : -1);
+    if (wname) {
+        wchar_t buf[16];
+        int n = utf8_to_utf16("", buf, 0); (void)n;
+        /* compare wname as decimal number */
+        if (!wname[0]) return 1;
+        long acc = 0;
+        for (int i = 0; wname[i]; i++) {
+            if (wname[i] < L'0' || wname[i] > L'9') return 1;
+            acc = acc * 10 + (wname[i] - L'0');
+            if (acc > 0x7FFFFFFFl) return 1;
+        }
+        return acc == id ? 0 : 1;
+    }
+    (void)want;
+    if (!aname) return 1;
+    /* numeric string or plain number */
+    if (aname[0] == '#') {
+        long acc = 0;
+        for (const char* p = aname + 1; *p; p++) {
+            if (*p < '0' || *p > '9') return 1;
+            acc = acc * 10 + (*p - '0');
+        }
+        return acc == id ? 0 : 1;
+    }
+    return -1 == -1 ? 1 : 1; /* name string can't equal an ID entry */
+}
+
+static void* w3_res_find(void* hmod, const char* aname, const wchar_t* wname, const char* atype, const wchar_t* wtype) {
+    if (!g_image_base) return NULL;
+    /* locate .rsrc via the resource data directory */
+    uint32_t rsrc_rva = 0;
+    {
+        uint8_t* pe = g_image_base;
+        uint32_t pe_off = *(uint32_t*)(pe + 0x3c);
+        uint16_t num_dd = *(uint16_t*)(pe + pe_off + 24 + 108);
+        if (num_dd < 3) return NULL;
+        uint32_t dd_rva = *(uint32_t*)(pe + pe_off + 24 + 112 + 2 * 8);
+        rsrc_rva = dd_rva;
+    }
+    if (!rsrc_rva) return NULL;
+    const uint8_t* base = g_image_base + rsrc_rva;
+    /* level 1: type, level 2: name, level 3: language */
+    const uint8_t* level = base;
+    for (int depth = 0; depth < 3; depth++) {
+        uint16_t named = *(const uint16_t*)(level + 8);
+        uint16_t ided = *(const uint16_t*)(level + 10);
+        uint16_t count = named + ided;
+        const uint8_t* entries = level + 16;
+        const uint8_t* next = NULL;
+        for (uint16_t i = 0; i < count; i++) {
+            uint32_t nm = *(const uint32_t*)(entries + i * 8);
+            uint32_t of = *(const uint32_t*)(entries + i * 8 + 4);
+            int match;
+            if (depth == 0) match = w3_res_cmp_name(base, nm, atype, wtype) == 0;
+            else match = w3_res_cmp_name(base, nm, aname, wname) == 0;
+            if (match) {
+                if (of & 0x80000000u) {
+                    next = base + (of & 0x7FFFFFFFu);
+                    break;
+                } else if (depth == 2) {
+                    return (void*)(base + of); /* IMAGE_RESOURCE_DATA_ENTRY */
+                }
+                next = base + of;
+                break;
+            }
+        }
+        if (!next) return NULL;
+        level = next;
+    }
+    return NULL;
+}
+__attribute__((ms_abi)) void* mw_FindResourceA(void* hmod, const char* name, const char* type) {
+    MW_TRACE("FindResourceA(type=%s, name=%s)", type ? type : "?", name ? name : "?");
+    void* r = w3_res_find(hmod, name, NULL, type, NULL);
+    if (!r) mw_SetLastError(1814); /* ERROR_RESOURCE_NAME_NOT_FOUND */
+    return r;
+}
+__attribute__((ms_abi)) void* mw_FindResourceW(void* hmod, const wchar_t* name, const wchar_t* type) {
+    void* r = w3_res_find(hmod, NULL, name, NULL, type);
+    if (!r) mw_SetLastError(1814);
+    return r;
+}
+__attribute__((ms_abi)) void* mw_FindResourceExW(void* hmod, const wchar_t* type, const wchar_t* name, uint16_t lang) {
+    (void)lang;
+    void* r = w3_res_find(hmod, NULL, name, NULL, type);
+    if (!r) mw_SetLastError(1814);
+    return r;
+}
+__attribute__((ms_abi)) void* mw_LoadResource(void* hmod, void* hrsrc) {
+    MW_TRACE("LoadResource(%p)", hrsrc);
+    return hrsrc; /* data entry VA doubles as the resource handle */
+}
+__attribute__((ms_abi)) void* mw_LockResource(void* hrsrc) {
+    return hrsrc;
+}
+__attribute__((ms_abi)) uint32_t mw_SizeofResource(void* hmod, void* hrsrc) {
+    if (!hrsrc) return 0;
+    return *(const uint32_t*)((const uint8_t*)hrsrc + 4); /* DATA_ENTRY.Size */
+}
+__attribute__((ms_abi)) int mw_FreeResource(void* hrsrc) { (void)hrsrc; return 1; }
+__attribute__((ms_abi)) int mw_EnumResourceNamesW(void* hmod, const wchar_t* type, void* cb, long param) {
+    (void)hmod; (void)type; (void)cb; (void)param;
+    return 0; /* enumeration unsupported — honest */
+}
+
+
+/* ============================================================
+ * ISS1-WAVE4 — CRT family (api-ms-win-crt-*) for the mingw-ucrt
+ * corpus (ffmpeg). Real semantics per CRT contract; honest
+ * failures where the host cannot provide the behavior.
+ * ============================================================ */
+
+/* exe-wide thread-local atexit callback (registered once, run at exit) */
+static void (*g_tle_atexit_cb)(void) = NULL;
+__attribute__((ms_abi)) uint32_t mw__register_thread_local_exe_atexit_callback(void* cb) {
+    MW_TRACE("_register_thread_local_exe_atexit_callback(%p)", cb);
+    g_tle_atexit_cb = (void (*)(void))cb;
+    return 0;
+}
+static void w3_run_tle_atexit(void) {
+    if (g_tle_atexit_cb) g_tle_atexit_cb();
+}
+/* hook into ExitProcess: wrap the existing implementation */
+__attribute__((ms_abi)) void mw__set_abort_behavior(uint32_t flags, uint32_t mask) {
+    MW_TRACE("_set_abort_behavior(flags=%u, mask=%u)", flags, mask);
+}
+__attribute__((ms_abi)) int mw__set_errno(int v) { errno = v; g_errno_storage = v; return 0; }
+__attribute__((ms_abi)) int mw__get_errno(int* out, int* dos) {
+    if (out) *out = errno;
+    if (dos) *dos = 0;
+    return 0;
+}
+/* _initterm_e: table of int(void) initializers, stop on nonzero */
+__attribute__((ms_abi)) int mw__initterm_e(void (**start)(void), void (**end)(void)) {
+    MW_TRACE("_initterm_e(%p..%p)", start, end);
+    for (; start < end; start++) {
+        if (!*start) continue;
+        int (__attribute__((ms_abi)) *fn)(void) = (int (__attribute__((ms_abi)) *)(void))*start;
+        int r = fn();
+        if (r != 0) return r;
+    }
+    return 0;
+}
+
+/* SEH filter helpers: guest exception code filtering (map to continue) */
+__attribute__((ms_abi)) int mw__seh_filter_exe(uint32_t xc, void* info) {
+    MW_TRACE("_seh_filter_exe(code=%x)", xc);
+    return 1; /* EXCEPTION_EXECUTE_HANDLER */
+}
+__attribute__((ms_abi)) int mw__seh_filter_dll(uint32_t xc, void* info) {
+    return 1;
+}
+__attribute__((ms_abi)) void mw__invalid_parameter_noinfo(void) { }
+__attribute__((ms_abi)) int mw___report_rangecheckfailure(void) {
+    MW_TRACE("__report_rangecheckfailure()");
+    return 0;
+}
+
+/* __intrinsic_setjmp: guest uses setjmp for SEH frame installation.
+ * Route through the loader's existing setjmp buffer machinery. */
+/* __intrinsic_setjmp: the guest's mingw jmp_buf is 16 qwords (128 bytes);
+ * a glibc jmp_buf is 200 bytes and SMASHED 72 bytes past it (live: ffmpeg
+ * "malloc(): invalid size (unsorted)" during CRT init). Correct semantics
+ * without touching the guest buffer: keep the HOST jmp_buf in a side table
+ * keyed by the guest buffer pointer. longjmp unwinds the SHARED C stack
+ * back to our setjmp frame, whose return lands back in the guest — the
+ * observable setjmp/longjmp behavior matches Windows. */
+typedef struct { void* guest_buf; jmp_buf host; int used; } W3Sjmp;
+static W3Sjmp g_sjmp[16];
+__attribute__((ms_abi)) int mw___intrinsic_setjmp(void* jb) {
+    MW_TRACE("__intrinsic_setjmp(%p)", jb);
+    int slot = -1;
+    for (int i = 0; i < 16; i++) {
+        if (g_sjmp[i].used && g_sjmp[i].guest_buf == jb) { slot = i; break; }
+        if (slot < 0 && !g_sjmp[i].used) slot = i;
+    }
+    if (slot < 0) slot = 0;
+    g_sjmp[slot].used = 1;
+    g_sjmp[slot].guest_buf = jb;
+    int r = _setjmp(g_sjmp[slot].host);
+    return r;
+}
+__attribute__((ms_abi)) void mw___intrinsic_longjmp(void* jb, int val) {
+    MW_TRACE("__intrinsic_longjmp(%p, %d)", jb, val);
+    for (int i = 0; i < 16; i++) {
+        if (g_sjmp[i].used && g_sjmp[i].guest_buf == jb) {
+            longjmp(g_sjmp[i].host, val ? val : 1);
+        }
+    }
+    fprintf(stderr, "[MiniWin] longjmp to unknown jmp_buf %p\n", jb);
+    _exit(4);
+}
+
+/* wide char classification bridge for _wassert etc. */
+__attribute__((ms_abi)) void mw__wassert(const wchar_t* msg, const wchar_t* file, unsigned line) {
+    char m8[512], f8[512];
+    if (msg) wcstombs(m8, msg, sizeof(m8) - 1), m8[sizeof(m8)-1] = 0; else m8[0] = 0;
+    if (file) wcstombs(f8, file, sizeof(f8) - 1), f8[sizeof(f8)-1] = 0; else f8[0] = 0;
+    fprintf(stderr, "Assertion failed: %s (%s:%u)\n", m8, f8, line);
+    abort();
+}
+__attribute__((ms_abi)) void mw__assert2(const char* msg, const char* file, unsigned line) {
+    fprintf(stderr, "Assertion failed: %s (%s:%u)\n", msg ? msg : "?", file ? file : "?", line);
+    abort();
+}
+
+/* errno-returning math */
+__attribute__((ms_abi)) double mw__hypot(double a, double b) { return sqrt(a * a + b * b); }
+__attribute__((ms_abi)) int mw__isnan(double x) { return x != x; }
+__attribute__((ms_abi)) int mw__finite(double x) { return x == x && x != 1.0 / 0.0 && x != -1.0 / 0.0; }
+__attribute__((ms_abi)) double mw__j1(double x) { (void)x; return 0; }
+__attribute__((ms_abi)) double mw__y1(double x) { (void)x; return 0; }
+__attribute__((ms_abi)) double mw__jn(int n, double x) { (void)n; (void)x; return 0; }
+__attribute__((ms_abi)) double mw__yn(int n, double x) { (void)n; (void)x; return 0; }
+
+/* time */
+__attribute__((ms_abi)) int mw__localtime64_s(void* tm, const int64_t* t64) {
+    if (!tm || !t64) { mw_SetLastError(87); return 22; }
+    time_t t = (time_t)*t64;
+    struct tm tmp;
+    if (!localtime_r(&t, &tmp)) return 1;
+    /* struct tm layout is identical (9 ints) */
+    memcpy(tm, &tmp, sizeof(struct tm));
+    return 0;
+}
+__attribute__((ms_abi)) int mw__gmtime64_s(void* tm, const int64_t* t64) {
+    if (!tm || !t64) { mw_SetLastError(87); return 22; }
+    time_t t = (time_t)*t64;
+    struct tm tmp;
+    if (!gmtime_r(&t, &tmp)) return 1;
+    memcpy(tm, &tmp, sizeof(struct tm));
+    return 0;
+}
+__attribute__((ms_abi)) int64_t mw__mktime64(void* tm) {
+    if (!tm) return -1;
+    struct tm tmp;
+    memcpy(&tmp, tm, sizeof(struct tm));
+    time_t t = mktime(&tmp);
+    memcpy(tm, &tmp, sizeof(struct tm));
+    return (int64_t)t;
+}
+__attribute__((ms_abi)) int32_t mw__time32(int32_t* out) {
+    int32_t t = (int32_t)time(NULL);
+    if (out) *out = t;
+    return t;
+}
+__attribute__((ms_abi)) char* mw__ctime64(const int64_t* t64) {
+    if (!t64) return NULL;
+    time_t t = (time_t)*t64;
+    return ctime(&t);
+}
+__attribute__((ms_abi)) double mw__difftime64(int64_t a, int64_t b) { return difftime((time_t)a, (time_t)b); }
+__attribute__((ms_abi)) void mw__ftime64(void* tb) {
+    if (!tb) return;
+    struct timeval tv;
+    gettimeofday(&tv, NULL);
+    /* struct _timeb64: __int64 time; __int16 millitm; int16 timezone; int16 dstflag */
+    uint8_t* p = (uint8_t*)tb;
+    *(int64_t*)(p + 0) = tv.tv_sec;
+    *(int16_t*)(p + 8) = tv.tv_usec / 1000;
+    *(int16_t*)(p + 10) = 0;
+    *(int16_t*)(p + 12) = 0;
+}
+
+/* file ops (narrow) */
+__attribute__((ms_abi)) int mw__access(const char* path, int mode) { return access(path, mode == 0 ? F_OK : (mode & 6)); }
+__attribute__((ms_abi)) int mw__waccess(const wchar_t* path, int mode) {
+    char p8[4096];
+    if (!path || wcstombs(p8, path, sizeof(p8) - 1) == (size_t)-1) return -1;
+    p8[sizeof(p8)-1] = 0;
+    return access(p8, mode == 0 ? F_OK : (mode & 6));
+}
+__attribute__((ms_abi)) int mw__chsize(int fd, long sz) { return ftruncate(fd, sz); }
+__attribute__((ms_abi)) int mw__chsize_s(int fd, int64_t sz) { return ftruncate(fd, (off_t)sz); }
+__attribute__((ms_abi)) int mw__commit(int fd) { return fsync(fd); }
+__attribute__((ms_abi)) int mw__configthreadlocale(int how) {
+    (void)how;
+    return 0; /* _ENABLE_PER_THREAD_LOCALE never set — single team */
+}
+__attribute__((ms_abi)) void* mw__create_locale(int cat, const char* loc) {
+    MW_TRACE("_create_locale(%d, %s)", cat, loc ? loc : "");
+    return (void*)(uintptr_t)0x1000; /* opaque handle; C locale only */
+}
+__attribute__((ms_abi)) void mw__free_locale(void* h) { }
+__attribute__((ms_abi)) int mw__dup2(int a, int b) { return dup2(a, b); }
+__attribute__((ms_abi)) int mw__getch(void) {
+    /* console read without echo: single byte from stdin */
+    unsigned char c = 0;
+    ssize_t r = read(0, &c, 1);
+    return r == 1 ? (int)c : -1;
+}
+__attribute__((ms_abi)) int mw__getpid(void) { return (int)getpid(); }
+__attribute__((ms_abi)) int mw__getdrive(void) { return 3; /* C: */ }
+__attribute__((ms_abi)) int mw__mkdir(const char* p) { return mkdir(p, 0755); }
+__attribute__((ms_abi)) int mw__wmkdir(const wchar_t* p) {
+    char p8[4096];
+    if (!p || wcstombs(p8, p, sizeof(p8) - 1) == (size_t)-1) return -1;
+    p8[sizeof(p8)-1] = 0;
+    return mkdir(p8, 0755);
+}
+__attribute__((ms_abi)) int mw__wchdir(const wchar_t* p) {
+    char p8[4096];
+    if (!p || wcstombs(p8, p, sizeof(p8) - 1) == (size_t)-1) return -1;
+    p8[sizeof(p8)-1] = 0;
+    return chdir(p8);
+}
+__attribute__((ms_abi)) int mw__wchmod(const wchar_t* p, int mode) {
+    char p8[4096];
+    if (!p || wcstombs(p8, p, sizeof(p8) - 1) == (size_t)-1) return -1;
+    p8[sizeof(p8)-1] = 0;
+    return chmod(p8, mode);
+}
+__attribute__((ms_abi)) int mw__wcreat(const wchar_t* p, int mode) {
+    char p8[4096];
+    if (!p || wcstombs(p8, p, sizeof(p8) - 1) == (size_t)-1) return -1;
+    p8[sizeof(p8)-1] = 0;
+    return open(p8, O_CREAT | O_TRUNC | O_RDWR, mode);
+}
+__attribute__((ms_abi)) wchar_t* mw__wcsdup(const wchar_t* s) {
+    if (!s) return NULL;
+    size_t n = (wcslen(s) + 1) * sizeof(wchar_t);
+    wchar_t* d = (wchar_t*)malloc(n);
+    if (d) memcpy(d, s, n);
+    return d;
+}
+__attribute__((ms_abi)) int mw__wcsicmp(const wchar_t* a, const wchar_t* b) {
+    return wstr_case_cmp(a, b, 1);
+}
+__attribute__((ms_abi)) int mw__wcsnicmp(const wchar_t* a, const wchar_t* b, size_t n) {
+    for (size_t i = 0; i < n; i++) {
+        wint_t ca = towlower(a ? a[i] : 0), cb = towlower(b ? b[i] : 0);
+        if (ca != cb) return ca < cb ? -1 : 1;
+        if (!ca) return 0;
+    }
+    return 0;
+}
+__attribute__((ms_abi)) int mw__strnicmp(const char* a, const char* b, size_t n) {
+    return strncasecmp(a, b, n);
+}
+__attribute__((ms_abi)) wchar_t* mw__wgetenv(const wchar_t* name) {
+    char n8[256];
+    if (!name || wcstombs(n8, name, sizeof(n8) - 1) == (size_t)-1) return NULL;
+    n8[sizeof(n8)-1] = 0;
+    const char* v = getenv(n8);
+    if (!v) return NULL;
+    static wchar_t wval[4096];
+    utf8_to_utf16(v, wval, sizeof(wval)/sizeof(wchar_t) - 1);
+    return wval;
+}
+__attribute__((ms_abi)) char* mw__fullpath(char* abs, const char* rel, size_t n) {
+    char buf[4096];
+    if (!rel) { mw_SetLastError(87); return NULL; }
+    if (rel[0] != '/') {
+        char cwd[2048];
+        if (!getcwd(cwd, sizeof(cwd))) return NULL;
+        snprintf(buf, sizeof(buf), "%s/%s", cwd, rel);
+    } else snprintf(buf, sizeof(buf), "%s", rel);
+    if (!abs) {
+        abs = (char*)malloc(strlen(buf) + 1);
+        if (!abs) return NULL;
+    } else if (strlen(buf) + 1 > n) {
+        mw_SetLastError(34); return NULL;
+    }
+    strcpy(abs, buf);
+    return abs;
+}
+__attribute__((ms_abi)) wchar_t* mw__wfullpath(wchar_t* abs, const wchar_t* rel, size_t n) {
+    char r8[4096], buf[4096];
+    if (!rel || wcstombs(r8, rel, sizeof(r8) - 1) == (size_t)-1) return NULL;
+    r8[sizeof(r8)-1] = 0;
+    if (r8[0] != '/') {
+        char cwd[2048];
+        if (!getcwd(cwd, sizeof(cwd))) return NULL;
+        snprintf(buf, sizeof(buf), "%s/%s", cwd, r8);
+    } else snprintf(buf, sizeof(buf), "%s", r8);
+    if (!abs) {
+        size_t w = utf8_to_utf16(buf, NULL, 0);
+        abs = (wchar_t*)malloc((w + 1) * sizeof(wchar_t));
+        if (!abs) return NULL;
+    } else if (utf8_to_utf16(buf, NULL, 0) + 1 > n) {
+        mw_SetLastError(34); return NULL;
+    }
+    size_t got = utf8_to_utf16(buf, abs, n ? n - 1 : 0);
+    abs[got] = 0;
+    return abs;
+}
+__attribute__((ms_abi)) wchar_t* mw__wgetcwd(wchar_t* buf, int n) {
+    char cwd[2048];
+    if (!buf || !n || !getcwd(cwd, sizeof(cwd))) return NULL;
+    size_t got = utf8_to_utf16(cwd, buf, (size_t)n - 1);
+    buf[got] = 0;
+    return buf;
+}
+__attribute__((ms_abi)) int mw__wremove(const wchar_t* p) {
+    char p8[4096];
+    if (!p || wcstombs(p8, p, sizeof(p8) - 1) == (size_t)-1) return -1;
+    p8[sizeof(p8)-1] = 0;
+    return remove(p8);
+}
+__attribute__((ms_abi)) int mw__wrename(const wchar_t* a, const wchar_t* b) {
+    char a8[4096], b8[4096];
+    if (!a || !b || wcstombs(a8, a, sizeof(a8) - 1) == (size_t)-1
+        || wcstombs(b8, b, sizeof(b8) - 1) == (size_t)-1) return -1;
+    a8[sizeof(a8)-1] = 0; b8[sizeof(b8)-1] = 0;
+    return rename(a8, b8);
+}
+__attribute__((ms_abi)) int mw__wrmdir(const wchar_t* p) {
+    char p8[4096];
+    if (!p || wcstombs(p8, p, sizeof(p8) - 1) == (size_t)-1) return -1;
+    p8[sizeof(p8)-1] = 0;
+    return rmdir(p8);
+}
+__attribute__((ms_abi)) int mw__wutime64(const wchar_t* p, void* t) {
+    char p8[4096];
+    if (!p || wcstombs(p8, p, sizeof(p8) - 1) == (size_t)-1) return -1;
+    p8[sizeof(p8)-1] = 0;
+    struct timespec ts[2];
+    memset(ts, 0, sizeof(ts));
+    if (t) {
+        int64_t secs = *(int64_t*)t; /* __utimbuf64: time_t time, time_t modtime */
+        ts[0].tv_sec = (time_t)secs;
+        ts[1].tv_sec = (time_t)*((int64_t*)t + 1);
+    }
+    return utimensat(AT_FDCWD, p8, ts, 0);
+}
+__attribute__((ms_abi)) int mw__utime64(const char* p, void* t) {
+    struct timespec ts[2];
+    memset(ts, 0, sizeof(ts));
+    if (t) {
+        ts[0].tv_sec = (time_t)*(int64_t*)t;
+        ts[1].tv_sec = (time_t)*((int64_t*)t + 1);
+    }
+    return utimensat(AT_FDCWD, p, ts, 0);
+}
+/* FILE* bridges for wide fs (registry-backed streams) */
+__attribute__((ms_abi)) void* mw__wfopen(const wchar_t* path, const wchar_t* mode) {
+    char p8[4096], m8[32];
+    if (!path || !mode) return NULL;
+    if (wcstombs(p8, path, sizeof(p8) - 1) == (size_t)-1) return NULL;
+    if (wcstombs(m8, mode, sizeof(m8) - 1) == (size_t)-1) return NULL;
+    p8[sizeof(p8)-1] = 0; m8[sizeof(m8)-1] = 0;
+    MW_TRACE("_wfopen(%s, %s)", p8, m8);
+    FILE* f = fopen(p8, m8);
+    return f;
+}
+__attribute__((ms_abi)) void* mw__fdopen(int fd, const char* mode) {
+    MW_TRACE("_fdopen(%d, %s)", fd, mode ? mode : "");
+    if (!mode) return NULL;
+    return fdopen(fd, mode);
+}
+__attribute__((ms_abi)) void* mw__fsopen(const char* path, const char* mode, int sh) {
+    return path && mode ? fopen(path, mode) : NULL;
+}
+__attribute__((ms_abi)) int mw__fseeki64(void* f, int64_t off, int whence) {
+    return f ? fseek((FILE*)f, (long)off, whence) : -1;
+}
+__attribute__((ms_abi)) int64_t mw__ftelli64(void* f) {
+    return f ? (int64_t)ftell((FILE*)f) : -1;
+}
+__attribute__((ms_abi)) int mw__lock_file(void* f) {
+    (void)f;
+    return 0; /* single team: lock uncontended */
+}
+__attribute__((ms_abi)) void mw__unlock_file(void* f) { (void)f; }
+__attribute__((ms_abi)) int mw__fflush_nolock(void* f) { return f ? fflush((FILE*)f) : 0; }
+__attribute__((ms_abi)) int mw__fstat64i32(int fd, void* st) {
+    if (!st) return -1;
+    struct stat s;
+    if (fstat(fd, &s) != 0) return -1;
+    /* struct _stat64i32: st_dev(4), st_ino(4), st_mode(4), st_nlink(4),
+     * st_uid(4), st_gid(4), st_rdev(4), pad(4), st_size(8), times(4*4×...) */
+    uint8_t* p = (uint8_t*)st;
+    memset(p, 0, 64);
+    *(uint32_t*)(p + 0)  = (uint32_t)s.st_dev;
+    *(uint32_t*)(p + 4)  = (uint32_t)s.st_ino;
+    *(uint32_t*)(p + 8)  = (uint32_t)s.st_mode;
+    *(uint32_t*)(p + 12) = (uint32_t)s.st_nlink;
+    *(uint32_t*)(p + 16) = (uint32_t)s.st_uid;
+    *(uint32_t*)(p + 20) = (uint32_t)s.st_gid;
+    *(uint32_t*)(p + 24) = (uint32_t)s.st_rdev;
+    *(uint32_t*)(p + 28) = 0;
+    *(int64_t*)(p + 32)  = (int64_t)s.st_size;
+    *(int32_t*)(p + 40)  = (int32_t)s.st_atime;
+    *(int32_t*)(p + 44)  = (int32_t)s.st_mtime;
+    *(int32_t*)(p + 48)  = (int32_t)s.st_ctime;
+    return 0;
+}
+__attribute__((ms_abi)) int mw__stat64i32(const char* path, void* st) {
+    if (!path || !st) return -1;
+    struct stat s;
+    if (stat(path, &s) != 0) return -1;
+    int fd = open(path, O_RDONLY);
+    int r = mw__fstat64i32(fd, st);
+    if (fd >= 0) close(fd);
+    return r;
+}
+__attribute__((ms_abi)) int mw__wstat64i32(const wchar_t* path, void* st) {
+    char p8[4096];
+    if (!path || wcstombs(p8, path, sizeof(p8) - 1) == (size_t)-1) return -1;
+    p8[sizeof(p8)-1] = 0;
+    return mw__stat64i32(p8, st);
+}
+__attribute__((ms_abi)) int mw__open_osfhandle(int64_t handle, int flags) {
+    /* Win32 handle -> CRT fd: handles 4/8/0xC are stdin/stdout/stderr */
+    uint64_t hv = (uint64_t)handle;
+    if (hv == 4) return 0;
+    if (hv == 8) return 1;
+    if (hv == 0xC) return 2;
+    int fd = w3fd_from_handle((void*)(uintptr_t)handle);
+    return fd; /* already a POSIX fd in our model */
+}
+__attribute__((ms_abi)) int mw__pipe(int64_t* handles, unsigned size, int mode) {
+    int fds[2];
+    if (pipe(fds) != 0) return -1;
+    if (handles) { handles[0] = fds[0]; handles[1] = fds[1]; }
+    return 0;
+}
+__attribute__((ms_abi)) int mw__lseek(int fd, long off, int whence) { return (int)lseek(fd, off, whence); }
+__attribute__((ms_abi)) int mw__locking(int fd, int mode, long nbytes) {
+    (void)fd; (void)mode; (void)nbytes;
+    return 0; /* uncontended */
+}
+static void* w3_create_file(const char* name8, uint32_t access, uint32_t disp);
+__attribute__((ms_abi)) int mw__findfirst64i32(const char* spec, void* data) {
+    /* narrow findfirst: reuse the W walker with an 8-bit pattern */
+    wchar_t wspec[4096];
+    if (!spec) return -1;
+    size_t n = utf8_to_utf16(spec, wspec, 4095);
+    wspec[n] = 0;
+    void* h = mw_FindFirstFileExW(wspec, 0, data, 0, NULL, 0);
+    return h == (void*)-1 ? -1 : (int)(intptr_t)h;
+}
+__attribute__((ms_abi)) int mw__findnext64i32(int h, void* data) {
+    return mw_FindNextFileW((void*)(uintptr_t)h, data);
+}
+__attribute__((ms_abi)) int mw__findclose(int h) {
+    return mw_FindClose((void*)(uintptr_t)h);
+}
+__attribute__((ms_abi)) char* mw__mbsrchr(const char* s, int c) {
+    return s ? strrchr(s, c) : NULL;
+}
+__attribute__((ms_abi)) char* mw__ui64toa_s(uint64_t v, char* buf, size_t sz, int radix) {
+    if (!buf || sz < 2) return NULL;
+    snprintf(buf, sz, "%llu", (unsigned long long)v);
+    return buf;
+}
+__attribute__((ms_abi)) int mw__wspawnv(int mode, const wchar_t* path, const wchar_t* const* argv) {
+    (void)mode; (void)path; (void)argv;
+    mw_SetLastError(2);
+    return -1; /* no child processes */
+}
+__attribute__((ms_abi)) int mw__wspawnve(int mode, const wchar_t* path, const wchar_t* const* argv, const wchar_t* const* env) {
+    (void)mode; (void)path; (void)argv; (void)env;
+    mw_SetLastError(2);
+    return -1;
+}
+__attribute__((ms_abi)) int mw__sopen_s(int* fd, const char* p, int oflags, int sh, int pmode) {
+    if (!fd) return 22;
+    *fd = open(p, oflags | O_CREAT | O_TRUNC | O_RDWR, pmode);
+    return *fd < 0 ? errno : 0;
+}
+__attribute__((ms_abi)) int mw__wsopen(int* fd, const wchar_t* p, int oflags, int sh, int pmode) {
+    char p8[4096];
+    if (!p || wcstombs(p8, p, sizeof(p8) - 1) == (size_t)-1) return 22;
+    p8[sizeof(p8)-1] = 0;
+    return mw__sopen_s(fd, p8, oflags, sh, pmode);
+}
+__attribute__((ms_abi)) int mw__wsopen_s(int* fd, const wchar_t* p, int oflags, int sh, int pmode) {
+    return mw__wsopen(fd, p, oflags, sh, pmode);
+}
+
+/* rand_s: real entropy via BCryptGenRandom path (UCRT contract: returns 0
+ * on success, fills the value; non-secure rand fallback is NOT honest) */
+__attribute__((ms_abi)) int mw_rand_s(unsigned int* v) {
+    if (!v) return 22; /* EINVAL-ish */
+    int fd = open("/dev/urandom", O_RDONLY);
+    if (fd < 0) return 1;
+    ssize_t got = read(fd, v, sizeof(unsigned int));
+    close(fd);
+    return got == sizeof(unsigned int) ? 0 : 1;
+}
+/* Wave-4b: conversion/charclass CRT bridges (glibc-backed, real semantics) */
+__attribute__((ms_abi)) size_t mw_wcrtomb(char* dst, wchar_t wc, void* ps) {
+    return wcrtomb(dst, wc, (mbstate_t*)ps);
+}
+__attribute__((ms_abi)) size_t mw_mbrtowc(wchar_t* dst, const char* src, size_t n, void* ps) {
+    return mbrtowc(dst, src, n, (mbstate_t*)ps);
+}
+__attribute__((ms_abi)) size_t mw_mbsrtowcs(wchar_t* dst, const char** src, size_t len, void* ps) {
+    return mbsrtowcs(dst, src, len, (mbstate_t*)ps);
+}
+__attribute__((ms_abi)) size_t mw_wcsrtombs(char* dst, const wchar_t** src, size_t len, void* ps) {
+    return wcsrtombs(dst, src, len, (mbstate_t*)ps);
+}
+/* Wave-4b bridges: implementations */
+__attribute__((ms_abi)) int mw__iswctype_bridge(wint_t c, wctype_t t) { return iswctype(c, t); }
+__attribute__((ms_abi)) wint_t mw__towlower_bridge(wint_t c) { return towlower(c); }
+__attribute__((ms_abi)) wint_t mw__towupper_bridge(wint_t c) { return towupper(c); }
+__attribute__((ms_abi)) long long mw__strtoll_bridge(const char* s, char** end, int base) { return strtoll(s, end, base); }
+__attribute__((ms_abi)) int mw_mbstowcs_s(size_t* ret, wchar_t* dst, size_t cap, const char* src, size_t count) {
+    if (!dst || !src) { if (ret) *ret = 0; return 22; }
+    size_t need = mbstowcs(NULL, src, 0) + 1;
+    if (count != (size_t)-1 && need > count + 1) { if (ret) *ret = 0; return 34; }
+    if (cap < need) { if (ret) *ret = 0; return 34; }
+    size_t got = mbstowcs(dst, src, cap - 1);
+    if (got == (size_t)-1) { if (ret) *ret = 0; return 42; }
+    dst[got] = 0;
+    if (ret) *ret = got + 1;
+    return 0;
+}
+
+/* ISS1-WAVE4C: pure-CRT bridges (glibc-backed) */
+__attribute__((ms_abi)) double mw_acos(double a0) { return acos(a0); }
+__attribute__((ms_abi)) float mw_acosf(float a0) { return acosf(a0); }
+__attribute__((ms_abi)) double mw_acosh(double a0) { return acosh(a0); }
+__attribute__((ms_abi)) double mw_asin(double a0) { return asin(a0); }
+__attribute__((ms_abi)) float mw_asinf(float a0) { return asinf(a0); }
+__attribute__((ms_abi)) double mw_asinh(double a0) { return asinh(a0); }
+__attribute__((ms_abi)) float mw_asinhf(float a0) { return asinhf(a0); }
+__attribute__((ms_abi)) double mw_atan(double a0) { return atan(a0); }
+__attribute__((ms_abi)) float mw_atanf(float a0) { return atanf(a0); }
+__attribute__((ms_abi)) double mw_atanh(double a0) { return atanh(a0); }
+__attribute__((ms_abi)) float mw_atanhf(float a0) { return atanhf(a0); }
+__attribute__((ms_abi)) double mw_cbrt(double a0) { return cbrt(a0); }
+__attribute__((ms_abi)) float mw_cbrtf(float a0) { return cbrtf(a0); }
+__attribute__((ms_abi)) double mw_ceil(double a0) { return ceil(a0); }
+__attribute__((ms_abi)) float mw_ceilf(float a0) { return ceilf(a0); }
+__attribute__((ms_abi)) double mw_cos(double a0) { return cos(a0); }
+__attribute__((ms_abi)) float mw_cosf(float a0) { return cosf(a0); }
+__attribute__((ms_abi)) double mw_cosh(double a0) { return cosh(a0); }
+__attribute__((ms_abi)) double mw_exp(double a0) { return exp(a0); }
+__attribute__((ms_abi)) double mw_exp2(double a0) { return exp2(a0); }
+__attribute__((ms_abi)) float mw_exp2f(float a0) { return exp2f(a0); }
+__attribute__((ms_abi)) float mw_expf(float a0) { return expf(a0); }
+__attribute__((ms_abi)) double mw_expm1(double a0) { return expm1(a0); }
+__attribute__((ms_abi)) double mw_fabs(double a0) { return fabs(a0); }
+__attribute__((ms_abi)) double mw_floor(double a0) { return floor(a0); }
+__attribute__((ms_abi)) float mw_floorf(float a0) { return floorf(a0); }
+__attribute__((ms_abi)) double mw_log(double a0) { return log(a0); }
+__attribute__((ms_abi)) double mw_log10(double a0) { return log10(a0); }
+__attribute__((ms_abi)) float mw_log10f(float a0) { return log10f(a0); }
+__attribute__((ms_abi)) double mw_log1p(double a0) { return log1p(a0); }
+__attribute__((ms_abi)) float mw_log1pf(float a0) { return log1pf(a0); }
+__attribute__((ms_abi)) double mw_log2(double a0) { return log2(a0); }
+__attribute__((ms_abi)) float mw_log2f(float a0) { return log2f(a0); }
+__attribute__((ms_abi)) float mw_logf(float a0) { return logf(a0); }
+__attribute__((ms_abi)) double mw_sin(double a0) { return sin(a0); }
+__attribute__((ms_abi)) float mw_sinf(float a0) { return sinf(a0); }
+__attribute__((ms_abi)) double mw_sinh(double a0) { return sinh(a0); }
+__attribute__((ms_abi)) float mw_sinhf(float a0) { return sinhf(a0); }
+__attribute__((ms_abi)) double mw_sqrt(double a0) { return sqrt(a0); }
+__attribute__((ms_abi)) float mw_sqrtf(float a0) { return sqrtf(a0); }
+__attribute__((ms_abi)) double mw_tan(double a0) { return tan(a0); }
+__attribute__((ms_abi)) float mw_tanf(float a0) { return tanf(a0); }
+__attribute__((ms_abi)) double mw_tanh(double a0) { return tanh(a0); }
+__attribute__((ms_abi)) float mw_tanhf(float a0) { return tanhf(a0); }
+__attribute__((ms_abi)) double mw_trunc(double a0) { return trunc(a0); }
+__attribute__((ms_abi)) float mw_truncf(float a0) { return truncf(a0); }
+__attribute__((ms_abi)) float mw_roundf(float a0) { return roundf(a0); }
+__attribute__((ms_abi)) float mw_llrintf(float a0) { return llrintf(a0); }
+__attribute__((ms_abi)) float mw_lrintf(float a0) { return lrintf(a0); }
+__attribute__((ms_abi)) double mw_atan2(double a0, double a1) { return atan2(a0, a1); }
+__attribute__((ms_abi)) float mw_atan2f(float a0, float a1) { return atan2f(a0, a1); }
+__attribute__((ms_abi)) double mw_fmod(double a0, double a1) { return fmod(a0, a1); }
+__attribute__((ms_abi)) float mw_fmodf(float a0, float a1) { return fmodf(a0, a1); }
+__attribute__((ms_abi)) double mw_pow(double a0, double a1) { return pow(a0, a1); }
+__attribute__((ms_abi)) float mw_powf(float a0, float a1) { return powf(a0, a1); }
+__attribute__((ms_abi)) double mw_hypot(double a0, double a1) { return hypot(a0, a1); }
+__attribute__((ms_abi)) double mw_fmax(double a0, double a1) { return fmax(a0, a1); }
+__attribute__((ms_abi)) float mw_fmaxf(float a0, float a1) { return fmaxf(a0, a1); }
+__attribute__((ms_abi)) double mw_fmin(double a0, double a1) { return fmin(a0, a1); }
+__attribute__((ms_abi)) float mw_fminf(float a0, float a1) { return fminf(a0, a1); }
+__attribute__((ms_abi)) double mw_remainder(double a0, double a1) { return remainder(a0, a1); }
+__attribute__((ms_abi)) double mw_nextafter(double a0, double a1) { return nextafter(a0, a1); }
+__attribute__((ms_abi)) double mw_fma(double a0, double a1, double a2) { return fma(a0, a1, a2); }
+__attribute__((ms_abi)) float mw_fmaf(float a0, float a1, float a2) { return fmaf(a0, a1, a2); }
+__attribute__((ms_abi)) long long mw_llround(double a0) { return llround(a0); }
+__attribute__((ms_abi)) long long mw_llroundf(float a0) { return llroundf(a0); }
+__attribute__((ms_abi)) long mw_lround(double a0) { return lround(a0); }
+__attribute__((ms_abi)) long mw_lroundf(float a0) { return lroundf(a0); }
+__attribute__((ms_abi)) long mw_lrint(double a0) { return lrint(a0); }
+__attribute__((ms_abi)) long long mw_llrint(double a0) { return llrint(a0); }
+__attribute__((ms_abi)) double mw_modf(double a0, double* a1) { return modf(a0, a1); }
+__attribute__((ms_abi)) float mw_modff(float a0, float* a1) { return modff(a0, a1); }
+__attribute__((ms_abi)) double mw_frexp(double a0, int* a1) { return frexp(a0, a1); }
+
+__attribute__((ms_abi)) double mw_erf(double a0) { return erf(a0); }
+__attribute__((ms_abi)) float mw_erff(float a0) { return erff(a0); }
+__attribute__((ms_abi)) int mw_isalnum(int a0) { return isalnum(a0); }
+__attribute__((ms_abi)) int mw_isalpha(int a0) { return isalpha(a0); }
+__attribute__((ms_abi)) int mw_isblank(int a0) { return isblank(a0); }
+__attribute__((ms_abi)) int mw_iscntrl(int a0) { return iscntrl(a0); }
+__attribute__((ms_abi)) int mw_isdigit(int a0) { return isdigit(a0); }
+__attribute__((ms_abi)) int mw_isprint(int a0) { return isprint(a0); }
+__attribute__((ms_abi)) int mw_toupper(int a0) { return toupper(a0); }
+__attribute__((ms_abi)) int mw_strcoll(const char* a0, const char* a1) { return strcoll(a0, a1); }
+__attribute__((ms_abi)) wchar_t* mw_wcschr(wchar_t* a0, wchar_t a1) { return wcschr(a0, a1); }
+__attribute__((ms_abi)) wchar_t* mw_wcsrchr(wchar_t* a0, wchar_t a1) { return wcsrchr(a0, a1); }
+__attribute__((ms_abi)) int mw_wcsncmp(const wchar_t* a0, const wchar_t* a1, size_t a2) { return wcsncmp(a0, a1, a2); }
+__attribute__((ms_abi)) wchar_t* mw_wcsncpy(wchar_t* a0, const wchar_t* a1, size_t a2) { return wcsncpy(a0, a1, a2); }
+__attribute__((ms_abi)) wchar_t* mw_wcscat(wchar_t* a0, const wchar_t* a1) { return wcscat(a0, a1); }
+__attribute__((ms_abi)) wchar_t* mw_wcscpy(wchar_t* a0, const wchar_t* a1) { return wcscpy(a0, a1); }
+__attribute__((ms_abi)) wchar_t* mw_wcsstr(const wchar_t* a0, const wchar_t* a1) { return wcsstr(a0, a1); }
+__attribute__((ms_abi)) size_t mw_wcsspn(const wchar_t* a0, const wchar_t* a1) { return wcsspn(a0, a1); }
+__attribute__((ms_abi)) int mw_wcscoll(const wchar_t* a0, const wchar_t* a1) { return wcscoll(a0, a1); }
+__attribute__((ms_abi)) size_t mw_wcsxfrm(wchar_t* a0, const wchar_t* a1, size_t a2) { return wcsxfrm(a0, a1, a2); }
+__attribute__((ms_abi)) size_t mw_wcsftime(wchar_t* a0, size_t a1, const wchar_t* a2, const void* a3) { return wcsftime(a0, a1, a2, a3); }
+__attribute__((ms_abi)) size_t mw_wcsnlen(const wchar_t* a0, size_t a1) { return wcsnlen(a0, a1); }
+__attribute__((ms_abi)) void* mw_bsearch(const void* a0, const void* a1, size_t a2, size_t a3, int (*a4)(const void*, const void*)) { return bsearch(a0, a1, a2, a3, a4); }
+__attribute__((ms_abi)) int mw_raise(int a0) { return raise(a0); }
+__attribute__((ms_abi)) void mw_clearerr(void* a0) { return clearerr(a0); }
+__attribute__((ms_abi)) int mw_ferror(void* a0) { return ferror(a0); }
+__attribute__((ms_abi)) int mw_putc(int a0, void* a1) { return putc(a0, a1); }
+__attribute__((ms_abi)) int mw_putchar(int a0) { return putchar(a0); }
+__attribute__((ms_abi)) wint_t mw_fgetwc(void* a0) { return fgetwc(a0); }
+__attribute__((ms_abi)) wint_t mw_ungetwc(wint_t a0, void* a1) { return ungetwc(a0, a1); }
+__attribute__((ms_abi)) wint_t mw_putwc(wint_t a0, void* a1) { return putwc(a0, a1); }
+__attribute__((ms_abi)) void mw_perror(const char* a0) { return perror(a0); }
+__attribute__((ms_abi)) int mw_getchar(void) { return getchar(); }
+__attribute__((ms_abi)) void mw_setbuf(void* a0, char* a1) { return setbuf(a0, a1); }
+__attribute__((ms_abi)) double mw_atof(const char* a0) { return atof(a0); }
+__attribute__((ms_abi)) long mw_atol(const char* a0) { return atol(a0); }
+__attribute__((ms_abi)) double mw_strtod(const char* a0, char** a1) { return strtod(a0, a1); }
+__attribute__((ms_abi)) float mw_strtof(const char* a0, char** a1) { return strtof(a0, a1); }
+__attribute__((ms_abi)) unsigned long long mw_strtoull(const char* a0, char** a1, int a2) { return strtoull(a0, a1, a2); }
+#include <inttypes.h>
+__attribute__((ms_abi)) uintmax_t mw_strtoumax(const char* a0, char** a1, int a2) { return strtoumax(a0, a1, a2); }
+__attribute__((ms_abi)) size_t mw_mbstowcs(wchar_t* a0, const char* a1, size_t a2) { return mbstowcs(a0, a1, a2); }
+__attribute__((ms_abi)) size_t mw_mbrlen(const char* a0, size_t a1, void* a2) { return mbrlen(a0, a1, a2); }
+__attribute__((ms_abi)) int mw_wctomb(char* a0, wchar_t a1) { return wctomb(a0, a1); }
+__attribute__((ms_abi)) unsigned long mw_wctype(const char* a0) { return (unsigned long)wctype(a0); }
+
+__attribute__((ms_abi)) double mw_round_bridge(double a0) { return round(a0); }
+/* Wave-4D: remaining string family bridges */
+__attribute__((ms_abi)) char* mw_strcat(char* d, const char* s) { return strcat(d, s); }
+__attribute__((ms_abi)) char* mw_strncat(char* d, const char* s, size_t n) { return strncat(d, s, n); }
+__attribute__((ms_abi)) char* mw_strncpy(char* d, const char* s, size_t n) { return strncpy(d, s, n); }
+__attribute__((ms_abi)) int mw_strncpy_s(char* d, size_t dsz, const char* s, size_t n) {
+    if (!d || !dsz) return 22;
+    if (!s) { d[0] = 0; return 22; }
+    size_t len = strnlen(s, n);
+    if (len >= dsz) { d[0] = 0; return 34; }
+    memcpy(d, s, len);
+    d[len] = 0;
+    return 0;
+}
+__attribute__((ms_abi)) size_t mw_strnlen(const char* s, size_t n) { return strnlen(s, n); }
+__attribute__((ms_abi)) char* mw_strpbrk(const char* s, const char* set) { return strpbrk(s, set); }
+__attribute__((ms_abi)) size_t mw_strspn(const char* s, const char* set) { return strspn(s, set); }
+__attribute__((ms_abi)) char* mw_strtok(char* s, const char* sep) { return strtok(s, sep); }
+__attribute__((ms_abi)) char* mw_strtok_s(char* s, const char* sep, char** ctx) {
+    (void)ctx;
+    return strtok(s, sep);
+}
+__attribute__((ms_abi)) size_t mw_strxfrm(char* d, const char* s, size_t n) { return strxfrm(d, s, n); }
+__attribute__((ms_abi)) int mw_wcscmp(const wchar_t* a, const wchar_t* b) { return wcscmp(a, b); }
+__attribute__((ms_abi)) int mw_wcscat_s(wchar_t* d, size_t dsz, const wchar_t* s) {
+    if (!d || !dsz || !s) return 22;
+    size_t dl = wcslen(d);
+    if (dl + wcslen(s) + 1 > dsz) { d[0] = 0; return 34; }
+    wcscat(d, s);
+    return 0;
+}
+__attribute__((ms_abi)) int mw_wcscpy_s(wchar_t* d, size_t dsz, const wchar_t* s) {
+    if (!d || !dsz || !s) return 22;
+    if (wcslen(s) + 1 > dsz) { d[0] = 0; return 34; }
+    wcscpy(d, s);
+    return 0;
+}
+__attribute__((ms_abi)) int mw_wcsncpy_s(wchar_t* d, size_t dsz, const wchar_t* s, size_t n) {
+    if (!d || !dsz) return 22;
+    if (!s) { d[0] = 0; return 22; }
+    size_t len = wcsnlen(s, n);
+    if (len >= dsz) { d[0] = 0; return 34; }
+    wcsncpy(d, s, len);
+    d[len] = 0;
+    return 0;
+}
+__attribute__((ms_abi)) long long mw_wcstoll(const wchar_t* s, wchar_t** end, int base) {
+    return wcstoll(s, end, base);
+}
+__attribute__((ms_abi)) unsigned long long mw_wcstoull(const wchar_t* s, wchar_t** end, int base) {
+    return wcstoull(s, end, base);
+}
+__attribute__((ms_abi)) int mw_wcstombs_s(size_t* ret, char* dst, size_t dsz, const wchar_t* src, size_t count) {
+    if (!dst || !dsz || !src) { if (ret) *ret = 0; return 22; }
+    size_t need = wcstombs(NULL, src, 0) + 1;
+    if (count != (size_t)-1 && need > count + 1) { if (ret) *ret = 0; return 34; }
+    if (dsz < need) { if (ret) *ret = 0; return 34; }
+    size_t got = wcstombs(dst, src, dsz - 1);
+    if (got == (size_t)-1) { if (ret) *ret = 0; return 42; }
+    dst[got] = 0;
+    if (ret) *ret = got + 1;
+    return 0;
+}
+__attribute__((ms_abi)) int mw_strerror_s(char* buf, size_t n, int err) {
+    if (!buf || !n) return 22;
+    char* r = strerror(err);
+    snprintf(buf, n, "%s", r ? r : "unknown");
+    return 0;
+}
+/* ---- Wave-4E: WinSock 2 (real host sockets; unimplemented async = honest fail) ---- */
+#define MW_WSAENETDOWN 10050
+static int g_wsa_err = 0;
+static int g_wsa_started = 0;
+/* WSADATA x64 layout (winsock2.h): wVersion(2) wHighVersion(2)
+ * iMaxSockets(2) iMaxUdpDg(2) pad(4) lpVendorInfo(8) szDescription[257]
+ * szSystemStatus[129] = 408 bytes total. Writing a wrong-order/larger
+ * struct smashed the caller's stack (live: ffmpeg __stack_chk_fail). */
+typedef struct { uint16_t version; uint16_t highver; uint16_t maxsocks; uint16_t maxudp; void* vendor; char desc[257]; char sys[129]; } WSADataT;
+__attribute__((ms_abi)) int mw_WSAStartup(uint16_t want, void* data) {
+    MW_TRACE("WSAStartup(%x)", want);
+    if (!data) return MW_WSAENETDOWN;
+    g_wsa_started = 1;
+    WSADataT* d = (WSADataT*)data;
+    memset(d, 0, sizeof(WSADataT));   /* exactly 408 bytes */
+    d->version = 0x0202;
+    d->highver = 0x0202;
+    d->maxsocks = 64;
+    d->maxudp = 64;
+    snprintf(d->desc, sizeof(d->desc), "MiniWin WinSock 2.2");
+    snprintf(d->sys, sizeof(d->sys), "MiniWin");
+    return 0;
+}
+__attribute__((ms_abi)) int mw_WSACleanup(void) { g_wsa_started = 0; return 0; }
+__attribute__((ms_abi)) int mw_WSAGetLastError(void) { return g_wsa_err; }
+__attribute__((ms_abi)) void mw_WSASetLastError(int e) { g_wsa_err = e; }
+__attribute__((ms_abi)) unsigned long mw_htonl(unsigned long h) { return htonl(h); }
+__attribute__((ms_abi)) unsigned short mw_htons(unsigned short h) { return htons(h); }
+__attribute__((ms_abi)) unsigned long mw_ntohl(unsigned long n) { return ntohl(n); }
+__attribute__((ms_abi)) unsigned short mw_ntohs(unsigned short n) { return ntohs(n); }
+__attribute__((ms_abi)) unsigned long mw_inet_addr(const char* s) { return inet_addr(s); }
+__attribute__((ms_abi)) char* mw_inet_ntoa(struct in_addr a) { return inet_ntoa(a); }
+__attribute__((ms_abi)) unsigned long long mw_socket(int af, int type, int proto) {
+    if (!g_wsa_started) { g_wsa_err = MW_WSAENETDOWN; return ~0ull; }
+    int s = (int)socket(af, type, proto);
+    if (s < 0) { g_wsa_err = 10093; return ~0ull; }
+    g_wsa_err = 0;
+    return (unsigned long long)s;
+}
+__attribute__((ms_abi)) int mw_closesocket(unsigned long long s) {
+    int r = close((int)s);
+    return r == 0 ? 0 : (g_wsa_err = 10038, -1);
+}
+__attribute__((ms_abi)) int mw_connect(unsigned long long s, void* addr, int len) {
+    int r = connect((int)s, (struct sockaddr*)addr, len);
+    if (r != 0) g_wsa_err = 10061;
+    return r;
+}
+__attribute__((ms_abi)) int mw_bind(unsigned long long s, void* addr, int len) { return bind((int)s, (struct sockaddr*)addr, len); }
+__attribute__((ms_abi)) int mw_listen(unsigned long long s, int back) { return listen((int)s, back); }
+__attribute__((ms_abi)) unsigned long long mw_accept(unsigned long long s, void* addr, int* len) {
+    int c = accept((int)s, (struct sockaddr*)addr, (socklen_t*)len);
+    return c < 0 ? ~0ull : (unsigned long long)c;
+}
+__attribute__((ms_abi)) int mw_shutdown(unsigned long long s, int how) { return shutdown((int)s, how); }
+__attribute__((ms_abi)) int mw_getsockopt(unsigned long long s, int lvl, int opt, void* v, int* len) { return getsockopt((int)s, lvl, opt, v, (socklen_t*)len); }
+__attribute__((ms_abi)) int mw_setsockopt(unsigned long long s, int lvl, int opt, const void* v, int len) { return setsockopt((int)s, lvl, opt, v, len); }
+__attribute__((ms_abi)) int mw_getsockname(unsigned long long s, void* addr, int* len) { return getsockname((int)s, (struct sockaddr*)addr, (socklen_t*)len); }
+__attribute__((ms_abi)) int mw_getpeername(unsigned long long s, void* addr, int* len) { return getpeername((int)s, (struct sockaddr*)addr, (socklen_t*)len); }
+__attribute__((ms_abi)) int mw_send(unsigned long long s, const void* buf, int len, int flags) {
+    ssize_t r = send((int)s, buf, len, flags & ~0x5);
+    return (int)r;
+}
+__attribute__((ms_abi)) int mw_recv(unsigned long long s, void* buf, int len, int flags) {
+    ssize_t r = recv((int)s, buf, len, flags & ~0x5);
+    return (int)r;
+}
+__attribute__((ms_abi)) int mw_sendto(unsigned long long s, const void* buf, int len, int flags, void* to, int tolen) {
+    return (int)sendto((int)s, buf, len, flags & ~0x5, (struct sockaddr*)to, tolen);
+}
+__attribute__((ms_abi)) int mw_recvfrom(unsigned long long s, void* buf, int len, int flags, void* from, int* fromlen) {
+    return (int)recvfrom((int)s, buf, len, flags & ~0x5, (struct sockaddr*)from, (socklen_t*)fromlen);
+}
+__attribute__((ms_abi)) int mw_select(int nfds, void* r, void* w, void* e, void* tv) {
+    return select(nfds, (fd_set*)r, (fd_set*)w, (fd_set*)e, (struct timeval*)tv);
+}
+__attribute__((ms_abi)) int mw_ioctlsocket(unsigned long long s, long cmd, unsigned long* arg) {
+    /* FIONREAD/FIONBIO share numeric values with Linux */
+    return ioctl((int)s, cmd, arg);
+}
+__attribute__((ms_abi)) int mw_WSAIoctl(unsigned long long s, long cmd, void* in, int ilen, void* out, int olen, unsigned long* ret, void* ov1, void* ov2) {
+    if (cmd == 0x40040007 /* SIO_GET_EXTENSION_FUNCTION_POINTER */ || cmd == 0x48000000) {
+        g_wsa_err = 10042; /* WSAENOPROTOOPT */
+        return -1;
+    }
+    return mw_ioctlsocket(s, cmd, (unsigned long*)out);
+}
+__attribute__((ms_abi)) void* mw_LoadLibraryExA(const char* name, void* file, uint32_t flags) {
+    MW_TRACE("LoadLibraryExA(%s, flags=%u) -> NULL", name ? name : "?", flags);
+    mw_SetLastError(126);
+    return NULL;
+}
 static ImportEntry g_import_table[] = {
     /* KERNEL32.DLL */
     ENTRY("KERNEL32.DLL", "AddVectoredExceptionHandler",        mw_AddVectoredExceptionHandler),
@@ -3239,6 +7097,7 @@ static ImportEntry g_import_table[] = {
     ENTRY("KERNEL32.DLL", "EnterCriticalSection",               mw_EnterCriticalSection),
     ENTRY("KERNEL32.DLL", "GetConsoleCursorInfo",               mw_GetConsoleCursorInfo),
     ENTRY("KERNEL32.DLL", "GetConsoleMode",                      mw_GetConsoleMode),
+    ENTRY("KERNEL32.DLL", "GetCPInfo",                          mw_GetCPInfo),
     ENTRY("KERNEL32.DLL", "GetConsoleScreenBufferInfo",          mw_GetConsoleScreenBufferInfo),
     ENTRY("KERNEL32.DLL", "GetCurrentProcess",                   mw_GetCurrentProcess),
     ENTRY("KERNEL32.DLL", "GetCurrentProcessId",                 mw_GetCurrentProcessId),
@@ -3297,13 +7156,58 @@ static ImportEntry g_import_table[] = {
     ENTRY("KERNEL32.DLL", "VirtualQuery",                        mw_VirtualQuery),
     ENTRY("KERNEL32.DLL", "WaitForMultipleObjects",              mw_WaitForMultipleObjects),
     ENTRY("KERNEL32.DLL", "WaitForSingleObject",                 mw_WaitForSingleObject),
+    ENTRY("KERNEL32.DLL", "WaitForSingleObjectEx",               mw_WaitForSingleObjectEx),
+    ENTRY("KERNEL32.DLL", "WakeConditionVariable",               mw_WakeConditionVariable),
+    ENTRY("KERNEL32.DLL", "WakeAllConditionVariable",            mw_WakeAllConditionVariable),
+    ENTRY("KERNEL32.DLL", "SleepConditionVariableSRW",           mw_SleepConditionVariableSRW),
+    ENTRY("KERNEL32.DLL", "AcquireSRWLockExclusive",             mw_AcquireSRWLockExclusive),
+    ENTRY("KERNEL32.DLL", "ReleaseSRWLockExclusive",             mw_ReleaseSRWLockExclusive),
+    ENTRY("KERNEL32.DLL", "TryAcquireSRWLockExclusive",          mw_TryAcquireSRWLockExclusive),
+    ENTRY("KERNEL32.DLL", "InitOnceExecuteOnce",                 mw_InitOnceExecuteOnce),
+    ENTRY("KERNEL32.DLL", "RtlRestoreContext",                   mw_RtlRestoreContext),
+    ENTRY("KERNEL32.DLL", "GetModuleHandleW",                    mw_GetModuleHandleW),
+    ENTRY("KERNEL32.DLL", "GetThreadId",                         mw_GetThreadId),
+    ENTRY("KERNEL32.DLL", "SwitchToThread",                      mw_SwitchToThread),
     ENTRY("KERNEL32.DLL", "WideCharToMultiByte",                 mw_WideCharToMultiByte),
     ENTRY("KERNEL32.DLL", "WriteConsoleOutputA",                 mw_WriteConsoleOutputA),
 
     /* msvcrt.dll — Code imports */
     ENTRY("msvcrt.dll", "__C_specific_handler",   mw___C_specific_handler),
+    ENTRY("api-ms-win-crt-runtime-l1-1-0.dll", "__C_specific_handler", mw___C_specific_handler),
     ENTRY("msvcrt.dll", "__getmainargs",         mw___getmainargs),
+    ENTRY("api-ms-win-crt-runtime-l1-1-0.dll", "_configure_narrow_argv", mw__configure_narrow_argv),
+    ENTRY("api-ms-win-crt-runtime-l1-1-0.dll", "_initialize_narrow_environment", mw__initialize_narrow_environment),
+    ENTRY("api-ms-win-crt-runtime-l1-1-0.dll", "_set_new_mode", mw__set_new_mode),
+    ENTRY("api-ms-win-crt-runtime-l1-1-0.dll", "_set_invalid_parameter_handler", mw__set_invalid_parameter_handler),
+    ENTRY("api-ms-win-crt-runtime-l1-1-0.dll", "_crt_atexit",   mw_atexit),
+    ENTRY("api-ms-win-crt-runtime-l1-1-0.dll", "signal",        mw_signal_stub),
+    ENTRY("api-ms-win-crt-runtime-l1-1-0.dll", "_set_app_type", mw___set_app_type),
     ENTRY("msvcrt.dll", "__iob_func",            mw___iob_func),
+    ENTRY("api-ms-win-crt-stdio-l1-1-0.dll", "__acrt_iob_func", mw___acrt_iob_func),
+    ENTRY("api-ms-win-crt-stdio-l1-1-0.dll", "__stdio_common_vfprintf", mw___stdio_common_vfprintf),
+    ENTRY("api-ms-win-crt-stdio-l1-1-0.dll", "__stdio_common_vsprintf", mw___stdio_common_vsprintf),
+    ENTRY("api-ms-win-crt-stdio-l1-1-0.dll", "__stdio_common_vfwprintf", mw___stdio_common_vfwprintf),
+    ENTRY("api-ms-win-crt-stdio-l1-1-0.dll", "__stdio_common_vsscanf",  mw___stdio_common_vsscanf),
+    ENTRY("api-ms-win-crt-time-l1-1-0.dll", "_tzset",           mw__tzset),
+    ENTRY("api-ms-win-crt-stdio-l1-1-0.dll", "fopen",           mw_fopen),
+    ENTRY("api-ms-win-crt-stdio-l1-1-0.dll", "fclose",          mw_fclose),
+    ENTRY("api-ms-win-crt-stdio-l1-1-0.dll", "fread",           mw_fread),
+    ENTRY("api-ms-win-crt-stdio-l1-1-0.dll", "fwrite",          mw_fwrite),
+    ENTRY("api-ms-win-crt-stdio-l1-1-0.dll", "fgets",           mw_fgets),
+    ENTRY("api-ms-win-crt-stdio-l1-1-0.dll", "fgetc",           mw_fgetc),
+    ENTRY("api-ms-win-crt-stdio-l1-1-0.dll", "rewind",          mw_rewind),
+    ENTRY("api-ms-win-crt-stdio-l1-1-0.dll", "fseek",           mw_fseek),
+    ENTRY("api-ms-win-crt-stdio-l1-1-0.dll", "ftell",           mw_ftell),
+    ENTRY("api-ms-win-crt-stdio-l1-1-0.dll", "feof",            mw_feof),
+    ENTRY("msvcrt.dll", "fseek",                 mw_fseek),
+    ENTRY("msvcrt.dll", "ftell",                 mw_ftell),
+    ENTRY("msvcrt.dll", "feof",                  mw_feof),
+    ENTRY("api-ms-win-crt-time-l1-1-0.dll", "strftime",         mw_strftime),
+    ENTRY("api-ms-win-crt-private-l1-1-0.dll", "__p__fmode",    mw___p__fmode),
+    ENTRY("api-ms-win-crt-private-l1-1-0.dll", "__p__commode",  mw___p__commode),
+    ENTRY("api-ms-win-crt-runtime-l1-1-0.dll", "__p___argc",    mw___p___argc),
+    ENTRY("api-ms-win-crt-runtime-l1-1-0.dll", "__p___argv",    mw___p___argv),
+    ENTRY("api-ms-win-crt-environment-l1-1-0.dll", "__p__environ", mw___p__environ),
     ENTRY("msvcrt.dll", "__lconv_init",          mw___lconv_init),
     ENTRY("msvcrt.dll", "___lc_codepage_func",    mw___lc_codepage_func),
     ENTRY("msvcrt.dll", "___mb_cur_max_func",     mw___mb_cur_max_func),
@@ -3316,6 +7220,7 @@ static ImportEntry g_import_table[] = {
     ENTRY("msvcrt.dll", "_close",                mw__close),
     ENTRY("msvcrt.dll", "_dup",                  mw__dup),
     ENTRY("msvcrt.dll", "_endthreadex",          mw__endthreadex),
+    ENTRY("msvcrt.dll", "_exit",                 mw__exit_noflush),
     ENTRY("msvcrt.dll", "_errno",                mw__errno),
     ENTRY("msvcrt.dll", "_fstat64",              mw__fstat64),
     ENTRY("msvcrt.dll", "_fileno",               mw__fileno),
@@ -3344,8 +7249,10 @@ static ImportEntry g_import_table[] = {
     ENTRY("msvcrt.dll", "_unlock",               mw__unlock),
     ENTRY("msvcrt.dll", "_wopen",                mw__wopen),
     ENTRY("msvcrt.dll", "_write",                mw__write),
+    ENTRY("msvcrt.dll", "_XcptFilter",            mw__XcptFilter),
     ENTRY("msvcrt.dll", "abort",                 mw_abort),
     ENTRY("msvcrt.dll", "atoi",                  mw_atoi),
+    ENTRY("msvcrt.dll", "atexit",                mw_atexit),
     ENTRY("msvcrt.dll", "calloc",                mw_calloc),
     ENTRY("msvcrt.dll", "clock",                 mw_clock),
     ENTRY("msvcrt.dll", "exit",                  mw_exit),
@@ -3354,6 +7261,20 @@ static ImportEntry g_import_table[] = {
     ENTRY("msvcrt.dll", "fputc",                 mw_fputc),
     ENTRY("msvcrt.dll", "fputs",                 mw_fputs),
     ENTRY("msvcrt.dll", "free",                  mw_free),
+    ENTRY("msvcrt.dll", "_aligned_malloc",       mw__aligned_malloc),
+    ENTRY("msvcrt.dll", "_aligned_free",         mw__aligned_free),
+    ENTRY("msvcrt.dll", "_assert",               mw__assert),
+    ENTRY("msvcrt.dll", "_strtoi64",             mw__strtoi64),
+    ENTRY("msvcrt.dll", "_strtoui64",            mw__strtoui64),
+    ENTRY("msvcrt.dll", "wcstol",                mw_wcstol),
+    ENTRY("msvcrt.dll", "wcstoul",               mw_wcstoul),
+    ENTRY("msvcrt.dll", "_wcstoi64",             mw__wcstoi64),
+    ENTRY("msvcrt.dll", "_wcstoui64",            mw__wcstoui64),
+    ENTRY("msvcrt.dll", "fputwc",                mw_fputwc),
+    ENTRY("msvcrt.dll", "fwprintf",              mw_fwprintf),
+    ENTRY("msvcrt.dll", "FlsAlloc",              mw_FlsAlloc),
+    ENTRY("msvcrt.dll", "FlsGetValue",           mw_FlsGetValue),
+    ENTRY("msvcrt.dll", "FlsSetValue",           mw_FlsSetValue),
     ENTRY("msvcrt.dll", "fwrite",                mw_fwrite),
     ENTRY("msvcrt.dll", "getc",                  mw_getc),
     ENTRY("msvcrt.dll", "getenv",                mw_getenv),
@@ -3371,10 +7292,12 @@ static ImportEntry g_import_table[] = {
     ENTRY("msvcrt.dll", "memset",                mw_memset),
     ENTRY("msvcrt.dll", "printf",                mw_printf),
     ENTRY("msvcrt.dll", "puts",                  mw_puts),
+    ENTRY("msvcrt.dll", "setvbuf",               mw_setvbuf),
     ENTRY("msvcrt.dll", "qsort",                 mw_qsort),
     ENTRY("msvcrt.dll", "rand",                  mw_rand),
     ENTRY("msvcrt.dll", "realloc",               mw_realloc),
     ENTRY("msvcrt.dll", "rename",                mw_rename),
+    ENTRY("api-ms-win-crt-stdio-l1-1-0.dll", "remove",           mw_remove),
     ENTRY("msvcrt.dll", "signal",                mw_signal),
     ENTRY("msvcrt.dll", "srand",                 mw_srand),
     ENTRY("msvcrt.dll", "strchr",                mw_strchr),
@@ -3393,6 +7316,518 @@ static ImportEntry g_import_table[] = {
     ENTRY("msvcrt.dll", "vfprintf",              mw_vfprintf),
     ENTRY("msvcrt.dll", "wcstombs",               mw_wcstombs),
     ENTRY("msvcrt.dll", "wcslen",                mw_wcslen),
+    ENTRY("KERNEL32.DLL", "GetCommandLineA", mw_GetCommandLineA),
+    ENTRY("KERNEL32.DLL", "GetCommandLineW", mw_GetCommandLineW),
+    ENTRY("KERNEL32.DLL", "GetStartupInfoW", mw_GetStartupInfoW),
+    ENTRY("KERNEL32.DLL", "GetModuleHandleExA", mw_GetModuleHandleExA),
+    ENTRY("KERNEL32.DLL", "GetModuleHandleExW", mw_GetModuleHandleExW),
+    ENTRY("KERNEL32.DLL", "GetModuleFileNameA", mw_GetModuleFileNameA),
+    ENTRY("KERNEL32.DLL", "GetModuleFileNameW", mw_GetModuleFileNameW),
+    ENTRY("KERNEL32.DLL", "LoadLibraryW", mw_LoadLibraryW),
+    ENTRY("KERNEL32.DLL", "LoadLibraryExW", mw_LoadLibraryExW),
+    ENTRY("KERNEL32.DLL", "FreeLibrary", mw_FreeLibrary),
+    ENTRY("KERNEL32.DLL", "FreeLibraryAndExitThread", mw_FreeLibraryAndExitThread),
+    ENTRY("KERNEL32.DLL", "GetEnvironmentStringsW", mw_GetEnvironmentStringsW),
+    ENTRY("KERNEL32.DLL", "FreeEnvironmentStringsW", mw_FreeEnvironmentStringsW),
+    ENTRY("KERNEL32.DLL", "GetEnvironmentVariableW", mw_GetEnvironmentVariableW),
+    ENTRY("KERNEL32.DLL", "GetEnvironmentVariableA", mw_GetEnvironmentVariableA),
+    ENTRY("KERNEL32.DLL", "SetEnvironmentVariableA", mw_SetEnvironmentVariableA),
+    ENTRY("KERNEL32.DLL", "SetEnvironmentVariableW", mw_SetEnvironmentVariableW),
+    ENTRY("KERNEL32.DLL", "ExpandEnvironmentStringsW", mw_ExpandEnvironmentStringsW),
+    ENTRY("KERNEL32.DLL", "GetProcessHeap", mw_GetProcessHeap),
+    ENTRY("KERNEL32.DLL", "HeapCreate", mw_HeapCreate),
+    ENTRY("KERNEL32.DLL", "HeapAlloc", mw_HeapAlloc),
+    ENTRY("KERNEL32.DLL", "HeapReAlloc", mw_HeapReAlloc),
+    ENTRY("KERNEL32.DLL", "HeapFree", mw_HeapFree),
+    ENTRY("KERNEL32.DLL", "HeapSize", mw_HeapSize),
+    ENTRY("KERNEL32.DLL", "HeapValidate", mw_HeapValidate),
+    ENTRY("KERNEL32.DLL", "HeapSetInformation", mw_HeapSetInformation),
+    ENTRY("KERNEL32.DLL", "HeapQueryInformation", mw_HeapQueryInformation),
+    ENTRY("KERNEL32.DLL", "HeapCompact", mw_HeapCompact),
+    ENTRY("KERNEL32.DLL", "GlobalAlloc", mw_GlobalAlloc),
+    ENTRY("KERNEL32.DLL", "GlobalLock", mw_GlobalLock),
+    ENTRY("KERNEL32.DLL", "GlobalUnlock", mw_GlobalUnlock),
+    ENTRY("KERNEL32.DLL", "GlobalSize", mw_GlobalSize),
+    ENTRY("KERNEL32.DLL", "GlobalFree", mw_GlobalFree),
+    ENTRY("KERNEL32.DLL", "LocalAlloc", mw_LocalAlloc),
+    ENTRY("KERNEL32.DLL", "LocalLock", mw_LocalLock),
+    ENTRY("KERNEL32.DLL", "LocalUnlock", mw_LocalUnlock),
+    ENTRY("KERNEL32.DLL", "LocalSize", mw_LocalSize),
+    ENTRY("KERNEL32.DLL", "LocalFree", mw_LocalFree),
+    ENTRY("KERNEL32.DLL", "GlobalMemoryStatusEx", mw_GlobalMemoryStatusEx),
+    ENTRY("KERNEL32.DLL", "GetSystemInfo", mw_GetSystemInfo),
+    ENTRY("KERNEL32.DLL", "GetNativeSystemInfo", mw_GetNativeSystemInfo),
+    ENTRY("KERNEL32.DLL", "GetLogicalProcessorInformationEx", mw_GetLogicalProcessorInformationEx),
+    ENTRY("KERNEL32.DLL", "IsProcessorFeaturePresent", mw_IsProcessorFeaturePresent),
+    ENTRY("KERNEL32.DLL", "CheckRemoteDebuggerPresent", mw_CheckRemoteDebuggerPresent),
+    ENTRY("KERNEL32.DLL", "RtlCaptureStackBackTrace", mw_RtlCaptureStackBackTrace),
+    ENTRY("KERNEL32.DLL", "RtlPcToFileHeader", mw_RtlPcToFileHeader),
+    ENTRY("KERNEL32.DLL", "EncodePointer", mw_EncodePointer),
+    ENTRY("KERNEL32.DLL", "DecodePointer", mw_DecodePointer),
+    ENTRY("KERNEL32.DLL", "InitializeSListHead", mw_InitializeSListHead),
+    ENTRY("KERNEL32.DLL", "InterlockedPushEntrySList", mw_InterlockedPushEntrySList),
+    ENTRY("KERNEL32.DLL", "InterlockedFlushSList", mw_InterlockedFlushSList),
+    ENTRY("KERNEL32.DLL", "QueryDepthSList", mw_QueryDepthSList),
+    ENTRY("KERNEL32.DLL", "InitializeCriticalSectionEx", mw_InitializeCriticalSectionEx),
+    ENTRY("KERNEL32.DLL", "GetCurrentProcessorNumber", mw_GetCurrentProcessorNumber),
+    ENTRY("KERNEL32.DLL", "InitializeSRWLock", mw_InitializeSRWLock),
+    ENTRY("KERNEL32.DLL", "AcquireSRWLockShared", mw_AcquireSRWLockShared),
+    ENTRY("KERNEL32.DLL", "ReleaseSRWLockShared", mw_ReleaseSRWLockShared),
+    ENTRY("KERNEL32.DLL", "TryAcquireSRWLockShared", mw_TryAcquireSRWLockShared),
+    ENTRY("KERNEL32.DLL", "InitializeConditionVariable", mw_InitializeConditionVariable),
+    ENTRY("KERNEL32.DLL", "InitOnceBeginInitialize", mw_InitOnceBeginInitialize),
+    ENTRY("KERNEL32.DLL", "InitOnceComplete", mw_InitOnceComplete),
+    ENTRY("KERNEL32.DLL", "WaitOnAddress", mw_WaitOnAddress),
+    ENTRY("KERNEL32.DLL", "WakeByAddressSingle", mw_WakeByAddressSingle),
+    ENTRY("KERNEL32.DLL", "WakeByAddressAll", mw_WakeByAddressAll),
+    ENTRY("KERNEL32.DLL", "CreateEventW", mw_CreateEventW),
+    ENTRY("KERNEL32.DLL", "CreateMutexA", mw_CreateMutexA),
+    ENTRY("KERNEL32.DLL", "ReleaseMutex", mw_ReleaseMutex),
+    ENTRY("KERNEL32.DLL", "WaitForMultipleObjectsEx", mw_WaitForMultipleObjectsEx),
+    ENTRY("KERNEL32.DLL", "SignalObjectAndWait", mw_SignalObjectAndWait),
+    ENTRY("KERNEL32.DLL", "CreateThread", mw_CreateThread),
+    ENTRY("KERNEL32.DLL", "ExitThread", mw_ExitThread),
+    ENTRY("KERNEL32.DLL", "GetExitCodeThread", mw_GetExitCodeThread),
+    ENTRY("KERNEL32.DLL", "TerminateThread", mw_TerminateThread),
+    ENTRY("KERNEL32.DLL", "CreateThreadpoolWork", mw_CreateThreadpoolWork),
+    ENTRY("KERNEL32.DLL", "SubmitThreadpoolWork", mw_SubmitThreadpoolWork),
+    ENTRY("KERNEL32.DLL", "CloseThreadpoolWork", mw_CloseThreadpoolWork),
+    ENTRY("KERNEL32.DLL", "FreeLibraryWhenCallbackReturns", mw_FreeLibraryWhenCallbackReturns),
+    ENTRY("KERNEL32.DLL", "RegisterWaitForSingleObject", mw_RegisterWaitForSingleObject),
+    ENTRY("KERNEL32.DLL", "UnregisterWait", mw_UnregisterWait),
+    ENTRY("KERNEL32.DLL", "QueueUserWorkItem", mw_QueueUserWorkItem),
+    ENTRY("KERNEL32.DLL", "GetSystemTime", mw_GetSystemTime),
+    ENTRY("KERNEL32.DLL", "GetSystemTimePreciseAsFileTime", mw_GetSystemTimePreciseAsFileTime),
+    ENTRY("KERNEL32.DLL", "GetTickCount64", mw_GetTickCount64),
+    ENTRY("KERNEL32.DLL", "GetTimeZoneInformation", mw_GetTimeZoneInformation),
+    ENTRY("KERNEL32.DLL", "FileTimeToSystemTime", mw_FileTimeToSystemTime),
+    ENTRY("KERNEL32.DLL", "SystemTimeToFileTime", mw_SystemTimeToFileTime),
+    ENTRY("KERNEL32.DLL", "GetVersion", mw_GetVersion),
+    ENTRY("KERNEL32.DLL", "GetVersionExA", mw_GetVersionExA),
+    ENTRY("KERNEL32.DLL", "GetACP", mw_GetACP),
+    ENTRY("KERNEL32.DLL", "GetOEMCP", mw_GetOEMCP),
+    ENTRY("KERNEL32.DLL", "IsValidCodePage", mw_IsValidCodePage),
+    ENTRY("KERNEL32.DLL", "IsValidLocale", mw_IsValidLocale),
+    ENTRY("KERNEL32.DLL", "GetUserDefaultLCID", mw_GetUserDefaultLCID),
+    ENTRY("KERNEL32.DLL", "GetUserDefaultLangID", mw_GetUserDefaultLangID),
+    ENTRY("KERNEL32.DLL", "GetSystemDefaultLCID", mw_GetSystemDefaultLCID),
+    ENTRY("KERNEL32.DLL", "GetThreadLocale", mw_GetThreadLocale),
+    ENTRY("KERNEL32.DLL", "SetThreadLocale", mw_SetThreadLocale),
+    ENTRY("KERNEL32.DLL", "GetLocaleInfoA", mw_GetLocaleInfoA),
+    ENTRY("KERNEL32.DLL", "GetLocaleInfoW", mw_GetLocaleInfoW),
+    ENTRY("KERNEL32.DLL", "GetLocaleInfoEx", mw_GetLocaleInfoEx),
+    ENTRY("KERNEL32.DLL", "CompareStringW", mw_CompareStringW),
+    ENTRY("KERNEL32.DLL", "CompareStringEx", mw_CompareStringEx),
+    ENTRY("KERNEL32.DLL", "LCMapStringW", mw_LCMapStringW),
+    ENTRY("KERNEL32.DLL", "LCMapStringEx", mw_LCMapStringEx),
+    ENTRY("KERNEL32.DLL", "LCMapStringA", mw_LCMapStringA),
+    ENTRY("KERNEL32.DLL", "EnumSystemLocalesW", mw_EnumSystemLocalesW),
+    ENTRY("KERNEL32.DLL", "GetStringTypeW", mw_GetStringTypeW),
+    ENTRY("KERNEL32.DLL", "IsDBCSLeadByte", mw_IsDBCSLeadByte),
+    ENTRY("KERNEL32.DLL", "CreateFileA", mw_CreateFileA),
+    ENTRY("KERNEL32.DLL", "CreateFileW", mw_CreateFileW),
+    ENTRY("KERNEL32.DLL", "ReadFile", mw_ReadFile),
+    ENTRY("KERNEL32.DLL", "WriteFile", mw_WriteFile),
+    ENTRY("KERNEL32.DLL", "SetFilePointer", mw_SetFilePointer),
+    ENTRY("KERNEL32.DLL", "SetFilePointerEx", mw_SetFilePointerEx),
+    ENTRY("KERNEL32.DLL", "SetEndOfFile", mw_SetEndOfFile),
+    ENTRY("KERNEL32.DLL", "GetFileSize", mw_GetFileSize),
+    ENTRY("KERNEL32.DLL", "GetFileSizeEx", mw_GetFileSizeEx),
+    ENTRY("KERNEL32.DLL", "GetFileType", mw_GetFileType),
+    ENTRY("KERNEL32.DLL", "FlushFileBuffers", mw_FlushFileBuffers),
+    ENTRY("KERNEL32.DLL", "GetFileInformationByHandle", mw_GetFileInformationByHandle),
+    ENTRY("KERNEL32.DLL", "GetFileInformationByHandleEx", mw_GetFileInformationByHandleEx),
+    ENTRY("KERNEL32.DLL", "SetFileInformationByHandle", mw_SetFileInformationByHandle),
+    ENTRY("KERNEL32.DLL", "GetFileAttributesW", mw_GetFileAttributesW),
+    ENTRY("KERNEL32.DLL", "GetFileAttributesExW", mw_GetFileAttributesExW),
+    ENTRY("KERNEL32.DLL", "SetFileAttributesW", mw_SetFileAttributesW),
+    ENTRY("KERNEL32.DLL", "DeleteFileW", mw_DeleteFileW),
+    ENTRY("KERNEL32.DLL", "RemoveDirectoryW", mw_RemoveDirectoryW),
+    ENTRY("KERNEL32.DLL", "CreateDirectoryW", mw_CreateDirectoryW),
+    ENTRY("KERNEL32.DLL", "CreateDirectoryExW", mw_CreateDirectoryExW),
+    ENTRY("KERNEL32.DLL", "MoveFileExW", mw_MoveFileExW),
+    ENTRY("KERNEL32.DLL", "ReplaceFileW", mw_ReplaceFileW),
+    ENTRY("KERNEL32.DLL", "CreateFile2", mw_CreateFile2),
+    ENTRY("KERNEL32.DLL", "CopyFile2", mw_CopyFile2),
+    ENTRY("KERNEL32.DLL", "CreateSymbolicLinkW", mw_CreateSymbolicLinkW),
+    ENTRY("KERNEL32.DLL", "CreateHardLinkW", mw_CreateHardLinkW),
+    ENTRY("KERNEL32.DLL", "GetFullPathNameW", mw_GetFullPathNameW),
+    ENTRY("KERNEL32.DLL", "GetLongPathNameW", mw_GetLongPathNameW),
+    ENTRY("KERNEL32.DLL", "GetShortPathNameW", mw_GetShortPathNameW),
+    ENTRY("KERNEL32.DLL", "GetFinalPathNameByHandleW", mw_GetFinalPathNameByHandleW),
+    ENTRY("KERNEL32.DLL", "GetTempPathW", mw_GetTempPathW),
+    ENTRY("KERNEL32.DLL", "GetTempFileNameW", mw_GetTempFileNameW),
+    ENTRY("KERNEL32.DLL", "GetDiskFreeSpaceExW", mw_GetDiskFreeSpaceExW),
+    ENTRY("KERNEL32.DLL", "GetLogicalDrives", mw_GetLogicalDrives),
+    ENTRY("KERNEL32.DLL", "GetDriveTypeA", mw_GetDriveTypeA),
+    ENTRY("KERNEL32.DLL", "GetDriveTypeW", mw_GetDriveTypeW),
+    ENTRY("KERNEL32.DLL", "GetVolumeInformationW", mw_GetVolumeInformationW),
+    ENTRY("KERNEL32.DLL", "GetVolumePathNameW", mw_GetVolumePathNameW),
+    ENTRY("KERNEL32.DLL", "SetCurrentDirectoryW", mw_SetCurrentDirectoryW),
+    ENTRY("KERNEL32.DLL", "GetCurrentDirectoryW", mw_GetCurrentDirectoryW),
+    ENTRY("KERNEL32.DLL", "GetSystemDirectoryA", mw_GetSystemDirectoryA),
+    ENTRY("KERNEL32.DLL", "GetSystemDirectoryW", mw_GetSystemDirectoryW),
+    ENTRY("KERNEL32.DLL", "GetWindowsDirectoryW", mw_GetWindowsDirectoryW),
+    ENTRY("KERNEL32.DLL", "FindFirstFileExW", mw_FindFirstFileExW),
+    ENTRY("KERNEL32.DLL", "FindNextFileW", mw_FindNextFileW),
+    ENTRY("KERNEL32.DLL", "FindClose", mw_FindClose),
+    ENTRY("KERNEL32.DLL", "GetConsoleCP", mw_GetConsoleCP),
+    ENTRY("KERNEL32.DLL", "GetConsoleOutputCP", mw_GetConsoleOutputCP),
+    ENTRY("KERNEL32.DLL", "SetConsoleOutputCP", mw_SetConsoleOutputCP),
+    ENTRY("KERNEL32.DLL", "SetConsoleCP", mw_SetConsoleCP),
+    ENTRY("KERNEL32.DLL", "SetConsoleMode", mw_SetConsoleMode),
+    ENTRY("KERNEL32.DLL", "WriteConsoleW", mw_WriteConsoleW),
+    ENTRY("KERNEL32.DLL", "GetConsoleWindow", mw_GetConsoleWindow),
+    ENTRY("KERNEL32.DLL", "AllocConsole", mw_AllocConsole),
+    ENTRY("KERNEL32.DLL", "AttachConsole", mw_AttachConsole),
+    ENTRY("KERNEL32.DLL", "SetConsoleCtrlHandler", mw_SetConsoleCtrlHandler),
+    ENTRY("KERNEL32.DLL", "GetNumberOfConsoleInputEvents", mw_GetNumberOfConsoleInputEvents),
+    ENTRY("KERNEL32.DLL", "PeekConsoleInputA", mw_PeekConsoleInputA),
+    ENTRY("KERNEL32.DLL", "PeekConsoleInputW", mw_PeekConsoleInputW),
+    ENTRY("KERNEL32.DLL", "ReadConsoleW", mw_ReadConsoleW),
+    ENTRY("KERNEL32.DLL", "ReadConsoleInputW", mw_ReadConsoleInputW),
+    ENTRY("KERNEL32.DLL", "ReadConsoleInputA", mw_ReadConsoleInputA),
+    ENTRY("KERNEL32.DLL", "RegOpenKeyExW", mw_RegOpenKeyExW),
+    ENTRY("KERNEL32.DLL", "RegOpenKeyExA", mw_RegOpenKeyExA),
+    ENTRY("KERNEL32.DLL", "RegQueryValueExW", mw_RegQueryValueExW),
+    ENTRY("KERNEL32.DLL", "RegQueryValueExA", mw_RegQueryValueExA),
+    ENTRY("KERNEL32.DLL", "RegGetValueW", mw_RegGetValueW),
+    ENTRY("KERNEL32.DLL", "RegCloseKey", mw_RegCloseKey),
+    ENTRY("KERNEL32.DLL", "RegCreateKeyExW", mw_RegCreateKeyExW),
+    ENTRY("KERNEL32.DLL", "RegDeleteValueW", mw_RegDeleteValueW),
+    ENTRY("KERNEL32.DLL", "RegEnumKeyA", mw_RegEnumKeyA),
+    ENTRY("KERNEL32.DLL", "RegEnumKeyExW", mw_RegEnumKeyExW),
+    ENTRY("KERNEL32.DLL", "RegEnumValueW", mw_RegEnumValueW),
+    ENTRY("KERNEL32.DLL", "RegQueryInfoKeyW", mw_RegQueryInfoKeyW),
+    ENTRY("KERNEL32.DLL", "RegSetValueExW", mw_RegSetValueExW),
+    ENTRY("KERNEL32.DLL", "RegLoadMUIStringW", mw_RegLoadMUIStringW),
+    ENTRY("KERNEL32.DLL", "RegNotifyChangeKeyValue", mw_RegNotifyChangeKeyValue),
+    ENTRY("KERNEL32.DLL", "BCryptOpenAlgorithmProvider", mw_BCryptOpenAlgorithmProvider),
+    ENTRY("KERNEL32.DLL", "BCryptCloseAlgorithmProvider", mw_BCryptCloseAlgorithmProvider),
+    ENTRY("KERNEL32.DLL", "BCryptGenRandom", mw_BCryptGenRandom),
+    ENTRY("KERNEL32.DLL", "BCryptGetProperty", mw_BCryptGetProperty),
+    ENTRY("KERNEL32.DLL", "BCryptSetProperty", mw_BCryptSetProperty),
+    ENTRY("KERNEL32.DLL", "BCryptCreateHash", mw_BCryptCreateHash),
+    ENTRY("KERNEL32.DLL", "BCryptHashData", mw_BCryptHashData),
+    ENTRY("KERNEL32.DLL", "BCryptFinishHash", mw_BCryptFinishHash),
+    ENTRY("KERNEL32.DLL", "BCryptDestroyHash", mw_BCryptDestroyHash),
+    ENTRY("KERNEL32.DLL", "BCryptGenerateSymmetricKey", mw_BCryptGenerateSymmetricKey),
+    ENTRY("KERNEL32.DLL", "BCryptDestroyKey", mw_BCryptDestroyKey),
+    ENTRY("KERNEL32.DLL", "BCryptEncrypt", mw_BCryptEncrypt),
+    ENTRY("KERNEL32.DLL", "BCryptDeriveKeyPBKDF2", mw_BCryptDeriveKeyPBKDF2),
+    ENTRY("KERNEL32.DLL", "CryptAcquireContextA", mw_CryptAcquireContextA),
+    ENTRY("KERNEL32.DLL", "CryptGenRandom", mw_CryptGenRandom),
+    ENTRY("KERNEL32.DLL", "CryptReleaseContext", mw_CryptReleaseContext),
+    ENTRY("KERNEL32.DLL", "omp_get_max_threads", mw_omp_get_max_threads),
+    ENTRY("KERNEL32.DLL", "omp_get_thread_num", mw_omp_get_thread_num),
+    ENTRY("KERNEL32.DLL", "omp_set_nested", mw_omp_set_nested),
+    ENTRY("KERNEL32.DLL", "omp_init_lock", mw_omp_init_lock),
+    ENTRY("KERNEL32.DLL", "omp_destroy_lock", mw_omp_destroy_lock),
+    ENTRY("KERNEL32.DLL", "omp_set_lock", mw_omp_set_lock),
+    ENTRY("KERNEL32.DLL", "omp_unset_lock", mw_omp_unset_lock),
+    ENTRY("KERNEL32.DLL", "_vcomp_set_num_threads", mw__vcomp_set_num_threads),
+    ENTRY("KERNEL32.DLL", "_vcomp_barrier", mw__vcomp_barrier),
+    ENTRY("KERNEL32.DLL", "_vcomp_enter_critsect", mw__vcomp_enter_critsect),
+    ENTRY("KERNEL32.DLL", "_vcomp_leave_critsect", mw__vcomp_leave_critsect),
+    ENTRY("KERNEL32.DLL", "_vcomp_single_begin", mw__vcomp_single_begin),
+    ENTRY("KERNEL32.DLL", "_vcomp_single_end", mw__vcomp_single_end),
+    ENTRY("KERNEL32.DLL", "_vcomp_reduction_r8", mw__vcomp_reduction_r8),
+    ENTRY("KERNEL32.DLL", "_vcomp_atomic_add_i4", mw__vcomp_atomic_add_i4),
+    ENTRY("KERNEL32.DLL", "_vcomp_atomic_add_i8", mw__vcomp_atomic_add_i8),
+    ENTRY("KERNEL32.DLL", "_vcomp_for_static_simple_init", mw__vcomp_for_static_simple_init),
+    ENTRY("KERNEL32.DLL", "_vcomp_for_static_init_i8", mw__vcomp_for_static_init_i8),
+    ENTRY("KERNEL32.DLL", "_vcomp_for_next", mw__vcomp_for_next),
+    ENTRY("KERNEL32.DLL", "_vcomp_for_static_end", mw__vcomp_for_static_end),
+    ENTRY("KERNEL32.DLL", "_vcomp_for_dynamic_init", mw__vcomp_for_dynamic_init),
+    ENTRY("KERNEL32.DLL", "_vcomp_for_dynamic_init_i8", mw__vcomp_for_dynamic_init_i8),
+    ENTRY("KERNEL32.DLL", "_vcomp_for_dynamic_next", mw__vcomp_for_dynamic_next),
+    ENTRY("KERNEL32.DLL", "_vcomp_for_dynamic_next_i8", mw__vcomp_for_dynamic_next_i8),
+    ENTRY("KERNEL32.DLL", "_vcomp_fork", mw__vcomp_fork),
+    ENTRY("KERNEL32.DLL", "UnhandledExceptionFilter", mw_UnhandledExceptionFilter),
+    ENTRY("KERNEL32.DLL", "FormatMessageA", mw_FormatMessageA),
+    ENTRY("KERNEL32.DLL", "FormatMessageW", mw_FormatMessageW),
+    ENTRY("KERNEL32.DLL", "OutputDebugStringW", mw_OutputDebugStringW),
+    ENTRY("KERNEL32.DLL", "TerminateProcess", mw_TerminateProcess),
+    ENTRY("KERNEL32.DLL", "GetUserNameW", mw_GetUserNameW),
+    ENTRY("KERNEL32.DLL", "GetComputerNameW", mw_GetComputerNameW),
+    ENTRY("KERNEL32.DLL", "DeviceIoControl", mw_DeviceIoControl),
+    ENTRY("KERNEL32.DLL", "SetErrorMode", mw_SetErrorMode),
+    ENTRY("KERNEL32.DLL", "SetHandleInformation", mw_SetHandleInformation),
+    ENTRY("KERNEL32.DLL", "PeekNamedPipe", mw_PeekNamedPipe),
+    ENTRY("KERNEL32.DLL", "CreatePipe", mw_CreatePipe),
+    ENTRY("KERNEL32.DLL", "CreateProcessW", mw_CreateProcessW),
+    ENTRY("KERNEL32.DLL", "CreateProcessA", mw_CreateProcessA),
+    ENTRY("KERNEL32.DLL", "GetExitCodeProcess", mw_GetExitCodeProcess),
+/* --- end ISS1-WAVE3 --- */
+    ENTRY("KERNEL32.DLL", "FindResourceA", mw_FindResourceA),
+    ENTRY("KERNEL32.DLL", "FindResourceW", mw_FindResourceW),
+    ENTRY("KERNEL32.DLL", "FindResourceExW", mw_FindResourceExW),
+    ENTRY("KERNEL32.DLL", "LoadResource", mw_LoadResource),
+    ENTRY("KERNEL32.DLL", "LockResource", mw_LockResource),
+    ENTRY("KERNEL32.DLL", "SizeofResource", mw_SizeofResource),
+    ENTRY("KERNEL32.DLL", "FreeResource", mw_FreeResource),
+    ENTRY("KERNEL32.DLL", "EnumResourceNamesW", mw_EnumResourceNamesW),
+    ENTRY("msvcrt.dll", "_register_thread_local_exe_atexit_callback", mw__register_thread_local_exe_atexit_callback),
+    ENTRY("msvcrt.dll", "_set_abort_behavior", mw__set_abort_behavior),
+    ENTRY("msvcrt.dll", "_set_errno", mw__set_errno),
+    ENTRY("msvcrt.dll", "_get_errno", mw__get_errno),
+    ENTRY("msvcrt.dll", "_initterm_e", mw__initterm_e),
+    ENTRY("msvcrt.dll", "_seh_filter_exe", mw__seh_filter_exe),
+    ENTRY("msvcrt.dll", "_seh_filter_dll", mw__seh_filter_dll),
+    ENTRY("msvcrt.dll", "__intrinsic_setjmp", mw___intrinsic_setjmp),
+    ENTRY("msvcrt.dll", "__intrinsic_longjmp", mw___intrinsic_longjmp),
+    ENTRY("msvcrt.dll", "_wassert", mw__wassert),
+    ENTRY("msvcrt.dll", "_hypot", mw__hypot),
+    ENTRY("msvcrt.dll", "_isnan", mw__isnan),
+    ENTRY("msvcrt.dll", "_j1", mw__j1),
+    ENTRY("msvcrt.dll", "_y1", mw__y1),
+    ENTRY("msvcrt.dll", "_jn", mw__jn),
+    ENTRY("msvcrt.dll", "_yn", mw__yn),
+    ENTRY("msvcrt.dll", "_localtime64_s", mw__localtime64_s),
+    ENTRY("msvcrt.dll", "_gmtime64_s", mw__gmtime64_s),
+    ENTRY("msvcrt.dll", "_mktime64", mw__mktime64),
+    ENTRY("msvcrt.dll", "_time64", mw__time64),
+    ENTRY("msvcrt.dll", "_time32", mw__time32),
+    ENTRY("msvcrt.dll", "_ctime64", mw__ctime64),
+    ENTRY("msvcrt.dll", "_difftime64", mw__difftime64),
+    ENTRY("msvcrt.dll", "_ftime64", mw__ftime64),
+    ENTRY("msvcrt.dll", "_ftime64_s", mw__ftime64),
+    ENTRY("msvcrt.dll", "_access", mw__access),
+    ENTRY("msvcrt.dll", "_waccess", mw__waccess),
+    ENTRY("msvcrt.dll", "_chsize", mw__chsize),
+    ENTRY("msvcrt.dll", "_chsize_s", mw__chsize_s),
+    ENTRY("msvcrt.dll", "_commit", mw__commit),
+    ENTRY("msvcrt.dll", "_configthreadlocale", mw__configthreadlocale),
+    ENTRY("msvcrt.dll", "_create_locale", mw__create_locale),
+    ENTRY("msvcrt.dll", "_free_locale", mw__free_locale),
+    ENTRY("msvcrt.dll", "_dup2", mw__dup2),
+    ENTRY("msvcrt.dll", "_getch", mw__getch),
+    ENTRY("msvcrt.dll", "_getpid", mw__getpid),
+    ENTRY("msvcrt.dll", "_getdrive", mw__getdrive),
+    ENTRY("msvcrt.dll", "_mkdir", mw__mkdir),
+    ENTRY("msvcrt.dll", "_wmkdir", mw__wmkdir),
+    ENTRY("msvcrt.dll", "_wchdir", mw__wchdir),
+    ENTRY("msvcrt.dll", "_wchmod", mw__wchmod),
+    ENTRY("msvcrt.dll", "_wcreat", mw__wcreat),
+    ENTRY("msvcrt.dll", "_wcsdup", mw__wcsdup),
+    ENTRY("msvcrt.dll", "_wcsicmp", mw__wcsicmp),
+    ENTRY("msvcrt.dll", "_wcsnicmp", mw__wcsnicmp),
+    ENTRY("msvcrt.dll", "_strnicmp", mw__strnicmp),
+    ENTRY("msvcrt.dll", "_wgetenv", mw__wgetenv),
+    ENTRY("msvcrt.dll", "_fullpath", mw__fullpath),
+    ENTRY("msvcrt.dll", "_wfullpath", mw__wfullpath),
+    ENTRY("msvcrt.dll", "_wgetcwd", mw__wgetcwd),
+    ENTRY("msvcrt.dll", "_wremove", mw__wremove),
+    ENTRY("msvcrt.dll", "_wrename", mw__wrename),
+    ENTRY("msvcrt.dll", "_wrmdir", mw__wrmdir),
+    ENTRY("msvcrt.dll", "_wutime64", mw__wutime64),
+    ENTRY("msvcrt.dll", "_utime64", mw__utime64),
+    ENTRY("msvcrt.dll", "_wfopen", mw__wfopen),
+    ENTRY("msvcrt.dll", "_fdopen", mw__fdopen),
+    ENTRY("msvcrt.dll", "_fsopen", mw__fsopen),
+    ENTRY("msvcrt.dll", "_fseeki64", mw__fseeki64),
+    ENTRY("msvcrt.dll", "_ftelli64", mw__ftelli64),
+    ENTRY("msvcrt.dll", "_lock_file", mw__lock_file),
+    ENTRY("msvcrt.dll", "_unlock_file", mw__unlock_file),
+    ENTRY("msvcrt.dll", "_fflush_nolock", mw__fflush_nolock),
+    ENTRY("msvcrt.dll", "_fstat64i32", mw__fstat64i32),
+    ENTRY("msvcrt.dll", "_stat64i32", mw__stat64i32),
+    ENTRY("msvcrt.dll", "_wstat64i32", mw__wstat64i32),
+    ENTRY("msvcrt.dll", "_open_osfhandle", mw__open_osfhandle),
+    ENTRY("msvcrt.dll", "_pipe", mw__pipe),
+    ENTRY("msvcrt.dll", "_lseek", mw__lseek),
+    ENTRY("msvcrt.dll", "_locking", mw__locking),
+    ENTRY("msvcrt.dll", "_findfirst64i32", mw__findfirst64i32),
+    ENTRY("msvcrt.dll", "_findnext64i32", mw__findnext64i32),
+    ENTRY("msvcrt.dll", "_findclose", mw__findclose),
+    ENTRY("msvcrt.dll", "_mbsrchr", mw__mbsrchr),
+    ENTRY("msvcrt.dll", "_ui64toa_s", mw__ui64toa_s),
+    ENTRY("msvcrt.dll", "_wspawnv", mw__wspawnv),
+    ENTRY("msvcrt.dll", "_wspawnve", mw__wspawnve),
+    ENTRY("msvcrt.dll", "_sopen_s", mw__sopen_s),
+    ENTRY("msvcrt.dll", "_wsopen", mw__wsopen),
+    ENTRY("msvcrt.dll", "_wsopen_s", mw__wsopen_s),
+    ENTRY("msvcrt.dll", "_invalid_parameter_noinfo", mw__invalid_parameter_noinfo),
+    ENTRY("msvcrt.dll", "__report_rangecheckfailure", mw___report_rangecheckfailure),
+    ENTRY("msvcrt.dll", "rand_s", mw_rand_s),
+    ENTRY("msvcrt.dll", "wcrtomb", mw_wcrtomb),
+    ENTRY("msvcrt.dll", "mbrtowc", mw_mbrtowc),
+    ENTRY("msvcrt.dll", "mbsrtowcs", mw_mbsrtowcs),
+    ENTRY("msvcrt.dll", "wcsrtombs", mw_wcsrtombs),
+    ENTRY("msvcrt.dll", "iswctype", mw__iswctype_bridge),
+    ENTRY("msvcrt.dll", "mbstowcs_s", mw_mbstowcs_s),
+    ENTRY("msvcrt.dll", "strtoll", mw__strtoll_bridge),
+    ENTRY("msvcrt.dll", "towlower", mw__towlower_bridge),
+    ENTRY("msvcrt.dll", "towupper", mw__towupper_bridge),
+
+ENTRY("msvcrt.dll", "acos", mw_acos),
+ENTRY("msvcrt.dll", "acosf", mw_acosf),
+ENTRY("msvcrt.dll", "acosh", mw_acosh),
+ENTRY("msvcrt.dll", "asin", mw_asin),
+ENTRY("msvcrt.dll", "asinf", mw_asinf),
+ENTRY("msvcrt.dll", "asinh", mw_asinh),
+ENTRY("msvcrt.dll", "asinhf", mw_asinhf),
+ENTRY("msvcrt.dll", "atan", mw_atan),
+ENTRY("msvcrt.dll", "atanf", mw_atanf),
+ENTRY("msvcrt.dll", "atanh", mw_atanh),
+ENTRY("msvcrt.dll", "atanhf", mw_atanhf),
+ENTRY("msvcrt.dll", "cbrt", mw_cbrt),
+ENTRY("msvcrt.dll", "cbrtf", mw_cbrtf),
+ENTRY("msvcrt.dll", "ceil", mw_ceil),
+ENTRY("msvcrt.dll", "ceilf", mw_ceilf),
+ENTRY("msvcrt.dll", "cos", mw_cos),
+ENTRY("msvcrt.dll", "cosf", mw_cosf),
+ENTRY("msvcrt.dll", "cosh", mw_cosh),
+ENTRY("msvcrt.dll", "exp", mw_exp),
+ENTRY("msvcrt.dll", "exp2", mw_exp2),
+ENTRY("msvcrt.dll", "exp2f", mw_exp2f),
+ENTRY("msvcrt.dll", "expf", mw_expf),
+ENTRY("msvcrt.dll", "expm1", mw_expm1),
+ENTRY("msvcrt.dll", "fabs", mw_fabs),
+ENTRY("msvcrt.dll", "floor", mw_floor),
+ENTRY("msvcrt.dll", "floorf", mw_floorf),
+ENTRY("msvcrt.dll", "log", mw_log),
+ENTRY("msvcrt.dll", "log10", mw_log10),
+ENTRY("msvcrt.dll", "log10f", mw_log10f),
+ENTRY("msvcrt.dll", "log1p", mw_log1p),
+ENTRY("msvcrt.dll", "log1pf", mw_log1pf),
+ENTRY("msvcrt.dll", "log2", mw_log2),
+ENTRY("msvcrt.dll", "log2f", mw_log2f),
+ENTRY("msvcrt.dll", "logf", mw_logf),
+ENTRY("msvcrt.dll", "sin", mw_sin),
+ENTRY("msvcrt.dll", "sinf", mw_sinf),
+ENTRY("msvcrt.dll", "sinh", mw_sinh),
+ENTRY("msvcrt.dll", "sinhf", mw_sinhf),
+ENTRY("msvcrt.dll", "sqrt", mw_sqrt),
+ENTRY("msvcrt.dll", "sqrtf", mw_sqrtf),
+ENTRY("msvcrt.dll", "tan", mw_tan),
+ENTRY("msvcrt.dll", "tanf", mw_tanf),
+ENTRY("msvcrt.dll", "tanh", mw_tanh),
+ENTRY("msvcrt.dll", "tanhf", mw_tanhf),
+ENTRY("msvcrt.dll", "trunc", mw_trunc),
+ENTRY("msvcrt.dll", "truncf", mw_truncf),
+ENTRY("msvcrt.dll", "roundf", mw_roundf),
+ENTRY("msvcrt.dll", "llrintf", mw_llrintf),
+ENTRY("msvcrt.dll", "lrintf", mw_lrintf),
+ENTRY("msvcrt.dll", "atan2", mw_atan2),
+ENTRY("msvcrt.dll", "atan2f", mw_atan2f),
+ENTRY("msvcrt.dll", "fmod", mw_fmod),
+ENTRY("msvcrt.dll", "fmodf", mw_fmodf),
+ENTRY("msvcrt.dll", "pow", mw_pow),
+ENTRY("msvcrt.dll", "powf", mw_powf),
+ENTRY("msvcrt.dll", "hypot", mw_hypot),
+ENTRY("msvcrt.dll", "fmax", mw_fmax),
+ENTRY("msvcrt.dll", "fmaxf", mw_fmaxf),
+ENTRY("msvcrt.dll", "fmin", mw_fmin),
+ENTRY("msvcrt.dll", "fminf", mw_fminf),
+ENTRY("msvcrt.dll", "remainder", mw_remainder),
+ENTRY("msvcrt.dll", "nextafter", mw_nextafter),
+ENTRY("msvcrt.dll", "fma", mw_fma),
+ENTRY("msvcrt.dll", "fmaf", mw_fmaf),
+ENTRY("msvcrt.dll", "llround", mw_llround),
+ENTRY("msvcrt.dll", "llroundf", mw_llroundf),
+ENTRY("msvcrt.dll", "lround", mw_lround),
+ENTRY("msvcrt.dll", "lroundf", mw_lroundf),
+ENTRY("msvcrt.dll", "lrint", mw_lrint),
+ENTRY("msvcrt.dll", "lrintf", mw_lrintf),
+ENTRY("msvcrt.dll", "llrint", mw_llrint),
+ENTRY("msvcrt.dll", "modf", mw_modf),
+ENTRY("msvcrt.dll", "modff", mw_modff),
+ENTRY("msvcrt.dll", "frexp", mw_frexp),
+ENTRY("msvcrt.dll", "erf", mw_erf),
+ENTRY("msvcrt.dll", "erff", mw_erff),
+ENTRY("msvcrt.dll", "isalnum", mw_isalnum),
+ENTRY("msvcrt.dll", "isalpha", mw_isalpha),
+ENTRY("msvcrt.dll", "isblank", mw_isblank),
+ENTRY("msvcrt.dll", "iscntrl", mw_iscntrl),
+ENTRY("msvcrt.dll", "isdigit", mw_isdigit),
+ENTRY("msvcrt.dll", "isprint", mw_isprint),
+ENTRY("msvcrt.dll", "toupper", mw_toupper),
+ENTRY("msvcrt.dll", "strcoll", mw_strcoll),
+ENTRY("msvcrt.dll", "wcschr", mw_wcschr),
+ENTRY("msvcrt.dll", "wcsrchr", mw_wcsrchr),
+ENTRY("msvcrt.dll", "wcsncmp", mw_wcsncmp),
+ENTRY("msvcrt.dll", "wcsncpy", mw_wcsncpy),
+ENTRY("msvcrt.dll", "wcscat", mw_wcscat),
+ENTRY("msvcrt.dll", "wcscpy", mw_wcscpy),
+ENTRY("msvcrt.dll", "wcsstr", mw_wcsstr),
+ENTRY("msvcrt.dll", "wcsspn", mw_wcsspn),
+ENTRY("msvcrt.dll", "wcscoll", mw_wcscoll),
+ENTRY("msvcrt.dll", "wcsxfrm", mw_wcsxfrm),
+ENTRY("msvcrt.dll", "wcsftime", mw_wcsftime),
+ENTRY("msvcrt.dll", "wcsnlen", mw_wcsnlen),
+ENTRY("msvcrt.dll", "bsearch", mw_bsearch),
+ENTRY("msvcrt.dll", "raise", mw_raise),
+ENTRY("msvcrt.dll", "clearerr", mw_clearerr),
+ENTRY("msvcrt.dll", "ferror", mw_ferror),
+ENTRY("msvcrt.dll", "putc", mw_putc),
+ENTRY("msvcrt.dll", "putchar", mw_putchar),
+ENTRY("msvcrt.dll", "fgetwc", mw_fgetwc),
+ENTRY("msvcrt.dll", "ungetwc", mw_ungetwc),
+ENTRY("msvcrt.dll", "putwc", mw_putwc),
+ENTRY("msvcrt.dll", "perror", mw_perror),
+ENTRY("msvcrt.dll", "getchar", mw_getchar),
+ENTRY("msvcrt.dll", "setbuf", mw_setbuf),
+ENTRY("msvcrt.dll", "atof", mw_atof),
+ENTRY("msvcrt.dll", "atol", mw_atol),
+ENTRY("msvcrt.dll", "strtod", mw_strtod),
+ENTRY("msvcrt.dll", "strtof", mw_strtof),
+ENTRY("msvcrt.dll", "strtoull", mw_strtoull),
+ENTRY("msvcrt.dll", "strtoumax", mw_strtoumax),
+ENTRY("msvcrt.dll", "mbstowcs", mw_mbstowcs),
+ENTRY("msvcrt.dll", "mbrlen", mw_mbrlen),
+ENTRY("msvcrt.dll", "wctomb", mw_wctomb),
+ENTRY("msvcrt.dll", "wctype", mw_wctype),
+
+    ENTRY("msvcrt.dll", "round", mw_round_bridge),
+    ENTRY("msvcrt.dll", "strcat", mw_strcat),
+    ENTRY("msvcrt.dll", "strncat", mw_strncat),
+    ENTRY("msvcrt.dll", "strncpy", mw_strncpy),
+    ENTRY("msvcrt.dll", "strncpy_s", mw_strncpy_s),
+    ENTRY("msvcrt.dll", "strnlen", mw_strnlen),
+    ENTRY("msvcrt.dll", "strpbrk", mw_strpbrk),
+    ENTRY("msvcrt.dll", "strspn", mw_strspn),
+    ENTRY("msvcrt.dll", "strtok", mw_strtok),
+    ENTRY("msvcrt.dll", "strtok_s", mw_strtok_s),
+    ENTRY("msvcrt.dll", "strxfrm", mw_strxfrm),
+    ENTRY("msvcrt.dll", "wcscmp", mw_wcscmp),
+    ENTRY("msvcrt.dll", "wcscat_s", mw_wcscat_s),
+    ENTRY("msvcrt.dll", "wcscpy_s", mw_wcscpy_s),
+    ENTRY("msvcrt.dll", "wcsncpy_s", mw_wcsncpy_s),
+    ENTRY("msvcrt.dll", "wcstoll", mw_wcstoll),
+    ENTRY("msvcrt.dll", "wcstoull", mw_wcstoull),
+    ENTRY("msvcrt.dll", "wcstombs_s", mw_wcstombs_s),
+    ENTRY("msvcrt.dll", "strerror_s", mw_strerror_s),
+    ENTRY("ws2_32.dll", "WSAStartup", mw_WSAStartup),
+    ENTRY("ws2_32.dll", "WSACleanup", mw_WSACleanup),
+    ENTRY("ws2_32.dll", "WSAGetLastError", mw_WSAGetLastError),
+    ENTRY("ws2_32.dll", "WSASetLastError", mw_WSASetLastError),
+    ENTRY("ws2_32.dll", "htonl", mw_htonl),
+    ENTRY("ws2_32.dll", "htons", mw_htons),
+    ENTRY("ws2_32.dll", "ntohl", mw_ntohl),
+    ENTRY("ws2_32.dll", "ntohs", mw_ntohs),
+    ENTRY("ws2_32.dll", "inet_addr", mw_inet_addr),
+    ENTRY("ws2_32.dll", "inet_ntoa", mw_inet_ntoa),
+    ENTRY("ws2_32.dll", "socket", mw_socket),
+    ENTRY("ws2_32.dll", "closesocket", mw_closesocket),
+    ENTRY("ws2_32.dll", "connect", mw_connect),
+    ENTRY("ws2_32.dll", "bind", mw_bind),
+    ENTRY("ws2_32.dll", "listen", mw_listen),
+    ENTRY("ws2_32.dll", "accept", mw_accept),
+    ENTRY("ws2_32.dll", "shutdown", mw_shutdown),
+    ENTRY("ws2_32.dll", "getsockopt", mw_getsockopt),
+    ENTRY("ws2_32.dll", "setsockopt", mw_setsockopt),
+    ENTRY("ws2_32.dll", "getsockname", mw_getsockname),
+    ENTRY("ws2_32.dll", "getpeername", mw_getpeername),
+    ENTRY("ws2_32.dll", "send", mw_send),
+    ENTRY("ws2_32.dll", "recv", mw_recv),
+    ENTRY("ws2_32.dll", "sendto", mw_sendto),
+    ENTRY("ws2_32.dll", "recvfrom", mw_recvfrom),
+    ENTRY("ws2_32.dll", "select", mw_select),
+    ENTRY("ws2_32.dll", "ioctlsocket", mw_ioctlsocket),
+    ENTRY("ws2_32.dll", "WSAIoctl", mw_WSAIoctl),
+    ENTRY("msvcrt.dll", "__WSAFDIsSet", mw_select), /* shim: FD_ISSET helper */
+    ENTRY("KERNEL32.DLL", "LoadLibraryExA", mw_LoadLibraryExA),
 };
 
 #define NUM_IMPORTS (sizeof(g_import_table) / sizeof(g_import_table[0]))
@@ -3409,6 +7844,14 @@ static DataImportEntry g_data_imports[] = {
     { "msvcrt.dll", "__initenv",   &g_initenv_ptr },
     { "msvcrt.dll", "_commode",   &g_commode_val },
     { "msvcrt.dll", "_fmode",     &g_fmode_val },
+    /* TASK-API-011: UCRT-flavored data exports (__p_* return pointers to
+     * the variables; __tzname/__timezone/__daylight are the variables). */
+    /* ALL UCRT __p_* exports are FUNCTIONS returning &var — t10 crashes
+     * (0x2039038 __p__fmode, 0x2039034 __p__commode, 0x2039050 __p___argc)
+     * proved call-style usage for each. See mw___p__* below. */
+    { "api-ms-win-crt-time-l1-1-0.dll", "__tzname",   g_tzname },
+    { "api-ms-win-crt-time-l1-1-0.dll", "__timezone", &g_timezone_val },
+    { "api-ms-win-crt-time-l1-1-0.dll", "__daylight", &g_daylight_val },
     /* _errno removed from data imports — it's a function, not data */
 };
 #define NUM_DATA_IMPORTS (sizeof(g_data_imports) / sizeof(g_data_imports[0]))
@@ -3700,13 +8143,37 @@ static int load_pe(const char* filepath) {
         fprintf(stderr, "[WARN] %d imports unresolved\n", total_unresolved);
     }
 
-    /* Check TLS */
+    /* Check TLS (TASK-TLS-001): implement native static TLS.
+     * - allocate the image's TLS template + zero-fill as slot 0 block
+     * - write the slot index into the image's __tls_index
+     * - publish the block via ThreadLocalStoragePointer (gs:0x58 -> array)
+     * - run TLS callbacks with DLL_PROCESS_ATTACH */
     if (num_dd > DD_TLS && dd[DD_TLS].VirtualAddress != 0) {
         TlsDirectory64* tls = (TlsDirectory64*)(g_image_base + dd[DD_TLS].VirtualAddress);
         MW_TRACE("TLS: StartRaw=0x%lx EndRaw=0x%lx Callbacks=0x%lx",
                  tls->StartAddressOfRawData, tls->EndAddressOfRawData,
                  tls->AddressOfCallBacks);
-        /* No TLS callbacks for UPX 4.2.4 (AddressOfCallBacks = 0) */
+        size_t raw_size = 0;
+        if (tls->EndAddressOfRawData > tls->StartAddressOfRawData)
+            raw_size = (size_t)(tls->EndAddressOfRawData - tls->StartAddressOfRawData);
+        uint8_t* block = (uint8_t*)malloc(raw_size + tls->SizeOfZeroFill);
+        if (block) {
+            if (raw_size) memcpy(block, (void*)(uintptr_t)tls->StartAddressOfRawData, raw_size);
+            if (tls->SizeOfZeroFill) memset(block + raw_size, 0, tls->SizeOfZeroFill);
+            g_tls_ptr_array[0] = block;                 /* static TLS slot = 0 */
+            if (tls->AddressOfIndex)
+                *(uint32_t*)(uintptr_t)tls->AddressOfIndex = 0;
+            MW_TRACE("TLS: static block %p (%zu+%u bytes) -> slot 0",
+                     block, raw_size, tls->SizeOfZeroFill);
+        }
+        if (tls->AddressOfCallBacks) {
+            typedef void (__attribute__((ms_abi)) *tls_cb)(void*, uint32_t, void*);
+            void** cb = (void**)(uintptr_t)tls->AddressOfCallBacks;
+            for (uint32_t i = 0; cb[i]; i++) {
+                MW_TRACE("TLS: callback[%u] = %p", i, cb[i]);
+                ((tls_cb)cb[i])(g_image_base, 1 /* DLL_PROCESS_ATTACH */, NULL);
+            }
+        }
     }
 
     /* Store Exception directory (.pdata) for SEH unwinding */
@@ -3803,6 +8270,22 @@ static void crash_handler(int sig, siginfo_t* info, void* ctx) {
             uc->uc_mcontext.gregs[REG_R12], uc->uc_mcontext.gregs[REG_R13],
             uc->uc_mcontext.gregs[REG_R14], uc->uc_mcontext.gregs[REG_R15]);
 
+    /* ISS1-WAVE3B: tagged stack scan — return addresses into the loader or
+     * the PE reveal the abort/fault chain even when libc frames confuse the
+     * RBP walker. Bounded + read-safe. */
+    {
+        uint64_t scan_rsp = rsp;
+        for (int i = 0; i < 512; i++) {
+            uint64_t v = *(uint64_t*)(scan_rsp + (uint64_t)(i * 8));
+            const char* tag = NULL;
+            if (v >= 0x2000000ull && v < 0x2050000ull) tag = "LOADER";
+            else if (g_image_base && v >= (uint64_t)(uintptr_t)g_image_base &&
+                     v < (uint64_t)(uintptr_t)g_image_base + g_image_size) tag = "PE";
+            if (tag)
+                fprintf(stderr, "  [SCAN rsp+%03d] 0x%lx <%s>\n", i * 8, v, tag);
+        }
+    }
+
     /* Try to identify the function at RIP */
     fprintf(stderr, "  Backtrace (via stack walking):\n");
     uint64_t bt_rip = rip, bt_rsp = rsp;
@@ -3847,7 +8330,50 @@ static void setup_signal_handlers(void) {
  * Main
  * ============================================================ */
 
+
+/* ISS1-WATCHDOG: MINWIN_WATCHDOG=<seconds> dumps RIP/RSP at hang time */
+#include <ucontext.h>
+static void mw_watchdog_handler(int sig, siginfo_t* si, void* uc) {
+    ucontext_t* c = (ucontext_t*)uc;
+    fprintf(stderr, "[WATCHDOG] hang detected — RIP=0x%llx RSP=0x%llx RDI=0x%llx RSI=0x%llx RAX=0x%llx RCX=0x%llx RDX=0x%llx R8=0x%llx RBP=0x%llx\n",
+            (unsigned long long)c->uc_mcontext.gregs[REG_RIP],
+            (unsigned long long)c->uc_mcontext.gregs[REG_RSP],
+            (unsigned long long)c->uc_mcontext.gregs[REG_RDI],
+            (unsigned long long)c->uc_mcontext.gregs[REG_RSI],
+            (unsigned long long)c->uc_mcontext.gregs[REG_RAX],
+            (unsigned long long)c->uc_mcontext.gregs[REG_RCX],
+            (unsigned long long)c->uc_mcontext.gregs[REG_RDX],
+            (unsigned long long)c->uc_mcontext.gregs[REG_R8],
+            (unsigned long long)c->uc_mcontext.gregs[REG_RBP]);
+    uint64_t rsp = c->uc_mcontext.gregs[REG_RSP];
+    for (int i = 0; i < 256; i++) {
+        uint64_t v = *(uint64_t*)(rsp + i * 8);
+        const char* tag = "";
+        if (v >= 0x2000000ull && v < 0x2050000ull) tag = " <LOADER>";
+        else if (v >= 0x140000000ull && v < 0x141fdf000ull) tag = " <PE>";
+        if (tag[0] || i < 12)
+            fprintf(stderr, "[WATCHDOG] [rsp+%03d] = 0x%llx%s\n", i * 8,
+                    (unsigned long long)v, tag);
+    }
+    _exit(3);
+}
+static void mw_install_watchdog(int seconds) {
+    const char* v = getenv("MINWIN_WATCHDOG");
+    int secs = v ? atoi(v) : seconds;
+    if (secs <= 0) return;
+    struct sigaction sa;
+    memset(&sa, 0, sizeof(sa));
+    sa.sa_sigaction = mw_watchdog_handler;
+    sa.sa_flags = SA_SIGINFO;
+    sigaction(SIGALRM, &sa, NULL);
+    alarm((unsigned int)secs);
+    fprintf(stderr, "[WATCHDOG] armed for %ds\n", secs);
+}
+
 int main(int argc, char* argv[]) {
+    /* full Unicode through wcstombs/wcstombs (Wave-3B conversion APIs) */
+    setlocale(LC_ALL, "C.UTF-8");
+    mw_install_watchdog(0);
     if (argc < 2) {
         printf("MiniWin PE Loader v0.1\n");
         printf("Usage: %s <pe_executable> [args...]\n", argv[0]);

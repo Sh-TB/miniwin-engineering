@@ -1,0 +1,2 @@
+1232979c05fa7c4bd28a7a1d0101568b10afeb0c31b8a04414a463b4c0e007d0  artifacts/opensource/imagemagick/magick.exe
+78f831872bf50d4f8260f9aa165c36affe2393df92f38d40b1a9104d35077d2a  artifacts/opensource/ffmpeg/ffmpeg-master-latest-win64-gpl/bin/ffmpeg.exe

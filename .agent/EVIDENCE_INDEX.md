@@ -63,3 +63,45 @@ Format: `ID | path | what it proves | session`
 - EV-049 | docs/master/experiments/EXP-039-bug031-cleanup-chain-g1.md | full report: reproduce-first table, early-clobber proof, E1–E5 bisection (compile-dependent phase-1 flip), rax/r10/r11 boundary pinning, G1 scorecard, P-F/P-G/P-H | 2026-10-15
 - EV-050 | docs/bugs/BUG-031.md (CLOSED) + docs/master/ARCHITECTURE_DECISIONS.md ADR-011 | defect closure + architecture decision (resume commands + raise-site register fidelity) | 2026-10-15
 - EV-051 | checkpoints/checkpoint_pre_task-bug031_20261015.zip | pre-task checkpoint from the interrupted session (WIP origin) | 2026-10-15
+
+## appcompat sweep (CONTINUE #6, 2026-10-15)
+- EV-052 | evidence/master/appcompat/run-20261015_053015/summary.csv | final sweep: t01..t07 PASS, t08 CRASH (BUG-037), t09 CRASH (wave-3 APIs) | 2026-10-15
+- EV-053 | evidence/master/appcompat/run-20261015_044710/summary.csv | FIRST sweep: 0/9 PASS — every PE died at `call [iat]` on unresolved CRT startup imports (RIP=raw RVA 0x92f8 signature) | 2026-10-15
+- EV-054 | docs/master/experiments/EXP-040-appcompat-sweep.md | full report: 8-stage fix trail, findings APP-F-01..08, BUG-037 ground truth + fix plan, wave-3 API list (44) | 2026-10-15
+- EV-055 | docs/bugs/BUG-032.md | iob FILE* stride-0x30 window; setvbuf(stream=base+0x60) live evidence | 2026-10-15
+- EV-056 | docs/bugs/BUG-033.md | printf ms->SysV repack; float crash + integer-luck explanation | 2026-10-15
+- EV-057 | docs/bugs/BUG-034.md | CS 40-byte contract; dtoa freelist[0]=1 corruption at CS@0x14000b178/freelist@+0x28 | 2026-10-15
+- EV-058 | docs/bugs/BUG-035.md | qsort comparator ABI; cmp_int NULL deref (RCX=0) | 2026-10-15
+- EV-059 | docs/bugs/BUG-036.md | jmp_buf ownership; t07 longjmp(val=1) infinite loop trace | 2026-10-15
+- EV-060 | docs/bugs/BUG-037.md | OPEN: unwind interpreter fault (R9=0x27) on UI RVA 0x50458; handler/disposition trace preceding it | 2026-10-15
+- EV-061 | evidence/master/appcompat/run-20261015_053015/t08_big_cpp_stl.stderr + api_trace | C++ EH machinery live: personality called, disposition=1, frames 2->3 walked, then loader fault | 2026-10-15
+- EV-062 | tests/appcompat/ (t01..t09 + run_sweep.sh) | reproducible sweep suite; every program self-verifying with deterministic exit codes | 2026-10-15
+
+## CONTINUE #7 (2026-10-15)
+- EV-041a: t08 UI@0x50458 raw bytes + reference decode (13 slots, END-offsets,
+  handler 0x131b0@+32) — scripts/bug037_ref_decode.py output; root cause 1/2/3.
+- EV-041b: standalone alloc harness reproduce 0xff0191 → fixed 0x188 —
+  scripts/bug037_alloc_harness.c (CountOfCodes=slots proof).
+- EV-041c: full LSDA decode of t08 main frame — 73 entries; throw region
+  [0x806,0x829) lp=0x82d → VA 0x1c9d action=5; NO entry with lp=0x813 —
+  scripts/bug037_lsda_parse.py (BUG-038 ground truth).
+- EV-041d: __p__* function-vs-data crash signatures: __p__fmode=0x2039038,
+  __p__commode=0x2039034, __p___argc=0x2039050 (IAT value used as call target).
+- EV-041e: map_crt_stream fallback bug repro: /tmp/snapt.exe r=5 buf=[] →
+  r=5 buf=[3.142] after pass-through fix.
+- EV-041f: G1 pins: evidence/master/g1/20261015_{063340,064317,073727}/.
+- EV-041g: sweeps: evidence/master/appcompat/run-20261015_{071313,071634,073729}/
+  (final 10/12: t01..t07, t10, t11, t12 PASS).
+- EV-041h: toolchain re-download sha/size 87,950,564 B (llvm-mingw 20240917 ucrt).
+
+---
+## EV-ISS1 (2026-10-15, updated post-merge) — Issue #1 Phase 0/1 slice
+- evidence/master/issue1_final_*/ — final 3× runs on MERGED loader (sha256 0630d3ce…): upx/t09/t10/t11/t12 exit 0 ×3 byte-identical; t08 exit 1 ×3 (159/255, deterministic)
+- evidence/master/appcompat/run-20261015_091659/ — merged-tree sweep: 10/12 PASS (t08 FAIL, t09_big_cpp_iostream TIMEOUT — both C++ EH family, BUG-038 lineage)
+- artifacts/audit/repository_state.md · artifacts/audit/issue_reconciliation.md · artifacts/results/issue1_phase1_manifest.md — Phase-0/1 audit + reconciliation + manifest
+- tests/corpus/ — 5 recreated Phase-1 fixtures + 2 diagnostic probes (SHA256SUMS committed)
+- tests/appcompat/*.exe — rebuilt sweep binaries (sources pre-existed; binaries not committed upstream)
+- KEY SEMANTIC CONTRACTS discovered this slice (do not regress):
+  1) fopen MUST return MSVCRT-strided registry handle (guest CRT does InitializeCriticalSection(fp+0x30)); raw glibc FILE* → heap corruption SIGSEGV
+  2) real ungetc via glibc on mapped stream (stub lost pushback → fscanf off-by-one per token)
+  3) errno mirror (g_errno_storage) must sync on fopen/remove failure (guest _errno path)

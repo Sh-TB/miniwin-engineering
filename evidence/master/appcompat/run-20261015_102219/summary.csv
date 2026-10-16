@@ -1,0 +1,13 @@
+test,exit,signal,class
+t01_hello,0,,PASS
+t02_math,0,,PASS
+t03_mem,0,,PASS
+t04_string,0,,PASS
+t05_file,0,,PASS
+t06_setjmp,0,,PASS
+t07_big_c_app,0,,PASS
+t08_big_cpp_stl,0,,PASS
+t09_big_cpp_iostream,124,,TIMEOUT
+t10_float_math,0,,PASS
+t11_abi_deep,0,,PASS
+t12_libc_io,0,,PASS

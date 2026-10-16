@@ -1,0 +1,3 @@
+[MiniWin] Loading /home/z/my-project/workspace/miniwin-engineering/tests/corpus/bin/t12_libc_io.exe...
+RESULT score=255 expected=255
+RESULT libc_io=ok

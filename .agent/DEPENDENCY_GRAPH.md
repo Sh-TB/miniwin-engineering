@@ -65,3 +65,17 @@
 ```
 
 Rules: a task is READY only when all arrows into it are VERIFIED/TESTED. One task per CONTINUE by default.
+
+## CONTINUE #6 additions (2026-10-15, appcompat wave)
+```
+BUG-037 (CRT-startup UNWIND decode) ──► BUG-038 (G2 C++ EH acceptance)
+TASK-TLS-001 (DONE) ──► TLS-002 (thread callbacks) ──► API-011 (threads)
+API-010 (callback bridges: signal/beginthreadex/UEF/AVEH) ──► API-011
+API-009 (wave 3: 44 APIs) ──► TEST-011 (suite to 15) ──► TEST-012 (golden)
+TEST-013 (ABI boundary unit tests) ──► TEST-014 (printf repack fuzz)
+API-019 (VirtualAlloc) ──► API-022 (Heap family)
+INFRA-003 (sweep runner repo-local) ──► BENCH-001 (API db automation) ──► BENCH-002 (trend)
+INFRA-004 (toolchain pin script) ──► DOC-010 (toolchain guide)
+```
+Rule unchanged: READY only when all arrows in are TESTED/VERIFIED. Sweep suite (tests/appcompat/)
+is now the API-tier guard: any new ENTRY row needs a program that exercises it.

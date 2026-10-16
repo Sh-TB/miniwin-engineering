@@ -1,0 +1,15 @@
+[TRACE] Command line: /home/z/my-project/workspace/miniwin-engineering/tests/appcompat/t01_hello.exe
+
+[CRASH] Signal 11 at RIP=0x14000648e
+  RAX=0x1 RCX=0x0 RDX=0x14000b1a0 R8=0x0 R9=0x0
+  RSP=0x7fff97836f20 RBP=0x0
+  g_image_base=0x140000000 g_image_size=0x35000
+  RVA=0x648e (inside loaded PE)
+  Bytes: 4c 8b 00 4c 89 04 ca 83 3d a4 4c 00 00 02 0f 84 
+  Return addr: 0x0
+  RSI=0x0 RDI=0x14000b1f0
+  R8=0x0  R9=0x0 R10=0x0 R11=0x202
+  R12=0x0 R13=0x2 R14=0x7fff97837120 R15=0x2
+  Backtrace (via stack walking):
+    [0] RIP=0x14000648e RVA=0x648e      [RSP+0] = 0x0 (return addr?)
+    [1] RIP=0x14000648e RVA=0x648e

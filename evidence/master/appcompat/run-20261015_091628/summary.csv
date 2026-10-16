@@ -1,0 +1,13 @@
+test,exit,signal,class
+t01_hello: MISSING BINARY
+t02_math: MISSING BINARY
+t03_mem: MISSING BINARY
+t04_string: MISSING BINARY
+t05_file: MISSING BINARY
+t06_setjmp: MISSING BINARY
+t07_big_c_app: MISSING BINARY
+t08_big_cpp_stl: MISSING BINARY
+t09_big_cpp_iostream: MISSING BINARY
+t10_float_math: MISSING BINARY
+t11_abi_deep: MISSING BINARY
+t12_libc_io: MISSING BINARY

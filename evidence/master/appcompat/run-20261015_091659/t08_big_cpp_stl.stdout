@@ -1,0 +1,11 @@
+[MiniWin] Loading /home/z/my-project/workspace/miniwin-engineering/tests/appcompat/t08_big_cpp_stl.exe...
+FAIL: string size
+total inventory value = 8349180 cents
+caught NotFound: product not found
+caught AppError: negative quantity
+FAIL: 7 guards destroyed during unwind
+FAIL: no live guards after unwind
+unwind depth test OK (ctor=7 dtor=1 live=6)
+FAIL: rethrow preserves object
+checks=27 failed=4 throws=4
+t08: FAIL

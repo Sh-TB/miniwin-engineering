@@ -1,0 +1,12 @@
+[TRACE] Command line: /home/z/my-project/workspace/miniwin-engineering/tests/appcompat/t08_big_cpp_stl.exe
+[WARN] 26 imports unresolved
+
+[CRASH] Signal 11 at RIP=0x50194
+  RAX=0x140043460 RCX=0x14004f546 RDX=0x0 R8=0x0 R9=0x0
+  RSP=0x7ffc2837a8e8 RBP=0x2026001
+  g_image_base=0x140000000 g_image_size=0xa1000
+  (NOT inside loaded PE)
+  RSI=0x14004f7c8 RDI=0x1
+  R8=0x0  R9=0x0 R10=0x0 R11=0x202
+  R12=0x2029040 R13=0x1 R14=0x140056310 R15=0x1
+  Backtrace (via stack walking):

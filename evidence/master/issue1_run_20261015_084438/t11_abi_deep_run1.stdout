@@ -1,0 +1,4 @@
+[MiniWin] Loading /home/z/my-project/workspace/miniwin-engineering/tests/corpus/bin/t11_abi_deep.exe...
+RESULT preserve_probe=1761356 expected=1761356
+RESULT score=254 expected=255
+RESULT abi_deep=ok

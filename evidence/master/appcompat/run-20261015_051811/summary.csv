@@ -1,0 +1,10 @@
+test,exit,signal,class
+t01_hello,127,,FAIL
+t02_math,127,,FAIL
+t03_mem,127,,FAIL
+t04_string,127,,FAIL
+t05_file,127,,FAIL
+t06_setjmp,127,,FAIL
+t07_big_c_app,127,,FAIL
+t08_big_cpp_stl,127,,FAIL
+t09_big_cpp_iostream,127,,FAIL

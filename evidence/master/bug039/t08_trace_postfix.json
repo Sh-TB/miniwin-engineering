@@ -1,0 +1,2644 @@
+{
+  "trace": [
+[API] PE Loader: file=tests/appcompat/t08_big_cpp_stl.exe size=631444
+[API] PE Loader: ImageBase=0x140000000 EP=0x13f0 SizeOfImage=0x68000 Sections=18
+[API] PE Loader: Mapped at 0x140000000 (forced via MAP_FIXED)
+[API] Section [0] .text    VA=0x00001000 VS=0x00027470 Raw=0x00027600 Ch=0x60000020
+[API] Section [1] .data    VA=0x00029000 VS=0x00000220 Raw=0x00000400 Ch=0xc0000040
+[API] Section [2] .rdata   VA=0x0002a000 VS=0x00006778 Raw=0x00006800 Ch=0x40000040
+[API] Section [3] .pdata   VA=0x00031000 VS=0x000028e0 Raw=0x00002a00 Ch=0x40000040
+[API] Section [4] .xdata   VA=0x00034000 VS=0x000025a4 Raw=0x00002600 Ch=0x40000040
+[API] Section [5] .bss     VA=0x00037000 VS=0x00000c10 Raw=0x00000000 Ch=0xc0000080
+[API] Section [6] .idata   VA=0x00038000 VS=0x00000a6c Raw=0x00000c00 Ch=0x40000040
+[API] Section [7] .tls     VA=0x00039000 VS=0x00000010 Raw=0x00000200 Ch=0xc0000040
+[API] Section [8] .reloc   VA=0x0003a000 VS=0x000006b4 Raw=0x00000800 Ch=0x42000040
+[API] Section [9] /4       VA=0x0003b000 VS=0x000006b0 Raw=0x00000800 Ch=0x42000040
+[API] Section [10] /19      VA=0x0003c000 VS=0x00012e13 Raw=0x00013000 Ch=0x42000040
+[API] Section [11] /31      VA=0x0004f000 VS=0x000035a7 Raw=0x00003600 Ch=0x42000040
+[API] Section [12] /45      VA=0x00053000 VS=0x00006fcc Raw=0x00007000 Ch=0x42000040
+[API] Section [13] /57      VA=0x0005a000 VS=0x000017d8 Raw=0x00001800 Ch=0x42000040
+[API] Section [14] /70      VA=0x0005c000 VS=0x0000039d Raw=0x00000400 Ch=0x42000040
+[API] Section [15] /81      VA=0x0005d000 VS=0x00001818 Raw=0x00001a00 Ch=0x42000040
+[API] Section [16] /97      VA=0x0005f000 VS=0x00007952 Raw=0x00007a00 Ch=0x42000040
+[API] Section [17] /113     VA=0x00067000 VS=0x00000541 Raw=0x00000600 Ch=0x42000040
+[API] Import Directory: RVA=0x38000 Size=0xa6c
+[API] Import DLL: KERNEL32.dll (IAT RVA=0x382a0, ILT RVA=0x38040)
+[API]   [0] CloseHandle -> 0x200d000
+[API]   [1] DeleteCriticalSection -> 0x200ff90
+[API]   [2] EnterCriticalSection -> 0x20100b0
+[API]   [3] UNRESOLVED: FormatMessageA
+[API]   [4] GetLastError -> 0x2005850
+[API]   [5] GetModuleHandleW -> 0x20070f0
+[API]   [6] GetProcAddress -> 0x2005a80
+[API]   [7] GetThreadId -> 0x200ba90
+[API]   [8] InitializeCriticalSection -> 0x200fd10
+[API]   [9] IsDBCSLeadByteEx -> 0x2004e00
+[API]   [10] LeaveCriticalSection -> 0x20101e0
+[API]   [11] UNRESOLVED: LoadLibraryW
+[API]   [12] UNRESOLVED: LocalFree
+[API]   [13] MultiByteToWideChar -> 0x2007cb0
+[API]   [14] RaiseException -> 0x2004fe0
+[API]   [15] RtlCaptureContext -> 0x200f100
+[API]   [16] RtlLookupFunctionEntry -> 0x2005ce0
+[API]   [17] RtlUnwindEx -> 0x2014180
+[API]   [18] RtlVirtualUnwind -> 0x2012c90
+[API]   [19] SetLastError -> 0x200d5c0
+[API]   [20] SetUnhandledExceptionFilter -> 0x2005ec0
+[API]   [21] Sleep -> 0x20109d0
+[API]   [22] TlsAlloc -> 0x2007300
+[API]   [23] UNRESOLVED: TlsFree
+[API]   [24] TlsGetValue -> 0x2005fb0
+[API]   [25] TlsSetValue -> 0x200d6a0
+[API]   [26] TryEnterCriticalSection -> 0x200fe50
+[API]   [27] VirtualProtect -> 0x2008290
+[API]   [28] VirtualQuery -> 0x20076b0
+[API]   [29] WideCharToMultiByte -> 0x20084f0
+[API] Import DLL: msvcrt.dll (IAT RVA=0x38398, ILT RVA=0x38138)
+[API]   [0] __C_specific_handler -> 0x200f870
+[API]   [1] ___lc_codepage_func -> 0x200e350
+[API]   [2] ___mb_cur_max_func -> 0x200fb30
+[API]   [3] __getmainargs -> 0x20060a0
+[API]   [4] __initenv -> DATA 0x2037840
+[API]   [5] __iob_func -> 0x2006340
+[API]   [6] __set_app_type -> 0x200d960
+[API]   [7] __setusermatherr -> 0x200da40
+[API]   [8] _amsg_exit -> 0x2008880
+[API]   [9] _cexit -> 0x2006fe0
+[API]   [10] _commode -> DATA 0x203c034
+[API]   [11] _errno -> 0x200e5f0
+[API]   [12] _fmode -> DATA 0x203c038
+[API]   [13] _initterm -> 0x20061d0
+[API]   [14] _lock -> 0x200e6e0
+[API]   [15] _onexit -> 0x200c0e0
+[API]   [16] _unlock -> 0x200e7c0
+[API]   [17] abort -> 0x2007a40
+[API]   [18] calloc -> 0x2008a80
+[API]   [19] exit -> 0x2008930
+[API]   [20] fprintf -> 0x2011980
+[API]   [21] fputc -> 0x2012140
+[API]   [22] fputs -> 0x2012040
+[API]   [23] free -> 0x2008e50
+[API]   [24] fwrite -> 0x2012230
+[API]   [25] getenv -> 0x2007e10
+[API]   [26] localeconv -> 0x20087e0
+[API]   [27] malloc -> 0x2009440
+[API]   [28] memchr -> 0x20099f0
+[API]   [29] memcmp -> 0x2009a90
+[API]   [30] memcpy -> 0x20081f0
+[API]   [31] memmove -> 0x2006a30
+[API]   [32] memset -> 0x2007800
+[API]   [33] realloc -> 0x2009530
+[API]   [34] signal -> 0x200ddc0
+[API]   [35] strchr -> 0x2008db0
+[API]   [36] strcmp -> 0x2007fa0
+[API]   [37] strerror -> 0x7fabafa73550
+[API]   [38] strlen -> 0x2007c10
+[API]   [39] strncmp -> 0x2009810
+[API]   [40] strtoul -> 0x2009c70
+[API]   [41] vfprintf -> 0x2011bb0
+[API]   [42] wcslen -> 0x2008450
+[API]   [43] _read -> 0x200a480
+[API] Import resolution: 70 resolved, 4 unresolved (total 74)
+[API] TLS: StartRaw=0x140039000 EndRaw=0x140039008 Callbacks=0x140030750
+[API] TLS: static block 0x395a680 (8+0 bytes) -> slot 0
+[API] TLS: callback[0] = 0x140011750
+[API] InitializeCriticalSection(0x140037120)
+[API] TLS: callback[1] = 0x140011720
+[API] Exception: .pdata RVA=0x31000 Size=0x28e0 Entries=872
+[API] [API-005] EH hacks DISABLED (default) (MINWIN_EH_HACKS=<unset>)
+[API] [API-005] CXX-EH-FIX (LSDA catch-all patch RVA 0x2010c8) skipped: MINWIN_EH_HACKS not set
+[API] Jumping to EP=0x1400013f0
+[API] _initterm(start=0x140030730, end=0x140030740)
+[API] _initterm: calling 0x140001010
+[API] __set_app_type(1)
+[API] _initterm(start=0x140030718, end=0x140030728)
+[API] _initterm: calling 0x140001130
+[API] __getmainargs(argc=0x140037028, argv=0x140037020, envp=0x140037018)
+[API] SetUnhandledExceptionFilter(handler=0x140011e90)
+[API] malloc(16) = 0x395ad30
+[API] malloc(36) = 0x395ad00
+[API] _onexit(func=0x140001440)
+[API] _onexit(func=0x140026bc0)
+[API] _onexit(func=0x140026bd0)
+[API] InitializeCriticalSection(0x140029160)
+[API] malloc(90112) = 0x395ad50
+[API] _onexit(func=0x140026b80)
+[API] _onexit(func=0x140011640)
+[API] malloc(4000) = 0x3970d60
+[API] malloc(40) = 0x395ac30
+[API] malloc(40) = 0x3971d10
+[API] malloc(40) = 0x3971d40
+[API] malloc(40) = 0x3971d70
+[API] malloc(40) = 0x3971da0
+[API] malloc(40) = 0x3971dd0
+[API] malloc(40) = 0x3971e00
+[API] malloc(40) = 0x3971e30
+[API] malloc(40) = 0x3971e60
+[API] malloc(40) = 0x3971e90
+[API] malloc(40) = 0x3971ec0
+[API] malloc(40) = 0x3971ef0
+[API] malloc(40) = 0x3971f20
+[API] malloc(40) = 0x3971f50
+[API] malloc(40) = 0x3971f80
+[API] malloc(40) = 0x3971fb0
+[API] malloc(40) = 0x3971fe0
+[API] malloc(40) = 0x3972010
+[API] malloc(40) = 0x3972040
+[API] malloc(40) = 0x3972070
+[API] malloc(40) = 0x39720a0
+[API] malloc(40) = 0x39720d0
+[API] malloc(40) = 0x3972100
+[API] malloc(40) = 0x3972130
+[API] malloc(40) = 0x3972160
+[API] malloc(40) = 0x3972190
+[API] malloc(40) = 0x39721c0
+[API] malloc(40) = 0x39721f0
+[API] malloc(40) = 0x3972220
+[API] malloc(40) = 0x3972250
+[API] malloc(40) = 0x3972280
+[API] malloc(40) = 0x39722b0
+[API] malloc(40) = 0x39722e0
+[API] malloc(40) = 0x3972310
+[API] malloc(40) = 0x3972340
+[API] malloc(40) = 0x3972370
+[API] malloc(40) = 0x39723a0
+[API] malloc(40) = 0x39723d0
+[API] malloc(40) = 0x3972400
+[API] malloc(40) = 0x3972430
+[API] malloc(40) = 0x3972460
+[API] malloc(40) = 0x3972490
+[API] malloc(40) = 0x39724c0
+[API] malloc(40) = 0x39724f0
+[API] malloc(40) = 0x3972520
+[API] malloc(40) = 0x3972550
+[API] malloc(40) = 0x3972580
+[API] malloc(40) = 0x39725b0
+[API] malloc(40) = 0x39725e0
+[API] malloc(40) = 0x3972610
+[API] malloc(40) = 0x3972640
+[API] malloc(40) = 0x3972670
+[API] malloc(40) = 0x39726a0
+[API] malloc(40) = 0x39726d0
+[API] malloc(40) = 0x3972700
+[API] malloc(40) = 0x3972730
+[API] malloc(40) = 0x3972760
+[API] malloc(40) = 0x3972790
+[API] malloc(40) = 0x39727c0
+[API] malloc(40) = 0x39727f0
+[API] malloc(40) = 0x3972820
+[API] malloc(40) = 0x3972850
+[API] malloc(40) = 0x3972880
+[API] malloc(40) = 0x39728b0
+[API] malloc(40) = 0x39728e0
+[API] malloc(40) = 0x3972910
+[API] malloc(40) = 0x3972940
+[API] malloc(40) = 0x3972970
+[API] malloc(40) = 0x39729a0
+[API] malloc(40) = 0x39729d0
+[API] malloc(40) = 0x3972a00
+[API] malloc(40) = 0x3972a30
+[API] malloc(40) = 0x3972a60
+[API] malloc(40) = 0x3972a90
+[API] malloc(40) = 0x3972ac0
+[API] malloc(40) = 0x3972af0
+[API] malloc(40) = 0x3972b20
+[API] malloc(40) = 0x3972b50
+[API] malloc(40) = 0x3972b80
+[API] malloc(40) = 0x3972bb0
+[API] malloc(40) = 0x3972be0
+[API] malloc(40) = 0x3972c10
+[API] malloc(40) = 0x3972c40
+[API] malloc(40) = 0x3972c70
+[API] malloc(40) = 0x3972ca0
+[API] malloc(40) = 0x3972cd0
+[API] malloc(40) = 0x3972d00
+[API] malloc(40) = 0x3972d30
+[API] malloc(40) = 0x3972d60
+[API] malloc(40) = 0x3972d90
+[API] malloc(40) = 0x3972dc0
+[API] malloc(40) = 0x3972df0
+[API] malloc(40) = 0x3972e20
+[API] malloc(40) = 0x3972e50
+[API] malloc(40) = 0x3972e80
+[API] malloc(40) = 0x3972eb0
+[API] malloc(40) = 0x3972ee0
+[API] malloc(40) = 0x3972f10
+[API] malloc(40) = 0x3972f40
+[API] malloc(40) = 0x3972f70
+[API] malloc(40) = 0x3972fa0
+[API] malloc(40) = 0x3972fd0
+[API] malloc(40) = 0x3973000
+[API] malloc(40) = 0x3973030
+[API] malloc(40) = 0x3973060
+[API] malloc(40) = 0x3973090
+[API] malloc(40) = 0x39730c0
+[API] malloc(40) = 0x39730f0
+[API] malloc(40) = 0x3973120
+[API] malloc(40) = 0x3973150
+[API] malloc(40) = 0x3973180
+[API] malloc(40) = 0x39731b0
+[API] malloc(40) = 0x39731e0
+[API] malloc(40) = 0x3973210
+[API] malloc(40) = 0x3973240
+[API] malloc(40) = 0x3973270
+[API] malloc(40) = 0x39732a0
+[API] malloc(40) = 0x39732d0
+[API] malloc(40) = 0x3973300
+[API] malloc(40) = 0x3973330
+[API] malloc(40) = 0x3973360
+[API] malloc(40) = 0x3973390
+[API] malloc(40) = 0x39733c0
+[API] malloc(40) = 0x39733f0
+[API] malloc(40) = 0x3973420
+[API] malloc(40) = 0x3973450
+[API] malloc(40) = 0x3973480
+[API] malloc(40) = 0x39734b0
+[API] malloc(40) = 0x39734e0
+[API] malloc(40) = 0x3973510
+[API] malloc(40) = 0x3973540
+[API] malloc(40) = 0x3973570
+[API] malloc(40) = 0x39735a0
+[API] malloc(40) = 0x39735d0
+[API] malloc(40) = 0x3973600
+[API] malloc(40) = 0x3973630
+[API] malloc(40) = 0x3973660
+[API] malloc(40) = 0x3973690
+[API] malloc(40) = 0x39736c0
+[API] malloc(40) = 0x39736f0
+[API] malloc(40) = 0x3973720
+[API] malloc(40) = 0x3973750
+[API] malloc(40) = 0x3973780
+[API] malloc(40) = 0x39737b0
+[API] malloc(40) = 0x39737e0
+[API] malloc(40) = 0x3973810
+[API] malloc(40) = 0x3973840
+[API] malloc(40) = 0x3973870
+[API] malloc(40) = 0x39738a0
+[API] malloc(40) = 0x39738d0
+[API] malloc(40) = 0x3973900
+[API] malloc(40) = 0x3973930
+[API] malloc(40) = 0x3973960
+[API] malloc(40) = 0x3973990
+[API] malloc(40) = 0x39739c0
+[API] malloc(40) = 0x39739f0
+[API] malloc(40) = 0x3973a20
+[API] malloc(40) = 0x3973a50
+[API] malloc(40) = 0x3973a80
+[API] malloc(40) = 0x3973ab0
+[API] malloc(40) = 0x3973ae0
+[API] malloc(40) = 0x3973b10
+[API] malloc(40) = 0x3973b40
+[API] malloc(40) = 0x3973b70
+[API] malloc(40) = 0x3973ba0
+[API] malloc(40) = 0x3973bd0
+[API] malloc(40) = 0x3973c00
+[API] malloc(40) = 0x3973c30
+[API] malloc(40) = 0x3973c60
+[API] malloc(40) = 0x3973c90
+[API] malloc(40) = 0x3973cc0
+[API] malloc(40) = 0x3973cf0
+[API] malloc(40) = 0x3973d20
+[API] malloc(40) = 0x3973d50
+[API] malloc(40) = 0x3973d80
+[API] malloc(40) = 0x3973db0
+[API] malloc(40) = 0x3973de0
+[API] malloc(40) = 0x3973e10
+[API] malloc(40) = 0x3973e40
+[API] malloc(40) = 0x3973e70
+[API] malloc(40) = 0x3973ea0
+[API] malloc(40) = 0x3973ed0
+[API] malloc(40) = 0x3973f00
+[API] malloc(40) = 0x3973f30
+[API] malloc(40) = 0x3973f60
+[API] malloc(40) = 0x3973f90
+[API] malloc(40) = 0x3973fc0
+[API] malloc(40) = 0x3973ff0
+[API] malloc(40) = 0x3974020
+[API] malloc(40) = 0x3974050
+[API] malloc(40) = 0x3974080
+[API] malloc(40) = 0x39740b0
+[API] malloc(40) = 0x39740e0
+[API] malloc(40) = 0x3974110
+[API] malloc(40) = 0x3974140
+[API] malloc(40) = 0x3974170
+[API] malloc(40) = 0x39741a0
+[API] malloc(40) = 0x39741d0
+[API] malloc(40) = 0x3974200
+[API] malloc(40) = 0x3974230
+[API] malloc(40) = 0x3974260
+[API] malloc(40) = 0x3974290
+[API] malloc(40) = 0x39742c0
+[API] malloc(40) = 0x39742f0
+[API] malloc(40) = 0x3974320
+[API] malloc(40) = 0x3974350
+[API] malloc(40) = 0x3974380
+[API] malloc(40) = 0x39743b0
+[API] malloc(40) = 0x39743e0
+[API] malloc(40) = 0x3974410
+[API] malloc(40) = 0x3974440
+[API] malloc(40) = 0x3974470
+[API] malloc(40) = 0x39744a0
+[API] malloc(40) = 0x39744d0
+[API] malloc(40) = 0x3974500
+[API] malloc(40) = 0x3974530
+[API] malloc(40) = 0x3974560
+[API] malloc(40) = 0x3974590
+[API] malloc(40) = 0x39745c0
+[API] malloc(40) = 0x39745f0
+[API] malloc(40) = 0x3974620
+[API] malloc(40) = 0x3974650
+[API] malloc(40) = 0x3974680
+[API] malloc(40) = 0x39746b0
+[API] malloc(40) = 0x39746e0
+[API] malloc(40) = 0x3974710
+[API] malloc(40) = 0x3974740
+[API] malloc(40) = 0x3974770
+[API] malloc(40) = 0x39747a0
+[API] malloc(40) = 0x39747d0
+[API] malloc(40) = 0x3974800
+[API] malloc(40) = 0x3974830
+[API] malloc(40) = 0x3974860
+[API] malloc(40) = 0x3974890
+[API] malloc(40) = 0x39748c0
+[API] malloc(40) = 0x39748f0
+[API] malloc(40) = 0x3974920
+[API] malloc(40) = 0x3974950
+[API] malloc(40) = 0x3974980
+[API] malloc(40) = 0x39749b0
+[API] malloc(40) = 0x39749e0
+[API] malloc(40) = 0x3974a10
+[API] malloc(40) = 0x3974a40
+[API] malloc(40) = 0x3974a70
+[API] malloc(40) = 0x3974aa0
+[API] malloc(40) = 0x3974ad0
+[API] malloc(40) = 0x3974b00
+[API] malloc(40) = 0x3974b30
+[API] malloc(40) = 0x3974b60
+[API] malloc(40) = 0x3974b90
+[API] malloc(40) = 0x3974bc0
+[API] malloc(40) = 0x3974bf0
+[API] malloc(40) = 0x3974c20
+[API] malloc(40) = 0x3974c50
+[API] malloc(40) = 0x3974c80
+[API] malloc(40) = 0x3974cb0
+[API] malloc(40) = 0x3974ce0
+[API] malloc(40) = 0x3974d10
+[API] malloc(40) = 0x3974d40
+[API] malloc(40) = 0x3974d70
+[API] malloc(40) = 0x3974da0
+[API] malloc(40) = 0x3974dd0
+[API] malloc(40) = 0x3974e00
+[API] malloc(40) = 0x3974e30
+[API] malloc(40) = 0x3974e60
+[API] malloc(40) = 0x3974e90
+[API] malloc(40) = 0x3974ec0
+[API] malloc(40) = 0x3974ef0
+[API] malloc(40) = 0x3974f20
+[API] malloc(40) = 0x3974f50
+[API] malloc(40) = 0x3974f80
+[API] malloc(40) = 0x3974fb0
+[API] malloc(40) = 0x3974fe0
+[API] malloc(40) = 0x3975010
+[API] malloc(40) = 0x3975040
+[API] malloc(40) = 0x3975070
+[API] malloc(40) = 0x39750a0
+[API] malloc(40) = 0x39750d0
+[API] malloc(40) = 0x3975100
+[API] malloc(40) = 0x3975130
+[API] malloc(40) = 0x3975160
+[API] malloc(40) = 0x3975190
+[API] malloc(40) = 0x39751c0
+[API] malloc(40) = 0x39751f0
+[API] malloc(40) = 0x3975220
+[API] malloc(40) = 0x3975250
+[API] malloc(40) = 0x3975280
+[API] malloc(40) = 0x39752b0
+[API] malloc(40) = 0x39752e0
+[API] malloc(40) = 0x3975310
+[API] malloc(40) = 0x3975340
+[API] malloc(40) = 0x3975370
+[API] malloc(40) = 0x39753a0
+[API] malloc(40) = 0x39753d0
+[API] malloc(40) = 0x3975400
+[API] malloc(40) = 0x3975430
+[API] malloc(40) = 0x3975460
+[API] malloc(40) = 0x3975490
+[API] malloc(40) = 0x39754c0
+[API] malloc(40) = 0x39754f0
+[API] malloc(40) = 0x3975520
+[API] malloc(40) = 0x3975550
+[API] malloc(40) = 0x3975580
+[API] malloc(40) = 0x39755b0
+[API] malloc(40) = 0x39755e0
+[API] malloc(40) = 0x3975610
+[API] malloc(40) = 0x3975640
+[API] malloc(40) = 0x3975670
+[API] malloc(40) = 0x39756a0
+[API] malloc(40) = 0x39756d0
+[API] malloc(40) = 0x3975700
+[API] malloc(40) = 0x3975730
+[API] malloc(40) = 0x3975760
+[API] malloc(40) = 0x3975790
+[API] malloc(40) = 0x39757c0
+[API] malloc(40) = 0x39757f0
+[API] malloc(40) = 0x3975820
+[API] malloc(40) = 0x3975850
+[API] malloc(40) = 0x3975880
+[API] malloc(40) = 0x39758b0
+[API] malloc(40) = 0x39758e0
+[API] malloc(40) = 0x3975910
+[API] malloc(40) = 0x3975940
+[API] malloc(40) = 0x3975970
+[API] malloc(40) = 0x39759a0
+[API] malloc(40) = 0x39759d0
+[API] malloc(40) = 0x3975a00
+[API] malloc(40) = 0x3975a30
+[API] malloc(40) = 0x3975a60
+[API] malloc(40) = 0x3975a90
+[API] malloc(40) = 0x3975ac0
+[API] malloc(40) = 0x3975af0
+[API] malloc(40) = 0x3975b20
+[API] malloc(40) = 0x3975b50
+[API] malloc(40) = 0x3975b80
+[API] malloc(40) = 0x3975bb0
+[API] malloc(40) = 0x3975be0
+[API] malloc(40) = 0x3975c10
+[API] malloc(40) = 0x3975c40
+[API] malloc(40) = 0x3975c70
+[API] malloc(40) = 0x3975ca0
+[API] malloc(40) = 0x3975cd0
+[API] malloc(40) = 0x3975d00
+[API] malloc(40) = 0x3975d30
+[API] malloc(40) = 0x3975d60
+[API] malloc(40) = 0x3975d90
+[API] malloc(40) = 0x3975dc0
+[API] malloc(40) = 0x3975df0
+[API] malloc(40) = 0x3975e20
+[API] malloc(40) = 0x3975e50
+[API] malloc(40) = 0x3975e80
+[API] malloc(40) = 0x3975eb0
+[API] malloc(40) = 0x3975ee0
+[API] malloc(40) = 0x3975f10
+[API] malloc(40) = 0x3975f40
+[API] malloc(40) = 0x3975f70
+[API] malloc(40) = 0x3975fa0
+[API] malloc(40) = 0x3975fd0
+[API] malloc(40) = 0x3976000
+[API] malloc(40) = 0x3976030
+[API] malloc(40) = 0x3976060
+[API] malloc(40) = 0x3976090
+[API] malloc(40) = 0x39760c0
+[API] malloc(40) = 0x39760f0
+[API] malloc(40) = 0x3976120
+[API] malloc(40) = 0x3976150
+[API] malloc(40) = 0x3976180
+[API] malloc(40) = 0x39761b0
+[API] malloc(40) = 0x39761e0
+[API] malloc(40) = 0x3976210
+[API] malloc(40) = 0x3976240
+[API] malloc(40) = 0x3976270
+[API] malloc(40) = 0x39762a0
+[API] malloc(40) = 0x39762d0
+[API] malloc(40) = 0x3976300
+[API] malloc(40) = 0x3976330
+[API] malloc(40) = 0x3976360
+[API] malloc(40) = 0x3976390
+[API] malloc(40) = 0x39763c0
+[API] malloc(40) = 0x39763f0
+[API] malloc(40) = 0x3976420
+[API] malloc(40) = 0x3976450
+[API] malloc(40) = 0x3976480
+[API] malloc(40) = 0x39764b0
+[API] malloc(40) = 0x39764e0
+[API] malloc(40) = 0x3976510
+[API] malloc(40) = 0x3976540
+[API] malloc(40) = 0x3976570
+[API] malloc(40) = 0x39765a0
+[API] malloc(40) = 0x39765d0
+[API] malloc(40) = 0x3976600
+[API] malloc(40) = 0x3976630
+[API] malloc(40) = 0x3976660
+[API] malloc(40) = 0x3976690
+[API] malloc(40) = 0x39766c0
+[API] malloc(40) = 0x39766f0
+[API] malloc(40) = 0x3976720
+[API] malloc(40) = 0x3976750
+[API] malloc(40) = 0x3976780
+[API] malloc(40) = 0x39767b0
+[API] malloc(40) = 0x39767e0
+[API] malloc(40) = 0x3976810
+[API] malloc(40) = 0x3976840
+[API] malloc(40) = 0x3976870
+[API] malloc(40) = 0x39768a0
+[API] malloc(40) = 0x39768d0
+[API] malloc(40) = 0x3976900
+[API] malloc(40) = 0x3976930
+[API] malloc(40) = 0x3976960
+[API] malloc(40) = 0x3976990
+[API] malloc(40) = 0x39769c0
+[API] malloc(40) = 0x39769f0
+[API] malloc(40) = 0x3976a20
+[API] malloc(40) = 0x3976a50
+[API] malloc(40) = 0x3976a80
+[API] malloc(40) = 0x3976ab0
+[API] malloc(40) = 0x3976ae0
+[API] malloc(40) = 0x3976b10
+[API] malloc(40) = 0x3976b40
+[API] malloc(40) = 0x3976b70
+[API] malloc(40) = 0x3976ba0
+[API] malloc(40) = 0x3976bd0
+[API] malloc(40) = 0x3976c00
+[API] malloc(40) = 0x3976c30
+[API] malloc(40) = 0x3976c60
+[API] malloc(40) = 0x3976c90
+[API] malloc(40) = 0x3976cc0
+[API] malloc(40) = 0x3976cf0
+[API] malloc(40) = 0x3976d20
+[API] malloc(40) = 0x3976d50
+[API] malloc(40) = 0x3976d80
+[API] malloc(40) = 0x3976db0
+[API] malloc(40) = 0x3976de0
+[API] malloc(40) = 0x3976e10
+[API] malloc(40) = 0x3976e40
+[API] malloc(40) = 0x3976e70
+[API] malloc(40) = 0x3976ea0
+[API] malloc(40) = 0x3976ed0
+[API] malloc(40) = 0x3976f00
+[API] malloc(40) = 0x3976f30
+[API] malloc(40) = 0x3976f60
+[API] malloc(40) = 0x3976f90
+[API] malloc(40) = 0x3976fc0
+[API] malloc(40) = 0x3976ff0
+[API] malloc(40) = 0x3977020
+[API] malloc(40) = 0x3977050
+[API] malloc(40) = 0x3977080
+[API] malloc(40) = 0x39770b0
+[API] malloc(40) = 0x39770e0
+[API] malloc(40) = 0x3977110
+[API] malloc(40) = 0x3977140
+[API] malloc(40) = 0x3977170
+[API] malloc(40) = 0x39771a0
+[API] malloc(40) = 0x39771d0
+[API] malloc(40) = 0x3977200
+[API] malloc(40) = 0x3977230
+[API] malloc(40) = 0x3977260
+[API] malloc(40) = 0x3977290
+[API] malloc(40) = 0x39772c0
+[API] malloc(40) = 0x39772f0
+[API] malloc(40) = 0x3977320
+[API] malloc(40) = 0x3977350
+[API] malloc(40) = 0x3977380
+[API] malloc(40) = 0x39773b0
+[API] malloc(40) = 0x39773e0
+[API] malloc(40) = 0x3977410
+[API] malloc(40) = 0x3977440
+[API] malloc(40) = 0x3977470
+[API] malloc(40) = 0x39774a0
+[API] malloc(40) = 0x39774d0
+[API] malloc(40) = 0x3977500
+[API] malloc(40) = 0x3977530
+[API] malloc(40) = 0x3977560
+[API] malloc(40) = 0x3977590
+[API] malloc(40) = 0x39775c0
+[API] malloc(40) = 0x39775f0
+[API] malloc(40) = 0x3977620
+[API] malloc(40) = 0x3977650
+[API] malloc(40) = 0x3977680
+[API] malloc(40) = 0x39776b0
+[API] malloc(40) = 0x39776e0
+[API] malloc(40) = 0x3977710
+[API] malloc(40) = 0x3977740
+[API] malloc(40) = 0x3977770
+[API] malloc(40) = 0x39777a0
+[API] malloc(40) = 0x39777d0
+[API] malloc(40) = 0x3977800
+[API] malloc(40) = 0x3977830
+[API] malloc(40) = 0x3977860
+[API] malloc(40) = 0x3977890
+[API] malloc(40) = 0x39778c0
+[API] malloc(40) = 0x39778f0
+[API] malloc(40) = 0x3977920
+[API] malloc(40) = 0x3977950
+[API] malloc(40) = 0x3977980
+[API] malloc(40) = 0x39779b0
+[API] malloc(40) = 0x39779e0
+[API] malloc(40) = 0x3977a10
+[API] malloc(40) = 0x3977a40
+[API] malloc(40) = 0x3977a70
+[API] malloc(40) = 0x3977aa0
+[API] malloc(40) = 0x3977ad0
+[API] malloc(40) = 0x3977b00
+[API] malloc(40) = 0x3977b30
+[API] malloc(40) = 0x3977b60
+[API] malloc(40) = 0x3977b90
+[API] malloc(40) = 0x3977bc0
+[API] malloc(40) = 0x3977bf0
+[API] malloc(40) = 0x3977c20
+[API] malloc(40) = 0x3977c50
+[API] malloc(40) = 0x3977c80
+[API] malloc(40) = 0x3977cb0
+[API] malloc(40) = 0x3977ce0
+[API] malloc(40) = 0x3977d10
+[API] malloc(40) = 0x3977d40
+[API] malloc(40) = 0x3977d70
+[API] malloc(40) = 0x3977da0
+[API] malloc(40) = 0x3977dd0
+[API] malloc(40) = 0x3977e00
+[API] malloc(40) = 0x3977e30
+[API] malloc(40) = 0x3977e60
+[API] malloc(40) = 0x3977e90
+[API] malloc(40) = 0x3977ec0
+[API] malloc(40) = 0x3977ef0
+[API] malloc(40) = 0x3977f20
+[API] malloc(40) = 0x3977f50
+[API] malloc(40) = 0x3977f80
+[API] malloc(40) = 0x3977fb0
+[API] malloc(40) = 0x3977fe0
+[API] malloc(40) = 0x3978010
+[API] malloc(40) = 0x3978040
+[API] malloc(40) = 0x3978070
+[API] malloc(40) = 0x39780a0
+[API] malloc(40) = 0x39780d0
+[API] malloc(40) = 0x3978100
+[API] malloc(40) = 0x3978130
+[API] malloc(40) = 0x3978160
+[API] malloc(40) = 0x3978190
+[API] malloc(40) = 0x39781c0
+[API] malloc(40) = 0x39781f0
+[API] malloc(40) = 0x3978220
+[API] malloc(40) = 0x3978250
+[API] malloc(40) = 0x3978280
+[API] malloc(40) = 0x39782b0
+[API] malloc(40) = 0x39782e0
+[API] malloc(40) = 0x3978310
+[API] malloc(40) = 0x3978340
+[API] malloc(40) = 0x3978370
+[API] malloc(40) = 0x39783a0
+[API] malloc(40) = 0x39783d0
+[API] malloc(40) = 0x3978400
+[API] malloc(40) = 0x3978430
+[API] malloc(40) = 0x3978460
+[API] malloc(40) = 0x3978490
+[API] malloc(40) = 0x39784c0
+[API] malloc(40) = 0x39784f0
+[API] malloc(40) = 0x3978520
+[API] malloc(40) = 0x3978550
+[API] malloc(40) = 0x3978580
+[API] malloc(40) = 0x39785b0
+[API] malloc(40) = 0x39785e0
+[API] malloc(40) = 0x3978610
+[API] malloc(40) = 0x3978640
+[API] malloc(40) = 0x3978670
+[API] malloc(40) = 0x39786a0
+[API] malloc(40) = 0x39786d0
+[API] malloc(40) = 0x3978700
+[API] malloc(40) = 0x3978730
+[API] malloc(40) = 0x3978760
+[API] malloc(40) = 0x3978790
+[API] malloc(40) = 0x39787c0
+[API] malloc(40) = 0x39787f0
+[API] malloc(40) = 0x3978820
+[API] malloc(40) = 0x3978850
+[API] malloc(40) = 0x3978880
+[API] malloc(40) = 0x39788b0
+[API] malloc(40) = 0x39788e0
+[API] malloc(40) = 0x3978910
+[API] malloc(40) = 0x3978940
+[API] malloc(40) = 0x3978970
+[API] malloc(40) = 0x39789a0
+[API] malloc(40) = 0x39789d0
+[API] malloc(40) = 0x3978a00
+[API] malloc(40) = 0x3978a30
+[API] malloc(40) = 0x3978a60
+[API] malloc(40) = 0x3978a90
+[API] malloc(40) = 0x3978ac0
+[API] malloc(40) = 0x3978af0
+[API] malloc(40) = 0x3978b20
+[API] malloc(40) = 0x3978b50
+[API] malloc(40) = 0x3978b80
+[API] malloc(40) = 0x3978bb0
+[API] malloc(40) = 0x3978be0
+[API] malloc(40) = 0x3978c10
+[API] malloc(40) = 0x3978c40
+[API] malloc(40) = 0x3978c70
+[API] malloc(40) = 0x3978ca0
+[API] malloc(40) = 0x3978cd0
+[API] malloc(40) = 0x3978d00
+[API] malloc(40) = 0x3978d30
+[API] malloc(40) = 0x3978d60
+[API] malloc(40) = 0x3978d90
+[API] malloc(40) = 0x3978dc0
+[API] malloc(40) = 0x3978df0
+[API] malloc(40) = 0x3978e20
+[API] malloc(40) = 0x3978e50
+[API] malloc(40) = 0x3978e80
+[API] malloc(40) = 0x3978eb0
+[API] malloc(40) = 0x3978ee0
+[API] malloc(40) = 0x3978f10
+[API] malloc(40) = 0x3978f40
+[API] malloc(40) = 0x3978f70
+[API] malloc(40) = 0x3978fa0
+[API] malloc(40) = 0x3978fd0
+[API] malloc(40) = 0x3979000
+[API] malloc(40) = 0x3979030
+[API] malloc(40) = 0x3979060
+[API] malloc(40) = 0x3979090
+[API] malloc(40) = 0x39790c0
+[API] malloc(40) = 0x39790f0
+[API] malloc(40) = 0x3979120
+[API] malloc(40) = 0x3979150
+[API] malloc(40) = 0x3979180
+[API] malloc(40) = 0x39791b0
+[API] malloc(40) = 0x39791e0
+[API] malloc(40) = 0x3979210
+[API] malloc(40) = 0x3979240
+[API] malloc(40) = 0x3979270
+[API] malloc(40) = 0x39792a0
+[API] malloc(40) = 0x39792d0
+[API] malloc(40) = 0x3979300
+[API] malloc(40) = 0x3979330
+[API] malloc(40) = 0x3979360
+[API] malloc(40) = 0x3979390
+[API] malloc(40) = 0x39793c0
+[API] malloc(40) = 0x39793f0
+[API] malloc(40) = 0x3979420
+[API] malloc(40) = 0x3979450
+[API] malloc(40) = 0x3979480
+[API] malloc(40) = 0x39794b0
+[API] malloc(40) = 0x39794e0
+[API] malloc(40) = 0x3979510
+[API] malloc(40) = 0x3979540
+[API] malloc(40) = 0x3979570
+[API] malloc(40) = 0x39795a0
+[API] malloc(40) = 0x39795d0
+[API] malloc(40) = 0x3979600
+[API] malloc(40) = 0x3979630
+[API] malloc(40) = 0x3979660
+[API] malloc(40) = 0x3979690
+[API] malloc(40) = 0x39796c0
+[API] malloc(40) = 0x39796f0
+[API] malloc(40) = 0x3979720
+[API] malloc(40) = 0x3979750
+[API] malloc(40) = 0x3979780
+[API] malloc(40) = 0x39797b0
+[API] malloc(40) = 0x39797e0
+[API] malloc(40) = 0x3979810
+[API] malloc(40) = 0x3979840
+[API] malloc(40) = 0x3979870
+[API] malloc(40) = 0x39798a0
+[API] malloc(40) = 0x39798d0
+[API] malloc(40) = 0x3979900
+[API] malloc(40) = 0x3979930
+[API] malloc(40) = 0x3979960
+[API] malloc(40) = 0x3979990
+[API] malloc(40) = 0x39799c0
+[API] malloc(40) = 0x39799f0
+[API] malloc(40) = 0x3979a20
+[API] malloc(40) = 0x3979a50
+[API] malloc(40) = 0x3979a80
+[API] malloc(40) = 0x3979ab0
+[API] malloc(40) = 0x3979ae0
+[API] malloc(40) = 0x3979b10
+[API] malloc(40) = 0x3979b40
+[API] malloc(40) = 0x3979b70
+[API] malloc(40) = 0x3979ba0
+[API] malloc(40) = 0x3979bd0
+[API] malloc(40) = 0x3979c00
+[API] malloc(40) = 0x3979c30
+[API] malloc(40) = 0x3979c60
+[API] malloc(40) = 0x3979c90
+[API] malloc(40) = 0x3979cc0
+[API] malloc(40) = 0x3979cf0
+[API] malloc(40) = 0x3979d20
+[API] malloc(40) = 0x3979d50
+[API] malloc(40) = 0x3979d80
+[API] malloc(40) = 0x3979db0
+[API] malloc(40) = 0x3979de0
+[API] malloc(40) = 0x3979e10
+[API] malloc(40) = 0x3979e40
+[API] malloc(40) = 0x3979e70
+[API] malloc(40) = 0x3979ea0
+[API] malloc(40) = 0x3979ed0
+[API] malloc(40) = 0x3979f00
+[API] malloc(40) = 0x3979f30
+[API] malloc(40) = 0x3979f60
+[API] malloc(40) = 0x3979f90
+[API] malloc(40) = 0x3979fc0
+[API] malloc(40) = 0x3979ff0
+[API] malloc(40) = 0x397a020
+[API] malloc(40) = 0x397a050
+[API] malloc(40) = 0x397a080
+[API] malloc(40) = 0x397a0b0
+[API] malloc(40) = 0x397a0e0
+[API] malloc(40) = 0x397a110
+[API] malloc(40) = 0x397a140
+[API] malloc(40) = 0x397a170
+[API] malloc(40) = 0x397a1a0
+[API] malloc(40) = 0x397a1d0
+[API] malloc(40) = 0x397a200
+[API] malloc(40) = 0x397a230
+[API] malloc(40) = 0x397a260
+[API] malloc(40) = 0x397a290
+[API] malloc(40) = 0x397a2c0
+[API] malloc(40) = 0x397a2f0
+[API] malloc(40) = 0x397a320
+[API] malloc(40) = 0x397a350
+[API] malloc(40) = 0x397a380
+[API] malloc(40) = 0x397a3b0
+[API] malloc(40) = 0x397a3e0
+[API] malloc(40) = 0x397a410
+[API] malloc(40) = 0x397a440
+[API] malloc(40) = 0x397a470
+[API] malloc(40) = 0x397a4a0
+[API] malloc(40) = 0x397a4d0
+[API] malloc(40) = 0x397a500
+[API] malloc(40) = 0x397a530
+[API] malloc(40) = 0x397a560
+[API] malloc(40) = 0x397a590
+[API] malloc(40) = 0x397a5c0
+[API] malloc(40) = 0x397a5f0
+[API] malloc(40) = 0x397a620
+[API] malloc(40) = 0x397a650
+[API] malloc(40) = 0x397a680
+[API] malloc(40) = 0x397a6b0
+[API] malloc(40) = 0x397a6e0
+[API] malloc(40) = 0x397a710
+[API] malloc(40) = 0x397a740
+[API] malloc(40) = 0x397a770
+[API] malloc(40) = 0x397a7a0
+[API] malloc(40) = 0x397a7d0
+[API] malloc(40) = 0x397a800
+[API] malloc(40) = 0x397a830
+[API] malloc(40) = 0x397a860
+[API] malloc(40) = 0x397a890
+[API] malloc(40) = 0x397a8c0
+[API] malloc(40) = 0x397a8f0
+[API] malloc(40) = 0x397a920
+[API] malloc(40) = 0x397a950
+[API] malloc(40) = 0x397a980
+[API] malloc(40) = 0x397a9b0
+[API] malloc(40) = 0x397a9e0
+[API] malloc(40) = 0x397aa10
+[API] malloc(40) = 0x397aa40
+[API] malloc(40) = 0x397aa70
+[API] malloc(40) = 0x397aaa0
+[API] malloc(40) = 0x397aad0
+[API] malloc(40) = 0x397ab00
+[API] malloc(40) = 0x397ab30
+[API] malloc(40) = 0x397ab60
+[API] malloc(40) = 0x397ab90
+[API] malloc(40) = 0x397abc0
+[API] malloc(40) = 0x397abf0
+[API] malloc(40) = 0x397ac20
+[API] malloc(40) = 0x397ac50
+[API] malloc(40) = 0x397ac80
+[API] malloc(40) = 0x397acb0
+[API] malloc(40) = 0x397ace0
+[API] malloc(40) = 0x397ad10
+[API] malloc(40) = 0x397ad40
+[API] malloc(40) = 0x397ad70
+[API] malloc(40) = 0x397ada0
+[API] malloc(40) = 0x397add0
+[API] malloc(40) = 0x397ae00
+[API] malloc(40) = 0x397ae30
+[API] malloc(40) = 0x397ae60
+[API] malloc(40) = 0x397ae90
+[API] malloc(40) = 0x397aec0
+[API] malloc(40) = 0x397aef0
+[API] malloc(40) = 0x397af20
+[API] malloc(40) = 0x397af50
+[API] malloc(40) = 0x397af80
+[API] malloc(40) = 0x397afb0
+[API] malloc(40) = 0x397afe0
+[API] malloc(40) = 0x397b010
+[API] malloc(40) = 0x397b040
+[API] malloc(40) = 0x397b070
+[API] malloc(40) = 0x397b0a0
+[API] malloc(40) = 0x397b0d0
+[API] malloc(40) = 0x397b100
+[API] malloc(40) = 0x397b130
+[API] malloc(40) = 0x397b160
+[API] malloc(40) = 0x397b190
+[API] malloc(40) = 0x397b1c0
+[API] malloc(40) = 0x397b1f0
+[API] malloc(40) = 0x397b220
+[API] malloc(40) = 0x397b250
+[API] malloc(40) = 0x397b280
+[API] malloc(40) = 0x397b2b0
+[API] malloc(40) = 0x397b2e0
+[API] malloc(40) = 0x397b310
+[API] malloc(40) = 0x397b340
+[API] malloc(40) = 0x397b370
+[API] malloc(40) = 0x397b3a0
+[API] malloc(40) = 0x397b3d0
+[API] malloc(40) = 0x397b400
+[API] malloc(40) = 0x397b430
+[API] malloc(40) = 0x397b460
+[API] malloc(40) = 0x397b490
+[API] malloc(40) = 0x397b4c0
+[API] malloc(40) = 0x397b4f0
+[API] malloc(40) = 0x397b520
+[API] malloc(40) = 0x397b550
+[API] malloc(40) = 0x397b580
+[API] malloc(40) = 0x397b5b0
+[API] malloc(40) = 0x397b5e0
+[API] malloc(40) = 0x397b610
+[API] malloc(40) = 0x397b640
+[API] malloc(40) = 0x397b670
+[API] malloc(40) = 0x397b6a0
+[API] malloc(40) = 0x397b6d0
+[API] malloc(40) = 0x397b700
+[API] malloc(40) = 0x397b730
+[API] malloc(40) = 0x397b760
+[API] malloc(40) = 0x397b790
+[API] malloc(40) = 0x397b7c0
+[API] malloc(40) = 0x397b7f0
+[API] malloc(40) = 0x397b820
+[API] malloc(40) = 0x397b850
+[API] malloc(40) = 0x397b880
+[API] malloc(40) = 0x397b8b0
+[API] malloc(40) = 0x397b8e0
+[API] malloc(40) = 0x397b910
+[API] malloc(40) = 0x397b940
+[API] malloc(40) = 0x397b970
+[API] malloc(40) = 0x397b9a0
+[API] malloc(40) = 0x397b9d0
+[API] malloc(40) = 0x397ba00
+[API] malloc(40) = 0x397ba30
+[API] malloc(40) = 0x397ba60
+[API] malloc(40) = 0x397ba90
+[API] malloc(40) = 0x397bac0
+[API] malloc(40) = 0x397baf0
+[API] malloc(40) = 0x397bb20
+[API] malloc(40) = 0x397bb50
+[API] malloc(40) = 0x397bb80
+[API] malloc(40) = 0x397bbb0
+[API] malloc(40) = 0x397bbe0
+[API] malloc(40) = 0x397bc10
+[API] malloc(40) = 0x397bc40
+[API] malloc(40) = 0x397bc70
+[API] malloc(40) = 0x397bca0
+[API] malloc(40) = 0x397bcd0
+[API] malloc(40) = 0x397bd00
+[API] malloc(40) = 0x397bd30
+[API] malloc(40) = 0x397bd60
+[API] malloc(40) = 0x397bd90
+[API] malloc(40) = 0x397bdc0
+[API] malloc(40) = 0x397bdf0
+[API] malloc(40) = 0x397be20
+[API] malloc(40) = 0x397be50
+[API] malloc(40) = 0x397be80
+[API] malloc(40) = 0x397beb0
+[API] malloc(40) = 0x397bee0
+[API] malloc(40) = 0x397bf10
+[API] malloc(40) = 0x397bf40
+[API] malloc(40) = 0x397bf70
+[API] malloc(40) = 0x397bfa0
+[API] malloc(40) = 0x397bfd0
+[API] malloc(40) = 0x397c000
+[API] malloc(40) = 0x397c030
+[API] malloc(40) = 0x397c060
+[API] malloc(40) = 0x397c090
+[API] malloc(40) = 0x397c0c0
+[API] malloc(40) = 0x397c0f0
+[API] malloc(40) = 0x397c120
+[API] malloc(40) = 0x397c150
+[API] malloc(40) = 0x397c180
+[API] malloc(40) = 0x397c1b0
+[API] malloc(40) = 0x397c1e0
+[API] malloc(40) = 0x397c210
+[API] malloc(40) = 0x397c240
+[API] malloc(40) = 0x397c270
+[API] malloc(40) = 0x397c2a0
+[API] malloc(40) = 0x397c2d0
+[API] malloc(40) = 0x397c300
+[API] malloc(40) = 0x397c330
+[API] malloc(40) = 0x397c360
+[API] malloc(40) = 0x397c390
+[API] malloc(40) = 0x397c3c0
+[API] malloc(40) = 0x397c3f0
+[API] malloc(40) = 0x397c420
+[API] malloc(40) = 0x397c450
+[API] malloc(40) = 0x397c480
+[API] malloc(40) = 0x397c4b0
+[API] malloc(40) = 0x397c4e0
+[API] malloc(40) = 0x397c510
+[API] malloc(40) = 0x397c540
+[API] malloc(40) = 0x397c570
+[API] malloc(40) = 0x397c5a0
+[API] malloc(40) = 0x397c5d0
+[API] malloc(40) = 0x397c600
+[API] malloc(40) = 0x397c630
+[API] malloc(40) = 0x397c660
+[API] malloc(40) = 0x397c690
+[API] malloc(40) = 0x397c6c0
+[API] malloc(40) = 0x397c6f0
+[API] malloc(40) = 0x397c720
+[API] malloc(40) = 0x397c750
+[API] malloc(40) = 0x397c780
+[API] malloc(40) = 0x397c7b0
+[API] malloc(40) = 0x397c7e0
+[API] malloc(40) = 0x397c810
+[API] malloc(40) = 0x397c840
+[API] malloc(40) = 0x397c870
+[API] malloc(40) = 0x397c8a0
+[API] malloc(40) = 0x397c8d0
+[API] malloc(40) = 0x397c900
+[API] malloc(40) = 0x397c930
+[API] malloc(40) = 0x397c960
+[API] malloc(40) = 0x397c990
+[API] malloc(40) = 0x397c9c0
+[API] malloc(40) = 0x397c9f0
+[API] malloc(40) = 0x397ca20
+[API] malloc(40) = 0x397ca50
+[API] malloc(40) = 0x397ca80
+[API] malloc(40) = 0x397cab0
+[API] malloc(40) = 0x397cae0
+[API] malloc(40) = 0x397cb10
+[API] malloc(40) = 0x397cb40
+[API] malloc(40) = 0x397cb70
+[API] malloc(40) = 0x397cba0
+[API] malloc(40) = 0x397cbd0
+[API] malloc(40) = 0x397cc00
+[API] malloc(40) = 0x397cc30
+[API] malloc(40) = 0x397cc60
+[API] malloc(40) = 0x397cc90
+[API] malloc(40) = 0x397ccc0
+[API] malloc(40) = 0x397ccf0
+[API] malloc(40) = 0x397cd20
+[API] malloc(40) = 0x397cd50
+[API] malloc(40) = 0x397cd80
+[API] malloc(40) = 0x397cdb0
+[API] malloc(40) = 0x397cde0
+[API] malloc(40) = 0x397ce10
+[API] malloc(40) = 0x397ce40
+[API] malloc(40) = 0x397ce70
+[API] malloc(40) = 0x397cea0
+[API] malloc(40) = 0x397ced0
+[API] malloc(40) = 0x397cf00
+[API] malloc(40) = 0x397cf30
+[API] malloc(40) = 0x397cf60
+[API] malloc(40) = 0x397cf90
+[API] malloc(40) = 0x397cfc0
+[API] malloc(40) = 0x397cff0
+[API] malloc(40) = 0x397d020
+[API] malloc(40) = 0x397d050
+[API] malloc(40) = 0x397d080
+[API] malloc(40) = 0x397d0b0
+[API] malloc(40) = 0x397d0e0
+[API] malloc(40) = 0x397d110
+[API] malloc(40) = 0x397d140
+[API] malloc(40) = 0x397d170
+[API] malloc(40) = 0x397d1a0
+[API] malloc(40) = 0x397d1d0
+[API] malloc(40) = 0x397d200
+[API] malloc(40) = 0x397d230
+[API] malloc(40) = 0x397d260
+[API] malloc(40) = 0x397d290
+[API] malloc(40) = 0x397d2c0
+[API] malloc(40) = 0x397d2f0
+[API] malloc(40) = 0x397d320
+[API] malloc(40) = 0x397d350
+[API] malloc(40) = 0x397d380
+[API] malloc(40) = 0x397d3b0
+[API] malloc(40) = 0x397d3e0
+[API] malloc(40) = 0x397d410
+[API] malloc(40) = 0x397d440
+[API] malloc(40) = 0x397d470
+[API] malloc(40) = 0x397d4a0
+[API] malloc(40) = 0x397d4d0
+[API] malloc(40) = 0x397d500
+[API] malloc(40) = 0x397d530
+[API] malloc(40) = 0x397d560
+[API] malloc(40) = 0x397d590
+[API] malloc(40) = 0x397d5c0
+[API] malloc(40) = 0x397d5f0
+[API] malloc(40) = 0x397d620
+[API] malloc(40) = 0x397d650
+[API] malloc(40) = 0x397d680
+[API] malloc(40) = 0x397d6b0
+[API] malloc(40) = 0x397d6e0
+[API] malloc(40) = 0x397d710
+[API] malloc(40) = 0x397d740
+[API] malloc(40) = 0x397d770
+[API] malloc(40) = 0x397d7a0
+[API] malloc(40) = 0x397d7d0
+[API] malloc(40) = 0x397d800
+[API] malloc(40) = 0x397d830
+[API] malloc(72) = 0x397d860
+[API] malloc(72) = 0x397d8b0
+[API] malloc(72) = 0x397d900
+[API] malloc(88) = 0x397d950
+[API] malloc(12) = 0x397d9b0
+[API] malloc(88) = 0x397d9d0
+[API] malloc(12) = 0x397da30
+[API] malloc(88) = 0x397da50
+[API] malloc(4) = 0x397dab0
+[API] free(0x397dab0)
+[API] free(0x397da50)
+[API] free(0x397da30)
+[API] free(0x397d9d0)
+[API] free(0x397d9b0)
+[API] free(0x397d950)
+[API] malloc(10001) = 0x397dad0
+[API] malloc(120) = 0x395a6a0
+[API] malloc(80) = 0x397d950
+[API] free(0x397d950)
+[API] malloc(164) = 0x39801f0
+[API] InitializeCriticalSection(0x1400371c0)
+[API] TlsAlloc() = 1
+[API] calloc(1, 24) = 0x397d9b0
+[API] EnterCriticalSection(0x140037120)
+[API] LeaveCriticalSection(0x140037120)
+[API] EnterCriticalSection(0x1400371c0)
+[API] LeaveCriticalSection(0x1400371c0)
+[API] GetLastError() = 0
+[API] TlsGetValue(1) = (nil)
+[API] SetLastError(0)
+[API] calloc(34, 8) = 0x39802a0
+[API] TlsSetValue(1, 0x39802a0)
+[API] malloc(24) = 0x397da30
+[API] [DISPATCH] === RtlDispatchException ===
+[API] [DISPATCH] ExceptionCode=0x20474343 RIP=0x140012d11 RSP=0x7ffcd0619250
+[API] [EXC_STATE] EXCEPTION_BEGIN
+[API] [EXC_STATE] Code: 0x20474343
+[API] [EXC_STATE] Flags: 0x0
+[API] [EXC_STATE] Address: 0x140012d11
+[API] [EXC_STATE] NumParams: 1
+[API] [EXC_STATE] Param[0]: 0x3980250
+[API] [EXC_STATE] Param[1]: 0x0
+[API] [EXC_STATE] Param[2]: 0x0
+[API] [EXC_STATE] Param[3]: 0x0
+[API] [EXC_STATE] g_cap_args ptr: 0x7ffcd0619280
+[API] [EXC_STATE] Exception object @ 0x3980250 (first 32 bytes):
+[API] [EXC_STATE]   00 2b 2b 43 43 55 4e 47
+[API] [EXC_STATE]   d0 8f 01 40 01 00 00 00
+[API] [EXC_STATE]   00 00 00 00 00 00 00 00
+[API] [EXC_STATE]   00 00 00 00 00 00 00 00
+[API] [EXC_STATE] Exception class (u64): 0x474e5543432b2b00
+[API] [EXC_STATE] EXCEPTION_END
+[API] [DISPATCH] VEH chain: 0 handlers
+[API] [DISPATCH] Frame[0]: RIP=0x140012d11 RVA=0x12d11 CTX.Rsp=0x7ffcd0619250
+[API] [DISPATCH] Frame[0]: RF begin=0x12ce0 end=0x12d1b ui=0x36264
+[API] [DISPATCH] Unwind: pc=0x140012d11 begin=0x12ce0 handler=0x0 est=0x7ffcd0619278
+[API] [DISPATCH] Frame[0]: Unwind est=0x7ffcd0619278 CTX.Rsp_after=0x7ffcd0619278 alloc=0x0
+[API] [DISPATCH] Frame[0]: no handler, parent RIP=0x140026b49 RVA=0x26b49
+[API] [DISPATCH] Frame[0]: est=0x7ffcd0619278 CTX.Rsp=0x7ffcd0619278 delta=0x0
+[API] [DISPATCH] Frame[1]: RIP=0x140026b49 RVA=0x26b49 CTX.Rsp=0x7ffcd0619280
+[API] [DISPATCH] Frame[1]: RF begin=0x26b10 end=0x26b57 ui=0x34684
+[API] [DISPATCH] Unwind: pc=0x140026b49 begin=0x26b10 handler=0x0 est=0x7ffcd06192b8
+[API] [DISPATCH] Frame[1]: Unwind est=0x7ffcd06192b8 CTX.Rsp_after=0x7ffcd06192b8 alloc=0x0
+[API] [DISPATCH] Frame[1]: no handler, parent RIP=0x140005d8d RVA=0x5d8d
+[API] [DISPATCH] Frame[1]: est=0x7ffcd06192b8 CTX.Rsp=0x7ffcd06192b8 delta=0x0
+[API] [DISPATCH] Frame[2]: RIP=0x140005d8d RVA=0x5d8d CTX.Rsp=0x7ffcd06192c0
+[API] [DISPATCH] Frame[2]: RF begin=0x5d40 end=0x5eef ui=0x3429c
+[API] [DISPATCH] Unwind: pc=0x140005d8d begin=0x5d40 handler=0x26b60 est=0x7ffcd0619338
+[API] [DISPATCH] Frame[2]: Unwind est=0x7ffcd0619338 CTX.Rsp_after=0x7ffcd0619338 alloc=0x0
+[API] [DISPATCH] Frame[2]: EHANDLER at RVA 0x26b60 (VA 0x140026b60)
+[API] [DISPATCH] Frame[2]: establisher=0x7ffcd0619338 CTX.Rsp=0x7ffcd0619338 lsda=0x1400342b0
+[API] [HANDLER_CALL] Frame[2] BEGIN
+[API] [HANDLER_CALL] RCX (EXCEPTION_RECORD*) = 0x7ffcd0618770
+[API] [HANDLER_CALL] RDX (EstablisherFrame) = 0x7ffcd0619338
+[API] [HANDLER_CALL] R8  (CONTEXT*)       = 0x7ffcd0618810
+[API] [HANDLER_CALL] R9  (DISPATCHER_CONTEXT*) = 0x7ffcd0618720
+[API] [HANDLER_CALL] Handler VA = 0x140026b60  RVA = 0x26b60
+[API] [HANDLER_CALL] HandlerData (LSDA) = 0x1400342b0
+[API] [HANDLER_CALL] ER.Code=0x20474343 ER.Flags=0x0 ER.NumParams=1
+[API] [HANDLER_CALL] ER.Param[0]=0x3980250 ER.Param[1]=0x0 ER.Param[2]=0x0
+[API] [HANDLER_CALL] Handler bytes [0:16]: 48 83 ec 38 48 8d 05 f5 27 ff ff 48 89 44 24 20
+[API] [HANDLER_CALL] Handler bytes[16:32]: e8 3b bf fe ff 48 83 c4 38 c3 90 90 90 90 90 90
+[API] [HANDLER_CALL] Handler bytes[32:48]: 48 83 ec 28 48 8b 05 25 6c 00 00 8b 00 85 c0 75
+[API] [LSDA] raw[0:16]:  ff 9b 3d 01 24 18 05 4d 05 48 05 ae 01 05 77 05
+[API] [LSDA] raw[16:32]: 00 00 93 01 05 d6 01 07 a9 01 05 ae 01 05 85 02
+[API] [LSDA] raw[32:48]: 05 c4 02 00 92 03 05 00 00 03 00 02 7d 01 7d 00
+[API] [LSDA] raw[48:64]: 7d 00 00 00 24 4d ff ff 18 4d ff ff 24 4d ff ff
+[API] [LSDA] raw[64:80]: 01 08 05 00 08 82 04 30 03 60 02 70 01 50 00 00
+[API] [LSDA] raw[80:96]: 01 0a 06 00 0a 32 06 30 05 60 04 70 03 50 02 c0
+[API] [LSDA] raw[96:112]: 01 06 03 00 06 62 02 30 01 60 00 00 01 10 09 00
+[API] [LSDA] raw[112:128]: 10 a2 0c 30 0b 60 0a 70 09 50 08 c0 06 d0 04 e0
+[API] [LSDA] LPStart_enc=0xff (omit)
+[API] [LSDA] TType_enc=0x9b
+[API] [LSDA] CS_enc=0x3d
+[API] [HANDLER_CALL] CTX.Rip=0x140005d8c CTX.Rsp=0x7ffcd0619338 CTX.Rbp=0x7ffcd06193c0
+[API] [HANDLER_CALL] calling...
+[API] RtlUnwindEx(target_frame=0x7ffcd0619338, target_ip=0x140005dee, ctx=0x7ffcd0618770, exc=0x3980250)
+[API] RtlUnwindEx: TargetIp=0x140005dee TargetFrame=0x7ffcd0619338
+[API] [DISPATCH] Unwind: pc=0x140012d11 begin=0x12ce0 handler=0x0 est=0x7ffcd0619278
+[API] [DISPATCH] Unwind: pc=0x140026b49 begin=0x26b10 handler=0x0 est=0x7ffcd06192b8
+[API] [DISPATCH] Unwind: pc=0x140005d8d begin=0x5d40 handler=0x26b60 est=0x7ffcd0619338
+[API] [BUG-031] first walk: reached target frame est=0x7ffcd0619338 — intermediate scan done
+[API] RtlUnwindEx: BUG-039/B register base restored from target-frame snapshot (RDI=0x395a6ba RBP=0x7ffcd06193c0 RSI=0x397d9a0 RBX=0x0)
+[API] RtlUnwindEx: target_func RVA=0x5d40 alloc_total=0x78 post_prologue_RSP=0x7ffcd06192c0
+[API] RtlUnwindEx: Set CTX.Rax = 0x3980250 (exception object)
+[API] RtlUnwindEx: 4-param protocol ER (obj=0x3980250 est=0x7ffcd0619338 lp=0x140005dee sel=1) -> CTX.Rdx=1
+[API] RtlUnwindEx: longjmping to dispatcher (RIP=0x140005dee RSP=0x7ffcd06192c0)
+[API] RtlUnwindEx DIAG: tgt_frame(post-prologue RSP)=0x7ffcd0619338
+[API] RtlUnwindEx DIAG: [tgt_frame+0x30]=0x395a718 (expect global _onexit ptr)
+[API] RtlUnwindEx DIAG: [tgt_frame+0x38]=0x7ffcd06193bc (expect _pfirst ptr)
+[API] RtlUnwindEx DIAG: [tgt_frame+0x40]=0x1f03958480 (expect count)
+[API] [DISPATCH] RtlUnwindEx longjmped back — unwind to RIP=0x140005dee RSP=0x7ffcd06192c0
+[API] [DISPATCH] CONTEXT after longjmp: Rax=0x3980250 (saved to g_unwind_regs)
+[API] GetLastError() = 0
+[API] TlsGetValue(1) = 0x39802a0
+[API] SetLastError(0)
+[API] GetLastError() = 0
+[API] TlsGetValue(1) = 0x39802a0
+[API] SetLastError(0)
+[API] free(0x39801f0)
+[API] malloc(192) = 0x39803c0
+[API] GetLastError() = 0
+[API] TlsGetValue(1) = 0x39802a0
+[API] SetLastError(0)
+[API] [DISPATCH] === RtlDispatchException ===
+[API] [DISPATCH] ExceptionCode=0x20474343 RIP=0x140012d11 RSP=0x7ffcd0619250
+[API] [EXC_STATE] EXCEPTION_BEGIN
+[API] [EXC_STATE] Code: 0x20474343
+[API] [EXC_STATE] Flags: 0x0
+[API] [EXC_STATE] Address: 0x140012d11
+[API] [EXC_STATE] NumParams: 1
+[API] [EXC_STATE] Param[0]: 0x3980420
+[API] [EXC_STATE] Param[1]: 0x0
+[API] [EXC_STATE] Param[2]: 0x0
+[API] [EXC_STATE] Param[3]: 0x0
+[API] [EXC_STATE] g_cap_args ptr: 0x7ffcd0619280
+[API] [EXC_STATE] Exception object @ 0x3980420 (first 32 bytes):
+[API] [EXC_STATE]   00 2b 2b 43 43 55 4e 47
+[API] [EXC_STATE]   d0 8f 01 40 01 00 00 00
+[API] [EXC_STATE]   00 00 00 00 00 00 00 00
+[API] [EXC_STATE]   00 00 00 00 00 00 00 00
+[API] [EXC_STATE] Exception class (u64): 0x474e5543432b2b00
+[API] [EXC_STATE] EXCEPTION_END
+[API] [DISPATCH] VEH chain: 0 handlers
+[API] [DISPATCH] Frame[0]: RIP=0x140012d11 RVA=0x12d11 CTX.Rsp=0x7ffcd0619250
+[API] [DISPATCH] Frame[0]: RF begin=0x12ce0 end=0x12d1b ui=0x36264
+[API] [DISPATCH] Unwind: pc=0x140012d11 begin=0x12ce0 handler=0x0 est=0x7ffcd0619278
+[API] [DISPATCH] Frame[0]: Unwind est=0x7ffcd0619278 CTX.Rsp_after=0x7ffcd0619278 alloc=0x0
+[API] [DISPATCH] Frame[0]: no handler, parent RIP=0x140026b49 RVA=0x26b49
+[API] [DISPATCH] Frame[0]: est=0x7ffcd0619278 CTX.Rsp=0x7ffcd0619278 delta=0x0
+[API] [DISPATCH] Frame[1]: RIP=0x140026b49 RVA=0x26b49 CTX.Rsp=0x7ffcd0619280
+[API] [DISPATCH] Frame[1]: RF begin=0x26b10 end=0x26b57 ui=0x34684
+[API] [DISPATCH] Unwind: pc=0x140026b49 begin=0x26b10 handler=0x0 est=0x7ffcd06192b8
+[API] [DISPATCH] Frame[1]: Unwind est=0x7ffcd06192b8 CTX.Rsp_after=0x7ffcd06192b8 alloc=0x0
+[API] [DISPATCH] Frame[1]: no handler, parent RIP=0x140005dee RVA=0x5dee
+[API] [DISPATCH] Frame[1]: est=0x7ffcd06192b8 CTX.Rsp=0x7ffcd06192b8 delta=0x0
+[API] [DISPATCH] Frame[2]: RIP=0x140005dee RVA=0x5dee CTX.Rsp=0x7ffcd06192c0
+[API] [DISPATCH] Frame[2]: RF begin=0x5d40 end=0x5eef ui=0x3429c
+[API] [DISPATCH] Unwind: pc=0x140005dee begin=0x5d40 handler=0x26b60 est=0x7ffcd0619338
+[API] [DISPATCH] Frame[2]: Unwind est=0x7ffcd0619338 CTX.Rsp_after=0x7ffcd0619338 alloc=0x0
+[API] [DISPATCH] Frame[2]: EHANDLER at RVA 0x26b60 (VA 0x140026b60)
+[API] [DISPATCH] Frame[2]: establisher=0x7ffcd0619338 CTX.Rsp=0x7ffcd0619338 lsda=0x1400342b0
+[API] [HANDLER_CALL] Frame[2] BEGIN
+[API] [HANDLER_CALL] RCX (EXCEPTION_RECORD*) = 0x7ffcd0618770
+[API] [HANDLER_CALL] RDX (EstablisherFrame) = 0x7ffcd0619338
+[API] [HANDLER_CALL] R8  (CONTEXT*)       = 0x7ffcd0618810
+[API] [HANDLER_CALL] R9  (DISPATCHER_CONTEXT*) = 0x7ffcd0618720
+[API] [HANDLER_CALL] Handler VA = 0x140026b60  RVA = 0x26b60
+[API] [HANDLER_CALL] HandlerData (LSDA) = 0x1400342b0
+[API] [HANDLER_CALL] ER.Code=0x20474343 ER.Flags=0x0 ER.NumParams=1
+[API] [HANDLER_CALL] ER.Param[0]=0x3980420 ER.Param[1]=0x0 ER.Param[2]=0x0
+[API] [HANDLER_CALL] Handler bytes [0:16]: 48 83 ec 38 48 8d 05 f5 27 ff ff 48 89 44 24 20
+[API] [HANDLER_CALL] Handler bytes[16:32]: e8 3b bf fe ff 48 83 c4 38 c3 90 90 90 90 90 90
+[API] [HANDLER_CALL] Handler bytes[32:48]: 48 83 ec 28 48 8b 05 25 6c 00 00 8b 00 85 c0 75
+[API] [LSDA] raw[0:16]:  ff 9b 3d 01 24 18 05 4d 05 48 05 ae 01 05 77 05
+[API] [LSDA] raw[16:32]: 00 00 93 01 05 d6 01 07 a9 01 05 ae 01 05 85 02
+[API] [LSDA] raw[32:48]: 05 c4 02 00 92 03 05 00 00 03 00 02 7d 01 7d 00
+[API] [LSDA] raw[48:64]: 7d 00 00 00 24 4d ff ff 18 4d ff ff 24 4d ff ff
+[API] [LSDA] raw[64:80]: 01 08 05 00 08 82 04 30 03 60 02 70 01 50 00 00
+[API] [LSDA] raw[80:96]: 01 0a 06 00 0a 32 06 30 05 60 04 70 03 50 02 c0
+[API] [LSDA] raw[96:112]: 01 06 03 00 06 62 02 30 01 60 00 00 01 10 09 00
+[API] [LSDA] raw[112:128]: 10 a2 0c 30 0b 60 0a 70 09 50 08 c0 06 d0 04 e0
+[API] [LSDA] LPStart_enc=0xff (omit)
+[API] [LSDA] TType_enc=0x9b
+[API] [LSDA] CS_enc=0x3d
+[API] [HANDLER_CALL] CTX.Rip=0x140005ded CTX.Rsp=0x7ffcd0619338 CTX.Rbp=0x7ffcd06193c0
+[API] [HANDLER_CALL] calling...
+[API] RtlUnwindEx(target_frame=0x7ffcd0619338, target_ip=0x140005dee, ctx=0x7ffcd0618770, exc=0x3980420)
+[API] RtlUnwindEx: TargetIp=0x140005dee TargetFrame=0x7ffcd0619338
+[API] [DISPATCH] Unwind: pc=0x140012d11 begin=0x12ce0 handler=0x0 est=0x7ffcd0619278
+[API] [DISPATCH] Unwind: pc=0x140026b49 begin=0x26b10 handler=0x0 est=0x7ffcd06192b8
+[API] [DISPATCH] Unwind: pc=0x140005dee begin=0x5d40 handler=0x26b60 est=0x7ffcd0619338
+[API] [BUG-031] first walk: reached target frame est=0x7ffcd0619338 — intermediate scan done
+[API] RtlUnwindEx: BUG-039/B register base restored from target-frame snapshot (RDI=0x64 RBP=0x3980460 RSI=0x397d9a0 RBX=0x1)
+[API] RtlUnwindEx: target_func RVA=0x5d40 alloc_total=0x78 post_prologue_RSP=0x7ffcd06192c0
+[API] RtlUnwindEx: Set CTX.Rax = 0x3980420 (exception object)
+[API] RtlUnwindEx: 4-param protocol ER (obj=0x3980420 est=0x7ffcd0619338 lp=0x140005dee sel=2) -> CTX.Rdx=2
+[API] RtlUnwindEx: longjmping to dispatcher (RIP=0x140005dee RSP=0x7ffcd06192c0)
+[API] RtlUnwindEx DIAG: tgt_frame(post-prologue RSP)=0x7ffcd0619338
+[API] RtlUnwindEx DIAG: [tgt_frame+0x30]=0x395a718 (expect global _onexit ptr)
+[API] RtlUnwindEx DIAG: [tgt_frame+0x38]=0x7ffcd06193bc (expect _pfirst ptr)
+[API] RtlUnwindEx DIAG: [tgt_frame+0x40]=0x1f03958480 (expect count)
+[API] [DISPATCH] RtlUnwindEx longjmped back — unwind to RIP=0x140005dee RSP=0x7ffcd06192c0
+[API] [DISPATCH] CONTEXT after longjmp: Rax=0x3980420 (saved to g_unwind_regs)
+[API] GetLastError() = 0
+[API] TlsGetValue(1) = 0x39802a0
+[API] SetLastError(0)
+[API] GetLastError() = 0
+[API] TlsGetValue(1) = 0x39802a0
+[API] SetLastError(0)
+[API] free(0x39803c0)
+[API] malloc(176) = 0x3980490
+[API] malloc(34) = 0x3980550
+[API] GetLastError() = 0
+[API] TlsGetValue(1) = 0x39802a0
+[API] SetLastError(0)
+[API] [DISPATCH] === RtlDispatchException ===
+[API] [DISPATCH] ExceptionCode=0x20474343 RIP=0x140012d11 RSP=0x7ffcd0619210
+[API] [EXC_STATE] EXCEPTION_BEGIN
+[API] [EXC_STATE] Code: 0x20474343
+[API] [EXC_STATE] Flags: 0x0
+[API] [EXC_STATE] Address: 0x140012d11
+[API] [EXC_STATE] NumParams: 1
+[API] [EXC_STATE] Param[0]: 0x39804f0
+[API] [EXC_STATE] Param[1]: 0x0
+[API] [EXC_STATE] Param[2]: 0x0
+[API] [EXC_STATE] Param[3]: 0x0
+[API] [EXC_STATE] g_cap_args ptr: 0x7ffcd0619240
+[API] [EXC_STATE] Exception object @ 0x39804f0 (first 32 bytes):
+[API] [EXC_STATE]   00 2b 2b 43 43 55 4e 47
+[API] [EXC_STATE]   d0 8f 01 40 01 00 00 00
+[API] [EXC_STATE]   00 00 00 00 00 00 00 00
+[API] [EXC_STATE]   00 00 00 00 00 00 00 00
+[API] [EXC_STATE] Exception class (u64): 0x474e5543432b2b00
+[API] [EXC_STATE] EXCEPTION_END
+[API] [DISPATCH] VEH chain: 0 handlers
+[API] [DISPATCH] Frame[0]: RIP=0x140012d11 RVA=0x12d11 CTX.Rsp=0x7ffcd0619210
+[API] [DISPATCH] Frame[0]: RF begin=0x12ce0 end=0x12d1b ui=0x36264
+[API] [DISPATCH] Unwind: pc=0x140012d11 begin=0x12ce0 handler=0x0 est=0x7ffcd0619238
+[API] [DISPATCH] Frame[0]: Unwind est=0x7ffcd0619238 CTX.Rsp_after=0x7ffcd0619238 alloc=0x0
+[API] [DISPATCH] Frame[0]: no handler, parent RIP=0x140026b49 RVA=0x26b49
+[API] [DISPATCH] Frame[0]: est=0x7ffcd0619238 CTX.Rsp=0x7ffcd0619238 delta=0x0
+[API] [DISPATCH] Frame[1]: RIP=0x140026b49 RVA=0x26b49 CTX.Rsp=0x7ffcd0619240
+[API] [DISPATCH] Frame[1]: RF begin=0x26b10 end=0x26b57 ui=0x34684
+[API] [DISPATCH] Unwind: pc=0x140026b49 begin=0x26b10 handler=0x0 est=0x7ffcd0619278
+[API] [DISPATCH] Frame[1]: Unwind est=0x7ffcd0619278 CTX.Rsp_after=0x7ffcd0619278 alloc=0x0
+[API] [DISPATCH] Frame[1]: no handler, parent RIP=0x14000358a RVA=0x358a
+[API] [DISPATCH] Frame[1]: est=0x7ffcd0619278 CTX.Rsp=0x7ffcd0619278 delta=0x0
+[API] [DISPATCH] Frame[2]: RIP=0x14000358a RVA=0x358a CTX.Rsp=0x7ffcd0619280
+[API] [DISPATCH] Frame[2]: RF begin=0x3430 end=0x3786 ui=0x3417c
+[API] [DISPATCH] Unwind: pc=0x14000358a begin=0x3430 handler=0x26b60 est=0x7ffcd06192b8
+[API] [DISPATCH] Frame[2]: Unwind est=0x7ffcd06192b8 CTX.Rsp_after=0x7ffcd06192b8 alloc=0x0
+[API] [DISPATCH] Frame[2]: EHANDLER at RVA 0x26b60 (VA 0x140026b60)
+[API] [DISPATCH] Frame[2]: establisher=0x7ffcd06192b8 CTX.Rsp=0x7ffcd06192b8 lsda=0x14003418c
+[API] [HANDLER_CALL] Frame[2] BEGIN
+[API] [HANDLER_CALL] RCX (EXCEPTION_RECORD*) = 0x7ffcd0618730
+[API] [HANDLER_CALL] RDX (EstablisherFrame) = 0x7ffcd06192b8
+[API] [HANDLER_CALL] R8  (CONTEXT*)       = 0x7ffcd06187d0
+[API] [HANDLER_CALL] R9  (DISPATCHER_CONTEXT*) = 0x7ffcd06186e0
+[API] [HANDLER_CALL] Handler VA = 0x140026b60  RVA = 0x26b60
+[API] [HANDLER_CALL] HandlerData (LSDA) = 0x14003418c
+[API] [HANDLER_CALL] ER.Code=0x20474343 ER.Flags=0x0 ER.NumParams=1
+[API] [HANDLER_CALL] ER.Param[0]=0x39804f0 ER.Param[1]=0x0 ER.Param[2]=0x0
+[API] [HANDLER_CALL] Handler bytes [0:16]: 48 83 ec 38 48 8d 05 f5 27 ff ff 48 89 44 24 20
+[API] [HANDLER_CALL] Handler bytes[16:32]: e8 3b bf fe ff 48 83 c4 38 c3 90 90 90 90 90 90
+[API] [HANDLER_CALL] Handler bytes[32:48]: 48 83 ec 28 48 8b 05 25 6c 00 00 8b 00 85 c0 75
+[API] [LSDA] raw[0:16]:  ff ff 01 75 55 05 9a 01 00 7f 05 e6 01 00 95 01
+[API] [LSDA] raw[16:32]: 05 e1 01 00 dc 01 05 00 00 8d 02 05 a5 05 00 a3
+[API] [LSDA] raw[32:48]: 02 05 9a 01 00 bf 02 05 a8 06 00 d5 02 05 a0 06
+[API] [LSDA] raw[48:64]: 00 f1 02 05 c6 03 00 87 03 05 be 03 00 a3 03 05
+[API] [LSDA] raw[64:80]: e1 03 00 b9 03 05 d9 03 00 8b 04 05 c3 06 00 a1
+[API] [LSDA] raw[80:96]: 04 05 bb 06 00 bd 04 05 e0 04 00 d3 04 05 d8 04
+[API] [LSDA] raw[96:112]: 00 8a 05 05 c0 05 00 a0 05 05 b8 05 00 ea 05 05
+[API] [LSDA] raw[112:128]: 8d 06 00 80 06 05 85 06 00 00 00 00 01 10 09 00
+[API] [LSDA] LPStart_enc=0xff (omit)
+[API] [LSDA] TType_enc=0xff
+[API] [LSDA] CS_enc=0x01
+[API] [HANDLER_CALL] CTX.Rip=0x140003589 CTX.Rsp=0x7ffcd06192b8 CTX.Rbp=0x7ffcd06193c0
+[API] [HANDLER_CALL] calling...
+[API] [HANDLER_CALL] returned disposition=1 (0=Exec %1=Search %2=Nested %3=Collided)
+[API] [HANDLER_CALL] Frame[2] END
+[API] [DISPATCH] Handler returned ContinueSearch — walking to parent
+[API] [DISPATCH] Frame[2]: parent RIP=0x140005d5d RVA=0x5d5d
+[API] [DISPATCH] Frame[3]: RIP=0x140005d5d RVA=0x5d5d CTX.Rsp=0x7ffcd06192c0
+[API] [DISPATCH] Frame[3]: RF begin=0x5d40 end=0x5eef ui=0x3429c
+[API] [DISPATCH] Unwind: pc=0x140005d5d begin=0x5d40 handler=0x26b60 est=0x7ffcd0619338
+[API] [DISPATCH] Frame[3]: Unwind est=0x7ffcd0619338 CTX.Rsp_after=0x7ffcd0619338 alloc=0x0
+[API] [DISPATCH] Frame[3]: EHANDLER at RVA 0x26b60 (VA 0x140026b60)
+[API] [DISPATCH] Frame[3]: establisher=0x7ffcd0619338 CTX.Rsp=0x7ffcd0619338 lsda=0x1400342b0
+[API] [HANDLER_CALL] Frame[3] BEGIN
+[API] [HANDLER_CALL] RCX (EXCEPTION_RECORD*) = 0x7ffcd0618730
+[API] [HANDLER_CALL] RDX (EstablisherFrame) = 0x7ffcd0619338
+[API] [HANDLER_CALL] R8  (CONTEXT*)       = 0x7ffcd06187d0
+[API] [HANDLER_CALL] R9  (DISPATCHER_CONTEXT*) = 0x7ffcd06186e0
+[API] [HANDLER_CALL] Handler VA = 0x140026b60  RVA = 0x26b60
+[API] [HANDLER_CALL] HandlerData (LSDA) = 0x1400342b0
+[API] [HANDLER_CALL] ER.Code=0x20474343 ER.Flags=0x0 ER.NumParams=1
+[API] [HANDLER_CALL] ER.Param[0]=0x39804f0 ER.Param[1]=0x0 ER.Param[2]=0x0
+[API] [HANDLER_CALL] Handler bytes [0:16]: 48 83 ec 38 48 8d 05 f5 27 ff ff 48 89 44 24 20
+[API] [HANDLER_CALL] Handler bytes[16:32]: e8 3b bf fe ff 48 83 c4 38 c3 90 90 90 90 90 90
+[API] [HANDLER_CALL] Handler bytes[32:48]: 48 83 ec 28 48 8b 05 25 6c 00 00 8b 00 85 c0 75
+[API] [LSDA] raw[0:16]:  ff 9b 3d 01 24 18 05 4d 05 48 05 ae 01 05 77 05
+[API] [LSDA] raw[16:32]: 00 00 93 01 05 d6 01 07 a9 01 05 ae 01 05 85 02
+[API] [LSDA] raw[32:48]: 05 c4 02 00 92 03 05 00 00 03 00 02 7d 01 7d 00
+[API] [LSDA] raw[48:64]: 7d 00 00 00 24 4d ff ff 18 4d ff ff 24 4d ff ff
+[API] [LSDA] raw[64:80]: 01 08 05 00 08 82 04 30 03 60 02 70 01 50 00 00
+[API] [LSDA] raw[80:96]: 01 0a 06 00 0a 32 06 30 05 60 04 70 03 50 02 c0
+[API] [LSDA] raw[96:112]: 01 06 03 00 06 62 02 30 01 60 00 00 01 10 09 00
+[API] [LSDA] raw[112:128]: 10 a2 0c 30 0b 60 0a 70 09 50 08 c0 06 d0 04 e0
+[API] [LSDA] LPStart_enc=0xff (omit)
+[API] [LSDA] TType_enc=0x9b
+[API] [LSDA] CS_enc=0x3d
+[API] [HANDLER_CALL] CTX.Rip=0x140005d5c CTX.Rsp=0x7ffcd0619338 CTX.Rbp=0x7ffcd06193c0
+[API] [HANDLER_CALL] calling...
+[API] RtlUnwindEx(target_frame=0x7ffcd0619338, target_ip=0x140005d8d, ctx=0x7ffcd0618730, exc=0x39804f0)
+[API] RtlUnwindEx: TargetIp=0x140005d8d TargetFrame=0x7ffcd0619338
+[API] [DISPATCH] Unwind: pc=0x140012d11 begin=0x12ce0 handler=0x0 est=0x7ffcd0619238
+[API] [DISPATCH] Unwind: pc=0x140026b49 begin=0x26b10 handler=0x0 est=0x7ffcd0619278
+[API] [DISPATCH] Unwind: pc=0x14000358a begin=0x3430 handler=0x26b60 est=0x7ffcd06192b8
+[API] [BUG-031] first walk: personality fn=0x140026b60 est=0x7ffcd06192b8 rip=0x14000358a lsda=0x14003418c flags=0x2 (EH_UNWINDING)
+[API] [DISPATCH] === RtlDispatchException ===
+[API] [DISPATCH] ExceptionCode=0x21474343 RIP=0x140012b8b RSP=0x7ffcd0617bd0
+[API] [EXC_STATE] EXCEPTION_BEGIN
+[API] [EXC_STATE] Code: 0x21474343
+[API] [EXC_STATE] Flags: 0x1
+[API] [EXC_STATE] Address: 0x140012b8b
+[API] [EXC_STATE] NumParams: 4
+[API] [EXC_STATE] Param[0]: 0x39804f0
+[API] [EXC_STATE] Param[1]: 0x7ffcd06192b8
+[API] [EXC_STATE] Param[2]: 0x140003750
+[API] [EXC_STATE] Param[3]: 0x0
+[API] [EXC_STATE] g_cap_args ptr: 0x7ffcd0617db0
+[API] [EXC_STATE] Exception object @ 0x39804f0 (first 32 bytes):
+[API] [EXC_STATE]   00 2b 2b 43 43 55 4e 47
+[API] [EXC_STATE]   d0 8f 01 40 01 00 00 00
+[API] [EXC_STATE]   00 00 00 00 00 00 00 00
+[API] [EXC_STATE]   38 93 61 d0 fc 7f 00 00
+[API] [EXC_STATE] Exception class (u64): 0x474e5543432b2b00
+[API] [EXC_STATE] EXCEPTION_END
+[API] [BUG-031] resume-cmd: 0x21474343 obj=0x39804f0 est=0x7ffcd06192b8 lp=0x140003750 sel=0 alloc=0x38 -> RIP=0x140003750 RSP=0x7ffcd0619280
+[API] RtlCaptureContext()
+[API] RtlUnwindEx(target_frame=0x7ffcd0619338, target_ip=0x140005d8d, ctx=0x7ffcd0618c20, exc=0x39804f0)
+[API] RtlUnwindEx: TargetIp=0x140005d8d TargetFrame=0x7ffcd0619338
+[API] [BUG-031] continuation unwind: orig_ctx=0x7ffcd0618da0
+[API] [BUG-031] cont walk: RIP 0x0 outside PE — walk ends
+[API] [BUG-031] continuation: 4-param ER obj=0x39804f0 est=0x7ffcd0619338 lp=0x140005d8d sel=3 -> CTX.Rdx
+[API] [BUG-031] continuation resume: RIP=0x140005d8d RSP=0x7ffcd06192c0 alloc=0x78
+[API] GetLastError() = 0
+[API] TlsGetValue(1) = 0x39802a0
+[API] SetLastError(0)
+[API] GetLastError() = 0
+[API] TlsGetValue(1) = 0x39802a0
+[API] SetLastError(0)
+[API] free(0x3980550)
+[API] free(0x3980490)
+[API] __iob_func() = 0x2037820
+[API] __iob_func() = 0x2037820
+[API] __iob_func() = 0x2037820
+[API] __iob_func() = 0x2037820
+[API] _lock(17)
+[API] _errno() = 0x2037838
+[API] fputc(ch=0x52)
+[API] map_crt_stream: iob+0x30 -> stdout
+[API] fputc(ch=0x45)
+[API] map_crt_stream: iob+0x30 -> stdout
+[API] fputc(ch=0x53)
+[API] map_crt_stream: iob+0x30 -> stdout
+[API] fputc(ch=0x55)
+[API] map_crt_stream: iob+0x30 -> stdout
+[API] fputc(ch=0x4c)
+[API] map_crt_stream: iob+0x30 -> stdout
+[API] fputc(ch=0x54)
+[API] map_crt_stream: iob+0x30 -> stdout
+[API] fputc(ch=0x20)
+[API] map_crt_stream: iob+0x30 -> stdout
+[API] fputc(ch=0x73)
+[API] map_crt_stream: iob+0x30 -> stdout
+[API] fputc(ch=0x63)
+[API] map_crt_stream: iob+0x30 -> stdout
+[API] fputc(ch=0x6f)
+[API] map_crt_stream: iob+0x30 -> stdout
+[API] fputc(ch=0x72)
+[API] map_crt_stream: iob+0x30 -> stdout
+[API] fputc(ch=0x65)
+[API] map_crt_stream: iob+0x30 -> stdout
+[API] fputc(ch=0x3d)
+[API] map_crt_stream: iob+0x30 -> stdout
+[API] fputc(ch=0x32)
+[API] map_crt_stream: iob+0x30 -> stdout
+[API] fputc(ch=0x35)
+[API] map_crt_stream: iob+0x30 -> stdout
+[API] fputc(ch=0x35)
+[API] map_crt_stream: iob+0x30 -> stdout
+[API] fputc(ch=0x20)
+[API] map_crt_stream: iob+0x30 -> stdout
+[API] fputc(ch=0x65)
+[API] map_crt_stream: iob+0x30 -> stdout
+[API] fputc(ch=0x78)
+[API] map_crt_stream: iob+0x30 -> stdout
+[API] fputc(ch=0x70)
+[API] map_crt_stream: iob+0x30 -> stdout
+[API] fputc(ch=0x65)
+[API] map_crt_stream: iob+0x30 -> stdout
+[API] fputc(ch=0x63)
+[API] map_crt_stream: iob+0x30 -> stdout
+[API] fputc(ch=0x74)
+[API] map_crt_stream: iob+0x30 -> stdout
+[API] fputc(ch=0x65)
+[API] map_crt_stream: iob+0x30 -> stdout
+[API] fputc(ch=0x64)
+[API] map_crt_stream: iob+0x30 -> stdout
+[API] fputc(ch=0x3d)
+[API] map_crt_stream: iob+0x30 -> stdout
+[API] fputc(ch=0x32)
+[API] map_crt_stream: iob+0x30 -> stdout
+[API] fputc(ch=0x35)
+[API] map_crt_stream: iob+0x30 -> stdout
+[API] fputc(ch=0x35)
+[API] map_crt_stream: iob+0x30 -> stdout
+[API] fputc(ch=0xa)
+[API] map_crt_stream: iob+0x30 -> stdout
+[API] __iob_func() = 0x2037820
+[API] __iob_func() = 0x2037820
+[API] __iob_func() = 0x2037820
+[API] _unlock(17)
+[API] __iob_func() = 0x2037820
+[API] __iob_func() = 0x2037820
+[API] __iob_func() = 0x2037820
+[API] __iob_func() = 0x2037820
+[API] _lock(17)
+[API] _errno() = 0x2037838
+[API] fputc(ch=0x52)
+[API] map_crt_stream: iob+0x30 -> stdout
+[API] fputc(ch=0x45)
+[API] map_crt_stream: iob+0x30 -> stdout
+[API] fputc(ch=0x53)
+[API] map_crt_stream: iob+0x30 -> stdout
+[API] fputc(ch=0x55)
+[API] map_crt_stream: iob+0x30 -> stdout
+[API] fputc(ch=0x4c)
+[API] map_crt_stream: iob+0x30 -> stdout
+[API] fputc(ch=0x54)
+[API] map_crt_stream: iob+0x30 -> stdout
+[API] fputc(ch=0x20)
+[API] map_crt_stream: iob+0x30 -> stdout
+[API] fputc(ch=0x73)
+[API] map_crt_stream: iob+0x30 -> stdout
+[API] fputc(ch=0x74)
+[API] map_crt_stream: iob+0x30 -> stdout
+[API] fputc(ch=0x6c)
+[API] map_crt_stream: iob+0x30 -> stdout
+[API] fputc(ch=0x3d)
+[API] map_crt_stream: iob+0x30 -> stdout
+[API] fputc(ch=0x6f)
+[API] map_crt_stream: iob+0x30 -> stdout
+[API] fputc(ch=0x6b)
+[API] map_crt_stream: iob+0x30 -> stdout
+[API] fputc(ch=0x20)
+[API] map_crt_stream: iob+0x30 -> stdout
+[API] fputc(ch=0x65)
+[API] map_crt_stream: iob+0x30 -> stdout
+[API] fputc(ch=0x78)
+[API] map_crt_stream: iob+0x30 -> stdout
+[API] fputc(ch=0x63)
+[API] map_crt_stream: iob+0x30 -> stdout
+[API] fputc(ch=0x65)
+[API] map_crt_stream: iob+0x30 -> stdout
+[API] fputc(ch=0x70)
+[API] map_crt_stream: iob+0x30 -> stdout
+[API] fputc(ch=0x74)
+[API] map_crt_stream: iob+0x30 -> stdout
+[API] fputc(ch=0x69)
+[API] map_crt_stream: iob+0x30 -> stdout
+[API] fputc(ch=0x6f)
+[API] map_crt_stream: iob+0x30 -> stdout
+[API] fputc(ch=0x6e)
+[API] map_crt_stream: iob+0x30 -> stdout
+[API] fputc(ch=0x73)
+[API] map_crt_stream: iob+0x30 -> stdout
+[API] fputc(ch=0x3d)
+[API] map_crt_stream: iob+0x30 -> stdout
+[API] fputc(ch=0x6f)
+[API] map_crt_stream: iob+0x30 -> stdout
+[API] fputc(ch=0x6b)
+[API] map_crt_stream: iob+0x30 -> stdout
+[API] fputc(ch=0x20)
+[API] map_crt_stream: iob+0x30 -> stdout
+[API] fputc(ch=0x64)
+[API] map_crt_stream: iob+0x30 -> stdout
+[API] fputc(ch=0x74)
+[API] map_crt_stream: iob+0x30 -> stdout
+[API] fputc(ch=0x6f)
+[API] map_crt_stream: iob+0x30 -> stdout
+[API] fputc(ch=0x72)
+[API] map_crt_stream: iob+0x30 -> stdout
+[API] fputc(ch=0x73)
+[API] map_crt_stream: iob+0x30 -> stdout
+[API] fputc(ch=0x3d)
+[API] map_crt_stream: iob+0x30 -> stdout
+[API] fputc(ch=0x35)
+[API] map_crt_stream: iob+0x30 -> stdout
+[API] fputc(ch=0xa)
+[API] map_crt_stream: iob+0x30 -> stdout
+[API] __iob_func() = 0x2037820
+[API] __iob_func() = 0x2037820
+[API] __iob_func() = 0x2037820
+[API] _unlock(17)
+[API] free(0x395a6a0)
+[API] free(0x397dad0)
+[API] free(0x397d900)
+[API] free(0x397d8b0)
+[API] free(0x397d860)
+[API] free(0x395ac30)
+[API] free(0x3971d10)
+[API] free(0x3971d40)
+[API] free(0x3971d70)
+[API] free(0x3971da0)
+[API] free(0x3971dd0)
+[API] free(0x3971e00)
+[API] free(0x3971e30)
+[API] free(0x3971e60)
+[API] free(0x3971e90)
+[API] free(0x3971ec0)
+[API] free(0x3971ef0)
+[API] free(0x3971f20)
+[API] free(0x3971f50)
+[API] free(0x3971f80)
+[API] free(0x3971fb0)
+[API] free(0x3971fe0)
+[API] free(0x3972010)
+[API] free(0x3972040)
+[API] free(0x3972070)
+[API] free(0x39720a0)
+[API] free(0x39720d0)
+[API] free(0x3972100)
+[API] free(0x3972130)
+[API] free(0x3972160)
+[API] free(0x3972190)
+[API] free(0x39721c0)
+[API] free(0x39721f0)
+[API] free(0x3972220)
+[API] free(0x3972250)
+[API] free(0x3972280)
+[API] free(0x39722b0)
+[API] free(0x39722e0)
+[API] free(0x3972310)
+[API] free(0x3972340)
+[API] free(0x3972370)
+[API] free(0x39723a0)
+[API] free(0x39723d0)
+[API] free(0x3972400)
+[API] free(0x3972430)
+[API] free(0x3972460)
+[API] free(0x3972490)
+[API] free(0x39724c0)
+[API] free(0x39724f0)
+[API] free(0x3972520)
+[API] free(0x3972550)
+[API] free(0x3972580)
+[API] free(0x39725b0)
+[API] free(0x39725e0)
+[API] free(0x3972610)
+[API] free(0x3972640)
+[API] free(0x3972670)
+[API] free(0x39726a0)
+[API] free(0x39726d0)
+[API] free(0x3972700)
+[API] free(0x3972730)
+[API] free(0x3972760)
+[API] free(0x3972790)
+[API] free(0x39727c0)
+[API] free(0x39727f0)
+[API] free(0x3972820)
+[API] free(0x3972850)
+[API] free(0x3972880)
+[API] free(0x39728b0)
+[API] free(0x39728e0)
+[API] free(0x3972910)
+[API] free(0x3972940)
+[API] free(0x3972970)
+[API] free(0x39729a0)
+[API] free(0x39729d0)
+[API] free(0x3972a00)
+[API] free(0x3972a30)
+[API] free(0x3972a60)
+[API] free(0x3972a90)
+[API] free(0x3972ac0)
+[API] free(0x3972af0)
+[API] free(0x3972b20)
+[API] free(0x3972b50)
+[API] free(0x3972b80)
+[API] free(0x3972bb0)
+[API] free(0x3972be0)
+[API] free(0x3972c10)
+[API] free(0x3972c40)
+[API] free(0x3972c70)
+[API] free(0x3972ca0)
+[API] free(0x3972cd0)
+[API] free(0x3972d00)
+[API] free(0x3972d30)
+[API] free(0x3972d60)
+[API] free(0x3972d90)
+[API] free(0x3972dc0)
+[API] free(0x3972df0)
+[API] free(0x3972e20)
+[API] free(0x3972e50)
+[API] free(0x3972e80)
+[API] free(0x3972eb0)
+[API] free(0x3972ee0)
+[API] free(0x3972f10)
+[API] free(0x3972f40)
+[API] free(0x3972f70)
+[API] free(0x3972fa0)
+[API] free(0x3972fd0)
+[API] free(0x3973000)
+[API] free(0x3973030)
+[API] free(0x3973060)
+[API] free(0x3973090)
+[API] free(0x39730c0)
+[API] free(0x39730f0)
+[API] free(0x3973120)
+[API] free(0x3973150)
+[API] free(0x3973180)
+[API] free(0x39731b0)
+[API] free(0x39731e0)
+[API] free(0x3973210)
+[API] free(0x3973240)
+[API] free(0x3973270)
+[API] free(0x39732a0)
+[API] free(0x39732d0)
+[API] free(0x3973300)
+[API] free(0x3973330)
+[API] free(0x3973360)
+[API] free(0x3973390)
+[API] free(0x39733c0)
+[API] free(0x39733f0)
+[API] free(0x3973420)
+[API] free(0x3973450)
+[API] free(0x3973480)
+[API] free(0x39734b0)
+[API] free(0x39734e0)
+[API] free(0x3973510)
+[API] free(0x3973540)
+[API] free(0x3973570)
+[API] free(0x39735a0)
+[API] free(0x39735d0)
+[API] free(0x3973600)
+[API] free(0x3973630)
+[API] free(0x3973660)
+[API] free(0x3973690)
+[API] free(0x39736c0)
+[API] free(0x39736f0)
+[API] free(0x3973720)
+[API] free(0x3973750)
+[API] free(0x3973780)
+[API] free(0x39737b0)
+[API] free(0x39737e0)
+[API] free(0x3973810)
+[API] free(0x3973840)
+[API] free(0x3973870)
+[API] free(0x39738a0)
+[API] free(0x39738d0)
+[API] free(0x3973900)
+[API] free(0x3973930)
+[API] free(0x3973960)
+[API] free(0x3973990)
+[API] free(0x39739c0)
+[API] free(0x39739f0)
+[API] free(0x3973a20)
+[API] free(0x3973a50)
+[API] free(0x3973a80)
+[API] free(0x3973ab0)
+[API] free(0x3973ae0)
+[API] free(0x3973b10)
+[API] free(0x3973b40)
+[API] free(0x3973b70)
+[API] free(0x3973ba0)
+[API] free(0x3973bd0)
+[API] free(0x3973c00)
+[API] free(0x3973c30)
+[API] free(0x3973c60)
+[API] free(0x3973c90)
+[API] free(0x3973cc0)
+[API] free(0x3973cf0)
+[API] free(0x3973d20)
+[API] free(0x3973d50)
+[API] free(0x3973d80)
+[API] free(0x3973db0)
+[API] free(0x3973de0)
+[API] free(0x3973e10)
+[API] free(0x3973e40)
+[API] free(0x3973e70)
+[API] free(0x3973ea0)
+[API] free(0x3973ed0)
+[API] free(0x3973f00)
+[API] free(0x3973f30)
+[API] free(0x3973f60)
+[API] free(0x3973f90)
+[API] free(0x3973fc0)
+[API] free(0x3973ff0)
+[API] free(0x3974020)
+[API] free(0x3974050)
+[API] free(0x3974080)
+[API] free(0x39740b0)
+[API] free(0x39740e0)
+[API] free(0x3974110)
+[API] free(0x3974140)
+[API] free(0x3974170)
+[API] free(0x39741a0)
+[API] free(0x39741d0)
+[API] free(0x3974200)
+[API] free(0x3974230)
+[API] free(0x3974260)
+[API] free(0x3974290)
+[API] free(0x39742c0)
+[API] free(0x39742f0)
+[API] free(0x3974320)
+[API] free(0x3974350)
+[API] free(0x3974380)
+[API] free(0x39743b0)
+[API] free(0x39743e0)
+[API] free(0x3974410)
+[API] free(0x3974440)
+[API] free(0x3974470)
+[API] free(0x39744a0)
+[API] free(0x39744d0)
+[API] free(0x3974500)
+[API] free(0x3974530)
+[API] free(0x3974560)
+[API] free(0x3974590)
+[API] free(0x39745c0)
+[API] free(0x39745f0)
+[API] free(0x3974620)
+[API] free(0x3974650)
+[API] free(0x3974680)
+[API] free(0x39746b0)
+[API] free(0x39746e0)
+[API] free(0x3974710)
+[API] free(0x3974740)
+[API] free(0x3974770)
+[API] free(0x39747a0)
+[API] free(0x39747d0)
+[API] free(0x3974800)
+[API] free(0x3974830)
+[API] free(0x3974860)
+[API] free(0x3974890)
+[API] free(0x39748c0)
+[API] free(0x39748f0)
+[API] free(0x3974920)
+[API] free(0x3974950)
+[API] free(0x3974980)
+[API] free(0x39749b0)
+[API] free(0x39749e0)
+[API] free(0x3974a10)
+[API] free(0x3974a40)
+[API] free(0x3974a70)
+[API] free(0x3974aa0)
+[API] free(0x3974ad0)
+[API] free(0x3974b00)
+[API] free(0x3974b30)
+[API] free(0x3974b60)
+[API] free(0x3974b90)
+[API] free(0x3974bc0)
+[API] free(0x3974bf0)
+[API] free(0x3974c20)
+[API] free(0x3974c50)
+[API] free(0x3974c80)
+[API] free(0x3974cb0)
+[API] free(0x3974ce0)
+[API] free(0x3974d10)
+[API] free(0x3974d40)
+[API] free(0x3974d70)
+[API] free(0x3974da0)
+[API] free(0x3974dd0)
+[API] free(0x3974e00)
+[API] free(0x3974e30)
+[API] free(0x3974e60)
+[API] free(0x3974e90)
+[API] free(0x3974ec0)
+[API] free(0x3974ef0)
+[API] free(0x3974f20)
+[API] free(0x3974f50)
+[API] free(0x3974f80)
+[API] free(0x3974fb0)
+[API] free(0x3974fe0)
+[API] free(0x3975010)
+[API] free(0x3975040)
+[API] free(0x3975070)
+[API] free(0x39750a0)
+[API] free(0x39750d0)
+[API] free(0x3975100)
+[API] free(0x3975130)
+[API] free(0x3975160)
+[API] free(0x3975190)
+[API] free(0x39751c0)
+[API] free(0x39751f0)
+[API] free(0x3975220)
+[API] free(0x3975250)
+[API] free(0x3975280)
+[API] free(0x39752b0)
+[API] free(0x39752e0)
+[API] free(0x3975310)
+[API] free(0x3975340)
+[API] free(0x3975370)
+[API] free(0x39753a0)
+[API] free(0x39753d0)
+[API] free(0x3975400)
+[API] free(0x3975430)
+[API] free(0x3975460)
+[API] free(0x3975490)
+[API] free(0x39754c0)
+[API] free(0x39754f0)
+[API] free(0x3975520)
+[API] free(0x3975550)
+[API] free(0x3975580)
+[API] free(0x39755b0)
+[API] free(0x39755e0)
+[API] free(0x3975610)
+[API] free(0x3975640)
+[API] free(0x3975670)
+[API] free(0x39756a0)
+[API] free(0x39756d0)
+[API] free(0x3975700)
+[API] free(0x3975730)
+[API] free(0x3975760)
+[API] free(0x3975790)
+[API] free(0x39757c0)
+[API] free(0x39757f0)
+[API] free(0x3975820)
+[API] free(0x3975850)
+[API] free(0x3975880)
+[API] free(0x39758b0)
+[API] free(0x39758e0)
+[API] free(0x3975910)
+[API] free(0x3975940)
+[API] free(0x3975970)
+[API] free(0x39759a0)
+[API] free(0x39759d0)
+[API] free(0x3975a00)
+[API] free(0x3975a30)
+[API] free(0x3975a60)
+[API] free(0x3975a90)
+[API] free(0x3975ac0)
+[API] free(0x3975af0)
+[API] free(0x3975b20)
+[API] free(0x3975b50)
+[API] free(0x3975b80)
+[API] free(0x3975bb0)
+[API] free(0x3975be0)
+[API] free(0x3975c10)
+[API] free(0x3975c40)
+[API] free(0x3975c70)
+[API] free(0x3975ca0)
+[API] free(0x3975cd0)
+[API] free(0x3975d00)
+[API] free(0x3975d30)
+[API] free(0x3975d60)
+[API] free(0x3975d90)
+[API] free(0x3975dc0)
+[API] free(0x3975df0)
+[API] free(0x3975e20)
+[API] free(0x3975e50)
+[API] free(0x3975e80)
+[API] free(0x3975eb0)
+[API] free(0x3975ee0)
+[API] free(0x3975f10)
+[API] free(0x3975f40)
+[API] free(0x3975f70)
+[API] free(0x3975fa0)
+[API] free(0x3975fd0)
+[API] free(0x3976000)
+[API] free(0x3976030)
+[API] free(0x3976060)
+[API] free(0x3976090)
+[API] free(0x39760c0)
+[API] free(0x39760f0)
+[API] free(0x3976120)
+[API] free(0x3976150)
+[API] free(0x3976180)
+[API] free(0x39761b0)
+[API] free(0x39761e0)
+[API] free(0x3976210)
+[API] free(0x3976240)
+[API] free(0x3976270)
+[API] free(0x39762a0)
+[API] free(0x39762d0)
+[API] free(0x3976300)
+[API] free(0x3976330)
+[API] free(0x3976360)
+[API] free(0x3976390)
+[API] free(0x39763c0)
+[API] free(0x39763f0)
+[API] free(0x3976420)
+[API] free(0x3976450)
+[API] free(0x3976480)
+[API] free(0x39764b0)
+[API] free(0x39764e0)
+[API] free(0x3976510)
+[API] free(0x3976540)
+[API] free(0x3976570)
+[API] free(0x39765a0)
+[API] free(0x39765d0)
+[API] free(0x3976600)
+[API] free(0x3976630)
+[API] free(0x3976660)
+[API] free(0x3976690)
+[API] free(0x39766c0)
+[API] free(0x39766f0)
+[API] free(0x3976720)
+[API] free(0x3976750)
+[API] free(0x3976780)
+[API] free(0x39767b0)
+[API] free(0x39767e0)
+[API] free(0x3976810)
+[API] free(0x3976840)
+[API] free(0x3976870)
+[API] free(0x39768a0)
+[API] free(0x39768d0)
+[API] free(0x3976900)
+[API] free(0x3976930)
+[API] free(0x3976960)
+[API] free(0x3976990)
+[API] free(0x39769c0)
+[API] free(0x39769f0)
+[API] free(0x3976a20)
+[API] free(0x3976a50)
+[API] free(0x3976a80)
+[API] free(0x3976ab0)
+[API] free(0x3976ae0)
+[API] free(0x3976b10)
+[API] free(0x3976b40)
+[API] free(0x3976b70)
+[API] free(0x3976ba0)
+[API] free(0x3976bd0)
+[API] free(0x3976c00)
+[API] free(0x3976c30)
+[API] free(0x3976c60)
+[API] free(0x3976c90)
+[API] free(0x3976cc0)
+[API] free(0x3976cf0)
+[API] free(0x3976d20)
+[API] free(0x3976d50)
+[API] free(0x3976d80)
+[API] free(0x3976db0)
+[API] free(0x3976de0)
+[API] free(0x3976e10)
+[API] free(0x3976e40)
+[API] free(0x3976e70)
+[API] free(0x3976ea0)
+[API] free(0x3976ed0)
+[API] free(0x3976f00)
+[API] free(0x3976f30)
+[API] free(0x3976f60)
+[API] free(0x3976f90)
+[API] free(0x3976fc0)
+[API] free(0x3976ff0)
+[API] free(0x3977020)
+[API] free(0x3977050)
+[API] free(0x3977080)
+[API] free(0x39770b0)
+[API] free(0x39770e0)
+[API] free(0x3977110)
+[API] free(0x3977140)
+[API] free(0x3977170)
+[API] free(0x39771a0)
+[API] free(0x39771d0)
+[API] free(0x3977200)
+[API] free(0x3977230)
+[API] free(0x3977260)
+[API] free(0x3977290)
+[API] free(0x39772c0)
+[API] free(0x39772f0)
+[API] free(0x3977320)
+[API] free(0x3977350)
+[API] free(0x3977380)
+[API] free(0x39773b0)
+[API] free(0x39773e0)
+[API] free(0x3977410)
+[API] free(0x3977440)
+[API] free(0x3977470)
+[API] free(0x39774a0)
+[API] free(0x39774d0)
+[API] free(0x3977500)
+[API] free(0x3977530)
+[API] free(0x3977560)
+[API] free(0x3977590)
+[API] free(0x39775c0)
+[API] free(0x39775f0)
+[API] free(0x3977620)
+[API] free(0x3977650)
+[API] free(0x3977680)
+[API] free(0x39776b0)
+[API] free(0x39776e0)
+[API] free(0x3977710)
+[API] free(0x3977740)
+[API] free(0x3977770)
+[API] free(0x39777a0)
+[API] free(0x39777d0)
+[API] free(0x3977800)
+[API] free(0x3977830)
+[API] free(0x3977860)
+[API] free(0x3977890)
+[API] free(0x39778c0)
+[API] free(0x39778f0)
+[API] free(0x3977920)
+[API] free(0x3977950)
+[API] free(0x3977980)
+[API] free(0x39779b0)
+[API] free(0x39779e0)
+[API] free(0x3977a10)
+[API] free(0x3977a40)
+[API] free(0x3977a70)
+[API] free(0x3977aa0)
+[API] free(0x3977ad0)
+[API] free(0x3977b00)
+[API] free(0x3977b30)
+[API] free(0x3977b60)
+[API] free(0x3977b90)
+[API] free(0x3977bc0)
+[API] free(0x3977bf0)
+[API] free(0x3977c20)
+[API] free(0x3977c50)
+[API] free(0x3977c80)
+[API] free(0x3977cb0)
+[API] free(0x3977ce0)
+[API] free(0x3977d10)
+[API] free(0x3977d40)
+[API] free(0x3977d70)
+[API] free(0x3977da0)
+[API] free(0x3977dd0)
+[API] free(0x3977e00)
+[API] free(0x3977e30)
+[API] free(0x3977e60)
+[API] free(0x3977e90)
+[API] free(0x3977ec0)
+[API] free(0x3977ef0)
+[API] free(0x3977f20)
+[API] free(0x3977f50)
+[API] free(0x3977f80)
+[API] free(0x3977fb0)
+[API] free(0x3977fe0)
+[API] free(0x3978010)
+[API] free(0x3978040)
+[API] free(0x3978070)
+[API] free(0x39780a0)
+[API] free(0x39780d0)
+[API] free(0x3978100)
+[API] free(0x3978130)
+[API] free(0x3978160)
+[API] free(0x3978190)
+[API] free(0x39781c0)
+[API] free(0x39781f0)
+[API] free(0x3978220)
+[API] free(0x3978250)
+[API] free(0x3978280)
+[API] free(0x39782b0)
+[API] free(0x39782e0)
+[API] free(0x3978310)
+[API] free(0x3978340)
+[API] free(0x3978370)
+[API] free(0x39783a0)
+[API] free(0x39783d0)
+[API] free(0x3978400)
+[API] free(0x3978430)
+[API] free(0x3978460)
+[API] free(0x3978490)
+[API] free(0x39784c0)
+[API] free(0x39784f0)
+[API] free(0x3978520)
+[API] free(0x3978550)
+[API] free(0x3978580)
+[API] free(0x39785b0)
+[API] free(0x39785e0)
+[API] free(0x3978610)
+[API] free(0x3978640)
+[API] free(0x3978670)
+[API] free(0x39786a0)
+[API] free(0x39786d0)
+[API] free(0x3978700)
+[API] free(0x3978730)
+[API] free(0x3978760)
+[API] free(0x3978790)
+[API] free(0x39787c0)
+[API] free(0x39787f0)
+[API] free(0x3978820)
+[API] free(0x3978850)
+[API] free(0x3978880)
+[API] free(0x39788b0)
+[API] free(0x39788e0)
+[API] free(0x3978910)
+[API] free(0x3978940)
+[API] free(0x3978970)
+[API] free(0x39789a0)
+[API] free(0x39789d0)
+[API] free(0x3978a00)
+[API] free(0x3978a30)
+[API] free(0x3978a60)
+[API] free(0x3978a90)
+[API] free(0x3978ac0)
+[API] free(0x3978af0)
+[API] free(0x3978b20)
+[API] free(0x3978b50)
+[API] free(0x3978b80)
+[API] free(0x3978bb0)
+[API] free(0x3978be0)
+[API] free(0x3978c10)
+[API] free(0x3978c40)
+[API] free(0x3978c70)
+[API] free(0x3978ca0)
+[API] free(0x3978cd0)
+[API] free(0x3978d00)
+[API] free(0x3978d30)
+[API] free(0x3978d60)
+[API] free(0x3978d90)
+[API] free(0x3978dc0)
+[API] free(0x3978df0)
+[API] free(0x3978e20)
+[API] free(0x3978e50)
+[API] free(0x3978e80)
+[API] free(0x3978eb0)
+[API] free(0x3978ee0)
+[API] free(0x3978f10)
+[API] free(0x3978f40)
+[API] free(0x3978f70)
+[API] free(0x3978fa0)
+[API] free(0x3978fd0)
+[API] free(0x3979000)
+[API] free(0x3979030)
+[API] free(0x3979060)
+[API] free(0x3979090)
+[API] free(0x39790c0)
+[API] free(0x39790f0)
+[API] free(0x3979120)
+[API] free(0x3979150)
+[API] free(0x3979180)
+[API] free(0x39791b0)
+[API] free(0x39791e0)
+[API] free(0x3979210)
+[API] free(0x3979240)
+[API] free(0x3979270)
+[API] free(0x39792a0)
+[API] free(0x39792d0)
+[API] free(0x3979300)
+[API] free(0x3979330)
+[API] free(0x3979360)
+[API] free(0x3979390)
+[API] free(0x39793c0)
+[API] free(0x39793f0)
+[API] free(0x3979420)
+[API] free(0x3979450)
+[API] free(0x3979480)
+[API] free(0x39794b0)
+[API] free(0x39794e0)
+[API] free(0x3979510)
+[API] free(0x3979540)
+[API] free(0x3979570)
+[API] free(0x39795a0)
+[API] free(0x39795d0)
+[API] free(0x3979600)
+[API] free(0x3979630)
+[API] free(0x3979660)
+[API] free(0x3979690)
+[API] free(0x39796c0)
+[API] free(0x39796f0)
+[API] free(0x3979720)
+[API] free(0x3979750)
+[API] free(0x3979780)
+[API] free(0x39797b0)
+[API] free(0x39797e0)
+[API] free(0x3979810)
+[API] free(0x3979840)
+[API] free(0x3979870)
+[API] free(0x39798a0)
+[API] free(0x39798d0)
+[API] free(0x3979900)
+[API] free(0x3979930)
+[API] free(0x3979960)
+[API] free(0x3979990)
+[API] free(0x39799c0)
+[API] free(0x39799f0)
+[API] free(0x3979a20)
+[API] free(0x3979a50)
+[API] free(0x3979a80)
+[API] free(0x3979ab0)
+[API] free(0x3979ae0)
+[API] free(0x3979b10)
+[API] free(0x3979b40)
+[API] free(0x3979b70)
+[API] free(0x3979ba0)
+[API] free(0x3979bd0)
+[API] free(0x3979c00)
+[API] free(0x3979c30)
+[API] free(0x3979c60)
+[API] free(0x3979c90)
+[API] free(0x3979cc0)
+[API] free(0x3979cf0)
+[API] free(0x3979d20)
+[API] free(0x3979d50)
+[API] free(0x3979d80)
+[API] free(0x3979db0)
+[API] free(0x3979de0)
+[API] free(0x3979e10)
+[API] free(0x3979e40)
+[API] free(0x3979e70)
+[API] free(0x3979ea0)
+[API] free(0x3979ed0)
+[API] free(0x3979f00)
+[API] free(0x3979f30)
+[API] free(0x3979f60)
+[API] free(0x3979f90)
+[API] free(0x3979fc0)
+[API] free(0x3979ff0)
+[API] free(0x397a020)
+[API] free(0x397a050)
+[API] free(0x397a080)
+[API] free(0x397a0b0)
+[API] free(0x397a0e0)
+[API] free(0x397a110)
+[API] free(0x397a140)
+[API] free(0x397a170)
+[API] free(0x397a1a0)
+[API] free(0x397a1d0)
+[API] free(0x397a200)
+[API] free(0x397a230)
+[API] free(0x397a260)
+[API] free(0x397a290)
+[API] free(0x397a2c0)
+[API] free(0x397a2f0)
+[API] free(0x397a320)
+[API] free(0x397a350)
+[API] free(0x397a380)
+[API] free(0x397a3b0)
+[API] free(0x397a3e0)
+[API] free(0x397a410)
+[API] free(0x397a440)
+[API] free(0x397a470)
+[API] free(0x397a4a0)
+[API] free(0x397a4d0)
+[API] free(0x397a500)
+[API] free(0x397a530)
+[API] free(0x397a560)
+[API] free(0x397a590)
+[API] free(0x397a5c0)
+[API] free(0x397a5f0)
+[API] free(0x397a620)
+[API] free(0x397a650)
+[API] free(0x397a680)
+[API] free(0x397a6b0)
+[API] free(0x397a6e0)
+[API] free(0x397a710)
+[API] free(0x397a740)
+[API] free(0x397a770)
+[API] free(0x397a7a0)
+[API] free(0x397a7d0)
+[API] free(0x397a800)
+[API] free(0x397a830)
+[API] free(0x397a860)
+[API] free(0x397a890)
+[API] free(0x397a8c0)
+[API] free(0x397a8f0)
+[API] free(0x397a920)
+[API] free(0x397a950)
+[API] free(0x397a980)
+[API] free(0x397a9b0)
+[API] free(0x397a9e0)
+[API] free(0x397aa10)
+[API] free(0x397aa40)
+[API] free(0x397aa70)
+[API] free(0x397aaa0)
+[API] free(0x397aad0)
+[API] free(0x397ab00)
+[API] free(0x397ab30)
+[API] free(0x397ab60)
+[API] free(0x397ab90)
+[API] free(0x397abc0)
+[API] free(0x397abf0)
+[API] free(0x397ac20)
+[API] free(0x397ac50)
+[API] free(0x397ac80)
+[API] free(0x397acb0)
+[API] free(0x397ace0)
+[API] free(0x397ad10)
+[API] free(0x397ad40)
+[API] free(0x397ad70)
+[API] free(0x397ada0)
+[API] free(0x397add0)
+[API] free(0x397ae00)
+[API] free(0x397ae30)
+[API] free(0x397ae60)
+[API] free(0x397ae90)
+[API] free(0x397aec0)
+[API] free(0x397aef0)
+[API] free(0x397af20)
+[API] free(0x397af50)
+[API] free(0x397af80)
+[API] free(0x397afb0)
+[API] free(0x397afe0)
+[API] free(0x397b010)
+[API] free(0x397b040)
+[API] free(0x397b070)
+[API] free(0x397b0a0)
+[API] free(0x397b0d0)
+[API] free(0x397b100)
+[API] free(0x397b130)
+[API] free(0x397b160)
+[API] free(0x397b190)
+[API] free(0x397b1c0)
+[API] free(0x397b1f0)
+[API] free(0x397b220)
+[API] free(0x397b250)
+[API] free(0x397b280)
+[API] free(0x397b2b0)
+[API] free(0x397b2e0)
+[API] free(0x397b310)
+[API] free(0x397b340)
+[API] free(0x397b370)
+[API] free(0x397b3a0)
+[API] free(0x397b3d0)
+[API] free(0x397b400)
+[API] free(0x397b430)
+[API] free(0x397b460)
+[API] free(0x397b490)
+[API] free(0x397b4c0)
+[API] free(0x397b4f0)
+[API] free(0x397b520)
+[API] free(0x397b550)
+[API] free(0x397b580)
+[API] free(0x397b5b0)
+[API] free(0x397b5e0)
+[API] free(0x397b610)
+[API] free(0x397b640)
+[API] free(0x397b670)
+[API] free(0x397b6a0)
+[API] free(0x397b6d0)
+[API] free(0x397b700)
+[API] free(0x397b730)
+[API] free(0x397b760)
+[API] free(0x397b790)
+[API] free(0x397b7c0)
+[API] free(0x397b7f0)
+[API] free(0x397b820)
+[API] free(0x397b850)
+[API] free(0x397b880)
+[API] free(0x397b8b0)
+[API] free(0x397b8e0)
+[API] free(0x397b910)
+[API] free(0x397b940)
+[API] free(0x397b970)
+[API] free(0x397b9a0)
+[API] free(0x397b9d0)
+[API] free(0x397ba00)
+[API] free(0x397ba30)
+[API] free(0x397ba60)
+[API] free(0x397ba90)
+[API] free(0x397bac0)
+[API] free(0x397baf0)
+[API] free(0x397bb20)
+[API] free(0x397bb50)
+[API] free(0x397bb80)
+[API] free(0x397bbb0)
+[API] free(0x397bbe0)
+[API] free(0x397bc10)
+[API] free(0x397bc40)
+[API] free(0x397bc70)
+[API] free(0x397bca0)
+[API] free(0x397bcd0)
+[API] free(0x397bd00)
+[API] free(0x397bd30)
+[API] free(0x397bd60)
+[API] free(0x397bd90)
+[API] free(0x397bdc0)
+[API] free(0x397bdf0)
+[API] free(0x397be20)
+[API] free(0x397be50)
+[API] free(0x397be80)
+[API] free(0x397beb0)
+[API] free(0x397bee0)
+[API] free(0x397bf10)
+[API] free(0x397bf40)
+[API] free(0x397bf70)
+[API] free(0x397bfa0)
+[API] free(0x397bfd0)
+[API] free(0x397c000)
+[API] free(0x397c030)
+[API] free(0x397c060)
+[API] free(0x397c090)
+[API] free(0x397c0c0)
+[API] free(0x397c0f0)
+[API] free(0x397c120)
+[API] free(0x397c150)
+[API] free(0x397c180)
+[API] free(0x397c1b0)
+[API] free(0x397c1e0)
+[API] free(0x397c210)
+[API] free(0x397c240)
+[API] free(0x397c270)
+[API] free(0x397c2a0)
+[API] free(0x397c2d0)
+[API] free(0x397c300)
+[API] free(0x397c330)
+[API] free(0x397c360)
+[API] free(0x397c390)
+[API] free(0x397c3c0)
+[API] free(0x397c3f0)
+[API] free(0x397c420)
+[API] free(0x397c450)
+[API] free(0x397c480)
+[API] free(0x397c4b0)
+[API] free(0x397c4e0)
+[API] free(0x397c510)
+[API] free(0x397c540)
+[API] free(0x397c570)
+[API] free(0x397c5a0)
+[API] free(0x397c5d0)
+[API] free(0x397c600)
+[API] free(0x397c630)
+[API] free(0x397c660)
+[API] free(0x397c690)
+[API] free(0x397c6c0)
+[API] free(0x397c6f0)
+[API] free(0x397c720)
+[API] free(0x397c750)
+[API] free(0x397c780)
+[API] free(0x397c7b0)
+[API] free(0x397c7e0)
+[API] free(0x397c810)
+[API] free(0x397c840)
+[API] free(0x397c870)
+[API] free(0x397c8a0)
+[API] free(0x397c8d0)
+[API] free(0x397c900)
+[API] free(0x397c930)
+[API] free(0x397c960)
+[API] free(0x397c990)
+[API] free(0x397c9c0)
+[API] free(0x397c9f0)
+[API] free(0x397ca20)
+[API] free(0x397ca50)
+[API] free(0x397ca80)
+[API] free(0x397cab0)
+[API] free(0x397cae0)
+[API] free(0x397cb10)
+[API] free(0x397cb40)
+[API] free(0x397cb70)
+[API] free(0x397cba0)
+[API] free(0x397cbd0)
+[API] free(0x397cc00)
+[API] free(0x397cc30)
+[API] free(0x397cc60)
+[API] free(0x397cc90)
+[API] free(0x397ccc0)
+[API] free(0x397ccf0)
+[API] free(0x397cd20)
+[API] free(0x397cd50)
+[API] free(0x397cd80)
+[API] free(0x397cdb0)
+[API] free(0x397cde0)
+[API] free(0x397ce10)
+[API] free(0x397ce40)
+[API] free(0x397ce70)
+[API] free(0x397cea0)
+[API] free(0x397ced0)
+[API] free(0x397cf00)
+[API] free(0x397cf30)
+[API] free(0x397cf60)
+[API] free(0x397cf90)
+[API] free(0x397cfc0)
+[API] free(0x397cff0)
+[API] free(0x397d020)
+[API] free(0x397d050)
+[API] free(0x397d080)
+[API] free(0x397d0b0)
+[API] free(0x397d0e0)
+[API] free(0x397d110)
+[API] free(0x397d140)
+[API] free(0x397d170)
+[API] free(0x397d1a0)
+[API] free(0x397d1d0)
+[API] free(0x397d200)
+[API] free(0x397d230)
+[API] free(0x397d260)
+[API] free(0x397d290)
+[API] free(0x397d2c0)
+[API] free(0x397d2f0)
+[API] free(0x397d320)
+[API] free(0x397d350)
+[API] free(0x397d380)
+[API] free(0x397d3b0)
+[API] free(0x397d3e0)
+[API] free(0x397d410)
+[API] free(0x397d440)
+[API] free(0x397d470)
+[API] free(0x397d4a0)
+[API] free(0x397d4d0)
+[API] free(0x397d500)
+[API] free(0x397d530)
+[API] free(0x397d560)
+[API] free(0x397d590)
+[API] free(0x397d5c0)
+[API] free(0x397d5f0)
+[API] free(0x397d620)
+[API] free(0x397d650)
+[API] free(0x397d680)
+[API] free(0x397d6b0)
+[API] free(0x397d6e0)
+[API] free(0x397d710)
+[API] free(0x397d740)
+[API] free(0x397d770)
+[API] free(0x397d7a0)
+[API] free(0x397d7d0)
+[API] free(0x397d800)
+[API] free(0x397d830)
+[API] free(0x3970d60)
+[API] exit(0)
+[API] DeleteCriticalSection(0x140029160)
+  ]
+}

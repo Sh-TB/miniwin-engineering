@@ -1,6 +1,6 @@
 CC = gcc
 CFLAGS = -O2 -g -Wall -Wno-unused-function -no-pie -Iinclude
-LDFLAGS = -no-pie -ldl -Wl,-Ttext-segment=0x2000000
+LDFLAGS = -no-pie -ldl -lm -Wl,-Ttext-segment=0x2000000
 
 TARGET = minwin_loader
 SRC = src/loader/loader.c

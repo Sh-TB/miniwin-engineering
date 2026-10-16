@@ -193,8 +193,278 @@ TASK-API-014 (format warnings), TASK-API-015 (realloc trace smell), TASK-API-016
 - Old "M8: RtlUnwindEx context restoration" — SUPERSEDED by TASK-BUG-026 + EXP-037/038 chain (the M8 framing assumed the current source still reached the landing pad; it does not).
 - Old "M9: verify UPX --version output" — **ACHIEVED as G1 (2026-10-15, EXP-039)**; residual harness work lives in TEST-008.
 
+---
+
+## 2026-10-15 — appcompat sweep expansion (CONTINUE #6)
+
+Source: EXP-040 (tests/appcompat/, 9-program sweep: 7 PASS incl. both big apps' C tier).
+New findings/closed: BUG-032..036 (CLOSED TESTED), BUG-037 (OPEN, next), TASK-TLS-001 (CLOSED TESTED),
+TASK-API-007/008 (CLOSED TESTED, table 162 -> 188).
+
+### TASK-BUG-037 — unwind-code interpreter faults on CRT-startup UNWIND_INFO
+- Priority: P0. Status: **READY (NEXT)**. Deps: none (all gates green).
+- Scope: seh_internal_virtual_unwind opcode interpreter + a reference decoder test vector. Fault: `mov (%r9),%rbx` with R9=0x27 (slot offset used as address) while walking RF begin=0x1470 end=0x23d9, UNWIND_INFO @ RVA 0x50458 (v1, flags=0x03, 13 slots, frame byte 0x85, personality 0x131b0).
+- Acceptance: golden-vector decoder test in tests/; t08 reaches its own catch and prints `t08: PASS` (exit 0); regression 12/12; UPX G1 gate.
+- Evidence: docs/bugs/BUG-037.md; evidence/master/appcompat/run-20261015_053015/t08_big_cpp_stl.*
+
+### TASK-API-009 — wave 3: FILE* stdio + locale _l family (44 APIs, unblocks t09 iostream)
+- Priority: P1. Status: PENDING. Deps: none.
+- Scope (measured list from t09): fopen/fclose/fread/fseek/fsetpos/fgetpos/ftell? (not imported — verify), setbuf, setlocale, strftime, isdigit/toupper (bool maps), _vsnprintf/_vscprintf, _sys_nerr (data), __pctype_func, _filelengthi64, _wfopen, fgetwc/ungetwc, wcrtomb_s, _iswalpha_l.._iswxdigit_l, _tolower_l/_toupper_l/_towlower_l/_towupper_l, _strcoll_l/_wcscoll_l/_strxfrm_l/_wcsxfrm_l/_strtod_l/_mbtowc_l, AreFileApisANSI, FormatMessageA, GetACP, GetLocaleInfoEx, LocalFree.
+- Design note: `_l` functions take _locale_t — bridge to glibc per-thread locale or honest fixed-C-locale stubs (document each).
+- Acceptance: t09 reaches its own PASS line (exit 0); import resolution 0 unresolved for t09; regression 12/12; G1 gate.
+
+### TASK-API-010 — callback ABI audit: signal/_beginthreadex/SetUnhandledExceptionFilter/AVEH call sites
+- Priority: P1. Status: PENDING. Deps: none.
+- Scope: same class as BUG-035 — every PE callback invoked by glibc-side code must go through an ms_abi bridge. Audit mw_signal, mw__beginthreadex, mw_SetUnhandledExceptionFilter, mw_AddVectoredExceptionHandler/Remove; add bridges + doc.
+- Acceptance: table of call sites with bridge status; a thread+signal test (t10_signal.c) PASSes; regression 12/12.
+
+### TASK-API-011 — _beginthreadex real threads + WaitForSingleObject on thread handles
+- Priority: P1. Status: PENDING. Deps: TASK-API-010.
+- Scope: current _beginthreadex is a stub; implement pthread_create bridge returning a handle usable by WaitForSingleObject/WaitForMultipleObjects; _endthreadex pthread_exit bridge; thread-safe TlsAlloc/Fls per-thread arrays.
+- Acceptance: t11_threads.c: 4 worker threads sum 100k ints each via Tls + join by handle; PASS; regression 12/12.
+
+### TASK-API-012 — _open flag map fix: _O_NOINHERIT(0x0080) wrongly mapped to O_APPEND
+- Priority: P1. Status: PENDING. Deps: none.
+- Scope: mw__open maps 0x0080 → O_APPEND; msvcrt _O_APPEND = 0x0008, _O_NOINHERIT = 0x0080. Fix mapping + add _O_APPEND (0x0008) handling; check _O_TEXT/_O_BINARY ignore comments; update windows_abi doc if affected.
+- Acceptance: t12_openflags.c: O_APPEND append-behavior test PASS; regression 12/12.
+
+### TASK-TEST-011 — grow the appcompat suite to 15 programs (sweep hardening)
+- Priority: P1. Status: PENDING. Deps: TASK-API-009 for t09/t13.
+- Scope: add t10_signal (signal+raise), t11_threads, t12_openflags, t13_stdio_fopen (fopen/fprintf/fscanf/fclose), t14_env_locale (getenv/setlocale/strftime), t15_longjmp_thread — each self-verifying like t01..t07; extend run_sweep.sh classification (VERIFY_FAIL vs CRASH vs TIMEOUT already covers).
+- Acceptance: run_sweep.sh summary shows all 15 with class; evidence run committed.
+
+### TASK-TEST-012 — deterministic golden-output harness for appcompat
+- Priority: P2. Status: PENDING. Deps: TASK-TEST-011.
+- Scope: capture stdout of each test into evidence/golden/*.out; sweep diffs against golden (catches silent wrong-output regressions like print drift); wire into g1_accept.sh as optional stage.
+
+### TASK-BUG-038 (reserved) — C++ EH acceptance G2: dt_check-style binary from source
+- Priority: P1. Status: PENDING. Deps: TASK-BUG-037.
+- Scope: after t08 passes, build a dedicated C++ EH torture program (multiple catch types, nested try, dtors during unwind, rethrow across 3 frames, SEH+C++ mix) and pin as the G2 acceptance sample; update RELEASE_CRITERIA.
+
+### TASK-TLS-002 — TLS callbacks at DLL_THREAD_ATTACH/DETACH + thread-exit Fls callbacks
+- Priority: P2. Status: PENDING. Deps: TASK-API-011.
+- Scope: extend TASK-TLS-001: run AddressOfCallBacks array with reason 2/3 on thread create/exit (via pthread bridge), invoke Fls callbacks on thread exit (needs per-key registry keyed with ms_abi dtor bridge).
+
+### TASK-TLS-003 — dynamic TLS beyond 64 slots + TlsFree
+- Priority: P3. Status: PENDING. Deps: none.
+- Scope: Windows expands ThreadLocalStoragePointer for TlsAlloc beyond 64 (ExpansionSlots gs:0x28? verify); implement expansion + TlsFree (currently TlsFree missing from table? verify and add).
+- Acceptance: TlsAlloc*70 works; regression 12/12.
+
+### TASK-API-013 — fopen family implementation strategy (FILE* bridging)
+- Priority: P1. Status: PENDING. Deps: none.
+- Scope: msvcrt fopen returns FILE* — the PE expects MSVCRT_FILE semantics; bridge: fopen → real glibc fopen, and route ALL stream-taking mw_* through map_crt_stream passthrough (already does). Must handle mingw's __acrt_iob_func absence and _fdopen. Decide: glibc FILE* direct (current direction) vs opaque handle table.
+- Acceptance: design note in docs/master/ + t13 PASS.
+
+### TASK-API-014 — locale honest-stub policy (_l family, GetACP, GetLocaleInfoEx)
+- Priority: P2. Status: PENDING. Deps: TASK-API-009.
+- Scope: decide+document: which locale APIs return fixed C-locale values vs bridge to glibc; GetACP=1252 constant; GetLocaleInfoEx minimal table; write docs/master/LOCALE_POLICY.md.
+
+### TASK-API-015 — formatMessageA + LocalFree honest implementation
+- Priority: P3. Status: PENDING. Deps: TASK-API-009.
+- Scope: FormatMessageA(FORMAT_MESSAGE_FROM_SYSTEM) → strerror mapping table for common Win32 codes; LocalFree → free registry (FormatMessage-allocated buffers must be freeable by LocalFree — pair them).
+
+### TASK-DOC-005 — EXP-040 integration into README/ARCHITECTURE docs
+- Priority: P2. Status: PENDING. Deps: none.
+- Scope: ARCHITECTURE.md gains an "Application compatibility" section (sweep harness, toolchain pin, current matrix); README gains a "Building test apps" note (llvm-mingw path, NOT in repo).
+
+### TASK-DOC-006 — BUG-032..036 class documentation: ABI boundary rules
+- Priority: P2. Status: PENDING. Deps: none.
+- Scope: one doc (docs/master/ABI_BOUNDARY_RULES.md) codifying the sweep's lessons: (1) never hand raw ms va_list to SysV varargs; (2) never write past Windows struct sizes (CS 40B); (3) glibc-invoked callbacks need ms_abi bridges; (4) jmp_buf ownership; (5) stream pointer provenance. Feeds code review of future API additions.
+
+### TASK-TEST-013 — API boundary unit tests (regression armor for BUG-032..036 class)
+- Priority: P1. Status: PENDING. Deps: none.
+- Scope: host-side unit tests (C, not PE) exercising map_crt_stream, printf repack (mixed int/float/overflow >5 gp args >8 fp args), CS sentinel within 40 bytes, setjmp/longjmp reg restore (assembly-level), qsort bridge. Run in make test target.
+- Acceptance: `make test` runs them; CI-able; regression 12/12 unaffected.
+
+### TASK-TEST-014 — printf repack fuzz (cross-ABI correctness)
+- Priority: P2. Status: PENDING. Deps: TASK-TEST-013.
+- Scope: generate 500 random format strings (bounded subset: d,i,u,x,X,o,c,s,p,f,e,g,%%, widths, precisions, l/ll/h) with known args; PE prints, host compares vs host-side printf ground truth. Kills misclassification regressions.
+
+### TASK-PERF-001 — sweep-run overhead profiling
+- Priority: P3. Status: PENDING. Deps: none.
+- Scope: measure loader startup vs program runtime for t01..t08 (time -v); identify hot spots (trace JSON writes dominate?) — informs MINWIN_TRACE default-off paths.
+
+### TASK-INFRA-003 — sweep runner in repo without /tmp dependency
+- Priority: P2. Status: PENDING. Deps: none.
+- Scope: run_sweep.sh currently uses mktemp /tmp + miniwin-results cwd; make it repo-local (evidence/appcompat run dir), with --keep/--json flags; summary.json machine-readable.
+
+### TASK-INFRA-004 — toolchain pinning script
+- Priority: P2. Status: PENDING. Deps: none.
+- Scope: scripts/fetch_appcompat_toolchain.sh downloading llvm-mingw 20261006-msvcrt to /home/z/my-project/tools-mingw (documented, NOT vendored) with sha256 verification; used by sweep docs.
+
+### TASK-OWNER-004 — second acceptance sample decision (post-t08)
+- Priority: P3 (owner). Status: PENDING. Deps: TASK-BUG-037.
+- Scope: choose G2's pinned sample: (a) t08 as-is, (b) a real OSS console tool compiled with llvm-mingw (e.g., a small JSON parser), (c) MSVC-built C sample. Record in ROADMAP.md.
+
+### TASK-BUG-039 (reserved) — dispatch_tests/test_a movdqa ms_abi misalignment (slice-2 carryover)
+- Priority: P2. Status: PENDING. Deps: TASK-TEST-004 slice 2 (existing).
+- Note: existing TEST-004 slice-2 work; keep ID reserved, do not duplicate.
+
+### TASK-DOC-007 — knowledge-transfer/ working-tree/ dedup execution (OWNER-002 follow-through)
+- Priority: P3. Status: PENDING. Deps: OWNER-002 decision.
+- Scope: execute the dedup decision: either git rm the duplicates with a REPOSITORY_BASELINE.md note or document keep-reason per directory.
+
+### TASK-RESEARCH-003 — mingw TLS model coverage (emutls vs native) audit
+- Priority: P2. Status: PENDING. Deps: TASK-TLS-001.
+- Scope: -femutls vs native gs:0x58 TLS in llvm-mingw builds: document which mingw versions/models the loader supports; extend t08 with a __thread heavy program (t16_tls.c: 64 __thread vars, per-thread mutation, self-check).
+
+### TASK-RESEARCH-004 — GS-base vs FS-base coexistence audit
+- Priority: P3. Status: PENDING. Deps: none.
+- Scope: ARCH_SET_GS clobbers any host GS use (vDSO? stack protector?); document and test that the loader's own glibc code is unaffected across glibc versions; add a guard/test.
+
+### TASK-TEST-015 — PE TLS directory torture test
+- Priority: P2. Status: PENDING. Deps: TASK-TLS-001.
+- Scope: synthetic PE with TLS template + callbacks + __tls_index consumers (extend build_synthetic_pe.py); verify template copy, zero-fill, callback order (PROCESS_ATTACH), index write.
+
+### TASK-API-016 — Console API batch: GetConsoleScreenBufferInfo/SetConsoleCursorPosition fidelity
+- Priority: P3. Status: PENDING. Deps: none.
+- Scope: current console APIs are stubs; implement ANSIcon bridge (map to ANSI escapes) or honest defaults; needed by any TUI-style program; measure with a small t17_tui.c probe.
+
+### TASK-SEC-001 — loader crash handler redaction
+- Priority: P3. Status: PENDING. Deps: none.
+- Scope: crash output prints absolute host addresses; add MINWIN_REDACT=1 mode hashing pointers for shareable logs; keep full mode default for engineering.
+
+### TASK-BENCH-001 — compatibility database automation
+- Priority: P2. Status: PENDING. Deps: TASK-INFRA-003.
+- Scope: script regenerating API_COMPATIBILITY_DATABASE.md's implemented-table from loader.c ENTRY rows (single source of truth) + per-test import-coverage matrix from sweep evidence.
+
+### TASK-OWNER-005 — milestone: "runs real mingw C apps" announcement pack
+- Priority: P3 (owner). Status: PENDING. Deps: TASK-BUG-037 + TASK-TEST-011.
+- Scope: CHANGELOG entry + short demo script (t07 run) + screenshots for repo front page.
+
+### TASK-BUG-040 (reserved) — chaininfo/unwind edge cases surfaced by C++ tests
+- Priority: P2. Status: PENDING. Deps: TASK-BUG-037.
+- Scope: after t08 passes, run t08 5x for determinism; if flaky, isolate (the CXX-EH machinery has compile-dependent history — EXP-039 §4 lesson).
+
+### TASK-TEST-016 — appcompat suite in CI-style make target
+- Priority: P2. Status: PENDING. Deps: TASK-INFRA-003, TASK-TEST-013.
+- Scope: `make appcompat` = build tests (needs toolchain path env) + run sweep + compare golden outputs + exit non-zero on any regression; document toolchain prerequisite.
+
+### TASK-API-017 — GetFileAttributesA/GetFileAttributesExA (common in CRT init paths)
+- Priority: P3. Status: PENDING. Deps: none.
+- Scope: implement via stat(); return INVALID_FILE_ATTRIBUTES on error; feeds future programs' startup checks.
+
+### TASK-API-018 — CreateFileA/ReadFile/WriteFile/CloseHandle/GetFileSize minimal handle table
+- Priority: P2. Status: PENDING. Deps: none.
+- Scope: kernel32 file APIs absent today (only console handles); implement a small fd-backed handle table so win32-style I/O programs run; keep handles distinct from CRT fds (Windows-style) with an internal map.
+
+### TASK-API-019 — VirtualAlloc (absent) + VirtualProtect alignment audit
+- Priority: P2. Status: PENDING. Deps: none.
+- Scope: VirtualAlloc absent (state.md known gap); implement mmap-backed for allocations; VirtualProtect exists — audit page-granularity behavior vs Windows; test via t18_mem_win.c (VirtualAlloc + guard pages).
+
+### TASK-DOC-008 — TESTING_STRATEGY: promote appcompat tier to Tier 1.5
+- Priority: P2. Status: PENDING. Deps: none.
+- Scope: TESTING_STRATEGY.md: formalize the sweep as Tier 1.5 (between regression and synthetic dispatch), with pass criteria (C tier must stay 100%, C++ tier tracks BUG-037 frontier), and runbook.
+
+### TASK-RESEARCH-005 — UPX-packed sample (not decompressed) feasibility with current EH chain
+- Priority: P3. Status: PENDING. Deps: none.
+- Scope: OWNER-003 option (b): try upx-packed.exe (sample exists in checkpoints); document where the self-extractor path diverges; no fix expected this task — a scoping study.
+
+### TASK-API-020 — _ltoa/_ultoa family + _i64toa (missing conversions)
+- Priority: P3. Status: PENDING. Deps: none.
+- Scope: _i64toa/_ui64toa/_ltoa missing from table (only _ultoa present); implement via snprintf into caller buffer; add to sweep t02.
+
+### TASK-TEST-017 — stress: 200 randomized mixed-API programs via builder
+- Priority: P3. Status: PENDING. Deps: TASK-TEST-004 slice 2, TASK-BENCH-001.
+- Scope: extend the synthetic builder to compose random call graphs from the supported API table; run 200; classify; feeds both fuzzing and the API database matrix.
+
+### TASK-DOC-009 — release notes draft for the sweep wave
+- Priority: P3. Status: PENDING. Deps: none.
+- Scope: CHANGELOG.md entry: 5 bugs fixed, TLS support, 26+5 new APIs, appcompat suite (9 programs, 7 PASS incl. 2 big apps), toolchain pinning.
+
+### TASK-API-021 — Environment/Process batch: GetEnvironmentStringsA/GetCommandLineA/W
+- Priority: P2. Status: PENDING. Deps: none.
+- Scope: GetEnvironmentStringsA/W + FreeEnvironmentStringsA/W bridged to environ; GetCommandLineA/W from g_cmdline (data imports may exist — audit). Needed by any argv/env-consuming win32 program.
+
+### TASK-API-022 — Heap family: HeapCreate/HeapAlloc/HeapFree/GetProcessHeap
+- Priority: P2. Status: PENDING. Deps: TASK-API-019.
+- Scope: implement thin Heap* over malloc with a heap-id registry; common in UCRT-era binaries and rust-built PEs.
+
+### TASK-API-023 — Synchronization semantics: real Wait* on our semaphore/event objects
+- Priority: P2. Status: PENDING. Deps: TASK-API-011.
+- Scope: CreateSemaphoreA/WaitForSingleObject currently return instantly (stub-ish); wire to sem_t registry with real blocking semantics + timeouts; needed by threaded programs.
+
+### TASK-TEST-018 — exit-path determinism test (atexit/_onexit/_cexit ordering)
+- Priority: P2. Status: PENDING. Deps: none.
+- Scope: t19_exit.c registering atexit/_onexit chains and asserting LIFO order + _exit skipping them; pins mw_atexit/_onexit semantics (BUG-033-era additions).
+
+### TASK-RESEARCH-006 — MSVC-built sample feasibility (VCRUNTIME dependency surface)
+- Priority: P3. Status: PENDING. Deps: none.
+- Scope: compile a small C program with cl.exe equivalents (via wine-msvc? not available — instead document what a VCRUNTIME14-linked PE would import: __C_specific_handler exists, but vcruntime TLS/__security_check_cookie etc. missing) — scoping only.
+
+### TASK-SEC-002 — IAT patch bounds audit (writable-page restore completeness)
+- Priority: P2. Status: PENDING. Deps: none.
+- Scope: iat_page_ensure_writable/restore — fuzz 50 PEs with IATs straddling section boundaries; assert per-section protection restored byte-identically (extends TEST-004 slice-1 work).
+
+### TASK-BENCH-002 — sweep result trend tracking
+- Priority: P3. Status: PENDING. Deps: TASK-BENCH-001.
+- Scope: append every sweep's summary.csv into evidence/master/appcompat/trend.csv (date, PASS count, unresolved counts) for long-term progress visibility.
+
+### TASK-DOC-010 — toolchain usage guide (llvm-mingw) in tests/appcompat/README.md
+- Priority: P2. Status: PENDING. Deps: TASK-INFRA-004.
+- Scope: how to build each tXX, which flags, how imports were audited with pefile, how to add a new program (checklist mirroring t01's structure).
+
+## CONTINUE #7 additions (2026-10-15) — BUG-037 sweep + UCRT wave
+
+### TASK-BUG-038 — C++ EH target-frame delivery (barrier-cache LP installation)
+- Priority: P0. Status: **READY (NEXT)**. Deps: BUG-037 (done).
+- Symptom: t08 completes the whole walk + intermediate cleanups, resumes with the correct body RSP, and dies with SIGILL at 0x140001c85 — mid-instruction. Root cause proven: llvm-mingw's libunwind `_GCC_specific_handler` calls `RtlUnwindEx(frame, disp->ControlPc, ...)` in phase 1 — **TargetIp is a placeholder**; the real landing pad (0x1c9d, proven by scripts/bug037_lsda_parse.py: entry [0x806,0x829) lp=0x82d action=5) travels in the exception object's barrier cache and is installed via `set_registers()` only at TARGET-FRAME DELIVERY (ExceptionFlags 0x2|0x4, Info[1]=target_frame) after which the personality returns ExceptionExecuteHandler (4).
+- Fix: in mw_RtlUnwindEx, after the intermediate walk reaches the target frame, deliver target-unwind to the target frame's personality (dc.ContextRecord=&resume_ctx, TargetIp=tgt_ip, EstablisherFrame=tgt_frame) and honor its ctx.Rip write / return 4. GCC-style flow (UPX G1) must stay intact: GCC answers target delivery by setting Rdx and returning ContinueSearch, and its TargetIp IS the real LP.
+- Acceptance: t08 prints `t08: PASS` exit 0, 3/3 deterministic; regression 12/12; G1 gate; sweep 11/12.
+- Details: docs/bugs/BUG-038.md.
+
+### TASK-BUG-039 — PUSH_MACHFRAME arithmetic verification vs ReactOS
+- Priority: P2. Status: PENDING. Deps: none.
+- Scope: our three copies do `new_rsp += 40; rip=*(new_rsp+16); new_rsp=*(new_rsp+8)`. ReactOS does `rsp += OpInfo*8; Rip=*(rsp+0); Rsp=*(rsp+0x18)` (frame-relative). Never exercised by any current test; align to ReactOS + synthetic machframe test (TASK-BUG-040 fixture).
+
+### TASK-BUG-040 — v2 UNWIND_INFO / UWOP_EPILOG synthetic golden tests
+- Priority: P2. Status: PENDING. Deps: TASK-TEST-004 slice 2 (builder B-fixes).
+- Scope: extend build_synthetic_pe.py to emit a v2 UI with an EPILOG descriptor + SAVE_XMM128/SPARE codes; golden decode asserts; proves the EPILOG v1-corruption stop path and the 2-slot/3-slot accounting.
+
+### TASK-API-011 — UCRT startup + unified __stdio_common_v* wave (CARRY-OVER: DONE this session)
+- Priority: P0. Status: **TESTED (CLOSED)** (t10/t11 green). Note: vfwprintf is a returning stub; vsscanf uses the uniform-slot GP repack.
+
+### TASK-API-012 — FILE-level stdio + UCRT __p_* functions (CARRY-OVER: DONE this session)
+- Priority: P1. Status: **TESTED (CLOSED)** (t12 green). map_crt_stream pass-through fix included. __p__* are FUNCTIONS (three crash signatures proved it).
+
+### TASK-API-013 — UCRT environment access: getenv/_putenv/__p__wenviron
+- Priority: P2. Status: PENDING. Deps: TASK-API-011.
+- Scope: bridge getenv to the loader's env block; add __p__wenviron cell; t12b probe.
+
+### TASK-API-014 — time wave 2: clock/_timespec64/localtime_s, tz real data
+- Priority: P2. Status: PENDING. Deps: TASK-API-011.
+- Scope: clock() via clock_gettime(CLOCK_PROCESS_CPUTIME_ID); real TZ handling instead of the UTC stub; t12c probe asserting clock() monotonicity.
+
+### TASK-API-015 — wide stdio: __stdio_common_vfwprintf real implementation
+- Priority: P2. Status: PENDING. Deps: TASK-API-011.
+- Scope: replace the returning-stub with a wide bridge (fmemopen+wprintf or manual UTF-8 conversion); needs a wchar test (t13?).
+
+### TASK-TEST-006 — golden-vector UNWIND decode regression script
+- Priority: P1. Status: PENDING. Deps: none.
+- Scope: promote scripts/bug037_ref_decode.py + bug037_lsda_parse.py into tests/golden_unwind.sh: decode ALL test exes' UIs, assert descending END-offsets + handler positions + the pinned t08 CRT vector; fails the build on drift.
+
+### TASK-TEST-007 — full-image UI scanner as CI gate
+- Priority: P2. Status: PENDING. Deps: TASK-TEST-006.
+- Scope: run scripts/bug037_scan_uis.py over every tests/appcompat/*.exe each sweep; assert the violation count never increases (currently 40/98 known FP-relative-XMM shapes = expected llvm-mingw encodings, documented).
+
+### TASK-DOC-011 — API_COMPATIBILITY_DATABASE.md: UCRT apiset wave entry
+- Priority: P2. Status: PENDING. Deps: none.
+- Scope: record api-ms-win-crt-* name resolution (name-only matching), the __p_* function-vs-data lesson, and the map_crt_stream pass-through rule.
+
+### TASK-INFRA-003 — toolchain bootstrap script
+- Priority: P2. Status: PENDING. Deps: none.
+- Scope: scripts/get_toolchain.sh — download+extract llvm-mingw 20240917 ucrt (87,950,564 B) into /home/z/my-project/tools and verify clang version; environment resets wipe tools/ (happened twice).
+
+### TASK-RESEARCH-007 — libunwind vs libgcc resume-protocol differences
+- Priority: P1. Status: PENDING. Deps: TASK-BUG-038.
+- Scope: document the two resume protocols (GCC: private_[2]=ra → TargetIp=real LP; LLVM: TargetIp=ControlPc placeholder + barrier cache at target delivery) in docs/master/resume_protocols.md, with the UPX (GCC) and t08 (LLVM) traces as the two witnesses.
+
+### TASK-APP-013 — t13: mixed C library torture (stdio+env+time+locale)
+- Priority: P3. Status: PENDING. Deps: TASK-API-013/014.
+- Scope: next small program; gates the API-013/014 additions.
+
 ### TASK-TEST-004-C1 — test_c: real ContinueSearch chain (two-handler walk)
-- Priority: P2. Status: READY. Deps: TEST-004 slice 2 (done).
+- Priority: P2. Status: READY. Deps: TEST-004 slice 2 (done 2026-10-16, merge-integrated).
 - Evidence: post-slice-2 trace (test_c) shows ONE HANDLER_CALL (disposition=0) — the
   frame-0 handler (func_C's own, ContinueExecution) answers first, so func_B's
   ContinueSearch handler (RVA 0x1024, `mov eax,1; ret`) is dead code. The suite's

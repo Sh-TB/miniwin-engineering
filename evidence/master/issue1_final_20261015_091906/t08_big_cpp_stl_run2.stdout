@@ -1,0 +1,3 @@
+[MiniWin] Loading /home/z/my-project/workspace/miniwin-engineering/tests/corpus/bin/t08_big_cpp_stl.exe...
+RESULT score=159 expected=255
+RESULT stl=ok exceptions=ok dtors=5

@@ -1,0 +1,4 @@
+[MiniWin] Loading /home/z/my-project/workspace/miniwin-engineering/tests/appcompat/t06_setjmp.exe...
+FAIL: nested longjmp stage
+FAIL: reuse v=7 counter=1
+t06: FAIL (2)

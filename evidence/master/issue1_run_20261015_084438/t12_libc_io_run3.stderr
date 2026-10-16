@@ -1,0 +1,12 @@
+[TRACE] Command line: /home/z/my-project/workspace/miniwin-engineering/tests/corpus/bin/t12_libc_io.exe
+[WARN] 9 imports unresolved
+
+[CRASH] Signal 11 at RIP=0x166a2
+  RAX=0x1 RCX=0x140011022 RDX=0x14001101f R8=0x0 R9=0x0
+  RSP=0x7ffe377f63d8 RBP=0x0
+  g_image_base=0x140000000 g_image_size=0x61000
+  (NOT inside loaded PE)
+  RSI=0x140011022 RDI=0x257ad18
+  R8=0x0  R9=0x0 R10=0x0 R11=0x202
+  R12=0x2027040 R13=0x2025000 R14=0x10 R15=0x20233e0
+  Backtrace (via stack walking):
