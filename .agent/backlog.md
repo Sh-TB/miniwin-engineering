@@ -192,3 +192,26 @@ TASK-API-014 (format warnings), TASK-API-015 (realloc trace smell), TASK-API-016
 ## Superseded entries (historical M8/M9 etc.)
 - Old "M8: RtlUnwindEx context restoration" — SUPERSEDED by TASK-BUG-026 + EXP-037/038 chain (the M8 framing assumed the current source still reached the landing pad; it does not).
 - Old "M9: verify UPX --version output" — **ACHIEVED as G1 (2026-10-15, EXP-039)**; residual harness work lives in TEST-008.
+
+### TASK-TEST-004-C1 — test_c: real ContinueSearch chain (two-handler walk)
+- Priority: P2. Status: READY. Deps: TEST-004 slice 2 (done).
+- Evidence: post-slice-2 trace (test_c) shows ONE HANDLER_CALL (disposition=0) — the
+  frame-0 handler (func_C's own, ContinueExecution) answers first, so func_B's
+  ContinueSearch handler (RVA 0x1024, `mov eax,1; ret`) is dead code. The suite's
+  "handler returns ContinueSearch" intent is NOT exercised.
+- Scope: restructure make_test_c: func_C keeps the IAT call but its handler returns
+  ContinueSearch (1); func_B's handler returns ContinueExecution (0). Expected trace:
+  TWO HANDLER_CALL events (first disposition=1 at frame 0, then disposition=0 at
+  frame 1) + clean resume, ec=1. Evolve the test_c row to assert BOTH dispositions
+  and (if traced) both handler VAs. Builder-only; loader dispatch logic untouched.
+- Guard: test_a/b/d rows must stay green (walk math must remain consistent).
+
+### TASK-TEST-004-D1 — test_d: differentiate from test_a (byte-identical duplicate)
+- Priority: P2. Status: READY. Deps: none.
+- Evidence: post-slice-2 `sha256sum`: test_a.exe == test_d.exe ==
+  `048f6d27010a9db7e355152ac0f89557413b959ca60b2cdf9064941f57622c4c` — the two
+  builders construct identical code/layout, so test_d adds zero walk coverage.
+- Scope options: (a) make test_d's raise two frames deeper (A->B(no EH)->C(no EH)->D
+  raise, handler at frame 3) to exercise a longer no-handler chain; or (b) make
+  test_d's handler return ContinueSearch at every frame except the outermost
+  (overlaps C-1 — prefer (a)). Rebuild, re-pin hashes, evolve the row.

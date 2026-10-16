@@ -1,43 +1,41 @@
 # CURRENT TASK
 
-**Task ID:** TASK-TEST-004 (slice 2)
-**Title:** Fix the synthetic builder codegen (B-1/B-2/B-3) so all 4 dispatch tests reach dispatch
+**Task ID:** TASK-TEST-004-C1 (+D1 queued behind it)
+**Title:** test_c: real ContinueSearch chain (two-handler walk)
 **Status:** READY
-**Priority:** P1
+**Priority:** P2
 
 ## One-line description
-The non-vacuous real-loader harness (tests/dispatch_tests/test_dispatch_v2.sh, slice 1)
-is green on load/run contracts; the next slice fixes the three builder defects it found
-so test_b/c/d actually raise and dispatch, and test_a's post-dispatch crash goes away.
+Slice 2 closed B-1/B-2/B-3: all 4 synthetic tests now raise through the real IAT call,
+reach RtlDispatchException, get a handler invoked, and resume cleanly (suite 4/4 on
+dispatch contracts, 3x deterministic; G1 pin OK; loader.c untouched). Next micro-task:
+test_c's ContinueSearch handler is dead code — restructure so the walk really continues.
 
-## The three defects (all found by slice 1 — evidence in the harness header)
-- **B-1 call-rel32 fixups wrong** (test_b/c/d never raise): the call rel32 patch math
-  uses wrong instruction offsets — calls land on the next function's `ret`
-  (disassembly: `call 0x140001023` = the `ret` itself). Fix: compute each call's
-  displacement from its REAL instruction address (emit position + 5).
-- **B-2 UNWIND_CODE nibble order**: the unwind byte is (CodeOffset << 4) | UnwindOp —
-  OpCode is the LOW nibble. The builder packs `(opinfo << 12) | (op << 8) | offset`
-  into a 16-bit LE word = swapped. Rewrite `_emit_xdata`'s code emission to the
-  canonical byte layout (op byte = (offset<<4)|op; opinfo lives in the second slot
-  byte for wide ops, not the word's high byte).
-- **B-3 ms_abi frame alignment**: push rbx + sub 0x28 leaves RSP%16 != 0 before the
-  RaiseException call → the dispatcher's aligned SSE spill faults (movdqa SIGSEGV at
-  0x200fdff, CONTINUE #5 live). Fix frames to sub 0x30 AND regenerate the matching
-  unwind codes (ALLOC_SMALL info=5) — must be done together with B-2.
+## Where slice 2 landed (facts you may rely on)
+- B-1: test_b/c/d call fixups were off-by-one (disp measured from func_rva+13 instead
+  of +12; call sits at offset 7). Fixed in make_test_b/c/d; verifier rewritten to be
+  non-vacuous (12 calls verified: every e8 target = a function entry, every ff15
+  target = IAT 0x2048).
+- B-2: UNWIND_CODEs now canonical — byte0=CodeOffset, byte1=(OpInfo<<4)|Op, array in
+  REVERSE prolog execution order, offsets = end-of-instruction boundaries (push=1,
+  alloc=5). Byte-proof in built PE: `09 05 02 00 | 05 52 | 01 30`.
+- B-3: all frames `push rbx; sub rsp,0x30` (ms_abi aligned, ALLOC_SMALL opinfo=5);
+  no movdqa SIGSEGV anywhere.
+- Exit-code contract: after ContinueExecution resume the RaiseException stub's EAX(1)
+  is the EP return -> loader exit 1 (trace-evidenced "Entry point returned 1");
+  harness rows assert ec=1 as SUCCESS.
+- Hashes: builder `64735e05…`, harness `19cc822a…`, test_a/d `048f6d27…`,
+  test_b `8fd829f7…`, test_c `17ca43ea…`, loader binary `40646f4b…` (unchanged).
 
-## Execution notes
-1. Baseline: bash tests/dispatch_tests/test_dispatch_v2.sh (4/4 on current contracts) +
-   bash scripts/g1_accept.sh (G1 pin, 12/12). Hash: evidence/master/g1/<latest>.
-2. Fix B-1 first (pure fixup math) — verify test_b/c/d traces gain RaiseException +
-   [DISPATCH] lines. Then B-2+B-3 together — verify test_a runs to its handler without
-   the movdqa crash and test_b/c/d keep dispatching (unwind math must stay consistent).
-3. Evolve the harness rows from load/run contracts to dispatch contracts as each defect
-   closes (each upgrade = a real PASS).
-4. Do NOT touch loader.c dispatch logic; if a loader defect surfaces, register BUG-032
-   with a trace.
-5. Guardrail: bash scripts/g1_accept.sh must stay OK after every loader-adjacent change.
+## C-1 scope
+- make_test_c: func_C handler -> ContinueSearch (mov eax,1; ret); func_B handler ->
+  ContinueExecution (xor eax,eax; ret). Expected: TWO HANDLER_CALL events
+  (disposition=1 at frame 0, then disposition=0 at frame 1) + clean resume, ec=1.
+- Evolve the test_c row to assert both dispositions.
+- Builder-only. If a loader defect surfaces in the ContinueSearch-continue path,
+  register BUG-032 with a trace; do NOT touch loader.c in this task.
+- Guardrail: bash scripts/g1_accept.sh must stay OK; test_a/b/d rows stay green.
 
-## Verified facts you may rely on
-- G1 acceptance MET (EXP-039); regression 12/12; IAT writability fix in the loader is
-  Windows-faithful (mprotect around the import pass, restore after).
-- The old harness (test_dispatch_harness.c) is superseded by test_dispatch_v2.sh.
+## Then: TASK-TEST-004-D1 (see backlog)
+test_a.exe == test_d.exe (sha256 048f6d27…) — differentiate test_d (prefer a deeper
+no-handler chain: handler discovered at frame 3).

@@ -91,16 +91,28 @@ class SyntheticPEBuilder:
         prolog_alloc = func.get('prolog_alloc', 0x20)  # default 32 bytes
         num_pushes = func.get('num_pushes', 0)
 
-        # Build unwind codes
+        # Build unwind codes (B-2 canonical encoding, TASK-TEST-004 slice 2)
+        #   Canonical winnt.h UNWIND_CODE as a 16-bit LE word:
+        #     byte0 = CodeOffset (8-bit, offset of the instruction boundary AFTER
+        #             the instruction that performs the operation)
+        #     byte1 = (OpInfo << 4) | UnwindOp   -> Op is the LOW nibble of byte1
+        #   i.e. word = (OpInfo << 12) | (UnwindOp << 8) | CodeOffset.
+        #   The array is stored in REVERSE order of prolog execution (MS x64
+        #   spec): the unwinder iterates the array forward to undo the prolog,
+        #   so the LAST prolog operation comes FIRST in the array.
+        #   Prolog shape: push rbx (1 byte, boundary after it = 1);
+        #                 sub rsp,N (4 bytes, boundary after it = num_pushes+4)
         codes = []
-        if num_pushes > 0:
-            # PUSH_NONVOL for RBX (register index 3)
-            codes.append((3 << 12) | (0 << 8) | 0)  # PUSH_NONVOL RBX at offset 0
         if prolog_alloc > 0:
             alloc_slots = (prolog_alloc // 8) - 1  # ALLOC_SMALL encodes (N+1)*8
             if alloc_slots <= 15:
-                push_offset = num_pushes * 1  # each push is 1 byte
-                codes.append((2 << 12) | (alloc_slots << 8) | push_offset)  # ALLOC_SMALL
+                alloc_end = num_pushes * 1 + 4  # end of the 4-byte sub rsp,imm8
+                codes.append(((alloc_slots & 0xF) << 12) | (2 << 8) | (alloc_end & 0xFF))  # ALLOC_SMALL
+            else:
+                raise ValueError('ALLOC_LARGE not supported by synthetic dispatch tests')
+        if num_pushes > 0:
+            # PUSH_NONVOL for RBX (register index 3) — first prolog op, last code
+            codes.append((3 << 12) | (0 << 8) | (num_pushes & 0xFF))  # push ends at num_pushes
 
         count_codes = len(codes)
         code_bytes = b''.join(p16(c) for c in codes)
@@ -339,10 +351,10 @@ def make_test_a():
     IAT_RVA = 0x2048  # must match _build_imports() (RDATA_RVA + 0x048) — TASK-TEST-004
 
     # func_C: call RaiseException(0xE0000001, 0, 0, NULL) via IAT
-    # Prolog: push rbx; sub rsp, 0x28
+    # Prolog: push rbx; sub rsp, 0x30
     # mov ecx, 0xE0000001; xor edx, edx; xor r8d, r8d; xor r9d, r9d
     # call qword ptr [IAT_RVA relative to RIP]
-    # add rsp, 0x28; pop rbx; ret
+    # add rsp, 0x30; pop rbx; ret
     # Need to compute the relative offset for the IAT call.
     # We'll compute it after we know func_C's position.
     # For now, use a placeholder and fix up later.
@@ -357,27 +369,27 @@ def make_test_a():
 
     # func_C code (no handler, no EHANDLER):
     # push rbx            ; 1 byte
-    # sub rsp, 0x28       ; 4 bytes (REX.W + sub + imm8)
+    # sub rsp, 0x30       ; 4 bytes (REX.W + sub + imm8)
     # mov ecx, 0xE0000001 ; 5 bytes
     # xor edx, edx        ; 2 bytes
     # xor r8d, r8d        ; 3 bytes
     # xor r9d, r9d        ; 3 bytes
     # call [rip+disp32]   ; 6 bytes
-    # add rsp, 0x28       ; 4 bytes
+    # add rsp, 0x30       ; 4 bytes
     # pop rbx             ; 1 byte
     # ret                 ; 1 byte
     # Total: 30 bytes
 
     func_C_code = bytearray()
     func_C_code.extend(b'\x53')                      # push rbx
-    func_C_code.extend(b'\x48\x83\xec\x28')          # sub rsp, 0x28
+    func_C_code.extend(b'\x48\x83\xec\x30')          # sub rsp, 0x30
     func_C_code.extend(b'\xb9\x01\x00\x00\xe0')      # mov ecx, 0xE0000001
     func_C_code.extend(b'\x31\xd2')                    # xor edx, edx
     func_C_code.extend(b'\x45\x31\xc0')                # xor r8d, r8d
     func_C_code.extend(b'\x45\x31\xc9')                # xor r9d, r9d
     # call [rip+disp32] — placeholder, will fix up
     func_C_code.extend(b'\xff\x15\x00\x00\x00\x00')  # call [rip+0] (fixup later)
-    func_C_code.extend(b'\x48\x83\xc4\x28')          # add rsp, 0x28
+    func_C_code.extend(b'\x48\x83\xc4\x30')          # add rsp, 0x30
     func_C_code.extend(b'\x5b')                        # pop rbx
     func_C_code.extend(b'\xc3')                        # ret
 
@@ -390,24 +402,24 @@ def make_test_a():
     handler_B_code.extend(b'\xc3')           # ret
 
     # func_B: calls func_C, has EHANDLER pointing to handler_B
-    # push rbx; sub rsp, 0x28; xor ecx, ecx; call func_C (relative); add rsp, 0x28; pop rbx; ret
+    # push rbx; sub rsp, 0x30; xor ecx, ecx; call func_C (relative); add rsp, 0x30; pop rbx; ret
     func_B_code = bytearray()
     func_B_code.extend(b'\x53')                      # push rbx
-    func_B_code.extend(b'\x48\x83\xec\x28')          # sub rsp, 0x28
+    func_B_code.extend(b'\x48\x83\xec\x30')          # sub rsp, 0x30
     func_B_code.extend(b'\x31\xc9')                    # xor ecx, ecx
     # call func_C — relative, need to know offset
     func_B_code.extend(b'\xe8\x00\x00\x00\x00')      # call rel32 (fixup later)
-    func_B_code.extend(b'\x48\x83\xc4\x28')          # add rsp, 0x28
+    func_B_code.extend(b'\x48\x83\xc4\x30')          # add rsp, 0x30
     func_B_code.extend(b'\x5b')                        # pop rbx
     func_B_code.extend(b'\xc3')                        # ret
 
     # func_A: calls func_B, no handler
     func_A_code = bytearray()
     func_A_code.extend(b'\x53')                      # push rbx
-    func_A_code.extend(b'\x48\x83\xec\x28')          # sub rsp, 0x28
+    func_A_code.extend(b'\x48\x83\xec\x30')          # sub rsp, 0x30
     func_A_code.extend(b'\x31\xc9')                    # xor ecx, ecx
     func_A_code.extend(b'\xe8\x00\x00\x00\x00')      # call func_B (fixup later)
-    func_A_code.extend(b'\x48\x83\xc4\x28')          # add rsp, 0x28
+    func_A_code.extend(b'\x48\x83\xc4\x30')          # add rsp, 0x30
     func_A_code.extend(b'\x5b')                        # pop rbx
     func_A_code.extend(b'\xc3')                        # ret
 
@@ -439,14 +451,14 @@ def make_test_a():
 
     return [
         {'name': 'func_A', 'code': bytes(func_A_code), 'has_ehandler': False,
-         'prolog_alloc': 0x28, 'num_pushes': 1, 'prolog_size': 5},
+         'prolog_alloc': 0x30, 'num_pushes': 1, 'prolog_size': 5},
         {'name': 'func_B', 'code': bytes(func_B_code), 'has_ehandler': True,
          'handler_code': len(func_A_code) + len(func_B_code),  # handler offset in .text
-         'prolog_alloc': 0x28, 'num_pushes': 1, 'prolog_size': 5},
+         'prolog_alloc': 0x30, 'num_pushes': 1, 'prolog_size': 5},
         {'name': 'handler_B', 'code': bytes(handler_B_code), 'has_ehandler': False,
          'prolog_alloc': 0, 'num_pushes': 0, 'prolog_size': 0},
         {'name': 'func_C', 'code': bytes(func_C_code), 'has_ehandler': False,
-         'prolog_alloc': 0x28, 'num_pushes': 1, 'prolog_size': 5},
+         'prolog_alloc': 0x30, 'num_pushes': 1, 'prolog_size': 5},
     ], 'func_A'
 
 
@@ -462,25 +474,25 @@ def make_test_b():
 
     # func_C: calls [IAT], has handler
     func_C_code = bytearray()
-    func_C_code.extend(b'\x53\x48\x83\xec\x28')  # push rbx; sub rsp, 0x28
+    func_C_code.extend(b'\x53\x48\x83\xec\x30')  # push rbx; sub rsp, 0x30
     func_C_code.extend(b'\xb9\x01\x00\x00\xe0')    # mov ecx, 0xE0000002
     func_C_code.extend(b'\x31\xd2\x45\x31\xc0\x45\x31\xc9')  # xor edx, r8d, r9d
     func_C_code.extend(b'\xff\x15\x00\x00\x00\x00')  # call [IAT] (fixup)
-    func_C_code.extend(b'\x48\x83\xc4\x28\x5b\xc3')  # cleanup; ret
+    func_C_code.extend(b'\x48\x83\xc4\x30\x5b\xc3')  # cleanup; ret
 
     # func_B: calls func_C, no handler
     func_B_code = bytearray()
-    func_B_code.extend(b'\x53\x48\x83\xec\x28')  # push rbx; sub rsp, 0x28
+    func_B_code.extend(b'\x53\x48\x83\xec\x30')  # push rbx; sub rsp, 0x30
     func_B_code.extend(b'\x31\xc9')                    # xor ecx, ecx
     func_B_code.extend(b'\xe8\x00\x00\x00\x00')      # call func_C (fixup)
-    func_B_code.extend(b'\x48\x83\xc4\x28\x5b\xc3')
+    func_B_code.extend(b'\x48\x83\xc4\x30\x5b\xc3')
 
     # func_A: calls func_B, no handler
     func_A_code = bytearray()
-    func_A_code.extend(b'\x53\x48\x83\xec\x28')
+    func_A_code.extend(b'\x53\x48\x83\xec\x30')
     func_A_code.extend(b'\x31\xc9')
     func_A_code.extend(b'\xe8\x00\x00\x00\x00')
-    func_A_code.extend(b'\x48\x83\xc4\x28\x5b\xc3')
+    func_A_code.extend(b'\x48\x83\xc4\x30\x5b\xc3')
 
     TEXT_RVA = 0x1000
     func_A_rva = TEXT_RVA
@@ -488,10 +500,11 @@ def make_test_b():
     func_C_rva = func_B_rva + len(func_B_code)
     handler_C_rva = func_C_rva + len(func_C_code)
 
-    # Fixup func_A -> func_B
-    struct.pack_into('<i', func_A_code, 8, func_B_rva - (func_A_rva + 8 + 5))
-    # Fixup func_B -> func_C
-    struct.pack_into('<i', func_B_code, 8, func_C_rva - (func_B_rva + 8 + 5))
+    # Fixup func_A -> func_B (B-1: call rel32 sits at offset 7 — push(1)+sub(4)+xor(2);
+    # disp32 is at offset 8 and is measured from the NEXT instruction = func_rva+12)
+    struct.pack_into('<i', func_A_code, 8, func_B_rva - (func_A_rva + 12))
+    # Fixup func_B -> func_C (same prolog shape: call at 7, next-instruction addr +12)
+    struct.pack_into('<i', func_B_code, 8, func_C_rva - (func_B_rva + 12))
     # Fixup func_C -> IAT
     iat_call_off = 18  # push(1)+sub(4)+mov(5)+xor*3(2+3+3)=18
     iat_va = 0x140000000 + IAT_RVA
@@ -502,12 +515,12 @@ def make_test_b():
 
     return [
         {'name': 'func_A', 'code': bytes(func_A_code), 'has_ehandler': False,
-         'prolog_alloc': 0x28, 'num_pushes': 1, 'prolog_size': 5},
+         'prolog_alloc': 0x30, 'num_pushes': 1, 'prolog_size': 5},
         {'name': 'func_B', 'code': bytes(func_B_code), 'has_ehandler': False,
-         'prolog_alloc': 0x28, 'num_pushes': 1, 'prolog_size': 5},
+         'prolog_alloc': 0x30, 'num_pushes': 1, 'prolog_size': 5},
         {'name': 'func_C', 'code': bytes(func_C_code), 'has_ehandler': True,
          'handler_code': handler_offset,
-         'prolog_alloc': 0x28, 'num_pushes': 1, 'prolog_size': 5},
+         'prolog_alloc': 0x30, 'num_pushes': 1, 'prolog_size': 5},
         {'name': 'handler_C', 'code': bytes(handler_C_code), 'has_ehandler': False,
          'prolog_alloc': 0, 'num_pushes': 0, 'prolog_size': 0},
     ], 'func_A'
@@ -528,25 +541,25 @@ def make_test_c():
 
     # func_C: has handler, calls IAT
     func_C_code = bytearray()
-    func_C_code.extend(b'\x53\x48\x83\xec\x28')
+    func_C_code.extend(b'\x53\x48\x83\xec\x30')
     func_C_code.extend(b'\xb9\x01\x00\x00\xe0')    # mov ecx, 0xE0000003
     func_C_code.extend(b'\x31\xd2\x45\x31\xc0\x45\x31\xc9')
     func_C_code.extend(b'\xff\x15\x00\x00\x00\x00')
-    func_C_code.extend(b'\x48\x83\xc4\x28\x5b\xc3')
+    func_C_code.extend(b'\x48\x83\xc4\x30\x5b\xc3')
 
     # func_B: has handler (ContinueSearch), calls func_C
     func_B_code = bytearray()
-    func_B_code.extend(b'\x53\x48\x83\xec\x28')
+    func_B_code.extend(b'\x53\x48\x83\xec\x30')
     func_B_code.extend(b'\x31\xc9')
     func_B_code.extend(b'\xe8\x00\x00\x00\x00')
-    func_B_code.extend(b'\x48\x83\xc4\x28\x5b\xc3')
+    func_B_code.extend(b'\x48\x83\xc4\x30\x5b\xc3')
 
     # func_A: no handler, calls func_B
     func_A_code = bytearray()
-    func_A_code.extend(b'\x53\x48\x83\xec\x28')
+    func_A_code.extend(b'\x53\x48\x83\xec\x30')
     func_A_code.extend(b'\x31\xc9')
     func_A_code.extend(b'\xe8\x00\x00\x00\x00')
-    func_A_code.extend(b'\x48\x83\xc4\x28\x5b\xc3')
+    func_A_code.extend(b'\x48\x83\xc4\x30\x5b\xc3')
 
     TEXT_RVA = 0x1000
     func_A_rva = TEXT_RVA
@@ -555,9 +568,9 @@ def make_test_c():
     func_C_rva = handler_B_rva + len(handler_B_code)
     handler_C_rva = func_C_rva + len(func_C_code)
 
-    # Fixups
-    struct.pack_into('<i', func_A_code, 8, func_B_rva - (func_A_rva + 13))
-    struct.pack_into('<i', func_B_code, 8, func_C_rva - (func_B_rva + 13))
+    # Fixups (B-1: call rel32 at offset 7, disp32 measured from func_rva+12)
+    struct.pack_into('<i', func_A_code, 8, func_B_rva - (func_A_rva + 12))
+    struct.pack_into('<i', func_B_code, 8, func_C_rva - (func_B_rva + 12))
     iat_call_off = 18
     iat_va = 0x140000000 + IAT_RVA
     disp = iat_va - (0x140000000 + func_C_rva + iat_call_off + 6)
@@ -568,15 +581,15 @@ def make_test_c():
 
     return [
         {'name': 'func_A', 'code': bytes(func_A_code), 'has_ehandler': False,
-         'prolog_alloc': 0x28, 'num_pushes': 1, 'prolog_size': 5},
+         'prolog_alloc': 0x30, 'num_pushes': 1, 'prolog_size': 5},
         {'name': 'func_B', 'code': bytes(func_B_code), 'has_ehandler': True,
          'handler_code': handler_B_offset,
-         'prolog_alloc': 0x28, 'num_pushes': 1, 'prolog_size': 5},
+         'prolog_alloc': 0x30, 'num_pushes': 1, 'prolog_size': 5},
         {'name': 'handler_B', 'code': bytes(handler_B_code), 'has_ehandler': False,
          'prolog_alloc': 0, 'num_pushes': 0, 'prolog_size': 0},
         {'name': 'func_C', 'code': bytes(func_C_code), 'has_ehandler': True,
          'handler_code': handler_C_offset,
-         'prolog_alloc': 0x28, 'num_pushes': 1, 'prolog_size': 5},
+         'prolog_alloc': 0x30, 'num_pushes': 1, 'prolog_size': 5},
         {'name': 'handler_C', 'code': bytes(handler_C_code), 'has_ehandler': False,
          'prolog_alloc': 0, 'num_pushes': 0, 'prolog_size': 0},
     ], 'func_A'
@@ -595,25 +608,25 @@ def make_test_d():
 
     # func_C: calls IAT, no handler
     func_C_code = bytearray()
-    func_C_code.extend(b'\x53\x48\x83\xec\x28')
+    func_C_code.extend(b'\x53\x48\x83\xec\x30')
     func_C_code.extend(b'\xb9\x01\x00\x00\xe0')
     func_C_code.extend(b'\x31\xd2\x45\x31\xc0\x45\x31\xc9')
     func_C_code.extend(b'\xff\x15\x00\x00\x00\x00')
-    func_C_code.extend(b'\x48\x83\xc4\x28\x5b\xc3')
+    func_C_code.extend(b'\x48\x83\xc4\x30\x5b\xc3')
 
     # func_B: has handler, calls func_C
     func_B_code = bytearray()
-    func_B_code.extend(b'\x53\x48\x83\xec\x28')
+    func_B_code.extend(b'\x53\x48\x83\xec\x30')
     func_B_code.extend(b'\x31\xc9')
     func_B_code.extend(b'\xe8\x00\x00\x00\x00')
-    func_B_code.extend(b'\x48\x83\xc4\x28\x5b\xc3')
+    func_B_code.extend(b'\x48\x83\xc4\x30\x5b\xc3')
 
     # func_A: no handler, calls func_B
     func_A_code = bytearray()
-    func_A_code.extend(b'\x53\x48\x83\xec\x28')
+    func_A_code.extend(b'\x53\x48\x83\xec\x30')
     func_A_code.extend(b'\x31\xc9')
     func_A_code.extend(b'\xe8\x00\x00\x00\x00')
-    func_A_code.extend(b'\x48\x83\xc4\x28\x5b\xc3')
+    func_A_code.extend(b'\x48\x83\xc4\x30\x5b\xc3')
 
     TEXT_RVA = 0x1000
     func_A_rva = TEXT_RVA
@@ -621,8 +634,8 @@ def make_test_d():
     handler_B_rva = func_B_rva + len(func_B_code)
     func_C_rva = handler_B_rva + len(handler_B_code)
 
-    struct.pack_into('<i', func_A_code, 8, func_B_rva - (func_A_rva + 13))
-    struct.pack_into('<i', func_B_code, 8, func_C_rva - (func_B_rva + 13))
+    struct.pack_into('<i', func_A_code, 8, func_B_rva - (func_A_rva + 12))
+    struct.pack_into('<i', func_B_code, 8, func_C_rva - (func_B_rva + 12))
     iat_call_off = 18
     iat_va = 0x140000000 + IAT_RVA
     disp = iat_va - (0x140000000 + func_C_rva + iat_call_off + 6)
@@ -632,55 +645,62 @@ def make_test_d():
 
     return [
         {'name': 'func_A', 'code': bytes(func_A_code), 'has_ehandler': False,
-         'prolog_alloc': 0x28, 'num_pushes': 1, 'prolog_size': 5},
+         'prolog_alloc': 0x30, 'num_pushes': 1, 'prolog_size': 5},
         {'name': 'func_B', 'code': bytes(func_B_code), 'has_ehandler': True,
          'handler_code': handler_B_offset,
-         'prolog_alloc': 0x28, 'num_pushes': 1, 'prolog_size': 5},
+         'prolog_alloc': 0x30, 'num_pushes': 1, 'prolog_size': 5},
         {'name': 'handler_B', 'code': bytes(handler_B_code), 'has_ehandler': False,
          'prolog_alloc': 0, 'num_pushes': 0, 'prolog_size': 0},
         {'name': 'func_C', 'code': bytes(func_C_code), 'has_ehandler': False,
-         'prolog_alloc': 0x28, 'num_pushes': 1, 'prolog_size': 5},
+         'prolog_alloc': 0x30, 'num_pushes': 1, 'prolog_size': 5},
     ], 'func_A'
 
 
 def verify_func_calls():
-    """Verify all call displacements are correct."""
+    """Non-vacuous call verification (B-1 regression guard).
+
+    The old verifier only compared targets against function RVAs it happened to
+    match, so a call landing on `ret` padding (B-1 symptom) silently passed.
+    This version asserts:
+      - every e8 rel32 call target is EXACTLY a known function/handler entry;
+      - every ff 15 rip-relative call target is EXACTLY the IAT slot (0x2048).
+    """
+    IAT_RVA = 0x2048  # must match _build_imports() (RDATA_RVA + 0x048)
     pass_count = 0
     fail_count = 0
     for fname, make_fn, desc in [("test_a", make_test_a, ""), ("test_b", make_test_b, ""), ("test_c", make_test_c, ""), ("test_d", make_test_d, "")]:
         functions, entry = make_fn()
         builder = SyntheticPEBuilder(desc, functions, entry)
-        pe_data = builder.build()
-        text = builder.text_bytes
+        builder.build()
+        known = set(builder.func_rvas.values())
+        code_by_name = {fn['name']: fn['code'] for fn in functions}
         for name, rva in builder.func_rvas.items():
-            code = None
-            for fn in functions:
-                if fn['name'] == name:
-                    code = fn['code']
-                    break
-            assert code is not None, f'Missing code for {name}'
-            # Find call e8 instructions
-            for j in range(len(code) - 4):
-                if code[j] == 0xe8:
+            code = code_by_name.get(name)
+            if code is None:
+                continue
+            j = 0
+            while j < len(code):
+                if code[j] == 0xe8:  # call rel32
                     disp = struct.unpack_from('<i', code, j + 1)[0]
-                    target = rva + (j + 5) + disp
-                    expected_rva = builder.func_rvas.get(name + '_rva_next', None)
-                    # Find what function target should be
-                    expected = None
-                    for fn in functions:
-                        if fn['name'] != name and fn['name'] != name + '_rva_next':
-                            fn_rva = builder.func_rvas.get(fn['name'])
-                            if fn_rva is not None and fn_rva == target:
-                                expected = fn_rva
-                                break
-                    if expected is None:
-                        pass  # might be handler or IAT
-                    elif target != expected and expected is not None:
-                        print(f'  FAIL {fname}: call at {name}+{j} targets RVA 0x{target:x} but expected 0x{expected:x}')
-                        fail_count += 1
-                    else:
+                    target = rva + j + 5 + disp
+                    if target in known:
                         pass_count += 1
-    print(f'Veification: {pass_count} passed, {fail_count} failed')
+                    else:
+                        print(f'  FAIL {fname}: {name}+{j} call rel32 -> 0x{target:x} is not a function entry')
+                        fail_count += 1
+                    j += 5
+                elif code[j] == 0xff and j + 5 < len(code) and code[j + 1] == 0x15:  # call [rip+disp32]
+                    disp = struct.unpack_from('<i', code, j + 2)[0]
+                    target = rva + j + 6 + disp
+                    if target == IAT_RVA:
+                        pass_count += 1
+                    else:
+                        print(f'  FAIL {fname}: {name}+{j} call [rip+disp] -> 0x{target:x} != IAT 0x{IAT_RVA:x}')
+                        fail_count += 1
+                    j += 6
+                else:
+                    j += 1
+    print(f'Verification: {pass_count} calls verified, {fail_count} failed')
     return pass_count, fail_count
 
 
