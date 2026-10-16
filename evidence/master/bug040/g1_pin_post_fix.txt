@@ -1,0 +1,8 @@
+== G1 acceptance pin @ 2026-10-16T18:51:03Z ==
+-- clean build
+   binary sha256 = f1207219976f5622ea06735c5be58deb6761824d244fafd4513b55a46f1dbcd3
+-- run: ./minwin_loader samples/upx_decompressed.exe --version
+-- regression suite
+   Results: [0;32m12 passed[0m, [0;31m0 failed[0m
+-- evidence recorded in evidence/master/g1/20261016_185103
+== G1 PIN: OK (exit 0, banner exact, no crash, regression green) ==

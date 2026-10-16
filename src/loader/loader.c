@@ -554,6 +554,11 @@ static void mw_trace_shutdown_flush(void) {
     }
 }
 
+/* BUG-040 build repair: forward declaration — the definition lives in the
+ * ISS1-WAVE3B atexit section (mw_ExitProcess calls it before that point,
+ * and C23 rejects implicit declarations). Declaration-order fix only. */
+static void w3_run_guest_atexit(void);
+
 __attribute__((noreturn)) __attribute__((ms_abi)) void mw_ExitProcess(unsigned int code) {
     MW_TRACE("ExitProcess(%u)", code);
     w3_run_guest_atexit();          /* Windows: CRT handlers run before exit */
@@ -3608,6 +3613,13 @@ static void w3_guard_free(void* p);
 static int w3_is_guarded(void* p);
 static void w3_run_guest_atexit(void);
 static void w3_run_tle_atexit(void);
+/* BUG-040 build repair: the allocation registry TYPE, SIZE macro and w3_reg_slot
+ * are used by mw_free/mw_realloc above; their definitions live in the
+ * ISS1-WAVE3B allocator section far below. Hoisted here verbatim (C23 rejects
+ * implicit declarations and use-before-declaration of statics). */
+#define W3_REG_SIZE 8192
+static struct { void* p; size_t size; uint32_t gen; } g_alloc_reg[W3_REG_SIZE];
+static unsigned w3_reg_slot(void* p);
 __attribute__((ms_abi)) void* mw_malloc(size_t size) {
     if (w3_guard_enabled()) {
         void* gp = w3_guard_alloc(size ? size : 1);
@@ -4676,9 +4688,10 @@ __attribute__((ms_abi)) void* mw_HeapCreate(uint32_t fl, size_t init, size_t max
 
 /* ISS1-WAVE3B: allocation registry — every pointer our HeapAlloc/ReAlloc/
  * GlobalAlloc family hands out is recorded; frees of unknown pointers are
- * trapped with the caller chain (root-causes "free(): invalid size"). */
-#define W3_REG_SIZE 8192
-static struct { void* p; size_t size; uint32_t gen; } g_alloc_reg[W3_REG_SIZE];
+ * trapped with the caller chain (root-causes "free(): invalid size").
+ * BUG-040: W3_REG_SIZE + g_alloc_reg + w3_reg_slot declared at the malloc
+ * forward-decl block above (mw_free touches the registry directly); the
+ * function definitions remain here. */
 static uint32_t g_alloc_gen = 1;
 static unsigned w3_reg_slot(void* p) {
     uint64_t v = (uint64_t)(uintptr_t)p;
