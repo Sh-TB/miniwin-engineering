@@ -1,33 +1,24 @@
 # CURRENT TASK
 
-**Task ID:** TASK-OPENSRC-1 (canonical, P1 — see `.agent/NEXT_ACTION.md`)
-**Title:** Unblock ffmpeg.exe and magick.exe (real famous open-source targets)
-**Status:** READY — merged state (2026-10-16): parallel appcompat/ISS1/OPENSRC-1 line + TEST-004 slice 2 line integrated
+**Task ID:** TASK-OPENSRC-2 (P1) — ffmpeg PNG frontier
+**Status:** READY (2026-10-16, commit 6140184)
 **Priority:** P1
 
-## Canonical frontier (from NEXT_ACTION.md @ f75aa97/00898fe, re-verified at merge)
-- **ffmpeg.exe** (BtbN win64 GPL): ~425 unresolved imports; deep into CRT init (WSAStartup,
-  vulkan probe, per-library constructors). BLOCKED root: heap metadata corruption
-  ("malloc(): invalid size (unsorted)") during late CRT init, before main.
-  Next command: `timeout 150 ./minwin_loader artifacts/opensource/ffmpeg/ffmpeg-master-latest-win64-gpl/bin/ffmpeg.exe -hide_banner -loglevel error -f lavfi -i "testsrc2=size=64x48:rate=1" -frames:v 1 -y /tmp/out.png`
-  Tooling: MINWIN_HEAP_GUARD diagnostics already in the tree.
-- **magick.exe** (ImageMagick 7.1.2-34 portable): BLOCKED root: UCRT locale ctype-init
-  delivers a corrupted frame to GetStringTypeW (R9 = string data as out-ptr).
-  Next: decode the caller at RVA 0x3d87b2 frame + the locale struct layout.
-- Acceptance: ffmpeg reaches main() and produces a valid PNG; magick produces rose.png;
-  regression 12/12 + sweep 11/12 stay green.
+## Milestone reached this session
+- **`ffmpeg.exe -version` prints the FULL banner through the real loader, exit 0,
+  3/3 deterministic** (evidence/master/bug041-048/) — the OPENSRC-class "G1 moment".
+- BUG-040..048 closed (build repair, realloc-on-guard, wchar 2↔4 family x2,
+  console struct overrun, console-mode fidelity, aligned-heap family, registry
+  linear probing). All gates green: G1 pin (12/12), dispatch 4/4.
+- llvm-mingw toolchain + ffmpeg + ImageMagick corpora restored in-container.
+- Local commits 394f6d4 (merge) -> 3c1fea9 (BUG-040) -> 6140184 (BUG-041..048).
+  PUSH BLOCKED: ~/.git-credentials lost between sessions (OWNER-004) — needs the
+  token re-supplied by the owner; never store it in the repo.
 
-## Also completed in this merge (TEST-004 slice 2, commit 824230f)
-- Builder B-1/B-2/B-3 closed: all 4 synthetic dispatch tests raise through the real IAT
-  call, reach RtlDispatchException, get a handler invoked, resume cleanly (4/4, 3x
-  deterministic; byte-proof `09 05 02 00 | 05 52 | 01 30`); verifier non-vacuous.
-- Queued micro-tasks: TASK-TEST-004-C1 (real ContinueSearch two-handler walk) and
-  TASK-TEST-004-D1 (test_d is a byte-identical duplicate of test_a — differentiate).
-- TASK-BUG-038 design (target-frame delivery) remains in backlog/history — P2,
-  llvm-mingw/MS-ER family only.
-
-## Ground rules
-- Loader changes must keep: regression 12/12, UPX G1 (exit 0 + banner), sweep 11/12,
-  dispatch suite 4/4. Every fix = separate report + evidence dir + 3x runs.
-- Credentials: ~/.git-credentials LOST between sessions (OWNER-004) — push blocked until
-  the user re-supplies the token; never store it in the repo.
+## Next micro-tasks (see backlog for full detail)
+1. TASK-OPENSRC-2: ffmpeg frame-thread NULL deref (RVA 0x8070d2d, after
+   CreateEventW x4) — the PNG-pipeline acceptance.
+2. TASK-TEST-014: rebuild sweep t01..t12 with the restored toolchain, re-pin 11/12.
+3. TASK-OPENSRC-3: magick silent -version (trace the output path).
+4. TASK-OPENSRC-4: magick coder SIGSEGV.
+5. Queued: TEST-004-C1 (real ContinueSearch chain), TEST-004-D1 (dedupe test_d).

@@ -485,3 +485,43 @@ TASK-API-007/008 (CLOSED TESTED, table 162 -> 188).
   raise, handler at frame 3) to exercise a longer no-handler chain; or (b) make
   test_d's handler return ContinueSearch at every frame except the outermost
   (overlaps C-1 — prefer (a)). Rebuild, re-pin hashes, evolve the row.
+
+### TASK-OPENSRC-2 — ffmpeg: frame-thread init NULL deref (PNG frontier)
+- Priority: P1. Status: READY. Deps: BUG-041..048 (done 2026-10-16).
+- Evidence: after BUG-041..048, `ffmpeg -version` prints the FULL banner (exit 0,
+  3/3 deterministic — evidence/master/bug041-048/). The lavfi->PNG pipeline crashes
+  at RVA 0x8070d2d INSIDE the PE: `testb $1,0x18(%rax)` with RAX=0, right after
+  `mov 0x28(%rcx),%rdi; mov %edx,0x14c(%rdi)` (thread/event field writes), last
+  traced APIs = malloc(24) + CreateEventW(manual=0,init=0) x4 — frame-thread sync
+  event pool. Suspect: an event/thread API contract (CreateEventW handle semantics,
+  SetEvent/ResetEvent state machine, or thread_count path) returns a value ffmpeg
+  treats as its own struct pointer. Next: dump CreateEventW/SetEvent/WaitFor
+  sequences around the crash; compare with Wine's event semantics; consider making
+  -threads 1 work first (skip frame threading) as a diagnostic bisect.
+- Acceptance: out.png produced and validated (file magic PNG), regression 12/12 +
+  G1 + dispatch 4/4 stay green.
+
+### TASK-OPENSRC-3 — magick: -version silent exit 0
+- Priority: P1. Status: READY.
+- Evidence: magick -version exits 0 but stdout is empty (65 bytes = loader banner
+  only); NO traced write API (no _write/fwrite/fputs/WriteConsoleW calls). Trace
+  shows GetLocaleInfoW(type=20/1003/20001009) + GetEnvironmentVariableW (name
+  prints as UTF-16 garbage in trace — MW_TRACE %s cosmetics, separate note).
+- Hypothesis: magick's version banner path consults locale/policy config and takes
+  a silent early-exit, OR its printf goes through a CRT path our trace doesn't
+  instrument and our repack drops (BUG-033 regression check first).
+- Next: (a) grep the magick trace for the last 100 events pre-ExitProcess(0);
+  (b) run with MINWIN_TRACE patch on vfprintf to see the format strings magick
+  passes; (c) check GetLocaleInfoW return values against real Windows.
+
+### TASK-OPENSRC-4 — magick coder paths: SIGSEGV on image ops
+- Priority: P2. Status: READY. Deps: TASK-OPENSRC-3 for sane CLI.
+- Evidence: `magick -size 64x48 gradient:red-blue out.png` -> SIGSEGV (ec 139),
+  161 imports unresolved. Coder register/InitOnce paths suspected.
+
+### TASK-TEST-014 — rebuild appcompat sweep binaries (t01..t12) with restored toolchain
+- Priority: P1. Status: READY.
+- Evidence: /home/z/my-project/tools-mingw restored (llvm-mingw 20261006 msvcrt,
+  clang 23.1.3 — exact pin); binaries were session-local and absent.
+- Scope: rebuild t01..t12, run_sweep.sh, re-verify 11/12 (t09 = TASK-API-009),
+  re-pin evidence dir; then 3x determinism.
