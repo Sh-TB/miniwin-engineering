@@ -434,6 +434,14 @@ __attribute__((ms_abi)) int mw_DuplicateHandle(void* src, void* src_h, void* tgt
 /* Console */
 __attribute__((ms_abi)) int mw_GetConsoleMode(void* h, uint32_t* mode) {
     MW_TRACE("GetConsoleMode(handle=%p)", h);
+    /* BUG-045 (Windows-faithful): GetConsoleMode FAILS on a non-console
+     * handle (ERROR_INVALID_HANDLE=6). Our pseudo-std-handles are fd+10
+     * (GetStdHandle) — when the fd is redirected (pipe/file), a real console
+     * API would fail; ffmpeg uses this to pick its UTF-16 console output
+     * path, so always-succeed made it write raw UTF-16 into the pipe. */
+    uintptr_t hv = (uintptr_t)h;
+    int fd = (hv >= 10 && hv <= 12) ? (int)(hv - 10) : -1;
+    if (fd < 0 || !isatty(fd)) { mw_SetLastError(6); return 0; }
     if (mode) *mode = 0x0003; /* ENABLE_ECHO_INPUT | ENABLE_LINE_INPUT */
     return 1;
 }
@@ -441,12 +449,24 @@ __attribute__((ms_abi)) int mw_GetConsoleMode(void* h, uint32_t* mode) {
 __attribute__((ms_abi)) int mw_GetConsoleScreenBufferInfo(void* h, void* info) {
     MW_TRACE("GetConsoleScreenBufferInfo(handle=%p)", h);
     if (info) {
-        memset(info, 0, 48); /* CONSOLE_SCREEN_BUFFER_INFO is ~48 bytes */
-        *(uint16_t*)((uint8_t*)info + 0) = 80;   /* dwSize.X */
-        *(uint16_t*)((uint8_t*)info + 2) = 25;   /* dwSize.Y */
-        *(uint16_t*)((uint8_t*)info + 4) = 80;   /* dwCursorPosition.X */
-        *(uint16_t*)((uint8_t*)info + 6) = 0;    /* dwCursorPosition.Y */
-        *(uint16_t*)((uint8_t*)info + 8) = 0x0007; /* wAttributes */
+        /* BUG-044: CONSOLE_SCREEN_BUFFER_INFO is 22 bytes on x64
+         * (COORD dwSize @0, COORD dwCursorPosition @4, WORD wAttributes @8,
+         * SMALL_RECT srWindow @10..17, COORD dwMaximumWindowSize @18..21).
+         * The old memset wrote 48 bytes — a 26-byte overrun past the guest's
+         * stack local, tripping its stack canary (TerminateProcess
+         * 0xC0000409 STATUS_STACK_BUFFER_OVERRUN, seen live on ffmpeg). */
+        memset(info, 0, 22);
+        *(uint16_t*)((uint8_t*)info + 0)  = 80;    /* dwSize.X */
+        *(uint16_t*)((uint8_t*)info + 2)  = 25;    /* dwSize.Y */
+        *(uint16_t*)((uint8_t*)info + 4)  = 80;    /* dwCursorPosition.X */
+        *(uint16_t*)((uint8_t*)info + 6)  = 0;     /* dwCursorPosition.Y */
+        *(uint16_t*)((uint8_t*)info + 8)  = 0x0007;/* wAttributes */
+        *(uint16_t*)((uint8_t*)info + 10) = 0;     /* srWindow.Left */
+        *(uint16_t*)((uint8_t*)info + 12) = 0;     /* srWindow.Top */
+        *(uint16_t*)((uint8_t*)info + 14) = 79;    /* srWindow.Right */
+        *(uint16_t*)((uint8_t*)info + 16) = 24;    /* srWindow.Bottom */
+        *(uint16_t*)((uint8_t*)info + 18) = 80;    /* dwMaximumWindowSize.X */
+        *(uint16_t*)((uint8_t*)info + 20) = 25;    /* dwMaximumWindowSize.Y */
     }
     return 1;
 }
@@ -537,6 +557,23 @@ __attribute__((ms_abi)) void* mw_LoadLibraryA(const char* name) {
      * UPX uses the handle with GetProcAddress later; our mw_GetProcAddress
      * currently returns NULL, which is handled by UPX's own error paths. */
     return (void*)(uintptr_t)0xdead0001;
+}
+
+/* TASK-OPENSRC-1 (ffmpeg CRT/constructor chain): SetDllDirectoryA — winbase
+ * DLL-search-path hardening API. The loader resolves guest DLL loads itself
+ * and never searches a directory list, so the honest contract is: accept and
+ * remember the argument, restore default on NULL, always succeed (TRUE).
+ * ffmpeg's static-CRT/avcodec constructors call it before main. */
+static const char* g_dll_directory_a = NULL;
+__attribute__((ms_abi)) int mw_SetDllDirectoryA(const char* path) {
+    MW_TRACE("SetDllDirectoryA(%s)", path ? path : "NULL");
+    g_dll_directory_a = path;   /* guest memory, borrowed pointer — same as Windows */
+    return 1;
+}
+__attribute__((ms_abi)) int mw_SetDllDirectoryW(const void* path) {
+    MW_TRACE("SetDllDirectoryW(%p)", path);
+    g_dll_directory_a = NULL;   /* wide variant: accept, no conversion needed */
+    return 1;
 }
 
 /* TASK-API-002: shared flush for every _exit() path (ExitProcess, abort).
@@ -643,12 +680,86 @@ __attribute__((ms_abi)) int mw_IsDebuggerPresent(void) {
  * allocated one wchar too little and the conversion overflowed the chunk
  * header by 2 bytes (observed live: ImageMagick abort with
  * "free(): invalid size" after MultiByteToWideChar(cp=65001, srclen=-1)). */
+/* BUG-042 (TASK-OPENSRC-1 heap-corruption root cause): the guest wchar_t is
+ * 2 bytes but glibc wchar_t is 4 — mbstowcs(dst, ...) overruns any guest-
+ * sized buffer by 2x ("malloc(): invalid size (unsorted)" / "free(): invalid
+ * pointer" during UCRT locale init and ffmpeg's command-line handling).
+ * For UTF-8 (cp=65001 — the codepage ffmpeg and the UCRT init actually use)
+ * decode with mbrtowc but ENCODE UTF-16LE ourselves. Returns the number of
+ * 2-byte units, or -1 on invalid input, -2 if dst is too small. */
+static int w3_utf8_to_utf16le(const char* src, size_t src_bytes,
+                              uint16_t* dst, int dst_wchars) {
+    mbstate_t ps; memset(&ps, 0, sizeof(ps));
+    size_t consumed = 0;
+    int out = 0;
+    while (consumed < src_bytes) {
+        wchar_t wc4 = 0;
+        size_t r = mbrtowc(&wc4, src + consumed, src_bytes - consumed, &ps);
+        if (r == (size_t)-1 || r == (size_t)-2) return -1;
+        if (r == 0) r = 1;              /* decoded NUL character */
+        consumed += r;
+        uint32_t cp32 = (uint32_t)wc4;
+        uint16_t u[2];
+        unsigned units;
+        if (cp32 < 0x10000) { u[0] = (uint16_t)cp32; units = 1; }
+        else { cp32 -= 0x10000; u[0] = (uint16_t)(0xD800 | (cp32 >> 10));
+               u[1] = (uint16_t)(0xDC00 | (cp32 & 0x3FF)); units = 2; }
+        if (!dst) { out += (int)units; continue; }
+        if (out + (int)units > dst_wchars) return -2;
+        dst[out++] = u[0];
+        if (units == 2) dst[out++] = u[1];
+    }
+    return out;
+}
+
+/* BUG-042 extension: Windows-1252 (the ACP) high-range table 0x80..0x9F;
+ * 0xA0..0xFF is the Latin-1 identity. Guest buffers hold 2-byte units. */
+static const uint16_t w3_cp1252_hi[32] = {
+    0x20AC, 0x0081, 0x201A, 0x0192, 0x201E, 0x2026, 0x2020, 0x2021,
+    0x02C6, 0x2030, 0x0160, 0x2039, 0x0152, 0x008D, 0x017D, 0x008F,
+    0x0090, 0x2018, 0x2019, 0x201C, 0x201D, 0x2022, 0x2013, 0x2014,
+    0x02DC, 0x2122, 0x0161, 0x203A, 0x0153, 0x009D, 0x017E, 0x0178
+};
+static int w3_cp1252_to_utf16(const char* src, size_t src_bytes,
+                              uint16_t* dst, int dst_units) {
+    int out = 0;
+    for (size_t i = 0; i < src_bytes; i++) {
+        uint8_t b = (uint8_t)src[i];
+        uint16_t u = (b >= 0x80 && b <= 0x9F) ? w3_cp1252_hi[b - 0x80] : (uint16_t)b;
+        if (!dst) { out++; continue; }
+        if (out + 1 > dst_units) return -2;
+        dst[out++] = u;
+    }
+    return out;
+}
+
 __attribute__((ms_abi)) int mw_MultiByteToWideChar(uint32_t cp, uint32_t flags,
     const char* src, int srclen, wchar_t* dst, int dstlen) {
     MW_TRACE("MultiByteToWideChar(cp=%u, srclen=%d, dstlen=%d)", cp, srclen, dstlen);
     if (!src) { mw_SetLastError(87); return 0; }
     if (srclen == 0) return 0;
     int include_null = (srclen < 0);
+    /* BUG-042 + extension: cp 65001 (UTF-8) and 1252/ACP take native 2-byte-
+     * unit paths. Any other codepage keeps the legacy glibc-wchar passthrough
+     * — known 2x-overrun hazard, tracked under TASK-API-009 note (5). */
+    if (cp == 65001 || cp == 1252 || cp == 0) {
+        size_t bytes = include_null ? strlen(src) : (size_t)srclen;
+        int need;
+        if (cp == 65001)
+            need = w3_utf8_to_utf16le(src, bytes, NULL, 0);
+        else
+            need = w3_cp1252_to_utf16(src, bytes, NULL, 0);
+        if (need < 0) { mw_SetLastError(1113); return 0; }
+        if (include_null) need += 1;
+        if (!dst || dstlen == 0) return need;
+        if (dstlen < 0 || dstlen < need) { mw_SetLastError(122); return 0; }
+        int got = (cp == 65001)
+            ? w3_utf8_to_utf16le(src, bytes, (uint16_t*)dst, dstlen)
+            : w3_cp1252_to_utf16(src, bytes, (uint16_t*)dst, dstlen);
+        if (got < 0) { mw_SetLastError(got == -2 ? 122 : 1113); return 0; }
+        if (include_null) ((uint16_t*)dst)[got++] = 0;
+        return got;
+    }
     size_t need = 0;
     if (include_null) {
         need = mbstowcs(NULL, src, 0);          /* chars before null */
@@ -2988,12 +3099,57 @@ __attribute__((ms_abi)) uint32_t mw_WaitForMultipleObjects(uint32_t count, void*
 
 /* Same contract fix for WideCharToMultiByte: size query returns the BYTE
  * count INCLUDING the terminating null when srclen==-1. */
+/* BUG-046 family: guest wchar_t is 2 bytes (UTF-16LE) but glibc wchar_t is 4 —
+ * wcstombs/wcslen/WideCharToMultiByte over guest buffers read interleaved
+ * garbage (unit[1]=0x0000 collapses pairs; non-ASCII = wild codepoints).
+ * Native UTF-16LE -> UTF-8 encoder used by the cp=65001 paths. Returns bytes
+ * (excluding terminator), -1 on invalid input, -2 if dst is too small. */
+static int w3_utf16le_to_utf8(const uint16_t* src, int src_units, char* dst, int dst_bytes) {
+    int o = 0;
+    for (int i = 0; i < src_units; i++) {
+        uint32_t cp32 = src[i];
+        if (cp32 >= 0xD800 && cp32 <= 0xDBFF && i + 1 < src_units &&
+            src[i + 1] >= 0xDC00 && src[i + 1] <= 0xDFFF) {
+            cp32 = 0x10000 + ((cp32 - 0xD800) << 10) + (src[i + 1] - 0xDC00);
+            i++;
+        } else if (cp32 >= 0xD800 && cp32 <= 0xDFFF) {
+            return -1;                     /* unpaired surrogate */
+        }
+        uint8_t enc[4]; unsigned need;
+        if (cp32 < 0x80) { enc[0] = (uint8_t)cp32; need = 1; }
+        else if (cp32 < 0x800) { enc[0] = 0xC0 | (cp32 >> 6); enc[1] = 0x80 | (cp32 & 0x3F); need = 2; }
+        else if (cp32 < 0x10000) { enc[0] = 0xE0 | (cp32 >> 12); enc[1] = 0x80 | ((cp32 >> 6) & 0x3F); enc[2] = 0x80 | (cp32 & 0x3F); need = 3; }
+        else { enc[0] = 0xF0 | (cp32 >> 18); enc[1] = 0x80 | ((cp32 >> 12) & 0x3F); enc[2] = 0x80 | ((cp32 >> 6) & 0x3F); enc[3] = 0x80 | (cp32 & 0x3F); need = 4; }
+        if (!dst) { o += (int)need; continue; }
+        if (o + (int)need > dst_bytes) return -2;
+        for (unsigned k = 0; k < need; k++) dst[o++] = (char)enc[k];
+    }
+    return o;
+}
+
 __attribute__((ms_abi)) int mw_WideCharToMultiByte(uint32_t cp, uint32_t flags,
     const wchar_t* src, int srclen, char* dst, int dstlen, char* defc, int* used) {
     MW_TRACE("WideCharToMultiByte(cp=%u, srclen=%d, dstlen=%d)", cp, srclen, dstlen);
     if (!src) { mw_SetLastError(87); return 0; }
     if (srclen == 0) return 0;
     int include_null = (srclen < 0);
+    /* BUG-046: UTF-8 takes the native 2-byte-unit path. Other codepages keep
+     * the legacy glibc passthrough (known 2x mis-read hazard, TASK-API-009). */
+    if (cp == 65001) {
+        const uint16_t* u = (const uint16_t*)src;
+        int units = srclen;
+        if (include_null) { units = 0; while (u[units]) units++; }
+        int need = w3_utf16le_to_utf8(u, units, NULL, 0);
+        if (need < 0) { mw_SetLastError(1113); return 0; }
+        if (include_null) need += 1;
+        if (used) *used = 0;
+        if (!dst || dstlen == 0) return need;
+        if (dstlen < 0 || dstlen < need) { mw_SetLastError(122); return 0; }
+        int got = w3_utf16le_to_utf8(u, units, dst, dstlen);
+        if (got < 0) { mw_SetLastError(got == -2 ? 122 : 1113); return 0; }
+        if (include_null) dst[got++] = '\0';
+        return got;
+    }
     size_t need = 0;
     if (include_null) {
         need = wcstombs(NULL, src, 0);           /* bytes before null */
@@ -3618,8 +3774,10 @@ static void w3_run_tle_atexit(void);
  * ISS1-WAVE3B allocator section far below. Hoisted here verbatim (C23 rejects
  * implicit declarations and use-before-declaration of statics). */
 #define W3_REG_SIZE 8192
+#define W3_REG_TOMB ((void*)(uintptr_t)1)
 static struct { void* p; size_t size; uint32_t gen; } g_alloc_reg[W3_REG_SIZE];
 static unsigned w3_reg_slot(void* p);
+static int w3_reg_find(void* p);
 __attribute__((ms_abi)) void* mw_malloc(size_t size) {
     if (w3_guard_enabled()) {
         void* gp = w3_guard_alloc(size ? size : 1);
@@ -3636,8 +3794,8 @@ __attribute__((ms_abi)) void mw_free(void* ptr) {
     MW_TRACE("free(%p)", ptr);
     if (!w3_reg_has(ptr)) w3_trap_bad_free(ptr, "free");
     {
-        unsigned s = w3_reg_slot(ptr);
-        if (g_alloc_reg[s].p == ptr && (g_alloc_reg[s].size >> 32)) {
+        int s = w3_reg_find(ptr);
+        if (s >= 0 && (g_alloc_reg[s].size >> 32)) {
             w3_guard_free(ptr);
             return;
         }
@@ -3648,9 +3806,24 @@ __attribute__((ms_abi)) void mw_free(void* ptr) {
 
 __attribute__((ms_abi)) void* mw_realloc(void* ptr, size_t size) {
     if (ptr && !w3_reg_has(ptr)) w3_trap_bad_free(ptr, "realloc");
+    if (ptr && w3_is_guarded(ptr)) {
+        /* BUG-041 (TASK-OPENSRC-1, guard-mode SIGSEGV root cause): a guarded
+         * chunk is an mmap'd region — glibc realloc would read a bogus chunk
+         * header at [ptr-8] and fault inside libc.so (crash signature: RIP in
+         * libc r-xp map, `mov r12,[rbx-0x8]`, return addr inside mw_realloc).
+         * mw_HeapReAlloc already had the guarded branch; mw_realloc did not. */
+        int s0 = w3_reg_find(ptr);
+        size_t old = (s0 >= 0) ? (g_alloc_reg[s0].size & ~0x100000000ull) : 0;
+        void* n = w3_guard_alloc(size ? size : 1);
+        if (!n) { mw_SetLastError(8); return NULL; }
+        memcpy(n, ptr, old < size ? old : size);
+        w3_guard_free(ptr);
+        MW_TRACE("realloc[GUARD](%p, %zu) = %p", ptr, size, n);
+        return n;
+    }
     void* p = realloc(ptr, size);
     MW_TRACE("realloc(%p, %zu) = %p", ptr, size, p);
-    if (p) { w3_reg_del(ptr); w3_reg_add(p); }
+    if (p) { w3_reg_del(ptr); w3_reg_add_sz(p, size ? size : 1); }
     return p;
 }
 
@@ -3739,9 +3912,24 @@ __attribute__((ms_abi)) char* mw__ultoa(unsigned long val, char* buf, int base) 
 
 __attribute__((ms_abi)) int mw_tolower(int c) { return tolower(c); }
 __attribute__((ms_abi)) size_t mw_wcstombs(char* d, const wchar_t* s, size_t n) {
-    return wcstombs(d, s, n);
+    /* BUG-046: guest UTF-16 (2-byte units) -> UTF-8, native encoder.
+     * Stops at the L terminator (CRT semantics); n = max bytes incl. null. */
+    const uint16_t* u = (const uint16_t*)s;
+    size_t units = 0;
+    while (u[units]) units++;
+    int got = w3_utf16le_to_utf8(u, (int)units, d, d ? (int)(n ? n - 1 : 0) : 0);
+    if (got < 0) return (size_t)-1;
+    if (d && n) { d[got] = '\0'; return (size_t)got + 1; }
+    return d ? (size_t)got + 1 : (size_t)got;
 }
-__attribute__((ms_abi)) size_t mw_wcslen(const wchar_t* s) { return wcslen(s); }
+__attribute__((ms_abi)) size_t mw_wcslen(const wchar_t* s) {
+    /* BUG-046: guest UTF-16 — count 2-byte units, not glibc 4-byte wchars. */
+    const uint16_t* u = (const uint16_t*)s;
+    size_t n = 0;
+    if (!s) return 0;
+    while (u[n]) n++;
+    return n;
+}
 
 /* Character classification */
 __attribute__((ms_abi)) int mw_islower(int c) { return islower(c); }
@@ -4258,14 +4446,90 @@ __attribute__((ms_abi)) uint32_t mw_WaitForSingleObjectEx(void* h, uint32_t ms, 
     return mw_WaitForSingleObject(h, ms);
 }
 
-/* ---- msvcrt wave 2 ---- */
-__attribute__((ms_abi)) void* mw__aligned_malloc(size_t size, size_t align) {
-    void* p = NULL;
-    if (align < 8) align = 8;
-    if (posix_memalign(&p, align, size) != 0) return NULL;
-    return p;
+/* ---- msvcrt wave 2 + TASK-OPENSRC-1 (api-ms-win-crt-heap) ---- */
+/* Aligned-heap family with a Windows-style header: [base_ptr @ -16]
+ * [req_size @ -8] before the aligned pointer. _aligned_realloc/_recalloc/
+ * _msize need the old size (Windows contract), which plain posix_memalign
+ * cannot recover; free() still works because we own the base pointer. */
+static size_t w3_align_up_sz(size_t v, size_t a) { return (v + a - 1) & ~(a - 1); }
+/* BUG-047: aligned chunks carry [magic @ -24][base @ -16][size @ -8]. The
+ * guest is allowed to free an aligned pointer through free/HeapFree (UCRT
+ * does), so the central bad-free path resolves the magic back to the base
+ * instead of trapping (magick: '[HEAP-TRAP HeapFree] untracked 0x2656660'). */
+#define W3_ALIGNED_MAGIC 0x4D574147554E4957ULL
+static void* w3_aligned_base_of(void* p) {
+    if (!p || (uintptr_t)p < 4096) return NULL;
+    if (*(uint64_t*)((uintptr_t)p - 24) == W3_ALIGNED_MAGIC)
+        return *(void**)((uintptr_t)p - 16);
+    return NULL;
 }
-__attribute__((ms_abi)) void mw__aligned_free(void* p) { free(p); }
+__attribute__((ms_abi)) void* mw__aligned_malloc(size_t size, size_t align) {
+    if (align < 8) align = 8;
+    if ((align & (align - 1)) != 0) return NULL;
+    size_t slack = align + 24;
+    void* base = malloc((size ? size : 1) + slack);
+    if (!base) return NULL;
+    uintptr_t a = w3_align_up_sz((uintptr_t)base + 24, align);
+    *(uint64_t*)(a - 24) = W3_ALIGNED_MAGIC;
+    *(void**)(a - 16) = base;
+    *(size_t*)(a - 8) = size;
+    return (void*)a;
+}
+__attribute__((ms_abi)) void* mw__aligned_offset_malloc(size_t size, size_t align, size_t offset) {
+    if (align < 8) align = 8;
+    if ((align & (align - 1)) != 0) return NULL;
+    size_t slack = align + 24 + offset;
+    void* base = malloc((size ? size : 1) + slack);
+    if (!base) return NULL;
+    uintptr_t a = w3_align_up_sz((uintptr_t)base + 24 + offset, align) - offset;
+    *(uint64_t*)(a - 24) = W3_ALIGNED_MAGIC;
+    *(void**)(a - 16) = base;
+    *(size_t*)(a - 8) = size;
+    return (void*)a;
+}
+__attribute__((ms_abi)) void mw__aligned_free(void* p) {
+    if (!p) return;
+    free(*(void**)((uintptr_t)p - 16));
+}
+__attribute__((ms_abi)) void* mw__aligned_realloc(void* p, size_t size, size_t align) {
+    if (!p) return mw__aligned_malloc(size, align);
+    if (align < 8) align = 8;
+    size_t old = *(size_t*)((uintptr_t)p - 8);
+    void* n = mw__aligned_malloc(size, align);
+    if (!n) return NULL;
+    memcpy(n, p, old < size ? old : size);
+    mw__aligned_free(p);
+    return n;
+}
+__attribute__((ms_abi)) void* mw__aligned_offset_realloc(void* p, size_t size, size_t align, size_t offset) {
+    if (!p) return mw__aligned_offset_malloc(size, align, offset);
+    if (align < 8) align = 8;
+    size_t old = *(size_t*)((uintptr_t)p - 8);
+    void* n = mw__aligned_offset_malloc(size, align, offset);
+    if (!n) return NULL;
+    memcpy(n, p, old < size ? old : size);
+    mw__aligned_free(p);
+    return n;
+}
+__attribute__((ms_abi)) void* mw__aligned_recalloc(void* p, size_t num, size_t size, size_t align) {
+    size_t bytes = num * size;
+    if (!p) {
+        void* n = mw__aligned_malloc(bytes, align);
+        if (n) memset(n, 0, bytes);
+        return n;
+    }
+    size_t old = *(size_t*)((uintptr_t)p - 8);
+    void* n = mw__aligned_malloc(bytes, align);
+    if (!n) return NULL;
+    memcpy(n, p, old < bytes ? old : bytes);
+    if (bytes > old) memset((char*)n + old, 0, bytes - old);
+    mw__aligned_free(p);
+    return n;
+}
+__attribute__((ms_abi)) size_t mw__aligned_msize(void* p, size_t align, size_t offset) {
+    (void)align; (void)offset;
+    return p ? *(size_t*)((uintptr_t)p - 8) : 0;
+}
 
 __attribute__((ms_abi)) void mw__assert(const char* msg, const char* file, unsigned line) {
     fprintf(stderr, "Assertion failed: %s (%s:%u)\n", msg ? msg : "?", file ? file : "?", line);
@@ -4481,7 +4745,7 @@ typedef struct {
 
 /* ---- process parameter block (command line / env / module) ---- */
 static char g_cmdline_buf[8192];
-static wchar_t g_cmdline_bufw[4096];
+/* (removed: g_cmdline_bufw was the 4-byte-wchar cmdline buffer — BUG-043 replaced it with g_cmdline_bufw16) */
 static int g_cmdline_ready = 0;
 static int g_cmdline_w_ready = 0;
 
@@ -4503,10 +4767,19 @@ static size_t utf8_to_utf16(const char* s, wchar_t* out, size_t cap) {
     size_t n = mbstowcs(out, s, cap);
     return n == (size_t)-1 ? 0 : n;
 }
+
+/* BUG-043: the guest command line must be UTF-16LE (2-byte units). The old
+ * build_cmdline_w used mbstowcs -> 4-byte glibc wchars: the guest reading the
+ * buffer as UTF-16 saw every high half as a NUL terminator, i.e. argv0 = "f"
+ * and NO arguments (ffmpeg's CRT init mis-parses its own command line). */
+static uint16_t g_cmdline_bufw16[2048];
 static void build_cmdline_w(void) {
     if (g_cmdline_w_ready) return;
     build_cmdline();
-    utf8_to_utf16(g_cmdline_buf, g_cmdline_bufw, sizeof(g_cmdline_bufw)/sizeof(wchar_t) - 1);
+    int n = w3_utf8_to_utf16le(g_cmdline_buf, strlen(g_cmdline_buf),
+                               g_cmdline_bufw16, 2047);
+    if (n < 0) n = 0;
+    g_cmdline_bufw16[n] = 0;
     g_cmdline_w_ready = 1;
 }
 
@@ -4518,7 +4791,77 @@ __attribute__((ms_abi)) const char* mw_GetCommandLineA(void) {
 __attribute__((ms_abi)) const wchar_t* mw_GetCommandLineW(void) {
     build_cmdline_w();
     MW_TRACE("GetCommandLineW()");
-    return g_cmdline_bufw;
+    return (const wchar_t*)g_cmdline_bufw16;
+}
+
+/* TASK-OPENSRC-1 / BUG-043 family (shell32!CommandLineToArgvW): MS parser
+ * semantics — whitespace = space/tab; "..." toggles quoting; 2n backslashes
+ * followed by a quote = n backslashes + quote-toggle; 2n+1 backslashes + a
+ * quote = n backslashes + a literal quote (Wine/ReactOS-verified). One
+ * mw_malloc'd block holds the argv pointer array followed by all strings;
+ * the guest frees it with LocalFree. Two passes: count, then emit. */
+static void w3_c2a_run(const uint16_t* s, uint16_t** argv, uint16_t* out,
+                       int* pargc, size_t* punits) {
+    int argc = 0;
+    size_t u = 0;
+    while (*s == ' ' || *s == '\t') s++;          /* leading whitespace */
+    /* argv[0] */
+    if (argv) argv[argc] = out ? out + u : NULL;
+    argc++;
+    if (*s == '"') {
+        s++;
+        while (*s && *s != '"') { if (out) out[u] = *s; u++; s++; }
+        if (*s) s++;
+    } else {
+        while (*s && *s != ' ' && *s != '\t') { if (out) out[u] = *s; u++; s++; }
+    }
+    if (out) out[u] = 0;
+    u++;
+    /* remaining arguments */
+    while (*s) {
+        while (*s == ' ' || *s == '\t') s++;
+        if (!*s) break;
+        if (argv) argv[argc] = out ? out + u : NULL;
+        argc++;
+        int in_quotes = 0;
+        while (*s) {
+            if (*s == ' ' || *s == '\t') {
+                if (!in_quotes) break;
+                if (out) out[u] = *s; u++; s++;
+            } else if (*s == '"') {
+                int bs = 0;
+                while (*s == '\\') { bs++; s++; }
+                if (*s == '"') {
+                    for (int i = 0; i < bs / 2; i++) { if (out) out[u] = '\\'; u++; }
+                    if (bs & 1) { if (out) out[u] = '"'; u++; s++; }
+                    else { in_quotes = !in_quotes; s++; }
+                } else {
+                    for (int i = 0; i < bs; i++) { if (out) out[u] = '\\'; u++; }
+                }
+            } else {
+                if (out) out[u] = *s; u++; s++;
+            }
+        }
+        if (out) out[u] = 0;
+        u++;
+    }
+    *pargc = argc;
+    *punits = u;
+}
+
+__attribute__((ms_abi)) void** mw_CommandLineToArgvW(const void* cmdline, int* pNumArgs) {
+    const uint16_t* s = (const uint16_t*)cmdline;
+    MW_TRACE("CommandLineToArgvW(%p)", cmdline);
+    if (!pNumArgs) { mw_SetLastError(87); return NULL; }
+    if (!s) { build_cmdline_w(); s = g_cmdline_bufw16; }
+    int argc = 0; size_t units = 0;
+    w3_c2a_run(s, NULL, NULL, &argc, &units);
+    uint16_t** block = mw_malloc((size_t)argc * 8 + units * 2 + 16);
+    if (!block) { mw_SetLastError(8); return NULL; }
+    uint16_t* strs = (uint16_t*)((char*)block + (size_t)argc * 8);
+    w3_c2a_run(s, block, strs, &argc, &units);
+    *pNumArgs = argc;
+    return (void**)block;
 }
 
 __attribute__((ms_abi)) void mw_GetStartupInfoW(void* si) {
@@ -4699,23 +5042,53 @@ static unsigned w3_reg_slot(void* p) {
 }
 static void w3_reg_add_sz(void* p, size_t sz) {
     if (!p) return;
+    /* BUG-048: linear probing — the direct-mapped table lost entries on hash
+     * collisions (big guests allocate thousands of chunks; a displaced entry
+     * turned its later free into a spurious HEAP-TRAP exit(4)). */
     unsigned s = w3_reg_slot(p);
-    g_alloc_reg[s].p = p;
-    g_alloc_reg[s].size = sz;
-    g_alloc_reg[s].gen = g_alloc_gen;
+    for (unsigned probe = 0; probe < W3_REG_SIZE; probe++) {
+        unsigned idx = (s + probe) & (W3_REG_SIZE - 1);
+        void* q = g_alloc_reg[idx].p;
+        if (q == p) { g_alloc_reg[idx].size = sz; g_alloc_reg[idx].gen = g_alloc_gen; return; }
+        if (q == NULL || q == W3_REG_TOMB) {
+            g_alloc_reg[idx].p = p;
+            g_alloc_reg[idx].size = sz;
+            g_alloc_reg[idx].gen = g_alloc_gen;
+            return;
+        }
+    }
+    MW_TRACE("registry FULL — %p untracked", p);
 }
 static void w3_reg_add(void* p) { w3_reg_add_sz(p, 0); }
 static void w3_reg_del(void* p) {
     if (!p) return;
+    int s = w3_reg_find(p);
+    if (s >= 0) { g_alloc_reg[s].p = W3_REG_TOMB; g_alloc_reg[s].size = 0; }
+}
+static int w3_reg_find(void* p) {
+    if (!p || (uintptr_t)p < 16) return -1;
     unsigned s = w3_reg_slot(p);
-    if (g_alloc_reg[s].p == p) g_alloc_reg[s].p = NULL;
+    for (unsigned probe = 0; probe < W3_REG_SIZE; probe++) {
+        unsigned idx = (s + probe) & (W3_REG_SIZE - 1);
+        void* q = g_alloc_reg[idx].p;
+        if (q == p) return (int)idx;
+        if (q == NULL) return -1;   /* empty slot ends the probe chain */
+    }
+    return -1;
 }
 static int w3_reg_has(void* p) {
     if (!p) return 1;
-    unsigned s = w3_reg_slot(p);
-    return g_alloc_reg[s].p == p;
+    return w3_reg_find(p) >= 0;
 }
 static void w3_trap_bad_free(void* p, const char* tag) {
+    /* BUG-047: an aligned-family pointer freed through the generic path —
+     * resolve the magic header and free the base instead of trapping. */
+    void* abase = w3_aligned_base_of(p);
+    if (abase) {
+        MW_TRACE("%s(aligned %p) -> base %p", tag, p, abase);
+        free(abase);
+        return;
+    }
     fprintf(stderr, "[HEAP-TRAP %s] free of untracked/bad ptr 0x%lx — caller chain:\n",
             tag, (unsigned long)(uintptr_t)p);
     uint64_t scan_rsp = (uint64_t)(uintptr_t)&p;
@@ -4753,16 +5126,18 @@ static void* w3_guard_alloc(size_t size) {
     return mem;
 }
 static void w3_guard_free(void* p) {
-    unsigned s = w3_reg_slot(p);
+    int s = w3_reg_find(p);
+    if (s < 0) return;
     size_t size = g_alloc_reg[s].size & ~0x100000000ull;
     size_t page = 4096;
     size_t body = (size + page - 1) & ~(page - 1);
     munmap(p, body + page);
-    g_alloc_reg[s].p = NULL;
+    g_alloc_reg[s].p = W3_REG_TOMB;
+    g_alloc_reg[s].size = 0;
 }
 static int w3_is_guarded(void* p) {
-    unsigned s = w3_reg_slot(p);
-    return g_alloc_reg[s].p == p && (g_alloc_reg[s].size >> 32);
+    int s = w3_reg_find(p);
+    return s >= 0 && (g_alloc_reg[s].size >> 32);
 }
 __attribute__((ms_abi)) void* mw_HeapAlloc(void* heap, uint32_t flags, size_t size) {
     if (w3_guard_enabled()) {
@@ -4802,8 +5177,8 @@ static void w3_validate_chunk(void* p, const char* tag) {
 __attribute__((ms_abi)) void* mw_HeapReAlloc(void* heap, uint32_t flags, void* p, size_t size) {
     if (!p) return mw_HeapAlloc(heap, flags, size);
     if (w3_is_guarded(p)) {
-        unsigned s0 = w3_reg_slot(p);
-        size_t old = g_alloc_reg[s0].size & ~0x100000000ull;
+        int s0 = w3_reg_find(p);
+        size_t old = (s0 >= 0) ? (g_alloc_reg[s0].size & ~0x100000000ull) : 0;
         void* n = w3_guard_alloc(size ? size : 1);
         if (!n) { mw_SetLastError(8); return NULL; }
         memcpy(n, p, old < size ? old : size);
@@ -4827,22 +5202,15 @@ __attribute__((ms_abi)) int mw_HeapFree(void* heap, uint32_t flags, void* p) {
     if (!p) return 1;
     /* guarded allocations must be checked BEFORE touching p-8 (their header
      * word lives inside the PROT_NONE guard page) */
-    {
-        unsigned g = w3_reg_slot(p);
-        if (g_alloc_reg[g].p == p && (g_alloc_reg[g].size >> 32)) {
-            w3_guard_free(p);
-            return 1;
-        }
-    }
+    if (w3_is_guarded(p)) { w3_guard_free(p); return 1; }
     /* glibc chunk validation: size at p-8 must be sane. Catch corrupted
      * chunks AT THE FREE with the guest caller still on the stack. */
     uint64_t hdr = *(uint64_t*)((uint8_t*)p - 8);
     uint64_t sz = hdr & ~0xFull;
     uint64_t scan_rsp = (uint64_t)(uintptr_t)&hdr;
-    unsigned rs = w3_reg_slot(p);
-    int tracked = (g_alloc_reg[rs].p == p);
-    size_t exp = tracked ? (g_alloc_reg[rs].size & ~0x100000000ull) : 0;
-    if (tracked && (g_alloc_reg[rs].size >> 32)) { w3_guard_free(p); return 1; }
+    int rf = w3_reg_find(p);
+    int tracked = (rf >= 0);
+    size_t exp = tracked ? (g_alloc_reg[rf].size & ~0x100000000ull) : 0;
     if (sz < 32 || (sz & 7) || sz > (1ull << 40) || !tracked) {
         w3_trap_bad_free(p, "HeapFree");
     }
@@ -4868,10 +5236,9 @@ __attribute__((ms_abi)) int mw_HeapFree(void* heap, uint32_t flags, void* p) {
 }
 __attribute__((ms_abi)) size_t mw_HeapSize(void* heap, uint32_t flags, void* p) {
     if (!p) return 0;
-    if (w3_is_guarded(p)) {
-        unsigned s = w3_reg_slot(p);
+    int s = w3_reg_find(p);
+    if (s >= 0 && (g_alloc_reg[s].size >> 32))
         return g_alloc_reg[s].size & ~0x100000000ull;
-    }
     return malloc_usable_size(p);
 }
 __attribute__((ms_abi)) int mw_HeapValidate(void* heap, uint32_t flags, void* p) { return 1; }
@@ -4892,10 +5259,9 @@ __attribute__((ms_abi)) void* mw_GlobalLock(void* p) { return p; }
 __attribute__((ms_abi)) int mw_GlobalUnlock(void* p) { return 1; }
 __attribute__((ms_abi)) size_t mw_GlobalSize(void* p) {
     if (!p) return 0;
-    if (w3_is_guarded(p)) {
-        unsigned s = w3_reg_slot(p);
+    int s = w3_reg_find(p);
+    if (s >= 0 && (g_alloc_reg[s].size >> 32))
         return g_alloc_reg[s].size & ~0x100000000ull;
-    }
     return malloc_usable_size(p);
 }
 __attribute__((ms_abi)) void* mw_GlobalFree(void* p) { if (!w3_reg_has(p)) w3_trap_bad_free(p, "GlobalFree"); w3_reg_del(p); free(p); return NULL; }
@@ -4903,7 +5269,16 @@ __attribute__((ms_abi)) void* mw_LocalAlloc(uint32_t flags, size_t bytes) { retu
 __attribute__((ms_abi)) void* mw_LocalLock(void* p) { return p; }
 __attribute__((ms_abi)) int mw_LocalUnlock(void* p) { return 1; }
 __attribute__((ms_abi)) size_t mw_LocalSize(void* p) { return p ? malloc_usable_size(p) : 0; }
-__attribute__((ms_abi)) void* mw_LocalFree(void* p) { if (!w3_reg_has(p)) w3_trap_bad_free(p, "LocalFree"); w3_reg_del(p); free(p); return NULL; }
+__attribute__((ms_abi)) void* mw_LocalFree(void* p) {
+    if (!p) return NULL;
+    if (!w3_reg_has(p)) w3_trap_bad_free(p, "LocalFree");
+    /* BUG-043 family: mirror mw_free — a guarded chunk is mmap'd; plain
+     * free() on it faults inside libc (same class as BUG-041 mw_realloc). */
+    if (w3_is_guarded(p)) { w3_guard_free(p); return NULL; }
+    w3_reg_del(p);
+    free(p);
+    return NULL;
+}
 
 __attribute__((ms_abi)) int mw_GlobalMemoryStatusEx(void* ms) {
     if (!ms) return 0;
@@ -5395,15 +5770,25 @@ __attribute__((ms_abi)) int mw_EnumSystemLocalesW(void* cb, uint32_t flags) {
 }
 __attribute__((ms_abi)) int mw_GetStringTypeW(uint32_t type, const wchar_t* src, int cnt, uint16_t* out) {
     if (!src || !out) return 0;
+    /* BUG-046 family: guest wchar_t is 2 bytes — classify uint16 units. */
+    const uint16_t* u = (const uint16_t*)src;
     for (int i = 0; i < cnt; i++) {
-        wint_t c = src[i];
+        uint32_t c = u[i];
         uint16_t t = 0;
-        if (iswupper(c)) t |= 0x0001;                 /* C1_UPPER */
-        if (iswlower(c)) t |= 0x0002;                 /* C1_LOWER */
-        if (iswdigit(c)) t |= 0x0004;                 /* C1_DIGIT */
-        if (iswspace(c)) t |= 0x0008;                 /* C1_SPACE */
-        if (ispunct(c))  t |= 0x0010;                 /* C1_PUNCT */
-        if (t == 0)      t |= 0x0080;                 /* C1_UNDEFINED */
+        if (c < 0x80) {
+            if (isupper((int)c)) t |= 0x0001;         /* C1_UPPER */
+            if (islower((int)c)) t |= 0x0002;         /* C1_LOWER */
+            if (isdigit((int)c)) t |= 0x0004;         /* C1_DIGIT */
+            if (isspace((int)c)) t |= 0x0008;         /* C1_SPACE */
+            if (ispunct((int)c)) t |= 0x0010;         /* C1_PUNCT */
+            if ((uint8_t)c < 0x20) t |= 0x0010;       /* C1_PUNCT covers ctrl in Windows ctype */
+        } else if (c >= 0x00C0 && c <= 0x024F) {
+            t |= 0x0002;                              /* letters: treat as lower-ish */
+            if ((c >= 0x00C0 && c <= 0x00DE) || (c >= 0x0100 && c <= 0x017F && !(c & 1))) t |= 0x0001;
+        } else {
+            t |= 0x0080;                              /* C1_UNDEFINED */
+        }
+        if (t == 0)      t |= 0x0080;
         out[i] = t;
     }
     return 1;
@@ -7128,6 +7513,7 @@ static ImportEntry g_import_table[] = {
     ENTRY("KERNEL32.DLL", "GetThreadContext",                    mw_GetThreadContext),
     ENTRY("KERNEL32.DLL", "GetThreadPriority",                   mw_GetThreadPriority),
     ENTRY("KERNEL32.DLL", "GetTickCount",                        mw_GetTickCount),
+    ENTRY("SHELL32.DLL", "CommandLineToArgvW",                   mw_CommandLineToArgvW),
     ENTRY("KERNEL32.DLL", "InitializeCriticalSection",           mw_InitializeCriticalSection),
     ENTRY("KERNEL32.DLL", "IsDBCSLeadByteEx",                    mw_IsDBCSLeadByteEx),
     ENTRY("KERNEL32.DLL", "ExitProcess",                        mw_ExitProcess),
@@ -7156,6 +7542,8 @@ static ImportEntry g_import_table[] = {
     ENTRY("KERNEL32.DLL", "SetFileTime",                         mw_SetFileTime),
     ENTRY("KERNEL32.DLL", "SetLastError",                        mw_SetLastError),
     ENTRY("KERNEL32.DLL", "SetProcessAffinityMask",              mw_SetProcessAffinityMask),
+    ENTRY("KERNEL32.DLL", "SetDllDirectoryA",                    mw_SetDllDirectoryA),
+    ENTRY("KERNEL32.DLL", "SetDllDirectoryW",                    mw_SetDllDirectoryW),
     ENTRY("KERNEL32.DLL", "SetThreadContext",                    mw_SetThreadContext),
     ENTRY("KERNEL32.DLL", "SetThreadPriority",                   mw_SetThreadPriority),
     ENTRY("KERNEL32.DLL", "SetUnhandledExceptionFilter",         mw_SetUnhandledExceptionFilter),
@@ -7276,6 +7664,10 @@ static ImportEntry g_import_table[] = {
     ENTRY("msvcrt.dll", "free",                  mw_free),
     ENTRY("msvcrt.dll", "_aligned_malloc",       mw__aligned_malloc),
     ENTRY("msvcrt.dll", "_aligned_free",         mw__aligned_free),
+    ENTRY("msvcrt.dll", "_aligned_realloc",      mw__aligned_realloc),
+    ENTRY("msvcrt.dll", "_aligned_offset_realloc", mw__aligned_offset_realloc),
+    ENTRY("msvcrt.dll", "_aligned_recalloc",     mw__aligned_recalloc),
+    ENTRY("msvcrt.dll", "_aligned_msize",        mw__aligned_msize),
     ENTRY("msvcrt.dll", "_assert",               mw__assert),
     ENTRY("msvcrt.dll", "_strtoi64",             mw__strtoi64),
     ENTRY("msvcrt.dll", "_strtoui64",            mw__strtoui64),
@@ -8272,6 +8664,40 @@ static void crash_handler(int sig, siginfo_t* info, void* ctx) {
         fprintf(stderr, "  Return addr: 0x%lx\n", *(uint64_t*)rsp);
     } else {
         fprintf(stderr, "  (NOT inside loaded PE)\n");
+        /* TASK-OPENSRC-1 diag: attribute the out-of-PE RIP via /proc/self/maps.
+         * Distinguishes a glibc-internal fault (heap metadata / realloc on a
+         * non-chunk pointer) from a jump/call into data (guard-region body,
+         * unresolved-import raw RVA). Read-safe: bytes are dumped only when
+         * the containing map is readable. */
+        {
+            FILE* mf = fopen("/proc/self/maps", "r");
+            if (mf) {
+                char line[512];
+                int attributed = 0;
+                while (fgets(line, sizeof line, mf)) {
+                    unsigned long s = 0, e = 0;
+                    char perms[8] = {0};
+                    char path[400] = {0};
+                    if (sscanf(line, "%lx-%lx %7s %*x %*x:%*x %*d %399[^\n]",
+                               &s, &e, perms, path) >= 3) {
+                        if (rip >= s && rip < e) {
+                            fprintf(stderr, "  [RIP-MAP] 0x%lx in 0x%lx-0x%lx %s %s\n",
+                                    rip, s, e, perms, path);
+                            if (perms[0] == 'r') {
+                                uint8_t* cp = (uint8_t*)(uintptr_t)rip;
+                                fprintf(stderr, "  Bytes: ");
+                                for (int i = 0; i < 16; i++) fprintf(stderr, "%02x ", cp[i]);
+                                fprintf(stderr, "\n");
+                            }
+                            attributed = 1;
+                            break;
+                        }
+                    }
+                }
+                if (!attributed) fprintf(stderr, "  [RIP-MAP] no mapping contains RIP\n");
+                fclose(mf);
+            }
+        }
     }
 
     /* Check if the crash is from calling a NULL function pointer */

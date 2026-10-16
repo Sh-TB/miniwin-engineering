@@ -1,0 +1,6 @@
+== TASK-TEST-004 v2: real-loader dispatch tests (slice 2 contracts) ==
+  PASS: test_a: raise in func_C -> frame-1 catch (func_B), ContinueExecution resume (B-3 closed)
+  PASS: test_b: raise in func_C -> frame-0 catch (func_C's own handler), resume (B-1 closed)
+  PASS: test_c: dispatch reached, frame-0 catch, resume (real ContinueSearch chain = C-1, queued)
+  PASS: test_d: raise in func_C -> frame-1 catch (func_B), ContinueExecution resume
+== Results: 4 passed, 0 failed, 0 known-broken-as-documented ==
