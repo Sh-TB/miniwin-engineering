@@ -1,0 +1,34 @@
+[TRACE] Command line: /home/z/my-project/workspace/miniwin-engineering/tests/appcompat/t09_big_cpp_iostream.exe
+[WARN] 20 imports unresolved
+
+[CRASH] Signal 11 at RIP=0x140001921
+  RAX=0x2126080 RCX=0x3a34 RDX=0x140003080 R8=0x13 R9=0x0
+  RSP=0x7ffc3f042e50 RBP=0x7ffc3f042f20
+  g_image_base=0x140000000 g_image_size=0x18000
+  RVA=0x1921 (inside loaded PE)
+  Bytes: 48 8b 01 48 8b 40 e8 83 7c 01 20 00 74 0c 80 7c 
+  Return addr: 0x7f2296bcc030
+  RSI=0x3a34 RDI=0x13
+  R8=0x13  R9=0x0 R10=0x0 R11=0x202
+  R12=0x212a060 R13=0x1 R14=0x1400050a8 R15=0x1
+  [SCAN rsp+040] 0x140001c90 <PE>
+  [SCAN rsp+056] 0x200a789 <LOADER>
+  [SCAN rsp+080] 0x1400050b0 <PE>
+  [SCAN rsp+120] 0x1400050a8 <PE>
+  [SCAN rsp+136] 0x14000149b <PE>
+  [SCAN rsp+216] 0x1400050b0 <PE>
+  [SCAN rsp+248] 0x14000110d <PE>
+  [SCAN rsp+376] 0x20071bf <LOADER>
+  [SCAN rsp+408] 0x1400038c8 <PE>
+  [SCAN rsp+744] 0x2002497 <LOADER>
+  [SCAN rsp+752] 0x2001ef0 <LOADER>
+  [SCAN rsp+2200] 0x20062d0 <LOADER>
+  [SCAN rsp+2352] 0x20062d0 <LOADER>
+  [SCAN rsp+2392] 0x20077d0 <LOADER>
+  [SCAN rsp+2424] 0x20077f1 <LOADER>
+  [SCAN rsp+2896] 0x2000040 <LOADER>
+  [SCAN rsp+2976] 0x20077d0 <LOADER>
+  Backtrace (via stack walking):
+    [0] RIP=0x140001921 RVA=0x1921      [RSP+0] = 0x7f2296bcc030 (return addr?)
+    [1] RIP=0x140001921 RVA=0x1921      [RSP+0] = 0x0 (return addr?)
+    [2] RIP=0x140001921 RVA=0x1921

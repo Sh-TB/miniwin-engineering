@@ -3128,6 +3128,77 @@ static int w3_utf16le_to_utf8(const uint16_t* src, int src_units, char* dst, int
     return o;
 }
 
+
+/* BUG-050 (2026-10-17): guest wide strings are ALWAYS 2-byte UTF-16LE.
+ * Every wide->narrow conversion must go through these; glibc wcstombs reads
+ * 4-byte wchars and dies on guest data (ASCII truncates to first byte:
+ * 0x43,0x00 = 'C', NUL). */
+static int w3_w16_to_utf8z(const uint16_t* s, char* dst, size_t dstbytes) {
+    if (!s) return -1;
+    size_t u = 0;
+    while (s[u]) u++;
+    int got = w3_utf16le_to_utf8(s, (int)u, dst, dstbytes ? (int)(dstbytes - 1) : 0);
+    if (got < 0) return -1;
+    if (dst && dstbytes) dst[got] = '\0';
+    return got;
+}
+static int w3_w16_to_utf8_size(const uint16_t* s) {
+    if (!s) return -1;
+    size_t u = 0;
+    while (s[u]) u++;
+    int got = w3_utf16le_to_utf8(s, (int)u, NULL, 0);
+    return got < 0 ? -1 : got;
+}
+/* 2-byte wide string primitives (guest ABI) */
+static size_t w16len(const uint16_t* s) { size_t n = 0; if (s) while (s[n]) n++; return n; }
+static int w16cmp(const uint16_t* a, const uint16_t* b) {
+    while (*a && *a == *b) { a++; b++; }
+    return (int)*a - (int)*b;
+}
+static int w16ncmp(const uint16_t* a, const uint16_t* b, size_t n) {
+    while (n && *a && *a == *b) { a++; b++; n--; }
+    return n ? (int)*a - (int)*b : 0;
+}
+static uint16_t* w16cpy(uint16_t* d, const uint16_t* s) {
+    uint16_t* r = d;
+    while ((*d++ = *s++)) ;
+    return r;
+}
+static uint16_t* w16ncpy(uint16_t* d, const uint16_t* s, size_t n) {
+    uint16_t* r = d;
+    while (n && (*d++ = *s++)) n--;
+    while (n--) *d++ = 0;
+    return r;
+}
+static uint16_t* w16cat(uint16_t* d, const uint16_t* s) {
+    uint16_t* r = d;
+    while (*d) d++;
+    while ((*d++ = *s++)) ;
+    return r;
+}
+static uint16_t* w16chr(const uint16_t* s, uint16_t c) {
+    for (;; s++) { if (*s == c) return (uint16_t*)s; if (!*s) return NULL; }
+}
+static uint16_t* w16rchr(const uint16_t* s, uint16_t c) {
+    const uint16_t* r = NULL;
+    for (;; s++) { if (*s == c) r = s; if (!*s) break; }
+    return (uint16_t*)r;
+}
+static uint16_t* w16str(const uint16_t* h, const uint16_t* n) {
+    if (!*n) return (uint16_t*)h;
+    for (; *h; h++) {
+        const uint16_t* a = h; const uint16_t* b = n;
+        while (*a && *b && *a == *b) { a++; b++; }
+        if (!*b) return (uint16_t*)h;
+    }
+    return NULL;
+}
+static size_t w16spn(const uint16_t* s, const uint16_t* set) {
+    size_t n = 0;
+    for (; s[n]; n++) { if (!w16chr(set, s[n])) break; }
+    return n;
+}
+
 __attribute__((ms_abi)) int mw_WideCharToMultiByte(uint32_t cp, uint32_t flags,
     const wchar_t* src, int srclen, char* dst, int dstlen, char* defc, int* used) {
     MW_TRACE("WideCharToMultiByte(cp=%u, srclen=%d, dstlen=%d)", cp, srclen, dstlen);
@@ -3153,7 +3224,7 @@ __attribute__((ms_abi)) int mw_WideCharToMultiByte(uint32_t cp, uint32_t flags,
     }
     size_t need = 0;
     if (include_null) {
-        need = wcstombs(NULL, src, 0);           /* bytes before null */
+        need = w3_w16_to_utf8_size((const uint16_t*)src);           /* bytes before null */
         if (need == (size_t)-1) { mw_SetLastError(1113); return 0; }
         need += 1;
     } else {
@@ -3167,7 +3238,7 @@ __attribute__((ms_abi)) int mw_WideCharToMultiByte(uint32_t cp, uint32_t flags,
     if (dstlen < 0 || (size_t)dstlen < need) { mw_SetLastError(122); return 0; }
     size_t got;
     if (include_null) {
-        got = wcstombs(dst, src, (size_t)dstlen);
+        got = w3_w16_to_utf8z((const uint16_t*)src, dst, dstlen > 0 ? (size_t)dstlen : 0);
         if (got == (size_t)-1) { mw_SetLastError(1113); return 0; }
         got += 1;
     } else {
@@ -4014,7 +4085,7 @@ __attribute__((ms_abi)) int mw__sopen(const char* path, int flags, int shflag, i
 __attribute__((ms_abi)) int mw__wopen(const wchar_t* path, int flags, int mode) {
     MW_TRACE("_wopen()");
     char buf[1024];
-    wcstombs(buf, path, sizeof(buf));
+    w3_w16_to_utf8z((const uint16_t*)path, buf, sizeof(buf));
     return mw__open(buf, flags, mode);
 }
 
@@ -4548,16 +4619,32 @@ __attribute__((ms_abi)) unsigned long long mw__strtoui64(const char* s, char** e
  * correct for the numeric cases the C++ runtime uses. Non-ASCII wide input
  * needs a UTF-16 -> UTF-32 shim (follow-up API task). */
 __attribute__((ms_abi)) long mw_wcstol(const wchar_t* s, wchar_t** end, int base) {
-    return wcstol((const int*)s, (int**)end, base);
+    { size_t o = 0; while (((const uint16_t*)s)[o]) o++;
+      char b8[64]; int gn = w3_utf16le_to_utf8((const uint16_t*)s, o > 63 ? 63 : o, b8, 63); if (gn < 0) gn = 0; b8[gn] = 0;
+      char* e8; long r = strtol(b8, &e8, base);
+      if (end) *end = (wchar_t*)((const uint16_t*)s + (e8 - b8));
+      return r; }
 }
 __attribute__((ms_abi)) unsigned long mw_wcstoul(const wchar_t* s, wchar_t** end, int base) {
-    return wcstoul((const int*)s, (int**)end, base);
+    { size_t o = 0; while (((const uint16_t*)s)[o]) o++;
+      char b8[64]; int gn = w3_utf16le_to_utf8((const uint16_t*)s, o > 63 ? 63 : o, b8, 63); if (gn < 0) gn = 0; b8[gn] = 0;
+      char* e8; unsigned long r = strtoul(b8, &e8, base);
+      if (end) *end = (wchar_t*)((const uint16_t*)s + (e8 - b8));
+      return r; }
 }
 __attribute__((ms_abi)) long long mw__wcstoi64(const wchar_t* s, wchar_t** end, int base) {
-    return wcstol((const int*)s, (int**)end, base);
+    { size_t o = 0; while (((const uint16_t*)s)[o]) o++;
+      char b8[64]; int gn = w3_utf16le_to_utf8((const uint16_t*)s, o > 63 ? 63 : o, b8, 63); if (gn < 0) gn = 0; b8[gn] = 0;
+      char* e8; long r = strtol(b8, &e8, base);
+      if (end) *end = (wchar_t*)((const uint16_t*)s + (e8 - b8));
+      return r; }
 }
 __attribute__((ms_abi)) unsigned long long mw__wcstoui64(const wchar_t* s, wchar_t** end, int base) {
-    return wcstoul((const int*)s, (int**)end, base);
+    { size_t o = 0; while (((const uint16_t*)s)[o]) o++;
+      char b8[64]; int gn = w3_utf16le_to_utf8((const uint16_t*)s, o > 63 ? 63 : o, b8, 63); if (gn < 0) gn = 0; b8[gn] = 0;
+      char* e8; unsigned long r = strtoul(b8, &e8, base);
+      if (end) *end = (wchar_t*)((const uint16_t*)s + (e8 - b8));
+      return r; }
 }
 
 __attribute__((ms_abi)) wint_t mw_fputwc(wchar_t ch, void* file) {
@@ -4764,9 +4851,12 @@ static void build_cmdline(void) {
     g_cmdline_buf[o] = '\0';
     g_cmdline_ready = 1;
 }
-static size_t utf8_to_utf16(const char* s, wchar_t* out, size_t cap) {
-    size_t n = mbstowcs(out, s, cap);
-    return n == (size_t)-1 ? 0 : n;
+static size_t utf8_to_utf16(const char* s, void* out, size_t cap_units) {
+    /* BUG-050: emits 2-byte UTF-16LE units (guest ABI), not 4-byte glibc
+     * wchars. cap_units counts uint16_t units. Returns unit count. */
+    if (!s) return 0;
+    int got = w3_utf8_to_utf16le(s, strlen(s), (uint16_t*)out, out ? (int)cap_units : 0);
+    return got < 0 ? 0 : (size_t)got;
 }
 
 /* BUG-043: the guest command line must be UTF-16LE (2-byte units). The old
@@ -4900,6 +4990,10 @@ __attribute__((ms_abi)) int mw_GetModuleHandleExW(uint32_t flags, const wchar_t*
 static char w3_exe_path[4096];
 static int w3_exe_path_ready = 0;
 static const char* get_exe_path(void) {
+    /* BUG-051 (2026-10-17): /proc/self/exe is the HOST loader binary
+     * (minwin_loader — no .exe, wrong file). The guest's own module path
+     * is the PE the loader was told to run (g_exe_path = argv[1]). */
+    if (g_exe_path) return g_exe_path;
     if (!w3_exe_path_ready) {
         ssize_t n = readlink("/proc/self/exe", w3_exe_path, sizeof(w3_exe_path) - 1);
         if (n <= 0) n = 0;
@@ -4920,7 +5014,7 @@ __attribute__((ms_abi)) uint32_t mw_GetModuleFileNameW(void* mod, wchar_t* out, 
     if (!out || !cap) return 0;
     const char* p = get_exe_path();
     size_t n = utf8_to_utf16(p, out, cap - 1);
-    out[n] = 0;
+    ((uint16_t*)out)[n] = 0;
     return (uint32_t)n;
 }
 
@@ -4945,16 +5039,16 @@ __attribute__((ms_abi)) wchar_t* mw_GetEnvironmentStringsW(void) {
     MW_TRACE("GetEnvironmentStringsW()");
     /* Build a double-NUL-terminated UTF-16 block; the loader never frees it
      * (FreeEnvironmentStringsW is a no-op) so one static buffer suffices. */
-    static wchar_t block[16384];
+    static uint16_t block[16384];
     size_t o = 0;
-    for (char** e = environ; *e && o < sizeof(block)/sizeof(wchar_t) - 4; e++) {
-        int n = utf8_to_utf16(*e, block + o, sizeof(block)/sizeof(wchar_t) - o - 4);
+    for (char** e = environ; *e && o < 16380; e++) {
+        int n = w3_utf8_to_utf16le(*e, strlen(*e), block + o, 16380 - (int)o - 2);
         if (n <= 0) break;
         o += n;
         block[o++] = 0;
     }
     block[o] = 0;
-    return block;
+    return (wchar_t*)block;
 }
 __attribute__((ms_abi)) int mw_FreeEnvironmentStringsW(wchar_t* b) { MW_TRACE("FreeEnvironmentStringsW()"); return 1; }
 __attribute__((ms_abi)) int mw_FreeEnvironmentStringsA(char* b) { MW_TRACE("FreeEnvironmentStringsA()"); return 1; }
@@ -4962,13 +5056,13 @@ __attribute__((ms_abi)) int mw_FreeEnvironmentStringsA(char* b) { MW_TRACE("Free
 __attribute__((ms_abi)) uint32_t mw_GetEnvironmentVariableW(const wchar_t* name, wchar_t* out, uint32_t cap) {
     char n8[256], v8[4096];
     if (!name) return 0;
-    wcstombs(n8, name, sizeof(n8));
+    w3_w16_to_utf8z((const uint16_t*)name, n8, sizeof(n8));
     const char* v = getenv(n8);
     MW_TRACE("GetEnvironmentVariableW(%s) = %s", n8, v ? v : "<null>");
     if (!v) { mw_SetLastError(203); return 0; }
     if (!out || !cap) return (uint32_t)strlen(v) + 1;
     size_t n = utf8_to_utf16(v, out, cap - 1);
-    out[n] = 0;
+    ((uint16_t*)out)[n] = 0;
     return (uint32_t)n;
 }
 __attribute__((ms_abi)) uint32_t mw_GetEnvironmentVariableA(const char* name, char* out, uint32_t cap) {
@@ -4988,8 +5082,8 @@ __attribute__((ms_abi)) int mw_SetEnvironmentVariableA(const char* name, const c
 __attribute__((ms_abi)) int mw_SetEnvironmentVariableW(const wchar_t* name, const wchar_t* val) {
     char n8[256], v8[4096];
     if (!name) return 1;
-    wcstombs(n8, name, sizeof(n8));
-    if (val) wcstombs(v8, val, sizeof(v8));
+    w3_w16_to_utf8z((const uint16_t*)name, n8, sizeof(n8));
+    if (val) w3_w16_to_utf8z((const uint16_t*)val, v8, sizeof(v8));
     MW_TRACE("SetEnvironmentVariableW(%s)", n8);
     if (setenv(name && n8[0] ? n8 : "", val ? v8 : "", 1) == 0) return 1;
     mw_SetLastError(8); return 0;
@@ -4998,8 +5092,8 @@ __attribute__((ms_abi)) uint32_t mw_ExpandEnvironmentStringsW(const wchar_t* src
     /* Real %VAR% expansion against the host environment */
     char s8[8192], d8[8192];
     if (!src) return 0;
-    size_t sn = wcstombs(s8, src, sizeof(s8) - 1);
-    if (sn == (size_t)-1) return 0;
+    int sn = w3_w16_to_utf8z((const uint16_t*)src, s8, sizeof(s8));
+    if (sn < 0) return 0;
     s8[sn] = '\0';
     size_t o = 0;
     for (char* p = s8; *p && o < sizeof(d8) - 1; ) {
@@ -5018,7 +5112,7 @@ __attribute__((ms_abi)) uint32_t mw_ExpandEnvironmentStringsW(const wchar_t* src
     MW_TRACE("ExpandEnvironmentStringsW() -> \"%s\"", d8);
     if (!out || !cap) return (uint32_t)strlen(d8) + 1;
     size_t n = utf8_to_utf16(d8, out, cap - 1);
-    out[n] = 0;
+    ((uint16_t*)out)[n] = 0;
     return (uint32_t)n + 1;
 }
 
@@ -5699,7 +5793,7 @@ __attribute__((ms_abi)) int mw_GetLocaleInfoW(uint32_t lcid, uint32_t type, wcha
     int need = (int)strlen(s) + 1; /* wide chars incl null */
     if (!out || cap < need) { mw_SetLastError(122); return 0; }
     size_t n = utf8_to_utf16(s, out, cap - 1);
-    out[n] = 0;
+    ((uint16_t*)out)[n] = 0;
     return (int)n + 1;
 }
 __attribute__((ms_abi)) int mw_GetLocaleInfoEx(void* name, uint32_t type, wchar_t* out, int cap) {
@@ -5871,7 +5965,7 @@ __attribute__((ms_abi)) void* mw_CreateFileW(const wchar_t* name, uint32_t acces
         void* sec, uint32_t disp, uint32_t flags, void* tmpl) {
     char n8[4096];
     if (!name) { mw_SetLastError(87); return (void*)-1; }
-    if (wcstombs(n8, name, sizeof(n8) - 1) == (size_t)-1) { mw_SetLastError(87); return (void*)-1; }
+    if (w3_w16_to_utf8z((const uint16_t*)name, n8, sizeof(n8)) < 0) { mw_SetLastError(87); return (void*)-1; }
     n8[sizeof(n8) - 1] = '\0';
     MW_TRACE("CreateFileW(%s, acc=%08x, disp=%u)", n8, access, disp);
     return w3_create_file(n8, access, disp);
@@ -5987,7 +6081,7 @@ __attribute__((ms_abi)) int mw_SetFileInformationByHandle(void* h, int cls, void
 }
 __attribute__((ms_abi)) uint32_t mw_GetFileAttributesW(const wchar_t* name) {
     char n8[4096];
-    if (!name || wcstombs(n8, name, sizeof(n8) - 1) == (size_t)-1) { mw_SetLastError(87); return 0xFFFFFFFFu; }
+    if (!name || w3_w16_to_utf8z((const uint16_t*)name, n8, sizeof(n8)) < 0) { mw_SetLastError(87); return 0xFFFFFFFFu; }
     n8[sizeof(n8) - 1] = '\0';
     MW_TRACE("GetFileAttributesW(%s)", n8);
     struct stat st;
@@ -6007,7 +6101,7 @@ __attribute__((ms_abi)) uint32_t mw_GetFileAttributesExW(const wchar_t* name, in
 __attribute__((ms_abi)) int mw_SetFileAttributesW(const wchar_t* name, uint32_t attr) { return 1; }
 __attribute__((ms_abi)) int mw_DeleteFileW(const wchar_t* name) {
     char n8[4096];
-    if (!name || wcstombs(n8, name, sizeof(n8) - 1) == (size_t)-1) { mw_SetLastError(87); return 0; }
+    if (!name || w3_w16_to_utf8z((const uint16_t*)name, n8, sizeof(n8)) < 0) { mw_SetLastError(87); return 0; }
     n8[sizeof(n8) - 1] = '\0';
     MW_TRACE("DeleteFileW(%s)", n8);
     if (unlink(n8) != 0) { mw_SetLastError(errno == ENOENT ? 2 : 5); return 0; }
@@ -6015,7 +6109,7 @@ __attribute__((ms_abi)) int mw_DeleteFileW(const wchar_t* name) {
 }
 __attribute__((ms_abi)) int mw_RemoveDirectoryW(const wchar_t* name) {
     char n8[4096];
-    if (!name || wcstombs(n8, name, sizeof(n8) - 1) == (size_t)-1) { mw_SetLastError(87); return 0; }
+    if (!name || w3_w16_to_utf8z((const uint16_t*)name, n8, sizeof(n8)) < 0) { mw_SetLastError(87); return 0; }
     n8[sizeof(n8) - 1] = '\0';
     MW_TRACE("RemoveDirectoryW(%s)", n8);
     if (rmdir(n8) != 0) { mw_SetLastError(2); return 0; }
@@ -6023,7 +6117,7 @@ __attribute__((ms_abi)) int mw_RemoveDirectoryW(const wchar_t* name) {
 }
 __attribute__((ms_abi)) int mw_CreateDirectoryW(const wchar_t* name, void* sa) {
     char n8[4096];
-    if (!name || wcstombs(n8, name, sizeof(n8) - 1) == (size_t)-1) { mw_SetLastError(87); return 0; }
+    if (!name || w3_w16_to_utf8z((const uint16_t*)name, n8, sizeof(n8)) < 0) { mw_SetLastError(87); return 0; }
     n8[sizeof(n8) - 1] = '\0';
     MW_TRACE("CreateDirectoryW(%s)", n8);
     if (mkdir(n8, 0755) != 0) { mw_SetLastError(errno == EEXIST ? 183 : 3); return 0; }
@@ -6034,8 +6128,8 @@ __attribute__((ms_abi)) int mw_CreateDirectoryExW(const wchar_t* tmpl, const wch
 }
 __attribute__((ms_abi)) int mw_MoveFileExW(const wchar_t* from, const wchar_t* to, uint32_t flags) {
     char f8[4096], t8[4096];
-    if (!from || !to || wcstombs(f8, from, sizeof(f8) - 1) == (size_t)-1
-        || wcstombs(t8, to, sizeof(t8) - 1) == (size_t)-1) { mw_SetLastError(87); return 0; }
+    if (!from || !to || w3_w16_to_utf8z((const uint16_t*)from, f8, sizeof(f8)) < 0
+        || w3_w16_to_utf8z((const uint16_t*)to, t8, sizeof(t8)) < 0) { mw_SetLastError(87); return 0; }
     f8[sizeof(f8)-1] = '\0'; t8[sizeof(t8)-1] = '\0';
     MW_TRACE("MoveFileExW(%s -> %s)", f8, t8);
     if (rename(f8, t8) != 0) { mw_SetLastError(2); return 0; }
@@ -6050,8 +6144,8 @@ __attribute__((ms_abi)) void* mw_CreateFile2(const wchar_t* name, uint32_t acces
 }
 __attribute__((ms_abi)) int mw_CopyFile2(const wchar_t* from, const wchar_t* to, void* cancel) {
     char f8[4096], t8[4096];
-    if (!from || !to || wcstombs(f8, from, sizeof(f8) - 1) == (size_t)-1
-        || wcstombs(t8, to, sizeof(t8) - 1) == (size_t)-1) { mw_SetLastError(87); return 0x80070057u; }
+    if (!from || !to || w3_w16_to_utf8z((const uint16_t*)from, f8, sizeof(f8)) < 0
+        || w3_w16_to_utf8z((const uint16_t*)to, t8, sizeof(t8)) < 0) { mw_SetLastError(87); return 0x80070057u; }
     f8[sizeof(f8)-1] = '\0'; t8[sizeof(t8)-1] = '\0';
     MW_TRACE("CopyFile2(%s -> %s)", f8, t8);
     FILE* a = fopen(f8, "rb");
@@ -6093,10 +6187,10 @@ __attribute__((ms_abi)) uint32_t mw_GetFullPathNameW(const wchar_t* name, uint32
     MW_TRACE("GetFullPathNameW(%s) -> %s", n8, f8);
     if (!out || !cap) return (uint32_t)strlen(f8) + 1;
     size_t n = utf8_to_utf16(f8, out, cap - 1);
-    out[n] = 0;
+    ((uint16_t*)out)[n] = 0;
     if (part) {
         char* slash = strrchr(f8, '/');
-        if (slash) *part = out + (slash - f8 + 1);
+        if (slash) *part = (wchar_t*)((uint16_t*)out + (slash - f8 + 1));
         else *part = out;
     }
     return (uint32_t)n;
@@ -6122,7 +6216,7 @@ __attribute__((ms_abi)) uint32_t mw_GetFinalPathNameByHandleW(void* h, wchar_t* 
     path[n] = '\0';
     if (!out || !cap) return (uint32_t)n + 1;
     size_t u = utf8_to_utf16(path, out, cap - 1);
-    out[u] = 0;
+    ((uint16_t*)out)[u] = 0;
     return (uint32_t)u;
 }
 
@@ -6135,26 +6229,26 @@ __attribute__((ms_abi)) uint32_t mw_GetTempPathW(uint32_t cap, wchar_t* out) {
     snprintf(buf, sizeof(buf), "%s/", t);
     if (!out || !cap) return (uint32_t)strlen(buf) + 1;
     size_t n = utf8_to_utf16(buf, out, cap - 1);
-    out[n] = 0;
+    ((uint16_t*)out)[n] = 0;
     return (uint32_t)n;
 }
 __attribute__((ms_abi)) uint32_t mw_GetTempFileNameW(const wchar_t* path, const wchar_t* prefix, uint32_t uniq, wchar_t* out) {
     char p8[2048], u8[64];
-    if (path) wcstombs(p8, path, sizeof(p8) - 1); else snprintf(p8, sizeof(p8), "%s", "/tmp");
-    if (prefix) wcstombs(u8, prefix, sizeof(u8) - 1); else u8[0] = '\0';
+    if (path) w3_w16_to_utf8z((const uint16_t*)path, p8, sizeof(p8)); else snprintf(p8, sizeof(p8), "%s", "/tmp");
+    if (prefix) w3_w16_to_utf8z((const uint16_t*)prefix, u8, sizeof(u8)); else u8[0] = '\0';
     char full[4096];
     snprintf(full, sizeof(full), "%s/%s%04x.tmp", p8, u8, (uint32_t)(time(NULL) & 0xffff) + uniq);
     FILE* f = fopen(full, "wb");
     if (f) fclose(f);
     if (out) {
         size_t n = utf8_to_utf16(full, out, 4095);
-        out[n] = 0;
+        ((uint16_t*)out)[n] = 0;
     }
     return 1;
 }
 __attribute__((ms_abi)) int mw_GetDiskFreeSpaceExW(const wchar_t* dir, void* free_caller, void* total, void* free_total) {
     char d8[2048];
-    if (dir) wcstombs(d8, dir, sizeof(d8) - 1); else snprintf(d8, sizeof(d8), "%s", ".");
+    if (dir) w3_w16_to_utf8z((const uint16_t*)dir, d8, sizeof(d8)); else snprintf(d8, sizeof(d8), "%s", ".");
     struct statvfs v;
     if (statvfs(d8, &v) != 0) { mw_SetLastError(3); return 0; }
     uint64_t bs = (uint64_t)v.f_frsize;
@@ -6180,7 +6274,7 @@ __attribute__((ms_abi)) uint32_t mw_GetVolumePathNameW(const wchar_t* name, wcha
 }
 __attribute__((ms_abi)) int mw_SetCurrentDirectoryW(const wchar_t* dir) {
     char d8[4096];
-    if (!dir || wcstombs(d8, dir, sizeof(d8) - 1) == (size_t)-1) return 0;
+    if (!dir || w3_w16_to_utf8z((const uint16_t*)dir, d8, sizeof(d8)) < 0) return 0;
     d8[sizeof(d8)-1] = '\0';
     MW_TRACE("SetCurrentDirectoryW(%s)", d8);
     if (chdir(d8) != 0) { mw_SetLastError(2); return 0; }
@@ -6191,7 +6285,7 @@ __attribute__((ms_abi)) uint32_t mw_GetCurrentDirectoryW(uint32_t cap, wchar_t* 
     if (!getcwd(cwd, sizeof(cwd))) { mw_SetLastError(3); return 0; }
     if (!out || !cap) return (uint32_t)strlen(cwd) + 1;
     size_t n = utf8_to_utf16(cwd, out, cap - 1);
-    out[n] = 0;
+    ((uint16_t*)out)[n] = 0;
     return (uint32_t)n;
 }
 __attribute__((ms_abi)) uint32_t mw_GetSystemDirectoryA(char* out, uint32_t cap) {
@@ -6203,13 +6297,13 @@ __attribute__((ms_abi)) uint32_t mw_GetSystemDirectoryA(char* out, uint32_t cap)
 __attribute__((ms_abi)) uint32_t mw_GetSystemDirectoryW(wchar_t* out, uint32_t cap) {
     if (!out || !cap) return 19;
     size_t n = utf8_to_utf16("C:\\Windows\\System32", out, cap - 1);
-    out[n] = 0;
+    ((uint16_t*)out)[n] = 0;
     return (uint32_t)n;
 }
 __attribute__((ms_abi)) uint32_t mw_GetWindowsDirectoryW(wchar_t* out, uint32_t cap) {
     if (!out || !cap) return 14;
     size_t n = utf8_to_utf16("C:\\Windows", out, cap - 1);
-    out[n] = 0;
+    ((uint16_t*)out)[n] = 0;
     return (uint32_t)n;
 }
 
@@ -6318,7 +6412,7 @@ static void* find_first_impl(const char* p8, void* data) {
 
 __attribute__((ms_abi)) void* mw_FindFirstFileExW(const wchar_t* pattern, int level, void* data, int search_op, void* filter, uint32_t extra) {
     char p8[4096];
-    if (!pattern || wcstombs(p8, pattern, sizeof(p8) - 1) == (size_t)-1) { mw_SetLastError(87); return (void*)-1; }
+    if (!pattern || w3_w16_to_utf8z((const uint16_t*)pattern, p8, sizeof(p8)) < 0) { mw_SetLastError(87); return (void*)-1; }
     p8[sizeof(p8)-1] = '\0';
     return find_first_impl(p8, data);
 }
@@ -6567,7 +6661,7 @@ __attribute__((ms_abi)) int32_t mw_FormatMessageW(uint32_t flags, const void* sr
 }
 __attribute__((ms_abi)) void mw_OutputDebugStringW(const wchar_t* s) {
     char u8[1024];
-    if (s) { size_t n = wcstombs(u8, s, sizeof(u8) - 1); u8[n >= 0 ? n : 0] = '\0'; MW_TRACE("OutputDebugStringW(%s)", u8); }
+    if (s) { size_t n = w3_w16_to_utf8z((const uint16_t*)s, u8, sizeof(u8)); u8[n >= 0 ? n : 0] = '\0'; MW_TRACE("OutputDebugStringW(%s)", u8); }
 }
 __attribute__((ms_abi)) int mw_TerminateProcess(void* h, uint32_t code) {
     MW_TRACE("TerminateProcess(%u)", code);
@@ -6580,7 +6674,7 @@ __attribute__((ms_abi)) int mw_GetUserNameW(wchar_t* out, uint32_t* cap) {
     if (!u) u = "user";
     if (!out || !cap || *cap < 32) { if (cap) *cap = 32; return 0; }
     size_t n = utf8_to_utf16(u, out, *cap - 1);
-    out[n] = 0;
+    ((uint16_t*)out)[n] = 0;
     *cap = (uint32_t)(n + 1);
     return 1;
 }
@@ -6589,7 +6683,7 @@ __attribute__((ms_abi)) int mw_GetComputerNameW(wchar_t* out, uint32_t* cap) {
     if (gethostname(h, sizeof(h) - 1) != 0) snprintf(h, sizeof(h), "%s", "minwin-host");
     if (!out || !cap || *cap < (uint32_t)strlen(h) + 1) { if (cap) *cap = (uint32_t)strlen(h) + 1; return 0; }
     size_t n = utf8_to_utf16(h, out, *cap - 1);
-    out[n] = 0;
+    ((uint16_t*)out)[n] = 0;
     *cap = (uint32_t)(n + 1);
     return 1;
 }
@@ -6850,8 +6944,8 @@ __attribute__((ms_abi)) void mw___intrinsic_longjmp(void* jb, int val) {
 /* wide char classification bridge for _wassert etc. */
 __attribute__((ms_abi)) void mw__wassert(const wchar_t* msg, const wchar_t* file, unsigned line) {
     char m8[512], f8[512];
-    if (msg) wcstombs(m8, msg, sizeof(m8) - 1), m8[sizeof(m8)-1] = 0; else m8[0] = 0;
-    if (file) wcstombs(f8, file, sizeof(f8) - 1), f8[sizeof(f8)-1] = 0; else f8[0] = 0;
+    if (msg) w3_w16_to_utf8z((const uint16_t*)msg, m8, sizeof(m8)), m8[sizeof(m8)-1] = 0; else m8[0] = 0;
+    if (file) w3_w16_to_utf8z((const uint16_t*)file, f8, sizeof(f8)), f8[sizeof(f8)-1] = 0; else f8[0] = 0;
     fprintf(stderr, "Assertion failed: %s (%s:%u)\n", m8, f8, line);
     abort();
 }
@@ -6922,7 +7016,7 @@ __attribute__((ms_abi)) void mw__ftime64(void* tb) {
 __attribute__((ms_abi)) int mw__access(const char* path, int mode) { return access(path, mode == 0 ? F_OK : (mode & 6)); }
 __attribute__((ms_abi)) int mw__waccess(const wchar_t* path, int mode) {
     char p8[4096];
-    if (!path || wcstombs(p8, path, sizeof(p8) - 1) == (size_t)-1) return -1;
+    if (!path || w3_w16_to_utf8z((const uint16_t*)path, p8, sizeof(p8)) < 0) return -1;
     p8[sizeof(p8)-1] = 0;
     return access(p8, mode == 0 ? F_OK : (mode & 6));
 }
@@ -6950,25 +7044,25 @@ __attribute__((ms_abi)) int mw__getdrive(void) { return 3; /* C: */ }
 __attribute__((ms_abi)) int mw__mkdir(const char* p) { return mkdir(p, 0755); }
 __attribute__((ms_abi)) int mw__wmkdir(const wchar_t* p) {
     char p8[4096];
-    if (!p || wcstombs(p8, p, sizeof(p8) - 1) == (size_t)-1) return -1;
+    if (!p || w3_w16_to_utf8z((const uint16_t*)p, p8, sizeof(p8)) < 0) return -1;
     p8[sizeof(p8)-1] = 0;
     return mkdir(p8, 0755);
 }
 __attribute__((ms_abi)) int mw__wchdir(const wchar_t* p) {
     char p8[4096];
-    if (!p || wcstombs(p8, p, sizeof(p8) - 1) == (size_t)-1) return -1;
+    if (!p || w3_w16_to_utf8z((const uint16_t*)p, p8, sizeof(p8)) < 0) return -1;
     p8[sizeof(p8)-1] = 0;
     return chdir(p8);
 }
 __attribute__((ms_abi)) int mw__wchmod(const wchar_t* p, int mode) {
     char p8[4096];
-    if (!p || wcstombs(p8, p, sizeof(p8) - 1) == (size_t)-1) return -1;
+    if (!p || w3_w16_to_utf8z((const uint16_t*)p, p8, sizeof(p8)) < 0) return -1;
     p8[sizeof(p8)-1] = 0;
     return chmod(p8, mode);
 }
 __attribute__((ms_abi)) int mw__wcreat(const wchar_t* p, int mode) {
     char p8[4096];
-    if (!p || wcstombs(p8, p, sizeof(p8) - 1) == (size_t)-1) return -1;
+    if (!p || w3_w16_to_utf8z((const uint16_t*)p, p8, sizeof(p8)) < 0) return -1;
     p8[sizeof(p8)-1] = 0;
     return open(p8, O_CREAT | O_TRUNC | O_RDWR, mode);
 }
@@ -6995,13 +7089,13 @@ __attribute__((ms_abi)) int mw__strnicmp(const char* a, const char* b, size_t n)
 }
 __attribute__((ms_abi)) wchar_t* mw__wgetenv(const wchar_t* name) {
     char n8[256];
-    if (!name || wcstombs(n8, name, sizeof(n8) - 1) == (size_t)-1) return NULL;
+    if (!name || w3_w16_to_utf8z((const uint16_t*)name, n8, sizeof(n8)) < 0) return NULL;
     n8[sizeof(n8)-1] = 0;
     const char* v = getenv(n8);
     if (!v) return NULL;
-    static wchar_t wval[4096];
-    utf8_to_utf16(v, wval, sizeof(wval)/sizeof(wchar_t) - 1);
-    return wval;
+    static uint16_t wval[4096];
+    utf8_to_utf16(v, wval, 4095);
+    return (wchar_t*)wval;
 }
 __attribute__((ms_abi)) char* mw__fullpath(char* abs, const char* rel, size_t n) {
     char buf[4096];
@@ -7022,7 +7116,7 @@ __attribute__((ms_abi)) char* mw__fullpath(char* abs, const char* rel, size_t n)
 }
 __attribute__((ms_abi)) wchar_t* mw__wfullpath(wchar_t* abs, const wchar_t* rel, size_t n) {
     char r8[4096], buf[4096];
-    if (!rel || wcstombs(r8, rel, sizeof(r8) - 1) == (size_t)-1) return NULL;
+    if (!rel || w3_w16_to_utf8z((const uint16_t*)rel, r8, sizeof(r8)) < 0) return NULL;
     r8[sizeof(r8)-1] = 0;
     if (r8[0] != '/') {
         char cwd[2048];
@@ -7031,44 +7125,44 @@ __attribute__((ms_abi)) wchar_t* mw__wfullpath(wchar_t* abs, const wchar_t* rel,
     } else snprintf(buf, sizeof(buf), "%s", r8);
     if (!abs) {
         size_t w = utf8_to_utf16(buf, NULL, 0);
-        abs = (wchar_t*)malloc((w + 1) * sizeof(wchar_t));
+        abs = (wchar_t*)malloc((w + 1) * 2);
         if (!abs) return NULL;
     } else if (utf8_to_utf16(buf, NULL, 0) + 1 > n) {
         mw_SetLastError(34); return NULL;
     }
     size_t got = utf8_to_utf16(buf, abs, n ? n - 1 : 0);
-    abs[got] = 0;
+    ((uint16_t*)abs)[got] = 0;
     return abs;
 }
 __attribute__((ms_abi)) wchar_t* mw__wgetcwd(wchar_t* buf, int n) {
     char cwd[2048];
     if (!buf || !n || !getcwd(cwd, sizeof(cwd))) return NULL;
     size_t got = utf8_to_utf16(cwd, buf, (size_t)n - 1);
-    buf[got] = 0;
+    ((uint16_t*)buf)[got] = 0;
     return buf;
 }
 __attribute__((ms_abi)) int mw__wremove(const wchar_t* p) {
     char p8[4096];
-    if (!p || wcstombs(p8, p, sizeof(p8) - 1) == (size_t)-1) return -1;
+    if (!p || w3_w16_to_utf8z((const uint16_t*)p, p8, sizeof(p8)) < 0) return -1;
     p8[sizeof(p8)-1] = 0;
     return remove(p8);
 }
 __attribute__((ms_abi)) int mw__wrename(const wchar_t* a, const wchar_t* b) {
     char a8[4096], b8[4096];
-    if (!a || !b || wcstombs(a8, a, sizeof(a8) - 1) == (size_t)-1
-        || wcstombs(b8, b, sizeof(b8) - 1) == (size_t)-1) return -1;
+    if (!a || !b || w3_w16_to_utf8z((const uint16_t*)a, a8, sizeof(a8)) < 0
+        || w3_w16_to_utf8z((const uint16_t*)b, b8, sizeof(b8)) < 0) return -1;
     a8[sizeof(a8)-1] = 0; b8[sizeof(b8)-1] = 0;
     return rename(a8, b8);
 }
 __attribute__((ms_abi)) int mw__wrmdir(const wchar_t* p) {
     char p8[4096];
-    if (!p || wcstombs(p8, p, sizeof(p8) - 1) == (size_t)-1) return -1;
+    if (!p || w3_w16_to_utf8z((const uint16_t*)p, p8, sizeof(p8)) < 0) return -1;
     p8[sizeof(p8)-1] = 0;
     return rmdir(p8);
 }
 __attribute__((ms_abi)) int mw__wutime64(const wchar_t* p, void* t) {
     char p8[4096];
-    if (!p || wcstombs(p8, p, sizeof(p8) - 1) == (size_t)-1) return -1;
+    if (!p || w3_w16_to_utf8z((const uint16_t*)p, p8, sizeof(p8)) < 0) return -1;
     p8[sizeof(p8)-1] = 0;
     struct timespec ts[2];
     memset(ts, 0, sizeof(ts));
@@ -7092,8 +7186,8 @@ __attribute__((ms_abi)) int mw__utime64(const char* p, void* t) {
 __attribute__((ms_abi)) void* mw__wfopen(const wchar_t* path, const wchar_t* mode) {
     char p8[4096], m8[32];
     if (!path || !mode) return NULL;
-    if (wcstombs(p8, path, sizeof(p8) - 1) == (size_t)-1) return NULL;
-    if (wcstombs(m8, mode, sizeof(m8) - 1) == (size_t)-1) return NULL;
+    if (w3_w16_to_utf8z((const uint16_t*)path, p8, sizeof(p8)) < 0) return NULL;
+    if (w3_w16_to_utf8z((const uint16_t*)mode, m8, sizeof(m8)) < 0) return NULL;
     p8[sizeof(p8)-1] = 0; m8[sizeof(m8)-1] = 0;
     MW_TRACE("_wfopen(%s, %s)", p8, m8);
     FILE* f = fopen(p8, m8);
@@ -7152,7 +7246,7 @@ __attribute__((ms_abi)) int mw__stat64i32(const char* path, void* st) {
 }
 __attribute__((ms_abi)) int mw__wstat64i32(const wchar_t* path, void* st) {
     char p8[4096];
-    if (!path || wcstombs(p8, path, sizeof(p8) - 1) == (size_t)-1) return -1;
+    if (!path || w3_w16_to_utf8z((const uint16_t*)path, p8, sizeof(p8)) < 0) return -1;
     p8[sizeof(p8)-1] = 0;
     return mw__stat64i32(p8, st);
 }
@@ -7179,11 +7273,11 @@ __attribute__((ms_abi)) int mw__locking(int fd, int mode, long nbytes) {
 static void* w3_create_file(const char* name8, uint32_t access, uint32_t disp);
 __attribute__((ms_abi)) int mw__findfirst64i32(const char* spec, void* data) {
     /* narrow findfirst: reuse the W walker with an 8-bit pattern */
-    wchar_t wspec[4096];
+    uint16_t wspec[4096];
     if (!spec) return -1;
     size_t n = utf8_to_utf16(spec, wspec, 4095);
-    wspec[n] = 0;
-    void* h = mw_FindFirstFileExW(wspec, 0, data, 0, NULL, 0);
+    ((uint16_t*)wspec)[n] = 0;
+    void* h = mw_FindFirstFileExW((const wchar_t*)wspec, 0, data, 0, NULL, 0);
     return h == (void*)-1 ? -1 : (int)(intptr_t)h;
 }
 __attribute__((ms_abi)) int mw__findnext64i32(int h, void* data) {
@@ -7217,7 +7311,7 @@ __attribute__((ms_abi)) int mw__sopen_s(int* fd, const char* p, int oflags, int 
 }
 __attribute__((ms_abi)) int mw__wsopen(int* fd, const wchar_t* p, int oflags, int sh, int pmode) {
     char p8[4096];
-    if (!p || wcstombs(p8, p, sizeof(p8) - 1) == (size_t)-1) return 22;
+    if (!p || w3_w16_to_utf8z((const uint16_t*)p, p8, sizeof(p8)) < 0) return 22;
     p8[sizeof(p8)-1] = 0;
     return mw__sopen_s(fd, p8, oflags, sh, pmode);
 }
@@ -7246,7 +7340,12 @@ __attribute__((ms_abi)) size_t mw_mbsrtowcs(wchar_t* dst, const char** src, size
     return mbsrtowcs(dst, src, len, (mbstate_t*)ps);
 }
 __attribute__((ms_abi)) size_t mw_wcsrtombs(char* dst, const wchar_t** src, size_t len, void* ps) {
-    return wcsrtombs(dst, src, len, (mbstate_t*)ps);
+    /* BUG-050: guest src is 2-byte UTF-16LE; convert the whole string */
+    (void)ps;
+    if (!src || !*src) return 0;
+    int got = w3_w16_to_utf8z((const uint16_t*)*src, dst, dst ? len : 0);
+    if (got < 0) return (size_t)-1;
+    return dst ? (size_t)got : (size_t)got;
 }
 /* Wave-4b bridges: implementations */
 __attribute__((ms_abi)) int mw__iswctype_bridge(wint_t c, wctype_t t) { return iswctype(c, t); }
@@ -7350,18 +7449,29 @@ __attribute__((ms_abi)) int mw_isdigit(int a0) { return isdigit(a0); }
 __attribute__((ms_abi)) int mw_isprint(int a0) { return isprint(a0); }
 __attribute__((ms_abi)) int mw_toupper(int a0) { return toupper(a0); }
 __attribute__((ms_abi)) int mw_strcoll(const char* a0, const char* a1) { return strcoll(a0, a1); }
-__attribute__((ms_abi)) wchar_t* mw_wcschr(wchar_t* a0, wchar_t a1) { return wcschr(a0, a1); }
-__attribute__((ms_abi)) wchar_t* mw_wcsrchr(wchar_t* a0, wchar_t a1) { return wcsrchr(a0, a1); }
-__attribute__((ms_abi)) int mw_wcsncmp(const wchar_t* a0, const wchar_t* a1, size_t a2) { return wcsncmp(a0, a1, a2); }
-__attribute__((ms_abi)) wchar_t* mw_wcsncpy(wchar_t* a0, const wchar_t* a1, size_t a2) { return wcsncpy(a0, a1, a2); }
-__attribute__((ms_abi)) wchar_t* mw_wcscat(wchar_t* a0, const wchar_t* a1) { return wcscat(a0, a1); }
-__attribute__((ms_abi)) wchar_t* mw_wcscpy(wchar_t* a0, const wchar_t* a1) { return wcscpy(a0, a1); }
-__attribute__((ms_abi)) wchar_t* mw_wcsstr(const wchar_t* a0, const wchar_t* a1) { return wcsstr(a0, a1); }
-__attribute__((ms_abi)) size_t mw_wcsspn(const wchar_t* a0, const wchar_t* a1) { return wcsspn(a0, a1); }
-__attribute__((ms_abi)) int mw_wcscoll(const wchar_t* a0, const wchar_t* a1) { return wcscoll(a0, a1); }
-__attribute__((ms_abi)) size_t mw_wcsxfrm(wchar_t* a0, const wchar_t* a1, size_t a2) { return wcsxfrm(a0, a1, a2); }
-__attribute__((ms_abi)) size_t mw_wcsftime(wchar_t* a0, size_t a1, const wchar_t* a2, const void* a3) { return wcsftime(a0, a1, a2, a3); }
-__attribute__((ms_abi)) size_t mw_wcsnlen(const wchar_t* a0, size_t a1) { return wcsnlen(a0, a1); }
+/* BUG-050: 2-byte guest ABI implementations (glibc bridges read 4-byte
+ * strides and corrupt every non-trivial guest wide string) */
+__attribute__((ms_abi)) wchar_t* mw_wcschr(wchar_t* a0, wchar_t a1) { return (wchar_t*)w16chr((const uint16_t*)a0, (uint16_t)a1); }
+__attribute__((ms_abi)) wchar_t* mw_wcsrchr(wchar_t* a0, wchar_t a1) { return (wchar_t*)w16rchr((const uint16_t*)a0, (uint16_t)a1); }
+__attribute__((ms_abi)) int mw_wcsncmp(const wchar_t* a0, const wchar_t* a1, size_t a2) { return w16ncmp((const uint16_t*)a0, (const uint16_t*)a1, a2); }
+__attribute__((ms_abi)) wchar_t* mw_wcsncpy(wchar_t* a0, const wchar_t* a1, size_t a2) { return (wchar_t*)w16ncpy((uint16_t*)a0, (const uint16_t*)a1, a2); }
+__attribute__((ms_abi)) wchar_t* mw_wcscat(wchar_t* a0, const wchar_t* a1) { return (wchar_t*)w16cat((uint16_t*)a0, (const uint16_t*)a1); }
+__attribute__((ms_abi)) wchar_t* mw_wcscpy(wchar_t* a0, const wchar_t* a1) { return (wchar_t*)w16cpy((uint16_t*)a0, (const uint16_t*)a1); }
+__attribute__((ms_abi)) wchar_t* mw_wcsstr(const wchar_t* a0, const wchar_t* a1) { return (wchar_t*)w16str((const uint16_t*)a0, (const uint16_t*)a1); }
+__attribute__((ms_abi)) size_t mw_wcsspn(const wchar_t* a0, const wchar_t* a1) { return w16spn((const uint16_t*)a0, (const uint16_t*)a1); }
+__attribute__((ms_abi)) int mw_wcscoll(const wchar_t* a0, const wchar_t* a1) { return w16cmp((const uint16_t*)a0, (const uint16_t*)a1); }
+__attribute__((ms_abi)) size_t mw_wcsxfrm(wchar_t* a0, const wchar_t* a1, size_t a2) {
+    /* identity transform: collation order = code-unit order */
+    size_t n = w16len((const uint16_t*)a1);
+    if (a0) { if (n >= a2) n = a2 ? a2 - 1 : 0; w16ncpy((uint16_t*)a0, (const uint16_t*)a1, n); ((uint16_t*)a0)[n] = 0; }
+    return n + 1;
+}
+__attribute__((ms_abi)) size_t mw_wcsftime(wchar_t* a0, size_t a1, const wchar_t* a2, const void* a3) { return wcsftime(a0, a1, a2, a3); } /* BUG-050 residual: 4-byte format string, unused by targets */
+__attribute__((ms_abi)) size_t mw_wcsnlen(const wchar_t* a0, size_t a1) {
+    size_t n = 0; if (!a0) return 0;
+    while (n < a1 && ((const uint16_t*)a0)[n]) n++;
+    return n;
+}
 __attribute__((ms_abi)) void* mw_bsearch(const void* a0, const void* a1, size_t a2, size_t a3, int (*a4)(const void*, const void*)) { return bsearch(a0, a1, a2, a3, a4); }
 __attribute__((ms_abi)) int mw_raise(int a0) { return raise(a0); }
 __attribute__((ms_abi)) void mw_clearerr(void* a0) { return clearerr(a0); }
@@ -7381,7 +7491,12 @@ __attribute__((ms_abi)) float mw_strtof(const char* a0, char** a1) { return strt
 __attribute__((ms_abi)) unsigned long long mw_strtoull(const char* a0, char** a1, int a2) { return strtoull(a0, a1, a2); }
 #include <inttypes.h>
 __attribute__((ms_abi)) uintmax_t mw_strtoumax(const char* a0, char** a1, int a2) { return strtoumax(a0, a1, a2); }
-__attribute__((ms_abi)) size_t mw_mbstowcs(wchar_t* a0, const char* a1, size_t a2) { return mbstowcs(a0, a1, a2); }
+__attribute__((ms_abi)) size_t mw_mbstowcs(wchar_t* a0, const char* a1, size_t a2) {
+    /* BUG-050: Windows CRT wchar_t = 2 bytes; emit UTF-16LE units */
+    if (!a1) return 0;
+    int got = w3_utf8_to_utf16le(a1, strlen(a1), (uint16_t*)a0, a0 ? (int)a2 : 0);
+    return got < 0 ? (size_t)-1 : (size_t)got;
+}
 __attribute__((ms_abi)) size_t mw_mbrlen(const char* a0, size_t a1, void* a2) { return mbrlen(a0, a1, a2); }
 __attribute__((ms_abi)) int mw_wctomb(char* a0, wchar_t a1) { return wctomb(a0, a1); }
 __attribute__((ms_abi)) unsigned long mw_wctype(const char* a0) { return (unsigned long)wctype(a0); }
@@ -7409,41 +7524,49 @@ __attribute__((ms_abi)) char* mw_strtok_s(char* s, const char* sep, char** ctx) 
     return strtok(s, sep);
 }
 __attribute__((ms_abi)) size_t mw_strxfrm(char* d, const char* s, size_t n) { return strxfrm(d, s, n); }
-__attribute__((ms_abi)) int mw_wcscmp(const wchar_t* a, const wchar_t* b) { return wcscmp(a, b); }
+__attribute__((ms_abi)) int mw_wcscmp(const wchar_t* a, const wchar_t* b) { return w16cmp((const uint16_t*)a, (const uint16_t*)b); }
 __attribute__((ms_abi)) int mw_wcscat_s(wchar_t* d, size_t dsz, const wchar_t* s) {
     if (!d || !dsz || !s) return 22;
-    size_t dl = wcslen(d);
-    if (dl + wcslen(s) + 1 > dsz) { d[0] = 0; return 34; }
-    wcscat(d, s);
+    size_t dl = w16len((const uint16_t*)d);
+    if (dl + w16len((const uint16_t*)s) + 1 > dsz) { ((uint16_t*)d)[0] = 0; return 34; }
+    w16cat((uint16_t*)d, (const uint16_t*)s);
     return 0;
 }
 __attribute__((ms_abi)) int mw_wcscpy_s(wchar_t* d, size_t dsz, const wchar_t* s) {
     if (!d || !dsz || !s) return 22;
-    if (wcslen(s) + 1 > dsz) { d[0] = 0; return 34; }
-    wcscpy(d, s);
+    if (w16len((const uint16_t*)s) + 1 > dsz) { ((uint16_t*)d)[0] = 0; return 34; }
+    w16cpy((uint16_t*)d, (const uint16_t*)s);
     return 0;
 }
 __attribute__((ms_abi)) int mw_wcsncpy_s(wchar_t* d, size_t dsz, const wchar_t* s, size_t n) {
     if (!d || !dsz) return 22;
-    if (!s) { d[0] = 0; return 22; }
-    size_t len = wcsnlen(s, n);
-    if (len >= dsz) { d[0] = 0; return 34; }
-    wcsncpy(d, s, len);
-    d[len] = 0;
+    if (!s) { ((uint16_t*)d)[0] = 0; return 22; }
+    size_t len = mw_wcsnlen(s, n);
+    if (len >= dsz) { ((uint16_t*)d)[0] = 0; return 34; }
+    w16ncpy((uint16_t*)d, (const uint16_t*)s, len);
+    ((uint16_t*)d)[len] = 0;
     return 0;
 }
 __attribute__((ms_abi)) long long mw_wcstoll(const wchar_t* s, wchar_t** end, int base) {
-    return wcstoll(s, end, base);
+    size_t o = 0; while (((const uint16_t*)s)[o]) o++;
+    char b8[64]; int gn = w3_utf16le_to_utf8((const uint16_t*)s, o > 63 ? 63 : o, b8, 63); if (gn < 0) gn = 0; b8[gn] = 0;
+    char* e8; long long r = strtoll(b8, &e8, base);
+    if (end) *end = (wchar_t*)((const uint16_t*)s + (e8 - b8));
+    return r;
 }
 __attribute__((ms_abi)) unsigned long long mw_wcstoull(const wchar_t* s, wchar_t** end, int base) {
-    return wcstoull(s, end, base);
+    size_t o = 0; while (((const uint16_t*)s)[o]) o++;
+    char b8[64]; int gn = w3_utf16le_to_utf8((const uint16_t*)s, o > 63 ? 63 : o, b8, 63); if (gn < 0) gn = 0; b8[gn] = 0;
+    char* e8; unsigned long long r = strtoull(b8, &e8, base);
+    if (end) *end = (wchar_t*)((const uint16_t*)s + (e8 - b8));
+    return r;
 }
 __attribute__((ms_abi)) int mw_wcstombs_s(size_t* ret, char* dst, size_t dsz, const wchar_t* src, size_t count) {
     if (!dst || !dsz || !src) { if (ret) *ret = 0; return 22; }
-    size_t need = wcstombs(NULL, src, 0) + 1;
+    size_t need = (size_t)w3_w16_to_utf8_size((const uint16_t*)src) + 1;
     if (count != (size_t)-1 && need > count + 1) { if (ret) *ret = 0; return 34; }
     if (dsz < need) { if (ret) *ret = 0; return 34; }
-    size_t got = wcstombs(dst, src, dsz - 1);
+    size_t got = w3_w16_to_utf8z((const uint16_t*)src, dst, dsz - 1);
     if (got == (size_t)-1) { if (ret) *ret = 0; return 42; }
     dst[got] = 0;
     if (ret) *ret = got + 1;

@@ -1,0 +1,61 @@
+[TRACE] Command line: /home/z/my-project/workspace/miniwin-engineering/tests/appcompat/t08_big_cpp_stl.exe
+
+[CRASH] Signal 4 at RIP=0x140001c85
+  RAX=0x3ad0d10 RCX=0x140001c83 RDX=0x0 R8=0x1 R9=0x7ffdfd6f24d0
+  RSP=0x7ffdfd6f2570 RBP=0x7ffdfd6f25f0
+  g_image_base=0x140000000 g_image_size=0xa1000
+  RVA=0x1c85 (inside loaded PE)
+  Bytes: c7 48 8d 0d 9b 38 04 00 48 8d 15 32 36 04 00 e8 
+  Return addr: 0x7ffdfd6f2580
+  RSI=0x1 RDI=0xf
+  R8=0x1  R9=0x7ffdfd6f24d0 R10=0x110 R11=0xd
+  R12=0x0 R13=0x0 R14=0x0 R15=0x7ffdfd6f24b0
+  [SCAN rsp+200] 0x200a789 <LOADER>
+  [SCAN rsp+328] 0x140056318 <PE>
+  [SCAN rsp+368] 0x140056310 <PE>
+  [SCAN rsp+392] 0x14000110d <PE>
+  [SCAN rsp+416] 0x14004f798 <PE>
+  [SCAN rsp+504] 0x14004f798 <PE>
+  [SCAN rsp+520] 0x20071bf <LOADER>
+  [SCAN rsp+536] 0x14005a000 <PE>
+  [SCAN rsp+552] 0x14004fe38 <PE>
+  [SCAN rsp+888] 0x2002497 <LOADER>
+  [SCAN rsp+896] 0x2001ef0 <LOADER>
+  [SCAN rsp+2344] 0x20062d0 <LOADER>
+  [SCAN rsp+2496] 0x20062d0 <LOADER>
+  [SCAN rsp+2536] 0x20077d0 <LOADER>
+  [SCAN rsp+2568] 0x20077f1 <LOADER>
+  [SCAN rsp+3040] 0x2000040 <LOADER>
+  [SCAN rsp+3120] 0x20077d0 <LOADER>
+  Backtrace (via stack walking):
+    [0] RIP=0x140001c85 RVA=0x1c85      [RSP+0] = 0x7ffdfd6f2580 (return addr?)
+    [1] RIP=0x140001c85 RVA=0x1c85      [RSP+0] = 0x15 (return addr?)
+    [2] RIP=0x140001c85 RVA=0x1c85
+[CRASH] Signal 11 at RIP=0x2019da2
+  RAX=0x22 RCX=0x0 RDX=0x0 R8=0x0 R9=0x0
+  RSP=0x7ffdfd6f13e0 RBP=0x203c300
+  g_image_base=0x140000000 g_image_size=0xa1000
+  (NOT inside loaded PE)
+  [RIP-MAP] 0x2019da2 in 0x2005000-0x2037000 r-xp /home/z/my-project/workspace/miniwin-engineering/minwin_loader
+  Bytes: 49 8b 17 48 8b 3d 74 02 04 00 31 c0 48 8d 35 23 
+  RSI=0x7ffdfd6f1230 RDI=0x7ffdfd6f1200
+  R8=0x0  R9=0x0 R10=0x0 R11=0x202
+  R12=0x7fffffeffffd R13=0x13ff01c84 R14=0x3 R15=0x1d
+  [SCAN rsp+344] 0x203d9b8 <LOADER>
+  [SCAN rsp+392] 0x2041dc8 <LOADER>
+  [SCAN rsp+488] 0x2040998 <LOADER>
+  [SCAN rsp+672] 0x140001c84 <PE>
+  [SCAN rsp+704] 0x14005047c <PE>
+  [SCAN rsp+712] 0x1400131b0 <PE>
+  [SCAN rsp+992] 0x1400131d0 <PE>
+  [SCAN rsp+1208] 0x140001c83 <PE>
+  [SCAN rsp+1224] 0x140001c85 <PE>
+  [SCAN rsp+1376] 0x140001c85 <PE>
+  [SCAN rsp+1488] 0x1400131b0 <PE>
+  [SCAN rsp+1496] 0x14005047c <PE>
+  [SCAN rsp+1720] 0x140057024 <PE>
+  [SCAN rsp+1928] 0x140001c83 <PE>
+  Backtrace (via stack walking):
+    [0] RIP=0x2019da2 (outside PE, possible shared lib)
+    [1] RIP=0x2019da2 (outside PE, possible shared lib)
+    [2] RIP=0x2019da2 (outside PE, possible shared lib)
