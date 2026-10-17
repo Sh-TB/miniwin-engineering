@@ -1,0 +1,157 @@
+[TRACE] Command line: /home/z/my-project/workspace/miniwin-engineering/artifacts/sweep50/dl/si-gui2/rammap64.exe
+[WARN]   unresolved: ImageList_DrawEx
+[WARN]   unresolved: ImageList_Destroy
+[WARN]   unresolved: ImageList_SetImageCount
+[WARN]   unresolved: ImageList_Add
+[WARN]   unresolved: ImageList_SetBkColor
+[WARN]   unresolved: ImageList_ReplaceIcon
+[WARN]   unresolved: ImageList_Create
+[WARN]   unresolved: GetFileVersionInfoW
+[WARN]   unresolved: VerQueryValueW
+[WARN]   unresolved: GetFileVersionInfoSizeW
+[WARN]   unresolved: GlobalAddAtomW
+[WARN]   unresolved: QueryDosDeviceW
+[WARN]   unresolved: GetNumberFormatW
+[WARN]   unresolved: GetVersionExW
+[WARN]   unresolved: SetWindowPos
+[WARN]   unresolved: GetDC
+[WARN]   unresolved: ReleaseDC
+[WARN]   unresolved: BeginPaint
+[WARN]   unresolved: GetParent
+[WARN]   unresolved: InvalidateRect
+[WARN]   unresolved: GetDlgItem
+[WARN]   unresolved: EndDialog
+[WARN]   unresolved: DialogBoxIndirectParamW
+[WARN]   unresolved: SendMessageW
+[WARN]   unresolved: DrawEdge
+[WARN]   unresolved: GetFocus
+[WARN]   unresolved: SetWindowTextW
+[WARN]   unresolved: SetCursor
+[WARN]   unresolved: GetSysColorBrush
+[WARN]   unresolved: InflateRect
+[WARN]   unresolved: EndPaint
+[WARN]   unresolved: GetScrollInfo
+[WARN]   unresolved: SetScrollInfo
+[WARN]   unresolved: GetClassLongPtrW
+[WARN]   unresolved: IntersectRect
+[WARN]   unresolved: ScrollWindowEx
+[WARN]   unresolved: GetUpdateRgn
+[WARN]   unresolved: DrawTextW
+[WARN]   unresolved: SetCapture
+[WARN]   unresolved: GetCapture
+[WARN]   unresolved: GetKeyState
+[WARN]   unresolved: GetAncestor
+[WARN]   unresolved: IsDialogMessageW
+[WARN]   unresolved: GetClassNameW
+[WARN]   unresolved: EnumChildWindows
+[WARN]   unresolved: GetDesktopWindow
+[WARN]   unresolved: GetClassLongW
+[WARN]   unresolved: SetWindowLongPtrW
+[WARN]   unresolved: GetWindowLongPtrW
+[WARN]   unresolved: SetWindowLongW
+[WARN]   unresolved: OffsetRect
+[WARN]   unresolved: UnionRect
+[WARN]   unresolved: GetSysColor
+[WARN]   unresolved: ChildWindowFromPoint
+[WARN]   unresolved: MapWindowPoints
+[WARN]   unresolved: ScreenToClient
+[WARN]   unresolved: InvalidateRgn
+[WARN]   unresolved: TranslateAcceleratorW
+[WARN]   unresolved: LoadAcceleratorsW
+[WARN]   unresolved: EnableWindow
+[WARN]   unresolved: SetTimer
+[WARN]   unresolved: ReleaseCapture
+[WARN]   unresolved: SetFocus
+[WARN]   unresolved: DefDlgProcW
+[WARN]   unresolved: SetDlgItemTextW
+[WARN]   unresolved: DialogBoxParamW
+[WARN]   unresolved: CreateDialogParamW
+[WARN]   unresolved: IsZoomed
+[WARN]   unresolved: EndDeferWindowPos
+[WARN]   unresolved: DeferWindowPos
+[WARN]   unresolved: BeginDeferWindowPos
+[WARN]   unresolved: SetWindowPlacement
+[WARN]   unresolved: GetWindowPlacement
+[WARN]   unresolved: MoveWindow
+[WARN]   unresolved: IsChild
+[WARN]   unresolved: CallWindowProcW
+[WARN]   unresolved: PostMessageW
+[WARN]   unresolved: DrawFrameControl
+[WARN]   unresolved: RegisterWindowMessageW
+[WARN]   unresolved: LoadImageW
+[WARN]   unresolved: LoadIconW
+[WARN]   unresolved: GetWindowLongW
+[WARN]   unresolved: PtInRect
+[WARN]   unresolved: GetWindowRect
+[WARN]   unresolved: GetSystemMetrics
+[WARN]   unresolved: LoadStringW
+[WARN]   unresolved: FillRect
+[WARN]   unresolved: DrawFocusRect
+[WARN]   unresolved: GetClientRect
+[WARN]   unresolved: GetPropW
+[WARN]   unresolved: SetPropW
+[WARN]   unresolved: LoadCursorW
+[WARN]   unresolved: Polyline
+[WARN]   unresolved: GetTextMetricsW
+[WARN]   unresolved: SelectClipRgn
+[WARN]   unresolved: RectInRegion
+[WARN]   unresolved: GetBkColor
+[WARN]   unresolved: CreateRectRgnIndirect
+[WARN]   unresolved: CreateRectRgn
+[WARN]   unresolved: CreatePen
+[WARN]   unresolved: BitBlt
+[WARN]   unresolved: GetObjectW
+[WARN]   unresolved: SetBkMode
+[WARN]   unresolved: CreateFontIndirectW
+[WARN]   unresolved: SelectObject
+[WARN]   unresolved: DeleteDC
+[WARN]   unresolved: CreateCompatibleDC
+[WARN]   unresolved: CreateCompatibleBitmap
+[WARN]   unresolved: DeleteObject
+[WARN]   unresolved: CreateSolidBrush
+[WARN]   unresolved: EndPage
+[WARN]   unresolved: StartPage
+[WARN]   unresolved: EndDoc
+[WARN]   unresolved: StartDocW
+[WARN]   unresolved: SetMapMode
+[WARN]   unresolved: GetDeviceCaps
+[WARN]   unresolved: ExtTextOutW
+[WARN]   unresolved: SetTextColor
+[WARN]   unresolved: SetBkColor
+[WARN]   unresolved: GetTextExtentPoint32W
+[WARN]   unresolved: GetStockObject
+[WARN]   unresolved: FindTextW
+[WARN]   unresolved: GetSaveFileNameW
+[WARN]   unresolved: GetOpenFileNameW
+[WARN]   unresolved: PrintDlgW
+[WARN]   unresolved: ChooseColorW
+[WARN]   unresolved: RegOpenKeyW
+[WARN]   unresolved: StartServiceW
+[WARN]   unresolved: QueryServiceStatusEx
+[WARN]   unresolved: OpenServiceW
+[WARN]   unresolved: OpenSCManagerW
+[WARN]   unresolved: ControlService
+[WARN]   unresolved: CloseServiceHandle
+[WARN]   unresolved: RegCreateKeyW
+[WARN]   unresolved: ShellExecuteW
+[WARN]   unresolved: CoInitialize
+[WARN]   unresolved: CoCreateInstance
+[WARN] 140 imports unresolved
+[STUB] unresolved import called -> returning 0 (call #1)
+[STUB] unresolved import called -> returning 0 (call #2)
+[STUB] unresolved import called -> returning 0 (call #3)
+[STUB] unresolved import called -> returning 0 (call #4)
+[STUB] unresolved import called -> returning 0 (call #5)
+[STUB] unresolved import called -> returning 0 (call #6)
+[STUB] unresolved import called -> returning 0 (call #7)
+[STUB] unresolved import called -> returning 0 (call #8)
+[STUB] unresolved import called -> returning 0 (call #9)
+[STUB] unresolved import called -> returning 0 (call #10)
+[STUB] unresolved import called -> returning 0 (call #11)
+[STUB] unresolved import called -> returning 0 (call #12)
+[STUB] unresolved import called -> returning 0 (call #13)
+[STUB] unresolved import called -> returning 0 (call #14)
+[STUB] unresolved import called -> returning 0 (call #15)
+[STUB] unresolved import called -> returning 0 (call #16)
+[STUB] unresolved import called -> returning 0 (call #17)
+[STUB] unresolved import called -> returning 0 (call #18)

@@ -130,3 +130,40 @@ Rules unchanged: 3x acceptance, irreversible status labels, no fake success.
 ---
 **Status vocabulary:** PLANNED → TRIAGED → IN-PROGRESS → TESTED → VERIFIED (irreversible).
 **Micro-game SW-501 is the user's 100% mandate — nothing else outranks it.**
+
+## SWEEP-003 wave (2026-10-18) — GUI skeleton + BUG-066, user mandate «برنامه‌های گرافیکی متوسط»
+
+**Landed (code, VERIFIED 3×3 + G1 12/12 re-pinned):**
+- SWEEP-003 GUI skeleton v1: RegisterClass{,Ex}{W,A}→ATOM, CreateWindowEx{W,A}→HWND,
+  ShowWindow/UpdateWindow/DestroyWindow→TRUE, GetMessage{W,A}→WM_QUIT (no event source),
+  TranslateMessage/DispatchMessage/DefWindowProc{W,A}, PostQuitMessage,
+  COMCTL32 InitCommonControlsEx→TRUE + InitCommonControls.
+- BUG-066: seh_dispatch_exception C++ object dump dereferenced Param[0]=0x19930520
+  (MSVC EH magic, NOT a pointer) → loader SIGSEGV inside its own dispatcher.
+  Fix: x64 C++ layout (param[1]=object) + process_vm_readv probe, dump from local
+  buffer only. zoomit64/bginfo64/winmergeu: 139→133/9/9, zero [CRASH] banners.
+
+**GUI stage map now (16 programs, all 3×3 deterministic — runs_gui/):**
+4×RAN-EXIT0 (produkey=full GUI lifecycle InitCommonControlsEx→CreateWindowExA→
+ShowWindow→GetMessage→exit(0); coreinfoex64; procmon64; diskmon64) ·
+4×RAN-EXIT1 (putty-gui, pageant, autoruns64, rammap64) · 1×RAN-EXIT2 (procexp64) ·
+2×RAN-TERM9-CXX-UNHANDLED (bginfo64, winmergeu: 14 personality calls, walk works,
+unhandled→fail-fast 0xC0000409) · 2×RAN-TRAP133 (adexplorer64, zoomit64) ·
+3×CRASH-GUEST (cports 0x14001b338 past init gate; searchmyfiles 0x140028001;
+puttygen RIP=0x0).
+
+- [x] **SW-511 (partial → VERIFIED)** comctl32 init gate: InitCommonControlsEx
+      was the exit(1) cause of cports+produkey (GetProcAddress→FALSE). Landed.
+- [ ] **SW-551** isolate cports SIGSEGV 0x14001b338 (post-init, process-enum phase,
+      psapi via GetProcAddress optional-stub) — one BUG-*.
+- [ ] **SW-552** isolate puttygen RIP=0x0 (call through NULL — bound-import/ordinal
+      slot left NULL despite SWEEP-001?) — one BUG-*.
+- [ ] **SW-553** isolate adexplorer64/zoomit64 SIGTRAP (133) after UnhandledExceptionFilter —
+      DebugBreak/int3 in fail-fast path; decide honest mapping (one BUG-* or WONTFIX note).
+- [ ] **SW-554** putty-gui + pageant exit(1) gate: find the stub-call that returns the
+      fatal FALSE (trace shows CRT-exit sequence after mscoree probe) — needs named
+      stub-call logging (per-import thunk identity) as tooling prerequisite.
+- [ ] **SW-555** procexp64 exit(2) + autoruns64/rammap64 exit(1) gates: same named-stub
+      prerequisite, then fix top blocker each.
+- [ ] **SW-556** SW-509 (PE-DLL loader) now blocks 4 GUI heavyweights
+      (bginfo64/winmergeu C++ runtime, searchmyfiles mfcu, procexp64) — raise priority.

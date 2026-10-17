@@ -1756,28 +1756,47 @@ static int seh_dispatch_exception(void) {
     MW_TRACE("[EXC_STATE] Param[3]: 0x%lx", er.ExceptionInformation[3]);
     MW_TRACE("[EXC_STATE] g_cap_args ptr: 0x%lx", (uint64_t)(uintptr_t)g_cap_args);
     /* Dump first 64 bytes of exception object if Param[0] looks like a pointer */
-    if (er.NumberParameters >= 1 && er.ExceptionInformation[0] != 0) {
-        uint8_t* exc_obj = (uint8_t*)(uintptr_t)er.ExceptionInformation[0];
-        MW_TRACE("[EXC_STATE] Exception object @ %p (first 32 bytes):", (void*)exc_obj);
-        /* Check if pointer is readable */
-        uint64_t check;
-        if (memcpy(&check, exc_obj, 8) == NULL || 1) {
-            /* Just dump - if it faults we'll know from signal handler */
-            MW_TRACE("[EXC_STATE]   %02x %02x %02x %02x %02x %02x %02x %02x",
-                     exc_obj[0], exc_obj[1], exc_obj[2], exc_obj[3],
-                     exc_obj[4], exc_obj[5], exc_obj[6], exc_obj[7]);
-            MW_TRACE("[EXC_STATE]   %02x %02x %02x %02x %02x %02x %02x %02x",
-                     exc_obj[8], exc_obj[9], exc_obj[10], exc_obj[11],
-                     exc_obj[12], exc_obj[13], exc_obj[14], exc_obj[15]);
-            MW_TRACE("[EXC_STATE]   %02x %02x %02x %02x %02x %02x %02x %02x",
-                     exc_obj[16], exc_obj[17], exc_obj[18], exc_obj[19],
-                     exc_obj[20], exc_obj[21], exc_obj[22], exc_obj[23]);
-            MW_TRACE("[EXC_STATE]   %02x %02x %02x %02x %02x %02x %02x %02x",
-                     exc_obj[24], exc_obj[25], exc_obj[26], exc_obj[27],
-                     exc_obj[28], exc_obj[29], exc_obj[30], exc_obj[31]);
-            /* Also dump as uint64 for the exception class */
-            uint64_t exc_class = *(uint64_t*)exc_obj;
-            MW_TRACE("[EXC_STATE] Exception class (u64): 0x%016lx", exc_class);
+    /* BUG-066 (2026-10-18): the old dump dereferenced Param[0] unconditionally
+     * (the "readability check" was `memcpy(...) == NULL || 1` — always true).
+     * For 0xe06d7363 (MSVC C++ EH) Param[0] is the 0x19930520 magic constant,
+     * NOT a pointer — zoomit64/bginfo64/winmergeu all died INSIDE this dump
+     * (loader SIGSEGV at seh_dispatch_exception+0x7b0, movzbl 0x7(%rbx)).
+     * x64 MSVC C++ record layout: [0]=0x19930520 magic, [1]=throw object,
+     * [2]=ThrowInfo*, [3]=module base. Fix: dump Param[1] for C++ exceptions,
+     * and only after a real fault-free readability probe (process_vm_readv
+     * returns EFAULT instead of crashing). All 32 bytes are copied into a
+     * local buffer by ONE probe call; printing never touches guest memory. */
+    {
+        uint64_t obj_va = (er.NumberParameters >= 1) ? er.ExceptionInformation[0] : 0;
+        if (er.ExceptionCode == 0xe06d7363u) {
+            MW_TRACE("[EXC_STATE] MSVC C++ EH magic @ Param[0]=0x%lx (not a pointer)",
+                     er.ExceptionInformation[0]);
+            if (er.NumberParameters >= 2) obj_va = er.ExceptionInformation[1];
+        }
+        if (obj_va != 0) {
+            uint8_t* exc_obj = (uint8_t*)(uintptr_t)obj_va;
+            MW_TRACE("[EXC_STATE] Exception object @ %p (first 32 bytes):", (void*)exc_obj);
+            uint8_t buf[32];
+            memset(buf, 0, sizeof(buf));
+            struct iovec liov = { buf, sizeof(buf) };
+            struct iovec riov = { (void*)exc_obj, sizeof(buf) };
+            ssize_t got = process_vm_readv(getpid(), &liov, 1, &riov, 1, 0);
+            if (got == (ssize_t)sizeof(buf)) {
+                MW_TRACE("[EXC_STATE]   %02x %02x %02x %02x %02x %02x %02x %02x",
+                         buf[0], buf[1], buf[2], buf[3], buf[4], buf[5], buf[6], buf[7]);
+                MW_TRACE("[EXC_STATE]   %02x %02x %02x %02x %02x %02x %02x %02x",
+                         buf[8], buf[9], buf[10], buf[11], buf[12], buf[13], buf[14], buf[15]);
+                MW_TRACE("[EXC_STATE]   %02x %02x %02x %02x %02x %02x %02x %02x",
+                         buf[16], buf[17], buf[18], buf[19], buf[20], buf[21], buf[22], buf[23]);
+                MW_TRACE("[EXC_STATE]   %02x %02x %02x %02x %02x %02x %02x %02x",
+                         buf[24], buf[25], buf[26], buf[27], buf[28], buf[29], buf[30], buf[31]);
+                /* Also dump as uint64 for the exception class */
+                uint64_t exc_class = *(uint64_t*)buf;
+                MW_TRACE("[EXC_STATE] Exception class (u64): 0x%016lx", exc_class);
+            } else {
+                MW_TRACE("[EXC_STATE]   NOT READABLE (probe got %zd, errno=%d) — dump skipped",
+                         got, errno);
+            }
         }
     }
     MW_TRACE("[EXC_STATE] EXCEPTION_END");
@@ -9814,7 +9833,99 @@ __attribute__((ms_abi)) int mw_MessageBoxW(void* hwnd, const uint16_t* text,
     fprintf(stderr, "[MessageBoxW] %s: %s\n", c8, t8);
     return 1; /* IDOK */
 }
-/* ==== end LADDER-013 wave ==== */
+/* ---- SWEEP-003: GUI skeleton v1 — window-class / window / message-loop
+ * primitives. Evidence: cports + produkey exit(1) at InitCommonControlsEx
+ * (GetProcAddress→FALSE gate); putty/pageant exit inside GUI init; NirSoft
+ * toolbar path needs comctl32 registration. Contract (honest): class
+ * registration succeeds (ATOM non-zero), window creation returns a stable
+ * non-NULL HWND identity, message loop reports WM_QUIT on first GetMessage
+ * (no event source yet) so guests unwind their loop cleanly. ---- */
+#define MW_GUI_ATOM      0xC001u           /* registered-class identity */
+#define MW_GUI_HWND      ((void*)0x00010001) /* first window identity */
+__attribute__((ms_abi)) int mw_InitCommonControlsEx(const void* picc) {
+    uint32_t classes = picc ? *(const uint32_t*)((const char*)picc + 4) : 0;
+    MW_TRACE("InitCommonControlsEx(dwICC=0x%x) -> TRUE", classes);
+    return 1; /* TRUE — all common-control classes registered */
+}
+__attribute__((ms_abi)) void mw_InitCommonControls(void) {
+    MW_TRACE("InitCommonControls()");
+}
+__attribute__((ms_abi)) uint16_t mw_RegisterClassExW(const void* wcex) {
+    MW_TRACE("RegisterClassExW(wcex=%p) -> ATOM 0x%x", wcex, MW_GUI_ATOM);
+    return MW_GUI_ATOM;
+}
+__attribute__((ms_abi)) uint16_t mw_RegisterClassExA(const void* wcex) {
+    MW_TRACE("RegisterClassExA(wcex=%p) -> ATOM 0x%x", wcex, MW_GUI_ATOM);
+    return MW_GUI_ATOM;
+}
+__attribute__((ms_abi)) uint16_t mw_RegisterClassW(const void* wc) {
+    MW_TRACE("RegisterClassW(wc=%p) -> ATOM 0x%x", wc, MW_GUI_ATOM);
+    return MW_GUI_ATOM;
+}
+__attribute__((ms_abi)) uint16_t mw_RegisterClassA(const void* wc) {
+    MW_TRACE("RegisterClassA(wc=%p) -> ATOM 0x%x", wc, MW_GUI_ATOM);
+    return MW_GUI_ATOM;
+}
+__attribute__((ms_abi)) void* mw_CreateWindowExW(uint32_t exstyle, const void* cls,
+        const uint16_t* win, uint32_t style, int x, int y, int w, int h,
+        void* parent, void* menu, void* inst, void* param) {
+    MW_TRACE("CreateWindowExW(ex=0x%x style=0x%x cls=%p %dx%d@%d,%d) -> HWND %p",
+             exstyle, style, cls, w, h, x, y, MW_GUI_HWND);
+    return MW_GUI_HWND;
+}
+__attribute__((ms_abi)) void* mw_CreateWindowExA(uint32_t exstyle, const void* cls,
+        const char* win, uint32_t style, int x, int y, int w, int h,
+        void* parent, void* menu, void* inst, void* param) {
+    MW_TRACE("CreateWindowExA(ex=0x%x style=0x%x cls=%p %dx%d@%d,%d) -> HWND %p",
+             exstyle, style, cls, w, h, x, y, MW_GUI_HWND);
+    return MW_GUI_HWND;
+}
+__attribute__((ms_abi)) int mw_ShowWindow(void* hwnd, int cmd) {
+    MW_TRACE("ShowWindow(hwnd=%p cmd=%d) -> TRUE", hwnd, cmd);
+    return 1;
+}
+__attribute__((ms_abi)) int mw_UpdateWindow(void* hwnd) {
+    MW_TRACE("UpdateWindow(hwnd=%p)", hwnd);
+    return 1;
+}
+__attribute__((ms_abi)) int mw_DestroyWindow(void* hwnd) {
+    MW_TRACE("DestroyWindow(hwnd=%p)", hwnd);
+    return 1;
+}
+__attribute__((ms_abi)) int mw_GetMessageW(void* msg, void* hwnd, uint32_t lo, uint32_t hi) {
+    MW_TRACE("GetMessageW(hwnd=%p) -> 0 (WM_QUIT: no event source)", hwnd);
+    return 0;
+}
+__attribute__((ms_abi)) int mw_GetMessageA(void* msg, void* hwnd, uint32_t lo, uint32_t hi) {
+    MW_TRACE("GetMessageA(hwnd=%p) -> 0 (WM_QUIT: no event source)", hwnd);
+    return 0;
+}
+__attribute__((ms_abi)) int mw_TranslateMessage(const void* msg) {
+    (void)msg;
+    return 0; /* not translated — guests still DispatchMessage */
+}
+__attribute__((ms_abi)) long long mw_DispatchMessageW(const void* msg) {
+    (void)msg;
+    return 0;
+}
+__attribute__((ms_abi)) long long mw_DispatchMessageA(const void* msg) {
+    (void)msg;
+    return 0;
+}
+__attribute__((ms_abi)) long long mw_DefWindowProcW(void* hwnd, uint32_t msg,
+        uintptr_t wp, long long lp) {
+    (void)hwnd; (void)msg; (void)wp; (void)lp;
+    return 0;
+}
+__attribute__((ms_abi)) long long mw_DefWindowProcA(void* hwnd, uint32_t msg,
+        uintptr_t wp, long long lp) {
+    (void)hwnd; (void)msg; (void)wp; (void)lp;
+    return 0;
+}
+__attribute__((ms_abi)) void mw_PostQuitMessage(int code) {
+    MW_TRACE("PostQuitMessage(%d)", code);
+}
+/* ==== end SWEEP-003 GUI skeleton ==== */
 
 
 static ImportEntry g_import_table[] = {
@@ -10713,6 +10824,26 @@ ENTRY("msvcrt.dll", "wctype", mw_wctype),
     ENTRY("Secur32.dll", "InitSecurityInterfaceA",              mw_InitSecurityInterfaceA),
     ENTRY("USER32.DLL", "FindWindowA",                          mw_FindWindowA),
     ENTRY("USER32.DLL", "SendMessageA",                         mw_SendMessageA),
+    /* SWEEP-003 GUI skeleton v1 (see functions above for contract) */
+    ENTRY("USER32.DLL", "RegisterClassExW",                     mw_RegisterClassExW),
+    ENTRY("USER32.DLL", "RegisterClassExA",                     mw_RegisterClassExA),
+    ENTRY("USER32.DLL", "RegisterClassW",                       mw_RegisterClassW),
+    ENTRY("USER32.DLL", "RegisterClassA",                       mw_RegisterClassA),
+    ENTRY("USER32.DLL", "CreateWindowExW",                      mw_CreateWindowExW),
+    ENTRY("USER32.DLL", "CreateWindowExA",                      mw_CreateWindowExA),
+    ENTRY("USER32.DLL", "ShowWindow",                           mw_ShowWindow),
+    ENTRY("USER32.DLL", "UpdateWindow",                         mw_UpdateWindow),
+    ENTRY("USER32.DLL", "DestroyWindow",                        mw_DestroyWindow),
+    ENTRY("USER32.DLL", "GetMessageW",                          mw_GetMessageW),
+    ENTRY("USER32.DLL", "GetMessageA",                          mw_GetMessageA),
+    ENTRY("USER32.DLL", "TranslateMessage",                     mw_TranslateMessage),
+    ENTRY("USER32.DLL", "DispatchMessageW",                     mw_DispatchMessageW),
+    ENTRY("USER32.DLL", "DispatchMessageA",                     mw_DispatchMessageA),
+    ENTRY("USER32.DLL", "DefWindowProcW",                       mw_DefWindowProcW),
+    ENTRY("USER32.DLL", "DefWindowProcA",                       mw_DefWindowProcA),
+    ENTRY("USER32.DLL", "PostQuitMessage",                      mw_PostQuitMessage),
+    ENTRY("COMCTL32.DLL", "InitCommonControlsEx",               mw_InitCommonControlsEx),
+    ENTRY("COMCTL32.DLL", "InitCommonControls",                 mw_InitCommonControls),
     ENTRY("WLDAP32.dll", "ber_free",                            mw_ber_free),
     ENTRY("WLDAP32.dll", "ldap_bind_s",                         mw_ldap_bind_s),
     ENTRY("WLDAP32.dll", "ldap_err2string",                     mw_ldap_err2string),

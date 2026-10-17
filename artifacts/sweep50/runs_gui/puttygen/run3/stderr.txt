@@ -1,0 +1,102 @@
+[TRACE] Command line: /home/z/my-project/workspace/miniwin-engineering/artifacts/sweep50/dl/puttygen/puttygen.exe
+[WARN]   unresolved: BitBlt
+[WARN]   unresolved: CreateCompatibleBitmap
+[WARN]   unresolved: CreateCompatibleDC
+[WARN]   unresolved: DeleteObject
+[WARN]   unresolved: GetCurrentObject
+[WARN]   unresolved: GetDIBits
+[WARN]   unresolved: GetObjectA
+[WARN]   unresolved: SelectObject
+[WARN]   unresolved: ShellExecuteA
+[WARN]   unresolved: AppendMenuA
+[WARN]   unresolved: CheckMenuItem
+[WARN]   unresolved: CheckMenuRadioItem
+[WARN]   unresolved: CheckRadioButton
+[WARN]   unresolved: CreateDialogParamA
+[WARN]   unresolved: CreateMenu
+[WARN]   unresolved: DefDlgProcA
+[WARN]   unresolved: DialogBoxParamA
+[WARN]   unresolved: EnableMenuItem
+[WARN]   unresolved: EnableWindow
+[WARN]   unresolved: EndDialog
+[WARN]   unresolved: GetCapture
+[WARN]   unresolved: GetClientRect
+[WARN]   unresolved: GetClipboardOwner
+[WARN]   unresolved: GetCursorPos
+[WARN]   unresolved: GetDC
+[WARN]   unresolved: GetDesktopWindow
+[WARN]   unresolved: GetDlgItem
+[WARN]   unresolved: GetDlgItemInt
+[WARN]   unresolved: GetDlgItemTextA
+[WARN]   unresolved: GetForegroundWindow
+[WARN]   unresolved: GetMessageTime
+[WARN]   unresolved: GetQueueStatus
+[WARN]   unresolved: GetWindowLongPtrA
+[WARN]   unresolved: GetWindowRect
+[WARN]   unresolved: GetWindowTextA
+[WARN]   unresolved: GetWindowTextLengthA
+[WARN]   unresolved: IsDialogMessageA
+[WARN]   unresolved: IsDlgButtonChecked
+[WARN]   unresolved: KillTimer
+[WARN]   unresolved: LoadCursorA
+[WARN]   unresolved: LoadIconA
+[WARN]   unresolved: MapDialogRect
+[WARN]   unresolved: MessageBeep
+[WARN]   unresolved: MessageBoxA
+[WARN]   unresolved: MessageBoxIndirectW
+[WARN]   unresolved: MoveWindow
+[WARN]   unresolved: PostMessageA
+[WARN]   unresolved: ReleaseDC
+[WARN]   unresolved: SendDlgItemMessageA
+[WARN]   unresolved: SetActiveWindow
+[WARN]   unresolved: SetDlgItemInt
+[WARN]   unresolved: SetDlgItemTextA
+[WARN]   unresolved: SetForegroundWindow
+[WARN]   unresolved: SetMenu
+[WARN]   unresolved: SetTimer
+[WARN]   unresolved: SetWindowLongPtrA
+[WARN]   unresolved: SetWindowPos
+[WARN]   unresolved: GetCurrentDirectoryA
+[WARN]   unresolved: GetLocalTime
+[WARN]   unresolved: GetThreadTimes
+[WARN]   unresolved: GetWindowsDirectoryA
+[WARN]   unresolved: GlobalMemoryStatus
+[WARN]   unresolved: SetCurrentDirectoryA
+[WARN]   unresolved: AllocateAndInitializeSid
+[WARN]   unresolved: CopySid
+[WARN]   unresolved: GetLengthSid
+[WARN]   unresolved: RegCreateKeyExA
+[WARN]   unresolved: GetOpenFileNameA
+[WARN]   unresolved: GetOpenFileNameW
+[WARN]   unresolved: GetSaveFileNameA
+[WARN]   unresolved: GetSaveFileNameW
+[WARN] 71 imports unresolved
+
+[CRASH] Signal 11 at RIP=0x0
+  RAX=0x0 RCX=0x4d2 RDX=0xffffffffffffffff R8=0x0 R9=0x0
+  RSP=0x7ffdded7b048 RBP=0x217e000
+  g_image_base=0x140000000 g_image_size=0xfc000
+  (NOT inside loaded PE)
+  [RIP-MAP] no mapping contains RIP
+  RSI=0x140000000 RDI=0x7f5361fbd700
+  R8=0x0  R9=0x0 R10=0x0 R11=0x202
+  R12=0x217d000 R13=0x217c000 R14=0x4d2 R15=0x7ffdded7b5d0
+  [SCAN rsp+000] 0x1400028e2 <PE>
+  [SCAN rsp+032] 0x140092c00 <PE>
+  [SCAN rsp+064] 0x140041652 <PE>
+  [SCAN rsp+096] 0x14005dda4 <PE>
+  [SCAN rsp+144] 0x14008e710 <PE>
+  [SCAN rsp+224] 0x140041246 <PE>
+  [SCAN rsp+240] 0x1400412bd <PE>
+  [SCAN rsp+288] 0x20076a6 <LOADER>
+  [SCAN rsp+312] 0x14008ab18 <PE>
+  [SCAN rsp+640] 0x20026d7 <LOADER>
+  [SCAN rsp+648] 0x20020b8 <LOADER>
+  [SCAN rsp+2096] 0x2006490 <LOADER>
+  [SCAN rsp+2248] 0x2006490 <LOADER>
+  [SCAN rsp+2288] 0x2007d50 <LOADER>
+  [SCAN rsp+2320] 0x2007d71 <LOADER>
+  [SCAN rsp+2792] 0x2000040 <LOADER>
+  [SCAN rsp+2872] 0x2007d50 <LOADER>
+  Backtrace (via stack walking):
+  Likely: NULL or invalid function pointer call
