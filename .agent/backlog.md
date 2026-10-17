@@ -539,7 +539,8 @@ Ladder detail lives in `.agent/PROGRAM_LADDER.md` (canonical). Plan docs:
 
 ## LADDER-001..100 — one task per rung (detail + obtain-from + CRT in PROGRAM_LADDER.md)
 - LADDER-001..006: statuses already recorded (VERIFIED/RUNS-PARTIAL) — keep pinned; re-verify on every release.
-- LADDER-007..010 (T0 tail: busybox64, zstd, lz4, gzip): READY. Per-rung protocol: legal download → SHA-256 → census (arch/CRT/imports diff) → 3× runs → status.
+- LADDER-008 zstd 1.5.6: **VERIFIED (2026-10-17)** — after BUG-062 real guest threads; version 3/3 + round trip 3/3 SHA-256 byte-perfect + 0x60000-threshold case 3/3; evidence evidence/master/ladder/LADDER-008_{version,roundtrip}_20261017_*. Payload: samples/real/ladder_payload.bin (35e6e204…, deterministic).
+- LADDER-007/009/010 (T0 tail: busybox64, lz4, gzip): READY. Per-rung protocol: legal download → SHA-256 → census (arch/CRT/imports diff) → 3× runs → status. Runner: `scripts/ladder_run.sh <ID> <phase> -- <cmd>` (3× evidence harness, phase-named evidence dirs).
 - LADDER-011..020 (T1): READY after MSVC-001 census script; GnuWin32 wave = msvcrt.dll gate.
 - LADDER-021..030 (T2): winsock wave; deps: socket API shim census first (RES-004).
 - LADDER-031..040 (T3): NT-API wave; deps: NtQuerySystemInformation family decision.

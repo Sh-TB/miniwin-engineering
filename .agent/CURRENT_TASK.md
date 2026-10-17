@@ -52,3 +52,30 @@ t13_wide_abi PASS; t14_file_read PASS; dispatch 4/4.
 - New planning base per user directive: .agent/PROGRAM_LADDER.md (100 rungs),
   docs/master/MSVC_RUNTIME_PLAN.md (ADR-012), docs/master/ANDROID_FEASIBILITY.md
   (ADR-013), docs/master/GITHUB_RESOURCES_MAP.md (ADR-014 borrowing policy).
+
+---
+
+## 2026-10-17 (CONTINUE #11) — BUG-062 real guest threads; LADDER-008 re-verified on 0x60000-threshold payload
+- **New harness**: scripts/ladder_run.sh — standardized 3× evidence runner for
+  every ladder rung (command/exit/stdout/stderr/api_trace + artifact hashes,
+  phase-named evidence dirs). Deterministic payload: samples/real/ladder_payload.bin
+  (401408 B, SHA 35e6e204…).
+- **BUG-062 CLOSED (TESTED)**: _beginthreadex/_CreateThread were failure stubs;
+  zstd's pool got zero workers → ZSTDMT queued jobs → CLI livelocked in
+  SleepConditionVariableCS for inputs ≥ 0x60000 bytes (393216; bisection
+  0x5FFFF OK / 0x60000 hang, content- and level-independent). Live state proven
+  by ptrace futex sample — NOTE: first attach hit the `timeout` wrapper via
+  pgrep -f (its own legitimate sigsuspend = red herring); pgrep -x targets the
+  real loader process. Fix: thread registry (64 slots, alloc_handle-issued
+  handles) + ms_abi trampoline calling guest start on a host pthread; real
+  WaitForSingleObject (WAIT_OBJECT_0/TIMEOUT); _endthreadex sets done+exit_code;
+  ExitThread ends the calling thread only (was exit()!); GetExitCodeThread +
+  CloseHandle wired. docs/bugs/BUG-062.md.
+- **LADDER-008 zstd 1.5.6 RE-VERIFIED post-fix**: version 3/3 (banner), round
+  trip 3/3 on the 401408-byte payload (compress + decompress + cmp,
+  SHA-256 byte-perfect 35e6e204…), dedicated 393216-byte threshold case 3/3.
+  Evidence: evidence/master/ladder/LADDER-008_{version,roundtrip}_20261017_*.
+- G1 pin OK after change (evidence/master/g1/20261017_141251, binary
+  062fa371…, regression 12/12). I/O paths exonerated with PE probes
+  (scripts/probe_bug062_readfile.c/.fread.c; zig cc cross-compiler via pip
+  `ziglang` now available in this env).

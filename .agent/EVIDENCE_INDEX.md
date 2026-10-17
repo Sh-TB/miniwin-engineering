@@ -113,3 +113,7 @@ Format: `ID | path | what it proves | session`
 - EV-064: docs/bugs/BUG-061.md (CLOSED TESTED), BUG-054.md BUG-054b section (CLOSED TESTED)
 - EV-065: download/miniwin_execution_proof_v3_20261017.png — 4-panel proof sheet (7z BUG-054b + zstd v/round trip + gates)
 - EV-066: .agent/PROGRAM_LADDER.md (100 rungs), docs/master/{MSVC_RUNTIME_PLAN,ANDROID_FEASIBILITY,GITHUB_RESOURCES_MAP}.md, ADR-012/013/014
+- EV-067: docs/bugs/BUG-062.md (CLOSED TESTED) — real guest threads; zstd 0x60000 livelock root cause (ptrace futex evidence, bisection table)
+- EV-068: evidence/master/ladder/LADDER-008_version_20261017_141329 + LADDER-008_roundtrip_20261017_141302 — zstd 3×3 post-fix (version, round trip SHA-256 byte-perfect 35e6e204…, threshold case 3/3)
+- EV-069: evidence/master/g1/20261017_141251 — G1 pin post-BUG-062 (binary 062fa371…, regression 12/12)
+- EV-070: scripts/ladder_run.sh + samples/real/ladder_payload.bin (35e6e204…) + scripts/probe_bug062_{readfile,fread}.c — reusable 3× ladder harness, deterministic payload, PE I/O probes (zig cc)

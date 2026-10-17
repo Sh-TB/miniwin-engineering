@@ -1,0 +1,4 @@
+command=./minwin_loader samples/real/zstd/zstd-v1.5.6-win64/zstd.exe --version
+phase=version
+workdir=/tmp/ladder_LADDER-008_ocgWGX
+timestamp_utc=20261017_141329

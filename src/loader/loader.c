@@ -344,8 +344,14 @@ __attribute__((ms_abi)) uint8_t mw_RemoveVectoredExceptionHandler(void* h) {
     return 0;
 }
 
+/* BUG-062 forward decls: thread registry lives below (before
+ * mw_WaitForSingleObject); CloseHandle releases thread slots. */
+static void mw_thread_release(void* h);
+
 __attribute__((ms_abi)) int mw_CloseHandle(void* h) {
     MW_TRACE("CloseHandle(handle=%p)", h);
+    /* BUG-062: thread handles release their registry slot. */
+    mw_thread_release(h);
     return 1; /* TRUE */
 }
 
@@ -3146,8 +3152,116 @@ __attribute__((ms_abi)) size_t mw_VirtualQuery(void* addr, void* info, size_t le
     return 0;
 }
 
+/* ============================================================
+ * BUG-062: real guest threads.
+ *
+ * _beginthreadex/_endthreadex/CreateThread used to be stubs that returned
+ * "failure" (handle 0/NULL). Consequences measured with zstd.exe 1.5.6
+ * (LADDER-008): its thread pool (POOL_create -> _beginthreadex) got zero
+ * workers, ZSTDMT still queued jobs and the CLI blocked forever in
+ * SleepConditionVariableCS waiting on a completion CV nobody would ever
+ * signal. Hang threshold measured at input >= 0x60000 bytes (393216);
+ * smaller inputs take the serial path and exit cleanly.
+ *
+ * Design:
+ *  - opaque HANDLE built with alloc_handle() wrapping a MwThread slot;
+ *  - host pthread runs a SysV trampoline that calls the GUEST start routine
+ *    through an ms_abi function-pointer type (x64 Windows ABI: RCX/RDX/R8/R9
+ *    + shadow space), so plain MS code runs on a host thread;
+ *  - completion (normal return or _endthreadex) sets done + exit_code under
+ *    t_exit_mu and broadcasts t_exit_cv;
+ *  - WaitForSingleObject honors thread handles (WAIT_OBJECT_0 / WAIT_TIMEOUT);
+ *  - CloseHandle releases the slot (join-without-block semantics: the thread
+ *    is detached at creation, so no pthread_join resource leak).
+ * Limitations (documented, honest):
+ *  - CREATE_SUSPENDED (initflag bit 4) is ignored — thread starts running;
+ *  - TLS (TlsGetValue/SetValue) shares the main thread's slots across threads;
+ *  - no per-thread CRT init (fine for plain-C worker threads like zstd's).
+ * ============================================================ */
+typedef unsigned (__attribute__((ms_abi)) *MwGuestStart)(void*);
+typedef struct {
+    int used;
+    int done;
+    unsigned exit_code;
+    pthread_t pt;
+} MwThread;
+static MwThread g_mw_threads[64];
+static pthread_mutex_t g_mw_threads_mu = PTHREAD_MUTEX_INITIALIZER;
+static pthread_mutex_t t_exit_mu = PTHREAD_MUTEX_INITIALIZER;
+static pthread_cond_t t_exit_cv = PTHREAD_COND_INITIALIZER;
+static __thread MwThread* t_cur_thread;
+
+typedef struct { MwGuestStart start; void* arg; MwThread* self; } MwThreadBoot;
+
+static void* mw_thread_trampoline(void* p) {
+    MwThreadBoot* b = (MwThreadBoot*)p;
+    MwThread* self = b->self;
+    MwGuestStart start = b->start;
+    void* arg = b->arg;
+    free(b);
+    t_cur_thread = self;
+    unsigned ret = start(arg);   /* MS-ABI call into guest code */
+    pthread_mutex_lock(&t_exit_mu);
+    if (!self->done) { self->exit_code = ret; self->done = 1; }
+    pthread_cond_broadcast(&t_exit_cv);
+    pthread_mutex_unlock(&t_exit_mu);
+    t_cur_thread = NULL;
+    return NULL;
+}
+
+static MwThread* mw_thread_lookup(void* h) {
+    /* Handles are small integers from alloc_handle(); the table stores the
+     * MwThread* they wrap. */
+    if (!h || (uintptr_t)h < 4) return NULL;
+    int idx = (int)(uintptr_t)h - 4;
+    if (idx < 0 || idx >= MAX_HANDLES) return NULL;
+    void* v = g_handle_table[idx];
+    if (!v) return NULL;
+    MwThread* base = &g_mw_threads[0];
+    if ((MwThread*)v < base || (MwThread*)v >= base + 64) return NULL;
+    MwThread* t = (MwThread*)v;
+    return t->used ? t : NULL;
+}
+
+static uint32_t mw_thread_wait(void* h, uint32_t ms) {
+    MwThread* t = mw_thread_lookup(h);
+    if (!t) return 0; /* WAIT_OBJECT_0 — legacy passthrough for non-thread handles */
+    pthread_mutex_lock(&t_exit_mu);
+    uint32_t rc = 0; /* WAIT_OBJECT_0 */
+    if (!t->done) {
+        if (ms == 0xFFFFFFFFu) {
+            while (!t->done) pthread_cond_wait(&t_exit_cv, &t_exit_mu);
+        } else {
+            struct timespec ts;
+            clock_gettime(CLOCK_REALTIME, &ts);
+            ts.tv_sec += ms / 1000;
+            ts.tv_nsec += (long)(ms % 1000) * 1000000L;
+            if (ts.tv_nsec >= 1000000000L) { ts.tv_sec++; ts.tv_nsec -= 1000000000L; }
+            while (!t->done) {
+                int r = pthread_cond_timedwait(&t_exit_cv, &t_exit_mu, &ts);
+                if (r == ETIMEDOUT) { rc = 0x102; break; } /* WAIT_TIMEOUT */
+            }
+        }
+    }
+    pthread_mutex_unlock(&t_exit_mu);
+    return rc;
+}
+
+static void mw_thread_release(void* h) {
+    MwThread* t = mw_thread_lookup(h);
+    if (!t) return;
+    pthread_mutex_lock(&t_exit_mu);
+    int done = t->done;
+    pthread_mutex_unlock(&t_exit_mu);
+    if (done) { t->used = 0; } /* fully reaped */
+    /* still running: keep slot for _endthreadex completion; leak-free because
+     * the thread is detached and the slot is statically allocated */
+}
+
 __attribute__((ms_abi)) uint32_t mw_WaitForSingleObject(void* h, uint32_t ms) {
     MW_TRACE("WaitForSingleObject(handle=%p, ms=%u)", h, ms);
+    MwThread* t = mw_thread_lookup(h);
+    if (t) return mw_thread_wait(h, ms);
     return 0; /* WAIT_OBJECT_0 */
 }
 
@@ -4940,15 +5054,49 @@ __attribute__((ms_abi)) long mw__XcptFilter(unsigned long xcpt, void* ep) {
     return 0; /* EXCEPTION_CONTINUE_SEARCH */
 }
 
+/* BUG-062: real thread creation (was a 0-returning stub — see the thread
+ * registry block above mw_WaitForSingleObject for the full design note). */
 __attribute__((ms_abi)) unsigned long mw__beginthreadex(void* sec, unsigned int stk,
     void* (*start)(void*), void* arg, int init, unsigned int* tid) {
-    MW_TRACE("_beginthreadex()");
-    if (tid) *tid = 5678;
-    return 0;
+    (void)sec; (void)stk; /* security descriptor + stack size: host defaults */
+    MW_TRACE("_beginthreadex(start=%p, arg=%p, init=0x%x)", start, arg, init);
+    pthread_mutex_lock(&g_mw_threads_mu);
+    MwThread* slot = NULL;
+    for (int i = 0; i < 64; i++) {
+        if (!g_mw_threads[i].used) { slot = &g_mw_threads[i]; break; }
+    }
+    if (slot) { slot->used = 1; slot->done = 0; slot->exit_code = 0; slot->pt = 0; }
+    pthread_mutex_unlock(&g_mw_threads_mu);
+    if (!slot) return 0; /* table full -> Windows-style failure (NULL handle) */
+
+    MwThreadBoot* b = (MwThreadBoot*)malloc(sizeof(MwThreadBoot));
+    if (!b) { slot->used = 0; return 0; }
+    b->start = (MwGuestStart)(void*)start;
+    b->arg = arg;
+    b->self = slot;
+    pthread_t pt;
+    if (pthread_create(&pt, NULL, mw_thread_trampoline, b) != 0) {
+        free(b); slot->used = 0; return 0;
+    }
+    slot->pt = pt;
+    pthread_detach(pt); /* CloseHandle/Wait semantics; no join leak */
+    void* h = alloc_handle((void*)slot);
+    if (tid) *tid = (unsigned)(uintptr_t)pt & 0xFFFFFFFFu;
+    MW_TRACE("_beginthreadex() = %p", h);
+    return (unsigned long)(uintptr_t)h;
 }
 
 __attribute__((ms_abi)) void mw__endthreadex(unsigned int code) {
     MW_TRACE("_endthreadex(%u)", code);
+    MwThread* self = t_cur_thread;
+    if (self) {
+        pthread_mutex_lock(&t_exit_mu);
+        self->exit_code = code;
+        self->done = 1;
+        pthread_cond_broadcast(&t_exit_cv);
+        pthread_mutex_unlock(&t_exit_mu);
+        t_cur_thread = NULL;
+    }
     pthread_exit((void*)(uintptr_t)code);
 }
 
@@ -5807,18 +5955,36 @@ __attribute__((ms_abi)) int mw_ReleaseMutex(void* h) { return mw_SetEvent(h); }
 
 /* ---- threads (single-team honest semantics) ---- */
 __attribute__((ms_abi)) void* mw_CreateThread(void* attr, size_t stack, void* fn, void* arg, uint32_t flags, uint32_t* tid) {
-    /* Guest threads cannot run (no per-thread TEB/CPU handoff yet): fail
-     * honestly so callers take their fallback paths. */
-    MW_TRACE("CreateThread() -> NULL (no guest threading)");
-    mw_SetLastError(8); /* ERROR_NOT_ENOUGH_MEMORY */
-    if (tid) *tid = 0;
-    return NULL;
+    /* BUG-062: real threads via the _beginthreadex registry (ms_abi bridge).
+     * CREATE_SUSPENDED (flags bit 4) is ignored — thread starts immediately. */
+    (void)attr;
+    MW_TRACE("CreateThread(fn=%p, arg=%p, flags=0x%x)", fn, arg, flags);
+    unsigned long h = mw__beginthreadex(NULL, (unsigned)stack, fn, arg,
+                                        (int)(flags & 0x4), tid);
+    if ((flags & 0x4) && h) {
+        MW_TRACE("CreateThread: CREATE_SUSPENDED ignored (thread runs immediately)");
+    }
+    if (!h) { mw_SetLastError(8); } /* ERROR_NOT_ENOUGH_MEMORY */
+    return (void*)(uintptr_t)h;
 }
 __attribute__((ms_abi)) void mw_ExitThread(uint32_t code) {
     MW_TRACE("ExitThread(%u)", code);
-    exit(code);
+    /* BUG-062: must end the CALLING THREAD only — exit() killed the whole
+     * guest process (same lifecycle family as _beginthreadex). */
+    mw__endthreadex(code);
 }
-__attribute__((ms_abi)) int mw_GetExitCodeThread(void* h, uint32_t* code) { if (code) *code = 0; return 1; }
+__attribute__((ms_abi)) int mw_GetExitCodeThread(void* h, uint32_t* code) {
+    /* BUG-062: report the recorded exit code for registry threads. */
+    MwThread* t = mw_thread_lookup(h);
+    if (t && code) {
+        pthread_mutex_lock(&t_exit_mu);
+        *code = t->exit_code;
+        pthread_mutex_unlock(&t_exit_mu);
+        return 1;
+    }
+    if (code) *code = 0;
+    return 1;
+}
 __attribute__((ms_abi)) int mw_TerminateThread(void* h, uint32_t code) { return 0; }
 __attribute__((ms_abi)) uint32_t mw_GetCurrentProcessorNumber(void) { return 0; }
 /* threadpool: honest synchronous fallback is NOT Windows semantics; fail */
