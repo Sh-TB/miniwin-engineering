@@ -1,0 +1,79 @@
+[TRACE] Command line: /home/z/my-project/workspace/miniwin-engineering/artifacts/sweep50/dl/watchexec/watchexec.exe
+[WARN]   unresolved: UnregisterWaitEx
+[WARN]   unresolved: GetQueuedCompletionStatusEx
+[WARN]   unresolved: SetWaitableTimer
+[WARN]   unresolved: CreateWaitableTimerExW
+[WARN]   unresolved: lstrlenW
+[WARN]   unresolved: ScrollConsoleScreenBufferW
+[WARN]   unresolved: IsThreadAFiber
+[WARN]   unresolved: SetFileCompletionNotificationModes
+[WARN]   unresolved: ReadDirectoryChangesW
+[WARN]   unresolved: ReadFileEx
+[WARN]   unresolved: WriteFileEx
+[WARN]   unresolved: CompareStringOrdinal
+[WARN]   unresolved: TerminateJobObject
+[WARN]   unresolved: SetThreadStackGuarantee
+[WARN]   unresolved: OpenThread
+[WARN]   unresolved: Thread32Next
+[WARN]   unresolved: Thread32First
+[WARN]   unresolved: AssignProcessToJobObject
+[WARN]   unresolved: SetInformationJobObject
+[WARN]   unresolved: CreateJobObjectW
+[WARN]   unresolved: GetProcessId
+[WARN]   unresolved: GetBinaryTypeW
+[WARN]   unresolved: GetTimeZoneInformationForYear
+[WARN]   unresolved: RtlGetVersion
+[WARN]   unresolved: RtlNtStatusToDosError
+[WARN]   unresolved: NtCancelIoFileEx
+[WARN]   unresolved: NtDeviceIoControlFile
+[WARN]   unresolved: NtCreateNamedPipeFile
+[WARN]   unresolved: NtCreateFile
+[WARN]   unresolved: NtWriteFile
+[WARN]   unresolved: NtReadFile
+[WARN]   unresolved: NtOpenFile
+[WARN]   unresolved: IsWellKnownSid
+[WARN]   unresolved: GetTokenInformation
+[WARN]   unresolved: OpenThreadToken
+[WARN]   unresolved: EqualSid
+[WARN]   unresolved: CheckTokenMembership
+[WARN]   unresolved: GetNamedSecurityInfoW
+[WARN]   unresolved: GetErrorInfo
+[WARN]   unresolved: CoIncrementMTAUsage
+[WARN]   unresolved: CoTaskMemFree
+[WARN]   unresolved: CoCreateFreeThreadedMarshaler
+[WARN]   unresolved: RoGetActivationFactory
+[WARN]   unresolved: WSADuplicateSocketW
+[WARN]   unresolved: WSASocketW
+[WARN]   unresolved: SHGetKnownFolderPath
+[WARN]   unresolved: GetUserProfileDirectoryW
+[WARN]   unresolved: __current_exception
+[WARN]   unresolved: __current_exception_context
+[WARN]   unresolved: __CxxFrameHandler3
+[WARN]   unresolved: _initialize_onexit_table
+[WARN]   unresolved: _register_onexit_function
+[WARN]   unresolved: _get_initial_narrow_environment
+[WARN]   unresolved: terminate
+[WARN]   unresolved: _set_fmode
+[WARN] 55 imports unresolved
+[STUB] unresolved import called -> returning 0 (call #1)
+[STUB] unresolved import called -> returning 0 (call #2)
+[STUB] unresolved import called -> returning 0 (call #3)
+[STUB] unresolved import called -> returning 0 (call #4)
+[STUB] unresolved import called -> returning 0 (call #5)
+
+[CRASH] Signal 11 at RIP=0x140387311
+  RAX=0x0 RCX=0x7 RDX=0xfffffffe R8=0x0 R9=0x0
+  RSP=0x7f3d355bba00 RBP=0x7f3d355bba70
+  g_image_base=0x140000000 g_image_size=0x904000
+  RVA=0x387311 (inside loaded PE)
+  Bytes: cd 29 0f 0b 48 8d 80 00 01 00 00 4c 89 00 e8 cc 
+  Return addr: 0x0
+  RSI=0x3c6d0a0 RDI=0x3c7cf50
+  R8=0x0  R9=0x0 R10=0x0 R11=0x246
+  R12=0x2178b00 R13=0x11 R14=0x7fff0ccc58a0 R15=0x7f3d34dbc000
+  [SCAN rsp+144] 0x140387270 <PE>
+  [SCAN rsp+152] 0x200fdfd <LOADER>
+  [SCAN rsp+184] 0x200fde4 <LOADER>
+  Backtrace (via stack walking):
+    [0] RIP=0x140387311 RVA=0x387311      [RSP+0] = 0x0 (return addr?)
+    [1] RIP=0x140387311 RVA=0x387311

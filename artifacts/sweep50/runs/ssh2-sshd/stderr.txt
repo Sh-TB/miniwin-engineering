@@ -1,0 +1,214 @@
+[TRACE] Command line: /home/z/my-project/workspace/miniwin-engineering/artifacts/sweep50/dl/openssh/sshd.exe
+[WARN]   unresolved: RAND_bytes
+[WARN]   unresolved: EVP_DigestSignFinal
+[WARN]   unresolved: EVP_DigestVerifyFinal
+[WARN]   unresolved: EC_POINT_oct2point
+[WARN]   unresolved: BN_bn2bin
+[WARN]   unresolved: EC_POINT_point2oct
+[WARN]   unresolved: BN_bin2bn
+[WARN]   unresolved: BN_dup
+[WARN]   unresolved: BN_set_flags
+[WARN]   unresolved: RSA_new
+[WARN]   unresolved: RSA_set0_crt_params
+[WARN]   unresolved: RSA_get0_key
+[WARN]   unresolved: RSA_pkey_ctx_ctrl
+[WARN]   unresolved: BN_div
+[WARN]   unresolved: RSA_set0_factors
+[WARN]   unresolved: RSA_get0_factors
+[WARN]   unresolved: RSA_get0_crt_params
+[WARN]   unresolved: RSA_set0_key
+[WARN]   unresolved: BN_CTX_new
+[WARN]   unresolved: BN_CTX_free
+[WARN]   unresolved: d2i_ECDSA_SIG
+[WARN]   unresolved: EC_KEY_set_private_key
+[WARN]   unresolved: EVP_PKEY_CTX_free
+[WARN]   unresolved: EVP_PKEY_CTX_new_id
+[WARN]   unresolved: EVP_PKEY_new
+[WARN]   unresolved: ECDSA_SIG_get0
+[WARN]   unresolved: EC_KEY_set_public_key
+[WARN]   unresolved: EC_KEY_set_group
+[WARN]   unresolved: EVP_PKEY_keygen_init
+[WARN]   unresolved: ECDSA_SIG_free
+[WARN]   unresolved: EVP_PKEY_keygen
+[WARN]   unresolved: EC_GROUP_free
+[WARN]   unresolved: EC_GROUP_cmp
+[WARN]   unresolved: EVP_PKEY_cmp
+[WARN]   unresolved: EC_GROUP_set_asn1_flag
+[WARN]   unresolved: EVP_PKEY_CTX_ctrl
+[WARN]   unresolved: ECDSA_SIG_set0
+[WARN]   unresolved: EC_GROUP_new_by_curve_name
+[WARN]   unresolved: EC_KEY_new_by_curve_name
+[WARN]   unresolved: ECDSA_SIG_new
+[WARN]   unresolved: EVP_PKEY_set1_EC_KEY
+[WARN]   unresolved: i2d_ECDSA_SIG
+[WARN]   unresolved: RAND_status
+[WARN]   unresolved: OpenSSL_version_num
+[WARN]   unresolved: EVP_md5
+[WARN]   unresolved: EVP_DigestUpdate
+[WARN]   unresolved: EVP_Digest
+[WARN]   unresolved: EVP_DigestInit_ex
+[WARN]   unresolved: EVP_DigestFinal_ex
+[WARN]   unresolved: EVP_CIPHER_CTX_key_length
+[WARN]   unresolved: EVP_CIPHER_CTX_new
+[WARN]   unresolved: EVP_aes_256_cbc
+[WARN]   unresolved: EVP_CipherInit
+[WARN]   unresolved: EVP_aes_128_ctr
+[WARN]   unresolved: EVP_aes_256_ctr
+[WARN]   unresolved: EVP_des_ede3_cbc
+[WARN]   unresolved: EVP_aes_192_cbc
+[WARN]   unresolved: EVP_CIPHER_CTX_ctrl
+[WARN]   unresolved: EVP_CIPHER_CTX_set_key_length
+[WARN]   unresolved: EVP_aes_192_ctr
+[WARN]   unresolved: EVP_Cipher
+[WARN]   unresolved: EVP_aes_256_gcm
+[WARN]   unresolved: EVP_aes_128_gcm
+[WARN]   unresolved: EVP_CIPHER_CTX_free
+[WARN]   unresolved: EVP_PKEY_up_ref
+[WARN]   unresolved: EVP_PKEY_set1_RSA
+[WARN]   unresolved: RSA_blinding_on
+[WARN]   unresolved: EVP_sha384
+[WARN]   unresolved: EC_GROUP_get_order
+[WARN]   unresolved: BIO_new
+[WARN]   unresolved: BN_clear_free
+[WARN]   unresolved: ERR_peek_error
+[WARN]   unresolved: BN_value_one
+[WARN]   unresolved: EVP_PKEY_get1_EC_KEY
+[WARN]   unresolved: EVP_MD_CTX_new
+[WARN]   unresolved: EC_POINT_mul
+[WARN]   unresolved: RSA_free
+[WARN]   unresolved: ERR_get_error
+[WARN]   unresolved: EC_POINT_get_affine_coordinates_GFp
+[WARN]   unresolved: ERR_peek_last_error
+[WARN]   unresolved: EVP_sha256
+[WARN]   unresolved: EC_POINT_is_at_infinity
+[WARN]   unresolved: BIO_s_mem
+[WARN]   unresolved: EVP_PKEY_get0_EC_KEY
+[WARN]   unresolved: PEM_read_bio_PrivateKey
+[WARN]   unresolved: EC_POINT_free
+[WARN]   unresolved: EVP_aes_128_cbc
+[WARN]   unresolved: EC_KEY_free
+[WARN]   unresolved: EVP_MD_CTX_free
+[WARN]   unresolved: EVP_PKEY_get0_RSA
+[WARN]   unresolved: EVP_PKEY_free
+[WARN]   unresolved: EVP_PKEY_get1_RSA
+[WARN]   unresolved: EC_KEY_get0_public_key
+[WARN]   unresolved: EC_POINT_new
+[WARN]   unresolved: BIO_write
+[WARN]   unresolved: BIO_free
+[WARN]   unresolved: EVP_sha1
+[WARN]   unresolved: EVP_DigestSignInit
+[WARN]   unresolved: EVP_PKEY_bits
+[WARN]   unresolved: EC_GROUP_get_curve_name
+[WARN]   unresolved: BN_new
+[WARN]   unresolved: EC_KEY_get0_private_key
+[WARN]   unresolved: EVP_sha512
+[WARN]   unresolved: EVP_PKEY_size
+[WARN]   unresolved: EC_KEY_get0_group
+[WARN]   unresolved: BN_cmp
+[WARN]   unresolved: BN_sub
+[WARN]   unresolved: EVP_PKEY_base_id
+[WARN]   unresolved: BN_num_bits
+[WARN]   unresolved: EVP_DigestVerifyInit
+[WARN]   unresolved: RAND_seed
+[WARN]   unresolved: OpenSSL_version
+[WARN]   unresolved: CryptBinaryToStringA
+[WARN]   unresolved: CryptStringToBinaryA
+[WARN]   unresolved: WSASend
+[WARN]   unresolved: WSASocketW
+[WARN]   unresolved: FreeAddrInfoW
+[WARN]   unresolved: GetAddrInfoW
+[WARN]   unresolved: WSARecv
+[WARN]   unresolved: WSAGetOverlappedResult
+[WARN]   unresolved: getnameinfo
+[WARN]   unresolved: WSADuplicateSocketW
+[WARN]   unresolved: LsaFreeReturnBuffer
+[WARN]   unresolved: LsaLookupAuthenticationPackage
+[WARN]   unresolved: LsaLogonUser
+[WARN]   unresolved: LsaDeregisterLogonProcess
+[WARN]   unresolved: LsaConnectUntrusted
+[WARN]   unresolved: LsaRegisterLogonProcess
+[WARN]   unresolved: CancelIoEx
+[WARN]   unresolved: GetLocalTime
+[WARN]   unresolved: CancelSynchronousIo
+[WARN]   unresolved: CreateWaitableTimerA
+[WARN]   unresolved: ReadFileEx
+[WARN]   unresolved: WriteFileEx
+[WARN]   unresolved: CreateNamedPipeA
+[WARN]   unresolved: ReadConsoleOutputA
+[WARN]   unresolved: Beep
+[WARN]   unresolved: FillConsoleOutputAttribute
+[WARN]   unresolved: SetConsoleWindowInfo
+[WARN]   unresolved: CopyFileW
+[WARN]   unresolved: VirtualUnlock
+[WARN]   unresolved: VirtualLock
+[WARN]   unresolved: OpenThread
+[WARN]   unresolved: QueueUserAPC
+[WARN]   unresolved: FillConsoleOutputCharacterA
+[WARN]   unresolved: SetConsoleScreenBufferSize
+[WARN]   unresolved: ShowWindow
+[WARN]   unresolved: GetWindowPlacement
+[WARN]   unresolved: IsValidSecurityDescriptor
+[WARN]   unresolved: EventWrite
+[WARN]   unresolved: EventRegister
+[WARN]   unresolved: ConvertSidToStringSidA
+[WARN]   unresolved: LookupAccountSidW
+[WARN]   unresolved: ConvertStringSidToSidW
+[WARN]   unresolved: GetTokenInformation
+[WARN]   unresolved: GetSidIdentifierAuthority
+[WARN]   unresolved: CheckTokenMembership
+[WARN]   unresolved: IsValidSid
+[WARN]   unresolved: ConvertStringSecurityDescriptorToSecurityDescriptorW
+[WARN]   unresolved: StartServiceCtrlDispatcherW
+[WARN]   unresolved: RegisterServiceCtrlHandlerW
+[WARN]   unresolved: SetServiceStatus
+[WARN]   unresolved: IsWellKnownSid
+[WARN]   unresolved: LookupAccountNameW
+[WARN]   unresolved: IsValidAcl
+[WARN]   unresolved: GetLengthSid
+[WARN]   unresolved: GetNamedSecurityInfoW
+[WARN]   unresolved: CopySid
+[WARN]   unresolved: CreateWellKnownSid
+[WARN]   unresolved: GetAce
+[WARN]   unresolved: ConvertSidToStringSidW
+[WARN]   unresolved: CreateProcessAsUserW
+[WARN]   unresolved: DuplicateToken
+[WARN]   unresolved: FreeSid
+[WARN]   unresolved: CreateRestrictedToken
+[WARN]   unresolved: AllocateAndInitializeSid
+[WARN]   unresolved: EqualSid
+[WARN]   unresolved: AllocateLocallyUniqueId
+[WARN]   unresolved: LsaManageSidNameMapping
+[WARN] 194 imports unresolved
+
+[CRASH] Signal 11 at RIP=0x1400292be
+  RAX=0x0 RCX=0x3ac2420 RDX=0x5c R8=0x3ac2530 R9=0x0
+  RSP=0x7fffdaedfd50 RBP=0x3ac0700
+  g_image_base=0x140000000 g_image_size=0xe5000
+  RVA=0x292be (inside loaded PE)
+  Bytes: c6 00 00 e8 36 9d 02 00 48 8b 0d e3 ea 08 00 33 
+  Return addr: 0x3ac0700
+  RSI=0x1 RDI=0x3ac2e20
+  R8=0x3ac2530  R9=0x0 R10=0x56 R11=0x57
+  R12=0x217b000 R13=0x217a000 R14=0x628 R15=0x7fffdaee02e0
+  [SCAN rsp+088] 0x140018391 <PE>
+  [SCAN rsp+096] 0x1400b9170 <PE>
+  [SCAN rsp+104] 0x14007cb10 <PE>
+  [SCAN rsp+120] 0x14007cb18 <PE>
+  [SCAN rsp+136] 0x140051c7e <PE>
+  [SCAN rsp+184] 0x1400522b5 <PE>
+  [SCAN rsp+232] 0x140051d98 <PE>
+  [SCAN rsp+248] 0x140051e19 <PE>
+  [SCAN rsp+296] 0x20076a6 <LOADER>
+  [SCAN rsp+320] 0x14007c0d8 <PE>
+  [SCAN rsp+648] 0x20026ae <LOADER>
+  [SCAN rsp+656] 0x20020a0 <LOADER>
+  [SCAN rsp+2104] 0x2006490 <LOADER>
+  [SCAN rsp+2256] 0x2006490 <LOADER>
+  [SCAN rsp+2296] 0x2007d50 <LOADER>
+  [SCAN rsp+2328] 0x2007d71 <LOADER>
+  [SCAN rsp+2800] 0x2000040 <LOADER>
+  [SCAN rsp+2880] 0x2007d50 <LOADER>
+  Backtrace (via stack walking):
+    [0] RIP=0x1400292be RVA=0x292be      [RSP+0] = 0x3ac0700 (return addr?)
+    [1] RIP=0x1400292be RVA=0x292be      [RSP+0] = 0x0 (return addr?)
+    [2] RIP=0x1400292be RVA=0x292be

@@ -1,0 +1,5 @@
+exe=openssh/ssh-pkcs11-helper.exe
+sha256=0f1ee63b38af0a96670ffc3f1c5421c4fba678d96ab0485854b550467b987ff5
+timeout=10s
+args=none
+date_utc=2026-10-17T18:39:39Z

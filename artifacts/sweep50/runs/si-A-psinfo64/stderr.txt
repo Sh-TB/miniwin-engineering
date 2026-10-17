@@ -1,0 +1,37 @@
+[TRACE] Command line: /home/z/my-project/workspace/miniwin-engineering/artifacts/sweep50/dl/si-psinfo/PsInfo64.exe
+[WARN]   unresolved: PdhOpenQueryW
+[WARN]   unresolved: PdhCloseQuery
+[WARN]   unresolved: PdhAddCounterW
+[WARN]   unresolved: PdhGetFormattedCounterValue
+[WARN]   unresolved: PdhCollectQueryData
+[WARN]   unresolved: GetFileVersionInfoSizeW
+[WARN]   unresolved: GetFileVersionInfoW
+[WARN]   unresolved: VerQueryValueW
+[WARN]   unresolved: NetServerEnum
+[WARN]   unresolved: NetApiBufferFree
+[WARN]   unresolved: WNetCancelConnection2W
+[WARN]   unresolved: WNetAddConnection2W
+[WARN]   unresolved: GetVersionExW
+[WARN]   unresolved: PrintDlgW
+[WARN]   unresolved: RegEnumKeyW
+[WARN]   unresolved: RevertToSelf
+[WARN]   unresolved: CreateServiceW
+[WARN]   unresolved: QueryServiceStatus
+[WARN]   unresolved: CloseServiceHandle
+[WARN]   unresolved: OpenSCManagerW
+[WARN]   unresolved: DeleteService
+[WARN]   unresolved: ControlService
+[WARN]   unresolved: ImpersonateLoggedOnUser
+[WARN]   unresolved: LogonUserW
+[WARN]   unresolved: StartServiceW
+[WARN]   unresolved: RegConnectRegistryW
+[WARN]   unresolved: OpenServiceW
+[WARN]   unresolved: RegCreateKeyW
+[WARN]   unresolved: RegOpenKeyW
+[WARN]   unresolved: CoInitializeEx
+[WARN]   unresolved: CoCreateInstance
+[WARN]   unresolved: CoInitializeSecurity
+[WARN] 36 imports unresolved
+[STUB] unresolved import called -> returning 0 (call #1)
+[STUB] unresolved import called -> returning 0 (call #2)
+[STUB] unresolved import called -> returning 0 (call #3)

@@ -1,0 +1,29 @@
+[TRACE] Command line: /home/z/my-project/workspace/miniwin-engineering/artifacts/sweep50/dl/si-testlimit/Testlimit64.exe
+[WARN]   unresolved: VirtualLock
+[WARN]   unresolved: AllocateUserPhysicalPages
+[WARN]   unresolved: GetProcessWorkingSetSize
+[WARN]   unresolved: SetProcessWorkingSetSize
+[WARN]   unresolved: FatalAppExitA
+[WARN]   unresolved: CreateMenu
+[WARN]   unresolved: RegisterClassA
+[WARN]   unresolved: LoadCursorA
+[WARN]   unresolved: InflateRect
+[WARN]   unresolved: GetSysColorBrush
+[WARN]   unresolved: SetCursor
+[WARN]   unresolved: SetWindowTextA
+[WARN]   unresolved: GetDlgItem
+[WARN]   unresolved: EndDialog
+[WARN]   unresolved: DialogBoxIndirectParamA
+[WARN]   unresolved: EndPage
+[WARN]   unresolved: StartPage
+[WARN]   unresolved: EndDoc
+[WARN]   unresolved: StartDocA
+[WARN]   unresolved: SetMapMode
+[WARN]   unresolved: GetDeviceCaps
+[WARN]   unresolved: CreateBitmap
+[WARN]   unresolved: PrintDlgA
+[WARN]   unresolved: RegSetValueExA
+[WARN]   unresolved: RegOpenKeyA
+[WARN]   unresolved: RegCreateKeyA
+[WARN]   unresolved: LookupPrivilegeValueA
+[WARN] 27 imports unresolved

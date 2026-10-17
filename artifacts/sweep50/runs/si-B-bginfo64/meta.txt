@@ -1,0 +1,5 @@
+exe=si-bginfo/Bginfo64.exe
+sha256=1d00da4ecb04825ae2106adc5fe70e9317976c5ace85f335894d22c4e2c04d54
+timeout=10s
+args=none
+date_utc=2026-10-17T18:39:37Z

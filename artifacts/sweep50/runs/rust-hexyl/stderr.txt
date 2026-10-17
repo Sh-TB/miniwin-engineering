@@ -1,0 +1,97 @@
+[TRACE] Command line: /home/z/my-project/workspace/miniwin-engineering/artifacts/sweep50/dl/hexyl/hexyl.exe
+[WARN]   unresolved: SetThreadStackGuarantee
+[WARN]   unresolved: lstrlenW
+[WARN]   unresolved: RtlNtStatusToDosError
+[WARN]   unresolved: NtWriteFile
+[WARN]   unresolved: NtReadFile
+[WARN]   unresolved: __current_exception
+[WARN]   unresolved: __CxxFrameHandler3
+[WARN]   unresolved: __current_exception_context
+[WARN]   unresolved: terminate
+[WARN]   unresolved: _register_onexit_function
+[WARN]   unresolved: _initialize_onexit_table
+[WARN]   unresolved: _get_initial_narrow_environment
+[WARN]   unresolved: _set_fmode
+[WARN] 13 imports unresolved
+[STUB] unresolved import called -> returning 0 (call #1)
+[STUB] unresolved import called -> returning 0 (call #2)
+[STUB] unresolved import called -> returning 0 (call #3)
+[STUB] unresolved import called -> returning 0 (call #4)
+[STUB] unresolved import called -> returning 0 (call #5)
+[STUB] unresolved import called -> returning 0 (call #6)
+[STUB] unresolved import called -> returning 0 (call #7)
+[STUB] unresolved import called -> returning 0 (call #8)
+[STUB] unresolved import called -> returning 0 (call #9)
+
+[CRASH] Signal 11 at RIP=0x203da90
+  RAX=0x0 RCX=0x7ffc4d22d140 RDX=0xffffffffffffffff R8=0x0 R9=0x0
+  RSP=0x7ffc4d22c280 RBP=0x1400ff380
+  g_image_base=0x140000000 g_image_size=0x109000
+  (NOT inside loaded PE)
+  [RIP-MAP] 0x203da90 in 0x2005000-0x2042000 r-xp /home/z/my-project/workspace/miniwin-engineering/minwin_loader
+  Bytes: 44 0f b6 43 07 0f b6 7b 06 0f b6 73 05 0f b6 4b 
+  RSI=0x0 RDI=0x2e303a0
+  R8=0x0  R9=0x0 R10=0x0 R11=0x202
+  R12=0x2e302c0 R13=0x200be84 R14=0x7ffc4d22d140 R15=0x1400a8cd0
+  [SCAN rsp+024] 0x140000000 <PE>
+  [SCAN rsp+048] 0x204359b <LOADER>
+  [SCAN rsp+160] 0x204359b <LOADER>
+  [SCAN rsp+168] 0x204359d <LOADER>
+  [SCAN rsp+248] 0x2048c3c <LOADER>
+  [SCAN rsp+384] 0x2048c20 <LOADER>
+  [SCAN rsp+392] 0x2048c22 <LOADER>
+  [SCAN rsp+448] 0x2042c8e <LOADER>
+  [SCAN rsp+456] 0x204c795 <LOADER>
+  [SCAN rsp+552] 0x2049400 <LOADER>
+  [SCAN rsp+592] 0x204c768 <LOADER>
+  [SCAN rsp+600] 0x204c76a <LOADER>
+  [SCAN rsp+688] 0x2049418 <LOADER>
+  [SCAN rsp+712] 0x20435b3 <LOADER>
+  [SCAN rsp+848] 0x204359b <LOADER>
+  [SCAN rsp+856] 0x204359d <LOADER>
+  [SCAN rsp+896] 0x2046920 <LOADER>
+  [SCAN rsp+904] 0x2046922 <LOADER>
+  [SCAN rsp+976] 0x1400ff251 <PE>
+  [SCAN rsp+1008] 0x200be84 <LOADER>
+  [SCAN rsp+1040] 0x1400ff380 <PE>
+  [SCAN rsp+1224] 0x204359b <LOADER>
+  [SCAN rsp+1288] 0x20220ca <LOADER>
+  [SCAN rsp+1336] 0x2048c3c <LOADER>
+  [SCAN rsp+1472] 0x2048c20 <LOADER>
+  [SCAN rsp+1480] 0x2048c22 <LOADER>
+  [SCAN rsp+1544] 0x2049195 <LOADER>
+  [SCAN rsp+1592] 0x204a5d2 <LOADER>
+  [SCAN rsp+1688] 0x2049100 <LOADER>
+  [SCAN rsp+1728] 0x204a598 <LOADER>
+  [SCAN rsp+1736] 0x204a5ce <LOADER>
+  [SCAN rsp+1768] 0x204a5d2 <LOADER>
+  [SCAN rsp+1832] 0x2049448 <LOADER>
+  [SCAN rsp+1896] 0x204719d <LOADER>
+  [SCAN rsp+2032] 0x2047170 <LOADER>
+  [SCAN rsp+2040] 0x2047172 <LOADER>
+  [SCAN rsp+2584] 0x203a23a <LOADER>
+  [SCAN rsp+2904] 0x204a598 <LOADER>
+  [SCAN rsp+3096] 0x203a00a <LOADER>
+  [SCAN rsp+3144] 0x2049418 <LOADER>
+  [SCAN rsp+3208] 0x2047170 <LOADER>
+  [SCAN rsp+3472] 0x1400a8cd0 <PE>
+  [SCAN rsp+3536] 0x1400a8cd0 <PE>
+  [SCAN rsp+3624] 0x200be84 <LOADER>
+  [SCAN rsp+3632] 0x1400ff380 <PE>
+  [SCAN rsp+3648] 0x1400de3b8 <PE>
+  [SCAN rsp+3664] 0x1400a8cd0 <PE>
+  [SCAN rsp+3672] 0x200814c <LOADER>
+  [SCAN rsp+3688] 0x200be84 <LOADER>
+  [SCAN rsp+3720] 0x1400a8cd0 <PE>
+  [SCAN rsp+3736] 0x1400de3b8 <PE>
+  [SCAN rsp+3752] 0x1400ff380 <PE>
+  [SCAN rsp+3768] 0x200be84 <LOADER>
+  [SCAN rsp+3824] 0x1400ff380 <PE>
+  [SCAN rsp+4040] 0x1400ae4bd <PE>
+  [SCAN rsp+4048] 0x1400e2104 <PE>
+  [SCAN rsp+4088] 0x1400ff1b8 <PE>
+  Backtrace (via stack walking):
+    [0] RIP=0x203da90 (outside PE, possible shared lib)
+    [1] RIP=0x203da90 (outside PE, possible shared lib)
+    [2] RIP=0x203da90 (outside PE, possible shared lib)
+    [3] RIP=0x203da90 (outside PE, possible shared lib)

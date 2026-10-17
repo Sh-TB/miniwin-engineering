@@ -1,0 +1,612 @@
+[TRACE] Command line: /home/z/my-project/workspace/miniwin-engineering/artifacts/sweep50/dl/winmerge/WinMergeU.exe
+[WARN]   unresolved: PathStripToRootW
+[WARN]   unresolved: PathRemoveFileSpecW
+[WARN]   unresolved: PathCombineW
+[WARN]   unresolved: StrCmpLogicalW
+[WARN]   unresolved: PathGetCharTypeW
+[WARN]   unresolved: PathCreateFromUrlW
+[WARN]   unresolved: UrlIsW
+[WARN]   unresolved: PathIsDirectoryW
+[WARN]   unresolved: PathFindExtensionW
+[WARN]   unresolved: StrCmpIW
+[WARN]   unresolved: PathMatchSpecW
+[WARN]   unresolved: SHAutoComplete
+[WARN]   unresolved: PathCompactPathW
+[WARN]   unresolved: StrFormatByteSizeW
+[WARN]   unresolved: StrTrimW
+[WARN]   unresolved: StrChrW
+[WARN]   unresolved: PathFileExistsW
+[WARN]   unresolved: PathFindFileNameW
+[WARN]   unresolved: PathIsUNCW
+[WARN]   unresolved: ImmSetCompositionWindow
+[WARN]   unresolved: ImmSetCompositionFontW
+[WARN]   unresolved: ImmReleaseContext
+[WARN]   unresolved: ImmGetContext
+[WARN]   unresolved: GetSystemDefaultLangID
+[WARN]   unresolved: GlobalReAlloc
+[WARN]   unresolved: lstrcpyW
+[WARN]   unresolved: SetThreadUILanguage
+[WARN]   unresolved: GetNumberFormatW
+[WARN]   unresolved: lstrcpynW
+[WARN]   unresolved: SetSearchPathMode
+[WARN]   unresolved: FreeConsole
+[WARN]   unresolved: GetSystemWow64DirectoryW
+[WARN]   unresolved: lstrcmpiW
+[WARN]   unresolved: GetCompressedFileSizeW
+[WARN]   unresolved: ExpandEnvironmentStringsA
+[WARN]   unresolved: lstrcmpW
+[WARN]   unresolved: ActivateActCtx
+[WARN]   unresolved: DeactivateActCtx
+[WARN]   unresolved: FindActCtxSectionStringW
+[WARN]   unresolved: QueryActCtxW
+[WARN]   unresolved: GetProfileIntW
+[WARN]   unresolved: GlobalDeleteAtom
+[WARN]   unresolved: GlobalAddAtomW
+[WARN]   unresolved: GlobalFindAtomW
+[WARN]   unresolved: GlobalGetAtomNameW
+[WARN]   unresolved: lstrcmpA
+[WARN]   unresolved: GetVersionExW
+[WARN]   unresolved: CompareStringA
+[WARN]   unresolved: GetPrivateProfileIntW
+[WARN]   unresolved: GlobalHandle
+[WARN]   unresolved: LocalReAlloc
+[WARN]   unresolved: GetStringTypeExW
+[WARN]   unresolved: GlobalFlags
+[WARN]   unresolved: GetSystemDefaultUILanguage
+[WARN]   unresolved: GetUserDefaultUILanguage
+[WARN]   unresolved: ReadDirectoryChangesW
+[WARN]   unresolved: WritePrivateProfileStringW
+[WARN]   unresolved: CreateActCtxW
+[WARN]   unresolved: MulDiv
+[WARN]   unresolved: GetPrivateProfileStringW
+[WARN]   unresolved: GetLocalTime
+[WARN]   unresolved: ReadProcessMemory
+[WARN]   unresolved: GetCurrentDirectoryA
+[WARN]   unresolved: CopyFileW
+[WARN]   unresolved: lstrlenW
+[WARN]   unresolved: SearchPathW
+[WARN]   unresolved: LockWindowUpdate
+[WARN]   unresolved: CopyAcceleratorTableW
+[WARN]   unresolved: RealChildWindowFromPoint
+[WARN]   unresolved: PostQuitMessage
+[WARN]   unresolved: ShowOwnedPopups
+[WARN]   unresolved: SetWindowRgn
+[WARN]   unresolved: DrawIcon
+[WARN]   unresolved: UnionRect
+[WARN]   unresolved: TranslateMDISysAccel
+[WARN]   unresolved: DefMDIChildProcW
+[WARN]   unresolved: DefFrameProcW
+[WARN]   unresolved: WindowFromPoint
+[WARN]   unresolved: GetTabbedTextExtentW
+[WARN]   unresolved: SetCursorPos
+[WARN]   unresolved: GetWindowDC
+[WARN]   unresolved: DestroyCursor
+[WARN]   unresolved: ReuseDDElParam
+[WARN]   unresolved: UnpackDDElParam
+[WARN]   unresolved: BringWindowToTop
+[WARN]   unresolved: MonitorFromWindow
+[WARN]   unresolved: WinHelpW
+[WARN]   unresolved: GetScrollInfo
+[WARN]   unresolved: SetScrollInfo
+[WARN]   unresolved: AdjustWindowRectEx
+[WARN]   unresolved: ShowScrollBar
+[WARN]   unresolved: GetScrollRange
+[WARN]   unresolved: SetScrollRange
+[WARN]   unresolved: SetScrollPos
+[WARN]   unresolved: ScrollWindow
+[WARN]   unresolved: EndPaint
+[WARN]   unresolved: BeginPaint
+[WARN]   unresolved: SetMenu
+[WARN]   unresolved: GetMenu
+[WARN]   unresolved: DeferWindowPos
+[WARN]   unresolved: SetWindowPlacement
+[WARN]   unresolved: GetWindowPlacement
+[WARN]   unresolved: GetClassInfoExW
+[WARN]   unresolved: GetMessageTime
+[WARN]   unresolved: GetMessagePos
+[WARN]   unresolved: RegisterWindowMessageW
+[WARN]   unresolved: SetActiveWindow
+[WARN]   unresolved: CreateDialogIndirectParamW
+[WARN]   unresolved: SetMenuItemInfoW
+[WARN]   unresolved: GetMenuCheckMarkDimensions
+[WARN]   unresolved: ValidateRect
+[WARN]   unresolved: SetWindowLongW
+[WARN]   unresolved: SendDlgItemMessageW
+[WARN]   unresolved: IsDlgButtonChecked
+[WARN]   unresolved: CheckDlgButton
+[WARN]   unresolved: GetDlgItemInt
+[WARN]   unresolved: SetDlgItemInt
+[WARN]   unresolved: MoveWindow
+[WARN]   unresolved: SetRectEmpty
+[WARN]   unresolved: SendDlgItemMessageA
+[WARN]   unresolved: DialogBoxParamW
+[WARN]   unresolved: EndDialog
+[WARN]   unresolved: GetDlgItemTextW
+[WARN]   unresolved: SetDlgItemTextW
+[WARN]   unresolved: DestroyWindow
+[WARN]   unresolved: IsWindowEnabled
+[WARN]   unresolved: UnregisterHotKey
+[WARN]   unresolved: RegisterHotKey
+[WARN]   unresolved: GetWindowTextLengthW
+[WARN]   unresolved: CreateWindowExW
+[WARN]   unresolved: ChildWindowFromPoint
+[WARN]   unresolved: CreateIconIndirect
+[WARN]   unresolved: GetMonitorInfoW
+[WARN]   unresolved: MonitorFromPoint
+[WARN]   unresolved: GetScrollPos
+[WARN]   unresolved: GetDCEx
+[WARN]   unresolved: SetClassLongPtrW
+[WARN]   unresolved: IsRectEmpty
+[WARN]   unresolved: EndDeferWindowPos
+[WARN]   unresolved: BeginDeferWindowPos
+[WARN]   unresolved: DestroyMenu
+[WARN]   unresolved: IsDialogMessageW
+[WARN]   unresolved: GetNextDlgTabItem
+[WARN]   unresolved: ChildWindowFromPointEx
+[WARN]   unresolved: GetIconInfo
+[WARN]   unresolved: MapDialogRect
+[WARN]   unresolved: IsChild
+[WARN]   unresolved: GetWindowThreadProcessId
+[WARN]   unresolved: GetLastActivePopup
+[WARN]   unresolved: SetForegroundWindow
+[WARN]   unresolved: ShowWindow
+[WARN]   unresolved: FindWindowW
+[WARN]   unresolved: GetThreadDesktop
+[WARN]   unresolved: GetUserObjectInformationW
+[WARN]   unresolved: DragDetect
+[WARN]   unresolved: EqualRect
+[WARN]   unresolved: DrawIconEx
+[WARN]   unresolved: GetClassLongPtrW
+[WARN]   unresolved: GetTopWindow
+[WARN]   unresolved: GetSystemMenu
+[WARN]   unresolved: FlashWindowEx
+[WARN]   unresolved: GetActiveWindow
+[WARN]   unresolved: ReplyMessage
+[WARN]   unresolved: IsMenu
+[WARN]   unresolved: DrawMenuBar
+[WARN]   unresolved: RegisterClassW
+[WARN]   unresolved: GetClassInfoW
+[WARN]   unresolved: GrayStringW
+[WARN]   unresolved: DrawTextExW
+[WARN]   unresolved: DrawTextW
+[WARN]   unresolved: TabbedTextOutW
+[WARN]   unresolved: GetCapture
+[WARN]   unresolved: DispatchMessageW
+[WARN]   unresolved: TranslateMessage
+[WARN]   unresolved: GetWindow
+[WARN]   unresolved: SetWindowTextW
+[WARN]   unresolved: GetWindowTextW
+[WARN]   unresolved: GetMenuStringW
+[WARN]   unresolved: ClientToScreen
+[WARN]   unresolved: EnableMenuItem
+[WARN]   unresolved: InflateRect
+[WARN]   unresolved: CheckMenuRadioItem
+[WARN]   unresolved: GetFocus
+[WARN]   unresolved: SetParent
+[WARN]   unresolved: GetDlgCtrlID
+[WARN]   unresolved: MapWindowPoints
+[WARN]   unresolved: IsIconic
+[WARN]   unresolved: IsZoomed
+[WARN]   unresolved: SetWindowPos
+[WARN]   unresolved: RemovePropW
+[WARN]   unresolved: SetPropW
+[WARN]   unresolved: SetWindowLongPtrW
+[WARN]   unresolved: GetWindowLongPtrW
+[WARN]   unresolved: CallWindowProcW
+[WARN]   unresolved: DefWindowProcW
+[WARN]   unresolved: GetPropW
+[WARN]   unresolved: GetParent
+[WARN]   unresolved: wsprintfA
+[WARN]   unresolved: TrackPopupMenu
+[WARN]   unresolved: LoadIconW
+[WARN]   unresolved: GetForegroundWindow
+[WARN]   unresolved: GetClassNameW
+[WARN]   unresolved: CallNextHookEx
+[WARN]   unresolved: SetFocus
+[WARN]   unresolved: UnhookWindowsHookEx
+[WARN]   unresolved: SetWindowsHookExW
+[WARN]   unresolved: PostMessageW
+[WARN]   unresolved: DrawFrameControl
+[WARN]   unresolved: IsWindowVisible
+[WARN]   unresolved: InsertMenuItemW
+[WARN]   unresolved: LoadMenuW
+[WARN]   unresolved: CheckMenuItem
+[WARN]   unresolved: GetComboBoxInfo
+[WARN]   unresolved: DestroyIcon
+[WARN]   unresolved: DeleteMenu
+[WARN]   unresolved: RemoveMenu
+[WARN]   unresolved: LoadBitmapW
+[WARN]   unresolved: SetMenuItemBitmaps
+[WARN]   unresolved: CreateMenu
+[WARN]   unresolved: GetMenuItemID
+[WARN]   unresolved: GetSubMenu
+[WARN]   unresolved: GetMenuState
+[WARN]   unresolved: ModifyMenuW
+[WARN]   unresolved: InsertMenuW
+[WARN]   unresolved: GetMenuItemCount
+[WARN]   unresolved: GetMenuItemInfoW
+[WARN]   unresolved: SetRect
+[WARN]   unresolved: DrawEdge
+[WARN]   unresolved: FillRect
+[WARN]   unresolved: GetSysColorBrush
+[WARN]   unresolved: GetMessageW
+[WARN]   unresolved: PeekMessageW
+[WARN]   unresolved: PostThreadMessageW
+[WARN]   unresolved: TrackMouseEvent
+[WARN]   unresolved: PtInRect
+[WARN]   unresolved: AppendMenuW
+[WARN]   unresolved: CreatePopupMenu
+[WARN]   unresolved: GetWindowRect
+[WARN]   unresolved: SetDlgItemTextA
+[WARN]   unresolved: CharPrevW
+[WARN]   unresolved: CharNextW
+[WARN]   unresolved: LoadImageW
+[WARN]   unresolved: UnregisterClassW
+[WARN]   unresolved: GetDesktopWindow
+[WARN]   unresolved: SendMessageW
+[WARN]   unresolved: GetWindowLongW
+[WARN]   unresolved: GetClipboardData
+[WARN]   unresolved: CloseClipboard
+[WARN]   unresolved: RegisterClipboardFormatW
+[WARN]   unresolved: SetClipboardData
+[WARN]   unresolved: EmptyClipboard
+[WARN]   unresolved: OpenClipboard
+[WARN]   unresolved: IsClipboardFormatAvailable
+[WARN]   unresolved: SetTimer
+[WARN]   unresolved: SetCapture
+[WARN]   unresolved: MessageBeep
+[WARN]   unresolved: RedrawWindow
+[WARN]   unresolved: GetCaretPos
+[WARN]   unresolved: GetDoubleClickTime
+[WARN]   unresolved: TranslateAcceleratorW
+[WARN]   unresolved: LoadAcceleratorsW
+[WARN]   unresolved: LoadCursorW
+[WARN]   unresolved: SetCursor
+[WARN]   unresolved: ScreenToClient
+[WARN]   unresolved: GetCursorPos
+[WARN]   unresolved: EnableScrollBar
+[WARN]   unresolved: OffsetRect
+[WARN]   unresolved: ReleaseDC
+[WARN]   unresolved: GetDC
+[WARN]   unresolved: GetDlgItem
+[WARN]   unresolved: SystemParametersInfoW
+[WARN]   unresolved: IsWindow
+[WARN]   unresolved: KillTimer
+[WARN]   unresolved: ReleaseCapture
+[WARN]   unresolved: GetSysColor
+[WARN]   unresolved: CopyRect
+[WARN]   unresolved: IntersectRect
+[WARN]   unresolved: wsprintfW
+[WARN]   unresolved: InvalidateRect
+[WARN]   unresolved: GetSystemMetrics
+[WARN]   unresolved: EnableWindow
+[WARN]   unresolved: HideCaret
+[WARN]   unresolved: ShowCaret
+[WARN]   unresolved: SetCaretPos
+[WARN]   unresolved: CreateCaret
+[WARN]   unresolved: UpdateWindow
+[WARN]   unresolved: GetClientRect
+[WARN]   unresolved: GetKeyState
+[WARN]   unresolved: GetAsyncKeyState
+[WARN]   unresolved: FindWindowExW
+[WARN]   unresolved: RestoreDC
+[WARN]   unresolved: SaveDC
+[WARN]   unresolved: SelectClipRgn
+[WARN]   unresolved: SetMapMode
+[WARN]   unresolved: SetLayout
+[WARN]   unresolved: GetLayout
+[WARN]   unresolved: SetPolyFillMode
+[WARN]   unresolved: SetROP2
+[WARN]   unresolved: SetStretchBltMode
+[WARN]   unresolved: SetTextAlign
+[WARN]   unresolved: MoveToEx
+[WARN]   unresolved: SetViewportExtEx
+[WARN]   unresolved: SetViewportOrgEx
+[WARN]   unresolved: SetWindowExtEx
+[WARN]   unresolved: SetWindowOrgEx
+[WARN]   unresolved: OffsetViewportOrgEx
+[WARN]   unresolved: ScaleViewportExtEx
+[WARN]   unresolved: LineTo
+[WARN]   unresolved: CombineRgn
+[WARN]   unresolved: SetRectRgn
+[WARN]   unresolved: GetROP2
+[WARN]   unresolved: GetCharWidthW
+[WARN]   unresolved: GetNearestColor
+[WARN]   unresolved: GetPolyFillMode
+[WARN]   unresolved: GetStretchBltMode
+[WARN]   unresolved: GetTextAlign
+[WARN]   unresolved: GetWindowOrgEx
+[WARN]   unresolved: GetTextFaceW
+[WARN]   unresolved: CreateFontW
+[WARN]   unresolved: StretchDIBits
+[WARN]   unresolved: CreateEllipticRgn
+[WARN]   unresolved: EnumFontFamiliesExW
+[WARN]   unresolved: IntersectClipRect
+[WARN]   unresolved: GetPixel
+[WARN]   unresolved: GetCurrentPositionEx
+[WARN]   unresolved: GetClipBox
+[WARN]   unresolved: ExcludeClipRect
+[WARN]   unresolved: CreateRectRgn
+[WARN]   unresolved: CreatePatternBrush
+[WARN]   unresolved: CreateCompatibleDC
+[WARN]   unresolved: CreateCompatibleBitmap
+[WARN]   unresolved: BitBlt
+[WARN]   unresolved: GetDeviceCaps
+[WARN]   unresolved: GetTextExtentPoint32W
+[WARN]   unresolved: CreateFontIndirectW
+[WARN]   unresolved: GetObjectW
+[WARN]   unresolved: Polygon
+[WARN]   unresolved: PtVisible
+[WARN]   unresolved: RectVisible
+[WARN]   unresolved: TextOutW
+[WARN]   unresolved: ExtTextOutW
+[WARN]   unresolved: Escape
+[WARN]   unresolved: CreateRectRgnIndirect
+[WARN]   unresolved: GetCharWidth32W
+[WARN]   unresolved: CreatePen
+[WARN]   unresolved: GetBkColor
+[WARN]   unresolved: GetStockObject
+[WARN]   unresolved: GetTextColor
+[WARN]   unresolved: RoundRect
+[WARN]   unresolved: DeleteDC
+[WARN]   unresolved: SelectObject
+[WARN]   unresolved: GetDIBColorTable
+[WARN]   unresolved: DeleteObject
+[WARN]   unresolved: SetDIBColorTable
+[WARN]   unresolved: CreateDIBSection
+[WARN]   unresolved: CreateSolidBrush
+[WARN]   unresolved: GetDIBits
+[WARN]   unresolved: SetDIBits
+[WARN]   unresolved: GetBkMode
+[WARN]   unresolved: Ellipse
+[WARN]   unresolved: CreateBitmap
+[WARN]   unresolved: PatBlt
+[WARN]   unresolved: GetTextMetricsW
+[WARN]   unresolved: CreateDCW
+[WARN]   unresolved: SetTextColor
+[WARN]   unresolved: SetBkMode
+[WARN]   unresolved: EnumFontFamiliesW
+[WARN]   unresolved: CopyMetaFileW
+[WARN]   unresolved: SetBkColor
+[WARN]   unresolved: StartDocW
+[WARN]   unresolved: EndDoc
+[WARN]   unresolved: StartPage
+[WARN]   unresolved: EndPage
+[WARN]   unresolved: AbortDoc
+[WARN]   unresolved: ScaleWindowExtEx
+[WARN]   unresolved: SetAbortProc
+[WARN]   unresolved: LPtoDP
+[WARN]   unresolved: GetMapMode
+[WARN]   unresolved: GetWindowExtEx
+[WARN]   unresolved: GetViewportExtEx
+[WARN]   unresolved: DPtoLP
+[WARN]   unresolved: Rectangle
+[WARN]   unresolved: GetViewportOrgEx
+[WARN]   unresolved: RegSetValueW
+[WARN]   unresolved: GetUserNameA
+[WARN]   unresolved: RegDeleteTreeW
+[WARN]   unresolved: RegQueryValueW
+[WARN]   unresolved: RegEnumKeyW
+[WARN]   unresolved: RegDeleteKeyW
+[WARN]   unresolved: RegOpenKeyW
+[WARN]   unresolved: SHFileOperationW
+[WARN]   unresolved: ShellExecuteW
+[WARN]   unresolved: SHCreateShellItem
+[WARN]   unresolved: SHParseDisplayName
+[WARN]   unresolved: DragQueryFileW
+[WARN]   unresolved: SHGetPropertyStoreFromParsingName
+[WARN]   unresolved: SHBrowseForFolderW
+[WARN]   unresolved: SHGetPathFromIDListW
+[WARN]   unresolved: SetCurrentProcessExplicitAppUserModelID
+[WARN]   unresolved: SHAddToRecentDocs
+[WARN]   unresolved: ShellExecuteExW
+[WARN]   unresolved: SHGetMalloc
+[WARN]   unresolved: SHGetDesktopFolder
+[WARN]   unresolved: SHGetFileInfoW
+[WARN]   unresolved: DragFinish
+[WARN]   unresolved: ExtractIconW
+[WARN]   unresolved: SHGetFolderPathW
+[WARN]   unresolved: ImageList_Add
+[WARN]   unresolved: ImageList_Draw
+[WARN]   unresolved: ImageList_DrawIndirect
+[WARN]   unresolved: ImageList_AddMasked
+[WARN]   unresolved: ImageList_GetImageCount
+[WARN]   unresolved: ImageList_Copy
+[WARN]   unresolved: ImageList_Remove
+[WARN]   unresolved: ImageList_GetIcon
+[WARN]   unresolved: ImageList_ReplaceIcon
+[WARN]   unresolved: ImageList_GetImageInfo
+[WARN]   unresolved: ImageList_DrawEx
+[WARN]   unresolved: IsThemeActive
+[WARN]   unresolved: OpenThemeData
+[WARN]   unresolved: GetThemePartSize
+[WARN]   unresolved: GetThemeMargins
+[WARN]   unresolved: GetThemeInt
+[WARN]   unresolved: GetThemeColor
+[WARN]   unresolved: DrawThemeBackground
+[WARN]   unresolved: DrawThemeText
+[WARN]   unresolved: CloseThemeData
+[WARN]   unresolved: GetThemeFont
+[WARN]   unresolved: SetWindowTheme
+[WARN]   unresolved: IsThemeBackgroundPartiallyTransparent
+[WARN]   unresolved: IsAppThemed
+[WARN]   unresolved: DrawThemeParentBackground
+[WARN]   unresolved: CoCreateFreeThreadedMarshaler
+[WARN]   unresolved: CoRevokeClassObject
+[WARN]   unresolved: IsAccelerator
+[WARN]   unresolved: OleTranslateAccelerator
+[WARN]   unresolved: OleDestroyMenuDescriptor
+[WARN]   unresolved: OleCreateMenuDescriptor
+[WARN]   unresolved: CoRegisterMessageFilter
+[WARN]   unresolved: CoFreeUnusedLibraries
+[WARN]   unresolved: CoCreateGuid
+[WARN]   unresolved: CoInitializeEx
+[WARN]   unresolved: DoDragDrop
+[WARN]   unresolved: OleIsCurrentClipboard
+[WARN]   unresolved: OleFlushClipboard
+[WARN]   unresolved: OleGetClipboard
+[WARN]   unresolved: OleDuplicateData
+[WARN]   unresolved: StringFromCLSID
+[WARN]   unresolved: CoLockObjectExternal
+[WARN]   unresolved: OleUninitialize
+[WARN]   unresolved: OleInitialize
+[WARN]   unresolved: CoUninitialize
+[WARN]   unresolved: CoInitialize
+[WARN]   unresolved: CoGetObject
+[WARN]   unresolved: CLSIDFromProgID
+[WARN]   unresolved: CoTaskMemAlloc
+[WARN]   unresolved: CreateStreamOnHGlobal
+[WARN]   unresolved: RegisterDragDrop
+[WARN]   unresolved: RevokeDragDrop
+[WARN]   unresolved: OleRun
+[WARN]   unresolved: CoCreateInstance
+[WARN]   unresolved: ReleaseStgMedium
+[WARN]   unresolved: PropVariantClear
+[WARN]   unresolved: CoTaskMemFree
+[WARN]   unresolved: GdipFillRectangleI
+[WARN]   unresolved: GdipAddPathArcI
+[WARN]   unresolved: GdipDrawPath
+[WARN]   unresolved: GdipFillPath
+[WARN]   unresolved: GdipClosePathFigure
+[WARN]   unresolved: GdipAddPathLineI
+[WARN]   unresolved: GdipAddPathBezierI
+[WARN]   unresolved: GdipStartPathFigure
+[WARN]   unresolved: GdipDeletePath
+[WARN]   unresolved: GdipCreatePath
+[WARN]   unresolved: GdipDrawBezierI
+[WARN]   unresolved: GdipCreateFromHDC
+[WARN]   unresolved: GdipDeleteGraphics
+[WARN]   unresolved: GdipCreatePen1
+[WARN]   unresolved: GdipDeletePen
+[WARN]   unresolved: GdipDrawLineI
+[WARN]   unresolved: GdiplusShutdown
+[WARN]   unresolved: GdipCreateBitmapFromScan0
+[WARN]   unresolved: GdipFree
+[WARN]   unresolved: GdipAlloc
+[WARN]   unresolved: GdipCloneImage
+[WARN]   unresolved: GdipDisposeImage
+[WARN]   unresolved: GdipGetImageGraphicsContext
+[WARN]   unresolved: GdipSetInterpolationMode
+[WARN]   unresolved: GdipDrawImageRectI
+[WARN]   unresolved: GdipCreateHBITMAPFromBitmap
+[WARN]   unresolved: GdipDrawImageI
+[WARN]   unresolved: GdipBitmapUnlockBits
+[WARN]   unresolved: GdipBitmapLockBits
+[WARN]   unresolved: GdipGetImagePalette
+[WARN]   unresolved: GdipGetImagePaletteSize
+[WARN]   unresolved: GdipGetImageWidth
+[WARN]   unresolved: GdipGetImageHeight
+[WARN]   unresolved: GdipGetImagePixelFormat
+[WARN]   unresolved: GdipCreateBitmapFromFile
+[WARN]   unresolved: GdiplusStartup
+[WARN]   unresolved: GdipCreateBitmapFromHBITMAP
+[WARN]   unresolved: GdipDrawImageRectRectI
+[WARN]   unresolved: GdipCreateBitmapFromStream
+[WARN]   unresolved: GdipSaveImageToStream
+[WARN]   unresolved: GdipGetImageEncoders
+[WARN]   unresolved: GdipGetImageEncodersSize
+[WARN]   unresolved: GdipSetSmoothingMode
+[WARN]   unresolved: GdipDrawLine
+[WARN]   unresolved: GdipCreateSolidFill
+[WARN]   unresolved: GdipDeleteBrush
+[WARN]   unresolved: GdipCloneBrush
+[WARN]   unresolved: GdipDrawLinesI
+[WARN]   unresolved: LresultFromObject
+[WARN]   unresolved: AccessibleObjectFromWindow
+[WARN]   unresolved: CreateStdAccessibleObject
+[WARN] 536 imports unresolved
+[STUB] unresolved import called -> returning 0 (call #1)
+[STUB] unresolved import called -> returning 0 (call #2)
+[STUB] unresolved import called -> returning 0 (call #3)
+[STUB] unresolved import called -> returning 0 (call #4)
+[STUB] unresolved import called -> returning 0 (call #5)
+[STUB] unresolved import called -> returning 0 (call #6)
+[STUB] unresolved import called -> returning 0 (call #7)
+[STUB] unresolved import called -> returning 0 (call #8)
+[STUB] unresolved import called -> returning 0 (call #9)
+[STUB] unresolved import called -> returning 0 (call #10)
+[STUB] unresolved import called -> returning 0 (call #11)
+[STUB] unresolved import called -> returning 0 (call #12)
+[STUB] unresolved import called -> returning 0 (call #13)
+[STUB] unresolved import called -> returning 0 (call #14)
+[STUB] unresolved import called -> returning 0 (call #15)
+[STUB] unresolved import called -> returning 0 (call #16)
+[STUB] unresolved import called -> returning 0 (call #17)
+[STUB] unresolved import called -> returning 0 (call #18)
+[STUB] unresolved import called -> returning 0 (call #19)
+[STUB] unresolved import called -> returning 0 (call #20)
+[STUB] further unresolved-import calls silenced
+
+[CRASH] Signal 11 at RIP=0x203da90
+  RAX=0x0 RCX=0x7ffd92b8f3a0 RDX=0xffffffffffffffff R8=0x0 R9=0x0
+  RSP=0x7ffd92b8e4e0 RBP=0x217c000
+  g_image_base=0x140000000 g_image_size=0x681000
+  (NOT inside loaded PE)
+  [RIP-MAP] 0x203da90 in 0x2005000-0x2042000 r-xp /home/z/my-project/workspace/miniwin-engineering/minwin_loader
+  Bytes: 44 0f b6 43 07 0f b6 7b 06 0f b6 73 05 0f b6 4b 
+  RSI=0x0 RDI=0x32163a0
+  R8=0x0  R9=0x0 R10=0x0 R11=0x202
+  R12=0x32162c0 R13=0x14032126f R14=0x7ffd92b8f3a0 R15=0x322a500
+  [SCAN rsp+024] 0x140000000 <PE>
+  [SCAN rsp+152] 0x2020ce0 <LOADER>
+  [SCAN rsp+456] 0x2002953 <LOADER>
+  [SCAN rsp+464] 0x2001950 <LOADER>
+  [SCAN rsp+712] 0x20026d1 <LOADER>
+  [SCAN rsp+720] 0x2001c80 <LOADER>
+  [SCAN rsp+1008] 0x14032126f <PE>
+  [SCAN rsp+1040] 0x1404fd7b0 <PE>
+  [SCAN rsp+1048] 0x140000000 <PE>
+  [SCAN rsp+1176] 0x2002583 <LOADER>
+  [SCAN rsp+1240] 0x20026d9 <LOADER>
+  [SCAN rsp+1384] 0x2004b98 <LOADER>
+  [SCAN rsp+1448] 0x20039e0 <LOADER>
+  [SCAN rsp+1512] 0x2004928 <LOADER>
+  [SCAN rsp+1592] 0x140533838 <PE>
+  [SCAN rsp+1720] 0x2049f4c <LOADER>
+  [SCAN rsp+1832] 0x2049f4c <LOADER>
+  [SCAN rsp+1968] 0x2049f28 <LOADER>
+  [SCAN rsp+1976] 0x2049f2a <LOADER>
+  [SCAN rsp+2000] 0x2049f28 <LOADER>
+  [SCAN rsp+2008] 0x2049f2a <LOADER>
+  [SCAN rsp+2192] 0x204a8d8 <LOADER>
+  [SCAN rsp+2248] 0x2049f4c <LOADER>
+  [SCAN rsp+2384] 0x2049f28 <LOADER>
+  [SCAN rsp+2392] 0x2049f2a <LOADER>
+  [SCAN rsp+2592] 0x204a610 <LOADER>
+  [SCAN rsp+2600] 0x204a612 <LOADER>
+  [SCAN rsp+3032] 0x2049f28 <LOADER>
+  [SCAN rsp+3144] 0x2049f28 <LOADER>
+  [SCAN rsp+3320] 0x1405331b8 <PE>
+  [SCAN rsp+3400] 0x1405331b8 <PE>
+  [SCAN rsp+3432] 0x1405331b8 <PE>
+  [SCAN rsp+3464] 0x1405331b8 <PE>
+  [SCAN rsp+3600] 0x1405331b8 <PE>
+  [SCAN rsp+3624] 0x14032126f <PE>
+  [SCAN rsp+3656] 0x1405331b8 <PE>
+  [SCAN rsp+3672] 0x200814c <LOADER>
+  [SCAN rsp+3688] 0x14032126f <PE>
+  [SCAN rsp+3728] 0x1405331b8 <PE>
+  [SCAN rsp+3760] 0x1404fd7b0 <PE>
+  [SCAN rsp+3768] 0x14032126f <PE>
+  [SCAN rsp+3808] 0x140000000 <PE>
+  [SCAN rsp+3832] 0x1404fd7b0 <PE>
+  [SCAN rsp+3840] 0x140000000 <PE>
+  [SCAN rsp+3856] 0x140533190 <PE>
+  [SCAN rsp+3864] 0x1402bd10d <PE>
+  [SCAN rsp+3912] 0x140304d2b <PE>
+  [SCAN rsp+3920] 0x140506150 <PE>
+  [SCAN rsp+3928] 0x1405331b8 <PE>
+  [SCAN rsp+3944] 0x1402bdcfe <PE>
+  [SCAN rsp+3952] 0x140536f00 <PE>
+  [SCAN rsp+3960] 0x1402bd140 <PE>
+  [SCAN rsp+3992] 0x140304ad3 <PE>
+  [SCAN rsp+4000] 0x140533190 <PE>
+  [SCAN rsp+4016] 0x1402bdcf0 <PE>
+  [SCAN rsp+4024] 0x1402bdcf0 <PE>
+  [SCAN rsp+4040] 0x1402fe632 <PE>
+  [SCAN rsp+4048] 0x140536f00 <PE>
+  [SCAN rsp+4080] 0x140536f00 <PE>
+  Backtrace (via stack walking):
+    [0] RIP=0x203da90 (outside PE, possible shared lib)
+    [1] RIP=0x203da90 (outside PE, possible shared lib)
+    [2] RIP=0x203da90 (outside PE, possible shared lib)

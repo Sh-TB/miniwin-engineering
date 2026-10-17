@@ -1,0 +1,5 @@
+exe=openssh/sshd-session.exe
+sha256=5b28ad2046596454bd1e0b1ab19e8d66945def1d18ec9bec6f0ef538600a03cf
+timeout=10s
+args=none
+date_utc=2026-10-17T18:39:39Z

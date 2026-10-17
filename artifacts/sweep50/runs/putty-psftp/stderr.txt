@@ -1,0 +1,27 @@
+[TRACE] Command line: /home/z/my-project/workspace/miniwin-engineering/artifacts/sweep50/dl/psftp/psftp.exe
+[WARN]   unresolved: ConnectNamedPipe
+[WARN]   unresolved: CreateDirectoryA
+[WARN]   unresolved: CreateNamedPipeA
+[WARN]   unresolved: GetCurrentDirectoryA
+[WARN]   unresolved: GetLocalTime
+[WARN]   unresolved: GetThreadTimes
+[WARN]   unresolved: GetWindowsDirectoryA
+[WARN]   unresolved: GlobalMemoryStatus
+[WARN]   unresolved: SetCurrentDirectoryA
+[WARN]   unresolved: AllocateAndInitializeSid
+[WARN]   unresolved: CopySid
+[WARN]   unresolved: EqualSid
+[WARN]   unresolved: GetLengthSid
+[WARN]   unresolved: GetUserNameA
+[WARN]   unresolved: InitializeSecurityDescriptor
+[WARN]   unresolved: RegCreateKeyExA
+[WARN]   unresolved: RegSetValueExA
+[WARN]   unresolved: SetSecurityDescriptorDacl
+[WARN]   unresolved: SetSecurityDescriptorOwner
+[WARN]   unresolved: GetCapture
+[WARN]   unresolved: GetClipboardOwner
+[WARN]   unresolved: GetCursorPos
+[WARN]   unresolved: GetForegroundWindow
+[WARN]   unresolved: GetQueueStatus
+[WARN] 24 imports unresolved
+FATAL ERROR: Unable to load any WinSock library

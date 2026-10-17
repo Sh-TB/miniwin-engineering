@@ -1,0 +1,647 @@
+{
+  "trace": [
+[Tcf80] [API] PE Loader: file=/home/z/my-project/workspace/miniwin-engineering/artifacts/sweep50/dl/nasm/ndisasm.exe size=1124864
+[Tcf80] [API] PE Loader: ImageBase=0x140000000 EP=0x13f0 SizeOfImage=0x11a000 Sections=11
+[Tcf80] [API] PE Loader: Mapped at 0x140000000 (forced via MAP_FIXED)
+[Tcf80] [API] Section [0] .text    VA=0x00001000 VS=0x0000cdd8 Raw=0x0000ce00 Ch=0x60000060
+[Tcf80] [API] Section [1] .data    VA=0x0000e000 VS=0x000004b0 Raw=0x00000600 Ch=0xc0000040
+[Tcf80] [API] Section [2] .rdata   VA=0x0000f000 VS=0x000f80e0 Raw=0x000f8200 Ch=0x40000040
+[Tcf80] [API] Section [3] .pdata   VA=0x00108000 VS=0x00000864 Raw=0x00000a00 Ch=0x40000040
+[Tcf80] [API] Section [4] .xdata   VA=0x00109000 VS=0x000007c8 Raw=0x00000800 Ch=0x40000040
+[Tcf80] [API] Section [5] .bss     VA=0x0010a000 VS=0x00000b30 Raw=0x00000000 Ch=0xc0000080
+[Tcf80] [API] Section [6] .idata   VA=0x0010b000 VS=0x00000fac Raw=0x00001000 Ch=0xc0000040
+[Tcf80] [API] Section [7] .CRT     VA=0x0010c000 VS=0x00000060 Raw=0x00000200 Ch=0xc0000040
+[Tcf80] [API] Section [8] .tls     VA=0x0010d000 VS=0x00000010 Raw=0x00000200 Ch=0xc0000040
+[Tcf80] [API] Section [9] .rsrc    VA=0x0010e000 VS=0x00000460 Raw=0x00000600 Ch=0xc0000040
+[Tcf80] [API] Section [10] .reloc   VA=0x0010f000 VS=0x0000a2a0 Raw=0x0000a400 Ch=0x42000040
+[Tcf80] [API] Import Directory: RVA=0x10b000 Size=0xfac
+[Tcf80] [API] Import DLL: KERNEL32.dll (IAT RVA=0x10b450, ILT RVA=0x10b108)
+[Tcf80] [API]   [0] DeleteCriticalSection -> 0x200d760
+[Tcf80] [API]   [1] EnterCriticalSection -> 0x202fa30
+[Tcf80] [API]   [2] GetLastError -> 0x2009c00
+[Tcf80] [API]   [3] InitializeCriticalSection -> 0x2029a00
+[Tcf80] [API]   [4] LeaveCriticalSection -> 0x2027ab0
+[Tcf80] [API]   [5] SetUnhandledExceptionFilter -> 0x200a5d0
+[Tcf80] [API]   [6] Sleep -> 0x202a6d0
+[Tcf80] [API]   [7] TlsGetValue -> 0x200a6d0
+[Tcf80] [API]   [8] VirtualProtect -> 0x200f1d0
+[Tcf80] [API]   [9] VirtualQuery -> 0x200c870
+[Tcf80] [API] Import DLL: api-ms-win-crt-convert-l1-1-0.dll (IAT RVA=0x10b4a8, ILT RVA=0x10b160)
+[Tcf80] [API]   [0] mbrtowc -> 0x200e6b0
+[Tcf80] [API]   [1] mbsrtowcs -> 0x2017130
+[Tcf80] [API]   [2] strtoul -> 0x20111e0
+[Tcf80] [API]   [3] wcrtomb -> 0x2017090
+[Tcf80] [API] Import DLL: api-ms-win-crt-environment-l1-1-0.dll (IAT RVA=0x10b4d0, ILT RVA=0x10b188)
+[Tcf80] [API]   [0] __p__environ -> 0x2026a20
+[Tcf80] [API]   [1] __p__wenviron -> 0x202a3c0
+[Tcf80] [API] Import DLL: api-ms-win-crt-filesystem-l1-1-0.dll (IAT RVA=0x10b4e8, ILT RVA=0x10b1a0)
+[Tcf80] [API]   [0] _fstat64 -> 0x2012820
+[Tcf80] [API]   [1] _lock_file -> 0x202e090
+[Tcf80] [API]   [2] _unlock_file -> 0x202e200
+[Tcf80] [API]   [3] _waccess -> 0x20356c0
+[Tcf80] [API]   [4] _wstat64 -> 0x2036590
+[Tcf80] [API] Import DLL: api-ms-win-crt-heap-l1-1-0.dll (IAT RVA=0x10b518, ILT RVA=0x10b1d0)
+[Tcf80] [API]   [0] _set_new_mode -> 0x2026300
+[Tcf80] [API]   [1] calloc -> 0x2030080
+[Tcf80] [API]   [2] free -> 0x20381e0
+[Tcf80] [API]   [3] malloc -> 0x202fcc0
+[Tcf80] [API]   [4] realloc -> 0x203ba60
+[Tcf80] [API] Import DLL: api-ms-win-crt-locale-l1-1-0.dll (IAT RVA=0x10b548, ILT RVA=0x10b200)
+[Tcf80] [API]   [0] localeconv -> 0x200f860
+[Tcf80] [API] Import DLL: api-ms-win-crt-math-l1-1-0.dll (IAT RVA=0x10b558, ILT RVA=0x10b210)
+[Tcf80] [API]   [0] __setusermatherr -> 0x2026120
+[Tcf80] [API] Import DLL: api-ms-win-crt-private-l1-1-0.dll (IAT RVA=0x10b568, ILT RVA=0x10b220)
+[Tcf80] [API]   [0] __C_specific_handler -> 0x2028c40
+[Tcf80] [API]   [1] memcpy -> 0x200efe0
+[Tcf80] [API]   [2] strchr -> 0x200fbc0
+[Tcf80] [API] Import DLL: api-ms-win-crt-runtime-l1-1-0.dll (IAT RVA=0x10b588, ILT RVA=0x10b240)
+[Tcf80] [API]   [0] _set_app_type -> 0x2026030
+[Tcf80] [API]   [1] __p___argc -> 0x2026800
+[Tcf80] [API]   [2] __p___argv -> 0x2026910
+[Tcf80] [API]   [3] __p___wargv -> 0x202a4d0
+[Tcf80] [API]   [4] _cexit -> 0x200d190
+[Tcf80] [API]   [5] _configure_narrow_argv -> 0x2026210
+[Tcf80] [API]   [6] _configure_wide_argv -> 0x202e0d0
+[Tcf80] [API]   [7] _crt_at_quick_exit -> 0x202e0a0
+[Tcf80] [API]   [8] _crt_atexit -> 0x200b030
+[Tcf80] [API]   [9] _errno -> 0x2026e10
+[Tcf80] [API]   [10] _exit -> 0x200dad0
+[Tcf80] [API]   [11] _initialize_narrow_environment -> 0x2028d30
+[Tcf80] [API]   [12] _initialize_wide_environment -> 0x202e160
+[Tcf80] [API]   [13] _initterm -> 0x200a930
+[Tcf80] [API]   [14] _set_invalid_parameter_handler -> 0x20263f0
+[Tcf80] [API]   [15] abort -> 0x200df00
+[Tcf80] [API]   [16] exit -> 0x200f9c0
+[Tcf80] [API]   [17] perror -> 0x2006300
+[Tcf80] [API]   [18] signal -> 0x20264e0
+[Tcf80] [API]   [19] strerror -> 0x7f73642f7550
+[Tcf80] [API] Import DLL: api-ms-win-crt-stdio-l1-1-0.dll (IAT RVA=0x10b630, ILT RVA=0x10b2e8)
+[Tcf80] [API]   [0] __acrt_iob_func -> 0x200abf0
+[Tcf80] [API]   [1] __p__commode -> 0x20266f0
+[Tcf80] [API]   [2] __p__fmode -> 0x20265e0
+[Tcf80] [API]   [3] __stdio_common_vfprintf -> 0x201ef30
+[Tcf80] [API]   [4] __stdio_common_vfwprintf -> 0x2029000
+[Tcf80] [API]   [5] _chsize_s -> 0x202e330
+[Tcf80] [API]   [6] _fileno -> 0x200ae00
+[Tcf80] [API]   [7] _fseeki64 -> 0x200fef0
+[Tcf80] [API]   [8] _ftelli64 -> 0x2010050
+[Tcf80] [API]   [9] _wfopen -> 0x2039b00
+[Tcf80] [API]   [10] fclose -> 0x202e8d0
+[Tcf80] [API]   [11] feof -> 0x201d5e0
+[Tcf80] [API]   [12] ferror -> 0x201a160
+[Tcf80] [API]   [13] fflush -> 0x201cf90
+[Tcf80] [API]   [14] fopen -> 0x20349a0
+[Tcf80] [API]   [15] fputc -> 0x201d7c0
+[Tcf80] [API]   [16] fread -> 0x201d0a0
+[Tcf80] [API]   [17] fseek -> 0x201d430
+[Tcf80] [API]   [18] ftell -> 0x201d520
+[Tcf80] [API]   [19] fwrite -> 0x201d8d0
+[Tcf80] [API]   [20] setvbuf -> 0x201dd60
+[Tcf80] [API]   [21] _setmode -> 0x2026c20
+[Tcf80] [API]   [22] _fileno -> 0x200ae00
+[Tcf80] [API] Import DLL: api-ms-win-crt-string-l1-1-0.dll (IAT RVA=0x10b6f0, ILT RVA=0x10b3a8)
+[Tcf80] [API]   [0] _strnicmp -> 0x2016e30
+[Tcf80] [API]   [1] isalpha -> 0x2011750
+[Tcf80] [API]   [2] iscntrl -> 0x20118b0
+[Tcf80] [API]   [3] UNRESOLVED: ispunct
+[Tcf80] [API]   [4] isspace -> 0x2011490
+[Tcf80] [API]   [5] isxdigit -> 0x20115f0
+[Tcf80] [API]   [6] memset -> 0x200c9d0
+[Tcf80] [API]   [7] strcmp -> 0x200eac0
+[Tcf80] [API]   [8] strlen -> 0x200d990
+[Tcf80] [API]   [9] strncmp -> 0x2010cc0
+[Tcf80] [API]   [10] strncpy -> 0x201ab60
+[Tcf80] [API]   [11] strpbrk -> 0x201aca0
+[Tcf80] [API]   [12] tolower -> 0x202b0c0
+[Tcf80] [API]   [13] wcslen -> 0x201ff00
+[Tcf80] [API]   [14] _stricmp -> 0x2010d60
+[Tcf80] [API] Import DLL: api-ms-win-crt-time-l1-1-0.dll (IAT RVA=0x10b770, ILT RVA=0x10b428)
+[Tcf80] [API]   [0] __daylight -> DATA 0x217d254
+[Tcf80] [API]   [1] __timezone -> DATA 0x217d258
+[Tcf80] [API]   [2] __tzname -> DATA 0x206d9a0
+[Tcf80] [API]   [3] _tzset -> 0x2028e20
+[Tcf80] [API] Import resolution: 92 resolved, 1 unresolved (total 93)
+[Tcf80] [API] TLS: StartRaw=0x14010d000 EndRaw=0x14010d008 Callbacks=0x14010c038
+[Tcf80] [API] TLS: static block 0x259c0a0 (8+0 bytes) -> slot 0
+[Tcf80] [API] TLS: callback[0] = 0x140001560
+[Tcf80] [API] InitializeCriticalSection(0x14010a100)
+[Tcf80] [API] TLS: callback[1] = 0x140001530
+[Tcf80] [API] Exception: .pdata RVA=0x108000 Size=0x864 Entries=179
+[Tcf80] [API] [API-005] EH hacks DISABLED (default) (MINWIN_EH_HACKS=<unset>)
+[Tcf80] [API] [API-005] CXX-EH-FIX (LSDA catch-all patch RVA 0x2010c8) skipped: MINWIN_EH_HACKS not set
+[Tcf80] [API] Jumping to EP=0x1400013f0
+[Tcf80] [API] _initterm(start=0x14010c018, end=0x14010c028)
+[Tcf80] [API] _initterm: calling 0x140001010
+[Tcf80] [API] __set_app_type(1)
+[Tcf80] [API] __p__fmode() = 0x217d250
+[Tcf80] [API] __p__commode() = 0x217d24c
+[Tcf80] [API] _initterm(start=0x14010c000, end=0x14010c010)
+[Tcf80] [API] _initterm: calling 0x140001130
+[Tcf80] [API] _initialize_narrow_environment() -> 0
+[Tcf80] [API] _configure_narrow_argv(mode=1) -> 0
+[Tcf80] [API] __p___argc() = 0x217d268
+[Tcf80] [API] __p___argv() = 0x206d9b0
+[Tcf80] [API] __p__environ() = 0x217d260
+[Tcf80] [API] _set_new_mode(0) -> 0
+[Tcf80] [API] SetUnhandledExceptionFilter(handler=0x140001ca0)
+[Tcf80] [API] _set_invalid_parameter_handler(0x140001000) -> NULL
+[Tcf80] [API] malloc(16) = 0x259c750
+[Tcf80] [API] malloc(12) = 0x259c770
+[Tcf80] [API] atexit(func=0x140001440)
+[Tcf80] [API] atexit(func=0x140001450)
+[Tcf80] [API] malloc(65552) = 0x259c790
+[Tcf80] [API] __acrt_iob_func(2) = 0x7f73644344e0
+[Tcf80] [API] _errno() = 0x215e978
+[Tcf80] [API] fputc(ch=0x75)
+[Tcf80] [API] fputc(ch=0x73)
+[Tcf80] [API] fputc(ch=0x61)
+[Tcf80] [API] fputc(ch=0x67)
+[Tcf80] [API] fputc(ch=0x65)
+[Tcf80] [API] fputc(ch=0x3a)
+[Tcf80] [API] fputc(ch=0x20)
+[Tcf80] [API] fputc(ch=0x6e)
+[Tcf80] [API] fputc(ch=0x64)
+[Tcf80] [API] fputc(ch=0x69)
+[Tcf80] [API] fputc(ch=0x73)
+[Tcf80] [API] fputc(ch=0x61)
+[Tcf80] [API] fputc(ch=0x73)
+[Tcf80] [API] fputc(ch=0x6d)
+[Tcf80] [API] fputc(ch=0x20)
+[Tcf80] [API] fputc(ch=0x5b)
+[Tcf80] [API] fputc(ch=0x2d)
+[Tcf80] [API] fputc(ch=0x61)
+[Tcf80] [API] fputc(ch=0x5d)
+[Tcf80] [API] fputc(ch=0x20)
+[Tcf80] [API] fputc(ch=0x5b)
+[Tcf80] [API] fputc(ch=0x2d)
+[Tcf80] [API] fputc(ch=0x69)
+[Tcf80] [API] fputc(ch=0x5d)
+[Tcf80] [API] fputc(ch=0x20)
+[Tcf80] [API] fputc(ch=0x5b)
+[Tcf80] [API] fputc(ch=0x2d)
+[Tcf80] [API] fputc(ch=0x68)
+[Tcf80] [API] fputc(ch=0x5d)
+[Tcf80] [API] fputc(ch=0x20)
+[Tcf80] [API] fputc(ch=0x5b)
+[Tcf80] [API] fputc(ch=0x2d)
+[Tcf80] [API] fputc(ch=0x72)
+[Tcf80] [API] fputc(ch=0x5d)
+[Tcf80] [API] fputc(ch=0x20)
+[Tcf80] [API] fputc(ch=0x5b)
+[Tcf80] [API] fputc(ch=0x2d)
+[Tcf80] [API] fputc(ch=0x75)
+[Tcf80] [API] fputc(ch=0x5d)
+[Tcf80] [API] fputc(ch=0x20)
+[Tcf80] [API] fputc(ch=0x5b)
+[Tcf80] [API] fputc(ch=0x2d)
+[Tcf80] [API] fputc(ch=0x62)
+[Tcf80] [API] fputc(ch=0x20)
+[Tcf80] [API] fputc(ch=0x62)
+[Tcf80] [API] fputc(ch=0x69)
+[Tcf80] [API] fputc(ch=0x74)
+[Tcf80] [API] fputc(ch=0x73)
+[Tcf80] [API] fputc(ch=0x5d)
+[Tcf80] [API] fputc(ch=0x20)
+[Tcf80] [API] fputc(ch=0x5b)
+[Tcf80] [API] fputc(ch=0x2d)
+[Tcf80] [API] fputc(ch=0x6f)
+[Tcf80] [API] fputc(ch=0x20)
+[Tcf80] [API] fputc(ch=0x6f)
+[Tcf80] [API] fputc(ch=0x72)
+[Tcf80] [API] fputc(ch=0x69)
+[Tcf80] [API] fputc(ch=0x67)
+[Tcf80] [API] fputc(ch=0x69)
+[Tcf80] [API] fputc(ch=0x6e)
+[Tcf80] [API] fputc(ch=0x5d)
+[Tcf80] [API] fputc(ch=0x20)
+[Tcf80] [API] fputc(ch=0x5b)
+[Tcf80] [API] fputc(ch=0x2d)
+[Tcf80] [API] fputc(ch=0x73)
+[Tcf80] [API] fputc(ch=0x20)
+[Tcf80] [API] fputc(ch=0x73)
+[Tcf80] [API] fputc(ch=0x79)
+[Tcf80] [API] fputc(ch=0x6e)
+[Tcf80] [API] fputc(ch=0x63)
+[Tcf80] [API] fputc(ch=0x2e)
+[Tcf80] [API] fputc(ch=0x2e)
+[Tcf80] [API] fputc(ch=0x2e)
+[Tcf80] [API] fputc(ch=0x5d)
+[Tcf80] [API] fputc(ch=0xa)
+[Tcf80] [API] fputc(ch=0x20)
+[Tcf80] [API] fputc(ch=0x20)
+[Tcf80] [API] fputc(ch=0x20)
+[Tcf80] [API] fputc(ch=0x20)
+[Tcf80] [API] fputc(ch=0x20)
+[Tcf80] [API] fputc(ch=0x20)
+[Tcf80] [API] fputc(ch=0x20)
+[Tcf80] [API] fputc(ch=0x20)
+[Tcf80] [API] fputc(ch=0x20)
+[Tcf80] [API] fputc(ch=0x20)
+[Tcf80] [API] fputc(ch=0x20)
+[Tcf80] [API] fputc(ch=0x20)
+[Tcf80] [API] fputc(ch=0x20)
+[Tcf80] [API] fputc(ch=0x20)
+[Tcf80] [API] fputc(ch=0x20)
+[Tcf80] [API] fputc(ch=0x5b)
+[Tcf80] [API] fputc(ch=0x2d)
+[Tcf80] [API] fputc(ch=0x65)
+[Tcf80] [API] fputc(ch=0x20)
+[Tcf80] [API] fputc(ch=0x62)
+[Tcf80] [API] fputc(ch=0x79)
+[Tcf80] [API] fputc(ch=0x74)
+[Tcf80] [API] fputc(ch=0x65)
+[Tcf80] [API] fputc(ch=0x73)
+[Tcf80] [API] fputc(ch=0x5d)
+[Tcf80] [API] fputc(ch=0x20)
+[Tcf80] [API] fputc(ch=0x5b)
+[Tcf80] [API] fputc(ch=0x2d)
+[Tcf80] [API] fputc(ch=0x6b)
+[Tcf80] [API] fputc(ch=0x20)
+[Tcf80] [API] fputc(ch=0x73)
+[Tcf80] [API] fputc(ch=0x74)
+[Tcf80] [API] fputc(ch=0x61)
+[Tcf80] [API] fputc(ch=0x72)
+[Tcf80] [API] fputc(ch=0x74)
+[Tcf80] [API] fputc(ch=0x2c)
+[Tcf80] [API] fputc(ch=0x62)
+[Tcf80] [API] fputc(ch=0x79)
+[Tcf80] [API] fputc(ch=0x74)
+[Tcf80] [API] fputc(ch=0x65)
+[Tcf80] [API] fputc(ch=0x73)
+[Tcf80] [API] fputc(ch=0x5d)
+[Tcf80] [API] fputc(ch=0x20)
+[Tcf80] [API] fputc(ch=0x5b)
+[Tcf80] [API] fputc(ch=0x2d)
+[Tcf80] [API] fputc(ch=0x70)
+[Tcf80] [API] fputc(ch=0x20)
+[Tcf80] [API] fputc(ch=0x76)
+[Tcf80] [API] fputc(ch=0x65)
+[Tcf80] [API] fputc(ch=0x6e)
+[Tcf80] [API] fputc(ch=0x64)
+[Tcf80] [API] fputc(ch=0x6f)
+[Tcf80] [API] fputc(ch=0x72)
+[Tcf80] [API] fputc(ch=0x5d)
+[Tcf80] [API] fputc(ch=0x20)
+[Tcf80] [API] fputc(ch=0x66)
+[Tcf80] [API] fputc(ch=0x69)
+[Tcf80] [API] fputc(ch=0x6c)
+[Tcf80] [API] fputc(ch=0x65)
+[Tcf80] [API] fputc(ch=0xa)
+[Tcf80] [API] fputc(ch=0x20)
+[Tcf80] [API] fputc(ch=0x20)
+[Tcf80] [API] fputc(ch=0x20)
+[Tcf80] [API] fputc(ch=0x2d)
+[Tcf80] [API] fputc(ch=0x61)
+[Tcf80] [API] fputc(ch=0x20)
+[Tcf80] [API] fputc(ch=0x6f)
+[Tcf80] [API] fputc(ch=0x72)
+[Tcf80] [API] fputc(ch=0x20)
+[Tcf80] [API] fputc(ch=0x2d)
+[Tcf80] [API] fputc(ch=0x69)
+[Tcf80] [API] fputc(ch=0x20)
+[Tcf80] [API] fputc(ch=0x61)
+[Tcf80] [API] fputc(ch=0x63)
+[Tcf80] [API] fputc(ch=0x74)
+[Tcf80] [API] fputc(ch=0x69)
+[Tcf80] [API] fputc(ch=0x76)
+[Tcf80] [API] fputc(ch=0x61)
+[Tcf80] [API] fputc(ch=0x74)
+[Tcf80] [API] fputc(ch=0x65)
+[Tcf80] [API] fputc(ch=0x73)
+[Tcf80] [API] fputc(ch=0x20)
+[Tcf80] [API] fputc(ch=0x61)
+[Tcf80] [API] fputc(ch=0x75)
+[Tcf80] [API] fputc(ch=0x74)
+[Tcf80] [API] fputc(ch=0x6f)
+[Tcf80] [API] fputc(ch=0x20)
+[Tcf80] [API] fputc(ch=0x28)
+[Tcf80] [API] fputc(ch=0x69)
+[Tcf80] [API] fputc(ch=0x6e)
+[Tcf80] [API] fputc(ch=0x74)
+[Tcf80] [API] fputc(ch=0x65)
+[Tcf80] [API] fputc(ch=0x6c)
+[Tcf80] [API] fputc(ch=0x6c)
+[Tcf80] [API] fputc(ch=0x69)
+[Tcf80] [API] fputc(ch=0x67)
+[Tcf80] [API] fputc(ch=0x65)
+[Tcf80] [API] fputc(ch=0x6e)
+[Tcf80] [API] fputc(ch=0x74)
+[Tcf80] [API] fputc(ch=0x29)
+[Tcf80] [API] fputc(ch=0x20)
+[Tcf80] [API] fputc(ch=0x73)
+[Tcf80] [API] fputc(ch=0x79)
+[Tcf80] [API] fputc(ch=0x6e)
+[Tcf80] [API] fputc(ch=0x63)
+[Tcf80] [API] fputc(ch=0xa)
+[Tcf80] [API] fputc(ch=0x20)
+[Tcf80] [API] fputc(ch=0x20)
+[Tcf80] [API] fputc(ch=0x20)
+[Tcf80] [API] fputc(ch=0x2d)
+[Tcf80] [API] fputc(ch=0x75)
+[Tcf80] [API] fputc(ch=0x20)
+[Tcf80] [API] fputc(ch=0x73)
+[Tcf80] [API] fputc(ch=0x61)
+[Tcf80] [API] fputc(ch=0x6d)
+[Tcf80] [API] fputc(ch=0x65)
+[Tcf80] [API] fputc(ch=0x20)
+[Tcf80] [API] fputc(ch=0x61)
+[Tcf80] [API] fputc(ch=0x73)
+[Tcf80] [API] fputc(ch=0x20)
+[Tcf80] [API] fputc(ch=0x2d)
+[Tcf80] [API] fputc(ch=0x62)
+[Tcf80] [API] fputc(ch=0x20)
+[Tcf80] [API] fputc(ch=0x33)
+[Tcf80] [API] fputc(ch=0x32)
+[Tcf80] [API] fputc(ch=0xa)
+[Tcf80] [API] fputc(ch=0x20)
+[Tcf80] [API] fputc(ch=0x20)
+[Tcf80] [API] fputc(ch=0x20)
+[Tcf80] [API] fputc(ch=0x2d)
+[Tcf80] [API] fputc(ch=0x62)
+[Tcf80] [API] fputc(ch=0x20)
+[Tcf80] [API] fputc(ch=0x31)
+[Tcf80] [API] fputc(ch=0x36)
+[Tcf80] [API] fputc(ch=0x2c)
+[Tcf80] [API] fputc(ch=0x20)
+[Tcf80] [API] fputc(ch=0x2d)
+[Tcf80] [API] fputc(ch=0x62)
+[Tcf80] [API] fputc(ch=0x20)
+[Tcf80] [API] fputc(ch=0x33)
+[Tcf80] [API] fputc(ch=0x32)
+[Tcf80] [API] fputc(ch=0x20)
+[Tcf80] [API] fputc(ch=0x6f)
+[Tcf80] [API] fputc(ch=0x72)
+[Tcf80] [API] fputc(ch=0x20)
+[Tcf80] [API] fputc(ch=0x2d)
+[Tcf80] [API] fputc(ch=0x62)
+[Tcf80] [API] fputc(ch=0x20)
+[Tcf80] [API] fputc(ch=0x36)
+[Tcf80] [API] fputc(ch=0x34)
+[Tcf80] [API] fputc(ch=0x20)
+[Tcf80] [API] fputc(ch=0x73)
+[Tcf80] [API] fputc(ch=0x65)
+[Tcf80] [API] fputc(ch=0x74)
+[Tcf80] [API] fputc(ch=0x73)
+[Tcf80] [API] fputc(ch=0x20)
+[Tcf80] [API] fputc(ch=0x74)
+[Tcf80] [API] fputc(ch=0x68)
+[Tcf80] [API] fputc(ch=0x65)
+[Tcf80] [API] fputc(ch=0x20)
+[Tcf80] [API] fputc(ch=0x70)
+[Tcf80] [API] fputc(ch=0x72)
+[Tcf80] [API] fputc(ch=0x6f)
+[Tcf80] [API] fputc(ch=0x63)
+[Tcf80] [API] fputc(ch=0x65)
+[Tcf80] [API] fputc(ch=0x73)
+[Tcf80] [API] fputc(ch=0x73)
+[Tcf80] [API] fputc(ch=0x6f)
+[Tcf80] [API] fputc(ch=0x72)
+[Tcf80] [API] fputc(ch=0x20)
+[Tcf80] [API] fputc(ch=0x6d)
+[Tcf80] [API] fputc(ch=0x6f)
+[Tcf80] [API] fputc(ch=0x64)
+[Tcf80] [API] fputc(ch=0x65)
+[Tcf80] [API] fputc(ch=0xa)
+[Tcf80] [API] fputc(ch=0x20)
+[Tcf80] [API] fputc(ch=0x20)
+[Tcf80] [API] fputc(ch=0x20)
+[Tcf80] [API] fputc(ch=0x2d)
+[Tcf80] [API] fputc(ch=0x68)
+[Tcf80] [API] fputc(ch=0x20)
+[Tcf80] [API] fputc(ch=0x64)
+[Tcf80] [API] fputc(ch=0x69)
+[Tcf80] [API] fputc(ch=0x73)
+[Tcf80] [API] fputc(ch=0x70)
+[Tcf80] [API] fputc(ch=0x6c)
+[Tcf80] [API] fputc(ch=0x61)
+[Tcf80] [API] fputc(ch=0x79)
+[Tcf80] [API] fputc(ch=0x73)
+[Tcf80] [API] fputc(ch=0x20)
+[Tcf80] [API] fputc(ch=0x74)
+[Tcf80] [API] fputc(ch=0x68)
+[Tcf80] [API] fputc(ch=0x69)
+[Tcf80] [API] fputc(ch=0x73)
+[Tcf80] [API] fputc(ch=0x20)
+[Tcf80] [API] fputc(ch=0x74)
+[Tcf80] [API] fputc(ch=0x65)
+[Tcf80] [API] fputc(ch=0x78)
+[Tcf80] [API] fputc(ch=0x74)
+[Tcf80] [API] fputc(ch=0xa)
+[Tcf80] [API] fputc(ch=0x20)
+[Tcf80] [API] fputc(ch=0x20)
+[Tcf80] [API] fputc(ch=0x20)
+[Tcf80] [API] fputc(ch=0x2d)
+[Tcf80] [API] fputc(ch=0x72)
+[Tcf80] [API] fputc(ch=0x20)
+[Tcf80] [API] fputc(ch=0x6f)
+[Tcf80] [API] fputc(ch=0x72)
+[Tcf80] [API] fputc(ch=0x20)
+[Tcf80] [API] fputc(ch=0x2d)
+[Tcf80] [API] fputc(ch=0x76)
+[Tcf80] [API] fputc(ch=0x20)
+[Tcf80] [API] fputc(ch=0x64)
+[Tcf80] [API] fputc(ch=0x69)
+[Tcf80] [API] fputc(ch=0x73)
+[Tcf80] [API] fputc(ch=0x70)
+[Tcf80] [API] fputc(ch=0x6c)
+[Tcf80] [API] fputc(ch=0x61)
+[Tcf80] [API] fputc(ch=0x79)
+[Tcf80] [API] fputc(ch=0x73)
+[Tcf80] [API] fputc(ch=0x20)
+[Tcf80] [API] fputc(ch=0x74)
+[Tcf80] [API] fputc(ch=0x68)
+[Tcf80] [API] fputc(ch=0x65)
+[Tcf80] [API] fputc(ch=0x20)
+[Tcf80] [API] fputc(ch=0x76)
+[Tcf80] [API] fputc(ch=0x65)
+[Tcf80] [API] fputc(ch=0x72)
+[Tcf80] [API] fputc(ch=0x73)
+[Tcf80] [API] fputc(ch=0x69)
+[Tcf80] [API] fputc(ch=0x6f)
+[Tcf80] [API] fputc(ch=0x6e)
+[Tcf80] [API] fputc(ch=0x20)
+[Tcf80] [API] fputc(ch=0x6e)
+[Tcf80] [API] fputc(ch=0x75)
+[Tcf80] [API] fputc(ch=0x6d)
+[Tcf80] [API] fputc(ch=0x62)
+[Tcf80] [API] fputc(ch=0x65)
+[Tcf80] [API] fputc(ch=0x72)
+[Tcf80] [API] fputc(ch=0xa)
+[Tcf80] [API] fputc(ch=0x20)
+[Tcf80] [API] fputc(ch=0x20)
+[Tcf80] [API] fputc(ch=0x20)
+[Tcf80] [API] fputc(ch=0x2d)
+[Tcf80] [API] fputc(ch=0x65)
+[Tcf80] [API] fputc(ch=0x20)
+[Tcf80] [API] fputc(ch=0x73)
+[Tcf80] [API] fputc(ch=0x6b)
+[Tcf80] [API] fputc(ch=0x69)
+[Tcf80] [API] fputc(ch=0x70)
+[Tcf80] [API] fputc(ch=0x73)
+[Tcf80] [API] fputc(ch=0x20)
+[Tcf80] [API] fputc(ch=0x3c)
+[Tcf80] [API] fputc(ch=0x62)
+[Tcf80] [API] fputc(ch=0x79)
+[Tcf80] [API] fputc(ch=0x74)
+[Tcf80] [API] fputc(ch=0x65)
+[Tcf80] [API] fputc(ch=0x73)
+[Tcf80] [API] fputc(ch=0x3e)
+[Tcf80] [API] fputc(ch=0x20)
+[Tcf80] [API] fputc(ch=0x62)
+[Tcf80] [API] fputc(ch=0x79)
+[Tcf80] [API] fputc(ch=0x74)
+[Tcf80] [API] fputc(ch=0x65)
+[Tcf80] [API] fputc(ch=0x73)
+[Tcf80] [API] fputc(ch=0x20)
+[Tcf80] [API] fputc(ch=0x6f)
+[Tcf80] [API] fputc(ch=0x66)
+[Tcf80] [API] fputc(ch=0x20)
+[Tcf80] [API] fputc(ch=0x68)
+[Tcf80] [API] fputc(ch=0x65)
+[Tcf80] [API] fputc(ch=0x61)
+[Tcf80] [API] fputc(ch=0x64)
+[Tcf80] [API] fputc(ch=0x65)
+[Tcf80] [API] fputc(ch=0x72)
+[Tcf80] [API] fputc(ch=0xa)
+[Tcf80] [API] fputc(ch=0x20)
+[Tcf80] [API] fputc(ch=0x20)
+[Tcf80] [API] fputc(ch=0x20)
+[Tcf80] [API] fputc(ch=0x2d)
+[Tcf80] [API] fputc(ch=0x6b)
+[Tcf80] [API] fputc(ch=0x20)
+[Tcf80] [API] fputc(ch=0x61)
+[Tcf80] [API] fputc(ch=0x76)
+[Tcf80] [API] fputc(ch=0x6f)
+[Tcf80] [API] fputc(ch=0x69)
+[Tcf80] [API] fputc(ch=0x64)
+[Tcf80] [API] fputc(ch=0x73)
+[Tcf80] [API] fputc(ch=0x20)
+[Tcf80] [API] fputc(ch=0x64)
+[Tcf80] [API] fputc(ch=0x69)
+[Tcf80] [API] fputc(ch=0x73)
+[Tcf80] [API] fputc(ch=0x61)
+[Tcf80] [API] fputc(ch=0x73)
+[Tcf80] [API] fputc(ch=0x73)
+[Tcf80] [API] fputc(ch=0x65)
+[Tcf80] [API] fputc(ch=0x6d)
+[Tcf80] [API] fputc(ch=0x62)
+[Tcf80] [API] fputc(ch=0x6c)
+[Tcf80] [API] fputc(ch=0x69)
+[Tcf80] [API] fputc(ch=0x6e)
+[Tcf80] [API] fputc(ch=0x67)
+[Tcf80] [API] fputc(ch=0x20)
+[Tcf80] [API] fputc(ch=0x3c)
+[Tcf80] [API] fputc(ch=0x62)
+[Tcf80] [API] fputc(ch=0x79)
+[Tcf80] [API] fputc(ch=0x74)
+[Tcf80] [API] fputc(ch=0x65)
+[Tcf80] [API] fputc(ch=0x73)
+[Tcf80] [API] fputc(ch=0x3e)
+[Tcf80] [API] fputc(ch=0x20)
+[Tcf80] [API] fputc(ch=0x62)
+[Tcf80] [API] fputc(ch=0x79)
+[Tcf80] [API] fputc(ch=0x74)
+[Tcf80] [API] fputc(ch=0x65)
+[Tcf80] [API] fputc(ch=0x73)
+[Tcf80] [API] fputc(ch=0x20)
+[Tcf80] [API] fputc(ch=0x66)
+[Tcf80] [API] fputc(ch=0x72)
+[Tcf80] [API] fputc(ch=0x6f)
+[Tcf80] [API] fputc(ch=0x6d)
+[Tcf80] [API] fputc(ch=0x20)
+[Tcf80] [API] fputc(ch=0x70)
+[Tcf80] [API] fputc(ch=0x6f)
+[Tcf80] [API] fputc(ch=0x73)
+[Tcf80] [API] fputc(ch=0x69)
+[Tcf80] [API] fputc(ch=0x74)
+[Tcf80] [API] fputc(ch=0x69)
+[Tcf80] [API] fputc(ch=0x6f)
+[Tcf80] [API] fputc(ch=0x6e)
+[Tcf80] [API] fputc(ch=0x20)
+[Tcf80] [API] fputc(ch=0x3c)
+[Tcf80] [API] fputc(ch=0x73)
+[Tcf80] [API] fputc(ch=0x74)
+[Tcf80] [API] fputc(ch=0x61)
+[Tcf80] [API] fputc(ch=0x72)
+[Tcf80] [API] fputc(ch=0x74)
+[Tcf80] [API] fputc(ch=0x3e)
+[Tcf80] [API] fputc(ch=0xa)
+[Tcf80] [API] fputc(ch=0x20)
+[Tcf80] [API] fputc(ch=0x20)
+[Tcf80] [API] fputc(ch=0x20)
+[Tcf80] [API] fputc(ch=0x2d)
+[Tcf80] [API] fputc(ch=0x70)
+[Tcf80] [API] fputc(ch=0x20)
+[Tcf80] [API] fputc(ch=0x73)
+[Tcf80] [API] fputc(ch=0x65)
+[Tcf80] [API] fputc(ch=0x6c)
+[Tcf80] [API] fputc(ch=0x65)
+[Tcf80] [API] fputc(ch=0x63)
+[Tcf80] [API] fputc(ch=0x74)
+[Tcf80] [API] fputc(ch=0x73)
+[Tcf80] [API] fputc(ch=0x20)
+[Tcf80] [API] fputc(ch=0x74)
+[Tcf80] [API] fputc(ch=0x68)
+[Tcf80] [API] fputc(ch=0x65)
+[Tcf80] [API] fputc(ch=0x20)
+[Tcf80] [API] fputc(ch=0x70)
+[Tcf80] [API] fputc(ch=0x72)
+[Tcf80] [API] fputc(ch=0x65)
+[Tcf80] [API] fputc(ch=0x66)
+[Tcf80] [API] fputc(ch=0x65)
+[Tcf80] [API] fputc(ch=0x72)
+[Tcf80] [API] fputc(ch=0x72)
+[Tcf80] [API] fputc(ch=0x65)
+[Tcf80] [API] fputc(ch=0x64)
+[Tcf80] [API] fputc(ch=0x20)
+[Tcf80] [API] fputc(ch=0x76)
+[Tcf80] [API] fputc(ch=0x65)
+[Tcf80] [API] fputc(ch=0x6e)
+[Tcf80] [API] fputc(ch=0x64)
+[Tcf80] [API] fputc(ch=0x6f)
+[Tcf80] [API] fputc(ch=0x72)
+[Tcf80] [API] fputc(ch=0x20)
+[Tcf80] [API] fputc(ch=0x69)
+[Tcf80] [API] fputc(ch=0x6e)
+[Tcf80] [API] fputc(ch=0x73)
+[Tcf80] [API] fputc(ch=0x74)
+[Tcf80] [API] fputc(ch=0x72)
+[Tcf80] [API] fputc(ch=0x75)
+[Tcf80] [API] fputc(ch=0x63)
+[Tcf80] [API] fputc(ch=0x74)
+[Tcf80] [API] fputc(ch=0x69)
+[Tcf80] [API] fputc(ch=0x6f)
+[Tcf80] [API] fputc(ch=0x6e)
+[Tcf80] [API] fputc(ch=0x20)
+[Tcf80] [API] fputc(ch=0x73)
+[Tcf80] [API] fputc(ch=0x65)
+[Tcf80] [API] fputc(ch=0x74)
+[Tcf80] [API] fputc(ch=0x20)
+[Tcf80] [API] fputc(ch=0x28)
+[Tcf80] [API] fputc(ch=0x69)
+[Tcf80] [API] fputc(ch=0x6e)
+[Tcf80] [API] fputc(ch=0x74)
+[Tcf80] [API] fputc(ch=0x65)
+[Tcf80] [API] fputc(ch=0x6c)
+[Tcf80] [API] fputc(ch=0x2c)
+[Tcf80] [API] fputc(ch=0x20)
+[Tcf80] [API] fputc(ch=0x61)
+[Tcf80] [API] fputc(ch=0x6d)
+[Tcf80] [API] fputc(ch=0x64)
+[Tcf80] [API] fputc(ch=0x2c)
+[Tcf80] [API] fputc(ch=0x20)
+[Tcf80] [API] fputc(ch=0x63)
+[Tcf80] [API] fputc(ch=0x79)
+[Tcf80] [API] fputc(ch=0x72)
+[Tcf80] [API] fputc(ch=0x69)
+[Tcf80] [API] fputc(ch=0x78)
+[Tcf80] [API] fputc(ch=0x2c)
+[Tcf80] [API] fputc(ch=0x20)
+[Tcf80] [API] fputc(ch=0x69)
+[Tcf80] [API] fputc(ch=0x64)
+[Tcf80] [API] fputc(ch=0x74)
+[Tcf80] [API] fputc(ch=0x29)
+[Tcf80] [API] fputc(ch=0xa)
+[Tcf80] [API] exit(0)
+  ]
+}

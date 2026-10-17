@@ -1,0 +1,5 @@
+exe=wimlib/wimlib-imagex.exe
+sha256=401bf99d6dec2b749b464183f71d146327ae0856a968c309955f71a0c398a348
+timeout=10s
+args=none
+date_utc=2026-10-17T18:39:38Z

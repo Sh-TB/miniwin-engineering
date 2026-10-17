@@ -1,0 +1,5 @@
+exe=dufs/dufs.exe
+sha256=7902502964dcfee6c610aad85fa2e2aee2b66d2c5392e00dc6606f9ac2877171
+timeout=10s
+args=none
+date_utc=2026-10-17T18:39:38Z

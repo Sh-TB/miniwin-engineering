@@ -1,0 +1,94 @@
+[TRACE] Command line: /home/z/my-project/workspace/miniwin-engineering/artifacts/sweep50/dl/si-psexec/PsExec64.exe
+[WARN]   unresolved: GetFileVersionInfoW
+[WARN]   unresolved: VerQueryValueW
+[WARN]   unresolved: GetFileVersionInfoSizeW
+[WARN]   unresolved: NetServerEnum
+[WARN]   unresolved: NetApiBufferFree
+[WARN]   unresolved: WNetAddConnection2W
+[WARN]   unresolved: WNetCancelConnection2W
+[WARN]   unresolved: CopyFileW
+[WARN]   unresolved: SetConsoleTitleW
+[WARN]   unresolved: WaitNamedPipeW
+[WARN]   unresolved: TransactNamedPipe
+[WARN]   unresolved: SetNamedPipeHandleState
+[WARN]   unresolved: DisconnectNamedPipe
+[WARN]   unresolved: SetThreadGroupAffinity
+[WARN]   unresolved: GetVersionExW
+[WARN]   unresolved: GetDlgItem
+[WARN]   unresolved: EndDialog
+[WARN]   unresolved: SetWindowTextW
+[WARN]   unresolved: SendMessageW
+[WARN]   unresolved: SetCursor
+[WARN]   unresolved: GetSysColorBrush
+[WARN]   unresolved: LoadStringW
+[WARN]   unresolved: InflateRect
+[WARN]   unresolved: LoadCursorW
+[WARN]   unresolved: DialogBoxIndirectParamW
+[WARN]   unresolved: StartPage
+[WARN]   unresolved: EndDoc
+[WARN]   unresolved: StartDocW
+[WARN]   unresolved: SetMapMode
+[WARN]   unresolved: GetDeviceCaps
+[WARN]   unresolved: EndPage
+[WARN]   unresolved: PrintDlgW
+[WARN]   unresolved: LsaFreeMemory
+[WARN]   unresolved: CreateProcessAsUserW
+[WARN]   unresolved: CryptHashData
+[WARN]   unresolved: CryptCreateHash
+[WARN]   unresolved: CryptDecrypt
+[WARN]   unresolved: CryptEncrypt
+[WARN]   unresolved: CryptImportKey
+[WARN]   unresolved: CryptExportKey
+[WARN]   unresolved: CryptDestroyKey
+[WARN]   unresolved: CryptDeriveKey
+[WARN]   unresolved: CryptGenKey
+[WARN]   unresolved: CryptAcquireContextW
+[WARN]   unresolved: StartServiceW
+[WARN]   unresolved: QueryServiceStatus
+[WARN]   unresolved: OpenServiceW
+[WARN]   unresolved: OpenSCManagerW
+[WARN]   unresolved: DeleteService
+[WARN]   unresolved: CreateServiceW
+[WARN]   unresolved: ControlService
+[WARN]   unresolved: CloseServiceHandle
+[WARN]   unresolved: LsaEnumerateAccountRights
+[WARN]   unresolved: LsaOpenPolicy
+[WARN]   unresolved: LsaClose
+[WARN]   unresolved: SetSecurityInfo
+[WARN]   unresolved: GetSecurityInfo
+[WARN]   unresolved: SetEntriesInAclW
+[WARN]   unresolved: SetTokenInformation
+[WARN]   unresolved: SetSecurityDescriptorDacl
+[WARN]   unresolved: InitializeSecurityDescriptor
+[WARN]   unresolved: InitializeAcl
+[WARN]   unresolved: GetTokenInformation
+[WARN]   unresolved: GetLengthSid
+[WARN]   unresolved: GetAce
+[WARN]   unresolved: FreeSid
+[WARN]   unresolved: AllocateAndInitializeSid
+[WARN]   unresolved: AddAce
+[WARN]   unresolved: AddAccessAllowedAce
+[WARN]   unresolved: RegOpenKeyW
+[WARN]   unresolved: RegCreateKeyW
+[WARN] 75 imports unresolved
+[STUB] unresolved import called -> returning 0 (call #1)
+[STUB] unresolved import called -> returning 0 (call #2)
+[STUB] unresolved import called -> returning 0 (call #3)
+[STUB] unresolved import called -> returning 0 (call #4)
+[STUB] unresolved import called -> returning 0 (call #5)
+[STUB] unresolved import called -> returning 0 (call #6)
+[STUB] unresolved import called -> returning 0 (call #7)
+[STUB] unresolved import called -> returning 0 (call #8)
+[STUB] unresolved import called -> returning 0 (call #9)
+[STUB] unresolved import called -> returning 0 (call #10)
+[STUB] unresolved import called -> returning 0 (call #11)
+[STUB] unresolved import called -> returning 0 (call #12)
+
+(null) v(null) - (null)
+(null)
+(null)
+
+[STUB] unresolved import called -> returning 0 (call #13)
+[STUB] unresolved import called -> returning 0 (call #14)
+[STUB] unresolved import called -> returning 0 (call #15)
+[STUB] unresolved import called -> returning 0 (call #16)

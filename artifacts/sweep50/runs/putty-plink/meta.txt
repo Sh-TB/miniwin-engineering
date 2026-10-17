@@ -1,0 +1,5 @@
+exe=plink/plink.exe
+sha256=969f36879d5716aa1a9811f43a6a6510e8f08372dbeb9695b810b9c776f39c75
+timeout=10s
+args=none
+date_utc=2026-10-17T18:39:37Z

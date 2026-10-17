@@ -1,0 +1,34 @@
+[TRACE] Command line: /home/z/my-project/workspace/miniwin-engineering/artifacts/sweep50/dl/nasm/ndisasm.exe
+[WARN]   unresolved: ispunct
+[WARN] 1 imports unresolved
+[STUB] unresolved import called -> returning 0 (call #1)
+[STUB] unresolved import called -> returning 0 (call #2)
+[STUB] unresolved import called -> returning 0 (call #3)
+[STUB] unresolved import called -> returning 0 (call #4)
+[STUB] unresolved import called -> returning 0 (call #5)
+[STUB] unresolved import called -> returning 0 (call #6)
+[STUB] unresolved import called -> returning 0 (call #7)
+[STUB] unresolved import called -> returning 0 (call #8)
+[STUB] unresolved import called -> returning 0 (call #9)
+[STUB] unresolved import called -> returning 0 (call #10)
+[STUB] unresolved import called -> returning 0 (call #11)
+[STUB] unresolved import called -> returning 0 (call #12)
+[STUB] unresolved import called -> returning 0 (call #13)
+[STUB] unresolved import called -> returning 0 (call #14)
+[STUB] unresolved import called -> returning 0 (call #15)
+[STUB] unresolved import called -> returning 0 (call #16)
+[STUB] unresolved import called -> returning 0 (call #17)
+[STUB] unresolved import called -> returning 0 (call #18)
+[STUB] unresolved import called -> returning 0 (call #19)
+[STUB] unresolved import called -> returning 0 (call #20)
+[STUB] further unresolved-import calls silenced
+usage: ndisasm [-a] [-i] [-h] [-r] [-u] [-b bits] [-o origin] [-s sync...]
+               [-e bytes] [-k start,bytes] [-p vendor] file
+   -a or -i activates auto (intelligent) sync
+   -u same as -b 32
+   -b 16, -b 32 or -b 64 sets the processor mode
+   -h displays this text
+   -r or -v displays the version number
+   -e skips <bytes> bytes of header
+   -k avoids disassembling <bytes> bytes from position <start>
+   -p selects the preferred vendor instruction set (intel, amd, cyrix, idt)

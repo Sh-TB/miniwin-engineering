@@ -1,0 +1,5 @@
+exe=openssh/sftp-server.exe
+sha256=63462c6904943f5f32ca363065f2eb7e883ee308f40c7c1637a307a253522151
+timeout=10s
+args=none
+date_utc=2026-10-17T18:39:39Z

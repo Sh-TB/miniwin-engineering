@@ -1,0 +1,81 @@
+[TRACE] Command line: /home/z/my-project/workspace/miniwin-engineering/artifacts/sweep50/dl/openssh/sftp.exe
+[WARN]   unresolved: CryptStringToBinaryA
+[WARN]   unresolved: CryptBinaryToStringA
+[WARN]   unresolved: WSASend
+[WARN]   unresolved: WSARecv
+[WARN]   unresolved: WSAGetOverlappedResult
+[WARN]   unresolved: WSADuplicateSocketW
+[WARN]   unresolved: WSASocketW
+[WARN]   unresolved: OpenThread
+[WARN]   unresolved: SetWaitableTimer
+[WARN]   unresolved: CancelWaitableTimer
+[WARN]   unresolved: CreateWaitableTimerA
+[WARN]   unresolved: CreateWaitableTimerW
+[WARN]   unresolved: FillConsoleOutputCharacterA
+[WARN]   unresolved: SetConsoleScreenBufferSize
+[WARN]   unresolved: SetConsoleWindowInfo
+[WARN]   unresolved: FillConsoleOutputAttribute
+[WARN]   unresolved: Beep
+[WARN]   unresolved: ReadConsoleOutputA
+[WARN]   unresolved: CreateNamedPipeA
+[WARN]   unresolved: WriteFileEx
+[WARN]   unresolved: ReadFileEx
+[WARN]   unresolved: QueueUserAPC
+[WARN]   unresolved: CancelSynchronousIo
+[WARN]   unresolved: CancelIoEx
+[WARN]   unresolved: GetLocalTime
+[WARN]   unresolved: GetWindowPlacement
+[WARN]   unresolved: ShowWindow
+[WARN]   unresolved: EventWrite
+[WARN]   unresolved: EventRegister
+[WARN]   unresolved: ConvertSidToStringSidW
+[WARN]   unresolved: LookupAccountSidW
+[WARN]   unresolved: GetSidIdentifierAuthority
+[WARN]   unresolved: GetAce
+[WARN]   unresolved: CreateWellKnownSid
+[WARN]   unresolved: CopySid
+[WARN]   unresolved: GetNamedSecurityInfoW
+[WARN]   unresolved: IsWellKnownSid
+[WARN]   unresolved: IsValidSid
+[WARN]   unresolved: IsValidSecurityDescriptor
+[WARN]   unresolved: ConvertStringSecurityDescriptorToSecurityDescriptorW
+[WARN]   unresolved: GetLengthSid
+[WARN]   unresolved: IsValidAcl
+[WARN]   unresolved: LookupAccountNameW
+[WARN]   unresolved: GetTokenInformation
+[WARN] 53 imports unresolved
+
+[CRASH] Signal 11 at RIP=0x140013d53
+  RAX=0x0 RCX=0x3416320 RDX=0x5c R8=0x3416430 R9=0x0
+  RSP=0x7ffde4bf01b0 RBP=0xffffffffffffe2e0
+  g_image_base=0x140000000 g_image_size=0xaa000
+  RVA=0x13d53 (inside loaded PE)
+  Bytes: c6 00 00 e8 0d 94 01 00 48 8b 0d 46 8f 05 00 33 
+  Return addr: 0x3412428
+  RSI=0x0 RDI=0x1
+  R8=0x3416430  R9=0x0 R10=0x56 R11=0x57
+  R12=0x1 R13=0x217a000 R14=0x4be R15=0x3412420
+  [SCAN rsp+080] 0x14006d6b0 <PE>
+  [SCAN rsp+264] 0x14006dfe8 <PE>
+  [SCAN rsp+280] 0x2027b47 <LOADER>
+  [SCAN rsp+488] 0x14003b4f8 <PE>
+  [SCAN rsp+496] 0x1400626d4 <PE>
+  [SCAN rsp+536] 0x14001296b <PE>
+  [SCAN rsp+576] 0x1400556b0 <PE>
+  [SCAN rsp+584] 0x14002c6a5 <PE>
+  [SCAN rsp+632] 0x14002c188 <PE>
+  [SCAN rsp+696] 0x20076a6 <LOADER>
+  [SCAN rsp+720] 0x140055078 <PE>
+  [SCAN rsp+1048] 0x20026ae <LOADER>
+  [SCAN rsp+1056] 0x20020a0 <LOADER>
+  [SCAN rsp+2504] 0x2006490 <LOADER>
+  [SCAN rsp+2656] 0x2006490 <LOADER>
+  [SCAN rsp+2696] 0x2007d50 <LOADER>
+  [SCAN rsp+2728] 0x2007d71 <LOADER>
+  [SCAN rsp+3200] 0x2000040 <LOADER>
+  [SCAN rsp+3280] 0x2007d50 <LOADER>
+  Backtrace (via stack walking):
+    [0] RIP=0x140013d53 RVA=0x13d53      [RSP+0] = 0x3412428 (return addr?)
+    [1] RIP=0x140013d53 RVA=0x13d53      [RSP+0] = 0x3412410 (return addr?)
+    [2] RIP=0x140013d53 RVA=0x13d53      [RSP+0] = 0x21 (return addr?)
+    [3] RIP=0x140013d53 RVA=0x13d53

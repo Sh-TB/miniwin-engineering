@@ -1,0 +1,65 @@
+[TRACE] Command line: /home/z/my-project/workspace/miniwin-engineering/artifacts/sweep50/dl/mkcert/mkcert-v1.4.4-windows-amd64.exe
+[WARN]   unresolved: SetWaitableTimer
+[WARN]   unresolved: SetProcessPriorityBoost
+[WARN]   unresolved: GetQueuedCompletionStatusEx
+[WARN]   unresolved: CreateWaitableTimerExW
+[WARN] 4 imports unresolved
+fatal error: advapi32.dll not found
+runtime: panic before malloc heap initialized
+
+[CRASH] Signal 11 at RIP=0x0
+  RAX=0x0 RCX=0xffffffffffffffff RDX=0x0 R8=0x7ffd377b1350 R9=0x0
+  RSP=0x7ffd377b1328 RBP=0x7ffd377b1370
+  g_image_base=0x400000 g_image_size=0x519000
+  (NOT inside loaded PE)
+  [RIP-MAP] no mapping contains RIP
+  RSI=0x7ffd377b1201 RDI=0x432360
+  R8=0x7ffd377b1350  R9=0x0 R10=0x0 R11=0x202
+  R12=0x52 R13=0x217a000 R14=0x7430e0 R15=0x7ffd377b1af0
+  [SCAN rsp+000] 0x4622d4 <PE>
+  [SCAN rsp+016] 0x4367b1 <PE>
+  [SCAN rsp+024] 0x5e2677 <PE>
+  [SCAN rsp+056] 0x4323b7 <PE>
+  [SCAN rsp+080] 0x43233d <PE>
+  [SCAN rsp+096] 0x432360 <PE>
+  [SCAN rsp+120] 0x438cd6 <PE>
+  [SCAN rsp+128] 0x43669b <PE>
+  [SCAN rsp+152] 0x4354ae <PE>
+  [SCAN rsp+160] 0x5e2677 <PE>
+  [SCAN rsp+176] 0x7430e0 <PE>
+  [SCAN rsp+192] 0x435154 <PE>
+  [SCAN rsp+200] 0x6333ce <PE>
+  [SCAN rsp+232] 0x434eb6 <PE>
+  [SCAN rsp+240] 0x7430e0 <PE>
+  [SCAN rsp+256] 0x4350f0 <PE>
+  [SCAN rsp+272] 0x435120 <PE>
+  [SCAN rsp+280] 0x7430e0 <PE>
+  [SCAN rsp+288] 0x434eb6 <PE>
+  [SCAN rsp+312] 0x434eb6 <PE>
+  [SCAN rsp+328] 0x434ee0 <PE>
+  [SCAN rsp+336] 0x5da72f <PE>
+  [SCAN rsp+360] 0x42f9bf <PE>
+  [SCAN rsp+368] 0x5da72f <PE>
+  [SCAN rsp+712] 0x430215 <PE>
+  [SCAN rsp+744] 0x444658 <PE>
+  [SCAN rsp+784] 0x462970 <PE>
+  [SCAN rsp+816] 0x45e12f <PE>
+  [SCAN rsp+848] 0x20076a6 <LOADER>
+  [SCAN rsp+864] 0x20076a6 <LOADER>
+  [SCAN rsp+888] 0x712450 <PE>
+  [SCAN rsp+904] 0x4e033c <PE>
+  [SCAN rsp+928] 0x4e0000 <PE>
+  [SCAN rsp+1112] 0x400000 <PE>
+  [SCAN rsp+1216] 0x20026ae <LOADER>
+  [SCAN rsp+1224] 0x20020a0 <LOADER>
+  [SCAN rsp+1480] 0x7ff000 <PE>
+  [SCAN rsp+2024] 0x7ff000 <PE>
+  [SCAN rsp+2048] 0x73746f <PE>
+  [SCAN rsp+2672] 0x2006490 <LOADER>
+  [SCAN rsp+2824] 0x2006490 <LOADER>
+  [SCAN rsp+2864] 0x2007d50 <LOADER>
+  [SCAN rsp+2896] 0x2007d71 <LOADER>
+  [SCAN rsp+3368] 0x2000040 <LOADER>
+  [SCAN rsp+3448] 0x2007d50 <LOADER>
+  Backtrace (via stack walking):
+  Likely: NULL or invalid function pointer call

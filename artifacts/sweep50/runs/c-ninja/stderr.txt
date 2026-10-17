@@ -1,0 +1,20 @@
+[TRACE] Command line: /home/z/my-project/workspace/miniwin-engineering/artifacts/sweep50/dl/ninja/ninja.exe
+[WARN]   unresolved: GetFileAttributesExA
+[WARN]   unresolved: VerifyVersionInfoA
+[WARN]   unresolved: FindFirstFileExA
+[WARN]   unresolved: SetFileAttributesA
+[WARN]   unresolved: RemoveDirectoryA
+[WARN]   unresolved: QueryInformationJobObject
+[WARN]   unresolved: GetSystemTimes
+[WARN]   unresolved: GetActiveProcessorCount
+[WARN]   unresolved: CreateNamedPipeA
+[WARN]   unresolved: GetProcessId
+[WARN]   unresolved: GenerateConsoleCtrlEvent
+[WARN]   unresolved: ConnectNamedPipe
+[WARN] 12 imports unresolved
+[STUB] unresolved import called -> returning 0 (call #1)
+[STUB] unresolved import called -> returning 0 (call #2)
+[HEAP-TRAP LocalFree] free of untracked/bad ptr 0x7ffe5a8533c8 — caller chain:
+[HEAP-TRAP LocalFree] [rsp+064] 0x2038edf <LOADER>
+[HEAP-TRAP LocalFree] [rsp+288] 0x14003316e <PE>
+[HEAP-TRAP LocalFree] [rsp+560] 0x140032bb7 <PE>

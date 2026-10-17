@@ -1,0 +1,104 @@
+{
+  "trace": [
+[Tbf80] [API] PE Loader: file=/home/z/my-project/workspace/miniwin-engineering/artifacts/sweep50/dl/age/age-plugin-tagpq.exe size=4584960
+[Tbf80] [API] PE Loader: ImageBase=0x140000000 EP=0x82f60 SizeOfImage=0x24b3000 Sections=16
+[Tbf80] [API] PE Loader: Mapped at 0x140000000 (forced via MAP_FIXED)
+[Tbf80] [API] Section [0] .text    VA=0x00001000 VS=0x001308d1 Raw=0x00130a00 Ch=0x60000020
+[Tbf80] [API] Section [1] .rdata   VA=0x00132000 VS=0x0015a6b0 Raw=0x0015a800 Ch=0x40000040
+[Tbf80] [API] Section [2] .data    VA=0x0028d000 VS=0x0209d028 Raw=0x00052800 Ch=0xc0000040
+[Tbf80] [API] Section [3] .pdata   VA=0x0232b000 VS=0x00007494 Raw=0x00007600 Ch=0x40000040
+[Tbf80] [API] Section [4] .xdata   VA=0x02333000 VS=0x000000a8 Raw=0x00000200 Ch=0x40000040
+[Tbf80] [API] Section [5] /4       VA=0x02334000 VS=0x00000164 Raw=0x00000200 Ch=0x42100040
+[Tbf80] [API] Section [6] /19      VA=0x02335000 VS=0x000406c7 Raw=0x00040800 Ch=0x42100040
+[Tbf80] [API] Section [7] /32      VA=0x02376000 VS=0x0000bdc2 Raw=0x0000be00 Ch=0x42100040
+[Tbf80] [API] Section [8] /46      VA=0x02382000 VS=0x00000018 Raw=0x00000200 Ch=0x42100040
+[Tbf80] [API] Section [9] /65      VA=0x02383000 VS=0x0009d4e3 Raw=0x0009d600 Ch=0x42100040
+[Tbf80] [API] Section [10] /78      VA=0x02421000 VS=0x00039825 Raw=0x00039a00 Ch=0x42100040
+[Tbf80] [API] Section [11] /95      VA=0x0245b000 VS=0x00019c18 Raw=0x00019e00 Ch=0x42100040
+[Tbf80] [API] Section [12] /112     VA=0x02475000 VS=0x00001b87 Raw=0x00001c00 Ch=0x42100040
+[Tbf80] [API] Section [13] .idata   VA=0x02477000 VS=0x0000057c Raw=0x00000600 Ch=0xc0000040
+[Tbf80] [API] Section [14] .reloc   VA=0x02478000 VS=0x00006d74 Raw=0x00006e00 Ch=0x42000040
+[Tbf80] [API] Section [15] .symtab  VA=0x0247f000 VS=0x00033424 Raw=0x00033600 Ch=0x42000000
+[Tbf80] [API] Import Directory: RVA=0x2477000 Size=0x57c
+[Tbf80] [API] Import DLL: kernel32.dll (IAT RVA=0x28d420, ILT RVA=0x24773f4)
+[Tbf80] [API]   [0] GetProcAddress -> 0x2009e60
+[Tbf80] [API]   [1] LoadLibraryExW -> 0x2038b20
+[Tbf80] [API]   [2] WriteFile -> 0x2024d20
+[Tbf80] [API]   [3] WriteConsoleW -> 0x2012160
+[Tbf80] [API]   [4] UNRESOLVED: WerSetFlags
+[Tbf80] [API]   [5] UNRESOLVED: WerGetFlags
+[Tbf80] [API]   [6] WaitForMultipleObjects -> 0x2033d70
+[Tbf80] [API]   [7] WaitForSingleObject -> 0x2033c20
+[Tbf80] [API]   [8] VirtualQuery -> 0x200c870
+[Tbf80] [API]   [9] VirtualFree -> 0x2023500
+[Tbf80] [API]   [10] VirtualAlloc -> 0x20232a0
+[Tbf80] [API]   [11] TlsAlloc -> 0x200c3b0
+[Tbf80] [API]   [12] SwitchToThread -> 0x2013aa0
+[Tbf80] [API]   [13] SuspendThread -> 0x2028b50
+[Tbf80] [API]   [14] UNRESOLVED: SetWaitableTimer
+[Tbf80] [API]   [15] UNRESOLVED: SetProcessPriorityBoost
+[Tbf80] [API]   [16] SetEvent -> 0x20307f0
+[Tbf80] [API]   [17] SetErrorMode -> 0x2009110
+[Tbf80] [API]   [18] SetConsoleCtrlHandler -> 0x2008fd0
+[Tbf80] [API]   [19] RtlVirtualUnwind -> 0x2030dc0
+[Tbf80] [API]   [20] RtlLookupFunctionEntry -> 0x200a380
+[Tbf80] [API]   [21] ResumeThread -> 0x20284c0
+[Tbf80] [API]   [22] UNRESOLVED: RaiseFailFastException
+[Tbf80] [API]   [23] QueryPerformanceCounter -> 0x200e0e0
+[Tbf80] [API]   [24] PostQueuedCompletionStatus -> 0x2022b30
+[Tbf80] [API]   [25] LoadLibraryExW -> 0x2038b20
+[Tbf80] [API]   [26] SetThreadContext -> 0x2028970
+[Tbf80] [API]   [27] GetThreadContext -> 0x2028100
+[Tbf80] [API]   [28] GetSystemInfo -> 0x202cee0
+[Tbf80] [API]   [29] GetSystemDirectoryA -> 0x2014de0
+[Tbf80] [API]   [30] GetStdHandle -> 0x2040f70
+[Tbf80] [API]   [31] UNRESOLVED: GetQueuedCompletionStatusEx
+[Tbf80] [API]   [32] GetProcessAffinityMask -> 0x200cd60
+[Tbf80] [API]   [33] GetProcAddress -> 0x2009e60
+[Tbf80] [API]   [34] UNRESOLVED: GetErrorMode
+[Tbf80] [API]   [35] GetEnvironmentStringsW -> 0x200e440
+[Tbf80] [API]   [36] GetCurrentThreadId -> 0x2007e70
+[Tbf80] [API]   [37] GetConsoleMode -> 0x2022000
+[Tbf80] [API]   [38] FreeEnvironmentStringsW -> 0x2029320
+[Tbf80] [API]   [39] ExitProcess -> 0x200dcd0
+[Tbf80] [API]   [40] DuplicateHandle -> 0x20099e0
+[Tbf80] [API]   [41] UNRESOLVED: CreateWaitableTimerExW
+[Tbf80] [API]   [42] CreateThread -> 0x2023ab0
+[Tbf80] [API]   [43] CreateIoCompletionPort -> 0x2021a10
+[Tbf80] [API]   [44] CreateEventA -> 0x20215c0
+[Tbf80] [API]   [45] CloseHandle -> 0x20340f0
+[Tbf80] [API]   [46] AddVectoredExceptionHandler -> 0x200c050
+[Tbf80] [API]   [47] UNRESOLVED: AddVectoredContinueHandler
+[Tbf80] [API] Import resolution: 39 resolved, 9 unresolved (total 48)
+[Tbf80] [API] Exception: .pdata RVA=0x232b000 Size=0x7494 Entries=2487
+[Tbf80] [API] [API-005] EH hacks DISABLED (default) (MINWIN_EH_HACKS=<unset>)
+[Tbf80] [API] [API-005] CXX-EH-FIX (LSDA catch-all patch RVA 0x2010c8) skipped: MINWIN_EH_HACKS not set
+[Tbf80] [API] Jumping to EP=0x140082f60
+[Tbf80] [API] TlsAlloc() = 1
+[Tbf80] [API] LoadLibraryExW(flags=2048)
+[Tbf80] [API] LoadLibraryA(bcryptprimitives.dll)
+[Tbf80] [API] GetProcAddress(module=0xdead003a, name=ProcessPrng)
+[Tbf80] [API]   -> 0x2013be0
+[Tbf80] [API] LoadLibraryExW(flags=2048)
+[Tbf80] [API] LoadLibraryA(ntdll.dll)
+[Tbf80] [API] GetProcAddress(module=0xdead0008, name=NtCreateWaitCompletionPacket)
+[Tbf80] [API]   -> NULL (not in dispatch table)
+[Tbf80] [API] GetProcAddress(module=0xdead0008, name=NtAssociateWaitCompletionPacket)
+[Tbf80] [API]   -> NULL (not in dispatch table)
+[Tbf80] [API] GetProcAddress(module=0xdead0008, name=NtCancelWaitCompletionPacket)
+[Tbf80] [API]   -> NULL (not in dispatch table)
+[Tbf80] [API] GetProcAddress(module=0xdead0008, name=RtlGetCurrentPeb)
+[Tbf80] [API]   -> NULL (not in dispatch table)
+[Tbf80] [API] GetProcAddress(module=0xdead0008, name=RtlGetVersion)
+[Tbf80] [API]   -> NULL (not in dispatch table)
+[Tbf80] [API] AddVectoredExceptionHandler(first=1, handler=0x140083100)
+[Tbf80] [API] LoadLibraryExW(flags=2048)
+[Tbf80] [API] LoadLibraryA(winmm.dll)
+[Tbf80] [API] GetProcAddress(module=0xdead0013, name=timeBeginPeriod)
+[Tbf80] [API]   -> 0x200b2a0
+[Tbf80] [API] GetProcAddress(module=0xdead0013, name=timeEndPeriod)
+[Tbf80] [API]   -> 0x200b3a0
+[Tbf80] [API] timeBeginPeriod(1)
+[Tbf80] [API] GetSystemDirectoryA()
+[Tbf80] [API] GetProcessAffinityMask()
+[Tbf80] [API] GetSystemInfo()

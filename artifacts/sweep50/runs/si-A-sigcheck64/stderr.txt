@@ -1,0 +1,78 @@
+[TRACE] Command line: /home/z/my-project/workspace/miniwin-engineering/artifacts/sweep50/dl/si-sigcheck/sigcheck64.exe
+[WARN]   unresolved: CryptCATEnumerateCatAttr
+[WARN]   unresolved: CryptCATClose
+[WARN]   unresolved: CryptCATEnumerateAttr
+[WARN]   unresolved: CryptCATEnumerateMember
+[WARN]   unresolved: CryptCATOpen
+[WARN]   unresolved: GetFileVersionInfoSizeW
+[WARN]   unresolved: VerQueryValueW
+[WARN]   unresolved: GetFileVersionInfoW
+[WARN]   unresolved: CertGetValidUsages
+[WARN]   unresolved: CryptSIPLoad
+[WARN]   unresolved: CryptSIPRetrieveSubjectGuidForCatalogFile
+[WARN]   unresolved: CertFreeCertificateChain
+[WARN]   unresolved: CertGetStoreProperty
+[WARN]   unresolved: CertOpenStore
+[WARN]   unresolved: CertAddCertificateContextToStore
+[WARN]   unresolved: CertCreateCTLContext
+[WARN]   unresolved: CertGetCertificateChain
+[WARN]   unresolved: CertDuplicateCertificateContext
+[WARN]   unresolved: CertGetNameStringW
+[WARN]   unresolved: CryptFindOIDInfo
+[WARN]   unresolved: CertGetCertificateContextProperty
+[WARN]   unresolved: MulDiv
+[WARN]   unresolved: ExpandEnvironmentStringsA
+[WARN]   unresolved: GetCurrentDirectoryA
+[WARN]   unresolved: GetVersionExW
+[WARN]   unresolved: SetDefaultDllDirectories
+[WARN]   unresolved: GetDlgItem
+[WARN]   unresolved: SetCursor
+[WARN]   unresolved: LoadCursorW
+[WARN]   unresolved: DialogBoxIndirectParamW
+[WARN]   unresolved: GetSysColorBrush
+[WARN]   unresolved: EndDialog
+[WARN]   unresolved: SendMessageW
+[WARN]   unresolved: InflateRect
+[WARN]   unresolved: SetWindowTextW
+[WARN]   unresolved: CreateCompatibleDC
+[WARN]   unresolved: DeleteDC
+[WARN]   unresolved: StartPage
+[WARN]   unresolved: EndDoc
+[WARN]   unresolved: GetDeviceCaps
+[WARN]   unresolved: SetMapMode
+[WARN]   unresolved: EndPage
+[WARN]   unresolved: StartDocW
+[WARN]   unresolved: PrintDlgW
+[WARN]   unresolved: CryptAcquireContextW
+[WARN]   unresolved: RegOpenKeyW
+[WARN]   unresolved: RegCreateKeyW
+[WARN]   unresolved: FreeSid
+[WARN]   unresolved: EqualSid
+[WARN]   unresolved: GetTokenInformation
+[WARN]   unresolved: AllocateAndInitializeSid
+[WARN]   unresolved: CryptGetHashParam
+[WARN]   unresolved: CryptDestroyHash
+[WARN]   unresolved: CryptHashData
+[WARN]   unresolved: CryptCreateHash
+[WARN]   unresolved: RegEnumKeyW
+[WARN]   unresolved: ShellExecuteW
+[WARN]   unresolved: CLSIDFromString
+[WARN]   unresolved: CoCreateInstance
+[WARN]   unresolved: WinHttpSetOption
+[WARN]   unresolved: WinHttpGetProxyForUrl
+[WARN]   unresolved: WinHttpReadData
+[WARN]   unresolved: WinHttpSendRequest
+[WARN]   unresolved: WinHttpQueryHeaders
+[WARN]   unresolved: WinHttpCloseHandle
+[WARN]   unresolved: WinHttpConnect
+[WARN]   unresolved: WinHttpOpen
+[WARN]   unresolved: WinHttpWriteData
+[WARN]   unresolved: WinHttpOpenRequest
+[WARN]   unresolved: WinHttpReceiveResponse
+[WARN]   unresolved: WinHttpQueryDataAvailable
+[WARN] 77 imports unresolved
+[STUB] unresolved import called -> returning 0 (call #1)
+[STUB] unresolved import called -> returning 0 (call #2)
+[STUB] unresolved import called -> returning 0 (call #3)
+[STUB] unresolved import called -> returning 0 (call #4)
+[STUB] unresolved import called -> returning 0 (call #5)

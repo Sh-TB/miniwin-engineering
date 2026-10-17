@@ -1,0 +1,98 @@
+{
+  "trace": [
+[T5f80] [API] PE Loader: file=/home/z/my-project/workspace/miniwin-engineering/artifacts/sweep50/dl/frp/frpc.exe size=17043968
+[T5f80] [API] PE Loader: ImageBase=0x140000000 EP=0x93040 SizeOfImage=0x30a1000 Sections=8
+[T5f80] [API] PE Loader: Mapped at 0x140000000 (forced via MAP_FIXED)
+[T5f80] [API] Section [0] .text    VA=0x00001000 VS=0x0073bb91 Raw=0x0073bc00 Ch=0x60000020
+[T5f80] [API] Section [1] .rdata   VA=0x0073d000 VS=0x008178f0 Raw=0x00817a00 Ch=0x40000040
+[T5f80] [API] Section [2] .data    VA=0x00f55000 VS=0x020f8120 Raw=0x0009d200 Ch=0xc0000040
+[T5f80] [API] Section [3] .pdata   VA=0x0304e000 VS=0x0002bd58 Raw=0x0002be00 Ch=0x40000040
+[T5f80] [API] Section [4] .xdata   VA=0x0307a000 VS=0x000000c0 Raw=0x00000200 Ch=0x40000040
+[T5f80] [API] Section [5] .idata   VA=0x0307b000 VS=0x000005b8 Raw=0x00000600 Ch=0xc0000040
+[T5f80] [API] Section [6] .reloc   VA=0x0307c000 VS=0x00023a78 Raw=0x00023c00 Ch=0x42000040
+[T5f80] [API] Section [7] .symtab  VA=0x030a0000 VS=0x00000004 Raw=0x00000200 Ch=0x42000000
+[T5f80] [API] Import Directory: RVA=0x307b000 Size=0x5b8
+[T5f80] [API] Import DLL: kernel32.dll (IAT RVA=0xf55fa0, ILT RVA=0x307b420)
+[T5f80] [API]   [0] WriteFile -> 0x2024d20
+[T5f80] [API]   [1] WriteConsoleW -> 0x2012160
+[T5f80] [API]   [2] UNRESOLVED: WerSetFlags
+[T5f80] [API]   [3] UNRESOLVED: WerGetFlags
+[T5f80] [API]   [4] WaitForMultipleObjects -> 0x2033d70
+[T5f80] [API]   [5] WaitForSingleObject -> 0x2033c20
+[T5f80] [API]   [6] VirtualQuery -> 0x200c870
+[T5f80] [API]   [7] VirtualFree -> 0x2023500
+[T5f80] [API]   [8] VirtualAlloc -> 0x20232a0
+[T5f80] [API]   [9] TlsAlloc -> 0x200c3b0
+[T5f80] [API]   [10] SwitchToThread -> 0x2013aa0
+[T5f80] [API]   [11] SuspendThread -> 0x2028b50
+[T5f80] [API]   [12] UNRESOLVED: SetWaitableTimer
+[T5f80] [API]   [13] SetThreadPriority -> 0x2028a60
+[T5f80] [API]   [14] UNRESOLVED: SetProcessPriorityBoost
+[T5f80] [API]   [15] SetEvent -> 0x20307f0
+[T5f80] [API]   [16] SetErrorMode -> 0x2009110
+[T5f80] [API]   [17] SetConsoleCtrlHandler -> 0x2008fd0
+[T5f80] [API]   [18] RtlVirtualUnwind -> 0x2030dc0
+[T5f80] [API]   [19] RtlLookupFunctionEntry -> 0x200a380
+[T5f80] [API]   [20] ResumeThread -> 0x20284c0
+[T5f80] [API]   [21] UNRESOLVED: RaiseFailFastException
+[T5f80] [API]   [22] QueryPerformanceCounter -> 0x200e0e0
+[T5f80] [API]   [23] PostQueuedCompletionStatus -> 0x2022b30
+[T5f80] [API]   [24] LoadLibraryExW -> 0x2038b20
+[T5f80] [API]   [25] SetThreadContext -> 0x2028970
+[T5f80] [API]   [26] GetThreadContext -> 0x2028100
+[T5f80] [API]   [27] GetSystemInfo -> 0x202cee0
+[T5f80] [API]   [28] GetSystemDirectoryA -> 0x2014de0
+[T5f80] [API]   [29] GetStdHandle -> 0x2040f70
+[T5f80] [API]   [30] UNRESOLVED: GetQueuedCompletionStatusEx
+[T5f80] [API]   [31] GetProcessAffinityMask -> 0x200cd60
+[T5f80] [API]   [32] GetProcAddress -> 0x2009e60
+[T5f80] [API]   [33] UNRESOLVED: GetErrorMode
+[T5f80] [API]   [34] GetEnvironmentStringsW -> 0x200e440
+[T5f80] [API]   [35] GetCurrentThreadId -> 0x2007e70
+[T5f80] [API]   [36] GetConsoleMode -> 0x2022000
+[T5f80] [API]   [37] FreeEnvironmentStringsW -> 0x2029320
+[T5f80] [API]   [38] ExitProcess -> 0x200dcd0
+[T5f80] [API]   [39] DuplicateHandle -> 0x20099e0
+[T5f80] [API]   [40] UNRESOLVED: CreateWaitableTimerExW
+[T5f80] [API]   [41] UNRESOLVED: CreateWaitableTimerA
+[T5f80] [API]   [42] CreateThread -> 0x2023ab0
+[T5f80] [API]   [43] CreateIoCompletionPort -> 0x2021a10
+[T5f80] [API]   [44] CreateEventA -> 0x20215c0
+[T5f80] [API]   [45] CloseHandle -> 0x20340f0
+[T5f80] [API]   [46] AddVectoredExceptionHandler -> 0x200c050
+[T5f80] [API]   [47] UNRESOLVED: AddVectoredContinueHandler
+[T5f80] [API]   [48] GetProcAddress -> 0x2009e60
+[T5f80] [API]   [49] LoadLibraryExW -> 0x2038b20
+[T5f80] [API] Import resolution: 40 resolved, 10 unresolved (total 50)
+[T5f80] [API] Exception: .pdata RVA=0x304e000 Size=0x2bd58 Entries=14962
+[T5f80] [API] [API-005] EH hacks DISABLED (default) (MINWIN_EH_HACKS=<unset>)
+[T5f80] [API] [API-005] CXX-EH-FIX (LSDA catch-all patch RVA 0x2010c8) skipped: MINWIN_EH_HACKS not set
+[T5f80] [API] Jumping to EP=0x140093040
+[T5f80] [API] TlsAlloc() = 1
+[T5f80] [API] LoadLibraryExW(flags=2048)
+[T5f80] [API] LoadLibraryA(bcryptprimitives.dll)
+[T5f80] [API] GetProcAddress(module=0xdead003a, name=ProcessPrng)
+[T5f80] [API]   -> 0x2013be0
+[T5f80] [API] LoadLibraryExW(flags=2048)
+[T5f80] [API] LoadLibraryA(ntdll.dll)
+[T5f80] [API] GetProcAddress(module=0xdead0008, name=NtCreateWaitCompletionPacket)
+[T5f80] [API]   -> NULL (not in dispatch table)
+[T5f80] [API] GetProcAddress(module=0xdead0008, name=NtAssociateWaitCompletionPacket)
+[T5f80] [API]   -> NULL (not in dispatch table)
+[T5f80] [API] GetProcAddress(module=0xdead0008, name=NtCancelWaitCompletionPacket)
+[T5f80] [API]   -> NULL (not in dispatch table)
+[T5f80] [API] GetProcAddress(module=0xdead0008, name=RtlGetCurrentPeb)
+[T5f80] [API]   -> NULL (not in dispatch table)
+[T5f80] [API] GetProcAddress(module=0xdead0008, name=RtlGetVersion)
+[T5f80] [API]   -> NULL (not in dispatch table)
+[T5f80] [API] AddVectoredExceptionHandler(first=1, handler=0x1400931e0)
+[T5f80] [API] LoadLibraryExW(flags=2048)
+[T5f80] [API] LoadLibraryA(winmm.dll)
+[T5f80] [API] GetProcAddress(module=0xdead0013, name=timeBeginPeriod)
+[T5f80] [API]   -> 0x200b2a0
+[T5f80] [API] GetProcAddress(module=0xdead0013, name=timeEndPeriod)
+[T5f80] [API]   -> 0x200b3a0
+[T5f80] [API] timeBeginPeriod(1)
+[T5f80] [API] GetSystemDirectoryA()
+[T5f80] [API] GetProcessAffinityMask()
+[T5f80] [API] GetSystemInfo()

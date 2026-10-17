@@ -1,0 +1,5 @@
+exe=watchexec/watchexec.exe
+sha256=0a362aa3bb944337f9d2e8d37f8a4fdc4aba2f3a6d83e5d69df43a7eedfbfd14
+timeout=10s
+args=none
+date_utc=2026-10-17T18:39:38Z

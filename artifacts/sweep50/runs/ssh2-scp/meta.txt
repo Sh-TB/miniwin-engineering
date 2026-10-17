@@ -1,0 +1,5 @@
+exe=openssh/scp.exe
+sha256=ca014ddb0a3c058719e7061eb604de7dfe1f7732954792ac8176e6c1fc99b4a3
+timeout=10s
+args=none
+date_utc=2026-10-17T18:39:39Z

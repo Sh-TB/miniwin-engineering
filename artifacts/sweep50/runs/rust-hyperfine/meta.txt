@@ -1,0 +1,5 @@
+exe=hyperfine/hyperfine.exe
+sha256=e42ed192500a7191296b95d7b60d3a3466423535c7ba2b7d0e97ab389cfec5ca
+timeout=10s
+args=none
+date_utc=2026-10-17T18:39:38Z

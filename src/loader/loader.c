@@ -584,7 +584,11 @@ __attribute__((ms_abi)) void* mw_GetProcAddress(void* module, const char* name) 
         void* r = g_resolve_proc_fn(module, name);
         if (r) return r;
         uintptr_t m = (uintptr_t)module;
-        if (m >= 0xdead0001 && m <= 0xdead0003) {
+        /* SWEEP-002 fix: the known[] pseudo-handle space is 0xdead0001+
+         * (bounded by the table size), NOT just 3 slots — winmm.dll is
+         * slot 18 (0xdead0013) and Go's timeBeginPeriod lookup died on
+         * this stale range check. Keep 0xdead0004..0xdead00ff reserved. */
+        if (m >= 0xdead0001 && m <= 0xdead00ff) {
             /* system module: optional extensions resolve to the generic stub */
             return (void*)&mw_winapi_optional_stub;
         }
@@ -611,6 +615,7 @@ __attribute__((ms_abi)) void* mw_LoadLibraryA(const char* name) {
         "imagehlp.dll", "msimg32.dll", "opengl32.dll", "glu32.dll", "dwmapi.dll",
         "gdiplus.dll", "windowscodecs.dll", "propsys.dll", "setupapi.dll",
         "cfgmgr32.dll", "devobj.dll", "winusb.dll", "hid.dll", "ws2help.dll",
+        "bcryptprimitives.dll", /* SWEEP-002: Go runtime.osinit + Rust std */
     };
     if (name && name[0]) {
         char low[64]; size_t k = 0;
@@ -5767,6 +5772,52 @@ __attribute__((ms_abi)) uint32_t mw_GetModuleFileNameW(void* mod, wchar_t* out, 
     return (uint32_t)n;
 }
 
+/* ============================================================
+ * SWEEP-002 (2026-10-18): ProcessPrng (bcryptprimitives.dll).
+ * Sweep evidence: every Go binary died in runtime.osinit ->
+ * loadOptionalSyscalls with "fatal error: bcryptprimitives.dll not
+ * found", and every Rust/MSVC binary lists ProcessPrng as its FIRST
+ * unresolved import. Modern language runtimes get randomness through
+ * this single bcryptprimitives export. BOOL ProcessPrng(PBYTE, SIZE_T)
+ * fills the buffer from the OS CSPRNG and returns nonzero on success.
+ * Linux mapping: getrandom(2) loop (same primitive as loader.c:8629).
+ * ============================================================ */
+__attribute__((ms_abi)) int mw_ProcessPrng(uint8_t* buf, uint64_t len) {
+    MW_TRACE("ProcessPrng(len=%llu)", (unsigned long long)len);
+    if (!buf && len) return 0;
+    uint64_t done = 0;
+    while (done < len) {
+        ssize_t r = syscall(SYS_getrandom, buf + done, len - done, 0);
+        if (r < 0) {
+            if (errno == EINTR) continue;
+            return 0; /* honest failure — guest runtimes retry or abort */
+        }
+        done += (uint64_t)r;
+    }
+    return 1;
+}
+
+/* ============================================================
+ * SWEEP-002b (2026-10-18): winmm.dll timeBeginPeriod/timeEndPeriod.
+ * Sweep evidence: with bcryptprimitives.dll present, Go osinit now
+ * fails one step later: "fatal error: timeBegin/EndPeriod not found"
+ * (runtime.initHighResTimer requires both exports or aborts before
+ * main). Windows contract: request 1ms scheduler resolution, return
+ * TIMERR_NOERROR (0); nested periods are refcounted. Linux needs no
+ * such knob — honest no-op that remembers the last period.
+ * ============================================================ */
+static uint32_t g_time_period_ms = 0;
+__attribute__((ms_abi)) uint32_t mw_timeBeginPeriod(uint32_t ms) {
+    MW_TRACE("timeBeginPeriod(%u)", ms);
+    g_time_period_ms = ms;
+    return 0; /* TIMERR_NOERROR */
+}
+__attribute__((ms_abi)) uint32_t mw_timeEndPeriod(uint32_t ms) {
+    MW_TRACE("timeEndPeriod(%u)", ms);
+    if (g_time_period_ms == ms) g_time_period_ms = 0;
+    return 0; /* TIMERR_NOERROR */
+}
+
 __attribute__((ms_abi)) void* mw_LoadLibraryW(const wchar_t* name) {
     /* OPENSRC battery (sqlite3): known system DLLs load successfully with a
      * pseudo-handle — the guest's imports were already resolved at load
@@ -9793,6 +9844,9 @@ static ImportEntry g_import_table[] = {
     ENTRY("KERNEL32.DLL", "GetLastError",                        mw_GetLastError),
     ENTRY("KERNEL32.DLL", "GetModuleHandleA",                    mw_GetModuleHandleA),
     ENTRY("KERNEL32.DLL", "GetProcAddress",                      mw_GetProcAddress),
+    ENTRY("bcryptprimitives.dll", "ProcessPrng",                mw_ProcessPrng), /* SWEEP-002 */
+    ENTRY("winmm.dll", "timeBeginPeriod",                       mw_timeBeginPeriod), /* SWEEP-002b: Go osinit */
+    ENTRY("winmm.dll", "timeEndPeriod",                         mw_timeEndPeriod), /* SWEEP-002b: Go osinit */
     ENTRY("KERNEL32.DLL", "GetProcessAffinityMask",             mw_GetProcessAffinityMask),
     ENTRY("KERNEL32.DLL", "GetStartupInfoA",                     mw_GetStartupInfoA),
     ENTRY("KERNEL32.DLL", "GetStdHandle",                       mw_GetStdHandle),
@@ -10733,7 +10787,9 @@ static DataImportEntry g_data_imports[] = {
 static void* resolve_proc_from_table(void* module, const char* name) {
     /* OPENSRC battery: any pseudo-handle (LoadLibrary identities) or the
      * image base resolves by NAME — the table is module-agnostic. */
-    if ((uintptr_t)module >= 0xdead0001 && (uintptr_t)module <= 0xdead0003) {
+    /* SWEEP-002 fix: same stale-range bug as mw_GetProcAddress — the
+     * pseudo-handle space grew with known[] (57 DLLs). Bound: +0xff. */
+    if ((uintptr_t)module >= 0xdead0001 && (uintptr_t)module <= 0xdead00ff) {
         for (size_t i = 0; i < NUM_IMPORTS; i++) {
             if (strcmp(g_import_table[i].name, name) == 0) {
                 MW_TRACE("  -> %p", g_import_table[i].func);
@@ -10794,6 +10850,38 @@ static void iat_pages_restore(void) {
         mprotect((void*)(uintptr_t)g_iat_pages[i], 0x1000, prot);
     }
     g_iat_page_count = 0;
+}
+
+/* ============================================================
+ * SWEEP-001 (2026-10-18): safe stub for unresolved imports.
+ * 50-program sweep evidence: 33/50 programs SIGSEGV'd the loader the
+ * moment guest code called an unresolved IAT slot (the slot was left
+ * NULL, so the call jumped to 0x0; strings64/accesschk/rg/nasm/ssh* all
+ * show "[CRASH] ... NOT inside loaded PE" after the unresolved banner).
+ * Wine precedent (dlls/ntdll/loader stubs): an unimplemented export is a
+ * real callable that returns failure, never a NULL slot. We return 0 and
+ * rate-limit the stderr note to keep sweep runs readable. Zero behavior
+ * change for fully-resolved binaries (G1/T0 all resolve every import).
+ * ============================================================ */
+static uint64_t g_stub_calls = 0; /* rate-limiter only; racy count is fine */
+__attribute__((ms_abi)) uint64_t mw_unresolved_import_stub(void);
+__attribute__((ms_abi)) uint64_t mw_unresolved_import_stub(void) {
+    uint64_t n = ++g_stub_calls;
+    if (n <= 20) {
+        fprintf(stderr, "[STUB] unresolved import called -> returning 0 (call #%llu)\n",
+                (unsigned long long)n);
+    } else if (n == 21) {
+        fprintf(stderr, "[STUB] further unresolved-import calls silenced\n");
+    }
+    return 0;
+}
+/* Patch one IAT slot (handling the BUG-059 page-crossing case). */
+static void iat_patch_slot(uint64_t iat_off, int slot, void* target) {
+    void* patch_addr = g_image_base + iat_off + slot * 8;
+    iat_page_ensure_writable((uint8_t*)(uintptr_t)patch_addr);
+    if ((((uintptr_t)patch_addr & 0xFFF) + 8) > 0x1000)
+        iat_page_ensure_writable((uint8_t*)(uintptr_t)patch_addr + 8);
+    *(uint64_t*)patch_addr = (uint64_t)(uintptr_t)target;
 }
 
 /* ============================================================
@@ -10993,6 +11081,9 @@ static int load_pe(const char* filepath) {
                     MW_TRACE("  [%d] Ordinal %u -> %s (OLEAUT32 fixed)", slot, ordinal, ord_name);
                 } else {
                     MW_TRACE("  [%d] Ordinal %u (not supported)", slot, ordinal);
+                    /* SWEEP-001: stub the slot too — same crash class as
+                     * name-unresolved if guest ever calls it. */
+                    iat_patch_slot(iat_off, slot, (void*)mw_unresolved_import_stub);
                     total_unresolved++;
                     slot++;
                     continue;
@@ -11041,6 +11132,10 @@ static int load_pe(const char* filepath) {
                  * the summary line's neighbor so a run without MINWIN_TRACE
                  * still identifies them. */
                 fprintf(stderr, "[WARN]   unresolved: %s\n", func_name);
+                /* SWEEP-001: a NULL IAT slot is a delayed SIGSEGV — every
+                 * sweep program that called one died with the loader. Wine
+                 * never leaves a slot NULL; install the returning-0 stub. */
+                iat_patch_slot(iat_off, slot, (void*)mw_unresolved_import_stub);
                 total_unresolved++;
             } else {
                 /* Only log code imports here (data imports logged above) */

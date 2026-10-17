@@ -1,0 +1,5 @@
+exe=nasm/ndisasm.exe
+sha256=cd57be890f2d3d87189e67eb1c2537de6b85dfc843461d7c0fdd437dc0f1270d
+timeout=10s
+args=none
+date_utc=2026-10-17T18:39:39Z

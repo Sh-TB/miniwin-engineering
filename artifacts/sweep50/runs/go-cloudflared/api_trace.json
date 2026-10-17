@@ -1,0 +1,182 @@
+{
+  "trace": [
+[T4f80] [API] PE Loader: file=/home/z/my-project/workspace/miniwin-engineering/artifacts/sweep50/dl/cloudflared/cloudflared-windows-amd64.exe size=55325120
+[T4f80] [API] PE Loader: ImageBase=0x140000000 EP=0x1440 SizeOfImage=0x5959000 Sections=21
+[T4f80] [API] PE Loader: Mapped at 0x140000000 (forced via MAP_FIXED)
+[T4f80] [API] Section [0] .text    VA=0x00001000 VS=0x00bc02c0 Raw=0x00bc0400 Ch=0x60000020
+[T4f80] [API] Section [1] .data    VA=0x00bc2000 VS=0x000b4b00 Raw=0x000b4c00 Ch=0xc0000040
+[T4f80] [API] Section [2] .rdata   VA=0x00c77000 VS=0x00dce760 Raw=0x00dce800 Ch=0x40000040
+[T4f80] [API] Section [3] .pdata   VA=0x01a46000 VS=0x0004e8f4 Raw=0x0004ea00 Ch=0x40000040
+[T4f80] [API] Section [4] .xdata   VA=0x01a95000 VS=0x000002d4 Raw=0x00000400 Ch=0x40000040
+[T4f80] [API] Section [5] .bss     VA=0x01a96000 VS=0x0278eaa0 Raw=0x00000000 Ch=0xc0000080
+[T4f80] [API] Section [6] .edata   VA=0x04225000 VS=0x0000004d Raw=0x00000200 Ch=0x40000040
+[T4f80] [API] Section [7] .idata   VA=0x04226000 VS=0x00000fd8 Raw=0x00001000 Ch=0x40000040
+[T4f80] [API] Section [8] .tls     VA=0x04227000 VS=0x00000010 Raw=0x00000200 Ch=0xc0000040
+[T4f80] [API] Section [9] .reloc   VA=0x04228000 VS=0x00046288 Raw=0x00046400 Ch=0x42000040
+[T4f80] [API] Section [10] /4       VA=0x0426f000 VS=0x00000180 Raw=0x00000200 Ch=0x42000040
+[T4f80] [API] Section [11] /19      VA=0x04270000 VS=0x00a6175f Raw=0x00a61800 Ch=0x42000040
+[T4f80] [API] Section [12] /31      VA=0x04cd2000 VS=0x00000823 Raw=0x00000a00 Ch=0x42000040
+[T4f80] [API] Section [13] /45      VA=0x04cd3000 VS=0x004866d1 Raw=0x00486800 Ch=0x42000040
+[T4f80] [API] Section [14] /57      VA=0x0515a000 VS=0x00194108 Raw=0x00194200 Ch=0x42000040
+[T4f80] [API] Section [15] /70      VA=0x052ef000 VS=0x000000e9 Raw=0x00000200 Ch=0x42000040
+[T4f80] [API] Section [16] /81      VA=0x052f0000 VS=0x00000043 Raw=0x00000200 Ch=0x42000040
+[T4f80] [API] Section [17] /100     VA=0x052f1000 VS=0x00041ee8 Raw=0x00042000 Ch=0x42000040
+[T4f80] [API] Section [18] /112     VA=0x05333000 VS=0x0000057f Raw=0x00000600 Ch=0x42000040
+[T4f80] [API] Section [19] /128     VA=0x05334000 VS=0x004e5192 Raw=0x004e5200 Ch=0x42000040
+[T4f80] [API] Section [20] /144     VA=0x0581a000 VS=0x0013ebe0 Raw=0x0013ec00 Ch=0x42000040
+[T4f80] [API] Import Directory: RVA=0x4226000 Size=0xfd8
+[T4f80] [API] Import DLL: KERNEL32.dll (IAT RVA=0x42263d8, ILT RVA=0x42260c8)
+[T4f80] [API]   [0] UNRESOLVED: AddVectoredContinueHandler
+[T4f80] [API]   [1] AddVectoredExceptionHandler -> 0x200c050
+[T4f80] [API]   [2] CloseHandle -> 0x20340f0
+[T4f80] [API]   [3] CreateEventA -> 0x20215c0
+[T4f80] [API]   [4] CreateIoCompletionPort -> 0x2021a10
+[T4f80] [API]   [5] CreateThread -> 0x2023ab0
+[T4f80] [API]   [6] UNRESOLVED: CreateWaitableTimerA
+[T4f80] [API]   [7] UNRESOLVED: CreateWaitableTimerExW
+[T4f80] [API]   [8] DeleteCriticalSection -> 0x200d760
+[T4f80] [API]   [9] DuplicateHandle -> 0x20099e0
+[T4f80] [API]   [10] EnterCriticalSection -> 0x202fa30
+[T4f80] [API]   [11] ExitProcess -> 0x200dcd0
+[T4f80] [API]   [12] FreeEnvironmentStringsW -> 0x2029320
+[T4f80] [API]   [13] GetConsoleMode -> 0x2022000
+[T4f80] [API]   [14] GetCurrentThreadId -> 0x2007e70
+[T4f80] [API]   [15] GetEnvironmentStringsW -> 0x200e440
+[T4f80] [API]   [16] UNRESOLVED: GetErrorMode
+[T4f80] [API]   [17] GetLastError -> 0x2009c00
+[T4f80] [API]   [18] GetProcAddress -> 0x2009e60
+[T4f80] [API]   [19] GetProcessAffinityMask -> 0x200cd60
+[T4f80] [API]   [20] UNRESOLVED: GetQueuedCompletionStatusEx
+[T4f80] [API]   [21] GetStdHandle -> 0x2040f70
+[T4f80] [API]   [22] GetSystemDirectoryA -> 0x2014de0
+[T4f80] [API]   [23] GetSystemInfo -> 0x202cee0
+[T4f80] [API]   [24] GetThreadContext -> 0x2028100
+[T4f80] [API]   [25] InitializeCriticalSection -> 0x2029a00
+[T4f80] [API]   [26] LeaveCriticalSection -> 0x2027ab0
+[T4f80] [API]   [27] LoadLibraryExW -> 0x2038b20
+[T4f80] [API]   [28] PostQueuedCompletionStatus -> 0x2022b30
+[T4f80] [API]   [29] QueryPerformanceCounter -> 0x200e0e0
+[T4f80] [API]   [30] UNRESOLVED: RaiseFailFastException
+[T4f80] [API]   [31] ResumeThread -> 0x20284c0
+[T4f80] [API]   [32] RtlLookupFunctionEntry -> 0x200a380
+[T4f80] [API]   [33] RtlVirtualUnwind -> 0x2030dc0
+[T4f80] [API]   [34] SetConsoleCtrlHandler -> 0x2008fd0
+[T4f80] [API]   [35] SetErrorMode -> 0x2009110
+[T4f80] [API]   [36] SetEvent -> 0x20307f0
+[T4f80] [API]   [37] UNRESOLVED: SetProcessPriorityBoost
+[T4f80] [API]   [38] SetThreadContext -> 0x2028970
+[T4f80] [API]   [39] SetThreadPriority -> 0x2028a60
+[T4f80] [API]   [40] SetUnhandledExceptionFilter -> 0x200a5d0
+[T4f80] [API]   [41] UNRESOLVED: SetWaitableTimer
+[T4f80] [API]   [42] Sleep -> 0x202a6d0
+[T4f80] [API]   [43] SuspendThread -> 0x2028b50
+[T4f80] [API]   [44] SwitchToThread -> 0x2013aa0
+[T4f80] [API]   [45] TlsAlloc -> 0x200c3b0
+[T4f80] [API]   [46] TlsGetValue -> 0x200a6d0
+[T4f80] [API]   [47] VirtualAlloc -> 0x20232a0
+[T4f80] [API]   [48] VirtualFree -> 0x2023500
+[T4f80] [API]   [49] VirtualProtect -> 0x200f1d0
+[T4f80] [API]   [50] VirtualQuery -> 0x200c870
+[T4f80] [API]   [51] WaitForMultipleObjects -> 0x2033d70
+[T4f80] [API]   [52] WaitForSingleObject -> 0x2033c20
+[T4f80] [API]   [53] UNRESOLVED: WerGetFlags
+[T4f80] [API]   [54] UNRESOLVED: WerSetFlags
+[T4f80] [API]   [55] WriteConsoleW -> 0x2012160
+[T4f80] [API]   [56] WriteFile -> 0x2024d20
+[T4f80] [API]   [57] __C_specific_handler -> 0x2028c40
+[T4f80] [API] Import DLL: api-ms-win-crt-environment-l1-1-0.dll (IAT RVA=0x42265b0, ILT RVA=0x42262a0)
+[T4f80] [API]   [0] __p__environ -> 0x2026a20
+[T4f80] [API] Import DLL: api-ms-win-crt-heap-l1-1-0.dll (IAT RVA=0x42265c0, ILT RVA=0x42262b0)
+[T4f80] [API]   [0] _set_new_mode -> 0x2026300
+[T4f80] [API]   [1] calloc -> 0x2030080
+[T4f80] [API]   [2] free -> 0x20381e0
+[T4f80] [API]   [3] malloc -> 0x202fcc0
+[T4f80] [API] Import DLL: api-ms-win-crt-locale-l1-1-0.dll (IAT RVA=0x42265e8, ILT RVA=0x42262d8)
+[T4f80] [API]   [0] _configthreadlocale -> 0x20091f0
+[T4f80] [API] Import DLL: api-ms-win-crt-math-l1-1-0.dll (IAT RVA=0x42265f8, ILT RVA=0x42262e8)
+[T4f80] [API]   [0] __setusermatherr -> 0x2026120
+[T4f80] [API] Import DLL: api-ms-win-crt-private-l1-1-0.dll (IAT RVA=0x4226608, ILT RVA=0x42262f8)
+[T4f80] [API]   [0] memcpy -> 0x200efe0
+[T4f80] [API] Import DLL: api-ms-win-crt-runtime-l1-1-0.dll (IAT RVA=0x4226618, ILT RVA=0x4226308)
+[T4f80] [API]   [0] __p___argc -> 0x2026800
+[T4f80] [API]   [1] __p___argv -> 0x2026910
+[T4f80] [API]   [2] _cexit -> 0x200d190
+[T4f80] [API]   [3] _configure_narrow_argv -> 0x2026210
+[T4f80] [API]   [4] _crt_atexit -> 0x200b030
+[T4f80] [API]   [5] _exit -> 0x200dad0
+[T4f80] [API]   [6] _initialize_narrow_environment -> 0x2028d30
+[T4f80] [API]   [7] _set_app_type -> 0x2026030
+[T4f80] [API]   [8] _initterm -> 0x200a930
+[T4f80] [API]   [9] _initterm_e -> 0x200bbe0
+[T4f80] [API]   [10] _set_invalid_parameter_handler -> 0x20263f0
+[T4f80] [API]   [11] abort -> 0x200df00
+[T4f80] [API]   [12] exit -> 0x200f9c0
+[T4f80] [API]   [13] signal -> 0x20264e0
+[T4f80] [API] Import DLL: api-ms-win-crt-stdio-l1-1-0.dll (IAT RVA=0x4226690, ILT RVA=0x4226380)
+[T4f80] [API]   [0] __acrt_iob_func -> 0x200abf0
+[T4f80] [API]   [1] __p__commode -> 0x20266f0
+[T4f80] [API]   [2] __p__fmode -> 0x20265e0
+[T4f80] [API]   [3] __stdio_common_vfprintf -> 0x201ef30
+[T4f80] [API]   [4] fflush -> 0x201cf90
+[T4f80] [API]   [5] fwrite -> 0x201d8d0
+[T4f80] [API]   [6] setvbuf -> 0x201dd60
+[T4f80] [API] Import DLL: api-ms-win-crt-string-l1-1-0.dll (IAT RVA=0x42266d0, ILT RVA=0x42263c0)
+[T4f80] [API]   [0] strlen -> 0x200d990
+[T4f80] [API]   [1] strncmp -> 0x2010cc0
+[T4f80] [API] Import resolution: 79 resolved, 10 unresolved (total 89)
+[T4f80] [API] TLS: StartRaw=0x144227000 EndRaw=0x144227008 Callbacks=0x141a45738
+[T4f80] [API] TLS: static block 0x23ab0a0 (8+0 bytes) -> slot 0
+[T4f80] [API] TLS: callback[0] = 0x140bbfcb0
+[T4f80] [API] InitializeCriticalSection(0x144224a20)
+[T4f80] [API] TLS: callback[1] = 0x140bbfc90
+[T4f80] [API] Exception: .pdata RVA=0x1a46000 Size=0x4e8f4 Entries=26815
+[T4f80] [API] [API-005] EH hacks DISABLED (default) (MINWIN_EH_HACKS=<unset>)
+[T4f80] [API] [API-005] CXX-EH-FIX (LSDA catch-all patch RVA 0x2010c8) skipped: MINWIN_EH_HACKS not set
+[T4f80] [API] Jumping to EP=0x140001440
+[T4f80] [API] __acrt_iob_func(2) = 0x7f99663cc4e0
+[T4f80] [API] setvbuf(stream=0x7f99663cc4e0, mode=4->2, size=0)
+[T4f80] [API] atexit(func=0x140001010)
+[T4f80] [API] SetUnhandledExceptionFilter(handler=0x140bc05b0)
+[T4f80] [API] _set_invalid_parameter_handler(0x140001000) -> NULL
+[T4f80] [API] __set_app_type(1)
+[T4f80] [API] __p__fmode() = 0x217d250
+[T4f80] [API] __p__commode() = 0x217d24c
+[T4f80] [API] _initterm_e(0x141a45720..0x141a45728)
+[T4f80] [API] _initialize_narrow_environment() -> 0
+[T4f80] [API] _configure_narrow_argv(mode=1) -> 0
+[T4f80] [API] __p___argc() = 0x217d268
+[T4f80] [API] __p___argv() = 0x206d9b0
+[T4f80] [API] __p__environ() = 0x217d260
+[T4f80] [API] _set_new_mode(0) -> 0
+[T4f80] [API] malloc(16) = 0x23ab750
+[T4f80] [API] malloc(30) = 0x23ab720
+[T4f80] [API] _initterm(start=0x141a45710, end=0x141a45718)
+[T4f80] [API] atexit(func=0x140001480)
+[T4f80] [API] TlsAlloc() = 1
+[T4f80] [API] LoadLibraryExW(flags=2048)
+[T4f80] [API] LoadLibraryA(bcryptprimitives.dll)
+[T4f80] [API] GetProcAddress(module=0xdead003a, name=ProcessPrng)
+[T4f80] [API]   -> 0x2013be0
+[T4f80] [API] LoadLibraryExW(flags=2048)
+[T4f80] [API] LoadLibraryA(ntdll.dll)
+[T4f80] [API] GetProcAddress(module=0xdead0008, name=NtCreateWaitCompletionPacket)
+[T4f80] [API]   -> NULL (not in dispatch table)
+[T4f80] [API] GetProcAddress(module=0xdead0008, name=NtAssociateWaitCompletionPacket)
+[T4f80] [API]   -> NULL (not in dispatch table)
+[T4f80] [API] GetProcAddress(module=0xdead0008, name=NtCancelWaitCompletionPacket)
+[T4f80] [API]   -> NULL (not in dispatch table)
+[T4f80] [API] GetProcAddress(module=0xdead0008, name=RtlGetCurrentPeb)
+[T4f80] [API]   -> NULL (not in dispatch table)
+[T4f80] [API] GetProcAddress(module=0xdead0008, name=RtlGetVersion)
+[T4f80] [API]   -> NULL (not in dispatch table)
+[T4f80] [API] AddVectoredExceptionHandler(first=1, handler=0x140097800)
+[T4f80] [API] LoadLibraryExW(flags=2048)
+[T4f80] [API] LoadLibraryA(winmm.dll)
+[T4f80] [API] GetProcAddress(module=0xdead0013, name=timeBeginPeriod)
+[T4f80] [API]   -> 0x200b2a0
+[T4f80] [API] GetProcAddress(module=0xdead0013, name=timeEndPeriod)
+[T4f80] [API]   -> 0x200b3a0
+[T4f80] [API] timeBeginPeriod(1)
+[T4f80] [API] GetSystemDirectoryA()
+[T4f80] [API] GetProcessAffinityMask()
+[T4f80] [API] GetSystemInfo()

@@ -1,0 +1,5 @@
+exe=si-du/du64.exe
+sha256=84d4b083a25d9365a969b7de20a0bdc7f1ae04f5ce3eefc4517ca1b13c308d1d
+timeout=10s
+args=none
+date_utc=2026-10-17T18:39:36Z

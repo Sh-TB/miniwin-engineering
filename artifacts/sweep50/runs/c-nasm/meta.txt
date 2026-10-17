@@ -1,0 +1,5 @@
+exe=nasm/nasm.exe
+sha256=a93276636266516421cc9b422f47476c21f7a2949f1ae251556b2f1d33a3be04
+timeout=10s
+args=none
+date_utc=2026-10-17T18:39:38Z

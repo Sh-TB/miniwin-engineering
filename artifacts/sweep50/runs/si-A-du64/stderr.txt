@@ -1,0 +1,58 @@
+[TRACE] Command line: /home/z/my-project/workspace/miniwin-engineering/artifacts/sweep50/dl/si-du/du64.exe
+[WARN]   unresolved: GetCompressedFileSizeW
+[WARN]   unresolved: GetVersionExW
+[WARN]   unresolved: GetNumberFormatW
+[WARN]   unresolved: FindFirstFileExA
+[WARN]   unresolved: SetCursor
+[WARN]   unresolved: SetWindowTextW
+[WARN]   unresolved: GetDlgItem
+[WARN]   unresolved: EndDialog
+[WARN]   unresolved: DialogBoxIndirectParamW
+[WARN]   unresolved: SendMessageW
+[WARN]   unresolved: LoadCursorW
+[WARN]   unresolved: InflateRect
+[WARN]   unresolved: GetSysColorBrush
+[WARN]   unresolved: StartPage
+[WARN]   unresolved: EndDoc
+[WARN]   unresolved: StartDocW
+[WARN]   unresolved: SetMapMode
+[WARN]   unresolved: GetDeviceCaps
+[WARN]   unresolved: EndPage
+[WARN]   unresolved: PrintDlgW
+[WARN]   unresolved: RegOpenKeyW
+[WARN]   unresolved: RegCreateKeyW
+[WARN]   unresolved: GetFileVersionInfoW
+[WARN]   unresolved: VerQueryValueW
+[WARN]   unresolved: GetFileVersionInfoSizeW
+[WARN] 29 imports unresolved
+[STUB] unresolved import called -> returning 0 (call #1)
+[STUB] unresolved import called -> returning 0 (call #2)
+[STUB] unresolved import called -> returning 0 (call #3)
+[STUB] unresolved import called -> returning 0 (call #4)
+[STUB] unresolved import called -> returning 0 (call #5)
+[STUB] unresolved import called -> returning 0 (call #6)
+[STUB] unresolved import called -> returning 0 (call #7)
+[STUB] unresolved import called -> returning 0 (call #8)
+[STUB] unresolved import called -> returning 0 (call #9)
+[STUB] unresolved import called -> returning 0 (call #10)
+[STUB] unresolved import called -> returning 0 (call #11)
+[STUB] unresolved import called -> returning 0 (call #12)
+
+(null) v(null) - (null)
+(null)
+(null)
+
+usage: du64.exe [-c[t]] [-l <levels> | -n | -v] [-u] [-q] <directory>
+   -c     Print output as CSV. Use -ct for tab delimiting.
+          Use -nobanner to suppress banner.
+   -l     Specify subdirectory depth of information (default is one level).
+   -n     Do not recurse.
+   -q     Quiet.
+   -nobanner
+          Do not display the startup banner and copyright message.
+   -u     Count each instance of a hardlinked file.
+   -v     Show size (in KB) of all subdirectories.
+
+CSV output is formatted as:
+Path,CurrentFileCount,CurrentFileSize,FileCount,DirectoryCount,DirectorySize,DirectorySizeOnDisk
+

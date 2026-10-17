@@ -1,0 +1,5 @@
+exe=pscp/pscp.exe
+sha256=4275310c04b4dd00cc139f93b932267df7816fda8e362d4a845660129264f3a1
+timeout=10s
+args=none
+date_utc=2026-10-17T18:39:37Z

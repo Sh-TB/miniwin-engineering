@@ -1,0 +1,220 @@
+[TRACE] Command line: /home/z/my-project/workspace/miniwin-engineering/artifacts/sweep50/dl/openssh/sshd-auth.exe
+[WARN]   unresolved: ECDH_compute_key
+[WARN]   unresolved: EC_KEY_generate_key
+[WARN]   unresolved: EC_POINT_clear_free
+[WARN]   unresolved: EC_GROUP_get_degree
+[WARN]   unresolved: BN_free
+[WARN]   unresolved: DH_compute_key
+[WARN]   unresolved: DH_size
+[WARN]   unresolved: AES_encrypt
+[WARN]   unresolved: AES_set_encrypt_key
+[WARN]   unresolved: EVP_DigestVerifyFinal
+[WARN]   unresolved: BN_set_flags
+[WARN]   unresolved: RSA_new
+[WARN]   unresolved: RSA_set0_crt_params
+[WARN]   unresolved: RSA_get0_key
+[WARN]   unresolved: RSA_pkey_ctx_ctrl
+[WARN]   unresolved: BN_div
+[WARN]   unresolved: RSA_set0_factors
+[WARN]   unresolved: RAND_bytes
+[WARN]   unresolved: OPENSSL_add_all_algorithms_noconf
+[WARN]   unresolved: BN_dup
+[WARN]   unresolved: EVP_DigestSignFinal
+[WARN]   unresolved: RSA_get0_factors
+[WARN]   unresolved: RSA_get0_crt_params
+[WARN]   unresolved: RSA_set0_key
+[WARN]   unresolved: BN_CTX_new
+[WARN]   unresolved: BN_CTX_free
+[WARN]   unresolved: d2i_ECDSA_SIG
+[WARN]   unresolved: EC_KEY_set_private_key
+[WARN]   unresolved: EVP_PKEY_CTX_free
+[WARN]   unresolved: EVP_PKEY_CTX_new_id
+[WARN]   unresolved: EVP_PKEY_new
+[WARN]   unresolved: ECDSA_SIG_get0
+[WARN]   unresolved: EVP_PKEY_keygen_init
+[WARN]   unresolved: ECDSA_SIG_free
+[WARN]   unresolved: EVP_PKEY_keygen
+[WARN]   unresolved: EVP_PKEY_cmp
+[WARN]   unresolved: EVP_PKEY_CTX_ctrl
+[WARN]   unresolved: ECDSA_SIG_set0
+[WARN]   unresolved: EC_KEY_new_by_curve_name
+[WARN]   unresolved: ECDSA_SIG_new
+[WARN]   unresolved: EVP_PKEY_set1_EC_KEY
+[WARN]   unresolved: i2d_ECDSA_SIG
+[WARN]   unresolved: RAND_status
+[WARN]   unresolved: OpenSSL_version_num
+[WARN]   unresolved: EVP_CIPHER_CTX_key_length
+[WARN]   unresolved: EVP_CIPHER_CTX_new
+[WARN]   unresolved: EVP_aes_256_cbc
+[WARN]   unresolved: EVP_CIPHER_CTX_iv_length
+[WARN]   unresolved: EVP_CipherInit
+[WARN]   unresolved: EVP_aes_128_ctr
+[WARN]   unresolved: EVP_aes_256_ctr
+[WARN]   unresolved: EVP_CIPHER_CTX_get_iv
+[WARN]   unresolved: EVP_des_ede3_cbc
+[WARN]   unresolved: EVP_aes_192_cbc
+[WARN]   unresolved: EVP_CIPHER_CTX_ctrl
+[WARN]   unresolved: EVP_CIPHER_CTX_set_key_length
+[WARN]   unresolved: EVP_aes_192_ctr
+[WARN]   unresolved: EVP_Cipher
+[WARN]   unresolved: EVP_aes_256_gcm
+[WARN]   unresolved: EVP_aes_128_gcm
+[WARN]   unresolved: EVP_CIPHER_CTX_free
+[WARN]   unresolved: BN_is_bit_set
+[WARN]   unresolved: DH_get0_key
+[WARN]   unresolved: BN_hex2bn
+[WARN]   unresolved: DH_set_length
+[WARN]   unresolved: DH_new
+[WARN]   unresolved: BN_is_negative
+[WARN]   unresolved: DH_get0_pqg
+[WARN]   unresolved: DH_set0_pqg
+[WARN]   unresolved: DH_generate_key
+[WARN]   unresolved: EC_POINT_oct2point
+[WARN]   unresolved: BN_bn2bin
+[WARN]   unresolved: EC_KEY_set_public_key
+[WARN]   unresolved: EC_POINT_point2oct
+[WARN]   unresolved: BN_bin2bn
+[WARN]   unresolved: DH_free
+[WARN]   unresolved: EVP_MD_CTX_copy_ex
+[WARN]   unresolved: EVP_md5
+[WARN]   unresolved: EVP_DigestUpdate
+[WARN]   unresolved: EVP_Digest
+[WARN]   unresolved: EVP_DigestInit_ex
+[WARN]   unresolved: EVP_MD_CTX_md
+[WARN]   unresolved: EVP_MD_block_size
+[WARN]   unresolved: EVP_DigestFinal_ex
+[WARN]   unresolved: EVP_PKEY_set1_RSA
+[WARN]   unresolved: RSA_blinding_on
+[WARN]   unresolved: EVP_sha384
+[WARN]   unresolved: EC_GROUP_get_order
+[WARN]   unresolved: BN_clear_free
+[WARN]   unresolved: BN_value_one
+[WARN]   unresolved: EVP_PKEY_get1_EC_KEY
+[WARN]   unresolved: EVP_MD_CTX_new
+[WARN]   unresolved: EC_POINT_mul
+[WARN]   unresolved: RSA_free
+[WARN]   unresolved: ERR_get_error
+[WARN]   unresolved: EC_POINT_get_affine_coordinates_GFp
+[WARN]   unresolved: EVP_sha256
+[WARN]   unresolved: EC_POINT_is_at_infinity
+[WARN]   unresolved: EVP_PKEY_get0_EC_KEY
+[WARN]   unresolved: EC_POINT_free
+[WARN]   unresolved: EVP_aes_128_cbc
+[WARN]   unresolved: EC_KEY_free
+[WARN]   unresolved: EVP_MD_CTX_free
+[WARN]   unresolved: EVP_PKEY_get0_RSA
+[WARN]   unresolved: EVP_PKEY_free
+[WARN]   unresolved: EVP_PKEY_get1_RSA
+[WARN]   unresolved: EC_KEY_get0_public_key
+[WARN]   unresolved: EC_POINT_new
+[WARN]   unresolved: EVP_sha1
+[WARN]   unresolved: EVP_DigestSignInit
+[WARN]   unresolved: EVP_PKEY_bits
+[WARN]   unresolved: BN_new
+[WARN]   unresolved: EC_KEY_get0_private_key
+[WARN]   unresolved: EVP_sha512
+[WARN]   unresolved: EVP_PKEY_size
+[WARN]   unresolved: EC_KEY_get0_group
+[WARN]   unresolved: BN_cmp
+[WARN]   unresolved: BN_sub
+[WARN]   unresolved: BN_num_bits
+[WARN]   unresolved: EVP_DigestVerifyInit
+[WARN]   unresolved: OpenSSL_version
+[WARN]   unresolved: CryptStringToBinaryA
+[WARN]   unresolved: WSASend
+[WARN]   unresolved: GetAddrInfoW
+[WARN]   unresolved: WSARecv
+[WARN]   unresolved: FreeAddrInfoW
+[WARN]   unresolved: WSAGetOverlappedResult
+[WARN]   unresolved: inet_ntop
+[WARN]   unresolved: WSADuplicateSocketW
+[WARN]   unresolved: WSASocketW
+[WARN]   unresolved: getnameinfo
+[WARN]   unresolved: InitSecurityInterfaceW
+[WARN]   unresolved: LsaFreeReturnBuffer
+[WARN]   unresolved: LsaLookupAuthenticationPackage
+[WARN]   unresolved: LsaConnectUntrusted
+[WARN]   unresolved: LsaDeregisterLogonProcess
+[WARN]   unresolved: LsaRegisterLogonProcess
+[WARN]   unresolved: LsaLogonUser
+[WARN]   unresolved: CancelIoEx
+[WARN]   unresolved: CancelSynchronousIo
+[WARN]   unresolved: CreateWaitableTimerA
+[WARN]   unresolved: ReadFileEx
+[WARN]   unresolved: WriteFileEx
+[WARN]   unresolved: ReadConsoleOutputA
+[WARN]   unresolved: GetLocalTime
+[WARN]   unresolved: Beep
+[WARN]   unresolved: FillConsoleOutputAttribute
+[WARN]   unresolved: SetConsoleWindowInfo
+[WARN]   unresolved: SetConsoleScreenBufferSize
+[WARN]   unresolved: FillConsoleOutputCharacterA
+[WARN]   unresolved: QueueUserAPC
+[WARN]   unresolved: OpenThread
+[WARN]   unresolved: VirtualUnlock
+[WARN]   unresolved: SetWaitableTimer
+[WARN]   unresolved: CreateWaitableTimerW
+[WARN]   unresolved: ShowWindow
+[WARN]   unresolved: GetWindowPlacement
+[WARN]   unresolved: AllocateAndInitializeSid
+[WARN]   unresolved: EventWrite
+[WARN]   unresolved: LookupAccountSidW
+[WARN]   unresolved: ConvertStringSidToSidW
+[WARN]   unresolved: GetTokenInformation
+[WARN]   unresolved: GetSidIdentifierAuthority
+[WARN]   unresolved: CheckTokenMembership
+[WARN]   unresolved: IsValidSid
+[WARN]   unresolved: IsWellKnownSid
+[WARN]   unresolved: DuplicateToken
+[WARN]   unresolved: FreeSid
+[WARN]   unresolved: CreateRestrictedToken
+[WARN]   unresolved: EventRegister
+[WARN]   unresolved: EqualSid
+[WARN]   unresolved: AllocateLocallyUniqueId
+[WARN]   unresolved: LsaManageSidNameMapping
+[WARN]   unresolved: LookupAccountNameW
+[WARN]   unresolved: IsValidAcl
+[WARN]   unresolved: GetLengthSid
+[WARN]   unresolved: ConvertStringSecurityDescriptorToSecurityDescriptorW
+[WARN]   unresolved: IsValidSecurityDescriptor
+[WARN]   unresolved: GetNamedSecurityInfoW
+[WARN]   unresolved: CopySid
+[WARN]   unresolved: CreateWellKnownSid
+[WARN]   unresolved: GetAce
+[WARN]   unresolved: ConvertSidToStringSidW
+[WARN]   unresolved: EventUnregister
+[WARN]   unresolved: EventWriteTransfer
+[WARN] 201 imports unresolved
+
+[CRASH] Signal 11 at RIP=0x14002bb7e
+  RAX=0x0 RCX=0x310d460 RDX=0x5c R8=0x310d570 R9=0x0
+  RSP=0x7ffcc6d32520 RBP=0x310d050
+  g_image_base=0x140000000 g_image_size=0x11e000
+  RVA=0x2bb7e (inside loaded PE)
+  Bytes: c6 00 00 e8 d6 40 05 00 48 8b 0d 23 22 0c 00 33 
+  Return addr: 0x310d050
+  RSI=0x1 RDI=0x310de60
+  R8=0x310d570  R9=0x0 R10=0x5b R11=0x5c
+  R12=0x217b000 R13=0x217a000 R14=0x88a R15=0x7ffcc6d32ab0
+  [SCAN rsp+088] 0x140027854 <PE>
+  [SCAN rsp+096] 0x1400ef1f0 <PE>
+  [SCAN rsp+104] 0x1400a9b18 <PE>
+  [SCAN rsp+120] 0x1400a9b20 <PE>
+  [SCAN rsp+136] 0x14007e87e <PE>
+  [SCAN rsp+184] 0x14007eeb5 <PE>
+  [SCAN rsp+232] 0x14007e998 <PE>
+  [SCAN rsp+248] 0x14007ea19 <PE>
+  [SCAN rsp+296] 0x20076a6 <LOADER>
+  [SCAN rsp+320] 0x1400a9078 <PE>
+  [SCAN rsp+648] 0x20026ae <LOADER>
+  [SCAN rsp+656] 0x20020a0 <LOADER>
+  [SCAN rsp+2104] 0x2006490 <LOADER>
+  [SCAN rsp+2256] 0x2006490 <LOADER>
+  [SCAN rsp+2296] 0x2007d50 <LOADER>
+  [SCAN rsp+2328] 0x2007d71 <LOADER>
+  [SCAN rsp+2800] 0x2000040 <LOADER>
+  [SCAN rsp+2880] 0x2007d50 <LOADER>
+  Backtrace (via stack walking):
+    [0] RIP=0x14002bb7e RVA=0x2bb7e      [RSP+0] = 0x310d050 (return addr?)
+    [1] RIP=0x14002bb7e RVA=0x2bb7e      [RSP+0] = 0x0 (return addr?)
+    [2] RIP=0x14002bb7e RVA=0x2bb7e

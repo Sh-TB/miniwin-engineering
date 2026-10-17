@@ -1,0 +1,5 @@
+exe=si-accesschk/accesschk64.exe
+sha256=843b6b1d275946f2c4569169c10c50eec0968c4b2f0bed68c50e79f828fab9f3
+timeout=10s
+args=none
+date_utc=2026-10-17T18:39:37Z

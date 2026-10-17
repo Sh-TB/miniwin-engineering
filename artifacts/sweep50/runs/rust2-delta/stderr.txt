@@ -1,0 +1,103 @@
+[TRACE] Command line: /home/z/my-project/workspace/miniwin-engineering/artifacts/sweep50/dl/delta/delta.exe
+[WARN]   unresolved: lstrlenW
+[WARN]   unresolved: GetComputerNameExW
+[WARN]   unresolved: GetSystemTimes
+[WARN]   unresolved: VirtualQueryEx
+[WARN]   unresolved: GetProcessIoCounters
+[WARN]   unresolved: ReadProcessMemory
+[WARN]   unresolved: CompareStringOrdinal
+[WARN]   unresolved: ReadFileEx
+[WARN]   unresolved: WriteFileEx
+[WARN]   unresolved: SetThreadStackGuarantee
+[WARN]   unresolved: IsThreadAFiber
+[WARN]   unresolved: VerifyVersionInfoA
+[WARN]   unresolved: SHGetKnownFolderPath
+[WARN]   unresolved: CoTaskMemFree
+[WARN]   unresolved: CoCreateInstance
+[WARN]   unresolved: CoInitializeEx
+[WARN]   unresolved: CoUninitialize
+[WARN]   unresolved: CoSetProxyBlanket
+[WARN]   unresolved: CoInitializeSecurity
+[WARN]   unresolved: CompareObjectHandles
+[WARN]   unresolved: AcquireCredentialsHandleW
+[WARN]   unresolved: FreeCredentialsHandle
+[WARN]   unresolved: InitializeSecurityContextW
+[WARN]   unresolved: CompleteAuthToken
+[WARN]   unresolved: DeleteSecurityContext
+[WARN]   unresolved: FreeContextBuffer
+[WARN]   unresolved: QuerySecurityPackageInfoW
+[WARN]   unresolved: LsaEnumerateLogonSessions
+[WARN]   unresolved: LsaFreeReturnBuffer
+[WARN]   unresolved: LsaGetLogonSessionData
+[WARN]   unresolved: NtCreateNamedPipeFile
+[WARN]   unresolved: NtOpenFile
+[WARN]   unresolved: NtQuerySystemInformation
+[WARN]   unresolved: NtQueryInformationProcess
+[WARN]   unresolved: NtWriteFile
+[WARN]   unresolved: RtlNtStatusToDosError
+[WARN]   unresolved: NtReadFile
+[WARN]   unresolved: RtlGetVersion
+[WARN]   unresolved: WSAPoll
+[WARN]   unresolved: GetNamedSecurityInfoW
+[WARN]   unresolved: IsWellKnownSid
+[WARN]   unresolved: IsValidSid
+[WARN]   unresolved: GetTokenInformation
+[WARN]   unresolved: GetLengthSid
+[WARN]   unresolved: EqualSid
+[WARN]   unresolved: CopySid
+[WARN]   unresolved: CheckTokenMembership
+[WARN]   unresolved: LookupAccountSidW
+[WARN]   unresolved: PdhCloseQuery
+[WARN]   unresolved: PdhAddEnglishCounterW
+[WARN]   unresolved: PdhCollectQueryData
+[WARN]   unresolved: PdhOpenQueryA
+[WARN]   unresolved: PdhGetFormattedCounterValue
+[WARN]   unresolved: PdhRemoveCounter
+[WARN]   unresolved: CallNtPowerInformation
+[WARN]   unresolved: GetProcessMemoryInfo
+[WARN]   unresolved: GetModuleFileNameExW
+[WARN]   unresolved: GetPerformanceInfo
+[WARN]   unresolved: GetIfEntry2
+[WARN]   unresolved: FreeMibTable
+[WARN]   unresolved: GetIfTable2
+[WARN]   unresolved: GetAdaptersAddresses
+[WARN]   unresolved: NetUserGetInfo
+[WARN]   unresolved: NetUserGetLocalGroups
+[WARN]   unresolved: NetApiBufferFree
+[WARN]   unresolved: NetUserEnum
+[WARN]   unresolved: __current_exception
+[WARN]   unresolved: __current_exception_context
+[WARN]   unresolved: __CxxFrameHandler3
+[WARN]   unresolved: ldexp
+[WARN]   unresolved: strcat_s
+[WARN]   unresolved: ispunct
+[WARN]   unresolved: _get_initial_narrow_environment
+[WARN]   unresolved: terminate
+[WARN]   unresolved: _register_onexit_function
+[WARN]   unresolved: _initialize_onexit_table
+[WARN]   unresolved: __stdio_common_vsnprintf_s
+[WARN]   unresolved: _set_fmode
+[WARN]   unresolved: __stdio_common_vsprintf_s
+[WARN] 79 imports unresolved
+[STUB] unresolved import called -> returning 0 (call #1)
+[STUB] unresolved import called -> returning 0 (call #2)
+[STUB] unresolved import called -> returning 0 (call #3)
+[STUB] unresolved import called -> returning 0 (call #4)
+[STUB] unresolved import called -> returning 0 (call #5)
+
+[CRASH] Signal 11 at RIP=0x14030555f
+  RAX=0x0 RCX=0x7 RDX=0xfffffffe R8=0x0 R9=0x0
+  RSP=0x7fe6f306a9f0 RBP=0x7fe6f306aa70
+  g_image_base=0x140000000 g_image_size=0x749000
+  RVA=0x30555f (inside loaded PE)
+  Bytes: cd 29 0f 0b 48 8d 80 c8 00 00 00 4c 89 00 e8 be 
+  Return addr: 0x7fe6f286b000
+  RSI=0x27d80a0 RDI=0x27d8940
+  R8=0x0  R9=0x0 R10=0x0 R11=0x246
+  R12=0x2178b00 R13=0x11 R14=0x7ffe4cbd8e10 R15=0x7fe6f286b000
+  [SCAN rsp+160] 0x1403054b0 <PE>
+  [SCAN rsp+168] 0x200fdfd <LOADER>
+  [SCAN rsp+200] 0x200fde4 <LOADER>
+  Backtrace (via stack walking):
+    [0] RIP=0x14030555f RVA=0x30555f      [RSP+0] = 0x7fe6f286b000 (return addr?)
+    [1] RIP=0x14030555f RVA=0x30555f

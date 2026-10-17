@@ -1,0 +1,5 @@
+exe=openssh/ssh-add.exe
+sha256=b6fec08648deaf7a77b50bc34ea8ac17c3cf240d06d0f1bffc60bf56d6f914b1
+timeout=10s
+args=none
+date_utc=2026-10-17T18:39:39Z

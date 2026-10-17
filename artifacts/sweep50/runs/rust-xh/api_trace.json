@@ -1,0 +1,3603 @@
+{
+  "trace": [
+[Tf80] [API] PE Loader: file=/home/z/my-project/workspace/miniwin-engineering/artifacts/sweep50/dl/xh/xh.exe size=10502144
+[Tf80] [API] PE Loader: ImageBase=0x140000000 EP=0x651c80 SizeOfImage=0xa0c000 Sections=6
+[Tf80] [API] PE Loader: Mapped at 0x140000000 (forced via MAP_FIXED)
+[Tf80] [API] Section [0] .text    VA=0x00001000 VS=0x0068c400 Raw=0x0068c400 Ch=0x60000020
+[Tf80] [API] Section [1] .rdata   VA=0x0068e000 VS=0x0031b8ee Raw=0x0031ba00 Ch=0x40000040
+[Tf80] [API] Section [2] .data    VA=0x009aa000 VS=0x00013080 Raw=0x0000f200 Ch=0xc0000040
+[Tf80] [API] Section [3] .pdata   VA=0x009be000 VS=0x0003dd34 Raw=0x0003de00 Ch=0x40000040
+[Tf80] [API] Section [4] .fptable VA=0x009fc000 VS=0x00000100 Raw=0x00000200 Ch=0xc0000040
+[Tf80] [API] Section [5] .reloc   VA=0x009fd000 VS=0x0000eb04 Raw=0x0000ec00 Ch=0x42000040
+[Tf80] [API] Import Directory: RVA=0x9a80d0 Size=0x104
+[Tf80] [API] Import DLL: kernel32.dll (IAT RVA=0x68e128, ILT RVA=0x9a83d8)
+[Tf80] [API]   [0] ReadFile -> 0x2024b00
+[Tf80] [API]   [1] GetOverlappedResult -> 0x2020be0
+[Tf80] [API]   [2] PostQueuedCompletionStatus -> 0x2022b30
+[Tf80] [API]   [3] WriteFile -> 0x2024d20
+[Tf80] [API]   [4] UNRESOLVED: CancelIoEx
+[Tf80] [API]   [5] UNRESOLVED: GetQueuedCompletionStatusEx
+[Tf80] [API]   [6] RaiseException -> 0x20080a0
+[Tf80] [API]   [7] CreateIoCompletionPort -> 0x2021a10
+[Tf80] [API]   [8] UNRESOLVED: SetFileCompletionNotificationModes
+[Tf80] [API]   [9] EncodePointer -> 0x20153d0
+[Tf80] [API]   [10] WaitForSingleObject -> 0x2033c20
+[Tf80] [API]   [11] RtlPcToFileHeader -> 0x2008ca0
+[Tf80] [API]   [12] EnterCriticalSection -> 0x202fa30
+[Tf80] [API]   [13] LeaveCriticalSection -> 0x2027ab0
+[Tf80] [API]   [14] RtlUnwindEx -> 0x2032560
+[Tf80] [API]   [15] SetUnhandledExceptionFilter -> 0x200a5d0
+[Tf80] [API]   [16] InitializeSListHead -> 0x2008d10
+[Tf80] [API]   [17] InitializeCriticalSectionEx -> 0x200d620
+[Tf80] [API]   [18] DeleteCriticalSection -> 0x200d760
+[Tf80] [API]   [19] SetEndOfFile -> 0x20251b0
+[Tf80] [API]   [20] CreateThread -> 0x2023ab0
+[Tf80] [API]   [21] GetCommandLineA -> 0x202a980
+[Tf80] [API]   [22] IsDebuggerPresent -> 0x20282e0
+[Tf80] [API]   [23] UnhandledExceptionFilter -> 0x2029410
+[Tf80] [API]   [24] OutputDebugStringW -> 0x2036260
+[Tf80] [API]   [25] GetEnvironmentStringsW -> 0x200e440
+[Tf80] [API]   [26] HeapSize -> 0x20344c0
+[Tf80] [API]   [27] GetStringTypeW -> 0x202b4b0
+[Tf80] [API]   [28] GetCPInfo -> 0x200ca70
+[Tf80] [API]   [29] GetOEMCP -> 0x2008e10
+[Tf80] [API]   [30] SwitchToThread -> 0x2013aa0
+[Tf80] [API]   [31] GetSystemTimePreciseAsFileTime -> 0x2029b60
+[Tf80] [API]   [32] GetFileInformationByHandleEx -> 0x2027100
+[Tf80] [API]   [33] SetConsoleCursorPosition -> 0x2020470
+[Tf80] [API]   [34] UNRESOLVED: FillConsoleOutputAttribute
+[Tf80] [API]   [35] GetACP -> 0x2008e00
+[Tf80] [API]   [36] IsValidCodePage -> 0x2008e20
+[Tf80] [API]   [37] CreateFileW -> 0x2037850
+[Tf80] [API]   [38] UNRESOLVED: SetNamedPipeHandleState
+[Tf80] [API]   [39] FindNextFileW -> 0x202a0e0
+[Tf80] [API]   [40] ReadConsoleW -> 0x2024d00
+[Tf80] [API]   [41] WriteConsoleW -> 0x2012160
+[Tf80] [API]   [42] UNRESOLVED: FillConsoleOutputCharacterA
+[Tf80] [API]   [43] SetStdHandle -> 0x202dfa0
+[Tf80] [API]   [44] GetModuleHandleW -> 0x200d2a0
+[Tf80] [API]   [45] GetProcAddress -> 0x2009e60
+[Tf80] [API]   [46] GetCurrentThreadId -> 0x2007e70
+[Tf80] [API]   [47] SetLastError -> 0x2020680
+[Tf80] [API]   [48] WaitForSingleObjectEx -> 0x2033d30
+[Tf80] [API]   [49] LoadLibraryA -> 0x2022140
+[Tf80] [API]   [50] GetCurrentProcess -> 0x2007e40
+[Tf80] [API]   [51] UNRESOLVED: lstrlenW
+[Tf80] [API]   [52] GetCurrentProcessId -> 0x2007e50
+[Tf80] [API]   [53] CreateMutexA -> 0x200b720
+[Tf80] [API]   [54] WideCharToMultiByte -> 0x2020c30
+[Tf80] [API]   [55] ReleaseMutex -> 0x2030950
+[Tf80] [API]   [56] GetConsoleOutputCP -> 0x202e290
+[Tf80] [API]   [57] GetFileSizeEx -> 0x2025400
+[Tf80] [API]   [58] MultiByteToWideChar -> 0x20223e0
+[Tf80] [API]   [59] SetConsoleTextAttribute -> 0x2020580
+[Tf80] [API]   [60] FlushFileBuffers -> 0x20256f0
+[Tf80] [API]   [61] SetHandleInformation -> 0x2009120
+[Tf80] [API]   [62] GetCurrentThread -> 0x2007e60
+[Tf80] [API]   [63] UNRESOLVED: SetThreadStackGuarantee
+[Tf80] [API]   [64] GetModuleHandleA -> 0x2009cf0
+[Tf80] [API]   [65] GetFullPathNameW -> 0x2039da0
+[Tf80] [API]   [66] SetFileTime -> 0x2028790
+[Tf80] [API]   [67] SetFileInformationByHandle -> 0x2008f50
+[Tf80] [API]   [68] FindFirstFileExW -> 0x2035c50
+[Tf80] [API]   [69] FindClose -> 0x20167f0
+[Tf80] [API]   [70] GetFileInformationByHandle -> 0x2025550
+[Tf80] [API]   [71] CreateDirectoryW -> 0x2037e50
+[Tf80] [API]   [72] ExitProcess -> 0x200dcd0
+[Tf80] [API]   [73] GetModuleFileNameW -> 0x2035020
+[Tf80] [API]   [74] GetFileType -> 0x2016190
+[Tf80] [API]   [75] GetFinalPathNameByHandleW -> 0x2036bf0
+[Tf80] [API]   [76] SetFilePointerEx -> 0x2025060
+[Tf80] [API]   [77] LCMapStringW -> 0x2024740
+[Tf80] [API]   [78] CompareStringW -> 0x2015820
+[Tf80] [API]   [79] GetConsoleScreenBufferInfo -> 0x200c620
+[Tf80] [API]   [80] SetConsoleMode -> 0x202df70
+[Tf80] [API]   [81] GetConsoleMode -> 0x2022000
+[Tf80] [API]   [82] UNRESOLVED: GenerateConsoleCtrlEvent
+[Tf80] [API]   [83] InitializeSRWLock -> 0x202e740
+[Tf80] [API]   [84] ReleaseSRWLockExclusive -> 0x202cb30
+[Tf80] [API]   [85] ReleaseSRWLockShared -> 0x2015770
+[Tf80] [API]   [86] AcquireSRWLockExclusive -> 0x202ca20
+[Tf80] [API]   [87] AcquireSRWLockShared -> 0x202de60
+[Tf80] [API]   [88] InitOnceExecuteOnce -> 0x202cc40
+[Tf80] [API]   [89] TlsAlloc -> 0x200c3b0
+[Tf80] [API]   [90] TlsGetValue -> 0x200a6d0
+[Tf80] [API]   [91] TlsSetValue -> 0x2025d00
+[Tf80] [API]   [92] LoadLibraryW -> 0x2038930
+[Tf80] [API]   [93] GetStdHandle -> 0x2040f70
+[Tf80] [API]   [94] HeapReAlloc -> 0x203a3c0
+[Tf80] [API]   [95] LoadLibraryExW -> 0x2038b20
+[Tf80] [API]   [96] VirtualProtect -> 0x200f1d0
+[Tf80] [API]   [97] FormatMessageW -> 0x20272e0
+[Tf80] [API]   [98] GetLastError -> 0x2009c00
+[Tf80] [API]   [99] FreeEnvironmentStringsW -> 0x2029320
+[Tf80] [API]   [100] CloseHandle -> 0x20340f0
+[Tf80] [API]   [101] HeapAlloc -> 0x2023050
+[Tf80] [API]   [102] HeapFree -> 0x203a050
+[Tf80] [API]   [103] RtlCaptureContext -> 0x20285b0
+[Tf80] [API]   [104] RtlLookupFunctionEntry -> 0x200a380
+[Tf80] [API]   [105] RtlVirtualUnwind -> 0x2030dc0
+[Tf80] [API]   [106] GetCurrentDirectoryW -> 0x20342c0
+[Tf80] [API]   [107] GetEnvironmentVariableW -> 0x2039600
+[Tf80] [API]   [108] QueryPerformanceFrequency -> 0x200ce70
+[Tf80] [API]   [109] QueryPerformanceCounter -> 0x200e0e0
+[Tf80] [API]   [110] GetCommandLineW -> 0x202ab00
+[Tf80] [API]   [111] SetEnvironmentVariableW -> 0x203be20
+[Tf80] [API]   [112] AddVectoredExceptionHandler -> 0x200c050
+[Tf80] [API]   [113] GetProcessHeap -> 0x2008bd0
+[Tf80] [API]   [114] GetSystemTimeAsFileTime -> 0x2029a20
+[Tf80] [API]   [115] GetStartupInfoW -> 0x20290f0
+[Tf80] [API]   [116] FlsAlloc -> 0x200c4f0
+[Tf80] [API]   [117] FlsGetValue -> 0x2008730
+[Tf80] [API]   [118] FlsSetValue -> 0x2008750
+[Tf80] [API]   [119] FlsFree -> 0x202e050
+[Tf80] [API]   [120] IsProcessorFeaturePresent -> 0x2008c60
+[Tf80] [API]   [121] GetModuleHandleExW -> 0x203c260
+[Tf80] [API]   [122] TerminateProcess -> 0x200fa80
+[Tf80] [API]   [123] FreeLibrary -> 0x2029230
+[Tf80] [API] Import DLL: advapi32.dll (IAT RVA=0x68e000, ILT RVA=0x9a82b0)
+[Tf80] [API]   [0] RegCloseKey -> 0x2009020
+[Tf80] [API]   [1] RegQueryValueExW -> 0x2020790
+[Tf80] [API]   [2] SystemFunction036 -> 0x20146c0
+[Tf80] [API]   [3] RegOpenKeyExW -> 0x2021cc0
+[Tf80] [API] Import DLL: api-ms-win-core-synch-l1-2-0.dll (IAT RVA=0x68e028, ILT RVA=0x9a82d8)
+[Tf80] [API]   [0] WakeByAddressAll -> 0x2013df0
+[Tf80] [API]   [1] WakeByAddressSingle -> 0x2013d30
+[Tf80] [API]   [2] WaitOnAddress -> 0x2023930
+[Tf80] [API] Import DLL: bcryptprimitives.dll (IAT RVA=0x68e058, ILT RVA=0x9a8308)
+[Tf80] [API]   [0] ProcessPrng -> 0x2013be0
+[Tf80] [API] Import DLL: ws2_32.dll (IAT RVA=0x68e5b0, ILT RVA=0x9a8860)
+[Tf80] [API]   [0] freeaddrinfo -> 0x201c400
+[Tf80] [API]   [1] getsockopt -> 0x201b550
+[Tf80] [API]   [2] connect -> 0x201b210
+[Tf80] [API]   [3] shutdown -> 0x201b4b0
+[Tf80] [API]   [4] recv -> 0x201b8a0
+[Tf80] [API]   [5] send -> 0x201b7f0
+[Tf80] [API]   [6] UNRESOLVED: WSASend
+[Tf80] [API]   [7] getaddrinfo -> 0x201c4a0
+[Tf80] [API]   [8] WSACleanup -> 0x20096b0
+[Tf80] [API]   [9] closesocket -> 0x2012660
+[Tf80] [API]   [10] bind -> 0x201b2c0
+[Tf80] [API]   [11] WSAIoctl -> 0x201bc20
+[Tf80] [API]   [12] setsockopt -> 0x201b600
+[Tf80] [API]   [13] ioctlsocket -> 0x201bb80
+[Tf80] [API]   [14] UNRESOLVED: WSASocketW
+[Tf80] [API]   [15] getsockname -> 0x201b6b0
+[Tf80] [API]   [16] WSAGetLastError -> 0x20096c0
+[Tf80] [API]   [17] getpeername -> 0x201b750
+[Tf80] [API]   [18] WSAStartup -> 0x2014fe0
+[Tf80] [API] Import DLL: ntdll.dll (IAT RVA=0x68e510, ILT RVA=0x9a87c0)
+[Tf80] [API]   [0] UNRESOLVED: NtReadFile
+[Tf80] [API]   [1] UNRESOLVED: NtCancelIoFileEx
+[Tf80] [API]   [2] UNRESOLVED: RtlNtStatusToDosError
+[Tf80] [API]   [3] UNRESOLVED: NtDeviceIoControlFile
+[Tf80] [API]   [4] UNRESOLVED: NtCreateFile
+[Tf80] [API]   [5] UNRESOLVED: NtWriteFile
+[Tf80] [API] Import DLL: bcrypt.dll (IAT RVA=0x68e048, ILT RVA=0x9a82f8)
+[Tf80] [API]   [0] BCryptGenRandom -> 0x2012410
+[Tf80] [API] Import DLL: secur32.dll (IAT RVA=0x68e548, ILT RVA=0x9a87f8)
+[Tf80] [API]   [0] UNRESOLVED: EncryptMessage
+[Tf80] [API]   [1] UNRESOLVED: AcceptSecurityContext
+[Tf80] [API]   [2] UNRESOLVED: InitializeSecurityContextW
+[Tf80] [API]   [3] UNRESOLVED: DeleteSecurityContext
+[Tf80] [API]   [4] UNRESOLVED: QueryContextAttributesW
+[Tf80] [API]   [5] UNRESOLVED: AcquireCredentialsHandleA
+[Tf80] [API]   [6] UNRESOLVED: FreeCredentialsHandle
+[Tf80] [API]   [7] UNRESOLVED: DecryptMessage
+[Tf80] [API]   [8] UNRESOLVED: ApplyControlToken
+[Tf80] [API]   [9] UNRESOLVED: FreeContextBuffer
+[Tf80] [API] Import DLL: crypt32.dll (IAT RVA=0x68e078, ILT RVA=0x9a8328)
+[Tf80] [API]   [0] CertCloseStore -> 0x202df90
+[Tf80] [API]   [1] UNRESOLVED: CryptStringToBinaryA
+[Tf80] [API]   [2] UNRESOLVED: CertCreateCertificateContext
+[Tf80] [API]   [3] UNRESOLVED: CertSetCertificateContextProperty
+[Tf80] [API]   [4] UNRESOLVED: CertVerifyCertificateChainPolicy
+[Tf80] [API]   [5] UNRESOLVED: CertFreeCertificateChain
+[Tf80] [API]   [6] UNRESOLVED: CertDuplicateCertificateChain
+[Tf80] [API]   [7] UNRESOLVED: CertGetCertificateChain
+[Tf80] [API]   [8] CertFreeCertificateContext -> 0x202e220
+[Tf80] [API]   [9] CertEnumCertificatesInStore -> 0x2020b10
+[Tf80] [API]   [10] UNRESOLVED: CertCreateCertificateChainEngine
+[Tf80] [API]   [11] UNRESOLVED: CertAddEncodedCertificateToStore
+[Tf80] [API]   [12] UNRESOLVED: CertFreeCertificateChainEngine
+[Tf80] [API]   [13] UNRESOLVED: CertAddCertificateContextToStore
+[Tf80] [API]   [14] UNRESOLVED: CertOpenStore
+[Tf80] [API]   [15] UNRESOLVED: CertDuplicateStore
+[Tf80] [API]   [16] UNRESOLVED: CertDuplicateCertificateContext
+[Tf80] [API] Import DLL: shell32.dll (IAT RVA=0x68e5a0, ILT RVA=0x9a8850)
+[Tf80] [API]   [0] UNRESOLVED: SHGetKnownFolderPath
+[Tf80] [API] Import DLL: combase.dll (IAT RVA=0x68e068, ILT RVA=0x9a8318)
+[Tf80] [API]   [0] UNRESOLVED: CoTaskMemFree
+[Tf80] [API] Import DLL: iphlpapi.dll (IAT RVA=0x68e108, ILT RVA=0x9a83b8)
+[Tf80] [API]   [0] UNRESOLVED: ConvertInterfaceLuidToIndex
+[Tf80] [API]   [1] UNRESOLVED: ConvertLengthToIpv4Mask
+[Tf80] [API]   [2] UNRESOLVED: GetAdaptersAddresses
+[Tf80] [API] Import resolution: 144 resolved, 46 unresolved (total 190)
+[Tf80] [API] TLS: StartRaw=0x1408df160 EndRaw=0x1408df290 Callbacks=0x14068e700
+[Tf80] [API] TLS: static block 0x298f0a0 (304+0 bytes) -> slot 0
+[Tf80] [API] TLS: callback[0] = 0x1403f54f0
+[Tf80] [API] TLS: callback[1] = 0x14063d920
+[Tf80] [API] Exception: .pdata RVA=0x9be000 Size=0x3dd34 Entries=21103
+[Tf80] [API] [API-005] EH hacks DISABLED (default) (MINWIN_EH_HACKS=<unset>)
+[Tf80] [API] [API-005] CXX-EH-FIX (LSDA catch-all patch RVA 0x2010c8) skipped: MINWIN_EH_HACKS not set
+[Tf80] [API] Jumping to EP=0x140651c80
+[Tf80] [API] GetSystemTimeAsFileTime()
+[Tf80] [API] QueryPerformanceCounter()
+[Tf80] [API] InitializeCriticalSectionEx(spin=4000)
+[Tf80] [API] FlsAlloc(cb=0x1406533d0) = 0
+[Tf80] [API] VirtualProtect(addr=0x1409fc000, size=0x100, prot=0x2)
+[Tf80] [API] InitializeCriticalSectionEx(spin=4000)
+[Tf80] [API] InitializeCriticalSectionEx(spin=4000)
+[Tf80] [API] InitializeCriticalSectionEx(spin=4000)
+[Tf80] [API] InitializeCriticalSectionEx(spin=4000)
+[Tf80] [API] InitializeCriticalSectionEx(spin=4000)
+[Tf80] [API] InitializeCriticalSectionEx(spin=4000)
+[Tf80] [API] InitializeCriticalSectionEx(spin=4000)
+[Tf80] [API] InitializeCriticalSectionEx(spin=4000)
+[Tf80] [API] InitializeCriticalSectionEx(spin=4000)
+[Tf80] [API] InitializeCriticalSectionEx(spin=4000)
+[Tf80] [API] InitializeCriticalSectionEx(spin=4000)
+[Tf80] [API] InitializeCriticalSectionEx(spin=4000)
+[Tf80] [API] InitializeCriticalSectionEx(spin=4000)
+[Tf80] [API] InitializeCriticalSectionEx(spin=4000)
+[Tf80] [API] InitializeCriticalSectionEx(spin=4000)
+[Tf80] [API] LoadLibraryExW(flags=2048)
+[Tf80] [API] LoadLibraryA(api-ms-win-core-fibers-l1-1-2)
+[Tf80] [API] GetProcAddress(module=0xdead0002, name=FlsGetValue2)
+[Tf80] [API]   -> NULL (not in dispatch table)
+[Tf80] [API] EnterCriticalSection(0x1409bcfd0)
+[Tf80] [API] VirtualProtect(addr=0x1409fc000, size=0x100, prot=0x4)
+[Tf80] [API] VirtualProtect(addr=0x1409fc000, size=0x100, prot=0x2)
+[Tf80] [API] LeaveCriticalSection(0x1409bcfd0)
+[Tf80] [API] FlsAlloc(cb=0x14066a214) = 1
+[Tf80] [API] GetLastError() = 0
+[Tf80] [API] HeapAlloc(size=0x3c8, zero=1) = 0x298f870
+[Tf80] [API] EnterCriticalSection(0x1409bce68)
+[Tf80] [API] LeaveCriticalSection(0x1409bce68)
+[Tf80] [API] EnterCriticalSection(0x1409bce40)
+[Tf80] [API] LeaveCriticalSection(0x1409bce40)
+[Tf80] [API] SetLastError(0)
+[Tf80] [API] EnterCriticalSection(0x1409bceb8)
+[Tf80] [API] EnterCriticalSection(0x1409bceb8)
+[Tf80] [API] HeapAlloc(size=0x1200, zero=1) = 0x298fc40
+[Tf80] [API] InitializeCriticalSectionEx(spin=4000)
+[Tf80] [API] InitializeCriticalSectionEx(spin=4000)
+[Tf80] [API] InitializeCriticalSectionEx(spin=4000)
+[Tf80] [API] InitializeCriticalSectionEx(spin=4000)
+[Tf80] [API] InitializeCriticalSectionEx(spin=4000)
+[Tf80] [API] InitializeCriticalSectionEx(spin=4000)
+[Tf80] [API] InitializeCriticalSectionEx(spin=4000)
+[Tf80] [API] InitializeCriticalSectionEx(spin=4000)
+[Tf80] [API] InitializeCriticalSectionEx(spin=4000)
+[Tf80] [API] InitializeCriticalSectionEx(spin=4000)
+[Tf80] [API] InitializeCriticalSectionEx(spin=4000)
+[Tf80] [API] InitializeCriticalSectionEx(spin=4000)
+[Tf80] [API] InitializeCriticalSectionEx(spin=4000)
+[Tf80] [API] InitializeCriticalSectionEx(spin=4000)
+[Tf80] [API] InitializeCriticalSectionEx(spin=4000)
+[Tf80] [API] InitializeCriticalSectionEx(spin=4000)
+[Tf80] [API] InitializeCriticalSectionEx(spin=4000)
+[Tf80] [API] InitializeCriticalSectionEx(spin=4000)
+[Tf80] [API] InitializeCriticalSectionEx(spin=4000)
+[Tf80] [API] InitializeCriticalSectionEx(spin=4000)
+[Tf80] [API] InitializeCriticalSectionEx(spin=4000)
+[Tf80] [API] InitializeCriticalSectionEx(spin=4000)
+[Tf80] [API] InitializeCriticalSectionEx(spin=4000)
+[Tf80] [API] InitializeCriticalSectionEx(spin=4000)
+[Tf80] [API] InitializeCriticalSectionEx(spin=4000)
+[Tf80] [API] InitializeCriticalSectionEx(spin=4000)
+[Tf80] [API] InitializeCriticalSectionEx(spin=4000)
+[Tf80] [API] InitializeCriticalSectionEx(spin=4000)
+[Tf80] [API] InitializeCriticalSectionEx(spin=4000)
+[Tf80] [API] InitializeCriticalSectionEx(spin=4000)
+[Tf80] [API] InitializeCriticalSectionEx(spin=4000)
+[Tf80] [API] InitializeCriticalSectionEx(spin=4000)
+[Tf80] [API] InitializeCriticalSectionEx(spin=4000)
+[Tf80] [API] InitializeCriticalSectionEx(spin=4000)
+[Tf80] [API] InitializeCriticalSectionEx(spin=4000)
+[Tf80] [API] InitializeCriticalSectionEx(spin=4000)
+[Tf80] [API] InitializeCriticalSectionEx(spin=4000)
+[Tf80] [API] InitializeCriticalSectionEx(spin=4000)
+[Tf80] [API] InitializeCriticalSectionEx(spin=4000)
+[Tf80] [API] InitializeCriticalSectionEx(spin=4000)
+[Tf80] [API] InitializeCriticalSectionEx(spin=4000)
+[Tf80] [API] InitializeCriticalSectionEx(spin=4000)
+[Tf80] [API] InitializeCriticalSectionEx(spin=4000)
+[Tf80] [API] InitializeCriticalSectionEx(spin=4000)
+[Tf80] [API] InitializeCriticalSectionEx(spin=4000)
+[Tf80] [API] InitializeCriticalSectionEx(spin=4000)
+[Tf80] [API] InitializeCriticalSectionEx(spin=4000)
+[Tf80] [API] InitializeCriticalSectionEx(spin=4000)
+[Tf80] [API] InitializeCriticalSectionEx(spin=4000)
+[Tf80] [API] InitializeCriticalSectionEx(spin=4000)
+[Tf80] [API] InitializeCriticalSectionEx(spin=4000)
+[Tf80] [API] InitializeCriticalSectionEx(spin=4000)
+[Tf80] [API] InitializeCriticalSectionEx(spin=4000)
+[Tf80] [API] InitializeCriticalSectionEx(spin=4000)
+[Tf80] [API] InitializeCriticalSectionEx(spin=4000)
+[Tf80] [API] InitializeCriticalSectionEx(spin=4000)
+[Tf80] [API] InitializeCriticalSectionEx(spin=4000)
+[Tf80] [API] InitializeCriticalSectionEx(spin=4000)
+[Tf80] [API] InitializeCriticalSectionEx(spin=4000)
+[Tf80] [API] InitializeCriticalSectionEx(spin=4000)
+[Tf80] [API] InitializeCriticalSectionEx(spin=4000)
+[Tf80] [API] InitializeCriticalSectionEx(spin=4000)
+[Tf80] [API] InitializeCriticalSectionEx(spin=4000)
+[Tf80] [API] InitializeCriticalSectionEx(spin=4000)
+[Tf80] [API] LeaveCriticalSection(0x1409bceb8)
+[Tf80] [API] GetStartupInfoW()
+[Tf80] [API] GetStdHandle(-10) = 0x4
+[Tf80] [API] GetStdHandle(-11) = 0x5
+[Tf80] [API] GetStdHandle(-12) = 0x6
+[Tf80] [API] LeaveCriticalSection(0x1409bceb8)
+[Tf80] [API] GetCommandLineA() = "xh.exe"
+[Tf80] [API] GetCommandLineW()
+[Tf80] [API] EnterCriticalSection(0x1409bce68)
+[Tf80] [API] LeaveCriticalSection(0x1409bce68)
+[Tf80] [API] HeapAlloc(size=0x228, zero=0) = 0x2990e50
+[Tf80] [API] GetCPInfo(cp=1252)
+[Tf80] [API] GetCPInfo(cp=1252)
+[Tf80] [API] MultiByteToWideChar(cp=1252, srclen=256, dstlen=0)
+[Tf80] [API] MultiByteToWideChar(cp=1252, srclen=256, dstlen=256)
+[Tf80] [API] MultiByteToWideChar(cp=1252, srclen=256, dstlen=0)
+[Tf80] [API] MultiByteToWideChar(cp=1252, srclen=256, dstlen=256)
+[Tf80] [API] LoadLibraryExW(flags=2048)
+[Tf80] [API] LoadLibraryA(api-ms-win-core-localization-l1-2-1)
+[Tf80] [API] GetProcAddress(module=0xdead0002, name=LCMapStringEx)
+[Tf80] [API]   -> 0x2024910
+[Tf80] [API] EnterCriticalSection(0x1409bcfd0)
+[Tf80] [API] VirtualProtect(addr=0x1409fc000, size=0x100, prot=0x4)
+[Tf80] [API] VirtualProtect(addr=0x1409fc000, size=0x100, prot=0x2)
+[Tf80] [API] LeaveCriticalSection(0x1409bcfd0)
+[Tf80] [API] WideCharToMultiByte(cp=1252, srclen=256, dstlen=256)
+[Tf80] [API] MultiByteToWideChar(cp=1252, srclen=256, dstlen=0)
+[Tf80] [API] MultiByteToWideChar(cp=1252, srclen=256, dstlen=256)
+[Tf80] [API] WideCharToMultiByte(cp=1252, srclen=256, dstlen=256)
+[Tf80] [API] EnterCriticalSection(0x1409bce68)
+[Tf80] [API] LeaveCriticalSection(0x1409bce68)
+[Tf80] [API] EnterCriticalSection(0x1409bcdf0)
+[Tf80] [API] HeapAlloc(size=0x100, zero=0) = 0x2991080
+[Tf80] [API] LeaveCriticalSection(0x1409bcdf0)
+[Tf80] [API] GetModuleFileNameW(cap=261)
+[Tf80] [API] LoadLibraryExW(flags=2048)
+[Tf80] [API] LoadLibraryA(kernel32)
+[Tf80] [API] SetLastError(126)
+[Tf80] [API] GetLastError() = 126
+[Tf80] [API] EnterCriticalSection(0x1409bcfd0)
+[Tf80] [API] VirtualProtect(addr=0x1409fc000, size=0x100, prot=0x4)
+[Tf80] [API] VirtualProtect(addr=0x1409fc000, size=0x100, prot=0x2)
+[Tf80] [API] LeaveCriticalSection(0x1409bcfd0)
+[Tf80] [API] WideCharToMultiByte(cp=0, srclen=-1, dstlen=0)
+[Tf80] [API] WideCharToMultiByte(cp=0, srclen=-1, dstlen=260)
+[Tf80] [API] HeapAlloc(size=0x17, zero=1) = 0x2991190
+[Tf80] [API] GetLastError() = 126
+[Tf80] [API] HeapAlloc(size=0x3c8, zero=1) = 0x29911b0
+[Tf80] [API] EnterCriticalSection(0x1409bce68)
+[Tf80] [API] LeaveCriticalSection(0x1409bce68)
+[Tf80] [API] EnterCriticalSection(0x1409bce40)
+[Tf80] [API] LeaveCriticalSection(0x1409bce40)
+[Tf80] [API] SetLastError(126)
+[Tf80] [API] GetEnvironmentStringsW()
+[Tf80] [API] WideCharToMultiByte(cp=0, srclen=1268, dstlen=0)
+[Tf80] [API] HeapAlloc(size=0x4f4, zero=0) = 0x2991580
+[Tf80] [API] WideCharToMultiByte(cp=0, srclen=1268, dstlen=1268)
+[Tf80] [API] FreeEnvironmentStringsW()
+[Tf80] [API] HeapAlloc(size=0x148, zero=1) = 0x2991a80
+[Tf80] [API] HeapAlloc(size=0x10, zero=1) = 0x2991bd0
+[Tf80] [API] HeapAlloc(size=0x1b, zero=1) = 0x298f840
+[Tf80] [API] HeapAlloc(size=0x13, zero=1) = 0x2991bf0
+[Tf80] [API] HeapAlloc(size=0x32, zero=1) = 0x2991c10
+[Tf80] [API] HeapAlloc(size=0x19, zero=1) = 0x298f770
+[Tf80] [API] HeapAlloc(size=0x14, zero=1) = 0x2991c50
+[Tf80] [API] HeapAlloc(size=0x54, zero=1) = 0x2991c70
+[Tf80] [API] HeapAlloc(size=0x3a, zero=1) = 0x2991cd0
+[Tf80] [API] HeapAlloc(size=0xa, zero=1) = 0x2991d20
+[Tf80] [API] HeapAlloc(size=0x16, zero=1) = 0x2991d40
+[Tf80] [API] HeapAlloc(size=0xf, zero=1) = 0x2991d60
+[Tf80] [API] HeapAlloc(size=0x31, zero=1) = 0x2991d80
+[Tf80] [API] HeapAlloc(size=0x39, zero=1) = 0x2991dc0
+[Tf80] [API] HeapAlloc(size=0xd, zero=1) = 0x2991e10
+[Tf80] [API] HeapAlloc(size=0x1d, zero=1) = 0x2991e30
+[Tf80] [API] HeapAlloc(size=0x1a, zero=1) = 0x2991e60
+[Tf80] [API] HeapAlloc(size=0x1c, zero=1) = 0x2991e90
+[Tf80] [API] HeapAlloc(size=0x24, zero=1) = 0x2991ec0
+[Tf80] [API] HeapAlloc(size=0x1b, zero=1) = 0x2991ef0
+[Tf80] [API] HeapAlloc(size=0xb, zero=1) = 0x2991f20
+[Tf80] [API] HeapAlloc(size=0x11, zero=1) = 0x2991f40
+[Tf80] [API] HeapAlloc(size=0x22, zero=1) = 0x2991f60
+[Tf80] [API] HeapAlloc(size=0xa, zero=1) = 0x2991f90
+[Tf80] [API] HeapAlloc(size=0x7, zero=1) = 0x2991fb0
+[Tf80] [API] HeapAlloc(size=0x8, zero=1) = 0x2991fd0
+[Tf80] [API] HeapAlloc(size=0x19, zero=1) = 0x2991ff0
+[Tf80] [API] HeapAlloc(size=0x1a, zero=1) = 0x2992020
+[Tf80] [API] HeapAlloc(size=0xb, zero=1) = 0x2992050
+[Tf80] [API] HeapAlloc(size=0x1f, zero=1) = 0x2992070
+[Tf80] [API] HeapAlloc(size=0x11, zero=1) = 0x29920a0
+[Tf80] [API] HeapAlloc(size=0x15, zero=1) = 0x29920c0
+[Tf80] [API] HeapAlloc(size=0x19, zero=1) = 0x29920e0
+[Tf80] [API] HeapAlloc(size=0xb0, zero=1) = 0x2992110
+[Tf80] [API] HeapAlloc(size=0x11, zero=1) = 0x29921d0
+[Tf80] [API] HeapAlloc(size=0x1f, zero=1) = 0x29921f0
+[Tf80] [API] HeapAlloc(size=0x1f, zero=1) = 0x2992220
+[Tf80] [API] HeapAlloc(size=0x30, zero=1) = 0x2992250
+[Tf80] [API] HeapAlloc(size=0x23, zero=1) = 0x2992290
+[Tf80] [API] HeapAlloc(size=0x38, zero=1) = 0x29922c0
+[Tf80] [API] HeapAlloc(size=0x13, zero=1) = 0x2992300
+[Tf80] [API] HeapFree(0x2991580)
+[Tf80] [API] HeapAlloc(size=0x1000, zero=1) = 0x2992320
+[Tf80] [API] InitializeCriticalSectionEx(spin=4000)
+[Tf80] [API] InitializeCriticalSectionEx(spin=4000)
+[Tf80] [API] InitializeCriticalSectionEx(spin=4000)
+[Tf80] [API] SetUnhandledExceptionFilter(handler=0x140652630)
+[Tf80] [API] EnterCriticalSection(0x1409bcdf0)
+[Tf80] [API] LeaveCriticalSection(0x1409bcdf0)
+[Tf80] [API] EnterCriticalSection(0x1409bcdf0)
+[Tf80] [API] LeaveCriticalSection(0x1409bcdf0)
+[Tf80] [API] EnterCriticalSection(0x1409bcf58)
+[Tf80] [API] LeaveCriticalSection(0x1409bcf58)
+[Tf80] [API] AddVectoredExceptionHandler(first=0, handler=0x1403fe6f0)
+[Tf80] [API] GetModuleHandleA(name=kernel32)
+[Tf80] [API] SetLastError(120)
+[Tf80] [API] HeapAlloc(size=0x1c, zero=0) = 0x2991580
+[Tf80] [API] SetLastError(0)
+[Tf80] [API] GetEnvironmentVariableW(XH_CONFIG_DIR) = <null>
+[Tf80] [API] SetLastError(203)
+[Tf80] [API] GetLastError() = 203
+[Tf80] [API] GetLastError() = 203
+[Tf80] [API] HeapFree(0x2991580)
+[Tf80] [API] HeapAlloc(size=0x8, zero=0) = 0x29915b0
+[Tf80] [API] HeapAlloc(size=0x2, zero=0) = 0x29915d0
+[Tf80] [API] HeapReAlloc(size=0x8) = 0x29915d0
+[Tf80] [API] HeapReAlloc(size=0x10) = 0x29915d0
+[Tf80] [API] HeapAlloc(size=0x1e, zero=0) = 0x2991580
+[Tf80] [API] SetLastError(0)
+[Tf80] [API] GetFullPathNameW(xh\config.json) -> /home/z/my-project/workspace/miniwin-engineering/artifacts/sweep50/runs/rust-xh/xh\config.json
+[Tf80] [API] HeapReAlloc(size=0xbe) = 0x29915f0
+[Tf80] [API] CreateFileW(/home/z/my-project/workspace/miniwin-engineering/artifacts/sweep50/runs/rust-xh/xh\config.json, acc=80000000, disp=3)
+[Tf80] [API] SetLastError(2)
+[Tf80] [API] GetLastError() = 2
+[Tf80] [API] HeapFree(0x29915f0)
+[Tf80] [API] HeapFree(0x29915d0)
+[Tf80] [API] HeapFree(0x29915b0)
+[Tf80] [API] GetCommandLineW()
+[Tf80] [API] HeapAlloc(size=0x8, zero=0) = 0x29915b0
+[Tf80] [API] HeapReAlloc(size=0x10) = 0x29915b0
+[Tf80] [API] HeapAlloc(size=0x6, zero=0) = 0x29915d0
+[Tf80] [API] HeapAlloc(size=0x80, zero=0) = 0x29916c0
+[Tf80] [API] HeapFree(0x29915b0)
+[Tf80] [API] HeapAlloc(size=0x1a0, zero=0) = 0x2991750
+[Tf80] [API] HeapAlloc(size=0x18, zero=0) = 0x29915b0
+[Tf80] [API] HeapAlloc(size=0x45, zero=0) = 0x2991900
+[Tf80] [API] HeapAlloc(size=0x6e, zero=0) = 0x298f1e0
+[Tf80] [API] HeapAlloc(size=0x60, zero=0) = 0x2991950
+[Tf80] [API] HeapAlloc(size=0x9c0, zero=0) = 0x2993330
+[Tf80] [API] HeapAlloc(size=0x18, zero=0) = 0x29919c0
+[Tf80] [API] HeapAlloc(size=0x39, zero=0) = 0x29919e0
+[Tf80] [API] HeapAlloc(size=0x62, zero=0) = 0x2993d00
+[Tf80] [API] HeapAlloc(size=0x60, zero=0) = 0x2993d70
+[Tf80] [API] HeapAlloc(size=0x18, zero=0) = 0x2991a30
+[Tf80] [API] HeapAlloc(size=0x47, zero=0) = 0x2993de0
+[Tf80] [API] HeapAlloc(size=0x6b, zero=0) = 0x2993e30
+[Tf80] [API] HeapAlloc(size=0x60, zero=0) = 0x2993eb0
+[Tf80] [API] HeapAlloc(size=0x60, zero=0) = 0x2993f20
+[Tf80] [API] HeapAlloc(size=0x18, zero=0) = 0x2991a50
+[Tf80] [API] HeapAlloc(size=0x2e, zero=0) = 0x2993f90
+[Tf80] [API] HeapAlloc(size=0x18, zero=0) = 0x2993fd0
+[Tf80] [API] HeapFree(0x2991a50)
+[Tf80] [API] HeapAlloc(size=0x18, zero=0) = 0x2993ff0
+[Tf80] [API] HeapAlloc(size=0x1a, zero=0) = 0x2991a50
+[Tf80] [API] HeapAlloc(size=0x18, zero=0) = 0x2994010
+[Tf80] [API] HeapFree(0x2993ff0)
+[Tf80] [API] HeapAlloc(size=0x154, zero=0) = 0x2994030
+[Tf80] [API] HeapReAlloc(size=0x1380) = 0x2994190
+[Tf80] [API] HeapAlloc(size=0x18, zero=0) = 0x2993ff0
+[Tf80] [API] HeapAlloc(size=0x8, zero=0) = 0x2993330
+[Tf80] [API] HeapAlloc(size=0x1d, zero=0) = 0x2991580
+[Tf80] [API] HeapAlloc(size=0x18, zero=0) = 0x2993350
+[Tf80] [API] HeapFree(0x2993ff0)
+[Tf80] [API] HeapAlloc(size=0xf3, zero=0) = 0x298f670
+[Tf80] [API] HeapAlloc(size=0x18, zero=0) = 0x2993ff0
+[Tf80] [API] HeapAlloc(size=0x15, zero=0) = 0x2993370
+[Tf80] [API] HeapAlloc(size=0x18, zero=0) = 0x2993390
+[Tf80] [API] HeapFree(0x2993ff0)
+[Tf80] [API] HeapAlloc(size=0x18, zero=0) = 0x2993ff0
+[Tf80] [API] HeapAlloc(size=0x3c, zero=0) = 0x29933b0
+[Tf80] [API] HeapAlloc(size=0x61, zero=0) = 0x2993400
+[Tf80] [API] HeapAlloc(size=0x18, zero=0) = 0x2993470
+[Tf80] [API] HeapFree(0x2993ff0)
+[Tf80] [API] HeapAlloc(size=0x18, zero=0) = 0x2993ff0
+[Tf80] [API] HeapAlloc(size=0x4c, zero=0) = 0x2993490
+[Tf80] [API] HeapAlloc(size=0x78, zero=0) = 0x29934f0
+[Tf80] [API] HeapAlloc(size=0x18, zero=0) = 0x2993570
+[Tf80] [API] HeapFree(0x2993ff0)
+[Tf80] [API] HeapReAlloc(size=0x2700) = 0x2994190
+[Tf80] [API] HeapAlloc(size=0x18, zero=0) = 0x2993ff0
+[Tf80] [API] HeapAlloc(size=0x8, zero=0) = 0x2993590
+[Tf80] [API] HeapAlloc(size=0x30, zero=0) = 0x29935b0
+[Tf80] [API] HeapAlloc(size=0x18, zero=0) = 0x29935f0
+[Tf80] [API] HeapFree(0x2993ff0)
+[Tf80] [API] HeapAlloc(size=0xbc, zero=0) = 0x29915f0
+[Tf80] [API] HeapAlloc(size=0x18, zero=0) = 0x2993ff0
+[Tf80] [API] HeapAlloc(size=0x37, zero=0) = 0x2993610
+[Tf80] [API] HeapAlloc(size=0x18, zero=0) = 0x2993650
+[Tf80] [API] HeapAlloc(size=0x34, zero=0) = 0x2993670
+[Tf80] [API] HeapAlloc(size=0x18, zero=0) = 0x29936b0
+[Tf80] [API] HeapAlloc(size=0x38, zero=0) = 0x29936d0
+[Tf80] [API] HeapAlloc(size=0x18, zero=0) = 0x2993710
+[Tf80] [API] HeapAlloc(size=0x20, zero=0) = 0x2993730
+[Tf80] [API] HeapAlloc(size=0x2f, zero=0) = 0x2993760
+[Tf80] [API] HeapAlloc(size=0x105, zero=0) = 0x29937a0
+[Tf80] [API] HeapAlloc(size=0x18, zero=0) = 0x29938b0
+[Tf80] [API] HeapAlloc(size=0x34, zero=0) = 0x29938d0
+[Tf80] [API] HeapAlloc(size=0x100, zero=0) = 0x2993910
+[Tf80] [API] HeapAlloc(size=0x18, zero=0) = 0x2993a20
+[Tf80] [API] HeapAlloc(size=0x50, zero=0) = 0x2993a40
+[Tf80] [API] HeapAlloc(size=0x18, zero=0) = 0x2993aa0
+[Tf80] [API] HeapAlloc(size=0x8, zero=0) = 0x2993ac0
+[Tf80] [API] HeapAlloc(size=0x47, zero=0) = 0x2993ae0
+[Tf80] [API] HeapAlloc(size=0x18, zero=0) = 0x2993b30
+[Tf80] [API] HeapFree(0x2993aa0)
+[Tf80] [API] HeapReAlloc(size=0x4e00) = 0x2994190
+[Tf80] [API] HeapAlloc(size=0x18, zero=0) = 0x2993aa0
+[Tf80] [API] HeapAlloc(size=0x20, zero=0) = 0x2993b50
+[Tf80] [API] HeapAlloc(size=0x20, zero=0) = 0x2993b80
+[Tf80] [API] HeapAlloc(size=0x5d, zero=0) = 0x2993bb0
+[Tf80] [API] HeapAlloc(size=0x18, zero=0) = 0x2993c20
+[Tf80] [API] HeapAlloc(size=0x1f, zero=0) = 0x2993c40
+[Tf80] [API] HeapAlloc(size=0x18, zero=0) = 0x2993c70
+[Tf80] [API] HeapAlloc(size=0x20, zero=0) = 0x2993c90
+[Tf80] [API] HeapAlloc(size=0x33, zero=0) = 0x2993cc0
+[Tf80] [API] HeapAlloc(size=0x137, zero=0) = 0x2998fa0
+[Tf80] [API] HeapAlloc(size=0x18, zero=0) = 0x29990e0
+[Tf80] [API] HeapAlloc(size=0x25, zero=0) = 0x2999100
+[Tf80] [API] HeapAlloc(size=0x18, zero=0) = 0x2999130
+[Tf80] [API] HeapFree(0x29990e0)
+[Tf80] [API] HeapAlloc(size=0x18, zero=0) = 0x29990e0
+[Tf80] [API] HeapAlloc(size=0x32, zero=0) = 0x2999150
+[Tf80] [API] HeapAlloc(size=0x86, zero=0) = 0x2999190
+[Tf80] [API] HeapAlloc(size=0x18, zero=0) = 0x2999220
+[Tf80] [API] HeapAlloc(size=0x40, zero=0) = 0x2999240
+[Tf80] [API] HeapAlloc(size=0xc0, zero=0) = 0x2999290
+[Tf80] [API] HeapAlloc(size=0x18, zero=0) = 0x2999360
+[Tf80] [API] HeapAlloc(size=0x25, zero=0) = 0x2999380
+[Tf80] [API] HeapAlloc(size=0x9f, zero=0) = 0x29993b0
+[Tf80] [API] HeapAlloc(size=0x18, zero=0) = 0x2999460
+[Tf80] [API] HeapFree(0x2999360)
+[Tf80] [API] HeapAlloc(size=0x18, zero=0) = 0x2999360
+[Tf80] [API] HeapAlloc(size=0x4f, zero=0) = 0x2999480
+[Tf80] [API] HeapAlloc(size=0x18, zero=0) = 0x29994e0
+[Tf80] [API] HeapFree(0x2999360)
+[Tf80] [API] HeapAlloc(size=0x60, zero=0) = 0x2999500
+[Tf80] [API] HeapAlloc(size=0x18, zero=0) = 0x2999360
+[Tf80] [API] HeapAlloc(size=0x1a, zero=0) = 0x2999570
+[Tf80] [API] HeapAlloc(size=0x18, zero=0) = 0x29995a0
+[Tf80] [API] HeapAlloc(size=0x8, zero=0) = 0x29995c0
+[Tf80] [API] HeapAlloc(size=0x4a, zero=0) = 0x29995e0
+[Tf80] [API] HeapAlloc(size=0xe2, zero=0) = 0x2999640
+[Tf80] [API] HeapAlloc(size=0x18, zero=0) = 0x2999730
+[Tf80] [API] HeapFree(0x29995a0)
+[Tf80] [API] HeapAlloc(size=0x18, zero=0) = 0x29995a0
+[Tf80] [API] HeapAlloc(size=0x8, zero=0) = 0x2999750
+[Tf80] [API] HeapAlloc(size=0x20, zero=0) = 0x2999770
+[Tf80] [API] HeapAlloc(size=0x18, zero=0) = 0x29997a0
+[Tf80] [API] HeapFree(0x29995a0)
+[Tf80] [API] HeapAlloc(size=0x18, zero=0) = 0x29995a0
+[Tf80] [API] HeapAlloc(size=0x22, zero=0) = 0x29997c0
+[Tf80] [API] HeapAlloc(size=0x60, zero=0) = 0x29997f0
+[Tf80] [API] HeapAlloc(size=0x18, zero=0) = 0x2999860
+[Tf80] [API] HeapAlloc(size=0x2b, zero=0) = 0x2999880
+[Tf80] [API] HeapAlloc(size=0x18, zero=0) = 0x29998c0
+[Tf80] [API] HeapFree(0x2999860)
+[Tf80] [API] HeapAlloc(size=0xc0, zero=0) = 0x29998e0
+[Tf80] [API] HeapAlloc(size=0x18, zero=0) = 0x2999860
+[Tf80] [API] HeapAlloc(size=0x29, zero=0) = 0x29999b0
+[Tf80] [API] HeapAlloc(size=0x5f, zero=0) = 0x29999f0
+[Tf80] [API] HeapAlloc(size=0x18, zero=0) = 0x2999a60
+[Tf80] [API] HeapFree(0x2999860)
+[Tf80] [API] HeapAlloc(size=0xc0, zero=0) = 0x2999a80
+[Tf80] [API] HeapAlloc(size=0x18, zero=0) = 0x2999860
+[Tf80] [API] HeapAlloc(size=0x26, zero=0) = 0x2999b50
+[Tf80] [API] HeapAlloc(size=0x9b, zero=0) = 0x2999b80
+[Tf80] [API] HeapAlloc(size=0x18, zero=0) = 0x2999c30
+[Tf80] [API] HeapFree(0x2999860)
+[Tf80] [API] HeapAlloc(size=0xc0, zero=0) = 0x2999c50
+[Tf80] [API] HeapAlloc(size=0x18, zero=0) = 0x2999860
+[Tf80] [API] HeapAlloc(size=0x8, zero=0) = 0x2999d20
+[Tf80] [API] HeapAlloc(size=0x3f, zero=0) = 0x2999d40
+[Tf80] [API] HeapAlloc(size=0x15b, zero=0) = 0x2999d90
+[Tf80] [API] HeapAlloc(size=0x18, zero=0) = 0x2999f00
+[Tf80] [API] HeapFree(0x2999860)
+[Tf80] [API] HeapReAlloc(size=0x9c00) = 0x2999f20
+[Tf80] [API] HeapAlloc(size=0x18, zero=0) = 0x2999860
+[Tf80] [API] HeapAlloc(size=0x35, zero=0) = 0x2994190
+[Tf80] [API] HeapAlloc(size=0x18, zero=0) = 0x29941d0
+[Tf80] [API] HeapAlloc(size=0x4c, zero=0) = 0x29941f0
+[Tf80] [API] HeapAlloc(size=0x102, zero=0) = 0x2994250
+[Tf80] [API] HeapAlloc(size=0x18, zero=0) = 0x2994360
+[Tf80] [API] HeapAlloc(size=0x13, zero=0) = 0x2994380
+[Tf80] [API] HeapAlloc(size=0x18, zero=0) = 0x29943a0
+[Tf80] [API] HeapAlloc(size=0x8, zero=0) = 0x29943c0
+[Tf80] [API] HeapAlloc(size=0x41, zero=0) = 0x29943e0
+[Tf80] [API] HeapAlloc(size=0x18, zero=0) = 0x2994430
+[Tf80] [API] HeapFree(0x29943a0)
+[Tf80] [API] HeapAlloc(size=0x18, zero=0) = 0x29943a0
+[Tf80] [API] HeapAlloc(size=0x8, zero=0) = 0x2994450
+[Tf80] [API] HeapAlloc(size=0x21, zero=0) = 0x2994470
+[Tf80] [API] HeapAlloc(size=0x5e, zero=0) = 0x29944a0
+[Tf80] [API] HeapAlloc(size=0x18, zero=0) = 0x2994510
+[Tf80] [API] HeapFree(0x29943a0)
+[Tf80] [API] HeapAlloc(size=0x18, zero=0) = 0x29943a0
+[Tf80] [API] HeapAlloc(size=0x8, zero=0) = 0x2994530
+[Tf80] [API] HeapAlloc(size=0x4d, zero=0) = 0x2994550
+[Tf80] [API] HeapAlloc(size=0x1c5, zero=0) = 0x29945b0
+[Tf80] [API] HeapAlloc(size=0x18, zero=0) = 0x2994780
+[Tf80] [API] HeapFree(0x29943a0)
+[Tf80] [API] HeapAlloc(size=0x18, zero=0) = 0x29943a0
+[Tf80] [API] HeapAlloc(size=0x45, zero=0) = 0x29947a0
+[Tf80] [API] HeapAlloc(size=0xd8, zero=0) = 0x29947f0
+[Tf80] [API] HeapAlloc(size=0x18, zero=0) = 0x29948d0
+[Tf80] [API] HeapFree(0x29943a0)
+[Tf80] [API] HeapAlloc(size=0x18, zero=0) = 0x29943a0
+[Tf80] [API] HeapAlloc(size=0x25, zero=0) = 0x29948f0
+[Tf80] [API] HeapAlloc(size=0x18, zero=0) = 0x2994920
+[Tf80] [API] HeapFree(0x29943a0)
+[Tf80] [API] HeapAlloc(size=0x18, zero=0) = 0x29943a0
+[Tf80] [API] HeapAlloc(size=0x25, zero=0) = 0x2994940
+[Tf80] [API] HeapAlloc(size=0x6c, zero=0) = 0x2994970
+[Tf80] [API] HeapAlloc(size=0x18, zero=0) = 0x29949f0
+[Tf80] [API] HeapFree(0x29943a0)
+[Tf80] [API] HeapAlloc(size=0x18, zero=0) = 0x29943a0
+[Tf80] [API] HeapAlloc(size=0x1e, zero=0) = 0x2994a10
+[Tf80] [API] HeapAlloc(size=0x6c, zero=0) = 0x2994a40
+[Tf80] [API] HeapAlloc(size=0x18, zero=0) = 0x2994ac0
+[Tf80] [API] HeapFree(0x29943a0)
+[Tf80] [API] HeapAlloc(size=0x18, zero=0) = 0x29943a0
+[Tf80] [API] HeapAlloc(size=0x49, zero=0) = 0x2994ae0
+[Tf80] [API] HeapAlloc(size=0x18, zero=0) = 0x2994b40
+[Tf80] [API] HeapAlloc(size=0x35, zero=0) = 0x2994b60
+[Tf80] [API] HeapAlloc(size=0x18, zero=0) = 0x2994ba0
+[Tf80] [API] HeapFree(0x2994b40)
+[Tf80] [API] HeapAlloc(size=0x18, zero=0) = 0x2994b40
+[Tf80] [API] HeapAlloc(size=0x2f, zero=0) = 0x2994bc0
+[Tf80] [API] HeapAlloc(size=0x18, zero=0) = 0x2994c00
+[Tf80] [API] HeapAlloc(size=0x13, zero=0) = 0x2994c20
+[Tf80] [API] HeapAlloc(size=0x18, zero=0) = 0x2994c40
+[Tf80] [API] HeapFree(0x2994c00)
+[Tf80] [API] HeapAlloc(size=0x18, zero=0) = 0x2994c00
+[Tf80] [API] HeapAlloc(size=0x8, zero=0) = 0x2994c60
+[Tf80] [API] HeapAlloc(size=0x3a, zero=0) = 0x2994c80
+[Tf80] [API] HeapAlloc(size=0xa2, zero=0) = 0x2994cd0
+[Tf80] [API] HeapAlloc(size=0x18, zero=0) = 0x2994d80
+[Tf80] [API] HeapFree(0x2994c00)
+[Tf80] [API] HeapAlloc(size=0x18, zero=0) = 0x2994c00
+[Tf80] [API] HeapAlloc(size=0x2f, zero=0) = 0x2994da0
+[Tf80] [API] HeapAlloc(size=0x63, zero=0) = 0x2994de0
+[Tf80] [API] HeapAlloc(size=0x18, zero=0) = 0x2994e50
+[Tf80] [API] HeapFree(0x2994c00)
+[Tf80] [API] HeapAlloc(size=0x18, zero=0) = 0x2994c00
+[Tf80] [API] HeapAlloc(size=0x27, zero=0) = 0x2994e70
+[Tf80] [API] HeapAlloc(size=0x18, zero=0) = 0x2994ea0
+[Tf80] [API] HeapAlloc(size=0x27, zero=0) = 0x2994ec0
+[Tf80] [API] HeapAlloc(size=0x18, zero=0) = 0x2994ef0
+[Tf80] [API] HeapAlloc(size=0x22, zero=0) = 0x2994f10
+[Tf80] [API] HeapAlloc(size=0x5e, zero=0) = 0x2994f40
+[Tf80] [API] HeapAlloc(size=0x18, zero=0) = 0x2994fb0
+[Tf80] [API] HeapFree(0x2994ef0)
+[Tf80] [API] HeapAlloc(size=0x18, zero=0) = 0x2994ef0
+[Tf80] [API] HeapAlloc(size=0x1c, zero=0) = 0x2994fd0
+[Tf80] [API] HeapAlloc(size=0x123, zero=0) = 0x2995000
+[Tf80] [API] HeapAlloc(size=0x18, zero=0) = 0x2995130
+[Tf80] [API] HeapAlloc(size=0x25, zero=0) = 0x2995150
+[Tf80] [API] HeapAlloc(size=0x67, zero=0) = 0x2995180
+[Tf80] [API] HeapAlloc(size=0x18, zero=0) = 0x29951f0
+[Tf80] [API] HeapAlloc(size=0x25, zero=0) = 0x2995210
+[Tf80] [API] HeapAlloc(size=0x18, zero=0) = 0x2995240
+[Tf80] [API] HeapAlloc(size=0x27, zero=0) = 0x2995260
+[Tf80] [API] HeapAlloc(size=0x18, zero=0) = 0x2995290
+[Tf80] [API] HeapFree(0x2995240)
+[Tf80] [API] HeapAlloc(size=0x248, zero=0) = 0x29952b0
+[Tf80] [API] HeapAlloc(size=0x60, zero=0) = 0x2995500
+[Tf80] [API] HeapAlloc(size=0x18, zero=0) = 0x2995240
+[Tf80] [API] HeapAlloc(size=0xa, zero=0) = 0x2995570
+[Tf80] [API] HeapAlloc(size=0x18, zero=0) = 0x2995590
+[Tf80] [API] HeapAlloc(size=0x34, zero=0) = 0x29955b0
+[Tf80] [API] HeapAlloc(size=0x183, zero=0) = 0x29955f0
+[Tf80] [API] HeapAlloc(size=0x18, zero=0) = 0x2995780
+[Tf80] [API] HeapFree(0x2995590)
+[Tf80] [API] HeapAlloc(size=0x18, zero=0) = 0x2995590
+[Tf80] [API] HeapAlloc(size=0x37, zero=0) = 0x29957a0
+[Tf80] [API] HeapAlloc(size=0x4ca, zero=0) = 0x29957e0
+[Tf80] [API] HeapAlloc(size=0x18, zero=0) = 0x2995cc0
+[Tf80] [API] HeapFree(0x2995590)
+[Tf80] [API] HeapAlloc(size=0x38, zero=0) = 0x2995ce0
+[Tf80] [API] HeapAlloc(size=0xa2, zero=0) = 0x2995d20
+[Tf80] [API] HeapAlloc(size=0x90, zero=0) = 0x298f7a0
+[Tf80] [API] HeapAlloc(size=0x40, zero=0) = 0x2995dd0
+[Tf80] [API] HeapAlloc(size=0x80, zero=0) = 0x2995e20
+[Tf80] [API] HeapAlloc(size=0x6, zero=0) = 0x2995590
+[Tf80] [API] HeapReAlloc(size=0xc) = 0x2995590
+[Tf80] [API] HeapReAlloc(size=0x7) = 0x2995590
+[Tf80] [API] HeapAlloc(size=0x6, zero=0) = 0x2995eb0
+[Tf80] [API] HeapReAlloc(size=0xc) = 0x2995eb0
+[Tf80] [API] HeapReAlloc(size=0x7) = 0x2995eb0
+[Tf80] [API] HeapAlloc(size=0x60, zero=0) = 0x2995ed0
+[Tf80] [API] HeapAlloc(size=0x9c0, zero=0) = 0x2995f40
+[Tf80] [API] HeapAlloc(size=0x6, zero=0) = 0x2996910
+[Tf80] [API] HeapReAlloc(size=0xc) = 0x2996910
+[Tf80] [API] HeapReAlloc(size=0x7) = 0x2996910
+[Tf80] [API] HeapAlloc(size=0x6, zero=0) = 0x2996930
+[Tf80] [API] HeapReAlloc(size=0xc) = 0x2996930
+[Tf80] [API] HeapReAlloc(size=0x7) = 0x2996930
+[Tf80] [API] HeapAlloc(size=0x60, zero=0) = 0x2996950
+[Tf80] [API] HeapAlloc(size=0x6, zero=0) = 0x29969c0
+[Tf80] [API] HeapReAlloc(size=0xc) = 0x29969c0
+[Tf80] [API] HeapAlloc(size=0x6, zero=0) = 0x29969e0
+[Tf80] [API] HeapReAlloc(size=0xc) = 0x29969e0
+[Tf80] [API] HeapAlloc(size=0x60, zero=0) = 0x2996a00
+[Tf80] [API] HeapAlloc(size=0x6, zero=0) = 0x2996a70
+[Tf80] [API] HeapAlloc(size=0x6, zero=0) = 0x2996a90
+[Tf80] [API] HeapAlloc(size=0x60, zero=0) = 0x2996ab0
+[Tf80] [API] HeapAlloc(size=0x6, zero=0) = 0x2996b20
+[Tf80] [API] HeapReAlloc(size=0xc) = 0x2996b20
+[Tf80] [API] HeapReAlloc(size=0x9) = 0x2996b20
+[Tf80] [API] HeapAlloc(size=0x6, zero=0) = 0x2996b40
+[Tf80] [API] HeapReAlloc(size=0xc) = 0x2996b40
+[Tf80] [API] HeapReAlloc(size=0x9) = 0x2996b40
+[Tf80] [API] HeapAlloc(size=0x60, zero=0) = 0x2996b60
+[Tf80] [API] HeapReAlloc(size=0x1380) = 0x2996bd0
+[Tf80] [API] HeapAlloc(size=0x6, zero=0) = 0x2995f40
+[Tf80] [API] HeapReAlloc(size=0x11) = 0x2995f40
+[Tf80] [API] HeapAlloc(size=0x6, zero=0) = 0x2995f60
+[Tf80] [API] HeapReAlloc(size=0x11) = 0x2995f60
+[Tf80] [API] HeapAlloc(size=0x60, zero=0) = 0x2995f80
+[Tf80] [API] HeapAlloc(size=0x6, zero=0) = 0x2995ff0
+[Tf80] [API] HeapReAlloc(size=0xc) = 0x2995ff0
+[Tf80] [API] HeapReAlloc(size=0x8) = 0x2995ff0
+[Tf80] [API] HeapAlloc(size=0x6, zero=0) = 0x2996010
+[Tf80] [API] HeapReAlloc(size=0xc) = 0x2996010
+[Tf80] [API] HeapReAlloc(size=0x8) = 0x2996010
+[Tf80] [API] HeapAlloc(size=0x60, zero=0) = 0x2996030
+[Tf80] [API] HeapAlloc(size=0x6, zero=0) = 0x29960a0
+[Tf80] [API] HeapReAlloc(size=0x13) = 0x29960a0
+[Tf80] [API] HeapAlloc(size=0x6, zero=0) = 0x29960c0
+[Tf80] [API] HeapReAlloc(size=0x13) = 0x29960c0
+[Tf80] [API] HeapAlloc(size=0x60, zero=0) = 0x29960e0
+[Tf80] [API] HeapAlloc(size=0x6, zero=0) = 0x2996150
+[Tf80] [API] HeapReAlloc(size=0x10) = 0x2996150
+[Tf80] [API] HeapAlloc(size=0x6, zero=0) = 0x2996170
+[Tf80] [API] HeapReAlloc(size=0x10) = 0x2996170
+[Tf80] [API] HeapAlloc(size=0x60, zero=0) = 0x2996190
+[Tf80] [API] HeapReAlloc(size=0x2700) = 0x29a3b30
+[Tf80] [API] HeapAlloc(size=0x6, zero=0) = 0x2996200
+[Tf80] [API] HeapReAlloc(size=0xc) = 0x2996200
+[Tf80] [API] HeapReAlloc(size=0x8) = 0x2996200
+[Tf80] [API] HeapAlloc(size=0x6, zero=0) = 0x2996220
+[Tf80] [API] HeapReAlloc(size=0xc) = 0x2996220
+[Tf80] [API] HeapReAlloc(size=0x8) = 0x2996220
+[Tf80] [API] HeapAlloc(size=0x60, zero=0) = 0x2996240
+[Tf80] [API] HeapAlloc(size=0x6, zero=0) = 0x29962b0
+[Tf80] [API] HeapReAlloc(size=0xc) = 0x29962b0
+[Tf80] [API] HeapReAlloc(size=0xa) = 0x29962b0
+[Tf80] [API] HeapAlloc(size=0x6, zero=0) = 0x29962d0
+[Tf80] [API] HeapReAlloc(size=0xc) = 0x29962d0
+[Tf80] [API] HeapReAlloc(size=0xa) = 0x29962d0
+[Tf80] [API] HeapAlloc(size=0x60, zero=0) = 0x29962f0
+[Tf80] [API] HeapAlloc(size=0x6, zero=0) = 0x2996360
+[Tf80] [API] HeapReAlloc(size=0xc) = 0x2996360
+[Tf80] [API] HeapReAlloc(size=0x7) = 0x2996360
+[Tf80] [API] HeapAlloc(size=0x6, zero=0) = 0x2996380
+[Tf80] [API] HeapReAlloc(size=0xc) = 0x2996380
+[Tf80] [API] HeapReAlloc(size=0x7) = 0x2996380
+[Tf80] [API] HeapAlloc(size=0x60, zero=0) = 0x29963a0
+[Tf80] [API] HeapAlloc(size=0x6, zero=0) = 0x2996410
+[Tf80] [API] HeapReAlloc(size=0xc) = 0x2996410
+[Tf80] [API] HeapReAlloc(size=0x7) = 0x2996410
+[Tf80] [API] HeapAlloc(size=0x6, zero=0) = 0x2996430
+[Tf80] [API] HeapReAlloc(size=0xc) = 0x2996430
+[Tf80] [API] HeapReAlloc(size=0x7) = 0x2996430
+[Tf80] [API] HeapAlloc(size=0x60, zero=0) = 0x2996450
+[Tf80] [API] HeapAlloc(size=0x6, zero=0) = 0x29964c0
+[Tf80] [API] HeapReAlloc(size=0xc) = 0x29964c0
+[Tf80] [API] HeapReAlloc(size=0xa) = 0x29964c0
+[Tf80] [API] HeapAlloc(size=0x6, zero=0) = 0x29964e0
+[Tf80] [API] HeapReAlloc(size=0xc) = 0x29964e0
+[Tf80] [API] HeapReAlloc(size=0xa) = 0x29964e0
+[Tf80] [API] HeapAlloc(size=0x60, zero=0) = 0x2996500
+[Tf80] [API] HeapAlloc(size=0x6, zero=0) = 0x2996570
+[Tf80] [API] HeapReAlloc(size=0xc) = 0x2996570
+[Tf80] [API] HeapReAlloc(size=0x8) = 0x2996570
+[Tf80] [API] HeapAlloc(size=0x6, zero=0) = 0x2996590
+[Tf80] [API] HeapReAlloc(size=0xc) = 0x2996590
+[Tf80] [API] HeapReAlloc(size=0x8) = 0x2996590
+[Tf80] [API] HeapAlloc(size=0x60, zero=0) = 0x29965b0
+[Tf80] [API] HeapAlloc(size=0x6, zero=0) = 0x2996620
+[Tf80] [API] HeapAlloc(size=0x6, zero=0) = 0x2996640
+[Tf80] [API] HeapAlloc(size=0x60, zero=0) = 0x2996660
+[Tf80] [API] HeapAlloc(size=0x6, zero=0) = 0x29966d0
+[Tf80] [API] HeapReAlloc(size=0x10) = 0x29966d0
+[Tf80] [API] HeapAlloc(size=0x6, zero=0) = 0x29966f0
+[Tf80] [API] HeapReAlloc(size=0x10) = 0x29966f0
+[Tf80] [API] HeapAlloc(size=0x60, zero=0) = 0x2996710
+[Tf80] [API] HeapReAlloc(size=0x4e00) = 0x29a3b30
+[Tf80] [API] HeapAlloc(size=0x6, zero=0) = 0x2996780
+[Tf80] [API] HeapReAlloc(size=0xc) = 0x2996780
+[Tf80] [API] HeapReAlloc(size=0x8) = 0x2996780
+[Tf80] [API] HeapAlloc(size=0x6, zero=0) = 0x29967a0
+[Tf80] [API] HeapReAlloc(size=0xc) = 0x29967a0
+[Tf80] [API] HeapReAlloc(size=0x8) = 0x29967a0
+[Tf80] [API] HeapAlloc(size=0x60, zero=0) = 0x29967c0
+[Tf80] [API] HeapAlloc(size=0x6, zero=0) = 0x2996830
+[Tf80] [API] HeapReAlloc(size=0xc) = 0x2996830
+[Tf80] [API] HeapReAlloc(size=0x9) = 0x2996830
+[Tf80] [API] HeapAlloc(size=0x6, zero=0) = 0x2996850
+[Tf80] [API] HeapReAlloc(size=0xc) = 0x2996850
+[Tf80] [API] HeapReAlloc(size=0x9) = 0x2996850
+[Tf80] [API] HeapAlloc(size=0x60, zero=0) = 0x2996870
+[Tf80] [API] HeapAlloc(size=0x6, zero=0) = 0x29968e0
+[Tf80] [API] HeapReAlloc(size=0xc) = 0x29968e0
+[Tf80] [API] HeapReAlloc(size=0xb) = 0x29968e0
+[Tf80] [API] HeapAlloc(size=0x6, zero=0) = 0x2996bd0
+[Tf80] [API] HeapReAlloc(size=0xc) = 0x2996bd0
+[Tf80] [API] HeapReAlloc(size=0xb) = 0x2996bd0
+[Tf80] [API] HeapAlloc(size=0x60, zero=0) = 0x2996bf0
+[Tf80] [API] HeapAlloc(size=0x6, zero=0) = 0x2996c60
+[Tf80] [API] HeapReAlloc(size=0xc) = 0x2996c60
+[Tf80] [API] HeapReAlloc(size=0x9) = 0x2996c60
+[Tf80] [API] HeapAlloc(size=0x6, zero=0) = 0x2996c80
+[Tf80] [API] HeapReAlloc(size=0xc) = 0x2996c80
+[Tf80] [API] HeapReAlloc(size=0x9) = 0x2996c80
+[Tf80] [API] HeapAlloc(size=0x60, zero=0) = 0x2996ca0
+[Tf80] [API] HeapAlloc(size=0x6, zero=0) = 0x2996d10
+[Tf80] [API] HeapReAlloc(size=0xc) = 0x2996d10
+[Tf80] [API] HeapReAlloc(size=0xb) = 0x2996d10
+[Tf80] [API] HeapAlloc(size=0x6, zero=0) = 0x2996d30
+[Tf80] [API] HeapReAlloc(size=0xc) = 0x2996d30
+[Tf80] [API] HeapReAlloc(size=0xb) = 0x2996d30
+[Tf80] [API] HeapAlloc(size=0x60, zero=0) = 0x2996d50
+[Tf80] [API] HeapAlloc(size=0x6, zero=0) = 0x2996dc0
+[Tf80] [API] HeapReAlloc(size=0xc) = 0x2996dc0
+[Tf80] [API] HeapReAlloc(size=0xb) = 0x2996dc0
+[Tf80] [API] HeapAlloc(size=0x6, zero=0) = 0x2996de0
+[Tf80] [API] HeapReAlloc(size=0xc) = 0x2996de0
+[Tf80] [API] HeapReAlloc(size=0xb) = 0x2996de0
+[Tf80] [API] HeapAlloc(size=0x60, zero=0) = 0x2996e00
+[Tf80] [API] HeapAlloc(size=0x6, zero=0) = 0x2996e70
+[Tf80] [API] HeapReAlloc(size=0xc) = 0x2996e70
+[Tf80] [API] HeapReAlloc(size=0xa) = 0x2996e70
+[Tf80] [API] HeapAlloc(size=0x6, zero=0) = 0x2996e90
+[Tf80] [API] HeapReAlloc(size=0xc) = 0x2996e90
+[Tf80] [API] HeapReAlloc(size=0xa) = 0x2996e90
+[Tf80] [API] HeapAlloc(size=0x60, zero=0) = 0x2996eb0
+[Tf80] [API] HeapAlloc(size=0x6, zero=0) = 0x2996f20
+[Tf80] [API] HeapReAlloc(size=0x14) = 0x2996f20
+[Tf80] [API] HeapAlloc(size=0x6, zero=0) = 0x2996f40
+[Tf80] [API] HeapReAlloc(size=0x14) = 0x2996f40
+[Tf80] [API] HeapAlloc(size=0x60, zero=0) = 0x2996f60
+[Tf80] [API] HeapAlloc(size=0x6, zero=0) = 0x2996fd0
+[Tf80] [API] HeapReAlloc(size=0xc) = 0x2996fd0
+[Tf80] [API] HeapAlloc(size=0x6, zero=0) = 0x2996ff0
+[Tf80] [API] HeapReAlloc(size=0xc) = 0x2996ff0
+[Tf80] [API] HeapAlloc(size=0x60, zero=0) = 0x2997010
+[Tf80] [API] HeapAlloc(size=0x6, zero=0) = 0x2997080
+[Tf80] [API] HeapReAlloc(size=0xc) = 0x2997080
+[Tf80] [API] HeapReAlloc(size=0x7) = 0x2997080
+[Tf80] [API] HeapAlloc(size=0x6, zero=0) = 0x29970a0
+[Tf80] [API] HeapReAlloc(size=0xc) = 0x29970a0
+[Tf80] [API] HeapReAlloc(size=0x7) = 0x29970a0
+[Tf80] [API] HeapAlloc(size=0x60, zero=0) = 0x29970c0
+[Tf80] [API] HeapAlloc(size=0x6, zero=0) = 0x2997130
+[Tf80] [API] HeapReAlloc(size=0xc) = 0x2997130
+[Tf80] [API] HeapReAlloc(size=0x9) = 0x2997130
+[Tf80] [API] HeapAlloc(size=0x6, zero=0) = 0x2997150
+[Tf80] [API] HeapReAlloc(size=0xc) = 0x2997150
+[Tf80] [API] HeapReAlloc(size=0x9) = 0x2997150
+[Tf80] [API] HeapAlloc(size=0x60, zero=0) = 0x2997170
+[Tf80] [API] HeapAlloc(size=0x6, zero=0) = 0x29971e0
+[Tf80] [API] HeapReAlloc(size=0xf) = 0x29971e0
+[Tf80] [API] HeapAlloc(size=0x6, zero=0) = 0x2997200
+[Tf80] [API] HeapReAlloc(size=0xf) = 0x2997200
+[Tf80] [API] HeapAlloc(size=0x60, zero=0) = 0x2997220
+[Tf80] [API] HeapAlloc(size=0x6, zero=0) = 0x2997290
+[Tf80] [API] HeapReAlloc(size=0x14) = 0x2997290
+[Tf80] [API] HeapAlloc(size=0x6, zero=0) = 0x29972b0
+[Tf80] [API] HeapReAlloc(size=0x14) = 0x29972b0
+[Tf80] [API] HeapAlloc(size=0x60, zero=0) = 0x29972d0
+[Tf80] [API] HeapAlloc(size=0x6, zero=0) = 0x2997340
+[Tf80] [API] HeapReAlloc(size=0x15) = 0x2997340
+[Tf80] [API] HeapAlloc(size=0x6, zero=0) = 0x2997360
+[Tf80] [API] HeapReAlloc(size=0x15) = 0x2997360
+[Tf80] [API] HeapAlloc(size=0x60, zero=0) = 0x2997380
+[Tf80] [API] HeapAlloc(size=0x6, zero=0) = 0x29973f0
+[Tf80] [API] HeapReAlloc(size=0x15) = 0x29973f0
+[Tf80] [API] HeapAlloc(size=0x6, zero=0) = 0x2997410
+[Tf80] [API] HeapReAlloc(size=0x15) = 0x2997410
+[Tf80] [API] HeapAlloc(size=0x60, zero=0) = 0x2997430
+[Tf80] [API] HeapAlloc(size=0x6, zero=0) = 0x29974a0
+[Tf80] [API] HeapReAlloc(size=0x16) = 0x29974a0
+[Tf80] [API] HeapAlloc(size=0x6, zero=0) = 0x29974c0
+[Tf80] [API] HeapReAlloc(size=0x16) = 0x29974c0
+[Tf80] [API] HeapAlloc(size=0x60, zero=0) = 0x29974e0
+[Tf80] [API] HeapReAlloc(size=0x9c00) = 0x29a3b30
+[Tf80] [API] HeapAlloc(size=0x6, zero=0) = 0x2997550
+[Tf80] [API] HeapReAlloc(size=0xc) = 0x2997550
+[Tf80] [API] HeapReAlloc(size=0xa) = 0x2997550
+[Tf80] [API] HeapAlloc(size=0x6, zero=0) = 0x2997570
+[Tf80] [API] HeapReAlloc(size=0xc) = 0x2997570
+[Tf80] [API] HeapReAlloc(size=0xa) = 0x2997570
+[Tf80] [API] HeapAlloc(size=0x60, zero=0) = 0x2997590
+[Tf80] [API] HeapAlloc(size=0x6, zero=0) = 0x2997600
+[Tf80] [API] HeapReAlloc(size=0xf) = 0x2997600
+[Tf80] [API] HeapAlloc(size=0x6, zero=0) = 0x2997620
+[Tf80] [API] HeapReAlloc(size=0xf) = 0x2997620
+[Tf80] [API] HeapAlloc(size=0x60, zero=0) = 0x2997640
+[Tf80] [API] HeapAlloc(size=0x6, zero=0) = 0x29976b0
+[Tf80] [API] HeapReAlloc(size=0xc) = 0x29976b0
+[Tf80] [API] HeapReAlloc(size=0x9) = 0x29976b0
+[Tf80] [API] HeapAlloc(size=0x6, zero=0) = 0x29976d0
+[Tf80] [API] HeapReAlloc(size=0xc) = 0x29976d0
+[Tf80] [API] HeapReAlloc(size=0x9) = 0x29976d0
+[Tf80] [API] HeapAlloc(size=0x60, zero=0) = 0x29976f0
+[Tf80] [API] HeapAlloc(size=0x6, zero=0) = 0x2997760
+[Tf80] [API] HeapReAlloc(size=0x10) = 0x2997760
+[Tf80] [API] HeapAlloc(size=0x6, zero=0) = 0x2997780
+[Tf80] [API] HeapReAlloc(size=0x10) = 0x2997780
+[Tf80] [API] HeapAlloc(size=0x60, zero=0) = 0x29977a0
+[Tf80] [API] HeapAlloc(size=0x6, zero=0) = 0x2997810
+[Tf80] [API] HeapReAlloc(size=0xc) = 0x2997810
+[Tf80] [API] HeapReAlloc(size=0xa) = 0x2997810
+[Tf80] [API] HeapAlloc(size=0x6, zero=0) = 0x2997830
+[Tf80] [API] HeapReAlloc(size=0xc) = 0x2997830
+[Tf80] [API] HeapReAlloc(size=0xa) = 0x2997830
+[Tf80] [API] HeapAlloc(size=0x60, zero=0) = 0x2997850
+[Tf80] [API] HeapAlloc(size=0x6, zero=0) = 0x29978c0
+[Tf80] [API] HeapReAlloc(size=0xc) = 0x29978c0
+[Tf80] [API] HeapReAlloc(size=0x8) = 0x29978c0
+[Tf80] [API] HeapAlloc(size=0x6, zero=0) = 0x29978e0
+[Tf80] [API] HeapReAlloc(size=0xc) = 0x29978e0
+[Tf80] [API] HeapReAlloc(size=0x8) = 0x29978e0
+[Tf80] [API] HeapAlloc(size=0x60, zero=0) = 0x2997900
+[Tf80] [API] HeapAlloc(size=0x6, zero=0) = 0x2997970
+[Tf80] [API] HeapReAlloc(size=0xc) = 0x2997970
+[Tf80] [API] HeapReAlloc(size=0x9) = 0x2997970
+[Tf80] [API] HeapAlloc(size=0x6, zero=0) = 0x2997990
+[Tf80] [API] HeapReAlloc(size=0xc) = 0x2997990
+[Tf80] [API] HeapReAlloc(size=0x9) = 0x2997990
+[Tf80] [API] HeapAlloc(size=0x60, zero=0) = 0x29979b0
+[Tf80] [API] HeapAlloc(size=0x6, zero=0) = 0x2997a20
+[Tf80] [API] HeapReAlloc(size=0xc) = 0x2997a20
+[Tf80] [API] HeapReAlloc(size=0x7) = 0x2997a20
+[Tf80] [API] HeapAlloc(size=0x6, zero=0) = 0x2997a40
+[Tf80] [API] HeapReAlloc(size=0xc) = 0x2997a40
+[Tf80] [API] HeapReAlloc(size=0x7) = 0x2997a40
+[Tf80] [API] HeapAlloc(size=0x60, zero=0) = 0x2997a60
+[Tf80] [API] HeapAlloc(size=0x6, zero=0) = 0x2997ad0
+[Tf80] [API] HeapReAlloc(size=0xc) = 0x2997ad0
+[Tf80] [API] HeapReAlloc(size=0xb) = 0x2997ad0
+[Tf80] [API] HeapAlloc(size=0x6, zero=0) = 0x2997af0
+[Tf80] [API] HeapReAlloc(size=0xc) = 0x2997af0
+[Tf80] [API] HeapReAlloc(size=0xb) = 0x2997af0
+[Tf80] [API] HeapAlloc(size=0x60, zero=0) = 0x2997b10
+[Tf80] [API] HeapAlloc(size=0x6, zero=0) = 0x2997b80
+[Tf80] [API] HeapAlloc(size=0x6, zero=0) = 0x2997ba0
+[Tf80] [API] HeapAlloc(size=0x60, zero=0) = 0x2997bc0
+[Tf80] [API] HeapAlloc(size=0x6, zero=0) = 0x2997c30
+[Tf80] [API] HeapReAlloc(size=0xd) = 0x2997c30
+[Tf80] [API] HeapAlloc(size=0x6, zero=0) = 0x2997c50
+[Tf80] [API] HeapReAlloc(size=0xd) = 0x2997c50
+[Tf80] [API] HeapAlloc(size=0x60, zero=0) = 0x2997c70
+[Tf80] [API] HeapAlloc(size=0x6, zero=0) = 0x2997ce0
+[Tf80] [API] HeapReAlloc(size=0x11) = 0x2997ce0
+[Tf80] [API] HeapAlloc(size=0x6, zero=0) = 0x2997d00
+[Tf80] [API] HeapReAlloc(size=0x11) = 0x2997d00
+[Tf80] [API] HeapAlloc(size=0x60, zero=0) = 0x2997d20
+[Tf80] [API] HeapAlloc(size=0x6, zero=0) = 0x2997d90
+[Tf80] [API] HeapReAlloc(size=0xc) = 0x2997d90
+[Tf80] [API] HeapReAlloc(size=0x8) = 0x2997d90
+[Tf80] [API] HeapAlloc(size=0x6, zero=0) = 0x2997db0
+[Tf80] [API] HeapReAlloc(size=0xc) = 0x2997db0
+[Tf80] [API] HeapReAlloc(size=0x8) = 0x2997db0
+[Tf80] [API] HeapAlloc(size=0x60, zero=0) = 0x2997dd0
+[Tf80] [API] HeapAlloc(size=0x6, zero=0) = 0x2997e40
+[Tf80] [API] HeapReAlloc(size=0xf) = 0x2997e40
+[Tf80] [API] HeapAlloc(size=0x6, zero=0) = 0x2997e60
+[Tf80] [API] HeapReAlloc(size=0xf) = 0x2997e60
+[Tf80] [API] HeapAlloc(size=0x60, zero=0) = 0x2997e80
+[Tf80] [API] HeapAlloc(size=0x6, zero=0) = 0x2997ef0
+[Tf80] [API] HeapReAlloc(size=0xc) = 0x2997ef0
+[Tf80] [API] HeapReAlloc(size=0xa) = 0x2997ef0
+[Tf80] [API] HeapAlloc(size=0x6, zero=0) = 0x2997f10
+[Tf80] [API] HeapReAlloc(size=0xc) = 0x2997f10
+[Tf80] [API] HeapReAlloc(size=0xa) = 0x2997f10
+[Tf80] [API] HeapAlloc(size=0x60, zero=0) = 0x2997f30
+[Tf80] [API] HeapAlloc(size=0x6, zero=0) = 0x2997fa0
+[Tf80] [API] HeapReAlloc(size=0xc) = 0x2997fa0
+[Tf80] [API] HeapAlloc(size=0x6, zero=0) = 0x2997fc0
+[Tf80] [API] HeapReAlloc(size=0xc) = 0x2997fc0
+[Tf80] [API] HeapAlloc(size=0x60, zero=0) = 0x2997fe0
+[Tf80] [API] HeapAlloc(size=0x6, zero=0) = 0x2998050
+[Tf80] [API] HeapReAlloc(size=0xc) = 0x2998050
+[Tf80] [API] HeapReAlloc(size=0x7) = 0x2998050
+[Tf80] [API] HeapAlloc(size=0x6, zero=0) = 0x2998070
+[Tf80] [API] HeapReAlloc(size=0xc) = 0x2998070
+[Tf80] [API] HeapReAlloc(size=0x7) = 0x2998070
+[Tf80] [API] HeapAlloc(size=0x60, zero=0) = 0x2998090
+[Tf80] [API] HeapAlloc(size=0x6, zero=0) = 0x2998100
+[Tf80] [API] HeapReAlloc(size=0xc) = 0x2998100
+[Tf80] [API] HeapReAlloc(size=0x7) = 0x2998100
+[Tf80] [API] HeapAlloc(size=0x6, zero=0) = 0x2998120
+[Tf80] [API] HeapReAlloc(size=0xc) = 0x2998120
+[Tf80] [API] HeapReAlloc(size=0x7) = 0x2998120
+[Tf80] [API] HeapAlloc(size=0x60, zero=0) = 0x2998140
+[Tf80] [API] HeapAlloc(size=0x6, zero=0) = 0x29981b0
+[Tf80] [API] HeapReAlloc(size=0xe) = 0x29981b0
+[Tf80] [API] HeapAlloc(size=0x6, zero=0) = 0x29981d0
+[Tf80] [API] HeapReAlloc(size=0xe) = 0x29981d0
+[Tf80] [API] HeapAlloc(size=0x60, zero=0) = 0x29981f0
+[Tf80] [API] HeapAlloc(size=0x6, zero=0) = 0x2998260
+[Tf80] [API] HeapReAlloc(size=0xf) = 0x2998260
+[Tf80] [API] HeapAlloc(size=0x6, zero=0) = 0x2998280
+[Tf80] [API] HeapReAlloc(size=0xf) = 0x2998280
+[Tf80] [API] HeapAlloc(size=0x60, zero=0) = 0x29982a0
+[Tf80] [API] HeapAlloc(size=0x6, zero=0) = 0x2998310
+[Tf80] [API] HeapReAlloc(size=0xc) = 0x2998310
+[Tf80] [API] HeapReAlloc(size=0x7) = 0x2998310
+[Tf80] [API] HeapAlloc(size=0x6, zero=0) = 0x2998330
+[Tf80] [API] HeapReAlloc(size=0xc) = 0x2998330
+[Tf80] [API] HeapReAlloc(size=0x7) = 0x2998330
+[Tf80] [API] HeapAlloc(size=0x60, zero=0) = 0x2998350
+[Tf80] [API] HeapAlloc(size=0x6, zero=0) = 0x29983c0
+[Tf80] [API] HeapReAlloc(size=0xc) = 0x29983c0
+[Tf80] [API] HeapAlloc(size=0x6, zero=0) = 0x29983e0
+[Tf80] [API] HeapReAlloc(size=0xc) = 0x29983e0
+[Tf80] [API] HeapAlloc(size=0x60, zero=0) = 0x2998400
+[Tf80] [API] HeapAlloc(size=0x6, zero=0) = 0x2998470
+[Tf80] [API] HeapReAlloc(size=0xc) = 0x2998470
+[Tf80] [API] HeapReAlloc(size=0xb) = 0x2998470
+[Tf80] [API] HeapAlloc(size=0x6, zero=0) = 0x2998490
+[Tf80] [API] HeapReAlloc(size=0xc) = 0x2998490
+[Tf80] [API] HeapReAlloc(size=0xb) = 0x2998490
+[Tf80] [API] HeapAlloc(size=0x60, zero=0) = 0x29984b0
+[Tf80] [API] HeapAlloc(size=0x6, zero=0) = 0x2998520
+[Tf80] [API] HeapReAlloc(size=0xc) = 0x2998520
+[Tf80] [API] HeapReAlloc(size=0x7) = 0x2998520
+[Tf80] [API] HeapAlloc(size=0x6, zero=0) = 0x2998540
+[Tf80] [API] HeapReAlloc(size=0xc) = 0x2998540
+[Tf80] [API] HeapReAlloc(size=0x7) = 0x2998540
+[Tf80] [API] HeapAlloc(size=0x60, zero=0) = 0x2998560
+[Tf80] [API] HeapReAlloc(size=0x13800) = 0x29ad740
+[Tf80] [API] HeapFree(0x29a3b30)
+[Tf80] [API] HeapAlloc(size=0x65, zero=0) = 0x29985d0
+[Tf80] [API] HeapAlloc(size=0x35, zero=0) = 0x2998640
+[Tf80] [API] HeapAlloc(size=0xd, zero=0) = 0x2998680
+[Tf80] [API] HeapAlloc(size=0x18, zero=0) = 0x29986a0
+[Tf80] [API] HeapAlloc(size=0x18, zero=0) = 0x29986c0
+[Tf80] [API] HeapAlloc(size=0x18, zero=0) = 0x29986e0
+[Tf80] [API] HeapAlloc(size=0x18, zero=0) = 0x2998700
+[Tf80] [API] HeapAlloc(size=0x18, zero=0) = 0x2998720
+[Tf80] [API] HeapAlloc(size=0x18, zero=0) = 0x2998740
+[Tf80] [API] HeapAlloc(size=0x18, zero=0) = 0x2998760
+[Tf80] [API] HeapAlloc(size=0x18, zero=0) = 0x2998780
+[Tf80] [API] HeapAlloc(size=0x18, zero=0) = 0x29987a0
+[Tf80] [API] HeapAlloc(size=0x18, zero=0) = 0x29987c0
+[Tf80] [API] HeapAlloc(size=0x18, zero=0) = 0x29987e0
+[Tf80] [API] HeapAlloc(size=0x18, zero=0) = 0x2998800
+[Tf80] [API] HeapAlloc(size=0x18, zero=0) = 0x2998820
+[Tf80] [API] HeapAlloc(size=0x18, zero=0) = 0x2998840
+[Tf80] [API] HeapAlloc(size=0x18, zero=0) = 0x2998860
+[Tf80] [API] HeapAlloc(size=0x18, zero=0) = 0x2998880
+[Tf80] [API] HeapAlloc(size=0x18, zero=0) = 0x29988a0
+[Tf80] [API] HeapAlloc(size=0x18, zero=0) = 0x29988c0
+[Tf80] [API] HeapAlloc(size=0x18, zero=0) = 0x29988e0
+[Tf80] [API] HeapAlloc(size=0x18, zero=0) = 0x2998900
+[Tf80] [API] HeapAlloc(size=0x18, zero=0) = 0x2998920
+[Tf80] [API] HeapAlloc(size=0x18, zero=0) = 0x2998940
+[Tf80] [API] HeapAlloc(size=0x18, zero=0) = 0x2998960
+[Tf80] [API] HeapAlloc(size=0x18, zero=0) = 0x2998980
+[Tf80] [API] HeapAlloc(size=0x18, zero=0) = 0x29989a0
+[Tf80] [API] HeapAlloc(size=0x18, zero=0) = 0x29989c0
+[Tf80] [API] HeapAlloc(size=0x18, zero=0) = 0x29989e0
+[Tf80] [API] HeapAlloc(size=0x18, zero=0) = 0x2998a00
+[Tf80] [API] HeapAlloc(size=0x18, zero=0) = 0x2998a20
+[Tf80] [API] HeapAlloc(size=0x18, zero=0) = 0x2998a40
+[Tf80] [API] HeapAlloc(size=0x18, zero=0) = 0x2998a60
+[Tf80] [API] HeapAlloc(size=0x18, zero=0) = 0x2998a80
+[Tf80] [API] HeapAlloc(size=0x18, zero=0) = 0x2998aa0
+[Tf80] [API] HeapAlloc(size=0x18, zero=0) = 0x2998ac0
+[Tf80] [API] HeapAlloc(size=0x18, zero=0) = 0x2998ae0
+[Tf80] [API] HeapAlloc(size=0x18, zero=0) = 0x2998b00
+[Tf80] [API] HeapAlloc(size=0x18, zero=0) = 0x2998b20
+[Tf80] [API] HeapAlloc(size=0x18, zero=0) = 0x2998b40
+[Tf80] [API] HeapAlloc(size=0x18, zero=0) = 0x2998b60
+[Tf80] [API] HeapAlloc(size=0x18, zero=0) = 0x2998b80
+[Tf80] [API] HeapAlloc(size=0x18, zero=0) = 0x2998ba0
+[Tf80] [API] HeapAlloc(size=0x18, zero=0) = 0x2998bc0
+[Tf80] [API] HeapAlloc(size=0x18, zero=0) = 0x2998be0
+[Tf80] [API] HeapAlloc(size=0x18, zero=0) = 0x2998c00
+[Tf80] [API] HeapAlloc(size=0x18, zero=0) = 0x2998c20
+[Tf80] [API] HeapAlloc(size=0x18, zero=0) = 0x2998c40
+[Tf80] [API] HeapAlloc(size=0x18, zero=0) = 0x2998c60
+[Tf80] [API] HeapAlloc(size=0x18, zero=0) = 0x2998c80
+[Tf80] [API] HeapAlloc(size=0x18, zero=0) = 0x2998ca0
+[Tf80] [API] HeapAlloc(size=0x18, zero=0) = 0x2998cc0
+[Tf80] [API] HeapAlloc(size=0x18, zero=0) = 0x2998ce0
+[Tf80] [API] HeapAlloc(size=0x18, zero=0) = 0x2998d00
+[Tf80] [API] HeapAlloc(size=0x18, zero=0) = 0x2998d20
+[Tf80] [API] HeapAlloc(size=0x18, zero=0) = 0x2998d40
+[Tf80] [API] HeapAlloc(size=0x18, zero=0) = 0x2998d60
+[Tf80] [API] HeapAlloc(size=0x18, zero=0) = 0x2998d80
+[Tf80] [API] HeapAlloc(size=0x18, zero=0) = 0x2998da0
+[Tf80] [API] HeapAlloc(size=0x18, zero=0) = 0x2998dc0
+[Tf80] [API] HeapAlloc(size=0x18, zero=0) = 0x2998de0
+[Tf80] [API] HeapAlloc(size=0x18, zero=0) = 0x2998e00
+[Tf80] [API] HeapAlloc(size=0x18, zero=0) = 0x2998e20
+[Tf80] [API] HeapAlloc(size=0x18, zero=0) = 0x2998e40
+[Tf80] [API] HeapAlloc(size=0x18, zero=0) = 0x2998e60
+[Tf80] [API] HeapAlloc(size=0x18, zero=0) = 0x2998e80
+[Tf80] [API] HeapAlloc(size=0x18, zero=0) = 0x2998ea0
+[Tf80] [API] HeapAlloc(size=0x18, zero=0) = 0x2998ec0
+[Tf80] [API] HeapAlloc(size=0x18, zero=0) = 0x2998ee0
+[Tf80] [API] HeapAlloc(size=0x18, zero=0) = 0x2998f00
+[Tf80] [API] HeapAlloc(size=0x18, zero=0) = 0x2998f20
+[Tf80] [API] HeapAlloc(size=0x18, zero=0) = 0x2998f40
+[Tf80] [API] HeapAlloc(size=0x18, zero=0) = 0x2998f60
+[Tf80] [API] HeapAlloc(size=0x18, zero=0) = 0x2998f80
+[Tf80] [API] HeapAlloc(size=0x18, zero=0) = 0x2999f20
+[Tf80] [API] HeapAlloc(size=0x18, zero=0) = 0x2999f40
+[Tf80] [API] HeapAlloc(size=0x18, zero=0) = 0x2999f60
+[Tf80] [API] HeapAlloc(size=0x18, zero=0) = 0x2999f80
+[Tf80] [API] HeapAlloc(size=0x18, zero=0) = 0x2999fa0
+[Tf80] [API] HeapAlloc(size=0x18, zero=0) = 0x2999fc0
+[Tf80] [API] HeapAlloc(size=0x18, zero=0) = 0x2999fe0
+[Tf80] [API] HeapAlloc(size=0x18, zero=0) = 0x299a000
+[Tf80] [API] HeapAlloc(size=0x18, zero=0) = 0x299a020
+[Tf80] [API] HeapAlloc(size=0x18, zero=0) = 0x299a040
+[Tf80] [API] HeapAlloc(size=0x18, zero=0) = 0x299a060
+[Tf80] [API] HeapAlloc(size=0x18, zero=0) = 0x299a080
+[Tf80] [API] HeapAlloc(size=0x18, zero=0) = 0x299a0a0
+[Tf80] [API] HeapAlloc(size=0x18, zero=0) = 0x299a0c0
+[Tf80] [API] HeapAlloc(size=0x18, zero=0) = 0x299a0e0
+[Tf80] [API] HeapAlloc(size=0x18, zero=0) = 0x299a100
+[Tf80] [API] HeapAlloc(size=0x18, zero=0) = 0x299a120
+[Tf80] [API] HeapAlloc(size=0x18, zero=0) = 0x299a140
+[Tf80] [API] HeapAlloc(size=0x18, zero=0) = 0x299a160
+[Tf80] [API] HeapAlloc(size=0x18, zero=0) = 0x299a180
+[Tf80] [API] HeapAlloc(size=0x18, zero=0) = 0x299a1a0
+[Tf80] [API] HeapAlloc(size=0x18, zero=0) = 0x299a1c0
+[Tf80] [API] HeapAlloc(size=0x18, zero=0) = 0x299a1e0
+[Tf80] [API] HeapAlloc(size=0x18, zero=0) = 0x299a200
+[Tf80] [API] HeapAlloc(size=0x18, zero=0) = 0x299a220
+[Tf80] [API] HeapAlloc(size=0x18, zero=0) = 0x299a240
+[Tf80] [API] HeapAlloc(size=0x18, zero=0) = 0x299a260
+[Tf80] [API] HeapAlloc(size=0x18, zero=0) = 0x299a280
+[Tf80] [API] HeapAlloc(size=0x18, zero=0) = 0x299a2a0
+[Tf80] [API] HeapAlloc(size=0x18, zero=0) = 0x299a2c0
+[Tf80] [API] HeapAlloc(size=0x18, zero=0) = 0x299a2e0
+[Tf80] [API] HeapAlloc(size=0x18, zero=0) = 0x299a300
+[Tf80] [API] HeapAlloc(size=0x18, zero=0) = 0x299a320
+[Tf80] [API] HeapAlloc(size=0x18, zero=0) = 0x299a340
+[Tf80] [API] HeapAlloc(size=0x18, zero=0) = 0x299a360
+[Tf80] [API] HeapAlloc(size=0x18, zero=0) = 0x299a380
+[Tf80] [API] HeapAlloc(size=0x18, zero=0) = 0x299a3a0
+[Tf80] [API] HeapAlloc(size=0x18, zero=0) = 0x299a3c0
+[Tf80] [API] HeapAlloc(size=0x18, zero=0) = 0x299a3e0
+[Tf80] [API] HeapAlloc(size=0x18, zero=0) = 0x299a400
+[Tf80] [API] HeapAlloc(size=0x18, zero=0) = 0x299a420
+[Tf80] [API] HeapAlloc(size=0x18, zero=0) = 0x299a440
+[Tf80] [API] HeapAlloc(size=0x18, zero=0) = 0x299a460
+[Tf80] [API] HeapAlloc(size=0x18, zero=0) = 0x299a480
+[Tf80] [API] HeapAlloc(size=0x18, zero=0) = 0x299a4a0
+[Tf80] [API] HeapAlloc(size=0x18, zero=0) = 0x299a4c0
+[Tf80] [API] HeapAlloc(size=0x18, zero=0) = 0x299a4e0
+[Tf80] [API] HeapAlloc(size=0x18, zero=0) = 0x299a500
+[Tf80] [API] HeapAlloc(size=0x18, zero=0) = 0x299a520
+[Tf80] [API] HeapAlloc(size=0x18, zero=0) = 0x299a540
+[Tf80] [API] HeapAlloc(size=0x18, zero=0) = 0x299a560
+[Tf80] [API] HeapAlloc(size=0x18, zero=0) = 0x299a580
+[Tf80] [API] HeapAlloc(size=0x18, zero=0) = 0x299a5a0
+[Tf80] [API] HeapAlloc(size=0x18, zero=0) = 0x299a5c0
+[Tf80] [API] HeapAlloc(size=0x18, zero=0) = 0x299a5e0
+[Tf80] [API] HeapAlloc(size=0x18, zero=0) = 0x299a600
+[Tf80] [API] HeapAlloc(size=0x18, zero=0) = 0x299a620
+[Tf80] [API] HeapAlloc(size=0x18, zero=0) = 0x299a640
+[Tf80] [API] HeapAlloc(size=0x18, zero=0) = 0x299a660
+[Tf80] [API] HeapAlloc(size=0x18, zero=0) = 0x299a680
+[Tf80] [API] HeapAlloc(size=0x18, zero=0) = 0x299a6a0
+[Tf80] [API] HeapAlloc(size=0x18, zero=0) = 0x299a6c0
+[Tf80] [API] HeapAlloc(size=0x18, zero=0) = 0x299a6e0
+[Tf80] [API] HeapAlloc(size=0x18, zero=0) = 0x299a700
+[Tf80] [API] HeapAlloc(size=0x18, zero=0) = 0x299a720
+[Tf80] [API] HeapAlloc(size=0x18, zero=0) = 0x299a740
+[Tf80] [API] HeapAlloc(size=0x18, zero=0) = 0x299a760
+[Tf80] [API] HeapAlloc(size=0x18, zero=0) = 0x299a780
+[Tf80] [API] HeapAlloc(size=0x18, zero=0) = 0x299a7a0
+[Tf80] [API] HeapAlloc(size=0x18, zero=0) = 0x299a7c0
+[Tf80] [API] HeapAlloc(size=0x18, zero=0) = 0x299a7e0
+[Tf80] [API] HeapAlloc(size=0x18, zero=0) = 0x299a800
+[Tf80] [API] HeapAlloc(size=0x18, zero=0) = 0x299a820
+[Tf80] [API] HeapAlloc(size=0x18, zero=0) = 0x299a840
+[Tf80] [API] HeapAlloc(size=0x18, zero=0) = 0x299a860
+[Tf80] [API] HeapAlloc(size=0x18, zero=0) = 0x299a880
+[Tf80] [API] HeapAlloc(size=0x18, zero=0) = 0x299a8a0
+[Tf80] [API] HeapAlloc(size=0x18, zero=0) = 0x299a8c0
+[Tf80] [API] HeapAlloc(size=0x18, zero=0) = 0x299a8e0
+[Tf80] [API] HeapAlloc(size=0x18, zero=0) = 0x299a900
+[Tf80] [API] HeapAlloc(size=0x18, zero=0) = 0x299a920
+[Tf80] [API] HeapAlloc(size=0x18, zero=0) = 0x299a940
+[Tf80] [API] HeapAlloc(size=0x18, zero=0) = 0x299a960
+[Tf80] [API] HeapAlloc(size=0x18, zero=0) = 0x299a980
+[Tf80] [API] HeapAlloc(size=0x18, zero=0) = 0x299a9a0
+[Tf80] [API] HeapAlloc(size=0x18, zero=0) = 0x299a9c0
+[Tf80] [API] HeapAlloc(size=0x18, zero=0) = 0x299a9e0
+[Tf80] [API] HeapAlloc(size=0x18, zero=0) = 0x299aa00
+[Tf80] [API] HeapAlloc(size=0x18, zero=0) = 0x299aa20
+[Tf80] [API] HeapAlloc(size=0xea0, zero=0) = 0x299aa40
+[Tf80] [API] HeapAlloc(size=0x7, zero=0) = 0x299b8f0
+[Tf80] [API] HeapAlloc(size=0x7, zero=0) = 0x299b910
+[Tf80] [API] HeapFree(0x299b8f0)
+[Tf80] [API] HeapAlloc(size=0x7, zero=0) = 0x299b8f0
+[Tf80] [API] HeapAlloc(size=0x7, zero=0) = 0x299b930
+[Tf80] [API] HeapFree(0x299b8f0)
+[Tf80] [API] HeapAlloc(size=0xc, zero=0) = 0x299b8f0
+[Tf80] [API] HeapAlloc(size=0xc, zero=0) = 0x299b950
+[Tf80] [API] HeapFree(0x299b8f0)
+[Tf80] [API] HeapAlloc(size=0x6, zero=0) = 0x299b8f0
+[Tf80] [API] HeapAlloc(size=0x6, zero=0) = 0x299b970
+[Tf80] [API] HeapFree(0x299b8f0)
+[Tf80] [API] HeapAlloc(size=0x9, zero=0) = 0x299b8f0
+[Tf80] [API] HeapAlloc(size=0x9, zero=0) = 0x299b990
+[Tf80] [API] HeapFree(0x299b8f0)
+[Tf80] [API] HeapAlloc(size=0x11, zero=0) = 0x299b8f0
+[Tf80] [API] HeapAlloc(size=0x11, zero=0) = 0x299b9b0
+[Tf80] [API] HeapFree(0x299b8f0)
+[Tf80] [API] HeapAlloc(size=0x8, zero=0) = 0x299b8f0
+[Tf80] [API] HeapAlloc(size=0x8, zero=0) = 0x299b9d0
+[Tf80] [API] HeapFree(0x299b8f0)
+[Tf80] [API] HeapAlloc(size=0x13, zero=0) = 0x299b8f0
+[Tf80] [API] HeapAlloc(size=0x13, zero=0) = 0x299b9f0
+[Tf80] [API] HeapFree(0x299b8f0)
+[Tf80] [API] HeapAlloc(size=0x10, zero=0) = 0x299b8f0
+[Tf80] [API] HeapAlloc(size=0x10, zero=0) = 0x299ba10
+[Tf80] [API] HeapFree(0x299b8f0)
+[Tf80] [API] HeapAlloc(size=0x8, zero=0) = 0x299b8f0
+[Tf80] [API] HeapAlloc(size=0x8, zero=0) = 0x299ba30
+[Tf80] [API] HeapFree(0x299b8f0)
+[Tf80] [API] HeapAlloc(size=0xa, zero=0) = 0x299b8f0
+[Tf80] [API] HeapAlloc(size=0xa, zero=0) = 0x299ba50
+[Tf80] [API] HeapFree(0x299b8f0)
+[Tf80] [API] HeapAlloc(size=0x7, zero=0) = 0x299b8f0
+[Tf80] [API] HeapAlloc(size=0x7, zero=0) = 0x299ba70
+[Tf80] [API] HeapFree(0x299b8f0)
+[Tf80] [API] HeapAlloc(size=0x7, zero=0) = 0x299b8f0
+[Tf80] [API] HeapAlloc(size=0x7, zero=0) = 0x299ba90
+[Tf80] [API] HeapFree(0x299b8f0)
+[Tf80] [API] HeapAlloc(size=0xa, zero=0) = 0x299b8f0
+[Tf80] [API] HeapAlloc(size=0xa, zero=0) = 0x299bab0
+[Tf80] [API] HeapFree(0x299b8f0)
+[Tf80] [API] HeapAlloc(size=0x8, zero=0) = 0x299b8f0
+[Tf80] [API] HeapAlloc(size=0x8, zero=0) = 0x299bad0
+[Tf80] [API] HeapFree(0x299b8f0)
+[Tf80] [API] HeapAlloc(size=0x6, zero=0) = 0x299b8f0
+[Tf80] [API] HeapAlloc(size=0x6, zero=0) = 0x299baf0
+[Tf80] [API] HeapFree(0x299b8f0)
+[Tf80] [API] HeapAlloc(size=0x10, zero=0) = 0x299b8f0
+[Tf80] [API] HeapAlloc(size=0x10, zero=0) = 0x299bb10
+[Tf80] [API] HeapFree(0x299b8f0)
+[Tf80] [API] HeapAlloc(size=0x8, zero=0) = 0x299b8f0
+[Tf80] [API] HeapAlloc(size=0x8, zero=0) = 0x299bb30
+[Tf80] [API] HeapFree(0x299b8f0)
+[Tf80] [API] HeapAlloc(size=0x9, zero=0) = 0x299b8f0
+[Tf80] [API] HeapAlloc(size=0x9, zero=0) = 0x299bb50
+[Tf80] [API] HeapFree(0x299b8f0)
+[Tf80] [API] HeapAlloc(size=0xb, zero=0) = 0x299b8f0
+[Tf80] [API] HeapAlloc(size=0xb, zero=0) = 0x299bb70
+[Tf80] [API] HeapFree(0x299b8f0)
+[Tf80] [API] HeapAlloc(size=0x9, zero=0) = 0x299b8f0
+[Tf80] [API] HeapAlloc(size=0x9, zero=0) = 0x299bb90
+[Tf80] [API] HeapFree(0x299b8f0)
+[Tf80] [API] HeapAlloc(size=0xb, zero=0) = 0x299b8f0
+[Tf80] [API] HeapAlloc(size=0xb, zero=0) = 0x299bbb0
+[Tf80] [API] HeapFree(0x299b8f0)
+[Tf80] [API] HeapAlloc(size=0xb, zero=0) = 0x299b8f0
+[Tf80] [API] HeapAlloc(size=0xb, zero=0) = 0x299bbd0
+[Tf80] [API] HeapFree(0x299b8f0)
+[Tf80] [API] HeapAlloc(size=0xa, zero=0) = 0x299b8f0
+[Tf80] [API] HeapAlloc(size=0xa, zero=0) = 0x299bbf0
+[Tf80] [API] HeapFree(0x299b8f0)
+[Tf80] [API] HeapAlloc(size=0x14, zero=0) = 0x299b8f0
+[Tf80] [API] HeapAlloc(size=0x14, zero=0) = 0x299bc10
+[Tf80] [API] HeapFree(0x299b8f0)
+[Tf80] [API] HeapAlloc(size=0xc, zero=0) = 0x299b8f0
+[Tf80] [API] HeapAlloc(size=0xc, zero=0) = 0x299bc30
+[Tf80] [API] HeapFree(0x299b8f0)
+[Tf80] [API] HeapAlloc(size=0x7, zero=0) = 0x299b8f0
+[Tf80] [API] HeapAlloc(size=0x7, zero=0) = 0x299bc50
+[Tf80] [API] HeapFree(0x299b8f0)
+[Tf80] [API] HeapAlloc(size=0x9, zero=0) = 0x299b8f0
+[Tf80] [API] HeapAlloc(size=0x9, zero=0) = 0x299bc70
+[Tf80] [API] HeapFree(0x299b8f0)
+[Tf80] [API] HeapAlloc(size=0xf, zero=0) = 0x299b8f0
+[Tf80] [API] HeapAlloc(size=0xf, zero=0) = 0x299bc90
+[Tf80] [API] HeapFree(0x299b8f0)
+[Tf80] [API] HeapAlloc(size=0x14, zero=0) = 0x299b8f0
+[Tf80] [API] HeapAlloc(size=0x14, zero=0) = 0x299bcb0
+[Tf80] [API] HeapFree(0x299b8f0)
+[Tf80] [API] HeapAlloc(size=0x15, zero=0) = 0x299b8f0
+[Tf80] [API] HeapAlloc(size=0x15, zero=0) = 0x299bcd0
+[Tf80] [API] HeapFree(0x299b8f0)
+[Tf80] [API] HeapAlloc(size=0x15, zero=0) = 0x299b8f0
+[Tf80] [API] HeapAlloc(size=0x15, zero=0) = 0x299bcf0
+[Tf80] [API] HeapFree(0x299b8f0)
+[Tf80] [API] HeapAlloc(size=0x16, zero=0) = 0x299b8f0
+[Tf80] [API] HeapAlloc(size=0x16, zero=0) = 0x299bd10
+[Tf80] [API] HeapFree(0x299b8f0)
+[Tf80] [API] HeapAlloc(size=0xa, zero=0) = 0x299b8f0
+[Tf80] [API] HeapAlloc(size=0xa, zero=0) = 0x299bd30
+[Tf80] [API] HeapFree(0x299b8f0)
+[Tf80] [API] HeapAlloc(size=0xf, zero=0) = 0x299b8f0
+[Tf80] [API] HeapAlloc(size=0xf, zero=0) = 0x299bd50
+[Tf80] [API] HeapFree(0x299b8f0)
+[Tf80] [API] HeapAlloc(size=0x9, zero=0) = 0x299b8f0
+[Tf80] [API] HeapAlloc(size=0x9, zero=0) = 0x299bd70
+[Tf80] [API] HeapFree(0x299b8f0)
+[Tf80] [API] HeapAlloc(size=0x10, zero=0) = 0x299b8f0
+[Tf80] [API] HeapAlloc(size=0x10, zero=0) = 0x299bd90
+[Tf80] [API] HeapFree(0x299b8f0)
+[Tf80] [API] HeapAlloc(size=0xa, zero=0) = 0x299b8f0
+[Tf80] [API] HeapAlloc(size=0xa, zero=0) = 0x299bdb0
+[Tf80] [API] HeapFree(0x299b8f0)
+[Tf80] [API] HeapReAlloc(size=0x1d40) = 0x299bdd0
+[Tf80] [API] HeapAlloc(size=0x8, zero=0) = 0x299b8f0
+[Tf80] [API] HeapAlloc(size=0x8, zero=0) = 0x299aa40
+[Tf80] [API] HeapFree(0x299b8f0)
+[Tf80] [API] HeapAlloc(size=0x9, zero=0) = 0x299b8f0
+[Tf80] [API] HeapAlloc(size=0x9, zero=0) = 0x299aa60
+[Tf80] [API] HeapFree(0x299b8f0)
+[Tf80] [API] HeapAlloc(size=0x7, zero=0) = 0x299b8f0
+[Tf80] [API] HeapAlloc(size=0x7, zero=0) = 0x299aa80
+[Tf80] [API] HeapFree(0x299b8f0)
+[Tf80] [API] HeapAlloc(size=0xb, zero=0) = 0x299b8f0
+[Tf80] [API] HeapAlloc(size=0xb, zero=0) = 0x299aaa0
+[Tf80] [API] HeapFree(0x299b8f0)
+[Tf80] [API] HeapAlloc(size=0x6, zero=0) = 0x299b8f0
+[Tf80] [API] HeapAlloc(size=0x6, zero=0) = 0x299aac0
+[Tf80] [API] HeapFree(0x299b8f0)
+[Tf80] [API] HeapAlloc(size=0xd, zero=0) = 0x299b8f0
+[Tf80] [API] HeapAlloc(size=0xd, zero=0) = 0x299aae0
+[Tf80] [API] HeapFree(0x299b8f0)
+[Tf80] [API] HeapAlloc(size=0x11, zero=0) = 0x299b8f0
+[Tf80] [API] HeapAlloc(size=0x11, zero=0) = 0x299ab00
+[Tf80] [API] HeapFree(0x299b8f0)
+[Tf80] [API] HeapAlloc(size=0x8, zero=0) = 0x299b8f0
+[Tf80] [API] HeapAlloc(size=0x8, zero=0) = 0x299ab20
+[Tf80] [API] HeapFree(0x299b8f0)
+[Tf80] [API] HeapAlloc(size=0xf, zero=0) = 0x299b8f0
+[Tf80] [API] HeapAlloc(size=0xf, zero=0) = 0x299ab40
+[Tf80] [API] HeapFree(0x299b8f0)
+[Tf80] [API] HeapAlloc(size=0xa, zero=0) = 0x299b8f0
+[Tf80] [API] HeapAlloc(size=0xa, zero=0) = 0x299ab60
+[Tf80] [API] HeapFree(0x299b8f0)
+[Tf80] [API] HeapAlloc(size=0xc, zero=0) = 0x299b8f0
+[Tf80] [API] HeapAlloc(size=0xc, zero=0) = 0x299ab80
+[Tf80] [API] HeapFree(0x299b8f0)
+[Tf80] [API] HeapAlloc(size=0x7, zero=0) = 0x299b8f0
+[Tf80] [API] HeapAlloc(size=0x7, zero=0) = 0x299aba0
+[Tf80] [API] HeapFree(0x299b8f0)
+[Tf80] [API] HeapAlloc(size=0x7, zero=0) = 0x299b8f0
+[Tf80] [API] HeapAlloc(size=0x7, zero=0) = 0x299abc0
+[Tf80] [API] HeapFree(0x299b8f0)
+[Tf80] [API] HeapAlloc(size=0xe, zero=0) = 0x299b8f0
+[Tf80] [API] HeapAlloc(size=0xe, zero=0) = 0x299abe0
+[Tf80] [API] HeapFree(0x299b8f0)
+[Tf80] [API] HeapAlloc(size=0xf, zero=0) = 0x299b8f0
+[Tf80] [API] HeapAlloc(size=0xf, zero=0) = 0x299ac00
+[Tf80] [API] HeapFree(0x299b8f0)
+[Tf80] [API] HeapAlloc(size=0x7, zero=0) = 0x299b8f0
+[Tf80] [API] HeapAlloc(size=0x7, zero=0) = 0x299ac20
+[Tf80] [API] HeapFree(0x299b8f0)
+[Tf80] [API] HeapAlloc(size=0xc, zero=0) = 0x299b8f0
+[Tf80] [API] HeapAlloc(size=0xc, zero=0) = 0x299ac40
+[Tf80] [API] HeapFree(0x299b8f0)
+[Tf80] [API] HeapAlloc(size=0xb, zero=0) = 0x299b8f0
+[Tf80] [API] HeapAlloc(size=0xb, zero=0) = 0x299ac60
+[Tf80] [API] HeapFree(0x299b8f0)
+[Tf80] [API] HeapAlloc(size=0x7, zero=0) = 0x299b8f0
+[Tf80] [API] HeapAlloc(size=0x7, zero=0) = 0x299ac80
+[Tf80] [API] HeapFree(0x299b8f0)
+[Tf80] [API] HeapAlloc(size=0x1, zero=0) = 0x299b8f0
+[Tf80] [API] HeapAlloc(size=0xf0, zero=0) = 0x299aca0
+[Tf80] [API] HeapAlloc(size=0x8, zero=0) = 0x299ada0
+[Tf80] [API] HeapAlloc(size=0x20, zero=0) = 0x299adc0
+[Tf80] [API] HeapFree(0x299ada0)
+[Tf80] [API] HeapFree(0x299adc0)
+[Tf80] [API] HeapAlloc(size=0x60, zero=0) = 0x299adf0
+[Tf80] [API] HeapAlloc(size=0x18, zero=0) = 0x299ada0
+[Tf80] [API] HeapAlloc(size=0x18, zero=0) = 0x299ae60
+[Tf80] [API] HeapFree(0x299ada0)
+[Tf80] [API] HeapAlloc(size=0x4, zero=0) = 0x299ada0
+[Tf80] [API] HeapReAlloc(size=0xd) = 0x299ada0
+[Tf80] [API] HeapReAlloc(size=0x1a) = 0x299ae80
+[Tf80] [API] HeapAlloc(size=0xe, zero=0) = 0x299ada0
+[Tf80] [API] HeapFree(0x299ae80)
+[Tf80] [API] HeapFree(0x299ae60)
+[Tf80] [API] HeapAlloc(size=0x8, zero=0) = 0x299ae60
+[Tf80] [API] HeapReAlloc(size=0x13) = 0x299ae60
+[Tf80] [API] HeapReAlloc(size=0x26) = 0x299aeb0
+[Tf80] [API] HeapFree(0x299ada0)
+[Tf80] [API] HeapAlloc(size=0x17, zero=0) = 0x299ada0
+[Tf80] [API] HeapFree(0x299aeb0)
+[Tf80] [API] HeapAlloc(size=0x60, zero=0) = 0x299aee0
+[Tf80] [API] HeapAlloc(size=0x60, zero=0) = 0x299af50
+[Tf80] [API] HeapFree(0x299aee0)
+[Tf80] [API] HeapFree(0x299adf0)
+[Tf80] [API] HeapFree(0x299aca0)
+[Tf80] [API] HeapAlloc(size=0xe, zero=0) = 0x299ae60
+[Tf80] [API] HeapReAlloc(size=0xf) = 0x299b8f0
+[Tf80] [API] HeapFree(0x299ae60)
+[Tf80] [API] HeapReAlloc(size=0x1e) = 0x299afc0
+[Tf80] [API] HeapFree(0x299ada0)
+[Tf80] [API] HeapFree(0x299af50)
+[Tf80] [API] HeapAlloc(size=0x2, zero=0) = 0x299ada0
+[Tf80] [API] HeapFree(0x299ada0)
+[Tf80] [API] HeapFree(0x299afc0)
+[Tf80] [API] HeapAlloc(size=0x80, zero=0) = 0x299aff0
+[Tf80] [API] HeapFree(0x29916c0)
+[Tf80] [API] HeapAlloc(size=0x6, zero=0) = 0x299ada0
+[Tf80] [API] HeapAlloc(size=0x20, zero=0) = 0x299afc0
+[Tf80] [API] HeapAlloc(size=0x5, zero=0) = 0x299b8f0
+[Tf80] [API] HeapAlloc(size=0x60, zero=0) = 0x299af50
+[Tf80] [API] HeapAlloc(size=0x1a0, zero=0) = 0x299b080
+[Tf80] [API] HeapAlloc(size=0x60, zero=0) = 0x299adf0
+[Tf80] [API] HeapAlloc(size=0x60, zero=0) = 0x299aee0
+[Tf80] [API] HeapAlloc(size=0x18, zero=0) = 0x299ae60
+[Tf80] [API] HeapAlloc(size=0x80, zero=0) = 0x29916c0
+[Tf80] [API] HeapAlloc(size=0x80, zero=0) = 0x299b230
+[Tf80] [API] HeapAlloc(size=0x20, zero=0) = 0x299aeb0
+[Tf80] [API] HeapFree(0x299afc0)
+[Tf80] [API] HeapAlloc(size=0x20, zero=0) = 0x299afc0
+[Tf80] [API] HeapAlloc(size=0x5, zero=0) = 0x299b2c0
+[Tf80] [API] HeapAlloc(size=0x60, zero=0) = 0x299b2e0
+[Tf80] [API] HeapAlloc(size=0x60, zero=0) = 0x299b350
+[Tf80] [API] HeapAlloc(size=0x18, zero=0) = 0x299b3c0
+[Tf80] [API] HeapAlloc(size=0x80, zero=0) = 0x299b3e0
+[Tf80] [API] HeapAlloc(size=0x80, zero=0) = 0x299b470
+[Tf80] [API] HeapAlloc(size=0x20, zero=0) = 0x299ae80
+[Tf80] [API] HeapFree(0x299afc0)
+[Tf80] [API] HeapAlloc(size=0x20, zero=0) = 0x299afc0
+[Tf80] [API] HeapAlloc(size=0x5, zero=0) = 0x299b500
+[Tf80] [API] HeapAlloc(size=0x60, zero=0) = 0x299b520
+[Tf80] [API] HeapAlloc(size=0x60, zero=0) = 0x299b590
+[Tf80] [API] HeapAlloc(size=0x18, zero=0) = 0x299b600
+[Tf80] [API] HeapAlloc(size=0x80, zero=0) = 0x299b620
+[Tf80] [API] HeapAlloc(size=0x80, zero=0) = 0x299b6b0
+[Tf80] [API] HeapAlloc(size=0x20, zero=0) = 0x299adc0
+[Tf80] [API] HeapFree(0x299afc0)
+[Tf80] [API] HeapAlloc(size=0x20, zero=0) = 0x299afc0
+[Tf80] [API] HeapAlloc(size=0x5, zero=0) = 0x299b740
+[Tf80] [API] HeapAlloc(size=0x60, zero=0) = 0x299b760
+[Tf80] [API] HeapAlloc(size=0x60, zero=0) = 0x299b7d0
+[Tf80] [API] HeapAlloc(size=0x18, zero=0) = 0x299b840
+[Tf80] [API] HeapAlloc(size=0x80, zero=0) = 0x299b860
+[Tf80] [API] HeapAlloc(size=0x80, zero=0) = 0x299db20
+[Tf80] [API] HeapAlloc(size=0x20, zero=0) = 0x299dbb0
+[Tf80] [API] HeapFree(0x299afc0)
+[Tf80] [API] HeapAlloc(size=0x20, zero=0) = 0x299afc0
+[Tf80] [API] HeapAlloc(size=0x5, zero=0) = 0x299dbe0
+[Tf80] [API] HeapReAlloc(size=0xc0) = 0x299dc00
+[Tf80] [API] HeapReAlloc(size=0x340) = 0x299dcd0
+[Tf80] [API] HeapAlloc(size=0x60, zero=0) = 0x299af50
+[Tf80] [API] HeapAlloc(size=0x60, zero=0) = 0x299e020
+[Tf80] [API] HeapAlloc(size=0x18, zero=0) = 0x299e090
+[Tf80] [API] HeapAlloc(size=0x80, zero=0) = 0x299e0b0
+[Tf80] [API] HeapAlloc(size=0x80, zero=0) = 0x299e140
+[Tf80] [API] HeapAlloc(size=0x20, zero=0) = 0x299e1d0
+[Tf80] [API] HeapFree(0x299afc0)
+[Tf80] [API] HeapAlloc(size=0x20, zero=0) = 0x299afc0
+[Tf80] [API] HeapAlloc(size=0x5, zero=0) = 0x299e200
+[Tf80] [API] HeapAlloc(size=0x60, zero=0) = 0x299e220
+[Tf80] [API] HeapAlloc(size=0x60, zero=0) = 0x299e290
+[Tf80] [API] HeapAlloc(size=0x18, zero=0) = 0x299e300
+[Tf80] [API] HeapAlloc(size=0x80, zero=0) = 0x299e320
+[Tf80] [API] HeapAlloc(size=0x80, zero=0) = 0x299e3b0
+[Tf80] [API] HeapAlloc(size=0x20, zero=0) = 0x299e440
+[Tf80] [API] HeapFree(0x299afc0)
+[Tf80] [API] HeapAlloc(size=0x20, zero=0) = 0x299afc0
+[Tf80] [API] HeapAlloc(size=0x1, zero=0) = 0x299e470
+[Tf80] [API] HeapAlloc(size=0x60, zero=0) = 0x299e490
+[Tf80] [API] HeapAlloc(size=0x60, zero=0) = 0x299e500
+[Tf80] [API] HeapAlloc(size=0x18, zero=0) = 0x299e570
+[Tf80] [API] HeapAlloc(size=0x80, zero=0) = 0x299e590
+[Tf80] [API] HeapAlloc(size=0x80, zero=0) = 0x299e620
+[Tf80] [API] HeapAlloc(size=0x20, zero=0) = 0x299e6b0
+[Tf80] [API] HeapFree(0x299afc0)
+[Tf80] [API] HeapAlloc(size=0x20, zero=0) = 0x299afc0
+[Tf80] [API] HeapAlloc(size=0x5, zero=0) = 0x299e6e0
+[Tf80] [API] HeapAlloc(size=0x60, zero=0) = 0x299e700
+[Tf80] [API] HeapAlloc(size=0x60, zero=0) = 0x299e770
+[Tf80] [API] HeapAlloc(size=0x18, zero=0) = 0x299e7e0
+[Tf80] [API] HeapAlloc(size=0x80, zero=0) = 0x299e800
+[Tf80] [API] HeapAlloc(size=0x80, zero=0) = 0x299e890
+[Tf80] [API] HeapAlloc(size=0x20, zero=0) = 0x299e920
+[Tf80] [API] HeapFree(0x299afc0)
+[Tf80] [API] HeapAlloc(size=0x20, zero=0) = 0x299afc0
+[Tf80] [API] HeapAlloc(size=0x5, zero=0) = 0x299e950
+[Tf80] [API] HeapReAlloc(size=0x180) = 0x299e970
+[Tf80] [API] HeapReAlloc(size=0x680) = 0x299eb00
+[Tf80] [API] HeapAlloc(size=0x60, zero=0) = 0x299f190
+[Tf80] [API] HeapAlloc(size=0x60, zero=0) = 0x299f200
+[Tf80] [API] HeapAlloc(size=0x18, zero=0) = 0x299f270
+[Tf80] [API] HeapAlloc(size=0x80, zero=0) = 0x299f290
+[Tf80] [API] HeapAlloc(size=0x80, zero=0) = 0x299f320
+[Tf80] [API] HeapAlloc(size=0x20, zero=0) = 0x299f3b0
+[Tf80] [API] HeapFree(0x299afc0)
+[Tf80] [API] HeapAlloc(size=0x20, zero=0) = 0x299afc0
+[Tf80] [API] HeapAlloc(size=0x1, zero=0) = 0x299f3e0
+[Tf80] [API] HeapAlloc(size=0x60, zero=0) = 0x299f400
+[Tf80] [API] HeapAlloc(size=0x60, zero=0) = 0x299f470
+[Tf80] [API] HeapAlloc(size=0x18, zero=0) = 0x299f4e0
+[Tf80] [API] HeapAlloc(size=0x80, zero=0) = 0x299f500
+[Tf80] [API] HeapAlloc(size=0x80, zero=0) = 0x299f590
+[Tf80] [API] HeapAlloc(size=0x20, zero=0) = 0x299f620
+[Tf80] [API] HeapFree(0x299afc0)
+[Tf80] [API] HeapAlloc(size=0x20, zero=0) = 0x299afc0
+[Tf80] [API] HeapAlloc(size=0x5, zero=0) = 0x299f650
+[Tf80] [API] HeapAlloc(size=0x60, zero=0) = 0x299f670
+[Tf80] [API] HeapAlloc(size=0x60, zero=0) = 0x299f6e0
+[Tf80] [API] HeapAlloc(size=0x18, zero=0) = 0x299f750
+[Tf80] [API] HeapAlloc(size=0x80, zero=0) = 0x299f770
+[Tf80] [API] HeapAlloc(size=0x80, zero=0) = 0x299f800
+[Tf80] [API] HeapAlloc(size=0x20, zero=0) = 0x299f890
+[Tf80] [API] HeapFree(0x299afc0)
+[Tf80] [API] HeapAlloc(size=0x20, zero=0) = 0x299afc0
+[Tf80] [API] HeapAlloc(size=0x1, zero=0) = 0x299f8c0
+[Tf80] [API] HeapAlloc(size=0x60, zero=0) = 0x299f8e0
+[Tf80] [API] HeapAlloc(size=0x60, zero=0) = 0x299f950
+[Tf80] [API] HeapAlloc(size=0x18, zero=0) = 0x299f9c0
+[Tf80] [API] HeapAlloc(size=0x80, zero=0) = 0x299f9e0
+[Tf80] [API] HeapAlloc(size=0x80, zero=0) = 0x299fa70
+[Tf80] [API] HeapAlloc(size=0x20, zero=0) = 0x299fb00
+[Tf80] [API] HeapFree(0x299afc0)
+[Tf80] [API] HeapAlloc(size=0x20, zero=0) = 0x299afc0
+[Tf80] [API] HeapAlloc(size=0x5, zero=0) = 0x299fb30
+[Tf80] [API] HeapAlloc(size=0x60, zero=0) = 0x299fb50
+[Tf80] [API] HeapAlloc(size=0x60, zero=0) = 0x299fbc0
+[Tf80] [API] HeapAlloc(size=0x18, zero=0) = 0x299fc30
+[Tf80] [API] HeapAlloc(size=0x80, zero=0) = 0x299fc50
+[Tf80] [API] HeapAlloc(size=0x80, zero=0) = 0x299fce0
+[Tf80] [API] HeapAlloc(size=0x20, zero=0) = 0x299fd70
+[Tf80] [API] HeapFree(0x299afc0)
+[Tf80] [API] HeapAlloc(size=0x20, zero=0) = 0x299afc0
+[Tf80] [API] HeapAlloc(size=0x5, zero=0) = 0x299fda0
+[Tf80] [API] HeapAlloc(size=0x60, zero=0) = 0x299fdc0
+[Tf80] [API] HeapAlloc(size=0x60, zero=0) = 0x299fe30
+[Tf80] [API] HeapAlloc(size=0x18, zero=0) = 0x299fea0
+[Tf80] [API] HeapAlloc(size=0x80, zero=0) = 0x299fec0
+[Tf80] [API] HeapAlloc(size=0x80, zero=0) = 0x299ff50
+[Tf80] [API] HeapAlloc(size=0x20, zero=0) = 0x299ffe0
+[Tf80] [API] HeapFree(0x299afc0)
+[Tf80] [API] HeapAlloc(size=0x20, zero=0) = 0x299afc0
+[Tf80] [API] HeapAlloc(size=0x5, zero=0) = 0x29a0010
+[Tf80] [API] HeapAlloc(size=0x60, zero=0) = 0x29a0030
+[Tf80] [API] HeapAlloc(size=0x60, zero=0) = 0x29a00a0
+[Tf80] [API] HeapAlloc(size=0x18, zero=0) = 0x29a0110
+[Tf80] [API] HeapAlloc(size=0x80, zero=0) = 0x29a0130
+[Tf80] [API] HeapAlloc(size=0x80, zero=0) = 0x29a01c0
+[Tf80] [API] HeapAlloc(size=0x20, zero=0) = 0x29a0250
+[Tf80] [API] HeapFree(0x299afc0)
+[Tf80] [API] HeapAlloc(size=0x20, zero=0) = 0x299afc0
+[Tf80] [API] HeapAlloc(size=0x5, zero=0) = 0x29a0280
+[Tf80] [API] HeapAlloc(size=0x60, zero=0) = 0x29a02a0
+[Tf80] [API] HeapAlloc(size=0x60, zero=0) = 0x29a0310
+[Tf80] [API] HeapAlloc(size=0x18, zero=0) = 0x29a0380
+[Tf80] [API] HeapAlloc(size=0x80, zero=0) = 0x29a03a0
+[Tf80] [API] HeapAlloc(size=0x80, zero=0) = 0x29a0430
+[Tf80] [API] HeapAlloc(size=0x20, zero=0) = 0x29a04c0
+[Tf80] [API] HeapFree(0x299afc0)
+[Tf80] [API] HeapAlloc(size=0x20, zero=0) = 0x299afc0
+[Tf80] [API] HeapAlloc(size=0x5, zero=0) = 0x29a04f0
+[Tf80] [API] HeapReAlloc(size=0x300) = 0x29a0510
+[Tf80] [API] HeapReAlloc(size=0xd00) = 0x29a0820
+[Tf80] [API] HeapAlloc(size=0x60, zero=0) = 0x299eb00
+[Tf80] [API] HeapAlloc(size=0x60, zero=0) = 0x299eb70
+[Tf80] [API] HeapAlloc(size=0x18, zero=0) = 0x299ebe0
+[Tf80] [API] HeapAlloc(size=0x80, zero=0) = 0x299ec00
+[Tf80] [API] HeapAlloc(size=0x80, zero=0) = 0x299ec90
+[Tf80] [API] HeapAlloc(size=0x20, zero=0) = 0x299ed20
+[Tf80] [API] HeapFree(0x299afc0)
+[Tf80] [API] HeapAlloc(size=0x20, zero=0) = 0x299afc0
+[Tf80] [API] HeapAlloc(size=0x5, zero=0) = 0x299ed50
+[Tf80] [API] HeapAlloc(size=0x60, zero=0) = 0x299ed70
+[Tf80] [API] HeapAlloc(size=0x60, zero=0) = 0x299ede0
+[Tf80] [API] HeapAlloc(size=0x18, zero=0) = 0x299ee50
+[Tf80] [API] HeapAlloc(size=0x80, zero=0) = 0x299ee70
+[Tf80] [API] HeapAlloc(size=0x80, zero=0) = 0x299ef00
+[Tf80] [API] HeapAlloc(size=0x20, zero=0) = 0x299ef90
+[Tf80] [API] HeapFree(0x299afc0)
+[Tf80] [API] HeapAlloc(size=0x20, zero=0) = 0x299afc0
+[Tf80] [API] HeapAlloc(size=0x5, zero=0) = 0x299efc0
+[Tf80] [API] HeapAlloc(size=0x60, zero=0) = 0x299efe0
+[Tf80] [API] HeapAlloc(size=0x60, zero=0) = 0x299f050
+[Tf80] [API] HeapAlloc(size=0x18, zero=0) = 0x299f0c0
+[Tf80] [API] HeapAlloc(size=0x80, zero=0) = 0x299f0e0
+[Tf80] [API] HeapAlloc(size=0x80, zero=0) = 0x29a1530
+[Tf80] [API] HeapAlloc(size=0x20, zero=0) = 0x29a15c0
+[Tf80] [API] HeapFree(0x299afc0)
+[Tf80] [API] HeapAlloc(size=0x20, zero=0) = 0x299afc0
+[Tf80] [API] HeapAlloc(size=0x5, zero=0) = 0x299f170
+[Tf80] [API] HeapAlloc(size=0x60, zero=0) = 0x29a15f0
+[Tf80] [API] HeapAlloc(size=0x60, zero=0) = 0x29a1660
+[Tf80] [API] HeapAlloc(size=0x18, zero=0) = 0x29a16d0
+[Tf80] [API] HeapAlloc(size=0x80, zero=0) = 0x29a16f0
+[Tf80] [API] HeapAlloc(size=0x80, zero=0) = 0x29a1780
+[Tf80] [API] HeapAlloc(size=0x20, zero=0) = 0x29a1810
+[Tf80] [API] HeapFree(0x299afc0)
+[Tf80] [API] HeapAlloc(size=0x20, zero=0) = 0x299afc0
+[Tf80] [API] HeapAlloc(size=0x5, zero=0) = 0x29a1840
+[Tf80] [API] HeapAlloc(size=0x60, zero=0) = 0x29a1860
+[Tf80] [API] HeapAlloc(size=0x60, zero=0) = 0x29a18d0
+[Tf80] [API] HeapAlloc(size=0x18, zero=0) = 0x29a1940
+[Tf80] [API] HeapAlloc(size=0x80, zero=0) = 0x29a1960
+[Tf80] [API] HeapAlloc(size=0x80, zero=0) = 0x29a19f0
+[Tf80] [API] HeapAlloc(size=0x20, zero=0) = 0x29a1a80
+[Tf80] [API] HeapFree(0x299afc0)
+[Tf80] [API] HeapAlloc(size=0x20, zero=0) = 0x299afc0
+[Tf80] [API] HeapAlloc(size=0x5, zero=0) = 0x29a1ab0
+[Tf80] [API] HeapAlloc(size=0x60, zero=0) = 0x29a1ad0
+[Tf80] [API] HeapAlloc(size=0x60, zero=0) = 0x29a1b40
+[Tf80] [API] HeapAlloc(size=0x18, zero=0) = 0x29a1bb0
+[Tf80] [API] HeapAlloc(size=0x80, zero=0) = 0x29a1bd0
+[Tf80] [API] HeapAlloc(size=0x80, zero=0) = 0x29a1c60
+[Tf80] [API] HeapAlloc(size=0x20, zero=0) = 0x29a1cf0
+[Tf80] [API] HeapFree(0x299afc0)
+[Tf80] [API] HeapAlloc(size=0x20, zero=0) = 0x299afc0
+[Tf80] [API] HeapAlloc(size=0x5, zero=0) = 0x29a1d20
+[Tf80] [API] HeapAlloc(size=0x60, zero=0) = 0x29a1d40
+[Tf80] [API] HeapAlloc(size=0x60, zero=0) = 0x29a1db0
+[Tf80] [API] HeapAlloc(size=0x18, zero=0) = 0x29a1e20
+[Tf80] [API] HeapAlloc(size=0x80, zero=0) = 0x29a1e40
+[Tf80] [API] HeapAlloc(size=0x80, zero=0) = 0x29a1ed0
+[Tf80] [API] HeapAlloc(size=0x20, zero=0) = 0x29a1f60
+[Tf80] [API] HeapFree(0x299afc0)
+[Tf80] [API] HeapAlloc(size=0x20, zero=0) = 0x299afc0
+[Tf80] [API] HeapAlloc(size=0x5, zero=0) = 0x29a1f90
+[Tf80] [API] HeapAlloc(size=0x60, zero=0) = 0x29a1fb0
+[Tf80] [API] HeapAlloc(size=0x60, zero=0) = 0x29a2020
+[Tf80] [API] HeapAlloc(size=0x18, zero=0) = 0x29a2090
+[Tf80] [API] HeapAlloc(size=0x80, zero=0) = 0x29a20b0
+[Tf80] [API] HeapAlloc(size=0x80, zero=0) = 0x29a2140
+[Tf80] [API] HeapAlloc(size=0x20, zero=0) = 0x29a21d0
+[Tf80] [API] HeapFree(0x299afc0)
+[Tf80] [API] HeapAlloc(size=0x20, zero=0) = 0x299afc0
+[Tf80] [API] HeapAlloc(size=0x5, zero=0) = 0x29a2200
+[Tf80] [API] HeapAlloc(size=0x60, zero=0) = 0x29a2220
+[Tf80] [API] HeapAlloc(size=0x60, zero=0) = 0x29a2290
+[Tf80] [API] HeapAlloc(size=0x18, zero=0) = 0x29a2300
+[Tf80] [API] HeapAlloc(size=0x80, zero=0) = 0x29a2320
+[Tf80] [API] HeapAlloc(size=0x80, zero=0) = 0x29a23b0
+[Tf80] [API] HeapAlloc(size=0x20, zero=0) = 0x29a2440
+[Tf80] [API] HeapFree(0x299afc0)
+[Tf80] [API] HeapAlloc(size=0x20, zero=0) = 0x299afc0
+[Tf80] [API] HeapAlloc(size=0x5, zero=0) = 0x29a2470
+[Tf80] [API] HeapAlloc(size=0x7, zero=0) = 0x29a2490
+[Tf80] [API] HeapAlloc(size=0x60, zero=0) = 0x29a24b0
+[Tf80] [API] HeapAlloc(size=0x60, zero=0) = 0x29a2520
+[Tf80] [API] HeapAlloc(size=0x18, zero=0) = 0x29a2590
+[Tf80] [API] HeapAlloc(size=0x80, zero=0) = 0x29a25b0
+[Tf80] [API] HeapAlloc(size=0x80, zero=0) = 0x29a2640
+[Tf80] [API] HeapAlloc(size=0x20, zero=0) = 0x29a26d0
+[Tf80] [API] HeapFree(0x299afc0)
+[Tf80] [API] HeapAlloc(size=0x20, zero=0) = 0x299afc0
+[Tf80] [API] HeapAlloc(size=0x5, zero=0) = 0x29a2700
+[Tf80] [API] HeapAlloc(size=0x7, zero=0) = 0x29a2720
+[Tf80] [API] HeapAlloc(size=0x60, zero=0) = 0x29a2740
+[Tf80] [API] HeapAlloc(size=0x60, zero=0) = 0x29a27b0
+[Tf80] [API] HeapAlloc(size=0x18, zero=0) = 0x29a2820
+[Tf80] [API] HeapAlloc(size=0x80, zero=0) = 0x29a2840
+[Tf80] [API] HeapAlloc(size=0x80, zero=0) = 0x29a28d0
+[Tf80] [API] HeapAlloc(size=0x20, zero=0) = 0x29a2960
+[Tf80] [API] HeapFree(0x299afc0)
+[Tf80] [API] HeapAlloc(size=0x20, zero=0) = 0x299afc0
+[Tf80] [API] HeapAlloc(size=0x5, zero=0) = 0x29a2990
+[Tf80] [API] HeapAlloc(size=0xc, zero=0) = 0x29a29b0
+[Tf80] [API] HeapAlloc(size=0x60, zero=0) = 0x29a29d0
+[Tf80] [API] HeapAlloc(size=0x60, zero=0) = 0x29a2a40
+[Tf80] [API] HeapAlloc(size=0x18, zero=0) = 0x29a2ab0
+[Tf80] [API] HeapAlloc(size=0x80, zero=0) = 0x29a2ad0
+[Tf80] [API] HeapAlloc(size=0x80, zero=0) = 0x29a2b60
+[Tf80] [API] HeapAlloc(size=0x20, zero=0) = 0x29a2bf0
+[Tf80] [API] HeapFree(0x299afc0)
+[Tf80] [API] HeapAlloc(size=0x20, zero=0) = 0x299afc0
+[Tf80] [API] HeapAlloc(size=0x5, zero=0) = 0x29a2c20
+[Tf80] [API] HeapAlloc(size=0x6, zero=0) = 0x29a2c40
+[Tf80] [API] HeapAlloc(size=0x60, zero=0) = 0x29a2c60
+[Tf80] [API] HeapAlloc(size=0x60, zero=0) = 0x29a2cd0
+[Tf80] [API] HeapAlloc(size=0x18, zero=0) = 0x29a2d40
+[Tf80] [API] HeapAlloc(size=0x80, zero=0) = 0x29a2d60
+[Tf80] [API] HeapAlloc(size=0x80, zero=0) = 0x29a2df0
+[Tf80] [API] HeapAlloc(size=0x20, zero=0) = 0x29a2e80
+[Tf80] [API] HeapFree(0x299afc0)
+[Tf80] [API] HeapAlloc(size=0x20, zero=0) = 0x299afc0
+[Tf80] [API] HeapAlloc(size=0x5, zero=0) = 0x29a2eb0
+[Tf80] [API] HeapAlloc(size=0x9, zero=0) = 0x29a2ed0
+[Tf80] [API] HeapAlloc(size=0x60, zero=0) = 0x29a2ef0
+[Tf80] [API] HeapAlloc(size=0x60, zero=0) = 0x29a2f60
+[Tf80] [API] HeapAlloc(size=0x18, zero=0) = 0x29a2fd0
+[Tf80] [API] HeapAlloc(size=0x80, zero=0) = 0x29a2ff0
+[Tf80] [API] HeapAlloc(size=0x80, zero=0) = 0x29a3080
+[Tf80] [API] HeapAlloc(size=0x20, zero=0) = 0x29a3110
+[Tf80] [API] HeapFree(0x299afc0)
+[Tf80] [API] HeapAlloc(size=0x20, zero=0) = 0x299afc0
+[Tf80] [API] HeapAlloc(size=0x5, zero=0) = 0x29a3140
+[Tf80] [API] HeapAlloc(size=0x11, zero=0) = 0x29a3160
+[Tf80] [API] HeapAlloc(size=0x60, zero=0) = 0x29a3180
+[Tf80] [API] HeapAlloc(size=0x60, zero=0) = 0x29a31f0
+[Tf80] [API] HeapAlloc(size=0x18, zero=0) = 0x29a3260
+[Tf80] [API] HeapAlloc(size=0x80, zero=0) = 0x29a3280
+[Tf80] [API] HeapAlloc(size=0x80, zero=0) = 0x29a3310
+[Tf80] [API] HeapAlloc(size=0x20, zero=0) = 0x29a33a0
+[Tf80] [API] HeapFree(0x299afc0)
+[Tf80] [API] HeapAlloc(size=0x20, zero=0) = 0x299afc0
+[Tf80] [API] HeapAlloc(size=0x5, zero=0) = 0x29a33d0
+[Tf80] [API] HeapAlloc(size=0x8, zero=0) = 0x29a33f0
+[Tf80] [API] HeapAlloc(size=0x60, zero=0) = 0x29a3410
+[Tf80] [API] HeapAlloc(size=0x60, zero=0) = 0x29a3480
+[Tf80] [API] HeapAlloc(size=0x18, zero=0) = 0x29a34f0
+[Tf80] [API] HeapAlloc(size=0x80, zero=0) = 0x29a3510
+[Tf80] [API] HeapAlloc(size=0x80, zero=0) = 0x29a35a0
+[Tf80] [API] HeapAlloc(size=0x20, zero=0) = 0x29a3630
+[Tf80] [API] HeapFree(0x299afc0)
+[Tf80] [API] HeapAlloc(size=0x20, zero=0) = 0x299afc0
+[Tf80] [API] HeapAlloc(size=0x5, zero=0) = 0x29a3660
+[Tf80] [API] HeapAlloc(size=0x13, zero=0) = 0x29a3680
+[Tf80] [API] HeapReAlloc(size=0x600) = 0x29a36a0
+[Tf80] [API] HeapReAlloc(size=0x1a00) = 0x29a3cb0
+[Tf80] [API] HeapAlloc(size=0x60, zero=0) = 0x29a0820
+[Tf80] [API] HeapAlloc(size=0x60, zero=0) = 0x29a0890
+[Tf80] [API] HeapAlloc(size=0x18, zero=0) = 0x29a0900
+[Tf80] [API] HeapAlloc(size=0x80, zero=0) = 0x29a0920
+[Tf80] [API] HeapAlloc(size=0x80, zero=0) = 0x29a09b0
+[Tf80] [API] HeapAlloc(size=0x20, zero=0) = 0x29a0a40
+[Tf80] [API] HeapFree(0x299afc0)
+[Tf80] [API] HeapAlloc(size=0x20, zero=0) = 0x299afc0
+[Tf80] [API] HeapAlloc(size=0x5, zero=0) = 0x29a0a70
+[Tf80] [API] HeapAlloc(size=0x10, zero=0) = 0x29a0a90
+[Tf80] [API] HeapAlloc(size=0x60, zero=0) = 0x29a0ab0
+[Tf80] [API] HeapAlloc(size=0x60, zero=0) = 0x29a0b20
+[Tf80] [API] HeapAlloc(size=0x18, zero=0) = 0x29a0b90
+[Tf80] [API] HeapAlloc(size=0x80, zero=0) = 0x29a0bb0
+[Tf80] [API] HeapAlloc(size=0x80, zero=0) = 0x29a0c40
+[Tf80] [API] HeapAlloc(size=0x20, zero=0) = 0x29a0cd0
+[Tf80] [API] HeapFree(0x299afc0)
+[Tf80] [API] HeapAlloc(size=0x20, zero=0) = 0x299afc0
+[Tf80] [API] HeapAlloc(size=0x5, zero=0) = 0x29a0d00
+[Tf80] [API] HeapAlloc(size=0x8, zero=0) = 0x29a0d20
+[Tf80] [API] HeapAlloc(size=0x60, zero=0) = 0x29a0d40
+[Tf80] [API] HeapAlloc(size=0x60, zero=0) = 0x29a0db0
+[Tf80] [API] HeapAlloc(size=0x18, zero=0) = 0x29a0e20
+[Tf80] [API] HeapAlloc(size=0x80, zero=0) = 0x29a0e40
+[Tf80] [API] HeapAlloc(size=0x80, zero=0) = 0x29a0ed0
+[Tf80] [API] HeapAlloc(size=0x20, zero=0) = 0x29a0f60
+[Tf80] [API] HeapFree(0x299afc0)
+[Tf80] [API] HeapAlloc(size=0x20, zero=0) = 0x299afc0
+[Tf80] [API] HeapAlloc(size=0x5, zero=0) = 0x29a0f90
+[Tf80] [API] HeapAlloc(size=0xa, zero=0) = 0x29a0fb0
+[Tf80] [API] HeapAlloc(size=0x60, zero=0) = 0x29a0fd0
+[Tf80] [API] HeapAlloc(size=0x60, zero=0) = 0x29a1040
+[Tf80] [API] HeapAlloc(size=0x18, zero=0) = 0x29a10b0
+[Tf80] [API] HeapAlloc(size=0x80, zero=0) = 0x29a10d0
+[Tf80] [API] HeapAlloc(size=0x80, zero=0) = 0x29a1160
+[Tf80] [API] HeapAlloc(size=0x20, zero=0) = 0x29a11f0
+[Tf80] [API] HeapFree(0x299afc0)
+[Tf80] [API] HeapAlloc(size=0x20, zero=0) = 0x299afc0
+[Tf80] [API] HeapAlloc(size=0x5, zero=0) = 0x29a1220
+[Tf80] [API] HeapAlloc(size=0x7, zero=0) = 0x29a1240
+[Tf80] [API] HeapAlloc(size=0x60, zero=0) = 0x29a1260
+[Tf80] [API] HeapAlloc(size=0x60, zero=0) = 0x29a12d0
+[Tf80] [API] HeapAlloc(size=0x18, zero=0) = 0x29a1340
+[Tf80] [API] HeapAlloc(size=0x80, zero=0) = 0x29a1360
+[Tf80] [API] HeapAlloc(size=0x80, zero=0) = 0x29a13f0
+[Tf80] [API] HeapAlloc(size=0x20, zero=0) = 0x29a1480
+[Tf80] [API] HeapFree(0x299afc0)
+[Tf80] [API] HeapAlloc(size=0x20, zero=0) = 0x299afc0
+[Tf80] [API] HeapAlloc(size=0x5, zero=0) = 0x29a14b0
+[Tf80] [API] HeapAlloc(size=0x7, zero=0) = 0x29a14d0
+[Tf80] [API] HeapAlloc(size=0x60, zero=0) = 0x29a56c0
+[Tf80] [API] HeapAlloc(size=0x60, zero=0) = 0x29a5730
+[Tf80] [API] HeapAlloc(size=0x18, zero=0) = 0x29a57a0
+[Tf80] [API] HeapAlloc(size=0x80, zero=0) = 0x29a57c0
+[Tf80] [API] HeapAlloc(size=0x80, zero=0) = 0x29a5850
+[Tf80] [API] HeapAlloc(size=0x20, zero=0) = 0x29a58e0
+[Tf80] [API] HeapFree(0x299afc0)
+[Tf80] [API] HeapAlloc(size=0x20, zero=0) = 0x299afc0
+[Tf80] [API] HeapAlloc(size=0x5, zero=0) = 0x29a5910
+[Tf80] [API] HeapAlloc(size=0xa, zero=0) = 0x29a5930
+[Tf80] [API] HeapAlloc(size=0x60, zero=0) = 0x29a5950
+[Tf80] [API] HeapAlloc(size=0x60, zero=0) = 0x29a59c0
+[Tf80] [API] HeapAlloc(size=0x18, zero=0) = 0x29a5a30
+[Tf80] [API] HeapAlloc(size=0x80, zero=0) = 0x29a5a50
+[Tf80] [API] HeapAlloc(size=0x80, zero=0) = 0x29a5ae0
+[Tf80] [API] HeapAlloc(size=0x20, zero=0) = 0x29a5b70
+[Tf80] [API] HeapFree(0x299afc0)
+[Tf80] [API] HeapAlloc(size=0x20, zero=0) = 0x299afc0
+[Tf80] [API] HeapAlloc(size=0x5, zero=0) = 0x29a5ba0
+[Tf80] [API] HeapAlloc(size=0x8, zero=0) = 0x29a5bc0
+[Tf80] [API] HeapAlloc(size=0x60, zero=0) = 0x29a5be0
+[Tf80] [API] HeapAlloc(size=0x60, zero=0) = 0x29a5c50
+[Tf80] [API] HeapAlloc(size=0x18, zero=0) = 0x29a5cc0
+[Tf80] [API] HeapAlloc(size=0x80, zero=0) = 0x29a5ce0
+[Tf80] [API] HeapAlloc(size=0x80, zero=0) = 0x29a5d70
+[Tf80] [API] HeapAlloc(size=0x20, zero=0) = 0x29a5e00
+[Tf80] [API] HeapFree(0x299afc0)
+[Tf80] [API] HeapAlloc(size=0x20, zero=0) = 0x299afc0
+[Tf80] [API] HeapAlloc(size=0x5, zero=0) = 0x29a5e30
+[Tf80] [API] HeapAlloc(size=0x6, zero=0) = 0x29a5e50
+[Tf80] [API] HeapAlloc(size=0x60, zero=0) = 0x29a5e70
+[Tf80] [API] HeapAlloc(size=0x60, zero=0) = 0x29a5ee0
+[Tf80] [API] HeapAlloc(size=0x18, zero=0) = 0x29a5f50
+[Tf80] [API] HeapAlloc(size=0x80, zero=0) = 0x29a5f70
+[Tf80] [API] HeapAlloc(size=0x80, zero=0) = 0x29a6000
+[Tf80] [API] HeapAlloc(size=0x20, zero=0) = 0x29a6090
+[Tf80] [API] HeapFree(0x299afc0)
+[Tf80] [API] HeapAlloc(size=0x20, zero=0) = 0x299afc0
+[Tf80] [API] HeapAlloc(size=0x5, zero=0) = 0x29a60c0
+[Tf80] [API] HeapAlloc(size=0x10, zero=0) = 0x29a60e0
+[Tf80] [API] HeapAlloc(size=0x60, zero=0) = 0x29a6100
+[Tf80] [API] HeapAlloc(size=0x60, zero=0) = 0x29a6170
+[Tf80] [API] HeapAlloc(size=0x18, zero=0) = 0x29a61e0
+[Tf80] [API] HeapAlloc(size=0x80, zero=0) = 0x29a6200
+[Tf80] [API] HeapAlloc(size=0x80, zero=0) = 0x29a6290
+[Tf80] [API] HeapAlloc(size=0x20, zero=0) = 0x29a6320
+[Tf80] [API] HeapFree(0x299afc0)
+[Tf80] [API] HeapAlloc(size=0x20, zero=0) = 0x299afc0
+[Tf80] [API] HeapAlloc(size=0x5, zero=0) = 0x29a6350
+[Tf80] [API] HeapAlloc(size=0x8, zero=0) = 0x29a6370
+[Tf80] [API] HeapAlloc(size=0x60, zero=0) = 0x29a6390
+[Tf80] [API] HeapAlloc(size=0x60, zero=0) = 0x29a6400
+[Tf80] [API] HeapAlloc(size=0x18, zero=0) = 0x29a6470
+[Tf80] [API] HeapAlloc(size=0x80, zero=0) = 0x29a6490
+[Tf80] [API] HeapAlloc(size=0x80, zero=0) = 0x29a6520
+[Tf80] [API] HeapAlloc(size=0x20, zero=0) = 0x29a65b0
+[Tf80] [API] HeapFree(0x299afc0)
+[Tf80] [API] HeapAlloc(size=0x20, zero=0) = 0x299afc0
+[Tf80] [API] HeapAlloc(size=0x5, zero=0) = 0x29a65e0
+[Tf80] [API] HeapAlloc(size=0x9, zero=0) = 0x29a6600
+[Tf80] [API] HeapAlloc(size=0x60, zero=0) = 0x29a6620
+[Tf80] [API] HeapAlloc(size=0x60, zero=0) = 0x29a6690
+[Tf80] [API] HeapAlloc(size=0x18, zero=0) = 0x29a6700
+[Tf80] [API] HeapAlloc(size=0x80, zero=0) = 0x29a6720
+[Tf80] [API] HeapAlloc(size=0x80, zero=0) = 0x29a67b0
+[Tf80] [API] HeapAlloc(size=0x20, zero=0) = 0x29a6840
+[Tf80] [API] HeapFree(0x299afc0)
+[Tf80] [API] HeapAlloc(size=0x20, zero=0) = 0x299afc0
+[Tf80] [API] HeapAlloc(size=0x5, zero=0) = 0x29a6870
+[Tf80] [API] HeapAlloc(size=0xb, zero=0) = 0x29a6890
+[Tf80] [API] HeapAlloc(size=0x60, zero=0) = 0x29a68b0
+[Tf80] [API] HeapAlloc(size=0x60, zero=0) = 0x29a6920
+[Tf80] [API] HeapAlloc(size=0x18, zero=0) = 0x29a6990
+[Tf80] [API] HeapAlloc(size=0x80, zero=0) = 0x29a69b0
+[Tf80] [API] HeapAlloc(size=0x80, zero=0) = 0x29a6a40
+[Tf80] [API] HeapAlloc(size=0x20, zero=0) = 0x29a6ad0
+[Tf80] [API] HeapFree(0x299afc0)
+[Tf80] [API] HeapAlloc(size=0x20, zero=0) = 0x299afc0
+[Tf80] [API] HeapAlloc(size=0x5, zero=0) = 0x29a6b00
+[Tf80] [API] HeapAlloc(size=0x9, zero=0) = 0x29a6b20
+[Tf80] [API] HeapAlloc(size=0x60, zero=0) = 0x29a6b40
+[Tf80] [API] HeapAlloc(size=0x60, zero=0) = 0x29a6bb0
+[Tf80] [API] HeapAlloc(size=0x18, zero=0) = 0x29a6c20
+[Tf80] [API] HeapAlloc(size=0x80, zero=0) = 0x29a6c40
+[Tf80] [API] HeapAlloc(size=0x80, zero=0) = 0x29a6cd0
+[Tf80] [API] HeapAlloc(size=0x20, zero=0) = 0x29a6d60
+[Tf80] [API] HeapFree(0x299afc0)
+[Tf80] [API] HeapAlloc(size=0x20, zero=0) = 0x299afc0
+[Tf80] [API] HeapAlloc(size=0x5, zero=0) = 0x29a6d90
+[Tf80] [API] HeapAlloc(size=0xb, zero=0) = 0x29a6db0
+[Tf80] [API] HeapAlloc(size=0x60, zero=0) = 0x29a6dd0
+[Tf80] [API] HeapAlloc(size=0x60, zero=0) = 0x29a6e40
+[Tf80] [API] HeapAlloc(size=0x18, zero=0) = 0x29a6eb0
+[Tf80] [API] HeapAlloc(size=0x80, zero=0) = 0x29a6ed0
+[Tf80] [API] HeapAlloc(size=0x80, zero=0) = 0x29a6f60
+[Tf80] [API] HeapAlloc(size=0x20, zero=0) = 0x29a6ff0
+[Tf80] [API] HeapFree(0x299afc0)
+[Tf80] [API] HeapAlloc(size=0x20, zero=0) = 0x299afc0
+[Tf80] [API] HeapAlloc(size=0x5, zero=0) = 0x29a7020
+[Tf80] [API] HeapAlloc(size=0xb, zero=0) = 0x29a7040
+[Tf80] [API] HeapAlloc(size=0x60, zero=0) = 0x29a7060
+[Tf80] [API] HeapAlloc(size=0x60, zero=0) = 0x29a70d0
+[Tf80] [API] HeapAlloc(size=0x18, zero=0) = 0x29a7140
+[Tf80] [API] HeapAlloc(size=0x80, zero=0) = 0x29a7160
+[Tf80] [API] HeapAlloc(size=0x80, zero=0) = 0x29a71f0
+[Tf80] [API] HeapAlloc(size=0x20, zero=0) = 0x29a7280
+[Tf80] [API] HeapFree(0x299afc0)
+[Tf80] [API] HeapAlloc(size=0x20, zero=0) = 0x299afc0
+[Tf80] [API] HeapAlloc(size=0x5, zero=0) = 0x29a72b0
+[Tf80] [API] HeapAlloc(size=0xa, zero=0) = 0x29a72d0
+[Tf80] [API] HeapAlloc(size=0x60, zero=0) = 0x29a72f0
+[Tf80] [API] HeapAlloc(size=0x60, zero=0) = 0x29a7360
+[Tf80] [API] HeapAlloc(size=0x18, zero=0) = 0x29a73d0
+[Tf80] [API] HeapAlloc(size=0x80, zero=0) = 0x29a73f0
+[Tf80] [API] HeapAlloc(size=0x80, zero=0) = 0x29a7480
+[Tf80] [API] HeapAlloc(size=0x20, zero=0) = 0x29a7510
+[Tf80] [API] HeapFree(0x299afc0)
+[Tf80] [API] HeapAlloc(size=0x20, zero=0) = 0x299afc0
+[Tf80] [API] HeapAlloc(size=0x5, zero=0) = 0x29a7540
+[Tf80] [API] HeapAlloc(size=0x14, zero=0) = 0x29a7560
+[Tf80] [API] HeapAlloc(size=0x60, zero=0) = 0x29a7580
+[Tf80] [API] HeapAlloc(size=0x60, zero=0) = 0x29a75f0
+[Tf80] [API] HeapAlloc(size=0x18, zero=0) = 0x29a7660
+[Tf80] [API] HeapAlloc(size=0x80, zero=0) = 0x29a7680
+[Tf80] [API] HeapAlloc(size=0x80, zero=0) = 0x29a7710
+[Tf80] [API] HeapAlloc(size=0x20, zero=0) = 0x29a77a0
+[Tf80] [API] HeapFree(0x299afc0)
+[Tf80] [API] HeapAlloc(size=0x20, zero=0) = 0x299afc0
+[Tf80] [API] HeapAlloc(size=0x5, zero=0) = 0x29a77d0
+[Tf80] [API] HeapAlloc(size=0xc, zero=0) = 0x29a77f0
+[Tf80] [API] HeapAlloc(size=0x60, zero=0) = 0x29a7810
+[Tf80] [API] HeapAlloc(size=0x60, zero=0) = 0x29a7880
+[Tf80] [API] HeapAlloc(size=0x18, zero=0) = 0x29a78f0
+[Tf80] [API] HeapAlloc(size=0x80, zero=0) = 0x29a7910
+[Tf80] [API] HeapAlloc(size=0x80, zero=0) = 0x29a79a0
+[Tf80] [API] HeapAlloc(size=0x20, zero=0) = 0x29a7a30
+[Tf80] [API] HeapFree(0x299afc0)
+[Tf80] [API] HeapAlloc(size=0x20, zero=0) = 0x299afc0
+[Tf80] [API] HeapAlloc(size=0x5, zero=0) = 0x29a7a60
+[Tf80] [API] HeapAlloc(size=0x7, zero=0) = 0x29a7a80
+[Tf80] [API] HeapAlloc(size=0x60, zero=0) = 0x29a7aa0
+[Tf80] [API] HeapAlloc(size=0x60, zero=0) = 0x29a7b10
+[Tf80] [API] HeapAlloc(size=0x18, zero=0) = 0x29a7b80
+[Tf80] [API] HeapAlloc(size=0x80, zero=0) = 0x29a7ba0
+[Tf80] [API] HeapAlloc(size=0x80, zero=0) = 0x29a7c30
+[Tf80] [API] HeapAlloc(size=0x20, zero=0) = 0x29a7cc0
+[Tf80] [API] HeapFree(0x299afc0)
+[Tf80] [API] HeapAlloc(size=0x20, zero=0) = 0x299afc0
+[Tf80] [API] HeapAlloc(size=0x5, zero=0) = 0x29a7cf0
+[Tf80] [API] HeapAlloc(size=0x9, zero=0) = 0x29a7d10
+[Tf80] [API] HeapAlloc(size=0x60, zero=0) = 0x29a7d30
+[Tf80] [API] HeapAlloc(size=0x60, zero=0) = 0x29a7da0
+[Tf80] [API] HeapAlloc(size=0x18, zero=0) = 0x29a7e10
+[Tf80] [API] HeapAlloc(size=0x80, zero=0) = 0x29a7e30
+[Tf80] [API] HeapAlloc(size=0x80, zero=0) = 0x29a7ec0
+[Tf80] [API] HeapAlloc(size=0x20, zero=0) = 0x29a7f50
+[Tf80] [API] HeapFree(0x299afc0)
+[Tf80] [API] HeapAlloc(size=0x20, zero=0) = 0x299afc0
+[Tf80] [API] HeapAlloc(size=0x5, zero=0) = 0x29a7f80
+[Tf80] [API] HeapAlloc(size=0xf, zero=0) = 0x29a7fa0
+[Tf80] [API] HeapAlloc(size=0x60, zero=0) = 0x29a7fc0
+[Tf80] [API] HeapAlloc(size=0x60, zero=0) = 0x29a8030
+[Tf80] [API] HeapAlloc(size=0x18, zero=0) = 0x29a80a0
+[Tf80] [API] HeapAlloc(size=0x80, zero=0) = 0x29a80c0
+[Tf80] [API] HeapAlloc(size=0x80, zero=0) = 0x29a8150
+[Tf80] [API] HeapAlloc(size=0x20, zero=0) = 0x29a81e0
+[Tf80] [API] HeapFree(0x299afc0)
+[Tf80] [API] HeapAlloc(size=0x20, zero=0) = 0x299afc0
+[Tf80] [API] HeapAlloc(size=0x5, zero=0) = 0x29a8210
+[Tf80] [API] HeapAlloc(size=0x14, zero=0) = 0x29a8230
+[Tf80] [API] HeapAlloc(size=0x60, zero=0) = 0x29a8250
+[Tf80] [API] HeapAlloc(size=0x60, zero=0) = 0x29a82c0
+[Tf80] [API] HeapAlloc(size=0x18, zero=0) = 0x29a8330
+[Tf80] [API] HeapAlloc(size=0x80, zero=0) = 0x29a8350
+[Tf80] [API] HeapAlloc(size=0x80, zero=0) = 0x29a83e0
+[Tf80] [API] HeapAlloc(size=0x20, zero=0) = 0x29a8470
+[Tf80] [API] HeapFree(0x299afc0)
+[Tf80] [API] HeapAlloc(size=0x20, zero=0) = 0x299afc0
+[Tf80] [API] HeapAlloc(size=0x5, zero=0) = 0x29a84a0
+[Tf80] [API] HeapAlloc(size=0x15, zero=0) = 0x29a84c0
+[Tf80] [API] HeapAlloc(size=0x60, zero=0) = 0x29a84e0
+[Tf80] [API] HeapAlloc(size=0x60, zero=0) = 0x29a8550
+[Tf80] [API] HeapAlloc(size=0x18, zero=0) = 0x29a85c0
+[Tf80] [API] HeapAlloc(size=0x80, zero=0) = 0x29a85e0
+[Tf80] [API] HeapAlloc(size=0x80, zero=0) = 0x29a8670
+[Tf80] [API] HeapAlloc(size=0x20, zero=0) = 0x29a8700
+[Tf80] [API] HeapFree(0x299afc0)
+[Tf80] [API] HeapAlloc(size=0x20, zero=0) = 0x299afc0
+[Tf80] [API] HeapAlloc(size=0x5, zero=0) = 0x29a8730
+[Tf80] [API] HeapAlloc(size=0x15, zero=0) = 0x29a8750
+[Tf80] [API] HeapAlloc(size=0x60, zero=0) = 0x29a8770
+[Tf80] [API] HeapAlloc(size=0x60, zero=0) = 0x29a87e0
+[Tf80] [API] HeapAlloc(size=0x18, zero=0) = 0x29a8850
+[Tf80] [API] HeapAlloc(size=0x80, zero=0) = 0x29a8870
+[Tf80] [API] HeapAlloc(size=0x80, zero=0) = 0x29a8900
+[Tf80] [API] HeapAlloc(size=0x20, zero=0) = 0x29a8990
+[Tf80] [API] HeapFree(0x299afc0)
+[Tf80] [API] HeapAlloc(size=0x20, zero=0) = 0x299afc0
+[Tf80] [API] HeapAlloc(size=0x5, zero=0) = 0x29a89c0
+[Tf80] [API] HeapAlloc(size=0x16, zero=0) = 0x29a89e0
+[Tf80] [API] HeapAlloc(size=0x60, zero=0) = 0x29a8a00
+[Tf80] [API] HeapAlloc(size=0x60, zero=0) = 0x29a8a70
+[Tf80] [API] HeapAlloc(size=0x18, zero=0) = 0x29a8ae0
+[Tf80] [API] HeapAlloc(size=0x80, zero=0) = 0x29a8b00
+[Tf80] [API] HeapAlloc(size=0x80, zero=0) = 0x29a8b90
+[Tf80] [API] HeapAlloc(size=0x20, zero=0) = 0x29a8c20
+[Tf80] [API] HeapFree(0x299afc0)
+[Tf80] [API] HeapAlloc(size=0x20, zero=0) = 0x299afc0
+[Tf80] [API] HeapAlloc(size=0x5, zero=0) = 0x29a8c50
+[Tf80] [API] HeapAlloc(size=0xa, zero=0) = 0x29a8c70
+[Tf80] [API] HeapAlloc(size=0x60, zero=0) = 0x29a8c90
+[Tf80] [API] HeapAlloc(size=0x60, zero=0) = 0x29a8d00
+[Tf80] [API] HeapAlloc(size=0x18, zero=0) = 0x29a8d70
+[Tf80] [API] HeapAlloc(size=0x80, zero=0) = 0x29a8d90
+[Tf80] [API] HeapAlloc(size=0x80, zero=0) = 0x29a8e20
+[Tf80] [API] HeapAlloc(size=0x20, zero=0) = 0x29a8eb0
+[Tf80] [API] HeapFree(0x299afc0)
+[Tf80] [API] HeapAlloc(size=0x20, zero=0) = 0x299afc0
+[Tf80] [API] HeapAlloc(size=0x5, zero=0) = 0x29a8ee0
+[Tf80] [API] HeapAlloc(size=0xf, zero=0) = 0x29a8f00
+[Tf80] [API] HeapAlloc(size=0x60, zero=0) = 0x29a8f20
+[Tf80] [API] HeapAlloc(size=0x60, zero=0) = 0x29a8f90
+[Tf80] [API] HeapAlloc(size=0x18, zero=0) = 0x29a9000
+[Tf80] [API] HeapAlloc(size=0x80, zero=0) = 0x29a9020
+[Tf80] [API] HeapAlloc(size=0x80, zero=0) = 0x29a90b0
+[Tf80] [API] HeapAlloc(size=0x20, zero=0) = 0x29a9140
+[Tf80] [API] HeapFree(0x299afc0)
+[Tf80] [API] HeapAlloc(size=0x20, zero=0) = 0x299afc0
+[Tf80] [API] HeapAlloc(size=0x5, zero=0) = 0x29a9170
+[Tf80] [API] HeapAlloc(size=0x9, zero=0) = 0x29a9190
+[Tf80] [API] HeapAlloc(size=0x60, zero=0) = 0x29a91b0
+[Tf80] [API] HeapAlloc(size=0x60, zero=0) = 0x29a9220
+[Tf80] [API] HeapAlloc(size=0x18, zero=0) = 0x29a9290
+[Tf80] [API] HeapAlloc(size=0x80, zero=0) = 0x29a92b0
+[Tf80] [API] HeapAlloc(size=0x80, zero=0) = 0x29a9340
+[Tf80] [API] HeapAlloc(size=0x20, zero=0) = 0x29a93d0
+[Tf80] [API] HeapFree(0x299afc0)
+[Tf80] [API] HeapAlloc(size=0x20, zero=0) = 0x299afc0
+[Tf80] [API] HeapAlloc(size=0x5, zero=0) = 0x29a9400
+[Tf80] [API] HeapAlloc(size=0x10, zero=0) = 0x29a9420
+[Tf80] [API] HeapAlloc(size=0x60, zero=0) = 0x29a9440
+[Tf80] [API] HeapAlloc(size=0x60, zero=0) = 0x29a94b0
+[Tf80] [API] HeapAlloc(size=0x18, zero=0) = 0x29a9520
+[Tf80] [API] HeapAlloc(size=0x80, zero=0) = 0x29a9540
+[Tf80] [API] HeapAlloc(size=0x80, zero=0) = 0x29a95d0
+[Tf80] [API] HeapAlloc(size=0x20, zero=0) = 0x29a9660
+[Tf80] [API] HeapFree(0x299afc0)
+[Tf80] [API] HeapAlloc(size=0x20, zero=0) = 0x299afc0
+[Tf80] [API] HeapAlloc(size=0x5, zero=0) = 0x29a9690
+[Tf80] [API] HeapAlloc(size=0xa, zero=0) = 0x29a96b0
+[Tf80] [API] HeapAlloc(size=0x60, zero=0) = 0x29a96d0
+[Tf80] [API] HeapAlloc(size=0x60, zero=0) = 0x29a9740
+[Tf80] [API] HeapAlloc(size=0x18, zero=0) = 0x29a97b0
+[Tf80] [API] HeapAlloc(size=0x80, zero=0) = 0x29a97d0
+[Tf80] [API] HeapAlloc(size=0x80, zero=0) = 0x29a9860
+[Tf80] [API] HeapAlloc(size=0x20, zero=0) = 0x29a98f0
+[Tf80] [API] HeapFree(0x299afc0)
+[Tf80] [API] HeapAlloc(size=0x20, zero=0) = 0x299afc0
+[Tf80] [API] HeapAlloc(size=0x5, zero=0) = 0x29a9920
+[Tf80] [API] HeapAlloc(size=0x8, zero=0) = 0x29a9940
+[Tf80] [API] HeapAlloc(size=0x60, zero=0) = 0x29a9960
+[Tf80] [API] HeapAlloc(size=0x60, zero=0) = 0x29a99d0
+[Tf80] [API] HeapAlloc(size=0x18, zero=0) = 0x29a9a40
+[Tf80] [API] HeapAlloc(size=0x80, zero=0) = 0x29a9a60
+[Tf80] [API] HeapAlloc(size=0x80, zero=0) = 0x29a9af0
+[Tf80] [API] HeapAlloc(size=0x20, zero=0) = 0x29a9b80
+[Tf80] [API] HeapFree(0x299afc0)
+[Tf80] [API] HeapAlloc(size=0x20, zero=0) = 0x299afc0
+[Tf80] [API] HeapAlloc(size=0x5, zero=0) = 0x29a9bb0
+[Tf80] [API] HeapAlloc(size=0x9, zero=0) = 0x29a9bd0
+[Tf80] [API] HeapReAlloc(size=0xc00) = 0x29a9bf0
+[Tf80] [API] HeapReAlloc(size=0x3400) = 0x29c0f50
+[Tf80] [API] HeapAlloc(size=0x60, zero=0) = 0x29a36a0
+[Tf80] [API] HeapAlloc(size=0x60, zero=0) = 0x29a3710
+[Tf80] [API] HeapAlloc(size=0x18, zero=0) = 0x29a3780
+[Tf80] [API] HeapAlloc(size=0x80, zero=0) = 0x29a37a0
+[Tf80] [API] HeapAlloc(size=0x80, zero=0) = 0x29a3830
+[Tf80] [API] HeapAlloc(size=0x20, zero=0) = 0x29a38c0
+[Tf80] [API] HeapFree(0x299afc0)
+[Tf80] [API] HeapAlloc(size=0x20, zero=0) = 0x299afc0
+[Tf80] [API] HeapAlloc(size=0x5, zero=0) = 0x29a38f0
+[Tf80] [API] HeapAlloc(size=0x7, zero=0) = 0x29a3910
+[Tf80] [API] HeapAlloc(size=0x60, zero=0) = 0x29a3930
+[Tf80] [API] HeapAlloc(size=0x60, zero=0) = 0x29a39a0
+[Tf80] [API] HeapAlloc(size=0x18, zero=0) = 0x29a3a10
+[Tf80] [API] HeapAlloc(size=0x80, zero=0) = 0x29a3a30
+[Tf80] [API] HeapAlloc(size=0x80, zero=0) = 0x29a3ac0
+[Tf80] [API] HeapAlloc(size=0x20, zero=0) = 0x29a3b50
+[Tf80] [API] HeapFree(0x299afc0)
+[Tf80] [API] HeapAlloc(size=0x20, zero=0) = 0x299afc0
+[Tf80] [API] HeapAlloc(size=0x5, zero=0) = 0x29a3b80
+[Tf80] [API] HeapAlloc(size=0xb, zero=0) = 0x29a3ba0
+[Tf80] [API] HeapAlloc(size=0x60, zero=0) = 0x29a3bc0
+[Tf80] [API] HeapAlloc(size=0x60, zero=0) = 0x29a3c30
+[Tf80] [API] HeapAlloc(size=0x18, zero=0) = 0x29a3ca0
+[Tf80] [API] HeapAlloc(size=0x80, zero=0) = 0x29a3cc0
+[Tf80] [API] HeapAlloc(size=0x80, zero=0) = 0x29a3d50
+[Tf80] [API] HeapAlloc(size=0x20, zero=0) = 0x29a3de0
+[Tf80] [API] HeapFree(0x299afc0)
+[Tf80] [API] HeapAlloc(size=0x20, zero=0) = 0x299afc0
+[Tf80] [API] HeapAlloc(size=0x5, zero=0) = 0x29a3e10
+[Tf80] [API] HeapAlloc(size=0x6, zero=0) = 0x29a3e30
+[Tf80] [API] HeapAlloc(size=0x60, zero=0) = 0x29a3e50
+[Tf80] [API] HeapAlloc(size=0x60, zero=0) = 0x29a3ec0
+[Tf80] [API] HeapAlloc(size=0x18, zero=0) = 0x29a3f30
+[Tf80] [API] HeapAlloc(size=0x80, zero=0) = 0x29a3f50
+[Tf80] [API] HeapAlloc(size=0x80, zero=0) = 0x29a3fe0
+[Tf80] [API] HeapAlloc(size=0x20, zero=0) = 0x29a4070
+[Tf80] [API] HeapFree(0x299afc0)
+[Tf80] [API] HeapAlloc(size=0x20, zero=0) = 0x299afc0
+[Tf80] [API] HeapAlloc(size=0x5, zero=0) = 0x29a40a0
+[Tf80] [API] HeapAlloc(size=0xd, zero=0) = 0x29a40c0
+[Tf80] [API] HeapAlloc(size=0x60, zero=0) = 0x29a40e0
+[Tf80] [API] HeapAlloc(size=0x60, zero=0) = 0x29a4150
+[Tf80] [API] HeapAlloc(size=0x18, zero=0) = 0x29a41c0
+[Tf80] [API] HeapAlloc(size=0x80, zero=0) = 0x29a41e0
+[Tf80] [API] HeapAlloc(size=0x80, zero=0) = 0x29a4270
+[Tf80] [API] HeapAlloc(size=0x20, zero=0) = 0x29a4300
+[Tf80] [API] HeapFree(0x299afc0)
+[Tf80] [API] HeapAlloc(size=0x20, zero=0) = 0x299afc0
+[Tf80] [API] HeapAlloc(size=0x5, zero=0) = 0x29a4330
+[Tf80] [API] HeapAlloc(size=0x11, zero=0) = 0x29a4350
+[Tf80] [API] HeapAlloc(size=0x60, zero=0) = 0x29a4370
+[Tf80] [API] HeapAlloc(size=0x60, zero=0) = 0x29a43e0
+[Tf80] [API] HeapAlloc(size=0x18, zero=0) = 0x29a4450
+[Tf80] [API] HeapAlloc(size=0x80, zero=0) = 0x29a4470
+[Tf80] [API] HeapAlloc(size=0x80, zero=0) = 0x29a4500
+[Tf80] [API] HeapAlloc(size=0x20, zero=0) = 0x29a4590
+[Tf80] [API] HeapFree(0x299afc0)
+[Tf80] [API] HeapAlloc(size=0x20, zero=0) = 0x299afc0
+[Tf80] [API] HeapAlloc(size=0x5, zero=0) = 0x29a45c0
+[Tf80] [API] HeapAlloc(size=0x8, zero=0) = 0x29a45e0
+[Tf80] [API] HeapAlloc(size=0x60, zero=0) = 0x29a4600
+[Tf80] [API] HeapAlloc(size=0x60, zero=0) = 0x29a4670
+[Tf80] [API] HeapAlloc(size=0x18, zero=0) = 0x29a46e0
+[Tf80] [API] HeapAlloc(size=0x80, zero=0) = 0x29a4700
+[Tf80] [API] HeapAlloc(size=0x80, zero=0) = 0x29a4790
+[Tf80] [API] HeapAlloc(size=0x20, zero=0) = 0x29a4820
+[Tf80] [API] HeapFree(0x299afc0)
+[Tf80] [API] HeapAlloc(size=0x20, zero=0) = 0x299afc0
+[Tf80] [API] HeapAlloc(size=0x5, zero=0) = 0x29a4850
+[Tf80] [API] HeapAlloc(size=0xf, zero=0) = 0x29a4870
+[Tf80] [API] HeapAlloc(size=0x60, zero=0) = 0x29a4890
+[Tf80] [API] HeapAlloc(size=0x60, zero=0) = 0x29a4900
+[Tf80] [API] HeapAlloc(size=0x18, zero=0) = 0x29a4970
+[Tf80] [API] HeapAlloc(size=0x80, zero=0) = 0x29a4990
+[Tf80] [API] HeapAlloc(size=0x80, zero=0) = 0x29a4a20
+[Tf80] [API] HeapAlloc(size=0x20, zero=0) = 0x29a4ab0
+[Tf80] [API] HeapFree(0x299afc0)
+[Tf80] [API] HeapAlloc(size=0x20, zero=0) = 0x299afc0
+[Tf80] [API] HeapAlloc(size=0x5, zero=0) = 0x29a4ae0
+[Tf80] [API] HeapAlloc(size=0xa, zero=0) = 0x29a4b00
+[Tf80] [API] HeapAlloc(size=0x60, zero=0) = 0x29a4b20
+[Tf80] [API] HeapAlloc(size=0x60, zero=0) = 0x29a4b90
+[Tf80] [API] HeapAlloc(size=0x18, zero=0) = 0x29a4c00
+[Tf80] [API] HeapAlloc(size=0x80, zero=0) = 0x29a4c20
+[Tf80] [API] HeapAlloc(size=0x80, zero=0) = 0x29a4cb0
+[Tf80] [API] HeapAlloc(size=0x20, zero=0) = 0x29a4d40
+[Tf80] [API] HeapFree(0x299afc0)
+[Tf80] [API] HeapAlloc(size=0x20, zero=0) = 0x299afc0
+[Tf80] [API] HeapAlloc(size=0x5, zero=0) = 0x29a4d70
+[Tf80] [API] HeapAlloc(size=0xc, zero=0) = 0x29a4d90
+[Tf80] [API] HeapAlloc(size=0x60, zero=0) = 0x29a4db0
+[Tf80] [API] HeapAlloc(size=0x60, zero=0) = 0x29a4e20
+[Tf80] [API] HeapAlloc(size=0x18, zero=0) = 0x29a4e90
+[Tf80] [API] HeapAlloc(size=0x80, zero=0) = 0x29a4eb0
+[Tf80] [API] HeapAlloc(size=0x80, zero=0) = 0x29a4f40
+[Tf80] [API] HeapAlloc(size=0x20, zero=0) = 0x29a4fd0
+[Tf80] [API] HeapFree(0x299afc0)
+[Tf80] [API] HeapAlloc(size=0x20, zero=0) = 0x299afc0
+[Tf80] [API] HeapAlloc(size=0x5, zero=0) = 0x29a5000
+[Tf80] [API] HeapAlloc(size=0x7, zero=0) = 0x29a5020
+[Tf80] [API] HeapAlloc(size=0x60, zero=0) = 0x29a5040
+[Tf80] [API] HeapAlloc(size=0x60, zero=0) = 0x29a50b0
+[Tf80] [API] HeapAlloc(size=0x18, zero=0) = 0x29a5120
+[Tf80] [API] HeapAlloc(size=0x80, zero=0) = 0x29a5140
+[Tf80] [API] HeapAlloc(size=0x80, zero=0) = 0x29a51d0
+[Tf80] [API] HeapAlloc(size=0x20, zero=0) = 0x29a5260
+[Tf80] [API] HeapFree(0x299afc0)
+[Tf80] [API] HeapAlloc(size=0x20, zero=0) = 0x299afc0
+[Tf80] [API] HeapAlloc(size=0x5, zero=0) = 0x29a5290
+[Tf80] [API] HeapAlloc(size=0x7, zero=0) = 0x29a52b0
+[Tf80] [API] HeapAlloc(size=0x60, zero=0) = 0x29a52d0
+[Tf80] [API] HeapAlloc(size=0x60, zero=0) = 0x29a5340
+[Tf80] [API] HeapAlloc(size=0x18, zero=0) = 0x29a53b0
+[Tf80] [API] HeapAlloc(size=0x80, zero=0) = 0x29a53d0
+[Tf80] [API] HeapAlloc(size=0x80, zero=0) = 0x29a5460
+[Tf80] [API] HeapAlloc(size=0x20, zero=0) = 0x29a54f0
+[Tf80] [API] HeapFree(0x299afc0)
+[Tf80] [API] HeapAlloc(size=0x20, zero=0) = 0x299afc0
+[Tf80] [API] HeapAlloc(size=0x5, zero=0) = 0x29a5520
+[Tf80] [API] HeapAlloc(size=0xe, zero=0) = 0x29a5540
+[Tf80] [API] HeapAlloc(size=0x60, zero=0) = 0x29a5560
+[Tf80] [API] HeapAlloc(size=0x60, zero=0) = 0x29a55d0
+[Tf80] [API] HeapAlloc(size=0x18, zero=0) = 0x29a5640
+[Tf80] [API] HeapAlloc(size=0x80, zero=0) = 0x29aa800
+[Tf80] [API] HeapAlloc(size=0x80, zero=0) = 0x29aa890
+[Tf80] [API] HeapAlloc(size=0x20, zero=0) = 0x29aa920
+[Tf80] [API] HeapFree(0x299afc0)
+[Tf80] [API] HeapAlloc(size=0x20, zero=0) = 0x299afc0
+[Tf80] [API] HeapAlloc(size=0x5, zero=0) = 0x29aa950
+[Tf80] [API] HeapAlloc(size=0xf, zero=0) = 0x29aa970
+[Tf80] [API] HeapAlloc(size=0x60, zero=0) = 0x29aa990
+[Tf80] [API] HeapAlloc(size=0x60, zero=0) = 0x29aaa00
+[Tf80] [API] HeapAlloc(size=0x18, zero=0) = 0x29aaa70
+[Tf80] [API] HeapAlloc(size=0x80, zero=0) = 0x29aaa90
+[Tf80] [API] HeapAlloc(size=0x80, zero=0) = 0x29aab20
+[Tf80] [API] HeapAlloc(size=0x20, zero=0) = 0x29aabb0
+[Tf80] [API] HeapFree(0x299afc0)
+[Tf80] [API] HeapAlloc(size=0x20, zero=0) = 0x299afc0
+[Tf80] [API] HeapAlloc(size=0x5, zero=0) = 0x29aabe0
+[Tf80] [API] HeapAlloc(size=0x7, zero=0) = 0x29aac00
+[Tf80] [API] HeapAlloc(size=0x60, zero=0) = 0x29aac20
+[Tf80] [API] HeapAlloc(size=0x60, zero=0) = 0x29aac90
+[Tf80] [API] HeapAlloc(size=0x18, zero=0) = 0x29aad00
+[Tf80] [API] HeapAlloc(size=0x80, zero=0) = 0x29aad20
+[Tf80] [API] HeapAlloc(size=0x80, zero=0) = 0x29aadb0
+[Tf80] [API] HeapAlloc(size=0x20, zero=0) = 0x29aae40
+[Tf80] [API] HeapFree(0x299afc0)
+[Tf80] [API] HeapAlloc(size=0x20, zero=0) = 0x299afc0
+[Tf80] [API] HeapAlloc(size=0x5, zero=0) = 0x29aae70
+[Tf80] [API] HeapAlloc(size=0xc, zero=0) = 0x29aae90
+[Tf80] [API] HeapAlloc(size=0x60, zero=0) = 0x29aaeb0
+[Tf80] [API] HeapAlloc(size=0x60, zero=0) = 0x29aaf20
+[Tf80] [API] HeapAlloc(size=0x18, zero=0) = 0x29aaf90
+[Tf80] [API] HeapAlloc(size=0x80, zero=0) = 0x29aafb0
+[Tf80] [API] HeapAlloc(size=0x80, zero=0) = 0x29ab040
+[Tf80] [API] HeapAlloc(size=0x20, zero=0) = 0x29ab0d0
+[Tf80] [API] HeapFree(0x299afc0)
+[Tf80] [API] HeapAlloc(size=0x20, zero=0) = 0x299afc0
+[Tf80] [API] HeapAlloc(size=0x5, zero=0) = 0x29ab100
+[Tf80] [API] HeapAlloc(size=0xb, zero=0) = 0x29ab120
+[Tf80] [API] HeapAlloc(size=0x60, zero=0) = 0x29ab140
+[Tf80] [API] HeapAlloc(size=0x60, zero=0) = 0x29ab1b0
+[Tf80] [API] HeapAlloc(size=0x18, zero=0) = 0x29ab220
+[Tf80] [API] HeapAlloc(size=0x80, zero=0) = 0x29ab240
+[Tf80] [API] HeapAlloc(size=0x80, zero=0) = 0x29ab2d0
+[Tf80] [API] HeapAlloc(size=0x20, zero=0) = 0x29ab360
+[Tf80] [API] HeapFree(0x299afc0)
+[Tf80] [API] HeapAlloc(size=0x20, zero=0) = 0x299afc0
+[Tf80] [API] HeapAlloc(size=0x5, zero=0) = 0x29ab390
+[Tf80] [API] HeapAlloc(size=0x7, zero=0) = 0x29ab3b0
+[Tf80] [API] HeapAlloc(size=0x60, zero=0) = 0x29ab3d0
+[Tf80] [API] HeapAlloc(size=0x60, zero=0) = 0x29ab440
+[Tf80] [API] HeapAlloc(size=0x18, zero=0) = 0x29ab4b0
+[Tf80] [API] HeapAlloc(size=0x80, zero=0) = 0x29ab4d0
+[Tf80] [API] HeapAlloc(size=0x80, zero=0) = 0x29ab560
+[Tf80] [API] HeapAlloc(size=0x20, zero=0) = 0x29ab5f0
+[Tf80] [API] HeapFree(0x299afc0)
+[Tf80] [API] HeapAlloc(size=0xf0, zero=0) = 0x299aca0
+[Tf80] [API] HeapAlloc(size=0x60, zero=0) = 0x29ab620
+[Tf80] [API] HeapAlloc(size=0x8, zero=0) = 0x29ab690
+[Tf80] [API] HeapAlloc(size=0x20, zero=0) = 0x299afc0
+[Tf80] [API] HeapFree(0x29ab690)
+[Tf80] [API] HeapFree(0x299afc0)
+[Tf80] [API] HeapAlloc(size=0x60, zero=0) = 0x29ab6b0
+[Tf80] [API] HeapAlloc(size=0x18, zero=0) = 0x29ab690
+[Tf80] [API] HeapAlloc(size=0x18, zero=0) = 0x29ab720
+[Tf80] [API] HeapFree(0x29ab690)
+[Tf80] [API] HeapAlloc(size=0x4, zero=0) = 0x29ab690
+[Tf80] [API] HeapReAlloc(size=0xd) = 0x29ab690
+[Tf80] [API] HeapReAlloc(size=0x1a) = 0x29ab740
+[Tf80] [API] HeapAlloc(size=0xe, zero=0) = 0x29ab690
+[Tf80] [API] HeapFree(0x29ab740)
+[Tf80] [API] HeapFree(0x29ab720)
+[Tf80] [API] HeapAlloc(size=0x8, zero=0) = 0x29ab720
+[Tf80] [API] HeapReAlloc(size=0x13) = 0x29ab720
+[Tf80] [API] HeapReAlloc(size=0x26) = 0x29ab770
+[Tf80] [API] HeapFree(0x29ab690)
+[Tf80] [API] HeapAlloc(size=0x17, zero=0) = 0x29ab690
+[Tf80] [API] HeapFree(0x29ab770)
+[Tf80] [API] HeapAlloc(size=0x60, zero=0) = 0x29ab7a0
+[Tf80] [API] HeapAlloc(size=0x18, zero=0) = 0x29ab720
+[Tf80] [API] HeapAlloc(size=0x18, zero=0) = 0x29ab810
+[Tf80] [API] HeapFree(0x29ab720)
+[Tf80] [API] HeapAlloc(size=0x4, zero=0) = 0x29ab720
+[Tf80] [API] HeapReAlloc(size=0xd) = 0x29ab720
+[Tf80] [API] HeapReAlloc(size=0x1a) = 0x29ab830
+[Tf80] [API] HeapAlloc(size=0xe, zero=0) = 0x29ab720
+[Tf80] [API] HeapFree(0x29ab830)
+[Tf80] [API] HeapFree(0x29ab810)
+[Tf80] [API] HeapAlloc(size=0x8, zero=0) = 0x29ab810
+[Tf80] [API] HeapReAlloc(size=0x13) = 0x29ab810
+[Tf80] [API] HeapReAlloc(size=0x26) = 0x29ab860
+[Tf80] [API] HeapFree(0x29ab720)
+[Tf80] [API] HeapAlloc(size=0x17, zero=0) = 0x29ab720
+[Tf80] [API] HeapFree(0x29ab860)
+[Tf80] [API] HeapFree(0x29ab690)
+[Tf80] [API] HeapAlloc(size=0x60, zero=0) = 0x29ab890
+[Tf80] [API] HeapFree(0x29ab7a0)
+[Tf80] [API] HeapFree(0x29ab6b0)
+[Tf80] [API] HeapAlloc(size=0xe, zero=0) = 0x29ab690
+[Tf80] [API] HeapFree(0x29ab720)
+[Tf80] [API] HeapAlloc(size=0x60, zero=0) = 0x29ab6b0
+[Tf80] [API] HeapFree(0x29ab620)
+[Tf80] [API] HeapAlloc(size=0x8, zero=0) = 0x29ab720
+[Tf80] [API] HeapReAlloc(size=0x10) = 0x29ab720
+[Tf80] [API] HeapReAlloc(size=0x20) = 0x29ab900
+[Tf80] [API] HeapReAlloc(size=0x40) = 0x29ab900
+[Tf80] [API] HeapAlloc(size=0x8, zero=0) = 0x29ab720
+[Tf80] [API] HeapAlloc(size=0x20, zero=0) = 0x29ab860
+[Tf80] [API] HeapFree(0x29ab720)
+[Tf80] [API] HeapFree(0x29ab860)
+[Tf80] [API] HeapAlloc(size=0x60, zero=0) = 0x29ab620
+[Tf80] [API] HeapAlloc(size=0x18, zero=0) = 0x29ab720
+[Tf80] [API] HeapAlloc(size=0x18, zero=0) = 0x29ab810
+[Tf80] [API] HeapFree(0x29ab720)
+[Tf80] [API] HeapAlloc(size=0x4, zero=0) = 0x29ab720
+[Tf80] [API] HeapReAlloc(size=0xd) = 0x29ab720
+[Tf80] [API] HeapReAlloc(size=0x1a) = 0x29a14f0
+[Tf80] [API] HeapAlloc(size=0xe, zero=0) = 0x29ab720
+[Tf80] [API] HeapFree(0x29a14f0)
+[Tf80] [API] HeapFree(0x29ab810)
+[Tf80] [API] HeapAlloc(size=0x8, zero=0) = 0x29ab810
+[Tf80] [API] HeapReAlloc(size=0x13) = 0x29ab810
+[Tf80] [API] HeapReAlloc(size=0x26) = 0x29a5660
+[Tf80] [API] HeapFree(0x29ab720)
+[Tf80] [API] HeapAlloc(size=0x17, zero=0) = 0x29ab720
+[Tf80] [API] HeapFree(0x29a5660)
+[Tf80] [API] HeapAlloc(size=0x60, zero=0) = 0x29ab7a0
+[Tf80] [API] HeapAlloc(size=0x18, zero=0) = 0x29ab810
+[Tf80] [API] HeapAlloc(size=0x18, zero=0) = 0x29a5690
+[Tf80] [API] HeapFree(0x29ab810)
+[Tf80] [API] HeapAlloc(size=0x4, zero=0) = 0x29ab810
+[Tf80] [API] HeapReAlloc(size=0xd) = 0x29ab810
+[Tf80] [API] HeapReAlloc(size=0x1a) = 0x29ab950
+[Tf80] [API] HeapAlloc(size=0xe, zero=0) = 0x29ab810
+[Tf80] [API] HeapFree(0x29ab950)
+[Tf80] [API] HeapFree(0x29a5690)
+[Tf80] [API] HeapAlloc(size=0x8, zero=0) = 0x29ab980
+[Tf80] [API] HeapReAlloc(size=0x13) = 0x29ab980
+[Tf80] [API] HeapReAlloc(size=0x26) = 0x29ab980
+[Tf80] [API] HeapFree(0x29ab810)
+[Tf80] [API] HeapAlloc(size=0x17, zero=0) = 0x29ab810
+[Tf80] [API] HeapFree(0x29ab980)
+[Tf80] [API] HeapFree(0x29ab720)
+[Tf80] [API] HeapAlloc(size=0x18, zero=0) = 0x29ab720
+[Tf80] [API] HeapAlloc(size=0x18, zero=0) = 0x29ab9b0
+[Tf80] [API] HeapFree(0x29ab720)
+[Tf80] [API] HeapAlloc(size=0x4, zero=0) = 0x29ab720
+[Tf80] [API] HeapReAlloc(size=0xd) = 0x29ab720
+[Tf80] [API] HeapReAlloc(size=0x1a) = 0x29ab980
+[Tf80] [API] HeapAlloc(size=0xe, zero=0) = 0x29ab720
+[Tf80] [API] HeapFree(0x29ab980)
+[Tf80] [API] HeapReAlloc(size=0x1c) = 0x29ab980
+[Tf80] [API] HeapFree(0x29ab9b0)
+[Tf80] [API] HeapAlloc(size=0x8, zero=0) = 0x29ab9b0
+[Tf80] [API] HeapReAlloc(size=0x16) = 0x29ab9b0
+[Tf80] [API] HeapReAlloc(size=0x2c) = 0x29ab9b0
+[Tf80] [API] HeapFree(0x29ab980)
+[Tf80] [API] HeapAlloc(size=0x1a, zero=0) = 0x29ab950
+[Tf80] [API] HeapFree(0x29ab9b0)
+[Tf80] [API] HeapFree(0x29ab810)
+[Tf80] [API] HeapReAlloc(size=0x80) = 0x29ab9f0
+[Tf80] [API] HeapFree(0x29ab950)
+[Tf80] [API] HeapFree(0x29ab7a0)
+[Tf80] [API] HeapFree(0x29ab620)
+[Tf80] [API] HeapAlloc(size=0x5a, zero=0) = 0x29ab620
+[Tf80] [API] HeapFree(0x29ab9f0)
+[Tf80] [API] HeapAlloc(size=0x100, zero=0) = 0x29aba80
+[Tf80] [API] HeapAlloc(size=0x4, zero=0) = 0x29ab810
+[Tf80] [API] HeapReAlloc(size=0x8) = 0x29ab810
+[Tf80] [API] HeapAlloc(size=0x8, zero=0) = 0x29ab720
+[Tf80] [API] HeapAlloc(size=0x80, zero=0) = 0x29ab9f0
+[Tf80] [API] HeapFree(0x29ab6b0)
+[Tf80] [API] HeapFree(0x299aca0)
+[Tf80] [API] HeapFree(0x29a2490)
+[Tf80] [API] HeapFree(0x29a2720)
+[Tf80] [API] HeapFree(0x29a29b0)
+[Tf80] [API] HeapFree(0x29a2c40)
+[Tf80] [API] HeapFree(0x29a2ed0)
+[Tf80] [API] HeapFree(0x29a3160)
+[Tf80] [API] HeapFree(0x29a33f0)
+[Tf80] [API] HeapFree(0x29a3680)
+[Tf80] [API] HeapFree(0x29a0a90)
+[Tf80] [API] HeapFree(0x29a0d20)
+[Tf80] [API] HeapFree(0x29a0fb0)
+[Tf80] [API] HeapFree(0x29a1240)
+[Tf80] [API] HeapFree(0x29a14d0)
+[Tf80] [API] HeapFree(0x29a5930)
+[Tf80] [API] HeapFree(0x29a5bc0)
+[Tf80] [API] HeapFree(0x29a5e50)
+[Tf80] [API] HeapFree(0x29a60e0)
+[Tf80] [API] HeapFree(0x29a6370)
+[Tf80] [API] HeapFree(0x29a6600)
+[Tf80] [API] HeapFree(0x29a6890)
+[Tf80] [API] HeapFree(0x29a6b20)
+[Tf80] [API] HeapFree(0x29a6db0)
+[Tf80] [API] HeapFree(0x29a7040)
+[Tf80] [API] HeapFree(0x29a72d0)
+[Tf80] [API] HeapFree(0x29a7560)
+[Tf80] [API] HeapFree(0x29a77f0)
+[Tf80] [API] HeapFree(0x29a7a80)
+[Tf80] [API] HeapFree(0x29a7d10)
+[Tf80] [API] HeapFree(0x29a7fa0)
+[Tf80] [API] HeapFree(0x29a8230)
+[Tf80] [API] HeapFree(0x29a84c0)
+[Tf80] [API] HeapFree(0x29a8750)
+[Tf80] [API] HeapFree(0x29a89e0)
+[Tf80] [API] HeapFree(0x29a8c70)
+[Tf80] [API] HeapFree(0x29a8f00)
+[Tf80] [API] HeapFree(0x29a9190)
+[Tf80] [API] HeapFree(0x29a9420)
+[Tf80] [API] HeapFree(0x29a96b0)
+[Tf80] [API] HeapFree(0x29a9940)
+[Tf80] [API] HeapFree(0x29a9bd0)
+[Tf80] [API] HeapFree(0x29a3910)
+[Tf80] [API] HeapFree(0x29a3ba0)
+[Tf80] [API] HeapFree(0x29a3e30)
+[Tf80] [API] HeapFree(0x29a40c0)
+[Tf80] [API] HeapFree(0x29a4350)
+[Tf80] [API] HeapFree(0x29a45e0)
+[Tf80] [API] HeapFree(0x29a4870)
+[Tf80] [API] HeapFree(0x29a4b00)
+[Tf80] [API] HeapFree(0x29a4d90)
+[Tf80] [API] HeapFree(0x29a5020)
+[Tf80] [API] HeapFree(0x29a52b0)
+[Tf80] [API] HeapFree(0x29a5540)
+[Tf80] [API] HeapFree(0x29aa970)
+[Tf80] [API] HeapFree(0x29aac00)
+[Tf80] [API] HeapFree(0x29aae90)
+[Tf80] [API] HeapFree(0x29ab120)
+[Tf80] [API] HeapFree(0x29ab3b0)
+[Tf80] [API] HeapFree(0x29a9bf0)
+[Tf80] [API] HeapFree(0x299aeb0)
+[Tf80] [API] HeapFree(0x299ae60)
+[Tf80] [API] HeapFree(0x29916c0)
+[Tf80] [API] HeapFree(0x299adf0)
+[Tf80] [API] HeapFree(0x299b8f0)
+[Tf80] [API] HeapFree(0x299b230)
+[Tf80] [API] HeapFree(0x299aee0)
+[Tf80] [API] HeapFree(0x299ae80)
+[Tf80] [API] HeapFree(0x299b3c0)
+[Tf80] [API] HeapFree(0x299b3e0)
+[Tf80] [API] HeapFree(0x299b2e0)
+[Tf80] [API] HeapFree(0x299b2c0)
+[Tf80] [API] HeapFree(0x299b470)
+[Tf80] [API] HeapFree(0x299b350)
+[Tf80] [API] HeapFree(0x299adc0)
+[Tf80] [API] HeapFree(0x299b600)
+[Tf80] [API] HeapFree(0x299b620)
+[Tf80] [API] HeapFree(0x299b520)
+[Tf80] [API] HeapFree(0x299b500)
+[Tf80] [API] HeapFree(0x299b6b0)
+[Tf80] [API] HeapFree(0x299b590)
+[Tf80] [API] HeapFree(0x299dbb0)
+[Tf80] [API] HeapFree(0x299b840)
+[Tf80] [API] HeapFree(0x299b860)
+[Tf80] [API] HeapFree(0x299b760)
+[Tf80] [API] HeapFree(0x299b740)
+[Tf80] [API] HeapFree(0x299db20)
+[Tf80] [API] HeapFree(0x299b7d0)
+[Tf80] [API] HeapFree(0x299e1d0)
+[Tf80] [API] HeapFree(0x299e090)
+[Tf80] [API] HeapFree(0x299e0b0)
+[Tf80] [API] HeapFree(0x299af50)
+[Tf80] [API] HeapFree(0x299dbe0)
+[Tf80] [API] HeapFree(0x299e140)
+[Tf80] [API] HeapFree(0x299e020)
+[Tf80] [API] HeapFree(0x299e440)
+[Tf80] [API] HeapFree(0x299e300)
+[Tf80] [API] HeapFree(0x299e320)
+[Tf80] [API] HeapFree(0x299e220)
+[Tf80] [API] HeapFree(0x299e200)
+[Tf80] [API] HeapFree(0x299e3b0)
+[Tf80] [API] HeapFree(0x299e290)
+[Tf80] [API] HeapFree(0x299e6b0)
+[Tf80] [API] HeapFree(0x299e570)
+[Tf80] [API] HeapFree(0x299e590)
+[Tf80] [API] HeapFree(0x299e490)
+[Tf80] [API] HeapFree(0x299e470)
+[Tf80] [API] HeapFree(0x299e620)
+[Tf80] [API] HeapFree(0x299e500)
+[Tf80] [API] HeapFree(0x299e920)
+[Tf80] [API] HeapFree(0x299e7e0)
+[Tf80] [API] HeapFree(0x299e800)
+[Tf80] [API] HeapFree(0x299e700)
+[Tf80] [API] HeapFree(0x299e6e0)
+[Tf80] [API] HeapFree(0x299e890)
+[Tf80] [API] HeapFree(0x299e770)
+[Tf80] [API] HeapFree(0x299f3b0)
+[Tf80] [API] HeapFree(0x299f270)
+[Tf80] [API] HeapFree(0x299f290)
+[Tf80] [API] HeapFree(0x299f190)
+[Tf80] [API] HeapFree(0x299e950)
+[Tf80] [API] HeapFree(0x299f320)
+[Tf80] [API] HeapFree(0x299f200)
+[Tf80] [API] HeapFree(0x299f620)
+[Tf80] [API] HeapFree(0x299f4e0)
+[Tf80] [API] HeapFree(0x299f500)
+[Tf80] [API] HeapFree(0x299f400)
+[Tf80] [API] HeapFree(0x299f3e0)
+[Tf80] [API] HeapFree(0x299f590)
+[Tf80] [API] HeapFree(0x299f470)
+[Tf80] [API] HeapFree(0x299f890)
+[Tf80] [API] HeapFree(0x299f750)
+[Tf80] [API] HeapFree(0x299f770)
+[Tf80] [API] HeapFree(0x299f670)
+[Tf80] [API] HeapFree(0x299f650)
+[Tf80] [API] HeapFree(0x299f800)
+[Tf80] [API] HeapFree(0x299f6e0)
+[Tf80] [API] HeapFree(0x299fb00)
+[Tf80] [API] HeapFree(0x299f9c0)
+[Tf80] [API] HeapFree(0x299f9e0)
+[Tf80] [API] HeapFree(0x299f8e0)
+[Tf80] [API] HeapFree(0x299f8c0)
+[Tf80] [API] HeapFree(0x299fa70)
+[Tf80] [API] HeapFree(0x299f950)
+[Tf80] [API] HeapFree(0x299fd70)
+[Tf80] [API] HeapFree(0x299fc30)
+[Tf80] [API] HeapFree(0x299fc50)
+[Tf80] [API] HeapFree(0x299fb50)
+[Tf80] [API] HeapFree(0x299fb30)
+[Tf80] [API] HeapFree(0x299fce0)
+[Tf80] [API] HeapFree(0x299fbc0)
+[Tf80] [API] HeapFree(0x299ffe0)
+[Tf80] [API] HeapFree(0x299fea0)
+[Tf80] [API] HeapFree(0x299fec0)
+[Tf80] [API] HeapFree(0x299fdc0)
+[Tf80] [API] HeapFree(0x299fda0)
+[Tf80] [API] HeapFree(0x299ff50)
+[Tf80] [API] HeapFree(0x299fe30)
+[Tf80] [API] HeapFree(0x29a0250)
+[Tf80] [API] HeapFree(0x29a0110)
+[Tf80] [API] HeapFree(0x29a0130)
+[Tf80] [API] HeapFree(0x29a0030)
+[Tf80] [API] HeapFree(0x29a0010)
+[Tf80] [API] HeapFree(0x29a01c0)
+[Tf80] [API] HeapFree(0x29a00a0)
+[Tf80] [API] HeapFree(0x29a04c0)
+[Tf80] [API] HeapFree(0x29a0380)
+[Tf80] [API] HeapFree(0x29a03a0)
+[Tf80] [API] HeapFree(0x29a02a0)
+[Tf80] [API] HeapFree(0x29a0280)
+[Tf80] [API] HeapFree(0x29a0430)
+[Tf80] [API] HeapFree(0x29a0310)
+[Tf80] [API] HeapFree(0x299ed20)
+[Tf80] [API] HeapFree(0x299ebe0)
+[Tf80] [API] HeapFree(0x299ec00)
+[Tf80] [API] HeapFree(0x299eb00)
+[Tf80] [API] HeapFree(0x29a04f0)
+[Tf80] [API] HeapFree(0x299ec90)
+[Tf80] [API] HeapFree(0x299eb70)
+[Tf80] [API] HeapFree(0x299ef90)
+[Tf80] [API] HeapFree(0x299ee50)
+[Tf80] [API] HeapFree(0x299ee70)
+[Tf80] [API] HeapFree(0x299ed70)
+[Tf80] [API] HeapFree(0x299ed50)
+[Tf80] [API] HeapFree(0x299ef00)
+[Tf80] [API] HeapFree(0x299ede0)
+[Tf80] [API] HeapFree(0x29a15c0)
+[Tf80] [API] HeapFree(0x299f0c0)
+[Tf80] [API] HeapFree(0x299f0e0)
+[Tf80] [API] HeapFree(0x299efe0)
+[Tf80] [API] HeapFree(0x299efc0)
+[Tf80] [API] HeapFree(0x29a1530)
+[Tf80] [API] HeapFree(0x299f050)
+[Tf80] [API] HeapFree(0x29a1810)
+[Tf80] [API] HeapFree(0x29a16d0)
+[Tf80] [API] HeapFree(0x29a16f0)
+[Tf80] [API] HeapFree(0x29a15f0)
+[Tf80] [API] HeapFree(0x299f170)
+[Tf80] [API] HeapFree(0x29a1780)
+[Tf80] [API] HeapFree(0x29a1660)
+[Tf80] [API] HeapFree(0x29a1a80)
+[Tf80] [API] HeapFree(0x29a1940)
+[Tf80] [API] HeapFree(0x29a1960)
+[Tf80] [API] HeapFree(0x29a1860)
+[Tf80] [API] HeapFree(0x29a1840)
+[Tf80] [API] HeapFree(0x29a19f0)
+[Tf80] [API] HeapFree(0x29a18d0)
+[Tf80] [API] HeapFree(0x29a1cf0)
+[Tf80] [API] HeapFree(0x29a1bb0)
+[Tf80] [API] HeapFree(0x29a1bd0)
+[Tf80] [API] HeapFree(0x29a1ad0)
+[Tf80] [API] HeapFree(0x29a1ab0)
+[Tf80] [API] HeapFree(0x29a1c60)
+[Tf80] [API] HeapFree(0x29a1b40)
+[Tf80] [API] HeapFree(0x29a1f60)
+[Tf80] [API] HeapFree(0x29a1e20)
+[Tf80] [API] HeapFree(0x29a1e40)
+[Tf80] [API] HeapFree(0x29a1d40)
+[Tf80] [API] HeapFree(0x29a1d20)
+[Tf80] [API] HeapFree(0x29a1ed0)
+[Tf80] [API] HeapFree(0x29a1db0)
+[Tf80] [API] HeapFree(0x29a21d0)
+[Tf80] [API] HeapFree(0x29a2090)
+[Tf80] [API] HeapFree(0x29a20b0)
+[Tf80] [API] HeapFree(0x29a1fb0)
+[Tf80] [API] HeapFree(0x29a1f90)
+[Tf80] [API] HeapFree(0x29a2140)
+[Tf80] [API] HeapFree(0x29a2020)
+[Tf80] [API] HeapFree(0x29a2440)
+[Tf80] [API] HeapFree(0x29a2300)
+[Tf80] [API] HeapFree(0x29a2320)
+[Tf80] [API] HeapFree(0x29a2220)
+[Tf80] [API] HeapFree(0x29a2200)
+[Tf80] [API] HeapFree(0x29a23b0)
+[Tf80] [API] HeapFree(0x29a2290)
+[Tf80] [API] HeapFree(0x29a26d0)
+[Tf80] [API] HeapFree(0x29a2590)
+[Tf80] [API] HeapFree(0x29a25b0)
+[Tf80] [API] HeapFree(0x29a24b0)
+[Tf80] [API] HeapFree(0x29a2470)
+[Tf80] [API] HeapFree(0x29a2640)
+[Tf80] [API] HeapFree(0x29a2520)
+[Tf80] [API] HeapFree(0x29a2960)
+[Tf80] [API] HeapFree(0x29a2820)
+[Tf80] [API] HeapFree(0x29a2840)
+[Tf80] [API] HeapFree(0x29a2740)
+[Tf80] [API] HeapFree(0x29a2700)
+[Tf80] [API] HeapFree(0x29a28d0)
+[Tf80] [API] HeapFree(0x29a27b0)
+[Tf80] [API] HeapFree(0x29a2bf0)
+[Tf80] [API] HeapFree(0x29a2ab0)
+[Tf80] [API] HeapFree(0x29a2ad0)
+[Tf80] [API] HeapFree(0x29a29d0)
+[Tf80] [API] HeapFree(0x29a2990)
+[Tf80] [API] HeapFree(0x29a2b60)
+[Tf80] [API] HeapFree(0x29a2a40)
+[Tf80] [API] HeapFree(0x29a2e80)
+[Tf80] [API] HeapFree(0x29a2d40)
+[Tf80] [API] HeapFree(0x29a2d60)
+[Tf80] [API] HeapFree(0x29a2c60)
+[Tf80] [API] HeapFree(0x29a2c20)
+[Tf80] [API] HeapFree(0x29a2df0)
+[Tf80] [API] HeapFree(0x29a2cd0)
+[Tf80] [API] HeapFree(0x29a3110)
+[Tf80] [API] HeapFree(0x29a2fd0)
+[Tf80] [API] HeapFree(0x29a2ff0)
+[Tf80] [API] HeapFree(0x29a2ef0)
+[Tf80] [API] HeapFree(0x29a2eb0)
+[Tf80] [API] HeapFree(0x29a3080)
+[Tf80] [API] HeapFree(0x29a2f60)
+[Tf80] [API] HeapFree(0x29a33a0)
+[Tf80] [API] HeapFree(0x29a3260)
+[Tf80] [API] HeapFree(0x29a3280)
+[Tf80] [API] HeapFree(0x29a3180)
+[Tf80] [API] HeapFree(0x29a3140)
+[Tf80] [API] HeapFree(0x29a3310)
+[Tf80] [API] HeapFree(0x29a31f0)
+[Tf80] [API] HeapFree(0x29a3630)
+[Tf80] [API] HeapFree(0x29a34f0)
+[Tf80] [API] HeapFree(0x29a3510)
+[Tf80] [API] HeapFree(0x29a3410)
+[Tf80] [API] HeapFree(0x29a33d0)
+[Tf80] [API] HeapFree(0x29a35a0)
+[Tf80] [API] HeapFree(0x29a3480)
+[Tf80] [API] HeapFree(0x29a0a40)
+[Tf80] [API] HeapFree(0x29a0900)
+[Tf80] [API] HeapFree(0x29a0920)
+[Tf80] [API] HeapFree(0x29a0820)
+[Tf80] [API] HeapFree(0x29a3660)
+[Tf80] [API] HeapFree(0x29a09b0)
+[Tf80] [API] HeapFree(0x29a0890)
+[Tf80] [API] HeapFree(0x29a0cd0)
+[Tf80] [API] HeapFree(0x29a0b90)
+[Tf80] [API] HeapFree(0x29a0bb0)
+[Tf80] [API] HeapFree(0x29a0ab0)
+[Tf80] [API] HeapFree(0x29a0a70)
+[Tf80] [API] HeapFree(0x29a0c40)
+[Tf80] [API] HeapFree(0x29a0b20)
+[Tf80] [API] HeapFree(0x29a0f60)
+[Tf80] [API] HeapFree(0x29a0e20)
+[Tf80] [API] HeapFree(0x29a0e40)
+[Tf80] [API] HeapFree(0x29a0d40)
+[Tf80] [API] HeapFree(0x29a0d00)
+[Tf80] [API] HeapFree(0x29a0ed0)
+[Tf80] [API] HeapFree(0x29a0db0)
+[Tf80] [API] HeapFree(0x29a11f0)
+[Tf80] [API] HeapFree(0x29a10b0)
+[Tf80] [API] HeapFree(0x29a10d0)
+[Tf80] [API] HeapFree(0x29a0fd0)
+[Tf80] [API] HeapFree(0x29a0f90)
+[Tf80] [API] HeapFree(0x29a1160)
+[Tf80] [API] HeapFree(0x29a1040)
+[Tf80] [API] HeapFree(0x29a1480)
+[Tf80] [API] HeapFree(0x29a1340)
+[Tf80] [API] HeapFree(0x29a1360)
+[Tf80] [API] HeapFree(0x29a1260)
+[Tf80] [API] HeapFree(0x29a1220)
+[Tf80] [API] HeapFree(0x29a13f0)
+[Tf80] [API] HeapFree(0x29a12d0)
+[Tf80] [API] HeapFree(0x29a58e0)
+[Tf80] [API] HeapFree(0x29a57a0)
+[Tf80] [API] HeapFree(0x29a57c0)
+[Tf80] [API] HeapFree(0x29a56c0)
+[Tf80] [API] HeapFree(0x29a14b0)
+[Tf80] [API] HeapFree(0x29a5850)
+[Tf80] [API] HeapFree(0x29a5730)
+[Tf80] [API] HeapFree(0x29a5b70)
+[Tf80] [API] HeapFree(0x29a5a30)
+[Tf80] [API] HeapFree(0x29a5a50)
+[Tf80] [API] HeapFree(0x29a5950)
+[Tf80] [API] HeapFree(0x29a5910)
+[Tf80] [API] HeapFree(0x29a5ae0)
+[Tf80] [API] HeapFree(0x29a59c0)
+[Tf80] [API] HeapFree(0x29a5e00)
+[Tf80] [API] HeapFree(0x29a5cc0)
+[Tf80] [API] HeapFree(0x29a5ce0)
+[Tf80] [API] HeapFree(0x29a5be0)
+[Tf80] [API] HeapFree(0x29a5ba0)
+[Tf80] [API] HeapFree(0x29a5d70)
+[Tf80] [API] HeapFree(0x29a5c50)
+[Tf80] [API] HeapFree(0x29a6090)
+[Tf80] [API] HeapFree(0x29a5f50)
+[Tf80] [API] HeapFree(0x29a5f70)
+[Tf80] [API] HeapFree(0x29a5e70)
+[Tf80] [API] HeapFree(0x29a5e30)
+[Tf80] [API] HeapFree(0x29a6000)
+[Tf80] [API] HeapFree(0x29a5ee0)
+[Tf80] [API] HeapFree(0x29a6320)
+[Tf80] [API] HeapFree(0x29a61e0)
+[Tf80] [API] HeapFree(0x29a6200)
+[Tf80] [API] HeapFree(0x29a6100)
+[Tf80] [API] HeapFree(0x29a60c0)
+[Tf80] [API] HeapFree(0x29a6290)
+[Tf80] [API] HeapFree(0x29a6170)
+[Tf80] [API] HeapFree(0x29a65b0)
+[Tf80] [API] HeapFree(0x29a6470)
+[Tf80] [API] HeapFree(0x29a6490)
+[Tf80] [API] HeapFree(0x29a6390)
+[Tf80] [API] HeapFree(0x29a6350)
+[Tf80] [API] HeapFree(0x29a6520)
+[Tf80] [API] HeapFree(0x29a6400)
+[Tf80] [API] HeapFree(0x29a6840)
+[Tf80] [API] HeapFree(0x29a6700)
+[Tf80] [API] HeapFree(0x29a6720)
+[Tf80] [API] HeapFree(0x29a6620)
+[Tf80] [API] HeapFree(0x29a65e0)
+[Tf80] [API] HeapFree(0x29a67b0)
+[Tf80] [API] HeapFree(0x29a6690)
+[Tf80] [API] HeapFree(0x29a6ad0)
+[Tf80] [API] HeapFree(0x29a6990)
+[Tf80] [API] HeapFree(0x29a69b0)
+[Tf80] [API] HeapFree(0x29a68b0)
+[Tf80] [API] HeapFree(0x29a6870)
+[Tf80] [API] HeapFree(0x29a6a40)
+[Tf80] [API] HeapFree(0x29a6920)
+[Tf80] [API] HeapFree(0x29a6d60)
+[Tf80] [API] HeapFree(0x29a6c20)
+[Tf80] [API] HeapFree(0x29a6c40)
+[Tf80] [API] HeapFree(0x29a6b40)
+[Tf80] [API] HeapFree(0x29a6b00)
+[Tf80] [API] HeapFree(0x29a6cd0)
+[Tf80] [API] HeapFree(0x29a6bb0)
+[Tf80] [API] HeapFree(0x29a6ff0)
+[Tf80] [API] HeapFree(0x29a6eb0)
+[Tf80] [API] HeapFree(0x29a6ed0)
+[Tf80] [API] HeapFree(0x29a6dd0)
+[Tf80] [API] HeapFree(0x29a6d90)
+[Tf80] [API] HeapFree(0x29a6f60)
+[Tf80] [API] HeapFree(0x29a6e40)
+[Tf80] [API] HeapFree(0x29a7280)
+[Tf80] [API] HeapFree(0x29a7140)
+[Tf80] [API] HeapFree(0x29a7160)
+[Tf80] [API] HeapFree(0x29a7060)
+[Tf80] [API] HeapFree(0x29a7020)
+[Tf80] [API] HeapFree(0x29a71f0)
+[Tf80] [API] HeapFree(0x29a70d0)
+[Tf80] [API] HeapFree(0x29a7510)
+[Tf80] [API] HeapFree(0x29a73d0)
+[Tf80] [API] HeapFree(0x29a73f0)
+[Tf80] [API] HeapFree(0x29a72f0)
+[Tf80] [API] HeapFree(0x29a72b0)
+[Tf80] [API] HeapFree(0x29a7480)
+[Tf80] [API] HeapFree(0x29a7360)
+[Tf80] [API] HeapFree(0x29a77a0)
+[Tf80] [API] HeapFree(0x29a7660)
+[Tf80] [API] HeapFree(0x29a7680)
+[Tf80] [API] HeapFree(0x29a7580)
+[Tf80] [API] HeapFree(0x29a7540)
+[Tf80] [API] HeapFree(0x29a7710)
+[Tf80] [API] HeapFree(0x29a75f0)
+[Tf80] [API] HeapFree(0x29a7a30)
+[Tf80] [API] HeapFree(0x29a78f0)
+[Tf80] [API] HeapFree(0x29a7910)
+[Tf80] [API] HeapFree(0x29a7810)
+[Tf80] [API] HeapFree(0x29a77d0)
+[Tf80] [API] HeapFree(0x29a79a0)
+[Tf80] [API] HeapFree(0x29a7880)
+[Tf80] [API] HeapFree(0x29a7cc0)
+[Tf80] [API] HeapFree(0x29a7b80)
+[Tf80] [API] HeapFree(0x29a7ba0)
+[Tf80] [API] HeapFree(0x29a7aa0)
+[Tf80] [API] HeapFree(0x29a7a60)
+[Tf80] [API] HeapFree(0x29a7c30)
+[Tf80] [API] HeapFree(0x29a7b10)
+[Tf80] [API] HeapFree(0x29a7f50)
+[Tf80] [API] HeapFree(0x29a7e10)
+[Tf80] [API] HeapFree(0x29a7e30)
+[Tf80] [API] HeapFree(0x29a7d30)
+[Tf80] [API] HeapFree(0x29a7cf0)
+[Tf80] [API] HeapFree(0x29a7ec0)
+[Tf80] [API] HeapFree(0x29a7da0)
+[Tf80] [API] HeapFree(0x29a81e0)
+[Tf80] [API] HeapFree(0x29a80a0)
+[Tf80] [API] HeapFree(0x29a80c0)
+[Tf80] [API] HeapFree(0x29a7fc0)
+[Tf80] [API] HeapFree(0x29a7f80)
+[Tf80] [API] HeapFree(0x29a8150)
+[Tf80] [API] HeapFree(0x29a8030)
+[Tf80] [API] HeapFree(0x29a8470)
+[Tf80] [API] HeapFree(0x29a8330)
+[Tf80] [API] HeapFree(0x29a8350)
+[Tf80] [API] HeapFree(0x29a8250)
+[Tf80] [API] HeapFree(0x29a8210)
+[Tf80] [API] HeapFree(0x29a83e0)
+[Tf80] [API] HeapFree(0x29a82c0)
+[Tf80] [API] HeapFree(0x29a8700)
+[Tf80] [API] HeapFree(0x29a85c0)
+[Tf80] [API] HeapFree(0x29a85e0)
+[Tf80] [API] HeapFree(0x29a84e0)
+[Tf80] [API] HeapFree(0x29a84a0)
+[Tf80] [API] HeapFree(0x29a8670)
+[Tf80] [API] HeapFree(0x29a8550)
+[Tf80] [API] HeapFree(0x29a8990)
+[Tf80] [API] HeapFree(0x29a8850)
+[Tf80] [API] HeapFree(0x29a8870)
+[Tf80] [API] HeapFree(0x29a8770)
+[Tf80] [API] HeapFree(0x29a8730)
+[Tf80] [API] HeapFree(0x29a8900)
+[Tf80] [API] HeapFree(0x29a87e0)
+[Tf80] [API] HeapFree(0x29a8c20)
+[Tf80] [API] HeapFree(0x29a8ae0)
+[Tf80] [API] HeapFree(0x29a8b00)
+[Tf80] [API] HeapFree(0x29a8a00)
+[Tf80] [API] HeapFree(0x29a89c0)
+[Tf80] [API] HeapFree(0x29a8b90)
+[Tf80] [API] HeapFree(0x29a8a70)
+[Tf80] [API] HeapFree(0x29a8eb0)
+[Tf80] [API] HeapFree(0x29a8d70)
+[Tf80] [API] HeapFree(0x29a8d90)
+[Tf80] [API] HeapFree(0x29a8c90)
+[Tf80] [API] HeapFree(0x29a8c50)
+[Tf80] [API] HeapFree(0x29a8e20)
+[Tf80] [API] HeapFree(0x29a8d00)
+[Tf80] [API] HeapFree(0x29a9140)
+[Tf80] [API] HeapFree(0x29a9000)
+[Tf80] [API] HeapFree(0x29a9020)
+[Tf80] [API] HeapFree(0x29a8f20)
+[Tf80] [API] HeapFree(0x29a8ee0)
+[Tf80] [API] HeapFree(0x29a90b0)
+[Tf80] [API] HeapFree(0x29a8f90)
+[Tf80] [API] HeapFree(0x29a93d0)
+[Tf80] [API] HeapFree(0x29a9290)
+[Tf80] [API] HeapFree(0x29a92b0)
+[Tf80] [API] HeapFree(0x29a91b0)
+[Tf80] [API] HeapFree(0x29a9170)
+[Tf80] [API] HeapFree(0x29a9340)
+[Tf80] [API] HeapFree(0x29a9220)
+[Tf80] [API] HeapFree(0x29a9660)
+[Tf80] [API] HeapFree(0x29a9520)
+[Tf80] [API] HeapFree(0x29a9540)
+[Tf80] [API] HeapFree(0x29a9440)
+[Tf80] [API] HeapFree(0x29a9400)
+[Tf80] [API] HeapFree(0x29a95d0)
+[Tf80] [API] HeapFree(0x29a94b0)
+[Tf80] [API] HeapFree(0x29a98f0)
+[Tf80] [API] HeapFree(0x29a97b0)
+[Tf80] [API] HeapFree(0x29a97d0)
+[Tf80] [API] HeapFree(0x29a96d0)
+[Tf80] [API] HeapFree(0x29a9690)
+[Tf80] [API] HeapFree(0x29a9860)
+[Tf80] [API] HeapFree(0x29a9740)
+[Tf80] [API] HeapFree(0x29a9b80)
+[Tf80] [API] HeapFree(0x29a9a40)
+[Tf80] [API] HeapFree(0x29a9a60)
+[Tf80] [API] HeapFree(0x29a9960)
+[Tf80] [API] HeapFree(0x29a9920)
+[Tf80] [API] HeapFree(0x29a9af0)
+[Tf80] [API] HeapFree(0x29a99d0)
+[Tf80] [API] HeapFree(0x29a38c0)
+[Tf80] [API] HeapFree(0x29a3780)
+[Tf80] [API] HeapFree(0x29a37a0)
+[Tf80] [API] HeapFree(0x29a36a0)
+[Tf80] [API] HeapFree(0x29a9bb0)
+[Tf80] [API] HeapFree(0x29a3830)
+[Tf80] [API] HeapFree(0x29a3710)
+[Tf80] [API] HeapFree(0x29a3b50)
+[Tf80] [API] HeapFree(0x29a3a10)
+[Tf80] [API] HeapFree(0x29a3a30)
+[Tf80] [API] HeapFree(0x29a3930)
+[Tf80] [API] HeapFree(0x29a38f0)
+[Tf80] [API] HeapFree(0x29a3ac0)
+[Tf80] [API] HeapFree(0x29a39a0)
+[Tf80] [API] HeapFree(0x29a3de0)
+[Tf80] [API] HeapFree(0x29a3ca0)
+[Tf80] [API] HeapFree(0x29a3cc0)
+[Tf80] [API] HeapFree(0x29a3bc0)
+[Tf80] [API] HeapFree(0x29a3b80)
+[Tf80] [API] HeapFree(0x29a3d50)
+[Tf80] [API] HeapFree(0x29a3c30)
+[Tf80] [API] HeapFree(0x29a4070)
+[Tf80] [API] HeapFree(0x29a3f30)
+[Tf80] [API] HeapFree(0x29a3f50)
+[Tf80] [API] HeapFree(0x29a3e50)
+[Tf80] [API] HeapFree(0x29a3e10)
+[Tf80] [API] HeapFree(0x29a3fe0)
+[Tf80] [API] HeapFree(0x29a3ec0)
+[Tf80] [API] HeapFree(0x29a4300)
+[Tf80] [API] HeapFree(0x29a41c0)
+[Tf80] [API] HeapFree(0x29a41e0)
+[Tf80] [API] HeapFree(0x29a40e0)
+[Tf80] [API] HeapFree(0x29a40a0)
+[Tf80] [API] HeapFree(0x29a4270)
+[Tf80] [API] HeapFree(0x29a4150)
+[Tf80] [API] HeapFree(0x29a4590)
+[Tf80] [API] HeapFree(0x29a4450)
+[Tf80] [API] HeapFree(0x29a4470)
+[Tf80] [API] HeapFree(0x29a4370)
+[Tf80] [API] HeapFree(0x29a4330)
+[Tf80] [API] HeapFree(0x29a4500)
+[Tf80] [API] HeapFree(0x29a43e0)
+[Tf80] [API] HeapFree(0x29a4820)
+[Tf80] [API] HeapFree(0x29a46e0)
+[Tf80] [API] HeapFree(0x29a4700)
+[Tf80] [API] HeapFree(0x29a4600)
+[Tf80] [API] HeapFree(0x29a45c0)
+[Tf80] [API] HeapFree(0x29a4790)
+[Tf80] [API] HeapFree(0x29a4670)
+[Tf80] [API] HeapFree(0x29a4ab0)
+[Tf80] [API] HeapFree(0x29a4970)
+[Tf80] [API] HeapFree(0x29a4990)
+[Tf80] [API] HeapFree(0x29a4890)
+[Tf80] [API] HeapFree(0x29a4850)
+[Tf80] [API] HeapFree(0x29a4a20)
+[Tf80] [API] HeapFree(0x29a4900)
+[Tf80] [API] HeapFree(0x29a4d40)
+[Tf80] [API] HeapFree(0x29a4c00)
+[Tf80] [API] HeapFree(0x29a4c20)
+[Tf80] [API] HeapFree(0x29a4b20)
+[Tf80] [API] HeapFree(0x29a4ae0)
+[Tf80] [API] HeapFree(0x29a4cb0)
+[Tf80] [API] HeapFree(0x29a4b90)
+[Tf80] [API] HeapFree(0x29a4fd0)
+[Tf80] [API] HeapFree(0x29a4e90)
+[Tf80] [API] HeapFree(0x29a4eb0)
+[Tf80] [API] HeapFree(0x29a4db0)
+[Tf80] [API] HeapFree(0x29a4d70)
+[Tf80] [API] HeapFree(0x29a4f40)
+[Tf80] [API] HeapFree(0x29a4e20)
+[Tf80] [API] HeapFree(0x29a5260)
+[Tf80] [API] HeapFree(0x29a5120)
+[Tf80] [API] HeapFree(0x29a5140)
+[Tf80] [API] HeapFree(0x29a5040)
+[Tf80] [API] HeapFree(0x29a5000)
+[Tf80] [API] HeapFree(0x29a51d0)
+[Tf80] [API] HeapFree(0x29a50b0)
+[Tf80] [API] HeapFree(0x29a54f0)
+[Tf80] [API] HeapFree(0x29a53b0)
+[Tf80] [API] HeapFree(0x29a53d0)
+[Tf80] [API] HeapFree(0x29a52d0)
+[Tf80] [API] HeapFree(0x29a5290)
+[Tf80] [API] HeapFree(0x29a5460)
+[Tf80] [API] HeapFree(0x29a5340)
+[Tf80] [API] HeapFree(0x29aa920)
+[Tf80] [API] HeapFree(0x29a5640)
+[Tf80] [API] HeapFree(0x29aa800)
+[Tf80] [API] HeapFree(0x29a5560)
+[Tf80] [API] HeapFree(0x29a5520)
+[Tf80] [API] HeapFree(0x29aa890)
+[Tf80] [API] HeapFree(0x29a55d0)
+[Tf80] [API] HeapFree(0x29aabb0)
+[Tf80] [API] HeapFree(0x29aaa70)
+[Tf80] [API] HeapFree(0x29aaa90)
+[Tf80] [API] HeapFree(0x29aa990)
+[Tf80] [API] HeapFree(0x29aa950)
+[Tf80] [API] HeapFree(0x29aab20)
+[Tf80] [API] HeapFree(0x29aaa00)
+[Tf80] [API] HeapFree(0x29aae40)
+[Tf80] [API] HeapFree(0x29aad00)
+[Tf80] [API] HeapFree(0x29aad20)
+[Tf80] [API] HeapFree(0x29aac20)
+[Tf80] [API] HeapFree(0x29aabe0)
+[Tf80] [API] HeapFree(0x29aadb0)
+[Tf80] [API] HeapFree(0x29aac90)
+[Tf80] [API] HeapFree(0x29ab0d0)
+[Tf80] [API] HeapFree(0x29aaf90)
+[Tf80] [API] HeapFree(0x29aafb0)
+[Tf80] [API] HeapFree(0x29aaeb0)
+[Tf80] [API] HeapFree(0x29aae70)
+[Tf80] [API] HeapFree(0x29ab040)
+[Tf80] [API] HeapFree(0x29aaf20)
+[Tf80] [API] HeapFree(0x29ab360)
+[Tf80] [API] HeapFree(0x29ab220)
+[Tf80] [API] HeapFree(0x29ab240)
+[Tf80] [API] HeapFree(0x29ab140)
+[Tf80] [API] HeapFree(0x29ab100)
+[Tf80] [API] HeapFree(0x29ab2d0)
+[Tf80] [API] HeapFree(0x29ab1b0)
+[Tf80] [API] HeapFree(0x29ab5f0)
+[Tf80] [API] HeapFree(0x29ab4b0)
+[Tf80] [API] HeapFree(0x29ab4d0)
+[Tf80] [API] HeapFree(0x29ab3d0)
+[Tf80] [API] HeapFree(0x29ab390)
+[Tf80] [API] HeapFree(0x29ab560)
+[Tf80] [API] HeapFree(0x29ab440)
+[Tf80] [API] HeapFree(0x29c0f50)
+[Tf80] [API] HeapFree(0x29915d0)
+[Tf80] [API] HeapFree(0x299aff0)
+[Tf80] [API] HeapFree(0x299ada0)
+[Tf80] [API] HeapFree(0x2995ce0)
+[Tf80] [API] HeapFree(0x2995d20)
+[Tf80] [API] HeapFree(0x29985d0)
+[Tf80] [API] HeapFree(0x2998640)
+[Tf80] [API] HeapFree(0x2991900)
+[Tf80] [API] HeapFree(0x298f1e0)
+[Tf80] [API] HeapFree(0x2991950)
+[Tf80] [API] HeapFree(0x29915b0)
+[Tf80] [API] HeapFree(0x29986a0)
+[Tf80] [API] HeapFree(0x29986c0)
+[Tf80] [API] HeapFree(0x29919e0)
+[Tf80] [API] HeapFree(0x2993d00)
+[Tf80] [API] HeapFree(0x2993d70)
+[Tf80] [API] HeapFree(0x29919c0)
+[Tf80] [API] HeapFree(0x29986e0)
+[Tf80] [API] HeapFree(0x2998700)
+[Tf80] [API] HeapFree(0x2993de0)
+[Tf80] [API] HeapFree(0x2993e30)
+[Tf80] [API] HeapFree(0x2993eb0)
+[Tf80] [API] HeapFree(0x2993f20)
+[Tf80] [API] HeapFree(0x2991a30)
+[Tf80] [API] HeapFree(0x2998720)
+[Tf80] [API] HeapFree(0x2998740)
+[Tf80] [API] HeapFree(0x2993f90)
+[Tf80] [API] HeapFree(0x2993fd0)
+[Tf80] [API] HeapFree(0x2991a50)
+[Tf80] [API] HeapFree(0x2994030)
+[Tf80] [API] HeapFree(0x2994010)
+[Tf80] [API] HeapFree(0x2991580)
+[Tf80] [API] HeapFree(0x298f670)
+[Tf80] [API] HeapFree(0x2993330)
+[Tf80] [API] HeapFree(0x2993350)
+[Tf80] [API] HeapFree(0x2993370)
+[Tf80] [API] HeapFree(0x2993390)
+[Tf80] [API] HeapFree(0x29933b0)
+[Tf80] [API] HeapFree(0x2993400)
+[Tf80] [API] HeapFree(0x2993470)
+[Tf80] [API] HeapFree(0x2993490)
+[Tf80] [API] HeapFree(0x29934f0)
+[Tf80] [API] HeapFree(0x2993570)
+[Tf80] [API] HeapFree(0x29935b0)
+[Tf80] [API] HeapFree(0x29915f0)
+[Tf80] [API] HeapFree(0x2993590)
+[Tf80] [API] HeapFree(0x29935f0)
+[Tf80] [API] HeapFree(0x2993610)
+[Tf80] [API] HeapFree(0x2993ff0)
+[Tf80] [API] HeapFree(0x2998760)
+[Tf80] [API] HeapFree(0x2998780)
+[Tf80] [API] HeapFree(0x2993670)
+[Tf80] [API] HeapFree(0x2993650)
+[Tf80] [API] HeapFree(0x29987a0)
+[Tf80] [API] HeapFree(0x29987c0)
+[Tf80] [API] HeapFree(0x29936d0)
+[Tf80] [API] HeapFree(0x29936b0)
+[Tf80] [API] HeapFree(0x29987e0)
+[Tf80] [API] HeapFree(0x2998800)
+[Tf80] [API] HeapFree(0x2993760)
+[Tf80] [API] HeapFree(0x29937a0)
+[Tf80] [API] HeapFree(0x2993730)
+[Tf80] [API] HeapFree(0x2993710)
+[Tf80] [API] HeapFree(0x2998820)
+[Tf80] [API] HeapFree(0x29938d0)
+[Tf80] [API] HeapFree(0x2993910)
+[Tf80] [API] HeapFree(0x29938b0)
+[Tf80] [API] HeapFree(0x2998840)
+[Tf80] [API] HeapFree(0x2998860)
+[Tf80] [API] HeapFree(0x2993a40)
+[Tf80] [API] HeapFree(0x2993a20)
+[Tf80] [API] HeapFree(0x2998880)
+[Tf80] [API] HeapFree(0x29988a0)
+[Tf80] [API] HeapFree(0x2993ae0)
+[Tf80] [API] HeapFree(0x2993ac0)
+[Tf80] [API] HeapFree(0x2993b30)
+[Tf80] [API] HeapFree(0x2993b80)
+[Tf80] [API] HeapFree(0x2993bb0)
+[Tf80] [API] HeapFree(0x2993b50)
+[Tf80] [API] HeapFree(0x2993aa0)
+[Tf80] [API] HeapFree(0x29988c0)
+[Tf80] [API] HeapFree(0x2993c40)
+[Tf80] [API] HeapFree(0x2993c20)
+[Tf80] [API] HeapFree(0x29988e0)
+[Tf80] [API] HeapFree(0x2998900)
+[Tf80] [API] HeapFree(0x2993cc0)
+[Tf80] [API] HeapFree(0x2998fa0)
+[Tf80] [API] HeapFree(0x2993c90)
+[Tf80] [API] HeapFree(0x2993c70)
+[Tf80] [API] HeapFree(0x2998920)
+[Tf80] [API] HeapFree(0x2999100)
+[Tf80] [API] HeapFree(0x2999130)
+[Tf80] [API] HeapFree(0x2999150)
+[Tf80] [API] HeapFree(0x2999190)
+[Tf80] [API] HeapFree(0x29990e0)
+[Tf80] [API] HeapFree(0x2998940)
+[Tf80] [API] HeapFree(0x2998960)
+[Tf80] [API] HeapFree(0x2999240)
+[Tf80] [API] HeapFree(0x2999290)
+[Tf80] [API] HeapFree(0x2999220)
+[Tf80] [API] HeapFree(0x2998980)
+[Tf80] [API] HeapFree(0x29989a0)
+[Tf80] [API] HeapFree(0x2999380)
+[Tf80] [API] HeapFree(0x29993b0)
+[Tf80] [API] HeapFree(0x2999460)
+[Tf80] [API] HeapFree(0x2999480)
+[Tf80] [API] HeapFree(0x2999500)
+[Tf80] [API] HeapFree(0x29994e0)
+[Tf80] [API] HeapFree(0x2999570)
+[Tf80] [API] HeapFree(0x2999360)
+[Tf80] [API] HeapFree(0x29995e0)
+[Tf80] [API] HeapFree(0x2999640)
+[Tf80] [API] HeapFree(0x29995c0)
+[Tf80] [API] HeapFree(0x2999730)
+[Tf80] [API] HeapFree(0x2999770)
+[Tf80] [API] HeapFree(0x2999750)
+[Tf80] [API] HeapFree(0x29997a0)
+[Tf80] [API] HeapFree(0x29997c0)
+[Tf80] [API] HeapFree(0x29995a0)
+[Tf80] [API] HeapFree(0x29989c0)
+[Tf80] [API] HeapFree(0x29989e0)
+[Tf80] [API] HeapFree(0x2999880)
+[Tf80] [API] HeapFree(0x29998e0)
+[Tf80] [API] HeapFree(0x29998c0)
+[Tf80] [API] HeapFree(0x29999b0)
+[Tf80] [API] HeapFree(0x29999f0)
+[Tf80] [API] HeapFree(0x2999a80)
+[Tf80] [API] HeapFree(0x2999a60)
+[Tf80] [API] HeapFree(0x2999b50)
+[Tf80] [API] HeapFree(0x2999b80)
+[Tf80] [API] HeapFree(0x2999c50)
+[Tf80] [API] HeapFree(0x2999c30)
+[Tf80] [API] HeapFree(0x2999d40)
+[Tf80] [API] HeapFree(0x2999d90)
+[Tf80] [API] HeapFree(0x2999d20)
+[Tf80] [API] HeapFree(0x2999f00)
+[Tf80] [API] HeapFree(0x2994190)
+[Tf80] [API] HeapFree(0x2999860)
+[Tf80] [API] HeapFree(0x2998a00)
+[Tf80] [API] HeapFree(0x2998a20)
+[Tf80] [API] HeapFree(0x29941f0)
+[Tf80] [API] HeapFree(0x2994250)
+[Tf80] [API] HeapFree(0x29941d0)
+[Tf80] [API] HeapFree(0x2998a40)
+[Tf80] [API] HeapFree(0x2998a60)
+[Tf80] [API] HeapFree(0x2994380)
+[Tf80] [API] HeapFree(0x2994360)
+[Tf80] [API] HeapFree(0x2998a80)
+[Tf80] [API] HeapFree(0x2998aa0)
+[Tf80] [API] HeapFree(0x29943e0)
+[Tf80] [API] HeapFree(0x29943c0)
+[Tf80] [API] HeapFree(0x2994430)
+[Tf80] [API] HeapFree(0x2994470)
+[Tf80] [API] HeapFree(0x29944a0)
+[Tf80] [API] HeapFree(0x2994450)
+[Tf80] [API] HeapFree(0x2994510)
+[Tf80] [API] HeapFree(0x2994550)
+[Tf80] [API] HeapFree(0x29945b0)
+[Tf80] [API] HeapFree(0x2994530)
+[Tf80] [API] HeapFree(0x2994780)
+[Tf80] [API] HeapFree(0x29947a0)
+[Tf80] [API] HeapFree(0x29947f0)
+[Tf80] [API] HeapFree(0x29948d0)
+[Tf80] [API] HeapFree(0x29948f0)
+[Tf80] [API] HeapFree(0x2994920)
+[Tf80] [API] HeapFree(0x2994940)
+[Tf80] [API] HeapFree(0x2994970)
+[Tf80] [API] HeapFree(0x29949f0)
+[Tf80] [API] HeapFree(0x2994a10)
+[Tf80] [API] HeapFree(0x2994a40)
+[Tf80] [API] HeapFree(0x2994ac0)
+[Tf80] [API] HeapFree(0x2994ae0)
+[Tf80] [API] HeapFree(0x29943a0)
+[Tf80] [API] HeapFree(0x2998ac0)
+[Tf80] [API] HeapFree(0x2998ae0)
+[Tf80] [API] HeapFree(0x2994b60)
+[Tf80] [API] HeapFree(0x2994ba0)
+[Tf80] [API] HeapFree(0x2994bc0)
+[Tf80] [API] HeapFree(0x2994b40)
+[Tf80] [API] HeapFree(0x2998b00)
+[Tf80] [API] HeapFree(0x2998b20)
+[Tf80] [API] HeapFree(0x2994c20)
+[Tf80] [API] HeapFree(0x2994c40)
+[Tf80] [API] HeapFree(0x2994c80)
+[Tf80] [API] HeapFree(0x2994cd0)
+[Tf80] [API] HeapFree(0x2994c60)
+[Tf80] [API] HeapFree(0x2994d80)
+[Tf80] [API] HeapFree(0x2994da0)
+[Tf80] [API] HeapFree(0x2994de0)
+[Tf80] [API] HeapFree(0x2994e50)
+[Tf80] [API] HeapFree(0x2994e70)
+[Tf80] [API] HeapFree(0x2994c00)
+[Tf80] [API] HeapFree(0x2998b40)
+[Tf80] [API] HeapFree(0x2998b60)
+[Tf80] [API] HeapFree(0x2994ec0)
+[Tf80] [API] HeapFree(0x2994ea0)
+[Tf80] [API] HeapFree(0x2998b80)
+[Tf80] [API] HeapFree(0x2998ba0)
+[Tf80] [API] HeapFree(0x2994f10)
+[Tf80] [API] HeapFree(0x2994f40)
+[Tf80] [API] HeapFree(0x2994fb0)
+[Tf80] [API] HeapFree(0x2994fd0)
+[Tf80] [API] HeapFree(0x2995000)
+[Tf80] [API] HeapFree(0x2994ef0)
+[Tf80] [API] HeapFree(0x2998bc0)
+[Tf80] [API] HeapFree(0x2998be0)
+[Tf80] [API] HeapFree(0x2995150)
+[Tf80] [API] HeapFree(0x2995180)
+[Tf80] [API] HeapFree(0x2995130)
+[Tf80] [API] HeapFree(0x2998c00)
+[Tf80] [API] HeapFree(0x2998c20)
+[Tf80] [API] HeapFree(0x2995210)
+[Tf80] [API] HeapFree(0x29951f0)
+[Tf80] [API] HeapFree(0x2998c40)
+[Tf80] [API] HeapFree(0x2998c60)
+[Tf80] [API] HeapFree(0x2995260)
+[Tf80] [API] HeapFree(0x29952b0)
+[Tf80] [API] HeapFree(0x2995500)
+[Tf80] [API] HeapFree(0x2995290)
+[Tf80] [API] HeapFree(0x2995570)
+[Tf80] [API] HeapFree(0x2995240)
+[Tf80] [API] HeapFree(0x29955b0)
+[Tf80] [API] HeapFree(0x29955f0)
+[Tf80] [API] HeapFree(0x2995780)
+[Tf80] [API] HeapFree(0x29957a0)
+[Tf80] [API] HeapFree(0x29957e0)
+[Tf80] [API] HeapFree(0x2995cc0)
+[Tf80] [API] HeapFree(0x2995590)
+[Tf80] [API] HeapFree(0x2995ed0)
+[Tf80] [API] HeapFree(0x2995eb0)
+[Tf80] [API] HeapFree(0x2998c80)
+[Tf80] [API] HeapFree(0x2998ca0)
+[Tf80] [API] HeapFree(0x2996910)
+[Tf80] [API] HeapFree(0x2996950)
+[Tf80] [API] HeapFree(0x2996930)
+[Tf80] [API] HeapFree(0x2998cc0)
+[Tf80] [API] HeapFree(0x2998ce0)
+[Tf80] [API] HeapFree(0x29969c0)
+[Tf80] [API] HeapFree(0x2996a00)
+[Tf80] [API] HeapFree(0x29969e0)
+[Tf80] [API] HeapFree(0x2998d00)
+[Tf80] [API] HeapFree(0x2998d20)
+[Tf80] [API] HeapFree(0x2996a70)
+[Tf80] [API] HeapFree(0x2996ab0)
+[Tf80] [API] HeapFree(0x2996a90)
+[Tf80] [API] HeapFree(0x2998d40)
+[Tf80] [API] HeapFree(0x2998d60)
+[Tf80] [API] HeapFree(0x2996b20)
+[Tf80] [API] HeapFree(0x2996b60)
+[Tf80] [API] HeapFree(0x2996b40)
+[Tf80] [API] HeapFree(0x2998d80)
+[Tf80] [API] HeapFree(0x2998da0)
+[Tf80] [API] HeapFree(0x2995f40)
+[Tf80] [API] HeapFree(0x2995f80)
+[Tf80] [API] HeapFree(0x2995f60)
+[Tf80] [API] HeapFree(0x2998dc0)
+[Tf80] [API] HeapFree(0x2998de0)
+[Tf80] [API] HeapFree(0x2995ff0)
+[Tf80] [API] HeapFree(0x2996030)
+[Tf80] [API] HeapFree(0x2996010)
+[Tf80] [API] HeapFree(0x2998e00)
+[Tf80] [API] HeapFree(0x2998e20)
+[Tf80] [API] HeapFree(0x29960a0)
+[Tf80] [API] HeapFree(0x29960e0)
+[Tf80] [API] HeapFree(0x29960c0)
+[Tf80] [API] HeapFree(0x2998e40)
+[Tf80] [API] HeapFree(0x2998e60)
+[Tf80] [API] HeapFree(0x2996150)
+[Tf80] [API] HeapFree(0x2996190)
+[Tf80] [API] HeapFree(0x2996170)
+[Tf80] [API] HeapFree(0x2998e80)
+[Tf80] [API] HeapFree(0x2998ea0)
+[Tf80] [API] HeapFree(0x2996200)
+[Tf80] [API] HeapFree(0x2996240)
+[Tf80] [API] HeapFree(0x2996220)
+[Tf80] [API] HeapFree(0x2998ec0)
+[Tf80] [API] HeapFree(0x2998ee0)
+[Tf80] [API] HeapFree(0x29962b0)
+[Tf80] [API] HeapFree(0x29962f0)
+[Tf80] [API] HeapFree(0x29962d0)
+[Tf80] [API] HeapFree(0x2998f00)
+[Tf80] [API] HeapFree(0x2998f20)
+[Tf80] [API] HeapFree(0x2996360)
+[Tf80] [API] HeapFree(0x29963a0)
+[Tf80] [API] HeapFree(0x2996380)
+[Tf80] [API] HeapFree(0x2998f40)
+[Tf80] [API] HeapFree(0x2998f60)
+[Tf80] [API] HeapFree(0x2996410)
+[Tf80] [API] HeapFree(0x2996450)
+[Tf80] [API] HeapFree(0x2996430)
+[Tf80] [API] HeapFree(0x2998f80)
+[Tf80] [API] HeapFree(0x2999f20)
+[Tf80] [API] HeapFree(0x29964c0)
+[Tf80] [API] HeapFree(0x2996500)
+[Tf80] [API] HeapFree(0x29964e0)
+[Tf80] [API] HeapFree(0x2999f40)
+[Tf80] [API] HeapFree(0x2999f60)
+[Tf80] [API] HeapFree(0x2996570)
+[Tf80] [API] HeapFree(0x29965b0)
+[Tf80] [API] HeapFree(0x2996590)
+[Tf80] [API] HeapFree(0x2999f80)
+[Tf80] [API] HeapFree(0x2999fa0)
+[Tf80] [API] HeapFree(0x2996620)
+[Tf80] [API] HeapFree(0x2996660)
+[Tf80] [API] HeapFree(0x2996640)
+[Tf80] [API] HeapFree(0x2999fc0)
+[Tf80] [API] HeapFree(0x2999fe0)
+[Tf80] [API] HeapFree(0x29966d0)
+[Tf80] [API] HeapFree(0x2996710)
+[Tf80] [API] HeapFree(0x29966f0)
+[Tf80] [API] HeapFree(0x299a000)
+[Tf80] [API] HeapFree(0x299a020)
+[Tf80] [API] HeapFree(0x2996780)
+[Tf80] [API] HeapFree(0x29967c0)
+[Tf80] [API] HeapFree(0x29967a0)
+[Tf80] [API] HeapFree(0x299a040)
+[Tf80] [API] HeapFree(0x299a060)
+[Tf80] [API] HeapFree(0x2996830)
+[Tf80] [API] HeapFree(0x2996870)
+[Tf80] [API] HeapFree(0x2996850)
+[Tf80] [API] HeapFree(0x299a080)
+[Tf80] [API] HeapFree(0x299a0a0)
+[Tf80] [API] HeapFree(0x29968e0)
+[Tf80] [API] HeapFree(0x2996bf0)
+[Tf80] [API] HeapFree(0x2996bd0)
+[Tf80] [API] HeapFree(0x299a0c0)
+[Tf80] [API] HeapFree(0x299a0e0)
+[Tf80] [API] HeapFree(0x2996c60)
+[Tf80] [API] HeapFree(0x2996ca0)
+[Tf80] [API] HeapFree(0x2996c80)
+[Tf80] [API] HeapFree(0x299a100)
+[Tf80] [API] HeapFree(0x299a120)
+[Tf80] [API] HeapFree(0x2996d10)
+[Tf80] [API] HeapFree(0x2996d50)
+[Tf80] [API] HeapFree(0x2996d30)
+[Tf80] [API] HeapFree(0x299a140)
+[Tf80] [API] HeapFree(0x299a160)
+[Tf80] [API] HeapFree(0x2996dc0)
+[Tf80] [API] HeapFree(0x2996e00)
+[Tf80] [API] HeapFree(0x2996de0)
+[Tf80] [API] HeapFree(0x299a180)
+[Tf80] [API] HeapFree(0x299a1a0)
+[Tf80] [API] HeapFree(0x2996e70)
+[Tf80] [API] HeapFree(0x2996eb0)
+[Tf80] [API] HeapFree(0x2996e90)
+[Tf80] [API] HeapFree(0x299a1c0)
+[Tf80] [API] HeapFree(0x299a1e0)
+[Tf80] [API] HeapFree(0x2996f20)
+[Tf80] [API] HeapFree(0x2996f60)
+[Tf80] [API] HeapFree(0x2996f40)
+[Tf80] [API] HeapFree(0x299a200)
+[Tf80] [API] HeapFree(0x299a220)
+[Tf80] [API] HeapFree(0x2996fd0)
+[Tf80] [API] HeapFree(0x2997010)
+[Tf80] [API] HeapFree(0x2996ff0)
+[Tf80] [API] HeapFree(0x299a240)
+[Tf80] [API] HeapFree(0x299a260)
+[Tf80] [API] HeapFree(0x2997080)
+[Tf80] [API] HeapFree(0x29970c0)
+[Tf80] [API] HeapFree(0x29970a0)
+[Tf80] [API] HeapFree(0x299a280)
+[Tf80] [API] HeapFree(0x299a2a0)
+[Tf80] [API] HeapFree(0x2997130)
+[Tf80] [API] HeapFree(0x2997170)
+[Tf80] [API] HeapFree(0x2997150)
+[Tf80] [API] HeapFree(0x299a2c0)
+[Tf80] [API] HeapFree(0x299a2e0)
+[Tf80] [API] HeapFree(0x29971e0)
+[Tf80] [API] HeapFree(0x2997220)
+[Tf80] [API] HeapFree(0x2997200)
+[Tf80] [API] HeapFree(0x299a300)
+[Tf80] [API] HeapFree(0x299a320)
+[Tf80] [API] HeapFree(0x2997290)
+[Tf80] [API] HeapFree(0x29972d0)
+[Tf80] [API] HeapFree(0x29972b0)
+[Tf80] [API] HeapFree(0x299a340)
+[Tf80] [API] HeapFree(0x299a360)
+[Tf80] [API] HeapFree(0x2997340)
+[Tf80] [API] HeapFree(0x2997380)
+[Tf80] [API] HeapFree(0x2997360)
+[Tf80] [API] HeapFree(0x299a380)
+[Tf80] [API] HeapFree(0x299a3a0)
+[Tf80] [API] HeapFree(0x29973f0)
+[Tf80] [API] HeapFree(0x2997430)
+[Tf80] [API] HeapFree(0x2997410)
+[Tf80] [API] HeapFree(0x299a3c0)
+[Tf80] [API] HeapFree(0x299a3e0)
+[Tf80] [API] HeapFree(0x29974a0)
+[Tf80] [API] HeapFree(0x29974e0)
+[Tf80] [API] HeapFree(0x29974c0)
+[Tf80] [API] HeapFree(0x299a400)
+[Tf80] [API] HeapFree(0x299a420)
+[Tf80] [API] HeapFree(0x2997550)
+[Tf80] [API] HeapFree(0x2997590)
+[Tf80] [API] HeapFree(0x2997570)
+[Tf80] [API] HeapFree(0x299a440)
+[Tf80] [API] HeapFree(0x299a460)
+[Tf80] [API] HeapFree(0x2997600)
+[Tf80] [API] HeapFree(0x2997640)
+[Tf80] [API] HeapFree(0x2997620)
+[Tf80] [API] HeapFree(0x299a480)
+[Tf80] [API] HeapFree(0x299a4a0)
+[Tf80] [API] HeapFree(0x29976b0)
+[Tf80] [API] HeapFree(0x29976f0)
+[Tf80] [API] HeapFree(0x29976d0)
+[Tf80] [API] HeapFree(0x299a4c0)
+[Tf80] [API] HeapFree(0x299a4e0)
+[Tf80] [API] HeapFree(0x2997760)
+[Tf80] [API] HeapFree(0x29977a0)
+[Tf80] [API] HeapFree(0x2997780)
+[Tf80] [API] HeapFree(0x299a500)
+[Tf80] [API] HeapFree(0x299a520)
+[Tf80] [API] HeapFree(0x2997810)
+[Tf80] [API] HeapFree(0x2997850)
+[Tf80] [API] HeapFree(0x2997830)
+[Tf80] [API] HeapFree(0x299a540)
+[Tf80] [API] HeapFree(0x299a560)
+[Tf80] [API] HeapFree(0x29978c0)
+[Tf80] [API] HeapFree(0x2997900)
+[Tf80] [API] HeapFree(0x29978e0)
+[Tf80] [API] HeapFree(0x299a580)
+[Tf80] [API] HeapFree(0x299a5a0)
+[Tf80] [API] HeapFree(0x2997970)
+[Tf80] [API] HeapFree(0x29979b0)
+[Tf80] [API] HeapFree(0x2997990)
+[Tf80] [API] HeapFree(0x299a5c0)
+[Tf80] [API] HeapFree(0x299a5e0)
+[Tf80] [API] HeapFree(0x2997a20)
+[Tf80] [API] HeapFree(0x2997a60)
+[Tf80] [API] HeapFree(0x2997a40)
+[Tf80] [API] HeapFree(0x299a600)
+[Tf80] [API] HeapFree(0x299a620)
+[Tf80] [API] HeapFree(0x2997ad0)
+[Tf80] [API] HeapFree(0x2997b10)
+[Tf80] [API] HeapFree(0x2997af0)
+[Tf80] [API] HeapFree(0x299a640)
+[Tf80] [API] HeapFree(0x299a660)
+[Tf80] [API] HeapFree(0x2997b80)
+[Tf80] [API] HeapFree(0x2997bc0)
+[Tf80] [API] HeapFree(0x2997ba0)
+[Tf80] [API] HeapFree(0x299a680)
+[Tf80] [API] HeapFree(0x299a6a0)
+[Tf80] [API] HeapFree(0x2997c30)
+[Tf80] [API] HeapFree(0x2997c70)
+[Tf80] [API] HeapFree(0x2997c50)
+[Tf80] [API] HeapFree(0x299a6c0)
+[Tf80] [API] HeapFree(0x299a6e0)
+[Tf80] [API] HeapFree(0x2997ce0)
+[Tf80] [API] HeapFree(0x2997d20)
+[Tf80] [API] HeapFree(0x2997d00)
+[Tf80] [API] HeapFree(0x299a700)
+[Tf80] [API] HeapFree(0x299a720)
+[Tf80] [API] HeapFree(0x2997d90)
+[Tf80] [API] HeapFree(0x2997dd0)
+[Tf80] [API] HeapFree(0x2997db0)
+[Tf80] [API] HeapFree(0x299a740)
+[Tf80] [API] HeapFree(0x299a760)
+[Tf80] [API] HeapFree(0x2997e40)
+[Tf80] [API] HeapFree(0x2997e80)
+[Tf80] [API] HeapFree(0x2997e60)
+[Tf80] [API] HeapFree(0x299a780)
+[Tf80] [API] HeapFree(0x299a7a0)
+[Tf80] [API] HeapFree(0x2997ef0)
+[Tf80] [API] HeapFree(0x2997f30)
+[Tf80] [API] HeapFree(0x2997f10)
+[Tf80] [API] HeapFree(0x299a7c0)
+[Tf80] [API] HeapFree(0x299a7e0)
+[Tf80] [API] HeapFree(0x2997fa0)
+[Tf80] [API] HeapFree(0x2997fe0)
+[Tf80] [API] HeapFree(0x2997fc0)
+[Tf80] [API] HeapFree(0x299a800)
+[Tf80] [API] HeapFree(0x299a820)
+[Tf80] [API] HeapFree(0x2998050)
+[Tf80] [API] HeapFree(0x2998090)
+[Tf80] [API] HeapFree(0x2998070)
+[Tf80] [API] HeapFree(0x299a840)
+[Tf80] [API] HeapFree(0x299a860)
+[Tf80] [API] HeapFree(0x2998100)
+[Tf80] [API] HeapFree(0x2998140)
+[Tf80] [API] HeapFree(0x2998120)
+[Tf80] [API] HeapFree(0x299a880)
+[Tf80] [API] HeapFree(0x299a8a0)
+[Tf80] [API] HeapFree(0x29981b0)
+[Tf80] [API] HeapFree(0x29981f0)
+[Tf80] [API] HeapFree(0x29981d0)
+[Tf80] [API] HeapFree(0x299a8c0)
+[Tf80] [API] HeapFree(0x299a8e0)
+[Tf80] [API] HeapFree(0x2998260)
+[Tf80] [API] HeapFree(0x29982a0)
+[Tf80] [API] HeapFree(0x2998280)
+[Tf80] [API] HeapFree(0x299a900)
+[Tf80] [API] HeapFree(0x299a920)
+[Tf80] [API] HeapFree(0x2998310)
+[Tf80] [API] HeapFree(0x2998350)
+[Tf80] [API] HeapFree(0x2998330)
+[Tf80] [API] HeapFree(0x299a940)
+[Tf80] [API] HeapFree(0x299a960)
+[Tf80] [API] HeapFree(0x29983c0)
+[Tf80] [API] HeapFree(0x2998400)
+[Tf80] [API] HeapFree(0x29983e0)
+[Tf80] [API] HeapFree(0x299a980)
+[Tf80] [API] HeapFree(0x299a9a0)
+[Tf80] [API] HeapFree(0x2998470)
+[Tf80] [API] HeapFree(0x29984b0)
+[Tf80] [API] HeapFree(0x2998490)
+[Tf80] [API] HeapFree(0x299a9c0)
+[Tf80] [API] HeapFree(0x299a9e0)
+[Tf80] [API] HeapFree(0x2998520)
+[Tf80] [API] HeapFree(0x2998560)
+[Tf80] [API] HeapFree(0x2998540)
+[Tf80] [API] HeapFree(0x299aa00)
+[Tf80] [API] HeapFree(0x299aa20)
+[Tf80] [API] HeapFree(0x2998680)
+[Tf80] [API] HeapFree(0x29ad740)
+[Tf80] [API] HeapFree(0x299b910)
+[Tf80] [API] HeapFree(0x299b930)
+[Tf80] [API] HeapFree(0x299b950)
+[Tf80] [API] HeapFree(0x299b970)
+[Tf80] [API] HeapFree(0x299b990)
+[Tf80] [API] HeapFree(0x299b9b0)
+[Tf80] [API] HeapFree(0x299b9d0)
+[Tf80] [API] HeapFree(0x299b9f0)
+[Tf80] [API] HeapFree(0x299ba10)
+[Tf80] [API] HeapFree(0x299ba30)
+[Tf80] [API] HeapFree(0x299ba50)
+[Tf80] [API] HeapFree(0x299ba70)
+[Tf80] [API] HeapFree(0x299ba90)
+[Tf80] [API] HeapFree(0x299bab0)
+[Tf80] [API] HeapFree(0x299bad0)
+[Tf80] [API] HeapFree(0x299baf0)
+[Tf80] [API] HeapFree(0x299bb10)
+[Tf80] [API] HeapFree(0x299bb30)
+[Tf80] [API] HeapFree(0x299bb50)
+[Tf80] [API] HeapFree(0x299bb70)
+[Tf80] [API] HeapFree(0x299bb90)
+[Tf80] [API] HeapFree(0x299bbb0)
+[Tf80] [API] HeapFree(0x299bbd0)
+[Tf80] [API] HeapFree(0x299bbf0)
+[Tf80] [API] HeapFree(0x299bc10)
+[Tf80] [API] HeapFree(0x299bc30)
+[Tf80] [API] HeapFree(0x299bc50)
+[Tf80] [API] HeapFree(0x299bc70)
+[Tf80] [API] HeapFree(0x299bc90)
+[Tf80] [API] HeapFree(0x299bcb0)
+[Tf80] [API] HeapFree(0x299bcd0)
+[Tf80] [API] HeapFree(0x299bcf0)
+[Tf80] [API] HeapFree(0x299bd10)
+[Tf80] [API] HeapFree(0x299bd30)
+[Tf80] [API] HeapFree(0x299bd50)
+[Tf80] [API] HeapFree(0x299bd70)
+[Tf80] [API] HeapFree(0x299bd90)
+[Tf80] [API] HeapFree(0x299bdb0)
+[Tf80] [API] HeapFree(0x299aa40)
+[Tf80] [API] HeapFree(0x299aa60)
+[Tf80] [API] HeapFree(0x299aa80)
+[Tf80] [API] HeapFree(0x299aaa0)
+[Tf80] [API] HeapFree(0x299aac0)
+[Tf80] [API] HeapFree(0x299aae0)
+[Tf80] [API] HeapFree(0x299ab00)
+[Tf80] [API] HeapFree(0x299ab20)
+[Tf80] [API] HeapFree(0x299ab40)
+[Tf80] [API] HeapFree(0x299ab60)
+[Tf80] [API] HeapFree(0x299ab80)
+[Tf80] [API] HeapFree(0x299aba0)
+[Tf80] [API] HeapFree(0x299abc0)
+[Tf80] [API] HeapFree(0x299abe0)
+[Tf80] [API] HeapFree(0x299ac00)
+[Tf80] [API] HeapFree(0x299ac20)
+[Tf80] [API] HeapFree(0x299ac40)
+[Tf80] [API] HeapFree(0x299ac60)
+[Tf80] [API] HeapFree(0x299ac80)
+[Tf80] [API] HeapFree(0x299bdd0)
+[Tf80] [API] HeapFree(0x29997f0)
+[Tf80] [API] HeapFree(0x2991750)
+[Tf80] [API] HeapFree(0x2995dd0)
+[Tf80] [API] HeapFree(0x298f7a0)
+[Tf80] [API] HeapFree(0x2995e20)
+[Tf80] [API] HeapAlloc(size=0x8, zero=0) = 0x29a33f0
+[Tf80] [API] HeapReAlloc(size=0x10) = 0x29a33f0
+[Tf80] [API] HeapReAlloc(size=0x20) = 0x29a33f0
+[Tf80] [API] HeapReAlloc(size=0x47) = 0x29a33f0
+[Tf80] [API] HeapReAlloc(size=0x8e) = 0x29a33f0
+[Tf80] [API] HeapReAlloc(size=0x11c) = 0x29a33f0
+[Tf80] [API] HeapAlloc(size=0x12, zero=0) = 0x29a3160
+[Tf80] [API] SetLastError(0)
+[Tf80] [API] GetEnvironmentVariableW(CLICOLOR) = 0
+[Tf80] [API] HeapAlloc(size=0x1, zero=0) = 0x29a2ed0
+[Tf80] [API] HeapFree(0x29a3160)
+[Tf80] [API] HeapFree(0x29a2ed0)
+[Tf80] [API] HeapAlloc(size=0x12, zero=0) = 0x29a2ed0
+[Tf80] [API] SetLastError(0)
+[Tf80] [API] GetEnvironmentVariableW(NO_COLOR) = 1
+[Tf80] [API] HeapAlloc(size=0x1, zero=0) = 0x29a3160
+[Tf80] [API] HeapFree(0x29a2ed0)
+[Tf80] [API] HeapFree(0x29a3160)
+[Tf80] [API] GetStdHandle(-12) = 0x6
+[Tf80] [API] GetConsoleMode(handle=0x6)
+[Tf80] [API] SetLastError(6)
+[Tf80] [API] HeapFree(0x29a33f0)
+[Tf80] [API] ExitProcess(2)
+  ]
+}

@@ -1,0 +1,5 @@
+exe=produkey/ProduKey.exe
+sha256=6cf9dbed273e35c0719ef691074ec6d84e6a89e5f9674120eec757a501e8564c
+timeout=10s
+args=none
+date_utc=2026-10-17T18:39:37Z

@@ -1,0 +1,25 @@
+[TRACE] Command line: /home/z/my-project/workspace/miniwin-engineering/artifacts/sweep50/dl/si-pipelist/pipelist64.exe
+[WARN]   unresolved: GetVersionExW
+[WARN]   unresolved: InflateRect
+[WARN]   unresolved: SendMessageW
+[WARN]   unresolved: EndDialog
+[WARN]   unresolved: SetWindowTextW
+[WARN]   unresolved: DialogBoxIndirectParamW
+[WARN]   unresolved: LoadCursorW
+[WARN]   unresolved: GetSysColorBrush
+[WARN]   unresolved: GetDlgItem
+[WARN]   unresolved: SetCursor
+[WARN]   unresolved: EndDoc
+[WARN]   unresolved: GetDeviceCaps
+[WARN]   unresolved: SetMapMode
+[WARN]   unresolved: StartDocW
+[WARN]   unresolved: EndPage
+[WARN]   unresolved: StartPage
+[WARN]   unresolved: PrintDlgW
+[WARN]   unresolved: RegCreateKeyW
+[WARN]   unresolved: RegOpenKeyW
+[WARN] 19 imports unresolved
+[STUB] unresolved import called -> returning 0 (call #1)
+[STUB] unresolved import called -> returning 0 (call #2)
+[STUB] unresolved import called -> returning 0 (call #3)
+[STUB] unresolved import called -> returning 0 (call #4)

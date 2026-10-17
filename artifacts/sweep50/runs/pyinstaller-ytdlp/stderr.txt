@@ -1,0 +1,57 @@
+[TRACE] Command line: /home/z/my-project/workspace/miniwin-engineering/artifacts/sweep50/dl/ytdlp/yt-dlp.exe
+[WARN]   unresolved: ConvertSidToStringSidW
+[WARN]   unresolved: ConvertStringSecurityDescriptorToSecurityDescriptorW
+[WARN]   unresolved: GetTokenInformation
+[WARN]   unresolved: K32EnumProcessModules
+[WARN]   unresolved: K32GetModuleFileNameExW
+[WARN]   unresolved: __wgetmainargs
+[WARN]   unresolved: __winitenv
+[WARN]   unresolved: _vsnwprintf
+[WARN]   unresolved: _wcserror
+[WARN]   unresolved: _wputenv_s
+[WARN]   unresolved: _wstat
+[WARN]   unresolved: _wtempnam
+[WARN]   unresolved: CreateWindowExW
+[WARN]   unresolved: DefWindowProcW
+[WARN]   unresolved: DestroyWindow
+[WARN]   unresolved: DispatchMessageW
+[WARN]   unresolved: GetCursorPos
+[WARN]   unresolved: GetMessageW
+[WARN]   unresolved: GetMonitorInfoW
+[WARN]   unresolved: GetSystemMetrics
+[WARN]   unresolved: GetWindowLongPtrW
+[WARN]   unresolved: GetWindowThreadProcessId
+[WARN]   unresolved: MonitorFromPoint
+[WARN]   unresolved: MsgWaitForMultipleObjects
+[WARN]   unresolved: PeekMessageW
+[WARN]   unresolved: RegisterClassW
+[WARN]   unresolved: SetWindowLongPtrW
+[WARN]   unresolved: ShowWindow
+[WARN]   unresolved: ShutdownBlockReasonCreate
+[WARN]   unresolved: TranslateMessage
+[WARN] 30 imports unresolved
+[STUB] unresolved import called -> returning 0 (call #1)
+
+[CRASH] Signal 11 at RIP=0x140001148
+  RAX=0x20297d0 RCX=0x0 RDX=0x2122200 R8=0x0 R9=0x0
+  RSP=0x7ffce42e59b0 RBP=0x0
+  g_image_base=0x140000000 g_image_size=0x36000
+  RVA=0x1148 (inside loaded PE)
+  Bytes: 4c 89 00 48 8b 15 c6 2e 02 00 e8 79 03 00 00 8b 
+  Return addr: 0x6c
+  RSI=0x0 RDI=0x202a6d0
+  R8=0x0  R9=0x0 R10=0x0 R11=0x202
+  R12=0x1400270f8 R13=0x24e5730 R14=0x0 R15=0x7ffce42e5eb0
+  [SCAN rsp+152] 0x20076a6 <LOADER>
+  [SCAN rsp+176] 0x140028960 <PE>
+  [SCAN rsp+504] 0x20026ae <LOADER>
+  [SCAN rsp+512] 0x20020a0 <LOADER>
+  [SCAN rsp+1960] 0x2006490 <LOADER>
+  [SCAN rsp+2112] 0x2006490 <LOADER>
+  [SCAN rsp+2152] 0x2007d50 <LOADER>
+  [SCAN rsp+2184] 0x2007d71 <LOADER>
+  [SCAN rsp+2656] 0x2000040 <LOADER>
+  [SCAN rsp+2736] 0x2007d50 <LOADER>
+  Backtrace (via stack walking):
+    [0] RIP=0x140001148 RVA=0x1148      [RSP+0] = 0x6c (return addr?)
+    [1] RIP=0x140001148 RVA=0x1148

@@ -1,0 +1,431 @@
+{
+  "trace": [
+[T9f80] [API] PE Loader: file=/home/z/my-project/workspace/miniwin-engineering/artifacts/sweep50/dl/delta/delta.exe size=7618048
+[T9f80] [API] PE Loader: ImageBase=0x140000000 EP=0x42d310 SizeOfImage=0x749000 Sections=5
+[T9f80] [API] PE Loader: Mapped at 0x140000000 (forced via MAP_FIXED)
+[T9f80] [API] Section [0] .text    VA=0x00001000 VS=0x0043d778 Raw=0x0043d800 Ch=0x60000020
+[T9f80] [API] Section [1] .rdata   VA=0x0043f000 VS=0x002bd88e Raw=0x002bda00 Ch=0x40000040
+[T9f80] [API] Section [2] .data    VA=0x006fd000 VS=0x00014f60 Raw=0x00012200 Ch=0xc0000040
+[T9f80] [API] Section [3] .pdata   VA=0x00712000 VS=0x0002ed34 Raw=0x0002ee00 Ch=0x40000040
+[T9f80] [API] Section [4] .reloc   VA=0x00741000 VS=0x000077ec Raw=0x00007800 Ch=0x42000040
+[T9f80] [API] Import Directory: RVA=0x6fa2d8 Size=0x230
+[T9f80] [API] Import DLL: kernel32.dll (IAT RVA=0x43f4e8, ILT RVA=0x6faaa8)
+[T9f80] [API]   [0] FormatMessageW -> 0x20272e0
+[T9f80] [API]   [1] MapViewOfFile -> 0x202db20
+[T9f80] [API]   [2] UnmapViewOfFile -> 0x2023760
+[T9f80] [API]   [3] CreateFileMappingA -> 0x20215b0
+[T9f80] [API]   [4] MultiByteToWideChar -> 0x20223e0
+[T9f80] [API]   [5] WideCharToMultiByte -> 0x2020c30
+[T9f80] [API]   [6] UNRESOLVED: lstrlenW
+[T9f80] [API]   [7] WriteConsoleW -> 0x2012160
+[T9f80] [API]   [8] GetFileType -> 0x2016190
+[T9f80] [API]   [9] SetConsoleTextAttribute -> 0x2020580
+[T9f80] [API]   [10] SetConsoleMode -> 0x202df70
+[T9f80] [API]   [11] CreateSemaphoreA -> 0x20217d0
+[T9f80] [API]   [12] WaitForSingleObject -> 0x2033c20
+[T9f80] [API]   [13] FormatMessageA -> 0x20271f0
+[T9f80] [API]   [14] GetExitCodeProcess -> 0x2009160
+[T9f80] [API]   [15] GlobalMemoryStatusEx -> 0x202cdb0
+[T9f80] [API]   [16] GetModuleHandleW -> 0x200d2a0
+[T9f80] [API]   [17] GetProcessTimes -> 0x201bd00
+[T9f80] [API]   [18] GetExitCodeThread -> 0x2030ca0
+[T9f80] [API]   [19] UNRESOLVED: GetComputerNameExW
+[T9f80] [API]   [20] GetFileInformationByHandleEx -> 0x2027100
+[T9f80] [API]   [21] UNRESOLVED: GetSystemTimes
+[T9f80] [API]   [22] GetCurrentProcessId -> 0x2007e50
+[T9f80] [API]   [23] UNRESOLVED: VirtualQueryEx
+[T9f80] [API]   [24] Sleep -> 0x202a6d0
+[T9f80] [API]   [25] GetCurrentThreadId -> 0x2007e70
+[T9f80] [API]   [26] CreateThread -> 0x2023ab0
+[T9f80] [API]   [27] CreateEventW -> 0x200b5c0
+[T9f80] [API]   [28] OpenProcess -> 0x20283d0
+[T9f80] [API]   [29] LocalAlloc -> 0x20109a0
+[T9f80] [API]   [30] SetEvent -> 0x20307f0
+[T9f80] [API]   [31] UNRESOLVED: GetProcessIoCounters
+[T9f80] [API]   [32] UNRESOLVED: ReadProcessMemory
+[T9f80] [API]   [33] GetProcessHeap -> 0x2008bd0
+[T9f80] [API]   [34] HeapAlloc -> 0x2023050
+[T9f80] [API]   [35] HeapFree -> 0x203a050
+[T9f80] [API]   [36] WaitForMultipleObjects -> 0x2033d70
+[T9f80] [API]   [37] DeleteCriticalSection -> 0x200d760
+[T9f80] [API]   [38] LeaveCriticalSection -> 0x2027ab0
+[T9f80] [API]   [39] EnterCriticalSection -> 0x202fa30
+[T9f80] [API]   [40] InitializeCriticalSection -> 0x2029a00
+[T9f80] [API]   [41] FlsFree -> 0x202e050
+[T9f80] [API]   [42] UNRESOLVED: CompareStringOrdinal
+[T9f80] [API]   [43] FlsSetValue -> 0x2008750
+[T9f80] [API]   [44] GetProcAddress -> 0x2009e60
+[T9f80] [API]   [45] DuplicateHandle -> 0x20099e0
+[T9f80] [API]   [46] HeapReAlloc -> 0x203a3c0
+[T9f80] [API]   [47] QueryPerformanceCounter -> 0x200e0e0
+[T9f80] [API]   [48] FlsGetValue -> 0x2008730
+[T9f80] [API]   [49] FlsAlloc -> 0x200c4f0
+[T9f80] [API]   [50] ReleaseSemaphore -> 0x20302a0
+[T9f80] [API]   [51] GetConsoleMode -> 0x2022000
+[T9f80] [API]   [52] GetConsoleScreenBufferInfo -> 0x200c620
+[T9f80] [API]   [53] UNRESOLVED: ReadFileEx
+[T9f80] [API]   [54] SleepEx -> 0x200f6a0
+[T9f80] [API]   [55] UNRESOLVED: WriteFileEx
+[T9f80] [API]   [56] GetOverlappedResult -> 0x2020be0
+[T9f80] [API]   [57] GetStdHandle -> 0x2040f70
+[T9f80] [API]   [58] GetSystemTimePreciseAsFileTime -> 0x2029b60
+[T9f80] [API]   [59] CancelIo -> 0x202e000
+[T9f80] [API]   [60] GetSystemDirectoryW -> 0x20336a0
+[T9f80] [API]   [61] GetWindowsDirectoryW -> 0x2033780
+[T9f80] [API]   [62] CreateProcessW -> 0x2021dd0
+[T9f80] [API]   [63] GetEnvironmentStringsW -> 0x200e440
+[T9f80] [API]   [64] GetTickCount64 -> 0x200e210
+[T9f80] [API]   [65] GetVolumeInformationW -> 0x2035ae0
+[T9f80] [API]   [66] GetDriveTypeW -> 0x202e0e0
+[T9f80] [API]   [67] CreateDirectoryW -> 0x2037e50
+[T9f80] [API]   [68] AddVectoredExceptionHandler -> 0x200c050
+[T9f80] [API]   [69] UNRESOLVED: SetThreadStackGuarantee
+[T9f80] [API]   [70] GetCurrentThread -> 0x2007e60
+[T9f80] [API]   [71] GetCommandLineW -> 0x202ab00
+[T9f80] [API]   [72] GetDiskFreeSpaceExW -> 0x2038430
+[T9f80] [API]   [73] GetEnvironmentVariableW -> 0x2039600
+[T9f80] [API]   [74] ExitProcess -> 0x200dcd0
+[T9f80] [API]   [75] WaitForSingleObjectEx -> 0x2033d30
+[T9f80] [API]   [76] LoadLibraryA -> 0x2022140
+[T9f80] [API]   [77] CreateMutexA -> 0x200b720
+[T9f80] [API]   [78] ReleaseMutex -> 0x2030950
+[T9f80] [API]   [79] GetModuleFileNameW -> 0x2035020
+[T9f80] [API]   [80] ReadConsoleW -> 0x2024d00
+[T9f80] [API]   [81] GetConsoleOutputCP -> 0x202e290
+[T9f80] [API]   [82] GetModuleHandleExW -> 0x203c260
+[T9f80] [API]   [83] UNRESOLVED: IsThreadAFiber
+[T9f80] [API]   [84] QueryPerformanceFrequency -> 0x200ce70
+[T9f80] [API]   [85] ExpandEnvironmentStringsW -> 0x2039870
+[T9f80] [API]   [86] GetLogicalDrives -> 0x2008f70
+[T9f80] [API]   [87] GetSystemTimeAsFileTime -> 0x2029a20
+[T9f80] [API]   [88] InitializeSListHead -> 0x2008d10
+[T9f80] [API]   [89] GetSystemInfo -> 0x202cee0
+[T9f80] [API]   [90] SetFileInformationByHandle -> 0x2008f50
+[T9f80] [API]   [91] UNRESOLVED: VerifyVersionInfoA
+[T9f80] [API]   [92] GetModuleHandleA -> 0x2009cf0
+[T9f80] [API]   [93] SetUnhandledExceptionFilter -> 0x200a5d0
+[T9f80] [API]   [94] LocalFree -> 0x2038d20
+[T9f80] [API]   [95] FindNextFileW -> 0x202a0e0
+[T9f80] [API]   [96] FindFirstFileExW -> 0x2035c50
+[T9f80] [API]   [97] FindFirstFileW -> 0x20359a0
+[T9f80] [API]   [98] FindClose -> 0x20167f0
+[T9f80] [API]   [99] GetShortPathNameW -> 0x202f510
+[T9f80] [API]   [100] CreateSymbolicLinkW -> 0x203ac60
+[T9f80] [API]   [101] MoveFileExW -> 0x203b340
+[T9f80] [API]   [102] SetFileTime -> 0x2028790
+[T9f80] [API]   [103] SetFileAttributesW -> 0x2008f60
+[T9f80] [API]   [104] RemoveDirectoryW -> 0x2037690
+[T9f80] [API]   [105] GetLongPathNameW -> 0x200f080
+[T9f80] [API]   [106] GetFullPathNameW -> 0x2039da0
+[T9f80] [API]   [107] GetFinalPathNameByHandleW -> 0x2036bf0
+[T9f80] [API]   [108] GetFileInformationByHandle -> 0x2025550
+[T9f80] [API]   [109] GetFileAttributesExW -> 0x2037c40
+[T9f80] [API]   [110] GetFileAttributesW -> 0x2037a40
+[T9f80] [API]   [111] CreateFileW -> 0x2037850
+[T9f80] [API]   [112] FlushFileBuffers -> 0x20256f0
+[T9f80] [API]   [113] DeleteFileW -> 0x2037c80
+[T9f80] [API]   [114] ReadFile -> 0x2024b00
+[T9f80] [API]   [115] WriteFile -> 0x2024d20
+[T9f80] [API]   [116] GetSystemTime -> 0x202d040
+[T9f80] [API]   [117] SystemTimeToFileTime -> 0x202d500
+[T9f80] [API]   [118] SetLastError -> 0x2020680
+[T9f80] [API]   [119] GetCurrentDirectoryW -> 0x20342c0
+[T9f80] [API]   [120] DeviceIoControl -> 0x2020900
+[T9f80] [API]   [121] FreeEnvironmentStringsW -> 0x2029320
+[T9f80] [API]   [122] GetCurrentProcess -> 0x2007e40
+[T9f80] [API]   [123] GetLastError -> 0x2009c00
+[T9f80] [API]   [124] CloseHandle -> 0x20340f0
+[T9f80] [API]   [125] SetConsoleCtrlHandler -> 0x2008fd0
+[T9f80] [API] Import DLL: shell32.dll (IAT RVA=0x43fa28, ILT RVA=0x6fafe8)
+[T9f80] [API]   [0] UNRESOLVED: SHGetKnownFolderPath
+[T9f80] [API]   [1] CommandLineToArgvW -> 0x202fea0
+[T9f80] [API] Import DLL: combase.dll (IAT RVA=0x43f4b0, ILT RVA=0x6faa70)
+[T9f80] [API]   [0] UNRESOLVED: CoTaskMemFree
+[T9f80] [API] Import DLL: ole32.dll (IAT RVA=0x43f970, ILT RVA=0x6faf30)
+[T9f80] [API]   [0] UNRESOLVED: CoCreateInstance
+[T9f80] [API]   [1] UNRESOLVED: CoInitializeEx
+[T9f80] [API]   [2] UNRESOLVED: CoUninitialize
+[T9f80] [API]   [3] UNRESOLVED: CoSetProxyBlanket
+[T9f80] [API]   [4] UNRESOLVED: CoInitializeSecurity
+[T9f80] [API] Import DLL: oleaut32.dll (IAT RVA=0x43f9a0, ILT RVA=0x6faf60)
+[T9f80] [API]   [0] SysAllocString -> 0x202f120
+[T9f80] [API]   [1] SysFreeString -> 0x202e5b0
+[T9f80] [API]   [2] VariantClear -> 0x202ad50
+[T9f80] [API] Import DLL: api-ms-win-core-handle-l1-1-0.dll (IAT RVA=0x43f150, ILT RVA=0x6fa710)
+[T9f80] [API]   [0] UNRESOLVED: CompareObjectHandles
+[T9f80] [API] Import DLL: api-ms-win-core-synch-l1-2-0.dll (IAT RVA=0x43f160, ILT RVA=0x6fa720)
+[T9f80] [API]   [0] WakeByAddressAll -> 0x2013df0
+[T9f80] [API]   [1] WaitOnAddress -> 0x2023930
+[T9f80] [API]   [2] WakeByAddressSingle -> 0x2013d30
+[T9f80] [API] Import DLL: bcryptprimitives.dll (IAT RVA=0x43f4a0, ILT RVA=0x6faa60)
+[T9f80] [API]   [0] ProcessPrng -> 0x2013be0
+[T9f80] [API] Import DLL: Secur32.dll (IAT RVA=0x43f000, ILT RVA=0x6fa5c0)
+[T9f80] [API]   [0] UNRESOLVED: AcquireCredentialsHandleW
+[T9f80] [API]   [1] UNRESOLVED: FreeCredentialsHandle
+[T9f80] [API]   [2] UNRESOLVED: InitializeSecurityContextW
+[T9f80] [API]   [3] UNRESOLVED: CompleteAuthToken
+[T9f80] [API]   [4] UNRESOLVED: DeleteSecurityContext
+[T9f80] [API]   [5] UNRESOLVED: FreeContextBuffer
+[T9f80] [API]   [6] UNRESOLVED: QuerySecurityPackageInfoW
+[T9f80] [API]   [7] UNRESOLVED: LsaEnumerateLogonSessions
+[T9f80] [API]   [8] UNRESOLVED: LsaFreeReturnBuffer
+[T9f80] [API]   [9] UNRESOLVED: LsaGetLogonSessionData
+[T9f80] [API] Import DLL: ntdll.dll (IAT RVA=0x43f908, ILT RVA=0x6faec8)
+[T9f80] [API]   [0] UNRESOLVED: NtCreateNamedPipeFile
+[T9f80] [API]   [1] UNRESOLVED: NtOpenFile
+[T9f80] [API]   [2] VerSetConditionMask -> 0x2009830
+[T9f80] [API]   [3] UNRESOLVED: NtQuerySystemInformation
+[T9f80] [API]   [4] UNRESOLVED: NtQueryInformationProcess
+[T9f80] [API]   [5] UNRESOLVED: NtWriteFile
+[T9f80] [API]   [6] RtlVirtualUnwind -> 0x2030dc0
+[T9f80] [API]   [7] RtlLookupFunctionEntry -> 0x200a380
+[T9f80] [API]   [8] RtlCaptureContext -> 0x20285b0
+[T9f80] [API]   [9] UNRESOLVED: RtlNtStatusToDosError
+[T9f80] [API]   [10] UNRESOLVED: NtReadFile
+[T9f80] [API]   [11] UNRESOLVED: RtlGetVersion
+[T9f80] [API] Import DLL: ws2_32.dll (IAT RVA=0x43fa40, ILT RVA=0x6fb000)
+[T9f80] [API]   [0] ntohl -> 0x202e2a0
+[T9f80] [API]   [1] htonl -> 0x201afc0
+[T9f80] [API]   [2] htons -> 0x201afd0
+[T9f80] [API]   [3] ntohs -> 0x202e2b0
+[T9f80] [API]   [4] recv -> 0x201b8a0
+[T9f80] [API]   [5] send -> 0x201b7f0
+[T9f80] [API]   [6] WSAGetLastError -> 0x20096c0
+[T9f80] [API]   [7] closesocket -> 0x2012660
+[T9f80] [API]   [8] connect -> 0x201b210
+[T9f80] [API]   [9] ioctlsocket -> 0x201bb80
+[T9f80] [API]   [10] getsockopt -> 0x201b550
+[T9f80] [API]   [11] socket -> 0x201b120
+[T9f80] [API]   [12] WSAStartup -> 0x2014fe0
+[T9f80] [API]   [13] UNRESOLVED: WSAPoll
+[T9f80] [API]   [14] getaddrinfo -> 0x201c4a0
+[T9f80] [API]   [15] freeaddrinfo -> 0x201c400
+[T9f80] [API]   [16] WSACleanup -> 0x20096b0
+[T9f80] [API] Import DLL: advapi32.dll (IAT RVA=0x43f0c8, ILT RVA=0x6fa688)
+[T9f80] [API]   [0] RegCloseKey -> 0x2009020
+[T9f80] [API]   [1] RegQueryValueExW -> 0x2020790
+[T9f80] [API]   [2] RegOpenKeyExW -> 0x2021cc0
+[T9f80] [API]   [3] UNRESOLVED: GetNamedSecurityInfoW
+[T9f80] [API]   [4] UNRESOLVED: IsWellKnownSid
+[T9f80] [API]   [5] UNRESOLVED: IsValidSid
+[T9f80] [API]   [6] UNRESOLVED: GetTokenInformation
+[T9f80] [API]   [7] UNRESOLVED: GetLengthSid
+[T9f80] [API]   [8] UNRESOLVED: EqualSid
+[T9f80] [API]   [9] UNRESOLVED: CopySid
+[T9f80] [API]   [10] UNRESOLVED: CheckTokenMembership
+[T9f80] [API]   [11] CryptGenRandom -> 0x2012540
+[T9f80] [API]   [12] OpenProcessToken -> 0x20209a0
+[T9f80] [API]   [13] CryptAcquireContextA -> 0x2020fb0
+[T9f80] [API]   [14] CryptReleaseContext -> 0x202df80
+[T9f80] [API]   [15] UNRESOLVED: LookupAccountSidW
+[T9f80] [API] Import DLL: pdh.dll (IAT RVA=0x43f9c0, ILT RVA=0x6faf80)
+[T9f80] [API]   [0] UNRESOLVED: PdhCloseQuery
+[T9f80] [API]   [1] UNRESOLVED: PdhAddEnglishCounterW
+[T9f80] [API]   [2] UNRESOLVED: PdhCollectQueryData
+[T9f80] [API]   [3] UNRESOLVED: PdhOpenQueryA
+[T9f80] [API]   [4] UNRESOLVED: PdhGetFormattedCounterValue
+[T9f80] [API]   [5] UNRESOLVED: PdhRemoveCounter
+[T9f80] [API] Import DLL: powrprof.dll (IAT RVA=0x43f9f8, ILT RVA=0x6fafb8)
+[T9f80] [API]   [0] UNRESOLVED: CallNtPowerInformation
+[T9f80] [API] Import DLL: psapi.dll (IAT RVA=0x43fa08, ILT RVA=0x6fafc8)
+[T9f80] [API]   [0] UNRESOLVED: GetProcessMemoryInfo
+[T9f80] [API]   [1] UNRESOLVED: GetModuleFileNameExW
+[T9f80] [API]   [2] UNRESOLVED: GetPerformanceInfo
+[T9f80] [API] Import DLL: iphlpapi.dll (IAT RVA=0x43f4c0, ILT RVA=0x6faa80)
+[T9f80] [API]   [0] UNRESOLVED: GetIfEntry2
+[T9f80] [API]   [1] UNRESOLVED: FreeMibTable
+[T9f80] [API]   [2] UNRESOLVED: GetIfTable2
+[T9f80] [API]   [3] UNRESOLVED: GetAdaptersAddresses
+[T9f80] [API] Import DLL: netapi32.dll (IAT RVA=0x43f8e0, ILT RVA=0x6faea0)
+[T9f80] [API]   [0] UNRESOLVED: NetUserGetInfo
+[T9f80] [API]   [1] UNRESOLVED: NetUserGetLocalGroups
+[T9f80] [API]   [2] UNRESOLVED: NetApiBufferFree
+[T9f80] [API]   [3] UNRESOLVED: NetUserEnum
+[T9f80] [API] Import DLL: VCRUNTIME140.dll (IAT RVA=0x43f058, ILT RVA=0x6fa618)
+[T9f80] [API]   [0] UNRESOLVED: __current_exception
+[T9f80] [API]   [1] UNRESOLVED: __current_exception_context
+[T9f80] [API]   [2] __C_specific_handler -> 0x2028c40
+[T9f80] [API]   [3] _CxxThrowException -> 0x200bdc0
+[T9f80] [API]   [4] strstr -> 0x200fb20
+[T9f80] [API]   [5] memchr -> 0x2010e00
+[T9f80] [API]   [6] strrchr -> 0x2010ad0
+[T9f80] [API]   [7] strchr -> 0x200fbc0
+[T9f80] [API]   [8] memcmp -> 0x200da30
+[T9f80] [API]   [9] memset -> 0x200c9d0
+[T9f80] [API]   [10] memcpy -> 0x200efe0
+[T9f80] [API]   [11] memmove -> 0x200c310
+[T9f80] [API]   [12] UNRESOLVED: __CxxFrameHandler3
+[T9f80] [API] Import DLL: api-ms-win-crt-math-l1-1-0.dll (IAT RVA=0x43f210, ILT RVA=0x6fa7d0)
+[T9f80] [API]   [0] __setusermatherr -> 0x2026120
+[T9f80] [API]   [1] UNRESOLVED: ldexp
+[T9f80] [API]   [2] log10 -> 0x20181a0
+[T9f80] [API]   [3] round -> 0x201a980
+[T9f80] [API]   [4] cbrtf -> 0x2017a00
+[T9f80] [API]   [5] powf -> 0x20191f0
+[T9f80] [API]   [6] floor -> 0x2018050
+[T9f80] [API] Import DLL: api-ms-win-crt-string-l1-1-0.dll (IAT RVA=0x43f390, ILT RVA=0x6fa950)
+[T9f80] [API]   [0] strcpy -> 0x2010a30
+[T9f80] [API]   [1] strcspn -> 0x2010c20
+[T9f80] [API]   [2] strncpy -> 0x201ab60
+[T9f80] [API]   [3] strncmp -> 0x2010cc0
+[T9f80] [API]   [4] strcmp -> 0x200eac0
+[T9f80] [API]   [5] _stricmp -> 0x2010d60
+[T9f80] [API]   [6] strlen -> 0x200d990
+[T9f80] [API]   [7] _strnicmp -> 0x2016e30
+[T9f80] [API]   [8] strnlen -> 0x201ac00
+[T9f80] [API]   [9] tolower -> 0x202b0c0
+[T9f80] [API]   [10] toupper -> 0x202d670
+[T9f80] [API]   [11] strspn -> 0x201ad40
+[T9f80] [API]   [12] wcslen -> 0x201ff00
+[T9f80] [API]   [13] wcscpy -> 0x2009400
+[T9f80] [API]   [14] wcsncmp -> 0x2009380
+[T9f80] [API]   [15] iscntrl -> 0x20118b0
+[T9f80] [API]   [16] UNRESOLVED: strcat_s
+[T9f80] [API]   [17] wcscmp -> 0x202ef00
+[T9f80] [API]   [18] isalpha -> 0x2011750
+[T9f80] [API]   [19] isupper -> 0x2011540
+[T9f80] [API]   [20] islower -> 0x20113e0
+[T9f80] [API]   [21] isdigit -> 0x2011960
+[T9f80] [API]   [22] isxdigit -> 0x20115f0
+[T9f80] [API]   [23] isspace -> 0x2011490
+[T9f80] [API]   [24] UNRESOLVED: ispunct
+[T9f80] [API]   [25] isalnum -> 0x20116a0
+[T9f80] [API]   [26] isprint -> 0x2011a10
+[T9f80] [API] Import DLL: api-ms-win-crt-runtime-l1-1-0.dll (IAT RVA=0x43f250, ILT RVA=0x6fa810)
+[T9f80] [API]   [0] _seh_filter_exe -> 0x20275c0
+[T9f80] [API]   [1] abort -> 0x200df00
+[T9f80] [API]   [2] _initterm -> 0x200a930
+[T9f80] [API]   [3] UNRESOLVED: _get_initial_narrow_environment
+[T9f80] [API]   [4] _initialize_narrow_environment -> 0x2028d30
+[T9f80] [API]   [5] UNRESOLVED: terminate
+[T9f80] [API]   [6] _crt_atexit -> 0x200b030
+[T9f80] [API]   [7] UNRESOLVED: _register_onexit_function
+[T9f80] [API]   [8] UNRESOLVED: _initialize_onexit_table
+[T9f80] [API]   [9] _initterm_e -> 0x200bbe0
+[T9f80] [API]   [10] _configure_narrow_argv -> 0x2026210
+[T9f80] [API]   [11] strerror -> 0x7fe6f3174550
+[T9f80] [API]   [12] _register_thread_local_exe_atexit_callback -> 0x200bae0
+[T9f80] [API]   [13] _c_exit -> 0x20295f0
+[T9f80] [API]   [14] _cexit -> 0x200d190
+[T9f80] [API]   [15] __p___argv -> 0x2026910
+[T9f80] [API]   [16] __p___argc -> 0x2026800
+[T9f80] [API]   [17] _set_app_type -> 0x2026030
+[T9f80] [API]   [18] _errno -> 0x2026e10
+[T9f80] [API]   [19] exit -> 0x200f9c0
+[T9f80] [API]   [20] _exit -> 0x200dad0
+[T9f80] [API] Import DLL: api-ms-win-crt-filesystem-l1-1-0.dll (IAT RVA=0x43f198, ILT RVA=0x6fa758)
+[T9f80] [API]   [0] _wchmod -> 0x20351c0
+[T9f80] [API]   [1] _getdrive -> 0x2009200
+[T9f80] [API]   [2] remove -> 0x2010100
+[T9f80] [API]   [3] _wmkdir -> 0x2035440
+[T9f80] [API]   [4] _wrmdir -> 0x2034da0
+[T9f80] [API]   [5] _waccess -> 0x20356c0
+[T9f80] [API] Import DLL: api-ms-win-crt-time-l1-1-0.dll (IAT RVA=0x43f470, ILT RVA=0x6faa30)
+[T9f80] [API]   [0] _gmtime64 -> 0x2013270
+[T9f80] [API]   [1] _difftime64 -> 0x2016c50
+[T9f80] [API]   [2] _localtime64 -> 0x2013310
+[T9f80] [API]   [3] _time64 -> 0x2013120
+[T9f80] [API]   [4] _mktime64 -> 0x2016a70
+[T9f80] [API] Import DLL: api-ms-win-crt-stdio-l1-1-0.dll (IAT RVA=0x43f300, ILT RVA=0x6fa8c0)
+[T9f80] [API]   [0] _lseeki64 -> 0x2012b90
+[T9f80] [API]   [1] __stdio_common_vfprintf -> 0x201ef30
+[T9f80] [API]   [2] __p__commode -> 0x20266f0
+[T9f80] [API]   [3] fwrite -> 0x201d8d0
+[T9f80] [API]   [4] __stdio_common_vsprintf -> 0x201f060
+[T9f80] [API]   [5] UNRESOLVED: __stdio_common_vsnprintf_s
+[T9f80] [API]   [6] _chsize_s -> 0x202e330
+[T9f80] [API]   [7] _get_osfhandle -> 0x200af40
+[T9f80] [API]   [8] _close -> 0x2012310
+[T9f80] [API]   [9] fputc -> 0x201d7c0
+[T9f80] [API]   [10] UNRESOLVED: _set_fmode
+[T9f80] [API]   [11] UNRESOLVED: __stdio_common_vsprintf_s
+[T9f80] [API]   [12] fflush -> 0x201cf90
+[T9f80] [API]   [13] _open_osfhandle -> 0x201ff30
+[T9f80] [API]   [14] _read -> 0x2011e70
+[T9f80] [API]   [15] __acrt_iob_func -> 0x200abf0
+[T9f80] [API]   [16] _write -> 0x2012050
+[T9f80] [API] Import DLL: api-ms-win-crt-convert-l1-1-0.dll (IAT RVA=0x43f180, ILT RVA=0x6fa740)
+[T9f80] [API]   [0] strtoul -> 0x20111e0
+[T9f80] [API]   [1] strtol -> 0x2010f40
+[T9f80] [API] Import DLL: api-ms-win-crt-heap-l1-1-0.dll (IAT RVA=0x43f1d0, ILT RVA=0x6fa790)
+[T9f80] [API]   [0] realloc -> 0x203ba60
+[T9f80] [API]   [1] _set_new_mode -> 0x2026300
+[T9f80] [API]   [2] malloc -> 0x202fcc0
+[T9f80] [API]   [3] free -> 0x20381e0
+[T9f80] [API]   [4] calloc -> 0x2030080
+[T9f80] [API] Import DLL: api-ms-win-crt-locale-l1-1-0.dll (IAT RVA=0x43f200, ILT RVA=0x6fa7c0)
+[T9f80] [API]   [0] _configthreadlocale -> 0x20091f0
+[T9f80] [API] Import resolution: 240 resolved, 79 unresolved (total 319)
+[T9f80] [API] TLS: StartRaw=0x1406737f8 EndRaw=0x1406738e9 Callbacks=0x14043fb48
+[T9f80] [API] TLS: static block 0x27d80a0 (241+0 bytes) -> slot 0
+[T9f80] [API] Exception: .pdata RVA=0x712000 Size=0x2ed34 Entries=15983
+[T9f80] [API] [API-005] EH hacks DISABLED (default) (MINWIN_EH_HACKS=<unset>)
+[T9f80] [API] [API-005] CXX-EH-FIX (LSDA catch-all patch RVA 0x2010c8) skipped: MINWIN_EH_HACKS not set
+[T9f80] [API] Jumping to EP=0x14042d310
+[T9f80] [API] GetSystemTimeAsFileTime()
+[T9f80] [API] QueryPerformanceCounter()
+[T9f80] [API] _initterm_e(0x14043fb20..0x14043fb38)
+[T9f80] [API] __set_app_type(1)
+[T9f80] [API] __p__commode() = 0x217d24c
+[T9f80] [API] atexit(func=0x14042dab0)
+[T9f80] [API] _configure_narrow_argv(mode=1) -> 0
+[T9f80] [API] _initialize_narrow_environment() -> 0
+[T9f80] [API] _initterm(start=0x14043fb08, end=0x14043fb18)
+[T9f80] [API] _initterm: calling 0x14042d170
+[T9f80] [API] SetUnhandledExceptionFilter(handler=0x14042da00)
+[T9f80] [API] _set_new_mode(0) -> 0
+[T9f80] [API] __p___argv() = 0x206d9b0
+[T9f80] [API] __p___argc() = 0x217d268
+[T9f80] [API] AddVectoredExceptionHandler(first=0, handler=0x140304cf0)
+[T9f80] [API] GetModuleHandleA(name=kernel32)
+[T9f80] [API] SetLastError(120)
+[T9f80] [API] HeapAlloc(size=0x14, zero=0) = 0x27d8830
+[T9f80] [API] HeapAlloc(size=0x1e, zero=0) = 0x27d8800
+[T9f80] [API] SetLastError(0)
+[T9f80] [API] GetEnvironmentVariableW(RUST_MIN_STACK) = <null>
+[T9f80] [API] SetLastError(203)
+[T9f80] [API] GetLastError() = 203
+[T9f80] [API] GetLastError() = 203
+[T9f80] [API] HeapFree(0x27d8800)
+[T9f80] [API] HeapReAlloc(size=0x15) = 0x27d8830
+[T9f80] [API] HeapAlloc(size=0x30, zero=0) = 0x27d8850
+[T9f80] [API] FlsAlloc(cb=0x140304220) = 0
+[T9f80] [API] GetModuleHandleExW(flags=6)
+[T9f80] [API] GetModuleHandleW()
+[T9f80] [API] HeapAlloc(size=0x40, zero=0) = 0x27d8890
+[T9f80] [API] HeapAlloc(size=0x30, zero=0) = 0x27d88e0
+[T9f80] [API] HeapAlloc(size=0x28, zero=0) = 0x27d8800
+[T9f80] [API] HeapAlloc(size=0x18, zero=0) = 0x27d8920
+[T9f80] [API] CreateThread(fn=0x1403054b0, arg=0x27d8920, flags=0x10000)
+[T9f80] [API] _beginthreadex(start=0x1403054b0, arg=0x27d8920, init=0x0)
+[T9f80] [API] _beginthreadex() = 0x4
+[T9f80] [API] CloseHandle(handle=0x4)
+[T9f80] [API] CreateSemaphoreA(init=0, max=255, name=NULL)
+[T9f80] [API] HeapAlloc(size=0x6, zero=0) = 0x27d8a90
+[T9f80] [API] HeapReAlloc(size=0x7) = 0x27d8a90
+[T9f80] [API] HeapAlloc(size=0x30, zero=0) = 0x27d8ab0
+[T9f80] [API] HeapAlloc(size=0x30, zero=0) = 0x27d8af0
+[T9f80] [API] HeapAlloc(size=0x28, zero=0) = 0x27d8730
+[T9f80] [API] HeapAlloc(size=0x18, zero=0) = 0x27d8b30
+[T9f80] [API] CreateThread(fn=0x1403054b0, arg=0x27d8b30, flags=0x10000)
+[T9f80] [API] _beginthreadex(start=0x1403054b0, arg=0x27d8b30, init=0x0)
+[Tb6c0] [API] GetStdHandle(-12) = 0x4
+[Tb6c0] [API] GetConsoleMode(handle=0x4)
+[Tb6c0] [API] SetLastError(6)
+[T9f80] [API] _beginthreadex() = 0x6
+[T9f80] [API] CloseHandle(handle=0x6)
+[T9f80] [API] GetCommandLineW()
+[T9f80] [API] HeapAlloc(size=0x8, zero=0) = 0x27d8ca0
+[T9f80] [API] HeapReAlloc(size=0x10) = 0x27d8ca0
+[T9f80] [API] HeapReAlloc(size=0x20) = 0x27d8ca0
+[T9f80] [API] HeapAlloc(size=0x9, zero=0) = 0x27d8cd0
+[T9f80] [API] HeapAlloc(size=0x80, zero=0) = 0x27d8cf0
+[T9f80] [API] HeapFree(0x27d8ca0)
+[T9f80] [API] HeapAlloc(size=0x80, zero=0) = 0x27d8d80
+[T9f80] [API] HeapFree(0x27d8cf0)
+[T9f80] [API] HeapAlloc(size=0x14, zero=0) = 0x27d8e10
+[T9f80] [API] SetLastError(0)
+[T9f80] [API] GetEnvironmentVariableW(BAT_THEME) = <null>
+[T9f80] [API] SetLastError(203)
+[T9f80] [API] GetLastError() = 203
+[T9f80] [API] GetLastError() = 203

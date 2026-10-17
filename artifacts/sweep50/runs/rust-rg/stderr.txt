@@ -1,0 +1,19 @@
+[TRACE] Command line: /home/z/my-project/workspace/miniwin-engineering/artifacts/sweep50/dl/ripgrep/rg.exe
+[WARN]   unresolved: GetComputerNameExW
+[WARN]   unresolved: NtWriteFile
+[WARN]   unresolved: NtReadFile
+[WARN]   unresolved: NtOpenFile
+[WARN]   unresolved: NtCreateNamedPipeFile
+[WARN]   unresolved: RtlNtStatusToDosError
+[WARN]   unresolved: SetThreadStackGuarantee
+[WARN]   unresolved: CreateWaitableTimerExW
+[WARN]   unresolved: SetWaitableTimer
+[WARN]   unresolved: lstrlenW
+[WARN]   unresolved: IsThreadAFiber
+[WARN]   unresolved: WriteFileEx
+[WARN]   unresolved: ReadFileEx
+[WARN]   unresolved: CompareStringOrdinal
+[WARN]   unresolved: GetUserProfileDirectoryW
+[WARN] 15 imports unresolved
+[STUB] unresolved import called -> returning 0 (call #1)
+[STUB] unresolved import called -> returning 0 (call #2)

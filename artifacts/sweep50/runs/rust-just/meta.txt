@@ -1,0 +1,5 @@
+exe=just/just.exe
+sha256=146c26ccfe1e40fadb59183cf8bc17d46c0cdf1bd1e43e52cca686cef0c44627
+timeout=10s
+args=none
+date_utc=2026-10-17T18:39:38Z

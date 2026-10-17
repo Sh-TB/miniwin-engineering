@@ -1,0 +1,688 @@
+{
+  "trace": [
+[T7f80] [API] PE Loader: file=/home/z/my-project/workspace/miniwin-engineering/artifacts/sweep50/dl/openssh/ssh-pkcs11-helper.exe size=526880
+[T7f80] [API] PE Loader: ImageBase=0x140000000 EP=0x2a060 SizeOfImage=0x9e000 Sections=7
+[T7f80] [API] PE Loader: Mapped at 0x140000000 (forced via MAP_FIXED)
+[T7f80] [API] Section [0] .text    VA=0x00001000 VS=0x00048490 Raw=0x00048600 Ch=0x60000020
+[T7f80] [API] Section [1] .rdata   VA=0x0004a000 VS=0x0002ffc2 Raw=0x00030000 Ch=0x40000040
+[T7f80] [API] Section [2] .data    VA=0x0007a000 VS=0x0001c608 Raw=0x00001000 Ch=0xc0000040
+[T7f80] [API] Section [3] .pdata   VA=0x00097000 VS=0x0000312c Raw=0x00003200 Ch=0x40000040
+[T7f80] [API] Section [4] .fptable VA=0x0009b000 VS=0x00000100 Raw=0x00000200 Ch=0xc0000040
+[T7f80] [API] Section [5] .rsrc    VA=0x0009c000 VS=0x000008b0 Raw=0x00000a00 Ch=0x40000040
+[T7f80] [API] Section [6] .reloc   VA=0x0009d000 VS=0x00000944 Raw=0x00000a00 Ch=0x42000040
+[T7f80] [API] Import Directory: RVA=0x7809c Size=0x8c
+[T7f80] [API] Import DLL: libcrypto.dll (IAT RVA=0x4a548, ILT RVA=0x78670)
+[T7f80] [API]   [0] UNRESOLVED: EC_POINT_point2oct
+[T7f80] [API]   [1] UNRESOLVED: BN_dup
+[T7f80] [API]   [2] UNRESOLVED: BN_set_flags
+[T7f80] [API]   [3] UNRESOLVED: RSA_set0_crt_params
+[T7f80] [API]   [4] UNRESOLVED: RSA_get0_key
+[T7f80] [API]   [5] UNRESOLVED: RSA_pkey_ctx_ctrl
+[T7f80] [API]   [6] UNRESOLVED: BN_div
+[T7f80] [API]   [7] UNRESOLVED: RSA_set0_factors
+[T7f80] [API]   [8] UNRESOLVED: RSA_get0_factors
+[T7f80] [API]   [9] UNRESOLVED: RSA_get0_crt_params
+[T7f80] [API]   [10] UNRESOLVED: EC_POINT_oct2point
+[T7f80] [API]   [11] UNRESOLVED: BN_CTX_free
+[T7f80] [API]   [12] UNRESOLVED: EVP_md5
+[T7f80] [API]   [13] UNRESOLVED: EVP_DigestUpdate
+[T7f80] [API]   [14] UNRESOLVED: EVP_DigestVerifyFinal
+[T7f80] [API]   [15] UNRESOLVED: EVP_aes_256_cbc
+[T7f80] [API]   [16] UNRESOLVED: EVP_aes_128_ctr
+[T7f80] [API]   [17] UNRESOLVED: EVP_aes_256_ctr
+[T7f80] [API]   [18] UNRESOLVED: BN_bn2bin
+[T7f80] [API]   [19] UNRESOLVED: EVP_DigestSignFinal
+[T7f80] [API]   [20] UNRESOLVED: RAND_bytes
+[T7f80] [API]   [21] UNRESOLVED: EVP_PKEY_get1_RSA
+[T7f80] [API]   [22] UNRESOLVED: EVP_des_ede3_cbc
+[T7f80] [API]   [23] UNRESOLVED: EVP_aes_192_cbc
+[T7f80] [API]   [24] UNRESOLVED: EVP_aes_192_ctr
+[T7f80] [API]   [25] UNRESOLVED: EVP_aes_256_gcm
+[T7f80] [API]   [26] UNRESOLVED: EVP_aes_128_gcm
+[T7f80] [API]   [27] UNRESOLVED: d2i_ECDSA_SIG
+[T7f80] [API]   [28] UNRESOLVED: EC_KEY_set_private_key
+[T7f80] [API]   [29] UNRESOLVED: EVP_PKEY_CTX_free
+[T7f80] [API]   [30] UNRESOLVED: EVP_PKEY_CTX_new_id
+[T7f80] [API]   [31] UNRESOLVED: ECDSA_SIG_get0
+[T7f80] [API]   [32] UNRESOLVED: EC_KEY_set_public_key
+[T7f80] [API]   [33] UNRESOLVED: EVP_PKEY_keygen_init
+[T7f80] [API]   [34] UNRESOLVED: EVP_PKEY_keygen
+[T7f80] [API]   [35] UNRESOLVED: EVP_PKEY_cmp
+[T7f80] [API]   [36] UNRESOLVED: EVP_PKEY_CTX_ctrl
+[T7f80] [API]   [37] UNRESOLVED: EC_KEY_new_by_curve_name
+[T7f80] [API]   [38] UNRESOLVED: i2d_ECDSA_SIG
+[T7f80] [API]   [39] UNRESOLVED: RAND_status
+[T7f80] [API]   [40] UNRESOLVED: OpenSSL_version_num
+[T7f80] [API]   [41] UNRESOLVED: RSA_blinding_on
+[T7f80] [API]   [42] UNRESOLVED: EVP_sha384
+[T7f80] [API]   [43] UNRESOLVED: EC_GROUP_get_order
+[T7f80] [API]   [44] UNRESOLVED: EVP_Digest
+[T7f80] [API]   [45] UNRESOLVED: BN_CTX_new
+[T7f80] [API]   [46] UNRESOLVED: BN_clear_free
+[T7f80] [API]   [47] UNRESOLVED: BN_value_one
+[T7f80] [API]   [48] UNRESOLVED: EVP_MD_CTX_new
+[T7f80] [API]   [49] UNRESOLVED: EC_POINT_mul
+[T7f80] [API]   [50] UNRESOLVED: EC_POINT_get_affine_coordinates_GFp
+[T7f80] [API]   [51] UNRESOLVED: EVP_sha256
+[T7f80] [API]   [52] UNRESOLVED: EC_POINT_is_at_infinity
+[T7f80] [API]   [53] UNRESOLVED: EC_POINT_free
+[T7f80] [API]   [54] UNRESOLVED: EVP_aes_128_cbc
+[T7f80] [API]   [55] UNRESOLVED: EVP_MD_CTX_free
+[T7f80] [API]   [56] UNRESOLVED: EC_KEY_get0_public_key
+[T7f80] [API]   [57] UNRESOLVED: EC_POINT_new
+[T7f80] [API]   [58] UNRESOLVED: EVP_sha1
+[T7f80] [API]   [59] UNRESOLVED: EVP_DigestSignInit
+[T7f80] [API]   [60] UNRESOLVED: EVP_PKEY_bits
+[T7f80] [API]   [61] UNRESOLVED: EC_GROUP_get_curve_name
+[T7f80] [API]   [62] UNRESOLVED: BN_new
+[T7f80] [API]   [63] UNRESOLVED: EC_KEY_get0_private_key
+[T7f80] [API]   [64] UNRESOLVED: EVP_sha512
+[T7f80] [API]   [65] UNRESOLVED: EVP_PKEY_size
+[T7f80] [API]   [66] UNRESOLVED: EC_KEY_get0_group
+[T7f80] [API]   [67] UNRESOLVED: BN_cmp
+[T7f80] [API]   [68] UNRESOLVED: BN_sub
+[T7f80] [API]   [69] UNRESOLVED: BN_num_bits
+[T7f80] [API]   [70] UNRESOLVED: EVP_DigestVerifyInit
+[T7f80] [API]   [71] UNRESOLVED: EVP_PKEY_set1_RSA
+[T7f80] [API]   [72] UNRESOLVED: EC_KEY_METHOD_set_sign
+[T7f80] [API]   [73] UNRESOLVED: RSAPublicKey_dup
+[T7f80] [API]   [74] UNRESOLVED: X509_get_pubkey
+[T7f80] [API]   [75] UNRESOLVED: EC_KEY_set_method
+[T7f80] [API]   [76] UNRESOLVED: RSA_meth_set_priv_enc
+[T7f80] [API]   [77] UNRESOLVED: o2i_ECPublicKey
+[T7f80] [API]   [78] UNRESOLVED: d2i_ECPKParameters
+[T7f80] [API]   [79] UNRESOLVED: EC_KEY_METHOD_get_sign
+[T7f80] [API]   [80] UNRESOLVED: RSA_meth_set1_name
+[T7f80] [API]   [81] UNRESOLVED: d2i_ASN1_OCTET_STRING
+[T7f80] [API]   [82] UNRESOLVED: EVP_PKEY_new
+[T7f80] [API]   [83] UNRESOLVED: RSA_new
+[T7f80] [API]   [84] UNRESOLVED: d2i_X509
+[T7f80] [API]   [85] UNRESOLVED: ERR_get_error
+[T7f80] [API]   [86] UNRESOLVED: d2i_X509_NAME
+[T7f80] [API]   [87] UNRESOLVED: BN_free
+[T7f80] [API]   [88] UNRESOLVED: EC_KEY_get_ex_data
+[T7f80] [API]   [89] UNRESOLVED: EC_KEY_set_ex_data
+[T7f80] [API]   [90] UNRESOLVED: EC_KEY_set_group
+[T7f80] [API]   [91] UNRESOLVED: X509_NAME_free
+[T7f80] [API]   [92] UNRESOLVED: RSA_set_method
+[T7f80] [API]   [93] UNRESOLVED: EVP_PKEY_get0_EC_KEY
+[T7f80] [API]   [94] UNRESOLVED: EVP_PKEY_get0_RSA
+[T7f80] [API]   [95] UNRESOLVED: RSA_meth_dup
+[T7f80] [API]   [96] UNRESOLVED: ECDSA_SIG_free
+[T7f80] [API]   [97] UNRESOLVED: RSA_set_ex_data
+[T7f80] [API]   [98] UNRESOLVED: ERR_error_string
+[T7f80] [API]   [99] UNRESOLVED: EVP_PKEY_free
+[T7f80] [API]   [100] UNRESOLVED: EC_GROUP_free
+[T7f80] [API]   [101] UNRESOLVED: EC_KEY_new
+[T7f80] [API]   [102] UNRESOLVED: RSA_get_ex_data
+[T7f80] [API]   [103] UNRESOLVED: RSA_get_default_method
+[T7f80] [API]   [104] UNRESOLVED: RSA_get_ex_new_index
+[T7f80] [API]   [105] UNRESOLVED: RSA_meth_set_priv_dec
+[T7f80] [API]   [106] UNRESOLVED: ECDSA_SIG_set0
+[T7f80] [API]   [107] UNRESOLVED: X509_free
+[T7f80] [API]   [108] UNRESOLVED: X509_NAME_oneline
+[T7f80] [API]   [109] UNRESOLVED: RSA_set0_key
+[T7f80] [API]   [110] UNRESOLVED: CRYPTO_get_ex_new_index
+[T7f80] [API]   [111] UNRESOLVED: ASN1_OCTET_STRING_free
+[T7f80] [API]   [112] UNRESOLVED: EC_KEY_METHOD_new
+[T7f80] [API]   [113] UNRESOLVED: EC_KEY_dup
+[T7f80] [API]   [114] UNRESOLVED: EVP_PKEY_base_id
+[T7f80] [API]   [115] UNRESOLVED: EC_KEY_OpenSSL
+[T7f80] [API]   [116] UNRESOLVED: ECDSA_SIG_new
+[T7f80] [API]   [117] UNRESOLVED: BN_bin2bn
+[T7f80] [API]   [118] UNRESOLVED: EVP_PKEY_set1_EC_KEY
+[T7f80] [API]   [119] UNRESOLVED: EVP_PKEY_get1_EC_KEY
+[T7f80] [API]   [120] UNRESOLVED: RSA_free
+[T7f80] [API]   [121] UNRESOLVED: ECDSA_size
+[T7f80] [API]   [122] UNRESOLVED: RSA_private_encrypt
+[T7f80] [API]   [123] UNRESOLVED: ECDSA_sign
+[T7f80] [API]   [124] UNRESOLVED: EC_KEY_free
+[T7f80] [API]   [125] UNRESOLVED: RSA_size
+[T7f80] [API] Import DLL: CRYPT32.dll (IAT RVA=0x4a060, ILT RVA=0x78188)
+[T7f80] [API]   [0] UNRESOLVED: CryptBinaryToStringA
+[T7f80] [API]   [1] UNRESOLVED: CryptStringToBinaryA
+[T7f80] [API] Import DLL: WS2_32.dll (IAT RVA=0x4a4e8, ILT RVA=0x78610)
+[T7f80] [API]   [0] UNRESOLVED: WSASend
+[T7f80] [API]   [1] Ordinal 115 (not supported)
+[T7f80] [API]   [2] Ordinal 6 (not supported)
+[T7f80] [API]   [3] UNRESOLVED: WSARecv
+[T7f80] [API]   [4] UNRESOLVED: WSAGetOverlappedResult
+[T7f80] [API]   [5] Ordinal 21 (not supported)
+[T7f80] [API]   [6] Ordinal 3 (not supported)
+[T7f80] [API]   [7] UNRESOLVED: WSADuplicateSocketW
+[T7f80] [API]   [8] UNRESOLVED: WSASocketW
+[T7f80] [API]   [9] Ordinal 111 (not supported)
+[T7f80] [API]   [10] Ordinal 23 (not supported)
+[T7f80] [API] Import DLL: KERNEL32.dll (IAT RVA=0x4a078, ILT RVA=0x781a0)
+[T7f80] [API]   [0] FlsFree -> 0x202e050
+[T7f80] [API]   [1] FlsSetValue -> 0x2008750
+[T7f80] [API]   [2] FlsGetValue -> 0x2008730
+[T7f80] [API]   [3] FlsAlloc -> 0x200c4f0
+[T7f80] [API]   [4] HeapFree -> 0x203a050
+[T7f80] [API]   [5] HeapAlloc -> 0x2023050
+[T7f80] [API]   [6] FreeLibraryAndExitThread -> 0x200de50
+[T7f80] [API]   [7] ExitThread -> 0x2014d30
+[T7f80] [API]   [8] CreateThread -> 0x2023ab0
+[T7f80] [API]   [9] FindNextFileW -> 0x202a0e0
+[T7f80] [API]   [10] FindFirstFileExW -> 0x2035c50
+[T7f80] [API]   [11] FindClose -> 0x20167f0
+[T7f80] [API]   [12] GetCurrentDirectoryW -> 0x20342c0
+[T7f80] [API]   [13] SetEnvironmentVariableW -> 0x203be20
+[T7f80] [API]   [14] GetFullPathNameW -> 0x2039da0
+[T7f80] [API]   [15] SetStdHandle -> 0x202dfa0
+[T7f80] [API]   [16] GetCommandLineW -> 0x202ab00
+[T7f80] [API]   [17] GetCommandLineA -> 0x202a980
+[T7f80] [API]   [18] GetModuleHandleExW -> 0x203c260
+[T7f80] [API]   [19] ExitProcess -> 0x200dcd0
+[T7f80] [API]   [20] RtlPcToFileHeader -> 0x2008ca0
+[T7f80] [API]   [21] RaiseException -> 0x20080a0
+[T7f80] [API]   [22] EncodePointer -> 0x20153d0
+[T7f80] [API]   [23] TlsFree -> 0x20097b0
+[T7f80] [API]   [24] TlsSetValue -> 0x2025d00
+[T7f80] [API]   [25] TlsGetValue -> 0x200a6d0
+[T7f80] [API]   [26] TlsAlloc -> 0x200c3b0
+[T7f80] [API]   [27] InitializeCriticalSectionAndSpinCount -> 0x202f260
+[T7f80] [API]   [28] DeleteCriticalSection -> 0x200d760
+[T7f80] [API]   [29] LeaveCriticalSection -> 0x2027ab0
+[T7f80] [API]   [30] EnterCriticalSection -> 0x202fa30
+[T7f80] [API]   [31] SetLastError -> 0x2020680
+[T7f80] [API]   [32] RtlUnwindEx -> 0x2032560
+[T7f80] [API]   [33] GetStartupInfoW -> 0x20290f0
+[T7f80] [API]   [34] IsDebuggerPresent -> 0x20282e0
+[T7f80] [API]   [35] InitializeSListHead -> 0x2008d10
+[T7f80] [API]   [36] QueryPerformanceCounter -> 0x200e0e0
+[T7f80] [API]   [37] IsProcessorFeaturePresent -> 0x2008c60
+[T7f80] [API]   [38] SetUnhandledExceptionFilter -> 0x200a5d0
+[T7f80] [API]   [39] UnhandledExceptionFilter -> 0x2029410
+[T7f80] [API]   [40] RtlVirtualUnwind -> 0x2030dc0
+[T7f80] [API]   [41] RtlLookupFunctionEntry -> 0x200a380
+[T7f80] [API]   [42] RtlCaptureContext -> 0x20285b0
+[T7f80] [API]   [43] InitializeCriticalSectionEx -> 0x200d620
+[T7f80] [API]   [44] VirtualProtect -> 0x200f1d0
+[T7f80] [API]   [45] CompareStringW -> 0x2015820
+[T7f80] [API]   [46] LCMapStringW -> 0x2024740
+[T7f80] [API]   [47] GetStringTypeW -> 0x202b4b0
+[T7f80] [API]   [48] GetNumberOfConsoleInputEvents -> 0x2008fe0
+[T7f80] [API]   [49] PeekConsoleInputA -> 0x2009000
+[T7f80] [API]   [50] ReadConsoleW -> 0x2024d00
+[T7f80] [API]   [51] HeapReAlloc -> 0x203a3c0
+[T7f80] [API]   [52] GetFileSizeEx -> 0x2025400
+[T7f80] [API]   [53] IsValidCodePage -> 0x2008e20
+[T7f80] [API]   [54] GetACP -> 0x2008e00
+[T7f80] [API]   [55] GetOEMCP -> 0x2008e10
+[T7f80] [API]   [56] GetCPInfo -> 0x200ca70
+[T7f80] [API]   [57] GetEnvironmentStringsW -> 0x200e440
+[T7f80] [API]   [58] FreeEnvironmentStringsW -> 0x2029320
+[T7f80] [API]   [59] GetProcessHeap -> 0x2008bd0
+[T7f80] [API]   [60] HeapSize -> 0x20344c0
+[T7f80] [API]   [61] UNRESOLVED: GetLocalTime
+[T7f80] [API]   [62] ReleaseMutex -> 0x2030950
+[T7f80] [API]   [63] CreateMutexA -> 0x200b720
+[T7f80] [API]   [64] UNRESOLVED: VirtualUnlock
+[T7f80] [API]   [65] VirtualAlloc -> 0x20232a0
+[T7f80] [API]   [66] VirtualFree -> 0x2023500
+[T7f80] [API]   [67] LoadLibraryExW -> 0x2038b20
+[T7f80] [API]   [68] UNRESOLVED: ReadConsoleOutputA
+[T7f80] [API]   [69] SetConsoleCursorPosition -> 0x2020470
+[T7f80] [API]   [70] GetConsoleWindow -> 0x2008fa0
+[T7f80] [API]   [71] UNRESOLVED: Beep
+[T7f80] [API]   [72] UNRESOLVED: FillConsoleOutputAttribute
+[T7f80] [API]   [73] WriteConsoleOutputA -> 0x200c750
+[T7f80] [API]   [74] ReadConsoleInputW -> 0x202e110
+[T7f80] [API]   [75] SetConsoleCursorInfo -> 0x2020370
+[T7f80] [API]   [76] UNRESOLVED: SetConsoleWindowInfo
+[T7f80] [API]   [77] GetConsoleCursorInfo -> 0x2009af0
+[T7f80] [API]   [78] ScrollConsoleScreenBufferA -> 0x20286a0
+[T7f80] [API]   [79] GetConsoleOutputCP -> 0x202e290
+[T7f80] [API]   [80] UNRESOLVED: SetConsoleScreenBufferSize
+[T7f80] [API]   [81] SetConsoleTextAttribute -> 0x2020580
+[T7f80] [API]   [82] UNRESOLVED: FillConsoleOutputCharacterA
+[T7f80] [API]   [83] UNRESOLVED: CreateWaitableTimerA
+[T7f80] [API]   [84] WriteConsoleW -> 0x2012160
+[T7f80] [API]   [85] UNRESOLVED: CancelIoEx
+[T7f80] [API]   [86] UNRESOLVED: CancelSynchronousIo
+[T7f80] [API]   [87] GetConsoleMode -> 0x2022000
+[T7f80] [API]   [88] GetModuleHandleW -> 0x200d2a0
+[T7f80] [API]   [89] FlushFileBuffers -> 0x20256f0
+[T7f80] [API]   [90] SetConsoleMode -> 0x202df70
+[T7f80] [API]   [91] WriteFile -> 0x2024d20
+[T7f80] [API]   [92] ReadFile -> 0x2024b00
+[T7f80] [API]   [93] WaitForSingleObjectEx -> 0x2033d30
+[T7f80] [API]   [94] WaitForMultipleObjectsEx -> 0x2033f90
+[T7f80] [API]   [95] GetDriveTypeW -> 0x202e0e0
+[T7f80] [API]   [96] GetFinalPathNameByHandleW -> 0x2036bf0
+[T7f80] [API]   [97] UNRESOLVED: QueueUserAPC
+[T7f80] [API]   [98] SetConsoleCtrlHandler -> 0x2008fd0
+[T7f80] [API]   [99] CreateEventA -> 0x20215c0
+[T7f80] [API]   [100] VerifyVersionInfoW -> 0x2009840
+[T7f80] [API]   [101] VerSetConditionMask -> 0x2009830
+[T7f80] [API]   [102] ResetEvent -> 0x2030690
+[T7f80] [API]   [103] SetEvent -> 0x20307f0
+[T7f80] [API]   [104] SleepEx -> 0x200f6a0
+[T7f80] [API]   [105] UNRESOLVED: ReadFileEx
+[T7f80] [API]   [106] CreateFileA -> 0x202bb20
+[T7f80] [API]   [107] UNRESOLVED: WriteFileEx
+[T7f80] [API]   [108] UNRESOLVED: CreateNamedPipeA
+[T7f80] [API]   [109] CancelIo -> 0x202e000
+[T7f80] [API]   [110] MultiByteToWideChar -> 0x20223e0
+[T7f80] [API]   [111] GetExitCodeProcess -> 0x2009160
+[T7f80] [API]   [112] GetSystemTimeAsFileTime -> 0x2029a20
+[T7f80] [API]   [113] WideCharToMultiByte -> 0x2020c30
+[T7f80] [API]   [114] FreeLibrary -> 0x2029230
+[T7f80] [API]   [115] LocalFree -> 0x2038d20
+[T7f80] [API]   [116] GetProcAddress -> 0x2009e60
+[T7f80] [API]   [117] GetModuleFileNameW -> 0x2035020
+[T7f80] [API]   [118] SetHandleInformation -> 0x2009120
+[T7f80] [API]   [119] GetCurrentProcess -> 0x2007e40
+[T7f80] [API]   [120] GetStdHandle -> 0x2040f70
+[T7f80] [API]   [121] TerminateProcess -> 0x200fa80
+[T7f80] [API]   [122] SetEndOfFile -> 0x20251b0
+[T7f80] [API]   [123] GetCurrentThreadId -> 0x2007e70
+[T7f80] [API]   [124] DuplicateHandle -> 0x20099e0
+[T7f80] [API]   [125] GetTickCount64 -> 0x200e210
+[T7f80] [API]   [126] GetLastError -> 0x2009c00
+[T7f80] [API]   [127] CloseHandle -> 0x20340f0
+[T7f80] [API]   [128] SetFilePointerEx -> 0x2025060
+[T7f80] [API]   [129] GetCurrentProcessId -> 0x2007e50
+[T7f80] [API]   [130] CreateProcessW -> 0x2021dd0
+[T7f80] [API]   [131] GetFileType -> 0x2016190
+[T7f80] [API]   [132] UNRESOLVED: OpenThread
+[T7f80] [API]   [133] GetConsoleScreenBufferInfo -> 0x200c620
+[T7f80] [API]   [134] WaitForSingleObject -> 0x2033c20
+[T7f80] [API]   [135] CreateFileW -> 0x2037850
+[T7f80] [API]   [136] FormatMessageW -> 0x20272e0
+[T7f80] [API]   [137] LoadLibraryW -> 0x2038930
+[T7f80] [API] Import DLL: USER32.dll (IAT RVA=0x4a4d0, ILT RVA=0x785f8)
+[T7f80] [API]   [0] UNRESOLVED: GetWindowPlacement
+[T7f80] [API]   [1] UNRESOLVED: ShowWindow
+[T7f80] [API] Import DLL: ADVAPI32.dll (IAT RVA=0x4a000, ILT RVA=0x78128)
+[T7f80] [API]   [0] UNRESOLVED: EventWrite
+[T7f80] [API]   [1] UNRESOLVED: EventRegister
+[T7f80] [API]   [2] UNRESOLVED: CreateProcessAsUserW
+[T7f80] [API]   [3] UNRESOLVED: GetTokenInformation
+[T7f80] [API]   [4] UNRESOLVED: GetLengthSid
+[T7f80] [API]   [5] UNRESOLVED: ConvertStringSecurityDescriptorToSecurityDescriptorW
+[T7f80] [API]   [6] OpenProcessToken -> 0x20209a0
+[T7f80] [API]   [7] UNRESOLVED: IsValidSecurityDescriptor
+[T7f80] [API]   [8] UNRESOLVED: IsWellKnownSid
+[T7f80] [API]   [9] UNRESOLVED: CopySid
+[T7f80] [API]   [10] UNRESOLVED: ConvertSidToStringSidW
+[T7f80] [API] Import resolution: 123 resolved, 167 unresolved (total 290)
+[T7f80] [API] Exception: .pdata RVA=0x97000 Size=0x312c Entries=1049
+[T7f80] [API] [API-005] EH hacks DISABLED (default) (MINWIN_EH_HACKS=<unset>)
+[T7f80] [API] [API-005] CXX-EH-FIX (LSDA catch-all patch RVA 0x2010c8) skipped: MINWIN_EH_HACKS not set
+[T7f80] [API] Jumping to EP=0x14002a060
+[T7f80] [API] GetSystemTimeAsFileTime()
+[T7f80] [API] QueryPerformanceCounter()
+[T7f80] [API] LoadLibraryExW(flags=2048)
+[T7f80] [API] LoadLibraryA(api-ms-win-core-synch-l1-2-0)
+[T7f80] [API] GetProcAddress(module=0xdead0002, name=InitializeCriticalSectionEx)
+[T7f80] [API]   -> 0x200d620
+[T7f80] [API] InitializeCriticalSectionEx(spin=4000)
+[T7f80] [API] LoadLibraryExW(flags=2048)
+[T7f80] [API] LoadLibraryA(api-ms-win-core-fibers-l1-1-1)
+[T7f80] [API] GetProcAddress(module=0xdead0002, name=FlsAlloc)
+[T7f80] [API]   -> 0x200c4f0
+[T7f80] [API] FlsAlloc(cb=0x14002b580) = 0
+[T7f80] [API] GetProcAddress(module=0xdead0002, name=FlsSetValue)
+[T7f80] [API]   -> 0x2008750
+[T7f80] [API] VirtualProtect(addr=0x14009b000, size=0x100, prot=0x2)
+[T7f80] [API] InitializeCriticalSectionEx(spin=4000)
+[T7f80] [API] InitializeCriticalSectionEx(spin=4000)
+[T7f80] [API] InitializeCriticalSectionEx(spin=4000)
+[T7f80] [API] InitializeCriticalSectionEx(spin=4000)
+[T7f80] [API] InitializeCriticalSectionEx(spin=4000)
+[T7f80] [API] InitializeCriticalSectionEx(spin=4000)
+[T7f80] [API] InitializeCriticalSectionEx(spin=4000)
+[T7f80] [API] InitializeCriticalSectionEx(spin=4000)
+[T7f80] [API] InitializeCriticalSectionEx(spin=4000)
+[T7f80] [API] InitializeCriticalSectionEx(spin=4000)
+[T7f80] [API] InitializeCriticalSectionEx(spin=4000)
+[T7f80] [API] InitializeCriticalSectionEx(spin=4000)
+[T7f80] [API] InitializeCriticalSectionEx(spin=4000)
+[T7f80] [API] InitializeCriticalSectionEx(spin=4000)
+[T7f80] [API] InitializeCriticalSectionEx(spin=4000)
+[T7f80] [API] LoadLibraryExW(flags=2048)
+[T7f80] [API] LoadLibraryA(api-ms-win-core-fibers-l1-1-2)
+[T7f80] [API] GetProcAddress(module=0xdead0002, name=FlsGetValue2)
+[T7f80] [API]   -> NULL (not in dispatch table)
+[T7f80] [API] EnterCriticalSection(0x14007ba60)
+[T7f80] [API] VirtualProtect(addr=0x14009b000, size=0x100, prot=0x4)
+[T7f80] [API] VirtualProtect(addr=0x14009b000, size=0x100, prot=0x2)
+[T7f80] [API] LeaveCriticalSection(0x14007ba60)
+[T7f80] [API] FlsAlloc(cb=0x14003d7a0) = 1
+[T7f80] [API] GetLastError() = 0
+[T7f80] [API] HeapAlloc(size=0x3c8, zero=1) = 0x24b3730
+[T7f80] [API] EnterCriticalSection(0x14007b8f8)
+[T7f80] [API] LeaveCriticalSection(0x14007b8f8)
+[T7f80] [API] EnterCriticalSection(0x14007b8d0)
+[T7f80] [API] LeaveCriticalSection(0x14007b8d0)
+[T7f80] [API] SetLastError(0)
+[T7f80] [API] EnterCriticalSection(0x14007b948)
+[T7f80] [API] EnterCriticalSection(0x14007b948)
+[T7f80] [API] HeapAlloc(size=0x1200, zero=1) = 0x24b3b00
+[T7f80] [API] InitializeCriticalSectionEx(spin=4000)
+[T7f80] [API] InitializeCriticalSectionEx(spin=4000)
+[T7f80] [API] InitializeCriticalSectionEx(spin=4000)
+[T7f80] [API] InitializeCriticalSectionEx(spin=4000)
+[T7f80] [API] InitializeCriticalSectionEx(spin=4000)
+[T7f80] [API] InitializeCriticalSectionEx(spin=4000)
+[T7f80] [API] InitializeCriticalSectionEx(spin=4000)
+[T7f80] [API] InitializeCriticalSectionEx(spin=4000)
+[T7f80] [API] InitializeCriticalSectionEx(spin=4000)
+[T7f80] [API] InitializeCriticalSectionEx(spin=4000)
+[T7f80] [API] InitializeCriticalSectionEx(spin=4000)
+[T7f80] [API] InitializeCriticalSectionEx(spin=4000)
+[T7f80] [API] InitializeCriticalSectionEx(spin=4000)
+[T7f80] [API] InitializeCriticalSectionEx(spin=4000)
+[T7f80] [API] InitializeCriticalSectionEx(spin=4000)
+[T7f80] [API] InitializeCriticalSectionEx(spin=4000)
+[T7f80] [API] InitializeCriticalSectionEx(spin=4000)
+[T7f80] [API] InitializeCriticalSectionEx(spin=4000)
+[T7f80] [API] InitializeCriticalSectionEx(spin=4000)
+[T7f80] [API] InitializeCriticalSectionEx(spin=4000)
+[T7f80] [API] InitializeCriticalSectionEx(spin=4000)
+[T7f80] [API] InitializeCriticalSectionEx(spin=4000)
+[T7f80] [API] InitializeCriticalSectionEx(spin=4000)
+[T7f80] [API] InitializeCriticalSectionEx(spin=4000)
+[T7f80] [API] InitializeCriticalSectionEx(spin=4000)
+[T7f80] [API] InitializeCriticalSectionEx(spin=4000)
+[T7f80] [API] InitializeCriticalSectionEx(spin=4000)
+[T7f80] [API] InitializeCriticalSectionEx(spin=4000)
+[T7f80] [API] InitializeCriticalSectionEx(spin=4000)
+[T7f80] [API] InitializeCriticalSectionEx(spin=4000)
+[T7f80] [API] InitializeCriticalSectionEx(spin=4000)
+[T7f80] [API] InitializeCriticalSectionEx(spin=4000)
+[T7f80] [API] InitializeCriticalSectionEx(spin=4000)
+[T7f80] [API] InitializeCriticalSectionEx(spin=4000)
+[T7f80] [API] InitializeCriticalSectionEx(spin=4000)
+[T7f80] [API] InitializeCriticalSectionEx(spin=4000)
+[T7f80] [API] InitializeCriticalSectionEx(spin=4000)
+[T7f80] [API] InitializeCriticalSectionEx(spin=4000)
+[T7f80] [API] InitializeCriticalSectionEx(spin=4000)
+[T7f80] [API] InitializeCriticalSectionEx(spin=4000)
+[T7f80] [API] InitializeCriticalSectionEx(spin=4000)
+[T7f80] [API] InitializeCriticalSectionEx(spin=4000)
+[T7f80] [API] InitializeCriticalSectionEx(spin=4000)
+[T7f80] [API] InitializeCriticalSectionEx(spin=4000)
+[T7f80] [API] InitializeCriticalSectionEx(spin=4000)
+[T7f80] [API] InitializeCriticalSectionEx(spin=4000)
+[T7f80] [API] InitializeCriticalSectionEx(spin=4000)
+[T7f80] [API] InitializeCriticalSectionEx(spin=4000)
+[T7f80] [API] InitializeCriticalSectionEx(spin=4000)
+[T7f80] [API] InitializeCriticalSectionEx(spin=4000)
+[T7f80] [API] InitializeCriticalSectionEx(spin=4000)
+[T7f80] [API] InitializeCriticalSectionEx(spin=4000)
+[T7f80] [API] InitializeCriticalSectionEx(spin=4000)
+[T7f80] [API] InitializeCriticalSectionEx(spin=4000)
+[T7f80] [API] InitializeCriticalSectionEx(spin=4000)
+[T7f80] [API] InitializeCriticalSectionEx(spin=4000)
+[T7f80] [API] InitializeCriticalSectionEx(spin=4000)
+[T7f80] [API] InitializeCriticalSectionEx(spin=4000)
+[T7f80] [API] InitializeCriticalSectionEx(spin=4000)
+[T7f80] [API] InitializeCriticalSectionEx(spin=4000)
+[T7f80] [API] InitializeCriticalSectionEx(spin=4000)
+[T7f80] [API] InitializeCriticalSectionEx(spin=4000)
+[T7f80] [API] InitializeCriticalSectionEx(spin=4000)
+[T7f80] [API] InitializeCriticalSectionEx(spin=4000)
+[T7f80] [API] LeaveCriticalSection(0x14007b948)
+[T7f80] [API] GetStartupInfoW()
+[T7f80] [API] GetStdHandle(-10) = 0x4
+[T7f80] [API] GetStdHandle(-11) = 0x5
+[T7f80] [API] GetStdHandle(-12) = 0x6
+[T7f80] [API] LeaveCriticalSection(0x14007b948)
+[T7f80] [API] GetCommandLineA() = "ssh-pkcs11-helper.exe"
+[T7f80] [API] GetCommandLineW()
+[T7f80] [API] EnterCriticalSection(0x14007b8f8)
+[T7f80] [API] LeaveCriticalSection(0x14007b8f8)
+[T7f80] [API] HeapAlloc(size=0x228, zero=0) = 0x24b4d10
+[T7f80] [API] GetCPInfo(cp=1252)
+[T7f80] [API] GetCPInfo(cp=1252)
+[T7f80] [API] MultiByteToWideChar(cp=1252, srclen=256, dstlen=0)
+[T7f80] [API] MultiByteToWideChar(cp=1252, srclen=256, dstlen=256)
+[T7f80] [API] MultiByteToWideChar(cp=1252, srclen=256, dstlen=0)
+[T7f80] [API] MultiByteToWideChar(cp=1252, srclen=256, dstlen=256)
+[T7f80] [API] LoadLibraryExW(flags=2048)
+[T7f80] [API] LoadLibraryA(api-ms-win-core-localization-l1-2-1)
+[T7f80] [API] GetProcAddress(module=0xdead0002, name=LCMapStringEx)
+[T7f80] [API]   -> 0x2024910
+[T7f80] [API] EnterCriticalSection(0x14007ba60)
+[T7f80] [API] VirtualProtect(addr=0x14009b000, size=0x100, prot=0x4)
+[T7f80] [API] VirtualProtect(addr=0x14009b000, size=0x100, prot=0x2)
+[T7f80] [API] LeaveCriticalSection(0x14007ba60)
+[T7f80] [API] WideCharToMultiByte(cp=1252, srclen=256, dstlen=256)
+[T7f80] [API] MultiByteToWideChar(cp=1252, srclen=256, dstlen=0)
+[T7f80] [API] MultiByteToWideChar(cp=1252, srclen=256, dstlen=256)
+[T7f80] [API] WideCharToMultiByte(cp=1252, srclen=256, dstlen=256)
+[T7f80] [API] EnterCriticalSection(0x14007b8f8)
+[T7f80] [API] LeaveCriticalSection(0x14007b8f8)
+[T7f80] [API] EnterCriticalSection(0x14007b880)
+[T7f80] [API] HeapAlloc(size=0x100, zero=0) = 0x24b4f40
+[T7f80] [API] LeaveCriticalSection(0x14007b880)
+[T7f80] [API] GetModuleFileNameW(cap=260)
+[T7f80] [API] HeapAlloc(size=0x3c, zero=1) = 0x24b5050
+[T7f80] [API] GetLastError() = 0
+[T7f80] [API] HeapAlloc(size=0x3c8, zero=1) = 0x24b50a0
+[T7f80] [API] EnterCriticalSection(0x14007b8f8)
+[T7f80] [API] LeaveCriticalSection(0x14007b8f8)
+[T7f80] [API] EnterCriticalSection(0x14007b8d0)
+[T7f80] [API] LeaveCriticalSection(0x14007b8d0)
+[T7f80] [API] SetLastError(0)
+[T7f80] [API] GetEnvironmentStringsW()
+[T7f80] [API] HeapAlloc(size=0xa02, zero=0) = 0x24b5470
+[T7f80] [API] FreeEnvironmentStringsW()
+[T7f80] [API] HeapAlloc(size=0x148, zero=1) = 0x24b5e80
+[T7f80] [API] HeapAlloc(size=0x20, zero=1) = 0x24b3700
+[T7f80] [API] HeapAlloc(size=0x36, zero=1) = 0x24b5fd0
+[T7f80] [API] HeapAlloc(size=0x26, zero=1) = 0x24b3630
+[T7f80] [API] HeapAlloc(size=0x64, zero=1) = 0x24b6010
+[T7f80] [API] HeapAlloc(size=0x32, zero=1) = 0x24b6080
+[T7f80] [API] HeapAlloc(size=0x28, zero=1) = 0x24b60c0
+[T7f80] [API] HeapAlloc(size=0xc2, zero=1) = 0x24b60f0
+[T7f80] [API] HeapAlloc(size=0x74, zero=1) = 0x24b30a0
+[T7f80] [API] HeapAlloc(size=0x14, zero=1) = 0x24b61c0
+[T7f80] [API] HeapAlloc(size=0x2c, zero=1) = 0x24b61e0
+[T7f80] [API] HeapAlloc(size=0x1e, zero=1) = 0x24b6220
+[T7f80] [API] HeapAlloc(size=0x62, zero=1) = 0x24b6250
+[T7f80] [API] HeapAlloc(size=0x72, zero=1) = 0x24b62c0
+[T7f80] [API] HeapAlloc(size=0x1a, zero=1) = 0x24b6340
+[T7f80] [API] HeapAlloc(size=0x3a, zero=1) = 0x24b6370
+[T7f80] [API] HeapAlloc(size=0x34, zero=1) = 0x24b63c0
+[T7f80] [API] HeapAlloc(size=0x38, zero=1) = 0x24b6400
+[T7f80] [API] HeapAlloc(size=0x48, zero=1) = 0x24b6440
+[T7f80] [API] HeapAlloc(size=0x36, zero=1) = 0x24b6490
+[T7f80] [API] HeapAlloc(size=0x16, zero=1) = 0x24b64d0
+[T7f80] [API] HeapAlloc(size=0x22, zero=1) = 0x24b64f0
+[T7f80] [API] HeapAlloc(size=0x44, zero=1) = 0x24b6520
+[T7f80] [API] HeapAlloc(size=0x14, zero=1) = 0x24b6570
+[T7f80] [API] HeapAlloc(size=0xe, zero=1) = 0x24b6590
+[T7f80] [API] HeapAlloc(size=0x10, zero=1) = 0x24b65b0
+[T7f80] [API] HeapAlloc(size=0x32, zero=1) = 0x24b65d0
+[T7f80] [API] HeapAlloc(size=0x34, zero=1) = 0x24b6610
+[T7f80] [API] HeapAlloc(size=0x16, zero=1) = 0x24b6650
+[T7f80] [API] HeapAlloc(size=0x3e, zero=1) = 0x24b6670
+[T7f80] [API] HeapAlloc(size=0x22, zero=1) = 0x24b66c0
+[T7f80] [API] HeapAlloc(size=0x2a, zero=1) = 0x24b66f0
+[T7f80] [API] HeapAlloc(size=0x32, zero=1) = 0x24b6730
+[T7f80] [API] HeapAlloc(size=0x160, zero=1) = 0x24b6770
+[T7f80] [API] HeapAlloc(size=0x22, zero=1) = 0x24b68e0
+[T7f80] [API] HeapAlloc(size=0x3e, zero=1) = 0x24b6910
+[T7f80] [API] HeapAlloc(size=0x3e, zero=1) = 0x24b6960
+[T7f80] [API] HeapAlloc(size=0x60, zero=1) = 0x24b69b0
+[T7f80] [API] HeapAlloc(size=0x46, zero=1) = 0x24b6a20
+[T7f80] [API] HeapAlloc(size=0x70, zero=1) = 0x24b6a70
+[T7f80] [API] HeapAlloc(size=0x26, zero=1) = 0x24b6af0
+[T7f80] [API] HeapFree(0x24b5470)
+[T7f80] [API] HeapAlloc(size=0x1000, zero=1) = 0x24b6b20
+[T7f80] [API] InitializeCriticalSectionEx(spin=4000)
+[T7f80] [API] InitializeCriticalSectionEx(spin=4000)
+[T7f80] [API] InitializeCriticalSectionEx(spin=4000)
+[T7f80] [API] SetUnhandledExceptionFilter(handler=0x14002a8a0)
+[T7f80] [API] HeapAlloc(size=0x10, zero=0) = 0x24b5470
+[T7f80] [API] WideCharToMultiByte(cp=65001, srclen=-1, dstlen=0)
+[T7f80] [API] HeapAlloc(size=0x16, zero=0) = 0x24b5490
+[T7f80] [API] WideCharToMultiByte(cp=65001, srclen=-1, dstlen=22)
+[T7f80] [API] EnterCriticalSection(0x14007b9e8)
+[T7f80] [API] GetEnvironmentStringsW()
+[T7f80] [API] WideCharToMultiByte(cp=0, srclen=1281, dstlen=0)
+[T7f80] [API] HeapAlloc(size=0x501, zero=0) = 0x24b54b0
+[T7f80] [API] WideCharToMultiByte(cp=0, srclen=1281, dstlen=1281)
+[T7f80] [API] FreeEnvironmentStringsW()
+[T7f80] [API] HeapAlloc(size=0x148, zero=1) = 0x24b59c0
+[T7f80] [API] HeapAlloc(size=0x10, zero=1) = 0x24b5b10
+[T7f80] [API] HeapAlloc(size=0x1b, zero=1) = 0x24b5b30
+[T7f80] [API] HeapAlloc(size=0x13, zero=1) = 0x24b5b60
+[T7f80] [API] HeapAlloc(size=0x32, zero=1) = 0x24b5b80
+[T7f80] [API] HeapAlloc(size=0x19, zero=1) = 0x24b5bc0
+[T7f80] [API] HeapAlloc(size=0x14, zero=1) = 0x24b5bf0
+[T7f80] [API] HeapAlloc(size=0x61, zero=1) = 0x24b5c10
+[T7f80] [API] HeapAlloc(size=0x3a, zero=1) = 0x24b5c80
+[T7f80] [API] HeapAlloc(size=0xa, zero=1) = 0x24b5cd0
+[T7f80] [API] HeapAlloc(size=0x16, zero=1) = 0x24b5cf0
+[T7f80] [API] HeapAlloc(size=0xf, zero=1) = 0x24b5d10
+[T7f80] [API] HeapAlloc(size=0x31, zero=1) = 0x24b5d30
+[T7f80] [API] HeapAlloc(size=0x39, zero=1) = 0x24b5d70
+[T7f80] [API] HeapAlloc(size=0xd, zero=1) = 0x24b5dc0
+[T7f80] [API] HeapAlloc(size=0x1d, zero=1) = 0x24b5de0
+[T7f80] [API] HeapAlloc(size=0x1a, zero=1) = 0x24b5e10
+[T7f80] [API] HeapAlloc(size=0x1c, zero=1) = 0x24b5e40
+[T7f80] [API] HeapAlloc(size=0x24, zero=1) = 0x24b7b30
+[T7f80] [API] HeapAlloc(size=0x1b, zero=1) = 0x24b7b60
+[T7f80] [API] HeapAlloc(size=0xb, zero=1) = 0x24b7b90
+[T7f80] [API] HeapAlloc(size=0x11, zero=1) = 0x24b7bb0
+[T7f80] [API] HeapAlloc(size=0x22, zero=1) = 0x24b7bd0
+[T7f80] [API] HeapAlloc(size=0xa, zero=1) = 0x24b7c00
+[T7f80] [API] HeapAlloc(size=0x7, zero=1) = 0x24b7c20
+[T7f80] [API] HeapAlloc(size=0x8, zero=1) = 0x24b7c40
+[T7f80] [API] HeapAlloc(size=0x19, zero=1) = 0x24b7c60
+[T7f80] [API] HeapAlloc(size=0x1a, zero=1) = 0x24b7c90
+[T7f80] [API] HeapAlloc(size=0xb, zero=1) = 0x24b7cc0
+[T7f80] [API] HeapAlloc(size=0x1f, zero=1) = 0x24b7ce0
+[T7f80] [API] HeapAlloc(size=0x11, zero=1) = 0x24b7d10
+[T7f80] [API] HeapAlloc(size=0x15, zero=1) = 0x24b7d30
+[T7f80] [API] HeapAlloc(size=0x19, zero=1) = 0x24b7d50
+[T7f80] [API] HeapAlloc(size=0xb0, zero=1) = 0x24b7d80
+[T7f80] [API] HeapAlloc(size=0x11, zero=1) = 0x24b7e40
+[T7f80] [API] HeapAlloc(size=0x1f, zero=1) = 0x24b7e60
+[T7f80] [API] HeapAlloc(size=0x1f, zero=1) = 0x24b7e90
+[T7f80] [API] HeapAlloc(size=0x30, zero=1) = 0x24b7ec0
+[T7f80] [API] HeapAlloc(size=0x23, zero=1) = 0x24b7f00
+[T7f80] [API] HeapAlloc(size=0x38, zero=1) = 0x24b7f30
+[T7f80] [API] HeapAlloc(size=0x13, zero=1) = 0x24b7f70
+[T7f80] [API] HeapFree(0x24b54b0)
+[T7f80] [API] LeaveCriticalSection(0x14007b9e8)
+[T7f80] [API] EnterCriticalSection(0x14007b9e8)
+[T7f80] [API] HeapAlloc(size=0x29, zero=1) = 0x24b54b0
+[T7f80] [API] HeapAlloc(size=0x148, zero=1) = 0x24b54f0
+[T7f80] [API] HeapAlloc(size=0x10, zero=1) = 0x24b5640
+[T7f80] [API] HeapAlloc(size=0x1b, zero=1) = 0x24b5660
+[T7f80] [API] HeapAlloc(size=0x13, zero=1) = 0x24b5690
+[T7f80] [API] HeapAlloc(size=0x32, zero=1) = 0x24b56b0
+[T7f80] [API] HeapAlloc(size=0x19, zero=1) = 0x24b56f0
+[T7f80] [API] HeapAlloc(size=0x14, zero=1) = 0x24b5720
+[T7f80] [API] HeapAlloc(size=0x61, zero=1) = 0x24b5740
+[T7f80] [API] HeapAlloc(size=0x3a, zero=1) = 0x24b57b0
+[T7f80] [API] HeapAlloc(size=0xa, zero=1) = 0x24b5800
+[T7f80] [API] HeapAlloc(size=0x16, zero=1) = 0x24b5820
+[T7f80] [API] HeapAlloc(size=0xf, zero=1) = 0x24b5840
+[T7f80] [API] HeapAlloc(size=0x31, zero=1) = 0x24b5860
+[T7f80] [API] HeapAlloc(size=0x39, zero=1) = 0x24b58a0
+[T7f80] [API] HeapAlloc(size=0xd, zero=1) = 0x24b58f0
+[T7f80] [API] HeapAlloc(size=0x1d, zero=1) = 0x24b5910
+[T7f80] [API] HeapAlloc(size=0x1a, zero=1) = 0x24b5940
+[T7f80] [API] HeapAlloc(size=0x1c, zero=1) = 0x24b5970
+[T7f80] [API] HeapAlloc(size=0x24, zero=1) = 0x24b7f90
+[T7f80] [API] HeapAlloc(size=0x1b, zero=1) = 0x24b7fc0
+[T7f80] [API] HeapAlloc(size=0xb, zero=1) = 0x24b59a0
+[T7f80] [API] HeapAlloc(size=0x11, zero=1) = 0x24b7ff0
+[T7f80] [API] HeapAlloc(size=0x22, zero=1) = 0x24b8010
+[T7f80] [API] HeapAlloc(size=0xa, zero=1) = 0x24b8040
+[T7f80] [API] HeapAlloc(size=0x7, zero=1) = 0x24b8060
+[T7f80] [API] HeapAlloc(size=0x8, zero=1) = 0x24b8080
+[T7f80] [API] HeapAlloc(size=0x19, zero=1) = 0x24b80a0
+[T7f80] [API] HeapAlloc(size=0x1a, zero=1) = 0x24b80d0
+[T7f80] [API] HeapAlloc(size=0xb, zero=1) = 0x24b8100
+[T7f80] [API] HeapAlloc(size=0x1f, zero=1) = 0x24b8120
+[T7f80] [API] HeapAlloc(size=0x11, zero=1) = 0x24b8150
+[T7f80] [API] HeapAlloc(size=0x15, zero=1) = 0x24b8170
+[T7f80] [API] HeapAlloc(size=0x19, zero=1) = 0x24b8190
+[T7f80] [API] HeapAlloc(size=0xb0, zero=1) = 0x24b81c0
+[T7f80] [API] HeapAlloc(size=0x11, zero=1) = 0x24b8280
+[T7f80] [API] HeapAlloc(size=0x1f, zero=1) = 0x24b82a0
+[T7f80] [API] HeapAlloc(size=0x1f, zero=1) = 0x24b82d0
+[T7f80] [API] HeapAlloc(size=0x30, zero=1) = 0x24b8300
+[T7f80] [API] HeapAlloc(size=0x23, zero=1) = 0x24b8340
+[T7f80] [API] HeapAlloc(size=0x38, zero=1) = 0x24b8370
+[T7f80] [API] HeapAlloc(size=0x13, zero=1) = 0x24b83b0
+[T7f80] [API] HeapReAlloc(size=0x150) = 0x24b83d0
+[T7f80] [API] HeapAlloc(size=0x2a, zero=1) = 0x24b8530
+[T7f80] [API] LoadLibraryExW(flags=2048)
+[T7f80] [API] LoadLibraryA(kernel32)
+[T7f80] [API] SetLastError(126)
+[T7f80] [API] GetLastError() = 126
+[T7f80] [API] EnterCriticalSection(0x14007ba60)
+[T7f80] [API] VirtualProtect(addr=0x14009b000, size=0x100, prot=0x4)
+[T7f80] [API] VirtualProtect(addr=0x14009b000, size=0x100, prot=0x2)
+[T7f80] [API] LeaveCriticalSection(0x14007ba60)
+[T7f80] [API] MultiByteToWideChar(cp=0, srclen=-1, dstlen=0)
+[T7f80] [API] HeapAlloc(size=0x1c, zero=0) = 0x24b8570
+[T7f80] [API] MultiByteToWideChar(cp=0, srclen=-1, dstlen=14)
+[T7f80] [API] MultiByteToWideChar(cp=0, srclen=-1, dstlen=0)
+[T7f80] [API] HeapAlloc(size=0x36, zero=0) = 0x24b85a0
+[T7f80] [API] MultiByteToWideChar(cp=0, srclen=-1, dstlen=27)
+[T7f80] [API] SetEnvironmentVariableW(SSH_AUTH_SOCK)
+[T7f80] [API] HeapFree(0x24b85a0)
+[T7f80] [API] HeapFree(0x24b8570)
+[T7f80] [API] HeapFree(0x24b8530)
+[T7f80] [API] MultiByteToWideChar(cp=0, srclen=-1, dstlen=0)
+[T7f80] [API] HeapAlloc(size=0x52, zero=1) = 0x24b8660
+[T7f80] [API] MultiByteToWideChar(cp=0, srclen=-1, dstlen=41)
+[T7f80] [API] HeapAlloc(size=0x148, zero=1) = 0x24b54f0
+[T7f80] [API] HeapAlloc(size=0x20, zero=1) = 0x24b8570
+[T7f80] [API] HeapAlloc(size=0x36, zero=1) = 0x24b8530
+[T7f80] [API] HeapAlloc(size=0x26, zero=1) = 0x24b86c0
+[T7f80] [API] HeapAlloc(size=0x64, zero=1) = 0x24b86f0
+[T7f80] [API] HeapAlloc(size=0x32, zero=1) = 0x24b85a0
+[T7f80] [API] HeapAlloc(size=0x28, zero=1) = 0x24b8760
+[T7f80] [API] HeapAlloc(size=0xc2, zero=1) = 0x24b8790
+[T7f80] [API] HeapAlloc(size=0x74, zero=1) = 0x24b8860
+[T7f80] [API] HeapAlloc(size=0x14, zero=1) = 0x24b88e0
+[T7f80] [API] HeapAlloc(size=0x2c, zero=1) = 0x24b8900
+[T7f80] [API] HeapAlloc(size=0x1e, zero=1) = 0x24b8940
+[T7f80] [API] HeapAlloc(size=0x62, zero=1) = 0x24b8970
+[T7f80] [API] HeapAlloc(size=0x72, zero=1) = 0x24b89e0
+[T7f80] [API] HeapAlloc(size=0x1a, zero=1) = 0x24b8a60
+[T7f80] [API] HeapAlloc(size=0x3a, zero=1) = 0x24b8a90
+[T7f80] [API] HeapAlloc(size=0x34, zero=1) = 0x24b8ae0
+[T7f80] [API] HeapAlloc(size=0x38, zero=1) = 0x24b8b20
+[T7f80] [API] HeapAlloc(size=0x48, zero=1) = 0x24b8b60
+[T7f80] [API] HeapAlloc(size=0x36, zero=1) = 0x24b8bb0
+[T7f80] [API] HeapAlloc(size=0x16, zero=1) = 0x24b8bf0
+[T7f80] [API] HeapAlloc(size=0x22, zero=1) = 0x24b8c10
+[T7f80] [API] HeapAlloc(size=0x44, zero=1) = 0x24b8c40
+[T7f80] [API] HeapAlloc(size=0x14, zero=1) = 0x24b8c90
+[T7f80] [API] HeapAlloc(size=0xe, zero=1) = 0x24b8cb0
+[T7f80] [API] HeapAlloc(size=0x10, zero=1) = 0x24b8cd0
+[T7f80] [API] HeapAlloc(size=0x32, zero=1) = 0x24b8cf0
+[T7f80] [API] HeapAlloc(size=0x34, zero=1) = 0x24b8d30
+[T7f80] [API] HeapAlloc(size=0x16, zero=1) = 0x24b8d70
+[T7f80] [API] HeapAlloc(size=0x3e, zero=1) = 0x24b8d90
+[T7f80] [API] HeapAlloc(size=0x22, zero=1) = 0x24b8de0
+[T7f80] [API] HeapAlloc(size=0x2a, zero=1) = 0x24b8e10
+[T7f80] [API] HeapAlloc(size=0x32, zero=1) = 0x24b8e50
+[T7f80] [API] HeapAlloc(size=0x160, zero=1) = 0x24b8e90
+[T7f80] [API] HeapAlloc(size=0x22, zero=1) = 0x24b9000
+[T7f80] [API] HeapAlloc(size=0x3e, zero=1) = 0x24b9030
+[T7f80] [API] HeapAlloc(size=0x3e, zero=1) = 0x24b9080
+[T7f80] [API] HeapAlloc(size=0x60, zero=1) = 0x24b90d0
+[T7f80] [API] HeapAlloc(size=0x46, zero=1) = 0x24b9140
+[T7f80] [API] HeapAlloc(size=0x70, zero=1) = 0x24b9190
+[T7f80] [API] HeapAlloc(size=0x26, zero=1) = 0x24b9210
+[T7f80] [API] HeapReAlloc(size=0x150) = 0x24b9240
+[T7f80] [API] LeaveCriticalSection(0x14007b9e8)
+[T7f80] [API] EnterCriticalSection(0x14007b9e8)
+[T7f80] [API] LeaveCriticalSection(0x14007b9e8)
+[T7f80] [API] HeapAlloc(size=0xc8, zero=0) = 0x24b93a0
+[T7f80] [API] WideCharToMultiByte(cp=65001, srclen=-1, dstlen=0)
+[T7f80] [API] HeapAlloc(size=0x64, zero=0) = 0x24b9470
+[T7f80] [API] WideCharToMultiByte(cp=65001, srclen=-1, dstlen=100)

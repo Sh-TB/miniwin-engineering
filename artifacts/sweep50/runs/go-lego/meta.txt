@@ -1,0 +1,5 @@
+exe=lego/lego.exe
+sha256=7c94914300222fbee5f3666369b9e6855bd9e18baf2a95fa9a327e6764fd8fc8
+timeout=10s
+args=none
+date_utc=2026-10-17T18:39:37Z

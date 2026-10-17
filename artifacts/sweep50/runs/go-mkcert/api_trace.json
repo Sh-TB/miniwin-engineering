@@ -1,0 +1,84 @@
+{
+  "trace": [
+[Tcf80] [API] PE Loader: file=/home/z/my-project/workspace/miniwin-engineering/artifacts/sweep50/dl/mkcert/mkcert-v1.4.4-windows-amd64.exe size=4896256
+[Tcf80] [API] PE Loader: ImageBase=0x400000 EP=0x61c80 SizeOfImage=0x519000 Sections=13
+[Tcf80] [API] PE Loader: Mapped at 0x400000 (forced via MAP_FIXED)
+[Tcf80] [API] Section [0] .text    VA=0x00001000 VS=0x0019b659 Raw=0x0019b800 Ch=0x60000020
+[Tcf80] [API] Section [1] .rdata   VA=0x0019d000 VS=0x00174440 Raw=0x00174600 Ch=0x40000040
+[Tcf80] [API] Section [2] .data    VA=0x00312000 VS=0x00094f90 Raw=0x0002f400 Ch=0xc0000040
+[Tcf80] [API] Section [3] /4       VA=0x003a7000 VS=0x00000127 Raw=0x00000200 Ch=0x42100040
+[Tcf80] [API] Section [4] /19      VA=0x003a8000 VS=0x00045628 Raw=0x00045800 Ch=0x42100040
+[Tcf80] [API] Section [5] /32      VA=0x003ee000 VS=0x0000d01d Raw=0x0000d200 Ch=0x42100040
+[Tcf80] [API] Section [6] /46      VA=0x003fc000 VS=0x0000003f Raw=0x00000200 Ch=0x42100040
+[Tcf80] [API] Section [7] /65      VA=0x003fd000 VS=0x0007242f Raw=0x00072600 Ch=0x42100040
+[Tcf80] [API] Section [8] /78      VA=0x00470000 VS=0x00057db7 Raw=0x00057e00 Ch=0x42100040
+[Tcf80] [API] Section [9] /90      VA=0x004c8000 VS=0x0001785c Raw=0x00017a00 Ch=0x42100040
+[Tcf80] [API] Section [10] .idata   VA=0x004e0000 VS=0x0000047c Raw=0x00000600 Ch=0xc0000040
+[Tcf80] [API] Section [11] .reloc   VA=0x004e1000 VS=0x0000552c Raw=0x00005600 Ch=0x42000040
+[Tcf80] [API] Section [12] .symtab  VA=0x004e7000 VS=0x00031566 Raw=0x00031600 Ch=0x42000000
+[Tcf80] [API] Import Directory: RVA=0x4e0000 Size=0x47c
+[Tcf80] [API] Import DLL: kernel32.dll (IAT RVA=0x312320, ILT RVA=0x4e033c)
+[Tcf80] [API]   [0] WriteFile -> 0x2024d20
+[Tcf80] [API]   [1] WriteConsoleW -> 0x2012160
+[Tcf80] [API]   [2] WaitForMultipleObjects -> 0x2033d70
+[Tcf80] [API]   [3] WaitForSingleObject -> 0x2033c20
+[Tcf80] [API]   [4] VirtualQuery -> 0x200c870
+[Tcf80] [API]   [5] VirtualFree -> 0x2023500
+[Tcf80] [API]   [6] VirtualAlloc -> 0x20232a0
+[Tcf80] [API]   [7] SwitchToThread -> 0x2013aa0
+[Tcf80] [API]   [8] SuspendThread -> 0x2028b50
+[Tcf80] [API]   [9] UNRESOLVED: SetWaitableTimer
+[Tcf80] [API]   [10] SetUnhandledExceptionFilter -> 0x200a5d0
+[Tcf80] [API]   [11] UNRESOLVED: SetProcessPriorityBoost
+[Tcf80] [API]   [12] SetEvent -> 0x20307f0
+[Tcf80] [API]   [13] SetErrorMode -> 0x2009110
+[Tcf80] [API]   [14] SetConsoleCtrlHandler -> 0x2008fd0
+[Tcf80] [API]   [15] ResumeThread -> 0x20284c0
+[Tcf80] [API]   [16] PostQueuedCompletionStatus -> 0x2022b30
+[Tcf80] [API]   [17] LoadLibraryA -> 0x2022140
+[Tcf80] [API]   [18] LoadLibraryW -> 0x2038930
+[Tcf80] [API]   [19] SetThreadContext -> 0x2028970
+[Tcf80] [API]   [20] GetThreadContext -> 0x2028100
+[Tcf80] [API]   [21] GetSystemInfo -> 0x202cee0
+[Tcf80] [API]   [22] GetSystemDirectoryA -> 0x2014de0
+[Tcf80] [API]   [23] GetStdHandle -> 0x2040f70
+[Tcf80] [API]   [24] UNRESOLVED: GetQueuedCompletionStatusEx
+[Tcf80] [API]   [25] GetProcessAffinityMask -> 0x200cd60
+[Tcf80] [API]   [26] GetProcAddress -> 0x2009e60
+[Tcf80] [API]   [27] GetEnvironmentStringsW -> 0x200e440
+[Tcf80] [API]   [28] GetConsoleMode -> 0x2022000
+[Tcf80] [API]   [29] FreeEnvironmentStringsW -> 0x2029320
+[Tcf80] [API]   [30] ExitProcess -> 0x200dcd0
+[Tcf80] [API]   [31] DuplicateHandle -> 0x20099e0
+[Tcf80] [API]   [32] UNRESOLVED: CreateWaitableTimerExW
+[Tcf80] [API]   [33] CreateThread -> 0x2023ab0
+[Tcf80] [API]   [34] CreateIoCompletionPort -> 0x2021a10
+[Tcf80] [API]   [35] CreateFileA -> 0x202bb20
+[Tcf80] [API]   [36] CreateEventA -> 0x20215c0
+[Tcf80] [API]   [37] CloseHandle -> 0x20340f0
+[Tcf80] [API]   [38] AddVectoredExceptionHandler -> 0x200c050
+[Tcf80] [API] Import resolution: 35 resolved, 4 unresolved (total 39)
+[Tcf80] [API] Exception: no .pdata directory
+[Tcf80] [API] [API-005] EH hacks DISABLED (default) (MINWIN_EH_HACKS=<unset>)
+[Tcf80] [API] [API-005] CXX-EH-FIX (LSDA catch-all patch RVA 0x2010c8) skipped: MINWIN_EH_HACKS not set
+[Tcf80] [API] Jumping to EP=0x461c80
+[Tcf80] [API] LoadLibraryA(kernel32.dll)
+[Tcf80] [API] GetProcAddress(module=0xdead0001, name=AddDllDirectory)
+[Tcf80] [API]   -> NULL (not in dispatch table)
+[Tcf80] [API] GetProcAddress(module=0xdead0001, name=AddVectoredContinueHandler)
+[Tcf80] [API]   -> NULL (not in dispatch table)
+[Tcf80] [API] GetProcAddress(module=0xdead0001, name=LoadLibraryExA)
+[Tcf80] [API]   -> 0x2021120
+[Tcf80] [API] GetProcAddress(module=0xdead0001, name=LoadLibraryExW)
+[Tcf80] [API]   -> 0x2038b20
+[Tcf80] [API] GetSystemDirectoryA()
+[Tcf80] [API] LoadLibraryExA(advapi32.dll, flags=2048) -> NULL
+[Tcf80] [API] SetLastError(126)
+[Tcf80] [API] GetStdHandle(-12) = 0x4
+[Tcf80] [API] WriteFile(n=13)
+[Tcf80] [API] GetStdHandle(-12) = 0x4
+[Tcf80] [API] WriteFile(n=22)
+[Tcf80] [API] GetStdHandle(-12) = 0x4
+[Tcf80] [API] WriteFile(n=1)
+[Tcf80] [API] GetStdHandle(-12) = 0x4
+[Tcf80] [API] WriteFile(n=46)

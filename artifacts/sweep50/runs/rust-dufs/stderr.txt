@@ -1,0 +1,49 @@
+[TRACE] Command line: /home/z/my-project/workspace/miniwin-engineering/artifacts/sweep50/dl/dufs/dufs.exe
+[WARN]   unresolved: IsThreadAFiber
+[WARN]   unresolved: GetTimeZoneInformationForYear
+[WARN]   unresolved: SetFileCompletionNotificationModes
+[WARN]   unresolved: GetQueuedCompletionStatusEx
+[WARN]   unresolved: SetThreadStackGuarantee
+[WARN]   unresolved: CopyFileExW
+[WARN]   unresolved: WSASocketW
+[WARN]   unresolved: WSASend
+[WARN]   unresolved: NtCancelIoFileEx
+[WARN]   unresolved: NtOpenFile
+[WARN]   unresolved: RtlNtStatusToDosError
+[WARN]   unresolved: NtDeviceIoControlFile
+[WARN]   unresolved: NtCreateFile
+[WARN]   unresolved: NtReadFile
+[WARN]   unresolved: NtWriteFile
+[WARN]   unresolved: GetAdaptersAddresses
+[WARN]   unresolved: lstrlenW
+[WARN]   unresolved: __CxxFrameHandler3
+[WARN]   unresolved: __current_exception
+[WARN]   unresolved: __current_exception_context
+[WARN]   unresolved: _initialize_onexit_table
+[WARN]   unresolved: _register_onexit_function
+[WARN]   unresolved: terminate
+[WARN]   unresolved: _get_initial_narrow_environment
+[WARN]   unresolved: _set_fmode
+[WARN] 25 imports unresolved
+[STUB] unresolved import called -> returning 0 (call #1)
+[STUB] unresolved import called -> returning 0 (call #2)
+[STUB] unresolved import called -> returning 0 (call #3)
+[STUB] unresolved import called -> returning 0 (call #4)
+[STUB] unresolved import called -> returning 0 (call #5)
+
+[CRASH] Signal 11 at RIP=0x140201601
+  RAX=0x0 RCX=0x7 RDX=0xfffffffe R8=0x0 R9=0x0
+  RSP=0x7f75be611a00 RBP=0x7f75be611a70
+  g_image_base=0x140000000 g_image_size=0x352000
+  RVA=0x201601 (inside loaded PE)
+  Bytes: cd 29 0f 0b 48 8d 80 00 02 00 00 4c 89 00 e8 9c 
+  Return addr: 0x0
+  RSI=0x3e570a0 RDI=0x3e66f90
+  R8=0x0  R9=0x0 R10=0x0 R11=0x246
+  R12=0x2178b00 R13=0x11 R14=0x7ffec27b27b0 R15=0x7f75bde12000
+  [SCAN rsp+144] 0x140201560 <PE>
+  [SCAN rsp+152] 0x200fdfd <LOADER>
+  [SCAN rsp+184] 0x200fde4 <LOADER>
+  Backtrace (via stack walking):
+    [0] RIP=0x140201601 RVA=0x201601      [RSP+0] = 0x0 (return addr?)
+    [1] RIP=0x140201601 RVA=0x201601

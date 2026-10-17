@@ -1,0 +1,5 @@
+exe=openssh/ssh-shellhost.exe
+sha256=f090cb45e3b9dd830201993fc274e75a9be2058c1d4e900e85eff334dfd5a84c
+timeout=10s
+args=none
+date_utc=2026-10-17T18:39:39Z

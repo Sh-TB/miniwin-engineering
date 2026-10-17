@@ -1,0 +1,5 @@
+exe=hexyl/hexyl.exe
+sha256=9fa04c965ba6b670580e30f9395c87391fd83bb719d930fa503f92357f40a44a
+timeout=10s
+args=none
+date_utc=2026-10-17T18:39:38Z

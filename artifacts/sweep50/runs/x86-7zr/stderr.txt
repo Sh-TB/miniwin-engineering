@@ -1,0 +1,3 @@
+[TRACE] Command line: /home/z/my-project/workspace/miniwin-engineering/artifacts/sweep50/dl/7zr/7zr.exe
+[ERROR] Not a PE32+ file (magic=0x10b)
+[ERROR] Failed to load PE

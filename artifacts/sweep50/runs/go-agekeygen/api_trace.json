@@ -1,0 +1,104 @@
+{
+  "trace": [
+[Tcf80] [API] PE Loader: file=/home/z/my-project/workspace/miniwin-engineering/artifacts/sweep50/dl/age/age-keygen.exe size=4365824
+[Tcf80] [API] PE Loader: ImageBase=0x140000000 EP=0x82e80 SizeOfImage=0x247d000 Sections=16
+[Tcf80] [API] PE Loader: Mapped at 0x140000000 (forced via MAP_FIXED)
+[Tcf80] [API] Section [0] .text    VA=0x00001000 VS=0x00124e11 Raw=0x00125000 Ch=0x60000020
+[Tcf80] [API] Section [1] .rdata   VA=0x00126000 VS=0x00150a58 Raw=0x00150c00 Ch=0x40000040
+[Tcf80] [API] Section [2] .data    VA=0x00277000 VS=0x02087648 Raw=0x0003ce00 Ch=0xc0000040
+[Tcf80] [API] Section [3] .pdata   VA=0x022ff000 VS=0x000071ac Raw=0x00007200 Ch=0x40000040
+[Tcf80] [API] Section [4] .xdata   VA=0x02307000 VS=0x000000a8 Raw=0x00000200 Ch=0x40000040
+[Tcf80] [API] Section [5] /4       VA=0x02308000 VS=0x00000164 Raw=0x00000200 Ch=0x42100040
+[Tcf80] [API] Section [6] /19      VA=0x02309000 VS=0x0003ec0a Raw=0x0003ee00 Ch=0x42100040
+[Tcf80] [API] Section [7] /32      VA=0x02348000 VS=0x0000b937 Raw=0x0000ba00 Ch=0x42100040
+[Tcf80] [API] Section [8] /46      VA=0x02354000 VS=0x00000018 Raw=0x00000200 Ch=0x42100040
+[Tcf80] [API] Section [9] /65      VA=0x02355000 VS=0x00099e4c Raw=0x0009a000 Ch=0x42100040
+[Tcf80] [API] Section [10] /78      VA=0x023ef000 VS=0x0003764b Raw=0x00037800 Ch=0x42100040
+[Tcf80] [API] Section [11] /95      VA=0x02427000 VS=0x000194c2 Raw=0x00019600 Ch=0x42100040
+[Tcf80] [API] Section [12] /112     VA=0x02441000 VS=0x00001a7e Raw=0x00001c00 Ch=0x42100040
+[Tcf80] [API] Section [13] .idata   VA=0x02443000 VS=0x0000057c Raw=0x00000600 Ch=0xc0000040
+[Tcf80] [API] Section [14] .reloc   VA=0x02444000 VS=0x00006bb4 Raw=0x00006c00 Ch=0x42000040
+[Tcf80] [API] Section [15] .symtab  VA=0x0244b000 VS=0x000311e2 Raw=0x00031200 Ch=0x42000000
+[Tcf80] [API] Import Directory: RVA=0x2443000 Size=0x57c
+[Tcf80] [API] Import DLL: kernel32.dll (IAT RVA=0x2773e0, ILT RVA=0x24433f4)
+[Tcf80] [API]   [0] GetProcAddress -> 0x2009e60
+[Tcf80] [API]   [1] LoadLibraryExW -> 0x2038b20
+[Tcf80] [API]   [2] WriteFile -> 0x2024d20
+[Tcf80] [API]   [3] WriteConsoleW -> 0x2012160
+[Tcf80] [API]   [4] UNRESOLVED: WerSetFlags
+[Tcf80] [API]   [5] UNRESOLVED: WerGetFlags
+[Tcf80] [API]   [6] WaitForMultipleObjects -> 0x2033d70
+[Tcf80] [API]   [7] WaitForSingleObject -> 0x2033c20
+[Tcf80] [API]   [8] VirtualQuery -> 0x200c870
+[Tcf80] [API]   [9] VirtualFree -> 0x2023500
+[Tcf80] [API]   [10] VirtualAlloc -> 0x20232a0
+[Tcf80] [API]   [11] TlsAlloc -> 0x200c3b0
+[Tcf80] [API]   [12] SwitchToThread -> 0x2013aa0
+[Tcf80] [API]   [13] SuspendThread -> 0x2028b50
+[Tcf80] [API]   [14] UNRESOLVED: SetWaitableTimer
+[Tcf80] [API]   [15] UNRESOLVED: SetProcessPriorityBoost
+[Tcf80] [API]   [16] SetEvent -> 0x20307f0
+[Tcf80] [API]   [17] SetErrorMode -> 0x2009110
+[Tcf80] [API]   [18] SetConsoleCtrlHandler -> 0x2008fd0
+[Tcf80] [API]   [19] RtlVirtualUnwind -> 0x2030dc0
+[Tcf80] [API]   [20] RtlLookupFunctionEntry -> 0x200a380
+[Tcf80] [API]   [21] ResumeThread -> 0x20284c0
+[Tcf80] [API]   [22] UNRESOLVED: RaiseFailFastException
+[Tcf80] [API]   [23] QueryPerformanceCounter -> 0x200e0e0
+[Tcf80] [API]   [24] PostQueuedCompletionStatus -> 0x2022b30
+[Tcf80] [API]   [25] LoadLibraryExW -> 0x2038b20
+[Tcf80] [API]   [26] SetThreadContext -> 0x2028970
+[Tcf80] [API]   [27] GetThreadContext -> 0x2028100
+[Tcf80] [API]   [28] GetSystemInfo -> 0x202cee0
+[Tcf80] [API]   [29] GetSystemDirectoryA -> 0x2014de0
+[Tcf80] [API]   [30] GetStdHandle -> 0x2040f70
+[Tcf80] [API]   [31] UNRESOLVED: GetQueuedCompletionStatusEx
+[Tcf80] [API]   [32] GetProcessAffinityMask -> 0x200cd60
+[Tcf80] [API]   [33] GetProcAddress -> 0x2009e60
+[Tcf80] [API]   [34] UNRESOLVED: GetErrorMode
+[Tcf80] [API]   [35] GetEnvironmentStringsW -> 0x200e440
+[Tcf80] [API]   [36] GetCurrentThreadId -> 0x2007e70
+[Tcf80] [API]   [37] GetConsoleMode -> 0x2022000
+[Tcf80] [API]   [38] FreeEnvironmentStringsW -> 0x2029320
+[Tcf80] [API]   [39] ExitProcess -> 0x200dcd0
+[Tcf80] [API]   [40] DuplicateHandle -> 0x20099e0
+[Tcf80] [API]   [41] UNRESOLVED: CreateWaitableTimerExW
+[Tcf80] [API]   [42] CreateThread -> 0x2023ab0
+[Tcf80] [API]   [43] CreateIoCompletionPort -> 0x2021a10
+[Tcf80] [API]   [44] CreateEventA -> 0x20215c0
+[Tcf80] [API]   [45] CloseHandle -> 0x20340f0
+[Tcf80] [API]   [46] AddVectoredExceptionHandler -> 0x200c050
+[Tcf80] [API]   [47] UNRESOLVED: AddVectoredContinueHandler
+[Tcf80] [API] Import resolution: 39 resolved, 9 unresolved (total 48)
+[Tcf80] [API] Exception: .pdata RVA=0x22ff000 Size=0x71ac Entries=2425
+[Tcf80] [API] [API-005] EH hacks DISABLED (default) (MINWIN_EH_HACKS=<unset>)
+[Tcf80] [API] [API-005] CXX-EH-FIX (LSDA catch-all patch RVA 0x2010c8) skipped: MINWIN_EH_HACKS not set
+[Tcf80] [API] Jumping to EP=0x140082e80
+[Tcf80] [API] TlsAlloc() = 1
+[Tcf80] [API] LoadLibraryExW(flags=2048)
+[Tcf80] [API] LoadLibraryA(bcryptprimitives.dll)
+[Tcf80] [API] GetProcAddress(module=0xdead003a, name=ProcessPrng)
+[Tcf80] [API]   -> 0x2013be0
+[Tcf80] [API] LoadLibraryExW(flags=2048)
+[Tcf80] [API] LoadLibraryA(ntdll.dll)
+[Tcf80] [API] GetProcAddress(module=0xdead0008, name=NtCreateWaitCompletionPacket)
+[Tcf80] [API]   -> NULL (not in dispatch table)
+[Tcf80] [API] GetProcAddress(module=0xdead0008, name=NtAssociateWaitCompletionPacket)
+[Tcf80] [API]   -> NULL (not in dispatch table)
+[Tcf80] [API] GetProcAddress(module=0xdead0008, name=NtCancelWaitCompletionPacket)
+[Tcf80] [API]   -> NULL (not in dispatch table)
+[Tcf80] [API] GetProcAddress(module=0xdead0008, name=RtlGetCurrentPeb)
+[Tcf80] [API]   -> NULL (not in dispatch table)
+[Tcf80] [API] GetProcAddress(module=0xdead0008, name=RtlGetVersion)
+[Tcf80] [API]   -> NULL (not in dispatch table)
+[Tcf80] [API] AddVectoredExceptionHandler(first=1, handler=0x140083020)
+[Tcf80] [API] LoadLibraryExW(flags=2048)
+[Tcf80] [API] LoadLibraryA(winmm.dll)
+[Tcf80] [API] GetProcAddress(module=0xdead0013, name=timeBeginPeriod)
+[Tcf80] [API]   -> 0x200b2a0
+[Tcf80] [API] GetProcAddress(module=0xdead0013, name=timeEndPeriod)
+[Tcf80] [API]   -> 0x200b3a0
+[Tcf80] [API] timeBeginPeriod(1)
+[Tcf80] [API] GetSystemDirectoryA()
+[Tcf80] [API] GetProcessAffinityMask()
+[Tcf80] [API] GetSystemInfo()

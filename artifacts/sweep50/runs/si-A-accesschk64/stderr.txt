@@ -1,0 +1,107 @@
+[TRACE] Command line: /home/z/my-project/workspace/miniwin-engineering/artifacts/sweep50/dl/si-accesschk/accesschk64.exe
+[WARN]   unresolved: NetShareEnum
+[WARN]   unresolved: NetShareGetInfo
+[WARN]   unresolved: NetApiBufferFree
+[WARN]   unresolved: NetUserGetLocalGroups
+[WARN]   unresolved: GetFileVersionInfoSizeW
+[WARN]   unresolved: GetFileVersionInfoW
+[WARN]   unresolved: VerQueryValueW
+[WARN]   unresolved: Thread32Next
+[WARN]   unresolved: Thread32First
+[WARN]   unresolved: OpenThread
+[WARN]   unresolved: Process32NextW
+[WARN]   unresolved: Process32FirstW
+[WARN]   unresolved: GetVersionExW
+[WARN]   unresolved: SendMessageW
+[WARN]   unresolved: LoadCursorW
+[WARN]   unresolved: InflateRect
+[WARN]   unresolved: GetSysColorBrush
+[WARN]   unresolved: SetCursor
+[WARN]   unresolved: SetWindowTextW
+[WARN]   unresolved: GetDlgItem
+[WARN]   unresolved: EndDialog
+[WARN]   unresolved: DialogBoxIndirectParamW
+[WARN]   unresolved: GetDeviceCaps
+[WARN]   unresolved: SetMapMode
+[WARN]   unresolved: StartDocW
+[WARN]   unresolved: EndDoc
+[WARN]   unresolved: StartPage
+[WARN]   unresolved: EndPage
+[WARN]   unresolved: PrintDlgW
+[WARN]   unresolved: GetEffectiveRightsFromAclW
+[WARN]   unresolved: QueryServiceObjectSecurity
+[WARN]   unresolved: OpenServiceW
+[WARN]   unresolved: OpenSCManagerW
+[WARN]   unresolved: EnumServicesStatusW
+[WARN]   unresolved: CloseServiceHandle
+[WARN]   unresolved: GetSecurityInfo
+[WARN]   unresolved: DeleteAce
+[WARN]   unresolved: RegGetKeySecurity
+[WARN]   unresolved: RegEnumKeyW
+[WARN]   unresolved: GetNamedSecurityInfoW
+[WARN]   unresolved: ConvertStringSecurityDescriptorToSecurityDescriptorW
+[WARN]   unresolved: RegDeleteKeyW
+[WARN]   unresolved: GetKernelObjectSecurity
+[WARN]   unresolved: LsaNtStatusToWinError
+[WARN]   unresolved: LsaEnumerateAccountRights
+[WARN]   unresolved: LsaEnumerateAccountsWithUserRight
+[WARN]   unresolved: LsaOpenPolicy
+[WARN]   unresolved: LsaClose
+[WARN]   unresolved: LsaFreeMemory
+[WARN]   unresolved: LookupPrivilegeDisplayNameW
+[WARN]   unresolved: LookupPrivilegeNameW
+[WARN]   unresolved: ConvertSecurityDescriptorToStringSecurityDescriptorW
+[WARN]   unresolved: SetEntriesInAclW
+[WARN]   unresolved: LookupAccountNameW
+[WARN]   unresolved: LookupAccountSidW
+[WARN]   unresolved: SetSecurityDescriptorOwner
+[WARN]   unresolved: SetSecurityDescriptorDacl
+[WARN]   unresolved: RevertToSelf
+[WARN]   unresolved: IsWellKnownSid
+[WARN]   unresolved: IsValidSid
+[WARN]   unresolved: InitializeSecurityDescriptor
+[WARN]   unresolved: ImpersonateLoggedOnUser
+[WARN]   unresolved: GetTokenInformation
+[WARN]   unresolved: GetSidSubAuthorityCount
+[WARN]   unresolved: GetSidSubAuthority
+[WARN]   unresolved: GetSidIdentifierAuthority
+[WARN]   unresolved: GetSecurityDescriptorSacl
+[WARN]   unresolved: GetSecurityDescriptorOwner
+[WARN]   unresolved: GetSecurityDescriptorDacl
+[WARN]   unresolved: GetSecurityDescriptorControl
+[WARN]   unresolved: GetLengthSid
+[WARN]   unresolved: GetAce
+[WARN]   unresolved: EqualSid
+[WARN]   unresolved: DuplicateTokenEx
+[WARN]   unresolved: CopySid
+[WARN]   unresolved: AllocateAndInitializeSid
+[WARN]   unresolved: OpenThreadToken
+[WARN]   unresolved: RegOpenKeyW
+[WARN]   unresolved: RegCreateKeyW
+[WARN]   unresolved: EvtOpenChannelEnum
+[WARN]   unresolved: EvtNextChannelPath
+[WARN]   unresolved: EvtOpenChannelConfig
+[WARN]   unresolved: EvtGetChannelConfigProperty
+[WARN]   unresolved: EvtClose
+[WARN] 84 imports unresolved
+[STUB] unresolved import called -> returning 0 (call #1)
+[STUB] unresolved import called -> returning 0 (call #2)
+[STUB] unresolved import called -> returning 0 (call #3)
+[STUB] unresolved import called -> returning 0 (call #4)
+[STUB] unresolved import called -> returning 0 (call #5)
+[STUB] unresolved import called -> returning 0 (call #6)
+[STUB] unresolved import called -> returning 0 (call #7)
+[STUB] unresolved import called -> returning 0 (call #8)
+[STUB] unresolved import called -> returning 0 (call #9)
+[STUB] unresolved import called -> returning 0 (call #10)
+[STUB] unresolved import called -> returning 0 (call #11)
+[STUB] unresolved import called -> returning 0 (call #12)
+
+(null) v(null) - (null)
+(null)
+(null)
+
+[STUB] unresolved import called -> returning 0 (call #13)
+[STUB] unresolved import called -> returning 0 (call #14)
+[STUB] unresolved import called -> returning 0 (call #15)
+[STUB] unresolved import called -> returning 0 (call #16)

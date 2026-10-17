@@ -1,0 +1,5 @@
+exe=age/age-keygen.exe
+sha256=1549c7049be32695594bedd09bbd352a94b6013a9d5c43364f3c6cd7a09ab61c
+timeout=10s
+args=none
+date_utc=2026-10-17T18:39:37Z

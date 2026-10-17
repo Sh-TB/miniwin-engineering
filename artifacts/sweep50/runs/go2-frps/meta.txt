@@ -1,0 +1,5 @@
+exe=frp/frps.exe
+sha256=88f2e5b1ef0e838fe6b15303dbe1a9dbccacd4d7eb46706b64a812895b36aaa1
+timeout=10s
+args=none
+date_utc=2026-10-17T18:39:39Z

@@ -1,0 +1,5 @@
+exe=searchmyfiles/SearchMyFiles.exe
+sha256=56ecd368db4cebeb4aa0b12793f8cb6f2fae10656120193c45f33281f7854cf7
+timeout=10s
+args=none
+date_utc=2026-10-17T18:39:37Z

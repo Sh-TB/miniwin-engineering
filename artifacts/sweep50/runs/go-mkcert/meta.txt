@@ -1,0 +1,5 @@
+exe=mkcert/mkcert-v1.4.4-windows-amd64.exe
+sha256=d2660b50a9ed59eada480750561c96abc2ed4c9a38c6a24d93e30e0977631398
+timeout=10s
+args=none
+date_utc=2026-10-17T18:39:37Z

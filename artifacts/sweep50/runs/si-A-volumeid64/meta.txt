@@ -1,0 +1,5 @@
+exe=si-volumeid/Volumeid64.exe
+sha256=fb0d02ea26bb1e5df5a07147931caf1ae3d7d1d9b4d83f168b678e7f3a1c0ecd
+timeout=10s
+args=none
+date_utc=2026-10-17T18:39:37Z

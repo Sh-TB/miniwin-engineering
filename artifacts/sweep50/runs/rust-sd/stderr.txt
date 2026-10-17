@@ -1,0 +1,19 @@
+[TRACE] Command line: /home/z/my-project/workspace/miniwin-engineering/artifacts/sweep50/dl/sd/sd.exe
+[WARN]   unresolved: SetThreadStackGuarantee
+[WARN]   unresolved: lstrlenW
+[WARN]   unresolved: RtlNtStatusToDosError
+[WARN]   unresolved: NtWriteFile
+[WARN]   unresolved: NtReadFile
+[WARN]   unresolved: __current_exception
+[WARN]   unresolved: __CxxFrameHandler3
+[WARN]   unresolved: __current_exception_context
+[WARN]   unresolved: terminate
+[WARN]   unresolved: _register_onexit_function
+[WARN]   unresolved: _initialize_onexit_table
+[WARN]   unresolved: _get_initial_narrow_environment
+[WARN]   unresolved: _set_fmode
+[WARN] 13 imports unresolved
+[STUB] unresolved import called -> returning 0 (call #1)
+[STUB] unresolved import called -> returning 0 (call #2)
+[STUB] unresolved import called -> returning 0 (call #3)
+[STUB] unresolved import called -> returning 0 (call #4)

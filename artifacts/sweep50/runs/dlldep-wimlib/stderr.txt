@@ -1,0 +1,79 @@
+[TRACE] Command line: /home/z/my-project/workspace/miniwin-engineering/artifacts/sweep50/dl/wimlib/wimlib-imagex.exe
+[WARN]   unresolved: wimlib_add_image_multisource
+[WARN]   unresolved: wimlib_create_new_wim
+[WARN]   unresolved: wimlib_delete_image
+[WARN]   unresolved: wimlib_export_image
+[WARN]   unresolved: wimlib_extract_image
+[WARN]   unresolved: wimlib_extract_image_from_pipe_with_progress
+[WARN]   unresolved: wimlib_extract_pathlist
+[WARN]   unresolved: wimlib_extract_paths
+[WARN]   unresolved: wimlib_extract_xml_data
+[WARN]   unresolved: wimlib_free
+[WARN]   unresolved: wimlib_get_compression_type_string
+[WARN]   unresolved: wimlib_get_error_string
+[WARN]   unresolved: wimlib_get_image_property
+[WARN]   unresolved: wimlib_get_version_string
+[WARN]   unresolved: wimlib_get_wim_info
+[WARN]   unresolved: wimlib_global_cleanup
+[WARN]   unresolved: wimlib_global_init
+[WARN]   unresolved: wimlib_image_name_in_use
+[WARN]   unresolved: wimlib_iterate_dir_tree
+[WARN]   unresolved: wimlib_iterate_lookup_table
+[WARN]   unresolved: wimlib_join_with_progress
+[WARN]   unresolved: wimlib_load_text_file
+[WARN]   unresolved: wimlib_open_wim_with_progress
+[WARN]   unresolved: wimlib_overwrite
+[WARN]   unresolved: wimlib_print_available_images
+[WARN]   unresolved: wimlib_print_header
+[WARN]   unresolved: wimlib_reference_resource_files
+[WARN]   unresolved: wimlib_reference_resources
+[WARN]   unresolved: wimlib_reference_template_image
+[WARN]   unresolved: wimlib_register_progress_function
+[WARN]   unresolved: wimlib_resolve_image
+[WARN]   unresolved: wimlib_set_default_compression_level
+[WARN]   unresolved: wimlib_set_image_property
+[WARN]   unresolved: wimlib_set_output_chunk_size
+[WARN]   unresolved: wimlib_set_output_compression_type
+[WARN]   unresolved: wimlib_set_output_pack_chunk_size
+[WARN]   unresolved: wimlib_set_output_pack_compression_type
+[WARN]   unresolved: wimlib_set_print_errors
+[WARN]   unresolved: wimlib_set_wim_info
+[WARN]   unresolved: wimlib_split
+[WARN]   unresolved: wimlib_update_image
+[WARN]   unresolved: wimlib_verify_wim
+[WARN]   unresolved: wimlib_write
+[WARN]   unresolved: wimlib_write_to_fd
+[WARN]   unresolved: ConvertSecurityDescriptorToStringSecurityDescriptorW
+[WARN]   unresolved: __wgetmainargs
+[WARN]   unresolved: __winitenv
+[WARN]   unresolved: _putws
+[WARN]   unresolved: _wcserror
+[WARN]   unresolved: fputws
+[WARN] 50 imports unresolved
+[STUB] unresolved import called -> returning 0 (call #1)
+
+[CRASH] Signal 11 at RIP=0x1400012e0
+  RAX=0x20297d0 RCX=0x0 RDX=0xbbaae0df6f38dcb0 R8=0x0 R9=0x0
+  RSP=0x7ffe3a5eeb90 RBP=0x38ad750
+  g_image_base=0x140000000 g_image_size=0x2a000
+  RVA=0x12e0 (inside loaded PE)
+  Bytes: 4c 89 00 48 8b 15 36 2d 02 00 e8 81 67 00 00 8b 
+  Return addr: 0x217b000
+  RSI=0x1400241c8 RDI=0x38ad750
+  R8=0x0  R9=0x0 R10=0x0 R11=0x202
+  R12=0x0 R13=0x217a000 R14=0xb5 R15=0x7ffe3a5ef070
+  [SCAN rsp+072] 0x140001406 <PE>
+  [SCAN rsp+120] 0x20076a6 <LOADER>
+  [SCAN rsp+144] 0x140025874 <PE>
+  [SCAN rsp+472] 0x20026ae <LOADER>
+  [SCAN rsp+480] 0x20020a0 <LOADER>
+  [SCAN rsp+1928] 0x2006490 <LOADER>
+  [SCAN rsp+2080] 0x2006490 <LOADER>
+  [SCAN rsp+2120] 0x2007d50 <LOADER>
+  [SCAN rsp+2152] 0x2007d71 <LOADER>
+  [SCAN rsp+2624] 0x2000040 <LOADER>
+  [SCAN rsp+2704] 0x2007d50 <LOADER>
+  Backtrace (via stack walking):
+    [0] RIP=0x1400012e0 RVA=0x12e0      [RSP+0] = 0x217b000 (return addr?)
+    [1] RIP=0x1400012e0 RVA=0x12e0      [RSP+0] = 0x0 (return addr?)
+    [2] RIP=0x1400012e0 RVA=0x12e0
