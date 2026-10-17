@@ -1,0 +1,31 @@
+[TRACE] Command line: /home/z/my-project/workspace/miniwin-engineering/samples/real/lz4/lz4.exe -q -f ladder_payload.bin
+[WARN]   unresolved: CreateIoCompletionPort
+[WARN]   unresolved: GetQueuedCompletionStatus
+[WARN]   unresolved: PostQueuedCompletionStatus
+[WARN]   unresolved: RtlAddFunctionTable
+[WARN]   unresolved: __doserrno
+[WARN]   unresolved: _vsnprintf
+[WARN] 6 imports unresolved
+[TRACE] Command line: /home/z/my-project/workspace/miniwin-engineering/samples/real/lz4/lz4.exe -q -d -f ladder_payload.bin.lz4 -o ladder_payload.rt
+[WARN]   unresolved: CreateIoCompletionPort
+[WARN]   unresolved: GetQueuedCompletionStatus
+[WARN]   unresolved: PostQueuedCompletionStatus
+[WARN]   unresolved: RtlAddFunctionTable
+[WARN]   unresolved: __doserrno
+[WARN]   unresolved: _vsnprintf
+[WARN] 6 imports unresolved
+Incorrect parameters
+Usage : 
+      lz4.exe [arg] [input] [output] 
+
+input   : a filename 
+          with no FILE, or when FILE is - or stdin, read standard input
+Arguments : 
+ -1     : fast compression (default) 
+ -12    : slowest compression level 
+ -T#    : use # threads for compression (default:0==auto) 
+ -d     : decompression (default for .lz4 extension)
+ -f     : overwrite output without prompting 
+ -k     : preserve source files(s)  (default) 
+--rm    : remove source file(s) after successful de/compression 
+ -h/-H  : display help/long help and exit 

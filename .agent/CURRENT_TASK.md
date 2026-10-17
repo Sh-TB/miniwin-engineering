@@ -79,3 +79,26 @@ t13_wide_abi PASS; t14_file_read PASS; dispatch 4/4.
   062fa371…, regression 12/12). I/O paths exonerated with PE probes
   (scripts/probe_bug062_readfile.c/.fread.c; zig cc cross-compiler via pip
   `ziglang` now available in this env).
+
+---
+
+## 2026-10-17 (CONTINUE #11b) — BUG-063 + BUG-064: lz4 LADDER-009 VERIFIED
+- **BUG-063 CLOSED (TESTED)**: mw_printf/mw_fprintf/mw_fwprintf were ms_abi
+  variadic but walked SysV va_list — garbage arg slots (lz4 --version SIGSEGV
+  inside mw_fprintf; 1-arg shapes had survived by layout luck). Fixed with
+  __builtin_ms_va_list (+ va_arg dispatch); emit path unchanged.
+- **BUG-064 CLOSED (TESTED)**: real kernel objects. Events (MwKEvent:
+  manual/auto-reset, Set/Reset real), semaphores (MwKSem: count/max,
+  ReleaseSemaphore real), IOCP queue (INFINITE branch was missing -> worker
+  exited its GQCS loop -> pool lost worker; ms now uint32_t — 64-bit read
+  picked dirty high bits), WaitForSingleObject dispatch (thread/event/sem),
+  WaitForMultipleObjects wait-all/any, CloseHandle slot release,
+  MapViewOfFile real mmap over the CreateFileMapping registry, plus
+  RtlAddFunctionTable/__doserrno/_vsnprintf exports. Trace lines now carry
+  [Txxxx] host thread ids (permanent facility).
+- **LADDER-009 lz4 1.10.0 VERIFIED**: version 3/3; round trip 3/3 on the
+  401408-byte payload, SHA-256 byte-perfect (35e6e204...). Sample provenance
+  samples/real/lz4/ (official release asset, SHA c2b1ecab...).
+- zstd LADDER-008 re-checked post-changes: 3/3 (no regression). G1 pin OK
+  12/12 (evidence/master/g1/20261017_145001). Upstream source read:
+  lz4 v1.10.0 threadpool.c (borrowing policy ADR-014 — read-only guidance).

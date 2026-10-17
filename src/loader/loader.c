@@ -92,7 +92,8 @@ __attribute__((ms_abi)) void mw_SetLastError(uint32_t err);
 
 #define MW_TRACE(fmt, ...) do { \
     if (g_trace_log) { \
-        fprintf(g_trace_log, "[API] " fmt "\n", ##__VA_ARGS__); \
+        fprintf(g_trace_log, "[T%lx] [API] " fmt "\n", \
+                (unsigned long)pthread_self() & 0xFFFF, ##__VA_ARGS__); \
         fflush(g_trace_log); \
     } else { \
         fprintf(stderr, "[TRACE] " fmt "\n", ##__VA_ARGS__); \
@@ -347,22 +348,35 @@ __attribute__((ms_abi)) uint8_t mw_RemoveVectoredExceptionHandler(void* h) {
 /* BUG-062 forward decls: thread registry lives below (before
  * mw_WaitForSingleObject); CloseHandle releases thread slots. */
 static void mw_thread_release(void* h);
+/* BUG-064 forward decl: mw__vsnprintf reuses mw_vfprintf (defined below). */
+__attribute__((ms_abi)) int mw_vfprintf(void* file, const char* fmt, void* ap);
+/* LADDER-009 forward decls: real kernel objects (events/semaphores) live in
+ * the registry block below; the early stubs call into them. */
+static void* mw_event_create(int manual, int init);
+static void* mw_sem_create(int32_t init, int32_t max);
+static int mw_event_set(void* h);
+static int mw_event_reset(void* h);
+static int mw_sem_release(void* h, int32_t count, int32_t* prev);
+static void mw_kobj_release(void* h);
 
 __attribute__((ms_abi)) int mw_CloseHandle(void* h) {
     MW_TRACE("CloseHandle(handle=%p)", h);
-    /* BUG-062: thread handles release their registry slot. */
-    mw_thread_release(h);
+    /* BUG-062/064: thread + event + semaphore handles release their slots. */
+    mw_kobj_release(h);
     return 1; /* TRUE */
 }
 
 __attribute__((ms_abi)) void* mw_CreateEventA(void* attr, int manual, int init, const char* name) {
     MW_TRACE("CreateEventA(manual=%d, init=%d, name=%s)", manual, init, name ? name : "NULL");
-    return alloc_handle((void*)(uintptr_t)1);
+    (void)attr; (void)name;
+    return mw_event_create(manual, init);
 }
 
 __attribute__((ms_abi)) void* mw_CreateSemaphoreA(void* attr, int32_t init, int32_t max, const char* name) {
     MW_TRACE("CreateSemaphoreA(init=%d, max=%d, name=%s)", init, max, name ? name : "NULL");
-    return alloc_handle((void*)(uintptr_t)1);
+    (void)attr; (void)name;
+    if (max <= 0 || init < 0 || init > max) { mw_SetLastError(87); return NULL; }
+    return mw_sem_create(init, max);
 }
 
 __attribute__((ms_abi)) void mw_DebugBreak(void) {
@@ -2283,14 +2297,13 @@ static void mw_RaiseException_baseline(uint32_t code, uint32_t flags,
 }
 
 __attribute__((ms_abi)) int mw_ReleaseSemaphore(void* h, int32_t count, int32_t* prev) {
-    MW_TRACE("ReleaseSemaphore()");
-    if (prev) *prev = 0;
-    return 1;
+    MW_TRACE("ReleaseSemaphore(h=%p, count=%d)", h, count);
+    return mw_sem_release(h, count, prev);
 }
 
 __attribute__((ms_abi)) int mw_ResetEvent(void* h) {
-    MW_TRACE("ResetEvent()");
-    return 1;
+    MW_TRACE("ResetEvent(h=%p)", h);
+    return mw_event_reset(h);
 }
 
 __attribute__((ms_abi)) uint32_t mw_ResumeThread(void* h) {
@@ -3040,8 +3053,8 @@ __attribute__((ms_abi)) int mw_ScrollConsoleScreenBufferA(void* h, void* sr, voi
 }
 
 __attribute__((ms_abi)) int mw_SetEvent(void* h) {
-    MW_TRACE("SetEvent()");
-    return 1;
+    MW_TRACE("SetEvent(h=%p)", h);
+    return mw_event_set(h);
 }
 
 __attribute__((ms_abi)) int mw_SetFileTime(void* h, void* ct, void* at, void* wt) {
@@ -3258,17 +3271,356 @@ static void mw_thread_release(void* h) {
      * the thread is detached and the slot is statically allocated */
 }
 
-__attribute__((ms_abi)) uint32_t mw_WaitForSingleObject(void* h, uint32_t ms) {
-    MW_TRACE("WaitForSingleObject(handle=%p, ms=%u)", h, ms);
+/* ============================================================
+ * LADDER-009 (lz4.exe): minimal honest IOCP + RtlAddFunctionTable +
+ * __doserrno + _vsnprintf. Without them lz4 decompress jumped to the
+ * hint/name RVA of CreateIoCompletionPort (unresolved IAT slot still
+ * holding ILT contents = BUG-032-local class crash at RIP=0x5a7ca).
+ * IOCP semantics implemented for the in-process queue (Post/Get with
+ * timeout); association of FILE handles records nothing yet — honest
+ * limitation documented in docs/bugs/BUG-064.md.
+ * ============================================================ */
+typedef struct { void* key; void* ovl; unsigned long count; } MwIocpEntry;
+typedef struct {
+    int used;
+    pthread_mutex_t mu;
+    pthread_cond_t cv;
+    MwIocpEntry q[256];
+    int head, tail, cnt;
+} MwIocp;
+static MwIocp g_iocp_tab[16];
+
+static MwIocp* mw_iocp_lookup(void* h) {
+    if (!h) return NULL;
+    MwIocp* base = &g_iocp_tab[0];
+    if ((MwIocp*)h < base || (MwIocp*)h >= base + 16) return NULL;
+    MwIocp* p = (MwIocp*)h;
+    return p->used ? p : NULL;
+}
+
+static int g_doserrno_storage = 0;
+
+__attribute__((ms_abi)) void* mw_CreateIoCompletionPort(void* file, void* existing,
+    unsigned long key, unsigned long threads) {
+    (void)file; (void)key; (void)threads;
+    MW_TRACE("CreateIoCompletionPort(file=%p, existing=%p, key=%lu)", file, existing, key);
+    if (existing) return existing;      /* association: port reused as-is */
+    for (int i = 0; i < 16; i++) {
+        if (!g_iocp_tab[i].used) {
+            MwIocp* p = &g_iocp_tab[i];
+            memset(p, 0, sizeof(*p));
+            p->used = 1;
+            pthread_mutex_init(&p->mu, NULL);
+            pthread_cond_init(&p->cv, NULL);
+            return p;                    /* handle == slot pointer */
+        }
+    }
+    mw_SetLastError(8); /* ERROR_NOT_ENOUGH_MEMORY */
+    return NULL;
+}
+
+__attribute__((ms_abi)) int mw_PostQueuedCompletionStatus(void* port,
+    unsigned long count, unsigned long key, void* ovl) {
+    MW_TRACE("PostQueuedCompletionStatus(port=%p, count=%lu, key=%lu)", port, count, key);
+    MwIocp* p = mw_iocp_lookup(port);
+    if (!p) { mw_SetLastError(87); return 0; } /* ERROR_INVALID_PARAMETER */
+    pthread_mutex_lock(&p->mu);
+    if (p->cnt >= 256) { pthread_mutex_unlock(&p->mu); mw_SetLastError(1385); return 0; }
+    MwIocpEntry* e = &p->q[p->tail];
+    e->key = (void*)(uintptr_t)key; e->ovl = ovl; e->count = count;
+    p->tail = (p->tail + 1) % 256;
+    p->cnt++;
+    pthread_cond_signal(&p->cv);
+    pthread_mutex_unlock(&p->mu);
+    return 1;
+}
+
+__attribute__((ms_abi)) int mw_GetQueuedCompletionStatus(void* port,
+    unsigned long* count, unsigned long* key, void** ovl, uint32_t ms) {
+    /* ms is a Windows DWORD: the guest writes 32 bits into the 5th-arg stack
+     * slot — reading it as 64-bit picked up dirty high bits (0x7f8dffffffff
+     * instead of INFINITE 0xffffffff). */
+    MW_TRACE("GetQueuedCompletionStatus(port=%p, ms=%lu)", port, ms);
+    MwIocp* p = mw_iocp_lookup(port);
+    if (!p) { mw_SetLastError(87); return 0; }
+    pthread_mutex_lock(&p->mu);
+    int ok = 0;
+    if (p->cnt == 0 && ms > 0) {
+        /* ms == 0xFFFFFFFF (INFINITE) must BLOCK — the earlier code skipped
+         * the wait entirely and returned FALSE (lz4's WorkerThread then left
+         * its loop and the pool lost its worker; main waited forever). */
+        if (ms == 0xFFFFFFFFu) {
+            while (p->cnt == 0) pthread_cond_wait(&p->cv, &p->mu);
+        } else {
+            struct timespec ts;
+            clock_gettime(CLOCK_REALTIME, &ts);
+            ts.tv_sec += ms / 1000;
+            ts.tv_nsec += (long)(ms % 1000) * 1000000L;
+            if (ts.tv_nsec >= 1000000000L) { ts.tv_sec++; ts.tv_nsec -= 1000000000L; }
+            while (p->cnt == 0) {
+                int r = pthread_cond_timedwait(&p->cv, &p->mu, &ts);
+                if (r == ETIMEDOUT) break;
+            }
+        }
+    }
+    if (p->cnt > 0) {
+        MwIocpEntry* e = &p->q[p->head];
+        if (count) *count = e->count;
+        if (key) *key = (unsigned long)(uintptr_t)e->key;
+        if (ovl) *ovl = e->ovl;
+        p->head = (p->head + 1) % 256;
+        p->cnt--;
+        ok = 1;
+    } else {
+        mw_SetLastError(258); /* WAIT_TIMEOUT */
+    }
+    pthread_mutex_unlock(&p->mu);
+    return ok;
+}
+
+/* mingw SEH init registers guest unwind info; our EH walk reads .pdata
+ * directly, so the registration is a no-op that must still report success. */
+__attribute__((ms_abi)) void* mw_RtlAddFunctionTable(void* tbl, unsigned long n, void* base) {
+    MW_TRACE("RtlAddFunctionTable(tbl=%p, n=%lu, base=%p) -> 1 (no-op)", tbl, n, base);
+    (void)tbl; (void)n; (void)base;
+    return (void*)(uintptr_t)1;
+}
+
+__attribute__((ms_abi)) int* mw___doserrno(void) {
+    MW_TRACE("__doserrno() = %p", &g_doserrno_storage);
+    return &g_doserrno_storage;
+}
+
+/* ============================================================
+ * LADDER-009: REAL event + semaphore objects.
+ * lz4's TPool protocol: TPool_submitJob waits jobSlotAvail (SEMAPHORE),
+ * workers SetEvent(allJobsCompleted) (EVENT) when the last job finishes,
+ * TPool_jobsCompleted waits that event. The old stubs (alloc_handle(1),
+ * wait->0 immediately) made TPool_jobsCompleted return before any job ran
+ * -> main exited with "invalid frame" while workers were still idle.
+ * Handles stay alloc_handle()-issued; the payload pointer selects the
+ * object kind by registry-range (same pattern as mw_thread_lookup).
+ * ============================================================ */
+typedef struct {
+    int used; int manual; int signaled;
+    pthread_mutex_t mu; pthread_cond_t cv;
+} MwKEvent;
+static MwKEvent g_mw_events[32];
+
+typedef struct {
+    int used; int32_t count; int32_t max;
+    pthread_mutex_t mu; pthread_cond_t cv;
+} MwKSem;
+static MwKSem g_mw_sems[32];
+
+static void* g_handle_table_lookup(int idx) {
+    if (idx < 0 || idx >= MAX_HANDLES) return NULL;
+    return g_handle_table[idx];
+}
+
+static MwKEvent* mw_event_lookup(void* h) {
+    if (!h || (uintptr_t)h < 4) return NULL;
+    void* v = g_handle_table_lookup((int)(uintptr_t)h - 4);
+    if (!v) return NULL;
+    MwKEvent* base = &g_mw_events[0];
+    if ((MwKEvent*)v < base || (MwKEvent*)v >= base + 32) return NULL;
+    MwKEvent* e = (MwKEvent*)v;
+    return e->used ? e : NULL;
+}
+
+static MwKSem* mw_sem_lookup(void* h) {
+    if (!h || (uintptr_t)h < 4) return NULL;
+    void* v = g_handle_table_lookup((int)(uintptr_t)h - 4);
+    if (!v) return NULL;
+    MwKSem* base = &g_mw_sems[0];
+    if ((MwKSem*)v < base || (MwKSem*)v >= base + 32) return NULL;
+    MwKSem* s = (MwKSem*)v;
+    return s->used ? s : NULL;
+}
+
+static void* mw_event_create(int manual, int init) {
+    for (int i = 0; i < 32; i++) {
+        if (!g_mw_events[i].used) {
+            MwKEvent* e = &g_mw_events[i];
+            memset(e, 0, sizeof(*e));
+            e->used = 1; e->manual = manual ? 1 : 0; e->signaled = init ? 1 : 0;
+            pthread_mutex_init(&e->mu, NULL);
+            pthread_cond_init(&e->cv, NULL);
+            return alloc_handle((void*)e);
+        }
+    }
+    mw_SetLastError(8);
+    return NULL;
+}
+
+static void* mw_sem_create(int32_t init, int32_t max) {
+    for (int i = 0; i < 32; i++) {
+        if (!g_mw_sems[i].used) {
+            MwKSem* s = &g_mw_sems[i];
+            memset(s, 0, sizeof(*s));
+            s->used = 1; s->count = init; s->max = max;
+            pthread_mutex_init(&s->mu, NULL);
+            pthread_cond_init(&s->cv, NULL);
+            return alloc_handle((void*)s);
+        }
+    }
+    mw_SetLastError(8);
+    return NULL;
+}
+
+static uint32_t mw_event_wait(MwKEvent* e, uint32_t ms) {
+    pthread_mutex_lock(&e->mu);
+    uint32_t rc = 0; /* WAIT_OBJECT_0 */
+    if (!e->signaled) {
+        if (ms == 0xFFFFFFFFu) {
+            while (!e->signaled) pthread_cond_wait(&e->cv, &e->mu);
+        } else {
+            struct timespec ts;
+            clock_gettime(CLOCK_REALTIME, &ts);
+            ts.tv_sec += ms / 1000;
+            ts.tv_nsec += (long)(ms % 1000) * 1000000L;
+            if (ts.tv_nsec >= 1000000000L) { ts.tv_sec++; ts.tv_nsec -= 1000000000L; }
+            while (!e->signaled) {
+                int r = pthread_cond_timedwait(&e->cv, &e->mu, &ts);
+                if (r == ETIMEDOUT) { rc = 0x102; break; }
+            }
+        }
+    }
+    if (rc == 0 && !e->manual) e->signaled = 0; /* auto-reset consumes the signal */
+    pthread_mutex_unlock(&e->mu);
+    return rc;
+}
+
+static uint32_t mw_sem_wait(MwKSem* s, uint32_t ms) {
+    pthread_mutex_lock(&s->mu);
+    uint32_t rc = 0;
+    if (s->count <= 0) {
+        if (ms == 0xFFFFFFFFu) {
+            while (s->count <= 0) pthread_cond_wait(&s->cv, &s->mu);
+        } else {
+            struct timespec ts;
+            clock_gettime(CLOCK_REALTIME, &ts);
+            ts.tv_sec += ms / 1000;
+            ts.tv_nsec += (long)(ms % 1000) * 1000000L;
+            if (ts.tv_nsec >= 1000000000L) { ts.tv_sec++; ts.tv_nsec -= 1000000000L; }
+            while (s->count <= 0) {
+                int r = pthread_cond_timedwait(&s->cv, &s->mu, &ts);
+                if (r == ETIMEDOUT) { rc = 0x102; break; }
+            }
+        }
+    }
+    if (rc == 0 && s->count > 0) s->count--;
+    pthread_mutex_unlock(&s->mu);
+    return rc;
+}
+
+/* Unified wait dispatch: thread handle -> event -> semaphore -> legacy 0. */
+static uint32_t mw_kobj_wait(void* h, uint32_t ms) {
     MwThread* t = mw_thread_lookup(h);
     if (t) return mw_thread_wait(h, ms);
-    return 0; /* WAIT_OBJECT_0 */
+    MwKEvent* e = mw_event_lookup(h);
+    if (e) return mw_event_wait(e, ms);
+    MwKSem* s = mw_sem_lookup(h);
+    if (s) return mw_sem_wait(s, ms);
+    return 0; /* WAIT_OBJECT_0 — legacy passthrough (process/pseudo handles) */
+}
+
+/* Unified release for CloseHandle. */
+static void mw_kobj_release(void* h) {
+    MwThread* t = mw_thread_lookup(h);
+    if (t) { mw_thread_release(h); return; }
+    MwKEvent* e = mw_event_lookup(h);
+    if (e) { e->used = 0; return; }
+    MwKSem* s = mw_sem_lookup(h);
+    if (s) { s->used = 0; return; }
+}
+
+/* Real event/semaphore state transitions (registry block above). */
+static int mw_event_set(void* h) {
+    MwKEvent* e = mw_event_lookup(h);
+    if (!e) return 1; /* legacy handles: pretend success */
+    pthread_mutex_lock(&e->mu);
+    e->signaled = 1;
+    pthread_cond_broadcast(&e->cv);
+    pthread_mutex_unlock(&e->mu);
+    return 1;
+}
+
+static int mw_event_reset(void* h) {
+    MwKEvent* e = mw_event_lookup(h);
+    if (!e) return 1;
+    pthread_mutex_lock(&e->mu);
+    e->signaled = 0;
+    pthread_mutex_unlock(&e->mu);
+    return 1;
+}
+
+static int mw_sem_release(void* h, int32_t count, int32_t* prev) {
+    MwKSem* s = mw_sem_lookup(h);
+    if (!s) { if (prev) *prev = 0; return 1; }
+    pthread_mutex_lock(&s->mu);
+    if (prev) *prev = s->count;
+    int32_t before = s->count;
+    s->count = (s->count + count > s->max) ? s->max : (s->count + count);
+    if (s->count != before) pthread_cond_broadcast(&s->cv);
+    pthread_mutex_unlock(&s->mu);
+    return 1;
+}
+
+/* LADDER-009: _vsnprintf — the guest va_list is the ms_abi slot stream
+ * (uniform 8-byte slots starting at the first vararg), same contract as
+ * mw_vfprintf's ap parameter. msvcrt truncation semantics: write up to n
+ * bytes (no terminator), return -1. */
+__attribute__((ms_abi)) int mw__vsnprintf(char* buf, size_t n, const char* fmt, void* ap) {
+    MW_TRACE("_vsnprintf(n=%zu, fmt=%s)", n, fmt ? fmt : "NULL");
+    if (!buf || !fmt) return -1;
+    char tmp[16384];
+    FILE* mf = fmemopen(tmp, sizeof tmp, "w");
+    if (!mf) return -1;
+    int r = mw_vfprintf(mf, fmt, ap);
+    fclose(mf);
+    if (r < 0) return -1;
+    if ((size_t)r < n) { memcpy(buf, tmp, (size_t)r + 1); return r; }
+    if (n) memcpy(buf, tmp, n);
+    return -1;
+}
+
+__attribute__((ms_abi)) uint32_t mw_WaitForSingleObject(void* h, uint32_t ms) {
+    MW_TRACE("WaitForSingleObject(handle=%p, ms=%u)", h, ms);
+    return mw_kobj_wait(h, ms);
 }
 
 __attribute__((ms_abi)) uint32_t mw_WaitForMultipleObjects(uint32_t count, void** handles,
     int all, uint32_t ms) {
     MW_TRACE("WaitForMultipleObjects(count=%u, all=%d, ms=%u)", count, all, ms);
-    return 0; /* WAIT_OBJECT_0 */
+    /* Real wait over kernel objects (threads/events/semaphores), used by
+     * lz4's TPool_free (wait-all on worker threads). Legacy handles (whose
+     * kobj_wait returns 0 instantly) are treated as signaled. */
+    if (count == 0 || !handles) return 0;
+    uint32_t deadline = ms;
+    for (uint32_t done = 0;;) {
+        int pending = 0;
+        for (uint32_t i = 0; i < count; i++) {
+            uint32_t rc = mw_kobj_wait(handles[i], 0);
+            if (rc != 0) {
+                if (!all) return 0; /* any-mode: first signaled object wins */
+                pending = 1;
+            }
+        }
+        if (!pending) return 0;                 /* all (or any) satisfied */
+        if (deadline == 0) return 0x102;        /* WAIT_TIMEOUT */
+        struct timespec ts;
+        clock_gettime(CLOCK_REALTIME, &ts);
+        ts.tv_nsec += 10000000L; /* 10ms poll slice */
+        if (ts.tv_nsec >= 1000000000L) { ts.tv_sec++; ts.tv_nsec -= 1000000000L; }
+        struct timespec now;
+        clock_gettime(CLOCK_REALTIME, &now);
+        if (deadline != 0xFFFFFFFFu) {
+            if (now.tv_sec > (time_t)(deadline / 1000)) return 0x102;
+        }
+        nanosleep(&ts, NULL);
+        (void)done;
+    }
 }
 
 /* Same contract fix for WideCharToMultiByte: size query returns the BYTE
@@ -3695,7 +4047,9 @@ __attribute__((ms_abi)) int mw_fclose(void* stream) {
 __attribute__((ms_abi)) unsigned long long mw_fread(void* buf,
         unsigned long long sz, unsigned long long n, void* stream) {
     FILE* f = map_crt_stream(stream);
-    return (f && buf) ? fread(buf, (size_t)sz, (size_t)n, f) : 0ULL;
+    unsigned long long r = (f && buf) ? fread(buf, (size_t)sz, (size_t)n, f) : 0ULL;
+    MW_TRACE("fread(sz=%llu, cnt=%llu) = %llu", sz, n, r);
+    return r;
 }
 
 __attribute__((ms_abi)) char* mw_fgets(char* buf, int n, void* stream) {
@@ -3858,36 +4212,42 @@ static int mw_printf_emit(FILE* f, const char* fmt,
     return vfprintf(f, fmt, sv);
 }
 
-/* printf - variadic, needs special handling */
+/* printf - variadic, needs special handling.
+ * BUG-063: this is an ms_abi VARIADIC function — the va_list here MUST be
+ * __builtin_ms_va_list (Windows x64 ABI: 4 GP regs + shadow space, XMM6-15
+ * volatile). The old SysV va_start read the wrong register-save layout and
+ * dereferenced garbage arg slots (lz4.exe --version SIGSEGV inside the
+ * mw_fprintf format walk at 0x202ab43; simple 1-arg calls had survived by
+ * layout luck since UPX). */
 __attribute__((ms_abi)) int mw_printf(const char* fmt, ...) {
     MW_TRACE("printf(fmt=%s)", fmt ? fmt : "NULL");
     unsigned char cls[MW_PRINTF_MAX_ARGS];
     int nargs = mw_printf_classify(fmt, cls);
     unsigned long long slots[MW_PRINTF_MAX_ARGS];
-    va_list ap;
-    va_start(ap, fmt);
+    __builtin_ms_va_list ap;
+    __builtin_ms_va_start(ap, fmt);
     for (int i = 0; i < nargs; i++) {
         if (cls[i]) { double d = va_arg(ap, double); memcpy(&slots[i], &d, 8); }
         else        { slots[i] = (unsigned long long)va_arg(ap, long long); }
     }
-    va_end(ap);
+    __builtin_ms_va_end(ap);
     return mw_printf_emit(stdout, fmt, slots, nargs);
 }
 
-/* fprintf - variadic */
+/* fprintf - variadic. BUG-063: ms_abi varargs -> __builtin_ms_va_list. */
 __attribute__((ms_abi)) int mw_fprintf(void* file, const char* fmt, ...) {
     MW_TRACE("fprintf(file=%p, fmt=%s)", file, fmt ? fmt : "NULL");
     FILE* f = map_crt_stream(file);
     unsigned char cls[MW_PRINTF_MAX_ARGS];
     int nargs = mw_printf_classify(fmt, cls);
     unsigned long long slots[MW_PRINTF_MAX_ARGS];
-    va_list ap;
-    va_start(ap, fmt);
+    __builtin_ms_va_list ap;
+    __builtin_ms_va_start(ap, fmt);
     for (int i = 0; i < nargs; i++) {
         if (cls[i]) { double d = va_arg(ap, double); memcpy(&slots[i], &d, 8); }
         else        { slots[i] = (unsigned long long)va_arg(ap, long long); }
     }
-    va_end(ap);
+    __builtin_ms_va_end(ap);
     return mw_printf_emit(f, fmt, slots, nargs);
 }
 
@@ -4940,13 +5300,13 @@ __attribute__((ms_abi)) int mw_fwprintf(void* file, const wchar_t* fmt, ...) {
     narrow[k] = 0;
     int nargs = mw_printf_classify(narrow, cls);
     unsigned long long slots[MW_PRINTF_MAX_ARGS];
-    va_list ap;
-    va_start(ap, fmt);
+    __builtin_ms_va_list ap;   /* BUG-063: ms_abi variadic -> ms va_list */
+    __builtin_ms_va_start(ap, fmt);
     for (int i = 0; i < nargs; i++) {
         if (cls[i]) { double d = va_arg(ap, double); memcpy(&slots[i], &d, 8); }
         else        { slots[i] = (unsigned long long)va_arg(ap, long long); }
     }
-    va_end(ap);
+    __builtin_ms_va_end(ap);
     unsigned char cls2[MW_PRINTF_MAX_ARGS];
     int parsed = mw_printf_classify(narrow, cls2);
     if (nargs > parsed) nargs = parsed;
@@ -8331,14 +8691,39 @@ typedef struct { void* base; size_t size; } MapView;
 static MapView g_mapviews[MAX_MAPVIEWS];
 static int g_mapview_count = 0;
 
+/* LADDER-009 (lz4): MapViewOfFile backed by REAL mmap.
+ * Forward decls: the FileMap registry and its lookup live further down
+ * (file mapping family, near mw_CreateFileMappingW). */
+static int filemap_lookup(void* h, void** hfile, long long* size_out);
+static int w3fd_from_handle(void* h);
+
 __attribute__((ms_abi)) void* mw_MapViewOfFile(void* h, uint32_t access, uint32_t hi, uint32_t lo, size_t bytes) {
-    /* Without a mapping-object registry (no CreateFileMapping import from
-     * the current targets), named/unnamed mapping handles cannot be honored:
-     * fail faithfully instead of returning a bogus pointer. */
-    (void)h; (void)access; (void)hi; (void)lo; (void)bytes;
-    MW_TRACE("MapViewOfFile(h=%p, bytes=0x%zx) -> NULL (no mapping objects)", h, bytes);
-    mw_SetLastError(6); /* ERROR_INVALID_HANDLE */
-    return NULL;
+    MW_TRACE("MapViewOfFile(h=%p, access=0x%x, off=%u:%u, bytes=0x%zx)", h, access, hi, lo, bytes);
+    void* hfile = NULL; long long msize = 0;
+    if (!filemap_lookup(h, &hfile, &msize)) { mw_SetLastError(6); return NULL; } /* ERROR_INVALID_HANDLE */
+    int fd = w3fd_from_handle(hfile);
+    if (fd < 0) { mw_SetLastError(6); return NULL; }
+    long long fsize = (long long)lseek(fd, 0, SEEK_END);
+    lseek(fd, 0, SEEK_CUR);
+    if (msize == 0) msize = fsize;               /* CreateFileMapping size 0 -> EOF */
+    if (msize <= 0) { mw_SetLastError(2); return NULL; }
+    long long off = ((long long)hi << 32) | lo;
+    if (off > msize) { mw_SetLastError(113); return NULL; }
+    size_t view = (bytes != 0) ? (size_t)bytes : (size_t)(msize - off);
+    if ((long long)view > msize - off) view = (size_t)(msize - off);
+    int prot = PROT_READ;
+    if (access & 0x2) prot |= PROT_WRITE;                       /* FILE_MAP_WRITE */
+    if ((access & 0xF001Fu) == 0xF001Fu) prot |= PROT_WRITE;    /* FILE_MAP_ALL_ACCESS */
+    if (access & 0x20u) prot |= PROT_EXEC;                      /* FILE_MAP_EXECUTE */
+    void* base = mmap(NULL, view, prot, MAP_SHARED, fd, (off_t)off);
+    if (base == MAP_FAILED) { mw_SetLastError(8); return NULL; }
+    if (g_mapview_count < MAX_MAPVIEWS) {
+        g_mapviews[g_mapview_count].base = base;
+        g_mapviews[g_mapview_count].size = view;
+        g_mapview_count++;
+    }
+    MW_TRACE("MapViewOfFile -> %p (%zu bytes, fd=%d)", base, view, fd);
+    return base;
 }
 __attribute__((ms_abi)) int mw_UnmapViewOfFile(void* base) {
     for (int i = 0; i < g_mapview_count; i++) {
@@ -8581,6 +8966,17 @@ __attribute__((ms_abi)) int mw___intrinsic_setjmp(void* jb);
 typedef struct { void* handle; long long size; } FileMap;
 static FileMap g_filemaps[MAX_FILEMAPS];
 static int g_filemap_count = 0;
+
+/* LADDER-009: resolve a mapping-object handle (0x6000+N from
+ * mw_CreateFileMappingW) to its backing file handle + recorded size. */
+static int filemap_lookup(void* h, void** hfile, long long* size_out) {
+    if ((uintptr_t)h < 0x6000) return 0;
+    int idx = (int)((uintptr_t)h - 0x6000);
+    if (idx < 0 || idx >= g_filemap_count) return 0;
+    if (hfile) *hfile = g_filemaps[idx].handle;
+    if (size_out) *size_out = g_filemaps[idx].size;
+    return 1;
+}
 
 __attribute__((ms_abi)) void* mw_CreateFileMappingW(void* hfile, void* sa, uint32_t prot,
         uint32_t maxhi, uint32_t maxlo, const uint16_t* name) {
@@ -9020,6 +9416,10 @@ static ImportEntry g_import_table[] = {
     ENTRY("KERNEL32.DLL", "AddVectoredExceptionHandler",        mw_AddVectoredExceptionHandler),
     ENTRY("KERNEL32.DLL", "CloseHandle",                        mw_CloseHandle),
     ENTRY("KERNEL32.DLL", "CreateEventA",                       mw_CreateEventA),
+    ENTRY("KERNEL32.DLL", "CreateIoCompletionPort",             mw_CreateIoCompletionPort),
+    ENTRY("KERNEL32.DLL", "GetQueuedCompletionStatus",          mw_GetQueuedCompletionStatus),
+    ENTRY("KERNEL32.DLL", "PostQueuedCompletionStatus",         mw_PostQueuedCompletionStatus),
+    ENTRY("KERNEL32.DLL", "RtlAddFunctionTable",                mw_RtlAddFunctionTable),
     ENTRY("KERNEL32.DLL", "CreateSemaphoreA",                   mw_CreateSemaphoreA),
     ENTRY("KERNEL32.DLL", "DebugBreak",                         mw_DebugBreak),
     ENTRY("KERNEL32.DLL", "DeleteCriticalSection",              mw_DeleteCriticalSection),
@@ -9195,6 +9595,8 @@ static ImportEntry g_import_table[] = {
     ENTRY("msvcrt.dll", "fputc",                 mw_fputc),
     ENTRY("msvcrt.dll", "fputs",                 mw_fputs),
     ENTRY("msvcrt.dll", "free",                  mw_free),
+    ENTRY("msvcrt.dll", "__doserrno",            mw___doserrno),
+    ENTRY("msvcrt.dll", "_vsnprintf",            mw__vsnprintf),
     ENTRY("msvcrt.dll", "_aligned_malloc",       mw__aligned_malloc),
     ENTRY("msvcrt.dll", "_aligned_free",         mw__aligned_free),
     ENTRY("msvcrt.dll", "_aligned_realloc",      mw__aligned_realloc),

@@ -28,7 +28,7 @@ Statuses as of 2026-10-17 (session CONTINUE #10): only T0 entries have evidence 
 | 6 | LADDER-006 | 7z.exe (full, w/ 7z.dll) | 7-zip.org | 2026 | MSVC C++ | S | ★★★ | RUNS-PARTIAL — LoadLibraryW frontier OPENSRC-7ZIP-3 |
 | 7 | LADDER-007 | busybox64.exe | frippery busybox win64 | old | mingw | S | ★★ | PLANNED — multi-call argv[0] dispatch test |
 | 8 | LADDER-008 | zstd.exe | github.com/facebook/zstd | modern | MSVC UCRT | S | ★ | VERIFIED — v+round trip 3x SHA byte-perfect after BUG-062 threads |
-| 9 | LADDER-009 | lz4.exe | github.com/lz4/lz4 | modern | MSVC UCRT | S | ★ | PLANNED |
+| 9 | LADDER-009 | lz4.exe | github.com/lz4/lz4 | modern | mingw/msvcrt | S | ★ | VERIFIED — v+round trip 3x SHA byte-perfect after BUG-063/064 |
 | 10 | LADDER-010 | gzip/gunzip (mingw) | gnuwin / mingw builds | old | msvcrt.dll | S | ★ | PLANNED |
 
 ## T1 — Trivial single-exe console tools (CRT-light, fs-only)

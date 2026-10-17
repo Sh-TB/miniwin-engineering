@@ -117,3 +117,8 @@ Format: `ID | path | what it proves | session`
 - EV-068: evidence/master/ladder/LADDER-008_version_20261017_141329 + LADDER-008_roundtrip_20261017_141302 — zstd 3×3 post-fix (version, round trip SHA-256 byte-perfect 35e6e204…, threshold case 3/3)
 - EV-069: evidence/master/g1/20261017_141251 — G1 pin post-BUG-062 (binary 062fa371…, regression 12/12)
 - EV-070: scripts/ladder_run.sh + samples/real/ladder_payload.bin (35e6e204…) + scripts/probe_bug062_{readfile,fread}.c — reusable 3× ladder harness, deterministic payload, PE I/O probes (zig cc)
+- EV-071: docs/bugs/BUG-063.md (CLOSED TESTED) — ms_abi varargs fix; lz4 banner unblocked
+- EV-072: docs/bugs/BUG-064.md (CLOSED TESTED) — kernel-object layer (events/sem/IOCP/mmap); lz4 round trip unblocked
+- EV-073: evidence/master/ladder/LADDER-009_{version,roundtrip}_20261017_145012 — lz4 3×3, SHA byte-perfect 35e6e204…
+- EV-074: evidence/master/g1/20261017_145001 — G1 pin post-BUG-063/064 (regression 12/12)
+- EV-075: scripts/probe_thread_iocp2.c — isolated guest-thread+IOCP contract probe (exit 0)

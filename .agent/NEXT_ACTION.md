@@ -22,3 +22,12 @@ Parallel quick wins (P1):
   script (artifacts/census/crt-versions.tsv), then T1 GnuWin32 wave.
 - Keep in mind: mw_CreateThreadpoolWork still stubbed; TLS shared across guest
   threads (documented in BUG-062) — revisit if a threaded rung shows TLS corruption.
+
+## CONTINUE #11b update (2026-10-17)
+- LADDER-009 lz4 VERIFIED (BUG-063/064). Kernel-object layer now real
+  (events/sem/IOCP/threads/mmap) — big unblock for T2+ threaded rungs.
+- Next (P0): LADDER-010 gzip/gunzip (GnuWin32 or mingw build), then
+  busybox64 (LADDER-007, argv[0] multi-call dispatch), then MSVC-001 census
+  script, then T1 GnuWin32 wave (grep/sed/diffutils).
+- Watch: WaitForMultipleObjects wait-all polls (10ms) — fine for TPool_free;
+  revisit only if a rung times out.

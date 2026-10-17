@@ -1,0 +1,4 @@
+command=./minwin_loader samples/real/lz4/lz4.exe --version
+phase=version
+workdir=/tmp/ladder_LADDER-009_Hy1oI5
+timestamp_utc=20261017_145012

@@ -1,0 +1,8 @@
+[TRACE] Command line: /home/z/my-project/workspace/miniwin-engineering/samples/real/lz4/lz4.exe --version
+[WARN]   unresolved: CreateIoCompletionPort
+[WARN]   unresolved: GetQueuedCompletionStatus
+[WARN]   unresolved: PostQueuedCompletionStatus
+[WARN]   unresolved: RtlAddFunctionTable
+[WARN]   unresolved: __doserrno
+[WARN]   unresolved: _vsnprintf
+[WARN] 6 imports unresolved
