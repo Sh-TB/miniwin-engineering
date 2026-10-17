@@ -54,3 +54,6 @@ artifacts/sweep50/dl/
 
 # SWEEP-005: game build outputs + 96MB frame/evidence dumps stay local
 artifacts/sweep005/
+
+# SWEEP-006: breakout build outputs + frame dumps stay local (curated into evidence/sweep006_game/)
+artifacts/sweep006/

@@ -1,0 +1,4 @@
+frames: run1=381 run2=381 run3=381
+per-frame SHA-256 identical across 3 runs: True
+brick pixels first=31360 last=10192 (bricks 40 -> 13, destroyed 27)
+semantic progress (bricks destroyed): True

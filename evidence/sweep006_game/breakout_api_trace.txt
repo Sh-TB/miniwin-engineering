@@ -1,0 +1,201 @@
+{
+  "trace": [
+[Tff80] [API] PE Loader: file=artifacts/sweep006/breakout.exe size=227328
+[Tff80] [API] PE Loader: ImageBase=0x140000000 EP=0x2450 SizeOfImage=0x3e000 Sections=7
+[Tff80] [API] PE Loader: Mapped at 0x140000000 (forced via MAP_FIXED)
+[Tff80] [API] Section [0] .text    VA=0x00001000 VS=0x00029216 Raw=0x00029400 Ch=0x60000020
+[Tff80] [API] Section [1] .rdata   VA=0x0002b000 VS=0x0000bef0 Raw=0x0000c000 Ch=0x40000040
+[Tff80] [API] Section [2] .buildid VA=0x00037000 VS=0x0000005d Raw=0x00000200 Ch=0x40000040
+[Tff80] [API] Section [3] .data    VA=0x00038000 VS=0x000012b8 Raw=0x00000200 Ch=0xc0000040
+[Tff80] [API] Section [4] .pdata   VA=0x0003a000 VS=0x0000174c Raw=0x00001800 Ch=0x40000040
+[Tff80] [API] Section [5] .tls     VA=0x0003c000 VS=0x00000010 Raw=0x00000200 Ch=0xc0000040
+[Tff80] [API] Section [6] .reloc   VA=0x0003d000 VS=0x00000060 Raw=0x00000200 Ch=0x42000040
+[Tff80] [API] Import Directory: RVA=0x34928 Size=0xdc
+[Tff80] [API] Import DLL: USER32.dll (IAT RVA=0x34c90, ILT RVA=0x34a08)
+[Tff80] [API]   [0] BeginPaint -> 0x2033100
+[Tff80] [API]   [1] CreateWindowExA -> 0x2033b70
+[Tff80] [API]   [2] DefWindowProcA -> 0x2030f50
+[Tff80] [API]   [3] DestroyWindow -> 0x201cc70
+[Tff80] [API]   [4] DispatchMessageA -> 0x203a810
+[Tff80] [API]   [5] EndPaint -> 0x2030b10
+[Tff80] [API]   [6] FillRect -> 0x2032aa0
+[Tff80] [API]   [7] GetDC -> 0x2009aa0
+[Tff80] [API]   [8] GetMessageA -> 0x20322f0
+[Tff80] [API]   [9] InvalidateRect -> 0x202bd20
+[Tff80] [API]   [10] PostQuitMessage -> 0x2029c00
+[Tff80] [API]   [11] RegisterClassA -> 0x200c640
+[Tff80] [API]   [12] SetTimer -> 0x2029d00
+[Tff80] [API]   [13] ShowWindow -> 0x2029b00
+[Tff80] [API]   [14] TranslateMessage -> 0x200c750
+[Tff80] [API]   [15] UpdateWindow -> 0x201cb60
+[Tff80] [API]   [16] wsprintfA -> 0x20307b0
+[Tff80] [API] Import DLL: GDI32.dll (IAT RVA=0x34d20, ILT RVA=0x34a98)
+[Tff80] [API]   [0] BitBlt -> 0x2033280
+[Tff80] [API]   [1] CreateCompatibleBitmap -> 0x2033650
+[Tff80] [API]   [2] CreateCompatibleDC -> 0x200eea0
+[Tff80] [API]   [3] CreateSolidBrush -> 0x200cbf0
+[Tff80] [API]   [4] DeleteObject -> 0x2009b30
+[Tff80] [API]   [5] Ellipse -> 0x2032cd0
+[Tff80] [API]   [6] GetStockObject -> 0x200cf00
+[Tff80] [API]   [7] SelectObject -> 0x200d000
+[Tff80] [API]   [8] SetBkMode -> 0x2029e10
+[Tff80] [API]   [9] SetTextColor -> 0x200d3b0
+[Tff80] [API]   [10] TextOutA -> 0x20418c0
+[Tff80] [API] Import DLL: KERNEL32.dll (IAT RVA=0x34d80, ILT RVA=0x34af8)
+[Tff80] [API]   [0] DeleteCriticalSection -> 0x200f180
+[Tff80] [API]   [1] EnterCriticalSection -> 0x20347f0
+[Tff80] [API]   [2] GetLastError -> 0x2009da0
+[Tff80] [API]   [3] GetStartupInfoA -> 0x202a030
+[Tff80] [API]   [4] InitializeCriticalSection -> 0x202c050
+[Tff80] [API]   [5] IsDBCSLeadByte -> 0x2008fc0
+[Tff80] [API]   [6] LeaveCriticalSection -> 0x2029f10
+[Tff80] [API]   [7] SetUnhandledExceptionFilter -> 0x200a790
+[Tff80] [API]   [8] Sleep -> 0x202cd20
+[Tff80] [API]   [9] TlsGetValue -> 0x200a890
+[Tff80] [API]   [10] VirtualProtect -> 0x2010da0
+[Tff80] [API]   [11] VirtualQuery -> 0x200e0f0
+[Tff80] [API]   [12] lstrlenA -> 0x2039230
+[Tff80] [API] Import DLL: api-ms-win-crt-heap-l1-1-0.dll (IAT RVA=0x34df0, ILT RVA=0x34b68)
+[Tff80] [API]   [0] _set_new_mode -> 0x2028240
+[Tff80] [API]   [1] calloc -> 0x2034e40
+... [middle truncated: 12700 lines total; WM_TIMER game loop] ...
+[Tff80] [API] [GDI] frame #378 (EndPaint) 480x360 -> miniwin-results/breakout.exe/screenshots/frame_378.bmp
+[Tff80] [API] [GUI-EVENT] dispatch WM_PAINT wp=0x0 -> 0
+[Tff80] [API] [GUI-EVENT] #1903 GetMessageA -> WM_TIMER id=1
+[Tff80] [API] [GUI-EVENT] dispatch WM_TIMER wp=0x1 -> 0
+[Tff80] [API] [GUI-EVENT] #1904 GetMessageA -> WM_TIMER id=1
+[Tff80] [API] [GUI-EVENT] dispatch WM_TIMER wp=0x1 -> 0
+[Tff80] [API] [GUI-EVENT] #1905 GetMessageA -> WM_TIMER id=1
+[Tff80] [API] [GUI-EVENT] dispatch WM_TIMER wp=0x1 -> 0
+[Tff80] [API] [GUI-EVENT] #1906 GetMessageA -> WM_TIMER id=1
+[Tff80] [API] [GUI] InvalidateRect -> paint pending
+[Tff80] [API] [GUI-EVENT] dispatch WM_TIMER wp=0x1 -> 0
+[Tff80] [API] [GUI-EVENT] #1907 GetMessageA -> WM_PAINT
+[Tff80] [API] BeginPaint(hwnd=0x10001) -> hdc 0x20001 (480x360)
+[Tff80] [API] [GDI] CreateSolidBrush(#f8f8f8) -> h 0x00030010
+[Tff80] [API] [GDI] FillRect(0,0)-(480,360) color=#f8f8f8
+[Tff80] [API] [GDI] FillRect(4,36)-(60,50) color=#e74c3c
+[Tff80] [API] [GDI] FillRect(62,36)-(118,50) color=#e74c3c
+[Tff80] [API] [GDI] FillRect(120,36)-(176,50) color=#e74c3c
+[Tff80] [API] [GDI] FillRect(178,36)-(234,50) color=#e74c3c
+[Tff80] [API] [GDI] FillRect(4,52)-(60,66) color=#e67e22
+[Tff80] [API] [GDI] FillRect(62,52)-(118,66) color=#e67e22
+[Tff80] [API] [GDI] FillRect(120,52)-(176,66) color=#e67e22
+[Tff80] [API] [GDI] FillRect(178,52)-(234,66) color=#e67e22
+[Tff80] [API] [GDI] FillRect(120,68)-(176,82) color=#f1c40f
+[Tff80] [API] [GDI] FillRect(178,68)-(234,82) color=#f1c40f
+[Tff80] [API] [GDI] FillRect(120,84)-(176,98) color=#2ecc71
+[Tff80] [API] [GDI] FillRect(178,84)-(234,98) color=#2ecc71
+[Tff80] [API] [GDI] FillRect(294,84)-(350,98) color=#2ecc71
+[Tff80] [API] [GDI] CreateSolidBrush(#212121) -> h 0x00030011
+[Tff80] [API] [GDI] FillRect(28,336)-(92,346) color=#212121
+[Tff80] [API] [GDI] GetStockObject(5)
+[Tff80] [API] [GDI] SelectObject(0x00040005)
+[Tff80] [API] [GDI] CreateSolidBrush(#141414) -> h 0x00030012
+[Tff80] [API] [GDI] SelectObject(0x00030012)
+[Tff80] [API] [GDI] Ellipse(75,150,83,158) fill=#141414
+[Tff80] [API] [GDI] GetStockObject(8)
+[Tff80] [API] [GDI] SelectObject(0x00040008)
+[Tff80] [API] [GDI] SetBkMode(1)
+[Tff80] [API] [GDI] SetTextColor(#282828)
+[Tff80] [API] [GDI] TextOutA(8,8) 'MiniWin Breakout  |  Score: 270  |  Lives: 3'
+[Tff80] [API] [GDI] BitBlt 480x360 @0,0 <- src@0,0 SRCCOPY (172800 px)
+[Tff80] [API] [GDI] frame #379 (EndPaint) 480x360 -> miniwin-results/breakout.exe/screenshots/frame_379.bmp
+[Tff80] [API] [GUI-EVENT] dispatch WM_PAINT wp=0x0 -> 0
+[Tff80] [API] [GUI-EVENT] #1908 GetMessageA -> WM_TIMER id=1
+[Tff80] [API] [GUI-EVENT] dispatch WM_TIMER wp=0x1 -> 0
+[Tff80] [API] [GUI-EVENT] #1909 GetMessageA -> WM_TIMER id=1
+[Tff80] [API] [GUI-EVENT] dispatch WM_TIMER wp=0x1 -> 0
+[Tff80] [API] [GUI-EVENT] #1910 GetMessageA -> WM_TIMER id=1
+[Tff80] [API] [GUI-EVENT] dispatch WM_TIMER wp=0x1 -> 0
+[Tff80] [API] [GUI-EVENT] #1911 GetMessageA -> WM_TIMER id=1
+[Tff80] [API] [GUI] InvalidateRect -> paint pending
+[Tff80] [API] [GUI-EVENT] dispatch WM_TIMER wp=0x1 -> 0
+[Tff80] [API] [GUI-EVENT] #1912 GetMessageA -> WM_PAINT
+[Tff80] [API] BeginPaint(hwnd=0x10001) -> hdc 0x20001 (480x360)
+[Tff80] [API] [GDI] CreateSolidBrush(#f8f8f8) -> h 0x00030013
+[Tff80] [API] [GDI] FillRect(0,0)-(480,360) color=#f8f8f8
+[Tff80] [API] [GDI] FillRect(4,36)-(60,50) color=#e74c3c
+[Tff80] [API] [GDI] FillRect(62,36)-(118,50) color=#e74c3c
+[Tff80] [API] [GDI] FillRect(120,36)-(176,50) color=#e74c3c
+[Tff80] [API] [GDI] FillRect(178,36)-(234,50) color=#e74c3c
+[Tff80] [API] [GDI] FillRect(4,52)-(60,66) color=#e67e22
+[Tff80] [API] [GDI] FillRect(62,52)-(118,66) color=#e67e22
+[Tff80] [API] [GDI] FillRect(120,52)-(176,66) color=#e67e22
+[Tff80] [API] [GDI] FillRect(178,52)-(234,66) color=#e67e22
+[Tff80] [API] [GDI] FillRect(120,68)-(176,82) color=#f1c40f
+[Tff80] [API] [GDI] FillRect(178,68)-(234,82) color=#f1c40f
+[Tff80] [API] [GDI] FillRect(120,84)-(176,98) color=#2ecc71
+[Tff80] [API] [GDI] FillRect(178,84)-(234,98) color=#2ecc71
+[Tff80] [API] [GDI] FillRect(294,84)-(350,98) color=#2ecc71
+[Tff80] [API] [GDI] CreateSolidBrush(#212121) -> h 0x00030014
+[Tff80] [API] [GDI] FillRect(20,336)-(84,346) color=#212121
+[Tff80] [API] [GDI] GetStockObject(5)
+[Tff80] [API] [GDI] SelectObject(0x00040005)
+[Tff80] [API] [GDI] CreateSolidBrush(#141414) -> h 0x00030015
+[Tff80] [API] [GDI] SelectObject(0x00030015)
+[Tff80] [API] [GDI] Ellipse(67,126,75,134) fill=#141414
+[Tff80] [API] [GDI] GetStockObject(8)
+[Tff80] [API] [GDI] SelectObject(0x00040008)
+[Tff80] [API] [GDI] SetBkMode(1)
+[Tff80] [API] [GDI] SetTextColor(#282828)
+[Tff80] [API] [GDI] TextOutA(8,8) 'MiniWin Breakout  |  Score: 270  |  Lives: 3'
+[Tff80] [API] [GDI] BitBlt 480x360 @0,0 <- src@0,0 SRCCOPY (172800 px)
+[Tff80] [API] [GDI] frame #380 (EndPaint) 480x360 -> miniwin-results/breakout.exe/screenshots/frame_380.bmp
+[Tff80] [API] [GUI-EVENT] dispatch WM_PAINT wp=0x0 -> 0
+[Tff80] [API] [GUI-EVENT] #1913 GetMessageA -> WM_TIMER id=1
+[Tff80] [API] [GUI-EVENT] dispatch WM_TIMER wp=0x1 -> 0
+[Tff80] [API] [GUI-EVENT] #1914 GetMessageA -> WM_TIMER id=1
+[Tff80] [API] [GUI-EVENT] dispatch WM_TIMER wp=0x1 -> 0
+[Tff80] [API] [GUI-EVENT] #1915 GetMessageA -> WM_TIMER id=1
+[Tff80] [API] [GUI-EVENT] dispatch WM_TIMER wp=0x1 -> 0
+[Tff80] [API] [GUI-EVENT] #1916 GetMessageA -> WM_TIMER id=1
+[Tff80] [API] [GUI] InvalidateRect -> paint pending
+[Tff80] [API] [GUI-EVENT] dispatch WM_TIMER wp=0x1 -> 0
+[Tff80] [API] [GUI-EVENT] #1917 GetMessageA -> WM_PAINT
+[Tff80] [API] BeginPaint(hwnd=0x10001) -> hdc 0x20001 (480x360)
+[Tff80] [API] [GDI] CreateSolidBrush(#f8f8f8) -> h 0x00030016
+[Tff80] [API] [GDI] FillRect(0,0)-(480,360) color=#f8f8f8
+[Tff80] [API] [GDI] FillRect(4,36)-(60,50) color=#e74c3c
+[Tff80] [API] [GDI] FillRect(62,36)-(118,50) color=#e74c3c
+[Tff80] [API] [GDI] FillRect(120,36)-(176,50) color=#e74c3c
+[Tff80] [API] [GDI] FillRect(178,36)-(234,50) color=#e74c3c
+[Tff80] [API] [GDI] FillRect(4,52)-(60,66) color=#e67e22
+[Tff80] [API] [GDI] FillRect(62,52)-(118,66) color=#e67e22
+[Tff80] [API] [GDI] FillRect(120,52)-(176,66) color=#e67e22
+[Tff80] [API] [GDI] FillRect(178,52)-(234,66) color=#e67e22
+[Tff80] [API] [GDI] FillRect(120,68)-(176,82) color=#f1c40f
+[Tff80] [API] [GDI] FillRect(178,68)-(234,82) color=#f1c40f
+[Tff80] [API] [GDI] FillRect(120,84)-(176,98) color=#2ecc71
+[Tff80] [API] [GDI] FillRect(178,84)-(234,98) color=#2ecc71
+[Tff80] [API] [GDI] FillRect(294,84)-(350,98) color=#2ecc71
+[Tff80] [API] [GDI] CreateSolidBrush(#212121) -> h 0x00030017
+[Tff80] [API] [GDI] FillRect(12,336)-(76,346) color=#212121
+[Tff80] [API] [GDI] GetStockObject(5)
+[Tff80] [API] [GDI] SelectObject(0x00040005)
+[Tff80] [API] [GDI] CreateSolidBrush(#141414) -> h 0x00030018
+[Tff80] [API] [GDI] SelectObject(0x00030018)
+[Tff80] [API] [GDI] Ellipse(59,102,67,110) fill=#141414
+[Tff80] [API] [GDI] GetStockObject(8)
+[Tff80] [API] [GDI] SelectObject(0x00040008)
+[Tff80] [API] [GDI] SetBkMode(1)
+[Tff80] [API] [GDI] SetTextColor(#282828)
+[Tff80] [API] [GDI] TextOutA(8,8) 'MiniWin Breakout  |  Score: 270  |  Lives: 3'
+[Tff80] [API] [GDI] BitBlt 480x360 @0,0 <- src@0,0 SRCCOPY (172800 px)
+[Tff80] [API] [GDI] frame #381 (EndPaint) 480x360 -> miniwin-results/breakout.exe/screenshots/frame_381.bmp
+[Tff80] [API] [GUI-EVENT] dispatch WM_PAINT wp=0x0 -> 0
+[Tff80] [API] [GUI-EVENT] #1918 GetMessageA -> WM_TIMER id=1
+[Tff80] [API] [GUI-EVENT] dispatch WM_TIMER wp=0x1 -> 0
+[Tff80] [API] [GUI-EVENT] #1919 GetMessageA -> WM_TIMER id=1
+[Tff80] [API] [GUI-EVENT] dispatch WM_TIMER wp=0x1 -> 0
+[Tff80] [API] [GUI-EVENT] #1920 GetMessageA -> WM_TIMER id=1
+[Tff80] [API] [GUI-EVENT] dispatch WM_TIMER wp=0x1 -> 0
+[Tff80] [API] [GUI-EVENT] #1921 GetMessageA -> WM_KEYDOWN VK=0x1b
+[Tff80] [API] DestroyWindow(hwnd=0x10001)
+[Tff80] [API] PostQuitMessage(0)
+[Tff80] [API] [GUI] WM_DESTROY -> wndproc -> 0
+[Tff80] [API] [GUI-EVENT] dispatch WM_KEYDOWN wp=0x1b -> 0
+[Tff80] [API] GetMessageA() -> 0 (WM_QUIT code=0)
+[Tff80] [API] exit(0)
+  ]
+}

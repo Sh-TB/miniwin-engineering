@@ -9848,10 +9848,12 @@ static void mw_gui_store_wndproc(void* proc);
 static void mw_gui_store_window(int w, int h);
 static void mw_gui_set_quit(int code);
 static void mw_gui_send_destroy(void* hwnd);
+static void mw_gui_send_create(void); /* SWEEP-006: real WM_CREATE on CreateWindowEx */
 static void mw_gui_request_paint(void);
 static int  mw_gui_pump_getmsg(void* msg, void* hwnd, const char* api);
 static long long mw_gui_dispatch_msg(const void* msg);
 static int  mw_gui_events_enabled(void);
+static uint32_t g_char_pending = 0; /* SWEEP-006: WM_CHAR queued by TranslateMessage */
 __attribute__((ms_abi)) int mw_InitCommonControlsEx(const void* picc) {
     uint32_t classes = picc ? *(const uint32_t*)((const char*)picc + 4) : 0;
     MW_TRACE("InitCommonControlsEx(dwICC=0x%x) -> TRUE", classes);
@@ -9886,6 +9888,7 @@ __attribute__((ms_abi)) void* mw_CreateWindowExW(uint32_t exstyle, const void* c
         const uint16_t* win, uint32_t style, int x, int y, int w, int h,
         void* parent, void* menu, void* inst, void* param) {
     mw_gui_store_window((int)w, (int)h); /* SWEEP-005: allocate paint surface */
+    mw_gui_send_create(); /* SWEEP-006: synchronous WM_CREATE */
     MW_TRACE("CreateWindowExW(ex=0x%x style=0x%x cls=%p %dx%d@%d,%d) -> HWND %p",
              exstyle, style, cls, w, h, x, y, MW_GUI_HWND);
     return MW_GUI_HWND;
@@ -9894,6 +9897,7 @@ __attribute__((ms_abi)) void* mw_CreateWindowExA(uint32_t exstyle, const void* c
         const char* win, uint32_t style, int x, int y, int w, int h,
         void* parent, void* menu, void* inst, void* param) {
     mw_gui_store_window((int)w, (int)h); /* SWEEP-005: allocate paint surface */
+    mw_gui_send_create(); /* SWEEP-006: synchronous WM_CREATE */
     MW_TRACE("CreateWindowExA(ex=0x%x style=0x%x cls=%p %dx%d@%d,%d) -> HWND %p",
              exstyle, style, cls, w, h, x, y, MW_GUI_HWND);
     return MW_GUI_HWND;
@@ -9922,8 +9926,22 @@ __attribute__((ms_abi)) int mw_GetMessageA(void* msg, void* hwnd, uint32_t lo, u
     return mw_gui_pump_getmsg(msg, hwnd, "GetMessageA");
 }
 __attribute__((ms_abi)) int mw_TranslateMessage(const void* msg) {
-    (void)msg;
-    return 0; /* not translated — guests still DispatchMessage */
+    /* SWEEP-006: real TranslateMessage — WM_KEYDOWN for a printable key
+     * (VK 0x20..0x5A maps to the same ASCII char) queues a WM_CHAR that the
+     * pump delivers as the next event. Non-printable keys (arrows/ESC/F-keys)
+     * queue nothing -> cadence unchanged for existing guests (snake keys are
+     * all non-printable by design). */
+    if (!msg) return 0;
+    const uint8_t* p = (const uint8_t*)msg;
+    uint32_t m = *(const uint32_t*)(p + 8);
+    uintptr_t wp = *(const uintptr_t*)(p + 16);
+    if (m == 0x0100u && wp >= 0x20u && wp <= 0x5Au) {
+        g_char_pending = (uint32_t)wp;
+        MW_TRACE("[GUI-EVENT] TranslateMessage WM_KEYDOWN VK=0x%llx -> WM_CHAR queued",
+                 (unsigned long long)wp);
+        return 1;
+    }
+    return 0;
 }
 __attribute__((ms_abi)) long long mw_DispatchMessageW(const void* msg) {
     return mw_gui_dispatch_msg(msg); /* SWEEP-005: calls guest wndproc */
@@ -10143,6 +10161,32 @@ static uint32_t  g_brush_rgb[32]; static uint8_t g_brush_live[32];
 static uint32_t  g_pen_rgb[32];   static uint8_t g_pen_live[32];
 static int       g_obj_next = 0;
 
+/* ---- SWEEP-006: memory DCs + compatible bitmaps + BitBlt (real double buffering) ----
+ * A memory DC (CreateCompatibleDC) draws into a compatible bitmap
+ * (CreateCompatibleBitmap + SelectObject); BitBlt copies bitmap->window or
+ * bitmap->bitmap. Draw functions below route through mw_dc_surface(hdc), so
+ * a guest that renders off-screen and blits once per frame works for real. */
+#define MW_MEMDC_BASE    0x00021000u  /* memDC handles   0x00021001+i */
+#define MW_HBITMAP_BASE  0x00052000u  /* HBITMAP handles 0x00052001+i (index=v&0xFF)-1 */
+#define MW_MEMDC_MAX     8
+static MWBmp   g_bitmap_obj[MW_MEMDC_MAX]; /* CreateCompatibleBitmap pixel store */
+static uint8_t g_bitmap_live[MW_MEMDC_MAX];
+static int     g_memdc_sel[MW_MEMDC_MAX];  /* selected bitmap index, -1 = none */
+static uint8_t g_memdc_live[MW_MEMDC_MAX];
+
+/* target surface of a DC: the window DC (0x20001 — BeginPaint/GetDC) draws
+ * into the window framebuffer; a memory DC draws into its selected bitmap. */
+static MWBmp* mw_dc_surface(void* hdc) {
+    uintptr_t v = (uintptr_t)hdc;
+    if (v == 0x00020001u) return g_surf.px ? &g_surf : 0;
+    if ((v & 0xFFFFF000u) == MW_MEMDC_BASE) {
+        int i = (int)(v & 0xFF) - 1; /* handle = base|(slot+1) */
+        if (i >= 0 && i < MW_MEMDC_MAX && g_memdc_live[i] && g_memdc_sel[i] >= 0)
+            return &g_bitmap_obj[g_memdc_sel[i]];
+    }
+    return 0;
+}
+
 static uint32_t mw_cr2rgb(uint32_t c) { /* COLORREF 0x00BBGGRR -> 0xRRGGBB */
     return ((c & 0xFFu) << 16) | (c & 0xFF00u) | ((c >> 16) & 0xFFu);
 }
@@ -10155,6 +10199,7 @@ static const char* mw_wm_name(uint32_t m) {
     case 0x000Fu: return "WM_PAINT";
     case 0x0012u: return "WM_QUIT";
     case 0x0100u: return "WM_KEYDOWN";
+    case 0x0102u: return "WM_CHAR";
     case 0x0113u: return "WM_TIMER";
     default: return "WM_?";
     }
@@ -10189,6 +10234,15 @@ static void mw_gui_send_destroy(void* hwnd) {
     }
 }
 static void mw_gui_request_paint(void) { g_paint_pending = 1; }
+/* SWEEP-006: real Win32 sends WM_CREATE synchronously inside CreateWindowEx
+ * (guests create their double buffers / child controls there). Gated on the
+ * event pump so the v1 no-pump contract is unchanged. */
+static void mw_gui_send_create(void) {
+    if (mw_gui_events_enabled() && g_wndproc_fwd) {
+        long long r = g_wndproc_fwd(MW_GUI_HWND, 0x0001u, 0, 0); /* WM_CREATE */
+        MW_TRACE("[GUI] WM_CREATE -> wndproc -> %lld", r);
+    }
+}
 
 static int mw_gui_events_enabled(void) {
     if (g_events_mode < 0) {
@@ -10229,6 +10283,14 @@ static void mw_gui_fill_msg(void* msg, void* hwnd, uint32_t m, uintptr_t wp, lon
  * and scripted keys were never delivered). */
 static int mw_gui_next_event(void* msg, void* hwnd, int consume, const char* api) {
     void* h = g_main_hwnd ? g_main_hwnd : hwnd;
+    if (g_char_pending) { /* SWEEP-006: TranslateMessage-queued WM_CHAR comes next */
+        uint32_t ch = g_char_pending;
+        if (consume) { g_char_pending = 0; g_delivered++; }
+        mw_gui_fill_msg(msg, h, 0x0102u, (uintptr_t)ch, 1);
+        if (consume)
+            MW_TRACE("[GUI-EVENT] #%d %s -> WM_CHAR 0x%x", g_delivered, api, ch);
+        return 1;
+    }
     if (g_keyi < g_keyn && (g_delivered % g_key_every) == 0) {
         uint32_t vk = g_keyv[g_keyi++];
         if (consume) g_delivered++;
@@ -10358,8 +10420,8 @@ __attribute__((ms_abi)) int mw_ReleaseDC(void* hwnd, void* hdc) {
 
 /* ---- SWEEP-005 part 2: USER32 draw stubs + GDI32 pseudo-module ---- */
 __attribute__((ms_abi)) int mw_FillRect(void* hdc, const void* rect, void* hbrush) {
-    (void)hdc;
-    if (rect && g_surf.px) {
+    MWBmp* S = mw_dc_surface(hdc); /* SWEEP-006: route by DC */
+    if (rect && S) {
         const int32_t* r = (const int32_t*)rect;
         uintptr_t v = (uintptr_t)hbrush;
         uint32_t col = 0xC0C0C0;
@@ -10379,7 +10441,7 @@ __attribute__((ms_abi)) int mw_FillRect(void* hdc, const void* rect, void* hbrus
             }
         }
         if (!hollow) {
-            mwb_fill(&g_surf, r[0], r[1], r[2] - r[0], r[3] - r[1], col);
+            mwb_fill(S, r[0], r[1], r[2] - r[0], r[3] - r[1], col);
             MW_TRACE("[GDI] FillRect(%d,%d)-(%d,%d) color=#%06x", r[0], r[1], r[2], r[3], col);
         }
     }
@@ -10573,8 +10635,8 @@ __attribute__((ms_abi)) int mw_lstrlenW(const uint16_t* s) {
 }
 /* ---- GDI32 module: text, shapes, objects, state ---- */
 __attribute__((ms_abi)) int mw_TextOutA(void* hdc, int x, int y, const char* s, int len) {
-    (void)hdc;
-    if (!s || len <= 0 || !g_surf.px) return 1;
+    MWBmp* S = mw_dc_surface(hdc); /* SWEEP-006: route by DC */
+    if (!s || len <= 0 || !S) return 1;
     if (len > 512) len = 512;
     char buf[513];
     if (!mw_probe_copy(s, (size_t)len, buf)) {
@@ -10582,22 +10644,22 @@ __attribute__((ms_abi)) int mw_TextOutA(void* hdc, int x, int y, const char* s, 
         return 1;
     }
     buf[len] = 0;
-    if (g_bk_mode != 1) mwb_fill(&g_surf, x, y, len * 8, 8, g_bk_col);
-    mwb_text8(&g_surf, x, y, buf, g_text_col, 1);
+    if (g_bk_mode != 1) mwb_fill(S, x, y, len * 8, 8, g_bk_col);
+    mwb_text8(S, x, y, buf, g_text_col, 1);
     MW_TRACE("[GDI] TextOutA(%d,%d) '%s'", x, y, buf);
     return 1;
 }
 __attribute__((ms_abi)) int mw_TextOutW(void* hdc, int x, int y, const uint16_t* s, int len) {
-    (void)hdc;
-    if (!s || len <= 0 || !g_surf.px) return 1;
+    MWBmp* S = mw_dc_surface(hdc); /* SWEEP-006: route by DC */
+    if (!s || len <= 0 || !S) return 1;
     if (len > 512) len = 512;
     uint16_t wbuf[513];
     if (!mw_probe_copy(s, (size_t)len * 2, wbuf)) return 1;
     wbuf[len] = 0;
     char buf[1025];
     w3_w16_to_utf8z(wbuf, buf, sizeof(buf));
-    if (g_bk_mode != 1) mwb_fill(&g_surf, x, y, len * 8, 8, g_bk_col);
-    mwb_text8(&g_surf, x, y, buf, g_text_col, 1);
+    if (g_bk_mode != 1) mwb_fill(S, x, y, len * 8, 8, g_bk_col);
+    mwb_text8(S, x, y, buf, g_text_col, 1);
     MW_TRACE("[GDI] TextOutW(%d,%d) '%s'", x, y, buf);
     return 1;
 }
@@ -10607,8 +10669,8 @@ __attribute__((ms_abi)) int mw_ExtTextOutA(void* hdc, int x, int y, uint32_t opt
     return mw_TextOutA(hdc, x, y, s, len);
 }
 __attribute__((ms_abi)) int mw_DrawTextA(void* hdc, const char* s, int n, void* rect, uint32_t flags) {
-    (void)hdc;
-    if (!s || !rect || !g_surf.px) return 0;
+    MWBmp* S = mw_dc_surface(hdc); /* SWEEP-006: route by DC */
+    if (!s || !rect || !S) return 0;
     char buf[513];
     int cap = (n < 0) ? 512 : (n > 512 ? 512 : n);
     if (n < 0) {
@@ -10625,35 +10687,35 @@ __attribute__((ms_abi)) int mw_DrawTextA(void* hdc, const char* s, int n, void* 
         MW_TRACE("[GDI] DrawTextA DT_CALCRECT '%s' -> %dx%d", buf, tw, th);
         return th;
     }
-    mwb_text8(&g_surf, r[0], r[1], buf, g_text_col, 1);
+    mwb_text8(S, r[0], r[1], buf, g_text_col, 1);
     MW_TRACE("[GDI] DrawTextA @(%d,%d) '%s'", r[0], r[1], buf);
     return th;
 }
 __attribute__((ms_abi)) int mw_Rectangle(void* hdc, int l, int t, int r, int b) {
-    (void)hdc;
-    if (g_surf.px && r > l && b > t) {
-        if (!g_brush_hollow) mwb_fill(&g_surf, l, t, r - l, b - t, g_cur_brush);
-        mwb_fill(&g_surf, l, t, r - l, 1, g_cur_pen);
-        mwb_fill(&g_surf, l, b - 1, r - l, 1, g_cur_pen);
-        mwb_fill(&g_surf, l, t, 1, b - t, g_cur_pen);
-        mwb_fill(&g_surf, r - 1, t, 1, b - t, g_cur_pen);
+    MWBmp* S = mw_dc_surface(hdc); /* SWEEP-006: route by DC */
+    if (S && r > l && b > t) {
+        if (!g_brush_hollow) mwb_fill(S, l, t, r - l, b - t, g_cur_brush);
+        mwb_fill(S, l, t, r - l, 1, g_cur_pen);
+        mwb_fill(S, l, b - 1, r - l, 1, g_cur_pen);
+        mwb_fill(S, l, t, 1, b - t, g_cur_pen);
+        mwb_fill(S, r - 1, t, 1, b - t, g_cur_pen);
         MW_TRACE("[GDI] Rectangle(%d,%d,%d,%d) fill=#%06x", l, t, r, b, g_cur_brush);
     }
     return 1;
 }
 __attribute__((ms_abi)) int mw_Ellipse(void* hdc, int l, int t, int r, int b) {
-    (void)hdc;
-    if (g_surf.px && r > l && b > t) {
+    MWBmp* S = mw_dc_surface(hdc); /* SWEEP-006: route by DC */
+    if (S && r > l && b > t) {
         int cx = (l + r) / 2, cy = (t + b) / 2;
         long rx = (r - l) / 2, ry = (b - t) / 2;
         if (rx < 1 || ry < 1) {
-            mwb_fill(&g_surf, l, t, r - l, b - t, g_cur_brush);
+            mwb_fill(S, l, t, r - l, b - t, g_cur_brush);
         } else {
             for (int y = t; y <= b; y++)
                 for (int x = l; x <= r; x++) {
                     long dx = (long)(x - cx) * 2, dy = (long)(y - cy) * 2;
                     if ((dx * dx) / (rx * rx) + (dy * dy) / (ry * ry) <= 1)
-                        mwb_set(&g_surf, x, y, g_cur_brush);
+                        mwb_set(S, x, y, g_cur_brush);
                 }
         }
         MW_TRACE("[GDI] Ellipse(%d,%d,%d,%d) fill=#%06x", l, t, r, b, g_cur_brush);
@@ -10681,15 +10743,15 @@ static void mwb_line(MWBmp* b, int x0, int y0, int x1, int y1, uint32_t c) {
     }
 }
 __attribute__((ms_abi)) int mw_LineTo(void* hdc, int x, int y) {
-    (void)hdc;
-    if (g_surf.px) mwb_line(&g_surf, g_pen_x, g_pen_y, x, y, g_cur_pen);
+    MWBmp* S = mw_dc_surface(hdc); /* SWEEP-006: route by DC */
+    if (S) mwb_line(S, g_pen_x, g_pen_y, x, y, g_cur_pen);
     g_pen_x = x; g_pen_y = y;
     MW_TRACE("[GDI] LineTo(%d,%d)", x, y);
     return 1;
 }
 __attribute__((ms_abi)) uint32_t mw_SetPixel(void* hdc, int x, int y, uint32_t colorref) {
-    (void)hdc;
-    if (g_surf.px) mwb_set(&g_surf, x, y, mw_cr2rgb(colorref));
+    MWBmp* S = mw_dc_surface(hdc); /* SWEEP-006: route by DC */
+    if (S) mwb_set(S, x, y, mw_cr2rgb(colorref));
     return colorref;
 }
 __attribute__((ms_abi)) void* mw_CreateSolidBrush(uint32_t colorref) {
@@ -10726,8 +10788,30 @@ __attribute__((ms_abi)) void* mw_GetStockObject(int idx) {
     return (void*)(uintptr_t)(0x00040000u | (unsigned)(idx & 0xFF));
 }
 __attribute__((ms_abi)) void* mw_SelectObject(void* hdc, void* h) {
-    (void)hdc;
     uintptr_t v = (uintptr_t)h;
+    /* SWEEP-006: bitmap selection into a memory DC (double buffering) */
+    {
+        uintptr_t dcv = (uintptr_t)hdc;
+        if ((dcv & 0xFFFFF000u) == MW_MEMDC_BASE) {
+            int di = (int)(dcv & 0xFF) - 1; /* handle = base|(slot+1) */
+            if (di >= 0 && di < MW_MEMDC_MAX && g_memdc_live[di]) {
+                if ((v & 0xFFFFF000u) == MW_HBITMAP_BASE) {
+                    int prev = g_memdc_sel[di];
+                    int bi = (int)(v & 0xFF) - 1;
+                    g_memdc_sel[di] =
+                        (bi >= 0 && bi < MW_MEMDC_MAX && g_bitmap_live[bi]) ? bi : -1;
+                    MW_TRACE("[GDI] SelectObject(memdc=%d, 0x%08llx) -> sel=%d",
+                             di, (unsigned long long)v, g_memdc_sel[di]);
+                    if (prev >= 0)
+                        return (void*)(uintptr_t)(MW_HBITMAP_BASE | (unsigned)(prev + 1));
+                    return (void*)0x00040001; /* dummy previous object */
+                }
+                /* brush/pen/stock on a memDC: fall through to the global draw
+                 * state — selecting a brush does NOT deselect the bitmap
+                 * (real GDI keeps them independent). */
+            }
+        }
+    }
     if ((v & 0xFFFFF000u) == 0x00030000u) {
         int i = (int)(v & 0x1F);
         if (g_brush_live[i]) { g_cur_brush = g_brush_rgb[i]; g_brush_hollow = 0; }
@@ -10800,14 +10884,98 @@ __attribute__((ms_abi)) int mw_GetDeviceCaps(void* hdc, int idx) {
 }
 __attribute__((ms_abi)) int mw_SaveDC(void* hdc) { (void)hdc; return 1; }
 __attribute__((ms_abi)) int mw_RestoreDC(void* hdc, int saved) { (void)hdc; (void)saved; return 1; }
-__attribute__((ms_abi)) int mw_DeleteDC(void* hdc) { (void)hdc; return 1; }
+__attribute__((ms_abi)) int mw_DeleteDC(void* hdc) {
+    uintptr_t v = (uintptr_t)hdc; /* SWEEP-006: free memory DC slots for real */
+    if ((v & 0xFFFFF000u) == MW_MEMDC_BASE) {
+        int i = (int)(v & 0xFF) - 1; /* handle = base|(slot+1) */
+        if (i >= 0 && i < MW_MEMDC_MAX && g_memdc_live[i]) {
+            g_memdc_live[i] = 0; g_memdc_sel[i] = -1;
+            MW_TRACE("[GDI] DeleteDC(memdc=%d) -> freed", i);
+        }
+    }
+    return 1;
+}
 __attribute__((ms_abi)) int mw_PatBlt(void* hdc, int x, int y, int w, int h, uint32_t rop) {
-    (void)hdc; (void)rop; /* v1: ROP ignored, brush fill (covers WHITENESS/PATCOPY paths) */
-    if (g_surf.px && w > 0 && h > 0) mwb_fill(&g_surf, x, y, w, h, g_cur_brush);
+    (void)rop; /* v1: ROP ignored, brush fill (covers WHITENESS/PATCOPY paths) */
+    MWBmp* S = mw_dc_surface(hdc); /* SWEEP-006: route by DC */
+    if (S && w > 0 && h > 0) mwb_fill(S, x, y, w, h, g_cur_brush);
     MW_TRACE("[GDI] PatBlt(%d,%d %dx%d rop=0x%x)", x, y, w, h, rop);
     return 1;
 }
 /* ==== end SWEEP-005 ==== */
+
+/* ==== SWEEP-006: CreateCompatibleDC/CreateCompatibleBitmap/BitBlt — the
+ * double-buffering trio. A memory DC draws into its selected compatible
+ * bitmap; BitBlt SRCCOPY copies pixel blocks between DC surfaces (window
+ * framebuffer <-> bitmap, bitmap <-> bitmap), clipped to both surfaces. ==== */
+__attribute__((ms_abi)) void* mw_CreateCompatibleDC(void* hdc) {
+    (void)hdc;
+    for (int i = 0; i < MW_MEMDC_MAX; i++) {
+        if (!g_memdc_live[i]) {
+            g_memdc_live[i] = 1; g_memdc_sel[i] = -1;
+            MW_TRACE("[GDI] CreateCompatibleDC -> 0x%08x",
+                     MW_MEMDC_BASE | (unsigned)(i + 1));
+            return (void*)(uintptr_t)(MW_MEMDC_BASE | (unsigned)(i + 1));
+        }
+    }
+    MW_TRACE("[GDI] CreateCompatibleDC -> NULL (table full)");
+    return 0;
+}
+__attribute__((ms_abi)) void* mw_CreateCompatibleBitmap(void* hdc, int w, int h) {
+    (void)hdc;
+    if (w < 1) w = 1; if (h < 1) h = 1;
+    if (w > 2048) w = 2048; if (h > 2048) h = 2048;
+    for (int i = 0; i < MW_MEMDC_MAX; i++) {
+        if (!g_bitmap_live[i]) {
+            g_bitmap_live[i] = 1;
+            g_bitmap_obj[i].w = w; g_bitmap_obj[i].h = h;
+            g_bitmap_obj[i].px = (uint8_t*)calloc((size_t)w * (size_t)h, 3);
+            if (g_bitmap_obj[i].px) mwb_fill(&g_bitmap_obj[i], 0, 0, w, h, 0xFFFFFF);
+            MW_TRACE("[GDI] CreateCompatibleBitmap(%dx%d) -> 0x%08x", w, h,
+                     MW_HBITMAP_BASE | (unsigned)(i + 1));
+            return (void*)(uintptr_t)(MW_HBITMAP_BASE | (unsigned)(i + 1));
+        }
+    }
+    MW_TRACE("[GDI] CreateCompatibleBitmap -> NULL (table full)");
+    return 0;
+}
+__attribute__((ms_abi)) int mw_BitBlt(void* hdcDst, int x, int y, int w, int h,
+        void* hdcSrc, int xs, int ys, uint32_t rop) {
+    MWBmp* D = mw_dc_surface(hdcDst);
+    MWBmp* S = mw_dc_surface(hdcSrc);
+    if (rop == 0x00000042u) { /* BLACKNESS */
+        if (D) mwb_fill(D, x, y, w, h, 0x000000);
+        return 1;
+    }
+    if (rop == 0x00FF0062u) { /* WHITENESS */
+        if (D) mwb_fill(D, x, y, w, h, 0xFFFFFF);
+        return 1;
+    }
+    if (!D || !S) {
+        MW_TRACE("[GDI] BitBlt -> 0 (bad dst/src DC)");
+        return 0;
+    }
+    if (rop != 0x00CC0020u) { /* SRCCOPY is the contract; honest fallback */
+        mwb_fill(D, x, y, w, h, g_cur_brush);
+        MW_TRACE("[GDI] BitBlt rop=0x%x -> brush fill fallback", rop);
+        return 1;
+    }
+    int copied = 0;
+    for (int row = 0; row < h; row++) {
+        int sy = ys + row, dy = y + row;
+        if (sy < 0 || dy < 0 || sy >= S->h || dy >= D->h) continue;
+        for (int col = 0; col < w; col++) {
+            int sx = xs + col, dx = x + col;
+            if (sx < 0 || dx < 0 || sx >= S->w || dx >= D->w) continue;
+            memcpy(D->px + 3 * ((size_t)dy * (size_t)D->w + (size_t)dx),
+                   S->px + 3 * ((size_t)sy * (size_t)S->w + (size_t)sx), 3);
+            copied++;
+        }
+    }
+    MW_TRACE("[GDI] BitBlt %dx%d @%d,%d <- src@%d,%d SRCCOPY (%d px)",
+             w, h, x, y, xs, ys, copied);
+    return 1;
+}
 
 static ImportEntry g_import_table[] = {
     /* KERNEL32.DLL */
@@ -11769,6 +11937,9 @@ ENTRY("msvcrt.dll", "wctype", mw_wctype),
     ENTRY("GDI32.DLL", "SetBkMode",                             mw_SetBkMode),
     ENTRY("GDI32.DLL", "SetMapMode",                            mw_SetMapMode),
     ENTRY("GDI32.DLL", "GetDeviceCaps",                         mw_GetDeviceCaps),
+    ENTRY("GDI32.DLL", "CreateCompatibleDC",                    mw_CreateCompatibleDC), /* SWEEP-006 */
+    ENTRY("GDI32.DLL", "CreateCompatibleBitmap",                mw_CreateCompatibleBitmap), /* SWEEP-006 */
+    ENTRY("GDI32.DLL", "BitBlt",                                mw_BitBlt), /* SWEEP-006 */
     ENTRY("GDI32.DLL", "SaveDC",                                mw_SaveDC),
     ENTRY("GDI32.DLL", "RestoreDC",                             mw_RestoreDC),
     ENTRY("GDI32.DLL", "DeleteDC",                              mw_DeleteDC),

@@ -235,8 +235,21 @@ puttygen RIP=0x0).
 - [x] **SW-559 (core)** real WM_PAINT surface + TextOut/FillRect landed; open
       remainder: produkey window content render (listview is comctl32-internal)
       -> needs child-control emulation or SW-509 PE-DLL loader.
-- [ ] **SW-560** games wave 2: BitBlt/CreateCompatibleDC double buffering +
-      WM_CHAR + GetAsyncKeyState, then a second genre (tetris/breakout).
+- [x] **SW-560** games wave 2 — DONE (SWEEP-006): BitBlt/CreateCompatibleDC/
+      CreateCompatibleBitmap REAL double buffering (draws routed by HDC;
+      window framebuffer changes only via BitBlt SRCCOPY 172800 px/frame);
+      WM_CHAR queued by real TranslateMessage (printable VKs only — snake
+      cadence unchanged, re-verified 3x); synchronous WM_CREATE on
+      CreateWindowEx{W,A}. Second genre = MiniWinBreakout
+      (tests/games/miniwin_breakout.c): 3x exit0, 381 frames x3 ALL
+      byte-identical SHA-256, 27/40 bricks destroyed (score 270, lives 3),
+      evidence/sweep006_game/. Pre-commit bugs fixed: memDC handle decode
+      off-by-one; SelectObject must not deselect bitmap on brush/pen;
+      WM_CREATE was never delivered; guest auto-launch counter zeroed each
+      tick (ball parked — caught by frozen-score frame diff). G1 12/12
+      re-pinned; snake 3x re-pinned (30 frames x3, HUD Score:10 Len:9).
+      Open remainder: GetAsyncKeyState (not needed for the genre, tracked
+      for SW-562 battery), StretchBlt/transparent blits for sprites.
 - [ ] **SW-561** Coreinfo64.exe (live.sysinternals, current version) exit(1):
       newer exe needs SetThreadGroupAffinity/GetProcessWorkingSetSize/
       version.dll trio — version drift vs SWEEP-003 coreinfoex64, one BUG-*.
