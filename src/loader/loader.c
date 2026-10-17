@@ -9823,16 +9823,6 @@ __attribute__((ms_abi)) char* mw__mktemp(char* tmpl) {
     return tmpl;
 }
 
-/* ---- MessageBoxW: console-honest — log, return IDOK ---- */
-__attribute__((ms_abi)) int mw_MessageBoxW(void* hwnd, const uint16_t* text,
-        const uint16_t* caption, uint32_t type) {
-    (void)hwnd; (void)type;
-    char t8[2048], c8[256];
-    if (text) w3_w16_to_utf8z(text, t8, sizeof(t8)); else t8[0] = 0;
-    if (caption) w3_w16_to_utf8z(caption, c8, sizeof(c8)); else c8[0] = 0;
-    fprintf(stderr, "[MessageBoxW] %s: %s\n", c8, t8);
-    return 1; /* IDOK */
-}
 /* ---- SWEEP-003: GUI skeleton v1 — window-class / window / message-loop
  * primitives. Evidence: cports + produkey exit(1) at InitCommonControlsEx
  * (GetProcAddress→FALSE gate); putty/pageant exit inside GUI init; NirSoft
@@ -9926,6 +9916,155 @@ __attribute__((ms_abi)) void mw_PostQuitMessage(int code) {
     MW_TRACE("PostQuitMessage(%d)", code);
 }
 /* ==== end SWEEP-003 GUI skeleton ==== */
+
+/* ---- SWEEP-004: GDI-lite dialog raster — MessageBoxW/A render to BMP ----
+ * User mandate (2026-10-18): «از برنامه گرافیکی تصویر هم بده» — produce a
+ * real image from a graphical program. Classic Win95-style dialog drawn into
+ * an RGB buffer with the public-domain font8x8 (D. Hepper, U+0000..007F),
+ * written as 24-bit BMP into <results>/screenshots/messagebox_N.bmp.
+ * Honest contract: layout is ours (no GDI yet), but the TEXT, TITLE, and
+ * ICON CLASS are the guest's own — the image is genuine program output. */
+#include "font8x8_basic.h"
+static char g_result_base_dir[512] = "miniwin-results";
+static int  g_dialog_count = 0;
+
+typedef struct { uint8_t* px; int w, h; } MWBmp;
+
+static void mwb_set(MWBmp* b, int x, int y, uint32_t c) {
+    if (x < 0 || y < 0 || x >= b->w || y >= b->h) return;
+    uint8_t* p = b->px + 3 * ((size_t)y * b->w + x);
+    p[0] = (uint8_t)(c & 0xFF); p[1] = (uint8_t)((c >> 8) & 0xFF); p[2] = (uint8_t)((c >> 16) & 0xFF);
+}
+static void mwb_fill(MWBmp* b, int x, int y, int w, int h, uint32_t c) {
+    for (int j = y; j < y + h; j++)
+        for (int i = x; i < x + w; i++) mwb_set(b, i, j, c);
+}
+/* Win95 3D chrome: raised (out) or sunken (in) */
+static void mwb_3d(MWBmp* b, int x, int y, int w, int h, int raised) {
+    uint32_t lt = 0xFFFFFF, dk = 0x808080, blk = 0x000000, face = 0xC0C0C0;
+    mwb_fill(b, x, y, w, h, face);
+    mwb_fill(b, x, y, w, 2, raised ? lt : dk);        /* top */
+    mwb_fill(b, x, y, 2, h, raised ? lt : dk);        /* left */
+    mwb_fill(b, x, y + h - 2, w, 2, raised ? dk : lt);/* bottom */
+    mwb_fill(b, x + w - 2, y, 2, h, raised ? dk : lt);/* right */
+    mwb_fill(b, x, y, 1, 1, blk); mwb_fill(b, x + w - 1, y, 1, 1, blk);
+    mwb_fill(b, x, y + h - 1, 1, 1, blk); mwb_fill(b, x + w - 1, y + h - 1, 1, 1, blk);
+}
+static void mwb_text8(MWBmp* b, int x, int y, const char* s, uint32_t c, int scale) {
+    for (; *s; s++, x += 8 * scale) {
+        uint8_t ch = (uint8_t)*s;
+        if (ch > 0x7F) ch = '?';
+        for (int ry = 0; ry < 8; ry++) {
+            uint8_t row = font8x8_basic[ch][ry];
+            for (int rx = 0; rx < 8; rx++)
+                if (row & (1 << rx))
+                    mwb_fill(b, x + rx * scale, y + ry * scale, scale, scale, c);
+        }
+    }
+}
+static int mwb_textw(const char* s, int scale) { return (int)strlen(s) * 8 * scale; }
+static void mwb_circle(MWBmp* b, int cx, int cy, int r, uint32_t c) {
+    for (int j = -r; j <= r; j++)
+        for (int i = -r; i <= r; i++)
+            if (i * i + j * j <= r * r) mwb_set(b, cx + i, cy + j, c);
+}
+
+static void mw_dialog_write_bmp(const char* title, const char* text, uint32_t type) {
+    int sc = 2;                                  /* glyph scale: 8x8 -> 16x16 px */
+    uint32_t navy = 0x000080, white = 0xFFFFFF; /* constants are 0xRRGGBB; mwb_set packs BGR */
+    int lines_max = 24, tw = 0, nl = 0;
+    char* copy = strdup(text ? text : "");
+    char* linev[32];
+    for (char* ln = strtok(copy, "\n"); ln && nl < lines_max; ln = strtok(NULL, "\n")) {
+        linev[nl++] = ln;
+        int lw = mwb_textw(ln, sc); if (lw > tw) tw = lw;
+    }
+    int icon = type & 0xF0;                       /* 0x10 err 0x20 ? 0x30 warn 0x40 info */
+    int icon_area = icon ? 36 : 0;
+    int bw = mwb_textw("OK", sc) + 32, bh = 30;   /* OK button */
+    int W = tw + 24 + icon_area; if (W < 200) W = 200;
+    if (W > 720) { W = 720; }                     /* clip honest: no wrap engine yet */
+    int client_h = 14 + nl * 10 * sc + 16;
+    int H = 18 + client_h + 12 + bh + 12;
+    MWBmp b = { malloc((size_t)W * H * 3), W, H };
+    if (!b.px) { free(copy); return; }
+    mwb_fill(&b, 0, 0, W, H, 0xC0C0C0);
+    /* window frame + navy caption + fake close box */
+    mwb_3d(&b, 0, 0, W, H, 1);
+    mwb_fill(&b, 2, 2, W - 4, 16, navy);
+    mwb_text8(&b, 8, 5, title ? title : "", white, 1);
+    mwb_3d(&b, W - 22, 4, 16, 14, 0);
+    mwb_text8(&b, W - 19, 6, "x", 0x000000, 1);
+    /* icon */
+    int tx = 12 + icon_area, ty = 18 + 8;
+    if (icon == 0x30) {                            /* warning: yellow ! */
+        mwb_fill(&b, 12, ty + 6, 30, 30, 0x000080); /* shadow block */
+        mwb_fill(&b, 10, ty + 4, 30, 30, 0xFFFF00); /* classic warning yellow */
+        mwb_text8(&b, 22, ty + 14, "!", 0x000000, 2);
+    } else if (icon) {                             /* err/question/info: colored disc */
+        uint32_t col = (icon == 0x10) ? 0xC00000 : 0x0000C0; /* err red disc, ?/i blue disc */
+        mwb_circle(&b, 27, ty + 18, 15, 0x000000);
+        mwb_circle(&b, 27, ty + 17, 14, col);
+        mwb_text8(&b, 23, ty + 12, (icon == 0x10) ? "X" : (icon == 0x20) ? "?" : "i", white, 2);
+    }
+    /* body text lines */
+    for (int i = 0; i < nl; i++)
+        mwb_text8(&b, tx, ty + i * 10 * sc, linev[i], 0x000000, sc);
+    /* OK button centered */
+    mwb_3d(&b, (W - bw) / 2, H - bh - 10, bw, bh, 1);
+    mwb_text8(&b, (W - bw) / 2 + (bw - mwb_textw("OK", sc)) / 2, H - bh - 10 + 7, "OK", 0x000000, sc);
+    /* write 24-bit bottom-up BMP */
+    char path[640];
+    snprintf(path, sizeof(path), "%s/screenshots/messagebox_%d.bmp",
+             g_result_base_dir, ++g_dialog_count);
+    mkdir(g_result_base_dir, 0755);
+    char sdir[640]; snprintf(sdir, sizeof(sdir), "%s/screenshots", g_result_base_dir);
+    mkdir(sdir, 0755);
+    int pad = (4 - (W * 3) % 4) % 4;
+    uint32_t datasz = (uint32_t)((W * 3 + pad) * H);
+    uint8_t hdr[54] = { 'B','M',0,0,0,0,0,0,0,0,54,0,0,0,40,0,0,0,0,0,0,0,0,0,0,0,1,0,24,0 };
+    uint32_t fsz = 54 + datasz;
+    memcpy(hdr + 2, &fsz, 4); memcpy(hdr + 22, &H, 4); memcpy(hdr + 18, &W, 4);
+    memcpy(hdr + 34, &datasz, 4);
+    FILE* f = fopen(path, "wb");
+    if (f) {
+        fwrite(hdr, 1, 54, f);
+        uint8_t* row = malloc((size_t)W * 3 + 4);
+        for (int y = H - 1; y >= 0; y--) {
+            memcpy(row, b.px + 3 * ((size_t)y * W), (size_t)W * 3);
+            memset(row + W * 3, 0, (size_t)pad);
+            fwrite(row, 1, (size_t)W * 3 + pad, f);
+        }
+        free(row);
+        fclose(f);
+        MW_TRACE("[GDI-LITE] dialog #%d rendered %dx%d -> %s", g_dialog_count, W, H, path);
+        fprintf(stderr, "[MessageBox] dialog #%d rendered -> %s\n", g_dialog_count, path);
+    }
+    free(b.px);
+    free(copy);
+}
+
+/* ---- MessageBoxW: render dialog image, log, return IDOK ---- */
+__attribute__((ms_abi)) int mw_MessageBoxW(void* hwnd, const uint16_t* text,
+        const uint16_t* caption, uint32_t type) {
+    (void)hwnd;
+    char t8[2048], c8[256];
+    if (text) w3_w16_to_utf8z(text, t8, sizeof(t8)); else t8[0] = 0;
+    if (caption) w3_w16_to_utf8z(caption, c8, sizeof(c8)); else c8[0] = 0;
+    fprintf(stderr, "[MessageBoxW] %s: %s\n", c8, t8);
+    MW_TRACE("MessageBoxW(type=0x%x) caption='%s'", type, c8);
+    mw_dialog_write_bmp(c8, t8, type);
+    return 1; /* IDOK */
+}
+__attribute__((ms_abi)) int mw_MessageBoxA(void* hwnd, const char* text,
+        const char* caption, uint32_t type) {
+    (void)hwnd;
+    fprintf(stderr, "[MessageBoxA] %s: %s\n", caption ? caption : "", text ? text : "");
+    MW_TRACE("MessageBoxA(type=0x%x) caption='%s'", type, caption ? caption : "");
+    mw_dialog_write_bmp(caption ? caption : "", text ? text : "", type);
+    return 1; /* IDOK */
+}
+/* ==== end SWEEP-004 GDI-lite ==== */
 
 
 static ImportEntry g_import_table[] = {
@@ -10844,6 +10983,7 @@ ENTRY("msvcrt.dll", "wctype", mw_wctype),
     ENTRY("USER32.DLL", "PostQuitMessage",                      mw_PostQuitMessage),
     ENTRY("COMCTL32.DLL", "InitCommonControlsEx",               mw_InitCommonControlsEx),
     ENTRY("COMCTL32.DLL", "InitCommonControls",                 mw_InitCommonControls),
+    ENTRY("USER32.DLL", "MessageBoxA",                          mw_MessageBoxA),
     ENTRY("WLDAP32.dll", "ber_free",                            mw_ber_free),
     ENTRY("WLDAP32.dll", "ldap_bind_s",                         mw_ldap_bind_s),
     ENTRY("WLDAP32.dll", "ldap_err2string",                     mw_ldap_err2string),
@@ -11616,6 +11756,8 @@ int main(int argc, char* argv[]) {
         char dir_path[512];
         snprintf(dir_path, sizeof(dir_path), "miniwin-results/%s", base);
         mkdir(dir_path, 0755);
+        /* SWEEP-004: remember per-exe results dir for GDI-lite BMP output */
+        snprintf(g_result_base_dir, sizeof(g_result_base_dir), "%s", dir_path);
         /* Also create subdirs */
         char subdir[600];
         snprintf(subdir, sizeof(subdir), "%s/execution", dir_path);

@@ -167,3 +167,28 @@ puttygen RIP=0x0).
       prerequisite, then fix top blocker each.
 - [ ] **SW-556** SW-509 (PE-DLL loader) now blocks 4 GUI heavyweights
       (bginfo64/winmergeu C++ runtime, searchmyfiles mfcu, procexp64) — raise priority.
+
+## SWEEP-004 wave (2026-10-18) — GDI-lite dialog raster, image mandate DELIVERED
+
+**Landed (code, VERIFIED 3×3 identical SHA + G1 12/12 re-pinned):**
+- MessageBoxW/MessageBoxA now RENDER a classic Win95 dialog to
+  <results>/<exe>/screenshots/messagebox_N.bmp (font8x8, public domain).
+- First image from a real graphical program: putty.exe --version ->
+  MessageBoxA("PuTTY Fatal Error", "Unable to load any WinSock library")
+  -> dialog #1 (evidence/sweep004_gdi/putty_messagebox_1.bmp, 604x122,
+  3 runs byte-identical SHA f953a2f3ec131b3a*).
+
+**2 NEW programs tested (user mandate «یکی دوتا برنامه جدید»):**
+- DriverView.exe (NirSoft x64 GUI): CRASH-GUEST 139 @ 0x14000cd1d, after
+  advapi32 privilege phase (LookupPrivilegeValueA/AdjustTokenPrivileges
+  resolved, ERROR 1300 honest path) — SW-557.
+- HeapMemView.exe (NirSoft x64 GUI): CRASH-GUEST 139 @ 0x14000c581, same
+  class — SW-558.
+
+- [ ] **SW-557** isolate DriverView 0x14000cd1d (post-privilege, stub call
+      #1/#2 unnamed — named-stub logging prerequisite stands).
+- [ ] **SW-558** isolate HeapMemView 0x14000c581 (same class — likely one
+      shared BUG with SW-557).
+- [ ] **SW-559** extend GDI-lite: TextOutA/W + FillRect + real WM_PAINT
+      surface so programs that draw their OWN window content produce images
+      (produkey window render = end goal).

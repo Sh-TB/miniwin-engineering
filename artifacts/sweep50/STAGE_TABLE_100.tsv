@@ -46,7 +46,7 @@ procs/procs.exe	x64	console	RAN-OUTPUT	0	40	vcruntime140.dll	rust-procs
 produkey/ProduKey.exe	x64	GUI	RAN-EXIT0-GUI-LIFECYCLE	0	153	msvcrt.dll	runs_gui/produkey
 pscp/pscp.exe	x64	console	RAN-EXIT1	1	22	-	putty-pscp
 psftp/psftp.exe	x64	console	RAN-EXIT1	1	24	-	putty-psftp
-putty/putty.exe	x64	GUI	RAN-EXIT1	1	209	-	runs_gui/putty-gui
+putty/putty.exe	x64	GUI	RAN-EXIT1+DIALOG-IMG	1	209	-	runs_gui/putty-gui
 puttygen/puttygen.exe	x64	GUI	CRASH-GUEST	139	78	-	runs_gui/puttygen
 restic/restic_0.19.1_windows_amd64.exe	x64	console	CRASH-GUEST	139	9	-	go2-restic
 ripgrep/rg.exe	x64	console	RAN-EXIT2	2	15	-	rust-rg
@@ -106,3 +106,5 @@ si-gui2/rammap64.exe	x64	GUI	RAN-EXIT1	1	140	-	runs_gui/rammap64
 si-gui2/zoomit64.exe	x64	GUI	RAN-TRAP133-CXX-UNHANDLED	133	315	-	runs_gui/zoomit64
 si-gui2/procmon64.exe	x64	GUI	RAN-EXIT0-GUI-LIFECYCLE	0	344	-	runs_gui/procmon64
 si-gui2/diskmon64.exe	x64	GUI	RAN-EXIT0-GUI-LIFECYCLE	0	120	-	runs_gui/diskmon64
+nirsoft2/DriverView.exe	x64	GUI	CRASH-GUEST	139	61	-	evidence/sweep004_gdi
+nirsoft2/HeapMemView.exe	x64	GUI	CRASH-GUEST	139	58	-	evidence/sweep004_gdi
