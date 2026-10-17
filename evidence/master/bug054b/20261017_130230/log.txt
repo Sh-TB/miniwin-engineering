@@ -1,0 +1,17 @@
+input sha256: 3ca45a54ccdf8f3478a2e67e7d104e49254d851927c9bd237f99b4ed77122d5f
+-- run 1: archive create
+a exit=0
+-- run 1: extract with ABSOLUTE backslash -o path
+e exit=0
+out sha256: 3ca45a54ccdf8f3478a2e67e7d104e49254d851927c9bd237f99b4ed77122d5f
+-- run 2: archive create
+a exit=0
+-- run 2: extract with ABSOLUTE backslash -o path
+e exit=0
+out sha256: 3ca45a54ccdf8f3478a2e67e7d104e49254d851927c9bd237f99b4ed77122d5f
+-- run 3: archive create
+a exit=0
+-- run 3: extract with ABSOLUTE backslash -o path
+e exit=0
+out sha256: 3ca45a54ccdf8f3478a2e67e7d104e49254d851927c9bd237f99b4ed77122d5f
+BUG-054b ACCEPTANCE: PASS 3/3 (sha match, no stray dir)

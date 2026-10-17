@@ -31,3 +31,24 @@ t13_wide_abi PASS; t14_file_read PASS; dispatch 4/4.
 3. BUG-053: wprintf/wide-%s output path (7za `i` Formats table mojibake).
 4. TASK-TEST-014 remainder: pin the sweep binary set in-repo (gitignore
    policy decision) + add t13/t14 to run_sweep.sh TESTS list.
+
+---
+
+## 2026-10-17 (CONTINUE #10) — Ladder wave: BUG-054b + BUG-061 + LADDER-008 zstd VERIFIED
+- **BUG-054b CLOSED (TESTED)**: CreateDirectoryW/RemoveDirectoryW/DeleteFileW/
+  GetDiskFreeSpaceExW now apply w3_normalize_path (absolute backslash -o root
+  works; 3/3, SHA-256 byte-perfect; scripts/bug054b_accept.sh).
+- **BUG-061 CLOSED (TESTED)**: _stat64 wrote POSIX offsets + memset 128B into
+  the 56-byte MS x64 struct (72-byte overflow -> guest corruption -> RIP=0x0
+  in zstd). Exact MS layout now (dev@0/ino@4/mode@6/nlink@8/rdev@16/size@24/
+  times @32/40/48, memset 56).
+- **LADDER-008 (zstd.exe 1.5.6 x64, mingw/msvcrt, SHA 6b5c50dd...) VERIFIED**:
+  --version banner exit 0 3/3; -T1 compress + decompress round trip exit 0 3/3,
+  SHA-256 byte-perfect. zstd-wave APIs added: FindFirstFileA, FindNextFileA,
+  SetPriorityClass, _filelengthi64, fgetpos, fsetpos (msvcrt/kernel32),
+  SleepConditionVariableCS (kernel32, mirrors SRW variant).
+- G1 pin OK after each change (latest evidence/master/g1/20261017_131102);
+  regression 12/12.
+- New planning base per user directive: .agent/PROGRAM_LADDER.md (100 rungs),
+  docs/master/MSVC_RUNTIME_PLAN.md (ADR-012), docs/master/ANDROID_FEASIBILITY.md
+  (ADR-013), docs/master/GITHUB_RESOURCES_MAP.md (ADR-014 borrowing policy).

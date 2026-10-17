@@ -105,3 +105,11 @@ Format: `ID | path | what it proves | session`
   1) fopen MUST return MSVCRT-strided registry handle (guest CRT does InitializeCriticalSection(fp+0x30)); raw glibc FILE* → heap corruption SIGSEGV
   2) real ungetc via glibc on mapped stream (stub lost pushback → fscanf off-by-one per token)
   3) errno mirror (g_errno_storage) must sync on fopen/remove failure (guest _errno path)
+
+## 2026-10-17 (CONTINUE #10)
+- EV-061: evidence/master/bug054b/20261017_130230 — BUG-054b 3/3 (absolute backslash -o, SHA-256 match)
+- EV-062: evidence/master/g1/20261017_130103 / _130609 / _130845 / _131102 — G1 pins after each wave
+- EV-063: samples/real/zstd/SHA256-zstd-1.5.6.txt + /tmp/zstdrt c_*.out d_*.out (session log) — zstd --version 3/3 exit 0 + round trip 3/3 SHA-256 match
+- EV-064: docs/bugs/BUG-061.md (CLOSED TESTED), BUG-054.md BUG-054b section (CLOSED TESTED)
+- EV-065: download/miniwin_execution_proof_v3_20261017.png — 4-panel proof sheet (7z BUG-054b + zstd v/round trip + gates)
+- EV-066: .agent/PROGRAM_LADDER.md (100 rungs), docs/master/{MSVC_RUNTIME_PLAN,ANDROID_FEASIBILITY,GITHUB_RESOURCES_MAP}.md, ADR-012/013/014

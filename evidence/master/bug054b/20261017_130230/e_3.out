@@ -1,0 +1,22 @@
+[TRACE] Command line: /home/z/my-project/workspace/miniwin-engineering/samples/real/7za.exe e final.7z -o\tmp\7ztest54b\out
+[MiniWin] Loading /home/z/my-project/workspace/miniwin-engineering/samples/real/7za.exe...
+
+7-Zip (a) 26.04 (x64) : Copyright (c) 1999-2026 Igor Pavlov : 2026-10-05
+
+Scanning the drive for archives:
+1 file, 183 bytes (1 KiB)
+
+Extracting archive: final.7z
+--
+Path = final.7z
+Type = 7z
+Physical Size = 183
+Headers Size = 122
+Method = LZMA2:12
+Solid = -
+Blocks = 1
+
+Everything is Ok
+
+Size:       57
+Compressed: 183

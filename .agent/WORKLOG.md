@@ -102,3 +102,17 @@ Work Log:
 - Push verified: 7d047a8..f75aa97 main -> main (0 ahead / 0 behind after fetch).
 Stage Summary:
 - Remote HEAD f75aa97 contains both milestones of the session (BUG-039 + OPENSRC-1).
+
+## 2026-10-17 — CONTINUE #10: ladder + MSVC/Android/research base + BUG-054b/061 + zstd
+- User directive: old small/medium software; 100-program ladder; MSVC runtime base;
+  Android feasibility; deep GitHub reuse (license-clean).
+- Research: wibo(MIT)/loadlibrary(Apache-2)/retrowin32/wine+reactos(read-only)/
+  msvc-wine+winetricks(patterns)/Winlator+Mobox+Hangover+box64+FEX(android).
+- Deliverables: PROGRAM_LADDER.md (100 rungs x 10 tiers), MSVC_RUNTIME_PLAN.md
+  (ADR-012: 3 modes, no DLL redistribution), ANDROID_FEASIBILITY.md (ADR-013:
+  Path A proot+qemu shortcut, Path B loader/engine split, Path C oracle),
+  GITHUB_RESOURCES_MAP.md (ADR-014 borrowing policy), backlog Wave-12.
+- Engineering: BUG-054b CLOSED (CreateDirectoryW/RemoveDirectoryW/DeleteFileW/
+  GetDiskFreeSpaceExW normalize; 3/3 SHA match); zstd wave (7 APIs); BUG-061
+  CLOSED (_stat64 layout+overflow); LADDER-008 zstd VERIFIED 3/3; G1 pinned 4x;
+  regression 12/12; proof PNG v3.

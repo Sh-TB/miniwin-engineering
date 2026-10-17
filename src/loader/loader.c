@@ -4232,12 +4232,24 @@ __attribute__((ms_abi)) int mw__stat64(const char* path, void* st) {
     struct stat64 st64;
     int ret = stat64(path, &st64);
     if (ret == 0 && st) {
-        memset(st, 0, 128);
-        *(uint32_t*)((uint8_t*)st + 0) = st64.st_mode;
-        *(int64_t*)((uint8_t*)st + 8) = st64.st_size;
-        *(int64_t*)((uint8_t*)st + 24) = st64.st_atime;
-        *(int64_t*)((uint8_t*)st + 32) = st64.st_mtime;
-        *(int64_t*)((uint8_t*)st + 40) = st64.st_ctime;
+        /* BUG-061 (2026-10-17, zstd LADDER-008): the guest struct is the MS x64
+         * `struct _stat64` (56 bytes: dev@0 u32, ino@4 u16, mode@6 u16, nlink@8
+         * u16, uid@10, gid@12, rdev@16 u32, size@24 i64, atime@32, mtime@40,
+         * ctime@48). The prior version wrote POSIX offsets (mode@0, size@8) and
+         * memset 128 bytes — 72 bytes past the real struct, corrupting adjacent
+         * guest globals and crashing zstd's compress path at RIP=0. */
+        memset(st, 0, 56);
+        *(uint32_t*)((uint8_t*)st + 0)  = (uint32_t)st64.st_dev;
+        *(uint16_t*)((uint8_t*)st + 4)  = (uint16_t)st64.st_ino;
+        *(uint16_t*)((uint8_t*)st + 6)  = (uint16_t)st64.st_mode;
+        *(uint16_t*)((uint8_t*)st + 8)  = (uint16_t)st64.st_nlink;
+        *(uint16_t*)((uint8_t*)st + 10) = 0; /* st_uid */
+        *(uint16_t*)((uint8_t*)st + 12) = 0; /* st_gid */
+        *(uint32_t*)((uint8_t*)st + 16) = (uint32_t)st64.st_rdev;
+        *(int64_t*)((uint8_t*)st + 24)  = (int64_t)st64.st_size;
+        *(int64_t*)((uint8_t*)st + 32)  = (int64_t)st64.st_atime;
+        *(int64_t*)((uint8_t*)st + 40)  = (int64_t)st64.st_mtime;
+        *(int64_t*)((uint8_t*)st + 48)  = (int64_t)st64.st_ctime;
     }
     return ret;
 }
@@ -4514,6 +4526,32 @@ __attribute__((ms_abi)) uint32_t mw_SleepConditionVariableSRW(void* cv, void* sr
     pthread_mutex_unlock(&c->mu);
     if (flags & 1) pthread_rwlock_rdlock(rw); else pthread_rwlock_wrlock(rw);
     MW_TRACE("SleepConditionVariableSRW(cv=%p, ms=%u) = %u", cv, ms, result);
+    return result;
+}
+/* zstd wave (LADDER-008): CS condition variable — mirrors the SRW variant;
+ * the CRITICAL_SECTION's loader-owned pthread mutex (cs_mutex) is released
+ * while waiting and re-acquired on wake, matching Windows semantics. */
+__attribute__((ms_abi)) uint32_t mw_SleepConditionVariableCS(void* cv, void* cs, uint32_t ms) {
+    MwCvEntry* c = cv_get(cv);
+    if (!c || !cs) return 0;
+    if (!cs_is_initialized(cs)) mw_InitializeCriticalSection(cs);
+    pthread_mutex_t* mu = cs_mutex(cs);
+    pthread_mutex_unlock(mu);
+    uint32_t result = 0;
+    pthread_mutex_lock(&c->mu);
+    if (ms == 0xFFFFFFFFu) {
+        pthread_cond_wait(&c->cd, &c->mu);
+    } else {
+        struct timespec ts;
+        clock_gettime(CLOCK_REALTIME, &ts);
+        ts.tv_sec += ms / 1000;
+        ts.tv_nsec += (long)(ms % 1000) * 1000000L;
+        if (ts.tv_nsec >= 1000000000L) { ts.tv_sec++; ts.tv_nsec -= 1000000000L; }
+        if (pthread_cond_timedwait(&c->cd, &c->mu, &ts) == ETIMEDOUT) result = 258; /* WAIT_TIMEOUT */
+    }
+    pthread_mutex_unlock(&c->mu);
+    pthread_mutex_lock(mu);
+    MW_TRACE("SleepConditionVariableCS(cv=%p, ms=%u) = %u", cv, ms, result);
     return result;
 }
 __attribute__((ms_abi)) void mw_WakeConditionVariable(void* cv) {
@@ -6290,6 +6328,7 @@ __attribute__((ms_abi)) int mw_DeleteFileW(const wchar_t* name) {
     char n8[4096];
     if (!name || w3_w16_to_utf8z((const uint16_t*)name, n8, sizeof(n8)) < 0) { mw_SetLastError(87); return 0; }
     n8[sizeof(n8) - 1] = '\0';
+    w3_normalize_path(n8); /* BUG-054b: same Windows-path rule as CreateDirectoryW */
     MW_TRACE("DeleteFileW(%s)", n8);
     if (unlink(n8) != 0) { mw_SetLastError(errno == ENOENT ? 2 : 5); return 0; }
     return 1;
@@ -6298,6 +6337,7 @@ __attribute__((ms_abi)) int mw_RemoveDirectoryW(const wchar_t* name) {
     char n8[4096];
     if (!name || w3_w16_to_utf8z((const uint16_t*)name, n8, sizeof(n8)) < 0) { mw_SetLastError(87); return 0; }
     n8[sizeof(n8) - 1] = '\0';
+    w3_normalize_path(n8); /* BUG-054b: same Windows-path rule as CreateDirectoryW */
     MW_TRACE("RemoveDirectoryW(%s)", n8);
     if (rmdir(n8) != 0) { mw_SetLastError(2); return 0; }
     return 1;
@@ -6306,6 +6346,10 @@ __attribute__((ms_abi)) int mw_CreateDirectoryW(const wchar_t* name, void* sa) {
     char n8[4096];
     if (!name || w3_w16_to_utf8z((const uint16_t*)name, n8, sizeof(n8)) < 0) { mw_SetLastError(87); return 0; }
     n8[sizeof(n8) - 1] = '\0';
+    /* BUG-054b (2026-10-17): the -o extraction root arrives as a Windows-style
+     * absolute path ("\\tmp\\7ztest\\out"); without normalization mkdir created
+     * a literal backslash-named directory in the CWD. Same rule as CreateFileW. */
+    w3_normalize_path(n8);
     MW_TRACE("CreateDirectoryW(%s)", n8);
     if (mkdir(n8, 0755) != 0) { mw_SetLastError(errno == EEXIST ? 183 : 3); return 0; }
     return 1;
@@ -6442,6 +6486,7 @@ w3_normalize_path(u8);
 __attribute__((ms_abi)) int mw_GetDiskFreeSpaceExW(const wchar_t* dir, void* free_caller, void* total, void* free_total) {
     char d8[2048];
     if (dir) w3_w16_to_utf8z((const uint16_t*)dir, d8, sizeof(d8)); else snprintf(d8, sizeof(d8), "%s", ".");
+    w3_normalize_path(d8); /* BUG-054b: same Windows-path rule as CreateFileW/CreateDirectoryW */
     struct statvfs v;
     if (statvfs(d8, &v) != 0) { mw_SetLastError(3); return 0; }
     uint64_t bs = (uint64_t)v.f_frsize;
@@ -8170,6 +8215,48 @@ __attribute__((ms_abi)) int mw_FindNextStreamW(void* h, void* data) {
     return 0;
 }
 
+/* ---- zstd wave (LADDER-008, 2026-10-17): ANSI find + priority + CRT pos/length ----
+ * zstd.exe (mingw/msvcrt) imports 7 APIs we lacked; crash was RIP=0x0.
+ * The 6 trivial ones are implemented here; SleepConditionVariableCS (threads
+ * wave) is registered separately and -T1 exercises the single-thread path. */
+__attribute__((ms_abi)) void* mw_FindFirstFileA(const char* pattern, void* data) {
+    if (!pattern) { mw_SetLastError(87); return (void*)-1; }
+    MW_TRACE("FindFirstFileA(%s)", pattern);
+    return find_first_impl((char*)pattern, data);
+}
+__attribute__((ms_abi)) int mw_FindNextFileA(void* h, void* data) {
+    return mw_FindNextFileW(h, data);
+}
+__attribute__((ms_abi)) void* mw_SetPriorityClass(void* proc, uint32_t cls) {
+    (void)proc; (void)cls;
+    MW_TRACE("SetPriorityClass(cls=%u) -> TRUE (no-op)", cls);
+    return (void*)(uintptr_t)1;
+}
+__attribute__((ms_abi)) long long mw__filelengthi64(int fd) {
+    struct stat st;
+    MW_TRACE("_filelengthi64(fd=%d)", fd);
+    if (fstat(fd, &st) != 0) { return -1LL; }
+    return (long long)st.st_size;
+}
+/* MS msvcrt fpos_t is __int64 for msvcrt.dll-era; host off_t is 64-bit here. */
+__attribute__((ms_abi)) int mw_fgetpos(FILE* f, long long* pos) {
+    FILE* hf = map_crt_stream(f);
+    if (!hf) hf = f; /* EXP-041 rule: pass unknown pointers through */
+    MW_TRACE("fgetpos(%p)", (void*)f);
+    if (!pos) return -1;
+    off_t o = ftello(hf);
+    if (o < 0) return -1;
+    *pos = (long long)o;
+    return 0;
+}
+__attribute__((ms_abi)) int mw_fsetpos(FILE* f, const long long* pos) {
+    FILE* hf = map_crt_stream(f);
+    if (!hf) hf = f;
+    MW_TRACE("fsetpos(%p)", (void*)f);
+    if (!pos) return -1;
+    return fseeko(hf, (off_t)*pos, SEEK_SET) == 0 ? 0 : -1;
+}
+
 /* ---- KERNEL32: move/copy family ---- */
 __attribute__((ms_abi)) int mw_MoveFileW(const uint16_t* from, const uint16_t* to) {
     char f8[4096], t8[4096];
@@ -8840,6 +8927,7 @@ static ImportEntry g_import_table[] = {
     ENTRY("KERNEL32.DLL", "WakeConditionVariable",               mw_WakeConditionVariable),
     ENTRY("KERNEL32.DLL", "WakeAllConditionVariable",            mw_WakeAllConditionVariable),
     ENTRY("KERNEL32.DLL", "SleepConditionVariableSRW",           mw_SleepConditionVariableSRW),
+    ENTRY("KERNEL32.DLL", "SleepConditionVariableCS",            mw_SleepConditionVariableCS),
     ENTRY("KERNEL32.DLL", "AcquireSRWLockExclusive",             mw_AcquireSRWLockExclusive),
     ENTRY("KERNEL32.DLL", "ReleaseSRWLockExclusive",             mw_ReleaseSRWLockExclusive),
     ENTRY("KERNEL32.DLL", "TryAcquireSRWLockExclusive",          mw_TryAcquireSRWLockExclusive),
@@ -9154,6 +9242,9 @@ static ImportEntry g_import_table[] = {
     ENTRY("KERNEL32.DLL", "GetWindowsDirectoryW", mw_GetWindowsDirectoryW),
     ENTRY("KERNEL32.DLL", "FindFirstFileExW", mw_FindFirstFileExW),
     ENTRY("KERNEL32.DLL", "FindNextFileW", mw_FindNextFileW),
+    ENTRY("KERNEL32.DLL", "FindFirstFileA", mw_FindFirstFileA),
+    ENTRY("KERNEL32.DLL", "FindNextFileA", mw_FindNextFileA),
+    ENTRY("KERNEL32.DLL", "SetPriorityClass", mw_SetPriorityClass),
     ENTRY("KERNEL32.DLL", "FindClose", mw_FindClose),
     ENTRY("KERNEL32.DLL", "GetConsoleCP", mw_GetConsoleCP),
     ENTRY("KERNEL32.DLL", "GetConsoleOutputCP", mw_GetConsoleOutputCP),
@@ -9535,6 +9626,9 @@ ENTRY("msvcrt.dll", "wctype", mw_wctype),
     ENTRY("msvcrt.dll", "_purecall",                            mw__purecall),
     ENTRY("msvcrt.dll", "__CxxFrameHandler",                    mw__CxxFrameHandler),
     ENTRY("msvcrt.dll", "_CxxThrowException",                   mw__CxxThrowException),
+    ENTRY("msvcrt.dll", "_filelengthi64",                       mw__filelengthi64),
+    ENTRY("msvcrt.dll", "fgetpos",                              mw_fgetpos),
+    ENTRY("msvcrt.dll", "fsetpos",                              mw_fsetpos),
     ENTRY("KERNEL32.DLL", "VirtualAlloc",                       mw_VirtualAlloc),
     ENTRY("KERNEL32.DLL", "VirtualFree",                        mw_VirtualFree),
     ENTRY("KERNEL32.DLL", "MapViewOfFile",                      mw_MapViewOfFile),

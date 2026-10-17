@@ -525,3 +525,117 @@ TASK-API-007/008 (CLOSED TESTED, table 162 -> 188).
   clang 23.1.3 — exact pin); binaries were session-local and absent.
 - Scope: rebuild t01..t12, run_sweep.sh, re-verify 11/12 (t09 = TASK-API-009),
   re-pin evidence dir; then 3x determinism.
+
+---
+
+# Wave 12 (2026-10-17, CONTINUE #10) — 100-program ladder + MSVC base + Android + research mining
+
+Driver: user directive — old small/medium software is the goal; 100-program ladder
+smallest→hardest; leverage existing GitHub sources (license-clean); MSVC C++ runtimes
+across versions as the base; Android feasibility + prereqs; deep GitHub investigation.
+Ladder detail lives in `.agent/PROGRAM_LADDER.md` (canonical). Plan docs:
+`docs/master/MSVC_RUNTIME_PLAN.md`, `docs/master/ANDROID_FEASIBILITY.md`,
+`docs/master/GITHUB_RESOURCES_MAP.md`; ADR-012/013/014.
+
+## LADDER-001..100 — one task per rung (detail + obtain-from + CRT in PROGRAM_LADDER.md)
+- LADDER-001..006: statuses already recorded (VERIFIED/RUNS-PARTIAL) — keep pinned; re-verify on every release.
+- LADDER-007..010 (T0 tail: busybox64, zstd, lz4, gzip): READY. Per-rung protocol: legal download → SHA-256 → census (arch/CRT/imports diff) → 3× runs → status.
+- LADDER-011..020 (T1): READY after MSVC-001 census script; GnuWin32 wave = msvcrt.dll gate.
+- LADDER-021..030 (T2): winsock wave; deps: socket API shim census first (RES-004).
+- LADDER-031..040 (T3): NT-API wave; deps: NtQuerySystemInformation family decision.
+- LADDER-041..050 (T4): codec wave; deps: MSVC-004..009 (vcruntime140/ucrtbase naming).
+- LADDER-051..060 (T5): first GUI wave; deps: message-loop/dialog minimal surface study.
+- LADDER-061..070 (T6): common-controls wave.
+- LADDER-071..080 (T7): framework wave (MFC/Delphi/wx/Qt) — census-only until CRT passthrough (MSVC-010..012).
+- LADDER-081..090 (T8): suites wave.
+- LADDER-091..100 (T9): frontier rungs — each run keeps a written WHY (blocked-by-design vs blocked-frontier).
+
+## MSVC runtime base (per MSVC_RUNTIME_PLAN.md / ADR-012)
+
+### TASK-MSVC-001 — census script: CRT version per ladder binary
+- Priority: P0. Status: READY. Output: artifacts/census/crt-versions.tsv (machine-readable).
+
+### TASK-MSVC-002 — vcruntime140 export inventory vs our EH surface
+- Priority: P0. Status: READY. Diff `vcruntime140.dll` exports (MS docs + redist dump) against implemented `__C_specific_handler`/`__CxxFrameHandler3` family.
+
+### TASK-MSVC-003 — ucrtbase naming layer: alias map msvcrt→ucrtbase names
+- Priority: P0. Status: READY. `__acrt_iob_func`, `_ initialize_onexit`, etc. — alias exports for EXEs linked against ucrt.
+
+### TASK-MSVC-004 — vcruntime140 shim: compiler-support subset
+- Priority: P1. Deps: MSVC-002. `__CxxFrameHandler4` decode = biggest item; scope strictly to ladder demand (ffmpeg/magick).
+
+### TASK-MSVC-005 — ucrtbase shim: `_initterm_e`/`_configure_narrow_argv` startup family
+- Priority: P1. Deps: MSVC-003. UCRT startup sequencing differs from msvcrt (curl frontier evidence).
+
+### TASK-MSVC-006 — msvcp140 census-only first
+- Priority: P1. Status: READY. Count C++ std exports demanded by magick/Notepad++-class before writing anything.
+
+### TASK-MSVC-007 — SxS manifest parse + log (no activation contexts)
+- Priority: P2. Parse embedded manifest RT_MANIFEST, log requested VC80/90 CRT version, map to resolver.
+
+### TASK-MSVC-008 — native-DLL passthrough prototype: ucrtbase only
+- Priority: P2. Deps: MSVC-005. Load user-provided ucrtbase.dll via our own loader; export-table resolve; CRT-init order vs EXE entry; map_crt_stream window rebind.
+
+### TASK-MSVC-009 — acquisition script (MIT): download VC redist from MS + cabextract
+- Priority: P2. Pattern from msvc-wine/winetricks; script ships, binaries never do (ADR-012).
+
+### TASK-MSVC-010..015 — per-CRT acceptance gates CRT-UCRT-1/2, CRT-VCRUNTIME-1, CRT-MSVCR90-1 (see plan §4)
+
+## Android (per ANDROID_FEASIBILITY.md / ADR-013)
+
+### TASK-ANDROID-001 — Path A runbook: Termux→proot-distro→Debian x86_64→MiniWin
+- Priority: P1. Status: READY. Written runbook + prerequisites (Android 7.0+; 16KB-page caveat).
+
+### TASK-ANDROID-002 — Path A smoke test: regression 12/12 + 7za banner inside emulated Debian
+- Priority: P1. Deps: ANDROID-001.
+
+### TASK-ANDROID-003 — page-size audit: MINWIN_PAGE_SIZE / section alignment under 16KB kernels
+- Priority: P1. Status: READY. Guest allocations must not assume 4K.
+
+### TASK-ANDROID-004 — W^X audit: mprotect/prot transitions under Android 10+ exec restrictions
+- Priority: P2. RWX page usage inventory (BUG-032 trap-stub page among them).
+
+### TASK-ANDROID-005 — engine-boundary study: split loader/API-host from CPU exec (Hangover shape)
+- Priority: P2. Deliverable: interface sketch doc; no code yet.
+
+### TASK-ANDROID-006 — FEX-Emu (MIT) engine option note; Box64 (BSD-3) second
+- Priority: P3. Deps: ANDROID-005.
+
+### TASK-ANDROID-007..010 — Path C oracle: Winlator/Mobox install notes, T0 programs reference runs, comparison table
+
+## Research mining (per GITHUB_RESOURCES_MAP.md)
+
+### TASK-RES-001 — wibo MIT msvcrt implementations: identify copy-safe export set for T1
+- Priority: P1. Output: list of ~40 boring exports (ctype/locale/env) with wibo file/line refs.
+
+### TASK-RES-002 — loadlibrary peloader design review (Apache-2.0)
+- Priority: P2. One-page review vs our loader.c; record any pattern worth an ADR.
+
+### TASK-RES-003 — Wine msvcrt/ucrtbase test suite as specification (read-only)
+- Priority: P2. Map tests/run tests to our API backlog entries.
+
+### TASK-RES-004 — winsock shim census: what T2 rungs (plink/netcat/iperf3) actually import
+- Priority: P1. WSAStartup/socket/connect/send/recv/select subset count.
+
+### TASK-RES-005 — ReactOS-Wine10.0 msvcrt sync (Jan 2026 news): which exports moved
+- Priority: P3. Read the sync commit list; extract priority signals.
+
+### TASK-RES-006 — retrowin32 architecture notes (emulate-vs-load)
+- Priority: P3. One-page note.
+
+### TASK-RES-007 — Hangover loader/engine split paper-read → ANDROID-005 input
+- Priority: P2.
+
+### TASK-RES-008 — Winlator/Mobox known-broken lists → ladder triage annotations
+- Priority: P2. Mark rungs where the oracle says "hard even under Wine".
+
+## License / hygiene
+
+### TASK-LIC-001 — choose project LICENSE (MIT or Apache-2 recommended; ADR-014)
+- Priority: P1. Status: READY (owner decision recorded as task until user picks).
+
+### TASK-LIC-002 — create docs/master/BORROWED_CODE.md; register any copied code with file/line/license
+- Priority: P1. Deps: RES-001 (first candidate source).
+
+### TASK-LIC-003 — token hygiene audit: confirm no credential material in tracked files
+- Priority: P1. `git grep` sweep for the PAT prefix; credentials live only in ~/.git-credentials.
