@@ -358,6 +358,9 @@ static int mw_event_set(void* h);
 static int mw_event_reset(void* h);
 static int mw_sem_release(void* h, int32_t count, int32_t* prev);
 static void mw_kobj_release(void* h);
+/* BUG-065: FILE* issuance registry (definitions below map_crt_stream). */
+static void mw_fileptr_register(FILE* f);
+static int mw_fileptr_is_valid(FILE* f);
 
 __attribute__((ms_abi)) int mw_CloseHandle(void* h) {
     MW_TRACE("CloseHandle(handle=%p)", h);
@@ -3133,18 +3136,42 @@ __attribute__((ms_abi)) int mw_TlsSetValue(uint32_t idx, void* val) {
 __attribute__((ms_abi)) int mw_VirtualProtect(void* addr, size_t size, uint32_t prot, uint32_t* old) {
     MW_TRACE("VirtualProtect(addr=%p, size=0x%zx, prot=0x%x)", addr, size, prot);
     int linux_prot = PROT_READ | PROT_WRITE;
-    if (prot & 0x01) linux_prot = PROT_READ;
-    if (prot & 0x02) linux_prot |= PROT_READ;
-    if (prot & 0x04) linux_prot |= PROT_WRITE;
-    if (prot & 0x20) linux_prot |= PROT_EXEC;
-    if (old) *old = 0x04; /* PAGE_READWRITE */
+    if (prot & 0x01) linux_prot = PROT_READ;                 /* PAGE_NOACCESS handled below */
+    if (prot & 0x02) linux_prot |= PROT_READ;                /* PAGE_READONLY */
+    if (prot & 0x04) linux_prot |= PROT_WRITE;               /* PAGE_READWRITE */
+    /* BUG-065: PAGE_EXECUTE(0x10)/PAGE_EXECUTE_READ(0x20)/
+     * PAGE_EXECUTE_READWRITE(0x40)/PAGE_EXECUTE_WRITECOPY(0x80) must map to
+     * PROT_EXEC — mingw's pseudo-relocator makes .text RWX then RESTORES with
+     * the value we report in *old; missing either half kills the text page
+     * (md5deep64 SIGSEGV at the instruction right after the call). */
+    if (prot & (0x10u | 0x20u | 0x40u | 0x80u)) linux_prot |= PROT_EXEC;
+    if (prot == 0x01) linux_prot = PROT_NONE;                /* PAGE_NOACCESS */
+    /* Honest old-protect: image pages are RWX under this loader (self-modifying
+     * relocators rely on restoring what we report); heap/other = RW. */
+    if (old) {
+        if ((uintptr_t)addr >= (uintptr_t)g_image_base &&
+            (uintptr_t)addr <  (uintptr_t)g_image_base + g_image_size) {
+            *old = 0x40; /* PAGE_EXECUTE_READWRITE */
+        } else {
+            *old = 0x04; /* PAGE_READWRITE */
+        }
+    }
     /* OPENSRC-7ZIP: Windows VirtualProtect accepts any address and rounds
      * internally; mprotect demands page alignment (mingw CRT passes the raw
      * TLS/stack address -> EINVAL -> "VirtualProtect failed" abort, t08). */
     if (addr) {
         uintptr_t page = (uintptr_t)addr & ~(uintptr_t)0xFFF;
-        size_t span = ((uintptr_t)addr - page) + size;
-        if (mprotect((void*)page, (span + 0xFFF) & ~(size_t)0xFFF, linux_prot) == 0) return 1;
+        uintptr_t end  = ((uintptr_t)addr + size + 0xFFF) & ~(size_t)0xFFF;
+        /* BUG-065: the image is mapped per-section, so [addr, addr+size) can
+         * span UNMAPPED alignment gaps — one big mprotect over the whole span
+         * fails with ENOMEM (mingw pseudo-relocator: "VirtualProtect failed").
+         * Walk page-by-page and skip gaps (Windows sees all pages committed;
+         * our gaps are by-construction unmapped slack). */
+        if (end <= page) return 1;
+        for (uintptr_t p = page; p < end; p += 0x1000) {
+            if (mprotect((void*)p, 0x1000, linux_prot) != 0 && errno != ENOMEM) return 0;
+        }
+        return 1;
     }
     return 0;
 }
@@ -4007,6 +4034,7 @@ __attribute__((ms_abi)) void* mw_fopen(const char* path, const char* mode) {
     if (!hf) { g_errno_storage = errno; /* ISS1: guest reads errno via _errno mirror */ }
     MW_TRACE("fopen(%s, %s) = %p", path ? path : "NULL", mode ? mode : "NULL", hf);
     if (!hf) return NULL;
+    mw_fileptr_register(hf); /* BUG-065: validate pass-throughs later */
     for (int i = 0; i < MW_FILE_MAX; ++i) {
         if (g_mwfile_tab[i].mf) continue;
         MwFile* mf = (MwFile*)calloc(1, sizeof(MwFile));
@@ -4366,7 +4394,35 @@ static FILE* map_crt_stream(void* stream) {
      * implementations). Pass them through verbatim; the old "unknown ->
      * stdout" fallback silently ate fmemopen output (snapt.exe repro:
      * "%.3f" went to stdout and the caller's buffer stayed empty). */
+    /* BUG-065 (md5deep): glibc aborts the process ("invalid stdio handle")
+     * when a guest hands us a GARBAGE stream pointer. Validate against the
+     * registry of FILE* we ever issued; unknown pointers are refused with a
+     * loud trace instead of reaching glibc. */
+    if (!mw_fileptr_is_valid((FILE*)stream)) {
+        MW_TRACE("map_crt_stream: UNKNOWN stream %p -> refused (NULL)", stream);
+        return NULL;
+    }
     return (FILE*)stream;
+}
+
+/* Registry of every host FILE* the loader ever handed to a guest. */
+#define MW_FILEPTR_MAX 512
+static FILE* g_issued_files[MW_FILEPTR_MAX];
+static int g_issued_files_n = 0;
+static void mw_fileptr_register(FILE* f) {
+    if (!f) return;
+    for (int i = 0; i < g_issued_files_n; i++)
+        if (g_issued_files[i] == f) return;
+    if (g_issued_files_n < MW_FILEPTR_MAX) g_issued_files[g_issued_files_n++] = f;
+}
+static int mw_fileptr_is_valid(FILE* f) {
+    if (f == stdin || f == stdout || f == stderr) return 1;
+    for (int i = 0; i < g_issued_files_n; i++)
+        if (g_issued_files[i] == f) return 1;
+    return 0;
+}
+__attribute__((constructor)) static void mw_fileptr_init(void) {
+    mw_fileptr_register(stdin); mw_fileptr_register(stdout); mw_fileptr_register(stderr);
 }
 
 __attribute__((ms_abi)) int mw_fflush(void* file) {
@@ -4390,7 +4446,9 @@ __attribute__((ms_abi)) int mw_fputc(int ch, void* file) {
 __attribute__((ms_abi)) size_t mw_fwrite(const void* buf, size_t sz, size_t cnt, void* file) {
     MW_TRACE("fwrite(sz=%zu, cnt=%zu)", sz, cnt);
     FILE* f = map_crt_stream(file);
-    return fwrite(buf, sz, cnt, f);
+    size_t r = fwrite(buf, sz, cnt, f);
+    MW_TRACE("fwrite -> %zu (f=%p)", r, (void*)f);
+    return r;
 }
 
 __attribute__((ms_abi)) int mw_getc(void* file) {
@@ -4726,6 +4784,17 @@ __attribute__((ms_abi)) int mw__stat64(const char* path, void* st) {
         *(int64_t*)((uint8_t*)st + 48)  = (int64_t)st64.st_ctime;
     }
     return ret;
+}
+
+/* LADDER-013 (md5deep64, BUG-065): _wstat64 — wide path, same MS layout. */
+__attribute__((ms_abi)) int mw__wstat64(const uint16_t* wpath, void* st) {
+    char p8[4096];
+    if (!wpath || w3_w16_to_utf8z(wpath, p8, sizeof(p8)) < 0) {
+        return -1;
+    }
+    w3_normalize_path(p8);
+    MW_TRACE("_wstat64(path=%s)", p8);
+    return mw__stat64(p8, st);
 }
 
 __attribute__((ms_abi)) int64_t mw__lseeki64(int fd, int64_t off, int whence) {
@@ -7968,15 +8037,20 @@ __attribute__((ms_abi)) void* mw__wfopen(const wchar_t* path, const wchar_t* mod
     p8[sizeof(p8)-1] = 0; m8[sizeof(m8)-1] = 0;
     MW_TRACE("_wfopen(%s, %s)", p8, m8);
     FILE* f = fopen(p8, m8);
+    mw_fileptr_register(f); /* BUG-065 */
     return f;
 }
 __attribute__((ms_abi)) void* mw__fdopen(int fd, const char* mode) {
     MW_TRACE("_fdopen(%d, %s)", fd, mode ? mode : "");
     if (!mode) return NULL;
-    return fdopen(fd, mode);
+    FILE* hf = fdopen(fd, mode);
+    mw_fileptr_register(hf); /* BUG-065: zstd opens outputs via _open+_fdopen */
+    return hf;
 }
 __attribute__((ms_abi)) void* mw__fsopen(const char* path, const char* mode, int sh) {
-    return path && mode ? fopen(path, mode) : NULL;
+    FILE* hf = (path && mode) ? fopen(path, mode) : NULL;
+    mw_fileptr_register(hf); /* BUG-065 */
+    return hf;
 }
 __attribute__((ms_abi)) int mw__fseeki64(void* f, int64_t off, int whence) {
     return f ? fseek((FILE*)f, (long)off, whence) : -1;
@@ -9411,6 +9485,287 @@ __attribute__((ms_abi)) int mw__findnext64(intptr_t h, void* data) {
     return mw_FindNextFileW((void*)(uintptr_t)h, data);
 }
 
+/* ============================================================
+ * LADDER-013 wave (md5deep64 4.4, 2014 mingw/msvcrt) — BUG-065 surface.
+ * 15 unresolved imports + 3 data imports blocked CRT init (SIGSEGV at
+ * 0x42eac9). All implemented with honest semantics below.
+ * ============================================================ */
+
+/* ---- data imports: __argv / __mb_cur_max / __pioinfo ---- */
+static int g_mb_cur_max = 1; /* SBCS answer, mirrors GetCPInfo */
+
+#define PIOINFO_ARRAY_ELTS 32
+typedef struct {           /* msvcrt ioinfo, x64 = 16 bytes */
+    void* osfhnd;          /* OS handle */
+    char  osfile;          /* flags: 0x80=FH_DEVICE, 0x01=open */
+    char  pipech;
+    char  pipech2[2];
+    char  pad[4];
+} MwIoinfo;
+static MwIoinfo g_ioinfo_blocks[2][PIOINFO_ARRAY_ELTS];
+static void* g_pioinfo[64]; /* msvcrt: ioinfo* __pioinfo[64], 32 fds per block */
+
+__attribute__((constructor)) static void mw_md5deep_wave_init(void) {
+    /* fd 0/1/2 = character devices (console) — mingw CRT init calls
+     * _isatty on them through __pioinfo during startup. */
+    for (int blk = 0; blk < 2; blk++) g_pioinfo[blk] = &g_ioinfo_blocks[blk][0];
+    for (int i = 0; i < 3; i++) {
+        g_ioinfo_blocks[0][i].osfhnd = (void*)(uintptr_t)(4 + 4 * i); /* std pseudo handles 4/8/0xC */
+        g_ioinfo_blocks[0][i].osfile = (char)(0x80 | 0x01);           /* FH_DEVICE | open */
+    }
+}
+
+/* ---- _atoi64 ---- */
+__attribute__((ms_abi)) long long mw__atoi64(const char* s) {
+    MW_TRACE("_atoi64(%s)", s ? s : "NULL");
+    return s ? strtoll(s, NULL, 10) : 0;
+}
+
+/* ---- _ftime (struct _timeb: time64? legacy msvcrt = 8+2+2+2 pad 16) ---- */
+__attribute__((ms_abi)) void mw__ftime(void* tb) {
+    MW_TRACE("_ftime(tb=%p)", tb);
+    if (!tb) return;
+    struct timeval tv;
+    gettimeofday(&tv, NULL);
+    *(long long*)(uint8_t*)tb = (long long)tv.tv_sec;
+    *(uint16_t*)((uint8_t*)tb + 8) = (uint16_t)(tv.tv_usec / 1000);
+    *(int16_t*)((uint8_t*)tb + 10) = 0;  /* timezone (min) */
+    *(int16_t*)((uint8_t*)tb + 12) = 0;  /* dstflag */
+}
+
+/* ---- _wfindfirst64/_wfindnext64 (own registry: _wfinddata64_t layout) ---- */
+#define MW_WFD64_SIZE 552 /* attrib4 pad4 t8 t8 t8 size8 name[256]*2 */
+typedef struct {
+    int used; DIR* d; char pattern[1024]; char dirpart[4096]; int first;
+} MwWFind;
+static MwWFind g_wfinds[16];
+static int g_wfind_count = 0;
+
+static int mw_wfd64_pattern_match(const char* pat, const char* name) {
+    /* exact or wildcard (case-insensitive like Windows) */
+    int star = 0, cq = 0;
+    for (const char* p = pat; *p; p++) { if (*p == '*') star = 1; if (*p == '?') cq = 1; }
+    if (!star && !cq) return strcasecmp(pat, name) == 0;
+    /* minimal wildcard matcher: '*' and '?' */
+    const char* pv = pat; const char* nv = name;
+    const char* star_p = NULL; const char* star_n = NULL;
+    while (*nv) {
+        if (*pv == '?' || tolower((unsigned char)*pv) == tolower((unsigned char)*nv)) { pv++; nv++; }
+        else if (*pv == '*') { star_p = ++pv; star_n = nv; }
+        else if (star_p) { pv = star_p; nv = ++star_n; }
+        else return 0;
+    }
+    while (*pv == '*') pv++;
+    return *pv == 0;
+}
+
+static void mw_wfd64_fill(void* data, const char* name, struct stat* st) {
+    uint8_t* p = (uint8_t*)data;
+    memset(p, 0, MW_WFD64_SIZE);
+    *(uint32_t*)(p + 0) = S_ISDIR(st->st_mode) ? 0x10 : 0x20;
+    if (name[0] == '.') *(uint32_t*)(p + 0) |= 0x2;
+    *(long long*)(p + 8)  = (long long)st->st_ctime;
+    *(long long*)(p + 16) = (long long)st->st_atime;
+    *(long long*)(p + 24) = (long long)st->st_mtime;
+    *(long long*)(p + 32) = (long long)st->st_size;
+    /* name as UTF-16 at +40 */
+    const char* s = name;
+    uint16_t* w = (uint16_t*)(p + 40);
+    int k = 0;
+    while (*s && k < 255) w[k++] = (uint16_t)(unsigned char)*s++;
+    w[k] = 0;
+}
+
+__attribute__((ms_abi)) intptr_t mw__wfindfirst64(const uint16_t* spec, void* fd64) {
+    char p8[4096];
+    if (!spec || !fd64 || w3_w16_to_utf8z(spec, p8, sizeof(p8)) < 0) {
+        mw_SetLastError(87); return -1;
+    }
+    w3_normalize_path(p8);
+    MW_TRACE("_wfindfirst64(%s)", p8);
+    if (g_wfind_count >= 16) { mw_SetLastError(4); return -1; }
+    char dirpart[4096];
+    snprintf(dirpart, sizeof(dirpart), "%s", p8);
+    char* slash = strrchr(dirpart, '/');
+    const char* fname = "*";
+    if (slash) { *slash = 0; fname = slash + 1; if (!dirpart[0]) snprintf(dirpart, sizeof(dirpart), "/"); }
+    else { snprintf(dirpart, sizeof(dirpart), "."); fname = p8; }
+    if (!fname[0]) fname = "*";
+    DIR* d = opendir(dirpart[0] ? dirpart : ".");
+    if (!d) { mw_SetLastError(3); return -1; }
+    MwWFind* f = &g_wfinds[g_wfind_count];
+    memset(f, 0, sizeof(*f));
+    f->d = d;
+    snprintf(f->pattern, sizeof(f->pattern), "%s", fname);
+    snprintf(f->dirpart, sizeof(f->dirpart), "%s", dirpart[0] ? dirpart : ".");
+    struct dirent* de;
+    while ((de = readdir(d)) != NULL) {
+        if (!mw_wfd64_pattern_match(f->pattern, de->d_name)) continue;
+        if (!strcmp(de->d_name, ".") || !strcmp(de->d_name, "..")) {
+            if (strcmp(f->pattern, "*") == 0 && strcmp(f->pattern, ".*") != 0) {
+                /* Windows * does not match . / .. unless pattern starts with . */
+                continue;
+            }
+        }
+        char full[8192];
+        snprintf(full, sizeof(full), "%s/%s", f->dirpart, de->d_name);
+        struct stat st;
+        if (stat(full, &st) != 0) continue;
+        mw_wfd64_fill(fd64, de->d_name, &st);
+        intptr_t h = (intptr_t)(4 + g_wfind_count++);
+        return h;
+    }
+    closedir(d);
+    mw_SetLastError(2);
+    return -1;
+}
+
+__attribute__((ms_abi)) int mw__wfindnext64(intptr_t h, void* fd64) {
+    int idx = (int)h - 4;
+    if (idx < 0 || idx >= 16 || !g_wfinds[idx].d) { mw_SetLastError(6); return -1; }
+    MwWFind* f = &g_wfinds[idx];
+    struct dirent* de;
+    while ((de = readdir(f->d)) != NULL) {
+        if (!mw_wfd64_pattern_match(f->pattern, de->d_name)) continue;
+        if (!strcmp(de->d_name, ".") || !strcmp(de->d_name, "..")) continue;
+        char full[8192];
+        snprintf(full, sizeof(full), "%s/%s", f->dirpart, de->d_name);
+        struct stat st;
+        if (stat(full, &st) != 0) continue;
+        mw_wfd64_fill(fd64, de->d_name, &st);
+        return 0;
+    }
+    closedir(f->d);
+    f->d = NULL;
+    mw_SetLastError(18); /* ERROR_NO_MORE_FILES */
+    return -1;
+}
+
+/* ---- wide char classification + getwc ---- */
+__attribute__((ms_abi)) int mw_getwc(void* f) {
+    FILE* hf = map_crt_stream(f);
+    return hf ? fgetwc(hf) : WEOF;
+}
+__attribute__((ms_abi)) int mw_iswalpha(int c) { return iswalpha(c & 0xFFFF); }
+__attribute__((ms_abi)) int mw_iswdigit(int c) { return iswdigit(c & 0xFFFF); }
+
+/* ---- sprintf (msvcrt) — ms_abi variadic into guest buffer ---- */
+__attribute__((ms_abi)) int mw_sprintf(char* buf, const char* fmt, ...) {
+    MW_TRACE("sprintf(fmt=%s)", fmt ? fmt : "NULL");
+    if (!buf || !fmt) return -1;
+    unsigned char cls[MW_PRINTF_MAX_ARGS];
+    int nargs = mw_printf_classify(fmt, cls);
+    unsigned long long slots[MW_PRINTF_MAX_ARGS];
+    __builtin_ms_va_list ap;
+    __builtin_ms_va_start(ap, fmt);
+    for (int i = 0; i < nargs; i++) {
+        if (cls[i]) { double d = va_arg(ap, double); memcpy(&slots[i], &d, 8); }
+        else        { slots[i] = (unsigned long long)va_arg(ap, long long); }
+    }
+    __builtin_ms_va_end(ap);
+    char tmp[16384];
+    FILE* mf = fmemopen(tmp, sizeof tmp, "w");
+    if (!mf) return -1;
+    int r = mw_printf_emit(mf, fmt, slots, nargs);
+    fclose(mf);
+    if (r < 0) return -1;
+    memcpy(buf, tmp, (size_t)r + 1);
+    return r;
+}
+
+/* ---- _snwprintf (wide, guest wchar = UTF-16 2B) ----
+ * Subset: %s args are guest-wide strings (converted to narrow), %c wide char,
+ * everything else passes through to glibc narrow formatting; result converted
+ * back to UTF-16. Honest limitation: locale-specific wide conversions are
+ * ASCII-scope. */
+__attribute__((ms_abi)) int mw__snwprintf(uint16_t* buf, size_t cnt,
+        const uint16_t* fmt, ...) {
+    if (!buf || !fmt) return -1;
+    /* narrow the format with %s -> %s and remember which args were wide */
+    char nfmt[2048]; int nk = 0;
+    char wide_arg[MW_PRINTF_MAX_ARGS];
+    int argi = 0;
+    for (int i = 0; fmt[i] && nk + 2 < (int)sizeof(nfmt); i++) {
+        if (fmt[i] != '%') { nfmt[nk++] = (char)(fmt[i] & 0xFF); continue; }
+        nfmt[nk++] = '%';
+        i++;
+        if (fmt[i] == '%') { nfmt[nk++] = '%'; continue; }
+        /* copy flags/width/precision/length */
+        while (fmt[i] && strchr("-+ #0123456789.lhjzt", fmt[i]) && nk + 2 < (int)sizeof(nfmt)) {
+            nfmt[nk++] = (char)(fmt[i] & 0xFF); i++;
+        }
+        char conv = (char)(fmt[i] & 0xFF);
+        if (argi < MW_PRINTF_MAX_ARGS) wide_arg[argi] = (conv == 's') ? 1 : (conv == 'c') ? 2 : 0;
+        argi++;
+        nfmt[nk++] = conv;
+    }
+    nfmt[nk] = 0;
+    unsigned char cls[MW_PRINTF_MAX_ARGS];
+    int nargs = mw_printf_classify(nfmt, cls);
+    unsigned long long slots[MW_PRINTF_MAX_ARGS];
+    __builtin_ms_va_list ap;
+    __builtin_ms_va_start(ap, fmt);
+    for (int i = 0; i < nargs && i < MW_PRINTF_MAX_ARGS; i++) {
+        unsigned long long v = (unsigned long long)va_arg(ap, long long);
+        if (wide_arg[i] && cls[i] == 0 && v) {
+            /* guest wide string/char -> narrow UTF-8 */
+            char conv[1024]; int cx = 0;
+            const uint16_t* w = (const uint16_t*)(uintptr_t)v;
+            if (wide_arg[i] == 2) {
+                /* %c: single UTF-16 unit */
+                cx = w3_utf16le_to_utf8(w, 1, conv, sizeof(conv) - 1);
+                if (cx < 0) cx = 0;
+            } else {
+                int units = 0; while (w[units] && units < 511) units++;
+                cx = w3_utf16le_to_utf8(w, units, conv, sizeof(conv) - 1);
+                if (cx < 0) { cx = 0; }
+            }
+            conv[cx] = 0;
+            v = (unsigned long long)(uintptr_t)conv;
+        }
+        slots[i] = v;
+    }
+    __builtin_ms_va_end(ap);
+    (void)argi;
+    char tmp[8192];
+    FILE* mf = fmemopen(tmp, sizeof tmp, "w");
+    if (!mf) return -1;
+    int r = mw_printf_emit(mf, nfmt, slots, nargs);
+    fclose(mf);
+    if (r < 0) return -1;
+    /* narrow result -> UTF-16 into buf */
+    size_t o = 0;
+    for (int i = 0; tmp[i] && o + 1 < cnt; i++) buf[o++] = (uint16_t)(unsigned char)tmp[i];
+    if (o < cnt) buf[o] = 0;
+    return (int)o;
+}
+
+/* ---- _mktemp ---- */
+__attribute__((ms_abi)) char* mw__mktemp(char* tmpl) {
+    MW_TRACE("_mktemp(%s)", tmpl ? tmpl : "NULL");
+    if (!tmpl) return NULL;
+    size_t len = strlen(tmpl);
+    static int mk_counter = 0;
+    if (len < 6) { /* msvcrt: invalid template returns "" */ tmpl[0] = 0; return tmpl; }
+    char suffix[7];
+    snprintf(suffix, sizeof(suffix), "%06d", (getpid() + (mk_counter++)) % 1000000);
+    memcpy(tmpl + len - 6, suffix, 6);
+    return tmpl;
+}
+
+/* ---- MessageBoxW: console-honest — log, return IDOK ---- */
+__attribute__((ms_abi)) int mw_MessageBoxW(void* hwnd, const uint16_t* text,
+        const uint16_t* caption, uint32_t type) {
+    (void)hwnd; (void)type;
+    char t8[2048], c8[256];
+    if (text) w3_w16_to_utf8z(text, t8, sizeof(t8)); else t8[0] = 0;
+    if (caption) w3_w16_to_utf8z(caption, c8, sizeof(c8)); else c8[0] = 0;
+    fprintf(stderr, "[MessageBoxW] %s: %s\n", c8, t8);
+    return 1; /* IDOK */
+}
+/* ==== end LADDER-013 wave ==== */
+
+
 static ImportEntry g_import_table[] = {
     /* KERNEL32.DLL */
     ENTRY("KERNEL32.DLL", "AddVectoredExceptionHandler",        mw_AddVectoredExceptionHandler),
@@ -9575,6 +9930,7 @@ static ImportEntry g_import_table[] = {
     ENTRY("msvcrt.dll", "_setmode",              mw__setmode),
     ENTRY("msvcrt.dll", "_setjmp",               mw__setjmp),
     ENTRY("msvcrt.dll", "_stat64",               mw__stat64),
+    ENTRY("msvcrt.dll", "_wstat64",              mw__wstat64),
     ENTRY("msvcrt.dll", "_strdup",               mw__strdup),
     ENTRY("msvcrt.dll", "_stricmp",              mw__stricmp),
     ENTRY("msvcrt.dll", "_time64",               mw__time64),
@@ -9597,6 +9953,17 @@ static ImportEntry g_import_table[] = {
     ENTRY("msvcrt.dll", "free",                  mw_free),
     ENTRY("msvcrt.dll", "__doserrno",            mw___doserrno),
     ENTRY("msvcrt.dll", "_vsnprintf",            mw__vsnprintf),
+    ENTRY("msvcrt.dll", "_atoi64",               mw__atoi64),
+    ENTRY("msvcrt.dll", "_ftime",                mw__ftime),
+    ENTRY("msvcrt.dll", "_wfindfirst64",         mw__wfindfirst64),
+    ENTRY("msvcrt.dll", "_wfindnext64",          mw__wfindnext64),
+    ENTRY("msvcrt.dll", "getwc",                 mw_getwc),
+    ENTRY("msvcrt.dll", "iswalpha",              mw_iswalpha),
+    ENTRY("msvcrt.dll", "iswdigit",              mw_iswdigit),
+    ENTRY("msvcrt.dll", "sprintf",               mw_sprintf),
+    ENTRY("msvcrt.dll", "_snwprintf",            mw__snwprintf),
+    ENTRY("msvcrt.dll", "_mktemp",               mw__mktemp),
+    ENTRY("KERNEL32.DLL", "MessageBoxW",         mw_MessageBoxW),
     ENTRY("msvcrt.dll", "_aligned_malloc",       mw__aligned_malloc),
     ENTRY("msvcrt.dll", "_aligned_free",         mw__aligned_free),
     ENTRY("msvcrt.dll", "_aligned_realloc",      mw__aligned_realloc),
@@ -10342,6 +10709,10 @@ static DataImportEntry g_data_imports[] = {
     { "msvcrt.dll", "_iob",        g_msvcrt_iob },   /* OPENSRC-7ZIP: 3-slot FILE window */
     { "api-ms-win-crt-runtime-l1-1-0.dll", "__sys_errlist", g_sys_errlist },  /* OPENSRC battery */
     { "api-ms-win-crt-runtime-l1-1-0.dll", "__sys_nerr",    &g_sys_nerr },    /* OPENSRC battery */
+    /* LADDER-013 (md5deep64, BUG-065): old-mingw data surface */
+    { "msvcrt.dll", "__argv",      &g_argv_cell },   /* slot = &var; guest derefs to char** */
+    { "msvcrt.dll", "__mb_cur_max", &g_mb_cur_max },
+    { "msvcrt.dll", "__pioinfo",   &g_pioinfo[0] },  /* ioinfo* [64] */
     /* TASK-API-011: UCRT-flavored data exports (__p_* return pointers to
      * the variables; __tzname/__timezone/__daylight are the variables). */
     /* ALL UCRT __p_* exports are FUNCTIONS returning &var — t10 crashes
@@ -10987,7 +11358,18 @@ int main(int argc, char* argv[]) {
     /* Set up CRT data */
     g_acmdln_ptr = g_cmdline_ansi;
     g_initenv_ptr = NULL; /* no env for now */
+    /* LADDER-013: argv[0] = basename only. Old console software does
+     * argv[0]-dispatch on the bare name (md5deep 4.4 cuts "deep" IN PLACE
+     * and strcmps the remainder; busybox64 multi-call needs the same). A
+     * full-path argv[0] breaks that class of programs on any OS. */
     g_argv[0] = (char*)exe_path;
+    {
+        const char* slash = strrchr(exe_path, '/');
+        const char* base = slash ? slash + 1 : exe_path;
+        const char* bs = strrchr(base, '\\');
+        if (bs) base = bs + 1;
+        g_argv[0] = (char*)base;
+    }
     for (int i = 2; i < argc; i++) {
         g_argv[i - 1] = argv[i];
     }

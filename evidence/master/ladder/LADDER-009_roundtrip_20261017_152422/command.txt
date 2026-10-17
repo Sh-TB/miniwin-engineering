@@ -1,0 +1,4 @@
+command=bash -c cp "$REPO_ABS/samples/real/ladder_payload.bin" . && "$REPO_ABS/minwin_loader" "$REPO_ABS/samples/real/lz4/lz4.exe" -q -f ladder_payload.bin && "$REPO_ABS/minwin_loader" "$REPO_ABS/samples/real/lz4/lz4.exe" -q -d -f ladder_payload.bin.lz4 ladder_payload.rt && cmp ladder_payload.bin ladder_payload.rt && echo ROUNDTRIP-OK
+phase=roundtrip
+workdir=/tmp/ladder_LADDER-009_c5zvdB
+timestamp_utc=20261017_152422

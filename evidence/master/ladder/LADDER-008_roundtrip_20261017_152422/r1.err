@@ -1,0 +1,33 @@
+[TRACE] Command line: /home/z/my-project/workspace/miniwin-engineering/samples/real/zstd/zstd-v1.5.6-win64/zstd.exe -q -f ladder_payload.bin
+
+[CRASH] Signal 11 at RIP=0x7efca682400a
+  RAX=0x0 RCX=0x0 RDX=0x2cc1 R8=0x0 R9=0x0
+  RSP=0x7efca6744810 RBP=0x2cc1
+  g_image_base=0x140000000 g_image_size=0x16c000
+  (NOT inside loaded PE)
+  [RIP-MAP] 0x7efca682400a in 0x7efca67cd000-0x7efca6930000 r-xp /usr/lib/x86_64-linux-gnu/libc.so.6
+  Bytes: f6 41 01 80 75 4b 48 8b b9 88 00 00 00 80 3d e2 
+  RSI=0x1 RDI=0x250f5a0
+  R8=0x0  R9=0x0 R10=0x0 R11=0x246
+  R12=0x2cc1 R13=0x1 R14=0x250f5a0 R15=0x1400f99f0
+  [SCAN rsp+008] 0x201cddb <LOADER>
+  [SCAN rsp+064] 0x1400f99f0 <PE>
+  [SCAN rsp+072] 0x201d8a3 <LOADER>
+  [SCAN rsp+288] 0x200f3a0 <LOADER>
+  [SCAN rsp+296] 0x1400f9c28 <PE>
+  [SCAN rsp+392] 0x2030250 <LOADER>
+  [SCAN rsp+408] 0x202f830 <LOADER>
+  [SCAN rsp+416] 0x20279b0 <LOADER>
+  [SCAN rsp+424] 0x200f3a0 <LOADER>
+  [SCAN rsp+432] 0x1400f99f0 <PE>
+  [SCAN rsp+440] 0x140003f0c <PE>
+  [SCAN rsp+520] 0x140003e20 <PE>
+  [SCAN rsp+568] 0x14000492e <PE>
+  [SCAN rsp+640] 0x1400048f0 <PE>
+  [SCAN rsp+648] 0x200fcdd <LOADER>
+  [SCAN rsp+680] 0x200fcc4 <LOADER>
+  Backtrace (via stack walking):
+    [0] RIP=0x7efca682400a (outside PE, possible shared lib)
+    [1] RIP=0x7efca682400a (outside PE, possible shared lib)
+    [2] RIP=0x7efca682400a (outside PE, possible shared lib)
+bash: line 1:  9036 Segmentation fault      "$REPO_ABS/minwin_loader" "$REPO_ABS/samples/real/zstd/zstd-v1.5.6-win64/zstd.exe" -q -f ladder_payload.bin

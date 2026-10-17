@@ -36,7 +36,7 @@ Statuses as of 2026-10-17 (session CONTINUE #10): only T0 entries have evidence 
 |---|----|---------|--------|-----|-----|-------|-----------|--------|
 | 11 | LADDER-011 | wget64.exe | brechtsanders/winlibs wget64 | modern | static mingw | winsock-lite HTTPS | ★ | PLANNED |
 | 12 | LADDER-012 | xxd.exe (vim rt) | vim.org / tuxproject builds | old | msvcrt.dll | hex round trip | ★ | PLANNED |
-| 13 | LADDER-013 | md5deep 4.4 | md5deep.sf.net | 2014 | msvcr100 | hashing, recursive walk | ★★ | PLANNED |
+| 13 | LADDER-013 | md5deep 4.4 | md5deep.sf.net | 2014 | msvcr100 | hashing, recursive walk | ★★ | RUNS-PARTIAL — 3x exit 0, display-line frontier (BUG-065) |
 | 14 | LADDER-014 | hashdeep 4.4 | md5deep.sf.net | 2014 | msvcr100 | audit files | ★★ | PLANNED |
 | 15 | LADDER-015 | Tree 1.7 | old free utility | 2000s | msvcrt.dll | fs walk | ★ | PLANNED |
 | 16 | LADDER-016 | GNU grep 2.5.4 (GnuWin32) | gnuwin32.sf.net | 2003 | msvcrt.dll | regex engine | ★★ | PLANNED |

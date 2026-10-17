@@ -1,0 +1,2 @@
+[TRACE] Command line: /home/z/my-project/workspace/miniwin-engineering/samples/real/lz4/lz4.exe -q -f ladder_payload.bin
+[TRACE] Command line: /home/z/my-project/workspace/miniwin-engineering/samples/real/lz4/lz4.exe -q -d -f ladder_payload.bin.lz4 ladder_payload.rt

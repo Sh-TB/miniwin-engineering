@@ -31,3 +31,11 @@ Parallel quick wins (P1):
   script, then T1 GnuWin32 wave (grep/sed/diffutils).
 - Watch: WaitForMultipleObjects wait-all polls (10ms) — fine for TPool_free;
   revisit only if a rung times out.
+
+## CONTINUE #11c update (2026-10-17)
+- md5deep frontier (BUG-065 open part): audit mw_* stdio paths bypassing
+  map_crt_stream (fclose pass-through!), then winpthreads join/kill protocol.
+- LADDER-010 gzip BLOCKED-OBTAIN (no official win64) — do LADDER-007 busybox64
+  instead (argv[0] multi-call now supported) and/or LADDER-012 xxd.
+- Keep: stream-validation now MANDATORY for any new FILE*-returning API —
+  register in mw_fileptr_register or guests crash/glibc aborts.

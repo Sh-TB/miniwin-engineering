@@ -122,3 +122,6 @@ Format: `ID | path | what it proves | session`
 - EV-073: evidence/master/ladder/LADDER-009_{version,roundtrip}_20261017_145012 — lz4 3×3, SHA byte-perfect 35e6e204…
 - EV-074: evidence/master/g1/20261017_145001 — G1 pin post-BUG-063/064 (regression 12/12)
 - EV-075: scripts/probe_thread_iocp2.c — isolated guest-thread+IOCP contract probe (exit 0)
+- EV-076: docs/bugs/BUG-065.md (4 sub-fixes VERIFIED + md5deep RUNS-PARTIAL frontier)
+- EV-077: evidence/master/ladder/LADDER-008_roundtrip_20261017_152850 — zstd 3/3 AFTER fdopen-registration fix (regression caught + resolved)
+- EV-078: evidence/master/ladder/LADDER-009_roundtrip_20261017_152900 + g1/20261017_152900 — lz4 3/3 + G1 12/12 post-wave

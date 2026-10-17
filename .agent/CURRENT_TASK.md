@@ -102,3 +102,21 @@ t13_wide_abi PASS; t14_file_read PASS; dispatch 4/4.
 - zstd LADDER-008 re-checked post-changes: 3/3 (no regression). G1 pin OK
   12/12 (evidence/master/g1/20261017_145001). Upstream source read:
   lz4 v1.10.0 threadpool.c (borrowing policy ADR-014 — read-only guidance).
+
+---
+
+## 2026-10-17 (CONTINUE #11c) — BUG-065 md5deep wave: 4 sub-fixes + 1 regression caught
+- **BUG-065 sub-fixes (VERIFIED)**: 15 imports + 3 data imports (incl. __pioinfo
+  full ioinfo layout, _wfindfirst/next64 552B registry, sprintf/_snwprintf with
+  __builtin_ms_va_list, _wstat64); VirtualProtect EXEC bits + honest old-protect
+  + page-walk over section gaps; argv[0] = basename (md5deep cuts "deep" in
+  place — also unblocks busybox multi-call); FILE* issuance registry in
+  map_crt_stream (glibc "invalid stdio handle" abort prevention).
+- **Regression caught by re-verify**: zstd LADDER-008 → 139 because zstd opens
+  output via _open+_fdopen (unregistered FILE*). Fixed by registering
+  _fdopen/_fsopen/_wfopen results; zstd 3/3, lz4 3/3, G1 12/12 re-pinned.
+- **LADDER-013 md5deep64 = RUNS-PARTIAL**: exit 0 3/3, dispatch+hashing work,
+  final display line deterministically lost (winpthreads shutdown protocol) —
+  frontier + next steps documented in docs/bugs/BUG-065.md.
+- gzip (LADDER-010) = BLOCKED-OBTAIN: no official native win64 build exists
+  (GnuWin32 is 32-bit only); revisit via busybox64 gzip applet or self-build.
