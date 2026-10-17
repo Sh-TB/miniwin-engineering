@@ -192,3 +192,53 @@ puttygen RIP=0x0).
 - [ ] **SW-559** extend GDI-lite: TextOutA/W + FillRect + real WM_PAINT
       surface so programs that draw their OWN window content produce images
       (produkey window render = end goal).
+
+## SWEEP-005 wave (2026-10-18) — SW-501 micro-game 100% DELIVERED + real paint surface
+
+**Landed (loader.c, VERIFIED 3×3 byte-identical + G1 12/12 re-pinned):**
+- SWEEP-005 paint surface + event pump v2 (gated by MW_GUI_EVENTS=1; default v1
+  contract untouched): persistent framebuffer from guest's own CreateWindowEx
+  size; RegisterClass stores lpfnWndProc (offset 8) and DispatchMessage CALLS it;
+  WM_PAINT on demand (UpdateWindow/InvalidateRect), WM_TIMER (SetTimer), scripted
+  WM_KEYDOWN (MW_GUI_KEYS, paced MW_GUI_KEY_EVERY), budget guard, WM_QUIT with
+  wParam=exit code filled into MSG (Win32 semantics).
+- GDI32 pseudo-module (24 entries): BeginPaint/EndPaint/GetDC/FillRect/DrawTextA/
+  GetClientRect/InvalidateRect/ValidateRect/GetSysColor/LoadCursor/LoadIcon/
+  CallWindowProc/wsprintf(A|W)/lstrlen(A|W)/SetTimer/KillTimer/PeekMessage + GDI32:
+  TextOutA/W, ExtTextOutA, Rectangle, Ellipse, MoveToEx, LineTo, SetPixel,
+  CreateSolidBrush, CreatePen, GetStockObject, SelectObject, DeleteObject,
+  SetTextColor, SetBkColor, SetBkMode, SetMapMode, GetDeviceCaps, SaveDC,
+  RestoreDC, DeleteDC, PatBlt. EndPaint dumps framebuffer ->
+  <results>/<exe>/screenshots/frame_NNN.bmp (the guest's own rendered frames).
+- BUG-067: zig/mingw ucrt startup imports __p__acmdln (api-ms-win-crt-runtime);
+  unresolved stub returned 0 -> CRT deref NULL (mov rsi,[rax]) -> SIGSEGV before
+  main. Fix: mw___p__acmdln returns &g_acmdln_ptr.
+- BUG-067b: ms_abi variadic stub (wsprintfA) with SysV va_list read garbage
+  (reg_save_area=0) -> SIGSEGV inside mw_vfmt_a. Fix: __builtin_ms_va_list
+  (Wine pattern).
+- BUG-067c: pump priority PAINT-before-KEY let the per-tick pending paint steal
+  every key-parity slot -> scripted keys never delivered. Fix: KEY first.
+
+**SW-501 ACCEPTANCE (user mandate «شبیه سازی بازی میکرو ... ۱۰۰ درصد»): DELIVERED.**
+- tests/games/miniwin_snake.c — a REAL Win32 GDI game (RegisterClassA -> CreateWindowExA
+  -> ShowWindow/UpdateWindow -> SetTimer loop -> WndProc WM_TIMER step /
+  WM_KEYDOWN turn / WM_PAINT draw with FillRect/Ellipse/Rectangle/TextOutA via
+  CreateSolidBrush+SelectObject -> ESC/PostQuitMessage clean exit). Compiled to
+  PE x64 with zig cc (machine 0x8664, imports USER32/GDI32/KERNEL32+ucrt sets).
+- scripts/sweep005_snake_accept.sh: 3 runs (MW_GUI_EVENTS=1, keys
+  40,39,38,39,40,39,38,39,40,39,27): exit 0 ×3, 35 frames ×3, ALL 35 frames
+  byte-identical SHA-256 across runs; HUD shows Score: 10 | Len: 9 (LCG seed
+  12983 puts first food on the scripted path); food eaten -> grow -> respawn
+  verified in pixels. STAGE_TABLE row: RAN-EXIT0-GAME-100%.
+
+- [x] **SW-501** micro-game runs 100% under MiniWin — DONE (this wave).
+- [x] **SW-559 (core)** real WM_PAINT surface + TextOut/FillRect landed; open
+      remainder: produkey window content render (listview is comctl32-internal)
+      -> needs child-control emulation or SW-509 PE-DLL loader.
+- [ ] **SW-560** games wave 2: BitBlt/CreateCompatibleDC double buffering +
+      WM_CHAR + GetAsyncKeyState, then a second genre (tetris/breakout).
+- [ ] **SW-561** Coreinfo64.exe (live.sysinternals, current version) exit(1):
+      newer exe needs SetThreadGroupAffinity/GetProcessWorkingSetSize/
+      version.dll trio — version drift vs SWEEP-003 coreinfoex64, one BUG-*.
+- [ ] **SW-562** MW_GUI_EVENTS=1 battery: run all 16 runs_gui programs under the
+      pump to map which survive WM_PAINT delivery (post-SWEEP-005 frontier).

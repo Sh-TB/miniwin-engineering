@@ -4047,6 +4047,16 @@ __attribute__((ms_abi)) char*** mw___p__environ(void) {
     return &g_environ_cell;
 }
 
+/* BUG-067 (SWEEP-005): zig/mingw ucrt startup imports __p__acmdln from
+ * api-ms-win-crt-runtime-l1-1-0.dll. Without it the unresolved-import stub
+ * returned 0 and the guest CRT dereferenced it (mov rsi,[rax], RAX=0) ->
+ * SIGSEGV at RVA 0x26b1 before main. __p__acmdln returns char** pointing at
+ * the command-line char* (g_acmdln_ptr = g_cmdline_ansi, set in main). */
+__attribute__((ms_abi)) char** mw___p__acmdln(void) {
+    MW_TRACE("__p__acmdln() = %p", (void*)&g_acmdln_ptr);
+    return (char**)&g_acmdln_ptr;
+}
+
 
 /* TASK-API-012 + ISS1: FILE-level stdio bridges. fopen returns an
  * MSVCRT-layout registry handle (guest CRT locks fp+0x30 — see registry
@@ -9832,6 +9842,16 @@ __attribute__((ms_abi)) char* mw__mktemp(char* tmpl) {
  * (no event source yet) so guests unwind their loop cleanly. ---- */
 #define MW_GUI_ATOM      0xC001u           /* registered-class identity */
 #define MW_GUI_HWND      ((void*)0x00010001) /* first window identity */
+/* SWEEP-005 forward decls (definitions live after the SWEEP-004 raster):
+ * real paint surface + WNDPROC registry + gated event pump (MW_GUI_EVENTS). */
+static void mw_gui_store_wndproc(void* proc);
+static void mw_gui_store_window(int w, int h);
+static void mw_gui_set_quit(int code);
+static void mw_gui_send_destroy(void* hwnd);
+static void mw_gui_request_paint(void);
+static int  mw_gui_pump_getmsg(void* msg, void* hwnd, const char* api);
+static long long mw_gui_dispatch_msg(const void* msg);
+static int  mw_gui_events_enabled(void);
 __attribute__((ms_abi)) int mw_InitCommonControlsEx(const void* picc) {
     uint32_t classes = picc ? *(const uint32_t*)((const char*)picc + 4) : 0;
     MW_TRACE("InitCommonControlsEx(dwICC=0x%x) -> TRUE", classes);
@@ -9841,24 +9861,31 @@ __attribute__((ms_abi)) void mw_InitCommonControls(void) {
     MW_TRACE("InitCommonControls()");
 }
 __attribute__((ms_abi)) uint16_t mw_RegisterClassExW(const void* wcex) {
+    /* SWEEP-005: WNDCLASSEXW.lpfnWndProc lives at offset 8 (after cbSize) */
+    if (wcex) mw_gui_store_wndproc(*(void* const*)((const char*)wcex + 8));
     MW_TRACE("RegisterClassExW(wcex=%p) -> ATOM 0x%x", wcex, MW_GUI_ATOM);
     return MW_GUI_ATOM;
 }
 __attribute__((ms_abi)) uint16_t mw_RegisterClassExA(const void* wcex) {
+    if (wcex) mw_gui_store_wndproc(*(void* const*)((const char*)wcex + 8));
     MW_TRACE("RegisterClassExA(wcex=%p) -> ATOM 0x%x", wcex, MW_GUI_ATOM);
     return MW_GUI_ATOM;
 }
 __attribute__((ms_abi)) uint16_t mw_RegisterClassW(const void* wc) {
+    /* WNDCLASSW.lpfnWndProc also at offset 8 (style is 4 bytes + pad) */
+    if (wc) mw_gui_store_wndproc(*(void* const*)((const char*)wc + 8));
     MW_TRACE("RegisterClassW(wc=%p) -> ATOM 0x%x", wc, MW_GUI_ATOM);
     return MW_GUI_ATOM;
 }
 __attribute__((ms_abi)) uint16_t mw_RegisterClassA(const void* wc) {
+    if (wc) mw_gui_store_wndproc(*(void* const*)((const char*)wc + 8));
     MW_TRACE("RegisterClassA(wc=%p) -> ATOM 0x%x", wc, MW_GUI_ATOM);
     return MW_GUI_ATOM;
 }
 __attribute__((ms_abi)) void* mw_CreateWindowExW(uint32_t exstyle, const void* cls,
         const uint16_t* win, uint32_t style, int x, int y, int w, int h,
         void* parent, void* menu, void* inst, void* param) {
+    mw_gui_store_window((int)w, (int)h); /* SWEEP-005: allocate paint surface */
     MW_TRACE("CreateWindowExW(ex=0x%x style=0x%x cls=%p %dx%d@%d,%d) -> HWND %p",
              exstyle, style, cls, w, h, x, y, MW_GUI_HWND);
     return MW_GUI_HWND;
@@ -9866,6 +9893,7 @@ __attribute__((ms_abi)) void* mw_CreateWindowExW(uint32_t exstyle, const void* c
 __attribute__((ms_abi)) void* mw_CreateWindowExA(uint32_t exstyle, const void* cls,
         const char* win, uint32_t style, int x, int y, int w, int h,
         void* parent, void* menu, void* inst, void* param) {
+    mw_gui_store_window((int)w, (int)h); /* SWEEP-005: allocate paint surface */
     MW_TRACE("CreateWindowExA(ex=0x%x style=0x%x cls=%p %dx%d@%d,%d) -> HWND %p",
              exstyle, style, cls, w, h, x, y, MW_GUI_HWND);
     return MW_GUI_HWND;
@@ -9876,31 +9904,32 @@ __attribute__((ms_abi)) int mw_ShowWindow(void* hwnd, int cmd) {
 }
 __attribute__((ms_abi)) int mw_UpdateWindow(void* hwnd) {
     MW_TRACE("UpdateWindow(hwnd=%p)", hwnd);
+    if (mw_gui_events_enabled()) mw_gui_request_paint(); /* update region -> WM_PAINT */
     return 1;
 }
 __attribute__((ms_abi)) int mw_DestroyWindow(void* hwnd) {
     MW_TRACE("DestroyWindow(hwnd=%p)", hwnd);
+    /* SWEEP-005: real semantics — WM_DESTROY is sent to the wndproc */
+    mw_gui_send_destroy(hwnd);
     return 1;
 }
 __attribute__((ms_abi)) int mw_GetMessageW(void* msg, void* hwnd, uint32_t lo, uint32_t hi) {
-    MW_TRACE("GetMessageW(hwnd=%p) -> 0 (WM_QUIT: no event source)", hwnd);
-    return 0;
+    (void)lo; (void)hi;
+    return mw_gui_pump_getmsg(msg, hwnd, "GetMessageW");
 }
 __attribute__((ms_abi)) int mw_GetMessageA(void* msg, void* hwnd, uint32_t lo, uint32_t hi) {
-    MW_TRACE("GetMessageA(hwnd=%p) -> 0 (WM_QUIT: no event source)", hwnd);
-    return 0;
+    (void)lo; (void)hi;
+    return mw_gui_pump_getmsg(msg, hwnd, "GetMessageA");
 }
 __attribute__((ms_abi)) int mw_TranslateMessage(const void* msg) {
     (void)msg;
     return 0; /* not translated — guests still DispatchMessage */
 }
 __attribute__((ms_abi)) long long mw_DispatchMessageW(const void* msg) {
-    (void)msg;
-    return 0;
+    return mw_gui_dispatch_msg(msg); /* SWEEP-005: calls guest wndproc */
 }
 __attribute__((ms_abi)) long long mw_DispatchMessageA(const void* msg) {
-    (void)msg;
-    return 0;
+    return mw_gui_dispatch_msg(msg); /* SWEEP-005: calls guest wndproc */
 }
 __attribute__((ms_abi)) long long mw_DefWindowProcW(void* hwnd, uint32_t msg,
         uintptr_t wp, long long lp) {
@@ -9913,6 +9942,7 @@ __attribute__((ms_abi)) long long mw_DefWindowProcA(void* hwnd, uint32_t msg,
     return 0;
 }
 __attribute__((ms_abi)) void mw_PostQuitMessage(int code) {
+    mw_gui_set_quit(code); /* SWEEP-005: pump honors this on next GetMessage */
     MW_TRACE("PostQuitMessage(%d)", code);
 }
 /* ==== end SWEEP-003 GUI skeleton ==== */
@@ -10067,6 +10097,718 @@ __attribute__((ms_abi)) int mw_MessageBoxA(void* hwnd, const char* text,
 /* ==== end SWEEP-004 GDI-lite ==== */
 
 
+/* ---- SWEEP-005: real paint surface + GDI32 module + message pump v2 ----
+ * SW-501 (user mandate, must run 100%): a micro-game has to run to
+ * completion under MiniWin. Games need a real event loop (WM_TIMER /
+ * WM_PAINT / WM_KEYDOWN) and a real draw surface (GDI). This block adds:
+ *   1. A persistent window framebuffer allocated at CreateWindowEx from the
+ *      guest's own width/height, rasterized with the SWEEP-004 helpers.
+ *   2. A guest WNDPROC registry: RegisterClass stores lpfnWndProc (offset 8),
+ *      DispatchMessage actually CALLS it — guest message handlers run.
+ *   3. An event pump gated by MW_GUI_EVENTS=1: WM_PAINT on demand
+ *      (UpdateWindow/InvalidateRect), WM_TIMER (SetTimer), scripted
+ *      WM_KEYDOWN (MW_GUI_KEYS=VK,.., paced by MW_GUI_KEY_EVERY, default 8),
+ *      budget guard (MW_GUI_EVENTS_BUDGET, default 400), then WM_QUIT.
+ *      Default mode (MW_GUI_EVENTS unset) keeps the SWEEP-003 v1 contract:
+ *      immediate WM_QUIT — zero behavior change for existing guests.
+ *   4. GDI32 pseudo-module: TextOut/Rectangle/Ellipse/FillRect/LineTo/
+ *      brushes/pens/state — every draw lands in the framebuffer; EndPaint
+ *      dumps it to <results>/screenshots/frame_NNN.bmp (guest's own image).
+ * ---- */
+#include <stdarg.h>
+typedef __attribute__((ms_abi)) long long (*MW_WNDPROC)(void*, uint32_t, uintptr_t, long long);
+
+static MW_WNDPROC g_wndproc_fwd = 0;   /* guest window procedure */
+static void*     g_main_hwnd = 0;
+static int       g_win_w = 640, g_win_h = 480;
+static MWBmp     g_surf = { 0, 0, 0 }; /* window framebuffer (0xRRGGBB pixels) */
+static int       g_events_mode = -1;   /* -1 = not yet read from env */
+static int       g_paint_pending = 0;
+static int       g_quit_flag = 0, g_quit_code = 0;
+static int       g_timer_live = 0; static uintptr_t g_timer_id = 0;
+static int       g_delivered = 0, g_budget = 400;
+static uint32_t  g_keyv[64]; static int g_keyn = 0, g_keyi = 0;
+static int       g_key_every = 8;
+static int       g_frame_no = 0;
+static char      g_frame_dir[600];
+
+/* GDI draw state (colors stored as 0xRRGGBB, guest COLORREF is 0x00BBGGRR) */
+static uint32_t  g_cur_brush = 0xFFFFFF; static int g_brush_hollow = 0;
+static uint32_t  g_cur_pen = 0x000000;
+static int       g_pen_x = 0, g_pen_y = 0;
+static uint32_t  g_text_col = 0x000000;
+static uint32_t  g_bk_col = 0xFFFFFF;
+static int       g_bk_mode = 2;        /* OPAQUE=2, TRANSPARENT=1 */
+static uint32_t  g_brush_rgb[32]; static uint8_t g_brush_live[32];
+static uint32_t  g_pen_rgb[32];   static uint8_t g_pen_live[32];
+static int       g_obj_next = 0;
+
+static uint32_t mw_cr2rgb(uint32_t c) { /* COLORREF 0x00BBGGRR -> 0xRRGGBB */
+    return ((c & 0xFFu) << 16) | (c & 0xFF00u) | ((c >> 16) & 0xFFu);
+}
+static uint32_t mw_rgb2cr(uint32_t c) { /* inverse */
+    return ((c & 0xFFu) << 16) | (c & 0xFF00u) | ((c >> 16) & 0xFFu);
+}
+static const char* mw_wm_name(uint32_t m) {
+    switch (m) {
+    case 0x0002u: return "WM_DESTROY";
+    case 0x000Fu: return "WM_PAINT";
+    case 0x0012u: return "WM_QUIT";
+    case 0x0100u: return "WM_KEYDOWN";
+    case 0x0113u: return "WM_TIMER";
+    default: return "WM_?";
+    }
+}
+/* safe guest-memory probe (BUG-066 discipline: never trust readability) */
+static int mw_probe_copy(const void* src, size_t n, void* dst) {
+    struct iovec l = { dst, n }, r = { (void*)src, n };
+    ssize_t got = process_vm_readv(getpid(), &l, 1, &r, 1, 0);
+    return (got == (ssize_t)n) ? (int)n : 0;
+}
+
+/* ---- registry / surface hooks (called from SWEEP-003 stubs) ---- */
+static void mw_gui_store_wndproc(void* proc) { if (proc) g_wndproc_fwd = (MW_WNDPROC)proc; }
+static void mw_gui_store_window(int w, int h) {
+    if (w < 32) w = 32; if (w > 1280) w = 1280;
+    if (h < 32) h = 32; if (h > 1024) h = 1024;
+    g_win_w = w; g_win_h = h; g_main_hwnd = MW_GUI_HWND;
+    if (!g_surf.px) {
+        g_surf.px = (uint8_t*)calloc((size_t)w * (size_t)h, 3);
+        g_surf.w = w; g_surf.h = h;
+        mwb_fill(&g_surf, 0, 0, w, h, 0xFFFFFF);
+        snprintf(g_frame_dir, sizeof(g_frame_dir), "%s/screenshots", g_result_base_dir);
+        mkdir(g_result_base_dir, 0755); mkdir(g_frame_dir, 0755);
+        MW_TRACE("[GUI] paint surface allocated %dx%d (SWEEP-005)", w, h);
+    }
+}
+static void mw_gui_set_quit(int code) { g_quit_flag = 1; g_quit_code = code; }
+static void mw_gui_send_destroy(void* hwnd) {
+    if (mw_gui_events_enabled() && g_wndproc_fwd) {
+        long long r = g_wndproc_fwd(hwnd, 0x0002u, 0, 0);
+        MW_TRACE("[GUI] WM_DESTROY -> wndproc -> %lld", r);
+    }
+}
+static void mw_gui_request_paint(void) { g_paint_pending = 1; }
+
+static int mw_gui_events_enabled(void) {
+    if (g_events_mode < 0) {
+        const char* e = getenv("MW_GUI_EVENTS");
+        g_events_mode = (e && e[0] && e[0] != '0') ? 1 : 0;
+        const char* k = getenv("MW_GUI_KEYS");
+        if (k && g_events_mode) {
+            char tmp[512]; strncpy(tmp, k, sizeof(tmp) - 1); tmp[sizeof(tmp) - 1] = 0;
+            for (char* t = strtok(tmp, ","); t && g_keyn < 64; t = strtok(NULL, ","))
+                g_keyv[g_keyn++] = (uint32_t)strtoul(t, 0, 0);
+        }
+        const char* b = getenv("MW_GUI_EVENTS_BUDGET");
+        if (b) { int v = atoi(b); if (v > 0) g_budget = v; }
+        const char* ke = getenv("MW_GUI_KEY_EVERY");
+        if (ke) { int v = atoi(ke); if (v > 0) g_key_every = v; }
+        if (g_events_mode)
+            MW_TRACE("[GUI] event pump v2 ARMED (budget=%d keys=%d every=%d)",
+                     g_budget, g_keyn, g_key_every);
+    }
+    return g_events_mode;
+}
+
+/* fill an x64 MSG: hwnd@0 message@8 wParam@16 lParam@24 time@32 pt@36 */
+static void mw_gui_fill_msg(void* msg, void* hwnd, uint32_t m, uintptr_t wp, long long lp) {
+    if (!msg) return;
+    uint8_t* p = (uint8_t*)msg;
+    memset(p, 0, 48);
+    *(void**)(p + 0) = hwnd;
+    *(uint32_t*)(p + 8) = m;
+    *(uintptr_t*)(p + 16) = wp;
+    *(long long*)(p + 24) = lp;
+}
+
+/* pick the next pump event; consume=1 mutates pump state (GetMessage),
+ * consume=0 is a PM_NOREMOVE peek. Returns 1 when an event was filled.
+ * Priority: WM_KEYDOWN first (BUG-067c: with PAINT first, the pending paint
+ * set by every WM_TIMER->InvalidateRect always won at the key-parity slots
+ * and scripted keys were never delivered). */
+static int mw_gui_next_event(void* msg, void* hwnd, int consume, const char* api) {
+    void* h = g_main_hwnd ? g_main_hwnd : hwnd;
+    if (g_keyi < g_keyn && (g_delivered % g_key_every) == 0) {
+        uint32_t vk = g_keyv[g_keyi++];
+        if (consume) g_delivered++;
+        mw_gui_fill_msg(msg, h, 0x0100u, (uintptr_t)vk, 1);
+        if (consume) MW_TRACE("[GUI-EVENT] #%d %s -> WM_KEYDOWN VK=0x%x", g_delivered, api, vk);
+        return 1;
+    }
+    if (g_paint_pending) {
+        if (consume) { g_paint_pending = 0; g_delivered++; }
+        mw_gui_fill_msg(msg, h, 0x000Fu, 0, 0);
+        if (consume) MW_TRACE("[GUI-EVENT] #%d %s -> WM_PAINT", g_delivered, api);
+        return 1;
+    }
+    if (g_timer_live) {
+        if (consume) g_delivered++;
+        mw_gui_fill_msg(msg, h, 0x0113u, (uintptr_t)g_timer_id, 0);
+        if (consume)
+            MW_TRACE("[GUI-EVENT] #%d %s -> WM_TIMER id=%lu", g_delivered, api,
+                     (unsigned long)g_timer_id);
+        return 1;
+    }
+    return 0;
+}
+
+static int mw_gui_pump_getmsg(void* msg, void* hwnd, const char* api) {
+    if (!mw_gui_events_enabled()) {
+        MW_TRACE("%s(hwnd=%p) -> 0 (WM_QUIT: no event source)", api, hwnd);
+        return 0;
+    }
+    /* Win32: when GetMessage returns 0 the MSG holds WM_QUIT with wParam =
+     * the PostQuitMessage code — guests do `return (int)msg.wParam;` */
+    if (g_quit_flag) {
+        MW_TRACE("%s() -> 0 (WM_QUIT code=%d)", api, g_quit_code);
+        mw_gui_fill_msg(msg, hwnd, 0x0012u, (uintptr_t)g_quit_code, 0);
+        return 0;
+    }
+    if (g_delivered >= g_budget) {
+        MW_TRACE("[GUI] event budget %d exhausted -> WM_QUIT", g_budget);
+        g_quit_flag = 1;
+        mw_gui_fill_msg(msg, hwnd, 0x0012u, 0, 0);
+        return 0;
+    }
+    if (mw_gui_next_event(msg, hwnd, 1, api)) return 1;
+    MW_TRACE("%s() -> 0 (no event source: no timer/paint/keys left)", api);
+    g_quit_flag = 1;
+    mw_gui_fill_msg(msg, hwnd, 0x0012u, 0, 0);
+    return 0;
+}
+
+static long long mw_gui_dispatch_msg(const void* msg) {
+    if (!msg) return 0;
+    const uint8_t* p = (const uint8_t*)msg;
+    void* hwnd = *(void* const*)p;
+    uint32_t m = *(const uint32_t*)(p + 8);
+    uintptr_t wp = *(const uintptr_t*)(p + 16);
+    long long lp = *(const long long*)(p + 24);
+    if (m == 0x0012u) return 0; /* WM_QUIT is never dispatched */
+    if (g_wndproc_fwd && hwnd == g_main_hwnd) {
+        long long r = g_wndproc_fwd(hwnd, m, wp, lp);
+        MW_TRACE("[GUI-EVENT] dispatch %s wp=0x%llx -> %lld",
+                 mw_wm_name(m), (unsigned long long)wp, r);
+        return r;
+    }
+    MW_TRACE("[GUI-EVENT] dispatch %s -> 0 (no registered wndproc)", mw_wm_name(m));
+    return 0;
+}
+
+/* ---- paint surface: BeginPaint/EndPaint + frame dump ---- */
+__attribute__((ms_abi)) void* mw_BeginPaint(void* hwnd, void* ps) {
+    if (ps) {
+        /* x64 PAINTSTRUCT: hdc@0 fErase@8 rcPaint@12 fRestore@28 fIncUpdate@32
+         * rgbReserved[32]@36 — total 72 bytes */
+        uint8_t* p = (uint8_t*)ps;
+        memset(p, 0, 72);
+        *(void**)(p + 0) = (void*)0x00020001;
+        *(uint32_t*)(p + 8) = 1; /* fErase = TRUE */
+        *(int32_t*)(p + 12) = 0; *(int32_t*)(p + 16) = 0;
+        *(int32_t*)(p + 20) = g_win_w; *(int32_t*)(p + 24) = g_win_h;
+    }
+    if (g_surf.px) mwb_fill(&g_surf, 0, 0, g_surf.w, g_surf.h, 0xFFFFFF); /* erase */
+    MW_TRACE("BeginPaint(hwnd=%p) -> hdc 0x20001 (%dx%d)", hwnd, g_win_w, g_win_h);
+    return (void*)0x00020001;
+}
+/* 24-bit bottom-up BMP writer for the window surface */
+static void mw_surface_dump(const char* kind) {
+    if (!g_surf.px) return;
+    char path[768];
+    snprintf(path, sizeof(path), "%s/frame_%03d.bmp",
+             g_frame_dir[0] ? g_frame_dir : "miniwin-results/screenshots", ++g_frame_no);
+    int W = g_surf.w, H = g_surf.h;
+    int pad = (4 - (W * 3) % 4) % 4;
+    uint32_t datasz = (uint32_t)((W * 3 + pad) * H);
+    uint8_t hdr[54] = { 'B','M',0,0,0,0,0,0,0,0,54,0,0,0,40,0,0,0,0,0,0,0,0,0,0,0,1,0,24,0 };
+    uint32_t fsz = 54 + datasz;
+    memcpy(hdr + 2, &fsz, 4); memcpy(hdr + 22, &H, 4); memcpy(hdr + 18, &W, 4);
+    memcpy(hdr + 34, &datasz, 4);
+    FILE* f = fopen(path, "wb");
+    if (f) {
+        fwrite(hdr, 1, 54, f);
+        uint8_t* row = (uint8_t*)malloc((size_t)W * 3 + 4);
+        if (row) {
+            for (int y = H - 1; y >= 0; y--) {
+                memcpy(row, g_surf.px + 3 * ((size_t)y * W), (size_t)W * 3);
+                memset(row + W * 3, 0, (size_t)pad);
+                fwrite(row, 1, (size_t)W * 3 + pad, f);
+            }
+            free(row);
+        }
+        fclose(f);
+        MW_TRACE("[GDI] frame #%d (%s) %dx%d -> %s", g_frame_no, kind, W, H, path);
+        fprintf(stderr, "[GDI-FRAME] #%d -> %s\n", g_frame_no, path);
+    }
+}
+__attribute__((ms_abi)) int mw_EndPaint(void* hwnd, const void* ps) {
+    (void)hwnd; (void)ps;
+    mw_surface_dump("EndPaint");
+    return 1; /* TRUE */
+}
+__attribute__((ms_abi)) void* mw_GetDC(void* hwnd) {
+    (void)hwnd;
+    return (void*)0x00020001;
+}
+__attribute__((ms_abi)) int mw_ReleaseDC(void* hwnd, void* hdc) {
+    (void)hwnd; (void)hdc;
+    return 1;
+}
+
+/* ---- SWEEP-005 part 2: USER32 draw stubs + GDI32 pseudo-module ---- */
+__attribute__((ms_abi)) int mw_FillRect(void* hdc, const void* rect, void* hbrush) {
+    (void)hdc;
+    if (rect && g_surf.px) {
+        const int32_t* r = (const int32_t*)rect;
+        uintptr_t v = (uintptr_t)hbrush;
+        uint32_t col = 0xC0C0C0;
+        int hollow = 0;
+        if ((v & 0xFFFFF000u) == 0x00030000u) {
+            int i = (int)(v & 0x1F);
+            if (g_brush_live[i]) col = g_brush_rgb[i];
+        } else if ((v & 0xFFFF0000u) == 0x00040000u) {
+            int idx = (int)(v & 0xFF);
+            switch (idx) { /* stock brushes */
+            case 0: col = 0xFFFFFF; break; case 1: col = 0xC0C0C0; break;
+            case 2: col = 0x808080; break; case 3: col = 0x404040; break;
+            case 4: col = 0x000000; break;
+            case 5: hollow = 1; break; /* NULL_BRUSH: paints nothing */
+            case 18: col = 0xFFFFFF; break; /* DC_BRUSH */
+            default: col = 0xC0C0C0; break;
+            }
+        }
+        if (!hollow) {
+            mwb_fill(&g_surf, r[0], r[1], r[2] - r[0], r[3] - r[1], col);
+            MW_TRACE("[GDI] FillRect(%d,%d)-(%d,%d) color=#%06x", r[0], r[1], r[2], r[3], col);
+        }
+    }
+    return 1;
+}
+__attribute__((ms_abi)) int mw_GetClientRect(void* hwnd, void* rect) {
+    (void)hwnd;
+    if (rect) {
+        int32_t* r = (int32_t*)rect;
+        r[0] = 0; r[1] = 0; r[2] = g_win_w; r[3] = g_win_h;
+    }
+    MW_TRACE("GetClientRect(hwnd=%p) -> %dx%d", hwnd, g_win_w, g_win_h);
+    return 1;
+}
+__attribute__((ms_abi)) int mw_InvalidateRect(void* hwnd, const void* rect, int erase) {
+    (void)hwnd; (void)rect; (void)erase;
+    g_paint_pending = 1;
+    MW_TRACE("[GUI] InvalidateRect -> paint pending");
+    return 1;
+}
+__attribute__((ms_abi)) int mw_ValidateRect(void* hwnd, const void* rect) {
+    (void)hwnd; (void)rect;
+    g_paint_pending = 0;
+    return 1;
+}
+__attribute__((ms_abi)) uint32_t mw_GetSysColor(int idx) {
+    uint32_t c; /* COLORREF 0x00BBGGRR, classic Win95 palette */
+    switch (idx) {
+    case 5:  c = 0x00FFFFFF; break;  /* COLOR_WINDOW */
+    case 8:  c = 0x00000000; break;  /* COLOR_WINDOWTEXT */
+    case 13: c = 0x00800000; break;  /* COLOR_HIGHLIGHT */
+    case 15: case 16: c = 0x00C0C0C0; break; /* BTNFACE / 3DFACE */
+    case 17: c = 0x00808080; break;  /* COLOR_3DSHADOW */
+    case 18: c = 0x00000000; break;  /* COLOR_BTNTEXT */
+    default: c = 0x00C0C0C0; break;
+    }
+    MW_TRACE("GetSysColor(%d) -> 0x%06x", idx, c);
+    return c;
+}
+__attribute__((ms_abi)) void* mw_LoadCursorA(void* h, const char* name) {
+    (void)h; (void)name;
+    return (void*)0x00050001;
+}
+__attribute__((ms_abi)) void* mw_LoadCursorW(void* h, const uint16_t* name) {
+    (void)h; (void)name;
+    return (void*)0x00050001;
+}
+__attribute__((ms_abi)) void* mw_LoadIconA(void* h, const char* name) {
+    (void)h; (void)name;
+    return (void*)0x00050002;
+}
+__attribute__((ms_abi)) void* mw_LoadIconW(void* h, const uint16_t* name) {
+    (void)h; (void)name;
+    return (void*)0x00050002;
+}
+__attribute__((ms_abi)) long long mw_CallWindowProcA(void* proc, void* hwnd, uint32_t m,
+        uintptr_t wp, long long lp) {
+    if (!proc) return 0;
+    return ((MW_WNDPROC)proc)(hwnd, m, wp, lp);
+}
+__attribute__((ms_abi)) long long mw_CallWindowProcW(void* proc, void* hwnd, uint32_t m,
+        uintptr_t wp, long long lp) {
+    if (!proc) return 0;
+    return ((MW_WNDPROC)proc)(hwnd, m, wp, lp);
+}
+__attribute__((ms_abi)) uintptr_t mw_SetTimer(void* hwnd, uintptr_t id, uint32_t elapse, void* proc) {
+    (void)hwnd; (void)proc;
+    g_timer_live = 1; g_timer_id = id;
+    MW_TRACE("[GUI] SetTimer(id=%lu, %ums) -> armed", (unsigned long)id, elapse);
+    return id;
+}
+__attribute__((ms_abi)) int mw_KillTimer(void* hwnd, uintptr_t id) {
+    (void)hwnd; (void)id;
+    g_timer_live = 0;
+    return 1;
+}
+__attribute__((ms_abi)) int mw_PeekMessageA(void* msg, void* hwnd, uint32_t lo, uint32_t hi, uint32_t remove) {
+    (void)lo; (void)hi;
+    if (!mw_gui_events_enabled() || g_quit_flag) return 0;
+    return mw_gui_next_event(msg, hwnd, (int)(remove & 1u), "PeekMessageA");
+}
+__attribute__((ms_abi)) int mw_PeekMessageW(void* msg, void* hwnd, uint32_t lo, uint32_t hi, uint32_t remove) {
+    (void)lo; (void)hi;
+    if (!mw_gui_events_enabled() || g_quit_flag) return 0;
+    return mw_gui_next_event(msg, hwnd, (int)(remove & 1u), "PeekMessageW");
+}
+/* tiny printf: %d %i %u %x %X %s %c %% (+ 'l'/'ll' + width skim).
+ * BUG-067b: must use __builtin_ms_va_list (Wine pattern) — the default SysV
+ * va_list inside an ms_abi variadic function reads garbage (reg_save_area=0
+ * -> movslq (%rsi) with RSI=0 -> SIGSEGV inside mw_vfmt_a, seen at
+ * 0x202fd74 in minwin_loader). */
+static int mw_vfmt_a(char* dst, size_t cap, const char* fmt, __builtin_ms_va_list ap) {
+    size_t o = 0;
+    for (const char* p = fmt; *p && o + 1 < cap; p++) {
+        if (*p != '%') { dst[o++] = *p; continue; }
+        p++;
+        while (*p == '-' || *p == '0' || *p == '+' || *p == ' ' ||
+               *p == '.' || (*p >= '0' && *p <= '9')) p++;
+        if (*p == 'l') p++;
+        if (*p == 'l') p++;
+        char c = *p;
+        if (!c) break;
+        if (c == 'd' || c == 'i') {
+            long long v = va_arg(ap, int);
+            char t[24]; int k = 0; unsigned long long u;
+            if (v < 0) { if (o + 1 < cap) dst[o++] = '-'; u = (unsigned long long)(-(v + 1)) + 1ULL; }
+            else u = (unsigned long long)v;
+            do { t[k++] = (char)('0' + (u % 10)); u /= 10; } while (u);
+            while (k && o + 1 < cap) dst[o++] = t[--k];
+        } else if (c == 'u') {
+            unsigned long long u = va_arg(ap, unsigned int);
+            char t[24]; int k = 0;
+            do { t[k++] = (char)('0' + (u % 10)); u /= 10; } while (u);
+            while (k && o + 1 < cap) dst[o++] = t[--k];
+        } else if (c == 'x' || c == 'X') {
+            unsigned long long u = va_arg(ap, unsigned int);
+            char t[24]; int k = 0;
+            const char* hx = (c == 'x') ? "0123456789abcdef" : "0123456789ABCDEF";
+            do { t[k++] = hx[u & 15]; u >>= 4; } while (u);
+            while (k && o + 1 < cap) dst[o++] = t[--k];
+        } else if (c == 's') {
+            const char* s = va_arg(ap, const char*);
+            if (!s) s = "(null)";
+            while (*s && o + 1 < cap) dst[o++] = *s++;
+        } else if (c == 'c') {
+            int ch = va_arg(ap, int);
+            dst[o++] = (char)ch;
+        } else if (c == '%') {
+            dst[o++] = '%';
+        } else {
+            dst[o++] = '%'; /* unknown conv: keep honest */
+        }
+        dst[o] = 0;
+    }
+    dst[o] = 0;
+    return (int)o;
+}
+__attribute__((ms_abi)) int mw_wsprintfA(char* buf, const char* fmt, ...) {
+    if (!buf) return 0;
+    __builtin_ms_va_list ap;
+    __builtin_ms_va_start(ap, fmt);
+    int n = mw_vfmt_a(buf, 1024, fmt, ap);
+    __builtin_ms_va_end(ap);
+    return n;
+}
+__attribute__((ms_abi)) int mw_wsprintfW(uint16_t* buf, const uint16_t* fmt, ...) {
+    if (!buf) return 0;
+    char f8[512], out[1024];
+    if (fmt) w3_w16_to_utf8z(fmt, f8, sizeof(f8)); else f8[0] = 0;
+    __builtin_ms_va_list ap;
+    __builtin_ms_va_start(ap, fmt);
+    int n = mw_vfmt_a(out, sizeof(out), f8, ap);
+    __builtin_ms_va_end(ap);
+    int i = 0;
+    for (; i < n && i < 1023; i++) buf[i] = (uint16_t)(uint8_t)out[i];
+    buf[i] = 0;
+    return n;
+}
+static int mw_safe_strlen_a(const char* s) {
+    int n = 0;
+    char chunk[128];
+    while (n < 32768) {
+        if (!mw_probe_copy(s + n, sizeof(chunk), chunk)) {
+            for (int k = 0; k < (int)sizeof(chunk); k++) {
+                char c;
+                if (!mw_probe_copy(s + n + k, 1, &c)) return n;
+                if (!c) return n + k;
+            }
+            return n;
+        }
+        for (int k = 0; k < (int)sizeof(chunk); k++)
+            if (!chunk[k]) return n + k;
+        n += (int)sizeof(chunk);
+    }
+    return n;
+}
+__attribute__((ms_abi)) int mw_lstrlenA(const char* s) {
+    return s ? mw_safe_strlen_a(s) : 0;
+}
+__attribute__((ms_abi)) int mw_lstrlenW(const uint16_t* s) {
+    if (!s) return 0;
+    int n = 0;
+    uint16_t chunk[64];
+    while (n < 16384) {
+        if (!mw_probe_copy(s + n, sizeof(chunk), chunk)) return n;
+        for (int k = 0; k < (int)(sizeof(chunk) / 2); k++)
+            if (!chunk[k]) return n + k;
+        n += (int)(sizeof(chunk) / 2);
+    }
+    return n;
+}
+/* ---- GDI32 module: text, shapes, objects, state ---- */
+__attribute__((ms_abi)) int mw_TextOutA(void* hdc, int x, int y, const char* s, int len) {
+    (void)hdc;
+    if (!s || len <= 0 || !g_surf.px) return 1;
+    if (len > 512) len = 512;
+    char buf[513];
+    if (!mw_probe_copy(s, (size_t)len, buf)) {
+        MW_TRACE("[GDI] TextOutA @%d,%d len=%d (guest text unreadable)", x, y, len);
+        return 1;
+    }
+    buf[len] = 0;
+    if (g_bk_mode != 1) mwb_fill(&g_surf, x, y, len * 8, 8, g_bk_col);
+    mwb_text8(&g_surf, x, y, buf, g_text_col, 1);
+    MW_TRACE("[GDI] TextOutA(%d,%d) '%s'", x, y, buf);
+    return 1;
+}
+__attribute__((ms_abi)) int mw_TextOutW(void* hdc, int x, int y, const uint16_t* s, int len) {
+    (void)hdc;
+    if (!s || len <= 0 || !g_surf.px) return 1;
+    if (len > 512) len = 512;
+    uint16_t wbuf[513];
+    if (!mw_probe_copy(s, (size_t)len * 2, wbuf)) return 1;
+    wbuf[len] = 0;
+    char buf[1025];
+    w3_w16_to_utf8z(wbuf, buf, sizeof(buf));
+    if (g_bk_mode != 1) mwb_fill(&g_surf, x, y, len * 8, 8, g_bk_col);
+    mwb_text8(&g_surf, x, y, buf, g_text_col, 1);
+    MW_TRACE("[GDI] TextOutW(%d,%d) '%s'", x, y, buf);
+    return 1;
+}
+__attribute__((ms_abi)) int mw_ExtTextOutA(void* hdc, int x, int y, uint32_t opts,
+        const void* rect, const char* s, int len, const void* dx) {
+    (void)opts; (void)rect; (void)dx;
+    return mw_TextOutA(hdc, x, y, s, len);
+}
+__attribute__((ms_abi)) int mw_DrawTextA(void* hdc, const char* s, int n, void* rect, uint32_t flags) {
+    (void)hdc;
+    if (!s || !rect || !g_surf.px) return 0;
+    char buf[513];
+    int cap = (n < 0) ? 512 : (n > 512 ? 512 : n);
+    if (n < 0) {
+        if (!mw_probe_copy(s, 512, buf)) return 0;
+        buf[512] = 0;
+    } else {
+        if (!mw_probe_copy(s, (size_t)cap, buf)) return 0;
+        buf[cap] = 0;
+    }
+    int32_t* r = (int32_t*)rect;
+    int tw = (int)strlen(buf) * 8, th = 8;
+    if (flags & 0x400u) { /* DT_CALCRECT */
+        r[2] = r[0] + tw; r[3] = r[1] + th;
+        MW_TRACE("[GDI] DrawTextA DT_CALCRECT '%s' -> %dx%d", buf, tw, th);
+        return th;
+    }
+    mwb_text8(&g_surf, r[0], r[1], buf, g_text_col, 1);
+    MW_TRACE("[GDI] DrawTextA @(%d,%d) '%s'", r[0], r[1], buf);
+    return th;
+}
+__attribute__((ms_abi)) int mw_Rectangle(void* hdc, int l, int t, int r, int b) {
+    (void)hdc;
+    if (g_surf.px && r > l && b > t) {
+        if (!g_brush_hollow) mwb_fill(&g_surf, l, t, r - l, b - t, g_cur_brush);
+        mwb_fill(&g_surf, l, t, r - l, 1, g_cur_pen);
+        mwb_fill(&g_surf, l, b - 1, r - l, 1, g_cur_pen);
+        mwb_fill(&g_surf, l, t, 1, b - t, g_cur_pen);
+        mwb_fill(&g_surf, r - 1, t, 1, b - t, g_cur_pen);
+        MW_TRACE("[GDI] Rectangle(%d,%d,%d,%d) fill=#%06x", l, t, r, b, g_cur_brush);
+    }
+    return 1;
+}
+__attribute__((ms_abi)) int mw_Ellipse(void* hdc, int l, int t, int r, int b) {
+    (void)hdc;
+    if (g_surf.px && r > l && b > t) {
+        int cx = (l + r) / 2, cy = (t + b) / 2;
+        long rx = (r - l) / 2, ry = (b - t) / 2;
+        if (rx < 1 || ry < 1) {
+            mwb_fill(&g_surf, l, t, r - l, b - t, g_cur_brush);
+        } else {
+            for (int y = t; y <= b; y++)
+                for (int x = l; x <= r; x++) {
+                    long dx = (long)(x - cx) * 2, dy = (long)(y - cy) * 2;
+                    if ((dx * dx) / (rx * rx) + (dy * dy) / (ry * ry) <= 1)
+                        mwb_set(&g_surf, x, y, g_cur_brush);
+                }
+        }
+        MW_TRACE("[GDI] Ellipse(%d,%d,%d,%d) fill=#%06x", l, t, r, b, g_cur_brush);
+    }
+    return 1;
+}
+__attribute__((ms_abi)) int mw_MoveToEx(void* hdc, int x, int y, void* old) {
+    (void)hdc;
+    if (old) { ((int32_t*)old)[0] = g_pen_x; ((int32_t*)old)[1] = g_pen_y; }
+    g_pen_x = x; g_pen_y = y;
+    MW_TRACE("[GDI] MoveToEx(%d,%d)", x, y);
+    return 1;
+}
+static void mwb_line(MWBmp* b, int x0, int y0, int x1, int y1, uint32_t c) {
+    int dx = x1 - x0, dy = y1 - y0;
+    int sx = dx < 0 ? -1 : 1, sy = dy < 0 ? -1 : 1;
+    if (dx < 0) dx = -dx; if (dy < 0) dy = -dy;
+    int err = dx - dy;
+    for (;;) {
+        mwb_set(b, x0, y0, c);
+        if (x0 == x1 && y0 == y1) break;
+        int e2 = 2 * err;
+        if (e2 > -dy) { err -= dy; x0 += sx; }
+        if (e2 < dx)  { err += dx; y0 += sy; }
+    }
+}
+__attribute__((ms_abi)) int mw_LineTo(void* hdc, int x, int y) {
+    (void)hdc;
+    if (g_surf.px) mwb_line(&g_surf, g_pen_x, g_pen_y, x, y, g_cur_pen);
+    g_pen_x = x; g_pen_y = y;
+    MW_TRACE("[GDI] LineTo(%d,%d)", x, y);
+    return 1;
+}
+__attribute__((ms_abi)) uint32_t mw_SetPixel(void* hdc, int x, int y, uint32_t colorref) {
+    (void)hdc;
+    if (g_surf.px) mwb_set(&g_surf, x, y, mw_cr2rgb(colorref));
+    return colorref;
+}
+__attribute__((ms_abi)) void* mw_CreateSolidBrush(uint32_t colorref) {
+    int slot = -1;
+    for (int i = 0; i < 32; i++) {
+        int j = (g_obj_next + i) & 31;
+        if (!g_brush_live[j]) { slot = j; break; }
+    }
+    if (slot < 0) slot = g_obj_next & 31;
+    g_obj_next = slot + 1;
+    g_brush_live[slot] = 1;
+    g_brush_rgb[slot] = mw_cr2rgb(colorref);
+    MW_TRACE("[GDI] CreateSolidBrush(#%06x) -> h 0x%08x", g_brush_rgb[slot],
+             0x00030000u | (unsigned)slot);
+    return (void*)(uintptr_t)(0x00030000u | (unsigned)slot);
+}
+__attribute__((ms_abi)) void* mw_CreatePen(int style, int width, uint32_t colorref) {
+    (void)style;
+    int slot = -1;
+    for (int i = 0; i < 32; i++) {
+        int j = (g_obj_next + i) & 31;
+        if (!g_pen_live[j]) { slot = j; break; }
+    }
+    if (slot < 0) slot = g_obj_next & 31;
+    g_obj_next = slot + 1;
+    g_pen_live[slot] = 1;
+    g_pen_rgb[slot] = mw_cr2rgb(colorref);
+    MW_TRACE("[GDI] CreatePen(w=%d,#%06x) -> h 0x%08x", width, g_pen_rgb[slot],
+             0x00031000u | (unsigned)slot);
+    return (void*)(uintptr_t)(0x00031000u | (unsigned)slot);
+}
+__attribute__((ms_abi)) void* mw_GetStockObject(int idx) {
+    MW_TRACE("[GDI] GetStockObject(%d)", idx);
+    return (void*)(uintptr_t)(0x00040000u | (unsigned)(idx & 0xFF));
+}
+__attribute__((ms_abi)) void* mw_SelectObject(void* hdc, void* h) {
+    (void)hdc;
+    uintptr_t v = (uintptr_t)h;
+    if ((v & 0xFFFFF000u) == 0x00030000u) {
+        int i = (int)(v & 0x1F);
+        if (g_brush_live[i]) { g_cur_brush = g_brush_rgb[i]; g_brush_hollow = 0; }
+    } else if ((v & 0xFFFFF000u) == 0x00031000u) {
+        int i = (int)(v & 0x1F);
+        if (g_pen_live[i]) g_cur_pen = g_pen_rgb[i];
+    } else if ((v & 0xFFFF0000u) == 0x00040000u) {
+        int idx = (int)(v & 0xFF);
+        switch (idx) {
+        case 0: g_cur_brush = 0xFFFFFF; g_brush_hollow = 0; break;
+        case 1: g_cur_brush = 0xC0C0C0; g_brush_hollow = 0; break;
+        case 2: g_cur_brush = 0x808080; g_brush_hollow = 0; break;
+        case 3: g_cur_brush = 0x404040; g_brush_hollow = 0; break;
+        case 4: g_cur_brush = 0x000000; g_brush_hollow = 0; break;
+        case 5: g_brush_hollow = 1; break;                    /* NULL_BRUSH */
+        case 6: g_cur_pen = 0xFFFFFF; break;                  /* WHITE_PEN */
+        case 7: g_cur_pen = 0x000000; break;                  /* BLACK_PEN */
+        default: break; /* fonts: font8x8 used regardless */
+        }
+    }
+    MW_TRACE("[GDI] SelectObject(0x%08llx)", (unsigned long long)v);
+    return (void*)0x00040001; /* dummy previous object */
+}
+__attribute__((ms_abi)) int mw_DeleteObject(void* h) {
+    uintptr_t v = (uintptr_t)h;
+    if ((v & 0xFFFFF000u) == 0x00030000u) g_brush_live[v & 0x1F] = 0;
+    if ((v & 0xFFFFF000u) == 0x00031000u) g_pen_live[v & 0x1F] = 0;
+    return 1;
+}
+__attribute__((ms_abi)) uint32_t mw_SetTextColor(void* hdc, uint32_t colorref) {
+    (void)hdc;
+    uint32_t prev = mw_rgb2cr(g_text_col);
+    g_text_col = mw_cr2rgb(colorref);
+    MW_TRACE("[GDI] SetTextColor(#%06x)", g_text_col);
+    return prev;
+}
+__attribute__((ms_abi)) uint32_t mw_SetBkColor(void* hdc, uint32_t colorref) {
+    (void)hdc;
+    uint32_t prev = mw_rgb2cr(g_bk_col);
+    g_bk_col = mw_cr2rgb(colorref);
+    MW_TRACE("[GDI] SetBkColor(#%06x)", g_bk_col);
+    return prev;
+}
+__attribute__((ms_abi)) int mw_SetBkMode(void* hdc, int mode) {
+    (void)hdc;
+    int prev = g_bk_mode;
+    g_bk_mode = mode;
+    MW_TRACE("[GDI] SetBkMode(%d)", mode);
+    return prev;
+}
+__attribute__((ms_abi)) int mw_SetMapMode(void* hdc, int mode) {
+    (void)hdc; (void)mode;
+    return 1; /* previous: MM_TEXT */
+}
+__attribute__((ms_abi)) int mw_GetDeviceCaps(void* hdc, int idx) {
+    (void)hdc;
+    int v = 0;
+    switch (idx) {
+    case 2:  v = 1; break;          /* TECHNOLOGY = DT_RASDISPLAY */
+    case 8:  v = g_win_w; break;    /* HORZRES */
+    case 10: v = g_win_h; break;    /* VERTRES */
+    case 12: v = 32; break;         /* BITSPIXEL */
+    case 14: v = 1; break;          /* PLANES */
+    case 24: v = -1; break;         /* NUMCOLORS */
+    case 88: case 90: v = 96; break;/* LOGPIXELSX/Y */
+    default: v = 0; break;
+    }
+    MW_TRACE("[GDI] GetDeviceCaps(%d) -> %d", idx, v);
+    return v;
+}
+__attribute__((ms_abi)) int mw_SaveDC(void* hdc) { (void)hdc; return 1; }
+__attribute__((ms_abi)) int mw_RestoreDC(void* hdc, int saved) { (void)hdc; (void)saved; return 1; }
+__attribute__((ms_abi)) int mw_DeleteDC(void* hdc) { (void)hdc; return 1; }
+__attribute__((ms_abi)) int mw_PatBlt(void* hdc, int x, int y, int w, int h, uint32_t rop) {
+    (void)hdc; (void)rop; /* v1: ROP ignored, brush fill (covers WHITENESS/PATCOPY paths) */
+    if (g_surf.px && w > 0 && h > 0) mwb_fill(&g_surf, x, y, w, h, g_cur_brush);
+    MW_TRACE("[GDI] PatBlt(%d,%d %dx%d rop=0x%x)", x, y, w, h, rop);
+    return 1;
+}
+/* ==== end SWEEP-005 ==== */
+
 static ImportEntry g_import_table[] = {
     /* KERNEL32.DLL */
     ENTRY("KERNEL32.DLL", "AddVectoredExceptionHandler",        mw_AddVectoredExceptionHandler),
@@ -10200,6 +10942,7 @@ static ImportEntry g_import_table[] = {
     ENTRY("api-ms-win-crt-private-l1-1-0.dll", "__p__commode",  mw___p__commode),
     ENTRY("api-ms-win-crt-runtime-l1-1-0.dll", "__p___argc",    mw___p___argc),
     ENTRY("api-ms-win-crt-runtime-l1-1-0.dll", "__p___argv",    mw___p___argv),
+    ENTRY("api-ms-win-crt-runtime-l1-1-0.dll", "__p__acmdln",   mw___p__acmdln), /* BUG-067 */
     ENTRY("api-ms-win-crt-environment-l1-1-0.dll", "__p__environ", mw___p__environ),
     ENTRY("msvcrt.dll", "__lconv_init",          mw___lconv_init),
     ENTRY("msvcrt.dll", "___lc_codepage_func",    mw___lc_codepage_func),
@@ -10983,6 +11726,53 @@ ENTRY("msvcrt.dll", "wctype", mw_wctype),
     ENTRY("USER32.DLL", "PostQuitMessage",                      mw_PostQuitMessage),
     ENTRY("COMCTL32.DLL", "InitCommonControlsEx",               mw_InitCommonControlsEx),
     ENTRY("COMCTL32.DLL", "InitCommonControls",                 mw_InitCommonControls),
+    /* SWEEP-005: paint surface + event pump + draw stubs */
+    ENTRY("USER32.DLL", "BeginPaint",                           mw_BeginPaint),
+    ENTRY("USER32.DLL", "EndPaint",                             mw_EndPaint),
+    ENTRY("USER32.DLL", "GetDC",                                mw_GetDC),
+    ENTRY("USER32.DLL", "ReleaseDC",                            mw_ReleaseDC),
+    ENTRY("USER32.DLL", "FillRect",                             mw_FillRect),
+    ENTRY("USER32.DLL", "DrawTextA",                            mw_DrawTextA),
+    ENTRY("USER32.DLL", "GetClientRect",                        mw_GetClientRect),
+    ENTRY("USER32.DLL", "InvalidateRect",                       mw_InvalidateRect),
+    ENTRY("USER32.DLL", "ValidateRect",                         mw_ValidateRect),
+    ENTRY("USER32.DLL", "GetSysColor",                          mw_GetSysColor),
+    ENTRY("USER32.DLL", "LoadCursorA",                          mw_LoadCursorA),
+    ENTRY("USER32.DLL", "LoadCursorW",                          mw_LoadCursorW),
+    ENTRY("USER32.DLL", "LoadIconA",                            mw_LoadIconA),
+    ENTRY("USER32.DLL", "LoadIconW",                            mw_LoadIconW),
+    ENTRY("USER32.DLL", "CallWindowProcA",                      mw_CallWindowProcA),
+    ENTRY("USER32.DLL", "CallWindowProcW",                      mw_CallWindowProcW),
+    ENTRY("USER32.DLL", "wsprintfA",                            mw_wsprintfA),
+    ENTRY("USER32.DLL", "wsprintfW",                            mw_wsprintfW),
+    ENTRY("USER32.DLL", "lstrlenA",                             mw_lstrlenA),
+    ENTRY("USER32.DLL", "lstrlenW",                             mw_lstrlenW),
+    ENTRY("USER32.DLL", "SetTimer",                             mw_SetTimer),
+    ENTRY("USER32.DLL", "KillTimer",                            mw_KillTimer),
+    ENTRY("USER32.DLL", "PeekMessageA",                         mw_PeekMessageA),
+    ENTRY("USER32.DLL", "PeekMessageW",                         mw_PeekMessageW),
+    ENTRY("GDI32.DLL", "TextOutA",                              mw_TextOutA),
+    ENTRY("GDI32.DLL", "TextOutW",                              mw_TextOutW),
+    ENTRY("GDI32.DLL", "ExtTextOutA",                           mw_ExtTextOutA),
+    ENTRY("GDI32.DLL", "Rectangle",                             mw_Rectangle),
+    ENTRY("GDI32.DLL", "Ellipse",                               mw_Ellipse),
+    ENTRY("GDI32.DLL", "MoveToEx",                              mw_MoveToEx),
+    ENTRY("GDI32.DLL", "LineTo",                                mw_LineTo),
+    ENTRY("GDI32.DLL", "SetPixel",                              mw_SetPixel),
+    ENTRY("GDI32.DLL", "CreateSolidBrush",                      mw_CreateSolidBrush),
+    ENTRY("GDI32.DLL", "CreatePen",                             mw_CreatePen),
+    ENTRY("GDI32.DLL", "GetStockObject",                        mw_GetStockObject),
+    ENTRY("GDI32.DLL", "SelectObject",                          mw_SelectObject),
+    ENTRY("GDI32.DLL", "DeleteObject",                          mw_DeleteObject),
+    ENTRY("GDI32.DLL", "SetTextColor",                          mw_SetTextColor),
+    ENTRY("GDI32.DLL", "SetBkColor",                            mw_SetBkColor),
+    ENTRY("GDI32.DLL", "SetBkMode",                             mw_SetBkMode),
+    ENTRY("GDI32.DLL", "SetMapMode",                            mw_SetMapMode),
+    ENTRY("GDI32.DLL", "GetDeviceCaps",                         mw_GetDeviceCaps),
+    ENTRY("GDI32.DLL", "SaveDC",                                mw_SaveDC),
+    ENTRY("GDI32.DLL", "RestoreDC",                             mw_RestoreDC),
+    ENTRY("GDI32.DLL", "DeleteDC",                              mw_DeleteDC),
+    ENTRY("GDI32.DLL", "PatBlt",                                mw_PatBlt),
     ENTRY("USER32.DLL", "MessageBoxA",                          mw_MessageBoxA),
     ENTRY("WLDAP32.dll", "ber_free",                            mw_ber_free),
     ENTRY("WLDAP32.dll", "ldap_bind_s",                         mw_ldap_bind_s),

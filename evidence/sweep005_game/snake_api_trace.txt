@@ -1,0 +1,1309 @@
+{
+  "trace": [
+[T3f80] [API] PE Loader: file=artifacts/sweep005/snake.exe size=224256
+[T3f80] [API] PE Loader: ImageBase=0x140000000 EP=0x1d20 SizeOfImage=0x3d000 Sections=7
+[T3f80] [API] PE Loader: Mapped at 0x140000000 (forced via MAP_FIXED)
+[T3f80] [API] Section [0] .text    VA=0x00001000 VS=0x00028ab6 Raw=0x00028c00 Ch=0x60000020
+[T3f80] [API] Section [1] .rdata   VA=0x0002a000 VS=0x0000bb74 Raw=0x0000bc00 Ch=0x40000040
+[T3f80] [API] Section [2] .buildid VA=0x00036000 VS=0x0000005a Raw=0x00000200 Ch=0x40000040
+[T3f80] [API] Section [3] .data    VA=0x00037000 VS=0x000017f8 Raw=0x00000200 Ch=0xc0000040
+[T3f80] [API] Section [4] .pdata   VA=0x00039000 VS=0x0000174c Raw=0x00001800 Ch=0x40000040
+[T3f80] [API] Section [5] .tls     VA=0x0003b000 VS=0x00000010 Raw=0x00000200 Ch=0xc0000040
+[T3f80] [API] Section [6] .reloc   VA=0x0003c000 VS=0x00000060 Raw=0x00000200 Ch=0x42000040
+[T3f80] [API] Import Directory: RVA=0x33618 Size=0xdc
+[T3f80] [API] Import DLL: USER32.dll (IAT RVA=0x33968, ILT RVA=0x336f8)
+[T3f80] [API]   [0] BeginPaint -> 0x2032a00
+[T3f80] [API]   [1] CreateWindowExA -> 0x2032e80
+[T3f80] [API]   [2] DefWindowProcA -> 0x2030910
+[T3f80] [API]   [3] DispatchMessageA -> 0x20388a0
+[T3f80] [API]   [4] EndPaint -> 0x20304d0
+[T3f80] [API]   [5] FillRect -> 0x2032360
+[T3f80] [API]   [6] GetMessageA -> 0x2031b90
+[T3f80] [API]   [7] InvalidateRect -> 0x202b760
+[T3f80] [API]   [8] LoadCursorA -> 0x2009a90
+[T3f80] [API]   [9] MessageBoxA -> 0x2042fb0
+[T3f80] [API]   [10] PostQuitMessage -> 0x2029640
+[T3f80] [API]   [11] RegisterClassA -> 0x200c600
+[T3f80] [API]   [12] SetTimer -> 0x2029740
+[T3f80] [API]   [13] ShowWindow -> 0x2029540
+[T3f80] [API]   [14] TranslateMessage -> 0x2030ba0
+[T3f80] [API]   [15] UpdateWindow -> 0x201c600
+[T3f80] [API]   [16] wsprintfA -> 0x2030170
+[T3f80] [API] Import DLL: GDI32.dll (IAT RVA=0x339f8, ILT RVA=0x33788)
+[T3f80] [API]   [0] CreateSolidBrush -> 0x200ca80
+[T3f80] [API]   [1] DeleteObject -> 0x2009af0
+[T3f80] [API]   [2] Ellipse -> 0x20325a0
+[T3f80] [API]   [3] Rectangle -> 0x2039190
+[T3f80] [API]   [4] SelectObject -> 0x200cea0
+[T3f80] [API]   [5] SetBkMode -> 0x2029850
+[T3f80] [API]   [6] SetTextColor -> 0x200d140
+[T3f80] [API]   [7] TextOutA -> 0x203cc40
+[T3f80] [API] Import DLL: KERNEL32.dll (IAT RVA=0x33a40, ILT RVA=0x337d0)
+[T3f80] [API]   [0] DeleteCriticalSection -> 0x200ec20
+[T3f80] [API]   [1] EnterCriticalSection -> 0x2033af0
+[T3f80] [API]   [2] GetLastError -> 0x2009d60
+[T3f80] [API]   [3] GetStartupInfoA -> 0x2029a70
+[T3f80] [API]   [4] InitializeCriticalSection -> 0x202ba90
+[T3f80] [API]   [5] IsDBCSLeadByte -> 0x2008fc0
+[T3f80] [API]   [6] LeaveCriticalSection -> 0x2029950
+[T3f80] [API]   [7] SetUnhandledExceptionFilter -> 0x200a750
+[T3f80] [API]   [8] Sleep -> 0x202c760
+[T3f80] [API]   [9] TlsGetValue -> 0x200a850
+[T3f80] [API]   [10] VirtualProtect -> 0x2010840
+[T3f80] [API]   [11] VirtualQuery -> 0x200dd40
+[T3f80] [API]   [12] lstrlenA -> 0x2038940
+[T3f80] [API] Import DLL: api-ms-win-crt-heap-l1-1-0.dll (IAT RVA=0x33ab0, ILT RVA=0x33840)
+[T3f80] [API]   [0] _set_new_mode -> 0x2027c80
+[T3f80] [API]   [1] calloc -> 0x2034140
+[T3f80] [API]   [2] free -> 0x203d640
+[T3f80] [API]   [3] malloc -> 0x2033d80
+[T3f80] [API] Import DLL: api-ms-win-crt-locale-l1-1-0.dll (IAT RVA=0x33ad8, ILT RVA=0x33868)
+[T3f80] [API]   [0] _configthreadlocale -> 0x2009270
+[T3f80] [API] Import DLL: api-ms-win-crt-runtime-l1-1-0.dll (IAT RVA=0x33ae8, ILT RVA=0x33878)
+[T3f80] [API]   [0] __p___argc -> 0x2028180
+[T3f80] [API]   [1] __p___argv -> 0x2028290
+[T3f80] [API]   [2] __p__acmdln -> 0x20284b0
+[T3f80] [API]   [3] _cexit -> 0x200e650
+[T3f80] [API]   [4] _configure_narrow_argv -> 0x2027b90
+[T3f80] [API]   [5] _crt_atexit -> 0x200b1b0
+[T3f80] [API]   [6] _exit -> 0x200ef90
+[T3f80] [API]   [7] _initialize_narrow_environment -> 0x202abd0
+[T3f80] [API]   [8] _initterm -> 0x200aab0
+[T3f80] [API]   [9] _initterm_e -> 0x200bd60
+[T3f80] [API]   [10] _seh_filter_exe -> 0x2029050
+[T3f80] [API]   [11] _set_app_type -> 0x20279b0
+[T3f80] [API]   [12] _set_invalid_parameter_handler -> 0x2027d70
+[T3f80] [API]   [13] abort -> 0x200f3c0
+[T3f80] [API]   [14] exit -> 0x2010f30
+[T3f80] [API] Import DLL: api-ms-win-crt-stdio-l1-1-0.dll (IAT RVA=0x33b68, ILT RVA=0x338f8)
+[T3f80] [API]   [0] __acrt_iob_func -> 0x200ad70
+[T3f80] [API]   [1] __p__commode -> 0x2028070
+[T3f80] [API]   [2] __p__fmode -> 0x2027f60
+[T3f80] [API]   [3] __stdio_common_vfprintf -> 0x20208b0
+[T3f80] [API]   [4] fflush -> 0x201e910
+[T3f80] [API]   [5] fwrite -> 0x201f250
+[T3f80] [API]   [6] setvbuf -> 0x201f6e0
+[T3f80] [API] Import DLL: api-ms-win-crt-environment-l1-1-0.dll (IAT RVA=0x33ba8, ILT RVA=0x33938)
+[T3f80] [API]   [0] __p__environ -> 0x20283a0
+[T3f80] [API] Import DLL: api-ms-win-crt-math-l1-1-0.dll (IAT RVA=0x33bb8, ILT RVA=0x33948)
+[T3f80] [API]   [0] __setusermatherr -> 0x2027aa0
+[T3f80] [API] Import DLL: api-ms-win-crt-string-l1-1-0.dll (IAT RVA=0x33bc8, ILT RVA=0x33958)
+[T3f80] [API]   [0] strncmp -> 0x2012230
+[T3f80] [API] Import resolution: 68 resolved, 0 unresolved (total 68)
+[T3f80] [API] TLS: StartRaw=0x14003b000 EndRaw=0x14003b008 Callbacks=0x1400335e0
+[T3f80] [API] TLS: static block 0x314b0a0 (8+0 bytes) -> slot 0
+[T3f80] [API] TLS: callback[0] = 0x140001da0
+[T3f80] [API] InitializeCriticalSection(0x140037730)
+[T3f80] [API] TLS: callback[1] = 0x140001e30
+[T3f80] [API] Exception: .pdata RVA=0x39000 Size=0x174c Entries=497
+[T3f80] [API] [API-005] EH hacks DISABLED (default) (MINWIN_EH_HACKS=<unset>)
+[T3f80] [API] [API-005] CXX-EH-FIX (LSDA catch-all patch RVA 0x2010c8) skipped: MINWIN_EH_HACKS not set
+[T3f80] [API] Jumping to EP=0x140001d20
+[T3f80] [API] __acrt_iob_func(2) = 0x7fc6bd98b4e0
+[T3f80] [API] setvbuf(stream=0x7fc6bd98b4e0, mode=4->2, size=0)
+[T3f80] [API] atexit(func=0x140001d50)
+[T3f80] [API] _set_invalid_parameter_handler(0x140001d60) -> NULL
+[T3f80] [API] __set_app_type(1)
+[T3f80] [API] __p__fmode() = 0x2189250
+[T3f80] [API] __p__commode() = 0x218924c
+[T3f80] [API] _initterm_e(0x1400335c8..0x1400335d0)
+[T3f80] [API] _initialize_narrow_environment() -> 0
+[T3f80] [API] _configure_narrow_argv(mode=1) -> 0
+[T3f80] [API] __p___argc() = 0x2189268
+[T3f80] [API] __p___argv() = 0x2078010
+[T3f80] [API] __p__environ() = 0x2189260
+[T3f80] [API] _set_new_mode(0) -> 0
+[T3f80] [API] malloc(16) = 0x314b750
+[T3f80] [API] malloc(10) = 0x314b770
+[T3f80] [API] SetUnhandledExceptionFilter(handler=0x140001d70)
+[T3f80] [API] _initterm(start=0x1400335a8, end=0x1400335b0)
+[T3f80] [API] atexit(func=0x140001ec0)
+[T3f80] [API] __p__acmdln() = 0x2169ec8
+[T3f80] [API] GetStartupInfoA(info=0x7ffe64b55cb0)
+[T3f80] [API] RegisterClassA(wc=0x7ffe64b55c00) -> ATOM 0xc001
+[T3f80] [API] [GUI] paint surface allocated 640x480 (SWEEP-005)
+[T3f80] [API] CreateWindowExA(ex=0x0 style=0x10ca0000 cls=0x14002a060 640x480@40,40) -> HWND 0x10001
+[T3f80] [API] ShowWindow(hwnd=0x10001 cmd=10) -> TRUE
+[T3f80] [API] UpdateWindow(hwnd=0x10001)
+[T3f80] [API] [GUI] event pump v2 ARMED (budget=400 keys=11 every=8)
+[T3f80] [API] [GUI] SetTimer(id=1, 50ms) -> armed
+[T3f80] [API] [GUI-EVENT] #1 GetMessageA -> WM_KEYDOWN VK=0x28
+[T3f80] [API] [GUI-EVENT] dispatch WM_KEYDOWN wp=0x28 -> 0
+[T3f80] [API] [GUI-EVENT] #2 GetMessageA -> WM_PAINT
+[T3f80] [API] BeginPaint(hwnd=0x10001) -> hdc 0x20001 (640x480)
+[T3f80] [API] [GDI] CreateSolidBrush(#10101c) -> h 0x00030000
+[T3f80] [API] [GDI] FillRect(0,0)-(640,480) color=#10101c
+[T3f80] [API] [GDI] CreateSolidBrush(#5a5a6e) -> h 0x00030001
+[T3f80] [API] [GDI] FillRect(0,0)-(640,16) color=#5a5a6e
+[T3f80] [API] [GDI] FillRect(0,464)-(640,480) color=#5a5a6e
+[T3f80] [API] [GDI] FillRect(0,0)-(16,480) color=#5a5a6e
+[T3f80] [API] [GDI] FillRect(624,0)-(640,480) color=#5a5a6e
+[T3f80] [API] [GDI] CreateSolidBrush(#e13c3c) -> h 0x00030002
+[T3f80] [API] [GDI] SelectObject(0x00030002)
+[T3f80] [API] [GDI] Ellipse(179,131,189,141) fill=#e13c3c
+[T3f80] [API] [GDI] CreateSolidBrush(#3cc85a) -> h 0x00030003
+[T3f80] [API] [GDI] SelectObject(0x00030003)
+[T3f80] [API] [GDI] Rectangle(161,97,175,111) fill=#3cc85a
+[T3f80] [API] [GDI] Rectangle(145,97,159,111) fill=#3cc85a
+[T3f80] [API] [GDI] Rectangle(129,97,143,111) fill=#3cc85a
+[T3f80] [API] [GDI] Rectangle(113,97,127,111) fill=#3cc85a
+[T3f80] [API] [GDI] Rectangle(97,97,111,111) fill=#3cc85a
+[T3f80] [API] [GDI] Rectangle(81,97,95,111) fill=#3cc85a
+[T3f80] [API] [GDI] Rectangle(65,97,79,111) fill=#3cc85a
+[T3f80] [API] [GDI] CreateSolidBrush(#8cf0a0) -> h 0x00030004
+[T3f80] [API] [GDI] SelectObject(0x00030004)
+[T3f80] [API] [GDI] Rectangle(177,97,191,111) fill=#8cf0a0
+[T3f80] [API] [GDI] SetBkMode(1)
+[T3f80] [API] [GDI] SetTextColor(#ebebeb)
+[T3f80] [API] [GDI] TextOutA(10,4) 'MiniWin Snake  |  Score: 0  |  Len: 8'
+[T3f80] [API] [GDI] frame #1 (EndPaint) 640x480 -> miniwin-results/snake.exe/screenshots/frame_001.bmp
+[T3f80] [API] [GUI-EVENT] dispatch WM_PAINT wp=0x0 -> 0
+[T3f80] [API] [GUI-EVENT] #3 GetMessageA -> WM_TIMER id=1
+[T3f80] [API] [GUI] InvalidateRect -> paint pending
+[T3f80] [API] [GUI-EVENT] dispatch WM_TIMER wp=0x1 -> 0
+[T3f80] [API] [GUI-EVENT] #4 GetMessageA -> WM_PAINT
+[T3f80] [API] BeginPaint(hwnd=0x10001) -> hdc 0x20001 (640x480)
+[T3f80] [API] [GDI] CreateSolidBrush(#10101c) -> h 0x00030005
+[T3f80] [API] [GDI] FillRect(0,0)-(640,480) color=#10101c
+[T3f80] [API] [GDI] CreateSolidBrush(#5a5a6e) -> h 0x00030006
+[T3f80] [API] [GDI] FillRect(0,0)-(640,16) color=#5a5a6e
+[T3f80] [API] [GDI] FillRect(0,464)-(640,480) color=#5a5a6e
+[T3f80] [API] [GDI] FillRect(0,0)-(16,480) color=#5a5a6e
+[T3f80] [API] [GDI] FillRect(624,0)-(640,480) color=#5a5a6e
+[T3f80] [API] [GDI] CreateSolidBrush(#e13c3c) -> h 0x00030007
+[T3f80] [API] [GDI] SelectObject(0x00030007)
+[T3f80] [API] [GDI] Ellipse(179,131,189,141) fill=#e13c3c
+[T3f80] [API] [GDI] CreateSolidBrush(#3cc85a) -> h 0x00030008
+[T3f80] [API] [GDI] SelectObject(0x00030008)
+[T3f80] [API] [GDI] Rectangle(177,97,191,111) fill=#3cc85a
+[T3f80] [API] [GDI] Rectangle(161,97,175,111) fill=#3cc85a
+[T3f80] [API] [GDI] Rectangle(145,97,159,111) fill=#3cc85a
+[T3f80] [API] [GDI] Rectangle(129,97,143,111) fill=#3cc85a
+[T3f80] [API] [GDI] Rectangle(113,97,127,111) fill=#3cc85a
+[T3f80] [API] [GDI] Rectangle(97,97,111,111) fill=#3cc85a
+[T3f80] [API] [GDI] Rectangle(81,97,95,111) fill=#3cc85a
+[T3f80] [API] [GDI] CreateSolidBrush(#8cf0a0) -> h 0x00030009
+[T3f80] [API] [GDI] SelectObject(0x00030009)
+[T3f80] [API] [GDI] Rectangle(177,113,191,127) fill=#8cf0a0
+[T3f80] [API] [GDI] SetBkMode(1)
+[T3f80] [API] [GDI] SetTextColor(#ebebeb)
+[T3f80] [API] [GDI] TextOutA(10,4) 'MiniWin Snake  |  Score: 0  |  Len: 8'
+[T3f80] [API] [GDI] frame #2 (EndPaint) 640x480 -> miniwin-results/snake.exe/screenshots/frame_002.bmp
+[T3f80] [API] [GUI-EVENT] dispatch WM_PAINT wp=0x0 -> 0
+[T3f80] [API] [GUI-EVENT] #5 GetMessageA -> WM_TIMER id=1
+[T3f80] [API] [GUI] InvalidateRect -> paint pending
+[T3f80] [API] [GUI-EVENT] dispatch WM_TIMER wp=0x1 -> 0
+[T3f80] [API] [GUI-EVENT] #6 GetMessageA -> WM_PAINT
+[T3f80] [API] BeginPaint(hwnd=0x10001) -> hdc 0x20001 (640x480)
+[T3f80] [API] [GDI] CreateSolidBrush(#10101c) -> h 0x0003000a
+[T3f80] [API] [GDI] FillRect(0,0)-(640,480) color=#10101c
+[T3f80] [API] [GDI] CreateSolidBrush(#5a5a6e) -> h 0x0003000b
+[T3f80] [API] [GDI] FillRect(0,0)-(640,16) color=#5a5a6e
+[T3f80] [API] [GDI] FillRect(0,464)-(640,480) color=#5a5a6e
+[T3f80] [API] [GDI] FillRect(0,0)-(16,480) color=#5a5a6e
+[T3f80] [API] [GDI] FillRect(624,0)-(640,480) color=#5a5a6e
+[T3f80] [API] [GDI] CreateSolidBrush(#e13c3c) -> h 0x0003000c
+[T3f80] [API] [GDI] SelectObject(0x0003000c)
+[T3f80] [API] [GDI] Ellipse(19,227,29,237) fill=#e13c3c
+[T3f80] [API] [GDI] CreateSolidBrush(#3cc85a) -> h 0x0003000d
+[T3f80] [API] [GDI] SelectObject(0x0003000d)
+[T3f80] [API] [GDI] Rectangle(177,113,191,127) fill=#3cc85a
+[T3f80] [API] [GDI] Rectangle(177,97,191,111) fill=#3cc85a
+[T3f80] [API] [GDI] Rectangle(161,97,175,111) fill=#3cc85a
+[T3f80] [API] [GDI] Rectangle(145,97,159,111) fill=#3cc85a
+[T3f80] [API] [GDI] Rectangle(129,97,143,111) fill=#3cc85a
+[T3f80] [API] [GDI] Rectangle(113,97,127,111) fill=#3cc85a
+[T3f80] [API] [GDI] Rectangle(97,97,111,111) fill=#3cc85a
+[T3f80] [API] [GDI] Rectangle(97,97,111,111) fill=#3cc85a
+[T3f80] [API] [GDI] CreateSolidBrush(#8cf0a0) -> h 0x0003000e
+[T3f80] [API] [GDI] SelectObject(0x0003000e)
+[T3f80] [API] [GDI] Rectangle(177,129,191,143) fill=#8cf0a0
+[T3f80] [API] [GDI] SetBkMode(1)
+[T3f80] [API] [GDI] SetTextColor(#ebebeb)
+[T3f80] [API] [GDI] TextOutA(10,4) 'MiniWin Snake  |  Score: 10  |  Len: 9'
+[T3f80] [API] [GDI] frame #3 (EndPaint) 640x480 -> miniwin-results/snake.exe/screenshots/frame_003.bmp
+[T3f80] [API] [GUI-EVENT] dispatch WM_PAINT wp=0x0 -> 0
+[T3f80] [API] [GUI-EVENT] #7 GetMessageA -> WM_TIMER id=1
+[T3f80] [API] [GUI] InvalidateRect -> paint pending
+[T3f80] [API] [GUI-EVENT] dispatch WM_TIMER wp=0x1 -> 0
+[T3f80] [API] [GUI-EVENT] #8 GetMessageA -> WM_PAINT
+[T3f80] [API] BeginPaint(hwnd=0x10001) -> hdc 0x20001 (640x480)
+[T3f80] [API] [GDI] CreateSolidBrush(#10101c) -> h 0x0003000f
+[T3f80] [API] [GDI] FillRect(0,0)-(640,480) color=#10101c
+[T3f80] [API] [GDI] CreateSolidBrush(#5a5a6e) -> h 0x00030010
+[T3f80] [API] [GDI] FillRect(0,0)-(640,16) color=#5a5a6e
+[T3f80] [API] [GDI] FillRect(0,464)-(640,480) color=#5a5a6e
+[T3f80] [API] [GDI] FillRect(0,0)-(16,480) color=#5a5a6e
+[T3f80] [API] [GDI] FillRect(624,0)-(640,480) color=#5a5a6e
+[T3f80] [API] [GDI] CreateSolidBrush(#e13c3c) -> h 0x00030011
+[T3f80] [API] [GDI] SelectObject(0x00030011)
+[T3f80] [API] [GDI] Ellipse(19,227,29,237) fill=#e13c3c
+[T3f80] [API] [GDI] CreateSolidBrush(#3cc85a) -> h 0x00030012
+[T3f80] [API] [GDI] SelectObject(0x00030012)
+[T3f80] [API] [GDI] Rectangle(177,129,191,143) fill=#3cc85a
+[T3f80] [API] [GDI] Rectangle(177,113,191,127) fill=#3cc85a
+[T3f80] [API] [GDI] Rectangle(177,97,191,111) fill=#3cc85a
+[T3f80] [API] [GDI] Rectangle(161,97,175,111) fill=#3cc85a
+[T3f80] [API] [GDI] Rectangle(145,97,159,111) fill=#3cc85a
+[T3f80] [API] [GDI] Rectangle(129,97,143,111) fill=#3cc85a
+[T3f80] [API] [GDI] Rectangle(113,97,127,111) fill=#3cc85a
+[T3f80] [API] [GDI] Rectangle(97,97,111,111) fill=#3cc85a
+[T3f80] [API] [GDI] CreateSolidBrush(#8cf0a0) -> h 0x00030013
+[T3f80] [API] [GDI] SelectObject(0x00030013)
+[T3f80] [API] [GDI] Rectangle(177,145,191,159) fill=#8cf0a0
+[T3f80] [API] [GDI] SetBkMode(1)
+[T3f80] [API] [GDI] SetTextColor(#ebebeb)
+[T3f80] [API] [GDI] TextOutA(10,4) 'MiniWin Snake  |  Score: 10  |  Len: 9'
+[T3f80] [API] [GDI] frame #4 (EndPaint) 640x480 -> miniwin-results/snake.exe/screenshots/frame_004.bmp
+[T3f80] [API] [GUI-EVENT] dispatch WM_PAINT wp=0x0 -> 0
+[T3f80] [API] [GUI-EVENT] #9 GetMessageA -> WM_KEYDOWN VK=0x27
+[T3f80] [API] [GUI-EVENT] dispatch WM_KEYDOWN wp=0x27 -> 0
+[T3f80] [API] [GUI-EVENT] #10 GetMessageA -> WM_TIMER id=1
+[T3f80] [API] [GUI] InvalidateRect -> paint pending
+[T3f80] [API] [GUI-EVENT] dispatch WM_TIMER wp=0x1 -> 0
+[T3f80] [API] [GUI-EVENT] #11 GetMessageA -> WM_PAINT
+[T3f80] [API] BeginPaint(hwnd=0x10001) -> hdc 0x20001 (640x480)
+[T3f80] [API] [GDI] CreateSolidBrush(#10101c) -> h 0x00030014
+[T3f80] [API] [GDI] FillRect(0,0)-(640,480) color=#10101c
+[T3f80] [API] [GDI] CreateSolidBrush(#5a5a6e) -> h 0x00030015
+[T3f80] [API] [GDI] FillRect(0,0)-(640,16) color=#5a5a6e
+[T3f80] [API] [GDI] FillRect(0,464)-(640,480) color=#5a5a6e
+[T3f80] [API] [GDI] FillRect(0,0)-(16,480) color=#5a5a6e
+[T3f80] [API] [GDI] FillRect(624,0)-(640,480) color=#5a5a6e
+[T3f80] [API] [GDI] CreateSolidBrush(#e13c3c) -> h 0x00030016
+[T3f80] [API] [GDI] SelectObject(0x00030016)
+[T3f80] [API] [GDI] Ellipse(19,227,29,237) fill=#e13c3c
+[T3f80] [API] [GDI] CreateSolidBrush(#3cc85a) -> h 0x00030017
+[T3f80] [API] [GDI] SelectObject(0x00030017)
+[T3f80] [API] [GDI] Rectangle(177,145,191,159) fill=#3cc85a
+[T3f80] [API] [GDI] Rectangle(177,129,191,143) fill=#3cc85a
+[T3f80] [API] [GDI] Rectangle(177,113,191,127) fill=#3cc85a
+[T3f80] [API] [GDI] Rectangle(177,97,191,111) fill=#3cc85a
+[T3f80] [API] [GDI] Rectangle(161,97,175,111) fill=#3cc85a
+[T3f80] [API] [GDI] Rectangle(145,97,159,111) fill=#3cc85a
+[T3f80] [API] [GDI] Rectangle(129,97,143,111) fill=#3cc85a
+[T3f80] [API] [GDI] Rectangle(113,97,127,111) fill=#3cc85a
+[T3f80] [API] [GDI] CreateSolidBrush(#8cf0a0) -> h 0x00030018
+[T3f80] [API] [GDI] SelectObject(0x00030018)
+[T3f80] [API] [GDI] Rectangle(193,145,207,159) fill=#8cf0a0
+[T3f80] [API] [GDI] SetBkMode(1)
+[T3f80] [API] [GDI] SetTextColor(#ebebeb)
+[T3f80] [API] [GDI] TextOutA(10,4) 'MiniWin Snake  |  Score: 10  |  Len: 9'
+[T3f80] [API] [GDI] frame #5 (EndPaint) 640x480 -> miniwin-results/snake.exe/screenshots/frame_005.bmp
+[T3f80] [API] [GUI-EVENT] dispatch WM_PAINT wp=0x0 -> 0
+[T3f80] [API] [GUI-EVENT] #12 GetMessageA -> WM_TIMER id=1
+[T3f80] [API] [GUI] InvalidateRect -> paint pending
+[T3f80] [API] [GUI-EVENT] dispatch WM_TIMER wp=0x1 -> 0
+[T3f80] [API] [GUI-EVENT] #13 GetMessageA -> WM_PAINT
+[T3f80] [API] BeginPaint(hwnd=0x10001) -> hdc 0x20001 (640x480)
+[T3f80] [API] [GDI] CreateSolidBrush(#10101c) -> h 0x00030019
+[T3f80] [API] [GDI] FillRect(0,0)-(640,480) color=#10101c
+[T3f80] [API] [GDI] CreateSolidBrush(#5a5a6e) -> h 0x0003001a
+[T3f80] [API] [GDI] FillRect(0,0)-(640,16) color=#5a5a6e
+[T3f80] [API] [GDI] FillRect(0,464)-(640,480) color=#5a5a6e
+[T3f80] [API] [GDI] FillRect(0,0)-(16,480) color=#5a5a6e
+[T3f80] [API] [GDI] FillRect(624,0)-(640,480) color=#5a5a6e
+[T3f80] [API] [GDI] CreateSolidBrush(#e13c3c) -> h 0x0003001b
+[T3f80] [API] [GDI] SelectObject(0x0003001b)
+[T3f80] [API] [GDI] Ellipse(19,227,29,237) fill=#e13c3c
+[T3f80] [API] [GDI] CreateSolidBrush(#3cc85a) -> h 0x0003001c
+[T3f80] [API] [GDI] SelectObject(0x0003001c)
+[T3f80] [API] [GDI] Rectangle(193,145,207,159) fill=#3cc85a
+[T3f80] [API] [GDI] Rectangle(177,145,191,159) fill=#3cc85a
+[T3f80] [API] [GDI] Rectangle(177,129,191,143) fill=#3cc85a
+[T3f80] [API] [GDI] Rectangle(177,113,191,127) fill=#3cc85a
+[T3f80] [API] [GDI] Rectangle(177,97,191,111) fill=#3cc85a
+[T3f80] [API] [GDI] Rectangle(161,97,175,111) fill=#3cc85a
+[T3f80] [API] [GDI] Rectangle(145,97,159,111) fill=#3cc85a
+[T3f80] [API] [GDI] Rectangle(129,97,143,111) fill=#3cc85a
+[T3f80] [API] [GDI] CreateSolidBrush(#8cf0a0) -> h 0x0003001d
+[T3f80] [API] [GDI] SelectObject(0x0003001d)
+[T3f80] [API] [GDI] Rectangle(209,145,223,159) fill=#8cf0a0
+[T3f80] [API] [GDI] SetBkMode(1)
+[T3f80] [API] [GDI] SetTextColor(#ebebeb)
+[T3f80] [API] [GDI] TextOutA(10,4) 'MiniWin Snake  |  Score: 10  |  Len: 9'
+[T3f80] [API] [GDI] frame #6 (EndPaint) 640x480 -> miniwin-results/snake.exe/screenshots/frame_006.bmp
+[T3f80] [API] [GUI-EVENT] dispatch WM_PAINT wp=0x0 -> 0
+[T3f80] [API] [GUI-EVENT] #14 GetMessageA -> WM_TIMER id=1
+[T3f80] [API] [GUI] InvalidateRect -> paint pending
+[T3f80] [API] [GUI-EVENT] dispatch WM_TIMER wp=0x1 -> 0
+[T3f80] [API] [GUI-EVENT] #15 GetMessageA -> WM_PAINT
+[T3f80] [API] BeginPaint(hwnd=0x10001) -> hdc 0x20001 (640x480)
+[T3f80] [API] [GDI] CreateSolidBrush(#10101c) -> h 0x0003001e
+[T3f80] [API] [GDI] FillRect(0,0)-(640,480) color=#10101c
+[T3f80] [API] [GDI] CreateSolidBrush(#5a5a6e) -> h 0x0003001f
+[T3f80] [API] [GDI] FillRect(0,0)-(640,16) color=#5a5a6e
+[T3f80] [API] [GDI] FillRect(0,464)-(640,480) color=#5a5a6e
+[T3f80] [API] [GDI] FillRect(0,0)-(16,480) color=#5a5a6e
+[T3f80] [API] [GDI] FillRect(624,0)-(640,480) color=#5a5a6e
+[T3f80] [API] [GDI] CreateSolidBrush(#e13c3c) -> h 0x00030000
+[T3f80] [API] [GDI] SelectObject(0x00030000)
+[T3f80] [API] [GDI] Ellipse(19,227,29,237) fill=#e13c3c
+[T3f80] [API] [GDI] CreateSolidBrush(#3cc85a) -> h 0x00030001
+[T3f80] [API] [GDI] SelectObject(0x00030001)
+[T3f80] [API] [GDI] Rectangle(209,145,223,159) fill=#3cc85a
+[T3f80] [API] [GDI] Rectangle(193,145,207,159) fill=#3cc85a
+[T3f80] [API] [GDI] Rectangle(177,145,191,159) fill=#3cc85a
+[T3f80] [API] [GDI] Rectangle(177,129,191,143) fill=#3cc85a
+[T3f80] [API] [GDI] Rectangle(177,113,191,127) fill=#3cc85a
+[T3f80] [API] [GDI] Rectangle(177,97,191,111) fill=#3cc85a
+[T3f80] [API] [GDI] Rectangle(161,97,175,111) fill=#3cc85a
+[T3f80] [API] [GDI] Rectangle(145,97,159,111) fill=#3cc85a
+[T3f80] [API] [GDI] CreateSolidBrush(#8cf0a0) -> h 0x00030002
+[T3f80] [API] [GDI] SelectObject(0x00030002)
+[T3f80] [API] [GDI] Rectangle(225,145,239,159) fill=#8cf0a0
+[T3f80] [API] [GDI] SetBkMode(1)
+[T3f80] [API] [GDI] SetTextColor(#ebebeb)
+[T3f80] [API] [GDI] TextOutA(10,4) 'MiniWin Snake  |  Score: 10  |  Len: 9'
+[T3f80] [API] [GDI] frame #7 (EndPaint) 640x480 -> miniwin-results/snake.exe/screenshots/frame_007.bmp
+[T3f80] [API] [GUI-EVENT] dispatch WM_PAINT wp=0x0 -> 0
+[T3f80] [API] [GUI-EVENT] #16 GetMessageA -> WM_TIMER id=1
+[T3f80] [API] [GUI] InvalidateRect -> paint pending
+[T3f80] [API] [GUI-EVENT] dispatch WM_TIMER wp=0x1 -> 0
+[T3f80] [API] [GUI-EVENT] #17 GetMessageA -> WM_KEYDOWN VK=0x26
+[T3f80] [API] [GUI-EVENT] dispatch WM_KEYDOWN wp=0x26 -> 0
+[T3f80] [API] [GUI-EVENT] #18 GetMessageA -> WM_PAINT
+[T3f80] [API] BeginPaint(hwnd=0x10001) -> hdc 0x20001 (640x480)
+[T3f80] [API] [GDI] CreateSolidBrush(#10101c) -> h 0x00030003
+[T3f80] [API] [GDI] FillRect(0,0)-(640,480) color=#10101c
+[T3f80] [API] [GDI] CreateSolidBrush(#5a5a6e) -> h 0x00030004
+[T3f80] [API] [GDI] FillRect(0,0)-(640,16) color=#5a5a6e
+[T3f80] [API] [GDI] FillRect(0,464)-(640,480) color=#5a5a6e
+[T3f80] [API] [GDI] FillRect(0,0)-(16,480) color=#5a5a6e
+[T3f80] [API] [GDI] FillRect(624,0)-(640,480) color=#5a5a6e
+[T3f80] [API] [GDI] CreateSolidBrush(#e13c3c) -> h 0x00030005
+[T3f80] [API] [GDI] SelectObject(0x00030005)
+[T3f80] [API] [GDI] Ellipse(19,227,29,237) fill=#e13c3c
+[T3f80] [API] [GDI] CreateSolidBrush(#3cc85a) -> h 0x00030006
+[T3f80] [API] [GDI] SelectObject(0x00030006)
+[T3f80] [API] [GDI] Rectangle(225,145,239,159) fill=#3cc85a
+[T3f80] [API] [GDI] Rectangle(209,145,223,159) fill=#3cc85a
+[T3f80] [API] [GDI] Rectangle(193,145,207,159) fill=#3cc85a
+[T3f80] [API] [GDI] Rectangle(177,145,191,159) fill=#3cc85a
+[T3f80] [API] [GDI] Rectangle(177,129,191,143) fill=#3cc85a
+[T3f80] [API] [GDI] Rectangle(177,113,191,127) fill=#3cc85a
+[T3f80] [API] [GDI] Rectangle(177,97,191,111) fill=#3cc85a
+[T3f80] [API] [GDI] Rectangle(161,97,175,111) fill=#3cc85a
+[T3f80] [API] [GDI] CreateSolidBrush(#8cf0a0) -> h 0x00030007
+[T3f80] [API] [GDI] SelectObject(0x00030007)
+[T3f80] [API] [GDI] Rectangle(241,145,255,159) fill=#8cf0a0
+[T3f80] [API] [GDI] SetBkMode(1)
+[T3f80] [API] [GDI] SetTextColor(#ebebeb)
+[T3f80] [API] [GDI] TextOutA(10,4) 'MiniWin Snake  |  Score: 10  |  Len: 9'
+[T3f80] [API] [GDI] frame #8 (EndPaint) 640x480 -> miniwin-results/snake.exe/screenshots/frame_008.bmp
+[T3f80] [API] [GUI-EVENT] dispatch WM_PAINT wp=0x0 -> 0
+[T3f80] [API] [GUI-EVENT] #19 GetMessageA -> WM_TIMER id=1
+[T3f80] [API] [GUI] InvalidateRect -> paint pending
+[T3f80] [API] [GUI-EVENT] dispatch WM_TIMER wp=0x1 -> 0
+[T3f80] [API] [GUI-EVENT] #20 GetMessageA -> WM_PAINT
+[T3f80] [API] BeginPaint(hwnd=0x10001) -> hdc 0x20001 (640x480)
+[T3f80] [API] [GDI] CreateSolidBrush(#10101c) -> h 0x00030008
+[T3f80] [API] [GDI] FillRect(0,0)-(640,480) color=#10101c
+[T3f80] [API] [GDI] CreateSolidBrush(#5a5a6e) -> h 0x00030009
+[T3f80] [API] [GDI] FillRect(0,0)-(640,16) color=#5a5a6e
+[T3f80] [API] [GDI] FillRect(0,464)-(640,480) color=#5a5a6e
+[T3f80] [API] [GDI] FillRect(0,0)-(16,480) color=#5a5a6e
+[T3f80] [API] [GDI] FillRect(624,0)-(640,480) color=#5a5a6e
+[T3f80] [API] [GDI] CreateSolidBrush(#e13c3c) -> h 0x0003000a
+[T3f80] [API] [GDI] SelectObject(0x0003000a)
+[T3f80] [API] [GDI] Ellipse(19,227,29,237) fill=#e13c3c
+[T3f80] [API] [GDI] CreateSolidBrush(#3cc85a) -> h 0x0003000b
+[T3f80] [API] [GDI] SelectObject(0x0003000b)
+[T3f80] [API] [GDI] Rectangle(241,145,255,159) fill=#3cc85a
+[T3f80] [API] [GDI] Rectangle(225,145,239,159) fill=#3cc85a
+[T3f80] [API] [GDI] Rectangle(209,145,223,159) fill=#3cc85a
+[T3f80] [API] [GDI] Rectangle(193,145,207,159) fill=#3cc85a
+[T3f80] [API] [GDI] Rectangle(177,145,191,159) fill=#3cc85a
+[T3f80] [API] [GDI] Rectangle(177,129,191,143) fill=#3cc85a
+[T3f80] [API] [GDI] Rectangle(177,113,191,127) fill=#3cc85a
+[T3f80] [API] [GDI] Rectangle(177,97,191,111) fill=#3cc85a
+[T3f80] [API] [GDI] CreateSolidBrush(#8cf0a0) -> h 0x0003000c
+[T3f80] [API] [GDI] SelectObject(0x0003000c)
+[T3f80] [API] [GDI] Rectangle(241,129,255,143) fill=#8cf0a0
+[T3f80] [API] [GDI] SetBkMode(1)
+[T3f80] [API] [GDI] SetTextColor(#ebebeb)
+[T3f80] [API] [GDI] TextOutA(10,4) 'MiniWin Snake  |  Score: 10  |  Len: 9'
+[T3f80] [API] [GDI] frame #9 (EndPaint) 640x480 -> miniwin-results/snake.exe/screenshots/frame_009.bmp
+[T3f80] [API] [GUI-EVENT] dispatch WM_PAINT wp=0x0 -> 0
+[T3f80] [API] [GUI-EVENT] #21 GetMessageA -> WM_TIMER id=1
+[T3f80] [API] [GUI] InvalidateRect -> paint pending
+[T3f80] [API] [GUI-EVENT] dispatch WM_TIMER wp=0x1 -> 0
+[T3f80] [API] [GUI-EVENT] #22 GetMessageA -> WM_PAINT
+[T3f80] [API] BeginPaint(hwnd=0x10001) -> hdc 0x20001 (640x480)
+[T3f80] [API] [GDI] CreateSolidBrush(#10101c) -> h 0x0003000d
+[T3f80] [API] [GDI] FillRect(0,0)-(640,480) color=#10101c
+[T3f80] [API] [GDI] CreateSolidBrush(#5a5a6e) -> h 0x0003000e
+[T3f80] [API] [GDI] FillRect(0,0)-(640,16) color=#5a5a6e
+[T3f80] [API] [GDI] FillRect(0,464)-(640,480) color=#5a5a6e
+[T3f80] [API] [GDI] FillRect(0,0)-(16,480) color=#5a5a6e
+[T3f80] [API] [GDI] FillRect(624,0)-(640,480) color=#5a5a6e
+[T3f80] [API] [GDI] CreateSolidBrush(#e13c3c) -> h 0x0003000f
+[T3f80] [API] [GDI] SelectObject(0x0003000f)
+[T3f80] [API] [GDI] Ellipse(19,227,29,237) fill=#e13c3c
+[T3f80] [API] [GDI] CreateSolidBrush(#3cc85a) -> h 0x00030010
+[T3f80] [API] [GDI] SelectObject(0x00030010)
+[T3f80] [API] [GDI] Rectangle(241,129,255,143) fill=#3cc85a
+[T3f80] [API] [GDI] Rectangle(241,145,255,159) fill=#3cc85a
+[T3f80] [API] [GDI] Rectangle(225,145,239,159) fill=#3cc85a
+[T3f80] [API] [GDI] Rectangle(209,145,223,159) fill=#3cc85a
+[T3f80] [API] [GDI] Rectangle(193,145,207,159) fill=#3cc85a
+[T3f80] [API] [GDI] Rectangle(177,145,191,159) fill=#3cc85a
+[T3f80] [API] [GDI] Rectangle(177,129,191,143) fill=#3cc85a
+[T3f80] [API] [GDI] Rectangle(177,113,191,127) fill=#3cc85a
+[T3f80] [API] [GDI] CreateSolidBrush(#8cf0a0) -> h 0x00030011
+[T3f80] [API] [GDI] SelectObject(0x00030011)
+[T3f80] [API] [GDI] Rectangle(241,113,255,127) fill=#8cf0a0
+[T3f80] [API] [GDI] SetBkMode(1)
+[T3f80] [API] [GDI] SetTextColor(#ebebeb)
+[T3f80] [API] [GDI] TextOutA(10,4) 'MiniWin Snake  |  Score: 10  |  Len: 9'
+[T3f80] [API] [GDI] frame #10 (EndPaint) 640x480 -> miniwin-results/snake.exe/screenshots/frame_010.bmp
+[T3f80] [API] [GUI-EVENT] dispatch WM_PAINT wp=0x0 -> 0
+[T3f80] [API] [GUI-EVENT] #23 GetMessageA -> WM_TIMER id=1
+[T3f80] [API] [GUI] InvalidateRect -> paint pending
+[T3f80] [API] [GUI-EVENT] dispatch WM_TIMER wp=0x1 -> 0
+[T3f80] [API] [GUI-EVENT] #24 GetMessageA -> WM_PAINT
+[T3f80] [API] BeginPaint(hwnd=0x10001) -> hdc 0x20001 (640x480)
+[T3f80] [API] [GDI] CreateSolidBrush(#10101c) -> h 0x00030012
+[T3f80] [API] [GDI] FillRect(0,0)-(640,480) color=#10101c
+[T3f80] [API] [GDI] CreateSolidBrush(#5a5a6e) -> h 0x00030013
+[T3f80] [API] [GDI] FillRect(0,0)-(640,16) color=#5a5a6e
+[T3f80] [API] [GDI] FillRect(0,464)-(640,480) color=#5a5a6e
+[T3f80] [API] [GDI] FillRect(0,0)-(16,480) color=#5a5a6e
+[T3f80] [API] [GDI] FillRect(624,0)-(640,480) color=#5a5a6e
+[T3f80] [API] [GDI] CreateSolidBrush(#e13c3c) -> h 0x00030014
+[T3f80] [API] [GDI] SelectObject(0x00030014)
+[T3f80] [API] [GDI] Ellipse(19,227,29,237) fill=#e13c3c
+[T3f80] [API] [GDI] CreateSolidBrush(#3cc85a) -> h 0x00030015
+[T3f80] [API] [GDI] SelectObject(0x00030015)
+[T3f80] [API] [GDI] Rectangle(241,113,255,127) fill=#3cc85a
+[T3f80] [API] [GDI] Rectangle(241,129,255,143) fill=#3cc85a
+[T3f80] [API] [GDI] Rectangle(241,145,255,159) fill=#3cc85a
+[T3f80] [API] [GDI] Rectangle(225,145,239,159) fill=#3cc85a
+[T3f80] [API] [GDI] Rectangle(209,145,223,159) fill=#3cc85a
+[T3f80] [API] [GDI] Rectangle(193,145,207,159) fill=#3cc85a
+[T3f80] [API] [GDI] Rectangle(177,145,191,159) fill=#3cc85a
+[T3f80] [API] [GDI] Rectangle(177,129,191,143) fill=#3cc85a
+[T3f80] [API] [GDI] CreateSolidBrush(#8cf0a0) -> h 0x00030016
+[T3f80] [API] [GDI] SelectObject(0x00030016)
+[T3f80] [API] [GDI] Rectangle(241,97,255,111) fill=#8cf0a0
+[T3f80] [API] [GDI] SetBkMode(1)
+[T3f80] [API] [GDI] SetTextColor(#ebebeb)
+[T3f80] [API] [GDI] TextOutA(10,4) 'MiniWin Snake  |  Score: 10  |  Len: 9'
+[T3f80] [API] [GDI] frame #11 (EndPaint) 640x480 -> miniwin-results/snake.exe/screenshots/frame_011.bmp
+[T3f80] [API] [GUI-EVENT] dispatch WM_PAINT wp=0x0 -> 0
+[T3f80] [API] [GUI-EVENT] #25 GetMessageA -> WM_KEYDOWN VK=0x27
+[T3f80] [API] [GUI-EVENT] dispatch WM_KEYDOWN wp=0x27 -> 0
+[T3f80] [API] [GUI-EVENT] #26 GetMessageA -> WM_TIMER id=1
+[T3f80] [API] [GUI] InvalidateRect -> paint pending
+[T3f80] [API] [GUI-EVENT] dispatch WM_TIMER wp=0x1 -> 0
+[T3f80] [API] [GUI-EVENT] #27 GetMessageA -> WM_PAINT
+[T3f80] [API] BeginPaint(hwnd=0x10001) -> hdc 0x20001 (640x480)
+[T3f80] [API] [GDI] CreateSolidBrush(#10101c) -> h 0x00030017
+[T3f80] [API] [GDI] FillRect(0,0)-(640,480) color=#10101c
+[T3f80] [API] [GDI] CreateSolidBrush(#5a5a6e) -> h 0x00030018
+[T3f80] [API] [GDI] FillRect(0,0)-(640,16) color=#5a5a6e
+[T3f80] [API] [GDI] FillRect(0,464)-(640,480) color=#5a5a6e
+[T3f80] [API] [GDI] FillRect(0,0)-(16,480) color=#5a5a6e
+[T3f80] [API] [GDI] FillRect(624,0)-(640,480) color=#5a5a6e
+[T3f80] [API] [GDI] CreateSolidBrush(#e13c3c) -> h 0x00030019
+[T3f80] [API] [GDI] SelectObject(0x00030019)
+[T3f80] [API] [GDI] Ellipse(19,227,29,237) fill=#e13c3c
+[T3f80] [API] [GDI] CreateSolidBrush(#3cc85a) -> h 0x0003001a
+[T3f80] [API] [GDI] SelectObject(0x0003001a)
+[T3f80] [API] [GDI] Rectangle(241,97,255,111) fill=#3cc85a
+[T3f80] [API] [GDI] Rectangle(241,113,255,127) fill=#3cc85a
+[T3f80] [API] [GDI] Rectangle(241,129,255,143) fill=#3cc85a
+[T3f80] [API] [GDI] Rectangle(241,145,255,159) fill=#3cc85a
+[T3f80] [API] [GDI] Rectangle(225,145,239,159) fill=#3cc85a
+[T3f80] [API] [GDI] Rectangle(209,145,223,159) fill=#3cc85a
+[T3f80] [API] [GDI] Rectangle(193,145,207,159) fill=#3cc85a
+[T3f80] [API] [GDI] Rectangle(177,145,191,159) fill=#3cc85a
+[T3f80] [API] [GDI] CreateSolidBrush(#8cf0a0) -> h 0x0003001b
+[T3f80] [API] [GDI] SelectObject(0x0003001b)
+[T3f80] [API] [GDI] Rectangle(257,97,271,111) fill=#8cf0a0
+[T3f80] [API] [GDI] SetBkMode(1)
+[T3f80] [API] [GDI] SetTextColor(#ebebeb)
+[T3f80] [API] [GDI] TextOutA(10,4) 'MiniWin Snake  |  Score: 10  |  Len: 9'
+[T3f80] [API] [GDI] frame #12 (EndPaint) 640x480 -> miniwin-results/snake.exe/screenshots/frame_012.bmp
+[T3f80] [API] [GUI-EVENT] dispatch WM_PAINT wp=0x0 -> 0
+[T3f80] [API] [GUI-EVENT] #28 GetMessageA -> WM_TIMER id=1
+[T3f80] [API] [GUI] InvalidateRect -> paint pending
+[T3f80] [API] [GUI-EVENT] dispatch WM_TIMER wp=0x1 -> 0
+[T3f80] [API] [GUI-EVENT] #29 GetMessageA -> WM_PAINT
+[T3f80] [API] BeginPaint(hwnd=0x10001) -> hdc 0x20001 (640x480)
+[T3f80] [API] [GDI] CreateSolidBrush(#10101c) -> h 0x0003001c
+[T3f80] [API] [GDI] FillRect(0,0)-(640,480) color=#10101c
+[T3f80] [API] [GDI] CreateSolidBrush(#5a5a6e) -> h 0x0003001d
+[T3f80] [API] [GDI] FillRect(0,0)-(640,16) color=#5a5a6e
+[T3f80] [API] [GDI] FillRect(0,464)-(640,480) color=#5a5a6e
+[T3f80] [API] [GDI] FillRect(0,0)-(16,480) color=#5a5a6e
+[T3f80] [API] [GDI] FillRect(624,0)-(640,480) color=#5a5a6e
+[T3f80] [API] [GDI] CreateSolidBrush(#e13c3c) -> h 0x0003001e
+[T3f80] [API] [GDI] SelectObject(0x0003001e)
+[T3f80] [API] [GDI] Ellipse(19,227,29,237) fill=#e13c3c
+[T3f80] [API] [GDI] CreateSolidBrush(#3cc85a) -> h 0x0003001f
+[T3f80] [API] [GDI] SelectObject(0x0003001f)
+[T3f80] [API] [GDI] Rectangle(257,97,271,111) fill=#3cc85a
+[T3f80] [API] [GDI] Rectangle(241,97,255,111) fill=#3cc85a
+[T3f80] [API] [GDI] Rectangle(241,113,255,127) fill=#3cc85a
+[T3f80] [API] [GDI] Rectangle(241,129,255,143) fill=#3cc85a
+[T3f80] [API] [GDI] Rectangle(241,145,255,159) fill=#3cc85a
+[T3f80] [API] [GDI] Rectangle(225,145,239,159) fill=#3cc85a
+[T3f80] [API] [GDI] Rectangle(209,145,223,159) fill=#3cc85a
+[T3f80] [API] [GDI] Rectangle(193,145,207,159) fill=#3cc85a
+[T3f80] [API] [GDI] CreateSolidBrush(#8cf0a0) -> h 0x00030000
+[T3f80] [API] [GDI] SelectObject(0x00030000)
+[T3f80] [API] [GDI] Rectangle(273,97,287,111) fill=#8cf0a0
+[T3f80] [API] [GDI] SetBkMode(1)
+[T3f80] [API] [GDI] SetTextColor(#ebebeb)
+[T3f80] [API] [GDI] TextOutA(10,4) 'MiniWin Snake  |  Score: 10  |  Len: 9'
+[T3f80] [API] [GDI] frame #13 (EndPaint) 640x480 -> miniwin-results/snake.exe/screenshots/frame_013.bmp
+[T3f80] [API] [GUI-EVENT] dispatch WM_PAINT wp=0x0 -> 0
+[T3f80] [API] [GUI-EVENT] #30 GetMessageA -> WM_TIMER id=1
+[T3f80] [API] [GUI] InvalidateRect -> paint pending
+[T3f80] [API] [GUI-EVENT] dispatch WM_TIMER wp=0x1 -> 0
+[T3f80] [API] [GUI-EVENT] #31 GetMessageA -> WM_PAINT
+[T3f80] [API] BeginPaint(hwnd=0x10001) -> hdc 0x20001 (640x480)
+[T3f80] [API] [GDI] CreateSolidBrush(#10101c) -> h 0x00030001
+[T3f80] [API] [GDI] FillRect(0,0)-(640,480) color=#10101c
+[T3f80] [API] [GDI] CreateSolidBrush(#5a5a6e) -> h 0x00030002
+[T3f80] [API] [GDI] FillRect(0,0)-(640,16) color=#5a5a6e
+[T3f80] [API] [GDI] FillRect(0,464)-(640,480) color=#5a5a6e
+[T3f80] [API] [GDI] FillRect(0,0)-(16,480) color=#5a5a6e
+[T3f80] [API] [GDI] FillRect(624,0)-(640,480) color=#5a5a6e
+[T3f80] [API] [GDI] CreateSolidBrush(#e13c3c) -> h 0x00030003
+[T3f80] [API] [GDI] SelectObject(0x00030003)
+[T3f80] [API] [GDI] Ellipse(19,227,29,237) fill=#e13c3c
+[T3f80] [API] [GDI] CreateSolidBrush(#3cc85a) -> h 0x00030004
+[T3f80] [API] [GDI] SelectObject(0x00030004)
+[T3f80] [API] [GDI] Rectangle(273,97,287,111) fill=#3cc85a
+[T3f80] [API] [GDI] Rectangle(257,97,271,111) fill=#3cc85a
+[T3f80] [API] [GDI] Rectangle(241,97,255,111) fill=#3cc85a
+[T3f80] [API] [GDI] Rectangle(241,113,255,127) fill=#3cc85a
+[T3f80] [API] [GDI] Rectangle(241,129,255,143) fill=#3cc85a
+[T3f80] [API] [GDI] Rectangle(241,145,255,159) fill=#3cc85a
+[T3f80] [API] [GDI] Rectangle(225,145,239,159) fill=#3cc85a
+[T3f80] [API] [GDI] Rectangle(209,145,223,159) fill=#3cc85a
+[T3f80] [API] [GDI] CreateSolidBrush(#8cf0a0) -> h 0x00030005
+[T3f80] [API] [GDI] SelectObject(0x00030005)
+[T3f80] [API] [GDI] Rectangle(289,97,303,111) fill=#8cf0a0
+[T3f80] [API] [GDI] SetBkMode(1)
+[T3f80] [API] [GDI] SetTextColor(#ebebeb)
+[T3f80] [API] [GDI] TextOutA(10,4) 'MiniWin Snake  |  Score: 10  |  Len: 9'
+[T3f80] [API] [GDI] frame #14 (EndPaint) 640x480 -> miniwin-results/snake.exe/screenshots/frame_014.bmp
+[T3f80] [API] [GUI-EVENT] dispatch WM_PAINT wp=0x0 -> 0
+[T3f80] [API] [GUI-EVENT] #32 GetMessageA -> WM_TIMER id=1
+[T3f80] [API] [GUI] InvalidateRect -> paint pending
+[T3f80] [API] [GUI-EVENT] dispatch WM_TIMER wp=0x1 -> 0
+[T3f80] [API] [GUI-EVENT] #33 GetMessageA -> WM_KEYDOWN VK=0x28
+[T3f80] [API] [GUI-EVENT] dispatch WM_KEYDOWN wp=0x28 -> 0
+[T3f80] [API] [GUI-EVENT] #34 GetMessageA -> WM_PAINT
+[T3f80] [API] BeginPaint(hwnd=0x10001) -> hdc 0x20001 (640x480)
+[T3f80] [API] [GDI] CreateSolidBrush(#10101c) -> h 0x00030006
+[T3f80] [API] [GDI] FillRect(0,0)-(640,480) color=#10101c
+[T3f80] [API] [GDI] CreateSolidBrush(#5a5a6e) -> h 0x00030007
+[T3f80] [API] [GDI] FillRect(0,0)-(640,16) color=#5a5a6e
+[T3f80] [API] [GDI] FillRect(0,464)-(640,480) color=#5a5a6e
+[T3f80] [API] [GDI] FillRect(0,0)-(16,480) color=#5a5a6e
+[T3f80] [API] [GDI] FillRect(624,0)-(640,480) color=#5a5a6e
+[T3f80] [API] [GDI] CreateSolidBrush(#e13c3c) -> h 0x00030008
+[T3f80] [API] [GDI] SelectObject(0x00030008)
+[T3f80] [API] [GDI] Ellipse(19,227,29,237) fill=#e13c3c
+[T3f80] [API] [GDI] CreateSolidBrush(#3cc85a) -> h 0x00030009
+[T3f80] [API] [GDI] SelectObject(0x00030009)
+[T3f80] [API] [GDI] Rectangle(289,97,303,111) fill=#3cc85a
+[T3f80] [API] [GDI] Rectangle(273,97,287,111) fill=#3cc85a
+[T3f80] [API] [GDI] Rectangle(257,97,271,111) fill=#3cc85a
+[T3f80] [API] [GDI] Rectangle(241,97,255,111) fill=#3cc85a
+[T3f80] [API] [GDI] Rectangle(241,113,255,127) fill=#3cc85a
+[T3f80] [API] [GDI] Rectangle(241,129,255,143) fill=#3cc85a
+[T3f80] [API] [GDI] Rectangle(241,145,255,159) fill=#3cc85a
+[T3f80] [API] [GDI] Rectangle(225,145,239,159) fill=#3cc85a
+[T3f80] [API] [GDI] CreateSolidBrush(#8cf0a0) -> h 0x0003000a
+[T3f80] [API] [GDI] SelectObject(0x0003000a)
+[T3f80] [API] [GDI] Rectangle(305,97,319,111) fill=#8cf0a0
+[T3f80] [API] [GDI] SetBkMode(1)
+[T3f80] [API] [GDI] SetTextColor(#ebebeb)
+[T3f80] [API] [GDI] TextOutA(10,4) 'MiniWin Snake  |  Score: 10  |  Len: 9'
+[T3f80] [API] [GDI] frame #15 (EndPaint) 640x480 -> miniwin-results/snake.exe/screenshots/frame_015.bmp
+[T3f80] [API] [GUI-EVENT] dispatch WM_PAINT wp=0x0 -> 0
+[T3f80] [API] [GUI-EVENT] #35 GetMessageA -> WM_TIMER id=1
+[T3f80] [API] [GUI] InvalidateRect -> paint pending
+[T3f80] [API] [GUI-EVENT] dispatch WM_TIMER wp=0x1 -> 0
+[T3f80] [API] [GUI-EVENT] #36 GetMessageA -> WM_PAINT
+[T3f80] [API] BeginPaint(hwnd=0x10001) -> hdc 0x20001 (640x480)
+[T3f80] [API] [GDI] CreateSolidBrush(#10101c) -> h 0x0003000b
+[T3f80] [API] [GDI] FillRect(0,0)-(640,480) color=#10101c
+[T3f80] [API] [GDI] CreateSolidBrush(#5a5a6e) -> h 0x0003000c
+[T3f80] [API] [GDI] FillRect(0,0)-(640,16) color=#5a5a6e
+[T3f80] [API] [GDI] FillRect(0,464)-(640,480) color=#5a5a6e
+[T3f80] [API] [GDI] FillRect(0,0)-(16,480) color=#5a5a6e
+[T3f80] [API] [GDI] FillRect(624,0)-(640,480) color=#5a5a6e
+[T3f80] [API] [GDI] CreateSolidBrush(#e13c3c) -> h 0x0003000d
+[T3f80] [API] [GDI] SelectObject(0x0003000d)
+[T3f80] [API] [GDI] Ellipse(19,227,29,237) fill=#e13c3c
+[T3f80] [API] [GDI] CreateSolidBrush(#3cc85a) -> h 0x0003000e
+[T3f80] [API] [GDI] SelectObject(0x0003000e)
+[T3f80] [API] [GDI] Rectangle(305,97,319,111) fill=#3cc85a
+[T3f80] [API] [GDI] Rectangle(289,97,303,111) fill=#3cc85a
+[T3f80] [API] [GDI] Rectangle(273,97,287,111) fill=#3cc85a
+[T3f80] [API] [GDI] Rectangle(257,97,271,111) fill=#3cc85a
+[T3f80] [API] [GDI] Rectangle(241,97,255,111) fill=#3cc85a
+[T3f80] [API] [GDI] Rectangle(241,113,255,127) fill=#3cc85a
+[T3f80] [API] [GDI] Rectangle(241,129,255,143) fill=#3cc85a
+[T3f80] [API] [GDI] Rectangle(241,145,255,159) fill=#3cc85a
+[T3f80] [API] [GDI] CreateSolidBrush(#8cf0a0) -> h 0x0003000f
+[T3f80] [API] [GDI] SelectObject(0x0003000f)
+[T3f80] [API] [GDI] Rectangle(305,113,319,127) fill=#8cf0a0
+[T3f80] [API] [GDI] SetBkMode(1)
+[T3f80] [API] [GDI] SetTextColor(#ebebeb)
+[T3f80] [API] [GDI] TextOutA(10,4) 'MiniWin Snake  |  Score: 10  |  Len: 9'
+[T3f80] [API] [GDI] frame #16 (EndPaint) 640x480 -> miniwin-results/snake.exe/screenshots/frame_016.bmp
+[T3f80] [API] [GUI-EVENT] dispatch WM_PAINT wp=0x0 -> 0
+[T3f80] [API] [GUI-EVENT] #37 GetMessageA -> WM_TIMER id=1
+[T3f80] [API] [GUI] InvalidateRect -> paint pending
+[T3f80] [API] [GUI-EVENT] dispatch WM_TIMER wp=0x1 -> 0
+[T3f80] [API] [GUI-EVENT] #38 GetMessageA -> WM_PAINT
+[T3f80] [API] BeginPaint(hwnd=0x10001) -> hdc 0x20001 (640x480)
+[T3f80] [API] [GDI] CreateSolidBrush(#10101c) -> h 0x00030010
+[T3f80] [API] [GDI] FillRect(0,0)-(640,480) color=#10101c
+[T3f80] [API] [GDI] CreateSolidBrush(#5a5a6e) -> h 0x00030011
+[T3f80] [API] [GDI] FillRect(0,0)-(640,16) color=#5a5a6e
+[T3f80] [API] [GDI] FillRect(0,464)-(640,480) color=#5a5a6e
+[T3f80] [API] [GDI] FillRect(0,0)-(16,480) color=#5a5a6e
+[T3f80] [API] [GDI] FillRect(624,0)-(640,480) color=#5a5a6e
+[T3f80] [API] [GDI] CreateSolidBrush(#e13c3c) -> h 0x00030012
+[T3f80] [API] [GDI] SelectObject(0x00030012)
+[T3f80] [API] [GDI] Ellipse(19,227,29,237) fill=#e13c3c
+[T3f80] [API] [GDI] CreateSolidBrush(#3cc85a) -> h 0x00030013
+[T3f80] [API] [GDI] SelectObject(0x00030013)
+[T3f80] [API] [GDI] Rectangle(305,113,319,127) fill=#3cc85a
+[T3f80] [API] [GDI] Rectangle(305,97,319,111) fill=#3cc85a
+[T3f80] [API] [GDI] Rectangle(289,97,303,111) fill=#3cc85a
+[T3f80] [API] [GDI] Rectangle(273,97,287,111) fill=#3cc85a
+[T3f80] [API] [GDI] Rectangle(257,97,271,111) fill=#3cc85a
+[T3f80] [API] [GDI] Rectangle(241,97,255,111) fill=#3cc85a
+[T3f80] [API] [GDI] Rectangle(241,113,255,127) fill=#3cc85a
+[T3f80] [API] [GDI] Rectangle(241,129,255,143) fill=#3cc85a
+[T3f80] [API] [GDI] CreateSolidBrush(#8cf0a0) -> h 0x00030014
+[T3f80] [API] [GDI] SelectObject(0x00030014)
+[T3f80] [API] [GDI] Rectangle(305,129,319,143) fill=#8cf0a0
+[T3f80] [API] [GDI] SetBkMode(1)
+[T3f80] [API] [GDI] SetTextColor(#ebebeb)
+[T3f80] [API] [GDI] TextOutA(10,4) 'MiniWin Snake  |  Score: 10  |  Len: 9'
+[T3f80] [API] [GDI] frame #17 (EndPaint) 640x480 -> miniwin-results/snake.exe/screenshots/frame_017.bmp
+[T3f80] [API] [GUI-EVENT] dispatch WM_PAINT wp=0x0 -> 0
+[T3f80] [API] [GUI-EVENT] #39 GetMessageA -> WM_TIMER id=1
+[T3f80] [API] [GUI] InvalidateRect -> paint pending
+[T3f80] [API] [GUI-EVENT] dispatch WM_TIMER wp=0x1 -> 0
+[T3f80] [API] [GUI-EVENT] #40 GetMessageA -> WM_PAINT
+[T3f80] [API] BeginPaint(hwnd=0x10001) -> hdc 0x20001 (640x480)
+[T3f80] [API] [GDI] CreateSolidBrush(#10101c) -> h 0x00030015
+[T3f80] [API] [GDI] FillRect(0,0)-(640,480) color=#10101c
+[T3f80] [API] [GDI] CreateSolidBrush(#5a5a6e) -> h 0x00030016
+[T3f80] [API] [GDI] FillRect(0,0)-(640,16) color=#5a5a6e
+[T3f80] [API] [GDI] FillRect(0,464)-(640,480) color=#5a5a6e
+[T3f80] [API] [GDI] FillRect(0,0)-(16,480) color=#5a5a6e
+[T3f80] [API] [GDI] FillRect(624,0)-(640,480) color=#5a5a6e
+[T3f80] [API] [GDI] CreateSolidBrush(#e13c3c) -> h 0x00030017
+[T3f80] [API] [GDI] SelectObject(0x00030017)
+[T3f80] [API] [GDI] Ellipse(19,227,29,237) fill=#e13c3c
+[T3f80] [API] [GDI] CreateSolidBrush(#3cc85a) -> h 0x00030018
+[T3f80] [API] [GDI] SelectObject(0x00030018)
+[T3f80] [API] [GDI] Rectangle(305,129,319,143) fill=#3cc85a
+[T3f80] [API] [GDI] Rectangle(305,113,319,127) fill=#3cc85a
+[T3f80] [API] [GDI] Rectangle(305,97,319,111) fill=#3cc85a
+[T3f80] [API] [GDI] Rectangle(289,97,303,111) fill=#3cc85a
+[T3f80] [API] [GDI] Rectangle(273,97,287,111) fill=#3cc85a
+[T3f80] [API] [GDI] Rectangle(257,97,271,111) fill=#3cc85a
+[T3f80] [API] [GDI] Rectangle(241,97,255,111) fill=#3cc85a
+[T3f80] [API] [GDI] Rectangle(241,113,255,127) fill=#3cc85a
+[T3f80] [API] [GDI] CreateSolidBrush(#8cf0a0) -> h 0x00030019
+[T3f80] [API] [GDI] SelectObject(0x00030019)
+[T3f80] [API] [GDI] Rectangle(305,145,319,159) fill=#8cf0a0
+[T3f80] [API] [GDI] SetBkMode(1)
+[T3f80] [API] [GDI] SetTextColor(#ebebeb)
+[T3f80] [API] [GDI] TextOutA(10,4) 'MiniWin Snake  |  Score: 10  |  Len: 9'
+[T3f80] [API] [GDI] frame #18 (EndPaint) 640x480 -> miniwin-results/snake.exe/screenshots/frame_018.bmp
+[T3f80] [API] [GUI-EVENT] dispatch WM_PAINT wp=0x0 -> 0
+[T3f80] [API] [GUI-EVENT] #41 GetMessageA -> WM_KEYDOWN VK=0x27
+[T3f80] [API] [GUI-EVENT] dispatch WM_KEYDOWN wp=0x27 -> 0
+[T3f80] [API] [GUI-EVENT] #42 GetMessageA -> WM_TIMER id=1
+[T3f80] [API] [GUI] InvalidateRect -> paint pending
+[T3f80] [API] [GUI-EVENT] dispatch WM_TIMER wp=0x1 -> 0
+[T3f80] [API] [GUI-EVENT] #43 GetMessageA -> WM_PAINT
+[T3f80] [API] BeginPaint(hwnd=0x10001) -> hdc 0x20001 (640x480)
+[T3f80] [API] [GDI] CreateSolidBrush(#10101c) -> h 0x0003001a
+[T3f80] [API] [GDI] FillRect(0,0)-(640,480) color=#10101c
+[T3f80] [API] [GDI] CreateSolidBrush(#5a5a6e) -> h 0x0003001b
+[T3f80] [API] [GDI] FillRect(0,0)-(640,16) color=#5a5a6e
+[T3f80] [API] [GDI] FillRect(0,464)-(640,480) color=#5a5a6e
+[T3f80] [API] [GDI] FillRect(0,0)-(16,480) color=#5a5a6e
+[T3f80] [API] [GDI] FillRect(624,0)-(640,480) color=#5a5a6e
+[T3f80] [API] [GDI] CreateSolidBrush(#e13c3c) -> h 0x0003001c
+[T3f80] [API] [GDI] SelectObject(0x0003001c)
+[T3f80] [API] [GDI] Ellipse(19,227,29,237) fill=#e13c3c
+[T3f80] [API] [GDI] CreateSolidBrush(#3cc85a) -> h 0x0003001d
+[T3f80] [API] [GDI] SelectObject(0x0003001d)
+[T3f80] [API] [GDI] Rectangle(305,145,319,159) fill=#3cc85a
+[T3f80] [API] [GDI] Rectangle(305,129,319,143) fill=#3cc85a
+[T3f80] [API] [GDI] Rectangle(305,113,319,127) fill=#3cc85a
+[T3f80] [API] [GDI] Rectangle(305,97,319,111) fill=#3cc85a
+[T3f80] [API] [GDI] Rectangle(289,97,303,111) fill=#3cc85a
+[T3f80] [API] [GDI] Rectangle(273,97,287,111) fill=#3cc85a
+[T3f80] [API] [GDI] Rectangle(257,97,271,111) fill=#3cc85a
+[T3f80] [API] [GDI] Rectangle(241,97,255,111) fill=#3cc85a
+[T3f80] [API] [GDI] CreateSolidBrush(#8cf0a0) -> h 0x0003001e
+[T3f80] [API] [GDI] SelectObject(0x0003001e)
+[T3f80] [API] [GDI] Rectangle(321,145,335,159) fill=#8cf0a0
+[T3f80] [API] [GDI] SetBkMode(1)
+[T3f80] [API] [GDI] SetTextColor(#ebebeb)
+[T3f80] [API] [GDI] TextOutA(10,4) 'MiniWin Snake  |  Score: 10  |  Len: 9'
+[T3f80] [API] [GDI] frame #19 (EndPaint) 640x480 -> miniwin-results/snake.exe/screenshots/frame_019.bmp
+[T3f80] [API] [GUI-EVENT] dispatch WM_PAINT wp=0x0 -> 0
+[T3f80] [API] [GUI-EVENT] #44 GetMessageA -> WM_TIMER id=1
+[T3f80] [API] [GUI] InvalidateRect -> paint pending
+[T3f80] [API] [GUI-EVENT] dispatch WM_TIMER wp=0x1 -> 0
+[T3f80] [API] [GUI-EVENT] #45 GetMessageA -> WM_PAINT
+[T3f80] [API] BeginPaint(hwnd=0x10001) -> hdc 0x20001 (640x480)
+[T3f80] [API] [GDI] CreateSolidBrush(#10101c) -> h 0x0003001f
+[T3f80] [API] [GDI] FillRect(0,0)-(640,480) color=#10101c
+[T3f80] [API] [GDI] CreateSolidBrush(#5a5a6e) -> h 0x00030000
+[T3f80] [API] [GDI] FillRect(0,0)-(640,16) color=#5a5a6e
+[T3f80] [API] [GDI] FillRect(0,464)-(640,480) color=#5a5a6e
+[T3f80] [API] [GDI] FillRect(0,0)-(16,480) color=#5a5a6e
+[T3f80] [API] [GDI] FillRect(624,0)-(640,480) color=#5a5a6e
+[T3f80] [API] [GDI] CreateSolidBrush(#e13c3c) -> h 0x00030001
+[T3f80] [API] [GDI] SelectObject(0x00030001)
+[T3f80] [API] [GDI] Ellipse(19,227,29,237) fill=#e13c3c
+[T3f80] [API] [GDI] CreateSolidBrush(#3cc85a) -> h 0x00030002
+[T3f80] [API] [GDI] SelectObject(0x00030002)
+[T3f80] [API] [GDI] Rectangle(321,145,335,159) fill=#3cc85a
+[T3f80] [API] [GDI] Rectangle(305,145,319,159) fill=#3cc85a
+[T3f80] [API] [GDI] Rectangle(305,129,319,143) fill=#3cc85a
+[T3f80] [API] [GDI] Rectangle(305,113,319,127) fill=#3cc85a
+[T3f80] [API] [GDI] Rectangle(305,97,319,111) fill=#3cc85a
+[T3f80] [API] [GDI] Rectangle(289,97,303,111) fill=#3cc85a
+[T3f80] [API] [GDI] Rectangle(273,97,287,111) fill=#3cc85a
+[T3f80] [API] [GDI] Rectangle(257,97,271,111) fill=#3cc85a
+[T3f80] [API] [GDI] CreateSolidBrush(#8cf0a0) -> h 0x00030003
+[T3f80] [API] [GDI] SelectObject(0x00030003)
+[T3f80] [API] [GDI] Rectangle(337,145,351,159) fill=#8cf0a0
+[T3f80] [API] [GDI] SetBkMode(1)
+[T3f80] [API] [GDI] SetTextColor(#ebebeb)
+[T3f80] [API] [GDI] TextOutA(10,4) 'MiniWin Snake  |  Score: 10  |  Len: 9'
+[T3f80] [API] [GDI] frame #20 (EndPaint) 640x480 -> miniwin-results/snake.exe/screenshots/frame_020.bmp
+[T3f80] [API] [GUI-EVENT] dispatch WM_PAINT wp=0x0 -> 0
+[T3f80] [API] [GUI-EVENT] #46 GetMessageA -> WM_TIMER id=1
+[T3f80] [API] [GUI] InvalidateRect -> paint pending
+[T3f80] [API] [GUI-EVENT] dispatch WM_TIMER wp=0x1 -> 0
+[T3f80] [API] [GUI-EVENT] #47 GetMessageA -> WM_PAINT
+[T3f80] [API] BeginPaint(hwnd=0x10001) -> hdc 0x20001 (640x480)
+[T3f80] [API] [GDI] CreateSolidBrush(#10101c) -> h 0x00030004
+[T3f80] [API] [GDI] FillRect(0,0)-(640,480) color=#10101c
+[T3f80] [API] [GDI] CreateSolidBrush(#5a5a6e) -> h 0x00030005
+[T3f80] [API] [GDI] FillRect(0,0)-(640,16) color=#5a5a6e
+[T3f80] [API] [GDI] FillRect(0,464)-(640,480) color=#5a5a6e
+[T3f80] [API] [GDI] FillRect(0,0)-(16,480) color=#5a5a6e
+[T3f80] [API] [GDI] FillRect(624,0)-(640,480) color=#5a5a6e
+[T3f80] [API] [GDI] CreateSolidBrush(#e13c3c) -> h 0x00030006
+[T3f80] [API] [GDI] SelectObject(0x00030006)
+[T3f80] [API] [GDI] Ellipse(19,227,29,237) fill=#e13c3c
+[T3f80] [API] [GDI] CreateSolidBrush(#3cc85a) -> h 0x00030007
+[T3f80] [API] [GDI] SelectObject(0x00030007)
+[T3f80] [API] [GDI] Rectangle(337,145,351,159) fill=#3cc85a
+[T3f80] [API] [GDI] Rectangle(321,145,335,159) fill=#3cc85a
+[T3f80] [API] [GDI] Rectangle(305,145,319,159) fill=#3cc85a
+[T3f80] [API] [GDI] Rectangle(305,129,319,143) fill=#3cc85a
+[T3f80] [API] [GDI] Rectangle(305,113,319,127) fill=#3cc85a
+[T3f80] [API] [GDI] Rectangle(305,97,319,111) fill=#3cc85a
+[T3f80] [API] [GDI] Rectangle(289,97,303,111) fill=#3cc85a
+[T3f80] [API] [GDI] Rectangle(273,97,287,111) fill=#3cc85a
+[T3f80] [API] [GDI] CreateSolidBrush(#8cf0a0) -> h 0x00030008
+[T3f80] [API] [GDI] SelectObject(0x00030008)
+[T3f80] [API] [GDI] Rectangle(353,145,367,159) fill=#8cf0a0
+[T3f80] [API] [GDI] SetBkMode(1)
+[T3f80] [API] [GDI] SetTextColor(#ebebeb)
+[T3f80] [API] [GDI] TextOutA(10,4) 'MiniWin Snake  |  Score: 10  |  Len: 9'
+[T3f80] [API] [GDI] frame #21 (EndPaint) 640x480 -> miniwin-results/snake.exe/screenshots/frame_021.bmp
+[T3f80] [API] [GUI-EVENT] dispatch WM_PAINT wp=0x0 -> 0
+[T3f80] [API] [GUI-EVENT] #48 GetMessageA -> WM_TIMER id=1
+[T3f80] [API] [GUI] InvalidateRect -> paint pending
+[T3f80] [API] [GUI-EVENT] dispatch WM_TIMER wp=0x1 -> 0
+[T3f80] [API] [GUI-EVENT] #49 GetMessageA -> WM_KEYDOWN VK=0x26
+[T3f80] [API] [GUI-EVENT] dispatch WM_KEYDOWN wp=0x26 -> 0
+[T3f80] [API] [GUI-EVENT] #50 GetMessageA -> WM_PAINT
+[T3f80] [API] BeginPaint(hwnd=0x10001) -> hdc 0x20001 (640x480)
+[T3f80] [API] [GDI] CreateSolidBrush(#10101c) -> h 0x00030009
+[T3f80] [API] [GDI] FillRect(0,0)-(640,480) color=#10101c
+[T3f80] [API] [GDI] CreateSolidBrush(#5a5a6e) -> h 0x0003000a
+[T3f80] [API] [GDI] FillRect(0,0)-(640,16) color=#5a5a6e
+[T3f80] [API] [GDI] FillRect(0,464)-(640,480) color=#5a5a6e
+[T3f80] [API] [GDI] FillRect(0,0)-(16,480) color=#5a5a6e
+[T3f80] [API] [GDI] FillRect(624,0)-(640,480) color=#5a5a6e
+[T3f80] [API] [GDI] CreateSolidBrush(#e13c3c) -> h 0x0003000b
+[T3f80] [API] [GDI] SelectObject(0x0003000b)
+[T3f80] [API] [GDI] Ellipse(19,227,29,237) fill=#e13c3c
+[T3f80] [API] [GDI] CreateSolidBrush(#3cc85a) -> h 0x0003000c
+[T3f80] [API] [GDI] SelectObject(0x0003000c)
+[T3f80] [API] [GDI] Rectangle(353,145,367,159) fill=#3cc85a
+[T3f80] [API] [GDI] Rectangle(337,145,351,159) fill=#3cc85a
+[T3f80] [API] [GDI] Rectangle(321,145,335,159) fill=#3cc85a
+[T3f80] [API] [GDI] Rectangle(305,145,319,159) fill=#3cc85a
+[T3f80] [API] [GDI] Rectangle(305,129,319,143) fill=#3cc85a
+[T3f80] [API] [GDI] Rectangle(305,113,319,127) fill=#3cc85a
+[T3f80] [API] [GDI] Rectangle(305,97,319,111) fill=#3cc85a
+[T3f80] [API] [GDI] Rectangle(289,97,303,111) fill=#3cc85a
+[T3f80] [API] [GDI] CreateSolidBrush(#8cf0a0) -> h 0x0003000d
+[T3f80] [API] [GDI] SelectObject(0x0003000d)
+[T3f80] [API] [GDI] Rectangle(369,145,383,159) fill=#8cf0a0
+[T3f80] [API] [GDI] SetBkMode(1)
+[T3f80] [API] [GDI] SetTextColor(#ebebeb)
+[T3f80] [API] [GDI] TextOutA(10,4) 'MiniWin Snake  |  Score: 10  |  Len: 9'
+[T3f80] [API] [GDI] frame #22 (EndPaint) 640x480 -> miniwin-results/snake.exe/screenshots/frame_022.bmp
+[T3f80] [API] [GUI-EVENT] dispatch WM_PAINT wp=0x0 -> 0
+[T3f80] [API] [GUI-EVENT] #51 GetMessageA -> WM_TIMER id=1
+[T3f80] [API] [GUI] InvalidateRect -> paint pending
+[T3f80] [API] [GUI-EVENT] dispatch WM_TIMER wp=0x1 -> 0
+[T3f80] [API] [GUI-EVENT] #52 GetMessageA -> WM_PAINT
+[T3f80] [API] BeginPaint(hwnd=0x10001) -> hdc 0x20001 (640x480)
+[T3f80] [API] [GDI] CreateSolidBrush(#10101c) -> h 0x0003000e
+[T3f80] [API] [GDI] FillRect(0,0)-(640,480) color=#10101c
+[T3f80] [API] [GDI] CreateSolidBrush(#5a5a6e) -> h 0x0003000f
+[T3f80] [API] [GDI] FillRect(0,0)-(640,16) color=#5a5a6e
+[T3f80] [API] [GDI] FillRect(0,464)-(640,480) color=#5a5a6e
+[T3f80] [API] [GDI] FillRect(0,0)-(16,480) color=#5a5a6e
+[T3f80] [API] [GDI] FillRect(624,0)-(640,480) color=#5a5a6e
+[T3f80] [API] [GDI] CreateSolidBrush(#e13c3c) -> h 0x00030010
+[T3f80] [API] [GDI] SelectObject(0x00030010)
+[T3f80] [API] [GDI] Ellipse(19,227,29,237) fill=#e13c3c
+[T3f80] [API] [GDI] CreateSolidBrush(#3cc85a) -> h 0x00030011
+[T3f80] [API] [GDI] SelectObject(0x00030011)
+[T3f80] [API] [GDI] Rectangle(369,145,383,159) fill=#3cc85a
+[T3f80] [API] [GDI] Rectangle(353,145,367,159) fill=#3cc85a
+[T3f80] [API] [GDI] Rectangle(337,145,351,159) fill=#3cc85a
+[T3f80] [API] [GDI] Rectangle(321,145,335,159) fill=#3cc85a
+[T3f80] [API] [GDI] Rectangle(305,145,319,159) fill=#3cc85a
+[T3f80] [API] [GDI] Rectangle(305,129,319,143) fill=#3cc85a
+[T3f80] [API] [GDI] Rectangle(305,113,319,127) fill=#3cc85a
+[T3f80] [API] [GDI] Rectangle(305,97,319,111) fill=#3cc85a
+[T3f80] [API] [GDI] CreateSolidBrush(#8cf0a0) -> h 0x00030012
+[T3f80] [API] [GDI] SelectObject(0x00030012)
+[T3f80] [API] [GDI] Rectangle(369,129,383,143) fill=#8cf0a0
+[T3f80] [API] [GDI] SetBkMode(1)
+[T3f80] [API] [GDI] SetTextColor(#ebebeb)
+[T3f80] [API] [GDI] TextOutA(10,4) 'MiniWin Snake  |  Score: 10  |  Len: 9'
+[T3f80] [API] [GDI] frame #23 (EndPaint) 640x480 -> miniwin-results/snake.exe/screenshots/frame_023.bmp
+[T3f80] [API] [GUI-EVENT] dispatch WM_PAINT wp=0x0 -> 0
+[T3f80] [API] [GUI-EVENT] #53 GetMessageA -> WM_TIMER id=1
+[T3f80] [API] [GUI] InvalidateRect -> paint pending
+[T3f80] [API] [GUI-EVENT] dispatch WM_TIMER wp=0x1 -> 0
+[T3f80] [API] [GUI-EVENT] #54 GetMessageA -> WM_PAINT
+[T3f80] [API] BeginPaint(hwnd=0x10001) -> hdc 0x20001 (640x480)
+[T3f80] [API] [GDI] CreateSolidBrush(#10101c) -> h 0x00030013
+[T3f80] [API] [GDI] FillRect(0,0)-(640,480) color=#10101c
+[T3f80] [API] [GDI] CreateSolidBrush(#5a5a6e) -> h 0x00030014
+[T3f80] [API] [GDI] FillRect(0,0)-(640,16) color=#5a5a6e
+[T3f80] [API] [GDI] FillRect(0,464)-(640,480) color=#5a5a6e
+[T3f80] [API] [GDI] FillRect(0,0)-(16,480) color=#5a5a6e
+[T3f80] [API] [GDI] FillRect(624,0)-(640,480) color=#5a5a6e
+[T3f80] [API] [GDI] CreateSolidBrush(#e13c3c) -> h 0x00030015
+[T3f80] [API] [GDI] SelectObject(0x00030015)
+[T3f80] [API] [GDI] Ellipse(19,227,29,237) fill=#e13c3c
+[T3f80] [API] [GDI] CreateSolidBrush(#3cc85a) -> h 0x00030016
+[T3f80] [API] [GDI] SelectObject(0x00030016)
+[T3f80] [API] [GDI] Rectangle(369,129,383,143) fill=#3cc85a
+[T3f80] [API] [GDI] Rectangle(369,145,383,159) fill=#3cc85a
+[T3f80] [API] [GDI] Rectangle(353,145,367,159) fill=#3cc85a
+[T3f80] [API] [GDI] Rectangle(337,145,351,159) fill=#3cc85a
+[T3f80] [API] [GDI] Rectangle(321,145,335,159) fill=#3cc85a
+[T3f80] [API] [GDI] Rectangle(305,145,319,159) fill=#3cc85a
+[T3f80] [API] [GDI] Rectangle(305,129,319,143) fill=#3cc85a
+[T3f80] [API] [GDI] Rectangle(305,113,319,127) fill=#3cc85a
+[T3f80] [API] [GDI] CreateSolidBrush(#8cf0a0) -> h 0x00030017
+[T3f80] [API] [GDI] SelectObject(0x00030017)
+[T3f80] [API] [GDI] Rectangle(369,113,383,127) fill=#8cf0a0
+[T3f80] [API] [GDI] SetBkMode(1)
+[T3f80] [API] [GDI] SetTextColor(#ebebeb)
+[T3f80] [API] [GDI] TextOutA(10,4) 'MiniWin Snake  |  Score: 10  |  Len: 9'
+[T3f80] [API] [GDI] frame #24 (EndPaint) 640x480 -> miniwin-results/snake.exe/screenshots/frame_024.bmp
+[T3f80] [API] [GUI-EVENT] dispatch WM_PAINT wp=0x0 -> 0
+[T3f80] [API] [GUI-EVENT] #55 GetMessageA -> WM_TIMER id=1
+[T3f80] [API] [GUI] InvalidateRect -> paint pending
+[T3f80] [API] [GUI-EVENT] dispatch WM_TIMER wp=0x1 -> 0
+[T3f80] [API] [GUI-EVENT] #56 GetMessageA -> WM_PAINT
+[T3f80] [API] BeginPaint(hwnd=0x10001) -> hdc 0x20001 (640x480)
+[T3f80] [API] [GDI] CreateSolidBrush(#10101c) -> h 0x00030018
+[T3f80] [API] [GDI] FillRect(0,0)-(640,480) color=#10101c
+[T3f80] [API] [GDI] CreateSolidBrush(#5a5a6e) -> h 0x00030019
+[T3f80] [API] [GDI] FillRect(0,0)-(640,16) color=#5a5a6e
+[T3f80] [API] [GDI] FillRect(0,464)-(640,480) color=#5a5a6e
+[T3f80] [API] [GDI] FillRect(0,0)-(16,480) color=#5a5a6e
+[T3f80] [API] [GDI] FillRect(624,0)-(640,480) color=#5a5a6e
+[T3f80] [API] [GDI] CreateSolidBrush(#e13c3c) -> h 0x0003001a
+[T3f80] [API] [GDI] SelectObject(0x0003001a)
+[T3f80] [API] [GDI] Ellipse(19,227,29,237) fill=#e13c3c
+[T3f80] [API] [GDI] CreateSolidBrush(#3cc85a) -> h 0x0003001b
+[T3f80] [API] [GDI] SelectObject(0x0003001b)
+[T3f80] [API] [GDI] Rectangle(369,113,383,127) fill=#3cc85a
+[T3f80] [API] [GDI] Rectangle(369,129,383,143) fill=#3cc85a
+[T3f80] [API] [GDI] Rectangle(369,145,383,159) fill=#3cc85a
+[T3f80] [API] [GDI] Rectangle(353,145,367,159) fill=#3cc85a
+[T3f80] [API] [GDI] Rectangle(337,145,351,159) fill=#3cc85a
+[T3f80] [API] [GDI] Rectangle(321,145,335,159) fill=#3cc85a
+[T3f80] [API] [GDI] Rectangle(305,145,319,159) fill=#3cc85a
+[T3f80] [API] [GDI] Rectangle(305,129,319,143) fill=#3cc85a
+[T3f80] [API] [GDI] CreateSolidBrush(#8cf0a0) -> h 0x0003001c
+[T3f80] [API] [GDI] SelectObject(0x0003001c)
+[T3f80] [API] [GDI] Rectangle(369,97,383,111) fill=#8cf0a0
+[T3f80] [API] [GDI] SetBkMode(1)
+[T3f80] [API] [GDI] SetTextColor(#ebebeb)
+[T3f80] [API] [GDI] TextOutA(10,4) 'MiniWin Snake  |  Score: 10  |  Len: 9'
+[T3f80] [API] [GDI] frame #25 (EndPaint) 640x480 -> miniwin-results/snake.exe/screenshots/frame_025.bmp
+[T3f80] [API] [GUI-EVENT] dispatch WM_PAINT wp=0x0 -> 0
+[T3f80] [API] [GUI-EVENT] #57 GetMessageA -> WM_KEYDOWN VK=0x27
+[T3f80] [API] [GUI-EVENT] dispatch WM_KEYDOWN wp=0x27 -> 0
+[T3f80] [API] [GUI-EVENT] #58 GetMessageA -> WM_TIMER id=1
+[T3f80] [API] [GUI] InvalidateRect -> paint pending
+[T3f80] [API] [GUI-EVENT] dispatch WM_TIMER wp=0x1 -> 0
+[T3f80] [API] [GUI-EVENT] #59 GetMessageA -> WM_PAINT
+[T3f80] [API] BeginPaint(hwnd=0x10001) -> hdc 0x20001 (640x480)
+[T3f80] [API] [GDI] CreateSolidBrush(#10101c) -> h 0x0003001d
+[T3f80] [API] [GDI] FillRect(0,0)-(640,480) color=#10101c
+[T3f80] [API] [GDI] CreateSolidBrush(#5a5a6e) -> h 0x0003001e
+[T3f80] [API] [GDI] FillRect(0,0)-(640,16) color=#5a5a6e
+[T3f80] [API] [GDI] FillRect(0,464)-(640,480) color=#5a5a6e
+[T3f80] [API] [GDI] FillRect(0,0)-(16,480) color=#5a5a6e
+[T3f80] [API] [GDI] FillRect(624,0)-(640,480) color=#5a5a6e
+[T3f80] [API] [GDI] CreateSolidBrush(#e13c3c) -> h 0x0003001f
+[T3f80] [API] [GDI] SelectObject(0x0003001f)
+[T3f80] [API] [GDI] Ellipse(19,227,29,237) fill=#e13c3c
+[T3f80] [API] [GDI] CreateSolidBrush(#3cc85a) -> h 0x00030000
+[T3f80] [API] [GDI] SelectObject(0x00030000)
+[T3f80] [API] [GDI] Rectangle(369,97,383,111) fill=#3cc85a
+[T3f80] [API] [GDI] Rectangle(369,113,383,127) fill=#3cc85a
+[T3f80] [API] [GDI] Rectangle(369,129,383,143) fill=#3cc85a
+[T3f80] [API] [GDI] Rectangle(369,145,383,159) fill=#3cc85a
+[T3f80] [API] [GDI] Rectangle(353,145,367,159) fill=#3cc85a
+[T3f80] [API] [GDI] Rectangle(337,145,351,159) fill=#3cc85a
+[T3f80] [API] [GDI] Rectangle(321,145,335,159) fill=#3cc85a
+[T3f80] [API] [GDI] Rectangle(305,145,319,159) fill=#3cc85a
+[T3f80] [API] [GDI] CreateSolidBrush(#8cf0a0) -> h 0x00030001
+[T3f80] [API] [GDI] SelectObject(0x00030001)
+[T3f80] [API] [GDI] Rectangle(385,97,399,111) fill=#8cf0a0
+[T3f80] [API] [GDI] SetBkMode(1)
+[T3f80] [API] [GDI] SetTextColor(#ebebeb)
+[T3f80] [API] [GDI] TextOutA(10,4) 'MiniWin Snake  |  Score: 10  |  Len: 9'
+[T3f80] [API] [GDI] frame #26 (EndPaint) 640x480 -> miniwin-results/snake.exe/screenshots/frame_026.bmp
+[T3f80] [API] [GUI-EVENT] dispatch WM_PAINT wp=0x0 -> 0
+[T3f80] [API] [GUI-EVENT] #60 GetMessageA -> WM_TIMER id=1
+[T3f80] [API] [GUI] InvalidateRect -> paint pending
+[T3f80] [API] [GUI-EVENT] dispatch WM_TIMER wp=0x1 -> 0
+[T3f80] [API] [GUI-EVENT] #61 GetMessageA -> WM_PAINT
+[T3f80] [API] BeginPaint(hwnd=0x10001) -> hdc 0x20001 (640x480)
+[T3f80] [API] [GDI] CreateSolidBrush(#10101c) -> h 0x00030002
+[T3f80] [API] [GDI] FillRect(0,0)-(640,480) color=#10101c
+[T3f80] [API] [GDI] CreateSolidBrush(#5a5a6e) -> h 0x00030003
+[T3f80] [API] [GDI] FillRect(0,0)-(640,16) color=#5a5a6e
+[T3f80] [API] [GDI] FillRect(0,464)-(640,480) color=#5a5a6e
+[T3f80] [API] [GDI] FillRect(0,0)-(16,480) color=#5a5a6e
+[T3f80] [API] [GDI] FillRect(624,0)-(640,480) color=#5a5a6e
+[T3f80] [API] [GDI] CreateSolidBrush(#e13c3c) -> h 0x00030004
+[T3f80] [API] [GDI] SelectObject(0x00030004)
+[T3f80] [API] [GDI] Ellipse(19,227,29,237) fill=#e13c3c
+[T3f80] [API] [GDI] CreateSolidBrush(#3cc85a) -> h 0x00030005
+[T3f80] [API] [GDI] SelectObject(0x00030005)
+[T3f80] [API] [GDI] Rectangle(385,97,399,111) fill=#3cc85a
+[T3f80] [API] [GDI] Rectangle(369,97,383,111) fill=#3cc85a
+[T3f80] [API] [GDI] Rectangle(369,113,383,127) fill=#3cc85a
+[T3f80] [API] [GDI] Rectangle(369,129,383,143) fill=#3cc85a
+[T3f80] [API] [GDI] Rectangle(369,145,383,159) fill=#3cc85a
+[T3f80] [API] [GDI] Rectangle(353,145,367,159) fill=#3cc85a
+[T3f80] [API] [GDI] Rectangle(337,145,351,159) fill=#3cc85a
+[T3f80] [API] [GDI] Rectangle(321,145,335,159) fill=#3cc85a
+[T3f80] [API] [GDI] CreateSolidBrush(#8cf0a0) -> h 0x00030006
+[T3f80] [API] [GDI] SelectObject(0x00030006)
+[T3f80] [API] [GDI] Rectangle(401,97,415,111) fill=#8cf0a0
+[T3f80] [API] [GDI] SetBkMode(1)
+[T3f80] [API] [GDI] SetTextColor(#ebebeb)
+[T3f80] [API] [GDI] TextOutA(10,4) 'MiniWin Snake  |  Score: 10  |  Len: 9'
+[T3f80] [API] [GDI] frame #27 (EndPaint) 640x480 -> miniwin-results/snake.exe/screenshots/frame_027.bmp
+[T3f80] [API] [GUI-EVENT] dispatch WM_PAINT wp=0x0 -> 0
+[T3f80] [API] [GUI-EVENT] #62 GetMessageA -> WM_TIMER id=1
+[T3f80] [API] [GUI] InvalidateRect -> paint pending
+[T3f80] [API] [GUI-EVENT] dispatch WM_TIMER wp=0x1 -> 0
+[T3f80] [API] [GUI-EVENT] #63 GetMessageA -> WM_PAINT
+[T3f80] [API] BeginPaint(hwnd=0x10001) -> hdc 0x20001 (640x480)
+[T3f80] [API] [GDI] CreateSolidBrush(#10101c) -> h 0x00030007
+[T3f80] [API] [GDI] FillRect(0,0)-(640,480) color=#10101c
+[T3f80] [API] [GDI] CreateSolidBrush(#5a5a6e) -> h 0x00030008
+[T3f80] [API] [GDI] FillRect(0,0)-(640,16) color=#5a5a6e
+[T3f80] [API] [GDI] FillRect(0,464)-(640,480) color=#5a5a6e
+[T3f80] [API] [GDI] FillRect(0,0)-(16,480) color=#5a5a6e
+[T3f80] [API] [GDI] FillRect(624,0)-(640,480) color=#5a5a6e
+[T3f80] [API] [GDI] CreateSolidBrush(#e13c3c) -> h 0x00030009
+[T3f80] [API] [GDI] SelectObject(0x00030009)
+[T3f80] [API] [GDI] Ellipse(19,227,29,237) fill=#e13c3c
+[T3f80] [API] [GDI] CreateSolidBrush(#3cc85a) -> h 0x0003000a
+[T3f80] [API] [GDI] SelectObject(0x0003000a)
+[T3f80] [API] [GDI] Rectangle(401,97,415,111) fill=#3cc85a
+[T3f80] [API] [GDI] Rectangle(385,97,399,111) fill=#3cc85a
+[T3f80] [API] [GDI] Rectangle(369,97,383,111) fill=#3cc85a
+[T3f80] [API] [GDI] Rectangle(369,113,383,127) fill=#3cc85a
+[T3f80] [API] [GDI] Rectangle(369,129,383,143) fill=#3cc85a
+[T3f80] [API] [GDI] Rectangle(369,145,383,159) fill=#3cc85a
+[T3f80] [API] [GDI] Rectangle(353,145,367,159) fill=#3cc85a
+[T3f80] [API] [GDI] Rectangle(337,145,351,159) fill=#3cc85a
+[T3f80] [API] [GDI] CreateSolidBrush(#8cf0a0) -> h 0x0003000b
+[T3f80] [API] [GDI] SelectObject(0x0003000b)
+[T3f80] [API] [GDI] Rectangle(417,97,431,111) fill=#8cf0a0
+[T3f80] [API] [GDI] SetBkMode(1)
+[T3f80] [API] [GDI] SetTextColor(#ebebeb)
+[T3f80] [API] [GDI] TextOutA(10,4) 'MiniWin Snake  |  Score: 10  |  Len: 9'
+[T3f80] [API] [GDI] frame #28 (EndPaint) 640x480 -> miniwin-results/snake.exe/screenshots/frame_028.bmp
+[T3f80] [API] [GUI-EVENT] dispatch WM_PAINT wp=0x0 -> 0
+[T3f80] [API] [GUI-EVENT] #64 GetMessageA -> WM_TIMER id=1
+[T3f80] [API] [GUI] InvalidateRect -> paint pending
+[T3f80] [API] [GUI-EVENT] dispatch WM_TIMER wp=0x1 -> 0
+[T3f80] [API] [GUI-EVENT] #65 GetMessageA -> WM_KEYDOWN VK=0x28
+[T3f80] [API] [GUI-EVENT] dispatch WM_KEYDOWN wp=0x28 -> 0
+[T3f80] [API] [GUI-EVENT] #66 GetMessageA -> WM_PAINT
+[T3f80] [API] BeginPaint(hwnd=0x10001) -> hdc 0x20001 (640x480)
+[T3f80] [API] [GDI] CreateSolidBrush(#10101c) -> h 0x0003000c
+[T3f80] [API] [GDI] FillRect(0,0)-(640,480) color=#10101c
+[T3f80] [API] [GDI] CreateSolidBrush(#5a5a6e) -> h 0x0003000d
+[T3f80] [API] [GDI] FillRect(0,0)-(640,16) color=#5a5a6e
+[T3f80] [API] [GDI] FillRect(0,464)-(640,480) color=#5a5a6e
+[T3f80] [API] [GDI] FillRect(0,0)-(16,480) color=#5a5a6e
+[T3f80] [API] [GDI] FillRect(624,0)-(640,480) color=#5a5a6e
+[T3f80] [API] [GDI] CreateSolidBrush(#e13c3c) -> h 0x0003000e
+[T3f80] [API] [GDI] SelectObject(0x0003000e)
+[T3f80] [API] [GDI] Ellipse(19,227,29,237) fill=#e13c3c
+[T3f80] [API] [GDI] CreateSolidBrush(#3cc85a) -> h 0x0003000f
+[T3f80] [API] [GDI] SelectObject(0x0003000f)
+[T3f80] [API] [GDI] Rectangle(417,97,431,111) fill=#3cc85a
+[T3f80] [API] [GDI] Rectangle(401,97,415,111) fill=#3cc85a
+[T3f80] [API] [GDI] Rectangle(385,97,399,111) fill=#3cc85a
+[T3f80] [API] [GDI] Rectangle(369,97,383,111) fill=#3cc85a
+[T3f80] [API] [GDI] Rectangle(369,113,383,127) fill=#3cc85a
+[T3f80] [API] [GDI] Rectangle(369,129,383,143) fill=#3cc85a
+[T3f80] [API] [GDI] Rectangle(369,145,383,159) fill=#3cc85a
+[T3f80] [API] [GDI] Rectangle(353,145,367,159) fill=#3cc85a
+[T3f80] [API] [GDI] CreateSolidBrush(#8cf0a0) -> h 0x00030010
+[T3f80] [API] [GDI] SelectObject(0x00030010)
+[T3f80] [API] [GDI] Rectangle(433,97,447,111) fill=#8cf0a0
+[T3f80] [API] [GDI] SetBkMode(1)
+[T3f80] [API] [GDI] SetTextColor(#ebebeb)
+[T3f80] [API] [GDI] TextOutA(10,4) 'MiniWin Snake  |  Score: 10  |  Len: 9'
+[T3f80] [API] [GDI] frame #29 (EndPaint) 640x480 -> miniwin-results/snake.exe/screenshots/frame_029.bmp
+[T3f80] [API] [GUI-EVENT] dispatch WM_PAINT wp=0x0 -> 0
+[T3f80] [API] [GUI-EVENT] #67 GetMessageA -> WM_TIMER id=1
+[T3f80] [API] [GUI] InvalidateRect -> paint pending
+[T3f80] [API] [GUI-EVENT] dispatch WM_TIMER wp=0x1 -> 0
+[T3f80] [API] [GUI-EVENT] #68 GetMessageA -> WM_PAINT
+[T3f80] [API] BeginPaint(hwnd=0x10001) -> hdc 0x20001 (640x480)
+[T3f80] [API] [GDI] CreateSolidBrush(#10101c) -> h 0x00030011
+[T3f80] [API] [GDI] FillRect(0,0)-(640,480) color=#10101c
+[T3f80] [API] [GDI] CreateSolidBrush(#5a5a6e) -> h 0x00030012
+[T3f80] [API] [GDI] FillRect(0,0)-(640,16) color=#5a5a6e
+[T3f80] [API] [GDI] FillRect(0,464)-(640,480) color=#5a5a6e
+[T3f80] [API] [GDI] FillRect(0,0)-(16,480) color=#5a5a6e
+[T3f80] [API] [GDI] FillRect(624,0)-(640,480) color=#5a5a6e
+[T3f80] [API] [GDI] CreateSolidBrush(#e13c3c) -> h 0x00030013
+[T3f80] [API] [GDI] SelectObject(0x00030013)
+[T3f80] [API] [GDI] Ellipse(19,227,29,237) fill=#e13c3c
+[T3f80] [API] [GDI] CreateSolidBrush(#3cc85a) -> h 0x00030014
+[T3f80] [API] [GDI] SelectObject(0x00030014)
+[T3f80] [API] [GDI] Rectangle(433,97,447,111) fill=#3cc85a
+[T3f80] [API] [GDI] Rectangle(417,97,431,111) fill=#3cc85a
+[T3f80] [API] [GDI] Rectangle(401,97,415,111) fill=#3cc85a
+[T3f80] [API] [GDI] Rectangle(385,97,399,111) fill=#3cc85a
+[T3f80] [API] [GDI] Rectangle(369,97,383,111) fill=#3cc85a
+[T3f80] [API] [GDI] Rectangle(369,113,383,127) fill=#3cc85a
+[T3f80] [API] [GDI] Rectangle(369,129,383,143) fill=#3cc85a
+[T3f80] [API] [GDI] Rectangle(369,145,383,159) fill=#3cc85a
+[T3f80] [API] [GDI] CreateSolidBrush(#8cf0a0) -> h 0x00030015
+[T3f80] [API] [GDI] SelectObject(0x00030015)
+[T3f80] [API] [GDI] Rectangle(433,113,447,127) fill=#8cf0a0
+[T3f80] [API] [GDI] SetBkMode(1)
+[T3f80] [API] [GDI] SetTextColor(#ebebeb)
+[T3f80] [API] [GDI] TextOutA(10,4) 'MiniWin Snake  |  Score: 10  |  Len: 9'
+[T3f80] [API] [GDI] frame #30 (EndPaint) 640x480 -> miniwin-results/snake.exe/screenshots/frame_030.bmp
+[T3f80] [API] [GUI-EVENT] dispatch WM_PAINT wp=0x0 -> 0
+[T3f80] [API] [GUI-EVENT] #69 GetMessageA -> WM_TIMER id=1
+[T3f80] [API] [GUI] InvalidateRect -> paint pending
+[T3f80] [API] [GUI-EVENT] dispatch WM_TIMER wp=0x1 -> 0
+[T3f80] [API] [GUI-EVENT] #70 GetMessageA -> WM_PAINT
+[T3f80] [API] BeginPaint(hwnd=0x10001) -> hdc 0x20001 (640x480)
+[T3f80] [API] [GDI] CreateSolidBrush(#10101c) -> h 0x00030016
+[T3f80] [API] [GDI] FillRect(0,0)-(640,480) color=#10101c
+[T3f80] [API] [GDI] CreateSolidBrush(#5a5a6e) -> h 0x00030017
+[T3f80] [API] [GDI] FillRect(0,0)-(640,16) color=#5a5a6e
+[T3f80] [API] [GDI] FillRect(0,464)-(640,480) color=#5a5a6e
+[T3f80] [API] [GDI] FillRect(0,0)-(16,480) color=#5a5a6e
+[T3f80] [API] [GDI] FillRect(624,0)-(640,480) color=#5a5a6e
+[T3f80] [API] [GDI] CreateSolidBrush(#e13c3c) -> h 0x00030018
+[T3f80] [API] [GDI] SelectObject(0x00030018)
+[T3f80] [API] [GDI] Ellipse(19,227,29,237) fill=#e13c3c
+[T3f80] [API] [GDI] CreateSolidBrush(#3cc85a) -> h 0x00030019
+[T3f80] [API] [GDI] SelectObject(0x00030019)
+[T3f80] [API] [GDI] Rectangle(433,113,447,127) fill=#3cc85a
+[T3f80] [API] [GDI] Rectangle(433,97,447,111) fill=#3cc85a
+[T3f80] [API] [GDI] Rectangle(417,97,431,111) fill=#3cc85a
+[T3f80] [API] [GDI] Rectangle(401,97,415,111) fill=#3cc85a
+[T3f80] [API] [GDI] Rectangle(385,97,399,111) fill=#3cc85a
+[T3f80] [API] [GDI] Rectangle(369,97,383,111) fill=#3cc85a
+[T3f80] [API] [GDI] Rectangle(369,113,383,127) fill=#3cc85a
+[T3f80] [API] [GDI] Rectangle(369,129,383,143) fill=#3cc85a
+[T3f80] [API] [GDI] CreateSolidBrush(#8cf0a0) -> h 0x0003001a
+[T3f80] [API] [GDI] SelectObject(0x0003001a)
+[T3f80] [API] [GDI] Rectangle(433,129,447,143) fill=#8cf0a0
+[T3f80] [API] [GDI] SetBkMode(1)
+[T3f80] [API] [GDI] SetTextColor(#ebebeb)
+[T3f80] [API] [GDI] TextOutA(10,4) 'MiniWin Snake  |  Score: 10  |  Len: 9'
+[T3f80] [API] [GDI] frame #31 (EndPaint) 640x480 -> miniwin-results/snake.exe/screenshots/frame_031.bmp
+[T3f80] [API] [GUI-EVENT] dispatch WM_PAINT wp=0x0 -> 0
+[T3f80] [API] [GUI-EVENT] #71 GetMessageA -> WM_TIMER id=1
+[T3f80] [API] [GUI] InvalidateRect -> paint pending
+[T3f80] [API] [GUI-EVENT] dispatch WM_TIMER wp=0x1 -> 0
+[T3f80] [API] [GUI-EVENT] #72 GetMessageA -> WM_PAINT
+[T3f80] [API] BeginPaint(hwnd=0x10001) -> hdc 0x20001 (640x480)
+[T3f80] [API] [GDI] CreateSolidBrush(#10101c) -> h 0x0003001b
+[T3f80] [API] [GDI] FillRect(0,0)-(640,480) color=#10101c
+[T3f80] [API] [GDI] CreateSolidBrush(#5a5a6e) -> h 0x0003001c
+[T3f80] [API] [GDI] FillRect(0,0)-(640,16) color=#5a5a6e
+[T3f80] [API] [GDI] FillRect(0,464)-(640,480) color=#5a5a6e
+[T3f80] [API] [GDI] FillRect(0,0)-(16,480) color=#5a5a6e
+[T3f80] [API] [GDI] FillRect(624,0)-(640,480) color=#5a5a6e
+[T3f80] [API] [GDI] CreateSolidBrush(#e13c3c) -> h 0x0003001d
+[T3f80] [API] [GDI] SelectObject(0x0003001d)
+[T3f80] [API] [GDI] Ellipse(19,227,29,237) fill=#e13c3c
+[T3f80] [API] [GDI] CreateSolidBrush(#3cc85a) -> h 0x0003001e
+[T3f80] [API] [GDI] SelectObject(0x0003001e)
+[T3f80] [API] [GDI] Rectangle(433,129,447,143) fill=#3cc85a
+[T3f80] [API] [GDI] Rectangle(433,113,447,127) fill=#3cc85a
+[T3f80] [API] [GDI] Rectangle(433,97,447,111) fill=#3cc85a
+[T3f80] [API] [GDI] Rectangle(417,97,431,111) fill=#3cc85a
+[T3f80] [API] [GDI] Rectangle(401,97,415,111) fill=#3cc85a
+[T3f80] [API] [GDI] Rectangle(385,97,399,111) fill=#3cc85a
+[T3f80] [API] [GDI] Rectangle(369,97,383,111) fill=#3cc85a
+[T3f80] [API] [GDI] Rectangle(369,113,383,127) fill=#3cc85a
+[T3f80] [API] [GDI] CreateSolidBrush(#8cf0a0) -> h 0x0003001f
+[T3f80] [API] [GDI] SelectObject(0x0003001f)
+[T3f80] [API] [GDI] Rectangle(433,145,447,159) fill=#8cf0a0
+[T3f80] [API] [GDI] SetBkMode(1)
+[T3f80] [API] [GDI] SetTextColor(#ebebeb)
+[T3f80] [API] [GDI] TextOutA(10,4) 'MiniWin Snake  |  Score: 10  |  Len: 9'
+[T3f80] [API] [GDI] frame #32 (EndPaint) 640x480 -> miniwin-results/snake.exe/screenshots/frame_032.bmp
+[T3f80] [API] [GUI-EVENT] dispatch WM_PAINT wp=0x0 -> 0
+[T3f80] [API] [GUI-EVENT] #73 GetMessageA -> WM_KEYDOWN VK=0x27
+[T3f80] [API] [GUI-EVENT] dispatch WM_KEYDOWN wp=0x27 -> 0
+[T3f80] [API] [GUI-EVENT] #74 GetMessageA -> WM_TIMER id=1
+[T3f80] [API] [GUI] InvalidateRect -> paint pending
+[T3f80] [API] [GUI-EVENT] dispatch WM_TIMER wp=0x1 -> 0
+[T3f80] [API] [GUI-EVENT] #75 GetMessageA -> WM_PAINT
+[T3f80] [API] BeginPaint(hwnd=0x10001) -> hdc 0x20001 (640x480)
+[T3f80] [API] [GDI] CreateSolidBrush(#10101c) -> h 0x00030000
+[T3f80] [API] [GDI] FillRect(0,0)-(640,480) color=#10101c
+[T3f80] [API] [GDI] CreateSolidBrush(#5a5a6e) -> h 0x00030001
+[T3f80] [API] [GDI] FillRect(0,0)-(640,16) color=#5a5a6e
+[T3f80] [API] [GDI] FillRect(0,464)-(640,480) color=#5a5a6e
+[T3f80] [API] [GDI] FillRect(0,0)-(16,480) color=#5a5a6e
+[T3f80] [API] [GDI] FillRect(624,0)-(640,480) color=#5a5a6e
+[T3f80] [API] [GDI] CreateSolidBrush(#e13c3c) -> h 0x00030002
+[T3f80] [API] [GDI] SelectObject(0x00030002)
+[T3f80] [API] [GDI] Ellipse(19,227,29,237) fill=#e13c3c
+[T3f80] [API] [GDI] CreateSolidBrush(#3cc85a) -> h 0x00030003
+[T3f80] [API] [GDI] SelectObject(0x00030003)
+[T3f80] [API] [GDI] Rectangle(433,145,447,159) fill=#3cc85a
+[T3f80] [API] [GDI] Rectangle(433,129,447,143) fill=#3cc85a
+[T3f80] [API] [GDI] Rectangle(433,113,447,127) fill=#3cc85a
+[T3f80] [API] [GDI] Rectangle(433,97,447,111) fill=#3cc85a
+[T3f80] [API] [GDI] Rectangle(417,97,431,111) fill=#3cc85a
+[T3f80] [API] [GDI] Rectangle(401,97,415,111) fill=#3cc85a
+[T3f80] [API] [GDI] Rectangle(385,97,399,111) fill=#3cc85a
+[T3f80] [API] [GDI] Rectangle(369,97,383,111) fill=#3cc85a
+[T3f80] [API] [GDI] CreateSolidBrush(#8cf0a0) -> h 0x00030004
+[T3f80] [API] [GDI] SelectObject(0x00030004)
+[T3f80] [API] [GDI] Rectangle(449,145,463,159) fill=#8cf0a0
+[T3f80] [API] [GDI] SetBkMode(1)
+[T3f80] [API] [GDI] SetTextColor(#ebebeb)
+[T3f80] [API] [GDI] TextOutA(10,4) 'MiniWin Snake  |  Score: 10  |  Len: 9'
+[T3f80] [API] [GDI] frame #33 (EndPaint) 640x480 -> miniwin-results/snake.exe/screenshots/frame_033.bmp
+[T3f80] [API] [GUI-EVENT] dispatch WM_PAINT wp=0x0 -> 0
+[T3f80] [API] [GUI-EVENT] #76 GetMessageA -> WM_TIMER id=1
+[T3f80] [API] [GUI] InvalidateRect -> paint pending
+[T3f80] [API] [GUI-EVENT] dispatch WM_TIMER wp=0x1 -> 0
+[T3f80] [API] [GUI-EVENT] #77 GetMessageA -> WM_PAINT
+[T3f80] [API] BeginPaint(hwnd=0x10001) -> hdc 0x20001 (640x480)
+[T3f80] [API] [GDI] CreateSolidBrush(#10101c) -> h 0x00030005
+[T3f80] [API] [GDI] FillRect(0,0)-(640,480) color=#10101c
+[T3f80] [API] [GDI] CreateSolidBrush(#5a5a6e) -> h 0x00030006
+[T3f80] [API] [GDI] FillRect(0,0)-(640,16) color=#5a5a6e
+[T3f80] [API] [GDI] FillRect(0,464)-(640,480) color=#5a5a6e
+[T3f80] [API] [GDI] FillRect(0,0)-(16,480) color=#5a5a6e
+[T3f80] [API] [GDI] FillRect(624,0)-(640,480) color=#5a5a6e
+[T3f80] [API] [GDI] CreateSolidBrush(#e13c3c) -> h 0x00030007
+[T3f80] [API] [GDI] SelectObject(0x00030007)
+[T3f80] [API] [GDI] Ellipse(19,227,29,237) fill=#e13c3c
+[T3f80] [API] [GDI] CreateSolidBrush(#3cc85a) -> h 0x00030008
+[T3f80] [API] [GDI] SelectObject(0x00030008)
+[T3f80] [API] [GDI] Rectangle(449,145,463,159) fill=#3cc85a
+[T3f80] [API] [GDI] Rectangle(433,145,447,159) fill=#3cc85a
+[T3f80] [API] [GDI] Rectangle(433,129,447,143) fill=#3cc85a
+[T3f80] [API] [GDI] Rectangle(433,113,447,127) fill=#3cc85a
+[T3f80] [API] [GDI] Rectangle(433,97,447,111) fill=#3cc85a
+[T3f80] [API] [GDI] Rectangle(417,97,431,111) fill=#3cc85a
+[T3f80] [API] [GDI] Rectangle(401,97,415,111) fill=#3cc85a
+[T3f80] [API] [GDI] Rectangle(385,97,399,111) fill=#3cc85a
+[T3f80] [API] [GDI] CreateSolidBrush(#8cf0a0) -> h 0x00030009
+[T3f80] [API] [GDI] SelectObject(0x00030009)
+[T3f80] [API] [GDI] Rectangle(465,145,479,159) fill=#8cf0a0
+[T3f80] [API] [GDI] SetBkMode(1)
+[T3f80] [API] [GDI] SetTextColor(#ebebeb)
+[T3f80] [API] [GDI] TextOutA(10,4) 'MiniWin Snake  |  Score: 10  |  Len: 9'
+[T3f80] [API] [GDI] frame #34 (EndPaint) 640x480 -> miniwin-results/snake.exe/screenshots/frame_034.bmp
+[T3f80] [API] [GUI-EVENT] dispatch WM_PAINT wp=0x0 -> 0
+[T3f80] [API] [GUI-EVENT] #78 GetMessageA -> WM_TIMER id=1
+[T3f80] [API] [GUI] InvalidateRect -> paint pending
+[T3f80] [API] [GUI-EVENT] dispatch WM_TIMER wp=0x1 -> 0
+[T3f80] [API] [GUI-EVENT] #79 GetMessageA -> WM_PAINT
+[T3f80] [API] BeginPaint(hwnd=0x10001) -> hdc 0x20001 (640x480)
+[T3f80] [API] [GDI] CreateSolidBrush(#10101c) -> h 0x0003000a
+[T3f80] [API] [GDI] FillRect(0,0)-(640,480) color=#10101c
+[T3f80] [API] [GDI] CreateSolidBrush(#5a5a6e) -> h 0x0003000b
+[T3f80] [API] [GDI] FillRect(0,0)-(640,16) color=#5a5a6e
+[T3f80] [API] [GDI] FillRect(0,464)-(640,480) color=#5a5a6e
+[T3f80] [API] [GDI] FillRect(0,0)-(16,480) color=#5a5a6e
+[T3f80] [API] [GDI] FillRect(624,0)-(640,480) color=#5a5a6e
+[T3f80] [API] [GDI] CreateSolidBrush(#e13c3c) -> h 0x0003000c
+[T3f80] [API] [GDI] SelectObject(0x0003000c)
+[T3f80] [API] [GDI] Ellipse(19,227,29,237) fill=#e13c3c
+[T3f80] [API] [GDI] CreateSolidBrush(#3cc85a) -> h 0x0003000d
+[T3f80] [API] [GDI] SelectObject(0x0003000d)
+[T3f80] [API] [GDI] Rectangle(465,145,479,159) fill=#3cc85a
+[T3f80] [API] [GDI] Rectangle(449,145,463,159) fill=#3cc85a
+[T3f80] [API] [GDI] Rectangle(433,145,447,159) fill=#3cc85a
+[T3f80] [API] [GDI] Rectangle(433,129,447,143) fill=#3cc85a
+[T3f80] [API] [GDI] Rectangle(433,113,447,127) fill=#3cc85a
+[T3f80] [API] [GDI] Rectangle(433,97,447,111) fill=#3cc85a
+[T3f80] [API] [GDI] Rectangle(417,97,431,111) fill=#3cc85a
+[T3f80] [API] [GDI] Rectangle(401,97,415,111) fill=#3cc85a
+[T3f80] [API] [GDI] CreateSolidBrush(#8cf0a0) -> h 0x0003000e
+[T3f80] [API] [GDI] SelectObject(0x0003000e)
+[T3f80] [API] [GDI] Rectangle(481,145,495,159) fill=#8cf0a0
+[T3f80] [API] [GDI] SetBkMode(1)
+[T3f80] [API] [GDI] SetTextColor(#ebebeb)
+[T3f80] [API] [GDI] TextOutA(10,4) 'MiniWin Snake  |  Score: 10  |  Len: 9'
+[T3f80] [API] [GDI] frame #35 (EndPaint) 640x480 -> miniwin-results/snake.exe/screenshots/frame_035.bmp
+[T3f80] [API] [GUI-EVENT] dispatch WM_PAINT wp=0x0 -> 0
+[T3f80] [API] [GUI-EVENT] #80 GetMessageA -> WM_TIMER id=1
+[T3f80] [API] [GUI] InvalidateRect -> paint pending
+[T3f80] [API] [GUI-EVENT] dispatch WM_TIMER wp=0x1 -> 0
+[T3f80] [API] [GUI-EVENT] #81 GetMessageA -> WM_KEYDOWN VK=0x1b
+[T3f80] [API] PostQuitMessage(0)
+[T3f80] [API] [GUI-EVENT] dispatch WM_KEYDOWN wp=0x1b -> 0
+[T3f80] [API] GetMessageA() -> 0 (WM_QUIT code=0)
+[T3f80] [API] exit(0)
+  ]
+}

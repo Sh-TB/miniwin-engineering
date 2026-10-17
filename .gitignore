@@ -51,3 +51,6 @@ artifacts/opensource/run/
 
 # SWEEP-50: downloaded PE binaries stay local (680MB), evidence TSVs are committed
 artifacts/sweep50/dl/
+
+# SWEEP-005: game build outputs + 96MB frame/evidence dumps stay local
+artifacts/sweep005/

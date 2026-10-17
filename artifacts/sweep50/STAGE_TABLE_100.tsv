@@ -108,3 +108,4 @@ si-gui2/procmon64.exe	x64	GUI	RAN-EXIT0-GUI-LIFECYCLE	0	344	-	runs_gui/procmon64
 si-gui2/diskmon64.exe	x64	GUI	RAN-EXIT0-GUI-LIFECYCLE	0	120	-	runs_gui/diskmon64
 nirsoft2/DriverView.exe	x64	GUI	CRASH-GUEST	139	61	-	evidence/sweep004_gdi
 nirsoft2/HeapMemView.exe	x64	GUI	CRASH-GUEST	139	58	-	evidence/sweep004_gdi
+tests/games/miniwin_snake.exe	x64	GAME	RAN-EXIT0-GAME-100%	0	0	-	artifacts/sweep005/acceptance
