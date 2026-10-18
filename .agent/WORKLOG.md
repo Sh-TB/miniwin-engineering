@@ -116,3 +116,47 @@ Stage Summary:
   GetDiskFreeSpaceExW normalize; 3/3 SHA match); zstd wave (7 APIs); BUG-061
   CLOSED (_stat64 layout+overflow); LADDER-008 zstd VERIFIED 3/3; G1 pinned 4x;
   regression 12/12; proof PNG v3.
+
+---
+Task ID: SWEEP-007 (SW-562)
+Agent: Super Z (engineering agent)
+Task: User «ادامه بده» — continue per worklist: SW-562 battery (all GUI programs
+      under MW_GUI_EVENTS=1), honest post-SWEEP-005/006 frontier measurement.
+
+Work Log:
+- Re-acquired the SWEEP-003 GUI set (dl/ tree lost to ENOSPC cleanup):
+  scripts/sweep007_redownload_gui.py, same official endpoints; 15/16 OK,
+  pefile-verified (14 GUI + 1 console); ADExplorer.zip retired by Microsoft
+  (404) — recorded as UNOBTAINABLE; SHA-256 manifest per exe
+  (artifacts/sweep50/sweep007_redownload_manifest.tsv).
+- Binary-identity spot checks: cports v1 reproduces SWEEP-003 crash site
+  0x14001b338 exactly; putty renders the identical WinSock dialog — same set.
+- Clean rebuild; G1 PIN OK pre-battery (binary sha 791334c8..., byte-identical
+  to SWEEP-006 build; regression 12/12; UPX banner exact).
+- Battery: scripts/sweep562_battery.sh, 15 programs x3 under MW_GUI_EVENTS=1,
+  classification from per-run api_trace.json (MW_TRACE target — NOT stderr;
+  first battery pass mis-grepped stderr, fixed and re-run).
+- Results 15/15 3x-deterministic: produkey+cports ARM the pump and crash in the
+  synchronous WM_CREATE (produkey 0x22f24 at stub call #4 = comctl32 child
+  controls on NULL returns; cports fault moves earlier 0x1b338 -> 0x2119, same
+  binary); procmon64/diskmon64 exit 0 with armed=0 — NO runtime
+  CreateWindowEx/GetMessage (import-resolve trace lines are not runtime calls;
+  SWEEP-003 GUI-lifecycle labels corrected to PRE-WINDOW-CLEAN-EXIT);
+  coreinfoex64 exit1 = SW-561 version drift CONFIRMED x3; putty 2nd dialog
+  image; pageant FIRST dialog image ("Unable to access security APIs");
+  named-stub gates (procexp64/autoruns64/rammap64/puttygen RIP=0) unchanged;
+  zoomit64 TRAP133, bginfo64/winmergeu TERM9 unchanged.
+- Images: scripts/sweep562_images.py -> putty_dialog_minwin.png,
+  pageant_dialog_minwin.png (2x nearest), battery_map.png (v1-vs-pump map).
+- Worklist: SW-562 closed; SW-553 scoped to zoomit64-only; SW-561 confirmed.
+- Gates after battery: no loader.c change this sweep (pure measurement) —
+  G1 pin from pre-battery stands; regression untouched.
+
+Stage Summary:
+- SW-562 DONE with the honest map: 2/15 reach the pump and both die in
+  WM_CREATE comctl32 cliff; 2/15 exit0 pre-window; 2/15 produce dialog images;
+  4/15 named-stub gates (SW-554/555 = highest leverage next); 1 version drift
+  (SW-561); 1 retired binary (SW-553 scope-cut); 5 unchanged crash classes.
+- Evidence: evidence/sweep007_battery/ (README.md, battery_map.png, 2 dialog
+  PNGs, battery_raw.tsv, determinism.txt, per-program run1 stderr/cmdline);
+  artifacts/sweep50/runs_gui562/ (per-run artifacts x45).

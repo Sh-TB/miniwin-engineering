@@ -1,0 +1,16 @@
+autoruns64: DETERMINISTIC exit=1 paints=0 frames=0
+bginfo64: DETERMINISTIC exit=9 paints=0 frames=0
+coreinfoex64: DETERMINISTIC exit=1 paints=0 frames=0
+cports: DETERMINISTIC exit=139 paints=0 frames=0
+diskmon64: DETERMINISTIC exit=0 paints=0 frames=0
+pageant: DETERMINISTIC exit=1 paints=0 frames=1
+procexp64: DETERMINISTIC exit=2 paints=0 frames=0
+procmon64: DETERMINISTIC exit=0 paints=0 frames=0
+produkey: DETERMINISTIC exit=139 paints=0 frames=0
+putty: DETERMINISTIC exit=1 paints=0 frames=1
+puttygen: DETERMINISTIC exit=139 paints=0 frames=0
+rammap64: DETERMINISTIC exit=1 paints=0 frames=0
+searchmyfiles: DETERMINISTIC exit=139 paints=0 frames=0
+winmergeu: DETERMINISTIC exit=9 paints=0 frames=0
+zoomit64: DETERMINISTIC exit=133 paints=0 frames=0
+--- 15/15 programs 3x-deterministic

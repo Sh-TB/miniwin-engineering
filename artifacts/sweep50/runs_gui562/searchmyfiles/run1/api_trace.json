@@ -1,0 +1,333 @@
+{
+  "trace": [
+[Tdf80] [API] PE Loader: file=artifacts/sweep50/dl/searchmyfiles/SearchMyFiles.exe size=236032
+[Tdf80] [API] PE Loader: ImageBase=0x140000000 EP=0x27e60 SizeOfImage=0x3e000 Sections=5
+[Tdf80] [API] PE Loader: Mapped at 0x140000000 (forced via MAP_FIXED)
+[Tdf80] [API] Section [0] .text    VA=0x00001000 VS=0x0002738b Raw=0x00027400 Ch=0x60000020
+[Tdf80] [API] Section [1] .rdata   VA=0x00029000 VS=0x000096ec Raw=0x00009800 Ch=0x40000040
+[Tdf80] [API] Section [2] .data    VA=0x00033000 VS=0x00001ee8 Raw=0x00000800 Ch=0xc0000040
+[Tdf80] [API] Section [3] .pdata   VA=0x00035000 VS=0x00001470 Raw=0x00001600 Ch=0x40000040
+[Tdf80] [API] Section [4] .rsrc    VA=0x00037000 VS=0x00006aa0 Raw=0x00006c00 Ch=0x40000040
+[Tdf80] [API] Import Directory: RVA=0x30a50 Size=0xf0
+[Tdf80] [API] Import DLL: msvcrt.dll (IAT RVA=0x29730, ILT RVA=0x31270)
+[Tdf80] [API]   [0] UNRESOLVED: __wgetmainargs
+[Tdf80] [API]   [1] UNRESOLVED: _wcmdln
+[Tdf80] [API]   [2] exit -> 0x2011490
+[Tdf80] [API]   [3] _cexit -> 0x200ea10
+[Tdf80] [API]   [4] _exit -> 0x200f4f0
+[Tdf80] [API]   [5] _c_exit -> 0x202ba50
+[Tdf80] [API]   [6] _XcptFilter -> 0x2028d70
+[Tdf80] [API]   [7] __C_specific_handler -> 0x202b0a0
+[Tdf80] [API]   [8] _onexit -> 0x2016450
+[Tdf80] [API]   [9] _initterm -> 0x200aaf0
+[Tdf80] [API]   [10] UNRESOLVED: _msize
+[Tdf80] [API]   [11] calloc -> 0x2034e40
+[Tdf80] [API]   [12] realloc -> 0x2041c70
+[Tdf80] [API]   [13] strchr -> 0x2011690
+[Tdf80] [API]   [14] strrchr -> 0x20125a0
+[Tdf80] [API]   [15] sprintf -> 0x2021100
+[Tdf80] [API]   [16] _stricmp -> 0x2012830
+[Tdf80] [API]   [17] UNRESOLVED: _wcslwr
+[Tdf80] [API]   [18] strlen -> 0x200f3b0
+[Tdf80] [API]   [19] qsort -> 0x2015110
+[Tdf80] [API]   [20] memmove -> 0x200db90
+[Tdf80] [API]   [21] memcmp -> 0x200f450
+[Tdf80] [API]   [22] wcstoul -> 0x2012d50
+[Tdf80] [API]   [23] wcsrchr -> 0x20093d0
+[Tdf80] [API]   [24] __setusermatherr -> 0x2028060
+[Tdf80] [API]   [25] _commode -> DATA 0x218b24c
+[Tdf80] [API]   [26] _fmode -> DATA 0x218b250
+[Tdf80] [API]   [27] __set_app_type -> 0x2027f70
+[Tdf80] [API]   [28] __dllonexit -> 0x20221d0
+[Tdf80] [API]   [29] wcsncpy -> 0x2033df0
+[Tdf80] [API]   [30] towupper -> 0x2017950
+[Tdf80] [API]   [31] malloc -> 0x2034a80
+[Tdf80] [API]   [32] UNRESOLVED: _memicmp
+[Tdf80] [API]   [33] free -> 0x203dd60
+[Tdf80] [API]   [34] modf -> 0x201b690
+[Tdf80] [API]   [35] _wcsicmp -> 0x2032540
+[Tdf80] [API]   [36] wcschr -> 0x2009380
+[Tdf80] [API]   [37] _wcsnicmp -> 0x20177a0
+[Tdf80] [API]   [38] UNRESOLVED: ??3@YAXPEAX@Z
+[Tdf80] [API]   [39] UNRESOLVED: ??2@YAPEAX_K@Z
+[Tdf80] [API]   [40] wcslen -> 0x2021dc0
+[Tdf80] [API]   [41] UNRESOLVED: _itow
+[Tdf80] [API]   [42] _purecall -> 0x2015c30
+[Tdf80] [API]   [43] UNRESOLVED: _wtoi
+[Tdf80] [API]   [44] wcscpy -> 0x2009480
+[Tdf80] [API]   [45] UNRESOLVED: _ui64tow
+[Tdf80] [API]   [46] UNRESOLVED: _wtoi64
+[Tdf80] [API]   [47] memset -> 0x200e250
+[Tdf80] [API]   [48] wcscmp -> 0x20329c0
+[Tdf80] [API]   [49] memcpy -> 0x2010c20
+[Tdf80] [API]   [50] wcscat -> 0x2009440
+[Tdf80] [API]   [51] _snwprintf -> 0x2021340
+[Tdf80] [API]   [52] UNRESOLVED: wcsncat
+[Tdf80] [API]   [53] ftell -> 0x201f400
+[Tdf80] [API]   [54] fwrite -> 0x201f7b0
+[Tdf80] [API]   [55] ferror -> 0x201bba0
+[Tdf80] [API]   [56] fread -> 0x201ef80
+[Tdf80] [API]   [57] _wfopen -> 0x203f960
+[Tdf80] [API]   [58] fclose -> 0x20319d0
+[Tdf80] [API]   [59] fseek -> 0x201f310
+[Tdf80] [API] Import DLL: COMCTL32.dll (IAT RVA=0x29040, ILT RVA=0x30b80)
+[Tdf80] [API]   [0] UNRESOLVED: ImageList_AddMasked
+[Tdf80] [API]   [1] UNRESOLVED: ImageList_Add
+[Tdf80] [API]   [2] UNRESOLVED: CreateStatusWindowW
+[Tdf80] [API]   [3] UNRESOLVED: CreateToolbarEx
+[Tdf80] [API]   [4] Ordinal 17 (not supported)
+[Tdf80] [API]   [5] UNRESOLVED: ImageList_SetImageCount
+[Tdf80] [API]   [6] UNRESOLVED: ImageList_Create
+[Tdf80] [API] Import DLL: VERSION.dll (IAT RVA=0x296e8, ILT RVA=0x31228)
+[Tdf80] [API]   [0] UNRESOLVED: GetFileVersionInfoSizeW
+[Tdf80] [API]   [1] UNRESOLVED: VerQueryValueW
+[Tdf80] [API]   [2] UNRESOLVED: GetFileVersionInfoW
+[Tdf80] [API] Import DLL: MPR.dll (IAT RVA=0x29348, ILT RVA=0x30e88)
+[Tdf80] [API]   [0] UNRESOLVED: WNetGetUniversalNameW
+[Tdf80] [API] Import DLL: KERNEL32.dll (IAT RVA=0x29110, ILT RVA=0x30c50)
+[Tdf80] [API]   [0] UNRESOLVED: ReadProcessMemory
+[Tdf80] [API]   [1] OpenProcess -> 0x202a830
+[Tdf80] [API]   [2] GetCurrentProcess -> 0x2007ec0
+[Tdf80] [API]   [3] GetCurrentProcessId -> 0x2007ed0
+[Tdf80] [API]   [4] ExitProcess -> 0x200f6f0
+[Tdf80] [API]   [5] RemoveDirectoryW -> 0x203d210
+[Tdf80] [API]   [6] DeleteFileW -> 0x203d800
+[Tdf80] [API]   [7] CreateProcessW -> 0x2023d10
+[Tdf80] [API]   [8] UNRESOLVED: EnumResourceTypesW
+[Tdf80] [API]   [9] GetDiskFreeSpaceW -> 0x2040c80
+[Tdf80] [API]   [10] UNRESOLVED: GetLocalTime
+[Tdf80] [API]   [11] SetFilePointerEx -> 0x2026fa0
+[Tdf80] [API]   [12] GetTickCount -> 0x200f9d0
+[Tdf80] [API]   [13] GetVolumeInformationW -> 0x203b370
+[Tdf80] [API]   [14] GetStartupInfoW -> 0x202b550
+[Tdf80] [API]   [15] MultiByteToWideChar -> 0x2024320
+[Tdf80] [API]   [16] SetErrorMode -> 0x2009190
+[Tdf80] [API]   [17] GlobalFree -> 0x203b090
+[Tdf80] [API]   [18] GetStdHandle -> 0x2048a50
+[Tdf80] [API]   [19] UNRESOLVED: GetPrivateProfileStringW
+[Tdf80] [API]   [20] EnumResourceNamesW -> 0x2009220
+[Tdf80] [API]   [21] UNRESOLVED: GetPrivateProfileIntW
+[Tdf80] [API]   [22] GetModuleHandleW -> 0x200eb20
+[Tdf80] [API]   [23] CreateFileW -> 0x203d3d0
+[Tdf80] [API]   [24] GetProcAddress -> 0x200a000
+[Tdf80] [API]   [25] CloseHandle -> 0x2039450
+[Tdf80] [API]   [26] CompareFileTime -> 0x20229e0
+[Tdf80] [API]   [27] GetLastError -> 0x2009da0
+[Tdf80] [API]   [28] MoveFileW -> 0x2041400
+[Tdf80] [API]   [29] GetSystemTimeAsFileTime -> 0x202c070
+[Tdf80] [API]   [30] FileTimeToLocalFileTime -> 0x20326b0
+[Tdf80] [API]   [31] LoadLibraryW -> 0x203e4b0
+[Tdf80] [API]   [32] FileTimeToSystemTime -> 0x202f840
+[Tdf80] [API]   [33] FreeLibrary -> 0x202b690
+[Tdf80] [API]   [34] SystemTimeToFileTime -> 0x202fb60
+[Tdf80] [API]   [35] GetDriveTypeW -> 0x20311e0
+[Tdf80] [API]   [36] GetLogicalDrives -> 0x2008ff0
+[Tdf80] [API]   [37] ExpandEnvironmentStringsW -> 0x203f6d0
+[Tdf80] [API]   [38] GlobalUnlock -> 0x2008cd0
+[Tdf80] [API]   [39] GlobalLock -> 0x2008cc0
+[Tdf80] [API]   [40] GlobalAlloc -> 0x2012320
+[Tdf80] [API]   [41] LocalFileTimeToFileTime -> 0x202fd80
+[Tdf80] [API]   [42] GetTempPathW -> 0x2039b40
+[Tdf80] [API]   [43] GetLocaleInfoW -> 0x2024740
+[Tdf80] [API]   [44] SizeofResource -> 0x2009200
+[Tdf80] [API]   [45] GetDateFormatW -> 0x2025e00
+[Tdf80] [API]   [46] GetTempFileNameW -> 0x2040f50
+[Tdf80] [API]   [47] FormatMessageW -> 0x2029330
+[Tdf80] [API]   [48] GetFileSize -> 0x20271f0
+[Tdf80] [API]   [49] UNRESOLVED: GetVersionExW
+[Tdf80] [API]   [50] FindNextFileW -> 0x202c730
+[Tdf80] [API]   [51] FindFirstFileW -> 0x203b230
+[Tdf80] [API]   [52] FindClose -> 0x2018230
+[Tdf80] [API]   [53] GetTimeFormatW -> 0x2025f10
+[Tdf80] [API]   [54] GetFileAttributesW -> 0x203d5c0
+[Tdf80] [API]   [55] WriteFile -> 0x2026c60
+[Tdf80] [API]   [56] ReadFile -> 0x2026a40
+[Tdf80] [API]   [57] GetModuleFileNameW -> 0x203a8b0
+[Tdf80] [API]   [58] GetWindowsDirectoryW -> 0x20388c0
+[Tdf80] [API]   [59] FindResourceW -> 0x203cfa0
+[Tdf80] [API]   [60] LocalFree -> 0x203e8a0
+[Tdf80] [API]   [61] LoadResource -> 0x2029420
+[Tdf80] [API]   [62] UNRESOLVED: GetNumberFormatW
+[Tdf80] [API]   [63] GetSystemDirectoryW -> 0x20387e0
+[Tdf80] [API]   [64] lstrlenW -> 0x2035d70
+[Tdf80] [API]   [65] LockResource -> 0x20310b0
+[Tdf80] [API]   [66] UNRESOLVED: lstrcpyW
+[Tdf80] [API]   [67] LoadLibraryExW -> 0x203e6a0
+[Tdf80] [API]   [68] WideCharToMultiByte -> 0x2022b70
+[Tdf80] [API]   [69] UNRESOLVED: WritePrivateProfileStringW
+[Tdf80] [API] Import DLL: USER32.dll (IAT RVA=0x293b0, ILT RVA=0x30ef0)
+[Tdf80] [API]   [0] UNRESOLVED: SetWindowLongPtrW
+[Tdf80] [API]   [1] CallWindowProcW -> 0x2031b80
+[Tdf80] [API]   [2] UNRESOLVED: MonitorFromWindow
+[Tdf80] [API]   [3] UNRESOLVED: GetMonitorInfoW
+[Tdf80] [API]   [4] UNRESOLVED: ChildWindowFromPoint
+[Tdf80] [API]   [5] ReleaseDC -> 0x2009ab0
+[Tdf80] [API]   [6] GetDC -> 0x2009aa0
+[Tdf80] [API]   [7] LoadCursorW -> 0x2031080
+[Tdf80] [API]   [8] UNRESOLVED: SetCursor
+[Tdf80] [API]   [9] UNRESOLVED: GetSysColorBrush
+[Tdf80] [API]   [10] ShowWindow -> 0x2029b00
+[Tdf80] [API]   [11] UpdateWindow -> 0x201cb60
+[Tdf80] [API]   [12] UNRESOLVED: SetDlgItemInt
+[Tdf80] [API]   [13] UNRESOLVED: SetDlgItemTextW
+[Tdf80] [API]   [14] UNRESOLVED: GetDlgItemTextW
+[Tdf80] [API]   [15] BeginPaint -> 0x2033100
+[Tdf80] [API]   [16] UNRESOLVED: GetSystemMetrics
+[Tdf80] [API]   [17] GetClientRect -> 0x200c880
+[Tdf80] [API]   [18] UNRESOLVED: DeferWindowPos
+[Tdf80] [API]   [19] CreateWindowExW -> 0x20339d0
+[Tdf80] [API]   [20] UNRESOLVED: InsertMenuW
+[Tdf80] [API]   [21] UNRESOLVED: SendDlgItemMessageW
+[Tdf80] [API]   [22] UNRESOLVED: EndDialog
+[Tdf80] [API]   [23] UNRESOLVED: GetDlgItem
+[Tdf80] [API]   [24] UNRESOLVED: GetWindowRect
+[Tdf80] [API]   [25] UNRESOLVED: GetDlgItemInt
+[Tdf80] [API]   [26] InvalidateRect -> 0x202bd20
+[Tdf80] [API]   [27] UNRESOLVED: GetWindow
+[Tdf80] [API]   [28] UNRESOLVED: DrawFrameControl
+[Tdf80] [API]   [29] EndPaint -> 0x2030b10
+[Tdf80] [API]   [30] UNRESOLVED: SetWindowTextW
+[Tdf80] [API]   [31] UNRESOLVED: GetWindowPlacement
+[Tdf80] [API]   [32] MessageBoxW -> 0x2043aa0
+[Tdf80] [API]   [33] UNRESOLVED: PostMessageW
+[Tdf80] [API]   [34] UNRESOLVED: SetMenu
+[Tdf80] [API]   [35] UNRESOLVED: TranslateAcceleratorW
+[Tdf80] [API]   [36] UNRESOLVED: LoadAcceleratorsW
+[Tdf80] [API]   [37] DefWindowProcW -> 0x2030f40
+[Tdf80] [API]   [38] UNRESOLVED: SendMessageW
+[Tdf80] [API]   [39] RegisterClassW -> 0x200c530
+[Tdf80] [API]   [40] UNRESOLVED: IsDialogMessageW
+[Tdf80] [API]   [41] UNRESOLVED: GetForegroundWindow
+[Tdf80] [API]   [42] TranslateMessage -> 0x200c750
+[Tdf80] [API]   [43] PeekMessageW -> 0x2032470
+[Tdf80] [API]   [44] DispatchMessageW -> 0x203a770
+[Tdf80] [API]   [45] UNRESOLVED: LoadImageW
+[Tdf80] [API]   [46] GetSysColor -> 0x200c9b0
+[Tdf80] [API]   [47] UNRESOLVED: SetWindowLongW
+[Tdf80] [API]   [48] UNRESOLVED: GetWindowLongW
+[Tdf80] [API]   [49] UNRESOLVED: SetFocus
+[Tdf80] [API]   [50] UNRESOLVED: EndDeferWindowPos
+[Tdf80] [API]   [51] UNRESOLVED: BeginDeferWindowPos
+[Tdf80] [API]   [52] UNRESOLVED: EnableMenuItem
+[Tdf80] [API]   [53] UNRESOLVED: GetSubMenu
+[Tdf80] [API]   [54] UNRESOLVED: GetClassNameW
+[Tdf80] [API]   [55] UNRESOLVED: InsertMenuItemW
+[Tdf80] [API]   [56] UNRESOLVED: OpenClipboard
+[Tdf80] [API]   [57] UNRESOLVED: MoveWindow
+[Tdf80] [API]   [58] UNRESOLVED: GetMenuItemCount
+[Tdf80] [API]   [59] UNRESOLVED: CheckMenuItem
+[Tdf80] [API]   [60] UNRESOLVED: GetMenuStringW
+[Tdf80] [API]   [61] UNRESOLVED: CheckMenuRadioItem
+[Tdf80] [API]   [62] UNRESOLVED: GetCursorPos
+[Tdf80] [API]   [63] UNRESOLVED: SetClipboardData
+[Tdf80] [API]   [64] UNRESOLVED: EnableWindow
+[Tdf80] [API]   [65] UNRESOLVED: CloseClipboard
+[Tdf80] [API]   [66] UNRESOLVED: MapWindowPoints
+[Tdf80] [API]   [67] UNRESOLVED: GetParent
+[Tdf80] [API]   [68] UNRESOLVED: GetMenu
+[Tdf80] [API]   [69] UNRESOLVED: EmptyClipboard
+[Tdf80] [API]   [70] UNRESOLVED: ModifyMenuW
+[Tdf80] [API]   [71] UNRESOLVED: GetMenuItemInfoW
+[Tdf80] [API]   [72] UNRESOLVED: GetDlgCtrlID
+[Tdf80] [API]   [73] UNRESOLVED: DestroyMenu
+[Tdf80] [API]   [74] UNRESOLVED: DialogBoxParamW
+[Tdf80] [API]   [75] UNRESOLVED: CreateDialogParamW
+[Tdf80] [API]   [76] UNRESOLVED: EnumChildWindows
+[Tdf80] [API]   [77] UNRESOLVED: LoadStringW
+[Tdf80] [API]   [78] DestroyWindow -> 0x201cc70
+[Tdf80] [API]   [79] UNRESOLVED: GetWindowTextW
+[Tdf80] [API]   [80] UNRESOLVED: LoadMenuW
+[Tdf80] [API]   [81] LoadIconW -> 0x2031090
+[Tdf80] [API]   [82] UNRESOLVED: SetMenuItemInfoW
+[Tdf80] [API]   [83] UNRESOLVED: DestroyIcon
+[Tdf80] [API]   [84] UNRESOLVED: CreatePopupMenu
+[Tdf80] [API]   [85] UNRESOLVED: GetKeyState
+[Tdf80] [API]   [86] UNRESOLVED: RemoveMenu
+[Tdf80] [API]   [87] KillTimer -> 0x2009b20
+[Tdf80] [API]   [88] UNRESOLVED: RegisterWindowMessageW
+[Tdf80] [API]   [89] UNRESOLVED: DrawTextExW
+[Tdf80] [API]   [90] UNRESOLVED: TrackPopupMenu
+[Tdf80] [API]   [91] PostQuitMessage -> 0x2029c00
+[Tdf80] [API]   [92] GetMessageW -> 0x2032240
+[Tdf80] [API]   [93] UNRESOLVED: SetClipboardViewer
+[Tdf80] [API]   [94] SetTimer -> 0x2029d00
+[Tdf80] [API]   [95] UNRESOLVED: ChangeClipboardChain
+[Tdf80] [API]   [96] UNRESOLVED: RegisterClipboardFormatW
+[Tdf80] [API]   [97] UNRESOLVED: IsWindowVisible
+[Tdf80] [API]   [98] UNRESOLVED: GetFocus
+[Tdf80] [API]   [99] UNRESOLVED: DeleteMenu
+[Tdf80] [API]   [100] UNRESOLVED: SetForegroundWindow
+[Tdf80] [API]   [101] UNRESOLVED: SetWindowPos
+[Tdf80] [API] Import DLL: GDI32.dll (IAT RVA=0x29080, ILT RVA=0x30bc0)
+[Tdf80] [API]   [0] DeleteObject -> 0x2009b30
+[Tdf80] [API]   [1] SetBkMode -> 0x2029e10
+[Tdf80] [API]   [2] GetDeviceCaps -> 0x200d5f0
+[Tdf80] [API]   [3] SetTextColor -> 0x200d3b0
+[Tdf80] [API]   [4] UNRESOLVED: GetTextExtentPoint32W
+[Tdf80] [API]   [5] GetStockObject -> 0x200cf00
+[Tdf80] [API]   [6] SetBkColor -> 0x200d4d0
+[Tdf80] [API]   [7] CreateCompatibleBitmap -> 0x2033650
+[Tdf80] [API]   [8] UNRESOLVED: StretchBlt
+[Tdf80] [API]   [9] UNRESOLVED: SetStretchBltMode
+[Tdf80] [API]   [10] UNRESOLVED: GetObjectW
+[Tdf80] [API]   [11] DeleteDC -> 0x200d790
+[Tdf80] [API]   [12] UNRESOLVED: GetPixel
+[Tdf80] [API]   [13] SetPixel -> 0x2039d00
+[Tdf80] [API]   [14] SelectObject -> 0x200d000
+[Tdf80] [API]   [15] CreateCompatibleDC -> 0x200eea0
+[Tdf80] [API]   [16] UNRESOLVED: CreateFontIndirectW
+[Tdf80] [API] Import DLL: comdlg32.dll (IAT RVA=0x29708, ILT RVA=0x31248)
+[Tdf80] [API]   [0] UNRESOLVED: ChooseFontW
+[Tdf80] [API]   [1] UNRESOLVED: FindTextW
+[Tdf80] [API]   [2] UNRESOLVED: GetOpenFileNameW
+[Tdf80] [API]   [3] UNRESOLVED: GetSaveFileNameW
+[Tdf80] [API] Import DLL: ADVAPI32.dll (IAT RVA=0x29000, ILT RVA=0x30b40)
+[Tdf80] [API]   [0] RegCloseKey -> 0x20090a0
+[Tdf80] [API]   [1] GetFileSecurityW -> 0x2022970
+[Tdf80] [API]   [2] RegSetValueExW -> 0x20227b0
+[Tdf80] [API]   [3] RegCreateKeyExW -> 0x2022710
+[Tdf80] [API]   [4] RegQueryValueExW -> 0x20226d0
+[Tdf80] [API]   [5] RegOpenKeyExW -> 0x2023c00
+[Tdf80] [API]   [6] UNRESOLVED: RegDeleteKeyW
+[Tdf80] [API] Import DLL: SHELL32.dll (IAT RVA=0x29358, ILT RVA=0x30e98)
+[Tdf80] [API]   [0] UNRESOLVED: SHBindToParent
+[Tdf80] [API]   [1] UNRESOLVED: SHGetDesktopFolder
+[Tdf80] [API]   [2] UNRESOLVED: SHGetPathFromIDListW
+[Tdf80] [API]   [3] UNRESOLVED: SHGetMalloc
+[Tdf80] [API]   [4] UNRESOLVED: SHBrowseForFolderW
+[Tdf80] [API]   [5] UNRESOLVED: SHFileOperationW
+[Tdf80] [API]   [6] Ordinal 88 (not supported)
+[Tdf80] [API]   [7] UNRESOLVED: SHGetFileInfoW
+[Tdf80] [API]   [8] UNRESOLVED: ShellExecuteExW
+[Tdf80] [API]   [9] UNRESOLVED: ShellExecuteW
+[Tdf80] [API] Import DLL: ole32.dll (IAT RVA=0x29918, ILT RVA=0x31458)
+[Tdf80] [API]   [0] UNRESOLVED: OleInitialize
+[Tdf80] [API]   [1] UNRESOLVED: CoCreateInstance
+[Tdf80] [API]   [2] UNRESOLVED: OleUninitialize
+[Tdf80] [API] Import resolution: 150 resolved, 134 unresolved (total 284)
+[Tdf80] [API] Exception: .pdata RVA=0x35000 Size=0x1470 Entries=436
+[Tdf80] [API] [API-005] EH hacks DISABLED (default) (MINWIN_EH_HACKS=<unset>)
+[Tdf80] [API] [API-005] CXX-EH-FIX (LSDA catch-all patch RVA 0x2010c8) skipped: MINWIN_EH_HACKS not set
+[Tdf80] [API] Jumping to EP=0x140027e60
+[Tdf80] [API] GetStartupInfoW()
+[Tdf80] [API] __set_app_type(2)
+[Tdf80] [API] _initterm(start=0x140029990, end=0x140029998)
+[Tdf80] [API] _initterm(start=0x140029938, end=0x140029988)
+[Tdf80] [API] _initterm: calling 0x1400281e0
+[Tdf80] [API] _onexit(func=0x14002824c)
+[Tdf80] [API] _initterm: calling 0x1400281ec
+[Tdf80] [API] _onexit(func=0x140028268)
+[Tdf80] [API] _initterm: calling 0x1400281f8
+[Tdf80] [API] _onexit(func=0x140028284)
+[Tdf80] [API] _initterm: calling 0x140028204
+[Tdf80] [API] _onexit(func=0x1400282b4)
+[Tdf80] [API] _initterm: calling 0x140028210
+[Tdf80] [API] _onexit(func=0x1400282c0)
+[Tdf80] [API] _initterm: calling 0x14002821c
+[Tdf80] [API] _onexit(func=0x1400282cc)
+[Tdf80] [API] _initterm: calling 0x140028228
+[Tdf80] [API] _onexit(func=0x14002831c)
+[Tdf80] [API] _initterm: calling 0x140028234
+[Tdf80] [API] _onexit(func=0x140028338)
+[Tdf80] [API] _initterm: calling 0x140028240
+[Tdf80] [API] _onexit(func=0x140028368)

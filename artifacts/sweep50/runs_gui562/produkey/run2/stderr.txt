@@ -1,0 +1,174 @@
+[TRACE] Command line: artifacts/sweep50/dl/produkey/ProduKey.exe
+[WARN]   unresolved: ImageList_Add
+[WARN]   unresolved: CreateToolbarEx
+[WARN]   unresolved: ImageList_Create
+[WARN]   unresolved: ImageList_ReplaceIcon
+[WARN]   unresolved: ImageList_AddMasked
+[WARN]   unresolved: ImageList_SetImageCount
+[WARN]   unresolved: WNetOpenEnumA
+[WARN]   unresolved: WNetCloseEnum
+[WARN]   unresolved: WNetEnumResourceA
+[WARN]   unresolved: _mbsicmp
+[WARN]   unresolved: _itoa
+[WARN]   unresolved: _memicmp
+[WARN]   unresolved: _strlwr
+[WARN]   unresolved: _mbschr
+[WARN]   unresolved: _snprintf
+[WARN]   unresolved: _strcmpi
+[WARN]   unresolved: ??2@YAPEAX_K@Z
+[WARN]   unresolved: ??3@YAXPEAX@Z
+[WARN]   unresolved: ReadProcessMemory
+[WARN]   unresolved: GetComputerNameA
+[WARN]   unresolved: GetCurrentDirectoryA
+[WARN]   unresolved: ExpandEnvironmentStringsA
+[WARN]   unresolved: WritePrivateProfileStringA
+[WARN]   unresolved: GetPrivateProfileStringA
+[WARN]   unresolved: GetPrivateProfileIntA
+[WARN]   unresolved: EnumResourceNamesA
+[WARN]   unresolved: GetTimeFormatA
+[WARN]   unresolved: GetTempFileNameA
+[WARN]   unresolved: GetWindowsDirectoryA
+[WARN]   unresolved: GetDateFormatA
+[WARN]   unresolved: PostThreadMessageA
+[WARN]   unresolved: MonitorFromWindow
+[WARN]   unresolved: EndDeferWindowPos
+[WARN]   unresolved: GetMonitorInfoA
+[WARN]   unresolved: RegisterWindowMessageA
+[WARN]   unresolved: GetSysColorBrush
+[WARN]   unresolved: ChildWindowFromPoint
+[WARN]   unresolved: SetCursor
+[WARN]   unresolved: GetWindowPlacement
+[WARN]   unresolved: SetDlgItemInt
+[WARN]   unresolved: GetWindow
+[WARN]   unresolved: SetDlgItemTextA
+[WARN]   unresolved: DrawFrameControl
+[WARN]   unresolved: GetDlgItemTextA
+[WARN]   unresolved: SetWindowTextA
+[WARN]   unresolved: GetSystemMetrics
+[WARN]   unresolved: DeferWindowPos
+[WARN]   unresolved: SendDlgItemMessageA
+[WARN]   unresolved: SetWindowPos
+[WARN]   unresolved: GetWindowRect
+[WARN]   unresolved: GetDlgItemInt
+[WARN]   unresolved: EndDialog
+[WARN]   unresolved: GetDlgItem
+[WARN]   unresolved: PostMessageA
+[WARN]   unresolved: SetMenu
+[WARN]   unresolved: LoadAcceleratorsA
+[WARN]   unresolved: TranslateAcceleratorA
+[WARN]   unresolved: SetWindowLongA
+[WARN]   unresolved: LoadImageA
+[WARN]   unresolved: GetWindowLongA
+[WARN]   unresolved: SetFocus
+[WARN]   unresolved: CheckMenuRadioItem
+[WARN]   unresolved: GetMenuStringA
+[WARN]   unresolved: GetCursorPos
+[WARN]   unresolved: SetClipboardData
+[WARN]   unresolved: EnableWindow
+[WARN]   unresolved: MapWindowPoints
+[WARN]   unresolved: GetMenu
+[WARN]   unresolved: GetParent
+[WARN]   unresolved: OpenClipboard
+[WARN]   unresolved: MoveWindow
+[WARN]   unresolved: GetClassNameA
+[WARN]   unresolved: EmptyClipboard
+[WARN]   unresolved: CloseClipboard
+[WARN]   unresolved: EnableMenuItem
+[WARN]   unresolved: GetSubMenu
+[WARN]   unresolved: CheckMenuItem
+[WARN]   unresolved: GetMenuItemCount
+[WARN]   unresolved: CreateDialogParamA
+[WARN]   unresolved: EnumChildWindows
+[WARN]   unresolved: GetMenuItemInfoA
+[WARN]   unresolved: GetWindowTextA
+[WARN]   unresolved: LoadMenuA
+[WARN]   unresolved: ModifyMenuA
+[WARN]   unresolved: LoadStringA
+[WARN]   unresolved: DialogBoxParamA
+[WARN]   unresolved: GetDlgCtrlID
+[WARN]   unresolved: DestroyMenu
+[WARN]   unresolved: BeginDeferWindowPos
+[WARN]   unresolved: GetFocus
+[WARN]   unresolved: IsDialogMessageA
+[WARN]   unresolved: TrackPopupMenu
+[WARN]   unresolved: SetStretchBltMode
+[WARN]   unresolved: GetPixel
+[WARN]   unresolved: GetObjectA
+[WARN]   unresolved: StretchBlt
+[WARN]   unresolved: CreateFontIndirectA
+[WARN]   unresolved: GetTextExtentPoint32A
+[WARN]   unresolved: FindTextA
+[WARN]   unresolved: GetOpenFileNameA
+[WARN]   unresolved: GetSaveFileNameA
+[WARN]   unresolved: RegDeleteKeyA
+[WARN]   unresolved: RegUnLoadKeyA
+[WARN]   unresolved: RegConnectRegistryA
+[WARN]   unresolved: RegDeleteValueA
+[WARN]   unresolved: RegQueryInfoKeyA
+[WARN]   unresolved: RegEnumKeyExA
+[WARN]   unresolved: RegEnumValueA
+[WARN]   unresolved: RegSetValueExA
+[WARN]   unresolved: RegLoadKeyA
+[WARN]   unresolved: ShellExecuteExA
+[WARN]   unresolved: SHGetPathFromIDListA
+[WARN]   unresolved: SHGetMalloc
+[WARN]   unresolved: SHBrowseForFolderA
+[WARN]   unresolved: SHGetFileInfoA
+[WARN]   unresolved: ShellExecuteA
+[WARN]   unresolved: CoSetProxyBlanket
+[WARN]   unresolved: CoUninitialize
+[WARN]   unresolved: CoInitialize
+[WARN]   unresolved: CoCreateInstance
+[WARN] 133 imports unresolved
+[STUB] unresolved import called -> returning 0 (call #1)
+[STUB] unresolved import called -> returning 0 (call #2)
+[STUB] unresolved import called -> returning 0 (call #3)
+[STUB] unresolved import called -> returning 0 (call #4)
+
+[CRASH] Signal 11 at RIP=0x140022f24
+  RAX=0x140022ef0 RCX=0x10001 RDX=0x1 R8=0x0 R9=0x0
+  RSP=0x7ffe586894e0 RBP=0xcf0000
+  g_image_base=0x140000000 g_image_size=0x38000
+  RVA=0x22f24 (inside loaded PE)
+  Bytes: 4d 8b 29 49 89 8d 10 01 00 00 33 c0 4c 63 15 91 
+  Return addr: 0x3e
+  RSI=0x1 RDI=0x10001
+  R8=0x0  R9=0x0 R10=0x0 R11=0x202
+  R12=0x140027e50 R13=0x80000000 R14=0x0 R15=0x0
+  [SCAN rsp+032] 0x140027e50 <PE>
+  [SCAN rsp+072] 0x140027e50 <PE>
+  [SCAN rsp+088] 0x20300b8 <LOADER>
+  [SCAN rsp+152] 0x2033bfd <LOADER>
+  [SCAN rsp+416] 0x140028668 <PE>
+  [SCAN rsp+440] 0x140012751 <PE>
+  [SCAN rsp+528] 0x140000000 <PE>
+  [SCAN rsp+552] 0x140022ef0 <PE>
+  [SCAN rsp+568] 0x140000000 <PE>
+  [SCAN rsp+632] 0x14001421e <PE>
+  [SCAN rsp+816] 0x140028668 <PE>
+  [SCAN rsp+936] 0x2002b13 <LOADER>
+  [SCAN rsp+1480] 0x204e3b0 <LOADER>
+  [SCAN rsp+1512] 0x1400265e0 <PE>
+  [SCAN rsp+1664] 0x140027880 <PE>
+  [SCAN rsp+1672] 0x204e3b0 <LOADER>
+  [SCAN rsp+1680] 0x204e3d8 <LOADER>
+  [SCAN rsp+1752] 0x1400265e0 <PE>
+  [SCAN rsp+1768] 0x140027880 <PE>
+  [SCAN rsp+1776] 0x204e3b0 <LOADER>
+  [SCAN rsp+1784] 0x20164d9 <LOADER>
+  [SCAN rsp+1960] 0x140027878 <PE>
+  [SCAN rsp+1984] 0x1400263e0 <PE>
+  [SCAN rsp+1992] 0x140001084 <PE>
+  [SCAN rsp+2024] 0x140027878 <PE>
+  [SCAN rsp+2032] 0x1400263e0 <PE>
+  [SCAN rsp+2040] 0x200abee <LOADER>
+  [SCAN rsp+2232] 0x140000000 <PE>
+  [SCAN rsp+2264] 0x140000000 <PE>
+  [SCAN rsp+2280] 0x140001351 <PE>
+  [SCAN rsp+2488] 0x2007726 <LOADER>
+  [SCAN rsp+2728] 0x2000002 <LOADER>
+  [SCAN rsp+2840] 0x20026f6 <LOADER>
+  [SCAN rsp+2848] 0x20020d0 <LOADER>
+  Backtrace (via stack walking):
+    [0] RIP=0x140022f24 RVA=0x22f24      [RSP+0] = 0x3e (return addr?)
+    [1] RIP=0x140022f24 RVA=0x22f24

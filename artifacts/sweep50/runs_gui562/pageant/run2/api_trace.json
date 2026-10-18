@@ -1,0 +1,471 @@
+{
+  "trace": [
+[Tf80] [API] PE Loader: file=artifacts/sweep50/dl/pageant/pageant.exe size=933000
+[Tf80] [API] PE Loader: ImageBase=0x140000000 EP=0x3afe4 SizeOfImage=0xe5000 Sections=9
+[Tf80] [API] PE Loader: Mapped at 0x140000000 (forced via MAP_FIXED)
+[Tf80] [API] Section [0] .text    VA=0x00001000 VS=0x0005b8c0 Raw=0x0005ba00 Ch=0x60000020
+[Tf80] [API] Section [1] .rdata   VA=0x0005d000 VS=0x0001dca4 Raw=0x0001de00 Ch=0x40000040
+[Tf80] [API] Section [2] .data    VA=0x0007b000 VS=0x00002dd4 Raw=0x00000e00 Ch=0xc0000040
+[Tf80] [API] Section [3] .pdata   VA=0x0007e000 VS=0x0000375c Raw=0x00003800 Ch=0x40000040
+[Tf80] [API] Section [4] .00cfg   VA=0x00082000 VS=0x00000038 Raw=0x00000200 Ch=0x40000040
+[Tf80] [API] Section [5] .gxfg    VA=0x00083000 VS=0x00002120 Raw=0x00002200 Ch=0x40000040
+[Tf80] [API] Section [6] _RDATA   VA=0x00086000 VS=0x0000015c Raw=0x00000200 Ch=0x40000040
+[Tf80] [API] Section [7] .rsrc    VA=0x00087000 VS=0x0005b7d0 Raw=0x0005b800 Ch=0x40000040
+[Tf80] [API] Section [8] .reloc   VA=0x000e3000 VS=0x000013d0 Raw=0x00001400 Ch=0x42000040
+[Tf80] [API] Import Directory: RVA=0x76dd0 Size=0x8c
+[Tf80] [API] Import DLL: ADVAPI32.dll (IAT RVA=0x774e0, ILT RVA=0x76e60)
+[Tf80] [API]   [0] UNRESOLVED: AllocateAndInitializeSid
+[Tf80] [API]   [1] UNRESOLVED: CopySid
+[Tf80] [API]   [2] UNRESOLVED: EqualSid
+[Tf80] [API]   [3] UNRESOLVED: GetLengthSid
+[Tf80] [API]   [4] UNRESOLVED: GetUserNameA
+[Tf80] [API]   [5] UNRESOLVED: InitializeSecurityDescriptor
+[Tf80] [API]   [6] RegCloseKey -> 0x20090a0
+[Tf80] [API]   [7] UNRESOLVED: RegCreateKeyExA
+[Tf80] [API]   [8] RegEnumKeyA -> 0x2022750
+[Tf80] [API]   [9] UNRESOLVED: RegOpenKeyA
+[Tf80] [API]   [10] RegOpenKeyExA -> 0x20226b0
+[Tf80] [API]   [11] RegQueryValueExA -> 0x2030f60
+[Tf80] [API]   [12] UNRESOLVED: SetSecurityDescriptorDacl
+[Tf80] [API]   [13] UNRESOLVED: SetSecurityDescriptorOwner
+[Tf80] [API] Import DLL: GDI32.dll (IAT RVA=0x77558, ILT RVA=0x76ed8)
+[Tf80] [API]   [0] DeleteDC -> 0x200d790
+[Tf80] [API]   [1] ExtTextOutA -> 0x2041c50
+[Tf80] [API]   [2] UNRESOLVED: GetTextExtentPoint32A
+[Tf80] [API]   [3] SelectObject -> 0x200d000
+[Tf80] [API]   [4] SetBkColor -> 0x200d4d0
+[Tf80] [API]   [5] SetTextColor -> 0x200d3b0
+[Tf80] [API] Import DLL: SHELL32.dll (IAT RVA=0x77590, ILT RVA=0x76f10)
+[Tf80] [API]   [0] UNRESOLVED: ShellExecuteA
+[Tf80] [API]   [1] UNRESOLVED: Shell_NotifyIconA
+[Tf80] [API] Import DLL: USER32.dll (IAT RVA=0x775a8, ILT RVA=0x76f28)
+[Tf80] [API]   [0] UNRESOLVED: AppendMenuA
+[Tf80] [API]   [1] UNRESOLVED: CreateDialogParamA
+[Tf80] [API]   [2] UNRESOLVED: CreateMenu
+[Tf80] [API]   [3] UNRESOLVED: CreatePopupMenu
+[Tf80] [API]   [4] CreateWindowExA -> 0x2033b70
+[Tf80] [API]   [5] DefWindowProcA -> 0x2030f50
+[Tf80] [API]   [6] UNRESOLVED: DestroyIcon
+[Tf80] [API]   [7] UNRESOLVED: DestroyMenu
+[Tf80] [API]   [8] DestroyWindow -> 0x201cc70
+[Tf80] [API]   [9] UNRESOLVED: DialogBoxParamA
+[Tf80] [API]   [10] DispatchMessageA -> 0x203a810
+[Tf80] [API]   [11] UNRESOLVED: DrawFocusRect
+[Tf80] [API]   [12] UNRESOLVED: EnableWindow
+[Tf80] [API]   [13] UNRESOLVED: EndDialog
+[Tf80] [API]   [14] FindWindowA -> 0x20098d0
+[Tf80] [API]   [15] UNRESOLVED: GetCursorPos
+[Tf80] [API]   [16] GetDC -> 0x2009aa0
+[Tf80] [API]   [17] UNRESOLVED: GetDesktopWindow
+[Tf80] [API]   [18] UNRESOLVED: GetDlgItem
+[Tf80] [API]   [19] UNRESOLVED: GetMenuDefaultItem
+[Tf80] [API]   [20] UNRESOLVED: GetMenuItemCount
+[Tf80] [API]   [21] UNRESOLVED: GetMenuItemInfoA
+[Tf80] [API]   [22] GetMessageA -> 0x20322f0
+[Tf80] [API]   [23] GetSysColor -> 0x200c9b0
+[Tf80] [API]   [24] UNRESOLVED: GetWindowLongPtrA
+[Tf80] [API]   [25] UNRESOLVED: GetWindowRect
+[Tf80] [API]   [26] UNRESOLVED: GetWindowTextA
+[Tf80] [API]   [27] UNRESOLVED: GetWindowTextLengthA
+[Tf80] [API]   [28] UNRESOLVED: InsertMenuItemA
+[Tf80] [API]   [29] UNRESOLVED: IsDialogMessageA
+[Tf80] [API]   [30] UNRESOLVED: IsWindow
+[Tf80] [API]   [31] LoadIconA -> 0x2009ae0
+[Tf80] [API]   [32] UNRESOLVED: MapDialogRect
+[Tf80] [API]   [33] UNRESOLVED: MessageBeep
+[Tf80] [API]   [34] MessageBoxA -> 0x2043cf0
+[Tf80] [API]   [35] UNRESOLVED: MessageBoxIndirectW
+[Tf80] [API]   [36] UNRESOLVED: MoveWindow
+[Tf80] [API]   [37] UNRESOLVED: MsgWaitForMultipleObjects
+[Tf80] [API]   [38] PeekMessageW -> 0x2032470
+[Tf80] [API]   [39] UNRESOLVED: PostMessageA
+[Tf80] [API]   [40] PostQuitMessage -> 0x2029c00
+[Tf80] [API]   [41] RegisterClassA -> 0x200c640
+[Tf80] [API]   [42] UNRESOLVED: RegisterWindowMessageA
+[Tf80] [API]   [43] UNRESOLVED: RemoveMenu
+[Tf80] [API]   [44] UNRESOLVED: SendDlgItemMessageA
+[Tf80] [API]   [45] SendMessageA -> 0x20098e0
+[Tf80] [API]   [46] UNRESOLVED: SetActiveWindow
+[Tf80] [API]   [47] UNRESOLVED: SetDlgItemTextA
+[Tf80] [API]   [48] UNRESOLVED: SetForegroundWindow
+[Tf80] [API]   [49] UNRESOLVED: SetMenuDefaultItem
+[Tf80] [API]   [50] UNRESOLVED: SetWindowLongPtrA
+[Tf80] [API]   [51] UNRESOLVED: SetWindowPos
+[Tf80] [API]   [52] ShowWindow -> 0x2029b00
+[Tf80] [API]   [53] UNRESOLVED: TabbedTextOutA
+[Tf80] [API]   [54] UNRESOLVED: TrackPopupMenu
+[Tf80] [API]   [55] TranslateMessage -> 0x200c750
+[Tf80] [API] Import DLL: KERNEL32.dll (IAT RVA=0x77770, ILT RVA=0x770f0)
+[Tf80] [API]   [0] CloseHandle -> 0x2039450
+[Tf80] [API]   [1] CompareStringW -> 0x2017260
+[Tf80] [API]   [2] UNRESOLVED: ConnectNamedPipe
+[Tf80] [API]   [3] CreateEventA -> 0x2023500
+[Tf80] [API]   [4] CreateFileA -> 0x202e180
+[Tf80] [API]   [5] CreateFileMappingA -> 0x20234f0
+[Tf80] [API]   [6] CreateFileW -> 0x203d3d0
+[Tf80] [API]   [7] CreateMutexA -> 0x200b8e0
+[Tf80] [API]   [8] UNRESOLVED: CreateNamedPipeA
+[Tf80] [API]   [9] CreateThread -> 0x20259f0
+[Tf80] [API]   [10] DeleteCriticalSection -> 0x200f180
+[Tf80] [API]   [11] DeleteFileA -> 0x202e320
+[Tf80] [API]   [12] DeleteFileW -> 0x203d800
+[Tf80] [API]   [13] EncodePointer -> 0x2014c90
+[Tf80] [API]   [14] EnterCriticalSection -> 0x20347f0
+[Tf80] [API]   [15] ExitProcess -> 0x200f6f0
+[Tf80] [API]   [16] FindClose -> 0x2018230
+[Tf80] [API]   [17] FindFirstFileA -> 0x202ec60
+[Tf80] [API]   [18] FindFirstFileExW -> 0x203b4e0
+[Tf80] [API]   [19] FindNextFileW -> 0x202c730
+[Tf80] [API]   [20] FindResourceA -> 0x203d080
+[Tf80] [API]   [21] FlsAlloc -> 0x200dd70
+[Tf80] [API]   [22] FlsFree -> 0x2031150
+[Tf80] [API]   [23] FlsGetValue -> 0x20087b0
+[Tf80] [API]   [24] FlsSetValue -> 0x20087d0
+[Tf80] [API]   [25] FlushFileBuffers -> 0x2027630
+[Tf80] [API]   [26] FormatMessageA -> 0x2029240
+[Tf80] [API]   [27] FreeEnvironmentStringsW -> 0x202b780
+[Tf80] [API]   [28] FreeLibrary -> 0x202b690
+[Tf80] [API]   [29] GetACP -> 0x2008e80
+[Tf80] [API]   [30] GetCPInfo -> 0x200e2f0
+[Tf80] [API]   [31] GetCommandLineA -> 0x202cfe0
+[Tf80] [API]   [32] GetCommandLineW -> 0x202d160
+[Tf80] [API]   [33] GetConsoleMode -> 0x2023f40
+[Tf80] [API]   [34] GetConsoleOutputCP -> 0x2031390
+[Tf80] [API]   [35] UNRESOLVED: GetCurrentDirectoryA
+[Tf80] [API]   [36] GetCurrentDirectoryW -> 0x2039620
+[Tf80] [API]   [37] GetCurrentProcess -> 0x2007ec0
+[Tf80] [API]   [38] GetCurrentProcessId -> 0x2007ed0
+[Tf80] [API]   [39] GetCurrentThreadId -> 0x2007ef0
+[Tf80] [API]   [40] GetDateFormatW -> 0x2025e00
+[Tf80] [API]   [41] GetEnvironmentStringsW -> 0x200fe60
+[Tf80] [API]   [42] GetFileSizeEx -> 0x2027340
+[Tf80] [API]   [43] GetFileType -> 0x2017bd0
+[Tf80] [API]   [44] GetLastError -> 0x2009da0
+[Tf80] [API]   [45] GetModuleFileNameA -> 0x2034140
+[Tf80] [API]   [46] GetModuleFileNameW -> 0x203a8b0
+[Tf80] [API]   [47] GetModuleHandleExW -> 0x2042820
+[Tf80] [API]   [48] GetModuleHandleW -> 0x200eb20
+[Tf80] [API]   [49] GetOEMCP -> 0x2008e90
+[Tf80] [API]   [50] GetOverlappedResult -> 0x2022b20
+[Tf80] [API]   [51] GetProcAddress -> 0x200a000
+[Tf80] [API]   [52] GetProcessHeap -> 0x2008c50
+[Tf80] [API]   [53] GetStartupInfoW -> 0x202b550
+[Tf80] [API]   [54] GetStdHandle -> 0x2048a50
+[Tf80] [API]   [55] GetStringTypeW -> 0x202db10
+[Tf80] [API]   [56] GetSystemDirectoryA -> 0x20169c0
+[Tf80] [API]   [57] GetSystemTimeAsFileTime -> 0x202c070
+[Tf80] [API]   [58] GetTempPathA -> 0x2016d30
+[Tf80] [API]   [59] GetTickCount -> 0x200f9d0
+[Tf80] [API]   [60] GetTimeFormatW -> 0x2025f10
+[Tf80] [API]   [61] GetTimeZoneInformation -> 0x200ec30
+[Tf80] [API]   [62] HeapAlloc -> 0x2024f90
+[Tf80] [API]   [63] HeapFree -> 0x203feb0
+[Tf80] [API]   [64] HeapReAlloc -> 0x2040220
+[Tf80] [API]   [65] HeapSize -> 0x2039820
+[Tf80] [API]   [66] InitializeCriticalSection -> 0x202c050
+[Tf80] [API]   [67] InitializeCriticalSectionAndSpinCount -> 0x2034020
+[Tf80] [API]   [68] InitializeSListHead -> 0x2008d90
+[Tf80] [API]   [69] IsDebuggerPresent -> 0x202a740
+[Tf80] [API]   [70] IsProcessorFeaturePresent -> 0x2008ce0
+[Tf80] [API]   [71] IsValidCodePage -> 0x2008ea0
+[Tf80] [API]   [72] LCMapStringW -> 0x2026680
+[Tf80] [API]   [73] LeaveCriticalSection -> 0x2029f10
+[Tf80] [API]   [74] LoadLibraryA -> 0x2024080
+[Tf80] [API]   [75] LoadLibraryExW -> 0x203e6a0
+[Tf80] [API]   [76] LoadResource -> 0x2029420
+[Tf80] [API]   [77] LocalAlloc -> 0x2012470
+[Tf80] [API]   [78] LocalFree -> 0x203e8a0
+[Tf80] [API]   [79] LockResource -> 0x20310b0
+[Tf80] [API]   [80] MapViewOfFile -> 0x2030bb0
+[Tf80] [API]   [81] MultiByteToWideChar -> 0x2024320
+[Tf80] [API]   [82] UNRESOLVED: OpenFileMappingA
+[Tf80] [API]   [83] OpenProcess -> 0x202a830
+[Tf80] [API]   [84] OutputDebugStringW -> 0x203baf0
+[Tf80] [API]   [85] QueryPerformanceCounter -> 0x200fb00
+[Tf80] [API]   [86] RaiseException -> 0x2008120
+[Tf80] [API]   [87] ReadConsoleW -> 0x2026c40
+[Tf80] [API]   [88] ReadFile -> 0x2026a40
+[Tf80] [API]   [89] ReleaseMutex -> 0x2035900
+[Tf80] [API]   [90] RtlCaptureContext -> 0x202aa10
+[Tf80] [API]   [91] RtlLookupFunctionEntry -> 0x200a520
+[Tf80] [API]   [92] RtlPcToFileHeader -> 0x2008d20
+[Tf80] [API]   [93] RtlUnwind -> 0x20384d0
+[Tf80] [API]   [94] RtlUnwindEx -> 0x20376a0
+[Tf80] [API]   [95] RtlVirtualUnwind -> 0x2035f10
+[Tf80] [API]   [96] UNRESOLVED: SetCurrentDirectoryA
+[Tf80] [API]   [97] SetCurrentDirectoryW -> 0x203dbb0
+[Tf80] [API]   [98] SetEndOfFile -> 0x20270f0
+[Tf80] [API]   [99] SetEnvironmentVariableW -> 0x20423e0
+[Tf80] [API]   [100] SetEvent -> 0x20357a0
+[Tf80] [API]   [101] SetFilePointerEx -> 0x2026fa0
+[Tf80] [API]   [102] SetHandleInformation -> 0x20091a0
+[Tf80] [API]   [103] SetLastError -> 0x20225c0
+[Tf80] [API]   [104] SetStdHandle -> 0x2031070
+[Tf80] [API]   [105] SetUnhandledExceptionFilter -> 0x200a790
+[Tf80] [API]   [106] SizeofResource -> 0x2009200
+[Tf80] [API]   [107] TerminateProcess -> 0x2011550
+[Tf80] [API]   [108] TlsAlloc -> 0x200dc30
+[Tf80] [API]   [109] TlsFree -> 0x2009830
+[Tf80] [API]   [110] TlsGetValue -> 0x200a890
+[Tf80] [API]   [111] TlsSetValue -> 0x2027c40
+[Tf80] [API]   [112] UnhandledExceptionFilter -> 0x202b870
+[Tf80] [API]   [113] UnmapViewOfFile -> 0x20256a0
+[Tf80] [API]   [114] VirtualQuery -> 0x200e0f0
+[Tf80] [API]   [115] WaitForSingleObject -> 0x2038d60
+[Tf80] [API]   [116] WaitNamedPipeA -> 0x2022b50
+[Tf80] [API]   [117] WideCharToMultiByte -> 0x2022b70
+[Tf80] [API]   [118] WriteConsoleW -> 0x2013c30
+[Tf80] [API]   [119] WriteFile -> 0x2026c60
+[Tf80] [API] Import DLL: COMDLG32.dll (IAT RVA=0x77b38, ILT RVA=0x774b8)
+[Tf80] [API]   [0] UNRESOLVED: GetOpenFileNameA
+[Tf80] [API]   [1] UNRESOLVED: GetOpenFileNameW
+[Tf80] [API]   [2] UNRESOLVED: GetSaveFileNameA
+[Tf80] [API]   [3] UNRESOLVED: GetSaveFileNameW
+[Tf80] [API] Import resolution: 140 resolved, 62 unresolved (total 202)
+[Tf80] [API] Exception: .pdata RVA=0x7e000 Size=0x375c Entries=1181
+[Tf80] [API] [API-005] EH hacks DISABLED (default) (MINWIN_EH_HACKS=<unset>)
+[Tf80] [API] [API-005] CXX-EH-FIX (LSDA catch-all patch RVA 0x2010c8) skipped: MINWIN_EH_HACKS not set
+[Tf80] [API] Jumping to EP=0x14003afe4
+[Tf80] [API] GetSystemTimeAsFileTime()
+[Tf80] [API] QueryPerformanceCounter()
+[Tf80] [API] LoadLibraryExW(flags=2048)
+[Tf80] [API] LoadLibraryA(api-ms-win-core-synch-l1-2-0)
+[Tf80] [API] GetProcAddress(module=0xdead0002, name=InitializeCriticalSectionEx)
+[Tf80] [API]   -> 0x200f040
+[Tf80] [API] InitializeCriticalSectionEx(spin=4000)
+[Tf80] [API] LoadLibraryExW(flags=2048)
+[Tf80] [API] LoadLibraryA(api-ms-win-core-fibers-l1-1-1)
+[Tf80] [API] GetProcAddress(module=0xdead0002, name=FlsAlloc)
+[Tf80] [API]   -> 0x200dd70
+[Tf80] [API] FlsAlloc(cb=0x140048714) = 0
+[Tf80] [API] GetProcAddress(module=0xdead0002, name=FlsSetValue)
+[Tf80] [API]   -> 0x20087d0
+[Tf80] [API] LoadLibraryExW(flags=2048)
+[Tf80] [API] LoadLibraryA(api-ms-win-core-synch-l1-2-0)
+[Tf80] [API] GetProcAddress(module=0xdead0002, name=InitializeCriticalSectionEx)
+[Tf80] [API]   -> 0x200f040
+[Tf80] [API] InitializeCriticalSectionEx(spin=4000)
+[Tf80] [API] InitializeCriticalSectionEx(spin=4000)
+[Tf80] [API] InitializeCriticalSectionEx(spin=4000)
+[Tf80] [API] InitializeCriticalSectionEx(spin=4000)
+[Tf80] [API] InitializeCriticalSectionEx(spin=4000)
+[Tf80] [API] InitializeCriticalSectionEx(spin=4000)
+[Tf80] [API] InitializeCriticalSectionEx(spin=4000)
+[Tf80] [API] InitializeCriticalSectionEx(spin=4000)
+[Tf80] [API] InitializeCriticalSectionEx(spin=4000)
+[Tf80] [API] InitializeCriticalSectionEx(spin=4000)
+[Tf80] [API] InitializeCriticalSectionEx(spin=4000)
+[Tf80] [API] InitializeCriticalSectionEx(spin=4000)
+[Tf80] [API] InitializeCriticalSectionEx(spin=4000)
+[Tf80] [API] InitializeCriticalSectionEx(spin=4000)
+[Tf80] [API] FlsAlloc(cb=0x140049688) = 1
+[Tf80] [API] GetLastError() = 0
+[Tf80] [API] HeapAlloc(size=0x3c8, zero=1) = 0x2ec3730
+[Tf80] [API] EnterCriticalSection(0x14007d638)
+[Tf80] [API] LeaveCriticalSection(0x14007d638)
+[Tf80] [API] EnterCriticalSection(0x14007d610)
+[Tf80] [API] LeaveCriticalSection(0x14007d610)
+[Tf80] [API] SetLastError(0)
+[Tf80] [API] EnterCriticalSection(0x14007d688)
+[Tf80] [API] EnterCriticalSection(0x14007d688)
+[Tf80] [API] HeapAlloc(size=0x1200, zero=1) = 0x2ec3b00
+[Tf80] [API] InitializeCriticalSectionEx(spin=4000)
+[Tf80] [API] InitializeCriticalSectionEx(spin=4000)
+[Tf80] [API] InitializeCriticalSectionEx(spin=4000)
+[Tf80] [API] InitializeCriticalSectionEx(spin=4000)
+[Tf80] [API] InitializeCriticalSectionEx(spin=4000)
+[Tf80] [API] InitializeCriticalSectionEx(spin=4000)
+[Tf80] [API] InitializeCriticalSectionEx(spin=4000)
+[Tf80] [API] InitializeCriticalSectionEx(spin=4000)
+[Tf80] [API] InitializeCriticalSectionEx(spin=4000)
+[Tf80] [API] InitializeCriticalSectionEx(spin=4000)
+[Tf80] [API] InitializeCriticalSectionEx(spin=4000)
+[Tf80] [API] InitializeCriticalSectionEx(spin=4000)
+[Tf80] [API] InitializeCriticalSectionEx(spin=4000)
+[Tf80] [API] InitializeCriticalSectionEx(spin=4000)
+[Tf80] [API] InitializeCriticalSectionEx(spin=4000)
+[Tf80] [API] InitializeCriticalSectionEx(spin=4000)
+[Tf80] [API] InitializeCriticalSectionEx(spin=4000)
+[Tf80] [API] InitializeCriticalSectionEx(spin=4000)
+[Tf80] [API] InitializeCriticalSectionEx(spin=4000)
+[Tf80] [API] InitializeCriticalSectionEx(spin=4000)
+[Tf80] [API] InitializeCriticalSectionEx(spin=4000)
+[Tf80] [API] InitializeCriticalSectionEx(spin=4000)
+[Tf80] [API] InitializeCriticalSectionEx(spin=4000)
+[Tf80] [API] InitializeCriticalSectionEx(spin=4000)
+[Tf80] [API] InitializeCriticalSectionEx(spin=4000)
+[Tf80] [API] InitializeCriticalSectionEx(spin=4000)
+[Tf80] [API] InitializeCriticalSectionEx(spin=4000)
+[Tf80] [API] InitializeCriticalSectionEx(spin=4000)
+[Tf80] [API] InitializeCriticalSectionEx(spin=4000)
+[Tf80] [API] InitializeCriticalSectionEx(spin=4000)
+[Tf80] [API] InitializeCriticalSectionEx(spin=4000)
+[Tf80] [API] InitializeCriticalSectionEx(spin=4000)
+[Tf80] [API] InitializeCriticalSectionEx(spin=4000)
+[Tf80] [API] InitializeCriticalSectionEx(spin=4000)
+[Tf80] [API] InitializeCriticalSectionEx(spin=4000)
+[Tf80] [API] InitializeCriticalSectionEx(spin=4000)
+[Tf80] [API] InitializeCriticalSectionEx(spin=4000)
+[Tf80] [API] InitializeCriticalSectionEx(spin=4000)
+[Tf80] [API] InitializeCriticalSectionEx(spin=4000)
+[Tf80] [API] InitializeCriticalSectionEx(spin=4000)
+[Tf80] [API] InitializeCriticalSectionEx(spin=4000)
+[Tf80] [API] InitializeCriticalSectionEx(spin=4000)
+[Tf80] [API] InitializeCriticalSectionEx(spin=4000)
+[Tf80] [API] InitializeCriticalSectionEx(spin=4000)
+[Tf80] [API] InitializeCriticalSectionEx(spin=4000)
+[Tf80] [API] InitializeCriticalSectionEx(spin=4000)
+[Tf80] [API] InitializeCriticalSectionEx(spin=4000)
+[Tf80] [API] InitializeCriticalSectionEx(spin=4000)
+[Tf80] [API] InitializeCriticalSectionEx(spin=4000)
+[Tf80] [API] InitializeCriticalSectionEx(spin=4000)
+[Tf80] [API] InitializeCriticalSectionEx(spin=4000)
+[Tf80] [API] InitializeCriticalSectionEx(spin=4000)
+[Tf80] [API] InitializeCriticalSectionEx(spin=4000)
+[Tf80] [API] InitializeCriticalSectionEx(spin=4000)
+[Tf80] [API] InitializeCriticalSectionEx(spin=4000)
+[Tf80] [API] InitializeCriticalSectionEx(spin=4000)
+[Tf80] [API] InitializeCriticalSectionEx(spin=4000)
+[Tf80] [API] InitializeCriticalSectionEx(spin=4000)
+[Tf80] [API] InitializeCriticalSectionEx(spin=4000)
+[Tf80] [API] InitializeCriticalSectionEx(spin=4000)
+[Tf80] [API] InitializeCriticalSectionEx(spin=4000)
+[Tf80] [API] InitializeCriticalSectionEx(spin=4000)
+[Tf80] [API] InitializeCriticalSectionEx(spin=4000)
+[Tf80] [API] InitializeCriticalSectionEx(spin=4000)
+[Tf80] [API] LeaveCriticalSection(0x14007d688)
+[Tf80] [API] GetStartupInfoW()
+[Tf80] [API] GetStdHandle(-10) = 0x4
+[Tf80] [API] GetStdHandle(-11) = 0x5
+[Tf80] [API] GetStdHandle(-12) = 0x6
+[Tf80] [API] LeaveCriticalSection(0x14007d688)
+[Tf80] [API] GetCommandLineA() = "pageant.exe"
+[Tf80] [API] GetCommandLineW()
+[Tf80] [API] EnterCriticalSection(0x14007d638)
+[Tf80] [API] LeaveCriticalSection(0x14007d638)
+[Tf80] [API] HeapAlloc(size=0x228, zero=0) = 0x2ec4d10
+[Tf80] [API] GetCPInfo(cp=1252)
+[Tf80] [API] GetCPInfo(cp=1252)
+[Tf80] [API] MultiByteToWideChar(cp=1252, srclen=256, dstlen=0)
+[Tf80] [API] MultiByteToWideChar(cp=1252, srclen=256, dstlen=256)
+[Tf80] [API] MultiByteToWideChar(cp=1252, srclen=256, dstlen=0)
+[Tf80] [API] MultiByteToWideChar(cp=1252, srclen=256, dstlen=256)
+[Tf80] [API] LoadLibraryExW(flags=2048)
+[Tf80] [API] LoadLibraryA(api-ms-win-core-localization-l1-2-1)
+[Tf80] [API] GetProcAddress(module=0xdead0002, name=LCMapStringEx)
+[Tf80] [API]   -> 0x2026850
+[Tf80] [API] WideCharToMultiByte(cp=1252, srclen=256, dstlen=256)
+[Tf80] [API] MultiByteToWideChar(cp=1252, srclen=256, dstlen=0)
+[Tf80] [API] MultiByteToWideChar(cp=1252, srclen=256, dstlen=256)
+[Tf80] [API] WideCharToMultiByte(cp=1252, srclen=256, dstlen=256)
+[Tf80] [API] EnterCriticalSection(0x14007d638)
+[Tf80] [API] LeaveCriticalSection(0x14007d638)
+[Tf80] [API] EnterCriticalSection(0x14007d5c0)
+[Tf80] [API] HeapAlloc(size=0x100, zero=0) = 0x2ec4f40
+[Tf80] [API] LeaveCriticalSection(0x14007d5c0)
+[Tf80] [API] GetModuleFileNameW(cap=261)
+[Tf80] [API] LoadLibraryExW(flags=2048)
+[Tf80] [API] LoadLibraryA(kernel32)
+[Tf80] [API] SetLastError(126)
+[Tf80] [API] GetLastError() = 126
+[Tf80] [API] WideCharToMultiByte(cp=0, srclen=-1, dstlen=0)
+[Tf80] [API] WideCharToMultiByte(cp=0, srclen=-1, dstlen=260)
+[Tf80] [API] HeapAlloc(size=0x1c, zero=1) = 0x2ec3700
+[Tf80] [API] GetLastError() = 126
+[Tf80] [API] SetLastError(126)
+[Tf80] [API] GetEnvironmentStringsW()
+[Tf80] [API] WideCharToMultiByte(cp=0, srclen=1253, dstlen=0)
+[Tf80] [API] HeapAlloc(size=0x4e5, zero=0) = 0x2ec5050
+[Tf80] [API] WideCharToMultiByte(cp=0, srclen=1253, dstlen=1253)
+[Tf80] [API] FreeEnvironmentStringsW()
+[Tf80] [API] HeapAlloc(size=0x150, zero=1) = 0x2ec5540
+[Tf80] [API] HeapAlloc(size=0x10, zero=1) = 0x2ec56a0
+[Tf80] [API] HeapAlloc(size=0x10, zero=1) = 0x2ec56c0
+[Tf80] [API] HeapAlloc(size=0x1b, zero=1) = 0x2ec3630
+[Tf80] [API] HeapAlloc(size=0x13, zero=1) = 0x2ec56e0
+[Tf80] [API] HeapAlloc(size=0x32, zero=1) = 0x2ec5700
+[Tf80] [API] HeapAlloc(size=0x19, zero=1) = 0x2ec5740
+[Tf80] [API] HeapAlloc(size=0x14, zero=1) = 0x2ec5770
+[Tf80] [API] HeapAlloc(size=0x35, zero=1) = 0x2ec5790
+[Tf80] [API] HeapAlloc(size=0x3a, zero=1) = 0x2ec57d0
+[Tf80] [API] HeapAlloc(size=0xa, zero=1) = 0x2ec5820
+[Tf80] [API] HeapAlloc(size=0x16, zero=1) = 0x2ec5840
+[Tf80] [API] HeapAlloc(size=0xf, zero=1) = 0x2ec5860
+[Tf80] [API] HeapAlloc(size=0x31, zero=1) = 0x2ec5880
+[Tf80] [API] HeapAlloc(size=0x39, zero=1) = 0x2ec58c0
+[Tf80] [API] HeapAlloc(size=0xd, zero=1) = 0x2ec5910
+[Tf80] [API] HeapAlloc(size=0x1d, zero=1) = 0x2ec5930
+[Tf80] [API] HeapAlloc(size=0x1a, zero=1) = 0x2ec5960
+[Tf80] [API] HeapAlloc(size=0x1c, zero=1) = 0x2ec5990
+[Tf80] [API] HeapAlloc(size=0x24, zero=1) = 0x2ec59c0
+[Tf80] [API] HeapAlloc(size=0x1b, zero=1) = 0x2ec59f0
+[Tf80] [API] HeapAlloc(size=0xb, zero=1) = 0x2ec5a20
+[Tf80] [API] HeapAlloc(size=0x11, zero=1) = 0x2ec5a40
+[Tf80] [API] HeapAlloc(size=0x22, zero=1) = 0x2ec5a60
+[Tf80] [API] HeapAlloc(size=0xa, zero=1) = 0x2ec5a90
+[Tf80] [API] HeapAlloc(size=0x7, zero=1) = 0x2ec5ab0
+[Tf80] [API] HeapAlloc(size=0x8, zero=1) = 0x2ec5ad0
+[Tf80] [API] HeapAlloc(size=0x19, zero=1) = 0x2ec5af0
+[Tf80] [API] HeapAlloc(size=0x1a, zero=1) = 0x2ec5b20
+[Tf80] [API] HeapAlloc(size=0xb, zero=1) = 0x2ec5b50
+[Tf80] [API] HeapAlloc(size=0x1f, zero=1) = 0x2ec5b70
+[Tf80] [API] HeapAlloc(size=0x11, zero=1) = 0x2ec5ba0
+[Tf80] [API] HeapAlloc(size=0x15, zero=1) = 0x2ec5bc0
+[Tf80] [API] HeapAlloc(size=0x19, zero=1) = 0x2ec5be0
+[Tf80] [API] HeapAlloc(size=0xb0, zero=1) = 0x2ec5c10
+[Tf80] [API] HeapAlloc(size=0x11, zero=1) = 0x2ec5cd0
+[Tf80] [API] HeapAlloc(size=0x1f, zero=1) = 0x2ec5cf0
+[Tf80] [API] HeapAlloc(size=0x1f, zero=1) = 0x2ec5d20
+[Tf80] [API] HeapAlloc(size=0x30, zero=1) = 0x2ec5d50
+[Tf80] [API] HeapAlloc(size=0x23, zero=1) = 0x2ec5d90
+[Tf80] [API] HeapAlloc(size=0x38, zero=1) = 0x2ec5dc0
+[Tf80] [API] HeapAlloc(size=0x13, zero=1) = 0x2ec5e00
+[Tf80] [API] HeapFree(0x2ec5050)
+[Tf80] [API] HeapAlloc(size=0x1000, zero=1) = 0x2ec5e20
+[Tf80] [API] InitializeCriticalSectionEx(spin=4000)
+[Tf80] [API] InitializeCriticalSectionEx(spin=4000)
+[Tf80] [API] InitializeCriticalSectionEx(spin=4000)
+[Tf80] [API] SetUnhandledExceptionFilter(handler=0x14003b55c)
+[Tf80] [API] GetStartupInfoW()
+[Tf80] [API] GetSystemDirectoryA()
+[Tf80] [API] HeapAlloc(size=0x100, zero=0) = 0x2ec5050
+[Tf80] [API] GetSystemDirectoryA()
+[Tf80] [API] HeapAlloc(size=0x21, zero=0) = 0x2ec5160
+[Tf80] [API] LoadLibraryA(C:\Windows\System32\kernel32.dll)
+[Tf80] [API] SetLastError(126)
+[Tf80] [API] HeapFree(0x2ec5160)
+[Tf80] [API] HeapAlloc(size=0x21, zero=0) = 0x2ec5160
+[Tf80] [API] LoadLibraryA(C:\Windows\System32\advapi32.dll)
+[Tf80] [API] SetLastError(126)
+[Tf80] [API] HeapFree(0x2ec5160)
+[Tf80] [API] MessageBoxA(type=0x10) caption='Pageant Fatal Error'
+[Tf80] [API] [GDI-LITE] dialog #1 rendered 720x142 -> miniwin-results/pageant.exe/screenshots/messagebox_1.bmp
+[Tf80] [API] GetModuleHandleW()
+[Tf80] [API] GetModuleHandleW()
+[Tf80] [API] EnterCriticalSection(0x14007d5c0)
+[Tf80] [API] EnterCriticalSection(0x14007d5c0)
+[Tf80] [API] HeapFree(0x2ec4f40)
+[Tf80] [API] LeaveCriticalSection(0x14007d5c0)
+[Tf80] [API] EnterCriticalSection(0x14007d610)
+[Tf80] [API] LeaveCriticalSection(0x14007d610)
+[Tf80] [API] EnterCriticalSection(0x14007d6b0)
+[Tf80] [API] LeaveCriticalSection(0x14007d6b0)
+[Tf80] [API] EnterCriticalSection(0x14007d6b0)
+[Tf80] [API] LeaveCriticalSection(0x14007d6b0)
+[Tf80] [API] DeleteCriticalSection(0x14007b8d0)
+[Tf80] [API] DeleteCriticalSection(0x14007b928)
+[Tf80] [API] DeleteCriticalSection(0x14007b980)
+[Tf80] [API] HeapFree(0x2ec5e20)
+[Tf80] [API] LeaveCriticalSection(0x14007d5c0)
+[Tf80] [API] LoadLibraryExW(flags=2048)
+[Tf80] [API] LoadLibraryA(api-ms-win-appmodel-runtime-l1-1-2)
+[Tf80] [API] GetProcAddress(module=0xdead0002, name=AppPolicyGetProcessTerminationMethod)
+[Tf80] [API]   -> NULL (not in dispatch table)
+[Tf80] [API] GetModuleHandleExW(flags=0)
+[Tf80] [API] LoadLibraryA(mscoree.dll)
+[Tf80] [API] GetProcAddress(module=0xdead001f, name=CorExitProcess)
+[Tf80] [API]   -> NULL (not in dispatch table)
+[Tf80] [API] FreeLibrary()
+[Tf80] [API] ExitProcess(1)
+  ]
+}

@@ -160,6 +160,9 @@ puttygen RIP=0x0).
       slot left NULL despite SWEEP-001?) — one BUG-*.
 - [ ] **SW-553** isolate adexplorer64/zoomit64 SIGTRAP (133) after UnhandledExceptionFilter —
       DebugBreak/int3 in fail-fast path; decide honest mapping (one BUG-* or WONTFIX note).
+      UPDATE (SWEEP-007): adexplorer64 is UNOBTAINABLE — Microsoft retired
+      ADExplorer.zip from download.sysinternals.com (404). zoomit64 TRAP133 re-confirmed
+      3x deterministic; SW-553 is now zoomit64-only.
 - [ ] **SW-554** putty-gui + pageant exit(1) gate: find the stub-call that returns the
       fatal FALSE (trace shows CRT-exit sequence after mscoree probe) — needs named
       stub-call logging (per-import thunk identity) as tooling prerequisite.
@@ -253,5 +256,21 @@ puttygen RIP=0x0).
 - [ ] **SW-561** Coreinfo64.exe (live.sysinternals, current version) exit(1):
       newer exe needs SetThreadGroupAffinity/GetProcessWorkingSetSize/
       version.dll trio — version drift vs SWEEP-003 coreinfoex64, one BUG-*.
-- [ ] **SW-562** MW_GUI_EVENTS=1 battery: run all 16 runs_gui programs under the
-      pump to map which survive WM_PAINT delivery (post-SWEEP-005 frontier).
+      CONFIRMED by SWEEP-007 battery: re-downloaded Coreinfo64.exe exit 1 x3
+      (SWEEP-003 binary exited 0) — version drift is real and reproducible.
+- [x] **SW-562** MW_GUI_EVENTS=1 battery — DONE (SWEEP-007): 15 re-acquired GUI
+      programs x3 under the pump, 15/15 3x-deterministic (exit+paints+frames).
+      Map: produkey+cports ARM the pump and crash in the synchronous WM_CREATE
+      (comctl32 child-control cliff — produkey 0x22f24 at stub #4; cports moves
+      its old 0x1b338 site earlier to 0x2119); procmon64/diskmon64 exit 0 with
+      armed=0 — NO runtime CreateWindowEx/GetMessage (SWEEP-003 GUI-lifecycle
+      labels were overly generous, honest stage = PRE-WINDOW-CLEAN-EXIT);
+      putty 2nd dialog-image confirm; pageant FIRST dialog image ("Unable to
+      access security APIs"); coreinfoex64 exit1 = version drift (SW-561);
+      adexplorer64 UNOBTAINABLE (retired 404, folded into SW-553 note).
+      Named-stub gates (procexp64/autoruns64/rammap64/puttygen) unchanged —
+      SW-554/555 named-stub-call logging is the highest-leverage next step.
+      Evidence: evidence/sweep007_battery/ (README, battery_map.png, 2 dialog
+      PNGs, battery_raw.tsv 105 rows); scripts/sweep007_redownload_gui.py +
+      sweep562_battery.sh + sweep562_images.py; exe SHA manifest in
+      artifacts/sweep50/sweep007_redownload_manifest.tsv.

@@ -1,0 +1,59 @@
+[TRACE] Command line: artifacts/sweep50/dl/coreinfoex64/Coreinfo64.exe
+[WARN]   unresolved: GetFileVersionInfoSizeW
+[WARN]   unresolved: VerQueryValueW
+[WARN]   unresolved: GetFileVersionInfoW
+[WARN]   unresolved: SetThreadGroupAffinity
+[WARN]   unresolved: GetProcessWorkingSetSize
+[WARN]   unresolved: GetNumaNodeProcessorMask
+[WARN]   unresolved: VirtualLock
+[WARN]   unresolved: SetProcessWorkingSetSize
+[WARN]   unresolved: GetNumaHighestNodeNumber
+[WARN]   unresolved: GetVersionExW
+[WARN]   unresolved: InflateRect
+[WARN]   unresolved: SendMessageW
+[WARN]   unresolved: EndDialog
+[WARN]   unresolved: SetWindowTextW
+[WARN]   unresolved: DialogBoxIndirectParamW
+[WARN]   unresolved: SetCursor
+[WARN]   unresolved: GetDlgItem
+[WARN]   unresolved: GetSysColorBrush
+[WARN]   unresolved: EndDoc
+[WARN]   unresolved: StartDocW
+[WARN]   unresolved: EndPage
+[WARN]   unresolved: StartPage
+[WARN]   unresolved: PrintDlgW
+[WARN]   unresolved: RegDeleteKeyW
+[WARN]   unresolved: RegCreateKeyW
+[WARN]   unresolved: RegOpenKeyW
+[WARN]   unresolved: CoSetProxyBlanket
+[WARN]   unresolved: CoInitializeSecurity
+[WARN]   unresolved: CoCreateInstance
+[WARN]   unresolved: CoUninitialize
+[WARN] 30 imports unresolved
+[STUB] unresolved import called -> returning 0 (call #1)
+[STUB] unresolved import called -> returning 0 (call #2)
+[STUB] unresolved import called -> returning 0 (call #3)
+[STUB] unresolved import called -> returning 0 (call #4)
+[STUB] unresolved import called -> returning 0 (call #5)
+[STUB] unresolved import called -> returning 0 (call #6)
+[STUB] unresolved import called -> returning 0 (call #7)
+[STUB] unresolved import called -> returning 0 (call #8)
+[STUB] unresolved import called -> returning 0 (call #9)
+[STUB] unresolved import called -> returning 0 (call #10)
+[STUB] unresolved import called -> returning 0 (call #11)
+[STUB] unresolved import called -> returning 0 (call #12)
+[STUB] unresolved import called -> returning 0 (call #13)
+[STUB] unresolved import called -> returning 0 (call #14)
+[STUB] unresolved import called -> returning 0 (call #15)
+[STUB] unresolved import called -> returning 0 (call #16)
+
+(null) v(null) - (null)
+(null)
+(null)
+
+[STUB] unresolved import called -> returning 0 (call #17)
+[STUB] unresolved import called -> returning 0 (call #18)
+[STUB] unresolved import called -> returning 0 (call #19)
+[STUB] unresolved import called -> returning 0 (call #20)
+Eula declined.
+
