@@ -156,8 +156,22 @@ puttygen RIP=0x0).
       was the exit(1) cause of cports+produkey (GetProcAddress→FALSE). Landed.
 - [ ] **SW-551** isolate cports SIGSEGV 0x14001b338 (post-init, process-enum phase,
       psapi via GetProcAddress optional-stub) — one BUG-*.
+      UPDATE (SWEEP-008, REA+Ghidra): faulting instruction DECODED =
+      `CMP dword ptr [R11+0xb8], R13D` — a DATA read of an invalid structure
+      pointer (R11) during process-enum, not a control-flow transfer. Next:
+      find what fills R11 (xrefs to the struct init) and why it is invalid
+      under MiniWin. Evidence: evidence/sweep008_rea/cports_crash_*.json.
 - [ ] **SW-552** isolate puttygen RIP=0x0 (call through NULL — bound-import/ordinal
       slot left NULL despite SWEEP-001?) — one BUG-*.
+      UPDATE (SWEEP-008, REA+Ghidra): hypothesis REWRITTEN — the NULL is NOT an
+      IAT/bound-import slot. Chain: WinMain FUN_1400028b0 `call 0x14000be30`
+      (0x1400028dd; return addr 0x1400028e2 = stack top at fault) -> FUN_14000be30
+      `call *%rdi` at 0x14000be56 where RDI = [.data 0x14008a8e8] — a
+      FUNCTION-POINTER VARIABLE, never initialized under MiniWin (pefile: not in
+      IAT). Writer candidates: refs to 0x14008a8e8 at 0x14002c787..0x14002cc57
+      (FUN_14002c730 region). Next: decompile the writers, find the init stub
+      that no-ops instead of storing the pointer. Evidence:
+      evidence/sweep008_rea/puttygen_*.json.
 - [ ] **SW-553** isolate adexplorer64/zoomit64 SIGTRAP (133) after UnhandledExceptionFilter —
       DebugBreak/int3 in fail-fast path; decide honest mapping (one BUG-* or WONTFIX note).
       UPDATE (SWEEP-007): adexplorer64 is UNOBTAINABLE — Microsoft retired
@@ -166,6 +180,14 @@ puttygen RIP=0x0).
 - [ ] **SW-554** putty-gui + pageant exit(1) gate: find the stub-call that returns the
       fatal FALSE (trace shows CRT-exit sequence after mscoree probe) — needs named
       stub-call logging (per-import thunk identity) as tooling prerequisite.
+      UPDATE (SWEEP-008, REA+Ghidra): pageant fatal path MAPPED — string trace
+      "security APIs" -> FUN_1400017e0, gate = main-init else-branch ->
+      MessageBoxA("Unable to access security APIs", "Pageant Fatal Error") ->
+      return 1 (the exit(1)); teardown probes (api-ms-win-appmodel /
+      mscoree CorExitProcess) confirmed post-decision. Candidate guard
+      FUN_1400132a0 = trivial `return 1`. Remaining hunt: the early-init
+      security chain inside FUN_1400017e0 before the message loop. Evidence:
+      evidence/sweep008_rea/pageant_*.json.
 - [ ] **SW-555** procexp64 exit(2) + autoruns64/rammap64 exit(1) gates: same named-stub
       prerequisite, then fix top blocker each.
 - [ ] **SW-556** SW-509 (PE-DLL loader) now blocks 4 GUI heavyweights

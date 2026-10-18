@@ -160,3 +160,41 @@ Stage Summary:
 - Evidence: evidence/sweep007_battery/ (README.md, battery_map.png, 2 dialog
   PNGs, battery_raw.tsv, determinism.txt, per-program run1 stderr/cmdline);
   artifacts/sweep50/runs_gui562/ (per-run artifacts x45).
+
+---
+Task ID: SWEEP-008 (REA evaluation)
+Agent: Super Z (engineering agent)
+Task: User directive — test the trending GitHub RE tool "REA" (morluto/rea)
+      on a few of our programs and assess whether it helps MiniWin.
+
+Work Log:
+- Identified REA = "Reverse Engineer Anything" (morluto/rea, npm rea-agents
+  6.7.0, MIT): MCP server + CLI connecting agents to RE engines.
+- Toolchain brought up in user space (outside repo): Ghidra 12.1.4 PUBLIC +
+  Temurin full JDK 21.0.12.1 at /home/z/ghidra-dl (system java = JRE only,
+  REA ghidra-java check demands a full JDK — first doctor fail fixed);
+  pwntools 4.15.0 + pyelftools + unicorn into the venv for REA_PWNTOOLS_PYTHON.
+  `rea doctor --provider ghidra` -> healthy.
+- Provider truth: Kuna REJECTS PE (ELF/Mach-O only); pwntools provider is
+  ELF-only; Ghidra provider handles our x64 PEs end to end.
+- Program tests:
+  * puttygen.exe (SW-552): `rea function` decompiled WinMain (15.2K chars) +
+    call graph in one command; objdump+pefile cross-check proved the NULL call
+    is `call *%rdi` with RDI from a .data FUNCTION-POINTER (0x14008a8e8, NOT
+    IAT) — SW-552 hypothesis rewritten; xrefs give writer candidates.
+  * cports.exe (SW-551): `rea inspect-native-instruction` decoded the fault as
+    `CMP dword ptr [R11+0xb8], R13D` — DATA fault on invalid struct pointer.
+  * pageant.exe (SW-554): `rea trace "security APIs"` -> FUN_1400017e0; full
+    decompile shows the gate (MessageBoxA "Unable to access security APIs" ->
+    return 1 = exit(1)); teardown probes confirmed post-decision.
+  * ProduKey.exe: `rea inspect-pe-resources` engine-free structured evidence.
+- Verdict: ADOPT for isolation work (function/xrefs/trace/instruction).
+  Gaps: no PE for Kuna/pwntools; ephemeral Ghidra project per CLI call;
+  first-call auto-analysis cost 40-90 s per PE.
+- Worklist deltas recorded (SW-551/552/554 UPDATE blocks). No loader.c change.
+- Evidence: evidence/sweep008_rea/ (README + 7 REA JSON payloads).
+
+Stage Summary:
+- REA adopted as the isolation toolchain; three worklist entries advanced with
+  concrete, address-level facts; toolchain env documented for future sessions
+  (GHIDRA_INSTALL_DIR, JAVA_HOME=JDK21, REA_PWNTOOLS_PYTHON).
