@@ -815,6 +815,8 @@ __attribute__((ms_abi)) long long mw_winapi_optional_stub(long long a, long long
     (void)a; (void)b; (void)c; (void)d;
     return 0;
 }
+static const char* mw_uxtheme_ord_lookup(uint16_t ordinal); /* SWEEP-015 SW-801g fwd */
+
 __attribute__((ms_abi)) void* mw_GetProcAddress(void* module, const char* name) {
     /* SWEEP-012: ordinal form — MAKEINTRESOURCEA(n) passes the ordinal in the
      * POINTER, not a string (autoruns64: GetProcAddress(h, (LPCSTR)0x87);
@@ -823,6 +825,17 @@ __attribute__((ms_abi)) void* mw_GetProcAddress(void* module, const char* name) 
         uintptr_t m = (uintptr_t)module;
         MW_TRACE("GetProcAddress(module=%p, ordinal=%llu)",
                  module, (unsigned long long)(uintptr_t)name);
+        /* SWEEP-015 SW-801g: named UXTHEME dark-mode ordinals first —
+         * real contracts beat the anonymous optional stub. The UXTHEME
+         * rows live in g_uxtheme_ord (defined below with the shared DLL
+         * table); the uxtheme.dll slot index is 36 in g_known_dlls. */
+        if (m == 0xdead0001 + 36) { /* uxtheme.dll */
+            const char* fn = mw_uxtheme_ord_lookup((uint16_t)(uintptr_t)name);
+            if (fn && g_resolve_proc_fn) {
+                void* r = g_resolve_proc_fn(module, fn);
+                if (r) return r;
+            }
+        }
         if (m >= 0xdead0001 && m <= 0xdead00ff)
             return (void*)&mw_winapi_optional_stub; /* known system module */
         return NULL; /* our image: ordinal-only exports unsupported (honest) */
@@ -881,6 +894,34 @@ static void* mw_known_dll_handle(const char* low) {
     }
     return NULL;
 }
+/* ---- SWEEP-015 SW-801g: UXTHEME dark-mode family ----
+ * Win10 undocumented-but-stable ordinals; autoruns64 resolves
+ * GetProcAddress(hUxTheme, (LPCSTR)0x87) = ordinal 135. Named entries
+ * give real per-function contracts for a light-mode host (the GDI-lite
+ * raster renders classic light chrome) and self-describing traces,
+ * instead of the anonymous optional stub. */
+static const struct { uint16_t ord; const char* name; } g_uxtheme_ord[] = {
+    { 104, "RefreshImmersiveColorPolicyState" },
+    { 132, "ShouldAppsUseDarkMode" },
+    { 133, "AllowDarkModeForWindow" },
+    { 135, "AllowDarkModeForApp" },
+};
+__attribute__((ms_abi)) int mw_ShouldAppsUseDarkMode(void) { return 0; } /* FALSE: light mode */
+__attribute__((ms_abi)) int mw_AllowDarkModeForWindow(void* hwnd, int allow) {
+    (void)hwnd; (void)allow;
+    return 0;
+}
+__attribute__((ms_abi)) int mw_AllowDarkModeForApp(int allow) {
+    (void)allow;
+    return 0; /* previous mode: Default/DISABLED */
+}
+__attribute__((ms_abi)) void mw_RefreshImmersiveColorPolicyState(void) { }
+static const char* mw_uxtheme_ord_lookup(uint16_t ordinal) {
+    for (size_t i = 0; i < sizeof(g_uxtheme_ord)/sizeof(g_uxtheme_ord[0]); i++)
+        if (g_uxtheme_ord[i].ord == ordinal) return g_uxtheme_ord[i].name;
+    return NULL;
+}
+
 
 __attribute__((ms_abi)) void* mw_LoadLibraryA(const char* name) {
     MW_TRACE("LoadLibraryA(%s)", name ? name : "NULL");
@@ -11139,6 +11180,34 @@ static int mw_gui_next_event(void* msg, void* hwnd, int consume, const char* api
                      (unsigned long)g_timer_id);
         return 1;
     }
+    /* SWEEP-015 SW-801f: keys/clicks remain queued but their pacing gates
+     * are closed and there is nothing else to deliver. Deliver the next
+     * scripted event anyway — a real GetMessage BLOCKS here, it never
+     * terminates the loop; the old fall-through quit the pump at the
+     * first idle gap, which only timer-driven guests (snake) survived.
+     * Paint-driven guests (tests/games/miniwin_calc.c) died after their
+     * first key with "no event source: no timer/paint/keys left". */
+    if (g_keyi < g_keyn) {
+        uint32_t vk = g_keyv[g_keyi++];
+        if (consume) g_delivered++;
+        mw_gui_fill_msg(msg, h, 0x0100u, (uintptr_t)vk, 1);
+        if (consume) MW_TRACE("[GUI-EVENT] #%d %s -> WM_KEYDOWN VK=0x%x (gate-bypass)", g_delivered, api, vk);
+        return 1;
+    }
+    if (g_clicki < g_clickn) {
+        uint32_t id = g_clickv[g_clicki++];
+        void* ctl = 0;
+        for (int i = 0; i < MW_CHILD_MAX; i++)
+            if (g_child[i].live && g_child[i].id == id) { ctl = g_child[i].hwnd; break; }
+        if (consume) g_delivered++;
+        mw_gui_fill_msg(msg, h, MWWM_COMMAND,
+                        (uintptr_t)((id & 0xFFFFu)),
+                        (long long)(intptr_t)ctl);
+        if (consume)
+            MW_TRACE("[GUI-EVENT] #%d %s -> WM_COMMAND id=%lu ctl=%p (gate-bypass)",
+                     g_delivered, api, (unsigned long)id, ctl);
+        return 1;
+    }
     return 0;
 }
 
@@ -14963,6 +15032,11 @@ ENTRY("msvcrt.dll", "wctype", mw_wctype),
     ENTRY("version.dll", "GetFileVersionInfoSizeW",             mw_GetFileVersionInfoSizeW),
     ENTRY("version.dll", "GetFileVersionInfoW",                 mw_GetFileVersionInfoW),
     ENTRY("version.dll", "VerQueryValueW",                      mw_VerQueryValueW),
+    /* SWEEP-015 SW-801g: UXTHEME dark-mode family (autoruns64 ord 0x87=135) */
+    ENTRY("UxTheme.dll",  "ShouldAppsUseDarkMode",   mw_ShouldAppsUseDarkMode),
+    ENTRY("UxTheme.dll",  "AllowDarkModeForWindow",  mw_AllowDarkModeForWindow),
+    ENTRY("UxTheme.dll",  "AllowDarkModeForApp",     mw_AllowDarkModeForApp),
+    ENTRY("UxTheme.dll",  "RefreshImmersiveColorPolicyState", mw_RefreshImmersiveColorPolicyState),
     /* user32 misc (bginfo64/winmergeu/produkey/7zFM) */
     ENTRY("USER32.DLL", "RegisterWindowMessageW",               mw_RegisterWindowMessageW),
     ENTRY("USER32.DLL", "RegisterWindowMessageA",               mw_RegisterWindowMessageA), /* SWEEP-013 r2 */
@@ -15359,6 +15433,12 @@ static int load_pe(const char* filepath) {
                      * neighborhood 0x477080 between GDI32/KERNEL32 groups and
                      * 7zG's installer ListView usage). */
                     { "COMCTL32", 17, "ImageList_Create" },
+                    /* SWEEP-015 (SW-801g): UXTHEME dark-mode family —
+                     * autoruns64-class guests bind these by raw ordinal. */
+                    { "UXTHEME", 104, "RefreshImmersiveColorPolicyState" },
+                    { "UXTHEME", 132, "ShouldAppsUseDarkMode" },
+                    { "UXTHEME", 133, "AllowDarkModeForWindow" },
+                    { "UXTHEME", 135, "AllowDarkModeForApp" },
                     /* SWEEP-014 r2 (BUG-071): NirSoft/Sysinternals/SQLite tools
                      * bind WS2_32 by fixed ordinal (ProduKey ILT[0]=0x8000..6f).
                      * The old map lacked WS2_32 entirely, so WSAStartup gated

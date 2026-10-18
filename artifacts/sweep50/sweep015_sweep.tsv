@@ -1,0 +1,19 @@
+exe	exit1	exit2	exit3	stub_calls	stub_names	images
+sweep50/dl_extract/Autoruns64.exe	0	0	0	0		0
+sweep50/dl_extract/Bginfo64.exe	-11	-11	-11	0		0
+sweep50/dl_extract/Coreinfo64.exe	139	139	139	0		0
+sweep50/dl_extract/CoreinfoEx64.exe	-11	-11	-11	1		0
+sweep50/dl_extract/Diskmon64.exe	0	0	0	0		0
+sweep50/dl_extract/Procmon64.exe	1	1	1	0		1
+sweep50/dl_extract/ProduKey.exe	0	0	0	0		0
+sweep50/dl_extract/RAMMap64.exe	0	0	0	0		0
+sweep50/dl_extract/SearchMyFiles.exe	-11	-11	-11	0		0
+sweep50/dl_extract/WinMerge/WinMergeU.exe	139	139	139	0		0
+sweep50/dl_extract/ZoomIt64.exe	0	0	0	0		0
+sweep50/dl_extract/autorunsc64.exe	139	139	139	0		0
+sweep50/dl_extract/cports.exe	0	0	0	0		0
+sweep50/dl_extract/procexp64.exe	139	139	139	0		3
+sweep50/dl/putty/putty.exe	1	1	1	0		1
+sweep50/dl/puttygen/puttygen.exe	139	139	139	0		0
+sweep50/dl/pageant/pageant.exe	1	1	1	0		1
+sweep008/calc.exe	0	0	0	0		0

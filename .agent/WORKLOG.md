@@ -464,3 +464,22 @@ Stage Summary:
   triages, 15 ws2_32 socket ladder, 20 GUI, 10 oleaut32, 15 GDI, 10 CRT
   tail, 10 PE-DLL slices, 25 kernel/user32 tail, 30 infra/verify.
 - **G1 re-pinned sha 45fd1d18 12/12** (evidence/master/g1/20261018_182015).
+
+---
+Task ID: SWEEP-015
+Agent: Super Z (main agent)
+Task: «ادامه سه برابری» — honest-stub continuation, broad sweep, GUI calc, worklist x3
+
+Work Log:
+- Discovered upstream had advanced to f64290e (SWEEP-014) via `git fetch` — local b783c44 was stale; fast-forwarded main to f64290e (clean ff, no divergence).
+- Re-derived SWEEP-008/009-class fixes from scratch in a divergent line (self-identifying stub, mini-registry, atoms, Color*, RtlGetVersion, GetModuleHandleW identity, GetProcAddress IS_INTRESOURCE, DialogBoxIndirectParamW, EULA render) — all superseded by upstream SWEEP-009..014; port patch preserved in .agent/patches/sweep015_resource_version_port.patch.
+- LANDED on top of f64290e (zero-regression subset): SW-801f pump gate-bypass (timerless guests), SW-801g UXTHEME dark-mode ordinals 104/132/133/135 (IAT map + GetProcAddress + ENTRYs). Reverted with evidence: SW-801a-e resource/version port (Bginfo64/Coreinfo64 flow regressions documented as worklist items).
+- NEW GAME-CALC: tests/games/miniwin_calc.c (pure GDI + WM_KEYDOWN calc) — 3x exit0, 4 frames, all-frame SHA 1b92b95f873029f0 x3, display "1+2=" result "3".
+- Regressions green: upstream calc 9/9 (A/C/D scenarios), snake 3x exit0 (30 frames, SHA 52d2cc22 x3 — frame count is environment-sensitive, recorded SW-801h), breakout 3x exit0.
+- Broad sweep 18 x64 exes x3 (artifacts/sweep50/sweep015_sweep.tsv): exit0x3 = Autoruns64, Diskmon64, ProduKey, RAMMap64, ZoomIt64, cports, miniwin_calc; exit1x3 = putty/pageant/Procmon64; deterministic 139/-11 frontier = puttygen/Coreinfo64/autorunsc64/WinMergeU/procexp64/Bginfo64/SearchMyFiles/CoreinfoEx64 (SW-801h environment-sensitivity: pure-upstream binary reproduces).
+- G1 re-pinned: sha 986f349fd2bf7106... 12/12 (evidence/master/g1/20261018_205456).
+- Worklist: SW-801a..j appended (10 evidence-cited items) on top of the SW-651..800 x3 queue.
+
+Stage Summary:
+- main == f64290e + SWEEP-015 deltas; G1 12/12 green; calc acceptance 3x deterministic.
+- Known environment frontier recorded (SW-801h); pending port batch SW-801a-e with gates.

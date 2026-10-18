@@ -550,3 +550,56 @@ irreversible status labels, no fake success, PROGRESS over activity.
 - [ ] **SW-798** infra/verify: sqlite3_analyzer: byte-store crash at RVA 0xaa652 (REA funcmap)
 - [ ] **SW-799** infra/verify: procmon64: exit 1 banner path audit after batch #4
 - [ ] **SW-800** infra/verify: lz4/zstd/trurl: exit-code parity re-pin (3x each)
+
+## SWEEP-015 continuation queue (SW-801..SW-820 — evidence-cited 2026-10-19)
+
+Source: SWEEP-015 session (reconciliation with upstream f64290e + fresh
+static analysis). Port patches preserved in `.agent/patches/sweep015_resource_version_port.patch`
+(ready-to-apply diff against f64290e; each item below names its regression
+gate that must be re-accepted when the port lands).
+
+- [ ] **SW-801a** resource/fix: IMAGE_RESOURCE_DIRECTORY NamedEntries/IdEntries
+      read at +12/+14 (not +8/+10) — old walk saw 0 entries and EVERY
+      FindResource honestly failed. Port patch hunk `w3_res_cmp_name/w3_res_find`.
+      Regression gate: Bginfo64 must re-accept exit0 after the flow deepens.
+- [ ] **SW-801b** resource/fix: resource string-name compare in real 2-byte
+      UTF-16 units (old 4-byte wchar_t cast only matched even-length names;
+      L"MAIN_WINDOW" never matched). Same hunk; same gate.
+- [ ] **SW-801c** resource/fix: language level (depth 2) accepts any entry;
+      IS_INTRESOURCE for numeric type/name (MAKEINTRESOURCE(5) RT_DIALOG).
+      Proven on rammap64: FindResourceW(L"MAIN_WINDOW", RT_DIALOG) then
+      DLGTEMPLATEEX parse -> main window dialog image.
+- [ ] **SW-801d** resource/fix: LockResource returns IMAGE_BASE +
+      DATA_ENTRY.OffsetToData (verified: rammap64 0x5e640 -> 01 00 ff ff).
+      Upstream policy (entry VA) kept this sweep to avoid Bginfo64 flow
+      regression; land together with SW-801a-c in one batch.
+- [ ] **SW-801e** version/real: VERSION.dll six-pack VS_VERSIONINFO parser
+      (GetFileVersionInfoSize/W + A, VerQueryValue\, \VarFileInfo\Translation,
+      \StringFileInfo\<lc>\<key>) reading RT_VERSION from disk. Replaces the
+      honest-0 stubs (loader.c:12034 f64290e). Gate: Coreinfo64 + autorunsc64
+      go deeper (version gate passes) — needs SW-801f-class topology stubs
+      (GetNumaHighestNodeNumber/SetThreadGroupAffinity real) or an
+      honest GetLogicalProcessorInformationEx to keep exit0.
+- [ ] **SW-801f** pump/fix LANDED: gate-bypass — keys/clicks remaining but
+      pacing gate closed + nothing else deliverable -> deliver anyway
+      (real GetMessage blocks, never quits). Timerless paint-driven guests
+      died after their first key. Acceptance: tests/games/miniwin_calc.c
+      3x exit0, 4 frames, all-frames SHA 1b92b95f873029f0 x3.
+- [ ] **SW-801g** uxtheme LANDED: dark-mode family named (ordinals
+      104/132/133/135 = RefreshImmersiveColorPolicyState /
+      ShouldAppsUseDarkMode(FALSE: light host) / AllowDarkModeForWindow /
+      AllowDarkModeForApp) in the IAT ordinal map + GetProcAddress
+      ordinal path + ENTRYs. autoruns64 ord 0x87=135 now self-describing.
+- [ ] **SW-801h** infra/env: environment-sensitive exits — procexp64/
+      Coreinfo64/Bginfo64/autorunsc64/WinMergeU measured exit0 in the
+      SWEEP-014 pool but 139 (deterministic x3) in today's 2-CPU/4GB
+      sandbox, pure-upstream binary reproduced (sha 8fda4302) — record
+      host geometry with every pool run (nproc/cpu.max/mem) and re-baseline.
+- [ ] **SW-801i** CRT/bug: zig/mingw static-CRT snprintf builds a fake FILE
+      (heap) that map_crt_stream refuses -> vfprintf(NULL) SIGSEGV
+      (tests/games/miniwin_calc.c first build). Either recognize the mingw
+      fake-FILE window in map_crt_stream or document wsprintfA-only contract.
+- [ ] **SW-801j** calc/accept: second calculator genre tests/games/
+      miniwin_calc.c (pure GDI + WM_KEYDOWN keyboard calc, no child
+      controls) — 3x exit0, display "1+2=" result "3", frame SHAs
+      byte-identical x3. Wire into scripts/ as a permanent acceptance.

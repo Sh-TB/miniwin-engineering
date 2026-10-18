@@ -1,0 +1,12 @@
+MiniWinCalc determinism (SWEEP-015, loader sha 986f349fd2bf7106...)
+run1 frames: 4  (combined SHA of all 4 frame BMPs)
+run2 frames: 4
+run3 frames: 4
+per-run combined SHA-256:
+  run1: 1b92b95f873029f0e...
+  run2: 1b92b95f873029f0e...
+  run3: 1b92b95f873029f0e...
+=> 3x byte-identical frame sequences; exit code 0 x3
+run1: 1b92b95f873029f044e94caef9eae703f687833233d8a2a59e09a1a836c1ed72
+run2: 1b92b95f873029f044e94caef9eae703f687833233d8a2a59e09a1a836c1ed72
+run3: 1b92b95f873029f044e94caef9eae703f687833233d8a2a59e09a1a836c1ed72
