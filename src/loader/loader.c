@@ -82,6 +82,7 @@ static uint64_t g_entry_point = 0;
 
 /* API trace */
 static FILE* g_trace_log = NULL;
+static int g_trace_disabled = 0; /* SWEEP-011: MINWIN_TRACE=0 silences MW_TRACE */
 
 /* Forward declaration for GetProcAddress resolver (defined after import tables) */
 typedef void* (*resolve_proc_fn_t)(void* module, const char* name);
@@ -91,14 +92,242 @@ static resolve_proc_fn_t g_resolve_proc_fn = NULL;
 __attribute__((ms_abi)) void mw_SetLastError(uint32_t err);
 
 #define MW_TRACE(fmt, ...) do { \
-    if (g_trace_log) { \
-        fprintf(g_trace_log, "[T%lx] [API] " fmt "\n", \
-                (unsigned long)pthread_self() & 0xFFFF, ##__VA_ARGS__); \
-        fflush(g_trace_log); \
-    } else { \
-        fprintf(stderr, "[TRACE] " fmt "\n", ##__VA_ARGS__); \
+    if (!g_trace_disabled) { \
+        if (g_trace_log) { \
+            fprintf(g_trace_log, "[T%lx] [API] " fmt "\n", \
+                    (unsigned long)pthread_self() & 0xFFFF, ##__VA_ARGS__); \
+            fflush(g_trace_log); \
+        } else { \
+            fprintf(stderr, "[TRACE] " fmt "\n", ##__VA_ARGS__); \
+        } \
     } \
 } while(0)
+
+/* ============================================================
+ * SWEEP-011 (2026-10-18): REA-powered debugger-speed facilities
+ * ------------------------------------------------------------
+ * User directive: «از ابزارهای rea نهایت استفاده رو بکن برای کمتر شدن
+ * زمان اجرا برنامه‌ها، سرعت دیباگر بهتر بشه».
+ *
+ * Measured baseline (artifacts/sweep011_perf/baseline.tsv): guest code
+ * runs natively (whole battery < 2 s); the real per-run I/O tax is the
+ * per-line fflush on api_trace.json (breakout: 21,608 lines) and the
+ * per-frame BMP dumps; the real DEBUG-loop tax is REA/Ghidra paying a
+ * fresh 40-90 s auto-analysis for every address question (ephemeral
+ * project, no snapshot reuse in CLI mode — evidence/sweep008_rea).
+ *
+ * 1. mw_funcmap_*: MINWIN_FUNC_MAP=<json> loads a Ghidra function map
+ *    built ONCE per PE by scripts/sweep011_funcmap_export.py (persistent
+ *    headless project, no re-analysis). Gives O(log n) RIP -> function
+ *    symbolization to [STUB]/[CRASH]/[WATCHDOG] lines and the profiler —
+ *    instant answers where a rea query used to cost a minute.
+ * 2. mw_prof_*: MINWIN_PROFILE=1 arms ITIMER_PROF/SIGPROF at 1 ms CPU;
+ *    at shutdown (and in crash_handler) writes <results>/profile.json:
+ *    top guest functions by samples, symbolized via the funcmap.
+ * 3. Trace/screenshot I/O: api_trace.json becomes 1 MiB-buffered
+ *    (flushed at the existing mw_trace_shutdown_flush choke points);
+ *    MINWIN_TRACE=0 disables the trace file; MINWIN_SCREENSHOT=0 skips
+ *    per-frame BMP dumps (frame numbering preserved).
+ * All defaults preserve the pre-SWEEP-011 behavior.
+ * ============================================================ */
+#include <ucontext.h>
+
+typedef struct { uint64_t start, end; const char* name; } mw_funcmap_ent;
+static mw_funcmap_ent* g_funcmap = NULL;
+static int  g_funcmap_n = 0;
+static char** g_funcmap_blobs = NULL; /* one name-blob per loaded file */
+static int   g_funcmap_blobn = 0;
+static int   g_funcmap_tried = 0;
+
+/* Parse the exporter's flat JSON: one object per function, field order
+ * name -> start -> end (decimal). No JSON library: the loader stays
+ * dependency-free. Names are NUL-terminated in place inside the blob. */
+static int mw_funcmap_load_one(const char* path) {
+    FILE* f = fopen(path, "rb");
+    if (!f) { fprintf(stderr, "[FUNCMAP] cannot open %s\n", path); return 0; }
+    fseek(f, 0, SEEK_END);
+    long sz = ftell(f);
+    fseek(f, 0, SEEK_SET);
+    if (sz <= 0 || sz > (64L << 20)) { fclose(f); return 0; }
+    char* buf = (char*)malloc((size_t)sz + 1);
+    if (!buf) { fclose(f); return 0; }
+    size_t rd = fread(buf, 1, (size_t)sz, f);
+    fclose(f);
+    buf[rd] = 0;
+
+    int cap = 1024, n = 0;
+    mw_funcmap_ent* ents = (mw_funcmap_ent*)malloc((size_t)cap * sizeof(*ents));
+    if (!ents) { free(buf); return 0; }
+    const char* p = buf;
+    while (n < cap * 4) {
+        /* key match tolerates whitespace after ':' (json.dump styles) */
+        char* nm_key = strstr(p, "\"name\":");
+        if (!nm_key) break;
+        nm_key += 7;
+        while (*nm_key == ' ' || *nm_key == '\t') nm_key++;
+        if (*nm_key != '"') break;
+        char* nm = nm_key + 1;
+        char* nm_end = strchr(nm, '"');
+        char* st = nm_end ? strstr(nm_end, "\"start\":") : NULL;
+        char* en = st ? strstr(st, "\"end\":") : NULL;
+        if (!nm_end || !st || !en) break;
+        *nm_end = 0; /* terminate the name in place */
+        uint64_t s = strtoull(st + 8, NULL, 10);
+        uint64_t e = strtoull(en + 6, NULL, 10);
+        if (e > s) {
+            if (n == cap) {
+                cap *= 2;
+                mw_funcmap_ent* rn = (mw_funcmap_ent*)realloc(ents, (size_t)cap * sizeof(*ents));
+                if (!rn) break;
+                ents = rn;
+            }
+            ents[n].start = s; ents[n].end = e; ents[n].name = nm; n++;
+        }
+        p = en + 6;
+    }
+    if (n == 0) { free(ents); free(buf); return 0; }
+    /* append to the global table */
+    int base = g_funcmap_n;
+    mw_funcmap_ent* rg = (mw_funcmap_ent*)realloc(g_funcmap,
+                            (size_t)(base + n) * sizeof(*g_funcmap));
+    if (!rg) { free(ents); free(buf); return 0; }
+    g_funcmap = rg;
+    memcpy(g_funcmap + base, ents, (size_t)n * sizeof(*ents));
+    g_funcmap_n = base + n;
+    free(ents);
+    char** rb = (char**)realloc(g_funcmap_blobs, (size_t)(g_funcmap_blobn + 1) * sizeof(char*));
+    if (rb) { g_funcmap_blobs = rb; g_funcmap_blobs[g_funcmap_blobn++] = buf; }
+    fprintf(stderr, "[FUNCMAP] %s: %d functions (REA/Ghidra map)\n", path, n);
+    return n;
+}
+
+/* MINWIN_FUNC_MAP=<path>[,<path>...] — merge + sort all maps together. */
+static void mw_funcmap_load(void) {
+    g_funcmap_tried = 1;
+    const char* paths = getenv("MINWIN_FUNC_MAP");
+    if (!paths || !paths[0]) return;
+    char* list = strdup(paths);
+    if (!list) return;
+    for (char* tok = strtok(list, ","); tok; tok = strtok(NULL, ","))
+        mw_funcmap_load_one(tok);
+    free(list);
+    /* insertion sort by start (maps are small: <= ~10k functions) */
+    for (int i = 1; i < g_funcmap_n; i++) {
+        mw_funcmap_ent k = g_funcmap[i];
+        int j = i - 1;
+        while (j >= 0 && g_funcmap[j].start > k.start) { g_funcmap[j + 1] = g_funcmap[j]; j--; }
+        g_funcmap[j + 1] = k;
+    }
+    if (g_funcmap_n)
+        fprintf(stderr, "[FUNCMAP] %d functions total (O(log n) lookups)\n", g_funcmap_n);
+}
+
+/* O(log n) RIP -> "name" + offset. Returns NULL outside any known
+ * function body. Lazily loads the map on first use. */
+static const char* mw_funcmap_lookup(uint64_t rip, uint64_t* off_out) {
+    if (!g_funcmap_tried) mw_funcmap_load();
+    if (!g_funcmap_n) return NULL;
+    int lo = 0, hi = g_funcmap_n - 1, found = -1;
+    while (lo <= hi) {
+        int mid = (lo + hi) / 2;
+        if (rip < g_funcmap[mid].start) hi = mid - 1;
+        else { found = mid; lo = mid + 1; }
+    }
+    if (found < 0) return NULL;
+    if (rip >= g_funcmap[found].start && rip < g_funcmap[found].end) {
+        if (off_out) *off_out = rip - g_funcmap[found].start;
+        return g_funcmap[found].name;
+    }
+    return NULL;
+}
+
+/* ---- MINWIN_PROFILE=1 poor-man's guest profiler ---- */
+#define MW_PROF_MAX 65536
+static uint64_t g_prof_rips[MW_PROF_MAX];
+static volatile uint64_t g_prof_head = 0;
+static volatile int g_prof_dumped = 0;
+static int g_prof_armed = 0;
+static char g_prof_out_path[600] = {0};
+
+static void mw_prof_handler(int sig, siginfo_t* si, void* ctx) {
+    (void)sig; (void)si;
+    ucontext_t* uc = (ucontext_t*)ctx;
+    uint64_t h = g_prof_head;
+    if (h < MW_PROF_MAX) {
+        g_prof_rips[h] = (uint64_t)uc->uc_mcontext.gregs[REG_RIP];
+        g_prof_head = h + 1;
+    }
+}
+
+static void mw_prof_start(void) {
+    if (!getenv("MINWIN_PROFILE") || getenv("MINWIN_PROFILE")[0] == '0') return;
+    struct sigaction sa;
+    memset(&sa, 0, sizeof(sa));
+    sa.sa_sigaction = mw_prof_handler;
+    sa.sa_flags = SA_SIGINFO | SA_RESTART;
+    sigaction(SIGPROF, &sa, NULL);
+    struct itimerval it;
+    memset(&it, 0, sizeof(it));
+    it.it_interval.tv_usec = 1000; /* 1 ms CPU time */
+    it.it_value = it.it_interval;
+    if (setitimer(ITIMER_PROF, &it, NULL) == 0) {
+        g_prof_armed = 1;
+        fprintf(stderr, "[PROF] SIGPROF sampler armed (1 ms CPU; MINWIN_PROFILE=1)\n");
+    }
+}
+
+/* Symbolize one RIP via the funcmap: "<name>+0x<off>" or "0x<rip>". */
+static void mw_prof_sym(char* out, size_t outsz, uint64_t rip) {
+    uint64_t off = 0;
+    const char* fn = mw_funcmap_lookup(rip, &off);
+    if (fn) snprintf(out, outsz, "%s+0x%llx", fn, (unsigned long long)off);
+    else    snprintf(out, outsz, "0x%llx", (unsigned long long)rip);
+}
+
+/* comparator over [rip, count] pairs: sort by COUNT descending */
+static int mw_prof_count_cmp(const void* a, const void* b) {
+    uint64_t ca = ((const uint64_t*)a)[1], cb = ((const uint64_t*)b)[1];
+    return (ca < cb) ? 1 : (ca > cb) ? -1 : 0;
+}
+
+/* Called from mw_trace_shutdown_flush (atexit / ExitProcess / crash). */
+static void mw_prof_dump(void) {
+    if (g_prof_dumped) return;
+    g_prof_dumped = 1;
+    if (!g_prof_armed || g_prof_head == 0) return;
+    struct itimerval stop;
+    memset(&stop, 0, sizeof(stop));
+    setitimer(ITIMER_PROF, &stop, NULL);
+
+    /* histogram over sampled RIPs (exact-rip; guest Rips repeat) */
+    uint64_t uniq[MW_PROF_MAX / 8][2]; /* [rip, count] */
+    int nu = 0;
+    for (uint64_t i = 0; i < g_prof_head; i++) {
+        int k = -1;
+        for (int j = 0; j < nu; j++) if (uniq[j][0] == g_prof_rips[i]) { k = j; break; }
+        if (k < 0 && nu < MW_PROF_MAX / 8) { uniq[nu][0] = g_prof_rips[i]; uniq[nu][1] = 0; k = nu++; }
+        if (k >= 0) uniq[k][1]++;
+    }
+    /* sort by count desc */
+    qsort(uniq, (size_t)nu, sizeof(uniq[0]), mw_prof_count_cmp);
+
+    FILE* f = g_prof_out_path[0] ? fopen(g_prof_out_path, "w") : NULL;
+    if (f) {
+        fprintf(f, "{\n  \"sampled\": %llu,\n  \"top\": [\n", (unsigned long long)g_prof_head);
+        int top = nu < 16 ? nu : 16;
+        for (int i = 0; i < top; i++) {
+            char sym[512];
+            mw_prof_sym(sym, sizeof(sym), uniq[i][0]);
+            fprintf(f, "    {\"rip\": %llu, \"count\": %llu, \"symbol\": \"%s\"}%s\n",
+                    (unsigned long long)uniq[i][0], (unsigned long long)uniq[i][1],
+                    sym, i + 1 < top ? "," : "");
+        }
+        fprintf(f, "  ]\n}\n");
+        fclose(f);
+        fprintf(stderr, "[PROF] %llu samples, %d unique RIPs -> %s\n",
+                (unsigned long long)g_prof_head, nu, g_prof_out_path);
+    }
+}
 
 /* ============================================================
  * TASK-API-005 (ADR-010): EH hack isolation flag
@@ -663,7 +892,9 @@ __attribute__((ms_abi)) int mw_SetDllDirectoryW(const void* path) {
  * the stdout/stderr buffers would be silently dropped by _exit(). Closing the
  * trace here makes every api_trace.json parseable without the append-']}'
  * workaround. Idempotent (NULL check) so main()'s normal-return path is safe. */
+static void mw_prof_dump(void); /* SWEEP-011: defined with the profiler block */
 static void mw_trace_shutdown_flush(void) {
+    mw_prof_dump(); /* SWEEP-011: flush the SIGPROF histogram before dying */
     fflush(stdout);
     fflush(stderr);
     if (g_trace_log) {
@@ -10620,6 +10851,20 @@ __attribute__((ms_abi)) void* mw_BeginPaint(void* hwnd, void* ps) {
 /* 24-bit bottom-up BMP writer for the window surface */
 static void mw_surface_dump(const char* kind) {
     if (!g_surf.px) return;
+    /* SWEEP-011: MINWIN_SCREENSHOT=0 skips per-frame BMP disk writes
+     * (breakout: 381 frames per run); frame NUMBERING is preserved so
+     * acceptance tooling stays aligned. Default (unset) unchanged. */
+    static int g_shot_off = -1;
+    if (g_shot_off < 0) {
+        const char* s = getenv("MINWIN_SCREENSHOT");
+        g_shot_off = (s && s[0] == '0' && s[1] == 0) ? 1 : 0;
+    }
+    if (g_shot_off) {
+        g_frame_no++;
+        MW_TRACE("[GDI] frame #%d (%s) BMP dump skipped (MINWIN_SCREENSHOT=0)",
+                 g_frame_no, kind);
+        return;
+    }
     char path[768];
     snprintf(path, sizeof(path), "%s/frame_%03d.bmp",
              g_frame_dir[0] ? g_frame_dir : "miniwin-results/screenshots", ++g_frame_no);
@@ -12473,8 +12718,19 @@ __attribute__((ms_abi)) uint64_t mw_unresolved_import_stub(void) {
          * decode of the `call qword [rip+disp32]` that precedes it maps
          * the site to the exact dll!import (pefile IAT map + REA/Ghidra
          * decompile of the containing function gives the gate branch). */
-        fprintf(stderr, "[STUB] unresolved import called -> returning 0 (call #%llu) guest_rip=%p\n",
+        fprintf(stderr, "[STUB] unresolved import called -> returning 0 (call #%llu) guest_rip=%p",
                 (unsigned long long)n, __builtin_return_address(0));
+        {
+            /* SWEEP-011: name the CALLER from the REA/Ghidra function map
+             * (return address - 1 = last byte of the `call [rip+disp32]`).
+             * Without MINWIN_FUNC_MAP the line is unchanged. */
+            uint64_t mw_soff = 0;
+            const char* mw_sfn = mw_funcmap_lookup(
+                (uint64_t)(uintptr_t)__builtin_return_address(0) - 1, &mw_soff);
+            if (mw_sfn)
+                fprintf(stderr, " caller=%s+0x%llx", mw_sfn, (unsigned long long)mw_soff);
+        }
+        fprintf(stderr, "\n");
     } else if (n == 21) {
         fprintf(stderr, "[STUB] further unresolved-import calls silenced\n");
     }
@@ -12874,6 +13130,16 @@ static void crash_handler(int sig, siginfo_t* info, void* ctx) {
         uint64_t rva = rip - (uint64_t)(uintptr_t)g_image_base;
         fprintf(stderr, "  RVA=0x%lx (inside loaded PE)\n", rva);
 
+        /* SWEEP-011: instant function context from the REA/Ghidra map
+         * (MINWIN_FUNC_MAP=<json> built once by sweep011_funcmap_export). */
+        {
+            uint64_t mw_coff = 0;
+            const char* mw_cfn = mw_funcmap_lookup(rip, &mw_coff);
+            if (mw_cfn)
+                fprintf(stderr, "  [FUNC] %s+0x%llx (REA/Ghidra function map)\n",
+                        mw_cfn, (unsigned long long)mw_coff);
+        }
+
         /* Dump bytes at crash point */
         uint8_t* crash_ptr = (uint8_t*)(uintptr_t)rip;
         fprintf(stderr, "  Bytes: ");
@@ -12942,8 +13208,18 @@ static void crash_handler(int sig, siginfo_t* info, void* ctx) {
             if (v >= 0x2000000ull && v < 0x2050000ull) tag = "LOADER";
             else if (g_image_base && v >= (uint64_t)(uintptr_t)g_image_base &&
                      v < (uint64_t)(uintptr_t)g_image_base + g_image_size) tag = "PE";
-            if (tag)
-                fprintf(stderr, "  [SCAN rsp+%03d] 0x%lx <%s>\n", i * 8, v, tag);
+            if (tag) {
+                fprintf(stderr, "  [SCAN rsp+%03d] 0x%lx <%s>", i * 8, v, tag);
+                /* SWEEP-011: name the containing function from the
+                 * REA/Ghidra map — for RIP=0 crashes (SW-552 puttygen) the
+                 * stack return addresses become instantly readable. */
+                {
+                    uint64_t mw_voff = 0;
+                    const char* mw_vfn = mw_funcmap_lookup(v, &mw_voff);
+                    if (mw_vfn) fprintf(stderr, " %s+0x%llx", mw_vfn, (unsigned long long)mw_voff);
+                }
+                fprintf(stderr, "\n");
+            }
         }
     }
 
@@ -12955,10 +13231,30 @@ static void crash_handler(int sig, siginfo_t* info, void* ctx) {
             bt_rip < (uint64_t)(uintptr_t)g_image_base + g_image_size) {
             uint64_t bt_rva = bt_rip - (uint64_t)(uintptr_t)g_image_base;
             fprintf(stderr, "    [%d] RIP=0x%lx RVA=0x%lx", i, bt_rip, bt_rva);
-            /* Find return address */
-            uint64_t* ra_ptr = (uint64_t*)(uintptr_t)bt_rsp;
-            fprintf(stderr, "      [RSP+0] = 0x%lx (return addr?)\n", *ra_ptr);
-            bt_rsp = *ra_ptr + 8;  /* follow return chain */
+            /* SWEEP-011: REA/Ghidra function for each backtrace frame */
+            {
+                uint64_t mw_boff = 0;
+                const char* mw_bfn = mw_funcmap_lookup(bt_rip, &mw_boff);
+                if (mw_bfn) fprintf(stderr, " [%s+0x%llx]", mw_bfn, (unsigned long long)mw_boff);
+            }
+            /* Find return address — SWEEP-011 hardening: follow the chain
+             * (bt_rip = return address) and BOUND the walk to the used
+             * stack above rsp. zoomit64's int3 (SW-553) previously caused
+             * repeated frames and an unbounded read = nested SIGSEGV that
+             * killed the handler itself (exit 139 instead of 133). */
+            uint64_t bt_rsp_next = bt_rsp;
+            if (bt_rsp < rsp || bt_rsp > rsp + 0x8000) break;
+            uint64_t ra = *(uint64_t*)(uintptr_t)bt_rsp;
+            fprintf(stderr, "\n      [RSP+0] = 0x%lx (return addr?)\n", ra);
+            {
+                uint64_t mw_raoff = 0;
+                const char* mw_rafn = mw_funcmap_lookup(ra, &mw_raoff);
+                if (mw_rafn)
+                    fprintf(stderr, "      [FUNC] %s+0x%llx (REA/Ghidra map)\n",
+                            mw_rafn, (unsigned long long)mw_raoff);
+            }
+            bt_rip = ra;
+            bt_rsp = bt_rsp_next + 8;  /* follow return chain */
         } else if (bt_rip > 0x100000 && bt_rip < 0x7fffffffffffULL) {
             fprintf(stderr, "    [%d] RIP=0x%lx (outside PE, possible shared lib)\n", i, bt_rip);
             bt_rsp = *(uint64_t*)(uintptr_t)(bt_rsp + 8);
@@ -12972,7 +13268,15 @@ static void crash_handler(int sig, siginfo_t* info, void* ctx) {
         fprintf(stderr, "  Likely: NULL or invalid function pointer call\n");
     }
 
-    _exit(139);
+    /* SWEEP-011: flush trace JSON + profiler histogram on handled crashes
+     * (async-signal-unsafe stdio is already used throughout this handler;
+     * we are terminating regardless). */
+    mw_trace_shutdown_flush();
+    /* Exit code = 128+sig, matching shell convention: SIGSEGV -> 139 and
+     * SIGABRT -> 134 UNCHANGED vs the old hardcoded _exit(139); SIGTRAP
+     * (guest int3, e.g. zoomit64 SW-553) now exits 133 WITH diagnostics
+     * instead of dying silently. */
+    _exit(128 + sig);
 }
 
 static void setup_signal_handlers(void) {
@@ -12985,6 +13289,10 @@ static void setup_signal_handlers(void) {
     sigaction(SIGFPE, &sa, NULL);
     sigaction(SIGBUS, &sa, NULL);
     sigaction(SIGABRT, &sa, NULL);
+    /* SWEEP-011: guest int3 (zoomit64 SW-553 TRAP-133) used to kill the
+     * process with zero diagnostics; now it gets the full crash report
+     * and still exits 133. */
+    sigaction(SIGTRAP, &sa, NULL);
 }
 
 /* ============================================================
@@ -13079,6 +13387,12 @@ int main(int argc, char* argv[]) {
     /* Set up signal handlers */
     setup_signal_handlers();
 
+    /* SWEEP-011: MINWIN_PROFILE=1 arms the SIGPROF guest sampler */
+    mw_prof_start();
+    /* SWEEP-011: load MINWIN_FUNC_MAP eagerly — startup stderr placement,
+     * and getenv stays reliable before any guest-side environment churn */
+    mw_funcmap_load();
+
     /* Set up trace log */
     {
         char trace_path[512];
@@ -13110,7 +13424,23 @@ int main(int argc, char* argv[]) {
              * handlers — close the trace JSON there. _exit() paths
              * (ExitProcess/abort) call mw_trace_shutdown_flush directly. */
             atexit(mw_trace_shutdown_flush);
+            /* SWEEP-011 debugger-speed: 64 KiB stdio buffer instead of a
+             * flush syscall PER MW_TRACE line (breakout: 21,608 lines per
+             * run). Content identical; flushed at every atexit /
+             * ExitProcess / handled-crash path. Loss bounded to 64 KiB on
+             * UNHANDLED signals. MINWIN_TRACE=0 skips the file entirely. */
+            static char mw_trace_iobuf[1 << 16];
+            setvbuf(g_trace_log, mw_trace_iobuf, _IOFBF, sizeof(mw_trace_iobuf));
+            const char* mw_tenv = getenv("MINWIN_TRACE");
+            if (mw_tenv && mw_tenv[0] == '0' && mw_tenv[1] == 0) {
+                fclose(g_trace_log);
+                g_trace_log = NULL;
+                g_trace_disabled = 1;
+                fprintf(stderr, "[TRACE-FILE] disabled (MINWIN_TRACE=0)\n");
+            }
         }
+        /* SWEEP-011: profiler output lands next to api_trace.json */
+        snprintf(g_prof_out_path, sizeof(g_prof_out_path), "%s/profile.json", dir_path);
     }
 
     printf("[MiniWin] Loading %s...\n", exe_path);

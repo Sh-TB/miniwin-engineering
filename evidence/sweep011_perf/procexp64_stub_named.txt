@@ -1,0 +1,3 @@
+[FUNCMAP] /home/z/my-project/workspace/miniwin-engineering/artifacts/sweep011_perf/funcmaps/procexp64.exe.funcs.json: 2938 functions (REA/Ghidra map)
+[FUNCMAP] 2938 functions total (O(log n) lookups)
+[STUB] unresolved import called -> returning 0 (call #1) guest_rip=0x14005cd6c caller=FUN_14005c860+0x50b

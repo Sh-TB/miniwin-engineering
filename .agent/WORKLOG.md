@@ -296,3 +296,32 @@ Stage Summary:
 - Next lever is now singular: DialogBoxIndirectParamW + DLGTEMPLATE +
   mini-hive (SW-509/SW-559 family) unlocks all three Sysinternals gates at
   once. Evidence: evidence/sweep010_ui_init/.
+
+---
+## SWEEP-011 (2026-10-18) — REA-powered speed: wall time + debugger speed
+Task: user directive to maximize REA usage for lower program runtimes and a
+faster debugger.
+Work:
+- Restored the toolchain wiped by the home reset (rea 6.7.0 npm rea-agents,
+  Ghidra 12.1.4 PUBLIC, Temurin JDK 21.0.12.1); foreground downloads (bg
+  processes get killed between tool calls).
+- Baseline battery (13 programs x3, getrusage): guests are ms-fast; costs =
+  per-line trace fflush + per-frame BMPs + 40-90 s per rea query.
+- loader.c: MINWIN_FUNC_MAP symbolizer (merged comma-separated maps, eager
+  load, whitespace-tolerant parser), MINWIN_PROFILE sampler + profile.json,
+  64 KiB trace buffer + MINWIN_TRACE=0, MINWIN_SCREENSHOT=0, SIGTRAP crash
+  report (exit 128+sig: SEGV 139 / ABRT 134 / TRAP 133 unchanged), backtrace
+  walker hardening (return-chain + stack bounds — zoomit64 nested-SEGV fix).
+- Ghidra persistent project funcmap exporter (Java postScript; state-dir
+  import tracking); 10 guest maps + nm engine map; two parser/format bugs
+  caught live (json.dump spaces; silent n==0 path).
+- Battery compare: parity 13/13 exits identical; fast-mode wins breakout -27%
+  / snake -15% / 7za -43% / sqlite3 -44% / t08 -50%; trace lines 21608->2.
+- rea --snapshot warm query 2.0s vs 2m29s cold (74x).
+- G1 re-pin sha 5e81f847 (clean build deterministic — earlier sha drift was
+  an edit/build race, not nondeterminism), regression 12/12; live diagnostics
+  re-verified on the pinned binary (procexp stub caller, puttygen stack
+  names, zoomit 133+report).
+Artifacts: evidence/sweep011_perf/ (README + 4 trimmed evidence files),
+artifacts/sweep011_perf/ (TSVs, COMPARISON.md, funcmaps/), 4 new scripts,
+.gitignore raw-runs exclusion, worklist SW-011 DONE block.

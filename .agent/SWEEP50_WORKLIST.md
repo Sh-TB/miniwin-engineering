@@ -348,3 +348,29 @@ puttygen RIP=0x0).
       PNGs, battery_raw.tsv 105 rows); scripts/sweep007_redownload_gui.py +
       sweep562_battery.sh + sweep562_images.py; exe SHA manifest in
       artifacts/sweep50/sweep007_redownload_manifest.tsv.
+- [x] **SW-011** REA-powered speed sweep — DONE (SWEEP-011): user directive
+      «از rea نهایت استفاده برای کمتر شدن زمان اجرا برنامه‌ها، سرعت دیباگر
+      بهتر بشه». Landed in loader.c (all env-gated, defaults unchanged):
+      (1) MINWIN_FUNC_MAP=<json>[,<json>] O(log n) function-map symbolizer —
+      auto-names [STUB] caller=, [CRASH] [FUNC], [SCAN] stack values,
+      backtrace frames, profiler output; maps built ONCE per PE via
+      persistent Ghidra headless project (scripts/sweep011_funcmap_export.py,
+      Java postScript — Ghidra 12 .py needs PyGhidra) + nm engine map
+      (scripts/sweep011_engine_funcmap.sh, 1070 fns); 10 guest maps in
+      artifacts/sweep011_perf/funcmaps/ (procexp64 2938 fns, ZoomIt64 4958).
+      (2) MINWIN_PROFILE=1 SIGPROF 1 ms sampler -> profile.json top-16
+      symbolized (breakout verdict: mwb_fill/mw_BitBlt pixel loops, not guest
+      code). (3) api_trace.json 64 KiB buffered (was fflush PER line;
+      breakout 21608 lines/run), MINWIN_TRACE=0 opt-out,
+      MINWIN_SCREENSHOT=0 opt-out (381 BMPs/run). (4) SIGTRAP -> full crash
+      report, exit stays 133 (SW-553 zoomit64 int3 now diagnosed:
+      RIP=0x140054c56); backtrace walker follows return chain, stack-bounded.
+      Speeds (median-of-3, artifacts/sweep011_perf/COMPARISON.md): breakout
+      1228->896 ms fast-mode (-27%), snake 102->86 (-15%), 7za 4.7->2.7
+      (-43%), sqlite3 7.0->3.9 (-44%), t08 3.4->1.7 (-50%); parity battery
+      13/13 exit-identical. rea --snapshot: cold 2m29s -> warm 2.0s (74x).
+      G1 re-pinned sha 5e81f847 12/12 (evidence/master/g1/20261018_153005).
+      SW-552 delta: puttygen crash stack machine-named (FUN_1400028b0+0x32
+      WinMain / FUN_140041140+0x106 / entry+0x9). NOTE: toolchain restore
+      after home reset — rea 6.7.0 + Ghidra 12.1.4 + JDK 21.0.12.1 back in
+      place; engine funcmap must be regenerated after every engine rebuild.

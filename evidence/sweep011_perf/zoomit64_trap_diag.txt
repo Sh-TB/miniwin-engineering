@@ -1,0 +1,19 @@
+[FUNCMAP] /home/z/my-project/workspace/miniwin-engineering/artifacts/sweep011_perf/funcmaps/ZoomIt64.exe.funcs.json: 4958 functions (REA/Ghidra map)
+[FUNCMAP] 4958 functions total (O(log n) lookups)
+[CRASH] Signal 5 at RIP=0x140054c56
+  RAX=0x0 RCX=0x7ffc8aeb9e90 RDX=0x7fcf4145a563 R8=0x0 R9=0x0
+  RSP=0x7ffc8aeb8690 RBP=0x7ffc8aeb8890
+  RVA=0x54c56 (inside loaded PE)
+  [SCAN rsp+032] 0x140207b20 <PE>
+  [SCAN rsp+192] 0x140099bb9 <PE>
+  [SCAN rsp+200] 0x140001709 <PE> FUN_140001700+0x9
+  [SCAN rsp+240] 0x140099bb9 <PE>
+  [SCAN rsp+248] 0x14000ecc5 <PE> FUN_14000ea20+0x2a5
+  [SCAN rsp+264] 0x140206ad0 <PE>
+  [SCAN rsp+344] 0x140206ad0 <PE>
+  [SCAN rsp+416] 0x14086cc10 <PE>
+  [SCAN rsp+424] 0x140099bb9 <PE>
+  [SCAN rsp+432] 0x140001709 <PE> FUN_140001700+0x9
+  [SCAN rsp+3080] 0x14086e390 <PE>
+    [0] RIP=0x140054c56 RVA=0x54c56
+      [RSP+0] = 0x0 (return addr?)

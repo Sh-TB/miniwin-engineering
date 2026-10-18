@@ -1,0 +1,7 @@
+[FUNCMAP] /home/z/my-project/workspace/miniwin-engineering/artifacts/sweep011_perf/funcmaps/puttygen.exe.funcs.json: 1435 functions (REA/Ghidra map)
+[FUNCMAP] 1435 functions total (O(log n) lookups)
+[CRASH] Signal 11 at RIP=0x0
+  [SCAN rsp+000] 0x1400028e2 <PE> FUN_1400028b0+0x32
+  [SCAN rsp+096] 0x14005dda4 <PE> FUN_14005dd80+0x24
+  [SCAN rsp+224] 0x140041246 <PE> FUN_140041140+0x106
+  Backtrace (via stack walking):

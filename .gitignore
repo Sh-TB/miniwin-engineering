@@ -57,3 +57,7 @@ artifacts/sweep005/
 
 # SWEEP-006: breakout build outputs + frame dumps stay local (curated into evidence/sweep006_game/)
 artifacts/sweep006/
+
+# SWEEP-011 raw timing runs (BMP-heavy parity captures kept out of git)
+artifacts/sweep011_perf/runs_baseline/
+artifacts/sweep011_perf/runs_fast/

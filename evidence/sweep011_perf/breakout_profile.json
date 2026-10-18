@@ -1,0 +1,21 @@
+{
+  "sampled": 1012,
+  "top": [
+    {"rip": 33772693, "count": 251, "symbol": "mwb_fill+0x65"},
+    {"rip": 33772679, "count": 144, "symbol": "mwb_fill+0x57"},
+    {"rip": 33775123, "count": 108, "symbol": "mw_BitBlt+0x173"},
+    {"rip": 139621193085863, "count": 96, "symbol": "0x7efc179df3a7"},
+    {"rip": 33772670, "count": 87, "symbol": "mwb_fill+0x4e"},
+    {"rip": 33772686, "count": 68, "symbol": "mwb_fill+0x5e"},
+    {"rip": 33772666, "count": 40, "symbol": "mwb_fill+0x4a"},
+    {"rip": 33775082, "count": 23, "symbol": "mw_BitBlt+0x14a"},
+    {"rip": 33775136, "count": 22, "symbol": "mw_BitBlt+0x180"},
+    {"rip": 33775114, "count": 21, "symbol": "mw_BitBlt+0x16a"},
+    {"rip": 33775107, "count": 20, "symbol": "mw_BitBlt+0x163"},
+    {"rip": 33775099, "count": 20, "symbol": "mw_BitBlt+0x15b"},
+    {"rip": 33772689, "count": 18, "symbol": "mwb_fill+0x61"},
+    {"rip": 33775086, "count": 17, "symbol": "mw_BitBlt+0x14e"},
+    {"rip": 33775140, "count": 16, "symbol": "mw_BitBlt+0x184"},
+    {"rip": 33775144, "count": 11, "symbol": "mw_BitBlt+0x188"}
+  ]
+}
