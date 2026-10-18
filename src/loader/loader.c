@@ -790,10 +790,21 @@ __attribute__((ms_abi)) uint32_t mw_GetLastError(void) {
     return err;
 }
 
+static void* mw_known_dll_handle(const char* low); /* SWEEP-012 shared known-DLL lookup */
+
 __attribute__((ms_abi)) void* mw_GetModuleHandleA(const char* name) {
     MW_TRACE("GetModuleHandleA(name=%s)", name ? name : "NULL");
     if (name == NULL || name[0] == '\0') return g_image_base;
-    return NULL;
+    /* SWEEP-012: named system DLLs ARE loaded in this emulation — return the
+     * same pseudo-handles LoadLibraryA hands out (was: NULL for every name,
+     * which made GetProcAddress(NULL, fn) -> NULL -> jmp-rax SIGSEGV at the
+     * guest's late-bound import thunks, e.g. autoruns64 ntdll resolution).
+     * Unknown names still fail honestly (Windows: module not loaded). */
+    char low[64]; size_t k = 0;
+    for (; name[k] && k < sizeof(low) - 1; k++)
+        low[k] = (name[k] >= 'A' && name[k] <= 'Z') ? (char)(name[k] + 32) : name[k];
+    low[k] = 0;
+    return mw_known_dll_handle(low);
 }
 
 /* OPENSRC battery (BUG-057): optional extension APIs (AppPolicy* etc.) that
@@ -805,6 +816,17 @@ __attribute__((ms_abi)) long long mw_winapi_optional_stub(long long a, long long
     return 0;
 }
 __attribute__((ms_abi)) void* mw_GetProcAddress(void* module, const char* name) {
+    /* SWEEP-012: ordinal form — MAKEINTRESOURCEA(n) passes the ordinal in the
+     * POINTER, not a string (autoruns64: GetProcAddress(h, (LPCSTR)0x87);
+     * the old code printed name as %s -> strlen(0x87) -> SEGV in libc). */
+    if ((uintptr_t)name > 0 && (uintptr_t)name <= 0xFFFF) {
+        uintptr_t m = (uintptr_t)module;
+        MW_TRACE("GetProcAddress(module=%p, ordinal=%llu)",
+                 module, (unsigned long long)(uintptr_t)name);
+        if (m >= 0xdead0001 && m <= 0xdead00ff)
+            return (void*)&mw_winapi_optional_stub; /* known system module */
+        return NULL; /* our image: ordinal-only exports unsupported (honest) */
+    }
     MW_TRACE("GetProcAddress(module=%p, name=%s)", module, name ? name : "NULL");
     if (!name || !name[0]) return NULL;
     /* Resolve from dispatch table if module matches our fake handle or image base.
@@ -825,45 +847,54 @@ __attribute__((ms_abi)) void* mw_GetProcAddress(void* module, const char* name) 
     return NULL;
 }
 
+/* SWEEP-012: shared known-system-DLL table (was: static inside LoadLibraryA).
+ * GetModuleHandleA/W must hand out the SAME pseudo-handles — guests late-bind
+ * through GetModuleHandle + GetProcAddress and a NULL here is a crash. */
+static const char* g_known_dlls[] = {
+    "kernel32.dll", "user32.dll", "gdi32.dll", "shell32.dll", "advapi32.dll",
+    "ole32.dll", "oleaut32.dll", "ntdll.dll", "ws2_32.dll", "msvcrt.dll",
+    "ucrtbase.dll", "comctl32.dll", "comdlg32.dll", "version.dll", "crypt32.dll",
+    "secur32.dll", "normaliz.dll", "iphlpapi.dll", "winmm.dll", "shlwapi.dll",
+    "winspool.drv", "dnsapi.dll", "mswsock.dll", "powrprof.dll", "sechost.dll",
+    "bcrypt.dll", "ncrypt.dll", "userenv.dll", "dbghelp.dll", "psapi.dll",
+    "mscoree.dll", "kernelbase.dll", "appmodel.dll", "cryptbase.dll",
+    "sspicli.dll", "rpcrt4.dll", "uxtheme.dll", "apphelp.dll", "sxs.dll",
+    "msvcp140.dll", "vcruntime140.dll", "wintrust.dll", "cabinet.dll",
+    "imagehlp.dll", "msimg32.dll", "opengl32.dll", "glu32.dll", "dwmapi.dll",
+    "gdiplus.dll", "windowscodecs.dll", "propsys.dll", "setupapi.dll",
+    "cfgmgr32.dll", "devobj.dll", "winusb.dll", "hid.dll", "ws2help.dll",
+    "bcryptprimitives.dll", /* SWEEP-002: Go runtime.osinit + Rust std */
+};
+static void* mw_known_dll_handle(const char* low) {
+    size_t nl = strlen(low);
+    /* api-ms-win-* API-set names are OS-guaranteed redirections — always
+     * "present" (sqlite3 loads api-ms-win-appmodel-runtime-l1-1-2 during
+     * winOpen; failure aborts its DB-open path). */
+    if (nl >= 10 && memcmp(low, "api-ms-win", 10) == 0)
+        return (void*)(uintptr_t)0xdead0002;
+    for (size_t i = 0; i < sizeof(g_known_dlls)/sizeof(g_known_dlls[0]); i++) {
+        size_t kl = strlen(g_known_dlls[i]);
+        if (nl == kl && memcmp(low, g_known_dlls[i], kl) == 0)
+            return (void*)(uintptr_t)(0xdead0001 + (uintptr_t)i);
+        if (nl + 1 == kl && memcmp(low, g_known_dlls[i], nl) == 0 && g_known_dlls[i][nl] == '.')
+            return (void*)(uintptr_t)(0xdead0001 + (uintptr_t)i); /* no-ext form */
+    }
+    return NULL;
+}
+
 __attribute__((ms_abi)) void* mw_LoadLibraryA(const char* name) {
     MW_TRACE("LoadLibraryA(%s)", name ? name : "NULL");
     /* Known system DLLs (case-insensitive, extension optional): pseudo-
      * handle identities. GetProcAddress resolves against our dispatch
      * table (g_resolve_proc_fn). Unknown DLLs fail with ERROR 126 — the
      * honest Windows answer for a DLL the loader cannot materialize. */
-    static const char* known[] = {
-        "kernel32.dll", "user32.dll", "gdi32.dll", "shell32.dll", "advapi32.dll",
-        "ole32.dll", "oleaut32.dll", "ntdll.dll", "ws2_32.dll", "msvcrt.dll",
-        "ucrtbase.dll", "comctl32.dll", "comdlg32.dll", "version.dll", "crypt32.dll",
-        "secur32.dll", "normaliz.dll", "iphlpapi.dll", "winmm.dll", "shlwapi.dll",
-        "winspool.drv", "dnsapi.dll", "mswsock.dll", "powrprof.dll", "sechost.dll",
-        "bcrypt.dll", "ncrypt.dll", "userenv.dll", "dbghelp.dll", "psapi.dll",
-        "mscoree.dll", "kernelbase.dll", "appmodel.dll", "cryptbase.dll",
-        "sspicli.dll", "rpcrt4.dll", "uxtheme.dll", "apphelp.dll", "sxs.dll",
-        "msvcp140.dll", "vcruntime140.dll", "wintrust.dll", "cabinet.dll",
-        "imagehlp.dll", "msimg32.dll", "opengl32.dll", "glu32.dll", "dwmapi.dll",
-        "gdiplus.dll", "windowscodecs.dll", "propsys.dll", "setupapi.dll",
-        "cfgmgr32.dll", "devobj.dll", "winusb.dll", "hid.dll", "ws2help.dll",
-        "bcryptprimitives.dll", /* SWEEP-002: Go runtime.osinit + Rust std */
-    };
     if (name && name[0]) {
         char low[64]; size_t k = 0;
         for (; name[k] && k < sizeof(low) - 1; k++)
             low[k] = (name[k] >= 'A' && name[k] <= 'Z') ? (char)(name[k] + 32) : name[k];
         low[k] = 0;
-        size_t nl = strlen(low);
-        /* api-ms-win-* API-set names are OS-guaranteed redirections — always
-         * "present" (sqlite3 loads api-ms-win-appmodel-runtime-l1-1-2 during
-         * winOpen; failure aborts its DB-open path). */
-        if (nl >= 10 && memcmp(low, "api-ms-win", 10) == 0)
-            return (void*)(uintptr_t)0xdead0002;
-        for (size_t i = 0; i < sizeof(known)/sizeof(known[0]); i++) {
-            size_t kl = strlen(known[i]);
-            if (nl == kl && memcmp(low, known[i], kl) == 0)
-                return (void*)(uintptr_t)(0xdead0001 + (uintptr_t)i);
-            if (nl + 1 == kl && memcmp(low, known[i], nl) == 0 && known[i][nl] == '.')
-                return (void*)(uintptr_t)(0xdead0001 + (uintptr_t)i); /* no-ext form */
-        }
+        void* h = mw_known_dll_handle(low);
+        if (h) return h;
         mw_SetLastError(126);
         return NULL;
     }
@@ -4118,6 +4149,8 @@ __attribute__((ms_abi)) int mw___getmainargs(int* pargc, char*** pargv, char*** 
     return 0;
 }
 
+/* SWEEP-012: __wgetmainargs lives with the UCRT wide-argv block (needs
+ * g_wargv_arr/g_wenv_arr) — see mw___p___wargv below. */
 __attribute__((ms_abi)) int mw___lconv_init(void) {
     MW_TRACE("__lconv_init()");
     localeconv(); /* initialize locale data */
@@ -5469,10 +5502,21 @@ __attribute__((ms_abi)) void mw_RtlRestoreContext(void* ctx, void* exc) {
 }
 
 /* ---- misc kernel32 ---- */
-__attribute__((ms_abi)) void* mw_GetModuleHandleW(const wchar_t* name) {
+__attribute__((ms_abi)) void* mw_GetModuleHandleW(const uint16_t* name) {
     MW_TRACE("GetModuleHandleW()");
     if (name == NULL || name[0] == 0) return g_image_base;
-    return NULL;
+    /* SWEEP-012: same contract as the A variant — system DLLs are loaded.
+     * Windows wchar_t = 2 bytes (UTF-16), so the parameter is uint16_t* —
+     * the old wchar_t* stub read 4-byte units and mangled 'kernel32.dll'
+     * into 'kre3.l' (found via [DBG-GMHW] name trace). */
+    char low[64]; size_t k = 0;
+    for (; name[k] && k < sizeof(low) - 1; k++) {
+        uint16_t c = name[k];
+        if (c >= 128) return NULL; /* non-ASCII system-DLL names don't exist here */
+        low[k] = (c >= 'A' && c <= 'Z') ? (char)(c + 32) : (char)c;
+    }
+    low[k] = 0;
+    return mw_known_dll_handle(low);
 }
 __attribute__((ms_abi)) uint32_t mw_GetThreadId(void* h) {
     (void)h;
@@ -9815,6 +9859,20 @@ __attribute__((ms_abi)) void** mw___p___wargv(void) {
     return &g_wargv_cell;
 }
 __attribute__((ms_abi)) int mw__configure_wide_argv(int mode) { (void)mode; return 0; }
+/* SWEEP-012: wide CRT-startup sibling of __getmainargs (msvcrt.dll).
+ * SearchMyFiles/NirSoft-era MSVC guests CRT-init through __wgetmainargs;
+ * all plumbing already exists (build_wargv_wenv: UCRT __wargv/__wenviron
+ * semantics). Returns 0 = success, fills argc/wargv/wenv out-params. */
+__attribute__((ms_abi)) int mw___wgetmainargs(int* pargc, uint16_t*** pwargv,
+    uint16_t*** pwenv, int dowildcard, void* startup) {
+    (void)dowildcard; (void)startup;
+    build_wargv_wenv();
+    MW_TRACE("__wgetmainargs(argc=%p, wargv=%p, wenv=%p)", pargc, pwargv, pwenv);
+    if (pargc) *pargc = g_argc;
+    if (pwargv) *pwargv = (uint16_t**)g_wargv_arr;
+    if (pwenv) *pwenv = (uint16_t**)g_wenv_arr;
+    return 0;
+}
 __attribute__((ms_abi)) int mw__initialize_wide_environment(void) { return 0; }
 __attribute__((ms_abi)) int mw__crt_at_quick_exit(void* fn) { (void)fn; return 0; }
 __attribute__((ms_abi)) char* mw_setlocale_bridge(int cat, const char* loc) {
@@ -11571,6 +11629,274 @@ __attribute__((ms_abi)) int mw_BitBlt(void* hdcDst, int x, int y, int w, int h,
     return 1;
 }
 
+/* ============================================================
+ * SWEEP-012 (2026-10-18): honest-stub batch #2 — program-count driven.
+ * Evidence: artifacts/sweep012/runs-BASELINE (51 programs, progress.json).
+ * Every function here unblocks ≥1 program of the 51-program pool; policy
+ * per function is stated and honest (no fabricated success states beyond
+ * what a headless session legitimately means).
+ *
+ * Dialog protocol (SW-509/SW-559 first slice): we cannot run a real modal
+ * loop (no windowing), but we CAN run the honest dialog MESSAGE PROTOCOL:
+ *   1. WM_INITDIALOG (0x0110) -> dlgproc(hwnd, WM_INITDIALOG, 0, lParam)
+ *   2. WM_COMMAND   (0x0111) -> dlgproc(hwnd, WM_COMMAND, MAKEWPARAM(IDOK=1,0), 0)
+ *      = "the (virtual) headless user pressed OK"
+ *   3. result = whatever the proc passed to EndDialog (recorded here),
+ *      defaulting to IDOK(1) if it never did (headless: dialog must close).
+ * This lets Sysinternals EULA procs run their real init + accept path
+ * (SetDlgItemText/checkbox reads resolve-or-stub honestly at 0).
+ * ============================================================ */
+static int g_dialog_result = 0;
+#define MWWM_INITDIALOG 0x0110u
+#define MWWM_COMMAND    0x0111u
+#define MW_IDOK         1
+
+typedef int (__attribute__((ms_abi)) *MwDlgProc)(void* hwnd, uint32_t msg,
+                                                 uintptr_t wp, intptr_t lp);
+static int mw_dialog_run(MwDlgProc proc, intptr_t init_param) {
+    if (!proc) return MW_IDOK;
+    void* hwnd = (void*)(uintptr_t)0x00010001; /* pseudo-HWND (house style) */
+    g_dialog_result = 0;
+    MW_TRACE("Dialog: WM_INITDIALOG proc=%p", (void*)proc);
+    proc(hwnd, MWWM_INITDIALOG, 0, init_param);
+    MW_TRACE("Dialog: WM_COMMAND(IDOK) proc=%p", (void*)proc);
+    proc(hwnd, MWWM_COMMAND, (uintptr_t)MW_IDOK, 0); /* lparam = control hwnd = none */
+    return g_dialog_result ? g_dialog_result : MW_IDOK;
+}
+__attribute__((ms_abi)) int mw_EndDialog(void* hwnd, intptr_t result) {
+    (void)hwnd;
+    g_dialog_result = (int)result;
+    MW_TRACE("EndDialog(result=%lld)", (long long)result);
+    return 1; /* TRUE */
+}
+__attribute__((ms_abi)) intptr_t mw_DialogBoxIndirectParamW(void* hinst,
+        const void* tmpl, void* parent, MwDlgProc proc, intptr_t init) {
+    (void)hinst; (void)tmpl; (void)parent;
+    MW_TRACE("DialogBoxIndirectParamW(proc=%p, init=%lld)", (void*)proc, (long long)init);
+    return mw_dialog_run(proc, init);
+}
+__attribute__((ms_abi)) intptr_t mw_DialogBoxIndirectParamA(void* hinst,
+        const void* tmpl, void* parent, MwDlgProc proc, intptr_t init) {
+    (void)hinst; (void)tmpl; (void)parent;
+    MW_TRACE("DialogBoxIndirectParamA(proc=%p, init=%lld)", (void*)proc, (long long)init);
+    return mw_dialog_run(proc, init);
+}
+__attribute__((ms_abi)) intptr_t mw_DialogBoxParamW(void* hinst,
+        const uint16_t* name, void* parent, MwDlgProc proc, intptr_t init) {
+    (void)hinst; (void)name; (void)parent;
+    MW_TRACE("DialogBoxParamW(name=%p, proc=%p)", (const void*)name, (void*)proc);
+    return mw_dialog_run(proc, init);
+}
+__attribute__((ms_abi)) intptr_t mw_DialogBoxParamA(void* hinst,
+        const char* name, void* parent, MwDlgProc proc, intptr_t init) {
+    (void)hinst; (void)name; (void)parent;
+    MW_TRACE("DialogBoxParamA(name=%p, proc=%p)", (const void*)name, (void*)proc);
+    return mw_dialog_run(proc, init);
+}
+
+/* ---- COM initialization (ole32.dll). Headless-honest policy: STA init
+ * succeeds (single thread, no apartment contention is possible); init/
+ * uninit calls are balanced no-ops. CoCreateInstance family stays
+ * unresolved until a gate demands it (honest 0 = failure there). ---- */
+__attribute__((ms_abi)) uint32_t mw_CoInitialize(void* reserved) {
+    (void)reserved; MW_TRACE("CoInitialize() -> S_OK"); return 0; /* S_OK */
+}
+__attribute__((ms_abi)) uint32_t mw_CoInitializeEx(void* reserved, uint32_t model) {
+    (void)reserved; MW_TRACE("CoInitializeEx(model=%#x) -> S_OK", model); return 0;
+}
+__attribute__((ms_abi)) uint32_t mw_OleInitialize(void* reserved) {
+    (void)reserved; MW_TRACE("OleInitialize() -> S_OK"); return 0;
+}
+__attribute__((ms_abi)) void mw_CoUninitialize(void) { MW_TRACE("CoUninitialize()"); }
+__attribute__((ms_abi)) void mw_OleUninitialize(void) { MW_TRACE("OleUninitialize()"); }
+
+/* ---- version.dll: version-resource reads. Honest policy: report the
+ * resource as ABSENT (size 0 / FALSE) instead of fabricating VS_VERSIONINFO
+ * — callers must tolerate missing version info on Windows too. ---- */
+__attribute__((ms_abi)) uint32_t mw_GetFileVersionInfoSizeW(const uint16_t* path, void* handle) {
+    (void)path; if (handle) *(uint32_t*)handle = 0;
+    MW_TRACE("GetFileVersionInfoSizeW() -> 0 (no version resource)");
+    return 0;
+}
+__attribute__((ms_abi)) int mw_GetFileVersionInfoW(const uint16_t* path, uint32_t reserved,
+        uint32_t len, void* buf) {
+    (void)path; (void)reserved; (void)len; (void)buf;
+    MW_TRACE("GetFileVersionInfoW() -> FALSE");
+    return 0;
+}
+__attribute__((ms_abi)) int mw_VerQueryValueW(const void* block, const uint16_t* sub,
+        void** buf, uint32_t* len) {
+    (void)block; (void)sub;
+    if (buf) *buf = NULL;
+    if (len) *len = 0;
+    MW_TRACE("VerQueryValueW() -> FALSE");
+    return 0;
+}
+
+/* ---- user32 misc. RegisterWindowMessage/RegisterClipboardFormat return a
+ * unique 0xC000..0xFFFF identifier per docs (same range as atoms). Stock
+ * objects: GetSysColorBrush hands out 0x0004_00xx handles that FillRect
+ * already consumes (SWEEP-005 stock-brush encoding). PostMessage drops
+ * into our message-free pump: TRUE = accepted (PeekMessage guests poll
+ * their own queues; nothing blocks). ---- */
+static uint32_t g_regmsg_next = 0xC000, g_regclip_next = 0xC000;
+__attribute__((ms_abi)) uint32_t mw_RegisterWindowMessageW(const uint16_t* name) {
+    MW_TRACE("RegisterWindowMessageW() -> %#x", g_regmsg_next);
+    return g_regmsg_next++ < 0xFFFF ? g_regmsg_next - 1 : (g_regmsg_next = 0xC000);
+}
+__attribute__((ms_abi)) uint32_t mw_RegisterClipboardFormatW(const uint16_t* name) {
+    MW_TRACE("RegisterClipboardFormatW() -> %#x", g_regclip_next);
+    return g_regclip_next++ < 0xFFFF ? g_regclip_next - 1 : (g_regclip_next = 0xC000);
+}
+__attribute__((ms_abi)) void* mw_GetSysColorBrush(int idx) {
+    MW_TRACE("GetSysColorBrush(%d) -> stock %#x", idx, 0x00040000u | (idx & 0xFF));
+    return (void*)(uintptr_t)(0x00040000u | (idx & 0xFF));
+}
+__attribute__((ms_abi)) void* mw_GetWindowDC(void* hwnd) {
+    (void)hwnd; MW_TRACE("GetWindowDC() -> screen DC");
+    return (void*)0x00020001; /* same pseudo-DC as GetDC (whole-window = screen here) */
+}
+__attribute__((ms_abi)) int mw_GetCursorPos(void* pt) {
+    if (pt) { int32_t* p = (int32_t*)pt; p[0] = 0; p[1] = 0; } /* origin: headless cursor */
+    MW_TRACE("GetCursorPos() -> (0,0) TRUE");
+    return 1;
+}
+__attribute__((ms_abi)) int mw_PostMessageA(void* hwnd, uint32_t msg, uintptr_t wp, intptr_t lp) {
+    (void)hwnd; (void)msg; (void)wp; (void)lp;
+    MW_TRACE("PostMessageA(msg=%#x) dropped (headless) -> TRUE", msg);
+    return 1;
+}
+__attribute__((ms_abi)) int mw_PostMessageW(void* hwnd, uint32_t msg, uintptr_t wp, intptr_t lp) {
+    (void)hwnd; (void)msg; (void)wp; (void)lp;
+    MW_TRACE("PostMessageW(msg=%#x) dropped (headless) -> TRUE", msg);
+    return 1;
+}
+__attribute__((ms_abi)) void* mw_LoadAcceleratorsA(void* hinst, const char* name) {
+    (void)hinst; (void)name;
+    MW_TRACE("LoadAcceleratorsA() -> NULL (no accelerators; optional sugar)");
+    return NULL;
+}
+__attribute__((ms_abi)) void* mw_LoadAcceleratorsW(void* hinst, const uint16_t* name) {
+    (void)hinst; (void)name;
+    MW_TRACE("LoadAcceleratorsW() -> NULL (no accelerators; optional sugar)");
+    return NULL;
+}
+__attribute__((ms_abi)) int mw_GetDialogBaseUnits(void) {
+    /* default GUI font: 8 px horizontal, 16 px vertical (MAKELONG(8,16)) */
+    MW_TRACE("GetDialogBaseUnits() -> 0x00100008");
+    return (int)0x00100008u;
+}
+__attribute__((ms_abi)) int mw_LookupAccountNameW(const uint16_t* sys, const uint16_t* acct,
+        void* sid, uint32_t* cbsid, uint16_t* dom, uint32_t* cbdom, void* use) {
+    (void)sys; (void)acct; (void)sid; (void)cbsid; (void)dom; (void)cbdom; (void)use;
+    MW_TRACE("LookupAccountNameW() -> FALSE (ERROR_NONE_MAPPED=1332)");
+    mw_SetLastError(1332);
+    return 0;
+}
+__attribute__((ms_abi)) int mw_SystemParametersInfoW(uint32_t action, uint32_t param,
+        void* pv, uint32_t ini) {
+    (void)action; (void)param; (void)pv; (void)ini;
+    MW_TRACE("SystemParametersInfoW(action=%#x) -> FALSE (unsupported; caller falls back)", action);
+    return 0;
+}
+
+/* SWEEP-012 (round 2, AFTER-sweep evidence): procexp64 loops 11x on MulDiv
+ * right past the EULA gate. Pure math with a 64-bit intermediate — that IS
+ * the API's documented purpose (avoid 32-bit overflow). Wine-compatible
+ * rounding: add denominator/2 adjusted by sign, then truncate. */
+__attribute__((ms_abi)) int32_t mw_MulDiv(int32_t a, int32_t b, int32_t den) {
+    if (den == 0) { mw_SetLastError(158 /*ERROR_INTEGER_OVERFLOW*/); return -1; }
+    int64_t half = (den >= 0) ? (int64_t)(den / 2) : -((int64_t)(-den) / 2);
+    int64_t v = ((int64_t)a * b + half) / den;
+    if (v > 0x7FFFFFFF) { mw_SetLastError(158); return -1; }
+    if (v < -0x80000000LL) { mw_SetLastError(158); return -1; }
+    return (int32_t)v;
+}
+/* user32!LoadStringW/A — honest "resource absent": return 0, empty string.
+ * Callers fall back to hardcoded text when the resource is missing. */
+__attribute__((ms_abi)) int mw_LoadStringW(void* hinst, uint32_t id, uint16_t* buf, int cch) {
+    (void)hinst; (void)id;
+    if (buf && cch > 0) buf[0] = 0;
+    MW_TRACE("LoadStringW(id=%u) -> 0 (resource absent)", id);
+    return 0;
+}
+__attribute__((ms_abi)) int mw_LoadStringA(void* hinst, uint32_t id, char* buf, int cch) {
+    (void)hinst; (void)id;
+    if (buf && cch > 0) buf[0] = 0;
+    MW_TRACE("LoadStringA(id=%u) -> 0 (resource absent)", id);
+    return 0;
+}
+/* user32!SetWindowsHookExW/A — no hook machinery: honest NULL = "hook not
+ * installed" (callers proceed unhooked, same as a failed install on Win). */
+__attribute__((ms_abi)) void* mw_SetWindowsHookExW(int idhook, void* proc, void* hmod, uint32_t tid) {
+    (void)idhook; (void)proc; (void)hmod; (void)tid;
+    MW_TRACE("SetWindowsHookExW(%d) -> NULL (no hook machinery)", idhook);
+    return NULL;
+}
+__attribute__((ms_abi)) void* mw_SetWindowsHookExA(int idhook, void* proc, void* hmod, uint32_t tid) {
+    (void)idhook; (void)proc; (void)hmod; (void)tid;
+    MW_TRACE("SetWindowsHookExA(%d) -> NULL (no hook machinery)", idhook);
+    return NULL;
+}
+__attribute__((ms_abi)) int mw_UnhookWindowsHookEx(void* hhk) {
+    (void)hhk; return 1; /* idempotent success */
+}
+/* advapi32!RegDeleteKeyW — our registry has no persistent keys for guests
+ * that never created one: ERROR_FILE_NOT_FOUND (2) is the honest answer. */
+__attribute__((ms_abi)) uint32_t mw_RegDeleteKeyW(void* key, const uint16_t* sub) {
+    (void)key; (void)sub;
+    MW_TRACE("RegDeleteKeyW() -> ERROR_FILE_NOT_FOUND");
+    return 2;
+}
+
+/* ---- kernel32 locale / sync / heap ----
+ * GetUserDefaultLangID already exists (line ~7064, returns 0x0409). */
+__attribute__((ms_abi)) uint16_t mw_GetSystemDefaultLangID(void) {
+    MW_TRACE("GetSystemDefaultLangID() -> 0x0409 (en-US)"); return 0x0409;
+}
+
+/* SWEEP-012: ntdll!RtlGetVersion — autoruns64 (and most Sysinternals) probe
+ * the real version through ntdll late-binding (GetModuleHandleW(L"ntdll.dll")
+ * -> GetProcAddress("RtlGetVersion") -> jmp-rax thunk); with the optional
+ * stub returning 0 and the buffer untouched, the guest branched on garbage
+ * and crashed in libc string code. Fill the honest OSVERSIONINFOW/EXW
+ * image (same version image as mw_GetVersionExW above): Windows 10,
+ * VER_PLATFORM_WIN32_NT. dwBuildNumber 19045 (22H2) keeps build-range
+ * checks (>= 17763 Server2019, >= 19041 Win10 2004) on the true path. */
+__attribute__((ms_abi)) uint32_t mw_RtlGetVersion(void* vi) {
+    if (vi) {
+        /* NT's RtlGetVersion tolerates an uninitialized dwOSVersionInfoSize
+         * (autoruns64 calls it with stack garbage in the field — live crash
+         * evidence). Clamp to the two real struct sizes and fill honestly. */
+        uint32_t sz = *(uint32_t*)vi;
+        if (sz < 276 || sz > 284) sz = 276; /* OSVERSIONINFOW .. OSVERSIONINFOEXW */
+        memset(vi, 0, sz);
+        *(uint32_t*)vi = sz;
+        uint8_t* p = (uint8_t*)vi;
+        *(uint32_t*)(p + 4)  = 10; *(uint32_t*)(p + 8) = 0;
+        *(uint32_t*)(p + 12) = 19045;             /* dwBuildNumber: Win10 22H2 */
+        *(uint32_t*)(p + 16) = 2;                 /* VER_PLATFORM_WIN32_NT */
+        /* OSVERSIONINFOEXW extras (wServicePackMajor..wProductType) stay 0
+         * via the memset — honest for a fully-patched Win10. */
+    }
+    MW_TRACE("RtlGetVersion() -> 10.0.19045 (Win10 22H2)");
+    return 0; /* STATUS_SUCCESS */
+}
+__attribute__((ms_abi)) void* mw_CreateMutexExW(void* attr, const uint16_t* name,
+        uint32_t flags, uint32_t access) {
+    (void)access;
+    MW_TRACE("CreateMutexExW(name=%p, flags=%#x)", (const void*)name, flags);
+    return mw_CreateMutexW(attr, (int)(flags & 0x1u) /*INITIAL_OWNER*/, name);
+}
+__attribute__((ms_abi)) void* mw_CreateEventExW(void* attr, const uint16_t* name,
+        uint32_t flags, uint32_t access) {
+    (void)access;
+    MW_TRACE("CreateEventExW(name=%p, flags=%#x)", (const void*)name, flags);
+    /* CREATE_EVENT_MANUAL_RESET=0x1, CREATE_EVENT_INITIAL_SET=0x2 */
+    return mw_CreateEventW(attr, (int)(flags & 0x1u), (int)((flags >> 1) & 0x1u),
+                           (const wchar_t*)name);
+}
+
 static ImportEntry g_import_table[] = {
     /* KERNEL32.DLL */
     ENTRY("KERNEL32.DLL", "AddVectoredExceptionHandler",        mw_AddVectoredExceptionHandler),
@@ -12587,6 +12913,52 @@ ENTRY("msvcrt.dll", "wctype", mw_wctype),
     ENTRY("shlwapi.dll", "ColorRGBToHLS",                       mw_ColorRGBToHLS),
     ENTRY("shlwapi.dll", "ColorHLSToRGB",                       mw_ColorHLSToRGB),
 
+    /* ---- SWEEP-012 honest batch #2 (program-count driven; see block above) ---- */
+    /* dialog protocol (autoruns64/procexp64/procmon64/coreinfo64/diskmon64) */
+    ENTRY("USER32.DLL", "DialogBoxIndirectParamW",              mw_DialogBoxIndirectParamW),
+    ENTRY("USER32.DLL", "DialogBoxIndirectParamA",              mw_DialogBoxIndirectParamA),
+    ENTRY("USER32.DLL", "DialogBoxParamW",                      mw_DialogBoxParamW),
+    ENTRY("USER32.DLL", "DialogBoxParamA",                      mw_DialogBoxParamA),
+    ENTRY("USER32.DLL", "EndDialog",                            mw_EndDialog),
+    /* COM init family (produkey/putty/7z2604/7zFM/7zG/autoruns64) */
+    ENTRY("ole32.dll", "CoInitialize",                          mw_CoInitialize),
+    ENTRY("ole32.dll", "CoInitializeEx",                        mw_CoInitializeEx),
+    ENTRY("ole32.dll", "OleInitialize",                         mw_OleInitialize),
+    ENTRY("ole32.dll", "CoUninitialize",                        mw_CoUninitialize),
+    ENTRY("ole32.dll", "OleUninitialize",                       mw_OleUninitialize),
+    /* version resource (coreinfo64) */
+    ENTRY("version.dll", "GetFileVersionInfoSizeW",             mw_GetFileVersionInfoSizeW),
+    ENTRY("version.dll", "GetFileVersionInfoW",                 mw_GetFileVersionInfoW),
+    ENTRY("version.dll", "VerQueryValueW",                      mw_VerQueryValueW),
+    /* user32 misc (bginfo64/winmergeu/produkey/7zFM) */
+    ENTRY("USER32.DLL", "RegisterWindowMessageW",               mw_RegisterWindowMessageW),
+    ENTRY("USER32.DLL", "RegisterClipboardFormatW",             mw_RegisterClipboardFormatW),
+    ENTRY("USER32.DLL", "GetSysColorBrush",                     mw_GetSysColorBrush),
+    ENTRY("USER32.DLL", "GetWindowDC",                          mw_GetWindowDC),
+    ENTRY("USER32.DLL", "GetCursorPos",                         mw_GetCursorPos),
+    ENTRY("USER32.DLL", "PostMessageA",                         mw_PostMessageA),
+    ENTRY("USER32.DLL", "PostMessageW",                         mw_PostMessageW),
+    ENTRY("USER32.DLL", "LoadAcceleratorsA",                    mw_LoadAcceleratorsA),
+    ENTRY("USER32.DLL", "LoadAcceleratorsW",                    mw_LoadAcceleratorsW),
+    ENTRY("USER32.DLL", "GetDialogBaseUnits",                   mw_GetDialogBaseUnits),
+    ENTRY("USER32.DLL", "LookupAccountNameW",                   mw_LookupAccountNameW),
+    ENTRY("USER32.DLL", "SystemParametersInfoW",                mw_SystemParametersInfoW),
+    /* kernel32 (zoomit64/7zFM/7zG) — GetUserDefaultLangID entry already exists */
+    ENTRY("KERNEL32.DLL", "GetSystemDefaultLangID",             mw_GetSystemDefaultLangID),
+    ENTRY("KERNEL32.DLL", "CreateMutexExW",                     mw_CreateMutexExW),
+    ENTRY("KERNEL32.DLL", "CreateEventExW",                     mw_CreateEventExW),
+    /* ntdll late-bound (autoruns64/Sysinternals RtlGetVersion probe) */
+    ENTRY("ntdll.dll", "RtlGetVersion",                         mw_RtlGetVersion),
+    /* SWEEP-012 round 2 (procexp64 past-EULA loop: MulDiv x11 etc.) */
+    ENTRY("KERNEL32.DLL", "MulDiv",                             mw_MulDiv),
+    ENTRY("USER32.DLL", "LoadStringW",                          mw_LoadStringW),
+    ENTRY("USER32.DLL", "LoadStringA",                          mw_LoadStringA),
+    ENTRY("USER32.DLL", "SetWindowsHookExW",                    mw_SetWindowsHookExW),
+    ENTRY("USER32.DLL", "SetWindowsHookExA",                    mw_SetWindowsHookExA),
+    ENTRY("USER32.DLL", "UnhookWindowsHookEx",                  mw_UnhookWindowsHookEx),
+    ENTRY("advapi32.dll", "RegDeleteKeyW",                      mw_RegDeleteKeyW),
+    /* msvcrt wide CRT init (searchmyfiles + NirSoft family) */
+    ENTRY("msvcrt.dll", "__wgetmainargs",                       mw___wgetmainargs),
 };
 
 #define NUM_IMPORTS (sizeof(g_import_table) / sizeof(g_import_table[0]))

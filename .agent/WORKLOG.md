@@ -325,3 +325,23 @@ Work:
 Artifacts: evidence/sweep011_perf/ (README + 4 trimmed evidence files),
 artifacts/sweep011_perf/ (TSVs, COMPARISON.md, funcmaps/), 4 new scripts,
 .gitignore raw-runs exclusion, worklist SW-011 DONE block.
+
+---
+Task ID: SWEEP-012
+Agent: Super Z (main agent)
+Task: User directive 2026-10-18: "از اون لیست ۱۰۰ نرم افزاری هر چی میتونی تست بکن، ببین چقدر پیشرفت اجرا داشتن — تغییرات بدون پیشرفت ارزشی نداره" (test as many of the 100-program list as available; measure EXECUTION PROGRESS; changes without progress are worthless).
+
+Work Log:
+- Built scripts/sweep012_progsweep.sh (full-pool discovery, resumable, MINWIN_SCREENSHOT=0, api_trace ON) + scripts/sweep012_progress.py (guest_rip -> dll!import decoder via FF15/disp32/IAT + progress score 0..5 + named-gate clusterer + before/after differ).
+- Pool: 51 real binaries (sweep50/dl Sysinternals+NirSoft+PuTTY, opensource sqlite/7z/jq, samples md5deep/zstd/lz4/gzip, games, UPX).
+- BASELINE: 15 RAN-OUTPUT / 12 STUB-GATE / 13 CRASH-GUEST / 11 LOAD-REJECT, mean_score 2.69 (runs-BASELINE/progress.json).
+- Honest batch #1 (program-count driven): dialog protocol (DialogBoxIndirectParamA/W + DialogBoxParamA/W run WM_INITDIALOG then WM_COMMAND(IDOK) then return EndDialog's code; EndDialog entry), COM init family (CoInitialize/Ex, OleInitialize, CoUninitialize, OleUninitialize -> S_OK/no-op), version.dll honest-absent trio, user32 misc (RegisterWindowMessageW/RegisterClipboardFormatW 0xC000-range, GetSysColorBrush stock-handle 0x0004xx, GetWindowDC, GetCursorPos, PostMessageA/W, LoadAcceleratorsA/W, GetDialogBaseUnits, LookupAccountNameW FALSE+1332, SystemParametersInfoW FALSE), kernel32 (GetSystemDefaultLangID, CreateMutexExW, CreateEventExW), msvcrt __wgetmainargs (wide CRT init over existing build_wargv_wenv).
+- LIVE DIAGNOSIS (autoruns64 EULA path, REA decompile FUN_140062810 confirmed): crash RIP=0 at guest jmp-rax thunk. Root cause chain: (1) GetModuleHandleW returned NULL for EVERY named module -> GetProcAddress(NULL,"RtlGetVersion")=NULL -> jmp 0; (2) after pseudo-handle fix, next crash = GetProcAddress(h,(LPCSTR)0x87) ORDINAL form printed as %s -> strlen(0x87) SEGV in libc -> ordinal branch added; (3) next crash = mw_RtlGetVersion read garbage dwOSVersionInfoSize -> memset(140TB) -> clamped 276..284. ALSO: GetModuleHandleW took Linux wchar_t (4-byte) while guests pass UTF-16 (2-byte) — 'kernel32.dll' mangled to 'kre3.l' (found via temp [DBG-GMHW] trace) — fixed to uint16_t*.
+- Added ntdll!RtlGetVersion (10.0.19045 / VER_PLATFORM_WIN32_NT, size-clamped) + round 2 from AFTER-sweep gates: MulDiv (64-bit intermediate, Wine rounding), LoadStringA/W (resource-absent 0), SetWindowsHookExA/W (NULL), UnhookWindowsHookEx (TRUE), RegDeleteKeyW (ERROR_FILE_NOT_FOUND).
+- AFTER: mean_score 2.69->2.71; RAN-OUTPUT 15->16; STUB-GATE 12->10; wins: autoruns64 exit 1 (EULA-refused) -> EXIT 0 full run (15 stubs, 3x deterministic), zoomit64 crash 133 -> EXIT 0 (9 stubs, 3x deterministic), putty resolved to own exit, Bginfo64/WinMergeU/ProduKey/7zFM/7zG gates cleared; deeper-into-crash: procexp64 1->21 stubs (past EULA+MulDiv, now ntdll NT-query frontier NtOpenSymbolicLinkObject), Coreinfo64/SearchMyFiles past old gates into new guest-internal crashes.
+- G1 re-pinned sha256 6754715c687eae72 12/12; runs dirs trimmed to summary+meta+progress (16MB->72KB).
+
+Stage Summary:
+- Progress discipline established: every future change must move the 51-program mean_score or class histogram, else it is not valuable.
+- Top named gates REMAINING: user32 GetDlgItem 5x / SetWindowTextW 4x / SendMessageW 4x (mini-dialog family), procexp64 ntdll NT-query family, md5deep64-suite x6 + curl + puttygen + sqlite3_analyzer crash cluster (each = own BUG).
+- Artifacts: artifacts/sweep012/runs-{BASELINE,AFTER}/{summary,meta,progress.json}; scripts/sweep012_{progsweep.sh,progress.py}.
