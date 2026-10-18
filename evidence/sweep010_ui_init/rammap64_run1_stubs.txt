@@ -1,0 +1,2 @@
+[STUB] unresolved import called -> returning 0 (call #1) guest_rip=0x14000438f
+1

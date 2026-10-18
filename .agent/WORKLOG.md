@@ -260,3 +260,39 @@ Stage Summary:
   have exactly one/few named gates left; next lever = GetSystemMetrics +
   ImageList_* (procexp) and the EULA dialog + mini-hive (autoruns/rammap),
   all in the SW-509/SW-556 child-control family.
+
+---
+Task ID: SWEEP-010
+Agent: Super Z (main session)
+Task: «ادامه» — procexp64 UI-init batch (GetSystemMetrics + ImageList_* +
+  SetDefaultDllDirectories), re-measure gates, push.
+
+Work Log:
+- REA-decoded procexp64's 4 GetSystemMetrics call sites (FF15 + backwards
+  mov ecx,imm32): the program asks EXACTLY SM_CYSMCAPTION (50) and
+  SM_CYSMICON (49) — toolbar small-icon sizing feeding ImageList_Create.
+- Implemented 6 imports (loader.c): GetSystemMetrics (REAL Win10 1920x1080
+  table, honest 0s for no-network/no-digitizer/no-TS, undefined -> 0 like
+  real Windows), ImageList_Create/Destroy (REAL handle lists, slot-reuse),
+  ImageList_Add/GetImageCount (strip-bitmap add with real 3-byte BGR pixel
+  copy from the CreateCompatibleBitmap pool), SetDefaultDllDirectories
+  (documented policy no-op -> TRUE).
+- Placement bugs caught: block first inserted before the GDI infra it
+  references exists; first move spliced into mw_BitBlt's MULTILINE
+  signature. Both fixed by marker-scanning scripts (kept in scripts/).
+- Self-test sweep010_imglist_test.c links the REAL loader TU (-Dmain=...):
+  29/29 PASS. ABI lesson: mw_* are ms_abi — the test must declare them
+  ms_abi or SysV call sites garble args (observed ImageList_Create(4,37)).
+- Post-batch 3x runs (runs_stubrip10, MW_GUI_EVENTS=1): all deterministic.
+  procexp64 9 -> 1 stub call and exit(2) -> exit(1); autoruns64 2, rammap64
+  1 (unchanged). The single remaining procexp stub DECODES to user32!
+  DialogBoxIndirectParamW @0x14005cd6c — same import as the autoruns/rammap
+  EULA gate. All three gates now share one named blocker.
+- G1 re-pinned sha df28de0f, 12/12; battery re-verified post-pin.
+
+Stage Summary:
+- procexp64's old exit(2) frontier (SWEEP-008b: "decision from a resolved
+  API") is broken through — UI init completes with real metrics/image lists.
+- Next lever is now singular: DialogBoxIndirectParamW + DLGTEMPLATE +
+  mini-hive (SW-509/SW-559 family) unlocks all three Sysinternals gates at
+  once. Evidence: evidence/sweep010_ui_init/.

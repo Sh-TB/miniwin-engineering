@@ -229,6 +229,21 @@ puttygen RIP=0x0).
       artifacts/sweep50/runs_stubrip9/, scripts/sweep009_color_roundtrip.c.
 - [ ] **SW-556** SW-509 (PE-DLL loader) now blocks 4 GUI heavyweights
       (bginfo64/winmergeu C++ runtime, searchmyfiles mfcu, procexp64) — raise priority.
+      UPDATE (SWEEP-010, UI-init batch LANDED): procexp64's named UI-init
+      stubs implemented — user32!GetSystemMetrics (REAL Win10 1920x1080 table;
+      procexp asks EXACTLY SM_CYSMCAPTION=17 / SM_CYSMICON=16, decoded from
+      the 4 call sites), comctl32!ImageList_Create/Destroy (REAL handle
+      lists) + Add/GetImageCount (strip-add, real pixel copy), kernel32!
+      SetDefaultDllDirectories (documented policy no-op -> TRUE). Self-test
+      links the REAL loader TU: 29/29 PASS (ms_abi declaration lesson
+      recorded). Result: procexp64 9 -> 1 stub calls AND exit(2) -> exit(1) —
+      the SWEEP-008b "decision from a resolved API" frontier is broken
+      through; cleanup ImageList_Destroy now real. ALL THREE gate programs
+      (procexp64/autoruns64/rammap64) now converge on ONE named stub import:
+      DialogBoxIndirectParamW (EULA gate needs the in-memory mini-hive too,
+      per SWEEP-009 policy note). G1 re-pinned sha df28de0f 12/12. Evidence:
+      evidence/sweep010_ui_init/ (README + 2 JSONs + trimmed traces),
+      artifacts/sweep50/runs_stubrip10/, scripts/sweep010_*.py/.c/.sh.
 
 ## SWEEP-004 wave (2026-10-18) — GDI-lite dialog raster, image mandate DELIVERED
 

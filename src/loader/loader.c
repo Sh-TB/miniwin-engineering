@@ -6293,6 +6293,106 @@ __attribute__((ms_abi)) uint32_t mw_ColorHLSToRGB(uint16_t hue, uint16_t lum, ui
     return MW_C2B(r) | (MW_C2B(g) << 8) | (MW_C2B(b) << 16);  /* COLORREF 0x00BBGGRR */
 }
 
+/* ---- SWEEP-010 (SW-556, procexp64 UI-init): user32!GetSystemMetrics ----
+ * Evidence: procexp64 UI init asks EXACTLY SM_CYSMCAPTION (50) and
+ * SM_CYSMICON (49) at 0x140001eb5/ec4/f55/f62 (scripts/sweep010_sm_indexes.py;
+ * mov ecx,imm32 decoded before each FF15) — the all-purpose stub returned 0 =
+ * zero-sized small icons/captions feeding the toolbar ImageList_Create.
+ * Contract (honest): full standard table with a Windows-10 x64 1920x1080
+ * single-monitor identity; guest reality is no network stack (SM_NETWORK 0),
+ * no digitizer/touch, no terminal-server session, no secure boot; undefined
+ * indexes return 0 exactly like real GetSystemMetrics. */
+__attribute__((ms_abi)) int mw_GetSystemMetrics(int index) {
+    switch (index) {
+    case 0:  return 1920; /* SM_CXSCREEN */
+    case 1:  return 1080; /* SM_CYSCREEN */
+    case 2:  return 17;   /* SM_CXVSCROLL */
+    case 3:  return 17;   /* SM_CYHSCROLL */
+    case 4:  return 23;   /* SM_CYCAPTION */
+    case 5:  return 1;    /* SM_CXBORDER */
+    case 6:  return 3;    /* SM_CXDLGFRAME */
+    case 7:  return 3;    /* SM_CYDLGFRAME */
+    case 8:  return 17;   /* SM_CYVTHUMB */
+    case 9:  return 17;   /* SM_CXHTHUMB */
+    case 10: return 32;   /* SM_CXICON */
+    case 11: return 32;   /* SM_CYICON */
+    case 12: return 32;   /* SM_CXCURSOR */
+    case 13: return 32;   /* SM_CYCURSOR */
+    case 14: return 20;   /* SM_CYMENU */
+    case 15: return 1920; /* SM_CXFULLSCREEN */
+    case 16: return 1057; /* SM_CYFULLSCREEN (1080 - caption) */
+    case 17: return 0;    /* SM_CYKANJIWINDOW */
+    case 18: return 1;    /* SM_MOUSEPRESENT */
+    case 19: return 17;   /* SM_CYVSCROLL */
+    case 20: return 17;   /* SM_CXHSCROLL */
+    case 21: return 0;    /* SM_DEBUG */
+    case 22: return 0;    /* SM_SWAPBUTTON */
+    case 27: return 132;  /* SM_CXMIN */
+    case 28: return 54;   /* SM_CYMIN */
+    case 29: return 18;   /* SM_CXSIZE */
+    case 30: return 18;   /* SM_CYSIZE */
+    case 31: return 4;    /* SM_CXSIZEFRAME (SM_CXFRAME) */
+    case 32: return 4;    /* SM_CYSIZEFRAME (SM_CYFRAME) */
+    case 33: return 132;  /* SM_CXMINTRACK */
+    case 34: return 54;   /* SM_CYMINTRACK */
+    case 35: return 4;    /* SM_CXDOUBLECLK */
+    case 36: return 4;    /* SM_CYDOUBLECLK */
+    case 37: return 75;   /* SM_CXICONSPACING */
+    case 38: return 75;   /* SM_CYICONSPACING */
+    case 39: return 0;    /* SM_MENUDROPALIGNMENT (left) */
+    case 40: return 0;    /* SM_PENWINDOWS */
+    case 41: return 0;    /* SM_DBCSENABLED */
+    case 42: return 3;    /* SM_CMOUSEBUTTONS */
+    case 43: return 0;    /* SM_SECURE */
+    case 44: return 2;    /* SM_CXEDGE */
+    case 45: return 2;    /* SM_CYEDGE */
+    case 46: return 160;  /* SM_CXMINSPACING */
+    case 47: return 24;   /* SM_CYMINSPACING */
+    case 48: return 16;   /* SM_CXSMICON */
+    case 49: return 16;   /* SM_CYSMICON   <- procexp64 toolbar sizing */
+    case 50: return 17;   /* SM_CYSMCAPTION <- procexp64 toolbar sizing */
+    case 51: return 16;   /* SM_CXSMSIZE */
+    case 52: return 16;   /* SM_CYSMSIZE */
+    case 53: return 18;   /* SM_CXMENUSIZE */
+    case 54: return 18;   /* SM_CYMENUSIZE */
+    case 55: return 8;    /* SM_ARRANGE */
+    case 56: return 160;  /* SM_CXMINIMIZED */
+    case 57: return 24;   /* SM_CYMINIMIZED */
+    case 58: return 1936; /* SM_CXMAXTRACK (1920 + 2*frame) */
+    case 59: return 1096; /* SM_CYMAXTRACK (1080 + 2*frame) */
+    case 60: return 1928; /* SM_CXMAXIMIZED */
+    case 61: return 1079; /* SM_CYMAXIMIZED */
+    case 62: return 0;    /* SM_NETWORK — guest has no network stack (honest) */
+    case 63: return 0;    /* SM_CLEANBOOT (normal boot) */
+    case 64: return 4;    /* SM_CXDRAG */
+    case 65: return 4;    /* SM_CYDRAG */
+    case 66: return 0;    /* SM_SHOWSOUNDS */
+    case 71: return 13;   /* SM_CXMENUCHECK */
+    case 72: return 13;   /* SM_CYMENUCHECK */
+    case 73: return 0;    /* SM_SLOWMACHINE */
+    case 74: return 0;    /* SM_MIDEASTENABLED */
+    case 75: return 1;    /* SM_MOUSEWHEELPRESENT */
+    case 76: return 0;    /* SM_XVIRTUALSCREEN */
+    case 77: return 0;    /* SM_YVIRTUALSCREEN */
+    case 78: return 1920; /* SM_CXVIRTUALSCREEN */
+    case 79: return 1080; /* SM_CYVIRTUALSCREEN */
+    case 80: return 1;    /* SM_CMONITORS */
+    case 81: return 1;    /* SM_SAMEDISPLAYFORMAT */
+    case 82: return 1;    /* SM_IMMENABLED */
+    case 83: return 2;    /* SM_CXFOCUSBORDER */
+    case 84: return 2;    /* SM_CYFOCUSBORDER */
+    case 86: return 0;    /* SM_TABLETPC */
+    case 87: return 0;    /* SM_MEDIACENTER */
+    case 88: return 0;    /* SM_STARTER */
+    case 89: return 0;    /* SM_SERVERR2 */
+    case 90: return 0;    /* SM_CARETBLINKINGENABLED (off) */
+    case 94: return 0;    /* SM_DIGITIZER */
+    case 95: return 0;    /* SM_MAXIMUM_TOUCHES */
+    case 4096: return 0;  /* SM_REMOTESESSION — not a terminal-server session */
+    }
+    return 0; /* real GetSystemMetrics also returns 0 for undefined indexes */
+}
+
 __attribute__((ms_abi)) void* mw_GlobalAlloc(uint32_t flags, size_t bytes) {
     void* p = (flags & 0x40) ? calloc(1, bytes ? bytes : 1) : malloc(bytes ? bytes : 1);
     MW_TRACE("GlobalAlloc(flags=%u, bytes=0x%lx) = %p", flags, (unsigned long)bytes, p);
@@ -11082,7 +11182,113 @@ __attribute__((ms_abi)) void* mw_CreateCompatibleBitmap(void* hdc, int w, int h)
     MW_TRACE("[GDI] CreateCompatibleBitmap -> NULL (table full)");
     return 0;
 }
+
+/* ---- SWEEP-010: comctl32 ImageList_Create/Destroy/Add/GetImageCount ----
+ * Honest handle-based image lists (procexp64 creates 2 while sizing its
+ * toolbar; SWEEP-009 stub map @0x140001f0f/0x140001fab + Destroy x2 at
+ * comctl32 internals 0x140132d5e/0x140132d2e). Storage mirrors the MWBmp
+ * raster (3 bytes/px BGR, stride = w*3) so ImageList_Add can copy real
+ * pixels from any HBITMAP created by our GDI (CreateCompatibleBitmap /
+ * LoadImage pool). Slot caps documented; Create validates dimensions. */
+#define MW_IMGL_MAX   8
+#define MW_IMGL_BASE  0x00061000u  /* HIMAGELIST handles 0x00061001+i */
+#define MW_IMGL_IMGMAX 512
+typedef struct {
+    int cx, cy, count, cap;
+    uint32_t flags;
+    uint8_t* px; /* cap images * cx*cy, 3 bytes/px BGR */
+} MWImgList;
+static MWImgList g_imglist[MW_IMGL_MAX];
+static uint8_t   g_imglist_live[MW_IMGL_MAX];
+
+static MWImgList* mw_imgl_decode(void* h) {
+    uintptr_t v = (uintptr_t)h;
+    if ((v & 0xFFFFF000u) != MW_IMGL_BASE) return 0;
+    int i = (int)(v & 0xFFu) - 1; /* handle = base|(slot+1) */
+    if (i < 0 || i >= MW_IMGL_MAX || !g_imglist_live[i]) return 0;
+    return &g_imglist[i];
+}
+/* source-bitmap decode: HBITMAP from the CreateCompatibleBitmap pool */
+static MWBmp* mw_imgl_srcbmp(void* hbmp) {
+    uintptr_t v = (uintptr_t)hbmp;
+    if ((v & 0xFFFFF000u) != MW_HBITMAP_BASE) return 0;
+    int i = (int)(v & 0xFFu) - 1;
+    if (i < 0 || i >= MW_MEMDC_MAX || !g_bitmap_live[i]) return 0;
+    return &g_bitmap_obj[i];
+}
+__attribute__((ms_abi)) void* mw_ImageList_Create(int cx, int cy, uint32_t flags,
+                                                  int cInitial, int cGrow) {
+    (void)cGrow;
+    if (cx < 1 || cy < 1 || cx > 256 || cy > 256) return 0;
+    for (int i = 0; i < MW_IMGL_MAX; i++) {
+        if (!g_imglist_live[i]) {
+            g_imglist_live[i] = 1;
+            g_imglist[i].cx = cx; g_imglist[i].cy = cy;
+            g_imglist[i].flags = flags; g_imglist[i].count = 0;
+            g_imglist[i].cap = cInitial > 0 ? cInitial : 1;
+            g_imglist[i].px = (uint8_t*)calloc((size_t)g_imglist[i].cap * cx * cy, 3);
+            MW_TRACE("[GDI] ImageList_Create(%d,%d,0x%x,%d,%d) -> 0x%08x",
+                     cx, cy, flags, cInitial, cGrow, MW_IMGL_BASE | (unsigned)(i + 1));
+            return (void*)(uintptr_t)(MW_IMGL_BASE | (unsigned)(i + 1));
+        }
+    }
+    MW_TRACE("[GDI] ImageList_Create -> NULL (table full)");
+    return 0;
+}
+__attribute__((ms_abi)) int mw_ImageList_Destroy(void* himl) {
+    MWImgList* L = mw_imgl_decode(himl);
+    if (!L) return 0;
+    free(L->px);
+    int i = (int)((uintptr_t)himl & 0xFFu) - 1;
+    memset(&g_imglist[i], 0, sizeof(MWImgList));
+    g_imglist_live[i] = 0;
+    MW_TRACE("[GDI] ImageList_Destroy(0x%08x) -> TRUE", (unsigned)(uintptr_t)himl);
+    return 1;
+}
+__attribute__((ms_abi)) int mw_ImageList_Add(void* himl, void* hbmImage, void* hbmMask) {
+    MWImgList* L = mw_imgl_decode(himl);
+    MWBmp* src = hbmImage ? mw_imgl_srcbmp(hbmImage) : 0;
+    if (!L || !src || !src->px) return -1;
+    if (src->w < L->cx || src->h < L->cy) return -1;
+    int n = src->w / L->cx; /* strip bitmap: real API adds w/cx images */
+    if (n < 1) return -1;
+    if (L->count + n > MW_IMGL_IMGMAX) n = MW_IMGL_IMGMAX - L->count;
+    if (n <= 0) return -1;
+    if (L->count + n > L->cap) {
+        int ncap = L->cap;
+        while (ncap < L->count + n) ncap *= 2;
+        uint8_t* np = (uint8_t*)realloc(L->px, (size_t)ncap * L->cx * L->cy * 3);
+        if (!np) return -1;
+        memset(np + (size_t)L->cap * L->cx * L->cy * 3, 0,
+               (size_t)(ncap - L->cap) * L->cx * L->cy * 3);
+        L->px = np; L->cap = ncap;
+    }
+    for (int j = 0; j < n; j++)
+        for (int y = 0; y < L->cy; y++)
+            memcpy(L->px + ((size_t)(L->count + j) * L->cy + y) * L->cx * 3,
+                   src->px + ((size_t)y * src->w + j * L->cx) * 3,
+                   (size_t)L->cx * 3);
+    int first = L->count; L->count += n;
+    MW_TRACE("[GDI] ImageList_Add(0x%08x) -> %d (%d images)", (unsigned)(uintptr_t)himl, first, n);
+    return first;
+}
+__attribute__((ms_abi)) int mw_ImageList_GetImageCount(void* himl) {
+    MWImgList* L = mw_imgl_decode(himl);
+    return L ? L->count : 0;
+}
+
+/* ---- SWEEP-010: kernel32!SetDefaultDllDirectories ----
+ * Contract (documented policy no-op): the guest loader keeps no dynamic
+ * LoadLibraryEx search-path state this could configure — the call is
+ * advisory, returns TRUE, and records the requested flags in the trace.
+ * Honesty class: same as CoInitializeEx all-purpose stub-0 (== S_OK benign,
+ * named + measured), NOT a silent fake of observable state. */
+__attribute__((ms_abi)) int mw_SetDefaultDllDirectories(uint32_t flags) {
+    MW_TRACE("SetDefaultDllDirectories(0x%x) -> TRUE", flags);
+    return 1;
+}
 __attribute__((ms_abi)) int mw_BitBlt(void* hdcDst, int x, int y, int w, int h,
+
         void* hdcSrc, int xs, int ys, uint32_t rop) {
     MWBmp* D = mw_dc_surface(hdcDst);
     MWBmp* S = mw_dc_surface(hdcSrc);
@@ -11474,6 +11680,7 @@ static ImportEntry g_import_table[] = {
     ENTRY("KERNEL32.DLL", "GetVersion", mw_GetVersion),
     ENTRY("KERNEL32.DLL", "GetVersionExA", mw_GetVersionExA),
     ENTRY("KERNEL32.DLL", "GetVersionExW", mw_GetVersionExW),
+    ENTRY("KERNEL32.DLL", "SetDefaultDllDirectories", mw_SetDefaultDllDirectories), /* SWEEP-010 */
     ENTRY("KERNEL32.DLL", "GetACP", mw_GetACP),
     ENTRY("KERNEL32.DLL", "GetOEMCP", mw_GetOEMCP),
     ENTRY("KERNEL32.DLL", "IsValidCodePage", mw_IsValidCodePage),
@@ -12044,6 +12251,12 @@ ENTRY("msvcrt.dll", "wctype", mw_wctype),
     ENTRY("USER32.DLL", "PostQuitMessage",                      mw_PostQuitMessage),
     ENTRY("COMCTL32.DLL", "InitCommonControlsEx",               mw_InitCommonControlsEx),
     ENTRY("COMCTL32.DLL", "InitCommonControls",                 mw_InitCommonControls),
+    /* SWEEP-010: honest image lists (procexp64 toolbar init) */
+    ENTRY("COMCTL32.DLL", "ImageList_Create",                   mw_ImageList_Create),
+    ENTRY("COMCTL32.DLL", "ImageList_Destroy",                  mw_ImageList_Destroy),
+    ENTRY("COMCTL32.DLL", "ImageList_Add",                      mw_ImageList_Add),
+    ENTRY("COMCTL32.DLL", "ImageList_GetImageCount",            mw_ImageList_GetImageCount),
+    ENTRY("USER32.DLL", "GetSystemMetrics",                     mw_GetSystemMetrics), /* SWEEP-010 */
     /* SWEEP-005: paint surface + event pump + draw stubs */
     ENTRY("USER32.DLL", "BeginPaint",                           mw_BeginPaint),
     ENTRY("USER32.DLL", "EndPaint",                             mw_EndPaint),
