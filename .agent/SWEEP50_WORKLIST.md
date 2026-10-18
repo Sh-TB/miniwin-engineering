@@ -190,6 +190,25 @@ puttygen RIP=0x0).
       evidence/sweep008_rea/pageant_*.json.
 - [ ] **SW-555** procexp64 exit(2) + autoruns64/rammap64 exit(1) gates: same named-stub
       prerequisite, then fix top blocker each.
+      UPDATE (SWEEP-008b, REA+Ghidra): prerequisite DELIVERED — loader stub now
+      logs the guest call site (`guest_rip=`), static decode (FF 15 + IAT map)
+      names every stub call, 0 unmapped across the 3 programs (2 runs
+      identical). GATES IDENTIFIED: autoruns64 exit(1) AND rammap64 exit(1) =
+      the Sysinternals EULA gate — last stub call is user32!
+      DialogBoxIndirectParamW (autoruns 0x140062d1c, rammap 0x14000438f)
+      inside the in-memory-DLGTEMPLATE EULA check ("&Decline"/"&Print"/
+      RICHEDIT; on success RegSetValueExW("EulaAccepted")); stub 0 -> "not
+      accepted" -> return 0 -> exit(1). procexp64 exit(2): GlobalAddAtomW +
+      GetVersionExW, then shlwapi!ColorRGBToHLS/ColorHLSToRGB alternating 9x
+      inside FUN_14007baf0 (22%-luminance shading helper, 36 callers — stubs
+      black out the palette); the exit(2) itself comes from a RESOLVED API
+      (no stub after call #20) — open. Cheap honest-stub fixes queued:
+      GetVersionExW (real OSVERSIONINFOW — lied 0 eleven times in rammap),
+      RegOpenKeyW (ERROR_FILE_NOT_FOUND instead of lying SUCCESS+NULL handle),
+      GlobalAddAtomW, ColorRGBToHLS/ColorHLSToRGB (pure math). EULA-dialog fix
+      needs DialogBoxIndirectParamW/DLGTEMPLATE — SW-509/SW-559 family.
+      Evidence: evidence/sweep008_rea/ (3 gate-function YAMLs,
+      sweep008b_stub_callers.json), scripts/sweep008b_*.py.
 - [ ] **SW-556** SW-509 (PE-DLL loader) now blocks 4 GUI heavyweights
       (bginfo64/winmergeu C++ runtime, searchmyfiles mfcu, procexp64) — raise priority.
 

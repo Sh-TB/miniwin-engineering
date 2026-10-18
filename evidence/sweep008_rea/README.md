@@ -95,3 +95,59 @@ it helps MiniWin.
 ## Files
 - REA evidence JSONs (this directory) — 7 files, one per query above
 - Toolchain lives in /home/z/ghidra-dl (git-ignored territory, outside repo)
+
+## SWEEP-008b — API-free wiring + named-stub gate identity (2026-10-18)
+
+User directive: «اگر برای rea توکن یا ای پی ای می خواد خودتو بهش وصل بکن بدون
+api فکر کنم برای برنامه های ویندوزی خیلی کمک بکنه» — verify REA needs no
+token/API, wire it up without one, keep applying it to Windows programs.
+
+### API/token audit — RESULT: NONE needed
+- `rea doctor` green with ZERO auth env vars (no OPENAI/ANTHROPIC/GEMINI/
+  *_API_KEY/TOKEN anywhere in the environment); 153 CLI commands + 207 MCP
+  tools, all local.
+- The only `apiKey` strings in the package are a FEATURE that detects leaked
+  API keys inside analyzed Electron apps (domain/javascript/*) — not a
+  requirement of REA itself.
+- `rea setup` would register REA into external agent clients (claude_desktop,
+  codex, cursor, ...) — deliberately SKIPPED: the main agent consumes the
+  `rea` CLI directly (spawn -> YAML -> reasoning). Wiring:
+  main agent -> `rea` CLI -> Ghidra 12.1.4 headless (JDK 21) — fully offline.
+- Caveat recorded: `rea function` emits YAML (not JSON) in 6.7.0.
+
+### SW-555 prerequisite DELIVERED — named-stub identity via guest_rip
+1. Loader change (mw_unresolved_import_stub): unresolved calls now log the
+   GUEST return address (`guest_rip=0x...`). The shared stub cannot know its
+   import name; its call site does.
+2. `scripts/sweep008b_stub_candidates.py` — diffs each PE's import table
+   against loader.c g_import_table/g_data_imports -> per-exe stub candidates
+   with IAT slot VAs (artifacts/sweep50/sweep008b_stub_candidates.json;
+   autoruns64 279, rammap64 ?, procexp64 ? candidates vs only 6/16/20 real calls).
+3. `scripts/sweep008b_decode_callers.py` — slot = guest_rip + disp32 of the
+   preceding `FF 15` -> exact dll!import per call
+   (artifacts/sweep50/sweep008b_stub_callers.json). ALL 42 calls decoded,
+   0 unmapped; guest_rip sequences IDENTICAL across 2 runs.
+4. Runs: artifacts/sweep50/runs_stubrip/<exe>/ (stderr/exit_code), runs under
+   MW_GUI_EVENTS=1, exits 1/1/2 unchanged vs SWEEP-007 battery.
+
+### Gates identified (REA decompiles — trimmed raw_result YAMLs committed)
+- autoruns64 exit(1): Sysinternals EULA gate. Last stub call =
+  user32!DialogBoxIndirectParamW @ 0x140062d1c inside the EULA-check function
+  (in-memory DLGTEMPLATE: "&Decline"/"&Print"/RICHEDIT; success path does
+  RegCreateKeyW -> RegSetValueExW("EulaAccepted")). Stub 0 -> bVar16=true ->
+  return 0 ("not accepted") -> exit(1). Sequence: CoInitializeEx, GetVersionExW
+  x2, RegOpenKeyW x2, DialogBoxIndirectParamW.
+- rammap64 exit(1): SAME EULA gate @ 0x14000438f (identical template/branch
+  shape). GetVersionExW stub returned 0 ELEVEN times; RegOpenKeyW x3;
+  GlobalAddAtomW x1.
+- procexp64 exit(2): GlobalAddAtomW, GetVersionExW, then shlwapi!
+  ColorRGBToHLS/ColorHLSToRGB alternating 9x inside FUN_14007baf0 — a
+  22%-luminance shading helper (HLS math: l = l*22/100, clamp 0xf0) with 36
+  callers; stub 0s black out the theme palette. The exit(2) decision comes
+  from a RESOLVED API (no stub call after #20) — open, next round.
+- Full YAMLs reproducible: `rea function <exe> <addr>` (files kept out of the
+  repo; trimmed raw_result sections committed here).
+
+### G1 re-pin after loader change
+- binary sha256 f40d26872b47228bd4b1fd26f4561efadb76c33c2c8e8c9c8e6fb22c3c97c8b2,
+  UPX banner exact, regression 12/12 (evidence/master/g1/20261018_105545).

@@ -1,0 +1,3278 @@
+evidence_id: ev_f433551fecc99b2c5f844df5f4cf3cac33a73b019a342b4a6894854cff82b555
+subject:
+  name: procexp64.exe
+  digest:
+    sha256: cdd3bf8fd68284480361c3673b9db7f48ff8a44317d28a243d26e12192050392
+  local_path: /home/z/my-project/workspace/miniwin-engineering/artifacts/sweep50/dl/procexp64/procexp64.exe
+  format: pe
+  architecture: x86_64
+provider:
+  id: ghidra
+  name: Ghidra
+  version: 12.1.4
+analysis_profile:
+  provider:
+    id: ghidra
+    name: Ghidra
+    version: 12.1.4
+  parameters:
+    target_kind: executable
+    target_format: pe
+    executable_role: application
+    managed: false
+    native_aot_metadata:
+      contract_revision: rtr-9.1-x64-pe-read-only-v5
+      source_bytes: 134217728
+      work_units: 67108864
+      working_memory_bytes: 67108864
+      report_bytes: 4194304
+    architecture: x86_64
+    available_architectures[1]: x86_64
+    import_mode: ephemeral-source-immutable
+    pdb_observations: program-info-v5
+    annotation_policy: atomic-function-entry-metadata-v1
+    load_image_observations: source-mappings-entry-context-v2
+    function_body_evidence: complete-inclusive-ranges-v1
+    function_references: complete-body-and-entry-reference-manager-v2
+    call_relationship_coverage: function-body-call-coverage-v5
+    function_dossier_coverage: observed-facets-and-call-relationships-v1
+    string_inventory_evidence: defined-data-coverage-v1
+    location_resolution: explicit-address-exact-entry-symbol-first-v3
+    procedure_file_offset_resolution: address-first-unique-target-source-mapping-v2
+    instruction_flow_evidence: decoded-return-pcode-v1
+    instruction_references: exact-address-incoming-without-synthetic-entry-v2
+    function_boundary_observations: ghidra-function-boundary-limitations-v4
+    no_return_repair: returning-imports-decoded-return-v2
+    process_launch: inspected-jvm-launch-support-v1
+    jump_table_evidence: typed-case-default-blocks-v1
+    decompiler_jump_loads: true
+    loader: auto-from-header
+    language_id: auto-from-header
+    compiler_spec_id: auto-default
+    analyzer_preset: ghidra-default
+  digest: 8deff58aed9d509ca1f5e324742162509fc546437bff519805a5e5497ec5f789
+raw_result:
+  value:
+    procedure:
+      address: 0x14007baf0
+      name: FUN_14007baf0
+      classification:
+        external: false
+        thunk: false
+        thunk_target: null
+        provenance: ghidra-function-manager
+      body:
+        available: true
+        provenance: ghidra-function-body-address-set
+        ranges[1]{start,end}:
+          0x14007baf0,0x14007bb63
+        total_bytes: 116
+        span_bytes: 116
+        non_contiguous: false
+        contains_entry: true
+      signature: undefined FUN_14007baf0()
+      locals[4]{description,provenance}:
+        "undefined8 local_18 @ Stack[-0x18]:8",ghidra-function-database
+        "undefined2 local_20 @ Stack[-0x20]:2",ghidra-function-database
+        "undefined2 local_24 @ Stack[-0x24]:2",ghidra-function-database
+        "undefined2 local_28 @ Stack[-0x28]:2",ghidra-function-database
+    pseudocode: "\n/* WARNING: Function: __security_check_cookie replaced with injection: security_check_cookie */\n\nvoid FUN_14007baf0(COLORREF param_1)\n\n{\n  uint uVar1;\n  undefined1 auStack_48 [32];\n  ushort local_28 [2];\n  WORD local_24 [2];\n  WORD local_20 [4];\n  ulonglong local_18;\n  \n  local_18 = DAT_140185040 ^ (ulonglong)auStack_48;\n  ColorRGBToHLS(param_1,local_20,local_28,local_24);\n  uVar1 = ((uint)local_28[0] * 0x16) / 100;\n  local_28[0] = (ushort)uVar1;\n  if (0xf0 < uVar1) {\n    local_28[0] = 0xf0;\n  }\n  ColorHLSToRGB(local_20[0],local_28[0],local_24[0]);\n  return;\n}\n\n"
+    assembly[28]: "0x14007baf0: SUB RSP, 0x48","0x14007baf4: MOV RAX, qword ptr [0x140185040]","0x14007bafb: XOR RAX, RSP","0x14007bafe: MOV qword ptr [RSP + 0x30], RAX","0x14007bb03: LEA R9, [RSP + 0x24]","0x14007bb08: LEA R8, [RSP + 0x20]","0x14007bb0d: LEA RDX, [RSP + 0x28]","0x14007bb12: CALL qword ptr [0x140134e08]","0x14007bb18: MOVZX EAX, word ptr [RSP + 0x20]","0x14007bb1d: MOVZX R8D, word ptr [RSP + 0x24]","0x14007bb23: IMUL ECX, EAX, 0x16","0x14007bb26: MOV EAX, 0x51eb851f","0x14007bb2b: IMUL ECX","0x14007bb2d: MOVZX ECX, word ptr [RSP + 0x28]","0x14007bb32: SAR EDX, 0x5","0x14007bb35: MOV EAX, EDX","0x14007bb37: SHR EAX, 0x1f","0x14007bb3a: ADD EDX, EAX","0x14007bb3c: MOV EAX, 0xf0","0x14007bb41: CMP EDX, EAX","0x14007bb43: CMOVG DX, AX","0x14007bb47: MOV word ptr [RSP + 0x20], DX","0x14007bb4c: CALL qword ptr [0x140134dd8]","0x14007bb52: MOV RCX, qword ptr [RSP + 0x30]","0x14007bb57: XOR RCX, RSP","0x14007bb5a: CALL 0x1400fb370","0x14007bb5f: ADD RSP, 0x48","0x14007bb63: RET"
+    comments: []
+    callers[36]:
+      - address: 0x140001b00
+        name: FUN_140001b00
+        classification:
+          external: false
+          thunk: false
+          thunk_target: null
+          provenance: ghidra-function-manager
+        body:
+          available: true
+          provenance: ghidra-function-body-address-set
+          ranges[1]{start,end}:
+            0x140001b00,0x140001b18
+          total_bytes: 25
+          span_bytes: 25
+          non_contiguous: false
+          contains_entry: true
+      - address: 0x140001b20
+        name: FUN_140001b20
+        classification:
+          external: false
+          thunk: false
+          thunk_target: null
+          provenance: ghidra-function-manager
+        body:
+          available: true
+          provenance: ghidra-function-body-address-set
+          ranges[1]{start,end}:
+            0x140001b20,0x140001b38
+          total_bytes: 25
+          span_bytes: 25
+          non_contiguous: false
+          contains_entry: true
+      - address: 0x140001b40
+        name: FUN_140001b40
+        classification:
+          external: false
+          thunk: false
+          thunk_target: null
+          provenance: ghidra-function-manager
+        body:
+          available: true
+          provenance: ghidra-function-body-address-set
+          ranges[1]{start,end}:
+            0x140001b40,0x140001b58
+          total_bytes: 25
+          span_bytes: 25
+          non_contiguous: false
+          contains_entry: true
+      - address: 0x140001b60
+        name: FUN_140001b60
+        classification:
+          external: false
+          thunk: false
+          thunk_target: null
+          provenance: ghidra-function-manager
+        body:
+          available: true
+          provenance: ghidra-function-body-address-set
+          ranges[1]{start,end}:
+            0x140001b60,0x140001b78
+          total_bytes: 25
+          span_bytes: 25
+          non_contiguous: false
+          contains_entry: true
+      - address: 0x140001b80
+        name: FUN_140001b80
+        classification:
+          external: false
+          thunk: false
+          thunk_target: null
+          provenance: ghidra-function-manager
+        body:
+          available: true
+          provenance: ghidra-function-body-address-set
+          ranges[1]{start,end}:
+            0x140001b80,0x140001b98
+          total_bytes: 25
+          span_bytes: 25
+          non_contiguous: false
+          contains_entry: true
+      - address: 0x140001ba0
+        name: FUN_140001ba0
+        classification:
+          external: false
+          thunk: false
+          thunk_target: null
+          provenance: ghidra-function-manager
+        body:
+          available: true
+          provenance: ghidra-function-body-address-set
+          ranges[1]{start,end}:
+            0x140001ba0,0x140001bb8
+          total_bytes: 25
+          span_bytes: 25
+          non_contiguous: false
+          contains_entry: true
+      - address: 0x140001bc0
+        name: FUN_140001bc0
+        classification:
+          external: false
+          thunk: false
+          thunk_target: null
+          provenance: ghidra-function-manager
+        body:
+          available: true
+          provenance: ghidra-function-body-address-set
+          ranges[1]{start,end}:
+            0x140001bc0,0x140001bf1
+          total_bytes: 50
+          span_bytes: 50
+          non_contiguous: false
+          contains_entry: true
+      - address: 0x140001c00
+        name: FUN_140001c00
+        classification:
+          external: false
+          thunk: false
+          thunk_target: null
+          provenance: ghidra-function-manager
+        body:
+          available: true
+          provenance: ghidra-function-body-address-set
+          ranges[1]{start,end}:
+            0x140001c00,0x140001c18
+          total_bytes: 25
+          span_bytes: 25
+          non_contiguous: false
+          contains_entry: true
+      - address: 0x140001c20
+        name: FUN_140001c20
+        classification:
+          external: false
+          thunk: false
+          thunk_target: null
+          provenance: ghidra-function-manager
+        body:
+          available: true
+          provenance: ghidra-function-body-address-set
+          ranges[1]{start,end}:
+            0x140001c20,0x140001c38
+          total_bytes: 25
+          span_bytes: 25
+          non_contiguous: false
+          contains_entry: true
+      - address: 0x140001c40
+        name: FUN_140001c40
+        classification:
+          external: false
+          thunk: false
+          thunk_target: null
+          provenance: ghidra-function-manager
+        body:
+          available: true
+          provenance: ghidra-function-body-address-set
+          ranges[1]{start,end}:
+            0x140001c40,0x140001c58
+          total_bytes: 25
+          span_bytes: 25
+          non_contiguous: false
+          contains_entry: true
+      - address: 0x140001c60
+        name: FUN_140001c60
+        classification:
+          external: false
+          thunk: false
+          thunk_target: null
+          provenance: ghidra-function-manager
+        body:
+          available: true
+          provenance: ghidra-function-body-address-set
+          ranges[1]{start,end}:
+            0x140001c60,0x140001c78
+          total_bytes: 25
+          span_bytes: 25
+          non_contiguous: false
+          contains_entry: true
+      - address: 0x140001c80
+        name: FUN_140001c80
+        classification:
+          external: false
+          thunk: false
+          thunk_target: null
+          provenance: ghidra-function-manager
+        body:
+          available: true
+          provenance: ghidra-function-body-address-set
+          ranges[1]{start,end}:
+            0x140001c80,0x140001c98
+          total_bytes: 25
+          span_bytes: 25
+          non_contiguous: false
+          contains_entry: true
+      - address: 0x140002060
+        name: FUN_140002060
+        classification:
+          external: false
+          thunk: false
+          thunk_target: null
+          provenance: ghidra-function-manager
+        body:
+          available: true
+          provenance: ghidra-function-body-address-set
+          ranges[1]{start,end}:
+            0x140002060,0x140002091
+          total_bytes: 50
+          span_bytes: 50
+          non_contiguous: false
+          contains_entry: true
+      - address: 0x1400020a0
+        name: FUN_1400020a0
+        classification:
+          external: false
+          thunk: false
+          thunk_target: null
+          provenance: ghidra-function-manager
+        body:
+          available: true
+          provenance: ghidra-function-body-address-set
+          ranges[1]{start,end}:
+            0x1400020a0,0x1400020b8
+          total_bytes: 25
+          span_bytes: 25
+          non_contiguous: false
+          contains_entry: true
+      - address: 0x1400020c0
+        name: FUN_1400020c0
+        classification:
+          external: false
+          thunk: false
+          thunk_target: null
+          provenance: ghidra-function-manager
+        body:
+          available: true
+          provenance: ghidra-function-body-address-set
+          ranges[1]{start,end}:
+            0x1400020c0,0x1400020d8
+          total_bytes: 25
+          span_bytes: 25
+          non_contiguous: false
+          contains_entry: true
+      - address: 0x1400020e0
+        name: FUN_1400020e0
+        classification:
+          external: false
+          thunk: false
+          thunk_target: null
+          provenance: ghidra-function-manager
+        body:
+          available: true
+          provenance: ghidra-function-body-address-set
+          ranges[1]{start,end}:
+            0x1400020e0,0x1400020f8
+          total_bytes: 25
+          span_bytes: 25
+          non_contiguous: false
+          contains_entry: true
+      - address: 0x140002100
+        name: FUN_140002100
+        classification:
+          external: false
+          thunk: false
+          thunk_target: null
+          provenance: ghidra-function-manager
+        body:
+          available: true
+          provenance: ghidra-function-body-address-set
+          ranges[1]{start,end}:
+            0x140002100,0x140002118
+          total_bytes: 25
+          span_bytes: 25
+          non_contiguous: false
+          contains_entry: true
+      - address: 0x140002120
+        name: FUN_140002120
+        classification:
+          external: false
+          thunk: false
+          thunk_target: null
+          provenance: ghidra-function-manager
+        body:
+          available: true
+          provenance: ghidra-function-body-address-set
+          ranges[1]{start,end}:
+            0x140002120,0x140002138
+          total_bytes: 25
+          span_bytes: 25
+          non_contiguous: false
+          contains_entry: true
+      - address: 0x140002140
+        name: FUN_140002140
+        classification:
+          external: false
+          thunk: false
+          thunk_target: null
+          provenance: ghidra-function-manager
+        body:
+          available: true
+          provenance: ghidra-function-body-address-set
+          ranges[1]{start,end}:
+            0x140002140,0x140002158
+          total_bytes: 25
+          span_bytes: 25
+          non_contiguous: false
+          contains_entry: true
+      - address: 0x140002160
+        name: FUN_140002160
+        classification:
+          external: false
+          thunk: false
+          thunk_target: null
+          provenance: ghidra-function-manager
+        body:
+          available: true
+          provenance: ghidra-function-body-address-set
+          ranges[1]{start,end}:
+            0x140002160,0x140002178
+          total_bytes: 25
+          span_bytes: 25
+          non_contiguous: false
+          contains_entry: true
+      - address: 0x140002180
+        name: FUN_140002180
+        classification:
+          external: false
+          thunk: false
+          thunk_target: null
+          provenance: ghidra-function-manager
+        body:
+          available: true
+          provenance: ghidra-function-body-address-set
+          ranges[1]{start,end}:
+            0x140002180,0x140002198
+          total_bytes: 25
+          span_bytes: 25
+          non_contiguous: false
+          contains_entry: true
+      - address: 0x1400021a0
+        name: FUN_1400021a0
+        classification:
+          external: false
+          thunk: false
+          thunk_target: null
+          provenance: ghidra-function-manager
+        body:
+          available: true
+          provenance: ghidra-function-body-address-set
+          ranges[1]{start,end}:
+            0x1400021a0,0x1400021b8
+          total_bytes: 25
+          span_bytes: 25
+          non_contiguous: false
+          contains_entry: true
+      - address: 0x1400021c0
+        name: FUN_1400021c0
+        classification:
+          external: false
+          thunk: false
+          thunk_target: null
+          provenance: ghidra-function-manager
+        body:
+          available: true
+          provenance: ghidra-function-body-address-set
+          ranges[1]{start,end}:
+            0x1400021c0,0x1400021d8
+          total_bytes: 25
+          span_bytes: 25
+          non_contiguous: false
+          contains_entry: true
+      - address: 0x1400021e0
+        name: FUN_1400021e0
+        classification:
+          external: false
+          thunk: false
+          thunk_target: null
+          provenance: ghidra-function-manager
+        body:
+          available: true
+          provenance: ghidra-function-body-address-set
+          ranges[1]{start,end}:
+            0x1400021e0,0x1400021f8
+          total_bytes: 25
+          span_bytes: 25
+          non_contiguous: false
+          contains_entry: true
+      - address: 0x140002590
+        name: FUN_140002590
+        classification:
+          external: false
+          thunk: false
+          thunk_target: null
+          provenance: ghidra-function-manager
+        body:
+          available: true
+          provenance: ghidra-function-body-address-set
+          ranges[1]{start,end}:
+            0x140002590,0x140002599
+          total_bytes: 10
+          span_bytes: 10
+          non_contiguous: false
+          contains_entry: true
+      - address: 0x1400025a0
+        name: FUN_1400025a0
+        classification:
+          external: false
+          thunk: false
+          thunk_target: null
+          provenance: ghidra-function-manager
+        body:
+          available: true
+          provenance: ghidra-function-body-address-set
+          ranges[1]{start,end}:
+            0x1400025a0,0x1400025a9
+          total_bytes: 10
+          span_bytes: 10
+          non_contiguous: false
+          contains_entry: true
+      - address: 0x1400025b0
+        name: FUN_1400025b0
+        classification:
+          external: false
+          thunk: false
+          thunk_target: null
+          provenance: ghidra-function-manager
+        body:
+          available: true
+          provenance: ghidra-function-body-address-set
+          ranges[1]{start,end}:
+            0x1400025b0,0x1400025b9
+          total_bytes: 10
+          span_bytes: 10
+          non_contiguous: false
+          contains_entry: true
+      - address: 0x1400025c0
+        name: FUN_1400025c0
+        classification:
+          external: false
+          thunk: false
+          thunk_target: null
+          provenance: ghidra-function-manager
+        body:
+          available: true
+          provenance: ghidra-function-body-address-set
+          ranges[1]{start,end}:
+            0x1400025c0,0x1400025c9
+          total_bytes: 10
+          span_bytes: 10
+          non_contiguous: false
+          contains_entry: true
+      - address: 0x1400025d0
+        name: FUN_1400025d0
+        classification:
+          external: false
+          thunk: false
+          thunk_target: null
+          provenance: ghidra-function-manager
+        body:
+          available: true
+          provenance: ghidra-function-body-address-set
+          ranges[1]{start,end}:
+            0x1400025d0,0x1400025d9
+          total_bytes: 10
+          span_bytes: 10
+          non_contiguous: false
+          contains_entry: true
+      - address: 0x1400025e0
+        name: FUN_1400025e0
+        classification:
+          external: false
+          thunk: false
+          thunk_target: null
+          provenance: ghidra-function-manager
+        body:
+          available: true
+          provenance: ghidra-function-body-address-set
+          ranges[1]{start,end}:
+            0x1400025e0,0x1400025e9
+          total_bytes: 10
+          span_bytes: 10
+          non_contiguous: false
+          contains_entry: true
+      - address: 0x1400025f0
+        name: FUN_1400025f0
+        classification:
+          external: false
+          thunk: false
+          thunk_target: null
+          provenance: ghidra-function-manager
+        body:
+          available: true
+          provenance: ghidra-function-body-address-set
+          ranges[1]{start,end}:
+            0x1400025f0,0x1400025f9
+          total_bytes: 10
+          span_bytes: 10
+          non_contiguous: false
+          contains_entry: true
+      - address: 0x140002600
+        name: FUN_140002600
+        classification:
+          external: false
+          thunk: false
+          thunk_target: null
+          provenance: ghidra-function-manager
+        body:
+          available: true
+          provenance: ghidra-function-body-address-set
+          ranges[1]{start,end}:
+            0x140002600,0x140002609
+          total_bytes: 10
+          span_bytes: 10
+          non_contiguous: false
+          contains_entry: true
+      - address: 0x140002610
+        name: FUN_140002610
+        classification:
+          external: false
+          thunk: false
+          thunk_target: null
+          provenance: ghidra-function-manager
+        body:
+          available: true
+          provenance: ghidra-function-body-address-set
+          ranges[1]{start,end}:
+            0x140002610,0x140002619
+          total_bytes: 10
+          span_bytes: 10
+          non_contiguous: false
+          contains_entry: true
+      - address: 0x140002620
+        name: FUN_140002620
+        classification:
+          external: false
+          thunk: false
+          thunk_target: null
+          provenance: ghidra-function-manager
+        body:
+          available: true
+          provenance: ghidra-function-body-address-set
+          ranges[1]{start,end}:
+            0x140002620,0x140002629
+          total_bytes: 10
+          span_bytes: 10
+          non_contiguous: false
+          contains_entry: true
+      - address: 0x140002630
+        name: FUN_140002630
+        classification:
+          external: false
+          thunk: false
+          thunk_target: null
+          provenance: ghidra-function-manager
+        body:
+          available: true
+          provenance: ghidra-function-body-address-set
+          ranges[1]{start,end}:
+            0x140002630,0x140002639
+          total_bytes: 10
+          span_bytes: 10
+          non_contiguous: false
+          contains_entry: true
+      - address: 0x140002640
+        name: FUN_140002640
+        classification:
+          external: false
+          thunk: false
+          thunk_target: null
+          provenance: ghidra-function-manager
+        body:
+          available: true
+          provenance: ghidra-function-body-address-set
+          ranges[1]{start,end}:
+            0x140002640,0x140002664
+          total_bytes: 37
+          span_bytes: 37
+          non_contiguous: false
+          contains_entry: true
+    callees[3]:
+      - address: "EXTERNAL:0x1"
+        name: "SHLWAPI.DLL::ColorHLSToRGB"
+        classification:
+          external: true
+          thunk: false
+          thunk_target: null
+          provenance: ghidra-function-manager
+        body:
+          available: true
+          provenance: ghidra-function-body-address-set
+          ranges: []
+          total_bytes: 0
+          span_bytes: 0
+          non_contiguous: false
+          contains_entry: false
+      - address: "EXTERNAL:0x7"
+        name: "SHLWAPI.DLL::ColorRGBToHLS"
+        classification:
+          external: true
+          thunk: false
+          thunk_target: null
+          provenance: ghidra-function-manager
+        body:
+          available: true
+          provenance: ghidra-function-body-address-set
+          ranges: []
+          total_bytes: 0
+          span_bytes: 0
+          non_contiguous: false
+          contains_entry: false
+      - address: 0x1400fb370
+        name: __security_check_cookie
+        classification:
+          external: false
+          thunk: false
+          thunk_target: null
+          provenance: ghidra-function-manager
+        body:
+          available: true
+          provenance: ghidra-function-body-address-set
+          ranges[1]{start,end}:
+            0x1400fb370,0x1400fb38d
+          total_bytes: 30
+          span_bytes: 30
+          non_contiguous: false
+          contains_entry: true
+    incoming_references[37]:
+      - source_address: 0x140001b09
+        target_address: 0x14007baf0
+        source_procedure:
+          address: 0x140001b00
+          name: FUN_140001b00
+          classification:
+            external: false
+            thunk: false
+            thunk_target: null
+            provenance: ghidra-function-manager
+          body:
+            available: true
+            provenance: ghidra-function-body-address-set
+            ranges[1]{start,end}:
+              0x140001b00,0x140001b18
+            total_bytes: 25
+            span_bytes: 25
+            non_contiguous: false
+            contains_entry: true
+        target_procedure:
+          address: 0x14007baf0
+          name: FUN_14007baf0
+          classification:
+            external: false
+            thunk: false
+            thunk_target: null
+            provenance: ghidra-function-manager
+          body:
+            available: true
+            provenance: ghidra-function-body-address-set
+            ranges[1]{start,end}:
+              0x14007baf0,0x14007bb63
+            total_bytes: 116
+            span_bytes: 116
+            non_contiguous: false
+            contains_entry: true
+        kind:
+          available: true
+          provenance: ghidra-reference-manager
+          type: UNCONDITIONAL_CALL
+          flow: true
+          call: true
+          jump: false
+          data: false
+          read: false
+          write: false
+          indirect: false
+          computed: false
+          conditional: false
+          terminal: false
+          primary: true
+          operand_index: 0
+          external: false
+      - source_address: 0x140001b29
+        target_address: 0x14007baf0
+        source_procedure:
+          address: 0x140001b20
+          name: FUN_140001b20
+          classification:
+            external: false
+            thunk: false
+            thunk_target: null
+            provenance: ghidra-function-manager
+          body:
+            available: true
+            provenance: ghidra-function-body-address-set
+            ranges[1]{start,end}:
+              0x140001b20,0x140001b38
+            total_bytes: 25
+            span_bytes: 25
+            non_contiguous: false
+            contains_entry: true
+        target_procedure:
+          address: 0x14007baf0
+          name: FUN_14007baf0
+          classification:
+            external: false
+            thunk: false
+            thunk_target: null
+            provenance: ghidra-function-manager
+          body:
+            available: true
+            provenance: ghidra-function-body-address-set
+            ranges[1]{start,end}:
+              0x14007baf0,0x14007bb63
+            total_bytes: 116
+            span_bytes: 116
+            non_contiguous: false
+            contains_entry: true
+        kind:
+          available: true
+          provenance: ghidra-reference-manager
+          type: UNCONDITIONAL_CALL
+          flow: true
+          call: true
+          jump: false
+          data: false
+          read: false
+          write: false
+          indirect: false
+          computed: false
+          conditional: false
+          terminal: false
+          primary: true
+          operand_index: 0
+          external: false
+      - source_address: 0x140001b49
+        target_address: 0x14007baf0
+        source_procedure:
+          address: 0x140001b40
+          name: FUN_140001b40
+          classification:
+            external: false
+            thunk: false
+            thunk_target: null
+            provenance: ghidra-function-manager
+          body:
+            available: true
+            provenance: ghidra-function-body-address-set
+            ranges[1]{start,end}:
+              0x140001b40,0x140001b58
+            total_bytes: 25
+            span_bytes: 25
+            non_contiguous: false
+            contains_entry: true
+        target_procedure:
+          address: 0x14007baf0
+          name: FUN_14007baf0
+          classification:
+            external: false
+            thunk: false
+            thunk_target: null
+            provenance: ghidra-function-manager
+          body:
+            available: true
+            provenance: ghidra-function-body-address-set
+            ranges[1]{start,end}:
+              0x14007baf0,0x14007bb63
+            total_bytes: 116
+            span_bytes: 116
+            non_contiguous: false
+            contains_entry: true
+        kind:
+          available: true
+          provenance: ghidra-reference-manager
+          type: UNCONDITIONAL_CALL
+          flow: true
+          call: true
+          jump: false
+          data: false
+          read: false
+          write: false
+          indirect: false
+          computed: false
+          conditional: false
+          terminal: false
+          primary: true
+          operand_index: 0
+          external: false
+      - source_address: 0x140001b69
+        target_address: 0x14007baf0
+        source_procedure:
+          address: 0x140001b60
+          name: FUN_140001b60
+          classification:
+            external: false
+            thunk: false
+            thunk_target: null
+            provenance: ghidra-function-manager
+          body:
+            available: true
+            provenance: ghidra-function-body-address-set
+            ranges[1]{start,end}:
+              0x140001b60,0x140001b78
+            total_bytes: 25
+            span_bytes: 25
+            non_contiguous: false
+            contains_entry: true
+        target_procedure:
+          address: 0x14007baf0
+          name: FUN_14007baf0
+          classification:
+            external: false
+            thunk: false
+            thunk_target: null
+            provenance: ghidra-function-manager
+          body:
+            available: true
+            provenance: ghidra-function-body-address-set
+            ranges[1]{start,end}:
+              0x14007baf0,0x14007bb63
+            total_bytes: 116
+            span_bytes: 116
+            non_contiguous: false
+            contains_entry: true
+        kind:
+          available: true
+          provenance: ghidra-reference-manager
+          type: UNCONDITIONAL_CALL
+          flow: true
+          call: true
+          jump: false
+          data: false
+          read: false
+          write: false
+          indirect: false
+          computed: false
+          conditional: false
+          terminal: false
+          primary: true
+          operand_index: 0
+          external: false
+      - source_address: 0x140001b89
+        target_address: 0x14007baf0
+        source_procedure:
+          address: 0x140001b80
+          name: FUN_140001b80
+          classification:
+            external: false
+            thunk: false
+            thunk_target: null
+            provenance: ghidra-function-manager
+          body:
+            available: true
+            provenance: ghidra-function-body-address-set
+            ranges[1]{start,end}:
+              0x140001b80,0x140001b98
+            total_bytes: 25
+            span_bytes: 25
+            non_contiguous: false
+            contains_entry: true
+        target_procedure:
+          address: 0x14007baf0
+          name: FUN_14007baf0
+          classification:
+            external: false
+            thunk: false
+            thunk_target: null
+            provenance: ghidra-function-manager
+          body:
+            available: true
+            provenance: ghidra-function-body-address-set
+            ranges[1]{start,end}:
+              0x14007baf0,0x14007bb63
+            total_bytes: 116
+            span_bytes: 116
+            non_contiguous: false
+            contains_entry: true
+        kind:
+          available: true
+          provenance: ghidra-reference-manager
+          type: UNCONDITIONAL_CALL
+          flow: true
+          call: true
+          jump: false
+          data: false
+          read: false
+          write: false
+          indirect: false
+          computed: false
+          conditional: false
+          terminal: false
+          primary: true
+          operand_index: 0
+          external: false
+      - source_address: 0x140001ba9
+        target_address: 0x14007baf0
+        source_procedure:
+          address: 0x140001ba0
+          name: FUN_140001ba0
+          classification:
+            external: false
+            thunk: false
+            thunk_target: null
+            provenance: ghidra-function-manager
+          body:
+            available: true
+            provenance: ghidra-function-body-address-set
+            ranges[1]{start,end}:
+              0x140001ba0,0x140001bb8
+            total_bytes: 25
+            span_bytes: 25
+            non_contiguous: false
+            contains_entry: true
+        target_procedure:
+          address: 0x14007baf0
+          name: FUN_14007baf0
+          classification:
+            external: false
+            thunk: false
+            thunk_target: null
+            provenance: ghidra-function-manager
+          body:
+            available: true
+            provenance: ghidra-function-body-address-set
+            ranges[1]{start,end}:
+              0x14007baf0,0x14007bb63
+            total_bytes: 116
+            span_bytes: 116
+            non_contiguous: false
+            contains_entry: true
+        kind:
+          available: true
+          provenance: ghidra-reference-manager
+          type: UNCONDITIONAL_CALL
+          flow: true
+          call: true
+          jump: false
+          data: false
+          read: false
+          write: false
+          indirect: false
+          computed: false
+          conditional: false
+          terminal: false
+          primary: true
+          operand_index: 0
+          external: false
+      - source_address: 0x140001be2
+        target_address: 0x14007baf0
+        source_procedure:
+          address: 0x140001bc0
+          name: FUN_140001bc0
+          classification:
+            external: false
+            thunk: false
+            thunk_target: null
+            provenance: ghidra-function-manager
+          body:
+            available: true
+            provenance: ghidra-function-body-address-set
+            ranges[1]{start,end}:
+              0x140001bc0,0x140001bf1
+            total_bytes: 50
+            span_bytes: 50
+            non_contiguous: false
+            contains_entry: true
+        target_procedure:
+          address: 0x14007baf0
+          name: FUN_14007baf0
+          classification:
+            external: false
+            thunk: false
+            thunk_target: null
+            provenance: ghidra-function-manager
+          body:
+            available: true
+            provenance: ghidra-function-body-address-set
+            ranges[1]{start,end}:
+              0x14007baf0,0x14007bb63
+            total_bytes: 116
+            span_bytes: 116
+            non_contiguous: false
+            contains_entry: true
+        kind:
+          available: true
+          provenance: ghidra-reference-manager
+          type: UNCONDITIONAL_CALL
+          flow: true
+          call: true
+          jump: false
+          data: false
+          read: false
+          write: false
+          indirect: false
+          computed: false
+          conditional: false
+          terminal: false
+          primary: true
+          operand_index: 0
+          external: false
+      - source_address: 0x140001c09
+        target_address: 0x14007baf0
+        source_procedure:
+          address: 0x140001c00
+          name: FUN_140001c00
+          classification:
+            external: false
+            thunk: false
+            thunk_target: null
+            provenance: ghidra-function-manager
+          body:
+            available: true
+            provenance: ghidra-function-body-address-set
+            ranges[1]{start,end}:
+              0x140001c00,0x140001c18
+            total_bytes: 25
+            span_bytes: 25
+            non_contiguous: false
+            contains_entry: true
+        target_procedure:
+          address: 0x14007baf0
+          name: FUN_14007baf0
+          classification:
+            external: false
+            thunk: false
+            thunk_target: null
+            provenance: ghidra-function-manager
+          body:
+            available: true
+            provenance: ghidra-function-body-address-set
+            ranges[1]{start,end}:
+              0x14007baf0,0x14007bb63
+            total_bytes: 116
+            span_bytes: 116
+            non_contiguous: false
+            contains_entry: true
+        kind:
+          available: true
+          provenance: ghidra-reference-manager
+          type: UNCONDITIONAL_CALL
+          flow: true
+          call: true
+          jump: false
+          data: false
+          read: false
+          write: false
+          indirect: false
+          computed: false
+          conditional: false
+          terminal: false
+          primary: true
+          operand_index: 0
+          external: false
+      - source_address: 0x140001c29
+        target_address: 0x14007baf0
+        source_procedure:
+          address: 0x140001c20
+          name: FUN_140001c20
+          classification:
+            external: false
+            thunk: false
+            thunk_target: null
+            provenance: ghidra-function-manager
+          body:
+            available: true
+            provenance: ghidra-function-body-address-set
+            ranges[1]{start,end}:
+              0x140001c20,0x140001c38
+            total_bytes: 25
+            span_bytes: 25
+            non_contiguous: false
+            contains_entry: true
+        target_procedure:
+          address: 0x14007baf0
+          name: FUN_14007baf0
+          classification:
+            external: false
+            thunk: false
+            thunk_target: null
+            provenance: ghidra-function-manager
+          body:
+            available: true
+            provenance: ghidra-function-body-address-set
+            ranges[1]{start,end}:
+              0x14007baf0,0x14007bb63
+            total_bytes: 116
+            span_bytes: 116
+            non_contiguous: false
+            contains_entry: true
+        kind:
+          available: true
+          provenance: ghidra-reference-manager
+          type: UNCONDITIONAL_CALL
+          flow: true
+          call: true
+          jump: false
+          data: false
+          read: false
+          write: false
+          indirect: false
+          computed: false
+          conditional: false
+          terminal: false
+          primary: true
+          operand_index: 0
+          external: false
+      - source_address: 0x140001c49
+        target_address: 0x14007baf0
+        source_procedure:
+          address: 0x140001c40
+          name: FUN_140001c40
+          classification:
+            external: false
+            thunk: false
+            thunk_target: null
+            provenance: ghidra-function-manager
+          body:
+            available: true
+            provenance: ghidra-function-body-address-set
+            ranges[1]{start,end}:
+              0x140001c40,0x140001c58
+            total_bytes: 25
+            span_bytes: 25
+            non_contiguous: false
+            contains_entry: true
+        target_procedure:
+          address: 0x14007baf0
+          name: FUN_14007baf0
+          classification:
+            external: false
+            thunk: false
+            thunk_target: null
+            provenance: ghidra-function-manager
+          body:
+            available: true
+            provenance: ghidra-function-body-address-set
+            ranges[1]{start,end}:
+              0x14007baf0,0x14007bb63
+            total_bytes: 116
+            span_bytes: 116
+            non_contiguous: false
+            contains_entry: true
+        kind:
+          available: true
+          provenance: ghidra-reference-manager
+          type: UNCONDITIONAL_CALL
+          flow: true
+          call: true
+          jump: false
+          data: false
+          read: false
+          write: false
+          indirect: false
+          computed: false
+          conditional: false
+          terminal: false
+          primary: true
+          operand_index: 0
+          external: false
+      - source_address: 0x140001c69
+        target_address: 0x14007baf0
+        source_procedure:
+          address: 0x140001c60
+          name: FUN_140001c60
+          classification:
+            external: false
+            thunk: false
+            thunk_target: null
+            provenance: ghidra-function-manager
+          body:
+            available: true
+            provenance: ghidra-function-body-address-set
+            ranges[1]{start,end}:
+              0x140001c60,0x140001c78
+            total_bytes: 25
+            span_bytes: 25
+            non_contiguous: false
+            contains_entry: true
+        target_procedure:
+          address: 0x14007baf0
+          name: FUN_14007baf0
+          classification:
+            external: false
+            thunk: false
+            thunk_target: null
+            provenance: ghidra-function-manager
+          body:
+            available: true
+            provenance: ghidra-function-body-address-set
+            ranges[1]{start,end}:
+              0x14007baf0,0x14007bb63
+            total_bytes: 116
+            span_bytes: 116
+            non_contiguous: false
+            contains_entry: true
+        kind:
+          available: true
+          provenance: ghidra-reference-manager
+          type: UNCONDITIONAL_CALL
+          flow: true
+          call: true
+          jump: false
+          data: false
+          read: false
+          write: false
+          indirect: false
+          computed: false
+          conditional: false
+          terminal: false
+          primary: true
+          operand_index: 0
+          external: false
+      - source_address: 0x140001c89
+        target_address: 0x14007baf0
+        source_procedure:
+          address: 0x140001c80
+          name: FUN_140001c80
+          classification:
+            external: false
+            thunk: false
+            thunk_target: null
+            provenance: ghidra-function-manager
+          body:
+            available: true
+            provenance: ghidra-function-body-address-set
+            ranges[1]{start,end}:
+              0x140001c80,0x140001c98
+            total_bytes: 25
+            span_bytes: 25
+            non_contiguous: false
+            contains_entry: true
+        target_procedure:
+          address: 0x14007baf0
+          name: FUN_14007baf0
+          classification:
+            external: false
+            thunk: false
+            thunk_target: null
+            provenance: ghidra-function-manager
+          body:
+            available: true
+            provenance: ghidra-function-body-address-set
+            ranges[1]{start,end}:
+              0x14007baf0,0x14007bb63
+            total_bytes: 116
+            span_bytes: 116
+            non_contiguous: false
+            contains_entry: true
+        kind:
+          available: true
+          provenance: ghidra-reference-manager
+          type: UNCONDITIONAL_CALL
+          flow: true
+          call: true
+          jump: false
+          data: false
+          read: false
+          write: false
+          indirect: false
+          computed: false
+          conditional: false
+          terminal: false
+          primary: true
+          operand_index: 0
+          external: false
+      - source_address: 0x140002082
+        target_address: 0x14007baf0
+        source_procedure:
+          address: 0x140002060
+          name: FUN_140002060
+          classification:
+            external: false
+            thunk: false
+            thunk_target: null
+            provenance: ghidra-function-manager
+          body:
+            available: true
+            provenance: ghidra-function-body-address-set
+            ranges[1]{start,end}:
+              0x140002060,0x140002091
+            total_bytes: 50
+            span_bytes: 50
+            non_contiguous: false
+            contains_entry: true
+        target_procedure:
+          address: 0x14007baf0
+          name: FUN_14007baf0
+          classification:
+            external: false
+            thunk: false
+            thunk_target: null
+            provenance: ghidra-function-manager
+          body:
+            available: true
+            provenance: ghidra-function-body-address-set
+            ranges[1]{start,end}:
+              0x14007baf0,0x14007bb63
+            total_bytes: 116
+            span_bytes: 116
+            non_contiguous: false
+            contains_entry: true
+        kind:
+          available: true
+          provenance: ghidra-reference-manager
+          type: UNCONDITIONAL_CALL
+          flow: true
+          call: true
+          jump: false
+          data: false
+          read: false
+          write: false
+          indirect: false
+          computed: false
+          conditional: false
+          terminal: false
+          primary: true
+          operand_index: 0
+          external: false
+      - source_address: 0x1400020a9
+        target_address: 0x14007baf0
+        source_procedure:
+          address: 0x1400020a0
+          name: FUN_1400020a0
+          classification:
+            external: false
+            thunk: false
+            thunk_target: null
+            provenance: ghidra-function-manager
+          body:
+            available: true
+            provenance: ghidra-function-body-address-set
+            ranges[1]{start,end}:
+              0x1400020a0,0x1400020b8
+            total_bytes: 25
+            span_bytes: 25
+            non_contiguous: false
+            contains_entry: true
+        target_procedure:
+          address: 0x14007baf0
+          name: FUN_14007baf0
+          classification:
+            external: false
+            thunk: false
+            thunk_target: null
+            provenance: ghidra-function-manager
+          body:
+            available: true
+            provenance: ghidra-function-body-address-set
+            ranges[1]{start,end}:
+              0x14007baf0,0x14007bb63
+            total_bytes: 116
+            span_bytes: 116
+            non_contiguous: false
+            contains_entry: true
+        kind:
+          available: true
+          provenance: ghidra-reference-manager
+          type: UNCONDITIONAL_CALL
+          flow: true
+          call: true
+          jump: false
+          data: false
+          read: false
+          write: false
+          indirect: false
+          computed: false
+          conditional: false
+          terminal: false
+          primary: true
+          operand_index: 0
+          external: false
+      - source_address: 0x1400020c9
+        target_address: 0x14007baf0
+        source_procedure:
+          address: 0x1400020c0
+          name: FUN_1400020c0
+          classification:
+            external: false
+            thunk: false
+            thunk_target: null
+            provenance: ghidra-function-manager
+          body:
+            available: true
+            provenance: ghidra-function-body-address-set
+            ranges[1]{start,end}:
+              0x1400020c0,0x1400020d8
+            total_bytes: 25
+            span_bytes: 25
+            non_contiguous: false
+            contains_entry: true
+        target_procedure:
+          address: 0x14007baf0
+          name: FUN_14007baf0
+          classification:
+            external: false
+            thunk: false
+            thunk_target: null
+            provenance: ghidra-function-manager
+          body:
+            available: true
+            provenance: ghidra-function-body-address-set
+            ranges[1]{start,end}:
+              0x14007baf0,0x14007bb63
+            total_bytes: 116
+            span_bytes: 116
+            non_contiguous: false
+            contains_entry: true
+        kind:
+          available: true
+          provenance: ghidra-reference-manager
+          type: UNCONDITIONAL_CALL
+          flow: true
+          call: true
+          jump: false
+          data: false
+          read: false
+          write: false
+          indirect: false
+          computed: false
+          conditional: false
+          terminal: false
+          primary: true
+          operand_index: 0
+          external: false
+      - source_address: 0x1400020e9
+        target_address: 0x14007baf0
+        source_procedure:
+          address: 0x1400020e0
+          name: FUN_1400020e0
+          classification:
+            external: false
+            thunk: false
+            thunk_target: null
+            provenance: ghidra-function-manager
+          body:
+            available: true
+            provenance: ghidra-function-body-address-set
+            ranges[1]{start,end}:
+              0x1400020e0,0x1400020f8
+            total_bytes: 25
+            span_bytes: 25
+            non_contiguous: false
+            contains_entry: true
+        target_procedure:
+          address: 0x14007baf0
+          name: FUN_14007baf0
+          classification:
+            external: false
+            thunk: false
+            thunk_target: null
+            provenance: ghidra-function-manager
+          body:
+            available: true
+            provenance: ghidra-function-body-address-set
+            ranges[1]{start,end}:
+              0x14007baf0,0x14007bb63
+            total_bytes: 116
+            span_bytes: 116
+            non_contiguous: false
+            contains_entry: true
+        kind:
+          available: true
+          provenance: ghidra-reference-manager
+          type: UNCONDITIONAL_CALL
+          flow: true
+          call: true
+          jump: false
+          data: false
+          read: false
+          write: false
+          indirect: false
+          computed: false
+          conditional: false
+          terminal: false
+          primary: true
+          operand_index: 0
+          external: false
+      - source_address: 0x140002109
+        target_address: 0x14007baf0
+        source_procedure:
+          address: 0x140002100
+          name: FUN_140002100
+          classification:
+            external: false
+            thunk: false
+            thunk_target: null
+            provenance: ghidra-function-manager
+          body:
+            available: true
+            provenance: ghidra-function-body-address-set
+            ranges[1]{start,end}:
+              0x140002100,0x140002118
+            total_bytes: 25
+            span_bytes: 25
+            non_contiguous: false
+            contains_entry: true
+        target_procedure:
+          address: 0x14007baf0
+          name: FUN_14007baf0
+          classification:
+            external: false
+            thunk: false
+            thunk_target: null
+            provenance: ghidra-function-manager
+          body:
+            available: true
+            provenance: ghidra-function-body-address-set
+            ranges[1]{start,end}:
+              0x14007baf0,0x14007bb63
+            total_bytes: 116
+            span_bytes: 116
+            non_contiguous: false
+            contains_entry: true
+        kind:
+          available: true
+          provenance: ghidra-reference-manager
+          type: UNCONDITIONAL_CALL
+          flow: true
+          call: true
+          jump: false
+          data: false
+          read: false
+          write: false
+          indirect: false
+          computed: false
+          conditional: false
+          terminal: false
+          primary: true
+          operand_index: 0
+          external: false
+      - source_address: 0x140002129
+        target_address: 0x14007baf0
+        source_procedure:
+          address: 0x140002120
+          name: FUN_140002120
+          classification:
+            external: false
+            thunk: false
+            thunk_target: null
+            provenance: ghidra-function-manager
+          body:
+            available: true
+            provenance: ghidra-function-body-address-set
+            ranges[1]{start,end}:
+              0x140002120,0x140002138
+            total_bytes: 25
+            span_bytes: 25
+            non_contiguous: false
+            contains_entry: true
+        target_procedure:
+          address: 0x14007baf0
+          name: FUN_14007baf0
+          classification:
+            external: false
+            thunk: false
+            thunk_target: null
+            provenance: ghidra-function-manager
+          body:
+            available: true
+            provenance: ghidra-function-body-address-set
+            ranges[1]{start,end}:
+              0x14007baf0,0x14007bb63
+            total_bytes: 116
+            span_bytes: 116
+            non_contiguous: false
+            contains_entry: true
+        kind:
+          available: true
+          provenance: ghidra-reference-manager
+          type: UNCONDITIONAL_CALL
+          flow: true
+          call: true
+          jump: false
+          data: false
+          read: false
+          write: false
+          indirect: false
+          computed: false
+          conditional: false
+          terminal: false
+          primary: true
+          operand_index: 0
+          external: false
+      - source_address: 0x140002149
+        target_address: 0x14007baf0
+        source_procedure:
+          address: 0x140002140
+          name: FUN_140002140
+          classification:
+            external: false
+            thunk: false
+            thunk_target: null
+            provenance: ghidra-function-manager
+          body:
+            available: true
+            provenance: ghidra-function-body-address-set
+            ranges[1]{start,end}:
+              0x140002140,0x140002158
+            total_bytes: 25
+            span_bytes: 25
+            non_contiguous: false
+            contains_entry: true
+        target_procedure:
+          address: 0x14007baf0
+          name: FUN_14007baf0
+          classification:
+            external: false
+            thunk: false
+            thunk_target: null
+            provenance: ghidra-function-manager
+          body:
+            available: true
+            provenance: ghidra-function-body-address-set
+            ranges[1]{start,end}:
+              0x14007baf0,0x14007bb63
+            total_bytes: 116
+            span_bytes: 116
+            non_contiguous: false
+            contains_entry: true
+        kind:
+          available: true
+          provenance: ghidra-reference-manager
+          type: UNCONDITIONAL_CALL
+          flow: true
+          call: true
+          jump: false
+          data: false
+          read: false
+          write: false
+          indirect: false
+          computed: false
+          conditional: false
+          terminal: false
+          primary: true
+          operand_index: 0
+          external: false
+      - source_address: 0x140002169
+        target_address: 0x14007baf0
+        source_procedure:
+          address: 0x140002160
+          name: FUN_140002160
+          classification:
+            external: false
+            thunk: false
+            thunk_target: null
+            provenance: ghidra-function-manager
+          body:
+            available: true
+            provenance: ghidra-function-body-address-set
+            ranges[1]{start,end}:
+              0x140002160,0x140002178
+            total_bytes: 25
+            span_bytes: 25
+            non_contiguous: false
+            contains_entry: true
+        target_procedure:
+          address: 0x14007baf0
+          name: FUN_14007baf0
+          classification:
+            external: false
+            thunk: false
+            thunk_target: null
+            provenance: ghidra-function-manager
+          body:
+            available: true
+            provenance: ghidra-function-body-address-set
+            ranges[1]{start,end}:
+              0x14007baf0,0x14007bb63
+            total_bytes: 116
+            span_bytes: 116
+            non_contiguous: false
+            contains_entry: true
+        kind:
+          available: true
+          provenance: ghidra-reference-manager
+          type: UNCONDITIONAL_CALL
+          flow: true
+          call: true
+          jump: false
+          data: false
+          read: false
+          write: false
+          indirect: false
+          computed: false
+          conditional: false
+          terminal: false
+          primary: true
+          operand_index: 0
+          external: false
+      - source_address: 0x140002189
+        target_address: 0x14007baf0
+        source_procedure:
+          address: 0x140002180
+          name: FUN_140002180
+          classification:
+            external: false
+            thunk: false
+            thunk_target: null
+            provenance: ghidra-function-manager
+          body:
+            available: true
+            provenance: ghidra-function-body-address-set
+            ranges[1]{start,end}:
+              0x140002180,0x140002198
+            total_bytes: 25
+            span_bytes: 25
+            non_contiguous: false
+            contains_entry: true
+        target_procedure:
+          address: 0x14007baf0
+          name: FUN_14007baf0
+          classification:
+            external: false
+            thunk: false
+            thunk_target: null
+            provenance: ghidra-function-manager
+          body:
+            available: true
+            provenance: ghidra-function-body-address-set
+            ranges[1]{start,end}:
+              0x14007baf0,0x14007bb63
+            total_bytes: 116
+            span_bytes: 116
+            non_contiguous: false
+            contains_entry: true
+        kind:
+          available: true
+          provenance: ghidra-reference-manager
+          type: UNCONDITIONAL_CALL
+          flow: true
+          call: true
+          jump: false
+          data: false
+          read: false
+          write: false
+          indirect: false
+          computed: false
+          conditional: false
+          terminal: false
+          primary: true
+          operand_index: 0
+          external: false
+      - source_address: 0x1400021a9
+        target_address: 0x14007baf0
+        source_procedure:
+          address: 0x1400021a0
+          name: FUN_1400021a0
+          classification:
+            external: false
+            thunk: false
+            thunk_target: null
+            provenance: ghidra-function-manager
+          body:
+            available: true
+            provenance: ghidra-function-body-address-set
+            ranges[1]{start,end}:
+              0x1400021a0,0x1400021b8
+            total_bytes: 25
+            span_bytes: 25
+            non_contiguous: false
+            contains_entry: true
+        target_procedure:
+          address: 0x14007baf0
+          name: FUN_14007baf0
+          classification:
+            external: false
+            thunk: false
+            thunk_target: null
+            provenance: ghidra-function-manager
+          body:
+            available: true
+            provenance: ghidra-function-body-address-set
+            ranges[1]{start,end}:
+              0x14007baf0,0x14007bb63
+            total_bytes: 116
+            span_bytes: 116
+            non_contiguous: false
+            contains_entry: true
+        kind:
+          available: true
+          provenance: ghidra-reference-manager
+          type: UNCONDITIONAL_CALL
+          flow: true
+          call: true
+          jump: false
+          data: false
+          read: false
+          write: false
+          indirect: false
+          computed: false
+          conditional: false
+          terminal: false
+          primary: true
+          operand_index: 0
+          external: false
+      - source_address: 0x1400021c9
+        target_address: 0x14007baf0
+        source_procedure:
+          address: 0x1400021c0
+          name: FUN_1400021c0
+          classification:
+            external: false
+            thunk: false
+            thunk_target: null
+            provenance: ghidra-function-manager
+          body:
+            available: true
+            provenance: ghidra-function-body-address-set
+            ranges[1]{start,end}:
+              0x1400021c0,0x1400021d8
+            total_bytes: 25
+            span_bytes: 25
+            non_contiguous: false
+            contains_entry: true
+        target_procedure:
+          address: 0x14007baf0
+          name: FUN_14007baf0
+          classification:
+            external: false
+            thunk: false
+            thunk_target: null
+            provenance: ghidra-function-manager
+          body:
+            available: true
+            provenance: ghidra-function-body-address-set
+            ranges[1]{start,end}:
+              0x14007baf0,0x14007bb63
+            total_bytes: 116
+            span_bytes: 116
+            non_contiguous: false
+            contains_entry: true
+        kind:
+          available: true
+          provenance: ghidra-reference-manager
+          type: UNCONDITIONAL_CALL
+          flow: true
+          call: true
+          jump: false
+          data: false
+          read: false
+          write: false
+          indirect: false
+          computed: false
+          conditional: false
+          terminal: false
+          primary: true
+          operand_index: 0
+          external: false
+      - source_address: 0x1400021e9
+        target_address: 0x14007baf0
+        source_procedure:
+          address: 0x1400021e0
+          name: FUN_1400021e0
+          classification:
+            external: false
+            thunk: false
+            thunk_target: null
+            provenance: ghidra-function-manager
+          body:
+            available: true
+            provenance: ghidra-function-body-address-set
+            ranges[1]{start,end}:
+              0x1400021e0,0x1400021f8
+            total_bytes: 25
+            span_bytes: 25
+            non_contiguous: false
+            contains_entry: true
+        target_procedure:
+          address: 0x14007baf0
+          name: FUN_14007baf0
+          classification:
+            external: false
+            thunk: false
+            thunk_target: null
+            provenance: ghidra-function-manager
+          body:
+            available: true
+            provenance: ghidra-function-body-address-set
+            ranges[1]{start,end}:
+              0x14007baf0,0x14007bb63
+            total_bytes: 116
+            span_bytes: 116
+            non_contiguous: false
+            contains_entry: true
+        kind:
+          available: true
+          provenance: ghidra-reference-manager
+          type: UNCONDITIONAL_CALL
+          flow: true
+          call: true
+          jump: false
+          data: false
+          read: false
+          write: false
+          indirect: false
+          computed: false
+          conditional: false
+          terminal: false
+          primary: true
+          operand_index: 0
+          external: false
+      - source_address: 0x140002595
+        target_address: 0x14007baf0
+        source_procedure:
+          address: 0x140002590
+          name: FUN_140002590
+          classification:
+            external: false
+            thunk: false
+            thunk_target: null
+            provenance: ghidra-function-manager
+          body:
+            available: true
+            provenance: ghidra-function-body-address-set
+            ranges[1]{start,end}:
+              0x140002590,0x140002599
+            total_bytes: 10
+            span_bytes: 10
+            non_contiguous: false
+            contains_entry: true
+        target_procedure:
+          address: 0x14007baf0
+          name: FUN_14007baf0
+          classification:
+            external: false
+            thunk: false
+            thunk_target: null
+            provenance: ghidra-function-manager
+          body:
+            available: true
+            provenance: ghidra-function-body-address-set
+            ranges[1]{start,end}:
+              0x14007baf0,0x14007bb63
+            total_bytes: 116
+            span_bytes: 116
+            non_contiguous: false
+            contains_entry: true
+        kind:
+          available: true
+          provenance: ghidra-reference-manager
+          type: UNCONDITIONAL_CALL
+          flow: true
+          call: true
+          jump: false
+          data: false
+          read: false
+          write: false
+          indirect: false
+          computed: false
+          conditional: false
+          terminal: false
+          primary: true
+          operand_index: 0
+          external: false
+      - source_address: 0x1400025a5
+        target_address: 0x14007baf0
+        source_procedure:
+          address: 0x1400025a0
+          name: FUN_1400025a0
+          classification:
+            external: false
+            thunk: false
+            thunk_target: null
+            provenance: ghidra-function-manager
+          body:
+            available: true
+            provenance: ghidra-function-body-address-set
+            ranges[1]{start,end}:
+              0x1400025a0,0x1400025a9
+            total_bytes: 10
+            span_bytes: 10
+            non_contiguous: false
+            contains_entry: true
+        target_procedure:
+          address: 0x14007baf0
+          name: FUN_14007baf0
+          classification:
+            external: false
+            thunk: false
+            thunk_target: null
+            provenance: ghidra-function-manager
+          body:
+            available: true
+            provenance: ghidra-function-body-address-set
+            ranges[1]{start,end}:
+              0x14007baf0,0x14007bb63
+            total_bytes: 116
+            span_bytes: 116
+            non_contiguous: false
+            contains_entry: true
+        kind:
+          available: true
+          provenance: ghidra-reference-manager
+          type: UNCONDITIONAL_CALL
+          flow: true
+          call: true
+          jump: false
+          data: false
+          read: false
+          write: false
+          indirect: false
+          computed: false
+          conditional: false
+          terminal: false
+          primary: true
+          operand_index: 0
+          external: false
+      - source_address: 0x1400025b5
+        target_address: 0x14007baf0
+        source_procedure:
+          address: 0x1400025b0
+          name: FUN_1400025b0
+          classification:
+            external: false
+            thunk: false
+            thunk_target: null
+            provenance: ghidra-function-manager
+          body:
+            available: true
+            provenance: ghidra-function-body-address-set
+            ranges[1]{start,end}:
+              0x1400025b0,0x1400025b9
+            total_bytes: 10
+            span_bytes: 10
+            non_contiguous: false
+            contains_entry: true
+        target_procedure:
+          address: 0x14007baf0
+          name: FUN_14007baf0
+          classification:
+            external: false
+            thunk: false
+            thunk_target: null
+            provenance: ghidra-function-manager
+          body:
+            available: true
+            provenance: ghidra-function-body-address-set
+            ranges[1]{start,end}:
+              0x14007baf0,0x14007bb63
+            total_bytes: 116
+            span_bytes: 116
+            non_contiguous: false
+            contains_entry: true
+        kind:
+          available: true
+          provenance: ghidra-reference-manager
+          type: UNCONDITIONAL_CALL
+          flow: true
+          call: true
+          jump: false
+          data: false
+          read: false
+          write: false
+          indirect: false
+          computed: false
+          conditional: false
+          terminal: false
+          primary: true
+          operand_index: 0
+          external: false
+      - source_address: 0x1400025c5
+        target_address: 0x14007baf0
+        source_procedure:
+          address: 0x1400025c0
+          name: FUN_1400025c0
+          classification:
+            external: false
+            thunk: false
+            thunk_target: null
+            provenance: ghidra-function-manager
+          body:
+            available: true
+            provenance: ghidra-function-body-address-set
+            ranges[1]{start,end}:
+              0x1400025c0,0x1400025c9
+            total_bytes: 10
+            span_bytes: 10
+            non_contiguous: false
+            contains_entry: true
+        target_procedure:
+          address: 0x14007baf0
+          name: FUN_14007baf0
+          classification:
+            external: false
+            thunk: false
+            thunk_target: null
+            provenance: ghidra-function-manager
+          body:
+            available: true
+            provenance: ghidra-function-body-address-set
+            ranges[1]{start,end}:
+              0x14007baf0,0x14007bb63
+            total_bytes: 116
+            span_bytes: 116
+            non_contiguous: false
+            contains_entry: true
+        kind:
+          available: true
+          provenance: ghidra-reference-manager
+          type: UNCONDITIONAL_CALL
+          flow: true
+          call: true
+          jump: false
+          data: false
+          read: false
+          write: false
+          indirect: false
+          computed: false
+          conditional: false
+          terminal: false
+          primary: true
+          operand_index: 0
+          external: false
+      - source_address: 0x1400025d5
+        target_address: 0x14007baf0
+        source_procedure:
+          address: 0x1400025d0
+          name: FUN_1400025d0
+          classification:
+            external: false
+            thunk: false
+            thunk_target: null
+            provenance: ghidra-function-manager
+          body:
+            available: true
+            provenance: ghidra-function-body-address-set
+            ranges[1]{start,end}:
+              0x1400025d0,0x1400025d9
+            total_bytes: 10
+            span_bytes: 10
+            non_contiguous: false
+            contains_entry: true
+        target_procedure:
+          address: 0x14007baf0
+          name: FUN_14007baf0
+          classification:
+            external: false
+            thunk: false
+            thunk_target: null
+            provenance: ghidra-function-manager
+          body:
+            available: true
+            provenance: ghidra-function-body-address-set
+            ranges[1]{start,end}:
+              0x14007baf0,0x14007bb63
+            total_bytes: 116
+            span_bytes: 116
+            non_contiguous: false
+            contains_entry: true
+        kind:
+          available: true
+          provenance: ghidra-reference-manager
+          type: UNCONDITIONAL_CALL
+          flow: true
+          call: true
+          jump: false
+          data: false
+          read: false
+          write: false
+          indirect: false
+          computed: false
+          conditional: false
+          terminal: false
+          primary: true
+          operand_index: 0
+          external: false
+      - source_address: 0x1400025e5
+        target_address: 0x14007baf0
+        source_procedure:
+          address: 0x1400025e0
+          name: FUN_1400025e0
+          classification:
+            external: false
+            thunk: false
+            thunk_target: null
+            provenance: ghidra-function-manager
+          body:
+            available: true
+            provenance: ghidra-function-body-address-set
+            ranges[1]{start,end}:
+              0x1400025e0,0x1400025e9
+            total_bytes: 10
+            span_bytes: 10
+            non_contiguous: false
+            contains_entry: true
+        target_procedure:
+          address: 0x14007baf0
+          name: FUN_14007baf0
+          classification:
+            external: false
+            thunk: false
+            thunk_target: null
+            provenance: ghidra-function-manager
+          body:
+            available: true
+            provenance: ghidra-function-body-address-set
+            ranges[1]{start,end}:
+              0x14007baf0,0x14007bb63
+            total_bytes: 116
+            span_bytes: 116
+            non_contiguous: false
+            contains_entry: true
+        kind:
+          available: true
+          provenance: ghidra-reference-manager
+          type: UNCONDITIONAL_CALL
+          flow: true
+          call: true
+          jump: false
+          data: false
+          read: false
+          write: false
+          indirect: false
+          computed: false
+          conditional: false
+          terminal: false
+          primary: true
+          operand_index: 0
+          external: false
+      - source_address: 0x1400025f5
+        target_address: 0x14007baf0
+        source_procedure:
+          address: 0x1400025f0
+          name: FUN_1400025f0
+          classification:
+            external: false
+            thunk: false
+            thunk_target: null
+            provenance: ghidra-function-manager
+          body:
+            available: true
+            provenance: ghidra-function-body-address-set
+            ranges[1]{start,end}:
+              0x1400025f0,0x1400025f9
+            total_bytes: 10
+            span_bytes: 10
+            non_contiguous: false
+            contains_entry: true
+        target_procedure:
+          address: 0x14007baf0
+          name: FUN_14007baf0
+          classification:
+            external: false
+            thunk: false
+            thunk_target: null
+            provenance: ghidra-function-manager
+          body:
+            available: true
+            provenance: ghidra-function-body-address-set
+            ranges[1]{start,end}:
+              0x14007baf0,0x14007bb63
+            total_bytes: 116
+            span_bytes: 116
+            non_contiguous: false
+            contains_entry: true
+        kind:
+          available: true
+          provenance: ghidra-reference-manager
+          type: UNCONDITIONAL_CALL
+          flow: true
+          call: true
+          jump: false
+          data: false
+          read: false
+          write: false
+          indirect: false
+          computed: false
+          conditional: false
+          terminal: false
+          primary: true
+          operand_index: 0
+          external: false
+      - source_address: 0x140002605
+        target_address: 0x14007baf0
+        source_procedure:
+          address: 0x140002600
+          name: FUN_140002600
+          classification:
+            external: false
+            thunk: false
+            thunk_target: null
+            provenance: ghidra-function-manager
+          body:
+            available: true
+            provenance: ghidra-function-body-address-set
+            ranges[1]{start,end}:
+              0x140002600,0x140002609
+            total_bytes: 10
+            span_bytes: 10
+            non_contiguous: false
+            contains_entry: true
+        target_procedure:
+          address: 0x14007baf0
+          name: FUN_14007baf0
+          classification:
+            external: false
+            thunk: false
+            thunk_target: null
+            provenance: ghidra-function-manager
+          body:
+            available: true
+            provenance: ghidra-function-body-address-set
+            ranges[1]{start,end}:
+              0x14007baf0,0x14007bb63
+            total_bytes: 116
+            span_bytes: 116
+            non_contiguous: false
+            contains_entry: true
+        kind:
+          available: true
+          provenance: ghidra-reference-manager
+          type: UNCONDITIONAL_CALL
+          flow: true
+          call: true
+          jump: false
+          data: false
+          read: false
+          write: false
+          indirect: false
+          computed: false
+          conditional: false
+          terminal: false
+          primary: true
+          operand_index: 0
+          external: false
+      - source_address: 0x140002615
+        target_address: 0x14007baf0
+        source_procedure:
+          address: 0x140002610
+          name: FUN_140002610
+          classification:
+            external: false
+            thunk: false
+            thunk_target: null
+            provenance: ghidra-function-manager
+          body:
+            available: true
+            provenance: ghidra-function-body-address-set
+            ranges[1]{start,end}:
+              0x140002610,0x140002619
+            total_bytes: 10
+            span_bytes: 10
+            non_contiguous: false
+            contains_entry: true
+        target_procedure:
+          address: 0x14007baf0
+          name: FUN_14007baf0
+          classification:
+            external: false
+            thunk: false
+            thunk_target: null
+            provenance: ghidra-function-manager
+          body:
+            available: true
+            provenance: ghidra-function-body-address-set
+            ranges[1]{start,end}:
+              0x14007baf0,0x14007bb63
+            total_bytes: 116
+            span_bytes: 116
+            non_contiguous: false
+            contains_entry: true
+        kind:
+          available: true
+          provenance: ghidra-reference-manager
+          type: UNCONDITIONAL_CALL
+          flow: true
+          call: true
+          jump: false
+          data: false
+          read: false
+          write: false
+          indirect: false
+          computed: false
+          conditional: false
+          terminal: false
+          primary: true
+          operand_index: 0
+          external: false
+      - source_address: 0x140002625
+        target_address: 0x14007baf0
+        source_procedure:
+          address: 0x140002620
+          name: FUN_140002620
+          classification:
+            external: false
+            thunk: false
+            thunk_target: null
+            provenance: ghidra-function-manager
+          body:
+            available: true
+            provenance: ghidra-function-body-address-set
+            ranges[1]{start,end}:
+              0x140002620,0x140002629
+            total_bytes: 10
+            span_bytes: 10
+            non_contiguous: false
+            contains_entry: true
+        target_procedure:
+          address: 0x14007baf0
+          name: FUN_14007baf0
+          classification:
+            external: false
+            thunk: false
+            thunk_target: null
+            provenance: ghidra-function-manager
+          body:
+            available: true
+            provenance: ghidra-function-body-address-set
+            ranges[1]{start,end}:
+              0x14007baf0,0x14007bb63
+            total_bytes: 116
+            span_bytes: 116
+            non_contiguous: false
+            contains_entry: true
+        kind:
+          available: true
+          provenance: ghidra-reference-manager
+          type: UNCONDITIONAL_CALL
+          flow: true
+          call: true
+          jump: false
+          data: false
+          read: false
+          write: false
+          indirect: false
+          computed: false
+          conditional: false
+          terminal: false
+          primary: true
+          operand_index: 0
+          external: false
+      - source_address: 0x140002635
+        target_address: 0x14007baf0
+        source_procedure:
+          address: 0x140002630
+          name: FUN_140002630
+          classification:
+            external: false
+            thunk: false
+            thunk_target: null
+            provenance: ghidra-function-manager
+          body:
+            available: true
+            provenance: ghidra-function-body-address-set
+            ranges[1]{start,end}:
+              0x140002630,0x140002639
+            total_bytes: 10
+            span_bytes: 10
+            non_contiguous: false
+            contains_entry: true
+        target_procedure:
+          address: 0x14007baf0
+          name: FUN_14007baf0
+          classification:
+            external: false
+            thunk: false
+            thunk_target: null
+            provenance: ghidra-function-manager
+          body:
+            available: true
+            provenance: ghidra-function-body-address-set
+            ranges[1]{start,end}:
+              0x14007baf0,0x14007bb63
+            total_bytes: 116
+            span_bytes: 116
+            non_contiguous: false
+            contains_entry: true
+        kind:
+          available: true
+          provenance: ghidra-reference-manager
+          type: UNCONDITIONAL_CALL
+          flow: true
+          call: true
+          jump: false
+          data: false
+          read: false
+          write: false
+          indirect: false
+          computed: false
+          conditional: false
+          terminal: false
+          primary: true
+          operand_index: 0
+          external: false
+      - source_address: 0x140002660
+        target_address: 0x14007baf0
+        source_procedure:
+          address: 0x140002640
+          name: FUN_140002640
+          classification:
+            external: false
+            thunk: false
+            thunk_target: null
+            provenance: ghidra-function-manager
+          body:
+            available: true
+            provenance: ghidra-function-body-address-set
+            ranges[1]{start,end}:
+              0x140002640,0x140002664
+            total_bytes: 37
+            span_bytes: 37
+            non_contiguous: false
+            contains_entry: true
+        target_procedure:
+          address: 0x14007baf0
+          name: FUN_14007baf0
+          classification:
+            external: false
+            thunk: false
+            thunk_target: null
+            provenance: ghidra-function-manager
+          body:
+            available: true
+            provenance: ghidra-function-body-address-set
+            ranges[1]{start,end}:
+              0x14007baf0,0x14007bb63
+            total_bytes: 116
+            span_bytes: 116
+            non_contiguous: false
+            contains_entry: true
+        kind:
+          available: true
+          provenance: ghidra-reference-manager
+          type: UNCONDITIONAL_CALL
+          flow: true
+          call: true
+          jump: false
+          data: false
+          read: false
+          write: false
+          indirect: false
+          computed: false
+          conditional: false
+          terminal: false
+          primary: true
+          operand_index: 0
+          external: false
+      - source_address: 0x1401bfeac
+        target_address: 0x14007baf0
+        source_procedure: null
+        target_procedure:
+          address: 0x14007baf0
+          name: FUN_14007baf0
+          classification:
+            external: false
+            thunk: false
+            thunk_target: null
+            provenance: ghidra-function-manager
+          body:
+            available: true
+            provenance: ghidra-function-body-address-set
+            ranges[1]{start,end}:
+              0x14007baf0,0x14007bb63
+            total_bytes: 116
+            span_bytes: 116
+            non_contiguous: false
+            contains_entry: true
+        kind:
+          available: true
+          provenance: ghidra-reference-manager
+          type: DATA
+          flow: false
+          call: false
+          jump: false
+          data: true
+          read: false
+          write: false
+          indirect: false
+          computed: false
+          conditional: false
+          terminal: false
+          primary: true
+          operand_index: 0
+          external: false
+    outgoing_references[15]:
+      - source_address: 0x14007baf4
+        target_address: 0x140185040
+        source_procedure:
+          address: 0x14007baf0
+          name: FUN_14007baf0
+          classification:
+            external: false
+            thunk: false
+            thunk_target: null
+            provenance: ghidra-function-manager
+          body:
+            available: true
+            provenance: ghidra-function-body-address-set
+            ranges[1]{start,end}:
+              0x14007baf0,0x14007bb63
+            total_bytes: 116
+            span_bytes: 116
+            non_contiguous: false
+            contains_entry: true
+        target_procedure: null
+        kind:
+          available: true
+          provenance: ghidra-reference-manager
+          type: READ
+          flow: false
+          call: false
+          jump: false
+          data: true
+          read: true
+          write: false
+          indirect: false
+          computed: false
+          conditional: false
+          terminal: false
+          primary: true
+          operand_index: 1
+          external: false
+      - source_address: 0x14007bafe
+        target_address: "stack:0xffffffffffffffe8"
+        source_procedure:
+          address: 0x14007baf0
+          name: FUN_14007baf0
+          classification:
+            external: false
+            thunk: false
+            thunk_target: null
+            provenance: ghidra-function-manager
+          body:
+            available: true
+            provenance: ghidra-function-body-address-set
+            ranges[1]{start,end}:
+              0x14007baf0,0x14007bb63
+            total_bytes: 116
+            span_bytes: 116
+            non_contiguous: false
+            contains_entry: true
+        target_procedure: null
+        kind:
+          available: true
+          provenance: ghidra-reference-manager
+          type: WRITE
+          flow: false
+          call: false
+          jump: false
+          data: true
+          read: false
+          write: true
+          indirect: false
+          computed: false
+          conditional: false
+          terminal: false
+          primary: true
+          operand_index: 0
+          external: false
+      - source_address: 0x14007bb03
+        target_address: "stack:0xffffffffffffffdc"
+        source_procedure:
+          address: 0x14007baf0
+          name: FUN_14007baf0
+          classification:
+            external: false
+            thunk: false
+            thunk_target: null
+            provenance: ghidra-function-manager
+          body:
+            available: true
+            provenance: ghidra-function-body-address-set
+            ranges[1]{start,end}:
+              0x14007baf0,0x14007bb63
+            total_bytes: 116
+            span_bytes: 116
+            non_contiguous: false
+            contains_entry: true
+        target_procedure: null
+        kind:
+          available: true
+          provenance: ghidra-reference-manager
+          type: DATA
+          flow: false
+          call: false
+          jump: false
+          data: true
+          read: false
+          write: false
+          indirect: false
+          computed: false
+          conditional: false
+          terminal: false
+          primary: true
+          operand_index: 0
+          external: false
+      - source_address: 0x14007bb08
+        target_address: "stack:0xffffffffffffffd8"
+        source_procedure:
+          address: 0x14007baf0
+          name: FUN_14007baf0
+          classification:
+            external: false
+            thunk: false
+            thunk_target: null
+            provenance: ghidra-function-manager
+          body:
+            available: true
+            provenance: ghidra-function-body-address-set
+            ranges[1]{start,end}:
+              0x14007baf0,0x14007bb63
+            total_bytes: 116
+            span_bytes: 116
+            non_contiguous: false
+            contains_entry: true
+        target_procedure: null
+        kind:
+          available: true
+          provenance: ghidra-reference-manager
+          type: DATA
+          flow: false
+          call: false
+          jump: false
+          data: true
+          read: false
+          write: false
+          indirect: false
+          computed: false
+          conditional: false
+          terminal: false
+          primary: true
+          operand_index: 0
+          external: false
+      - source_address: 0x14007bb0d
+        target_address: "stack:0xffffffffffffffe0"
+        source_procedure:
+          address: 0x14007baf0
+          name: FUN_14007baf0
+          classification:
+            external: false
+            thunk: false
+            thunk_target: null
+            provenance: ghidra-function-manager
+          body:
+            available: true
+            provenance: ghidra-function-body-address-set
+            ranges[1]{start,end}:
+              0x14007baf0,0x14007bb63
+            total_bytes: 116
+            span_bytes: 116
+            non_contiguous: false
+            contains_entry: true
+        target_procedure: null
+        kind:
+          available: true
+          provenance: ghidra-reference-manager
+          type: DATA
+          flow: false
+          call: false
+          jump: false
+          data: true
+          read: false
+          write: false
+          indirect: false
+          computed: false
+          conditional: false
+          terminal: false
+          primary: true
+          operand_index: 0
+          external: false
+      - source_address: 0x14007bb12
+        target_address: "EXTERNAL:0x7"
+        source_procedure:
+          address: 0x14007baf0
+          name: FUN_14007baf0
+          classification:
+            external: false
+            thunk: false
+            thunk_target: null
+            provenance: ghidra-function-manager
+          body:
+            available: true
+            provenance: ghidra-function-body-address-set
+            ranges[1]{start,end}:
+              0x14007baf0,0x14007bb63
+            total_bytes: 116
+            span_bytes: 116
+            non_contiguous: false
+            contains_entry: true
+        target_procedure:
+          address: "EXTERNAL:0x7"
+          name: "SHLWAPI.DLL::ColorRGBToHLS"
+          classification:
+            external: true
+            thunk: false
+            thunk_target: null
+            provenance: ghidra-function-manager
+          body:
+            available: true
+            provenance: ghidra-function-body-address-set
+            ranges: []
+            total_bytes: 0
+            span_bytes: 0
+            non_contiguous: false
+            contains_entry: false
+        kind:
+          available: true
+          provenance: ghidra-reference-manager
+          type: COMPUTED_CALL
+          flow: true
+          call: true
+          jump: false
+          data: false
+          read: false
+          write: false
+          indirect: false
+          computed: true
+          conditional: false
+          terminal: false
+          primary: true
+          operand_index: -1
+          external: true
+      - source_address: 0x14007bb12
+        target_address: 0x140134e08
+        source_procedure:
+          address: 0x14007baf0
+          name: FUN_14007baf0
+          classification:
+            external: false
+            thunk: false
+            thunk_target: null
+            provenance: ghidra-function-manager
+          body:
+            available: true
+            provenance: ghidra-function-body-address-set
+            ranges[1]{start,end}:
+              0x14007baf0,0x14007bb63
+            total_bytes: 116
+            span_bytes: 116
+            non_contiguous: false
+            contains_entry: true
+        target_procedure: null
+        kind:
+          available: true
+          provenance: ghidra-reference-manager
+          type: READ
+          flow: false
+          call: false
+          jump: false
+          data: true
+          read: true
+          write: false
+          indirect: false
+          computed: false
+          conditional: false
+          terminal: false
+          primary: true
+          operand_index: 0
+          external: false
+      - source_address: 0x14007bb18
+        target_address: "stack:0xffffffffffffffd8"
+        source_procedure:
+          address: 0x14007baf0
+          name: FUN_14007baf0
+          classification:
+            external: false
+            thunk: false
+            thunk_target: null
+            provenance: ghidra-function-manager
+          body:
+            available: true
+            provenance: ghidra-function-body-address-set
+            ranges[1]{start,end}:
+              0x14007baf0,0x14007bb63
+            total_bytes: 116
+            span_bytes: 116
+            non_contiguous: false
+            contains_entry: true
+        target_procedure: null
+        kind:
+          available: true
+          provenance: ghidra-reference-manager
+          type: READ
+          flow: false
+          call: false
+          jump: false
+          data: true
+          read: true
+          write: false
+          indirect: false
+          computed: false
+          conditional: false
+          terminal: false
+          primary: true
+          operand_index: 1
+          external: false
+      - source_address: 0x14007bb1d
+        target_address: "stack:0xffffffffffffffdc"
+        source_procedure:
+          address: 0x14007baf0
+          name: FUN_14007baf0
+          classification:
+            external: false
+            thunk: false
+            thunk_target: null
+            provenance: ghidra-function-manager
+          body:
+            available: true
+            provenance: ghidra-function-body-address-set
+            ranges[1]{start,end}:
+              0x14007baf0,0x14007bb63
+            total_bytes: 116
+            span_bytes: 116
+            non_contiguous: false
+            contains_entry: true
+        target_procedure: null
+        kind:
+          available: true
+          provenance: ghidra-reference-manager
+          type: READ
+          flow: false
+          call: false
+          jump: false
+          data: true
+          read: true
+          write: false
+          indirect: false
+          computed: false
+          conditional: false
+          terminal: false
+          primary: true
+          operand_index: 1
+          external: false
+      - source_address: 0x14007bb2d
+        target_address: "stack:0xffffffffffffffe0"
+        source_procedure:
+          address: 0x14007baf0
+          name: FUN_14007baf0
+          classification:
+            external: false
+            thunk: false
+            thunk_target: null
+            provenance: ghidra-function-manager
+          body:
+            available: true
+            provenance: ghidra-function-body-address-set
+            ranges[1]{start,end}:
+              0x14007baf0,0x14007bb63
+            total_bytes: 116
+            span_bytes: 116
+            non_contiguous: false
+            contains_entry: true
+        target_procedure: null
+        kind:
+          available: true
+          provenance: ghidra-reference-manager
+          type: READ
+          flow: false
+          call: false
+          jump: false
+          data: true
+          read: true
+          write: false
+          indirect: false
+          computed: false
+          conditional: false
+          terminal: false
+          primary: true
+          operand_index: 1
+          external: false
+      - source_address: 0x14007bb47
+        target_address: "stack:0xffffffffffffffd8"
+        source_procedure:
+          address: 0x14007baf0
+          name: FUN_14007baf0
+          classification:
+            external: false
+            thunk: false
+            thunk_target: null
+            provenance: ghidra-function-manager
+          body:
+            available: true
+            provenance: ghidra-function-body-address-set
+            ranges[1]{start,end}:
+              0x14007baf0,0x14007bb63
+            total_bytes: 116
+            span_bytes: 116
+            non_contiguous: false
+            contains_entry: true
+        target_procedure: null
+        kind:
+          available: true
+          provenance: ghidra-reference-manager
+          type: WRITE
+          flow: false
+          call: false
+          jump: false
+          data: true
+          read: false
+          write: true
+          indirect: false
+          computed: false
+          conditional: false
+          terminal: false
+          primary: true
+          operand_index: 0
+          external: false
+      - source_address: 0x14007bb4c
+        target_address: "EXTERNAL:0x1"
+        source_procedure:
+          address: 0x14007baf0
+          name: FUN_14007baf0
+          classification:
+            external: false
+            thunk: false
+            thunk_target: null
+            provenance: ghidra-function-manager
+          body:
+            available: true
+            provenance: ghidra-function-body-address-set
+            ranges[1]{start,end}:
+              0x14007baf0,0x14007bb63
+            total_bytes: 116
+            span_bytes: 116
+            non_contiguous: false
+            contains_entry: true
+        target_procedure:
+          address: "EXTERNAL:0x1"
+          name: "SHLWAPI.DLL::ColorHLSToRGB"
+          classification:
+            external: true
+            thunk: false
+            thunk_target: null
+            provenance: ghidra-function-manager
+          body:
+            available: true
+            provenance: ghidra-function-body-address-set
+            ranges: []
+            total_bytes: 0
+            span_bytes: 0
+            non_contiguous: false
+            contains_entry: false
+        kind:
+          available: true
+          provenance: ghidra-reference-manager
+          type: COMPUTED_CALL
+          flow: true
+          call: true
+          jump: false
+          data: false
+          read: false
+          write: false
+          indirect: false
+          computed: true
+          conditional: false
+          terminal: false
+          primary: true
+          operand_index: -1
+          external: true
+      - source_address: 0x14007bb4c
+        target_address: 0x140134dd8
+        source_procedure:
+          address: 0x14007baf0
+          name: FUN_14007baf0
+          classification:
+            external: false
+            thunk: false
+            thunk_target: null
+            provenance: ghidra-function-manager
+          body:
+            available: true
+            provenance: ghidra-function-body-address-set
+            ranges[1]{start,end}:
+              0x14007baf0,0x14007bb63
+            total_bytes: 116
+            span_bytes: 116
+            non_contiguous: false
+            contains_entry: true
+        target_procedure: null
+        kind:
+          available: true
+          provenance: ghidra-reference-manager
+          type: READ
+          flow: false
+          call: false
+          jump: false
+          data: true
+          read: true
+          write: false
+          indirect: false
+          computed: false
+          conditional: false
+          terminal: false
+          primary: true
+          operand_index: 0
+          external: false
+      - source_address: 0x14007bb52
+        target_address: "stack:0xffffffffffffffe8"
+        source_procedure:
+          address: 0x14007baf0
+          name: FUN_14007baf0
+          classification:
+            external: false
+            thunk: false
+            thunk_target: null
+            provenance: ghidra-function-manager
+          body:
+            available: true
+            provenance: ghidra-function-body-address-set
+            ranges[1]{start,end}:
+              0x14007baf0,0x14007bb63
+            total_bytes: 116
+            span_bytes: 116
+            non_contiguous: false
+            contains_entry: true
+        target_procedure: null
+        kind:
+          available: true
+          provenance: ghidra-reference-manager
+          type: READ
+          flow: false
+          call: false
+          jump: false
+          data: true
+          read: true
+          write: false
+          indirect: false
+          computed: false
+          conditional: false
+          terminal: false
+          primary: true
+          operand_index: 1
+          external: false
+      - source_address: 0x14007bb5a
+        target_address: 0x1400fb370
+        source_procedure:
+          address: 0x14007baf0
+          name: FUN_14007baf0
+          classification:
+            external: false
+            thunk: false
+            thunk_target: null
+            provenance: ghidra-function-manager
+          body:
+            available: true
+            provenance: ghidra-function-body-address-set
+            ranges[1]{start,end}:
+              0x14007baf0,0x14007bb63
+            total_bytes: 116
+            span_bytes: 116
+            non_contiguous: false
+            contains_entry: true
+        target_procedure:
+          address: 0x1400fb370
+          name: __security_check_cookie
+          classification:
+            external: false
+            thunk: false
+            thunk_target: null
+            provenance: ghidra-function-manager
+          body:
+            available: true
+            provenance: ghidra-function-body-address-set
+            ranges[1]{start,end}:
+              0x1400fb370,0x1400fb38d
+            total_bytes: 30
+            span_bytes: 30
+            non_contiguous: false
+            contains_entry: true
+        kind:
+          available: true
+          provenance: ghidra-reference-manager
+          type: UNCONDITIONAL_CALL
+          flow: true
+          call: true
+          jump: false
+          data: false
+          read: false
+          write: false
+          indirect: false
+          computed: false
+          conditional: false
+          terminal: false
+          primary: true
+          operand_index: 0
+          external: false
+    referenced_strings: []
+    referenced_names[6]{address,value,source_address}:
+      0x1400fb370,__security_check_cookie,0x14007bb5a
+      0x140134dd8,PTR_ColorHLSToRGB_140134dd8,0x14007bb4c
+      0x140134e08,PTR_ColorRGBToHLS_140134e08,0x14007bb12
+      0x140185040,DAT_140185040,0x14007baf4
+      "EXTERNAL:0x1","SHLWAPI.DLL::ColorHLSToRGB",0x14007bb4c
+      "EXTERNAL:0x7","SHLWAPI.DLL::ColorRGBToHLS",0x14007bb12
+    basic_blocks[1]:
+      - start: 0x14007baf0
+        end: 0x14007bb64
+        successors: []
+    native_api:
+      available: true
+      provenance: ghidra-high-function
+      signature_source: default
+      calling_convention: __fastcall
+      return_type:
+        role: return
+        ordinal: null
+        name: null
+        data_type: void
+        size_bytes: 0
+        storage: <VOID>
+        

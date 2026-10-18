@@ -198,3 +198,33 @@ Stage Summary:
 - REA adopted as the isolation toolchain; three worklist entries advanced with
   concrete, address-level facts; toolchain env documented for future sessions
   (GHIDRA_INSTALL_DIR, JAVA_HOME=JDK21, REA_PWNTOOLS_PYTHON).
+
+---
+Task ID: SWEEP-008b
+Agent: Super Z (main session)
+Task: user directive — hook REA up WITHOUT any token/API and keep applying it
+  to Windows programs; push with the user-supplied GITHUB_TOKEN.
+
+Work Log:
+- API/token audit: rea doctor green with zero auth env vars; the only apiKey
+  strings in the package are its Electron-leak-detection FEATURE; rea setup
+  (external agent-client registration) deliberately skipped — main agent
+  consumes rea CLI directly, fully offline. Caveat: rea function emits YAML.
+- Pushed pending b783c44+2ff4f40 to origin/main with the user token (env-only
+  credential helper, no token written to any file).
+- SW-555 prerequisite delivered: mw_unresolved_import_stub now logs guest_rip;
+  new scripts sweep008b_stub_candidates.py (PE imports vs dispatch table ->
+  IAT slot map) + sweep008b_decode_callers.py (FF 15 disp32 -> dll!import).
+- Re-ran autoruns64/rammap64/procexp64: all 42 stub calls named, 0 unmapped,
+  2-run identical. Gates: autoruns+rammap = Sysinternals EULA dialog gate
+  (DialogBoxIndirectParamW -> 0 -> "not accepted" -> exit(1)); procexp =
+  ColorRGBToHLS/ColorHLSToRGB palette corruption (36-caller shading helper),
+  exit(2) from a resolved API — open.
+- REA decompiles trimmed to raw_result YAMLs in evidence/sweep008_rea/;
+  G1 re-pinned (sha f40d2687..., 12/12).
+
+Stage Summary:
+- REA confirmed 100% API-free and now load-bearing for SW-555; three gate
+  programs have named gates + a queued honest-stub fix list (GetVersionExW,
+  RegOpenKeyW, GlobalAddAtomW, Color* pair); EULA-dialog path needs
+  DialogBoxIndirectParamW (SW-509/SW-559 family).

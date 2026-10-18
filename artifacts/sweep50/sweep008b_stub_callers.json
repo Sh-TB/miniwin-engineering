@@ -1,0 +1,344 @@
+{
+ "autoruns64": [
+  {
+   "call": 1,
+   "guest_rip": "0x14001be6d",
+   "opcode": "ff15",
+   "ff15": true,
+   "iat_slot": "0x1400c7f98",
+   "import": "ole32.dll!CoInitializeEx"
+  },
+  {
+   "call": 2,
+   "guest_rip": "0x1400620e2",
+   "opcode": "ff15",
+   "ff15": true,
+   "iat_slot": "0x1400c7698",
+   "import": "kernel32.dll!GetVersionExW"
+  },
+  {
+   "call": 3,
+   "guest_rip": "0x1400628ab",
+   "opcode": "ff15",
+   "ff15": true,
+   "iat_slot": "0x1400c7030",
+   "import": "advapi32.dll!RegOpenKeyW"
+  },
+  {
+   "call": 4,
+   "guest_rip": "0x1400629a4",
+   "opcode": "ff15",
+   "ff15": true,
+   "iat_slot": "0x1400c7030",
+   "import": "advapi32.dll!RegOpenKeyW"
+  },
+  {
+   "call": 5,
+   "guest_rip": "0x1400620e2",
+   "opcode": "ff15",
+   "ff15": true,
+   "iat_slot": "0x1400c7698",
+   "import": "kernel32.dll!GetVersionExW"
+  },
+  {
+   "call": 6,
+   "guest_rip": "0x140062d1c",
+   "opcode": "ff15",
+   "ff15": true,
+   "iat_slot": "0x1400c79f0",
+   "import": "user32.dll!DialogBoxIndirectParamW"
+  }
+ ],
+ "rammap64": [
+  {
+   "call": 1,
+   "guest_rip": "0x1400036f6",
+   "opcode": "ff15",
+   "ff15": true,
+   "iat_slot": "0x14003d520",
+   "import": "kernel32.dll!GetVersionExW"
+  },
+  {
+   "call": 2,
+   "guest_rip": "0x1400036f6",
+   "opcode": "ff15",
+   "ff15": true,
+   "iat_slot": "0x14003d520",
+   "import": "kernel32.dll!GetVersionExW"
+  },
+  {
+   "call": 3,
+   "guest_rip": "0x1400036f6",
+   "opcode": "ff15",
+   "ff15": true,
+   "iat_slot": "0x14003d520",
+   "import": "kernel32.dll!GetVersionExW"
+  },
+  {
+   "call": 4,
+   "guest_rip": "0x1400036f6",
+   "opcode": "ff15",
+   "ff15": true,
+   "iat_slot": "0x14003d520",
+   "import": "kernel32.dll!GetVersionExW"
+  },
+  {
+   "call": 5,
+   "guest_rip": "0x1400026db",
+   "opcode": "ff15",
+   "ff15": true,
+   "iat_slot": "0x14003d008",
+   "import": "advapi32.dll!RegOpenKeyW"
+  },
+  {
+   "call": 6,
+   "guest_rip": "0x1400036f6",
+   "opcode": "ff15",
+   "ff15": true,
+   "iat_slot": "0x14003d520",
+   "import": "kernel32.dll!GetVersionExW"
+  },
+  {
+   "call": 7,
+   "guest_rip": "0x1400036f6",
+   "opcode": "ff15",
+   "ff15": true,
+   "iat_slot": "0x14003d520",
+   "import": "kernel32.dll!GetVersionExW"
+  },
+  {
+   "call": 8,
+   "guest_rip": "0x1400036f6",
+   "opcode": "ff15",
+   "ff15": true,
+   "iat_slot": "0x14003d520",
+   "import": "kernel32.dll!GetVersionExW"
+  },
+  {
+   "call": 9,
+   "guest_rip": "0x1400012b1",
+   "opcode": "ff15",
+   "ff15": true,
+   "iat_slot": "0x14003d450",
+   "import": "kernel32.dll!GlobalAddAtomW"
+  },
+  {
+   "call": 10,
+   "guest_rip": "0x1400036f6",
+   "opcode": "ff15",
+   "ff15": true,
+   "iat_slot": "0x14003d520",
+   "import": "kernel32.dll!GetVersionExW"
+  },
+  {
+   "call": 11,
+   "guest_rip": "0x1400036f6",
+   "opcode": "ff15",
+   "ff15": true,
+   "iat_slot": "0x14003d520",
+   "import": "kernel32.dll!GetVersionExW"
+  },
+  {
+   "call": 12,
+   "guest_rip": "0x1400036f6",
+   "opcode": "ff15",
+   "ff15": true,
+   "iat_slot": "0x14003d520",
+   "import": "kernel32.dll!GetVersionExW"
+  },
+  {
+   "call": 13,
+   "guest_rip": "0x140003b8b",
+   "opcode": "ff15",
+   "ff15": true,
+   "iat_slot": "0x14003d008",
+   "import": "advapi32.dll!RegOpenKeyW"
+  },
+  {
+   "call": 14,
+   "guest_rip": "0x140003c46",
+   "opcode": "ff15",
+   "ff15": true,
+   "iat_slot": "0x14003d008",
+   "import": "advapi32.dll!RegOpenKeyW"
+  },
+  {
+   "call": 15,
+   "guest_rip": "0x1400036f6",
+   "opcode": "ff15",
+   "ff15": true,
+   "iat_slot": "0x14003d520",
+   "import": "kernel32.dll!GetVersionExW"
+  },
+  {
+   "call": 16,
+   "guest_rip": "0x14000438f",
+   "opcode": "ff15",
+   "ff15": true,
+   "iat_slot": "0x14003d5f8",
+   "import": "user32.dll!DialogBoxIndirectParamW"
+  }
+ ],
+ "procexp64": [
+  {
+   "call": 1,
+   "guest_rip": "0x1400015e1",
+   "opcode": "ff15",
+   "ff15": true,
+   "iat_slot": "0x140134780",
+   "import": "kernel32.dll!GlobalAddAtomW"
+  },
+  {
+   "call": 2,
+   "guest_rip": "0x140033e42",
+   "opcode": "ff15",
+   "ff15": true,
+   "iat_slot": "0x140134768",
+   "import": "kernel32.dll!GetVersionExW"
+  },
+  {
+   "call": 3,
+   "guest_rip": "0x14007bb18",
+   "opcode": "ff15",
+   "ff15": true,
+   "iat_slot": "0x140134e08",
+   "import": "shlwapi.dll!ColorRGBToHLS"
+  },
+  {
+   "call": 4,
+   "guest_rip": "0x14007bb52",
+   "opcode": "ff15",
+   "ff15": true,
+   "iat_slot": "0x140134dd8",
+   "import": "shlwapi.dll!ColorHLSToRGB"
+  },
+  {
+   "call": 5,
+   "guest_rip": "0x14007bb18",
+   "opcode": "ff15",
+   "ff15": true,
+   "iat_slot": "0x140134e08",
+   "import": "shlwapi.dll!ColorRGBToHLS"
+  },
+  {
+   "call": 6,
+   "guest_rip": "0x14007bb52",
+   "opcode": "ff15",
+   "ff15": true,
+   "iat_slot": "0x140134dd8",
+   "import": "shlwapi.dll!ColorHLSToRGB"
+  },
+  {
+   "call": 7,
+   "guest_rip": "0x14007bb18",
+   "opcode": "ff15",
+   "ff15": true,
+   "iat_slot": "0x140134e08",
+   "import": "shlwapi.dll!ColorRGBToHLS"
+  },
+  {
+   "call": 8,
+   "guest_rip": "0x14007bb52",
+   "opcode": "ff15",
+   "ff15": true,
+   "iat_slot": "0x140134dd8",
+   "import": "shlwapi.dll!ColorHLSToRGB"
+  },
+  {
+   "call": 9,
+   "guest_rip": "0x14007bb18",
+   "opcode": "ff15",
+   "ff15": true,
+   "iat_slot": "0x140134e08",
+   "import": "shlwapi.dll!ColorRGBToHLS"
+  },
+  {
+   "call": 10,
+   "guest_rip": "0x14007bb52",
+   "opcode": "ff15",
+   "ff15": true,
+   "iat_slot": "0x140134dd8",
+   "import": "shlwapi.dll!ColorHLSToRGB"
+  },
+  {
+   "call": 11,
+   "guest_rip": "0x14007bb18",
+   "opcode": "ff15",
+   "ff15": true,
+   "iat_slot": "0x140134e08",
+   "import": "shlwapi.dll!ColorRGBToHLS"
+  },
+  {
+   "call": 12,
+   "guest_rip": "0x14007bb52",
+   "opcode": "ff15",
+   "ff15": true,
+   "iat_slot": "0x140134dd8",
+   "import": "shlwapi.dll!ColorHLSToRGB"
+  },
+  {
+   "call": 13,
+   "guest_rip": "0x14007bb18",
+   "opcode": "ff15",
+   "ff15": true,
+   "iat_slot": "0x140134e08",
+   "import": "shlwapi.dll!ColorRGBToHLS"
+  },
+  {
+   "call": 14,
+   "guest_rip": "0x14007bb52",
+   "opcode": "ff15",
+   "ff15": true,
+   "iat_slot": "0x140134dd8",
+   "import": "shlwapi.dll!ColorHLSToRGB"
+  },
+  {
+   "call": 15,
+   "guest_rip": "0x14007bb18",
+   "opcode": "ff15",
+   "ff15": true,
+   "iat_slot": "0x140134e08",
+   "import": "shlwapi.dll!ColorRGBToHLS"
+  },
+  {
+   "call": 16,
+   "guest_rip": "0x14007bb52",
+   "opcode": "ff15",
+   "ff15": true,
+   "iat_slot": "0x140134dd8",
+   "import": "shlwapi.dll!ColorHLSToRGB"
+  },
+  {
+   "call": 17,
+   "guest_rip": "0x14007bb18",
+   "opcode": "ff15",
+   "ff15": true,
+   "iat_slot": "0x140134e08",
+   "import": "shlwapi.dll!ColorRGBToHLS"
+  },
+  {
+   "call": 18,
+   "guest_rip": "0x14007bb52",
+   "opcode": "ff15",
+   "ff15": true,
+   "iat_slot": "0x140134dd8",
+   "import": "shlwapi.dll!ColorHLSToRGB"
+  },
+  {
+   "call": 19,
+   "guest_rip": "0x14007bb18",
+   "opcode": "ff15",
+   "ff15": true,
+   "iat_slot": "0x140134e08",
+   "import": "shlwapi.dll!ColorRGBToHLS"
+  },
+  {
+   "call": 20,
+   "guest_rip": "0x14007bb52",
+   "opcode": "ff15",
+   "ff15": true,
+   "iat_slot": "0x140134dd8",
+   "import": "shlwapi.dll!ColorHLSToRGB"
+  }
+ ]
+}

@@ -12100,8 +12100,15 @@ __attribute__((ms_abi)) uint64_t mw_unresolved_import_stub(void);
 __attribute__((ms_abi)) uint64_t mw_unresolved_import_stub(void) {
     uint64_t n = ++g_stub_calls;
     if (n <= 20) {
-        fprintf(stderr, "[STUB] unresolved import called -> returning 0 (call #%llu)\n",
-                (unsigned long long)n);
+        /* SW-555 tooling prerequisite (SWEEP-008b): log the GUEST return
+         * address of each unresolved call. The stub cannot know its own
+         * import name (it is one shared function patched into many IAT
+         * slots), but the return address is the guest call site — static
+         * decode of the `call qword [rip+disp32]` that precedes it maps
+         * the site to the exact dll!import (pefile IAT map + REA/Ghidra
+         * decompile of the containing function gives the gate branch). */
+        fprintf(stderr, "[STUB] unresolved import called -> returning 0 (call #%llu) guest_rip=%p\n",
+                (unsigned long long)n, __builtin_return_address(0));
     } else if (n == 21) {
         fprintf(stderr, "[STUB] further unresolved-import calls silenced\n");
     }
