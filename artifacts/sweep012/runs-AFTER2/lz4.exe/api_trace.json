@@ -1,0 +1,193 @@
+{
+  "trace": [
+[Tbf80] [API] PE Loader: file=/home/z/my-project/workspace/miniwin-engineering/samples/real/lz4/lz4.exe size=882789
+[Tbf80] [API] PE Loader: ImageBase=0x400000 EP=0x14a0 SizeOfImage=0xd4000 Sections=18
+[Tbf80] [API] PE Loader: Mapped at 0x400000 (forced via MAP_FIXED)
+[Tbf80] [API] Section [0] .text    VA=0x00001000 VS=0x0004a328 Raw=0x0004a400 Ch=0x60500060
+[Tbf80] [API] Section [1] .data    VA=0x0004c000 VS=0x00000950 Raw=0x00000a00 Ch=0xc0600040
+[Tbf80] [API] Section [2] .rdata   VA=0x0004d000 VS=0x00005640 Raw=0x00005800 Ch=0x40600040
+[Tbf80] [API] Section [3] .pdata   VA=0x00053000 VS=0x000011ac Raw=0x00001200 Ch=0x40300040
+[Tbf80] [API] Section [4] .xdata   VA=0x00055000 VS=0x00001344 Raw=0x00001400 Ch=0x40300040
+[Tbf80] [API] Section [5] .bss     VA=0x00057000 VS=0x00002a60 Raw=0x00000000 Ch=0xc0600080
+[Tbf80] [API] Section [6] .idata   VA=0x0005a000 VS=0x0000107c Raw=0x00001200 Ch=0xc0300040
+[Tbf80] [API] Section [7] .CRT     VA=0x0005c000 VS=0x00000068 Raw=0x00000200 Ch=0xc0400040
+[Tbf80] [API] Section [8] .tls     VA=0x0005d000 VS=0x00000010 Raw=0x00000200 Ch=0xc0400040
+[Tbf80] [API] Section [9] .rsrc    VA=0x0005e000 VS=0x00000820 Raw=0x00000820 Ch=0xc0300040
+[Tbf80] [API] Section [10] /4       VA=0x0005f000 VS=0x000006f0 Raw=0x00000800 Ch=0x42100040
+[Tbf80] [API] Section [11] /19      VA=0x00060000 VS=0x0004f4a8 Raw=0x0004f600 Ch=0x42100040
+[Tbf80] [API] Section [12] /31      VA=0x000b0000 VS=0x00004148 Raw=0x00004200 Ch=0x42100040
+[Tbf80] [API] Section [13] /45      VA=0x000b5000 VS=0x00008913 Raw=0x00008a00 Ch=0x42100040
+[Tbf80] [API] Section [14] /57      VA=0x000be000 VS=0x000019b8 Raw=0x00001a00 Ch=0x42400040
+[Tbf80] [API] Section [15] /70      VA=0x000c0000 VS=0x00000aba Raw=0x00000c00 Ch=0x42100040
+[Tbf80] [API] Section [16] /81      VA=0x000c1000 VS=0x00011754 Raw=0x00011800 Ch=0x42100040
+[Tbf80] [API] Section [17] /92      VA=0x000d3000 VS=0x00000e20 Raw=0x00001000 Ch=0x42100040
+[Tbf80] [API] Import Directory: RVA=0x5a000 Size=0x107c
+[Tbf80] [API] Import DLL: KERNEL32.dll (IAT RVA=0x5a3f4, ILT RVA=0x5a03c)
+[Tbf80] [API]   [0] CloseHandle -> 0x2041d20
+[Tbf80] [API]   [1] CreateEventA -> 0x2026670
+[Tbf80] [API]   [2] CreateIoCompletionPort -> 0x2026ad0
+[Tbf80] [API]   [3] CreateSemaphoreA -> 0x2026890
+[Tbf80] [API]   [4] CreateThread -> 0x2029580
+[Tbf80] [API]   [5] DeleteCriticalSection -> 0x2032700
+[Tbf80] [API]   [6] DeviceIoControl -> 0x2047390
+[Tbf80] [API]   [7] EnterCriticalSection -> 0x203c370
+[Tbf80] [API]   [8] FindClose -> 0x201ba30
+[Tbf80] [API]   [9] FindFirstFileA -> 0x2035540
+[Tbf80] [API]   [10] FindNextFileA -> 0x203db60
+[Tbf80] [API]   [11] GetConsoleMode -> 0x20276f0
+[Tbf80] [API]   [12] GetCurrentProcess -> 0x2008310
+[Tbf80] [API]   [13] GetCurrentProcessId -> 0x2008320
+[Tbf80] [API]   [14] GetCurrentThreadId -> 0x2008340
+[Tbf80] [API]   [15] GetLastError -> 0x200a7d0
+[Tbf80] [API]   [16] GetProcessTimes -> 0x2021270
+[Tbf80] [API]   [17] GetQueuedCompletionStatus -> 0x20287f0
+[Tbf80] [API]   [18] GetStartupInfoA -> 0x200fc50
+[Tbf80] [API]   [19] GetSystemInfo -> 0x201a3b0
+[Tbf80] [API]   [20] GetSystemTimeAsFileTime -> 0x2013690
+[Tbf80] [API]   [21] GetTickCount -> 0x2013920
+[Tbf80] [API]   [22] InitializeCriticalSection -> 0x20326e0
+[Tbf80] [API]   [23] IsDBCSLeadByteEx -> 0x2008360
+[Tbf80] [API]   [24] LeaveCriticalSection -> 0x202f2f0
+[Tbf80] [API]   [25] MultiByteToWideChar -> 0x2027e80
+[Tbf80] [API]   [26] PostQueuedCompletionStatus -> 0x20285f0
+[Tbf80] [API]   [27] QueryPerformanceCounter -> 0x2013a50
+[Tbf80] [API]   [28] QueryPerformanceFrequency -> 0x20103c0
+[Tbf80] [API]   [29] ReleaseSemaphore -> 0x203ce80
+[Tbf80] [API]   [30] ResetEvent -> 0x203d760
+[Tbf80] [API]   [31] RtlAddFunctionTable -> 0x202b860
+[Tbf80] [API]   [32] RtlCaptureContext -> 0x202fd30
+[Tbf80] [API]   [33] RtlLookupFunctionEntry -> 0x200aea0
+[Tbf80] [API]   [34] RtlVirtualUnwind -> 0x203dff0
+[Tbf80] [API]   [35] SetEvent -> 0x203d8c0
+[Tbf80] [API]   [36] SetPriorityClass -> 0x202d4d0
+[Tbf80] [API]   [37] SetUnhandledExceptionFilter -> 0x200b130
+[Tbf80] [API]   [38] Sleep -> 0x2014cb0
+[Tbf80] [API]   [39] TerminateProcess -> 0x2015480
+[Tbf80] [API]   [40] TlsGetValue -> 0x200b240
+[Tbf80] [API]   [41] UnhandledExceptionFilter -> 0x2030bf0
+[Tbf80] [API]   [42] VirtualProtect -> 0x2014dc0
+[Tbf80] [API]   [43] VirtualQuery -> 0x200fdb0
+[Tbf80] [API]   [44] WaitForMultipleObjects -> 0x2041600
+[Tbf80] [API]   [45] WaitForSingleObject -> 0x20414b0
+[Tbf80] [API]   [46] WideCharToMultiByte -> 0x2025ca0
+[Tbf80] [API] Import DLL: msvcrt.dll (IAT RVA=0x5a574, ILT RVA=0x5a1bc)
+[Tbf80] [API]   [0] __C_specific_handler -> 0x2030470
+[Tbf80] [API]   [1] ___lc_codepage_func -> 0x202c700
+[Tbf80] [API]   [2] ___mb_cur_max_func -> 0x2030770
+[Tbf80] [API]   [3] __doserrno -> 0x202b990
+[Tbf80] [API]   [4] __getmainargs -> 0x200b360
+[Tbf80] [API]   [5] __initenv -> DATA 0x219f620
+[Tbf80] [API]   [6] __iob_func -> 0x200b660
+[Tbf80] [API]   [7] __lconv_init -> 0x2015140
+[Tbf80] [API]   [8] __set_app_type -> 0x202ba90
+[Tbf80] [API]   [9] __setusermatherr -> 0x202bba0
+[Tbf80] [API]   [10] _acmdln -> DATA 0x219f628
+[Tbf80] [API]   [11] _amsg_exit -> 0x20152e0
+[Tbf80] [API]   [12] _assert -> 0x2019640
+[Tbf80] [API]   [13] _cexit -> 0x2010750
+[Tbf80] [API]   [14] _chmod -> 0x20185b0
+[Tbf80] [API]   [15] _errno -> 0x202ca40
+[Tbf80] [API]   [16] _filelengthi64 -> 0x201b660
+[Tbf80] [API]   [17] _fileno -> 0x200b9a0
+[Tbf80] [API]   [18] _fileno -> 0x200b9a0
+[Tbf80] [API]   [19] _fmode -> DATA 0x223e4f8
+[Tbf80] [API]   [20] _fstat64 -> 0x2017dc0
+[Tbf80] [API]   [21] _get_osfhandle -> 0x200baf0
+[Tbf80] [API]   [22] _initterm -> 0x200b4b0
+[Tbf80] [API]   [23] _isatty -> 0x2011450
+[Tbf80] [API]   [24] _lock -> 0x202cb40
+[Tbf80] [API]   [25] _onexit -> 0x2019d70
+[Tbf80] [API]   [26] _setmode -> 0x202c810
+[Tbf80] [API]   [27] _stat64 -> 0x2017f70
+[Tbf80] [API]   [28] _time64 -> 0x20186e0
+[Tbf80] [API]   [29] _unlock -> 0x202cc50
+[Tbf80] [API]   [30] _utime64 -> 0x201c110
+[Tbf80] [API]   [31] _vsnprintf -> 0x2023e50
+[Tbf80] [API]   [32] abort -> 0x2038120
+[Tbf80] [API]   [33] calloc -> 0x203cc50
+[Tbf80] [API]   [34] clock -> 0x2017030
+[Tbf80] [API]   [35] exit -> 0x20153b0
+[Tbf80] [API]   [36] fclose -> 0x20394b0
+[Tbf80] [API]   [37] feof -> 0x20226a0
+[Tbf80] [API]   [38] ferror -> 0x201f3a0
+[Tbf80] [API]   [39] fflush -> 0x2022030
+[Tbf80] [API]   [40] fgetpos -> 0x20230a0
+[Tbf80] [API]   [41] fopen -> 0x20429b0
+[Tbf80] [API]   [42] fprintf -> 0x2023a50
+[Tbf80] [API]   [43] fputc -> 0x2022890
+[Tbf80] [API]   [44] fread -> 0x2022210
+[Tbf80] [API]   [45] free -> 0x2049640
+[Tbf80] [API]   [46] fsetpos -> 0x20231e0
+[Tbf80] [API]   [47] ftell -> 0x2022150
+[Tbf80] [API]   [48] fwrite -> 0x20229b0
+[Tbf80] [API]   [49] getchar -> 0x2015d60
+[Tbf80] [API]   [50] getenv -> 0x2012020
+[Tbf80] [API]   [51] localeconv -> 0x2015240
+[Tbf80] [API]   [52] malloc -> 0x203c620
+[Tbf80] [API]   [53] memcpy -> 0x2012b90
+[Tbf80] [API]   [54] memmove -> 0x200f6b0
+[Tbf80] [API]   [55] memset -> 0x200ff20
+[Tbf80] [API]   [56] perror -> 0x2006380
+[Tbf80] [API]   [57] realloc -> 0x204dc00
+[Tbf80] [API]   [58] remove -> 0x20159a0
+[Tbf80] [API]   [59] signal -> 0x202bfe0
+[Tbf80] [API]   [60] strcat -> 0x201fc60
+[Tbf80] [API]   [61] strcmp -> 0x20147f0
+[Tbf80] [API]   [62] strcpy -> 0x2015fa0
+[Tbf80] [API]   [63] strerror -> 0x7fb8ed616550
+[Tbf80] [API]   [64] strlen -> 0x2011550
+[Tbf80] [API]   [65] strncmp -> 0x2016230
+[Tbf80] [API]   [66] strncpy -> 0x201fda0
+[Tbf80] [API]   [67] strrchr -> 0x2016040
+[Tbf80] [API]   [68] vfprintf -> 0x2023c70
+[Tbf80] [API]   [69] wcslen -> 0x2025040
+[Tbf80] [API] Import resolution: 117 resolved, 0 unresolved (total 117)
+[Tbf80] [API] TLS: StartRaw=0x45d000 EndRaw=0x45d008 Callbacks=0x45c040
+[Tbf80] [API] TLS: static block 0x28a9090 (8+0 bytes) -> slot 0
+[Tbf80] [API] TLS: callback[0] = 0x442810
+[Tbf80] [API] InitializeCriticalSection(0x458fe0)
+[Tbf80] [API] TLS: callback[1] = 0x4427e0
+[Tbf80] [API] Exception: .pdata RVA=0x53000 Size=0x11ac Entries=377
+[Tbf80] [API] [API-005] EH hacks DISABLED (default) (MINWIN_EH_HACKS=<unset>)
+[Tbf80] [API] [API-005] CXX-EH-FIX (LSDA catch-all patch RVA 0x2010c8) skipped: MINWIN_EH_HACKS not set
+[Tbf80] [API] Jumping to EP=0x4014a0
+[Tbf80] [API] GetSystemTimeAsFileTime()
+[Tbf80] [API] GetTickCount() = 18582387
+[Tbf80] [API] QueryPerformanceCounter()
+[Tbf80] [API] _initterm(start=0x45c018, end=0x45c030)
+[Tbf80] [API] _initterm: calling 0x401010
+[Tbf80] [API] __set_app_type(1)
+[Tbf80] [API] _initterm: calling 0x4425f0
+[Tbf80] [API] __lconv_init()
+[Tbf80] [API] _initterm(start=0x45c000, end=0x45c010)
+[Tbf80] [API] _initterm: calling 0x401120
+[Tbf80] [API] __getmainargs(argc=0x457028, argv=0x457020, envp=0x457018)
+[Tbf80] [API] SetUnhandledExceptionFilter(handler=0x443180)
+[Tbf80] [API] malloc(16) = 0x28a9740
+[Tbf80] [API] malloc(8) = 0x28a9760
+[Tbf80] [API] _onexit(func=0x401500)
+[Tbf80] [API] _onexit(func=0x442530)
+[Tbf80] [API] calloc(1, 8) = 0x28a9780
+[Tbf80] [API] malloc(72) = 0x28a97a0
+[Tbf80] [API] GetSystemInfo()
+[Tbf80] [API] __iob_func() = 0x219f600
+[Tbf80] [API] _fileno(file=0x219f600)
+[Tbf80] [API] _isatty(fd=-1)
+[Tbf80] [API] __iob_func() = 0x219f600
+[Tbf80] [API] _fileno(file=0x219f630)
+[Tbf80] [API] _isatty(fd=-1)
+[Tbf80] [API] QueryPerformanceFrequency()
+[Tbf80] [API] QueryPerformanceCounter()
+[Tbf80] [API] calloc(1, 216) = 0x28a97f0
+[Tbf80] [API] malloc(4194304) = 0x7fb8ed10d010
+[Tbf80] [API] malloc(4194335) = 0x7fb8ecd0c010
+[Tbf80] [API] __iob_func() = 0x219f600
+[Tbf80] [API] __iob_func() = 0x219f600
+[Tbf80] [API] _fileno(file=0x219f600)
+[Tbf80] [API] _setmode(fd=-1, mode=32768)
+[Tbf80] [API] __iob_func() = 0x219f600
+[Tbf80] [API] __iob_func() = 0x219f600
+[Tbf80] [API] _fileno(file=0x219f630)
+[Tbf80] [API] _setmode(fd=-1, mode=32768)
+[Tbf80] [API] __iob_func() = 0x219f600
+[Tbf80] [API] map_crt_stream: iob+0 -> stdin

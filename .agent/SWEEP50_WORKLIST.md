@@ -374,3 +374,120 @@ puttygen RIP=0x0).
       WinMain / FUN_140041140+0x106 / entry+0x9). NOTE: toolchain restore
       after home reset — rea 6.7.0 + Ghidra 12.1.4 + JDK 21.0.12.1 back in
       place; engine funcmap must be regenerated after every engine rebuild.
+
+---
+## SWEEP-013 (2026-10-19) — DONE block
+- [x] **SW-013** "5x multiplication" sweep — DONE: user directives
+      «حداقل یک برنامه گرافیکی ساده ماشین حساب» + «تسک رو حداقل ۵ برابر بکن».
+      (1) GUI calculator tests/gui/calc.c delivered: real Win32 EDIT+16 BUTTON
+      children, WM_COMMAND via MINWIN_CLICKS, 3x deterministic exit 0,
+      stdout "[CALC] 12+45 = 57", guest-drawn screenshot
+      evidence/sweep013/calc_screenshot.bmp. (2) Honest batch #3: ~65 APIs
+      real-ified (mini window manager + dialog family + NT-query family +
+      SID/token + registry A-variants + monitors/fonts + IsBad*Ptr) — see
+      evidence/sweep013/README.md. (3) MEASURED PROGRESS (51+2 pool):
+      mean_score 2.71->2.92, RAN-OUTPUT 16->22, STUB-GATE 10->5, zero-stub
+      clean runs for Autoruns64/ZoomIt64/Diskmon64/7z2604/jq64/sqlite3/gui-calc.
+      (4) Harness fix: stdin </dev/null (stdin-blockers were misclassified).
+      (5) G1 re-pinned 700d83ee 12/12.
+
+---
+## SWEEP-014 QUEUE — 5x task multiplication (SW-601..SW-650)
+User directive: multiply the suggested-next-task list at least 5x; every item
+named, evidence-backed, and progress-measurable. 50 items:
+
+### A. Direct continuations of SWEEP-013 named gates (highest value first)
+- [ ] **SW-601** RAMMap64 last gate: user32!InvalidateRgn (1x) — pseudo-HRGN
+      + invalidate path; expected RAMMap64 20-stub crash -> RAN-OUTPUT.
+- [ ] **SW-602** procexp64 guest-level crash (exit 139, 0 stubs): guest_rip
+      decode + REA funcmap symbolize the crash site; one BUG-* + fix.
+- [ ] **SW-603** Bginfo64 8-stub frontier: dump the 8 named imports (trace
+      api_trace), implement the family in one batch (CoCreateInstance class
+      audit expected).
+- [ ] **SW-604** WinMergeU exit 9 with 1 stub — name the stub, decide
+      honest-vs-real, expect exit 0 like Diskmon64.
+- [ ] **SW-605** 7zFM/7zG last 3+1 stubs (gui-calc dialog family already
+      real) — name them; likely GetWindowLongPtrW/SetWindowLongPtrW.
+- [ ] **SW-606** ProduKey 5 stubs — name + batch.
+- [ ] **SW-607** cports 21-stub crash — decode callers (sweep008b method),
+      comctl32 child-control cliff continuation (SW-562 note).
+- [ ] **SW-608** Coreinfo64 exit 139 0-stubs: guest crash — REA funcmap
+      symbolize; version-drift trio (SetThreadGroupAffinity etc.) audit.
+- [ ] **SW-609** SearchMyFiles exit 139 0-stubs: same method as SW-602.
+- [ ] **SW-610** curl exit 139: UCRT frontier OPENSRC-CURL-1 next slice
+      (BCryptOpenAlgorithmProvider family or __acrt_locale).
+- [ ] **SW-611** puttygen exit 139 (SW-552 stack already named): fix
+      FUN_140041140+0x106 site — key-generation path audit.
+- [ ] **SW-612** sqlite3_analyzer 1 stub + crash — name the stub.
+- [ ] **SW-613** md5deep64 suite (6 programs) guest crash in own code:
+      map_crt_stream audit for fopen/fread paths (BUG-065 continuation).
+- [ ] **SW-614** md5deep 32-bit suite LOAD-REJECT — decide: honest reject
+      page or x86 support investigation ticket (stay x64-only: document).
+
+### B. GUI depth (games/dialogs/paint — builds on mini window manager)
+- [ ] **SW-615** Child-control PAINT: draw BUTTON/EDIT frames + labels in
+      the window framebuffer (screenshot shows real buttons, not just text).
+- [ ] **SW-616** WM_CHAR path to EDIT children: pump delivers typed digits
+      to the focused control (calculator accepts keyboard input end-to-end).
+- [ ] **SW-617** BM_SETCHECK/BM_GETCHECK real button state round-trip test
+      in calc.exe (checkbox row) — extends gui-calc acceptance.
+- [ ] **SW-618** calculator division/multiply chained scenario (C 9 * 8 =
+      already proven; add (a+b)*c paren-free precedence audit).
+- [ ] **SW-619** Second GUI guest: Win32 Notepad clone (EDIT multiline +
+      menu + WM_SIZE) — tests LISTBOX/EDIT big text.
+- [ ] **SW-620** Third GUI guest: Win32 clock (SetTimer + WM_TIMER +
+      InvalidateRect cadence) — tests timer/paint interplay.
+- [ ] **SW-621** Fourth GUI guest: Win32 paint program (mouse WM_LBUTTONDOWN
+      + MoveToEx/LineTo) — needs MINWIN_MOUSE click-to-pos pump extension.
+- [ ] **SW-622** Pump: MINWIN_MOUSE="x,y" env delivering WM_LBUTTONDOWN/
+      WM_LBUTTONUP with client coords (generic input channel #3).
+- [ ] **SW-623** Modal dialogs with real DLGTEMPLATE parsing (SW-509 full
+      slice): walk the in-memory template, create child controls from it.
+- [ ] **SW-624** WM_GETDLGCODE/IsDialogMessageW dialog keyboard navigation.
+- [ ] **SW-625** Static controls SS_* + WM_SETFONT store (no-op render note).
+
+### C. Kernel/NT depth (Sysinternals frontier)
+- [ ] **SW-626** NtQuerySystemInformation class 5 (SystemProcessInformation):
+      one honest fake process row (our own PID) — procexp64 deeper.
+- [ ] **SW-627** NtQuerySystemInformation class 16 (HandleInformation):
+      count-only row.
+- [ ] **SW-628** NtOpenSymbolicLinkObject for \??\C: → return real link
+      target string; NtQuerySymbolicLinkObject fills it (procexp drive map).
+- [ ] **SW-629** NtQueryObject ObjectTypeInformation for our handle table
+      (honest "File"/"Event" for known pseudo-handles).
+- [ ] **SW-630** OpenSCManagerW policy upgrade: NULL vs honest handle to an
+      empty SCM (services enum returns 0 rows) — procmon64/procexp64 degrade
+      comparison.
+- [ ] **SW-631** EnumServicesStatusW empty-set + ERROR_SERVICE_DOES_NOT_EXIST.
+- [ ] **SW-632** GetTokenInformation TokenUser: synthesize S-1-5-18-style
+      SID honestly labeled (document fabrication boundary in decisions.md).
+- [ ] **SW-633** RegOpenKeyExW real mini-hive (currently ERROR stub):
+      in-memory registry keyed by path, RegCreateKeyExW writes work —
+      unblocks EULA-accept persistence path end-to-end.
+- [ ] **SW-634** RegQueryValueExW over the mini-hive (after SW-633).
+- [ ] **SW-635** SHGetFolderPathW CSIDL_DESKTOP/CSIDL_FONTS + shell32
+      SHGetKnownFolderPath (GUID form) — Bginfo/WinMerge commonly use it.
+
+### D. Ladder rungs (100-program list breadth)
+- [ ] **SW-636** LADDER-007 busybox64: argv[0] multi-call smoke (sh -c echo).
+- [ ] **SW-637** LADDER-012 xxd round trip (vim rt build).
+- [ ] **SW-638** LADDER-011 wget64 --version (static mingw profile).
+- [ ] **SW-639** LADDER-013 hashdeep 32/64 display-line BUG-065 closure.
+- [ ] **SW-640** LADDER-014 Tree 1.7 (GnuWin) census + run.
+- [ ] **SW-641** LADDER-015 GNU grep 2.5.4 census + run (regex engine).
+- [ ] **SW-642** LADDER-016 GNU sed 4.2.1 census + run (-i temp dance).
+- [ ] **SW-643** LADDER-017 Info-ZIP unzip 6.0 census + extract test.
+- [ ] **SW-644** LADDER-018 plink/pscp/psftp PuTTY trio census.
+- [ ] **SW-645** LADDER-019 Sysinternals du.exe + strings.exe census.
+- [ ] **SW-646** 100-list re-download wave: 10 NEW small utilities (netstat
+      variants, tcping, etc.) — extend sweep50_download.py manifest.
+- [ ] **SW-647** gui-calc PDB-backed symbol check (MW_FUNC_MAP on our own
+      guest) — validate funcmap exporter against a known source.
+- [ ] **SW-648** Calculator acceptance into CI: scripts/sweep013_calc_accept.sh
+      (3x determinism + stdout assert + BMP non-white check) — permanence.
+- [ ] **SW-649** Second calculator scenario into CI (C 9*8=) — permanence.
+- [ ] **SW-650** Documentation: mini window manager section in
+      docs/master/ARCHITECTURE_DECISIONS.md (ADR-013 draft).
+
+Rule unchanged: every fix must move mean_score / class histogram / a named
+program's exit, else it is not valuable.

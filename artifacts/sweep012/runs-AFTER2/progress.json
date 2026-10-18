@@ -1,0 +1,836 @@
+{
+ "tag": "AFTER2",
+ "n_programs": 53,
+ "programs": [
+  {
+   "name": "Procmon64.exe",
+   "exit": 1,
+   "class": "RAN-OUTPUT",
+   "score": 5,
+   "out_bytes": 115,
+   "stub_calls": 0,
+   "n_unres_called": 0,
+   "imports_called": [],
+   "api_events": 0,
+   "last_api": "parse-err",
+   "timeout": 0
+  },
+  {
+   "name": "putty.exe",
+   "exit": 1,
+   "class": "RAN-OUTPUT",
+   "score": 5,
+   "out_bytes": 107,
+   "stub_calls": 0,
+   "n_unres_called": 0,
+   "imports_called": [],
+   "api_events": 0,
+   "last_api": "parse-err",
+   "timeout": 0
+  },
+  {
+   "name": "Autoruns64.exe",
+   "exit": 0,
+   "class": "RAN-OUTPUT",
+   "score": 5,
+   "out_bytes": 117,
+   "stub_calls": 0,
+   "n_unres_called": 0,
+   "imports_called": [],
+   "api_events": 0,
+   "last_api": "parse-err",
+   "timeout": 0
+  },
+  {
+   "name": "ZoomIt64.exe",
+   "exit": 0,
+   "class": "RAN-OUTPUT",
+   "score": 5,
+   "out_bytes": 113,
+   "stub_calls": 0,
+   "n_unres_called": 0,
+   "imports_called": [],
+   "api_events": 0,
+   "last_api": "parse-err",
+   "timeout": 0
+  },
+  {
+   "name": "pageant.exe",
+   "exit": 1,
+   "class": "RAN-OUTPUT",
+   "score": 5,
+   "out_bytes": 111,
+   "stub_calls": 0,
+   "n_unres_called": 0,
+   "imports_called": [],
+   "api_events": 0,
+   "last_api": "parse-err",
+   "timeout": 0
+  },
+  {
+   "name": "7za.exe",
+   "exit": 1,
+   "class": "LOAD-REJECT",
+   "score": 0,
+   "out_bytes": 112,
+   "stub_calls": 0,
+   "n_unres_called": 0,
+   "imports_called": [],
+   "api_events": 0,
+   "last_api": "parse-err",
+   "timeout": 0
+  },
+  {
+   "name": "x64_7za.exe",
+   "exit": 0,
+   "class": "RAN-OUTPUT",
+   "score": 5,
+   "out_bytes": 2971,
+   "stub_calls": 0,
+   "n_unres_called": 0,
+   "imports_called": [],
+   "api_events": 0,
+   "last_api": "parse-err",
+   "timeout": 0
+  },
+  {
+   "name": "arm64_7za.exe",
+   "exit": 139,
+   "class": "CRASH-GUEST",
+   "score": 2,
+   "out_bytes": 118,
+   "stub_calls": 0,
+   "n_unres_called": 0,
+   "imports_called": [],
+   "api_events": 0,
+   "last_api": "parse-err",
+   "timeout": 0
+  },
+  {
+   "name": "7z-win-x64.exe",
+   "exit": 1,
+   "class": "LOAD-REJECT",
+   "score": 0,
+   "out_bytes": 110,
+   "stub_calls": 0,
+   "n_unres_called": 0,
+   "imports_called": [],
+   "api_events": 0,
+   "last_api": "parse-err",
+   "timeout": 0
+  },
+  {
+   "name": "jq.exe",
+   "exit": 5,
+   "class": "RAN-OUTPUT",
+   "score": 5,
+   "out_bytes": 102,
+   "stub_calls": 0,
+   "n_unres_called": 0,
+   "imports_called": [],
+   "api_events": 0,
+   "last_api": "parse-err",
+   "timeout": 0
+  },
+  {
+   "name": "sqlite3_rsync.exe",
+   "exit": 1,
+   "class": "RAN-OUTPUT",
+   "score": 5,
+   "out_bytes": 120,
+   "stub_calls": 0,
+   "n_unres_called": 0,
+   "imports_called": [],
+   "api_events": 0,
+   "last_api": "parse-err",
+   "timeout": 0
+  },
+  {
+   "name": "sqldiff.exe",
+   "exit": 1,
+   "class": "RAN-OUTPUT",
+   "score": 5,
+   "out_bytes": 114,
+   "stub_calls": 0,
+   "n_unres_called": 0,
+   "imports_called": [],
+   "api_events": 0,
+   "last_api": "parse-err",
+   "timeout": 0
+  },
+  {
+   "name": "Uninstall.exe",
+   "exit": 1,
+   "class": "LOAD-REJECT",
+   "score": 0,
+   "out_bytes": 120,
+   "stub_calls": 0,
+   "n_unres_called": 0,
+   "imports_called": [],
+   "api_events": 0,
+   "last_api": "parse-err",
+   "timeout": 0
+  },
+  {
+   "name": "7z.exe",
+   "exit": 0,
+   "class": "RAN-OUTPUT",
+   "score": 5,
+   "out_bytes": 2963,
+   "stub_calls": 0,
+   "n_unres_called": 0,
+   "imports_called": [],
+   "api_events": 0,
+   "last_api": "parse-err",
+   "timeout": 0
+  },
+  {
+   "name": "trurl.exe",
+   "exit": 7,
+   "class": "RAN-OUTPUT",
+   "score": 5,
+   "out_bytes": 140,
+   "stub_calls": 0,
+   "n_unres_called": 0,
+   "imports_called": [],
+   "api_events": 0,
+   "last_api": "parse-err",
+   "timeout": 0
+  },
+  {
+   "name": "7z_x64_7za.exe",
+   "exit": 1,
+   "class": "LOAD-REJECT",
+   "score": 0,
+   "out_bytes": 98,
+   "stub_calls": 0,
+   "n_unres_called": 0,
+   "imports_called": [],
+   "api_events": 0,
+   "last_api": "parse-err",
+   "timeout": 0
+  },
+  {
+   "name": "real_7za.exe",
+   "exit": 0,
+   "class": "RAN-OUTPUT",
+   "score": 5,
+   "out_bytes": 2946,
+   "stub_calls": 0,
+   "n_unres_called": 0,
+   "imports_called": [],
+   "api_events": 0,
+   "last_api": "parse-err",
+   "timeout": 0
+  },
+  {
+   "name": "md5deep.exe",
+   "exit": 1,
+   "class": "LOAD-REJECT",
+   "score": 0,
+   "out_bytes": 115,
+   "stub_calls": 0,
+   "n_unres_called": 0,
+   "imports_called": [],
+   "api_events": 0,
+   "last_api": "parse-err",
+   "timeout": 0
+  },
+  {
+   "name": "tigerdeep.exe",
+   "exit": 1,
+   "class": "LOAD-REJECT",
+   "score": 0,
+   "out_bytes": 117,
+   "stub_calls": 0,
+   "n_unres_called": 0,
+   "imports_called": [],
+   "api_events": 0,
+   "last_api": "parse-err",
+   "timeout": 0
+  },
+  {
+   "name": "hashdeep.exe",
+   "exit": 1,
+   "class": "LOAD-REJECT",
+   "score": 0,
+   "out_bytes": 116,
+   "stub_calls": 0,
+   "n_unres_called": 0,
+   "imports_called": [],
+   "api_events": 0,
+   "last_api": "parse-err",
+   "timeout": 0
+  },
+  {
+   "name": "sha1deep.exe",
+   "exit": 1,
+   "class": "LOAD-REJECT",
+   "score": 0,
+   "out_bytes": 116,
+   "stub_calls": 0,
+   "n_unres_called": 0,
+   "imports_called": [],
+   "api_events": 0,
+   "last_api": "parse-err",
+   "timeout": 0
+  },
+  {
+   "name": "sha256deep.exe",
+   "exit": 1,
+   "class": "LOAD-REJECT",
+   "score": 0,
+   "out_bytes": 118,
+   "stub_calls": 0,
+   "n_unres_called": 0,
+   "imports_called": [],
+   "api_events": 0,
+   "last_api": "parse-err",
+   "timeout": 0
+  },
+  {
+   "name": "whirlpooldeep.exe",
+   "exit": 1,
+   "class": "LOAD-REJECT",
+   "score": 0,
+   "out_bytes": 121,
+   "stub_calls": 0,
+   "n_unres_called": 0,
+   "imports_called": [],
+   "api_events": 0,
+   "last_api": "parse-err",
+   "timeout": 0
+  },
+  {
+   "name": "gzip.exe",
+   "exit": 1,
+   "class": "LOAD-REJECT",
+   "score": 0,
+   "out_bytes": 101,
+   "stub_calls": 0,
+   "n_unres_called": 0,
+   "imports_called": [],
+   "api_events": 0,
+   "last_api": "parse-err",
+   "timeout": 0
+  },
+  {
+   "name": "game-breakout",
+   "exit": 0,
+   "class": "RAN-OUTPUT",
+   "score": 5,
+   "out_bytes": 102,
+   "stub_calls": 0,
+   "n_unres_called": 0,
+   "imports_called": [],
+   "api_events": 0,
+   "last_api": "parse-err",
+   "timeout": 0
+  },
+  {
+   "name": "game-snake",
+   "exit": 0,
+   "class": "RAN-OUTPUT",
+   "score": 5,
+   "out_bytes": 99,
+   "stub_calls": 0,
+   "n_unres_called": 0,
+   "imports_called": [],
+   "api_events": 0,
+   "last_api": "parse-err",
+   "timeout": 0
+  },
+  {
+   "name": "upx-decompressed",
+   "exit": 1,
+   "class": "RAN-OUTPUT",
+   "score": 5,
+   "out_bytes": 993,
+   "stub_calls": 0,
+   "n_unres_called": 0,
+   "imports_called": [],
+   "api_events": 0,
+   "last_api": "parse-err",
+   "timeout": 0
+  },
+  {
+   "name": "gui-calc",
+   "exit": 0,
+   "class": "RAN-OUTPUT",
+   "score": 5,
+   "out_bytes": 261,
+   "stub_calls": 0,
+   "n_unres_called": 0,
+   "imports_called": [],
+   "api_events": 0,
+   "last_api": "parse-err",
+   "timeout": 0
+  },
+  {
+   "name": "sqlite3.exe",
+   "exit": 0,
+   "class": "RAN-OUTPUT",
+   "score": 5,
+   "out_bytes": 303,
+   "stub_calls": 0,
+   "n_unres_called": 0,
+   "imports_called": [],
+   "api_events": 0,
+   "last_api": "parse-err",
+   "timeout": 0
+  },
+  {
+   "name": "lz4.exe",
+   "exit": 40,
+   "class": "RAN-OUTPUT",
+   "score": 5,
+   "out_bytes": 95,
+   "stub_calls": 0,
+   "n_unres_called": 0,
+   "imports_called": [],
+   "api_events": 0,
+   "last_api": "parse-err",
+   "timeout": 0
+  },
+  {
+   "name": "zstd.exe",
+   "exit": 37,
+   "class": "RAN-OUTPUT",
+   "score": 5,
+   "out_bytes": 115,
+   "stub_calls": 0,
+   "n_unres_called": 0,
+   "imports_called": [],
+   "api_events": 0,
+   "last_api": "parse-err",
+   "timeout": 0
+  },
+  {
+   "name": "hashdeep64.exe",
+   "exit": 139,
+   "class": "CRASH-GUEST",
+   "score": 2,
+   "out_bytes": 118,
+   "stub_calls": 0,
+   "n_unres_called": 0,
+   "imports_called": [],
+   "api_events": 0,
+   "last_api": "parse-err",
+   "timeout": 0
+  },
+  {
+   "name": "tigerdeep64.exe",
+   "exit": 139,
+   "class": "CRASH-GUEST",
+   "score": 2,
+   "out_bytes": 119,
+   "stub_calls": 0,
+   "n_unres_called": 0,
+   "imports_called": [],
+   "api_events": 0,
+   "last_api": "parse-err",
+   "timeout": 0
+  },
+  {
+   "name": "sha1deep64.exe",
+   "exit": 139,
+   "class": "CRASH-GUEST",
+   "score": 2,
+   "out_bytes": 118,
+   "stub_calls": 0,
+   "n_unres_called": 0,
+   "imports_called": [],
+   "api_events": 0,
+   "last_api": "parse-err",
+   "timeout": 0
+  },
+  {
+   "name": "md5deep64.exe",
+   "exit": 139,
+   "class": "CRASH-GUEST",
+   "score": 2,
+   "out_bytes": 117,
+   "stub_calls": 0,
+   "n_unres_called": 0,
+   "imports_called": [],
+   "api_events": 0,
+   "last_api": "parse-err",
+   "timeout": 0
+  },
+  {
+   "name": "whirlpooldeep64.exe",
+   "exit": 139,
+   "class": "CRASH-GUEST",
+   "score": 2,
+   "out_bytes": 123,
+   "stub_calls": 0,
+   "n_unres_called": 0,
+   "imports_called": [],
+   "api_events": 0,
+   "last_api": "parse-err",
+   "timeout": 0
+  },
+  {
+   "name": "sha256deep64.exe",
+   "exit": 139,
+   "class": "CRASH-GUEST",
+   "score": 2,
+   "out_bytes": 120,
+   "stub_calls": 0,
+   "n_unres_called": 0,
+   "imports_called": [],
+   "api_events": 0,
+   "last_api": "parse-err",
+   "timeout": 0
+  },
+  {
+   "name": "jq-windows-amd64.exe",
+   "exit": 0,
+   "class": "RAN-OUTPUT",
+   "score": 5,
+   "out_bytes": 104,
+   "stub_calls": 0,
+   "n_unres_called": 0,
+   "imports_called": [],
+   "api_events": 0,
+   "last_api": "parse-err",
+   "timeout": 0
+  },
+  {
+   "name": "RAMMap64.exe",
+   "exit": 139,
+   "class": "CRASH-GUEST",
+   "score": 2,
+   "out_bytes": 113,
+   "stub_calls": 20,
+   "n_unres_called": 10,
+   "imports_called": [
+    "comctl32.dll!ImageList_ReplaceIcon",
+    "comctl32.dll!ImageList_SetBkColor",
+    "comctl32.dll!ImageList_SetImageCount",
+    "user32.dll!GetPropW",
+    "user32.dll!GetWindowLongPtrW",
+    "user32.dll!GetWindowLongW",
+    "user32.dll!InvalidateRgn",
+    "user32.dll!MapWindowPoints",
+    "user32.dll!SetPropW",
+    "user32.dll!SetWindowLongPtrW"
+   ],
+   "api_events": 0,
+   "last_api": "parse-err",
+   "timeout": 0
+  },
+  {
+   "name": "cports.exe",
+   "exit": 139,
+   "class": "CRASH-GUEST",
+   "score": 2,
+   "out_bytes": 109,
+   "stub_calls": 21,
+   "n_unres_called": 0,
+   "imports_called": [],
+   "api_events": 0,
+   "last_api": "parse-err",
+   "timeout": 0
+  },
+  {
+   "name": "puttygen.exe",
+   "exit": 139,
+   "class": "CRASH-GUEST",
+   "score": 2,
+   "out_bytes": 113,
+   "stub_calls": 0,
+   "n_unres_called": 0,
+   "imports_called": [],
+   "api_events": 0,
+   "last_api": "parse-err",
+   "timeout": 0
+  },
+  {
+   "name": "Diskmon64.exe",
+   "exit": 0,
+   "class": "RAN-OUTPUT",
+   "score": 5,
+   "out_bytes": 115,
+   "stub_calls": 0,
+   "n_unres_called": 0,
+   "imports_called": [],
+   "api_events": 0,
+   "last_api": "parse-err",
+   "timeout": 0
+  },
+  {
+   "name": "Coreinfo64.exe",
+   "exit": 139,
+   "class": "CRASH-GUEST",
+   "score": 2,
+   "out_bytes": 119,
+   "stub_calls": 0,
+   "n_unres_called": 0,
+   "imports_called": [],
+   "api_events": 0,
+   "last_api": "parse-err",
+   "timeout": 0
+  },
+  {
+   "name": "ProduKey.exe",
+   "exit": 0,
+   "class": "STUB-GATE",
+   "score": 3,
+   "out_bytes": 113,
+   "stub_calls": 5,
+   "n_unres_called": 0,
+   "imports_called": [],
+   "api_events": 0,
+   "last_api": "parse-err",
+   "timeout": 0
+  },
+  {
+   "name": "procexp64.exe",
+   "exit": 139,
+   "class": "CRASH-GUEST",
+   "score": 2,
+   "out_bytes": 115,
+   "stub_calls": 0,
+   "n_unres_called": 0,
+   "imports_called": [],
+   "api_events": 0,
+   "last_api": "parse-err",
+   "timeout": 0
+  },
+  {
+   "name": "Bginfo64.exe",
+   "exit": 9,
+   "class": "STUB-GATE",
+   "score": 3,
+   "out_bytes": 113,
+   "stub_calls": 8,
+   "n_unres_called": 4,
+   "imports_called": [
+    "kernel32.dll!GetProfileIntW",
+    "kernel32.dll!IsWow64Process",
+    "ole32.dll!CoCreateInstance",
+    "user32.dll!CopyRect"
+   ],
+   "api_events": 0,
+   "last_api": "parse-err",
+   "timeout": 0
+  },
+  {
+   "name": "WinMergeU.exe",
+   "exit": 9,
+   "class": "STUB-GATE",
+   "score": 3,
+   "out_bytes": 115,
+   "stub_calls": 1,
+   "n_unres_called": 1,
+   "imports_called": [
+    "shlwapi.dll!PathFindExtensionW"
+   ],
+   "api_events": 0,
+   "last_api": "parse-err",
+   "timeout": 0
+  },
+  {
+   "name": "SearchMyFiles.exe",
+   "exit": 139,
+   "class": "CRASH-GUEST",
+   "score": 2,
+   "out_bytes": 123,
+   "stub_calls": 0,
+   "n_unres_called": 0,
+   "imports_called": [],
+   "api_events": 0,
+   "last_api": "parse-err",
+   "timeout": 0
+  },
+  {
+   "name": "sqlite3_analyzer.exe",
+   "exit": 139,
+   "class": "CRASH-GUEST",
+   "score": 2,
+   "out_bytes": 123,
+   "stub_calls": 1,
+   "n_unres_called": 0,
+   "imports_called": [],
+   "api_events": 0,
+   "last_api": "parse-err",
+   "timeout": 0
+  },
+  {
+   "name": "7zG.exe",
+   "exit": 0,
+   "class": "STUB-GATE",
+   "score": 3,
+   "out_bytes": 114,
+   "stub_calls": 1,
+   "n_unres_called": 0,
+   "imports_called": [],
+   "api_events": 0,
+   "last_api": "parse-err",
+   "timeout": 0
+  },
+  {
+   "name": "7zFM.exe",
+   "exit": 0,
+   "class": "STUB-GATE",
+   "score": 3,
+   "out_bytes": 115,
+   "stub_calls": 3,
+   "n_unres_called": 1,
+   "imports_called": [
+    "user32.dll!SetWindowPlacement"
+   ],
+   "api_events": 0,
+   "last_api": "parse-err",
+   "timeout": 0
+  },
+  {
+   "name": "curl.exe",
+   "exit": 139,
+   "class": "CRASH-GUEST",
+   "score": 2,
+   "out_bytes": 139,
+   "stub_calls": 0,
+   "n_unres_called": 0,
+   "imports_called": [],
+   "api_events": 0,
+   "last_api": "parse-err",
+   "timeout": 0
+  },
+  {
+   "name": "7z2604-x64.exe",
+   "exit": 1,
+   "class": "RAN-OUTPUT",
+   "score": 5,
+   "out_bytes": 98,
+   "stub_calls": 0,
+   "n_unres_called": 0,
+   "imports_called": [],
+   "api_events": 0,
+   "last_api": "parse-err",
+   "timeout": 0
+  }
+ ],
+ "class_histogram": {
+  "RAN-OUTPUT": 22,
+  "LOAD-REJECT": 11,
+  "CRASH-GUEST": 15,
+  "STUB-GATE": 5
+ },
+ "mean_score": 2.92,
+ "gate_imports": [
+  {
+   "import": "user32.dll!GetWindowLongW",
+   "programs": [
+    "RAMMap64.exe"
+   ],
+   "n": 1
+  },
+  {
+   "import": "comctl32.dll!ImageList_SetImageCount",
+   "programs": [
+    "RAMMap64.exe"
+   ],
+   "n": 1
+  },
+  {
+   "import": "comctl32.dll!ImageList_SetBkColor",
+   "programs": [
+    "RAMMap64.exe"
+   ],
+   "n": 1
+  },
+  {
+   "import": "user32.dll!InvalidateRgn",
+   "programs": [
+    "RAMMap64.exe"
+   ],
+   "n": 1
+  },
+  {
+   "import": "user32.dll!MapWindowPoints",
+   "programs": [
+    "RAMMap64.exe"
+   ],
+   "n": 1
+  },
+  {
+   "import": "user32.dll!SetPropW",
+   "programs": [
+    "RAMMap64.exe"
+   ],
+   "n": 1
+  },
+  {
+   "import": "comctl32.dll!ImageList_ReplaceIcon",
+   "programs": [
+    "RAMMap64.exe"
+   ],
+   "n": 1
+  },
+  {
+   "import": "user32.dll!GetPropW",
+   "programs": [
+    "RAMMap64.exe"
+   ],
+   "n": 1
+  },
+  {
+   "import": "user32.dll!GetWindowLongPtrW",
+   "programs": [
+    "RAMMap64.exe"
+   ],
+   "n": 1
+  },
+  {
+   "import": "user32.dll!SetWindowLongPtrW",
+   "programs": [
+    "RAMMap64.exe"
+   ],
+   "n": 1
+  },
+  {
+   "import": "ole32.dll!CoCreateInstance",
+   "programs": [
+    "Bginfo64.exe"
+   ],
+   "n": 1
+  },
+  {
+   "import": "user32.dll!CopyRect",
+   "programs": [
+    "Bginfo64.exe"
+   ],
+   "n": 1
+  },
+  {
+   "import": "kernel32.dll!GetProfileIntW",
+   "programs": [
+    "Bginfo64.exe"
+   ],
+   "n": 1
+  },
+  {
+   "import": "kernel32.dll!IsWow64Process",
+   "programs": [
+    "Bginfo64.exe"
+   ],
+   "n": 1
+  },
+  {
+   "import": "shlwapi.dll!PathFindExtensionW",
+   "programs": [
+    "WinMergeU.exe"
+   ],
+   "n": 1
+  },
+  {
+   "import": "user32.dll!SetWindowPlacement",
+   "programs": [
+    "7zFM.exe"
+   ],
+   "n": 1
+  }
+ ]
+}

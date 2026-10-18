@@ -1,0 +1,27 @@
+[TRACE] Command line: /home/z/my-project/workspace/miniwin-engineering/artifacts/opensource/_dl/7z-install/7zG.exe
+[WARN]   unresolved: CommDlgExtendedError
+[WARN]   unresolved: GetSaveFileNameW
+[WARN]   unresolved: GetOpenFileNameW
+[WARN]   unresolved: CoTaskMemFree
+[WARN]   unresolved: CoCreateInstance
+[WARN]   unresolved: EmptyClipboard
+[WARN]   unresolved: SetWindowLongPtrW
+[WARN]   unresolved: GetWindowLongPtrW
+[WARN]   unresolved: MapDialogRect
+[WARN]   unresolved: MonitorFromWindow
+[WARN]   unresolved: SetClipboardData
+[WARN]   unresolved: CloseClipboard
+[WARN]   unresolved: OpenClipboard
+[WARN]   unresolved: GetFocus
+[WARN]   unresolved: SetCursor
+[WARN]   unresolved: DestroyIcon
+[WARN]   unresolved: SendDlgItemMessageW
+[WARN]   unresolved: GetKeyState
+[WARN]   unresolved: SHBrowseForFolderW
+[WARN]   unresolved: SHGetFileInfoW
+[WARN]   unresolved: SHGetPathFromIDListW
+[WARN]   unresolved: lstrcatW
+[WARN] 23 imports unresolved
+[STUB] unresolved import called -> returning 0 (call #1) guest_rip=0x470331
+[MessageBoxW] 7-Zip: Specify command
+[MessageBox] dialog #1 rendered -> miniwin-results/7zG.exe/screenshots/messagebox_1.bmp

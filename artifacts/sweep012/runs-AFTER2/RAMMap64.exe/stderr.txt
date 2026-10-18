@@ -1,0 +1,139 @@
+[TRACE] Command line: /home/z/my-project/workspace/miniwin-engineering/artifacts/sweep50/dl/rammap64/RAMMap64.exe
+[WARN]   unresolved: ImageList_DrawEx
+[WARN]   unresolved: ImageList_SetImageCount
+[WARN]   unresolved: ImageList_SetBkColor
+[WARN]   unresolved: ImageList_ReplaceIcon
+[WARN]   unresolved: QueryDosDeviceW
+[WARN]   unresolved: GetNumberFormatW
+[WARN]   unresolved: SetWindowPos
+[WARN]   unresolved: DrawEdge
+[WARN]   unresolved: GetFocus
+[WARN]   unresolved: SetCursor
+[WARN]   unresolved: InflateRect
+[WARN]   unresolved: GetScrollInfo
+[WARN]   unresolved: SetScrollInfo
+[WARN]   unresolved: GetClassLongPtrW
+[WARN]   unresolved: IntersectRect
+[WARN]   unresolved: ScrollWindowEx
+[WARN]   unresolved: GetUpdateRgn
+[WARN]   unresolved: SetCapture
+[WARN]   unresolved: GetCapture
+[WARN]   unresolved: GetKeyState
+[WARN]   unresolved: GetAncestor
+[WARN]   unresolved: IsDialogMessageW
+[WARN]   unresolved: GetClassNameW
+[WARN]   unresolved: EnumChildWindows
+[WARN]   unresolved: GetDesktopWindow
+[WARN]   unresolved: GetClassLongW
+[WARN]   unresolved: SetWindowLongPtrW
+[WARN]   unresolved: GetWindowLongPtrW
+[WARN]   unresolved: SetWindowLongW
+[WARN]   unresolved: OffsetRect
+[WARN]   unresolved: UnionRect
+[WARN]   unresolved: ChildWindowFromPoint
+[WARN]   unresolved: MapWindowPoints
+[WARN]   unresolved: InvalidateRgn
+[WARN]   unresolved: TranslateAcceleratorW
+[WARN]   unresolved: ReleaseCapture
+[WARN]   unresolved: DefDlgProcW
+[WARN]   unresolved: IsZoomed
+[WARN]   unresolved: EndDeferWindowPos
+[WARN]   unresolved: DeferWindowPos
+[WARN]   unresolved: BeginDeferWindowPos
+[WARN]   unresolved: SetWindowPlacement
+[WARN]   unresolved: IsChild
+[WARN]   unresolved: DrawFrameControl
+[WARN]   unresolved: GetWindowLongW
+[WARN]   unresolved: PtInRect
+[WARN]   unresolved: DrawFocusRect
+[WARN]   unresolved: GetPropW
+[WARN]   unresolved: SetPropW
+[WARN]   unresolved: Polyline
+[WARN]   unresolved: SelectClipRgn
+[WARN]   unresolved: RectInRegion
+[WARN]   unresolved: GetBkColor
+[WARN]   unresolved: CreateRectRgnIndirect
+[WARN]   unresolved: CreateRectRgn
+[WARN]   unresolved: EndPage
+[WARN]   unresolved: StartPage
+[WARN]   unresolved: EndDoc
+[WARN]   unresolved: StartDocW
+[WARN]   unresolved: GetTextExtentPoint32W
+[WARN]   unresolved: FindTextW
+[WARN]   unresolved: GetSaveFileNameW
+[WARN]   unresolved: GetOpenFileNameW
+[WARN]   unresolved: PrintDlgW
+[WARN]   unresolved: ChooseColorW
+[WARN]   unresolved: StartServiceW
+[WARN]   unresolved: QueryServiceStatusEx
+[WARN]   unresolved: OpenServiceW
+[WARN]   unresolved: ControlService
+[WARN]   unresolved: ShellExecuteW
+[WARN]   unresolved: CoCreateInstance
+[WARN] 74 imports unresolved
+[STUB] unresolved import called -> returning 0 (call #1) guest_rip=0x140017c62
+[STUB] unresolved import called -> returning 0 (call #2) guest_rip=0x14000f36a
+[STUB] unresolved import called -> returning 0 (call #3) guest_rip=0x14000f378
+[STUB] unresolved import called -> returning 0 (call #4) guest_rip=0x14000f390
+[STUB] unresolved import called -> returning 0 (call #5) guest_rip=0x140012d47
+[STUB] unresolved import called -> returning 0 (call #6) guest_rip=0x140012d5a
+[STUB] unresolved import called -> returning 0 (call #7) guest_rip=0x14000f36a
+[STUB] unresolved import called -> returning 0 (call #8) guest_rip=0x14000f378
+[STUB] unresolved import called -> returning 0 (call #9) guest_rip=0x14000f390
+[STUB] unresolved import called -> returning 0 (call #10) guest_rip=0x14000550f
+[STUB] unresolved import called -> returning 0 (call #11) guest_rip=0x14000520a
+[STUB] unresolved import called -> returning 0 (call #12) guest_rip=0x140005226
+[STUB] unresolved import called -> returning 0 (call #13) guest_rip=0x140005242
+[STUB] unresolved import called -> returning 0 (call #14) guest_rip=0x1400114b1
+[STUB] unresolved import called -> returning 0 (call #15) guest_rip=0x140011549
+[STUB] unresolved import called -> returning 0 (call #16) guest_rip=0x1400115c8
+[STUB] unresolved import called -> returning 0 (call #17) guest_rip=0x14000f4a2
+[STUB] unresolved import called -> returning 0 (call #18) guest_rip=0x14000f4b0
+[STUB] unresolved import called -> returning 0 (call #19) guest_rip=0x14001719d
+[STUB] unresolved import called -> returning 0 (call #20) guest_rip=0x1400171ad
+
+[CRASH] Signal 11 at RIP=0x14000df5a
+  RAX=0xea RCX=0x10 RDX=0x8 R8=0x7ffdfa0175b0 R9=0x3
+  RSP=0x7ffdfa017550 RBP=0x1209
+  g_image_base=0x140000000 g_image_size=0x63000
+  RVA=0xdf5a (inside loaded PE)
+  Bytes: 4c 8b 51 08 48 8b f9 4c 8b 09 49 8b ca 49 2b c9 
+  Return addr: 0x0
+  RSI=0x8 RDI=0x3c791d0
+  R8=0x7ffdfa0175b0  R9=0x3 R10=0x0 R11=0x7ffdfa017570
+  R12=0x10002 R13=0x2 R14=0x0 R15=0x0
+  [SCAN rsp+040] 0x140015c66 <PE>
+  [SCAN rsp+088] 0x140015d61 <PE>
+  [SCAN rsp+152] 0x1400171c1 <PE>
+  [SCAN rsp+272] 0x140045e10 <PE>
+  [SCAN rsp+320] 0x140045e10 <PE>
+  [SCAN rsp+360] 0x140045e10 <PE>
+  [SCAN rsp+384] 0x140045ec0 <PE>
+  [SCAN rsp+408] 0x202f620 <LOADER>
+  [SCAN rsp+424] 0x140016650 <PE>
+  [SCAN rsp+616] 0x140016650 <PE>
+  [SCAN rsp+632] 0x140045ec0 <PE>
+  [SCAN rsp+648] 0x140012eee <PE>
+  [SCAN rsp+856] 0x140045ea8 <PE>
+  [SCAN rsp+1432] 0x140000000 <PE>
+  [SCAN rsp+1592] 0x140000000 <PE>
+  [SCAN rsp+1728] 0x140000000 <PE>
+  [SCAN rsp+1768] 0x140011db0 <PE>
+  [SCAN rsp+1784] 0x202f620 <LOADER>
+  [SCAN rsp+2024] 0x140017ca4 <PE>
+  [SCAN rsp+2088] 0x140059608 <PE>
+  [SCAN rsp+2120] 0x2010a5c <LOADER>
+  [SCAN rsp+2296] 0x14005ac20 <PE>
+  [SCAN rsp+2328] 0x1400203c6 <PE>
+  [SCAN rsp+2344] 0x14003d998 <PE>
+  [SCAN rsp+2360] 0x140033ef0 <PE>
+  [SCAN rsp+2408] 0x140058520 <PE>
+  [SCAN rsp+2440] 0x14002ef1d <PE>
+  [SCAN rsp+2488] 0x14001fed2 <PE>
+  [SCAN rsp+2552] 0x2007942 <LOADER>
+  [SCAN rsp+2592] 0x14003d578 <PE>
+  [SCAN rsp+2920] 0x200275d <LOADER>
+  [SCAN rsp+2928] 0x2002130 <LOADER>
+  Backtrace (via stack walking):
+    [0] RIP=0x14000df5a RVA=0xdf5a
+      [RSP+0] = 0x0 (return addr?)

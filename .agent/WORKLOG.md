@@ -345,3 +345,68 @@ Stage Summary:
 - Progress discipline established: every future change must move the 51-program mean_score or class histogram, else it is not valuable.
 - Top named gates REMAINING: user32 GetDlgItem 5x / SetWindowTextW 4x / SendMessageW 4x (mini-dialog family), procexp64 ntdll NT-query family, md5deep64-suite x6 + curl + puttygen + sqlite3_analyzer crash cluster (each = own BUG).
 - Artifacts: artifacts/sweep012/runs-{BASELINE,AFTER}/{summary,meta,progress.json}; scripts/sweep012_{progsweep.sh,progress.py}.
+
+---
+Task ID: SWEEP-013
+Agent: Super Z (main agent)
+Task: User directives 2026-10-19 — (1) test at least one simple graphical
+program (a calculator); (2) multiply the task queue 5x and solve many
+problems; keep measuring per-program execution progress.
+
+Work Log:
+- Restored mingw-w64 toolchain (home reset wiped it): downloaded 5 Debian
+  debs (gcc-mingw-w64-x86-64-posix 14.2.0-19+27+b1, binutils 2.47, mingw
+  12.0.0-5), extracted to scripts/mingw-debs/root/usr — smoke test PE32+ OK.
+- loader.c mini window manager: MwChild registry (64 slots, HWND 0x0003xxxx),
+  system-class detection (atom 0x8080..0x8085 + string forms), child-aware
+  CreateWindowExW/A + DestroyWindow; SendMessageW/A real (WM_SETTEXT /
+  WM_GETTEXT / WM_GETTEXTLEN / BM_GETCHECK + main-wndproc routing — the old
+  A stub returned 0); pump v3 MINWIN_CLICKS scripted WM_COMMAND delivery.
+- Honest batch #3 (~65 APIs): dialog/child family (GetDlgItem,
+  SetWindowTextW/A, GetWindowTextW/A, GetDlgItemText/Int family, checkbox
+  family, menus, LoadImage, GetClassInfoEx, GetWindowPlacement/Rect,
+  MoveWindow, focus/foreground, CharLower, DrawTextW, ExtTextOutW, fonts
+  CreateFontIndirectW/A + GetObjectW/A), kernel32 (LocalReAlloc,
+  GetSystemWindowsDirectoryW/A, FlushInstructionCache, lstrcpynW/A, lstrcpyW/A,
+  InterlockedPopEntrySList, GetWindowsDirectoryA), ntdll (NtQuerySystem
+  Information classes 0/2 real + honest 0xC0000003 otherwise, NT object
+  opens/queries with honest NTSTATUS, RtlNtStatusToDosError), advapi32
+  (real SID alloc/free/equal, GetTokenInformation classes 18/20 real,
+  OpenSCManager NULL+ERROR_ACCESS_DENIED, CloseServiceHandle, registry
+  A-variants), shell32 (SHGetFolderPathW 8 CSIDLs, Shell_NotifyIconW),
+  gdiplus (GdiplusStartup/Shutdown), ole32/oleaut32 (CoInitializeSecurity,
+  SysAllocStringByteLen), msvcrt _ismbblead.
+- BUG-068 fixed in-flight: WM_GETTEXT buffer/count swapped (wParam=count,
+  lParam=buffer) — caught by the calculator crash at mw_SendMessageW+0x237
+  (symbolized via nm: R13=0 write). Guest calc.c expression double-append
+  also fixed (guest-side only).
+- Calculator acceptance: tests/gui/calc.c — 3x deterministic exit 0,
+  "[CALC] 12+45 = 57" (clicks 1,2,+,4,5,=), second scenario "[CALC] 9*8 = 72";
+  guest-drawn BMP archived (title/expression/display/log lines visible).
+- Full-pool sweep AFTER2 (53 programs incl. gui-calc): mean_score
+  2.71->2.92, RAN-OUTPUT 16->22, STUB-GATE 10->5, zero-stub clean runs for
+  Autoruns64/ZoomIt64/Diskmon64/7z2604-x64/jq-windows-amd64/sqlite3/gui-calc;
+  procexp64 21->0 stubs (IsBadStringPtrW frontier cleared, now guest-level
+  crash); Bginfo64 16->8 stubs; RAMMap64 deeper (1 gate left: InvalidateRgn);
+  zstd 37/lz4 40/jq 5/trurl 7 real exit codes.
+- Harness fix: sweep feeds stdin </dev/null (stdin-blockers zstd/lz4/jq/
+  sqlite3/md5deep64 were previously misclassified as hang/crash at the CRT
+  stage; they now measure their true stage).
+- Round 2 from AFTER2 evidence: IsBadStringPtrW/A, IsBadRead/WritePtr,
+  RegisterWindowMessageA, lstrcpyW/A, CreateDialogParamW/A(modeless),
+  CreateDialogIndirectParamW, GetTextMetricsW/A, GetTextCharset(Info),
+  EnumFontFamiliesW/A, EnumDisplayMonitors, GetMonitorInfoW/A,
+  CoInitializeSecurity, SysAllocStringByteLen.
+- G1 re-pinned sha256 700d83ee 12/12 (evidence/master/g1/20261018_174244).
+- Task queue 5x expanded: SW-601..SW-650 (50 named, evidence-backed items)
+  appended to SWEEP50_WORKLIST.md.
+
+Stage Summary:
+- Artifacts: evidence/sweep013/ (README, comparison.txt, progress.json,
+  summary.tsv, calc_screenshot.bmp); artifacts/sweep013_calc/ (2 BMPs);
+  artifacts/sweep012/runs-AFTER2/ (53 trimmed runs); tests/gui/calc.c+.exe;
+  scripts/sweep012_progsweep.sh (stdin fix + calc pool entry).
+- Calculator = first GUI program with REAL end-to-end input processing
+  (scripted user clicks -> WM_COMMAND -> text I/O -> GDI paint -> BMP).
+- Next lever: SW-601 InvalidateRgn (RAMMap64), SW-602/608/609 guest-level
+  crash symbolization, SW-603 Bginfo64 8-stub family.

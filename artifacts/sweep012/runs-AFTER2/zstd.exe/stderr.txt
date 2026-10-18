@@ -1,0 +1,2 @@
+[TRACE] Command line: /home/z/my-project/workspace/miniwin-engineering/samples/real/zstd/zstd-v1.5.6-win64/zstd.exe
+zstd: error 37 : Read error 

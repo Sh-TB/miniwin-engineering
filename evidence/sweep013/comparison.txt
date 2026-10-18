@@ -1,0 +1,86 @@
+== tag=AFTER2 programs=53 mean_score=2.92
+   histogram: {'RAN-OUTPUT': 22, 'LOAD-REJECT': 11, 'CRASH-GUEST': 15, 'STUB-GATE': 5}
+
+-- progress ladder (lowest first = where the work is) --
+  0 LOAD-REJECT   exit=1    stubs=0    apis=0      out=110     7z-win-x64.exe
+  0 LOAD-REJECT   exit=1    stubs=0    apis=0      out=98      7z_x64_7za.exe
+  0 LOAD-REJECT   exit=1    stubs=0    apis=0      out=112     7za.exe
+  0 LOAD-REJECT   exit=1    stubs=0    apis=0      out=120     Uninstall.exe
+  0 LOAD-REJECT   exit=1    stubs=0    apis=0      out=101     gzip.exe
+  0 LOAD-REJECT   exit=1    stubs=0    apis=0      out=116     hashdeep.exe
+  0 LOAD-REJECT   exit=1    stubs=0    apis=0      out=115     md5deep.exe
+  0 LOAD-REJECT   exit=1    stubs=0    apis=0      out=116     sha1deep.exe
+  0 LOAD-REJECT   exit=1    stubs=0    apis=0      out=118     sha256deep.exe
+  0 LOAD-REJECT   exit=1    stubs=0    apis=0      out=117     tigerdeep.exe
+  0 LOAD-REJECT   exit=1    stubs=0    apis=0      out=121     whirlpooldeep.exe
+  2 CRASH-GUEST   exit=139  stubs=0    apis=0      out=119     Coreinfo64.exe
+  2 CRASH-GUEST   exit=139  stubs=20   apis=0      out=113     RAMMap64.exe
+  2 CRASH-GUEST   exit=139  stubs=0    apis=0      out=123     SearchMyFiles.exe
+  2 CRASH-GUEST   exit=139  stubs=0    apis=0      out=118     arm64_7za.exe
+  2 CRASH-GUEST   exit=139  stubs=21   apis=0      out=109     cports.exe
+  2 CRASH-GUEST   exit=139  stubs=0    apis=0      out=139     curl.exe
+  2 CRASH-GUEST   exit=139  stubs=0    apis=0      out=118     hashdeep64.exe
+  2 CRASH-GUEST   exit=139  stubs=0    apis=0      out=117     md5deep64.exe
+  2 CRASH-GUEST   exit=139  stubs=0    apis=0      out=115     procexp64.exe
+  2 CRASH-GUEST   exit=139  stubs=0    apis=0      out=113     puttygen.exe
+  2 CRASH-GUEST   exit=139  stubs=0    apis=0      out=118     sha1deep64.exe
+  2 CRASH-GUEST   exit=139  stubs=0    apis=0      out=120     sha256deep64.exe
+  2 CRASH-GUEST   exit=139  stubs=1    apis=0      out=123     sqlite3_analyzer.exe
+  2 CRASH-GUEST   exit=139  stubs=0    apis=0      out=119     tigerdeep64.exe
+  2 CRASH-GUEST   exit=139  stubs=0    apis=0      out=123     whirlpooldeep64.exe
+  3 STUB-GATE     exit=0    stubs=3    apis=0      out=115     7zFM.exe
+  3 STUB-GATE     exit=0    stubs=1    apis=0      out=114     7zG.exe
+  3 STUB-GATE     exit=9    stubs=8    apis=0      out=113     Bginfo64.exe
+  3 STUB-GATE     exit=0    stubs=5    apis=0      out=113     ProduKey.exe
+  3 STUB-GATE     exit=9    stubs=1    apis=0      out=115     WinMergeU.exe
+  5 RAN-OUTPUT    exit=0    stubs=0    apis=0      out=2963    7z.exe
+  5 RAN-OUTPUT    exit=1    stubs=0    apis=0      out=98      7z2604-x64.exe
+  5 RAN-OUTPUT    exit=0    stubs=0    apis=0      out=117     Autoruns64.exe
+  5 RAN-OUTPUT    exit=0    stubs=0    apis=0      out=115     Diskmon64.exe
+  5 RAN-OUTPUT    exit=1    stubs=0    apis=0      out=115     Procmon64.exe
+  5 RAN-OUTPUT    exit=0    stubs=0    apis=0      out=113     ZoomIt64.exe
+  5 RAN-OUTPUT    exit=0    stubs=0    apis=0      out=102     game-breakout
+  5 RAN-OUTPUT    exit=0    stubs=0    apis=0      out=99      game-snake
+  5 RAN-OUTPUT    exit=0    stubs=0    apis=0      out=261     gui-calc
+  5 RAN-OUTPUT    exit=0    stubs=0    apis=0      out=104     jq-windows-amd64.exe
+  5 RAN-OUTPUT    exit=5    stubs=0    apis=0      out=102     jq.exe
+  5 RAN-OUTPUT    exit=40   stubs=0    apis=0      out=95      lz4.exe
+  5 RAN-OUTPUT    exit=1    stubs=0    apis=0      out=111     pageant.exe
+  5 RAN-OUTPUT    exit=1    stubs=0    apis=0      out=107     putty.exe
+  5 RAN-OUTPUT    exit=0    stubs=0    apis=0      out=2946    real_7za.exe
+  5 RAN-OUTPUT    exit=1    stubs=0    apis=0      out=114     sqldiff.exe
+  5 RAN-OUTPUT    exit=0    stubs=0    apis=0      out=303     sqlite3.exe
+  5 RAN-OUTPUT    exit=1    stubs=0    apis=0      out=120     sqlite3_rsync.exe
+  5 RAN-OUTPUT    exit=7    stubs=0    apis=0      out=140     trurl.exe
+  5 RAN-OUTPUT    exit=1    stubs=0    apis=0      out=993     upx-decompressed
+  5 RAN-OUTPUT    exit=0    stubs=0    apis=0      out=2971    x64_7za.exe
+  5 RAN-OUTPUT    exit=37   stubs=0    apis=0      out=115     zstd.exe
+
+-- TOP gate imports (named, highest value first) --
+   1x  user32.dll!GetWindowLongW                    blocks: RAMMap64.exe
+   1x  comctl32.dll!ImageList_SetImageCount         blocks: RAMMap64.exe
+   1x  comctl32.dll!ImageList_SetBkColor            blocks: RAMMap64.exe
+   1x  user32.dll!InvalidateRgn                     blocks: RAMMap64.exe
+   1x  user32.dll!MapWindowPoints                   blocks: RAMMap64.exe
+   1x  user32.dll!SetPropW                          blocks: RAMMap64.exe
+   1x  comctl32.dll!ImageList_ReplaceIcon           blocks: RAMMap64.exe
+   1x  user32.dll!GetPropW                          blocks: RAMMap64.exe
+   1x  user32.dll!GetWindowLongPtrW                 blocks: RAMMap64.exe
+   1x  user32.dll!SetWindowLongPtrW                 blocks: RAMMap64.exe
+   1x  ole32.dll!CoCreateInstance                   blocks: Bginfo64.exe
+   1x  user32.dll!CopyRect                          blocks: Bginfo64.exe
+   1x  kernel32.dll!GetProfileIntW                  blocks: Bginfo64.exe
+   1x  kernel32.dll!IsWow64Process                  blocks: Bginfo64.exe
+   1x  shlwapi.dll!PathFindExtensionW               blocks: WinMergeU.exe
+   1x  user32.dll!SetWindowPlacement                blocks: 7zFM.exe
+Traceback (most recent call last):
+  File "/home/z/my-project/workspace/miniwin-engineering/scripts/sweep012_progress.py", line 189, in <module>
+    r0 = analyze(sys.argv[2])
+         ^^^^^^^^^^^^^^^^^^^^
+  File "/home/z/my-project/workspace/miniwin-engineering/scripts/sweep012_progress.py", line 120, in analyze
+    imports = decode_stub_imports(meta.get(name, ""), stderr)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/z/my-project/workspace/miniwin-engineering/scripts/sweep012_progress.py", line 65, in decode_stub_imports
+    for line in open(stderr_path, errors="replace"):
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+FileNotFoundError: [Errno 2] No such file or directory: '/home/z/my-project/workspace/miniwin-engineering/artifacts/sweep012/runs-AFTER/cports.exe/stderr.txt'

@@ -1,0 +1,348 @@
+{
+  "trace": [
+[T8f80] [API] PE Loader: file=/home/z/my-project/workspace/miniwin-engineering/artifacts/opensource/_dl/7z-install/7zG.exe size=722944
+[T8f80] [API] PE Loader: ImageBase=0x400000 EP=0x753a0 SizeOfImage=0xb8000 Sections=6
+[T8f80] [API] PE Loader: Mapped at 0x400000 (forced via MAP_FIXED)
+[T8f80] [API] Section [0] .text    VA=0x00001000 VS=0x00075884 Raw=0x00075a00 Ch=0x60000020
+[T8f80] [API] Section [1] .rdata   VA=0x00077000 VS=0x000289b4 Raw=0x00028a00 Ch=0x40000040
+[T8f80] [API] Section [2] .data    VA=0x000a0000 VS=0x000043f0 Raw=0x00000800 Ch=0xc0000040
+[T8f80] [API] Section [3] .pdata   VA=0x000a5000 VS=0x00009858 Raw=0x00009a00 Ch=0x40000040
+[T8f80] [API] Section [4] .rsrc    VA=0x000af000 VS=0x00006a48 Raw=0x00006c00 Ch=0x40000040
+[T8f80] [API] Section [5] .reloc   VA=0x000b6000 VS=0x0000106a Raw=0x00001200 Ch=0x42000040
+[T8f80] [API] Import Directory: RVA=0x9e34c Size=0xdc
+[T8f80] [API] Import DLL: COMCTL32.dll (IAT RVA=0x77080, ILT RVA=0x9e4a8)
+[T8f80] [API]   [0] Ordinal 17 (not supported)
+[T8f80] [API] Import DLL: comdlg32.dll (IAT RVA=0x77588, ILT RVA=0x9e9b0)
+[T8f80] [API]   [0] UNRESOLVED: CommDlgExtendedError
+[T8f80] [API]   [1] UNRESOLVED: GetSaveFileNameW
+[T8f80] [API]   [2] UNRESOLVED: GetOpenFileNameW
+[T8f80] [API] Import DLL: GDI32.dll (IAT RVA=0x77090, ILT RVA=0x9e4b8)
+[T8f80] [API]   [0] DeleteObject -> 0x200a410
+[T8f80] [API]   [1] CreateFontIndirectW -> 0x204e5e0
+[T8f80] [API] Import DLL: OLEAUT32.dll (IAT RVA=0x773c8, ILT RVA=0x9e7f0)
+[T8f80] [API]   [0] Ordinal 2 -> SysAllocString (OLEAUT32 fixed)
+[T8f80] [API]   [0] SysAllocString -> 0x203b9c0
+[T8f80] [API]   [1] Ordinal 149 -> SysStringByteLen (OLEAUT32 fixed)
+[T8f80] [API]   [1] SysStringByteLen -> 0x200a060
+[T8f80] [API]   [2] Ordinal 9 -> VariantClear (OLEAUT32 fixed)
+[T8f80] [API]   [2] VariantClear -> 0x2032980
+[T8f80] [API]   [3] Ordinal 4 -> SysAllocStringLen (OLEAUT32 fixed)
+[T8f80] [API]   [3] SysAllocStringLen -> 0x203b7c0
+[T8f80] [API]   [4] Ordinal 7 -> SysStringLen (OLEAUT32 fixed)
+[T8f80] [API]   [4] SysStringLen -> 0x200a040
+[T8f80] [API]   [5] Ordinal 10 -> VariantCopy (OLEAUT32 fixed)
+[T8f80] [API]   [5] VariantCopy -> 0x2032f80
+[T8f80] [API] Import DLL: ole32.dll (IAT RVA=0x776c0, ILT RVA=0x9eae8)
+[T8f80] [API]   [0] UNRESOLVED: CoTaskMemFree
+[T8f80] [API]   [1] UNRESOLVED: CoCreateInstance
+[T8f80] [API]   [2] OleInitialize -> 0x2031310
+[T8f80] [API]   [3] CoUninitialize -> 0x2031410
+[T8f80] [API]   [4] CoInitialize -> 0x2031210
+[T8f80] [API] Import DLL: USER32.dll (IAT RVA=0x77420, ILT RVA=0x9e848)
+[T8f80] [API]   [0] LoadStringW -> 0x202e550
+[T8f80] [API]   [1] SendMessageW -> 0x20531b0
+[T8f80] [API]   [2] GetWindowTextLengthW -> 0x2041990
+[T8f80] [API]   [3] GetWindowTextW -> 0x2043470
+[T8f80] [API]   [4] GetParent -> 0x203def0
+[T8f80] [API]   [5] GetWindowRect -> 0x200ef50
+[T8f80] [API]   [6] ScreenToClient -> 0x2038b10
+[T8f80] [API]   [7] UNRESOLVED: EmptyClipboard
+[T8f80] [API]   [8] ShowWindow -> 0x202d810
+[T8f80] [API]   [9] UNRESOLVED: SetWindowLongPtrW
+[T8f80] [API]   [10] UNRESOLVED: GetWindowLongPtrW
+[T8f80] [API]   [11] GetDlgItem -> 0x200e950
+[T8f80] [API]   [12] UNRESOLVED: MapDialogRect
+[T8f80] [API]   [13] SystemParametersInfoW -> 0x202e440
+[T8f80] [API]   [14] UNRESOLVED: GetMonitorInfoA
+[T8f80] [API]   [15] UNRESOLVED: MonitorFromWindow
+[T8f80] [API]   [16] DialogBoxParamW -> 0x200e0f0
+[T8f80] [API]   [17] MessageBoxW -> 0x2051e80
+[T8f80] [API]   [18] UNRESOLVED: SetClipboardData
+[T8f80] [API]   [19] UNRESOLVED: CloseClipboard
+[T8f80] [API]   [20] UNRESOLVED: OpenClipboard
+[T8f80] [API]   [21] CharUpperW -> 0x20253e0
+[T8f80] [API]   [22] MoveWindow -> 0x202efa0
+[T8f80] [API]   [23] IsWindowEnabled -> 0x203dea0
+[T8f80] [API]   [24] SetDlgItemTextA -> 0x2052960
+[T8f80] [API]   [25] UNRESOLVED: GetFocus
+[T8f80] [API]   [26] SetFocus -> 0x202e990
+[T8f80] [API]   [27] LoadIconW -> 0x2038b30
+[T8f80] [API]   [28] LoadCursorW -> 0x2038b20
+[T8f80] [API]   [29] UNRESOLVED: SetCursor
+[T8f80] [API]   [30] KillTimer -> 0x200a400
+[T8f80] [API]   [31] SetTimer -> 0x202db90
+[T8f80] [API]   [32] CheckDlgButton -> 0x2040f70
+[T8f80] [API]   [33] UNRESOLVED: DestroyIcon
+[T8f80] [API]   [34] PostMessageW -> 0x202e330
+[T8f80] [API]   [35] InvalidateRect -> 0x20310f0
+[T8f80] [API]   [36] IsDlgButtonChecked -> 0x203e7f0
+[T8f80] [API]   [37] UNRESOLVED: SendDlgItemMessageW
+[T8f80] [API]   [38] SetDlgItemTextW -> 0x204f790
+[T8f80] [API]   [39] EnableWindow -> 0x203e850
+[T8f80] [API]   [40] UNRESOLVED: GetKeyState
+[T8f80] [API]   [41] EndDialog -> 0x202e000
+[T8f80] [API]   [42] SetWindowTextW -> 0x204f450
+[T8f80] [API]   [43] CheckRadioButton -> 0x203d5c0
+[T8f80] [API] Import DLL: ADVAPI32.dll (IAT RVA=0x77000, ILT RVA=0x9e428)
+[T8f80] [API]   [0] LookupPrivilegeValueW -> 0x200a090
+[T8f80] [API]   [1] RegOpenKeyExA -> 0x2046610
+[T8f80] [API]   [2] RegQueryValueExA -> 0x2048590
+[T8f80] [API]   [3] GetFileSecurityW -> 0x2049110
+[T8f80] [API]   [4] SetFileSecurityW -> 0x2047a50
+[T8f80] [API]   [5] RegEnumKeyExW -> 0x2046df0
+[T8f80] [API]   [6] RegOpenKeyExW -> 0x2026db0
+[T8f80] [API]   [7] RegCreateKeyExW -> 0x2046970
+[T8f80] [API]   [8] RegSetValueExW -> 0x2047030
+[T8f80] [API]   [9] RegDeleteValueW -> 0x2046bb0
+[T8f80] [API]   [10] RegDeleteKeyW -> 0x2031eb0
+[T8f80] [API]   [11] RegCloseKey -> 0x2009980
+[T8f80] [API]   [12] RegQueryValueExW -> 0x2046730
+[T8f80] [API]   [13] OpenProcessToken -> 0x2025b70
+[T8f80] [API]   [14] AdjustTokenPrivileges -> 0x2047930
+[T8f80] [API] Import DLL: SHELL32.dll (IAT RVA=0x77400, ILT RVA=0x9e828)
+[T8f80] [API]   [0] UNRESOLVED: SHBrowseForFolderW
+[T8f80] [API]   [1] UNRESOLVED: SHGetFileInfoW
+[T8f80] [API]   [2] UNRESOLVED: SHGetPathFromIDListW
+[T8f80] [API] Import DLL: msvcrt.dll (IAT RVA=0x775a8, ILT RVA=0x9e9d0)
+[T8f80] [API]   [0] strcmp -> 0x20147f0
+[T8f80] [API]   [1] wcscmp -> 0x203a640
+[T8f80] [API]   [2] wcsstr -> 0x2009da0
+[T8f80] [API]   [3] malloc -> 0x203c620
+[T8f80] [API]   [4] free -> 0x2049640
+[T8f80] [API]   [5] memset -> 0x200ff20
+[T8f80] [API]   [6] strlen -> 0x2011550
+[T8f80] [API]   [7] memcmp -> 0x2011a30
+[T8f80] [API]   [8] _get_osfhandle -> 0x200baf0
+[T8f80] [API]   [9] _isatty -> 0x2011450
+[T8f80] [API]   [10] _iob -> DATA 0x219f360
+[T8f80] [API]   [11] memmove -> 0x200f6b0
+[T8f80] [API]   [12] _beginthreadex -> 0x2019e70
+[T8f80] [API]   [13] __C_specific_handler -> 0x2030470
+[T8f80] [API]   [14] ??1type_info@@UEAA@XZ -> 0x2038e10
+[T8f80] [API]   [15] ?terminate@@YAXXZ -> 0x20196c0
+[T8f80] [API]   [16] __dllonexit -> 0x2025450
+[T8f80] [API]   [17] _onexit -> 0x2019d70
+[T8f80] [API]   [18] _XcptFilter -> 0x202c930
+[T8f80] [API]   [19] _exit -> 0x2011ad0
+[T8f80] [API]   [20] _cexit -> 0x2010750
+[T8f80] [API]   [21] exit -> 0x20153b0
+[T8f80] [API]   [22] _acmdln -> DATA 0x219f628
+[T8f80] [API]   [23] __CxxFrameHandler -> 0x200a0b0
+[T8f80] [API]   [24] _CxxThrowException -> 0x200c9f0
+[T8f80] [API]   [25] memcpy -> 0x2012b90
+[T8f80] [API]   [26] _purecall -> 0x2019740
+[T8f80] [API]   [27] __getmainargs -> 0x200b360
+[T8f80] [API]   [28] _initterm -> 0x200b4b0
+[T8f80] [API]   [29] __setusermatherr -> 0x202bba0
+[T8f80] [API]   [30] _commode -> DATA 0x223e4f4
+[T8f80] [API]   [31] _fmode -> DATA 0x223e4f8
+[T8f80] [API]   [32] __set_app_type -> 0x202ba90
+[T8f80] [API]   [33] _c_exit -> 0x2030df0
+[T8f80] [API] Import DLL: KERNEL32.dll (IAT RVA=0x770a8, ILT RVA=0x9e4d0)
+[T8f80] [API]   [0] WaitForSingleObject -> 0x20414b0
+[T8f80] [API]   [1] GetVersion -> 0x2009750
+[T8f80] [API]   [2] GetLargePageMinimum -> 0x200a0d0
+[T8f80] [API]   [3] VirtualFree -> 0x2029000
+[T8f80] [API]   [4] VirtualAlloc -> 0x2028d80
+[T8f80] [API]   [5] GetCommandLineW -> 0x2033490
+[T8f80] [API]   [6] UNRESOLVED: lstrcatW
+[T8f80] [API]   [7] WaitForMultipleObjects -> 0x2041600
+[T8f80] [API]   [8] SetPriorityClass -> 0x202d4d0
+[T8f80] [API]   [9] Sleep -> 0x2014cb0
+[T8f80] [API]   [10] GetSystemDefaultLangID -> 0x2031fd0
+[T8f80] [API]   [11] GetUserDefaultLangID -> 0x2038e40
+[T8f80] [API]   [12] GetProcessTimes -> 0x2021270
+[T8f80] [API]   [13] QueryPerformanceFrequency -> 0x20103c0
+[T8f80] [API]   [14] QueryPerformanceCounter -> 0x2013a50
+[T8f80] [API]   [15] LeaveCriticalSection -> 0x202f2f0
+[T8f80] [API]   [16] EnterCriticalSection -> 0x203c370
+[T8f80] [API]   [17] DeleteCriticalSection -> 0x2032700
+[T8f80] [API]   [18] SetProcessAffinityMask -> 0x2030030
+[T8f80] [API]   [19] GetConsoleMode -> 0x20276f0
+[T8f80] [API]   [20] OpenEventW -> 0x204a260
+[T8f80] [API]   [21] UnmapViewOfFile -> 0x2029230
+[T8f80] [API]   [22] MapViewOfFile -> 0x2037300
+[T8f80] [API]   [23] OpenFileMappingW -> 0x204a0c0
+[T8f80] [API]   [24] SetEvent -> 0x203d8c0
+[T8f80] [API]   [25] FileTimeToDosDateTime -> 0x2035fe0
+[T8f80] [API]   [26] IsProcessorFeaturePresent -> 0x20095c0
+[T8f80] [API]   [27] GetSystemInfo -> 0x201a3b0
+[T8f80] [API]   [28] GetProcessAffinityMask -> 0x20102a0
+[T8f80] [API]   [29] ResumeThread -> 0x202fc30
+[T8f80] [API]   [30] GlobalMemoryStatusEx -> 0x2035d20
+[T8f80] [API]   [31] lstrlenW -> 0x2044820
+[T8f80] [API]   [32] FileTimeToLocalFileTime -> 0x203a3f0
+[T8f80] [API]   [33] FileTimeToSystemTime -> 0x2035e50
+[T8f80] [API]   [34] CompareFileTime -> 0x2025be0
+[T8f80] [API]   [35] GetModuleHandleW -> 0x20118a0
+[T8f80] [API]   [36] GetProcAddress -> 0x200a8d0
+[T8f80] [API]   [37] GetCurrentProcess -> 0x2008310
+[T8f80] [API]   [38] GlobalFree -> 0x2043de0
+[T8f80] [API]   [39] GlobalAlloc -> 0x2015530
+[T8f80] [API]   [40] GetDiskFreeSpaceExW -> 0x2049890
+[T8f80] [API]   [41] GetDiskFreeSpaceW -> 0x204cfc0
+[T8f80] [API]   [42] GetDriveTypeW -> 0x2038cd0
+[T8f80] [API]   [43] SetEndOfFile -> 0x202abf0
+[T8f80] [API]   [44] WriteFile -> 0x202a750
+[T8f80] [API]   [45] ReadFile -> 0x202a520
+[T8f80] [API]   [46] SetFilePointer -> 0x202a960
+[T8f80] [API]   [47] GetFileSize -> 0x202acf0
+[T8f80] [API]   [48] DeviceIoControl -> 0x2047390
+[T8f80] [API]   [49] GetLogicalDriveStringsW -> 0x2025480
+[T8f80] [API]   [50] InitializeCriticalSection -> 0x20326e0
+[T8f80] [API]   [51] LoadLibraryA -> 0x2027840
+[T8f80] [API]   [52] GetStartupInfoA -> 0x200fc50
+[T8f80] [API]   [53] TerminateProcess -> 0x2015480
+[T8f80] [API]   [54] SetThreadAffinityMask -> 0x200a0c0
+[T8f80] [API]   [55] GetModuleHandleA -> 0x20116d0
+[T8f80] [API]   [56] CreateEventW -> 0x200c1a0
+[T8f80] [API]   [57] UnhandledExceptionFilter -> 0x2030bf0
+[T8f80] [API]   [58] SetUnhandledExceptionFilter -> 0x200b130
+[T8f80] [API]   [59] RtlVirtualUnwind -> 0x203dff0
+[T8f80] [API]   [60] RtlLookupFunctionEntry -> 0x200aea0
+[T8f80] [API]   [61] GetSystemTimeAsFileTime -> 0x2013690
+[T8f80] [API]   [62] GetFileAttributesW -> 0x20489d0
+[T8f80] [API]   [63] FindNextStreamW -> 0x2047b70
+[T8f80] [API]   [64] FindFirstStreamW -> 0x2026ff0
+[T8f80] [API]   [65] FindNextFileW -> 0x2033760
+[T8f80] [API]   [66] FindFirstFileW -> 0x2043f80
+[T8f80] [API]   [67] FindClose -> 0x201ba30
+[T8f80] [API]   [68] GetStdHandle -> 0x20593d0
+[T8f80] [API]   [69] GetFileInformationByHandle -> 0x202af90
+[T8f80] [API]   [70] GetCurrentThreadId -> 0x2008340
+[T8f80] [API]   [71] GetTickCount -> 0x2013920
+[T8f80] [API]   [72] GetCurrentProcessId -> 0x2008320
+[T8f80] [API]   [73] SetLastError -> 0x2025a60
+[T8f80] [API]   [74] GetTempPathW -> 0x20427e0
+[T8f80] [API]   [75] GetCurrentDirectoryW -> 0x2041f00
+[T8f80] [API]   [76] SetCurrentDirectoryW -> 0x2049470
+[T8f80] [API]   [77] DeleteFileW -> 0x2048c20
+[T8f80] [API]   [78] CreateDirectoryW -> 0x2048e00
+[T8f80] [API]   [79] CreateHardLinkW -> 0x204e3c0
+[T8f80] [API]   [80] MoveFileWithProgressW -> 0x204d9a0
+[T8f80] [API]   [81] MoveFileW -> 0x204d750
+[T8f80] [API]   [82] RemoveDirectoryW -> 0x2046440
+[T8f80] [API]   [83] SetFileAttributesW -> 0x20098c0
+[T8f80] [API]   [84] CreateFileW -> 0x20487d0
+[T8f80] [API]   [85] SetFileTime -> 0x202ff30
+[T8f80] [API]   [86] CloseHandle -> 0x2041d20
+[T8f80] [API]   [87] FormatMessageW -> 0x202cf70
+[T8f80] [API]   [88] LocalFree -> 0x204a400
+[T8f80] [API]   [89] RtlCaptureContext -> 0x202fd30
+[T8f80] [API]   [90] GetModuleFileNameW -> 0x2043180
+[T8f80] [API]   [91] LoadLibraryW -> 0x204a800
+[T8f80] [API]   [92] LoadLibraryExW -> 0x204aa00
+[T8f80] [API]   [93] FreeLibrary -> 0x20309b0
+[T8f80] [API]   [94] GlobalUnlock -> 0x20095b0
+[T8f80] [API]   [95] GlobalLock -> 0x20095a0
+[T8f80] [API]   [96] WideCharToMultiByte -> 0x2025ca0
+[T8f80] [API]   [97] MultiByteToWideChar -> 0x2027e80
+[T8f80] [API]   [98] GetLastError -> 0x200a7d0
+[T8f80] [API] Import resolution: 188 resolved, 24 unresolved (total 212)
+[T8f80] [API] Exception: .pdata RVA=0xa5000 Size=0x9858 Entries=3250
+[T8f80] [API] [API-005] EH hacks DISABLED (default) (MINWIN_EH_HACKS=<unset>)
+[T8f80] [API] [API-005] CXX-EH-FIX (LSDA catch-all patch RVA 0x2010c8) skipped: MINWIN_EH_HACKS not set
+[T8f80] [API] Jumping to EP=0x4753a0
+[T8f80] [API] GetStartupInfoA(info=0x7fff54d895c0)
+[T8f80] [API] __set_app_type(2)
+[T8f80] [API] _initterm(start=0x477750, end=0x477758)
+[T8f80] [API] __getmainargs(argc=0x7fff54d895ac, argv=0x7fff54d895b8, envp=0x7fff54d895b0)
+[T8f80] [API] _initterm(start=0x4776f0, end=0x477748)
+[T8f80] [API] _initterm: calling 0x475660
+[T8f80] [API] GetSystemTimeAsFileTime()
+[T8f80] [API] GetTickCount() = 18582222
+[T8f80] [API] QueryPerformanceCounter()
+[T8f80] [API] _initterm: calling 0x475e6c
+[T8f80] [API] _initterm: calling 0x475e74
+[T8f80] [API] _initterm: calling 0x476768
+[T8f80] [API] InitializeCriticalSection(0x4a0ce8)
+[T8f80] [API] _onexit(func=0x476820)
+[T8f80] [API] _initterm: calling 0x476788
+[T8f80] [API] InitializeCriticalSection(0x4a0d10)
+[T8f80] [API] _onexit(func=0x476830)
+[T8f80] [API] _initterm: calling 0x4767a8
+[T8f80] [API] InitializeCriticalSection(0x4a0d38)
+[T8f80] [API] _onexit(func=0x476840)
+[T8f80] [API] _initterm: calling 0x4767c8
+[T8f80] [API] malloc(8) = 0x233b720
+[T8f80] [API] _onexit(func=0x476850)
+[T8f80] [API] _initterm: calling 0x4767e8
+[T8f80] [API] _onexit(func=0x47686c)
+[T8f80] [API] _initterm: calling 0x4767f4
+[T8f80] [API] InitializeCriticalSection(0x4a0db0)
+[T8f80] [API] _onexit(func=0x47685c)
+[T8f80] [API] _initterm: calling 0x476814
+[T8f80] [API] _onexit(func=0x476878)
+[T8f80] [API] OleInitialize() -> S_OK
+[T8f80] [API] EnterCriticalSection(0x4a0db0)
+[T8f80] [API] free((nil))
+[T8f80] [API] RegOpenKeyExW() -> ERROR_FILE_NOT_FOUND
+[T8f80] [API] SetLastError(2)
+[T8f80] [API] GetSystemDefaultLangID() -> 0x0409 (en-US)
+[T8f80] [API] malloc(4) = 0x233b740
+[T8f80] [API] malloc(8) = 0x233b760
+[T8f80] [API] free((nil))
+[T8f80] [API] malloc(16) = 0x233b780
+[T8f80] [API] malloc(3) = 0x233b7a0
+[T8f80] [API] free(0x233b740)
+[T8f80] [API] malloc(8) = 0x233b740
+[T8f80] [API] GetModuleFileNameW(cap=261)
+[T8f80] [API] malloc(186) = 0x233b7c0
+[T8f80] [API] free(0x233b740)
+[T8f80] [API] malloc(182) = 0x233b890
+[T8f80] [API] free(0x233b7c0)
+[T8f80] [API] malloc(182) = 0x233b950
+[T8f80] [API] malloc(286) = 0x233ba10
+[T8f80] [API] free(0x233b950)
+[T8f80] [API] free((nil))
+[T8f80] [API] CreateFileW(/home/z/my-project/workspace/miniwin-engineering/artifacts/opensource/_dl/7z-install/Lang\en.txt, acc=80000000, disp=3)
+[T8f80] [API] SetLastError(2)
+[T8f80] [API] malloc(8) = 0x233b740
+[T8f80] [API] malloc(8) = 0x233bb40
+[T8f80] [API] malloc(176) = 0x233b950
+[T8f80] [API] free(0x233bb40)
+[T8f80] [API] malloc(288) = 0x233bb60
+[T8f80] [API] free(0x233b950)
+[T8f80] [API] free(0x233bb60)
+[T8f80] [API] free(0x233b740)
+[T8f80] [API] free(0x233ba10)
+[T8f80] [API] free(0x233b890)
+[T8f80] [API] free(0x233b7a0)
+[T8f80] [API] free(0x233b780)
+[T8f80] [API] free(0x233b760)
+[T8f80] [API] LeaveCriticalSection(0x4a0db0)
+[T8f80] [API] GetCommandLineW()
+[T8f80] [API] malloc(16) = 0x233b760
+[T8f80] [API] malloc(16) = 0x233b780
+[T8f80] [API] malloc(8) = 0x233b7a0
+[T8f80] [API] malloc(8) = 0x233b740
+[T8f80] [API] malloc(32) = 0x233b6f0
+[T8f80] [API] free(0x233b7a0)
+[T8f80] [API] malloc(8) = 0x233b7a0
+[T8f80] [API] free((nil))
+[T8f80] [API] malloc(16) = 0x233bb40
+[T8f80] [API] malloc(16) = 0x233bc90
+[T8f80] [API] free(0x233b740)
+[T8f80] [API] free(0x233b6f0)
+[T8f80] [API] free(0x233b780)
+[T8f80] [API] free(0x233b760)
+[T8f80] [API] free(0x233bc90)
+[T8f80] [API] free(0x233bb40)
+[T8f80] [API] MessageBoxW(type=0x0) caption='7-Zip'
+[T8f80] [API] [GDI-LITE] dialog #1 rendered 264x122 -> miniwin-results/7zG.exe/screenshots/messagebox_1.bmp
+[T8f80] [API] free(0x233b7a0)
+[T8f80] [API] exit(0)
+[T8f80] [API] free((nil))
+[T8f80] [API] free((nil))
+[T8f80] [API] free((nil))
+[T8f80] [API] DeleteCriticalSection(0x4a0db0)
+[T8f80] [API] free((nil))
+[T8f80] [API] free((nil))
+[T8f80] [API] free((nil))
+[T8f80] [API] free((nil))
+[T8f80] [API] free(0x233b720)
+[T8f80] [API] DeleteCriticalSection(0x4a0d38)
+[T8f80] [API] DeleteCriticalSection(0x4a0d10)
+[T8f80] [API] DeleteCriticalSection(0x4a0ce8)
+  ]
+}

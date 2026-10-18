@@ -41,6 +41,8 @@ while IFS= read -r f; do add "" "$f"; done < <(find "$REPO/samples/real" -iname 
 [ -f "$REPO/artifacts/sweep006/breakout.exe" ] && PROGS+=("game-breakout|$REPO/artifacts/sweep006/breakout.exe")
 [ -f "$REPO/artifacts/sweep005/snake.exe" ] && PROGS+=("game-snake|$REPO/artifacts/sweep005/snake.exe")
 [ -f "$REPO/samples/upx_decompressed.exe" ] && PROGS+=("upx-decompressed|$REPO/samples/upx_decompressed.exe")
+# E. SWEEP-013: our own GUI calculator acceptance guest (user demand)
+[ -f "$REPO/tests/gui/calc.exe" ] && PROGS+=("gui-calc|$REPO/tests/gui/calc.exe")
 
 # dedupe by name (first wins) — on collision disambiguate with parent dir
 declare -A SEEN
@@ -64,7 +66,7 @@ for e in "${ORDER[@]}"; do
   grep -qx "$name" <<<"$DONE_NAMES" && { echo "[skip] $name (already done)"; continue; }
   dir="$RUNS/$name"; mkdir -p "$dir"
   printf "%s\t%s\n" "$name" "$exe" >> "$META"
-  ( cd "$dir" && timeout "$TIMEOUT_S" "$LOADER" "$exe" > stdout.txt 2> stderr.txt )
+  ( cd "$dir" && timeout "$TIMEOUT_S" "$LOADER" "$exe" > stdout.txt 2> stderr.txt < /dev/null )
   code=$?
   tflag=0; [ "$code" = "124" ] && tflag=1
 

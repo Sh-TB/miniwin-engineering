@@ -1,0 +1,349 @@
+{
+  "trace": [
+[T9f80] [API] PE Loader: file=/home/z/my-project/workspace/miniwin-engineering/samples/real/7za.exe size=1335808
+[T9f80] [API] PE Loader: ImageBase=0x400000 EP=0xe9c30 SizeOfImage=0x156000 Sections=6
+[T9f80] [API] PE Loader: Mapped at 0x400000 (forced via MAP_FIXED)
+[T9f80] [API] Section [0] .text    VA=0x00001000 VS=0x000f10fe Raw=0x000f1200 Ch=0x60000020
+[T9f80] [API] Section [1] .rdata   VA=0x000f3000 VS=0x00041656 Raw=0x00041800 Ch=0x40000040
+[T9f80] [API] Section [2] .data    VA=0x00135000 VS=0x0000ca90 Raw=0x00000a00 Ch=0xc0000040
+[T9f80] [API] Section [3] .pdata   VA=0x00142000 VS=0x0000fe58 Raw=0x00010000 Ch=0x40000040
+[T9f80] [API] Section [4] .rsrc    VA=0x00152000 VS=0x000007d0 Raw=0x00000800 Ch=0x40000040
+[T9f80] [API] Section [5] .reloc   VA=0x00153000 VS=0x000020ba Raw=0x00002200 Ch=0x42000040
+[T9f80] [API] Import Directory: RVA=0x13375c Size=0x78
+[T9f80] [API] Import DLL: OLEAUT32.dll (IAT RVA=0xf3320, ILT RVA=0x133af8)
+[T9f80] [API]   [0] Ordinal 7 -> SysStringLen (OLEAUT32 fixed)
+[T9f80] [API]   [0] SysStringLen -> 0x200a040
+[T9f80] [API]   [1] Ordinal 9 -> VariantClear (OLEAUT32 fixed)
+[T9f80] [API]   [1] VariantClear -> 0x2032980
+[T9f80] [API]   [2] Ordinal 10 -> VariantCopy (OLEAUT32 fixed)
+[T9f80] [API]   [2] VariantCopy -> 0x2032f80
+[T9f80] [API]   [3] Ordinal 2 -> SysAllocString (OLEAUT32 fixed)
+[T9f80] [API]   [3] SysAllocString -> 0x203b9c0
+[T9f80] [API]   [4] Ordinal 6 -> SysFreeString (OLEAUT32 fixed)
+[T9f80] [API]   [4] SysFreeString -> 0x2039190
+[T9f80] [API]   [5] Ordinal 4 -> SysAllocStringLen (OLEAUT32 fixed)
+[T9f80] [API]   [5] SysAllocStringLen -> 0x203b7c0
+[T9f80] [API] Import DLL: USER32.dll (IAT RVA=0xf3358, ILT RVA=0x133b30)
+[T9f80] [API]   [0] CharUpperW -> 0x20253e0
+[T9f80] [API]   [1] CharPrevExA -> 0x200a080
+[T9f80] [API] Import DLL: ADVAPI32.dll (IAT RVA=0xf3000, ILT RVA=0x1337d8)
+[T9f80] [API]   [0] OpenProcessToken -> 0x2025b70
+[T9f80] [API]   [1] SystemFunction036 -> 0x2019bb0
+[T9f80] [API]   [2] GetFileSecurityW -> 0x2049110
+[T9f80] [API]   [3] SetFileSecurityW -> 0x2047a50
+[T9f80] [API]   [4] RegOpenKeyExW -> 0x2026db0
+[T9f80] [API]   [5] AdjustTokenPrivileges -> 0x2047930
+[T9f80] [API]   [6] LookupPrivilegeValueW -> 0x200a090
+[T9f80] [API]   [7] RegQueryValueExW -> 0x2046730
+[T9f80] [API]   [8] RegCloseKey -> 0x2009980
+[T9f80] [API] Import DLL: msvcrt.dll (IAT RVA=0xf3370, ILT RVA=0x133b48)
+[T9f80] [API]   [0] _exit -> 0x2011ad0
+[T9f80] [API]   [1] _c_exit -> 0x2030df0
+[T9f80] [API]   [2] _XcptFilter -> 0x202c930
+[T9f80] [API]   [3] _onexit -> 0x2019d70
+[T9f80] [API]   [4] __dllonexit -> 0x2025450
+[T9f80] [API]   [5] ?terminate@@YAXXZ -> 0x20196c0
+[T9f80] [API]   [6] ??1type_info@@UEAA@XZ -> 0x2038e10
+[T9f80] [API]   [7] __C_specific_handler -> 0x2030470
+[T9f80] [API]   [8] _beginthreadex -> 0x2019e70
+[T9f80] [API]   [9] realloc -> 0x204dc00
+[T9f80] [API]   [10] _purecall -> 0x2019740
+[T9f80] [API]   [11] _isatty -> 0x2011450
+[T9f80] [API]   [12] _get_osfhandle -> 0x200baf0
+[T9f80] [API]   [13] memset -> 0x200ff20
+[T9f80] [API]   [14] strlen -> 0x2011550
+[T9f80] [API]   [15] _cexit -> 0x2010750
+[T9f80] [API]   [16] wcscmp -> 0x203a640
+[T9f80] [API]   [17] strcmp -> 0x20147f0
+[T9f80] [API]   [18] memmove -> 0x200f6b0
+[T9f80] [API]   [19] fflush -> 0x2022030
+[T9f80] [API]   [20] fputc -> 0x2022890
+[T9f80] [API]   [21] fputs -> 0x2022750
+[T9f80] [API]   [22] _iob -> DATA 0x219f360
+[T9f80] [API]   [23] fgetc -> 0x2022440
+[T9f80] [API]   [24] free -> 0x2049640
+[T9f80] [API]   [25] malloc -> 0x203c620
+[T9f80] [API]   [26] memcmp -> 0x2011a30
+[T9f80] [API]   [27] __CxxFrameHandler -> 0x200a0b0
+[T9f80] [API]   [28] _CxxThrowException -> 0x200c9f0
+[T9f80] [API]   [29] memcpy -> 0x2012b90
+[T9f80] [API]   [30] exit -> 0x20153b0
+[T9f80] [API]   [31] __getmainargs -> 0x200b360
+[T9f80] [API]   [32] __initenv -> DATA 0x219f620
+[T9f80] [API]   [33] _initterm -> 0x200b4b0
+[T9f80] [API]   [34] __setusermatherr -> 0x202bba0
+[T9f80] [API]   [35] _commode -> DATA 0x223e4f4
+[T9f80] [API]   [36] _fmode -> DATA 0x223e4f8
+[T9f80] [API]   [37] __set_app_type -> 0x202ba90
+[T9f80] [API]   [38] wcsstr -> 0x2009da0
+[T9f80] [API] Import DLL: KERNEL32.dll (IAT RVA=0xf3050, ILT RVA=0x133828)
+[T9f80] [API]   [0] ResumeThread -> 0x202fc30
+[T9f80] [API]   [1] SetThreadAffinityMask -> 0x200a0c0
+[T9f80] [API]   [2] CreateEventW -> 0x200c1a0
+[T9f80] [API]   [3] SetEvent -> 0x203d8c0
+[T9f80] [API]   [4] ResetEvent -> 0x203d760
+[T9f80] [API]   [5] CreateSemaphoreW -> 0x20262e0
+[T9f80] [API]   [6] ReleaseSemaphore -> 0x203ce80
+[T9f80] [API]   [7] InitializeCriticalSection -> 0x20326e0
+[T9f80] [API]   [8] GetVersion -> 0x2009750
+[T9f80] [API]   [9] MoveFileW -> 0x204d750
+[T9f80] [API]   [10] WaitForSingleObject -> 0x20414b0
+[T9f80] [API]   [11] GetLargePageMinimum -> 0x200a0d0
+[T9f80] [API]   [12] VirtualFree -> 0x2029000
+[T9f80] [API]   [13] VirtualAlloc -> 0x2028d80
+[T9f80] [API]   [14] GetOEMCP -> 0x2009770
+[T9f80] [API]   [15] LocalFileTimeToFileTime -> 0x2036390
+[T9f80] [API]   [16] SetConsoleMode -> 0x2038aa0
+[T9f80] [API]   [17] SetFileApisToOEM -> 0x2030ef0
+[T9f80] [API]   [18] GetCommandLineW -> 0x2033490
+[T9f80] [API]   [19] GetConsoleScreenBufferInfo -> 0x200f9e0
+[T9f80] [API]   [20] SetConsoleCtrlHandler -> 0x2009930
+[T9f80] [API]   [21] GetProcessTimes -> 0x2021270
+[T9f80] [API]   [22] QueryPerformanceFrequency -> 0x20103c0
+[T9f80] [API]   [23] QueryPerformanceCounter -> 0x2013a50
+[T9f80] [API]   [24] DeleteCriticalSection -> 0x2032700
+[T9f80] [API]   [25] SetProcessAffinityMask -> 0x2030030
+[T9f80] [API]   [26] GetConsoleMode -> 0x20276f0
+[T9f80] [API]   [27] OpenEventW -> 0x204a260
+[T9f80] [API]   [28] UnmapViewOfFile -> 0x2029230
+[T9f80] [API]   [29] MapViewOfFile -> 0x2037300
+[T9f80] [API]   [30] OpenFileMappingW -> 0x204a0c0
+[T9f80] [API]   [31] WaitForMultipleObjects -> 0x2041600
+[T9f80] [API]   [32] LeaveCriticalSection -> 0x202f2f0
+[T9f80] [API]   [33] EnterCriticalSection -> 0x203c370
+[T9f80] [API]   [34] GetSystemTimeAsFileTime -> 0x2013690
+[T9f80] [API]   [35] FileTimeToDosDateTime -> 0x2035fe0
+[T9f80] [API]   [36] DosDateTimeToFileTime -> 0x2029fc0
+[T9f80] [API]   [37] IsProcessorFeaturePresent -> 0x20095c0
+[T9f80] [API]   [38] GetSystemInfo -> 0x201a3b0
+[T9f80] [API]   [39] GetProcessAffinityMask -> 0x20102a0
+[T9f80] [API]   [40] GetModuleHandleA -> 0x20116d0
+[T9f80] [API]   [41] GlobalMemoryStatusEx -> 0x2035d20
+[T9f80] [API]   [42] FileTimeToLocalFileTime -> 0x203a3f0
+[T9f80] [API]   [43] FileTimeToSystemTime -> 0x2035e50
+[T9f80] [API]   [44] CompareFileTime -> 0x2025be0
+[T9f80] [API]   [45] GetCurrentProcess -> 0x2008310
+[T9f80] [API]   [46] GetDiskFreeSpaceExW -> 0x2049890
+[T9f80] [API]   [47] GetDiskFreeSpaceW -> 0x204cfc0
+[T9f80] [API]   [48] GetLastError -> 0x200a7d0
+[T9f80] [API]   [49] MultiByteToWideChar -> 0x2027e80
+[T9f80] [API]   [50] WideCharToMultiByte -> 0x2025ca0
+[T9f80] [API]   [51] FreeLibrary -> 0x20309b0
+[T9f80] [API]   [52] LoadLibraryW -> 0x204a800
+[T9f80] [API]   [53] GetModuleFileNameW -> 0x2043180
+[T9f80] [API]   [54] LocalFree -> 0x204a400
+[T9f80] [API]   [55] FormatMessageW -> 0x202cf70
+[T9f80] [API]   [56] CloseHandle -> 0x2041d20
+[T9f80] [API]   [57] SetFileTime -> 0x202ff30
+[T9f80] [API]   [58] CreateFileW -> 0x20487d0
+[T9f80] [API]   [59] SetFileAttributesW -> 0x20098c0
+[T9f80] [API]   [60] RemoveDirectoryW -> 0x2046440
+[T9f80] [API]   [61] MoveFileWithProgressW -> 0x204d9a0
+[T9f80] [API]   [62] CreateHardLinkW -> 0x204e3c0
+[T9f80] [API]   [63] CreateDirectoryW -> 0x2048e00
+[T9f80] [API]   [64] DeleteFileW -> 0x2048c20
+[T9f80] [API]   [65] SetCurrentDirectoryW -> 0x2049470
+[T9f80] [API]   [66] GetCurrentDirectoryW -> 0x2041f00
+[T9f80] [API]   [67] GetTempPathW -> 0x20427e0
+[T9f80] [API]   [68] SetLastError -> 0x2025a60
+[T9f80] [API]   [69] GetCurrentProcessId -> 0x2008320
+[T9f80] [API]   [70] GetTickCount -> 0x2013920
+[T9f80] [API]   [71] GetCurrentThreadId -> 0x2008340
+[T9f80] [API]   [72] GetFileInformationByHandle -> 0x202af90
+[T9f80] [API]   [73] GetStdHandle -> 0x20593d0
+[T9f80] [API]   [74] FindClose -> 0x201ba30
+[T9f80] [API]   [75] FindFirstFileW -> 0x2043f80
+[T9f80] [API]   [76] FindNextFileW -> 0x2033760
+[T9f80] [API]   [77] FindFirstStreamW -> 0x2026ff0
+[T9f80] [API]   [78] FindNextStreamW -> 0x2047b70
+[T9f80] [API]   [79] GetFileAttributesW -> 0x20489d0
+[T9f80] [API]   [80] GetLogicalDriveStringsW -> 0x2025480
+[T9f80] [API]   [81] DeviceIoControl -> 0x2047390
+[T9f80] [API]   [82] GetProcAddress -> 0x200a8d0
+[T9f80] [API]   [83] GetModuleHandleW -> 0x20118a0
+[T9f80] [API]   [84] GetFileSize -> 0x202acf0
+[T9f80] [API]   [85] SetFilePointer -> 0x202a960
+[T9f80] [API]   [86] ReadFile -> 0x202a520
+[T9f80] [API]   [87] WriteFile -> 0x202a750
+[T9f80] [API]   [88] SetEndOfFile -> 0x202abf0
+[T9f80] [API] Import resolution: 145 resolved, 0 unresolved (total 145)
+[T9f80] [API] Exception: .pdata RVA=0x142000 Size=0xfe58 Entries=5426
+[T9f80] [API] [API-005] EH hacks DISABLED (default) (MINWIN_EH_HACKS=<unset>)
+[T9f80] [API] [API-005] CXX-EH-FIX (LSDA catch-all patch RVA 0x2010c8) skipped: MINWIN_EH_HACKS not set
+[T9f80] [API] Jumping to EP=0x4e9c30
+[T9f80] [API] __set_app_type(1)
+[T9f80] [API] _initterm(start=0x4f3670, end=0x4f3678)
+[T9f80] [API] __getmainargs(argc=0x7ffd8796bae0, argv=0x7ffd8796baf0, envp=0x7ffd8796bae8)
+[T9f80] [API] _initterm(start=0x4f34b0, end=0x4f3668)
+[T9f80] [API] _initterm: calling 0x4f1100
+[T9f80] [API] _initterm: calling 0x4f1108
+[T9f80] [API] _initterm: calling 0x4f1114
+[T9f80] [API] _initterm: calling 0x4f111c
+[T9f80] [API] _initterm: calling 0x4f112c
+[T9f80] [API] _initterm: calling 0x4f1140
+[T9f80] [API] _initterm: calling 0x4f1154
+[T9f80] [API] _initterm: calling 0x4f1160
+[T9f80] [API] _initterm: calling 0x4f116c
+[T9f80] [API] _initterm: calling 0x4f1178
+[T9f80] [API] _initterm: calling 0x4f1180
+[T9f80] [API] _initterm: calling 0x4f118c
+[T9f80] [API] _initterm: calling 0x4f1194
+[T9f80] [API] _initterm: calling 0x4f119c
+[T9f80] [API] GetModuleHandleW()
+[T9f80] [API] GetProcAddress(module=0xdead0008, name=NtSetInformationFile)
+[T9f80] [API]   -> NULL (not in dispatch table)
+[T9f80] [API] GetProcAddress(module=0xdead0008, name=RtlNtStatusToDosError)
+[T9f80] [API]   -> 0x200a520
+[T9f80] [API] _initterm: calling 0x4f11e8
+[T9f80] [API] _initterm: calling 0x4f1b0c
+[T9f80] [API] InitializeCriticalSection(0x535f08)
+[T9f80] [API] _onexit(func=0x4f1fe0)
+[T9f80] [API] _initterm: calling 0x4f1b2c
+[T9f80] [API] InitializeCriticalSection(0x535f30)
+[T9f80] [API] _onexit(func=0x4f1ff0)
+[T9f80] [API] _initterm: calling 0x4f1b4c
+[T9f80] [API] InitializeCriticalSection(0x535f60)
+[T9f80] [API] _onexit(func=0x4f2000)
+[T9f80] [API] _initterm: calling 0x4f1b6c
+[T9f80] [API] InitializeCriticalSection(0x535fa0)
+[T9f80] [API] _onexit(func=0x4f2010)
+[T9f80] [API] _initterm: calling 0x4f1b8c
+[T9f80] [API] _initterm: calling 0x4f1b98
+[T9f80] [API] _initterm: calling 0x4f1ba4
+[T9f80] [API] _initterm: calling 0x4f1bb0
+[T9f80] [API] _initterm: calling 0x4f1bbc
+[T9f80] [API] _initterm: calling 0x4f1bc8
+[T9f80] [API] _initterm: calling 0x4f1bd4
+[T9f80] [API] _initterm: calling 0x4f1be0
+[T9f80] [API] _initterm: calling 0x4f1bf4
+[T9f80] [API] _initterm: calling 0x4f1c00
+[T9f80] [API] _initterm: calling 0x4f1c0c
+[T9f80] [API] _initterm: calling 0x4f1c20
+[T9f80] [API] _initterm: calling 0x4f1c30
+[T9f80] [API] _initterm: calling 0x4f1c40
+[T9f80] [API] _initterm: calling 0x4f1c90
+[T9f80] [API] _initterm: calling 0x4f1cd0
+[T9f80] [API] _initterm: calling 0x4f1ce0
+[T9f80] [API] _initterm: calling 0x4f1cf0
+[T9f80] [API] _initterm: calling 0x4f1d00
+[T9f80] [API] _initterm: calling 0x4f1d40
+[T9f80] [API] _initterm: calling 0x4f1e10
+[T9f80] [API] _initterm: calling 0x4f1e20
+[T9f80] [API] _initterm: calling 0x4f1e30
+[T9f80] [API] _initterm: calling 0x4f1e40
+[T9f80] [API] _initterm: calling 0x4f1f10
+[T9f80] [API] _initterm: calling 0x4f1f20
+[T9f80] [API] _initterm: calling 0x4f1f30
+[T9f80] [API] _initterm: calling 0x4f1f40
+[T9f80] [API] _initterm: calling 0x4f1f50
+[T9f80] [API] _initterm: calling 0x4f1f60
+[T9f80] [API] _onexit(func=0x4f2030)
+[T9f80] [API] _initterm: calling 0x4f1f70
+[T9f80] [API] InitializeCriticalSection(0x536888)
+[T9f80] [API] _onexit(func=0x4f2020)
+[T9f80] [API] _initterm: calling 0x4f1f90
+[T9f80] [API] _initterm: calling 0x4f1fa0
+[T9f80] [API] _initterm: calling 0x4f1fb0
+[T9f80] [API] _initterm: calling 0x4f1fc0
+[T9f80] [API] InitializeCriticalSection(0x5368b8)
+[T9f80] [API] _onexit(func=0x4f20f0)
+[T9f80] [API] SetFileApisToOEM() (no-op: cp65001 identity)
+[T9f80] [API] GetCommandLineW()
+[T9f80] [API] malloc(16) = 0x2ec5720
+[T9f80] [API] malloc(16) = 0x2ec5740
+[T9f80] [API] malloc(8) = 0x2ec5760
+[T9f80] [API] malloc(8) = 0x2ec5780
+[T9f80] [API] malloc(32) = 0x2ec56f0
+[T9f80] [API] free(0x2ec5760)
+[T9f80] [API] malloc(8) = 0x2ec5760
+[T9f80] [API] free((nil))
+[T9f80] [API] malloc(16) = 0x2ec57a0
+[T9f80] [API] malloc(16) = 0x2ec57c0
+[T9f80] [API] free(0x2ec5780)
+[T9f80] [API] free(0x2ec56f0)
+[T9f80] [API] free(0x2ec5740)
+[T9f80] [API] free(0x2ec5720)
+[T9f80] [API] free(0x2ec57c0)
+[T9f80] [API] free(0x2ec57a0)
+[T9f80] [API] fputs(str=
+7-Zip (a) 26.04 (x64) : Copyright (c) 1999-2026 Igor Pavlov : 2026-10-05
+)
+[T9f80] [API] map_crt_stream: _iob+0x30 -> stdout
+[T9f80] [API] fputc(ch=0xa)
+[T9f80] [API] map_crt_stream: _iob+0x30 -> stdout
+[T9f80] [API] fputs(str=Usage: 7za <command> [<switches>...] <archive_name> [<file_names>...] [@listfile]
+
+<Commands>
+  a : Add files to archive
+  b : Benchmark
+  d : Delete files from archive
+  e : Extract files from archive (without using directory names)
+  h : Calculate hash values for files
+  i : Show information about supported formats
+  l : List contents of archive
+  rn : Rename files in archive
+  t : Test integrity of archive
+  u : Update files to archive
+  x : eXtract files with full paths
+
+<Switches>
+  -- : Stop switches and @listfile parsing
+  -ai[r[-|0]][m[-|2]][w[-]]{@listfile|!wildcard} : Include archives
+  -ax[r[-|0]][m[-|2]][w[-]]{@listfile|!wildcard} : eXclude archives
+  -ao{a|s|t|u} : set Overwrite mode
+  -an : disable archive_name field
+  -bb[0-3] : set output log level
+  -bd : disable progress indicator
+  -bs{o|e|p}{0|1|2} : set output stream for output/error/progress line
+  -bt : show execution time statistics
+  -i[r[-|0]][m[-|2]][w[-]]{@listfile|!wildcard} : Include filenames
+  -m{Parameters} : set compression Method
+    -mmt[N] : set number of CPU threads
+    -mx[N] : set compression level: -mx1 (fastest) ... -mx9 (ultra)
+  -o{Directory} : set Output directory
+  -p{Password} : set Password
+  -r[-|0] : Recurse subdirectories for name search
+  -sa{a|e|s} : set Archive name mode
+  -scc{UTF-8|WIN|DOS} : set charset for console input/output
+  -scs{UTF-8|UTF-16LE|UTF-16BE|WIN|DOS|{id}} : set charset for list files
+  -scrc[CRC32|CRC64|SHA256|SHA1|XXH64|*] : set hash function for x, e, h commands
+  -sdel : delete files after compression
+  -seml[.] : send archive by email
+  -sfx[{name}] : Create SFX archive
+  -si[{name}] : read data from stdin
+  -slp : set Large Pages mode
+  -slt : show technical information for l (List) command
+  -snh : store hard links as links
+  -snl : store symbolic links as links
+  -sni : store NT security information
+  -sns[-] : store NTFS alternate streams
+  -so : write data to stdout
+  -spd : disable wildcard matching for file names
+  -spe : eliminate duplication of root folder for extract command
+  -spf[2] : use fully qualified file paths
+  -ssc[-] : set sensitive case mode
+  -sse : stop archive creating, if it can't open some input file
+  -ssp : do not change Last Access Time of source files while archiving
+  -ssw : compress shared files
+  -stl : set archive timestamp from the most recently modified file
+  -stm{HexMask} : set CPU thread affinity mask (hexadecimal number)
+  -stx{Type} : exclude archive type
+  -t{Type} : Set type of archive
+  -u[-][p#][q#][r#][x#][y#][z#][!newArchiveName] : Update options
+  -v{Size}[b|k|m|g] : Create volumes
+  -w[{path}] : assign Work directory. Empty path means a temporary directory
+  -x[r[-|0]][m[-|2]][w[-]]{@listfile|!wildcard} : eXclude filenames
+  -y : assume Yes on all queries
+)
+[T9f80] [API] map_crt_stream: _iob+0x30 -> stdout
+[T9f80] [API] free(0x2ec5760)
+[T9f80] [API] exit(0)
+[T9f80] [API] DeleteCriticalSection(0x5368b8)
+[T9f80] [API] DeleteCriticalSection(0x536888)
+[T9f80] [API] free((nil))
+[T9f80] [API] DeleteCriticalSection(0x535fa0)
+[T9f80] [API] DeleteCriticalSection(0x535f60)
+[T9f80] [API] DeleteCriticalSection(0x535f30)
+[T9f80] [API] DeleteCriticalSection(0x535f08)
+  ]
+}

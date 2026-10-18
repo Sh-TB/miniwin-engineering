@@ -1,0 +1,786 @@
+{
+  "trace": [
+[Tcf80] [API] PE Loader: file=/home/z/my-project/workspace/miniwin-engineering/artifacts/opensource/_dl/curl/curl-8.17.0_2-win64-mingw/bin/curl.exe size=3890792
+[Tcf80] [API] PE Loader: ImageBase=0x140000000 EP=0x13f0 SizeOfImage=0x3bf000 Sections=10
+[Tcf80] [API] PE Loader: Mapped at 0x140000000 (forced via MAP_FIXED)
+[Tcf80] [API] Section [0] .text    VA=0x00001000 VS=0x00295570 Raw=0x00295600 Ch=0x60000020
+[Tcf80] [API] Section [1] .rdata   VA=0x00297000 VS=0x00113f5c Raw=0x00114000 Ch=0x40000040
+[Tcf80] [API] Section [2] .buildid VA=0x003ab000 VS=0x00000020 Raw=0x00000200 Ch=0x40000040
+[Tcf80] [API] Section [3] .data    VA=0x003ac000 VS=0x00006630 Raw=0x00002e00 Ch=0xc0000040
+[Tcf80] [API] Section [4] .pdata   VA=0x003b3000 VS=0x000006c0 Raw=0x00000800 Ch=0x40000040
+[Tcf80] [API] Section [5] .note    VA=0x003b4000 VS=0x00000070 Raw=0x00000200 Ch=0xc0000040
+[Tcf80] [API] Section [6] .rodata  VA=0x003b5000 VS=0x00001bc0 Raw=0x00001c00 Ch=0xc0000040
+[Tcf80] [API] Section [7] .tls     VA=0x003b7000 VS=0x00000010 Raw=0x00000200 Ch=0xc0000040
+[Tcf80] [API] Section [8] .rsrc    VA=0x003b8000 VS=0x000003d8 Raw=0x00000400 Ch=0x40000040
+[Tcf80] [API] Section [9] .reloc   VA=0x003b9000 VS=0x00005878 Raw=0x00005a00 Ch=0x42000040
+[Tcf80] [API] Import Directory: RVA=0x3a7ac8 Size=0x1cc
+[Tcf80] [API] Import DLL: bcrypt.dll (IAT RVA=0x3a8654, ILT RVA=0x3a7c94)
+[Tcf80] [API]   [0] BCryptGenRandom -> 0x20179b0
+[Tcf80] [API] Import DLL: CRYPT32.dll (IAT RVA=0x3a8664, ILT RVA=0x3a7ca4)
+[Tcf80] [API]   [0] CertCloseStore -> 0x2038ac0
+[Tcf80] [API]   [1] CertEnumCertificatesInStore -> 0x2047db0
+[Tcf80] [API]   [2] CertFreeCertificateContext -> 0x2038e20
+[Tcf80] [API]   [3] CertGetEnhancedKeyUsage -> 0x2049230
+[Tcf80] [API]   [4] CertGetIntendedKeyUsage -> 0x200a180
+[Tcf80] [API]   [5] CertOpenSystemStoreA -> 0x2047c90
+[Tcf80] [API] Import DLL: IPHLPAPI.DLL (IAT RVA=0x3a869c, ILT RVA=0x3a7cdc)
+[Tcf80] [API]   [0] if_nametoindex -> 0x2019590
+[Tcf80] [API] Import DLL: KERNEL32.dll (IAT RVA=0x3a86ac, ILT RVA=0x3a7cec)
+[Tcf80] [API]   [0] AcquireSRWLockExclusive -> 0x2035990
+[Tcf80] [API]   [1] CancelIo -> 0x2038b90
+[Tcf80] [API]   [2] CloseHandle -> 0x2041d20
+[Tcf80] [API]   [3] CompareFileTime -> 0x2025be0
+[Tcf80] [API]   [4] CreateEventA -> 0x2026670
+[Tcf80] [API]   [5] CreateFileA -> 0x2034960
+[Tcf80] [API]   [6] CreateFileMappingA -> 0x2026660
+[Tcf80] [API]   [7] CreateMutexA -> 0x200c320
+[Tcf80] [API]   [8] CreateThread -> 0x2029580
+[Tcf80] [API]   [9] CreateToolhelp32Snapshot -> 0x2047ed0
+[Tcf80] [API]   [10] DeleteCriticalSection -> 0x2032700
+[Tcf80] [API]   [11] DuplicateHandle -> 0x200a590
+[Tcf80] [API]   [12] EnterCriticalSection -> 0x203c370
+[Tcf80] [API]   [13] FindFirstVolumeW -> 0x2048110
+[Tcf80] [API]   [14] FindNextVolumeW -> 0x2048230
+[Tcf80] [API]   [15] FindVolumeClose -> 0x2038ba0
+[Tcf80] [API]   [16] FormatMessageW -> 0x202cf70
+[Tcf80] [API]   [17] GetConsoleMode -> 0x20276f0
+[Tcf80] [API]   [18] GetConsoleScreenBufferInfo -> 0x200f9e0
+[Tcf80] [API]   [19] GetCurrentProcess -> 0x2008310
+[Tcf80] [API]   [20] GetCurrentThreadId -> 0x2008340
+[Tcf80] [API]   [21] GetDiskFreeSpaceExW -> 0x2049890
+[Tcf80] [API]   [22] GetEnvironmentVariableA -> 0x2027c70
+[Tcf80] [API]   [23] GetFileAttributesA -> 0x2034d90
+[Tcf80] [API]   [24] GetFileInformationByHandle -> 0x202af90
+[Tcf80] [API]   [25] GetFileSizeEx -> 0x202ae40
+[Tcf80] [API]   [26] GetFileTime -> 0x202f630
+[Tcf80] [API]   [27] GetFileType -> 0x201b3c0
+[Tcf80] [API]   [28] GetFullPathNameW -> 0x204bf00
+[Tcf80] [API]   [29] GetLastError -> 0x200a7d0
+[Tcf80] [API]   [30] GetModuleFileNameA -> 0x203bda0
+[Tcf80] [API]   [31] GetModuleHandleA -> 0x20116d0
+[Tcf80] [API]   [32] GetOverlappedResult -> 0x2049350
+[Tcf80] [API]   [33] GetProcAddress -> 0x200a8d0
+[Tcf80] [API]   [34] GetStdHandle -> 0x20593d0
+[Tcf80] [API]   [35] GetSystemInfo -> 0x201a3b0
+[Tcf80] [API]   [36] GetSystemTime -> 0x201a820
+[Tcf80] [API]   [37] GetSystemTimeAsFileTime -> 0x2013690
+[Tcf80] [API]   [38] GetTickCount -> 0x2013920
+[Tcf80] [API]   [39] GetTickCount64 -> 0x2013b90
+[Tcf80] [API]   [40] GetTimeZoneInformation -> 0x20109c0
+[Tcf80] [API]   [41] GetVolumeInformationW -> 0x20440c0
+[Tcf80] [API]   [42] InitOnceExecuteOnce -> 0x2035bb0
+[Tcf80] [API]   [43] InitializeCriticalSection -> 0x20326e0
+[Tcf80] [API]   [44] InitializeCriticalSectionEx -> 0x2011300
+[Tcf80] [API]   [45] IsProcessorFeaturePresent -> 0x20095c0
+[Tcf80] [API]   [46] LeaveCriticalSection -> 0x202f2f0
+[Tcf80] [API]   [47] MapViewOfFile -> 0x2037300
+[Tcf80] [API]   [48] Module32First -> 0x2047ff0
+[Tcf80] [API]   [49] Module32Next -> 0x20486b0
+[Tcf80] [API]   [50] MoveFileExA -> 0x2035680
+[Tcf80] [API]   [51] MultiByteToWideChar -> 0x2027e80
+[Tcf80] [API]   [52] PeekNamedPipe -> 0x2009a90
+[Tcf80] [API]   [53] QueryPerformanceCounter -> 0x2013a50
+[Tcf80] [API]   [54] QueryPerformanceFrequency -> 0x20103c0
+[Tcf80] [API]   [55] ReadFile -> 0x202a520
+[Tcf80] [API]   [56] ReleaseMutex -> 0x203da30
+[Tcf80] [API]   [57] ReleaseSRWLockExclusive -> 0x2035aa0
+[Tcf80] [API]   [58] RtlVirtualUnwind -> 0x203dff0
+[Tcf80] [API]   [59] SetConsoleCtrlHandler -> 0x2009930
+[Tcf80] [API]   [60] SetConsoleMode -> 0x2038aa0
+[Tcf80] [API]   [61] SetEndOfFile -> 0x202abf0
+[Tcf80] [API]   [62] SetFilePointer -> 0x202a960
+[Tcf80] [API]   [63] SetFileTime -> 0x202ff30
+[Tcf80] [API]   [64] SetHandleInformation -> 0x2009a80
+[Tcf80] [API]   [65] SetLastError -> 0x2025a60
+[Tcf80] [API]   [66] SetStdHandle -> 0x2038af0
+[Tcf80] [API]   [67] SetUnhandledExceptionFilter -> 0x200b130
+[Tcf80] [API]   [68] Sleep -> 0x2014cb0
+[Tcf80] [API]   [69] SleepEx -> 0x2015070
+[Tcf80] [API]   [70] SystemTimeToFileTime -> 0x2036170
+[Tcf80] [API]   [71] TerminateProcess -> 0x2015480
+[Tcf80] [API]   [72] TerminateThread -> 0x2038a20
+[Tcf80] [API]   [73] TlsGetValue -> 0x200b240
+[Tcf80] [API]   [74] UnmapViewOfFile -> 0x2029230
+[Tcf80] [API]   [75] VerSetConditionMask -> 0x200a190
+[Tcf80] [API]   [76] VerifyVersionInfoW -> 0x200a1a0
+[Tcf80] [API]   [77] VirtualAlloc -> 0x2028d80
+[Tcf80] [API]   [78] VirtualFree -> 0x2029000
+[Tcf80] [API]   [79] VirtualProtect -> 0x2014dc0
+[Tcf80] [API]   [80] VirtualQuery -> 0x200fdb0
+[Tcf80] [API]   [81] WaitForMultipleObjects -> 0x2041600
+[Tcf80] [API]   [82] WaitForSingleObject -> 0x20414b0
+[Tcf80] [API]   [83] WaitForSingleObjectEx -> 0x20415c0
+[Tcf80] [API]   [84] WaitNamedPipeA -> 0x2048350
+[Tcf80] [API]   [85] WideCharToMultiByte -> 0x2025ca0
+[Tcf80] [API]   [86] WriteConsoleW -> 0x2017700
+[Tcf80] [API]   [87] WriteFile -> 0x202a750
+[Tcf80] [API] Import DLL: Normaliz.dll (IAT RVA=0x3a8974, ILT RVA=0x3a7fb4)
+[Tcf80] [API]   [0] IdnToAscii -> 0x20330e0
+[Tcf80] [API]   [1] IdnToUnicode -> 0x203a550
+[Tcf80] [API] Import DLL: Secur32.dll (IAT RVA=0x3a898c, ILT RVA=0x3a7fcc)
+[Tcf80] [API]   [0] InitSecurityInterfaceA -> 0x2038d70
+[Tcf80] [API] Import DLL: api-ms-win-crt-conio-l1-1-0.dll (IAT RVA=0x3a899c, ILT RVA=0x3a7fdc)
+[Tcf80] [API]   [0] _getch -> 0x2017510
+[Tcf80] [API] Import DLL: api-ms-win-crt-convert-l1-1-0.dll (IAT RVA=0x3a89ac, ILT RVA=0x3a7fec)
+[Tcf80] [API]   [0] atoi -> 0x2016410
+[Tcf80] [API]   [1] mbrtowc -> 0x2014030
+[Tcf80] [API]   [2] mbstowcs -> 0x2013f40
+[Tcf80] [API]   [3] strtol -> 0x20164b0
+[Tcf80] [API]   [4] strtoll -> 0x2038fb0
+[Tcf80] [API]   [5] strtoul -> 0x2016750
+[Tcf80] [API]   [6] strtoull -> 0x2039050
+[Tcf80] [API]   [7] wcrtomb -> 0x201c2d0
+[Tcf80] [API]   [8] wcstombs -> 0x2008a00
+[Tcf80] [API] Import DLL: api-ms-win-crt-environment-l1-1-0.dll (IAT RVA=0x3a89fc, ILT RVA=0x3a803c)
+[Tcf80] [API]   [0] __p__environ -> 0x202c500
+[Tcf80] [API]   [1] getenv -> 0x2012020
+[Tcf80] [API] Import DLL: api-ms-win-crt-filesystem-l1-1-0.dll (IAT RVA=0x3a8a14, ILT RVA=0x3a8054)
+[Tcf80] [API]   [0] _findclose -> 0x203bb30
+[Tcf80] [API]   [1] _findfirst64 -> 0x2044cf0
+[Tcf80] [API]   [2] _findnext64 -> 0x203dc70
+[Tcf80] [API]   [3] _fullpath -> 0x202b210
+[Tcf80] [API]   [4] _lock_file -> 0x2038c70
+[Tcf80] [API]   [5] _stat64 -> 0x2017f70
+[Tcf80] [API]   [6] _unlock_file -> 0x2038e00
+[Tcf80] [API]   [7] _unlink -> 0x2018370
+[Tcf80] [API]   [8] _mkdir -> 0x201b990
+[Tcf80] [API]   [9] _fstat64 -> 0x2017dc0
+[Tcf80] [API] Import DLL: api-ms-win-crt-heap-l1-1-0.dll (IAT RVA=0x3a8a6c, ILT RVA=0x3a80ac)
+[Tcf80] [API]   [0] _aligned_free -> 0x2039270
+[Tcf80] [API]   [1] _aligned_malloc -> 0x2012670
+[Tcf80] [API]   [2] _set_new_mode -> 0x202bdc0
+[Tcf80] [API]   [3] calloc -> 0x203cc50
+[Tcf80] [API]   [4] free -> 0x2049640
+[Tcf80] [API]   [5] malloc -> 0x203c620
+[Tcf80] [API]   [6] realloc -> 0x204dc00
+[Tcf80] [API] Import DLL: api-ms-win-crt-locale-l1-1-0.dll (IAT RVA=0x3a8aac, ILT RVA=0x3a80ec)
+[Tcf80] [API]   [0] _configthreadlocale -> 0x2009b50
+[Tcf80] [API]   [1] localeconv -> 0x2015240
+[Tcf80] [API]   [2] setlocale -> 0x20213e0
+[Tcf80] [API] Import DLL: api-ms-win-crt-math-l1-1-0.dll (IAT RVA=0x3a8acc, ILT RVA=0x3a810c)
+[Tcf80] [API]   [0] __setusermatherr -> 0x202bba0
+[Tcf80] [API]   [1] _fdopen -> 0x2040be0
+[Tcf80] [API] Import DLL: api-ms-win-crt-private-l1-1-0.dll (IAT RVA=0x3a8ae4, ILT RVA=0x3a8124)
+[Tcf80] [API]   [0] __C_specific_handler -> 0x2030470
+[Tcf80] [API]   [1] memchr -> 0x2016370
+[Tcf80] [API]   [2] memcmp -> 0x2011a30
+[Tcf80] [API]   [3] memcpy -> 0x2012b90
+[Tcf80] [API]   [4] memmove -> 0x200f6b0
+[Tcf80] [API]   [5] strchr -> 0x2012810
+[Tcf80] [API]   [6] strrchr -> 0x2016040
+[Tcf80] [API]   [7] strstr -> 0x2012770
+[Tcf80] [API] Import DLL: api-ms-win-crt-runtime-l1-1-0.dll (IAT RVA=0x3a8b2c, ILT RVA=0x3a816c)
+[Tcf80] [API]   [0] _set_app_type -> 0x202ba90
+[Tcf80] [API]   [1] __p___argc -> 0x202c300
+[Tcf80] [API]   [2] __p___argv -> 0x202c400
+[Tcf80] [API]   [3] __sys_errlist -> DATA 0x2094010
+[Tcf80] [API]   [4] __sys_nerr -> DATA 0x2094004
+[Tcf80] [API]   [5] _cexit -> 0x2010750
+[Tcf80] [API]   [6] _configure_narrow_argv -> 0x202bcb0
+[Tcf80] [API]   [7] _crt_atexit -> 0x200bbf0
+[Tcf80] [API]   [8] _errno -> 0x202ca40
+[Tcf80] [API]   [9] _exit -> 0x2011ad0
+[Tcf80] [API]   [10] _initialize_narrow_environment -> 0x2030570
+[Tcf80] [API]   [11] _initterm -> 0x200b4b0
+[Tcf80] [API]   [12] _initterm_e -> 0x200c800
+[Tcf80] [API]   [13] _set_invalid_parameter_handler -> 0x202bed0
+[Tcf80] [API]   [14] abort -> 0x2038120
+[Tcf80] [API]   [15] exit -> 0x20153b0
+[Tcf80] [API]   [16] signal -> 0x202bfe0
+[Tcf80] [API]   [17] strerror -> 0x7f181c527550
+[Tcf80] [API] Import DLL: api-ms-win-crt-stdio-l1-1-0.dll (IAT RVA=0x3a8bc4, ILT RVA=0x3a8204)
+[Tcf80] [API]   [0] __acrt_iob_func -> 0x200b780
+[Tcf80] [API]   [1] __p__commode -> 0x202c200
+[Tcf80] [API]   [2] __p__fmode -> 0x202c100
+[Tcf80] [API]   [3] __stdio_common_vfprintf -> 0x2024050
+[Tcf80] [API]   [4] __stdio_common_vsprintf -> 0x2024190
+[Tcf80] [API]   [5] _fseeki64 -> 0x2012500
+[Tcf80] [API]   [6] _get_osfhandle -> 0x200baf0
+[Tcf80] [API]   [7] _lseeki64 -> 0x2018140
+[Tcf80] [API]   [8] _open -> 0x20170d0
+[Tcf80] [API]   [9] _read -> 0x20173f0
+[Tcf80] [API]   [10] _setmode -> 0x202c810
+[Tcf80] [API]   [11] _telli64 -> 0x201b280
+[Tcf80] [API]   [12] _write -> 0x20175e0
+[Tcf80] [API]   [13] fclose -> 0x20394b0
+[Tcf80] [API]   [14] feof -> 0x20226a0
+[Tcf80] [API]   [15] ferror -> 0x201f3a0
+[Tcf80] [API]   [16] fflush -> 0x2022030
+[Tcf80] [API]   [17] fgets -> 0x2022370
+[Tcf80] [API]   [18] fopen -> 0x20429b0
+[Tcf80] [API]   [19] fputc -> 0x2022890
+[Tcf80] [API]   [20] fputs -> 0x2022750
+[Tcf80] [API]   [21] fread -> 0x2022210
+[Tcf80] [API]   [22] freopen -> 0x2023320
+[Tcf80] [API]   [23] fseek -> 0x20225b0
+[Tcf80] [API]   [24] ftell -> 0x2022150
+[Tcf80] [API]   [25] fwrite -> 0x20229b0
+[Tcf80] [API]   [26] getc -> 0x2022b50
+[Tcf80] [API]   [27] putchar -> 0x201f4e0
+[Tcf80] [API]   [28] puts -> 0x2015e00
+[Tcf80] [API]   [29] rewind -> 0x2022500
+[Tcf80] [API]   [30] setvbuf -> 0x2022e70
+[Tcf80] [API]   [31] ungetc -> 0x2022c80
+[Tcf80] [API]   [32] _write -> 0x20175e0
+[Tcf80] [API]   [33] _open -> 0x20170d0
+[Tcf80] [API]   [34] _isatty -> 0x2011450
+[Tcf80] [API]   [35] _fileno -> 0x200b9a0
+[Tcf80] [API]   [36] _fileno -> 0x200b9a0
+[Tcf80] [API]   [37] _close -> 0x20178b0
+[Tcf80] [API] Import DLL: api-ms-win-crt-string-l1-1-0.dll (IAT RVA=0x3a8cfc, ILT RVA=0x3a833c)
+[Tcf80] [API]   [0] _strnicmp -> 0x201c070
+[Tcf80] [API]   [1] isalnum -> 0x2016c10
+[Tcf80] [API]   [2] isdigit -> 0x2016ed0
+[Tcf80] [API]   [3] isspace -> 0x2016a00
+[Tcf80] [API]   [4] isupper -> 0x2016ab0
+[Tcf80] [API]   [5] isxdigit -> 0x2016b60
+[Tcf80] [API]   [6] mbrlen -> 0x20364c0
+[Tcf80] [API]   [7] memset -> 0x200ff20
+[Tcf80] [API]   [8] strcat -> 0x201fc60
+[Tcf80] [API]   [9] strcmp -> 0x20147f0
+[Tcf80] [API]   [10] strcpy -> 0x2015fa0
+[Tcf80] [API]   [11] strcspn -> 0x2016190
+[Tcf80] [API]   [12] strlen -> 0x2011550
+[Tcf80] [API]   [13] strncmp -> 0x2016230
+[Tcf80] [API]   [14] strncpy -> 0x201fda0
+[Tcf80] [API]   [15] strnlen -> 0x20202b0
+[Tcf80] [API]   [16] strpbrk -> 0x2020350
+[Tcf80] [API]   [17] strspn -> 0x20203f0
+[Tcf80] [API]   [18] tolower -> 0x2034020
+[Tcf80] [API]   [19] wcscpy -> 0x2009d60
+[Tcf80] [API]   [20] wcslen -> 0x2025040
+[Tcf80] [API]   [21] wcsncmp -> 0x2009ce0
+[Tcf80] [API]   [22] wcsncpy -> 0x203b8e0
+[Tcf80] [API]   [23] wcsnlen -> 0x2039240
+[Tcf80] [API]   [24] _stricmp -> 0x20162d0
+[Tcf80] [API]   [25] _strdup -> 0x2012aa0
+[Tcf80] [API] Import DLL: api-ms-win-crt-time-l1-1-0.dll (IAT RVA=0x3a8dd4, ILT RVA=0x3a8414)
+[Tcf80] [API]   [0] _difftime64 -> 0x201be90
+[Tcf80] [API]   [1] _gmtime64 -> 0x2018930
+[Tcf80] [API]   [2] _localtime64 -> 0x20189d0
+[Tcf80] [API]   [3] _time64 -> 0x20186e0
+[Tcf80] [API]   [4] strftime -> 0x2015ae0
+[Tcf80] [API] Import DLL: api-ms-win-crt-utility-l1-1-0.dll (IAT RVA=0x3a8e04, ILT RVA=0x3a8444)
+[Tcf80] [API]   [0] _byteswap_uint64 -> 0x2021b60
+[Tcf80] [API]   [1] bsearch -> 0x2009f00
+[Tcf80] [API]   [2] qsort -> 0x2018c10
+[Tcf80] [API] Import DLL: USER32.dll (IAT RVA=0x3a8e24, ILT RVA=0x3a8464)
+[Tcf80] [API]   [0] FindWindowA -> 0x200a1b0
+[Tcf80] [API]   [1] SendMessageA -> 0x20539f0
+[Tcf80] [API] Import DLL: WLDAP32.dll (IAT RVA=0x3a8e3c, ILT RVA=0x3a847c)
+[Tcf80] [API]   [0] ber_free -> 0x200a1c0
+[Tcf80] [API]   [1] ldap_bind_s -> 0x200a1d0
+[Tcf80] [API]   [2] ldap_err2string -> 0x200a1e0
+[Tcf80] [API]   [3] ldap_first_attribute -> 0x200a1f0
+[Tcf80] [API]   [4] ldap_first_entry -> 0x2038a60
+[Tcf80] [API]   [5] ldap_get_dn -> 0x2038a80
+[Tcf80] [API]   [6] ldap_get_values_len -> 0x2038a10
+[Tcf80] [API]   [7] ldap_init -> 0x200a260
+[Tcf80] [API]   [8] ldap_memfree -> 0x2012460
+[Tcf80] [API]   [9] ldap_msgfree -> 0x2038c90
+[Tcf80] [API]   [10] ldap_next_attribute -> 0x200a200
+[Tcf80] [API]   [11] ldap_next_entry -> 0x2038a70
+[Tcf80] [API]   [12] ldap_search_s -> 0x200a210
+[Tcf80] [API]   [13] ldap_set_option -> 0x200a230
+[Tcf80] [API]   [14] ldap_simple_bind_s -> 0x200a240
+[Tcf80] [API]   [15] ldap_sslinit -> 0x200a250
+[Tcf80] [API]   [16] ldap_unbind_s -> 0x2038ca0
+[Tcf80] [API]   [17] ldap_value_free_len -> 0x20390f0
+[Tcf80] [API] Import DLL: WS2_32.dll (IAT RVA=0x3a8ed4, ILT RVA=0x3a8514)
+[Tcf80] [API]   [0] WSACleanup -> 0x200a010
+[Tcf80] [API]   [1] WSACloseEvent -> 0x2038bb0
+[Tcf80] [API]   [2] WSACreateEvent -> 0x200a270
+[Tcf80] [API]   [3] WSAEnumNetworkEvents -> 0x202f500
+[Tcf80] [API]   [4] WSAEventSelect -> 0x200a2d0
+[Tcf80] [API]   [5] WSAGetLastError -> 0x200a020
+[Tcf80] [API]   [6] WSAIoctl -> 0x2021190
+[Tcf80] [API]   [7] WSAResetEvent -> 0x200a2e0
+[Tcf80] [API]   [8] WSASetEvent -> 0x200a300
+[Tcf80] [API]   [9] WSASetLastError -> 0x200a030
+[Tcf80] [API]   [10] WSAStartup -> 0x2011ea0
+[Tcf80] [API]   [11] WSAStringToAddressW -> 0x200a320
+[Tcf80] [API]   [12] WSAWaitForMultipleEvents -> 0x2041840
+[Tcf80] [API]   [13] __WSAFDIsSet -> 0x2021040
+[Tcf80] [API]   [14] accept -> 0x2020970
+[Tcf80] [API]   [15] bind -> 0x2020830
+[Tcf80] [API]   [16] closesocket -> 0x2017c00
+[Tcf80] [API]   [17] connect -> 0x2020780
+[Tcf80] [API]   [18] freeaddrinfo -> 0x2021970
+[Tcf80] [API]   [19] getaddrinfo -> 0x2021a10
+[Tcf80] [API]   [20] gethostname -> 0x201bb40
+[Tcf80] [API]   [21] getpeername -> 0x2020cc0
+[Tcf80] [API]   [22] getsockname -> 0x2020c20
+[Tcf80] [API]   [23] getsockopt -> 0x2020ac0
+[Tcf80] [API]   [24] htonl -> 0x2020530
+[Tcf80] [API]   [25] htons -> 0x2020540
+[Tcf80] [API]   [26] inet_pton -> 0x2021ac0
+[Tcf80] [API]   [27] ioctlsocket -> 0x20210f0
+[Tcf80] [API]   [28] listen -> 0x20208d0
+[Tcf80] [API]   [29] ntohl -> 0x2038ea0
+[Tcf80] [API]   [30] ntohs -> 0x2038eb0
+[Tcf80] [API]   [31] recv -> 0x2020e10
+[Tcf80] [API]   [32] recvfrom -> 0x2020f80
+[Tcf80] [API]   [33] select -> 0x2021040
+[Tcf80] [API]   [34] send -> 0x2020d60
+[Tcf80] [API]   [35] sendto -> 0x2020ec0
+[Tcf80] [API]   [36] setsockopt -> 0x2020b70
+[Tcf80] [API]   [37] shutdown -> 0x2020a20
+[Tcf80] [API]   [38] socket -> 0x2020690
+[Tcf80] [API] Import resolution: 290 resolved, 0 unresolved (total 290)
+[Tcf80] [API] TLS: StartRaw=0x1403b7000 EndRaw=0x1403b7008 Callbacks=0x1403a7a88
+[Tcf80] [API] TLS: static block 0x2922090 (8+0 bytes) -> slot 0
+[Tcf80] [API] TLS: callback[0] = 0x1400fb4a0
+[Tcf80] [API] InitializeCriticalSection(0x1403aef20)
+[Tcf80] [API] TLS: callback[1] = 0x1400fb480
+[Tcf80] [API] Exception: .pdata RVA=0x3b3000 Size=0x6c0 Entries=144
+[Tcf80] [API] [API-005] EH hacks DISABLED (default) (MINWIN_EH_HACKS=<unset>)
+[Tcf80] [API] [API-005] CXX-EH-FIX (LSDA catch-all patch RVA 0x2010c8) skipped: MINWIN_EH_HACKS not set
+[Tcf80] [API] Jumping to EP=0x1400013f0
+[Tcf80] [API] SetUnhandledExceptionFilter(handler=0x1400fbbf0)
+[Tcf80] [API] _set_invalid_parameter_handler(0x140001000) -> NULL
+[Tcf80] [API] __set_app_type(1)
+[Tcf80] [API] __p__fmode() = 0x223e4f8
+[Tcf80] [API] __p__commode() = 0x223e4f4
+[Tcf80] [API] _initterm_e(0x1403a7a70..0x1403a7a78)
+[Tcf80] [API] _initialize_narrow_environment() -> 0
+[Tcf80] [API] _configure_narrow_argv(mode=1) -> 0
+[Tcf80] [API] __p___argc() = 0x223e510
+[Tcf80] [API] __p___argv() = 0x2094030
+[Tcf80] [API] __p__environ() = 0x223e508
+[Tcf80] [API] _set_new_mode(0) -> 0
+[Tcf80] [API] malloc(16) = 0x2922740
+[Tcf80] [API] malloc(9) = 0x2922760
+[Tcf80] [API] _initterm(start=0x1403a7a50, end=0x1403a7a58)
+[Tcf80] [API] atexit(func=0x1400fb380)
+[Tcf80] [API] __acrt_iob_func(2) = 0x7f181c6644e0
+[Tcf80] [API] GetModuleHandleA(name=ntdll)
+[Tcf80] [API] GetProcAddress(module=(nil), name=RtlVerifyVersionInfo)
+[Tcf80] [API] QueryPerformanceFrequency()
+[Tcf80] [API] GetStdHandle(-11) = 0x4
+[Tcf80] [API] GetConsoleMode(handle=0x4)
+[Tcf80] [API] SetLastError(6)
+[Tcf80] [API] calloc(1, 1064) = 0x2922780
+[Tcf80] [API] AcquireSRWLockExclusive(0x1403b2258)
+[Tcf80] [API] malloc(40) = 0x2922710
+[Tcf80] [API] InitializeCriticalSection(0x2922710)
+[Tcf80] [API] EnterCriticalSection(0x2922710)
+[Tcf80] [API] calloc(1, 56) = 0x2922bb0
+[Tcf80] [API] calloc(16, 8) = 0x2922bf0
+[Tcf80] [API] LeaveCriticalSection(0x2922710)
+[Tcf80] [API] EnterCriticalSection(0x2922710)
+[Tcf80] [API] malloc(24) = 0x2922c80
+[Tcf80] [API] LeaveCriticalSection(0x2922710)
+[Tcf80] [API] EnterCriticalSection(0x2922710)
+[Tcf80] [API] LeaveCriticalSection(0x2922710)
+[Tcf80] [API] EnterCriticalSection(0x2922710)
+[Tcf80] [API] malloc(24) = 0x2922ca0
+[Tcf80] [API] LeaveCriticalSection(0x2922710)
+[Tcf80] [API] EnterCriticalSection(0x2922710)
+[Tcf80] [API] LeaveCriticalSection(0x2922710)
+[Tcf80] [API] EnterCriticalSection(0x2922710)
+[Tcf80] [API] malloc(24) = 0x2922cc0
+[Tcf80] [API] LeaveCriticalSection(0x2922710)
+[Tcf80] [API] EnterCriticalSection(0x2922710)
+[Tcf80] [API] LeaveCriticalSection(0x2922710)
+[Tcf80] [API] EnterCriticalSection(0x2922710)
+[Tcf80] [API] malloc(24) = 0x2922ce0
+[Tcf80] [API] LeaveCriticalSection(0x2922710)
+[Tcf80] [API] EnterCriticalSection(0x2922710)
+[Tcf80] [API] LeaveCriticalSection(0x2922710)
+[Tcf80] [API] EnterCriticalSection(0x2922710)
+[Tcf80] [API] malloc(24) = 0x2922d00
+[Tcf80] [API] LeaveCriticalSection(0x2922710)
+[Tcf80] [API] EnterCriticalSection(0x2922710)
+[Tcf80] [API] LeaveCriticalSection(0x2922710)
+[Tcf80] [API] EnterCriticalSection(0x2922710)
+[Tcf80] [API] malloc(24) = 0x2922d20
+[Tcf80] [API] LeaveCriticalSection(0x2922710)
+[Tcf80] [API] EnterCriticalSection(0x2922710)
+[Tcf80] [API] LeaveCriticalSection(0x2922710)
+[Tcf80] [API] EnterCriticalSection(0x2922710)
+[Tcf80] [API] malloc(24) = 0x2922d40
+[Tcf80] [API] LeaveCriticalSection(0x2922710)
+[Tcf80] [API] EnterCriticalSection(0x2922710)
+[Tcf80] [API] LeaveCriticalSection(0x2922710)
+[Tcf80] [API] EnterCriticalSection(0x2922710)
+[Tcf80] [API] malloc(24) = 0x2922d60
+[Tcf80] [API] LeaveCriticalSection(0x2922710)
+[Tcf80] [API] EnterCriticalSection(0x2922710)
+[Tcf80] [API] LeaveCriticalSection(0x2922710)
+[Tcf80] [API] EnterCriticalSection(0x2922710)
+[Tcf80] [API] malloc(24) = 0x2922d80
+[Tcf80] [API] LeaveCriticalSection(0x2922710)
+[Tcf80] [API] EnterCriticalSection(0x2922710)
+[Tcf80] [API] LeaveCriticalSection(0x2922710)
+[Tcf80] [API] EnterCriticalSection(0x2922710)
+[Tcf80] [API] malloc(24) = 0x2922da0
+[Tcf80] [API] LeaveCriticalSection(0x2922710)
+[Tcf80] [API] EnterCriticalSection(0x2922710)
+[Tcf80] [API] LeaveCriticalSection(0x2922710)
+[Tcf80] [API] EnterCriticalSection(0x2922710)
+[Tcf80] [API] malloc(24) = 0x2922dc0
+[Tcf80] [API] LeaveCriticalSection(0x2922710)
+[Tcf80] [API] EnterCriticalSection(0x2922710)
+[Tcf80] [API] LeaveCriticalSection(0x2922710)
+[Tcf80] [API] EnterCriticalSection(0x2922710)
+[Tcf80] [API] malloc(24) = 0x2922de0
+[Tcf80] [API] LeaveCriticalSection(0x2922710)
+[Tcf80] [API] EnterCriticalSection(0x2922710)
+[Tcf80] [API] LeaveCriticalSection(0x2922710)
+[Tcf80] [API] EnterCriticalSection(0x2922710)
+[Tcf80] [API] malloc(24) = 0x2922e00
+[Tcf80] [API] LeaveCriticalSection(0x2922710)
+[Tcf80] [API] EnterCriticalSection(0x2922710)
+[Tcf80] [API] LeaveCriticalSection(0x2922710)
+[Tcf80] [API] EnterCriticalSection(0x2922710)
+[Tcf80] [API] malloc(24) = 0x2922e20
+[Tcf80] [API] LeaveCriticalSection(0x2922710)
+[Tcf80] [API] EnterCriticalSection(0x2922710)
+[Tcf80] [API] LeaveCriticalSection(0x2922710)
+[Tcf80] [API] EnterCriticalSection(0x2922710)
+[Tcf80] [API] malloc(24) = 0x2922e40
+[Tcf80] [API] LeaveCriticalSection(0x2922710)
+[Tcf80] [API] EnterCriticalSection(0x2922710)
+[Tcf80] [API] LeaveCriticalSection(0x2922710)
+[Tcf80] [API] EnterCriticalSection(0x2922710)
+[Tcf80] [API] malloc(24) = 0x2922e60
+[Tcf80] [API] LeaveCriticalSection(0x2922710)
+[Tcf80] [API] EnterCriticalSection(0x2922710)
+[Tcf80] [API] LeaveCriticalSection(0x2922710)
+[Tcf80] [API] EnterCriticalSection(0x2922710)
+[Tcf80] [API] malloc(24) = 0x2922e80
+[Tcf80] [API] LeaveCriticalSection(0x2922710)
+[Tcf80] [API] EnterCriticalSection(0x2922710)
+[Tcf80] [API] LeaveCriticalSection(0x2922710)
+[Tcf80] [API] EnterCriticalSection(0x2922710)
+[Tcf80] [API] malloc(24) = 0x2922ea0
+[Tcf80] [API] LeaveCriticalSection(0x2922710)
+[Tcf80] [API] EnterCriticalSection(0x2922710)
+[Tcf80] [API] LeaveCriticalSection(0x2922710)
+[Tcf80] [API] EnterCriticalSection(0x2922710)
+[Tcf80] [API] malloc(24) = 0x2922ec0
+[Tcf80] [API] LeaveCriticalSection(0x2922710)
+[Tcf80] [API] EnterCriticalSection(0x2922710)
+[Tcf80] [API] LeaveCriticalSection(0x2922710)
+[Tcf80] [API] EnterCriticalSection(0x2922710)
+[Tcf80] [API] malloc(24) = 0x2922ee0
+[Tcf80] [API] LeaveCriticalSection(0x2922710)
+[Tcf80] [API] EnterCriticalSection(0x2922710)
+[Tcf80] [API] LeaveCriticalSection(0x2922710)
+[Tcf80] [API] EnterCriticalSection(0x2922710)
+[Tcf80] [API] malloc(24) = 0x2922f00
+[Tcf80] [API] LeaveCriticalSection(0x2922710)
+[Tcf80] [API] EnterCriticalSection(0x2922710)
+[Tcf80] [API] LeaveCriticalSection(0x2922710)
+[Tcf80] [API] EnterCriticalSection(0x2922710)
+[Tcf80] [API] malloc(24) = 0x2922f20
+[Tcf80] [API] LeaveCriticalSection(0x2922710)
+[Tcf80] [API] EnterCriticalSection(0x2922710)
+[Tcf80] [API] LeaveCriticalSection(0x2922710)
+[Tcf80] [API] EnterCriticalSection(0x2922710)
+[Tcf80] [API] malloc(24) = 0x2922f40
+[Tcf80] [API] LeaveCriticalSection(0x2922710)
+[Tcf80] [API] EnterCriticalSection(0x2922710)
+[Tcf80] [API] LeaveCriticalSection(0x2922710)
+[Tcf80] [API] EnterCriticalSection(0x2922710)
+[Tcf80] [API] malloc(24) = 0x2922f60
+[Tcf80] [API] LeaveCriticalSection(0x2922710)
+[Tcf80] [API] EnterCriticalSection(0x2922710)
+[Tcf80] [API] LeaveCriticalSection(0x2922710)
+[Tcf80] [API] EnterCriticalSection(0x2922710)
+[Tcf80] [API] malloc(24) = 0x2922f80
+[Tcf80] [API] LeaveCriticalSection(0x2922710)
+[Tcf80] [API] EnterCriticalSection(0x2922710)
+[Tcf80] [API] LeaveCriticalSection(0x2922710)
+[Tcf80] [API] EnterCriticalSection(0x2922710)
+[Tcf80] [API] malloc(24) = 0x2922fa0
+[Tcf80] [API] LeaveCriticalSection(0x2922710)
+[Tcf80] [API] EnterCriticalSection(0x2922710)
+[Tcf80] [API] LeaveCriticalSection(0x2922710)
+[Tcf80] [API] EnterCriticalSection(0x2922710)
+[Tcf80] [API] malloc(24) = 0x2922fc0
+[Tcf80] [API] LeaveCriticalSection(0x2922710)
+[Tcf80] [API] EnterCriticalSection(0x2922710)
+[Tcf80] [API] LeaveCriticalSection(0x2922710)
+[Tcf80] [API] EnterCriticalSection(0x2922710)
+[Tcf80] [API] malloc(24) = 0x2922fe0
+[Tcf80] [API] LeaveCriticalSection(0x2922710)
+[Tcf80] [API] EnterCriticalSection(0x2922710)
+[Tcf80] [API] LeaveCriticalSection(0x2922710)
+[Tcf80] [API] EnterCriticalSection(0x2922710)
+[Tcf80] [API] malloc(24) = 0x2923000
+[Tcf80] [API] LeaveCriticalSection(0x2922710)
+[Tcf80] [API] EnterCriticalSection(0x2922710)
+[Tcf80] [API] LeaveCriticalSection(0x2922710)
+[Tcf80] [API] EnterCriticalSection(0x2922710)
+[Tcf80] [API] malloc(24) = 0x2923020
+[Tcf80] [API] LeaveCriticalSection(0x2922710)
+[Tcf80] [API] EnterCriticalSection(0x2922710)
+[Tcf80] [API] LeaveCriticalSection(0x2922710)
+[Tcf80] [API] EnterCriticalSection(0x2922710)
+[Tcf80] [API] realloc(0x2922bf0, 256) = 0x2923040
+[Tcf80] [API] malloc(24) = 0x2923150
+[Tcf80] [API] LeaveCriticalSection(0x2922710)
+[Tcf80] [API] EnterCriticalSection(0x2922710)
+[Tcf80] [API] LeaveCriticalSection(0x2922710)
+[Tcf80] [API] EnterCriticalSection(0x2922710)
+[Tcf80] [API] malloc(24) = 0x2923170
+[Tcf80] [API] LeaveCriticalSection(0x2922710)
+[Tcf80] [API] EnterCriticalSection(0x2922710)
+[Tcf80] [API] LeaveCriticalSection(0x2922710)
+[Tcf80] [API] EnterCriticalSection(0x2922710)
+[Tcf80] [API] malloc(24) = 0x2923190
+[Tcf80] [API] LeaveCriticalSection(0x2922710)
+[Tcf80] [API] EnterCriticalSection(0x2922710)
+[Tcf80] [API] LeaveCriticalSection(0x2922710)
+[Tcf80] [API] EnterCriticalSection(0x2922710)
+[Tcf80] [API] malloc(24) = 0x29231b0
+[Tcf80] [API] LeaveCriticalSection(0x2922710)
+[Tcf80] [API] EnterCriticalSection(0x2922710)
+[Tcf80] [API] LeaveCriticalSection(0x2922710)
+[Tcf80] [API] EnterCriticalSection(0x2922710)
+[Tcf80] [API] malloc(24) = 0x29231d0
+[Tcf80] [API] LeaveCriticalSection(0x2922710)
+[Tcf80] [API] EnterCriticalSection(0x2922710)
+[Tcf80] [API] LeaveCriticalSection(0x2922710)
+[Tcf80] [API] EnterCriticalSection(0x2922710)
+[Tcf80] [API] malloc(24) = 0x29231f0
+[Tcf80] [API] LeaveCriticalSection(0x2922710)
+[Tcf80] [API] EnterCriticalSection(0x2922710)
+[Tcf80] [API] LeaveCriticalSection(0x2922710)
+[Tcf80] [API] EnterCriticalSection(0x2922710)
+[Tcf80] [API] malloc(24) = 0x2923210
+[Tcf80] [API] LeaveCriticalSection(0x2922710)
+[Tcf80] [API] EnterCriticalSection(0x2922710)
+[Tcf80] [API] LeaveCriticalSection(0x2922710)
+[Tcf80] [API] EnterCriticalSection(0x2922710)
+[Tcf80] [API] malloc(24) = 0x2923230
+[Tcf80] [API] LeaveCriticalSection(0x2922710)
+[Tcf80] [API] EnterCriticalSection(0x2922710)
+[Tcf80] [API] LeaveCriticalSection(0x2922710)
+[Tcf80] [API] EnterCriticalSection(0x2922710)
+[Tcf80] [API] malloc(24) = 0x2923250
+[Tcf80] [API] LeaveCriticalSection(0x2922710)
+[Tcf80] [API] EnterCriticalSection(0x2922710)
+[Tcf80] [API] LeaveCriticalSection(0x2922710)
+[Tcf80] [API] EnterCriticalSection(0x2922710)
+[Tcf80] [API] malloc(24) = 0x2923270
+[Tcf80] [API] LeaveCriticalSection(0x2922710)
+[Tcf80] [API] EnterCriticalSection(0x2922710)
+[Tcf80] [API] LeaveCriticalSection(0x2922710)
+[Tcf80] [API] EnterCriticalSection(0x2922710)
+[Tcf80] [API] malloc(24) = 0x2923290
+[Tcf80] [API] LeaveCriticalSection(0x2922710)
+[Tcf80] [API] EnterCriticalSection(0x2922710)
+[Tcf80] [API] LeaveCriticalSection(0x2922710)
+[Tcf80] [API] EnterCriticalSection(0x2922710)
+[Tcf80] [API] malloc(24) = 0x29232b0
+[Tcf80] [API] LeaveCriticalSection(0x2922710)
+[Tcf80] [API] EnterCriticalSection(0x2922710)
+[Tcf80] [API] LeaveCriticalSection(0x2922710)
+[Tcf80] [API] EnterCriticalSection(0x2922710)
+[Tcf80] [API] malloc(24) = 0x29232d0
+[Tcf80] [API] LeaveCriticalSection(0x2922710)
+[Tcf80] [API] EnterCriticalSection(0x2922710)
+[Tcf80] [API] LeaveCriticalSection(0x2922710)
+[Tcf80] [API] EnterCriticalSection(0x2922710)
+[Tcf80] [API] malloc(24) = 0x29232f0
+[Tcf80] [API] LeaveCriticalSection(0x2922710)
+[Tcf80] [API] EnterCriticalSection(0x2922710)
+[Tcf80] [API] LeaveCriticalSection(0x2922710)
+[Tcf80] [API] EnterCriticalSection(0x2922710)
+[Tcf80] [API] malloc(24) = 0x2923310
+[Tcf80] [API] LeaveCriticalSection(0x2922710)
+[Tcf80] [API] EnterCriticalSection(0x2922710)
+[Tcf80] [API] LeaveCriticalSection(0x2922710)
+[Tcf80] [API] EnterCriticalSection(0x2922710)
+[Tcf80] [API] malloc(24) = 0x2923330
+[Tcf80] [API] LeaveCriticalSection(0x2922710)
+[Tcf80] [API] EnterCriticalSection(0x2922710)
+[Tcf80] [API] LeaveCriticalSection(0x2922710)
+[Tcf80] [API] EnterCriticalSection(0x2922710)
+[Tcf80] [API] malloc(24) = 0x2923350
+[Tcf80] [API] LeaveCriticalSection(0x2922710)
+[Tcf80] [API] EnterCriticalSection(0x2922710)
+[Tcf80] [API] LeaveCriticalSection(0x2922710)
+[Tcf80] [API] EnterCriticalSection(0x2922710)
+[Tcf80] [API] malloc(24) = 0x2923370
+[Tcf80] [API] LeaveCriticalSection(0x2922710)
+[Tcf80] [API] EnterCriticalSection(0x2922710)
+[Tcf80] [API] LeaveCriticalSection(0x2922710)
+[Tcf80] [API] EnterCriticalSection(0x2922710)
+[Tcf80] [API] malloc(24) = 0x2923390
+[Tcf80] [API] LeaveCriticalSection(0x2922710)
+[Tcf80] [API] EnterCriticalSection(0x2922710)
+[Tcf80] [API] LeaveCriticalSection(0x2922710)
+[Tcf80] [API] EnterCriticalSection(0x2922710)
+[Tcf80] [API] malloc(24) = 0x29233b0
+[Tcf80] [API] LeaveCriticalSection(0x2922710)
+[Tcf80] [API] EnterCriticalSection(0x2922710)
+[Tcf80] [API] LeaveCriticalSection(0x2922710)
+[Tcf80] [API] EnterCriticalSection(0x2922710)
+[Tcf80] [API] malloc(24) = 0x29233d0
+[Tcf80] [API] LeaveCriticalSection(0x2922710)
+[Tcf80] [API] EnterCriticalSection(0x2922710)
+[Tcf80] [API] LeaveCriticalSection(0x2922710)
+[Tcf80] [API] EnterCriticalSection(0x2922710)
+[Tcf80] [API] malloc(24) = 0x29233f0
+[Tcf80] [API] LeaveCriticalSection(0x2922710)
+[Tcf80] [API] EnterCriticalSection(0x2922710)
+[Tcf80] [API] LeaveCriticalSection(0x2922710)
+[Tcf80] [API] EnterCriticalSection(0x2922710)
+[Tcf80] [API] malloc(24) = 0x2923410
+[Tcf80] [API] LeaveCriticalSection(0x2922710)
+[Tcf80] [API] EnterCriticalSection(0x2922710)
+[Tcf80] [API] LeaveCriticalSection(0x2922710)
+[Tcf80] [API] EnterCriticalSection(0x2922710)
+[Tcf80] [API] malloc(24) = 0x2923430
+[Tcf80] [API] LeaveCriticalSection(0x2922710)
+[Tcf80] [API] EnterCriticalSection(0x2922710)
+[Tcf80] [API] LeaveCriticalSection(0x2922710)
+[Tcf80] [API] EnterCriticalSection(0x2922710)
+[Tcf80] [API] malloc(24) = 0x2923450
+[Tcf80] [API] LeaveCriticalSection(0x2922710)
+[Tcf80] [API] EnterCriticalSection(0x2922710)
+[Tcf80] [API] LeaveCriticalSection(0x2922710)
+[Tcf80] [API] EnterCriticalSection(0x2922710)
+[Tcf80] [API] malloc(24) = 0x2923470
+[Tcf80] [API] LeaveCriticalSection(0x2922710)
+[Tcf80] [API] EnterCriticalSection(0x2922710)
+[Tcf80] [API] LeaveCriticalSection(0x2922710)
+[Tcf80] [API] EnterCriticalSection(0x2922710)
+[Tcf80] [API] malloc(24) = 0x2923490
+[Tcf80] [API] LeaveCriticalSection(0x2922710)
+[Tcf80] [API] EnterCriticalSection(0x2922710)
+[Tcf80] [API] LeaveCriticalSection(0x2922710)
+[Tcf80] [API] EnterCriticalSection(0x2922710)
+[Tcf80] [API] malloc(24) = 0x29234b0
+[Tcf80] [API] LeaveCriticalSection(0x2922710)
+[Tcf80] [API] EnterCriticalSection(0x2922710)
+[Tcf80] [API] LeaveCriticalSection(0x2922710)
+[Tcf80] [API] EnterCriticalSection(0x2922710)
+[Tcf80] [API] malloc(24) = 0x29234d0
+[Tcf80] [API] LeaveCriticalSection(0x2922710)
+[Tcf80] [API] EnterCriticalSection(0x2922710)
+[Tcf80] [API] LeaveCriticalSection(0x2922710)
+[Tcf80] [API] EnterCriticalSection(0x2922710)
+[Tcf80] [API] malloc(24) = 0x29234f0
+[Tcf80] [API] LeaveCriticalSection(0x2922710)
+[Tcf80] [API] EnterCriticalSection(0x2922710)
+[Tcf80] [API] LeaveCriticalSection(0x2922710)
+[Tcf80] [API] EnterCriticalSection(0x2922710)
+[Tcf80] [API] malloc(24) = 0x2923510
+[Tcf80] [API] LeaveCriticalSection(0x2922710)
+[Tcf80] [API] EnterCriticalSection(0x2922710)
+[Tcf80] [API] LeaveCriticalSection(0x2922710)
+[Tcf80] [API] EnterCriticalSection(0x2922710)
+[Tcf80] [API] malloc(24) = 0x2923530
+[Tcf80] [API] LeaveCriticalSection(0x2922710)
+[Tcf80] [API] EnterCriticalSection(0x2922710)
+[Tcf80] [API] LeaveCriticalSection(0x2922710)
+[Tcf80] [API] EnterCriticalSection(0x2922710)
+[Tcf80] [API] realloc(0x2923040, 512) = 0x2923550
+[Tcf80] [API] malloc(24) = 0x2923760
+[Tcf80] [API] LeaveCriticalSection(0x2922710)
+[Tcf80] [API] EnterCriticalSection(0x2922710)
+[Tcf80] [API] LeaveCriticalSection(0x2922710)
+[Tcf80] [API] EnterCriticalSection(0x2922710)
+[Tcf80] [API] malloc(24) = 0x2923780
+[Tcf80] [API] LeaveCriticalSection(0x2922710)
+[Tcf80] [API] EnterCriticalSection(0x2922710)
+[Tcf80] [API] LeaveCriticalSection(0x2922710)
+[Tcf80] [API] EnterCriticalSection(0x2922710)
+[Tcf80] [API] malloc(24) = 0x29237a0
+[Tcf80] [API] LeaveCriticalSection(0x2922710)
+[Tcf80] [API] EnterCriticalSection(0x2922710)
+[Tcf80] [API] LeaveCriticalSection(0x2922710)
+[Tcf80] [API] EnterCriticalSection(0x2922710)
+[Tcf80] [API] malloc(24) = 0x29237c0
+[Tcf80] [API] LeaveCriticalSection(0x2922710)
+[Tcf80] [API] EnterCriticalSection(0x2922710)
+[Tcf80] [API] LeaveCriticalSection(0x2922710)
+[Tcf80] [API] EnterCriticalSection(0x2922710)
+[Tcf80] [API] malloc(24) = 0x29237e0
+[Tcf80] [API] LeaveCriticalSection(0x2922710)
+[Tcf80] [API] EnterCriticalSection(0x2922710)
+[Tcf80] [API] LeaveCriticalSection(0x2922710)
+[Tcf80] [API] EnterCriticalSection(0x2922710)
+[Tcf80] [API] malloc(24) = 0x2923800
+[Tcf80] [API] LeaveCriticalSection(0x2922710)
+[Tcf80] [API] EnterCriticalSection(0x2922710)
+[Tcf80] [API] LeaveCriticalSection(0x2922710)
+[Tcf80] [API] EnterCriticalSection(0x2922710)
+[Tcf80] [API] malloc(24) = 0x2923820
+[Tcf80] [API] LeaveCriticalSection(0x2922710)
+[Tcf80] [API] EnterCriticalSection(0x2922710)
+[Tcf80] [API] LeaveCriticalSection(0x2922710)
+[Tcf80] [API] EnterCriticalSection(0x2922710)
+[Tcf80] [API] malloc(24) = 0x2923840
+[Tcf80] [API] LeaveCriticalSection(0x2922710)
+[Tcf80] [API] EnterCriticalSection(0x2922710)
+[Tcf80] [API] LeaveCriticalSection(0x2922710)
+[Tcf80] [API] EnterCriticalSection(0x2922710)
+[Tcf80] [API] malloc(24) = 0x2923860
+[Tcf80] [API] LeaveCriticalSection(0x2922710)
+[Tcf80] [API] EnterCriticalSection(0x2922710)
+[Tcf80] [API] LeaveCriticalSection(0x2922710)
+[Tcf80] [API] EnterCriticalSection(0x2922710)
+[Tcf80] [API] malloc(24) = 0x2923880
+[Tcf80] [API] LeaveCriticalSection(0x2922710)
+[Tcf80] [API] EnterCriticalSection(0x2922710)
+[Tcf80] [API] LeaveCriticalSection(0x2922710)
+[Tcf80] [API] EnterCriticalSection(0x2922710)
+[Tcf80] [API] malloc(24) = 0x29238a0
+[Tcf80] [API] LeaveCriticalSection(0x2922710)
+[Tcf80] [API] EnterCriticalSection(0x2922710)
+[Tcf80] [API] LeaveCriticalSection(0x2922710)
+[Tcf80] [API] EnterCriticalSection(0x2922710)
+[Tcf80] [API] malloc(24) = 0x29238c0
+[Tcf80] [API] LeaveCriticalSection(0x2922710)
+[Tcf80] [API] EnterCriticalSection(0x2922710)
+[Tcf80] [API] LeaveCriticalSection(0x2922710)
+[Tcf80] [API] EnterCriticalSection(0x2922710)
+[Tcf80] [API] malloc(24) = 0x29238e0
+[Tcf80] [API] LeaveCriticalSection(0x2922710)
+[Tcf80] [API] EnterCriticalSection(0x2922710)
+[Tcf80] [API] LeaveCriticalSection(0x2922710)
+[Tcf80] [API] EnterCriticalSection(0x2922710)
+[Tcf80] [API] malloc(24) = 0x2923900
+[Tcf80] [API] LeaveCriticalSection(0x2922710)
+[Tcf80] [API] _errno() = 0x219f618
+[Tcf80] [API] _errno() = 0x219f618
+[Tcf80] [API] EnterCriticalSection(0x2922710)
+[Tcf80] [API] LeaveCriticalSection(0x2922710)
+[Tcf80] [API] EnterCriticalSection(0x2922710)
+[Tcf80] [API] malloc(24) = 0x2923940
+[Tcf80] [API] LeaveCriticalSection(0x2922710)
+[Tcf80] [API] EnterCriticalSection(0x2922710)
+[Tcf80] [API] LeaveCriticalSection(0x2922710)
+[Tcf80] [API] EnterCriticalSection(0x2922710)
+[Tcf80] [API] malloc(24) = 0x2923960
+[Tcf80] [API] LeaveCriticalSection(0x2922710)
+[Tcf80] [API] EnterCriticalSection(0x2922710)
+[Tcf80] [API] LeaveCriticalSection(0x2922710)
+[Tcf80] [API] EnterCriticalSection(0x2922710)
+[Tcf80] [API] malloc(24) = 0x2923980
+[Tcf80] [API] LeaveCriticalSection(0x2922710)
+[Tcf80] [API] EnterCriticalSection(0x2922710)
+[Tcf80] [API] LeaveCriticalSection(0x2922710)
+[Tcf80] [API] EnterCriticalSection(0x2922710)
+[Tcf80] [API] malloc(24) = 0x29239a0
+[Tcf80] [API] LeaveCriticalSection(0x2922710)
+[Tcf80] [API] EnterCriticalSection(0x2922710)
+[Tcf80] [API] LeaveCriticalSection(0x2922710)
+[Tcf80] [API] EnterCriticalSection(0x2922710)
+[Tcf80] [API] malloc(24) = 0x29239c0
+[Tcf80] [API] LeaveCriticalSection(0x2922710)
+[Tcf80] [API] EnterCriticalSection(0x2922710)
+[Tcf80] [API] LeaveCriticalSection(0x2922710)
+[Tcf80] [API] EnterCriticalSection(0x2922710)
+[Tcf80] [API] malloc(24) = 0x29239e0
+[Tcf80] [API] LeaveCriticalSection(0x2922710)
+[Tcf80] [API] EnterCriticalSection(0x2922710)
+[Tcf80] [API] LeaveCriticalSection(0x2922710)
+[Tcf80] [API] EnterCriticalSection(0x2922710)
+[Tcf80] [API] malloc(24) = 0x2923a00
+[Tcf80] [API] LeaveCriticalSection(0x2922710)

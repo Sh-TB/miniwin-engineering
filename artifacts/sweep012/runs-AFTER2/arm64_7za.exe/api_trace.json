@@ -1,0 +1,185 @@
+{
+  "trace": [
+[Taf80] [API] PE Loader: file=/home/z/my-project/workspace/miniwin-engineering/artifacts/opensource/_dl/7z-extra/arm64/7za.exe size=1207296
+[Taf80] [API] PE Loader: ImageBase=0x140000000 EP=0xcd610 SizeOfImage=0x137000 Sections=6
+[Taf80] [API] PE Loader: Mapped at 0x140000000 (forced via MAP_FIXED)
+[Taf80] [API] Section [0] .text    VA=0x00001000 VS=0x000e2f04 Raw=0x000e3000 Ch=0x60000020
+[Taf80] [API] Section [1] .rdata   VA=0x000e4000 VS=0x000381e8 Raw=0x00038200 Ch=0x40000040
+[Taf80] [API] Section [2] .data    VA=0x0011d000 VS=0x0000e554 Raw=0x00001600 Ch=0xc0000040
+[Taf80] [API] Section [3] .pdata   VA=0x0012c000 VS=0x00007ae8 Raw=0x00007c00 Ch=0x40000040
+[Taf80] [API] Section [4] .rsrc    VA=0x00134000 VS=0x000007d0 Raw=0x00000800 Ch=0x40000040
+[Taf80] [API] Section [5] .reloc   VA=0x00135000 VS=0x00001a1c Raw=0x00001c00 Ch=0x42000040
+[Taf80] [API] Import Directory: RVA=0x11b0f4 Size=0x64
+[Taf80] [API] Import DLL: OLEAUT32.dll (IAT RVA=0xe44c0, ILT RVA=0x11b618)
+[Taf80] [API]   [0] Ordinal 2 -> SysAllocString (OLEAUT32 fixed)
+[Taf80] [API]   [0] SysAllocString -> 0x203b9c0
+[Taf80] [API]   [1] Ordinal 4 -> SysAllocStringLen (OLEAUT32 fixed)
+[Taf80] [API]   [1] SysAllocStringLen -> 0x203b7c0
+[Taf80] [API]   [2] Ordinal 9 -> VariantClear (OLEAUT32 fixed)
+[Taf80] [API]   [2] VariantClear -> 0x2032980
+[Taf80] [API]   [3] Ordinal 10 -> VariantCopy (OLEAUT32 fixed)
+[Taf80] [API]   [3] VariantCopy -> 0x2032f80
+[Taf80] [API]   [4] Ordinal 6 -> SysFreeString (OLEAUT32 fixed)
+[Taf80] [API]   [4] SysFreeString -> 0x2039190
+[Taf80] [API]   [5] Ordinal 7 -> SysStringLen (OLEAUT32 fixed)
+[Taf80] [API]   [5] SysStringLen -> 0x200a040
+[Taf80] [API] Import DLL: USER32.dll (IAT RVA=0xe44f8, ILT RVA=0x11b650)
+[Taf80] [API]   [0] CharPrevExA -> 0x200a080
+[Taf80] [API]   [1] CharUpperW -> 0x20253e0
+[Taf80] [API] Import DLL: ADVAPI32.dll (IAT RVA=0xe4000, ILT RVA=0x11b158)
+[Taf80] [API]   [0] LookupPrivilegeValueW -> 0x200a090
+[Taf80] [API]   [1] SystemFunction036 -> 0x2019bb0
+[Taf80] [API]   [2] GetFileSecurityW -> 0x2049110
+[Taf80] [API]   [3] SetFileSecurityW -> 0x2047a50
+[Taf80] [API]   [4] RegQueryValueExW -> 0x2046730
+[Taf80] [API]   [5] RegOpenKeyExW -> 0x2026db0
+[Taf80] [API]   [6] OpenProcessToken -> 0x2025b70
+[Taf80] [API]   [7] AdjustTokenPrivileges -> 0x2047930
+[Taf80] [API]   [8] RegCloseKey -> 0x2009980
+[Taf80] [API] Import DLL: KERNEL32.dll (IAT RVA=0xe4050, ILT RVA=0x11b1a8)
+[Taf80] [API]   [0] FreeEnvironmentStringsW -> 0x2030ad0
+[Taf80] [API]   [1] SetEnvironmentVariableW -> 0x204e170
+[Taf80] [API]   [2] GetProcessHeap -> 0x2009090
+[Taf80] [API]   [3] GetStringTypeW -> 0x2034420
+[Taf80] [API]   [4] ReadConsoleW -> 0x202a730
+[Taf80] [API]   [5] HeapSize -> 0x2042100
+[Taf80] [API]   [6] WriteConsoleW -> 0x2017700
+[Taf80] [API]   [7] OpenEventW -> 0x204a260
+[Taf80] [API]   [8] GetLastError -> 0x200a7d0
+[Taf80] [API]   [9] MultiByteToWideChar -> 0x2027e80
+[Taf80] [API]   [10] WideCharToMultiByte -> 0x2025ca0
+[Taf80] [API]   [11] FreeLibrary -> 0x20309b0
+[Taf80] [API]   [12] GetModuleFileNameW -> 0x2043180
+[Taf80] [API]   [13] LoadLibraryExW -> 0x204aa00
+[Taf80] [API]   [14] LoadLibraryW -> 0x204a800
+[Taf80] [API]   [15] LocalFree -> 0x204a400
+[Taf80] [API]   [16] FormatMessageW -> 0x202cf70
+[Taf80] [API]   [17] SetCurrentDirectoryW -> 0x2049470
+[Taf80] [API]   [18] GetCurrentDirectoryW -> 0x2041f00
+[Taf80] [API]   [19] CreateDirectoryW -> 0x2048e00
+[Taf80] [API]   [20] CreateFileW -> 0x20487d0
+[Taf80] [API]   [21] DeleteFileW -> 0x2048c20
+[Taf80] [API]   [22] RemoveDirectoryW -> 0x2046440
+[Taf80] [API]   [23] SetFileAttributesW -> 0x20098c0
+[Taf80] [API]   [24] SetFileTime -> 0x202ff30
+[Taf80] [API]   [25] GetTempPathW -> 0x20427e0
+[Taf80] [API]   [26] CloseHandle -> 0x2041d20
+[Taf80] [API]   [27] SetLastError -> 0x2025a60
+[Taf80] [API]   [28] GetCurrentProcessId -> 0x2008320
+[Taf80] [API]   [29] GetCurrentThreadId -> 0x2008340
+[Taf80] [API]   [30] GetTickCount -> 0x2013920
+[Taf80] [API]   [31] MoveFileW -> 0x204d750
+[Taf80] [API]   [32] MoveFileWithProgressW -> 0x204d9a0
+[Taf80] [API]   [33] CreateHardLinkW -> 0x204e3c0
+[Taf80] [API]   [34] GetStdHandle -> 0x20593d0
+[Taf80] [API]   [35] FindClose -> 0x201ba30
+[Taf80] [API]   [36] FindFirstFileW -> 0x2043f80
+[Taf80] [API]   [37] FindNextFileW -> 0x2033760
+[Taf80] [API]   [38] GetFileAttributesW -> 0x20489d0
+[Taf80] [API]   [39] GetFileInformationByHandle -> 0x202af90
+[Taf80] [API]   [40] GetLogicalDriveStringsW -> 0x2025480
+[Taf80] [API]   [41] FindFirstStreamW -> 0x2026ff0
+[Taf80] [API]   [42] FindNextStreamW -> 0x2047b70
+[Taf80] [API]   [43] GetFileSize -> 0x202acf0
+[Taf80] [API]   [44] ReadFile -> 0x202a520
+[Taf80] [API]   [45] SetEndOfFile -> 0x202abf0
+[Taf80] [API]   [46] SetFilePointer -> 0x202a960
+[Taf80] [API]   [47] WriteFile -> 0x202a750
+[Taf80] [API]   [48] DeviceIoControl -> 0x2047390
+[Taf80] [API]   [49] GetDiskFreeSpaceW -> 0x204cfc0
+[Taf80] [API]   [50] GetDiskFreeSpaceExW -> 0x2049890
+[Taf80] [API]   [51] GetCurrentProcess -> 0x2008310
+[Taf80] [API]   [52] GetModuleHandleW -> 0x20118a0
+[Taf80] [API]   [53] GetProcAddress -> 0x200a8d0
+[Taf80] [API]   [54] CompareFileTime -> 0x2025be0
+[Taf80] [API]   [55] FileTimeToLocalFileTime -> 0x203a3f0
+[Taf80] [API]   [56] FileTimeToSystemTime -> 0x2035e50
+[Taf80] [API]   [57] GlobalMemoryStatusEx -> 0x2035d20
+[Taf80] [API]   [58] GetSystemInfo -> 0x201a3b0
+[Taf80] [API]   [59] GetModuleHandleA -> 0x20116d0
+[Taf80] [API]   [60] GetProcessAffinityMask -> 0x20102a0
+[Taf80] [API]   [61] IsProcessorFeaturePresent -> 0x20095c0
+[Taf80] [API]   [62] GetSystemTimeAsFileTime -> 0x2013690
+[Taf80] [API]   [63] FileTimeToDosDateTime -> 0x2035fe0
+[Taf80] [API]   [64] DosDateTimeToFileTime -> 0x2029fc0
+[Taf80] [API]   [65] EnterCriticalSection -> 0x203c370
+[Taf80] [API]   [66] LeaveCriticalSection -> 0x202f2f0
+[Taf80] [API]   [67] WaitForMultipleObjects -> 0x2041600
+[Taf80] [API]   [68] RtlUnwind -> 0x2040aa0
+[Taf80] [API]   [69] OpenFileMappingW -> 0x204a0c0
+[Taf80] [API]   [70] MapViewOfFile -> 0x2037300
+[Taf80] [API]   [71] UnmapViewOfFile -> 0x2029230
+[Taf80] [API]   [72] SetProcessAffinityMask -> 0x2030030
+[Taf80] [API]   [73] GetConsoleMode -> 0x20276f0
+[Taf80] [API]   [74] QueryPerformanceCounter -> 0x2013a50
+[Taf80] [API]   [75] QueryPerformanceFrequency -> 0x20103c0
+[Taf80] [API]   [76] DeleteCriticalSection -> 0x2032700
+[Taf80] [API]   [77] GetProcessTimes -> 0x2021270
+[Taf80] [API]   [78] SetConsoleCtrlHandler -> 0x2009930
+[Taf80] [API]   [79] GetCommandLineW -> 0x2033490
+[Taf80] [API]   [80] SetFileApisToOEM -> 0x2030ef0
+[Taf80] [API]   [81] GetConsoleScreenBufferInfo -> 0x200f9e0
+[Taf80] [API]   [82] SetConsoleMode -> 0x2038aa0
+[Taf80] [API]   [83] LocalFileTimeToFileTime -> 0x2036390
+[Taf80] [API]   [84] GetOEMCP -> 0x2009770
+[Taf80] [API]   [85] VirtualAlloc -> 0x2028d80
+[Taf80] [API]   [86] VirtualFree -> 0x2029000
+[Taf80] [API]   [87] GetLargePageMinimum -> 0x200a0d0
+[Taf80] [API]   [88] InitializeCriticalSection -> 0x20326e0
+[Taf80] [API]   [89] SetEvent -> 0x203d8c0
+[Taf80] [API]   [90] ResetEvent -> 0x203d760
+[Taf80] [API]   [91] ReleaseSemaphore -> 0x203ce80
+[Taf80] [API]   [92] WaitForSingleObject -> 0x20414b0
+[Taf80] [API]   [93] CreateEventW -> 0x200c1a0
+[Taf80] [API]   [94] CreateSemaphoreW -> 0x20262e0
+[Taf80] [API]   [95] ResumeThread -> 0x202fc30
+[Taf80] [API]   [96] SetThreadAffinityMask -> 0x200a0c0
+[Taf80] [API]   [97] GetVersion -> 0x2009750
+[Taf80] [API]   [98] SetUnhandledExceptionFilter -> 0x200b130
+[Taf80] [API]   [99] GetStartupInfoW -> 0x2010870
+[Taf80] [API]   [100] InitializeSListHead -> 0x2009670
+[Taf80] [API]   [101] GetEnvironmentStringsW -> 0x2013dc0
+[Taf80] [API]   [102] RtlPcToFileHeader -> 0x2009600
+[Taf80] [API]   [103] RaiseException -> 0x2008560
+[Taf80] [API]   [104] RtlLookupFunctionEntry -> 0x200aea0
+[Taf80] [API]   [105] RtlUnwindEx -> 0x203fab0
+[Taf80] [API]   [106] VerSetConditionMask -> 0x200a190
+[Taf80] [API]   [107] VerifyVersionInfoW -> 0x200a1a0
+[Taf80] [API]   [108] FlsAlloc -> 0x200f8a0
+[Taf80] [API]   [109] FlsGetValue -> 0x2008bf0
+[Taf80] [API]   [110] FlsSetValue -> 0x2008c10
+[Taf80] [API]   [111] FlsFree -> 0x2038c20
+[Taf80] [API]   [112] EncodePointer -> 0x2018780
+[Taf80] [API]   [113] InitializeCriticalSectionEx -> 0x2011300
+[Taf80] [API]   [114] SetStdHandle -> 0x2038af0
+[Taf80] [API]   [115] GetFileType -> 0x201b3c0
+[Taf80] [API]   [116] CreateThread -> 0x2029580
+[Taf80] [API]   [117] ExitThread -> 0x201a250
+[Taf80] [API]   [118] FreeLibraryAndExitThread -> 0x2038070
+[Taf80] [API]   [119] GetModuleHandleExW -> 0x204eba0
+[Taf80] [API]   [120] ExitProcess -> 0x2037ee0
+[Taf80] [API]   [121] TerminateProcess -> 0x2015480
+[Taf80] [API]   [122] GetCommandLineA -> 0x2032d60
+[Taf80] [API]   [123] HeapAlloc -> 0x2028b20
+[Taf80] [API]   [124] HeapFree -> 0x204c1b0
+[Taf80] [API]   [125] InitializeCriticalSectionAndSpinCount -> 0x203bb00
+[Taf80] [API]   [126] TlsAlloc -> 0x200f750
+[Taf80] [API]   [127] TlsGetValue -> 0x200b240
+[Taf80] [API]   [128] TlsSetValue -> 0x202b740
+[Taf80] [API]   [129] TlsFree -> 0x200a110
+[Taf80] [API]   [130] CompareStringW -> 0x201aa60
+[Taf80] [API]   [131] LCMapStringW -> 0x202a160
+[Taf80] [API]   [132] FlushFileBuffers -> 0x202b130
+[Taf80] [API]   [133] GetConsoleOutputCP -> 0x2038e90
+[Taf80] [API]   [134] GetFileSizeEx -> 0x202ae40
+[Taf80] [API]   [135] SetFilePointerEx -> 0x202aaa0
+[Taf80] [API]   [136] HeapReAlloc -> 0x204c530
+[Taf80] [API]   [137] FindFirstFileExW -> 0x2044230
+[Taf80] [API]   [138] IsValidCodePage -> 0x2009780
+[Taf80] [API]   [139] GetACP -> 0x2009760
+[Taf80] [API]   [140] GetCPInfo -> 0x200ffc0
+[Taf80] [API] Import resolution: 158 resolved, 0 unresolved (total 158)
+[Taf80] [API] Exception: .pdata RVA=0x12c000 Size=0x7ae8 Entries=2622
+[Taf80] [API] [API-005] EH hacks DISABLED (default) (MINWIN_EH_HACKS=<unset>)
+[Taf80] [API] [API-005] CXX-EH-FIX (LSDA catch-all patch RVA 0x2010c8) skipped: MINWIN_EH_HACKS not set
+[Taf80] [API] Jumping to EP=0x1400cd610
