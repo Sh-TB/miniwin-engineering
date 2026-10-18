@@ -11,11 +11,11 @@ REPO = "/home/z/my-project/workspace/miniwin-engineering"
 CAND = json.load(open(f"{REPO}/artifacts/sweep50/sweep008b_stub_candidates.json"))
 
 RUNS = {
-    "autoruns64": (f"{REPO}/artifacts/sweep50/runs_stubrip/autoruns64/stderr.txt",
+    "autoruns64": (f"{REPO}/artifacts/sweep50/runs_stubrip9/autoruns64/run1/stderr.txt",
                    f"{REPO}/artifacts/sweep50/dl/autoruns64/Autoruns64.exe"),
-    "rammap64":   (f"{REPO}/artifacts/sweep50/runs_stubrip/rammap64/stderr.txt",
+    "rammap64":   (f"{REPO}/artifacts/sweep50/runs_stubrip9/rammap64/run1/stderr.txt",
                    f"{REPO}/artifacts/sweep50/dl/rammap64/RAMMap64.exe"),
-    "procexp64":  (f"{REPO}/artifacts/sweep50/runs_stubrip/procexp64/stderr.txt",
+    "procexp64":  (f"{REPO}/artifacts/sweep50/runs_stubrip9/procexp64/run1/stderr.txt",
                    f"{REPO}/artifacts/sweep50/dl/procexp64/procexp64.exe"),
 }
 

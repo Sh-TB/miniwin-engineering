@@ -6181,6 +6181,118 @@ __attribute__((ms_abi)) int mw_HeapQueryInformation(void* heap, int cls, void* i
 }
 __attribute__((ms_abi)) int mw_HeapCompact(void* heap, uint32_t flags) { return 0; }
 
+/* ============================================================
+ * SW-555 honest batch (SWEEP-009): REAL global atom table.
+ * Win32 string atoms occupy 0xC000..0xFFFF; add refcounts repeats,
+ * delete drops a ref (frees at zero), find looks up without adding,
+ * get-name copies. Pure user-mode, zero host dependency — honest by
+ * implementation, not by failure. RAMMap64/procexp64 hit GlobalAddAtomW
+ * through their IATs while it was the lying stub returning atom 0.
+ * ============================================================ */
+#define MW_ATOM_FIRST 0xC000
+#define MW_ATOM_MAX   1024
+static struct { wchar_t* name; uint32_t refs; } g_atoms[MW_ATOM_MAX];
+static uint32_t g_atom_count = 0;
+static int mw_atom_find(const wchar_t* s) {
+    for (uint32_t i = 0; i < g_atom_count; i++)
+        if (g_atoms[i].name && wcscmp(g_atoms[i].name, s) == 0) return (int)i;
+    return -1;
+}
+static int mw_atom_hole(void) {
+    for (uint32_t i = 0; i < g_atom_count; i++)
+        if (!g_atoms[i].name) return (int)i;
+    return -1;
+}
+__attribute__((ms_abi)) uint16_t mw_GlobalAddAtomW(const wchar_t* s) {
+    if (!s || !s[0]) return 0;                             /* real: NULL/empty fails */
+    if (wcslen(s) > 255) { mw_SetLastError(6); return 0; } /* real: name >255 fails */
+    int i = mw_atom_find(s);
+    if (i >= 0) { if (g_atoms[i].refs < 0xFFFFFFFFu) g_atoms[i].refs++; return (uint16_t)(MW_ATOM_FIRST + i); }
+    wchar_t* dup = (wchar_t*)malloc((wcslen(s) + 1) * sizeof(wchar_t));
+    if (!dup) { mw_SetLastError(14); return 0; }           /* ERROR_OUTOFMEMORY */
+    wcscpy(dup, s);
+    int hole = mw_atom_hole();
+    if (hole >= 0) { g_atoms[hole].name = dup; g_atoms[hole].refs = 1; return (uint16_t)(MW_ATOM_FIRST + hole); }
+    if (g_atom_count >= MW_ATOM_MAX) { free(dup); mw_SetLastError(14); return 0; }
+    g_atoms[g_atom_count].name = dup; g_atoms[g_atom_count].refs = 1; g_atom_count++;
+    return (uint16_t)(MW_ATOM_FIRST + g_atom_count - 1);
+}
+__attribute__((ms_abi)) uint16_t mw_GlobalFindAtomW(const wchar_t* s) {
+    if (!s || !s[0]) return 0;
+    int i = mw_atom_find(s);
+    return i < 0 ? 0 : (uint16_t)(MW_ATOM_FIRST + i);
+}
+__attribute__((ms_abi)) void mw_GlobalDeleteAtom(uint16_t atom) {
+    int i = (int)atom - MW_ATOM_FIRST;
+    if (i < 0 || i >= (int)g_atom_count || !g_atoms[i].name) return;
+    if (g_atoms[i].refs > 0 && --g_atoms[i].refs == 0) { free(g_atoms[i].name); g_atoms[i].name = NULL; }
+}
+__attribute__((ms_abi)) uint32_t mw_GlobalGetAtomNameW(uint16_t atom, wchar_t* buf, int32_t size) {
+    int i = (int)atom - MW_ATOM_FIRST;
+    if (!buf || size <= 0 || i < 0 || i >= (int)g_atom_count || !g_atoms[i].name) { mw_SetLastError(13); return 0; }
+    uint32_t n = (uint32_t)wcslen(g_atoms[i].name);
+    if (n >= (uint32_t)size) { mw_SetLastError(13); return 0; }
+    wcscpy(buf, g_atoms[i].name);
+    return n;
+}
+
+/* ============================================================
+ * SW-555 honest batch (SWEEP-009): shlwapi HLS color pair — REAL math.
+ * Classic Win32 HLS scale: H/S/L each 0..240. procexp64's 36-caller
+ * 22%-luminance shading helper (FUN_14007baf0: L = L*22/100, clamp 240)
+ * read BLACK (0,0,0) for every color while these were stubs. Roundtrip
+ * verified over all 2^24 colors (host test: scripts/sweep009_color_roundtrip.c:
+ * max channel dev 4 — inherent to the 0..240 Win32 scale; L err EXACTLY 0,
+ * which is what procexp consumes). Hue must ROUND, not truncate (the test
+ * caught dev 2 at 0x000251 before the fix).
+ * ============================================================ */
+__attribute__((ms_abi)) void mw_ColorRGBToHLS(uint32_t clr, uint16_t* hue, uint16_t* lum, uint16_t* sat) {
+    uint32_t r = clr & 0xFF, g = (clr >> 8) & 0xFF, b = (clr >> 16) & 0xFF;
+    uint32_t mx = r > g ? (r > b ? r : b) : (g > b ? g : b);
+    uint32_t mn = r < g ? (r < b ? r : b) : (g < b ? g : b);
+    uint32_t sum = mx + mn, delta = mx - mn;
+    uint32_t H = 0, L, S = 0;
+    L = (sum * 240 + 255) / 510;                    /* rounded (mx+mn)/2 -> 0..240 */
+    if (delta) {
+        S = (sum <= 255) ? (delta * 240 + sum / 2) / sum
+                         : (delta * 240 + (510 - sum) / 2) / (510 - sum);
+        /* hue must ROUND (truncation broke near-primary colors) */
+        if (mx == r)      { int32_t d2 = (int32_t)g - (int32_t)b;
+                            int32_t n2 = d2 >= 0 ? (d2 * 40 + (int32_t)delta / 2) / (int32_t)delta
+                                                 : (d2 * 40 - (int32_t)delta / 2) / (int32_t)delta;
+                            H = (uint32_t)((d2 >= 0 ? 0 : 240) + n2); }
+        else if (mx == g) { int32_t d2 = (int32_t)b - (int32_t)r;
+                            H = (uint32_t)(80 + (d2 * 40 + (d2 >= 0 ? (int32_t)delta / 2 : -(int32_t)delta / 2)) / (int32_t)delta); }
+        else              { int32_t d2 = (int32_t)r - (int32_t)g;
+                            H = (uint32_t)(160 + (d2 * 40 + (d2 >= 0 ? (int32_t)delta / 2 : -(int32_t)delta / 2)) / (int32_t)delta); }
+        H %= 240;
+    }
+    if (hue) *hue = (uint16_t)H;
+    if (lum) *lum = (uint16_t)L;
+    if (sat) *sat = (uint16_t)S;
+}
+static double mw_hls_v(double m1, double m2, double h) {
+    if (h < 0) h += 1; else if (h > 1) h -= 1;
+    if (h < 1.0/6) return m1 + (m2 - m1) * 6 * h;
+    if (h < 0.5)   return m2;
+    if (h < 2.0/3) return m1 + (m2 - m1) * (2.0/3 - h) * 6;
+    return m1;
+}
+__attribute__((ms_abi)) uint32_t mw_ColorHLSToRGB(uint16_t hue, uint16_t lum, uint16_t sat) {
+    double L = lum / 240.0, S = sat / 240.0, H = (hue % 240) / 240.0;
+    double r, g, b;
+    if (S == 0) { r = g = b = L; }
+    else {
+        double m2 = (L <= 0.5) ? L * (1 + S) : L + S - L * S;
+        double m1 = 2 * L - m2;
+        r = mw_hls_v(m1, m2, H + 1.0/3);
+        g = mw_hls_v(m1, m2, H);
+        b = mw_hls_v(m1, m2, H - 1.0/3);
+    }
+#define MW_C2B(x) ((uint32_t)((x) * 255 + 0.5) & 0xFF)
+    return MW_C2B(r) | (MW_C2B(g) << 8) | (MW_C2B(b) << 16);  /* COLORREF 0x00BBGGRR */
+}
+
 __attribute__((ms_abi)) void* mw_GlobalAlloc(uint32_t flags, size_t bytes) {
     void* p = (flags & 0x40) ? calloc(1, bytes ? bytes : 1) : malloc(bytes ? bytes : 1);
     MW_TRACE("GlobalAlloc(flags=%u, bytes=0x%lx) = %p", flags, (unsigned long)bytes, p);
@@ -6564,6 +6676,24 @@ __attribute__((ms_abi)) int mw_SystemTimeToFileTime(const void* st, void* ft) {
 }
 __attribute__((ms_abi)) int mw_GetVersion(void) { return 0x000A0006; } /* 10.6 */
 __attribute__((ms_abi)) int mw_GetVersionExA(void* vi) {
+    if (!vi) return 0;
+    uint32_t sz = *(uint32_t*)vi;
+    memset(vi, 0, sz);
+    *(uint32_t*)vi = sz;
+    uint8_t* p = (uint8_t*)vi;
+    *(uint32_t*)(p + 4)  = 10; *(uint32_t*)(p + 8) = 0; *(uint32_t*)(p + 12) = 0;
+    *(uint32_t*)(p + 16) = 2;  /* VER_PLATFORM_WIN32_NT */
+    return 1;
+}
+
+/* SW-555 honest batch (SWEEP-009): GetVersionExW — the W sibling of the A
+ * variant above. autoruns64 called it 2x and RAMMap64 ELEVEN times through
+ * their IATs while it was still the all-purpose stub lying 0 (BOOL-false
+ * with an untouched struct = garbage version data downstream). Same
+ * identity fill: Win10, VER_PLATFORM_WIN32_NT, build 0 (consistent with
+ * GetVersionExA); handles both OSVERSIONINFOW (276) and OSVERSIONINFOEXW
+ * (284) because the guest pre-sizes the struct and we zero through it. */
+__attribute__((ms_abi)) int mw_GetVersionExW(void* vi) {
     if (!vi) return 0;
     uint32_t sz = *(uint32_t*)vi;
     memset(vi, 0, sz);
@@ -7430,6 +7560,19 @@ __attribute__((ms_abi)) int32_t mw_RegCloseKey(void* key) { return 0; }
 __attribute__((ms_abi)) int32_t mw_RegCreateKeyExW(void* key, const wchar_t* sub, uint32_t res, const wchar_t* cls, uint32_t opts, uint32_t access, void* sa, void** result, void* disp) {
     mw_SetLastError(5);
     return 5;
+}
+/* SW-555 honest batch (SWEEP-009): W short forms. Real RegOpenKeyW ==
+ * RegOpenKeyExW(..., 0, KEY_ALL_ACCESS, ...); real RegCreateKeyW ==
+ * RegCreateKeyExW(..., REG_OPTION_NON_VOLATILE, KEY_ALL_ACCESS, ...).
+ * Wrapped — NOT duplicated — so both inherit the same honest-failure
+ * contract (ERROR_FILE_NOT_FOUND / ERROR_ACCESS_DENIED + SetLastError).
+ * autoruns64/rammap64 hit RegOpenKeyW via IAT; the old stub returned
+ * 0 == ERROR_SUCCESS with a NULL phkResult — a lying success. */
+__attribute__((ms_abi)) int32_t mw_RegOpenKeyW(void* key, const wchar_t* sub, void** result) {
+    return mw_RegOpenKeyExW(key, sub, 0, 0x000F0000 /*KEY_ALL_ACCESS*/, result);
+}
+__attribute__((ms_abi)) int32_t mw_RegCreateKeyW(void* key, const wchar_t* sub, void** result) {
+    return mw_RegCreateKeyExW(key, sub, 0, NULL, 0, 0x000F0000, NULL, result, NULL);
 }
 __attribute__((ms_abi)) int32_t mw_RegDeleteValueW(void* key, const wchar_t* name) { mw_SetLastError(2); return 2; }
 __attribute__((ms_abi)) int32_t mw_RegEnumKeyA(void* key, uint32_t idx, char* name, uint32_t cap) { mw_SetLastError(259); return 259; }
@@ -11271,6 +11414,10 @@ static ImportEntry g_import_table[] = {
     ENTRY("KERNEL32.DLL", "GlobalUnlock", mw_GlobalUnlock),
     ENTRY("KERNEL32.DLL", "GlobalSize", mw_GlobalSize),
     ENTRY("KERNEL32.DLL", "GlobalFree", mw_GlobalFree),
+    ENTRY("KERNEL32.DLL", "GlobalAddAtomW", mw_GlobalAddAtomW),
+    ENTRY("KERNEL32.DLL", "GlobalFindAtomW", mw_GlobalFindAtomW),
+    ENTRY("KERNEL32.DLL", "GlobalDeleteAtom", mw_GlobalDeleteAtom),
+    ENTRY("KERNEL32.DLL", "GlobalGetAtomNameW", mw_GlobalGetAtomNameW),
     ENTRY("KERNEL32.DLL", "LocalAlloc", mw_LocalAlloc),
     ENTRY("KERNEL32.DLL", "LocalLock", mw_LocalLock),
     ENTRY("KERNEL32.DLL", "LocalUnlock", mw_LocalUnlock),
@@ -11326,6 +11473,7 @@ static ImportEntry g_import_table[] = {
     ENTRY("KERNEL32.DLL", "SystemTimeToFileTime", mw_SystemTimeToFileTime),
     ENTRY("KERNEL32.DLL", "GetVersion", mw_GetVersion),
     ENTRY("KERNEL32.DLL", "GetVersionExA", mw_GetVersionExA),
+    ENTRY("KERNEL32.DLL", "GetVersionExW", mw_GetVersionExW),
     ENTRY("KERNEL32.DLL", "GetACP", mw_GetACP),
     ENTRY("KERNEL32.DLL", "GetOEMCP", mw_GetOEMCP),
     ENTRY("KERNEL32.DLL", "IsValidCodePage", mw_IsValidCodePage),
@@ -11419,6 +11567,8 @@ static ImportEntry g_import_table[] = {
     ENTRY("KERNEL32.DLL", "RegGetValueW", mw_RegGetValueW),
     ENTRY("KERNEL32.DLL", "RegCloseKey", mw_RegCloseKey),
     ENTRY("KERNEL32.DLL", "RegCreateKeyExW", mw_RegCreateKeyExW),
+    ENTRY("KERNEL32.DLL", "RegOpenKeyW", mw_RegOpenKeyW),
+    ENTRY("KERNEL32.DLL", "RegCreateKeyW", mw_RegCreateKeyW),
     ENTRY("KERNEL32.DLL", "RegDeleteValueW", mw_RegDeleteValueW),
     ENTRY("KERNEL32.DLL", "RegEnumKeyA", mw_RegEnumKeyA),
     ENTRY("KERNEL32.DLL", "RegEnumKeyExW", mw_RegEnumKeyExW),
@@ -11975,6 +12125,9 @@ ENTRY("msvcrt.dll", "wctype", mw_wctype),
     ENTRY("WS2_32.dll", "getaddrinfo",                          mw_getaddrinfo_),
     ENTRY("WS2_32.dll", "gethostname",                          mw_gethostname_),
     ENTRY("WS2_32.dll", "inet_pton",                            mw_inet_pton_),
+    /* SW-555 honest batch (SWEEP-009): shlwapi color pair (procexp64) */
+    ENTRY("shlwapi.dll", "ColorRGBToHLS",                       mw_ColorRGBToHLS),
+    ENTRY("shlwapi.dll", "ColorHLSToRGB",                       mw_ColorHLSToRGB),
 
 };
 

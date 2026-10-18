@@ -101,12 +101,6 @@
    },
    {
     "dll": "kernel32.dll",
-    "name": "GetVersionExW",
-    "iat_va": "0x1400c7698",
-    "in_table": false
-   },
-   {
-    "dll": "kernel32.dll",
     "name": "lstrcmpW",
     "iat_va": "0x1400c7730",
     "in_table": false
@@ -1763,12 +1757,6 @@
    },
    {
     "dll": "kernel32.dll",
-    "name": "GlobalAddAtomW",
-    "iat_va": "0x14003d450",
-    "in_table": false
-   },
-   {
-    "dll": "kernel32.dll",
     "name": "QueryDosDeviceW",
     "iat_va": "0x14003d4b0",
     "in_table": false
@@ -1777,12 +1765,6 @@
     "dll": "kernel32.dll",
     "name": "GetNumberFormatW",
     "iat_va": "0x14003d4b8",
-    "in_table": false
-   },
-   {
-    "dll": "kernel32.dll",
-    "name": "GetVersionExW",
-    "iat_va": "0x14003d520",
     "in_table": false
    },
    {
@@ -2441,12 +2423,6 @@
   "candidates": [
    {
     "dll": "shlwapi.dll",
-    "name": "ColorHLSToRGB",
-    "iat_va": "0x140134dd8",
-    "in_table": false
-   },
-   {
-    "dll": "shlwapi.dll",
     "name": "StrStrIW",
     "iat_va": "0x140134de0",
     "in_table": false
@@ -2473,12 +2449,6 @@
     "dll": "shlwapi.dll",
     "name": "UrlUnescapeW",
     "iat_va": "0x140134e00",
-    "in_table": false
-   },
-   {
-    "dll": "shlwapi.dll",
-    "name": "ColorRGBToHLS",
-    "iat_va": "0x140134e08",
     "in_table": false
    },
    {
@@ -3199,18 +3169,6 @@
     "dll": "kernel32.dll",
     "name": "SetDefaultDllDirectories",
     "iat_va": "0x140134760",
-    "in_table": false
-   },
-   {
-    "dll": "kernel32.dll",
-    "name": "GetVersionExW",
-    "iat_va": "0x140134768",
-    "in_table": false
-   },
-   {
-    "dll": "kernel32.dll",
-    "name": "GlobalAddAtomW",
-    "iat_va": "0x140134780",
     "in_table": false
    },
    {

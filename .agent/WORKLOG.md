@@ -228,3 +228,35 @@ Stage Summary:
   programs have named gates + a queued honest-stub fix list (GetVersionExW,
   RegOpenKeyW, GlobalAddAtomW, Color* pair); EULA-dialog path needs
   DialogBoxIndirectParamW (SW-509/SW-559 family).
+
+---
+Task ID: SWEEP-009
+Agent: Super Z (main session)
+Task: «ادامه» — land the queued honest-stub batch (SW-555), re-measure the
+  three gate programs, push.
+
+Work Log:
+- REWIND RECOVERY: workspace snapshot had reverted to b783c44 (2ff4f40+6c5f651
+  missing locally; GitHub intact). fetch + reset --hard origin/main restored
+  SWEEP-008/008b; pefile reinstalled (python3 -m pip).
+- Implemented 9 imports (loader.c): GetVersionExW, RegOpenKeyW/RegCreateKeyW
+  (honest-failure wrappers), GlobalAddAtomW/Find/Delete/GetName (REAL atom
+  table), ColorRGBToHLS/ColorHLSToRGB (REAL 0..240 HLS). MultiEdit retry
+  duplicated blocks (non-atomic failure) — sweep009_dedup*.py cleaned; all
+  symbols verified exactly-once.
+- scripts/sweep009_color_roundtrip.c: exhaustive 2^24 roundtrip — caught hue
+  TRUNCATION bug (dev 2 @0x000251); fixed to rounding; final max channel dev
+  4 (Win32-scale inherent), L error 0 (procexp only consumes L).
+- Post-batch 3x runs (runs_stubrip9): all deterministic; autoruns64 6->2,
+  rammap64 16->1, procexp64 20->9 ALL-NEW sites (GetSystemMetrics x4,
+  ImageList_Create/Destroy x4, SetDefaultDllDirectories — past color init,
+  into UI init). Honest RegOpenKeyW reroutes autoruns64 to the open-fail
+  branch 0x140062976 = NO EULA dialog — EULA fix needs dialog + reachable
+  key-open (in-memory hive); EulaAccepted auto-seed shim NOT taken.
+- G1 re-pinned sha c06c5eb8, 12/12. Evidence: evidence/sweep009_honest_stubs/.
+
+Stage Summary:
+- All "lying stub" lies named in SWEEP-008b are gone; three gate programs
+  have exactly one/few named gates left; next lever = GetSystemMetrics +
+  ImageList_* (procexp) and the EULA dialog + mini-hive (autoruns/rammap),
+  all in the SW-509/SW-556 child-control family.

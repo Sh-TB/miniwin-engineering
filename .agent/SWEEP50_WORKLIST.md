@@ -209,6 +209,24 @@ puttygen RIP=0x0).
       needs DialogBoxIndirectParamW/DLGTEMPLATE — SW-509/SW-559 family.
       Evidence: evidence/sweep008_rea/ (3 gate-function YAMLs,
       sweep008b_stub_callers.json), scripts/sweep008b_*.py.
+      UPDATE (SWEEP-009, honest-stub batch LANDED): 9 imports implemented —
+      GetVersionExW (real OSVERSIONINFOW/EXW fill), RegOpenKeyW/RegCreateKeyW
+      (wrappers, honest-failure contract), GlobalAddAtomW/FindAtomW/
+      DeleteAtom/GetAtomNameW (REAL refcounted atom table 0xC000..0xFFFF),
+      ColorRGBToHLS/ColorHLSToRGB (REAL 0..240 HLS; exhaustive 2^24 roundtrip
+      test: L error EXACTLY 0, channel dev <=4 inherent to Win32 scale; caught
+      + fixed a hue-truncation bug pre-commit). Post-batch 3x runs all
+      deterministic: autoruns64 6->2 stub calls, rammap64 16->1, procexp64
+      20->9 with ALL-NEW sites (GetSystemMetrics x4, ImageList_Create/Destroy
+      x4, SetDefaultDllDirectories — progressed past color init into
+      UI-resource init; exit(2) decision downstream, SW-509/556 family).
+      NEW INSIGHT: with RegOpenKeyW honest, autoruns64 exits via the
+      open-fail branch 0x140062976 WITHOUT showing the EULA dialog — the
+      EULA fix needs DialogBoxIndirectParamW AND a reachable key-open (minimal
+      in-memory hive for HKCU\Software\Sysinternals\<tool>); EulaAccepted
+      auto-seed shim considered and NOT taken (policy). G1 re-pinned
+      sha c06c5eb8 12/12. Evidence: evidence/sweep009_honest_stubs/README.md,
+      artifacts/sweep50/runs_stubrip9/, scripts/sweep009_color_roundtrip.c.
 - [ ] **SW-556** SW-509 (PE-DLL loader) now blocks 4 GUI heavyweights
       (bginfo64/winmergeu C++ runtime, searchmyfiles mfcu, procexp64) — raise priority.
 
