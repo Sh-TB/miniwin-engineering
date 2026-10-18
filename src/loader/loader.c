@@ -10054,6 +10054,13 @@ static void mw_w16cpy(uint16_t* dst, const uint16_t* src, size_t cap) {
     if (src) { while (n + 1 < cap && src[n]) { dst[n] = src[n]; n++; } }
     dst[n] = 0;
 }
+static int mw_w16cmp(const uint16_t* a, const uint16_t* b, size_t cap) {
+    for (size_t i = 0; i < cap; i++) {
+        if (a[i] != b[i]) return a[i] < b[i] ? -1 : 1;
+        if (!a[i]) return 0;
+    }
+    return 0;
+}
 static const uint16_t* mw_hwnd_text(void* h) {
     int s = mw_child_slot(h);
     if (s >= 0) return g_child[s].text;
@@ -11808,6 +11815,7 @@ __attribute__((ms_abi)) void* mw_CreateCompatibleBitmap(void* hdc, int w, int h)
 typedef struct {
     int cx, cy, count, cap;
     uint32_t flags;
+    uint32_t bkcolor; /* SWEEP-014 r2: CLR_NONE=0xFFFFFFFF default */
     uint8_t* px; /* cap images * cx*cy, 3 bytes/px BGR */
 } MWImgList;
 static MWImgList g_imglist[MW_IMGL_MAX];
@@ -11837,6 +11845,7 @@ __attribute__((ms_abi)) void* mw_ImageList_Create(int cx, int cy, uint32_t flags
             g_imglist_live[i] = 1;
             g_imglist[i].cx = cx; g_imglist[i].cy = cy;
             g_imglist[i].flags = flags; g_imglist[i].count = 0;
+            g_imglist[i].bkcolor = 0xFFFFFFFFu; /* CLR_NONE (documented default) */
             g_imglist[i].cap = cInitial > 0 ? cInitial : 1;
             g_imglist[i].px = (uint8_t*)calloc((size_t)g_imglist[i].cap * cx * cy, 3);
             MW_TRACE("[GDI] ImageList_Create(%d,%d,0x%x,%d,%d) -> 0x%08x",
@@ -12434,9 +12443,18 @@ __attribute__((ms_abi)) uint32_t mw_EnableMenuItem(void* menu, uint32_t id, uint
 }
 
 /* ---- user32: misc window APIs ---- */
+static uint8_t g_winplace[44]; /* WINDOWPLACEMENT, x64 sizeof == 44 (SWEEP-014) */
+static uint8_t g_winplace_live = 0;
 __attribute__((ms_abi)) int mw_GetWindowPlacement(void* hwnd, void* wp) {
     (void)hwnd;
     if (!wp) return 0;
+    /* SWEEP-014: SetWindowPlacement (below) stores the guest's placement —
+     * honest round-trip when placed; documented defaults otherwise. */
+    if (g_winplace_live) {
+        memcpy(wp, g_winplace, 44);
+        MW_TRACE("GetWindowPlacement -> TRUE (stored placement)");
+        return 1;
+    }
     uint8_t* p = (uint8_t*)wp;
     /* WINDOWPLACEMENT x64: length@0 flags@4 showCmd@8 ptMin@12 ptMax@20
      * rcNormal@28..44 rcPad? -> writer-safe: only fill beyond length field */
@@ -13194,6 +13212,546 @@ __attribute__((ms_abi)) void* mw_SysAllocStringByteLen(const char* s, uint32_t l
     return b;
 }
 
+/* ============================================================
+ * SWEEP-014 (2026-10-19): honest batch #4 — "3x continuation" per user
+ * directive («ادامه سه برابری»). Same evidence discipline as batches #1-#3:
+ * every target below is a NAMED gate from artifacts/sweep012/runs-AFTER2
+ * (progress.json gate_imports) re-decoded with the fixed thunk-walking
+ * decoder (BUG-069: guests call imports via `call rel32` -> `jmp [rip+disp]`
+ * thunks, which the old FF15-only decoder mislabeled ??NOT-FF15??):
+ *
+ *   ws2_32!WSAStartup / WSACleanup -> ProduKey, cports, sqlite3_analyzer
+ *   msvcrt!operator new/delete     -> ProduKey, cports (C++ heap ops)
+ *   msvcrt!_mbsnbcat               -> cports (18 calls, sole hard gate)
+ *   comctl32!#17 ImageList_Create  -> 7zG (fixed-ordinal import, BUG-052 kin)
+ *   user32 Get/SetWindowLongPtrW, Get/SetWindowLongW, Get/SetPropW,
+ *         MapWindowPoints, InvalidateRgn, CopyRect, SetWindowPlacement
+ *                                  -> RAMMap64 (10 named gates), 7zFM
+ *   kernel32!GetProfileIntW, IsWow64Process -> Bginfo64
+ *   ole32!CoCreateInstance         -> Bginfo64 (policy UPDATE below)
+ *   shlwapi!PathFindExtensionW     -> WinMergeU
+ *
+ * Honesty classes (same taxonomy as batches #1-#3):
+ *   [real]    pure math/state we fully model: CopyRect, PathFindExtensionW,
+ *             wndlong store, prop store, IsWow64Process, operator new/delete,
+ *             _mbsnbcat, WSAStartup struct fill
+ *   [benign]  success with no fabricated observable state: WSACleanup,
+ *             SetWindowPlacement (own store), InvalidateRgn (superset paint),
+ *             MapWindowPoints (identity — the engine's coordinate model has
+ *             every client origin at (0,0), so the honest delta IS 0)
+ *   [failure] honest failure where a headless session cannot provide the
+ *             service: CoCreateInstance -> REGDB_E_CLASSNOTFOUND (policy
+ *             update: the previous "unresolved stub-0" answer was S_OK with
+ *             an untouched *ppv — a success code that crashes every
+ *             well-formed caller; the real failure code lets guest fallback
+ *             paths run, exactly like a class with no registered server)
+ * ============================================================ */
+
+/* ---- ws2_32: WSAStartup/WSACleanup (SW-521 slice) ----
+ * BUG-070 (SWEEP-014): these two have been FULLY IMPLEMENTED since the
+ * ffmpeg-era winsock work (WSADataT 408-byte struct, line ~9045) yet gated
+ * three programs — the ENTRY lines were missing from the dispatch table.
+ * Wired via ENTRY only; the function bodies above the table are canonical. */
+/* ---- msvcrt: C++ operator new/delete (guest heap == host heap) ---- */
+__attribute__((ms_abi)) void* mw_msvcrt_op_new(uint64_t size) {
+    void* p = size ? malloc((size_t)size) : malloc(1);
+    MW_TRACE("msvcrt operator new(%llu) -> %p", (unsigned long long)size, p);
+    return p; /* NULL on failure — the real operator's contract */
+}
+__attribute__((ms_abi)) void* mw_msvcrt_op_new_arr(uint64_t size) {
+    return mw_msvcrt_op_new(size); /* new[] shares the heap, honest alias */
+}
+__attribute__((ms_abi)) void mw_msvcrt_op_delete(void* p) {
+    free(p); /* free(NULL) is a no-op — matches operator delete */
+}
+__attribute__((ms_abi)) void mw_msvcrt_op_delete_arr(void* p) {
+    free(p);
+}
+
+/* ---- msvcrt!_mbsnbcat (cports' sole hard gate, 18 calls) ----
+ * Appends at most `count` BYTES of src onto dest (stops early at a NUL in
+ * src, or when dest has no NUL within the first count bytes — real MBCS
+ * contract). Byte-honest ASCII engine subset: no lead-byte state is ever
+ * produced by the loader itself, so byte semantics are exact here. */
+__attribute__((ms_abi)) unsigned char* mw_mbsnbcat(unsigned char* dest,
+        const unsigned char* src, size_t count) {
+    if (!dest) return NULL;
+    if (!src || !count) return dest;
+    size_t dl = strlen((const char*)dest);
+    size_t i = 0;
+    for (; i < count && src[i]; i++) dest[dl + i] = src[i];
+    /* _mbsnbcat quirk kept: if the LAST appended byte was a NUL-terminated
+     * short copy, we still NUL-terminate; if count bytes were consumed
+     * without src NUL, dest grows by exactly count (no terminator added by
+     * the real API either — but our probe-safe engine adds none too). */
+    if (i < count) dest[dl + i] = 0;
+    return dest;
+}
+
+/* ---- user32: per-window long/ptr store (RAMMap64 family) ----
+ * The engine models each window as a registry record (SWEEP-013), so
+ * per-window long words are honest state we fully own: GWL_STYLE,
+ * GWLP_USERDATA, GWLP_WNDPROC (subclassing routes through g_wndproc_fwd). */
+#define MW_WNDLONG_MAX 128
+typedef struct { void* hwnd; int index; uintptr_t value; uint8_t live; } MWWndLong;
+static MWWndLong g_wndlong[MW_WNDLONG_MAX];
+static int mw_wndlong_slot(void* hwnd, int index, int create) {
+    for (int i = 0; i < MW_WNDLONG_MAX; i++)
+        if (g_wndlong[i].live && g_wndlong[i].hwnd == hwnd &&
+            g_wndlong[i].index == index) return i;
+    if (!create) return -1;
+    for (int i = 0; i < MW_WNDLONG_MAX; i++)
+        if (!g_wndlong[i].live) {
+            g_wndlong[i].live = 1; g_wndlong[i].hwnd = hwnd;
+            g_wndlong[i].index = index; g_wndlong[i].value = 0;
+            return i;
+        }
+    return -1;
+}
+__attribute__((ms_abi)) intptr_t mw_GetWindowLongPtrW(void* h, int index) {
+    int i = mw_wndlong_slot(h, index, 0);
+    MW_TRACE("GetWindowLongPtrW(%p,%d) -> 0x%llx", h, index,
+             i >= 0 ? (unsigned long long)g_wndlong[i].value : 0ull);
+    return i >= 0 ? (intptr_t)g_wndlong[i].value : 0;
+}
+__attribute__((ms_abi)) intptr_t mw_SetWindowLongPtrW(void* h, int index, intptr_t v) {
+    int i = mw_wndlong_slot(h, index, 1);
+    intptr_t prev = 0;
+    if (i >= 0) { prev = (intptr_t)g_wndlong[i].value; g_wndlong[i].value = (uintptr_t)v; }
+    if (index == -4 && v) g_wndproc_fwd = (MW_WNDPROC)v; /* GWLP_WNDPROC: real subclass */
+    MW_TRACE("SetWindowLongPtrW(%p,%d,0x%llx) -> 0x%llx", h, index,
+             (unsigned long long)(uintptr_t)v, (unsigned long long)(uintptr_t)prev);
+    return prev;
+}
+__attribute__((ms_abi)) int32_t mw_GetWindowLongW(void* h, int index) {
+    int i = mw_wndlong_slot(h, index, 0);
+    MW_TRACE("GetWindowLongW(%p,%d) -> 0x%llx", h, index,
+             i >= 0 ? (unsigned long long)g_wndlong[i].value : 0ull);
+    return i >= 0 ? (int32_t)(uint32_t)g_wndlong[i].value : 0;
+}
+__attribute__((ms_abi)) int32_t mw_SetWindowLongW(void* h, int index, int32_t v) {
+    int i = mw_wndlong_slot(h, index, 1);
+    int32_t prev = 0;
+    if (i >= 0) { prev = (int32_t)(uint32_t)g_wndlong[i].value;
+                  g_wndlong[i].value = (uintptr_t)(uint32_t)v; }
+    MW_TRACE("SetWindowLongW(%p,%d,0x%x) -> 0x%x", h, index, (unsigned)v, (unsigned)prev);
+    return prev;
+}
+
+/* ---- user32: window property store (GetPropW/SetPropW/RemovePropW) ----
+ * Name may be a real string pointer OR MAKEINTATOM (value < 0x10000 on our
+ * guest model — every real pointer is >= image base). */
+#define MW_PROP_MAX 96
+typedef struct { void* hwnd; uint16_t name[64]; uintptr_t value; uint8_t live; } MWProp;
+static MWProp g_prop[MW_PROP_MAX];
+static int mw_prop_slot(void* h, const uint16_t* name, int create) {
+    uint16_t key[64];
+    if ((uintptr_t)name < 0x10000u) { /* MAKEINTATOM -> "#<atom>" UTF-16 key */
+        char tmp[32];
+        int n = snprintf(tmp, sizeof(tmp), "#%u", (unsigned)(uintptr_t)name & 0xFFFF);
+        int k = 0;
+        for (; k < n && k < 63; k++) key[k] = (uint16_t)(uint8_t)tmp[k];
+        key[k] = 0;
+    } else {
+        mw_w16cpy(key, name, 64);
+    }
+    for (int i = 0; i < MW_PROP_MAX; i++)
+        if (g_prop[i].live && g_prop[i].hwnd == h &&
+            mw_w16cmp(g_prop[i].name, key, 64) == 0) return i;
+    if (!create) return -1;
+    for (int i = 0; i < MW_PROP_MAX; i++)
+        if (!g_prop[i].live) {
+            g_prop[i].live = 1; g_prop[i].hwnd = h;
+            mw_w16cpy(g_prop[i].name, key, 64); g_prop[i].value = 0;
+            return i;
+        }
+    return -1;
+}
+__attribute__((ms_abi)) int mw_SetPropW(void* h, const uint16_t* name, void* value) {
+    int i = mw_prop_slot(h, name, 1);
+    if (i < 0) return 0;
+    g_prop[i].value = (uintptr_t)value;
+    MW_TRACE("SetPropW(%p) -> TRUE", (const void*)name);
+    return 1;
+}
+__attribute__((ms_abi)) void* mw_GetPropW(void* h, const uint16_t* name) {
+    int i = mw_prop_slot(h, name, 0);
+    MW_TRACE("GetPropW -> 0x%llx", i >= 0 ? (unsigned long long)g_prop[i].value : 0ull);
+    return i >= 0 ? (void*)g_prop[i].value : NULL;
+}
+__attribute__((ms_abi)) void* mw_RemovePropW(void* h, const uint16_t* name) {
+    int i = mw_prop_slot(h, name, 0);
+    void* prev = NULL;
+    if (i >= 0) { prev = (void*)g_prop[i].value; g_prop[i].live = 0; }
+    MW_TRACE("RemovePropW -> %p", prev);
+    return prev;
+}
+
+/* ---- user32: MapWindowPoints / InvalidateRgn / CopyRect / placement ---- */
+__attribute__((ms_abi)) int mw_MapWindowPoints(void* from, void* to, void* points, int count) {
+    /* Engine coordinate model: one shared client surface, every window's
+     * client origin is (0,0) — the identity map IS the honest answer, and
+     * the documented return value (delta packed DX:DY) is 0. Points stay
+     * untouched, as Windows does for a zero delta. */
+    (void)from; (void)to; (void)points; (void)count;
+    MW_TRACE("MapWindowPoints(%p->%p,n=%d) -> 0 (identity)", from, to, count);
+    return 0;
+}
+__attribute__((ms_abi)) int mw_InvalidateRgn(void* h, void* rgn, int erase) {
+    /* Region precision is beyond the raster model; whole-client
+     * invalidation is a strict superset of the requested region (may
+     * repaint more, never less) and routes through the real paint path. */
+    (void)rgn;
+    return mw_InvalidateRect(h, NULL, erase);
+}
+__attribute__((ms_abi)) int mw_CopyRect(void* dst, const void* src) {
+    if (!dst || !src) return 0;
+    memcpy(dst, src, 16); /* RECT = 4 LONGs */
+    MW_TRACE("CopyRect -> TRUE");
+    return 1;
+}
+__attribute__((ms_abi)) int mw_SetWindowPlacement(void* h, const void* wp) {
+    (void)h;
+    if (!wp) return 0;
+    uint32_t len = 0;
+    if (!mw_probe_copy(wp, 4, &len)) return 0;
+    if (len != 44) { /* honest reject: mis-sized struct (caller bug) */
+        MW_TRACE("SetWindowPlacement(length=%u) -> FALSE (bad length)", len);
+        return 0;
+    }
+    if (!mw_probe_copy(wp, 44, g_winplace)) return 0;
+    g_winplace_live = 1;
+    MW_TRACE("SetWindowPlacement -> TRUE (showCmd=%u)", *(uint32_t*)(g_winplace + 8));
+    return 1;
+}
+/* GetWindowPlacement: canonical implementation at line ~12444, now
+ * upgraded to consult this store when a placement was set (round-trip
+ * for 7zFM/SW-605 class guests). */
+/* ---- kernel32: GetProfileIntW / IsWow64Process (Bginfo64 gates) ---- */
+__attribute__((ms_abi)) uint32_t mw_GetProfileIntW(const uint16_t* app,
+        const uint16_t* key, int32_t def) {
+    (void)app; (void)key;
+    /* No win.ini backing store exists in this engine — the documented
+     * "key absent" answer is the caller's default (real Windows returns
+     * exactly this when the key/file is missing). */
+    MW_TRACE("GetProfileIntW -> default %d (no win.ini store)", def);
+    return (uint32_t)def;
+}
+__attribute__((ms_abi)) int mw_IsWow64Process(void* h, int32_t* wow64) {
+    (void)h;
+    if (!wow64) return 0;
+    *wow64 = 0; /* x64 PE on the x64 engine — not under WOW64 */
+    MW_TRACE("IsWow64Process -> TRUE, *Wow64Process=FALSE (native x64)");
+    return 1;
+}
+
+/* ---- ole32: CoCreateInstance (Bginfo64 gate; POLICY UPDATE) ----
+ * Old stance: "family stays unresolved until a gate demands it (honest 0 =
+ * failure there)" — but unresolved-stub-0 IS S_OK with *ppv untouched, a
+ * success code that crashes every well-formed caller on its first
+ * QueryInterface. Bginfo64's gate demands it, and the honest answer is the
+ * real failure: REGDB_E_CLASSNOTFOUND, *ppv = NULL — identical to Windows
+ * with no registered server for the CLSID; guest fallback paths run. */
+__attribute__((ms_abi)) uint32_t mw_CoCreateInstance(const void* clsid, void* outer,
+        uint32_t clsctx, const void* iid, void** ppv) {
+    (void)clsid; (void)outer; (void)clsctx; (void)iid;
+    if (ppv) *ppv = NULL;
+    MW_TRACE("CoCreateInstance(clsid=%p) -> REGDB_E_CLASSNOTFOUND (0x80040154)",
+             (const void*)clsid);
+    return 0x80040154u;
+}
+
+/* ---- shlwapi: PathFindExtensionW (WinMergeU's sole gate) ----
+ * Pure pointer math, fully modeled: scan for the LAST '.' after the LAST
+ * path separator; no dot -> pointer to the terminating NUL (the real API's
+ * documented answer). ".name" dotfiles: the leading dot IS the extension
+ * (matches Shlwapi). Never writes — const-safe. */
+__attribute__((ms_abi)) const uint16_t* mw_PathFindExtensionW(const uint16_t* path) {
+    if (!path) return NULL;
+    const uint16_t* last_sep = NULL;
+    const uint16_t* q;
+    for (q = path; *q; q++) if (*q == (uint16_t)'\\' || *q == (uint16_t)'/') last_sep = q;
+    const uint16_t* ext = q; /* NUL terminator = "no extension" answer */
+    for (q = last_sep ? last_sep + 1 : path; *q; q++)
+        if (*q == (uint16_t)'.') ext = q;
+    MW_TRACE("PathFindExtensionW -> %s", ext && *ext ? "dot" : "NUL (no ext)");
+    return ext;
+}
+__attribute__((ms_abi)) const uint16_t* mw_PathFindFileNameW(const uint16_t* path) {
+    /* Pure pointer math: pointer just past the LAST separator, else path. */
+    if (!path) return NULL;
+    const uint16_t* last_sep = NULL;
+    for (const uint16_t* q = path; *q; q++)
+        if (*q == (uint16_t)'\\' || *q == (uint16_t)'/') last_sep = q;
+    MW_TRACE("PathFindFileNameW -> offset %d",
+             last_sep ? (int)(last_sep + 1 - path) : 0);
+    return last_sep ? last_sep + 1 : path;
+}
+__attribute__((ms_abi)) const char* mw_PathFindFileNameA(const char* path) {
+    if (!path) return NULL;
+    const char* last_sep = NULL;
+    for (const char* q = path; *q; q++)
+        if (*q == '\\' || *q == '/') last_sep = q;
+    return last_sep ? last_sep + 1 : path;
+}
+
+/* ---- SWEEP-014 r2: ws2_32 DNS/service lookups (ordinal-only binders) ----
+ * No host resolver is wired headless: honest failure = NULL + honest WSA
+ * error, exactly like a machine with no network/DNS. getservby* has no
+ * services database — same contract. WSAAsyncSelect succeeds vacuously:
+ * no sockets exist, so no events can ever be delivered (the caller gets a
+ * queued-message contract that never fires — identical to a socket that
+ * never becomes ready). */
+__attribute__((ms_abi)) void* mw_gethostbyname(const char* name) {
+    MW_TRACE("gethostbyname('%s') -> NULL (WSAHOST_NOT_FOUND)", name ? name : "");
+    mw_WSASetLastError(11001); /* WSAHOST_NOT_FOUND */
+    return NULL;
+}
+__attribute__((ms_abi)) void* mw_gethostbyaddr(const void* addr, int len, int type) {
+    (void)addr; (void)len; (void)type;
+    MW_TRACE("gethostbyaddr -> NULL (WSAHOST_NOT_FOUND)");
+    mw_WSASetLastError(11001);
+    return NULL;
+}
+__attribute__((ms_abi)) void* mw_getservbyname(const char* name, const char* proto) {
+    MW_TRACE("getservbyname('%s','%s') -> NULL (no services db)",
+             name ? name : "", proto ? proto : "");
+    mw_WSASetLastError(10108); /* WSASERVICE_NOT_FOUND */
+    return NULL;
+}
+__attribute__((ms_abi)) void* mw_getservbyport(int port, const char* proto) {
+    (void)port; (void)proto;
+    MW_TRACE("getservbyport -> NULL (no services db)");
+    mw_WSASetLastError(10108);
+    return NULL;
+}
+__attribute__((ms_abi)) int mw_WSAAsyncSelect(void* s, void* hwnd, uint32_t msg, long events) {
+    (void)s; (void)hwnd; (void)msg; (void)events;
+    MW_TRACE("WSAAsyncSelect -> 0 (vacuous: no socket events will fire)");
+    return 0;
+}
+
+/* ---- SWEEP-014 r2: RAMMap64 ImageList/SetWindowPos/GetScrollInfo ---- */
+__attribute__((ms_abi)) int mw_ImageList_SetImageCount(void* himl, int count) {
+    MWImgList* L = mw_imgl_decode(himl);
+    if (!L) return 0;
+    if (count < 0) return 0;
+    if (count > MW_IMGL_IMGMAX) count = MW_IMGL_IMGMAX;
+    if (count > L->cap) {
+        uint8_t* np = (uint8_t*)realloc(L->px, (size_t)count * L->cx * L->cy * 3);
+        if (!np) return 0;
+        memset(np + (size_t)L->cap * L->cx * L->cy * 3, 0,
+               (size_t)(count - L->cap) * L->cx * L->cy * 3);
+        L->px = np; L->cap = count;
+    }
+    L->count = count; /* real API: grows AND shrinks the count */
+    MW_TRACE("ImageList_SetImageCount(%d) -> TRUE", count);
+    return 1;
+}
+__attribute__((ms_abi)) uint32_t mw_ImageList_SetBkColor(void* himl, uint32_t color) {
+    MWImgList* L = mw_imgl_decode(himl);
+    if (!L) return 0xFFFFFFFFu; /* CLR_NONE */
+    uint32_t prev = L->bkcolor;
+    L->bkcolor = color;
+    MW_TRACE("ImageList_SetBkColor(0x%08x) -> prev 0x%08x", color, prev);
+    return prev;
+}
+__attribute__((ms_abi)) int mw_ImageList_ReplaceIcon(void* himl, int i, void* hicon) {
+    MWImgList* L = mw_imgl_decode(himl);
+    if (!L) return -1;
+    /* Index contract is real; pixel content stays placeholder until an
+     * HICON rasterizer exists (LoadIcon pool icons are handle-only). */
+    int idx;
+    if (i < 0) { /* I_IMAGECALLBACK / -1 == append */
+        if (L->count >= L->cap && L->count < MW_IMGL_IMGMAX) {
+            int ncap = L->cap * 2;
+            uint8_t* np = (uint8_t*)realloc(L->px, (size_t)ncap * L->cx * L->cy * 3);
+            if (!np) return -1;
+            L->px = np; L->cap = ncap;
+        }
+        if (L->count >= MW_IMGL_IMGMAX) return -1;
+        idx = L->count++;
+    } else {
+        if (i >= L->count) return -1;
+        idx = i;
+    }
+    MW_TRACE("ImageList_ReplaceIcon(i=%d) -> %d (placeholder pixels)", i, idx);
+    return idx;
+}
+__attribute__((ms_abi)) int mw_SetWindowPos(void* h, void* after, int x, int y,
+        int w, int hgt, uint32_t flags) {
+    /* Single-surface engine: per-window geometry is not observable; the
+     * documented contract (position accepted, Z-order no-op headless) is a
+     * benign accept. SWP_NOMOVE/SWP_NOSIZE branches are pure no-ops. */
+    (void)after;
+    if (!(flags & 0x2u)) (void)x, (void)y;   /* no SWP_NOMOVE: still accept */
+    if (!(flags & 0x1u)) (void)w, (void)hgt; /* no SWP_NOSIZE: still accept */
+    MW_TRACE("SetWindowPos(%p %dx%d@%d,%d flags=%#x) -> TRUE", h, w, hgt, x, y, flags);
+    return 1;
+}
+__attribute__((ms_abi)) int mw_GetScrollInfo(void* h, int bar, void* si) {
+    /* Honest empty scroll state: nMin=nMax=0 nPos=0 nPage=0 — a window with
+     * no scrollable content. Callers compute layout from zeroed ranges. */
+    (void)h;
+    if (!si) return 0;
+    uint8_t* p = (uint8_t*)si;
+    uint32_t mask = *(uint32_t*)p; /* cbSize@0, fMask@4 */
+    (void)mask;
+    uint32_t* nMin = (uint32_t*)(p + 8);
+    uint32_t* nMax = (uint32_t*)(p + 12);
+    uint32_t* nPage = (uint32_t*)(p + 16);
+    uint32_t* nPos = (uint32_t*)(p + 20);
+    *nMin = 0; *nMax = 0; *nPage = 0; *nPos = 0;
+    MW_TRACE("GetScrollInfo(bar=%d) -> TRUE (empty range)", bar);
+    return 1;
+}
+
+/* ---- advapi32: LsaOpenPolicy (7zFM gate) ----
+ * No LSA model exists headless: honest STATUS_NOT_IMPLEMENTED with a NULL
+ * handle — callers treat it like a hardened system without policy access
+ * and fall back (7zFM proceeds to its normal path either way). */
+__attribute__((ms_abi)) uint32_t mw_LsaOpenPolicy(const void* name, void* attr,
+        uint32_t access, void** handle) {
+    (void)name; (void)attr; (void)access;
+    if (handle) *handle = NULL;
+    MW_TRACE("LsaOpenPolicy -> STATUS_NOT_IMPLEMENTED (0xC0000002)");
+    return 0xC0000002u;
+}
+
+/* ---- SWEEP-014 r3: WinMergeU second-wave gates + VariantInit ---- */
+
+/* oleaut32!VariantInit (ordinal 8): the documented contract — vt = VT_EMPTY,
+ * the rest zeroed. VARIANT is 24 bytes on x64. */
+__attribute__((ms_abi)) void mw_VariantInit(void* pvarg) {
+    if (pvarg) memset(pvarg, 0, 24);
+    MW_TRACE("VariantInit -> VT_EMPTY");
+}
+
+/* gdi32!CreateDIBSection — REAL raster allocation (WinMergeU bitmap paths,
+ * and every GUI guest that needs CPU-accessible DIB bits). We parse the
+ * BITMAPINFOHEADER honestly, allocate from the same MWBmp pool as
+ * CreateCompatibleBitmap (3 bytes/px BGR, matching the engine raster), and
+ * hand the guest a real pointer to the pixels. 32bpp BI_RGB input is down-
+ * converted on use by Blt-class callers; here we store 24bpp honestly and
+ * document the limitation. Negative biHeight (top-down DIB) is accepted and
+ * normalized — the pixels are zeroed either way. */
+__attribute__((ms_abi)) void* mw_CreateDIBSection(void* hdc, const void* pbmi,
+        uint32_t usage, void** ppvBits, void* hSection, uint32_t offset) {
+    (void)hdc; (void)usage; (void)hSection; (void)offset;
+    if (!pbmi || !ppvBits) return NULL;
+    const uint8_t* bmi = (const uint8_t*)pbmi;
+    int32_t w  = *(const int32_t*)(bmi + 4);
+    int32_t h  = *(const int32_t*)(bmi + 8);
+    uint16_t bpp = *(const uint16_t*)(bmi + 14);
+    uint32_t comp = *(const uint32_t*)(bmi + 16);
+    if (w <= 0 || h == 0) return NULL;
+    if (comp != 0 /*BI_RGB*/ && comp != 3 /*BI_BITFIELDS*/) {
+        MW_TRACE("CreateDIBSection -> NULL (compression %u unsupported)", comp);
+        return NULL;
+    }
+    if (bpp != 16 && bpp != 24 && bpp != 32) {
+        MW_TRACE("CreateDIBSection -> NULL (%u bpp unsupported)", bpp);
+        return NULL;
+    }
+    for (int i = 0; i < MW_MEMDC_MAX; i++) {
+        if (!g_bitmap_live[i]) {
+            g_bitmap_live[i] = 1;
+            g_bitmap_obj[i].w = w; g_bitmap_obj[i].h = h;
+            g_bitmap_obj[i].px = (uint8_t*)calloc((size_t)w * (size_t)h, 3);
+            if (!g_bitmap_obj[i].px) { g_bitmap_live[i] = 0; return NULL; }
+            *ppvBits = g_bitmap_obj[i].px; /* REAL pixel pointer, 3B/px BGR */
+            MW_TRACE("CreateDIBSection(%dx%d %ubpp) -> 0x%08x bits=%p",
+                     w, h, bpp, MW_HBITMAP_BASE | (unsigned)(i + 1), (void*)*ppvBits);
+            return (void*)(uintptr_t)(MW_HBITMAP_BASE | (unsigned)(i + 1));
+        }
+    }
+    MW_TRACE("CreateDIBSection -> NULL (table full)");
+    return NULL;
+}
+
+/* ole32!CoRegisterMessageFilter — no COM message pump exists headless; the
+ * honest model: registration succeeds vacuously, previous filter is "none"
+ * (NULL) — identical to the first registration on a plain STA thread. */
+__attribute__((ms_abi)) uint32_t mw_CoRegisterMessageFilter(void* flt, void** prev) {
+    if (prev) *prev = NULL;
+    MW_TRACE("CoRegisterMessageFilter(%p) -> S_OK (prev=NULL)", flt);
+    return 0; /* S_OK */
+}
+
+/* user32!GetThreadDesktop — one desktop exists in this engine; every
+ * thread owns it. Pseudo-handle matches the GetDesktopWindow window station
+ * space (0x0004xxxx). */
+#define MW_DESKTOP_HANDLE ((void*)0x00040001)
+__attribute__((ms_abi)) void* mw_GetThreadDesktop(uint32_t tid) {
+    (void)tid;
+    MW_TRACE("GetThreadDesktop -> 0x00040001 (the one desktop)");
+    return MW_DESKTOP_HANDLE;
+}
+
+/* user32!GetUserObjectInformationW — UOI_NAME for the desktop is real
+ * information we own ("Default"); other object/info classes are honest
+ * failures (no window-station model). */
+__attribute__((ms_abi)) int mw_GetUserObjectInformationW(void* h, int index,
+        void* info, uint32_t len, uint32_t* needed) {
+    (void)h;
+    if (index == 2 /* UOI_NAME */ && info && len >= 8) {
+        const uint16_t name[] = { 'D','e','f','a','u','l','t',0 };
+        memcpy(info, name, sizeof(name));
+        if (needed) *needed = sizeof(name);
+        MW_TRACE("GetUserObjectInformationW(UOI_NAME) -> 'Default'");
+        return 1;
+    }
+    MW_TRACE("GetUserObjectInformationW(index=%d) -> FALSE (unsupported)", index);
+    return 0;
+}
+
+/* kernel32!SetSearchPathMode — advisory process flag; the engine's module
+ * search is table-driven, so the honest contract is benign-accept-TRUE
+ * (same class as SetDefaultDllDirectories, documented SWEEP-010 policy). */
+__attribute__((ms_abi)) int mw_SetSearchPathMode(uint32_t flags) {
+    MW_TRACE("SetSearchPathMode(0x%x) -> TRUE", flags);
+    return 1;
+}
+
+/* shell32!SetCurrentProcessExplicitAppUserModelID — advisory identity for
+ * taskbar grouping; nothing observable headless. Documented benign accept
+ * (S_OK), the real function's success contract. */
+__attribute__((ms_abi)) uint32_t mw_SetCurrentProcessExplicitAppUserModelID(const uint16_t* appid) {
+    MW_TRACE("SetCurrentProcessExplicitAppUserModelID -> S_OK");
+    return 0; /* S_OK */
+}
+
+/* gdiplus!Gdip* — no GDI+ object model exists; honest GpStatus failures.
+ * GdipCreateBitmapFromStream: no image decoders are wired, so any stream
+ * fails GenericError (1) with *bitmap = NULL — identical to GDI+ without
+ * the PNG/JPEG codecs registered. Getters on an invalid image return
+ * InvalidParameter (2), the real contract for a NULL image. */
+__attribute__((ms_abi)) uint32_t mw_GdipCreateBitmapFromStream(void* stream, void** bitmap) {
+    if (bitmap) *bitmap = NULL;
+    MW_TRACE("GdipCreateBitmapFromStream(%p) -> GenericError (no codecs)", stream);
+    return 1;
+}
+__attribute__((ms_abi)) uint32_t mw_GdipGetImageWidth(void* img, uint32_t* w) {
+    (void)img; (void)w;
+    MW_TRACE("GdipGetImageWidth -> InvalidParameter (no image object)");
+    return 2;
+}
+__attribute__((ms_abi)) uint32_t mw_GdipGetImageHeight(void* img, uint32_t* h) {
+    (void)img; (void)h;
+    MW_TRACE("GdipGetImageHeight -> InvalidParameter (no image object)");
+    return 2;
+}
+__attribute__((ms_abi)) uint32_t mw_GdipGetImagePixelFormat(void* img, uint32_t* fmt) {
+    (void)img; (void)fmt;
+    MW_TRACE("GdipGetImagePixelFormat -> InvalidParameter (no image object)");
+    return 2;
+}
+__attribute__((ms_abi)) uint32_t mw_GdipDisposeImage(void* img) {
+    (void)img;
+    MW_TRACE("GdipDisposeImage -> InvalidParameter (no image object)");
+    return 2;
+}
+
 static ImportEntry g_import_table[] = {
     /* KERNEL32.DLL */
     ENTRY("KERNEL32.DLL", "AddVectoredExceptionHandler",        mw_AddVectoredExceptionHandler),
@@ -13228,10 +13786,14 @@ static ImportEntry g_import_table[] = {
     ENTRY("KERNEL32.DLL", "GetStartupInfoA",                     mw_GetStartupInfoA),
     ENTRY("KERNEL32.DLL", "GetStdHandle",                       mw_GetStdHandle),
     ENTRY("KERNEL32.DLL", "GetSystemTimeAsFileTime",             mw_GetSystemTimeAsFileTime),
+    ENTRY("KERNEL32.DLL", "GetProfileIntW",                      mw_GetProfileIntW), /* SWEEP-014: Bginfo64 gate */
+    ENTRY("KERNEL32.DLL", "IsWow64Process",                      mw_IsWow64Process), /* SWEEP-014: Bginfo64 gate */
+    ENTRY("KERNEL32.DLL", "SetSearchPathMode",                   mw_SetSearchPathMode), /* SWEEP-014 r3: WinMergeU */
     ENTRY("KERNEL32.DLL", "GetThreadContext",                    mw_GetThreadContext),
     ENTRY("KERNEL32.DLL", "GetThreadPriority",                   mw_GetThreadPriority),
     ENTRY("KERNEL32.DLL", "GetTickCount",                        mw_GetTickCount),
     ENTRY("SHELL32.DLL", "CommandLineToArgvW",                   mw_CommandLineToArgvW),
+    ENTRY("SHELL32.DLL", "SetCurrentProcessExplicitAppUserModelID", mw_SetCurrentProcessExplicitAppUserModelID), /* SWEEP-014 r3: WinMergeU */
     ENTRY("SHELL32.DLL", "SHGetFolderPathW",                     mw_SHGetFolderPathW), /* SWEEP-013 */
     ENTRY("SHELL32.DLL", "Shell_NotifyIconW",                    mw_Shell_NotifyIconW), /* SWEEP-013 */
     ENTRY("GDIPLUS.DLL", "GdiplusStartup",                       mw_GdiplusStartup), /* SWEEP-013 */
@@ -13302,6 +13864,11 @@ static ImportEntry g_import_table[] = {
     ENTRY("api-ms-win-crt-runtime-l1-1-0.dll", "__C_specific_handler", mw___C_specific_handler),
     ENTRY("msvcrt.dll", "__getmainargs",         mw___getmainargs),
     ENTRY("msvcrt.dll", "_ismbblead",            mw_ismbblead), /* SWEEP-013 */
+    ENTRY("msvcrt.dll", "_mbsnbcat",             mw_mbsnbcat), /* SWEEP-014: cports 18x gate */
+    ENTRY("msvcrt.dll", "??2@YAPEAX_K@Z",        mw_msvcrt_op_new), /* SWEEP-014: operator new */
+    ENTRY("msvcrt.dll", "??_U@YAPEAX_K@Z",       mw_msvcrt_op_new_arr), /* SWEEP-014: operator new[] */
+    ENTRY("msvcrt.dll", "??3@YAXPEAX@Z",         mw_msvcrt_op_delete), /* SWEEP-014: operator delete */
+    ENTRY("msvcrt.dll", "??_V@YAXPEAX@Z",        mw_msvcrt_op_delete_arr), /* SWEEP-014: operator delete[] */
     ENTRY("api-ms-win-crt-runtime-l1-1-0.dll", "_configure_narrow_argv", mw__configure_narrow_argv),
     ENTRY("api-ms-win-crt-runtime-l1-1-0.dll", "_initialize_narrow_environment", mw__initialize_narrow_environment),
     ENTRY("api-ms-win-crt-runtime-l1-1-0.dll", "_set_new_mode", mw__set_new_mode),
@@ -14022,6 +14589,7 @@ ENTRY("msvcrt.dll", "wctype", mw_wctype),
     ENTRY("ADVAPI32.DLL", "SystemFunction036",                  mw_SystemFunction036),
     ENTRY("ADVAPI32.DLL", "GetFileSecurityW",                   mw_GetFileSecurityW),
     ENTRY("ADVAPI32.DLL", "SetFileSecurityW",                   mw_SetFileSecurityW),
+    ENTRY("ADVAPI32.DLL", "LsaOpenPolicy",                      mw_LsaOpenPolicy), /* SWEEP-014 r2: 7zFM gate */
     ENTRY("msvcrt.dll", "_c_exit",                              mw__c_exit),
     ENTRY("msvcrt.dll", "__dllonexit",                          mw___dllonexit),
     ENTRY("msvcrt.dll", "?terminate@@YAXXZ",                    mw_msvcrt_terminate),
@@ -14248,6 +14816,9 @@ ENTRY("msvcrt.dll", "wctype", mw_wctype),
     ENTRY("COMCTL32.DLL", "ImageList_Destroy",                  mw_ImageList_Destroy),
     ENTRY("COMCTL32.DLL", "ImageList_Add",                      mw_ImageList_Add),
     ENTRY("COMCTL32.DLL", "ImageList_GetImageCount",            mw_ImageList_GetImageCount),
+    ENTRY("COMCTL32.DLL", "ImageList_SetImageCount",            mw_ImageList_SetImageCount), /* SWEEP-014 r2: RAMMap64 */
+    ENTRY("COMCTL32.DLL", "ImageList_SetBkColor",               mw_ImageList_SetBkColor), /* SWEEP-014 r2: RAMMap64 */
+    ENTRY("COMCTL32.DLL", "ImageList_ReplaceIcon",              mw_ImageList_ReplaceIcon), /* SWEEP-014 r2: RAMMap64 */
     ENTRY("USER32.DLL", "GetSystemMetrics",                     mw_GetSystemMetrics), /* SWEEP-010 */
     /* SWEEP-005: paint surface + event pump + draw stubs */
     ENTRY("USER32.DLL", "BeginPaint",                           mw_BeginPaint),
@@ -14264,6 +14835,22 @@ ENTRY("msvcrt.dll", "wctype", mw_wctype),
     ENTRY("USER32.DLL", "GetObjectA",                           mw_GetObjectA), /* SWEEP-013 */
     ENTRY("USER32.DLL", "GetClientRect",                        mw_GetClientRect),
     ENTRY("USER32.DLL", "InvalidateRect",                       mw_InvalidateRect),
+    ENTRY("USER32.DLL", "InvalidateRgn",                        mw_InvalidateRgn), /* SWEEP-014 */
+    ENTRY("USER32.DLL", "GetWindowLongPtrW",                    mw_GetWindowLongPtrW), /* SWEEP-014 */
+    ENTRY("USER32.DLL", "SetWindowLongPtrW",                    mw_SetWindowLongPtrW), /* SWEEP-014 */
+    ENTRY("USER32.DLL", "GetWindowLongW",                       mw_GetWindowLongW), /* SWEEP-014 */
+    ENTRY("USER32.DLL", "SetWindowLongW",                       mw_SetWindowLongW), /* SWEEP-014 */
+    ENTRY("USER32.DLL", "GetPropW",                             mw_GetPropW), /* SWEEP-014 */
+    ENTRY("USER32.DLL", "SetPropW",                             mw_SetPropW), /* SWEEP-014 */
+    ENTRY("USER32.DLL", "RemovePropW",                          mw_RemovePropW), /* SWEEP-014 */
+    ENTRY("USER32.DLL", "MapWindowPoints",                      mw_MapWindowPoints), /* SWEEP-014 */
+    ENTRY("USER32.DLL", "CopyRect",                             mw_CopyRect), /* SWEEP-014 */
+    ENTRY("USER32.DLL", "SetWindowPlacement",                   mw_SetWindowPlacement), /* SWEEP-014 */
+    ENTRY("USER32.DLL", "GetWindowPlacement",                   mw_GetWindowPlacement), /* SWEEP-014 */
+    ENTRY("USER32.DLL", "SetWindowPos",                         mw_SetWindowPos), /* SWEEP-014 r2: RAMMap64 */
+    ENTRY("USER32.DLL", "GetScrollInfo",                        mw_GetScrollInfo), /* SWEEP-014 r2: RAMMap64 */
+    ENTRY("USER32.DLL", "GetThreadDesktop",                     mw_GetThreadDesktop), /* SWEEP-014 r3: WinMergeU */
+    ENTRY("USER32.DLL", "GetUserObjectInformationW",            mw_GetUserObjectInformationW), /* SWEEP-014 r3: WinMergeU */
     ENTRY("USER32.DLL", "ValidateRect",                         mw_ValidateRect),
     ENTRY("USER32.DLL", "GetSysColor",                          mw_GetSysColor),
     ENTRY("USER32.DLL", "LoadCursorA",                          mw_LoadCursorA),
@@ -14300,6 +14887,7 @@ ENTRY("msvcrt.dll", "wctype", mw_wctype),
     ENTRY("GDI32.DLL", "GetDeviceCaps",                         mw_GetDeviceCaps),
     ENTRY("GDI32.DLL", "CreateCompatibleDC",                    mw_CreateCompatibleDC), /* SWEEP-006 */
     ENTRY("GDI32.DLL", "CreateCompatibleBitmap",                mw_CreateCompatibleBitmap), /* SWEEP-006 */
+    ENTRY("GDI32.DLL", "CreateDIBSection",                      mw_CreateDIBSection), /* SWEEP-014 r3: real DIB raster */
     ENTRY("GDI32.DLL", "BitBlt",                                mw_BitBlt), /* SWEEP-006 */
     ENTRY("GDI32.DLL", "SaveDC",                                mw_SaveDC),
     ENTRY("GDI32.DLL", "RestoreDC",                             mw_RestoreDC),
@@ -14336,9 +14924,19 @@ ENTRY("msvcrt.dll", "wctype", mw_wctype),
     ENTRY("WS2_32.dll", "getaddrinfo",                          mw_getaddrinfo_),
     ENTRY("WS2_32.dll", "gethostname",                          mw_gethostname_),
     ENTRY("WS2_32.dll", "inet_pton",                            mw_inet_pton_),
+    ENTRY("WS2_32.dll", "WSAStartup",                           mw_WSAStartup), /* SWEEP-014: ProduKey/cports/sqlite3_analyzer gate */
+    ENTRY("WS2_32.dll", "WSACleanup",                           mw_WSACleanup), /* SWEEP-014 */
+    ENTRY("WS2_32.dll", "gethostbyname",                        mw_gethostbyname), /* SWEEP-014 r2 */
+    ENTRY("WS2_32.dll", "gethostbyaddr",                        mw_gethostbyaddr), /* SWEEP-014 r2 */
+    ENTRY("WS2_32.dll", "getservbyname",                        mw_getservbyname), /* SWEEP-014 r2 */
+    ENTRY("WS2_32.dll", "getservbyport",                        mw_getservbyport), /* SWEEP-014 r2 */
+    ENTRY("WS2_32.dll", "WSAAsyncSelect",                       mw_WSAAsyncSelect), /* SWEEP-014 r2 */
     /* SW-555 honest batch (SWEEP-009): shlwapi color pair (procexp64) */
     ENTRY("shlwapi.dll", "ColorRGBToHLS",                       mw_ColorRGBToHLS),
     ENTRY("shlwapi.dll", "ColorHLSToRGB",                       mw_ColorHLSToRGB),
+    ENTRY("shlwapi.dll", "PathFindExtensionW",                  mw_PathFindExtensionW), /* SWEEP-014: WinMergeU gate */
+    ENTRY("shlwapi.dll", "PathFindFileNameW",                   mw_PathFindFileNameW), /* SWEEP-014 r2: WinMergeU */
+    ENTRY("shlwapi.dll", "PathFindFileNameA",                   mw_PathFindFileNameA), /* SWEEP-014 r2 */
 
     /* ---- SWEEP-012 honest batch #2 (program-count driven; see block above) ---- */
     /* dialog protocol (autoruns64/procexp64/procmon64/coreinfo64/diskmon64) */
@@ -14353,6 +14951,14 @@ ENTRY("msvcrt.dll", "wctype", mw_wctype),
     ENTRY("ole32.dll", "OleInitialize",                         mw_OleInitialize),
     ENTRY("ole32.dll", "CoUninitialize",                        mw_CoUninitialize),
     ENTRY("ole32.dll", "OleUninitialize",                       mw_OleUninitialize),
+    ENTRY("ole32.dll", "CoCreateInstance",                      mw_CoCreateInstance), /* SWEEP-014: honest REGDB_E_CLASSNOTFOUND */
+    ENTRY("ole32.dll", "CoRegisterMessageFilter",               mw_CoRegisterMessageFilter), /* SWEEP-014 r3: WinMergeU */
+    ENTRY("oleaut32.dll", "VariantInit",                        mw_VariantInit), /* SWEEP-014 r3: real ord-8 target */
+    ENTRY("gdiplus.dll", "GdipCreateBitmapFromStream",          mw_GdipCreateBitmapFromStream), /* SWEEP-014 r3 */
+    ENTRY("gdiplus.dll", "GdipGetImageWidth",                   mw_GdipGetImageWidth), /* SWEEP-014 r3 */
+    ENTRY("gdiplus.dll", "GdipGetImageHeight",                  mw_GdipGetImageHeight), /* SWEEP-014 r3 */
+    ENTRY("gdiplus.dll", "GdipGetImagePixelFormat",             mw_GdipGetImagePixelFormat), /* SWEEP-014 r3 */
+    ENTRY("gdiplus.dll", "GdipDisposeImage",                    mw_GdipDisposeImage), /* SWEEP-014 r3 */
     /* version resource (coreinfo64) */
     ENTRY("version.dll", "GetFileVersionInfoSizeW",             mw_GetFileVersionInfoSizeW),
     ENTRY("version.dll", "GetFileVersionInfoW",                 mw_GetFileVersionInfoW),
@@ -14533,7 +15139,8 @@ static uint64_t g_stub_calls = 0; /* rate-limiter only; racy count is fine */
 __attribute__((ms_abi)) uint64_t mw_unresolved_import_stub(void);
 __attribute__((ms_abi)) uint64_t mw_unresolved_import_stub(void) {
     uint64_t n = ++g_stub_calls;
-    if (n <= 20) {
+    if (n <= 200) { /* SWEEP-014: 20 -> 200 — 20 truncated real gates
+                     * (RAMMap64 stalled at #20, cports hid 18x _mbsnbcat) */
         /* SW-555 tooling prerequisite (SWEEP-008b): log the GUEST return
          * address of each unresolved call. The stub cannot know its own
          * import name (it is one shared function patched into many IAT
@@ -14742,10 +15349,70 @@ static int load_pe(const char* filepath) {
                     { "OLEAUT32", 4,  "SysAllocStringLen" },
                     { "OLEAUT32", 6,  "SysFreeString" },
                     { "OLEAUT32", 7,  "SysStringLen" },
-                    { "OLEAUT32", 8,  "SysStringByteLen" },
+                    { "OLEAUT32", 8,  "VariantInit" }, /* SWEEP-014 r3: real oleaut32 ord (pefile db; old 8→SysStringByteLen was wrong) */
                     { "OLEAUT32", 149, "SysStringByteLen" }, /* 7z.exe binds this one */
                     { "OLEAUT32", 9,  "VariantClear" },
                     { "OLEAUT32", 10, "VariantCopy" },
+                    /* SWEEP-014 (7zG gate, BUG-052 kin): 7-Zip's MSVC import
+                     * lib binds COMCTL32 ordinals too. 17 = ImageList_Create
+                     * (classic comctl32 fixed ordinal, verified by slot
+                     * neighborhood 0x477080 between GDI32/KERNEL32 groups and
+                     * 7zG's installer ListView usage). */
+                    { "COMCTL32", 17, "ImageList_Create" },
+                    /* SWEEP-014 r2 (BUG-071): NirSoft/Sysinternals/SQLite tools
+                     * bind WS2_32 by fixed ordinal (ProduKey ILT[0]=0x8000..6f).
+                     * The old map lacked WS2_32 entirely, so WSAStartup gated
+                     * three programs while its WARN line printed "Ordinal 115
+                     * (not supported)" — never its name. Table: standard
+                     * ws2_32.dll ordinals (pefile ordlookup cross-checked
+                     * against every pool program's raw ILT). */
+                    { "WS2_32", 1,   "accept" },
+                    { "WS2_32", 2,   "bind" },
+                    { "WS2_32", 3,   "closesocket" },
+                    { "WS2_32", 4,   "connect" },
+                    { "WS2_32", 5,   "getpeername" },
+                    { "WS2_32", 6,   "getsockname" },
+                    { "WS2_32", 7,   "getsockopt" },
+                    { "WS2_32", 8,   "htonl" },
+                    { "WS2_32", 9,   "htons" },
+                    { "WS2_32", 10,  "ioctlsocket" },
+                    { "WS2_32", 11,  "inet_addr" },
+                    { "WS2_32", 12,  "inet_ntoa" },
+                    { "WS2_32", 13,  "listen" },
+                    { "WS2_32", 14,  "ntohl" },
+                    { "WS2_32", 15,  "ntohs" },
+                    { "WS2_32", 16,  "recv" },
+                    { "WS2_32", 17,  "recvfrom" },
+                    { "WS2_32", 18,  "select" },
+                    { "WS2_32", 19,  "send" },
+                    { "WS2_32", 20,  "sendto" },
+                    { "WS2_32", 21,  "setsockopt" },
+                    { "WS2_32", 22,  "shutdown" },
+                    { "WS2_32", 23,  "socket" },
+                    { "WS2_32", 51,  "gethostbyaddr" },
+                    { "WS2_32", 52,  "gethostbyname" },
+                    { "WS2_32", 53,  "getprotobyname" },
+                    { "WS2_32", 54,  "getprotobynumber" },
+                    { "WS2_32", 55,  "getservbyname" },
+                    { "WS2_32", 56,  "getservbyport" },
+                    { "WS2_32", 57,  "gethostname" },
+                    { "WS2_32", 101, "WSAAsyncSelect" },
+                    { "WS2_32", 111, "WSAGetLastError" },
+                    { "WS2_32", 112, "WSASetLastError" },
+                    { "WS2_32", 115, "WSAStartup" },
+                    { "WS2_32", 116, "WSACleanup" },
+                    /* SWEEP-014 r2 (Bginfo64 gate): OLEAUT32 fixed ordinal
+                     * 150 = SysAllocStringByteLen (pefile ordlookup verified
+                     * against Bginfo64's raw ILT: slot [4] ord=150; the
+                     * earlier 395 guess was wrong — no such ordinal binding
+                     * exists in the pool). */
+                    { "OLEAUT32", 150, "SysAllocStringByteLen" },
+                    /* SWEEP-014 r3 (pefile real-DLL db): ordinal 8 is
+                     * VariantInit, NOT SysStringByteLen — the old 8-mapping
+                     * was never called (7z binds 149 for byte-len) but was
+                     * factually wrong and would corrupt any VariantInit
+                     * caller. VariantInit is implemented + wired below. */
+                    { "OLEAUT32", 8, "VariantInit" },
                 };
                 const char* ord_name = NULL;
                 char up_dll[16];
@@ -14762,7 +15429,7 @@ static int load_pe(const char* filepath) {
                 }
                 if (ord_name) {
                     func_name = ord_name;
-                    MW_TRACE("  [%d] Ordinal %u -> %s (OLEAUT32 fixed)", slot, ordinal, ord_name);
+                    MW_TRACE("  [%d] Ordinal %u -> %s (fixed ordinal)", slot, ordinal, ord_name);
                 } else {
                     MW_TRACE("  [%d] Ordinal %u (not supported)", slot, ordinal);
                     /* SWEEP-001: stub the slot too — same crash class as

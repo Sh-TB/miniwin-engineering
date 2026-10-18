@@ -410,3 +410,57 @@ Stage Summary:
   (scripted user clicks -> WM_COMMAND -> text I/O -> GDI paint -> BMP).
 - Next lever: SW-601 InvalidateRgn (RAMMap64), SW-602/608/609 guest-level
   crash symbolization, SW-603 Bginfo64 8-stub family.
+
+## 2026-10-18 (SWEEP-014) — «ادامه سه برابری»: batch #4 + 3x queue + calc scenario D
+- **BUG-069 CLOSED (fixed)**: sweep012_progress.py decoder handled only direct
+  `FF 15` calls; ProduKey/cports/7zG/sqlite3_analyzer call imports via
+  `E8 rel32 -> FF 25` jmp-thunks, so their gates printed ??NOT-FF15??.
+  Decoder now walks the thunk (tgt = rip+disp, slot = tgt+6+disp2) and names
+  ordinal slots (`dll!#N`). Upgraded in scripts/sweep012_progress.py.
+- **BUG-070 CLOSED (wired)**: WSAStartup/WSACleanup were FULLY IMPLEMENTED
+  (ffmpeg-era, WSADataT 408B) yet gated 3 programs — the ENTRY lines were
+  missing from g_import_table. New audit class: defined-but-unwired.
+- **BUG-071 CLOSED (fixed)**: WS2_32 imports bind by FIXED ORDINAL
+  (ProduKey ILT[0]=0x8000..006f); the fixed-ordinal map lacked WS2_32
+  entirely (WARN printed "Ordinal 115 (not supported)", never the name).
+  Added the standard ws2_32 ordinal table (29 entries, pefile ordlookup
+  cross-checked vs every pool program's raw ILT) + OLEAUT32 150 =
+  SysAllocStringByteLen (Bginfo64 raw ILT [4]; 395 guess discarded) +
+  COMCTL32 17 = ImageList_Create (7zG). Ordinal-8 corrected to VariantInit
+  (pefile real-DLL db; old 8->SysStringByteLen never fired but was wrong;
+  VariantInit implemented + wired).
+- **Honest batch #4 (~40 APIs)**: ws2_32 WSAStartup/WSACleanup wired +
+  gethostbyname/gethostbyaddr/getservbyname/getservbyport (honest NULL +
+  WSA error) + WSAAsyncSelect (vacuous success); msvcrt operator
+  new/delete/new[]/delete[] + _mbsnbcat (cports 18x gate); user32
+  Get/SetWindowLongPtrW + Get/SetWindowLongW (per-window store, GWLP_WNDPROC
+  subclass routes g_wndproc_fwd) + Get/SetPropW/RemovePropW (MAKEINTATOM
+  aware) + MapWindowPoints (identity — the engine's honest coordinate model)
+  + InvalidateRgn (superset paint via real InvalidateRect path) + CopyRect +
+  Set/GetWindowPlacement (store round-trip) + SetWindowPos + GetScrollInfo
+  (honest empty range); kernel32 GetProfileIntW (default — no win.ini store)
+  + IsWow64Process (native x64 FALSE) + SetSearchPathMode; ole32
+  CoCreateInstance (POLICY UPDATE: honest REGDB_E_CLASSNOTFOUND + *ppv=NULL —
+  the old "unresolved 0" was S_OK-with-NULL-punk, crashes well-formed
+  callers) + CoRegisterMessageFilter; shlwapi PathFindExtensionW/
+  PathFindFileNameW/A (pure pointer math); comctl32 ImageList
+  SetImageCount/SetBkColor/ReplaceIcon (index contract real, placeholder
+  pixels documented); advapi32 LsaOpenPolicy (STATUS_NOT_IMPLEMENTED);
+  gdiplus GdipCreateBitmapFromStream/GetImageWidth/Height/PixelFormat/
+  DisposeImage (honest GpStatus failures, no codecs headless); shell32
+  SetCurrentProcessExplicitAppUserModelID (S_OK); **gdi32 CreateDIBSection
+  REAL** (BITMAPINFOHEADER parse + MWBmp pool + real ppvBits pointer).
+- **MEASURED PROGRESS (52-program pool, AFTER2 -> AFTER3)**:
+  mean_score 2.92 -> 3.08; RAN-OUTPUT 22 -> 26 (+5: RAMMap64 139crash->exit0
+  0-stubs, cports 139crash->exit0, ProduKey 5->0 stubs, 7zG 1->0, 7zFM 3->0);
+  STUB-GATE 5 -> 0 (EVERY named stub gate in the pool is closed);
+  Bginfo64/WinMergeU ran deeper (exit 9 -> 0-stub guest crashes = new
+  frontier, queued SW-795/796/797/798). Stub trace limit 20 -> 200.
+- **GUI acceptance 9/9 (scripts/sweep014_calc_accept.sh)**: scenario A
+  12+45=57, C 9*8=72, NEW D 84/12=7 — all 3x deterministic exit 0 via
+  MW_GUI_EVENTS=1 + MINWIN_CLICKS.
+- **Task queue 3x**: SW-651..SW-800 (150 items) generated from AFTER3
+  evidence (scripts/sweep014_queue.py): 15 crash-frontier REA funcmap
+  triages, 15 ws2_32 socket ladder, 20 GUI, 10 oleaut32, 15 GDI, 10 CRT
+  tail, 10 PE-DLL slices, 25 kernel/user32 tail, 30 infra/verify.
+- **G1 re-pinned sha 45fd1d18 12/12** (evidence/master/g1/20261018_182015).

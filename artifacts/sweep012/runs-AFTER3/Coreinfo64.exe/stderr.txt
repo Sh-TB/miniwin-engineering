@@ -1,0 +1,62 @@
+[TRACE] Command line: /home/z/my-project/workspace/miniwin-engineering/artifacts/sweep50/dl/coreinfoex64/Coreinfo64.exe
+[WARN]   unresolved: SetThreadGroupAffinity
+[WARN]   unresolved: GetProcessWorkingSetSize
+[WARN]   unresolved: GetNumaNodeProcessorMask
+[WARN]   unresolved: VirtualLock
+[WARN]   unresolved: SetProcessWorkingSetSize
+[WARN]   unresolved: GetNumaHighestNodeNumber
+[WARN]   unresolved: InflateRect
+[WARN]   unresolved: SetCursor
+[WARN]   unresolved: EndDoc
+[WARN]   unresolved: StartDocW
+[WARN]   unresolved: EndPage
+[WARN]   unresolved: StartPage
+[WARN]   unresolved: PrintDlgW
+[WARN]   unresolved: CoSetProxyBlanket
+[WARN] 14 imports unresolved
+
+[CRASH] Signal 11 at RIP=0x140002866
+  RAX=0x0 RCX=0x7ffd8c8a40f0 RDX=0xffffffffffffffff R8=0x140051748 R9=0x0
+  RSP=0x7ffd8c8a40a0 RBP=0x7ffd8c8a4410
+  g_image_base=0x140000000 g_image_size=0x80000
+  RVA=0x2866 (inside loaded PE)
+  Bytes: 0f b7 50 02 44 0f b7 08 89 54 24 20 ba 00 01 00 
+  Return addr: 0x22
+  RSI=0x232e060 RDI=0x232e310
+  R8=0x140051748  R9=0x0 R10=0x0 R11=0x202
+  R12=0x21cb000 R13=0x21ca000 R14=0x0 R15=0x7ffd8c8a4c60
+  [SCAN rsp+040] 0x140051688 <PE>
+  [SCAN rsp+424] 0x2033be8 <LOADER>
+  [SCAN rsp+616] 0x1400048ee <PE>
+  [SCAN rsp+952] 0x140061220 <PE>
+  [SCAN rsp+1016] 0x1400611d0 <PE>
+  [SCAN rsp+1048] 0x1400611d0 <PE>
+  [SCAN rsp+1304] 0x1400611d0 <PE>
+  [SCAN rsp+1320] 0x20317d5 <LOADER>
+  [SCAN rsp+1528] 0x140024c32 <PE>
+  [SCAN rsp+1568] 0x14003d598 <PE>
+  [SCAN rsp+1576] 0x14002500a <PE>
+  [SCAN rsp+1584] 0x14003c380 <PE>
+  [SCAN rsp+1592] 0x140060a80 <PE>
+  [SCAN rsp+1656] 0x140012434 <PE>
+  [SCAN rsp+1664] 0x140061150 <PE>
+  [SCAN rsp+1672] 0x14003c380 <PE>
+  [SCAN rsp+1696] 0x14003d590 <PE>
+  [SCAN rsp+1704] 0x140012461 <PE>
+  [SCAN rsp+1712] 0x14003d578 <PE>
+  [SCAN rsp+1720] 0x14005f1a8 <PE>
+  [SCAN rsp+1744] 0x14003d5d8 <PE>
+  [SCAN rsp+1752] 0x1400123d9 <PE>
+  [SCAN rsp+1800] 0x140011fb8 <PE>
+  [SCAN rsp+1816] 0x140012039 <PE>
+  [SCAN rsp+1864] 0x2007942 <LOADER>
+  [SCAN rsp+1904] 0x14003d460 <PE>
+  [SCAN rsp+2232] 0x200275d <LOADER>
+  [SCAN rsp+2240] 0x2002130 <LOADER>
+  [SCAN rsp+3688] 0x2006510 <LOADER>
+  [SCAN rsp+3840] 0x2006510 <LOADER>
+  [SCAN rsp+3880] 0x20081b0 <LOADER>
+  [SCAN rsp+3912] 0x20081d1 <LOADER>
+  Backtrace (via stack walking):
+    [0] RIP=0x140002866 RVA=0x2866
+      [RSP+0] = 0x22 (return addr?)

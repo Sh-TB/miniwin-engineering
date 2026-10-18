@@ -1,0 +1,592 @@
+{
+  "trace": [
+[Tff80] [API] PE Loader: file=/home/z/my-project/workspace/miniwin-engineering/artifacts/opensource/_dl/sqlite/sqlite3_analyzer.exe size=4439040
+[Tff80] [API] PE Loader: ImageBase=0x140000000 EP=0x2fa6d0 SizeOfImage=0x443000 Sections=7
+[Tff80] [API] PE Loader: Mapped at 0x140000000 (forced via MAP_FIXED)
+[Tff80] [API] Section [0] .text    VA=0x00001000 VS=0x0036d400 Raw=0x0036d400 Ch=0x60000020
+[Tff80] [API] Section [1] .rdata   VA=0x0036f000 VS=0x0009a83c Raw=0x0009aa00 Ch=0x40000040
+[Tff80] [API] Section [2] .data    VA=0x0040a000 VS=0x0000aea1 Raw=0x00007a00 Ch=0xc0000040
+[Tff80] [API] Section [3] .pdata   VA=0x00415000 VS=0x00027bb8 Raw=0x00027c00 Ch=0x40000040
+[Tff80] [API] Section [4] _RDATA   VA=0x0043d000 VS=0x000001f4 Raw=0x00000200 Ch=0x40000040
+[Tff80] [API] Section [5] .rsrc    VA=0x0043e000 VS=0x00000df8 Raw=0x00000e00 Ch=0x40000040
+[Tff80] [API] Section [6] .reloc   VA=0x0043f000 VS=0x000032f4 Raw=0x00003400 Ch=0x42000040
+[Tff80] [API] Import Directory: RVA=0x407e84 Size=0x8c
+[Tff80] [API] Import DLL: NETAPI32.dll (IAT RVA=0x36f660, ILT RVA=0x408570)
+[Tff80] [API]   [0] UNRESOLVED: NetGetDCName
+[Tff80] [API]   [1] UNRESOLVED: NetApiBufferFree
+[Tff80] [API]   [2] UNRESOLVED: NetUserGetInfo
+[Tff80] [API] Import DLL: USER32.dll (IAT RVA=0x36f680, ILT RVA=0x408590)
+[Tff80] [API]   [0] wsprintfA -> 0x203a270
+[Tff80] [API]   [1] UNRESOLVED: WaitForInputIdle
+[Tff80] [API]   [2] SetTimer -> 0x202f2d0
+[Tff80] [API]   [3] RegisterClassW -> 0x204e920
+[Tff80] [API]   [4] DispatchMessageW -> 0x2058630
+[Tff80] [API]   [5] GetWindowLongPtrW -> 0x2040070
+[Tff80] [API]   [6] UNRESOLVED: UnregisterClassW
+[Tff80] [API]   [7] SendMessageW -> 0x2058770
+[Tff80] [API]   [8] CreateWindowExW -> 0x2055ac0
+[Tff80] [API]   [9] PostQuitMessage -> 0x202f070
+[Tff80] [API]   [10] SetWindowLongPtrW -> 0x2026b20
+[Tff80] [API]   [11] DestroyWindow -> 0x20462f0
+[Tff80] [API]   [12] PostMessageW -> 0x202fa70
+[Tff80] [API]   [13] DefWindowProcW -> 0x200a330
+[Tff80] [API]   [14] GetMessageW -> 0x203d5a0
+[Tff80] [API]   [15] MessageBeep -> 0x203c070
+[Tff80] [API]   [16] MessageBoxW -> 0x2057440
+[Tff80] [API]   [17] CharLowerW -> 0x20268b0
+[Tff80] [API]   [18] wsprintfW -> 0x2050100
+[Tff80] [API]   [19] KillTimer -> 0x200a400
+[Tff80] [API]   [20] TranslateMessage -> 0x200cdc0
+[Tff80] [API]   [21] UNRESOLVED: MsgWaitForMultipleObjectsEx
+[Tff80] [API]   [22] PeekMessageW -> 0x203d7d0
+[Tff80] [API] Import DLL: ADVAPI32.dll (IAT RVA=0x36f000, ILT RVA=0x407f10)
+[Tff80] [API]   [0] UNRESOLVED: RevertToSelf
+[Tff80] [API]   [1] UNRESOLVED: AccessCheck
+[Tff80] [API]   [2] EqualSid -> 0x20541b0
+[Tff80] [API]   [3] UNRESOLVED: GetNamedSecurityInfoW
+[Tff80] [API]   [4] UNRESOLVED: GetSecurityDescriptorOwner
+[Tff80] [API]   [5] UNRESOLVED: ImpersonateSelf
+[Tff80] [API]   [6] OpenProcessToken -> 0x20272c0
+[Tff80] [API]   [7] GetFileSecurityW -> 0x204dcd0
+[Tff80] [API]   [8] UNRESOLVED: OpenThreadToken
+[Tff80] [API]   [9] UNRESOLVED: GetSidIdentifierAuthority
+[Tff80] [API]   [10] GetTokenInformation -> 0x2028990
+[Tff80] [API]   [11] GetUserNameW -> 0x2049130
+[Tff80] [API] Import DLL: WS2_32.dll (IAT RVA=0x36f750, ILT RVA=0x408660)
+[Tff80] [API]   [0] Ordinal 115 -> WSAStartup (fixed ordinal)
+[Tff80] [API]   [0] WSAStartup -> 0x2012ce0
+[Tff80] [API]   [1] Ordinal 111 -> WSAGetLastError (fixed ordinal)
+[Tff80] [API]   [1] WSAGetLastError -> 0x200a020
+[Tff80] [API]   [2] Ordinal 21 -> setsockopt (fixed ordinal)
+[Tff80] [API]   [2] setsockopt -> 0x2021ed0
+[Tff80] [API]   [3] UNRESOLVED: getnameinfo
+[Tff80] [API]   [4] Ordinal 10 -> ioctlsocket (fixed ordinal)
+[Tff80] [API]   [4] ioctlsocket -> 0x2022450
+[Tff80] [API]   [5] freeaddrinfo -> 0x2022cd0
+[Tff80] [API]   [6] Ordinal 9 -> htons (fixed ordinal)
+[Tff80] [API]   [6] htons -> 0x20218a0
+[Tff80] [API]   [7] Ordinal 7 -> getsockopt (fixed ordinal)
+[Tff80] [API]   [7] getsockopt -> 0x2021e20
+[Tff80] [API]   [8] Ordinal 16 -> recv (fixed ordinal)
+[Tff80] [API]   [8] recv -> 0x2022170
+[Tff80] [API]   [9] Ordinal 57 -> gethostname (fixed ordinal)
+[Tff80] [API]   [9] gethostname -> 0x201cea0
+[Tff80] [API]   [10] Ordinal 55 -> getservbyname (fixed ordinal)
+[Tff80] [API]   [10] getservbyname -> 0x200f600
+[Tff80] [API]   [11] Ordinal 12 -> inet_ntoa (fixed ordinal)
+[Tff80] [API]   [11] inet_ntoa -> 0x2021950
+[Tff80] [API]   [12] Ordinal 4 -> connect (fixed ordinal)
+[Tff80] [API]   [12] connect -> 0x2021ae0
+[Tff80] [API]   [13] Ordinal 23 -> socket (fixed ordinal)
+[Tff80] [API]   [13] socket -> 0x20219f0
+[Tff80] [API]   [14] Ordinal 19 -> send (fixed ordinal)
+[Tff80] [API]   [14] send -> 0x20220c0
+[Tff80] [API]   [15] Ordinal 6 -> getsockname (fixed ordinal)
+[Tff80] [API]   [15] getsockname -> 0x2021f80
+[Tff80] [API]   [16] Ordinal 5 -> getpeername (fixed ordinal)
+[Tff80] [API]   [16] getpeername -> 0x2022020
+[Tff80] [API]   [17] Ordinal 101 -> WSAAsyncSelect (fixed ordinal)
+[Tff80] [API]   [17] WSAAsyncSelect -> 0x2034dc0
+[Tff80] [API]   [18] Ordinal 13 -> listen (fixed ordinal)
+[Tff80] [API]   [18] listen -> 0x2021c30
+[Tff80] [API]   [19] Ordinal 22 -> shutdown (fixed ordinal)
+[Tff80] [API]   [19] shutdown -> 0x2021d80
+[Tff80] [API]   [20] Ordinal 18 -> select (fixed ordinal)
+[Tff80] [API]   [20] select -> 0x20223a0
+[Tff80] [API]   [21] Ordinal 3 -> closesocket (fixed ordinal)
+[Tff80] [API]   [21] closesocket -> 0x2018f50
+[Tff80] [API]   [22] Ordinal 2 -> bind (fixed ordinal)
+[Tff80] [API]   [22] bind -> 0x2021b90
+[Tff80] [API]   [23] Ordinal 1 -> accept (fixed ordinal)
+[Tff80] [API]   [23] accept -> 0x2021cd0
+[Tff80] [API]   [24] getaddrinfo -> 0x2022d70
+[Tff80] [API]   [25] Ordinal 15 -> ntohs (fixed ordinal)
+[Tff80] [API]   [25] ntohs -> 0x203c310
+[Tff80] [API] Import DLL: USERENV.dll (IAT RVA=0x36f740, ILT RVA=0x408650)
+[Tff80] [API]   [0] UNRESOLVED: GetProfilesDirectoryW
+[Tff80] [API] Import DLL: KERNEL32.dll (IAT RVA=0x36f068, ILT RVA=0x407f78)
+[Tff80] [API]   [0] EnumSystemLocalesW -> 0x20097e0
+[Tff80] [API]   [1] GetUserDefaultLCID -> 0x20097c0
+[Tff80] [API]   [2] IsValidLocale -> 0x20097b0
+[Tff80] [API]   [3] GetLocaleInfoW -> 0x20299f0
+[Tff80] [API]   [4] LCMapStringW -> 0x202b8a0
+[Tff80] [API]   [5] CompareStringW -> 0x201bdc0
+[Tff80] [API]   [6] GetTimeFormatW -> 0x20292a0
+[Tff80] [API]   [7] GetConsoleOutputCP -> 0x203c2f0
+[Tff80] [API]   [8] FlsFree -> 0x203c080
+[Tff80] [API]   [9] FlsSetValue -> 0x2008c10
+[Tff80] [API]   [10] FlsGetValue -> 0x2008bf0
+[Tff80] [API]   [11] FlsAlloc -> 0x200fd20
+[Tff80] [API]   [12] GetCommandLineW -> 0x2036910
+[Tff80] [API]   [13] GetCommandLineA -> 0x2035f60
+[Tff80] [API]   [14] GetTimeZoneInformation -> 0x2010e40
+[Tff80] [API]   [15] GetFileSizeEx -> 0x202c580
+[Tff80] [API]   [16] SetFilePointerEx -> 0x202c1e0
+[Tff80] [API]   [17] SetStdHandle -> 0x203bf40
+[Tff80] [API]   [18] IsValidCodePage -> 0x2009780
+[Tff80] [API]   [19] GetOEMCP -> 0x2009770
+[Tff80] [API]   [20] GetCPInfo -> 0x2010440
+[Tff80] [API]   [21] GetEnvironmentStringsW -> 0x2014d50
+[Tff80] [API]   [22] FreeEnvironmentStringsW -> 0x2032f10
+[Tff80] [API]   [23] SetEnvironmentVariableW -> 0x2053450
+[Tff80] [API]   [24] SetConsoleCtrlHandler -> 0x2009930
+[Tff80] [API]   [25] GetStringTypeW -> 0x20378a0
+[Tff80] [API]   [26] GetDateFormatW -> 0x2029190
+[Tff80] [API]   [27] ExitProcess -> 0x203b360
+[Tff80] [API]   [28] FreeLibraryAndExitThread -> 0x203b4f0
+[Tff80] [API]   [29] ResumeThread -> 0x2032070
+[Tff80] [API]   [30] ExitThread -> 0x201b5b0
+[Tff80] [API]   [31] GetModuleHandleExW -> 0x2054380
+[Tff80] [API]   [32] RtlPcToFileHeader -> 0x2009600
+[Tff80] [API]   [33] EncodePointer -> 0x2019ad0
+[Tff80] [API]   [34] TlsFree -> 0x200a110
+[Tff80] [API]   [35] TlsSetValue -> 0x202ce80
+[Tff80] [API]   [36] TlsGetValue -> 0x200b240
+[Tff80] [API]   [37] TlsAlloc -> 0x200fbd0
+[Tff80] [API]   [38] InitializeCriticalSectionAndSpinCount -> 0x203f080
+[Tff80] [API]   [39] SetLastError -> 0x20271b0
+[Tff80] [API]   [40] InterlockedFlushSList -> 0x20096a0
+[Tff80] [API]   [41] InterlockedPushEntrySList -> 0x2009680
+[Tff80] [API]   [42] RtlUnwindEx -> 0x2044310
+[Tff80] [API]   [43] GetStartupInfoW -> 0x2010cf0
+[Tff80] [API]   [44] InitializeSListHead -> 0x2009670
+[Tff80] [API]   [45] IsProcessorFeaturePresent -> 0x20095c0
+[Tff80] [API]   [46] TerminateProcess -> 0x2016420
+[Tff80] [API]   [47] SetUnhandledExceptionFilter -> 0x200b130
+[Tff80] [API]   [48] UnhandledExceptionFilter -> 0x2033030
+[Tff80] [API]   [49] RtlVirtualUnwind -> 0x20420d0
+[Tff80] [API]   [50] RtlLookupFunctionEntry -> 0x200aeb0
+[Tff80] [API]   [51] RtlCaptureContext -> 0x2032170
+[Tff80] [API]   [52] WriteConsoleW -> 0x2018a50
+[Tff80] [API]   [53] PeekConsoleInputW -> 0x203c140
+[Tff80] [API]   [54] ReadConsoleW -> 0x202be70
+[Tff80] [API]   [55] GetConsoleCP -> 0x20098f0
+[Tff80] [API]   [56] SetConsoleMode -> 0x203bef0
+[Tff80] [API]   [57] FlushFileBuffers -> 0x202c870
+[Tff80] [API]   [58] GetTickCount -> 0x20148b0
+[Tff80] [API]   [59] QueryPerformanceCounter -> 0x20149e0
+[Tff80] [API]   [60] MapViewOfFile -> 0x203a780
+[Tff80] [API]   [61] CreateFileMappingW -> 0x2027be0
+[Tff80] [API]   [62] FormatMessageA -> 0x202e5a0
+[Tff80] [API]   [63] GetSystemTime -> 0x201bb80
+[Tff80] [API]   [64] GetSystemTimeAsFileTime -> 0x2014620
+[Tff80] [API]   [65] WideCharToMultiByte -> 0x20273f0
+[Tff80] [API]   [66] GetModuleHandleW -> 0x20126e0
+[Tff80] [API]   [67] SystemTimeToFileTime -> 0x20395f0
+[Tff80] [API]   [68] GetProcessHeap -> 0x2009090
+[Tff80] [API]   [69] GetCurrentProcessId -> 0x2008320
+[Tff80] [API]   [70] GetFileSize -> 0x202c430
+[Tff80] [API]   [71] LockFileEx -> 0x202ee30
+[Tff80] [API]   [72] LocalFree -> 0x204f390
+[Tff80] [API]   [73] UnlockFile -> 0x200a0e0
+[Tff80] [API]   [74] HeapDestroy -> 0x203bfd0
+[Tff80] [API]   [75] HeapCompact -> 0x20090f0
+[Tff80] [API]   [76] HeapAlloc -> 0x202a260
+[Tff80] [API]   [77] GetSystemInfo -> 0x201b710
+[Tff80] [API]   [78] CloseHandle -> 0x2046580
+[Tff80] [API]   [79] HeapReAlloc -> 0x2051670
+[Tff80] [API]   [80] DeleteFileW -> 0x204d7e0
+[Tff80] [API]   [81] DeleteFileA -> 0x2037f70
+[Tff80] [API]   [82] WaitForSingleObjectEx -> 0x2045e20
+[Tff80] [API]   [83] CreateFileA -> 0x2037de0
+[Tff80] [API]   [84] FlushViewOfFile -> 0x200a100
+[Tff80] [API]   [85] OutputDebugStringW -> 0x2049700
+[Tff80] [API]   [86] GetFileAttributesExW -> 0x204d7a0
+[Tff80] [API]   [87] GetFileAttributesA -> 0x2038210
+[Tff80] [API]   [88] GetLastError -> 0x200a7e0
+[Tff80] [API]   [89] GetDiskFreeSpaceA -> 0x202cb30
+[Tff80] [API]   [90] FormatMessageW -> 0x202e6b0
+[Tff80] [API]   [91] GetTempPathA -> 0x2013ca0
+[Tff80] [API]   [92] Sleep -> 0x2015c50
+[Tff80] [API]   [93] MultiByteToWideChar -> 0x20295c0
+[Tff80] [API]   [94] HeapSize -> 0x2046960
+[Tff80] [API]   [95] HeapValidate -> 0x20090b0
+[Tff80] [API]   [96] UnmapViewOfFile -> 0x202a970
+[Tff80] [API]   [97] GetFileAttributesW -> 0x204d590
+[Tff80] [API]   [98] CreateFileW -> 0x204d390
+[Tff80] [API]   [99] WaitForSingleObject -> 0x2045d10
+[Tff80] [API]   [100] CreateMutexW -> 0x200cb40
+[Tff80] [API]   [101] GetTempPathW -> 0x2047040
+[Tff80] [API]   [102] UnlockFileEx -> 0x200a0f0
+[Tff80] [API]   [103] SetEndOfFile -> 0x202c330
+[Tff80] [API]   [104] GetFullPathNameA -> 0x2038390
+[Tff80] [API]   [105] SetFilePointer -> 0x202c0a0
+[Tff80] [API]   [106] LockFile -> 0x202ed20
+[Tff80] [API]   [107] OutputDebugStringA -> 0x200ad50
+[Tff80] [API]   [108] GetDiskFreeSpaceW -> 0x2052100
+[Tff80] [API]   [109] WriteFile -> 0x202be90
+[Tff80] [API]   [110] GetFullPathNameW -> 0x2051040
+[Tff80] [API]   [111] HeapFree -> 0x20512f0
+[Tff80] [API]   [112] HeapCreate -> 0x20090a0
+[Tff80] [API]   [113] ReadFile -> 0x202bc60
+[Tff80] [API]   [114] AreFileApisANSI -> 0x203c2e0
+[Tff80] [API]   [115] DebugBreak -> 0x2031970
+[Tff80] [API]   [116] RaiseException -> 0x2008560
+[Tff80] [API]   [117] RtlUnwind -> 0x2045300
+[Tff80] [API]   [118] IsDebuggerPresent -> 0x2031e70
+[Tff80] [API]   [119] EnterCriticalSection -> 0x203f9f0
+[Tff80] [API]   [120] LeaveCriticalSection -> 0x2031730
+[Tff80] [API]   [121] InitializeCriticalSection -> 0x20358f0
+[Tff80] [API]   [122] GetCurrentThreadId -> 0x2008340
+[Tff80] [API]   [123] DeleteCriticalSection -> 0x2035910
+[Tff80] [API]   [124] GetModuleFileNameA -> 0x203f1a0
+[Tff80] [API]   [125] GetModuleFileNameW -> 0x20479e0
+[Tff80] [API]   [126] GetEnvironmentVariableW -> 0x20502c0
+[Tff80] [API]   [127] GetEnvironmentVariableA -> 0x20293b0
+[Tff80] [API]   [128] GetVersionExW -> 0x203cc30
+[Tff80] [API]   [129] GetACP -> 0x2009760
+[Tff80] [API]   [130] GetProcAddress -> 0x200a8e0
+[Tff80] [API]   [131] UNRESOLVED: lstrcmpiA
+[Tff80] [API]   [132] UNRESOLVED: SearchPathW
+[Tff80] [API]   [133] GetCurrentProcess -> 0x2008310
+[Tff80] [API]   [134] GetStdHandle -> 0x205e990
+[Tff80] [API]   [135] GetShortPathNameW -> 0x203f340
+[Tff80] [API]   [136] SetThreadPriority -> 0x2032690
+[Tff80] [API]   [137] CreatePipe -> 0x204c070
+[Tff80] [API]   [138] PeekNamedPipe -> 0x2009a90
+[Tff80] [API]   [139] DuplicateHandle -> 0x200a5a0
+[Tff80] [API]   [140] CreateEventW -> 0x200c1a0
+[Tff80] [API]   [141] GetExitCodeThread -> 0x2041e60
+[Tff80] [API]   [142] SetEvent -> 0x20419a0
+[Tff80] [API]   [143] TerminateThread -> 0x203be70
+[Tff80] [API]   [144] CreateThread -> 0x202acc0
+[Tff80] [API]   [145] ResetEvent -> 0x2041650
+[Tff80] [API]   [146] CreateProcessW -> 0x2028630
+[Tff80] [API]   [147] GetTempFileNameW -> 0x20523d0
+[Tff80] [API]   [148] GetExitCodeProcess -> 0x2009ac0
+[Tff80] [API]   [149] GetConsoleMode -> 0x2028e50
+[Tff80] [API]   [150] UNRESOLVED: GetCommState
+[Tff80] [API]   [151] GetFileType -> 0x201c720
+[Tff80] [API]   [152] SetHandleInformation -> 0x2009a80
+[Tff80] [API]   [153] UNRESOLVED: GetComputerNameExW
+[Tff80] [API]   [154] QueryPerformanceFrequency -> 0x2010840
+[Tff80] [API]   [155] CreateDirectoryW -> 0x204d9c0
+[Tff80] [API]   [156] GetVolumeInformationW -> 0x2048c80
+[Tff80] [API]   [157] FindFirstFileW -> 0x2048b40
+[Tff80] [API]   [158] FindFirstFileExW -> 0x2048df0
+[Tff80] [API]   [159] FindNextFileW -> 0x2036be0
+[Tff80] [API]   [160] lstrlenW -> 0x20493e0
+[Tff80] [API]   [161] DeviceIoControl -> 0x204bf50
+[Tff80] [API]   [162] RemoveDirectoryW -> 0x204b000
+[Tff80] [API]   [163] SetFileTime -> 0x2032370
+[Tff80] [API]   [164] CreateHardLinkW -> 0x20536a0
+[Tff80] [API]   [165] FindClose -> 0x201cd90
+[Tff80] [API]   [166] GetFileInformationByHandle -> 0x202c6d0
+[Tff80] [API]   [167] GetCurrentThread -> 0x2008330
+[Tff80] [API]   [168] GetWindowsDirectoryA -> 0x2038cc0
+[Tff80] [API]   [169] GetCurrentDirectoryW -> 0x2046760
+[Tff80] [API]   [170] SetCurrentDirectoryW -> 0x204e030
+[Tff80] [API]   [171] UNRESOLVED: GetPrivateProfileStringA
+[Tff80] [API]   [172] UNRESOLVED: GetVolumeNameForVolumeMountPointW
+[Tff80] [API]   [173] UNRESOLVED: GetVolumeInformationA
+[Tff80] [API]   [174] SetFileAttributesW -> 0x20098c0
+[Tff80] [API]   [175] UNRESOLVED: GetLogicalDriveStringsA
+[Tff80] [API]   [176] UNRESOLVED: CopyFileW
+[Tff80] [API]   [177] MoveFileW -> 0x2052890
+[Tff80] [API]   [178] FreeLibrary -> 0x2032df0
+[Tff80] [API]   [179] LoadLibraryExW -> 0x204f9a0
+[Tff80] [API]   [180] SleepEx -> 0x2016010
+[Tff80] [API]   [181] UNRESOLVED: PurgeComm
+[Tff80] [API]   [182] UNRESOLVED: GetCommModemStatus
+[Tff80] [API]   [183] UNRESOLVED: SetupComm
+[Tff80] [API]   [184] UNRESOLVED: BuildCommDCBW
+[Tff80] [API]   [185] UNRESOLVED: EscapeCommFunction
+[Tff80] [API]   [186] UNRESOLVED: ClearCommError
+[Tff80] [API]   [187] GetOverlappedResult -> 0x204df10
+[Tff80] [API]   [188] UNRESOLVED: SetCommTimeouts
+[Tff80] [API]   [189] UNRESOLVED: SetCommState
+[Tff80] [API] Import resolution: 223 resolved, 32 unresolved (total 255)
+[Tff80] [API] Exception: .pdata RVA=0x415000 Size=0x27bb8 Entries=13562
+[Tff80] [API] [API-005] EH hacks DISABLED (default) (MINWIN_EH_HACKS=<unset>)
+[Tff80] [API] [API-005] CXX-EH-FIX (LSDA catch-all patch RVA 0x2010c8) skipped: MINWIN_EH_HACKS not set
+[Tff80] [API] Jumping to EP=0x1402fa6d0
+[Tff80] [API] GetSystemTimeAsFileTime()
+[Tff80] [API] QueryPerformanceCounter()
+[Tff80] [API] LoadLibraryExW(flags=2048)
+[Tff80] [API] LoadLibraryA(api-ms-win-core-synch-l1-2-0)
+[Tff80] [API] GetProcAddress(module=0xdead0002, name=InitializeCriticalSectionEx)
+[Tff80] [API]   -> 0x2012020
+[Tff80] [API] InitializeCriticalSectionEx(spin=4000)
+[Tff80] [API] LoadLibraryExW(flags=2048)
+[Tff80] [API] LoadLibraryA(api-ms-win-core-fibers-l1-1-1)
+[Tff80] [API] GetProcAddress(module=0xdead0002, name=FlsAlloc)
+[Tff80] [API]   -> 0x200fd20
+[Tff80] [API] FlsAlloc(cb=0x1402fc468) = 0
+[Tff80] [API] GetProcAddress(module=0xdead0002, name=FlsSetValue)
+[Tff80] [API]   -> 0x2008c10
+[Tff80] [API] LoadLibraryExW(flags=2048)
+[Tff80] [API] LoadLibraryA(api-ms-win-core-synch-l1-2-0)
+[Tff80] [API] GetProcAddress(module=0xdead0002, name=InitializeCriticalSectionEx)
+[Tff80] [API]   -> 0x2012020
+[Tff80] [API] InitializeCriticalSectionEx(spin=4000)
+[Tff80] [API] InitializeCriticalSectionEx(spin=4000)
+[Tff80] [API] InitializeCriticalSectionEx(spin=4000)
+[Tff80] [API] InitializeCriticalSectionEx(spin=4000)
+[Tff80] [API] InitializeCriticalSectionEx(spin=4000)
+[Tff80] [API] InitializeCriticalSectionEx(spin=4000)
+[Tff80] [API] InitializeCriticalSectionEx(spin=4000)
+[Tff80] [API] InitializeCriticalSectionEx(spin=4000)
+[Tff80] [API] InitializeCriticalSectionEx(spin=4000)
+[Tff80] [API] InitializeCriticalSectionEx(spin=4000)
+[Tff80] [API] InitializeCriticalSectionEx(spin=4000)
+[Tff80] [API] InitializeCriticalSectionEx(spin=4000)
+[Tff80] [API] InitializeCriticalSectionEx(spin=4000)
+[Tff80] [API] InitializeCriticalSectionEx(spin=4000)
+[Tff80] [API] FlsAlloc(cb=0x14034fca4) = 1
+[Tff80] [API] GetLastError() = 0
+[Tff80] [API] HeapAlloc(size=0x3c8, zero=1) = 0x38a5720
+[Tff80] [API] EnterCriticalSection(0x1404135f8)
+[Tff80] [API] LeaveCriticalSection(0x1404135f8)
+[Tff80] [API] EnterCriticalSection(0x1404135d0)
+[Tff80] [API] LeaveCriticalSection(0x1404135d0)
+[Tff80] [API] SetLastError(0)
+[Tff80] [API] EnterCriticalSection(0x140413648)
+[Tff80] [API] EnterCriticalSection(0x140413648)
+[Tff80] [API] HeapAlloc(size=0x1200, zero=1) = 0x38a5af0
+[Tff80] [API] InitializeCriticalSectionEx(spin=4000)
+[Tff80] [API] InitializeCriticalSectionEx(spin=4000)
+[Tff80] [API] InitializeCriticalSectionEx(spin=4000)
+[Tff80] [API] InitializeCriticalSectionEx(spin=4000)
+[Tff80] [API] InitializeCriticalSectionEx(spin=4000)
+[Tff80] [API] InitializeCriticalSectionEx(spin=4000)
+[Tff80] [API] InitializeCriticalSectionEx(spin=4000)
+[Tff80] [API] InitializeCriticalSectionEx(spin=4000)
+[Tff80] [API] InitializeCriticalSectionEx(spin=4000)
+[Tff80] [API] InitializeCriticalSectionEx(spin=4000)
+[Tff80] [API] InitializeCriticalSectionEx(spin=4000)
+[Tff80] [API] InitializeCriticalSectionEx(spin=4000)
+[Tff80] [API] InitializeCriticalSectionEx(spin=4000)
+[Tff80] [API] InitializeCriticalSectionEx(spin=4000)
+[Tff80] [API] InitializeCriticalSectionEx(spin=4000)
+[Tff80] [API] InitializeCriticalSectionEx(spin=4000)
+[Tff80] [API] InitializeCriticalSectionEx(spin=4000)
+[Tff80] [API] InitializeCriticalSectionEx(spin=4000)
+[Tff80] [API] InitializeCriticalSectionEx(spin=4000)
+[Tff80] [API] InitializeCriticalSectionEx(spin=4000)
+[Tff80] [API] InitializeCriticalSectionEx(spin=4000)
+[Tff80] [API] InitializeCriticalSectionEx(spin=4000)
+[Tff80] [API] InitializeCriticalSectionEx(spin=4000)
+[Tff80] [API] InitializeCriticalSectionEx(spin=4000)
+[Tff80] [API] InitializeCriticalSectionEx(spin=4000)
+[Tff80] [API] InitializeCriticalSectionEx(spin=4000)
+[Tff80] [API] InitializeCriticalSectionEx(spin=4000)
+[Tff80] [API] InitializeCriticalSectionEx(spin=4000)
+[Tff80] [API] InitializeCriticalSectionEx(spin=4000)
+[Tff80] [API] InitializeCriticalSectionEx(spin=4000)
+[Tff80] [API] InitializeCriticalSectionEx(spin=4000)
+[Tff80] [API] InitializeCriticalSectionEx(spin=4000)
+[Tff80] [API] InitializeCriticalSectionEx(spin=4000)
+[Tff80] [API] InitializeCriticalSectionEx(spin=4000)
+[Tff80] [API] InitializeCriticalSectionEx(spin=4000)
+[Tff80] [API] InitializeCriticalSectionEx(spin=4000)
+[Tff80] [API] InitializeCriticalSectionEx(spin=4000)
+[Tff80] [API] InitializeCriticalSectionEx(spin=4000)
+[Tff80] [API] InitializeCriticalSectionEx(spin=4000)
+[Tff80] [API] InitializeCriticalSectionEx(spin=4000)
+[Tff80] [API] InitializeCriticalSectionEx(spin=4000)
+[Tff80] [API] InitializeCriticalSectionEx(spin=4000)
+[Tff80] [API] InitializeCriticalSectionEx(spin=4000)
+[Tff80] [API] InitializeCriticalSectionEx(spin=4000)
+[Tff80] [API] InitializeCriticalSectionEx(spin=4000)
+[Tff80] [API] InitializeCriticalSectionEx(spin=4000)
+[Tff80] [API] InitializeCriticalSectionEx(spin=4000)
+[Tff80] [API] InitializeCriticalSectionEx(spin=4000)
+[Tff80] [API] InitializeCriticalSectionEx(spin=4000)
+[Tff80] [API] InitializeCriticalSectionEx(spin=4000)
+[Tff80] [API] InitializeCriticalSectionEx(spin=4000)
+[Tff80] [API] InitializeCriticalSectionEx(spin=4000)
+[Tff80] [API] InitializeCriticalSectionEx(spin=4000)
+[Tff80] [API] InitializeCriticalSectionEx(spin=4000)
+[Tff80] [API] InitializeCriticalSectionEx(spin=4000)
+[Tff80] [API] InitializeCriticalSectionEx(spin=4000)
+[Tff80] [API] InitializeCriticalSectionEx(spin=4000)
+[Tff80] [API] InitializeCriticalSectionEx(spin=4000)
+[Tff80] [API] InitializeCriticalSectionEx(spin=4000)
+[Tff80] [API] InitializeCriticalSectionEx(spin=4000)
+[Tff80] [API] InitializeCriticalSectionEx(spin=4000)
+[Tff80] [API] InitializeCriticalSectionEx(spin=4000)
+[Tff80] [API] InitializeCriticalSectionEx(spin=4000)
+[Tff80] [API] InitializeCriticalSectionEx(spin=4000)
+[Tff80] [API] LeaveCriticalSection(0x140413648)
+[Tff80] [API] GetStartupInfoW()
+[Tff80] [API] GetStdHandle(-10) = 0x4
+[Tff80] [API] GetStdHandle(-11) = 0x5
+[Tff80] [API] GetStdHandle(-12) = 0x6
+[Tff80] [API] LeaveCriticalSection(0x140413648)
+[Tff80] [API] GetCommandLineA() = "sqlite3_analyzer.exe"
+[Tff80] [API] GetCommandLineW()
+[Tff80] [API] EnterCriticalSection(0x1404135f8)
+[Tff80] [API] LeaveCriticalSection(0x1404135f8)
+[Tff80] [API] HeapAlloc(size=0x228, zero=0) = 0x38a6d00
+[Tff80] [API] GetCPInfo(cp=1252)
+[Tff80] [API] GetCPInfo(cp=1252)
+[Tff80] [API] MultiByteToWideChar(cp=1252, srclen=256, dstlen=0)
+[Tff80] [API] MultiByteToWideChar(cp=1252, srclen=256, dstlen=256)
+[Tff80] [API] MultiByteToWideChar(cp=1252, srclen=256, dstlen=0)
+[Tff80] [API] MultiByteToWideChar(cp=1252, srclen=256, dstlen=256)
+[Tff80] [API] LoadLibraryExW(flags=2048)
+[Tff80] [API] LoadLibraryA(api-ms-win-core-localization-l1-2-1)
+[Tff80] [API] GetProcAddress(module=0xdead0002, name=LCMapStringEx)
+[Tff80] [API]   -> 0x202ba70
+[Tff80] [API] WideCharToMultiByte(cp=1252, srclen=256, dstlen=256)
+[Tff80] [API] MultiByteToWideChar(cp=1252, srclen=256, dstlen=0)
+[Tff80] [API] MultiByteToWideChar(cp=1252, srclen=256, dstlen=256)
+[Tff80] [API] WideCharToMultiByte(cp=1252, srclen=256, dstlen=256)
+[Tff80] [API] EnterCriticalSection(0x1404135f8)
+[Tff80] [API] LeaveCriticalSection(0x1404135f8)
+[Tff80] [API] EnterCriticalSection(0x140413580)
+[Tff80] [API] HeapAlloc(size=0x100, zero=0) = 0x38a6f30
+[Tff80] [API] LeaveCriticalSection(0x140413580)
+[Tff80] [API] GetModuleFileNameW(cap=261)
+[Tff80] [API] LoadLibraryExW(flags=2048)
+[Tff80] [API] LoadLibraryA(kernel32)
+[Tff80] [API] SetLastError(126)
+[Tff80] [API] GetLastError() = 126
+[Tff80] [API] WideCharToMultiByte(cp=0, srclen=-1, dstlen=0)
+[Tff80] [API] WideCharToMultiByte(cp=0, srclen=-1, dstlen=260)
+[Tff80] [API] HeapAlloc(size=0x25, zero=1) = 0x38a56f0
+[Tff80] [API] GetLastError() = 126
+[Tff80] [API] SetLastError(126)
+[Tff80] [API] GetEnvironmentStringsW()
+[Tff80] [API] WideCharToMultiByte(cp=0, srclen=1322, dstlen=0)
+[Tff80] [API] HeapAlloc(size=0x52a, zero=0) = 0x38a7040
+[Tff80] [API] WideCharToMultiByte(cp=0, srclen=1322, dstlen=1322)
+[Tff80] [API] FreeEnvironmentStringsW()
+[Tff80] [API] HeapAlloc(size=0x158, zero=1) = 0x38a7580
+[Tff80] [API] HeapAlloc(size=0x10, zero=1) = 0x38a76e0
+[Tff80] [API] HeapAlloc(size=0x1b, zero=1) = 0x38a5620
+[Tff80] [API] HeapAlloc(size=0x13, zero=1) = 0x38a7700
+[Tff80] [API] HeapAlloc(size=0x32, zero=1) = 0x38a7720
+[Tff80] [API] HeapAlloc(size=0xd, zero=1) = 0x38a7760
+[Tff80] [API] HeapAlloc(size=0x19, zero=1) = 0x38a7780
+[Tff80] [API] HeapAlloc(size=0x14, zero=1) = 0x38a77b0
+[Tff80] [API] HeapAlloc(size=0x14, zero=1) = 0x38a77d0
+[Tff80] [API] HeapAlloc(size=0x69, zero=1) = 0x38a5090
+[Tff80] [API] HeapAlloc(size=0x3a, zero=1) = 0x38a77f0
+[Tff80] [API] HeapAlloc(size=0xa, zero=1) = 0x38a7840
+[Tff80] [API] HeapAlloc(size=0x16, zero=1) = 0x38a7860
+[Tff80] [API] HeapAlloc(size=0xf, zero=1) = 0x38a7880
+[Tff80] [API] HeapAlloc(size=0x31, zero=1) = 0x38a78a0
+[Tff80] [API] HeapAlloc(size=0x39, zero=1) = 0x38a78e0
+[Tff80] [API] HeapAlloc(size=0xd, zero=1) = 0x38a7930
+[Tff80] [API] HeapAlloc(size=0x1d, zero=1) = 0x38a7950
+[Tff80] [API] HeapAlloc(size=0x1a, zero=1) = 0x38a7980
+[Tff80] [API] HeapAlloc(size=0x1c, zero=1) = 0x38a79b0
+[Tff80] [API] HeapAlloc(size=0x24, zero=1) = 0x38a79e0
+[Tff80] [API] HeapAlloc(size=0x1b, zero=1) = 0x38a7a10
+[Tff80] [API] HeapAlloc(size=0xb, zero=1) = 0x38a7a40
+[Tff80] [API] HeapAlloc(size=0x11, zero=1) = 0x38a7a60
+[Tff80] [API] HeapAlloc(size=0x22, zero=1) = 0x38a7a80
+[Tff80] [API] HeapAlloc(size=0xa, zero=1) = 0x38a7ab0
+[Tff80] [API] HeapAlloc(size=0x7, zero=1) = 0x38a7ad0
+[Tff80] [API] HeapAlloc(size=0x8, zero=1) = 0x38a7af0
+[Tff80] [API] HeapAlloc(size=0x19, zero=1) = 0x38a7b10
+[Tff80] [API] HeapAlloc(size=0x1a, zero=1) = 0x38a7b40
+[Tff80] [API] HeapAlloc(size=0xb, zero=1) = 0x38a7b70
+[Tff80] [API] HeapAlloc(size=0x1f, zero=1) = 0x38a7b90
+[Tff80] [API] HeapAlloc(size=0x11, zero=1) = 0x38a7bc0
+[Tff80] [API] HeapAlloc(size=0x15, zero=1) = 0x38a7be0
+[Tff80] [API] HeapAlloc(size=0x19, zero=1) = 0x38a7c00
+[Tff80] [API] HeapAlloc(size=0xb0, zero=1) = 0x38a7c30
+[Tff80] [API] HeapAlloc(size=0x11, zero=1) = 0x38a7cf0
+[Tff80] [API] HeapAlloc(size=0x1f, zero=1) = 0x38a7d10
+[Tff80] [API] HeapAlloc(size=0x1f, zero=1) = 0x38a7d40
+[Tff80] [API] HeapAlloc(size=0x30, zero=1) = 0x38a7d70
+[Tff80] [API] HeapAlloc(size=0x23, zero=1) = 0x38a7db0
+[Tff80] [API] HeapAlloc(size=0x38, zero=1) = 0x38a7de0
+[Tff80] [API] HeapAlloc(size=0x13, zero=1) = 0x38a7e20
+[Tff80] [API] HeapFree(0x38a7040)
+[Tff80] [API] HeapAlloc(size=0x1000, zero=1) = 0x38a7e40
+[Tff80] [API] InitializeCriticalSectionEx(spin=4000)
+[Tff80] [API] InitializeCriticalSectionEx(spin=4000)
+[Tff80] [API] InitializeCriticalSectionEx(spin=4000)
+[Tff80] [API] SetUnhandledExceptionFilter(handler=0x1402fae9c)
+[Tff80] [API] EnterCriticalSection(0x1404136e8)
+[Tff80] [API] LeaveCriticalSection(0x1404136e8)
+[Tff80] [API] InitializeCriticalSection(0x140413f70)
+[Tff80] [API] InitializeCriticalSection(0x140413fc0)
+[Tff80] [API] InitializeCriticalSection(0x140413f98)
+[Tff80] [API] EnterCriticalSection(0x140413fc0)
+[Tff80] [API] WSAStartup(202)
+[Tff80] [API] GetModuleHandleW()
+[Tff80] [API] GetModuleHandleW()
+[Tff80] [API] GetProcAddress(module=(nil), name=CancelSynchronousIo)
+[Tff80] [API] GetProcAddress(module=(nil), name=CreateSymbolicLinkW)
+[Tff80] [API] HeapAlloc(size=0xa0, zero=0) = 0x38a7040
+[Tff80] [API] HeapAlloc(size=0x10, zero=0) = 0x38a70f0
+[Tff80] [API] HeapAlloc(size=0x10, zero=0) = 0x38a7110
+[Tff80] [API] HeapAlloc(size=0x10, zero=0) = 0x38a7130
+[Tff80] [API] HeapAlloc(size=0x10, zero=0) = 0x38a7150
+[Tff80] [API] HeapAlloc(size=0x10, zero=0) = 0x38a7170
+[Tff80] [API] HeapAlloc(size=0x10, zero=0) = 0x38a7190
+[Tff80] [API] HeapAlloc(size=0x10, zero=0) = 0x38a71b0
+[Tff80] [API] HeapAlloc(size=0x10, zero=0) = 0x38a71d0
+[Tff80] [API] HeapAlloc(size=0x10, zero=0) = 0x38a71f0
+[Tff80] [API] HeapReAlloc(size=0x18) = 0x38a71b0
+[Tff80] [API] HeapReAlloc(size=0x30) = 0x38a7210
+[Tff80] [API] HeapReAlloc(size=0x58) = 0x38a7250
+[Tff80] [API] HeapAlloc(size=0x10, zero=0) = 0x38a71f0
+[Tff80] [API] HeapAlloc(size=0x10, zero=0) = 0x38a71d0
+[Tff80] [API] HeapAlloc(size=0x10, zero=0) = 0x38a72b0
+[Tff80] [API] HeapReAlloc(size=0x18) = 0x38a72b0
+[Tff80] [API] HeapAlloc(size=0x10, zero=0) = 0x38a72d0
+[Tff80] [API] HeapReAlloc(size=0x28) = 0x38a72d0
+[Tff80] [API] HeapAlloc(size=0x10, zero=0) = 0x38a8e50
+[Tff80] [API] HeapReAlloc(size=0x48) = 0x38a8e50
+[Tff80] [API] HeapAlloc(size=0x2a, zero=0) = 0x38a8ea0
+[Tff80] [API] HeapAlloc(size=0x28, zero=0) = 0x38a8ee0
+[Tff80] [API] HeapAlloc(size=0x2b, zero=0) = 0x38a8f10
+[Tff80] [API] HeapAlloc(size=0x28, zero=0) = 0x38a8f50
+[Tff80] [API] HeapAlloc(size=0x28, zero=0) = 0x38a8f80
+[Tff80] [API] HeapAlloc(size=0x28, zero=0) = 0x38a8fb0
+[Tff80] [API] HeapAlloc(size=0x28, zero=0) = 0x38a8fe0
+[Tff80] [API] HeapAlloc(size=0x29, zero=0) = 0x38a9010
+[Tff80] [API] HeapAlloc(size=0x2d, zero=0) = 0x38a9050
+[Tff80] [API] HeapAlloc(size=0x28, zero=0) = 0x38a9090
+[Tff80] [API] HeapAlloc(size=0x28, zero=0) = 0x38a90c0
+[Tff80] [API] HeapAlloc(size=0x29, zero=0) = 0x38a90f0
+[Tff80] [API] HeapAlloc(size=0x80, zero=0) = 0x38a9130
+[Tff80] [API] HeapAlloc(size=0x28, zero=0) = 0x38a91c0
+[Tff80] [API] HeapAlloc(size=0x28, zero=0) = 0x38a91f0
+[Tff80] [API] HeapAlloc(size=0x48, zero=0) = 0x38a9220
+[Tff80] [API] HeapAlloc(size=0x40, zero=0) = 0x38a9270
+[Tff80] [API] HeapAlloc(size=0x29, zero=0) = 0x38a92c0
+[Tff80] [API] HeapAlloc(size=0x9, zero=0) = 0x38a9300
+[Tff80] [API] HeapAlloc(size=0x48, zero=0) = 0x38a9320
+[Tff80] [API] HeapAlloc(size=0x28, zero=0) = 0x38a9370
+[Tff80] [API] HeapAlloc(size=0x6, zero=0) = 0x38a93a0
+[Tff80] [API] HeapAlloc(size=0x48, zero=0) = 0x38a93c0
+[Tff80] [API] HeapAlloc(size=0x28, zero=0) = 0x38a9410
+[Tff80] [API] HeapAlloc(size=0x8, zero=0) = 0x38a9440
+[Tff80] [API] HeapAlloc(size=0x48, zero=0) = 0x38a9460
+[Tff80] [API] HeapAlloc(size=0x118, zero=0) = 0x38a94b0
+[Tff80] [API] HeapAlloc(size=0xa00, zero=0) = 0x38a95d0
+[Tff80] [API] HeapAlloc(size=0xa00, zero=0) = 0x38a9fe0
+[Tff80] [API] HeapAlloc(size=0x2a, zero=0) = 0x38aa9f0
+[Tff80] [API] HeapAlloc(size=0xa, zero=0) = 0x38aaa30
+[Tff80] [API] HeapAlloc(size=0x48, zero=0) = 0x38aaa50
+[Tff80] [API] LeaveCriticalSection(0x140413fc0)
+[Tff80] [API] HeapAlloc(size=0x60, zero=0) = 0x38aaaa0
+[Tff80] [API] HeapAlloc(size=0x50, zero=0) = 0x38aab10
+[Tff80] [API] RegisterClassW(wc=0x7ffe12e24640) -> ATOM 0xc001
+[Tff80] [API] InitializeCriticalSection(0x38aab10)
+[Tff80] [API] CreateEventW(manual=1 init=0)
+[Tff80] [API] HeapAlloc(size=0x12c0, zero=0) = 0x38aab70
+[Tff80] [API] HeapAlloc(size=0x7, zero=0) = 0x38abe40
+[Tff80] [API] HeapAlloc(size=0x7, zero=0) = 0x38abe60
+[Tff80] [API] HeapAlloc(size=0x8, zero=0) = 0x38abe80
+[Tff80] [API] HeapAlloc(size=0x58, zero=0) = 0x38abea0
+[Tff80] [API] HeapAlloc(size=0x10, zero=0) = 0x38abf00
+[Tff80] [API] HeapAlloc(size=0x18, zero=0) = 0x38abf20
+[Tff80] [API] HeapAlloc(size=0x9, zero=0) = 0x38abf40
+[Tff80] [API] HeapAlloc(size=0x8, zero=0) = 0x38abf60
+[Tff80] [API] HeapAlloc(size=0x58, zero=0) = 0x38abf80
+[Tff80] [API] HeapAlloc(size=0x18, zero=0) = 0x38abfe0
+[Tff80] [API] GetEnvironmentVariableW(TCL_LIBRARY) = <null>
+[Tff80] [API] SetLastError(203)
+[Tff80] [API] GetEnvironmentVariableA(TCL_LIBRARY) = <null>
+[Tff80] [API] SetLastError(203)
+[Tff80] [API] HeapAlloc(size=0x8, zero=0) = 0x38ac000
+[Tff80] [API] HeapAlloc(size=0x58, zero=0) = 0x38ac020
+[Tff80] [API] HeapAlloc(size=0x18, zero=0) = 0x38ac080
+[Tff80] [API] GetModuleFileNameW(cap=324)

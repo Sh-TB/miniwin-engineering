@@ -1,0 +1,3 @@
+[MiniWin] Loading /home/z/my-project/workspace/miniwin-engineering/tests/gui/calc.exe...
+[CALC] main=0000000000010001 display=0000000000030001 btn1=000000000003000a btnadd=0000000000030011 btneq=000000000003000f
+[CALC] exit loop, final display='' expr='' acc=0

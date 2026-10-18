@@ -1,0 +1,1260 @@
+{
+  "trace": [
+[T7f80] [API] PE Loader: file=/home/z/my-project/workspace/miniwin-engineering/samples/real/md5deep/md5deep-4.4/whirlpooldeep64.exe size=868864
+[T7f80] [API] PE Loader: ImageBase=0x400000 EP=0x14d0 SizeOfImage=0xdb000 Sections=9
+[T7f80] [API] PE Loader: Mapped at 0x400000 (forced via MAP_FIXED)
+[T7f80] [API] Section [0] .text    VA=0x00001000 VS=0x00091430 Raw=0x00091600 Ch=0x60500060
+[T7f80] [API] Section [1] .data    VA=0x00093000 VS=0x00015270 Raw=0x00015400 Ch=0xc0600040
+[T7f80] [API] Section [2] .rdata   VA=0x000a9000 VS=0x00015f04 Raw=0x00016000 Ch=0x40600040
+[T7f80] [API] Section [3] .pdata   VA=0x000bf000 VS=0x00008634 Raw=0x00008800 Ch=0x40300040
+[T7f80] [API] Section [4] .xdata   VA=0x000c8000 VS=0x0000ca20 Raw=0x0000cc00 Ch=0x40300040
+[T7f80] [API] Section [5] .bss     VA=0x000d5000 VS=0x000017e0 Raw=0x00000000 Ch=0xc0600080
+[T7f80] [API] Section [6] .idata   VA=0x000d7000 VS=0x00001b90 Raw=0x00001c00 Ch=0xc0300040
+[T7f80] [API] Section [7] .CRT     VA=0x000d9000 VS=0x00000070 Raw=0x00000200 Ch=0xc0400040
+[T7f80] [API] Section [8] .tls     VA=0x000da000 VS=0x00000068 Raw=0x00000200 Ch=0xc0600040
+[T7f80] [API] Import Directory: RVA=0xd7000 Size=0x1b90
+[T7f80] [API] Import DLL: KERNEL32.dll (IAT RVA=0xd76e0, ILT RVA=0xd7078)
+[T7f80] [API]   [0] CloseHandle -> 0x2046580
+[T7f80] [API]   [1] CreateEventA -> 0x2027dc0
+[T7f80] [API]   [2] CreateFileW -> 0x204d390
+[T7f80] [API]   [3] CreateSemaphoreA -> 0x2027ff0
+[T7f80] [API]   [4] DeleteCriticalSection -> 0x2035910
+[T7f80] [API]   [5] DuplicateHandle -> 0x200a5a0
+[T7f80] [API]   [6] EnterCriticalSection -> 0x203f9f0
+[T7f80] [API]   [7] FindClose -> 0x201cd90
+[T7f80] [API]   [8] FindFirstFileW -> 0x2048b40
+[T7f80] [API]   [9] FindNextFileW -> 0x2036be0
+[T7f80] [API]   [10] FormatMessageW -> 0x202e6b0
+[T7f80] [API]   [11] GetCommandLineW -> 0x2036910
+[T7f80] [API]   [12] GetCurrentProcess -> 0x2008310
+[T7f80] [API]   [13] GetCurrentProcessId -> 0x2008320
+[T7f80] [API]   [14] GetCurrentThread -> 0x2008330
+[T7f80] [API]   [15] GetCurrentThreadId -> 0x2008340
+[T7f80] [API]   [16] GetFileAttributesW -> 0x204d590
+[T7f80] [API]   [17] GetFileInformationByHandle -> 0x202c6d0
+[T7f80] [API]   [18] GetHandleInformation -> 0x2031b70
+[T7f80] [API]   [19] GetLastError -> 0x200a7e0
+[T7f80] [API]   [20] GetModuleFileNameW -> 0x20479e0
+[T7f80] [API]   [21] GetModuleHandleW -> 0x20126e0
+[T7f80] [API]   [22] GetProcAddress -> 0x200a8e0
+[T7f80] [API]   [23] GetProcessAffinityMask -> 0x2010720
+[T7f80] [API]   [24] GetStartupInfoA -> 0x20100d0
+[T7f80] [API]   [25] GetSystemInfo -> 0x201b710
+[T7f80] [API]   [26] GetSystemTimeAsFileTime -> 0x2014620
+[T7f80] [API]   [27] GetThreadContext -> 0x2031c70
+[T7f80] [API]   [28] GetThreadPriority -> 0x2031d70
+[T7f80] [API]   [29] GetTickCount -> 0x20148b0
+[T7f80] [API]   [30] GetTimeZoneInformation -> 0x2010e40
+[T7f80] [API]   [31] InitializeCriticalSection -> 0x20358f0
+[T7f80] [API]   [32] IsDBCSLeadByteEx -> 0x2008360
+[T7f80] [API]   [33] LeaveCriticalSection -> 0x2031730
+[T7f80] [API]   [34] LocalFree -> 0x204f390
+[T7f80] [API]   [35] MultiByteToWideChar -> 0x20295c0
+[T7f80] [API]   [36] QueryPerformanceCounter -> 0x20149e0
+[T7f80] [API]   [37] RaiseException -> 0x2008560
+[T7f80] [API]   [38] ReleaseSemaphore -> 0x20408c0
+[T7f80] [API]   [39] ResetEvent -> 0x2041650
+[T7f80] [API]   [40] ResumeThread -> 0x2032070
+[T7f80] [API]   [41] RtlAddFunctionTable -> 0x202cfa0
+[T7f80] [API]   [42] RtlCaptureContext -> 0x2032170
+[T7f80] [API]   [43] RtlLookupFunctionEntry -> 0x200aeb0
+[T7f80] [API]   [44] RtlUnwindEx -> 0x2044310
+[T7f80] [API]   [45] RtlVirtualUnwind -> 0x20420d0
+[T7f80] [API]   [46] SetEvent -> 0x20419a0
+[T7f80] [API]   [47] SetLastError -> 0x20271b0
+[T7f80] [API]   [48] SetProcessAffinityMask -> 0x2032470
+[T7f80] [API]   [49] SetThreadContext -> 0x2032590
+[T7f80] [API]   [50] SetThreadPriority -> 0x2032690
+[T7f80] [API]   [51] SetUnhandledExceptionFilter -> 0x200b130
+[T7f80] [API]   [52] Sleep -> 0x2015c50
+[T7f80] [API]   [53] SuspendThread -> 0x20327b0
+[T7f80] [API]   [54] TerminateProcess -> 0x2016420
+[T7f80] [API]   [55] TlsAlloc -> 0x200fbd0
+[T7f80] [API]   [56] TlsFree -> 0x200a110
+[T7f80] [API]   [57] TlsGetValue -> 0x200b240
+[T7f80] [API]   [58] TlsSetValue -> 0x202ce80
+[T7f80] [API]   [59] TryEnterCriticalSection -> 0x203fb40
+[T7f80] [API]   [60] UnhandledExceptionFilter -> 0x2033030
+[T7f80] [API]   [61] VirtualProtect -> 0x2015d60
+[T7f80] [API]   [62] VirtualQuery -> 0x2010230
+[T7f80] [API]   [63] WaitForMultipleObjects -> 0x2045e60
+[T7f80] [API]   [64] WaitForSingleObject -> 0x2045d10
+[T7f80] [API]   [65] WideCharToMultiByte -> 0x20273f0
+[T7f80] [API] Import DLL: msvcrt.dll (IAT RVA=0xd78f8, ILT RVA=0xd7290)
+[T7f80] [API]   [0] __C_specific_handler -> 0x20328b0
+[T7f80] [API]   [1] ___lc_codepage_func -> 0x202de40
+[T7f80] [API]   [2] __argv -> DATA 0x209e030
+[T7f80] [API]   [3] __dllonexit -> 0x20267d0
+[T7f80] [API]   [4] __doserrno -> 0x202d0d0
+[T7f80] [API]   [5] __getmainargs -> 0x200b360
+[T7f80] [API]   [6] __initenv -> DATA 0x21adf80
+[T7f80] [API]   [7] __iob_func -> 0x200b660
+[T7f80] [API]   [8] __lconv_init -> 0x20160e0
+[T7f80] [API]   [9] __mb_cur_max -> DATA 0x209e000
+[T7f80] [API]   [10] __pioinfo -> DATA 0x20d3fe0
+[T7f80] [API]   [11] __set_app_type -> 0x202d1d0
+[T7f80] [API]   [12] __setusermatherr -> 0x202d2e0
+[T7f80] [API]   [13] _acmdln -> DATA 0x21adf88
+[T7f80] [API]   [14] _amsg_exit -> 0x2016280
+[T7f80] [API]   [15] _atoi64 -> 0x201ad00
+[T7f80] [API]   [16] _beginthreadex -> 0x201b1c0
+[T7f80] [API]   [17] _cexit -> 0x2010bd0
+[T7f80] [API]   [18] _endthreadex -> 0x201b4b0
+[T7f80] [API]   [19] _errno -> 0x202e180
+[T7f80] [API]   [20] _exit -> 0x2012910
+[T7f80] [API]   [21] _filelengthi64 -> 0x201c9c0
+[T7f80] [API]   [22] _fileno -> 0x200b9a0
+[T7f80] [API]   [23] _findclose -> 0x203f0b0
+[T7f80] [API]   [24] _fmode -> DATA 0x224d4f8
+[T7f80] [API]   [25] _fstat64 -> 0x2019110
+[T7f80] [API]   [26] _ftime -> 0x2014770
+[T7f80] [API]   [27] _gmtime64 -> 0x2019c80
+[T7f80] [API]   [28] _initterm -> 0x200b4b0
+[T7f80] [API]   [29] _lock -> 0x202e280
+[T7f80] [API]   [30] _lseeki64 -> 0x2019490
+[T7f80] [API]   [31] _onexit -> 0x201b0c0
+[T7f80] [API]   [32] _setjmp -> 0x2008b20
+[T7f80] [API]   [33] _stricmp -> 0x2017620
+[T7f80] [API]   [34] _strnicmp -> 0x201d3d0
+[T7f80] [API]   [35] _time64 -> 0x2019a30
+[T7f80] [API]   [36] _unlock -> 0x202e390
+[T7f80] [API]   [37] _wcsnicmp -> 0x201c2f0
+[T7f80] [API]   [38] _wfindfirst64 -> 0x2051cb0
+[T7f80] [API]   [39] _wfopen -> 0x2050db0
+[T7f80] [API]   [40] _wfullpath -> 0x204fe80
+[T7f80] [API]   [41] _wgetcwd -> 0x20460b0
+[T7f80] [API]   [42] _wopen -> 0x204a230
+[T7f80] [API]   [43] _write -> 0x2018930
+[T7f80] [API]   [44] _wstat64 -> 0x2049ec0
+[T7f80] [API]   [45] abort -> 0x203b5a0
+[T7f80] [API]   [46] atoi -> 0x2017760
+[T7f80] [API]   [47] calloc -> 0x2040690
+[T7f80] [API]   [48] clearerr -> 0x2016c50
+[T7f80] [API]   [49] exit -> 0x2016350
+[T7f80] [API]   [50] fclose -> 0x203ca50
+[T7f80] [API]   [51] feof -> 0x2023a00
+[T7f80] [API]   [52] ferror -> 0x2020700
+[T7f80] [API]   [53] fflush -> 0x2023390
+[T7f80] [API]   [54] fgetpos -> 0x2024400
+[T7f80] [API]   [55] fgets -> 0x20236d0
+[T7f80] [API]   [56] fopen -> 0x2047210
+[T7f80] [API]   [57] fprintf -> 0x2024dd0
+[T7f80] [API]   [58] fputc -> 0x2023bf0
+[T7f80] [API]   [59] fputs -> 0x2023ab0
+[T7f80] [API]   [60] fread -> 0x2023570
+[T7f80] [API]   [61] free -> 0x204e200
+[T7f80] [API]   [62] fseek -> 0x2023910
+[T7f80] [API]   [63] fsetpos -> 0x2024540
+[T7f80] [API]   [64] fwprintf -> 0x2025eb0
+[T7f80] [API]   [65] fwrite -> 0x2023d10
+[T7f80] [API]   [66] getc -> 0x2023eb0
+[T7f80] [API]   [67] getenv -> 0x2012e60
+[T7f80] [API]   [68] getwc -> 0x2024340
+[T7f80] [API]   [69] islower -> 0x2017ca0
+[T7f80] [API]   [70] isprint -> 0x20182d0
+[T7f80] [API]   [71] isspace -> 0x2017d50
+[T7f80] [API]   [72] isupper -> 0x2017e00
+[T7f80] [API]   [73] iswalpha -> 0x2022ed0
+[T7f80] [API]   [74] iswctype -> 0x201d780
+[T7f80] [API]   [75] iswdigit -> 0x2022f70
+[T7f80] [API]   [76] isxdigit -> 0x2017eb0
+[T7f80] [API]   [77] localeconv -> 0x20161e0
+[T7f80] [API]   [78] longjmp -> 0x2019ed0
+[T7f80] [API]   [79] malloc -> 0x203fca0
+[T7f80] [API]   [80] memchr -> 0x20176c0
+[T7f80] [API]   [81] memcmp -> 0x2012870
+[T7f80] [API]   [82] memcpy -> 0x2013b20
+[T7f80] [API]   [83] memmove -> 0x200fb30
+[T7f80] [API]   [84] memset -> 0x20103a0
+[T7f80] [API]   [85] perror -> 0x2006380
+[T7f80] [API]   [86] printf -> 0x2024bb0
+[T7f80] [API]   [87] putc -> 0x20207a0
+[T7f80] [API]   [88] putwc -> 0x2020a20
+[T7f80] [API]   [89] raise -> 0x2020660
+[T7f80] [API]   [90] realloc -> 0x2052ee0
+[T7f80] [API]   [91] rewind -> 0x2023860
+[T7f80] [API]   [92] setlocale -> 0x2022740
+[T7f80] [API]   [93] setvbuf -> 0x20241d0
+[T7f80] [API]   [94] signal -> 0x202d720
+[T7f80] [API]   [95] sprintf -> 0x2025710
+[T7f80] [API]   [96] strchr -> 0x20137a0
+[T7f80] [API]   [97] strcmp -> 0x2015790
+[T7f80] [API]   [98] strcoll -> 0x2020510
+[T7f80] [API]   [99] strcpy -> 0x20172f0
+[T7f80] [API]   [100] strerror -> 0x7f8f2b042550
+[T7f80] [API]   [101] strftime -> 0x2016e30
+[T7f80] [API]   [102] strlen -> 0x2012270
+[T7f80] [API]   [103] strncmp -> 0x2017580
+[T7f80] [API]   [104] strncpy -> 0x2021100
+[T7f80] [API]   [105] strxfrm -> 0x20217f0
+[T7f80] [API]   [106] tolower -> 0x20374a0
+[T7f80] [API]   [107] toupper -> 0x2039760
+[T7f80] [API]   [108] towlower -> 0x201c400
+[T7f80] [API]   [109] towupper -> 0x201c4a0
+[T7f80] [API]   [110] ungetc -> 0x2023fe0
+[T7f80] [API]   [111] ungetwc -> 0x2020980
+[T7f80] [API]   [112] vfprintf -> 0x2024ff0
+[T7f80] [API]   [113] wcscat -> 0x2009d20
+[T7f80] [API]   [114] wcscoll -> 0x2009ea0
+[T7f80] [API]   [115] wcscpy -> 0x2009d60
+[T7f80] [API]   [116] wcsftime -> 0x20205b0
+[T7f80] [API]   [117] wcslen -> 0x20263c0
+[T7f80] [API]   [118] wcsxfrm -> 0x2040420
+[T7f80] [API]   [119] _wfindnext64 -> 0x2037670
+[T7f80] [API]   [120] _snwprintf -> 0x2025960
+[T7f80] [API]   [121] _write -> 0x2018930
+[T7f80] [API]   [122] _unlink -> 0x20196c0
+[T7f80] [API]   [123] _strdup -> 0x2013a30
+[T7f80] [API]   [124] _setmode -> 0x202df50
+[T7f80] [API]   [125] _read -> 0x2018740
+[T7f80] [API]   [126] _open -> 0x2018420
+[T7f80] [API]   [127] _mktemp -> 0x2015110
+[T7f80] [API]   [128] _fileno -> 0x200b9a0
+[T7f80] [API]   [129] _fdopen -> 0x2045440
+[T7f80] [API]   [130] _close -> 0x2018c00
+[T7f80] [API] Import DLL: SHELL32.dll (IAT RVA=0xd7d18, ILT RVA=0xd76b0)
+[T7f80] [API]   [0] CommandLineToArgvW -> 0x203fe90
+[T7f80] [API] Import DLL: USER32.dll (IAT RVA=0xd7d28, ILT RVA=0xd76c0)
+[T7f80] [API]   [0] MessageBoxW -> 0x2057440
+[T7f80] [API] Import DLL: WS2_32.dll (IAT RVA=0xd7d38, ILT RVA=0xd76d0)
+[T7f80] [API]   [0] gethostname -> 0x201cea0
+[T7f80] [API] Import resolution: 200 resolved, 0 unresolved (total 200)
+[T7f80] [API] TLS: StartRaw=0x4da000 EndRaw=0x4da060 Callbacks=0x4d9040
+[T7f80] [API] TLS: static block 0x4093090 (96+0 bytes) -> slot 0
+[T7f80] [API] TLS: callback[0] = 0x42e140
+[T7f80] [API] InitializeCriticalSection(0x4d5c20)
+[T7f80] [API] TLS: callback[1] = 0x42e110
+[T7f80] [API] TLS: callback[2] = 0x4231d0
+[T7f80] [API] Exception: .pdata RVA=0xbf000 Size=0x8634 Entries=2863
+[T7f80] [API] [API-005] EH hacks DISABLED (default) (MINWIN_EH_HACKS=<unset>)
+[T7f80] [API] [API-005] CXX-EH-FIX (LSDA catch-all patch RVA 0x2010c8) skipped: MINWIN_EH_HACKS not set
+[T7f80] [API] Jumping to EP=0x4014d0
+[T7f80] [API] GetSystemTimeAsFileTime()
+[T7f80] [API] GetTickCount() = 21935762
+[T7f80] [API] QueryPerformanceCounter()
+[T7f80] [API] _initterm(start=0x4d9018, end=0x4d9030)
+[T7f80] [API] _initterm: calling 0x401010
+[T7f80] [API] __set_app_type(1)
+[T7f80] [API] _initterm: calling 0x42e1c0
+[T7f80] [API] __lconv_init()
+[T7f80] [API] _initterm(start=0x4d9000, end=0x4d9010)
+[T7f80] [API] _initterm: calling 0x401130
+[T7f80] [API] __getmainargs(argc=0x4d5028, argv=0x4d5020, envp=0x4d5018)
+[T7f80] [API] VirtualQuery(addr=0x401000)
+[T7f80] [API] VirtualProtect(addr=0x401000, size=0xdb000, prot=0x40)
+[T7f80] [API] VirtualQuery(addr=0x40126f)
+[T7f80] [API] VirtualProtect(addr=0x40126f, size=0xdb000, prot=0x40)
+[T7f80] [API] VirtualProtect(addr=0x40126f, size=0xdb000, prot=0x40)
+[T7f80] [API] VirtualQuery(addr=0x43458d)
+[T7f80] [API] VirtualProtect(addr=0x43458d, size=0xdb000, prot=0x40)
+[T7f80] [API] VirtualProtect(addr=0x43458d, size=0xdb000, prot=0x40)
+[T7f80] [API] VirtualQuery(addr=0x401000)
+[T7f80] [API] VirtualProtect(addr=0x401000, size=0xdb000, prot=0x40)
+[T7f80] [API] SetUnhandledExceptionFilter(handler=0x42e570)
+[T7f80] [API] malloc(16) = 0x4093790
+[T7f80] [API] malloc(20) = 0x40937b0
+[T7f80] [API] _onexit(func=0x4908c0)
+[T7f80] [API] _onexit(func=0x4908f0)
+[T7f80] [API] TlsAlloc() = 1
+[T7f80] [API] calloc(1, 24) = 0x40937d0
+[T7f80] [API] EnterCriticalSection(0x4d5c20)
+[T7f80] [API] LeaveCriticalSection(0x4d5c20)
+[T7f80] [API] _onexit(func=0x490890)
+[T7f80] [API] CreateSemaphoreA(init=0, max=65535, name=NULL)
+[T7f80] [API] _onexit(func=0x490870)
+[T7f80] [API] __iob_func() = 0x21adf60
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] WideCharToMultiByte(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] WideCharToMultiByte(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] WideCharToMultiByte(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] WideCharToMultiByte(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] WideCharToMultiByte(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] WideCharToMultiByte(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] WideCharToMultiByte(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] WideCharToMultiByte(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] WideCharToMultiByte(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] WideCharToMultiByte(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] WideCharToMultiByte(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] WideCharToMultiByte(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] WideCharToMultiByte(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] WideCharToMultiByte(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] WideCharToMultiByte(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] WideCharToMultiByte(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] WideCharToMultiByte(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] WideCharToMultiByte(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] WideCharToMultiByte(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] WideCharToMultiByte(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] WideCharToMultiByte(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] WideCharToMultiByte(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] WideCharToMultiByte(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] WideCharToMultiByte(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] WideCharToMultiByte(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] WideCharToMultiByte(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] WideCharToMultiByte(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] WideCharToMultiByte(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] WideCharToMultiByte(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] WideCharToMultiByte(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] WideCharToMultiByte(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] WideCharToMultiByte(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] WideCharToMultiByte(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] WideCharToMultiByte(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] WideCharToMultiByte(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] WideCharToMultiByte(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] WideCharToMultiByte(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] WideCharToMultiByte(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] WideCharToMultiByte(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] WideCharToMultiByte(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] WideCharToMultiByte(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] WideCharToMultiByte(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] WideCharToMultiByte(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] WideCharToMultiByte(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] WideCharToMultiByte(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] WideCharToMultiByte(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] WideCharToMultiByte(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] WideCharToMultiByte(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] WideCharToMultiByte(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] WideCharToMultiByte(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] WideCharToMultiByte(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] WideCharToMultiByte(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] WideCharToMultiByte(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] WideCharToMultiByte(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] WideCharToMultiByte(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] WideCharToMultiByte(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] WideCharToMultiByte(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] WideCharToMultiByte(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] WideCharToMultiByte(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] WideCharToMultiByte(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] WideCharToMultiByte(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] WideCharToMultiByte(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] WideCharToMultiByte(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] WideCharToMultiByte(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] WideCharToMultiByte(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] WideCharToMultiByte(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] WideCharToMultiByte(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] WideCharToMultiByte(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] WideCharToMultiByte(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] WideCharToMultiByte(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] WideCharToMultiByte(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] WideCharToMultiByte(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] WideCharToMultiByte(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] WideCharToMultiByte(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] WideCharToMultiByte(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] WideCharToMultiByte(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] WideCharToMultiByte(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] WideCharToMultiByte(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] WideCharToMultiByte(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] WideCharToMultiByte(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] WideCharToMultiByte(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] WideCharToMultiByte(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] WideCharToMultiByte(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] WideCharToMultiByte(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] WideCharToMultiByte(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] WideCharToMultiByte(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] WideCharToMultiByte(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] WideCharToMultiByte(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] WideCharToMultiByte(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] WideCharToMultiByte(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] WideCharToMultiByte(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] WideCharToMultiByte(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] WideCharToMultiByte(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] WideCharToMultiByte(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] WideCharToMultiByte(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] WideCharToMultiByte(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] WideCharToMultiByte(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] WideCharToMultiByte(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] WideCharToMultiByte(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] WideCharToMultiByte(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] WideCharToMultiByte(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] WideCharToMultiByte(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] WideCharToMultiByte(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] WideCharToMultiByte(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] WideCharToMultiByte(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] WideCharToMultiByte(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] WideCharToMultiByte(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] WideCharToMultiByte(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] WideCharToMultiByte(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] WideCharToMultiByte(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] WideCharToMultiByte(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] WideCharToMultiByte(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] WideCharToMultiByte(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] WideCharToMultiByte(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] WideCharToMultiByte(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] WideCharToMultiByte(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] WideCharToMultiByte(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] WideCharToMultiByte(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] WideCharToMultiByte(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] WideCharToMultiByte(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] WideCharToMultiByte(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] WideCharToMultiByte(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] WideCharToMultiByte(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] WideCharToMultiByte(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] WideCharToMultiByte(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] WideCharToMultiByte(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] WideCharToMultiByte(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] WideCharToMultiByte(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] MultiByteToWideChar(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] MultiByteToWideChar(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] MultiByteToWideChar(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] MultiByteToWideChar(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] MultiByteToWideChar(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] MultiByteToWideChar(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] MultiByteToWideChar(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] MultiByteToWideChar(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] MultiByteToWideChar(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] MultiByteToWideChar(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] MultiByteToWideChar(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] MultiByteToWideChar(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] MultiByteToWideChar(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] MultiByteToWideChar(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] MultiByteToWideChar(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] MultiByteToWideChar(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] MultiByteToWideChar(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] MultiByteToWideChar(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] MultiByteToWideChar(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] MultiByteToWideChar(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] MultiByteToWideChar(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] MultiByteToWideChar(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] MultiByteToWideChar(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] MultiByteToWideChar(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] MultiByteToWideChar(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] MultiByteToWideChar(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] MultiByteToWideChar(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] MultiByteToWideChar(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] MultiByteToWideChar(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] MultiByteToWideChar(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] MultiByteToWideChar(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] MultiByteToWideChar(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] MultiByteToWideChar(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] MultiByteToWideChar(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] MultiByteToWideChar(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] MultiByteToWideChar(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] MultiByteToWideChar(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] MultiByteToWideChar(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] MultiByteToWideChar(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] MultiByteToWideChar(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] MultiByteToWideChar(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] MultiByteToWideChar(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] MultiByteToWideChar(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] MultiByteToWideChar(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] MultiByteToWideChar(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] MultiByteToWideChar(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] MultiByteToWideChar(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] MultiByteToWideChar(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] MultiByteToWideChar(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] MultiByteToWideChar(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] MultiByteToWideChar(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] MultiByteToWideChar(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] MultiByteToWideChar(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] MultiByteToWideChar(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] MultiByteToWideChar(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] MultiByteToWideChar(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] MultiByteToWideChar(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] MultiByteToWideChar(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] MultiByteToWideChar(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] MultiByteToWideChar(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] MultiByteToWideChar(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] MultiByteToWideChar(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] MultiByteToWideChar(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] MultiByteToWideChar(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] MultiByteToWideChar(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] MultiByteToWideChar(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] MultiByteToWideChar(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] MultiByteToWideChar(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] MultiByteToWideChar(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] MultiByteToWideChar(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] MultiByteToWideChar(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] MultiByteToWideChar(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] MultiByteToWideChar(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] MultiByteToWideChar(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] MultiByteToWideChar(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] MultiByteToWideChar(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] MultiByteToWideChar(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] MultiByteToWideChar(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] MultiByteToWideChar(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] MultiByteToWideChar(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] MultiByteToWideChar(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] MultiByteToWideChar(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] MultiByteToWideChar(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] MultiByteToWideChar(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] MultiByteToWideChar(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] MultiByteToWideChar(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] MultiByteToWideChar(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] MultiByteToWideChar(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] MultiByteToWideChar(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] MultiByteToWideChar(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] MultiByteToWideChar(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] MultiByteToWideChar(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] MultiByteToWideChar(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] MultiByteToWideChar(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] MultiByteToWideChar(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] MultiByteToWideChar(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] MultiByteToWideChar(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] MultiByteToWideChar(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] MultiByteToWideChar(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] MultiByteToWideChar(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] MultiByteToWideChar(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] MultiByteToWideChar(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] MultiByteToWideChar(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] MultiByteToWideChar(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] MultiByteToWideChar(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] MultiByteToWideChar(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] MultiByteToWideChar(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] MultiByteToWideChar(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] MultiByteToWideChar(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] MultiByteToWideChar(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] MultiByteToWideChar(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] MultiByteToWideChar(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] MultiByteToWideChar(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] MultiByteToWideChar(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] MultiByteToWideChar(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] MultiByteToWideChar(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] MultiByteToWideChar(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] MultiByteToWideChar(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] MultiByteToWideChar(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] MultiByteToWideChar(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] MultiByteToWideChar(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] MultiByteToWideChar(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] MultiByteToWideChar(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] MultiByteToWideChar(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] MultiByteToWideChar(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] MultiByteToWideChar(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] MultiByteToWideChar(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] MultiByteToWideChar(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] MultiByteToWideChar(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] MultiByteToWideChar(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] MultiByteToWideChar(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] MultiByteToWideChar(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] MultiByteToWideChar(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] MultiByteToWideChar(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] MultiByteToWideChar(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] MultiByteToWideChar(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] MultiByteToWideChar(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] MultiByteToWideChar(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] MultiByteToWideChar(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] MultiByteToWideChar(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] MultiByteToWideChar(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] MultiByteToWideChar(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] MultiByteToWideChar(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] MultiByteToWideChar(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] MultiByteToWideChar(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] MultiByteToWideChar(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] MultiByteToWideChar(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] MultiByteToWideChar(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] MultiByteToWideChar(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] MultiByteToWideChar(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] MultiByteToWideChar(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] MultiByteToWideChar(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] MultiByteToWideChar(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] MultiByteToWideChar(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] MultiByteToWideChar(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] MultiByteToWideChar(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] MultiByteToWideChar(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] MultiByteToWideChar(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] MultiByteToWideChar(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] MultiByteToWideChar(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] MultiByteToWideChar(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] MultiByteToWideChar(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] MultiByteToWideChar(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] MultiByteToWideChar(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] MultiByteToWideChar(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] MultiByteToWideChar(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] MultiByteToWideChar(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] MultiByteToWideChar(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] MultiByteToWideChar(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] MultiByteToWideChar(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] MultiByteToWideChar(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] MultiByteToWideChar(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] MultiByteToWideChar(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] MultiByteToWideChar(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] MultiByteToWideChar(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] MultiByteToWideChar(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] MultiByteToWideChar(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] MultiByteToWideChar(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] MultiByteToWideChar(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] MultiByteToWideChar(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] MultiByteToWideChar(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] MultiByteToWideChar(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] MultiByteToWideChar(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] MultiByteToWideChar(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] MultiByteToWideChar(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] MultiByteToWideChar(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] MultiByteToWideChar(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] MultiByteToWideChar(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] MultiByteToWideChar(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] MultiByteToWideChar(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] MultiByteToWideChar(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] MultiByteToWideChar(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] MultiByteToWideChar(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] MultiByteToWideChar(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] MultiByteToWideChar(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] MultiByteToWideChar(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] MultiByteToWideChar(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] MultiByteToWideChar(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] MultiByteToWideChar(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] MultiByteToWideChar(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] MultiByteToWideChar(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] MultiByteToWideChar(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] MultiByteToWideChar(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] MultiByteToWideChar(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] MultiByteToWideChar(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] MultiByteToWideChar(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] MultiByteToWideChar(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] MultiByteToWideChar(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] MultiByteToWideChar(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] MultiByteToWideChar(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] MultiByteToWideChar(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] MultiByteToWideChar(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] MultiByteToWideChar(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] MultiByteToWideChar(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] MultiByteToWideChar(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] MultiByteToWideChar(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] MultiByteToWideChar(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] MultiByteToWideChar(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] MultiByteToWideChar(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] MultiByteToWideChar(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] MultiByteToWideChar(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] MultiByteToWideChar(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] MultiByteToWideChar(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] MultiByteToWideChar(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] MultiByteToWideChar(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] MultiByteToWideChar(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] MultiByteToWideChar(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] MultiByteToWideChar(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] MultiByteToWideChar(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] MultiByteToWideChar(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] MultiByteToWideChar(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] MultiByteToWideChar(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] MultiByteToWideChar(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] MultiByteToWideChar(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] MultiByteToWideChar(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] MultiByteToWideChar(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] MultiByteToWideChar(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] MultiByteToWideChar(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] MultiByteToWideChar(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] MultiByteToWideChar(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] MultiByteToWideChar(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] MultiByteToWideChar(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] MultiByteToWideChar(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] MultiByteToWideChar(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] MultiByteToWideChar(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] MultiByteToWideChar(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] MultiByteToWideChar(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] MultiByteToWideChar(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] MultiByteToWideChar(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] MultiByteToWideChar(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] MultiByteToWideChar(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] MultiByteToWideChar(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] MultiByteToWideChar(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] MultiByteToWideChar(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] MultiByteToWideChar(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __lc_codepage_func() = 0
+[T7f80] [API] MultiByteToWideChar(cp=0, srclen=1, dstlen=1)
+[T7f80] [API] __iob_func() = 0x21adf60
+[T7f80] [API] __iob_func() = 0x21adf60
+[T7f80] [API] __iob_func() = 0x21adf60
+[T7f80] [API] __iob_func() = 0x21adf60
+[T7f80] [API] __iob_func() = 0x21adf60
+[T7f80] [API] _onexit(func=0x420b70)
+[T7f80] [API] _onexit(func=0x420370)
+[T7f80] [API] _onexit(func=0x41ea90)
+[T7f80] [API] _onexit(func=0x41c980)
+[T7f80] [API] malloc(29) = 0x4093760
+[T7f80] [API] _onexit(func=0x41ca90)
+[T7f80] [API] malloc(29) = 0x4093690
+[T7f80] [API] _onexit(func=0x41ca10)
+[T7f80] [API] malloc(30) = 0x40937f0
+[T7f80] [API] _onexit(func=0x41ca50)
+[T7f80] [API] malloc(31) = 0x4093820
+[T7f80] [API] _onexit(func=0x41c9d0)
+[T7f80] [API] malloc(31) = 0x4093850
+[T7f80] [API] _onexit(func=0x41c990)
+[T7f80] [API] _onexit(func=0x41c8d0)
+[T7f80] [API] _onexit(func=0x418530)
+[T7f80] [API] _onexit(func=0x416ab0)
+[T7f80] [API] calloc(1, 32) = 0x4093880
+[T7f80] [API] CreateSemaphoreA(init=1, max=2147483647, name=NULL)
+[T7f80] [API] _onexit(func=0x416aa0)
+[T7f80] [API] _onexit(func=0x40dd70)
+[T7f80] [API] calloc(1, 32) = 0x40938b0
+[T7f80] [API] CreateSemaphoreA(init=1, max=2147483647, name=NULL)
+[T7f80] [API] _onexit(func=0x40dd60)
+[T7f80] [API] _onexit(func=0x40db00)
+[T7f80] [API] _onexit(func=0x40c450)
+[T7f80] [API] _onexit(func=0x408410)
+[T7f80] [API] _onexit(func=0x4084d0)
+[T7f80] [API] _onexit(func=0x408530)
+[T7f80] [API] _onexit(func=0x42ee60)
+[T7f80] [API] malloc(28) = 0x40938e0
+[T7f80] [API] malloc(29) = 0x4093910
+[T7f80] [API] malloc(31) = 0x4093940
+[T7f80] [API] malloc(30) = 0x4093970
+[T7f80] [API] malloc(34) = 0x40939a0
+[T7f80] [API] malloc(1472) = 0x40939d0
+[T7f80] [API] calloc(1, 32) = 0x4093fa0
+[T7f80] [API] CreateSemaphoreA(init=1, max=2147483647, name=NULL)
+[T7f80] [API] GetSystemInfo()
+[T7f80] [API] malloc(44) = 0x4093fd0
+[T7f80] [API] GetSystemInfo()
+[T7f80] [API] malloc(34) = 0x4094010
+[T7f80] [API] malloc(34) = 0x4094040
+[T7f80] [API] malloc(34) = 0x4094070
+[T7f80] [API] malloc(34) = 0x40940a0
+[T7f80] [API] malloc(8) = 0x40940d0
+[T7f80] [API] free(0x4094070)
+[T7f80] [API] malloc(8) = 0x40940f0
+[T7f80] [API] free(0x40940d0)
+[T7f80] [API] malloc(34) = 0x4094070
+[T7f80] [API] free(0x4094070)
+[T7f80] [API] free(0x40940a0)
+[T7f80] [API] free(0x40940f0)
+[T7f80] [API] free(0x4094040)
+[T7f80] [API] GetCommandLineW()
+[T7f80] [API] CommandLineToArgvW(0x216e7c0)
+[T7f80] [API] malloc(64) = 0x4094110
+[T7f80] [API] GetModuleHandleW()
+[T7f80] [API] GetProcAddress(module=(nil), name=IsWow64Process)
+[T7f80] [API] malloc(224) = 0x4094160
+[T7f80] [API] free(0x4094160)
+[T7f80] [API] malloc(136) = 0x4094250
+[T7f80] [API] calloc(1, 32) = 0x4094040
+[T7f80] [API] CreateSemaphoreA(init=1, max=2147483647, name=NULL)
+[T7f80] [API] malloc(64) = 0x40942e0
+[T7f80] [API] malloc(512) = 0x4094330
+[T7f80] [API] malloc(64) = 0x4094540
+[T7f80] [API] malloc(512) = 0x4094590
+[T7f80] [API] free(0x4094330)
+[T7f80] [API] free(0x40942e0)
+[T7f80] [API] calloc(1, 176) = 0x40947a0
+[T7f80] [API] CreateSemaphoreA(init=0, max=2147483647, name=NULL)
+[T7f80] [API] CreateSemaphoreA(init=0, max=2147483647, name=NULL)
+[T7f80] [API] InitializeCriticalSection(0x40947b8)
+[T7f80] [API] InitializeCriticalSection(0x4094810)
+[T7f80] [API] InitializeCriticalSection(0x40947e0)
+[T7f80] [API] calloc(1, 176) = 0x4094860
+[T7f80] [API] CreateSemaphoreA(init=0, max=2147483647, name=NULL)
+[T7f80] [API] CreateSemaphoreA(init=0, max=2147483647, name=NULL)
+[T7f80] [API] InitializeCriticalSection(0x4094878)
+[T7f80] [API] InitializeCriticalSection(0x40948d0)
+[T7f80] [API] InitializeCriticalSection(0x40948a0)
+[T7f80] [API] WaitForSingleObject(handle=0x8, ms=4294967295)
+[T7f80] [API] malloc(24) = 0x40940f0
+[T7f80] [API] malloc(8) = 0x40940d0
+[T7f80] [API] calloc(1, 32) = 0x40940a0
+[T7f80] [API] CreateSemaphoreA(init=1, max=2147483647, name=NULL)
+[T7f80] [API] WaitForSingleObject(handle=0xd, ms=4294967295)
+[T7f80] [API] calloc(1, 480) = 0x4094920
+[T7f80] [API] malloc(256) = 0x4094b10
+[T7f80] [API] ReleaseSemaphore(h=0xd, count=1)
+[T7f80] [API] CreateEventA(manual=1, init=0, name=NULL)
+[T7f80] [API] _beginthreadex(start=0x423360, arg=0x4094920, init=0x4)
+[T7f80] [API] _beginthreadex() = 0xf
+[T7f80] [API] SetThreadPriority()
+[T7f80] [API] ResetEvent(h=0xe)
+[T7f80] [API] ResumeThread()
+[T7f80] [API] Sleep(0)
+[T7f80] [API] malloc(24) = 0x4094d70
+[T7f80] [API] malloc(16) = 0x4094d90
+[T7f80] [API] free(0x40940d0)
+[T7f80] [API] WaitForSingleObject(handle=0xd, ms=4294967295)
+[T7f80] [API] calloc(1, 480) = 0x4094db0
+[T7f80] [API] ReleaseSemaphore(h=0xd, count=1)
+[T7f80] [API] CreateEventA(manual=1, init=0, name=NULL)
+[T7f80] [API] _beginthreadex(start=0x423360, arg=0x4094db0, init=0x4)
+[T96c0] [API] WaitForSingleObject(handle=0xd, ms=4294967295)
+[T96c0] [API] calloc(1, 32) = 0x7f8f24000b70
+[T7f80] [API] _beginthreadex() = 0x11
+[T96c0] [API] CreateSemaphoreA(init=1, max=2147483647, name=NULL)
+[T96c0] [API] WaitForSingleObject(handle=0x12, ms=4294967295)
+[T7f80] [API] SetThreadPriority()
+[T96c0] [API] calloc(1, 32) = 0x7f8f24000ba0
+[T96c0] [API] calloc(1, 32) = 0x7f8f24000bd0
+[T96c0] [API] CreateSemaphoreA(init=1, max=2147483647, name=NULL)
+[T96c0] [API] WaitForSingleObject(handle=0x13, ms=4294967295)
+[T96c0] [API] TlsAlloc() = 2
+[T96c0] [API] ReleaseSemaphore(h=0x13, count=1)
+[T96c0] [API] CloseHandle(handle=0x13)
+[T7f80] [API] ResetEvent(h=0x10)
+[T96c0] [API] free(0x7f8f24000bd0)
+[T7f80] [API] ResumeThread()
+[T7f80] [API] Sleep(0)
+[T7f80] [API] ReleaseSemaphore(h=0x8, count=1)
+[T96c0] [API] free(0x7f8f24000ba0)
+[T96c0] [API] TlsSetValue(2, 0x4094920)
+[T7f80] [API] malloc(616) = 0x40950d0
+[T96c0] [API] ReleaseSemaphore(h=0x12, count=1)
+[T7f80] [API] malloc(36) = 0x4094070
+[T96c0] [API] ReleaseSemaphore(h=0xd, count=1)
+[T7f80] [API] malloc(30) = 0x4095340
+[T7f80] [API] __iob_func() = 0x21adf60
+[T7f80] [API] __iob_func() = 0x21adf60
+[T7f80] [API] _fileno(file=0x21adf60)
+[T7f80] [API] _setmode(fd=-1, mode=32768)
+[T96c0] [API] WaitForSingleObject(handle=0x8, ms=4294967295)
+[T96c0] [API] TlsGetValue(2) = 0x4094920
+[T86c0] [API] WaitForSingleObject(handle=0xd, ms=4294967295)
+[T86c0] [API] calloc(1, 32) = 0x7f8f1c000b70
+[T86c0] [API] CreateSemaphoreA(init=1, max=2147483647, name=NULL)
+[T96c0] [API] EnterCriticalSection(0x40948d0)
+[T96c0] [API] LeaveCriticalSection(0x40948d0)
+[T96c0] [API] EnterCriticalSection(0x4094878)
+[T96c0] [API] LeaveCriticalSection(0x4094878)
+[T96c0] [API] EnterCriticalSection(0x40948d0)
+[T96c0] [API] LeaveCriticalSection(0x40948d0)
+[T96c0] [API] TlsGetValue(2) = 0x4094920
+[T96c0] [API] TlsGetValue(2) = 0x4094920
+[T96c0] [API] ReleaseSemaphore(h=0x8, count=1)
+[T96c0] [API] EnterCriticalSection(0x40948a0)
+[T96c0] [API] LeaveCriticalSection(0x40948a0)
+[T96c0] [API] TlsGetValue(2) = 0x4094920
+[T96c0] [API] WaitForMultipleObjects(count=2, all=0, ms=4294967295)
+[T7f80] [API] map_crt_stream: iob+0 -> stdin
+[T7f80] [API] fread(sz=1, cnt=8192) = 0
+[T7f80] [API] _errno() = 0x21adf78
+[T7f80] [API] _errno() = 0x21adf78
+[T7f80] [API] GetModuleHandleW()
+[T7f80] [API] GetProcAddress(module=0xdead000a, name=_get_output_format)
+[T7f80] [API]   -> NULL (not in dispatch table)
+[T7f80] [API] malloc(44) = 0x40963f0
+[T7f80] [API] _errno() = 0x21adf78
+[T7f80] [API] GetModuleHandleW()
+[T7f80] [API] GetProcAddress(module=0xdead000a, name=_get_output_format)
+[T7f80] [API]   -> NULL (not in dispatch table)
+[T7f80] [API] malloc(35) = 0x4096430
+[T7f80] [API] malloc(75) = 0x4096460
+[T7f80] [API] WaitForSingleObject(handle=0x7, ms=4294967295)
+[T7f80] [API] fflush(file=0x21adf90)
+[T7f80] [API] map_crt_stream: iob+0x30 -> stdout
+[T7f80] [API] fwrite(sz=1, cnt=50)
+[T7f80] [API] map_crt_stream: iob+0x60 -> stderr
+[T7f80] [API] fwrite -> 50 (f=0x7f8f2b17f4e0)
+[T7f80] [API] GetLastError() = 0
+[T7f80] [API] TlsGetValue(1) = (nil)
+[T7f80] [API] SetLastError(0)
+[T7f80] [API] malloc(16) = 0x40963a0
+[T7f80] [API] TlsSetValue(1, 0x40963a0)
+[T7f80] [API] fflush(file=0x21adfc0)
+[T7f80] [API] map_crt_stream: iob+0x60 -> stderr
+[T7f80] [API] fflush(file=0x21adf90)
+[T7f80] [API] map_crt_stream: iob+0x30 -> stdout
+[T96c0] [API] EnterCriticalSection(0x40948a0)
+[T96c0] [API] LeaveCriticalSection(0x40948a0)
+[T96c0] [API] TlsGetValue(2) = 0x4094920
+[T96c0] [API] EnterCriticalSection(0x4094878)
+[T96c0] [API] LeaveCriticalSection(0x4094878)
+[T96c0] [API] WaitForSingleObject(handle=0x8, ms=4294967295)
+[T96c0] [API] TlsGetValue(2) = 0x4094920
+[T96c0] [API] EnterCriticalSection(0x40948d0)
+[T96c0] [API] LeaveCriticalSection(0x40948d0)
+[T96c0] [API] EnterCriticalSection(0x4094878)
+[T96c0] [API] LeaveCriticalSection(0x4094878)
+[T96c0] [API] EnterCriticalSection(0x40948d0)
+[T96c0] [API] LeaveCriticalSection(0x40948d0)
+[T96c0] [API] TlsGetValue(2) = 0x4094920
+[T96c0] [API] TlsGetValue(2) = 0x4094920
+[T96c0] [API] ReleaseSemaphore(h=0x8, count=1)
+[T96c0] [API] EnterCriticalSection(0x40948a0)
+[T96c0] [API] LeaveCriticalSection(0x40948a0)
+[T96c0] [API] TlsGetValue(2) = 0x4094920
+[T96c0] [API] WaitForMultipleObjects(count=2, all=0, ms=4294967295)
+[T96c0] [API] EnterCriticalSection(0x40948a0)
+[T96c0] [API] LeaveCriticalSection(0x40948a0)
+[T96c0] [API] TlsGetValue(2) = 0x4094920
+[T96c0] [API] EnterCriticalSection(0x4094878)
+[T96c0] [API] LeaveCriticalSection(0x4094878)
+[T96c0] [API] WaitForSingleObject(handle=0x8, ms=4294967295)
+[T96c0] [API] TlsGetValue(2) = 0x4094920
+[T96c0] [API] EnterCriticalSection(0x40948d0)
+[T96c0] [API] LeaveCriticalSection(0x40948d0)
+[T96c0] [API] EnterCriticalSection(0x4094878)
+[T96c0] [API] LeaveCriticalSection(0x4094878)
+[T96c0] [API] EnterCriticalSection(0x40948d0)
+[T96c0] [API] LeaveCriticalSection(0x40948d0)
+[T96c0] [API] TlsGetValue(2) = 0x4094920
+[T96c0] [API] TlsGetValue(2) = 0x4094920
+[T96c0] [API] ReleaseSemaphore(h=0x8, count=1)
+[T96c0] [API] EnterCriticalSection(0x40948a0)
+[T96c0] [API] LeaveCriticalSection(0x40948a0)
+[T96c0] [API] TlsGetValue(2) = 0x4094920
+[T96c0] [API] WaitForMultipleObjects(count=2, all=0, ms=4294967295)

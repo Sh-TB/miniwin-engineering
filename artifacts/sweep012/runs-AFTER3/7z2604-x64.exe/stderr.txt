@@ -1,0 +1,7 @@
+[TRACE] Command line: /home/z/my-project/workspace/miniwin-engineering/samples/real/7z2604-x64.exe
+[WARN]   unresolved: ExitWindowsEx
+[WARN]   unresolved: IsDialogMessageW
+[WARN]   unresolved: SHGetPathFromIDListW
+[WARN]   unresolved: SHBrowseForFolderW
+[WARN]   unresolved: lstrcatW
+[WARN] 5 imports unresolved

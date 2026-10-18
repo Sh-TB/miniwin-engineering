@@ -1,0 +1,23 @@
+[TRACE] Command line: /home/z/my-project/workspace/miniwin-engineering/artifacts/opensource/_dl/7z-install/7zG.exe
+[WARN]   unresolved: CommDlgExtendedError
+[WARN]   unresolved: GetSaveFileNameW
+[WARN]   unresolved: GetOpenFileNameW
+[WARN]   unresolved: CoTaskMemFree
+[WARN]   unresolved: EmptyClipboard
+[WARN]   unresolved: MapDialogRect
+[WARN]   unresolved: MonitorFromWindow
+[WARN]   unresolved: SetClipboardData
+[WARN]   unresolved: CloseClipboard
+[WARN]   unresolved: OpenClipboard
+[WARN]   unresolved: GetFocus
+[WARN]   unresolved: SetCursor
+[WARN]   unresolved: DestroyIcon
+[WARN]   unresolved: SendDlgItemMessageW
+[WARN]   unresolved: GetKeyState
+[WARN]   unresolved: SHBrowseForFolderW
+[WARN]   unresolved: SHGetFileInfoW
+[WARN]   unresolved: SHGetPathFromIDListW
+[WARN]   unresolved: lstrcatW
+[WARN] 19 imports unresolved
+[MessageBoxW] 7-Zip: Specify command
+[MessageBox] dialog #1 rendered -> miniwin-results/7zG.exe/screenshots/messagebox_1.bmp

@@ -1,0 +1,2 @@
+[TRACE] Command line: /home/z/my-project/workspace/miniwin-engineering/samples/real/lz4/lz4.exe
+Error 40 : Error reading first chunk (4194304 bytes) of 'stdin'  

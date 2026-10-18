@@ -51,7 +51,8 @@ def iat_slot_map(exe_path):
                 iname = imp.name.decode()
                 if (dll, iname) in _FUNCS or (dll, iname) in _DATA:
                     continue
-                slots[imp.address] = f"{dll}!{iname}"
+                nm = f"{dll}!{iname}" if imp.name else f"{dll}!#{imp.ordinal}"
+                slots[imp.address] = nm
     except Exception as e:
         print(f"  [warn] pefile {exe_path}: {e}")
     _iat_cache[exe_path] = slots
@@ -87,6 +88,15 @@ def decode_stub_imports(exe_path, stderr_path):
                 opcode = raw[off - 6:off - 4]
                 if opcode == b"\xff\x15":
                     names.append(slots.get(rip + disp, "??UNMAPPED??"))
+                elif raw[off - 5:off - 4] == b"\xe8":
+                    # BUG-069 fix (SWEEP-014): call rel32 -> FF25 jmp-thunk
+                    tgt = rip + disp
+                    toff = pe.get_offset_from_rva(tgt - base)
+                    if raw[toff:toff + 2] == b"\xff\x25":
+                        d2 = struct.unpack_from("<i", raw, toff + 2)[0]
+                        names.append(slots.get(tgt + 6 + d2, "??UNMAPPED??"))
+                    else:
+                        names.append("??THUNK-OP??")
                 else:
                     names.append("??NOT-FF15??")
             except Exception:

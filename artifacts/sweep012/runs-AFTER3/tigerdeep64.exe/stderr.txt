@@ -1,0 +1,44 @@
+[TRACE] Command line: /home/z/my-project/workspace/miniwin-engineering/samples/real/md5deep/md5deep-4.4/tigerdeep64.exe
+stdin: error at offset 0: Unknown error 907900384Fatal error: glibc detected an invalid stdio handle
+
+[CRASH] Signal 6 at RIP=0x7fe75b6e969c
+  RAX=0x0 RCX=0x7fe75b6e969c RDX=0x6 R8=0xffffffff R9=0x0
+  RSP=0x7ffe361d70c0 RBP=0x1000
+  g_image_base=0x400000 g_image_size=0xdb000
+  (NOT inside loaded PE)
+  [RIP-MAP] 0x7fe75b6e969c in 0x7fe75b67d000-0x7fe75b7e0000 r-xp /usr/lib/x86_64-linux-gnu/libc.so.6
+  Bytes: 89 c3 f7 db 3d 00 f0 ff ff b8 00 00 00 00 0f 47 
+  RSI=0x6154 RDI=0x6154
+  R8=0xffffffff  R9=0x0 R10=0x22 R11=0x246
+  R12=0x7ffe361d7210 R13=0x6 R14=0x7ffe361d7210 R15=0x7ffe361d7210
+  [SCAN rsp+672] 0x4a7a00 <PE>
+  [SCAN rsp+680] 0x20207f2 <LOADER>
+  [SCAN rsp+872] 0x464702 <PE>
+  [SCAN rsp+920] 0x4a7a00 <PE>
+  [SCAN rsp+928] 0x4a7a00 <PE>
+  [SCAN rsp+944] 0x4a6560 <PE>
+  [SCAN rsp+952] 0x40ddde <PE>
+  [SCAN rsp+984] 0x466da2 <PE>
+  [SCAN rsp+1032] 0x40e497 <PE>
+  [SCAN rsp+1240] 0x416b7d <PE>
+  Backtrace (via stack walking):
+    [0] RIP=0x7fe75b6e969c (outside PE, possible shared lib)
+    [1] RIP=0x7fe75b6e969c (outside PE, possible shared lib)
+
+[CRASH] Signal 11 at RIP=0x203bab6
+  RAX=0x3d RCX=0x0 RDX=0x0 R8=0x0 R9=0x0
+  RSP=0x7ffe361d5f20 RBP=0x206d188
+  g_image_base=0x400000 g_image_size=0xdb000
+  (NOT inside loaded PE)
+  [RIP-MAP] 0x203bab6 in 0x2005000-0x205f000 r-xp /home/z/my-project/workspace/miniwin-engineering/minwin_loader
+  Bytes: 4d 8b 76 08 41 83 ff 08 0f 84 f6 00 00 00 48 8b 
+  RSI=0x0 RDI=0x7ffe361d5d20
+  R8=0x0  R9=0x0 R10=0x0 R11=0x246
+  R12=0x7fe75b6e969c R13=0x7fe75b6e969c R14=0x3737a0dabed91f00 R15=0x2
+  [SCAN rsp+2440] 0x200253f <LOADER>
+  [SCAN rsp+2448] 0x2000e58 <LOADER>
+  [SCAN rsp+2472] 0x2004170 <LOADER>
+  Backtrace (via stack walking):
+    [0] RIP=0x203bab6 (outside PE, possible shared lib)
+    [1] RIP=0x203bab6 (outside PE, possible shared lib)
+    [2] RIP=0x203bab6 (outside PE, possible shared lib)

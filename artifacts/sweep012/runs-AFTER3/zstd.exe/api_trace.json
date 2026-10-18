@@ -1,0 +1,433 @@
+{
+  "trace": [
+[Tdf80] [API] PE Loader: file=/home/z/my-project/workspace/miniwin-engineering/samples/real/zstd/zstd-v1.5.6-win64/zstd.exe size=1560744
+[Tdf80] [API] PE Loader: ImageBase=0x140000000 EP=0x13f0 SizeOfImage=0x16c000 Sections=20
+[Tdf80] [API] PE Loader: Mapped at 0x140000000 (forced via MAP_FIXED)
+[Tdf80] [API] Section [0] .text    VA=0x00001000 VS=0x00114960 Raw=0x00114a00 Ch=0x60000060
+[Tdf80] [API] Section [1] .data    VA=0x00116000 VS=0x00000d70 Raw=0x00000e00 Ch=0xc0000040
+[Tdf80] [API] Section [2] .rdata   VA=0x00117000 VS=0x000148c0 Raw=0x00014a00 Ch=0x40000040
+[Tdf80] [API] Section [3] .pdata   VA=0x0012c000 VS=0x000036f0 Raw=0x00003800 Ch=0x40000040
+[Tdf80] [API] Section [4] .xdata   VA=0x00130000 VS=0x000042ec Raw=0x00004400 Ch=0x40000040
+[Tdf80] [API] Section [5] .bss     VA=0x00135000 VS=0x000016b0 Raw=0x00000000 Ch=0xc0000080
+[Tdf80] [API] Section [6] .idata   VA=0x00137000 VS=0x00000fdc Raw=0x00001000 Ch=0xc0000040
+[Tdf80] [API] Section [7] .CRT     VA=0x00138000 VS=0x00000060 Raw=0x00000200 Ch=0xc0000040
+[Tdf80] [API] Section [8] .tls     VA=0x00139000 VS=0x00000010 Raw=0x00000200 Ch=0xc0000040
+[Tdf80] [API] Section [9] .rsrc    VA=0x0013a000 VS=0x000004e8 Raw=0x00000600 Ch=0x40000040
+[Tdf80] [API] Section [10] .reloc   VA=0x0013b000 VS=0x000004ac Raw=0x00000600 Ch=0x42000040
+[Tdf80] [API] Section [11] /4       VA=0x0013c000 VS=0x00000710 Raw=0x00000800 Ch=0x42000040
+[Tdf80] [API] Section [12] /19      VA=0x0013d000 VS=0x0001348c Raw=0x00013600 Ch=0x42000040
+[Tdf80] [API] Section [13] /31      VA=0x00151000 VS=0x000037fa Raw=0x00003800 Ch=0x42000040
+[Tdf80] [API] Section [14] /45      VA=0x00155000 VS=0x00007190 Raw=0x00007200 Ch=0x42000040
+[Tdf80] [API] Section [15] /57      VA=0x0015d000 VS=0x00001870 Raw=0x00001a00 Ch=0x42000040
+[Tdf80] [API] Section [16] /70      VA=0x0015f000 VS=0x0000039d Raw=0x00000400 Ch=0x42000040
+[Tdf80] [API] Section [17] /81      VA=0x00160000 VS=0x00002562 Raw=0x00002600 Ch=0x42000040
+[Tdf80] [API] Section [18] /97      VA=0x00163000 VS=0x000079bf Raw=0x00007a00 Ch=0x42000040
+[Tdf80] [API] Section [19] /113     VA=0x0016b000 VS=0x00000558 Raw=0x00000600 Ch=0x42000040
+[Tdf80] [API] Import Directory: RVA=0x137000 Size=0xfdc
+[Tdf80] [API] Import DLL: KERNEL32.dll (IAT RVA=0x1373e8, ILT RVA=0x137040)
+[Tdf80] [API]   [0] CloseHandle -> 0x2046580
+[Tdf80] [API]   [1] CreateFileA -> 0x2037de0
+[Tdf80] [API]   [2] CreateFileMappingA -> 0x2027db0
+[Tdf80] [API]   [3] DeleteCriticalSection -> 0x2035910
+[Tdf80] [API]   [4] EnterCriticalSection -> 0x203f9f0
+[Tdf80] [API]   [5] FindClose -> 0x201cd90
+[Tdf80] [API]   [6] FindFirstFileA -> 0x20389c0
+[Tdf80] [API]   [7] FindNextFileA -> 0x2041c40
+[Tdf80] [API]   [8] GetConsoleMode -> 0x2028e50
+[Tdf80] [API]   [9] GetCurrentProcess -> 0x2008310
+[Tdf80] [API]   [10] GetLastError -> 0x200a7e0
+[Tdf80] [API]   [11] GetModuleHandleA -> 0x2012510
+[Tdf80] [API]   [12] GetModuleHandleW -> 0x20126e0
+[Tdf80] [API]   [13] GetProcAddress -> 0x200a8e0
+[Tdf80] [API]   [14] GetSystemInfo -> 0x201b710
+[Tdf80] [API]   [15] InitializeConditionVariable -> 0x203c8d0
+[Tdf80] [API]   [16] InitializeCriticalSection -> 0x20358f0
+[Tdf80] [API]   [17] IsDBCSLeadByteEx -> 0x2008360
+[Tdf80] [API]   [18] IsProcessorFeaturePresent -> 0x20095c0
+[Tdf80] [API]   [19] LeaveCriticalSection -> 0x2031730
+[Tdf80] [API]   [20] LoadLibraryW -> 0x204f7a0
+[Tdf80] [API]   [21] MapViewOfFile -> 0x203a780
+[Tdf80] [API]   [22] MultiByteToWideChar -> 0x20295c0
+[Tdf80] [API]   [23] QueryPerformanceCounter -> 0x20149e0
+[Tdf80] [API]   [24] QueryPerformanceFrequency -> 0x2010840
+[Tdf80] [API]   [25] SetPriorityClass -> 0x202ec10
+[Tdf80] [API]   [26] SetUnhandledExceptionFilter -> 0x200b130
+[Tdf80] [API]   [27] Sleep -> 0x2015c50
+[Tdf80] [API]   [28] SleepConditionVariableCS -> 0x2041080
+[Tdf80] [API]   [29] TerminateProcess -> 0x2016420
+[Tdf80] [API]   [30] TlsGetValue -> 0x200b240
+[Tdf80] [API]   [31] UnmapViewOfFile -> 0x202a970
+[Tdf80] [API]   [32] VirtualProtect -> 0x2015d60
+[Tdf80] [API]   [33] VirtualQuery -> 0x2010230
+[Tdf80] [API]   [34] WaitForSingleObject -> 0x2045d10
+[Tdf80] [API]   [35] WakeAllConditionVariable -> 0x2037240
+[Tdf80] [API]   [36] WakeConditionVariable -> 0x2037370
+[Tdf80] [API]   [37] WideCharToMultiByte -> 0x20273f0
+[Tdf80] [API] Import DLL: msvcrt.dll (IAT RVA=0x137520, ILT RVA=0x137178)
+[Tdf80] [API]   [0] __C_specific_handler -> 0x20328b0
+[Tdf80] [API]   [1] ___lc_codepage_func -> 0x202de40
+[Tdf80] [API]   [2] ___mb_cur_max_func -> 0x2032bb0
+[Tdf80] [API]   [3] __getmainargs -> 0x200b360
+[Tdf80] [API]   [4] __initenv -> DATA 0x21adf80
+[Tdf80] [API]   [5] __iob_func -> 0x200b660
+[Tdf80] [API]   [6] __set_app_type -> 0x202d1d0
+[Tdf80] [API]   [7] __setusermatherr -> 0x202d2e0
+[Tdf80] [API]   [8] _amsg_exit -> 0x2016280
+[Tdf80] [API]   [9] _assert -> 0x201a990
+[Tdf80] [API]   [10] _beginthreadex -> 0x201b1c0
+[Tdf80] [API]   [11] _cexit -> 0x2010bd0
+[Tdf80] [API]   [12] _chmod -> 0x2019900
+[Tdf80] [API]   [13] _commode -> DATA 0x224d4f4
+[Tdf80] [API]   [14] _errno -> 0x202e180
+[Tdf80] [API]   [15] _fdopen -> 0x2045440
+[Tdf80] [API]   [16] _filelengthi64 -> 0x201c9c0
+[Tdf80] [API]   [17] _fileno -> 0x200b9a0
+[Tdf80] [API]   [18] _fileno -> 0x200b9a0
+[Tdf80] [API]   [19] _fmode -> DATA 0x224d4f8
+[Tdf80] [API]   [20] _fstat64 -> 0x2019110
+[Tdf80] [API]   [21] _get_osfhandle -> 0x200baf0
+[Tdf80] [API]   [22] _initterm -> 0x200b4b0
+[Tdf80] [API]   [23] _isatty -> 0x2012170
+[Tdf80] [API]   [24] _lock -> 0x202e280
+[Tdf80] [API]   [25] _mkdir -> 0x201ccf0
+[Tdf80] [API]   [26] _onexit -> 0x201b0c0
+[Tdf80] [API]   [27] _open -> 0x2018420
+[Tdf80] [API]   [28] _setmode -> 0x202df50
+[Tdf80] [API]   [29] _stat64 -> 0x20192c0
+[Tdf80] [API]   [30] _strdup -> 0x2013a30
+[Tdf80] [API]   [31] _time64 -> 0x2019a30
+[Tdf80] [API]   [32] _unlock -> 0x202e390
+[Tdf80] [API]   [33] _utime64 -> 0x201d470
+[Tdf80] [API]   [34] _write -> 0x2018930
+[Tdf80] [API]   [35] abort -> 0x203b5a0
+[Tdf80] [API]   [36] calloc -> 0x2040690
+[Tdf80] [API]   [37] clock -> 0x2018380
+[Tdf80] [API]   [38] exit -> 0x2016350
+[Tdf80] [API]   [39] fclose -> 0x203ca50
+[Tdf80] [API]   [40] feof -> 0x2023a00
+[Tdf80] [API]   [41] ferror -> 0x2020700
+[Tdf80] [API]   [42] fflush -> 0x2023390
+[Tdf80] [API]   [43] fgetpos -> 0x2024400
+[Tdf80] [API]   [44] fgets -> 0x20236d0
+[Tdf80] [API]   [45] fopen -> 0x2047210
+[Tdf80] [API]   [46] fprintf -> 0x2024dd0
+[Tdf80] [API]   [47] fputc -> 0x2023bf0
+[Tdf80] [API]   [48] fread -> 0x2023570
+[Tdf80] [API]   [49] free -> 0x204e200
+[Tdf80] [API]   [50] fseek -> 0x2023910
+[Tdf80] [API]   [51] fsetpos -> 0x2024540
+[Tdf80] [API]   [52] fwrite -> 0x2023d10
+[Tdf80] [API]   [53] getchar -> 0x20170b0
+[Tdf80] [API]   [54] getenv -> 0x2012e60
+[Tdf80] [API]   [55] localeconv -> 0x20161e0
+[Tdf80] [API]   [56] malloc -> 0x203fca0
+[Tdf80] [API]   [57] memcmp -> 0x2012870
+[Tdf80] [API]   [58] memcpy -> 0x2013b20
+[Tdf80] [API]   [59] memmove -> 0x200fb30
+[Tdf80] [API]   [60] memset -> 0x20103a0
+[Tdf80] [API]   [61] perror -> 0x2006380
+[Tdf80] [API]   [62] qsort -> 0x2019f60
+[Tdf80] [API]   [63] realloc -> 0x2052ee0
+[Tdf80] [API]   [64] remove -> 0x2016cf0
+[Tdf80] [API]   [65] setvbuf -> 0x20241d0
+[Tdf80] [API]   [66] signal -> 0x202d720
+[Tdf80] [API]   [67] strchr -> 0x20137a0
+[Tdf80] [API]   [68] strcmp -> 0x2015790
+[Tdf80] [API]   [69] strcpy -> 0x20172f0
+[Tdf80] [API]   [70] strerror -> 0x7f486dd08550
+[Tdf80] [API]   [71] strlen -> 0x2012270
+[Tdf80] [API]   [72] strncmp -> 0x2017580
+[Tdf80] [API]   [73] strrchr -> 0x2017390
+[Tdf80] [API]   [74] strstr -> 0x2013700
+[Tdf80] [API]   [75] vfprintf -> 0x2024ff0
+[Tdf80] [API]   [76] wcslen -> 0x20263c0
+[Tdf80] [API] Import resolution: 115 resolved, 0 unresolved (total 115)
+[Tdf80] [API] TLS: StartRaw=0x140139000 EndRaw=0x140139008 Callbacks=0x140138038
+[Tdf80] [API] TLS: static block 0x245c090 (8+0 bytes) -> slot 0
+[Tdf80] [API] TLS: callback[0] = 0x14010a650
+[Tdf80] [API] InitializeCriticalSection(0x140135c20)
+[Tdf80] [API] TLS: callback[1] = 0x14010a620
+[Tdf80] [API] Exception: .pdata RVA=0x12c000 Size=0x36f0 Entries=1172
+[Tdf80] [API] [API-005] EH hacks DISABLED (default) (MINWIN_EH_HACKS=<unset>)
+[Tdf80] [API] [API-005] CXX-EH-FIX (LSDA catch-all patch RVA 0x2010c8) skipped: MINWIN_EH_HACKS not set
+[Tdf80] [API] Jumping to EP=0x1400013f0
+[Tdf80] [API] _initterm(start=0x140138018, end=0x140138028)
+[Tdf80] [API] _initterm: calling 0x140001010
+[Tdf80] [API] __set_app_type(1)
+[Tdf80] [API] _initterm(start=0x140138000, end=0x140138010)
+[Tdf80] [API] _initterm: calling 0x140001130
+[Tdf80] [API] __getmainargs(argc=0x140135028, argv=0x140135020, envp=0x140135018)
+[Tdf80] [API] SetUnhandledExceptionFilter(handler=0x14010ad90)
+[Tdf80] [API] malloc(16) = 0x245c740
+[Tdf80] [API] malloc(9) = 0x245c760
+[Tdf80] [API] _onexit(func=0x140001440)
+[Tdf80] [API] GetModuleHandleW()
+[Tdf80] [API] GetProcAddress(module=0xdead000a, name=rand_s)
+[Tdf80] [API]   -> 0x2018e60
+[Tdf80] [API] GetModuleHandleW()
+[Tdf80] [API] GetProcAddress(module=0xdead000a, name=rand_s)
+[Tdf80] [API]   -> 0x2018e60
+[Tdf80] [API] _onexit(func=0x14010a540)
+[Tdf80] [API] malloc(136) = 0x245c780
+[Tdf80] [API] malloc(40) = 0x245c710
+[Tdf80] [API] malloc(8) = 0x245c810
+[Tdf80] [API] malloc(32) = 0x245c640
+[Tdf80] [API] malloc(8) = 0x245c830
+[Tdf80] [API] malloc(32) = 0x245c850
+[Tdf80] [API] __iob_func() = 0x21adf60
+[Tdf80] [API] __iob_func() = 0x21adf60
+[Tdf80] [API] __iob_func() = 0x21adf60
+[Tdf80] [API] __iob_func() = 0x21adf60
+[Tdf80] [API] _fileno(file=0x21adf60)
+[Tdf80] [API] _isatty(fd=-1)
+[Tdf80] [API] __iob_func() = 0x21adf60
+[Tdf80] [API] __iob_func() = 0x21adf60
+[Tdf80] [API] __iob_func() = 0x21adf60
+[Tdf80] [API] __iob_func() = 0x21adf60
+[Tdf80] [API] _fileno(file=0x21adf90)
+[Tdf80] [API] _isatty(fd=-1)
+[Tdf80] [API] __iob_func() = 0x21adf60
+[Tdf80] [API] __iob_func() = 0x21adf60
+[Tdf80] [API] __iob_func() = 0x21adf60
+[Tdf80] [API] __iob_func() = 0x21adf60
+[Tdf80] [API] _fileno(file=0x21adfc0)
+[Tdf80] [API] _isatty(fd=-1)
+[Tdf80] [API] _stat64(path=/*stdin*\)
+[Tdf80] [API] calloc(5248, 1) = 0x245c880
+[Tdf80] [API] malloc(184) = 0x245dd10
+[Tdf80] [API] InitializeCriticalSection(0x245dd38)
+[Tdf80] [API] calloc(1, 160) = 0x245ddd0
+[Tdf80] [API] calloc(1, 144) = 0x245c670
+[Tdf80] [API] InitializeCriticalSection(0x245de30)
+[Tdf80] [API] calloc(1, 8) = 0x245de80
+[Tdf80] [API] InitializeCriticalSection(0x7ffd607b7030)
+[Tdf80] [API] _beginthreadex(start=0x1400048f0, arg=0x7ffd607b7010, init=0x0)
+[Tdf80] [API] _beginthreadex() = 0x4
+[Tdf80] [API] EnterCriticalSection(0x7ffd607b7030)
+[Tf6c0] [API] EnterCriticalSection(0x7ffd607b7030)
+[Tf6c0] [API] WakeConditionVariable(0x7ffd607b7028)
+[Tf6c0] [API] LeaveCriticalSection(0x7ffd607b7030)
+[Tf6c0] [API] EnterCriticalSection(0x245de30)
+[Tdf80] [API] SleepConditionVariableCS(cv=0x7ffd607b7028, ms=4294967295) = 0
+[Tdf80] [API] LeaveCriticalSection(0x7ffd607b7030)
+[Tdf80] [API] DeleteCriticalSection(0x7ffd607b7030)
+[Tdf80] [API] malloc(48) = 0x245dff0
+[Tdf80] [API] malloc(131591) = 0x245e030
+[Tdf80] [API] malloc(48) = 0x247e240
+[Tdf80] [API] malloc(131591) = 0x247e280
+[Tdf80] [API] malloc(48) = 0x249e490
+[Tdf80] [API] malloc(131591) = 0x249e4d0
+[Tdf80] [API] malloc(48) = 0x24be6e0
+[Tdf80] [API] malloc(131591) = 0x24be720
+[Tdf80] [API] malloc(48) = 0x24de930
+[Tdf80] [API] malloc(131591) = 0x24de970
+[Tdf80] [API] malloc(48) = 0x24feb80
+[Tdf80] [API] malloc(131591) = 0x24febc0
+[Tdf80] [API] malloc(48) = 0x251edd0
+[Tdf80] [API] malloc(131591) = 0x251ee10
+[Tdf80] [API] malloc(48) = 0x253f020
+[Tdf80] [API] malloc(131591) = 0x253f060
+[Tdf80] [API] malloc(48) = 0x255f270
+[Tdf80] [API] malloc(131591) = 0x255f2b0
+[Tdf80] [API] malloc(48) = 0x257f4c0
+[Tdf80] [API] malloc(131591) = 0x257f500
+[Tdf80] [API] malloc(328) = 0x259f710
+[Tdf80] [API] InitializeCriticalSection(0x259f738)
+[Tdf80] [API] calloc(1, 160) = 0x259f860
+[Tdf80] [API] calloc(1, 144) = 0x259f910
+[Tdf80] [API] InitializeCriticalSection(0x259f8c0)
+[Tdf80] [API] calloc(1, 8) = 0x259f9b0
+[Tdf80] [API] InitializeCriticalSection(0x7ffd607b7030)
+[Tdf80] [API] _beginthreadex(start=0x1400048f0, arg=0x7ffd607b7010, init=0x0)
+[Tdf80] [API] _beginthreadex() = 0x5
+[Tdf80] [API] EnterCriticalSection(0x7ffd607b7030)
+[Te6c0] [API] EnterCriticalSection(0x7ffd607b7030)
+[Te6c0] [API] WakeConditionVariable(0x7ffd607b7028)
+[Te6c0] [API] LeaveCriticalSection(0x7ffd607b7030)
+[Te6c0] [API] EnterCriticalSection(0x259f8c0)
+[Tdf80] [API] SleepConditionVariableCS(cv=0x7ffd607b7028, ms=4294967295) = 0
+[Tdf80] [API] LeaveCriticalSection(0x7ffd607b7030)
+[Tdf80] [API] DeleteCriticalSection(0x7ffd607b7030)
+[Tdf80] [API] malloc(48) = 0x259fb20
+[Tdf80] [API] malloc(131072) = 0x259fb60
+[Tdf80] [API] malloc(48) = 0x25bfb70
+[Tdf80] [API] malloc(131072) = 0x25bfbb0
+[Tdf80] [API] malloc(48) = 0x25dfbc0
+[Tdf80] [API] malloc(131072) = 0x25dfc00
+[Tdf80] [API] malloc(48) = 0x25ffc10
+[Tdf80] [API] malloc(131072) = 0x25ffc50
+[Tdf80] [API] malloc(48) = 0x261fc60
+[Tdf80] [API] malloc(131072) = 0x261fca0
+[Tdf80] [API] malloc(48) = 0x263fcb0
+[Tdf80] [API] malloc(131072) = 0x263fcf0
+[Tdf80] [API] malloc(48) = 0x265fd00
+[Tdf80] [API] malloc(131072) = 0x265fd40
+[Tdf80] [API] malloc(48) = 0x267fd50
+[Tdf80] [API] malloc(131072) = 0x267fd90
+[Tdf80] [API] malloc(48) = 0x269fda0
+[Tdf80] [API] malloc(131072) = 0x269fde0
+[Tdf80] [API] malloc(48) = 0x26bfdf0
+[Tdf80] [API] malloc(131072) = 0x26bfe30
+[Tdf80] [API] malloc(262144) = 0x26dfe40
+[Tdf80] [API] __iob_func() = 0x21adf60
+[Tdf80] [API] _fileno(file=0x21adf60)
+[Tdf80] [API] _setmode(fd=-1, mode=32768)
+[Tdf80] [API] __iob_func() = 0x21adf60
+[Tdf80] [API] EnterCriticalSection(0x259f8c0)
+[Tdf80] [API] LeaveCriticalSection(0x259f8c0)
+[Tdf80] [API] EnterCriticalSection(0x259f8c0)
+[Tdf80] [API] LeaveCriticalSection(0x259f8c0)
+[Tdf80] [API] EnterCriticalSection(0x259f738)
+[Tdf80] [API] LeaveCriticalSection(0x259f738)
+[Tdf80] [API] EnterCriticalSection(0x259f8c0)
+[Tdf80] [API] WakeConditionVariable(0x259f8f0)
+[Tdf80] [API] LeaveCriticalSection(0x259f8c0)
+[Tdf80] [API] EnterCriticalSection(0x259f738)
+[Tdf80] [API] LeaveCriticalSection(0x259f738)
+[Tdf80] [API] EnterCriticalSection(0x259f8c0)
+[Tdf80] [API] WakeConditionVariable(0x259f8f0)
+[Tdf80] [API] LeaveCriticalSection(0x259f8c0)
+[Tdf80] [API] EnterCriticalSection(0x259f738)
+[Tdf80] [API] LeaveCriticalSection(0x259f738)
+[Tdf80] [API] EnterCriticalSection(0x259f8c0)
+[Tdf80] [API] WakeConditionVariable(0x259f8f0)
+[Tdf80] [API] LeaveCriticalSection(0x259f8c0)
+[Tdf80] [API] EnterCriticalSection(0x259f738)
+[Tdf80] [API] LeaveCriticalSection(0x259f738)
+[Tdf80] [API] EnterCriticalSection(0x259f8c0)
+[Tdf80] [API] WakeConditionVariable(0x259f8f0)
+[Tdf80] [API] LeaveCriticalSection(0x259f8c0)
+[Tdf80] [API] EnterCriticalSection(0x259f738)
+[Tdf80] [API] LeaveCriticalSection(0x259f738)
+[Tdf80] [API] EnterCriticalSection(0x259f8c0)
+[Tdf80] [API] WakeConditionVariable(0x259f8f0)
+[Te6c0] [API] SleepConditionVariableCS(cv=0x259f8f0, ms=4294967295) = 0
+[Te6c0] [API] WakeConditionVariable(0x259f8e8)
+[Te6c0] [API] LeaveCriticalSection(0x259f8c0)
+[Tdf80] [API] LeaveCriticalSection(0x259f8c0)
+[Tdf80] [API] EnterCriticalSection(0x259f738)
+[Tdf80] [API] LeaveCriticalSection(0x259f738)
+[Tdf80] [API] EnterCriticalSection(0x259f8c0)
+[Tdf80] [API] WakeConditionVariable(0x259f8f0)
+[Tdf80] [API] LeaveCriticalSection(0x259f8c0)
+[Tdf80] [API] EnterCriticalSection(0x259f738)
+[Tdf80] [API] LeaveCriticalSection(0x259f738)
+[Te6c0] [API] map_crt_stream: iob+0 -> stdin
+[Tdf80] [API] EnterCriticalSection(0x259f8c0)
+[Tdf80] [API] WakeConditionVariable(0x259f8f0)
+[Tdf80] [API] LeaveCriticalSection(0x259f8c0)
+[Tdf80] [API] EnterCriticalSection(0x259f738)
+[Tdf80] [API] LeaveCriticalSection(0x259f738)
+[Tdf80] [API] EnterCriticalSection(0x259f8c0)
+[Tdf80] [API] WakeConditionVariable(0x259f8f0)
+[Tdf80] [API] LeaveCriticalSection(0x259f8c0)
+[Tdf80] [API] EnterCriticalSection(0x259f738)
+[Tdf80] [API] LeaveCriticalSection(0x259f738)
+[Tdf80] [API] EnterCriticalSection(0x259f8c0)
+[Tdf80] [API] WakeConditionVariable(0x259f8f0)
+[Tdf80] [API] LeaveCriticalSection(0x259f8c0)
+[Te6c0] [API] fread(sz=1, cnt=131072) = 0
+[Tdf80] [API] EnterCriticalSection(0x259f738)
+[Tdf80] [API] LeaveCriticalSection(0x259f738)
+[Tdf80] [API] EnterCriticalSection(0x259f8c0)
+[Te6c0] [API] __iob_func() = 0x21adf60
+[Te6c0] [API] __iob_func() = 0x21adf60
+[Te6c0] [API] __iob_func() = 0x21adf60
+[Te6c0] [API] __iob_func() = 0x21adf60
+[Te6c0] [API] _lock(18)
+[Te6c0] [API] _errno() = 0x21adf78
+[Te6c0] [API] fputc(ch=0x7a)
+[Te6c0] [API] map_crt_stream: iob+0x60 -> stderr
+[Te6c0] [API] fputc(ch=0x73)
+[Te6c0] [API] map_crt_stream: iob+0x60 -> stderr
+[Te6c0] [API] fputc(ch=0x74)
+[Te6c0] [API] map_crt_stream: iob+0x60 -> stderr
+[Te6c0] [API] fputc(ch=0x64)
+[Te6c0] [API] map_crt_stream: iob+0x60 -> stderr
+[Te6c0] [API] fputc(ch=0x3a)
+[Te6c0] [API] map_crt_stream: iob+0x60 -> stderr
+[Te6c0] [API] fputc(ch=0x20)
+[Te6c0] [API] map_crt_stream: iob+0x60 -> stderr
+[Te6c0] [API] __iob_func() = 0x21adf60
+[Te6c0] [API] __iob_func() = 0x21adf60
+[Te6c0] [API] __iob_func() = 0x21adf60
+[Te6c0] [API] _unlock(18)
+[Te6c0] [API] __iob_func() = 0x21adf60
+[Te6c0] [API] __iob_func() = 0x21adf60
+[Te6c0] [API] __iob_func() = 0x21adf60
+[Te6c0] [API] __iob_func() = 0x21adf60
+[Te6c0] [API] _lock(18)
+[Te6c0] [API] _errno() = 0x21adf78
+[Te6c0] [API] fputc(ch=0x65)
+[Te6c0] [API] map_crt_stream: iob+0x60 -> stderr
+[Te6c0] [API] fputc(ch=0x72)
+[Te6c0] [API] map_crt_stream: iob+0x60 -> stderr
+[Te6c0] [API] fputc(ch=0x72)
+[Te6c0] [API] map_crt_stream: iob+0x60 -> stderr
+[Te6c0] [API] fputc(ch=0x6f)
+[Te6c0] [API] map_crt_stream: iob+0x60 -> stderr
+[Te6c0] [API] fputc(ch=0x72)
+[Te6c0] [API] map_crt_stream: iob+0x60 -> stderr
+[Te6c0] [API] fputc(ch=0x20)
+[Te6c0] [API] map_crt_stream: iob+0x60 -> stderr
+[Te6c0] [API] fputc(ch=0x33)
+[Te6c0] [API] map_crt_stream: iob+0x60 -> stderr
+[Te6c0] [API] fputc(ch=0x37)
+[Te6c0] [API] map_crt_stream: iob+0x60 -> stderr
+[Te6c0] [API] fputc(ch=0x20)
+[Te6c0] [API] map_crt_stream: iob+0x60 -> stderr
+[Te6c0] [API] fputc(ch=0x3a)
+[Te6c0] [API] map_crt_stream: iob+0x60 -> stderr
+[Te6c0] [API] fputc(ch=0x20)
+[Te6c0] [API] map_crt_stream: iob+0x60 -> stderr
+[Te6c0] [API] __iob_func() = 0x21adf60
+[Te6c0] [API] __iob_func() = 0x21adf60
+[Te6c0] [API] __iob_func() = 0x21adf60
+[Te6c0] [API] _unlock(18)
+[Te6c0] [API] __iob_func() = 0x21adf60
+[Te6c0] [API] __iob_func() = 0x21adf60
+[Te6c0] [API] __iob_func() = 0x21adf60
+[Te6c0] [API] __iob_func() = 0x21adf60
+[Te6c0] [API] _lock(18)
+[Te6c0] [API] _errno() = 0x21adf78
+[Te6c0] [API] fputc(ch=0x52)
+[Te6c0] [API] map_crt_stream: iob+0x60 -> stderr
+[Te6c0] [API] fputc(ch=0x65)
+[Te6c0] [API] map_crt_stream: iob+0x60 -> stderr
+[Te6c0] [API] fputc(ch=0x61)
+[Te6c0] [API] map_crt_stream: iob+0x60 -> stderr
+[Te6c0] [API] fputc(ch=0x64)
+[Te6c0] [API] map_crt_stream: iob+0x60 -> stderr
+[Te6c0] [API] fputc(ch=0x20)
+[Te6c0] [API] map_crt_stream: iob+0x60 -> stderr
+[Te6c0] [API] fputc(ch=0x65)
+[Te6c0] [API] map_crt_stream: iob+0x60 -> stderr
+[Te6c0] [API] fputc(ch=0x72)
+[Te6c0] [API] map_crt_stream: iob+0x60 -> stderr
+[Te6c0] [API] fputc(ch=0x72)
+[Te6c0] [API] map_crt_stream: iob+0x60 -> stderr
+[Te6c0] [API] fputc(ch=0x6f)
+[Te6c0] [API] map_crt_stream: iob+0x60 -> stderr
+[Te6c0] [API] fputc(ch=0x72)
+[Te6c0] [API] map_crt_stream: iob+0x60 -> stderr
+[Te6c0] [API] __iob_func() = 0x21adf60
+[Te6c0] [API] __iob_func() = 0x21adf60
+[Te6c0] [API] __iob_func() = 0x21adf60
+[Te6c0] [API] _unlock(18)
+[Te6c0] [API] __iob_func() = 0x21adf60
+[Te6c0] [API] __iob_func() = 0x21adf60
+[Te6c0] [API] __iob_func() = 0x21adf60
+[Te6c0] [API] __iob_func() = 0x21adf60
+[Te6c0] [API] _lock(18)
+[Te6c0] [API] _errno() = 0x21adf78
+[Te6c0] [API] fputc(ch=0x20)
+[Te6c0] [API] map_crt_stream: iob+0x60 -> stderr
+[Te6c0] [API] fputc(ch=0xa)
+[Te6c0] [API] map_crt_stream: iob+0x60 -> stderr
+[Te6c0] [API] __iob_func() = 0x21adf60
+[Te6c0] [API] __iob_func() = 0x21adf60
+[Te6c0] [API] __iob_func() = 0x21adf60
+[Te6c0] [API] _unlock(18)
+[Te6c0] [API] exit(37)
+  ]
+}

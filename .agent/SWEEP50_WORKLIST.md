@@ -392,102 +392,161 @@ puttygen RIP=0x0).
       (5) G1 re-pinned 700d83ee 12/12.
 
 ---
-## SWEEP-014 QUEUE — 5x task multiplication (SW-601..SW-650)
-User directive: multiply the suggested-next-task list at least 5x; every item
-named, evidence-backed, and progress-measurable. 50 items:
 
-### A. Direct continuations of SWEEP-013 named gates (highest value first)
-- [ ] **SW-601** RAMMap64 last gate: user32!InvalidateRgn (1x) — pseudo-HRGN
-      + invalidate path; expected RAMMap64 20-stub crash -> RAN-OUTPUT.
-- [ ] **SW-602** procexp64 guest-level crash (exit 139, 0 stubs): guest_rip
-      decode + REA funcmap symbolize the crash site; one BUG-* + fix.
-- [ ] **SW-603** Bginfo64 8-stub frontier: dump the 8 named imports (trace
-      api_trace), implement the family in one batch (CoCreateInstance class
-      audit expected).
-- [ ] **SW-604** WinMergeU exit 9 with 1 stub — name the stub, decide
-      honest-vs-real, expect exit 0 like Diskmon64.
-- [ ] **SW-605** 7zFM/7zG last 3+1 stubs (gui-calc dialog family already
-      real) — name them; likely GetWindowLongPtrW/SetWindowLongPtrW.
-- [ ] **SW-606** ProduKey 5 stubs — name + batch.
-- [ ] **SW-607** cports 21-stub crash — decode callers (sweep008b method),
-      comctl32 child-control cliff continuation (SW-562 note).
-- [ ] **SW-608** Coreinfo64 exit 139 0-stubs: guest crash — REA funcmap
-      symbolize; version-drift trio (SetThreadGroupAffinity etc.) audit.
-- [ ] **SW-609** SearchMyFiles exit 139 0-stubs: same method as SW-602.
-- [ ] **SW-610** curl exit 139: UCRT frontier OPENSRC-CURL-1 next slice
-      (BCryptOpenAlgorithmProvider family or __acrt_locale).
-- [ ] **SW-611** puttygen exit 139 (SW-552 stack already named): fix
-      FUN_140041140+0x106 site — key-generation path audit.
-- [ ] **SW-612** sqlite3_analyzer 1 stub + crash — name the stub.
-- [ ] **SW-613** md5deep64 suite (6 programs) guest crash in own code:
-      map_crt_stream audit for fopen/fread paths (BUG-065 continuation).
-- [ ] **SW-614** md5deep 32-bit suite LOAD-REJECT — decide: honest reject
-      page or x86 support investigation ticket (stay x64-only: document).
+## SWEEP-014 QUEUE — 3x continuation multiplication (SW-651..SW-800, 150 items)
 
-### B. GUI depth (games/dialogs/paint — builds on mini window manager)
-- [ ] **SW-615** Child-control PAINT: draw BUTTON/EDIT frames + labels in
-      the window framebuffer (screenshot shows real buttons, not just text).
-- [ ] **SW-616** WM_CHAR path to EDIT children: pump delivers typed digits
-      to the focused control (calculator accepts keyboard input end-to-end).
-- [ ] **SW-617** BM_SETCHECK/BM_GETCHECK real button state round-trip test
-      in calc.exe (checkbox row) — extends gui-calc acceptance.
-- [ ] **SW-618** calculator division/multiply chained scenario (C 9 * 8 =
-      already proven; add (a+b)*c paren-free precedence audit).
-- [ ] **SW-619** Second GUI guest: Win32 Notepad clone (EDIT multiline +
-      menu + WM_SIZE) — tests LISTBOX/EDIT big text.
-- [ ] **SW-620** Third GUI guest: Win32 clock (SetTimer + WM_TIMER +
-      InvalidateRect cadence) — tests timer/paint interplay.
-- [ ] **SW-621** Fourth GUI guest: Win32 paint program (mouse WM_LBUTTONDOWN
-      + MoveToEx/LineTo) — needs MINWIN_MOUSE click-to-pos pump extension.
-- [ ] **SW-622** Pump: MINWIN_MOUSE="x,y" env delivering WM_LBUTTONDOWN/
-      WM_LBUTTONUP with client coords (generic input channel #3).
-- [ ] **SW-623** Modal dialogs with real DLGTEMPLATE parsing (SW-509 full
-      slice): walk the in-memory template, create child controls from it.
-- [ ] **SW-624** WM_GETDLGCODE/IsDialogMessageW dialog keyboard navigation.
-- [ ] **SW-625** Static controls SS_* + WM_SETFONT store (no-op render note).
+**Source:** artifacts/sweep012/runs-AFTER3 (mean_score 3.08, RAN-OUTPUT 26,
+STUB-GATE 0 — batch #4 closed every named stub gate; the frontier is now
+0-stub guest crashes + deep API families). Rules unchanged: 3x acceptance,
+irreversible status labels, no fake success, PROGRESS over activity.
 
-### C. Kernel/NT depth (Sysinternals frontier)
-- [ ] **SW-626** NtQuerySystemInformation class 5 (SystemProcessInformation):
-      one honest fake process row (our own PID) — procexp64 deeper.
-- [ ] **SW-627** NtQuerySystemInformation class 16 (HandleInformation):
-      count-only row.
-- [ ] **SW-628** NtOpenSymbolicLinkObject for \??\C: → return real link
-      target string; NtQuerySymbolicLinkObject fills it (procexp drive map).
-- [ ] **SW-629** NtQueryObject ObjectTypeInformation for our handle table
-      (honest "File"/"Event" for known pseudo-handles).
-- [ ] **SW-630** OpenSCManagerW policy upgrade: NULL vs honest handle to an
-      empty SCM (services enum returns 0 rows) — procmon64/procexp64 degrade
-      comparison.
-- [ ] **SW-631** EnumServicesStatusW empty-set + ERROR_SERVICE_DOES_NOT_EXIST.
-- [ ] **SW-632** GetTokenInformation TokenUser: synthesize S-1-5-18-style
-      SID honestly labeled (document fabrication boundary in decisions.md).
-- [ ] **SW-633** RegOpenKeyExW real mini-hive (currently ERROR stub):
-      in-memory registry keyed by path, RegCreateKeyExW writes work —
-      unblocks EULA-accept persistence path end-to-end.
-- [ ] **SW-634** RegQueryValueExW over the mini-hive (after SW-633).
-- [ ] **SW-635** SHGetFolderPathW CSIDL_DESKTOP/CSIDL_FONTS + shell32
-      SHGetKnownFolderPath (GUID form) — Bginfo/WinMerge commonly use it.
-
-### D. Ladder rungs (100-program list breadth)
-- [ ] **SW-636** LADDER-007 busybox64: argv[0] multi-call smoke (sh -c echo).
-- [ ] **SW-637** LADDER-012 xxd round trip (vim rt build).
-- [ ] **SW-638** LADDER-011 wget64 --version (static mingw profile).
-- [ ] **SW-639** LADDER-013 hashdeep 32/64 display-line BUG-065 closure.
-- [ ] **SW-640** LADDER-014 Tree 1.7 (GnuWin) census + run.
-- [ ] **SW-641** LADDER-015 GNU grep 2.5.4 census + run (regex engine).
-- [ ] **SW-642** LADDER-016 GNU sed 4.2.1 census + run (-i temp dance).
-- [ ] **SW-643** LADDER-017 Info-ZIP unzip 6.0 census + extract test.
-- [ ] **SW-644** LADDER-018 plink/pscp/psftp PuTTY trio census.
-- [ ] **SW-645** LADDER-019 Sysinternals du.exe + strings.exe census.
-- [ ] **SW-646** 100-list re-download wave: 10 NEW small utilities (netstat
-      variants, tcping, etc.) — extend sweep50_download.py manifest.
-- [ ] **SW-647** gui-calc PDB-backed symbol check (MW_FUNC_MAP on our own
-      guest) — validate funcmap exporter against a known source.
-- [ ] **SW-648** Calculator acceptance into CI: scripts/sweep013_calc_accept.sh
-      (3x determinism + stdout assert + BMP non-white check) — permanence.
-- [ ] **SW-649** Second calculator scenario into CI (C 9*8=) — permanence.
-- [ ] **SW-650** Documentation: mini window manager section in
-      docs/master/ARCHITECTURE_DECISIONS.md (ADR-013 draft).
-
-Rule unchanged: every fix must move mean_score / class histogram / a named
-program's exit, else it is not valuable.
+- [ ] **SW-651** Bginfo64.exe exit 139 0-stub guest crash: MINWIN_FUNC_MAP symbolize RIP (SWEEP-011 method), one BUG-*, re-run 3x (evidence artifacts/sweep012/runs-AFTER3/Bginfo64.exe/)
+- [ ] **SW-652** Coreinfo64.exe exit 139 0-stub guest crash: MINWIN_FUNC_MAP symbolize RIP (SWEEP-011 method), one BUG-*, re-run 3x (evidence artifacts/sweep012/runs-AFTER3/Coreinfo64.exe/)
+- [ ] **SW-653** SearchMyFiles.exe exit 139 0-stub guest crash: MINWIN_FUNC_MAP symbolize RIP (SWEEP-011 method), one BUG-*, re-run 3x (evidence artifacts/sweep012/runs-AFTER3/SearchMyFiles.exe/)
+- [ ] **SW-654** WinMergeU.exe exit 139 0-stub guest crash: MINWIN_FUNC_MAP symbolize RIP (SWEEP-011 method), one BUG-*, re-run 3x (evidence artifacts/sweep012/runs-AFTER3/WinMergeU.exe/)
+- [ ] **SW-655** arm64_7za.exe exit 139 0-stub guest crash: MINWIN_FUNC_MAP symbolize RIP (SWEEP-011 method), one BUG-*, re-run 3x (evidence artifacts/sweep012/runs-AFTER3/arm64_7za.exe/)
+- [ ] **SW-656** curl.exe exit 139 0-stub guest crash: MINWIN_FUNC_MAP symbolize RIP (SWEEP-011 method), one BUG-*, re-run 3x (evidence artifacts/sweep012/runs-AFTER3/curl.exe/)
+- [ ] **SW-657** hashdeep64.exe exit 139 0-stub guest crash: MINWIN_FUNC_MAP symbolize RIP (SWEEP-011 method), one BUG-*, re-run 3x (evidence artifacts/sweep012/runs-AFTER3/hashdeep64.exe/)
+- [ ] **SW-658** md5deep64.exe exit 139 0-stub guest crash: MINWIN_FUNC_MAP symbolize RIP (SWEEP-011 method), one BUG-*, re-run 3x (evidence artifacts/sweep012/runs-AFTER3/md5deep64.exe/)
+- [ ] **SW-659** procexp64.exe exit 139 0-stub guest crash: MINWIN_FUNC_MAP symbolize RIP (SWEEP-011 method), one BUG-*, re-run 3x (evidence artifacts/sweep012/runs-AFTER3/procexp64.exe/)
+- [ ] **SW-660** puttygen.exe exit 139 0-stub guest crash: MINWIN_FUNC_MAP symbolize RIP (SWEEP-011 method), one BUG-*, re-run 3x (evidence artifacts/sweep012/runs-AFTER3/puttygen.exe/)
+- [ ] **SW-661** sha1deep64.exe exit 139 0-stub guest crash: MINWIN_FUNC_MAP symbolize RIP (SWEEP-011 method), one BUG-*, re-run 3x (evidence artifacts/sweep012/runs-AFTER3/sha1deep64.exe/)
+- [ ] **SW-662** sha256deep64.exe exit 139 0-stub guest crash: MINWIN_FUNC_MAP symbolize RIP (SWEEP-011 method), one BUG-*, re-run 3x (evidence artifacts/sweep012/runs-AFTER3/sha256deep64.exe/)
+- [ ] **SW-663** sqlite3_analyzer.exe exit 139 0-stub guest crash: MINWIN_FUNC_MAP symbolize RIP (SWEEP-011 method), one BUG-*, re-run 3x (evidence artifacts/sweep012/runs-AFTER3/sqlite3_analyzer.exe/)
+- [ ] **SW-664** tigerdeep64.exe exit 139 0-stub guest crash: MINWIN_FUNC_MAP symbolize RIP (SWEEP-011 method), one BUG-*, re-run 3x (evidence artifacts/sweep012/runs-AFTER3/tigerdeep64.exe/)
+- [ ] **SW-665** whirlpooldeep64.exe exit 139 0-stub guest crash: MINWIN_FUNC_MAP symbolize RIP (SWEEP-011 method), one BUG-*, re-run 3x (evidence artifacts/sweep012/runs-AFTER3/whirlpooldeep64.exe/)
+- [ ] **SW-666** ws2_32 ladder: socket->fd real alloc (cports/ProduKey/sqlite3_analyzer now resolve by ordinal — SWEEP-014 BUG-071; first CALLER gate applies)
+- [ ] **SW-667** ws2_32 ladder: bind/listen real (cports/ProduKey/sqlite3_analyzer now resolve by ordinal — SWEEP-014 BUG-071; first CALLER gate applies)
+- [ ] **SW-668** ws2_32 ladder: accept real (cports/ProduKey/sqlite3_analyzer now resolve by ordinal — SWEEP-014 BUG-071; first CALLER gate applies)
+- [ ] **SW-669** ws2_32 ladder: connect non-blocking (cports/ProduKey/sqlite3_analyzer now resolve by ordinal — SWEEP-014 BUG-071; first CALLER gate applies)
+- [ ] **SW-670** ws2_32 ladder: send/recv real fd (cports/ProduKey/sqlite3_analyzer now resolve by ordinal — SWEEP-014 BUG-071; first CALLER gate applies)
+- [ ] **SW-671** ws2_32 ladder: select real fd_set (cports/ProduKey/sqlite3_analyzer now resolve by ordinal — SWEEP-014 BUG-071; first CALLER gate applies)
+- [ ] **SW-672** ws2_32 ladder: getsockopt/setsockopt honest levels (cports/ProduKey/sqlite3_analyzer now resolve by ordinal — SWEEP-014 BUG-071; first CALLER gate applies)
+- [ ] **SW-673** ws2_32 ladder: shutdown + closesocket fd free (cports/ProduKey/sqlite3_analyzer now resolve by ordinal — SWEEP-014 BUG-071; first CALLER gate applies)
+- [ ] **SW-674** ws2_32 ladder: getsockname/getpeername real sockaddr (cports/ProduKey/sqlite3_analyzer now resolve by ordinal — SWEEP-014 BUG-071; first CALLER gate applies)
+- [ ] **SW-675** ws2_32 ladder: inet_addr/inet_ntoa real (cports/ProduKey/sqlite3_analyzer now resolve by ordinal — SWEEP-014 BUG-071; first CALLER gate applies)
+- [ ] **SW-676** ws2_32 ladder: ntohl/htonl no-op identity (cports/ProduKey/sqlite3_analyzer now resolve by ordinal — SWEEP-014 BUG-071; first CALLER gate applies)
+- [ ] **SW-677** ws2_32 ladder: ioctlsocket FIONBIO real (cports/ProduKey/sqlite3_analyzer now resolve by ordinal — SWEEP-014 BUG-071; first CALLER gate applies)
+- [ ] **SW-678** ws2_32 ladder: WSAPoll subset (cports/ProduKey/sqlite3_analyzer now resolve by ordinal — SWEEP-014 BUG-071; first CALLER gate applies)
+- [ ] **SW-679** ws2_32 ladder: WSAAsyncSelect event queue real (cports/ProduKey/sqlite3_analyzer now resolve by ordinal — SWEEP-014 BUG-071; first CALLER gate applies)
+- [ ] **SW-680** ws2_32 ladder: getaddrinfo host resolver (cports/ProduKey/sqlite3_analyzer now resolve by ordinal — SWEEP-014 BUG-071; first CALLER gate applies)
+- [ ] **SW-681** GUI frontier: WM_CHAR path: pump delivers typed digit chars to EDIT children (SW-616)
+- [ ] **SW-682** GUI frontier: child-control PAINT: draw BUTTON/EDIT frames + labels into the raster (SW-615)
+- [ ] **SW-683** GUI frontier: WM_CHAR +/- operators: full keyboard calculator scenario E 1+2+3=
+- [ ] **SW-684** GUI frontier: second GUI guest: Notepad clone (multiline EDIT + WM_CHAR typing)
+- [ ] **SW-685** GUI frontier: third GUI guest: analog/digital clock (SetTimer + WM_TIMER + paint)
+- [ ] **SW-686** GUI frontier: comdlg32 GetOpenFileNameW/GetSaveFileNameW modal-lite + file pick
+- [ ] **SW-687** GUI frontier: menus: SetMenu/DrawMenuBar/TrackPopupMenu + WM_COMMAND ids
+- [ ] **SW-688** GUI frontier: scrollbars: SetScrollInfo/ShowScrollBar + WM_VSCROLL delivery
+- [ ] **SW-689** GUI frontier: clipboard: OpenClipboard/SetClipboardData/GetClipboardData (text)
+- [ ] **SW-690** GUI frontier: ListView first slice: LVM_INSERTCOLUMN/ITEM + LVM_GETITEMCOUNT
+- [ ] **SW-691** GUI frontier: TreeView first slice: TVM_INSERTITEM + TVM_GETCOUNT
+- [ ] **SW-692** GUI frontier: TrackPopupMenu real WM_COMMAND return
+- [ ] **SW-693** GUI frontier: SetCursor/ShowCursor + WM_SETCURSOR routing
+- [ ] **SW-694** GUI frontier: GetUpdateRect/GetRgnBox honest rect fill
+- [ ] **SW-695** GUI frontier: RedrawWindow superset of InvalidateRect (RDW flags decode)
+- [ ] **SW-696** GUI frontier: dialog units MapDialogRect real font metric
+- [ ] **SW-697** GUI frontier: IsDialogMessage/DlgDirListlite for dialog keyboards
+- [ ] **SW-698** GUI frontier: WM_GETDLGCODE + IsDialogMessage focus walk
+- [ ] **SW-699** GUI frontier: Calc scenario F: chained 12+45-7= via clicks
+- [ ] **SW-700** GUI frontier: Calc paint assertion: golden-BMP hash pin of frame_006
+- [ ] **SW-701** oleaut32 family: audit full OLEAUT32 ordinal map vs pefile db (BUG-072: 8 was wrong) (Bginfo64 imports 19 ordinals; SysAllocStringByteLen=150 fixed this sweep)
+- [ ] **SW-702** oleaut32 family: VariantChangeType real VT_I4/VT_R8/VT_BSTR (Bginfo64 imports 19 ordinals; SysAllocStringByteLen=150 fixed this sweep)
+- [ ] **SW-703** oleaut32 family: VariantClear deep VT_BSTR|VT_ARRAY (Bginfo64 imports 19 ordinals; SysAllocStringByteLen=150 fixed this sweep)
+- [ ] **SW-704** oleaut32 family: SafeArrayCreate/DestroyDescriptor/Data (Bginfo64 imports 19 ordinals; SysAllocStringByteLen=150 fixed this sweep)
+- [ ] **SW-705** oleaut32 family: SafeArrayGetElement/PutElement 1D (Bginfo64 imports 19 ordinals; SysAllocStringByteLen=150 fixed this sweep)
+- [ ] **SW-706** oleaut32 family: SafeArrayGetUBound/LBound real dims (Bginfo64 imports 19 ordinals; SysAllocStringByteLen=150 fixed this sweep)
+- [ ] **SW-707** oleaut32 family: VariantTimeToSystemTime real conversion (Bginfo64 imports 19 ordinals; SysAllocStringByteLen=150 fixed this sweep)
+- [ ] **SW-708** oleaut32 family: SystemTimeToVariantTime inverse (Bginfo64 imports 19 ordinals; SysAllocStringByteLen=150 fixed this sweep)
+- [ ] **SW-709** oleaut32 family: VarBstrFromDate honest locale format (Bginfo64 imports 19 ordinals; SysAllocStringByteLen=150 fixed this sweep)
+- [ ] **SW-710** oleaut32 family: OleLoadPicture honest E_FAIL + stream probe (Bginfo64 imports 19 ordinals; SysAllocStringByteLen=150 fixed this sweep)
+- [ ] **SW-711** GDI depth: CreateDIBSection 32bpp real 4B/px mode + alpha (CreateDIBSection real landed SWEEP-014 r3)
+- [ ] **SW-712** GDI depth: CreateDIBSection BI_BITFIELDS masks decode (CreateDIBSection real landed SWEEP-014 r3)
+- [ ] **SW-713** GDI depth: StretchBlt real scale loop on MWBmp (CreateDIBSection real landed SWEEP-014 r3)
+- [ ] **SW-714** GDI depth: GdiFlush/batch no-op contract (CreateDIBSection real landed SWEEP-014 r3)
+- [ ] **SW-715** GDI depth: GetDIBits real from MWBmp pool (CreateDIBSection real landed SWEEP-014 r3)
+- [ ] **SW-716** GDI depth: SetDIBitsToDevice direct raster write (CreateDIBSection real landed SWEEP-014 r3)
+- [ ] **SW-717** GDI depth: PatBlt rop PATCOPY/PATINVERT (CreateDIBSection real landed SWEEP-014 r3)
+- [ ] **SW-718** GDI depth: ExtCreatePen/ExtCreateRegion honest handles (CreateDIBSection real landed SWEEP-014 r3)
+- [ ] **SW-719** GDI depth: GetTextExtentPoint32W real font metric est (CreateDIBSection real landed SWEEP-014 r3)
+- [ ] **SW-720** GDI depth: EnumFonts metrics round-trip pin (CreateDIBSection real landed SWEEP-014 r3)
+- [ ] **SW-721** GDI depth: SetWorldTransform/GetWorldTransform honest identity (CreateDIBSection real landed SWEEP-014 r3)
+- [ ] **SW-722** GDI depth: CreatePalette/RealizePalette honest handles (CreateDIBSection real landed SWEEP-014 r3)
+- [ ] **SW-723** GDI depth: GetPixel/SetPixel real MWBmp accessors (CreateDIBSection real landed SWEEP-014 r3)
+- [ ] **SW-724** GDI depth: RoundRect/Ellipse real raster paths (CreateDIBSection real landed SWEEP-014 r3)
+- [ ] **SW-725** GDI depth: TransparentBlt color-key loop (CreateDIBSection real landed SWEEP-014 r3)
+- [ ] **SW-726** msvcrt/advapi tail: _itoa/_ltoa/_ultoa real (Bginfo64 355-gate list order)
+- [ ] **SW-727** msvcrt/advapi tail: _strlwr/_strupr real (Bginfo64 355-gate list order)
+- [ ] **SW-728** msvcrt/advapi tail: _mbsicmp/_memicmp (Bginfo64 355-gate list order)
+- [ ] **SW-729** msvcrt/advapi tail: _mbschr/_mbsrchr byte semantics (Bginfo64 355-gate list order)
+- [ ] **SW-730** msvcrt/advapi tail: _snprintf real vararg (Bginfo64 355-gate list order)
+- [ ] **SW-731** msvcrt/advapi tail: _strcmpi/_strnicmp real (Bginfo64 355-gate list order)
+- [ ] **SW-732** msvcrt/advapi tail: WNetOpenEnum/EnumResource/CloseEnum honest ERROR_NO_NETWORK (Bginfo64 355-gate list order)
+- [ ] **SW-733** msvcrt/advapi tail: CreateEnvironmentBlock/DestroyEnvironmentBlock honest NULL (Bginfo64 355-gate list order)
+- [ ] **SW-734** msvcrt/advapi tail: NetWkstaUserGetInfo/NetServerGetInfo NERR base (Bginfo64 355-gate list order)
+- [ ] **SW-735** msvcrt/advapi tail: NetApiBufferFree/NetApiBufferAllocate real (Bginfo64 355-gate list order)
+- [ ] **SW-736** TASK-LOADER-DLL slice: PE DLL: LoadLibraryW image map + DllMain (unblocks 13+ sweep programs)
+- [ ] **SW-737** TASK-LOADER-DLL slice: PE DLL: export table walk (unblocks 13+ sweep programs)
+- [ ] **SW-738** TASK-LOADER-DLL slice: PE DLL: GetProcAddress by name/ordinal (unblocks 13+ sweep programs)
+- [ ] **SW-739** TASK-LOADER-DLL slice: PE DLL: TLS callbacks (unblocks 13+ sweep programs)
+- [ ] **SW-740** TASK-LOADER-DLL slice: PE DLL: DllMain detach + refcount (unblocks 13+ sweep programs)
+- [ ] **SW-741** TASK-LOADER-DLL slice: PE DLL: 7z.dll case study (unblocks 13+ sweep programs)
+- [ ] **SW-742** TASK-LOADER-DLL slice: PE DLL: libcrypto.dll case study (unblocks 13+ sweep programs)
+- [ ] **SW-743** TASK-LOADER-DLL slice: PE DLL: dependencies-of-dependencies (unblocks 13+ sweep programs)
+- [ ] **SW-744** TASK-LOADER-DLL slice: PE DLL: resource-only DLLs (unblocks 13+ sweep programs)
+- [ ] **SW-745** TASK-LOADER-DLL slice: PE DLL: G1 extension with 7z.exe full ops (unblocks 13+ sweep programs)
+- [ ] **SW-746** kernel32/user32 tail: ReadProcessMemory honest fail (self-probe)
+- [ ] **SW-747** kernel32/user32 tail: WriteProcessMemory honest fail
+- [ ] **SW-748** kernel32/user32 tail: GetComputerNameA real hostname
+- [ ] **SW-749** kernel32/user32 tail: ExpandEnvironmentStringsW real env map
+- [ ] **SW-750** kernel32/user32 tail: WritePrivateProfileStringW in-memory win.ini + GetPrivateProfileStringW round-trip
+- [ ] **SW-751** kernel32/user32 tail: GetPrivateProfileIntW (Bginfo64 pairs with GetProfileIntW)
+- [ ] **SW-752** kernel32/user32 tail: SearchPathW real module dir search
+- [ ] **SW-753** kernel32/user32 tail: GetModuleFileNameExW + EnumProcessModules honest set
+- [ ] **SW-754** kernel32/user32 tail: WaitForMultipleObjects full WAIT_FAILED paths
+- [ ] **SW-755** kernel32/user32 tail: SetUnhandledExceptionFilter + UnhandledExceptionFilter contract
+- [ ] **SW-756** kernel32/user32 tail: GetExitCodeProcess/TerminateProcess cross-check
+- [ ] **SW-757** kernel32/user32 tail: CreateToolhelp32Snapshot honest empty snapshot
+- [ ] **SW-758** kernel32/user32 tail: Process32First/Next honest ERROR_NO_MORE_FILES
+- [ ] **SW-759** kernel32/user32 tail: HeapWalk honest end-of-heap
+- [ ] **SW-760** kernel32/user32 tail: GetProcessWorkingSetSize honest quota
+- [ ] **SW-761** kernel32/user32 tail: SetInformationJobObject honest reject
+- [ ] **SW-762** kernel32/user32 tail: AssignProcessToJobObject honest fail
+- [ ] **SW-763** kernel32/user32 tail: GetLogicalDrives + GetDriveTypeA honest C: only
+- [ ] **SW-764** kernel32/user32 tail: GetVolumeInformationW honest volume
+- [ ] **SW-765** kernel32/user32 tail: SetLocalTime honest ignore
+- [ ] **SW-766** kernel32/user32 tail: GetTimeZoneInformation real host TZ
+- [ ] **SW-767** kernel32/user32 tail: GetSystemInfo real cores/page size
+- [ ] **SW-768** kernel32/user32 tail: GlobalMemoryStatusEx real
+- [ ] **SW-769** kernel32/user32 tail: GetProcessAffinityMask pin
+- [ ] **SW-770** kernel32/user32 tail: SetErrorMode honest store
+- [ ] **SW-771** infra/verify: decoder ordinal audit: sweep012_progress vs pefile db full sweep
+- [ ] **SW-772** infra/verify: api_trace repair: buffered writer close-on-crash (parse-err in AFTER3)
+- [ ] **SW-773** infra/verify: sweep pool: add collision-free meta names (AFTER2 dup RAMMap64)
+- [ ] **SW-774** infra/verify: G1: add jq.exe exit-parity case
+- [ ] **SW-775** infra/verify: prog-sweep: parallel runs (nproc workers)
+- [ ] **SW-776** infra/verify: prog-sweep: per-program wall-time column
+- [ ] **SW-777** infra/verify: progress.json: track cumulative zero-stub count
+- [ ] **SW-778** infra/verify: stdin </dev/null harness: document in sweep README
+- [ ] **SW-779** infra/verify: MINWIN_FUNC_MAP: auto-build for all 52 pool programs
+- [ ] **SW-780** infra/verify: crash banner: include last-3 APIs from api_trace
+- [ ] **SW-781** infra/verify: stub rate-limiter: MINWIN_STUB_LIMIT env (200 default)
+- [ ] **SW-782** infra/verify: loader: assert-dispatch audit script (defined-but-unwired check, BUG-070 class)
+- [ ] **SW-783** infra/verify: docs: ADR-015 ordinal-import policy
+- [ ] **SW-784** infra/verify: docs: BUG-069/070/071 postmortems
+- [ ] **SW-785** infra/verify: 100-list: x86 LOAD-REJECT column formalized (11 programs)
+- [ ] **SW-786** infra/verify: games: 2048-class win64 obtain+run (SW-501 mandate check-in)
+- [ ] **SW-787** infra/verify: 7zFM/7zG: click-through GUI scenario via MINWIN_CLICKS
+- [ ] **SW-788** infra/verify: procexp64: 0-stub crash RIP symbolize (SW-602 close-out)
+- [ ] **SW-789** infra/verify: produkey: RegSetValueExW persistence path (EulaAccepted pattern)
+- [ ] **SW-790** infra/verify: zoomit64 SW-553 int3 re-check after batch #4
+- [ ] **SW-791** infra/verify: curl: OPENSRC-CURL-1 UCRT state pointer next slice (SW-610)
+- [ ] **SW-792** infra/verify: puttygen: SW-552 stack machine-named frames -> fix RIP=0 path
+- [ ] **SW-793** infra/verify: md5deep64 suite: shared CRT-start crash root-cause (one BUG-*)
+- [ ] **SW-794** infra/verify: Coreinfo64: 0-stub crash — IsWow64Process now real, re-trace (SW-608)
+- [ ] **SW-795** infra/verify: SearchMyFiles: 0-stub crash re-trace after batch #4 (SW-609)
+- [ ] **SW-796** infra/verify: Bginfo64: libc-side NULL deref — last-API correlation (new frontier)
+- [ ] **SW-797** infra/verify: WinMergeU: guest NULL store at RVA 0x12d0c2 (REA funcmap)
+- [ ] **SW-798** infra/verify: sqlite3_analyzer: byte-store crash at RVA 0xaa652 (REA funcmap)
+- [ ] **SW-799** infra/verify: procmon64: exit 1 banner path audit after batch #4
+- [ ] **SW-800** infra/verify: lz4/zstd/trurl: exit-code parity re-pin (3x each)

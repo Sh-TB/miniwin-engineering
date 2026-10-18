@@ -1,0 +1,135 @@
+{
+  "trace": [
+[T7f80] [API] PE Loader: file=/home/z/my-project/workspace/miniwin-engineering/artifacts/sweep006/breakout.exe size=227328
+[T7f80] [API] PE Loader: ImageBase=0x140000000 EP=0x2450 SizeOfImage=0x3e000 Sections=7
+[T7f80] [API] PE Loader: Mapped at 0x140000000 (forced via MAP_FIXED)
+[T7f80] [API] Section [0] .text    VA=0x00001000 VS=0x00029216 Raw=0x00029400 Ch=0x60000020
+[T7f80] [API] Section [1] .rdata   VA=0x0002b000 VS=0x0000bef0 Raw=0x0000c000 Ch=0x40000040
+[T7f80] [API] Section [2] .buildid VA=0x00037000 VS=0x0000005d Raw=0x00000200 Ch=0x40000040
+[T7f80] [API] Section [3] .data    VA=0x00038000 VS=0x000012b8 Raw=0x00000200 Ch=0xc0000040
+[T7f80] [API] Section [4] .pdata   VA=0x0003a000 VS=0x0000174c Raw=0x00001800 Ch=0x40000040
+[T7f80] [API] Section [5] .tls     VA=0x0003c000 VS=0x00000010 Raw=0x00000200 Ch=0xc0000040
+[T7f80] [API] Section [6] .reloc   VA=0x0003d000 VS=0x00000060 Raw=0x00000200 Ch=0x42000040
+[T7f80] [API] Import Directory: RVA=0x34928 Size=0xdc
+[T7f80] [API] Import DLL: USER32.dll (IAT RVA=0x34c90, ILT RVA=0x34a08)
+[T7f80] [API]   [0] BeginPaint -> 0x203e450
+[T7f80] [API]   [1] CreateWindowExA -> 0x2055780
+[T7f80] [API]   [2] DefWindowProcA -> 0x203be40
+[T7f80] [API]   [3] DestroyWindow -> 0x20462f0
+[T7f80] [API]   [4] DispatchMessageA -> 0x20586d0
+[T7f80] [API]   [5] EndPaint -> 0x203a6e0
+[T7f80] [API]   [6] FillRect -> 0x203ddd0
+[T7f80] [API]   [7] GetDC -> 0x200a380
+[T7f80] [API]   [8] GetMessageA -> 0x203d650
+[T7f80] [API]   [9] InvalidateRect -> 0x2033530
+[T7f80] [API]   [10] PostQuitMessage -> 0x202f070
+[T7f80] [API]   [11] RegisterClassA -> 0x204eb60
+[T7f80] [API]   [12] SetTimer -> 0x202f2d0
+[T7f80] [API]   [13] ShowWindow -> 0x202ef50
+[T7f80] [API]   [14] TranslateMessage -> 0x200cdc0
+[T7f80] [API]   [15] UpdateWindow -> 0x20214f0
+[T7f80] [API]   [16] wsprintfA -> 0x203a270
+[T7f80] [API] Import DLL: GDI32.dll (IAT RVA=0x34d20, ILT RVA=0x34a98)
+[T7f80] [API]   [0] BitBlt -> 0x203e5e0
+[T7f80] [API]   [1] CreateCompatibleBitmap -> 0x203e9e0
+[T7f80] [API]   [2] CreateCompatibleDC -> 0x20110d0
+[T7f80] [API]   [3] CreateSolidBrush -> 0x200d020
+[T7f80] [API]   [4] DeleteObject -> 0x200a410
+[T7f80] [API]   [5] Ellipse -> 0x203e000
+[T7f80] [API]   [6] GetStockObject -> 0x200d370
+[T7f80] [API]   [7] SelectObject -> 0x200d470
+[T7f80] [API]   [8] SetBkMode -> 0x202f520
+[T7f80] [API]   [9] SetTextColor -> 0x200d820
+[T7f80] [API]   [10] TextOutA -> 0x2054c50
+[T7f80] [API] Import DLL: KERNEL32.dll (IAT RVA=0x34d80, ILT RVA=0x34af8)
+[T7f80] [API]   [0] DeleteCriticalSection -> 0x2035910
+[T7f80] [API]   [1] EnterCriticalSection -> 0x203f9f0
+[T7f80] [API]   [2] GetLastError -> 0x200a7e0
+[T7f80] [API]   [3] GetStartupInfoA -> 0x20100d0
+[T7f80] [API]   [4] InitializeCriticalSection -> 0x20358f0
+[T7f80] [API]   [5] IsDBCSLeadByte -> 0x20098a0
+[T7f80] [API]   [6] LeaveCriticalSection -> 0x2031730
+[T7f80] [API]   [7] SetUnhandledExceptionFilter -> 0x200b130
+[T7f80] [API]   [8] Sleep -> 0x2015c50
+[T7f80] [API]   [9] TlsGetValue -> 0x200b240
+[T7f80] [API]   [10] VirtualProtect -> 0x2015d60
+[T7f80] [API]   [11] VirtualQuery -> 0x2010230
+[T7f80] [API]   [12] lstrlenA -> 0x2053f80
+[T7f80] [API] Import DLL: api-ms-win-crt-heap-l1-1-0.dll (IAT RVA=0x34df0, ILT RVA=0x34b68)
+[T7f80] [API]   [0] _set_new_mode -> 0x202d500
+[T7f80] [API]   [1] calloc -> 0x2040690
+[T7f80] [API]   [2] free -> 0x204e200
+[T7f80] [API]   [3] malloc -> 0x203fca0
+[T7f80] [API] Import DLL: api-ms-win-crt-locale-l1-1-0.dll (IAT RVA=0x34e18, ILT RVA=0x34b90)
+[T7f80] [API]   [0] _configthreadlocale -> 0x2009b50
+[T7f80] [API] Import DLL: api-ms-win-crt-runtime-l1-1-0.dll (IAT RVA=0x34e28, ILT RVA=0x34ba0)
+[T7f80] [API]   [0] __p___argc -> 0x202da40
+[T7f80] [API]   [1] __p___argv -> 0x202db40
+[T7f80] [API]   [2] __p__acmdln -> 0x202dd40
+[T7f80] [API]   [3] _cexit -> 0x2010bd0
+[T7f80] [API]   [4] _configure_narrow_argv -> 0x202d3f0
+[T7f80] [API]   [5] _crt_atexit -> 0x200bbf0
+[T7f80] [API]   [6] _exit -> 0x2012910
+[T7f80] [API]   [7] _initialize_narrow_environment -> 0x20329b0
+[T7f80] [API]   [8] _initterm -> 0x200b4b0
+[T7f80] [API]   [9] _initterm_e -> 0x200c800
+[T7f80] [API]   [10] _seh_filter_exe -> 0x202e9d0
+[T7f80] [API]   [11] _set_app_type -> 0x202d1d0
+[T7f80] [API]   [12] _set_invalid_parameter_handler -> 0x202d610
+[T7f80] [API]   [13] abort -> 0x203b5a0
+[T7f80] [API]   [14] exit -> 0x2016350
+[T7f80] [API] Import DLL: api-ms-win-crt-stdio-l1-1-0.dll (IAT RVA=0x34ea8, ILT RVA=0x34c20)
+[T7f80] [API]   [0] __acrt_iob_func -> 0x200b780
+[T7f80] [API]   [1] __p__commode -> 0x202d940
+[T7f80] [API]   [2] __p__fmode -> 0x202d840
+[T7f80] [API]   [3] __stdio_common_vfprintf -> 0x20253d0
+[T7f80] [API]   [4] fflush -> 0x2023390
+[T7f80] [API]   [5] fwrite -> 0x2023d10
+[T7f80] [API]   [6] setvbuf -> 0x20241d0
+[T7f80] [API] Import DLL: api-ms-win-crt-environment-l1-1-0.dll (IAT RVA=0x34ee8, ILT RVA=0x34c60)
+[T7f80] [API]   [0] __p__environ -> 0x202dc40
+[T7f80] [API] Import DLL: api-ms-win-crt-math-l1-1-0.dll (IAT RVA=0x34ef8, ILT RVA=0x34c70)
+[T7f80] [API]   [0] __setusermatherr -> 0x202d2e0
+[T7f80] [API] Import DLL: api-ms-win-crt-string-l1-1-0.dll (IAT RVA=0x34f08, ILT RVA=0x34c80)
+[T7f80] [API]   [0] strncmp -> 0x2017580
+[T7f80] [API] Import resolution: 71 resolved, 0 unresolved (total 71)
+[T7f80] [API] TLS: StartRaw=0x14003c000 EndRaw=0x14003c008 Callbacks=0x1400348f0
+[T7f80] [API] TLS: static block 0x3bd1090 (8+0 bytes) -> slot 0
+[T7f80] [API] TLS: callback[0] = 0x1400024d0
+[T7f80] [API] InitializeCriticalSection(0x140038208)
+[T7f80] [API] TLS: callback[1] = 0x140002560
+[T7f80] [API] Exception: .pdata RVA=0x3a000 Size=0x174c Entries=497
+[T7f80] [API] [API-005] EH hacks DISABLED (default) (MINWIN_EH_HACKS=<unset>)
+[T7f80] [API] [API-005] CXX-EH-FIX (LSDA catch-all patch RVA 0x2010c8) skipped: MINWIN_EH_HACKS not set
+[T7f80] [API] Jumping to EP=0x140002450
+[T7f80] [API] __acrt_iob_func(2) = 0x7f0725f5f4e0
+[T7f80] [API] setvbuf(stream=0x7f0725f5f4e0, mode=4->2, size=0)
+[T7f80] [API] atexit(func=0x140002480)
+[T7f80] [API] _set_invalid_parameter_handler(0x140002490) -> NULL
+[T7f80] [API] __set_app_type(1)
+[T7f80] [API] __p__fmode() = 0x224d4f8
+[T7f80] [API] __p__commode() = 0x224d4f4
+[T7f80] [API] _initterm_e(0x1400348d8..0x1400348e0)
+[T7f80] [API] _initialize_narrow_environment() -> 0
+[T7f80] [API] _configure_narrow_argv(mode=1) -> 0
+[T7f80] [API] __p___argc() = 0x224d510
+[T7f80] [API] __p___argv() = 0x209e030
+[T7f80] [API] __p__environ() = 0x224d508
+[T7f80] [API] _set_new_mode(0) -> 0
+[T7f80] [API] malloc(16) = 0x3bd1740
+[T7f80] [API] malloc(13) = 0x3bd1760
+[T7f80] [API] SetUnhandledExceptionFilter(handler=0x1400024a0)
+[T7f80] [API] _initterm(start=0x1400348b8, end=0x1400348c0)
+[T7f80] [API] atexit(func=0x1400025f0)
+[T7f80] [API] __p__acmdln() = 0x21adf88
+[T7f80] [API] GetStartupInfoA(info=0x7fffd01908c0)
+[T7f80] [API] RegisterClassA(wc=0x7fffd0190810) -> ATOM 0xc001
+[T7f80] [API] [GUI] paint surface allocated 480x360 (SWEEP-005)
+[T7f80] [API] CreateWindowExA(ex=0x0 style=0xcf0000 cls=0x14002b3c8 480x360@60,60) -> HWND 0x10001
+[T7f80] [API] ShowWindow(hwnd=0x10001 cmd=10) -> TRUE
+[T7f80] [API] UpdateWindow(hwnd=0x10001)
+[T7f80] [API] [GUI] SetTimer(id=1, 20ms) -> armed
+[T7f80] [API] GetMessageA(hwnd=(nil)) -> 0 (WM_QUIT: no event source)
+[T7f80] [API] exit(0)
+  ]
+}

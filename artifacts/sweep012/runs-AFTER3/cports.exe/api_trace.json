@@ -1,0 +1,438 @@
+{
+  "trace": [
+[Tcf80] [API] PE Loader: file=/home/z/my-project/workspace/miniwin-engineering/artifacts/sweep50/dl/cports/cports.exe size=216064
+[Tcf80] [API] PE Loader: ImageBase=0x140000000 EP=0x26710 SizeOfImage=0x3c000 Sections=5
+[Tcf80] [API] PE Loader: Mapped at 0x140000000 (forced via MAP_FIXED)
+[Tcf80] [API] Section [0] .text    VA=0x00001000 VS=0x0002619b Raw=0x00026200 Ch=0x60000020
+[Tcf80] [API] Section [1] .rdata   VA=0x00028000 VS=0x000064ba Raw=0x00006600 Ch=0x40000040
+[Tcf80] [API] Section [2] .data    VA=0x0002f000 VS=0x00004860 Raw=0x00000c00 Ch=0xc0000040
+[Tcf80] [API] Section [3] .pdata   VA=0x00034000 VS=0x00001410 Raw=0x00001600 Ch=0x40000040
+[Tcf80] [API] Section [4] .rsrc    VA=0x00036000 VS=0x00005d74 Raw=0x00005e00 Ch=0x40000040
+[Tcf80] [API] Import Directory: RVA=0x2c9b0 Size=0xdc
+[Tcf80] [API] Import DLL: msvcrt.dll (IAT RVA=0x28738, ILT RVA=0x2d1c8)
+[Tcf80] [API]   [0] __set_app_type -> 0x202d1d0
+[Tcf80] [API]   [1] _acmdln -> DATA 0x21adf88
+[Tcf80] [API]   [2] _fmode -> DATA 0x224d4f8
+[Tcf80] [API]   [3] _cexit -> 0x2010bd0
+[Tcf80] [API]   [4] _exit -> 0x2012910
+[Tcf80] [API]   [5] _c_exit -> 0x2033230
+[Tcf80] [API]   [6] _XcptFilter -> 0x202e070
+[Tcf80] [API]   [7] __C_specific_handler -> 0x20328b0
+[Tcf80] [API]   [8] _onexit -> 0x201b0c0
+[Tcf80] [API]   [9] __dllonexit -> 0x20267d0
+[Tcf80] [API]   [10] qsort -> 0x2019f60
+[Tcf80] [API]   [11] UNRESOLVED: _strlwr
+[Tcf80] [API]   [12] UNRESOLVED: _itoa
+[Tcf80] [API]   [13] _atoi64 -> 0x201ad00
+[Tcf80] [API]   [14] UNRESOLVED: _mbsicmp
+[Tcf80] [API]   [15] UNRESOLVED: _mbscmp
+[Tcf80] [API]   [16] memmove -> 0x200fb30
+[Tcf80] [API]   [17] UNRESOLVED: _mbschr
+[Tcf80] [API]   [18] strrchr -> 0x2017390
+[Tcf80] [API]   [19] strcmp -> 0x2015790
+[Tcf80] [API]   [20] malloc -> 0x203fca0
+[Tcf80] [API]   [21] strtoul -> 0x2017aa0
+[Tcf80] [API]   [22] free -> 0x204e200
+[Tcf80] [API]   [23] modf -> 0x20201f0
+[Tcf80] [API]   [24] _stricmp -> 0x2017620
+[Tcf80] [API]   [25] _commode -> DATA 0x224d4f4
+[Tcf80] [API]   [26] __setusermatherr -> 0x202d2e0
+[Tcf80] [API]   [27] _initterm -> 0x200b4b0
+[Tcf80] [API]   [28] exit -> 0x2016350
+[Tcf80] [API]   [29] __getmainargs -> 0x200b360
+[Tcf80] [API]   [30] _mbsrchr -> 0x2017430
+[Tcf80] [API]   [31] UNRESOLVED: _memicmp
+[Tcf80] [API]   [32] strchr -> 0x20137a0
+[Tcf80] [API]   [33] sprintf -> 0x2025710
+[Tcf80] [API]   [34] _purecall -> 0x201aa90
+[Tcf80] [API]   [35] _ultoa -> 0x2026300
+[Tcf80] [API]   [36] strlen -> 0x2012270
+[Tcf80] [API]   [37] memcpy -> 0x2013b20
+[Tcf80] [API]   [38] memcmp -> 0x2012870
+[Tcf80] [API]   [39] strncmp -> 0x2017580
+[Tcf80] [API]   [40] atoi -> 0x2017760
+[Tcf80] [API]   [41] UNRESOLVED: _strcmpi
+[Tcf80] [API]   [42] strcpy -> 0x20172f0
+[Tcf80] [API]   [43] ??3@YAXPEAX@Z -> 0x203c5f0
+[Tcf80] [API]   [44] ??2@YAPEAX_K@Z -> 0x20135b0
+[Tcf80] [API]   [45] memset -> 0x20103a0
+[Tcf80] [API]   [46] _mbsnbcat -> 0x2012310
+[Tcf80] [API]   [47] UNRESOLVED: _snprintf
+[Tcf80] [API]   [48] strcat -> 0x2020fc0
+[Tcf80] [API]   [49] _errno -> 0x202e180
+[Tcf80] [API]   [50] fopen -> 0x2047210
+[Tcf80] [API]   [51] fread -> 0x2023570
+[Tcf80] [API]   [52] fprintf -> 0x2024dd0
+[Tcf80] [API]   [53] ferror -> 0x2020700
+[Tcf80] [API]   [54] ftell -> 0x20234b0
+[Tcf80] [API]   [55] fclose -> 0x203ca50
+[Tcf80] [API] Import DLL: WS2_32.dll (IAT RVA=0x286b8, ILT RVA=0x2d148)
+[Tcf80] [API]   [0] Ordinal 9 -> htons (fixed ordinal)
+[Tcf80] [API]   [0] htons -> 0x20218a0
+[Tcf80] [API]   [1] Ordinal 51 -> gethostbyaddr (fixed ordinal)
+[Tcf80] [API]   [1] gethostbyaddr -> 0x2011c40
+[Tcf80] [API]   [2] Ordinal 101 -> WSAAsyncSelect (fixed ordinal)
+[Tcf80] [API]   [2] WSAAsyncSelect -> 0x2034dc0
+[Tcf80] [API]   [3] Ordinal 112 -> WSASetLastError (fixed ordinal)
+[Tcf80] [API]   [3] WSASetLastError -> 0x200a030
+[Tcf80] [API]   [4] Ordinal 56 -> getservbyport (fixed ordinal)
+[Tcf80] [API]   [4] getservbyport -> 0x2011d60
+[Tcf80] [API]   [5] Ordinal 115 -> WSAStartup (fixed ordinal)
+[Tcf80] [API]   [5] WSAStartup -> 0x2012ce0
+[Tcf80] [API]   [6] Ordinal 116 -> WSACleanup (fixed ordinal)
+[Tcf80] [API]   [6] WSACleanup -> 0x200a010
+[Tcf80] [API]   [7] Ordinal 3 -> closesocket (fixed ordinal)
+[Tcf80] [API]   [7] closesocket -> 0x2018f50
+[Tcf80] [API]   [8] Ordinal 111 -> WSAGetLastError (fixed ordinal)
+[Tcf80] [API]   [8] WSAGetLastError -> 0x200a020
+[Tcf80] [API]   [9] Ordinal 11 -> inet_addr (fixed ordinal)
+[Tcf80] [API]   [9] inet_addr -> 0x20218b0
+[Tcf80] [API]   [10] Ordinal 4 -> connect (fixed ordinal)
+[Tcf80] [API]   [10] connect -> 0x2021ae0
+[Tcf80] [API] Import DLL: VERSION.dll (IAT RVA=0x28698, ILT RVA=0x2d128)
+[Tcf80] [API]   [0] UNRESOLVED: GetFileVersionInfoA
+[Tcf80] [API]   [1] UNRESOLVED: GetFileVersionInfoSizeA
+[Tcf80] [API]   [2] UNRESOLVED: VerQueryValueA
+[Tcf80] [API] Import DLL: COMCTL32.dll (IAT RVA=0x28010, ILT RVA=0x2caa0)
+[Tcf80] [API]   [0] Ordinal 6 (not supported)
+[Tcf80] [API]   [1] ImageList_Add -> 0x2013e70
+[Tcf80] [API]   [2] Ordinal 17 -> ImageList_Create (fixed ordinal)
+[Tcf80] [API]   [2] ImageList_Create -> 0x2016640
+[Tcf80] [API]   [3] ImageList_ReplaceIcon -> 0x2041470
+[Tcf80] [API]   [4] ImageList_Create -> 0x2016640
+[Tcf80] [API]   [5] ImageList_SetImageCount -> 0x20417b0
+[Tcf80] [API]   [6] UNRESOLVED: ImageList_AddMasked
+[Tcf80] [API]   [7] UNRESOLVED: CreateToolbarEx
+[Tcf80] [API] Import DLL: KERNEL32.dll (IAT RVA=0x280e8, ILT RVA=0x2cb78)
+[Tcf80] [API]   [0] FindFirstFileA -> 0x20389c0
+[Tcf80] [API]   [1] GetStartupInfoA -> 0x20100d0
+[Tcf80] [API]   [2] TerminateProcess -> 0x2016420
+[Tcf80] [API]   [3] GetVersionExA -> 0x2031860
+[Tcf80] [API]   [4] CreateEventA -> 0x2027dc0
+[Tcf80] [API]   [5] UNRESOLVED: GetThreadSelectorEntry
+[Tcf80] [API]   [6] GetProcessHeap -> 0x2009090
+[Tcf80] [API]   [7] GetCurrentThread -> 0x2008330
+[Tcf80] [API]   [8] HeapFree -> 0x20512f0
+[Tcf80] [API]   [9] UnmapViewOfFile -> 0x202a970
+[Tcf80] [API]   [10] MapViewOfFile -> 0x203a780
+[Tcf80] [API]   [11] DuplicateHandle -> 0x200a5a0
+[Tcf80] [API]   [12] DeviceIoControl -> 0x204bf50
+[Tcf80] [API]   [13] CreateThread -> 0x202acc0
+[Tcf80] [API]   [14] ResumeThread -> 0x2032070
+[Tcf80] [API]   [15] GetCurrentProcess -> 0x2008310
+[Tcf80] [API]   [16] ExitProcess -> 0x203b360
+[Tcf80] [API]   [17] DeleteFileA -> 0x2037f70
+[Tcf80] [API]   [18] GetCurrentProcessId -> 0x2008320
+[Tcf80] [API]   [19] Sleep -> 0x2015c50
+[Tcf80] [API]   [20] UNRESOLVED: WinExec
+[Tcf80] [API]   [21] GetStdHandle -> 0x205e990
+[Tcf80] [API]   [22] UNRESOLVED: WritePrivateProfileStringA
+[Tcf80] [API]   [23] UNRESOLVED: GetPrivateProfileStringA
+[Tcf80] [API]   [24] UNRESOLVED: GetPrivateProfileIntA
+[Tcf80] [API]   [25] UNRESOLVED: EnumResourceNamesA
+[Tcf80] [API]   [26] ReadFile -> 0x202bc60
+[Tcf80] [API]   [27] UNRESOLVED: GetTempFileNameA
+[Tcf80] [API]   [28] lstrcpyA -> 0x204ec80
+[Tcf80] [API]   [29] GetWindowsDirectoryA -> 0x2038cc0
+[Tcf80] [API]   [30] LoadResource -> 0x202e7c0
+[Tcf80] [API]   [31] GetLocaleInfoA -> 0x203f670
+[Tcf80] [API]   [32] GetTempPathA -> 0x2013ca0
+[Tcf80] [API]   [33] UNRESOLVED: GetNumberFormatA
+[Tcf80] [API]   [34] LocalFree -> 0x204f390
+[Tcf80] [API]   [35] GetModuleFileNameA -> 0x203f1a0
+[Tcf80] [API]   [36] FormatMessageA -> 0x202e5a0
+[Tcf80] [API]   [37] FindNextFileA -> 0x2041c40
+[Tcf80] [API]   [38] OpenProcess -> 0x2031f70
+[Tcf80] [API]   [39] WideCharToMultiByte -> 0x20273f0
+[Tcf80] [API]   [40] CompareFileTime -> 0x2027330
+[Tcf80] [API]   [41] CloseHandle -> 0x2046580
+[Tcf80] [API]   [42] FileTimeToLocalFileTime -> 0x203d990
+[Tcf80] [API]   [43] GetLastError -> 0x200a7e0
+[Tcf80] [API]   [44] UNRESOLVED: ReadProcessMemory
+[Tcf80] [API]   [45] GetProcAddress -> 0x200a8e0
+[Tcf80] [API]   [46] GetFileAttributesA -> 0x2038210
+[Tcf80] [API]   [47] GetModuleHandleA -> 0x2012510
+[Tcf80] [API]   [48] GetTickCount -> 0x20148b0
+[Tcf80] [API]   [49] GetSystemTimeAsFileTime -> 0x2014620
+[Tcf80] [API]   [50] InitializeCriticalSection -> 0x20358f0
+[Tcf80] [API]   [51] LeaveCriticalSection -> 0x2031730
+[Tcf80] [API]   [52] EnterCriticalSection -> 0x203f9f0
+[Tcf80] [API]   [53] DeleteCriticalSection -> 0x2035910
+[Tcf80] [API]   [54] GetFileSize -> 0x202c430
+[Tcf80] [API]   [55] FileTimeToSystemTime -> 0x20392d0
+[Tcf80] [API]   [56] FreeLibrary -> 0x2032df0
+[Tcf80] [API]   [57] LoadLibraryA -> 0x2028fa0
+[Tcf80] [API]   [58] FindClose -> 0x201cd90
+[Tcf80] [API]   [59] UNRESOLVED: GetDateFormatA
+[Tcf80] [API]   [60] GetSystemDirectoryA -> 0x2012ad0
+[Tcf80] [API]   [61] WriteFile -> 0x202be90
+[Tcf80] [API]   [62] LoadLibraryExA -> 0x20278e0
+[Tcf80] [API]   [63] CreateFileA -> 0x2037de0
+[Tcf80] [API]   [64] GlobalAlloc -> 0x20164d0
+[Tcf80] [API]   [65] GlobalLock -> 0x20095a0
+[Tcf80] [API]   [66] FindResourceA -> 0x204ab10
+[Tcf80] [API]   [67] UNRESOLVED: GetTimeFormatA
+[Tcf80] [API]   [68] GlobalUnlock -> 0x20095b0
+[Tcf80] [API]   [69] SetFilePointer -> 0x202c0a0
+[Tcf80] [API]   [70] LockResource -> 0x203bfa0
+[Tcf80] [API]   [71] lstrlenA -> 0x2053f80
+[Tcf80] [API] Import DLL: USER32.dll (IAT RVA=0x28360, ILT RVA=0x2cdf0)
+[Tcf80] [API]   [0] UNRESOLVED: GetClassNameA
+[Tcf80] [API]   [1] SetForegroundWindow -> 0x203c030
+[Tcf80] [API]   [2] KillTimer -> 0x200a400
+[Tcf80] [API]   [3] UNRESOLVED: IsDialogMessageA
+[Tcf80] [API]   [4] TranslateMessage -> 0x200cdc0
+[Tcf80] [API]   [5] SetWindowPlacement -> 0x2056570
+[Tcf80] [API]   [6] GetMessageA -> 0x203d650
+[Tcf80] [API]   [7] PostMessageA -> 0x202f960
+[Tcf80] [API]   [8] UNRESOLVED: RemoveMenu
+[Tcf80] [API]   [9] MessageBeep -> 0x203c070
+[Tcf80] [API]   [10] SetTimer -> 0x202f2d0
+[Tcf80] [API]   [11] DispatchMessageA -> 0x20586d0
+[Tcf80] [API]   [12] UNRESOLVED: WindowFromPoint
+[Tcf80] [API]   [13] UNRESOLVED: ReleaseCapture
+[Tcf80] [API]   [14] PostQuitMessage -> 0x202f070
+[Tcf80] [API]   [15] UNRESOLVED: TrackPopupMenu
+[Tcf80] [API]   [16] RegisterWindowMessageA -> 0x200f270
+[Tcf80] [API]   [17] UNRESOLVED: InsertMenuA
+[Tcf80] [API]   [18] UNRESOLVED: MonitorFromWindow
+[Tcf80] [API]   [19] GetMonitorInfoA -> 0x2050b10
+[Tcf80] [API]   [20] UpdateWindow -> 0x20214f0
+[Tcf80] [API]   [21] UNRESOLVED: DrawTextExA
+[Tcf80] [API]   [22] UNRESOLVED: SetCapture
+[Tcf80] [API]   [23] UNRESOLVED: GetKeyState
+[Tcf80] [API]   [24] UNRESOLVED: CreatePopupMenu
+[Tcf80] [API]   [25] UNRESOLVED: SetMenuItemInfoA
+[Tcf80] [API]   [26] GetDlgCtrlID -> 0x2042020
+[Tcf80] [API]   [27] DialogBoxParamA -> 0x200e210
+[Tcf80] [API]   [28] ShowWindow -> 0x202ef50
+[Tcf80] [API]   [29] LoadStringA -> 0x202fda0
+[Tcf80] [API]   [30] UNRESOLVED: ChildWindowFromPoint
+[Tcf80] [API]   [31] ReleaseDC -> 0x200a390
+[Tcf80] [API]   [32] GetDC -> 0x200a380
+[Tcf80] [API]   [33] GetSysColorBrush -> 0x200e5f0
+[Tcf80] [API]   [34] LoadCursorA -> 0x200a3b0
+[Tcf80] [API]   [35] SetWindowPos -> 0x2031290
+[Tcf80] [API]   [36] GetWindowPlacement -> 0x2011290
+[Tcf80] [API]   [37] GetSystemMetrics -> 0x2009580
+[Tcf80] [API]   [38] BeginPaint -> 0x203e450
+[Tcf80] [API]   [39] UNRESOLVED: GetWindow
+[Tcf80] [API]   [40] GetWindowTextLengthA -> 0x2046270
+[Tcf80] [API]   [41] GetClientRect -> 0x202f190
+[Tcf80] [API]   [42] SetDlgItemTextA -> 0x2057f20
+[Tcf80] [API]   [43] UNRESOLVED: DrawFrameControl
+[Tcf80] [API]   [44] GetDlgItemTextA -> 0x2048960
+[Tcf80] [API]   [45] SetWindowTextA -> 0x2057c30
+[Tcf80] [API]   [46] UNRESOLVED: DeferWindowPos
+[Tcf80] [API]   [47] UNRESOLVED: SendDlgItemMessageA
+[Tcf80] [API]   [48] GetWindowRect -> 0x200edd0
+[Tcf80] [API]   [49] GetDlgItemInt -> 0x2048270
+[Tcf80] [API]   [50] EndDialog -> 0x202f740
+[Tcf80] [API]   [51] GetDlgItem -> 0x200e950
+[Tcf80] [API]   [52] EndPaint -> 0x203a6e0
+[Tcf80] [API]   [53] CreateWindowExA -> 0x2055780
+[Tcf80] [API]   [54] InvalidateRect -> 0x2033530
+[Tcf80] [API]   [55] SetDlgItemInt -> 0x2053e00
+[Tcf80] [API]   [56] SetMenu -> 0x20301e0
+[Tcf80] [API]   [57] LoadAcceleratorsA -> 0x2033fd0
+[Tcf80] [API]   [58] DefWindowProcA -> 0x203be40
+[Tcf80] [API]   [59] UNRESOLVED: TranslateAcceleratorA
+[Tcf80] [API]   [60] MessageBoxA -> 0x2057690
+[Tcf80] [API]   [61] RegisterClassA -> 0x204eb60
+[Tcf80] [API]   [62] GetWindowTextA -> 0x2048740
+[Tcf80] [API]   [63] FindWindowA -> 0x200a1b0
+[Tcf80] [API]   [64] LoadIconA -> 0x200a3c0
+[Tcf80] [API]   [65] UNRESOLVED: IsWindowVisible
+[Tcf80] [API]   [66] UNRESOLVED: GetWindowThreadProcessId
+[Tcf80] [API]   [67] UNRESOLVED: EnumWindows
+[Tcf80] [API]   [68] SendMessageA -> 0x2058fb0
+[Tcf80] [API]   [69] UNRESOLVED: DestroyIcon
+[Tcf80] [API]   [70] LoadImageA -> 0x20116b0
+[Tcf80] [API]   [71] GetSysColor -> 0x200cf00
+[Tcf80] [API]   [72] UNRESOLVED: GetWindowLongA
+[Tcf80] [API]   [73] UNRESOLVED: SetWindowLongA
+[Tcf80] [API]   [74] UNRESOLVED: EndDeferWindowPos
+[Tcf80] [API]   [75] UNRESOLVED: BeginDeferWindowPos
+[Tcf80] [API]   [76] SetFocus -> 0x20300d0
+[Tcf80] [API]   [77] MoveWindow -> 0x20306e0
+[Tcf80] [API]   [78] GetMenu -> 0x200ec80
+[Tcf80] [API]   [79] UNRESOLVED: OpenClipboard
+[Tcf80] [API]   [80] UNRESOLVED: InsertMenuItemA
+[Tcf80] [API]   [81] CheckMenuItem -> 0x2030410
+[Tcf80] [API]   [82] UNRESOLVED: EmptyClipboard
+[Tcf80] [API]   [83] EnableMenuItem -> 0x2030570
+[Tcf80] [API]   [84] GetParent -> 0x2041fd0
+[Tcf80] [API]   [85] UNRESOLVED: GetMenuItemCount
+[Tcf80] [API]   [86] UNRESOLVED: GetSubMenu
+[Tcf80] [API]   [87] UNRESOLVED: SetCursor
+[Tcf80] [API]   [88] UNRESOLVED: CloseClipboard
+[Tcf80] [API]   [89] UNRESOLVED: GetMenuStringA
+[Tcf80] [API]   [90] UNRESOLVED: SetClipboardData
+[Tcf80] [API]   [91] EnableWindow -> 0x20430c0
+[Tcf80] [API]   [92] UNRESOLVED: CheckMenuRadioItem
+[Tcf80] [API]   [93] MapWindowPoints -> 0x2030c90
+[Tcf80] [API]   [94] GetCursorPos -> 0x2033ea0
+[Tcf80] [API]   [95] UNRESOLVED: DestroyMenu
+[Tcf80] [API]   [96] CreateDialogParamA -> 0x2030b60
+[Tcf80] [API]   [97] UNRESOLVED: EnumChildWindows
+[Tcf80] [API]   [98] DestroyWindow -> 0x20462f0
+[Tcf80] [API]   [99] UNRESOLVED: GetMenuItemInfoA
+[Tcf80] [API]   [100] LoadMenuA -> 0x200a460
+[Tcf80] [API]   [101] UNRESOLVED: ModifyMenuA
+[Tcf80] [API] Import DLL: GDI32.dll (IAT RVA=0x28058, ILT RVA=0x2cae8)
+[Tcf80] [API]   [0] SetBkColor -> 0x200d950
+[Tcf80] [API]   [1] GetStockObject -> 0x200d370
+[Tcf80] [API]   [2] UNRESOLVED: GetTextExtentPoint32A
+[Tcf80] [API]   [3] CreateCompatibleBitmap -> 0x203e9e0
+[Tcf80] [API]   [4] UNRESOLVED: SetStretchBltMode
+[Tcf80] [API]   [5] UNRESOLVED: StretchBlt
+[Tcf80] [API]   [6] UNRESOLVED: GetPixel
+[Tcf80] [API]   [7] GetObjectA -> 0x2014430
+[Tcf80] [API]   [8] DeleteDC -> 0x200dc20
+[Tcf80] [API]   [9] SetPixel -> 0x2048620
+[Tcf80] [API]   [10] SelectObject -> 0x200d470
+[Tcf80] [API]   [11] CreateCompatibleDC -> 0x20110d0
+[Tcf80] [API]   [12] SetBkMode -> 0x202f520
+[Tcf80] [API]   [13] DeleteObject -> 0x200a410
+[Tcf80] [API]   [14] SetTextColor -> 0x200d820
+[Tcf80] [API]   [15] GetDeviceCaps -> 0x200da80
+[Tcf80] [API]   [16] CreateFontIndirectA -> 0x20507f0
+[Tcf80] [API] Import DLL: comdlg32.dll (IAT RVA=0x28718, ILT RVA=0x2d1a8)
+[Tcf80] [API]   [0] UNRESOLVED: GetSaveFileNameA
+[Tcf80] [API]   [1] UNRESOLVED: FindTextA
+[Tcf80] [API]   [2] UNRESOLVED: ChooseFontA
+[Tcf80] [API] Import DLL: ADVAPI32.dll (IAT RVA=0x28000, ILT RVA=0x2ca90)
+[Tcf80] [API]   [0] UNRESOLVED: RegDeleteKeyA
+[Tcf80] [API] Import DLL: SHELL32.dll (IAT RVA=0x28330, ILT RVA=0x2cdc0)
+[Tcf80] [API]   [0] UNRESOLVED: ExtractIconExA
+[Tcf80] [API]   [1] UNRESOLVED: ShellExecuteA
+[Tcf80] [API]   [2] UNRESOLVED: ShellExecuteExA
+[Tcf80] [API]   [3] UNRESOLVED: SHGetFileInfoA
+[Tcf80] [API]   [4] UNRESOLVED: Shell_NotifyIconA
+[Tcf80] [API] Import resolution: 199 resolved, 79 unresolved (total 278)
+[Tcf80] [API] Exception: .pdata RVA=0x34000 Size=0x1410 Entries=428
+[Tcf80] [API] [API-005] EH hacks DISABLED (default) (MINWIN_EH_HACKS=<unset>)
+[Tcf80] [API] [API-005] CXX-EH-FIX (LSDA catch-all patch RVA 0x2010c8) skipped: MINWIN_EH_HACKS not set
+[Tcf80] [API] Jumping to EP=0x140026710
+[Tcf80] [API] GetStartupInfoA(info=0x7ffe5b353ef0)
+[Tcf80] [API] __set_app_type(2)
+[Tcf80] [API] _initterm(start=0x1400289b8, end=0x1400289c0)
+[Tcf80] [API] __getmainargs(argc=0x7ffe5b353edc, argv=0x7ffe5b353ee8, envp=0x7ffe5b353ee0)
+[Tcf80] [API] _initterm(start=0x140028900, end=0x1400289b0)
+[Tcf80] [API] _initterm: calling 0x140026ab0
+[Tcf80] [API] _onexit(func=0x140026c08)
+[Tcf80] [API] _initterm: calling 0x140026abc
+[Tcf80] [API] _onexit(func=0x140026c24)
+[Tcf80] [API] _initterm: calling 0x140026ac8
+[Tcf80] [API] _onexit(func=0x140026c40)
+[Tcf80] [API] _initterm: calling 0x140026ad4
+[Tcf80] [API] _onexit(func=0x140026c98)
+[Tcf80] [API] _initterm: calling 0x140026ae0
+[Tcf80] [API] _onexit(func=0x140026cc8)
+[Tcf80] [API] _initterm: calling 0x140026aec
+[Tcf80] [API] _onexit(func=0x140026d14)
+[Tcf80] [API] _initterm: calling 0x140026af8
+[Tcf80] [API] _onexit(func=0x140026d34)
+[Tcf80] [API] _initterm: calling 0x140026b04
+[Tcf80] [API] _onexit(func=0x140026e28)
+[Tcf80] [API] _initterm: calling 0x140026b10
+[Tcf80] [API] _onexit(func=0x140026e4c)
+[Tcf80] [API] _initterm: calling 0x140026b30
+[Tcf80] [API] _onexit(func=0x140026fb0)
+[Tcf80] [API] _initterm: calling 0x140026b3c
+[Tcf80] [API] _onexit(func=0x140027000)
+[Tcf80] [API] _initterm: calling 0x140026b48
+[Tcf80] [API] _onexit(func=0x14002701c)
+[Tcf80] [API] _initterm: calling 0x140026b54
+[Tcf80] [API] _onexit(func=0x140027020)
+[Tcf80] [API] _initterm: calling 0x140026b60
+[Tcf80] [API] _onexit(func=0x140027050)
+[Tcf80] [API] _initterm: calling 0x140026b6c
+[Tcf80] [API] _onexit(func=0x14002706c)
+[Tcf80] [API] _initterm: calling 0x140026b78
+[Tcf80] [API] _onexit(func=0x140027088)
+[Tcf80] [API] _initterm: calling 0x140026b84
+[Tcf80] [API] _onexit(func=0x1400270a4)
+[Tcf80] [API] _initterm: calling 0x140026b98
+[Tcf80] [API] _onexit(func=0x14002711c)
+[Tcf80] [API] _initterm: calling 0x140026be4
+[Tcf80] [API] _onexit(func=0x140027128)
+[Tcf80] [API] _initterm: calling 0x140026bf0
+[Tcf80] [API] _onexit(func=0x14002712c)
+[Tcf80] [API] _initterm: calling 0x140026bfc
+[Tcf80] [API] _onexit(func=0x140027178)
+[Tcf80] [API] GetModuleFileNameA(cap=260)
+[Tcf80] [API] GetModuleFileNameA(cap=260)
+[Tcf80] [API] SetLastError(2)
+[Tcf80] [API] LoadLibraryA(comctl32.dll)
+[Tcf80] [API] GetProcAddress(module=0xdead000c, name=InitCommonControlsEx)
+[Tcf80] [API]   -> 0x200ccb0
+[Tcf80] [API] InitCommonControlsEx(dwICC=0xff) -> TRUE
+[Tcf80] [API] FreeLibrary()
+[Tcf80] [API] GetSystemDirectoryA()
+[Tcf80] [API] LoadLibraryA(C:\Windows\System32\shell32.dll)
+[Tcf80] [API] SetLastError(126)
+[Tcf80] [API] LoadLibraryA(shell32.dll)
+[Tcf80] [API] GetProcAddress(module=0xdead0004, name=SHGetSpecialFolderPathA)
+[Tcf80] [API]   -> NULL (not in dispatch table)
+[Tcf80] [API] LoadLibraryA(C:\Windows\System32\psapi.dll)
+[Tcf80] [API] SetLastError(126)
+[Tcf80] [API] LoadLibraryA(psapi.dll)
+[Tcf80] [API] GetProcAddress(module=0xdead001e, name=GetModuleBaseNameA)
+[Tcf80] [API]   -> NULL (not in dispatch table)
+[Tcf80] [API] GetProcAddress(module=0xdead001e, name=EnumProcessModules)
+[Tcf80] [API]   -> NULL (not in dispatch table)
+[Tcf80] [API] GetProcAddress(module=0xdead001e, name=GetModuleFileNameExA)
+[Tcf80] [API]   -> NULL (not in dispatch table)
+[Tcf80] [API] GetProcAddress(module=0xdead001e, name=EnumProcesses)
+[Tcf80] [API]   -> NULL (not in dispatch table)
+[Tcf80] [API] GetProcAddress(module=0xdead001e, name=GetModuleInformation)
+[Tcf80] [API]   -> NULL (not in dispatch table)
+[Tcf80] [API] WSAStartup(101)
+[Tcf80] [API] msvcrt operator new(2640) -> 0x2729720
+[Tcf80] [API] msvcrt operator new(24) -> 0x272a180
+[Tcf80] [API] msvcrt operator new(128) -> 0x272a1a0
+[Tcf80] [API] GetModuleFileNameA(cap=260)
+[Tcf80] [API] free((nil))
+[Tcf80] [API] free((nil))
+[Tcf80] [API] GetModuleFileNameA(cap=260)
+[Tcf80] [API] SetLastError(2)
+[Tcf80] [API] RegisterClassA(wc=0x7ffe5b3532a0) -> ATOM 0xc001
+[Tcf80] [API] [GUI] paint surface allocated 32x32 (SWEEP-005)
+[Tcf80] [API] CreateWindowExA(ex=0x0 style=0xcf0000 cls=0x140028a08 -2147483648x-2147483648@-2147483648,-2147483648) -> HWND 0x10001
+[Tcf80] [API] ShowWindow(hwnd=0x10001 cmd=5) -> TRUE
+[Tcf80] [API] UpdateWindow(hwnd=0x10001)
+[Tcf80] [API] LoadAcceleratorsA() -> NULL (no accelerators; optional sugar)
+[Tcf80] [API] PostMessageA(msg=0x415) dropped (headless) -> TRUE
+[Tcf80] [API] GetMessageA(hwnd=(nil)) -> 0 (WM_QUIT: no event source)
+[Tcf80] [API] free((nil))
+[Tcf80] [API] free((nil))
+[Tcf80] [API] free((nil))
+[Tcf80] [API] free((nil))
+[Tcf80] [API] exit(0)
+[Tcf80] [API] free((nil))
+[Tcf80] [API] free((nil))
+[Tcf80] [API] free((nil))
+[Tcf80] [API] free((nil))
+[Tcf80] [API] free((nil))
+[Tcf80] [API] free((nil))
+[Tcf80] [API] free((nil))
+[Tcf80] [API] free((nil))
+[Tcf80] [API] free((nil))
+[Tcf80] [API] free((nil))
+[Tcf80] [API] free((nil))
+[Tcf80] [API] free((nil))
+[Tcf80] [API] free((nil))
+[Tcf80] [API] free((nil))
+[Tcf80] [API] free((nil))
+[Tcf80] [API] free((nil))
+[Tcf80] [API] free((nil))
+[Tcf80] [API] free((nil))
+[Tcf80] [API] free((nil))
+[Tcf80] [API] free((nil))
+[Tcf80] [API] free((nil))
+[Tcf80] [API] free((nil))
+[Tcf80] [API] free((nil))
+[Tcf80] [API] free((nil))
+  ]
+}

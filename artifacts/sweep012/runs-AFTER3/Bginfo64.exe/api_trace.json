@@ -1,0 +1,3299 @@
+{
+  "trace": [
+[T3f80] [API] PE Loader: file=/home/z/my-project/workspace/miniwin-engineering/artifacts/sweep50/dl/bginfo64/Bginfo64.exe size=2824984
+[T3f80] [API] PE Loader: ImageBase=0x140000000 EP=0x1a8520 SizeOfImage=0x2c5000 Sections=6
+[T3f80] [API] PE Loader: Mapped at 0x140000000 (forced via MAP_FIXED)
+[T3f80] [API] Section [0] .text    VA=0x00001000 VS=0x001e301e Raw=0x001e3200 Ch=0x60000020
+[T3f80] [API] Section [1] .rdata   VA=0x001e5000 VS=0x0009979c Raw=0x00099800 Ch=0x40000040
+[T3f80] [API] Section [2] .data    VA=0x0027f000 VS=0x000181f0 Raw=0x00007600 Ch=0xc0000040
+[T3f80] [API] Section [3] .pdata   VA=0x00298000 VS=0x000154bc Raw=0x00015600 Ch=0x40000040
+[T3f80] [API] Section [4] .rsrc    VA=0x002ae000 VS=0x00007018 Raw=0x00007200 Ch=0x40000040
+[T3f80] [API] Section [5] .reloc   VA=0x002b6000 VS=0x0000e774 Raw=0x0000e800 Ch=0x42000040
+[T3f80] [API] Import Directory: RVA=0x279cc0 Size=0x1e0
+[T3f80] [API] Import DLL: VERSION.dll (IAT RVA=0x1e6510, ILT RVA=0x27b3b0)
+[T3f80] [API]   [0] GetFileVersionInfoW -> 0x2033b60
+[T3f80] [API]   [1] VerQueryValueW -> 0x2033c60
+[T3f80] [API]   [2] GetFileVersionInfoSizeW -> 0x2033a50
+[T3f80] [API] Import DLL: snmpapi.dll (IAT RVA=0x1e6700, ILT RVA=0x27b5a0)
+[T3f80] [API]   [0] UNRESOLVED: SnmpUtilOidNCmp
+[T3f80] [API]   [1] UNRESOLVED: SnmpUtilOidCpy
+[T3f80] [API]   [2] UNRESOLVED: SnmpSvcGetUptime
+[T3f80] [API] Import DLL: NETAPI32.dll (IAT RVA=0x1e5b70, ILT RVA=0x27aa10)
+[T3f80] [API]   [0] UNRESOLVED: NetApiBufferFree
+[T3f80] [API]   [1] UNRESOLVED: NetWkstaUserGetInfo
+[T3f80] [API]   [2] UNRESOLVED: NetServerGetInfo
+[T3f80] [API]   [3] UNRESOLVED: NetWkstaGetInfo
+[T3f80] [API] Import DLL: ODBC32.dll (IAT RVA=0x1e5b98, ILT RVA=0x27aa38)
+[T3f80] [API]   [0] Ordinal 75 (not supported)
+[T3f80] [API]   [1] Ordinal 141 (not supported)
+[T3f80] [API]   [2] Ordinal 136 (not supported)
+[T3f80] [API]   [3] Ordinal 9 (not supported)
+[T3f80] [API]   [4] Ordinal 31 (not supported)
+[T3f80] [API]   [5] Ordinal 24 (not supported)
+[T3f80] [API] Import DLL: USERENV.dll (IAT RVA=0x1e6490, ILT RVA=0x27b330)
+[T3f80] [API]   [0] UNRESOLVED: DestroyEnvironmentBlock
+[T3f80] [API]   [1] UNRESOLVED: CreateEnvironmentBlock
+[T3f80] [API] Import DLL: KERNEL32.dll (IAT RVA=0x1e5560, ILT RVA=0x27a400)
+[T3f80] [API]   [0] VirtualAlloc -> 0x202a4c0
+[T3f80] [API]   [1] GetConsoleCP -> 0x20098f0
+[T3f80] [API]   [2] HeapQueryInformation -> 0x20090d0
+[T3f80] [API]   [3] GetCommandLineA -> 0x2035f60
+[T3f80] [API]   [4] RtlUnwindEx -> 0x2044310
+[T3f80] [API]   [5] RaiseException -> 0x2008560
+[T3f80] [API]   [6] OutputDebugStringW -> 0x2049700
+[T3f80] [API]   [7] VirtualQuery -> 0x2010230
+[T3f80] [API]   [8] CreateThread -> 0x202acc0
+[T3f80] [API]   [9] ExitThread -> 0x201b5b0
+[T3f80] [API]   [10] SetStdHandle -> 0x203bf40
+[T3f80] [API]   [11] GetTimeZoneInformation -> 0x2010e40
+[T3f80] [API]   [12] GetCPInfo -> 0x2010440
+[T3f80] [API]   [13] GetStringTypeW -> 0x20378a0
+[T3f80] [API]   [14] IsValidCodePage -> 0x2009780
+[T3f80] [API]   [15] GetACP -> 0x2009760
+[T3f80] [API]   [16] GetStartupInfoW -> 0x2010cf0
+[T3f80] [API]   [17] IsDebuggerPresent -> 0x2031e70
+[T3f80] [API]   [18] InitializeSListHead -> 0x2009670
+[T3f80] [API]   [19] GetSystemTimeAsFileTime -> 0x2014620
+[T3f80] [API]   [20] SleepConditionVariableSRW -> 0x201a260
+[T3f80] [API]   [21] WakeAllConditionVariable -> 0x2037240
+[T3f80] [API]   [22] AcquireSRWLockExclusive -> 0x2038e10
+[T3f80] [API]   [23] ReleaseSRWLockExclusive -> 0x2038f20
+[T3f80] [API]   [24] IsProcessorFeaturePresent -> 0x20095c0
+[T3f80] [API]   [25] SetUnhandledExceptionFilter -> 0x200b130
+[T3f80] [API]   [26] UnhandledExceptionFilter -> 0x2033030
+[T3f80] [API]   [27] RtlVirtualUnwind -> 0x20420d0
+[T3f80] [API]   [28] RtlLookupFunctionEntry -> 0x200aeb0
+[T3f80] [API]   [29] RtlCaptureContext -> 0x2032170
+[T3f80] [API]   [30] GetUserDefaultLCID -> 0x20097c0
+[T3f80] [API]   [31] GetTempFileNameW -> 0x20523d0
+[T3f80] [API]   [32] UNRESOLVED: SearchPathW
+[T3f80] [API]   [33] GetProfileIntW -> 0x200f3d0
+[T3f80] [API]   [34] GetTickCount64 -> 0x2014b20
+[T3f80] [API]   [35] GetTempPathW -> 0x2047040
+[T3f80] [API]   [36] VerifyVersionInfoW -> 0x200a1a0
+[T3f80] [API]   [37] VerSetConditionMask -> 0x200a190
+[T3f80] [API]   [38] GetWindowsDirectoryW -> 0x20456f0
+[T3f80] [API]   [39] GetCurrentDirectoryW -> 0x2046760
+[T3f80] [API]   [40] lstrcpyW -> 0x204f1a0
+[T3f80] [API]   [41] VirtualProtect -> 0x2015d60
+[T3f80] [API]   [42] UNRESOLVED: GetUserDefaultUILanguage
+[T3f80] [API]   [43] GetLocaleInfoW -> 0x20299f0
+[T3f80] [API]   [44] GetFileTime -> 0x2031a70
+[T3f80] [API]   [45] GetFileSizeEx -> 0x202c580
+[T3f80] [API]   [46] GetFileAttributesExW -> 0x204d7a0
+[T3f80] [API]   [47] ResumeThread -> 0x2032070
+[T3f80] [API]   [48] SetThreadPriority -> 0x2032690
+[T3f80] [API]   [49] WaitForSingleObject -> 0x2045d10
+[T3f80] [API]   [50] UNRESOLVED: lstrcmpiW
+[T3f80] [API]   [51] FreeLibraryAndExitThread -> 0x203b4f0
+[T3f80] [API]   [52] DuplicateHandle -> 0x200a5a0
+[T3f80] [API]   [53] UnlockFile -> 0x200a0e0
+[T3f80] [API]   [54] LockFile -> 0x202ed20
+[T3f80] [API]   [55] FlushFileBuffers -> 0x202c870
+[T3f80] [API]   [56] UNRESOLVED: GlobalFlags
+[T3f80] [API]   [57] GlobalFindAtomW -> 0x203dc40
+[T3f80] [API]   [58] GlobalAddAtomW -> 0x202b160
+[T3f80] [API]   [59] UNRESOLVED: lstrcmpW
+[T3f80] [API]   [60] GlobalDeleteAtom -> 0x20131b0
+[T3f80] [API]   [61] GetCurrentThreadId -> 0x2008340
+[T3f80] [API]   [62] GlobalGetAtomNameW -> 0x202b040
+[T3f80] [API]   [63] UNRESOLVED: lstrcmpA
+[T3f80] [API]   [64] GetCurrentProcessId -> 0x2008320
+[T3f80] [API]   [65] LocalReAlloc -> 0x20532b0
+[T3f80] [API]   [66] UNRESOLVED: GlobalHandle
+[T3f80] [API]   [67] UNRESOLVED: GlobalReAlloc
+[T3f80] [API]   [68] TlsFree -> 0x200a110
+[T3f80] [API]   [69] TlsSetValue -> 0x202ce80
+[T3f80] [API]   [70] TlsGetValue -> 0x200b240
+[T3f80] [API]   [71] TlsAlloc -> 0x200fbd0
+[T3f80] [API]   [72] InitializeCriticalSection -> 0x20358f0
+[T3f80] [API]   [73] UNRESOLVED: QueryActCtxW
+[T3f80] [API]   [74] UNRESOLVED: FindActCtxSectionStringW
+[T3f80] [API]   [75] UNRESOLVED: DeactivateActCtx
+[T3f80] [API]   [76] UNRESOLVED: ActivateActCtx
+[T3f80] [API]   [77] UNRESOLVED: CreateActCtxW
+[T3f80] [API]   [78] GetModuleHandleExW -> 0x2054380
+[T3f80] [API]   [79] InitializeCriticalSectionAndSpinCount -> 0x203f080
+[T3f80] [API]   [80] LeaveCriticalSection -> 0x2031730
+[T3f80] [API]   [81] EnterCriticalSection -> 0x203f9f0
+[T3f80] [API]   [82] OutputDebugStringA -> 0x200ad50
+[T3f80] [API]   [83] CompareStringW -> 0x201bdc0
+[T3f80] [API]   [84] UNRESOLVED: CopyFileW
+[T3f80] [API]   [85] GlobalSize -> 0x2046a80
+[T3f80] [API]   [86] SystemTimeToTzSpecificLocalTime -> 0x200a120
+[T3f80] [API]   [87] GetFileType -> 0x201c720
+[T3f80] [API]   [88] FreeLibrary -> 0x2032df0
+[T3f80] [API]   [89] DeleteCriticalSection -> 0x2035910
+[T3f80] [API]   [90] InitializeCriticalSectionEx -> 0x2012020
+[T3f80] [API]   [91] GetStdHandle -> 0x205e990
+[T3f80] [API]   [92] FindResourceExW -> 0x204a950
+[T3f80] [API]   [93] GetProcessHeap -> 0x2009090
+[T3f80] [API]   [94] HeapAlloc -> 0x202a260
+[T3f80] [API]   [95] HeapFree -> 0x20512f0
+[T3f80] [API]   [96] HeapReAlloc -> 0x2051670
+[T3f80] [API]   [97] HeapSize -> 0x2046960
+[T3f80] [API]   [98] HeapDestroy -> 0x203bfd0
+[T3f80] [API]   [99] WideCharToMultiByte -> 0x20273f0
+[T3f80] [API]   [100] SetFilePointer -> 0x202c0a0
+[T3f80] [API]   [101] SetLastError -> 0x20271b0
+[T3f80] [API]   [102] GetSystemInfo -> 0x201b710
+[T3f80] [API]   [103] GetVersionExW -> 0x203cc30
+[T3f80] [API]   [104] GetCommandLineW -> 0x2036910
+[T3f80] [API]   [105] IsWow64Process -> 0x2011b10
+[T3f80] [API]   [106] EncodePointer -> 0x2019ad0
+[T3f80] [API]   [107] DecodePointer -> 0x2009650
+[T3f80] [API]   [108] LoadLibraryExW -> 0x204f9a0
+[T3f80] [API]   [109] LoadLibraryW -> 0x204f7a0
+[T3f80] [API]   [110] DeleteFileW -> 0x204d7e0
+[T3f80] [API]   [111] GetFileAttributesW -> 0x204d590
+[T3f80] [API]   [112] GetEnvironmentStringsW -> 0x2014d50
+[T3f80] [API]   [113] GetFullPathNameW -> 0x2051040
+[T3f80] [API]   [114] ExitProcess -> 0x203b360
+[T3f80] [API]   [115] WaitForMultipleObjects -> 0x2045e60
+[T3f80] [API]   [116] GetModuleFileNameW -> 0x20479e0
+[T3f80] [API]   [117] TerminateProcess -> 0x2016420
+[T3f80] [API]   [118] GetExitCodeProcess -> 0x2009ac0
+[T3f80] [API]   [119] UNRESOLVED: K32GetModuleBaseNameW
+[T3f80] [API]   [120] UNRESOLVED: K32EnumProcessModules
+[T3f80] [API]   [121] OpenProcess -> 0x2031f70
+[T3f80] [API]   [122] UNRESOLVED: K32EnumProcesses
+[T3f80] [API]   [123] GetCurrentProcess -> 0x2008310
+[T3f80] [API]   [124] CreateDirectoryW -> 0x204d9c0
+[T3f80] [API]   [125] FindResourceW -> 0x204aa30
+[T3f80] [API]   [126] LoadResource -> 0x202e7c0
+[T3f80] [API]   [127] LockResource -> 0x203bfa0
+[T3f80] [API]   [128] SizeofResource -> 0x2009ae0
+[T3f80] [API]   [129] Sleep -> 0x2015c50
+[T3f80] [API]   [130] GlobalFree -> 0x20489a0
+[T3f80] [API]   [131] GlobalUnlock -> 0x20095b0
+[T3f80] [API]   [132] GlobalLock -> 0x20095a0
+[T3f80] [API]   [133] GlobalAlloc -> 0x20164d0
+[T3f80] [API]   [134] GetProcAddress -> 0x200a8e0
+[T3f80] [API]   [135] GetModuleHandleW -> 0x20126e0
+[T3f80] [API]   [136] MulDiv -> 0x2027380
+[T3f80] [API]   [137] MultiByteToWideChar -> 0x20295c0
+[T3f80] [API]   [138] FindClose -> 0x201cd90
+[T3f80] [API]   [139] FindFirstFileW -> 0x2048b40
+[T3f80] [API]   [140] ReadFile -> 0x202bc60
+[T3f80] [API]   [141] GetFileSize -> 0x202c430
+[T3f80] [API]   [142] GetEnvironmentVariableW -> 0x20502c0
+[T3f80] [API]   [143] GetDiskFreeSpaceExW -> 0x204e450
+[T3f80] [API]   [144] GetVolumeInformationW -> 0x2048c80
+[T3f80] [API]   [145] SetErrorMode -> 0x2009a70
+[T3f80] [API]   [146] GetDriveTypeW -> 0x203c130
+[T3f80] [API]   [147] GetLogicalDriveStringsW -> 0x2026800
+[T3f80] [API]   [148] SystemTimeToFileTime -> 0x20395f0
+[T3f80] [API]   [149] GetTickCount -> 0x20148b0
+[T3f80] [API]   [150] QueryPerformanceFrequency -> 0x2010840
+[T3f80] [API]   [151] QueryPerformanceCounter -> 0x20149e0
+[T3f80] [API]   [152] FileTimeToSystemTime -> 0x20392d0
+[T3f80] [API]   [153] FileTimeToLocalFileTime -> 0x203d990
+[T3f80] [API]   [154] GlobalMemoryStatusEx -> 0x20391a0
+[T3f80] [API]   [155] GetComputerNameW -> 0x2048f30
+[T3f80] [API]   [156] GetTimeFormatW -> 0x20292a0
+[T3f80] [API]   [157] GetDateFormatW -> 0x2029190
+[T3f80] [API]   [158] ExpandEnvironmentStringsW -> 0x2050b20
+[T3f80] [API]   [159] GetNativeSystemInfo -> 0x201b870
+[T3f80] [API]   [160] UNRESOLVED: GetLocalTime
+[T3f80] [API]   [161] CloseHandle -> 0x2046580
+[T3f80] [API]   [162] SetEndOfFile -> 0x202c330
+[T3f80] [API]   [163] WriteFile -> 0x202be90
+[T3f80] [API]   [164] GetLastError -> 0x200a7e0
+[T3f80] [API]   [165] CreateFileW -> 0x204d390
+[T3f80] [API]   [166] GetSystemDirectoryW -> 0x2045610
+[T3f80] [API]   [167] LocalAlloc -> 0x2016630
+[T3f80] [API]   [168] FormatMessageW -> 0x202e6b0
+[T3f80] [API]   [169] LocalFree -> 0x204f390
+[T3f80] [API]   [170] GetOEMCP -> 0x2009770
+[T3f80] [API]   [171] IsValidLocale -> 0x20097b0
+[T3f80] [API]   [172] EnumSystemLocalesW -> 0x20097e0
+[T3f80] [API]   [173] FlsAlloc -> 0x200fd20
+[T3f80] [API]   [174] FlsGetValue -> 0x2008bf0
+[T3f80] [API]   [175] FlsSetValue -> 0x2008c10
+[T3f80] [API]   [176] FlsFree -> 0x203c080
+[T3f80] [API]   [177] LCMapStringW -> 0x202b8a0
+[T3f80] [API]   [178] GetConsoleMode -> 0x2028e50
+[T3f80] [API]   [179] SetConsoleMode -> 0x203bef0
+[T3f80] [API]   [180] ReadConsoleInputW -> 0x203c160
+[T3f80] [API]   [181] ReadConsoleW -> 0x202be70
+[T3f80] [API]   [182] GetConsoleOutputCP -> 0x203c2f0
+[T3f80] [API]   [183] SetFilePointerEx -> 0x202c1e0
+[T3f80] [API]   [184] FindFirstFileExW -> 0x2048df0
+[T3f80] [API]   [185] FindNextFileW -> 0x2036be0
+[T3f80] [API]   [186] FreeEnvironmentStringsW -> 0x2032f10
+[T3f80] [API]   [187] SetEnvironmentVariableW -> 0x2053450
+[T3f80] [API]   [188] WriteConsoleW -> 0x2018a50
+[T3f80] [API]   [189] RtlPcToFileHeader -> 0x2009600
+[T3f80] [API] Import DLL: USER32.dll (IAT RVA=0x1e5d28, ILT RVA=0x27abc8)
+[T3f80] [API]   [0] UNRESOLVED: CallNextHookEx
+[T3f80] [API]   [1] SetWindowsHookExW -> 0x202feb0
+[T3f80] [API]   [2] UNRESOLVED: GetWindow
+[T3f80] [API]   [3] UNRESOLVED: GetTopWindow
+[T3f80] [API]   [4] UNRESOLVED: GetClassLongPtrW
+[T3f80] [API]   [5] UNRESOLVED: EqualRect
+[T3f80] [API]   [6] CopyRect -> 0x2034c90
+[T3f80] [API]   [7] RemovePropW -> 0x2042f80
+[T3f80] [API]   [8] UNRESOLVED: ShowScrollBar
+[T3f80] [API]   [9] UNRESOLVED: GetScrollRange
+[T3f80] [API]   [10] UNRESOLVED: SetScrollRange
+[T3f80] [API]   [11] UNRESOLVED: GetScrollPos
+[T3f80] [API]   [12] UNRESOLVED: SetScrollPos
+[T3f80] [API]   [13] UNRESOLVED: ScrollWindow
+[T3f80] [API]   [14] UNRESOLVED: RedrawWindow
+[T3f80] [API]   [15] ValidateRect -> 0x200a3a0
+[T3f80] [API]   [16] GetForegroundWindow -> 0x200a4b0
+[T3f80] [API]   [17] UNRESOLVED: SetActiveWindow
+[T3f80] [API]   [18] SetMenu -> 0x20301e0
+[T3f80] [API]   [19] UNRESOLVED: GetCapture
+[T3f80] [API]   [20] UNRESOLVED: GetKeyState
+[T3f80] [API]   [21] GetDlgCtrlID -> 0x2042020
+[T3f80] [API]   [22] UNRESOLVED: IsChild
+[T3f80] [API]   [23] UNRESOLVED: IsMenu
+[T3f80] [API]   [24] IsWindow -> 0x2042070
+[T3f80] [API]   [25] GetClassInfoExW -> 0x2055010
+[T3f80] [API]   [26] UNRESOLVED: GetClassInfoW
+[T3f80] [API]   [27] RegisterClassW -> 0x204e920
+[T3f80] [API]   [28] GetMessageTime -> 0x200a4c0
+[T3f80] [API]   [29] GetMessagePos -> 0x203c1c0
+[T3f80] [API]   [30] PeekMessageW -> 0x203d7d0
+[T3f80] [API]   [31] RegisterWindowMessageW -> 0x200e330
+[T3f80] [API]   [32] UNRESOLVED: GetLastActivePopup
+[T3f80] [API]   [33] UNRESOLVED: GetWindowThreadProcessId
+[T3f80] [API]   [34] IsWindowEnabled -> 0x2041f80
+[T3f80] [API]   [35] UnhookWindowsHookEx -> 0x203c020
+[T3f80] [API]   [36] UNRESOLVED: LoadBitmapW
+[T3f80] [API]   [37] UNRESOLVED: GetMenuCheckMarkDimensions
+[T3f80] [API]   [38] UNRESOLVED: SetMenuItemBitmaps
+[T3f80] [API]   [39] UNRESOLVED: GetFocus
+[T3f80] [API]   [40] UNRESOLVED: RemoveMenu
+[T3f80] [API]   [41] UNRESOLVED: AppendMenuW
+[T3f80] [API]   [42] UNRESOLVED: InsertMenuW
+[T3f80] [API]   [43] UNRESOLVED: GetMenuItemCount
+[T3f80] [API]   [44] UNRESOLVED: GetMenuItemID
+[T3f80] [API]   [45] UNRESOLVED: GetMenuState
+[T3f80] [API]   [46] UNRESOLVED: GetMenuStringW
+[T3f80] [API]   [47] DialogBoxIndirectParamW -> 0x200deb0
+[T3f80] [API]   [48] UNRESOLVED: CloseClipboard
+[T3f80] [API]   [49] UNRESOLVED: SetClipboardData
+[T3f80] [API]   [50] RegisterClipboardFormatW -> 0x200e490
+[T3f80] [API]   [51] UNRESOLVED: EmptyClipboard
+[T3f80] [API]   [52] UNRESOLVED: OpenClipboard
+[T3f80] [API]   [53] EnableMenuItem -> 0x2030570
+[T3f80] [API]   [54] CheckMenuItem -> 0x2030410
+[T3f80] [API]   [55] UNRESOLVED: SetCapture
+[T3f80] [API]   [56] UNRESOLVED: DrawIconEx
+[T3f80] [API]   [57] UNRESOLVED: DrawEdge
+[T3f80] [API]   [58] LoadImageW -> 0x20114a0
+[T3f80] [API]   [59] DispatchMessageW -> 0x2058630
+[T3f80] [API]   [60] TranslateMessage -> 0x200cdc0
+[T3f80] [API]   [61] UNRESOLVED: IsDialogMessageW
+[T3f80] [API]   [62] UNRESOLVED: TranslateAcceleratorW
+[T3f80] [API]   [63] UNRESOLVED: GetActiveWindow
+[T3f80] [API]   [64] GetMessageW -> 0x203d5a0
+[T3f80] [API]   [65] LoadAcceleratorsW -> 0x20340d0
+[T3f80] [API]   [66] UNRESOLVED: IntersectRect
+[T3f80] [API]   [67] SetWindowPlacement -> 0x2056570
+[T3f80] [API]   [68] CreateDialogParamW -> 0x2030a30
+[T3f80] [API]   [69] RegisterClassExW -> 0x204e800
+[T3f80] [API]   [70] UNRESOLVED: DefDlgProcW
+[T3f80] [API]   [71] GetWindowPlacement -> 0x2011290
+[T3f80] [API]   [72] IsIconic -> 0x203c110
+[T3f80] [API]   [73] LoadStringW -> 0x202fc90
+[T3f80] [API]   [74] UNRESOLVED: CheckMenuRadioItem
+[T3f80] [API]   [75] GetWindowTextLengthW -> 0x20461f0
+[T3f80] [API]   [76] SetTimer -> 0x202f2d0
+[T3f80] [API]   [77] UNRESOLVED: ShowOwnedPopups
+[T3f80] [API]   [78] UNRESOLVED: SetScrollInfo
+[T3f80] [API]   [79] UNRESOLVED: SetMenuItemInfoW
+[T3f80] [API]   [80] GetMenu -> 0x200ec80
+[T3f80] [API]   [81] UNRESOLVED: GetMenuItemInfoW
+[T3f80] [API]   [82] DestroyWindow -> 0x20462f0
+[T3f80] [API]   [83] DefWindowProcW -> 0x200a330
+[T3f80] [API]   [84] UNRESOLVED: IsWindowVisible
+[T3f80] [API]   [85] UNRESOLVED: GetNextDlgGroupItem
+[T3f80] [API]   [86] UNRESOLVED: ReleaseCapture
+[T3f80] [API]   [87] UNRESOLVED: WindowFromPoint
+[T3f80] [API]   [88] UNRESOLVED: RealChildWindowFromPoint
+[T3f80] [API]   [89] UNRESOLVED: IsRectEmpty
+[T3f80] [API]   [90] UNRESOLVED: TrackPopupMenu
+[T3f80] [API]   [91] UNRESOLVED: SetMenuDefaultItem
+[T3f80] [API]   [92] LoadMenuW -> 0x200eb40
+[T3f80] [API]   [93] UNRESOLVED: GetSubMenu
+[T3f80] [API]   [94] GetCursorPos -> 0x2033ea0
+[T3f80] [API]   [95] ShowWindow -> 0x202ef50
+[T3f80] [API]   [96] SetForegroundWindow -> 0x203c030
+[T3f80] [API]   [97] UNRESOLVED: AdjustWindowRectEx
+[T3f80] [API]   [98] UNRESOLVED: MonitorFromWindow
+[T3f80] [API]   [99] EndPaint -> 0x203a6e0
+[T3f80] [API]   [100] BeginPaint -> 0x203e450
+[T3f80] [API]   [101] CheckRadioButton -> 0x20412d0
+[T3f80] [API]   [102] SetWindowLongW -> 0x2026c90
+[T3f80] [API]   [103] DialogBoxParamW -> 0x200e0f0
+[T3f80] [API]   [104] IsDlgButtonChecked -> 0x2042a70
+[T3f80] [API]   [105] EnableWindow -> 0x20430c0
+[T3f80] [API]   [106] CheckDlgButton -> 0x20457d0
+[T3f80] [API]   [107] GetDlgItemTextW -> 0x2048230
+[T3f80] [API]   [108] UpdateWindow -> 0x20214f0
+[T3f80] [API]   [109] LoadCursorW -> 0x203bf70
+[T3f80] [API]   [110] UNRESOLVED: SetCursor
+[T3f80] [API]   [111] KillTimer -> 0x200a400
+[T3f80] [API]   [112] GetWindowTextW -> 0x2048050
+[T3f80] [API]   [113] LoadIconW -> 0x203bf80
+[T3f80] [API]   [114] PostMessageW -> 0x202fa70
+[T3f80] [API]   [115] UNRESOLVED: FrameRect
+[T3f80] [API]   [116] SetFocus -> 0x20300d0
+[T3f80] [API]   [117] UNRESOLVED: ChildWindowFromPoint
+[T3f80] [API]   [118] CreateWindowExW -> 0x2055ac0
+[T3f80] [API]   [119] MoveWindow -> 0x20306e0
+[T3f80] [API]   [120] GetDlgItem -> 0x200e950
+[T3f80] [API]   [121] MapWindowPoints -> 0x2030c90
+[T3f80] [API]   [122] EndDialog -> 0x202f740
+[T3f80] [API]   [123] SetDlgItemTextW -> 0x2053dd0
+[T3f80] [API]   [124] MessageBoxW -> 0x2057440
+[T3f80] [API]   [125] PostQuitMessage -> 0x202f070
+[T3f80] [API]   [126] SetWindowPos -> 0x2031290
+[T3f80] [API]   [127] GetWindowLongPtrW -> 0x2040070
+[T3f80] [API]   [128] SetWindowLongPtrW -> 0x2026b20
+[T3f80] [API]   [129] UNRESOLVED: DrawFrameControl
+[T3f80] [API]   [130] UNRESOLVED: PtInRect
+[T3f80] [API]   [131] UNRESOLVED: IsZoomed
+[T3f80] [API]   [132] CallWindowProcW -> 0x203cc00
+[T3f80] [API]   [133] SetPropW -> 0x2042cb0
+[T3f80] [API]   [134] GetPropW -> 0x2042de0
+[T3f80] [API]   [135] UNRESOLVED: UnionRect
+[T3f80] [API]   [136] GetClientRect -> 0x202f190
+[T3f80] [API]   [137] UNRESOLVED: EndDeferWindowPos
+[T3f80] [API]   [138] UNRESOLVED: EnumChildWindows
+[T3f80] [API]   [139] UNRESOLVED: BeginDeferWindowPos
+[T3f80] [API]   [140] UNRESOLVED: DestroyIcon
+[T3f80] [API]   [141] CharUpperW -> 0x2026760
+[T3f80] [API]   [142] UNRESOLVED: DrawTextExW
+[T3f80] [API]   [143] UNRESOLVED: GrayStringW
+[T3f80] [API]   [144] UNRESOLVED: TabbedTextOutW
+[T3f80] [API]   [145] GetWindowDC -> 0x2033d80
+[T3f80] [API]   [146] UNRESOLVED: DestroyMenu
+[T3f80] [API]   [147] UNRESOLVED: CopyImage
+[T3f80] [API]   [148] UNRESOLVED: LockWindowUpdate
+[T3f80] [API]   [149] UNRESOLVED: SendDlgItemMessageA
+[T3f80] [API]   [150] SetRectEmpty -> 0x20346a0
+[T3f80] [API]   [151] CreateDialogIndirectParamW -> 0x203f420
+[T3f80] [API]   [152] UNRESOLVED: GetNextDlgTabItem
+[T3f80] [API]   [153] UNRESOLVED: GetAsyncKeyState
+[T3f80] [API]   [154] UNRESOLVED: MapDialogRect
+[T3f80] [API]   [155] GetScrollInfo -> 0x200f740
+[T3f80] [API]   [156] UNRESOLVED: DeferWindowPos
+[T3f80] [API]   [157] InvalidateRect -> 0x2033530
+[T3f80] [API]   [158] GetWindowLongW -> 0x2040240
+[T3f80] [API]   [159] UNRESOLVED: WinHelpW
+[T3f80] [API]   [160] ClientToScreen -> 0x203bf50
+[T3f80] [API]   [161] UNRESOLVED: DeleteMenu
+[T3f80] [API]   [162] UNRESOLVED: GetDesktopWindow
+[T3f80] [API]   [163] UNRESOLVED: GetIconInfo
+[T3f80] [API]   [164] MessageBeep -> 0x203c070
+[T3f80] [API]   [165] UNRESOLVED: EnableScrollBar
+[T3f80] [API]   [166] UNRESOLVED: HideCaret
+[T3f80] [API]   [167] UNRESOLVED: InvertRect
+[T3f80] [API]   [168] UNRESOLVED: NotifyWinEvent
+[T3f80] [API]   [169] UNRESOLVED: CreatePopupMenu
+[T3f80] [API]   [170] UNRESOLVED: GetMenuDefaultItem
+[T3f80] [API]   [171] UNRESOLVED: MapVirtualKeyW
+[T3f80] [API]   [172] UNRESOLVED: GetKeyNameTextW
+[T3f80] [API]   [173] GetSysColor -> 0x200cf00
+[T3f80] [API]   [174] GetDC -> 0x200a380
+[T3f80] [API]   [175] ReleaseDC -> 0x200a390
+[T3f80] [API]   [176] FillRect -> 0x203ddd0
+[T3f80] [API]   [177] UNRESOLVED: OffsetRect
+[T3f80] [API]   [178] UNRESOLVED: InflateRect
+[T3f80] [API]   [179] UNRESOLVED: MonitorFromPoint
+[T3f80] [API]   [180] GetMonitorInfoW -> 0x2050960
+[T3f80] [API]   [181] GetSysColorBrush -> 0x200e5f0
+[T3f80] [API]   [182] GetSystemMetrics -> 0x2009580
+[T3f80] [API]   [183] EnumDisplayMonitors -> 0x20119a0
+[T3f80] [API]   [184] SystemParametersInfoW -> 0x202fb80
+[T3f80] [API]   [185] UNRESOLVED: SetSysColors
+[T3f80] [API]   [186] UNRESOLVED: GetProcessWindowStation
+[T3f80] [API]   [187] GetUserObjectInformationW -> 0x2011e80
+[T3f80] [API]   [188] UNRESOLVED: PostThreadMessageW
+[T3f80] [API]   [189] SetWindowTextW -> 0x2053a90
+[T3f80] [API]   [190] SendMessageW -> 0x2058770
+[T3f80] [API]   [191] DrawTextW -> 0x20577e0
+[T3f80] [API]   [192] GetWindowRect -> 0x200edd0
+[T3f80] [API]   [193] ScreenToClient -> 0x203bf60
+[T3f80] [API]   [194] GetParent -> 0x2041fd0
+[T3f80] [API]   [195] UNRESOLVED: GetClassNameW
+[T3f80] [API]   [196] UNRESOLVED: SetLayeredWindowAttributes
+[T3f80] [API]   [197] UNRESOLVED: DrawStateW
+[T3f80] [API]   [198] UNRESOLVED: SetClassLongPtrW
+[T3f80] [API]   [199] UNRESOLVED: SetWindowRgn
+[T3f80] [API]   [200] UNRESOLVED: DrawFocusRect
+[T3f80] [API]   [201] UNRESOLVED: SetParent
+[T3f80] [API]   [202] UNRESOLVED: GetSystemMenu
+[T3f80] [API]   [203] UNRESOLVED: BringWindowToTop
+[T3f80] [API]   [204] UNRESOLVED: SetCursorPos
+[T3f80] [API]   [205] UNRESOLVED: CopyIcon
+[T3f80] [API]   [206] UNRESOLVED: DrawIcon
+[T3f80] [API]   [207] UNRESOLVED: UpdateLayeredWindow
+[T3f80] [API]   [208] UNRESOLVED: InsertMenuItemW
+[T3f80] [API]   [209] UNRESOLVED: UnpackDDElParam
+[T3f80] [API]   [210] UNRESOLVED: ReuseDDElParam
+[T3f80] [API]   [211] UNRESOLVED: GetComboBoxInfo
+[T3f80] [API]   [212] UNRESOLVED: WaitMessage
+[T3f80] [API]   [213] UNRESOLVED: GetKeyboardLayout
+[T3f80] [API]   [214] UNRESOLVED: IsCharLowerW
+[T3f80] [API]   [215] UNRESOLVED: MapVirtualKeyExW
+[T3f80] [API]   [216] UNRESOLVED: ToUnicodeEx
+[T3f80] [API]   [217] UNRESOLVED: GetKeyboardState
+[T3f80] [API]   [218] UNRESOLVED: CreateAcceleratorTableW
+[T3f80] [API]   [219] UNRESOLVED: DestroyAcceleratorTable
+[T3f80] [API]   [220] UNRESOLVED: CopyAcceleratorTableW
+[T3f80] [API]   [221] UNRESOLVED: SetRect
+[T3f80] [API]   [222] UNRESOLVED: DestroyCursor
+[T3f80] [API]   [223] UNRESOLVED: GetWindowRgn
+[T3f80] [API]   [224] UNRESOLVED: CreateMenu
+[T3f80] [API]   [225] UNRESOLVED: SubtractRect
+[T3f80] [API]   [226] UNRESOLVED: TranslateMDISysAccel
+[T3f80] [API]   [227] UNRESOLVED: DefMDIChildProcW
+[T3f80] [API]   [228] UNRESOLVED: DefFrameProcW
+[T3f80] [API]   [229] DrawMenuBar -> 0x2030300
+[T3f80] [API]   [230] UNRESOLVED: GetUpdateRect
+[T3f80] [API]   [231] UNRESOLVED: IsClipboardFormatAvailable
+[T3f80] [API]   [232] UNRESOLVED: CharUpperBuffW
+[T3f80] [API]   [233] UNRESOLVED: ModifyMenuW
+[T3f80] [API]   [234] UNRESOLVED: GetDoubleClickTime
+[T3f80] [API]   [235] UNRESOLVED: TrackMouseEvent
+[T3f80] [API] Import DLL: GDI32.dll (IAT RVA=0x1e51b8, ILT RVA=0x27a058)
+[T3f80] [API]   [0] UNRESOLVED: GetWindowExtEx
+[T3f80] [API]   [1] UNRESOLVED: IntersectClipRect
+[T3f80] [API]   [2] UNRESOLVED: PtVisible
+[T3f80] [API]   [3] UNRESOLVED: RectVisible
+[T3f80] [API]   [4] RestoreDC -> 0x203bf30
+[T3f80] [API]   [5] SaveDC -> 0x203c010
+[T3f80] [API]   [6] UNRESOLVED: ExtSelectClipRgn
+[T3f80] [API]   [7] UNRESOLVED: SetLayout
+[T3f80] [API]   [8] UNRESOLVED: GetLayout
+[T3f80] [API]   [9] UNRESOLVED: SetPolyFillMode
+[T3f80] [API]   [10] UNRESOLVED: SetROP2
+[T3f80] [API]   [11] UNRESOLVED: SetTextAlign
+[T3f80] [API]   [12] TextOutW -> 0x2055e30
+[T3f80] [API]   [13] ExtTextOutW -> 0x2055e30
+[T3f80] [API]   [14] UNRESOLVED: SetViewportExtEx
+[T3f80] [API]   [15] UNRESOLVED: SetViewportOrgEx
+[T3f80] [API]   [16] UNRESOLVED: SetWindowExtEx
+[T3f80] [API]   [17] UNRESOLVED: SetWindowOrgEx
+[T3f80] [API]   [18] UNRESOLVED: OffsetViewportOrgEx
+[T3f80] [API]   [19] UNRESOLVED: OffsetWindowOrgEx
+[T3f80] [API]   [20] UNRESOLVED: ScaleViewportExtEx
+[T3f80] [API]   [21] UNRESOLVED: ScaleWindowExtEx
+[T3f80] [API]   [22] UNRESOLVED: GetTextExtentPoint32W
+[T3f80] [API]   [23] UNRESOLVED: CombineRgn
+[T3f80] [API]   [24] UNRESOLVED: CreateRectRgnIndirect
+[T3f80] [API]   [25] PatBlt -> 0x203e2c0
+[T3f80] [API]   [26] UNRESOLVED: GetViewportExtEx
+[T3f80] [API]   [27] UNRESOLVED: DPtoLP
+[T3f80] [API]   [28] GetTextMetricsW -> 0x2034b30
+[T3f80] [API]   [29] UNRESOLVED: EnumFontFamiliesExW
+[T3f80] [API]   [30] UNRESOLVED: GetNearestPaletteIndex
+[T3f80] [API]   [31] UNRESOLVED: GetBkColor
+[T3f80] [API]   [32] UNRESOLVED: CreateDIBitmap
+[T3f80] [API]   [33] EnumFontFamiliesW -> 0x20363d0
+[T3f80] [API]   [34] GetTextCharsetInfo -> 0x200a590
+[T3f80] [API]   [35] UNRESOLVED: CreateEllipticRgn
+[T3f80] [API]   [36] Ellipse -> 0x203e000
+[T3f80] [API]   [37] UNRESOLVED: GetTextColor
+[T3f80] [API]   [38] UNRESOLVED: CreatePolygonRgn
+[T3f80] [API]   [39] UNRESOLVED: Polygon
+[T3f80] [API]   [40] UNRESOLVED: Polyline
+[T3f80] [API]   [41] UNRESOLVED: CreateRoundRectRgn
+[T3f80] [API]   [42] UNRESOLVED: LPtoDP
+[T3f80] [API]   [43] Rectangle -> 0x2050500
+[T3f80] [API]   [44] UNRESOLVED: GetRgnBox
+[T3f80] [API]   [45] UNRESOLVED: OffsetRgn
+[T3f80] [API]   [46] UNRESOLVED: RoundRect
+[T3f80] [API]   [47] UNRESOLVED: FillRgn
+[T3f80] [API]   [48] UNRESOLVED: FrameRgn
+[T3f80] [API]   [49] UNRESOLVED: GetBoundsRect
+[T3f80] [API]   [50] UNRESOLVED: PtInRegion
+[T3f80] [API]   [51] UNRESOLVED: ExtFloodFill
+[T3f80] [API]   [52] UNRESOLVED: SetPaletteEntries
+[T3f80] [API]   [53] UNRESOLVED: SetPixelV
+[T3f80] [API]   [54] UNRESOLVED: GetWindowOrgEx
+[T3f80] [API]   [55] UNRESOLVED: GetViewportOrgEx
+[T3f80] [API]   [56] UNRESOLVED: GetTextFaceW
+[T3f80] [API]   [57] GetStockObject -> 0x200d370
+[T3f80] [API]   [58] UNRESOLVED: GetPixel
+[T3f80] [API]   [59] UNRESOLVED: GetObjectType
+[T3f80] [API]   [60] UNRESOLVED: GetClipBox
+[T3f80] [API]   [61] UNRESOLVED: ExcludeClipRect
+[T3f80] [API]   [62] UNRESOLVED: Escape
+[T3f80] [API]   [63] UNRESOLVED: CreatePatternBrush
+[T3f80] [API]   [64] UNRESOLVED: CreateHatchBrush
+[T3f80] [API]   [65] SetBkColor -> 0x200d950
+[T3f80] [API]   [66] UNRESOLVED: CreateBitmap
+[T3f80] [API]   [67] UNRESOLVED: CreateDCW
+[T3f80] [API]   [68] UNRESOLVED: CopyMetaFileW
+[T3f80] [API]   [69] UNRESOLVED: EndDoc
+[T3f80] [API]   [70] UNRESOLVED: EndPage
+[T3f80] [API]   [71] UNRESOLVED: StartPage
+[T3f80] [API]   [72] UNRESOLVED: StartDocW
+[T3f80] [API]   [73] SetMapMode -> 0x203bf20
+[T3f80] [API]   [74] UNRESOLVED: SetWorldTransform
+[T3f80] [API]   [75] UNRESOLVED: SetGraphicsMode
+[T3f80] [API]   [76] UNRESOLVED: CreateFontW
+[T3f80] [API]   [77] SetTextColor -> 0x200d820
+[T3f80] [API]   [78] CreateFontIndirectW -> 0x20538c0
+[T3f80] [API]   [79] UNRESOLVED: UpdateColors
+[T3f80] [API]   [80] UNRESOLVED: EnumFontsW
+[T3f80] [API]   [81] SetPixel -> 0x2048620
+[T3f80] [API]   [82] LineTo -> 0x2040e80
+[T3f80] [API]   [83] MoveToEx -> 0x202f3f0
+[T3f80] [API]   [84] CreatePen -> 0x200d1c0
+[T3f80] [API]   [85] UNRESOLVED: RealizePalette
+[T3f80] [API]   [86] UNRESOLVED: SelectPalette
+[T3f80] [API]   [87] UNRESOLVED: UnrealizeObject
+[T3f80] [API]   [88] UNRESOLVED: SetDIBColorTable
+[T3f80] [API]   [89] UNRESOLVED: GetPaletteEntries
+[T3f80] [API]   [90] UNRESOLVED: CreatePalette
+[T3f80] [API]   [91] UNRESOLVED: SelectClipRgn
+[T3f80] [API]   [92] UNRESOLVED: CreateRectRgn
+[T3f80] [API]   [93] SetBkMode -> 0x202f520
+[T3f80] [API]   [94] DeleteDC -> 0x200dc20
+[T3f80] [API]   [95] UNRESOLVED: StretchBlt
+[T3f80] [API]   [96] UNRESOLVED: SetBrushOrgEx
+[T3f80] [API]   [97] UNRESOLVED: SetStretchBltMode
+[T3f80] [API]   [98] BitBlt -> 0x203e5e0
+[T3f80] [API]   [99] CreateSolidBrush -> 0x200d020
+[T3f80] [API]   [100] UNRESOLVED: GetSystemPaletteEntries
+[T3f80] [API]   [101] UNRESOLVED: GetNearestColor
+[T3f80] [API]   [102] UNRESOLVED: GetDIBits
+[T3f80] [API]   [103] GetObjectW -> 0x20141b0
+[T3f80] [API]   [104] UNRESOLVED: GdiFlush
+[T3f80] [API]   [105] DeleteObject -> 0x200a410
+[T3f80] [API]   [106] SelectObject -> 0x200d470
+[T3f80] [API]   [107] CreateCompatibleDC -> 0x20110d0
+[T3f80] [API]   [108] CreateCompatibleBitmap -> 0x203e9e0
+[T3f80] [API]   [109] UNRESOLVED: SetRectRgn
+[T3f80] [API]   [110] CreateDIBSection -> 0x20168a0
+[T3f80] [API]   [111] GetDeviceCaps -> 0x200da80
+[T3f80] [API] Import DLL: MSIMG32.dll (IAT RVA=0x1e5b58, ILT RVA=0x27a9f8)
+[T3f80] [API]   [0] UNRESOLVED: TransparentBlt
+[T3f80] [API]   [1] UNRESOLVED: AlphaBlend
+[T3f80] [API] Import DLL: COMDLG32.dll (IAT RVA=0x1e5188, ILT RVA=0x27a028)
+[T3f80] [API]   [0] UNRESOLVED: CommDlgExtendedError
+[T3f80] [API]   [1] UNRESOLVED: GetSaveFileNameW
+[T3f80] [API]   [2] UNRESOLVED: GetOpenFileNameW
+[T3f80] [API]   [3] UNRESOLVED: ChooseColorW
+[T3f80] [API]   [4] UNRESOLVED: PrintDlgW
+[T3f80] [API] Import DLL: WINSPOOL.DRV (IAT RVA=0x1e6540, ILT RVA=0x27b3e0)
+[T3f80] [API]   [0] UNRESOLVED: ClosePrinter
+[T3f80] [API]   [1] UNRESOLVED: DocumentPropertiesW
+[T3f80] [API]   [2] UNRESOLVED: OpenPrinterW
+[T3f80] [API] Import DLL: ADVAPI32.dll (IAT RVA=0x1e5000, ILT RVA=0x279ea0)
+[T3f80] [API]   [0] UNRESOLVED: DeleteService
+[T3f80] [API]   [1] RegQueryValueExW -> 0x204b2f0
+[T3f80] [API]   [2] RegCloseKey -> 0x2009980
+[T3f80] [API]   [3] UNRESOLVED: LsaClose
+[T3f80] [API]   [4] UNRESOLVED: LsaFreeMemory
+[T3f80] [API]   [5] UNRESOLVED: LsaQueryInformationPolicy
+[T3f80] [API]   [6] LsaOpenPolicy -> 0x2034ec0
+[T3f80] [API]   [7] UNRESOLVED: SaferCloseLevel
+[T3f80] [API]   [8] UNRESOLVED: SaferComputeTokenFromLevel
+[T3f80] [API]   [9] UNRESOLVED: SaferIdentifyLevel
+[T3f80] [API]   [10] RegCreateKeyW -> 0x204b650
+[T3f80] [API]   [11] UNRESOLVED: RegEnumKeyW
+[T3f80] [API]   [12] RegGetValueW -> 0x204b410
+[T3f80] [API]   [13] RegOpenKeyExA -> 0x204b1d0
+[T3f80] [API]   [14] RegSetValueExA -> 0x204ae50
+[T3f80] [API]   [15] RegDeleteKeyW -> 0x20342f0
+[T3f80] [API]   [16] RegEnumValueW -> 0x204d030
+[T3f80] [API]   [17] RegQueryValueExA -> 0x204d150
+[T3f80] [API]   [18] RegCreateKeyExW -> 0x204b530
+[T3f80] [API]   [19] UNRESOLVED: StartServiceCtrlDispatcherW
+[T3f80] [API]   [20] CloseServiceHandle -> 0x2030810
+[T3f80] [API]   [21] UNRESOLVED: QueryServiceStatus
+[T3f80] [API]   [22] RegOpenKeyExW -> 0x2028510
+[T3f80] [API]   [23] UNRESOLVED: StartServiceW
+[T3f80] [API]   [24] UNRESOLVED: OpenServiceW
+[T3f80] [API]   [25] UNRESOLVED: CreateServiceW
+[T3f80] [API]   [26] OpenSCManagerW -> 0x2028c10
+[T3f80] [API]   [27] UNRESOLVED: RevertToSelf
+[T3f80] [API]   [28] UNRESOLVED: CreateProcessAsUserW
+[T3f80] [API]   [29] UNRESOLVED: ImpersonateLoggedOnUser
+[T3f80] [API]   [30] UNRESOLVED: SetServiceStatus
+[T3f80] [API]   [31] UNRESOLVED: RegisterServiceCtrlHandlerW
+[T3f80] [API]   [32] RegOpenKeyW -> 0x2040be0
+[T3f80] [API]   [33] FreeSid -> 0x2035c80
+[T3f80] [API]   [34] EqualSid -> 0x20541b0
+[T3f80] [API]   [35] GetTokenInformation -> 0x2028990
+[T3f80] [API]   [36] OpenProcessToken -> 0x20272c0
+[T3f80] [API]   [37] AllocateAndInitializeSid -> 0x2054650
+[T3f80] [API]   [38] RegSetValueExW -> 0x204bbf0
+[T3f80] [API]   [39] RegDeleteValueW -> 0x204b770
+[T3f80] [API]   [40] UNRESOLVED: CloseEventLog
+[T3f80] [API]   [41] UNRESOLVED: ReadEventLogW
+[T3f80] [API]   [42] UNRESOLVED: OpenEventLogW
+[T3f80] [API]   [43] RegEnumKeyExW -> 0x204b9b0
+[T3f80] [API]   [44] GetUserNameW -> 0x2049130
+[T3f80] [API] Import DLL: SHELL32.dll (IAT RVA=0x1e5c90, ILT RVA=0x27ab30)
+[T3f80] [API]   [0] UNRESOLVED: SHAppBarMessage
+[T3f80] [API]   [1] UNRESOLVED: SHBrowseForFolderW
+[T3f80] [API]   [2] UNRESOLVED: DragFinish
+[T3f80] [API]   [3] UNRESOLVED: DragQueryFileW
+[T3f80] [API]   [4] UNRESOLVED: SHGetSpecialFolderLocation
+[T3f80] [API]   [5] UNRESOLVED: SHGetPathFromIDListW
+[T3f80] [API]   [6] UNRESOLVED: SHGetFileInfoW
+[T3f80] [API]   [7] UNRESOLVED: SHChangeNotify
+[T3f80] [API]   [8] Shell_NotifyIconW -> 0x2030920
+[T3f80] [API]   [9] UNRESOLVED: ShellExecuteW
+[T3f80] [API]   [10] UNRESOLVED: SHGetDesktopFolder
+[T3f80] [API] Import DLL: COMCTL32.dll (IAT RVA=0x1e5170, ILT RVA=0x27a010)
+[T3f80] [API]   [0] Ordinal 17 -> ImageList_Create (fixed ordinal)
+[T3f80] [API]   [0] ImageList_Create -> 0x2016640
+[T3f80] [API]   [1] UNRESOLVED: CreateToolbarEx
+[T3f80] [API] Import DLL: SHLWAPI.dll (IAT RVA=0x1e5cf0, ILT RVA=0x27ab90)
+[T3f80] [API]   [0] PathFindExtensionW -> 0x2030ed0
+[T3f80] [API]   [1] UNRESOLVED: PathStripToRootW
+[T3f80] [API]   [2] UNRESOLVED: PathIsUNCW
+[T3f80] [API]   [3] PathFindFileNameW -> 0x20310c0
+[T3f80] [API]   [4] UNRESOLVED: PathRemoveFileSpecW
+[T3f80] [API]   [5] UNRESOLVED: StrFormatKBSizeW
+[T3f80] [API] Import DLL: UxTheme.dll (IAT RVA=0x1e64a8, ILT RVA=0x27b348)
+[T3f80] [API]   [0] UNRESOLVED: IsAppThemed
+[T3f80] [API]   [1] UNRESOLVED: GetWindowTheme
+[T3f80] [API]   [2] UNRESOLVED: GetCurrentThemeName
+[T3f80] [API]   [3] UNRESOLVED: GetThemePartSize
+[T3f80] [API]   [4] UNRESOLVED: GetThemeSysColor
+[T3f80] [API]   [5] UNRESOLVED: IsThemeBackgroundPartiallyTransparent
+[T3f80] [API]   [6] UNRESOLVED: DrawThemeBackground
+[T3f80] [API]   [7] UNRESOLVED: OpenThemeData
+[T3f80] [API]   [8] UNRESOLVED: CloseThemeData
+[T3f80] [API]   [9] UNRESOLVED: DrawThemeText
+[T3f80] [API]   [10] UNRESOLVED: DrawThemeParentBackground
+[T3f80] [API]   [11] UNRESOLVED: GetThemeColor
+[T3f80] [API] Import DLL: ole32.dll (IAT RVA=0x1e6628, ILT RVA=0x27b4c8)
+[T3f80] [API]   [0] UNRESOLVED: CoDisconnectObject
+[T3f80] [API]   [1] CoInitializeEx -> 0x202f860
+[T3f80] [API]   [2] UNRESOLVED: DoDragDrop
+[T3f80] [API]   [3] UNRESOLVED: OleGetClipboard
+[T3f80] [API]   [4] UNRESOLVED: CoLockObjectExternal
+[T3f80] [API]   [5] UNRESOLVED: RegisterDragDrop
+[T3f80] [API]   [6] UNRESOLVED: RevokeDragDrop
+[T3f80] [API]   [7] UNRESOLVED: OleLockRunning
+[T3f80] [API]   [8] UNRESOLVED: OleCreateMenuDescriptor
+[T3f80] [API]   [9] UNRESOLVED: OleDestroyMenuDescriptor
+[T3f80] [API]   [10] UNRESOLVED: OleTranslateAccelerator
+[T3f80] [API]   [11] UNRESOLVED: IsAccelerator
+[T3f80] [API]   [12] UNRESOLVED: ReleaseStgMedium
+[T3f80] [API]   [13] UNRESOLVED: OleDuplicateData
+[T3f80] [API]   [14] UNRESOLVED: CoTaskMemFree
+[T3f80] [API]   [15] UNRESOLVED: CoTaskMemAlloc
+[T3f80] [API]   [16] UNRESOLVED: CoSetProxyBlanket
+[T3f80] [API]   [17] CoInitializeSecurity -> 0x2034b90
+[T3f80] [API]   [18] OleInitialize -> 0x2033750
+[T3f80] [API]   [19] UNRESOLVED: StgCreateDocfileOnILockBytes
+[T3f80] [API]   [20] UNRESOLVED: CreateILockBytesOnHGlobal
+[T3f80] [API]   [21] UNRESOLVED: CreateStreamOnHGlobal
+[T3f80] [API]   [22] UNRESOLVED: OleRun
+[T3f80] [API]   [23] CoCreateInstance -> 0x2030dc0
+[T3f80] [API]   [24] CoUninitialize -> 0x2033850
+[T3f80] [API]   [25] CoInitialize -> 0x2033650
+[T3f80] [API] Import DLL: OLEAUT32.dll (IAT RVA=0x1e5bf0, ILT RVA=0x27aa90)
+[T3f80] [API]   [0] Ordinal 185 (not supported)
+[T3f80] [API]   [1] Ordinal 149 -> SysStringByteLen (fixed ordinal)
+[T3f80] [API]   [1] SysStringByteLen -> 0x200a060
+[T3f80] [API]   [2] Ordinal 114 (not supported)
+[T3f80] [API]   [3] Ordinal 4 -> SysAllocStringLen (fixed ordinal)
+[T3f80] [API]   [3] SysAllocStringLen -> 0x203ed80
+[T3f80] [API]   [4] Ordinal 150 -> SysAllocStringByteLen (fixed ordinal)
+[T3f80] [API]   [4] SysAllocStringByteLen -> 0x2052d40
+[T3f80] [API]   [5] Ordinal 161 (not supported)
+[T3f80] [API]   [6] Ordinal 25 (not supported)
+[T3f80] [API]   [7] Ordinal 19 (not supported)
+[T3f80] [API]   [8] Ordinal 20 (not supported)
+[T3f80] [API]   [9] Ordinal 12 (not supported)
+[T3f80] [API]   [10] Ordinal 7 -> SysStringLen (fixed ordinal)
+[T3f80] [API]   [10] SysStringLen -> 0x200a040
+[T3f80] [API]   [11] Ordinal 184 (not supported)
+[T3f80] [API]   [12] Ordinal 418 (not supported)
+[T3f80] [API]   [13] Ordinal 9 -> VariantClear (fixed ordinal)
+[T3f80] [API]   [13] VariantClear -> 0x2035b90
+[T3f80] [API]   [14] Ordinal 10 -> VariantCopy (fixed ordinal)
+[T3f80] [API]   [14] VariantCopy -> 0x2036180
+[T3f80] [API]   [15] Ordinal 8 -> VariantInit (fixed ordinal)
+[T3f80] [API]   [15] VariantInit -> 0x2034ff0
+[T3f80] [API]   [16] Ordinal 200 (not supported)
+[T3f80] [API]   [17] Ordinal 6 -> SysFreeString (fixed ordinal)
+[T3f80] [API]   [17] SysFreeString -> 0x203c730
+[T3f80] [API]   [18] Ordinal 2 -> SysAllocString (fixed ordinal)
+[T3f80] [API]   [18] SysAllocString -> 0x203ef40
+[T3f80] [API] Import DLL: WS2_32.dll (IAT RVA=0x1e6560, ILT RVA=0x27b400)
+[T3f80] [API]   [0] Ordinal 115 -> WSAStartup (fixed ordinal)
+[T3f80] [API]   [0] WSAStartup -> 0x2012ce0
+[T3f80] [API] Import DLL: gdiplus.dll (IAT RVA=0x1e6570, ILT RVA=0x27b410)
+[T3f80] [API]   [0] UNRESOLVED: GdipCreateFromHDC
+[T3f80] [API]   [1] UNRESOLVED: GdipCreateBitmapFromHBITMAP
+[T3f80] [API]   [2] UNRESOLVED: GdipDrawImageI
+[T3f80] [API]   [3] UNRESOLVED: GdipDeleteGraphics
+[T3f80] [API]   [4] UNRESOLVED: GdipBitmapUnlockBits
+[T3f80] [API]   [5] UNRESOLVED: GdipBitmapLockBits
+[T3f80] [API]   [6] UNRESOLVED: GdipCreateBitmapFromScan0
+[T3f80] [API]   [7] UNRESOLVED: GdipDrawImageRectI
+[T3f80] [API]   [8] GdipCreateBitmapFromStream -> 0x2031620
+[T3f80] [API]   [9] UNRESOLVED: GdipGetImagePaletteSize
+[T3f80] [API]   [10] UNRESOLVED: GdipGetImagePalette
+[T3f80] [API]   [11] GdipGetImagePixelFormat -> 0x2035570
+[T3f80] [API]   [12] GdipGetImageHeight -> 0x2035450
+[T3f80] [API]   [13] GdipGetImageWidth -> 0x2035330
+[T3f80] [API]   [14] UNRESOLVED: GdipGetImageGraphicsContext
+[T3f80] [API]   [15] GdipDisposeImage -> 0x2035690
+[T3f80] [API]   [16] UNRESOLVED: GdipCloneImage
+[T3f80] [API]   [17] GdiplusStartup -> 0x20347d0
+[T3f80] [API]   [18] UNRESOLVED: GdipFree
+[T3f80] [API]   [19] UNRESOLVED: GdipAlloc
+[T3f80] [API]   [20] GdiplusShutdown -> 0x20348e0
+[T3f80] [API]   [21] UNRESOLVED: GdipSetInterpolationMode
+[T3f80] [API] Import DLL: OLEACC.dll (IAT RVA=0x1e5bd0, ILT RVA=0x27aa70)
+[T3f80] [API]   [0] UNRESOLVED: AccessibleObjectFromWindow
+[T3f80] [API]   [1] UNRESOLVED: LresultFromObject
+[T3f80] [API]   [2] UNRESOLVED: CreateStdAccessibleObject
+[T3f80] [API] Import DLL: IMM32.dll (IAT RVA=0x1e5540, ILT RVA=0x27a3e0)
+[T3f80] [API]   [0] UNRESOLVED: ImmReleaseContext
+[T3f80] [API]   [1] UNRESOLVED: ImmGetOpenStatus
+[T3f80] [API]   [2] UNRESOLVED: ImmGetContext
+[T3f80] [API] Import DLL: WINMM.dll (IAT RVA=0x1e6530, ILT RVA=0x27b3d0)
+[T3f80] [API]   [0] UNRESOLVED: PlaySoundW
+[T3f80] [API] Import resolution: 353 resolved, 364 unresolved (total 717)
+[T3f80] [API] TLS: StartRaw=0x14025d978 EndRaw=0x14025d980 Callbacks=0x1401e6d48
+[T3f80] [API] TLS: static block 0x3c6a090 (8+0 bytes) -> slot 0
+[T3f80] [API] Exception: .pdata RVA=0x298000 Size=0x154bc Entries=7269
+[T3f80] [API] [API-005] EH hacks DISABLED (default) (MINWIN_EH_HACKS=<unset>)
+[T3f80] [API] [API-005] CXX-EH-FIX (LSDA catch-all patch RVA 0x2010c8) skipped: MINWIN_EH_HACKS not set
+[T3f80] [API] Jumping to EP=0x1401a8520
+[T3f80] [API] GetSystemTimeAsFileTime()
+[T3f80] [API] QueryPerformanceCounter()
+[T3f80] [API] LoadLibraryExW(flags=2048)
+[T3f80] [API] LoadLibraryA(api-ms-win-core-synch-l1-2-0)
+[T3f80] [API] GetProcAddress(module=0xdead0002, name=InitializeCriticalSectionEx)
+[T3f80] [API]   -> 0x2012020
+[T3f80] [API] InitializeCriticalSectionEx(spin=4000)
+[T3f80] [API] LoadLibraryExW(flags=2048)
+[T3f80] [API] LoadLibraryA(api-ms-win-core-fibers-l1-1-1)
+[T3f80] [API] GetProcAddress(module=0xdead0002, name=FlsAlloc)
+[T3f80] [API]   -> 0x200fd20
+[T3f80] [API] FlsAlloc(cb=0x1401aaf30) = 0
+[T3f80] [API] GetProcAddress(module=0xdead0002, name=FlsSetValue)
+[T3f80] [API]   -> 0x2008c10
+[T3f80] [API] LoadLibraryExW(flags=2048)
+[T3f80] [API] LoadLibraryA(api-ms-win-core-synch-l1-2-0)
+[T3f80] [API] GetProcAddress(module=0xdead0002, name=InitializeCriticalSectionEx)
+[T3f80] [API]   -> 0x2012020
+[T3f80] [API] InitializeCriticalSectionEx(spin=4000)
+[T3f80] [API] InitializeCriticalSectionEx(spin=4000)
+[T3f80] [API] InitializeCriticalSectionEx(spin=4000)
+[T3f80] [API] InitializeCriticalSectionEx(spin=4000)
+[T3f80] [API] InitializeCriticalSectionEx(spin=4000)
+[T3f80] [API] InitializeCriticalSectionEx(spin=4000)
+[T3f80] [API] InitializeCriticalSectionEx(spin=4000)
+[T3f80] [API] InitializeCriticalSectionEx(spin=4000)
+[T3f80] [API] InitializeCriticalSectionEx(spin=4000)
+[T3f80] [API] InitializeCriticalSectionEx(spin=4000)
+[T3f80] [API] InitializeCriticalSectionEx(spin=4000)
+[T3f80] [API] InitializeCriticalSectionEx(spin=4000)
+[T3f80] [API] InitializeCriticalSectionEx(spin=4000)
+[T3f80] [API] InitializeCriticalSectionEx(spin=4000)
+[T3f80] [API] FlsAlloc(cb=0x1401c94d0) = 1
+[T3f80] [API] GetLastError() = 0
+[T3f80] [API] HeapAlloc(size=0x3c8, zero=1) = 0x3c6a740
+[T3f80] [API] EnterCriticalSection(0x14028d5d8)
+[T3f80] [API] LeaveCriticalSection(0x14028d5d8)
+[T3f80] [API] EnterCriticalSection(0x14028d5b0)
+[T3f80] [API] LeaveCriticalSection(0x14028d5b0)
+[T3f80] [API] SetLastError(0)
+[T3f80] [API] EnterCriticalSection(0x14028d628)
+[T3f80] [API] EnterCriticalSection(0x14028d628)
+[T3f80] [API] HeapAlloc(size=0x1200, zero=1) = 0x3c6ab10
+[T3f80] [API] InitializeCriticalSectionEx(spin=4000)
+[T3f80] [API] InitializeCriticalSectionEx(spin=4000)
+[T3f80] [API] InitializeCriticalSectionEx(spin=4000)
+[T3f80] [API] InitializeCriticalSectionEx(spin=4000)
+[T3f80] [API] InitializeCriticalSectionEx(spin=4000)
+[T3f80] [API] InitializeCriticalSectionEx(spin=4000)
+[T3f80] [API] InitializeCriticalSectionEx(spin=4000)
+[T3f80] [API] InitializeCriticalSectionEx(spin=4000)
+[T3f80] [API] InitializeCriticalSectionEx(spin=4000)
+[T3f80] [API] InitializeCriticalSectionEx(spin=4000)
+[T3f80] [API] InitializeCriticalSectionEx(spin=4000)
+[T3f80] [API] InitializeCriticalSectionEx(spin=4000)
+[T3f80] [API] InitializeCriticalSectionEx(spin=4000)
+[T3f80] [API] InitializeCriticalSectionEx(spin=4000)
+[T3f80] [API] InitializeCriticalSectionEx(spin=4000)
+[T3f80] [API] InitializeCriticalSectionEx(spin=4000)
+[T3f80] [API] InitializeCriticalSectionEx(spin=4000)
+[T3f80] [API] InitializeCriticalSectionEx(spin=4000)
+[T3f80] [API] InitializeCriticalSectionEx(spin=4000)
+[T3f80] [API] InitializeCriticalSectionEx(spin=4000)
+[T3f80] [API] InitializeCriticalSectionEx(spin=4000)
+[T3f80] [API] InitializeCriticalSectionEx(spin=4000)
+[T3f80] [API] InitializeCriticalSectionEx(spin=4000)
+[T3f80] [API] InitializeCriticalSectionEx(spin=4000)
+[T3f80] [API] InitializeCriticalSectionEx(spin=4000)
+[T3f80] [API] InitializeCriticalSectionEx(spin=4000)
+[T3f80] [API] InitializeCriticalSectionEx(spin=4000)
+[T3f80] [API] InitializeCriticalSectionEx(spin=4000)
+[T3f80] [API] InitializeCriticalSectionEx(spin=4000)
+[T3f80] [API] InitializeCriticalSectionEx(spin=4000)
+[T3f80] [API] InitializeCriticalSectionEx(spin=4000)
+[T3f80] [API] InitializeCriticalSectionEx(spin=4000)
+[T3f80] [API] InitializeCriticalSectionEx(spin=4000)
+[T3f80] [API] InitializeCriticalSectionEx(spin=4000)
+[T3f80] [API] InitializeCriticalSectionEx(spin=4000)
+[T3f80] [API] InitializeCriticalSectionEx(spin=4000)
+[T3f80] [API] InitializeCriticalSectionEx(spin=4000)
+[T3f80] [API] InitializeCriticalSectionEx(spin=4000)
+[T3f80] [API] InitializeCriticalSectionEx(spin=4000)
+[T3f80] [API] InitializeCriticalSectionEx(spin=4000)
+[T3f80] [API] InitializeCriticalSectionEx(spin=4000)
+[T3f80] [API] InitializeCriticalSectionEx(spin=4000)
+[T3f80] [API] InitializeCriticalSectionEx(spin=4000)
+[T3f80] [API] InitializeCriticalSectionEx(spin=4000)
+[T3f80] [API] InitializeCriticalSectionEx(spin=4000)
+[T3f80] [API] InitializeCriticalSectionEx(spin=4000)
+[T3f80] [API] InitializeCriticalSectionEx(spin=4000)
+[T3f80] [API] InitializeCriticalSectionEx(spin=4000)
+[T3f80] [API] InitializeCriticalSectionEx(spin=4000)
+[T3f80] [API] InitializeCriticalSectionEx(spin=4000)
+[T3f80] [API] InitializeCriticalSectionEx(spin=4000)
+[T3f80] [API] InitializeCriticalSectionEx(spin=4000)
+[T3f80] [API] InitializeCriticalSectionEx(spin=4000)
+[T3f80] [API] InitializeCriticalSectionEx(spin=4000)
+[T3f80] [API] InitializeCriticalSectionEx(spin=4000)
+[T3f80] [API] InitializeCriticalSectionEx(spin=4000)
+[T3f80] [API] InitializeCriticalSectionEx(spin=4000)
+[T3f80] [API] InitializeCriticalSectionEx(spin=4000)
+[T3f80] [API] InitializeCriticalSectionEx(spin=4000)
+[T3f80] [API] InitializeCriticalSectionEx(spin=4000)
+[T3f80] [API] InitializeCriticalSectionEx(spin=4000)
+[T3f80] [API] InitializeCriticalSectionEx(spin=4000)
+[T3f80] [API] InitializeCriticalSectionEx(spin=4000)
+[T3f80] [API] InitializeCriticalSectionEx(spin=4000)
+[T3f80] [API] LeaveCriticalSection(0x14028d628)
+[T3f80] [API] GetStartupInfoW()
+[T3f80] [API] GetStdHandle(-10) = 0x4
+[T3f80] [API] GetStdHandle(-11) = 0x5
+[T3f80] [API] GetStdHandle(-12) = 0x6
+[T3f80] [API] LeaveCriticalSection(0x14028d628)
+[T3f80] [API] GetCommandLineA() = "Bginfo64.exe"
+[T3f80] [API] GetCommandLineW()
+[T3f80] [API] EnterCriticalSection(0x14028d5d8)
+[T3f80] [API] LeaveCriticalSection(0x14028d5d8)
+[T3f80] [API] HeapAlloc(size=0x228, zero=0) = 0x3c6bd20
+[T3f80] [API] GetCPInfo(cp=1252)
+[T3f80] [API] GetCPInfo(cp=1252)
+[T3f80] [API] MultiByteToWideChar(cp=1252, srclen=256, dstlen=0)
+[T3f80] [API] MultiByteToWideChar(cp=1252, srclen=256, dstlen=256)
+[T3f80] [API] MultiByteToWideChar(cp=1252, srclen=256, dstlen=0)
+[T3f80] [API] MultiByteToWideChar(cp=1252, srclen=256, dstlen=256)
+[T3f80] [API] LoadLibraryExW(flags=2048)
+[T3f80] [API] LoadLibraryA(api-ms-win-core-localization-l1-2-1)
+[T3f80] [API] GetProcAddress(module=0xdead0002, name=LCMapStringEx)
+[T3f80] [API]   -> 0x202ba70
+[T3f80] [API] WideCharToMultiByte(cp=1252, srclen=256, dstlen=256)
+[T3f80] [API] MultiByteToWideChar(cp=1252, srclen=256, dstlen=0)
+[T3f80] [API] MultiByteToWideChar(cp=1252, srclen=256, dstlen=256)
+[T3f80] [API] WideCharToMultiByte(cp=1252, srclen=256, dstlen=256)
+[T3f80] [API] EnterCriticalSection(0x14028d5d8)
+[T3f80] [API] LeaveCriticalSection(0x14028d5d8)
+[T3f80] [API] EnterCriticalSection(0x14028d560)
+[T3f80] [API] HeapAlloc(size=0x100, zero=0) = 0x3c6bf50
+[T3f80] [API] LeaveCriticalSection(0x14028d560)
+[T3f80] [API] GetModuleFileNameW(cap=260)
+[T3f80] [API] HeapAlloc(size=0x2a, zero=1) = 0x3c6c060
+[T3f80] [API] GetLastError() = 0
+[T3f80] [API] SetLastError(0)
+[T3f80] [API] GetEnvironmentStringsW()
+[T3f80] [API] HeapAlloc(size=0xa44, zero=0) = 0x3c6c0a0
+[T3f80] [API] FreeEnvironmentStringsW()
+[T3f80] [API] HeapAlloc(size=0x158, zero=1) = 0x3c6caf0
+[T3f80] [API] HeapAlloc(size=0x20, zero=1) = 0x3c6a710
+[T3f80] [API] HeapAlloc(size=0x36, zero=1) = 0x3c6cc50
+[T3f80] [API] HeapAlloc(size=0x26, zero=1) = 0x3c6a640
+[T3f80] [API] HeapAlloc(size=0x64, zero=1) = 0x3c6cc90
+[T3f80] [API] HeapAlloc(size=0x1a, zero=1) = 0x3c6cd00
+[T3f80] [API] HeapAlloc(size=0x32, zero=1) = 0x3c6cd30
+[T3f80] [API] HeapAlloc(size=0x28, zero=1) = 0x3c6cd70
+[T3f80] [API] HeapAlloc(size=0x28, zero=1) = 0x3c6cda0
+[T3f80] [API] HeapAlloc(size=0xc2, zero=1) = 0x3c6cdd0
+[T3f80] [API] HeapAlloc(size=0x74, zero=1) = 0x3c6a0b0
+[T3f80] [API] HeapAlloc(size=0x14, zero=1) = 0x3c6cea0
+[T3f80] [API] HeapAlloc(size=0x2c, zero=1) = 0x3c6cec0
+[T3f80] [API] HeapAlloc(size=0x1e, zero=1) = 0x3c6cf00
+[T3f80] [API] HeapAlloc(size=0x62, zero=1) = 0x3c6cf30
+[T3f80] [API] HeapAlloc(size=0x72, zero=1) = 0x3c6cfa0
+[T3f80] [API] HeapAlloc(size=0x1a, zero=1) = 0x3c6d020
+[T3f80] [API] HeapAlloc(size=0x3a, zero=1) = 0x3c6d050
+[T3f80] [API] HeapAlloc(size=0x34, zero=1) = 0x3c6d0a0
+[T3f80] [API] HeapAlloc(size=0x38, zero=1) = 0x3c6d0e0
+[T3f80] [API] HeapAlloc(size=0x48, zero=1) = 0x3c6d120
+[T3f80] [API] HeapAlloc(size=0x36, zero=1) = 0x3c6d170
+[T3f80] [API] HeapAlloc(size=0x16, zero=1) = 0x3c6d1b0
+[T3f80] [API] HeapAlloc(size=0x22, zero=1) = 0x3c6d1d0
+[T3f80] [API] HeapAlloc(size=0x44, zero=1) = 0x3c6d200
+[T3f80] [API] HeapAlloc(size=0x14, zero=1) = 0x3c6d250
+[T3f80] [API] HeapAlloc(size=0xe, zero=1) = 0x3c6d270
+[T3f80] [API] HeapAlloc(size=0x10, zero=1) = 0x3c6d290
+[T3f80] [API] HeapAlloc(size=0x32, zero=1) = 0x3c6d2b0
+[T3f80] [API] HeapAlloc(size=0x34, zero=1) = 0x3c6d2f0
+[T3f80] [API] HeapAlloc(size=0x16, zero=1) = 0x3c6d330
+[T3f80] [API] HeapAlloc(size=0x3e, zero=1) = 0x3c6d350
+[T3f80] [API] HeapAlloc(size=0x22, zero=1) = 0x3c6d3a0
+[T3f80] [API] HeapAlloc(size=0x2a, zero=1) = 0x3c6d3d0
+[T3f80] [API] HeapAlloc(size=0x32, zero=1) = 0x3c6d410
+[T3f80] [API] HeapAlloc(size=0x160, zero=1) = 0x3c6d450
+[T3f80] [API] HeapAlloc(size=0x22, zero=1) = 0x3c6d5c0
+[T3f80] [API] HeapAlloc(size=0x3e, zero=1) = 0x3c6d5f0
+[T3f80] [API] HeapAlloc(size=0x3e, zero=1) = 0x3c6d640
+[T3f80] [API] HeapAlloc(size=0x60, zero=1) = 0x3c6d690
+[T3f80] [API] HeapAlloc(size=0x46, zero=1) = 0x3c6d700
+[T3f80] [API] HeapAlloc(size=0x70, zero=1) = 0x3c6d750
+[T3f80] [API] HeapAlloc(size=0x26, zero=1) = 0x3c6d7d0
+[T3f80] [API] HeapFree(0x3c6c0a0)
+[T3f80] [API] HeapAlloc(size=0x1000, zero=1) = 0x3c6d800
+[T3f80] [API] InitializeCriticalSectionEx(spin=4000)
+[T3f80] [API] InitializeCriticalSectionEx(spin=4000)
+[T3f80] [API] InitializeCriticalSectionEx(spin=4000)
+[T3f80] [API] QueryPerformanceFrequency()
+[T3f80] [API] QueryPerformanceCounter()
+[T3f80] [API] SetUnhandledExceptionFilter(handler=0x1401a91c0)
+[T3f80] [API] EnterCriticalSection(0x14028d560)
+[T3f80] [API] LeaveCriticalSection(0x14028d560)
+[T3f80] [API] EnterCriticalSection(0x14028d560)
+[T3f80] [API] LeaveCriticalSection(0x14028d560)
+[T3f80] [API] EnterCriticalSection(0x14028d560)
+[T3f80] [API] LeaveCriticalSection(0x14028d560)
+[T3f80] [API] EnterCriticalSection(0x14028d560)
+[T3f80] [API] LeaveCriticalSection(0x14028d560)
+[T3f80] [API] EnterCriticalSection(0x14028d560)
+[T3f80] [API] LeaveCriticalSection(0x14028d560)
+[T3f80] [API] InitializeCriticalSectionEx(spin=0)
+[T3f80] [API] EnterCriticalSection(0x14028d560)
+[T3f80] [API] LeaveCriticalSection(0x14028d560)
+[T3f80] [API] EnterCriticalSection(0x14028d560)
+[T3f80] [API] LeaveCriticalSection(0x14028d560)
+[T3f80] [API] EnterCriticalSection(0x14028d560)
+[T3f80] [API] LeaveCriticalSection(0x14028d560)
+[T3f80] [API] EnterCriticalSection(0x14028d560)
+[T3f80] [API] LeaveCriticalSection(0x14028d560)
+[T3f80] [API] [GDI] GetDeviceCaps(88) -> 96
+[T3f80] [API] [GDI] GetDeviceCaps(90) -> 96
+[T3f80] [API] GetSysColor(15) -> 0xc0c0c0
+[T3f80] [API] GetSysColor(16) -> 0xc0c0c0
+[T3f80] [API] GetSysColor(20) -> 0xc0c0c0
+[T3f80] [API] GetSysColor(18) -> 0x000000
+[T3f80] [API] GetSysColor(6) -> 0xc0c0c0
+[T3f80] [API] GetSysColorBrush(15) -> stock 0x4000f
+[T3f80] [API] GetSysColorBrush(6) -> stock 0x40006
+[T3f80] [API] EnterCriticalSection(0x14028d560)
+[T3f80] [API] LeaveCriticalSection(0x14028d560)
+[T3f80] [API] EnterCriticalSection(0x14028d560)
+[T3f80] [API] LeaveCriticalSection(0x14028d560)
+[T3f80] [API] RegisterWindowMessageW() -> 0xc000
+[T3f80] [API] TlsAlloc() = 1
+[T3f80] [API] InitializeCriticalSection(0x1402865a8)
+[T3f80] [API] EnterCriticalSection(0x1402865a8)
+[T3f80] [API] GlobalAlloc(flags=2, bytes=0x200) = 0x3c6c0a0
+[T3f80] [API] LeaveCriticalSection(0x1402865a8)
+[T3f80] [API] EnterCriticalSection(0x1402865a8)
+[T3f80] [API] TlsGetValue(1) = (nil)
+[T3f80] [API] LeaveCriticalSection(0x1402865a8)
+[T3f80] [API] GlobalAlloc(flags=64, bytes=0x1e0) = 0x3c6c2b0
+[T3f80] [API] EnterCriticalSection(0x1402865a8)
+[T3f80] [API] TlsGetValue(1) = (nil)
+[T3f80] [API] GlobalAlloc(flags=64, bytes=0x20) = 0x3c6c4a0
+[T3f80] [API] GlobalAlloc(flags=0, bytes=0x10) = 0x3c6c4d0
+[T3f80] [API] TlsSetValue(1, 0x3c6c4a0)
+[T3f80] [API] LeaveCriticalSection(0x1402865a8)
+[T3f80] [API] InitializeCriticalSection(0x140289cb8)
+[T3f80] [API] EnterCriticalSection(0x140289cb8)
+[T3f80] [API] InitializeCriticalSection(0x140289c90)
+[T3f80] [API] LeaveCriticalSection(0x140289cb8)
+[T3f80] [API] EnterCriticalSection(0x140289c90)
+[T3f80] [API] GlobalAlloc(flags=64, bytes=0xd0) = 0x3c6c4f0
+[T3f80] [API] HeapAlloc(size=0x201a, zero=0) = 0x3c6e810
+[T3f80] [API] LeaveCriticalSection(0x140289c90)
+[T3f80] [API] EnterCriticalSection(0x14028d560)
+[T3f80] [API] LeaveCriticalSection(0x14028d560)
+[T3f80] [API] EnterCriticalSection(0x1402865a8)
+[T3f80] [API] TlsGetValue(1) = 0x3c6c4a0
+[T3f80] [API] LeaveCriticalSection(0x1402865a8)
+[T3f80] [API] EnterCriticalSection(0x14028d560)
+[T3f80] [API] LeaveCriticalSection(0x14028d560)
+[T3f80] [API] EnterCriticalSection(0x1402865a8)
+[T3f80] [API] TlsGetValue(1) = 0x3c6c4a0
+[T3f80] [API] LeaveCriticalSection(0x1402865a8)
+[T3f80] [API] EnterCriticalSection(0x14028d560)
+[T3f80] [API] LeaveCriticalSection(0x14028d560)
+[T3f80] [API] EnterCriticalSection(0x1402865a8)
+[T3f80] [API] TlsGetValue(1) = 0x3c6c4a0
+[T3f80] [API] LeaveCriticalSection(0x1402865a8)
+[T3f80] [API] EnterCriticalSection(0x14028d560)
+[T3f80] [API] LeaveCriticalSection(0x14028d560)
+[T3f80] [API] RegisterWindowMessageW() -> 0xc001
+[T3f80] [API] RegisterWindowMessageW() -> 0xc002
+[T3f80] [API] EnterCriticalSection(0x1402865a8)
+[T3f80] [API] TlsGetValue(1) = 0x3c6c4a0
+[T3f80] [API] LeaveCriticalSection(0x1402865a8)
+[T3f80] [API] EnterCriticalSection(0x140289cb8)
+[T3f80] [API] InitializeCriticalSection(0x140289a10)
+[T3f80] [API] LeaveCriticalSection(0x140289cb8)
+[T3f80] [API] EnterCriticalSection(0x140289a10)
+[T3f80] [API] LeaveCriticalSection(0x140289a10)
+[T3f80] [API] EnterCriticalSection(0x14028d560)
+[T3f80] [API] LeaveCriticalSection(0x14028d560)
+[T3f80] [API] EnterCriticalSection(0x14028d560)
+[T3f80] [API] LeaveCriticalSection(0x14028d560)
+[T3f80] [API] EnterCriticalSection(0x14028d560)
+[T3f80] [API] LeaveCriticalSection(0x14028d560)
+[T3f80] [API] EnterCriticalSection(0x1402865a8)
+[T3f80] [API] TlsGetValue(1) = 0x3c6c4a0
+[T3f80] [API] LeaveCriticalSection(0x1402865a8)
+[T3f80] [API] EnterCriticalSection(0x140289a10)
+[T3f80] [API] LeaveCriticalSection(0x140289a10)
+[T3f80] [API] EnterCriticalSection(0x14028d560)
+[T3f80] [API] LeaveCriticalSection(0x14028d560)
+[T3f80] [API] EnterCriticalSection(0x1402865a8)
+[T3f80] [API] TlsGetValue(1) = 0x3c6c4a0
+[T3f80] [API] LeaveCriticalSection(0x1402865a8)
+[T3f80] [API] EnterCriticalSection(0x140289a10)
+[T3f80] [API] LeaveCriticalSection(0x140289a10)
+[T3f80] [API] EnterCriticalSection(0x1402865a8)
+[T3f80] [API] TlsGetValue(1) = 0x3c6c4a0
+[T3f80] [API] LeaveCriticalSection(0x1402865a8)
+[T3f80] [API] EnterCriticalSection(0x140289a10)
+[T3f80] [API] LeaveCriticalSection(0x140289a10)
+[T3f80] [API] RegisterWindowMessageW() -> 0xc003
+[T3f80] [API] EnterCriticalSection(0x14028d560)
+[T3f80] [API] LeaveCriticalSection(0x14028d560)
+[T3f80] [API] RegisterWindowMessageW() -> 0xc004
+[T3f80] [API] GetSysColor(22) -> 0xc0c0c0
+[T3f80] [API] GetSysColor(21) -> 0xc0c0c0
+[T3f80] [API] GetWindowDC() -> screen DC
+[T3f80] [API] EnterCriticalSection(0x1402865a8)
+[T3f80] [API] TlsGetValue(1) = 0x3c6c4a0
+[T3f80] [API] LeaveCriticalSection(0x1402865a8)
+[T3f80] [API] EnterCriticalSection(0x1402865a8)
+[T3f80] [API] LeaveCriticalSection(0x1402865a8)
+[T3f80] [API] EnterCriticalSection(0x1402865a8)
+[T3f80] [API] TlsGetValue(1) = 0x3c6c4a0
+[T3f80] [API] LeaveCriticalSection(0x1402865a8)
+[T3f80] [API] GlobalAlloc(flags=64, bytes=0xa8) = 0x3c6c5d0
+[T3f80] [API] EnterCriticalSection(0x1402865a8)
+[T3f80] [API] TlsGetValue(1) = 0x3c6c4a0
+[T3f80] [API] realloc(0x3c6c4d0, 24) = 0x3c6c4d0
+[T3f80] [API] LocalReAlloc(0x3c6c4d0, 24) -> 0x3c6c4d0
+[T3f80] [API] TlsSetValue(1, 0x3c6c4a0)
+[T3f80] [API] LeaveCriticalSection(0x1402865a8)
+[T3f80] [API] HeapAlloc(size=0xb8, zero=0) = 0x3c6c680
+[T3f80] [API] HeapAlloc(size=0x88, zero=0) = 0x3c6c740
+[T3f80] [API] HeapAlloc(size=0xf8, zero=0) = 0x3c6a540
+[T3f80] [API] [GDI] GetDeviceCaps(12) -> 32
+[T3f80] [API] GetSysColor(15) -> 0xc0c0c0
+[T3f80] [API] GetSysColor(16) -> 0xc0c0c0
+[T3f80] [API] GetSysColor(21) -> 0xc0c0c0
+[T3f80] [API] GetSysColor(22) -> 0xc0c0c0
+[T3f80] [API] GetSysColor(20) -> 0xc0c0c0
+[T3f80] [API] GetSysColor(18) -> 0x000000
+[T3f80] [API] GetSysColor(17) -> 0x808080
+[T3f80] [API] GetSysColor(6) -> 0xc0c0c0
+[T3f80] [API] GetSysColor(13) -> 0x800000
+[T3f80] [API] GetSysColor(14) -> 0xc0c0c0
+[T3f80] [API] GetSysColor(5) -> 0xffffff
+[T3f80] [API] GetSysColor(8) -> 0x000000
+[T3f80] [API] GetSysColor(9) -> 0xc0c0c0
+[T3f80] [API] GetSysColor(7) -> 0xc0c0c0
+[T3f80] [API] GetSysColor(2) -> 0xc0c0c0
+[T3f80] [API] GetSysColor(3) -> 0xc0c0c0
+[T3f80] [API] GetSysColor(27) -> 0xc0c0c0
+[T3f80] [API] GetSysColor(28) -> 0xc0c0c0
+[T3f80] [API] GetSysColor(10) -> 0xc0c0c0
+[T3f80] [API] GetSysColor(11) -> 0xc0c0c0
+[T3f80] [API] GetSysColor(19) -> 0xc0c0c0
+[T3f80] [API] GetSysColor(26) -> 0xc0c0c0
+[T3f80] [API] GetSysColorBrush(16) -> stock 0x40010
+[T3f80] [API] GetSysColorBrush(20) -> stock 0x40014
+[T3f80] [API] GetSysColorBrush(5) -> stock 0x40005
+[T3f80] [API] [GDI] CreateSolidBrush(#c0c0c0) -> h 0x00030000
+[T3f80] [API] EnterCriticalSection(0x1402865a8)
+[T3f80] [API] TlsGetValue(1) = 0x3c6c4a0
+[T3f80] [API] LeaveCriticalSection(0x1402865a8)
+[T3f80] [API] EnterCriticalSection(0x1402865a8)
+[T3f80] [API] TlsGetValue(1) = 0x3c6c4a0
+[T3f80] [API] LeaveCriticalSection(0x1402865a8)
+[T3f80] [API] HeapAlloc(size=0xb8, zero=0) = 0x3c6c7d0
+[T3f80] [API] HeapAlloc(size=0x88, zero=0) = 0x3c6c890
+[T3f80] [API] HeapAlloc(size=0xf8, zero=0) = 0x3c6c920
+[T3f80] [API] [GDI] CreateSolidBrush(#c0c0c0) -> h 0x00030001
+[T3f80] [API] EnterCriticalSection(0x1402865a8)
+[T3f80] [API] TlsGetValue(1) = 0x3c6c4a0
+[T3f80] [API] LeaveCriticalSection(0x1402865a8)
+[T3f80] [API] EnterCriticalSection(0x1402865a8)
+[T3f80] [API] TlsGetValue(1) = 0x3c6c4a0
+[T3f80] [API] LeaveCriticalSection(0x1402865a8)
+[T3f80] [API] [GDI] CreateSolidBrush(#c0c0c0) -> h 0x00030002
+[T3f80] [API] EnterCriticalSection(0x1402865a8)
+[T3f80] [API] TlsGetValue(1) = 0x3c6c4a0
+[T3f80] [API] LeaveCriticalSection(0x1402865a8)
+[T3f80] [API] EnterCriticalSection(0x1402865a8)
+[T3f80] [API] TlsGetValue(1) = 0x3c6c4a0
+[T3f80] [API] LeaveCriticalSection(0x1402865a8)
+[T3f80] [API] [GDI] CreateSolidBrush(#c0c0c0) -> h 0x00030003
+[T3f80] [API] EnterCriticalSection(0x1402865a8)
+[T3f80] [API] TlsGetValue(1) = 0x3c6c4a0
+[T3f80] [API] LeaveCriticalSection(0x1402865a8)
+[T3f80] [API] EnterCriticalSection(0x1402865a8)
+[T3f80] [API] TlsGetValue(1) = 0x3c6c4a0
+[T3f80] [API] LeaveCriticalSection(0x1402865a8)
+[T3f80] [API] [GDI] CreateSolidBrush(#000080) -> h 0x00030004
+[T3f80] [API] EnterCriticalSection(0x1402865a8)
+[T3f80] [API] TlsGetValue(1) = 0x3c6c4a0
+[T3f80] [API] LeaveCriticalSection(0x1402865a8)
+[T3f80] [API] EnterCriticalSection(0x1402865a8)
+[T3f80] [API] TlsGetValue(1) = 0x3c6c4a0
+[T3f80] [API] LeaveCriticalSection(0x1402865a8)
+[T3f80] [API] [GDI] CreateSolidBrush(#c0c0c0) -> h 0x00030005
+[T3f80] [API] EnterCriticalSection(0x1402865a8)
+[T3f80] [API] TlsGetValue(1) = 0x3c6c4a0
+[T3f80] [API] LeaveCriticalSection(0x1402865a8)
+[T3f80] [API] EnterCriticalSection(0x1402865a8)
+[T3f80] [API] TlsGetValue(1) = 0x3c6c4a0
+[T3f80] [API] LeaveCriticalSection(0x1402865a8)
+[T3f80] [API] [GDI] CreateSolidBrush(#ffffff) -> h 0x00030006
+[T3f80] [API] EnterCriticalSection(0x1402865a8)
+[T3f80] [API] TlsGetValue(1) = 0x3c6c4a0
+[T3f80] [API] LeaveCriticalSection(0x1402865a8)
+[T3f80] [API] EnterCriticalSection(0x1402865a8)
+[T3f80] [API] TlsGetValue(1) = 0x3c6c4a0
+[T3f80] [API] LeaveCriticalSection(0x1402865a8)
+[T3f80] [API] [GDI] CreatePen(w=1,#000080) -> h 0x00031007
+[T3f80] [API] EnterCriticalSection(0x1402865a8)
+[T3f80] [API] TlsGetValue(1) = 0x3c6c4a0
+[T3f80] [API] LeaveCriticalSection(0x1402865a8)
+[T3f80] [API] EnterCriticalSection(0x1402865a8)
+[T3f80] [API] TlsGetValue(1) = 0x3c6c4a0
+[T3f80] [API] LeaveCriticalSection(0x1402865a8)
+[T3f80] [API] [GDI] CreatePen(w=1,#c0c0c0) -> h 0x00031008
+[T3f80] [API] EnterCriticalSection(0x1402865a8)
+[T3f80] [API] TlsGetValue(1) = 0x3c6c4a0
+[T3f80] [API] LeaveCriticalSection(0x1402865a8)
+[T3f80] [API] EnterCriticalSection(0x1402865a8)
+[T3f80] [API] TlsGetValue(1) = 0x3c6c4a0
+[T3f80] [API] LeaveCriticalSection(0x1402865a8)
+[T3f80] [API] [GDI] CreatePen(w=1,#c0c0c0) -> h 0x00031009
+[T3f80] [API] EnterCriticalSection(0x1402865a8)
+[T3f80] [API] TlsGetValue(1) = 0x3c6c4a0
+[T3f80] [API] LeaveCriticalSection(0x1402865a8)
+[T3f80] [API] EnterCriticalSection(0x1402865a8)
+[T3f80] [API] TlsGetValue(1) = 0x3c6c4a0
+[T3f80] [API] LeaveCriticalSection(0x1402865a8)
+[T3f80] [API] [GDI] CreateSolidBrush(#c0c0c0) -> h 0x0003000a
+[T3f80] [API] EnterCriticalSection(0x1402865a8)
+[T3f80] [API] TlsGetValue(1) = 0x3c6c4a0
+[T3f80] [API] LeaveCriticalSection(0x1402865a8)
+[T3f80] [API] EnterCriticalSection(0x1402865a8)
+[T3f80] [API] TlsGetValue(1) = 0x3c6c4a0
+[T3f80] [API] LeaveCriticalSection(0x1402865a8)
+[T3f80] [API] HeapAlloc(size=0xf8, zero=0) = 0x3c70840
+[T3f80] [API] EnterCriticalSection(0x1402865a8)
+[T3f80] [API] TlsGetValue(1) = 0x3c6c4a0
+[T3f80] [API] LeaveCriticalSection(0x1402865a8)
+[T3f80] [API] EnterCriticalSection(0x1402865a8)
+[T3f80] [API] TlsGetValue(1) = 0x3c6c4a0
+[T3f80] [API] LeaveCriticalSection(0x1402865a8)
+[T3f80] [API] HeapFree(0x3c6c740)
+[T3f80] [API] HeapFree(0x3c6a540)
+[T3f80] [API] GetWindowDC() -> screen DC
+[T3f80] [API] EnterCriticalSection(0x1402865a8)
+[T3f80] [API] TlsGetValue(1) = 0x3c6c4a0
+[T3f80] [API] LeaveCriticalSection(0x1402865a8)
+[T3f80] [API] EnterCriticalSection(0x1402865a8)
+[T3f80] [API] TlsGetValue(1) = 0x3c6c4a0
+[T3f80] [API] LeaveCriticalSection(0x1402865a8)
+[T3f80] [API] HeapAlloc(size=0x88, zero=0) = 0x3c6c740
+[T3f80] [API] HeapAlloc(size=0xf8, zero=0) = 0x3c6a540
+[T3f80] [API] [GDI] GetDeviceCaps(88) -> 96
+[T3f80] [API] SystemParametersInfoW(action=0x29) -> FALSE (unsupported; caller falls back)
+[T3f80] [API] EnumFontFamiliesW -> 1 font (Raster)
+[T3f80] [API] HeapAlloc(size=0x1c, zero=0) = 0x3c6ca20
+[T3f80] [API] HeapFree(0x3c6ca20)
+[T3f80] [API] EnumFontFamiliesW -> 1 font (Raster)
+[T3f80] [API] HeapAlloc(size=0x1c, zero=0) = 0x3c6ca20
+[T3f80] [API] HeapFree(0x3c6ca20)
+[T3f80] [API] CreateFontIndirectW -> HFONT 0x70001
+[T3f80] [API] EnterCriticalSection(0x1402865a8)
+[T3f80] [API] TlsGetValue(1) = 0x3c6c4a0
+[T3f80] [API] LeaveCriticalSection(0x1402865a8)
+[T3f80] [API] EnterCriticalSection(0x1402865a8)
+[T3f80] [API] TlsGetValue(1) = 0x3c6c4a0
+[T3f80] [API] LeaveCriticalSection(0x1402865a8)
+[T3f80] [API] CreateFontIndirectW -> HFONT 0x70002
+[T3f80] [API] EnterCriticalSection(0x1402865a8)
+[T3f80] [API] TlsGetValue(1) = 0x3c6c4a0
+[T3f80] [API] LeaveCriticalSection(0x1402865a8)
+[T3f80] [API] EnterCriticalSection(0x1402865a8)
+[T3f80] [API] TlsGetValue(1) = 0x3c6c4a0
+[T3f80] [API] LeaveCriticalSection(0x1402865a8)
+[T3f80] [API] SystemParametersInfoW(action=0x29) -> FALSE (unsupported; caller falls back)
+[T3f80] [API] CreateFontIndirectW -> HFONT 0x70003
+[T3f80] [API] EnterCriticalSection(0x1402865a8)
+[T3f80] [API] TlsGetValue(1) = 0x3c6c4a0
+[T3f80] [API] LeaveCriticalSection(0x1402865a8)
+[T3f80] [API] EnterCriticalSection(0x1402865a8)
+[T3f80] [API] TlsGetValue(1) = 0x3c6c4a0
+[T3f80] [API] LeaveCriticalSection(0x1402865a8)
+[T3f80] [API] CreateFontIndirectW -> HFONT 0x70004
+[T3f80] [API] EnterCriticalSection(0x1402865a8)
+[T3f80] [API] TlsGetValue(1) = 0x3c6c4a0
+[T3f80] [API] LeaveCriticalSection(0x1402865a8)
+[T3f80] [API] EnterCriticalSection(0x1402865a8)
+[T3f80] [API] TlsGetValue(1) = 0x3c6c4a0
+[T3f80] [API] LeaveCriticalSection(0x1402865a8)
+[T3f80] [API] CreateFontIndirectW -> HFONT 0x70005
+[T3f80] [API] EnterCriticalSection(0x1402865a8)
+[T3f80] [API] TlsGetValue(1) = 0x3c6c4a0
+[T3f80] [API] LeaveCriticalSection(0x1402865a8)
+[T3f80] [API] EnterCriticalSection(0x1402865a8)
+[T3f80] [API] TlsGetValue(1) = 0x3c6c4a0
+[T3f80] [API] LeaveCriticalSection(0x1402865a8)
+[T3f80] [API] CreateFontIndirectW -> HFONT 0x70006
+[T3f80] [API] EnterCriticalSection(0x1402865a8)
+[T3f80] [API] TlsGetValue(1) = 0x3c6c4a0
+[T3f80] [API] LeaveCriticalSection(0x1402865a8)
+[T3f80] [API] EnterCriticalSection(0x1402865a8)
+[T3f80] [API] TlsGetValue(1) = 0x3c6c4a0
+[T3f80] [API] LeaveCriticalSection(0x1402865a8)
+[T3f80] [API] [GDI] GetStockObject(17)
+[T3f80] [API] GetWindowDC() -> screen DC
+[T3f80] [API] EnterCriticalSection(0x1402865a8)
+[T3f80] [API] TlsGetValue(1) = 0x3c6c4a0
+[T3f80] [API] LeaveCriticalSection(0x1402865a8)
+[T3f80] [API] EnterCriticalSection(0x1402865a8)
+[T3f80] [API] TlsGetValue(1) = 0x3c6c4a0
+[T3f80] [API] LeaveCriticalSection(0x1402865a8)
+[T3f80] [API] [GDI] SelectObject(0x00070001)
+[T3f80] [API] EnterCriticalSection(0x1402865a8)
+[T3f80] [API] TlsGetValue(1) = 0x3c6c4a0
+[T3f80] [API] LeaveCriticalSection(0x1402865a8)
+[T3f80] [API] EnterCriticalSection(0x1402865a8)
+[T3f80] [API] TlsGetValue(1) = 0x3c6c4a0
+[T3f80] [API] LeaveCriticalSection(0x1402865a8)
+[T3f80] [API] HeapAlloc(size=0x408, zero=0) = 0x3c6a130
+[T3f80] [API] HeapAlloc(size=0x38, zero=0) = 0x3c6ca50
+[T3f80] [API] HeapAlloc(size=0x68, zero=0) = 0x3c70940
+[T3f80] [API] GetTextMetricsW -> 8x8 DEFAULT_CHARSET TRUE
+[T3f80] [API] [GDI] SelectObject(0x00000000)
+[T3f80] [API] EnterCriticalSection(0x1402865a8)
+[T3f80] [API] TlsGetValue(1) = 0x3c6c4a0
+[T3f80] [API] LeaveCriticalSection(0x1402865a8)
+[T3f80] [API] EnterCriticalSection(0x1402865a8)
+[T3f80] [API] TlsGetValue(1) = 0x3c6c4a0
+[T3f80] [API] LeaveCriticalSection(0x1402865a8)
+[T3f80] [API] GetTextMetricsW -> 8x8 DEFAULT_CHARSET TRUE
+[T3f80] [API] [GDI] SelectObject(0x00040001)
+[T3f80] [API] EnterCriticalSection(0x1402865a8)
+[T3f80] [API] TlsGetValue(1) = 0x3c6c4a0
+[T3f80] [API] LeaveCriticalSection(0x1402865a8)
+[T3f80] [API] EnterCriticalSection(0x1402865a8)
+[T3f80] [API] TlsGetValue(1) = 0x3c6c4a0
+[T3f80] [API] LeaveCriticalSection(0x1402865a8)
+[T3f80] [API] EnterCriticalSection(0x1402865a8)
+[T3f80] [API] TlsGetValue(1) = 0x3c6c4a0
+[T3f80] [API] LeaveCriticalSection(0x1402865a8)
+[T3f80] [API] EnterCriticalSection(0x1402865a8)
+[T3f80] [API] TlsGetValue(1) = 0x3c6c4a0
+[T3f80] [API] LeaveCriticalSection(0x1402865a8)
+[T3f80] [API] HeapFree(0x3c6c740)
+[T3f80] [API] HeapFree(0x3c6a540)
+[T3f80] [API] EnterCriticalSection(0x1402865a8)
+[T3f80] [API] TlsGetValue(1) = 0x3c6c4a0
+[T3f80] [API] LeaveCriticalSection(0x1402865a8)
+[T3f80] [API] EnterCriticalSection(0x1402865a8)
+[T3f80] [API] TlsGetValue(1) = 0x3c6c4a0
+[T3f80] [API] LeaveCriticalSection(0x1402865a8)
+[T3f80] [API] EnterCriticalSection(0x1402865a8)
+[T3f80] [API] TlsGetValue(1) = 0x3c6c4a0
+[T3f80] [API] LeaveCriticalSection(0x1402865a8)
+[T3f80] [API] EnterCriticalSection(0x1402865a8)
+[T3f80] [API] TlsGetValue(1) = 0x3c6c4a0
+[T3f80] [API] LeaveCriticalSection(0x1402865a8)
+[T3f80] [API] SetRectEmpty -> TRUE
+[T3f80] [API] EnumDisplayMonitors -> 1 monitor 1920x1080
+[T3f80] [API] GetMonitorInfoW -> 1920x1080 PRIMARY
+[T3f80] [API] CopyRect -> TRUE
+[T3f80] [API] SystemParametersInfoW(action=0x1002) -> FALSE (unsupported; caller falls back)
+[T3f80] [API] SystemParametersInfoW(action=0x100a) -> FALSE (unsupported; caller falls back)
+[T3f80] [API] EnterCriticalSection(0x14028d560)
+[T3f80] [API] LeaveCriticalSection(0x14028d560)
+[T3f80] [API] InitializeCriticalSection(0x14028a400)
+[T3f80] [API] EnterCriticalSection(0x14028d560)
+[T3f80] [API] LeaveCriticalSection(0x14028d560)
+[T3f80] [API] EnterCriticalSection(0x14028d560)
+[T3f80] [API] LeaveCriticalSection(0x14028d560)
+[T3f80] [API] InitializeCriticalSection(0x14028a480)
+[T3f80] [API] EnterCriticalSection(0x14028d560)
+[T3f80] [API] LeaveCriticalSection(0x14028d560)
+[T3f80] [API] RegisterWindowMessageW() -> 0xc005
+[T3f80] [API] RegisterWindowMessageW() -> 0xc006
+[T3f80] [API] RegisterWindowMessageW() -> 0xc007
+[T3f80] [API] RegisterWindowMessageW() -> 0xc008
+[T3f80] [API] RegisterWindowMessageW() -> 0xc009
+[T3f80] [API] RegisterWindowMessageW() -> 0xc00a
+[T3f80] [API] RegisterWindowMessageW() -> 0xc00b
+[T3f80] [API] RegisterWindowMessageW() -> 0xc00c
+[T3f80] [API] RegisterWindowMessageW() -> 0xc00d
+[T3f80] [API] RegisterWindowMessageW() -> 0xc00e
+[T3f80] [API] RegisterWindowMessageW() -> 0xc00f
+[T3f80] [API] RegisterWindowMessageW() -> 0xc010
+[T3f80] [API] EnterCriticalSection(0x14028d560)
+[T3f80] [API] LeaveCriticalSection(0x14028d560)
+[T3f80] [API] EnterCriticalSection(0x1402865a8)
+[T3f80] [API] TlsGetValue(1) = 0x3c6c4a0
+[T3f80] [API] LeaveCriticalSection(0x1402865a8)
+[T3f80] [API] EnterCriticalSection(0x140289cb8)
+[T3f80] [API] InitializeCriticalSection(0x140289a88)
+[T3f80] [API] LeaveCriticalSection(0x140289cb8)
+[T3f80] [API] EnterCriticalSection(0x140289a88)
+[T3f80] [API] GetProfileIntW -> default 2 (no win.ini store)
+[T3f80] [API] GetProfileIntW -> default 200 (no win.ini store)
+[T3f80] [API] LeaveCriticalSection(0x140289a88)
+[T3f80] [API] EnterCriticalSection(0x14028d560)
+[T3f80] [API] LeaveCriticalSection(0x14028d560)
+[T3f80] [API] EnterCriticalSection(0x14028d560)
+[T3f80] [API] LeaveCriticalSection(0x14028d560)
+[T3f80] [API] EnterCriticalSection(0x14028d560)
+[T3f80] [API] LeaveCriticalSection(0x14028d560)
+[T3f80] [API] EnterCriticalSection(0x14028d560)
+[T3f80] [API] LeaveCriticalSection(0x14028d560)
+[T3f80] [API] EnterCriticalSection(0x14028d560)
+[T3f80] [API] LeaveCriticalSection(0x14028d560)
+[T3f80] [API] EnterCriticalSection(0x14028d560)
+[T3f80] [API] LeaveCriticalSection(0x14028d560)
+[T3f80] [API] EnterCriticalSection(0x14028d560)
+[T3f80] [API] HeapReAlloc(size=0x200) = 0x3c709b0
+[T3f80] [API] LeaveCriticalSection(0x14028d560)
+[T3f80] [API] EnterCriticalSection(0x14028d560)
+[T3f80] [API] LeaveCriticalSection(0x14028d560)
+[T3f80] [API] EnterCriticalSection(0x14028d560)
+[T3f80] [API] LeaveCriticalSection(0x14028d560)
+[T3f80] [API] EnterCriticalSection(0x14028d560)
+[T3f80] [API] LeaveCriticalSection(0x14028d560)
+[T3f80] [API] EnterCriticalSection(0x14028d560)
+[T3f80] [API] LeaveCriticalSection(0x14028d560)
+[T3f80] [API] EnterCriticalSection(0x14028d560)
+[T3f80] [API] LeaveCriticalSection(0x14028d560)
+[T3f80] [API] EnterCriticalSection(0x14028d560)
+[T3f80] [API] LeaveCriticalSection(0x14028d560)
+[T3f80] [API] EnterCriticalSection(0x1402865a8)
+[T3f80] [API] TlsGetValue(1) = 0x3c6c4a0
+[T3f80] [API] LeaveCriticalSection(0x1402865a8)
+[T3f80] [API] EnterCriticalSection(0x140289a10)
+[T3f80] [API] LeaveCriticalSection(0x140289a10)
+[T3f80] [API] EnterCriticalSection(0x14028d560)
+[T3f80] [API] LeaveCriticalSection(0x14028d560)
+[T3f80] [API] RegisterWindowMessageW() -> 0xc011
+[T3f80] [API] RegisterWindowMessageW() -> 0xc012
+[T3f80] [API] RegisterWindowMessageW() -> 0xc013
+[T3f80] [API] RegisterWindowMessageW() -> 0xc014
+[T3f80] [API] RegisterWindowMessageW() -> 0xc015
+[T3f80] [API] EnterCriticalSection(0x14028d560)
+[T3f80] [API] LeaveCriticalSection(0x14028d560)
+[T3f80] [API] EnterCriticalSection(0x1402865a8)
+[T3f80] [API] TlsGetValue(1) = 0x3c6c4a0
+[T3f80] [API] LeaveCriticalSection(0x1402865a8)
+[T3f80] [API] EnterCriticalSection(0x140289a10)
+[T3f80] [API] LeaveCriticalSection(0x140289a10)
+[T3f80] [API] EnterCriticalSection(0x14028d560)
+[T3f80] [API] LeaveCriticalSection(0x14028d560)
+[T3f80] [API] EnterCriticalSection(0x1402865a8)
+[T3f80] [API] TlsGetValue(1) = 0x3c6c4a0
+[T3f80] [API] LeaveCriticalSection(0x1402865a8)
+[T3f80] [API] EnterCriticalSection(0x140289a10)
+[T3f80] [API] LeaveCriticalSection(0x140289a10)
+[T3f80] [API] RegisterWindowMessageW() -> 0xc016
+[T3f80] [API] RegisterWindowMessageW() -> 0xc017
+[T3f80] [API] RegisterWindowMessageW() -> 0xc018
+[T3f80] [API] RegisterWindowMessageW() -> 0xc019
+[T3f80] [API] RegisterWindowMessageW() -> 0xc01a
+[T3f80] [API] RegisterWindowMessageW() -> 0xc01b
+[T3f80] [API] EnterCriticalSection(0x14028d560)
+[T3f80] [API] LeaveCriticalSection(0x14028d560)
+[T3f80] [API] EnterCriticalSection(0x1402865a8)
+[T3f80] [API] TlsGetValue(1) = 0x3c6c4a0
+[T3f80] [API] LeaveCriticalSection(0x1402865a8)
+[T3f80] [API] EnterCriticalSection(0x140289a10)
+[T3f80] [API] LeaveCriticalSection(0x140289a10)
+[T3f80] [API] EnterCriticalSection(0x14028d560)
+[T3f80] [API] LeaveCriticalSection(0x14028d560)
+[T3f80] [API] EnterCriticalSection(0x14028d560)
+[T3f80] [API] LeaveCriticalSection(0x14028d560)
+[T3f80] [API] EnterCriticalSection(0x14028d560)
+[T3f80] [API] LeaveCriticalSection(0x14028d560)
+[T3f80] [API] EnterCriticalSection(0x14028d560)
+[T3f80] [API] LeaveCriticalSection(0x14028d560)
+[T3f80] [API] EnterCriticalSection(0x14028d560)
+[T3f80] [API] LeaveCriticalSection(0x14028d560)
+[T3f80] [API] EnterCriticalSection(0x14028d560)
+[T3f80] [API] LeaveCriticalSection(0x14028d560)
+[T3f80] [API] RegisterWindowMessageW() -> 0xc01c
+[T3f80] [API] EnterCriticalSection(0x1402865a8)
+[T3f80] [API] TlsGetValue(1) = 0x3c6c4a0
+[T3f80] [API] LeaveCriticalSection(0x1402865a8)
+[T3f80] [API] EnterCriticalSection(0x140289a10)
+[T3f80] [API] LeaveCriticalSection(0x140289a10)
+[T3f80] [API] EnterCriticalSection(0x1402865a8)
+[T3f80] [API] TlsGetValue(1) = 0x3c6c4a0
+[T3f80] [API] LeaveCriticalSection(0x1402865a8)
+[T3f80] [API] EnterCriticalSection(0x140289a10)
+[T3f80] [API] LeaveCriticalSection(0x140289a10)
+[T3f80] [API] EnterCriticalSection(0x1402865a8)
+[T3f80] [API] TlsGetValue(1) = 0x3c6c4a0
+[T3f80] [API] LeaveCriticalSection(0x1402865a8)
+[T3f80] [API] EnterCriticalSection(0x140289a10)
+[T3f80] [API] LeaveCriticalSection(0x140289a10)
+[T3f80] [API] EnterCriticalSection(0x14028d560)
+[T3f80] [API] LeaveCriticalSection(0x14028d560)
+[T3f80] [API] RegisterWindowMessageW() -> 0xc01d
+[T3f80] [API] EnterCriticalSection(0x1402865a8)
+[T3f80] [API] TlsGetValue(1) = 0x3c6c4a0
+[T3f80] [API] LeaveCriticalSection(0x1402865a8)
+[T3f80] [API] EnterCriticalSection(0x140289a10)
+[T3f80] [API] LeaveCriticalSection(0x140289a10)
+[T3f80] [API] EnterCriticalSection(0x1402865a8)
+[T3f80] [API] TlsGetValue(1) = 0x3c6c4a0
+[T3f80] [API] LeaveCriticalSection(0x1402865a8)
+[T3f80] [API] EnterCriticalSection(0x140289a10)
+[T3f80] [API] LeaveCriticalSection(0x140289a10)
+[T3f80] [API] EnterCriticalSection(0x14028d560)
+[T3f80] [API] LeaveCriticalSection(0x14028d560)
+[T3f80] [API] EnterCriticalSection(0x1402865a8)
+[T3f80] [API] TlsGetValue(1) = 0x3c6c4a0
+[T3f80] [API] LeaveCriticalSection(0x1402865a8)
+[T3f80] [API] EnterCriticalSection(0x140289a10)
+[T3f80] [API] LeaveCriticalSection(0x140289a10)
+[T3f80] [API] EnterCriticalSection(0x14028d560)
+[T3f80] [API] LeaveCriticalSection(0x14028d560)
+[T3f80] [API] EnterCriticalSection(0x14028d560)
+[T3f80] [API] LeaveCriticalSection(0x14028d560)
+[T3f80] [API] EnterCriticalSection(0x14028d560)
+[T3f80] [API] LeaveCriticalSection(0x14028d560)
+[T3f80] [API] EnterCriticalSection(0x14028d560)
+[T3f80] [API] LeaveCriticalSection(0x14028d560)
+[T3f80] [API] RegisterWindowMessageW() -> 0xc01e
+[T3f80] [API] EnterCriticalSection(0x1402865a8)
+[T3f80] [API] TlsGetValue(1) = 0x3c6c4a0
+[T3f80] [API] LeaveCriticalSection(0x1402865a8)
+[T3f80] [API] EnterCriticalSection(0x140289a10)
+[T3f80] [API] LeaveCriticalSection(0x140289a10)
+[T3f80] [API] EnterCriticalSection(0x14028d560)
+[T3f80] [API] LeaveCriticalSection(0x14028d560)
+[T3f80] [API] EnterCriticalSection(0x14028d560)
+[T3f80] [API] LeaveCriticalSection(0x14028d560)
+[T3f80] [API] EnterCriticalSection(0x14028d560)
+[T3f80] [API] LeaveCriticalSection(0x14028d560)
+[T3f80] [API] EnterCriticalSection(0x14028d560)
+[T3f80] [API] LeaveCriticalSection(0x14028d560)
+[T3f80] [API] RegisterWindowMessageW() -> 0xc01f
+[T3f80] [API] EnterCriticalSection(0x1402865a8)
+[T3f80] [API] TlsGetValue(1) = 0x3c6c4a0
+[T3f80] [API] LeaveCriticalSection(0x1402865a8)
+[T3f80] [API] EnterCriticalSection(0x140289a10)
+[T3f80] [API] LeaveCriticalSection(0x140289a10)
+[T3f80] [API] EnterCriticalSection(0x14028d560)
+[T3f80] [API] LeaveCriticalSection(0x14028d560)
+[T3f80] [API] EnterCriticalSection(0x1402865a8)
+[T3f80] [API] TlsGetValue(1) = 0x3c6c4a0
+[T3f80] [API] LeaveCriticalSection(0x1402865a8)
+[T3f80] [API] EnterCriticalSection(0x140289a10)
+[T3f80] [API] LeaveCriticalSection(0x140289a10)
+[T3f80] [API] EnterCriticalSection(0x1402865a8)
+[T3f80] [API] TlsGetValue(1) = 0x3c6c4a0
+[T3f80] [API] LeaveCriticalSection(0x1402865a8)
+[T3f80] [API] EnterCriticalSection(0x140289a10)
+[T3f80] [API] LeaveCriticalSection(0x140289a10)
+[T3f80] [API] EnterCriticalSection(0x14028d560)
+[T3f80] [API] LeaveCriticalSection(0x14028d560)
+[T3f80] [API] EnterCriticalSection(0x14028d560)
+[T3f80] [API] LeaveCriticalSection(0x14028d560)
+[T3f80] [API] EnterCriticalSection(0x1402865a8)
+[T3f80] [API] TlsGetValue(1) = 0x3c6c4a0
+[T3f80] [API] LeaveCriticalSection(0x1402865a8)
+[T3f80] [API] EnterCriticalSection(0x140289a10)
+[T3f80] [API] LeaveCriticalSection(0x140289a10)
+[T3f80] [API] EnterCriticalSection(0x1402865a8)
+[T3f80] [API] TlsGetValue(1) = 0x3c6c4a0
+[T3f80] [API] LeaveCriticalSection(0x1402865a8)
+[T3f80] [API] EnterCriticalSection(0x140289a10)
+[T3f80] [API] LeaveCriticalSection(0x140289a10)
+[T3f80] [API] EnterCriticalSection(0x1402865a8)
+[T3f80] [API] TlsGetValue(1) = 0x3c6c4a0
+[T3f80] [API] LeaveCriticalSection(0x1402865a8)
+[T3f80] [API] EnterCriticalSection(0x140289a10)
+[T3f80] [API] LeaveCriticalSection(0x140289a10)
+[T3f80] [API] EnterCriticalSection(0x14028d560)
+[T3f80] [API] LeaveCriticalSection(0x14028d560)
+[T3f80] [API] EnterCriticalSection(0x14028d560)
+[T3f80] [API] LeaveCriticalSection(0x14028d560)
+[T3f80] [API] RegisterWindowMessageW() -> 0xc020
+[T3f80] [API] EnterCriticalSection(0x1402865a8)
+[T3f80] [API] TlsGetValue(1) = 0x3c6c4a0
+[T3f80] [API] LeaveCriticalSection(0x1402865a8)
+[T3f80] [API] EnterCriticalSection(0x140289a10)
+[T3f80] [API] LeaveCriticalSection(0x140289a10)
+[T3f80] [API] EnterCriticalSection(0x1402865a8)
+[T3f80] [API] TlsGetValue(1) = 0x3c6c4a0
+[T3f80] [API] LeaveCriticalSection(0x1402865a8)
+[T3f80] [API] EnterCriticalSection(0x140289a10)
+[T3f80] [API] LeaveCriticalSection(0x140289a10)
+[T3f80] [API] EnterCriticalSection(0x14028d560)
+[T3f80] [API] HeapReAlloc(size=0x400) = 0x3c709b0
+[T3f80] [API] LeaveCriticalSection(0x14028d560)
+[T3f80] [API] EnterCriticalSection(0x14028d560)
+[T3f80] [API] LeaveCriticalSection(0x14028d560)
+[T3f80] [API] EnterCriticalSection(0x1402865a8)
+[T3f80] [API] TlsGetValue(1) = 0x3c6c4a0
+[T3f80] [API] LeaveCriticalSection(0x1402865a8)
+[T3f80] [API] EnterCriticalSection(0x140289a10)
+[T3f80] [API] LeaveCriticalSection(0x140289a10)
+[T3f80] [API] InitializeCriticalSection(0x14028c318)
+[T3f80] [API] EnterCriticalSection(0x14028d560)
+[T3f80] [API] LeaveCriticalSection(0x14028d560)
+[T3f80] [API] EnterCriticalSection(0x1402865a8)
+[T3f80] [API] TlsGetValue(1) = 0x3c6c4a0
+[T3f80] [API] LeaveCriticalSection(0x1402865a8)
+[T3f80] [API] EnterCriticalSection(0x140289a10)
+[T3f80] [API] LeaveCriticalSection(0x140289a10)
+[T3f80] [API] EnterCriticalSection(0x1402865a8)
+[T3f80] [API] TlsGetValue(1) = 0x3c6c4a0
+[T3f80] [API] LeaveCriticalSection(0x1402865a8)
+[T3f80] [API] EnterCriticalSection(0x140289a10)
+[T3f80] [API] LeaveCriticalSection(0x140289a10)
+[T3f80] [API] EnterCriticalSection(0x1402865a8)
+[T3f80] [API] TlsGetValue(1) = 0x3c6c4a0
+[T3f80] [API] LeaveCriticalSection(0x1402865a8)
+[T3f80] [API] EnterCriticalSection(0x140289a10)
+[T3f80] [API] LeaveCriticalSection(0x140289a10)
+[T3f80] [API] EnterCriticalSection(0x1402865a8)
+[T3f80] [API] TlsGetValue(1) = 0x3c6c4a0
+[T3f80] [API] LeaveCriticalSection(0x1402865a8)
+[T3f80] [API] EnterCriticalSection(0x140289a10)
+[T3f80] [API] LeaveCriticalSection(0x140289a10)
+[T3f80] [API] EnterCriticalSection(0x14028d560)
+[T3f80] [API] LeaveCriticalSection(0x14028d560)
+[T3f80] [API] EnterCriticalSection(0x1402865a8)
+[T3f80] [API] TlsGetValue(1) = 0x3c6c4a0
+[T3f80] [API] LeaveCriticalSection(0x1402865a8)
+[T3f80] [API] EnterCriticalSection(0x140289a10)
+[T3f80] [API] LeaveCriticalSection(0x140289a10)
+[T3f80] [API] EnterCriticalSection(0x1402865a8)
+[T3f80] [API] TlsGetValue(1) = 0x3c6c4a0
+[T3f80] [API] LeaveCriticalSection(0x1402865a8)
+[T3f80] [API] EnterCriticalSection(0x140289a10)
+[T3f80] [API] LeaveCriticalSection(0x140289a10)
+[T3f80] [API] EnterCriticalSection(0x1402865a8)
+[T3f80] [API] TlsGetValue(1) = 0x3c6c4a0
+[T3f80] [API] LeaveCriticalSection(0x1402865a8)
+[T3f80] [API] EnterCriticalSection(0x140289a10)
+[T3f80] [API] LeaveCriticalSection(0x140289a10)
+[T3f80] [API] RegisterWindowMessageW() -> 0xc021
+[T3f80] [API] EnterCriticalSection(0x14028d560)
+[T3f80] [API] LeaveCriticalSection(0x14028d560)
+[T3f80] [API] RegisterWindowMessageW() -> 0xc022
+[T3f80] [API] EnterCriticalSection(0x1402865a8)
+[T3f80] [API] TlsGetValue(1) = 0x3c6c4a0
+[T3f80] [API] LeaveCriticalSection(0x1402865a8)
+[T3f80] [API] EnterCriticalSection(0x140289a10)
+[T3f80] [API] LeaveCriticalSection(0x140289a10)
+[T3f80] [API] EnterCriticalSection(0x1402865a8)
+[T3f80] [API] TlsGetValue(1) = 0x3c6c4a0
+[T3f80] [API] LeaveCriticalSection(0x1402865a8)
+[T3f80] [API] EnterCriticalSection(0x140289a10)
+[T3f80] [API] LeaveCriticalSection(0x140289a10)
+[T3f80] [API] EnterCriticalSection(0x14028d560)
+[T3f80] [API] LeaveCriticalSection(0x14028d560)
+[T3f80] [API] EnterCriticalSection(0x14028d560)
+[T3f80] [API] LeaveCriticalSection(0x14028d560)
+[T3f80] [API] RegisterWindowMessageW() -> 0xc023
+[T3f80] [API] EnterCriticalSection(0x1402865a8)
+[T3f80] [API] TlsGetValue(1) = 0x3c6c4a0
+[T3f80] [API] LeaveCriticalSection(0x1402865a8)
+[T3f80] [API] EnterCriticalSection(0x140289a10)
+[T3f80] [API] LeaveCriticalSection(0x140289a10)
+[T3f80] [API] EnterCriticalSection(0x1402865a8)
+[T3f80] [API] TlsGetValue(1) = 0x3c6c4a0
+[T3f80] [API] LeaveCriticalSection(0x1402865a8)
+[T3f80] [API] EnterCriticalSection(0x140289a10)
+[T3f80] [API] LeaveCriticalSection(0x140289a10)
+[T3f80] [API] EnterCriticalSection(0x1402865a8)
+[T3f80] [API] TlsGetValue(1) = 0x3c6c4a0
+[T3f80] [API] LeaveCriticalSection(0x1402865a8)
+[T3f80] [API] EnterCriticalSection(0x140289a10)
+[T3f80] [API] LeaveCriticalSection(0x140289a10)
+[T3f80] [API] EnterCriticalSection(0x14028d560)
+[T3f80] [API] LeaveCriticalSection(0x14028d560)
+[T3f80] [API] EnterCriticalSection(0x1402865a8)
+[T3f80] [API] TlsGetValue(1) = 0x3c6c4a0
+[T3f80] [API] LeaveCriticalSection(0x1402865a8)
+[T3f80] [API] EnterCriticalSection(0x140289a10)
+[T3f80] [API] LeaveCriticalSection(0x140289a10)
+[T3f80] [API] EnterCriticalSection(0x14028d560)
+[T3f80] [API] LeaveCriticalSection(0x14028d560)
+[T3f80] [API] RegisterWindowMessageW() -> 0xc024
+[T3f80] [API] RegisterWindowMessageW() -> 0xc025
+[T3f80] [API] RegisterWindowMessageW() -> 0xc026
+[T3f80] [API] RegisterWindowMessageW() -> 0xc027
+[T3f80] [API] RegisterWindowMessageW() -> 0xc028
+[T3f80] [API] EnterCriticalSection(0x14028d560)
+[T3f80] [API] LeaveCriticalSection(0x14028d560)
+[T3f80] [API] EnterCriticalSection(0x14028d560)
+[T3f80] [API] LeaveCriticalSection(0x14028d560)
+[T3f80] [API] EnterCriticalSection(0x14028d560)
+[T3f80] [API] LeaveCriticalSection(0x14028d560)
+[T3f80] [API] EnterCriticalSection(0x1402865a8)
+[T3f80] [API] TlsGetValue(1) = 0x3c6c4a0
+[T3f80] [API] LeaveCriticalSection(0x1402865a8)
+[T3f80] [API] EnterCriticalSection(0x140289a10)
+[T3f80] [API] LeaveCriticalSection(0x140289a10)
+[T3f80] [API] RegisterWindowMessageW() -> 0xc029
+[T3f80] [API] EnterCriticalSection(0x14028d560)
+[T3f80] [API] LeaveCriticalSection(0x14028d560)
+[T3f80] [API] EnterCriticalSection(0x14028d560)
+[T3f80] [API] LeaveCriticalSection(0x14028d560)
+[T3f80] [API] EnterCriticalSection(0x1402865a8)
+[T3f80] [API] TlsGetValue(1) = 0x3c6c4a0
+[T3f80] [API] LeaveCriticalSection(0x1402865a8)
+[T3f80] [API] EnterCriticalSection(0x140289a10)
+[T3f80] [API] LeaveCriticalSection(0x140289a10)
+[T3f80] [API] EnterCriticalSection(0x14028d560)
+[T3f80] [API] LeaveCriticalSection(0x14028d560)
+[T3f80] [API] InitializeCriticalSection(0x14028c4d0)
+[T3f80] [API] EnterCriticalSection(0x14028d560)
+[T3f80] [API] LeaveCriticalSection(0x14028d560)
+[T3f80] [API] EnterCriticalSection(0x1402865a8)
+[T3f80] [API] TlsGetValue(1) = 0x3c6c4a0
+[T3f80] [API] LeaveCriticalSection(0x1402865a8)
+[T3f80] [API] EnterCriticalSection(0x140289a10)
+[T3f80] [API] LeaveCriticalSection(0x140289a10)
+[T3f80] [API] EnterCriticalSection(0x1402865a8)
+[T3f80] [API] TlsGetValue(1) = 0x3c6c4a0
+[T3f80] [API] LeaveCriticalSection(0x1402865a8)
+[T3f80] [API] EnterCriticalSection(0x140289a10)
+[T3f80] [API] LeaveCriticalSection(0x140289a10)
+[T3f80] [API] EnterCriticalSection(0x1402865a8)
+[T3f80] [API] TlsGetValue(1) = 0x3c6c4a0
+[T3f80] [API] LeaveCriticalSection(0x1402865a8)
+[T3f80] [API] EnterCriticalSection(0x140289a10)
+[T3f80] [API] LeaveCriticalSection(0x140289a10)
+[T3f80] [API] EnterCriticalSection(0x1402865a8)
+[T3f80] [API] TlsGetValue(1) = 0x3c6c4a0
+[T3f80] [API] LeaveCriticalSection(0x1402865a8)
+[T3f80] [API] EnterCriticalSection(0x140289a10)
+[T3f80] [API] LeaveCriticalSection(0x140289a10)
+[T3f80] [API] EnterCriticalSection(0x1402865a8)
+[T3f80] [API] TlsGetValue(1) = 0x3c6c4a0
+[T3f80] [API] LeaveCriticalSection(0x1402865a8)
+[T3f80] [API] EnterCriticalSection(0x140289a10)
+[T3f80] [API] LeaveCriticalSection(0x140289a10)
+[T3f80] [API] EnterCriticalSection(0x14028d560)
+[T3f80] [API] LeaveCriticalSection(0x14028d560)
+[T3f80] [API] RegisterWindowMessageW() -> 0xc02a
+[T3f80] [API] RegisterClipboardFormatW() -> 0xc000
+[T3f80] [API] RegisterClipboardFormatW() -> 0xc001
+[T3f80] [API] RegisterClipboardFormatW() -> 0xc002
+[T3f80] [API] RegisterClipboardFormatW() -> 0xc003
+[T3f80] [API] RegisterClipboardFormatW() -> 0xc004
+[T3f80] [API] RegisterClipboardFormatW() -> 0xc005
+[T3f80] [API] RegisterClipboardFormatW() -> 0xc006
+[T3f80] [API] RegisterClipboardFormatW() -> 0xc007
+[T3f80] [API] RegisterClipboardFormatW() -> 0xc008
+[T3f80] [API] RegisterClipboardFormatW() -> 0xc009
+[T3f80] [API] RegisterClipboardFormatW() -> 0xc00a
+[T3f80] [API] RegisterClipboardFormatW() -> 0xc00b
+[T3f80] [API] EnterCriticalSection(0x14028d560)
+[T3f80] [API] LeaveCriticalSection(0x14028d560)
+[T3f80] [API] CoInitialize() -> S_OK
+[T3f80] [API] EnterCriticalSection(0x14028d560)
+[T3f80] [API] LeaveCriticalSection(0x14028d560)
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c6ca90
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c6cab0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c6cad0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c70dc0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c70de0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c70e00
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c70e20
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c70e40
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c70e60
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c70e80
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c70ea0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c70ec0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c70ee0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c70f00
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c70f20
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c70f40
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c70f60
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c70f80
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c70fa0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c70fc0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c70fe0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c71000
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c71020
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c71040
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c71060
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c71080
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c710a0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c710c0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c710e0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c71100
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c71120
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c71140
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c71160
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c71180
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c711a0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c711c0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c711e0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c71200
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c71220
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c71240
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c71260
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c71280
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c712a0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c712c0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c712e0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c71300
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c71320
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c71340
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c71360
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c71380
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c713a0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c713c0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c713e0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c71400
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c71420
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c71440
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c71460
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c71480
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c714a0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c714c0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c714e0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c71500
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c71520
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c71540
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c71560
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c71580
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c715a0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c715c0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c715e0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c71600
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c71620
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c71640
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c71660
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c71680
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c716a0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c716c0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c716e0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c71700
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c71720
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c71740
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c71760
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c71780
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c717a0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c717c0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c717e0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c71800
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c71820
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c71840
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c71860
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c71880
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c718a0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c718c0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c718e0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c71900
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c71920
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c71940
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c71960
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c71980
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c719a0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c719c0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c719e0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c71a00
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c71a20
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c71a40
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c71a60
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c71a80
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c71aa0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c71ac0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c71ae0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c71b00
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c71b20
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c71b40
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c71b60
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c71b80
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c71ba0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c71bc0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c71be0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c71c00
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c71c20
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c71c40
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c71c60
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c71c80
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c71ca0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c71cc0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c71ce0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c71d00
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c71d20
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c71d40
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c71d60
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c71d80
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c71da0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c71dc0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c71de0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c71e00
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c71e20
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c71e40
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c71e60
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c71e80
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c71ea0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c71ec0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c71ee0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c71f00
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c71f20
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c71f40
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c71f60
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c71f80
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c71fa0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c71fc0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c71fe0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c72000
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c72020
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c72040
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c72060
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c72080
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c720a0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c720c0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c720e0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c72100
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c72120
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c72140
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c72160
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c72180
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c721a0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c721c0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c721e0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c72200
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c72220
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c72240
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c72260
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c72280
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c722a0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c722c0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c722e0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c72300
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c72320
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c72340
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c72360
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c72380
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c723a0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c723c0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c723e0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c72400
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c72420
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c72440
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c72460
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c72480
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c724a0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c724c0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c724e0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c72500
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c72520
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c72540
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c72560
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c72580
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c725a0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c725c0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c725e0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c72600
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c72620
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c72640
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c72660
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c72680
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c726a0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c726c0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c726e0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c72700
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c72720
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c72740
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c72760
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c72780
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c727a0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c727c0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c727e0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c72800
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c72820
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c72840
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c72860
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c72880
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c728a0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c728c0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c728e0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c72900
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c72920
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c72940
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c72960
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c72980
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c729a0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c729c0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c729e0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c72a00
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c72a20
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c72a40
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c72a60
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c72a80
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c72aa0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c72ac0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c72ae0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c72b00
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c72b20
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c72b40
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c72b60
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c72b80
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c72ba0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c72bc0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c72be0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c72c00
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c72c20
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c72c40
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c72c60
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c72c80
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c72ca0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c72cc0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c72ce0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c72d00
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c72d20
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c72d40
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c72d60
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c72d80
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c72da0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c72dc0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c72de0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c72e00
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c72e20
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c72e40
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c72e60
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c72e80
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c72ea0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c72ec0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c72ee0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c72f00
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c72f20
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c72f40
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c72f60
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c72f80
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c72fa0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c72fc0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c72fe0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c73000
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c73020
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c73040
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c73060
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c73080
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c730a0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c730c0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c730e0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c73100
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c73120
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c73140
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c73160
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c73180
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c731a0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c731c0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c731e0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c73200
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c73220
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c73240
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c73260
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c73280
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c732a0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c732c0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c732e0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c73300
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c73320
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c73340
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c73360
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c73380
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c733a0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c733c0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c733e0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c73400
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c73420
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c73440
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c73460
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c73480
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c734a0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c734c0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c734e0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c73500
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c73520
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c73540
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c73560
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c73580
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c735a0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c735c0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c735e0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c73600
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c73620
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c73640
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c73660
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c73680
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c736a0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c736c0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c736e0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c73700
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c73720
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c73740
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c73760
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c73780
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c737a0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c737c0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c737e0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c73800
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c73820
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c73840
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c73860
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c73880
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c738a0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c738c0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c738e0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c73900
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c73920
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c73940
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c73960
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c73980
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c739a0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c739c0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c739e0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c73a00
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c73a20
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c73a40
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c73a60
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c73a80
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c73aa0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c73ac0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c73ae0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c73b00
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c73b20
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c73b40
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c73b60
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c73b80
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c73ba0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c73bc0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c73be0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c73c00
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c73c20
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c73c40
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c73c60
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c73c80
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c73ca0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c73cc0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c73ce0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c73d00
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c73d20
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c73d40
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c73d60
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c73d80
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c73da0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c73dc0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c73de0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c73e00
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c73e20
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c73e40
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c73e60
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c73e80
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c73ea0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c73ec0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c73ee0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c73f00
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c73f20
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c73f40
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c73f60
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c73f80
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c73fa0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c73fc0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c73fe0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c74000
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c74020
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c74040
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c74060
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c74080
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c740a0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c740c0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c740e0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c74100
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c74120
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c74140
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c74160
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c74180
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c741a0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c741c0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c741e0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c74200
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c74220
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c74240
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c74260
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c74280
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c742a0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c742c0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c742e0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c74300
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c74320
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c74340
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c74360
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c74380
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c743a0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c743c0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c743e0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c74400
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c74420
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c74440
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c74460
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c74480
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c744a0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c744c0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c744e0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c74500
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c74520
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c74540
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c74560
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c74580
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c745a0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c745c0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c745e0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c74600
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c74620
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c74640
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c74660
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c74680
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c746a0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c746c0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c746e0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c74700
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c74720
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c74740
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c74760
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c74780
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c747a0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c747c0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c747e0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c74800
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c74820
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c74840
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c74860
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c74880
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c748a0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c748c0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c748e0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c74900
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c74920
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c74940
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c74960
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c74980
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c749a0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c749c0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c749e0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c74a00
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c74a20
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c74a40
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c74a60
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c74a80
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c74aa0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c74ac0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c74ae0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c74b00
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c74b20
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c74b40
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c74b60
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c74b80
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c74ba0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c74bc0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c74be0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c74c00
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c74c20
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c74c40
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c74c60
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c74c80
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c74ca0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c74cc0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c74ce0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c74d00
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c74d20
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c74d40
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c74d60
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c74d80
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c74da0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c74dc0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c74de0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c74e00
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c74e20
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c74e40
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c74e60
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c74e80
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c74ea0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c74ec0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c74ee0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c74f00
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c74f20
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c74f40
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c74f60
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c74f80
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c74fa0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c74fc0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c74fe0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c75000
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c75020
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c75040
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c75060
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c75080
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c750a0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c750c0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c750e0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c75100
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c75120
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c75140
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c75160
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c75180
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c751a0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c751c0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c751e0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c75200
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c75220
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c75240
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c75260
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c75280
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c752a0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c752c0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c752e0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c75300
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c75320
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c75340
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c75360
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c75380
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c753a0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c753c0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c753e0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c75400
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c75420
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c75440
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c75460
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c75480
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c754a0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c754c0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c754e0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c75500
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c75520
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c75540
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c75560
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c75580
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c755a0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c755c0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c755e0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c75600
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c75620
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c75640
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c75660
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c75680
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c756a0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c756c0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c756e0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c75700
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c75720
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c75740
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c75760
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c75780
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c757a0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c757c0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c757e0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c75800
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c75820
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c75840
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c75860
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c75880
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c758a0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c758c0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c758e0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c75900
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c75920
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c75940
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c75960
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c75980
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c759a0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c759c0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c759e0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c75a00
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c75a20
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c75a40
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c75a60
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c75a80
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c75aa0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c75ac0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c75ae0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c75b00
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c75b20
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c75b40
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c75b60
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c75b80
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c75ba0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c75bc0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c75be0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c75c00
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c75c20
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c75c40
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c75c60
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c75c80
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c75ca0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c75cc0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c75ce0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c75d00
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c75d20
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c75d40
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c75d60
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c75d80
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c75da0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c75dc0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c75de0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c75e00
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c75e20
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c75e40
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c75e60
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c75e80
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c75ea0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c75ec0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c75ee0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c75f00
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c75f20
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c75f40
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c75f60
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c75f80
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c75fa0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c75fc0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c75fe0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c76000
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c76020
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c76040
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c76060
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c76080
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c760a0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c760c0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c760e0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c76100
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c76120
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c76140
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c76160
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c76180
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c761a0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c761c0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c761e0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c76200
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c76220
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c76240
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c76260
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c76280
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c762a0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c762c0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c762e0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c76300
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c76320
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c76340
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c76360
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c76380
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c763a0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c763c0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c763e0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c76400
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c76420
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c76440
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c76460
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c76480
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c764a0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c764c0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c764e0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c76500
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c76520
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c76540
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c76560
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c76580
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c765a0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c765c0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c765e0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c76600
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c76620
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c76640
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c76660
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c76680
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c766a0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c766c0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c766e0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c76700
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c76720
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c76740
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c76760
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c76780
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c767a0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c767c0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c767e0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c76800
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c76820
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c76840
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c76860
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c76880
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c768a0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c768c0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c768e0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c76900
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c76920
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c76940
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c76960
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c76980
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c769a0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c769c0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c769e0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c76a00
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c76a20
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c76a40
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c76a60
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c76a80
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c76aa0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c76ac0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c76ae0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c76b00
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c76b20
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c76b40
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c76b60
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c76b80
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c76ba0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c76bc0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c76be0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c76c00
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c76c20
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c76c40
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c76c60
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c76c80
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c76ca0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c76cc0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c76ce0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c76d00
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c76d20
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c76d40
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c76d60
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c76d80
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c76da0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c76dc0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c76de0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c76e00
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c76e20
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c76e40
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c76e60
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c76e80
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c76ea0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c76ec0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c76ee0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c76f00
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c76f20
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c76f40
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c76f60
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c76f80
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c76fa0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c76fc0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c76fe0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c77000
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c77020
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c77040
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c77060
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c77080
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c770a0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c770c0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c770e0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c77100
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c77120
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c77140
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c77160
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c77180
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c771a0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c771c0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c771e0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c77200
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c77220
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c77240
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c77260
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c77280
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c772a0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c772c0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c772e0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c77300
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c77320
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c77340
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c77360
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c77380
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c773a0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c773c0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c773e0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c77400
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c77420
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c77440
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c77460
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c77480
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c774a0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c774c0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c774e0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c77500
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c77520
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c77540
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c77560
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c77580
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c775a0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c775c0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c775e0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c77600
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c77620
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c77640
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c77660
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c77680
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c776a0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c776c0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c776e0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c77700
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c77720
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c77740
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c77760
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c77780
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c777a0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c777c0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c777e0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c77800
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c77820
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c77840
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c77860
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c77880
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c778a0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c778c0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c778e0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c77900
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c77920
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c77940
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c77960
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c77980
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c779a0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c779c0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c779e0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c77a00
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c77a20
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c77a40
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c77a60
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c77a80
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c77aa0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c77ac0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c77ae0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c77b00
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c77b20
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c77b40
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c77b60
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c77b80
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c77ba0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c77bc0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c77be0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c77c00
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c77c20
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c77c40
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c77c60
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c77c80
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c77ca0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c77cc0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c77ce0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c77d00
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c77d20
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c77d40
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c77d60
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c77d80
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c77da0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c77dc0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c77de0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c77e00
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c77e20
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c77e40
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c77e60
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c77e80
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c77ea0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c77ec0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c77ee0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c77f00
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c77f20
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c77f40
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c77f60
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c77f80
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c77fa0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c77fc0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c77fe0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c78000
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c78020
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c78040
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c78060
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c78080
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c780a0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c780c0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c780e0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c78100
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c78120
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c78140
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c78160
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c78180
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c781a0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c781c0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c781e0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c78200
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c78220
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c78240
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c78260
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c78280
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c782a0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c782c0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c782e0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c78300
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c78320
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c78340
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c78360
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c78380
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c783a0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c783c0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c783e0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c78400
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c78420
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c78440
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c78460
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c78480
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c784a0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c784c0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c784e0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c78500
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c78520
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c78540
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c78560
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c78580
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c785a0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c785c0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c785e0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c78600
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c78620
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c78640
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c78660
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c78680
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c786a0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c786c0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c786e0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c78700
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c78720
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c78740
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c78760
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c78780
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c787a0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c787c0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c787e0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c78800
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c78820
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c78840
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c78860
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c78880
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c788a0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c788c0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c788e0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c78900
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c78920
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c78940
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c78960
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c78980
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c789a0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c789c0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c789e0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c78a00
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c78a20
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c78a40
+[T3f80] [API] EnterCriticalSection(0x14028d560)
+[T3f80] [API] LeaveCriticalSection(0x14028d560)
+[T3f80] [API] CoInitialize() -> S_OK
+[T3f80] [API] CoInitializeSecurity() -> S_OK (single headless apartment)
+[T3f80] [API] CoCreateInstance(clsid=0x1402353b8) -> REGDB_E_CLASSNOTFOUND (0x80040154)
+[T3f80] [API] EnterCriticalSection(0x14028d560)
+[T3f80] [API] LeaveCriticalSection(0x14028d560)
+[T3f80] [API] AcquireSRWLockExclusive(0x14028cb18)
+[T3f80] [API] ReleaseSRWLockExclusive(0x14028cb18)
+[T3f80] [API] EnterCriticalSection(0x14028d560)
+[T3f80] [API] LeaveCriticalSection(0x14028d560)
+[T3f80] [API] AcquireSRWLockExclusive(0x14028cb18)
+[T3f80] [API] ReleaseSRWLockExclusive(0x14028cb18)
+[T3f80] [API] WakeAllConditionVariable(0x14028cb10)
+[T3f80] [API] AcquireSRWLockExclusive(0x14028cb18)
+[T3f80] [API] ReleaseSRWLockExclusive(0x14028cb18)
+[T3f80] [API] EnterCriticalSection(0x14028d560)
+[T3f80] [API] LeaveCriticalSection(0x14028d560)
+[T3f80] [API] AcquireSRWLockExclusive(0x14028cb18)
+[T3f80] [API] ReleaseSRWLockExclusive(0x14028cb18)
+[T3f80] [API] WakeAllConditionVariable(0x14028cb10)
+[T3f80] [API] EnterCriticalSection(0x14028d560)
+[T3f80] [API] LeaveCriticalSection(0x14028d560)
+[T3f80] [API] GetStartupInfoW()
+[T3f80] [API] GetLastError() = 0
+[T3f80] [API] SetLastError(0)
+[T3f80] [API] LoadLibraryExW(flags=2048)
+[T3f80] [API] LoadLibraryA(kernel32)
+[T3f80] [API] SetLastError(126)
+[T3f80] [API] GetLastError() = 126
+[T3f80] [API] LoadLibraryExW(flags=2048)
+[T3f80] [API] LoadLibraryA(api-ms-win-core-string-l1-1-0)
+[T3f80] [API] GetProcAddress(module=0xdead0002, name=CompareStringEx)
+[T3f80] [API]   -> 0x201c2e0
+[T3f80] [API] GetProcAddress(module=0xdead0002, name=EnumSystemLocalesEx)
+[T3f80] [API]   -> NULL (not in dispatch table)
+[T3f80] [API] LoadLibraryExW(flags=2048)
+[T3f80] [API] LoadLibraryA(api-ms-win-core-datetime-l1-1-1)
+[T3f80] [API] GetProcAddress(module=0xdead0002, name=GetDateFormatEx)
+[T3f80] [API]   -> NULL (not in dispatch table)
+[T3f80] [API] GetProcAddress(module=0xdead0002, name=GetLocaleInfoEx)
+[T3f80] [API]   -> 0x2029d20
+[T3f80] [API] GetProcAddress(module=0xdead0002, name=GetTimeFormatEx)
+[T3f80] [API]   -> NULL (not in dispatch table)
+[T3f80] [API] GetProcAddress(module=0xdead0002, name=GetUserDefaultLocaleName)
+[T3f80] [API]   -> NULL (not in dispatch table)
+[T3f80] [API] GetProcAddress(module=0xdead0002, name=IsValidLocaleName)
+[T3f80] [API]   -> NULL (not in dispatch table)
+[T3f80] [API] LoadLibraryExW(flags=2048)
+[T3f80] [API] LoadLibraryA(api-ms-win-core-localization-obsolete-l1-2-0)
+[T3f80] [API] GetProcAddress(module=0xdead0002, name=LCIDToLocaleName)
+[T3f80] [API]   -> NULL (not in dispatch table)
+[T3f80] [API] GetProcAddress(module=0xdead0002, name=LocaleNameToLCID)
+[T3f80] [API]   -> NULL (not in dispatch table)
+[T3f80] [API] GetLastError() = 126
+[T3f80] [API] SetLastError(126)
+[T3f80] [API] EnterCriticalSection(0x14028d5b0)
+[T3f80] [API] LeaveCriticalSection(0x14028d5b0)
+[T3f80] [API] HeapAlloc(size=0x158, zero=1) = 0x3c78a60
+[T3f80] [API] EnterCriticalSection(0x14028d5b0)
+[T3f80] [API] GetLastError() = 126
+[T3f80] [API] SetLastError(126)
+[T3f80] [API] GetLastError() = 126
+[T3f80] [API] SetLastError(126)
+[T3f80] [API] GetLocaleInfoW(type=20001004)
+[T3f80] [API] GetLocaleInfoW(type=1001)
+[T3f80] [API] GetLocaleInfoW(type=1002)
+[T3f80] [API] GetLastError() = 126
+[T3f80] [API] SetLastError(126)
+[T3f80] [API] GetLastError() = 126
+[T3f80] [API] SetLastError(126)
+[T3f80] [API] HeapAlloc(size=0x16, zero=0) = 0x3c78bc0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c78be0
+[T3f80] [API] GetLastError() = 126
+[T3f80] [API] SetLastError(126)
+[T3f80] [API] GetLastError() = 126
+[T3f80] [API] SetLastError(126)
+[T3f80] [API] HeapAlloc(size=0x16, zero=0) = 0x3c78c00
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c78c20
+[T3f80] [API] MultiByteToWideChar(cp=1252, srclen=127, dstlen=0)
+[T3f80] [API] MultiByteToWideChar(cp=1252, srclen=127, dstlen=127)
+[T3f80] [API] HeapAlloc(size=0x4, zero=1) = 0x3c78c40
+[T3f80] [API] HeapAlloc(size=0x300, zero=1) = 0x3c78c60
+[T3f80] [API] HeapAlloc(size=0x180, zero=1) = 0x3c78f70
+[T3f80] [API] HeapAlloc(size=0x180, zero=1) = 0x3c79100
+[T3f80] [API] HeapAlloc(size=0x101, zero=1) = 0x3c6bf50
+[T3f80] [API] GetCPInfo(cp=1252)
+[T3f80] [API] HeapFree(0x3c78c40)
+[T3f80] [API] HeapFree(0x3c78c60)
+[T3f80] [API] HeapFree(0x3c78f70)
+[T3f80] [API] HeapFree(0x3c79100)
+[T3f80] [API] HeapFree(0x3c6bf50)
+[T3f80] [API] HeapFree(0x3c78c20)
+[T3f80] [API] HeapFree(0x3c78c00)
+[T3f80] [API] GetLastError() = 126
+[T3f80] [API] SetLastError(126)
+[T3f80] [API] GetLastError() = 126
+[T3f80] [API] SetLastError(126)
+[T3f80] [API] HeapAlloc(size=0x16, zero=0) = 0x3c78c00
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c78c20
+[T3f80] [API] HeapAlloc(size=0x98, zero=1) = 0x3c6a670
+[T3f80] [API] HeapAlloc(size=0x4, zero=1) = 0x3c78c40
+[T3f80] [API] HeapAlloc(size=0x4, zero=1) = 0x3c79290
+[T3f80] [API] GetLocaleInfoW(type=15)
+[T3f80] [API] SetLastError(122)
+[T3f80] [API] GetLastError() = 122
+[T3f80] [API] GetLocaleInfoW(type=15)
+[T3f80] [API] SetLastError(122)
+[T3f80] [API] GetLocaleInfoW(type=14)
+[T3f80] [API] SetLastError(122)
+[T3f80] [API] GetLastError() = 122
+[T3f80] [API] GetLocaleInfoW(type=14)
+[T3f80] [API] SetLastError(122)
+[T3f80] [API] GetLocaleInfoW(type=16)
+[T3f80] [API] SetLastError(122)
+[T3f80] [API] GetLastError() = 122
+[T3f80] [API] GetLocaleInfoW(type=16)
+[T3f80] [API] SetLastError(122)
+[T3f80] [API] GetLocaleInfoW(type=17)
+[T3f80] [API] SetLastError(122)
+[T3f80] [API] GetLastError() = 122
+[T3f80] [API] GetLocaleInfoW(type=17)
+[T3f80] [API] SetLastError(122)
+[T3f80] [API] GetLocaleInfoW(type=18)
+[T3f80] [API] SetLastError(122)
+[T3f80] [API] GetLastError() = 122
+[T3f80] [API] GetLocaleInfoW(type=18)
+[T3f80] [API] SetLastError(122)
+[T3f80] [API] GetLocaleInfoW(type=50)
+[T3f80] [API] SetLastError(122)
+[T3f80] [API] GetLastError() = 122
+[T3f80] [API] GetLocaleInfoW(type=50)
+[T3f80] [API] SetLastError(122)
+[T3f80] [API] GetLocaleInfoW(type=51)
+[T3f80] [API] SetLastError(122)
+[T3f80] [API] GetLastError() = 122
+[T3f80] [API] GetLocaleInfoW(type=51)
+[T3f80] [API] SetLastError(122)
+[T3f80] [API] GetLocaleInfoW(type=2000001a)
+[T3f80] [API] GetLocaleInfoW(type=20000019)
+[T3f80] [API] GetLocaleInfoW(type=20000054)
+[T3f80] [API] GetLocaleInfoW(type=20000055)
+[T3f80] [API] GetLocaleInfoW(type=20000056)
+[T3f80] [API] GetLocaleInfoW(type=20000057)
+[T3f80] [API] GetLocaleInfoW(type=20000052)
+[T3f80] [API] GetLocaleInfoW(type=20000053)
+[T3f80] [API] GetLocaleInfoW(type=15)
+[T3f80] [API] SetLastError(122)
+[T3f80] [API] GetLocaleInfoW(type=14)
+[T3f80] [API] SetLastError(122)
+[T3f80] [API] GetLocaleInfoW(type=16)
+[T3f80] [API] SetLastError(122)
+[T3f80] [API] GetLocaleInfoW(type=17)
+[T3f80] [API] SetLastError(122)
+[T3f80] [API] GetLocaleInfoW(type=50)
+[T3f80] [API] SetLastError(122)
+[T3f80] [API] GetLocaleInfoW(type=51)
+[T3f80] [API] SetLastError(122)
+[T3f80] [API] HeapFree(0x3c6a670)
+[T3f80] [API] HeapFree(0x3c78c40)
+[T3f80] [API] HeapFree(0x3c79290)
+[T3f80] [API] HeapFree(0x3c78c20)
+[T3f80] [API] HeapFree(0x3c78c00)
+[T3f80] [API] GetLastError() = 122
+[T3f80] [API] SetLastError(122)
+[T3f80] [API] GetLastError() = 122
+[T3f80] [API] SetLastError(122)
+[T3f80] [API] HeapAlloc(size=0x16, zero=0) = 0x3c78c00
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c78c20
+[T3f80] [API] HeapAlloc(size=0x98, zero=1) = 0x3c6a670
+[T3f80] [API] HeapAlloc(size=0x4, zero=0) = 0x3c79290
+[T3f80] [API] HeapAlloc(size=0x4, zero=0) = 0x3c78c40
+[T3f80] [API] GetLocaleInfoW(type=e)
+[T3f80] [API] SetLastError(122)
+[T3f80] [API] GetLastError() = 122
+[T3f80] [API] GetLocaleInfoW(type=e)
+[T3f80] [API] SetLastError(122)
+[T3f80] [API] GetLocaleInfoW(type=f)
+[T3f80] [API] SetLastError(122)
+[T3f80] [API] GetLastError() = 122
+[T3f80] [API] GetLocaleInfoW(type=f)
+[T3f80] [API] SetLastError(122)
+[T3f80] [API] GetLocaleInfoW(type=10)
+[T3f80] [API] SetLastError(122)
+[T3f80] [API] GetLastError() = 122
+[T3f80] [API] GetLocaleInfoW(type=10)
+[T3f80] [API] SetLastError(122)
+[T3f80] [API] GetLocaleInfoW(type=e)
+[T3f80] [API] SetLastError(122)
+[T3f80] [API] GetLocaleInfoW(type=f)
+[T3f80] [API] SetLastError(122)
+[T3f80] [API] HeapFree(0x3c6a670)
+[T3f80] [API] HeapFree(0x3c78c40)
+[T3f80] [API] HeapFree(0x3c79290)
+[T3f80] [API] HeapFree(0x3c78c20)
+[T3f80] [API] HeapFree(0x3c78c00)
+[T3f80] [API] GetLastError() = 122
+[T3f80] [API] SetLastError(122)
+[T3f80] [API] GetLastError() = 122
+[T3f80] [API] SetLastError(122)
+[T3f80] [API] HeapAlloc(size=0x16, zero=0) = 0x3c78c00
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c78c20
+[T3f80] [API] HeapAlloc(size=0x2c0, zero=1) = 0x3c792b0
+[T3f80] [API] HeapAlloc(size=0x2, zero=0) = 0x3c79290
+[T3f80] [API] GetLocaleInfoW(type=31)
+[T3f80] [API] SetLastError(122)
+[T3f80] [API] GetLastError() = 122
+[T3f80] [API] GetLocaleInfoW(type=31)
+[T3f80] [API] SetLastError(122)
+[T3f80] [API] GetLocaleInfoW(type=2a)
+[T3f80] [API] SetLastError(122)
+[T3f80] [API] GetLastError() = 122
+[T3f80] [API] GetLocaleInfoW(type=2a)
+[T3f80] [API] SetLastError(122)
+[T3f80] [API] GetLocaleInfoW(type=31)
+[T3f80] [API] SetLastError(122)
+[T3f80] [API] GetLocaleInfoW(type=2a)
+[T3f80] [API] SetLastError(122)
+[T3f80] [API] GetLocaleInfoW(type=32)
+[T3f80] [API] SetLastError(122)
+[T3f80] [API] GetLastError() = 122
+[T3f80] [API] GetLocaleInfoW(type=32)
+[T3f80] [API] SetLastError(122)
+[T3f80] [API] GetLocaleInfoW(type=2b)
+[T3f80] [API] SetLastError(122)
+[T3f80] [API] GetLastError() = 122
+[T3f80] [API] GetLocaleInfoW(type=2b)
+[T3f80] [API] SetLastError(122)
+[T3f80] [API] GetLocaleInfoW(type=32)
+[T3f80] [API] SetLastError(122)
+[T3f80] [API] GetLocaleInfoW(type=2b)
+[T3f80] [API] SetLastError(122)
+[T3f80] [API] GetLocaleInfoW(type=33)
+[T3f80] [API] SetLastError(122)
+[T3f80] [API] GetLastError() = 122
+[T3f80] [API] GetLocaleInfoW(type=33)
+[T3f80] [API] SetLastError(122)
+[T3f80] [API] GetLocaleInfoW(type=2c)
+[T3f80] [API] SetLastError(122)
+[T3f80] [API] GetLastError() = 122
+[T3f80] [API] GetLocaleInfoW(type=2c)
+[T3f80] [API] SetLastError(122)
+[T3f80] [API] GetLocaleInfoW(type=33)
+[T3f80] [API] SetLastError(122)
+[T3f80] [API] GetLocaleInfoW(type=2c)
+[T3f80] [API] SetLastError(122)
+[T3f80] [API] GetLocaleInfoW(type=34)
+[T3f80] [API] SetLastError(122)
+[T3f80] [API] GetLastError() = 122
+[T3f80] [API] GetLocaleInfoW(type=34)
+[T3f80] [API] SetLastError(122)
+[T3f80] [API] GetLocaleInfoW(type=2d)
+[T3f80] [API] SetLastError(122)
+[T3f80] [API] GetLastError() = 122
+[T3f80] [API] GetLocaleInfoW(type=2d)
+[T3f80] [API] SetLastError(122)
+[T3f80] [API] GetLocaleInfoW(type=34)
+[T3f80] [API] SetLastError(122)
+[T3f80] [API] GetLocaleInfoW(type=2d)
+[T3f80] [API] SetLastError(122)
+[T3f80] [API] GetLocaleInfoW(type=35)
+[T3f80] [API] SetLastError(122)
+[T3f80] [API] GetLastError() = 122
+[T3f80] [API] GetLocaleInfoW(type=35)
+[T3f80] [API] SetLastError(122)
+[T3f80] [API] GetLocaleInfoW(type=2e)
+[T3f80] [API] SetLastError(122)
+[T3f80] [API] GetLastError() = 122
+[T3f80] [API] GetLocaleInfoW(type=2e)
+[T3f80] [API] SetLastError(122)
+[T3f80] [API] GetLocaleInfoW(type=35)
+[T3f80] [API] SetLastError(122)
+[T3f80] [API] GetLocaleInfoW(type=2e)
+[T3f80] [API] SetLastError(122)
+[T3f80] [API] GetLocaleInfoW(type=36)
+[T3f80] [API] SetLastError(122)
+[T3f80] [API] GetLastError() = 122
+[T3f80] [API] GetLocaleInfoW(type=36)
+[T3f80] [API] SetLastError(122)
+[T3f80] [API] GetLocaleInfoW(type=2f)
+[T3f80] [API] SetLastError(122)
+[T3f80] [API] GetLastError() = 122
+[T3f80] [API] GetLocaleInfoW(type=2f)
+[T3f80] [API] SetLastError(122)
+[T3f80] [API] GetLocaleInfoW(type=36)
+[T3f80] [API] SetLastError(122)
+[T3f80] [API] GetLocaleInfoW(type=2f)
+[T3f80] [API] SetLastError(122)
+[T3f80] [API] GetLocaleInfoW(type=37)
+[T3f80] [API] SetLastError(122)
+[T3f80] [API] GetLastError() = 122
+[T3f80] [API] GetLocaleInfoW(type=37)
+[T3f80] [API] SetLastError(122)
+[T3f80] [API] GetLocaleInfoW(type=30)
+[T3f80] [API] SetLastError(122)
+[T3f80] [API] GetLastError() = 122
+[T3f80] [API] GetLocaleInfoW(type=30)
+[T3f80] [API] SetLastError(122)
+[T3f80] [API] GetLocaleInfoW(type=37)
+[T3f80] [API] SetLastError(122)
+[T3f80] [API] GetLocaleInfoW(type=30)
+[T3f80] [API] SetLastError(122)
+[T3f80] [API] GetLocaleInfoW(type=44)
+[T3f80] [API] SetLastError(122)
+[T3f80] [API] GetLastError() = 122
+[T3f80] [API] GetLocaleInfoW(type=44)
+[T3f80] [API] SetLastError(122)
+[T3f80] [API] GetLocaleInfoW(type=38)
+[T3f80] [API] SetLastError(122)
+[T3f80] [API] GetLastError() = 122
+[T3f80] [API] GetLocaleInfoW(type=38)
+[T3f80] [API] SetLastError(122)
+[T3f80] [API] GetLocaleInfoW(type=44)
+[T3f80] [API] SetLastError(122)
+[T3f80] [API] GetLocaleInfoW(type=38)
+[T3f80] [API] SetLastError(122)
+[T3f80] [API] GetLocaleInfoW(type=45)
+[T3f80] [API] SetLastError(122)
+[T3f80] [API] GetLastError() = 122
+[T3f80] [API] GetLocaleInfoW(type=45)
+[T3f80] [API] SetLastError(122)
+[T3f80] [API] GetLocaleInfoW(type=39)
+[T3f80] [API] SetLastError(122)
+[T3f80] [API] GetLastError() = 122
+[T3f80] [API] GetLocaleInfoW(type=39)
+[T3f80] [API] SetLastError(122)
+[T3f80] [API] GetLocaleInfoW(type=45)
+[T3f80] [API] SetLastError(122)
+[T3f80] [API] GetLocaleInfoW(type=39)
+[T3f80] [API] SetLastError(122)
+[T3f80] [API] GetLocaleInfoW(type=46)
+[T3f80] [API] SetLastError(122)
+[T3f80] [API] GetLastError() = 122
+[T3f80] [API] GetLocaleInfoW(type=46)
+[T3f80] [API] SetLastError(122)
+[T3f80] [API] GetLocaleInfoW(type=3a)
+[T3f80] [API] SetLastError(122)
+[T3f80] [API] GetLastError() = 122
+[T3f80] [API] GetLocaleInfoW(type=3a)
+[T3f80] [API] SetLastError(122)
+[T3f80] [API] GetLocaleInfoW(type=46)
+[T3f80] [API] SetLastError(122)
+[T3f80] [API] GetLocaleInfoW(type=3a)
+[T3f80] [API] SetLastError(122)
+[T3f80] [API] GetLocaleInfoW(type=47)
+[T3f80] [API] SetLastError(122)
+[T3f80] [API] GetLastError() = 122
+[T3f80] [API] GetLocaleInfoW(type=47)
+[T3f80] [API] SetLastError(122)
+[T3f80] [API] GetLocaleInfoW(type=3b)
+[T3f80] [API] SetLastError(122)
+[T3f80] [API] GetLastError() = 122
+[T3f80] [API] GetLocaleInfoW(type=3b)
+[T3f80] [API] SetLastError(122)
+[T3f80] [API] GetLocaleInfoW(type=47)
+[T3f80] [API] SetLastError(122)
+[T3f80] [API] GetLocaleInfoW(type=3b)
+[T3f80] [API] SetLastError(122)
+[T3f80] [API] GetLocaleInfoW(type=48)
+[T3f80] [API] SetLastError(122)
+[T3f80] [API] GetLastError() = 122
+[T3f80] [API] GetLocaleInfoW(type=48)
+[T3f80] [API] SetLastError(122)
+[T3f80] [API] GetLocaleInfoW(type=3c)
+[T3f80] [API] SetLastError(122)
+[T3f80] [API] GetLastError() = 122
+[T3f80] [API] GetLocaleInfoW(type=3c)
+[T3f80] [API] SetLastError(122)
+[T3f80] [API] GetLocaleInfoW(type=48)
+[T3f80] [API] SetLastError(122)
+[T3f80] [API] GetLocaleInfoW(type=3c)
+[T3f80] [API] SetLastError(122)
+[T3f80] [API] GetLocaleInfoW(type=49)
+[T3f80] [API] SetLastError(122)
+[T3f80] [API] GetLastError() = 122
+[T3f80] [API] GetLocaleInfoW(type=49)
+[T3f80] [API] SetLastError(122)
+[T3f80] [API] GetLocaleInfoW(type=3d)
+[T3f80] [API] SetLastError(122)
+[T3f80] [API] GetLastError() = 122
+[T3f80] [API] GetLocaleInfoW(type=3d)
+[T3f80] [API] SetLastError(122)
+[T3f80] [API] GetLocaleInfoW(type=49)
+[T3f80] [API] SetLastError(122)
+[T3f80] [API] GetLocaleInfoW(type=3d)
+[T3f80] [API] SetLastError(122)
+[T3f80] [API] GetLocaleInfoW(type=4a)
+[T3f80] [API] SetLastError(122)
+[T3f80] [API] GetLastError() = 122
+[T3f80] [API] GetLocaleInfoW(type=4a)
+[T3f80] [API] SetLastError(122)
+[T3f80] [API] GetLocaleInfoW(type=3e)
+[T3f80] [API] SetLastError(122)
+[T3f80] [API] GetLastError() = 122
+[T3f80] [API] GetLocaleInfoW(type=3e)
+[T3f80] [API] SetLastError(122)
+[T3f80] [API] GetLocaleInfoW(type=4a)
+[T3f80] [API] SetLastError(122)
+[T3f80] [API] GetLocaleInfoW(type=3e)
+[T3f80] [API] SetLastError(122)
+[T3f80] [API] GetLocaleInfoW(type=4b)
+[T3f80] [API] SetLastError(122)
+[T3f80] [API] GetLastError() = 122
+[T3f80] [API] GetLocaleInfoW(type=4b)
+[T3f80] [API] SetLastError(122)
+[T3f80] [API] GetLocaleInfoW(type=3f)
+[T3f80] [API] SetLastError(122)
+[T3f80] [API] GetLastError() = 122
+[T3f80] [API] GetLocaleInfoW(type=3f)
+[T3f80] [API] SetLastError(122)
+[T3f80] [API] GetLocaleInfoW(type=4b)
+[T3f80] [API] SetLastError(122)
+[T3f80] [API] GetLocaleInfoW(type=3f)
+[T3f80] [API] SetLastError(122)
+[T3f80] [API] GetLocaleInfoW(type=4c)
+[T3f80] [API] SetLastError(122)
+[T3f80] [API] GetLastError() = 122
+[T3f80] [API] GetLocaleInfoW(type=4c)
+[T3f80] [API] SetLastError(122)
+[T3f80] [API] GetLocaleInfoW(type=40)
+[T3f80] [API] SetLastError(122)
+[T3f80] [API] GetLastError() = 122
+[T3f80] [API] GetLocaleInfoW(type=40)
+[T3f80] [API] SetLastError(122)
+[T3f80] [API] GetLocaleInfoW(type=4c)
+[T3f80] [API] SetLastError(122)
+[T3f80] [API] GetLocaleInfoW(type=40)
+[T3f80] [API] SetLastError(122)
+[T3f80] [API] GetLocaleInfoW(type=4d)
+[T3f80] [API] SetLastError(122)
+[T3f80] [API] GetLastError() = 122
+[T3f80] [API] GetLocaleInfoW(type=4d)
+[T3f80] [API] SetLastError(122)
+[T3f80] [API] GetLocaleInfoW(type=41)
+[T3f80] [API] SetLastError(122)
+[T3f80] [API] GetLastError() = 122
+[T3f80] [API] GetLocaleInfoW(type=41)
+[T3f80] [API] SetLastError(122)
+[T3f80] [API] GetLocaleInfoW(type=4d)
+[T3f80] [API] SetLastError(122)
+[T3f80] [API] GetLocaleInfoW(type=41)
+[T3f80] [API] SetLastError(122)
+[T3f80] [API] GetLocaleInfoW(type=4e)
+[T3f80] [API] SetLastError(122)
+[T3f80] [API] GetLastError() = 122
+[T3f80] [API] GetLocaleInfoW(type=4e)
+[T3f80] [API] SetLastError(122)
+[T3f80] [API] GetLocaleInfoW(type=42)
+[T3f80] [API] SetLastError(122)
+[T3f80] [API] GetLastError() = 122
+[T3f80] [API] GetLocaleInfoW(type=42)
+[T3f80] [API] SetLastError(122)
+[T3f80] [API] GetLocaleInfoW(type=4e)
+[T3f80] [API] SetLastError(122)
+[T3f80] [API] GetLocaleInfoW(type=42)
+[T3f80] [API] SetLastError(122)
+[T3f80] [API] GetLocaleInfoW(type=4f)
+[T3f80] [API] SetLastError(122)
+[T3f80] [API] GetLastError() = 122
+[T3f80] [API] GetLocaleInfoW(type=4f)
+[T3f80] [API] SetLastError(122)
+[T3f80] [API] GetLocaleInfoW(type=43)
+[T3f80] [API] SetLastError(122)
+[T3f80] [API] GetLastError() = 122
+[T3f80] [API] GetLocaleInfoW(type=43)
+[T3f80] [API] SetLastError(122)
+[T3f80] [API] GetLocaleInfoW(type=4f)
+[T3f80] [API] SetLastError(122)
+[T3f80] [API] GetLocaleInfoW(type=43)
+[T3f80] [API] SetLastError(122)
+[T3f80] [API] GetLocaleInfoW(type=28)
+[T3f80] [API] SetLastError(122)
+[T3f80] [API] GetLastError() = 122
+[T3f80] [API] GetLocaleInfoW(type=28)
+[T3f80] [API] SetLastError(122)
+[T3f80] [API] GetLocaleInfoW(type=29)
+[T3f80] [API] SetLastError(122)
+[T3f80] [API] GetLastError() = 122
+[T3f80] [API] GetLocaleInfoW(type=29)
+[T3f80] [API] SetLastError(122)
+[T3f80] [API] GetLocaleInfoW(type=28)
+[T3f80] [API] SetLastError(122)
+[T3f80] [API] GetLocaleInfoW(type=29)
+[T3f80] [API] SetLastError(122)
+[T3f80] [API] GetLocaleInfoW(type=1f)
+[T3f80] [API] SetLastError(122)
+[T3f80] [API] GetLastError() = 122
+[T3f80] [API] GetLocaleInfoW(type=1f)
+[T3f80] [API] SetLastError(122)
+[T3f80] [API] GetLocaleInfoW(type=20)
+[T3f80] [API] SetLastError(122)
+[T3f80] [API] GetLastError() = 122
+[T3f80] [API] GetLocaleInfoW(type=20)
+[T3f80] [API] SetLastError(122)
+[T3f80] [API] GetLocaleInfoW(type=1003)
+[T3f80] [API] SetLastError(122)
+[T3f80] [API] GetLastError() = 122
+[T3f80] [API] GetLocaleInfoW(type=1003)
+[T3f80] [API] SetLastError(122)
+[T3f80] [API] GetLocaleInfoW(type=20001009)
+[T3f80] [API] GetLocaleInfoW(type=1f)
+[T3f80] [API] SetLastError(122)
+[T3f80] [API] GetLocaleInfoW(type=20)
+[T3f80] [API] SetLastError(122)
+[T3f80] [API] GetLocaleInfoW(type=1003)
+[T3f80] [API] SetLastError(122)
+[T3f80] [API] HeapFree(0x3c79290)
+[T3f80] [API] HeapFree(0x3c792b0)
+[T3f80] [API] HeapFree(0x3c78c20)
+[T3f80] [API] HeapFree(0x3c78c00)
+[T3f80] [API] HeapAlloc(size=0x6a6, zero=0) = 0x3c79580
+[T3f80] [API] LeaveCriticalSection(0x14028d5b0)
+[T3f80] [API] GetModuleHandleW()
+[T3f80] [API] GetProcAddress(module=0xdead0001, name=SetDefaultDllDirectories)
+[T3f80] [API]   -> 0x202f630
+[T3f80] [API] LoadLibraryExW(flags=2048)
+[T3f80] [API] LoadLibraryA(MSFTEDIT.DLL)
+[T3f80] [API] SetLastError(126)
+[T3f80] [API] IsWow64Process -> TRUE, *Wow64Process=FALSE (native x64)
+[T3f80] [API] GetCommandLineW()
+[T3f80] [API] HeapAlloc(size=0x1a, zero=0) = 0x3c6ca20
+[T3f80] [API] HeapAlloc(size=0x30, zero=0) = 0x3c79c30
+[T3f80] [API] HeapReAlloc(size=0x10) = 0x3c79c30
+[T3f80] [API] GetLastError() = 126
+[T3f80] [API] SetLastError(126)
+[T3f80] [API] GetLastError() = 126
+[T3f80] [API] SetLastError(126)
+[T3f80] [API] RegOpenKeyExW() -> ERROR_FILE_NOT_FOUND
+[T3f80] [API] SetLastError(2)
+[T3f80] [API] RegOpenKeyExW() -> ERROR_FILE_NOT_FOUND
+[T3f80] [API] SetLastError(2)
+[T3f80] [API] RegOpenKeyExW() -> ERROR_FILE_NOT_FOUND
+[T3f80] [API] SetLastError(2)
+[T3f80] [API] RegOpenKeyExW() -> ERROR_FILE_NOT_FOUND
+[T3f80] [API] SetLastError(2)
+[T3f80] [API] RegOpenKeyExW() -> ERROR_FILE_NOT_FOUND
+[T3f80] [API] SetLastError(2)
+[T3f80] [API] GetStdHandle(-11) = 0x5
+[T3f80] [API] GlobalAlloc(flags=64, bytes=0x3e8) = 0x3c79c70
+[T3f80] [API] LoadLibraryExW(flags=2048)
+[T3f80] [API] LoadLibraryA(Riched32.dll)
+[T3f80] [API] SetLastError(126)
+[T3f80] [API] DialogBoxIndirectParamW(proc=0x14001c5e0, init=5371085328)
+[T3f80] [API] Dialog: WM_INITDIALOG proc=0x14001c5e0
+[T3f80] [API] HeapAlloc(size=0x257a, zero=0) = 0x3c7a060
+[T3f80] [API] SetWindowTextW -> '24 wchars' TRUE
+[T3f80] [API] GetDlgItem(id=500) -> NULL (no such control)
+[T3f80] [API] SendMessageW(hwnd=(nil) WM_?) -> 0
+[T3f80] [API] GetDlgItem(id=500) -> NULL (no such control)
+[T3f80] [API] SendMessageW(hwnd=(nil) WM_?) -> 0
+[T3f80] [API] HeapFree(0x3c7a060)
+[T3f80] [API] Dialog: WM_COMMAND(IDOK) proc=0x14001c5e0
+[T3f80] [API] EndDialog(result=1)
+[T3f80] [API] SetLastError(5)
+[T3f80] [API] AllocateAndInitializeSid(count=1) -> SID 0x3c79c50
+[T3f80] [API] HeapAlloc(size=0x1, zero=0) = 0x3c78c00
+[T3f80] [API] GetTokenInformation(class=1) -> FALSE (ERROR_INVALID_PARAMETER)
+[T3f80] [API] SetLastError(87)
+[T3f80] [API] FreeSid(0x3c79c50) -> NULL
+[T3f80] [API] CloseHandle(handle=0x4)
+[T3f80] [API] HeapFree(0x3c78c00)
+[T3f80] [API] WSAStartup(1)
+[T3f80] [API] SetLastError(2)
+[T3f80] [API] GetModuleHandleW()
+[T3f80] [API] GetProcAddress(module=0xdead0008, name=RtlGetVersion)
+[T3f80] [API]   -> 0x2034530
+[T3f80] [API] RtlGetVersion() -> 10.0.19045 (Win10 22H2)
+[T3f80] [API] SetLastError(2)
+[T3f80] [API] GetSystemInfo()
+[T3f80] [API] CoInitialize() -> S_OK
+[T3f80] [API] HeapAlloc(size=0x18, zero=0) = 0x3c78c00
+[T3f80] [API] HeapAlloc(size=0x18, zero=0) = 0x3c78c20
+[T3f80] [API] HeapAlloc(size=0x18, zero=0) = 0x3c79290
+[T3f80] [API] SysAllocStringByteLen(len=42) -> 0x3c7a090
+[T3f80] [API] HeapFree(0x3c78c20)
+[T3f80] [API] HeapFree(0x3c78c00)
+[T3f80] [API] SetLastError(5)
