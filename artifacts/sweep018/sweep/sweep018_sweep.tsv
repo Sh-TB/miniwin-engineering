@@ -1,0 +1,95 @@
+program	exename	run	exit	stub_calls	unresolved	stdout_bytes	stderr_bytes
+adexplorer64	NO-EXE	-	-	-	-	-	-
+autoruns64	Autoruns64.exe	1	0	0
+0	169	117	6461
+autoruns64	Autoruns64.exe	2	0	0
+0	169	117	6461
+autoruns64	Autoruns64.exe	3	0	0
+0	169	117	6461
+bginfo64	Bginfo64.exe	1	0	2	336	113	12657
+bginfo64	Bginfo64.exe	2	0	2	336	113	12657
+bginfo64	Bginfo64.exe	3	0	2	336	113	12657
+coreinfoex64	Coreinfo64.exe	1	0	0
+0	0
+0	16189	272
+coreinfoex64	Coreinfo64.exe	2	0	0
+0	0
+0	16189	272
+coreinfoex64	Coreinfo64.exe	3	0	0
+0	0
+0	16189	272
+cports	cports.exe	1	0	0
+0	70	109	2676
+cports	cports.exe	2	0	0
+0	70	109	2676
+cports	cports.exe	3	0	0
+0	70	109	2676
+diskmon64	Diskmon64.exe	1	0	0
+0	34	115	1356
+diskmon64	Diskmon64.exe	2	0	0
+0	34	115	1356
+diskmon64	Diskmon64.exe	3	0	0
+0	34	115	1356
+pageant	pageant.exe	1	1	0
+0	42	111	1960
+pageant	pageant.exe	2	1	0
+0	42	111	1960
+pageant	pageant.exe	3	1	0
+0	42	111	1960
+procexp64	procexp64.exe	1	139	0
+0	305	115	13495
+procexp64	procexp64.exe	2	139	0
+0	305	115	13495
+procexp64	procexp64.exe	3	139	0
+0	305	115	13495
+procmon64	Procmon64.exe	1	1	0
+0	166	115	6404
+procmon64	Procmon64.exe	2	1	0
+0	166	115	6404
+procmon64	Procmon64.exe	3	1	0
+0	166	115	6404
+produkey	ProduKey.exe	1	0	0
+0	68	113	2648
+produkey	ProduKey.exe	2	0	0
+0	68	113	2648
+produkey	ProduKey.exe	3	0	0
+0	68	113	2648
+putty	putty.exe	1	1	0
+0	108	107	4267
+putty	putty.exe	2	1	0
+0	108	107	4267
+putty	putty.exe	3	1	0
+0	108	107	4267
+puttygen	puttygen.exe	1	139	0
+0	30	113	2309
+puttygen	puttygen.exe	2	139	0
+0	30	113	2309
+puttygen	puttygen.exe	3	139	0
+0	30	113	2309
+rammap64	RAMMap64.exe	1	0	0
+0	49	113	1878
+rammap64	RAMMap64.exe	2	0	0
+0	49	113	1878
+rammap64	RAMMap64.exe	3	0	0
+0	49	113	1878
+searchmyfiles	SearchMyFiles.exe	1	139	0
+0	69	123	3718
+searchmyfiles	SearchMyFiles.exe	2	139	0
+0	69	123	3718
+searchmyfiles	SearchMyFiles.exe	3	139	0
+0	69	123	3718
+winmergeu	WinMergeU.exe	1	139	0
+0	348	115	14264
+winmergeu	WinMergeU.exe	2	139	0
+0	348	115	14264
+winmergeu	WinMergeU.exe	3	139	0
+0	348	115	14264
+zoomit64	ZoomIt64.exe	1	1	0
+0	0
+0	113	261
+zoomit64	ZoomIt64.exe	2	1	0
+0	0
+0	113	261
+zoomit64	ZoomIt64.exe	3	1	0
+0	0
+0	113	261

@@ -10321,7 +10321,7 @@ __attribute__((ms_abi)) void* mw_FindWindowA(const char* cls, const char* title)
 #define MW_GUI_ATOM      0xC001u           /* registered-class identity */
 #define MW_GUI_HWND      ((void*)0x00010001) /* first window identity */
 #define MW_CHILD_BASE   0x00030000u
-#define MW_CHILD_MAX    64
+#define MW_CHILD_MAX    512 /* SW-803: 64 overflowed on NirSoft GUIs (produkey: status bar + toolbar + ~50 controls + our children) */
 #define MWWM_SETTEXT    0x000Cu
 #define MWWM_GETTEXT    0x000Du
 #define MWWM_GETTEXTLEN 0x000Eu
@@ -10415,6 +10415,7 @@ __attribute__((ms_abi)) long long mw_SendMessageW(void* h, uint32_t msg, uintptr
         return (src && mw_is_hwnd(h)) ? (long long)mw_w16len(src) : 0;
     }
     if (s >= 0 && msg == MW_BM_GETCHECK) return g_child[s].checked;
+    if (s >= 0 && msg == 0x404u) return 1; /* SW-803..806: SB_SETPARTS -> TRUE */
     if (h == MW_GUI_HWND && g_wndproc_fwd) {
         long long r = g_wndproc_fwd(h, msg, wp, lp);
         MW_TRACE("SendMessageW(%s wp=0x%llx) -> wndproc -> %lld",
@@ -10452,6 +10453,7 @@ __attribute__((ms_abi)) long mw_SendMessageA(void* h, uint32_t msg, uintptr_t wp
         return (src && mw_is_hwnd(h)) ? (long)mw_w16len(src) : 0;
     }
     if (s >= 0 && msg == MW_BM_GETCHECK) return g_child[s].checked;
+    if (s >= 0 && msg == 0x404u) return 1; /* SW-803..806: SB_SETPARTS -> TRUE */
     if (h == MW_GUI_HWND && g_wndproc_fwd)
         return (long)g_wndproc_fwd(h, msg, wp, (long long)lp);
     return 0;
@@ -10839,6 +10841,7 @@ static void mw_gui_store_window(int w, int h);
 static void mw_gui_set_quit(int code);
 static void mw_gui_send_destroy(void* hwnd);
 static void mw_gui_send_create(void); /* SWEEP-006: real WM_CREATE on CreateWindowEx */
+static void* g_create_param; /* SW-802..806: CreateWindowEx lpParam -> CREATESTRUCT.lpCreateParams */
 static void mw_gui_request_paint(void);
 static int  mw_gui_pump_getmsg(void* msg, void* hwnd, const char* api);
 static long long mw_gui_dispatch_msg(const void* msg);
@@ -10896,13 +10899,17 @@ static int mw_sysclass_w(const void* cls) {
     if (v && v < 0x10000u) {
         if ((v & 0xFF00u) == 0x8000u) {
             uint32_t c = v & 0xFFu;
-            if (c >= 0x80 && c <= 0x85) return (int)c;
+            if (c >= 0x80 && c <= 0x87) return (int)c;
         }
         return 0;
     }
     static const struct { const char* n; int c; } t[] = {
         {"button", 0x80}, {"edit", 0x81}, {"static", 0x82},
         {"listbox", 0x83}, {"scrollbar", 0x84}, {"combobox", 0x85},
+        /* SWEEP-018: comctl children via CreateToolbarEx / CreateStatusWindow
+         * (SW-803..806). Prefix match: toolbar* / msctls_statusbar32. */
+        {"toolbar", 0x86}, {"msctls_statusbar32", 0x87},
+        {"statuswindow", 0x87},
     };
     if (!cls) return 0;
     uint16_t tmp[16];
@@ -10911,8 +10918,12 @@ static int mw_sysclass_w(const void* cls) {
     for (i = 0; i < 15 && tmp[i]; i++)
         a[i] = (tmp[i] >= 'A' && tmp[i] <= 'Z') ? (char)(tmp[i] + 32) : (char)tmp[i];
     a[i] = 0;
-    for (i = 0; i < 6; i++)
-        if (strcmp(a, t[i].n) == 0) return t[i].c;
+    /* SWEEP-018: prefix compare clamped to the probe width (15) — matches
+     * toolbar* and the 15-char-truncated msctls_statusbar32 probe. */
+    for (i = 0; i < 9; i++) {
+        size_t L = strlen(t[i].n);
+        if (strncmp(a, t[i].n, L < 15 ? L : 15) == 0) return t[i].c;
+    }
     return 0;
 }
 static int mw_sysclass_a(const void* cls) {
@@ -10920,26 +10931,34 @@ static int mw_sysclass_a(const void* cls) {
     if (v && v < 0x10000u) {
         if ((v & 0xFF00u) == 0x8000u) {
             uint32_t c = v & 0xFFu;
-            if (c >= 0x80 && c <= 0x85) return (int)c;
+            if (c >= 0x80 && c <= 0x87) return (int)c;
         }
         return 0;
     }
     static const struct { const char* n; int c; } t[] = {
         {"button", 0x80}, {"edit", 0x81}, {"static", 0x82},
         {"listbox", 0x83}, {"scrollbar", 0x84}, {"combobox", 0x85},
+        /* SWEEP-018: comctl children via CreateToolbarEx / CreateStatusWindow
+         * (SW-803..806). Prefix match: toolbar* / msctls_statusbar32. */
+        {"toolbar", 0x86}, {"msctls_statusbar32", 0x87},
+        {"statuswindow", 0x87},
     };
     if (!cls) return 0;
     char a[16] = {0}; int i;
     if (!mw_probe_copy(cls, 15, a)) return 0;
     for (i = 0; i < 15; i++)
         if (a[i] >= 'A' && a[i] <= 'Z') a[i] += 32;
-    for (i = 0; i < 6; i++)
-        if (strncmp(a, t[i].n, 15) == 0) return t[i].c;
+    /* SWEEP-018: prefix compare clamped to the probe width (15). */
+    for (i = 0; i < 9; i++) {
+        size_t L = strlen(t[i].n);
+        if (strncmp(a, t[i].n, L < 15 ? L : 15) == 0) return t[i].c;
+    }
     return 0;
 }
 static const char* mw_sysclass_name(int c) {
-    static const char* n[] = {"BUTTON","EDIT","STATIC","LISTBOX","SCROLLBAR","COMBOBOX"};
-    return (c >= 0x80 && c <= 0x85) ? n[c - 0x80] : "?";
+    static const char* n[] = {"BUTTON","EDIT","STATIC","LISTBOX","SCROLLBAR","COMBOBOX",
+                              "TOOLBAR","STATUSBAR"};
+    return (c >= 0x80 && c <= 0x87) ? n[c - 0x80] : "?";
 }
 /* Register one child-control identity; NULL when the 64-slot table is full. */
 static void* mw_child_register(int sc, void* parent, void* menu,
@@ -10981,6 +11000,7 @@ __attribute__((ms_abi)) void* mw_CreateWindowExW(uint32_t exstyle, const void* c
         (void)exstyle; (void)x; (void)y; (void)style;
         return mw_child_register(sc, parent, menu, win, 1, NULL);
     }
+    g_create_param = param; /* SW-802..806: forward lpParam into CREATESTRUCT */
     mw_gui_store_window((int)w, (int)h); /* SWEEP-005: allocate paint surface */
     mw_gui_send_create(); /* SWEEP-006: synchronous WM_CREATE */
     MW_TRACE("CreateWindowExW(ex=0x%x style=0x%x cls=%p %dx%d@%d,%d) -> HWND %p",
@@ -10995,6 +11015,7 @@ __attribute__((ms_abi)) void* mw_CreateWindowExA(uint32_t exstyle, const void* c
         (void)exstyle; (void)x; (void)y; (void)style;
         return mw_child_register(sc, parent, menu, win, 0, NULL);
     }
+    g_create_param = param; /* SW-802..806: forward lpParam into CREATESTRUCT */
     mw_gui_store_window((int)w, (int)h); /* SWEEP-005: allocate paint surface */
     mw_gui_send_create(); /* SWEEP-006: synchronous WM_CREATE */
     MW_TRACE("CreateWindowExA(ex=0x%x style=0x%x cls=%p %dx%d@%d,%d) -> HWND %p",
@@ -11092,6 +11113,73 @@ static void mwb_set(MWBmp* b, int x, int y, uint32_t c) {
 static void mwb_fill(MWBmp* b, int x, int y, int w, int h, uint32_t c) {
     for (int j = y; j < y + h; j++)
         for (int i = x; i < x + w; i++) mwb_set(b, i, j, c);
+}
+/* SWEEP-018 (SW-803..806): NirSoft GUI family — honest blit/toolbar/status.
+ * Evidence: artifacts/sweep018/{produkey,cports}/run3 — WM_CREATE CREATESTRUCT
+ * fix unblocked WndProc init; new frontier = 33-level recursion of
+ * SetStretchBltMode+StretchBlt+CreateToolbarEx+comctl32!#6 driven by
+ * unresolved-GDI retry. All four now behave like real Win32. */
+static MWBmp* mw_dc_surface(void* hdc); /* defined in the mini-window block */
+static int g_stretch_mode = 1; /* BLACKONWHITE — MSDN default */
+__attribute__((ms_abi)) int mw_SetStretchBltMode(void* hdc, int mode) {
+    (void)hdc;
+    int prev = g_stretch_mode;
+    g_stretch_mode = mode ? mode : 1;
+    return prev; /* returns previous mode, 0 on failure */
+}
+__attribute__((ms_abi)) int mw_StretchBlt(void* hdcDst, int x, int y, int w, int h,
+        void* hdcSrc, int xs, int ys, int ws, int hs, uint32_t rop) {
+    MWBmp* D = mw_dc_surface(hdcDst);
+    MWBmp* S = mw_dc_surface(hdcSrc);
+    if (!D || !S || w <= 0 || h <= 0 || ws <= 0 || hs <= 0) return 0;
+    if (rop == 0x00000042u) { mwb_fill(D, x, y, w, h, 0x000000); return 1; } /* BLACKNESS */
+    if (rop == 0x00FF0062u) { mwb_fill(D, x, y, w, h, 0xFFFFFF); return 1; } /* WHITENESS */
+    /* nearest-neighbor scale — COLORONCOLOR equivalent, honest pixels */
+    int copied = 0;
+    for (int row = 0; row < h; row++) {
+        int sy = ys + (int)((long long)hs * row / h);
+        int dy = y + row;
+        if (sy < 0 || dy < 0 || sy >= S->h || dy >= D->h) continue;
+        for (int col = 0; col < w; col++) {
+            int sx = xs + (int)((long long)ws * col / w);
+            int dx = x + col;
+            if (sx < 0 || dx < 0 || sx >= S->w || dx >= D->w) continue;
+            memcpy(D->px + 3 * ((size_t)dy * (size_t)D->w + (size_t)dx),
+                   S->px + 3 * ((size_t)sy * (size_t)S->w + (size_t)sx), 3);
+            copied++;
+        }
+    }
+    MW_TRACE("[GDI] StretchBlt %dx%d@%d,%d <- %dx%d@%d,%d rop=0x%x (%d px)",
+             w, h, x, y, ws, hs, xs, ys, rop, copied);
+    return 1;
+}
+/* CreateToolbarEx(hwndParent, ws, id, nBitmaps, hBMInst, wBMID, buttons,
+ * nButtons, dxButton, dyButton, dxBitmap, dyBitmap, uStructSize) — NirSoft
+ * main toolbar. Engine registers a TOOLBAR child identity; the guest uses
+ * the returned HWND for SendMessage layout traffic. */
+__attribute__((ms_abi)) void* mw_CreateToolbarEx(void* parent, uint32_t ws, uint32_t id,
+        int nBitmaps, void* hBMInst, uint32_t wBMID, const void* buttons, int nButtons,
+        int dxButton, int dyButton, int dxBitmap, int dyBitmap, uint32_t structSize) {
+    (void)ws; (void)nBitmaps; (void)hBMInst; (void)wBMID; (void)buttons;
+    (void)nButtons; (void)dxButton; (void)dyButton; (void)dxBitmap; (void)dyBitmap;
+    (void)structSize;
+    void* h = mw_child_register(0x86, parent, (void*)(uintptr_t)id, NULL, 0, NULL);
+    MW_TRACE("[GUI] CreateToolbarEx(id=%u nbtn=%d) -> HWND %p", id, nButtons, h);
+    return h;
+}
+/* CreateStatusWindowA/W(style, lpszText, hwndParent, wID) — NirSoft status
+ * bar; confirmed by the immediate SB_SETPARTS(WM_USER+4) follow-up. */
+__attribute__((ms_abi)) void* mw_CreateStatusWindowA(uint32_t style, const char* text,
+        void* parent, uint32_t id) {
+    void* h = mw_child_register(0x87, parent, (void*)(uintptr_t)id, text, 0, NULL);
+    MW_TRACE("[GUI] CreateStatusWindowA(style=0x%x id=%u) -> HWND %p", style, id, h);
+    return h;
+}
+__attribute__((ms_abi)) void* mw_CreateStatusWindowW(uint32_t style, const uint16_t* text,
+        void* parent, uint32_t id) {
+    void* h = mw_child_register(0x87, parent, (void*)(uintptr_t)id, text, 1, NULL);
+    MW_TRACE("[GUI] CreateStatusWindowW(style=0x%x id=%u) -> HWND %p", style, id, h);
+    return h;
 }
 /* Win95 3D chrome: raised (out) or sunken (in) */
 static void mwb_3d(MWBmp* b, int x, int y, int w, int h, int raised) {
@@ -11244,6 +11332,13 @@ __attribute__((ms_abi)) int mw_MessageBoxA(void* hwnd, const char* text,
 
 static void*     g_main_hwnd = 0;
 static int       g_win_w = 640, g_win_h = 480;
+/* SW-802..806: WM_CREATE lParam must be a readable CREATESTRUCT* whose
+ * lpCreateParams (first field) is guest-writable — NirSoft WndProcs do
+ *   rdx = *(lParam); *(rdx+0x110) = hwnd;   (cports @0x2119, produkey @0x22f24)
+ *   rax = *(lParam); movups (%rax),%xmm0;   (diskmon64 @0x671c)
+ * so we forward CreateWindowEx's lpParam and fall back to a scratch page. */
+static void*     g_create_param = 0;
+static unsigned char g_cs_scratch[256]; /* tolerate guests that passed NULL lpParam */
 static MWBmp     g_surf = { 0, 0, 0 }; /* window framebuffer (0xRRGGBB pixels) */
 static int       g_events_mode = -1;   /* -1 = not yet read from env */
 static int       g_paint_pending = 0;
@@ -11279,7 +11374,7 @@ static int       g_obj_next = 0;
  * a guest that renders off-screen and blits once per frame works for real. */
 #define MW_MEMDC_BASE    0x00021000u  /* memDC handles   0x00021001+i */
 #define MW_HBITMAP_BASE  0x00052000u  /* HBITMAP handles 0x00052001+i (index=v&0xFF)-1 */
-#define MW_MEMDC_MAX     8
+#define MW_MEMDC_MAX     32 /* SW-803: 8 overflowed on NirSoft retry loops (produkey/cports: 2 DCs x ~15 controls) */
 static MWBmp   g_bitmap_obj[MW_MEMDC_MAX]; /* CreateCompatibleBitmap pixel store */
 static uint8_t g_bitmap_live[MW_MEMDC_MAX];
 static int     g_memdc_sel[MW_MEMDC_MAX];  /* selected bitmap index, -1 = none */
@@ -11350,8 +11445,29 @@ static void mw_gui_request_paint(void) { g_paint_pending = 1; }
  * event pump so the v1 no-pump contract is unchanged. */
 static void mw_gui_send_create(void) {
     if (mw_gui_events_enabled() && g_wndproc_fwd) {
-        long long r = g_wndproc_fwd(MW_GUI_HWND, 0x0001u, 0, 0); /* WM_CREATE */
-        MW_TRACE("[GUI] WM_CREATE -> wndproc -> %lld", r);
+        /* SW-802..806: real Win32 passes &CREATESTRUCT in lParam. Fields at
+         * the offsets guests actually deref: +0x00 lpCreateParams (must be
+         * guest-writable: cports/produkey store hwnd at +0x110 of it,
+         * diskmon64 copies 16 bytes from it), +0x18 hwndParent, +0x20 cy,
+         * +0x24 cx, +0x28 y, +0x2c x, +0x30 style, +0x38 lpszName,
+         * +0x40 lpszClass, +0x48 dwExStyle. x64 size = 0x50. */
+        static const unsigned short empty_w[1] = { 0 };
+        unsigned char cs[0x50];
+        memset(cs, 0, sizeof(cs));
+        *(void**)(cs + 0x00) = g_create_param ? g_create_param : (void*)g_cs_scratch;
+        *(void**)(cs + 0x08) = g_image_base; /* hInstance = main module */
+        *(void**)(cs + 0x18) = NULL;         /* hwndParent */
+        *(int32_t*)(cs + 0x20) = g_win_h;
+        *(int32_t*)(cs + 0x24) = g_win_w;
+        *(int32_t*)(cs + 0x28) = 0;
+        *(int32_t*)(cs + 0x2c) = 0;
+        *(uint32_t*)(cs + 0x30) = 0x00CF0000u | 0x10000000u; /* WS_OVERLAPPEDWINDOW|WS_VISIBLE */
+        *(const void**)(cs + 0x38) = empty_w; /* lpszName */
+        *(const void**)(cs + 0x40) = empty_w; /* lpszClass */
+        *(uint32_t*)(cs + 0x48) = 0;
+        long long r = g_wndproc_fwd(MW_GUI_HWND, 0x0001u, 0, (long long)(intptr_t)cs); /* WM_CREATE */
+        MW_TRACE("[GUI] WM_CREATE(lparam=&CS lpParams=%p) -> wndproc -> %lld",
+                 *(void**)cs, r);
     }
 }
 
@@ -11951,6 +12067,17 @@ __attribute__((ms_abi)) uint32_t mw_SetPixel(void* hdc, int x, int y, uint32_t c
     if (S) mwb_set(S, x, y, mw_cr2rgb(colorref));
     return colorref;
 }
+/* SW-803/804: honest GetPixel — NirSoft WndProcs poll it in a spin loop
+ * (ProduKey x198 @0x1400202de, cports x198 @0x1400157c9: GetPixel ->
+ * cmp vs expected color -> SetPixel -> retry). Returning hardcoded 0
+ * made the loop never converge; reading the real framebuffer lets the
+ * pixel match after SetPixel paints it. Out-of-surface -> CLR_INVALID. */
+__attribute__((ms_abi)) uint32_t mw_GetPixel(void* hdc, int x, int y) {
+    MWBmp* S = mw_dc_surface(hdc);
+    if (!S || x < 0 || y < 0 || x >= S->w || y >= S->h) return 0xFFFFFFFFu; /* CLR_INVALID */
+    const uint8_t* p = S->px + 3 * ((size_t)y * S->w + x);
+    return (uint32_t)p[0] | ((uint32_t)p[1] << 8) | ((uint32_t)p[2] << 16);
+}
 __attribute__((ms_abi)) void* mw_CreateSolidBrush(uint32_t colorref) {
     int slot = -1;
     for (int i = 0; i < 32; i++) {
@@ -12144,7 +12271,7 @@ __attribute__((ms_abi)) void* mw_CreateCompatibleBitmap(void* hdc, int w, int h)
  * raster (3 bytes/px BGR, stride = w*3) so ImageList_Add can copy real
  * pixels from any HBITMAP created by our GDI (CreateCompatibleBitmap /
  * LoadImage pool). Slot caps documented; Create validates dimensions. */
-#define MW_IMGL_MAX   8
+#define MW_IMGL_MAX   16 /* SW-803: 8 overflowed (produkey toolbar imagelist + per-child lists) */
 #define MW_IMGL_BASE  0x00061000u  /* HIMAGELIST handles 0x00061001+i */
 #define MW_IMGL_IMGMAX 512
 typedef struct {
@@ -13101,12 +13228,80 @@ __attribute__((ms_abi)) void* mw_CharLowerA(char* s) {
 static int g_img_w[8], g_img_h[8];
 static uint8_t g_img_live[8];
 static void* mw_image_alloc(int w, int h) {
+    static uint8_t g_img_pool_expanded = 0;
     for (int i = 0; i < 8; i++)
         if (!g_img_live[i]) {
             g_img_live[i] = 1; g_img_w[i] = w; g_img_h[i] = h;
             return (void*)(uintptr_t)(MW_IMAGE_BASE | (uintptr_t)(i + 1));
         }
+    (void)g_img_pool_expanded; /* SW-803: pool documented as 8-slot fallback */
     return NULL;
+}
+/* SW-803 (SWEEP-018): honest resource-backed IMAGE_BITMAP load. NirSoft
+ * toolbars do LoadImageW(hinst, MAKEINTRESOURCE(id), IMAGE_BITMAP, 0,0,0)
+ * then ImageList_Add the handle. Two engine bugs before this fix:
+ * (a) the blank-image pool (8 slots, no free path) exhausted after 8 calls
+ * -> NULL -> guest tore down + re-inited forever (produkey trace: 62,836
+ * DC create/destroy pairs, 20,946 bitmaps leaked, heap death in libc);
+ * (b) even non-NULL handles were MW_IMAGE-space, unreadable by
+ * ImageList_Add (HBITMAP-space only). Real DIB decode -> HBITMAP slot. */
+static void* mw_bitmap_slot(int w, int h) {
+    for (int i = 0; i < MW_MEMDC_MAX; i++) {
+        if (!g_bitmap_live[i]) {
+            g_bitmap_live[i] = 1;
+            g_bitmap_obj[i].w = w; g_bitmap_obj[i].h = h;
+            g_bitmap_obj[i].px = (uint8_t*)calloc((size_t)w * (size_t)h, 3);
+            return &g_bitmap_obj[i];
+        }
+    }
+    return NULL;
+}
+static void* mw_loadimage_bitmap_dib(void* hinst, const void* name) {
+    void* hrsrc;
+    if ((uintptr_t)name < 0x10000u) /* MAKEINTRESOURCE */
+        hrsrc = mw_FindResourceW(hinst, (const wchar_t*)(uintptr_t)name,
+                                 (const wchar_t*)(uintptr_t)2 /*RT_BITMAP*/);
+    else
+        hrsrc = mw_FindResourceW(hinst, (const wchar_t*)name,
+                                 (const wchar_t*)(uintptr_t)2);
+    if (!hrsrc) return NULL;
+    const uint8_t* dib = (const uint8_t*)mw_LockResource(hrsrc);
+    if (!dib) return NULL;
+    uint32_t hdr_size = *(const uint32_t*)(const void*)(dib);
+    if (hdr_size < 40) return NULL;
+    int32_t  w    = *(const int32_t*)(const void*)(dib + 4);
+    int32_t  h    = *(const int32_t*)(const void*)(dib + 8);
+    uint16_t bpp  = *(const uint16_t*)(const void*)(dib + 14);
+    uint32_t comp = *(const uint32_t*)(const void*)(dib + 16);
+    uint32_t clr_used = *(const uint32_t*)(const void*)(dib + 32);
+    if (w <= 0 || h == 0 || comp != 0 /* BI_RGB only */) return NULL;
+    int top_down = (h < 0); if (top_down) h = -h;
+    if (w > 4096 || h > 4096) return NULL;
+    if (bpp != 1 && bpp != 4 && bpp != 8 && bpp != 24 && bpp != 32) return NULL;
+    int npal = (bpp <= 8) ? (clr_used ? (int)clr_used : (1 << bpp)) : 0;
+    const uint8_t* pal = dib + hdr_size;
+    const uint8_t* pix = pal + (size_t)npal * 4;
+    size_t stride = (((size_t)w * bpp + 31) / 32) * 4;
+    MWBmp* B = mw_bitmap_slot(w, h);
+    if (!B || !B->px) return NULL;
+    for (int y = 0; y < h; y++) {
+        const uint8_t* row = pix + (size_t)(top_down ? y : (h - 1 - y)) * stride;
+        for (int x = 0; x < w; x++) {
+            uint32_t c;
+            if (bpp == 24) { const uint8_t* p = row + (size_t)x * 3; c = (uint32_t)p[0] | ((uint32_t)p[1] << 8) | ((uint32_t)p[2] << 16); }
+            else if (bpp == 32) { const uint8_t* p = row + (size_t)x * 4; c = (uint32_t)p[0] | ((uint32_t)p[1] << 8) | ((uint32_t)p[2] << 16); }
+            else {
+                uint32_t idx;
+                if (bpp == 8) idx = row[x];
+                else if (bpp == 4) idx = (x & 1) ? (row[x / 2] & 0xF) : (row[x / 2] >> 4);
+                else idx = (row[x / 8] >> (7 - (x & 7))) & 1;
+                const uint8_t* e = pal + (size_t)idx * 4; /* BGRx palette quad */
+                c = (uint32_t)e[0] | ((uint32_t)e[1] << 8) | ((uint32_t)e[2] << 16);
+            }
+            mwb_set(B, x, y, c);
+        }
+    }
+    return (void*)(uintptr_t)(MW_HBITMAP_BASE | (unsigned)((B - g_bitmap_obj) + 1));
 }
 __attribute__((ms_abi)) void* mw_LoadImageW(void* hinst, const void* name, uint32_t type,
         int cx, int cy, uint32_t flags) {
@@ -13114,6 +13309,10 @@ __attribute__((ms_abi)) void* mw_LoadImageW(void* hinst, const void* name, uint3
     if (flags & 0x10u) { /* LR_LOADFROMFILE */
         MW_TRACE("LoadImageW(LR_LOADFROMFILE) -> NULL (file images unsupported)");
         return NULL;
+    }
+    if (type == 0u /* IMAGE_BITMAP */) { /* SW-803: resource DIB first */
+        void* h = mw_loadimage_bitmap_dib(hinst, name);
+        if (h) { MW_TRACE("LoadImageW(IMAGE_BITMAP res=%p) -> HBITMAP %p", name, h); return h; }
     }
     void* h = mw_image_alloc(cx ? cx : 16, cy ? cy : 16);
     MW_TRACE("LoadImageW(type=%lu) -> %p", (unsigned long)type, h);
@@ -15489,7 +15688,13 @@ ENTRY("msvcrt.dll", "wctype", mw_wctype),
     ENTRY("GDI32.DLL", "MoveToEx",                              mw_MoveToEx),
     ENTRY("GDI32.DLL", "LineTo",                                mw_LineTo),
     ENTRY("GDI32.DLL", "SetPixel",                              mw_SetPixel),
+    ENTRY("GDI32.DLL", "GetPixel",                              mw_GetPixel),
+    ENTRY("GDI32.DLL", "SetStretchBltMode",                     mw_SetStretchBltMode),
+    ENTRY("GDI32.DLL", "StretchBlt",                            mw_StretchBlt),
     ENTRY("GDI32.DLL", "CreateSolidBrush",                      mw_CreateSolidBrush),
+    ENTRY("COMCTL32.DLL", "CreateToolbarEx",                    mw_CreateToolbarEx),
+    ENTRY("COMCTL32.DLL", "CreateStatusWindowA",                mw_CreateStatusWindowA),
+    ENTRY("COMCTL32.DLL", "CreateStatusWindowW",                mw_CreateStatusWindowW),
     ENTRY("GDI32.DLL", "CreatePen",                             mw_CreatePen),
     ENTRY("GDI32.DLL", "GetStockObject",                        mw_GetStockObject),
     ENTRY("GDI32.DLL", "SelectObject",                          mw_SelectObject),
@@ -16016,6 +16221,14 @@ static int load_pe(const char* filepath) {
                      * neighborhood 0x477080 between GDI32/KERNEL32 groups and
                      * 7zG's installer ListView usage). */
                     { "COMCTL32", 17, "ImageList_Create" },
+                    /* SWEEP-018 (SW-803..806): NirSoft GUI family binds
+                     * COMCTL32 by old fixed ordinal. #6 called with
+                     * (0x50000000=WS_CHILD|WS_VISIBLE|SBARS_SIZEGRIP, &text,
+                     * hwndParent, wID=0x101) then immediately SendMessageA(
+                     * h, 0x404=SB_SETPARTS, 1, &widths) — CreateStatusWindowA
+                     * semantics, ANSI (odd-aligned char* text, A-family
+                     * imports throughout the NirSoft binaries). */
+                    { "COMCTL32", 6,  "CreateStatusWindowA" },
                     /* SWEEP-015 (SW-801g): UXTHEME dark-mode family —
                      * autoruns64-class guests bind these by raw ordinal. */
                     { "UXTHEME", 104, "RefreshImmersiveColorPolicyState" },
@@ -16261,7 +16474,35 @@ static int load_pe(const char* filepath) {
  * Signal Handler (for debugging crashes)
  * ============================================================ */
 
+/* SWEEP-018: nested-fault escape for the crash handler's own raw reads. */
+static sigjmp_buf mw_crash_jmp;
+static volatile sig_atomic_t mw_crash_probe_armed = 0;
+static void mw_crash_nested_fault(int sg) {
+    (void)sg;
+    if (mw_crash_probe_armed) siglongjmp(mw_crash_jmp, 1);
+    _exit(139); /* fault outside a probe: give up, keep the exit code */
+}
+
 static void crash_handler(int sig, siginfo_t* info, void* ctx) {
+    /* SW-802 family (SWEEP-018): every raw read in this handler (bytes at
+     * RIP, return addr at rsp, 4KB stack scan, backtrace chain) can itself
+     * fault when the crash IS a stack overflow — the old handler died at
+     * the first guard-page touch and we lost ALL diagnostics (silent 139:
+     * produkey/cports/rammap64 run6 showed 5 register lines then nothing).
+     * Nested SIGSEGV -> siglongjmp back to a truncation notice. */
+    static sigjmp_buf mw_crash_jmp;
+    static volatile sig_atomic_t mw_crash_probe_armed = 0;
+    #define MW_CRASH_PROBE(...) do { \
+        void (*mw_old_segv)(int) = signal(SIGSEGV, mw_crash_nested_fault); \
+        if (sigsetjmp(mw_crash_jmp, 1) == 0) { \
+            mw_crash_probe_armed = 1; \
+            { __VA_ARGS__; } \
+            mw_crash_probe_armed = 0; \
+        } else { \
+            fprintf(stderr, "  [DIAG] dump truncated (unreadable memory)\n"); \
+        } \
+        signal(SIGSEGV, mw_old_segv); \
+    } while (0)
     ucontext_t* uc = (ucontext_t*)ctx;
     uint64_t rip = uc->uc_mcontext.gregs[REG_RIP];
     uint64_t rax = uc->uc_mcontext.gregs[REG_RAX];
@@ -16278,6 +16519,7 @@ static void crash_handler(int sig, siginfo_t* info, void* ctx) {
     fprintf(stderr, "  RSP=0x%lx RBP=0x%lx\n", rsp, rbp);
     fprintf(stderr, "  g_image_base=%p g_image_size=0x%lx\n", g_image_base, g_image_size);
 
+    MW_CRASH_PROBE({
     if (g_image_base && rip >= (uint64_t)(uintptr_t)g_image_base &&
         rip < (uint64_t)(uintptr_t)g_image_base + g_image_size) {
         uint64_t rva = rip - (uint64_t)(uintptr_t)g_image_base;
@@ -16420,6 +16662,7 @@ static void crash_handler(int sig, siginfo_t* info, void* ctx) {
     if (rip < 0x1000 || (info->si_code == SEGV_MAPERR && info->si_addr == NULL)) {
         fprintf(stderr, "  Likely: NULL or invalid function pointer call\n");
     }
+    }); /* MW_CRASH_PROBE */
 
     /* SWEEP-011: flush trace JSON + profiler histogram on handled crashes
      * (async-signal-unsafe stdio is already used throughout this handler;
@@ -16433,10 +16676,22 @@ static void crash_handler(int sig, siginfo_t* info, void* ctx) {
 }
 
 static void setup_signal_handlers(void) {
-    struct sigaction sa;
+    struct sigaction sa;    /* SW-802 family: guests that spin/recycle stack can exhaust the 8MB
+     * stack; without SA_ONSTACK the crash handler itself faults on the
+     * guard page and we lose ALL diagnostics (silent 139 — seen on
+     * RAMMap64 run1 SWEEP-018: 51 stderr lines, zero handler output). */
+    {
+        static char crash_altstack[64 * 1024]; /* SIGSTKSZ is not a compile-time constant on glibc */
+        stack_t ss;
+        memset(&ss, 0, sizeof(ss));
+        ss.ss_sp = crash_altstack;
+        ss.ss_size = sizeof(crash_altstack);
+        ss.ss_flags = 0;
+        sigaltstack(&ss, NULL);
+    }
     memset(&sa, 0, sizeof(sa));
     sa.sa_sigaction = crash_handler;
-    sa.sa_flags = SA_SIGINFO;
+    sa.sa_flags = SA_SIGINFO | SA_ONSTACK;
     sigaction(SIGSEGV, &sa, NULL);
     sigaction(SIGILL, &sa, NULL);
     sigaction(SIGFPE, &sa, NULL);

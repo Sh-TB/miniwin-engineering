@@ -1,0 +1,39 @@
+[TRACE] Command line: /home/z/my-project/workspace/miniwin-engineering/artifacts/sweep50/dl/diskmon64/Diskmon64.exe
+[WARN]   unresolved: CreateToolbarEx
+[WARN]   unresolved: ReadProcessMemory
+[WARN]   unresolved: lstrcatA
+[WARN]   unresolved: GlobalReAlloc
+[WARN]   unresolved: GetTimeFormatA
+[WARN]   unresolved: IsZoomed
+[WARN]   unresolved: DestroyIcon
+[WARN]   unresolved: SetWindowLongPtrA
+[WARN]   unresolved: GetFocus
+[WARN]   unresolved: EmptyClipboard
+[WARN]   unresolved: SetClipboardData
+[WARN]   unresolved: CloseClipboard
+[WARN]   unresolved: OpenClipboard
+[WARN]   unresolved: WinHelpA
+[WARN]   unresolved: IsDialogMessageA
+[WARN]   unresolved: TrackPopupMenu
+[WARN]   unresolved: GetSubMenu
+[WARN]   unresolved: DestroyMenu
+[WARN]   unresolved: TranslateAcceleratorA
+[WARN]   unresolved: ReleaseCapture
+[WARN]   unresolved: SetCapture
+[WARN]   unresolved: ChildWindowFromPoint
+[WARN]   unresolved: GetTextExtentPoint32A
+[WARN]   unresolved: StartDocA
+[WARN]   unresolved: FindTextA
+[WARN]   unresolved: GetSaveFileNameA
+[WARN]   unresolved: ChooseColorA
+[WARN]   unresolved: ChooseFontA
+[WARN]   unresolved: PrintDlgA
+[WARN]   unresolved: LookupAccountSidW
+[WARN]   unresolved: LookupAccountSidA
+[WARN]   unresolved: LookupPrivilegeValueA
+[WARN]   unresolved: ShellExecuteA
+[WARN]   unresolved: SHGetFileInfoA
+[WARN]   unresolved: Shell_NotifyIconA
+[WARN] 42 imports unresolved
+[STUB] unresolved import called -> returning 0 (call #1) guest_rip=0x14000679b
+[STUB] unresolved import called -> returning 0 (call #2) guest_rip=0x140004b7a

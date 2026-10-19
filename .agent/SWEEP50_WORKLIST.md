@@ -678,3 +678,105 @@ gate that must be re-accepted when the port lands).
       (SuspendThread/GetThreadContext family), closure/verify x2
       (lz4/zstd/trurl re-pin after every loader change; 14-section report
       update per user mandate).
+
+<!-- ============ SWEEP-018 (2026-10-19) — «ادامه و پوش» elephant batch ============ -->
+
+## SWEEP-018 results (measurable progress per user mandate)
+
+**Five 139s -> exit0 x3 deterministic (pump-off sweep, artifacts/sweep018/sweep/sweep018_sweep.tsv):**
+- [x] **SW-802 CLOSED** rammap64 139->exit0 x3. ROOT CAUSE: WM_CREATE dispatched
+      with lParam=NULL; NirSoft/Sysinternals WndProcs deref lParam as
+      CREATESTRUCT* (rammap 0x140004db7 `mov (%r9),%r8`; diskmon 0x14000671c
+      `mov (%r9),%rax` + `movups (%rax),%xmm0`; cports 0x140002119 /
+      produkey 0x140022f24 `mov (%r9),%rdx; mov %rcx,0x110(%rdx)` — store hwnd
+      at lpCreateParams+0x110). FIX: mw_gui_send_create builds a real
+      CREATESTRUCT (0x50 bytes, lpCreateParams = forwarded CreateWindowEx
+      lpParam, scratch fallback, geometry/style/name/class), both ExW/ExA
+      forward param (src/loader/loader.c g_create_param).
+- [x] **SW-803 CLOSED (NirSoft GUI family)** produkey/cports/diskmon64 139->exit0
+      x3. Chain of gates, all named by SWEEP-011 method:
+      (1) GDI32!GetPixel returned 0 -> x198 spin loops (produkey
+      0x1400202de, cports 0x1400157c9) -> honest GetPixel reads framebuffer,
+      CLR_INVALID out-of-surface; (2) SetStretchBltMode+StretchBlt unresolved
+      -> 33-level blit recursion -> honest nearest-neighbor StretchBlt;
+      (3) CreateToolbarEx unresolved -> TOOLBAR child identity (class table
+      0x86); (4) COMCTL32 ordinal #6 = CreateStatusWindowA (proven by
+      SendMessageA(h,0x404=SB_SETPARTS,1,&widths) follow-up) -> STATUSBAR
+      child (0x87), ordinal map extended, SB_SETPARTS->TRUE; (5) child table
+      64 overflowed -> 512; memDC/bitmap 8->32; ImageList 8->16.
+- [x] **SW-805 CLOSED** diskmon64 139->exit0 x3 (same WM_CREATE root cause).
+- [x] **SW-810 CLOSED** autoruns64 139->exit0 x3 (pump-off; same WM_CREATE
+      CREATESTRUCT root cause — the "environment sensitivity" of SW-801h was
+      this bug all along for autoruns64's class).
+- [x] **SW-813 crash-handler hardening LANDED**: silent-139 class eliminated.
+      (a) SA_ONSTACK + 64KB altstack (stack-overflow crashes used to kill the
+      handler itself -> zero diagnostics); (b) MW_CRASH_PROBE sigsetjmp guard
+      around every raw read (bytes@RIP, return-addr@rsp, 4KB stack scan,
+      backtrace chain) — nested fault -> "[DIAG] dump truncated" + full
+      register/RIP-MAP output still delivered.
+- [x] **LoadImageW honest resource DIB decode LANDED** (part of SW-803 chain):
+      RT_BITMAP (1/4/8/24/32bpp BI_RGB, bottom-up+top-down) -> HBITMAP-space
+      object readable by ImageList_Add; fixes the 8-slot blank-image pool
+      exhaustion that drove the 62,836-DC create/destroy init retry loop
+      (produkey run11 trace: 20,946 bitmaps leaked).
+- [ ] **SW-812** pump-on re-init loop (produkey/cports; pump-off = exit0):
+      with MW_GUI_EVENTS=1 the guest re-runs its whole init (10,468 SetMenu,
+      menu handles 0x50001..0x5000f, 62,836 DC pairs) — menu family APIs
+      GetSubMenu/GetMenuItemCount/GetMenuItemInfoA/ModifyMenuA/DestroyMenu
+      are UNRESOLVED, menu table is 8 slots with no free path, DestroyMenu
+      unresolved means slots never release. Hypothesis: NirSoft builds
+      toolbar from menu items; GetSubMenu()->NULL -> teardown+reload forever.
+      Fix: honest menu-item model (items from LoadMenu resource walk) or
+      at minimum DestroyMenu frees slots + GetSubMenu returns menu itself
+      for pos 0. Evidence: artifacts/sweep018/produkey/run11..run14 traces.
+- [ ] **SW-814** searchmyfiles 139 x3: RIP 0x140028001 `cmpw $0x22,(%r8)`
+      — UTF-16 string scanner walks wild pointer (R8=0x4800091111058b48);
+      NirSoft command-line/arg parsing path, RCX=0x120. Distinct from
+      SW-803 family (no stub loops; 0 stub calls).
+- [ ] **SW-815** winmergeu 139 x3: RIP 0x14012d0c2, RAX=0,
+      RCX=0x7ff0000000000001 (double 1.0), RDX=0x4032000000000000 (4.5) —
+      SSE/float code path in MFC init; decode with SWEEP-011 method.
+- [ ] **SW-807** puttygen RIP=0 NULL fn-ptr (still open, SW-552 family).
+- [ ] **SW-808** winmergeu (see SW-815).
+- [ ] **SW-809** procexp64 RIP=0x6f00690074006e UTF-16-bytes-as-code (still
+      open; CLR-adjacent init).
+
+## SW-816..SW-880 — «ادامه سه برابری» continuation queue (65 items, x3 of SW-817..850)
+
+- [ ] **SW-816..820 menu family x5** (drives SW-812): GetSubMenu honest,
+      GetMenuItemCount, GetMenuItemInfoA/W, ModifyMenuA/W, DestroyMenu slot
+      free — each with a menu-item storage model; acceptance = produkey
+      exit0 WITH pump.
+- [ ] **SW-821..825 clipboard x5**: OpenClipboard/CloseClipboard/EmptyClipboard/
+      SetClipboardData/GetClipboardData honest global-memory model
+      (produkey resolves CloseClipboard only).
+- [ ] **SW-826..830 common dialogs x5**: GetOpenFileNameA/W, GetSaveFileNameA/W,
+      ChooseColorA/W, FindTextA/W, PAGESETUPDLG family — canned-UI returns.
+- [ ] **SW-831..835 ListView x5** (NirSoft main lists): LVM_GETITEMCOUNT,
+      LVM_GETITEMTEXT, LVM_INSERTCOLUMN/ITEM, LVM_SETITEMSTATE, LVM_HITTEST
+      — child-class message routing for cls "SysListView32".
+- [ ] **SW-836..840 TreeView + Tab x5**: TVM_ family x3, TCM_ family x2
+      (SysTreeView32/SysTabControl32 child classes).
+- [ ] **SW-841..845 GDI regions x5**: CreateRectRgn/CreateRectRgnIndirect,
+      SelectClipRgn, GetUpdateRgn, RectInRegion, CombineRgn — region objects
+      with real rect algebra (produkey unresolved list).
+- [ ] **SW-846..850 printing x5**: StartDocA/StartPage/EndPage/EndDoc/
+      AbortDoc honest no-op printer (bginfo64 family tail).
+- [ ] **SW-851..855 shell x5**: SHGetSpecialFolderPathA (produkey gate,
+      GetProcAddress NULL today), SHBrowseForFolderA, SHGetFileInfoA,
+      ShellExecuteA/ExA stub-exit semantics, SHGetMalloc.
+- [ ] **SW-856..860 network x5**: WNetOpenEnum/CloseEnum/EnumResource,
+      getaddrinfo/getnameinfo, WSAEnumProtocols (produkey WNet* unresolved).
+- [ ] **SW-861..865 CRT tail x5**: _mbsicmp/_mbschr/_memicmp/_strlwr/_snprintf
+      (produkey CRT list) — honest MB-string semantics.
+- [ ] **SW-866..870 COM x5**: CoSetProxyBlanket callers, CoCreateInstance
+      family x3, CoUninitialize pairing audit (produkey CoInitialize path).
+- [ ] **SW-871..875 perf/debug x5**: SuspendThread/GetThreadContext/
+      SetThreadContext/ReadProcessMemory/WriteProcessMemory honest
+      (produkey ReadProcessMemory unresolved; procmon family).
+- [ ] **SW-876..878 registry export x3**: RegDeleteValueA, RegQueryInfoKeyA,
+      RegEnumValueA honest (produkey registry tail).
+- [ ] **SW-879..880 closure/verify x2**: re-pin G1 + full sweep TSV after
+      every loader change (mandate: «تغییرات بدون پیشرفت ارزشی نداره» —
+      every commit ships a measured progress table); 14-section final
+      report refresh.

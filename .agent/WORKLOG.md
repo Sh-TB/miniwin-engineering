@@ -483,3 +483,52 @@ Work Log:
 Stage Summary:
 - main == f64290e + SWEEP-015 deltas; G1 12/12 green; calc acceptance 3x deterministic.
 - Known environment frontier recorded (SW-801h); pending port batch SW-801a-e with gates.
+
+---
+
+## SWEEP-017 (2026-10-19) — reconcile with upstream SWEEP-014/015/016, local G1 re-pin
+
+- Local SWEEP-008 elephant batch (named stubs / registry / dialogs / version family / calc / mass sweep / worklist x3.32) was built on a stale baseline; push revealed origin/main already ahead via SWEEP-014/015/016 which landed the same subsystems plus more.
+- Honest handling: no force-push; local batch archived on branch `sweep008-local-divergent`; main synced to 2a15489 (SWEEP-016).
+- Upstream verified on this machine: build 0 errors, G1 PIN 12/12 (evidence/master/g1/20261019_133300), calc 9/9, snake 25f exit0, breakout exit0, rammap64 -accepteula exit0. Committed + pushed as 5d5e06e.
+- Note: local artifacts/sweep50/dl = 2024-era binaries (SWEEP-007 manifest); upstream swept re-downloaded 2026 official builds. Re-download locally before comparing frontier results against upstream reports.
+- Next: SW-802..810 (9 remaining 139s) and SW-811..850 queue per upstream worklist.
+
+---
+
+## SWEEP-018 (2026-10-19) — «ادامه و پوش» elephant batch: 5x139->exit0, G1 green
+
+Work Log:
+- Decoded produkey/cports/diskmon64/rammap64/searchmyfiles crash RIPs with
+  objdump + scripts/sweep018_decode_rip.py (new, pefile IAT map).
+- ONE loader.c batch: (1) WM_CREATE now carries a real CREATESTRUCT with
+  forwarded lpParam (SW-802..805 root cause: NirSoft WndProcs read
+  lParam->lpCreateParams and store hwnd at +0x110); (2) honest GetPixel /
+  SetStretchBltMode / StretchBlt / CreateToolbarEx / CreateStatusWindowA(W)
+  (COMCTL32 ordinal #6 named via SB_SETPARTS follow-up) + SB_SETPARTS->TRUE;
+  (3) LoadImageW decodes RT_BITMAP DIBs (1/4/8/24/32bpp BI_RGB) into
+  HBITMAP-space objects ImageList_Add can read; (4) tables grown: children
+  64->512, memDC/bitmap 8->32, ImageList 8->16; (5) crash handler hardened:
+  SA_ONSTACK + 64KB altstack + sigsetjmp-guarded raw reads (silent-139 class
+  eliminated).
+- Iterate-don't-rewrite discipline held: one failed MultiEdit (atomic
+  rollback) silently dropped 4 ENTRY lines — found by re-decoding stub sites
+  on a rebuilt binary; re-applied and re-verified.
+- Full breadth sweep x3 pump-off (scripts/sweep018_broad_sweep.sh ->
+  artifacts/sweep018/sweep/sweep018_sweep.tsv): autoruns64/cports/diskmon64/
+  produkey/rammap64 139->exit0 x3 each, zero regressions (bginfo64/coreinfoex
+  held 0; pageant/procmon64/putty/zoomit64 held own exit codes; procexp64/
+  puttygen/searchmyfiles/winmergeu 139 with recorded signatures SW-807/809/
+  814/815).
+- Gates: G1 PIN sha 616a9ba1 12/12; gui calc 9/9; snake 3x byte-identical;
+  breakout 3x (bricks 40->13); miniwin_calc rebuilt (lost untracked binary,
+  SW-801h class) 3x exit0 4 frames SHA 7e8821ae x3.
+- New evidence: evidence/sweep018/README.md; artifacts/sweep018/.
+- Worklist: SW-812..815 filed; «ادامه سه برابری» queue SW-816..880 (65 items)
+  appended to .agent/SWEEP50_WORKLIST.md.
+
+Stage Summary:
+- main = 5d5e06e + SWEEP-018 batch; G1 12/12 green; sweep 5 programs flipped
+  139->0; pump-on NirSoft loop root-caused and queued (SW-812, menu family).
+- Known open: procexp64/puttygen/searchmyfiles/winmergeu 139s with signatures;
+  pump-on menu-family queue SW-816..820.

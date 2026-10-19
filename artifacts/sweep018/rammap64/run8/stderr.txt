@@ -1,0 +1,62 @@
+[TRACE] Command line: /home/z/my-project/workspace/miniwin-engineering/artifacts/sweep50/dl/rammap64/RAMMap64.exe
+[WARN]   unresolved: ImageList_DrawEx
+[WARN]   unresolved: QueryDosDeviceW
+[WARN]   unresolved: GetNumberFormatW
+[WARN]   unresolved: DrawEdge
+[WARN]   unresolved: GetFocus
+[WARN]   unresolved: SetScrollInfo
+[WARN]   unresolved: GetClassLongPtrW
+[WARN]   unresolved: IntersectRect
+[WARN]   unresolved: ScrollWindowEx
+[WARN]   unresolved: GetUpdateRgn
+[WARN]   unresolved: SetCapture
+[WARN]   unresolved: GetCapture
+[WARN]   unresolved: GetKeyState
+[WARN]   unresolved: GetAncestor
+[WARN]   unresolved: IsDialogMessageW
+[WARN]   unresolved: GetClassNameW
+[WARN]   unresolved: EnumChildWindows
+[WARN]   unresolved: GetDesktopWindow
+[WARN]   unresolved: GetClassLongW
+[WARN]   unresolved: OffsetRect
+[WARN]   unresolved: UnionRect
+[WARN]   unresolved: ChildWindowFromPoint
+[WARN]   unresolved: TranslateAcceleratorW
+[WARN]   unresolved: ReleaseCapture
+[WARN]   unresolved: DefDlgProcW
+[WARN]   unresolved: IsZoomed
+[WARN]   unresolved: EndDeferWindowPos
+[WARN]   unresolved: DeferWindowPos
+[WARN]   unresolved: BeginDeferWindowPos
+[WARN]   unresolved: IsChild
+[WARN]   unresolved: DrawFrameControl
+[WARN]   unresolved: PtInRect
+[WARN]   unresolved: DrawFocusRect
+[WARN]   unresolved: Polyline
+[WARN]   unresolved: SelectClipRgn
+[WARN]   unresolved: RectInRegion
+[WARN]   unresolved: GetBkColor
+[WARN]   unresolved: CreateRectRgnIndirect
+[WARN]   unresolved: CreateRectRgn
+[WARN]   unresolved: GetTextExtentPoint32W
+[WARN]   unresolved: FindTextW
+[WARN]   unresolved: GetSaveFileNameW
+[WARN]   unresolved: GetOpenFileNameW
+[WARN]   unresolved: ChooseColorW
+[WARN]   unresolved: StartServiceW
+[WARN]   unresolved: QueryServiceStatusEx
+[WARN]   unresolved: OpenServiceW
+[WARN]   unresolved: ControlService
+[WARN]   unresolved: ShellExecuteW
+[WARN] 50 imports unresolved
+
+[CRASH] Signal 11 at RIP=0x7f489040b59d
+  RAX=0x20b4280 RCX=0x0 RDX=0x7ffd4d944400 R8=0x20e4040 R9=0x7ffd4d944700
+  RSP=0x7ffd4d943da0 RBP=0x2071a10
+  g_image_base=0x140000000 g_image_size=0x63000
+  (NOT inside loaded PE)
+  [RIP-MAP] 0x7f489040b59d in 0x7f48903d1000-0x7f4890534000 r-xp /usr/lib/x86_64-linux-gnu/libc.so.6
+  Bytes: 89 4c 24 4c 48 89 74 24 70 be 25 00 00 00 64 48 
+  RSI=0x2071a10 RDI=0x2071a10
+  R8=0x20e4040  R9=0x7ffd4d944700 R10=0x7ffd4d9447b0 R11=0x246
+  R12=0x7ffd4d944400 R13=0x0 R14=0x7ffd4d944400 R15=0x2071a10

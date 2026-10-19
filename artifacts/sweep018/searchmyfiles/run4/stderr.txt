@@ -1,0 +1,101 @@
+[TRACE] Command line: /home/z/my-project/workspace/miniwin-engineering/artifacts/sweep50/dl/searchmyfiles/SearchMyFiles.exe
+[WARN]   unresolved: _wcmdln
+[WARN]   unresolved: _msize
+[WARN]   unresolved: _wcslwr
+[WARN]   unresolved: _memicmp
+[WARN]   unresolved: _itow
+[WARN]   unresolved: _wtoi
+[WARN]   unresolved: _ui64tow
+[WARN]   unresolved: _wtoi64
+[WARN]   unresolved: wcsncat
+[WARN]   unresolved: ImageList_AddMasked
+[WARN]   unresolved: CreateStatusWindowW
+[WARN]   unresolved: CreateToolbarEx
+[WARN]   unresolved: WNetGetUniversalNameW
+[WARN]   unresolved: ReadProcessMemory
+[WARN]   unresolved: EnumResourceTypesW
+[WARN]   unresolved: GetLocalTime
+[WARN]   unresolved: GetPrivateProfileStringW
+[WARN]   unresolved: GetPrivateProfileIntW
+[WARN]   unresolved: GetNumberFormatW
+[WARN]   unresolved: WritePrivateProfileStringW
+[WARN]   unresolved: MonitorFromWindow
+[WARN]   unresolved: ChildWindowFromPoint
+[WARN]   unresolved: DeferWindowPos
+[WARN]   unresolved: InsertMenuW
+[WARN]   unresolved: SendDlgItemMessageW
+[WARN]   unresolved: GetWindow
+[WARN]   unresolved: DrawFrameControl
+[WARN]   unresolved: TranslateAcceleratorW
+[WARN]   unresolved: IsDialogMessageW
+[WARN]   unresolved: EndDeferWindowPos
+[WARN]   unresolved: BeginDeferWindowPos
+[WARN]   unresolved: GetSubMenu
+[WARN]   unresolved: GetClassNameW
+[WARN]   unresolved: InsertMenuItemW
+[WARN]   unresolved: OpenClipboard
+[WARN]   unresolved: GetMenuItemCount
+[WARN]   unresolved: GetMenuStringW
+[WARN]   unresolved: CheckMenuRadioItem
+[WARN]   unresolved: SetClipboardData
+[WARN]   unresolved: CloseClipboard
+[WARN]   unresolved: EmptyClipboard
+[WARN]   unresolved: ModifyMenuW
+[WARN]   unresolved: GetMenuItemInfoW
+[WARN]   unresolved: DestroyMenu
+[WARN]   unresolved: EnumChildWindows
+[WARN]   unresolved: SetMenuItemInfoW
+[WARN]   unresolved: DestroyIcon
+[WARN]   unresolved: CreatePopupMenu
+[WARN]   unresolved: GetKeyState
+[WARN]   unresolved: RemoveMenu
+[WARN]   unresolved: DrawTextExW
+[WARN]   unresolved: TrackPopupMenu
+[WARN]   unresolved: SetClipboardViewer
+[WARN]   unresolved: ChangeClipboardChain
+[WARN]   unresolved: IsWindowVisible
+[WARN]   unresolved: GetFocus
+[WARN]   unresolved: DeleteMenu
+[WARN]   unresolved: GetTextExtentPoint32W
+[WARN]   unresolved: StretchBlt
+[WARN]   unresolved: SetStretchBltMode
+[WARN]   unresolved: ChooseFontW
+[WARN]   unresolved: FindTextW
+[WARN]   unresolved: GetOpenFileNameW
+[WARN]   unresolved: GetSaveFileNameW
+[WARN]   unresolved: SHBindToParent
+[WARN]   unresolved: SHGetDesktopFolder
+[WARN]   unresolved: SHGetPathFromIDListW
+[WARN]   unresolved: SHGetMalloc
+[WARN]   unresolved: SHBrowseForFolderW
+[WARN]   unresolved: SHFileOperationW
+[WARN]   unresolved: SHGetFileInfoW
+[WARN]   unresolved: ShellExecuteExW
+[WARN]   unresolved: ShellExecuteW
+[WARN] 74 imports unresolved
+
+[CRASH] Signal 11 at RIP=0x140028001
+  RAX=0xffffffff RCX=0x120 RDX=0x9c65f74fc40b172a R8=0x4800090d89058b48 R9=0x0
+  RSP=0x7fff702c6510 RBP=0x21f0000
+  g_image_base=0x140000000 g_image_size=0x3e000
+  RVA=0x28001 (inside loaded PE)
+  Bytes: 66 41 83 38 22 75 38 66 66 66 90 66 66 66 90 49 
+  Return addr: 0x7fff702c6520
+  RSI=0x0 RDI=0x140000000
+  R8=0x4800090d89058b48  R9=0x0 R10=0x0 R11=0x202
+  R12=0x21ef000 R13=0x21ee000 R14=0x7fff702c6a50 R15=0x7fff702c6850
+  [SCAN rsp+200] 0x20079ab <LOADER>
+  [SCAN rsp+240] 0x140029928 <PE>
+  [SCAN rsp+568] 0x2002775 <LOADER>
+  [SCAN rsp+576] 0x2002148 <LOADER>
+  [SCAN rsp+2024] 0x2006510 <LOADER>
+  [SCAN rsp+2176] 0x2006510 <LOADER>
+  [SCAN rsp+2216] 0x20082f0 <LOADER>
+  [SCAN rsp+2248] 0x2008311 <LOADER>
+  [SCAN rsp+2728] 0x2000040 <LOADER>
+  [SCAN rsp+2808] 0x20082f0 <LOADER>
+  Backtrace (via stack walking):
+    [0] RIP=0x140028001 RVA=0x28001
+      [RSP+0] = 0x7fff702c6520 (return addr?)
+    [1] RIP=0x7fff702c6520 (outside PE, possible shared lib)
+    [2] RIP=0x7fff702c6520 (outside PE, possible shared lib)

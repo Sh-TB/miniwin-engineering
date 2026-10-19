@@ -1,0 +1,110 @@
+[TRACE] Command line: /home/z/my-project/workspace/miniwin-engineering/artifacts/sweep50/dl/cports/cports.exe
+[WARN]   unresolved: _strlwr
+[WARN]   unresolved: _itoa
+[WARN]   unresolved: _mbsicmp
+[WARN]   unresolved: _mbscmp
+[WARN]   unresolved: _mbschr
+[WARN]   unresolved: _memicmp
+[WARN]   unresolved: _strcmpi
+[WARN]   unresolved: _snprintf
+[WARN]   unresolved: ImageList_AddMasked
+[WARN]   unresolved: GetThreadSelectorEntry
+[WARN]   unresolved: WinExec
+[WARN]   unresolved: WritePrivateProfileStringA
+[WARN]   unresolved: GetPrivateProfileStringA
+[WARN]   unresolved: GetPrivateProfileIntA
+[WARN]   unresolved: EnumResourceNamesA
+[WARN]   unresolved: GetTempFileNameA
+[WARN]   unresolved: GetNumberFormatA
+[WARN]   unresolved: ReadProcessMemory
+[WARN]   unresolved: GetDateFormatA
+[WARN]   unresolved: GetTimeFormatA
+[WARN]   unresolved: GetClassNameA
+[WARN]   unresolved: IsDialogMessageA
+[WARN]   unresolved: RemoveMenu
+[WARN]   unresolved: WindowFromPoint
+[WARN]   unresolved: ReleaseCapture
+[WARN]   unresolved: TrackPopupMenu
+[WARN]   unresolved: InsertMenuA
+[WARN]   unresolved: MonitorFromWindow
+[WARN]   unresolved: DrawTextExA
+[WARN]   unresolved: SetCapture
+[WARN]   unresolved: GetKeyState
+[WARN]   unresolved: CreatePopupMenu
+[WARN]   unresolved: SetMenuItemInfoA
+[WARN]   unresolved: ChildWindowFromPoint
+[WARN]   unresolved: GetWindow
+[WARN]   unresolved: DrawFrameControl
+[WARN]   unresolved: DeferWindowPos
+[WARN]   unresolved: SendDlgItemMessageA
+[WARN]   unresolved: TranslateAcceleratorA
+[WARN]   unresolved: IsWindowVisible
+[WARN]   unresolved: GetWindowThreadProcessId
+[WARN]   unresolved: EnumWindows
+[WARN]   unresolved: DestroyIcon
+[WARN]   unresolved: GetWindowLongA
+[WARN]   unresolved: SetWindowLongA
+[WARN]   unresolved: EndDeferWindowPos
+[WARN]   unresolved: BeginDeferWindowPos
+[WARN]   unresolved: OpenClipboard
+[WARN]   unresolved: InsertMenuItemA
+[WARN]   unresolved: EmptyClipboard
+[WARN]   unresolved: GetMenuItemCount
+[WARN]   unresolved: GetSubMenu
+[WARN]   unresolved: CloseClipboard
+[WARN]   unresolved: GetMenuStringA
+[WARN]   unresolved: SetClipboardData
+[WARN]   unresolved: CheckMenuRadioItem
+[WARN]   unresolved: DestroyMenu
+[WARN]   unresolved: EnumChildWindows
+[WARN]   unresolved: GetMenuItemInfoA
+[WARN]   unresolved: ModifyMenuA
+[WARN]   unresolved: GetTextExtentPoint32A
+[WARN]   unresolved: GetSaveFileNameA
+[WARN]   unresolved: FindTextA
+[WARN]   unresolved: ChooseFontA
+[WARN]   unresolved: RegDeleteKeyA
+[WARN]   unresolved: ExtractIconExA
+[WARN]   unresolved: ShellExecuteA
+[WARN]   unresolved: ShellExecuteExA
+[WARN]   unresolved: SHGetFileInfoA
+[WARN]   unresolved: Shell_NotifyIconA
+[WARN] 70 imports unresolved
+
+[CRASH] Signal 11 at RIP=0x7f314f3805e5
+  RAX=0x7fff47914680 RCX=0x0 RDX=0x7fff47914660 R8=0x20d37c0 R9=0x7fff47914b30
+  RSP=0x7fff47914000 RBP=0x206df68
+  g_image_base=0x140000000 g_image_size=0x3c000
+  (NOT inside loaded PE)
+  [RIP-MAP] 0x7f314f3805e5 in 0x7f314f346000-0x7f314f4a9000 r-xp /usr/lib/x86_64-linux-gnu/libc.so.6
+  Bytes: e8 b6 5b fc ff 4c 89 fe 48 89 df 48 89 c2 48 89 
+  RSI=0x25 RDI=0x206df68
+  R8=0x20d37c0  R9=0x7fff47914b30 R10=0x14002ac98 R11=0x7fff47914ad8
+  R12=0x7fff47914660 R13=0x0 R14=0x7fff47914660 R15=0x206df68
+  [SCAN rsp+1848] 0x2030a30 <LOADER>
+  [SCAN rsp+2056] 0x1400159e9 <PE>
+  [SCAN rsp+2312] 0x200e0b4 <LOADER>
+  [SCAN rsp+2584] 0x14000230f <PE>
+  [SCAN rsp+2632] 0x14001a6e0 <PE>
+  [SCAN rsp+2664] 0x140015986 <PE>
+  [SCAN rsp+2776] 0x140002157 <PE>
+  [SCAN rsp+2824] 0x203a3f1 <LOADER>
+  [SCAN rsp+2840] 0x14002aa60 <PE>
+  [SCAN rsp+2848] 0x1400020f0 <PE>
+  [SCAN rsp+2872] 0x140000000 <PE>
+  [SCAN rsp+2944] 0x14002aa60 <PE>
+  [SCAN rsp+3056] 0x14002aa60 <PE>
+  [SCAN rsp+3248] 0x140028eb8 <PE>
+  [SCAN rsp+3304] 0x140015a94 <PE>
+  [SCAN rsp+3328] 0x140028eb8 <PE>
+  [SCAN rsp+3392] 0x140000000 <PE>
+  [SCAN rsp+3560] 0x200e0b4 <LOADER>
+  [SCAN rsp+3832] 0x14000230f <PE>
+  [SCAN rsp+3880] 0x14001a6e0 <PE>
+  [SCAN rsp+3912] 0x140015986 <PE>
+  [SCAN rsp+4024] 0x140002157 <PE>
+  [SCAN rsp+4072] 0x203a3f1 <LOADER>
+  [SCAN rsp+4088] 0x14002aa60 <PE>
+  Backtrace (via stack walking):
+    [0] RIP=0x7f314f3805e5 (outside PE, possible shared lib)
+    [1] RIP=0x7f314f3805e5 (outside PE, possible shared lib)
