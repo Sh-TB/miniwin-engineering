@@ -1,0 +1,1412 @@
+{
+  "trace": [
+[Tff80] [API] PE Loader: file=/home/z/my-project/workspace/miniwin-engineering/samples/upx_decompressed.exe size=2140672
+[Tff80] [API] PE Loader: ImageBase=0x400000 EP=0x14f0 SizeOfImage=0x213000 Sections=10
+[Tff80] [API] PE Loader: Mapped at 0x400000 (forced via MAP_FIXED)
+[Tff80] [API] Section [0] .text    VA=0x00001000 VS=0x000dfbb0 Raw=0x000dfc00 Ch=0x60500060
+[Tff80] [API] Section [1] .data    VA=0x000e1000 VS=0x00000a50 Raw=0x00000c00 Ch=0xc0600040
+[Tff80] [API] Section [2] .rdata   VA=0x000e2000 VS=0x00115800 Raw=0x00115800 Ch=0x40600040
+[Tff80] [API] Section [3] .pdata   VA=0x001f8000 VS=0x00008e08 Raw=0x00009000 Ch=0x40300040
+[Tff80] [API] Section [4] .xdata   VA=0x00201000 VS=0x0000937c Raw=0x00009400 Ch=0x40300040
+[Tff80] [API] Section [5] .bss     VA=0x0020b000 VS=0x00002ec0 Raw=0x00000000 Ch=0xc0600080
+[Tff80] [API] Section [6] .idata   VA=0x0020e000 VS=0x000016a8 Raw=0x00001800 Ch=0xc0300040
+[Tff80] [API] Section [7] .CRT     VA=0x00210000 VS=0x00000070 Raw=0x00000200 Ch=0xc0400040
+[Tff80] [API] Section [8] .tls     VA=0x00211000 VS=0x00000010 Raw=0x00000200 Ch=0xc0400040
+[Tff80] [API] Section [9] .rsrc    VA=0x00212000 VS=0x000005d0 Raw=0x00000600 Ch=0xc0300040
+[Tff80] [API] Import Directory: RVA=0x20e000 Size=0x16a8
+[Tff80] [API] Import DLL: KERNEL32.DLL (IAT RVA=0x20e55c, ILT RVA=0x0)
+[Tff80] [API]   [0] AddVectoredExceptionHandler -> 0x200fbf0
+[Tff80] [API]   [1] CloseHandle -> 0x2047fc0
+[Tff80] [API]   [2] CreateEventA -> 0x20285b0
+[Tff80] [API]   [3] CreateSemaphoreA -> 0x20287d0
+[Tff80] [API]   [4] DebugBreak -> 0x20320b0
+[Tff80] [API]   [5] DeleteCriticalSection -> 0x2035d20
+[Tff80] [API]   [6] DuplicateHandle -> 0x200a8a0
+[Tff80] [API]   [7] EnterCriticalSection -> 0x2041450
+[Tff80] [API]   [8] GetConsoleCursorInfo -> 0x200a9c0
+[Tff80] [API]   [9] GetConsoleMode -> 0x2029630
+[Tff80] [API]   [10] GetConsoleScreenBufferInfo -> 0x20101e0
+[Tff80] [API]   [11] GetCurrentProcess -> 0x2008410
+[Tff80] [API]   [12] GetCurrentProcessId -> 0x2008420
+[Tff80] [API]   [13] GetCurrentThread -> 0x2008430
+[Tff80] [API]   [14] GetCurrentThreadId -> 0x2008440
+[Tff80] [API]   [15] GetFileTime -> 0x20321b0
+[Tff80] [API]   [16] GetHandleInformation -> 0x20322b0
+[Tff80] [API]   [17] GetLastError -> 0x200aae0
+[Tff80] [API]   [18] GetModuleHandleA -> 0x2012910
+[Tff80] [API]   [19] GetProcAddress -> 0x200abe0
+[Tff80] [API]   [20] GetProcessAffinityMask -> 0x2010aa0
+[Tff80] [API]   [21] GetStartupInfoA -> 0x2010450
+[Tff80] [API]   [22] GetStdHandle -> 0x2060710
+[Tff80] [API]   [23] GetSystemTimeAsFileTime -> 0x2014b90
+[Tff80] [API]   [24] GetThreadContext -> 0x20323b0
+[Tff80] [API]   [25] GetThreadPriority -> 0x20324b0
+[Tff80] [API]   [26] GetTickCount -> 0x2014e20
+[Tff80] [API]   [27] InitializeCriticalSection -> 0x2035d00
+[Tff80] [API]   [28] IsDBCSLeadByteEx -> 0x2008520
+[Tff80] [API]   [29] IsDebuggerPresent -> 0x20325b0
+[Tff80] [API]   [30] LeaveCriticalSection -> 0x2031e70
+[Tff80] [API]   [31] MultiByteToWideChar -> 0x2029dc0
+[Tff80] [API]   [32] OpenProcess -> 0x20326b0
+[Tff80] [API]   [33] OutputDebugStringA -> 0x200b0d0
+[Tff80] [API]   [34] QueryPerformanceCounter -> 0x2014f50
+[Tff80] [API]   [35] QueryPerformanceFrequency -> 0x2010bc0
+[Tff80] [API]   [36] RaiseException -> 0x2008720
+[Tff80] [API]   [37] ReleaseSemaphore -> 0x2042300
+[Tff80] [API]   [38] RemoveVectoredExceptionHandler -> 0x200fd40
+[Tff80] [API]   [39] ResetEvent -> 0x2043090
+[Tff80] [API]   [40] ResumeThread -> 0x20327b0
+[Tff80] [API]   [41] RtlCaptureContext -> 0x20328b0
+[Tff80] [API]   [42] RtlLookupFunctionEntry -> 0x200b230
+[Tff80] [API]   [43] RtlUnwindEx -> 0x2045d50
+[Tff80] [API]   [44] RtlVirtualUnwind -> 0x2043b10
+[Tff80] [API]   [45] ScrollConsoleScreenBufferA -> 0x20329b0
+[Tff80] [API]   [46] SetConsoleCursorInfo -> 0x2027610
+[Tff80] [API]   [47] SetConsoleCursorPosition -> 0x2027720
+[Tff80] [API]   [48] SetConsoleTextAttribute -> 0x2027850
+[Tff80] [API]   [49] SetEvent -> 0x20433e0
+[Tff80] [API]   [50] SetFileTime -> 0x2032ab0
+[Tff80] [API]   [51] SetLastError -> 0x2027970
+[Tff80] [API]   [52] SetProcessAffinityMask -> 0x2032bb0
+[Tff80] [API]   [53] SetThreadContext -> 0x2032cd0
+[Tff80] [API]   [54] SetThreadPriority -> 0x2032dd0
+[Tff80] [API]   [55] SetUnhandledExceptionFilter -> 0x200b4b0
+[Tff80] [API]   [56] Sleep -> 0x20161b0
+[Tff80] [API]   [57] SuspendThread -> 0x2032ef0
+[Tff80] [API]   [58] TlsAlloc -> 0x200ff50
+[Tff80] [API]   [59] TlsGetValue -> 0x200b5c0
+[Tff80] [API]   [60] TlsSetValue -> 0x202d5c0
+[Tff80] [API]   [61] TryEnterCriticalSection -> 0x20415a0
+[Tff80] [API]   [62] VirtualProtect -> 0x20162c0
+[Tff80] [API]   [63] VirtualQuery -> 0x20105b0
+[Tff80] [API]   [64] WaitForMultipleObjects -> 0x20478a0
+[Tff80] [API]   [65] WaitForSingleObject -> 0x2047750
+[Tff80] [API]   [66] WideCharToMultiByte -> 0x2027be0
+[Tff80] [API]   [67] WriteConsoleOutputA -> 0x2010320
+[Tff80] [API] Import DLL: msvcrt.dll (IAT RVA=0x20e784, ILT RVA=0x0)
+[Tff80] [API]   [0] __C_specific_handler -> 0x2032ff0
+[Tff80] [API]   [1] ___lc_codepage_func -> 0x202e580
+[Tff80] [API]   [2] ___mb_cur_max_func -> 0x20332f0
+[Tff80] [API]   [3] __getmainargs -> 0x200b6e0
+[Tff80] [API]   [4] __initenv -> DATA 0x21c0fc0
+[Tff80] [API]   [5] __iob_func -> 0x200b9e0
+[Tff80] [API]   [6] __lconv_init -> 0x2016640
+[Tff80] [API]   [7] __set_app_type -> 0x202d910
+[Tff80] [API]   [8] __setusermatherr -> 0x202da20
+[Tff80] [API]   [9] _acmdln -> DATA 0x21c0fc8
+[Tff80] [API]   [10] _amsg_exit -> 0x20167e0
+[Tff80] [API]   [11] _beginthreadex -> 0x201b9a0
+[Tff80] [API]   [12] _cexit -> 0x2010f50
+[Tff80] [API]   [13] _commode -> DATA 0x22604f4
+[Tff80] [API]   [14] _endthreadex -> 0x201bc90
+[Tff80] [API]   [15] _errno -> 0x202e8c0
+[Tff80] [API]   [16] _fmode -> DATA 0x22604f8
+[Tff80] [API]   [17] _fstat64 -> 0x20198f0
+[Tff80] [API]   [18] _get_osfhandle -> 0x200be70
+[Tff80] [API]   [19] _gmtime64 -> 0x201a460
+[Tff80] [API]   [20] _initterm -> 0x200b830
+[Tff80] [API]   [21] _kbhit -> 0x203d900
+[Tff80] [API]   [22] _localtime64 -> 0x201a500
+[Tff80] [API]   [23] _lock -> 0x202e9c0
+[Tff80] [API]   [24] _lseeki64 -> 0x2019c70
+[Tff80] [API]   [25] _onexit -> 0x201b8a0
+[Tff80] [API]   [26] _setjmp -> 0x2008ce0
+[Tff80] [API]   [27] _stat64 -> 0x2019aa0
+[Tff80] [API]   [28] _time64 -> 0x201a210
+[Tff80] [API]   [29] _ultoa -> 0x2026ac0
+[Tff80] [API]   [30] _unlock -> 0x202ead0
+[Tff80] [API]   [31] _wopen -> 0x204bc70
+[Tff80] [API]   [32] abort -> 0x203cca0
+[Tff80] [API]   [33] atoi -> 0x2017cc0
+[Tff80] [API]   [34] calloc -> 0x20420d0
+[Tff80] [API]   [35] clock -> 0x2018b60
+[Tff80] [API]   [36] exit -> 0x20168b0
+[Tff80] [API]   [37] fflush -> 0x2023b70
+[Tff80] [API]   [38] fprintf -> 0x2025590
+[Tff80] [API]   [39] fputc -> 0x20243d0
+[Tff80] [API]   [40] fputs -> 0x2024290
+[Tff80] [API]   [41] free -> 0x204f780
+[Tff80] [API]   [42] fwrite -> 0x20244f0
+[Tff80] [API]   [43] getc -> 0x2024690
+[Tff80] [API]   [44] getenv -> 0x2013560
+[Tff80] [API]   [45] islower -> 0x2018480
+[Tff80] [API]   [46] isspace -> 0x2018530
+[Tff80] [API]   [47] isupper -> 0x20185e0
+[Tff80] [API]   [48] isxdigit -> 0x2018690
+[Tff80] [API]   [49] localeconv -> 0x2016740
+[Tff80] [API]   [50] malloc -> 0x2041700
+[Tff80] [API]   [51] memchr -> 0x2017c20
+[Tff80] [API]   [52] memcmp -> 0x2012c70
+[Tff80] [API]   [53] memcpy -> 0x2013f20
+[Tff80] [API]   [54] memmove -> 0x200feb0
+[Tff80] [API]   [55] memset -> 0x2010720
+[Tff80] [API]   [56] printf -> 0x2025370
+[Tff80] [API]   [57] qsort -> 0x201a740
+[Tff80] [API]   [58] rand -> 0x201b640
+[Tff80] [API]   [59] realloc -> 0x2054c80
+[Tff80] [API]   [60] rename -> 0x2019d90
+[Tff80] [API]   [61] signal -> 0x202de60
+[Tff80] [API]   [62] srand -> 0x201b800
+[Tff80] [API]   [63] strchr -> 0x2013ba0
+[Tff80] [API]   [64] strcmp -> 0x2015cf0
+[Tff80] [API]   [65] strcpy -> 0x2017850
+[Tff80] [API]   [66] strcspn -> 0x2017a40
+[Tff80] [API]   [67] strerror -> 0x7fee6712a550
+[Tff80] [API]   [68] strlen -> 0x20125f0
+[Tff80] [API]   [69] strncmp -> 0x2017ae0
+[Tff80] [API]   [70] strrchr -> 0x20178f0
+[Tff80] [API]   [71] strstr -> 0x2013b00
+[Tff80] [API]   [72] strtol -> 0x2017d60
+[Tff80] [API]   [73] strtoul -> 0x2018280
+[Tff80] [API]   [74] tolower -> 0x2037a90
+[Tff80] [API]   [75] ungetc -> 0x20247c0
+[Tff80] [API]   [76] vfprintf -> 0x20257b0
+[Tff80] [API]   [77] wcslen -> 0x2026b80
+[Tff80] [API]   [78] wcstombs -> 0x2008bc0
+[Tff80] [API]   [79] longjmp -> 0x201a6b0
+[Tff80] [API]   [80] _write -> 0x2019110
+[Tff80] [API]   [81] _unlink -> 0x2019ea0
+[Tff80] [API]   [82] _stricmp -> 0x2017b80
+[Tff80] [API]   [83] _strdup -> 0x2013e30
+[Tff80] [API]   [84] _sopen -> 0x2018de0
+[Tff80] [API]   [85] _setmode -> 0x202e690
+[Tff80] [API]   [86] _rmdir -> 0x2019fc0
+[Tff80] [API]   [87] _read -> 0x2018f20
+[Tff80] [API]   [88] _open -> 0x2018c00
+[Tff80] [API]   [89] _isatty -> 0x20124f0
+[Tff80] [API]   [90] _fileno -> 0x200bd20
+[Tff80] [API]   [91] _dup -> 0x20197f0
+[Tff80] [API]   [92] _close -> 0x20193e0
+[Tff80] [API]   [93] _chmod -> 0x201a0e0
+[Tff80] [API] Import resolution: 162 resolved, 0 unresolved (total 162)
+[Tff80] [API] TLS: StartRaw=0x611000 EndRaw=0x611008 Callbacks=0x610040
+[Tff80] [API] TLS: static block 0x3567090 (8+0 bytes) -> slot 0
+[Tff80] [API] TLS: callback[0] = 0x49c230
+[Tff80] [API] InitializeCriticalSection(0x60d2a0)
+[Tff80] [API] TLS: callback[1] = 0x49c200
+[Tff80] [API] TLS: callback[2] = 0x4aae90
+[Tff80] [API] AddVectoredExceptionHandler(first=1, handler=0x4aa3e0)
+[Tff80] [API] Exception: .pdata RVA=0x1f8000 Size=0x8e08 Entries=3030
+[Tff80] [API] [API-005] EH hacks DISABLED (default) (MINWIN_EH_HACKS=<unset>)
+[Tff80] [API] [API-005] CXX-EH-FIX (LSDA catch-all patch RVA 0x2010c8) skipped: MINWIN_EH_HACKS not set
+[Tff80] [API] Jumping to EP=0x4014f0
+[Tff80] [API] _initterm(start=0x610018, end=0x610030)
+[Tff80] [API] _initterm: calling 0x401010
+[Tff80] [API] __set_app_type(1)
+[Tff80] [API] _initterm: calling 0x49c1e0
+[Tff80] [API] __lconv_init()
+[Tff80] [API] _initterm(start=0x610000, end=0x610010)
+[Tff80] [API] _initterm: calling 0x401140
+[Tff80] [API] __getmainargs(argc=0x60b028, argv=0x60b020, envp=0x60b018)
+[Tff80] [API] SetUnhandledExceptionFilter(handler=0x49c9c0)
+[Tff80] [API] malloc(24) = 0x3567740
+[Tff80] [API] malloc(21) = 0x3567760
+[Tff80] [API] malloc(10) = 0x3567780
+[Tff80] [API] _onexit(func=0x401540)
+[Tff80] [API] calloc(1, 48) = 0x35677a0
+[Tff80] [API] calloc(1, 176) = 0x35677e0
+[Tff80] [API] CreateSemaphoreA(init=0, max=2147483647, name=NULL)
+[Tff80] [API] CreateSemaphoreA(init=0, max=2147483647, name=NULL)
+[Tff80] [API] InitializeCriticalSection(0x35677f8)
+[Tff80] [API] InitializeCriticalSection(0x3567850)
+[Tff80] [API] InitializeCriticalSection(0x3567820)
+[Tff80] [API] malloc(24) = 0x35678a0
+[Tff80] [API] malloc(24) = 0x35678c0
+[Tff80] [API] realloc((nil), 8) = 0x35678e0
+[Tff80] [API] _onexit(func=0x4e0260)
+[Tff80] [API] malloc(74752) = 0x3567900
+[Tff80] [API] _onexit(func=0x4e0240)
+[Tff80] [API] _onexit(func=0x471fd0)
+[Tff80] [API] _onexit(func=0x471fe0)
+[Tff80] [API] _onexit(func=0x49c110)
+[Tff80] [API] malloc(168) = 0x3579d10
+[Tff80] [API] GetLastError() = 0
+[Tff80] [API] calloc(1, 32) = 0x3567710
+[Tff80] [API] malloc(24) = 0x3579dc0
+[Tff80] [API] TlsAlloc() = 1
+[Tff80] [API] free(0x3579dc0)
+[Tff80] [API] free(0x3567710)
+[Tff80] [API] TlsGetValue(1) = (nil)
+[Tff80] [API] malloc(24) = 0x3579dc0
+[Tff80] [API] calloc(1, 480) = 0x3579de0
+[Tff80] [API] malloc(256) = 0x3579fd0
+[Tff80] [API] CreateEventA(manual=1, init=0, name=NULL)
+[Tff80] [API] DuplicateHandle(src_h=0xfffffffffffffffe, tgt_h=0x3579e08)
+[Tff80] [API] GetThreadPriority()
+[Tff80] [API] TlsSetValue(1, 0x3579de0)
+[Tff80] [API] SetLastError(0)
+[Tff80] [API] malloc(16) = 0x357a0e0
+[Tff80] [API] GetLastError() = 0
+[Tff80] [API] TlsGetValue(1) = 0x3579de0
+[Tff80] [API] realloc((nil), 8) = 0x357a100
+[Tff80] [API] realloc((nil), 1) = 0x357a120
+[Tff80] [API] SetLastError(0)
+[Tff80] [API] [DISPATCH] === RtlDispatchException ===
+[Tff80] [API] [DISPATCH] ExceptionCode=0x20474343 RIP=0x49d5b1 RSP=0x7ffe371be860
+[Tff80] [API] [EXC_STATE] EXCEPTION_BEGIN
+[Tff80] [API] [EXC_STATE] Code: 0x20474343
+[Tff80] [API] [EXC_STATE] Flags: 0x0
+[Tff80] [API] [EXC_STATE] Address: 0x49d5b1
+[Tff80] [API] [EXC_STATE] NumParams: 1
+[Tff80] [API] [EXC_STATE] Param[0]: 0x3579d70
+[Tff80] [API] [EXC_STATE] Param[1]: 0x0
+[Tff80] [API] [EXC_STATE] Param[2]: 0x0
+[Tff80] [API] [EXC_STATE] Param[3]: 0x0
+[Tff80] [API] [EXC_STATE] g_cap_args ptr: 0x7ffe371be890
+[Tff80] [API] [EXC_STATE] Exception object @ 0x3579d70 (first 32 bytes):
+[Tff80] [API] [EXC_STATE]   00 2b 2b 43 43 55 4e 47
+[Tff80] [API] [EXC_STATE]   10 f9 4a 00 00 00 00 00
+[Tff80] [API] [EXC_STATE]   00 00 00 00 00 00 00 00
+[Tff80] [API] [EXC_STATE]   00 00 00 00 00 00 00 00
+[Tff80] [API] [EXC_STATE] Exception class (u64): 0x474e5543432b2b00
+[Tff80] [API] [EXC_STATE] EXCEPTION_END
+[Tff80] [API] [DISPATCH] VEH chain: 1 handlers
+[Tff80] [API] [DISPATCH] VEH[0]: handler=0x4aa3e0
+[Tff80] [API] [DISPATCH] VEH[0]: returned 0
+[Tff80] [API] [DISPATCH] Frame[0]: RIP=0x49d5b1 RVA=0x9d5b1 CTX.Rsp=0x7ffe371be860
+[Tff80] [API] [DISPATCH] Frame[0]: RF begin=0x9d560 end=0x9d5bb ui=0x2098b4
+[Tff80] [API] [DISPATCH] Unwind: pc=0x49d5b1 begin=0x9d560 handler=0x0 est=0x7ffe371be888
+[Tff80] [API] [DISPATCH] Frame[0]: Unwind est=0x7ffe371be888 CTX.Rsp_after=0x7ffe371be888 alloc=0x0
+[Tff80] [API] [DISPATCH] Frame[0]: no handler, parent RIP=0x4e0203 RVA=0xe0203
+[Tff80] [API] [DISPATCH] Frame[0]: est=0x7ffe371be888 CTX.Rsp=0x7ffe371be888 delta=0x0
+[Tff80] [API] [DISPATCH] Frame[1]: RIP=0x4e0203 RVA=0xe0203 CTX.Rsp=0x7ffe371be890
+[Tff80] [API] [DISPATCH] Frame[1]: RF begin=0xe0190 end=0xe0211 ui=0x20931c
+[Tff80] [API] [DISPATCH] Unwind: pc=0x4e0203 begin=0xe0190 handler=0x0 est=0x7ffe371be8c8
+[Tff80] [API] [DISPATCH] Frame[1]: Unwind est=0x7ffe371be8c8 CTX.Rsp_after=0x7ffe371be8c8 alloc=0x0
+[Tff80] [API] [DISPATCH] Frame[1]: no handler, parent RIP=0x4e02d9 RVA=0xe02d9
+[Tff80] [API] [DISPATCH] Frame[1]: est=0x7ffe371be8c8 CTX.Rsp=0x7ffe371be8c8 delta=0x0
+[Tff80] [API] [DISPATCH] Frame[2]: RIP=0x4e02d9 RVA=0xe02d9 CTX.Rsp=0x7ffe371be8d0
+[Tff80] [API] [DISPATCH] Frame[2]: RF begin=0xe0290 end=0xe02da ui=0x201270
+[Tff80] [API] [DISPATCH] Unwind: pc=0x4e02d9 begin=0xe0290 handler=0x0 est=0x7ffe371be8f8
+[Tff80] [API] [DISPATCH] Frame[2]: Unwind est=0x7ffe371be8f8 CTX.Rsp_after=0x7ffe371be8f8 alloc=0x0
+[Tff80] [API] [DISPATCH] Frame[2]: no handler, parent RIP=0x401593 RVA=0x1593
+[Tff80] [API] [DISPATCH] Frame[2]: est=0x7ffe371be8f8 CTX.Rsp=0x7ffe371be8f8 delta=0x0
+[Tff80] [API] [DISPATCH] Frame[3]: RIP=0x401593 RVA=0x1593 CTX.Rsp=0x7ffe371be900
+[Tff80] [API] [DISPATCH] Frame[3]: RF begin=0x1570 end=0x15bb ui=0x20107c
+[Tff80] [API] [DISPATCH] Unwind: pc=0x401593 begin=0x1570 handler=0xe0220 est=0x7ffe371be948
+[Tff80] [API] [DISPATCH] Frame[3]: Unwind est=0x7ffe371be948 CTX.Rsp_after=0x7ffe371be948 alloc=0x0
+[Tff80] [API] [DISPATCH] Frame[3]: EHANDLER at RVA 0xe0220 (VA 0x4e0220)
+[Tff80] [API] [DISPATCH] Frame[3]: establisher=0x7ffe371be948 CTX.Rsp=0x7ffe371be948 lsda=0x601088
+[Tff80] [API] [HANDLER_CALL] Frame[3] BEGIN
+[Tff80] [API] [HANDLER_CALL] RCX (EXCEPTION_RECORD*) = 0x7ffe371bdd80
+[Tff80] [API] [HANDLER_CALL] RDX (EstablisherFrame) = 0x7ffe371be948
+[Tff80] [API] [HANDLER_CALL] R8  (CONTEXT*)       = 0x7ffe371bde20
+[Tff80] [API] [HANDLER_CALL] R9  (DISPATCHER_CONTEXT*) = 0x7ffe371bdd30
+[Tff80] [API] [HANDLER_CALL] Handler VA = 0x4e0220  RVA = 0xe0220
+[Tff80] [API] [HANDLER_CALL] HandlerData (LSDA) = 0x601088
+[Tff80] [API] [HANDLER_CALL] ER.Code=0x20474343 ER.Flags=0x0 ER.NumParams=1
+[Tff80] [API] [HANDLER_CALL] ER.Param[0]=0x3579d70 ER.Param[1]=0x0 ER.Param[2]=0x0
+[Tff80] [API] [HANDLER_CALL] Handler bytes [0:16]: 48 83 ec 38 48 8d 05 85 fb fc ff 48 89 44 24 20
+[Tff80] [API] [HANDLER_CALL] Handler bytes[16:32]: e8 0b d1 fb ff 48 83 c4 38 c3 90 90 90 90 90 90
+[Tff80] [API] [HANDLER_CALL] Handler bytes[32:48]: 48 83 ec 28 48 8d 0d 55 12 00 00 e8 20 a0 fc ff
+[Tff80] [API] [LSDA] raw[0:16]:  ff ff 01 08 20 03 35 00 45 06 00 00 01 00 00 00
+[Tff80] [API] [LSDA] raw[16:32]: 01 00 00 00 01 00 00 00 01 00 00 00 01 00 00 00
+[Tff80] [API] [LSDA] raw[32:48]: 01 00 00 00 01 00 00 00 01 00 00 00 01 00 00 00
+[Tff80] [API] [LSDA] raw[48:64]: 01 00 00 00 01 00 00 00 01 00 00 00 01 00 00 00
+[Tff80] [API] [LSDA] raw[64:80]: 01 00 00 00 01 00 00 00 01 00 00 00 01 00 00 00
+[Tff80] [API] [LSDA] raw[80:96]: 01 00 00 00 01 00 00 00 01 00 00 00 01 00 00 00
+[Tff80] [API] [LSDA] raw[96:112]: 01 00 00 00 01 00 00 00 01 00 00 00 01 00 00 00
+[Tff80] [API] [LSDA] raw[112:128]: 01 00 00 00 01 00 00 00 01 00 00 00 01 00 00 00
+[Tff80] [API] [LSDA] LPStart_enc=0xff (omit)
+[Tff80] [API] [LSDA] TType_enc=0xff
+[Tff80] [API] [LSDA] CS_enc=0x01
+[Tff80] [API] [HANDLER_CALL] CTX.Rip=0x401592 CTX.Rsp=0x7ffe371be948 CTX.Rbp=0x0
+[Tff80] [API] [HANDLER_CALL] calling...
+[Tff80] [API] [HANDLER_CALL] returned disposition=1 (0=Exec %1=Search %2=Nested %3=Collided)
+[Tff80] [API] [HANDLER_CALL] Frame[3] END
+[Tff80] [API] [DISPATCH] Handler returned ContinueSearch — walking to parent
+[Tff80] [API] [DISPATCH] Frame[3]: parent RIP=0x4032f2 RVA=0x32f2
+[Tff80] [API] [DISPATCH] Frame[4]: RIP=0x4032f2 RVA=0x32f2 CTX.Rsp=0x7ffe371be950
+[Tff80] [API] [DISPATCH] Frame[4]: RF begin=0x32c0 end=0x3368 ui=0x2011f0
+[Tff80] [API] [DISPATCH] Unwind: pc=0x4032f2 begin=0x32c0 handler=0xe0220 est=0x7ffe371be9b8
+[Tff80] [API] [DISPATCH] Frame[4]: Unwind est=0x7ffe371be9b8 CTX.Rsp_after=0x7ffe371be9b8 alloc=0x0
+[Tff80] [API] [DISPATCH] Frame[4]: EHANDLER at RVA 0xe0220 (VA 0x4e0220)
+[Tff80] [API] [DISPATCH] Frame[4]: establisher=0x7ffe371be9b8 CTX.Rsp=0x7ffe371be9b8 lsda=0x601200
+[Tff80] [API] [HANDLER_CALL] Frame[4] BEGIN
+[Tff80] [API] [HANDLER_CALL] RCX (EXCEPTION_RECORD*) = 0x7ffe371bdd80
+[Tff80] [API] [HANDLER_CALL] RDX (EstablisherFrame) = 0x7ffe371be9b8
+[Tff80] [API] [HANDLER_CALL] R8  (CONTEXT*)       = 0x7ffe371bde20
+[Tff80] [API] [HANDLER_CALL] R9  (DISPATCHER_CONTEXT*) = 0x7ffe371bdd30
+[Tff80] [API] [HANDLER_CALL] Handler VA = 0x4e0220  RVA = 0xe0220
+[Tff80] [API] [HANDLER_CALL] HandlerData (LSDA) = 0x601200
+[Tff80] [API] [HANDLER_CALL] ER.Code=0x20474343 ER.Flags=0x0 ER.NumParams=1
+[Tff80] [API] [HANDLER_CALL] ER.Param[0]=0x3579d70 ER.Param[1]=0x0 ER.Param[2]=0x0
+[Tff80] [API] [HANDLER_CALL] Handler bytes [0:16]: 48 83 ec 38 48 8d 05 85 fb fc ff 48 89 44 24 20
+[Tff80] [API] [HANDLER_CALL] Handler bytes[16:32]: e8 0b d1 fb ff 48 83 c4 38 c3 90 90 90 90 90 90
+[Tff80] [API] [HANDLER_CALL] Handler bytes[32:48]: 48 83 ec 28 48 8d 0d 55 12 00 00 e8 20 a0 fc ff
+[Tff80] [API] [LSDA] raw[0:16]:  ff 9b 15 01 04 2d 05 5c 05 02 00 01 7d 00 7d 00
+[Tff80] [API] [LSDA] raw[16:32]: 00 00 00 00 fc fd ed ff 01 06 02 00 06 32 02 c0
+[Tff80] [API] [LSDA] raw[32:48]: 01 04 01 00 04 22 00 00 01 04 01 00 04 22 00 00
+[Tff80] [API] [LSDA] raw[48:64]: 01 04 01 00 04 22 00 00 01 04 01 00 04 22 00 00
+[Tff80] [API] [LSDA] raw[64:80]: 01 04 01 00 04 22 00 00 01 04 01 00 04 22 00 00
+[Tff80] [API] [LSDA] raw[80:96]: 01 00 00 00 01 00 00 00 19 09 05 00 09 82 05 60
+[Tff80] [API] [LSDA] raw[96:112]: 04 70 03 50 02 c0 00 00 20 02 0e 00 ff ff 01 00
+[Tff80] [API] [LSDA] raw[112:128]: 01 05 02 00 05 32 01 30 01 04 01 00 04 42 00 00
+[Tff80] [API] [LSDA] LPStart_enc=0xff (omit)
+[Tff80] [API] [LSDA] TType_enc=0x9b
+[Tff80] [API] [LSDA] CS_enc=0x15
+[Tff80] [API] [HANDLER_CALL] CTX.Rip=0x4032f1 CTX.Rsp=0x7ffe371be9b8 CTX.Rbp=0x0
+[Tff80] [API] [HANDLER_CALL] calling...
+[Tff80] [API] RtlUnwindEx(target_frame=0x7ffe371be9b8, target_ip=0x40331c, ctx=0x7ffe371bdd80, exc=0x3579d70)
+[Tff80] [API] RtlUnwindEx: TargetIp=0x40331c TargetFrame=0x7ffe371be9b8
+[Tff80] [API] [DISPATCH] Unwind: pc=0x49d5b1 begin=0x9d560 handler=0x0 est=0x7ffe371be888
+[Tff80] [API] [DISPATCH] Unwind: pc=0x4e0203 begin=0xe0190 handler=0x0 est=0x7ffe371be8c8
+[Tff80] [API] [DISPATCH] Unwind: pc=0x4e02d9 begin=0xe0290 handler=0x0 est=0x7ffe371be8f8
+[Tff80] [API] [DISPATCH] Unwind: pc=0x401593 begin=0x1570 handler=0xe0220 est=0x7ffe371be948
+[Tff80] [API] [BUG-031] first walk: personality fn=0x4e0220 est=0x7ffe371be948 rip=0x401593 lsda=0x601088 flags=0x2 (EH_UNWINDING)
+[Tff80] [API] [DISPATCH] === RtlDispatchException ===
+[Tff80] [API] [DISPATCH] ExceptionCode=0x21474343 RIP=0x49d419 RSP=0x7ffe371bcfc0
+[Tff80] [API] [EXC_STATE] EXCEPTION_BEGIN
+[Tff80] [API] [EXC_STATE] Code: 0x21474343
+[Tff80] [API] [EXC_STATE] Flags: 0x1
+[Tff80] [API] [EXC_STATE] Address: 0x49d419
+[Tff80] [API] [EXC_STATE] NumParams: 4
+[Tff80] [API] [EXC_STATE] Param[0]: 0x3579d70
+[Tff80] [API] [EXC_STATE] Param[1]: 0x7ffe371be948
+[Tff80] [API] [EXC_STATE] Param[2]: 0x4015a5
+[Tff80] [API] [EXC_STATE] Param[3]: 0x0
+[Tff80] [API] [EXC_STATE] g_cap_args ptr: 0x7ffe371bd1a0
+[Tff80] [API] [EXC_STATE] Exception object @ 0x3579d70 (first 32 bytes):
+[Tff80] [API] [EXC_STATE]   00 2b 2b 43 43 55 4e 47
+[Tff80] [API] [EXC_STATE]   10 f9 4a 00 00 00 00 00
+[Tff80] [API] [EXC_STATE]   00 00 00 00 00 00 00 00
+[Tff80] [API] [EXC_STATE]   b8 e9 1b 37 fe 7f 00 00
+[Tff80] [API] [EXC_STATE] Exception class (u64): 0x474e5543432b2b00
+[Tff80] [API] [EXC_STATE] EXCEPTION_END
+[Tff80] [API] [BUG-031] resume-cmd: 0x21474343 obj=0x3579d70 est=0x7ffe371be948 lp=0x4015a5 sel=0 alloc=0x48 -> RIP=0x4015a5 RSP=0x7ffe371be900
+[Tff80] [API] RtlCaptureContext()
+[Tff80] [API] RtlUnwindEx(target_frame=0x7ffe371be9b8, target_ip=0x40331c, ctx=0x7ffe371be280, exc=0x3579d70)
+[Tff80] [API] RtlUnwindEx: TargetIp=0x40331c TargetFrame=0x7ffe371be9b8
+[Tff80] [API] [BUG-031] continuation unwind: orig_ctx=0x7ffe371be400
+[Tff80] [API] [BUG-031] cont walk: RIP 0x0 outside PE — walk ends
+[Tff80] [API] [BUG-031] continuation: 4-param ER obj=0x3579d70 est=0x7ffe371be9b8 lp=0x40331c sel=1 -> CTX.Rdx
+[Tff80] [API] [BUG-031] continuation resume: RIP=0x40331c RSP=0x7ffe371be950 alloc=0x68
+[Tff80] [API] GetLastError() = 0
+[Tff80] [API] TlsGetValue(1) = 0x3579de0
+[Tff80] [API] SetLastError(0)
+[Tff80] [API] GetLastError() = 0
+[Tff80] [API] TlsGetValue(1) = 0x3579de0
+[Tff80] [API] SetLastError(0)
+[Tff80] [API] free(0x3579d10)
+[Tff80] [API] _errno() = 0x21c0fb8
+[Tff80] [API] _errno() = 0x21c0fb8
+[Tff80] [API] __iob_func() = 0x21c0fa0
+[Tff80] [API] __iob_func() = 0x21c0fa0
+[Tff80] [API] __iob_func() = 0x21c0fa0
+[Tff80] [API] __iob_func() = 0x21c0fa0
+[Tff80] [API] __iob_func() = 0x21c0fa0
+[Tff80] [API] __iob_func() = 0x21c0fa0
+[Tff80] [API] _lock(17)
+[Tff80] [API] _errno() = 0x21c0fb8
+[Tff80] [API] fputc(ch=0x75)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x70)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x78)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x20)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x34)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x2e)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x32)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x2e)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x34)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0xa)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] __iob_func() = 0x21c0fa0
+[Tff80] [API] __iob_func() = 0x21c0fa0
+[Tff80] [API] __iob_func() = 0x21c0fa0
+[Tff80] [API] _unlock(17)
+[Tff80] [API] __iob_func() = 0x21c0fa0
+[Tff80] [API] __iob_func() = 0x21c0fa0
+[Tff80] [API] __iob_func() = 0x21c0fa0
+[Tff80] [API] _lock(17)
+[Tff80] [API] _errno() = 0x21c0fb8
+[Tff80] [API] fputc(ch=0x4e)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x52)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x56)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x20)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x64)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x61)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x74)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x61)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x20)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x63)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x6f)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x6d)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x70)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x72)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x65)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x73)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x73)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x69)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x6f)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x6e)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x20)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x6c)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x69)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x62)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x72)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x61)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x72)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x79)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x20)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x30)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x2e)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x38)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x34)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0xa)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] __iob_func() = 0x21c0fa0
+[Tff80] [API] __iob_func() = 0x21c0fa0
+[Tff80] [API] __iob_func() = 0x21c0fa0
+[Tff80] [API] _unlock(17)
+[Tff80] [API] __iob_func() = 0x21c0fa0
+[Tff80] [API] __iob_func() = 0x21c0fa0
+[Tff80] [API] __iob_func() = 0x21c0fa0
+[Tff80] [API] _lock(17)
+[Tff80] [API] _errno() = 0x21c0fb8
+[Tff80] [API] fputc(ch=0x55)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x43)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x4c)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x20)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x64)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x61)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x74)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x61)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x20)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x63)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x6f)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x6d)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x70)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x72)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x65)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x73)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x73)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x69)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x6f)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x6e)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x20)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x6c)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x69)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x62)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x72)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x61)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x72)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x79)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x20)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x31)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x2e)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x30)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x33)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0xa)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] __iob_func() = 0x21c0fa0
+[Tff80] [API] __iob_func() = 0x21c0fa0
+[Tff80] [API] __iob_func() = 0x21c0fa0
+[Tff80] [API] _unlock(17)
+[Tff80] [API] __iob_func() = 0x21c0fa0
+[Tff80] [API] __iob_func() = 0x21c0fa0
+[Tff80] [API] __iob_func() = 0x21c0fa0
+[Tff80] [API] _lock(17)
+[Tff80] [API] _errno() = 0x21c0fb8
+[Tff80] [API] fputc(ch=0x7a)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x6c)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x69)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x62)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x20)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x64)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x61)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x74)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x61)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x20)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x63)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x6f)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x6d)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x70)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x72)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x65)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x73)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x73)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x69)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x6f)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x6e)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x20)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x6c)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x69)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x62)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x72)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x61)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x72)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x79)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x20)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x31)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x2e)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x33)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x2e)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x31)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x2e)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x31)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x2d)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x6d)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x6f)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x74)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x6c)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x65)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x79)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0xa)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] __iob_func() = 0x21c0fa0
+[Tff80] [API] __iob_func() = 0x21c0fa0
+[Tff80] [API] __iob_func() = 0x21c0fa0
+[Tff80] [API] _unlock(17)
+[Tff80] [API] __iob_func() = 0x21c0fa0
+[Tff80] [API] __iob_func() = 0x21c0fa0
+[Tff80] [API] __iob_func() = 0x21c0fa0
+[Tff80] [API] _lock(17)
+[Tff80] [API] _errno() = 0x21c0fb8
+[Tff80] [API] fputc(ch=0x4c)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x5a)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x4d)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x41)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x20)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x53)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x44)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x4b)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x20)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x76)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x65)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x72)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x73)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x69)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x6f)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x6e)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x20)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x34)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x2e)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x34)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x33)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0xa)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] __iob_func() = 0x21c0fa0
+[Tff80] [API] __iob_func() = 0x21c0fa0
+[Tff80] [API] __iob_func() = 0x21c0fa0
+[Tff80] [API] _unlock(17)
+[Tff80] [API] __iob_func() = 0x21c0fa0
+[Tff80] [API] __iob_func() = 0x21c0fa0
+[Tff80] [API] __iob_func() = 0x21c0fa0
+[Tff80] [API] _lock(17)
+[Tff80] [API] _errno() = 0x21c0fb8
+[Tff80] [API] fputc(ch=0x43)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x6f)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x70)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x79)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x72)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x69)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x67)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x68)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x74)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x20)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x28)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x43)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x29)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x20)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x31)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x39)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x39)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x36)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x2d)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x32)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x30)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x32)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x34)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x20)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x4d)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x61)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x72)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x6b)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x75)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x73)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x20)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x46)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x72)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x61)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x6e)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x7a)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x20)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x58)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x61)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x76)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x65)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x72)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x20)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x4a)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x6f)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x68)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x61)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x6e)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x6e)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x65)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x73)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x20)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x4f)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x62)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x65)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x72)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x68)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x75)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x6d)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x65)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x72)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0xa)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] __iob_func() = 0x21c0fa0
+[Tff80] [API] __iob_func() = 0x21c0fa0
+[Tff80] [API] __iob_func() = 0x21c0fa0
+[Tff80] [API] _unlock(17)
+[Tff80] [API] __iob_func() = 0x21c0fa0
+[Tff80] [API] __iob_func() = 0x21c0fa0
+[Tff80] [API] __iob_func() = 0x21c0fa0
+[Tff80] [API] _lock(17)
+[Tff80] [API] _errno() = 0x21c0fb8
+[Tff80] [API] fputc(ch=0x43)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x6f)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x70)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x79)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x72)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x69)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x67)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x68)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x74)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x20)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x28)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x43)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x29)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x20)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x31)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x39)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x39)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x36)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x2d)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x32)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x30)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x32)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x34)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x20)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x4c)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x61)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x73)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x7a)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x6c)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x6f)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x20)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x4d)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x6f)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x6c)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x6e)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x61)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x72)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0xa)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] __iob_func() = 0x21c0fa0
+[Tff80] [API] __iob_func() = 0x21c0fa0
+[Tff80] [API] __iob_func() = 0x21c0fa0
+[Tff80] [API] _unlock(17)
+[Tff80] [API] __iob_func() = 0x21c0fa0
+[Tff80] [API] __iob_func() = 0x21c0fa0
+[Tff80] [API] __iob_func() = 0x21c0fa0
+[Tff80] [API] _lock(17)
+[Tff80] [API] _errno() = 0x21c0fb8
+[Tff80] [API] fputc(ch=0x43)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x6f)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x70)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x79)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x72)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x69)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x67)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x68)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x74)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x20)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x28)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x43)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x29)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x20)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x32)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x30)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x30)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x30)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x2d)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x32)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x30)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x32)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x34)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x20)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x4a)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x6f)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x68)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x6e)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x20)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x46)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x2e)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x20)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x52)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x65)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x69)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x73)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x65)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x72)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0xa)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] __iob_func() = 0x21c0fa0
+[Tff80] [API] __iob_func() = 0x21c0fa0
+[Tff80] [API] __iob_func() = 0x21c0fa0
+[Tff80] [API] _unlock(17)
+[Tff80] [API] __iob_func() = 0x21c0fa0
+[Tff80] [API] __iob_func() = 0x21c0fa0
+[Tff80] [API] __iob_func() = 0x21c0fa0
+[Tff80] [API] _lock(17)
+[Tff80] [API] _errno() = 0x21c0fb8
+[Tff80] [API] fputc(ch=0x43)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x6f)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x70)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x79)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x72)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x69)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x67)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x68)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x74)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x20)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x28)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x43)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x29)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x20)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x31)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x39)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x39)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x35)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x2d)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x32)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x30)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x32)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x34)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x20)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x4a)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x65)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x61)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x6e)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x2d)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x6c)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x6f)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x75)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x70)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x20)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x47)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x61)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x69)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x6c)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x6c)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x79)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x20)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x61)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x6e)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x64)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x20)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x4d)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x61)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x72)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x6b)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x20)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x41)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x64)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x6c)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x65)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x72)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0xa)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] __iob_func() = 0x21c0fa0
+[Tff80] [API] __iob_func() = 0x21c0fa0
+[Tff80] [API] __iob_func() = 0x21c0fa0
+[Tff80] [API] _unlock(17)
+[Tff80] [API] __iob_func() = 0x21c0fa0
+[Tff80] [API] __iob_func() = 0x21c0fa0
+[Tff80] [API] __iob_func() = 0x21c0fa0
+[Tff80] [API] _lock(17)
+[Tff80] [API] _errno() = 0x21c0fb8
+[Tff80] [API] fputc(ch=0x43)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x6f)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x70)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x79)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x72)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x69)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x67)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x68)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x74)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x20)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x28)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x43)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x29)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x20)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x31)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x39)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x39)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x39)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x2d)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x32)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x30)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x30)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x36)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x20)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x49)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x67)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x6f)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x72)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x20)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x50)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x61)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x76)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x6c)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x6f)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x76)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0xa)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] __iob_func() = 0x21c0fa0
+[Tff80] [API] __iob_func() = 0x21c0fa0
+[Tff80] [API] __iob_func() = 0x21c0fa0
+[Tff80] [API] _unlock(17)
+[Tff80] [API] __iob_func() = 0x21c0fa0
+[Tff80] [API] __iob_func() = 0x21c0fa0
+[Tff80] [API] __iob_func() = 0x21c0fa0
+[Tff80] [API] _lock(17)
+[Tff80] [API] _errno() = 0x21c0fb8
+[Tff80] [API] fputc(ch=0x55)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x50)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x58)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x20)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x63)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x6f)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x6d)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x65)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x73)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x20)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x77)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x69)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x74)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x68)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x20)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x41)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x42)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x53)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x4f)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x4c)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x55)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x54)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x45)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x4c)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x59)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x20)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x4e)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x4f)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x20)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x57)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x41)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x52)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x52)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x41)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x4e)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x54)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x59)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x3b)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x20)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x66)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x6f)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x72)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x20)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x64)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x65)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x74)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x61)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x69)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x6c)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x73)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x20)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x74)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x79)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x70)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x65)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x20)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x27)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x75)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x70)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x78)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x5f)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x64)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x65)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x63)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x6f)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x6d)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x70)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x72)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x65)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x73)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x73)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x65)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x64)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x20)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x2d)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x4c)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x27)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0x2e)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] fputc(ch=0xa)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] __iob_func() = 0x21c0fa0
+[Tff80] [API] __iob_func() = 0x21c0fa0
+[Tff80] [API] __iob_func() = 0x21c0fa0
+[Tff80] [API] _unlock(17)
+[Tff80] [API] fflush(file=0x21c0fd0)
+[Tff80] [API] map_crt_stream: iob+0x30 -> stdout
+[Tff80] [API] __iob_func() = 0x21c0fa0
+[Tff80] [API] fflush(file=0x21c1000)
+[Tff80] [API] map_crt_stream: iob+0x60 -> stderr
+[Tff80] [API] exit(0)
+  ]
+}
