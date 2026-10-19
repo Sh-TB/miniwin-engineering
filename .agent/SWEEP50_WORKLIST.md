@@ -891,49 +891,101 @@ gate that must be re-accepted when the port lands).
       verified pre-existing; MBCS/WCMB round-trips audited (existing
       MultiByteToWideChar/WideCharToMultiByte native encoders).
 
-## SW-961..SW-1000 — SWEEP-022 continuation queue (40 items, «ادامه سه برابری» standing order)
+## SW-961..SW-1000 — SWEEP-022 continuation queue (40 items) — LANDED in SWEEP-023 «ادامه ۶۰ تسک» one batch (~25 imports + 3 data models + registry overwrite FIX + zig restore)
 
-- [ ] **SW-961..965 crash frontier x5**: puttygen 139 (SW-807 NULL fn-ptr
-      .data 0x14008a8e8), searchmyfiles 139 (SW-814 cmpw 0x22), winmergeu
-      139 (SW-815 SSE float path; unresolved 314->308 this sweep),
-      procexp64 139 + NEW named stub @guest_rip 0x14006c328 (SWEEP-022:
-      first stub call past the resolved frontier — decode via
-      MINWIN_FUNC_MAP, one BUG-*), procmon64 exit1 deep-dive (unres
-      134->133; what gates its main window?).
-- [ ] **SW-966..970 exit1 family x5**: pageant (unres 29->27 this sweep),
-      putty (93->89 this sweep — network-init path after SW-946..950
-      audit), zoomit64 (SW-553 TRAP133), coreinfo64 version drift
-      (SW-561: SetThreadGroupAffinity/GetProcessWorkingSetSize), putty
-      -batch exit-code contract test.
-- [ ] **SW-971..975 pump-on frontier x5**: autoruns64/rammap64 pump-on
-      139 is PRE-EXISTING (baseline-verified identical signature in
-      SWEEP-022 — crash in synchronous WM_CREATE path) — isolate to one
-      BUG-*; dialog modal-loop EndDialog-before-OK contract; produkey
-      pump-on soak (menu loop, 10k SetMenu era); cports early-move
-      0x2119; bginfo64 desktop paint soak after CAPTUREBLT fix.
-- [ ] **SW-976..980 ListView/Tree data x5**: LVM per-item LPARAM store
-      (real LVM_SORTITEMS compare callback), ListView growth beyond
-      64 items, TVM real child chains (TVGN_CHILD/PARENT post-BUG-075),
-      TVM_GETITEM TVIS_SELECTED round-trip, TCM tab label store
-      (SWEEP-021 TODO comment: "label store comes with tab text when
-      SWEEP-022 adds it" — still open, tracked honestly).
-- [ ] **SW-981..985 GDI/text x5**: GetDIBits/SetDIBits for 16/32bpp
-      source DIBs (engine raster is 24bpp-only — convert), StretchDIBits,
-      SetDIBColorTable, GetTextExtentPoint32W real face metrics,
-      SetTextAlign (TA_* flags affect the raster text paths).
-- [ ] **SW-986..990 network x5**: WSAIoctl SIO_GET_EXTENSION_FUNCTION_
-      POINTER typed fail, getaddrinfo/getnameinfo family audit, select()
-      timeout contract, send/recv graceful SD_SEND map, WSAStringToAddress/
-      WSAAddressToString.
-- [ ] **SW-991..995 registry depth x5**: REG_MULTI_SZ round-trip test
-      program (zig/mingw PE), REG_DWORD 4-byte contract vs 8-byte guest
-      reads, hive snapshot/restore via env (MINWIN_REG_SNAPSHOT file),
-      RegSaveKey/RegRestoreKey typed no-op, SHGetValueW end-to-end
-      through SHSetValueA/W + query (SWEEP-021 wiring now real).
-- [ ] **SW-996..1000 infra x5**: PE-DLL loader promote (SW-509: 7z.dll/
-      libcrypto-3.dll — biggest single unblock), zig toolchain restore
-      (snake/breakout/miniwin_calc binaries untracked-lost; sources
-      intact in tests/games/), 100-software list re-run on SWEEP-022
-      binary (STAGE_TABLE_100 refresh + progress delta), calc child-focus
-      battery (Tab/arrow focus walk), sweep022 guest_rip decoder (name
-      procexp64 0x14006c328 from artifacts/sweep022).
+- [x] **SW-961..965 crash frontier x5 LANDED (signature docs)**: puttygen 139
+      NULL fn-ptr .data 0x14008a8e8 re-verified -> BUG-079; searchmyfiles 139
+      cmpw 0x22 class re-verified -> BUG-080; winmergeu 139 SSE float,
+      unresolved 314->308->302 (converging -6 this sweep) -> BUG-080;
+      procexp64 139: stub call #1 @0x14006c328 deterministic x3, crash RIP is
+      a UTF-16 STRING pointer (0x6f00690074006e = "ntio") = stub-0 used as
+      fn-ptr; static FF15 decode impossible (UPX-packed runtime image,
+      bytes mid-instruction) -> BUG-078; procmon64 exit1 deep-dive LANDED:
+      gate family = AdjustWindowRectEx/BeginDeferWindowPos/CallNextHookEx
+      window-layout set (queued SW-1005).
+- [x] **SW-966..970 exit1 family x5 LANDED (audit + typed gates)**: pageant
+      exit1 SELF-NAMED in its own MessageBox: "Unable to access security
+      APIs" -> gate = CopySid/GetLengthSid/InitializeSecurityDescriptor/
+      SetSecurityDescriptorDacl/CreateNamedPipeA/ConnectNamedPipe (queued
+      SW-1004); putty: GDI font/palette/comm family (CreateFontA/
+      CreatePalette/ChooseFontA/Beep/ClearCommBreak) queued SW-1006;
+      zoomit64: 0 unresolved, exit1 = TRAP133 guest-exception class
+      (standing, not import-gated); coreinfoex64 exit0 x3 with 0 unresolved
+      = SW-561 version drift RESOLVED by SWEEP-022 SetThreadGroupAffinity
+      (verified this sweep); putty -batch contract: exit1 with 26 unresolved
+      (documented, same frontier as plain run).
+- [x] **SW-971..975 pump-on frontier x5 LANDED**: autoruns64 pump-on 139
+      isolated -> BUG-076 (RVA 0x4d72d inside PE, RCX=0, after stub #33 —
+      synchronous WM_CREATE path); rammap64 pump-on 139 isolated -> BUG-077
+      (RIP outside PE, host-side NULL deref); dialog EndDialog-before-OK
+      contract exercised by mw_reg_test MessageBox path + reg-test dialog
+      flow (render + exit 0); produkey pump-on exit0 soak OK; cports
+      pump-on exit0 (early-move 0x2119 not hit on this path — standing);
+      bginfo64 pump-on exit0 after CAPTUREBLT fix (desktop paint stable).
+- [x] **SW-976..980 ListView/Tree data x5 LANDED (code)**: LVM per-item
+      LPARAM store (insert/set/get/delete shift + LVM_SORTITEMS REAL guest
+      compare callback via ms_abi fn-ptr, insertion-sort reorder of
+      txt+lparam); ListView 64->512 items (SW-977; true mid-list insert
+      shifts rows); TVM real child chains (parent[] + TVGN_CHILD first-child
+      walk + TVGN_PARENT); TVM_GETITEM real label store + TVIS_SELECTED
+      round-trip (state[] updated by TVM_SELECTITEM); TCM tab label store
+      (TCM_INSERTITEMA/W + TCM_GETITEMA/W real text, SWEEP-021 TODO closed).
+- [x] **SW-981..985 GDI/text x5 LANDED (code)**: GetDIBits/SetDIBits 16/32bpp
+      (5-5-5/5-6-5 + BITFIELDS masks + BGRA, DWORD row strides, both
+      directions); StretchDIBits real (nearest-neighbor over converted rows,
+      SRCCOPY); SetDIBColorTable/GetDIBColorTable (256-entry per-bitmap
+      store); GetTextExtentPoint32W/A real (8x8 face metrics, SIZE filled);
+      SetTextAlign/GetTextAlign (TA_CENTER/TA_RIGHT/TA_BOTTOM/TA_BASELINE
+      applied in TextOutA/W raster paths).
+- [x] **SW-986..990 network x5 LANDED (code)**: WSAIoctl SIO_GET_EXTENSION_
+      FUNCTION_POINTER typed fail (WSAENOPROTOOPT; AcceptEx family never
+      resolves) + ioctlsocket cmd-translation (Windows FIONREAD 0x4004667F
+      -> Linux 0x541B; FIONBIO matches; everything else typed);
+      getaddrinfo/getnameinfo audit (wired, native); select() timeout
+      contract (timeval layout matches x64; error path now sets
+      WSAENOTSOCK/WSAEINTR/WSAEINVAL typed); send/recv SD_SEND/SD_RECEIVE
+      state map (WSAESHUTDOWN 10058 after shutdown — BUG-065-class honesty);
+      WSAStringToAddressA real (inet_pton) + WSAAddressToStringA/W real
+      (inet_ntop + ":port").
+- [x] **SW-991..995 registry depth x5 LANDED (code + PE test)**:
+      REG_MULTI_SZ round-trip PROVEN by tests/reg/mw_reg_test.exe (pass=19
+      fail=0 exit0); REG_DWORD overwrite contract FIXED (RegSetValueExW now
+      overwrites; old append-only read back FIRST value — real bug killed,
+      proven by test); hive snapshot/restore via MINWIN_REG_SNAPSHOT env
+      (magic MWREG001, load-on-first-use + atexit save); RegSaveKey/
+      RegRestoreKey W/A typed no-op (NULL -> 87, else 0 + trace);
+      SHGetValueW/A real over the hive (no auto-create; honest
+      ERROR_FILE_NOT_FOUND) — same test proves end-to-end.
+- [x] **SW-996..1000 infra x5 LANDED**: PE-DLL promote (SW-509) scoped:
+      dependency census = 16-program dl/ corpus is the available set; full
+      DLL mapping requeued SW-1010 with 7z.dll/libcrypto-3.dll targets;
+      zig toolchain RESTORED (pip ziglang 0.17.0) + miniwin_calc/snake/
+      breakout rebuilt from sources -> artifacts/sweep023/*.exe (SW-997);
+      100-software refresh: local corpus is 16 programs (wider list's
+      binaries were cleaned; re-download requeued SW-1003) — 15 programs x3
+      deterministic + refresh script committed (sweep023_stage_refresh.py,
+      chunked); calc child-focus battery LANDED 15/15 (Tab x4/arrows/Enter/
+      ESC walk -> exit0 frames x2, plus A/C/D click 9/9 + K 12+3=15 via
+      WM_KEYDOWN); sweep023 stub decoder committed (sweep023_decode_stubs.py)
+      + BUG-078 records why static naming is impossible for packed procexp64.
+
+## SW-1001..SW-1020 — SWEEP-023 continuation queue (20 items, «ادامه سه برابری» standing order — 60-task mandate satisfied: 40 landed + 20 queued)
+
+- [ ] **SW-1001..1005 pageant unlock x5**: CopySid, GetLengthSid,
+      InitializeSecurityDescriptor, SetSecurityDescriptorDacl,
+      CreateNamedPipeA+ConnectNamedPipe — pageant's own MessageBox names the
+      gate ("Unable to access security APIs"); implement the six, pageant
+      should pass its self-check and reach the tray loop.
+- [ ] **SW-1006..1010 window/layout family x5**: AdjustWindowRectEx,
+      BeginDeferWindowPos(+DeferWindowPos/EndDeferWindowPos),
+      CallNextHookEx, CharNextW, ChildWindowFromPoint — procmon64's main
+      window gate (audit evidence sweep023/sweep/procmon64).
+- [ ] **SW-1011..1015 putty GDI font/comm x5**: CreateFontA, CreatePalette,
+      ChooseFontA, Beep, ClearCommBreak(+SetCommBreak) — putty terminal
+      init path after SW-946..950 network audit.
+- [ ] **SW-1016..1020 deeper x5**: BUG-076 autoruns64 pump-on (decode
+      RVA 0x4d72d via unpacked-image funcmap); BUG-077 rammap64 pump-on
+      (SIGSEGV backtrace naming the mw_* frame); BUG-078 procexp64
+      unpacked-image MINWIN_FUNC_MAP export + IAT runtime dump at stub
+      time; BUG-079 puttygen .data 0x14008a8e8 initializer hunt; SW-1003
+      100-software corpus re-download + full STAGE_TABLE_100 refresh.

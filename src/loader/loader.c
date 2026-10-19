@@ -8409,6 +8409,82 @@ typedef struct {
     MwRegVal vals[MW_REG_MAXVAL];
 } MwRegKey;
 static MwRegKey g_reg[MW_REG_MAXKEY];
+/* ---- SWEEP-023 SW-993: hive snapshot/restore via MINWIN_REG_SNAPSHOT ----
+ * When the env var names a file: on first registry access an existing file is
+ * loaded (magic "MWREG001"), and at process exit the live hive is written
+ * back. Binary, versioned, self-contained; corrupt/foreign files are skipped. */
+static int g_reg_snap_tried = 0;
+static void reg_snap_save(void);
+static uint32_t mw_reg_wlen(const uint16_t* s); /* fwd: defined below (snapshot uses it) */
+static void reg_snap_init(void) {
+    if (g_reg_snap_tried) return;
+    g_reg_snap_tried = 1;
+    const char* p = getenv("MINWIN_REG_SNAPSHOT");
+    if (!p || !p[0]) return;
+    FILE* f = fopen(p, "rb");
+    if (f) {
+        char magic[8] = {0};
+        if (fread(magic, 1, 8, f) == 8 && memcmp(magic, "MWREG001", 8) == 0) {
+            for (int i = 0; i < MW_REG_MAXKEY; i++) {
+                uint8_t live = 0;
+                if (fread(&live, 1, 1, f) != 1) break;
+                if (!live) continue;
+                uint32_t n = 0;
+                if (fread(&n, 4, 1, f) != 1 || n >= MW_REG_PATHN) break;
+                g_reg[i].live = 1;
+                g_reg[i].path[n] = 0;
+                if (n && fread(g_reg[i].path, 2, n, f) != n) break;
+                if (fread(&g_reg[i].nvals, 4, 1, f) != 1 ||
+                    g_reg[i].nvals > MW_REG_MAXVAL) break;
+                for (uint32_t v = 0; v < g_reg[i].nvals; v++) {
+                    MwRegVal* val = &g_reg[i].vals[v];
+                    uint32_t vn = 0;
+                    if (fread(&vn, 4, 1, f) != 1 || vn >= MW_REG_VALN) break;
+                    val->name[vn] = 0;
+                    if (vn && fread(val->name, 2, vn, f) != vn) break;
+                    if (fread(&val->type, 4, 1, f) != 1) break;
+                    if (fread(&val->size, 4, 1, f) != 1 || val->size > MW_REG_DATA) break;
+                    if (val->size && fread(val->data, 1, val->size, f) != val->size) break;
+                }
+            }
+            MW_TRACE("reg snapshot loaded from %s", p);
+        } else {
+            MW_TRACE("reg snapshot %s: bad magic, ignored", p);
+        }
+        fclose(f);
+    }
+    atexit(reg_snap_save);
+}
+static void snap_wstr(FILE* f, const uint16_t* s) {
+    uint32_t n = mw_reg_wlen(s);
+    fwrite(&n, 4, 1, f);
+    if (n) fwrite(s, 2, n, f);
+}
+static void reg_snap_save(void) {
+    const char* p = getenv("MINWIN_REG_SNAPSHOT");
+    if (!p || !p[0]) return;
+    FILE* f = fopen(p, "wb");
+    if (!f) return;
+    fwrite("MWREG001", 1, 8, f);
+    for (int i = 0; i < MW_REG_MAXKEY; i++) {
+        uint8_t live = (uint8_t)g_reg[i].live;
+        fwrite(&live, 1, 1, f);
+        if (!live) continue;
+        uint32_t n = mw_reg_wlen(g_reg[i].path);
+        fwrite(&n, 4, 1, f);
+        if (n) fwrite(g_reg[i].path, 2, n, f);
+        fwrite(&g_reg[i].nvals, 4, 1, f);
+        for (uint32_t v = 0; v < g_reg[i].nvals; v++) {
+            MwRegVal* val = &g_reg[i].vals[v];
+            snap_wstr(f, val->name);
+            fwrite(&val->type, 4, 1, f);
+            fwrite(&val->size, 4, 1, f);
+            if (val->size) fwrite(val->data, 1, val->size, f);
+        }
+    }
+    fclose(f);
+    MW_TRACE("reg snapshot saved to %s", p);
+}
 /* forward decls (A-tails + EnumKeyA above use these below) */
 static int32_t mw_reg_query(void* key, const uint16_t* name, uint32_t* type, void* data, uint32_t* size);
 __attribute__((ms_abi)) int32_t mw_RegCreateKeyExW(void* key, const wchar_t* sub, uint32_t res, const wchar_t* cls, uint32_t opts, uint32_t access, void* sa, void** result, void* disp);
@@ -8453,6 +8529,7 @@ static int mw_reg_wprefix(const uint16_t* path, const uint16_t* pre) {
 }
 /* resolve key: predefined root (slots 0..6) or hive handle; slot or -1 */
 static int mw_reg_slot(void* key) {
+    reg_snap_init(); /* SWEEP-023 SW-993: lazy snapshot load on first reg use */
     uintptr_t v = (uintptr_t)key;
     if (v >= 0x80000000u) {
         for (int r = 0; r < 7; r++)
@@ -8751,10 +8828,23 @@ __attribute__((ms_abi)) int32_t mw_RegSetValueExW(void* key, const wchar_t* name
     (void)res;
     int i = mw_reg_slot(key);
     if (i < 0) { mw_SetLastError(6); return 6; }
-    if (g_reg[i].nvals >= MW_REG_MAXVAL) { mw_SetLastError(14); return 14; }
     if (size > MW_REG_DATA) { mw_SetLastError(234); return 234; }
+    /* SWEEP-023 SW-992: overwrite the existing value (Windows contract); the
+     * old append-only path made double-writes read back the FIRST value. */
+    static const uint16_t empty_name[1] = {0};
+    const uint16_t* nm = name ? (const uint16_t*)name : empty_name;
+    for (uint32_t e = 0; e < g_reg[i].nvals; e++) {
+        if (!mw_reg_weq(g_reg[i].vals[e].name, nm)) continue;
+        MwRegVal* v = &g_reg[i].vals[e];
+        v->type = type;
+        v->size = size;
+        if (size && data) memcpy(v->data, data, size);
+        MW_TRACE("RegSetValueExW -> slot %d value overwritten (%u bytes)", i, size);
+        return 0;
+    }
+    if (g_reg[i].nvals >= MW_REG_MAXVAL) { mw_SetLastError(14); return 14; }
     MwRegVal* v = &g_reg[i].vals[g_reg[i].nvals];
-    mw_reg_wcopy(v->name, (const uint16_t*)name, MW_REG_VALN);
+    mw_reg_wcopy(v->name, nm, MW_REG_VALN);
     v->type = type;
     v->size = size;
     if (size && data) memcpy(v->data, data, size);
@@ -8769,6 +8859,34 @@ __attribute__((ms_abi)) int32_t mw_RegLoadMUIStringW(void* key, const wchar_t* v
 __attribute__((ms_abi)) int32_t mw_RegNotifyChangeKeyValue(void* key, int watch, uint32_t filter, void* event, int async) {
     (void)key; (void)watch; (void)filter; (void)event; (async);
     return 0; /* SWEEP-022 SW-955: typed success — no change events will fire */
+}
+/* ---- SWEEP-023 SW-994: RegSaveKey/RegRestoreKey typed no-op ----
+ * No on-disk hive-file model exists; the honest contract: NULL key/file is
+ * ERROR_INVALID_PARAMETER (the real contract), any valid pair succeeds with
+ * a loud trace and changes nothing. */
+__attribute__((ms_abi)) int32_t mw_RegSaveKeyW(void* key, const wchar_t* file, void* sa) {
+    (void)sa;
+    if (!key || !file) { mw_SetLastError(87); return 87; }
+    MW_TRACE("RegSaveKeyW -> typed no-op (no hive file model)");
+    return 0;
+}
+__attribute__((ms_abi)) int32_t mw_RegSaveKeyA(void* key, const char* file, void* sa) {
+    (void)sa;
+    if (!key || !file) { mw_SetLastError(87); return 87; }
+    MW_TRACE("RegSaveKeyA -> typed no-op (no hive file model)");
+    return 0;
+}
+__attribute__((ms_abi)) int32_t mw_RegRestoreKeyW(void* key, const wchar_t* file, uint32_t flags) {
+    (void)flags;
+    if (!key || !file) { mw_SetLastError(87); return 87; }
+    MW_TRACE("RegRestoreKeyW -> typed no-op (no hive file model)");
+    return 0;
+}
+__attribute__((ms_abi)) int32_t mw_RegRestoreKeyA(void* key, const char* file, uint32_t flags) {
+    (void)flags;
+    if (!key || !file) { mw_SetLastError(87); return 87; }
+    MW_TRACE("RegRestoreKeyA -> typed no-op (no hive file model)");
+    return 0;
 }
 
 /* ============================================================
@@ -10350,16 +10468,34 @@ __attribute__((ms_abi)) unsigned long long mw_accept(unsigned long long s, void*
     int c = accept((int)s, (struct sockaddr*)addr, (socklen_t*)len);
     return c < 0 ? ~0ull : (unsigned long long)c;
 }
-__attribute__((ms_abi)) int mw_shutdown(unsigned long long s, int how) { return shutdown((int)s, how); }
+/* SWEEP-023 SW-989: per-fd SD_* shutdown tracking (bit0=SD_RECEIVE, bit1=SD_SEND).
+ * Windows contract: send() after SD_SEND -> WSAESHUTDOWN (10058); recv() after
+ * SD_RECEIVE -> 10058. Linux shutdown() alone gives no such state. */
+static uint8_t g_sock_sd[4096];
+__attribute__((ms_abi)) int mw_shutdown(unsigned long long s, int how) {
+    if (s < sizeof(g_sock_sd)) {
+        g_sock_sd[s] |= (uint8_t)(how == 0 ? 1u : how == 1 ? 2u : 3u);
+        MW_TRACE("shutdown(fd=%llu how=%d) state=0x%x", s, how, g_sock_sd[s]);
+    }
+    return shutdown((int)s, how);
+}
 __attribute__((ms_abi)) int mw_getsockopt(unsigned long long s, int lvl, int opt, void* v, int* len) { return getsockopt((int)s, lvl, opt, v, (socklen_t*)len); }
 __attribute__((ms_abi)) int mw_setsockopt(unsigned long long s, int lvl, int opt, const void* v, int len) { return setsockopt((int)s, lvl, opt, v, len); }
 __attribute__((ms_abi)) int mw_getsockname(unsigned long long s, void* addr, int* len) { return getsockname((int)s, (struct sockaddr*)addr, (socklen_t*)len); }
 __attribute__((ms_abi)) int mw_getpeername(unsigned long long s, void* addr, int* len) { return getpeername((int)s, (struct sockaddr*)addr, (socklen_t*)len); }
 __attribute__((ms_abi)) int mw_send(unsigned long long s, const void* buf, int len, int flags) {
+    if (s < sizeof(g_sock_sd) && (g_sock_sd[s] & 2u)) { /* SW-989: SD_SEND done */
+        g_wsa_err = 10058; /* WSAESHUTDOWN */
+        return -1;
+    }
     ssize_t r = send((int)s, buf, len, flags & ~0x5);
     return (int)r;
 }
 __attribute__((ms_abi)) int mw_recv(unsigned long long s, void* buf, int len, int flags) {
+    if (s < sizeof(g_sock_sd) && (g_sock_sd[s] & 1u)) { /* SW-989: SD_RECEIVE done */
+        g_wsa_err = 10058; /* WSAESHUTDOWN */
+        return -1;
+    }
     ssize_t r = recv((int)s, buf, len, flags & ~0x5);
     return (int)r;
 }
@@ -10370,18 +10506,38 @@ __attribute__((ms_abi)) int mw_recvfrom(unsigned long long s, void* buf, int len
     return (int)recvfrom((int)s, buf, len, flags & ~0x5, (struct sockaddr*)from, (socklen_t*)fromlen);
 }
 __attribute__((ms_abi)) int mw_select(int nfds, void* r, void* w, void* e, void* tv) {
-    return select(nfds, (fd_set*)r, (fd_set*)w, (fd_set*)e, (struct timeval*)tv);
+    /* SW-988: Windows x64 timeval {long tv_sec; long tv_usec} matches Linux;
+     * timeout expiry -> 0 on both. Error path now sets WSA last-error typed. */
+    int rc = select(nfds, (fd_set*)r, (fd_set*)w, (fd_set*)e, (struct timeval*)tv);
+    if (rc < 0)
+        g_wsa_err = (errno == EBADF) ? 10038 /*WSAENOTSOCK*/
+                  : (errno == EINTR) ? 10004 /*WSAEINTR*/
+                  : 10022 /*WSAEINVAL*/;
+    return rc;
 }
 __attribute__((ms_abi)) int mw_ioctlsocket(unsigned long long s, long cmd, unsigned long* arg) {
-    /* FIONREAD/FIONBIO share numeric values with Linux */
-    return ioctl((int)s, cmd, arg);
-}
-__attribute__((ms_abi)) int mw_WSAIoctl(unsigned long long s, long cmd, void* in, int ilen, void* out, int olen, unsigned long* ret, void* ov1, void* ov2) {
-    if (cmd == 0x40040007 /* SIO_GET_EXTENSION_FUNCTION_POINTER */ || cmd == 0x48000000) {
+    /* SW-986: cmd values differ per-OS. Windows FIONREAD=0x4004667F vs Linux
+     * 0x541B; FIONBIO (0x8004667E) happens to match. Everything else is a
+     * typed WSAENOPROTOOPT instead of a random Linux ioctl. */
+    long lcmd = cmd;
+    if (lcmd == 0x4004667FL) lcmd = 0x541BL; /* Windows FIONREAD -> Linux */
+    if (lcmd != 0x541BL && lcmd != 0x8004667EL) {
         g_wsa_err = 10042; /* WSAENOPROTOOPT */
         return -1;
     }
+    return ioctl((int)s, lcmd, arg);
+}
+__attribute__((ms_abi)) int mw_WSAIoctl(unsigned long long s, long cmd, void* in, int ilen, void* out, int olen, unsigned long* ret, void* ov1, void* ov2) {
+    (void)in; (void)ilen; (void)ov1; (void)ov2;
+    /* SW-986: only the translated FIONREAD/FIONBIO pair is routable; all
+     * vendor/extension ioctls (SIO_GET_EXTENSION_FUNCTION_POINTER for the
+     * AcceptEx family included) fail typed WSAENOPROTOOPT. */
+    if (cmd == 0x40040007L || cmd == 0x48000000L || cmd == 0x80040000L) {
+        g_wsa_err = 10042; /* WSAENOPROTOOPT: no AcceptEx/ConnectEx/TransmitFile */
+        return -1;
+    }
     return mw_ioctlsocket(s, cmd, (unsigned long*)out);
+    (void)olen; (void)ret;
 }
 __attribute__((ms_abi)) void* mw_LoadLibraryExA(const char* name, void* file, uint32_t flags) {
     MW_TRACE("LoadLibraryExA(%s, flags=%u) -> NULL", name ? name : "?", flags);
@@ -11425,13 +11581,14 @@ static const uint16_t* mw_hwnd_text(void* h) {
  *   Tab:      item count + current selection
  *   Header:   column count
  * Unmodelled messages fall through to the old paths (trace + 0). */
-#define MW_LV_MAXITEM 64
+#define MW_LV_MAXITEM 512 /* SWEEP-023 SW-977: 64 overflowed on real corpus lists */
 #define MW_LV_MAXSUB  2
 #define MW_LV_TEXTN   40
 #define MW_LV_MAXCOL  8 /* SWEEP-022 SW-926..930: column header store */
 typedef struct {
     uint32_t items, cols;
     uint16_t txt[MW_LV_MAXITEM][MW_LV_MAXSUB][MW_LV_TEXTN];
+    uintptr_t lparam[MW_LV_MAXITEM]; /* SWEEP-023 SW-976: per-item LPARAM */
     /* SWEEP-022 SW-926..930: LVM_SET/GETCOLUMN header text + width */
     int32_t  colw[MW_LV_MAXCOL];
     uint16_t coltxt[MW_LV_MAXCOL][MW_LV_TEXTN];
@@ -11443,6 +11600,36 @@ static uintptr_t  g_tree_sel[MW_CHILD_MAX];  /* SWEEP-021 TVM_SELECTITEM */
 static uint32_t   g_tab_items[MW_CHILD_MAX];
 static int32_t    g_tab_cursel[MW_CHILD_MAX];
 static uint32_t   g_hdr_cols[MW_CHILD_MAX];
+/* ---- SWEEP-023 SW-978..980: real TreeView node model + tab label store ----
+ * Lazily calloc'd per child slot (MW_CHILD_MAX is 512; static arrays of
+ * that depth would waste MBs of BSS for slots that never host a tree). */
+#define MW_TV_MAX      256
+#define MW_TV_TEXTN    24
+typedef struct {
+    uint16_t parent[MW_TV_MAX]; /* 0 = root level, else 1-based node idx */
+    uint16_t state[MW_TV_MAX];  /* TVIS_SELECTED 0x2, TVIS_FOCUSED 0x10 */
+    uint16_t text[MW_TV_MAX][MW_TV_TEXTN];
+} MwTvState;
+static MwTvState* g_tvstate[MW_CHILD_MAX];
+#define MW_TAB_MAXITEM 32
+#define MW_TAB_TEXTN   48
+typedef struct { uint16_t txt[MW_TAB_MAXITEM][MW_TAB_TEXTN]; } MwTabState;
+static MwTabState* g_tabstate[MW_CHILD_MAX];
+static MwTvState* mw_tv_state(int s) {
+    if (s < 0 || s >= MW_CHILD_MAX) return NULL;
+    if (!g_tvstate[s]) g_tvstate[s] = (MwTvState*)calloc(1, sizeof(MwTvState));
+    return g_tvstate[s];
+}
+static MwTabState* mw_tab_state(int s) {
+    if (s < 0 || s >= MW_CHILD_MAX) return NULL;
+    if (!g_tabstate[s]) g_tabstate[s] = (MwTabState*)calloc(1, sizeof(MwTabState));
+    return g_tabstate[s];
+}
+/* SWEEP-023 SW-976: LVM_SORTITEMS guest comparator (PFNLVCOMPARE) +
+ * engine-side reorder scratch (single-threaded engine, documented) */
+typedef __attribute__((ms_abi)) int (*MW_LVCOMPARE)(uintptr_t, uintptr_t, uintptr_t);
+static uint16_t mw_lv_sort_txt[MW_LV_MAXITEM][MW_LV_MAXSUB][MW_LV_TEXTN];
+static uintptr_t mw_lv_sort_lp[MW_LV_MAXITEM];
 #define MW_TREE_BASE 0x00070000u
 static MwLvState* mw_lv_state(int s) {
     if (s < 0 || s >= MW_CHILD_MAX) return NULL;
@@ -11466,18 +11653,29 @@ static int mw_commonctl_msg(int s, uint32_t msg, uintptr_t wp, long long lp, lon
         switch (msg) {
         case 0x1004u: /* LVM_GETITEMCOUNT */
             *out = (long long)lv->items; return 1;
-        case 0x1007u: case 0x104Du: { /* LVM_INSERTITEMA/W */
+        case 0x1007u: case 0x104Du: { /* LVM_INSERTITEMA/W: real insert+shift (SW-976/977) */
             if (lv->items >= MW_LV_MAXITEM) { *out = -1; return 1; }
-            uint32_t idx = lv->items;
+            uint32_t iitem = 0xFFFFFFFFu; int sub = -1;
+            uintptr_t ilp = 0;
+            const uint16_t* src = NULL;
             if (lp) {
-                uint32_t iitem = *(uint32_t*)((uint8_t*)lp + 4);
-                idx = (iitem == 0xFFFFFFFFu) ? lv->items
-                    : (iitem > lv->items ? lv->items : iitem);
-                int sub = *(int*)((uint8_t*)lp + 8);
-                if (sub >= 0 && sub < MW_LV_MAXSUB)
-                    mw_lv_store_text(lv->txt[idx][sub],
-                                     *(const uint16_t* const*)((uint8_t*)lp + 24));
+                iitem = *(uint32_t*)((uint8_t*)lp + 4);
+                sub = *(int*)((uint8_t*)lp + 8);
+                src = *(const uint16_t* const*)((uint8_t*)lp + 24);
+                if (*(uint32_t*)lp & 0x4u) /* LVIF_PARAM */
+                    ilp = *(uintptr_t*)((uint8_t*)lp + 40);
             }
+            uint32_t idx = (iitem == 0xFFFFFFFFu) ? lv->items
+                : (iitem > lv->items ? lv->items : iitem);
+            /* true mid-list insert: rows below idx shift down (txt + lparam) */
+            for (uint32_t r = lv->items; r > idx; r--) {
+                memcpy(lv->txt[r], lv->txt[r - 1], sizeof(lv->txt[0]));
+                lv->lparam[r] = lv->lparam[r - 1];
+            }
+            memset(lv->txt[idx], 0, sizeof(lv->txt[0]));
+            lv->lparam[idx] = ilp;
+            if (sub >= 0 && sub < MW_LV_MAXSUB && src)
+                mw_lv_store_text(lv->txt[idx][sub], src);
             lv->items++;
             *out = (long long)idx; return 1;
         }
@@ -11539,6 +11737,8 @@ static int mw_commonctl_msg(int s, uint32_t msg, uintptr_t wp, long long lp, lon
             if (iitem < lv->items && sub >= 0 && sub < MW_LV_MAXSUB) {
                 mw_lv_store_text(lv->txt[iitem][sub],
                                  *(const uint16_t* const*)((uint8_t*)lp + 24));
+                if (*(uint32_t*)lp & 0x4u) /* SWEEP-023 SW-976: LVIF_PARAM */
+                    lv->lparam[iitem] = *(uintptr_t*)((uint8_t*)lp + 40);
                 *out = 1;
             }
             return 1;
@@ -11551,9 +11751,12 @@ static int mw_commonctl_msg(int s, uint32_t msg, uintptr_t wp, long long lp, lon
             *out = 0;
             uint32_t iitem = (uint32_t)wp;
             if (iitem < lv->items) {
-                for (uint32_t r = iitem; r + 1 < MW_LV_MAXITEM; r++)
+                for (uint32_t r = iitem; r + 1 < MW_LV_MAXITEM; r++) {
                     memcpy(lv->txt[r], lv->txt[r + 1], sizeof(lv->txt[0]));
+                    lv->lparam[r] = lv->lparam[r + 1]; /* SWEEP-023 SW-976 */
+                }
                 memset(lv->txt[MW_LV_MAXITEM - 1], 0, sizeof(lv->txt[0]));
+                lv->lparam[MW_LV_MAXITEM - 1] = 0;
                 lv->items--;
                 *out = 1;
             }
@@ -11561,6 +11764,7 @@ static int mw_commonctl_msg(int s, uint32_t msg, uintptr_t wp, long long lp, lon
         }
         case 0x1009u: /* LVM_DELETEALLITEMS: rows only — columns survive (real) */
             memset(lv->txt, 0, sizeof(lv->txt));
+            memset(lv->lparam, 0, sizeof(lv->lparam)); /* SWEEP-023 SW-976 */
             lv->items = 0;
             *out = 1; return 1;
         case 0x1005u: { /* LVM_GETITEMA: LVITEMA x64, char* text */
@@ -11570,6 +11774,8 @@ static int mw_commonctl_msg(int s, uint32_t msg, uintptr_t wp, long long lp, lon
             uint32_t iitem = *(uint32_t*)((uint8_t*)lp + 4);
             int sub = *(int*)((uint8_t*)lp + 8);
             *(uint32_t*)((uint8_t*)lp + 12) = 0; /* state: none tracked */
+            if (mask & 0x4u && iitem < lv->items) /* SWEEP-023 SW-976: LVIF_PARAM */
+                *(uintptr_t*)((uint8_t*)lp + 40) = lv->lparam[iitem];
             if ((mask & 0x1u /*LVIF_TEXT*/) && iitem < lv->items &&
                 sub >= 0 && sub < MW_LV_MAXSUB) {
                 char* dst = *(char**)((uint8_t*)lp + 24);
@@ -11592,6 +11798,8 @@ static int mw_commonctl_msg(int s, uint32_t msg, uintptr_t wp, long long lp, lon
             uint32_t iitem = *(uint32_t*)((uint8_t*)lp + 4);
             int sub = *(int*)((uint8_t*)lp + 8);
             *(uint32_t*)((uint8_t*)lp + 12) = 0;
+            if (mask & 0x4u && iitem < lv->items) /* SWEEP-023 SW-976: LVIF_PARAM */
+                *(uintptr_t*)((uint8_t*)lp + 40) = lv->lparam[iitem];
             if ((mask & 0x1u) && iitem < lv->items &&
                 sub >= 0 && sub < MW_LV_MAXSUB) {
                 uint16_t* dst = *(uint16_t**)((uint8_t*)lp + 24);
@@ -11649,8 +11857,30 @@ static int mw_commonctl_msg(int s, uint32_t msg, uintptr_t wp, long long lp, lon
             }
             return 1;
         }
-        case 0x1030u: /* LVM_SORTITEMS: no per-item param store; honest no-op */
-            *out = 1; return 1;
+        case 0x1030u: { /* LVM_SORTITEMS: real guest-comparator sort (SW-976) */
+            *out = 0;
+            MW_LVCOMPARE cmp = (MW_LVCOMPARE)lp;
+            if (!cmp) { *out = 1; return 1; }
+            uint32_t idx[MW_LV_MAXITEM];
+            for (uint32_t i = 0; i < lv->items; i++) idx[i] = i;
+            for (uint32_t a = 1; a < lv->items; a++) { /* insertion sort on LPARAM */
+                uint32_t key = idx[a]; uintptr_t kp = lv->lparam[key];
+                uint32_t b = a;
+                while (b > 0 && cmp(lv->lparam[idx[b - 1]], kp, wp) > 0) {
+                    idx[b] = idx[b - 1]; b--;
+                }
+                idx[b] = key;
+            }
+            memcpy(mw_lv_sort_txt, lv->txt, sizeof(mw_lv_sort_txt));
+            memcpy(mw_lv_sort_lp, lv->lparam, sizeof(mw_lv_sort_lp));
+            for (uint32_t i = 0; i < lv->items; i++) {
+                memcpy(lv->txt[i], mw_lv_sort_txt[idx[i]], sizeof(lv->txt[0]));
+                lv->lparam[i] = mw_lv_sort_lp[idx[i]];
+            }
+            *out = 1;
+            MW_TRACE("LVM_SORTITEMS: %u items reordered via guest cmp", lv->items);
+            return 1;
+        }
         case 0x1038u: { /* LVM_GETSUBITEMRECT: wp=item, lp=RECT* (sub=rect.left) */
             *out = 0;
             if (!lp) return 1;
@@ -11669,9 +11899,37 @@ static int mw_commonctl_msg(int s, uint32_t msg, uintptr_t wp, long long lp, lon
     }
     if (mw_child_cls_is(s, "SysTreeView32")) {
         switch (msg) {
-        case 0x1100u: case 0x1132u: { /* TVM_INSERTITEMA/W */
+        case 0x1100u: case 0x1132u: { /* TVM_INSERTITEMA/W: real node model (SW-978) */
+            MwTvState* tv = mw_tv_state(s);
+            if (!tv || g_tree_items[s] >= MW_TV_MAX) { *out = 0; return 1; }
+            uint32_t ni = g_tree_items[s] + 1; /* 1-based node idx */
+            uintptr_t h = MW_TREE_BASE | (uintptr_t)ni;
+            uintptr_t parent = lp ? *(uintptr_t*)lp : 0; /* TVINSERTSTRUCT.hParent */
+            uint32_t pidx = 0;
+            if (parent && (parent & 0xFFFF0000u) == MW_TREE_BASE) {
+                uint32_t p = (uint32_t)(parent & 0xFFFFu);
+                if (p >= 1 && p < ni) pidx = p;
+            }
+            tv->parent[ni - 1] = (uint16_t)pidx;
+            tv->state[ni - 1] = 0;
+            if (lp) { /* TVITEMEX at +16; TVIF_TEXT pszText@+40 (A: char*, W: u16) */
+                uint32_t mask = *(uint32_t*)((uint8_t*)lp + 16);
+                if (mask & 0x1u /*TVIF_TEXT*/) {
+                    if (msg == 0x1132u) {
+                        const uint16_t* t = *(const uint16_t* const*)((uint8_t*)lp + 40);
+                        uint16_t tmp[MW_TV_TEXTN];
+                        if (t && mw_probe_copy(t, (MW_TV_TEXTN - 1) * 2, tmp))
+                            mw_w16cpy(tv->text[ni - 1], tmp, MW_TV_TEXTN);
+                    } else {
+                        const char* t = *(const char* const*)((uint8_t*)lp + 40);
+                        char a[MW_TV_TEXTN] = {0};
+                        if (t && mw_probe_copy(t, MW_TV_TEXTN - 1, a))
+                            for (uint32_t k = 0; k < MW_TV_TEXTN && a[k]; k++)
+                                tv->text[ni - 1][k] = (uint16_t)(uint8_t)a[k];
+                    }
+                }
+            }
             g_tree_items[s]++;
-            uintptr_t h = MW_TREE_BASE | (uintptr_t)g_tree_items[s];
             if (!g_tree_root[s]) g_tree_root[s] = h;
             *out = (long long)h; return 1;
         }
@@ -11697,29 +11955,81 @@ static int mw_commonctl_msg(int s, uint32_t msg, uintptr_t wp, long long lp, lon
                 *out = (valid && idx < g_tree_items[s]) ? (long long)(h + 1) : 0; break;
             case 2u:  /* TVGN_PREVIOUS */
                 *out = (valid && idx > 1) ? (long long)(h - 1) : 0; break;
-            case 3u:  /* TVGN_PARENT: root's parent = NULL (flat model) */
-            case 4u:  /* TVGN_CHILD: no child chains tracked */
+            case 3u: { /* TVGN_PARENT: real chain (SW-978) */
+                MwTvState* tv = mw_tv_state(s);
+                *out = (tv && valid && tv->parent[idx - 1])
+                     ? (long long)(MW_TREE_BASE | (uintptr_t)tv->parent[idx - 1]) : 0;
+                break;
+            }
+            case 4u: { /* TVGN_CHILD: first child by insertion order (SW-978) */
+                MwTvState* tv = mw_tv_state(s);
+                *out = 0;
+                if (tv && valid)
+                    for (uint32_t c = 1; c <= g_tree_items[s]; c++)
+                        if (tv->parent[c - 1] == idx) {
+                            *out = (long long)(MW_TREE_BASE | (uintptr_t)c); break;
+                        }
+                break;
+            }
             default:
                 *out = 0; break;
             }
             return 1;
         }
         /* ---- SWEEP-021 SW-891..895: TreeView deepening ---- */
-        case 0x110Cu: case 0x113Eu: { /* TVM_GETITEMA/W: lp=TVITEM x64 */
+        case 0x110Cu: case 0x113Eu: { /* TVM_GETITEMA/W: real label + state (SW-978/979) */
             *out = 1;
             if (!lp) return 1;
-            uint32_t* t = (uint32_t*)lp;
-            if (t[0] & 0x1u) { /* TVIF_TEXT: honest empty label */
-                void** pt = (void**)((uint8_t*)lp + 24);
-                if (*pt) *(uint16_t*)*pt = 0;
-                *(uint32_t*)((uint8_t*)lp + 32) = 0;
+            uint32_t mask = *(uint32_t*)lp;
+            uintptr_t h = *(uintptr_t*)((uint8_t*)lp + 8);
+            MwTvState* tv = mw_tv_state(s);
+            uint32_t idx = (uint32_t)(h & 0xFFFFu);
+            int known = tv && (h & 0xFFFF0000u) == MW_TREE_BASE &&
+                        idx >= 1 && (uintptr_t)idx <= g_tree_items[s];
+            if (mask & 0x8u) /* TVIF_STATE: TVIS_SELECTED round-trip (SW-979) */
+                *(uint32_t*)((uint8_t*)lp + 16) =
+                    (known && (tv->state[idx - 1] & 0x2u)) ? 0x12u : 0u;
+            if (mask & 0x1u) { /* TVIF_TEXT: real stored label */
+                int cch = *(int*)((uint8_t*)lp + 32);
+                if (msg == 0x113Eu) { /* W */
+                    uint16_t* dst = *(uint16_t**)((uint8_t*)lp + 24);
+                    if (dst && cch > 0) {
+                        uint32_t n = 0;
+                        if (known)
+                            while (n + 1 < (uint32_t)cch && tv->text[idx - 1][n]) n++;
+                        for (uint32_t k = 0; k <= n; k++)
+                            dst[k] = known ? tv->text[idx - 1][k] : 0;
+                        *(uint32_t*)((uint8_t*)lp + 32) = (uint32_t)n;
+                    }
+                } else { /* A */
+                    char* dst = *(char**)((uint8_t*)lp + 24);
+                    if (dst && cch > 0) {
+                        uint32_t n = 0;
+                        if (known)
+                            while (n + 1 < (uint32_t)cch && tv->text[idx - 1][n]) n++;
+                        uint32_t k = 0;
+                        for (; k < n; k++) dst[k] = (char)(tv->text[idx - 1][k] & 0xFF);
+                        dst[k] = 0;
+                        *(uint32_t*)((uint8_t*)lp + 32) = (uint32_t)n;
+                    }
+                }
             }
-            *(uint32_t*)((uint8_t*)lp + 16) = 0; /* state: none tracked */
             return 1;
         }
-        case 0x110Bu: /* TVM_SELECTITEM: wp=flag, lp=hItem */
+        case 0x110Bu: { /* TVM_SELECTITEM: track + per-node TVIS_SELECTED (SW-979) */
+            MwTvState* tv = mw_tv_state(s);
+            if (tv) {
+                for (uint32_t c = 1; c <= g_tree_items[s]; c++)
+                    tv->state[c - 1] &= 0xFFFDu; /* clear TVIS_SELECTED */
+                uintptr_t h = (uintptr_t)lp;
+                uint32_t idx = (uint32_t)(h & 0xFFFFu);
+                if (h && (h & 0xFFFF0000u) == MW_TREE_BASE && idx >= 1 &&
+                    idx <= g_tree_items[s])
+                    tv->state[idx - 1] |= 0x2u; /* TVIS_SELECTED */
+            }
             g_tree_sel[s] = (uintptr_t)lp;
             *out = 1; return 1;
+        }
         case 0x1102u: /* TVM_EXPAND: children not fetched; expanded = success */
             *out = 1; return 1;
         /* ---- SWEEP-022 SW-931..935 additions ---- */
@@ -11754,8 +12064,28 @@ static int mw_commonctl_msg(int s, uint32_t msg, uintptr_t wp, long long lp, lon
         switch (msg) {
         case 0x1304u: /* TCM_GETITEMCOUNT */
             *out = (long long)g_tab_items[s]; return 1;
-        case 0x1308u: case 0x133Eu: /* TCM_INSERTITEMA/W */
+        case 0x1308u: case 0x133Eu: { /* TCM_INSERTITEMA/W: real label store (SW-980) */
+            MwTabState* tb = mw_tab_state(s);
+            uint32_t ti = g_tab_items[s];
+            if (tb && lp && ti < MW_TAB_MAXITEM) {
+                uint32_t mask = *(uint32_t*)lp;
+                if (mask & 0x1u /*TCIF_TEXT*/) {
+                    if (msg == 0x133Eu) {
+                        const uint16_t* t = *(const uint16_t* const*)((uint8_t*)lp + 8);
+                        uint16_t tmp[MW_TAB_TEXTN];
+                        if (t && mw_probe_copy(t, (MW_TAB_TEXTN - 1) * 2, tmp))
+                            mw_w16cpy(tb->txt[ti], tmp, MW_TAB_TEXTN);
+                    } else {
+                        const char* t = *(const char* const*)((uint8_t*)lp + 8);
+                        char a[MW_TAB_TEXTN] = {0};
+                        if (t && mw_probe_copy(t, MW_TAB_TEXTN - 1, a))
+                            for (uint32_t k = 0; k < MW_TAB_TEXTN && a[k]; k++)
+                                tb->txt[ti][k] = (uint16_t)(uint8_t)a[k];
+                    }
+                }
+            }
             *out = (long long)g_tab_items[s]++; return 1;
+        }
         case 0x130Cu: { /* TCM_SETCURSEL */
             int32_t prev = g_tab_cursel[s];
             g_tab_cursel[s] = (int32_t)wp;
@@ -11764,9 +12094,34 @@ static int mw_commonctl_msg(int s, uint32_t msg, uintptr_t wp, long long lp, lon
         case 0x130Bu: /* TCM_GETCURSEL */
             *out = (long long)g_tab_cursel[s]; return 1;
         /* ---- SWEEP-021 SW-891..895: Tab deepening ---- */
-        case 0x1305u: case 0x133Cu: { /* TCM_GETITEMA/W: label store comes with
-                                       * tab text when SWEEP-022 adds it */
-            *out = 1; return 1;
+        case 0x1305u: case 0x133Cu: { /* TCM_GETITEMA/W: real stored label (SW-980) */
+            *out = 1;
+            if (!lp) return 1;
+            uint32_t mask = *(uint32_t*)lp;
+            if (!(mask & 0x1u)) return 1;
+            uint32_t ti = (uint32_t)wp;
+            MwTabState* tb = mw_tab_state(s);
+            if (!tb || ti >= MW_TAB_MAXITEM || ti >= g_tab_items[s]) return 1;
+            if (msg == 0x133Cu) {
+                uint16_t* dst = *(uint16_t**)((uint8_t*)lp + 8);
+                int cch = *(int*)((uint8_t*)lp + 16);
+                if (dst && cch > 0) {
+                    uint32_t n = 0;
+                    while (n + 1 < (uint32_t)cch && tb->txt[ti][n]) n++;
+                    for (uint32_t k = 0; k <= n; k++) dst[k] = tb->txt[ti][k];
+                }
+            } else {
+                char* dst = *(char**)((uint8_t*)lp + 8);
+                int cch = *(int*)((uint8_t*)lp + 16);
+                if (dst && cch > 0) {
+                    uint32_t n = 0;
+                    while (n + 1 < (uint32_t)cch && tb->txt[ti][n]) n++;
+                    uint32_t k = 0;
+                    for (; k < n; k++) dst[k] = (char)(tb->txt[ti][k] & 0xFF);
+                    dst[k] = 0;
+                }
+            }
+            return 1;
         }
         case 0x1328u: { /* TCM_ADJUSTRECT: wp=TRUE display / FALSE window rect */
             *out = 1;
@@ -12037,6 +12392,65 @@ __attribute__((ms_abi)) int mw_WSAStringToAddressW(const uint16_t* str, int af, 
     (void)str;
     g_wsa_err = 11001; /* WSAHOST_NOT_FOUND */
     return -1;
+}
+/* ---- SWEEP-023 SW-990: WSAStringToAddressA + WSAAddressToStringA/W ----
+ * AF_INET dotted-quad ":port" round-trips through inet_pton/inet_ntop; other
+ * families typed WSAEAFNOSUPPORT (10047). WSAStringToAddressW keeps its honest
+ * unsupported contract above (no wide parse model yet). */
+__attribute__((ms_abi)) int mw_WSAStringToAddressA(const char* str, int af, void* sa,
+        void* addr, int* len) {
+    (void)sa;
+    if (!str || !addr || !len || *len < 16) { g_wsa_err = 10014; return -1; /* WSAEFAULT */ }
+    if (af != 2 /*AF_INET*/) { g_wsa_err = 10047; return -1; /* WSAEAFNOSUPPORT */ }
+    char ip[64]; unsigned port = 0;
+    const char* colon = strrchr(str, ':');
+    if (colon && *str != '[') {
+        size_t n = (size_t)(colon - str);
+        if (n >= sizeof(ip)) { g_wsa_err = 11001; return -1; }
+        memcpy(ip, str, n); ip[n] = 0;
+        port = (unsigned)atoi(colon + 1);
+    } else {
+        snprintf(ip, sizeof(ip), "%s", str); /* bare address: port 0 */
+    }
+    struct sockaddr_in sin;
+    memset(&sin, 0, sizeof(sin));
+    sin.sin_family = AF_INET;
+    if (inet_pton(AF_INET, ip, &sin.sin_addr) != 1) { g_wsa_err = 11001; return -1; }
+    sin.sin_port = htons((uint16_t)port);
+    memcpy(addr, &sin, sizeof(sin));
+    *len = (int)sizeof(sin);
+    MW_TRACE("WSAStringToAddressA('%s') -> %s:%u", str, ip, port);
+    return 0;
+}
+__attribute__((ms_abi)) int mw_WSAAddressToStringA(void* addr, int alen, void* unused,
+        char* out, int* outlen) {
+    (void)unused;
+    if (!addr || !out || !outlen) { g_wsa_err = 10014; return -1; }
+    if (alen < 16 || ((struct sockaddr*)addr)->sa_family != 2) {
+        g_wsa_err = 10047; return -1;
+    }
+    struct sockaddr_in* p = (struct sockaddr_in*)addr;
+    char ip[INET_ADDRSTRLEN] = {0};
+    inet_ntop(AF_INET, &p->sin_addr, ip, sizeof(ip));
+    char buf[96];
+    snprintf(buf, sizeof(buf), "%s:%u", ip, (unsigned)ntohs(p->sin_port));
+    int need = (int)strlen(buf) + 1;
+    if (*outlen < need) { g_wsa_err = 10014; *outlen = need; return -1; }
+    memcpy(out, buf, (size_t)need);
+    *outlen = need;
+    MW_TRACE("WSAAddressToStringA -> '%s'", buf);
+    return 0;
+}
+__attribute__((ms_abi)) int mw_WSAAddressToStringW(void* addr, int alen, void* unused,
+        uint16_t* out, int* outlen) {
+    char tmp[96]; int tl = (int)sizeof(tmp);
+    if (mw_WSAAddressToStringA(addr, alen, unused, tmp, &tl) != 0) return -1;
+    int need = tl; /* wide units == chars for the ASCII form */
+    if (*outlen < need) { g_wsa_err = 10014; *outlen = need; return -1; }
+    for (int k = 0; k < tl; k++) out[k] = (uint16_t)(uint8_t)tmp[k];
+    *outlen = need;
+    MW_TRACE("WSAAddressToStringW -> '%s'", tmp);
+    return 0;
 }
 __attribute__((ms_abi)) int mw_freeaddrinfo_(void* ai) { freeaddrinfo(ai); return 0; }
 __attribute__((ms_abi)) int mw_getaddrinfo_(const char* host, const char* svc, const void* hints, void** res) {
@@ -12891,6 +13305,7 @@ static uint32_t  g_cur_brush = 0xFFFFFF; static int g_brush_hollow = 0;
 static uint32_t  g_cur_pen = 0x000000;
 static int       g_pen_x = 0, g_pen_y = 0;
 static uint32_t  g_text_col = 0x000000;
+static int       g_text_align = 0;    /* SWEEP-023 SW-985: TA_* from SetTextAlign */
 static uint32_t  g_bk_col = 0xFFFFFF;
 static int       g_bk_mode = 2;        /* OPAQUE=2, TRANSPARENT=1 */
 static uint32_t  g_brush_rgb[32]; static uint8_t g_brush_live[32];
@@ -13466,6 +13881,9 @@ __attribute__((ms_abi)) int mw_TextOutA(void* hdc, int x, int y, const char* s, 
         return 1;
     }
     buf[len] = 0;
+    /* SWEEP-023 SW-985: honor TA_CENTER(6)/TA_RIGHT(2), TA_BOTTOM(8)/TA_BASELINE(24) */
+    if (g_text_align & 0x6) x -= (g_text_align & 0x6) == 0x6 ? (len * 4) : (len * 8);
+    if (g_text_align & 0x18) y -= (g_text_align & 0x18) == 0x18 ? 6 : 8;
     if (g_bk_mode != 1) mwb_fill(S, x, y, len * 8, 8, g_bk_col);
     mwb_text8(S, x, y, buf, g_text_col, 1);
     MW_TRACE("[GDI] TextOutA(%d,%d) '%s'", x, y, buf);
@@ -13480,9 +13898,62 @@ __attribute__((ms_abi)) int mw_TextOutW(void* hdc, int x, int y, const uint16_t*
     wbuf[len] = 0;
     char buf[1025];
     w3_w16_to_utf8z(wbuf, buf, sizeof(buf));
-    if (g_bk_mode != 1) mwb_fill(S, x, y, len * 8, 8, g_bk_col);
+    int alen = (int)strlen(buf); /* wide glyphs collapse; align on engine cols */
+    if (g_text_align & 0x6) x -= (g_text_align & 0x6) == 0x6 ? (alen * 4) : (alen * 8);
+    if (g_text_align & 0x18) y -= (g_text_align & 0x18) == 0x18 ? 6 : 8;
+    if (g_bk_mode != 1) mwb_fill(S, x, y, alen * 8, 8, g_bk_col);
     mwb_text8(S, x, y, buf, g_text_col, 1);
     MW_TRACE("[GDI] TextOutW(%d,%d) '%s'", x, y, buf);
+    return 1;
+}
+/* ---- SWEEP-023 SW-985: text alignment + extent (8x8 engine face metrics) ---- */
+__attribute__((ms_abi)) uint32_t mw_SetTextAlign(void* hdc, uint32_t mode) {
+    (void)hdc;
+    uint32_t prev = (uint32_t)g_text_align;
+    g_text_align = (int)(mode & 0x1Fu); /* only the x/y alignment bits are real here */
+    MW_TRACE("[GDI] SetTextAlign(0x%x) -> prev 0x%x", mode, prev);
+    return prev;
+}
+__attribute__((ms_abi)) uint32_t mw_GetTextAlign(void* hdc) {
+    (void)hdc;
+    return (uint32_t)g_text_align;
+}
+__attribute__((ms_abi)) int mw_GetTextExtentPoint32W(void* hdc, const uint16_t* s, int len, void* size) {
+    (void)hdc;
+    if (!s || len < 0 || !size) return 0;
+    int n = 0;
+    uint16_t chunk[64];
+    while (n < len) {
+        int want = len - n; if (want > 64) want = 64;
+        if (!mw_probe_copy(s + n, (size_t)want * 2, chunk)) break;
+        int stop = 0;
+        for (int k = 0; k < want; k++) if (!chunk[k]) { stop = 1; n += k; break; }
+        if (stop) break;
+        n += want;
+    }
+    int32_t* sz = (int32_t*)size; /* SIZE { LONG cx; LONG cy; } */
+    sz[0] = n * 8; sz[1] = 8;     /* engine face: 8x8 per glyph (GetTextMetricsW) */
+    MW_TRACE("[GDI] GetTextExtentPoint32W(len=%d) -> %dx8", n, n * 8);
+    return 1;
+}
+__attribute__((ms_abi)) int mw_GetTextExtentPoint32A(void* hdc, const char* s, int len, void* size) {
+    (void)hdc;
+    if (!s || len < 0 || !size) return 0;
+    int n = 0;
+    char chunk[128];
+    while (n < len) {
+        int want = len - n; if (want > 128) want = 128;
+        int got = 0;
+        for (int k = 0; k < want; k++) {
+            if (s[n + k] == 0) break;
+            chunk[k] = s[n + k]; got++;
+        }
+        n += got;
+        if (got < want) break;
+    }
+    int32_t* sz = (int32_t*)size;
+    sz[0] = n * 8; sz[1] = 8;
+    MW_TRACE("[GDI] GetTextExtentPoint32A(len=%d) -> %dx8", n, n * 8);
     return 1;
 }
 __attribute__((ms_abi)) int mw_ExtTextOutA(void* hdc, int x, int y, uint32_t opts,
@@ -15814,6 +16285,34 @@ __attribute__((ms_abi)) uint32_t mw_SHAutoComplete(void* hwnd, uint32_t flags) {
     MW_TRACE("SHAutoComplete() -> S_OK (vacuous: no completion events fire)");
     return 0;
 }
+/* ---- SWEEP-023 SW-995: SHGetValueW/A end-to-end over the real hive ----
+ * Reads WITHOUT creating (the real shlwapi contract): missing key/value is
+ * ERROR_FILE_NOT_FOUND (2), success is ERROR_SUCCESS (0). */
+__attribute__((ms_abi)) uint32_t mw_SHGetValueW(void* hk, const uint16_t* sub, const uint16_t* val,
+        uint32_t* type, void* data, uint32_t* cb) {
+    uint16_t path[MW_REG_PATHN];
+    if (mw_reg_compose(hk, (const wchar_t*)sub, path) < 0) return 2;
+    int i = mw_reg_find_path(path);
+    if (i < 0) return 2;
+    void* kh = (void*)(uintptr_t)(MW_REGKEY_BASE | (uintptr_t)(i + 1));
+    return (uint32_t)mw_reg_query(kh, val, type, data, cb);
+}
+__attribute__((ms_abi)) uint32_t mw_SHGetValueA(void* hk, const char* sub, const char* val,
+        uint32_t* type, void* data, uint32_t* cb) {
+    uint16_t wsub[MW_REG_PATHN] = {0};
+    uint16_t wval[MW_REG_VALN] = {0};
+    if (sub) {
+        char a[MW_REG_PATHN] = {0};
+        if (mw_probe_copy(sub, MW_REG_PATHN - 1, a))
+            mw_reg_copy_ascii(wsub, a, MW_REG_PATHN);
+    }
+    if (val) {
+        char a[MW_REG_VALN] = {0};
+        if (mw_probe_copy(val, MW_REG_VALN - 1, a))
+            mw_reg_copy_ascii(wval, a, MW_REG_VALN);
+    }
+    return mw_SHGetValueW(hk, wsub, wval, type, data, cb);
+}
 __attribute__((ms_abi)) uint32_t mw_SHSetValueW(void* hk, const uint16_t* sub, const uint16_t* val,
         uint32_t type, const void* data, uint32_t cb) {
     void* k = NULL;
@@ -16600,27 +17099,94 @@ static MWBmp* mw_bmp_by_handle(void* hbmp) {
     if (i < 0 || i >= MW_MEMDC_MAX || !g_bitmap_live[i]) return NULL;
     return &g_bitmap_obj[i];
 }
+/* ---- SWEEP-023 SW-981: DIB row format conversion (engine raster 24bpp BGR;
+ * sources/dests may be 16bpp 5-5-5/5-6-5 or 32bpp BGRA with DWORD row stride) ---- */
+static uint32_t mw_dib_stride(uint32_t w, uint16_t bpp) {
+    return ((w * (uint32_t)bpp + 31u) / 32u) * 4u;
+}
+static void mw_dib_row_to_bgr24(const uint8_t* src, int w, uint16_t sbpp,
+                                const uint32_t* masks, uint8_t* dst) {
+    if (sbpp == 24) { memcpy(dst, src, (size_t)w * 3u); return; }
+    if (sbpp == 32) {
+        for (int x = 0; x < w; x++) {
+            dst[x * 3 + 0] = src[x * 4 + 0]; /* B */
+            dst[x * 3 + 1] = src[x * 4 + 1]; /* G */
+            dst[x * 3 + 2] = src[x * 4 + 2]; /* R */
+        }
+        return;
+    }
+    if (sbpp == 16) {
+        uint32_t rm = masks ? masks[0] : 0x7C00u, gm = masks ? masks[1] : 0x03E0u,
+                 bm = masks ? masks[2] : 0x001Fu; /* BI_RGB 16bpp = 5-5-5 */
+        int rs = 0, gs = 0, bs = 0; uint32_t r;
+        for (r = rm, rs = 0; r && !(r & 1u); r >>= 1, rs++) {}
+        for (r = gm, gs = 0; r && !(r & 1u); r >>= 1, gs++) {}
+        for (r = bm, bs = 0; r && !(r & 1u); r >>= 1, bs++) {}
+        for (int x = 0; x < w; x++) {
+            uint16_t p = (uint16_t)(src[x * 2] | (src[x * 2 + 1] << 8));
+            uint8_t rv = (uint8_t)(((p >> rs) & (rm >> rs)) * 255u /
+                                   (rm >> rs ? (rm >> rs) : 1u));
+            uint8_t gv = (uint8_t)(((p >> gs) & (gm >> gs)) * 255u /
+                                   (gm >> gs ? (gm >> gs) : 1u));
+            uint8_t bv = (uint8_t)(((p >> bs) & (bm >> bs)) * 255u /
+                                   (bm >> bs ? (bm >> bs) : 1u));
+            dst[x * 3 + 0] = bv; dst[x * 3 + 1] = gv; dst[x * 3 + 2] = rv;
+        }
+        return;
+    }
+    memset(dst, 0, (size_t)w * 3u); /* 1/4/8bpp palette sources: honest black */
+}
+static void mw_dib_row_from_bgr24(const uint8_t* src, int w, uint16_t dbpp, uint8_t* dst, uint32_t stride) {
+    memset(dst, 0, stride);
+    if (dbpp == 24) { memcpy(dst, src, (size_t)w * 3u); return; }
+    if (dbpp == 32) {
+        for (int x = 0; x < w; x++) {
+            dst[x * 4 + 0] = src[x * 3 + 0];
+            dst[x * 4 + 1] = src[x * 3 + 1];
+            dst[x * 4 + 2] = src[x * 3 + 2];
+            dst[x * 4 + 3] = 0xFF;
+        }
+        return;
+    }
+    if (dbpp == 16) { /* emit 5-6-5 (the most common engine-adjacent format) */
+        for (int x = 0; x < w; x++) {
+            uint16_t p = (uint16_t)(((src[x * 3 + 2] >> 3) << 11) |
+                                    ((src[x * 3 + 1] >> 2) << 5) |
+                                    (src[x * 3 + 0] >> 3));
+            dst[x * 2] = (uint8_t)(p & 0xFF); dst[x * 2 + 1] = (uint8_t)(p >> 8);
+        }
+        return;
+    }
+}
 __attribute__((ms_abi)) int mw_GetDIBits(void* hdc, void* hbmp, uint32_t start,
         uint32_t lines, void* bits, void* pbmi, uint32_t usage) {
     (void)hdc; (void)start; (void)usage;
     MWBmp* b = mw_bmp_by_handle(hbmp);
     if (!b || !pbmi) return 0;
     uint8_t* h8 = (uint8_t*)pbmi;
+    uint16_t want = *(const uint16_t*)(h8 + 14); /* caller presets biBitCount */
+    if (want != 16 && want != 24 && want != 32) want = 24;
     *(uint32_t*)(h8 + 0) = 40;              /* biSize */
     *(int32_t*)(h8 + 4) = b->w;             /* biWidth */
     *(int32_t*)(h8 + 8) = b->h;             /* biHeight: positive = bottom-up */
     *(uint16_t*)(h8 + 12) = 1;              /* biPlanes */
-    *(uint16_t*)(h8 + 14) = 24;             /* biBitCount (engine raster) */
+    *(uint16_t*)(h8 + 14) = want;           /* SWEEP-023 SW-981: honored */
     *(uint32_t*)(h8 + 16) = 0;              /* BI_RGB */
     *(uint32_t*)(h8 + 20) = 0;              /* biSizeImage len 0 for BI_RGB ok */
-    *(uint32_t*)(h8 + 24) = (uint32_t)((size_t)b->w * 3u * (size_t)b->h);
+    *(uint32_t*)(h8 + 24) = mw_dib_stride((uint32_t)b->w, want) * (uint32_t)b->h;
     if (!bits) return 1;                    /* header-only probe */
     uint32_t n = lines ? lines : (uint32_t)b->h;
     if (n > (uint32_t)b->h) n = (uint32_t)b->h;
-    for (uint32_t y = 0; y < n; y++)        /* bottom-up row order */
-        memcpy((uint8_t*)bits + (size_t)(n - 1 - y) * (size_t)b->w * 3u,
-               b->px + (size_t)y * (size_t)b->w * 3u, (size_t)b->w * 3u);
-    MW_TRACE("GetDIBits(%dx%d) -> %u rows", b->w, b->h, n);
+    uint32_t stride = mw_dib_stride((uint32_t)b->w, want);
+    uint8_t* row24 = (uint8_t*)malloc((size_t)b->w * 3u);
+    if (!row24) return 0;
+    for (uint32_t y = 0; y < n; y++) {      /* bottom-up row order */
+        memcpy(row24, b->px + (size_t)y * (size_t)b->w * 3u, (size_t)b->w * 3u);
+        mw_dib_row_from_bgr24(row24, b->w, want,
+                              (uint8_t*)bits + (size_t)(n - 1 - y) * stride, stride);
+    }
+    free(row24);
+    MW_TRACE("GetDIBits(%dx%d -> %ubpp) %u rows", b->w, b->h, want, n);
     return (int)n;
 }
 __attribute__((ms_abi)) int mw_SetDIBits(void* hdc, void* hbmp, uint32_t start,
@@ -16631,17 +17197,98 @@ __attribute__((ms_abi)) int mw_SetDIBits(void* hdc, void* hbmp, uint32_t start,
     const uint8_t* h8 = (const uint8_t*)pbmi;
     int32_t w = *(const int32_t*)(h8 + 4);
     int32_t h = *(const int32_t*)(h8 + 8);
+    uint16_t sbpp = *(const uint16_t*)(h8 + 14);
+    uint32_t comp = *(const uint32_t*)(h8 + 16);
     if (w <= 0 || h == 0) return 0;
+    const uint32_t* masks = (comp == 3 /*BI_BITFIELDS*/) ? (const uint32_t*)(h8 + 40) : NULL;
     uint32_t n = (uint32_t)(h > 0 ? h : -h);
     if (n > (uint32_t)b->h) n = (uint32_t)b->h;
     int32_t cw = w < b->w ? w : b->w;
+    uint32_t stride = mw_dib_stride((uint32_t)w, sbpp);
+    uint8_t* row24 = (uint8_t*)malloc((size_t)w * 3u);
+    if (!row24) return 0;
     for (uint32_t y = 0; y < n; y++) {      /* source is bottom-up */
-        const uint8_t* src = (const uint8_t*)bits + (size_t)y * (size_t)w * 3u;
+        const uint8_t* src = (const uint8_t*)bits + (size_t)y * stride;
+        mw_dib_row_to_bgr24(src, cw, sbpp, masks, row24);
         uint8_t* dst = b->px + (size_t)(n - 1 - y) * (size_t)b->w * 3u;
-        memcpy(dst, src, (size_t)cw * 3u);
+        memcpy(dst, row24, (size_t)cw * 3u);
     }
-    MW_TRACE("SetDIBits(%dx%d) -> %u rows", w, h, n);
+    free(row24);
+    MW_TRACE("SetDIBits(%dx%d %ubpp) -> %u rows", w, h, sbpp, n);
     return (int)n;
+}
+/* ---- SWEEP-023 SW-982/983: StretchDIBits + DIB color tables ---- */
+__attribute__((ms_abi)) int mw_StretchDIBits(void* hdc, int dx, int dy, int dw, int dh,
+        int sx, int sy, int sw, int sh, const void* bits, const void* pbmi,
+        uint32_t usage, uint32_t rop) {
+    (void)usage; (void)sx; (void)sy;
+    MWBmp* D = mw_dc_surface(hdc);
+    if (!D || !bits || !pbmi || dw <= 0 || dh <= 0 || sw <= 0 || sh <= 0) return 0;
+    if ((rop & 0x00FFFFFFu) != 0x00CC0020u /*SRCCOPY*/) { mw_SetLastError(1); return 0; }
+    const uint8_t* h8 = (const uint8_t*)pbmi;
+    int32_t w = *(const int32_t*)(h8 + 4);
+    int32_t h = *(const int32_t*)(h8 + 8);
+    uint16_t sbpp = *(const uint16_t*)(h8 + 14);
+    uint32_t comp = *(const uint32_t*)(h8 + 16);
+    if (w <= 0 || h == 0) return 0;
+    const uint32_t* masks = (comp == 3) ? (const uint32_t*)(h8 + 40) : NULL;
+    uint32_t srch = (uint32_t)(h > 0 ? h : -h);
+    uint32_t stride = mw_dib_stride((uint32_t)w, sbpp);
+    uint8_t* row24 = (uint8_t*)malloc((size_t)w * 3u);
+    if (!row24) return 0;
+    int copied = 0;
+    for (int row = 0; row < dh; row++) {
+        int srcrow = (int)((long long)sh * row / dh); /* nearest-neighbor */
+        uint32_t y = (h > 0) ? (uint32_t)(srch - 1 - srcrow) /* bottom-up */
+                             : (uint32_t)srcrow;             /* top-down */
+        if (y >= srch) continue;
+        mw_dib_row_to_bgr24((const uint8_t*)bits + (size_t)y * stride, w,
+                            sbpp, masks, row24);
+        int ddy = dy + row;
+        if (ddy < 0 || ddy >= D->h) continue;
+        for (int col = 0; col < dw; col++) {
+            int sxx = (int)((long long)sw * col / dw);
+            if (sxx >= w) continue;
+            int ddx = dx + col;
+            if (ddx < 0 || ddx >= D->w) continue;
+            memcpy(D->px + 3 * ((size_t)ddy * (size_t)D->w + (size_t)ddx),
+                   row24 + (size_t)sxx * 3u, 3);
+            copied++;
+        }
+    }
+    free(row24);
+    MW_TRACE("[GDI] StretchDIBits %dx%d@%d,%d <- %dx%d %ubpp (%d px)",
+             dw, dh, dx, dy, sw, sh, sbpp, copied);
+    return copied ? 1 : 0;
+}
+static uint32_t g_dib_ctab[MW_MEMDC_MAX][256];
+static uint16_t g_dib_ctab_n[MW_MEMDC_MAX];
+static int mw_dib_ctab_ix(void* hbmp) {
+    uintptr_t v = (uintptr_t)hbmp;
+    if ((v & 0xFFFF0000u) != MW_HBITMAP_BASE) return -1;
+    int i = (int)(v & 0xFFu) - 1;
+    return (i >= 0 && i < MW_MEMDC_MAX && g_bitmap_live[i]) ? i : -1;
+}
+__attribute__((ms_abi)) int mw_SetDIBColorTable(void* hdc, void* hbmp, uint32_t start,
+        uint32_t count, const void* colors) {
+    (void)hdc;
+    int ix = mw_dib_ctab_ix(hbmp);
+    if (ix < 0 || !colors || start >= 256 || count > 256u - start) return 0;
+    memcpy(&g_dib_ctab[ix][start], colors, (size_t)count * 4u);
+    if ((uint16_t)(start + count) > g_dib_ctab_n[ix])
+        g_dib_ctab_n[ix] = (uint16_t)(start + count);
+    MW_TRACE("SetDIBColorTable(%u..%u) stored", start, start + count);
+    return (int)count;
+}
+__attribute__((ms_abi)) int mw_GetDIBColorTable(void* hdc, void* hbmp, uint32_t start,
+        uint32_t count, void* colors) {
+    (void)hdc;
+    int ix = mw_dib_ctab_ix(hbmp);
+    if (ix < 0 || !colors || start >= 256 || count > 256u - start) return 0;
+    memcpy(colors, &g_dib_ctab[ix][start], (size_t)count * 4u);
+    MW_TRACE("GetDIBColorTable(%u..%u) -> %u stored", start, start + count,
+             (unsigned)g_dib_ctab_n[ix]);
+    return (int)count;
 }
 /* MaskBlt: mask byte-map has no engine equivalent — honest contract:
  * plain SRCCOPY routes through BitBlt, everything else fails typed. */
@@ -17230,6 +17877,10 @@ static ImportEntry g_import_table[] = {
     ENTRY("KERNEL32.DLL", "RegEnumKeyExW", mw_RegEnumKeyExW),
     ENTRY("KERNEL32.DLL", "RegEnumValueW", mw_RegEnumValueW),
     ENTRY("KERNEL32.DLL", "RegQueryInfoKeyW", mw_RegQueryInfoKeyW),
+    ENTRY("ADVAPI32.DLL", "RegSaveKeyW", mw_RegSaveKeyW), /* SWEEP-023 SW-994 */
+    ENTRY("ADVAPI32.DLL", "RegSaveKeyA", mw_RegSaveKeyA), /* SWEEP-023 SW-994 */
+    ENTRY("ADVAPI32.DLL", "RegRestoreKeyW", mw_RegRestoreKeyW), /* SWEEP-023 SW-994 */
+    ENTRY("ADVAPI32.DLL", "RegRestoreKeyA", mw_RegRestoreKeyA), /* SWEEP-023 SW-994 */
     ENTRY("KERNEL32.DLL", "RegSetValueExW", mw_RegSetValueExW),
     ENTRY("KERNEL32.DLL", "RegLoadMUIStringW", mw_RegLoadMUIStringW),
     ENTRY("KERNEL32.DLL", "RegNotifyChangeKeyValue", mw_RegNotifyChangeKeyValue),
@@ -17946,6 +18597,9 @@ ENTRY("msvcrt.dll", "wctype", mw_wctype),
     ENTRY("WS2_32.dll", "WSASetEvent",                          mw_WSASetEvent),
     ENTRY("WS2_32.dll", "WSAWaitForMultipleEvents",             mw_WSAWaitForMultipleEvents),
     ENTRY("WS2_32.dll", "WSAStringToAddressW",                  mw_WSAStringToAddressW),
+    ENTRY("WS2_32.dll", "WSAStringToAddressA",                  mw_WSAStringToAddressA), /* SWEEP-023 SW-990 */
+    ENTRY("WS2_32.dll", "WSAAddressToStringA",                  mw_WSAAddressToStringA), /* SWEEP-023 SW-990 */
+    ENTRY("WS2_32.dll", "WSAAddressToStringW",                  mw_WSAAddressToStringW), /* SWEEP-023 SW-990 */
     ENTRY("WS2_32.dll", "freeaddrinfo",                         mw_freeaddrinfo_),
     ENTRY("WS2_32.dll", "getaddrinfo",                          mw_getaddrinfo_),
     ENTRY("WS2_32.dll", "gethostname",                          mw_gethostname_),
@@ -17965,6 +18619,8 @@ ENTRY("msvcrt.dll", "wctype", mw_wctype),
     /* SWEEP-021 SW-901..905: shlwapi registry tail */
     ENTRY("shlwapi.dll", "SHSetValueW",                         mw_SHSetValueW),
     ENTRY("shlwapi.dll", "SHSetValueA",                         mw_SHSetValueA),
+    ENTRY("shlwapi.dll", "SHGetValueW",                         mw_SHGetValueW), /* SWEEP-023 SW-995 */
+    ENTRY("shlwapi.dll", "SHGetValueA",                         mw_SHGetValueA), /* SWEEP-023 SW-995 */
     ENTRY("shlwapi.dll", "PathFindFileNameA",                   mw_PathFindFileNameA), /* SWEEP-014 r2 */
 
     /* ---- SWEEP-012 honest batch #2 (program-count driven; see block above) ---- */
@@ -18091,6 +18747,13 @@ ENTRY("msvcrt.dll", "wctype", mw_wctype),
     /* SWEEP-022 SW-936..945: DIB + font family completion */
     ENTRY("GDI32.DLL", "GetDIBits",                             mw_GetDIBits),
     ENTRY("GDI32.DLL", "SetDIBits",                             mw_SetDIBits),
+    ENTRY("GDI32.DLL", "StretchDIBits",                         mw_StretchDIBits), /* SWEEP-023 SW-982 */
+    ENTRY("GDI32.DLL", "SetDIBColorTable",                      mw_SetDIBColorTable), /* SWEEP-023 SW-983 */
+    ENTRY("GDI32.DLL", "GetDIBColorTable",                      mw_GetDIBColorTable), /* SWEEP-023 SW-983 */
+    ENTRY("GDI32.DLL", "GetTextExtentPoint32W",                 mw_GetTextExtentPoint32W), /* SWEEP-023 SW-984 */
+    ENTRY("GDI32.DLL", "GetTextExtentPoint32A",                 mw_GetTextExtentPoint32A), /* SWEEP-023 SW-984 */
+    ENTRY("GDI32.DLL", "SetTextAlign",                          mw_SetTextAlign), /* SWEEP-023 SW-985 */
+    ENTRY("GDI32.DLL", "GetTextAlign",                          mw_GetTextAlign), /* SWEEP-023 SW-985 */
     ENTRY("GDI32.DLL", "MaskBlt",                               mw_MaskBlt),
     ENTRY("GDI32.DLL", "EnumFontFamiliesExW",                   mw_EnumFontFamiliesExW),
     ENTRY("GDI32.DLL", "EnumFontFamiliesExA",                   mw_EnumFontFamiliesExA),

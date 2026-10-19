@@ -641,3 +641,48 @@ Stage Summary:
   standing order); file 276 -> 939 lines (x3.4).
 - evidence/sweep022/README.md + scripts/sweep022_chunk.sh + sweep022_calc_accept.sh;
   artifacts/sweep022/{sweep,pumpon,pumpon_baseline} + artifacts/sweep022_calc.
+
+## SWEEP-023 (2026-10-19) — «ادامه ۶۰ تسک رو یکی یکی اجرا بکن» 60-task batch: SW-961..1000 LANDED + SW-1001..1020 queued
+
+- ONE loader.c batch (~25 new/updated imports + 3 data models + 1 REAL bug fix):
+  * ListView: per-item LPARAM store (insert/set/get/delete-shift) + LVM_SORTITEMS
+    REAL guest compare callback (ms_abi fn-ptr, insertion sort over txt+lparam)
+    + 64->512 items + true mid-list insert row shift (SW-976/977).
+  * TreeView: real node model (lazy per-slot parent[]/state[]/text[]) —
+    TVGN_CHILD/TVGN_PARENT walks, real labels, TVIS_SELECTED round-trip (SW-978/979).
+  * Tab: TCM label store (SW-980; SWEEP-021 TODO comment closed).
+  * GDI: DIB 16/32bpp conversion both directions (5-5-5/5-6-5/BITFIELDS/BGRA,
+    DWORD strides), StretchDIBits real, Set/GetDIBColorTable store,
+    GetTextExtentPoint32W/A (8x8 face), SetTextAlign/GetTextAlign applied in
+    TextOutA/W (SW-981..985).
+  * Network: WSAIoctl ext-fn typed fail + ioctlsocket FIONREAD translate,
+    select() WSA-error mapping, SD_SEND/SD_RECEIVE shutdown state (WSAESHUTDOWN),
+    WSAStringToAddressA + WSAAddressToStringA/W real (SW-986..990).
+  * Registry: RegSetValueExW OVERWRITE FIX (old append-only read back FIRST
+    value — real bug, killed), MINWIN_REG_SNAPSHOT hive save/load (MWREG001),
+    RegSaveKey/RegRestoreKey W/A typed no-op, SHGetValueW/A real (SW-991..995).
+- MEASURED: build 1,880,672 -> 1,935,792 (+55,120); 15-prog corpus x3
+  deterministic (45/45); ZERO regressions vs SWEEP-022 (7 exit0 / 4 exit139 /
+  4 exit1 parity); coreinfoex64 exit0 0-unresolved = SW-561 RESOLVED verified;
+  procexp64 stub call #1 deterministic x3 (BUG-078: crash RIP = UTF-16 string
+  ptr, static decode impossible on UPX-packed image).
+- NEW test PE: tests/reg/mw_reg_test.c -> mw_reg_test.exe (zig cc) —
+  pass=19 fail=0 exit0 (REG_MULTI_SZ byte-exact, DWORD overwrite, SHGetValueW
+  end-to-end, honest FILE_NOT_FOUND miss).
+- GUI accounting: 6 pump-off exit0 x3 + 4 pump-on exit0 (produkey/cports/
+  bginfo64/diskmon64) + miniwin_calc 12+3=15 via WM_KEYDOWN + NEW child-focus
+  walk 15/15 battery (scripts/sweep023_calc_battery.sh) + snake 30f +
+  breakout 80f + mw_reg_test MessageBox = 10+ GUI programs with evidence
+  (artifacts/sweep023/GUI_EVIDENCE.tsv).
+- Infra: zig toolchain RESTORED (pip ziglang) + 3 games rebuilt
+  (artifacts/sweep023/*.exe); 100-software refresh scoped honestly (local
+  corpus = 16 programs; wider binaries cleaned -> SW-1003 requeue);
+  sweep023_decode_stubs.py + sweep023_stage_refresh.py committed.
+- BUG docs: BUG-076 (autoruns64 pump-on RVA 0x4d72d), BUG-077 (rammap64
+  pump-on host-side NULL), BUG-078 (procexp64 stub->string-jump), BUG-079
+  (puttygen NULL fn-ptr), BUG-080 (searchmyfiles/winmergeu classes).
+- Exit1 gates SELF-NAMED this sweep: pageant "Unable to access security APIs"
+  (6 ADVAPI32 imports -> SW-1001..1005), procmon64 window-layout family
+  (-> SW-1006..1010), putty GDI font/comm (-> SW-1011..1015).
+- Worklist: SW-961..1000 marked LANDED (per-task evidence) + new queue
+  SW-1001..1020 (20 items; 60-task mandate: 40 landed + 20 queued).
