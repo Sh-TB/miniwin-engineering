@@ -5001,6 +5001,35 @@ __attribute__((ms_abi)) char* mw__ultoa(unsigned long val, char* buf, int base) 
     buf[j] = 0;
     return buf;
 }
+/* ---- SWEEP-022 SW-956..958: signed radix converts (same house style) ---- */
+__attribute__((ms_abi)) char* mw__itoa(int val, char* buf, int base) {
+    unsigned long v;
+    char tmp[33];
+    int i = 0, neg = 0;
+    if (base == 10 && val < 0) { neg = 1; v = (unsigned long)(-(long long)val); }
+    else v = (unsigned long)(unsigned int)val;
+    if (v == 0 && !neg) { buf[0] = '0'; buf[1] = 0; return buf; }
+    while (v > 0) { tmp[i++] = "0123456789abcdef"[v % base]; v /= base; }
+    int j = 0;
+    if (neg) buf[j++] = '-';
+    while (i > 0) buf[j++] = tmp[--i];
+    buf[j] = 0;
+    return buf;
+}
+__attribute__((ms_abi)) char* mw__ltoa(int32_t val, char* buf, int base) {
+    unsigned long v;
+    char tmp[33];
+    int i = 0, neg = 0;
+    if (base == 10 && val < 0) { neg = 1; v = (unsigned long)(-(long long)val); }
+    else v = (unsigned long)(uint32_t)val;
+    if (v == 0 && !neg) { buf[0] = '0'; buf[1] = 0; return buf; }
+    while (v > 0) { tmp[i++] = "0123456789abcdef"[v % base]; v /= base; }
+    int j = 0;
+    if (neg) buf[j++] = '-';
+    while (i > 0) buf[j++] = tmp[--i];
+    buf[j] = 0;
+    return buf;
+}
 
 __attribute__((ms_abi)) int mw_tolower(int c) { return tolower(c); }
 __attribute__((ms_abi)) size_t mw_wcstombs(char* d, const wchar_t* s, size_t n) {
@@ -8352,33 +8381,223 @@ __attribute__((ms_abi)) int mw_ReadConsoleInputA(void* h, void* buf, uint32_t n,
     return 1;
 }
 
-/* ---- registry: honest failure (no registry on host) ---- */
-#define MW_REG_FAIL (mw_SetLastError(2), 2) /* ERROR_FILE_NOT_FOUND */
+/* ---- registry: minimal in-memory hive (SWEEP-022 SW-951..955) ----
+ * Contract: EMPTY at process start — reads of never-created keys fail with
+ * ERROR_FILE_NOT_FOUND exactly like the old honest-failure stubs (zero
+ * behavior change for read-only callers). Writes (create/set) succeed and
+ * are visible to reads in the same process — the Sysinternals EULA
+ * acceptance write (HKCU\Software\Sysinternals\<exe>\EulaAccepted) and
+ * GUI settings persistence now work end to end. */
+static int mw_probe_copy(const void* src, size_t n, void* dst); /* pump block */
+
+#define MW_REG_MAXKEY 64
+#define MW_REG_MAXVAL 16
+#define MW_REG_PATHN  160
+#define MW_REG_VALN   64
+#define MW_REG_DATA   512
+#define MW_REGKEY_BASE 0x00090000u
+typedef struct {
+    uint16_t name[MW_REG_VALN];
+    uint32_t type;
+    uint32_t size;
+    uint8_t  data[MW_REG_DATA];
+} MwRegVal;
+typedef struct {
+    uint8_t  live;
+    uint16_t path[MW_REG_PATHN];
+    uint32_t nvals;
+    MwRegVal vals[MW_REG_MAXVAL];
+} MwRegKey;
+static MwRegKey g_reg[MW_REG_MAXKEY];
+/* forward decls (A-tails + EnumKeyA above use these below) */
+static int32_t mw_reg_query(void* key, const uint16_t* name, uint32_t* type, void* data, uint32_t* size);
+__attribute__((ms_abi)) int32_t mw_RegCreateKeyExW(void* key, const wchar_t* sub, uint32_t res, const wchar_t* cls, uint32_t opts, uint32_t access, void* sa, void** result, void* disp);
+__attribute__((ms_abi)) int32_t mw_RegEnumKeyExW(void* key, uint32_t idx, wchar_t* name, uint32_t* ncap, void* res, wchar_t* cls, uint32_t* ccap, void* time);
+static const struct { uint32_t h; const char* pfx; } g_reg_roots[7] = {
+    { 0x80000000u, "HKCR" }, { 0x80000001u, "HKCU" },
+    { 0x80000002u, "HKLM" }, { 0x80000003u, "HKU"  },
+    { 0x80000004u, "HKPD" }, { 0x80000005u, "HKCC" },
+    { 0x80000006u, "HKDD" },
+};
+static uint32_t mw_reg_wlen(const uint16_t* s) {
+    uint32_t n = 0; if (s) while (s[n]) n++; return n;
+}
+static uint32_t mw_reg_wcopy(uint16_t* d, const uint16_t* s, uint32_t cap) {
+    uint32_t n = 0;
+    if (s) while (n + 1 < cap && s[n]) { d[n] = s[n]; n++; }
+    d[n] = 0; return n;
+}
+static uint32_t mw_reg_copy_ascii(uint16_t* d, const char* s, uint32_t cap) {
+    uint32_t n = 0;
+    if (s) while (s[n] && n + 1 < cap) { d[n] = (uint16_t)(uint8_t)s[n]; n++; }
+    d[n] = 0; return n;
+}
+static uint16_t mw_reg_wlower(uint16_t c) {
+    return (c >= 'A' && c <= 'Z') ? (uint16_t)(c + 32) : c;
+}
+static int mw_reg_weq(const uint16_t* a, const uint16_t* b) {
+    uint32_t i = 0;
+    for (;;) {
+        uint16_t ca = mw_reg_wlower(a[i]), cb = mw_reg_wlower(b[i]);
+        if (ca != cb) return 0;
+        if (!ca) return 1;
+        i++;
+    }
+}
+static int mw_reg_wprefix(const uint16_t* path, const uint16_t* pre) {
+    uint32_t n = mw_reg_wlen(pre);
+    if (mw_reg_wlen(path) <= n) return 0;
+    for (uint32_t i = 0; i < n; i++)
+        if (mw_reg_wlower(path[i]) != mw_reg_wlower(pre[i])) return 0;
+    return path[n] == 0x5C; /* L'\\' */
+}
+/* resolve key: predefined root (slots 0..6) or hive handle; slot or -1 */
+static int mw_reg_slot(void* key) {
+    uintptr_t v = (uintptr_t)key;
+    if (v >= 0x80000000u) {
+        for (int r = 0; r < 7; r++)
+            if ((uint32_t)v == g_reg_roots[r].h) {
+                g_reg[r].live = 1;
+                mw_reg_copy_ascii(g_reg[r].path, g_reg_roots[r].pfx, MW_REG_PATHN);
+                return r;
+            }
+        return -1;
+    }
+    if ((v & 0xFFFF0000u) != MW_REGKEY_BASE) return -1;
+    int i = (int)(v & 0xFFFFu) - 1;
+    if (i < 0 || i >= MW_REG_MAXKEY || !g_reg[i].live) return -1;
+    return i;
+}
+static int mw_reg_find_path(const uint16_t* path) {
+    for (int i = 7; i < MW_REG_MAXKEY; i++)
+        if (g_reg[i].live && mw_reg_weq(g_reg[i].path, path)) return i;
+    return -1;
+}
+/* root + optional sub -> full path; returns root slot or -1 */
+static int mw_reg_compose(void* root, const wchar_t* sub, uint16_t* out) {
+    int rs = mw_reg_slot(root);
+    if (rs < 0 || rs >= 7) return -1;
+    uint32_t n = mw_reg_copy_ascii(out, g_reg_roots[rs].pfx, MW_REG_PATHN);
+    if (sub && ((const uint16_t*)sub)[0]) {
+        if (n + 1 >= MW_REG_PATHN) return -1;
+        out[n++] = 0x5C;
+        mw_reg_wcopy(out + n, (const uint16_t*)sub, MW_REG_PATHN - n);
+    }
+    return rs;
+}
 __attribute__((ms_abi)) int32_t mw_RegOpenKeyExW(void* key, const wchar_t* sub, uint32_t opts, uint32_t access, void** result) {
-    MW_TRACE("RegOpenKeyExW() -> ERROR_FILE_NOT_FOUND");
-    mw_SetLastError(2);
-    return 2;
+    (void)opts; (void)access;
+    uint16_t path[MW_REG_PATHN];
+    if (mw_reg_compose(key, sub, path) < 0) { mw_SetLastError(6); return 6; }
+    int i = mw_reg_find_path(path);
+    if (i < 0) { mw_SetLastError(2); return 2; } /* FILE_NOT_FOUND: honest miss */
+    if (result) *result = (void*)(uintptr_t)(MW_REGKEY_BASE | (uintptr_t)(i + 1));
+    MW_TRACE("RegOpenKeyExW -> handle slot %d", i);
+    return 0;
 }
 __attribute__((ms_abi)) int32_t mw_RegOpenKeyExA(void* key, const char* sub, uint32_t opts, uint32_t access, void** result) {
+    uint16_t wsub[MW_REG_PATHN] = {0};
+    if (sub) {
+        char a[MW_REG_PATHN] = {0};
+        if (mw_probe_copy(sub, MW_REG_PATHN - 1, a))
+            mw_reg_copy_ascii(wsub, a, MW_REG_PATHN);
+    }
+    return mw_RegOpenKeyExW(key, (const wchar_t*)wsub, opts, access, result);
+}
+/* SWEEP-022 SW-952/954: ExA create + enumerate (real A-tail, not stubs) */
+__attribute__((ms_abi)) int32_t mw_RegCreateKeyExA(void* key, const char* sub, uint32_t res, const char* cls, uint32_t opts, uint32_t access, void* sa, void** result, void* disp) {
+    uint16_t wsub[MW_REG_PATHN] = {0};
+    if (sub) {
+        char a[MW_REG_PATHN] = {0};
+        if (mw_probe_copy(sub, MW_REG_PATHN - 1, a))
+            mw_reg_copy_ascii(wsub, a, MW_REG_PATHN);
+    }
+    (void)cls;
+    return mw_RegCreateKeyExW(key, (const wchar_t*)wsub, res, NULL, opts, access, sa, result, disp);
+}
+__attribute__((ms_abi)) int32_t mw_RegEnumKeyExA(void* key, uint32_t idx, char* name, uint32_t* ncap, void* res, char* cls, uint32_t* ccap, void* time) {
+    (void)cls; (void)ccap;
+    uint16_t wname[MW_REG_PATHN] = {0};
+    uint32_t wcap = ncap ? *ncap : MW_REG_PATHN;
+    if (wcap > MW_REG_PATHN) wcap = MW_REG_PATHN;
+    int32_t rc = mw_RegEnumKeyExW(key, idx, (wchar_t*)wname, &wcap, res, NULL, NULL, time);
+    if (rc == 0) {
+        uint32_t n = 0;
+        while (wname[n] && n + 1 < (ncap ? *ncap : MW_REG_PATHN)) {
+            name[n] = (char)(wname[n] & 0xFF); n++;
+        }
+        name[n] = 0;
+        if (ncap) *ncap = n;
+    }
+    return rc;
+}
+static int32_t mw_reg_query(void* key, const uint16_t* name, uint32_t* type, void* data, uint32_t* size) {
+    int i = mw_reg_slot(key);
+    if (i < 0) { mw_SetLastError(6); return 6; } /* INVALID_HANDLE */
+    if (name) {
+        for (uint32_t v = 0; v < g_reg[i].nvals; v++) {
+            MwRegVal* val = &g_reg[i].vals[v];
+            if (!mw_reg_weq(val->name, name)) continue;
+            if (type) *type = val->type;
+            if (!data) { if (size) *size = val->size; return 0; }
+            uint32_t cap = size ? *size : val->size;
+            if (cap < val->size) {
+                if (size) *size = val->size;
+                mw_SetLastError(234); /* MORE_DATA */
+                return 234;
+            }
+            if (val->size) memcpy(data, val->data, val->size);
+            if (size) *size = val->size;
+            return 0;
+        }
+    }
     mw_SetLastError(2);
     return 2;
 }
 __attribute__((ms_abi)) int32_t mw_RegQueryValueExW(void* key, const wchar_t* name, void* res, uint32_t* type, void* data, uint32_t* size) {
-    mw_SetLastError(2);
-    return 2;
+    (void)res;
+    return mw_reg_query(key, (const uint16_t*)name, type, data, size);
 }
 __attribute__((ms_abi)) int32_t mw_RegQueryValueExA(void* key, const char* name, void* res, uint32_t* type, void* data, uint32_t* size) {
-    mw_SetLastError(2);
-    return 2;
+    (void)res;
+    uint16_t wname[MW_REG_VALN] = {0};
+    if (name) {
+        char a[MW_REG_VALN] = {0};
+        if (mw_probe_copy(name, MW_REG_VALN - 1, a))
+            mw_reg_copy_ascii(wname, a, MW_REG_VALN);
+    }
+    return mw_reg_query(key, wname, type, data, size);
 }
 __attribute__((ms_abi)) int32_t mw_RegGetValueW(void* key, const wchar_t* sub, const wchar_t* name, uint32_t flags, uint32_t* type, void* data, uint32_t* size) {
-    mw_SetLastError(2);
-    return 2;
+    (void)flags;
+    uint16_t path[MW_REG_PATHN];
+    if (mw_reg_compose(key, sub, path) < 0) { mw_SetLastError(2); return 2; }
+    int i = mw_reg_find_path(path);
+    if (i < 0) { mw_SetLastError(2); return 2; }
+    return mw_reg_query((void*)(uintptr_t)(MW_REGKEY_BASE | (uintptr_t)(i + 1)),
+                        (const uint16_t*)name, type, data, size);
 }
-__attribute__((ms_abi)) int32_t mw_RegCloseKey(void* key) { return 0; }
+__attribute__((ms_abi)) int32_t mw_RegCloseKey(void* key) { (void)key; return 0; }
 __attribute__((ms_abi)) int32_t mw_RegCreateKeyExW(void* key, const wchar_t* sub, uint32_t res, const wchar_t* cls, uint32_t opts, uint32_t access, void* sa, void** result, void* disp) {
-    mw_SetLastError(5);
-    return 5;
+    (void)res; (void)cls; (void)opts; (void)access; (void)sa;
+    uint16_t path[MW_REG_PATHN];
+    if (mw_reg_compose(key, sub, path) < 0) { mw_SetLastError(6); return 6; }
+    int i = mw_reg_find_path(path);
+    int created = 0;
+    if (i < 0) {
+        int k;
+        for (k = 7; k < MW_REG_MAXKEY; k++) if (!g_reg[k].live) break;
+        if (k >= MW_REG_MAXKEY) { mw_SetLastError(14); return 14; }
+        i = k;
+        g_reg[i].live = 1;
+        mw_reg_wcopy(g_reg[i].path, path, MW_REG_PATHN);
+        g_reg[i].nvals = 0;
+        created = 1;
+    }
+    if (result) *result = (void*)(uintptr_t)(MW_REGKEY_BASE | (uintptr_t)(i + 1));
+    if (disp) *(uint32_t*)disp = created ? 1u /*CREATED_NEW_KEY*/ : 2u /*OPENED_EXISTING_KEY*/;
+    MW_TRACE("RegCreateKeyExW -> slot %d (created=%d)", i, created);
+    return 0;
 }
 /* SW-555 honest batch (SWEEP-009): W short forms. Real RegOpenKeyW ==
  * RegOpenKeyExW(..., 0, KEY_ALL_ACCESS, ...); real RegCreateKeyW ==
@@ -8393,48 +8612,163 @@ __attribute__((ms_abi)) int32_t mw_RegOpenKeyW(void* key, const wchar_t* sub, vo
 __attribute__((ms_abi)) int32_t mw_RegCreateKeyW(void* key, const wchar_t* sub, void** result) {
     return mw_RegCreateKeyExW(key, sub, 0, NULL, 0, 0x000F0000, NULL, result, NULL);
 }
-__attribute__((ms_abi)) int32_t mw_RegDeleteValueW(void* key, const wchar_t* name) { mw_SetLastError(2); return 2; }
-__attribute__((ms_abi)) int32_t mw_RegEnumKeyA(void* key, uint32_t idx, char* name, uint32_t cap) { mw_SetLastError(259); return 259; }
+__attribute__((ms_abi)) int32_t mw_RegDeleteValueW(void* key, const wchar_t* name) {
+    int i = mw_reg_slot(key);
+    if (i < 0) { mw_SetLastError(6); return 6; }
+    for (uint32_t v = 0; v < g_reg[i].nvals; v++) {
+        if (!mw_reg_weq(g_reg[i].vals[v].name, (const uint16_t*)name)) continue;
+        for (uint32_t k = v; k + 1 < g_reg[i].nvals; k++)
+            g_reg[i].vals[k] = g_reg[i].vals[k + 1];
+        g_reg[i].nvals--;
+        return 0;
+    }
+    mw_SetLastError(2);
+    return 2;
+}
+__attribute__((ms_abi)) int32_t mw_RegEnumKeyA(void* key, uint32_t idx, char* name, uint32_t cap) {
+    uint16_t wname[MW_REG_PATHN] = {0};
+    uint32_t wcap = cap < MW_REG_PATHN ? cap : MW_REG_PATHN;
+    int32_t rc = mw_RegEnumKeyExW(key, idx, (wchar_t*)wname, &wcap, NULL, NULL, NULL, NULL);
+    if (rc == 0) {
+        uint32_t n = 0;
+        while (wname[n] && n + 1 < cap) { name[n] = (char)(wname[n] & 0xFF); n++; }
+        name[n] = 0;
+    }
+    return rc;
+}
 __attribute__((ms_abi)) int32_t mw_RegEnumKeyExW(void* key, uint32_t idx, wchar_t* name, uint32_t* ncap, void* res, wchar_t* cls, uint32_t* ccap, void* time) {
-    mw_SetLastError(259);
+    (void)res; (void)cls; (void)ccap; (void)time;
+    int i = mw_reg_slot(key);
+    if (i < 0) { mw_SetLastError(6); return 6; }
+    uint16_t mypath[MW_REG_PATHN];
+    mw_reg_wcopy(mypath, g_reg[i].path, MW_REG_PATHN);
+    uint32_t mylen = mw_reg_wlen(mypath);
+    uint32_t seen = 0;
+    for (int k = 0; k < MW_REG_MAXKEY; k++) {
+        if (!g_reg[k].live || k == i) continue;
+        if (!mw_reg_wprefix(g_reg[k].path, mypath)) continue;
+        const uint16_t* child = g_reg[k].path + mylen + 1;
+        int deeper = 0;
+        for (uint32_t c = 0; child[c]; c++)
+            if (child[c] == 0x5Cu) { deeper = 1; break; }
+        if (deeper) continue;
+        if (seen == idx) {
+            uint32_t len = mw_reg_wlen(child);
+            if (!ncap || *ncap < len + 1) {
+                if (ncap) *ncap = len + 1;
+                mw_SetLastError(234);
+                return 234;
+            }
+            mw_reg_wcopy((uint16_t*)name, child, *ncap);
+            if (ncap) *ncap = len;
+            return 0;
+        }
+        seen++;
+    }
+    mw_SetLastError(259); /* NO_MORE_ITEMS */
     return 259;
 }
 __attribute__((ms_abi)) int32_t mw_RegEnumValueW(void* key, uint32_t idx, wchar_t* name, uint32_t* ncap, void* res, uint32_t* type, void* data, uint32_t* size) {
-    mw_SetLastError(259);
-    return 259;
+    (void)res;
+    int i = mw_reg_slot(key);
+    if (i < 0) { mw_SetLastError(6); return 6; }
+    if (idx >= g_reg[i].nvals) { mw_SetLastError(259); return 259; }
+    MwRegVal* v = &g_reg[i].vals[idx];
+    uint32_t len = mw_reg_wlen(v->name);
+    if (!ncap || *ncap < len + 1) {
+        if (ncap) *ncap = len + 1;
+        mw_SetLastError(234);
+        return 234;
+    }
+    mw_reg_wcopy((uint16_t*)name, v->name, *ncap);
+    if (ncap) *ncap = len;
+    if (type) *type = v->type;
+    if (size) {
+        if (!data) { *size = v->size; }
+        else if (*size < v->size) { *size = v->size; mw_SetLastError(234); return 234; }
+        else { if (v->size) memcpy(data, v->data, v->size); *size = v->size; }
+    }
+    return 0;
 }
 __attribute__((ms_abi)) int32_t mw_RegQueryInfoKeyW(void* key, wchar_t* cls, uint32_t* ccap, void* res, uint32_t* subkeys, uint32_t* maxsub, uint32_t* maxcls, uint32_t* values, uint32_t* maxval, uint32_t* maxdata, uint32_t* secdesc, void* time) {
-    mw_SetLastError(6);
-    return 6;
+    (void)cls; (void)ccap; (void)res; (void)maxcls; (void)secdesc; (void)time;
+    int i = mw_reg_slot(key);
+    if (i < 0) { mw_SetLastError(6); return 6; }
+    uint16_t mypath[MW_REG_PATHN];
+    mw_reg_wcopy(mypath, g_reg[i].path, MW_REG_PATHN);
+    uint32_t mylen = mw_reg_wlen(mypath);
+    uint32_t nsub = 0, maxsublen = 0;
+    for (int k = 0; k < MW_REG_MAXKEY; k++) {
+        if (!g_reg[k].live || k == i) continue;
+        if (!mw_reg_wprefix(g_reg[k].path, mypath)) continue;
+        const uint16_t* child = g_reg[k].path + mylen + 1;
+        int deeper = 0;
+        for (uint32_t c = 0; child[c]; c++)
+            if (child[c] == 0x5Cu) { deeper = 1; break; }
+        if (deeper) continue;
+        if (mw_reg_wlen(child) > maxsublen) maxsublen = mw_reg_wlen(child);
+        nsub++;
+    }
+    if (subkeys) *subkeys = nsub;
+    if (maxsub)  *maxsub = maxsublen;
+    if (values)  *values = g_reg[i].nvals;
+    if (maxval)  *maxval = MW_REG_VALN - 1;
+    if (maxdata) *maxdata = MW_REG_DATA;
+    return 0;
 }
 /* SWEEP-019 SW-876..878: A-side registry tail — mirrors the W-side honest
  * contracts (same codes, SetLastError set), NOT duplicated logic. */
 __attribute__((ms_abi)) int32_t mw_RegDeleteValueA(void* key, const char* name) {
-    (void)key; (void)name;
-    mw_SetLastError(2); /* ERROR_FILE_NOT_FOUND, same as RegDeleteValueW */
-    return 2;
+    uint16_t wname[MW_REG_VALN] = {0};
+    if (name) {
+        char a[MW_REG_VALN] = {0};
+        if (mw_probe_copy(name, MW_REG_VALN - 1, a))
+            mw_reg_copy_ascii(wname, a, MW_REG_VALN);
+    }
+    return mw_RegDeleteValueW(key, (const wchar_t*)wname);
 }
 __attribute__((ms_abi)) int32_t mw_RegEnumValueA(void* key, uint32_t idx, char* name, uint32_t* ncap, void* res, uint32_t* type, void* data, uint32_t* size) {
-    (void)key; (void)idx; (void)name; (void)ncap; (void)res; (void)type; (void)data; (void)size;
-    mw_SetLastError(259); /* ERROR_NO_MORE_ITEMS, same as RegEnumValueW */
-    return 259;
+    uint16_t wname[MW_REG_VALN] = {0};
+    uint32_t wcap = ncap ? *ncap : MW_REG_VALN;
+    if (wcap > MW_REG_VALN) wcap = MW_REG_VALN;
+    int32_t rc = mw_RegEnumValueW(key, idx, (wchar_t*)wname, &wcap, res, type, data, size);
+    if (rc == 0) {
+        uint32_t n = 0;
+        while (wname[n] && n + 1 < (ncap ? *ncap : MW_REG_VALN)) {
+            name[n] = (char)(wname[n] & 0xFF); n++;
+        }
+        name[n] = 0;
+        if (ncap) *ncap = n;
+    }
+    return rc;
 }
 __attribute__((ms_abi)) int32_t mw_RegQueryInfoKeyA(void* key, char* cls, uint32_t* ccap, void* res, uint32_t* subkeys, uint32_t* maxsub, uint32_t* maxcls, uint32_t* values, uint32_t* maxval, uint32_t* maxdata, uint32_t* secdesc, void* time) {
-    (void)key; (void)cls; (void)ccap; (void)res; (void)subkeys; (void)maxsub; (void)maxcls; (void)values; (void)maxval; (void)maxdata; (void)secdesc; (void)time;
-    mw_SetLastError(6); /* ERROR_INVALID_HANDLE, same as RegQueryInfoKeyW */
-    return 6;
+    /* counts are name-width independent — route straight to W */
+    return mw_RegQueryInfoKeyW(key, NULL, NULL, res, subkeys, maxsub, maxcls,
+                               values, maxval, maxdata, secdesc, time);
 }
 __attribute__((ms_abi)) int32_t mw_RegSetValueExW(void* key, const wchar_t* name, uint32_t res, uint32_t type, const void* data, uint32_t size) {
-    mw_SetLastError(5);
-    return 5;
+    (void)res;
+    int i = mw_reg_slot(key);
+    if (i < 0) { mw_SetLastError(6); return 6; }
+    if (g_reg[i].nvals >= MW_REG_MAXVAL) { mw_SetLastError(14); return 14; }
+    if (size > MW_REG_DATA) { mw_SetLastError(234); return 234; }
+    MwRegVal* v = &g_reg[i].vals[g_reg[i].nvals];
+    mw_reg_wcopy(v->name, (const uint16_t*)name, MW_REG_VALN);
+    v->type = type;
+    v->size = size;
+    if (size && data) memcpy(v->data, data, size);
+    g_reg[i].nvals++;
+    MW_TRACE("RegSetValueExW -> slot %d, %u bytes stored", i, size);
+    return 0;
 }
 __attribute__((ms_abi)) int32_t mw_RegLoadMUIStringW(void* key, const wchar_t* v, wchar_t* out, uint32_t cap, uint32_t* len, uint32_t flags, const wchar_t* dir) {
     mw_SetLastError(2);
     return 2;
 }
 __attribute__((ms_abi)) int32_t mw_RegNotifyChangeKeyValue(void* key, int watch, uint32_t filter, void* event, int async) {
-    mw_SetLastError(1);
-    return 1;
+    (void)key; (void)watch; (void)filter; (void)event; (async);
+    return 0; /* SWEEP-022 SW-955: typed success — no change events will fire */
 }
 
 /* ============================================================
@@ -11094,9 +11428,13 @@ static const uint16_t* mw_hwnd_text(void* h) {
 #define MW_LV_MAXITEM 64
 #define MW_LV_MAXSUB  2
 #define MW_LV_TEXTN   40
+#define MW_LV_MAXCOL  8 /* SWEEP-022 SW-926..930: column header store */
 typedef struct {
     uint32_t items, cols;
     uint16_t txt[MW_LV_MAXITEM][MW_LV_MAXSUB][MW_LV_TEXTN];
+    /* SWEEP-022 SW-926..930: LVM_SET/GETCOLUMN header text + width */
+    int32_t  colw[MW_LV_MAXCOL];
+    uint16_t coltxt[MW_LV_MAXCOL][MW_LV_TEXTN];
 } MwLvState;
 static MwLvState* g_lvstate[MW_CHILD_MAX];
 static uint32_t   g_tree_items[MW_CHILD_MAX];
@@ -11205,9 +11543,113 @@ static int mw_commonctl_msg(int s, uint32_t msg, uintptr_t wp, long long lp, lon
             }
             return 1;
         }
-        case 0x1008u: /* LVM_DELETEALLITEMS */
+        /* ---- SWEEP-022 SW-926..930: ListView final ----
+         * BUG-074 FIX: 0x1008 is LVM_DELETEITEM and 0x1009 is
+         * LVM_DELETEALLITEMS (wine commctrl.h LVM_FIRST+8/+9); SWEEP-021
+         * had the two constants swapped. */
+        case 0x1008u: { /* LVM_DELETEITEM: wp=item index, shift rows up */
+            *out = 0;
+            uint32_t iitem = (uint32_t)wp;
+            if (iitem < lv->items) {
+                for (uint32_t r = iitem; r + 1 < MW_LV_MAXITEM; r++)
+                    memcpy(lv->txt[r], lv->txt[r + 1], sizeof(lv->txt[0]));
+                memset(lv->txt[MW_LV_MAXITEM - 1], 0, sizeof(lv->txt[0]));
+                lv->items--;
+                *out = 1;
+            }
+            return 1;
+        }
+        case 0x1009u: /* LVM_DELETEALLITEMS: rows only — columns survive (real) */
             memset(lv->txt, 0, sizeof(lv->txt));
             lv->items = 0;
+            *out = 1; return 1;
+        case 0x1005u: { /* LVM_GETITEMA: LVITEMA x64, char* text */
+            *out = 1;
+            if (!lp) return 1;
+            uint32_t mask = *(uint32_t*)lp;
+            uint32_t iitem = *(uint32_t*)((uint8_t*)lp + 4);
+            int sub = *(int*)((uint8_t*)lp + 8);
+            *(uint32_t*)((uint8_t*)lp + 12) = 0; /* state: none tracked */
+            if ((mask & 0x1u /*LVIF_TEXT*/) && iitem < lv->items &&
+                sub >= 0 && sub < MW_LV_MAXSUB) {
+                char* dst = *(char**)((uint8_t*)lp + 24);
+                int cch = *(int*)((uint8_t*)lp + 32);
+                if (dst && cch > 0) {
+                    uint32_t n = 0;
+                    while (n + 1 < (uint32_t)cch && lv->txt[iitem][sub][n]) {
+                        dst[n] = (char)(lv->txt[iitem][sub][n] & 0xFF); n++;
+                    }
+                    dst[n] = 0;
+                    *(int*)((uint8_t*)lp + 32) = (int)n;
+                }
+            }
+            return 1;
+        }
+        case 0x104Bu: { /* LVM_GETITEMW: LVITEMW x64, wchar_t* text */
+            *out = 1;
+            if (!lp) return 1;
+            uint32_t mask = *(uint32_t*)lp;
+            uint32_t iitem = *(uint32_t*)((uint8_t*)lp + 4);
+            int sub = *(int*)((uint8_t*)lp + 8);
+            *(uint32_t*)((uint8_t*)lp + 12) = 0;
+            if ((mask & 0x1u) && iitem < lv->items &&
+                sub >= 0 && sub < MW_LV_MAXSUB) {
+                uint16_t* dst = *(uint16_t**)((uint8_t*)lp + 24);
+                int cch = *(int*)((uint8_t*)lp + 32);
+                if (dst && cch > 0) {
+                    uint32_t n = 0;
+                    while (n + 1 < (uint32_t)cch && lv->txt[iitem][sub][n]) n++;
+                    for (uint32_t k = 0; k <= n; k++) dst[k] = lv->txt[iitem][sub][k];
+                    *(int*)((uint8_t*)lp + 32) = (int)n;
+                }
+            }
+            return 1;
+        }
+        case 0x101Au: case 0x105Au: { /* LVM_SETCOLUMNA/W: store header */
+            *out = 1;
+            if (!lp) return 1;
+            int32_t cx = *(int32_t*)((uint8_t*)lp + 8);
+            int sub = *(int*)((uint8_t*)lp + 36);
+            if (sub >= 0 && sub < MW_LV_MAXCOL) {
+                lv->colw[sub] = cx;
+                mw_lv_store_text(lv->coltxt[sub],
+                                 *(const uint16_t* const*)((uint8_t*)lp + 24));
+            }
+            return 1;
+        }
+        case 0x1019u: { /* LVM_GETCOLUMNA: char* header out */
+            *out = 1;
+            if (!lp) return 1;
+            int sub = *(int*)((uint8_t*)lp + 36);
+            if (sub >= 0 && sub < MW_LV_MAXCOL)
+                *(int32_t*)((uint8_t*)lp + 8) = lv->colw[sub] ? lv->colw[sub] : 80;
+            char* dst = *(char**)((uint8_t*)lp + 24);
+            int cch = *(int*)((uint8_t*)lp + 32);
+            if (dst && cch > 0 && sub >= 0 && sub < MW_LV_MAXCOL) {
+                uint32_t n = 0;
+                while (n + 1 < (uint32_t)cch && lv->coltxt[sub][n]) {
+                    dst[n] = (char)(lv->coltxt[sub][n] & 0xFF); n++;
+                }
+                dst[n] = 0;
+            }
+            return 1;
+        }
+        case 0x1059u: { /* LVM_GETCOLUMNW: wchar_t* header out */
+            *out = 1;
+            if (!lp) return 1;
+            int sub = *(int*)((uint8_t*)lp + 36);
+            if (sub >= 0 && sub < MW_LV_MAXCOL)
+                *(int32_t*)((uint8_t*)lp + 8) = lv->colw[sub] ? lv->colw[sub] : 80;
+            uint16_t* dst = *(uint16_t**)((uint8_t*)lp + 24);
+            int cch = *(int*)((uint8_t*)lp + 32);
+            if (dst && cch > 0 && sub >= 0 && sub < MW_LV_MAXCOL) {
+                uint32_t n = 0;
+                while (n + 1 < (uint32_t)cch && lv->coltxt[sub][n]) n++;
+                for (uint32_t k = 0; k <= n; k++) dst[k] = lv->coltxt[sub][k];
+            }
+            return 1;
+        }
+        case 0x1030u: /* LVM_SORTITEMS: no per-item param store; honest no-op */
             *out = 1; return 1;
         case 0x1038u: { /* LVM_GETSUBITEMRECT: wp=item, lp=RECT* (sub=rect.left) */
             *out = 0;
@@ -11235,10 +11677,33 @@ static int mw_commonctl_msg(int s, uint32_t msg, uintptr_t wp, long long lp, lon
         }
         case 0x1105u: /* TVM_GETCOUNT */
             *out = (long long)g_tree_items[s]; return 1;
-        case 0x110Au: /* TVM_GETNEXTITEM: TVGN_ROOT(4) -> root; else NULL */
-            *out = (wp == 4u) ? (long long)g_tree_root[s]
-                : (wp == 9u ? (long long)g_tree_sel[s] : 0); /* 9=TVGN_CARET */
+        /* ---- SWEEP-022 SW-931..935: TreeView final ----
+         * BUG-075 FIX: real TVGN values (wine commctrl.h): ROOT=0, NEXT=1,
+         * PREVIOUS=2, PARENT=3, CHILD=4, FIRSTVISIBLE=5, CARET=9,
+         * LASTVISIBLE=10 — SWEEP-021 mapped wp==4 to ROOT (4 is CHILD). */
+        case 0x110Au: { /* TVM_GETNEXTITEM */
+            uintptr_t h = (uintptr_t)lp;
+            uint32_t idx = (uint32_t)(h & 0xFFFFu);
+            int valid = h != 0 && (h & 0xFFFF0000u) == MW_TREE_BASE &&
+                        idx >= 1 && idx <= g_tree_items[s];
+            switch (wp) {
+            case 0u:  /* TVGN_ROOT */
+            case 5u:  /* TVGN_FIRSTVISIBLE */
+            case 10u: /* TVGN_LASTVISIBLE */
+                *out = (long long)g_tree_root[s]; break;
+            case 9u:  /* TVGN_CARET */
+                *out = (long long)g_tree_sel[s]; break;
+            case 1u:  /* TVGN_NEXT: insertion-order walk */
+                *out = (valid && idx < g_tree_items[s]) ? (long long)(h + 1) : 0; break;
+            case 2u:  /* TVGN_PREVIOUS */
+                *out = (valid && idx > 1) ? (long long)(h - 1) : 0; break;
+            case 3u:  /* TVGN_PARENT: root's parent = NULL (flat model) */
+            case 4u:  /* TVGN_CHILD: no child chains tracked */
+            default:
+                *out = 0; break;
+            }
             return 1;
+        }
         /* ---- SWEEP-021 SW-891..895: TreeView deepening ---- */
         case 0x110Cu: case 0x113Eu: { /* TVM_GETITEMA/W: lp=TVITEM x64 */
             *out = 1;
@@ -11256,6 +11721,32 @@ static int mw_commonctl_msg(int s, uint32_t msg, uintptr_t wp, long long lp, lon
             g_tree_sel[s] = (uintptr_t)lp;
             *out = 1; return 1;
         case 0x1102u: /* TVM_EXPAND: children not fetched; expanded = success */
+            *out = 1; return 1;
+        /* ---- SWEEP-022 SW-931..935 additions ---- */
+        case 0x1104u: { /* TVM_GETITEMRECT: hItem pre-placed in rect.left */
+            *out = 0;
+            if (!lp) return 1;
+            uintptr_t h = *(uintptr_t*)lp;
+            uint32_t idx = (uint32_t)(h & 0xFFFFu);
+            if ((h & 0xFFFF0000u) == MW_TREE_BASE && idx >= 1 &&
+                idx <= g_tree_items[s]) {
+                int32_t* r = (int32_t*)lp;
+                r[0] = 0; r[1] = (int32_t)(idx - 1) * 16;
+                r[2] = wp ? 120 : 400; r[3] = r[1] + 16;
+                *out = 1;
+            }
+            return 1;
+        }
+        case 0x1110u: /* TVM_GETVISIBLECOUNT: honest 20-row viewport */
+            *out = 20; return 1;
+        case 0x1111u: { /* TVM_HITTEST: lp=TVHITTESTINFO{pt@0,flags@8,hItem@16} */
+            *out = 0;
+            if (!lp) return 1;
+            *(uint32_t*)((uint8_t*)lp + 8) = 0x1u; /* TVHT_NOWHERE */
+            *(void**)((uint8_t*)lp + 16) = NULL;
+            return 1;
+        }
+        case 0x1113u: /* TVM_SORTCHILDREN: no child chains; honest success */
             *out = 1; return 1;
         }
     }
@@ -13412,13 +13903,17 @@ __attribute__((ms_abi)) int mw_SetDefaultDllDirectories(uint32_t flags) {
 __attribute__((ms_abi)) int mw_BitBlt(void* hdcDst, int x, int y, int w, int h,
 
         void* hdcSrc, int xs, int ys, uint32_t rop) {
+    /* SWEEP-022 SW-939 CAPTUREBLT audit: strip CAPTUREBLT(0x40000000) and
+     * NOMIRRORBITMAP(0x80000000) so guests passing SRCCOPY|CAPTUREBLT land
+     * on the copy path instead of the fallback fill (bginfo64 desktop paint). */
+    uint32_t base = rop & 0x00FFFFFFu;
     MWBmp* D = mw_dc_surface(hdcDst);
     MWBmp* S = mw_dc_surface(hdcSrc);
-    if (rop == 0x00000042u) { /* BLACKNESS */
+    if (base == 0x00000042u) { /* BLACKNESS */
         if (D) mwb_fill(D, x, y, w, h, 0x000000);
         return 1;
     }
-    if (rop == 0x00FF0062u) { /* WHITENESS */
+    if (base == 0x00FF0062u) { /* WHITENESS */
         if (D) mwb_fill(D, x, y, w, h, 0xFFFFFF);
         return 1;
     }
@@ -13426,7 +13921,7 @@ __attribute__((ms_abi)) int mw_BitBlt(void* hdcDst, int x, int y, int w, int h,
         MW_TRACE("[GDI] BitBlt -> 0 (bad dst/src DC)");
         return 0;
     }
-    if (rop != 0x00CC0020u) { /* SRCCOPY is the contract; honest fallback */
+    if (base != 0x00CC0020u) { /* SRCCOPY is the contract; honest fallback */
         mwb_fill(D, x, y, w, h, g_cur_brush);
         MW_TRACE("[GDI] BitBlt rop=0x%x -> brush fill fallback", rop);
         return 1;
@@ -13472,6 +13967,60 @@ static int g_dialog_result = 0;
 
 typedef int (__attribute__((ms_abi)) *MwDlgProc)(void* hwnd, uint32_t msg,
                                                  uintptr_t wp, intptr_t lp);
+/* ---- SWEEP-022 SW-921..925: real DLGTEMPLATE walk ----
+ * Creates template children in the SAME child registry CreateWindowEx
+ * uses, so GetDlgItem/SendDlgItemMessage/SetDlgItemText resolve on the
+ * Sysinternals EULA path (autoruns64/rammap64 pump-on). Word-aligned
+ * SZ_OrOrd fields, DWORD-aligned items; class ordinal 0xFFFF: 0x80
+ * BUTTON .. 0x85 COMBOBOX map straight onto the sysclass ids. */
+static const uint16_t* mw_szorord_next(const uint16_t* p) {
+    if (*p == 0xFFFFu) return p + 2;
+    while (*p) p++;
+    return p + 1;
+}
+static const uint16_t* mw_align4_w(const uint16_t* p) {
+    return (const uint16_t*)(((uintptr_t)p + 3u) & ~(uintptr_t)3u);
+}
+static void mw_dialog_create_children(void* dlg, const void* tmpl) {
+    if (!tmpl) return;
+    const uint16_t* p = (const uint16_t*)tmpl;
+    uint32_t style = *(const uint32_t*)p;
+    uint16_t cdit = p[4];
+    p += 10;                    /* style+exstyle(8B) cdit(2B) x,y,cx,cy(8B) */
+    p = mw_szorord_next(p);     /* menu */
+    p = mw_szorord_next(p);     /* class */
+    while (*p) p++; p++;        /* title (always present) */
+    if (style & 0x40u) { p++; while (*p) p++; p++; } /* DS_SETFONT: size+face */
+    p = mw_align4_w(p);
+    for (uint16_t i = 0; i < cdit; i++) {
+        const uint16_t* it = p;
+        uint16_t id = it[9];    /* style(4)+ex(4)+x,y,cx,cy(8) = id @ +16 */
+        const uint16_t* cls = it + 10;
+        int sc = 0;
+        if (cls[0] == 0xFFFFu) {
+            uint16_t o = cls[1];
+            if (o >= 0x80u && o <= 0x85u) sc = (int)o;
+        } else {
+            uint16_t wname[16] = {0};
+            for (int k = 0; k < 15 && cls[k]; k++) wname[k] = cls[k];
+            sc = mw_sysclass_w((const void*)wname);
+        }
+        const uint16_t* ttl = mw_szorord_next(cls);
+        const void* txt = NULL;
+        if (ttl[0] != 0xFFFFu) txt = (const void*)ttl; /* ordinal title = none */
+        if (sc) {
+            void* h = mw_child_register(sc, dlg, (void*)(uintptr_t)id, txt, 1, NULL);
+            MW_TRACE("[GUI] dlg child id=%lu cls=%s -> %p",
+                     (unsigned long)id, mw_sysclass_name(sc), h);
+        } else {
+            MW_TRACE("[GUI] dlg child id=%lu class unrecognized (skipped)",
+                     (unsigned long)id);
+        }
+        const uint16_t* after = mw_szorord_next(ttl);
+        uint16_t extra = after[0];
+        p = mw_align4_w(after + 1 + extra); /* extraCount + creation data */
+    }
+}
 static int mw_dialog_run(MwDlgProc proc, intptr_t init_param) {
     if (!proc) return MW_IDOK;
     void* hwnd = (void*)(uintptr_t)0x00010001; /* pseudo-HWND (house style) */
@@ -13490,14 +14039,16 @@ __attribute__((ms_abi)) int mw_EndDialog(void* hwnd, intptr_t result) {
 }
 __attribute__((ms_abi)) intptr_t mw_DialogBoxIndirectParamW(void* hinst,
         const void* tmpl, void* parent, MwDlgProc proc, intptr_t init) {
-    (void)hinst; (void)tmpl; (void)parent;
+    (void)hinst; (void)parent;
     MW_TRACE("DialogBoxIndirectParamW(proc=%p, init=%lld)", (void*)proc, (long long)init);
+    mw_dialog_create_children(MW_GUI_HWND, tmpl); /* SWEEP-022 SW-921 */
     return mw_dialog_run(proc, init);
 }
 __attribute__((ms_abi)) intptr_t mw_DialogBoxIndirectParamA(void* hinst,
         const void* tmpl, void* parent, MwDlgProc proc, intptr_t init) {
-    (void)hinst; (void)tmpl; (void)parent;
+    (void)hinst; (void)parent;
     MW_TRACE("DialogBoxIndirectParamA(proc=%p, init=%lld)", (void*)proc, (long long)init);
+    mw_dialog_create_children(MW_GUI_HWND, tmpl); /* SWEEP-022 SW-921 */
     return mw_dialog_run(proc, init);
 }
 __attribute__((ms_abi)) intptr_t mw_DialogBoxParamW(void* hinst,
@@ -13953,12 +14504,28 @@ __attribute__((ms_abi)) void* mw_SetWindowsHookExA(int idhook, void* proc, void*
 __attribute__((ms_abi)) int mw_UnhookWindowsHookEx(void* hhk) {
     (void)hhk; return 1; /* idempotent success */
 }
-/* advapi32!RegDeleteKeyW — our registry has no persistent keys for guests
- * that never created one: ERROR_FILE_NOT_FOUND (2) is the honest answer. */
+/* advapi32!RegDeleteKeyW — real hive delete (SWEEP-022 SW-953):
+ * created keys go away, never-created keys stay ERROR_FILE_NOT_FOUND. */
 __attribute__((ms_abi)) uint32_t mw_RegDeleteKeyW(void* key, const uint16_t* sub) {
-    (void)key; (void)sub;
-    MW_TRACE("RegDeleteKeyW() -> ERROR_FILE_NOT_FOUND");
-    return 2;
+    uint16_t path[MW_REG_PATHN];
+    if (mw_reg_compose(key, (const wchar_t*)sub, path) < 0) {
+        mw_SetLastError(6);
+        return 6;
+    }
+    int i = mw_reg_find_path(path);
+    if (i < 0) { mw_SetLastError(2); return 2; }
+    g_reg[i].live = 0;
+    MW_TRACE("RegDeleteKeyW -> deleted slot %d", i);
+    return 0;
+}
+__attribute__((ms_abi)) uint32_t mw_RegDeleteKeyA(void* key, const char* sub) {
+    uint16_t wsub[MW_REG_PATHN] = {0};
+    if (sub) {
+        char a[MW_REG_PATHN] = {0};
+        if (mw_probe_copy(sub, MW_REG_PATHN - 1, a))
+            mw_reg_copy_ascii(wsub, a, MW_REG_PATHN);
+    }
+    return mw_RegDeleteKeyW(key, wsub);
 }
 
 /* ---- kernel32 locale / sync / heap ----
@@ -14028,6 +14595,19 @@ __attribute__((ms_abi)) void* mw_GetDlgItem(void* dlg, uint32_t id) {
         }
     MW_TRACE("GetDlgItem(id=%lu) -> NULL (no such control)", (unsigned long)id);
     return NULL;
+}
+/* ---- SWEEP-022 SW-922: SendDlgItemMessage — GetDlgItem + forward ---- */
+__attribute__((ms_abi)) long long mw_SendDlgItemMessageW(void* dlg, uint32_t id,
+        uint32_t msg, uintptr_t wp, long long lp) {
+    void* h = mw_GetDlgItem(dlg, id);
+    if (!h) return 0;
+    return mw_SendMessageW(h, msg, wp, lp);
+}
+__attribute__((ms_abi)) long mw_SendDlgItemMessageA(void* dlg, uint32_t id,
+        uint32_t msg, uintptr_t wp, long lp) {
+    void* h = mw_GetDlgItem(dlg, id);
+    if (!h) return 0;
+    return mw_SendMessageA(h, msg, wp, lp);
 }
 __attribute__((ms_abi)) int mw_SetWindowTextW(void* h, const uint16_t* t) {
     int s = mw_child_slot(h);
@@ -15454,6 +16034,57 @@ __attribute__((ms_abi)) int mw_EnumFontFamiliesA(void* hdc, const char* family,
     *(long*)(tma + 0) = 8;
     return proc(lfa, tma, 0x0004u /*RASTER_FONTTYPE*/, lparam) ? 1 : 0;
 }
+/* ---- SWEEP-022 SW-941..945: font family completion ----
+ * EnumFontFamiliesEx*: the guest proc receives an ENUMLOGFONTEX (LOGFONT
+ * + full-name/style/script tails, all zeroed here) + metrics; the single
+ * canned engine font "Raster" is the honest inventory. */
+__attribute__((ms_abi)) int mw_EnumFontFamiliesExW(void* hdc, const void* lf,
+        MW_FontEnumProc proc, intptr_t lparam, uint32_t flags) {
+    (void)hdc; (void)lf; (void)flags;
+    if (!proc) return 0;
+    uint8_t elfw[284]; memset(elfw, 0, sizeof(elfw)); /* ENUMLOGFONTEXW */
+    *(long*)(elfw + 0) = 8;
+    memcpy(elfw + 28, L"Raster", 14);
+    uint8_t tmw[160]; memset(tmw, 0, sizeof(tmw));    /* NEWTEXTMETRICW span */
+    *(long*)(tmw + 0) = 8;
+    MW_TRACE("EnumFontFamiliesExW -> 1 font (Raster)");
+    return proc(elfw, tmw, 0x0004u, lparam) ? 1 : 0;
+}
+__attribute__((ms_abi)) int mw_EnumFontFamiliesExA(void* hdc, const void* lf,
+        MW_FontEnumProc proc, intptr_t lparam, uint32_t flags) {
+    (void)hdc; (void)lf; (void)flags;
+    if (!proc) return 0;
+    uint8_t elfa[156]; memset(elfa, 0, sizeof(elfa)); /* ENUMLOGFONTEXA */
+    *(long*)(elfa + 0) = 8;
+    memcpy(elfa + 28, "Raster", 7);
+    uint8_t tma2[160]; memset(tma2, 0, sizeof(tma2));
+    *(long*)(tma2 + 0) = 8;
+    return proc(elfa, tma2, 0x0004u, lparam) ? 1 : 0;
+}
+__attribute__((ms_abi)) int mw_GetTextFaceW(void* hdc, int count, uint16_t* buf) {
+    (void)hdc;
+    const uint16_t face[] = { L'R', L'a', L's', L't', L'e', L'r', 0 };
+    int n = 6;
+    if (buf && count > 0) {
+        int c = count - 1 < n ? count - 1 : n;
+        for (int i = 0; i < c; i++) buf[i] = face[i];
+        buf[c] = 0;
+    }
+    return n;
+}
+__attribute__((ms_abi)) int mw_GetTextFaceA(void* hdc, int count, char* buf) {
+    (void)hdc;
+    if (buf && count > 0) {
+        int c = count - 1 < 6 ? count - 1 : 6;
+        if (c > 0) memcpy(buf, "Raster", (size_t)c);
+        buf[c] = 0;
+    }
+    return 6;
+}
+__attribute__((ms_abi)) int mw_SetTextJustification(void* hdc, int extra, int brk) {
+    (void)hdc; (void)extra; (void)brk;
+    return 1; /* no text shaping in the raster engine — vacuous success */
+}
 /* EnumDisplayMonitors: one virtual monitor callback (1920x1080 work area). */
 typedef int (__attribute__((ms_abi)) *MW_MonEnumProc)(void* hmon, void* hdc, void* rc, intptr_t lp);
 __attribute__((ms_abi)) int mw_EnumDisplayMonitors(void* hdc, const void* clip,
@@ -15960,6 +16591,69 @@ __attribute__((ms_abi)) void* mw_CreateDIBSection(void* hdc, const void* pbmi,
     return NULL;
 }
 
+/* ---- SWEEP-022 SW-936..940: DIB family — GetDIBits/SetDIBits real pixel
+ * paths over the CreateDIBSection pool (3B/px BGR internal raster) ---- */
+static MWBmp* mw_bmp_by_handle(void* hbmp) {
+    uintptr_t v = (uintptr_t)hbmp;
+    if ((v & 0xFFFF0000u) != MW_HBITMAP_BASE) return NULL;
+    int i = (int)(v & 0xFFu) - 1;
+    if (i < 0 || i >= MW_MEMDC_MAX || !g_bitmap_live[i]) return NULL;
+    return &g_bitmap_obj[i];
+}
+__attribute__((ms_abi)) int mw_GetDIBits(void* hdc, void* hbmp, uint32_t start,
+        uint32_t lines, void* bits, void* pbmi, uint32_t usage) {
+    (void)hdc; (void)start; (void)usage;
+    MWBmp* b = mw_bmp_by_handle(hbmp);
+    if (!b || !pbmi) return 0;
+    uint8_t* h8 = (uint8_t*)pbmi;
+    *(uint32_t*)(h8 + 0) = 40;              /* biSize */
+    *(int32_t*)(h8 + 4) = b->w;             /* biWidth */
+    *(int32_t*)(h8 + 8) = b->h;             /* biHeight: positive = bottom-up */
+    *(uint16_t*)(h8 + 12) = 1;              /* biPlanes */
+    *(uint16_t*)(h8 + 14) = 24;             /* biBitCount (engine raster) */
+    *(uint32_t*)(h8 + 16) = 0;              /* BI_RGB */
+    *(uint32_t*)(h8 + 20) = 0;              /* biSizeImage len 0 for BI_RGB ok */
+    *(uint32_t*)(h8 + 24) = (uint32_t)((size_t)b->w * 3u * (size_t)b->h);
+    if (!bits) return 1;                    /* header-only probe */
+    uint32_t n = lines ? lines : (uint32_t)b->h;
+    if (n > (uint32_t)b->h) n = (uint32_t)b->h;
+    for (uint32_t y = 0; y < n; y++)        /* bottom-up row order */
+        memcpy((uint8_t*)bits + (size_t)(n - 1 - y) * (size_t)b->w * 3u,
+               b->px + (size_t)y * (size_t)b->w * 3u, (size_t)b->w * 3u);
+    MW_TRACE("GetDIBits(%dx%d) -> %u rows", b->w, b->h, n);
+    return (int)n;
+}
+__attribute__((ms_abi)) int mw_SetDIBits(void* hdc, void* hbmp, uint32_t start,
+        uint32_t lines, const void* bits, const void* pbmi, uint32_t usage) {
+    (void)hdc; (void)start; (void)usage;
+    MWBmp* b = mw_bmp_by_handle(hbmp);
+    if (!b || !bits || !pbmi) return 0;
+    const uint8_t* h8 = (const uint8_t*)pbmi;
+    int32_t w = *(const int32_t*)(h8 + 4);
+    int32_t h = *(const int32_t*)(h8 + 8);
+    if (w <= 0 || h == 0) return 0;
+    uint32_t n = (uint32_t)(h > 0 ? h : -h);
+    if (n > (uint32_t)b->h) n = (uint32_t)b->h;
+    int32_t cw = w < b->w ? w : b->w;
+    for (uint32_t y = 0; y < n; y++) {      /* source is bottom-up */
+        const uint8_t* src = (const uint8_t*)bits + (size_t)y * (size_t)w * 3u;
+        uint8_t* dst = b->px + (size_t)(n - 1 - y) * (size_t)b->w * 3u;
+        memcpy(dst, src, (size_t)cw * 3u);
+    }
+    MW_TRACE("SetDIBits(%dx%d) -> %u rows", w, h, n);
+    return (int)n;
+}
+/* MaskBlt: mask byte-map has no engine equivalent — honest contract:
+ * plain SRCCOPY routes through BitBlt, everything else fails typed. */
+__attribute__((ms_abi)) int mw_MaskBlt(void* hdcDst, int x, int y, int w, int h,
+        void* hdcSrc, int xs, int ys, void* hbmMask, int xm, int ym, uint32_t rop) {
+    (void)hbmMask; (void)xm; (void)ym;
+    if ((rop & 0x00FFFFFFu) == 0x00CC0020u)
+        return mw_BitBlt(hdcDst, x, y, w, h, hdcSrc, xs, ys, 0x00CC0020u);
+    mw_SetLastError(1); /* ERROR_INVALID_FUNCTION */
+    return 0;
+}
+
 /* ole32!CoRegisterMessageFilter — no COM message pump exists headless; the
  * honest model: registration succeeds vacuously, previous filter is "none"
  * (NULL) — identical to the first registration on a plain STA thread. */
@@ -16237,6 +16931,8 @@ static ImportEntry g_import_table[] = {
     ENTRY("msvcrt.dll", "_stricmp",              mw__stricmp),
     ENTRY("msvcrt.dll", "_time64",               mw__time64),
     ENTRY("msvcrt.dll", "_ultoa",                mw__ultoa),
+    ENTRY("msvcrt.dll", "_itoa",                 mw__itoa), /* SWEEP-022 SW-956 */
+    ENTRY("msvcrt.dll", "_ltoa",                 mw__ltoa), /* SWEEP-022 SW-956 */
     ENTRY("msvcrt.dll", "_unlink",               mw__unlink),
     ENTRY("msvcrt.dll", "_unlock",               mw__unlock),
     ENTRY("msvcrt.dll", "_wopen",                mw__wopen),
@@ -16648,6 +17344,8 @@ static ImportEntry g_import_table[] = {
     ENTRY("msvcrt.dll", "_wcsicmp", mw__wcsicmp),
     ENTRY("msvcrt.dll", "_wcsnicmp", mw__wcsnicmp),
     ENTRY("msvcrt.dll", "_strnicmp", mw__strnicmp),
+    ENTRY("msvcrt.dll", "_itoa", mw__itoa), /* SWEEP-022 SW-956 */
+    ENTRY("msvcrt.dll", "_ltoa", mw__ltoa), /* SWEEP-022 SW-956 */
     ENTRY("msvcrt.dll", "_wgetenv", mw__wgetenv),
     ENTRY("msvcrt.dll", "_fullpath", mw__fullpath),
     ENTRY("msvcrt.dll", "_wfullpath", mw__wfullpath),
@@ -16886,6 +17584,10 @@ ENTRY("msvcrt.dll", "wctype", mw_wctype),
     ENTRY("ADVAPI32.DLL", "RegCreateKeyA",                      mw_RegCreateKeyA), /* SWEEP-013 */
     ENTRY("ADVAPI32.DLL", "RegOpenKeyA",                        mw_RegOpenKeyA), /* SWEEP-013 */
     ENTRY("ADVAPI32.DLL", "RegSetValueExA",                     mw_RegSetValueExA), /* SWEEP-013 */
+    ENTRY("ADVAPI32.DLL", "RegCreateKeyExA",                    mw_RegCreateKeyExA), /* SWEEP-022 SW-952 */
+    ENTRY("ADVAPI32.DLL", "RegEnumKeyExA",                      mw_RegEnumKeyExA), /* SWEEP-022 SW-954 */
+    ENTRY("ADVAPI32.DLL", "RegDeleteKeyA",                      mw_RegDeleteKeyA), /* SWEEP-022 SW-953 */
+    ENTRY("ADVAPI32.DLL", "RegNotifyChangeKeyValue",            mw_RegNotifyChangeKeyValue), /* SWEEP-022 SW-955 */
     ENTRY("ADVAPI32.DLL", "RegQueryValueExA",                   mw_RegQueryValueExA), /* SWEEP-013 */
     ENTRY("ADVAPI32.DLL", "AdjustTokenPrivileges",              mw_AdjustTokenPrivileges),
     ENTRY("ADVAPI32.DLL", "LookupPrivilegeValueW",              mw_LookupPrivilegeValueW),
@@ -17036,6 +17738,8 @@ ENTRY("msvcrt.dll", "wctype", mw_wctype),
     ENTRY("USER32.DLL", "GetDlgItemInt",                        mw_GetDlgItemInt), /* SWEEP-013 */
     ENTRY("USER32.DLL", "SetDlgItemInt",                        mw_SetDlgItemInt), /* SWEEP-013 */
     ENTRY("USER32.DLL", "CheckDlgButton",                       mw_CheckDlgButton), /* SWEEP-013 */
+    ENTRY("USER32.DLL", "SendDlgItemMessageW",                  mw_SendDlgItemMessageW), /* SWEEP-022 SW-922 */
+    ENTRY("USER32.DLL", "SendDlgItemMessageA",                  mw_SendDlgItemMessageA), /* SWEEP-022 SW-922 */
     ENTRY("USER32.DLL", "IsDlgButtonChecked",                   mw_IsDlgButtonChecked), /* SWEEP-013 */
     ENTRY("USER32.DLL", "CheckRadioButton",                     mw_CheckRadioButton), /* SWEEP-013 */
     ENTRY("USER32.DLL", "LoadMenuW",                            mw_LoadMenuW), /* SWEEP-013 */
@@ -17084,6 +17788,8 @@ ENTRY("msvcrt.dll", "wctype", mw_wctype),
     ENTRY("USER32.DLL", "GetDlgItemInt",                        mw_GetDlgItemInt), /* SWEEP-013 */
     ENTRY("USER32.DLL", "SetDlgItemInt",                        mw_SetDlgItemInt), /* SWEEP-013 */
     ENTRY("USER32.DLL", "CheckDlgButton",                       mw_CheckDlgButton), /* SWEEP-013 */
+    ENTRY("USER32.DLL", "SendDlgItemMessageW",                  mw_SendDlgItemMessageW), /* SWEEP-022 SW-922 */
+    ENTRY("USER32.DLL", "SendDlgItemMessageA",                  mw_SendDlgItemMessageA), /* SWEEP-022 SW-922 */
     ENTRY("USER32.DLL", "IsDlgButtonChecked",                   mw_IsDlgButtonChecked), /* SWEEP-013 */
     ENTRY("USER32.DLL", "CheckRadioButton",                     mw_CheckRadioButton), /* SWEEP-013 */
     ENTRY("USER32.DLL", "LoadMenuW",                            mw_LoadMenuW), /* SWEEP-013 */
@@ -17382,6 +18088,15 @@ ENTRY("msvcrt.dll", "wctype", mw_wctype),
     ENTRY("GDI32.DLL", "RectInRegion",                          mw_RectInRegion),
     ENTRY("GDI32.DLL", "StartDocA",                             mw_StartDocA),
     ENTRY("GDI32.DLL", "AbortDoc",                              mw_AbortDoc),
+    /* SWEEP-022 SW-936..945: DIB + font family completion */
+    ENTRY("GDI32.DLL", "GetDIBits",                             mw_GetDIBits),
+    ENTRY("GDI32.DLL", "SetDIBits",                             mw_SetDIBits),
+    ENTRY("GDI32.DLL", "MaskBlt",                               mw_MaskBlt),
+    ENTRY("GDI32.DLL", "EnumFontFamiliesExW",                   mw_EnumFontFamiliesExW),
+    ENTRY("GDI32.DLL", "EnumFontFamiliesExA",                   mw_EnumFontFamiliesExA),
+    ENTRY("GDI32.DLL", "GetTextFaceW",                          mw_GetTextFaceW),
+    ENTRY("GDI32.DLL", "GetTextFaceA",                          mw_GetTextFaceA),
+    ENTRY("GDI32.DLL", "SetTextJustification",                  mw_SetTextJustification),
     /* version resource (coreinfo64) */
     ENTRY("version.dll", "GetFileVersionInfoSizeW",             mw_GetFileVersionInfoSizeW),
     ENTRY("version.dll", "GetFileVersionInfoSizeA",             mw_GetFileVersionInfoSizeA),
@@ -17453,6 +18168,7 @@ ENTRY("msvcrt.dll", "wctype", mw_wctype),
     ENTRY("USER32.DLL", "SetWindowsHookExA",                    mw_SetWindowsHookExA),
     ENTRY("USER32.DLL", "UnhookWindowsHookEx",                  mw_UnhookWindowsHookEx),
     ENTRY("advapi32.dll", "RegDeleteKeyW",                      mw_RegDeleteKeyW),
+    ENTRY("advapi32.dll", "RegDeleteKeyA",                      mw_RegDeleteKeyA), /* SWEEP-022 SW-953 */
     /* msvcrt wide CRT init (searchmyfiles + NirSoft family) */
     ENTRY("msvcrt.dll", "__wgetmainargs",                       mw___wgetmainargs),
 };

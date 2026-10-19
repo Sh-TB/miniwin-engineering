@@ -1,0 +1,10 @@
+[MiniWin] Loading /home/z/my-project/workspace/miniwin-engineering/tests/gui/calc.exe...
+[CALC] main=0000000000010001 display=0000000000030001 btn1=000000000003000a btnadd=0000000000030011 btneq=000000000003000f
+[CALC] WM_COMMAND id=102 processed
+[CALC] WM_COMMAND id=105 processed
+[CALC] WM_COMMAND id=104 processed
+[CALC] WM_COMMAND id=109 processed
+[CALC] WM_COMMAND id=110 processed
+[CALC] 84/12 = 7
+[CALC] WM_COMMAND id=114 processed
+[CALC] exit loop, final display='7' expr='84/12=7' acc=7

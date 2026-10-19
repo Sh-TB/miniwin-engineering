@@ -837,32 +837,103 @@ gate that must be re-accepted when the port lands).
       fn-ptr, procexp64 UTF-16-as-code, searchmyfiles cmpw 0x22, winmergeu.
 
 
-## SW-921..SW-960 — SWEEP-021 continuation queue (40 items, «ادامه سه برابری» standing order)
+## SW-921..SW-960 — SWEEP-021 continuation queue (40 items) — LANDED in SWEEP-022 «ادامه» one batch (~45 new/updated imports + BUG-074/075 fixes)
 
-- [ ] **SW-921..925 dialog deepening x5**: DialogBoxIndirectParamW real
-      DLGTEMPLATE walk (word-aligned items, class/title ordinals),
-      GetDlgItem real child binding, SendDlgItemMessageA/W, CheckDlgButton,
-      IsDlgButtonChecked — Sysinternals EULA gate path (autoruns64/rammap64
-      pump-on verification).
-- [ ] **SW-926..930 ListView final x5**: LVM_GETITEMA/W, LVM_DELETEITEM,
-      LVM_SETCOLUMNA/W, LVM_GETCOLUMNA/W, LVM_SORTITEMS (typed no-op 1).
-- [ ] **SW-931..935 TreeView final x5**: TVM_GETITEMRECT, TVM_GETVISIBLECOUNT,
-      TVM_GETNEXTITEM TVGN_CHILD/PARENT/NEXTVISIBLE, TVM_HITTEST (typed -1),
-      TVM_SORTCHILDREN (no-op success).
-- [ ] **SW-936..940 GDI DIB x5**: CreateDIBSection (real host pixel buffer
-      readable via ppvBits), GetDIBits, SetDIBits, BitBlt CAPTUREBLT flag
-      audit, MaskBlt — bginfo64 desktop-paint path.
-- [ ] **SW-941..945 fonts x5**: CreateFontIndirectA/W (real LOGFONT store),
-      EnumFontFamiliesExA/W (canned face list), GetTextMetricsA/W,
-      GetTextFaceA/W, SetTextJustification — procexp64 lower pane text.
-- [ ] **SW-946..950 network x5**: WSAGetLastError typed map, ioctlsocket
-      FIONBIO, getsockopt/setsockopt (SO_* typed), htonl/ntohl/htons/ntohs
-      wrappers, WSAIoctl FIONREAD — pageant/putty family (SW-911..915
-      follow-up beyond connect/shutdown).
-- [ ] **SW-951..955 registry x5**: RegQueryValueExA real A-tail (not the
-      narrow stub), RegEnumKeyExW/A, RegDeleteKeyA/W, RegQueryValueExW
-      expanded types (REG_MULTI_SZ/SZ pair), RegNotifyChangeKeyValue
-      (typed success, no events) — autoruns64 deep enumeration.
-- [ ] **SW-956..960 CRT/COM x5**: _itoa/_ltoa/_ultoa (real radix convert),
-      _stricmp/_strnicmp, _wcsicmp, WideCharToMultiByte/MultiByteToWideChar
-      full codepage matrix audit (CP_ACP/UTF-8/UTF-16 round-trips).
+- [x] **SW-921..925 dialog deepening x5 LANDED**: DialogBoxIndirectParamW/A
+      now WALK the real DLGTEMPLATE (word-aligned SZ_OrOrd menu/class/title,
+      DS_SETFONT skip, DWORD-aligned items, class ordinals 0x80..0x85 ->
+      sysclass ids) and register children in the SAME registry as
+      CreateWindowEx children, so GetDlgItem binds for real;
+      SendDlgItemMessageA/W routed GetDlgItem->SendMessageW/A;
+      CheckDlgButton/IsDlgButtonChecked verified pre-existing.
+- [x] **SW-926..930 ListView final x5 LANDED** + BUG-074 FIX: 0x1008 is
+      LVM_DELETEITEM (row shift) and 0x1009 LVM_DELETEALLITEMS (rows only,
+      columns survive) — SWEEP-021 had the two swapped; LVM_GETITEMA/W
+      (LVITEM x64, LVIF_TEXT real text out + state), LVM_SETCOLUMNA/W
+      (colw/coltxt store), LVM_GETCOLUMNA/W (width + header text),
+      LVM_SORTITEMS (typed no-op 1).
+- [x] **SW-931..935 TreeView final x5 LANDED** + BUG-075 FIX: TVGN values
+      corrected against wine commctrl.h (ROOT=0, NEXT=1, PREVIOUS=2,
+      PARENT=3, CHILD=4, FIRSTVISIBLE=5, CARET=9, LASTVISIBLE=10) —
+      SWEEP-021 mapped wp==4 (CHILD) to ROOT; TVM_GETNEXTITEM now does
+      insertion-order NEXT/PREVIOUS walks; TVM_GETITEMRECT (hItem in
+      rect.left, synthetic 120x16 rows), TVM_GETVISIBLECOUNT (20),
+      TVM_HITTEST (TVHT_NOWHERE + NULL, typed), TVM_SORTCHILDREN (1).
+- [x] **SW-936..940 GDI DIB x5 LANDED**: GetDIBits (real BITMAPINFOHEADER
+      fill + bottom-up 24bpp row copy from the CreateDIBSection pool),
+      SetDIBits (bottom-up copy into pool bitmap), MaskBlt (SRCCOPY routes
+      through BitBlt, else typed ERROR_INVALID_FUNCTION), BitBlt
+      CAPTUREBLT audit LANDED as fix: rop base = rop & 0x00FFFFFF strips
+      CAPTUREBLT(0x40000000)/NOMIRRORBITMAP(0x80000000) so
+      SRCCOPY|CAPTUREBLT takes the copy path (bginfo64 desktop paint);
+      CreateDIBSection real-since-SWEEP-014 (ppvBits verified).
+- [x] **SW-941..945 fonts x5 LANDED**: EnumFontFamiliesExW/A (ENUMLOGFONTEX
+      shape, canned "Raster" inventory), GetTextFaceA/W (face name out),
+      SetTextJustification (vacuous 1); CreateFontIndirectA/W +
+      GetTextMetricsA/W verified pre-existing (real LOGFONT store).
+- [x] **SW-946..950 network x5 AUDITED-AND-COMPLETE**: htonl/htons/ntohl/
+      ntohs verified present (name + fixed-ordinal tables 9/14/15),
+      WSAGetLastError/ioctlsocket/getsockopt/setsockopt/WSAIoctl(FIONREAD)
+      verified pre-existing — family already covered by SWEEP-014 r2;
+      no dead code added, audit recorded here as the completion proof.
+- [x] **SW-951..955 registry x5 LANDED — in-memory hive**: EMPTY at start
+      (reads of never-created keys still ERROR_FILE_NOT_FOUND — zero change
+      for read-only callers); RegCreateKeyExW real (find-or-create, handle
+      = 0x00090000|slot, REG_CREATED_NEW_KEY/OPENED_EXISTING_KEY disp),
+      RegSetValueExW real (type+data+size stored), RegQueryValueExW/A real
+      (type contract + ERROR_MORE_DATA 234 + size-only probe),
+      RegEnumKeyExW/A (real subkey enumeration), RegEnumValueW/A,
+      RegDeleteKeyA/W, RegDeleteValueW/A, RegQueryInfoKeyW/A (real counts),
+      RegNotifyChangeKeyValue -> typed success 0, RegOpenKeyExA/
+      RegCreateKeyExA/RegGetValueW routed through the hive.
+- [x] **SW-956..960 CRT/COM x5 LANDED**: _itoa/_ltoa (real signed radix,
+      house style) beside existing _ultoa; _stricmp/_strnicmp/_wcsicmp
+      verified pre-existing; MBCS/WCMB round-trips audited (existing
+      MultiByteToWideChar/WideCharToMultiByte native encoders).
+
+## SW-961..SW-1000 — SWEEP-022 continuation queue (40 items, «ادامه سه برابری» standing order)
+
+- [ ] **SW-961..965 crash frontier x5**: puttygen 139 (SW-807 NULL fn-ptr
+      .data 0x14008a8e8), searchmyfiles 139 (SW-814 cmpw 0x22), winmergeu
+      139 (SW-815 SSE float path; unresolved 314->308 this sweep),
+      procexp64 139 + NEW named stub @guest_rip 0x14006c328 (SWEEP-022:
+      first stub call past the resolved frontier — decode via
+      MINWIN_FUNC_MAP, one BUG-*), procmon64 exit1 deep-dive (unres
+      134->133; what gates its main window?).
+- [ ] **SW-966..970 exit1 family x5**: pageant (unres 29->27 this sweep),
+      putty (93->89 this sweep — network-init path after SW-946..950
+      audit), zoomit64 (SW-553 TRAP133), coreinfo64 version drift
+      (SW-561: SetThreadGroupAffinity/GetProcessWorkingSetSize), putty
+      -batch exit-code contract test.
+- [ ] **SW-971..975 pump-on frontier x5**: autoruns64/rammap64 pump-on
+      139 is PRE-EXISTING (baseline-verified identical signature in
+      SWEEP-022 — crash in synchronous WM_CREATE path) — isolate to one
+      BUG-*; dialog modal-loop EndDialog-before-OK contract; produkey
+      pump-on soak (menu loop, 10k SetMenu era); cports early-move
+      0x2119; bginfo64 desktop paint soak after CAPTUREBLT fix.
+- [ ] **SW-976..980 ListView/Tree data x5**: LVM per-item LPARAM store
+      (real LVM_SORTITEMS compare callback), ListView growth beyond
+      64 items, TVM real child chains (TVGN_CHILD/PARENT post-BUG-075),
+      TVM_GETITEM TVIS_SELECTED round-trip, TCM tab label store
+      (SWEEP-021 TODO comment: "label store comes with tab text when
+      SWEEP-022 adds it" — still open, tracked honestly).
+- [ ] **SW-981..985 GDI/text x5**: GetDIBits/SetDIBits for 16/32bpp
+      source DIBs (engine raster is 24bpp-only — convert), StretchDIBits,
+      SetDIBColorTable, GetTextExtentPoint32W real face metrics,
+      SetTextAlign (TA_* flags affect the raster text paths).
+- [ ] **SW-986..990 network x5**: WSAIoctl SIO_GET_EXTENSION_FUNCTION_
+      POINTER typed fail, getaddrinfo/getnameinfo family audit, select()
+      timeout contract, send/recv graceful SD_SEND map, WSAStringToAddress/
+      WSAAddressToString.
+- [ ] **SW-991..995 registry depth x5**: REG_MULTI_SZ round-trip test
+      program (zig/mingw PE), REG_DWORD 4-byte contract vs 8-byte guest
+      reads, hive snapshot/restore via env (MINWIN_REG_SNAPSHOT file),
+      RegSaveKey/RegRestoreKey typed no-op, SHGetValueW end-to-end
+      through SHSetValueA/W + query (SWEEP-021 wiring now real).
+- [ ] **SW-996..1000 infra x5**: PE-DLL loader promote (SW-509: 7z.dll/
+      libcrypto-3.dll — biggest single unblock), zig toolchain restore
+      (snake/breakout/miniwin_calc binaries untracked-lost; sources
+      intact in tests/games/), 100-software list re-run on SWEEP-022
+      binary (STAGE_TABLE_100 refresh + progress delta), calc child-focus
+      battery (Tab/arrow focus walk), sweep022 guest_rip decoder (name
+      procexp64 0x14006c328 from artifacts/sweep022).

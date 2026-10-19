@@ -609,3 +609,35 @@ Stage Summary:
 - Worklist: SW-881..920 marked LANDED; new queue SW-921..960 (40 items, x3 standing
   order). Carried open: SW-800, SW-801i/j, SW-807/809/814/815 crash signatures.
 - evidence/sweep021/README.md + scripts/sweep021_chunk.sh + sweep021_gui_evidence.py.
+
+## SWEEP-022 (2026-10-19) — «ادامه» elephant batch: SW-921..960 LANDED + BUG-074/075
+
+- Synced local to origin/main 0bc6ba3 (SWEEP-021; local had been rewound to b783c44).
+- ONE loader.c batch (~45 new/updated imports):
+  * dialogs: DialogBoxIndirectParamW/A real DLGTEMPLATE walk (SZ_OrOrd,
+    DS_SETFONT, aligned items, class ordinals 0x80..0x85) -> children in the
+    shared registry; SendDlgItemMessageA/W (GetDlgItem->SendMessage).
+  * ListView (+BUG-074): 0x1008=LVM_DELETEITEM (row shift) / 0x1009=DELETEALLITEMS
+    swap fixed; GETITEMA/W, SET/GETCOLUMNA/W (colw+coltxt store), SORTITEMS.
+  * TreeView (+BUG-075): TVGN corrected to wine commctrl.h (ROOT=0, CHILD=4,
+    CARET=9, LASTVISIBLE=10; SWEEP-021 mapped 4->ROOT); NEXT/PREVIOUS walks;
+    GETITEMRECT/GETVISIBLECOUNT/HITTEST/SORTCHILDREN.
+  * GDI DIB: GetDIBits/SetDIBits (24bpp bottom-up over CreateDIBSection pool),
+    MaskBlt (SRCCOPY->BitBlt), BitBlt strips CAPTUREBLT/NOMIRRORBITMAP.
+  * fonts: EnumFontFamiliesExW/A, GetTextFaceA/W, SetTextJustification.
+  * registry: in-memory hive (empty-at-start; create/set/query/enum/delete/
+    info real; full A-tail routing; RegNotifyChangeKeyValue -> 0).
+  * CRT: _itoa/_ltoa real signed radix.
+- MEASURED: build 1,836,696 -> 1,880,672 (+43,976); 15-prog corpus x3
+  deterministic 45/45; ZERO regressions (7/4/4 parity vs SWEEP-021);
+  corpus unresolved 1505 -> 1476 (-29); procexp64 ONE NEW stub @0x14006c328
+  (deeper progress -> SW-964).
+- GUI accounting this sweep: 6 GUI programs exit0 x3 (pump-off) + produkey/
+  bginfo64/cports/diskmon64 pump-on exit0 + miniwin_calc 9/9 PASS.
+  autoruns64/rammap64 pump-on 139 = PRE-EXISTING (baseline-verified identical
+  signature on rebuilt origin/main binary — artifacts/sweep022/pumpon_baseline/).
+- G1 re-pin OK: 12/12, UPX exact, sha aecfc024..., evidence/master/g1/20261019_193310.
+- Worklist: SW-921..960 marked LANDED; new queue SW-961..1000 (40 items, x3
+  standing order); file 276 -> 939 lines (x3.4).
+- evidence/sweep022/README.md + scripts/sweep022_chunk.sh + sweep022_calc_accept.sh;
+  artifacts/sweep022/{sweep,pumpon,pumpon_baseline} + artifacts/sweep022_calc.
