@@ -1,0 +1,143 @@
+[TRACE] Command line: artifacts/sweep50/dl/searchmyfiles/SearchMyFiles.exe
+[WARN]   unresolved: __wgetmainargs
+[WARN]   unresolved: _wcmdln
+[WARN]   unresolved: _msize
+[WARN]   unresolved: _wcslwr
+[WARN]   unresolved: _memicmp
+[WARN]   unresolved: ??3@YAXPEAX@Z
+[WARN]   unresolved: ??2@YAPEAX_K@Z
+[WARN]   unresolved: _itow
+[WARN]   unresolved: _wtoi
+[WARN]   unresolved: _ui64tow
+[WARN]   unresolved: _wtoi64
+[WARN]   unresolved: wcsncat
+[WARN]   unresolved: CreateStatusWindowW
+[WARN]   unresolved: CreateToolbarEx
+[WARN]   unresolved: WNetGetUniversalNameW
+[WARN]   unresolved: ReadProcessMemory
+[WARN]   unresolved: EnumResourceTypesW
+[WARN]   unresolved: GetLocalTime
+[WARN]   unresolved: GetPrivateProfileStringW
+[WARN]   unresolved: GetPrivateProfileIntW
+[WARN]   unresolved: GetNumberFormatW
+[WARN]   unresolved: lstrcpyW
+[WARN]   unresolved: WritePrivateProfileStringW
+[WARN]   unresolved: SetWindowLongPtrW
+[WARN]   unresolved: MonitorFromWindow
+[WARN]   unresolved: GetMonitorInfoW
+[WARN]   unresolved: ChildWindowFromPoint
+[WARN]   unresolved: SetCursor
+[WARN]   unresolved: GetSysColorBrush
+[WARN]   unresolved: SetDlgItemInt
+[WARN]   unresolved: SetDlgItemTextW
+[WARN]   unresolved: GetDlgItemTextW
+[WARN]   unresolved: DeferWindowPos
+[WARN]   unresolved: InsertMenuW
+[WARN]   unresolved: GetWindowRect
+[WARN]   unresolved: GetDlgItemInt
+[WARN]   unresolved: GetWindow
+[WARN]   unresolved: DrawFrameControl
+[WARN]   unresolved: GetWindowPlacement
+[WARN]   unresolved: PostMessageW
+[WARN]   unresolved: SetMenu
+[WARN]   unresolved: TranslateAcceleratorW
+[WARN]   unresolved: LoadAcceleratorsW
+[WARN]   unresolved: IsDialogMessageW
+[WARN]   unresolved: GetForegroundWindow
+[WARN]   unresolved: LoadImageW
+[WARN]   unresolved: SetWindowLongW
+[WARN]   unresolved: GetWindowLongW
+[WARN]   unresolved: SetFocus
+[WARN]   unresolved: EndDeferWindowPos
+[WARN]   unresolved: BeginDeferWindowPos
+[WARN]   unresolved: EnableMenuItem
+[WARN]   unresolved: GetSubMenu
+[WARN]   unresolved: GetClassNameW
+[WARN]   unresolved: InsertMenuItemW
+[WARN]   unresolved: OpenClipboard
+[WARN]   unresolved: MoveWindow
+[WARN]   unresolved: GetMenuItemCount
+[WARN]   unresolved: CheckMenuItem
+[WARN]   unresolved: GetMenuStringW
+[WARN]   unresolved: CheckMenuRadioItem
+[WARN]   unresolved: GetCursorPos
+[WARN]   unresolved: SetClipboardData
+[WARN]   unresolved: EnableWindow
+[WARN]   unresolved: CloseClipboard
+[WARN]   unresolved: MapWindowPoints
+[WARN]   unresolved: GetParent
+[WARN]   unresolved: GetMenu
+[WARN]   unresolved: EmptyClipboard
+[WARN]   unresolved: ModifyMenuW
+[WARN]   unresolved: GetMenuItemInfoW
+[WARN]   unresolved: GetDlgCtrlID
+[WARN]   unresolved: DestroyMenu
+[WARN]   unresolved: EnumChildWindows
+[WARN]   unresolved: LoadStringW
+[WARN]   unresolved: GetWindowTextW
+[WARN]   unresolved: LoadMenuW
+[WARN]   unresolved: SetMenuItemInfoW
+[WARN]   unresolved: DestroyIcon
+[WARN]   unresolved: CreatePopupMenu
+[WARN]   unresolved: GetKeyState
+[WARN]   unresolved: RemoveMenu
+[WARN]   unresolved: DrawTextExW
+[WARN]   unresolved: TrackPopupMenu
+[WARN]   unresolved: SetClipboardViewer
+[WARN]   unresolved: ChangeClipboardChain
+[WARN]   unresolved: RegisterClipboardFormatW
+[WARN]   unresolved: GetFocus
+[WARN]   unresolved: DeleteMenu
+[WARN]   unresolved: SetForegroundWindow
+[WARN]   unresolved: SetWindowPos
+[WARN]   unresolved: GetTextExtentPoint32W
+[WARN]   unresolved: StretchBlt
+[WARN]   unresolved: SetStretchBltMode
+[WARN]   unresolved: GetObjectW
+[WARN]   unresolved: GetPixel
+[WARN]   unresolved: ChooseFontW
+[WARN]   unresolved: FindTextW
+[WARN]   unresolved: GetOpenFileNameW
+[WARN]   unresolved: GetSaveFileNameW
+[WARN]   unresolved: RegDeleteKeyW
+[WARN]   unresolved: SHBindToParent
+[WARN]   unresolved: SHGetDesktopFolder
+[WARN]   unresolved: SHGetPathFromIDListW
+[WARN]   unresolved: SHGetMalloc
+[WARN]   unresolved: SHBrowseForFolderW
+[WARN]   unresolved: SHFileOperationW
+[WARN]   unresolved: SHGetFileInfoW
+[WARN]   unresolved: ShellExecuteExW
+[WARN]   unresolved: ShellExecuteW
+[WARN]   unresolved: OleInitialize
+[WARN]   unresolved: CoCreateInstance
+[WARN]   unresolved: OleUninitialize
+[WARN] 115 imports unresolved
+[STUB] unresolved import called -> returning 0 (call #1) __wgetmainargs guest_rip=0x140027fcf
+
+[CRASH] Signal 11 at RIP=0x140028001
+  RAX=0xffffffff RCX=0x120 RDX=0x70380f4fd2a04e6e R8=0x2e4ff0d8d4857 R9=0x0
+  RSP=0x7ffeb8eea4c0 RBP=0x224d000
+  g_image_base=0x140000000 g_image_size=0x3e000
+  RVA=0x28001 (inside loaded PE)
+  Bytes: 66 41 83 38 22 75 38 66 66 66 90 66 66 66 90 49 
+  Return addr: 0x7ffeb8eea4d0
+  RSI=0x0 RDI=0x140000000
+  R8=0x2e4ff0d8d4857  R9=0x0 R10=0x0 R11=0x202
+  R12=0x224c000 R13=0x224b000 R14=0x1b4 R15=0x7ffeb8eeaa00
+  [SCAN rsp+200] 0x2007796 <LOADER>
+  [SCAN rsp+456] 0x2000002 <LOADER>
+  [SCAN rsp+568] 0x20026f6 <LOADER>
+  [SCAN rsp+576] 0x20020d0 <LOADER>
+  [SCAN rsp+2024] 0x20064d0 <LOADER>
+  [SCAN rsp+2176] 0x20064d0 <LOADER>
+  [SCAN rsp+2216] 0x2007e50 <LOADER>
+  [SCAN rsp+2248] 0x2007e71 <LOADER>
+  [SCAN rsp+2744] 0x2000040 <LOADER>
+  [SCAN rsp+2824] 0x2007e50 <LOADER>
+  Backtrace (via stack walking):
+    [0] RIP=0x140028001 RVA=0x28001      [RSP+0] = 0x7ffeb8eea4d0 (return addr?)
+    [1] RIP=0x140028001 RVA=0x28001      [RSP+0] = 0x7ff25de505c0 (return addr?)
+    [2] RIP=0x140028001 RVA=0x28001      [RSP+0] = 0x33efeb0 (return addr?)
+    [3] RIP=0x140028001 RVA=0x28001      [RSP+0] = 0x6e6964616f4c205d (return addr?)
+    [4] RIP=0x140028001 RVA=0x28001

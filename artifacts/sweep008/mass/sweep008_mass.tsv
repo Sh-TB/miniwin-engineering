@@ -1,0 +1,24 @@
+program	exit	stub_calls	first_stub	first_unresolved
+opensource__7zip__full__7z	0	0		
+opensource__7zip__x64__7za	0	0		
+opensource__curl__curl	139	0		
+opensource__jq__jq	0	0		
+opensource__sqlite__sqlite3	0	0		
+sweep005__snake	0	0		
+sweep006__breakout	0	0		
+sweep008__calc	0	0		lstrcatA
+sweep50__dl__autoruns64__Autoruns64	1	1	CoInitializeEx	FlushInstructionCache
+sweep50__dl__bginfo64__Bginfo64	9	3	GetSysColorBrush	SnmpUtilOidNCmp
+sweep50__dl__coreinfoex64__Coreinfo64	139	2	GetNumaHighestNodeNumber	SetThreadGroupAffinity
+sweep50__dl__cports__cports	139	41	<unknown>	_strlwr
+sweep50__dl__diskmon64__Diskmon64	0	3	RegOpenKeyA	CreateToolbarEx
+sweep50__dl__pageant__pageant	1	0		AllocateAndInitializeSid
+sweep50__dl__procexp64__procexp64	139	41	LoadStringW	StrStrIW
+sweep50__dl__procmon64__Procmon64	1	0		ImageList_DragMove
+sweep50__dl__produkey__ProduKey	0	9	CoInitialize	CreateToolbarEx
+sweep50__dl__putty__putty	1	1	CoUninitialize	CreateBitmap
+sweep50__dl__puttygen__puttygen	1	4	GetWindowsDirectoryA	GetCurrentObject
+sweep50__dl__rammap64__RAMMap64	1	0		GetNumberFormatW
+sweep50__dl__searchmyfiles__SearchMyFiles	139	1	__wgetmainargs	__wgetmainargs
+sweep50__dl__winmergeu__WinMergeU	9	17	GetSysColorBrush	PathStripToRootW
+sweep50__dl__zoomit64__ZoomIt64	133	3	CreateEventExW	timeKillEvent

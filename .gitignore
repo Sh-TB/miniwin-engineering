@@ -57,3 +57,4 @@ artifacts/sweep005/
 
 # SWEEP-006: breakout build outputs + frame dumps stay local (curated into evidence/sweep006_game/)
 artifacts/sweep006/
+calc.pdb

@@ -561,10 +561,24 @@ __attribute__((ms_abi)) uint32_t mw_GetLastError(void) {
     return err;
 }
 
+/* Forward declaration: GetModuleHandleA/W delegate known system DLL names to
+ * the LoadLibraryA pseudo-handle identities (definition at the LoadLibrary
+ * section); the guest must not observe a different handle for the same DLL. */
+__attribute__((ms_abi)) void* mw_LoadLibraryA(const char* name);
+
 __attribute__((ms_abi)) void* mw_GetModuleHandleA(const char* name) {
-    MW_TRACE("GetModuleHandleA(name=%s)", name ? name : "NULL");
-    if (name == NULL || name[0] == '\0') return g_image_base;
-    return NULL;
+    if (name == NULL) {
+        MW_TRACE("GetModuleHandleA(NULL) -> image base");
+        return g_image_base;
+    }
+    if ((uintptr_t)name < 0x1000) { mw_SetLastError(126); return NULL; } /* cookie */
+    if (name[0] == '\0') return g_image_base;
+    /* SWEEP-008: known system DLLs resolve to the same pseudo-handle
+     * identities LoadLibraryA mints — GetProcAddress on the result then
+     * resolves against the dispatch table (autoruns64: GetModuleHandleW(
+     * "ntdll.dll") + GetProcAddress("RtlGetVersion") used to return NULL
+     * and the guest called through the NULL pointer -> RIP=0). */
+    return mw_LoadLibraryA(name);
 }
 
 /* OPENSRC battery (BUG-057): optional extension APIs (AppPolicy* etc.) that
@@ -576,8 +590,10 @@ __attribute__((ms_abi)) long long mw_winapi_optional_stub(long long a, long long
     return 0;
 }
 __attribute__((ms_abi)) void* mw_GetProcAddress(void* module, const char* name) {
-    MW_TRACE("GetProcAddress(module=%p, name=%s)", module, name ? name : "NULL");
-    if (!name || !name[0]) return NULL;
+    /* Guest may pass a numeric cookie (MAKEINTRESOURCE-style, e.g. 0x87) as
+     * "name" — never deref it. Cookie-as-name is not a resolvable export. */
+    if (!name || (uintptr_t)name < 0x1000 || !name[0]) return NULL;
+    MW_TRACE("GetProcAddress(module=%p, name=%s)", module, name);
     /* Resolve from dispatch table if module matches our fake handle or image base.
      * Uses global function pointer set after table definitions (see resolve_proc_init). */
     if (g_resolve_proc_fn) {
@@ -596,8 +612,17 @@ __attribute__((ms_abi)) void* mw_GetProcAddress(void* module, const char* name) 
     return NULL;
 }
 
+/* Guard: a guest "DLL name" pointer below 0x1000 is a numeric cookie
+ * (MAKEINTRESOURCE-style), never a real string — reject before any deref
+ * (MW_TRACE %s included). This killed procexp64/autoruns64 at the
+ * LoadLibrary frontier (RIP in libc strlen with RDI=0x87). */
+static int mw_dllname_valid(const char* name) {
+    return name && (uintptr_t)name >= 0x1000 && name[0] != '\0';
+}
+
 __attribute__((ms_abi)) void* mw_LoadLibraryA(const char* name) {
-    MW_TRACE("LoadLibraryA(%s)", name ? name : "NULL");
+    if (!mw_dllname_valid(name)) { mw_SetLastError(126); return NULL; }
+    MW_TRACE("LoadLibraryA(%s)", name);
     /* Known system DLLs (case-insensitive, extension optional): pseudo-
      * handle identities. GetProcAddress resolves against our dispatch
      * table (g_resolve_proc_fn). Unknown DLLs fail with ERROR 126 — the
@@ -5239,9 +5264,16 @@ __attribute__((ms_abi)) void mw_RtlRestoreContext(void* ctx, void* exc) {
 
 /* ---- misc kernel32 ---- */
 __attribute__((ms_abi)) void* mw_GetModuleHandleW(const wchar_t* name) {
-    MW_TRACE("GetModuleHandleW()");
-    if (name == NULL || name[0] == 0) return g_image_base;
-    return NULL;
+    if (name == NULL) {
+        MW_TRACE("GetModuleHandleW(NULL) -> image base");
+        return g_image_base;
+    }
+    if ((uintptr_t)name < 0x1000) { mw_SetLastError(126); return NULL; } /* cookie */
+    char n8[256] = {0};
+    w3_w16_to_utf8z((const uint16_t*)name, n8, sizeof(n8));
+    if (n8[0] == 0) return g_image_base;
+    MW_TRACE("GetModuleHandleW(name=%s)", n8);
+    return mw_LoadLibraryA(n8);
 }
 __attribute__((ms_abi)) uint32_t mw_GetThreadId(void* h) {
     (void)h;
@@ -6566,12 +6598,98 @@ __attribute__((ms_abi)) int mw_GetVersion(void) { return 0x000A0006; } /* 10.6 *
 __attribute__((ms_abi)) int mw_GetVersionExA(void* vi) {
     if (!vi) return 0;
     uint32_t sz = *(uint32_t*)vi;
+    /* OSVERSIONINFOA=148, OSVERSIONINFOEXA=156 — Windows-faithful check */
+    if (sz != 148 && sz != 156) { mw_SetLastError(122); return 0; }
     memset(vi, 0, sz);
     *(uint32_t*)vi = sz;
     uint8_t* p = (uint8_t*)vi;
-    *(uint32_t*)(p + 4)  = 10; *(uint32_t*)(p + 8) = 0; *(uint32_t*)(p + 12) = 0;
+    *(uint32_t*)(p + 4)  = 10; *(uint32_t*)(p + 8) = 0; *(uint32_t*)(p + 12) = 19045;
     *(uint32_t*)(p + 16) = 2;  /* VER_PLATFORM_WIN32_NT */
     return 1;
+}
+/* SW-561 version drift: GetVersionExA used to report build 0 (Win10 reports
+ * 19045 for 22H2). W variant added for the Sysinternals EULA gate callers
+ * (autoruns64/rammap64 call GetVersionExW before the dialog). Windows-faithful
+ * size validation: only OSVERSIONINFOW(276)/OSVERSIONINFOEXW(284) accepted,
+ * else ERROR_INSUFFICIENT_BUFFER. */
+__attribute__((ms_abi)) int mw_GetVersionExW(void* vi) {
+    if (!vi) return 0;
+    uint32_t sz = *(uint32_t*)vi;
+    if (sz != 276 && sz != 284) { mw_SetLastError(122); return 0; }
+    memset(vi, 0, sz);
+    *(uint32_t*)vi = sz;
+    uint8_t* p = (uint8_t*)vi;
+    *(uint32_t*)(p + 4)  = 10;    /* dwMajorVersion */
+    *(uint32_t*)(p + 8)  = 0;     /* dwMinorVersion */
+    *(uint32_t*)(p + 12) = 19045; /* dwBuildNumber (Win10 22H2) */
+    *(uint32_t*)(p + 16) = 2;     /* VER_PLATFORM_WIN32_NT */
+    return 1;
+}
+
+/* SW-561 version drift family: ntdll!RtlGetVersion is the modern way to read
+ * the OS version — returns NTSTATUS 0 and fills OSVERSIONINFOW(W). Faithful
+ * semantics: the real ntdll never reads dwOSVersionInfoSize, it just writes
+ * the fixed 276-byte OSVERSIONINFOW prefix (fields + empty szCSDVersion). */
+__attribute__((ms_abi)) long long mw_RtlGetVersion(void* vi) {
+    if (!vi) return 0xC000000DLL; /* STATUS_INVALID_PARAMETER */
+    uint8_t* p = (uint8_t*)vi;
+    *(uint32_t*)(p + 4)  = 10;
+    *(uint32_t*)(p + 8)  = 0;
+    *(uint32_t*)(p + 12) = 19045;
+    *(uint32_t*)(p + 16) = 2;
+    memset(p + 20, 0, 256); /* szCSDVersion[128] = L"" */
+    return 0; /* STATUS_SUCCESS */
+}
+
+/* ---- SWEEP-008: global atom table (real semantics, RAM-backed) ----
+ * GlobalAddAtomW stores the string and hands back a unique atom >= 0xC000
+ * (System.StringAtoms range); duplicates return the same atom, as on Windows. */
+#define MW_ATOM_MAX 128
+static wchar_t g_atom_names[MW_ATOM_MAX][96];
+static uint32_t g_atom_count = 0;
+static int mw_wcs_eq(const wchar_t* a, const wchar_t* b) {
+    int i = 0;
+    for (;; i++) { if (a[i] != b[i]) return 0; if (!a[i]) return 1; }
+}
+static uint16_t mw_atom_add_w(const wchar_t* s) {
+    if (!s || !s[0]) { mw_SetLastError(6); return 0; } /* ERROR_INVALID_HANDLE */
+    for (uint32_t i = 0; i < g_atom_count; i++)
+        if (mw_wcs_eq(g_atom_names[i], s)) return (uint16_t)(0xC000u + i);
+    if (g_atom_count >= MW_ATOM_MAX) { mw_SetLastError(8); return 0; } /* NOT_ENOUGH_MEMORY */
+    uint32_t k = 0;
+    for (; s[k] && k < 95; k++) g_atom_names[g_atom_count][k] = s[k];
+    g_atom_names[g_atom_count][k] = 0;
+    uint16_t a = (uint16_t)(0xC000u + g_atom_count);
+    g_atom_count++;
+    MW_TRACE("GlobalAddAtomW -> atom 0x%04x", a);
+    return a;
+}
+__attribute__((ms_abi)) uint16_t mw_GlobalAddAtomW(const wchar_t* s) { return mw_atom_add_w(s); }
+__attribute__((ms_abi)) uint16_t mw_GlobalAddAtomA(const char* s) {
+    if (!s) { mw_SetLastError(6); return 0; }
+    wchar_t w[96];
+    uint32_t k = 0;
+    for (; s[k] && k < 95; k++) w[k] = (wchar_t)(uint8_t)s[k];
+    w[k] = 0;
+    return mw_atom_add_w(w);
+}
+__attribute__((ms_abi)) uint16_t mw_GlobalFindAtomW(const wchar_t* s) {
+    if (!s || !s[0]) { mw_SetLastError(6); return 0; }
+    for (uint32_t i = 0; i < g_atom_count; i++)
+        if (mw_wcs_eq(g_atom_names[i], s)) return (uint16_t)(0xC000u + i);
+    mw_SetLastError(2);
+    return 0;
+}
+__attribute__((ms_abi)) uint32_t mw_GlobalGetAtomNameW(uint16_t atom, wchar_t* buf, int cap) {
+    if (atom < 0xC000u || (uint32_t)(atom - 0xC000u) >= g_atom_count || !buf || cap <= 0) {
+        mw_SetLastError(2);
+        return 0;
+    }
+    const wchar_t* s = g_atom_names[atom - 0xC000u];
+    uint32_t n = 0;
+    while (s[n] && n + 1 < (uint32_t)cap) { buf[n] = s[n]; n++; }
+    buf[n] = 0;
+    return n;
 }
 
 /* ---- codepage / locale / string ---- */
@@ -7403,20 +7521,111 @@ __attribute__((ms_abi)) int mw_ReadConsoleInputA(void* h, void* buf, uint32_t n,
     return 1;
 }
 
-/* ---- registry: honest failure (no registry on host) ---- */
-#define MW_REG_FAIL (mw_SetLastError(2), 2) /* ERROR_FILE_NOT_FOUND */
+/* ---- registry: SWEEP-008 in-memory store (honest RAM-backed hive) ----
+ * Real registry semantics against a per-process RAM hive: create/open/query/
+ * set/delete/enumerate all operate on the store; keys that were never created
+ * really do return ERROR_FILE_NOT_FOUND (which is exactly what routes
+ * Sysinternals EULA gates into their first-run dialog). Predefined roots
+ * (HKEY_* = 0x80000000..0x80000005) implicitly exist; opened/created keys get
+ * synthetic handles 0xC1000000+idx. Values capped at 512 bytes / 512 values —
+ * honest ERROR_OUTOFMEMORY beyond. */
+#define MW_REG_MAXKEYS 96
+#define MW_REG_MAXVALS 512
+typedef struct { int used; char path[512]; } MwRegKey;
+typedef struct { int used; char path[512]; char name[160]; uint32_t type; uint32_t size; uint8_t data[512]; } MwRegVal;
+static MwRegKey g_regk[MW_REG_MAXKEYS];
+static MwRegVal g_regv[MW_REG_MAXVALS];
+static int g_reg_inited = 0;
+static void mw_reg_init_roots(void) {
+    if (g_reg_inited) return;
+    g_reg_inited = 1;
+    static const char* roots[] = { "HKCR", "HKCU", "HKLM", "HKU", "HKPD", "HCC" };
+    for (int r = 0; r < 6 && r < MW_REG_MAXKEYS; r++) {
+        g_regk[r].used = 1;
+        snprintf(g_regk[r].path, sizeof(g_regk[r].path), "%s", roots[r]);
+    }
+}
+static void mw_reg_w2a(const wchar_t* w, char* out, size_t cap) {
+    size_t k = 0;
+    if (w) for (; w[k] && k + 1 < cap; k++) out[k] = (w[k] < 128) ? (char)w[k] : '?';
+    out[k] = 0;
+}
+/* Resolve key handle (+optional subkey) to a store entry. Returns NULL if the
+ * path does not exist (honest miss). */
+static MwRegKey* mw_reg_resolve(void* key, const wchar_t* sub, uint64_t* out_h) {
+    mw_reg_init_roots();
+    uint64_t kh = (uint64_t)(uintptr_t)key;
+    char base[384], full[512];
+    if (kh >= 0xC1000000ULL && kh < 0xC1000000ULL + MW_REG_MAXKEYS) {
+        MwRegKey* k = &g_regk[kh - 0xC1000000ULL];
+        if (!k->used) return NULL;
+        snprintf(base, sizeof(base), "%s", k->path);
+    } else {
+        const char* r = NULL;
+        switch (kh) {
+        case 0x80000000ULL: r = "HKCR"; break;
+        case 0x80000001ULL: r = "HKCU"; break;
+        case 0x80000002ULL: r = "HKLM"; break;
+        case 0x80000003ULL: r = "HKU";  break;
+        case 0x80000004ULL: r = "HKPD"; break;
+        case 0x80000005ULL: r = "HCC";  break;
+        default: return NULL;
+        }
+        snprintf(base, sizeof(base), "%s", r);
+    }
+    char suba[384];
+    if (sub && (uintptr_t)sub >= 0x1000) mw_reg_w2a(sub, suba, sizeof(suba));
+    else suba[0] = 0; /* NULL or numeric cookie -> no subkey */
+    if (suba[0]) snprintf(full, sizeof(full), "%s\\%s", base, suba);
+    else         snprintf(full, sizeof(full), "%s", base);
+    for (int i = 0; i < MW_REG_MAXKEYS; i++) {
+        if (g_regk[i].used && strcmp(g_regk[i].path, full) == 0) {
+            if (out_h) *out_h = 0xC1000000ULL + (uint64_t)i;
+            return &g_regk[i];
+        }
+    }
+    return NULL;
+}
+static MwRegVal* mw_reg_findval(const char* path, const char* name) {
+    for (int i = 0; i < MW_REG_MAXVALS; i++)
+        if (g_regv[i].used && strcmp(g_regv[i].path, path) == 0 &&
+            strcmp(g_regv[i].name, name) == 0) return &g_regv[i];
+    return NULL;
+}
 __attribute__((ms_abi)) int32_t mw_RegOpenKeyExW(void* key, const wchar_t* sub, uint32_t opts, uint32_t access, void** result) {
-    MW_TRACE("RegOpenKeyExW() -> ERROR_FILE_NOT_FOUND");
-    mw_SetLastError(2);
-    return 2;
+    (void)opts; (void)access;
+    uint64_t h = 0;
+    MwRegKey* k = mw_reg_resolve(key, sub, &h);
+    if (!k) { mw_SetLastError(2); MW_TRACE("RegOpenKeyExW() -> ERROR_FILE_NOT_FOUND"); return 2; }
+    if (result) *result = (void*)(uintptr_t)h;
+    MW_TRACE("RegOpenKeyExW(%s) -> 0 (h=0x%llx)", k->path, (unsigned long long)h);
+    return 0;
+}
+/* RegOpenKeyW = 3-arg legacy form of RegOpenKeyExW */
+__attribute__((ms_abi)) int32_t mw_RegOpenKeyW(void* key, const wchar_t* sub, void** result) {
+    return mw_RegOpenKeyExW(key, sub, 0, 0, result);
 }
 __attribute__((ms_abi)) int32_t mw_RegOpenKeyExA(void* key, const char* sub, uint32_t opts, uint32_t access, void** result) {
+    (void)key; (void)sub; (void)opts; (void)access; (void)result;
     mw_SetLastError(2);
     return 2;
 }
 __attribute__((ms_abi)) int32_t mw_RegQueryValueExW(void* key, const wchar_t* name, void* res, uint32_t* type, void* data, uint32_t* size) {
-    mw_SetLastError(2);
-    return 2;
+    mw_reg_init_roots();
+    MwRegKey* k = mw_reg_resolve(key, NULL, NULL);
+    if (!k) { mw_SetLastError(2); return 2; }
+    char na[160]; mw_reg_w2a(name, na, sizeof(na));
+    MwRegVal* v = mw_reg_findval(k->path, na);
+    if (!v) { mw_SetLastError(2); return 2; }
+    if (type) *type = v->type;
+    if (data && size) {
+        if (*size < v->size) { mw_SetLastError(234); if (size) *size = v->size; return 234; } /* MORE_DATA */
+        memcpy(data, v->data, v->size);
+    }
+    if (size) *size = v->size;
+    (void)res;
+    MW_TRACE("RegQueryValueExW(%s\\%s) -> 0 (%u bytes)", k->path, na, v->size);
+    return 0;
 }
 __attribute__((ms_abi)) int32_t mw_RegQueryValueExA(void* key, const char* name, void* res, uint32_t* type, void* data, uint32_t* size) {
     mw_SetLastError(2);
@@ -7428,26 +7637,161 @@ __attribute__((ms_abi)) int32_t mw_RegGetValueW(void* key, const wchar_t* sub, c
 }
 __attribute__((ms_abi)) int32_t mw_RegCloseKey(void* key) { return 0; }
 __attribute__((ms_abi)) int32_t mw_RegCreateKeyExW(void* key, const wchar_t* sub, uint32_t res, const wchar_t* cls, uint32_t opts, uint32_t access, void* sa, void** result, void* disp) {
-    mw_SetLastError(5);
-    return 5;
+    (void)res; (void)cls; (void)opts; (void)access; (void)sa;
+    mw_reg_init_roots();
+    uint64_t kh = (uint64_t)(uintptr_t)key;
+    char base[384], full[512];
+    MwRegKey* bk = mw_reg_resolve(key, NULL, NULL);
+    if (bk) snprintf(base, sizeof(base), "%s", bk->path);
+    else {
+        const char* r = NULL;
+        switch (kh) {
+        case 0x80000000ULL: r = "HKCR"; break;
+        case 0x80000001ULL: r = "HKCU"; break;
+        case 0x80000002ULL: r = "HKLM"; break;
+        case 0x80000003ULL: r = "HKU";  break;
+        case 0x80000004ULL: r = "HKPD"; break;
+        case 0x80000005ULL: r = "HCC";  break;
+        default: mw_SetLastError(6); return 6;
+        }
+        snprintf(base, sizeof(base), "%s", r);
+    }
+    char suba[384]; mw_reg_w2a(sub, suba, sizeof(suba));
+    if (suba[0]) snprintf(full, sizeof(full), "%s\\%s", base, suba);
+    else         snprintf(full, sizeof(full), "%s", base);
+    /* open existing? */
+    for (int i = 0; i < MW_REG_MAXKEYS; i++) {
+        if (g_regk[i].used && strcmp(g_regk[i].path, full) == 0) {
+            if (result) *result = (void*)(uintptr_t)(0xC1000000ULL + (uint64_t)i);
+            if (disp) *(uint32_t*)disp = 2; /* REG_OPENED_EXISTING_KEY */
+            MW_TRACE("RegCreateKeyExW(%s) -> 0 (opened)", full);
+            return 0;
+        }
+    }
+    int slot = -1;
+    for (int i = 0; i < MW_REG_MAXKEYS; i++) if (!g_regk[i].used) { slot = i; break; }
+    if (slot < 0) { mw_SetLastError(14); return 14; } /* ERROR_OUTOFMEMORY */
+    g_regk[slot].used = 1;
+    snprintf(g_regk[slot].path, sizeof(g_regk[slot].path), "%s", full);
+    if (result) *result = (void*)(uintptr_t)(0xC1000000ULL + (uint64_t)slot);
+    if (disp) *(uint32_t*)disp = 1; /* REG_CREATED_NEW_KEY */
+    MW_TRACE("RegCreateKeyExW(%s) -> 0 (created, h=0x%llx)", full, 0xC1000000ULL + (uint64_t)slot);
+    return 0;
 }
-__attribute__((ms_abi)) int32_t mw_RegDeleteValueW(void* key, const wchar_t* name) { mw_SetLastError(2); return 2; }
+/* RegCreateKeyW = 3-arg legacy form of RegCreateKeyExW */
+__attribute__((ms_abi)) int32_t mw_RegCreateKeyW(void* key, const wchar_t* sub, void** result) {
+    uint32_t disp = 0;
+    return mw_RegCreateKeyExW(key, sub, 0, NULL, 0, 0, NULL, result, &disp);
+}
+__attribute__((ms_abi)) int32_t mw_RegDeleteValueW(void* key, const wchar_t* name) {
+    MwRegKey* k = mw_reg_resolve(key, NULL, NULL);
+    if (!k) { mw_SetLastError(2); return 2; }
+    char na[160]; mw_reg_w2a(name, na, sizeof(na));
+    MwRegVal* v = mw_reg_findval(k->path, na);
+    if (!v) { mw_SetLastError(2); return 2; }
+    v->used = 0;
+    return 0;
+}
 __attribute__((ms_abi)) int32_t mw_RegEnumKeyA(void* key, uint32_t idx, char* name, uint32_t cap) { mw_SetLastError(259); return 259; }
 __attribute__((ms_abi)) int32_t mw_RegEnumKeyExW(void* key, uint32_t idx, wchar_t* name, uint32_t* ncap, void* res, wchar_t* cls, uint32_t* ccap, void* time) {
-    mw_SetLastError(259);
+    (void)res; (void)cls; (void)ccap; (void)time;
+    MwRegKey* k = mw_reg_resolve(key, NULL, NULL);
+    if (!k) { mw_SetLastError(2); return 2; }
+    size_t plen = strlen(k->path);
+    uint32_t seen = 0;
+    for (int i = 0; i < MW_REG_MAXKEYS; i++) {
+        if (!g_regk[i].used) continue;
+        if (strncmp(g_regk[i].path, k->path, plen) != 0 || g_regk[i].path[plen] != '\\') continue;
+        const char* rest = g_regk[i].path + plen + 1;
+        if (strchr(rest, '\\')) continue; /* grandchild */
+        if (seen == idx) {
+            uint32_t n = (uint32_t)strlen(rest);
+            if (name && ncap) {
+                if (*ncap <= n) { mw_SetLastError(234); return 234; }
+                for (uint32_t c = 0; c <= n; c++) name[c] = (wchar_t)(uint8_t)rest[c];
+                if (ncap) *ncap = n;
+            }
+            return 0;
+        }
+        seen++;
+    }
+    mw_SetLastError(259); /* ERROR_NO_MORE_ITEMS */
     return 259;
 }
 __attribute__((ms_abi)) int32_t mw_RegEnumValueW(void* key, uint32_t idx, wchar_t* name, uint32_t* ncap, void* res, uint32_t* type, void* data, uint32_t* size) {
+    (void)res;
+    MwRegKey* k = mw_reg_resolve(key, NULL, NULL);
+    if (!k) { mw_SetLastError(2); return 2; }
+    uint32_t seen = 0;
+    for (int i = 0; i < MW_REG_MAXVALS; i++) {
+        if (!g_regv[i].used || strcmp(g_regv[i].path, k->path) != 0) continue;
+        if (seen == idx) {
+            uint32_t n = (uint32_t)strlen(g_regv[i].name);
+            if (name && ncap) {
+                if (*ncap <= n) { mw_SetLastError(234); return 234; }
+                for (uint32_t c = 0; c <= n; c++) name[c] = (wchar_t)(uint8_t)g_regv[i].name[c];
+                if (ncap) *ncap = n;
+            }
+            if (type) *type = g_regv[i].type;
+            if (data && size) {
+                if (*size < g_regv[i].size) { mw_SetLastError(234); return 234; }
+                memcpy(data, g_regv[i].data, g_regv[i].size);
+            }
+            if (size) *size = g_regv[i].size;
+            return 0;
+        }
+        seen++;
+    }
     mw_SetLastError(259);
     return 259;
 }
 __attribute__((ms_abi)) int32_t mw_RegQueryInfoKeyW(void* key, wchar_t* cls, uint32_t* ccap, void* res, uint32_t* subkeys, uint32_t* maxsub, uint32_t* maxcls, uint32_t* values, uint32_t* maxval, uint32_t* maxdata, uint32_t* secdesc, void* time) {
-    mw_SetLastError(6);
-    return 6;
+    (void)cls; (void)ccap; (void)res; (void)maxcls; (void)maxdata; (void)secdesc; (void)time;
+    MwRegKey* k = mw_reg_resolve(key, NULL, NULL);
+    if (!k) { mw_SetLastError(6); return 6; }
+    size_t plen = strlen(k->path);
+    uint32_t nk = 0, nv = 0, maxn = 0;
+    for (int i = 0; i < MW_REG_MAXKEYS; i++) {
+        if (!g_regk[i].used) continue;
+        if (strncmp(g_regk[i].path, k->path, plen) != 0 || g_regk[i].path[plen] != '\\') continue;
+        const char* rest = g_regk[i].path + plen + 1;
+        if (strchr(rest, '\\')) continue;
+        uint32_t n = (uint32_t)strlen(rest);
+        if (n > maxn) maxn = n;
+        nk++;
+    }
+    for (int i = 0; i < MW_REG_MAXVALS; i++) {
+        if (!g_regv[i].used || strcmp(g_regv[i].path, k->path) != 0) continue;
+        uint32_t n = (uint32_t)strlen(g_regv[i].name);
+        if (n > maxn) maxn = n;
+        nv++;
+    }
+    if (subkeys) *subkeys = nk;
+    if (maxsub) *maxsub = maxn;
+    if (values) *values = nv;
+    if (maxval) *maxval = maxn;
+    return 0;
 }
 __attribute__((ms_abi)) int32_t mw_RegSetValueExW(void* key, const wchar_t* name, uint32_t res, uint32_t type, const void* data, uint32_t size) {
-    mw_SetLastError(5);
-    return 5;
+    (void)res;
+    mw_reg_init_roots();
+    MwRegKey* k = mw_reg_resolve(key, NULL, NULL);
+    if (!k) { mw_SetLastError(6); return 6; } /* ERROR_INVALID_HANDLE */
+    char na[160]; mw_reg_w2a(name, na, sizeof(na));
+    if (size > 512) { mw_SetLastError(234); return 234; }
+    MwRegVal* v = mw_reg_findval(k->path, na);
+    if (!v) {
+        for (int i = 0; i < MW_REG_MAXVALS; i++) if (!g_regv[i].used) { v = &g_regv[i]; break; }
+        if (!v) { mw_SetLastError(14); return 14; }
+        v->used = 1;
+        snprintf(v->path, sizeof(v->path), "%s", k->path);
+        snprintf(v->name, sizeof(v->name), "%s", na);
+    }
+    v->type = type;
+    v->size = size;
+    if (size && data) memcpy(v->data, data, size);
+    MW_TRACE("RegSetValueExW(%s\\%s type=%u %u bytes) -> 0", k->path, na, type, size);
+    return 0;
 }
 __attribute__((ms_abi)) int32_t mw_RegLoadMUIStringW(void* key, const wchar_t* v, wchar_t* out, uint32_t cap, uint32_t* len, uint32_t flags, const wchar_t* dir) {
     mw_SetLastError(2);
@@ -7456,6 +7800,560 @@ __attribute__((ms_abi)) int32_t mw_RegLoadMUIStringW(void* key, const wchar_t* v
 __attribute__((ms_abi)) int32_t mw_RegNotifyChangeKeyValue(void* key, int watch, uint32_t filter, void* event, int async) {
     mw_SetLastError(1);
     return 1;
+}
+
+/* ---- SWEEP-008: shlwapi color pair (pure math, GDI 0..240 HLS scale) ----
+ * procexp64 dims palette entries as HLS.L *= 22/100 (clamp 0xf0) then converts
+ * back — 36 call sites. Wine-derived integer algorithm, self-consistent. */
+static int mw_hue2rgb(int n1, int n2, int hue) {
+    if (hue < 0) hue += 240;
+    if (hue >= 240) hue -= 240;
+    if (hue < 40)  return (n1 + ((n2 - n1) * hue) / 40) * 255 / 240;
+    if (hue < 120) return n2 * 255 / 240;
+    if (hue < 160) return (n1 + ((n2 - n1) * (160 - hue)) / 40) * 255 / 240;
+    return n1 * 255 / 240;
+}
+__attribute__((ms_abi)) void mw_ColorRGBToHLS(uint32_t rgb, uint16_t* wHue, uint16_t* wLum, uint16_t* wSat) {
+    int r = (int)(rgb & 0xFF), g = (int)((rgb >> 8) & 0xFF), b = (int)((rgb >> 16) & 0xFF);
+    int mx = r > g ? (r > b ? r : b) : (g > b ? g : b);
+    int mn = r < g ? (r < b ? r : b) : (g < b ? g : b);
+    int H = 0, L = (mx + mn) * 240 / 510, S = 0;
+    int dlt = mx - mn;
+    if (dlt) {
+        S = (L <= 120) ? dlt * 240 / (mx + mn) : dlt * 240 / (510 - mx - mn);
+        if (mx == r)      H = (g - b) * 40 / dlt + (g < b ? 240 : 0);
+        else if (mx == g) H = (b - r) * 40 / dlt + 80;
+        else              H = (r - g) * 40 / dlt + 160;
+        H %= 240;
+    }
+    if (wHue) *wHue = (uint16_t)H;
+    if (wLum) *wLum = (uint16_t)L;
+    if (wSat) *wSat = (uint16_t)S;
+    MW_TRACE("ColorRGBToHLS(#%06x) -> H=%d L=%d S=%d", rgb, H, L, S);
+}
+__attribute__((ms_abi)) uint32_t mw_ColorHLSToRGB(uint16_t wHue, uint16_t wLum, uint16_t wSat) {
+    uint32_t out;
+    if (wSat == 0) {
+        int v = wLum * 255 / 240;
+        out = (uint32_t)(v | (v << 8) | (v << 16));
+    } else {
+        int Magic1, Magic2;
+        if (wLum <= 120) Magic2 = (wLum * (240 + wSat) + 120) / 240;
+        else             Magic2 = wLum + wSat - (wLum * wSat + 120) / 240;
+        Magic1 = 2 * wLum - Magic2;
+        int r = mw_hue2rgb(Magic1, Magic2, (int)wHue + 80);
+        int g = mw_hue2rgb(Magic1, Magic2, (int)wHue);
+        int b = mw_hue2rgb(Magic1, Magic2, (int)wHue - 80);
+        out = (uint32_t)(r | (g << 8) | (b << 16));
+    }
+    MW_TRACE("ColorHLSToRGB(H=%u L=%u S=%u) -> #%06x", wHue, wLum, wSat, out);
+    return out;
+}
+
+/* ---- SWEEP-008: modal dialog (Sysinternals EULA gate class) ----
+ * Honest modal semantics: WM_INITDIALOG goes to the guest's DLGPROC. With
+ * MW_EULA_ACCEPT=1 the loader automates the Accept button (Wine-CI-style
+ * documented EULA automation) by delivering WM_COMMAND for the accept-class
+ * button id parsed from the in-memory DLGTEMPLATE; the guest's EndDialog
+ * closes the modal and DialogBoxIndirectParamW returns that result. Default
+ * (env unset): dialog opens, nobody clicks, 0 returned — "not accepted". */
+typedef __attribute__((ms_abi)) long long (*MW_DLGPROC)(void*, uint32_t, uintptr_t, long long);
+static int g_dlg_ended = 0;
+static long long g_dlg_result = 0;
+__attribute__((ms_abi)) int mw_EndDialog(void* h, long long result) {
+    (void)h;
+    g_dlg_ended = 1;
+    g_dlg_result = result;
+    MW_TRACE("EndDialog(hwnd=%p, result=%lld)", h, result);
+    return 1;
+}
+static const uint8_t* mw_dlg_sz(const uint8_t* p, wchar_t* out, int cap) {
+    uint16_t v;
+    memcpy(&v, p, 2); p += 2;
+    if (v == 0x0000) { if (cap > 0) out[0] = 0; return p; }
+    if (v == 0xFFFF) { uint16_t ord; memcpy(&ord, p, 2); p += 2; if (cap > 1) { out[0] = (wchar_t)ord; out[1] = 0; } return p; }
+    int k = 0;
+    for (;;) {
+        uint16_t c; memcpy(&c, p, 2); p += 2;
+        if (!c) break;
+        if (k < cap - 1) out[k++] = (wchar_t)c;
+    }
+    out[k] = 0;
+    return p;
+}
+static int mw_dlg_text_has(const wchar_t* s, const char* frag) {
+    size_t fl = strlen(frag);
+    for (int i = 0; s && s[i]; i++) {
+        size_t j = 0;
+        while (j < fl) {
+            wchar_t c = s[i + (int)j];
+            if (!c) break;
+            char cc = (c < 128) ? (char)c : 0;
+            if (cc >= 'A' && cc <= 'Z') cc = (char)(cc + 32);
+            if (cc != frag[j]) break;
+            j++;
+        }
+        if (j == fl) return 1;
+    }
+    return 0;
+}
+/* Scan an in-memory DLGTEMPLATE/EX for the accept-class button; returns its
+ * control id (or the first button's id as fallback; -1 if no buttons). */
+static int mw_dlg_find_accept(const void* tmplv) {
+    const uint8_t* p = (const uint8_t*)tmplv;
+    if (!p) return -1;
+    int ex = 0;
+    uint32_t style;
+    uint16_t cdit;
+    uint16_t sig; memcpy(&sig, p + 2, 2);
+    if (sig == 0xFFFF) { /* DLGTEMPLATEEX */
+        ex = 1;
+        memcpy(&style, p + 12, 4);
+        memcpy(&cdit, p + 16, 2);
+        p += 18;
+    } else {
+        memcpy(&style, p + 0, 4);
+        memcpy(&cdit, p + 8, 2);
+        p += 16; /* style, exstyle, cdit, x, y, cx, cy */
+    }
+    wchar_t tmp[64], cls[32];
+    p = mw_dlg_sz(p, tmp, 64); /* menu */
+    p = mw_dlg_sz(p, tmp, 64); /* class */
+    p = mw_dlg_sz(p, tmp, 64); /* title */
+    if (style & 0x40) { /* DS_SETFONT */
+        p += ex ? 6 : 2; /* EX: size,weight,italic,charset — normal: size */
+        p = mw_dlg_sz(p, tmp, 64);
+    }
+    static const char* frags[] = { "gre", "ccep", "ccpt", "yes", "ok" };
+    int fallback_id = -1;
+    for (uint16_t i = 0; i < cdit; i++) {
+        uint32_t istyle; uint32_t id; int is_button = 0;
+        if (ex) {
+            p += 4; /* helpID */
+            p += 4; /* exStyle */
+            memcpy(&istyle, p, 4); p += 4;
+            p += 8; /* x, y, cx, cy */
+            memcpy(&id, p, 4); p += 4;
+        } else {
+            memcpy(&istyle, p, 4); p += 4;
+            p += 4; /* exStyle */
+            p += 8; /* x, y, cx, cy */
+            uint16_t id16; memcpy(&id16, p, 2); p += 2;
+            id = id16;
+        }
+        uint16_t c0; memcpy(&c0, p, 2);
+        p = mw_dlg_sz(p, cls, 32);
+        if (c0 == 0x80) is_button = 1;                 /* ordinal BUTTON class */
+        else if (mw_dlg_text_has(cls, "button")) is_button = 1;
+        p = mw_dlg_sz(p, tmp, 64);                     /* title */
+        uint16_t extra; memcpy(&extra, p, 2); p += 2;
+        if (extra) p += (size_t)extra * 2;             /* creation data in WORDs */
+        if (is_button) {
+            if (fallback_id < 0) fallback_id = (int)id;
+            for (int f = 0; f < 5; f++)
+                if (mw_dlg_text_has(tmp, frags[f])) return (int)id;
+        }
+    }
+    return fallback_id;
+}
+static long long mw_dlg_modal_run(const void* tmpl, void* proc, long long init) {
+    MW_DLGPROC p = (MW_DLGPROC)proc;
+    void* h = (void*)(uintptr_t)0xC2000001ULL;
+    g_dlg_ended = 0;
+    g_dlg_result = 0;
+    MW_TRACE("dialog modal run(tmpl=%p proc=%p init=0x%llx)", tmpl, proc, (unsigned long long)init);
+    if (p) p(h, 0x0110u /*WM_INITDIALOG*/, 0, init);
+    const char* e = getenv("MW_EULA_ACCEPT");
+    if (e && e[0] == '1' && tmpl && p && !g_dlg_ended) {
+        int id = mw_dlg_find_accept(tmpl);
+        MW_TRACE("  MW_EULA_ACCEPT=1 -> WM_COMMAND accept-button id=%d", id);
+        if (id >= 0) p(h, 0x0111u /*WM_COMMAND*/, (uintptr_t)(uint32_t)id, 0);
+    }
+    if (g_dlg_ended) {
+        MW_TRACE("  -> modal result %lld", g_dlg_result);
+        return g_dlg_result;
+    }
+    MW_TRACE("  -> dismissed with no user input -> 0");
+    return 0;
+}
+__attribute__((ms_abi)) long long mw_DialogBoxIndirectParamW(void* hinst, const void* tmpl, void* parent, void* proc, long long init) {
+    (void)hinst; (void)parent;
+    return mw_dlg_modal_run(tmpl, proc, init);
+}
+
+/* ---- PE resource walk (RT_DIALOG templates for DialogBoxParamW) ----
+ * The loader maps every PE section, so resource data is addressable at
+ * image_base+RVA. Walk root -> type(RT_DIALOG=5) -> name -> first lang. */
+typedef struct { int by_id; uint32_t id; const wchar_t* wname; } MwResName;
+static const uint8_t* mw_res_walk_lvl(const uint8_t* dir, const MwResName* wants, int level);
+static int mw_res_name_eq(const uint8_t* dir, uint32_t noi, MwResName* want) {
+    if (noi & 0x80000000u) {
+        if (want->by_id || !want->wname) return 0;
+        const uint8_t* ns = dir + (noi & 0x7FFFFFFFu);
+        uint16_t len;
+        memcpy(&len, ns, 2); /* length in UTF-16 chars */
+        const uint16_t* w = (const uint16_t*)(ns + 2);
+        for (uint16_t k = 0; k < len; k++) {
+            uint16_t c = w[k], d = (uint16_t)want->wname[k];
+            if (c >= 'a' && c <= 'z') c -= 32;
+            if (d >= 'a' && d <= 'z') d -= 32;
+            if (c != d) return 0;
+        }
+        return want->wname[len] == 0;
+    }
+    return want->by_id && want->id == noi;
+}
+/* Level-tracked walk: level 0 = type dir (match wants[0]), level 1 = name dir
+ * (match wants[1]), level 2 = lang dir (take FIRST leaf). Passing `want`
+ * through levels was the original bug — the name selector must survive until
+ * the name level, not be dropped to NULL one level early. */
+static const uint8_t* mw_res_walk_lvl(const uint8_t* dir, const MwResName* wants, int level) {
+    uint16_t nn, ne;
+    memcpy(&nn, dir + 12, 2);
+    memcpy(&ne, dir + 14, 2);
+    const uint8_t* e = dir + 16;
+    for (uint16_t i = 0; i < (uint16_t)(nn + ne); i++) {
+        uint32_t noi, off;
+        memcpy(&noi, e + i * 8, 4);
+        memcpy(&off, e + i * 8 + 4, 4);
+        if (level <= 1) {
+            MwResName w = wants[level];
+            if (!mw_res_name_eq(dir, noi, &w)) continue;
+        }
+        if (off & 0x80000000u)
+            return mw_res_walk_lvl(dir + (off & 0x7FFFFFFFu), wants, level + 1);
+        /* leaf: DATA_DIRECTORY { DataRVA, Size, CodePage, Reserved } */
+        uint32_t drva;
+        memcpy(&drva, dir + off, 4);
+        return g_image_base + drva;
+    }
+    return NULL;
+}
+static void* mw_res_dialog_template(const void* lpName) {
+    uint8_t* img = g_image_base;
+    uint32_t pe = *(uint32_t*)(img + 0x3C);
+    uint8_t* opt = img + pe + 24;
+    uint32_t res_rva;
+    memcpy(&res_rva, opt + 112 + 2 * 8, 4); /* data dir index 2 = .rsrc */
+    if (!res_rva) return NULL;
+    MwResName want;
+    if ((uintptr_t)lpName >> 16) { want.by_id = 0; want.id = 0; want.wname = (const wchar_t*)lpName; }
+    else                         { want.by_id = 1; want.id = (uint32_t)(uintptr_t)lpName; want.wname = 0; }
+    MwResName wants[3] = {
+        { 1, 5, 0 },  /* level 0: RT_DIALOG type */
+        want,         /* level 1: dialog name/id */
+        { 1, 0, 0 },  /* level 2: first language (unused — first leaf wins) */
+    };
+    return mw_res_walk_lvl(img + res_rva, wants, 0);
+}
+/* DialogBoxParamW: lpName is MAKEINTRESOURCEW(id) (high word 0) or a UTF-16
+ * resource name pointer. Resolve the RT_DIALOG template from the guest PE. */
+__attribute__((ms_abi)) long long mw_DialogBoxParamW(void* hinst, const void* lpName, void* parent, void* proc, long long init) {
+    (void)hinst; (void)parent;
+    const uint8_t* tmpl = mw_res_dialog_template(lpName);
+    if (!tmpl) {
+        MW_TRACE("DialogBoxParamW: RT_DIALOG resource not found -> -1");
+        mw_SetLastError(1814); /* ERROR_RESOURCE_NAME_NOT_FOUND */
+        return -1;
+    }
+    MW_TRACE("DialogBoxParamW(resolved tmpl @%p)", tmpl);
+    return mw_dlg_modal_run(tmpl, proc, init);
+}
+/* CreateDialogParamW: modeless variant — same template resolution, WM_INIT-
+ * DIALOG delivered, the handle is returned immediately (no modal loop; the
+ * event pump drives it like the main window). rammap64 calls this. */
+__attribute__((ms_abi)) void* mw_CreateDialogParamW(void* hinst, const void* lpName, void* parent, void* proc, long long init) {
+    (void)hinst; (void)parent;
+    const uint8_t* tmpl = mw_res_dialog_template(lpName);
+    if (!tmpl) {
+        MW_TRACE("CreateDialogParamW: RT_DIALOG resource not found -> NULL");
+        mw_SetLastError(1814);
+        return NULL;
+    }
+    MW_DLGPROC p = (MW_DLGPROC)proc;
+    void* h = (void*)(uintptr_t)0xC2000001ULL;
+    MW_TRACE("CreateDialogParamW(tmpl=%p proc=%p) -> %p", tmpl, proc, h);
+    if (p) p(h, 0x0110u /*WM_INITDIALOG*/, 0, init);
+    return h;
+}
+__attribute__((ms_abi)) void* mw_CreateDialogIndirectParamW(void* hinst, const void* tmpl, void* parent, void* proc, long long init) {
+    (void)hinst; (void)parent;
+    MW_DLGPROC p = (MW_DLGPROC)proc;
+    void* h = (void*)(uintptr_t)0xC2000001ULL;
+    MW_TRACE("CreateDialogIndirectParamW(tmpl=%p proc=%p) -> %p", tmpl, proc, h);
+    if (p) p(h, 0x0110u /*WM_INITDIALOG*/, 0, init);
+    return h;
+}
+
+/* ---- dialog control layer: real handles, side-effect-honest UI ----
+ * GetDlgItem mints a stable control handle (0xC3000000+id, id recoverable via
+ * GetDlgCtrlID semantics); SetWindowTextW and SendMessageW deliver to no real
+ * UI and return success/0 per Win32 contract. IsDlgButtonChecked reports
+ * BST_CHECKED only under MW_EULA_ACCEPT=1 (documented EULA automation). */
+__attribute__((ms_abi)) void* mw_GetDlgItem(void* hwnd, int id) {
+    (void)hwnd;
+    return (void*)(uintptr_t)(0xC3000000ULL + (uint32_t)id);
+}
+__attribute__((ms_abi)) int mw_SetWindowTextW(void* hwnd, const wchar_t* text) {
+    (void)hwnd;
+    /* Do NOT dereference the guest text pointer here — trace must survive
+     * callers that pass non-string cookies (RIP=0/crash class in libc). */
+    MW_TRACE("SetWindowTextW(hwnd=%p, text=%p)", hwnd, text);
+    return 1;
+}
+__attribute__((ms_abi)) int mw_SetWindowTextA(void* hwnd, const char* text) {
+    (void)hwnd;
+    MW_TRACE("SetWindowTextA(hwnd=%p, text=%p)", hwnd, text);
+    return 1;
+}
+__attribute__((ms_abi)) long long mw_SendMessageW(void* hwnd, uint32_t msg, uintptr_t wp, long long lp) {
+    (void)hwnd;
+    MW_TRACE("SendMessageW(hwnd=%p, msg=0x%x, wp=0x%llx)", hwnd, msg, (unsigned long long)wp);
+    return 0; /* DefWindowProc default */
+}
+__attribute__((ms_abi)) int mw_IsDlgButtonChecked(void* hwnd, int id) {
+    (void)hwnd;
+    const char* e = getenv("MW_EULA_ACCEPT");
+    return (e && e[0] == '1') ? 1 /* BST_CHECKED */ : 0;
+}
+__attribute__((ms_abi)) int mw_CheckDlgButton(void* hwnd, int id, uint32_t state) {
+    (void)hwnd; (void)id; (void)state;
+    return 1;
+}
+__attribute__((ms_abi)) long long mw_SendDlgItemMessageW(void* hwnd, int id, uint32_t msg, uintptr_t wp, long long lp) {
+    (void)hwnd; (void)id; (void)msg; (void)wp; (void)lp;
+    return 0;
+}
+
+/* ---- SWEEP-008: Sysinternals/GUI init layer (procexp64 frontier) ----
+ * GetSystemMetrics: honest per-index values for a 1920x1080 single monitor;
+ * ImageList_*: synthetic handle objects (no raster backing yet — draws are
+ * no-ops that keep control flow alive); version trio: honest "no version
+ * resource" (size 0); SetDefaultDllDirectories accepted. */
+__attribute__((ms_abi)) int mw_GetSystemMetrics(int idx) {
+    switch (idx) {
+    case 0:  return 1920;  /* SM_CXSCREEN */
+    case 1:  return 1080;  /* SM_CYSCREEN */
+    case 2:  return 17;    /* SM_CXVSCROLL */
+    case 3:  return 17;    /* SM_CYHSCROLL */
+    case 4:  return 23;    /* SM_CYCAPTION */
+    case 5: case 6: return 1;   /* SM_CX/CYBORDER */
+    case 7: case 8: return 4;   /* SM_CX/CYDLGFRAME */
+    case 9: case 10: return 17; /* SM_CYVTHUMB / SM_CXHTHUMB */
+    case 11: case 12: return 32; /* SM_CX/CYICON */
+    case 13: case 14: return 32; /* SM_CX/CYCURSOR */
+    case 15: return 20;    /* SM_CYMENU */
+    case 16: return 1920;  /* SM_CXFULLSCREEN */
+    case 17: return 1057;  /* SM_CYFULLSCREEN */
+    case 19: return 1;     /* SM_MOUSEPRESENT */
+    case 20: return 17;    /* SM_CYVSCROLL */
+    case 21: return 17;    /* SM_CXHSCROLL */
+    case 23: return 0;     /* SM_SWAPBUTTON */
+    case 28: return 140;   /* SM_CXMIN */
+    case 29: return 41;    /* SM_CYMIN */
+    case 30: case 31: return 18; /* SM_CX/CYSIZE */
+    case 32: case 33: return 8;  /* SM_CX/CYFRAME (Win10) */
+    case 34: return 140;   /* SM_CXMINTRACK */
+    case 35: return 41;    /* SM_CYMINTRACK */
+    case 38: return 75;    /* SM_CXICONSPACING */
+    case 39: return 75;    /* SM_CYICONSPACING */
+    case 40: return 0;     /* SM_MENUDROPALIGNMENT */
+    case 43: return 3;     /* SM_CMOUSEBUTTONS */
+    case 45: case 46: return 2;  /* SM_CX/CYEDGE */
+    case 49: case 50: return 16; /* SM_CX/CYSMICON */
+    case 51: return 17;    /* SM_CYSMCAPTION */
+    case 52: case 53: return 16; /* SM_CX/CYSMSIZE */
+    case 54: case 55: return 18; /* SM_CX/CYMENUSIZE */
+    case 57: return 160;   /* SM_CXMINIMIZED */
+    case 58: return 24;    /* SM_CYMINIMIZED */
+    case 59: return 1936;  /* SM_CXMAXTRACK */
+    case 60: return 1096;  /* SM_CYMAXTRACK */
+    case 61: return 1936;  /* SM_CXMAXIMIZED */
+    case 62: return 1077;  /* SM_CYMAXIMIZED */
+    case 63: return 3;     /* SM_NETWORK present */
+    case 68: case 69: return 4;  /* SM_CX/CYDRAG */
+    case 71: case 72: return 13; /* SM_CX/CYMENUCHECK */
+    case 75: return 1;     /* SM_MOUSEWHEELPRESENT */
+    case 76: case 77: return 0;  /* SM_X/YVIRTUALSCREEN */
+    case 78: return 1920;  /* SM_CXVIRTUALSCREEN */
+    case 79: return 1080;  /* SM_CYVIRTUALSCREEN */
+    case 80: return 1;     /* SM_CMONITORS */
+    case 81: return 1;     /* SM_SAMEDISPLAYFORMAT */
+    case 82: return 1;     /* SM_IMMENABLED */
+    case 83: case 84: return 1;  /* SM_CX/CYFOCUSBORDER */
+    default: return 0;     /* unknown index -> honest 0 */
+    }
+}
+static uint64_t g_imglist_seq = 0;
+static int mw_imglist_valid(void* h) {
+    uint64_t v = (uint64_t)(uintptr_t)h;
+    return v >= 0xC4000000ULL && v < 0xC4000000ULL + 4096;
+}
+__attribute__((ms_abi)) void* mw_ImageList_Create(int cx, int cy, uint32_t flags, int initial, int grow) {
+    (void)cx; (void)cy; (void)flags; (void)initial; (void)grow;
+    if (++g_imglist_seq > 4095) return NULL;
+    void* h = (void*)(uintptr_t)(0xC4000000ULL + g_imglist_seq);
+    MW_TRACE("ImageList_Create -> %p", h);
+    return h;
+}
+__attribute__((ms_abi)) int mw_ImageList_Destroy(void* h) { return mw_imglist_valid(h) ? 1 : 0; }
+__attribute__((ms_abi)) int mw_ImageList_Add(void* h, void* bmp, void* mask) {
+    (void)h; (void)bmp; (void)mask;
+    return 0; /* index 0 */
+}
+__attribute__((ms_abi)) int mw_ImageList_AddMasked(void* h, void* bmp, uint32_t mask) {
+    (void)h; (void)bmp; (void)mask;
+    return 0;
+}
+__attribute__((ms_abi)) int mw_ImageList_ReplaceIcon(void* h, int idx, void* icon) {
+    (void)h; (void)icon;
+    return idx; /* index of replaced icon */
+}
+__attribute__((ms_abi)) uint32_t mw_ImageList_SetBkColor(void* h, uint32_t color) {
+    (void)h; (void)color;
+    return 0xFFFFFFFFu; /* CLR_NONE as previous value */
+}
+__attribute__((ms_abi)) int mw_ImageList_SetImageCount(void* h, int count) {
+    (void)h; (void)count;
+    return 1;
+}
+__attribute__((ms_abi)) int mw_ImageList_DrawEx(void* h, int i, void* hdc, int x, int y, int dx, int dy, uint32_t bk, uint32_t fg, uint32_t style) {
+    (void)h; (void)i; (void)hdc; (void)x; (void)y; (void)dx; (void)dy; (void)bk; (void)fg; (void)style;
+    return 1; /* draw is a no-op on the surface */
+}
+__attribute__((ms_abi)) int mw_ImageList_Draw(void* h, int i, void* hdc, int x, int y, uint32_t style) {
+    return mw_ImageList_DrawEx(h, i, hdc, x, y, 0, 0, 0xFFFFFFFFu, 0xFFFFFFFFu, style);
+}
+__attribute__((ms_abi)) uint32_t mw_GetFileVersionInfoSizeW(const wchar_t* path, uint32_t* handle) {
+    (void)path;
+    if (handle) *handle = 0;
+    return 0; /* no version resource exposed yet */
+}
+__attribute__((ms_abi)) int mw_GetFileVersionInfoW(const wchar_t* path, uint32_t handle, uint32_t len, void* data) {
+    (void)path; (void)handle; (void)len; (void)data;
+    mw_SetLastError(1813); /* ERROR_RESOURCE_TYPE_NOT_FOUND */
+    return 0;
+}
+__attribute__((ms_abi)) int mw_VerQueryValueW(const void* block, const wchar_t* sub, void** buf, uint32_t* len) {
+    (void)block; (void)sub; (void)buf; (void)len;
+    return 0;
+}
+__attribute__((ms_abi)) uint32_t mw_SetDefaultDllDirectories(uint32_t flags) {
+    MW_TRACE("SetDefaultDllDirectories(0x%x) -> accepted", flags);
+    return 1;
+}
+__attribute__((ms_abi)) uint32_t mw_QueryDosDeviceW(const wchar_t* dev, wchar_t* target, uint32_t max) {
+    (void)dev; (void)target; (void)max;
+    mw_SetLastError(2);
+    return 0;
+}
+
+/* ---- SWEEP-008: cheap honest UI/graphics primitives (autoruns/procexp frontier) ----
+ * SetRectEmpty: real write; IsWindow: TRUE for loader-minted synthetic window
+ * handles; CreateFontIndirect*: real GDI-object handle (guests store and use
+ * it — stub-0 caused the procexp NULL-deref); RegisterWindowMessage*: real
+ * unique message id >= 0xC000; SHGetFolderPathW: honest E_FAIL (no shell
+ * folders materialized). */
+__attribute__((ms_abi)) int mw_SetRectEmpty(void* rect) {
+    if (!rect) return 0;
+    ((int32_t*)rect)[0] = 0; ((int32_t*)rect)[1] = 0;
+    ((int32_t*)rect)[2] = 0; ((int32_t*)rect)[3] = 0;
+    return 1;
+}
+static void* g_main_hwnd; /* tentative def — completed at the GUI section */
+
+static int mw_is_synthetic_window(void* h) {
+    uint64_t v = (uint64_t)(uintptr_t)h;
+    if (v == (uint64_t)(uintptr_t)g_main_hwnd && g_main_hwnd) return 1;
+    if (v >= 0xC2000000ULL && v <= 0xC3FFFFFFULL) return 1; /* dialog/control handles */
+    return 0;
+}
+__attribute__((ms_abi)) int mw_IsWindow(void* h) { return mw_is_synthetic_window(h); }
+__attribute__((ms_abi)) int mw_IsWindowVisible(void* h) { return mw_is_synthetic_window(h); }
+static uint64_t g_gdiobj_seq = 0;
+__attribute__((ms_abi)) void* mw_CreateFontIndirectW(const void* lf) {
+    (void)lf;
+    if (++g_gdiobj_seq > 4095) return NULL;
+    void* h = (void*)(uintptr_t)(0xC5000000ULL + g_gdiobj_seq);
+    MW_TRACE("CreateFontIndirectW -> %p", h);
+    return h;
+}
+__attribute__((ms_abi)) void* mw_CreateFontIndirectA(const void* lf) { return mw_CreateFontIndirectW(lf); }
+static uint32_t g_regmsg_seq = 0;
+__attribute__((ms_abi)) uint32_t mw_RegisterWindowMessageW(const wchar_t* s) {
+    (void)s;
+    if (g_regmsg_seq >= 0x3FFFu) return 0;
+    uint32_t m = 0xC000u + ++g_regmsg_seq;
+    MW_TRACE("RegisterWindowMessageW -> 0x%x", m);
+    return m;
+}
+__attribute__((ms_abi)) uint32_t mw_RegisterWindowMessageA(const char* s) { return mw_RegisterWindowMessageW(0); }
+__attribute__((ms_abi)) long long mw_SHGetFolderPathW(void* hwnd, int csidl, void* token, uint32_t flags, wchar_t* path) {
+    (void)hwnd; (void)csidl; (void)token; (void)flags; (void)path;
+    return (long long)0x80004005LL; /* E_FAIL — no shell folders materialized */
+}
+
+/* ---- SWEEP-008: service control manager (honest empty hive) ----
+ * OpenSCManagerW succeeds with a synthetic SCM handle (Windows always
+ * succeeds); OpenServiceW: ERROR_SERVICE_DOES_NOT_EXIST (no services in
+ * this hive); EnumServicesStatusExW: success with zero services. This
+ * removes the NULL-SCM-handle deref class at the procexp64 frontier. */
+__attribute__((ms_abi)) void* mw_OpenSCManagerW(const wchar_t* machine, const wchar_t* db, uint32_t access) {
+    (void)machine; (void)db; (void)access;
+    MW_TRACE("OpenSCManagerW -> SCM handle (empty hive)");
+    return (void*)(uintptr_t)0xC6000001ULL;
+}
+__attribute__((ms_abi)) void* mw_OpenServiceW(void* scm, const wchar_t* name, uint32_t access) {
+    (void)scm; (void)name; (void)access;
+    mw_SetLastError(1060); /* ERROR_SERVICE_DOES_NOT_EXIST */
+    return NULL;
+}
+__attribute__((ms_abi)) int mw_CloseServiceHandle(void* h) { (void)h; return 1; }
+__attribute__((ms_abi)) int mw_EnumServicesStatusExW(void* scm, int info, uint32_t type, uint32_t state, void* buf, uint32_t bufsize, uint32_t* need, uint32_t* ret, uint32_t* resume, const wchar_t* order) {
+    (void)scm; (void)info; (void)type; (void)state; (void)buf; (void)bufsize; (void)order;
+    if (need) *need = 0;
+    if (ret) *ret = 0;
+    if (resume) *resume = 0;
+    return 1; /* zero services enumerated */
+}
+
+/* ---- SWEEP-008: NT DOS-device symbolic links (procexp drive-letter probe) ----
+ * NtOpenSymbolicLinkObject/NtQuerySymbolicLinkObject: honest per-drive
+ * device names so guests resolve "C:" style paths without dereferencing
+ * stub-NULL buffers (RVA 0x9be71 crash class). */
+static uint64_t g_symlink_seq = 0;
+__attribute__((ms_abi)) long long mw_NtOpenSymbolicLinkObject(void* handle, uint32_t access, void* objattr) {
+    (void)access; (void)objattr;
+    if (!handle) return 0xC000000DLL; /* STATUS_INVALID_PARAMETER */
+    if (++g_symlink_seq > 0xFFFF) return 0xC000009ALL; /* STATUS_INSUFFICIENT_RESOURCES */
+    *(uint64_t*)handle = 0xC7000000ULL + g_symlink_seq;
+    return 0; /* STATUS_SUCCESS */
+}
+__attribute__((ms_abi)) long long mw_NtQuerySymbolicLinkObject(void* handle, void* us, uint32_t* retlen) {
+    (void)handle;
+    if (!us) return 0xC000000DLL;
+    /* UNICODE_STRING { USHORT Length; USHORT MaximumLength; wchar_t* Buffer; } */
+    uint16_t maxlen;
+    memcpy(&maxlen, (uint8_t*)us + 2, 2);
+    wchar_t* buf = *(wchar_t**)((uint8_t*)us + 8);
+    static const wchar_t* devs[] = {
+        L"\\Device\\HarddiskVolume1", L"\\Device\\HarddiskVolume2",
+        L"\\Device\\HarddiskVolume3", L"\\Device\\HarddiskVolume4",
+    };
+    const wchar_t* d = devs[g_symlink_seq & 3];
+    uint16_t need = 0;
+    while (d[need]) need++;
+    need = (uint16_t)(need * 2 + 2); /* bytes incl. NUL */
+    if (!buf || maxlen < need) {
+        if (retlen) *retlen = need;
+        return 0xC0000023LL; /* STATUS_BUFFER_TOO_SMALL */
+    }
+    uint16_t k = 0;
+    for (; d[k]; k++) buf[k] = d[k];
+    buf[k] = 0;
+    *(uint16_t*)((uint8_t*)us + 0) = (uint16_t)(need - 2); /* Length */
+    if (retlen) *retlen = need;
+    return 0; /* STATUS_SUCCESS */
 }
 
 /* ---- BCrypt: real entropy for GenRandom, honest failure elsewhere ---- */
@@ -10621,6 +11519,32 @@ static int mw_safe_strlen_a(const char* s) {
 __attribute__((ms_abi)) int mw_lstrlenA(const char* s) {
     return s ? mw_safe_strlen_a(s) : 0;
 }
+/* SWEEP-008: lstrcpy/lstrcat family — safe-copy semantics with the same
+ * guest-pointer probe the other lstring members use. */
+static int mw_safe_strcpy_a(char* dst, const char* src) {
+    if (!dst) return 0;
+    if (!src) { dst[0] = 0; return 0; }
+    int n = 0;
+    while (n < 32767) {
+        char c = src[n];
+        dst[n] = c;
+        if (!c) return n + 1;
+        n++;
+    }
+    dst[n] = 0;
+    return n + 1;
+}
+__attribute__((ms_abi)) char* mw_lstrcpyA(char* dst, const char* src) {
+    mw_safe_strcpy_a(dst, src);
+    return dst;
+}
+__attribute__((ms_abi)) char* mw_lstrcatA(char* dst, const char* src) {
+    if (dst) {
+        int n = mw_safe_strlen_a(dst);
+        mw_safe_strcpy_a(dst + n, src);
+    }
+    return dst;
+}
 __attribute__((ms_abi)) int mw_lstrlenW(const uint16_t* s) {
     if (!s) return 0;
     int n = 0;
@@ -11326,6 +12250,12 @@ static ImportEntry g_import_table[] = {
     ENTRY("KERNEL32.DLL", "SystemTimeToFileTime", mw_SystemTimeToFileTime),
     ENTRY("KERNEL32.DLL", "GetVersion", mw_GetVersion),
     ENTRY("KERNEL32.DLL", "GetVersionExA", mw_GetVersionExA),
+    ENTRY("NTDLL.DLL", "RtlGetVersion", mw_RtlGetVersion),
+    ENTRY("KERNEL32.DLL", "GetVersionExW", mw_GetVersionExW),
+    ENTRY("KERNEL32.DLL", "GlobalAddAtomW", mw_GlobalAddAtomW),
+    ENTRY("KERNEL32.DLL", "GlobalAddAtomA", mw_GlobalAddAtomA),
+    ENTRY("KERNEL32.DLL", "GlobalFindAtomW", mw_GlobalFindAtomW),
+    ENTRY("KERNEL32.DLL", "GlobalGetAtomNameW", mw_GlobalGetAtomNameW),
     ENTRY("KERNEL32.DLL", "GetACP", mw_GetACP),
     ENTRY("KERNEL32.DLL", "GetOEMCP", mw_GetOEMCP),
     ENTRY("KERNEL32.DLL", "IsValidCodePage", mw_IsValidCodePage),
@@ -11413,6 +12343,51 @@ static ImportEntry g_import_table[] = {
     ENTRY("KERNEL32.DLL", "ReadConsoleInputW", mw_ReadConsoleInputW),
     ENTRY("KERNEL32.DLL", "ReadConsoleInputA", mw_ReadConsoleInputA),
     ENTRY("KERNEL32.DLL", "RegOpenKeyExW", mw_RegOpenKeyExW),
+    ENTRY("KERNEL32.DLL", "RegOpenKeyW", mw_RegOpenKeyW),
+    ENTRY("SHLWAPI.DLL", "ColorRGBToHLS", mw_ColorRGBToHLS),
+    ENTRY("SHLWAPI.DLL", "ColorHLSToRGB", mw_ColorHLSToRGB),
+    ENTRY("USER32.DLL", "DialogBoxIndirectParamW", mw_DialogBoxIndirectParamW),
+    ENTRY("USER32.DLL", "DialogBoxParamW", mw_DialogBoxParamW),
+    ENTRY("USER32.DLL", "EndDialog", mw_EndDialog),
+    ENTRY("USER32.DLL", "GetDlgItem", mw_GetDlgItem),
+    ENTRY("USER32.DLL", "SetWindowTextW", mw_SetWindowTextW),
+    ENTRY("USER32.DLL", "SetWindowTextA", mw_SetWindowTextA),
+    ENTRY("USER32.DLL", "SendMessageW", mw_SendMessageW),
+    ENTRY("USER32.DLL", "IsDlgButtonChecked", mw_IsDlgButtonChecked),
+    ENTRY("USER32.DLL", "CheckDlgButton", mw_CheckDlgButton),
+    ENTRY("USER32.DLL", "SendDlgItemMessageW", mw_SendDlgItemMessageW),
+    ENTRY("USER32.DLL", "GetSystemMetrics", mw_GetSystemMetrics),
+    ENTRY("USER32.DLL", "CreateDialogParamW", mw_CreateDialogParamW),
+    ENTRY("USER32.DLL", "CreateDialogIndirectParamW", mw_CreateDialogIndirectParamW),
+    ENTRY("ADVAPI32.DLL", "RegCreateKeyW", mw_RegCreateKeyW),
+    ENTRY("COMCTL32.DLL", "ImageList_Create", mw_ImageList_Create),
+    ENTRY("COMCTL32.DLL", "ImageList_Destroy", mw_ImageList_Destroy),
+    ENTRY("COMCTL32.DLL", "ImageList_Add", mw_ImageList_Add),
+    ENTRY("COMCTL32.DLL", "ImageList_AddMasked", mw_ImageList_AddMasked),
+    ENTRY("COMCTL32.DLL", "ImageList_ReplaceIcon", mw_ImageList_ReplaceIcon),
+    ENTRY("COMCTL32.DLL", "ImageList_SetBkColor", mw_ImageList_SetBkColor),
+    ENTRY("COMCTL32.DLL", "ImageList_SetImageCount", mw_ImageList_SetImageCount),
+    ENTRY("COMCTL32.DLL", "ImageList_DrawEx", mw_ImageList_DrawEx),
+    ENTRY("COMCTL32.DLL", "ImageList_Draw", mw_ImageList_Draw),
+    ENTRY("VERSION.DLL", "GetFileVersionInfoSizeW", mw_GetFileVersionInfoSizeW),
+    ENTRY("VERSION.DLL", "GetFileVersionInfoW", mw_GetFileVersionInfoW),
+    ENTRY("VERSION.DLL", "VerQueryValueW", mw_VerQueryValueW),
+    ENTRY("KERNEL32.DLL", "SetDefaultDllDirectories", mw_SetDefaultDllDirectories),
+    ENTRY("KERNEL32.DLL", "QueryDosDeviceW", mw_QueryDosDeviceW),
+    ENTRY("USER32.DLL", "SetRectEmpty", mw_SetRectEmpty),
+    ENTRY("USER32.DLL", "IsWindow", mw_IsWindow),
+    ENTRY("USER32.DLL", "IsWindowVisible", mw_IsWindowVisible),
+    ENTRY("USER32.DLL", "RegisterWindowMessageW", mw_RegisterWindowMessageW),
+    ENTRY("USER32.DLL", "RegisterWindowMessageA", mw_RegisterWindowMessageA),
+    ENTRY("GDI32.DLL", "CreateFontIndirectW", mw_CreateFontIndirectW),
+    ENTRY("GDI32.DLL", "CreateFontIndirectA", mw_CreateFontIndirectA),
+    ENTRY("SHELL32.DLL", "SHGetFolderPathW", mw_SHGetFolderPathW),
+    ENTRY("ADVAPI32.DLL", "OpenSCManagerW", mw_OpenSCManagerW),
+    ENTRY("ADVAPI32.DLL", "OpenServiceW", mw_OpenServiceW),
+    ENTRY("ADVAPI32.DLL", "CloseServiceHandle", mw_CloseServiceHandle),
+    ENTRY("ADVAPI32.DLL", "EnumServicesStatusExW", mw_EnumServicesStatusExW),
+    ENTRY("NTDLL.DLL", "NtOpenSymbolicLinkObject", mw_NtOpenSymbolicLinkObject),
+    ENTRY("NTDLL.DLL", "NtQuerySymbolicLinkObject", mw_NtQuerySymbolicLinkObject),
     ENTRY("KERNEL32.DLL", "RegOpenKeyExA", mw_RegOpenKeyExA),
     ENTRY("KERNEL32.DLL", "RegQueryValueExW", mw_RegQueryValueExW),
     ENTRY("KERNEL32.DLL", "RegQueryValueExA", mw_RegQueryValueExA),
@@ -11914,6 +12889,8 @@ ENTRY("msvcrt.dll", "wctype", mw_wctype),
     ENTRY("USER32.DLL", "wsprintfA",                            mw_wsprintfA),
     ENTRY("USER32.DLL", "wsprintfW",                            mw_wsprintfW),
     ENTRY("USER32.DLL", "lstrlenA",                             mw_lstrlenA),
+    ENTRY("USER32.DLL", "lstrcpyA",                             mw_lstrcpyA),
+    ENTRY("USER32.DLL", "lstrcatA",                             mw_lstrcatA),
     ENTRY("USER32.DLL", "lstrlenW",                             mw_lstrlenW),
     ENTRY("USER32.DLL", "SetTimer",                             mw_SetTimer),
     ENTRY("USER32.DLL", "KillTimer",                            mw_KillTimer),
@@ -12021,7 +12998,12 @@ static void* resolve_proc_from_table(void* module, const char* name) {
      * image base resolves by NAME — the table is module-agnostic. */
     /* SWEEP-002 fix: same stale-range bug as mw_GetProcAddress — the
      * pseudo-handle space grew with known[] (57 DLLs). Bound: +0xff. */
-    if ((uintptr_t)module >= 0xdead0001 && (uintptr_t)module <= 0xdead00ff) {
+    /* SWEEP-008: module==NULL also resolves by name — guests that got a
+     * NULL module handle (now fixed at the source) or deliberately pass
+     * NULL must not turn a resolvable name into a NULL fn pointer (the
+     * RIP=0 crash class). */
+    if (module == NULL ||
+        ((uintptr_t)module >= 0xdead0001 && (uintptr_t)module <= 0xdead00ff)) {
         for (size_t i = 0; i < NUM_IMPORTS; i++) {
             if (strcmp(g_import_table[i].name, name) == 0) {
                 MW_TRACE("  -> %p", g_import_table[i].func);
@@ -12097,12 +13079,35 @@ static void iat_pages_restore(void) {
  * ============================================================ */
 static uint64_t g_stub_calls = 0; /* rate-limiter only; racy count is fine */
 __attribute__((ms_abi)) uint64_t mw_unresolved_import_stub(void);
+/* SW-555: name the called stub via guest_rip decode — the caller executes
+ * `call qword [rip+disp32]`, so the return address is instruction_end and the
+ * IAT slot is return_address + disp32 (FF 15 disp32 = 6 bytes). Slot->name
+ * pairs are recorded at load time in static storage (filedata is freed). */
+static struct { void* slot; char name[56]; } g_unres_names[1024];
+static int g_unres_names_n = 0;
+static void mw_note_unresolved_slot(void* slot, const char* name) {
+    if (g_unres_names_n >= 1024) return;
+    g_unres_names[g_unres_names_n].slot = slot;
+    snprintf(g_unres_names[g_unres_names_n].name, 56, "%s", name ? name : "<ordinal>");
+    g_unres_names_n++;
+}
 __attribute__((ms_abi)) uint64_t mw_unresolved_import_stub(void) {
     uint64_t n = ++g_stub_calls;
-    if (n <= 20) {
-        fprintf(stderr, "[STUB] unresolved import called -> returning 0 (call #%llu)\n",
-                (unsigned long long)n);
-    } else if (n == 21) {
+    const char* nm = "<unknown>";
+    void* ret = __builtin_return_address(0);
+    uint8_t* insn = (uint8_t*)ret - 6;
+    if (insn[0] == 0xFF && insn[1] == 0x15) {
+        int32_t disp;
+        memcpy(&disp, insn + 2, 4);
+        void* slot = (uint8_t*)ret + disp;
+        for (int i = 0; i < g_unres_names_n; i++) {
+            if (g_unres_names[i].slot == slot) { nm = g_unres_names[i].name; break; }
+        }
+    }
+    if (n <= 40) {
+        fprintf(stderr, "[STUB] unresolved import called -> returning 0 (call #%llu) %s guest_rip=%p\n",
+                (unsigned long long)n, nm, ret);
+    } else if (n == 41) {
         fprintf(stderr, "[STUB] further unresolved-import calls silenced\n");
     }
     return 0;
@@ -12315,6 +13320,11 @@ static int load_pe(const char* filepath) {
                     MW_TRACE("  [%d] Ordinal %u (not supported)", slot, ordinal);
                     /* SWEEP-001: stub the slot too — same crash class as
                      * name-unresolved if guest ever calls it. */
+                    {
+                        char ob[64];
+                        snprintf(ob, sizeof(ob), "%s!#%u", dll_name ? dll_name : "?", ordinal);
+                        mw_note_unresolved_slot((void*)(g_image_base + iat_off + slot * 8), ob);
+                    }
                     iat_patch_slot(iat_off, slot, (void*)mw_unresolved_import_stub);
                     total_unresolved++;
                     slot++;
@@ -12367,6 +13377,7 @@ static int load_pe(const char* filepath) {
                 /* SWEEP-001: a NULL IAT slot is a delayed SIGSEGV — every
                  * sweep program that called one died with the loader. Wine
                  * never leaves a slot NULL; install the returning-0 stub. */
+                mw_note_unresolved_slot((void*)(g_image_base + iat_off + slot * 8), func_name);
                 iat_patch_slot(iat_off, slot, (void*)mw_unresolved_import_stub);
                 total_unresolved++;
             } else {

@@ -1,0 +1,4 @@
+[TRACE] Command line: artifacts/sweep008/calc.exe
+[WARN]   unresolved: lstrcatA
+[WARN]   unresolved: lstrcpyA
+[WARN] 2 imports unresolved

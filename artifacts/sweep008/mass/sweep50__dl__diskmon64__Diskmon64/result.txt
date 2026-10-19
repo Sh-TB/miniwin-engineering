@@ -1,0 +1,1 @@
+sweep50__dl__diskmon64__Diskmon64|0|3|RegOpenKeyA|CreateToolbarEx

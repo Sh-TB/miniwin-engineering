@@ -1,0 +1,28 @@
+[TRACE] Command line: artifacts/sweep50/dl/coreinfoex64/Coreinfo64.exe
+[WARN]   unresolved: SetThreadGroupAffinity
+[WARN]   unresolved: GetProcessWorkingSetSize
+[WARN]   unresolved: GetNumaNodeProcessorMask
+[WARN]   unresolved: VirtualLock
+[WARN]   unresolved: SetProcessWorkingSetSize
+[WARN]   unresolved: GetNumaHighestNodeNumber
+[WARN]   unresolved: InflateRect
+[WARN]   unresolved: SetCursor
+[WARN]   unresolved: GetSysColorBrush
+[WARN]   unresolved: EndDoc
+[WARN]   unresolved: StartDocW
+[WARN]   unresolved: EndPage
+[WARN]   unresolved: StartPage
+[WARN]   unresolved: PrintDlgW
+[WARN]   unresolved: RegDeleteKeyW
+[WARN]   unresolved: CoSetProxyBlanket
+[WARN]   unresolved: CoInitializeSecurity
+[WARN]   unresolved: CoCreateInstance
+[WARN]   unresolved: CoUninitialize
+[WARN] 19 imports unresolved
+
+(null) v(null) - (null)
+(null)
+(null)
+
+Eula declined.
+

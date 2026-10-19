@@ -1,0 +1,61 @@
+[TRACE] Command line: artifacts/sweep50/dl/puttygen/puttygen.exe
+[WARN]   unresolved: GetCurrentObject
+[WARN]   unresolved: GetDIBits
+[WARN]   unresolved: GetObjectA
+[WARN]   unresolved: ShellExecuteA
+[WARN]   unresolved: AppendMenuA
+[WARN]   unresolved: CheckMenuItem
+[WARN]   unresolved: CheckMenuRadioItem
+[WARN]   unresolved: CheckRadioButton
+[WARN]   unresolved: CreateDialogParamA
+[WARN]   unresolved: CreateMenu
+[WARN]   unresolved: DefDlgProcA
+[WARN]   unresolved: DialogBoxParamA
+[WARN]   unresolved: EnableMenuItem
+[WARN]   unresolved: EnableWindow
+[WARN]   unresolved: GetCapture
+[WARN]   unresolved: GetClipboardOwner
+[WARN]   unresolved: GetCursorPos
+[WARN]   unresolved: GetDesktopWindow
+[WARN]   unresolved: GetDlgItemInt
+[WARN]   unresolved: GetDlgItemTextA
+[WARN]   unresolved: GetForegroundWindow
+[WARN]   unresolved: GetMessageTime
+[WARN]   unresolved: GetQueueStatus
+[WARN]   unresolved: GetWindowLongPtrA
+[WARN]   unresolved: GetWindowRect
+[WARN]   unresolved: GetWindowTextA
+[WARN]   unresolved: GetWindowTextLengthA
+[WARN]   unresolved: IsDialogMessageA
+[WARN]   unresolved: MapDialogRect
+[WARN]   unresolved: MessageBeep
+[WARN]   unresolved: MessageBoxIndirectW
+[WARN]   unresolved: MoveWindow
+[WARN]   unresolved: PostMessageA
+[WARN]   unresolved: SendDlgItemMessageA
+[WARN]   unresolved: SetActiveWindow
+[WARN]   unresolved: SetDlgItemInt
+[WARN]   unresolved: SetDlgItemTextA
+[WARN]   unresolved: SetForegroundWindow
+[WARN]   unresolved: SetMenu
+[WARN]   unresolved: SetWindowLongPtrA
+[WARN]   unresolved: SetWindowPos
+[WARN]   unresolved: GetCurrentDirectoryA
+[WARN]   unresolved: GetLocalTime
+[WARN]   unresolved: GetThreadTimes
+[WARN]   unresolved: GetWindowsDirectoryA
+[WARN]   unresolved: GlobalMemoryStatus
+[WARN]   unresolved: SetCurrentDirectoryA
+[WARN]   unresolved: AllocateAndInitializeSid
+[WARN]   unresolved: CopySid
+[WARN]   unresolved: GetLengthSid
+[WARN]   unresolved: RegCreateKeyExA
+[WARN]   unresolved: GetOpenFileNameA
+[WARN]   unresolved: GetOpenFileNameW
+[WARN]   unresolved: GetSaveFileNameA
+[WARN]   unresolved: GetSaveFileNameW
+[WARN] 55 imports unresolved
+[STUB] unresolved import called -> returning 0 (call #1) GetWindowsDirectoryA guest_rip=0x140006944
+[STUB] unresolved import called -> returning 0 (call #2) GetWindowsDirectoryA guest_rip=0x140006f1b
+[STUB] unresolved import called -> returning 0 (call #3) GetWindowsDirectoryA guest_rip=0x140006f1b
+[STUB] unresolved import called -> returning 0 (call #4) DialogBoxParamA guest_rip=0x1400031e1

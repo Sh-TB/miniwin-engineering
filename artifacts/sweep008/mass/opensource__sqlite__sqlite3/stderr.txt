@@ -1,0 +1,1 @@
+[TRACE] Command line: artifacts/opensource/sqlite/sqlite3.exe

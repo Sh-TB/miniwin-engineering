@@ -1,0 +1,14 @@
+{
+ "autoruns64": {
+  "total": 388,
+  "stub_candidates": []
+ },
+ "rammap64": {
+  "total": 174,
+  "stub_candidates": []
+ },
+ "procexp64": {
+  "total": 1676,
+  "stub_candidates": []
+ }
+}

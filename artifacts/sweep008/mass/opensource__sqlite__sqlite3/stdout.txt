@@ -1,0 +1,6 @@
+[MiniWin] Loading artifacts/opensource/sqlite/sqlite3.exe...
+SQLite version 3.50.4 2025-07-30 19:33:53
+Enter ".help" for usage hints.
+Connected to a transient in-memory database.
+Use ".open FILENAME" to reopen on a persistent database.
+sqlite> 

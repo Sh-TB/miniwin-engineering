@@ -1,0 +1,32 @@
+[TRACE] Command line: artifacts/opensource/curl/curl.exe
+
+[CRASH] Signal 11 at RIP=0x10000002b
+  RAX=0x0 RCX=0x0 RDX=0xffffffffffffffff R8=0x0 R9=0x0
+  RSP=0x7fffb8606320 RBP=0x24e8930
+  g_image_base=0x140000000 g_image_size=0x3bf000
+  (NOT inside loaded PE)
+  [RIP-MAP] no mapping contains RIP
+  RSI=0x28 RDI=0x24e8950
+  R8=0x0  R9=0x0 R10=0x0 R11=0x202
+  R12=0x24e8930 R13=0x29 R14=0x24e8950 R15=0x2a
+  [SCAN rsp+1368] 0x14004a5aa <PE>
+  [SCAN rsp+1376] 0x1403aee20 <PE>
+  [SCAN rsp+1432] 0x140007577 <PE>
+  [SCAN rsp+1456] 0x1403aee20 <PE>
+  [SCAN rsp+1496] 0x140010c50 <PE>
+  [SCAN rsp+1544] 0x1403aee20 <PE>
+  [SCAN rsp+1552] 0x1403aee28 <PE>
+  [SCAN rsp+1576] 0x1400010c7 <PE>
+  [SCAN rsp+1736] 0x140001406 <PE>
+  [SCAN rsp+1784] 0x2007796 <LOADER>
+  [SCAN rsp+1816] 0x1403a9004 <PE>
+  [SCAN rsp+2024] 0x2000002 <LOADER>
+  [SCAN rsp+2152] 0x20026f6 <LOADER>
+  [SCAN rsp+2160] 0x20020d0 <LOADER>
+  [SCAN rsp+3608] 0x20064d0 <LOADER>
+  [SCAN rsp+3760] 0x20064d0 <LOADER>
+  [SCAN rsp+3800] 0x2007e50 <LOADER>
+  [SCAN rsp+3832] 0x2007e71 <LOADER>
+  Backtrace (via stack walking):
+    [0] RIP=0x10000002b (outside PE, possible shared lib)
+    [1] RIP=0x10000002b (outside PE, possible shared lib)

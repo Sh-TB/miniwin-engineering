@@ -1,0 +1,1 @@
+[TRACE] Command line: artifacts/sweep006/breakout.exe

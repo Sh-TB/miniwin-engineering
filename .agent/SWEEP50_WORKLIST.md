@@ -274,3 +274,217 @@ puttygen RIP=0x0).
       PNGs, battery_raw.tsv 105 rows); scripts/sweep007_redownload_gui.py +
       sweep562_battery.sh + sweep562_images.py; exe SHA manifest in
       artifacts/sweep50/sweep007_redownload_manifest.tsv.
+
+---
+
+# SWEEP-008 WORKLIST EXPANSION — x3 mandate («ادامه سه برابری», SWEEP-008 wave)
+
+**Source:** SWEEP-008 honest-stub batch + named-stub guest_rip decoding +
+in-memory registry + EULA-dialog automation + mass breadth sweep (23 programs,
+`artifacts/sweep008/mass/sweep008_mass.tsv`). Every item cites its blocker.
+Rules unchanged: 3x acceptance, irreversible labels, no fake success.
+
+## P0 — SWEEP-008 open frontiers (from the gates that moved)
+
+- [ ] **SW-600** COMCTL32 undocumented ordinal table: autoruns64 blocks on
+      COMCTL32!#344 stub-0, rammap64 on COMCTL32!#17 (both named by SWEEP-008
+      guest_rip decode; return 0 = init-fail -> graceful exit 1 after EULA).
+      Build an ordinal->name map (Wine spec + public ABI lists), implement the
+      Sysinternals-used subset, re-run both gates. Exit 1 -> non-1 = pass.
+- [ ] **SW-601** procexp64 RVA 0x9be71 guest NULL-deref after 37 named stub
+      calls (`mov ecx,[rdx]` RDX=0) — bisect the stored-NULL handle: candidates
+      LoadStringW/StrStrIW/remaining Nt* stubs. One BUG-*, re-run gate.
+- [ ] **SW-602** GetNumberFormatW/GetCurrencyFormatW real formatting (rammap64
+      frontier): LCID 0x0409 integer/grouping format, honest LOCALE_SDECIMAL.
+- [ ] **SW-603** _strlwr (cports frontier, 41 stubs deep): CRT string-case
+      helper as data import; cports crash -> output = pass.
+- [ ] **SW-604** StrStrIW/StrChrIW shlwapi family (procexp64 frontier).
+- [ ] **SW-605** FlushInstructionCache (autoruns64 first stub — cache flush
+      honest no-op TRUE on x64).
+- [ ] **SW-606** CreateToolbarEx + ImageList_DragMove (diskmon64 exit 0 already;
+      produkey frontier CreateToolbarEx — toolbar-window class registration).
+- [ ] **SW-607** AllocateAndInitializeSid / FreeSid (pageant frontier): honest
+      SID allocation — nonzero synthetic SID pointer, FreeSid no-op.
+- [ ] **SW-608** GetSysColorBrush real palette handles (bginfo64/winmergeu
+      frontier — returns brush handle, colors honored by GDI-lite fill).
+- [ ] **SW-609** PathStripToRootW (winmergeu, 17 stubs deep) — real path math.
+- [ ] **SW-610** SnmpUtilOidNCmp (bginfo64) — lexicographic OID compare.
+- [ ] **SW-611** GetWindowsDirectoryA/GetCurrentObject (puttygen frontier).
+- [ ] **SW-612** CreateBitmap (putty frontier — first stub; bitmap object with
+      1bpp/24bpp backing so dialog-image paths stay alive).
+- [ ] **SW-613** LoadStringW real resource loading (procexp64 first stub):
+      PE .rsrc RT_STRING (type 6) walk — reuse SWEEP-008 resource walker.
+- [ ] **SW-614** timeKillEvent/CreateEventExW (zoomit64 TRAP-133 family,
+      SW-553 scoping unchanged) — timer-kill honest stop, event object real.
+- [ ] **SW-615** SetThreadGroupAffinity/GetNumaHighestNodeNumber
+      (coreinfoex64 -accepteula frontier — it now runs past the version-drift
+      exit-1, SW-561 partially mitigated by build 19045; verify 3x).
+- [ ] **SW-616** __wgetmainargs crash (searchmyfiles) — UCRT startup data
+      import; likely same family as BUG-067 __p__acmdln.
+- [ ] **SW-617** curl exit 139 (was RUNS-PARTIAL in SWEEP-50?): isolate the
+      new crash site — if it is past the previous frontier, one BUG-*.
+- [ ] **SW-618** MW_EULA_ACCEPT contract test: a scripted Win32 EULA-dialog
+      PE compiled from tests/games/ template that exercises
+      DialogBoxParamW/EndDialog/IsDlgButtonChecked/CheckDlgButton end-to-end,
+      3x exit-0 with accepted+declined variants.
+- [ ] **SW-619** Registry persistence option: optional file-backed RAM hive
+      (MW_REG_FILE=path) so EulaAccepted survives loader restarts; document.
+
+## P1 — corpus restoration and breadth
+
+- [ ] **SW-620** The SWEEP-50 100-program corpus is no longer on disk (only
+      the 15 SWEEP-007-reacquired GUI programs + opensource + games remain;
+      23 executables total swept in SWEEP-008). Re-download the missing
+      corpus from artifacts/sweep50/download_log.tsv + redownload manifest,
+      verify SHAs where recorded, then re-run the mass sweep to regenerate
+      the 100-row progress table.
+- [ ] **SW-621** After SW-620: re-run mass sweep, diff vs STAGE_TABLE_100.tsv,
+      produce a per-program delta report (exit-before -> exit-after, stub
+      depth) into artifacts/sweep008/.
+- [ ] **SW-622** Third GUI genre: a Win32 notepad-class editor (menu + EDIT
+      control) as a third acceptance target after snake/breakout/calc.
+- [ ] **SW-623** Fourth genre: Win32 common-dialog (GetOpenFileNameW mock)
+      tester to exercise comdlg32 frontier honestly.
+- [ ] **SW-624** putty full login-dialog lifecycle under MW_EULA_ACCEPT-style
+      scripted dialog automation (pageant/pageant-dialog follow-up).
+
+## P2 — generated per-program items (from SWEEP-008 mass sweep)
+
+- [ ] **SW-625** `opensource/7zip/full/7z` — exit=0, stub-calls=0. Next: keep-green regression pin (3x exit-0 + output SHA) after every loader change.
+- [ ] **SW-626** `opensource/7zip/x64/7za` — exit=0, stub-calls=0. Next: keep-green regression pin (3x exit-0 + output SHA) after every loader change.
+- [ ] **SW-627** `opensource/curl/curl` — exit=139, stub-calls=0. Next: isolate the crash site (RVA/rip map), fix one BUG-*, re-run.
+- [ ] **SW-628** `opensource/jq/jq` — exit=0, stub-calls=0. Next: keep-green regression pin (3x exit-0 + output SHA) after every loader change.
+- [ ] **SW-629** `opensource/sqlite/sqlite3` — exit=0, stub-calls=0. Next: keep-green regression pin (3x exit-0 + output SHA) after every loader change.
+- [ ] **SW-630** `sweep005/snake` — exit=0, stub-calls=0. Next: keep-green regression pin (3x exit-0 + output SHA) after every loader change.
+- [ ] **SW-631** `sweep006/breakout` — exit=0, stub-calls=0. Next: keep-green regression pin (3x exit-0 + output SHA) after every loader change.
+- [ ] **SW-632** `sweep008/calc` — exit=0, stub-calls=0, first unresolved `lstrcatA`. Next: keep-green regression pin (3x exit-0 + output SHA) after every loader change.
+- [ ] **SW-633** `autoruns64/Autoruns64` — exit=1, stub-calls=1, first stub `CoInitializeEx`, first unresolved `FlushInstructionCache`. Next: the app exits 1 by its own decision — name the gate via guest_rip trace, implement the honest blocker (registry value, version check, or stub-0 API), re-run.
+- [ ] **SW-634** `bginfo64/Bginfo64` — exit=9, stub-calls=3, first stub `GetSysColorBrush`, first unresolved `SnmpUtilOidNCmp`. Next: isolate the crash site (RVA/rip map), fix one BUG-*, re-run.
+- [ ] **SW-635** `coreinfoex64/Coreinfo64` — exit=139, stub-calls=2, first stub `GetNumaHighestNodeNumber`, first unresolved `SetThreadGroupAffinity`. Next: isolate the crash site (RVA/rip map), fix one BUG-*, re-run.
+- [ ] **SW-636** `cports/cports` — exit=139, stub-calls=41, first stub `<unknown>`, first unresolved `_strlwr`. Next: isolate the crash site (RVA/rip map), fix one BUG-*, re-run.
+- [ ] **SW-637** `diskmon64/Diskmon64` — exit=0, stub-calls=3, first stub `RegOpenKeyA`, first unresolved `CreateToolbarEx`. Next: keep-green regression pin (3x exit-0 + output SHA) after every loader change.
+- [ ] **SW-638** `pageant/pageant` — exit=1, stub-calls=0, first unresolved `AllocateAndInitializeSid`. Next: the app exits 1 by its own decision — name the gate via guest_rip trace, implement the honest blocker (registry value, version check, or stub-0 API), re-run.
+- [ ] **SW-639** `procexp64/procexp64` — exit=139, stub-calls=41, first stub `LoadStringW`, first unresolved `StrStrIW`. Next: isolate the crash site (RVA/rip map), fix one BUG-*, re-run.
+- [ ] **SW-640** `procmon64/Procmon64` — exit=1, stub-calls=0, first unresolved `ImageList_DragMove`. Next: the app exits 1 by its own decision — name the gate via guest_rip trace, implement the honest blocker (registry value, version check, or stub-0 API), re-run.
+- [ ] **SW-641** `produkey/ProduKey` — exit=0, stub-calls=9, first stub `CoInitialize`, first unresolved `CreateToolbarEx`. Next: keep-green regression pin (3x exit-0 + output SHA) after every loader change.
+- [ ] **SW-642** `putty/putty` — exit=1, stub-calls=1, first stub `CoUninitialize`, first unresolved `CreateBitmap`. Next: the app exits 1 by its own decision — name the gate via guest_rip trace, implement the honest blocker (registry value, version check, or stub-0 API), re-run.
+- [ ] **SW-643** `puttygen/puttygen` — exit=1, stub-calls=4, first stub `GetWindowsDirectoryA`, first unresolved `GetCurrentObject`. Next: the app exits 1 by its own decision — name the gate via guest_rip trace, implement the honest blocker (registry value, version check, or stub-0 API), re-run.
+- [ ] **SW-644** `rammap64/RAMMap64` — exit=1, stub-calls=0, first unresolved `GetNumberFormatW`. Next: the app exits 1 by its own decision — name the gate via guest_rip trace, implement the honest blocker (registry value, version check, or stub-0 API), re-run.
+- [ ] **SW-645** `searchmyfiles/SearchMyFiles` — exit=139, stub-calls=1, first stub `__wgetmainargs`, first unresolved `__wgetmainargs`. Next: isolate the crash site (RVA/rip map), fix one BUG-*, re-run.
+- [ ] **SW-646** `winmergeu/WinMergeU` — exit=9, stub-calls=17, first stub `GetSysColorBrush`, first unresolved `PathStripToRootW`. Next: isolate the crash site (RVA/rip map), fix one BUG-*, re-run.
+- [ ] **SW-647** `zoomit64/ZoomIt64` — exit=133, stub-calls=3, first stub `CreateEventExW`, first unresolved `timeKillEvent`. Next: isolate the crash site (RVA/rip map), fix one BUG-*, re-run.
+
+## P2 — API-surface completion sweep (one item per family, evidence-cited)
+
+- [ ] **SW-648** KERNEL32 process/job family: CreateJobObjectW/SetInformationJobObject/IsProcessInJob — honest single-process job.
+- [ ] **SW-649** KERNEL32 memory family: VirtualQueryEx/VirtualLock/VirtualUnlock/GetWriteWatch — page-walk backed, honest results.
+- [ ] **SW-650** KERNEL32 file family: FindFirstFileExW filters (FIND_FIRST_EX_LARGE_FETCH), GetFileInformationByHandleEx.
+- [ ] **SW-651** KERNEL32 thread family: SetThreadAffinityMask/SetThreadPriority/GetExitCodeThread per-thread real values.
+- [ ] **SW-652** KERNEL32 sync family: WaitableTimer (SetWaitableTimerEx with APC), CreateMutexW ownership walk.
+- [ ] **SW-653** KERNEL32 console family: SetConsoleTextAttribute/WriteConsoleOutputA real attribute buffer for the terminal backend.
+- [ ] **SW-654** KERNEL32 locale family: GetLocaleInfoEx/GetDateFormatEx/GetTimeFormatEx — en-US fixed values, honest sizes.
+- [ ] **SW-655** KERNEL32 env family: GetEnvironmentVariableW real W environment (build_wargv_wenv already builds A; add W parity test).
+- [ ] **SW-656** KERNEL32 library family: LoadLibraryExW LOAD_LIBRARY_AS_DATAFILE honest rejection, AddDllDirectory/GetDllDirectoryW.
+- [ ] **SW-657** KERNEL32 time family: QueryPerformanceFrequency real TSC-backed, GetSystemTimePreciseAsFileTime (currently GetProcAddress'd).
+- [ ] **SW-658** KERNEL32 error family: SetErrorMode/GetErrorMode (Go runtime SW-507 list), RaiseFailFastException.
+- [ ] **SW-659** KERNEL32 debug family: OutputDebugStringA/W -> stderr channel with [DBG] prefix, IsDebuggerPresent=0.
+- [ ] **SW-660** USER32 window family: GetWindowRect/GetClientRect real 640x400 values, AdjustWindowRectEx math.
+- [ ] **SW-661** USER32 text family: DrawTextA/DrawTextExA/GetTextExtentPoint32A — font8x8-backed metrics.
+- [ ] **SW-662** USER32 caret/cursor family: CreateCaret/SetCaretPos/ShowCaret — state machine, no raster.
+- [ ] **SW-663** USER32 menu family: CreateMenu/AppendMenuW/DrawMenuBar — menu-object table.
+- [ ] **SW-664** USER32 scroll family: SetScrollInfo/GetScrollInfo/SetScrollPos — real bar state.
+- [ ] **SW-665** USER32 clipboard family: OpenClipboard/EmptyClipboard/SetClipboardData — RAM clipboard with format registry.
+- [ ] **SW-666** USER32 input family: GetKeyState/GetKeyboardState/MapVirtualKeyW — deterministic MW_GUI_KEYS-derived state.
+- [ ] **SW-667** USER32 hook family: SetWindowsHookExW WH_CBT/WH_KEYBOARD — honest "not installed" OR minimal call-through.
+- [ ] **SW-668** USER32 timer family: SetTimer with NULL hwnd (proc-exp style callback timers) + TIMERPROC dispatch.
+- [ ] **SW-669** USER32 DDE/message family: PostMessageW real queue insertion + GetMessage ordering test.
+- [ ] **SW-670** USER32 dialog family: GetDlgCtrlID/SetDlgItemInt/GetDlgItemInt — control-handle id decode (0xC3000000+id).
+- [ ] **SW-671** GDI32 font family: GetTextMetricsA/EnumFontFamiliesExA — font8x8 metrics, one family listing.
+- [ ] **SW-672** GDI32 bitmap family: CreateCompatibleBitmap real per-DC surfaces (SWEEP-006 has the mem-DC trio; extend to more formats).
+- [ ] **SW-673** GDI32 region family: CreateRectRgn/CreateRectRgnIndirect/CombineRgn real rect-set algebra.
+- [ ] **SW-674** GDI32 pen/brush family: CreatePen/ExtCreatePen/GetStockObject full 8-stock set with raster effects.
+- [ ] **SW-675** GDI32 mapping family: SetMapMode/SetWindowExtEx/SetViewportExtEx — coordinate transform in the GDI-lite layer.
+- [ ] **SW-676** GDI32 palette family: CreatePalette/RealizePalette/AnimatePalette — procexp color-gate end state.
+- [ ] **SW-677** GDI32 metafile family: CreateEnhMetaFileW/PlayEnhMetaFile — honest NULL (no metafile raster) + SetLastError.
+- [ ] **SW-678** GDI32 print family: StartDocW/StartPage/EndPage/EndDoc (rammap64 print path) — honest JOB abort or no-op success with counters.
+- [ ] **SW-679** ADVAPI32 token family: GetTokenInformation/DuplicateTokenEx — real SID/attribute blobs on the SWEEP-008 token model.
+- [ ] **SW-680** ADVAPI32 eventlog family: RegisterEventSourceW/ReportEventW — log to artifacts JSON, honest success.
+- [ ] **SW-681** ADVAPI32 crypto family: CryptAcquireContextW/CryptGenRandom — route GenRandom to ProcessPrng source.
+- [ ] **SW-682** ADVAPI32 service family: StartServiceW/QueryServiceStatusEx on the empty hive — honest 1060 everywhere (SWEEP-008 OpenServiceW base).
+- [ ] **SW-683** SHELL32 family: SHGetFolderPathW real mapping for CSIDL_APPDATA etc. onto a MiniWin virtual home (MW_HOME env) — replaces SWEEP-008 E_FAIL stub.
+- [ ] **SW-684** SHELL32 family: ShellExecuteW honest verb routing (open on a registered handler table; cports/rammap frontier).
+- [ ] **SW-685** SHELL32 family: SHBrowseForFolderW/SHGetFileInfoW — icon-list shim, honest defaults.
+- [ ] **SW-686** OLE32 family: CoInitializeEx apartment model — return S_OK + real apartment tag; CoCreateInstance CLSID registry (SW-608 follow-on from procmon/rammap frontier).
+- [ ] **SW-687** OLE32 family: PropVariantClear/VariantClear real tag-based free (OLEAUT ordinals already mapped).
+- [ ] **SW-688** COMCTL32 family: InitCommonControlsEx flags honored; property-page/trackbar classes as no-op window classes.
+- [ ] **SW-689** COMDLG32 family: GetOpenFileNameW/GetSaveFileNameW/ChooseColorW — scripted-file-dialog tester (SW-623 sister item).
+- [ ] **SW-690** VERSION.DLL family: real VS_VERSIONINFO parse from .rsrc RT_VERSION (type 16) — replaces honest-0 size (rammap trio SW-561).
+- [ ] **SW-691** WINSPOOL family: EnumPrintersW — zero printers, honest success (bginfo64 SnmpUtil family neighbor).
+- [ ] **SW-692** NETAPI32 family: NetWkstaGetInfo/NetApiBufferFree — workstation info fixed values (Sysinternals common probe).
+- [ ] **SW-693** IPHLPAPI family: GetAdaptersAddresses/GetIfTable — zero-adapter honest success (procmon/procexp network probes).
+- [ ] **SW-694** WS2_32 family: WSAStartup/GetAddrInfoW on the socket layer already present — external-net policy flag (MW_NET=0 default deny, MW_NET=1 pass-through).
+- [ ] **SW-695** WINTRUST/winhttp family: WinHttp* honest session objects (procexp64 425-unresolved tail — WinHttpOpen/Connect/Request with no transport) — thin object model, ERROR_INTERNET_OFFLINE default.
+- [ ] **SW-696** CRYPT32 family: CertGetNameStringW/CryptQueryObject — certificate blob honest-fail path (autoruns signature column).
+- [ ] **SW-697** SETUPAPI/CFGMGR32 family: SetupDiGetClassDevsW — empty device set, honest success (device-enumeration class).
+- [ ] **SW-698** POWRPROF family: CallNtPowerInformation/GetPwrCapabilities — fixed honest values.
+- [ ] **SW-699** DBGHELP family: SymInitialize/SymFromAddr — loader-symbol backtrace bridge (maps guest RVA -> PE section name).
+
+## P3 — engineering infrastructure (measurable-progress mandate)
+
+- [ ] **SW-700** Sweep runner v3: unified scripts/sweep_run.py — per-program JSON result (exit, stubs named, first unresolved, output SHA, wall-time), replaces ad-hoc TSVs; 3x mode built in.
+- [ ] **SW-701** Progress dashboard: render artifacts/sweep008/mass TSV + STAGE_TABLE delta into a single PNG/PDF chart per sweep commit.
+- [ ] **SW-702** Named-stub decoder as a library: extract guest_rip FF15+disp32 decode + g_unres_names lookup into scripts/sweep_stub_decode.py so every sweep report gets named stubs automatically.
+- [ ] **SW-703** Crash-triage harness: on SIGSEGV, auto-run the core backtrace (scripts/corebt.py symbolization) and append BUG-candidate to the run dir.
+- [ ] **SW-704** Determinism checker: run every exit-0 program 3x automatically, flag non-identical stdout/frames (extend SWEEP-005/006 SHA discipline to the whole corpus).
+- [ ] **SW-705** Registry dump tool: on exit, write the RAM hive to artifacts/<exe>/registry_dump.json — makes EULA/settings flows debuggable.
+- [ ] **SW-706** Handle-table audit: synthetic handle ranges (0xC1.. registry, 0xC2.. dialog, 0xC3.. control, 0xC4.. imagelist, 0xC5.. gdiobj, 0xC6.. SCM, 0xC7.. symlink) documented + collision-checked in one header comment block.
+- [ ] **SW-707** Loader unit tests for the SWEEP-008 subsystems: registry create/open/query/set round-trip, atom add/find/getname, Color roundtrip RGB->HLS->RGB <=2/channel, DLGTEMPLATE parser on synthetic templates.
+- [ ] **SW-708** G1 extension: add MiniWinCalc exit-0 + frame-SHA to the G1 acceptance script (games + GUI regression pins, 12/12 -> 15/15).
+- [ ] **SW-709** EULA-automation doc: MW_EULA_ACCEPT contract written into docs/ (env flags table: MW_GUI_EVENTS, MW_GUI_KEYS, MW_GUI_KEY_EVERY, MW_EULA_ACCEPT, MW_REG_FILE proposal).
+- [ ] **SW-710** REA evidence regeneration: run rea function on the next 3 blocker functions (procexp64 RVA 0x9be71 caller chain, cports _strlwr caller, winmergeu PathStripToRootW caller) and store trimmed YAMLs under evidence/sweep008_rea/ — the REA-first workflow the user mandated.
+- [ ] **SW-711** Corpus manifest hardening: sweep008 redownload manifest with per-exe SHA256 for ALL 23 swept programs (works even when upstream URLs die — SWEEP-007 ADExplorer lesson).
+- [ ] **SW-712** BUG-068 candidate: mw_unresolved_import_stub guest_rip decode must fall back safely when the caller is NOT `FF 15 disp32` (e.g. jmp thunks) — currently prints <unknown>; add jmp-thunk decode.
+- [ ] **SW-713** BUG-069 candidate: GetVersionExA/W size-validation is now strict — any guest passing garbage size gets honest 122; sweep the corpus for new exit-1s caused by this strictness and add a worklist per offender.
+- [ ] **SW-714** Performance: mass sweep wall-time budget — 23 programs in <4 min with -P8; document and pin (regression gate for loader slowdowns).
+- [ ] **SW-715** Docs: SWEEP-008 sweep report (this wave) in docs/master/ with the per-gate frontier table: autoruns64->SW-600, rammap64->SW-600/SW-602, procexp64->SW-601, calc 100%.
+
+## P4 — game & GUI portfolio (SW-501 discipline: 100% or open)
+
+- [ ] **SW-716** Fifth genre: Win32 Pong (real double-buffered GDI, MW_GUI_MOUSE-scripted paddle) — 3x exit-0 + frame SHA.
+- [ ] **SW-717** Sixth genre: Win32 Tetris-class falling blocks (WM_TIMER cadence, rotation via WM_KEYDOWN) — 3x exit-0 + frame SHA.
+- [ ] **SW-718** Seventh genre: Win32 paint/sketch (mouse-path drawing, WM_MOUSEMOVE stream under scripted events) — 3x exit-0 + frame SHA.
+- [ ] **SW-719** Eighth genre: Win32 file-viewer (menu + listbox over the RAM filesystem) — exercises menus/list controls with honest content.
+- [ ] **SW-720** Calculator v2: decimal point + division + clear entry (real long/int64 math, deterministic decimal print).
+- [ ] **SW-721** Multi-window test: calculator spawning an About dialog (DialogBoxParamW from a real GUI app — closes the modal-dialog loop in-product).
+- [ ] **SW-722** MW_GUI_MOUSE scripted click events feeding WM_LBUTTONDOWN/WM_LBUTTONUP with real client coordinates.
+- [ ] **SW-723** WM_CHAR path for the calc display (TranslateMessage already delivers WM_CHAR — verify both message paths 3x).
+- [ ] **SW-724** Frame-dump format option: PNG encoder in the loader (BMP today) for smaller evidence.
+- [ ] **SW-725** Game acceptance runner: one script that runs snake/breakout/calc(+future) 3x and fails on any SHA drift.
+
+## P5 — loader hardening & correctness backlog
+
+- [ ] **SW-726** BUG-070 candidate: DLGTEMPLATEEX DS_SETFONT offset — verify the 6-byte font block against a real Sysinternals template dump; add a unit test with a captured template.
+- [ ] **SW-727** BUG-071 candidate: mw_res_walk_lvl needs a cycle guard (malicious/corrupt .rsrc could loop the directory tree) — depth cap 16.
+- [ ] **SW-728** Registry: RegOpenKeyExA/RegQueryValueExA real A-side on the RAM hive (currently honest-fail; GUI apps that use A-side dialogs stay blocked).
+- [ ] **SW-729** Registry: REG_SZ/REG_MULTI_SZ/REG_EXPAND_SZ typed reads with buffer-size semantics (SWEEP-008 stores raw bytes only).
+- [ ] **SW-730** Registry: RegDeleteTreeW/RegDeleteKeyW + key enumeration order stability (sorted paths) — determinism mandate.
+- [ ] **SW-731** Atoms: GlobalAddAtomW MAX 128 -> dynamic table; GlobalFindAtomA + GlobalGetAtomNameA A-side completeness.
+- [ ] **SW-732** HLS: document the rounding deltas vs real shlwapi with a side-by-side table for 16 reference colors (evidence/sweep008_rea/color_table.md).
+- [ ] **SW-733** GetSystemMetrics: virtualized-monitor mode (MW_SCREEN_W/H env) instead of fixed 1920x1080; procexp UI layout adapts.
+- [ ] **SW-734** ImageList: real raster backing (pixel buffers + DrawEx blit into the GDI-lite surface) so toolbar images appear in future GUI waves.
+- [ ] **SW-735** NT symlink: enumerate the real drive set (C:..Z: via MW_DRIVES env) instead of the 4-volume rotation; return the same name twice in a row (currently seq-based).
+- [ ] **SW-736** SCM: services table via env (MW_SERVICES=name,type,state) so service-dependent guests get honest non-empty enumeration.
+- [ ] **SW-737** Dialog: real modal loop — pump WM_TIMER/WM_PAINT inside DialogBoxParamW until EndDialog (today: INITDIALOG + one WM_COMMAND; multi-message dialogs starve).
+- [ ] **SW-738** Dialog: DialogBoxIndirectParamA + CreateDialogParamA A-side resource-name handling (ANSI templates).
+- [ ] **SW-739** Dialog: capture Sysinternals EULA dialog templates (autoruns/rammap) into evidence/sweep008_rea/templates/ as hex dumps + parser unit fixtures.
+- [ ] **SW-740** Control handles: GetDlgCtrlID real decode; SetFocus/GetFocus per-dialog focus model.
+- [ ] **SW-741** SendMessageW: route WM_GETTEXT/WM_SETTEXT to the control-handle table (real text storage) — dialog text verification without raster.
+- [ ] **SW-742** RtlGetVersion: honor OSVERSIONINFOEXW (write wServicePackMajor=0 etc. — currently zeros stay from caller memory; write them explicitly).
+- [ ] **SW-743** Named stubs: g_unres_names cap 1024 -> dynamic growth (winmergeu 515+ unresolved programs can exhaust it).
+- [ ] **SW-744** mw_dllname_valid: also reject pointer cookies >= 0xC0000000 (synthetic handle space) — defense in depth.
+- [ ] **SW-745** Trace: MW_TRACE ring-buffer mode (MW_TRACE_RING=1) to bound api_trace.json size for long GUI runs (procexp 425 imports * init calls).
+- [ ] **SW-746** Repro hygiene: pin make flags + record binary SHA in every sweep evidence README (SWEEP-008 does this manually — automate).
+- [ ] **SW-747** Regression: keep 12/12 + calc/snake/breakout green through every future commit (script checks all four before push).
+- [ ] **SW-748** Docs: engineering-rules update — "one BUG-* per frontier, named-stub evidence required" added to the acceptance rules the worklist header cites.
+- [ ] **SW-749** Push hygiene: GITHUB_TOKEN rotation reminder stays visible in worklog until the user rotates the PAT (SWEEP-008 note).
+- [ ] **SW-750** Final report: the 14-section engineering report mandate — add SWEEP-008 section (registry/dialog/atoms/color/module-handle subsystems + mass sweep table + calc 100%).
