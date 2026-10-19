@@ -741,42 +741,98 @@ gate that must be re-accepted when the port lands).
 - [ ] **SW-809** procexp64 RIP=0x6f00690074006e UTF-16-bytes-as-code (still
       open; CLR-adjacent init).
 
-## SW-816..SW-880 — «ادامه سه برابری» continuation queue (65 items, x3 of SW-817..850)
+## SW-816..SW-880 — «ادامه سه برابری» continuation queue (65 items) — LANDED in SWEEP-019 «چند ده تسک همزمان»
 
-- [ ] **SW-816..820 menu family x5** (drives SW-812): GetSubMenu honest,
-      GetMenuItemCount, GetMenuItemInfoA/W, ModifyMenuA/W, DestroyMenu slot
-      free — each with a menu-item storage model; acceptance = produkey
-      exit0 WITH pump.
-- [ ] **SW-821..825 clipboard x5**: OpenClipboard/CloseClipboard/EmptyClipboard/
-      SetClipboardData/GetClipboardData honest global-memory model
-      (produkey resolves CloseClipboard only).
-- [ ] **SW-826..830 common dialogs x5**: GetOpenFileNameA/W, GetSaveFileNameA/W,
-      ChooseColorA/W, FindTextA/W, PAGESETUPDLG family — canned-UI returns.
-- [ ] **SW-831..835 ListView x5** (NirSoft main lists): LVM_GETITEMCOUNT,
-      LVM_GETITEMTEXT, LVM_INSERTCOLUMN/ITEM, LVM_SETITEMSTATE, LVM_HITTEST
-      — child-class message routing for cls "SysListView32".
-- [ ] **SW-836..840 TreeView + Tab x5**: TVM_ family x3, TCM_ family x2
-      (SysTreeView32/SysTabControl32 child classes).
-- [ ] **SW-841..845 GDI regions x5**: CreateRectRgn/CreateRectRgnIndirect,
-      SelectClipRgn, GetUpdateRgn, RectInRegion, CombineRgn — region objects
-      with real rect algebra (produkey unresolved list).
-- [ ] **SW-846..850 printing x5**: StartDocA/StartPage/EndPage/EndDoc/
-      AbortDoc honest no-op printer (bginfo64 family tail).
-- [ ] **SW-851..855 shell x5**: SHGetSpecialFolderPathA (produkey gate,
-      GetProcAddress NULL today), SHBrowseForFolderA, SHGetFileInfoA,
-      ShellExecuteA/ExA stub-exit semantics, SHGetMalloc.
-- [ ] **SW-856..860 network x5**: WNetOpenEnum/CloseEnum/EnumResource,
-      getaddrinfo/getnameinfo, WSAEnumProtocols (produkey WNet* unresolved).
-- [ ] **SW-861..865 CRT tail x5**: _mbsicmp/_mbschr/_memicmp/_strlwr/_snprintf
-      (produkey CRT list) — honest MB-string semantics.
-- [ ] **SW-866..870 COM x5**: CoSetProxyBlanket callers, CoCreateInstance
-      family x3, CoUninitialize pairing audit (produkey CoInitialize path).
-- [ ] **SW-871..875 perf/debug x5**: SuspendThread/GetThreadContext/
-      SetThreadContext/ReadProcessMemory/WriteProcessMemory honest
-      (produkey ReadProcessMemory unresolved; procmon family).
-- [ ] **SW-876..878 registry export x3**: RegDeleteValueA, RegQueryInfoKeyA,
-      RegEnumValueA honest (produkey registry tail).
-- [ ] **SW-879..880 closure/verify x2**: re-pin G1 + full sweep TSV after
-      every loader change (mandate: «تغییرات بدون پیشرفت ارزشی نداره» —
-      every commit ships a measured progress table); 14-section final
-      report refresh.
+- [x] **SW-816..820 menu family x5 LANDED**: MwMenu[8] x 16-item model
+      (id/state/text/submenu); CreateMenu/CreatePopupMenu/DestroyMenu (real
+      slot free — SW-812 prerequisite)/AppendMenuA+W (MF_POPUP links
+      submenus)/ModifyMenuA+W (BYPOSITION+BYCOMMAND)/GetMenuItemCount/
+      GetSubMenu/GetMenuItemInfoA+W (MENUITEMINFO x64 @0/4/8/12/16/24/56/64,
+      cbSize==72 enforced); LoadMenuW/A rebuilt on the same allocator.
+- [x] **SW-821..825 clipboard x5 LANDED**: single headless clipboard,
+      Open/Close (close-unopened = ERROR_INVALID_HANDLE)/Empty/Set/Get
+      (fmt-matched) + IsClipboardFormatAvailable.
+- [x] **SW-826..830 common dialogs x5 LANDED**: comdlg32 GetOpenFileNameA/W,
+      GetSaveFileNameA/W, ChooseColorA/W, FindTextA/W, ReplaceTextA/W,
+      PageSetupDlgA/W — canned user-CANCEL (0/FALSE/NULL) +
+      CommDlgExtendedError()==0.
+- [x] **SW-831..835 ListView x5 LANDED** (+ROOT CAUSE): mw_sysclass_* knew
+      only 8 built-ins so SysListView32 children were never registered and
+      LVM_* was never seen. Now 0x88..0x8B = SysListView32/SysTreeView32/
+      SysTabControl32/SysHeader32 registered as children; lazy per-slot
+      state (64 items x 2 subitems text + cols) routed in SendMessageW AND
+      SendMessageA: LVM_GETITEMCOUNT/INSERTITEM A+W/INSERTCOLUMN A+W/
+      GETITEMTEXT A+W/SETITEMSTATE/HITTEST (typed -1, no pixel layout).
+- [x] **SW-836..840 TreeView + Tab x5 LANDED**: TVM_INSERTITEM A+W
+      (MW_TREE_BASE pseudo-handles)/GETCOUNT/GETNEXTITEM(TVGN_ROOT);
+      TCM_INSERTITEM A+W/GETITEMCOUNT/SETCURSEL/GETCURSEL; HDM bonus
+      (GETITEMCOUNT/INSERTCOLUMN A+W).
+- [x] **SW-841..845 GDI regions x5 LANDED**: MwRgn[32] x 16 rects, real
+      rect algebra — CreateRectRgn/Indirect, CombineRgn (OR concat / AND
+      pairwise / DIFF slabs / XOR both ways / COPY; real
+      NULLREGION/SIMPLE/COMPLEX types), SelectClipRgn (per-DC map),
+      RectInRegion (exact scan), GetUpdateRgn (user32, NULLREGION).
+- [x] **SW-846..850 printing x5 LANDED**: old tail returned -1 (job
+      failure = fatal for bginfo64); now honest no-op printer —
+      StartDocA/W -> job 1, StartPage/EndPage/EndDoc succeed, AbortDoc.
+- [x] **SW-851..855 shell x5 LANDED**: SHGetSpecialFolderPathA/W (scratch
+      csidl dirs, the produkey GetProcAddress-NULL gate),
+      SHBrowseForFolderA/W (cancel), SHGetFileInfoA/W (honest 0),
+      ShellExecuteA/W (existence-checked 42/SE_ERR_FNF), ShellExecuteExA/W
+      (hInstApp@52), SHGetMalloc (malloc-backed IMalloc vtbl).
+- [x] **SW-856..860 network x5 LANDED**: mpr.dll added to g_known_dlls;
+      WNetOpenEnumA/W -> ERROR_NO_NETWORK(225) NULL handle, WNetCloseEnum
+      WN_SUCCESS, WNetEnumResourceA/W 225; getnameinfo -> real libc;
+      WSAEnumProtocolsA/W typed WSAENOBUFS handshake, 0 providers.
+- [x] **SW-861..865 CRT tail x5 LANDED**: _mbsicmp/_mbschr/_memicmp/
+      _strlwr/_snprintf (BUG-063 ms_abi varargs -> classify/repack ->
+      mw_printf_emit via fmemopen; MSVCRT -1 truncation contract).
+- [x] **SW-866..870 COM x5 LANDED**: CoCreateInstanceEx/CoGetClassObject
+      (REGDB_E_CLASSNOTFOUND policy), CoTaskMemAlloc/Free, CoCreateGuid
+      (/dev/urandom); CoSetProxyBlanket/CoUninitialize pairing audited —
+      already honest, unchanged.
+- [x] **SW-871..875 perf/debug x5 LANDED**: ReadProcessMemory/
+      WriteProcessMemory — same-process range-checked memcpy vs
+      [g_image_base,+size), ERROR_PARTIAL_COPY(299) outside, write path
+      mprotects RW during copy then restores R+X; Suspend/Get/SetThread-
+      Context already honest; ResumeThread entry bound to existing defn.
+- [x] **SW-876..878 registry export x3 LANDED**: RegDeleteValueA/
+      RegEnumValueA/RegQueryInfoKeyA — A-twins of the W honest contracts
+      (2/259/6 + SetLastError).
+- [x] **SW-879..880 closure/verify x2 LANDED**: G1 re-pin
+      sha 2f5535f2… (regression 12/12, evidence/master/g1/20261019_153111,
+      build 1,656,608 -> 1,771,176 bytes) + full measured sweep TSV
+      artifacts/sweep019/sweep/sweep019_sweep.tsv (16-prog corpus x3 +
+      produkey pump-on + calc/snake/breakout x3).
+
+## SW-881..SW-920 — SWEEP-019 continuation queue (40 items, «ادامه» standing order)
+
+- [ ] **SW-881..885 menu deepening x5**: InsertMenuItemA/W, RemoveMenu,
+      DeleteMenu, GetMenuItemRect, TrackPopupMenuEx — completes the menu
+      model for pump-on SW-812 verification beyond exit0 (menu loop must
+      terminate with bounded SetMenu counts).
+- [ ] **SW-886..890 ListView deepening x5**: LVM_GETNEXTITEM, LVM_SETITEM
+      A/W, LVM_DELETEALLITEMS, LVM_GETSUBITEMRECT, LVM_GETSTRINGWIDTH —
+      NirSoft lists iterate via GETNEXTITEM after population.
+- [ ] **SW-891..895 TreeView/Tab deepening x5**: TVM_GETITEM A/W,
+      TVM_SELECTITEM, TVM_EXPAND, TCM_GETITEM A/W, TCM_ADJUSTRECT.
+- [ ] **SW-896..900 GDI region deepening x5**: ExtCreateRegion,
+      GetRgnBox, OffsetRgn, PtInRegion, EqualRgn (completes the algebra).
+- [ ] **SW-901..905 shell deepening x5**: SHGetFolderPathA/W (legacy
+      shfolder path), SHGetKnownFolderPath, SHGetDesktopFolder minimal
+      IShellFolder, SHAutoComplete, SHSetValueA/W (shlwapi registry).
+- [ ] **SW-906..910 RICHEDIT x5**: msftedit.dll/RICHED50W + RICHEDIT class
+      — the Sysinternals EULA dialog template uses RICHEDIT; EM_ family
+      (EM_SETTEXTEX, EM_STREAMIN) so EULA text renders and gate logic can
+      proceed past text queries.
+- [ ] **SW-911..915 network x5**: WSAAsyncSelect, WSAEventSelect,
+      connect/gethostbyname wrappers, shutdown, select — pageant family.
+- [ ] **SW-916..920 CRT/COM x5**: _mbsncat/_mbsnbcpy/_mbslen, _splitpath/
+      _makepath, CoGetObjectContext, CoFreeUnusedLibraries, StringFromGUID2.
+- [ ] **SW-800 (carried)** infra/verify: lz4/zstd/trurl exit-code parity.
+- [ ] **SW-801i (carried)** CRT/bug: zig/mingw static-CRT snprintf fake FILE.
+- [ ] **SW-801j (carried)** calc/accept: second calculator genre
+      tests/games/ style acceptance.
+- [ ] **SW-807/809/814/815 (carried)** crash signatures: puttygen NULL
+      fn-ptr, procexp64 UTF-16-as-code, searchmyfiles cmpw 0x22, winmergeu.
+

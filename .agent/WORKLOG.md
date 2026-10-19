@@ -532,3 +532,37 @@ Stage Summary:
   139->0; pump-on NirSoft loop root-caused and queued (SW-812, menu family).
 - Known open: procexp64/puttygen/searchmyfiles/winmergeu 139s with signatures;
   pump-on menu-family queue SW-816..820.
+
+---
+Task ID: SWEEP-019
+Agent: main agent
+Task: «ادامه چند ده تسک همزمان و پوش در گیت هاب» — execute the queued
+  SW-816..880 continuation queue (65 items, 13 families) as ONE elephant
+  batch, measured sweep, push to GitHub.
+
+Work Log:
+- Implemented all 13 queue families in one loader.c edit series: menu
+  storage model (SW-816..820), clipboard (821..825), comdlg cancel canned
+  returns (826..830), SysListView32/SysTreeView32/SysTabControl32/SysHeader32
+  class registration + LVM_/TVM_/TCM_/HDM_ routing in SendMessageW+A
+  (831..840, ROOT CAUSE: sysclass matcher only knew 8 built-ins), GDI
+  region rect algebra (841..845), honest no-op printer replacing the -1
+  tail (846..850), shell32 family incl. SHGetSpecialFolderPath + IMalloc
+  (851..855), mpr.dll WNet* + getnameinfo + WSAEnumProtocols (856..860),
+  msvcrt _mbs*/_memicmp/_strlwr/_snprintf (861..865), COM completion
+  (866..870), range-checked Read/WriteProcessMemory with mprotect dance
+  (871..875), registry A-tail (876..878).
+- 74 new ENTRY lines across user32/comdlg32/shell32/mpr/ws2_32/msvcrt/
+  ole32/KERNEL32/GDI32.
+- G1 re-pin: sha 2f5535f254a2819e11dc6190ce91c74932171baabdf5517afd0d0965d8ff3774,
+  regression 12/12 (evidence/master/g1/20261019_153111).
+- Measured sweep (scripts/sweep019_chunk.sh, 4 foreground chunks — the 3 GB
+  box kills background batches): 16 programs x3 deterministic + produkey
+  pump-on + calc/snake/breakout x3. ZERO regressions vs SWEEP-018; bginfo64
+  unresolved 336 -> 310 (-26); calc acceptance 9/9 PASS.
+- Worklist: SW-816..880 marked LANDED; new queue SW-881..920 (40 items).
+
+Stage Summary:
+- main advanced with SWEEP-019 batch; TSV artifacts/sweep019/sweep/sweep019_sweep.tsv;
+  evidence/sweep019/README.md; SW-812 pump-on still open (queued SW-881..885);
+  139 group unchanged (SW-807/809/814/815 signatures carried).

@@ -877,6 +877,7 @@ static const char* g_known_dlls[] = {
     "gdiplus.dll", "windowscodecs.dll", "propsys.dll", "setupapi.dll",
     "cfgmgr32.dll", "devobj.dll", "winusb.dll", "hid.dll", "ws2help.dll",
     "bcryptprimitives.dll", /* SWEEP-002: Go runtime.osinit + Rust std */
+    "mpr.dll",              /* SWEEP-019 SW-856..860: WNet* (produkey) */
     "winsta.dll",           /* SWEEP-016 SW-801k: Procexp64 version probe via GetProcAddress */
 };
 static void* mw_known_dll_handle(const char* low) {
@@ -6939,14 +6940,189 @@ __attribute__((ms_abi)) int mw_InflateRect(void* rc, int dx, int dy) {
     r[0] -= dx; r[1] -= dy; r[2] += dx; r[3] += dy;
     return 1;
 }
+/* SWEEP-019 SW-846..850: honest no-op printer. The old tail returned -1
+ * (job failure) which bginfo64 treats as a fatal print error; a headless
+ * print job that produces no paper is better modelled as a COMPLETED job
+ * (StartDoc -> job id 1, page/doc lifecycle succeeds, no output). */
 __attribute__((ms_abi)) int mw_StartDocW(void* hdc, const void* docinfo) {
     (void)hdc; (void)docinfo;
-    mw_SetLastError(288); /* ERROR_PRINT_CANCELLED: no printer backend */
-    return -1;
+    MW_TRACE("StartDocW() -> job 1 (headless no-op printer)");
+    return 1;
 }
-__attribute__((ms_abi)) int mw_StartPage(void* hdc) { (void)hdc; return -1; }
-__attribute__((ms_abi)) int mw_EndPage(void* hdc) { (void)hdc; return -1; }
-__attribute__((ms_abi)) int mw_EndDoc(void* hdc) { (void)hdc; return -1; }
+__attribute__((ms_abi)) int mw_StartDocA(void* hdc, const void* docinfo) {
+    (void)hdc; (void)docinfo;
+    MW_TRACE("StartDocA() -> job 1 (headless no-op printer)");
+    return 1;
+}
+__attribute__((ms_abi)) int mw_StartPage(void* hdc) { (void)hdc; MW_TRACE("StartPage() -> 1"); return 1; }
+__attribute__((ms_abi)) int mw_EndPage(void* hdc) { (void)hdc; return 1; }
+__attribute__((ms_abi)) int mw_EndDoc(void* hdc) { (void)hdc; return 1; }
+__attribute__((ms_abi)) int mw_AbortDoc(void* hdc) { (void)hdc; return 1; }
+
+/* ---- SWEEP-019 SW-841..845: GDI region objects with real rect algebra ----
+ * Regions store up to 16 rects. RGN_OR concatenates the rect lists,
+ * RGN_AND intersects pairwise, RGN_DIFF subtracts each s2 rect from every
+ * s1 rect (up to 4 slabs each), RGN_XOR = DIFF both ways. RectInRegion is
+ * an exact intersection scan. Rect-based approximation (no y-sweep) —
+ * documented here, types are real (NULLREGION/SIMPLE/COMPLEX). */
+#define MW_RGN_MAX 32
+#define MW_RGN_RECTS 16
+typedef struct { uint8_t live; uint32_t n; int32_t r[MW_RGN_RECTS][4]; } MwRgn;
+static MwRgn g_rgn[MW_RGN_MAX];
+#define MW_RGN_BASE 0x00060000u
+static int mw_rgn_slot(void* h) {
+    uintptr_t v = (uintptr_t)h;
+    if ((v & 0xFFFF0000u) != MW_RGN_BASE) return -1;
+    int i = (int)(v & 0xFFFFu) - 1;
+    return (i >= 0 && i < MW_RGN_MAX && g_rgn[i].live) ? i : -1;
+}
+static void* mw_rgn_alloc(void) {
+    for (int i = 0; i < MW_RGN_MAX; i++) {
+        if (g_rgn[i].live) continue;
+        memset(&g_rgn[i], 0, sizeof(MwRgn));
+        g_rgn[i].live = 1;
+        return (void*)(uintptr_t)(MW_RGN_BASE | (uintptr_t)(i + 1));
+    }
+    return NULL;
+}
+static int mw_rgn_empty(int s) {
+    for (uint32_t i = 0; i < g_rgn[s].n; i++)
+        if (g_rgn[s].r[i][0] < g_rgn[s].r[i][2] && g_rgn[s].r[i][1] < g_rgn[s].r[i][3])
+            return 0;
+    return 1;
+}
+static int mw_rgn_type(int s) {
+    if (mw_rgn_empty(s)) return 1;  /* NULLREGION */
+    return g_rgn[s].n > 1 ? 3 : 2;  /* COMPLEXREGION : SIMPLEREGION */
+}
+/* A minus bbox B -> up to 4 slabs; returns count */
+static uint32_t mw_sub_rect(const int32_t* A, const int32_t* B, int32_t out[][4]) {
+    uint32_t n = 0;
+    int32_t al = A[0], at = A[1], ar = A[2], ab = A[3];
+    int32_t bl = B[0], bt = B[1], br = B[2], bb = B[3];
+    if (ar <= bl || al >= br || ab <= bt || at >= bb) { /* disjoint */
+        out[n][0] = al; out[n][1] = at; out[n][2] = ar; out[n][3] = ab;
+        return 1;
+    }
+    if (al < bl) { out[n][0] = al; out[n][1] = at; out[n][2] = bl; out[n][3] = ab; n++; }
+    if (ar > br) { out[n][0] = br; out[n][1] = at; out[n][2] = ar; out[n][3] = ab; n++; }
+    int32_t il = al > bl ? al : bl, ir = ar < br ? ar : br;
+    if (at < bt) { out[n][0] = il; out[n][1] = at; out[n][2] = ir; out[n][3] = bt; n++; }
+    if (ab > bb) { out[n][0] = il; out[n][1] = bb; out[n][2] = ir; out[n][3] = ab; n++; }
+    return n;
+}
+__attribute__((ms_abi)) void* mw_CreateRectRgn(int l, int t, int r, int b) {
+    void* h = mw_rgn_alloc();
+    if (!h) return NULL;
+    int s = mw_rgn_slot(h);
+    g_rgn[s].n = 1;
+    g_rgn[s].r[0][0] = l; g_rgn[s].r[0][1] = t;
+    g_rgn[s].r[0][2] = r; g_rgn[s].r[0][3] = b;
+    MW_TRACE("CreateRectRgn(%d,%d,%d,%d) -> %p", l, t, r, b, h);
+    return h;
+}
+__attribute__((ms_abi)) void* mw_CreateRectRgnIndirect(const void* rc) {
+    if (!rc) return NULL;
+    const int32_t* r = (const int32_t*)rc;
+    return mw_CreateRectRgn(r[0], r[1], r[2], r[3]);
+}
+__attribute__((ms_abi)) int mw_CombineRgn(void* dst, void* s1, void* s2, int mode) {
+    int d = mw_rgn_slot(dst), a = mw_rgn_slot(s1), b = mw_rgn_slot(s2);
+    if (d < 0 || a < 0) return 0; /* ERROR */
+    if (mode == 5) { /* RGN_COPY */
+        memcpy(g_rgn[d].r, g_rgn[a].r, sizeof(g_rgn[a].r));
+        g_rgn[d].n = g_rgn[a].n;
+        return mw_rgn_type(d);
+    }
+    if (b < 0) return 0;
+    if (mode == 2) { /* RGN_OR: concatenate rect lists */
+        uint32_t k = 0;
+        for (uint32_t i = 0; i < g_rgn[a].n && g_rgn[d].n + k < MW_RGN_RECTS; i++, k++)
+            memcpy(g_rgn[d].r[g_rgn[d].n + k], g_rgn[a].r[i], sizeof(int32_t) * 4);
+        for (uint32_t i = 0; i < g_rgn[b].n && g_rgn[d].n + k < MW_RGN_RECTS; i++, k++)
+            memcpy(g_rgn[d].r[g_rgn[d].n + k], g_rgn[b].r[i], sizeof(int32_t) * 4);
+        g_rgn[d].n += k;
+        return mw_rgn_type(d);
+    }
+    if (mode == 1) { /* RGN_AND: pairwise intersection */
+        uint32_t n = 0;
+        for (uint32_t i = 0; i < g_rgn[a].n && n < MW_RGN_RECTS; i++)
+            for (uint32_t j = 0; j < g_rgn[b].n && n < MW_RGN_RECTS; j++) {
+                int32_t l = g_rgn[a].r[i][0] > g_rgn[b].r[j][0] ? g_rgn[a].r[i][0] : g_rgn[b].r[j][0];
+                int32_t t = g_rgn[a].r[i][1] > g_rgn[b].r[j][1] ? g_rgn[a].r[i][1] : g_rgn[b].r[j][1];
+                int32_t r = g_rgn[a].r[i][2] < g_rgn[b].r[j][2] ? g_rgn[a].r[i][2] : g_rgn[b].r[j][2];
+                int32_t bo = g_rgn[a].r[i][3] < g_rgn[b].r[j][3] ? g_rgn[a].r[i][3] : g_rgn[b].r[j][3];
+                if (l < r && t < bo) {
+                    g_rgn[d].r[n][0] = l; g_rgn[d].r[n][1] = t;
+                    g_rgn[d].r[n][2] = r; g_rgn[d].r[n][3] = bo;
+                    n++;
+                }
+            }
+        g_rgn[d].n = n;
+        return mw_rgn_type(d);
+    }
+    if (mode == 4) { /* RGN_DIFF: subtract every s2 rect from every s1 rect */
+        uint32_t n = 0;
+        int32_t pieces[4][4];
+        for (uint32_t i = 0; i < g_rgn[a].n && n < MW_RGN_RECTS; i++) {
+            uint32_t m = mw_sub_rect(g_rgn[a].r[i], g_rgn[b].r[0], pieces);
+            for (uint32_t p = 0; p < m && n < MW_RGN_RECTS; p++) {
+                memcpy(g_rgn[d].r[n++], pieces[p], sizeof(int32_t) * 4);
+            }
+        }
+        g_rgn[d].n = n;
+        return mw_rgn_type(d);
+    }
+    if (mode == 3) { /* RGN_XOR: DIFF(a,b) + DIFF(b,a) */
+        uint32_t n = 0;
+        int32_t pieces[4][4];
+        for (uint32_t i = 0; i < g_rgn[a].n && n < MW_RGN_RECTS; i++) {
+            uint32_t m = mw_sub_rect(g_rgn[a].r[i], g_rgn[b].r[0], pieces);
+            for (uint32_t p = 0; p < m && n < MW_RGN_RECTS; p++)
+                memcpy(g_rgn[d].r[n++], pieces[p], sizeof(int32_t) * 4);
+        }
+        for (uint32_t i = 0; i < g_rgn[b].n && n < MW_RGN_RECTS; i++) {
+            uint32_t m = mw_sub_rect(g_rgn[b].r[i], g_rgn[a].r[0], pieces);
+            for (uint32_t p = 0; p < m && n < MW_RGN_RECTS; p++)
+                memcpy(g_rgn[d].r[n++], pieces[p], sizeof(int32_t) * 4);
+        }
+        g_rgn[d].n = n;
+        return mw_rgn_type(d);
+    }
+    return 0; /* unknown mode -> ERROR */
+}
+__attribute__((ms_abi)) int mw_GetUpdateRgn(void* hwnd, void* hrgn, int erase) {
+    (void)hwnd; (void)erase;
+    int d = mw_rgn_slot(hrgn);
+    if (d < 0) { mw_SetLastError(87); return 0; }
+    g_rgn[d].n = 0; /* no pending update region in the headless engine */
+    MW_TRACE("GetUpdateRgn() -> NULLREGION (no pending updates)");
+    return 1; /* NULLREGION */
+}
+static struct { void* dc; void* rgn; } g_clipmap[8];
+__attribute__((ms_abi)) int mw_SelectClipRgn(void* hdc, void* hrgn) {
+    int r = mw_rgn_slot(hrgn);
+    if (hrgn && r < 0) return 0; /* ERROR */
+    for (int i = 0; i < 8; i++) {
+        if (g_clipmap[i].dc == hdc || !g_clipmap[i].dc) {
+            g_clipmap[i].dc = hdc;
+            g_clipmap[i].rgn = hrgn;
+            break;
+        }
+    }
+    MW_TRACE("SelectClipRgn(dc=%p rgn=%p) -> SIMPLEREGION", hdc, hrgn);
+    return 2;
+}
+__attribute__((ms_abi)) int mw_RectInRegion(void* hrgn, const void* rc) {
+    int s = mw_rgn_slot(hrgn);
+    if (s < 0 || !rc) return 0;
+    const int32_t* r = (const int32_t*)rc;
+    for (uint32_t i = 0; i < g_rgn[s].n; i++)
+        if (r[0] < g_rgn[s].r[i][2] && r[2] > g_rgn[s].r[i][0] &&
+            r[1] < g_rgn[s].r[i][3] && r[3] > g_rgn[s].r[i][1])
+            return 1;
+    return 0;
+}
 __attribute__((ms_abi)) int mw_PrintDlgW(void* pdlg) {
     /* honest cancel: no print backend, user pressed Cancel */
     (void)pdlg;
@@ -8160,6 +8336,23 @@ __attribute__((ms_abi)) int32_t mw_RegQueryInfoKeyW(void* key, wchar_t* cls, uin
     mw_SetLastError(6);
     return 6;
 }
+/* SWEEP-019 SW-876..878: A-side registry tail — mirrors the W-side honest
+ * contracts (same codes, SetLastError set), NOT duplicated logic. */
+__attribute__((ms_abi)) int32_t mw_RegDeleteValueA(void* key, const char* name) {
+    (void)key; (void)name;
+    mw_SetLastError(2); /* ERROR_FILE_NOT_FOUND, same as RegDeleteValueW */
+    return 2;
+}
+__attribute__((ms_abi)) int32_t mw_RegEnumValueA(void* key, uint32_t idx, char* name, uint32_t* ncap, void* res, uint32_t* type, void* data, uint32_t* size) {
+    (void)key; (void)idx; (void)name; (void)ncap; (void)res; (void)type; (void)data; (void)size;
+    mw_SetLastError(259); /* ERROR_NO_MORE_ITEMS, same as RegEnumValueW */
+    return 259;
+}
+__attribute__((ms_abi)) int32_t mw_RegQueryInfoKeyA(void* key, char* cls, uint32_t* ccap, void* res, uint32_t* subkeys, uint32_t* maxsub, uint32_t* maxcls, uint32_t* values, uint32_t* maxval, uint32_t* maxdata, uint32_t* secdesc, void* time) {
+    (void)key; (void)cls; (void)ccap; (void)res; (void)subkeys; (void)maxsub; (void)maxcls; (void)values; (void)maxval; (void)maxdata; (void)secdesc; (void)time;
+    mw_SetLastError(6); /* ERROR_INVALID_HANDLE, same as RegQueryInfoKeyW */
+    return 6;
+}
 __attribute__((ms_abi)) int32_t mw_RegSetValueExW(void* key, const wchar_t* name, uint32_t res, uint32_t type, const void* data, uint32_t size) {
     mw_SetLastError(5);
     return 5;
@@ -8173,7 +8366,367 @@ __attribute__((ms_abi)) int32_t mw_RegNotifyChangeKeyValue(void* key, int watch,
     return 1;
 }
 
-/* ---- BCrypt: real entropy for GenRandom, honest failure elsewhere ---- */
+/* ============================================================
+ * SWEEP-019 queue families (SW-821..878) — one elephant batch:
+ *   clipboard x5 (SW-821..825), common dialogs x5 (SW-826..830),
+ *   shell x5 (SW-851..855), network x5 (SW-856..860),
+ *   CRT tail x5 (SW-861..865), COM completion (SW-866..870),
+ *   perf/debug x5 (SW-871..875).
+ * Every family: typed, self-describing semantics (MW_TRACE); honest
+ * failure where a real backend is absent (registry/BCrypt policy).
+ * Forward decls for helpers defined later in this file: */
+static void mw_w16cpy(uint16_t* dst, const uint16_t* src, size_t cap);
+static int mw_probe_copy(const void* src, size_t n, void* dst);
+__attribute__((ms_abi)) void mw_WSASetLastError(int e); /* defined in the ws2_32 block */
+static int mw_printf_classify(const char* fmt, unsigned char* cls); /* printf core */
+static int mw_printf_emit(FILE* f, const char* fmt, const unsigned long long* slots, int nargs);
+
+/* ---- SW-821..825: clipboard — single headless clipboard ---- */
+static int      g_clip_open = 0;
+static uint32_t g_clip_fmt = 0;
+static void*    g_clip_data = 0;
+__attribute__((ms_abi)) int mw_OpenClipboard(void* owner) {
+    (void)owner;
+    g_clip_open = 1;
+    MW_TRACE("OpenClipboard() -> TRUE (single headless clipboard)");
+    return 1;
+}
+__attribute__((ms_abi)) int mw_CloseClipboard(void) {
+    if (!g_clip_open) { mw_SetLastError(6); return 0; } /* ERROR_INVALID_HANDLE */
+    g_clip_open = 0;
+    return 1;
+}
+__attribute__((ms_abi)) int mw_EmptyClipboard(void) {
+    g_clip_fmt = 0; g_clip_data = 0;
+    MW_TRACE("EmptyClipboard() -> TRUE");
+    return 1;
+}
+__attribute__((ms_abi)) void* mw_SetClipboardData(uint32_t fmt, void* mem) {
+    if (!g_clip_open) return NULL;
+    g_clip_fmt = fmt; g_clip_data = mem;
+    MW_TRACE("SetClipboardData(fmt=%#x, %p) -> stored", fmt, mem);
+    return mem;
+}
+__attribute__((ms_abi)) void* mw_GetClipboardData(uint32_t fmt) {
+    void* r = (g_clip_open && g_clip_fmt == fmt) ? g_clip_data : NULL;
+    MW_TRACE("GetClipboardData(fmt=%#x) -> %p", fmt, r);
+    return r;
+}
+__attribute__((ms_abi)) int mw_IsClipboardFormatAvailable(uint32_t fmt) {
+    return (g_clip_fmt == fmt) ? 1 : 0;
+}
+
+/* ---- SW-826..830: common dialogs — canned user-CANCEL returns ----
+ * The headless engine has no modal UI: every dialog API reports "the user
+ * pressed Cancel" (0/FALSE/NULL, CommDlgExtendedError == 0), the path real
+ * programs treat as a clean no-op. */
+__attribute__((ms_abi)) int mw_GetOpenFileNameA(void* ofn) { (void)ofn; MW_TRACE("GetOpenFileNameA() -> FALSE (cancel)"); return 0; }
+__attribute__((ms_abi)) int mw_GetOpenFileNameW(void* ofn) { (void)ofn; MW_TRACE("GetOpenFileNameW() -> FALSE (cancel)"); return 0; }
+__attribute__((ms_abi)) int mw_GetSaveFileNameA(void* ofn) { (void)ofn; MW_TRACE("GetSaveFileNameA() -> FALSE (cancel)"); return 0; }
+__attribute__((ms_abi)) int mw_GetSaveFileNameW(void* ofn) { (void)ofn; MW_TRACE("GetSaveFileNameW() -> FALSE (cancel)"); return 0; }
+__attribute__((ms_abi)) int mw_ChooseColorA(void* cc) { (void)cc; MW_TRACE("ChooseColorA() -> FALSE (cancel)"); return 0; }
+__attribute__((ms_abi)) int mw_ChooseColorW(void* cc) { (void)cc; MW_TRACE("ChooseColorW() -> FALSE (cancel)"); return 0; }
+__attribute__((ms_abi)) void* mw_FindTextA(void* fr) { (void)fr; MW_TRACE("FindTextA() -> NULL (cancel)"); return NULL; }
+__attribute__((ms_abi)) void* mw_FindTextW(void* fr) { (void)fr; MW_TRACE("FindTextW() -> NULL (cancel)"); return NULL; }
+__attribute__((ms_abi)) void* mw_ReplaceTextA(void* fr) { (void)fr; MW_TRACE("ReplaceTextA() -> NULL (cancel)"); return NULL; }
+__attribute__((ms_abi)) void* mw_ReplaceTextW(void* fr) { (void)fr; MW_TRACE("ReplaceTextW() -> NULL (cancel)"); return NULL; }
+__attribute__((ms_abi)) int mw_PageSetupDlgA(void* psd) { (void)psd; MW_TRACE("PageSetupDlgA() -> FALSE (cancel)"); return 0; }
+__attribute__((ms_abi)) int mw_PageSetupDlgW(void* psd) { (void)psd; MW_TRACE("PageSetupDlgW() -> FALSE (cancel)"); return 0; }
+__attribute__((ms_abi)) uint32_t mw_CommDlgExtendedError(void) { return 0; }
+
+/* ---- SW-851..855: shell32 — scratch special folders, checked ShellExecute ---- */
+static void mw_shell_root(char* out, size_t cap) {
+    const char* env = getenv("MINWIN_SHELL_ROOT");
+    snprintf(out, cap, "%s/shellfolders", (env && *env) ? env : ".");
+}
+static int mw_shell_csidl_path(uint32_t csidl, int create, char* out, size_t cap) {
+    char root[512];
+    mw_shell_root(root, sizeof(root));
+    snprintf(out, cap, "%s/csidl_%02x", root, csidl & 0xFFu);
+    if (create) {
+        mkdir(root, 0755); /* EEXIST is fine */
+        mkdir(out, 0755);
+    }
+    return 1;
+}
+__attribute__((ms_abi)) int mw_SHGetSpecialFolderPathA(void* hwnd, char* out, int csidl, int create) {
+    (void)hwnd;
+    char p[512];
+    if (!out || !mw_shell_csidl_path((uint32_t)csidl, create, p, sizeof(p))) return 0;
+    snprintf(out, 260, "%s", p);
+    MW_TRACE("SHGetSpecialFolderPathA(csidl=%#x create=%d) -> %s", csidl, create, p);
+    return 1;
+}
+__attribute__((ms_abi)) int mw_SHGetSpecialFolderPathW(void* hwnd, uint16_t* out, int csidl, int create) {
+    (void)hwnd;
+    char p[512];
+    if (!out || !mw_shell_csidl_path((uint32_t)csidl, create, p, sizeof(p))) return 0;
+    uint16_t w[260];
+    uint32_t n = 0;
+    for (; n < 259 && p[n]; n++) w[n] = (uint16_t)(uint8_t)p[n];
+    w[n] = 0;
+    mw_w16cpy(out, w, 260);
+    MW_TRACE("SHGetSpecialFolderPathW(csidl=%#x create=%d) -> %s", csidl, create, p);
+    return 1;
+}
+__attribute__((ms_abi)) void* mw_SHBrowseForFolderA(void* bi) { (void)bi; MW_TRACE("SHBrowseForFolderA() -> NULL (cancel)"); return NULL; }
+__attribute__((ms_abi)) void* mw_SHBrowseForFolderW(void* bi) { (void)bi; MW_TRACE("SHBrowseForFolderW() -> NULL (cancel)"); return NULL; }
+__attribute__((ms_abi)) int mw_SHGetFileInfoA(const void* path, uint32_t attrs, void* sfi, uint32_t cb, uint32_t flags) {
+    (void)path; (void)attrs; (void)sfi; (void)cb; (void)flags;
+    MW_TRACE("SHGetFileInfoA() -> 0 (no shell icon DB, honest failure)");
+    return 0;
+}
+__attribute__((ms_abi)) int mw_SHGetFileInfoW(const void* path, uint32_t attrs, void* sfi, uint32_t cb, uint32_t flags) {
+    (void)path; (void)attrs; (void)sfi; (void)cb; (void)flags;
+    MW_TRACE("SHGetFileInfoW() -> 0 (no shell icon DB, honest failure)");
+    return 0;
+}
+__attribute__((ms_abi)) void* mw_ShellExecuteA(void* hwnd, const char* verb, const char* file, const char* params, const char* dir, int show) {
+    (void)hwnd; (void)verb; (void)params; (void)dir; (void)show;
+    if (file && access(file, F_OK) == 0) {
+        MW_TRACE("ShellExecuteA(file=%s) -> 42 (exists, no shell backend)", file);
+        return (void*)(uintptr_t)42; /* > 32: success convention */
+    }
+    MW_TRACE("ShellExecuteA(file=%s) -> SE_ERR_FNF", file ? file : "(null)");
+    return (void*)(uintptr_t)2; /* SE_ERR_FNF */
+}
+__attribute__((ms_abi)) void* mw_ShellExecuteW(void* hwnd, const uint16_t* verb, const uint16_t* file, const uint16_t* params, const uint16_t* dir, int show) {
+    (void)hwnd; (void)verb; (void)params; (void)dir; (void)show;
+    char a[1024];
+    int ok = 0;
+    if (file) {
+        uint16_t tmp[512];
+        if (mw_probe_copy(file, 1022, tmp)) {
+            uint32_t n = 0;
+            while (n < 511 && tmp[n]) { a[n] = (char)(tmp[n] & 0xFF); n++; }
+            a[n] = 0;
+            ok = (access(a, F_OK) == 0);
+        }
+    }
+    MW_TRACE("ShellExecuteW(file=%s) -> %s", ok ? a : "(missing)", ok ? "42" : "SE_ERR_FNF");
+    return (void*)(uintptr_t)(ok ? 42 : 2);
+}
+__attribute__((ms_abi)) int mw_ShellExecuteExA(void* sei) {
+    if (!sei) return 0;
+    if (*(uint32_t*)sei < 60) { mw_SetLastError(87); return 0; }
+    const char* file = *(const char* const*)((uint8_t*)sei + 24);
+    int ok = file && access(file, F_OK) == 0;
+    *(int32_t*)((uint8_t*)sei + 52) = ok ? 42 : 2; /* hInstApp */
+    MW_TRACE("ShellExecuteExA(file=%s) -> %d", file ? file : "(null)", ok);
+    return ok;
+}
+__attribute__((ms_abi)) int mw_ShellExecuteExW(void* sei) {
+    if (!sei) return 0;
+    if (*(uint32_t*)sei < 60) { mw_SetLastError(87); return 0; }
+    const uint16_t* file = *(const uint16_t* const*)((uint8_t*)sei + 24);
+    char a[1024];
+    int ok = 0;
+    if (file) {
+        uint16_t tmp[512];
+        if (mw_probe_copy(file, 1022, tmp)) {
+            uint32_t n = 0;
+            while (n < 511 && tmp[n]) { a[n] = (char)(tmp[n] & 0xFF); n++; }
+            a[n] = 0;
+            ok = (access(a, F_OK) == 0);
+        }
+    }
+    *(int32_t*)((uint8_t*)sei + 52) = ok ? 42 : 2; /* hInstApp */
+    MW_TRACE("ShellExecuteExW(file=%s) -> %d", ok ? a : "(null)", ok);
+    return ok;
+}
+/* SHGetMalloc: malloc-backed IMalloc (vtbl: QI/AddRef/Release/Alloc/Free/
+ * Realloc/GetSize/DidAlloc/HeapMinimize). */
+static long mw_shmalloc_qi(void* self, const void* iid, void** out) {
+    (void)self; (void)iid; if (out) *out = NULL; return 0x80004002L; /* E_NOINTERFACE */
+}
+static uint32_t mw_shmalloc_addref(void* self) { (void)self; return 2; }
+static uint32_t mw_shmalloc_release(void* self) { (void)self; return 1; }
+static void* mw_shmalloc_alloc(void* self, size_t cb) { (void)self; return cb ? malloc(cb) : NULL; }
+static void* mw_shmalloc_realloc(void* self, void* p, size_t cb) { (void)self; return realloc(p, cb); }
+static void mw_shmalloc_free(void* self, void* p) { (void)self; free(p); }
+static size_t mw_shmalloc_getsize(void* self, void* p) { (void)self; (void)p; return 0; }
+static int mw_shmalloc_didalloc(void* self, void* p) { (void)self; (void)p; return -1; }
+static void mw_shmalloc_heapmin(void* self) { (void)self; }
+static void* const g_shmalloc_vtbl[9] = {
+    (void*)mw_shmalloc_qi, (void*)mw_shmalloc_addref, (void*)mw_shmalloc_release,
+    (void*)mw_shmalloc_alloc, (void*)mw_shmalloc_free, (void*)mw_shmalloc_realloc,
+    (void*)mw_shmalloc_getsize, (void*)mw_shmalloc_didalloc, (void*)mw_shmalloc_heapmin,
+};
+static void* g_shmalloc_obj[1] = { (void*)g_shmalloc_vtbl };
+__attribute__((ms_abi)) uint32_t mw_SHGetMalloc(void** out) {
+    if (!out) return 0x80004003L; /* E_POINTER */
+    *out = (void*)g_shmalloc_obj;
+    MW_TRACE("SHGetMalloc() -> S_OK (malloc-backed IMalloc)");
+    return 0;
+}
+
+/* ---- SW-856..860: network — no neighborhood, real name resolution ---- */
+__attribute__((ms_abi)) uint32_t mw_WNetOpenEnumA(uint32_t scope, uint32_t type, uint32_t usage, const void* netres, void** henum) {
+    (void)scope; (void)type; (void)usage; (void)netres;
+    if (henum) *henum = NULL;
+    MW_TRACE("WNetOpenEnumA() -> ERROR_NO_NETWORK (headless)");
+    return 225;
+}
+__attribute__((ms_abi)) uint32_t mw_WNetOpenEnumW(uint32_t scope, uint32_t type, uint32_t usage, const void* netres, void** henum) {
+    (void)scope; (void)type; (void)usage; (void)netres;
+    if (henum) *henum = NULL;
+    MW_TRACE("WNetOpenEnumW() -> ERROR_NO_NETWORK (headless)");
+    return 225;
+}
+__attribute__((ms_abi)) uint32_t mw_WNetCloseEnum(void* henum) {
+    (void)henum;
+    return 0; /* WN_SUCCESS — nothing to release (open never succeeded) */
+}
+__attribute__((ms_abi)) uint32_t mw_WNetEnumResourceA(void* henum, uint32_t* count, void* buf, uint32_t* size) {
+    (void)henum; (void)buf; (void)size;
+    if (count) *count = 0;
+    return 225;
+}
+__attribute__((ms_abi)) uint32_t mw_WNetEnumResourceW(void* henum, uint32_t* count, void* buf, uint32_t* size) {
+    (void)henum; (void)buf; (void)size;
+    if (count) *count = 0;
+    return 225;
+}
+__attribute__((ms_abi)) int mw_getnameinfo_(const void* sa, uint32_t salen, char* host, uint32_t hostlen, char* serv, uint32_t servlen, int flags) {
+    int r = getnameinfo((const struct sockaddr*)sa, (socklen_t)salen, host,
+                        (socklen_t)hostlen, serv, (socklen_t)servlen, flags);
+    MW_TRACE("getnameinfo() -> %d", r);
+    return r;
+}
+__attribute__((ms_abi)) int mw_WSAEnumProtocolsA(const int* procs, void* buf, uint32_t* len) {
+    (void)procs; (void)buf;
+    uint32_t need = 304; /* sizeof(WSAPROTOCOL_INFOA) */
+    if (!len) { mw_WSASetLastError(10014); return -1; }
+    if (*len < need) { *len = need; mw_WSASetLastError(10055); return -1; } /* WSAENOBUFS */
+    *len = 0;
+    MW_TRACE("WSAEnumProtocolsA() -> 0 providers (headless)");
+    return 0;
+}
+__attribute__((ms_abi)) int mw_WSAEnumProtocolsW(const int* procs, void* buf, uint32_t* len) {
+    (void)procs; (void)buf;
+    uint32_t need = 304;
+    if (!len) { mw_WSASetLastError(10014); return -1; }
+    if (*len < need) { *len = need; mw_WSASetLastError(10055); return -1; }
+    *len = 0;
+    MW_TRACE("WSAEnumProtocolsW() -> 0 providers (headless)");
+    return 0;
+}
+
+/* ---- SW-861..865: msvcrt MB-string tail (produkey CRT list) ---- */
+static int mw_mb_lower(int c) { return (c >= 'A' && c <= 'Z') ? c + 32 : c; }
+__attribute__((ms_abi)) int mw__mbsicmp(const uint8_t* a, const uint8_t* b) {
+    if (!a || !b) return a ? 1 : (b ? -1 : 0);
+    while (*a && *b) {
+        int d = mw_mb_lower(*a) - mw_mb_lower(*b);
+        if (d) return d;
+        a++; b++;
+    }
+    return mw_mb_lower(*a) - mw_mb_lower(*b);
+}
+__attribute__((ms_abi)) uint8_t* mw__mbschr(const uint8_t* s, uint32_t c) {
+    if (!s) return NULL;
+    for (; *s; s++)
+        if (*s == (uint8_t)(c & 0xFF)) return (uint8_t*)s;
+    return NULL;
+}
+__attribute__((ms_abi)) int mw__memicmp(const void* pa, const void* pb, size_t n) {
+    const uint8_t* a = (const uint8_t*)pa;
+    const uint8_t* b = (const uint8_t*)pb;
+    for (size_t i = 0; i < n; i++) {
+        int d = mw_mb_lower(a[i]) - mw_mb_lower(b[i]);
+        if (d) return d;
+    }
+    return 0;
+}
+__attribute__((ms_abi)) char* mw__strlwr(char* s) {
+    if (s)
+        for (char* p = s; *p; p++) *p = (char)mw_mb_lower((uint8_t)*p);
+    return s;
+}
+__attribute__((ms_abi)) int mw__snprintf(char* buf, size_t cnt, const char* fmt, ...) {
+    if (!buf || !fmt || !cnt) return -1;
+    unsigned char cls[MW_PRINTF_MAX_ARGS];
+    int nargs = mw_printf_classify(fmt, cls);
+    unsigned long long slots[MW_PRINTF_MAX_ARGS];
+    __builtin_ms_va_list ap;
+    __builtin_ms_va_start(ap, fmt);
+    for (int i = 0; i < nargs; i++) {
+        if (cls[i]) { double d = va_arg(ap, double); memcpy(&slots[i], &d, 8); }
+        else        { slots[i] = (unsigned long long)va_arg(ap, long long); }
+    }
+    __builtin_ms_va_end(ap);
+    FILE* mf = fmemopen(buf, cnt, "w");
+    if (!mf) return -1;
+    int n = mw_printf_emit(mf, fmt, slots, nargs);
+    fclose(mf); /* fmemopen NUL-terminates */
+    if (n < 0) return -1;
+    if ((size_t)n >= cnt) return -1; /* MSVCRT truncation contract */
+    return n;
+}
+
+/* ---- SW-866..870: COM family completion (honest REGDB policy) ---- */
+__attribute__((ms_abi)) uint32_t mw_CoCreateInstanceEx(const void* clsid, void* outer, uint32_t clsctx, void* server, uint32_t count, void* results) {
+    (void)clsid; (void)outer; (void)clsctx; (void)server; (void)count; (void)results;
+    MW_TRACE("CoCreateInstanceEx() -> REGDB_E_CLASSNOTFOUND (0x80040154)");
+    return 0x80040154u;
+}
+__attribute__((ms_abi)) uint32_t mw_CoGetClassObject(const void* clsid, uint32_t clsctx, void* server, const void* iid, void** out) {
+    (void)clsid; (void)clsctx; (void)server; (void)iid;
+    if (out) *out = NULL;
+    MW_TRACE("CoGetClassObject() -> REGDB_E_CLASSNOTFOUND (0x80040154)");
+    return 0x80040154u;
+}
+__attribute__((ms_abi)) void* mw_CoTaskMemAlloc(size_t cb) {
+    void* p = cb ? malloc(cb) : NULL;
+    MW_TRACE("CoTaskMemAlloc(%zu) -> %p", cb, p);
+    return p;
+}
+__attribute__((ms_abi)) void mw_CoTaskMemFree(void* p) {
+    MW_TRACE("CoTaskMemFree(%p)", p);
+    free(p);
+}
+__attribute__((ms_abi)) uint32_t mw_CoCreateGuid(void* guid) {
+    if (guid) {
+        int fd = open("/dev/urandom", O_RDONLY);
+        if (fd >= 0) {
+            ssize_t g = read(fd, guid, 16);
+            close(fd);
+            if (g == 16) return 0;
+        }
+        memset(guid, 0, 16);
+    }
+    return 0;
+}
+
+/* ---- SW-871..875: perf/debug — same-process cross-memory access ----
+ * The guest PE runs in THIS process, so Read/WriteProcessMemory is a
+ * range-checked memcpy; the write path re-protects pages (code pages are
+ * mapped R-X) for the copy duration. */
+static int mw_range_in_image(const void* p, size_t n) {
+    if (!g_image_base || n == 0) return 0;
+    const uint8_t* q = (const uint8_t*)p;
+    return q >= g_image_base && q + n >= q && q + n <= g_image_base + g_image_size;
+}
+__attribute__((ms_abi)) int mw_ReadProcessMemory(void* proc, const void* base, void* buf, size_t size, size_t* read) {
+    (void)proc;
+    if (!mw_range_in_image(base, size)) { mw_SetLastError(299); return 0; } /* ERROR_PARTIAL_COPY */
+    memcpy(buf, base, size);
+    if (read) *read = size;
+    MW_TRACE("ReadProcessMemory(%p, %zu) -> TRUE", base, size);
+    return 1;
+}
+__attribute__((ms_abi)) int mw_WriteProcessMemory(void* proc, void* base, const void* buf, size_t size, size_t* written) {
+    (void)proc;
+    if (!mw_range_in_image(base, size)) { mw_SetLastError(299); return 0; }
+    uint8_t* pg = (uint8_t*)((uintptr_t)base & ~4095ULL);
+    size_t len = (size_t)((uint8_t*)base + size - pg);
+    if (mprotect(pg, len, PROT_READ | PROT_WRITE) != 0) { mw_SetLastError(299); return 0; }
+    memcpy(base, buf, size);
+    mprotect(pg, len, PROT_READ | PROT_EXEC);
+    if (written) *written = size;
+    MW_TRACE("WriteProcessMemory(%p, %zu) -> TRUE", base, size);
+    return 1;
+}
 __attribute__((ms_abi)) int32_t mw_BCryptOpenAlgorithmProvider(void** ph, const wchar_t* alg, const wchar_t* impl, uint32_t flags) {
     MW_TRACE("BCryptOpenAlgorithmProvider()");
     if (!ph) return 0xC000000Du; /* STATUS_INVALID_PARAMETER */
@@ -10375,6 +10928,149 @@ static const uint16_t* mw_hwnd_text(void* h) {
     return 0;
 }
 
+/* ---- SWEEP-019 SW-831..840: common-controls message routing ----
+ * mw_sysclass_* now recognises SysListView32/SysTreeView32/SysTabControl32/
+ * SysHeader32 (0x88..0x8B), so these children REGISTER like any other
+ * control. What was missing is message semantics: NirSoft main lists run
+ * entirely through LVM_* to the child HWND. Model (lazy, per slot):
+ *   ListView: 64 items x 2 subitems of stored text + column count
+ *   TreeView: item count + root pseudo-handle (MW_TREE_BASE)
+ *   Tab:      item count + current selection
+ *   Header:   column count
+ * Unmodelled messages fall through to the old paths (trace + 0). */
+#define MW_LV_MAXITEM 64
+#define MW_LV_MAXSUB  2
+#define MW_LV_TEXTN   40
+typedef struct {
+    uint32_t items, cols;
+    uint16_t txt[MW_LV_MAXITEM][MW_LV_MAXSUB][MW_LV_TEXTN];
+} MwLvState;
+static MwLvState* g_lvstate[MW_CHILD_MAX];
+static uint32_t   g_tree_items[MW_CHILD_MAX];
+static uintptr_t  g_tree_root[MW_CHILD_MAX];
+static uint32_t   g_tab_items[MW_CHILD_MAX];
+static int32_t    g_tab_cursel[MW_CHILD_MAX];
+static uint32_t   g_hdr_cols[MW_CHILD_MAX];
+#define MW_TREE_BASE 0x00070000u
+static MwLvState* mw_lv_state(int s) {
+    if (s < 0 || s >= MW_CHILD_MAX) return NULL;
+    if (!g_lvstate[s]) g_lvstate[s] = (MwLvState*)calloc(1, sizeof(MwLvState));
+    return g_lvstate[s];
+}
+static int mw_child_cls_is(int s, const char* cls) {
+    return s >= 0 && strncmp(g_child[s].cls, cls, sizeof(g_child[s].cls)) == 0;
+}
+static void mw_lv_store_text(uint16_t* dst, const uint16_t* src) {
+    uint16_t tmp[MW_LV_TEXTN];
+    if (src && mw_probe_copy(src, (MW_LV_TEXTN - 1) * 2, tmp))
+        mw_w16cpy(dst, tmp, MW_LV_TEXTN);
+}
+/* returns 1 with *out set when handled, 0 to fall through */
+static int mw_commonctl_msg(int s, uint32_t msg, uintptr_t wp, long long lp, long long* out) {
+    if (mw_child_cls_is(s, "SysListView32")) {
+        MwLvState* lv = mw_lv_state(s);
+        if (!lv) return 0;
+        switch (msg) {
+        case 0x1004u: /* LVM_GETITEMCOUNT */
+            *out = (long long)lv->items; return 1;
+        case 0x1007u: case 0x104Du: { /* LVM_INSERTITEMA/W */
+            if (lv->items >= MW_LV_MAXITEM) { *out = -1; return 1; }
+            uint32_t idx = lv->items;
+            if (lp) {
+                uint32_t iitem = *(uint32_t*)((uint8_t*)lp + 4);
+                idx = (iitem == 0xFFFFFFFFu) ? lv->items
+                    : (iitem > lv->items ? lv->items : iitem);
+                int sub = *(int*)((uint8_t*)lp + 8);
+                if (sub >= 0 && sub < MW_LV_MAXSUB)
+                    mw_lv_store_text(lv->txt[idx][sub],
+                                     *(const uint16_t* const*)((uint8_t*)lp + 24));
+            }
+            lv->items++;
+            *out = (long long)idx; return 1;
+        }
+        case 0x101Bu: case 0x1045u: /* LVM_INSERTCOLUMNA/W */
+            *out = (long long)lv->cols++; return 1;
+        case 0x1073u: { /* LVM_GETITEMTEXTW: wp=item, lp=LVITEMW */
+            *out = 0;
+            if (!lp) return 1;
+            uint32_t iitem = (uint32_t)wp;
+            int sub = *(int*)((uint8_t*)lp + 8);
+            uint16_t* dst = *(uint16_t**)((uint8_t*)lp + 24);
+            int cch = *(int*)((uint8_t*)lp + 32);
+            if (dst && cch > 0 && iitem < lv->items && sub >= 0 && sub < MW_LV_MAXSUB) {
+                uint32_t n = 0;
+                while (n + 1 < (uint32_t)cch && lv->txt[iitem][sub][n]) n++;
+                for (uint32_t k = 0; k <= n; k++) dst[k] = lv->txt[iitem][sub][k];
+                *out = (long long)n;
+            }
+            return 1;
+        }
+        case 0x102Du: { /* LVM_GETITEMTEXTA: ANSI out */
+            *out = 0;
+            if (!lp) return 1;
+            uint32_t iitem = (uint32_t)wp;
+            int sub = *(int*)((uint8_t*)lp + 8);
+            char* dst = *(char**)((uint8_t*)lp + 24);
+            int cch = *(int*)((uint8_t*)lp + 32);
+            if (dst && cch > 0 && iitem < lv->items && sub >= 0 && sub < MW_LV_MAXSUB) {
+                uint32_t n = 0;
+                while (n + 1 < (uint32_t)cch && lv->txt[iitem][sub][n]) n++;
+                uint32_t k = 0;
+                for (; k < n; k++) dst[k] = (char)(lv->txt[iitem][sub][k] & 0xFF);
+                dst[k] = 0;
+                *out = (long long)n;
+            }
+            return 1;
+        }
+        case 0x102Bu: /* LVM_SETITEMSTATE */
+            *out = 1; return 1;
+        case 0x1012u: { /* LVM_HITTEST: no pixel layout in the headless engine */
+            *out = -1;
+            if (lp) *(int32_t*)((uint8_t*)lp + 12) = -1;
+            return 1;
+        }
+        }
+    }
+    if (mw_child_cls_is(s, "SysTreeView32")) {
+        switch (msg) {
+        case 0x1100u: case 0x1132u: { /* TVM_INSERTITEMA/W */
+            g_tree_items[s]++;
+            uintptr_t h = MW_TREE_BASE | (uintptr_t)g_tree_items[s];
+            if (!g_tree_root[s]) g_tree_root[s] = h;
+            *out = (long long)h; return 1;
+        }
+        case 0x1105u: /* TVM_GETCOUNT */
+            *out = (long long)g_tree_items[s]; return 1;
+        case 0x110Au: /* TVM_GETNEXTITEM: TVGN_ROOT(4) -> root; else NULL */
+            *out = (wp == 4u) ? (long long)g_tree_root[s] : 0; return 1;
+        }
+    }
+    if (mw_child_cls_is(s, "SysTabControl32")) {
+        switch (msg) {
+        case 0x1304u: /* TCM_GETITEMCOUNT */
+            *out = (long long)g_tab_items[s]; return 1;
+        case 0x1308u: case 0x133Eu: /* TCM_INSERTITEMA/W */
+            *out = (long long)g_tab_items[s]++; return 1;
+        case 0x130Cu: { /* TCM_SETCURSEL */
+            int32_t prev = g_tab_cursel[s];
+            g_tab_cursel[s] = (int32_t)wp;
+            *out = (long long)prev; return 1;
+        }
+        case 0x130Bu: /* TCM_GETCURSEL */
+            *out = (long long)g_tab_cursel[s]; return 1;
+        }
+    }
+    if (mw_child_cls_is(s, "SysHeader32")) {
+        switch (msg) {
+        case 0x1200u: /* HDM_GETITEMCOUNT */
+            *out = (long long)g_hdr_cols[s]; return 1;
+        case 0x121Bu: case 0x1245u: /* HDM_INSERTCOLUMNA/W */
+            *out = (long long)g_hdr_cols[s]++; return 1;
+        }
+    }
+    return 0;
+}
+
 /* SWEEP-013: SendMessageW/A with real semantics — text I/O against the
  * child-control/main-window registries, BM_GETCHECK, and wndproc routing
  * for the main window (the old stub returned 0 for everything, which killed
@@ -10416,6 +11112,10 @@ __attribute__((ms_abi)) long long mw_SendMessageW(void* h, uint32_t msg, uintptr
     }
     if (s >= 0 && msg == MW_BM_GETCHECK) return g_child[s].checked;
     if (s >= 0 && msg == 0x404u) return 1; /* SW-803..806: SB_SETPARTS -> TRUE */
+    { /* SWEEP-019 SW-831..840: SysListView32/SysTreeView32/SysTabControl32 routing */
+        long long ctl_r;
+        if (s >= 0 && mw_commonctl_msg(s, msg, wp, lp, &ctl_r)) return ctl_r;
+    }
     if (h == MW_GUI_HWND && g_wndproc_fwd) {
         long long r = g_wndproc_fwd(h, msg, wp, lp);
         MW_TRACE("SendMessageW(%s wp=0x%llx) -> wndproc -> %lld",
@@ -10454,6 +11154,10 @@ __attribute__((ms_abi)) long mw_SendMessageA(void* h, uint32_t msg, uintptr_t wp
     }
     if (s >= 0 && msg == MW_BM_GETCHECK) return g_child[s].checked;
     if (s >= 0 && msg == 0x404u) return 1; /* SW-803..806: SB_SETPARTS -> TRUE */
+    { /* SWEEP-019 SW-831..840: common-control routing (A path) */
+        long long ctl_r;
+        if (s >= 0 && mw_commonctl_msg(s, msg, wp, lp, &ctl_r)) return (long)ctl_r;
+    }
     if (h == MW_GUI_HWND && g_wndproc_fwd)
         return (long)g_wndproc_fwd(h, msg, wp, (long long)lp);
     return 0;
@@ -10899,7 +11603,7 @@ static int mw_sysclass_w(const void* cls) {
     if (v && v < 0x10000u) {
         if ((v & 0xFF00u) == 0x8000u) {
             uint32_t c = v & 0xFFu;
-            if (c >= 0x80 && c <= 0x87) return (int)c;
+            if (c >= 0x80 && c <= 0x8B) return (int)c; /* SWEEP-019: +comctl children */
         }
         return 0;
     }
@@ -10910,6 +11614,12 @@ static int mw_sysclass_w(const void* cls) {
          * (SW-803..806). Prefix match: toolbar* / msctls_statusbar32. */
         {"toolbar", 0x86}, {"msctls_statusbar32", 0x87},
         {"statuswindow", 0x87},
+        /* SWEEP-019 SW-831..840: common-controls children (NirSoft main
+         * lists, MFC trees, property sheets). Before this, a guest-created
+         * SysListView32 got sc=0 and fell into the main-window path — the
+         * LVM_* messages were never seen by any child model. */
+        {"syslistview32", 0x88}, {"systreeview32", 0x89},
+        {"systabcontrol32", 0x8A}, {"sysheader32", 0x8B},
     };
     if (!cls) return 0;
     uint16_t tmp[16];
@@ -10920,7 +11630,7 @@ static int mw_sysclass_w(const void* cls) {
     a[i] = 0;
     /* SWEEP-018: prefix compare clamped to the probe width (15) — matches
      * toolbar* and the 15-char-truncated msctls_statusbar32 probe. */
-    for (i = 0; i < 9; i++) {
+    for (i = 0; i < 13; i++) { /* SWEEP-019: 9 -> 13 (comctl children) */
         size_t L = strlen(t[i].n);
         if (strncmp(a, t[i].n, L < 15 ? L : 15) == 0) return t[i].c;
     }
@@ -10931,7 +11641,7 @@ static int mw_sysclass_a(const void* cls) {
     if (v && v < 0x10000u) {
         if ((v & 0xFF00u) == 0x8000u) {
             uint32_t c = v & 0xFFu;
-            if (c >= 0x80 && c <= 0x87) return (int)c;
+            if (c >= 0x80 && c <= 0x8B) return (int)c; /* SWEEP-019: +comctl children */
         }
         return 0;
     }
@@ -10942,6 +11652,12 @@ static int mw_sysclass_a(const void* cls) {
          * (SW-803..806). Prefix match: toolbar* / msctls_statusbar32. */
         {"toolbar", 0x86}, {"msctls_statusbar32", 0x87},
         {"statuswindow", 0x87},
+        /* SWEEP-019 SW-831..840: common-controls children (NirSoft main
+         * lists, MFC trees, property sheets). Before this, a guest-created
+         * SysListView32 got sc=0 and fell into the main-window path — the
+         * LVM_* messages were never seen by any child model. */
+        {"syslistview32", 0x88}, {"systreeview32", 0x89},
+        {"systabcontrol32", 0x8A}, {"sysheader32", 0x8B},
     };
     if (!cls) return 0;
     char a[16] = {0}; int i;
@@ -10949,7 +11665,7 @@ static int mw_sysclass_a(const void* cls) {
     for (i = 0; i < 15; i++)
         if (a[i] >= 'A' && a[i] <= 'Z') a[i] += 32;
     /* SWEEP-018: prefix compare clamped to the probe width (15). */
-    for (i = 0; i < 9; i++) {
+    for (i = 0; i < 13; i++) { /* SWEEP-019: 9 -> 13 (comctl children) */
         size_t L = strlen(t[i].n);
         if (strncmp(a, t[i].n, L < 15 ? L : 15) == 0) return t[i].c;
     }
@@ -10957,8 +11673,10 @@ static int mw_sysclass_a(const void* cls) {
 }
 static const char* mw_sysclass_name(int c) {
     static const char* n[] = {"BUTTON","EDIT","STATIC","LISTBOX","SCROLLBAR","COMBOBOX",
-                              "TOOLBAR","STATUSBAR"};
-    return (c >= 0x80 && c <= 0x87) ? n[c - 0x80] : "?";
+                              "TOOLBAR","STATUSBAR",
+                              /* SWEEP-019 SW-831..840 */
+                              "SysListView32","SysTreeView32","SysTabControl32","SysHeader32"};
+    return (c >= 0x80 && c <= 0x8B) ? n[c - 0x80] : "?";
 }
 /* Register one child-control identity; NULL when the 64-slot table is full. */
 static void* mw_child_register(int sc, void* parent, void* menu,
@@ -13107,28 +13825,62 @@ __attribute__((ms_abi)) int mw_CheckRadioButton(void* dlg, uint32_t first, uint3
     return 1;
 }
 
-/* ---- user32: menus (pseudo-handle registry, honest per-id state) ---- */
+/* ---- user32: menus (pseudo-handle registry, honest per-id state) ----
+ * SWEEP-019 SW-816..820: full menu-item storage model. The old model was
+ * one-way (8 live bits + an id-indexed state side table): no DestroyMenu
+ * to release slots, nothing to READ BACK what the guest wrote, nothing to
+ * build menus in code. Produkey pump-on loop (SW-812: 10,468 SetMenu
+ * calls) traced back to that hole. Model: 8 slots x 16 items (id, state,
+ * text, submenu); MF_BYCOMMAND matches by id, MF_BYPOSITION by index. */
 #define MW_MENU_BASE 0x00050000u
-static uint8_t g_menu_live[8];
+#define MW_MENU_NSLOT 8
+#define MW_MENU_NITEM 16
+typedef struct {
+    uint32_t id;
+    uint16_t state;      /* MF_CHECKED | MF_GRAYED | MF_DISABLED */
+    void*    sub;        /* MF_POPUP submenu handle */
+    uint16_t txt[32];
+} MwMenuItem;
+typedef struct {
+    uint8_t  live;
+    uint8_t  popup;
+    uint32_t count;
+    MwMenuItem item[MW_MENU_NITEM];
+} MwMenu;
+static MwMenu g_menus[MW_MENU_NSLOT];
+static int mw_menu_slot(void* menu) {
+    uintptr_t v = (uintptr_t)menu;
+    if ((v & 0xFFFF0000u) != MW_MENU_BASE) return -1;
+    int i = (int)(v & 0xFFFFu) - 1;
+    return (i >= 0 && i < MW_MENU_NSLOT && g_menus[i].live) ? i : -1;
+}
+static void* mw_menu_alloc(int popup) {
+    for (int i = 0; i < MW_MENU_NSLOT; i++) {
+        if (g_menus[i].live) continue;
+        memset(&g_menus[i], 0, sizeof(MwMenu));
+        g_menus[i].live = 1;
+        g_menus[i].popup = (uint8_t)popup;
+        return (void*)(uintptr_t)(MW_MENU_BASE | (uintptr_t)(i + 1));
+    }
+    return NULL;
+}
+static int mw_menu_find(int s, uint32_t item, uint32_t flags) {
+    if (flags & 0x400u) { /* MF_BYPOSITION */
+        return (item < g_menus[s].count) ? (int)item : -1;
+    }
+    for (uint32_t i = 0; i < g_menus[s].count; i++)
+        if (g_menus[s].item[i].id == item) return (int)i;
+    return -1;
+}
 __attribute__((ms_abi)) void* mw_LoadMenuW(void* hinst, const uint16_t* name) {
     (void)hinst; (void)name;
-    for (int i = 0; i < 8; i++)
-        if (!g_menu_live[i]) {
-            g_menu_live[i] = 1;
-            void* h = (void*)(uintptr_t)(MW_MENU_BASE | (uintptr_t)(i + 1));
-            MW_TRACE("LoadMenuW() -> HMENU %p", h);
-            return h;
-        }
-    return NULL;
+    void* h = mw_menu_alloc(0);
+    MW_TRACE("LoadMenuW() -> HMENU %p", h);
+    return h;
 }
 __attribute__((ms_abi)) void* mw_LoadMenuA(void* hinst, const char* name) {
     (void)hinst; (void)name;
-    for (int i = 0; i < 8; i++)
-        if (!g_menu_live[i]) {
-            g_menu_live[i] = 1;
-            return (void*)(uintptr_t)(MW_MENU_BASE | (uintptr_t)(i + 1));
-        }
-    return NULL;
+    return mw_menu_alloc(0);
 }
 __attribute__((ms_abi)) int mw_SetMenu(void* hwnd, void* menu) {
     if (hwnd == MW_GUI_HWND) g_main_menu = menu;
@@ -13163,6 +13915,156 @@ __attribute__((ms_abi)) uint32_t mw_EnableMenuItem(void* menu, uint32_t id, uint
     *st = (uint8_t)((*st & ~2u) | ((flags & 3u) ? 2u : 0u));
     MW_TRACE("EnableMenuItem(id=%lu, flags=%#x) -> prev %#x", (unsigned long)id, flags, prev);
     return prev;
+}
+
+/* ---- SWEEP-019 SW-816..820: menu construction/readback APIs ---- */
+__attribute__((ms_abi)) void* mw_CreateMenu(void) {
+    void* h = mw_menu_alloc(0);
+    MW_TRACE("CreateMenu() -> %p", h);
+    return h;
+}
+__attribute__((ms_abi)) void* mw_CreatePopupMenu(void) {
+    void* h = mw_menu_alloc(1);
+    MW_TRACE("CreatePopupMenu() -> %p", h);
+    return h;
+}
+__attribute__((ms_abi)) int mw_DestroyMenu(void* menu) {
+    int s = mw_menu_slot(menu);
+    if (s < 0) { mw_SetLastError(1401); return 0; } /* ERROR_MENU_ITEM_NOT_FOUND class */
+    memset(&g_menus[s], 0, sizeof(MwMenu));
+    if (g_main_menu == menu) g_main_menu = 0;
+    MW_TRACE("DestroyMenu(%p) -> TRUE (slot %d freed)", menu, s);
+    return 1;
+}
+__attribute__((ms_abi)) int mw_AppendMenuW(void* menu, uint32_t flags, uintptr_t id, const uint16_t* text) {
+    int s = mw_menu_slot(menu);
+    if (s < 0 || g_menus[s].count >= MW_MENU_NITEM) return 0;
+    MwMenuItem* it = &g_menus[s].item[g_menus[s].count++];
+    memset(it, 0, sizeof(*it));
+    it->id = (uint32_t)id;
+    it->state = (uint16_t)(flags & (8u | 1u | 2u)); /* MF_CHECKED|MF_GRAYED|MF_DISABLED */
+    if (flags & 0x10u) it->sub = (void*)id;         /* MF_POPUP: idNew is an HMENU */
+    if (text) {
+        uint16_t tmp[32];
+        if (mw_probe_copy(text, 62, tmp)) mw_w16cpy(it->txt, tmp, 32);
+    }
+    MW_TRACE("AppendMenuW(menu=%p flags=%#x id=%lu) count->%u", menu, flags,
+             (unsigned long)id, g_menus[s].count);
+    return 1;
+}
+__attribute__((ms_abi)) int mw_AppendMenuA(void* menu, uint32_t flags, uintptr_t id, const char* text) {
+    int s = mw_menu_slot(menu);
+    if (s < 0 || g_menus[s].count >= MW_MENU_NITEM) return 0;
+    MwMenuItem* it = &g_menus[s].item[g_menus[s].count++];
+    memset(it, 0, sizeof(*it));
+    it->id = (uint32_t)id;
+    it->state = (uint16_t)(flags & (8u | 1u | 2u));
+    if (flags & 0x10u) it->sub = (void*)id;
+    if (text) {
+        char a[32];
+        if (mw_probe_copy(text, 31, a))
+            for (int j = 0; j < 31 && a[j]; j++) it->txt[j] = (uint16_t)(uint8_t)a[j];
+    }
+    MW_TRACE("AppendMenuA(menu=%p flags=%#x id=%lu) count->%u", menu, flags,
+             (unsigned long)id, g_menus[s].count);
+    return 1;
+}
+__attribute__((ms_abi)) int mw_ModifyMenuW(void* menu, uint32_t item, uint32_t flags, uintptr_t idnew, const uint16_t* text) {
+    int s = mw_menu_slot(menu);
+    if (s < 0) return 0;
+    int i = mw_menu_find(s, item, flags);
+    if (i < 0) return 0;
+    MwMenuItem* it = &g_menus[s].item[i];
+    it->id = (uint32_t)idnew;
+    it->state = (uint16_t)(flags & (8u | 1u | 2u));
+    if (flags & 0x10u) it->sub = (void*)idnew;
+    if (text) {
+        uint16_t tmp[32];
+        if (mw_probe_copy(text, 62, tmp)) mw_w16cpy(it->txt, tmp, 32);
+    }
+    MW_TRACE("ModifyMenuW(menu=%p item=%lu) -> TRUE", menu, (unsigned long)item);
+    return 1;
+}
+__attribute__((ms_abi)) int mw_ModifyMenuA(void* menu, uint32_t item, uint32_t flags, uintptr_t idnew, const char* text) {
+    int s = mw_menu_slot(menu);
+    if (s < 0) return 0;
+    int i = mw_menu_find(s, item, flags);
+    if (i < 0) return 0;
+    MwMenuItem* it = &g_menus[s].item[i];
+    it->id = (uint32_t)idnew;
+    it->state = (uint16_t)(flags & (8u | 1u | 2u));
+    if (flags & 0x10u) it->sub = (void*)idnew;
+    if (text) {
+        char a[32];
+        if (mw_probe_copy(text, 31, a))
+            for (int j = 0; j < 31 && a[j]; j++) it->txt[j] = (uint16_t)(uint8_t)a[j];
+    }
+    MW_TRACE("ModifyMenuA(menu=%p item=%lu) -> TRUE", menu, (unsigned long)item);
+    return 1;
+}
+__attribute__((ms_abi)) int mw_GetMenuItemCount(void* menu) {
+    int s = mw_menu_slot(menu);
+    return s >= 0 ? (int)g_menus[s].count : -1;
+}
+__attribute__((ms_abi)) void* mw_GetSubMenu(void* menu, int pos) {
+    int s = mw_menu_slot(menu);
+    if (s < 0 || pos < 0 || (uint32_t)pos >= g_menus[s].count) return NULL;
+    return g_menus[s].item[pos].sub;
+}
+/* MENUITEMINFO x64: cbSize@0 fMask@4 fType@8 fState@12 wID@16 hSubMenu@24
+ * dwItemData@48 dwTypeData@56 cch@64 (sizeof 72). MIIM: STATE=1 ID=2
+ * SUBMENU=4 STRING=0x40. */
+__attribute__((ms_abi)) int mw_GetMenuItemInfoW(void* menu, uint32_t item, int bypos, void* mii) {
+    int s = mw_menu_slot(menu);
+    if (s < 0 || !mii) { mw_SetLastError(87); return 0; } /* ERROR_INVALID_PARAMETER */
+    uint32_t* m = (uint32_t*)mii;
+    if (m[0] < 72) { mw_SetLastError(87); return 0; }
+    int i = bypos ? ((item < g_menus[s].count) ? (int)item : -1)
+                  : mw_menu_find(s, item, 0);
+    if (i < 0) { mw_SetLastError(87); return 0; }
+    MwMenuItem* it = &g_menus[s].item[i];
+    uint32_t mask = m[1];
+    if (mask & 0x1u) m[3] = it->state;
+    if (mask & 0x2u) m[4] = it->id;
+    if (mask & 0x4u) *(void**)((uint8_t*)mii + 24) = it->sub;
+    if (mask & 0x40u) {
+        uint16_t** dst = (uint16_t**)((uint8_t*)mii + 56);
+        uint32_t* cch = (uint32_t*)((uint8_t*)mii + 64);
+        uint32_t n = 0;
+        while (n + 1 < 32 && it->txt[n]) n++;
+        if (*dst && *cch) mw_w16cpy(*dst, it->txt, (size_t)(*cch < n ? *cch : n) + 1);
+        *cch = n;
+    }
+    MW_TRACE("GetMenuItemInfoW(menu=%p item=%lu) -> TRUE", menu, (unsigned long)item);
+    return 1;
+}
+__attribute__((ms_abi)) int mw_GetMenuItemInfoA(void* menu, uint32_t item, int bypos, void* mii) {
+    int s = mw_menu_slot(menu);
+    if (s < 0 || !mii) { mw_SetLastError(87); return 0; }
+    uint32_t* m = (uint32_t*)mii;
+    if (m[0] < 72) { mw_SetLastError(87); return 0; }
+    int i = bypos ? ((item < g_menus[s].count) ? (int)item : -1)
+                  : mw_menu_find(s, item, 0);
+    if (i < 0) { mw_SetLastError(87); return 0; }
+    MwMenuItem* it = &g_menus[s].item[i];
+    uint32_t mask = m[1];
+    if (mask & 0x1u) m[3] = it->state;
+    if (mask & 0x2u) m[4] = it->id;
+    if (mask & 0x4u) *(void**)((uint8_t*)mii + 24) = it->sub;
+    if (mask & 0x40u) {
+        char** dst = (char**)((uint8_t*)mii + 56);
+        uint32_t* cch = (uint32_t*)((uint8_t*)mii + 64);
+        uint32_t n = 0;
+        while (n + 1 < 32 && it->txt[n]) n++;
+        if (*dst && *cch) {
+            uint32_t k = 0;
+            for (; k < n && k + 1 < (uint32_t)*cch; k++) (*dst)[k] = (char)(it->txt[k] & 0xFF);
+            (*dst)[k] = 0;
+        }
+        *cch = n;
+    }
+    MW_TRACE("GetMenuItemInfoA(menu=%p item=%lu) -> TRUE", menu, (unsigned long)item);
+    return 1;
 }
 
 /* ---- user32: misc window APIs ---- */
@@ -15780,6 +16682,81 @@ ENTRY("msvcrt.dll", "wctype", mw_wctype),
     ENTRY("gdiplus.dll", "GdipGetImageHeight",                  mw_GdipGetImageHeight), /* SWEEP-014 r3 */
     ENTRY("gdiplus.dll", "GdipGetImagePixelFormat",             mw_GdipGetImagePixelFormat), /* SWEEP-014 r3 */
     ENTRY("gdiplus.dll", "GdipDisposeImage",                    mw_GdipDisposeImage), /* SWEEP-014 r3 */
+    /* ---- SWEEP-019 SW-816..878: queue families (menu/clipboard/comdlg/
+     * listview-support/gdi-rgn/print/shell/net/CRT/COM/perf/regA) ---- */
+    ENTRY("USER32.DLL", "CreateMenu",                           mw_CreateMenu),
+    ENTRY("USER32.DLL", "CreatePopupMenu",                      mw_CreatePopupMenu),
+    ENTRY("USER32.DLL", "DestroyMenu",                          mw_DestroyMenu),
+    ENTRY("USER32.DLL", "AppendMenuA",                          mw_AppendMenuA),
+    ENTRY("USER32.DLL", "AppendMenuW",                          mw_AppendMenuW),
+    ENTRY("USER32.DLL", "ModifyMenuA",                          mw_ModifyMenuA),
+    ENTRY("USER32.DLL", "ModifyMenuW",                          mw_ModifyMenuW),
+    ENTRY("USER32.DLL", "GetSubMenu",                           mw_GetSubMenu),
+    ENTRY("USER32.DLL", "GetMenuItemCount",                     mw_GetMenuItemCount),
+    ENTRY("USER32.DLL", "GetMenuItemInfoA",                     mw_GetMenuItemInfoA),
+    ENTRY("USER32.DLL", "GetMenuItemInfoW",                     mw_GetMenuItemInfoW),
+    ENTRY("USER32.DLL", "OpenClipboard",                        mw_OpenClipboard),
+    ENTRY("USER32.DLL", "CloseClipboard",                       mw_CloseClipboard),
+    ENTRY("USER32.DLL", "EmptyClipboard",                       mw_EmptyClipboard),
+    ENTRY("USER32.DLL", "SetClipboardData",                     mw_SetClipboardData),
+    ENTRY("USER32.DLL", "GetClipboardData",                     mw_GetClipboardData),
+    ENTRY("USER32.DLL", "IsClipboardFormatAvailable",           mw_IsClipboardFormatAvailable),
+    ENTRY("USER32.DLL", "GetUpdateRgn",                         mw_GetUpdateRgn),
+    ENTRY("comdlg32.dll", "GetOpenFileNameA",                   mw_GetOpenFileNameA),
+    ENTRY("comdlg32.dll", "GetOpenFileNameW",                   mw_GetOpenFileNameW),
+    ENTRY("comdlg32.dll", "GetSaveFileNameA",                   mw_GetSaveFileNameA),
+    ENTRY("comdlg32.dll", "GetSaveFileNameW",                   mw_GetSaveFileNameW),
+    ENTRY("comdlg32.dll", "ChooseColorA",                       mw_ChooseColorA),
+    ENTRY("comdlg32.dll", "ChooseColorW",                       mw_ChooseColorW),
+    ENTRY("comdlg32.dll", "FindTextA",                          mw_FindTextA),
+    ENTRY("comdlg32.dll", "FindTextW",                          mw_FindTextW),
+    ENTRY("comdlg32.dll", "ReplaceTextA",                       mw_ReplaceTextA),
+    ENTRY("comdlg32.dll", "ReplaceTextW",                       mw_ReplaceTextW),
+    ENTRY("comdlg32.dll", "PageSetupDlgA",                      mw_PageSetupDlgA),
+    ENTRY("comdlg32.dll", "PageSetupDlgW",                      mw_PageSetupDlgW),
+    ENTRY("comdlg32.dll", "CommDlgExtendedError",               mw_CommDlgExtendedError),
+    ENTRY("shell32.dll", "SHGetSpecialFolderPathA",             mw_SHGetSpecialFolderPathA),
+    ENTRY("shell32.dll", "SHGetSpecialFolderPathW",             mw_SHGetSpecialFolderPathW),
+    ENTRY("shell32.dll", "SHBrowseForFolderA",                  mw_SHBrowseForFolderA),
+    ENTRY("shell32.dll", "SHBrowseForFolderW",                  mw_SHBrowseForFolderW),
+    ENTRY("shell32.dll", "SHGetFileInfoA",                      mw_SHGetFileInfoA),
+    ENTRY("shell32.dll", "SHGetFileInfoW",                      mw_SHGetFileInfoW),
+    ENTRY("shell32.dll", "ShellExecuteA",                       mw_ShellExecuteA),
+    ENTRY("shell32.dll", "ShellExecuteW",                       mw_ShellExecuteW),
+    ENTRY("shell32.dll", "ShellExecuteExA",                     mw_ShellExecuteExA),
+    ENTRY("shell32.dll", "ShellExecuteExW",                     mw_ShellExecuteExW),
+    ENTRY("shell32.dll", "SHGetMalloc",                         mw_SHGetMalloc),
+    ENTRY("mpr.dll", "WNetOpenEnumA",                           mw_WNetOpenEnumA),
+    ENTRY("mpr.dll", "WNetOpenEnumW",                           mw_WNetOpenEnumW),
+    ENTRY("mpr.dll", "WNetCloseEnum",                           mw_WNetCloseEnum),
+    ENTRY("mpr.dll", "WNetEnumResourceA",                       mw_WNetEnumResourceA),
+    ENTRY("mpr.dll", "WNetEnumResourceW",                       mw_WNetEnumResourceW),
+    ENTRY("ws2_32.dll", "getnameinfo",                          mw_getnameinfo_),
+    ENTRY("WS2_32.dll", "WSAEnumProtocolsA",                    mw_WSAEnumProtocolsA),
+    ENTRY("WS2_32.dll", "WSAEnumProtocolsW",                    mw_WSAEnumProtocolsW),
+    ENTRY("msvcrt.dll", "_mbsicmp",                             mw__mbsicmp),
+    ENTRY("msvcrt.dll", "_mbschr",                              mw__mbschr),
+    ENTRY("msvcrt.dll", "_memicmp",                             mw__memicmp),
+    ENTRY("msvcrt.dll", "_strlwr",                              mw__strlwr),
+    ENTRY("msvcrt.dll", "_snprintf",                            mw__snprintf),
+    ENTRY("ole32.dll", "CoCreateInstanceEx",                    mw_CoCreateInstanceEx),
+    ENTRY("ole32.dll", "CoGetClassObject",                      mw_CoGetClassObject),
+    ENTRY("ole32.dll", "CoTaskMemAlloc",                        mw_CoTaskMemAlloc),
+    ENTRY("ole32.dll", "CoTaskMemFree",                         mw_CoTaskMemFree),
+    ENTRY("ole32.dll", "CoCreateGuid",                          mw_CoCreateGuid),
+    ENTRY("KERNEL32.DLL", "ReadProcessMemory",                  mw_ReadProcessMemory),
+    ENTRY("KERNEL32.DLL", "WriteProcessMemory",                 mw_WriteProcessMemory),
+    ENTRY("KERNEL32.DLL", "ResumeThread",                       mw_ResumeThread),
+    ENTRY("KERNEL32.DLL", "RegDeleteValueA",                    mw_RegDeleteValueA),
+    ENTRY("KERNEL32.DLL", "RegEnumValueA",                      mw_RegEnumValueA),
+    ENTRY("KERNEL32.DLL", "RegQueryInfoKeyA",                   mw_RegQueryInfoKeyA),
+    ENTRY("GDI32.DLL", "CreateRectRgn",                         mw_CreateRectRgn),
+    ENTRY("GDI32.DLL", "CreateRectRgnIndirect",                 mw_CreateRectRgnIndirect),
+    ENTRY("GDI32.DLL", "CombineRgn",                            mw_CombineRgn),
+    ENTRY("GDI32.DLL", "SelectClipRgn",                         mw_SelectClipRgn),
+    ENTRY("GDI32.DLL", "RectInRegion",                          mw_RectInRegion),
+    ENTRY("GDI32.DLL", "StartDocA",                             mw_StartDocA),
+    ENTRY("GDI32.DLL", "AbortDoc",                              mw_AbortDoc),
     /* version resource (coreinfo64) */
     ENTRY("version.dll", "GetFileVersionInfoSizeW",             mw_GetFileVersionInfoSizeW),
     ENTRY("version.dll", "GetFileVersionInfoSizeA",             mw_GetFileVersionInfoSizeA),

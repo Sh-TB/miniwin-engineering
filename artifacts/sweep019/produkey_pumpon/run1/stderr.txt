@@ -1,0 +1,3 @@
+[TRACE] Command line: artifacts/sweep50/dl/produkey/ProduKey.exe
+[ERROR] Not a regular file: artifacts/sweep50/dl/produkey/ProduKey.exe
+[ERROR] Failed to load PE

@@ -1,0 +1,3 @@
+[TRACE] Command line: ../../../../miniwin-results/breakout.exe
+[ERROR] Not a regular file: ../../../../miniwin-results/breakout.exe
+[ERROR] Failed to load PE
