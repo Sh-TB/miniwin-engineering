@@ -575,7 +575,19 @@ __attribute__((ms_abi)) long long mw_winapi_optional_stub(long long a, long long
     (void)a; (void)b; (void)c; (void)d;
     return 0;
 }
+__attribute__((ms_abi)) void* mw_GetProcAddress(void* module, const char* name);
+__attribute__((ms_abi)) int32_t mw_ntdll_ord135(void* a, uint32_t b, void* out); /* used by GetProcAddress ordinal path */
 __attribute__((ms_abi)) void* mw_GetProcAddress(void* module, const char* name) {
+    /* SWEEP-008 BUG-072: MAKEINTRESOURCE ordinals arrive as small integers
+     * (procexp64 calls GetProcAddress(hUxTheme, MAKEINTRESOURCE(135))).
+     * %s-printing that "pointer" crashed inside libc vsnprintf. Real
+     * GetProcAddress treats low 16 bits as an ordinal. */
+    if ((uintptr_t)name > 0 && (uintptr_t)name <= 0xFFFF) {
+        MW_TRACE("GetProcAddress(ordinal=%llu)", (unsigned long long)(uintptr_t)name);
+        if ((uintptr_t)name == 135)
+            return (void*)&mw_ntdll_ord135; /* procexp64 ntdll ordinal bind */
+        return (void*)&mw_winapi_optional_stub;
+    }
     MW_TRACE("GetProcAddress(module=%p, name=%s)", module, name ? name : "NULL");
     if (!name || !name[0]) return NULL;
     /* Resolve from dispatch table if module matches our fake handle or image base.
@@ -5241,7 +5253,18 @@ __attribute__((ms_abi)) void mw_RtlRestoreContext(void* ctx, void* exc) {
 __attribute__((ms_abi)) void* mw_GetModuleHandleW(const wchar_t* name) {
     MW_TRACE("GetModuleHandleW()");
     if (name == NULL || name[0] == 0) return g_image_base;
-    return NULL;
+    /* SWEEP-008 BUG-070: named lookups must return the SAME pseudo-handle
+     * identities LoadLibraryA hands out — autoruns64 does
+     * GetProcAddress(GetModuleHandleW(L"ntdll"), "RtlGetVersion") and the
+     * NULL handle made GetProcAddress return NULL, which the guest then
+     * CALLS through an incremental-link thunk (jmp rax -> RIP=0).
+     * BUG-070b: guest strings are UTF-16LE (2-byte); host wchar_t is
+     * 4-byte — read through uint16_t or "ntdll" decodes as "ndl"+junk. */
+    const uint16_t* w = (const uint16_t*)name;
+    char n8[64]; size_t k = 0;
+    for (; w[k] && k < sizeof(n8) - 1; k++) n8[k] = (char)w[k];
+    n8[k] = 0;
+    return mw_LoadLibraryA(n8); /* same known[] table, case-insensitive */
 }
 __attribute__((ms_abi)) uint32_t mw_GetThreadId(void* h) {
     (void)h;
@@ -5591,6 +5614,78 @@ typedef struct {
 
 #define ENTRY(dll, name, func) { dll, name, (void*)func, 0 }
 #define DATA_ENTRY(dll, name, addr) { dll, name, (void*)addr, 1 }
+
+/* SWEEP-008 forward decls: implementations live below the dispatch table
+ * (SWEEP-008 block); the table references them by address. */
+__attribute__((ms_abi)) int mw_GetVersionExW(void* vi);                                          /* SW-563 */
+__attribute__((ms_abi)) int32_t mw_RegOpenKeyW(void* key, const uint16_t* sub, void** result);   /* SW-564 */
+__attribute__((ms_abi)) int32_t mw_RegOpenKeyExW(void* key, const wchar_t* sub, uint32_t opts, uint32_t access, void** result); /* SW-564 */
+__attribute__((ms_abi)) int32_t mw_RegCreateKeyExW(void* key, const wchar_t* sub, uint32_t res, const wchar_t* cls, uint32_t opts, uint32_t access, void* sa, void** result, void* disp); /* SW-564 */
+__attribute__((ms_abi)) int32_t mw_RegSetValueExW(void* key, const wchar_t* name, uint32_t res, uint32_t type, const void* data, uint32_t size); /* SW-564 */
+__attribute__((ms_abi)) int32_t mw_RegQueryValueExW(void* key, const wchar_t* name, void* res, uint32_t* type, void* data, uint32_t* size); /* SW-564 */
+__attribute__((ms_abi)) int32_t mw_RegCloseKey(void* key);                                       /* SW-564 */
+__attribute__((ms_abi)) uint32_t mw_GlobalAddAtomW(const uint16_t* s);                           /* SW-565 */
+__attribute__((ms_abi)) uint32_t mw_GlobalAddAtomA(const char* s);                               /* SW-565 */
+__attribute__((ms_abi)) uint32_t mw_GlobalDeleteAtom(uint32_t atom);                             /* SW-565 */
+__attribute__((ms_abi)) uint32_t mw_GlobalGetAtomNameW(uint32_t atom, uint16_t* buf, int32_t cap); /* SW-565 */
+__attribute__((ms_abi)) uint32_t mw_ColorHLSToRGB(uint32_t hue, uint32_t lum, uint32_t sat);     /* SW-566 */
+__attribute__((ms_abi)) void mw_ColorRGBToHLS(uint32_t rgb, uint16_t* ph, uint16_t* pl, uint16_t* ps); /* SW-566 */
+__attribute__((ms_abi)) int mw_DialogBoxIndirectParamW(void* hinst, void* tmpl, void* parent, void* proc, void* init); /* SW-567 */
+
+/* SWEEP-008 batch-2 forward decls (implementations live below the table) */
+__attribute__((ms_abi)) int64_t mw_stub_ret0(void);
+__attribute__((ms_abi)) int64_t mw_stub_ret1(void);
+__attribute__((ms_abi)) int64_t mw_stub_ret_handle(void);
+__attribute__((ms_abi)) int64_t mw_stub_ret_neg1(void);
+__attribute__((ms_abi)) int64_t mw_stub_hresult_notimpl(void);
+__attribute__((ms_abi)) int64_t mw_stub_status_notimpl(void);
+__attribute__((ms_abi)) int64_t mw_stub_status_notfound(void);
+__attribute__((ms_abi)) int64_t mw_stub_status_denied(void);
+__attribute__((ms_abi)) int64_t mw_stub_winerr_nodata(void);
+__attribute__((ms_abi)) int64_t mw_stub_scm_denied(void);
+__attribute__((ms_abi)) int64_t mw_stub_reg_notfound(void);
+__attribute__((ms_abi)) int64_t mw_stub_reg_noitems(void);
+__attribute__((ms_abi)) int32_t mw_MulDiv(int32_t, int32_t, int32_t);
+__attribute__((ms_abi)) int32_t mw_lstrcmpW(const uint16_t*, const uint16_t*);
+__attribute__((ms_abi)) int32_t mw_lstrcmpiW(const uint16_t*, const uint16_t*);
+__attribute__((ms_abi)) const uint16_t* mw_CharNextW(const uint16_t*);
+__attribute__((ms_abi)) uint16_t* mw_CharLowerW(uint16_t*);
+__attribute__((ms_abi)) void* mw_CoTaskMemAlloc(size_t);
+__attribute__((ms_abi)) void mw_CoTaskMemFree(void*);
+__attribute__((ms_abi)) void* mw_CoTaskMemRealloc(void*, size_t);
+__attribute__((ms_abi)) int32_t mw_StringFromGUID2(const void*, uint16_t*, int32_t);
+__attribute__((ms_abi)) int32_t mw_CLSIDFromString(const uint16_t*, void*);
+__attribute__((ms_abi)) int32_t mw_SHGetKnownFolderPath(const void*, uint32_t, void*, uint16_t**);
+__attribute__((ms_abi)) int32_t mw_SHGetFolderPathW(void*, int32_t, void*, uint32_t, uint16_t*);
+__attribute__((ms_abi)) int32_t mw_GetSystemMetrics(int32_t);
+__attribute__((ms_abi)) void* mw_GetSysColorBrush(int32_t);
+__attribute__((ms_abi)) int32_t mw_GetWindowRect(void*, void*);
+__attribute__((ms_abi)) int32_t mw_SetRect(void*, int32_t, int32_t, int32_t, int32_t);
+__attribute__((ms_abi)) int32_t mw_SetRectEmpty(void*);
+__attribute__((ms_abi)) int32_t mw_GetMonitorInfoW(void*, void*);
+__attribute__((ms_abi)) int32_t mw_GetWindowThreadProcessId(void*, uint32_t*);
+__attribute__((ms_abi)) int32_t mw_GetTextExtentPoint32W(void*, const uint16_t*, int32_t, void*);
+__attribute__((ms_abi)) int32_t mw_GetTextMetricsW(void*, void*);
+__attribute__((ms_abi)) int32_t mw_GetLengthSid(const void*);
+__attribute__((ms_abi)) int32_t mw_IsValidSid(const void*);
+__attribute__((ms_abi)) int32_t mw_IsWow64Process(void*, int32_t*);
+__attribute__((ms_abi)) uint32_t mw_RegisterWindowMessageW(const uint16_t*);
+__attribute__((ms_abi)) int32_t mw_CryptAcquireContextW(uint64_t*, const void*, const void*, uint32_t, uint32_t);
+__attribute__((ms_abi)) void mw_GetLocalTime(void*);
+__attribute__((ms_abi)) uint32_t mw_WTSGetActiveConsoleSessionId(void);
+__attribute__((ms_abi)) uint32_t mw_GetSystemWindowsDirectoryW(uint16_t*, uint32_t);
+__attribute__((ms_abi)) uint32_t mw_GetPrivateProfileStringW(const uint16_t*, const uint16_t*, const uint16_t*, uint16_t*, uint32_t, const uint16_t*);
+__attribute__((ms_abi)) int32_t mw_StrCmpIW(const uint16_t*, const uint16_t*);
+__attribute__((ms_abi)) uint16_t* mw_StrStrIW(const uint16_t*, const uint16_t*);
+__attribute__((ms_abi)) int32_t mw_RegCreateKeyW(void*, const uint16_t*, void**);
+__attribute__((ms_abi)) int32_t mw_RegQueryValueW(void*, const uint16_t*, void*, int32_t*);
+__attribute__((ms_abi)) void* mw_SetupDiGetClassDevsW(const void*, const void*, void*, uint32_t);
+__attribute__((ms_abi)) int32_t mw_ImageList_GetIconSize(void*, int32_t*, int32_t*);
+__attribute__((ms_abi)) int64_t mw_OpenTraceW(const void*);
+__attribute__((ms_abi)) void* mw_RtlCreateQueryDebugBuffer(uint32_t size, uint32_t flag);
+__attribute__((ms_abi)) int32_t mw_RtlQueryProcessDebugInformation(void* buf, uint32_t pid);
+__attribute__((ms_abi)) int32_t mw_RtlDestroyQueryDebugBuffer(void* buf);
+__attribute__((ms_abi)) int32_t mw_ntdll_ord135(void* a, uint32_t b, void* out);
 
 
 /* ============================================================
@@ -6562,17 +6657,56 @@ __attribute__((ms_abi)) int mw_SystemTimeToFileTime(const void* st, void* ft) {
     *(uint64_t*)ft = (uint64_t)(secs + 11644473600LL) * 10000000ULL + w[7] * 10000;
     return 1;
 }
+/* SW-563: real version fill — Win10 22H2 (10.0 build 19045), VER_NT_WORKSTATION.
+ * Sysinternals version checks read dwBuildNumber/wProductType; build=0 was a
+ * documented-by-behavior lie. EXW layout: szCSDVersion(256B)@+20, so EX fields
+ * start at +276. EXA layout: szCSDVersion(128B)@+20 -> EX fields at +148. */
+static void mw_fill_version_block(uint8_t* p, uint32_t sz, int wide) {
+    *(uint32_t*)(p + 4)  = 10;            /* dwMajorVersion */
+    *(uint32_t*)(p + 8)  = 0;             /* dwMinorVersion */
+    *(uint32_t*)(p + 12) = 19045;         /* dwBuildNumber (Win10 22H2) */
+    *(uint32_t*)(p + 16) = 2;             /* VER_PLATFORM_WIN32_NT */
+    if (wide) {
+        if (sz >= 284) {
+            *(uint16_t*)(p + 276) = 0;      /* wServicePackMajor */
+            *(uint16_t*)(p + 278) = 0;      /* wServicePackMinor */
+            *(uint16_t*)(p + 280) = 0x0100; /* wSuiteMask VER_SUITE_SINGLEUSERTS */
+            *(uint8_t*)(p + 282)  = 1;      /* wProductType VER_NT_WORKSTATION */
+            *(uint8_t*)(p + 283)  = 0;      /* wReserved */
+        }
+    } else {
+        if (sz >= 156) {
+            *(uint16_t*)(p + 148) = 0;
+            *(uint16_t*)(p + 150) = 0;
+            *(uint16_t*)(p + 152) = 0x0100;
+            *(uint8_t*)(p + 154)  = 1;
+            *(uint8_t*)(p + 155)  = 0;
+        }
+    }
+}
 __attribute__((ms_abi)) int mw_GetVersion(void) { return 0x000A0006; } /* 10.6 */
 __attribute__((ms_abi)) int mw_GetVersionExA(void* vi) {
     if (!vi) return 0;
     uint32_t sz = *(uint32_t*)vi;
+    if (sz < 20 || sz > 1024) return 0;
     memset(vi, 0, sz);
     *(uint32_t*)vi = sz;
-    uint8_t* p = (uint8_t*)vi;
-    *(uint32_t*)(p + 4)  = 10; *(uint32_t*)(p + 8) = 0; *(uint32_t*)(p + 12) = 0;
-    *(uint32_t*)(p + 16) = 2;  /* VER_PLATFORM_WIN32_NT */
+    mw_fill_version_block((uint8_t*)vi, sz, 0);
     return 1;
 }
+__attribute__((ms_abi)) int mw_GetVersionExW(void* vi) {
+    if (!vi) return 0;
+    uint32_t sz = *(uint32_t*)vi;
+    if (sz < 20 || sz > 1024) return 0;
+    memset(vi, 0, sz);
+    *(uint32_t*)vi = sz;
+    mw_fill_version_block((uint8_t*)vi, sz, 1);
+    return 1;
+}
+/* SW-561 family: ntdll!RtlGetVersion — the version-detection idiom
+ * GetProcAddress(GetModuleHandleW(L"ntdll"), "RtlGetVersion") now resolves
+ * to a real function (BUG-070 chain). */
+__attribute__((ms_abi)) int mw_RtlGetVersion(void* vi) { return mw_GetVersionExW(vi); }
 
 /* ---- codepage / locale / string ---- */
 /* ACP must be a SINGLE-BYTE codepage: the UCRT builds its ctype table by
@@ -7403,18 +7537,13 @@ __attribute__((ms_abi)) int mw_ReadConsoleInputA(void* h, void* buf, uint32_t n,
     return 1;
 }
 
-/* ---- registry: honest failure (no registry on host) ---- */
+/* ---- registry: honest failure (no registry on host) ----
+ * SW-564: RegOpenKeyExW/RegOpenKeyW/RegCreateKeyExW/RegSetValueExW/
+ * RegQueryValueExW/RegCloseKey now live in the SWEEP-008 in-memory
+ * registry block (below the dispatch table); only the true-failure
+ * wrappers remain here. */
 #define MW_REG_FAIL (mw_SetLastError(2), 2) /* ERROR_FILE_NOT_FOUND */
-__attribute__((ms_abi)) int32_t mw_RegOpenKeyExW(void* key, const wchar_t* sub, uint32_t opts, uint32_t access, void** result) {
-    MW_TRACE("RegOpenKeyExW() -> ERROR_FILE_NOT_FOUND");
-    mw_SetLastError(2);
-    return 2;
-}
 __attribute__((ms_abi)) int32_t mw_RegOpenKeyExA(void* key, const char* sub, uint32_t opts, uint32_t access, void** result) {
-    mw_SetLastError(2);
-    return 2;
-}
-__attribute__((ms_abi)) int32_t mw_RegQueryValueExW(void* key, const wchar_t* name, void* res, uint32_t* type, void* data, uint32_t* size) {
     mw_SetLastError(2);
     return 2;
 }
@@ -7425,11 +7554,6 @@ __attribute__((ms_abi)) int32_t mw_RegQueryValueExA(void* key, const char* name,
 __attribute__((ms_abi)) int32_t mw_RegGetValueW(void* key, const wchar_t* sub, const wchar_t* name, uint32_t flags, uint32_t* type, void* data, uint32_t* size) {
     mw_SetLastError(2);
     return 2;
-}
-__attribute__((ms_abi)) int32_t mw_RegCloseKey(void* key) { return 0; }
-__attribute__((ms_abi)) int32_t mw_RegCreateKeyExW(void* key, const wchar_t* sub, uint32_t res, const wchar_t* cls, uint32_t opts, uint32_t access, void* sa, void** result, void* disp) {
-    mw_SetLastError(5);
-    return 5;
 }
 __attribute__((ms_abi)) int32_t mw_RegDeleteValueW(void* key, const wchar_t* name) { mw_SetLastError(2); return 2; }
 __attribute__((ms_abi)) int32_t mw_RegEnumKeyA(void* key, uint32_t idx, char* name, uint32_t cap) { mw_SetLastError(259); return 259; }
@@ -7444,10 +7568,6 @@ __attribute__((ms_abi)) int32_t mw_RegEnumValueW(void* key, uint32_t idx, wchar_
 __attribute__((ms_abi)) int32_t mw_RegQueryInfoKeyW(void* key, wchar_t* cls, uint32_t* ccap, void* res, uint32_t* subkeys, uint32_t* maxsub, uint32_t* maxcls, uint32_t* values, uint32_t* maxval, uint32_t* maxdata, uint32_t* secdesc, void* time) {
     mw_SetLastError(6);
     return 6;
-}
-__attribute__((ms_abi)) int32_t mw_RegSetValueExW(void* key, const wchar_t* name, uint32_t res, uint32_t type, const void* data, uint32_t size) {
-    mw_SetLastError(5);
-    return 5;
 }
 __attribute__((ms_abi)) int32_t mw_RegLoadMUIStringW(void* key, const wchar_t* v, wchar_t* out, uint32_t cap, uint32_t* len, uint32_t flags, const wchar_t* dir) {
     mw_SetLastError(2);
@@ -11268,6 +11388,10 @@ static ImportEntry g_import_table[] = {
     ENTRY("KERNEL32.DLL", "HeapCompact", mw_HeapCompact),
     ENTRY("KERNEL32.DLL", "GlobalAlloc", mw_GlobalAlloc),
     ENTRY("KERNEL32.DLL", "GlobalLock", mw_GlobalLock),
+    ENTRY("KERNEL32.DLL", "GlobalAddAtomW", mw_GlobalAddAtomW),   /* SW-565 */
+    ENTRY("KERNEL32.DLL", "GlobalAddAtomA", mw_GlobalAddAtomA),   /* SW-565 */
+    ENTRY("KERNEL32.DLL", "GlobalDeleteAtom", mw_GlobalDeleteAtom), /* SW-565 */
+    ENTRY("KERNEL32.DLL", "GlobalGetAtomNameW", mw_GlobalGetAtomNameW), /* SW-565 */
     ENTRY("KERNEL32.DLL", "GlobalUnlock", mw_GlobalUnlock),
     ENTRY("KERNEL32.DLL", "GlobalSize", mw_GlobalSize),
     ENTRY("KERNEL32.DLL", "GlobalFree", mw_GlobalFree),
@@ -11326,6 +11450,7 @@ static ImportEntry g_import_table[] = {
     ENTRY("KERNEL32.DLL", "SystemTimeToFileTime", mw_SystemTimeToFileTime),
     ENTRY("KERNEL32.DLL", "GetVersion", mw_GetVersion),
     ENTRY("KERNEL32.DLL", "GetVersionExA", mw_GetVersionExA),
+    ENTRY("KERNEL32.DLL", "GetVersionExW", mw_GetVersionExW), /* SW-563 */
     ENTRY("KERNEL32.DLL", "GetACP", mw_GetACP),
     ENTRY("KERNEL32.DLL", "GetOEMCP", mw_GetOEMCP),
     ENTRY("KERNEL32.DLL", "IsValidCodePage", mw_IsValidCodePage),
@@ -11414,6 +11539,8 @@ static ImportEntry g_import_table[] = {
     ENTRY("KERNEL32.DLL", "ReadConsoleInputA", mw_ReadConsoleInputA),
     ENTRY("KERNEL32.DLL", "RegOpenKeyExW", mw_RegOpenKeyExW),
     ENTRY("KERNEL32.DLL", "RegOpenKeyExA", mw_RegOpenKeyExA),
+    ENTRY("KERNEL32.DLL", "RegOpenKeyW", mw_RegOpenKeyW),     /* SW-564 */
+    ENTRY("ADVAPI32.DLL", "RegOpenKeyW", mw_RegOpenKeyW),     /* SW-564 */
     ENTRY("KERNEL32.DLL", "RegQueryValueExW", mw_RegQueryValueExW),
     ENTRY("KERNEL32.DLL", "RegQueryValueExA", mw_RegQueryValueExA),
     ENTRY("KERNEL32.DLL", "RegGetValueW", mw_RegGetValueW),
@@ -11862,6 +11989,8 @@ ENTRY("msvcrt.dll", "wctype", mw_wctype),
     ENTRY("api-ms-win-crt-stdio-l1-1-0.dll", "freopen",         mw_freopen_bridge),
     ENTRY("api-ms-win-crt-utility-l1-1-0.dll", "_byteswap_uint64", mw__byteswap_uint64),
     ENTRY("SHLWAPI.dll", "PathIsRelativeA",                     mw_PathIsRelativeA),
+    ENTRY("SHLWAPI.dll", "ColorHLSToRGB",                       mw_ColorHLSToRGB),   /* SW-566 */
+    ENTRY("SHLWAPI.dll", "ColorRGBToHLS",                       mw_ColorRGBToHLS),   /* SW-566 */
     ENTRY("CRYPT32.dll", "CertOpenSystemStoreA",                mw_CertOpenSystemStoreA),
     ENTRY("CRYPT32.dll", "CertCloseStore",                      mw_CertCloseStore),
     ENTRY("CRYPT32.dll", "CertEnumCertificatesInStore",         mw_CertEnumCertificatesInStore),
@@ -11945,6 +12074,7 @@ ENTRY("msvcrt.dll", "wctype", mw_wctype),
     ENTRY("GDI32.DLL", "DeleteDC",                              mw_DeleteDC),
     ENTRY("GDI32.DLL", "PatBlt",                                mw_PatBlt),
     ENTRY("USER32.DLL", "MessageBoxA",                          mw_MessageBoxA),
+    ENTRY("USER32.DLL", "DialogBoxIndirectParamW",              mw_DialogBoxIndirectParamW), /* SW-567 */
     ENTRY("WLDAP32.dll", "ber_free",                            mw_ber_free),
     ENTRY("WLDAP32.dll", "ldap_bind_s",                         mw_ldap_bind_s),
     ENTRY("WLDAP32.dll", "ldap_err2string",                     mw_ldap_err2string),
@@ -11975,6 +12105,503 @@ ENTRY("msvcrt.dll", "wctype", mw_wctype),
     ENTRY("WS2_32.dll", "getaddrinfo",                          mw_getaddrinfo_),
     ENTRY("WS2_32.dll", "gethostname",                          mw_gethostname_),
     ENTRY("WS2_32.dll", "inet_pton",                            mw_inet_pton_),
+
+    /* ---- SWEEP-008 batch-2: WARN-list union (autoruns64/rammap64/procexp64)
+     *     routed to policy stubs + real one-liners above ---- */
+    /* USER32 — real impls */
+    ENTRY("USER32.DLL", "MulDiv",                    mw_MulDiv),
+    ENTRY("USER32.DLL", "lstrcmpW",                  mw_lstrcmpW),
+    ENTRY("USER32.DLL", "lstrcmpiW",                 mw_lstrcmpiW),
+    ENTRY("USER32.DLL", "CharNextW",                 mw_CharNextW),
+    ENTRY("USER32.DLL", "CharLowerW",                mw_CharLowerW),
+    ENTRY("USER32.DLL", "DialogBoxParamW",           mw_DialogBoxIndirectParamW), /* auto-accept */
+    ENTRY("USER32.DLL", "GetSystemMetrics",          mw_GetSystemMetrics),
+    ENTRY("USER32.DLL", "GetSysColorBrush",          mw_GetSysColorBrush),
+    ENTRY("USER32.DLL", "GetWindowRect",             mw_GetWindowRect),
+    ENTRY("USER32.DLL", "SetRect",                   mw_SetRect),
+    ENTRY("USER32.DLL", "SetRectEmpty",              mw_SetRectEmpty),
+    ENTRY("USER32.DLL", "GetMonitorInfoW",           mw_GetMonitorInfoW),
+    ENTRY("USER32.DLL", "GetWindowThreadProcessId",  mw_GetWindowThreadProcessId),
+    ENTRY("USER32.DLL", "IsWow64Process",            mw_IsWow64Process),
+    ENTRY("USER32.DLL", "RegisterWindowMessageW",    mw_RegisterWindowMessageW),
+    /* USER32 — ret1 (BOOL success) */
+    ENTRY("USER32.DLL", "AdjustWindowRectEx",        mw_stub_ret1),
+    ENTRY("USER32.DLL", "AppendMenuW",               mw_stub_ret1),
+    ENTRY("USER32.DLL", "CheckDlgButton",            mw_stub_ret1),
+    ENTRY("USER32.DLL", "CheckMenuItem",             mw_stub_ret1),
+    ENTRY("USER32.DLL", "CheckMenuRadioItem",        mw_stub_ret1),
+    ENTRY("USER32.DLL", "CheckRadioButton",          mw_stub_ret1),
+    ENTRY("USER32.DLL", "ClientToScreen",            mw_stub_ret1),
+    ENTRY("USER32.DLL", "CloseClipboard",            mw_stub_ret1),
+    ENTRY("USER32.DLL", "CopyRect",                  mw_stub_ret1),
+    ENTRY("USER32.DLL", "DeleteMenu",                mw_stub_ret1),
+    ENTRY("USER32.DLL", "DrawEdge",                  mw_stub_ret1),
+    ENTRY("USER32.DLL", "DrawFocusRect",             mw_stub_ret1),
+    ENTRY("USER32.DLL", "DrawFrameControl",          mw_stub_ret1),
+    ENTRY("USER32.DLL", "DrawIconEx",                mw_stub_ret1),
+    ENTRY("USER32.DLL", "DrawMenuBar",               mw_stub_ret1),
+    ENTRY("USER32.DLL", "EnableMenuItem",            mw_stub_ret1),
+    ENTRY("USER32.DLL", "EnableWindow",              mw_stub_ret1),
+    ENTRY("USER32.DLL", "EndDialog",                 mw_stub_ret1),
+    ENTRY("USER32.DLL", "EnumChildWindows",          mw_stub_ret1),
+    ENTRY("USER32.DLL", "EnumWindows",               mw_stub_ret1),
+    ENTRY("USER32.DLL", "ExcludeClipRect",           mw_stub_ret1),
+    ENTRY("USER32.DLL", "InflateRect",               mw_stub_ret1),
+    ENTRY("USER32.DLL", "InsertMenuW",               mw_stub_ret1),
+    ENTRY("USER32.DLL", "IntersectRect",             mw_stub_ret1),
+    ENTRY("USER32.DLL", "InvalidateRgn",             mw_stub_ret1),
+    ENTRY("USER32.DLL", "MapDialogRect",             mw_stub_ret1),
+    ENTRY("USER32.DLL", "MessageBeep",               mw_stub_ret1),
+    ENTRY("USER32.DLL", "ModifyMenuW",               mw_stub_ret1),
+    ENTRY("USER32.DLL", "MoveWindow",                mw_stub_ret1),
+    ENTRY("USER32.DLL", "OffsetRect",                mw_stub_ret1),
+    ENTRY("USER32.DLL", "OpenClipboard",             mw_stub_ret1),
+    ENTRY("USER32.DLL", "PostMessageW",              mw_stub_ret1),
+    ENTRY("USER32.DLL", "RedrawWindow",              mw_stub_ret1),
+    ENTRY("USER32.DLL", "ReleaseCapture",            mw_stub_ret1),
+    ENTRY("USER32.DLL", "RemoveMenu",                mw_stub_ret1),
+    ENTRY("USER32.DLL", "ScreenToClient",            mw_stub_ret1),
+    ENTRY("USER32.DLL", "SetDlgItemTextW",           mw_stub_ret1),
+    ENTRY("USER32.DLL", "SetDlgItemInt",             mw_stub_ret1),
+    ENTRY("USER32.DLL", "SetForegroundWindow",       mw_stub_ret1),
+    ENTRY("USER32.DLL", "SetMenu",                   mw_stub_ret1),
+    ENTRY("USER32.DLL", "SetMenuDefaultItem",        mw_stub_ret1),
+    ENTRY("USER32.DLL", "SetMenuItemInfoW",          mw_stub_ret1),
+    ENTRY("USER32.DLL", "SetPropW",                  mw_stub_ret1),
+    ENTRY("USER32.DLL", "SetWindowPlacement",        mw_stub_ret1),
+    ENTRY("USER32.DLL", "SetWindowPos",              mw_stub_ret1),
+    ENTRY("USER32.DLL", "SetWindowTextW",            mw_stub_ret1),
+    ENTRY("USER32.DLL", "ShowScrollBar",             mw_stub_ret1),
+    ENTRY("USER32.DLL", "ShowWindowAsync",           mw_stub_ret1),
+    ENTRY("USER32.DLL", "TrackMouseEvent",           mw_stub_ret1),
+    ENTRY("USER32.DLL", "UnhookWindowsHookEx",       mw_stub_ret1),
+    ENTRY("USER32.DLL", "UnregisterClassW",          mw_stub_ret1),
+    ENTRY("USER32.DLL", "AllowSetForegroundWindow",  mw_stub_ret1),
+    ENTRY("USER32.DLL", "EndTask",                   mw_stub_ret1),
+    ENTRY("USER32.DLL", "EmptyClipboard",            mw_stub_ret1),
+    ENTRY("USER32.DLL", "UnionRect",                 mw_stub_ret1),
+    ENTRY("USER32.DLL", "SystemParametersInfoW",     mw_stub_ret1),
+    /* USER32 — ret0 (honest zero/failure) */
+    ENTRY("USER32.DLL", "CallNextHookEx",            mw_stub_ret0),
+    ENTRY("USER32.DLL", "ChangeWindowMessageFilterEx", mw_stub_ret1),
+    ENTRY("USER32.DLL", "CopyAcceleratorTableW",     mw_stub_ret0),
+    ENTRY("USER32.DLL", "GetActiveWindow",           mw_stub_ret0),
+    ENTRY("USER32.DLL", "GetAncestor",               mw_stub_ret0),
+    ENTRY("USER32.DLL", "GetCapture",                mw_stub_ret0),
+    ENTRY("USER32.DLL", "GetClassInfoExW",           mw_stub_ret0),
+    ENTRY("USER32.DLL", "GetClassLongPtrW",          mw_stub_ret0),
+    ENTRY("USER32.DLL", "GetClassLongW",             mw_stub_ret0),
+    ENTRY("USER32.DLL", "GetClassNameW",             mw_stub_ret0),
+    ENTRY("USER32.DLL", "GetDlgCtrlID",              mw_stub_ret0),
+    ENTRY("USER32.DLL", "GetDlgItem",                mw_stub_ret0),
+    ENTRY("USER32.DLL", "GetDlgItemTextW",           mw_stub_ret0),
+    ENTRY("USER32.DLL", "GetFocus",                  mw_stub_ret0),
+    ENTRY("USER32.DLL", "GetGuiResources",           mw_stub_ret0),
+    ENTRY("USER32.DLL", "GetKeyState",               mw_stub_ret0),
+    ENTRY("USER32.DLL", "GetMenu",                   mw_stub_ret0),
+    ENTRY("USER32.DLL", "GetMenuBarInfo",            mw_stub_ret0),
+    ENTRY("USER32.DLL", "GetMenuInfo",               mw_stub_ret0),
+    ENTRY("USER32.DLL", "GetMenuItemCount",          mw_stub_ret_neg1),
+    ENTRY("USER32.DLL", "GetMenuItemID",             mw_stub_ret_neg1),
+    ENTRY("USER32.DLL", "GetMenuItemInfoW",          mw_stub_ret0),
+    ENTRY("USER32.DLL", "GetMenuStringW",            mw_stub_ret0),
+    ENTRY("USER32.DLL", "GetMessagePos",             mw_stub_ret0),
+    ENTRY("USER32.DLL", "GetParent",                 mw_stub_ret0),
+    ENTRY("USER32.DLL", "GetPropW",                  mw_stub_ret0),
+    ENTRY("USER32.DLL", "GetScrollInfo",             mw_stub_ret0),
+    ENTRY("USER32.DLL", "GetSubMenu",                mw_stub_ret0),
+    ENTRY("USER32.DLL", "GetUpdateRgn",              mw_stub_ret0),
+    ENTRY("USER32.DLL", "GetWindow",                 mw_stub_ret0),
+    ENTRY("USER32.DLL", "GetWindowLongPtrW",         mw_stub_ret0),
+    ENTRY("USER32.DLL", "GetWindowLongW",            mw_stub_ret0),
+    ENTRY("USER32.DLL", "GetWindowModuleFileNameW",  mw_stub_ret0),
+    ENTRY("USER32.DLL", "GetWindowTextLengthW",      mw_stub_ret0),
+    ENTRY("USER32.DLL", "GetWindowTextW",            mw_stub_ret0),
+    ENTRY("USER32.DLL", "IsChild",                   mw_stub_ret0),
+    ENTRY("USER32.DLL", "IsDialogMessageW",          mw_stub_ret0),
+    ENTRY("USER32.DLL", "IsDlgButtonChecked",        mw_stub_ret0),
+    ENTRY("USER32.DLL", "IsHungAppWindow",           mw_stub_ret0),
+    ENTRY("USER32.DLL", "IsIconic",                  mw_stub_ret0),
+    ENTRY("USER32.DLL", "IsMenu",                    mw_stub_ret0),
+    ENTRY("USER32.DLL", "IsRectEmpty",               mw_stub_ret1),
+    ENTRY("USER32.DLL", "IsWindow",                  mw_stub_ret1),
+    ENTRY("USER32.DLL", "IsWindowEnabled",           mw_stub_ret1),
+    ENTRY("USER32.DLL", "IsWindowVisible",           mw_stub_ret1),
+    ENTRY("USER32.DLL", "IsZoomed",                  mw_stub_ret0),
+    ENTRY("USER32.DLL", "LoadAcceleratorsW",         mw_stub_ret0),
+    ENTRY("USER32.DLL", "LoadImageW",                mw_stub_ret0),
+    ENTRY("USER32.DLL", "LoadMenuW",                 mw_stub_ret0),
+    ENTRY("USER32.DLL", "LoadStringA",               mw_stub_ret0),
+    ENTRY("USER32.DLL", "LoadStringW",               mw_stub_ret0),
+    ENTRY("USER32.DLL", "MapWindowPoints",           mw_stub_ret0),
+    ENTRY("USER32.DLL", "MonitorFromPoint",          mw_stub_ret_handle),
+    ENTRY("USER32.DLL", "MonitorFromWindow",         mw_stub_ret_handle),
+    ENTRY("USER32.DLL", "PtInRect",                  mw_stub_ret0),
+    ENTRY("USER32.DLL", "ScrollWindowEx",            mw_stub_ret0),
+    ENTRY("USER32.DLL", "SendMessageW",              mw_stub_ret0),
+    ENTRY("USER32.DLL", "SendMessageTimeoutW",       mw_stub_ret0),
+    ENTRY("USER32.DLL", "SendDlgItemMessageW",       mw_stub_ret0),
+    ENTRY("USER32.DLL", "SetCapture",                mw_stub_ret0),
+    ENTRY("USER32.DLL", "SetClassLongPtrW",          mw_stub_ret0),
+    ENTRY("USER32.DLL", "SetClassLongW",             mw_stub_ret0),
+    ENTRY("USER32.DLL", "SetCursor",                 mw_stub_ret_handle),
+    ENTRY("USER32.DLL", "SetCursorPos",              mw_stub_ret1),
+    ENTRY("USER32.DLL", "SetFocus",                  mw_stub_ret0),
+    ENTRY("USER32.DLL", "SetScrollInfo",             mw_stub_ret0),
+    ENTRY("USER32.DLL", "SetScrollPos",              mw_stub_ret0),
+    ENTRY("USER32.DLL", "SetWindowsHookExW",         mw_stub_ret_handle),
+    ENTRY("USER32.DLL", "TrackPopupMenu",            mw_stub_ret0),
+    ENTRY("USER32.DLL", "TrackPopupMenuEx",          mw_stub_ret0),
+    ENTRY("USER32.DLL", "TranslateAcceleratorW",     mw_stub_ret0),
+    ENTRY("USER32.DLL", "WaitForInputIdle",          mw_stub_ret0),
+    ENTRY("USER32.DLL", "WindowFromPoint",           mw_stub_ret0),
+    ENTRY("USER32.DLL", "GetDesktopWindow",          mw_stub_ret_handle),
+    ENTRY("USER32.DLL", "GetWindowDC",               mw_stub_ret_handle),
+    ENTRY("USER32.DLL", "CreatePopupMenu",           mw_stub_ret_handle),
+    ENTRY("USER32.DLL", "CreateMenu",                mw_stub_ret_handle),
+    ENTRY("USER32.DLL", "CreateStatusWindowW",       mw_stub_ret_handle),
+    ENTRY("USER32.DLL", "DestroyIcon",               mw_stub_ret1),
+    ENTRY("USER32.DLL", "DestroyMenu",               mw_stub_ret1),
+    ENTRY("USER32.DLL", "EndMenu",                   mw_stub_ret1),
+    /* GDI32 */
+    ENTRY("GDI32.DLL", "CreateBitmap",               mw_stub_ret_handle),
+    ENTRY("GDI32.DLL", "CreateDIBSection",           mw_stub_ret_handle),
+    ENTRY("GDI32.DLL", "CreateFontIndirectW",        mw_stub_ret_handle),
+    ENTRY("GDI32.DLL", "CreatePatternBrush",         mw_stub_ret_handle),
+    ENTRY("GDI32.DLL", "CreateRectRgn",              mw_stub_ret_handle),
+    ENTRY("GDI32.DLL", "CreateRectRgnIndirect",      mw_stub_ret_handle),
+    ENTRY("GDI32.DLL", "GetCurrentObject",           mw_stub_ret_handle),
+    ENTRY("GDI32.DLL", "GetBkColor",                 mw_stub_ret0),
+    ENTRY("GDI32.DLL", "GetBkMode",                  mw_stub_ret1),
+    ENTRY("GDI32.DLL", "GetObjectW",                 mw_stub_ret0),
+    ENTRY("GDI32.DLL", "GetTextExtentPoint32W",      mw_GetTextExtentPoint32W),
+    ENTRY("GDI32.DLL", "GetTextExtentExPointW",      mw_stub_ret1),
+    ENTRY("GDI32.DLL", "GetTextMetricsW",            mw_GetTextMetricsW),
+    ENTRY("GDI32.DLL", "ExtTextOutW",                mw_stub_ret1),
+    ENTRY("GDI32.DLL", "GradientFill",               mw_stub_ret1),
+    ENTRY("GDI32.DLL", "Polyline",                   mw_stub_ret1),
+    ENTRY("GDI32.DLL", "Polygon",                    mw_stub_ret1),
+    ENTRY("GDI32.DLL", "SetBrushOrgEx",              mw_stub_ret1),
+    ENTRY("GDI32.DLL", "SetDCPenColor",              mw_stub_ret0),
+    ENTRY("GDI32.DLL", "SetTextAlign",               mw_stub_ret0),
+    ENTRY("GDI32.DLL", "SetViewportOrgEx",           mw_stub_ret1),
+    ENTRY("GDI32.DLL", "SetROP2",                    mw_stub_ret0),
+    ENTRY("GDI32.DLL", "StartDocW",                  mw_stub_ret1),
+    ENTRY("GDI32.DLL", "StartPage",                  mw_stub_ret1),
+    ENTRY("GDI32.DLL", "EndDoc",                     mw_stub_ret1),
+    ENTRY("GDI32.DLL", "EndPage",                    mw_stub_ret1),
+    ENTRY("GDI32.DLL", "FrameRect",                  mw_stub_ret1),
+    ENTRY("GDI32.DLL", "SelectClipRgn",              mw_stub_ret0),
+    /* COM / OLE */
+    ENTRY("ole32.dll", "CoInitializeEx",             mw_stub_ret0),
+    ENTRY("ole32.dll", "CoInitialize",               mw_stub_ret0),
+    ENTRY("ole32.dll", "CoUninitialize",             mw_stub_ret0),
+    ENTRY("ole32.dll", "CoCreateInstance",           mw_stub_hresult_notimpl),
+    ENTRY("ole32.dll", "CoGetInterfaceAndReleaseStream", mw_stub_hresult_notimpl),
+    ENTRY("ole32.dll", "CoMarshalInterThreadInterfaceInStream", mw_stub_hresult_notimpl),
+    ENTRY("ole32.dll", "CoSetProxyBlanket",          mw_stub_ret0),
+    ENTRY("ole32.dll", "CLSIDFromString",            mw_CLSIDFromString),
+    ENTRY("ole32.dll", "StringFromGUID2",            mw_StringFromGUID2),
+    ENTRY("ole32.dll", "CoTaskMemAlloc",             mw_CoTaskMemAlloc),
+    ENTRY("ole32.dll", "CoTaskMemFree",              mw_CoTaskMemFree),
+    ENTRY("ole32.dll", "CoTaskMemRealloc",           mw_CoTaskMemRealloc),
+    ENTRY("ole32.dll", "StgCreateStorageEx",         mw_stub_hresult_notimpl),
+    ENTRY("ole32.dll", "StgOpenStorageEx",           mw_stub_hresult_notimpl),
+    /* ADVAPI32 — registry extras (in-memory registry) */
+    ENTRY("ADVAPI32.DLL", "RegCreateKeyW",           mw_RegCreateKeyW),
+    ENTRY("ADVAPI32.DLL", "RegQueryValueW",          mw_RegQueryValueW),
+    ENTRY("ADVAPI32.DLL", "RegDeleteKeyW",           mw_stub_reg_notfound),
+    ENTRY("ADVAPI32.DLL", "RegDeleteTreeW",          mw_stub_reg_notfound),
+    ENTRY("ADVAPI32.DLL", "RegCopyTreeW",            mw_stub_reg_notfound),
+    ENTRY("ADVAPI32.DLL", "RegLoadKeyW",             mw_stub_reg_notfound),
+    ENTRY("ADVAPI32.DLL", "RegRenameKey",            mw_stub_reg_notfound),
+    ENTRY("ADVAPI32.DLL", "RegEnumKeyW",             mw_stub_reg_noitems),
+    ENTRY("ADVAPI32.DLL", "RegUnLoadKeyW",           mw_stub_reg_notfound),
+    /* ADVAPI32 — SCM honest access-denied */
+    ENTRY("ADVAPI32.DLL", "OpenSCManagerW",          mw_stub_scm_denied),
+    ENTRY("ADVAPI32.DLL", "OpenServiceW",            mw_stub_scm_denied),
+    ENTRY("ADVAPI32.DLL", "CloseServiceHandle",      mw_stub_ret1),
+    ENTRY("ADVAPI32.DLL", "ControlService",          mw_stub_ret0),
+    ENTRY("ADVAPI32.DLL", "DeleteService",           mw_stub_scm_denied),
+    ENTRY("ADVAPI32.DLL", "StartServiceW",           mw_stub_scm_denied),
+    ENTRY("ADVAPI32.DLL", "QueryServiceConfig2W",    mw_stub_ret0),
+    ENTRY("ADVAPI32.DLL", "QueryServiceConfigW",     mw_stub_ret0),
+    ENTRY("ADVAPI32.DLL", "QueryServiceObjectSecurity", mw_stub_ret0),
+    ENTRY("ADVAPI32.DLL", "QueryServiceStatus",      mw_stub_ret0),
+    ENTRY("ADVAPI32.DLL", "QueryServiceStatusEx",    mw_stub_ret0),
+    ENTRY("ADVAPI32.DLL", "EnumServicesStatusExW",   mw_stub_ret0),
+    ENTRY("ADVAPI32.DLL", "GetServiceDisplayNameW",  mw_stub_ret0),
+    ENTRY("ADVAPI32.DLL", "SetServiceObjectSecurity", mw_stub_ret0),
+    /* ADVAPI32 — SID/token/security */
+    ENTRY("ADVAPI32.DLL", "GetTokenInformation",     mw_stub_ret0),
+    ENTRY("ADVAPI32.DLL", "LookupAccountSidW",       mw_stub_ret0),
+    ENTRY("ADVAPI32.DLL", "LookupAccountNameW",      mw_stub_ret0),
+    ENTRY("ADVAPI32.DLL", "LookupPrivilegeNameW",    mw_stub_ret0),
+    ENTRY("ADVAPI32.DLL", "ConvertSidToStringSidW",  mw_stub_ret0),
+    ENTRY("ADVAPI32.DLL", "ConvertStringSidToSidW",  mw_stub_ret0),
+    ENTRY("ADVAPI32.DLL", "CopySid",                 mw_stub_ret1),
+    ENTRY("ADVAPI32.DLL", "GetLengthSid",            mw_GetLengthSid),
+    ENTRY("ADVAPI32.DLL", "GetSidIdentifierAuthority", mw_stub_ret_handle),
+    ENTRY("ADVAPI32.DLL", "GetSidSubAuthority",      mw_stub_ret_handle),
+    ENTRY("ADVAPI32.DLL", "GetSidSubAuthorityCount", mw_stub_ret_handle),
+    ENTRY("ADVAPI32.DLL", "IsValidSid",              mw_IsValidSid),
+    ENTRY("ADVAPI32.DLL", "EqualSid",                mw_stub_ret0),
+    ENTRY("ADVAPI32.DLL", "FreeSid",                 mw_stub_ret0),
+    ENTRY("ADVAPI32.DLL", "AllocateAndInitializeSid", mw_stub_ret1),
+    ENTRY("ADVAPI32.DLL", "InitializeAcl",           mw_stub_ret1),
+    ENTRY("ADVAPI32.DLL", "AddAccessAllowedAce",     mw_stub_ret1),
+    ENTRY("ADVAPI32.DLL", "AddAce",                  mw_stub_ret1),
+    ENTRY("ADVAPI32.DLL", "GetAce",                  mw_stub_ret0),
+    ENTRY("ADVAPI32.DLL", "GetSecurityDescriptorDacl", mw_stub_ret1),
+    ENTRY("ADVAPI32.DLL", "GetSecurityInfo",         mw_stub_ret0),
+    ENTRY("ADVAPI32.DLL", "SetSecurityInfo",         mw_stub_ret0),
+    ENTRY("ADVAPI32.DLL", "SetKernelObjectSecurity", mw_stub_ret0),
+    ENTRY("ADVAPI32.DLL", "MapGenericMask",          mw_stub_ret0),
+    ENTRY("ADVAPI32.DLL", "RevertToSelf",            mw_stub_ret1),
+    ENTRY("ADVAPI32.DLL", "ImpersonateLoggedOnUser", mw_stub_ret0),
+    ENTRY("ADVAPI32.DLL", "DuplicateTokenEx",        mw_stub_ret0),
+    ENTRY("ADVAPI32.DLL", "SetTokenInformation",     mw_stub_ret0),
+    ENTRY("ADVAPI32.DLL", "CreateRestrictedToken",   mw_stub_ret0),
+    ENTRY("ADVAPI32.DLL", "CreateProcessAsUserW",    mw_stub_ret0),
+    ENTRY("ADVAPI32.DLL", "ImpersonateSelf",         mw_stub_ret1),
+    /* ADVAPI32 — crypto */
+    ENTRY("ADVAPI32.DLL", "CryptAcquireContextW",    mw_CryptAcquireContextW),
+    ENTRY("ADVAPI32.DLL", "CryptCreateHash",         mw_stub_ret_handle),
+    ENTRY("ADVAPI32.DLL", "CryptDestroyHash",        mw_stub_ret1),
+    ENTRY("ADVAPI32.DLL", "CryptGetHashParam",       mw_stub_ret0),
+    ENTRY("ADVAPI32.DLL", "CryptHashData",           mw_stub_ret1),
+    /* ADVAPI32 — LSA / jobs / process */
+    ENTRY("ADVAPI32.DLL", "LsaClose",                mw_stub_ret0),
+    ENTRY("ADVAPI32.DLL", "LsaEnumerateAccountRights", mw_stub_status_notfound),
+    ENTRY("ADVAPI32.DLL", "LsaFreeMemory",           mw_stub_ret0),
+    ENTRY("ADVAPI32.DLL", "LsaOpenPolicy",           mw_stub_status_notfound),
+    ENTRY("KERNEL32.DLL", "CreateJobObjectW",        mw_stub_ret_handle),
+    ENTRY("KERNEL32.DLL", "QueryInformationJobObject", mw_stub_ret0),
+    ENTRY("KERNEL32.DLL", "IsProcessInJob",          mw_stub_ret1),
+    ENTRY("KERNEL32.DLL", "ProcessIdToSessionId",    mw_stub_ret1),
+    ENTRY("KERNEL32.DLL", "GetProcessId",            mw_stub_ret0),
+    ENTRY("KERNEL32.DLL", "ReadProcessMemory",       mw_stub_ret0),
+    ENTRY("KERNEL32.DLL", "VirtualQueryEx",          mw_stub_ret0),
+    ENTRY("KERNEL32.DLL", "PulseEvent",              mw_stub_ret1),
+    ENTRY("KERNEL32.DLL", "OpenThread",              mw_stub_ret_handle),
+    ENTRY("KERNEL32.DLL", "MsgWaitForMultipleObjects", mw_stub_ret0),
+    ENTRY("KERNEL32.DLL", "GetLocalTime",            mw_GetLocalTime),
+    ENTRY("KERNEL32.DLL", "GlobalMemoryStatus",      mw_stub_ret1),
+    ENTRY("KERNEL32.DLL", "GlobalReAlloc",           mw_stub_ret0),
+    ENTRY("KERNEL32.DLL", "FlushInstructionCache",   mw_stub_ret1),
+    ENTRY("KERNEL32.DLL", "InterlockedPopEntrySList", mw_stub_ret0),
+    ENTRY("KERNEL32.DLL", "TrySubmitThreadpoolCallback", mw_stub_ret1),
+    ENTRY("KERNEL32.DLL", "CreateThreadpoolTimer",   mw_stub_ret_handle),
+    ENTRY("KERNEL32.DLL", "SetThreadpoolTimer",      mw_stub_ret0),
+    ENTRY("KERNEL32.DLL", "CloseThreadpoolTimer",    mw_stub_ret0),
+    ENTRY("KERNEL32.DLL", "WaitForInputIdle",        mw_stub_ret0),
+    ENTRY("KERNEL32.DLL", "Wow64DisableWow64FsRedirection", mw_stub_ret1),
+    ENTRY("KERNEL32.DLL", "Wow64RevertWow64FsRedirection", mw_stub_ret1),
+    ENTRY("KERNEL32.DLL", "GetSystemWindowsDirectoryW", mw_GetSystemWindowsDirectoryW),
+    ENTRY("KERNEL32.DLL", "GetSystemWow64DirectoryW", mw_GetSystemWindowsDirectoryW),
+    ENTRY("KERNEL32.DLL", "QueryDosDeviceW",         mw_stub_ret0),
+    ENTRY("KERNEL32.DLL", "SearchPathW",             mw_stub_ret0),
+    ENTRY("KERNEL32.DLL", "GetPrivateProfileIntW",   mw_stub_ret0),
+    ENTRY("KERNEL32.DLL", "GetPrivateProfileStringW", mw_GetPrivateProfileStringW),
+    ENTRY("KERNEL32.DLL", "GetActiveProcessorCount", mw_stub_ret1),
+    ENTRY("KERNEL32.DLL", "GetActiveProcessorGroupCount", mw_stub_ret1),
+    ENTRY("KERNEL32.DLL", "GetLogicalProcessorInformation", mw_stub_ret0),
+    ENTRY("KERNEL32.DLL", "GetProcessWorkingSetSize", mw_stub_ret1),
+    ENTRY("KERNEL32.DLL", "SetProcessWorkingSetSize", mw_stub_ret1),
+    ENTRY("KERNEL32.DLL", "GetThreadGroupAffinity",  mw_stub_ret1),
+    ENTRY("KERNEL32.DLL", "GetThreadIdealProcessorEx", mw_stub_ret1),
+    ENTRY("KERNEL32.DLL", "FindPackagesByPackageFamily", mw_stub_ret0),
+    ENTRY("KERNEL32.DLL", "WTSGetActiveConsoleSessionId", mw_WTSGetActiveConsoleSessionId),
+    /* SHELL32 */
+    ENTRY("SHELL32.DLL", "ShellExecuteW",            mw_stub_ret1),
+    ENTRY("SHELL32.DLL", "ShellExecuteExW",          mw_stub_ret1),
+    ENTRY("SHELL32.DLL", "SHGetKnownFolderPath",     mw_SHGetKnownFolderPath),
+    ENTRY("SHELL32.DLL", "SHGetFolderPathW",         mw_SHGetFolderPathW),
+    ENTRY("SHELL32.DLL", "SHGetStockIconInfo",       mw_stub_hresult_notimpl),
+    ENTRY("SHELL32.DLL", "SHAutoComplete",           mw_stub_ret0),
+    ENTRY("SHELL32.DLL", "SHCreateStreamOnFileW",    mw_stub_hresult_notimpl),
+    ENTRY("SHELL32.DLL", "SHEvaluateSystemCommandTemplate", mw_stub_hresult_notimpl),
+    ENTRY("SHELL32.DLL", "SHBrowseForFolderW",       mw_stub_ret0),
+    ENTRY("SHELL32.DLL", "SHGetFileInfoW",           mw_stub_ret0),
+    ENTRY("SHELL32.DLL", "SHGetMalloc",              mw_stub_hresult_notimpl),
+    ENTRY("SHELL32.DLL", "SHGetPathFromIDListW",     mw_stub_ret0),
+    ENTRY("SHELL32.DLL", "SHGetSpecialFolderLocation", mw_stub_hresult_notimpl),
+    ENTRY("SHELL32.DLL", "ExtractAssociatedIconW",   mw_stub_ret_handle),
+    ENTRY("SHELL32.DLL", "ExtractIconExW",           mw_stub_ret0),
+    ENTRY("SHELL32.DLL", "Shell_NotifyIconW",        mw_stub_ret1),
+    ENTRY("SHLWAPI.dll", "PathIsNetworkPathW",       mw_stub_ret0),
+    ENTRY("SHLWAPI.dll", "StrCmpIW",                 mw_StrCmpIW),
+    ENTRY("SHLWAPI.dll", "StrStrIW",                 mw_StrStrIW),
+    ENTRY("SHLWAPI.dll", "UrlUnescapeW",             mw_stub_ret0),
+    ENTRY("KERNEL32.DLL", "WNetGetConnectionW",      mw_stub_winerr_nodata),
+    /* COMDLG32 — user-cancel is the honest headless answer */
+    ENTRY("COMDLG32.dll", "GetOpenFileNameW",        mw_stub_ret0),
+    ENTRY("COMDLG32.dll", "GetSaveFileNameW",        mw_stub_ret0),
+    ENTRY("COMDLG32.dll", "ChooseFontW",             mw_stub_ret0),
+    ENTRY("COMDLG32.dll", "ChooseColorW",            mw_stub_ret0),
+    ENTRY("COMDLG32.dll", "PrintDlgW",               mw_stub_ret0),
+    ENTRY("COMDLG32.dll", "FindTextW",               mw_stub_ret0),
+    ENTRY("COMDLG32.dll", "CommDlgExtendedError",    mw_stub_ret0),
+    /* VERSION */
+    ENTRY("VERSION.dll", "GetFileVersionInfoSizeW",  mw_stub_ret0),
+    ENTRY("VERSION.dll", "GetFileVersionInfoW",      mw_stub_ret0),
+    ENTRY("VERSION.dll", "VerQueryValueW",           mw_stub_ret0),
+    /* WINHTTP — open fails honestly, caller skips network */
+    ENTRY("WINHTTP.dll", "WinHttpOpen",              mw_stub_ret0),
+    ENTRY("WINHTTP.dll", "WinHttpConnect",           mw_stub_ret0),
+    ENTRY("WINHTTP.dll", "WinHttpOpenRequest",       mw_stub_ret0),
+    ENTRY("WINHTTP.dll", "WinHttpSendRequest",       mw_stub_ret0),
+    ENTRY("WINHTTP.dll", "WinHttpReceiveResponse",   mw_stub_ret0),
+    ENTRY("WINHTTP.dll", "WinHttpQueryDataAvailable", mw_stub_ret0),
+    ENTRY("WINHTTP.dll", "WinHttpQueryHeaders",      mw_stub_ret0),
+    ENTRY("WINHTTP.dll", "WinHttpReadData",          mw_stub_ret0),
+    ENTRY("WINHTTP.dll", "WinHttpWriteData",         mw_stub_ret0),
+    ENTRY("WINHTTP.dll", "WinHttpSetOption",         mw_stub_ret1),
+    ENTRY("WINHTTP.dll", "WinHttpCloseHandle",       mw_stub_ret1),
+    ENTRY("WINHTTP.dll", "WinHttpGetProxyForUrl",    mw_stub_ret0),
+    /* UXTheme / DWM */
+    ENTRY("UxTheme.dll", "IsAppThemed",              mw_stub_ret1),
+    ENTRY("UxTheme.dll", "IsThemeActive",            mw_stub_ret1),
+    ENTRY("UxTheme.dll", "OpenThemeData",            mw_stub_ret_handle),
+    ENTRY("UxTheme.dll", "CloseThemeData",           mw_stub_ret0),
+    ENTRY("UxTheme.dll", "SetWindowTheme",           mw_stub_ret0),
+    ENTRY("UxTheme.dll", "EnableThemeDialogTexture", mw_stub_ret1),
+    ENTRY("UxTheme.dll", "DrawThemeBackground",      mw_stub_ret0),
+    ENTRY("UxTheme.dll", "GetThemePartSize",         mw_stub_ret0),
+    ENTRY("dwmapi.dll", "DwmDefWindowProc",          mw_stub_ret0),
+    ENTRY("dwmapi.dll", "DwmSetWindowAttribute",     mw_stub_ret0),
+    /* WTSAPI */
+    ENTRY("WTSAPI32.dll", "WTSEnumerateSessionsW",   mw_stub_ret0),
+    ENTRY("WTSAPI32.dll", "WTSFreeMemory",           mw_stub_ret0),
+    ENTRY("WTSAPI32.dll", "WTSQuerySessionInformationW", mw_stub_ret0),
+    ENTRY("WTSAPI32.dll", "WTSLogoffSession",        mw_stub_ret0),
+    ENTRY("WTSAPI32.dll", "WTSSendMessageW",         mw_stub_ret0),
+    ENTRY("WTSAPI32.dll", "WTSDisconnectSession",    mw_stub_ret0),
+    /* SETUPAPI */
+    ENTRY("SETUPAPI.dll", "SetupDiGetClassDevsW",    mw_SetupDiGetClassDevsW),
+    ENTRY("SETUPAPI.dll", "SetupDiEnumDeviceInterfaces", mw_stub_ret0),
+    ENTRY("SETUPAPI.dll", "SetupDiGetDeviceInterfaceDetailW", mw_stub_ret0),
+    ENTRY("SETUPAPI.dll", "SetupDiDestroyDeviceInfoList", mw_stub_ret1),
+    /* IPHLPAPI */
+    ENTRY("IPHLPAPI.dll", "GetExtendedTcpTable",     mw_stub_winerr_nodata),
+    ENTRY("IPHLPAPI.dll", "GetExtendedUdpTable",     mw_stub_winerr_nodata),
+    ENTRY("IPHLPAPI.dll", "GetIfEntry2",             mw_stub_winerr_nodata),
+    ENTRY("IPHLPAPI.dll", "GetIfTable2",             mw_stub_winerr_nodata),
+    ENTRY("IPHLPAPI.dll", "FreeMibTable",            mw_stub_ret0),
+    /* PSAPI / TLHELP32 */
+    ENTRY("KERNEL32.DLL", "K32GetMappedFileNameW",   mw_stub_ret0),
+    ENTRY("KERNEL32.DLL", "K32GetModuleFileNameExW", mw_stub_ret0),
+    ENTRY("KERNEL32.DLL", "K32QueryWorkingSet",      mw_stub_ret0),
+    ENTRY("KERNEL32.DLL", "K32QueryWorkingSetEx",    mw_stub_ret0),
+    ENTRY("KERNEL32.DLL", "Heap32ListFirst",         mw_stub_ret0),
+    ENTRY("KERNEL32.DLL", "Heap32ListNext",          mw_stub_ret0),
+    ENTRY("KERNEL32.DLL", "Module32FirstW",          mw_stub_ret0),
+    ENTRY("KERNEL32.DLL", "Module32NextW",           mw_stub_ret0),
+    ENTRY("KERNEL32.DLL", "Process32FirstW",         mw_stub_ret0),
+    ENTRY("KERNEL32.DLL", "Process32NextW",          mw_stub_ret0),
+    ENTRY("KERNEL32.DLL", "Thread32First",           mw_stub_ret0),
+    ENTRY("KERNEL32.DLL", "Thread32Next",            mw_stub_ret0),
+    /* CRYPT32 / CREDUI / POWRPROF */
+    ENTRY("CRYPT32.dll", "CertGetNameStringW",       mw_stub_ret0),
+    ENTRY("CREDSUI.dll", "CredUIPromptForCredentialsW", mw_stub_hresult_notimpl),
+    ENTRY("POWRPROF.dll", "IsPwrHibernateAllowed",   mw_stub_ret0),
+    ENTRY("POWRPROF.dll", "IsPwrSuspendAllowed",     mw_stub_ret1),
+    ENTRY("POWRPROF.dll", "SetSuspendState",         mw_stub_ret0),
+    ENTRY("USER32.DLL", "LockWorkStation",           mw_stub_ret1),
+    ENTRY("USER32.DLL", "ExitWindowsEx",             mw_stub_ret0),
+    /* Nt* — honest NTSTATUS (procexp imports from ntdll) */
+    ENTRY("ntdll.dll", "NtCreateKey",                mw_stub_status_notfound),
+    ENTRY("ntdll.dll", "NtOpenKey",                  mw_stub_status_notfound),
+    ENTRY("ntdll.dll", "NtLoadDriver",               mw_stub_status_denied),
+    ENTRY("ntdll.dll", "NtUnloadDriver",             mw_stub_status_denied),
+    ENTRY("ntdll.dll", "NtOpenSymbolicLinkObject",   mw_stub_status_notfound),
+    ENTRY("ntdll.dll", "NtOpenThread",               mw_stub_status_notfound),
+    ENTRY("ntdll.dll", "NtQueryEvent",               mw_stub_status_notfound),
+    ENTRY("ntdll.dll", "NtQueryMutant",              mw_stub_status_notfound),
+    ENTRY("ntdll.dll", "NtQuerySection",             mw_stub_status_notfound),
+    ENTRY("ntdll.dll", "NtQuerySemaphore",           mw_stub_status_notfound),
+    ENTRY("ntdll.dll", "NtQuerySymbolicLinkObject",  mw_stub_status_notfound),
+    ENTRY("ntdll.dll", "NtQueryObject",              mw_stub_status_notimpl),
+    ENTRY("ntdll.dll", "NtQueryInformationProcess",  mw_stub_status_notimpl),
+    ENTRY("ntdll.dll", "NtQueryInformationThread",   mw_stub_status_notimpl),
+    ENTRY("ntdll.dll", "NtQuerySystemInformation",   mw_stub_status_notimpl),
+    ENTRY("ntdll.dll", "NtSetInformationProcess",    mw_stub_status_notimpl),
+    ENTRY("ntdll.dll", "NtResumeProcess",            mw_stub_ret0),
+    ENTRY("ntdll.dll", "NtResumeThread",             mw_stub_ret0),
+    ENTRY("ntdll.dll", "NtSuspendProcess",           mw_stub_ret0),
+    ENTRY("ntdll.dll", "NtSuspendThread",            mw_stub_ret0),
+    /* comctl32 ImageList family */
+    ENTRY("COMCTL32.dll", "ImageList_Create",        mw_stub_ret_handle),
+    ENTRY("COMCTL32.dll", "ImageList_Destroy",       mw_stub_ret1),
+    ENTRY("COMCTL32.dll", "ImageList_Add",           mw_stub_ret0),
+    ENTRY("COMCTL32.dll", "ImageList_AddMasked",     mw_stub_ret0),
+    ENTRY("COMCTL32.dll", "ImageList_BeginDrag",     mw_stub_ret1),
+    ENTRY("COMCTL32.dll", "ImageList_DragEnter",     mw_stub_ret1),
+    ENTRY("COMCTL32.dll", "ImageList_DragLeave",     mw_stub_ret1),
+    ENTRY("COMCTL32.dll", "ImageList_DragMove",      mw_stub_ret1),
+    ENTRY("COMCTL32.dll", "ImageList_DragShowNolock", mw_stub_ret1),
+    ENTRY("COMCTL32.dll", "ImageList_EndDrag",       mw_stub_ret0),
+    ENTRY("COMCTL32.dll", "ImageList_GetIcon",       mw_stub_ret_handle),
+    ENTRY("COMCTL32.dll", "ImageList_GetIconSize",   mw_ImageList_GetIconSize),
+    ENTRY("COMCTL32.dll", "ImageList_GetImageCount", mw_stub_ret0),
+    ENTRY("COMCTL32.dll", "ImageList_Read",          mw_stub_ret0),
+    ENTRY("COMCTL32.dll", "ImageList_ReplaceIcon",   mw_stub_ret0),
+    ENTRY("COMCTL32.dll", "ImageList_WriteEx",       mw_stub_ret0),
+    ENTRY("COMCTL32.dll", "ImageList_Duplicate",     mw_stub_ret_handle),
+    ENTRY("COMCTL32.dll", "ImageList_SetBkColor",    mw_stub_ret0),
+    ENTRY("COMCTL32.dll", "ImageList_SetImageCount", mw_stub_ret1),
+    ENTRY("COMCTL32.dll", "ImageList_Draw",          mw_stub_ret1),
+    ENTRY("COMCTL32.dll", "ImageList_DrawEx",        mw_stub_ret1),
+    ENTRY("COMCTL32.dll", "ImageList_DrawIndirect",  mw_stub_ret1),
+    ENTRY("COMCTL32.dll", "CreatePropertySheetPageW", mw_stub_ret_handle),
+    ENTRY("COMCTL32.dll", "PropertySheetW",          mw_stub_ret_neg1),
+    /* advapi32 trace / procexp ETW family */
+    ENTRY("ADVAPI32.DLL", "OpenTraceW",              mw_OpenTraceW),
+    ENTRY("ADVAPI32.DLL", "ProcessTrace",            mw_stub_ret0),
+    ENTRY("ADVAPI32.DLL", "CloseTrace",              mw_stub_ret0),
+    ENTRY("ADVAPI32.DLL", "ControlTraceW",           mw_stub_ret0),
+    ENTRY("ADVAPI32.DLL", "StartTraceW",             mw_stub_ret0),
+    ENTRY("ADVAPI32.DLL", "FlushTraceW",             mw_stub_ret0),
+    /* misc dialogs need DefDlgProc/DefFrameProc/DefMDIChildProc -> 0 */
+    ENTRY("USER32.DLL", "DefDlgProcW",               mw_stub_ret0),
+    ENTRY("USER32.DLL", "DefFrameProcW",             mw_stub_ret0),
+    ENTRY("USER32.DLL", "DefMDIChildProcW",          mw_stub_ret0),
+    ENTRY("USER32.DLL", "CreateDialogParamW",        mw_stub_ret_handle),
+    /* SWEEP-008 batch-3: names missed by batch-2 (live from rerun WARNs) */
+    ENTRY("USER32.DLL", "SetWindowLongPtrW",         mw_stub_ret0),
+    ENTRY("USER32.DLL", "SetWindowLongW",            mw_stub_ret0),
+    ENTRY("USER32.DLL", "DrawTextW",                 mw_stub_ret1),
+    ENTRY("USER32.DLL", "SetClipboardData",          mw_stub_ret_handle),
+    ENTRY("USER32.DLL", "FindWindowW",               mw_stub_ret0),
+    ENTRY("USER32.DLL", "FindWindowExW",             mw_stub_ret0),
+    ENTRY("USER32.DLL", "EnumDisplaySettingsW",      mw_stub_ret1),
+    ENTRY("USER32.DLL", "GetCursorPos",              mw_stub_ret1),
+    ENTRY("USER32.DLL", "SetMenuInfo",               mw_stub_ret1),
+    ENTRY("USER32.DLL", "GetWindowPlacement",        mw_stub_ret1),
+    ENTRY("USER32.DLL", "ChildWindowFromPoint",      mw_stub_ret0),
+    ENTRY("USER32.DLL", "BeginDeferWindowPos",       mw_stub_ret_handle),
+    ENTRY("USER32.DLL", "DeferWindowPos",            mw_stub_ret_handle),
+    ENTRY("USER32.DLL", "EndDeferWindowPos",         mw_stub_ret1),
+    ENTRY("USER32.DLL", "RectInRegion",              mw_stub_ret0),
+    ENTRY("KERNEL32.DLL", "GetNumberFormatEx",       mw_stub_ret0),
+    ENTRY("KERNEL32.DLL", "GetNumberFormatW",        mw_stub_ret0),
+    ENTRY("KERNEL32.DLL", "SetDefaultDllDirectories", mw_stub_ret1),
+    ENTRY("ntdll.dll", "RtlGetVersion",              mw_RtlGetVersion),
+    /* SWEEP-008 batch-4: procexp64 Rtl*-debug + remaining 14 (live WARNs) */
+    ENTRY("ntdll.dll", "RtlQueryProcessDebugInformation", mw_RtlQueryProcessDebugInformation),
+    ENTRY("ntdll.dll", "RtlCreateQueryDebugBuffer",  mw_RtlCreateQueryDebugBuffer),
+    ENTRY("ntdll.dll", "RtlDestroyQueryDebugBuffer", mw_RtlDestroyQueryDebugBuffer),
+    ENTRY("KERNEL32.DLL", "IsBadReadPtr",            mw_stub_ret0),
+    ENTRY("KERNEL32.DLL", "IsBadStringPtrW",         mw_stub_ret0),
+    ENTRY("KERNEL32.DLL", "QueryFullProcessImageNameW", mw_stub_ret0),
+    ENTRY("KERNEL32.DLL", "GetProcessInformation",   mw_stub_ret0),
+    ENTRY("KERNEL32.DLL", "SetThreadGroupAffinity",  mw_stub_ret1),
+    ENTRY("KERNEL32.DLL", "QueryThreadCycleTime",    mw_stub_ret1),
+    ENTRY("USER32.DLL", "SetLayeredWindowAttributes", mw_stub_ret1),
+    ENTRY("USER32.DLL", "EnumDisplayDevicesW",       mw_stub_ret1),
+    ENTRY("USER32.DLL", "CreateIconIndirect",        mw_stub_ret_handle),
+    ENTRY("ADVAPI32.DLL", "GetKernelObjectSecurity", mw_stub_ret1),
+    ENTRY("ADVAPI32.DLL", "ConvertStringSecurityDescriptorToSecurityDescriptorW", mw_stub_ret0),
 
 };
 
@@ -12096,12 +12723,72 @@ static void iat_pages_restore(void) {
  * change for fully-resolved binaries (G1/T0 all resolve every import).
  * ============================================================ */
 static uint64_t g_stub_calls = 0; /* rate-limiter only; racy count is fine */
+
+/* SW-555: record every slot patched with the returning-0 stub so the stub
+ * can NAME the exact dll!import from the guest return address.
+ * BUG-071: dll/name POINTERS pointed into the freed PE filedata buffer —
+ * the first stub print after load_pe was a use-after-free inside libc
+ * vsnprintf (crash RIP in libc, RCX = format cursor). Store COPIES. */
+typedef struct { uint64_t slot_va; char dll[16]; char name[64]; } mw_stub_site;
+#define MW_STUB_SITES_MAX 1024
+static mw_stub_site g_stub_sites[MW_STUB_SITES_MAX];
+static int g_stub_site_n = 0;
+static void stub_site_record(uint64_t iat_off, int slot, const char* dll, const char* name) {
+    if (g_stub_site_n >= MW_STUB_SITES_MAX) return;
+    mw_stub_site* s = &g_stub_sites[g_stub_site_n];
+    s->slot_va = (uint64_t)(uintptr_t)g_image_base + iat_off + slot * 8;
+    size_t i = 0;
+    if (dll) for (; dll[i] && i < sizeof(s->dll) - 1; i++) s->dll[i] = dll[i];
+    s->dll[i] = 0;
+    i = 0;
+    if (name) for (; name[i] && i < sizeof(s->name) - 1; i++) s->name[i] = name[i];
+    s->name[i] = 0;
+    g_stub_site_n++;
+}
+static int32_t stub_read_i32(const uint8_t* p) {
+    return (int32_t)((uint32_t)p[0] | ((uint32_t)p[1] << 8) | ((uint32_t)p[2] << 16) | ((uint32_t)p[3] << 24));
+}
+/* Decode guest return address -> IAT slot -> "dll!name" (NULL if unknown).
+ * Patterns: FF 15 d32 (call [rip+d]) @ret-6, FF 25 d32 (jmp) @ret-6,
+ * or mov r64,[rip+d] (48/4C 8B modrm mod=00 rm=101) up to 40 bytes back. */
+static const char* stub_site_lookup(uint64_t ret_rip) {
+    if (ret_rip < (uint64_t)(uintptr_t)g_image_base || ret_rip > (uint64_t)(uintptr_t)g_image_base + 0x8000000u)
+        return NULL;
+    const uint8_t* p = (const uint8_t*)(uintptr_t)ret_rip;
+    uint64_t slot = 0;
+    if (p[-6] == 0xFF && p[-5] == 0x15) slot = ret_rip + stub_read_i32(p - 4);
+    else if (p[-6] == 0xFF && p[-5] == 0x25) slot = ret_rip + stub_read_i32(p - 4);
+    else {
+        for (int k = 7; k <= 40; k++) {
+            const uint8_t* q = p - k;
+            if ((q[0] == 0x48 || q[0] == 0x4C) && q[1] == 0x8B && (q[2] & 0xC7) == 0x05) {
+                slot = (ret_rip - k + 7) + stub_read_i32(q + 3);
+                break;
+            }
+        }
+    }
+    if (!slot) return NULL;
+    for (int i = 0; i < g_stub_site_n; i++)
+        if (g_stub_sites[i].slot_va == slot) {
+            /* thread-unsafe scratch: stderr is line-buffered per call */
+            static char buf[128];
+            snprintf(buf, sizeof(buf), "%s!%s", g_stub_sites[i].dll, g_stub_sites[i].name);
+            return buf;
+        }
+    return NULL;
+}
 __attribute__((ms_abi)) uint64_t mw_unresolved_import_stub(void);
 __attribute__((ms_abi)) uint64_t mw_unresolved_import_stub(void) {
     uint64_t n = ++g_stub_calls;
     if (n <= 20) {
-        fprintf(stderr, "[STUB] unresolved import called -> returning 0 (call #%llu)\n",
-                (unsigned long long)n);
+        uint64_t ret = (uint64_t)__builtin_return_address(0);
+        const char* site = stub_site_lookup(ret);
+        if (site)
+            fprintf(stderr, "[STUB] %s -> returning 0 (call #%llu) guest_rip=%p\n",
+                    site, (unsigned long long)n, (void*)(uintptr_t)ret);
+        else
+            fprintf(stderr, "[STUB] unresolved import called -> returning 0 (call #%llu) guest_rip=%p\n",
+                    (unsigned long long)n, (void*)(uintptr_t)ret);
     } else if (n == 21) {
         fprintf(stderr, "[STUB] further unresolved-import calls silenced\n");
     }
@@ -12117,6 +12804,571 @@ static void iat_patch_slot(uint64_t iat_off, int slot, void* target) {
 }
 
 /* ============================================================
+ * SWEEP-008 honest-stub batch — one elephant-sized edit, five
+ * families implemented from named guest_rip gate evidence:
+ *   SW-563 GetVersionExW/A   real Win10 22H2 (10.0.19045) fill
+ *   SW-564 in-memory registry EULA round-trip becomes real
+ *   SW-565 GlobalAddAtomW/A  real atom table (0xC000+)
+ *   SW-566 shlwapi Color*    canonical Win32 HLS.H math (HLSMAX=240)
+ *   SW-567 DialogBoxIndirectParamW DECLARED auto-accept (IDOK)
+ * Order inside this block matters: w16 helpers come first because
+ * the atom table reuses them.
+ * ============================================================ */
+
+/* ---- w16 helpers (guest strings are UTF-16LE; host wchar_t is 4-byte!) ---- */
+static int w16_len(const uint16_t* s) { int n = 0; if (s) while (s[n]) n++; return n; }
+static int w16_up(uint16_t c) { return (c >= 'A' && c <= 'Z') ? c + 32 : c; }
+static int w16_icmp(const uint16_t* a, const uint16_t* b) {
+    int i = 0;
+    while (a[i] && w16_up(a[i]) == w16_up(b[i])) i++;
+    return (int)w16_up(a[i]) - (int)w16_up(b[i]);
+}
+static void w16_copy(uint16_t* d, size_t cap, const uint16_t* s) {
+    size_t i = 0;
+    if (s) while (s[i] && i + 1 < cap) { d[i] = s[i]; i++; }
+    d[i] = 0;
+}
+
+/* ---- SW-564: minimal in-memory registry ----
+ * EULA-flow semantics: RegOpenKeyW(missing) -> ERROR_FILE_NOT_FOUND, which
+ * is exactly the trigger Sysinternals uses to show its EULA dialog; after
+ * DialogBoxIndirectParamW returns IDOK the guest creates
+ * HKCU\\Software\\Sysinternals\\<exe> and writes EulaAccepted=1. A flat
+ * (path,name)->value store makes that round-trip real instead of theater. */
+#define MW_REG_PATHMAX 260
+#define MW_REG_NAMEMAX 64
+#define MW_REG_DATAMAX 512
+#define MW_REG_KEYS 64
+#define MW_REG_VALS 128
+#define MW_REG_HANDLE_BASE 0x50000000u
+typedef struct { int used; uint16_t path[MW_REG_PATHMAX]; } mw_reg_keyslot;
+typedef struct { int used; uint16_t path[MW_REG_PATHMAX]; uint16_t name[MW_REG_NAMEMAX];
+                 uint32_t type; uint32_t size; uint8_t data[MW_REG_DATAMAX]; } mw_reg_valslot;
+static mw_reg_keyslot g_reg_keys[MW_REG_KEYS];
+static mw_reg_valslot g_reg_vals[MW_REG_VALS];
+static const uint16_t g_w16_empty[1] = { 0 };
+
+static void reg_join(void* root, const uint16_t* sub, uint16_t* out, size_t cap) {
+    const char* r = NULL;
+    switch ((uint32_t)(uintptr_t)root) {
+    case 0x80000000u: r = "HKCR"; break;
+    case 0x80000001u: r = "HKCU"; break;
+    case 0x80000002u: r = "HKLM"; break;
+    case 0x80000003u: r = "HKU";  break;
+    case 0x80000004u: r = "HKPD"; break;
+    case 0x80000005u: r = "HKCC"; break;
+    case 0x80000006u: r = "HKDD"; break;
+    default: r = NULL; break;
+    }
+    size_t i = 0;
+    if (r) {
+        while (*r && i + 1 < cap) out[i++] = (uint16_t)(uint8_t)*r++;
+        if (!sub || !sub[0]) { out[i] = 0; return; }
+    } else {
+        uint32_t idx = (uint32_t)(uintptr_t)root - MW_REG_HANDLE_BASE;
+        if (idx < MW_REG_KEYS && g_reg_keys[idx].used) {
+            w16_copy(out, cap, g_reg_keys[idx].path);
+            if (!sub || !sub[0]) return;
+            i = w16_len(out);
+        } else {
+            out[0] = 0; /* unknown handle: honest dead-end path */
+            if (!sub || !sub[0]) return;
+            i = 0;
+        }
+    }
+    if (i + 1 < cap) out[i++] = '\\';
+    while (sub[0] && i + 1 < cap) { out[i++] = sub[0]; sub++; }
+    out[i] = 0;
+}
+static int reg_key_find(const uint16_t* path) {
+    for (int i = 0; i < MW_REG_KEYS; i++)
+        if (g_reg_keys[i].used && w16_icmp(g_reg_keys[i].path, path) == 0) return i;
+    return -1;
+}
+static int reg_val_find(const uint16_t* path, const uint16_t* name) {
+    if (!name) name = g_w16_empty;
+    for (int i = 0; i < MW_REG_VALS; i++)
+        if (g_reg_vals[i].used && w16_icmp(g_reg_vals[i].path, path) == 0 &&
+            w16_icmp(g_reg_vals[i].name, name) == 0) return i;
+ return -1;
+}
+static void* reg_handle_create(const uint16_t* path) {
+    int i = reg_key_find(path);
+    if (i >= 0) return (void*)(uintptr_t)(MW_REG_HANDLE_BASE + (unsigned)i);
+    for (int k = 0; k < MW_REG_KEYS; k++) {
+        if (!g_reg_keys[k].used) {
+            g_reg_keys[k].used = 1;
+            w16_copy(g_reg_keys[k].path, MW_REG_PATHMAX, path);
+            return (void*)(uintptr_t)(MW_REG_HANDLE_BASE + (unsigned)k);
+        }
+    }
+    return NULL;
+}
+static int32_t reg_open_common(void* key, const uint16_t* sub, void** result) {
+    uint16_t path[MW_REG_PATHMAX];
+    reg_join(key, sub, path, MW_REG_PATHMAX);
+    if (!sub || !sub[0]) { if (result) *result = key; return 0; } /* NULL sub = same handle */
+    void* h = reg_handle_create(path);
+    if (!h) { mw_SetLastError(14); return 14; }
+    if (result) *result = h;
+    MW_TRACE("RegOpenKeyW() -> handle (in-memory registry)");
+    return 0;
+}
+__attribute__((ms_abi)) int32_t mw_RegOpenKeyW(void* key, const uint16_t* sub, void** result) {
+    return reg_open_common(key, sub, result);
+}
+__attribute__((ms_abi)) int32_t mw_RegOpenKeyExW(void* key, const wchar_t* sub, uint32_t opts, uint32_t access, void** result) {
+    (void)opts; (void)access;
+    return reg_open_common(key, (const uint16_t*)sub, result);
+}
+__attribute__((ms_abi)) int32_t mw_RegCreateKeyExW(void* key, const wchar_t* sub, uint32_t res, const wchar_t* cls, uint32_t opts, uint32_t access, void* sa, void** result, void* disp) {
+    (void)res; (void)cls; (void)opts; (void)access; (void)sa;
+    uint16_t path[MW_REG_PATHMAX];
+    reg_join(key, (const uint16_t*)sub, path, MW_REG_PATHMAX);
+    void* h = reg_handle_create(path);
+    if (!h) { mw_SetLastError(14); return 14; }
+    if (result) *result = h;
+    if (disp) *(uint32_t*)disp = 1; /* REG_CREATED_NEW_KEY */
+    MW_TRACE("RegCreateKeyExW() -> created/opened (in-memory registry)");
+    return 0;
+}
+__attribute__((ms_abi)) int32_t mw_RegSetValueExW(void* key, const wchar_t* name, uint32_t res, uint32_t type, const void* data, uint32_t size) {
+    (void)res;
+    uint16_t path[MW_REG_PATHMAX];
+    reg_join(key, NULL, path, MW_REG_PATHMAX);
+    const uint16_t* nm = (const uint16_t*)name;
+    if (!nm) nm = g_w16_empty;
+    int vi = reg_val_find(path, nm);
+    if (vi < 0) {
+        for (int i = 0; i < MW_REG_VALS; i++) if (!g_reg_vals[i].used) { vi = i; break; }
+        if (vi < 0) { mw_SetLastError(14); return 14; }
+        g_reg_vals[vi].used = 1;
+        w16_copy(g_reg_vals[vi].path, MW_REG_PATHMAX, path);
+        w16_copy(g_reg_vals[vi].name, MW_REG_NAMEMAX, nm);
+    }
+    uint32_t n = size > MW_REG_DATAMAX ? MW_REG_DATAMAX : size;
+    if (data && n) memcpy(g_reg_vals[vi].data, data, n);
+    g_reg_vals[vi].type = type;
+    g_reg_vals[vi].size = size;
+    return 0;
+}
+__attribute__((ms_abi)) int32_t mw_RegQueryValueExW(void* key, const wchar_t* name, void* res, uint32_t* type, void* data, uint32_t* size) {
+    (void)res;
+    uint16_t path[MW_REG_PATHMAX];
+    reg_join(key, NULL, path, MW_REG_PATHMAX);
+    const uint16_t* nm = (const uint16_t*)name;
+    if (!nm) nm = g_w16_empty;
+    int vi = reg_val_find(path, nm);
+    if (vi < 0) { mw_SetLastError(2); return 2; }
+    if (type) *type = g_reg_vals[vi].type;
+    if (size) {
+        uint32_t want = g_reg_vals[vi].size;
+        if (data) {
+            uint32_t n = want > *size ? *size : want;
+            if (n) memcpy(data, g_reg_vals[vi].data, n);
+        }
+        *size = want;
+    }
+    return 0;
+}
+__attribute__((ms_abi)) int32_t mw_RegCloseKey(void* key) {
+    uint32_t idx = (uint32_t)(uintptr_t)key - MW_REG_HANDLE_BASE;
+    if (idx < MW_REG_KEYS) g_reg_keys[idx].used = 0;
+    return 0;
+}
+
+/* ---- SW-565: global atom table (real 0xC000+ semantics) ---- */
+#define MW_ATOM_MAX 256
+static uint16_t g_atom_names[MW_ATOM_MAX][64];
+static unsigned g_atom_count = 0;
+static uint16_t atom_find_or_add(const uint16_t* s) {
+    for (unsigned i = 0; i < g_atom_count; i++)
+        if (w16_icmp(g_atom_names[i], s) == 0) return (uint16_t)(0xC000u + i);
+    if (g_atom_count < MW_ATOM_MAX) {
+        w16_copy(g_atom_names[g_atom_count], 64, s);
+        return (uint16_t)(0xC000u + g_atom_count++);
+    }
+    return 0;
+}
+__attribute__((ms_abi)) uint32_t mw_GlobalAddAtomW(const uint16_t* s) {
+    if (!s || !s[0]) return 0;
+    uint16_t a = atom_find_or_add(s);
+    if (a) {
+        char t8[128]; w3_w16_to_utf8z(s, t8, sizeof(t8));
+        MW_TRACE("GlobalAddAtomW('%s') -> 0x%04x", t8, a);
+    }
+    return a;
+}
+__attribute__((ms_abi)) uint32_t mw_GlobalAddAtomA(const char* s) {
+    if (!s || !s[0]) return 0;
+    uint16_t w[64]; int i = 0;
+    for (; s[i] && i < 63; i++) w[i] = (uint16_t)(uint8_t)s[i];
+    w[i] = 0;
+    return atom_find_or_add(w);
+}
+__attribute__((ms_abi)) uint32_t mw_GlobalDeleteAtom(uint32_t atom) { (void)atom; return 0; }
+__attribute__((ms_abi)) uint32_t mw_GlobalGetAtomNameW(uint32_t atom, uint16_t* buf, int32_t cap) {
+    if (atom < 0xC000u || atom - 0xC000u >= g_atom_count || !buf || cap <= 0) { mw_SetLastError(13); return 0; }
+    const uint16_t* s = g_atom_names[atom - 0xC000u];
+    int n = 0;
+    while (s[n] && n < cap - 1) { buf[n] = s[n]; n++; }
+    buf[n] = 0;
+    return (uint32_t)n;
+}
+
+/* ---- SW-566: shlwapi Color* — canonical Win32 HLS.H math (HLSMAX=240) ---- */
+#define MW_HLSMAX 240
+#define MW_RGBMAX 255
+#define MW_HLSZERO (MW_HLSMAX / 2)
+static int mw_hue_to_rgb(int n1, int n2, int hue) {
+    if (hue < 0) hue += MW_HLSMAX;
+    if (hue > MW_HLSMAX) hue -= MW_HLSMAX;
+    if (hue < MW_HLSMAX / 6) return n1 + (((n2 - n1) * hue + (MW_HLSMAX / 12)) / (MW_HLSMAX / 6));
+    if (hue < MW_HLSMAX / 2) return n2;
+    if (hue < (MW_HLSMAX * 2) / 3)
+        return n1 + (((n2 - n1) * ((MW_HLSMAX * 2) / 3 - hue) + (MW_HLSMAX / 12)) / (MW_HLSMAX / 6));
+    return n1;
+}
+__attribute__((ms_abi)) uint32_t mw_ColorHLSToRGB(uint32_t hue, uint32_t lum, uint32_t sat) {
+    int h = (int)(hue & 0xFFFF), l = (int)(lum & 0xFFFF), s = (int)(sat & 0xFFFF);
+    int r, g, b;
+    if (s == 0) {
+        r = g = b = (l * MW_RGBMAX) / MW_HLSMAX;
+    } else {
+        int magic1, magic2;
+        if (l <= MW_HLSZERO) magic2 = (l * (MW_HLSMAX + s) + MW_HLSZERO) / MW_HLSMAX;
+        else magic2 = l + s - ((l * s) + MW_HLSZERO) / MW_HLSMAX;
+        magic1 = 2 * l - magic2;
+        r = (mw_hue_to_rgb(magic1, magic2, h + MW_HLSMAX / 3) * MW_RGBMAX + MW_HLSZERO) / MW_HLSMAX;
+        g = (mw_hue_to_rgb(magic1, magic2, h) * MW_RGBMAX + MW_HLSZERO) / MW_HLSMAX;
+        b = (mw_hue_to_rgb(magic1, magic2, h - MW_HLSMAX / 3) * MW_RGBMAX + MW_HLSZERO) / MW_HLSMAX;
+    }
+    if (r < 0) r = 0; if (r > 255) r = 255;
+    if (g < 0) g = 0; if (g > 255) g = 255;
+    if (b < 0) b = 0; if (b > 255) b = 255;
+    return (uint32_t)r | ((uint32_t)g << 8) | ((uint32_t)b << 16);
+}
+__attribute__((ms_abi)) void mw_ColorRGBToHLS(uint32_t rgb, uint16_t* ph, uint16_t* pl, uint16_t* ps) {
+    int r = (int)(rgb & 0xFF), g = (int)((rgb >> 8) & 0xFF), b = (int)((rgb >> 16) & 0xFF);
+    int max = r > g ? (r > b ? r : b) : (g > b ? g : b);
+    int min = r < g ? (r < b ? r : b) : (g < b ? g : b);
+    int h = 0, l = ((max + min) * MW_HLSMAX + MW_RGBMAX / 2) / MW_RGBMAX, s = 0;
+    if (max != min) {
+        int rd = ((max - r) * (MW_HLSMAX / 6) + (max - min) / 2) / (max - min);
+        int gd = ((max - g) * (MW_HLSMAX / 6) + (max - min) / 2) / (max - min);
+        int bd = ((max - b) * (MW_HLSMAX / 6) + (max - min) / 2) / (max - min);
+        if (l <= MW_HLSZERO) s = ((max - min) * MW_HLSMAX + (max + min) / 2) / (max + min);
+        else s = ((max - min) * MW_HLSMAX + (2 * MW_RGBMAX - max - min) / 2) / (2 * MW_RGBMAX - max - min);
+        if (r == max) h = bd - gd;
+        else if (g == max) h = (2 * MW_HLSMAX / 3) + rd - bd;
+        else h = (MW_HLSMAX / 3) + gd - rd;
+        if (h < 0) h += MW_HLSMAX;
+        if (h > MW_HLSMAX) h -= MW_HLSMAX;
+    }
+    if (ph) *ph = (uint16_t)h;
+    if (pl) *pl = (uint16_t)l;
+    if (ps) *ps = (uint16_t)s;
+}
+
+/* ---- SW-567: DialogBoxIndirectParamW — DECLARED EULA auto-accept ----
+ * Sysinternals builds its in-memory EULA DLGTEMPLATE and calls this; the
+ * honest move for a headless compat layer is a LOUD auto-accept that
+ * returns IDOK so the downstream RegCreateKeyExW +
+ * RegSetValueExW("EulaAccepted") flow (a real in-memory registry now)
+ * executes. Every call logs; nothing is silent. */
+__attribute__((ms_abi)) int mw_DialogBoxIndirectParamW(void* hinst, void* tmpl, void* parent, void* proc, void* init) {
+    (void)hinst; (void)tmpl; (void)parent; (void)proc; (void)init;
+    fprintf(stderr, "[DialogBoxIndirectParamW] dialog shown -> auto-accept (IDOK)\n");
+    MW_TRACE("DialogBoxIndirectParamW -> IDOK (auto-accept)");
+    return 1; /* IDOK */
+}
+
+/* ============================================================
+ * SWEEP-008 batch-2: policy stubs + real impls for the WARN-list
+ * union of autoruns64/rammap64/procexp64 (~230 imports). Policy
+ * pointers let one function cover a whole family; names stay
+ * precise for the site decoder. Handles are non-NULL magic ints
+ * so "must-succeed-to-proceed" callers proceed; optional APIs get
+ * honest failures.
+ * ============================================================ */
+static uint64_t g_mw_fake_handle = 0xA1000000ULL;
+static void* mw_next_fake_handle(void) { return (void*)(uintptr_t)(g_mw_fake_handle += 0x10); }
+__attribute__((ms_abi)) int64_t mw_stub_ret0(void) { return 0; }
+__attribute__((ms_abi)) int64_t mw_stub_ret1(void) { return 1; }
+__attribute__((ms_abi)) int64_t mw_stub_ret_handle(void) { return (int64_t)(uintptr_t)mw_next_fake_handle(); }
+__attribute__((ms_abi)) int64_t mw_stub_ret_neg1(void) { return -1; }
+__attribute__((ms_abi)) int64_t mw_stub_hresult_notimpl(void) { return (int64_t)(uint32_t)0x80004001u; }
+__attribute__((ms_abi)) int64_t mw_stub_status_notimpl(void) { return (int64_t)(uint32_t)0xC0000002u; }
+__attribute__((ms_abi)) int64_t mw_stub_status_notfound(void) { return (int64_t)(uint32_t)0xC0000034u; }
+__attribute__((ms_abi)) int64_t mw_stub_status_denied(void) { return (int64_t)(uint32_t)0xC0000022u; }
+__attribute__((ms_abi)) int64_t mw_stub_winerr_nodata(void) { return 1168; } /* ERROR_NO_DATA */
+__attribute__((ms_abi)) int64_t mw_stub_scm_denied(void) { mw_SetLastError(5); return 0; }
+__attribute__((ms_abi)) int64_t mw_stub_reg_notfound(void) { mw_SetLastError(2); return 2; }
+__attribute__((ms_abi)) int64_t mw_stub_reg_noitems(void) { mw_SetLastError(259); return 259; }
+
+/* --- real one-liners --- */
+__attribute__((ms_abi)) int32_t mw_MulDiv(int32_t a, int32_t b, int32_t c) {
+    if (!c) return 0;
+    return (int32_t)(((int64_t)a * b + c / 2) / c);
+}
+__attribute__((ms_abi)) int32_t mw_lstrcmpW(const uint16_t* a, const uint16_t* b) {
+    if (!a || !b) return -1;
+    while (*a && *a == *b) { a++; b++; }
+    return (int32_t)((int16_t)*a - (int16_t)*b);
+}
+__attribute__((ms_abi)) int32_t mw_lstrcmpiW(const uint16_t* a, const uint16_t* b) {
+    if (!a || !b) return -1;
+    for (;;) {
+        uint16_t ca = *a, cb = *b;
+        if (ca >= 'A' && ca <= 'Z') ca += 32;
+        if (cb >= 'A' && cb <= 'Z') cb += 32;
+        if (ca != cb || !ca) return (int32_t)((int16_t)ca - (int16_t)cb);
+        a++; b++;
+    }
+}
+__attribute__((ms_abi)) const uint16_t* mw_CharNextW(const uint16_t* s) { return s ? s + 1 : s; }
+__attribute__((ms_abi)) uint16_t* mw_CharLowerW(uint16_t* s) {
+    if (!s) return s;
+    for (uint16_t* p = s; *p; p++) if (*p >= 'A' && *p <= 'Z') *p += 32;
+    return s;
+}
+__attribute__((ms_abi)) void* mw_CoTaskMemAlloc(size_t cb) { return cb ? malloc(cb) : NULL; }
+__attribute__((ms_abi)) void mw_CoTaskMemFree(void* p) { free(p); }
+__attribute__((ms_abi)) void* mw_CoTaskMemRealloc(void* p, size_t cb) { return realloc(p, cb); }
+__attribute__((ms_abi)) int32_t mw_StringFromGUID2(const void* guid, uint16_t* buf, int32_t cap) {
+    static const char s[] = "{00000000-0000-0000-0000-000000000000}";
+    if (!buf || cap < 39) return 0;
+    int i = 0;
+    for (; s[i]; i++) buf[i] = (uint16_t)(uint8_t)s[i];
+    buf[i] = 0;
+    return 39;
+}
+__attribute__((ms_abi)) int32_t mw_CLSIDFromString(const uint16_t* str, void* guid) {
+    if (guid) memset(guid, 0, 16);
+    return 0; /* S_OK */
+}
+__attribute__((ms_abi)) int32_t mw_SHGetKnownFolderPath(const void* rfid, uint32_t flags, void* token, uint16_t** path) {
+    static const char p[] = "C:\\Users\\User";
+    if (!path) return (int32_t)0x8000FFFFu;
+    uint16_t* out = (uint16_t*)malloc(sizeof(p) * 2);
+    if (!out) return (int32_t)0x8007000Eu;
+    int i = 0;
+    for (; p[i]; i++) out[i] = (uint16_t)(uint8_t)p[i];
+    out[i] = 0;
+    *path = out;
+    return 0; /* S_OK */
+}
+__attribute__((ms_abi)) int32_t mw_SHGetFolderPathW(void* hwnd, int32_t csidl, void* token, uint32_t flags, uint16_t* path) {
+    static const char p[] = "C:\\Users\\User";
+    if (path) {
+        int i = 0;
+        for (; p[i]; i++) path[i] = (uint16_t)(uint8_t)p[i];
+        path[i] = 0;
+    }
+    return 0; /* S_OK */
+}
+__attribute__((ms_abi)) int32_t mw_GetSystemMetrics(int32_t idx) {
+    switch (idx) {
+    case 0: return 1920;  /* SM_CXSCREEN */
+    case 1: return 1080;  /* SM_CYSCREEN */
+    case 2: return 1024;  /* SM_CXVSCROLL */
+    case 3: return 17;    /* SM_CYHSCROLL */
+    case 4: return 720;   /* SM_CYCAPTION */
+    case 5: return 24;    /* SM_CXBORDER */
+    case 6: return 24;    /* SM_CYDLGFRAME */
+    case 7: return 18;    /* SM_CYVTHUMB */
+    case 8: return 18;    /* SM_CXHTHUMB */
+    case 9: return 8;     /* SM_CXICON */
+    case 10: return 8;    /* SM_CYICON */
+    case 11: return 32;   /* SM_CXCURSOR */
+    case 12: return 32;   /* SM_CYCURSOR */
+    case 13: return 0;    /* SM_CYMENU */
+    case 15: return 0;    /* SM_CXFULLSCREEN */
+    case 16: return 1080; /* SM_CYFULLSCREEN... honest-ish */
+    case 19: return 1;    /* SM_MOUSEPRESENT */
+    case 22: return 0;    /* SM_SWAPBUTTON */
+    case 32: return 1;    /* SM_SHOWSOUNDS? 0 */
+    case 40: return 1;    /* SM_REMOTESESSION? 0 honest */
+    case 76: return 1;    /* SM_REMOTECONTROL? 0 */
+    default: return 0;
+    }
+}
+__attribute__((ms_abi)) void* mw_GetSysColorBrush(int32_t id) { return (void*)(uintptr_t)(0xA2000000ULL + (uint32_t)id * 4); }
+static void mw_fill_rect(void* rc, int32_t l, int32_t t, int32_t r, int32_t b) {
+    if (!rc) return;
+    int32_t* p = (int32_t*)rc;
+    p[0] = l; p[1] = t; p[2] = r; p[3] = b;
+}
+__attribute__((ms_abi)) int32_t mw_GetWindowRect(void* hwnd, void* rc) {
+    mw_fill_rect(rc, 0, 0, 800, 600);
+    return 1;
+}
+__attribute__((ms_abi)) int32_t mw_SetRect(void* rc, int32_t l, int32_t t, int32_t r, int32_t b) {
+    mw_fill_rect(rc, l, t, r, b);
+    return 1;
+}
+__attribute__((ms_abi)) int32_t mw_SetRectEmpty(void* rc) { mw_fill_rect(rc, 0, 0, 0, 0); return 1; }
+__attribute__((ms_abi)) int32_t mw_GetMonitorInfoW(void* mon, void* mi) {
+    if (!mi) return 0;
+    uint32_t sz = *(uint32_t*)mi;
+    uint8_t* p = (uint8_t*)mi;
+    memset(p, 0, sz);
+    *(uint32_t*)p = sz;
+    /* rcMonitor / rcWork at +4 / +20 for MONITORINFO(40); same offsets in EX */
+    mw_fill_rect(p + 4, 0, 0, 1920, 1080);
+    mw_fill_rect(p + 20, 0, 0, 1920, 1040);
+    if (sz >= 64) *(uint32_t*)(p + 40) = 1; /* dwFlags = MONITORINFOF_PRIMARY */
+    return 1;
+}
+__attribute__((ms_abi)) int32_t mw_GetWindowThreadProcessId(void* hwnd, uint32_t* pid) {
+    if (pid) *pid = 0x1234;
+    return 1;
+}
+__attribute__((ms_abi)) int32_t mw_GetTextExtentPoint32W(void* hdc, const uint16_t* s, int32_t n, void* size) {
+    if (size) {
+        int32_t* p = (int32_t*)size;
+        p[0] = (n > 0 ? n : 0) * 8;
+        p[1] = 16;
+    }
+    return 1;
+}
+__attribute__((ms_abi)) int32_t mw_GetTextMetricsW(void* hdc, void* tm) {
+    if (!tm) return 0;
+    int32_t* p = (int32_t*)tm;
+    memset(p, 0, 60);
+    p[0] = 16;  /* tmHeight */
+    p[1] = 13;  /* tmAscent */
+    p[2] = 3;   /* tmDescent */
+    p[6] = 8;   /* tmAveCharWidth */
+    p[7] = 8;   /* tmMaxCharWidth */
+    return 1;
+}
+__attribute__((ms_abi)) int32_t mw_GetLengthSid(const void* sid) {
+    if (!sid) return 0;
+    const uint8_t* b = (const uint8_t*)sid;
+    return 8 + b[1] * 4;
+}
+__attribute__((ms_abi)) int32_t mw_IsValidSid(const void* sid) {
+    if (!sid) return 0;
+    const uint8_t* b = (const uint8_t*)sid;
+    return (b[0] == 1 && b[1] > 0 && b[1] < 16) ? 1 : 0;
+}
+__attribute__((ms_abi)) int32_t mw_IsWow64Process(void* h, int32_t* flag) {
+    if (flag) *flag = 0;
+    return 1;
+}
+__attribute__((ms_abi)) uint32_t mw_RegisterWindowMessageW(const uint16_t* s) {
+    static uint32_t nxt = 0xC001u;
+    return nxt++;
+}
+__attribute__((ms_abi)) int32_t mw_CryptAcquireContextW(uint64_t* prov, const void* c, const void* p, uint32_t type, uint32_t flags) {
+    if (prov) *prov = 0xA4000001ULL;
+    return 1;
+}
+static void mw_fill_system_time(void* st) {
+    if (!st) return;
+    uint16_t* w = (uint16_t*)st;
+    w[0] = 2026; w[1] = 10; w[2] = 2; w[3] = 20; w[4] = 12; w[5] = 0; w[6] = 0; w[7] = 0;
+}
+__attribute__((ms_abi)) void mw_GetLocalTime(void* st) { mw_fill_system_time(st); }
+__attribute__((ms_abi)) uint32_t mw_WTSGetActiveConsoleSessionId(void) { return 1; }
+__attribute__((ms_abi)) uint32_t mw_GetSystemWindowsDirectoryW(uint16_t* buf, uint32_t cap) {
+    static const char p[] = "C:\\Windows";
+    uint32_t n = 0;
+    if (buf) for (; p[n] && n + 1 < cap; n++) buf[n] = (uint16_t)(uint8_t)p[n];
+    if (buf) buf[n] = 0;
+    return n;
+}
+__attribute__((ms_abi)) uint32_t mw_GetPrivateProfileStringW(const uint16_t* sec, const uint16_t* key, const uint16_t* def, uint16_t* buf, uint32_t cap, const uint16_t* file) {
+    uint32_t n = 0;
+    if (def && buf && cap) {
+        for (; def[n] && n + 1 < cap; n++) buf[n] = def[n];
+        buf[n] = 0;
+    }
+    return n;
+}
+__attribute__((ms_abi)) int32_t mw_StrCmpIW(const uint16_t* a, const uint16_t* b) { return mw_lstrcmpiW(a, b); }
+__attribute__((ms_abi)) uint16_t* mw_StrStrIW(const uint16_t* hay, const uint16_t* needle) {
+    if (!hay || !needle) return NULL;
+    for (const uint16_t* h = hay; *h; h++) {
+        const uint16_t* a = h; const uint16_t* b = needle;
+        for (;;) {
+            uint16_t ca = *a, cb = *b;
+            if (ca >= 'A' && ca <= 'Z') ca += 32;
+            if (cb >= 'A' && cb <= 'Z') cb += 32;
+            if (!cb) return (uint16_t*)h;
+            if (ca != cb) break;
+            a++; b++;
+        }
+    }
+    return NULL;
+}
+/* RegCreateKeyW / RegQueryValueW route into the SW-564 in-memory registry */
+__attribute__((ms_abi)) int32_t mw_RegCreateKeyW(void* key, const uint16_t* sub, void** result) {
+    uint16_t path[MW_REG_PATHMAX];
+    reg_join(key, sub, path, MW_REG_PATHMAX);
+    void* h = reg_handle_create(path);
+    if (!h) { mw_SetLastError(14); return 14; }
+    if (result) *result = h;
+    return 0;
+}
+__attribute__((ms_abi)) int32_t mw_RegQueryValueW(void* key, const uint16_t* name, void* data, int32_t* cb) {
+    uint16_t path[MW_REG_PATHMAX];
+    reg_join(key, NULL, path, MW_REG_PATHMAX);
+    int vi = reg_val_find(path, name);
+    if (vi < 0) { mw_SetLastError(2); return 2; }
+    if (cb) {
+        uint32_t want = g_reg_vals[vi].size;
+        if (data) {
+            uint32_t n = want > (uint32_t)*cb ? (uint32_t)*cb : want;
+            if (n) memcpy(data, g_reg_vals[vi].data, n);
+        }
+        *cb = (int32_t)want;
+    }
+    return 0;
+}
+__attribute__((ms_abi)) void* mw_SetupDiGetClassDevsW(const void* guid, const void* enumr, void* hwnd, uint32_t flags) {
+    return (void*)(uintptr_t)0xFFFFFFFFFFFFFFFFULL; /* INVALID_HANDLE_VALUE */
+}
+__attribute__((ms_abi)) int32_t mw_ImageList_GetIconSize(void* himl, int32_t* cx, int32_t* cy) {
+    if (cx) *cx = 16;
+    if (cy) *cy = 16;
+    return 1;
+}
+__attribute__((ms_abi)) int64_t mw_OpenTraceW(const void* logf) { return -1; } /* INVALID_PROCESSTRACE_HANDLE */
+
+/* SW-560b: procexp64 binds ntdll!RtlQueryProcessDebugInformation BY ORDINAL
+ * 135 (GetProcAddress(hNtdll, MAKEINTRESOURCE(135))) and expects the callee
+ * to fill an out-struct {int@+0, ptr@+8} whose ptr is writable memory.
+ * Returning a real zero-filled buffer lets the guest proceed honestly. */
+__attribute__((ms_abi)) int32_t mw_ntdll_ord135(void* a, uint32_t b, void* out) {
+    (void)a; (void)b;
+    MW_TRACE("ntdll_ord135(out=%p)", out);
+    if (out) {
+        void* buf = calloc(1, 0x1000);
+        *(int32_t*)out = 0;
+        *(void**)((uint8_t*)out + 8) = buf;
+    }
+    return 0; /* STATUS_SUCCESS */
+}
+
+/* SW-560 family: RtlQueryProcessDebugBuffer trio — procexp64 derefs the
+ * buffer after a successful query, so the create must hand back a real
+ * zero-filled allocation and the query must report STATUS_SUCCESS. */
+__attribute__((ms_abi)) void* mw_RtlCreateQueryDebugBuffer(uint32_t size, uint32_t flag) {
+    (void)flag;
+    return calloc(1, size ? (size_t)size : 0x1000);
+}
+__attribute__((ms_abi)) int32_t mw_RtlQueryProcessDebugInformation(void* buf, uint32_t pid) {
+    (void)buf; (void)pid;
+    return 0; /* STATUS_SUCCESS — buffer stays zero-filled (no modules/threads) */
+}
+__attribute__((ms_abi)) int32_t mw_RtlDestroyQueryDebugBuffer(void* buf) {
+    free(buf);
+    return 0;
+}
+
+/* ============================================================
  * PE Loading
  * ============================================================ */
 
@@ -12126,8 +13378,17 @@ static int load_pe(const char* filepath) {
 
     fseek(f, 0, SEEK_END);
     long fsize = ftell(f);
+    /* BUG-068: fopen() on a DIRECTORY succeeds on Linux but fseek/ftell
+     * fails (ftell -> -1) -> malloc((size_t)-1) -> NULL -> SIGSEGV at the
+     * DOS-magic check. Reject non-regular sizes up front. */
+    if (fsize <= 0 || fsize > (64L * 1024 * 1024)) {
+        fprintf(stderr, "[ERROR] %s: not a readable PE file (size=%ld)\n", filepath, fsize);
+        fclose(f);
+        return -1;
+    }
     fseek(f, 0, SEEK_SET);
     uint8_t* filedata = (uint8_t*)malloc(fsize);
+    if (!filedata) { fprintf(stderr, "[ERROR] OOM reading %s\n", filepath); fclose(f); return -1; }
     fread(filedata, 1, fsize, f);
     fclose(f);
 
@@ -12315,6 +13576,7 @@ static int load_pe(const char* filepath) {
                     MW_TRACE("  [%d] Ordinal %u (not supported)", slot, ordinal);
                     /* SWEEP-001: stub the slot too — same crash class as
                      * name-unresolved if guest ever calls it. */
+                    stub_site_record(iat_off, slot, dll_name, "<ordinal>");
                     iat_patch_slot(iat_off, slot, (void*)mw_unresolved_import_stub);
                     total_unresolved++;
                     slot++;
@@ -12364,6 +13626,7 @@ static int load_pe(const char* filepath) {
                  * the summary line's neighbor so a run without MINWIN_TRACE
                  * still identifies them. */
                 fprintf(stderr, "[WARN]   unresolved: %s\n", func_name);
+                stub_site_record(iat_off, slot, dll_name, func_name);
                 /* SWEEP-001: a NULL IAT slot is a delayed SIGSEGV — every
                  * sweep program that called one died with the loader. Wine
                  * never leaves a slot NULL; install the returning-0 stub. */

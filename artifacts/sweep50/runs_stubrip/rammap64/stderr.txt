@@ -1,0 +1,4 @@
+[TRACE] Command line: /home/z/my-project/workspace/miniwin-engineering/artifacts/sweep50/dl/rammap64/RAMMap64.exe
+[WARN] 3 imports unresolved
+[DialogBoxIndirectParamW] dialog shown -> auto-accept (IDOK)
+[STUB] COMCTL32.dll!<ordinal> -> returning 0 (call #1) guest_rip=0x140017c62

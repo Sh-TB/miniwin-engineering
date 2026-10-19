@@ -1,0 +1,24 @@
+{
+ "autoruns64": {
+  "image_base": "0x140000000",
+  "n_calls": 0,
+  "calls": []
+ },
+ "rammap64": {
+  "image_base": "0x140000000",
+  "n_calls": 1,
+  "calls": [
+   {
+    "rip": "0x140017c62",
+    "slot": "0x14003c9d0",
+    "import": "UNKNOWN(0x14003c9d0)",
+    "via": "call"
+   }
+  ]
+ },
+ "procexp64": {
+  "image_base": "0x140000000",
+  "n_calls": 0,
+  "calls": []
+ }
+}

@@ -1,0 +1,39 @@
+[TRACE] Command line: /home/z/my-project/workspace/miniwin-engineering/artifacts/sweep50/dl/procmon64/Procmon64.exe
+[WARN]   unresolved: ImageList_SetOverlayImage
+[WARN]   unresolved: FilterSendMessage
+[WARN]   unresolved: FilterConnectCommunicationPort
+[WARN]   unresolved: FilterGetMessage
+[WARN]   unresolved: FilterReplyMessage
+[WARN]   unresolved: GetComputerNameA
+[WARN]   unresolved: SetProcessShutdownParameters
+[WARN]   unresolved: InsertMenuItemW
+[WARN]   unresolved: GetCursor
+[WARN]   unresolved: SetActiveWindow
+[WARN]   unresolved: FlashWindowEx
+[WARN]   unresolved: EqualRect
+[WARN]   unresolved: GetUpdateRect
+[WARN]   unresolved: CreateIconFromResourceEx
+[WARN]   unresolved: GetDlgItemInt
+[WARN]   unresolved: GetAsyncKeyState
+[WARN]   unresolved: SetWindowTextA
+[WARN]   unresolved: GetForegroundWindow
+[WARN]   unresolved: GetIconInfo
+[WARN]   unresolved: GetDIBits
+[WARN]   unresolved: CreateBitmapIndirect
+[WARN]   unresolved: GetPixel
+[WARN]   unresolved: GdiFlush
+[WARN]   unresolved: CreateFontW
+[WARN]   unresolved: GetBitmapBits
+[WARN]   unresolved: RegSetValueW
+[WARN]   unresolved: SHChangeNotify
+[WARN]   unresolved: DragQueryFileW
+[WARN]   unresolved: OleInitialize
+[WARN]   unresolved: RegisterDragDrop
+[WARN]   unresolved: CreateBindCtx
+[WARN]   unresolved: ReleaseStgMedium
+[WARN]   unresolved: OleUninitialize
+[WARN]   unresolved: IsCompositionActive
+[WARN] 65 imports unresolved
+[DialogBoxIndirectParamW] dialog shown -> auto-accept (IDOK)
+[MessageBoxW] Process Monitor: Process Monitor must be run from an administrator account.
+[MessageBox] dialog #1 rendered -> miniwin-results/Procmon64.exe/screenshots/messagebox_1.bmp

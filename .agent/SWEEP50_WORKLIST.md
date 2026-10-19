@@ -274,3 +274,343 @@ puttygen RIP=0x0).
       PNGs, battery_raw.tsv 105 rows); scripts/sweep007_redownload_gui.py +
       sweep562_battery.sh + sweep562_images.py; exe SHA manifest in
       artifacts/sweep50/sweep007_redownload_manifest.tsv.
+
+## SWEEP-008 (this sweep) — honest-stub elephant batch LANDED
+
+- [x] **SW-555** COMPLETE: named-stub machinery — stub_site_record() stores a
+      COPY of dll!name for every slot patched with the returning-0 stub
+      (BUG-071: storing pointers into freed filedata was a UAF inside libc
+      vsnprintf); mw_unresolved_import_stub decodes the guest return address
+      (FF 15 / FF 25 / mov r64,[rip+d]) and prints `[STUB] dll!name -> 0
+      (call #N) guest_rip=...`. Every future gate names itself for free.
+- [x] **SW-563** GetVersionExW/A real fill: Win10 22H2 10.0.19045, platform 2,
+      OSVERSIONINFOEX fields (wProductType=VER_NT_WORKSTATION, wSuiteMask,
+      SP major/minor) — no more build=0 lie; ntdll!RtlGetVersion routes here.
+- [x] **SW-564** minimal in-memory registry: RegOpenKeyW/RegOpenKeyExW/
+      RegCreateKeyExW/RegCreateKeyW/RegSetValueExW/RegQueryValueExW/
+      RegQueryValueW/RegCloseKey backed by a flat (path,name)->value store
+      with case-insensitive paths and 0x50000000+ handles; missing keys
+      honestly return ERROR_FILE_NOT_FOUND (the EULA-dialog trigger).
+- [x] **SW-565** global atom table: GlobalAddAtomW/A 0xC000+ real semantics,
+      GlobalDeleteAtom, GlobalGetAtomNameW.
+- [x] **SW-566** shlwapi ColorHLSToRGB/ColorRGBToHLS — canonical Win32 HLS.H
+      math (HLSMAX=240), pure functions.
+- [x] **SW-567** DialogBoxIndirectParamW DECLARED auto-accept -> IDOK (every
+      call logs loudly); DialogBoxParamW routes to the same accept.
+- [x] **GATES PASSED**: autoruns64 exit 1 -> **0** (0 unresolved, EULA flow:
+      dialog accept -> RegCreateKeyExW -> RegSetValueExW EulaAccepted);
+      rammap64 exit 1 -> **0** (0 unresolved); produkey exit -> **0**;
+      diskmon64 exit 0 held. G1 re-pinned 12/12 (sha 6c14f04c).
+- [x] **BUG-068** load_pe: fopen-on-directory / ftell=-1 -> malloc((size_t)-1)
+      SIGSEGV; reject size<=0 and size>64MB up front.
+- [x] **BUG-070/070b** GetModuleHandleW(name) now returns the SAME pseudo-
+      handle identities as LoadLibraryA (autoruns64's
+      GetProcAddress(GetModuleHandleW(L"ntdll"),"RtlGetVersion") chain), and
+      reads the guest string as UTF-16LE through uint16_t (host wchar_t is
+      4-byte — "ntdll" decoded as "ndl"+junk before).
+- [x] **BUG-072** GetProcAddress(MAKEINTRESOURCE): low-16-bit names are
+      ORDINALS (procexp64 binds ntdll!RtlQueryProcessDebugInformation by
+      ordinal 135); ordinal 135 returns a real handler that fills the
+      {int@+0, ptr@+8} out-struct with a zero-filled buffer; other ordinals
+      -> optional stub (was: %s-print of a small integer crashed libc).
+- [x] **batch-2/3/4 stub landing**: ~230 WARN-list imports of
+      autoruns64/rammap64/procexp64 covered via 12 policy functions + ~35
+      real one-liners (MulDiv, lstrcmp[i]W, CharNext/LowerW, CoTaskMem*,
+      SHGetKnownFolderPath, GetSystemMetrics, rects/monitor info, text
+      metrics/extents, SID length/validity, IsWow64Process, SCM honest
+      access-denied, LSA not-found, Nt* honest NTSTATUS, WinHTTP offline,
+      ImageList family, K32/TLHELP32 empty enumerations).
+
+## SWEEP-008 follow-ups (new levers, all with measurable accept criteria)
+
+- [ ] **SW-568** procexp64 exit(2)->SEGV at RIP=0x14009be71 (`mov ecx,[rdx]`
+      rdx=0): identify the function pointer stored in data slot 0x1401356d0
+      (thunk jmp rax); ord135 handler observed called with out=NULL — find
+      the (rcx=0, edx=3, r8=NULL) call site. Accept: named callee + exit
+      changes.
+- [ ] **SW-569** ntdll!RtlInitUnicodeString (GetProcAddress by name -> NULL
+      late in procexp64 run): implement real UTF-16 init (len/2, buffer
+      pointer, no alloc). Accept: trace shows non-NULL resolution.
+- [ ] **SW-570** procexp64 WinStationGetProcessSid (winsta.dll missing ->
+      ERROR 126 -> MessageBoxW 'Process Explorer' #3): winsta pseudo-DLL with
+      honest failure. Accept: dialog #3 replaced by logged graceful path.
+- [ ] **SW-571** coreinfoex64 CRASH-SEGV (4 warns, 2 stubs, dialog rendered,
+      14921 bytes): decode the 2 stub guest_rips, fix, exit 1 -> 0.
+- [ ] **SW-572** cports CRASH-SEGV (69 warns, 21 stubs): decode stub sequence,
+      fix top-3 imports. Accept: crash point advances past current site.
+- [ ] **SW-573** puttygen CRASH-SEGV (30 warns, 1 dialog): SW-552 family —
+      decode guest_rip at crash, implement the returning-0 caller's callee.
+- [ ] **SW-574** searchmyfiles CRASH-SEGV (32 warns, 1 stub): same decode
+      loop. Accept: named crash site.
+- [ ] **SW-575** bginfo64 exit 9 (247 warns): top-20 imports by call order ->
+      honest stubs; accept: exit 9 -> 0 or named gate.
+- [ ] **SW-576** winmergeu exit 9 (259 warns, 14 stubs): same as SW-575.
+- [ ] **SW-577** pageant/procmon64/putty exit 1 usage-path (34/34/93 warns,
+      3 dialogs each): dialog images render — identify post-dialog exit
+      decision API. Accept: named decision point per program.
+- [ ] **SW-578** zoomit64 exit 1 with 0 unresolved (SW-553 TRAP133 area):
+      exit decision now comes from RESOLVED APIs — guest_rip decode of the
+      exit path. Accept: named exit-decision call.
+- [ ] **SW-579** produkey under MW_GUI_EVENTS=1 crashes at 0x140022f24 — the
+      known SWEEP-007 comctl32 cliff (stub#4): implement the cliff callee.
+      Accept: produkey GUI pump survives WM_CREATE.
+- [ ] **SW-580** comctl32 cliff general fix (cports shares 0x22f24 class):
+      same accept as SW-579 for cports.
+- [ ] **SW-581** DialogBox* dialog-proc invocation: call the guest dialog proc
+      with WM_INITDIALOG then WM_COMMAND(IDOK) instead of returning IDOK
+      blindly. Accept: autoruns64/rammap64 still exit 0 AND EulaAccepted
+      value readable via RegQueryValueExW in-run.
+- [ ] **SW-582** SendMessageW routing: dispatch WM_* to the WNDPROC registry
+      (SWEEP-006 machinery) instead of ret0. Accept: a scripted-key GUI
+      program still exits 0 with unchanged frame hashes.
+- [ ] **SW-583** GetOpenFileNameW/GetSaveFileNameW cancel-semantics: return 0
+      with CommDlgExtendedError()==0 — verify callers handle (coreinfoex64
+      touches this). Accept: no crash change.
+- [ ] **SW-584** CryptHashData/CryptGetHashParam real SHA1 via advapi32
+      CryptoAPI in-memory hash. Accept: guest-computed hash matches sha1sum.
+- [ ] **SW-585** CoCreateInstance static CLSID table (a few known CLSIDs ->
+      fake IUnknown with QI). Accept: a guest that CoCreates proceeds 1 step.
+- [ ] **SW-586** SCM in-memory services (OpenSCManagerW fake handle +
+      EnumServicesStatusExW empty list instead of access-denied). Accept:
+      autoruns64 service tab path exercised without exit change.
+- [ ] **SW-587** MW_STUB_SITES dump: write g_stub_sites (slot_va, dll, name)
+      to miniwin-results/<exe>/stub_sites.json at exit. Accept: file present
+      for every run.
+- [ ] **SW-588** per-run stub-call summary line: total stub calls, first 5
+      named calls, exit code on one stderr line. Accept: present for all 15.
+- [ ] **SW-589** breadth runner env knobs (MW_EULA_MODE=auto|decline) to test
+      decline-path honesty. Accept: autoruns64 declines -> exit 1 w/ EULA
+      prompt message.
+- [ ] **SW-590** decode-script YAML/JSON dedupe: sweep008_decode.py outputs
+      stub callers per exe; wire into evidence automation. Accept: evidence
+      json regenerated in CI-style single command.
+- [ ] **SW-591** 100-list re-run under SWEEP-008 stubs (STAGE_TABLE_100
+      regeneration). Accept: new stage map TSV committed with deltas.
+- [ ] **SW-592** go2-* family (age tools, frp, gomplate, restic): re-run under
+      new stubs; classify per program (exit / crash site). Accept: delta vs
+      STAGE_TABLE_100 recorded.
+- [ ] **SW-593** ssh2-* family (openssh 13 exes): same as SW-592.
+- [ ] **SW-594** rust2-* family (delta, bat, fd, dust, hexyl, hyperfine...):
+      same as SW-592.
+- [ ] **SW-595** c2-* family (nasm, ndisasm): same as SW-592.
+- [ ] **SW-596** x86 subset re-run (7zr etc.): loader x86 path unaffected?
+      verify no regression vs LOAD-REJECT baseline. Accept: same exits.
+- [ ] **SW-597** msvcrt.dll CRT init for older exes: bginfo64/winmergeu use
+      A-suffix APIs — A/W bridge layer for the batch-2 family. Accept: warn
+      count drops for bginfo64.
+- [ ] **SW-598** GetNumberFormatW real formatting (_locale-independent digits).
+      Accept: returns formatted string for en-US.
+- [ ] **SW-599** GetDateFormatW/GetTimeFormatW same treatment. Accept: real
+      date string for fixed SYSTEMTIME.
+- [ ] **SW-600** ShellExecuteW/ExW return-code honesty: 33 (>32 success) vs
+      SE_ERR_ codes; verify putty pageant launcher path. Accept: named
+      decision documented.
+- [ ] **SW-601** FindTextW/ReplaceTextW comdlg common dialogs. Accept: return
+      0 + no crash.
+- [ ] **SW-602** PrintDlgW/StartDocW/EndPage printing no-op family honesty
+      note (no printer in MiniWin). Accept: document in loader comments.
+- [ ] **SW-603** SetWindowsHookExW hook registry: record hook type + return
+      fake handle; CallNextHookEx no-op. Accept: no crash, named in trace.
+- [ ] **SW-604** MonitorFromWindow/GetMonitorInfoW multi-monitor virtual
+      desktop consistency (SM_C[XY]SCREEN vs rcMonitor). Accept: consistent
+      1920x1080 across all metrics.
+- [ ] **SW-605** GetKeyState/GetKeyboardState honest zero-state with
+      MW_GUI_EVENTS key pump integration. Accept: scripted-key game still
+      deterministic.
+- [ ] **SW-606** IsWow64Process/GetNativeSystemInfo consistency (both report
+      x64-native). Accept: no WOW64 path taken by any guest.
+- [ ] **SW-607** ConvertSidToStringSidW real S-1-x-y formatting. Accept:
+      string matches Windows format for a crafted SID.
+- [ ] **SW-608** CheckTokenMembership/OpenProcessToken honest combo (token =
+      fake admin). Accept: autoruns admin-check path named in trace.
+- [ ] **SW-609** DwmSetWindowAttribute no-op already; add DwmIsComposition-
+      Enabled(TRUE). Accept: callers proceed.
+- [ ] **SW-610** uxtheme ordinal binds (procexp ord 135-class) general table:
+      map common uxtheme/ntdll ordinals to names. Accept: ordinals logged
+      WITH names.
+- [ ] **SW-611** LoadLibraryW bridge (currently routes to LoadLibraryA —
+      verify UTF-16 conversion correctness for "uxtheme.dll" etc.). Accept:
+      trace shows correct names.
+- [ ] **SW-612** GetModuleHandleA parity with BUG-070b fix (A-version reads
+      ANSI directly). Accept: puttygen module chain advances.
+- [ ] **SW-613** FreeLibrary/GetModuleFileNameW pseudo-handle hygiene. Accept:
+      no crash when guest frees.
+- [ ] **SW-614** SetEnvironmentVariableW/GetEnvironmentVariableW already real?
+      verify COMPLUS_FodPath write lands. Accept: read-back succeeds.
+- [ ] **SW-615** evidence/sweep008_stubs/ README + per-program before/after
+      exit table (this sweep's numbers). Accept: committed.
+- [ ] **SW-616** 3x determinism battery for the four exit-0 programs
+      (autoruns64/rammap64/produkey/diskmon64): exits + output hashes x3.
+      Accept: 3x identical.
+- [ ] **SW-617** G1 re-pin automation hook into sweep scripts (post-loader-
+      change mandatory pin). Accept: sweep script refuses without fresh pin.
+- [ ] **SW-618** STAGE_TABLE_100 CRLF discipline maintained for new TSVs.
+      Accept: file(1) says CRLF.
+- [ ] **SW-619** worklist audit: every SW-5xx entry has either evidence link
+      or a next-lever description. Accept: grep audit passes.
+- [ ] **SW-620** mini-game #3 genre: puzzle (same GDI pipeline). Accept:
+      3x exit0 with frame hashes.
+- [ ] **SW-621** mini-app: MiniWin Calc (button grid + display, real Win32
+      dialog app) — the "simple graphical program" acceptance anchor.
+      Accept: 3x exit0, display shows computed result, frame hash stable.
+- [ ] **SW-622** calc button hit-testing via scripted mouse pump (WM_LBUTTON-
+      DOWN at coords). Accept: 2+3=5 sequence renders "5".
+- [ ] **SW-623** MessageBoxW dialog image regression pin (putty/pageant
+      dialogs byte-identical x2 sweeps). Accept: SHA stable.
+- [ ] **SW-624** procmon64/procexp64 shared UI framework (Sysinternals
+      common code) — fix once, benefit both. Accept: one fix advances both.
+- [ ] **SW-625** document the honest-stub policy table (which APIs get
+      handle/ret1/ret0/error) in docs/. Accept: policy doc committed.
+- [ ] **SW-626** sweep008 evidence JSON: machine-readable per-program deltas
+      (exit_before/after, warns_before/after). Accept: json committed.
+- [ ] **SW-627** cports GUI pump test (SWEEP-007 cliff shared with produkey).
+      Accept: same cliff site named or bypassed.
+- [ ] **SW-628** puttygen SW-552 RIP=0 re-check under new stubs. Accept:
+      crash site moved or resolved.
+- [ ] **SW-629** SW-553 zoomit64 TRAP133 re-check under new stubs. Accept:
+      trap gone or named.
+- [ ] **SW-630** SW-561 version drift re-check: coreinfoex64 new binary vs
+      GetVersionExW 19045 fill. Accept: version check passes (exit moves).
+- [ ] **SW-631** adexplorer64 re-acquisition retry (was 404). Accept:
+      downloaded or documented unobtainable x2.
+- [ ] **SW-632** loader: cache GpResult — unresolved imports now resolve to
+      stub via site table; add slot->name map rebuild for data imports too.
+      Accept: data-import stubs named as well.
+- [ ] **SW-633** ApiSetSchema-lite: api-ms-win-* resolution to real DLLs
+      (normaliz etc.). Accept: one api-ms guest resolves deeper.
+- [ ] **SW-634** loader perf: stub_site linear scan -> hash if >64 sites.
+      Accept: no measurable slowdown on procexp64 (727 stubs).
+- [ ] **SW-635** thread-safety of stub_site_lookup static buf: use TLS.
+      Accept: multi-threaded guests (procmon64) show no interleaved names.
+- [ ] **SW-636** RegSetValueExW REG_DWORD/REG_SZ type validation. Accept:
+      wrong-type write logged.
+- [ ] **SW-637** registry: RegEnumValueW/RegEnumKeyExW enumerate the
+      in-memory store (currently honest 259). Accept: EULA key enumeration
+      works in-run.
+- [ ] **SW-638** registry persistence: optional JSON snapshot via
+      MW_REG_PERSIST=path. Accept: EulaAccepted survives loader restart.
+- [ ] **SW-639** ShGetKnownFolderPath real CSIDL table (AppData, ProgramFiles
+      etc.). Accept: guests see plausible paths per csidl.
+- [ ] **SW-640** GetTempPathW/GetTempFileNameW real (tmp dir). Accept: file
+      created and deletable.
+- [ ] **SW-641** ExpandEnvironmentStringsW real (%WINDIR% etc.). Accept:
+      expands consistently with SW-639.
+- [ ] **SW-642** CreateDirectoryW/GetFileAttributesW A/W parity audit. Accept:
+      no new crashes on Sysinternals startup path.
+- [ ] **SW-643** DefineDosDevice/QueryDosDeviceW honest table. Accept: named.
+- [ ] **SW-644** WTS API family: WTSQuerySessionInformationW returns session 1
+      console info. Accept: procexp session column path proceeds.
+- [ ] **SW-645** GetLogicalProcessorInformation real (1 group, N cores from
+      host). Accept: procexp CPU graph data path proceeds.
+- [ ] **SW-646** GetActiveProcessorCount(ALL_PROCESSOR_GROUPS)=host nproc.
+      Accept: consistent with SW-645.
+- [ ] **SW-647** GlobalMemoryStatusEx real from /proc/meminfo. Accept:
+      numbers plausible and stable within run.
+- [ ] **SW-648** GetDiskFreeSpaceExW real for cwd mount. Accept: procmon64
+      volume query proceeds.
+- [ ] **SW-649** GetVolumeInformationW honest "MINIWIN" label. Accept: named.
+- [ ] **SW-650** NetApi32 family for Sysinternals network tabs. Accept:
+      honest error + no crash.
+- [ ] **SW-651** document BUG-067/068/070/071/072 in BUGS.md with repro
+      commands. Accept: BUGS.md updated.
+- [ ] **SW-652** regression: add autoruns64+rammap64 exit0 pins to the suite
+      (like G1). Accept: suite 14/14.
+- [ ] **SW-653** regression: add rammap64 0-unresolved pin (import coverage
+      gate). Accept: suite enforces.
+- [ ] **SW-654** loader banner: print MiniWin version + stub-coverage stat at
+      startup. Accept: one line, all runs.
+- [ ] **SW-655** api_trace.json: add stub names to the JSON event stream.
+      Accept: trace contains dll!name for stub calls.
+- [ ] **SW-656** cleanup: mw_GetVersionExA/W share fill (already) — audit all
+      version consumers for 19045 assumptions. Accept: no regression.
+- [ ] **SW-657** USER32 A-suffix batch for pageant/procmon64 (CharLowerA etc.
+      — see SW-597). Accept: their warn counts drop.
+- [ ] **SW-658** gdi32 GetDeviceCaps(LOGPIXELSX/Y)=96 consistency. Accept:
+      DPI-dependent layout stable.
+- [ ] **SW-659** CreateDIBSection real pixel buffer (currently fake handle) —
+      route into the framebuffer for 32bpp. Accept: a DIB-drawing guest
+      paints visible pixels.
+- [ ] **SW-660** GradientFill/AlphaBlend raster into framebuffer. Accept:
+      visible gradient in a dialog render.
+- [ ] **SW-661** DrawTextW real text raster (font8x8 like MessageBoxW path).
+      Accept: dialog text visible in BMP.
+- [ ] **SW-662** ExtTextOutW/TextOutW raster for owner-drawn controls.
+      Accept: same.
+- [ ] **SW-663** GetTextExtentPoint32W real per-char widths from font8x8.
+      Accept: width sums match glyph widths.
+- [ ] **SW-664** dialogs: render DLGTEMPLATE controls (autoruns EULA rich
+      text area) into BMP before auto-accept. Accept: EULA dialog image.
+- [ ] **SW-665** keyboard: WM_KEYDOWN/UP synthesis into dialogs. Accept:
+      EULA accept via Enter key scripted.
+- [ ] **SW-666** mouse: WM_LBUTTONDOWN synthesis in client coords. Accept:
+      button click handled by guest WNDPROC.
+- [ ] **SW-667** focus: SetFocus/GetFocus real per-window state. Accept:
+      keyboard routed to focused window.
+- [ ] **SW-668** clipboard: OpenClipboard/SetClipboardData/GetClipboardData
+      in-memory clipboard. Accept: copy/paste within guest works.
+- [ ] **SW-669** DDE/Atom integration: atoms already real; wire
+      PropSet/PropGet to window properties table. Accept: GetPropW returns
+      what SetPropW stored.
+- [ ] **SW-670** timers: SetTimer/KillTimer/WM_TIMER into the event pump.
+      Accept: guest timer proc fires N times under pump.
+- [ ] **SW-671** WaitForInputIdle real via pump idle detection. Accept:
+      returns 0 after window creation.
+- [ ] **SW-672** IsHungAppWindow real (window not pumping = TRUE). Accept:
+      matches pump state.
+- [ ] **SW-673** audit: SendMessageTimeoutW/GetMessagePos real values. Accept:
+      named.
+- [ ] **SW-674** putty SW-554 remainder: post-dialog exit gate — after this
+      sweep's stub landing putty still exits 1 with 93 warns; decode the
+      first 10 stubs. Accept: named next API.
+- [ ] **SW-675** age/age.exe full crypto CLI run (SC-999 acceptance): 100-list
+      depth item. Accept: encrypt+decrypt roundtrip under loader.
+- [ ] **SW-676** zstd/lz4/gzip/md5deep regression re-run after sweep-008
+      loader changes. Accept: all still 3x3 byte-perfect.
+- [ ] **SW-677** 7-Zip 26.04 banner re-check (wave11 win). Accept: still
+      exit 0 banner.
+- [ ] **SW-678** curl/openssh x64 runtime probes under new stubs. Accept:
+      no new crashes.
+- [ ] **SW-679** crash-handler: log the guest caller chain (top 5 stack
+      addresses inside PE) on every CRASH. Accept: autoruns crash reports
+      caller 0x1400172cf-class info automatically.
+- [ ] **SW-680** disassembler integration for crash sites (objdump one-liner
+      in the report). Accept: crash log includes 8 instructions before RIP.
+- [ ] **SW-681** deterministic RNG audit: ProcessPrng consumers unaffected by
+      stub batch. Accept: snake/breakout frame hashes unchanged.
+- [ ] **SW-682** loader exit-code audit: map guest exit(1) usage strings to
+      per-program docs. Accept: table in evidence.
+- [ ] **SW-683** batch A/W duplication via macro (reduce loader.c size after
+      batch-2). Accept: loader.c net smaller, behavior identical.
+- [ ] **SW-684** MW_TRACE gating audit: ensure stub prints are rate-limited
+      like unresolved banner (n<=20). Accept: no stderr flooding.
+- [ ] **SW-685** review policy-stub return types vs real signatures (int64
+      truncation traps). Accept: audit list documented.
+- [ ] **SW-686** monitor virtual desktop math in GetWindowRect placement
+      (cascade offsets). Accept: multiple windows get distinct rects.
+- [ ] **SW-687** SetWindowPos/Z-order no-op documented. Accept: comment.
+- [ ] **SW-688** WM_CREATE synchronous delivery cliff (SW-579/580 root
+      cause): deliver WM_CREATE via pump instead of direct call. Accept:
+      produkey pump passes WM_CREATE.
+- [ ] **SW-689** InitCommonControlsEx: record requested classes; report
+      availability. Accept: named in trace.
+- [ ] **SW-690** property sheets (CreatePropertySheetPageW/PropertySheetW):
+      real sheet lifecycle for procexp64 properties. Accept: sheet proc
+      invoked with WM_INITDIALOG.
+- [ ] **SW-691** common dialogs: FileOpen dialog render (like MessageBoxW)
+      then cancel. Accept: BMP of a file dialog.
+- [ ] **SW-692** GetDlgItemTextW real from dialog control table. Accept:
+      returns typed text.
+- [ ] **SW-693** EndDialog records the per-dialog result code. Accept:
+      DialogBox* returns the EndDialog value not hardcoded IDOK.
+- [ ] **SW-694** autoruns64: with SW-693, accept the DECLINE path (IDCANCEL)
+      evidence too. Accept: decline -> exit 1 honest.
+- [ ] **SW-695** measure: stub-coverage percent per program (resolved / total
+      imports). Accept: metric in summary TSV.
+- [ ] **SW-696** target: 5 more exit-0 programs from the 100-list via batch
+      triage (SW-592..595 levers). Accept: stage map shows +5.
+- [ ] **SW-697** target: second GUI program to full lifecycle (bginfo64 or
+      winmergeu). Accept: window created + message loop entered.
+- [ ] **SW-698** keep .agent microtask count >= 100 after SWEEP-009 triage
+      (this expansion brings it to ~200). Accept: count verified.
+- [ ] **SW-699** final 14-section report skeleton refresh with SWEEP-008
+      numbers. Accept: draft committed.

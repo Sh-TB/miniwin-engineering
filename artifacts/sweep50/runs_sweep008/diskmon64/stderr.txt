@@ -1,0 +1,44 @@
+[TRACE] Command line: /home/z/my-project/workspace/miniwin-engineering/artifacts/sweep50/dl/diskmon64/Diskmon64.exe
+[WARN]   unresolved: CreateToolbarEx
+[WARN]   unresolved: GetFileVersionInfoA
+[WARN]   unresolved: GetFileVersionInfoSizeA
+[WARN]   unresolved: VerQueryValueA
+[WARN]   unresolved: lstrcpynA
+[WARN]   unresolved: lstrcatA
+[WARN]   unresolved: lstrcpyA
+[WARN]   unresolved: GetTimeFormatA
+[WARN]   unresolved: SetWindowTextA
+[WARN]   unresolved: DialogBoxIndirectParamA
+[WARN]   unresolved: SetWindowLongPtrA
+[WARN]   unresolved: GetDlgItemTextA
+[WARN]   unresolved: SetDlgItemTextA
+[WARN]   unresolved: WinHelpA
+[WARN]   unresolved: IsDialogMessageA
+[WARN]   unresolved: LoadMenuA
+[WARN]   unresolved: TranslateAcceleratorA
+[WARN]   unresolved: LoadAcceleratorsA
+[WARN]   unresolved: DialogBoxParamA
+[WARN]   unresolved: PostMessageA
+[WARN]   unresolved: RegisterWindowMessageA
+[WARN]   unresolved: GetTextExtentPoint32A
+[WARN]   unresolved: GetTextMetricsA
+[WARN]   unresolved: GetObjectA
+[WARN]   unresolved: CreateFontIndirectA
+[WARN]   unresolved: StartDocA
+[WARN]   unresolved: FindTextA
+[WARN]   unresolved: GetSaveFileNameA
+[WARN]   unresolved: ChooseColorA
+[WARN]   unresolved: ChooseFontA
+[WARN]   unresolved: PrintDlgA
+[WARN]   unresolved: RegOpenKeyA
+[WARN]   unresolved: LookupAccountSidA
+[WARN]   unresolved: LookupPrivilegeValueA
+[WARN]   unresolved: RegSetValueExA
+[WARN]   unresolved: RegCreateKeyA
+[WARN]   unresolved: ShellExecuteA
+[WARN]   unresolved: SHGetFileInfoA
+[WARN]   unresolved: Shell_NotifyIconA
+[WARN] 47 imports unresolved
+[STUB] ADVAPI32.dll!RegOpenKeyA -> returning 0 (call #1) guest_rip=0x140001e88
+[STUB] ADVAPI32.dll!RegOpenKeyA -> returning 0 (call #2) guest_rip=0x140001f81
+[STUB] USER32.dll!DialogBoxIndirectParamA -> returning 0 (call #3) guest_rip=0x1400022a3

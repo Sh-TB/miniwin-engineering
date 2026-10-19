@@ -1,0 +1,61 @@
+[TRACE] Command line: /home/z/my-project/workspace/miniwin-engineering/artifacts/sweep50/dl/puttygen/puttygen.exe
+[WARN]   unresolved: GetDIBits
+[WARN]   unresolved: GetObjectA
+[WARN]   unresolved: ShellExecuteA
+[WARN]   unresolved: AppendMenuA
+[WARN]   unresolved: CreateDialogParamA
+[WARN]   unresolved: DefDlgProcA
+[WARN]   unresolved: DialogBoxParamA
+[WARN]   unresolved: GetClipboardOwner
+[WARN]   unresolved: GetDlgItemInt
+[WARN]   unresolved: GetDlgItemTextA
+[WARN]   unresolved: GetForegroundWindow
+[WARN]   unresolved: GetMessageTime
+[WARN]   unresolved: GetQueueStatus
+[WARN]   unresolved: GetWindowLongPtrA
+[WARN]   unresolved: GetWindowTextA
+[WARN]   unresolved: GetWindowTextLengthA
+[WARN]   unresolved: IsDialogMessageA
+[WARN]   unresolved: MessageBoxIndirectW
+[WARN]   unresolved: PostMessageA
+[WARN]   unresolved: SendDlgItemMessageA
+[WARN]   unresolved: SetActiveWindow
+[WARN]   unresolved: SetDlgItemTextA
+[WARN]   unresolved: SetWindowLongPtrA
+[WARN]   unresolved: GetCurrentDirectoryA
+[WARN]   unresolved: GetThreadTimes
+[WARN]   unresolved: GetWindowsDirectoryA
+[WARN]   unresolved: SetCurrentDirectoryA
+[WARN]   unresolved: RegCreateKeyExA
+[WARN]   unresolved: GetOpenFileNameA
+[WARN]   unresolved: GetSaveFileNameA
+[WARN] 30 imports unresolved
+
+[CRASH] Signal 11 at RIP=0x0
+  RAX=0x0 RCX=0x4d2 RDX=0xffffffffffffffff R8=0x0 R9=0x0
+  RSP=0x7ffe701ecac8 RBP=0x21de000
+  g_image_base=0x140000000 g_image_size=0xfc000
+  (NOT inside loaded PE)
+  [RIP-MAP] no mapping contains RIP
+  RSI=0x140000000 RDI=0x7f809bc69700
+  R8=0x0  R9=0x0 R10=0x0 R11=0x202
+  R12=0x21dd000 R13=0x21dc000 R14=0x4d2 R15=0x7ffe701ed060
+  [SCAN rsp+000] 0x1400028e2 <PE>
+  [SCAN rsp+032] 0x140092c00 <PE>
+  [SCAN rsp+064] 0x140041652 <PE>
+  [SCAN rsp+096] 0x14005dda4 <PE>
+  [SCAN rsp+144] 0x14008e710 <PE>
+  [SCAN rsp+224] 0x140041246 <PE>
+  [SCAN rsp+240] 0x1400412bd <PE>
+  [SCAN rsp+288] 0x2007736 <LOADER>
+  [SCAN rsp+320] 0x14008ab40 <PE>
+  [SCAN rsp+656] 0x20026f6 <LOADER>
+  [SCAN rsp+664] 0x20020d0 <LOADER>
+  [SCAN rsp+2112] 0x20064d0 <LOADER>
+  [SCAN rsp+2264] 0x20064d0 <LOADER>
+  [SCAN rsp+2304] 0x2007e60 <LOADER>
+  [SCAN rsp+2336] 0x2007e81 <LOADER>
+  [SCAN rsp+2808] 0x2000040 <LOADER>
+  [SCAN rsp+2888] 0x2007e60 <LOADER>
+  Backtrace (via stack walking):
+  Likely: NULL or invalid function pointer call

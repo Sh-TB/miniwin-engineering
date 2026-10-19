@@ -1,0 +1,39 @@
+[TRACE] Command line: /home/z/my-project/workspace/miniwin-engineering/artifacts/sweep50/dl/pageant/pageant.exe
+[WARN]   unresolved: GetUserNameA
+[WARN]   unresolved: InitializeSecurityDescriptor
+[WARN]   unresolved: RegCreateKeyExA
+[WARN]   unresolved: RegOpenKeyA
+[WARN]   unresolved: SetSecurityDescriptorDacl
+[WARN]   unresolved: SetSecurityDescriptorOwner
+[WARN]   unresolved: GetTextExtentPoint32A
+[WARN]   unresolved: ShellExecuteA
+[WARN]   unresolved: Shell_NotifyIconA
+[WARN]   unresolved: AppendMenuA
+[WARN]   unresolved: CreateDialogParamA
+[WARN]   unresolved: DialogBoxParamA
+[WARN]   unresolved: GetMenuDefaultItem
+[WARN]   unresolved: GetMenuItemInfoA
+[WARN]   unresolved: GetWindowLongPtrA
+[WARN]   unresolved: GetWindowTextA
+[WARN]   unresolved: GetWindowTextLengthA
+[WARN]   unresolved: InsertMenuItemA
+[WARN]   unresolved: IsDialogMessageA
+[WARN]   unresolved: MessageBoxIndirectW
+[WARN]   unresolved: PostMessageA
+[WARN]   unresolved: RegisterWindowMessageA
+[WARN]   unresolved: SendDlgItemMessageA
+[WARN]   unresolved: SetActiveWindow
+[WARN]   unresolved: SetDlgItemTextA
+[WARN]   unresolved: SetWindowLongPtrA
+[WARN]   unresolved: TabbedTextOutA
+[WARN]   unresolved: ConnectNamedPipe
+[WARN]   unresolved: CreateNamedPipeA
+[WARN]   unresolved: GetCurrentDirectoryA
+[WARN]   unresolved: OpenFileMappingA
+[WARN]   unresolved: SetCurrentDirectoryA
+[WARN]   unresolved: GetOpenFileNameA
+[WARN]   unresolved: GetSaveFileNameA
+[WARN] 34 imports unresolved
+[MessageBoxA] Pageant Fatal Error: Unable to access security APIs. Pageant will
+not run, in case it causes a security breach.
+[MessageBox] dialog #1 rendered -> miniwin-results/pageant.exe/screenshots/messagebox_1.bmp

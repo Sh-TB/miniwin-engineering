@@ -1,0 +1,61 @@
+[TRACE] Command line: /home/z/my-project/workspace/miniwin-engineering/artifacts/sweep50/dl/searchmyfiles/SearchMyFiles.exe
+[WARN]   unresolved: __wgetmainargs
+[WARN]   unresolved: _wcmdln
+[WARN]   unresolved: _msize
+[WARN]   unresolved: _wcslwr
+[WARN]   unresolved: _memicmp
+[WARN]   unresolved: ??3@YAXPEAX@Z
+[WARN]   unresolved: ??2@YAPEAX_K@Z
+[WARN]   unresolved: _itow
+[WARN]   unresolved: _wtoi
+[WARN]   unresolved: _ui64tow
+[WARN]   unresolved: _wtoi64
+[WARN]   unresolved: wcsncat
+[WARN]   unresolved: CreateToolbarEx
+[WARN]   unresolved: WNetGetUniversalNameW
+[WARN]   unresolved: EnumResourceTypesW
+[WARN]   unresolved: lstrcpyW
+[WARN]   unresolved: WritePrivateProfileStringW
+[WARN]   unresolved: GetDlgItemInt
+[WARN]   unresolved: GetForegroundWindow
+[WARN]   unresolved: InsertMenuItemW
+[WARN]   unresolved: DrawTextExW
+[WARN]   unresolved: SetClipboardViewer
+[WARN]   unresolved: ChangeClipboardChain
+[WARN]   unresolved: RegisterClipboardFormatW
+[WARN]   unresolved: StretchBlt
+[WARN]   unresolved: SetStretchBltMode
+[WARN]   unresolved: GetPixel
+[WARN]   unresolved: SHBindToParent
+[WARN]   unresolved: SHGetDesktopFolder
+[WARN]   unresolved: SHFileOperationW
+[WARN]   unresolved: OleInitialize
+[WARN]   unresolved: OleUninitialize
+[WARN] 34 imports unresolved
+[STUB] msvcrt.dll!__wgetmainargs -> returning 0 (call #1) guest_rip=0x140027fcf
+
+[CRASH] Signal 11 at RIP=0x140028001
+  RAX=0xffffffff RCX=0x120 RDX=0x474f9b43e01d1a63 R8=0x8148535657555441 R9=0x0
+  RSP=0x7fff9a956ce0 RBP=0x21de000
+  g_image_base=0x140000000 g_image_size=0x3e000
+  RVA=0x28001 (inside loaded PE)
+  Bytes: 66 41 83 38 22 75 38 66 66 66 90 66 66 66 90 49 
+  Return addr: 0x7fff9a956cf0
+  RSI=0x0 RDI=0x140000000
+  R8=0x8148535657555441  R9=0x0 R10=0x0 R11=0x202
+  R12=0x21dd000 R13=0x21dc000 R14=0x1b4 R15=0x7fff9a957220
+  [SCAN rsp+200] 0x2007736 <LOADER>
+  [SCAN rsp+568] 0x20026f6 <LOADER>
+  [SCAN rsp+576] 0x20020d0 <LOADER>
+  [SCAN rsp+2024] 0x20064d0 <LOADER>
+  [SCAN rsp+2176] 0x20064d0 <LOADER>
+  [SCAN rsp+2216] 0x2007e60 <LOADER>
+  [SCAN rsp+2248] 0x2007e81 <LOADER>
+  [SCAN rsp+2720] 0x2000040 <LOADER>
+  [SCAN rsp+2800] 0x2007e60 <LOADER>
+  Backtrace (via stack walking):
+    [0] RIP=0x140028001 RVA=0x28001      [RSP+0] = 0x7fff9a956cf0 (return addr?)
+    [1] RIP=0x140028001 RVA=0x28001      [RSP+0] = 0x7f4cacfa25c0 (return addr?)
+    [2] RIP=0x140028001 RVA=0x28001      [RSP+0] = 0x2de4eb0 (return addr?)
+    [3] RIP=0x140028001 RVA=0x28001      [RSP+0] = 0x6e6964616f4c205d (return addr?)
+    [4] RIP=0x140028001 RVA=0x28001

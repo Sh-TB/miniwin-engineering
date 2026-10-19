@@ -1,0 +1,125 @@
+[TRACE] Command line: /home/z/my-project/workspace/miniwin-engineering/artifacts/sweep50/dl/cports/cports.exe
+[WARN]   unresolved: _strlwr
+[WARN]   unresolved: _itoa
+[WARN]   unresolved: _mbsicmp
+[WARN]   unresolved: _mbscmp
+[WARN]   unresolved: _mbschr
+[WARN]   unresolved: _memicmp
+[WARN]   unresolved: _strcmpi
+[WARN]   unresolved: ??3@YAXPEAX@Z
+[WARN]   unresolved: ??2@YAPEAX_K@Z
+[WARN]   unresolved: _mbsnbcat
+[WARN]   unresolved: _snprintf
+[WARN]   unresolved: GetFileVersionInfoA
+[WARN]   unresolved: GetFileVersionInfoSizeA
+[WARN]   unresolved: VerQueryValueA
+[WARN]   unresolved: CreateToolbarEx
+[WARN]   unresolved: GetThreadSelectorEntry
+[WARN]   unresolved: WinExec
+[WARN]   unresolved: WritePrivateProfileStringA
+[WARN]   unresolved: GetPrivateProfileStringA
+[WARN]   unresolved: GetPrivateProfileIntA
+[WARN]   unresolved: EnumResourceNamesA
+[WARN]   unresolved: GetTempFileNameA
+[WARN]   unresolved: lstrcpyA
+[WARN]   unresolved: GetWindowsDirectoryA
+[WARN]   unresolved: GetNumberFormatA
+[WARN]   unresolved: GetDateFormatA
+[WARN]   unresolved: GetTimeFormatA
+[WARN]   unresolved: GetClassNameA
+[WARN]   unresolved: IsDialogMessageA
+[WARN]   unresolved: PostMessageA
+[WARN]   unresolved: RegisterWindowMessageA
+[WARN]   unresolved: InsertMenuA
+[WARN]   unresolved: GetMonitorInfoA
+[WARN]   unresolved: DrawTextExA
+[WARN]   unresolved: SetMenuItemInfoA
+[WARN]   unresolved: DialogBoxParamA
+[WARN]   unresolved: GetWindowTextLengthA
+[WARN]   unresolved: SetDlgItemTextA
+[WARN]   unresolved: GetDlgItemTextA
+[WARN]   unresolved: SetWindowTextA
+[WARN]   unresolved: SendDlgItemMessageA
+[WARN]   unresolved: GetDlgItemInt
+[WARN]   unresolved: LoadAcceleratorsA
+[WARN]   unresolved: TranslateAcceleratorA
+[WARN]   unresolved: GetWindowTextA
+[WARN]   unresolved: LoadImageA
+[WARN]   unresolved: GetWindowLongA
+[WARN]   unresolved: SetWindowLongA
+[WARN]   unresolved: InsertMenuItemA
+[WARN]   unresolved: GetMenuStringA
+[WARN]   unresolved: CreateDialogParamA
+[WARN]   unresolved: GetMenuItemInfoA
+[WARN]   unresolved: LoadMenuA
+[WARN]   unresolved: ModifyMenuA
+[WARN]   unresolved: GetTextExtentPoint32A
+[WARN]   unresolved: SetStretchBltMode
+[WARN]   unresolved: StretchBlt
+[WARN]   unresolved: GetPixel
+[WARN]   unresolved: GetObjectA
+[WARN]   unresolved: CreateFontIndirectA
+[WARN]   unresolved: GetSaveFileNameA
+[WARN]   unresolved: FindTextA
+[WARN]   unresolved: ChooseFontA
+[WARN]   unresolved: RegDeleteKeyA
+[WARN]   unresolved: ExtractIconExA
+[WARN]   unresolved: ShellExecuteA
+[WARN]   unresolved: ShellExecuteExA
+[WARN]   unresolved: SHGetFileInfoA
+[WARN]   unresolved: Shell_NotifyIconA
+[WARN] 82 imports unresolved
+[STUB] unresolved import called -> returning 0 (call #1) guest_rip=0x14001a83e
+[STUB] unresolved import called -> returning 0 (call #2) guest_rip=0x14001a860
+[STUB] unresolved import called -> returning 0 (call #3) guest_rip=0x140001043
+[STUB] unresolved import called -> returning 0 (call #4) guest_rip=0x140001043
+[STUB] unresolved import called -> returning 0 (call #5) guest_rip=0x140001043
+[STUB] unresolved import called -> returning 0 (call #6) guest_rip=0x140001043
+[STUB] unresolved import called -> returning 0 (call #7) guest_rip=0x140001043
+[STUB] unresolved import called -> returning 0 (call #8) guest_rip=0x140001043
+[STUB] unresolved import called -> returning 0 (call #9) guest_rip=0x140001043
+[STUB] unresolved import called -> returning 0 (call #10) guest_rip=0x140001043
+[STUB] unresolved import called -> returning 0 (call #11) guest_rip=0x140001043
+[STUB] unresolved import called -> returning 0 (call #12) guest_rip=0x140001043
+[STUB] unresolved import called -> returning 0 (call #13) guest_rip=0x140001043
+[STUB] unresolved import called -> returning 0 (call #14) guest_rip=0x140001043
+[STUB] unresolved import called -> returning 0 (call #15) guest_rip=0x140001043
+[STUB] unresolved import called -> returning 0 (call #16) guest_rip=0x140001043
+[STUB] unresolved import called -> returning 0 (call #17) guest_rip=0x140001043
+[STUB] unresolved import called -> returning 0 (call #18) guest_rip=0x140001043
+[STUB] unresolved import called -> returning 0 (call #19) guest_rip=0x140001043
+[STUB] unresolved import called -> returning 0 (call #20) guest_rip=0x140001043
+[STUB] further unresolved-import calls silenced
+
+[CRASH] Signal 11 at RIP=0x14001b338
+  RAX=0x10001 RCX=0x80000000 RDX=0xffffffffffffffff R8=0x0 R9=0x0
+  RSP=0x7fff2e3a2400 RBP=0x21e3ad7
+  g_image_base=0x140000000 g_image_size=0x3c000
+  RVA=0x1b338 (inside loaded PE)
+  Bytes: 45 39 ab b8 00 00 00 74 1b 45 39 ab ac 00 00 00 
+  Return addr: 0x1
+  RSI=0x20 RDI=0x5
+  R8=0x0  R9=0x0 R10=0x0 R11=0x0
+  R12=0x100 R13=0x0 R14=0x1ac R15=0x104
+  [SCAN rsp+040] 0x2002a93 <LOADER>
+  [SCAN rsp+184] 0x2002a93 <LOADER>
+  [SCAN rsp+1296] 0x14002ac98 <PE>
+  [SCAN rsp+2200] 0x140027178 <PE>
+  [SCAN rsp+2352] 0x1400289b0 <PE>
+  [SCAN rsp+2440] 0x140027178 <PE>
+  [SCAN rsp+2456] 0x1400289b0 <PE>
+  [SCAN rsp+2472] 0x2017319 <LOADER>
+  [SCAN rsp+2648] 0x1400289a8 <PE>
+  [SCAN rsp+2672] 0x140026bfc <PE>
+  [SCAN rsp+2680] 0x140026634 <PE>
+  [SCAN rsp+2712] 0x1400289a8 <PE>
+  [SCAN rsp+2728] 0x200b5ee <LOADER>
+  [SCAN rsp+2760] 0x14002b648 <PE>
+  [SCAN rsp+2952] 0x140000000 <PE>
+  [SCAN rsp+2968] 0x140026921 <PE>
+  [SCAN rsp+3176] 0x2007736 <LOADER>
+  [SCAN rsp+3544] 0x20026f6 <LOADER>
+  [SCAN rsp+3552] 0x20020d0 <LOADER>
+  Backtrace (via stack walking):
+    [0] RIP=0x14001b338 RVA=0x1b338      [RSP+0] = 0x1 (return addr?)
+    [1] RIP=0x14001b338 RVA=0x1b338

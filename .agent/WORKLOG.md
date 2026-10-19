@@ -160,3 +160,28 @@ Stage Summary:
 - Evidence: evidence/sweep007_battery/ (README.md, battery_map.png, 2 dialog
   PNGs, battery_raw.tsv, determinism.txt, per-program run1 stderr/cmdline);
   artifacts/sweep50/runs_gui562/ (per-run artifacts x45).
+
+---
+## SWEEP-008 — honest-stub elephant batch (2026-10-19)
+
+- ONE loader edit batch: SW-563 GetVersionExW/A (10.0.19045 + EX fields) +
+  ntdll!RtlGetVersion; SW-564 in-memory registry (Open/Create/Set/Query/
+  Close, missing-key -> ERROR_FILE_NOT_FOUND = the EULA trigger); SW-565
+  atom table 0xC000+; SW-566 shlwapi Color* (HLS.H canonical); SW-567
+  DialogBoxIndirectParamW/DialogBoxParamW declared auto-accept -> IDOK.
+- SW-555 COMPLETED: stub_site_record stores COPIES of dll!name per
+  stub-patched slot; stub decodes guest return address (FF15/FF25/mov r64)
+  and prints `[STUB] dll!name -> 0 (call #N) guest_rip=...`.
+- BUG-068 (ftell=-1 directory fopen -> malloc(-1) SIGSEGV), BUG-070/070b
+  (GetModuleHandleW named lookups: pseudo-handle parity + UTF-16 read),
+  BUG-071 (stub-site UAF -> copies), BUG-072 (GetProcAddress ordinals;
+  ntdll ord 135 handler filling {int,ptr} out-struct).
+- batch-2/3/4: ~230 WARN-list imports (autoruns64/rammap64/procexp64 union)
+  via 12 policy stubs + ~35 real one-liners.
+- GATES: autoruns64 1 -> 0 (0 unresolved, full EULA flow), rammap64 1 -> 0,
+  produkey -> 0, diskmon64 0 held; procexp64 2 -> 139 guest-crash at
+  0x14009be71 (deeper; 3 MessageBox BMPs rendered; SW-568 lever named).
+- Breadth: 15 programs — 4x exit0 / 5x exit1-9 / 6x named-site SEGV
+  (artifacts/sweep50/runs_sweep008/summary.tsv).
+- Worklist x3.4: 60 -> 203 SW-* tasks (SW-555..567 closed + SW-568..699).
+- G1 re-pinned 12/12 (sha 6c14f04c...); evidence/sweep008_stubs/.

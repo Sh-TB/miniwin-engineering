@@ -1,0 +1,59 @@
+[TRACE] Command line: /home/z/my-project/workspace/miniwin-engineering/artifacts/sweep50/dl/procexp64/procexp64.exe
+[WARN] 22 imports unresolved
+[DialogBoxIndirectParamW] dialog shown -> auto-accept (IDOK)
+[MessageBoxW] Process Explorer: Not able to run on this version of Windows:
+Missing function: winsta!WinStationConnectW
+[MessageBox] dialog #1 rendered -> miniwin-results/procexp64.exe/screenshots/messagebox_1.bmp
+[MessageBoxW] Process Explorer: Not able to run on this version of Windows:
+Missing function: winsta!WinStationShadow
+[MessageBox] dialog #2 rendered -> miniwin-results/procexp64.exe/screenshots/messagebox_2.bmp
+[MessageBoxW] Process Explorer: Not able to run on this version of Windows:
+Missing function: winsta!WinStationGetProcessSid
+[MessageBox] dialog #3 rendered -> miniwin-results/procexp64.exe/screenshots/messagebox_3.bmp
+
+[CRASH] Signal 11 at RIP=0x14009be71
+  RAX=0x0 RCX=0x0 RDX=0x0 R8=0x7fff76479300 R9=0x0
+  RSP=0x7fff764792e0 RBP=0x7fff76479c59
+  g_image_base=0x140000000 g_image_size=0x291000
+  RVA=0x9be71 (inside loaded PE)
+  Bytes: 8b 0a 89 0d 6f 14 10 00 48 8b 4a 08 48 89 0d 6c 
+  Return addr: 0x0
+  RSI=0x2835690 RDI=0x1
+  R8=0x7fff76479300  R9=0x0 R10=0x0 R11=0x202
+  R12=0xffffffffffffffff R13=0xa R14=0xa R15=0x140144bd8
+  [SCAN rsp+072] 0x1400c36b5 <PE>
+  [SCAN rsp+696] 0x204da1a <LOADER>
+  [SCAN rsp+856] 0x204da1a <LOADER>
+  [SCAN rsp+904] 0x1401a1ff0 <PE>
+  [SCAN rsp+1064] 0x1401a1ff0 <PE>
+  [SCAN rsp+1072] 0x140144bd8 <PE>
+  [SCAN rsp+1184] 0x140144bd8 <PE>
+  [SCAN rsp+1416] 0x204291a <LOADER>
+  [SCAN rsp+1848] 0x140191bf0 <PE>
+  [SCAN rsp+1888] 0x140144bd8 <PE>
+  [SCAN rsp+2096] 0x140191bf0 <PE>
+  [SCAN rsp+2104] 0x140191bf0 <PE>
+  [SCAN rsp+2120] 0x202d589 <LOADER>
+  [SCAN rsp+2304] 0x140144bd8 <PE>
+  [SCAN rsp+2312] 0x1401a1fd8 <PE>
+  [SCAN rsp+2336] 0x140144bd8 <PE>
+  [SCAN rsp+2344] 0x14007133b <PE>
+  [SCAN rsp+2352] 0x1401a1fd8 <PE>
+  [SCAN rsp+2472] 0x140051108 <PE>
+  [SCAN rsp+2520] 0x1400f2f75 <PE>
+  [SCAN rsp+2536] 0x1401a1ea0 <PE>
+  [SCAN rsp+2576] 0x140000000 <PE>
+  [SCAN rsp+2592] 0x140144bd8 <PE>
+  [SCAN rsp+2824] 0x1401bb298 <PE>
+  [SCAN rsp+2856] 0x1400fc40e <PE>
+  [SCAN rsp+2872] 0x1400fb60c <PE>
+  [SCAN rsp+2880] 0x14018fca0 <PE>
+  [SCAN rsp+2888] 0x140133220 <PE>
+  [SCAN rsp+3016] 0x1400fbd62 <PE>
+  [SCAN rsp+3080] 0x2007736 <LOADER>
+  [SCAN rsp+3112] 0x1401354c8 <PE>
+  [SCAN rsp+3448] 0x20026f6 <LOADER>
+  [SCAN rsp+3456] 0x20020d0 <LOADER>
+  Backtrace (via stack walking):
+    [0] RIP=0x14009be71 RVA=0x9be71      [RSP+0] = 0x0 (return addr?)
+    [1] RIP=0x14009be71 RVA=0x9be71
