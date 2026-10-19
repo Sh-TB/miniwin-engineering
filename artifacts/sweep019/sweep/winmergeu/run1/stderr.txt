@@ -323,7 +323,7 @@
 
 [CRASH] Signal 11 at RIP=0x14012d0c2
   RAX=0x0 RCX=0x7ff0000000000001 RDX=0x4032000000000000 R8=0x8 R9=0x9
-  RSP=0x7ffcf7f61a00 RBP=0x7ffcf7f61b00
+  RSP=0x7ffc7025ce80 RBP=0x7ffc7025cf80
   g_image_base=0x140000000 g_image_size=0x681000
   RVA=0x12d0c2 (inside loaded PE)
   Bytes: 44 89 14 30 41 ff c4 48 83 c6 04 48 83 ef 01 0f 

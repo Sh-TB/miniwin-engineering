@@ -25,14 +25,14 @@
 [WARN] 23 imports unresolved
 
 [CRASH] Signal 11 at RIP=0x0
-  RAX=0x0 RCX=0x7fff196165f0 RDX=0xffffffffffffffff R8=0x0 R9=0x0
-  RSP=0x7fff19616058 RBP=0x2226000
+  RAX=0x0 RCX=0x7ffcdfc89e40 RDX=0xffffffffffffffff R8=0x0 R9=0x0
+  RSP=0x7ffcdfc898a8 RBP=0x2226000
   g_image_base=0x140000000 g_image_size=0xfc000
   (NOT inside loaded PE)
   [RIP-MAP] no mapping contains RIP
-  RSI=0x140000000 RDI=0x7f628b26f700
+  RSI=0x140000000 RDI=0x7fa90af53700
   R8=0x0  R9=0x0 R10=0x0 R11=0x202
-  R12=0x2225000 R13=0x2224000 R14=0x7fff196165f0 R15=0x7fff196163f0
+  R12=0x2225000 R13=0x2224000 R14=0x7ffcdfc89e40 R15=0x7ffcdfc89c40
   [SCAN rsp+000] 0x1400028e2 <PE>
   [SCAN rsp+032] 0x140092c00 <PE>
   [SCAN rsp+064] 0x140041652 <PE>

@@ -51,15 +51,15 @@
 [WARN] 50 imports unresolved
 
 [CRASH] Signal 11 at RIP=0x140028001
-  RAX=0xffffffff RCX=0x120 RDX=0x4c7a6433feffc143 R8=0x4800099bd1058b48 R9=0x0
-  RSP=0x7ffe497ab590 RBP=0x2226000
+  RAX=0xffffffff RCX=0x120 RDX=0x163caed9ffa464d5 R8=0x4800099bd1058b48 R9=0x0
+  RSP=0x7fff148a9e10 RBP=0x2226000
   g_image_base=0x140000000 g_image_size=0x3e000
   RVA=0x28001 (inside loaded PE)
   Bytes: 66 41 83 38 22 75 38 66 66 66 90 66 66 66 90 49 
-  Return addr: 0x7ffe497ab5a0
+  Return addr: 0x7fff148a9e20
   RSI=0x0 RDI=0x140000000
   R8=0x4800099bd1058b48  R9=0x0 R10=0x0 R11=0x202
-  R12=0x2225000 R13=0x2224000 R14=0x7ffe497abad0 R15=0x7ffe497ab8d0
+  R12=0x2225000 R13=0x2224000 R14=0x7fff148aa350 R15=0x7fff148aa150
   [SCAN rsp+200] 0x20079eb <LOADER>
   [SCAN rsp+240] 0x140029928 <PE>
   [SCAN rsp+568] 0x20027d4 <LOADER>
@@ -72,6 +72,6 @@
   [SCAN rsp+2808] 0x2008330 <LOADER>
   Backtrace (via stack walking):
     [0] RIP=0x140028001 RVA=0x28001
-      [RSP+0] = 0x7ffe497ab5a0 (return addr?)
-    [1] RIP=0x7ffe497ab5a0 (outside PE, possible shared lib)
-    [2] RIP=0x7ffe497ab5a0 (outside PE, possible shared lib)
+      [RSP+0] = 0x7fff148a9e20 (return addr?)
+    [1] RIP=0x7fff148a9e20 (outside PE, possible shared lib)
+    [2] RIP=0x7fff148a9e20 (outside PE, possible shared lib)

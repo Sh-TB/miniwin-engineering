@@ -566,3 +566,24 @@ Stage Summary:
 - main advanced with SWEEP-019 batch; TSV artifacts/sweep019/sweep/sweep019_sweep.tsv;
   evidence/sweep019/README.md; SW-812 pump-on still open (queued SW-881..885);
   139 group unchanged (SW-807/809/814/815 signatures carried).
+
+---
+## SWEEP-020 reconcile (2026-10-19, this sandbox)
+
+- Sandbox carried a pre-SWEEP-009 snapshot; a local divergent SWEEP-008
+  batch was built here (honest stubs, in-memory registry, named-stub
+  machinery, BUG-068/070/071/072) and archived WITHOUT merge on branch
+  `sweep008-local-divergent-2` (pushed for the record; no force-push).
+- Upstream superseded all of it (SWEEP-014/015/016 landed the same levers
+  first; SWEEP-017/018/019 went further: CREATESTRUCT root cause, exit0 x3
+  for autoruns64/cports/diskmon64/produkey/rammap64, menus/clipboard/
+  sysclasses/regions, 65-item SW-816..880 batch).
+- Local main reset-synced to origin/main = d5af5f8 (SWEEP-019); upstream
+  builds byte-exact (1,771,176 bytes).
+- VERIFY on this machine: G1 re-pin sha 2f5535f2 (12/12, EXACT match to
+  SWEEP-019's recorded pin); sweep019 broad sweep re-run 15 programs x3 —
+  parity with recorded TSV (autoruns64/bginfo64/coreinfoex64/cports/
+  diskmon64/produkey/rammap64 exit0 x3); calc acceptance 9/9 PASS;
+  snake 30 frames x3 byte-identical exit0 x3.
+- Evidence: evidence/master/g1/20261019_173159, fresh
+  artifacts/sweep019/sweep/sweep019_sweep.tsv + acceptance outputs.
