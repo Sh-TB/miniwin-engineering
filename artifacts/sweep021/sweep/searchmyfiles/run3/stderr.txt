@@ -1,0 +1,73 @@
+[TRACE] Command line: /home/z/my-project/workspace/miniwin-engineering/artifacts/sweep50/dl/searchmyfiles/SearchMyFiles.exe
+[WARN]   unresolved: _wcmdln
+[WARN]   unresolved: _msize
+[WARN]   unresolved: _wcslwr
+[WARN]   unresolved: _itow
+[WARN]   unresolved: _wtoi
+[WARN]   unresolved: _ui64tow
+[WARN]   unresolved: _wtoi64
+[WARN]   unresolved: wcsncat
+[WARN]   unresolved: ImageList_AddMasked
+[WARN]   unresolved: WNetGetUniversalNameW
+[WARN]   unresolved: EnumResourceTypesW
+[WARN]   unresolved: GetLocalTime
+[WARN]   unresolved: GetPrivateProfileStringW
+[WARN]   unresolved: GetPrivateProfileIntW
+[WARN]   unresolved: GetNumberFormatW
+[WARN]   unresolved: WritePrivateProfileStringW
+[WARN]   unresolved: MonitorFromWindow
+[WARN]   unresolved: ChildWindowFromPoint
+[WARN]   unresolved: DeferWindowPos
+[WARN]   unresolved: InsertMenuW
+[WARN]   unresolved: SendDlgItemMessageW
+[WARN]   unresolved: GetWindow
+[WARN]   unresolved: DrawFrameControl
+[WARN]   unresolved: TranslateAcceleratorW
+[WARN]   unresolved: IsDialogMessageW
+[WARN]   unresolved: EndDeferWindowPos
+[WARN]   unresolved: BeginDeferWindowPos
+[WARN]   unresolved: GetClassNameW
+[WARN]   unresolved: GetMenuStringW
+[WARN]   unresolved: CheckMenuRadioItem
+[WARN]   unresolved: EnumChildWindows
+[WARN]   unresolved: SetMenuItemInfoW
+[WARN]   unresolved: DestroyIcon
+[WARN]   unresolved: GetKeyState
+[WARN]   unresolved: DrawTextExW
+[WARN]   unresolved: TrackPopupMenu
+[WARN]   unresolved: SetClipboardViewer
+[WARN]   unresolved: ChangeClipboardChain
+[WARN]   unresolved: IsWindowVisible
+[WARN]   unresolved: GetFocus
+[WARN]   unresolved: GetTextExtentPoint32W
+[WARN]   unresolved: ChooseFontW
+[WARN]   unresolved: SHBindToParent
+[WARN]   unresolved: SHGetPathFromIDListW
+[WARN]   unresolved: SHFileOperationW
+[WARN] 46 imports unresolved
+
+[CRASH] Signal 11 at RIP=0x140028001
+  RAX=0xffffffff RCX=0x120 RDX=0xbeca77366cf22370 R8=0x480009dc91058b48 R9=0x0
+  RSP=0x7ffd4a9ecd90 RBP=0x222c000
+  g_image_base=0x140000000 g_image_size=0x3e000
+  RVA=0x28001 (inside loaded PE)
+  Bytes: 66 41 83 38 22 75 38 66 66 66 90 66 66 66 90 49 
+  Return addr: 0x7ffd4a9ecda0
+  RSI=0x0 RDI=0x140000000
+  R8=0x480009dc91058b48  R9=0x0 R10=0x0 R11=0x202
+  R12=0x222b000 R13=0x222a000 R14=0x7ffd4a9ed2d0 R15=0x7ffd4a9ed0d0
+  [SCAN rsp+200] 0x20079eb <LOADER>
+  [SCAN rsp+240] 0x140029928 <PE>
+  [SCAN rsp+568] 0x20027d4 <LOADER>
+  [SCAN rsp+576] 0x2002190 <LOADER>
+  [SCAN rsp+2024] 0x2006550 <LOADER>
+  [SCAN rsp+2176] 0x2006550 <LOADER>
+  [SCAN rsp+2216] 0x2008330 <LOADER>
+  [SCAN rsp+2248] 0x2008351 <LOADER>
+  [SCAN rsp+2728] 0x2000040 <LOADER>
+  [SCAN rsp+2808] 0x2008330 <LOADER>
+  Backtrace (via stack walking):
+    [0] RIP=0x140028001 RVA=0x28001
+      [RSP+0] = 0x7ffd4a9ecda0 (return addr?)
+    [1] RIP=0x7ffd4a9ecda0 (outside PE, possible shared lib)
+    [2] RIP=0x7ffd4a9ecda0 (outside PE, possible shared lib)

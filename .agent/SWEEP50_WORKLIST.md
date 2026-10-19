@@ -805,29 +805,29 @@ gate that must be re-accepted when the port lands).
       artifacts/sweep019/sweep/sweep019_sweep.tsv (16-prog corpus x3 +
       produkey pump-on + calc/snake/breakout x3).
 
-## SW-881..SW-920 — SWEEP-019 continuation queue (40 items, «ادامه» standing order)
+## SW-881..SW-920 — SWEEP-019 continuation queue (40 items) — LANDED in SWEEP-021 «چند ده تسک همزمان» (remainder: 35 imports; WSA/network tail SW-911..915 was already covered by SWEEP-014 r2 — verified present)
 
-- [ ] **SW-881..885 menu deepening x5**: InsertMenuItemA/W, RemoveMenu,
+- [x] **SW-881..885 menu deepening x5**: InsertMenuItemA/W, RemoveMenu,
       DeleteMenu, GetMenuItemRect, TrackPopupMenuEx — completes the menu
       model for pump-on SW-812 verification beyond exit0 (menu loop must
       terminate with bounded SetMenu counts).
-- [ ] **SW-886..890 ListView deepening x5**: LVM_GETNEXTITEM, LVM_SETITEM
+- [x] **SW-886..890 ListView deepening x5**: LVM_GETNEXTITEM, LVM_SETITEM
       A/W, LVM_DELETEALLITEMS, LVM_GETSUBITEMRECT, LVM_GETSTRINGWIDTH —
       NirSoft lists iterate via GETNEXTITEM after population.
-- [ ] **SW-891..895 TreeView/Tab deepening x5**: TVM_GETITEM A/W,
+- [x] **SW-891..895 TreeView/Tab deepening x5**: TVM_GETITEM A/W,
       TVM_SELECTITEM, TVM_EXPAND, TCM_GETITEM A/W, TCM_ADJUSTRECT.
-- [ ] **SW-896..900 GDI region deepening x5**: ExtCreateRegion,
+- [x] **SW-896..900 GDI region deepening x5**: ExtCreateRegion,
       GetRgnBox, OffsetRgn, PtInRegion, EqualRgn (completes the algebra).
-- [ ] **SW-901..905 shell deepening x5**: SHGetFolderPathA/W (legacy
+- [x] **SW-901..905 shell deepening x5**: SHGetFolderPathA/W (legacy
       shfolder path), SHGetKnownFolderPath, SHGetDesktopFolder minimal
       IShellFolder, SHAutoComplete, SHSetValueA/W (shlwapi registry).
-- [ ] **SW-906..910 RICHEDIT x5**: msftedit.dll/RICHED50W + RICHEDIT class
+- [x] **SW-906..910 RICHEDIT x5**: msftedit.dll/RICHED50W + RICHEDIT class
       — the Sysinternals EULA dialog template uses RICHEDIT; EM_ family
       (EM_SETTEXTEX, EM_STREAMIN) so EULA text renders and gate logic can
       proceed past text queries.
-- [ ] **SW-911..915 network x5**: WSAAsyncSelect, WSAEventSelect,
+- [x] **SW-911..915 network x5**: WSAAsyncSelect, WSAEventSelect,
       connect/gethostbyname wrappers, shutdown, select — pageant family.
-- [ ] **SW-916..920 CRT/COM x5**: _mbsncat/_mbsnbcpy/_mbslen, _splitpath/
+- [x] **SW-916..920 CRT/COM x5**: _mbsncat/_mbsnbcpy/_mbslen, _splitpath/
       _makepath, CoGetObjectContext, CoFreeUnusedLibraries, StringFromGUID2.
 - [ ] **SW-800 (carried)** infra/verify: lz4/zstd/trurl exit-code parity.
 - [ ] **SW-801i (carried)** CRT/bug: zig/mingw static-CRT snprintf fake FILE.
@@ -836,3 +836,33 @@ gate that must be re-accepted when the port lands).
 - [ ] **SW-807/809/814/815 (carried)** crash signatures: puttygen NULL
       fn-ptr, procexp64 UTF-16-as-code, searchmyfiles cmpw 0x22, winmergeu.
 
+
+## SW-921..SW-960 — SWEEP-021 continuation queue (40 items, «ادامه سه برابری» standing order)
+
+- [ ] **SW-921..925 dialog deepening x5**: DialogBoxIndirectParamW real
+      DLGTEMPLATE walk (word-aligned items, class/title ordinals),
+      GetDlgItem real child binding, SendDlgItemMessageA/W, CheckDlgButton,
+      IsDlgButtonChecked — Sysinternals EULA gate path (autoruns64/rammap64
+      pump-on verification).
+- [ ] **SW-926..930 ListView final x5**: LVM_GETITEMA/W, LVM_DELETEITEM,
+      LVM_SETCOLUMNA/W, LVM_GETCOLUMNA/W, LVM_SORTITEMS (typed no-op 1).
+- [ ] **SW-931..935 TreeView final x5**: TVM_GETITEMRECT, TVM_GETVISIBLECOUNT,
+      TVM_GETNEXTITEM TVGN_CHILD/PARENT/NEXTVISIBLE, TVM_HITTEST (typed -1),
+      TVM_SORTCHILDREN (no-op success).
+- [ ] **SW-936..940 GDI DIB x5**: CreateDIBSection (real host pixel buffer
+      readable via ppvBits), GetDIBits, SetDIBits, BitBlt CAPTUREBLT flag
+      audit, MaskBlt — bginfo64 desktop-paint path.
+- [ ] **SW-941..945 fonts x5**: CreateFontIndirectA/W (real LOGFONT store),
+      EnumFontFamiliesExA/W (canned face list), GetTextMetricsA/W,
+      GetTextFaceA/W, SetTextJustification — procexp64 lower pane text.
+- [ ] **SW-946..950 network x5**: WSAGetLastError typed map, ioctlsocket
+      FIONBIO, getsockopt/setsockopt (SO_* typed), htonl/ntohl/htons/ntohs
+      wrappers, WSAIoctl FIONREAD — pageant/putty family (SW-911..915
+      follow-up beyond connect/shutdown).
+- [ ] **SW-951..955 registry x5**: RegQueryValueExA real A-tail (not the
+      narrow stub), RegEnumKeyExW/A, RegDeleteKeyA/W, RegQueryValueExW
+      expanded types (REG_MULTI_SZ/SZ pair), RegNotifyChangeKeyValue
+      (typed success, no events) — autoruns64 deep enumeration.
+- [ ] **SW-956..960 CRT/COM x5**: _itoa/_ltoa/_ultoa (real radix convert),
+      _stricmp/_strnicmp, _wcsicmp, WideCharToMultiByte/MultiByteToWideChar
+      full codepage matrix audit (CP_ACP/UTF-8/UTF-16 round-trips).

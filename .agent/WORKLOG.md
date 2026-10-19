@@ -587,3 +587,25 @@ Stage Summary:
   snake 30 frames x3 byte-identical exit0 x3.
 - Evidence: evidence/master/g1/20261019_173159, fresh
   artifacts/sweep019/sweep/sweep019_sweep.tsv + acceptance outputs.
+
+## SWEEP-021 — 2026-10-19 — «ادامه چند ده تسک همزمان» elephant batch
+- LANDED (one batch): SW-881..920 remainder — 24 new functions + 35 ENTRY rows in
+  src/loader/loader.c: menu deepening (InsertMenuItemA/W, RemoveMenu, DeleteMenu,
+  GetMenuItemRect, TrackPopupMenuEx), ListView deepening (LVM_GETNEXTITEM/SETITEM/
+  DELETEALLITEMS/GETSUBITEMRECT/GETSTRINGWIDTH), TreeView/Tab deepening (TVM_GETITEM/
+  SELECTITEM/EXPAND, TCM_GETITEM/ADJUSTRECT), GDI regions (ExtCreateRegion, GetRgnBox,
+  OffsetRgn, PtInRegion, EqualRgn), shell (SHGetFolderPathA, SHGetKnownFolderPath 8
+  GUIDs, SHGetDesktopFolder minimal IShellFolder, SHAutoComplete, SHSetValueA/W),
+  RICHEDIT class 0x8C + EM_SETTEXTEX/STREAMIN/STREAMOUT/GETTEXTEX, CRT (_mbsncat,
+  _mbsnbcpy, _mbslen, _splitpath, _makepath), COM (CoGetObjectContext, CoFreeUnused-
+  Libraries, StringFromGUID2; g_com_init apartment flag).
+- MEASURED: build 1,771,176 -> 1,836,696; 15-prog corpus x3 exit-deterministic; ZERO
+  regressions (7 exit0 / 4 exit139 / 4 exit1 unchanged vs SWEEP-019); unresolved
+  1325 -> 1288 (-37, real call paths); GUI accounting: 6 real GUI-subsystem progs
+  exit0 x3 (autoruns64/bginfo64/cports/diskmon64/produkey/rammap64) + miniwin_calc
+  9/9 + snake 30f x3 + breakout 381f x3 (40->13 bricks) = 9 GUI programs with
+  lifecycle evidence; artifacts/sweep021/{sweep/sweep021_sweep.tsv,GUI_EVIDENCE.tsv}.
+- G1 re-pin OK: 12/12 regression, UPX banner exact, evidence/master/g1/20261019_181613.
+- Worklist: SW-881..920 marked LANDED; new queue SW-921..960 (40 items, x3 standing
+  order). Carried open: SW-800, SW-801i/j, SW-807/809/814/815 crash signatures.
+- evidence/sweep021/README.md + scripts/sweep021_chunk.sh + sweep021_gui_evidence.py.
