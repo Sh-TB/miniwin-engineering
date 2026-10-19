@@ -1,0 +1,378 @@
+[TRACE] Command line: /home/z/my-project/workspace/miniwin-engineering/artifacts/sweep50/dl/procexp64/procexp64.exe
+[WARN]   unresolved: StrStrIW
+[WARN]   unresolved: SHAutoComplete
+[WARN]   unresolved: PathIsNetworkPathW
+[WARN]   unresolved: StrCmpIW
+[WARN]   unresolved: UrlUnescapeW
+[WARN]   unresolved: GetExtendedTcpTable
+[WARN]   unresolved: GetIfEntry2
+[WARN]   unresolved: GetIfTable2
+[WARN]   unresolved: GetExtendedUdpTable
+[WARN]   unresolved: FreeMibTable
+[WARN]   unresolved: WNetGetConnectionW
+[WARN]   unresolved: CreatePropertySheetPageW
+[WARN]   unresolved: ImageList_DrawEx
+[WARN]   unresolved: ImageList_GetIconSize
+[WARN]   unresolved: ImageList_DragMove
+[WARN]   unresolved: ImageList_DragShowNolock
+[WARN]   unresolved: ImageList_DragEnter
+[WARN]   unresolved: ImageList_BeginDrag
+[WARN]   unresolved: ImageList_AddMasked
+[WARN]   unresolved: ImageList_EndDrag
+[WARN]   unresolved: ImageList_DragLeave
+[WARN]   unresolved: CreateStatusWindowW
+[WARN]   unresolved: PropertySheetW
+[WARN]   unresolved: ImageList_GetIcon
+[WARN]   unresolved: CredUIPromptForCredentialsW
+[WARN]   unresolved: SetupDiDestroyDeviceInfoList
+[WARN]   unresolved: SetupDiEnumDeviceInterfaces
+[WARN]   unresolved: SetupDiGetClassDevsW
+[WARN]   unresolved: SetupDiGetDeviceInterfaceDetailW
+[WARN]   unresolved: CertGetNameStringW
+[WARN]   unresolved: SetSuspendState
+[WARN]   unresolved: IsPwrSuspendAllowed
+[WARN]   unresolved: IsPwrHibernateAllowed
+[WARN]   unresolved: WTSFreeMemory
+[WARN]   unresolved: WTSEnumerateSessionsW
+[WARN]   unresolved: WTSQuerySessionInformationW
+[WARN]   unresolved: WTSDisconnectSession
+[WARN]   unresolved: WTSLogoffSession
+[WARN]   unresolved: WTSSendMessageW
+[WARN]   unresolved: SetWindowTheme
+[WARN]   unresolved: EnableThemeDialogTexture
+[WARN]   unresolved: OpenThemeData
+[WARN]   unresolved: GetThemePartSize
+[WARN]   unresolved: DrawThemeBackground
+[WARN]   unresolved: CloseThemeData
+[WARN]   unresolved: NtResumeProcess
+[WARN]   unresolved: NtSuspendProcess
+[WARN]   unresolved: NtOpenThread
+[WARN]   unresolved: NtSetInformationProcess
+[WARN]   unresolved: NtQueryInformationThread
+[WARN]   unresolved: NtQueryInformationProcess
+[WARN]   unresolved: NtUnloadDriver
+[WARN]   unresolved: NtLoadDriver
+[WARN]   unresolved: RtlQueryProcessDebugInformation
+[WARN]   unresolved: NtOpenKey
+[WARN]   unresolved: NtQuerySemaphore
+[WARN]   unresolved: NtQueryEvent
+[WARN]   unresolved: NtQuerySection
+[WARN]   unresolved: RtlCreateQueryDebugBuffer
+[WARN]   unresolved: RtlDestroyQueryDebugBuffer
+[WARN]   unresolved: NtSuspendThread
+[WARN]   unresolved: NtResumeThread
+[WARN]   unresolved: NtCreateKey
+[WARN]   unresolved: NtQueryMutant
+[WARN]   unresolved: Polyline
+[WARN]   unresolved: GetBkColor
+[WARN]   unresolved: RectInRegion
+[WARN]   unresolved: CreateRectRgnIndirect
+[WARN]   unresolved: SelectClipRgn
+[WARN]   unresolved: GetBkMode
+[WARN]   unresolved: SetDCPenColor
+[WARN]   unresolved: SetViewportOrgEx
+[WARN]   unresolved: GetTextExtentPoint32W
+[WARN]   unresolved: SetTextAlign
+[WARN]   unresolved: EndPage
+[WARN]   unresolved: StartDocW
+[WARN]   unresolved: EndDoc
+[WARN]   unresolved: StartPage
+[WARN]   unresolved: GetCurrentObject
+[WARN]   unresolved: Polygon
+[WARN]   unresolved: CreatePatternBrush
+[WARN]   unresolved: CreateBitmap
+[WARN]   unresolved: ExcludeClipRect
+[WARN]   unresolved: GetTextExtentExPointW
+[WARN]   unresolved: SetROP2
+[WARN]   unresolved: ChooseColorW
+[WARN]   unresolved: GetOpenFileNameW
+[WARN]   unresolved: GetSaveFileNameW
+[WARN]   unresolved: CommDlgExtendedError
+[WARN]   unresolved: ChooseFontW
+[WARN]   unresolved: PrintDlgW
+[WARN]   unresolved: FindTextW
+[WARN]   unresolved: Process32FirstW
+[WARN]   unresolved: Process32NextW
+[WARN]   unresolved: GetNumberFormatW
+[WARN]   unresolved: GetSystemWow64DirectoryW
+[WARN]   unresolved: GetPrivateProfileStringW
+[WARN]   unresolved: GetPrivateProfileIntW
+[WARN]   unresolved: GlobalReAlloc
+[WARN]   unresolved: Module32FirstW
+[WARN]   unresolved: Module32NextW
+[WARN]   unresolved: ReadProcessMemory
+[WARN]   unresolved: lstrcmpiW
+[WARN]   unresolved: GetLocalTime
+[WARN]   unresolved: Heap32ListFirst
+[WARN]   unresolved: Heap32ListNext
+[WARN]   unresolved: Thread32First
+[WARN]   unresolved: OpenThread
+[WARN]   unresolved: Thread32Next
+[WARN]   unresolved: K32QueryWorkingSetEx
+[WARN]   unresolved: VirtualQueryEx
+[WARN]   unresolved: K32GetMappedFileNameW
+[WARN]   unresolved: SearchPathW
+[WARN]   unresolved: QueryFullProcessImageNameW
+[WARN]   unresolved: PulseEvent
+[WARN]   unresolved: GetLogicalProcessorInformation
+[WARN]   unresolved: ProcessIdToSessionId
+[WARN]   unresolved: WTSGetActiveConsoleSessionId
+[WARN]   unresolved: GetProcessId
+[WARN]   unresolved: SetProcessWorkingSetSize
+[WARN]   unresolved: GetProcessInformation
+[WARN]   unresolved: K32QueryWorkingSet
+[WARN]   unresolved: GetProcessWorkingSetSize
+[WARN]   unresolved: K32GetModuleFileNameExW
+[WARN]   unresolved: IsProcessInJob
+[WARN]   unresolved: CreateJobObjectW
+[WARN]   unresolved: GlobalMemoryStatus
+[WARN]   unresolved: TrySubmitThreadpoolCallback
+[WARN]   unresolved: QueryInformationJobObject
+[WARN]   unresolved: GetActiveProcessorGroupCount
+[WARN]   unresolved: GetThreadGroupAffinity
+[WARN]   unresolved: SetThreadGroupAffinity
+[WARN]   unresolved: GetActiveProcessorCount
+[WARN]   unresolved: QueryThreadCycleTime
+[WARN]   unresolved: GetThreadIdealProcessorEx
+[WARN]   unresolved: TrackPopupMenuEx
+[WARN]   unresolved: MonitorFromPoint
+[WARN]   unresolved: AppendMenuW
+[WARN]   unresolved: RemoveMenu
+[WARN]   unresolved: GetMenuStringW
+[WARN]   unresolved: CreatePopupMenu
+[WARN]   unresolved: DrawEdge
+[WARN]   unresolved: GetMenuItemID
+[WARN]   unresolved: GetWindow
+[WARN]   unresolved: GetDesktopWindow
+[WARN]   unresolved: WindowFromPoint
+[WARN]   unresolved: AdjustWindowRectEx
+[WARN]   unresolved: SetClassLongW
+[WARN]   unresolved: ModifyMenuW
+[WARN]   unresolved: EnumWindows
+[WARN]   unresolved: TrackPopupMenu
+[WARN]   unresolved: SetMenuInfo
+[WARN]   unresolved: CopyAcceleratorTableW
+[WARN]   unresolved: IsDialogMessageW
+[WARN]   unresolved: GetMenuBarInfo
+[WARN]   unresolved: TranslateAcceleratorW
+[WARN]   unresolved: ShowWindowAsync
+[WARN]   unresolved: EndTask
+[WARN]   unresolved: SendDlgItemMessageW
+[WARN]   unresolved: CreateMenu
+[WARN]   unresolved: ChangeWindowMessageFilterEx
+[WARN]   unresolved: SetLayeredWindowAttributes
+[WARN]   unresolved: EndMenu
+[WARN]   unresolved: GetMenuInfo
+[WARN]   unresolved: MsgWaitForMultipleObjects
+[WARN]   unresolved: ExitWindowsEx
+[WARN]   unresolved: LockWorkStation
+[WARN]   unresolved: GetGuiResources
+[WARN]   unresolved: SendMessageTimeoutW
+[WARN]   unresolved: IsHungAppWindow
+[WARN]   unresolved: MapDialogRect
+[WARN]   unresolved: CharNextW
+[WARN]   unresolved: FrameRect
+[WARN]   unresolved: UnregisterClassW
+[WARN]   unresolved: SetMenuItemInfoW
+[WARN]   unresolved: DrawIconEx
+[WARN]   unresolved: CloseClipboard
+[WARN]   unresolved: SetClipboardData
+[WARN]   unresolved: EmptyClipboard
+[WARN]   unresolved: OpenClipboard
+[WARN]   unresolved: GetKeyState
+[WARN]   unresolved: ReleaseCapture
+[WARN]   unresolved: GetCapture
+[WARN]   unresolved: GetClassLongPtrW
+[WARN]   unresolved: SetCapture
+[WARN]   unresolved: IntersectRect
+[WARN]   unresolved: OffsetRect
+[WARN]   unresolved: GetFocus
+[WARN]   unresolved: SetRect
+[WARN]   unresolved: InflateRect
+[WARN]   unresolved: SetScrollInfo
+[WARN]   unresolved: ScrollWindowEx
+[WARN]   unresolved: GetSubMenu
+[WARN]   unresolved: InsertMenuW
+[WARN]   unresolved: DeleteMenu
+[WARN]   unresolved: FindWindowExW
+[WARN]   unresolved: GetWindowThreadProcessId
+[WARN]   unresolved: WaitForInputIdle
+[WARN]   unresolved: FindWindowW
+[WARN]   unresolved: EnumDisplaySettingsW
+[WARN]   unresolved: SetCursor
+[WARN]   unresolved: DestroyIcon
+[WARN]   unresolved: SetCursorPos
+[WARN]   unresolved: TrackMouseEvent
+[WARN]   unresolved: AllowSetForegroundWindow
+[WARN]   unresolved: SetMenuDefaultItem
+[WARN]   unresolved: GetMenuItemInfoW
+[WARN]   unresolved: CheckMenuRadioItem
+[WARN]   unresolved: EnumDisplayDevicesW
+[WARN]   unresolved: DefMDIChildProcW
+[WARN]   unresolved: DefFrameProcW
+[WARN]   unresolved: DefDlgProcW
+[WARN]   unresolved: CreateIconIndirect
+[WARN]   unresolved: BeginDeferWindowPos
+[WARN]   unresolved: EnumChildWindows
+[WARN]   unresolved: DeferWindowPos
+[WARN]   unresolved: EndDeferWindowPos
+[WARN]   unresolved: UnionRect
+[WARN]   unresolved: DrawFrameControl
+[WARN]   unresolved: GetMenuItemCount
+[WARN]   unresolved: GetAncestor
+[WARN]   unresolved: GetWindowModuleFileNameW
+[WARN]   unresolved: IsChild
+[WARN]   unresolved: CallNextHookEx
+[WARN]   unresolved: GetClassNameW
+[WARN]   unresolved: SetClassLongPtrW
+[WARN]   unresolved: IsZoomed
+[WARN]   unresolved: MonitorFromWindow
+[WARN]   unresolved: RedrawWindow
+[WARN]   unresolved: PtInRect
+[WARN]   unresolved: ShowScrollBar
+[WARN]   unresolved: IsWindowVisible
+[WARN]   unresolved: SetScrollPos
+[WARN]   unresolved: DestroyMenu
+[WARN]   unresolved: DrawFocusRect
+[WARN]   unresolved: DuplicateTokenEx
+[WARN]   unresolved: ImpersonateLoggedOnUser
+[WARN]   unresolved: RevertToSelf
+[WARN]   unresolved: RegLoadKeyW
+[WARN]   unresolved: RegUnLoadKeyW
+[WARN]   unresolved: LookupAccountSidW
+[WARN]   unresolved: RegQueryValueW
+[WARN]   unresolved: CryptAcquireContextW
+[WARN]   unresolved: CryptCreateHash
+[WARN]   unresolved: CryptHashData
+[WARN]   unresolved: CryptGetHashParam
+[WARN]   unresolved: CryptDestroyHash
+[WARN]   unresolved: RegEnumKeyW
+[WARN]   unresolved: OpenServiceW
+[WARN]   unresolved: GetServiceDisplayNameW
+[WARN]   unresolved: QueryServiceConfig2W
+[WARN]   unresolved: StartServiceW
+[WARN]   unresolved: ControlService
+[WARN]   unresolved: QueryServiceStatus
+[WARN]   unresolved: QueryServiceObjectSecurity
+[WARN]   unresolved: SetServiceObjectSecurity
+[WARN]   unresolved: MapGenericMask
+[WARN]   unresolved: StartTraceW
+[WARN]   unresolved: ControlTraceW
+[WARN]   unresolved: CloseTrace
+[WARN]   unresolved: OpenTraceW
+[WARN]   unresolved: ProcessTrace
+[WARN]   unresolved: ConvertStringSecurityDescriptorToSecurityDescriptorW
+[WARN]   unresolved: GetSecurityDescriptorDacl
+[WARN]   unresolved: SetSecurityInfo
+[WARN]   unresolved: QueryServiceConfigW
+[WARN]   unresolved: GetLengthSid
+[WARN]   unresolved: CopySid
+[WARN]   unresolved: IsValidSid
+[WARN]   unresolved: GetSidIdentifierAuthority
+[WARN]   unresolved: GetSidSubAuthorityCount
+[WARN]   unresolved: GetSidSubAuthority
+[WARN]   unresolved: LsaEnumerateAccountRights
+[WARN]   unresolved: LsaFreeMemory
+[WARN]   unresolved: LsaClose
+[WARN]   unresolved: CreateRestrictedToken
+[WARN]   unresolved: SetTokenInformation
+[WARN]   unresolved: GetSecurityInfo
+[WARN]   unresolved: InitializeAcl
+[WARN]   unresolved: LookupPrivilegeNameW
+[WARN]   unresolved: SetKernelObjectSecurity
+[WARN]   unresolved: GetAce
+[WARN]   unresolved: AddAce
+[WARN]   unresolved: AddAccessAllowedAce
+[WARN]   unresolved: ConvertSidToStringSidW
+[WARN]   unresolved: FlushTraceW
+[WARN]   unresolved: CreateProcessAsUserW
+[WARN]   unresolved: EnumServicesStatusExW
+[WARN]   unresolved: GetKernelObjectSecurity
+[WARN]   unresolved: ShellExecuteW
+[WARN]   unresolved: SHGetFileInfoW
+[WARN]   unresolved: SHGetPathFromIDListW
+[WARN]   unresolved: SHBrowseForFolderW
+[WARN]   unresolved: SHGetSpecialFolderLocation
+[WARN]   unresolved: SHGetMalloc
+[WARN]   unresolved: ShellExecuteExW
+[WARN]   unresolved: ExtractAssociatedIconW
+[WARN]   unresolved: ExtractIconExW
+[WARN]   unresolved: SHGetStockIconInfo
+[WARN]   unresolved: CoTaskMemFree
+[WARN]   unresolved: CoGetInterfaceAndReleaseStream
+[WARN]   unresolved: CoSetProxyBlanket
+[WARN]   unresolved: CoTaskMemRealloc
+[WARN]   unresolved: CoTaskMemAlloc
+[WARN]   unresolved: CoMarshalInterThreadInterfaceInStream
+[WARN]   unresolved: GradientFill
+[WARN]   unresolved: DwmDefWindowProc
+[WARN]   unresolved: DwmSetWindowAttribute
+[WARN]   unresolved: WinHttpQueryHeaders
+[WARN]   unresolved: WinHttpCloseHandle
+[WARN]   unresolved: WinHttpSendRequest
+[WARN]   unresolved: WinHttpOpen
+[WARN]   unresolved: WinHttpSetOption
+[WARN]   unresolved: WinHttpQueryDataAvailable
+[WARN]   unresolved: WinHttpOpenRequest
+[WARN]   unresolved: WinHttpGetProxyForUrl
+[WARN]   unresolved: WinHttpReceiveResponse
+[WARN]   unresolved: WinHttpReadData
+[WARN]   unresolved: WinHttpConnect
+[WARN]   unresolved: WinHttpWriteData
+[WARN] 333 imports unresolved
+[MessageBoxW] Process Explorer: Not able to run on this version of Windows:
+Missing function: winsta!WinStationConnectW
+[MessageBox] dialog #1 rendered -> miniwin-results/procexp64.exe/screenshots/messagebox_1.bmp
+[MessageBoxW] Process Explorer: Not able to run on this version of Windows:
+Missing function: winsta!WinStationShadow
+[MessageBox] dialog #2 rendered -> miniwin-results/procexp64.exe/screenshots/messagebox_2.bmp
+[MessageBoxW] Process Explorer: Not able to run on this version of Windows:
+Missing function: winsta!WinStationGetProcessSid
+[MessageBox] dialog #3 rendered -> miniwin-results/procexp64.exe/screenshots/messagebox_3.bmp
+
+[CRASH] Signal 11 at RIP=0x6f00690074006e
+  RAX=0x0 RCX=0x7f88d7800cba RDX=0x7ffcef89d11e R8=0x1 R9=0x0
+  RSP=0x7ffcef89d3f0 RBP=0x0
+  g_image_base=0x140000000 g_image_size=0x291000
+  (NOT inside loaded PE)
+  [RIP-MAP] no mapping contains RIP
+  RSI=0x6f004c00200073 RDI=0x64006500640061
+  R8=0x1  R9=0x0 R10=0x7ffcef89d0f0 R11=0x246
+  R12=0x610074006f0054 R13=0x2000230020006c R14=0x6300200066006f R15=0x650074006e006f
+  [SCAN rsp+296] 0x2028aa9 <LOADER>
+  [SCAN rsp+520] 0x140066367 <PE>
+  [SCAN rsp+616] 0x1400a13fd <PE>
+  [SCAN rsp+728] 0x1400c36a6 <PE>
+  [SCAN rsp+744] 0x1401a1ea0 <PE>
+  [SCAN rsp+864] 0x1401a1ea0 <PE>
+  [SCAN rsp+1368] 0x14005c5e0 <PE>
+  [SCAN rsp+1888] 0x140144bd8 <PE>
+  [SCAN rsp+2120] 0x200f377 <LOADER>
+  [SCAN rsp+2288] 0x140000000 <PE>
+  [SCAN rsp+2296] 0x1401a1ea0 <PE>
+  [SCAN rsp+2504] 0x140191bf0 <PE>
+  [SCAN rsp+2544] 0x140144bd8 <PE>
+  [SCAN rsp+2752] 0x140191bf0 <PE>
+  [SCAN rsp+2760] 0x140191bf0 <PE>
+  [SCAN rsp+2776] 0x2035703 <LOADER>
+  [SCAN rsp+2960] 0x140144bd8 <PE>
+  [SCAN rsp+2968] 0x1401a1fd8 <PE>
+  [SCAN rsp+2992] 0x140144bd8 <PE>
+  [SCAN rsp+3000] 0x14007133b <PE>
+  [SCAN rsp+3008] 0x1401a1fd8 <PE>
+  [SCAN rsp+3016] 0x1401a1ea0 <PE>
+  [SCAN rsp+3128] 0x140051108 <PE>
+  [SCAN rsp+3136] 0x1401a1ff0 <PE>
+  [SCAN rsp+3176] 0x1400f2f75 <PE>
+  [SCAN rsp+3192] 0x1401a1ea0 <PE>
+  [SCAN rsp+3232] 0x140000000 <PE>
+  [SCAN rsp+3248] 0x140144bd8 <PE>
+  [SCAN rsp+3480] 0x1401bb298 <PE>
+  [SCAN rsp+3512] 0x1400fc40e <PE>
+  [SCAN rsp+3528] 0x1400fb60c <PE>
+  [SCAN rsp+3536] 0x14018fca0 <PE>
+  [SCAN rsp+3544] 0x140133220 <PE>
+  [SCAN rsp+3672] 0x1400fbd62 <PE>
+  [SCAN rsp+3736] 0x200796b <LOADER>
+  [SCAN rsp+3776] 0x140134d18 <PE>
+  Backtrace (via stack walking):

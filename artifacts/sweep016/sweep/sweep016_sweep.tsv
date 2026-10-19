@@ -1,0 +1,92 @@
+program	exename	run	exit	stub_calls	unresolved	stdout_bytes	stderr_bytes
+adexplorer64	NO-EXE	-	-	-	-	-	-
+autoruns64	Autoruns64.exe	1	139	200	170	117	22594
+autoruns64	Autoruns64.exe	2	139	200	170	117	22594
+autoruns64	Autoruns64.exe	3	139	200	170	117	22594
+bginfo64	Bginfo64.exe	1	0	21	340	113	14381
+bginfo64	Bginfo64.exe	2	0	21	340	113	14381
+bginfo64	Bginfo64.exe	3	0	21	340	113	14381
+coreinfoex64	Coreinfo64.exe	1	0	0
+0	0
+0	16189	272
+coreinfoex64	Coreinfo64.exe	2	0	0
+0	0
+0	16189	272
+coreinfoex64	Coreinfo64.exe	3	0	0
+0	0
+0	16189	272
+cports	cports.exe	1	139	0
+0	74	109	4374
+cports	cports.exe	2	139	0
+0	74	109	4338
+cports	cports.exe	3	139	0
+0	74	109	4374
+diskmon64	Diskmon64.exe	1	139	0
+0	35	115	2867
+diskmon64	Diskmon64.exe	2	139	0
+0	35	115	2867
+diskmon64	Diskmon64.exe	3	139	0
+0	35	115	2867
+pageant	pageant.exe	1	1	0
+0	42	111	1960
+pageant	pageant.exe	2	1	0
+0	42	111	1960
+pageant	pageant.exe	3	1	0
+0	42	111	1960
+procexp64	procexp64.exe	1	139	0
+0	306	115	13536
+procexp64	procexp64.exe	2	139	0
+0	306	115	13536
+procexp64	procexp64.exe	3	139	0
+0	306	115	13536
+procmon64	Procmon64.exe	1	1	0
+0	168	115	6475
+procmon64	Procmon64.exe	2	1	0
+0	168	115	6475
+procmon64	Procmon64.exe	3	1	0
+0	168	115	6475
+produkey	ProduKey.exe	1	139	0
+0	72	113	4132
+produkey	ProduKey.exe	2	139	0
+0	72	113	4132
+produkey	ProduKey.exe	3	139	0
+0	72	113	4132
+putty	putty.exe	1	1	0
+0	109	107	4297
+putty	putty.exe	2	1	0
+0	109	107	4297
+putty	putty.exe	3	1	0
+0	109	107	4297
+puttygen	puttygen.exe	1	139	0
+0	30	113	2309
+puttygen	puttygen.exe	2	139	0
+0	30	113	2309
+puttygen	puttygen.exe	3	139	0
+0	30	113	2309
+rammap64	RAMMap64.exe	1	139	0
+0	49	113	4082
+rammap64	RAMMap64.exe	2	139	0
+0	49	113	4082
+rammap64	RAMMap64.exe	3	139	0
+0	49	113	4082
+searchmyfiles	SearchMyFiles.exe	1	139	0
+0	74	123	3897
+searchmyfiles	SearchMyFiles.exe	2	139	0
+0	74	123	3897
+searchmyfiles	SearchMyFiles.exe	3	139	0
+0	74	123	3897
+winmergeu	WinMergeU.exe	1	139	0
+0	350	115	14333
+winmergeu	WinMergeU.exe	2	139	0
+0	350	115	14333
+winmergeu	WinMergeU.exe	3	139	0
+0	350	115	14333
+zoomit64	ZoomIt64.exe	1	1	0
+0	0
+0	113	261
+zoomit64	ZoomIt64.exe	2	1	0
+0	0
+0	113	261
+zoomit64	ZoomIt64.exe	3	1	0
+0	0
+0	113	261

@@ -1,0 +1,55 @@
+[TRACE] Command line: /home/z/my-project/workspace/miniwin-engineering/artifacts/sweep50/dl/coreinfoex64/Coreinfo64.exe
+
+Coreinfo v4.02 - Dump information on system CPU and memory topology
+Copyright (C) 2008-2026 Mark Russinovich
+Sysinternals - www.sysinternals.com
+
+
+[CRASH] Signal 11 at RIP=0x140004030
+  RAX=0x25 RCX=0x1 RDX=0xffffffffffffffff R8=0x0 R9=0x0
+  RSP=0x7fff7cf9c6c0 RBP=0x7fff7cf9c7c0
+  g_image_base=0x140000000 g_image_size=0x80000
+  RVA=0x4030 (inside loaded PE)
+  Bytes: 66 83 7b 02 01 76 0f 41 8b d5 48 8d 0d 9f e8 04 
+  Return addr: 0x140052890
+  RSI=0x0 RDI=0x2d
+  R8=0x0  R9=0x0 R10=0x0 R11=0x202
+  R12=0xfffffeff R13=0x0 R14=0x1 R15=0x0
+  [SCAN rsp+000] 0x140052890 <PE>
+  [SCAN rsp+552] 0x14002820c <PE>
+  [SCAN rsp+600] 0x14000493d <PE>
+  [SCAN rsp+936] 0x140061220 <PE>
+  [SCAN rsp+1000] 0x1400611d0 <PE>
+  [SCAN rsp+1032] 0x1400611d0 <PE>
+  [SCAN rsp+1288] 0x1400611d0 <PE>
+  [SCAN rsp+1304] 0x2031ef5 <LOADER>
+  [SCAN rsp+1512] 0x140024c32 <PE>
+  [SCAN rsp+1552] 0x14003d598 <PE>
+  [SCAN rsp+1560] 0x14002500a <PE>
+  [SCAN rsp+1568] 0x14003c380 <PE>
+  [SCAN rsp+1576] 0x140060a80 <PE>
+  [SCAN rsp+1640] 0x140012434 <PE>
+  [SCAN rsp+1648] 0x140061150 <PE>
+  [SCAN rsp+1656] 0x14003c380 <PE>
+  [SCAN rsp+1680] 0x14003d590 <PE>
+  [SCAN rsp+1688] 0x140012461 <PE>
+  [SCAN rsp+1696] 0x14003d578 <PE>
+  [SCAN rsp+1704] 0x14005f1a8 <PE>
+  [SCAN rsp+1728] 0x14003d5d8 <PE>
+  [SCAN rsp+1736] 0x1400123d9 <PE>
+  [SCAN rsp+1784] 0x140011fb8 <PE>
+  [SCAN rsp+1800] 0x140012039 <PE>
+  [SCAN rsp+1848] 0x200796b <LOADER>
+  [SCAN rsp+1888] 0x14003d460 <PE>
+  [SCAN rsp+2120] 0x2000020 <LOADER>
+  [SCAN rsp+2216] 0x200275d <LOADER>
+  [SCAN rsp+2224] 0x2002130 <LOADER>
+  [SCAN rsp+3672] 0x2006510 <LOADER>
+  [SCAN rsp+3824] 0x2006510 <LOADER>
+  [SCAN rsp+3864] 0x20082b0 <LOADER>
+  [SCAN rsp+3896] 0x20082d1 <LOADER>
+  Backtrace (via stack walking):
+    [0] RIP=0x140004030 RVA=0x4030
+      [RSP+0] = 0x140052890 (return addr?)
+    [1] RIP=0x140052890 RVA=0x52890
+      [RSP+0] = 0xffffffffffffffff (return addr?)

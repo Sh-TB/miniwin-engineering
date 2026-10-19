@@ -1,0 +1,112 @@
+[TRACE] Command line: /home/z/my-project/workspace/miniwin-engineering/artifacts/sweep50/dl/rammap64/RAMMap64.exe
+[WARN]   unresolved: ImageList_DrawEx
+[WARN]   unresolved: QueryDosDeviceW
+[WARN]   unresolved: GetNumberFormatW
+[WARN]   unresolved: DrawEdge
+[WARN]   unresolved: GetFocus
+[WARN]   unresolved: SetScrollInfo
+[WARN]   unresolved: GetClassLongPtrW
+[WARN]   unresolved: IntersectRect
+[WARN]   unresolved: ScrollWindowEx
+[WARN]   unresolved: GetUpdateRgn
+[WARN]   unresolved: SetCapture
+[WARN]   unresolved: GetCapture
+[WARN]   unresolved: GetKeyState
+[WARN]   unresolved: GetAncestor
+[WARN]   unresolved: IsDialogMessageW
+[WARN]   unresolved: GetClassNameW
+[WARN]   unresolved: EnumChildWindows
+[WARN]   unresolved: GetDesktopWindow
+[WARN]   unresolved: GetClassLongW
+[WARN]   unresolved: OffsetRect
+[WARN]   unresolved: UnionRect
+[WARN]   unresolved: ChildWindowFromPoint
+[WARN]   unresolved: TranslateAcceleratorW
+[WARN]   unresolved: ReleaseCapture
+[WARN]   unresolved: DefDlgProcW
+[WARN]   unresolved: IsZoomed
+[WARN]   unresolved: EndDeferWindowPos
+[WARN]   unresolved: DeferWindowPos
+[WARN]   unresolved: BeginDeferWindowPos
+[WARN]   unresolved: IsChild
+[WARN]   unresolved: DrawFrameControl
+[WARN]   unresolved: PtInRect
+[WARN]   unresolved: DrawFocusRect
+[WARN]   unresolved: Polyline
+[WARN]   unresolved: SelectClipRgn
+[WARN]   unresolved: RectInRegion
+[WARN]   unresolved: GetBkColor
+[WARN]   unresolved: CreateRectRgnIndirect
+[WARN]   unresolved: CreateRectRgn
+[WARN]   unresolved: GetTextExtentPoint32W
+[WARN]   unresolved: FindTextW
+[WARN]   unresolved: GetSaveFileNameW
+[WARN]   unresolved: GetOpenFileNameW
+[WARN]   unresolved: ChooseColorW
+[WARN]   unresolved: StartServiceW
+[WARN]   unresolved: QueryServiceStatusEx
+[WARN]   unresolved: OpenServiceW
+[WARN]   unresolved: ControlService
+[WARN]   unresolved: ShellExecuteW
+[WARN] 50 imports unresolved
+
+[CRASH] Signal 11 at RIP=0x140004db7
+  RAX=0x0 RCX=0x10001 RDX=0x1 R8=0x0 R9=0x0
+  RSP=0x7ffdda000ec0 RBP=0x7ffdda000f89
+  g_image_base=0x140000000 g_image_size=0x63000
+  RVA=0x4db7 (inside loaded PE)
+  Bytes: 4d 8b 01 49 8b d4 ff 15 95 8a 03 00 33 c9 ff 15 
+  Return addr: 0x7f36af677ac0
+  RSI=0x0 RDI=0x10001
+  R8=0x0  R9=0x0 R10=0x0 R11=0x202
+  R12=0x140044798 R13=0x0 R14=0x1 R15=0x0
+  [SCAN rsp+280] 0x1400455d8 <PE>
+  [SCAN rsp+288] 0x14003dd60 <PE>
+  [SCAN rsp+296] 0x203a2f4 <LOADER>
+  [SCAN rsp+336] 0x14003dd60 <PE>
+  [SCAN rsp+344] 0x1400455d8 <PE>
+  [SCAN rsp+352] 0x14003dd60 <PE>
+  [SCAN rsp+712] 0x14000f51f <PE>
+  [SCAN rsp+800] 0x140000000 <PE>
+  [SCAN rsp+872] 0x14000eb29 <PE>
+  [SCAN rsp+936] 0x140004a30 <PE>
+  [SCAN rsp+952] 0x140000000 <PE>
+  [SCAN rsp+992] 0x1400455d8 <PE>
+  [SCAN rsp+1032] 0x140017185 <PE>
+  [SCAN rsp+1152] 0x140045e10 <PE>
+  [SCAN rsp+1200] 0x140045e10 <PE>
+  [SCAN rsp+1240] 0x140045e10 <PE>
+  [SCAN rsp+1264] 0x140045ec0 <PE>
+  [SCAN rsp+1288] 0x20311e0 <LOADER>
+  [SCAN rsp+1304] 0x140016650 <PE>
+  [SCAN rsp+1496] 0x140016650 <PE>
+  [SCAN rsp+1512] 0x140045ec0 <PE>
+  [SCAN rsp+1528] 0x140012eee <PE>
+  [SCAN rsp+1624] 0x140044a70 <PE>
+  [SCAN rsp+1736] 0x140045ea8 <PE>
+  [SCAN rsp+1760] 0x140044a70 <PE>
+  [SCAN rsp+1864] 0x204cc7b <LOADER>
+  [SCAN rsp+2312] 0x140000000 <PE>
+  [SCAN rsp+2472] 0x140000000 <PE>
+  [SCAN rsp+2608] 0x140000000 <PE>
+  [SCAN rsp+2648] 0x140011db0 <PE>
+  [SCAN rsp+2664] 0x20311e0 <LOADER>
+  [SCAN rsp+2904] 0x140017ca4 <PE>
+  [SCAN rsp+2968] 0x140059608 <PE>
+  [SCAN rsp+3000] 0x20110fc <LOADER>
+  [SCAN rsp+3176] 0x14005ac20 <PE>
+  [SCAN rsp+3208] 0x1400203c6 <PE>
+  [SCAN rsp+3224] 0x14003d998 <PE>
+  [SCAN rsp+3240] 0x140033ef0 <PE>
+  [SCAN rsp+3288] 0x140058520 <PE>
+  [SCAN rsp+3320] 0x14002ef1d <PE>
+  [SCAN rsp+3368] 0x14001fed2 <PE>
+  [SCAN rsp+3432] 0x200796b <LOADER>
+  [SCAN rsp+3472] 0x14003d578 <PE>
+  [SCAN rsp+3800] 0x200275d <LOADER>
+  [SCAN rsp+3808] 0x2002130 <LOADER>
+  Backtrace (via stack walking):
+    [0] RIP=0x140004db7 RVA=0x4db7
+      [RSP+0] = 0x7f36af677ac0 (return addr?)
+    [1] RIP=0x7f36af677ac0 (outside PE, possible shared lib)
+    [2] RIP=0x7f36af677ac0 (outside PE, possible shared lib)

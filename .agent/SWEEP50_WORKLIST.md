@@ -603,3 +603,78 @@ gate that must be re-accepted when the port lands).
       miniwin_calc.c (pure GDI + WM_KEYDOWN keyboard calc, no child
       controls) — 3x exit0, display "1+2=" result "3", frame SHAs
       byte-identical x3. Wire into scripts/ as a permanent acceptance.
+
+## SWEEP-016 wave (2026-10-19) — elephant batch: 2 gates closed, patch landed, root-causes fixed
+- [x] **SW-801a-e LANDED** resource/version port batch applied from
+      .agent/patches/sweep015_resource_version_port.patch (3-way, conflicts
+      resolved: kept landed SW-801g ordinal path, took VerQueryValueA ENTRY;
+      dedup UXTHEME block; stray-brace from git apply -3 fixed). Tree now
+      carries SW-801a (IS_INTRESOURCE), SW-801b (2-byte UTF-16 name compare),
+      SW-801c (NamedEntries/IdEntries at 12/14 + language level accepts all),
+      SW-801d (g_res_dir_base + LockResource data ptr), SW-801e (VS_VERSIONINFO
+      six-pack + VerQueryValueA). G1 12/12 re-pinned sha a5d94299.
+- [x] **SW-801l GLPIEx rewrite + RelationAll** — full multi-entry topology
+      (RelationProcessorCore xN + RelationNumaNode + RelationProcessorPackage
+      + RelationGroup, two-pass sizing); unknown cls now honest
+      ERROR_INVALID_PARAMETER (success-with-0-entries made Coreinfo64 walk
+      uninit stack); cls=0xFFFF = RelationAll (phnt) honored. Coreinfo64
+      139->exit0 x3 with FULL topology dump (16,189 B stdout: microcode,
+      processor signature, Cache Map, Group Map). Closes SW-652 + SW-561
+      (version gate now passes).
+- [x] **SW-801m NUMA old-SDK layout** — NUMA_NODE_RELATIONSHIP GroupCount at
+      sub+22 / GROUP_AFFINITY at sub+24 (Reserved[18], Win7-Win10 SDK layout);
+      the shifted Win11 layout made Coreinfo64 NUMA-map parser read garbage.
+- [x] **SW-801n BUG-072** load_pe hardening: fopen(dir) succeeds on Linux ->
+      ftell -1 -> malloc((size_t)-1) NULL -> SEGV at dos->e_magic. Now
+      stat()+S_ISREG + every I/O checked. ROOT CAUSE of "Bginfo64 exit 139
+      0-stub" and part of SW-801h.
+- [x] **SW-801o BUG-073** BSTR issuance registry (BUG-065 pattern):
+      bstr_alloc_len tracks; SysFreeString frees only issued BSTRs, reports
+      foreign ones (Bginfo64 crashed free()ing a foreign BSTR inside libc,
+      frame mw_SysFreeString). Bginfo64 139->exit0 x3. Closes SW-651.
+- [x] **SW-801k winsta.dll pseudo-module LANDED** — WinStationConnectW /
+      Shadow / GetProcessSid / QueryInformationW / FreeMemory /
+      CloseServer / OpenServerW with honest contracts; Procexp64's
+      GetProcAddress presence-probes no longer render "Not able to run on
+      this version of Windows" dialogs (3 dialogs -> 0).
+- [x] **SW-801p SW-801h ROOT CAUSE CORRECTION** — the SWEEP-015 sweep ran
+      against artifacts/sweep50/dl_extract/*.exe, a directory that no longer
+      exists (untracked scratch lost between sessions). The 139s are NOT
+      environment sensitivity: the current corpus is the re-downloaded
+      2026-era official builds (dl/<dir>/<exe>), which need more APIs than
+      the lost dl_extract copies. Re-baselined x3 (artifacts/sweep016/sweep/
+      sweep016_sweep.tsv, 16 programs, auto-resolved exe paths).
+- [ ] **SW-802** rammap64 139 x3: RIP 0x140004db7 mov (%r9),r8 r9=NULL before
+      SetPropW; 56 unresolved; fix prop-cookie source, re-run x3.
+- [ ] **SW-803** produkey 139 x3: RIP 0x140022f24 RAX=0x140022ef0
+      RCX=0x10001 RDX=1 (shared NirSoft signature).
+- [ ] **SW-804** cports 139 x3: RIP 0x140002119 RCX=0x10001 RDX=1 (same
+      signature family as SW-803 — solve together).
+- [ ] **SW-805** diskmon64 139 x3: RIP 0x14000671c RAX=0 RCX=0x10001 RDX=1.
+- [ ] **SW-806** searchmyfiles 139 x3: RIP 0x140028001 RAX=0xffffffff
+      RCX=0x120 (NirSoft).
+- [ ] **SW-807** puttygen 139 x3: RIP=0x0 call through NULL fn-ptr
+      (SW-552 family).
+- [ ] **SW-808** winmergeu 139 x3: RIP 0x14012d0c2 RAX=0 (big GUI, MFC).
+- [ ] **SW-809** procexp64 139 x3: winsta gates now pass (SW-801k); new
+      frontier = CLR-adjacent init (COMPLUS_FodPath, repeated
+      NtOpenSymbolicLinkObject('') loop, 319 unresolved). RIP executes
+      UTF-16 string bytes 0x6f00690074006e.
+- [ ] **SW-810** autoruns64 139 x3 (was exit0 on lost dl_extract build):
+      symbolize with SWEEP-011 method, one BUG-*, re-run x3.
+- [ ] **SW-811..SW-815** per-program unresolved-import closure to exit0:
+      rammap64 (56), bginfo64 (21 stubs->0), coreinfoex64 (12->0 done),
+      procexp64 (319), autoruns64 (364) — one item per program, each with
+      measured stub/unresolved counts from sweep016_sweep.tsv.
+- [ ] **SW-816** sweep hygiene: sweep script uses dl/<dir> auto-resolve
+      (scripts/sweep016_broad_sweep.sh); NEVER pass a directory to the
+      loader (BUG-072); keep dl_extract replacement INSIDE the repo.
+- [ ] **SW-817..SW-850** 3x continuation queue (34 items): ws2_32 ladder
+      tail (getaddrinfo/getnameinfo family x5), winhttp honest family x3
+      (Procexp64 needs), oleaut32 SafeArray x5 (SW-704..706), CRT tail x5
+      (SW-726..731), GUI frontier x5 (MFC dialogs WinMergeU, putty 3rd
+      dialog), printing x3 (StartDoc family honest), WMI/COM x3
+      (CoSetProxyBlanket callers), perf counters x2, debug APIs x3
+      (SuspendThread/GetThreadContext family), closure/verify x2
+      (lz4/zstd/trurl re-pin after every loader change; 14-section report
+      update per user mandate).

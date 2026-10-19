@@ -877,6 +877,7 @@ static const char* g_known_dlls[] = {
     "gdiplus.dll", "windowscodecs.dll", "propsys.dll", "setupapi.dll",
     "cfgmgr32.dll", "devobj.dll", "winusb.dll", "hid.dll", "ws2help.dll",
     "bcryptprimitives.dll", /* SWEEP-002: Go runtime.osinit + Rust std */
+    "winsta.dll",           /* SWEEP-016 SW-801k: Procexp64 version probe via GetProcAddress */
 };
 static void* mw_known_dll_handle(const char* low) {
     size_t nl = strlen(low);
@@ -920,6 +921,36 @@ static const char* mw_uxtheme_ord_lookup(uint16_t ordinal) {
     for (size_t i = 0; i < sizeof(g_uxtheme_ord)/sizeof(g_uxtheme_ord[0]); i++)
         if (g_uxtheme_ord[i].ord == ordinal) return g_uxtheme_ord[i].name;
     return NULL;
+}
+
+/* ---- SWEEP-016 SW-801k: winsta.dll (Terminal Services) family ----
+ * Procexp64 presence-probes these via GetProcAddress to sniff the Windows
+ * version; each miss rendered "Not able to run on this version of Windows"
+ * and the probe loop eventually blew the stack (SW-801h 139). Presence with
+ * honest failure contracts is what a real desktop session gives them. */
+__attribute__((ms_abi)) int mw_WinStationConnectW(void* srv, uint32_t sid, uint32_t target, const void* pwd, int wait) {
+    (void)srv; (void)sid; (void)target; (void)pwd; (void)wait;
+    return 1; /* TRUE: already connected to the interactive session */
+}
+__attribute__((ms_abi)) int mw_WinStationShadow(void* srv, const void* target, uint32_t kbd, uint32_t mouse, uint32_t sound) {
+    (void)srv; (void)target; (void)kbd; (void)mouse; (void)sound;
+    return 0; /* FALSE: shadowing refused (no remote stack) */
+}
+__attribute__((ms_abi)) int mw_WinStationGetProcessSid(void* srv, uint32_t pid, uint64_t flags, void* sid, uint32_t* len) {
+    (void)srv; (void)pid; (void)flags; (void)sid;
+    if (len) *len = 0;
+    return 0; /* FALSE: console session, no TS SID */
+}
+__attribute__((ms_abi)) int mw_WinStationQueryInformationW(void* srv, uint32_t sid, uint32_t cls, void* buf, uint32_t blen, uint32_t* rlen) {
+    (void)srv; (void)sid; (void)cls; (void)buf; (void)blen;
+    if (rlen) *rlen = 0;
+    return 0; /* FALSE: unsupported info class */
+}
+__attribute__((ms_abi)) void mw_WinStationFreeMemory(void* p) { free(p); }
+__attribute__((ms_abi)) int mw_WinStationCloseServer(void* srv) { (void)srv; return 1; }
+__attribute__((ms_abi)) void* mw_WinStationOpenServerW(const void* name) {
+    (void)name;
+    return NULL; /* no TS server handle on a console session */
 }
 
 
@@ -6782,30 +6813,149 @@ __attribute__((ms_abi)) void mw_GetNativeSystemInfo(void* si) { mw_GetSystemInfo
  * ImageMagick's CRT init). We expose one RelationProcessorCore entry with
  * the full processor mask. */
 __attribute__((ms_abi)) uint32_t mw_GetLogicalProcessorInformationEx(int cls, void* buf, uint32_t* len) {
+    /* SWEEP-016 SW-652b: full multi-entry topology. Coreinfo64 (a topology
+     * dumper) walked past the old single-entry 48-byte buffer and crashed on
+     * garbage (RIP 0x140003d6f, cmpw [rbx+2]). Real layout, all three
+     * Relation classes the tool wants:
+     *   RelationProcessorCore(0) xN   : 8 + PROCESSOR_RELATIONSHIP(40) = 48
+     *   RelationNumaNode(1) x1        : 8 + NUMA_NODE_RELATIONSHIP(40) = 48
+     *   RelationProcessorPackage(3) x1: 48 (same PROCESSOR_RELATIONSHIP)
+     *   RelationGroup(4) x1           : 8 + {2 DWORDs} + GROUP_INFO(48) = 64
+     * PROCESSOR_RELATIONSHIP x64: Flags(1) EfficiencyClass(1) Reserved(20)
+     *                             GroupCount(2) GROUP_AFFINITY(16) = 40 */
     MW_TRACE("GetLogicalProcessorInformationEx(cls=%d)", cls);
     if (!len) { mw_SetLastError(87); return 0; }
-    /* RelationProcessorCore entry: {Relationship=0, Size=48,
-     *   PROCESSOR_RELATIONSHIP { Flags=1 (PerformanceCounters? SMT off -> 0),
-     *     EfficiencyClass=0, Reserved[20], GroupCount=1,
-     *     GROUP_AFFINITY { Mask, Group=0, Reserved[6] } } } */
-    const uint32_t needed = 48;
+    /* RelationAll = 0xFFFF (phnt/ntapi, undocumented-but-real): Coreinfo64
+     * probes with it first; real Windows returns the full set. */
+    if (cls == 0xFFFF) cls = -1;
+    uint32_t ncpu = (uint32_t)sysconf(_SC_NPROCESSORS_ONLN);
+    if (!ncpu) ncpu = 1;
+    if (ncpu > 64) ncpu = 64;
+    uint64_t all = (ncpu >= 64) ? ~0ull : ((1ull << ncpu) - 1);
+    /* which classes the caller asked for: -1 = all */
+    int want_core = (cls == -1 || cls == 0);
+    int want_numa = (cls == -1 || cls == 1);
+    int want_pkg  = (cls == -1 || cls == 3);
+    int want_grp  = (cls == -1 || cls == 4);
+    uint32_t needed = 0;
+    if (want_core) needed += ncpu * 48;
+    if (want_numa) needed += 48;
+    if (want_pkg)  needed += 48;
+    if (want_grp)  needed += 64;
+    if (!needed) { /* unknown class: real Windows = ERROR_INVALID_PARAMETER */
+        *len = 0;
+        mw_SetLastError(87);
+        return 0; /* SW-652b: returning success-with-0-entries made Coreinfo
+                     walk uninitialized stack as entry data (RIP 0x140004030) */
+    }
     if (!buf || *len < needed) {
-        *len = needed;
+        if (needed) *len = needed;
         mw_SetLastError(122); /* ERROR_INSUFFICIENT_BUFFER */
         return 0;
     }
     uint8_t* p = (uint8_t*)buf;
     memset(p, 0, needed);
-    uint32_t ncpu = (uint32_t)sysconf(_SC_NPROCESSORS_ONLN);
-    if (!ncpu) ncpu = 1;
-    *(uint32_t*)(p + 0)  = 0;        /* RelationProcessorCore */
-    *(uint32_t*)(p + 4)  = needed;   /* Size */
-    *(uint8_t*)(p + 8)   = 0;        /* Flags: no SMT */
-    *(uint16_t*)(p + 8 + 1 + 1 + 20) = 1;          /* GroupCount */
-    *(uint64_t*)(p + 8 + 24) = (ncpu >= 64) ? ~0ull : ((1ull << ncpu) - 1); /* GroupMask.Mask */
-    /* GroupMask.Group at +8+24+8 = 0 */
-    *len = needed;
+    if (want_core) {
+        for (uint32_t i = 0; i < ncpu; i++) {
+            *(uint32_t*)(p + 0) = 0;            /* RelationProcessorCore */
+            *(uint32_t*)(p + 4) = 48;           /* Size */
+            /* Flags=0: no SMT; EfficiencyClass=0; Reserved[20]=0 */
+            *(uint16_t*)(p + 8 + 22) = 1;       /* GroupCount */
+            *(uint64_t*)(p + 8 + 24) = 1ull << i;
+            *(uint16_t*)(p + 8 + 32) = 0;       /* Group 0 */
+            p += 48;
+        }
+    }
+    if (want_numa) {
+        /* OLD-SDK NUMA_NODE_RELATIONSHIP: NodeNumber(4) Reserved[18]
+         * GroupCount(2)@sub+22 GROUP_AFFINITY(16)@sub+24 — sub=40, entry=48.
+         * Coreinfo64 (Sysinternals, old headers) reads GroupCount at +22; the
+         * shifted Win11 layout made its NUMA map parser read garbage. */
+        *(uint32_t*)(p + 0) = 1;                /* RelationNumaNode */
+        *(uint32_t*)(p + 4) = 48;
+        *(uint32_t*)(p + 8) = 0;                /* NodeNumber 0 */
+        /* Reserved[18] @+12..29; GroupCount @+30; GA @+32 (same as core/pkg) */
+        *(uint16_t*)(p + 30) = 1;
+        *(uint64_t*)(p + 32) = all;
+        *(uint16_t*)(p + 40) = 0;
+        p += 48;
+    }
+    if (want_pkg) {
+        *(uint32_t*)(p + 0) = 3;                /* RelationProcessorPackage */
+        *(uint32_t*)(p + 4) = 48;
+        *(uint16_t*)(p + 8 + 22) = 1;
+        *(uint64_t*)(p + 8 + 24) = all;
+        *(uint16_t*)(p + 8 + 32) = 0;
+        p += 48;
+    }
+    if (want_grp) {
+        *(uint32_t*)(p + 0) = 4;                /* RelationGroup */
+        *(uint32_t*)(p + 4) = 64;
+        *(uint32_t*)(p + 8) = 1;                /* ActiveGroupCount */
+        *(uint32_t*)(p + 12) = 1;               /* MaximumGroupCount */
+        /* PROCESSOR_GROUP_INFO at +16: MaxCount, ActiveCount, Reserved[38], Mask */
+        *(uint8_t*)(p + 16) = (uint8_t)ncpu;
+        *(uint8_t*)(p + 17) = (uint8_t)ncpu;
+        *(uint64_t*)(p + 16 + 40) = all;
+        p += 64;
+    }
+    *len = (uint32_t)(p - (uint8_t*)buf);
     return 1;
+}
+__attribute__((ms_abi)) int mw_GetNumaNodeProcessorMask(uint8_t node, uint64_t* mask) {
+    /* non-Ex form (Coreinfo64 import list): UCHAR Node, PULONGLONG mask */
+    if (!mask) { mw_SetLastError(87); return 0; }
+    if (node != 0) { *mask = 0; return 0; } /* only node 0 exists */
+    long n = sysconf(_SC_NPROCESSORS_ONLN);
+    if (n <= 0) n = 1;
+    *mask = (n >= 64) ? ~0ull : ((1ull << n) - 1);
+    return 1;
+}
+__attribute__((ms_abi)) int mw_GetProcessWorkingSetSize(void* h, size_t* min_ws, size_t* max_ws) {
+    /* honest defaults: Windows gives 200KB/1MB-4MB working set bounds; the
+     * guest only reads them for display/debugging. */
+    (void)h;
+    if (min_ws) *min_ws = 200 * 1024;
+    if (max_ws) *max_ws = 4 * 1024 * 1024;
+    return 1;
+}
+__attribute__((ms_abi)) int mw_SetProcessWorkingSetSize(void* h, size_t min_ws, size_t max_ws) {
+    /* flat memory model: accept -1/-1 trim and any bounds */
+    (void)h; (void)min_ws; (void)max_ws;
+    return 1;
+}
+__attribute__((ms_abi)) int mw_VirtualLock(void* addr, size_t size) {
+    (void)addr; (void)size; return 1; /* pages stay resident anyway */
+}
+__attribute__((ms_abi)) int mw_VirtualUnlock(void* addr, size_t size) {
+    (void)addr; (void)size; return 1;
+}
+__attribute__((ms_abi)) void* mw_SetCursor(void* cur) {
+    return cur; /* previous cursor: GDI-lite has no cursor state; identity keeps callers sane */
+}
+__attribute__((ms_abi)) int mw_InflateRect(void* rc, int dx, int dy) {
+    if (!rc) return 0;
+    int32_t* r = (int32_t*)rc;
+    r[0] -= dx; r[1] -= dy; r[2] += dx; r[3] += dy;
+    return 1;
+}
+__attribute__((ms_abi)) int mw_StartDocW(void* hdc, const void* docinfo) {
+    (void)hdc; (void)docinfo;
+    mw_SetLastError(288); /* ERROR_PRINT_CANCELLED: no printer backend */
+    return -1;
+}
+__attribute__((ms_abi)) int mw_StartPage(void* hdc) { (void)hdc; return -1; }
+__attribute__((ms_abi)) int mw_EndPage(void* hdc) { (void)hdc; return -1; }
+__attribute__((ms_abi)) int mw_EndDoc(void* hdc) { (void)hdc; return -1; }
+__attribute__((ms_abi)) int mw_PrintDlgW(void* pdlg) {
+    /* honest cancel: no print backend, user pressed Cancel */
+    (void)pdlg;
+    mw_SetLastError(0);
+    return 0;
+}
+__attribute__((ms_abi)) long mw_CoSetProxyBlanket(void* p, uint32_t a, uint32_t b, void* c, uint32_t d, uint32_t e, void* f, uint32_t g) {
+    (void)p; (void)a; (void)b; (void)c; (void)d; (void)e; (void)f; (void)g;
+    return 0; /* S_OK: WMI probes call this before use; blanket is vacuous here */
 }
 __attribute__((ms_abi)) int mw_IsProcessorFeaturePresent(uint32_t feat) {
     /* x64 hosts: SSE/SSE2/compare-exchange/3DNOW-none. Bits CRT checks. */
@@ -8204,32 +8354,48 @@ __attribute__((ms_abi)) int mw_WaitOnAddress_stub(void) { return 0; }
 /* FindResourceA/W return an HRSRC = pointer to the IMAGE_RESOURCE_DATA_ENTRY;
  * LoadResource/LockResource resolve it to the data VA; SizeofResource reads
  * its Size field. */
+static uint8_t* g_res_dir_base = NULL; /* section base of the last resource walk (SW-801d) */
 static int w3_res_cmp_name(const uint8_t* dir_base, uint32_t name_off, const char* aname, const wchar_t* wname) {
+    /* SWEEP-015 SW-801a: IS_INTRESOURCE — FindResource*(NULL, MAKEINTRESOURCE(5),
+     * ...) passes numeric type/name as low pointers, never strings. */
+    int a_num = (aname && (uintptr_t)aname > 0 && (uintptr_t)aname <= 0xFFFF) ? (int)(uintptr_t)aname : -1;
+    int w_num = (wname && (uintptr_t)wname > 0 && (uintptr_t)wname <= 0xFFFF) ? (int)(uintptr_t)wname : -1;
     if (name_off & 0x80000000u) {
-        /* string entry: WORD len, then UTF-16 */
+        /* string entry: numeric names never match a string entry */
+        if (w_num >= 0 || a_num >= 0) return 1;
+        /* string entry: WORD len, then UTF-16. SW-801b FIX: compare in real
+         * 2-byte units — the old (wchar_t*) cast read the guest's UTF-16 as
+         * 4-byte host wchars, which only worked for even-length names
+         * (odd names like L"MAIN_WINDOW" misaligned the terminator check). */
         const uint8_t* s = dir_base + (name_off & 0x7FFFFFFFu);
         uint16_t len = *(const uint16_t*)s;
-        const wchar_t* ws = (const wchar_t*)(s + 2);
+        const uint16_t* ws = (const uint16_t*)(s + 2);
         if (wname) {
+            const uint16_t* wn = (const uint16_t*)wname;
             for (uint16_t i = 0; i < len; i++) {
-                wchar_t c = ws[i];
-                wchar_t w = wname[i];
-                if (towlower(c) != towlower(w)) return 1;
+                uint16_t c = ws[i], w = wn[i];
+                uint16_t lc = (c >= 'A' && c <= 'Z') ? (uint16_t)(c + 32) : c;
+                uint16_t lw = (w >= 'A' && w <= 'Z') ? (uint16_t)(w + 32) : w;
+                if (lc != lw) return 1;
                 if (!w) return 1;
             }
-            return wname[len] ? 1 : 0;
+            return wn[len] ? 1 : 0;
         }
         if (!aname) return 1;
         for (uint16_t i = 0; i < len; i++) {
-            wchar_t c = ws[i];
+            uint16_t c = ws[i];
             char a = aname[i];
-            if (towlower(c) != (wchar_t)towlower((unsigned char)a)) return 1;
+            int lc = (c >= 'A' && c <= 'Z') ? c + 32 : c;
+            int la = (a >= 'A' && a <= 'Z') ? a + 32 : a;
+            if (lc != la) return 1;
             if (!a) return 1;
         }
         return aname[len] ? 1 : 0;
     }
     /* ID entry */
     uint32_t id = name_off;
+    if (w_num >= 0) return (w_num == (int)id) ? 0 : 1;
+    if (a_num >= 0) return (a_num == (int)id) ? 0 : 1;
     long want = wname ? -1 : (aname ? atol(aname) : -1);
     if (wname) {
         wchar_t buf[16];
@@ -8272,11 +8438,17 @@ static void* w3_res_find(void* hmod, const char* aname, const wchar_t* wname, co
     }
     if (!rsrc_rva) return NULL;
     const uint8_t* base = g_image_base + rsrc_rva;
+    g_res_dir_base = (uint8_t*)base; /* SW-801d: LockResource/dialog data resolve */
     /* level 1: type, level 2: name, level 3: language */
     const uint8_t* level = base;
     for (int depth = 0; depth < 3; depth++) {
-        uint16_t named = *(const uint16_t*)(level + 8);
-        uint16_t ided = *(const uint16_t*)(level + 10);
+        /* SW-801c FIX: IMAGE_RESOURCE_DIRECTORY = {Characteristics(4),
+         * TimeDateStamp(4), Major(2), Minor(2), NamedEntries(2)@12,
+         * IdEntries(2)@14}. The old read at +8/+10 fetched the version
+         * words (always 0) — the walk saw zero entries and EVERY
+         * FindResource honestly failed. Offsets corrected to 12/14. */
+        uint16_t named = *(const uint16_t*)(level + 12);
+        uint16_t ided = *(const uint16_t*)(level + 14);
         uint16_t count = named + ided;
         const uint8_t* entries = level + 16;
         const uint8_t* next = NULL;
@@ -8284,8 +8456,12 @@ static void* w3_res_find(void* hmod, const char* aname, const wchar_t* wname, co
             uint32_t nm = *(const uint32_t*)(entries + i * 8);
             uint32_t of = *(const uint32_t*)(entries + i * 8 + 4);
             int match;
-            if (depth == 0) match = w3_res_cmp_name(base, nm, atype, wtype) == 0;
-            else match = w3_res_cmp_name(base, nm, aname, wname) == 0;
+            /* SW-801c: level 3 is the LANGUAGE level — real FindResource
+             * accepts any language; comparing the name again there made
+             * every string-named resource unfindable. */
+            if (depth == 0)      match = w3_res_cmp_name(base, nm, atype, wtype) == 0;
+            else if (depth == 1) match = w3_res_cmp_name(base, nm, aname, wname) == 0;
+            else                 match = 1;
             if (match) {
                 if (of & 0x80000000u) {
                     next = base + (of & 0x7FFFFFFFu);
@@ -8324,7 +8500,13 @@ __attribute__((ms_abi)) void* mw_LoadResource(void* hmod, void* hrsrc) {
     return hrsrc; /* data entry VA doubles as the resource handle */
 }
 __attribute__((ms_abi)) void* mw_LockResource(void* hrsrc) {
-    return hrsrc;
+    /* SW-801d real contract: LockResource returns a pointer to the DATA
+     * bytes, not the DATA_ENTRY header. entry->OffsetToData is an RVA
+     * FROM THE IMAGE BASE (verified on rammap64: 0x5e640 -> 01 00 ff ff
+     * DLGTEMPLATEEX). Guests that never called FindResource keep the old
+     * identity fallback. */
+    if (!hrsrc || !g_image_base) return hrsrc;
+    return g_image_base + *(const uint32_t*)hrsrc;
 }
 __attribute__((ms_abi)) uint32_t mw_SizeofResource(void* hmod, void* hrsrc) {
     if (!hrsrc) return 0;
@@ -9173,10 +9355,32 @@ __attribute__((ms_abi)) void* mw_LoadLibraryExA(const char* name, void* file, ui
  * ==================================================================== */
 
 /* ---- OLEAUT32: BSTR = [uint32 byte_len][UTF-16 data][NUL] ---- */
+/* BUG-073: BSTR issuance registry. Guests free BSTRs they did not get from
+ * us (literals, stack BSTRs, strings from unimplemented APIs) — free()ing
+ * those crashes inside libc (Bginfo64 SW-651 RIP-in-libc, frame mw_SysFreeString).
+ * Only BSTRs we issued are freeable; foreign pointers are reported and kept
+ * (leak-safe, crash-free). Same honesty pattern as the BUG-065 FILE* registry. */
+static void** g_bstr_issued = NULL;
+static size_t g_bstr_issued_n = 0, g_bstr_issued_cap = 0;
+static void bstr_track(uint8_t* raw) {
+    if (g_bstr_issued_n == g_bstr_issued_cap) {
+        size_t nc = g_bstr_issued_cap ? g_bstr_issued_cap * 2 : 64;
+        void** nb = (void**)realloc(g_bstr_issued, nc * sizeof(void*));
+        if (!nb) return;
+        g_bstr_issued = nb; g_bstr_issued_cap = nc;
+    }
+    g_bstr_issued[g_bstr_issued_n++] = raw;
+}
+static int bstr_is_issued(uint8_t* raw) {
+    for (size_t i = 0; i < g_bstr_issued_n; i++)
+        if (g_bstr_issued[i] == raw) { g_bstr_issued[i] = g_bstr_issued[--g_bstr_issued_n]; return 1; }
+    return 0;
+}
 static void* bstr_alloc_len(const uint16_t* src, uint32_t units) {
     uint32_t bytes = units * 2;
     uint8_t* raw = (uint8_t*)malloc(4 + bytes + 2);
     if (!raw) return NULL;
+    bstr_track(raw);
     *(uint32_t*)raw = bytes;
     uint16_t* data = (uint16_t*)(raw + 4);
     if (src) memcpy(data, src, bytes);
@@ -9201,7 +9405,16 @@ __attribute__((ms_abi)) uint32_t mw_SysStringByteLen(const uint16_t* bstr) {
 }
 __attribute__((ms_abi)) void mw_SysFreeString(uint16_t* bstr) {
     if (!bstr) return;
-    free((uint8_t*)bstr - 4);
+    uint8_t* raw = (uint8_t*)bstr - 4;
+    if (!bstr_is_issued(raw)) {
+        /* BUG-073: foreign BSTR (guest-built or from an unimplemented API).
+         * Windows frees it because oleaut32 owns all BSTRs; we cannot free
+         * memory we did not allocate — report and keep. */
+        MW_TRACE("SysFreeString(foreign BSTR %p, len-prefix=%u) -> kept",
+                 (void*)bstr, *(uint32_t*)raw);
+        return;
+    }
+    free(raw);
 }
 /* VARIANT x64: WORD vt; WORD r1,r2,r3; union { ... void* bstrVal @+8 } */
 __attribute__((ms_abi)) long mw_VariantClear(void* pvarg) {
@@ -9665,6 +9878,59 @@ __attribute__((ms_abi)) int mw_GetProcessTimes(void* h, uint64_t* create, uint64
 __attribute__((ms_abi)) void* mw_SetThreadAffinityMask(void* h, uintptr_t mask) {
     (void)h; (void)mask;
     return (void*)(uintptr_t)1; /* previous mask */
+}
+
+/* SWEEP-016 SW-652: CPU-group/NUMA topology family. Coreinfo64 (Sysinternals)
+ * calls GetNumaHighestNodeNumber + SetThreadGroupAffinity during init and
+ * crashed on the FALSE path (guest read uninitialized group data). Real
+ * Windows on this host: one processor group, all CPUs in it, NUMA node 0.
+ * GROUP_AFFINITY x64 = { KAFFINITY Mask; WORD Group; WORD Reserved[3] }. */
+static uint64_t mw_host_cpu_mask(void) {
+    long n = sysconf(_SC_NPROCESSORS_ONLN);
+    if (n <= 0) n = 1;
+    if (n >= 64) return ~0ull;
+    return (1ull << n) - 1;
+}
+__attribute__((ms_abi)) int mw_GetNumaHighestNodeNumber(uint32_t* highest) {
+    if (!highest) { mw_SetLastError(87); return 0; }
+    *highest = 0; /* single NUMA node on the host */
+    return 1;     /* BOOL TRUE */
+}
+__attribute__((ms_abi)) int mw_SetThreadGroupAffinity(void* h, const void* ga, void* prev) {
+    (void)h;
+    /* Honest host behavior: affinity setting "succeeds" (mask is advisory on
+     * a flat scheduler); fill PreviousGroupAffinity like the real API. */
+    if (prev && ga) memcpy(prev, ga, 16);
+    return 1;
+}
+__attribute__((ms_abi)) int mw_GetThreadGroupAffinity(void* h, void* ga) {
+    (void)h;
+    if (!ga) { mw_SetLastError(87); return 0; }
+    uint8_t* p = (uint8_t*)ga;
+    *(uint64_t*)p = mw_host_cpu_mask();
+    *(uint16_t*)(p + 8) = 0; /* group 0 */
+    memset(p + 10, 0, 6);
+    return 1;
+}
+__attribute__((ms_abi)) int mw_GetNumaNodeProcessorMaskEx(uint16_t node, void* mask) {
+    if (node != 0 || !mask) return 0; /* only node 0 exists */
+    uint8_t* p = (uint8_t*)mask;
+    *(uint64_t*)p = mw_host_cpu_mask();
+    *(uint16_t*)(p + 8) = 0;
+    memset(p + 10, 0, 6);
+    return 1;
+}
+__attribute__((ms_abi)) uint32_t mw_GetActiveProcessorCount(uint16_t group) {
+    if (group != 0) return 0;
+    uint32_t n = (uint32_t)sysconf(_SC_NPROCESSORS_ONLN);
+    return n ? n : 1;
+}
+__attribute__((ms_abi)) uint16_t mw_GetActiveProcessorGroupCount(void) {
+    return 1;
+}
+__attribute__((ms_abi)) uint32_t mw_GetCurrentProcessorNumberEx(uint16_t* group) {
+    if (group) *group = 0;
+    return 0; /* flat scheduler: CPU 0 */
 }
 __attribute__((ms_abi)) size_t mw_GetLargePageMinimum(void) {
     return 0x200000; /* 2 MiB */
@@ -12097,27 +12363,288 @@ __attribute__((ms_abi)) uint32_t mw_OleInitialize(void* reserved) {
 __attribute__((ms_abi)) void mw_CoUninitialize(void) { MW_TRACE("CoUninitialize()"); }
 __attribute__((ms_abi)) void mw_OleUninitialize(void) { MW_TRACE("OleUninitialize()"); }
 
-/* ---- version.dll: version-resource reads. Honest policy: report the
- * resource as ABSENT (size 0 / FALSE) instead of fabricating VS_VERSIONINFO
- * — callers must tolerate missing version info on Windows too. ---- */
+/* ---- SWEEP-015 SW-801e: VERSION.dll six-pack, real VS_VERSIONINFO ----
+ * The honest-0 stubs answered "no version info" for every file; guests
+ * that REQUIRE FileVersion strings (Coreinfo64 hits the trio 18x,
+ * autorunsc64 23x) took their "old version" paths and VerQueryValue
+ * callers deref'd NULL. Real contract implemented here:
+ *   GetFileVersionInfoSizeW(path)  = byte size of the file's RT_VERSION
+ *                                    resource (0 = none, honest).
+ *   GetFileVersionInfoW(path,...)  = copy that resource blob.
+ *   VerQueryValueW(block, sub)     = walk the VS_VERSIONINFO tree:
+ *     "\"                        -> VS_FIXEDFILEINFO (52B)
+ *     "\VarFileInfo\Translation" -> DWORD lang/codepage pairs
+ *     "\StringFileInfo\<lc>\<k>" -> value string
+ * The resource is read from the file on DISK (guest paths here are the
+ * loader's own paths via GetModuleFileNameW) by parsing the PE headers. */
+struct w_ver_node {
+    uint8_t* p;         /* node start */
+    uint16_t len;       /* wLength */
+    uint16_t vlen;      /* wValueLength */
+    uint16_t type;      /* wType */
+    uint16_t* key;      /* szKey (guest UTF-16) */
+    uint16_t key_chars;
+    uint8_t* value;     /* aligned value start */
+};
+static int w_ver_node(uint8_t* p, uint8_t* end, struct w_ver_node* n) {
+    if (end - p < 6) return 0;
+    uint16_t len = *(uint16_t*)p;
+    if (!len || p + len > end) return 0;
+    n->p = p; n->len = len;
+    n->vlen = *(uint16_t*)(p + 2);
+    n->type = *(uint16_t*)(p + 4);
+    uint8_t* k = p + 6;
+    uint16_t kc = 0;
+    while (k + 2 * (kc + 1) <= p + len && *(uint16_t*)(k + 2 * kc)) kc++;
+    if (k + 2 * (kc + 1) > p + len) return 0;
+    n->key = (uint16_t*)k;
+    n->key_chars = kc;
+    uintptr_t after = (uintptr_t)(k + 2 * (kc + 1));
+    after = (after + 3) & ~(uintptr_t)3;
+    n->value = (uint8_t*)after;
+    return 1;
+}
+static int w_ver_key_eq(const uint16_t* k, uint16_t kc, const char* s) {
+    size_t sl = strlen(s);
+    if (sl != kc) return 0;
+    for (size_t i = 0; i < sl; i++) {
+        uint16_t c = k[i];
+        int lc = (c >= 'A' && c <= 'Z') ? c + 32 : c;
+        int ls = (s[i] >= 'A' && s[i] <= 'Z') ? s[i] + 32 : s[i];
+        if (lc != ls) return 0;
+    }
+    return 1;
+}
+/* read the file's first RT_VERSION(16) resource; copies data into out */
+static int w_ver_read_from_file(const char* path, uint8_t* out, uint32_t cap, uint32_t* size_out) {
+    *size_out = 0;
+    FILE* f = fopen(path, "rb");
+    if (!f) return 0;
+    fseek(f, 0, SEEK_END);
+    long sz = ftell(f);
+    fseek(f, 0, SEEK_SET);
+    if (sz < 0x200 || sz > 64 * 1024 * 1024) { fclose(f); return 0; }
+    uint8_t* buf = (uint8_t*)malloc((size_t)sz);
+    if (!buf) { fclose(f); return 0; }
+    if (fread(buf, 1, (size_t)sz, f) != (size_t)sz) { free(buf); fclose(f); return 0; }
+    fclose(f);
+    uint32_t pe_off = *(uint32_t*)(buf + 0x3c);
+    if (pe_off + 24 + 224 > (uint32_t)sz || memcmp(buf + pe_off, "PE\0\0", 4) != 0) { free(buf); return 0; }
+    uint16_t nsec = *(uint16_t*)(buf + pe_off + 6);
+    uint16_t optsz = *(uint16_t*)(buf + pe_off + 20);
+    uint32_t dd_rsrc = *(uint32_t*)(buf + pe_off + 24 + 112 + 2 * 8);
+    if (!dd_rsrc || pe_off + 24 + optsz + (uint32_t)nsec * 40 > (uint32_t)sz) { free(buf); return 0; }
+    uint8_t* sect = buf + pe_off + 24 + optsz;
+    uint8_t* rsrc = NULL;
+    for (int i = 0; i < nsec; i++) {
+        uint32_t va = *(uint32_t*)(sect + i * 40 + 12);
+        uint32_t vsz = *(uint32_t*)(sect + i * 40 + 8);
+        uint32_t rsz = *(uint32_t*)(sect + i * 40 + 16);
+        uint32_t ro = *(uint32_t*)(sect + i * 40 + 20);
+        if (va <= dd_rsrc && dd_rsrc < va + (vsz ? vsz : rsz)) {
+            rsrc = buf + ro + (dd_rsrc - va);
+            break;
+        }
+    }
+    if (!rsrc) { free(buf); return 0; }
+    uint8_t* rsrc_end = buf + sz;
+    uint32_t rel = 0;
+    uint8_t* data = NULL;
+    uint32_t data_size = 0;
+    for (int depth = 0; depth < 3; depth++) {
+        uint8_t* lvl = rsrc + rel;
+        if (lvl + 16 > rsrc_end) { free(buf); return 0; }
+        uint16_t named = *(uint16_t*)(lvl + 12); /* SW-801c offsets */
+        uint16_t ided = *(uint16_t*)(lvl + 14);
+        uint32_t next_rel = 0;
+        int got = 0;
+        for (int i = 0; i < named + ided; i++) {
+            uint32_t nm = *(uint32_t*)(lvl + 16 + i * 8);
+            uint32_t of = *(uint32_t*)(lvl + 16 + i * 8 + 4);
+            int match;
+            if (depth == 0)      match = (nm == 16); /* RT_VERSION */
+            else if (depth == 1) match = (nm == 1);  /* first version resource */
+            else                 match = 1;          /* any language */
+            if (!match) continue;
+            if (of & 0x80000000u) { next_rel = of & 0x7FFFFFFFu; got = 1; }
+            else {
+                uint8_t* entry = rsrc + of;
+                uint32_t data_rva = *(uint32_t*)entry;
+                data_size = *(uint32_t*)(entry + 4);
+                for (int j = 0; j < nsec; j++) {
+                    uint32_t va = *(uint32_t*)(sect + j * 40 + 12);
+                    uint32_t vsz = *(uint32_t*)(sect + j * 40 + 8);
+                    uint32_t rsz = *(uint32_t*)(sect + j * 40 + 16);
+                    uint32_t ro = *(uint32_t*)(sect + j * 40 + 20);
+                    if (va <= data_rva && data_rva < va + (vsz ? vsz : rsz)) {
+                        uint32_t fo = ro + (data_rva - va);
+                        if (fo + data_size > (uint32_t)sz) { free(buf); return 0; }
+                        data = buf + fo;
+                        break;
+                    }
+                }
+                got = 2;
+            }
+            break;
+        }
+        if (!got) { free(buf); return 0; }
+        if (got == 1) { rel = next_rel; continue; }
+        break;
+    }
+    if (!data || !data_size) { free(buf); return 0; }
+    if (data_size > cap) data_size = cap;
+    memcpy(out, data, data_size);
+    *size_out = data_size;
+    free(buf);
+    return 1;
+}
+#define MW_VER_BLOCK_CAP 65536
+static uint8_t g_ver_block[MW_VER_BLOCK_CAP];
+static uint32_t g_ver_block_size = 0;
 __attribute__((ms_abi)) uint32_t mw_GetFileVersionInfoSizeW(const uint16_t* path, void* handle) {
-    (void)path; if (handle) *(uint32_t*)handle = 0;
-    MW_TRACE("GetFileVersionInfoSizeW() -> 0 (no version resource)");
-    return 0;
+    char p8[1024];
+    if (path) w3_w16_to_utf8z(path, p8, sizeof(p8)); else p8[0] = 0;
+    if (handle) *(uint32_t*)handle = 0;
+    uint32_t sz = 0;
+    if (!w_ver_read_from_file(p8, g_ver_block, MW_VER_BLOCK_CAP, &sz)) {
+        mw_SetLastError(1813); /* ERROR_RESOURCE_TYPE_NOT_FOUND */
+        return 0;
+    }
+    g_ver_block_size = sz;
+    MW_TRACE("GetFileVersionInfoSizeW(%s) -> %u", p8, sz);
+    return sz;
+}
+__attribute__((ms_abi)) uint32_t mw_GetFileVersionInfoSizeA(const char* path, void* handle) {
+    uint16_t w[512];
+    if (path) { size_t c = 0; for (; path[c] && c < 511; c++) w[c] = (uint8_t)path[c]; w[c] = 0; }
+    else w[0] = 0;
+    return mw_GetFileVersionInfoSizeW(path ? w : NULL, handle);
 }
 __attribute__((ms_abi)) int mw_GetFileVersionInfoW(const uint16_t* path, uint32_t reserved,
         uint32_t len, void* buf) {
-    (void)path; (void)reserved; (void)len; (void)buf;
-    MW_TRACE("GetFileVersionInfoW() -> FALSE");
-    return 0;
+    (void)path; (void)reserved;
+    if (!buf || !len) return 0;
+    uint32_t n = g_ver_block_size;
+    if (n == 0) return 0; /* Size must be called first — real contract */
+    if (n > len) n = len;
+    memcpy(buf, g_ver_block, n);
+    MW_TRACE("GetFileVersionInfoW() -> TRUE (%u bytes)", n);
+    return 1;
+}
+__attribute__((ms_abi)) int mw_GetFileVersionInfoA(const char* path, uint32_t reserved,
+        uint32_t len, void* buf) {
+    (void)path; (void)reserved;
+    return mw_GetFileVersionInfoW(NULL, 0, len, buf);
+}
+static int w_ver_cstr_to_w(const uint16_t* sub, uint16_t* out, size_t cap) {
+    size_t k = 0;
+    if (sub) for (; sub[k] && k + 1 < cap; k++) out[k] = sub[k];
+    out[k] = 0;
+    return (int)k;
 }
 __attribute__((ms_abi)) int mw_VerQueryValueW(const void* block, const uint16_t* sub,
         void** buf, uint32_t* len) {
-    (void)block; (void)sub;
-    if (buf) *buf = NULL;
-    if (len) *len = 0;
-    MW_TRACE("VerQueryValueW() -> FALSE");
+    if (!block || !buf || !len) return 0;
+    uint8_t* base = (uint8_t*)block;
+    uint8_t* end = base + *(uint16_t*)base; /* root wLength bounds the tree */
+    struct w_ver_node root;
+    if (!w_ver_node(base, end, &root)) return 0;
+    uint16_t spath[512];
+    w_ver_cstr_to_w(sub, spath, 512);
+    const uint16_t* s = spath;
+    if (*s == '\\') s++;
+    if (!*s) {
+        /* "\" = the VS_FIXEDFILEINFO */
+        if (root.vlen < 52) return 0;
+        *buf = root.value;
+        *len = 52;
+        MW_TRACE("VerQueryValueW(\\) -> FIXEDFILEINFO 52B");
+        return 1;
+    }
+    uint16_t lvl1[128], lvl2[128], lvl3[128];
+    int n1 = 0, n2 = 0, n3 = 0;
+    while (*s && *s != '\\' && n1 < 127) lvl1[n1++] = *s++;
+    lvl1[n1] = 0;
+    if (*s == '\\') s++;
+    while (*s && *s != '\\' && n2 < 127) lvl2[n2++] = *s++;
+    lvl2[n2] = 0;
+    if (*s == '\\') s++;
+    while (*s && n3 < 127) lvl3[n3++] = *s++;
+    lvl3[n3] = 0;
+    uint8_t* p = root.value + ((root.vlen + 3) & ~3);
+    if ((size_t)(p - base) > (size_t)(end - base)) return 0;
+    struct w_ver_node c1;
+    while (p < end && w_ver_node(p, end, &c1)) {
+        if (w_ver_key_eq(c1.key, c1.key_chars, "VarFileInfo") &&
+            (w_ver_key_eq(lvl1, (uint16_t)n1, "VarFileInfo") || !lvl1[0])) {
+            uint8_t* q = c1.value + ((c1.vlen + 3) & ~3);
+            uint8_t* c1_end = c1.p + c1.len;
+            struct w_ver_node c2;
+            while (q < c1_end && w_ver_node(q, end, &c2)) {
+                if (w_ver_key_eq(c2.key, c2.key_chars, "Translation")) {
+                    *buf = c2.value;
+                    *len = c2.vlen; /* bytes of DWORD (lang, codepage) pairs */
+                    return 1;
+                }
+                q = c2.p + ((c2.len + 3) & ~3);
+            }
+            return 0;
+        }
+        if (w_ver_key_eq(c1.key, c1.key_chars, "StringFileInfo") &&
+            (w_ver_key_eq(lvl1, (uint16_t)n1, "StringFileInfo") || !lvl1[0])) {
+            uint8_t* q = c1.value + ((c1.vlen + 3) & ~3);
+            uint8_t* c1_end = c1.p + c1.len;
+            struct w_ver_node tbl;
+            int have_tbl = 0;
+            while (q < c1_end && w_ver_node(q, end, &tbl)) {
+                int tbl_match = 1;
+                if (n2) { /* guest asked for a specific lang table */
+                    tbl_match = (tbl.key_chars == (uint16_t)n2);
+                    if (tbl_match) {
+                        for (int i = 0; i < n2; i++) {
+                            uint16_t a = tbl.key[i], b = lvl2[i];
+                            int la = (a >= 'A' && a <= 'Z') ? a + 32 : a;
+                            int lb = (b >= 'A' && b <= 'Z') ? b + 32 : b;
+                            if (la != lb) { tbl_match = 0; break; }
+                        }
+                    }
+                }
+                if (tbl_match) { have_tbl = 1; break; }
+                q = tbl.p + ((tbl.len + 3) & ~3);
+            }
+            if (!have_tbl) return 0;
+            uint8_t* r = tbl.value + ((tbl.vlen + 3) & ~3);
+            uint8_t* tbl_end = tbl.p + tbl.len;
+            struct w_ver_node st;
+            while (r < tbl_end && w_ver_node(r, end, &st)) {
+                if (st.key_chars == (uint16_t)n3) {
+                    int eq = 1;
+                    for (int i = 0; i < n3; i++) {
+                        uint16_t a = st.key[i], b = lvl3[i];
+                        int la = (a >= 'A' && a <= 'Z') ? a + 32 : a;
+                        int lb = (b >= 'A' && b <= 'Z') ? b + 32 : b;
+                        if (la != lb) { eq = 0; break; }
+                    }
+                    if (eq && st.vlen) {
+                        *buf = st.value;
+                        *len = (uint32_t)st.vlen * 2; /* value bytes incl NUL */
+                        return 1;
+                    }
+                }
+                r = st.p + ((st.len + 3) & ~3);
+            }
+            return 0;
+        }
+        p = c1.p + ((c1.len + 3) & ~3);
+    }
     return 0;
+}
+__attribute__((ms_abi)) int mw_VerQueryValueA(const void* block, const char* sub,
+        void** buf, uint32_t* len) {
+    uint16_t w[512];
+    if (sub) { size_t c = 0; for (; sub[c] && c < 511; c++) w[c] = (uint8_t)sub[c]; w[c] = 0; }
+    else w[0] = 0;
+    return mw_VerQueryValueW(block, sub ? w : NULL, buf, len);
 }
 
 /* ---- user32 misc. RegisterWindowMessage/RegisterClipboardFormat return a
@@ -14144,6 +14671,11 @@ static ImportEntry g_import_table[] = {
     ENTRY("KERNEL32.DLL", "GetSystemInfo", mw_GetSystemInfo),
     ENTRY("KERNEL32.DLL", "GetNativeSystemInfo", mw_GetNativeSystemInfo),
     ENTRY("KERNEL32.DLL", "GetLogicalProcessorInformationEx", mw_GetLogicalProcessorInformationEx),
+    ENTRY("KERNEL32.DLL", "GetNumaNodeProcessorMask",           mw_GetNumaNodeProcessorMask),
+    ENTRY("KERNEL32.DLL", "GetProcessWorkingSetSize",           mw_GetProcessWorkingSetSize),
+    ENTRY("KERNEL32.DLL", "SetProcessWorkingSetSize",           mw_SetProcessWorkingSetSize),
+    ENTRY("KERNEL32.DLL", "VirtualLock",                        mw_VirtualLock),
+    ENTRY("KERNEL32.DLL", "VirtualUnlock",                      mw_VirtualUnlock),
     ENTRY("KERNEL32.DLL", "IsProcessorFeaturePresent", mw_IsProcessorFeaturePresent),
     ENTRY("KERNEL32.DLL", "CheckRemoteDebuggerPresent", mw_CheckRemoteDebuggerPresent),
     ENTRY("KERNEL32.DLL", "RtlCaptureStackBackTrace", mw_RtlCaptureStackBackTrace),
@@ -14640,6 +15172,8 @@ ENTRY("msvcrt.dll", "wctype", mw_wctype),
     ENTRY("OLEAUT32.DLL", "VariantClear",                       mw_VariantClear),
     ENTRY("OLEAUT32.DLL", "VariantCopy",                        mw_VariantCopy),
     ENTRY("USER32.DLL", "CharUpperW",                           mw_CharUpperW),
+    ENTRY("USER32.DLL", "SetCursor",                            mw_SetCursor),
+    ENTRY("USER32.DLL", "InflateRect",                          mw_InflateRect),
     ENTRY("USER32.DLL", "CharPrevExA",                          mw_CharPrevExA),
     ENTRY("ADVAPI32.DLL", "OpenProcessToken",                   mw_OpenProcessToken),
     ENTRY("ADVAPI32.DLL", "AllocateAndInitializeSid",           mw_AllocateAndInitializeSid), /* SWEEP-013 */
@@ -14690,6 +15224,13 @@ ENTRY("msvcrt.dll", "wctype", mw_wctype),
     ENTRY("KERNEL32.DLL", "GetLogicalDriveStringsW",            mw_GetLogicalDriveStringsW),
     ENTRY("KERNEL32.DLL", "GetProcessTimes",                    mw_GetProcessTimes),
     ENTRY("KERNEL32.DLL", "SetThreadAffinityMask",              mw_SetThreadAffinityMask),
+    ENTRY("KERNEL32.DLL", "GetNumaHighestNodeNumber",           mw_GetNumaHighestNodeNumber),
+    ENTRY("KERNEL32.DLL", "SetThreadGroupAffinity",             mw_SetThreadGroupAffinity),
+    ENTRY("KERNEL32.DLL", "GetThreadGroupAffinity",             mw_GetThreadGroupAffinity),
+    ENTRY("KERNEL32.DLL", "GetNumaNodeProcessorMaskEx",         mw_GetNumaNodeProcessorMaskEx),
+    ENTRY("KERNEL32.DLL", "GetActiveProcessorCount",            mw_GetActiveProcessorCount),
+    ENTRY("KERNEL32.DLL", "GetActiveProcessorGroupCount",       mw_GetActiveProcessorGroupCount),
+    ENTRY("KERNEL32.DLL", "GetCurrentProcessorNumberEx",        mw_GetCurrentProcessorNumberEx),
     ENTRY("KERNEL32.DLL", "GetLargePageMinimum",                mw_GetLargePageMinimum),
     ENTRY("KERNEL32.DLL", "SetFileApisToOEM",                   mw_SetFileApisToOEM),
 
@@ -14938,6 +15479,10 @@ ENTRY("msvcrt.dll", "wctype", mw_wctype),
     ENTRY("USER32.DLL", "PeekMessageW",                         mw_PeekMessageW),
     ENTRY("GDI32.DLL", "TextOutA",                              mw_TextOutA),
     ENTRY("GDI32.DLL", "TextOutW",                              mw_TextOutW),
+    ENTRY("GDI32.DLL", "StartDocW",                             mw_StartDocW),
+    ENTRY("GDI32.DLL", "StartPage",                             mw_StartPage),
+    ENTRY("GDI32.DLL", "EndPage",                               mw_EndPage),
+    ENTRY("GDI32.DLL", "EndDoc",                                mw_EndDoc),
     ENTRY("GDI32.DLL", "ExtTextOutA",                           mw_ExtTextOutA),
     ENTRY("GDI32.DLL", "Rectangle",                             mw_Rectangle),
     ENTRY("GDI32.DLL", "Ellipse",                               mw_Ellipse),
@@ -15021,6 +15566,8 @@ ENTRY("msvcrt.dll", "wctype", mw_wctype),
     ENTRY("ole32.dll", "CoUninitialize",                        mw_CoUninitialize),
     ENTRY("ole32.dll", "OleUninitialize",                       mw_OleUninitialize),
     ENTRY("ole32.dll", "CoCreateInstance",                      mw_CoCreateInstance), /* SWEEP-014: honest REGDB_E_CLASSNOTFOUND */
+    ENTRY("ole32.dll", "CoSetProxyBlanket",                     mw_CoSetProxyBlanket),
+    ENTRY("COMDLG32.DLL", "PrintDlgW",                          mw_PrintDlgW),
     ENTRY("ole32.dll", "CoRegisterMessageFilter",               mw_CoRegisterMessageFilter), /* SWEEP-014 r3: WinMergeU */
     ENTRY("oleaut32.dll", "VariantInit",                        mw_VariantInit), /* SWEEP-014 r3: real ord-8 target */
     ENTRY("gdiplus.dll", "GdipCreateBitmapFromStream",          mw_GdipCreateBitmapFromStream), /* SWEEP-014 r3 */
@@ -15030,12 +15577,23 @@ ENTRY("msvcrt.dll", "wctype", mw_wctype),
     ENTRY("gdiplus.dll", "GdipDisposeImage",                    mw_GdipDisposeImage), /* SWEEP-014 r3 */
     /* version resource (coreinfo64) */
     ENTRY("version.dll", "GetFileVersionInfoSizeW",             mw_GetFileVersionInfoSizeW),
+    ENTRY("version.dll", "GetFileVersionInfoSizeA",             mw_GetFileVersionInfoSizeA),
     ENTRY("version.dll", "GetFileVersionInfoW",                 mw_GetFileVersionInfoW),
+    ENTRY("version.dll", "GetFileVersionInfoA",                 mw_GetFileVersionInfoA),
     ENTRY("version.dll", "VerQueryValueW",                      mw_VerQueryValueW),
+    ENTRY("version.dll", "VerQueryValueA",                      mw_VerQueryValueA),
     /* SWEEP-015 SW-801g: UXTHEME dark-mode family (autoruns64 ord 0x87=135) */
     ENTRY("UxTheme.dll",  "ShouldAppsUseDarkMode",   mw_ShouldAppsUseDarkMode),
     ENTRY("UxTheme.dll",  "AllowDarkModeForWindow",  mw_AllowDarkModeForWindow),
     ENTRY("UxTheme.dll",  "AllowDarkModeForApp",     mw_AllowDarkModeForApp),
+    /* SWEEP-016 SW-801k: winsta.dll family (Procexp64 version probe) */
+    ENTRY("winsta.dll",   "WinStationConnectW",          mw_WinStationConnectW),
+    ENTRY("winsta.dll",   "WinStationShadow",            mw_WinStationShadow),
+    ENTRY("winsta.dll",   "WinStationGetProcessSid",     mw_WinStationGetProcessSid),
+    ENTRY("winsta.dll",   "WinStationQueryInformationW", mw_WinStationQueryInformationW),
+    ENTRY("winsta.dll",   "WinStationFreeMemory",        mw_WinStationFreeMemory),
+    ENTRY("winsta.dll",   "WinStationCloseServer",       mw_WinStationCloseServer),
+    ENTRY("winsta.dll",   "WinStationOpenServerW",       mw_WinStationOpenServerW),
     ENTRY("UxTheme.dll",  "RefreshImmersiveColorPolicyState", mw_RefreshImmersiveColorPolicyState),
     /* user32 misc (bginfo64/winmergeu/produkey/7zFM) */
     ENTRY("USER32.DLL", "RegisterWindowMessageW",               mw_RegisterWindowMessageW),
@@ -15254,14 +15812,39 @@ static void iat_patch_slot(uint64_t iat_off, int slot, void* target) {
  * ============================================================ */
 
 static int load_pe(const char* filepath) {
+    /* BUG-072: fopen() on a DIRECTORY succeeds on Linux, but ftell() then
+     * fails (returns -1) and malloc((size_t)-1) returns NULL -> SEGV at the
+     * first dos->e_magic byte. This is how "Bginfo64 exit 139 0-stub crash"
+     * (SW-651) and the SW-801h "environment-sensitive" 139s really happened:
+     * the sweep passed a directory path, not the exe inside it. Harden the
+     * entry: reject non-regular files up front, and check every I/O result. */
+    struct stat st;
+    if (stat(filepath, &st) != 0 || !S_ISREG(st.st_mode)) {
+        fprintf(stderr, "[ERROR] Not a regular file: %s\n", filepath);
+        return -1;
+    }
     FILE* f = fopen(filepath, "rb");
     if (!f) { fprintf(stderr, "[ERROR] Cannot open %s\n", filepath); return -1; }
 
-    fseek(f, 0, SEEK_END);
+    if (fseek(f, 0, SEEK_END) != 0) {
+        fprintf(stderr, "[ERROR] seek failed on %s\n", filepath);
+        fclose(f); return -1;
+    }
     long fsize = ftell(f);
+    if (fsize <= 0 || fsize > (64L << 20)) {
+        fprintf(stderr, "[ERROR] bad size %ld on %s\n", fsize, filepath);
+        fclose(f); return -1;
+    }
     fseek(f, 0, SEEK_SET);
-    uint8_t* filedata = (uint8_t*)malloc(fsize);
-    fread(filedata, 1, fsize, f);
+    uint8_t* filedata = (uint8_t*)malloc((size_t)fsize);
+    if (!filedata) {
+        fprintf(stderr, "[ERROR] out of memory for %ld bytes (%s)\n", fsize, filepath);
+        fclose(f); return -1;
+    }
+    if (fread(filedata, 1, (size_t)fsize, f) != (size_t)fsize) {
+        fprintf(stderr, "[ERROR] short read on %s\n", filepath);
+        free(filedata); fclose(f); return -1;
+    }
     fclose(f);
 
     MW_TRACE("PE Loader: file=%s size=%ld", filepath, fsize);
