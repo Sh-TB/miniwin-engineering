@@ -1644,3 +1644,55 @@ gate that must be re-accepted when the port lands).
 - Loader size 2,698,328 -> 2,698,920 (+592).
 - Next: SW-1201 winmergeu catch-type decode; SW-1153 ODBC mini-driver; SW-1154..1159
   raster/OLE wagons; SW-1160 K32EnumProcessModules; SW-1202 zstd argv decode.
+
+## SWEEP-032 round summary — TRAIN 1 of 5 «۵ قطار» (2026-10-21)
+- SW-1106 LANDED: zoomit64 was NEVER broken — the loader's 64MB file cap
+  rejected its 68,768,056-byte PE (valid PE32+, SizeOfImage 0x4264000,
+  .rsrc 60.5MB embedded media, overlay 10,040B — pefile-verified) before a
+  single header byte was parsed ("[ERROR] bad size" -> exit 1). Cap raised
+  to 512MB. Full import surface landed: 66 named + 4 raw ordinals
+  (COMCTL32.410/412/413 = SetWindowSubclass/RemoveWindowSubclass/
+  DefSubclassProc, SHLWAPI.219 = QISearch — wine-mirror spec cross-check
+  2026-10-21). zoomit64: 70 unresolved -> 0, exit 0 x3 deterministic.
+- SW-1152 LANDED (engine): RtlCaptureContext now captures all 16 XMM
+  low-128 (read BEFORE any compiler SSE work so XMM0-5 are caller-live;
+  XMM6-15 real by ms_abi callee-save), real stmxcsr MxCsr at both
+  CONTEXT+0x34 and FltSave+0x118, real fnstcw/fnstsw control/status words,
+  honest TagWord 0xFFFF. Layout per winnt.h (Xmm0@0x1A0+16i).
+- ENGINE FIX (owl-eye): MW_GDIPLUS_NOTIMPL was 4 (=Status::ObjectBusy);
+  NotImplemented is 6. GdipBitmapLockBits honest value corrected.
+- Wagon batch (70 ENTRY lines + gdobj state store + COM shell + real
+  IStream): pen state (color/width/caps/join) real; bitmap pixel store
+  (32bpp canonical, Scan0 copy) -> GdipBitmapGetPixel real read; effects
+  real lifecycle + honest unrendered apply; LCIDToLocaleName real table
+  (+neutral langs with LOCALE_ALLOW_NEUTRAL_NAMES); CompareStringOrdinal
+  REAL (SW-508 overlap); threadpool-wait objects (0x00B6 table) +
+  SetThreadpoolWaitEx/TimerEx; WINMM timeSetEvent/timeKillEvent real
+  table; WTS session-notification registration; USER32 extra-info slot,
+  ClipCursor/GetClipCursor real rect, MonitorFromRect real intersection,
+  SendInput cbSize-validated count, VkKeyScanW real US table,
+  SetWindowDisplayAffinity, ChangeDisplaySettingsExW honest
+  TEST=0/real=-1; clipboard owner+sequence wired (GetOpenClipboardWindow,
+  GetClipboardSequenceNumber real); RegSet/RegDeleteKeyValueW routed
+  through the hive; CoGetApartmentType REAL (g_com_init + MTA);
+  RoFailFastWithErrorContext real fail-fast (exit 9); Ro* error-info
+  family honest HRESULTs; MFStartup/Shutdown version-stamp
+  (0xC00D36C2 wrong version) + MFCopyImage REAL row-copy +
+  MFEnumDeviceSources 0-devices; SHCreateItemFromParsingName real
+  path-existence (0x80070002); SHGetKnownFolderItem real GUID whitelist;
+  SHCreateStreamOnFileEx REAL file-backed IStream (14-slot vtable, all
+  ms_abi: Read/Write/Seek/SetSize/Stat real on a dedicated fd);
+  COM shell objects (QI/AddRef/Release real, E_NOTIMPL body) for
+  MFCreateMediaType/MFCreateAttributes/shell items.
+- MEASURED sha e36f6e40 (G1 PIN 12/12, evidence/master/g1/20261020_175719):
+  corpus x3 15/15 deterministic, ZERO unresolved on ALL programs, ZERO
+  regressions (pageant 124, winmergeu 124 live daemons, procexp64 139
+  BUG-078 — all pre-existing frontiers).
+- Round trips re-verified BYTE-EXACT (cmp): 7za create+extract 2-file OK;
+  jq --version + .a query OK (jq-1.7.1); sqlite3 :memory: CREATE/INSERT/
+  SELECT OK. NOTE: a transient "[ello" display artifact was investigated
+  and DISPROVEN (od/cmp byte-exact) — no BUG entry, no regression.
+- Loader 2,722,720 -> 2,866,856 bytes (+144,136).
+- Next wagons queued: SW-1203 hook EVENT firing, SW-1153 ODBC mini-driver,
+  SW-1156 ExtFloodFill, SW-1102 procexp jump-into-string, SW-1156,
+  SW-508 remainder (CompareStringOrdinal landed here).
