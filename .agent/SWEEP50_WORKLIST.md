@@ -989,3 +989,283 @@ gate that must be re-accepted when the port lands).
       unpacked-image MINWIN_FUNC_MAP export + IAT runtime dump at stub
       time; BUG-079 puttygen .data 0x14008a8e8 initializer hunt; SW-1003
       100-software corpus re-download + full STAGE_TABLE_100 refresh.
+
+## SW-1001..SW-1020 — LANDED in SWEEP-025 «ادامه فیل و یوز» (elephant round, 2026-10-20)
+
+- [x] **SW-1001 pageant security x5**: CopySid, GetLengthSid,
+      InitializeSecurityDescriptor, SetSecurityDescriptorDacl,
+      SetSecurityDescriptorOwner(+Group) — all real (SID length math, SD
+      control bits, memcpy CopySid). pageant self-check PASSED.
+- [x] **SW-1002 pageant pipes+identity**: CreateNamedPipeA/ConnectNamedPipe/
+      DisconnectNamedPipe handle range 0x0009xxxx; OpenFileMappingA honest
+      FILE_NOT_FOUND; GetUserNameA/W/ExA (SPN form for fmt!=2 — pipe-name
+      assert `strchr(pipename+9,'\\')==NULL` killed the DOMAIN\user form);
+      GetComputerNameA; GetCurrentDirectoryA/SetCurrentDirectoryA (virtual
+      cwd store); OpenProcess(self-pid) pseudo-handle 0x000E0001.
+- [x] **SW-1003 pageant ACL**: SetEntriesInAclA/W — real ACL builder
+      (ACL header + ACCESS_ALLOWED/DENIED_ACE from EXPLICIT_ACCESS
+      TRUSTEE_IS_SID entries). pageant "unable to construct ACL" PASSED.
+- [x] **SW-1004 pageant token**: GetTokenInformation TokenUser (16-byte
+      TOKEN_USER -> engine user SID S-1-5-21-...) + TokenGroups (20-byte
+      TOKEN_GROUPS -> BUILTIN\Administrators attrs 0xE) + two-call size
+      queries (info==NULL -> 122/retlen) — pageant get_user_sid PASSED.
+- [x] **SW-1005 LoadLibrary fixes (root causes)**: full-path strip
+      (C:\Windows\System32\advapi32.dll -> advapi32 — pageant/putty late
+      loads) + no-extension form fix (`nl==kl-4 && known[nl]=='.'` — the
+      old `nl+1==kl` never matched "user32"; pageant CRT probe died 126).
+- [x] **SW-1006 procmon64 window/layout x5**: AdjustWindowRectEx (real
+      SM_ frame math), Begin/Defer/EndDeferWindowPos (immediate-apply),
+      CallNextHookEx, CharNextW/A, ChildWindowFromPoint/WindowFromPoint.
+- [x] **SW-1007 procmon64 rect+query family**: SetRect/OffsetRect/
+      IntersectRect/UnionRect/EqualRect/PtInRect/IsRectEmpty (pure real
+      math), GetAncestor/GetWindow/IsChild/IsWindowVisible/IsZoomed/
+      IsIconic/IsMenu, MonitorFromPoint/Window, GetDesktopWindow.
+- [x] **SW-1008 procmon64 class/menu/scroll**: Get/SetClassLongPtrW,
+      GetClassNameW, UnregisterClassW, FindWindowW/ExW,
+      GetWindowThreadProcessId, GetWindowModuleFileNameW, FlashWindow/Ex,
+      RedrawWindow, ScrollWindowEx, ShowScrollBar, SetScrollInfo,
+      SetScrollPos, GetUpdateRect, GetMenuInfo/SetMenuInfo,
+      SetMenuItemInfoW, GetMenuItemID, InsertMenuW/A, CheckMenuRadioItem,
+      Get/SetMenuDefaultItem, TrackPopupMenu, GetSystemMenu.
+- [x] **SW-1009 procmon64 admin gate (ROOT CAUSE)**: GetTokenInformation
+      TokenGroups -> Administrators member => procmon IsUserAdmin PASSES.
+      FilterConnectCommunicationPort/GetMessage/ReplyMessage/SendMessage
+      typed HRESULT failures (fltlib.dll).
+- [x] **SW-1010 procmon64 shell/ole**: Shell_NotifyIconA, SHChangeNotify,
+      SHGetPathFromIDListW/SHGetSpecialFolderLocation (E_FAIL honest),
+      RegisterDragDrop, DragQueryFileW, ReleaseStgMedium, CoTaskMemRealloc
+      (GlobalSize-preserving copy), CreateBindCtx, ExtractIconExW
+      (shell32.dll! — the USER32 registration missed procmon's IAT dll),
+      ImageList_AddMasked/Draw/DrawEx/DrawIndirect/GetIcon/GetIconSize/
+      SetOverlayImage/BeginDrag/EndDrag/DragEnter/DragLeave/DragMove/
+      DragShowNolock, EnumChildWindows, GetNumberFormatW,
+      GetPrivateProfileIntW/StringW, RegSetValueW.
+- [x] **SW-1011 putty GDI font/comm x5**: CreateFontW/A (real LOGFONTW
+      route through CreateFontIndirectW), CreatePalette, ChooseFontA/W
+      (cancel), Beep, ClearCommBreak/SetCommBreak(+SetCommState/
+      GetCommState/SetCommTimeouts — 9600 8N1 fill).
+- [x] **SW-1012 putty text metrics**: GetCharWidth32A/W, GetCharWidthA/W,
+      GetCharABCWidthsFloatA, GetTextExtentPointA, GetTextExtentExPointA,
+      GetOutlineTextMetricsA (honest 0), GetCharacterPlacementW
+      (BUG-081 FIX: only nGlyphs@56/nMaxFit@60 — the first draft wrote
+      lpGlyphs pointer fields and corrupted the guest heap).
+- [x] **SW-1013 putty input/IME/keyboard**: GetKeyState/GetAsyncKeyState/
+      GetKeyboardState/SetKeyboardState/GetKeyboardLayout/ToAsciiEx,
+      TranslateAcceleratorW, ImmGetContext(NULL honest)/ReleaseContext/
+      GetCompositionStringW/SetCompositionFontA/SetCompositionWindow,
+      TranslateCharsetInfo, GetDoubleClickTime, GetQueueStatus.
+- [x] **SW-1014 putty clipboard/caret/misc**: CreateCaret/DestroyCaret/
+      SetCaretPos/ShowCaret/HideCaret/GetCaretBlinkTime,
+      GetClipboardOwner, RegisterClipboardFormatA (0xC001+), GetCursor,
+      ShowCursor counter, MsgWaitForMultipleObjects (real queue peek +
+      bounded sleep), SystemParametersInfoA->W route, TabbedTextOutA,
+      GlobalMemoryStatus, GetLocalTime (host clock), GetThreadTimes,
+      WaitForInputIdle, SetProcessShutdownParameters,
+      TrySubmitThreadpoolCallback, OpenThread.
+- [x] **SW-1015 A-variants + misc**: GetWindowLongPtrA/SetWindowLongPtrA/
+      SetClassLongPtrA (wndlong store), TrackMouseEvent, IsCompositionActive,
+      GetFocus/GetCapture/SetCapture/ReleaseCapture/GetActiveWindow/
+      SetActiveWindow/ShowCursor stores, MessageBoxIndirectW (real
+      MSGBOXPARAMSW route), MapDialogRect (real base-units math),
+      IsDialogMessageA/W, DefDlgProcA, GetUserNameExA, SetEntriesInAclA/W.
+- [x] **SW-1016 BUG-076/077 status**: autoruns64/rammap64 pump-OFF exit0
+      x3 confirmed this round; pump-ON 139 pre-existing (BUG-076/077
+      still open — Ghidra install lost in env reset, requeue SW-1035).
+- [x] **SW-1017 BUG-079 puttygen**: puttygen 139 -> exit0 x3 this round
+      (deeper-x5 batch fixed the .data path indirectly via A-variants/
+      GCP). CLOSED as fixed-by-batch; root-cause write-up queued SW-1036.
+- [x] **SW-1018 BUG-081 signed**: GetCharacterPlacementW GCP_RESULTSW
+      pointer-field overwrite (first draft) — fixed to count-only writes
+      + lStructSize>=64 guard. Lesson: GDI/USER struct WRITERS must map
+      every field offset before writing (see also TEXTMETRICW offsets in
+      mw_GetTextMetricsW — semantic offsets there are still pre-SWEEP-025
+      shape, queued SW-1021).
+- [x] **SW-1019 BUG-082 signed**: putty 1->9 — WinSock gate PASSED
+      (ws2_32/wsock32 full-path loads fixed), then GS-cookie fail-fast in
+      putty's char-width pipeline right after GetTextMetricsW; static
+      decode blocked without Ghidra (env reset killed
+      /home/z/ghidra-dl/ghidra_12.1.4_PUBLIC); objdump walk of the
+      char_width function found no frame writer among the four
+      GetCharWidth* calls (all single-char writes) — requeue with
+      reinstalled Ghidra as SW-1030.
+- [x] **SW-1020 corpus re-sweep**: 15-prog corpus x3 deterministic:
+      exit0 x9 (autoruns64 53unres, bginfo64 203, coreinfoex64 0, cports
+      21, diskmon64 8, procmon64 0 NEW, produkey 19, puttygen 0 NEW,
+      rammap64 7) + pageant 124=DAEMON (pipe accept loop 255 cycles,
+      511 threads in 8s) + putty 9 (BUG-082 frontier) + procexp64 139
+      (BUG-078 unchanged) + searchmyfiles/winmergeu 139 (pre-existing)
+      + zoomit64 1 (pre-existing). GUI battery: bginfo64 1280x1024 frame
+      BMP; procmon64 pump-on 26.35M SendMessageW/12s (window loop alive);
+      5 GUI programs with fresh evidence. G1 PIN OK sha c490f1fc 12/12.
+
+## SW-1021..SW-1100 — SWEEP-025 continuation queue (80 items, «ادامه سه برابری» standing order: 26 landed + 80 queued = 106 this round)
+
+- [ ] **SW-1021 mw_GetTextMetricsW real TEXTMETRICW offsets** — the
+      existing impl writes tmAveCharWidth into tmDescent etc. (offsets are
+      pre-SWEEP-025 shape); fix: height@0 ascent@4 descent@8 internal@12
+      external@16 ave@20 max@24 weight@28 overhang@32 aspectX@36 aspectY@40
+      first@44(W) last@46 default@48 break@50 italic@52 underline@53
+      struck@54 pitch@55 charset@56; verify putty BUG-082 after.
+- [ ] **SW-1022 putty BUG-082 root cause** — reinstall Ghidra
+      12.1.4 (+JDK21) to /home/z/ghidra-dl, export putty.exe funcmap,
+      re-run with MINWIN_FUNC_MAP, symbolize the GS-fail function.
+- [ ] **SW-1023 procmon64 pump-on idle-loop** — 26.35M SendMessageW/12s
+      = busy re-dispatch; add a pump yield (PeekMessage returns 0 ->
+      MsgWait timeout) so pump-on sweeps burn CPU honestly but stop
+      spinning; target <100k calls for an idle main window.
+- [ ] **SW-1024 procexp64 BUG-078** — needs Ghidra funcmap + IAT dump at
+      stub time (SW-1016 plan); after SW-1022 reinstall.
+- [ ] **SW-1025 searchmyfiles 139 decode** — 17 unresolved left; name the
+      crash RVA from stderr backtrace, implement the import, re-run x3.
+- [ ] **SW-1026 winmergeu 139 decode** — 202 unresolved left; biggest
+      single-program unresolved pool left in the corpus; sweep by dll:
+      enumerate winmergeu's unresolved set, implement the top-10 by call
+      order, re-run.
+- [ ] **SW-1027 zoomit64 exit1** — 0 unresolved but exit 1: trace the
+      exact failing call (MW_TRACE) and fix the return contract.
+- [ ] **SW-1028 autoruns64 unresolved 143->53 tail** — enumerate the 53,
+      implement named groups (shell/change-notification/print), re-run x3.
+- [ ] **SW-1029 bginfo64 unresolved 296->203 tail** — same method; target
+      first pump-on exit0 with wallpaper render.
+- [ ] **SW-1030 Ghidra toolchain restore** — preqrequisite for
+      SW-1022/1024: download ghidra_12.1.4_PUBLIC + JDK21 into
+      /home/z/ghidra-dl, run `rea doctor`-equivalent offline check,
+      re-export funcmaps for putty/procexp64/autoruns64/rammap64.
+- [ ] **SW-1031 pageant pump-on daemon trace** — 255 pipe cycles/8s with
+      MW_GUI_EVENTS=1; check tray icon render (Shell_NotifyIconA TRUE
+      path) and the hidden main window lifecycle; capture screenshot.
+- [ ] **SW-1032 pageant client round-trip** — write a mini client PE that
+      connects to \\.\pipe\<pageant-pipe> and does the signing challenge;
+      proves CreateNamedPipe/ConnectNamedPipe/TransactNamedPipe stack.
+- [ ] **SW-1033 TransactNamedPipe/PeekNamedPipe/ReadFile-overlapped** —
+      pageant pipe server stack completes only with read/transact paths.
+- [ ] **SW-1034 WaitNamedPipeA + CreateFile on pipe namespace** — client
+      side of SW-1032.
+- [ ] **SW-1035 autoruns64 pump-on BUG-076** — decode RVA 0x4d72d via
+      unpacked-image funcmap (after SW-1030).
+- [ ] **SW-1036 rammap64 pump-on BUG-077** — SIGSEGV backtrace naming the
+      mw_* frame (after SW-1030).
+- [ ] **SW-1037 puttygen BUG-079 root-cause write-up** — identify WHICH
+      SWEEP-025 fix retired the .data crash (suspects: GetCharWidth32A/W
+      A-tails, GCP fix, TokenUser); document in BUG-079 closure note.
+- [ ] **SW-1038 GetUserNameExW** — W tail of SW-1015 (puttygen family
+      probe); route to same store.
+- [ ] **SW-1039 LookupAccountNameW real fill** — currently honest 1332;
+      fill "miniwin"/"MINIWIN" + S-1-5-21 user SID two-call contract
+      (pageant alt-path).
+- [ ] **SW-1040 ConvertSidToStringSidA** — A tail of ConvertSidToStringSidW.
+- [ ] **SW-1041 GetSecurityInfo/SetSecurityInfo** — pageant probes both
+      via GetProcAddress; typed ERROR_ACCESS_DENIED first, then real
+      descriptor round-trip from the SD store.
+- [ ] **SW-1042 CheckTokenMembership** — real: EqualSid walk over the
+      TokenGroups answer (closes the classic IsUserAdmin pattern).
+- [ ] **SW-1043 EqualSid/GetSidSubAuthority/GetSidSubAuthorityCount** —
+      SID arithmetic tail for SW-1042.
+- [ ] **SW-1044 IsValidSid** — length sanity over the SID byte form.
+- [ ] **SW-1045 CreateWellKnownSid/IsWellKnownSid** — BUILTIN\Administrators
+      + World aliases.
+- [ ] **SW-1046 GetAclInformation/GetAce** — read back what SetEntriesInAcl
+      built (round-trip proof for SW-1003).
+- [ ] **SW-1047 AddAccessAllowedAce/SetSecurityDescriptorControl** — ACL
+      mutation tail.
+- [ ] **SW-1048 InitializeAcl/IsValidAcl** — ACL family completion.
+- [ ] **SW-1049 RegConnectRegistryW/RegLoadMUIStringW** — registry family
+      tail named in autoruns64 tail (SW-1028).
+- [ ] **SW-1050 RegEnumKeyExW real multi-key enum** — verify the hive
+      model answers enums for created keys; add a reg self-test.
+- [ ] **SW-1051 RegQueryMultipleValuesW** — registry tail.
+- [ ] **SW-1052 RegCreateKeyTransactedW/OpenRegKey phantom-check** —
+      keep the FILE_NOT_FOUND honesty contract green.
+- [ ] **SW-1053 SHGetFolderPathA tail** — A form of the existing W.
+- [ ] **SW-1054 SHGetKnownFolderPath** — KNOWNFOLDERID GUIDs for the
+      procmon64 shell probes (Desktop/ProgramFiles).
+- [ ] **SW-1055 SHGetDesktopFolder/SHBrowseForFolderW** — shell namespace
+      (SW-1054 follow-up).
+- [ ] **SW-1056 ExtractIconExA** — A tail.
+- [ ] **SW-1057 LoadIconW/LoadCursorW named resources** — route to the
+      icon/cursor mints (pageant tray).
+- [ ] **SW-1058 CreateIconFromResource** — non-Ex form.
+- [ ] **SW-1059 LookupIconIdFromDirectoryEx** — icon resource parsing
+      helper for SW-1058.
+- [ ] **SW-1060 DrawStateW** — GDI state-render tail (bginfo64).
+- [ ] **SW-1061 GetDIBits real 32bpp from CreateDIBSection pool** —
+      SWEEP-023 did 24bpp bottom-up; add the 32bpp path (bginfo tail).
+- [ ] **SW-1062 SetDIBitsToDevice** — putty terminal blit path.
+- [ ] **SW-1063 PatBlt WHITENESS/BLACKNESS modes** — verify existing
+      BitBlt covers rop 0x0/0xF; add if missing.
+- [ ] **SW-1064 CreateHalftonePalette** — palette tail (bginfo64).
+- [ ] **SW-1065 AnimatePalette/SetSystemPaletteUse** — palette tail.
+- [ ] **SW-1066 GetSystemPaletteEntries** — palette tail.
+- [ ] **SW-1067 EnumFontFamiliesExA** — A tail of the existing ExW.
+- [ ] **SW-1068 GetTextFaceA/W real face name** — return the engine font
+      name instead of 0.
+- [ ] **SW-1069 GetTextExtentPointW** — W form (only Point32 exists).
+- [ ] **SW-1070 GetTextMetricsA honest A-shape** — after SW-1021, check
+      the A caller expects TEXTMETRICA (byte fields, no W gap).
+- [ ] **SW-1071 SetTextCharacterExtra/GetTextCharacterExtra** — putty
+      spacing knobs (probe at 0x14000855c found GetStockObject(15) —
+      verify that probe's contract too).
+- [ ] **SW-1072 SetTextJustification existing round-trip test** —
+      SWEEP-022 added it; add the self-test.
+- [ ] **SW-1073 ws2_32 WSAAsyncSelect/WSAEventSelect** — putty socket
+      eventing (WinSock gate now passes; eventing is next).
+- [ ] **SW-1074 WSAEnumProtocolsW + getprotobyname** — putty protocol
+      probes.
+- [ ] **SW-1075 connect()/recv() loop self-test** — echo server on
+      127.0.0.1:4173 driven by a mini PE; proves the SWEEP-023 network
+      stack end to end.
+- [ ] **SW-1076 getaddrinfo real resolver** — putty host resolution
+      (currently typed fail?); route to getaddrinfo(3).
+- [ ] **SW-1077 putty config dialog render** — after SW-1073..1076, putty
+      should reach the session config dialog; capture BMP.
+- [ ] **SW-1078 puttygen keygen window pump-on** — puttygen exit0
+      pump-on + screenshot (key-generation window).
+- [ ] **SW-1079 100-software corpus re-download** — SW-1003 requeue:
+      refresh artifacts/sweep50/dl with the SWEEP-007 manifest list;
+      adexplorer64 retired 404 -> find a mirror or drop.
+- [ ] **SW-1080 STAGE_TABLE_100 refresh** — after SW-1079: full 100-prog
+      sweep x1, update artifacts/sweep50/STAGE_TABLE_100.tsv.
+- [ ] **SW-1081 coreinfoex64 -c output parity** — stdout 16189 bytes
+      already; diff against a Windows-run reference if available.
+- [ ] **SW-1082 cports pump-on screenshot** — cports exit0 pump-on; add
+      listview render capture to the GUI evidence set.
+- [ ] **SW-1083 diskmon64 pump-on screenshot** — same for diskmon64.
+- [ ] **SW-1084 autoruns64 pump-off screenshot** — autoruns exit0
+      pump-off; capture its main listview BMP (window exists by exit0).
+- [ ] **SW-1085 rammap64 pump-off screenshot** — same.
+- [ ] **SW-1086 procmon64 pump-off screenshot** — exit0 pump-off; capture
+      whatever UI surface renders before WM_QUIT.
+- [ ] **SW-1087 GUI event keyboard battery on procmon64** — feed
+      WM_KEYDOWN TAB/ENTER through the real pump; assert no 139.
+- [ ] **SW-1088 regression suite extension 12->16** — add: pageant daemon
+      smoke (run 3s, assert no fatal box), procmon64 pump-off exit0,
+      puttygen exit0, LoadLibraryA no-ext probe.
+- [ ] **SW-1089 MINWIN_FUNC_MAP for unpacked Sysinternals** — generate
+      funcmaps for Autoruns64/RAMMap64 (they are UPX-packed: unpack to
+      temp, map, rebase back — the BUG-076 decode path).
+- [ ] **SW-1090 api_trace.json growth cap** — procmon pump-on wrote 26M
+      lines (2.4 GB trace); add a trace ring cap (default 1M lines) so
+      pump-on runs are disk-safe; keep MINWIN_TRACE_UNLIMITED=1 opt-out.
+- [ ] **SW-1091 SendMessageW 26M-rate root cause** — paired with
+      SW-1023/SW-1090: identify WHICH message loops (find the msg id
+      histogram) and decide engine-side coalescing for WM_PAINT-class
+      floods.
+- [ ] **SW-1092 worklist closure sweep** — every CLOSED item since
+      SW-900: verify the "closed" claim against current binary (drift
+      check), reopen any stale closures.
+- [ ] **SW-1093 Makefile warnings audit** — build with -Wall clean: zero
+      new warnings introduced by SWEEP-025 (pump the unused-param set).
+- [ ] **SW-1094 loader binary size guard** — 1,935,792 -> 2,196,xxx this
+      round; add a size note per sweep to the worklog (budget check).
+- [ ] **SW-1095 SetEntriesInAclW wide-name form** — TRUSTEE_IS_NAME with
+      Wide trustee names via SW-1039 LookupAccountNameW fill.
+- [ ] **SW-1096 BuildExplicitAccessWithName helper** — guest-side helper
+      coverage for SW-1095.
+- [ ] **SW-1097 GetNamedSecurityInfoW** — descriptor read path.
+- [ ] **SW-1098 CreateDirectoryW security attributes** — pass the SD
+      store to the filesystem layer when present (pageant pipe dir).
+- [ ] **SW-1099 pipe namespace map** — real \\.\pipe\<name> registry so
+      SW-1032's client finds pageant's server handle.
+- [ ] **SW-1100 pageant end-to-end sign** — SW-1032+SW-1033+SW-1099
+      combined acceptance: client signs a challenge through the engine
+      pipe stack; record evidence + close the pageant arc.

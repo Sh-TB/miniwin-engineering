@@ -1,0 +1,14 @@
+[TRACE] Command line: /home/z/my-project/workspace/miniwin-engineering/artifacts/sweep50/dl/pageant/pageant.exe
+[MessageBoxW] Microsoft Visual C++ Runtime Library: Assertion failed!
+
+Program: ...gineering/artifacts/sweep50/dl/pageant/pageant.exe
+File: /putty/windows/named-pipe-server.c
+Line: 209
+
+Expression: strchr(pipename + 9, '\\') == NULL
+
+For information on how your program can cause an assertion
+failure, see the Visual C++ documentation on asserts
+
+(Press Retry to debug the application - JIT must be enabled)
+[MessageBox] dialog #1 rendered -> miniwin-results/pageant.exe/screenshots/messagebox_1.bmp

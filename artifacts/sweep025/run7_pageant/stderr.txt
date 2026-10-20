@@ -1,0 +1,3 @@
+[TRACE] Command line: /home/z/my-project/workspace/miniwin-engineering/artifacts/sweep50/dl/pageant/pageant.exe
+[MessageBoxA] Pageant Error: unable to construct ACL: Error 0: (unable to format: FormatMessage returned 122)
+[MessageBox] dialog #1 rendered -> miniwin-results/pageant.exe/screenshots/messagebox_1.bmp

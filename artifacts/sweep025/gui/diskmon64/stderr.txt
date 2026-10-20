@@ -1,0 +1,11 @@
+[TRACE] Command line: /home/z/my-project/workspace/miniwin-engineering/artifacts/sweep50/dl/diskmon64/Diskmon64.exe
+[WARN]   unresolved: lstrcatA
+[WARN]   unresolved: GlobalReAlloc
+[WARN]   unresolved: GetTimeFormatA
+[WARN]   unresolved: WinHelpA
+[WARN]   unresolved: TranslateAcceleratorA
+[WARN]   unresolved: PrintDlgA
+[WARN]   unresolved: LookupAccountSidA
+[WARN]   unresolved: LookupPrivilegeValueA
+[WARN] 15 imports unresolved
+[STUB] unresolved import called -> returning 0 (call #1) guest_rip=0x140004b7a

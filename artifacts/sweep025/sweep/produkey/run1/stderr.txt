@@ -1,0 +1,21 @@
+[TRACE] Command line: /home/z/my-project/workspace/miniwin-engineering/artifacts/sweep50/dl/produkey/ProduKey.exe
+[WARN]   unresolved: _strcmpi
+[WARN]   unresolved: ExpandEnvironmentStringsA
+[WARN]   unresolved: WritePrivateProfileStringA
+[WARN]   unresolved: GetPrivateProfileStringA
+[WARN]   unresolved: GetPrivateProfileIntA
+[WARN]   unresolved: EnumResourceNamesA
+[WARN]   unresolved: GetTimeFormatA
+[WARN]   unresolved: GetTempFileNameA
+[WARN]   unresolved: GetDateFormatA
+[WARN]   unresolved: PostThreadMessageA
+[WARN]   unresolved: TranslateAcceleratorA
+[WARN]   unresolved: SetWindowLongA
+[WARN]   unresolved: GetWindowLongA
+[WARN]   unresolved: GetMenuStringA
+[WARN]   unresolved: GetClassNameA
+[WARN]   unresolved: RegUnLoadKeyA
+[WARN]   unresolved: RegConnectRegistryA
+[WARN]   unresolved: RegLoadKeyA
+[WARN]   unresolved: SHGetPathFromIDListA
+[WARN] 20 imports unresolved

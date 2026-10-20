@@ -1,0 +1,7 @@
+[TRACE] Command line: /home/z/my-project/workspace/miniwin-engineering/artifacts/sweep50/dl/pageant/pageant.exe
+[WARN]   unresolved: GetWindowLongPtrA
+[WARN]   unresolved: SetWindowLongPtrA
+[WARN] 2 imports unresolved
+[MessageBoxA] Pageant Fatal Error: Unable to access security APIs. Pageant will
+not run, in case it causes a security breach.
+[MessageBox] dialog #1 rendered -> miniwin-results/pageant.exe/screenshots/messagebox_1.bmp

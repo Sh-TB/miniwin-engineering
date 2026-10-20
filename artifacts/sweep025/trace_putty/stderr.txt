@@ -1,0 +1,8 @@
+[TRACE] Command line: /home/z/my-project/workspace/miniwin-engineering/artifacts/sweep50/dl/putty/putty.exe
+[WARN]   unresolved: GetCharacterPlacementW
+[WARN]   unresolved: GetWindowLongPtrA
+[WARN]   unresolved: SetClassLongPtrA
+[WARN]   unresolved: SetWindowLongPtrA
+[WARN] 4 imports unresolved
+[MessageBoxA] PuTTY Fatal Error: Unable to load any WinSock library
+[MessageBox] dialog #1 rendered -> miniwin-results/putty.exe/screenshots/messagebox_1.bmp

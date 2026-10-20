@@ -1,0 +1,20 @@
+[TRACE] Command line: /home/z/my-project/workspace/miniwin-engineering/artifacts/sweep50/dl/rammap64/RAMMap64.exe
+[WARN]   unresolved: QueryDosDeviceW
+[WARN]   unresolved: GetClassLongW
+[WARN]   unresolved: DefDlgProcW
+[WARN]   unresolved: StartServiceW
+[WARN]   unresolved: QueryServiceStatusEx
+[WARN]   unresolved: OpenServiceW
+[WARN]   unresolved: ControlService
+[WARN] 8 imports unresolved
+
+[CRASH] Signal 11 at RIP=0x7fbea299459d
+  RAX=0x20df280 RCX=0x0 RDX=0x7ffd3f504490 R8=0x2112060 R9=0x7ffd3f504790
+  RSP=0x7ffd3f503e30 RBP=0x20923f0
+  g_image_base=0x140000000 g_image_size=0x63000
+  (NOT inside loaded PE)
+  [RIP-MAP] 0x7fbea299459d in 0x7fbea295a000-0x7fbea2abd000 r-xp /usr/lib/x86_64-linux-gnu/libc.so.6
+  Bytes: 89 4c 24 4c 48 89 74 24 70 be 25 00 00 00 64 48 
+  RSI=0x20923f0 RDI=0x20923f0
+  R8=0x2112060  R9=0x7ffd3f504790 R10=0x7ffd3f5047a0 R11=0x246
+  R12=0x7ffd3f504490 R13=0x0 R14=0x7ffd3f504490 R15=0x20923f0

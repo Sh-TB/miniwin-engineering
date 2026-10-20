@@ -709,3 +709,14 @@ Work Log:
 Stage Summary:
 - Repo synced, verified, G1 pinned. Divergent work preserved on
   sweep008-local-divergent-3.
+
+---
+SWEEP-025 (2026-10-20) «ادامه فیل و یوز» — SW-1001..1020 + 10 root-cause fixes
+- Gates: pageant 1->124 daemon, procmon64 1->0, putty 1->9, puttygen 139->0.
+- Root causes: LoadLibraryA full-path + no-ext, TokenUser/TokenGroups,
+  OpenProcess self, SetEntriesInAclA, GetUserNameExA SPN, BUG-081 GCP fix.
+- Corpus: complete runs 7->10; unresolved: autoruns 53, bginfo 203,
+  winmerge 202, procexp 169 (BUG-078), searchmyfiles 17.
+- GUI: bginfo64 1280x1024 frame; procmon64 26.35M SendMessageW/12s.
+- G1 PIN OK sha c490f1fc regression 12/12; worklist +280 lines (SW-1021..1100).
+- BUG-082 open (putty GS-cookie; Ghidra env lost -> requeue SW-1022/1030).
