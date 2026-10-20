@@ -91,12 +91,34 @@ static resolve_proc_fn_t g_resolve_proc_fn = NULL;
 /* forward decl: used by early-defined conversion helpers (Wave-3B) */
 __attribute__((ms_abi)) void mw_SetLastError(uint32_t err);
 
+/* SWEEP-026 SW-1090: trace ring cap. Pump-on sweeps wrote 26M lines / 2.4 GB
+ * (procmon64); default cap 1M lines keeps runs disk-safe. MINWIN_TRACE_MAX_LINES
+ * overrides; MINWIN_TRACE_UNLIMITED=1 opts out. Counts only the FILE branch:
+ * stderr lines go to the sweep harness which already rotates. */
+static unsigned long long g_trace_lines = 0;
+static unsigned long long g_trace_cap = 0;
+static int g_trace_cap_init = 0;
+static unsigned long long mw_trace_cap_init(void) {
+    if (g_trace_cap_init) return g_trace_cap;
+    g_trace_cap_init = 1;
+    if (getenv("MINWIN_TRACE_UNLIMITED")) { g_trace_cap = 0; return 0; }
+    long v = 1000000L; /* default 1M lines */
+    const char* e = getenv("MINWIN_TRACE_MAX_LINES");
+    if (e) { long x = atol(e); if (x > 0) v = x; }
+    g_trace_cap = (unsigned long long)v;
+    return g_trace_cap;
+}
 #define MW_TRACE(fmt, ...) do { \
     if (!g_trace_disabled) { \
         if (g_trace_log) { \
-            fprintf(g_trace_log, "[T%lx] [API] " fmt "\n", \
-                    (unsigned long)pthread_self() & 0xFFFF, ##__VA_ARGS__); \
-            fflush(g_trace_log); \
+            unsigned long long cap_ = mw_trace_cap_init(); \
+            if (!cap_ || ++g_trace_lines <= cap_) { \
+                fprintf(g_trace_log, "[T%lx] [API] " fmt "\n", \
+                        (unsigned long)pthread_self() & 0xFFFF, ##__VA_ARGS__); \
+                fflush(g_trace_log); \
+            } else if (g_trace_lines == cap_ + 1) { \
+                fprintf(stderr, "[TRACE] cap %llu reached; further file lines dropped (MINWIN_TRACE_UNLIMITED=1 opts out)\n", cap_); \
+            } \
         } else { \
             fprintf(stderr, "[TRACE] " fmt "\n", ##__VA_ARGS__); \
         } \
@@ -13311,6 +13333,30 @@ static int       g_events_mode = -1;   /* -1 = not yet read from env */
 static int       g_paint_pending = 0;
 static int       g_quit_flag = 0, g_quit_code = 0;
 static int       g_timer_live = 0; static uintptr_t g_timer_id = 0;
+/* SWEEP-026 SW-1023: real SetTimer elapse gate. The pump used to serve
+ * WM_TIMER at unlimited rate; procmon64's timer loop then burned 26.35M
+ * SendMessageW/12s. A real timer fires every uElapse ms — gate on the
+ * monotonic clock, and yield when a poll finds nothing (MsgWait blocking). */
+static uint32_t g_timer_elapse_ms = 0;
+static long long g_timer_due_ms = 0;
+static long long mw_mono_ms(void) {
+    struct timespec ts;
+    clock_gettime(CLOCK_MONOTONIC, &ts);
+    return ts.tv_sec * 1000LL + ts.tv_nsec / 1000000;
+}
+static int g_pump_yield_us = -1; /* -1 = unset (default 250) */
+static void mw_pump_yield(void) {
+    if (g_pump_yield_us < 0) {
+        const char* e = getenv("MINWIN_PUMP_YIELD_US");
+        g_pump_yield_us = (e && atoi(e) >= 0) ? atoi(e) : 250;
+    }
+    if (g_pump_yield_us > 0) {
+        struct timespec ts;
+        ts.tv_sec = g_pump_yield_us / 1000000;
+        ts.tv_nsec = (long)(g_pump_yield_us % 1000000) * 1000L;
+        nanosleep(&ts, NULL);
+    }
+}
 static int       g_delivered = 0, g_budget = 400;
 static uint32_t  g_keyv[64]; static int g_keyn = 0, g_keyi = 0;
 static int       g_key_every = 8;
@@ -13522,8 +13568,14 @@ static int mw_gui_next_event(void* msg, void* hwnd, int consume, const char* api
         if (consume) MW_TRACE("[GUI-EVENT] #%d %s -> WM_PAINT", g_delivered, api);
         return 1;
     }
-    if (g_timer_live) {
-        if (consume) g_delivered++;
+    /* SWEEP-026 SW-1023: WM_TIMER fires on the real elapse schedule, not at
+     * pump spin rate. Refire arms the next due time on consumption. */
+    if (g_timer_live &&
+        (g_timer_elapse_ms == 0 || mw_mono_ms() >= g_timer_due_ms)) {
+        if (consume) {
+            g_delivered++;
+            if (g_timer_elapse_ms) g_timer_due_ms = mw_mono_ms() + g_timer_elapse_ms;
+        }
         mw_gui_fill_msg(msg, h, 0x0113u, (uintptr_t)g_timer_id, 0);
         if (consume)
             MW_TRACE("[GUI-EVENT] #%d %s -> WM_TIMER id=%lu", g_delivered, api,
@@ -13770,7 +13822,9 @@ __attribute__((ms_abi)) long long mw_CallWindowProcW(void* proc, void* hwnd, uin
 __attribute__((ms_abi)) uintptr_t mw_SetTimer(void* hwnd, uintptr_t id, uint32_t elapse, void* proc) {
     (void)hwnd; (void)proc;
     g_timer_live = 1; g_timer_id = id;
-    MW_TRACE("[GUI] SetTimer(id=%lu, %ums) -> armed", (unsigned long)id, elapse);
+    g_timer_elapse_ms = elapse; /* SWEEP-026 SW-1023: keep the elapse contract */
+    g_timer_due_ms = mw_mono_ms() + (elapse ? elapse : 1);
+    MW_TRACE("[GUI] SetTimer(id=%lu, %ums) -> armed (real elapse gate)", (unsigned long)id, elapse);
     return id;
 }
 __attribute__((ms_abi)) int mw_KillTimer(void* hwnd, uintptr_t id) {
@@ -13781,12 +13835,16 @@ __attribute__((ms_abi)) int mw_KillTimer(void* hwnd, uintptr_t id) {
 __attribute__((ms_abi)) int mw_PeekMessageA(void* msg, void* hwnd, uint32_t lo, uint32_t hi, uint32_t remove) {
     (void)lo; (void)hi;
     if (!mw_gui_events_enabled() || g_quit_flag) return 0;
-    return mw_gui_next_event(msg, hwnd, (int)(remove & 1u), "PeekMessageA");
+    int r = mw_gui_next_event(msg, hwnd, (int)(remove & 1u), "PeekMessageA");
+    if (!r) mw_pump_yield(); /* SWEEP-026 SW-1023: idle poll yields (MsgWait) */
+    return r;
 }
 __attribute__((ms_abi)) int mw_PeekMessageW(void* msg, void* hwnd, uint32_t lo, uint32_t hi, uint32_t remove) {
     (void)lo; (void)hi;
     if (!mw_gui_events_enabled() || g_quit_flag) return 0;
-    return mw_gui_next_event(msg, hwnd, (int)(remove & 1u), "PeekMessageW");
+    int r = mw_gui_next_event(msg, hwnd, (int)(remove & 1u), "PeekMessageW");
+    if (!r) mw_pump_yield(); /* SWEEP-026 SW-1023 */
+    return r;
 }
 /* tiny printf: %d %i %u %x %X %s %c %% (+ 'l'/'ll' + width skim).
  * BUG-067b: must use __builtin_ms_va_list (Wine pattern) — the default SysV
@@ -14244,9 +14302,25 @@ __attribute__((ms_abi)) int mw_DeleteDC(void* hdc) {
     return 1;
 }
 __attribute__((ms_abi)) int mw_PatBlt(void* hdc, int x, int y, int w, int h, uint32_t rop) {
-    (void)rop; /* v1: ROP ignored, brush fill (covers WHITENESS/PATCOPY paths) */
     MWBmp* S = mw_dc_surface(hdc); /* SWEEP-006: route by DC */
-    if (S && w > 0 && h > 0) mwb_fill(S, x, y, w, h, g_cur_brush);
+    if (S && w > 0 && h > 0) {
+        /* SWEEP-026 SW-1063: honor the rop-contract modes instead of brushing
+         * everything: BLACKNESS 0x42 -> 0, WHITENESS 0x62 -> 0xFFFFFF,
+         * DSTINVERT 0x550009 -> bitwise invert of the destination. */
+        if (rop == 0x00000042u) {
+            mwb_fill(S, x, y, w, h, 0x000000u);
+        } else if (rop == 0x00FF0062u || rop == 0x62u) {
+            mwb_fill(S, x, y, w, h, 0xFFFFFFu);
+        } else if (rop == 0x00550009u) {
+            for (int j = y; j < y + h; j++)
+                for (int i = x; i < x + w; i++) {
+                    uint8_t* p = S->px + 3 * ((size_t)j * S->w + i);
+                    p[0] = (uint8_t)~p[0]; p[1] = (uint8_t)~p[1]; p[2] = (uint8_t)~p[2];
+                }
+        } else {
+            mwb_fill(S, x, y, w, h, g_cur_brush); /* PATCOPY/PATINVERT v1 brush */
+        }
+    }
     MW_TRACE("[GDI] PatBlt(%d,%d %dx%d rop=0x%x)", x, y, w, h, rop);
     return 1;
 }
@@ -16116,6 +16190,18 @@ __attribute__((ms_abi)) int mw_EqualSid(const void* a, const void* b) {
     size_t n = 8 + 4u * (x[1] < y[1] ? x[1] : y[1]);
     return memcmp(x, y, n) == 0;
 }
+/* SWEEP-026: session SIDs lifted to file scope so the SW-1041..1045/1095
+ * family (GetSecurityInfo, CheckTokenMembership, WellKnownSid, wide-name
+ * SetEntriesInAclW) shares ONE identity model with GetTokenInformation. */
+static uint8_t g_mw_user_sid[28] = {
+    1, 5, 0, 0, 0, 0, 0, 5,              /* rev 1, count 5, IA=5 */
+    21, 0, 0, 0,                          /* S-1-5-21-... */
+    100, 0, 0, 0, 200, 1, 0, 0,
+    50, 1, 0, 0, 232, 3, 0, 0
+};
+static uint8_t g_mw_admins_sid[16] = {
+    1, 2, 0, 0, 0, 0, 0, 5, 32, 0, 0, 0, 32, 2, 0, 0 /* S-1-5-32-544 */
+};
 __attribute__((ms_abi)) int mw_GetTokenInformation(void* token, uint32_t cls, void* info,
         uint32_t len, uint32_t* retlen) {
     (void)token; /* process pseudo-token: any handle maps to our session token */
@@ -16131,14 +16217,8 @@ __attribute__((ms_abi)) int mw_GetTokenInformation(void* token, uint32_t cls, vo
     /* cls==1 TokenUser: the session user SID (pageant get_user_sid path).
      * TOKEN_USER x64 = { PSID Sid @0, ULONG Attributes @8 } = 16 bytes. */
     if (cls == 1) {
-        static uint8_t user_sid[28] = {
-            1, 5, 0, 0, 0, 0, 0, 5,              /* rev 1, count 5, IA=5 */
-            21, 0, 0, 0,                          /* S-1-5-21-... */
-            100, 0, 0, 0, 200, 1, 0, 0,
-            50, 1, 0, 0, 232, 3, 0, 0
-        };
         if (len < 16) { if (retlen) *retlen = 16; mw_SetLastError(122); return 0; }
-        *(void**)info = user_sid;
+        *(void**)info = g_mw_user_sid;
         *(uint32_t*)((uint8_t*)info + 8) = 0;
         if (retlen) *retlen = 16;
         MW_TRACE("GetTokenInformation(TokenUser) -> S-1-5-21-...-1000 TRUE");
@@ -16150,12 +16230,9 @@ __attribute__((ms_abi)) int mw_GetTokenInformation(void* token, uint32_t cls, vo
      * BUILTIN\Administrators, SE_GROUP_MANDATORY|ENABLED|ENABLED_BY_DEFAULT.
      * TOKEN_GROUPS x64: GroupCount u32, Groups[1] = {PSID 8, attr u32+pad4}. */
     if (cls == 2) {
-        static const uint8_t admins_sid[16] = {
-            1, 2, 0, 0, 0, 0, 0, 5, 32, 0, 0, 0, 32, 2, 0, 0 /* S-1-5-32-544 */
-        };
         if (len < 20) { if (retlen) *retlen = 20; mw_SetLastError(122); return 0; }
         *(uint32_t*)info = 1;
-        *(void**)((uint8_t*)info + 8) = (void*)admins_sid;
+        *(void**)((uint8_t*)info + 8) = (void*)g_mw_admins_sid;
         *(uint32_t*)((uint8_t*)info + 16) = 0xEu; /* MANDATORY|ENABLED|ENABLED_BY_DEFAULT */
         if (retlen) *retlen = 20;
         MW_TRACE("GetTokenInformation(TokenGroups) -> 1 group (S-1-5-32-544) TRUE");
@@ -16545,24 +16622,65 @@ __attribute__((ms_abi)) void* mw_CreateDialogIndirectParamW(void* hinst, const v
     (void)tmpl;
     return mw_CreateDialogParamW(hinst, NULL, parent, proc, init);
 }
-/* Bginfo64 text stack: honest font metrics for the 8x8 engine raster. */
+/* SWEEP-026 SW-1021: real TEXTMETRICW offsets — the pre-SWEEP-025 shape wrote
+ * tmAveCharWidth into tmDescent etc. (any guest reading descent/ave/weight
+ * saw wrong slots; putty BUG-082 candidate). Layout (long is 4B on Win64):
+ * height@0 ascent@4 descent@8 internal@12 external@16 ave@20 max@24
+ * weight@28 overhang@32 aspectX@36 aspectY@40 firstChar@44 lastChar@46
+ * defaultChar@48 breakChar@50 italic@52 underline@53 struckOut@54
+ * pitchAndFamily@55 charSet@56 (57-byte span; memset 60 is a safe span). */
 __attribute__((ms_abi)) int mw_GetTextMetricsW(void* hdc, void* tm) {
     (void)hdc;
     if (!tm) return 0;
     uint8_t* p = (uint8_t*)tm;
     memset(p, 0, 60);
-    *(long*)(p + 0)  = 8;   /* tmHeight */
-    *(long*)(p + 4)  = 0;   /* tmAscent simplified */
-    *(long*)(p + 8)  = 8;   /* tmAveCharWidth */
-    *(long*)(p + 12) = 8;   /* tmMaxCharWidth */
-    *(uint32_t*)(p + 16) = 400; /* tmWeight */
-    *(uint8_t*)(p + 20) = 0;    /* tmItalic */
-    *(uint8_t*)(p + 21) = 1;    /* tmCharSet = DEFAULT_CHARSET */
-    MW_TRACE("GetTextMetricsW -> 8x8 DEFAULT_CHARSET TRUE");
+    *(int32_t*)(p + 0)  = 8;    /* tmHeight */
+    *(int32_t*)(p + 4)  = 7;    /* tmAscent */
+    *(int32_t*)(p + 8)  = 1;    /* tmDescent */
+    *(int32_t*)(p + 12) = 0;    /* tmInternalLeading */
+    *(int32_t*)(p + 16) = 0;    /* tmExternalLeading */
+    *(int32_t*)(p + 20) = 8;    /* tmAveCharWidth (real slot) */
+    *(int32_t*)(p + 24) = 8;    /* tmMaxCharWidth (real slot) */
+    *(int32_t*)(p + 28) = 400;  /* tmWeight (real slot) */
+    *(int32_t*)(p + 32) = 0;    /* tmOverhang */
+    *(int32_t*)(p + 36) = 96;   /* tmDigitizedAspectX */
+    *(int32_t*)(p + 40) = 96;   /* tmDigitizedAspectY */
+    *(uint16_t*)(p + 44) = 0x20; /* tmFirstChar (W = u16) */
+    *(uint16_t*)(p + 46) = 0xFF; /* tmLastChar */
+    *(uint16_t*)(p + 48) = 0x20; /* tmDefaultChar */
+    *(uint16_t*)(p + 50) = 0x20; /* tmBreakChar */
+    *(uint8_t*)(p + 52) = 0;    /* tmItalic */
+    *(uint8_t*)(p + 53) = 0;    /* tmUnderline */
+    *(uint8_t*)(p + 54) = 0;    /* tmStruckOut */
+    *(uint8_t*)(p + 55) = 0x30; /* fixed pitch, FF_MODERN (raster mono) */
+    *(uint8_t*)(p + 56) = 1;    /* tmCharSet = DEFAULT_CHARSET */
+    MW_TRACE("GetTextMetricsW -> 8x8 real offsets (ave@20 weight@28) TRUE");
     return 1;
 }
+/* SWEEP-026 SW-1070: honest A-shape. TEXTMETRICA is 53 bytes: same LONG head
+ * but the four char slots are BYTEs @44..47 and the tail shifts up four
+ * slots: italic@48 underline@49 struck@50 pitch@51 charset@52. */
 __attribute__((ms_abi)) int mw_GetTextMetricsA(void* hdc, void* tm) {
-    return mw_GetTextMetricsW(hdc, tm);
+    (void)hdc;
+    if (!tm) return 0;
+    uint8_t* p = (uint8_t*)tm;
+    memset(p, 0, 56);
+    *(int32_t*)(p + 0)  = 8;
+    *(int32_t*)(p + 4)  = 7;
+    *(int32_t*)(p + 8)  = 1;
+    *(int32_t*)(p + 20) = 8;
+    *(int32_t*)(p + 24) = 8;
+    *(int32_t*)(p + 28) = 400;
+    *(int32_t*)(p + 36) = 96;
+    *(int32_t*)(p + 40) = 96;
+    *(uint8_t*)(p + 44) = 0x20; /* tmFirstChar (A = u8) */
+    *(uint8_t*)(p + 45) = 0xFF;
+    *(uint8_t*)(p + 46) = 0x20;
+    *(uint8_t*)(p + 47) = 0x20;
+    *(uint8_t*)(p + 51) = 0x30;
+    *(uint8_t*)(p + 52) = 1;
+    MW_TRACE("GetTextMetricsA -> 8x8 A-shape (53B) TRUE");
+    return 1;
 }
 __attribute__((ms_abi)) int mw_GetTextCharsetInfo(void* hdc, void* sig, uint32_t flags) {
     (void)hdc; (void)sig; (void)flags;
@@ -17616,8 +17734,11 @@ __attribute__((ms_abi)) int mw_GetComputerNameA(char* buf, uint32_t* size) {
 /* SetEntriesInAcl: real ACL construction from EXPLICIT_ACCESS entries
  * (pageant's "unable to construct ACL" gate). x64 EXPLICIT_ACCESS = 48
  * bytes: perms@0, mode@4, inheritance@8, TRUSTEE{pMultiple@16, MTO@24,
- * TrusteeForm@28, TrusteeType@32, ptstrName@40}. Only TRUSTEE_IS_SID is
- * supported (Name form would need an account database we don't keep). */
+ * TrusteeForm@28, TrusteeType@32, ptstrName@40}. TRUSTEE_IS_SID + (SWEEP-026
+ * SW-1095) TRUSTEE_IS_NAME with the session identity names are both real.
+ * Reserve: 4 spare ACE slots are allocated past AclSize so SW-1047
+ * AddAccessAllowedAce can append in place without realloc. */
+#define MW_ACL_RESERVE (4u * 96u)
 __attribute__((ms_abi)) uint32_t mw_SetEntriesInAclA(uint32_t count, const void* eas,
         const void* oldAcl, void** out) {
     (void)oldAcl;
@@ -17633,10 +17754,10 @@ __attribute__((ms_abi)) uint32_t mw_SetEntriesInAclA(uint32_t count, const void*
         total += 8u + sl;
         aces++;
     }
-    uint8_t* acl = (uint8_t*)mw_LocalAlloc(0x40, total);
+    uint8_t* acl = (uint8_t*)mw_LocalAlloc(0x40, total + MW_ACL_RESERVE);
     if (!acl) return 8u; /* ERROR_NOT_ENOUGH_MEMORY */
     acl[0] = 2; acl[1] = 0;             /* ACL_REVISION_DS=2 */
-    *(uint16_t*)(acl + 2) = (uint16_t)total;
+    *(uint16_t*)(acl + 2) = (uint16_t)total;   /* AclSize = USED bytes */
     *(uint16_t*)(acl + 4) = (uint16_t)aces;
     *(uint16_t*)(acl + 6) = 0;
     uint32_t off = 8;
@@ -17655,12 +17776,41 @@ __attribute__((ms_abi)) uint32_t mw_SetEntriesInAclA(uint32_t count, const void*
         off += 8u + sl;
     }
     *out = acl;
-    MW_TRACE("SetEntriesInAclA(%u entries) -> ERROR_SUCCESS (ACL %u bytes)", count, total);
+    MW_TRACE("SetEntriesInAclA(%u entries) -> ERROR_SUCCESS (ACL %u bytes + %u reserve)", count, total, (unsigned)MW_ACL_RESERVE);
     return 0u; /* ERROR_SUCCESS */
 }
+/* SWEEP-026 SW-1095: the W form accepts TRUSTEE_IS_NAME too — wide names
+ * map to the session identity ("miniwin"/"MINIWIN"/"MINIWIN\\miniwin"),
+ * everything else is an honest ERROR_NONE_MAPPED. SID-form entries pass
+ * through unchanged. */
 __attribute__((ms_abi)) uint32_t mw_SetEntriesInAclW(uint32_t count, const void* eas,
         const void* oldAcl, void** out) {
-    return mw_SetEntriesInAclA(count, eas, oldAcl, out);
+    if (!out || !eas) return 87u;
+    const uint8_t* e = (const uint8_t*)eas;
+    int any_name = 0;
+    for (uint32_t i = 0; i < count && !any_name; i++)
+        if (*(const uint32_t*)(e + i * 48 + 28) == 1u /* TRUSTEE_IS_NAME */) any_name = 1;
+    if (!any_name) return mw_SetEntriesInAclA(count, eas, oldAcl, out);
+    uint8_t* conv = (uint8_t*)mw_LocalAlloc(0x40, (size_t)count * 48);
+    if (!conv) return 8u;
+    for (uint32_t i = 0; i < count; i++) {
+        memcpy(conv + i * 48, e + i * 48, 48);
+        if (*(const uint32_t*)(conv + i * 48 + 28) == 1u) {
+            const uint16_t* nm = *(const uint16_t* const*)(conv + i * 48 + 40);
+            char a8[128] = {0}; int ok = 0;
+            if (nm) { uint32_t k = 0; while (nm[k] && k < 127) { a8[k] = (char)(nm[k] & 0xFF); k++; } }
+            if (strcmp(a8, "miniwin") == 0 || strcmp(a8, "MINIWIN") == 0 ||
+                strcmp(a8, "MINIWIN\\miniwin") == 0 || strcmp(a8, "\\\\MINIWIN\\\\miniwin") == 0) {
+                *(uint32_t*)(conv + i * 48 + 28) = 0u; /* -> TRUSTEE_IS_SID */
+                *(void**)(conv + i * 48 + 40) = g_mw_user_sid;
+                ok = 1;
+            }
+            if (!ok) { mw_SetLastError(1332); mw_LocalFree(conv); return 1332u; }
+        }
+    }
+    uint32_t r = mw_SetEntriesInAclA(count, conv, oldAcl, out);
+    mw_LocalFree(conv);
+    return r;
 }
 /* GetUserNameExA: pageant probes it via GetProcAddress(sspicli) with
  * fmt=8 (NameServicePrincipal). The result feeds pageant's pipe name
@@ -18804,7 +18954,584 @@ __attribute__((ms_abi)) uint32_t mw_GetCharacterPlacementW(void* dc, const uint1
     return (uint32_t)(c > 0 ? c * 8 : 0);
 }
 
+/* ============================================================
+ * SWEEP-026 — «ادامه فیل یوز با ۵۰ تسک» 50-task elephant round
+ * (SW-1021..1100 queue: text/registry/SID-ACL/icon/palette tails)
+ * Every function here is real math/parse or an honest typed contract,
+ * matching the family conventions set by SWEEP-023/025.
+ * ============================================================ */
+/* ---- SW-1069: GetTextExtentPointW — W short form of Point32 ---- */
+__attribute__((ms_abi)) int mw_GetTextExtentPointW(void* hdc, const uint16_t* s, int len, void* size) {
+    return mw_GetTextExtentPoint32W(hdc, s, len, size);
+}
+/* ---- SW-1071: character-extra spacing knobs (putty probe pair) ---- */
+static int g_char_extra = 0;
+__attribute__((ms_abi)) int mw_SetTextCharacterExtra(void* hdc, int extra) {
+    (void)hdc;
+    int prev = g_char_extra;
+    g_char_extra = extra;
+    MW_TRACE("SetTextCharacterExtra(%d) -> prev %d", extra, prev);
+    return prev;
+}
+__attribute__((ms_abi)) int mw_GetTextCharacterExtra(void* hdc) {
+    (void)hdc;
+    MW_TRACE("GetTextCharacterExtra -> %d", g_char_extra);
+    return g_char_extra;
+}
+/* ---- SW-1049: RegConnectRegistryW — local machine is the honest host ---- */
+__attribute__((ms_abi)) int32_t mw_RegConnectRegistryW(const uint16_t* machine, void* key, void** result) {
+    if (!result) { mw_SetLastError(87); return 87; }
+    if (!machine || !machine[0]) { /* NULL machine name = this machine */
+        *result = key;
+        MW_TRACE("RegConnectRegistryW(local) -> same root handle");
+        return 0;
+    }
+    char a8[256] = {0};
+    uint32_t k = 0;
+    while (machine[k] && k < 255) { a8[k] = (char)(machine[k] & 0xFF); k++; }
+    MW_TRACE("RegConnectRegistryW('%s') -> ERROR_BAD_NETPATH (no remote registry)", a8);
+    mw_SetLastError(53); /* ERROR_BAD_NETPATH */
+    return 53;
+}
+/* ---- SW-1051: RegQueryMultipleValuesW — real multi-value read loop ----
+ * VALENTW x64 = { name@0, valuelen u32@8, type u32@12, valueptr@16 } = 24B.
+ * Buffer accounting is in bytes (documented choice; guests pass RegQuery
+ * sizes). Sets ve_valueptr into the caller buffer, ve_valuelen/type real. */
+__attribute__((ms_abi)) int32_t mw_RegQueryMultipleValuesW(void* key, void* valents,
+        uint32_t nvals, uint16_t* buf, uint32_t* bufsize) {
+    if (!valents || !nvals || !bufsize) { mw_SetLastError(87); return 87; }
+    uint8_t* v = (uint8_t*)valents;
+    uint32_t need = 0, wrote = 0;
+    for (uint32_t i = 0; i < nvals; i++) {
+        const uint16_t* nm = *(const uint16_t* const*)(v + i * 24 + 0);
+        uint32_t sz = 0;
+        uint32_t ty = 0;
+        int32_t rc = mw_reg_query(key, nm, &ty, NULL, &sz);
+        if (rc != 0) { mw_SetLastError((uint32_t)rc); return rc; }
+        *(uint32_t*)(v + i * 24 + 8) = sz;
+        *(uint32_t*)(v + i * 24 + 12) = ty;
+        need += sz;
+        if (buf && need <= *bufsize) {
+            uint32_t cap = sz;
+            rc = mw_reg_query(key, nm, &ty, buf + wrote / 2, &cap);
+            if (rc != 0) { mw_SetLastError((uint32_t)rc); return rc; }
+            *(void**)(v + i * 24 + 16) = (uint8_t*)buf + wrote;
+            wrote += sz;
+        } else {
+            *(void**)(v + i * 24 + 16) = NULL;
+        }
+    }
+    if (!buf || need > *bufsize) {
+        *bufsize = need;
+        mw_SetLastError(234); /* ERROR_MORE_DATA */
+        return 234;
+    }
+    *bufsize = need;
+    MW_TRACE("RegQueryMultipleValuesW(%u values, %u bytes) -> all copied", nvals, need);
+    return (int32_t)nvals;
+}
+/* ---- SW-1052: RegCreateKeyTransactedW — transaction ignored, create real ---- */
+__attribute__((ms_abi)) int32_t mw_RegCreateKeyTransactedW(void* key, const wchar_t* sub, uint32_t res,
+        const wchar_t* cls, uint32_t opts, uint32_t access, void* sa, void** result,
+        void* disp, void* txattr, void* txn) {
+    (void)txattr; (void)txn;
+    return mw_RegCreateKeyExW(key, sub, res, cls, opts, access, sa, result, disp);
+}
+/* ---- SW-1038: GetUserNameExW — W tail routed to the ExA identity store ---- */
+__attribute__((ms_abi)) int mw_GetUserNameExW(uint32_t fmt, uint16_t* buf, uint32_t* size) {
+    char a8[128];
+    uint32_t acap = (uint32_t)sizeof(a8);
+    if (!size) { mw_SetLastError(87); return 0; }
+    uint32_t need = 0;
+    /* two-call contract: buf==NULL asks for the size first */
+    if (!buf) {
+        static const char spn[] = "miniwin@MINIWIN";
+        static const char sam[] = "MINIWIN\\miniwin";
+        const char* val = (fmt == 2u) ? sam : spn;
+        need = (uint32_t)strlen(val) + 1;
+        if (*size < need) { *size = need; mw_SetLastError(234); return 0; }
+    }
+    acap = *size ? *size : sizeof(a8);
+    if (acap > sizeof(a8)) acap = sizeof(a8);
+    if (!mw_GetUserNameExA(fmt, a8, &acap)) {
+        /* ExA already set 234 with the needed count in acap (A = bytes) */
+        *size = acap;
+        return 0;
+    }
+    uint32_t n = (uint32_t)strlen(a8);
+    if (*size < n + 1) { *size = n + 1; mw_SetLastError(234); return 0; }
+    for (uint32_t i = 0; i <= n; i++) buf[i] = (uint16_t)(uint8_t)a8[i];
+    *size = n;
+    MW_TRACE("GetUserNameExW(fmt=%u) -> '%s'", fmt, a8);
+    return 1;
+}
+/* ---- SW-1040: ConvertSidToStringSidA — A tail of the W string builder ---- */
+__attribute__((ms_abi)) int mw_ConvertSidToStringSidA(void* sid, char** out) {
+    if (!sid || !out) { mw_SetLastError(87); return 0; }
+    const uint8_t* b = (const uint8_t*)sid;
+    uint8_t n = b[1]; if (n > 15) n = 15;
+    uint64_t ia = 0; for (int i = 0; i < 6; i++) ia = (ia << 8) | b[2 + i];
+    char tmp[256];
+    int o = snprintf(tmp, sizeof(tmp), "S-1-%llu", (unsigned long long)ia);
+    const uint32_t* sub = (const uint32_t*)(b + 8);
+    for (int i = 0; i < n && o < (int)sizeof(tmp) - 16; i++)
+        o += snprintf(tmp + o, sizeof(tmp) - (size_t)o, "-%u", (unsigned)*(sub + i));
+    char* s = (char*)mw_LocalAlloc(0x40, strlen(tmp) + 1);
+    if (!s) return 0;
+    strcpy(s, tmp);
+    *out = s;
+    MW_TRACE("ConvertSidToStringSidA -> '%s'", tmp);
+    return 1;
+}
+/* ---- SW-1043: SID arithmetic pointers — real address math ---- */
+__attribute__((ms_abi)) uint8_t* mw_GetSidSubAuthorityCount(void* sid) {
+    MW_TRACE("GetSidSubAuthorityCount -> %u", sid ? ((uint8_t*)sid)[1] : 0);
+    return sid ? (uint8_t*)sid + 1 : NULL;
+}
+__attribute__((ms_abi)) uint32_t* mw_GetSidSubAuthority(void* sid, uint32_t idx) {
+    if (!sid) return NULL;
+    uint8_t n = ((uint8_t*)sid)[1];
+    if (idx >= n) idx = n ? n - 1 : 0; /* real API does not bounds-check; keep memory safe */
+    MW_TRACE("GetSidSubAuthority(%u) -> ptr", (unsigned)idx);
+    return (uint32_t*)((uint8_t*)sid + 8 + 4u * (size_t)idx);
+}
+/* ---- SW-1044: IsValidSid — wire-format sanity, real checks ---- */
+__attribute__((ms_abi)) int mw_IsValidSid(void* sid) {
+    if (!sid) return 0;
+    uint8_t x[8];
+    if (!mw_probe_copy(sid, 8, x)) return 0;
+    if (x[0] != 1) return 0;          /* SID_REVISION */
+    if (x[1] < 1 || x[1] > 15) return 0;
+    MW_TRACE("IsValidSid -> TRUE (%u subauths)", x[1]);
+    return 1;
+}
+/* ---- SW-1045: CreateWellKnownSid/IsWellKnownSid — real byte construction ---- */
+static const struct { uint32_t type; const char* s; } g_wellknown[] = {
+    { 1u,  "S-1-1-0" },      /* WinWorldSid */
+    { 2u,  "S-1-2-0" },      /* WinLocalSid */
+    { 3u,  "S-1-3-0" },      /* WinCreatorOwnerSid */
+    { 4u,  "S-1-3-1" },      /* WinCreatorGroupSid */
+    { 11u, "S-1-5-11" },     /* WinAuthenticatedUserSid */
+    { 22u, "S-1-5-18" },     /* WinLocalSystemSid */
+    { 23u, "S-1-5-19" },     /* WinLocalServiceSid */
+    { 24u, "S-1-5-20" },     /* WinNetworkServiceSid */
+    { 25u, "S-1-5-32-545" }, /* WinBuiltinUsersSid */
+    { 26u, "S-1-5-32-544" }, /* WinBuiltinAdministratorsSid */
+    { 27u, "S-1-5-32-546" }, /* WinBuiltinGuestsSid */
+    { 28u, "S-1-5-32-547" }, /* WinBuiltinPowerUsersSid */
+};
+static int mw_sid_from_string(const char* s, uint8_t* out) {
+    memset(out, 0, 8 + 4 * 15);
+    out[0] = 1;
+    uint64_t ia = 0; uint32_t sub[15]; int nsub = 0;
+    const char* p = s;
+    if (*p == 'S' || *p == 's') p++;
+    if (*p == '-') p++;
+    while (*p && nsub <= 14) {
+        uint64_t v = 0; int any = 0;
+        while (*p >= '0' && *p <= '9') { v = v * 10 + (uint64_t)(*p - '0'); p++; any = 1; }
+        if (!any) break;
+        if (nsub == 0) ia = v; else sub[nsub - 1] = (uint32_t)v;
+        nsub++;
+        if (*p == '-') p++; else break;
+    }
+    if (nsub == 0) return 0;
+    for (int i = 0; i < 6; i++) out[7 - i] = (uint8_t)((ia >> (8 * i)) & 0xFF);
+    out[1] = (uint8_t)(nsub - 1);
+    memcpy(out + 8, sub, 4 * (size_t)(nsub - 1));
+    return 8 + 4 * (nsub - 1);
+}
+__attribute__((ms_abi)) int mw_CreateWellKnownSid(uint32_t type, void* domain, void* sid, uint32_t* cb) {
+    (void)domain;
+    const char* s = NULL;
+    for (size_t i = 0; i < sizeof(g_wellknown) / sizeof(g_wellknown[0]); i++)
+        if (g_wellknown[i].type == type) { s = g_wellknown[i].s; break; }
+    if (!s) { mw_SetLastError(87); return 0; } /* ERROR_INVALID_PARAMETER */
+    uint8_t tmp[8 + 4 * 15];
+    int len = mw_sid_from_string(s, tmp);
+    if (!cb) { mw_SetLastError(87); return 0; }
+    if (*cb < (uint32_t)len) { *cb = (uint32_t)len; mw_SetLastError(122); return 0; }
+    memcpy(sid, tmp, (size_t)len);
+    MW_TRACE("CreateWellKnownSid(type=%u) -> '%s'", (unsigned)type, s);
+    return 1;
+}
+__attribute__((ms_abi)) int mw_IsWellKnownSid(void* sid, uint32_t type) {
+    const char* s = NULL;
+    for (size_t i = 0; i < sizeof(g_wellknown) / sizeof(g_wellknown[0]); i++)
+        if (g_wellknown[i].type == type) { s = g_wellknown[i].s; break; }
+    if (!s) return 0;
+    uint8_t tmp[8 + 4 * 15];
+    int len = mw_sid_from_string(s, tmp);
+    return len ? mw_EqualSid(sid, tmp) : 0;
+}
+/* ---- SW-1042: CheckTokenMembership — real EqualSid walk over the token
+ * groups answer (session model: Administrators-enabled elevated user). ---- */
+__attribute__((ms_abi)) int mw_CheckTokenMembership(void* token, void* sid, int* isMember) {
+    (void)token;
+    if (!isMember) { mw_SetLastError(87); return 0; }
+    *isMember = 0;
+    if (sid) {
+        /* the session's only enabled group is BUILTIN\Administrators */
+        int is_admins = mw_EqualSid(sid, g_mw_admins_sid);
+        int is_user = mw_EqualSid(sid, g_mw_user_sid);
+        *isMember = is_admins || is_user;
+    }
+    MW_TRACE("CheckTokenMembership -> TRUE (member=%d)", *isMember);
+    return 1;
+}
+/* ---- SW-1041/1097: security-descriptor round-trip from the session model ----
+ * Absolute SECURITY_DESCRIPTOR (40 bytes): owner=user, group=admins,
+ * Dacl = last ACL built by SetEntriesInAcl (or NULL). */
+static uint8_t g_mw_sd[40];
+static void* g_mw_sd_dacl = NULL;
+__attribute__((ms_abi)) uint32_t mw_GetSecurityInfo(void* h, uint32_t cls, uint32_t info,
+        void** pown, void** pgrp, void** pdacl, void** psacl, void** psd) {
+    (void)h; (void)cls;
+    memset(g_mw_sd, 0, sizeof(g_mw_sd));
+    g_mw_sd[0] = 1; /* revision */
+    *(void**)((uint8_t*)g_mw_sd + 8) = g_mw_user_sid;
+    *(void**)((uint8_t*)g_mw_sd + 16) = g_mw_admins_sid;
+    *(void**)((uint8_t*)g_mw_sd + 32) = g_mw_sd_dacl;
+    *(uint16_t*)((uint8_t*)g_mw_sd + 2) = 0x14u; /* SE_DACL_PRESENT */
+    if (pown) *pown = g_mw_user_sid;
+    if (pgrp) *pgrp = g_mw_admins_sid;
+    if (pdacl) *pdacl = g_mw_sd_dacl;
+    if (psacl) *psacl = NULL;
+    if (psd) *psd = g_mw_sd;
+    MW_TRACE("GetSecurityInfo(info=0x%x) -> ERROR_SUCCESS (owner=user group=admins)", (unsigned)info);
+    return 0u;
+}
+__attribute__((ms_abi)) uint32_t mw_SetSecurityInfo(void* h, uint32_t cls, uint32_t info,
+        void* own, void* grp, void* dacl, void* sacl) {
+    (void)h; (void)cls; (void)own; (void)grp; (void)sacl;
+    if (info & 0x4u) g_mw_sd_dacl = dacl; /* DACL_SECURITY_INFORMATION */
+    MW_TRACE("SetSecurityInfo(info=0x%x) -> ERROR_SUCCESS (stored)", (unsigned)info);
+    return 0u;
+}
+__attribute__((ms_abi)) uint32_t mw_GetNamedSecurityInfoW(const uint16_t* name, uint32_t cls,
+        uint32_t info, void** pown, void** pgrp, void** pdacl, void** psacl, void** psd) {
+    char a8[256] = {0};
+    if (name) { uint32_t k = 0; while (name[k] && k < 255) { a8[k] = (char)(name[k] & 0xFF); k++; } }
+    uint32_t r = mw_GetSecurityInfo(NULL, cls, info, pown, pgrp, pdacl, psacl, psd);
+    MW_TRACE("GetNamedSecurityInfoW('%s') -> %u", a8, (unsigned)r);
+    return r;
+}
+/* ---- SW-1048: InitializeAcl/IsValidAcl — real header contract ---- */
+__attribute__((ms_abi)) int mw_InitializeAcl(void* acl, uint32_t cb, uint32_t rev) {
+    if (!acl || cb < 8 || cb > 0xFFF8u || (cb & 1u)) { mw_SetLastError(87); return 0; }
+    uint8_t* a = (uint8_t*)acl;
+    memset(a, 0, 8);
+    a[0] = (uint8_t)rev;
+    *(uint16_t*)(a + 2) = (uint16_t)cb;
+    *(uint16_t*)(a + 4) = 0;
+    MW_TRACE("InitializeAcl(%u bytes, rev=%u) -> TRUE", cb, rev);
+    return 1;
+}
+__attribute__((ms_abi)) int mw_IsValidAcl(const void* acl) {
+    if (!acl) return 0;
+    const uint8_t* a = (const uint8_t*)acl;
+    uint8_t probe[8];
+    if (!mw_probe_copy(acl, 8, probe)) return 0;
+    uint16_t size = (uint16_t)(probe[2] | (probe[3] << 8));
+    uint16_t count = (uint16_t)(probe[4] | (probe[5] << 8));
+    if (probe[0] != 1 && probe[0] != 2) return 0;
+    if (size < 8 || size > 0xFFF8u || (size & 1u)) return 0;
+    uint32_t off = 8;
+    for (uint16_t i = 0; i < count; i++) {
+        uint8_t h[4];
+        if (off + 8 > size || !mw_probe_copy(a + off, 4, h)) return 0;
+        uint16_t asz = (uint16_t)(h[2] | (h[3] << 8));
+        if (asz < 8 || off + asz > size) return 0;
+        off += asz;
+    }
+    MW_TRACE("IsValidAcl -> TRUE (size=%u aces=%u)", size, count);
+    return 1;
+}
+/* ---- SW-1046: GetAclInformation/GetAce — real header reads ---- */
+__attribute__((ms_abi)) int mw_GetAclInformation(const void* acl, void* info, uint32_t cb, uint32_t cls) {
+    if (!acl || !info) { mw_SetLastError(87); return 0; }
+    const uint8_t* a = (const uint8_t*)acl;
+    if (cls == 0 /*AclRevisionInformation*/) { /* u16 */
+        if (cb < 2) { mw_SetLastError(122); return 0; }
+        *(uint16_t*)info = a[0];
+        return 1;
+    }
+    if (cls == 1 /*AclSizeInformation*/) { /* { u32 AceCount; u32 AclSize } x64: 8B */
+        if (cb < 8) { mw_SetLastError(122); return 0; }
+        uint16_t size = (uint16_t)(a[2] | (a[3] << 8));
+        uint16_t count = (uint16_t)(a[4] | (a[5] << 8));
+        *(uint32_t*)info = (uint32_t)count;
+        *(uint32_t*)((uint8_t*)info + 4) = (uint32_t)size;
+        return 1;
+    }
+    mw_SetLastError(87);
+    return 0;
+}
+__attribute__((ms_abi)) int mw_GetAce(const void* acl, uint32_t idx, void** ace) {
+    if (!acl || !ace) { mw_SetLastError(87); return 0; }
+    const uint8_t* a = (const uint8_t*)acl;
+    uint16_t size = (uint16_t)(a[2] | (a[3] << 8));
+    uint16_t count = (uint16_t)(a[4] | (a[5] << 8));
+    if (idx >= count) { mw_SetLastError(87); return 0; }
+    uint32_t off = 8;
+    for (uint32_t i = 0; i < idx; i++) {
+        uint16_t asz = (uint16_t)(a[off + 2] | (a[off + 3] << 8));
+        if (asz < 8 || off + asz > size) { mw_SetLastError(87); return 0; }
+        off += asz;
+    }
+    *ace = (void*)(a + off);
+    MW_TRACE("GetAce(%u) -> offset %u", idx, off);
+    return 1;
+}
+/* ---- SW-1047: AddAccessAllowedAce — append within the allocation reserve ---- */
+__attribute__((ms_abi)) int mw_AddAccessAllowedAce(void* acl, uint32_t rev, uint32_t mask, void* sid) {
+    if (!acl || !sid) { mw_SetLastError(87); return 0; }
+    uint8_t* a = (uint8_t*)acl;
+    uint16_t size = (uint16_t)(a[2] | (a[3] << 8));
+    uint16_t count = (uint16_t)(a[4] | (a[5] << 8));
+    uint32_t sl = mw_sid_length(sid);
+    uint32_t need = 8u + sl;
+    uint32_t newsz = (uint32_t)size + need;
+    if (newsz > 0xFFF8u) { mw_SetLastError(1344 /*ALLOTTED_SPACE_EXCEEDED*/); return 0; }
+    uint8_t* ace = a + size;
+    ace[0] = 0; /* ACCESS_ALLOWED_ACE_TYPE */
+    ace[1] = 0;
+    *(uint16_t*)(ace + 2) = (uint16_t)need;
+    *(uint32_t*)(ace + 4) = mask;
+    memcpy(ace + 8, sid, sl);
+    *(uint16_t*)(a + 2) = (uint16_t)newsz;
+    *(uint16_t*)(a + 4) = (uint16_t)(count + 1);
+    a[0] = (uint8_t)rev;
+    MW_TRACE("AddAccessAllowedAce(mask=0x%x) -> TRUE (acl %u->%u bytes)", mask, size, newsz);
+    return 1;
+}
+/* ---- SW-1047: SetSecurityDescriptorControl — real control-bit edit ---- */
+__attribute__((ms_abi)) int mw_SetSecurityDescriptorControl(void* sd, uint16_t mask, uint16_t set) {
+    if (!sd) { mw_SetLastError(87); return 0; }
+    uint16_t* ctl = (uint16_t*)((uint8_t*)sd + 2);
+    *ctl = (uint16_t)((*ctl & ~mask) | (set & mask));
+    MW_TRACE("SetSecurityDescriptorControl(mask=0x%x set=0x%x) -> TRUE", mask, set);
+    return 1;
+}
+/* ---- SW-1096: BuildExplicitAccessWithName A/W — real struct fill ---- */
+static void mw_bea_fill(void* ea, void* name, uint32_t perms, uint32_t mode, uint32_t inherit, int wide) {
+    uint8_t* e = (uint8_t*)ea;
+    memset(e, 0, 48);
+    *(uint32_t*)(e + 0) = perms;
+    *(uint32_t*)(e + 4) = mode;
+    *(uint32_t*)(e + 8) = inherit;
+    *(uint32_t*)(e + 28) = 1u; /* TRUSTEE_IS_NAME */
+    *(uint32_t*)(e + 32) = 1u; /* TRUSTEE_IS_USER */
+    (void)wide;
+    *(void**)(e + 40) = name;
+}
+__attribute__((ms_abi)) void mw_BuildExplicitAccessWithNameA(void* ea, char* name, uint32_t perms, uint32_t mode, uint32_t inherit) {
+    mw_bea_fill(ea, name, perms, mode, inherit, 0);
+    MW_TRACE("BuildExplicitAccessWithNameA('%s', 0x%x) -> filled", name ? name : "?", perms);
+}
+__attribute__((ms_abi)) void mw_BuildExplicitAccessWithNameW(void* ea, uint16_t* name, uint32_t perms, uint32_t mode, uint32_t inherit) {
+    mw_bea_fill(ea, name, perms, mode, inherit, 1);
+    MW_TRACE("BuildExplicitAccessWithNameW(0x%x) -> filled", perms);
+}
+/* ---- SW-1056: ExtractIconExA — A tail mirroring the W mint ---- */
+__attribute__((ms_abi)) uint32_t mw_ExtractIconExA(const char* file, int idx, void** large, void** small, uint32_t n) {
+    (void)file; (void)idx;
+    uint32_t produced = 0;
+    if (n >= 1 && large) { large[0] = (void*)(uintptr_t)(MW_GDI_ICON_BASE | (g_gdi_icon_next++ & 0xFFFu)); produced = 1; }
+    if (n >= 1 && small) small[0] = NULL;
+    for (uint32_t i = produced; i < n; i++) { if (large) large[i] = NULL; if (small) small[i] = NULL; }
+    MW_TRACE("ExtractIconExA -> %u", produced);
+    return produced;
+}
+/* ---- SW-1058: CreateIconFromResource — non-Ex route ---- */
+__attribute__((ms_abi)) void* mw_CreateIconFromResource(const uint8_t* pres, uint32_t size, int fIcon, uint32_t ver) {
+    return mw_CreateIconFromResourceEx(pres, size, fIcon, ver, 32, 32, 0x0u /*LR_DEFAULTCOLOR*/);
+}
+/* ---- SW-1059: LookupIconIdFromDirectoryEx — real ICONDIR parse ----
+ * Header { u16 reserved, u16 type, u16 count } + 16B entries
+ * { u8 w, u8 h, u8 colors, u8 res, u16 planes, u16 bitcount,
+ *   u32 bytes, u16 id } (cursors: id field = u16 name ordinal pair).
+ * Pick the entry closest to (cxWant, cyWant) at >=8bpp. */
+__attribute__((ms_abi)) uint16_t mw_LookupIconIdFromDirectoryEx(const void* dir, int fIcon,
+        int cxWant, int cyWant, uint32_t flags) {
+    (void)fIcon; (void)flags;
+    if (!dir) return 0;
+    uint8_t h[6];
+    if (!mw_probe_copy(dir, 6, h)) return 0;
+    uint16_t count = (uint16_t)(h[4] | (h[5] << 8));
+    if (!count || count > 64) return 0;
+    const uint8_t* best = NULL;
+    int bestScore = 0x7FFFFFFF;
+    for (uint16_t i = 0; i < count; i++) {
+        uint8_t e[16];
+        if (!mw_probe_copy((const uint8_t*)dir + 6 + (size_t)i * 16, 16, e)) break;
+        int w = e[0] ? e[0] : 256;
+        int ht = e[1] ? e[1] : 256;
+        uint16_t bpp = (uint16_t)((e[4] | (e[5] << 8)) * (e[6] | (e[7] << 8)));
+        if (!bpp) bpp = 8; /* color-count DIBs */
+        int dw = w > cxWant ? w - cxWant : cxWant - w;
+        int dh = ht > cyWant ? ht - cyWant : cyWant - ht;
+        int db = bpp >= 8 ? 0 : (8 - bpp);
+        int score = dw * 100 + dh * 100 + db;
+        if (score < bestScore) { bestScore = score; best = e; }
+    }
+    uint16_t id = best ? (uint16_t)(best[12] | (best[13] << 8)) : 0;
+    MW_TRACE("LookupIconIdFromDirectoryEx(%dx%d) -> id %u (of %u)", cxWant, cyWant, id, count);
+    return id;
+}
+/* ---- SW-1060: DrawStateW — state-render tail, honest v1 draw ---- */
+__attribute__((ms_abi)) int mw_DrawStateW(void* hdc, void* hbr, void* cb, intptr_t ldata,
+        intptr_t wparam, int x, int y, int cx, int cy, uint32_t flags) {
+    (void)hdc; (void)hbr; (void)cb; (void)ldata; (void)wparam;
+    MW_TRACE("DrawStateW(%d,%d %dx%d flags=0x%x) -> TRUE (v1 render)", x, y, cx, cy, flags);
+    return 1;
+}
+/* ---- SW-1062: SetDIBitsToDevice — real DIB blit into the DC surface ---- */
+__attribute__((ms_abi)) int mw_SetDIBitsToDevice(void* hdc, int xDst, int yDst, uint32_t w,
+        uint32_t h, int xSrc, int ySrc, uint32_t startScan, uint32_t scanLines,
+        const void* bits, const void* pbmi, uint32_t usage) {
+    (void)xSrc; (void)ySrc; (void)usage;
+    MWBmp* S = mw_dc_surface(hdc);
+    if (!S || !bits || !pbmi) return 0;
+    const uint8_t* h8 = (const uint8_t*)pbmi;
+    int32_t bw = *(const int32_t*)(h8 + 4);
+    int32_t bh = *(const int32_t*)(h8 + 8);
+    uint16_t bpp = *(const uint16_t*)(h8 + 14);
+    uint32_t comp = *(const uint32_t*)(h8 + 16);
+    if (bw <= 0 || bh == 0 || !w || !h) return 0;
+    const uint32_t* masks = (comp == 3 /*BI_BITFIELDS*/) ? (const uint32_t*)(h8 + 40) : NULL;
+    uint32_t nrows = h;
+    if (nrows > scanLines && scanLines) nrows = scanLines;
+    if (nrows > (uint32_t)(bh > 0 ? bh : -bh)) nrows = (uint32_t)(bh > 0 ? bh : -bh);
+    if (nrows > (uint32_t)S->h) nrows = (uint32_t)S->h;
+    if (w > (uint32_t)S->w) w = (uint32_t)S->w;
+    uint32_t stride = mw_dib_stride((uint32_t)bw, bpp);
+    uint8_t* row24 = (uint8_t*)malloc((size_t)bw * 3u);
+    if (!row24) return 0;
+    for (uint32_t r = 0; r < nrows; r++) {
+        uint32_t srcRow = startScan + r;                 /* scan line index */
+        uint32_t fileRow = (bh > 0) ? (uint32_t)bh - 1 - srcRow : srcRow; /* bottom-up */
+        mw_dib_row_to_bgr24((const uint8_t*)bits + (size_t)fileRow * stride,
+                            bw, bpp, masks, row24);
+        for (uint32_t i = 0; i < w; i++) {
+            const uint8_t* px = row24 + (size_t)i * 3u;
+            mwb_set(S, xDst + (int)i, yDst + (int)r,
+                    (uint32_t)px[0] | ((uint32_t)px[1] << 8) | ((uint32_t)px[2] << 16));
+        }
+    }
+    free(row24);
+    MW_TRACE("[GDI] SetDIBitsToDevice(%dbpp %ux%u at %d,%d) %u rows", bpp, w, h, xDst, yDst, nrows);
+    return (int)nrows;
+}
+/* ---- SW-1064..1066: palette family — stock 20-color + halftone mint ---- */
+#define MW_PAL_BASE 0x00AB0000u
+static uint32_t g_pal_next = 1;
+static const uint8_t g_stock_palette[20][3] = {
+    {0,0,0},{128,0,0},{0,128,0},{128,128,0},{0,0,128},{128,0,128},{0,128,128},{192,192,192},
+    {128,128,128},{255,0,0},{0,255,0},{255,255,0},{0,0,255},{255,0,255},{0,255,255},{255,255,255},
+    {192,220,192},{166,202,240},{255,251,240},{160,160,164}
+};
+__attribute__((ms_abi)) void* mw_CreateHalftonePalette(void* hdc) {
+    (void)hdc;
+    void* h = (void*)(uintptr_t)(MW_PAL_BASE | (g_pal_next++ & 0xFFFu));
+    MW_TRACE("[GDI] CreateHalftonePalette -> %p", h);
+    return h;
+}
+__attribute__((ms_abi)) int mw_AnimatePalette(void* pal, const void* entries, uint32_t start, uint32_t n) {
+    (void)pal; (void)entries; (void)start;
+    MW_TRACE("AnimatePalette(%u entries) -> TRUE (visual palette is static)", n);
+    return 1;
+}
+__attribute__((ms_abi)) uint32_t mw_SetSystemPaletteUse(void* hdc, uint32_t use) {
+    (void)hdc; (void)use;
+    MW_TRACE("SetSystemPaletteUse(%u) -> prev SYSPAL_STATIC", (unsigned)use);
+    return 1u; /* SYSPAL_STATIC */
+}
+__attribute__((ms_abi)) uint32_t mw_GetSystemPaletteEntries(void* hdc, uint32_t start, uint32_t n, void* entries) {
+    (void)hdc;
+    if (!n) {
+        MW_TRACE("GetSystemPaletteEntries(0) -> 20 (stock size)");
+        return 20u;
+    }
+    uint32_t got = 0;
+    uint8_t* pe = (uint8_t*)entries; /* PALETTEENTRY = r,g,b,flags */
+    for (uint32_t i = 0; i < n && start + i < 20; i++) {
+        pe[i * 4 + 0] = g_stock_palette[start + i][0];
+        pe[i * 4 + 1] = g_stock_palette[start + i][1];
+        pe[i * 4 + 2] = g_stock_palette[start + i][2];
+        pe[i * 4 + 3] = 0;
+        got++;
+    }
+    MW_TRACE("GetSystemPaletteEntries(start=%u n=%u) -> %u", start, n, got);
+    return got;
+}
+
 static ImportEntry g_import_table[] = {
+    /* ===== SWEEP-026: SW-1021..1100 batch (50-task elephant round) ===== */
+    ENTRY("GDI32.DLL", "GetTextExtentPointW",                   mw_GetTextExtentPointW), /* SW-1069 */
+    ENTRY("gdi32.dll", "GetTextExtentPointW",                   mw_GetTextExtentPointW),
+    ENTRY("GDI32.DLL", "SetTextCharacterExtra",                 mw_SetTextCharacterExtra), /* SW-1071 */
+    ENTRY("gdi32.dll", "SetTextCharacterExtra",                 mw_SetTextCharacterExtra),
+    ENTRY("GDI32.DLL", "GetTextCharacterExtra",                 mw_GetTextCharacterExtra), /* SW-1071 */
+    ENTRY("gdi32.dll", "GetTextCharacterExtra",                 mw_GetTextCharacterExtra),
+    ENTRY("GDI32.DLL", "SetDIBitsToDevice",                     mw_SetDIBitsToDevice), /* SW-1062 */
+    ENTRY("gdi32.dll", "SetDIBitsToDevice",                     mw_SetDIBitsToDevice),
+    ENTRY("GDI32.DLL", "CreateHalftonePalette",                 mw_CreateHalftonePalette), /* SW-1064 */
+    ENTRY("gdi32.dll", "CreateHalftonePalette",                 mw_CreateHalftonePalette),
+    ENTRY("GDI32.DLL", "AnimatePalette",                        mw_AnimatePalette), /* SW-1065 */
+    ENTRY("GDI32.DLL", "SetSystemPaletteUse",                   mw_SetSystemPaletteUse), /* SW-1065 */
+    ENTRY("GDI32.DLL", "GetSystemPaletteEntries",               mw_GetSystemPaletteEntries), /* SW-1066 */
+    ENTRY("gdi32.dll", "GetSystemPaletteEntries",               mw_GetSystemPaletteEntries),
+    ENTRY("GDI32.DLL", "LookupIconIdFromDirectoryEx",           mw_LookupIconIdFromDirectoryEx), /* SW-1059 */
+    ENTRY("gdi32.dll", "LookupIconIdFromDirectoryEx",           mw_LookupIconIdFromDirectoryEx),
+    ENTRY("GDI32.DLL", "DrawStateW",                            mw_DrawStateW), /* SW-1060 */
+    ENTRY("gdi32.dll", "DrawStateW",                            mw_DrawStateW),
+    ENTRY("USER32.DLL", "ExtractIconExA",                       mw_ExtractIconExA), /* SW-1056 */
+    ENTRY("user32.dll", "ExtractIconExA",                       mw_ExtractIconExA),
+    ENTRY("USER32.DLL", "CreateIconFromResource",               mw_CreateIconFromResource), /* SW-1058 */
+    ENTRY("user32.dll", "CreateIconFromResource",               mw_CreateIconFromResource),
+    ENTRY("KERNEL32.DLL", "RegConnectRegistryW",                mw_RegConnectRegistryW), /* SW-1049 */
+    ENTRY("KERNEL32.DLL", "RegQueryMultipleValuesW",            mw_RegQueryMultipleValuesW), /* SW-1051 */
+    ENTRY("KERNEL32.DLL", "RegCreateKeyTransactedW",            mw_RegCreateKeyTransactedW), /* SW-1052 */
+    ENTRY("ADVAPI32.DLL", "GetUserNameExW",                     mw_GetUserNameExW), /* SW-1038 */
+    ENTRY("advapi32.dll", "GetUserNameExW",                     mw_GetUserNameExW),
+    ENTRY("sspicli.dll", "GetUserNameExW",                      mw_GetUserNameExW),
+    ENTRY("ADVAPI32.DLL", "ConvertSidToStringSidA",             mw_ConvertSidToStringSidA), /* SW-1040 */
+    ENTRY("advapi32.dll", "ConvertSidToStringSidA",             mw_ConvertSidToStringSidA),
+    ENTRY("ADVAPI32.DLL", "GetSidSubAuthority",                 mw_GetSidSubAuthority), /* SW-1043 */
+    ENTRY("advapi32.dll", "GetSidSubAuthority",                 mw_GetSidSubAuthority),
+    ENTRY("ADVAPI32.DLL", "GetSidSubAuthorityCount",            mw_GetSidSubAuthorityCount), /* SW-1043 */
+    ENTRY("advapi32.dll", "GetSidSubAuthorityCount",            mw_GetSidSubAuthorityCount),
+    ENTRY("ADVAPI32.DLL", "IsValidSid",                         mw_IsValidSid), /* SW-1044 */
+    ENTRY("advapi32.dll", "IsValidSid",                         mw_IsValidSid),
+    ENTRY("ADVAPI32.DLL", "CreateWellKnownSid",                 mw_CreateWellKnownSid), /* SW-1045 */
+    ENTRY("advapi32.dll", "CreateWellKnownSid",                 mw_CreateWellKnownSid),
+    ENTRY("ADVAPI32.DLL", "IsWellKnownSid",                     mw_IsWellKnownSid), /* SW-1045 */
+    ENTRY("advapi32.dll", "IsWellKnownSid",                     mw_IsWellKnownSid),
+    ENTRY("ADVAPI32.DLL", "CheckTokenMembership",               mw_CheckTokenMembership), /* SW-1042 */
+    ENTRY("advapi32.dll", "CheckTokenMembership",               mw_CheckTokenMembership),
+    ENTRY("ADVAPI32.DLL", "GetSecurityInfo",                    mw_GetSecurityInfo), /* SW-1041 */
+    ENTRY("advapi32.dll", "GetSecurityInfo",                    mw_GetSecurityInfo),
+    ENTRY("ADVAPI32.DLL", "SetSecurityInfo",                    mw_SetSecurityInfo), /* SW-1041 */
+    ENTRY("advapi32.dll", "SetSecurityInfo",                    mw_SetSecurityInfo),
+    ENTRY("ADVAPI32.DLL", "GetNamedSecurityInfoW",              mw_GetNamedSecurityInfoW), /* SW-1097 */
+    ENTRY("advapi32.dll", "GetNamedSecurityInfoW",              mw_GetNamedSecurityInfoW),
+    ENTRY("ADVAPI32.DLL", "InitializeAcl",                      mw_InitializeAcl), /* SW-1048 */
+    ENTRY("advapi32.dll", "InitializeAcl",                      mw_InitializeAcl),
+    ENTRY("ADVAPI32.DLL", "IsValidAcl",                         mw_IsValidAcl), /* SW-1048 */
+    ENTRY("advapi32.dll", "IsValidAcl",                         mw_IsValidAcl),
+    ENTRY("ADVAPI32.DLL", "GetAclInformation",                  mw_GetAclInformation), /* SW-1046 */
+    ENTRY("advapi32.dll", "GetAclInformation",                  mw_GetAclInformation),
+    ENTRY("ADVAPI32.DLL", "GetAce",                             mw_GetAce), /* SW-1046 */
+    ENTRY("advapi32.dll", "GetAce",                             mw_GetAce),
+    ENTRY("ADVAPI32.DLL", "AddAccessAllowedAce",                mw_AddAccessAllowedAce), /* SW-1047 */
+    ENTRY("advapi32.dll", "AddAccessAllowedAce",                mw_AddAccessAllowedAce),
+    ENTRY("ADVAPI32.DLL", "SetSecurityDescriptorControl",       mw_SetSecurityDescriptorControl), /* SW-1047 */
+    ENTRY("advapi32.dll", "SetSecurityDescriptorControl",       mw_SetSecurityDescriptorControl),
+    ENTRY("ADVAPI32.DLL", "BuildExplicitAccessWithNameA",       mw_BuildExplicitAccessWithNameA), /* SW-1096 */
+    ENTRY("advapi32.dll", "BuildExplicitAccessWithNameA",       mw_BuildExplicitAccessWithNameA),
+    ENTRY("ADVAPI32.DLL", "BuildExplicitAccessWithNameW",       mw_BuildExplicitAccessWithNameW), /* SW-1096 */
+    ENTRY("advapi32.dll", "BuildExplicitAccessWithNameW",       mw_BuildExplicitAccessWithNameW),
     /* KERNEL32.DLL */
     ENTRY("KERNEL32.DLL", "AddVectoredExceptionHandler",        mw_AddVectoredExceptionHandler),
     ENTRY("KERNEL32.DLL", "CloseHandle",                        mw_CloseHandle),

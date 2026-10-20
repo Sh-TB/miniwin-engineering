@@ -720,3 +720,21 @@ SWEEP-025 (2026-10-20) «ادامه فیل و یوز» — SW-1001..1020 + 10 ro
 - GUI: bginfo64 1280x1024 frame; procmon64 26.35M SendMessageW/12s.
 - G1 PIN OK sha c490f1fc regression 12/12; worklist +280 lines (SW-1021..1100).
 - BUG-082 open (putty GS-cookie; Ghidra env lost -> requeue SW-1022/1030).
+
+---
+SWEEP-026 (2026-10-20) «ادامه فیل یوز با ۵۰ تسک» — resumed interrupted batch, closed it
+- Found SWEEP-026 mid-flight at session resume: 764 lines uncommitted in
+  loader.c (SW-1021..1097 batch + SW-1023 timer + SW-1090 trace cap).
+- Build fix: mw_SetDIBitsToDevice called the wrong-direction row helper
+  (from_bgr24 vs to_bgr24) — one-line fix, then clean build.
+- G1 PIN OK sha 51bc4fb3 regression 12/12 (evidence/master/g1/20261020_080749).
+- Corpus x3 45/45: putty 9->0 (BUG-082 closed via SW-1021 TEXTMETRICW),
+  complete runs 10->11; unresolved autoruns 52 / bginfo 201 / cports 20 /
+  procexp 161; zero regressions (searchmyfiles/winmergeu 139 + zoomit 1
+  unchanged, documented frontiers).
+- GUI: procmon64 26.35M->998,347 SendMessageW/12s (SW-1023 elapse gate 26x),
+  trace cap exact 1,000,002 lines (SW-1090); putty messagebox BMP; bginfo64
+  frame; calc battery 15/15 (rebuilt miniwin_calc from tests/games via
+  zig 0.17 pip); snake/breakout exit0+frames.
+- Worklist: 32 items marked LANDED w/ evidence; SW-1101..1150 queued (50);
+  sweep026 scripts committed (sweep.sh, gui_battery.sh, mark_landed.py).

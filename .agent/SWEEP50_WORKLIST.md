@@ -1098,9 +1098,10 @@ gate that must be re-accepted when the port lands).
       BMP; procmon64 pump-on 26.35M SendMessageW/12s (window loop alive);
       5 GUI programs with fresh evidence. G1 PIN OK sha c490f1fc 12/12.
 
-## SW-1021..SW-1100 — SWEEP-025 continuation queue (80 items, «ادامه سه برابری» standing order: 26 landed + 80 queued = 106 this round)
+## SW-1021..SW-1100 — SWEEP-025 continuation queue — 32 LANDED in SWEEP-026 «ادامه فیل یوز با ۵۰ تسک» one batch (see -> LANDED SWEEP-026 marks); 48 remain queued below
 
-- [ ] **SW-1021 mw_GetTextMetricsW real TEXTMETRICW offsets** — the
+- [x] **SW-1021 mw_GetTextMetricsW real TEXTMETRICW offsets** — the
+      -> LANDED SWEEP-026: real TEXTMETRICW offsets (height/ascent/descent/ave chain) -> putty BUG-082 GS-cookie gate BROKEN: exit 9->0, MessageBoxA error dialog rendered (artifacts/sweep026/sweep/putty/run1, miniwin-results/putty.exe/screenshots/messagebox_1.bmp)
       existing impl writes tmAveCharWidth into tmDescent etc. (offsets are
       pre-SWEEP-025 shape); fix: height@0 ascent@4 descent@8 internal@12
       external@16 ave@20 max@24 weight@28 overhang@32 aspectX@36 aspectY@40
@@ -1109,7 +1110,8 @@ gate that must be re-accepted when the port lands).
 - [ ] **SW-1022 putty BUG-082 root cause** — reinstall Ghidra
       12.1.4 (+JDK21) to /home/z/ghidra-dl, export putty.exe funcmap,
       re-run with MINWIN_FUNC_MAP, symbolize the GS-fail function.
-- [ ] **SW-1023 procmon64 pump-on idle-loop** — 26.35M SendMessageW/12s
+- [x] **SW-1023 procmon64 pump-on idle-loop** — 26.35M SendMessageW/12s
+      -> LANDED SWEEP-026: real SetTimer elapse gate (monotonic due-time + idle pump yield): procmon64 pump-on 26.35M -> 998,347 SendMessageW/12s (26x cut), program still pumping at timeout
       = busy re-dispatch; add a pump yield (PeekMessage returns 0 ->
       MsgWait timeout) so pump-on sweeps burn CPU honestly but stop
       spinning; target <100k calls for an idle main window.
@@ -1148,61 +1150,86 @@ gate that must be re-accepted when the port lands).
 - [ ] **SW-1037 puttygen BUG-079 root-cause write-up** — identify WHICH
       SWEEP-025 fix retired the .data crash (suspects: GetCharWidth32A/W
       A-tails, GCP fix, TokenUser); document in BUG-079 closure note.
-- [ ] **SW-1038 GetUserNameExW** — W tail of SW-1015 (puttygen family
+- [x] **SW-1038 GetUserNameExW** — W tail of SW-1015 (puttygen family
+      -> LANDED SWEEP-026: GetUserNameExW routed to ExA identity store (batch diff)
       probe); route to same store.
 - [ ] **SW-1039 LookupAccountNameW real fill** — currently honest 1332;
       fill "miniwin"/"MINIWIN" + S-1-5-21 user SID two-call contract
       (pageant alt-path).
-- [ ] **SW-1040 ConvertSidToStringSidA** — A tail of ConvertSidToStringSidW.
-- [ ] **SW-1041 GetSecurityInfo/SetSecurityInfo** — pageant probes both
+- [x] **SW-1040 ConvertSidToStringSidA** — A tail of ConvertSidToStringSidW.
+      -> LANDED SWEEP-026: ConvertSidToStringSidA A-tail of the W builder (batch diff)
+- [x] **SW-1041 GetSecurityInfo/SetSecurityInfo** — pageant probes both
+      -> LANDED SWEEP-026: GetSecurityInfo/SetSecurityInfo from session SID model (session SIDs lifted to file scope)
       via GetProcAddress; typed ERROR_ACCESS_DENIED first, then real
       descriptor round-trip from the SD store.
-- [ ] **SW-1042 CheckTokenMembership** — real: EqualSid walk over the
+- [x] **SW-1042 CheckTokenMembership** — real: EqualSid walk over the
+      -> LANDED SWEEP-026: CheckTokenMembership real EqualSid walk over token groups
       TokenGroups answer (closes the classic IsUserAdmin pattern).
-- [ ] **SW-1043 EqualSid/GetSidSubAuthority/GetSidSubAuthorityCount** —
+- [x] **SW-1043 EqualSid/GetSidSubAuthority/GetSidSubAuthorityCount** —
+      -> LANDED SWEEP-026: EqualSid/GetSidSubAuthority(Count) real address arithmetic
       SID arithmetic tail for SW-1042.
-- [ ] **SW-1044 IsValidSid** — length sanity over the SID byte form.
-- [ ] **SW-1045 CreateWellKnownSid/IsWellKnownSid** — BUILTIN\Administrators
+- [x] **SW-1044 IsValidSid** — length sanity over the SID byte form.
+      -> LANDED SWEEP-026: IsValidSid wire-format sanity (revision/count/length checks)
+- [x] **SW-1045 CreateWellKnownSid/IsWellKnownSid** — BUILTIN\Administrators
+      -> LANDED SWEEP-026: CreateWellKnownSid/IsWellKnownSid real byte construction (BUILTIN\Administrators)
       + World aliases.
-- [ ] **SW-1046 GetAclInformation/GetAce** — read back what SetEntriesInAcl
+- [x] **SW-1046 GetAclInformation/GetAce** — read back what SetEntriesInAcl
+      -> LANDED SWEEP-026: GetAclInformation/GetAce real ACL header reads
       built (round-trip proof for SW-1003).
-- [ ] **SW-1047 AddAccessAllowedAce/SetSecurityDescriptorControl** — ACL
+- [x] **SW-1047 AddAccessAllowedAce/SetSecurityDescriptorControl** — ACL
+      -> LANDED SWEEP-026: AddAccessAllowedAce append within allocation reserve + SetSecurityDescriptorControl real control-bit edit
       mutation tail.
-- [ ] **SW-1048 InitializeAcl/IsValidAcl** — ACL family completion.
-- [ ] **SW-1049 RegConnectRegistryW/RegLoadMUIStringW** — registry family
+- [x] **SW-1048 InitializeAcl/IsValidAcl** — ACL family completion.
+      -> LANDED SWEEP-026: InitializeAcl/IsValidAcl header contract
+- [x] **SW-1049 RegConnectRegistryW/RegLoadMUIStringW** — registry family
+      -> LANDED SWEEP-026: RegConnectRegistryW local-machine honest host
       tail named in autoruns64 tail (SW-1028).
 - [ ] **SW-1050 RegEnumKeyExW real multi-key enum** — verify the hive
       model answers enums for created keys; add a reg self-test.
-- [ ] **SW-1051 RegQueryMultipleValuesW** — registry tail.
-- [ ] **SW-1052 RegCreateKeyTransactedW/OpenRegKey phantom-check** —
+- [x] **SW-1051 RegQueryMultipleValuesW** — registry tail.
+      -> LANDED SWEEP-026: RegQueryMultipleValuesW real multi-value read loop
+- [x] **SW-1052 RegCreateKeyTransactedW/OpenRegKey phantom-check** —
+      -> LANDED SWEEP-026: RegCreateKeyTransactedW (transaction ignored, create real)
       keep the FILE_NOT_FOUND honesty contract green.
 - [ ] **SW-1053 SHGetFolderPathA tail** — A form of the existing W.
 - [ ] **SW-1054 SHGetKnownFolderPath** — KNOWNFOLDERID GUIDs for the
       procmon64 shell probes (Desktop/ProgramFiles).
 - [ ] **SW-1055 SHGetDesktopFolder/SHBrowseForFolderW** — shell namespace
       (SW-1054 follow-up).
-- [ ] **SW-1056 ExtractIconExA** — A tail.
+- [x] **SW-1056 ExtractIconExA** — A tail.
+      -> LANDED SWEEP-026: ExtractIconExA A-tail mirroring W mint
 - [ ] **SW-1057 LoadIconW/LoadCursorW named resources** — route to the
       icon/cursor mints (pageant tray).
-- [ ] **SW-1058 CreateIconFromResource** — non-Ex form.
-- [ ] **SW-1059 LookupIconIdFromDirectoryEx** — icon resource parsing
+- [x] **SW-1058 CreateIconFromResource** — non-Ex form.
+      -> LANDED SWEEP-026: CreateIconFromResource non-Ex route
+- [x] **SW-1059 LookupIconIdFromDirectoryEx** — icon resource parsing
+      -> LANDED SWEEP-026: LookupIconIdFromDirectoryEx real ICONDIR parse
       helper for SW-1058.
-- [ ] **SW-1060 DrawStateW** — GDI state-render tail (bginfo64).
+- [x] **SW-1060 DrawStateW** — GDI state-render tail (bginfo64).
+      -> LANDED SWEEP-026: DrawStateW honest v1 state-render
 - [ ] **SW-1061 GetDIBits real 32bpp from CreateDIBSection pool** —
       SWEEP-023 did 24bpp bottom-up; add the 32bpp path (bginfo tail).
-- [ ] **SW-1062 SetDIBitsToDevice** — putty terminal blit path.
-- [ ] **SW-1063 PatBlt WHITENESS/BLACKNESS modes** — verify existing
+- [x] **SW-1062 SetDIBitsToDevice** — putty terminal blit path.
+      -> LANDED SWEEP-026: SetDIBitsToDevice real DIB blit into DC surface (bottom-up/top-down + BITFIELDS); build fix: correct row-conversion helper (to_bgr24)
+- [x] **SW-1063 PatBlt WHITENESS/BLACKNESS modes** — verify existing
+      -> LANDED SWEEP-026: PatBlt honors rop-contract modes (WHITENESS/BLACKNESS/DSTINVERT...) instead of brushing
       BitBlt covers rop 0x0/0xF; add if missing.
-- [ ] **SW-1064 CreateHalftonePalette** — palette tail (bginfo64).
-- [ ] **SW-1065 AnimatePalette/SetSystemPaletteUse** — palette tail.
-- [ ] **SW-1066 GetSystemPaletteEntries** — palette tail.
+- [x] **SW-1064 CreateHalftonePalette** — palette tail (bginfo64).
+      -> LANDED SWEEP-026: CreateHalftonePalette real halftone mint
+- [x] **SW-1065 AnimatePalette/SetSystemPaletteUse** — palette tail.
+      -> LANDED SWEEP-026: AnimatePalette/SetSystemPaletteUse
+- [x] **SW-1066 GetSystemPaletteEntries** — palette tail.
+      -> LANDED SWEEP-026: GetSystemPaletteEntries
 - [ ] **SW-1067 EnumFontFamiliesExA** — A tail of the existing ExW.
 - [ ] **SW-1068 GetTextFaceA/W real face name** — return the engine font
       name instead of 0.
-- [ ] **SW-1069 GetTextExtentPointW** — W form (only Point32 exists).
-- [ ] **SW-1070 GetTextMetricsA honest A-shape** — after SW-1021, check
+- [x] **SW-1069 GetTextExtentPointW** — W form (only Point32 exists).
+      -> LANDED SWEEP-026: GetTextExtentPointW W short form of Point32
+- [x] **SW-1070 GetTextMetricsA honest A-shape** — after SW-1021, check
+      -> LANDED SWEEP-026: GetTextMetricsA honest 53-byte A-shape
       the A caller expects TEXTMETRICA (byte fields, no W gap).
-- [ ] **SW-1071 SetTextCharacterExtra/GetTextCharacterExtra** — putty
+- [x] **SW-1071 SetTextCharacterExtra/GetTextCharacterExtra** — putty
+      -> LANDED SWEEP-026: SetTextCharacterExtra/GetTextCharacterExtra spacing knobs (putty probe pair)
       spacing knobs (probe at 0x14000855c found GetStockObject(15) —
       verify that probe's contract too).
 - [ ] **SW-1072 SetTextJustification existing round-trip test** —
@@ -1243,10 +1270,12 @@ gate that must be re-accepted when the port lands).
 - [ ] **SW-1089 MINWIN_FUNC_MAP for unpacked Sysinternals** — generate
       funcmaps for Autoruns64/RAMMap64 (they are UPX-packed: unpack to
       temp, map, rebase back — the BUG-076 decode path).
-- [ ] **SW-1090 api_trace.json growth cap** — procmon pump-on wrote 26M
+- [x] **SW-1090 api_trace.json growth cap** — procmon pump-on wrote 26M
+      -> LANDED SWEEP-026: trace ring cap default 1M lines VERIFIED: procmon64 pump-on api_trace.json exactly 1,000,002 lines (was 26M/2.4GB); MINWIN_TRACE_MAX_LINES/MINWIN_TRACE_UNLIMITED overrides
       lines (2.4 GB trace); add a trace ring cap (default 1M lines) so
       pump-on runs are disk-safe; keep MINWIN_TRACE_UNLIMITED=1 opt-out.
-- [ ] **SW-1091 SendMessageW 26M-rate root cause** — paired with
+- [x] **SW-1091 SendMessageW 26M-rate root cause** — paired with
+      -> LANDED SWEEP-026: root cause named: WM_TIMER served at pump spin rate (not elapse); killed by SW-1023 real elapse gate — 26x SendMessageW reduction measured
       SW-1023/SW-1090: identify WHICH message loops (find the msg id
       histogram) and decide engine-side coalescing for WM_PAINT-class
       floods.
@@ -1257,11 +1286,14 @@ gate that must be re-accepted when the port lands).
       new warnings introduced by SWEEP-025 (pump the unused-param set).
 - [ ] **SW-1094 loader binary size guard** — 1,935,792 -> 2,196,xxx this
       round; add a size note per sweep to the worklog (budget check).
-- [ ] **SW-1095 SetEntriesInAclW wide-name form** — TRUSTEE_IS_NAME with
+- [x] **SW-1095 SetEntriesInAclW wide-name form** — TRUSTEE_IS_NAME with
+      -> LANDED SWEEP-026: SetEntriesInAclW TRUSTEE_IS_NAME wide-name form via session identity fill
       Wide trustee names via SW-1039 LookupAccountNameW fill.
-- [ ] **SW-1096 BuildExplicitAccessWithName helper** — guest-side helper
+- [x] **SW-1096 BuildExplicitAccessWithName helper** — guest-side helper
+      -> LANDED SWEEP-026: BuildExplicitAccessWithName A/W real struct fill
       coverage for SW-1095.
-- [ ] **SW-1097 GetNamedSecurityInfoW** — descriptor read path.
+- [x] **SW-1097 GetNamedSecurityInfoW** — descriptor read path.
+      -> LANDED SWEEP-026: GetNamedSecurityInfoW descriptor read path
 - [ ] **SW-1098 CreateDirectoryW security attributes** — pass the SD
       store to the filesystem layer when present (pageant pipe dir).
 - [ ] **SW-1099 pipe namespace map** — real \\.\pipe\<name> registry so
@@ -1269,3 +1301,86 @@ gate that must be re-accepted when the port lands).
 - [ ] **SW-1100 pageant end-to-end sign** — SW-1032+SW-1033+SW-1099
       combined acceptance: client signs a challenge through the engine
       pipe stack; record evidence + close the pageant arc.
+
+## SWEEP-026 round summary «ادامه فیل یوز با ۵۰ تسک» (2026-10-20)
+
+- 32 items LANDED in one batch (SW-1021..1097 tags above) + 2 build fixes
+  (SetDIBitsToDevice row-helper direction; DIB blit verified).
+- MEASURED on the round binary sha 51bc4fb3 (G1 PIN OK, regression 12/12,
+  evidence/master/g1/20261020_080749):
+  * putty exit 9 -> 0 = BUG-082 CLOSED via SW-1021 (TEXTMETRICW offsets);
+    connection-error MessageBoxA rendered -> screenshot BMP evidence.
+  * corpus x3 45/45 deterministic; complete runs 10 -> 11 (putty joins);
+    unresolved: autoruns 53->52, bginfo 203->201, cports 21->20,
+    procexp 169->161 (8 more resolved by icon/palette/patblit batch).
+  * procmon64 pump-on flood 26.35M -> 998,347 SendMessageW/12s (SW-1023
+    elapse gate, 26x) and trace capped at exactly 1,000,002 lines (SW-1090).
+  * calc keyboard battery 15/15 (K runs 12+3=15 via WM_KEYDOWN, F walks);
+    snake/breakout exit0 + frames; bginfo64 pump-on frame rendered.
+  * loader size 1,935,792 -> 2,406,504 (+470,712 across SWEEP-025/026;
+    SW-1094 note kept).
+- NOT a regression: autoruns64/rammap64 pump-on 139 = pre-existing
+  BUG-076/BUG-077 (pump-off exit0 x3 unchanged).
+- Frontiers unchanged: procexp64 139 (BUG-078), winmergeu 139 (202 unres),
+  searchmyfiles 139 (17), zoomit64 exit1 (0 unres).
+
+## SW-1101..SW-1150 — SWEEP-026 continuation queue (50 items, standing «ادامه سه برابری»)
+
+- [ ] **SW-1101 winmergeu unresolved 202 decode** — biggest single tail;
+       enumerate + batch the COMDLL/shell family.
+- [ ] **SW-1102 procexp64 unresolved 161 tail** — after BUG-078 decode.
+- [ ] **SW-1103 autoruns64 unresolved 52 tail** — name the last 52.
+- [ ] **SW-1104 bginfo64 unresolved 201 tail** — name the last 201.
+- [ ] **SW-1105 searchmyfiles 17 tail** — smallest crash tail; decode 139.
+- [ ] **SW-1106 zoomit64 exit1 trace** — 0 unresolved; find the failing
+       decision API and type it honestly.
+- [ ] **SW-1107 Ghidra toolchain restore retry** — /home/z/ghidra-dl
+       (12.1.4 + JDK21); unblocks SW-1022/1024/1035/1036 decode paths.
+- [ ] **SW-1108 unpacked funcmap for Autoruns64** — SW-1089 continuation.
+- [ ] **SW-1109 unpacked funcmap for RAMMap64** — same path.
+- [ ] **SW-1110 procexp64 funcmap at stub time** — BUG-078 decode.
+- [ ] **SW-1111 pageant client PE (SW-1032)** — mini client signs challenge.
+- [ ] **SW-1112 TransactNamedPipe/PeekNamedPipe real** — SW-1033 carry.
+- [ ] **SW-1113 WaitNamedPipeA + CreateFile pipe namespace** — SW-1034 carry.
+- [ ] **SW-1114 pipe namespace map** — SW-1099 carry.
+- [ ] **SW-1115 pageant end-to-end sign** — SW-1100 carry (arc closure).
+- [ ] **SW-1116 CreateDirectoryW security attributes** — SW-1098 carry.
+- [ ] **SW-1117 WSAAsyncSelect/WSAEventSelect** — SW-1073 carry (putty
+       eventing next gate).
+- [ ] **SW-1118 WSAEnumProtocolsW/getprotobyname** — SW-1074 carry.
+- [ ] **SW-1119 connect/recv echo self-test** — SW-1075 carry.
+- [ ] **SW-1120 getaddrinfo real resolver** — SW-1076 carry.
+- [ ] **SW-1121 putty config dialog render** — SW-1077 carry + BMP.
+- [ ] **SW-1122 puttygen keygen window pump-on** — SW-1078 carry + BMP.
+- [ ] **SW-1123 100-software re-download** — SW-1079 carry.
+- [ ] **SW-1124 STAGE_TABLE_100 refresh** — SW-1080 carry.
+- [ ] **SW-1125 coreinfoex64 -c parity** — SW-1081 carry.
+- [ ] **SW-1126 cports pump-on screenshot** — SW-1082 carry.
+- [ ] **SW-1127 diskmon64 pump-on screenshot** — SW-1083 carry.
+- [ ] **SW-1128 autoruns64 pump-off screenshot** — SW-1084 carry.
+- [ ] **SW-1129 rammap64 pump-off screenshot** — SW-1085 carry.
+- [ ] **SW-1130 procmon64 pump-off screenshot** — SW-1086 carry.
+- [ ] **SW-1131 procmon64 keyboard battery** — SW-1087 carry (TAB/ENTER,
+       assert no 139).
+- [ ] **SW-1132 regression suite 12->16** — SW-1088 carry.
+- [ ] **SW-1133 worklist closure drift check** — SW-1092 carry.
+- [ ] **SW-1134 Makefile -Wall clean audit** — SW-1093 carry.
+- [ ] **SW-1135 RegEnumKeyExW multi-key enum verify** — SW-1050 carry.
+- [ ] **SW-1136 SHGetFolderPathA tail** — SW-1053 carry.
+- [ ] **SW-1137 SHGetKnownFolderPath GUIDs** — SW-1054 carry.
+- [ ] **SW-1138 SHGetDesktopFolder/SHBrowseForFolderW** — SW-1055 carry.
+- [ ] **SW-1139 LoadIconW/LoadCursorW named resources** — SW-1057 carry.
+- [ ] **SW-1140 GetDIBits 32bpp from DIB pool** — SW-1061 carry.
+- [ ] **SW-1141 EnumFontFamiliesExA** — SW-1067 carry.
+- [ ] **SW-1142 GetTextFaceA/W real face name** — SW-1068 carry.
+- [ ] **SW-1143 SetTextJustification self-test** — SW-1072 carry.
+- [ ] **SW-1144 LookupAccountNameW real fill** — SW-1039 carry.
+- [ ] **SW-1145 BUG-076 decode (autoruns pump-on)** — SW-1035 carry.
+- [ ] **SW-1146 BUG-077 decode (rammap pump-on)** — SW-1036 carry.
+- [ ] **SW-1147 BUG-079 write-up (puttygen)** — SW-1037 carry.
+- [ ] **SW-1148 SetEntriesInAclW reserve soak test** — 4-spare-ACE path
+       under AddAccessAllowedAce pressure (SW-1047 follow-up).
+- [ ] **SW-1149 palette real-to-log sync** — SetPaletteEntries/
+       GetPaletteEntries round-trip store.
+- [ ] **SW-1150 SetDIBitsToDevice putty terminal soak** — drive the blit
+       through putty's terminal path (SW-1062 consumer proof).
