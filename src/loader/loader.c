@@ -575,11 +575,18 @@ __attribute__((ms_abi)) long long mw_winapi_optional_stub(long long a, long long
     (void)a; (void)b; (void)c; (void)d;
     return 0;
 }
+/* SWEEP-008b forward decl: hook lives near GetVersionExW */
+__attribute__((ms_abi)) long mw_RtlGetVersion(void* vi);
 __attribute__((ms_abi)) void* mw_GetProcAddress(void* module, const char* name) {
     MW_TRACE("GetProcAddress(module=%p, name=%s)", module, name ? name : "NULL");
     if (!name || !name[0]) return NULL;
     /* Resolve from dispatch table if module matches our fake handle or image base.
      * Uses global function pointer set after table definitions (see resolve_proc_init). */
+    /* SWEEP-008b: named native exports guests fetch by GetProcAddress and
+     * CALL directly — a NULL here is a call-NULL crash, and the generic
+     * optional-stub would leave their out-structs uninitialized. Resolve
+     * these BY NAME first, regardless of the module handle. */
+    if (strcmp(name, "RtlGetVersion") == 0) return (void*)&mw_RtlGetVersion;
     if (g_resolve_proc_fn) {
         void* r = g_resolve_proc_fn(module, name);
         if (r) return r;
@@ -593,6 +600,10 @@ __attribute__((ms_abi)) void* mw_GetProcAddress(void* module, const char* name) 
             return (void*)&mw_winapi_optional_stub;
         }
     }
+    /* SWEEP-008b: named native exports guests fetch by GetProcAddress and
+     * CALL directly — a NULL here is a call-NULL crash. Resolve these by
+     * name regardless of the module handle the guest passed. */
+    if (strcmp(name, "RtlGetVersion") == 0) return (void*)&mw_RtlGetVersion;
     return NULL;
 }
 
@@ -5241,6 +5252,33 @@ __attribute__((ms_abi)) void mw_RtlRestoreContext(void* ctx, void* exc) {
 __attribute__((ms_abi)) void* mw_GetModuleHandleW(const wchar_t* name) {
     MW_TRACE("GetModuleHandleW()");
     if (name == NULL || name[0] == 0) return g_image_base;
+    /* SWEEP-008b: known system DLLs always report as loaded (real Windows
+     * never returns NULL for ntdll) — generic pseudo-handle slot; guests
+     * then GetProcAddress() against it, which resolves hooks/table. */
+    {
+        static const wchar_t* known[] = {
+            L"ntdll", L"ntdll.dll", L"kernel32", L"kernel32.dll", L"user32",
+            L"user32.dll", L"gdi32", L"gdi32.dll", L"advapi32", L"advapi32.dll",
+            L"shell32", L"shell32.dll", L"ole32", L"ole32.dll", L"oleaut32",
+            L"oleaut32.dll", L"shlwapi", L"shlwapi.dll", L"comctl32",
+            L"comctl32.dll", L"comdlg32", L"comdlg32.dll", L"msvcrt",
+            L"msvcrt.dll", L"ws2_32", L"ws2_32.dll", L"winmm", L"winmm.dll",
+            L"version", L"version.dll", L"uxtheme", L"uxtheme.dll",
+            L"dwmapi", L"dwmapi.dll", L"winhttp", L"winhttp.dll",
+            L"crypt32", L"crypt32.dll", L"msimg32", L"msimg32.dll",
+            L"wtsapi32", L"wtsapi32.dll", L"wintrust", L"wintrust.dll",
+            L"psapi", L"psapi.dll", L"iphlpapi", L"iphlpapi.dll",
+            L"netapi32", L"netapi32.dll", L"powrprof", L"powrprof.dll",
+            L"setupapi", L"setupapi.dll", L"dbghelp", L"dbghelp.dll",
+            L"bcrypt", L"bcrypt.dll", L"ncrypt", L"ncrypt.dll",
+            L"mpr", L"mpr.dll", L"secur32", L"secur32.dll",
+            L"dnsapi", L"dnsapi.dll", L"wininet", L"wininet.dll",
+            L"gdiplus", L"gdiplus.dll", L"riched20", L"riched20.dll",
+            L"riched32", L"riched32.dll", L"msimg32.dll",
+        };
+        for (size_t i = 0; i < sizeof(known) / sizeof(known[0]); i++)
+            if (wcscmp(name, known[i]) == 0) return (void*)(uintptr_t)0xdead0001;
+    }
     return NULL;
 }
 __attribute__((ms_abi)) uint32_t mw_GetThreadId(void* h) {
@@ -6188,6 +6226,53 @@ __attribute__((ms_abi)) void* mw_GlobalAlloc(uint32_t flags, size_t bytes) {
     return p;
 }
 __attribute__((ms_abi)) void* mw_GlobalLock(void* p) { return p; }
+
+/* ---- SWEEP-008 SW-558: global atom table — rammap64/procexp64 call
+ * GlobalAddAtomW on their gate paths. Real semantics: unique 0xC000-0xFFFF
+ * per string, findable by name, deletable. Bounded honest table. ---- */
+static uint16_t g_atom_next = 0xC001;
+static struct { wchar_t name[64]; uint16_t atom; } g_atom_tab[64];
+static size_t g_atom_count = 0;
+static uint16_t mw_atom_add(const wchar_t* s) {
+    if (!s) return 0;
+    for (size_t i = 0; i < g_atom_count; i++)
+        if (wcscmp(g_atom_tab[i].name, s) == 0) return g_atom_tab[i].atom;
+    if (g_atom_count >= sizeof(g_atom_tab) / sizeof(g_atom_tab[0])) return 0;
+    wchar_t* d = g_atom_tab[g_atom_count].name;
+    size_t k = 0;
+    for (; s[k] && k < 63; k++) d[k] = s[k];
+    d[k] = 0;
+    g_atom_tab[g_atom_count].atom = g_atom_next;
+    g_atom_count++;
+    return g_atom_next++;
+}
+static uint16_t mw_atom_find(const wchar_t* s) {
+    if (!s) return 0;
+    for (size_t i = 0; i < g_atom_count; i++)
+        if (wcscmp(g_atom_tab[i].name, s) == 0) return g_atom_tab[i].atom;
+    return 0;
+}
+__attribute__((ms_abi)) uint16_t mw_GlobalAddAtomW(const wchar_t* s) {
+    uint16_t a = mw_atom_add(s);
+    MW_TRACE("GlobalAddAtomW() -> %u", a);
+    return a;
+}
+__attribute__((ms_abi)) uint16_t mw_GlobalAddAtomA(const char* s) {
+    if (!s) return 0;
+    wchar_t w[64]; size_t k = 0;
+    for (; s[k] && k < 63; k++) w[k] = (wchar_t)(unsigned char)s[k];
+    w[k] = 0;
+    return mw_atom_add(w);
+}
+__attribute__((ms_abi)) uint16_t mw_GlobalFindAtomW(const wchar_t* s) { return mw_atom_find(s); }
+__attribute__((ms_abi)) uint16_t mw_GlobalFindAtomA(const char* s) {
+    if (!s) return 0;
+    wchar_t w[64]; size_t k = 0;
+    for (; s[k] && k < 63; k++) w[k] = (wchar_t)(unsigned char)s[k];
+    w[k] = 0;
+    return mw_atom_find(w);
+}
+__attribute__((ms_abi)) uint16_t mw_GlobalDeleteAtom(uint16_t a) { (void)a; return 0; }
 __attribute__((ms_abi)) int mw_GlobalUnlock(void* p) { return 1; }
 __attribute__((ms_abi)) size_t mw_GlobalSize(void* p) {
     if (!p) return 0;
@@ -6566,12 +6651,37 @@ __attribute__((ms_abi)) int mw_GetVersion(void) { return 0x000A0006; } /* 10.6 *
 __attribute__((ms_abi)) int mw_GetVersionExA(void* vi) {
     if (!vi) return 0;
     uint32_t sz = *(uint32_t*)vi;
+    if (sz == 0 || sz > 560) sz = 560; /* SWEEP-008b: garbage-size guard (memset bomb) */
     memset(vi, 0, sz);
     *(uint32_t*)vi = sz;
     uint8_t* p = (uint8_t*)vi;
     *(uint32_t*)(p + 4)  = 10; *(uint32_t*)(p + 8) = 0; *(uint32_t*)(p + 12) = 0;
     *(uint32_t*)(p + 16) = 2;  /* VER_PLATFORM_WIN32_NT */
     return 1;
+}
+/* SWEEP-008 SW-556: W variant — the autoruns64/rammap64/procexp64 version
+ * gates all call GetVersionExW (OSVERSIONINFOW). Layout is structurally
+ * identical to the A struct up to szCSDVersion (5 DWORDs then the string;
+ * memset already zeroes it), so delegate to the pinned A implementation. */
+__attribute__((ms_abi)) int mw_GetVersionExW(void* vi) {
+    return mw_GetVersionExA(vi);
+}
+/* SWEEP-008b: ntdll!RtlGetVersion — autoruns64 does
+ * GetProcAddress(GetModuleHandleW("ntdll"), "RtlGetVersion") and CALLS the
+ * result; a NULL return is call-NULL SIGSEGV (RIP=0 @ 0x1400172cf confirmed
+ * by disassembly). Fills the struct itself (never trusts caller's size
+ * field for memset — garbage size walked off the stack, Signal 11 in libc
+ * memset). Same struct shape as OSVERSIONINFOW, STATUS_SUCCESS. */
+__attribute__((ms_abi)) long mw_RtlGetVersion(void* vi) {
+    if (!vi) return (long)0xC000000Du; /* STATUS_INVALID_PARAMETER */
+    uint32_t sz = *(uint32_t*)vi;
+    if (sz == 0 || sz > 560) sz = 284; /* OSVERSIONINFOW/EXW sane bound */
+    uint8_t* p = (uint8_t*)vi;
+    memset(p, 0, sz);
+    *(uint32_t*)(p)      = sz; /* preserve caller's declared size */
+    *(uint32_t*)(p + 4)  = 10; *(uint32_t*)(p + 8) = 0; *(uint32_t*)(p + 12) = 0;
+    *(uint32_t*)(p + 16) = 2;  /* VER_PLATFORM_WIN32_NT */
+    return 0; /* STATUS_SUCCESS */
 }
 
 /* ---- codepage / locale / string ---- */
@@ -7409,6 +7519,22 @@ __attribute__((ms_abi)) int32_t mw_RegOpenKeyExW(void* key, const wchar_t* sub, 
     MW_TRACE("RegOpenKeyExW() -> ERROR_FILE_NOT_FOUND");
     mw_SetLastError(2);
     return 2;
+}
+/* SWEEP-008 SW-557: RegOpenKeyW (non-Ex) — autoruns64/rammap64/procexp64
+ * gate paths open HKCU\Software\Sysinternals\<Tool>. No registry on host:
+ * honest ERROR_FILE_NOT_FOUND (2), same contract as the Ex variant. */
+__attribute__((ms_abi)) int32_t mw_RegOpenKeyW(void* key, const wchar_t* sub, void** result) {
+    (void)sub; (void)result;
+    mw_SetLastError(2);
+    return 2;
+}
+/* SWEEP-008b: RegCreateKeyW — autoruns64's EULA-accept write path. The
+ * generic stub returned 0 (success) WITHOUT writing a handle — a lie that
+ * sent the guest down a NULL-handle path. Honest failure: no registry. */
+__attribute__((ms_abi)) int32_t mw_RegCreateKeyW(void* key, const wchar_t* sub, void** result) {
+    (void)sub; (void)result;
+    mw_SetLastError(5);
+    return 5; /* ERROR_ACCESS_DENIED */
 }
 __attribute__((ms_abi)) int32_t mw_RegOpenKeyExA(void* key, const char* sub, uint32_t opts, uint32_t access, void** result) {
     mw_SetLastError(2);
@@ -10133,6 +10259,111 @@ __attribute__((ms_abi)) int mw_MessageBoxA(void* hwnd, const char* text,
  *      brushes/pens/state — every draw lands in the framebuffer; EndPaint
  *      dumps it to <results>/screenshots/frame_NNN.bmp (guest's own image).
  * ---- */
+/* ============================================================
+ * SWEEP-008 named-stub batch (SW-559/561/563): string compare,
+ * registered messages, shlwapi color math, dialog gate unlock.
+ * ============================================================ */
+static int mw_wc_ascii_cmp(const wchar_t* a, const wchar_t* b, int fold) {
+    if (!a || !b) return a == b ? 0 : (a ? 1 : -1);
+    for (;;) {
+        wchar_t ca = *a++, cb = *b++;
+        if (fold) {
+            if (ca >= 'A' && ca <= 'Z') ca += 32;
+            if (cb >= 'A' && cb <= 'Z') cb += 32;
+        }
+        if (ca != cb) return (int)ca - (int)cb;
+        if (!ca) return 0;
+    }
+}
+__attribute__((ms_abi)) int mw_lstrcmpW(const wchar_t* a, const wchar_t* b)  { return mw_wc_ascii_cmp(a, b, 0); }
+__attribute__((ms_abi)) int mw_lstrcmpiW(const wchar_t* a, const wchar_t* b) { return mw_wc_ascii_cmp(a, b, 1); }
+
+static uint32_t g_regmsg_next = 0xC000;
+__attribute__((ms_abi)) uint32_t mw_RegisterWindowMessageW(const wchar_t* s) {
+    (void)s;
+    return g_regmsg_next++; /* registered-message range 0xC000-0xFFFF */
+}
+
+/* shlwapi color math — HLSMAX=240 scale, same as real shlwapi (procexp64
+ * FUN_14007baf0 round-trips: ColorRGBToHLS, adjust L, ColorHLSToRGB). */
+#define MW_HLSMAX 240
+__attribute__((ms_abi)) void mw_ColorRGBToHLS(uint32_t rgb, uint16_t* H, uint16_t* L, uint16_t* S) {
+    int r = (int)(rgb & 0xFF), g = (int)((rgb >> 8) & 0xFF), b = (int)((rgb >> 16) & 0xFF);
+    int mx = r > g ? (r > b ? r : b) : (g > b ? g : b);
+    int mn = r < g ? (r < b ? r : b) : (g < b ? g : b);
+    int d = mx - mn;
+    uint16_t h = 0, s = 0;
+    uint16_t l = (uint16_t)(((mx + mn) * MW_HLSMAX + 255) / 510);
+    if (d) {
+        s = (l <= MW_HLSMAX / 2) ? (uint16_t)((d * MW_HLSMAX + (mx + mn) / 2) / (mx + mn))
+                                 : (uint16_t)((d * MW_HLSMAX + (510 - mx - mn) / 2) / (510 - mx - mn));
+        int hd;
+        if (mx == r)      { hd = 60 * (g - b) / d; if (hd < 0) hd += 360; }
+        else if (mx == g) { hd = 60 * (b - r) / d + 120; }
+        else              { hd = 60 * (r - g) / d + 240; }
+        h = (uint16_t)((hd * MW_HLSMAX + 180) / 360); /* degrees -> 0..240 */
+    }
+    if (H) *H = h;
+    if (L) *L = l;
+    if (S) *S = s;
+}
+static int mw_hls_trilogy(int n1, int n2, int hue) {
+    if (hue < 0) hue += MW_HLSMAX;
+    else if (hue > MW_HLSMAX) hue -= MW_HLSMAX;
+    if (hue < MW_HLSMAX / 6)     return n1 + (((n2 - n1) * hue) / (MW_HLSMAX / 6));
+    if (hue < MW_HLSMAX / 2)     return n2;
+    if (hue < 2 * MW_HLSMAX / 3) return n1 + (((n2 - n1) * (2 * MW_HLSMAX / 3 - hue)) / (MW_HLSMAX / 6));
+    return n1;
+}
+__attribute__((ms_abi)) uint32_t mw_ColorHLSToRGB(uint16_t h, uint16_t l, uint16_t s) {
+    int r, g, b;
+    if (s == 0) {
+        r = g = b = (l * 255) / MW_HLSMAX;
+    } else {
+        int m2 = (l <= MW_HLSMAX / 2) ? (l * (MW_HLSMAX + s)) / MW_HLSMAX
+                                      : l + s - (l * s) / MW_HLSMAX;
+        int m1 = 2 * l - m2;
+        r = (mw_hls_trilogy(m1, m2, (int)h + MW_HLSMAX / 3) * 255) / MW_HLSMAX;
+        g = (mw_hls_trilogy(m1, m2, (int)h) * 255) / MW_HLSMAX;
+        b = (mw_hls_trilogy(m1, m2, (int)h - MW_HLSMAX / 3) * 255) / MW_HLSMAX;
+    }
+    if (r < 0) r = 0; if (r > 255) r = 255;
+    if (g < 0) g = 0; if (g > 255) g = 255;
+    if (b < 0) b = 0; if (b > 255) b = 255;
+    return (uint32_t)r | ((uint32_t)g << 8) | ((uint32_t)b << 16);
+}
+
+/* ---- SW-560: dialog gate unlock (autoruns64/rammap64 EULA) ----
+ * Headless strategy: run the guest dialog procedure once with
+ * WM_INITDIALOG, then deliver WM_COMMAND(IDOK) — the exact path the
+ * guest's own "I Agree" button takes. EndDialog records the result and
+ * the box returns it (IDOK default when the proc never ends). No
+ * template parsing, no host window: EULA procs only touch controls via
+ * our honest-failure control APIs. */
+typedef __attribute__((ms_abi)) long long (*MW_DLGPROC)(void*, uint32_t, uintptr_t, long long);
+static long long g_dlg_result = 0;
+__attribute__((ms_abi)) int mw_EndDialog(void* h, long long result) {
+    (void)h;
+    g_dlg_result = result;
+    return 1;
+}
+static intptr_t mw_dialog_box_indirect(void* hinst, const void* tmpl, void* parent, MW_DLGPROC proc, intptr_t init) {
+    (void)hinst; (void)tmpl;
+    g_dlg_result = 1; /* IDOK default if proc never calls EndDialog */
+    MW_TRACE("DialogBoxIndirectParam(proc=%p)", (void*)proc);
+    if (!proc) return g_dlg_result;
+    proc(parent, 0x0110u /*WM_INITDIALOG*/, 0, init);
+    if (g_dlg_result != 1) return g_dlg_result; /* ended during init */
+    proc(parent, 0x0111u /*WM_COMMAND*/, (uintptr_t)1 /*IDOK*/, 0);
+    return g_dlg_result;
+}
+__attribute__((ms_abi)) intptr_t mw_DialogBoxIndirectParamW(void* hinst, const void* tmpl, void* parent, MW_DLGPROC proc, intptr_t init) {
+    return mw_dialog_box_indirect(hinst, tmpl, parent, proc, init);
+}
+__attribute__((ms_abi)) intptr_t mw_DialogBoxIndirectParamA(void* hinst, const void* tmpl, void* parent, MW_DLGPROC proc, intptr_t init) {
+    return mw_dialog_box_indirect(hinst, tmpl, parent, proc, init);
+}
+
 #include <stdarg.h>
 typedef __attribute__((ms_abi)) long long (*MW_WNDPROC)(void*, uint32_t, uintptr_t, long long);
 
@@ -10227,6 +10458,200 @@ static void mw_gui_store_window(int w, int h) {
     }
 }
 static void mw_gui_set_quit(int code) { g_quit_flag = 1; g_quit_code = code; }
+
+/* ============================================================
+ * SWEEP-008b: data-driven second ring — named stubs showed the
+ * three gate programs stuck on these. Honest semantics only.
+ * ============================================================ */
+/* SetWindowTextW/A: framebuffer-less world can't render, but the guest's
+ * flow expects success (0 = failure made rammap64 stall its dialog init). */
+__attribute__((ms_abi)) int mw_SetWindowTextW(void* h, const wchar_t* s) {
+    (void)h; (void)s;
+    return 1; /* TRUE */
+}
+__attribute__((ms_abi)) int mw_SetWindowTextA(void* h, const char* s) {
+    (void)h; (void)s;
+    return 1; /* TRUE */
+}
+/* GetDlgItem: return a stable pseudo control handle (id-tagged) so guests
+ * that send messages to it hit our graceful SendMessageW, not NULL. */
+__attribute__((ms_abi)) void* mw_GetDlgItem(void* h, intptr_t id) {
+    (void)h;
+    return (void*)(uintptr_t)(0x0000DEAD0000ULL | ((uint64_t)id & 0xFFFF));
+}
+/* SendMessageW: real delivery to the guest's own WNDPROC for the main
+ * window (SWEEP-003/006/007 machinery); graceful no-delivery elsewhere. */
+__attribute__((ms_abi)) long mw_SendMessageW(void* h, uint32_t msg, uintptr_t wp, long lp) {
+    if (g_wndproc_fwd && h == g_main_hwnd)
+        return (long)g_wndproc_fwd(h, msg, wp, lp);
+    return 0;
+}
+/* CreateDialogParamW/A: modeless — run WM_INITDIALOG once, return a stable
+ * pseudo window handle immediately (no modal loop). rammap64's main dialog
+ * init stalled here when the stub returned 0 = "no dialog". */
+static void* mw_dialog_modeless(void* hinst, const void* tmpl, void* parent, MW_DLGPROC proc, intptr_t init) {
+    (void)hinst; (void)tmpl;
+    MW_TRACE("CreateDialogParam(proc=%p)", (void*)proc);
+    if (!proc) return NULL;
+    g_dlg_result = 0;
+    proc(parent, 0x0110u /*WM_INITDIALOG*/, 0, init);
+    return (void*)(uintptr_t)0x0000DEAD0002ULL; /* pseudo dialog HWND */
+}
+__attribute__((ms_abi)) void* mw_CreateDialogParamW(void* hinst, const void* tmpl, void* parent, MW_DLGPROC proc, intptr_t init) {
+    return mw_dialog_modeless(hinst, tmpl, parent, proc, init);
+}
+__attribute__((ms_abi)) void* mw_CreateDialogParamA(void* hinst, const void* tmpl, void* parent, MW_DLGPROC proc, intptr_t init) {
+    return mw_dialog_modeless(hinst, tmpl, parent, proc, init);
+}
+/* GetSystemMetrics: real values for the metrics GUI programs size their
+ * windows from; 0 for unknown indices (procexp64 exit-2 path asked first). */
+__attribute__((ms_abi)) int mw_GetSystemMetrics(int idx) {
+    switch (idx) {
+    case 0:  return 1280; /* SM_CXSCREEN */
+    case 1:  return 800;  /* SM_CYSCREEN */
+    case 2:  return 17;   /* SM_CXVSCROLL */
+    case 3:  return 17;   /* SM_CYHSCROLL */
+    case 4:  return 23;   /* SM_CYCAPTION */
+    case 5:  return 1;    /* SM_CXBORDER */
+    case 6:  return 3;    /* SM_CXDLGFRAME */
+    case 7:  return 3;    /* SM_CYDLGFRAME */
+    case 8:  return 32;   /* SM_CYVTHUMB */
+    case 9:  return 32;   /* SM_CXHTHUMB */
+    case 10: return 32;   /* SM_CXICON */
+    case 11: return 32;   /* SM_CYICON */
+    case 12: return 32;   /* SM_CXCURSOR */
+    case 13: return 32;   /* SM_CYCURSOR */
+    case 14: return 20;   /* SM_CYMENU */
+    case 15: return 1280; /* SM_CXFULLSCREEN */
+    case 16: return 777;  /* SM_CYFULLSCREEN */
+    case 17: return 0;    /* SM_CYKANJIWINDOW */
+    case 18: return 1;    /* SM_MOUSEPRESENT */
+    case 19: return 0;    /* SM_CYVSCROLL */
+    case 20: return 0;    /* SM_CXHSCROLL */
+    case 21: return 1;    /* SM_DEBUG */
+    case 22: return 1;    /* SM_SWAPBUTTON */
+    case 23: return 64;   /* SM_CXMIN (>= minimum) */
+    case 24: return 32;   /* SM_CYMIN */
+    case 25: return 32;   /* SM_CXSIZE */
+    case 26: return 32;   /* SM_CYSIZE */
+    case 27: return 1;    /* SM_CXFRAME?? legacy border */
+    case 28: return 1;    /* SM_CYFRAME */
+    case 40: return 0;    /* SM_SECURE */
+    case 41: return 240;  /* SM_DBCSENABLED? 0 */ 
+    case 42: return 1;    /* SM_DBCSSENT? */
+    case 43: return 0;    /* SM_MIDEASTENABLED */
+    case 44: return 1;    /* SM_MOUSEWHEELPRESENT */
+    case 45: return 1;    /* SM_XVIRTUALSCREEN */
+    case 46: return 0;    /* SM_YVIRTUALSCREEN */
+    case 47: return 1280; /* SM_CXVIRTUALSCREEN */
+    case 48: return 800;  /* SM_CYVIRTUALSCREEN */
+    case 49: return 32;   /* SM_CMONITORS?? 1 */
+    case 51: return 1;    /* SM_REMOTESESSION? 0 */
+    case 56: return 0;    /* SM_MEDIACENTER */
+    case 57: return 0;    /* SM_STARTER */
+    case 58: return 1;    /* SM_SERVERR2? 0 */
+    case 59: return 0;    /* SM_PENWINDOWS */
+    case 63: return 0;    /* SM_IMMENABLED? 1 */
+    case 70: return 1;    /* SM_CXFOCUSBORDER? */
+    case 71: return 1;    /* SM_CYFOCUSBORDER? */
+    case 76: return 1280; /* SM_CXTABLET? */
+    case 82: return 1;    /* SM_DIGITIZER? 0 */
+    default: return 0;
+    }
+}
+/* ImageList_*: stable pseudo handles — procexp64 exit-2 path bails when
+ * ImageList_Create reports failure (NULL). */
+static uint64_t g_imglist_next = 0x0000DEAD0100ULL;
+__attribute__((ms_abi)) void* mw_ImageList_Create(int cx, int cy, uint32_t flags, int init, int grow) {
+    (void)cx; (void)cy; (void)flags; (void)init; (void)grow;
+    return (void*)(uintptr_t)g_imglist_next++;
+}
+__attribute__((ms_abi)) int mw_ImageList_Destroy(void* h) { (void)h; return 1; }
+__attribute__((ms_abi)) int mw_ImageList_Add(void* h, void* img, void* mask) { (void)h; (void)img; (void)mask; return 1; }
+__attribute__((ms_abi)) int mw_ImageList_AddMasked(void* h, void* img, uint32_t mask) { (void)h; (void)img; (void)mask; return 1; }
+__attribute__((ms_abi)) int mw_ImageList_GetImageCount(void* h) { (void)h; return 0; }
+/* SetWindowLongPtrW/A + SetWindowLongW/A: REAL per-(hwnd,index) store —
+ * rammap64's dlgproc stores `this` at GWLP_USERDATA then fetches it; the
+ * old always-0 pair made the guest deref 0x10 and die. GWLP_WNDPROC
+ * queries see a CALLABLE previous proc (g_wndproc_fwd). */
+#define MW_WNDPROP_MAX 512
+static struct { uint64_t key; long long val; } g_wndprop[MW_WNDPROP_MAX];
+static size_t g_wndprop_count = 0;
+static uint64_t mw_wndprop_key(void* h, intptr_t idx) {
+    return ((uint64_t)(uintptr_t)h << 12) ^ ((uint64_t)(uintptr_t)idx * 0x9E3779B97F4A7C15ULL);
+}
+static long long mw_wndprop_get(void* h, intptr_t idx) {
+    uint64_t k = mw_wndprop_key(h, idx);
+    for (size_t i = 0; i < g_wndprop_count; i++)
+        if (g_wndprop[i].key == k) return g_wndprop[i].val;
+    return 0;
+}
+static void mw_wndprop_set(void* h, intptr_t idx, long long v) {
+    uint64_t k = mw_wndprop_key(h, idx);
+    for (size_t i = 0; i < g_wndprop_count; i++)
+        if (g_wndprop[i].key == k) { g_wndprop[i].val = v; return; }
+    if (g_wndprop_count < MW_WNDPROP_MAX) {
+        g_wndprop[g_wndprop_count].key = k;
+        g_wndprop[g_wndprop_count].val = v;
+        g_wndprop_count++;
+    }
+}
+static long long mw_swp(void* h, int idx, long long val) {
+    long long old = (idx == -4 /*GWLP_WNDPROC*/ && !mw_wndprop_get(h, idx))
+                    ? (long long)(void*)g_wndproc_fwd : mw_wndprop_get(h, idx);
+    mw_wndprop_set(h, idx, val);
+    return old;
+}
+__attribute__((ms_abi)) long long mw_SetWindowLongPtrW(void* h, int idx, long long val) { return mw_swp(h, idx, val); }
+__attribute__((ms_abi)) long long mw_SetWindowLongPtrA(void* h, int idx, long long val) { return mw_swp(h, idx, val); }
+__attribute__((ms_abi)) long mw_SetWindowLongW(void* h, int idx, long val) { return (long)mw_swp(h, idx, val); }
+__attribute__((ms_abi)) long mw_SetWindowLongA(void* h, int idx, long val) { return (long)mw_swp(h, idx, val); }
+static long long mw_gwp(void* h, int idx) {
+    if (idx == -4 /*GWLP_WNDPROC*/) {
+        long long v = mw_wndprop_get(h, idx);
+        return v ? v : (long long)(void*)g_wndproc_fwd;
+    }
+    if (idx == -6 /*GWLP_HINSTANCE*/) return 0xdead0001;
+    return mw_wndprop_get(h, idx);
+}
+__attribute__((ms_abi)) long long mw_GetWindowLongPtrW(void* h, int idx) { return mw_gwp(h, idx); }
+__attribute__((ms_abi)) long long mw_GetWindowLongPtrA(void* h, int idx) { return mw_gwp(h, idx); }
+__attribute__((ms_abi)) long mw_GetWindowLongW(void* h, int idx) { return (long)mw_gwp(h, idx); }
+__attribute__((ms_abi)) long mw_GetWindowLongA(void* h, int idx) { return (long)mw_gwp(h, idx); }
+/* SetPropW/GetPropW/RemovePropW share the same store (key includes idx).
+ * SWEEP-008b: guests pass MAKEINTATOM(atom) (value < 0x10000) as the name —
+ * dereferencing it SIGSEGV'd (RIP in mw_GetPropW, RAX=0xc001). Atoms are
+ * valid prop names; key on the atom value without any deref. */
+static intptr_t mw_prop_key(const wchar_t* s) {
+    uintptr_t v = (uintptr_t)s;
+    if (v < 0x10000) return (intptr_t)(v | 0x50524F50LL); /* MAKEINTATOM */
+    return (intptr_t)((s ? *s : 0) | 0x50524F50LL);
+}
+__attribute__((ms_abi)) int mw_SetPropW(void* h, const wchar_t* s, void* v) {
+    mw_wndprop_set(h, mw_prop_key(s), (long long)(uintptr_t)v);
+    return 1;
+}
+__attribute__((ms_abi)) void* mw_GetPropW(void* h, const wchar_t* s) {
+    return (void*)(uintptr_t)mw_wndprop_get(h, mw_prop_key(s));
+}
+__attribute__((ms_abi)) void* mw_RemovePropW(void* h, const wchar_t* s) {
+    void* old = (void*)(uintptr_t)mw_wndprop_get(h, mw_prop_key(s));
+    mw_wndprop_set(h, mw_prop_key(s), 0);
+    return old;
+}
+/* ImageList extras + LoadImageW — icon/iconlist pseudo handles; a 0 from
+ * LoadImageW stalls rammap64's dialog icon chain. */
+__attribute__((ms_abi)) int mw_ImageList_SetBkColor(void* h, uint32_t c) { (void)h; (void)c; return 1; }
+__attribute__((ms_abi)) int mw_ImageList_ReplaceIcon(void* h, int idx, void* icon) { (void)h; (void)idx; (void)icon; return 1; }
+static uint64_t g_image_handle_next = 0x0000DEAD0500ULL;
+__attribute__((ms_abi)) void* mw_LoadImageW(void* hinst, const wchar_t* name, uint32_t type, int cx, int cy, uint32_t flags) {
+    (void)hinst; (void)name; (void)type; (void)cx; (void)cy; (void)flags;
+    return (void*)(uintptr_t)g_image_handle_next++;
+}
+__attribute__((ms_abi)) void* mw_LoadImageA(void* hinst, const char* name, uint32_t type, int cx, int cy, uint32_t flags) {
+    (void)hinst; (void)name; (void)type; (void)cx; (void)cy; (void)flags;
+    return (void*)(uintptr_t)g_image_handle_next++;
+}
 static void mw_gui_send_destroy(void* hwnd) {
     if (mw_gui_events_enabled() && g_wndproc_fwd) {
         long long r = g_wndproc_fwd(hwnd, 0x0002u, 0, 0);
@@ -11976,6 +12401,52 @@ ENTRY("msvcrt.dll", "wctype", mw_wctype),
     ENTRY("WS2_32.dll", "gethostname",                          mw_gethostname_),
     ENTRY("WS2_32.dll", "inet_pton",                            mw_inet_pton_),
 
+    /* ---- SWEEP-008 named-stub batch (SW-555..561 gate repairs) ---- */
+    ENTRY("KERNEL32.DLL", "GetVersionExW",           mw_GetVersionExW),
+    ENTRY("KERNEL32.DLL", "RegOpenKeyW",              mw_RegOpenKeyW),
+    ENTRY("KERNEL32.DLL", "GlobalAddAtomW",           mw_GlobalAddAtomW),
+    ENTRY("KERNEL32.DLL", "GlobalAddAtomA",           mw_GlobalAddAtomA),
+    ENTRY("KERNEL32.DLL", "GlobalFindAtomW",          mw_GlobalFindAtomW),
+    ENTRY("KERNEL32.DLL", "GlobalFindAtomA",          mw_GlobalFindAtomA),
+    ENTRY("KERNEL32.DLL", "GlobalDeleteAtom",         mw_GlobalDeleteAtom),
+    ENTRY("USER32.DLL",   "lstrcmpW",                 mw_lstrcmpW),
+    ENTRY("USER32.DLL",   "lstrcmpiW",                mw_lstrcmpiW),
+    ENTRY("USER32.DLL",   "RegisterWindowMessageW",   mw_RegisterWindowMessageW),
+    ENTRY("USER32.DLL",   "DialogBoxIndirectParamW",  mw_DialogBoxIndirectParamW),
+    ENTRY("USER32.DLL",   "DialogBoxIndirectParamA",  mw_DialogBoxIndirectParamA),
+    ENTRY("USER32.DLL",   "EndDialog",                mw_EndDialog),
+    ENTRY("SHLWAPI.dll",  "ColorRGBToHLS",            mw_ColorRGBToHLS),
+    ENTRY("SHLWAPI.dll",  "ColorHLSToRGB",            mw_ColorHLSToRGB),
+    /* ---- SWEEP-008b: data-driven second ring ---- */
+    ENTRY("ADVAPI32.dll", "RegCreateKeyW",            mw_RegCreateKeyW),
+    ENTRY("USER32.DLL",   "SetWindowTextW",           mw_SetWindowTextW),
+    ENTRY("USER32.DLL",   "SetWindowTextA",           mw_SetWindowTextA),
+    ENTRY("USER32.DLL",   "GetDlgItem",               mw_GetDlgItem),
+    ENTRY("USER32.DLL",   "SendMessageW",             mw_SendMessageW),
+    ENTRY("USER32.DLL",   "CreateDialogParamW",       mw_CreateDialogParamW),
+    ENTRY("USER32.DLL",   "CreateDialogParamA",       mw_CreateDialogParamA),
+    ENTRY("USER32.DLL",   "GetSystemMetrics",         mw_GetSystemMetrics),
+    ENTRY("USER32.DLL",   "SetWindowLongPtrW",        mw_SetWindowLongPtrW),
+    ENTRY("USER32.DLL",   "SetWindowLongPtrA",        mw_SetWindowLongPtrA),
+    ENTRY("USER32.DLL",   "SetWindowLongW",           mw_SetWindowLongW),
+    ENTRY("USER32.DLL",   "SetWindowLongA",           mw_SetWindowLongA),
+    ENTRY("USER32.DLL",   "GetWindowLongPtrW",        mw_GetWindowLongPtrW),
+    ENTRY("USER32.DLL",   "GetWindowLongPtrA",        mw_GetWindowLongPtrA),
+    ENTRY("USER32.DLL",   "GetWindowLongW",           mw_GetWindowLongW),
+    ENTRY("USER32.DLL",   "GetWindowLongA",           mw_GetWindowLongA),
+    ENTRY("USER32.DLL",   "SetPropW",                 mw_SetPropW),
+    ENTRY("USER32.DLL",   "GetPropW",                 mw_GetPropW),
+    ENTRY("USER32.DLL",   "RemovePropW",              mw_RemovePropW),
+    ENTRY("USER32.DLL",   "LoadImageW",               mw_LoadImageW),
+    ENTRY("USER32.DLL",   "LoadImageA",               mw_LoadImageA),
+    ENTRY("COMCTL32.dll", "ImageList_SetBkColor",     mw_ImageList_SetBkColor),
+    ENTRY("COMCTL32.dll", "ImageList_ReplaceIcon",    mw_ImageList_ReplaceIcon),
+    ENTRY("COMCTL32.dll", "ImageList_Create",         mw_ImageList_Create),
+    ENTRY("COMCTL32.dll", "ImageList_Destroy",        mw_ImageList_Destroy),
+    ENTRY("COMCTL32.dll", "ImageList_Add",            mw_ImageList_Add),
+    ENTRY("COMCTL32.dll", "ImageList_AddMasked",      mw_ImageList_AddMasked),
+    ENTRY("COMCTL32.dll", "ImageList_GetImageCount",  mw_ImageList_GetImageCount),
+
 };
 
 #define NUM_IMPORTS (sizeof(g_import_table) / sizeof(g_import_table[0]))
@@ -12096,12 +12567,45 @@ static void iat_pages_restore(void) {
  * change for fully-resolved binaries (G1/T0 all resolve every import).
  * ============================================================ */
 static uint64_t g_stub_calls = 0; /* rate-limiter only; racy count is fine */
+/* SW-555: name every unresolved slot at patch time so the runtime stub can
+ * decode its own call site (FF 15 disp32 -> IAT slot) and print the exact
+ * "dll!import" the guest called. Zero behavior change for resolved code. */
+#define MW_MAX_STUB_NAMES 8192
+static struct { uint64_t slot_va; char name[80]; } g_stub_names[MW_MAX_STUB_NAMES];
+static size_t g_stub_name_count = 0;
+static void iat_stub_name_register(uint64_t slot_va, const char* dll, const char* name) {
+    if (g_stub_name_count >= MW_MAX_STUB_NAMES) return;
+    g_stub_names[g_stub_name_count].slot_va = slot_va;
+    snprintf(g_stub_names[g_stub_name_count].name, sizeof(g_stub_names[0].name),
+             "%s!%s", dll, name);
+    g_stub_name_count++;
+}
+static const char* iat_stub_name_lookup(uint64_t slot_va) {
+    for (size_t i = 0; i < g_stub_name_count; i++)
+        if (g_stub_names[i].slot_va == slot_va) return g_stub_names[i].name;
+    return NULL;
+}
 __attribute__((ms_abi)) uint64_t mw_unresolved_import_stub(void);
 __attribute__((ms_abi)) uint64_t mw_unresolved_import_stub(void) {
     uint64_t n = ++g_stub_calls;
     if (n <= 20) {
-        fprintf(stderr, "[STUB] unresolved import called -> returning 0 (call #%llu)\n",
-                (unsigned long long)n);
+        void* ret = __builtin_return_address(0);
+        const char* nm = NULL;
+        uint8_t* call = (uint8_t*)ret - 6; /* FF 15 disp32 = 6 bytes */
+        /* SWEEP-008b: /INCREMENTAL-linked guests (rammap64) reach imports
+         * via `jmp [rip+disp32]` ILT thunks (FF 25) — the stub's return
+         * address then sits inside the thunk. Accept both encodings. */
+        if (call[0] == 0xFF && (call[1] == 0x15 || call[1] == 0x25)) {
+            int32_t disp;
+            memcpy(&disp, call + 2, 4);
+            nm = iat_stub_name_lookup((uint64_t)(uintptr_t)(call + 6 + disp));
+        }
+        if (nm)
+            fprintf(stderr, "[STUB] %s -> returning 0 (call #%llu)\n",
+                    nm, (unsigned long long)n);
+        else
+            fprintf(stderr, "[STUB] unresolved import called -> returning 0 (call #%llu) ret=%p\n",
+                    (unsigned long long)n, ret);
     } else if (n == 21) {
         fprintf(stderr, "[STUB] further unresolved-import calls silenced\n");
     }
@@ -12315,6 +12819,8 @@ static int load_pe(const char* filepath) {
                     MW_TRACE("  [%d] Ordinal %u (not supported)", slot, ordinal);
                     /* SWEEP-001: stub the slot too — same crash class as
                      * name-unresolved if guest ever calls it. */
+                    { char oname[24]; snprintf(oname, sizeof(oname), "Ordinal%u", ordinal);
+                      iat_stub_name_register((uint64_t)(uintptr_t)(g_image_base + iat_off + slot * 8), dll_name, oname); }
                     iat_patch_slot(iat_off, slot, (void*)mw_unresolved_import_stub);
                     total_unresolved++;
                     slot++;
@@ -12364,6 +12870,7 @@ static int load_pe(const char* filepath) {
                  * the summary line's neighbor so a run without MINWIN_TRACE
                  * still identifies them. */
                 fprintf(stderr, "[WARN]   unresolved: %s\n", func_name);
+                iat_stub_name_register((uint64_t)(uintptr_t)(g_image_base + iat_off + slot * 8), dll_name, func_name);
                 /* SWEEP-001: a NULL IAT slot is a delayed SIGSEGV — every
                  * sweep program that called one died with the loader. Wine
                  * never leaves a slot NULL; install the returning-0 stub. */

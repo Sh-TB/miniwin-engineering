@@ -274,3 +274,133 @@ puttygen RIP=0x0).
       PNGs, battery_raw.tsv 105 rows); scripts/sweep007_redownload_gui.py +
       sweep562_battery.sh + sweep562_images.py; exe SHA manifest in
       artifacts/sweep50/sweep007_redownload_manifest.tsv.
+
+## SWEEP-008 EXPANSION (x3 directive — «ادامه سه برابری», 2026-10-20)
+50 -> 150 items. SW-555..561 CLOSED by SWEEP-008 (see evidence/sweep008_stubfix/).
+New queue SW-570..SW-669 (100 items), grouped by theme.
+
+### A. Gate follow-ups (closed gates -> real UI work)
+- [ ] SW-570 autoruns64: paint path under MW_GUI_EVENTS=1 (message loop alive,
+      no WM_PAINT route yet — end with BMP frame or honest no-paint label)
+- [ ] SW-571 autoruns64: why exit 0 without window — trace the WinMain
+      decision (GetSysColor x7 suggests UI init; find the branch that skips
+      CreateWindowEx and either fix or document as version behavior)
+- [ ] SW-572 rammap64: pump-path crash (MW_GUI_EVENTS=1 -> 139; clean 0
+      without). Repro, backtrace, fix or scope
+- [ ] SW-573 rammap64: 8 unnamed stub calls remain (ILT thunk decode covers
+      FF 25; find the remaining pattern — likely call [reg] copied slots)
+- [ ] SW-574 procexp64 exit(2): instrument resolved-API exit path (mw_exit/
+      ExitProcess trace), identify which subsystem returns 2
+- [ ] SW-575 procexp64: after SW-574, target the 2 -> 0 conversion
+- [ ] SW-576 cports: pump WM_CREATE comctl32 cliff (0x2119 site) — add
+      child-control creation path for the pumped mode
+- [ ] SW-577 produkey: pump cliff 0x22f24 (stub #4 during WM_CREATE) —
+      comctl32 child creation same class as SW-576
+- [ ] SW-578 zoomit64: exit 133 (SIGTRP-like) — backtrace + root cause
+- [ ] SW-579 bginfo64: exit 9 root cause (440 unresolved — big import wave)
+- [ ] SW-580 winmergeu: exit 9 root cause (440 unresolved, same wave class)
+- [ ] SW-581 searchmyfiles: 139 under no-pump (base 139) — named stubs
+- [ ] SW-582 puttygen: 139 (base 139) — named stubs + backtrace
+- [ ] SW-583 coreinfoex64: SW-561 version drift — accept-version flag or
+      real version shim; exit 1 -> 0 candidate
+- [ ] SW-584 adexplorer64: UNOBTAINABLE — archive.org fallback or close
+- [ ] SW-585 diskmon64: pre-window exit 0 -> window (armed path)
+- [ ] SW-586 procmon64: pre-window exit 0 -> window (armed path)
+- [ ] SW-587 autoruns64 EULA dialog: render DialogBoxIndirectParamW template
+      to BMP (first in-memory DLGTEMPLATE raster)
+- [ ] SW-588 rammap64 EULA dialog: same template raster
+- [ ] SW-589 RegCreateKeyW: in-memory registry (HKCU tree) so EULA-accept
+      write path succeeds and Sysinternals skip the gate on 2nd run
+
+### B. Registry subsystem (honest in-memory tree)
+- [ ] SW-590 registry core: hive map (HKCU/HKLM) + create/open/query/set
+- [ ] SW-591 RegOpenKeyExW/RegOpenKeyW route through the tree
+- [ ] SW-592 RegCreateKeyExW/RegCreateKeyW route through the tree
+- [ ] SW-593 RegSetValueExW/RegQueryValueExW/RegGetValueW real values
+- [ ] SW-594 RegEnumKeyExW/RegEnumValueW real enumeration
+- [ ] SW-595 RegDeleteValueW/RegDeleteTreeW
+- [ ] SW-596 RegCloseKey refcount + handle validation
+- [ ] SW-597 persistence: optional JSON dump under MW_REG_PERSIST
+- [ ] SW-598 Sysinternals EulaAccepted flow end-to-end (accept -> 2nd run
+      skips dialog)
+- [ ] SW-599 registry-backed GetSystemMetrics overrides
+
+### C. Comctl32 / child controls (unlocks pumped GUI wave)
+- [ ] SW-600 comctl32 Ordinal17 + ImageCombo stubs (rammap64 calls)
+- [ ] SW-601 InitCommonControlsEx flags tracking
+- [ ] SW-602 child CreateWindowEx for BUTTON/STATIC/EDIT classes
+- [ ] SW-603 child WM_COMMAND routing to parent WNDPROC
+- [ ] SW-604 GetDlgItem -> real child map (currently pseudo handles)
+- [ ] SW-605 SetDlgItemTextW/GetDlgItemTextW to child store
+- [ ] SW-606 SendDlgItemMessageW
+- [ ] SW-607 ListBox/ComboBox message subset (LB_ADDSTRING etc.)
+- [ ] SW-608 ListView minimal (LVM_ INSERT/COUNT used by produkey)
+- [ ] SW-609 TreeView minimal (autoruns64 uses)
+- [ ] SW-610 Static control paint to framebuffer
+- [ ] SW-611 Button control paint + click pump events
+- [ ] SW-612 Edit control text store + WM_GETTEXT
+- [ ] SW-613 WS_TABSTOP dialog navigation (IsDialogMessageW)
+- [ ] SW-614 DialogBoxIndirectParamW real template walk (controls created)
+- [ ] SW-615 CreateDialogParamW real template walk
+- [ ] SW-616 EndDialog modal result plumbing through pump
+- [ ] SW-617 MessageBoxW timeout variant (MessageBoxTimeoutW)
+- [ ] SW-618 TaskDialogIndirect stub with honest failure
+- [ ] SW-619 WM_SETFONT/WM_GETFONT store
+
+### D. GDI deepening
+- [ ] SW-620 BitBltStretch (StretchBlt) for rammap-class
+- [ ] SW-621 TransparentBlt/AlphaBlend (msimg32)
+- [ ] SW-622 GradientFill (procmon64 imports)
+- [ ] SW-623 DIB section (CreateDIBSection) real pixel buffer
+- [ ] SW-624 GetDIBits/SetDIBits
+- [ ] SW-625 TextOutW font metrics (GetTextExtentPoint32W)
+- [ ] SW-626 DrawTextW/DrawTextExW
+- [ ] SW-627 SetWorldTransform/ModifyWorldTransform
+- [ ] SW-628 Region APIs (CreateRectRgn/CombineRgn/GetClipBox)
+- [ ] SW-629 GetDeviceCaps full index table
+- [ ] SW-630 Double-buffer present on EndPaint for dialogs
+- [ ] SW-631 Frame dumping for modeless dialogs (CreateDialogParam path)
+- [ ] SW-632 Icon rendering (LoadImageW HICON -> framebuffer blit)
+- [ ] SW-633 Cursor position simulation (GetCursorPos/SetCursorPos)
+- [ ] SW-634 WM_NCHITTEST default handling
+
+### E. Window manager
+- [ ] SW-635 Multi-window z-order map (CreateWindowEx x11 in rammap64)
+- [ ] SW-636 GetParent/GetWindow(GW_OWNER) real relations
+- [ ] SW-637 SetWindowPos real geometry store
+- [ ] SW-638 GetWindowRect/GetClientRect from geometry store (not zeros)
+- [ ] SW-639 MoveWindow/SetWindowPlacement
+- [ ] SW-640 InvalidateRect/ValidateRect region store
+- [ ] SW-641 UpdateWindow -> pump paint dispatch
+- [ ] SW-642 GetMessage real queue (post WM_PAINT/WM_TIMER by budget)
+- [ ] SW-643 PostMessage/PostQuitMessage queue
+- [ ] SW-644 SendMessageTimeoutW/SendNotifyMessageW
+- [ ] SW-645 EnumWindows/EnumChildWindows over window map
+- [ ] SW-646 FindWindowW/FindWindowExW over class/name registry
+- [ ] SW-647 GetClassNameW/RealGetWindowClassW
+- [ ] SW-648 Window text store (GetWindowTextW reads SetWindowTextW writes)
+- [ ] SW-649 IsWindowVisible/EnableWindow state store
+- [ ] SW-650 GetFocus/SetFocus + WM_KILLFOCUS pump events
+
+### F. Shell / common dialogs
+- [ ] SW-651 ShellExecuteW -> launcher-policy (open URLs honestly logged)
+- [ ] SW-652 SHGetFolderPathW/SHGetKnownFolderPath real dirs
+- [ ] SW-653 GetOpenFileNameW/GetSaveFileNameW (comdlg32) stub dialog
+- [ ] SW-654 DragQueryFileW/AcceptFiles
+- [ ] SW-655 SHBrowseForFolderW stub
+- [ ] SW-656 ExtractIconExW -> GDI icon pipeline (SW-632)
+- [ ] SW-657 Shell_NotifyIconW tray store
+- [ ] SW-658 WinHelpW honest no-op
+- [ ] SW-659 VerQueryValueW real VS_VERSIONINFO parse
+- [ ] SW-660 GetFileVersionInfoW/A size+query
+
+### G. Corpus + infra
+- [ ] SW-661 re-download missing 60 corpus tags (rust/go/ssh/putty-console)
+- [ ] SW-662 resweep after SW-661 with delta table
+- [ ] SW-663 named-stub decode for call [reg] patterns (SW-573 general)
+- [ ] SW-664 stub rate-limit 20 -> configurable MW_STUB_LOG_N
+- [ ] SW-665 per-program stub-call file artifact (not just stderr)
+- [ ] SW-666 crash backtrace: symbolize PE RVA -> nearest export
+- [ ] SW-667 api_trace.json size guard for 400-unresolved programs
+- [ ] SW-668 GUI evidence: BMP hash manifest generator
+- [ ] SW-669 SWEEP-009 planning: pick top-10 by stub-count for next wave

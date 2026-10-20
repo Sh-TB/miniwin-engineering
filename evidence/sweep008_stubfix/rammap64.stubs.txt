@@ -1,0 +1,21 @@
+[STUB] COMCTL32.dll!Ordinal17 -> returning 0 (call #1)
+[STUB] ole32.dll!CoInitialize -> returning 0 (call #2)
+[STUB] USER32.dll!GetWindowRect -> returning 0 (call #3)
+[STUB] USER32.dll!GetWindowRect -> returning 0 (call #4)
+[STUB] unresolved import called -> returning 0 (call #5) ret=0x140005545
+[STUB] unresolved import called -> returning 0 (call #6) ret=0x1400055b4
+[STUB] unresolved import called -> returning 0 (call #7) ret=0x140017109
+[STUB] unresolved import called -> returning 0 (call #8) ret=0x140017137
+[STUB] unresolved import called -> returning 0 (call #9) ret=0x14001148c
+[STUB] unresolved import called -> returning 0 (call #10) ret=0x1400114a3
+[STUB] COMCTL32.dll!ImageList_SetImageCount -> returning 0 (call #11)
+[STUB] USER32.dll!InvalidateRgn -> returning 0 (call #12)
+[STUB] COMCTL32.dll!ImageList_SetImageCount -> returning 0 (call #13)
+[STUB] USER32.dll!GetParent -> returning 0 (call #14)
+[STUB] USER32.dll!GetWindowRect -> returning 0 (call #15)
+[STUB] USER32.dll!MapWindowPoints -> returning 0 (call #16)
+[STUB] USER32.dll!GetParent -> returning 0 (call #17)
+[STUB] USER32.dll!GetWindowRect -> returning 0 (call #18)
+[STUB] USER32.dll!MapWindowPoints -> returning 0 (call #19)
+[STUB] USER32.dll!MoveWindow -> returning 0 (call #20)
+[STUB] further unresolved-import calls silenced

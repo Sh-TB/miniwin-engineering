@@ -160,3 +160,63 @@ Stage Summary:
 - Evidence: evidence/sweep007_battery/ (README.md, battery_map.png, 2 dialog
   PNGs, battery_raw.tsv, determinism.txt, per-program run1 stderr/cmdline);
   artifacts/sweep50/runs_gui562/ (per-run artifacts x45).
+
+---
+Task ID: SWEEP-008 (60-task elephant run, 2026-10-20 night)
+Agent: main (z.ai)
+
+Task: Execute the merged workflow — named-stub batch (SW-555..561) in one
+edit, one make, full gate re-verification, 74-tag corpus resweep, 5-GUI
+evidence wave, worklist x3 expansion, G1 re-pin, single commit+push.
+
+Work Log:
+- HONESTY CORRECTION: the previous session summary claimed SWEEP-008b was
+  committed+pushed (6c5f651) — that commit does NOT exist and no SWEEP-008b
+  artifacts existed on disk. Everything below was done for real this run.
+- Baseline re-established: autoruns64/rammap64/procexp64 exits 1/1/2;
+  named-stub logging did not exist; no REA evidence dir existed.
+- Batch 1 (one edit + one make): iat_stub_name_register + call-site decode
+  (FF 15 disp32 -> dll!import name) + GetVersionExW + RegOpenKeyW +
+  GlobalAddAtomW/A + GlobalFindAtomW/A + GlobalDeleteAtom + ColorRGBToHLS/
+  ColorHLSToRGB (HLSMAX=240) + DialogBoxIndirectParamW/A + EndDialog +
+  lstrcmpW/lstrcmpiW + RegisterWindowMessageW. 15 dispatch entries.
+- Round-1 reruns: gates moved DEEPER (named stubs: autoruns 7 calls ->
+  SIGSEGV RIP=0x0; rammap CreateDialogParamW; procexp GetSystemMetrics/
+  ImageList cliff 21 -> new path).
+- Batch 2 (disassembly-driven): autoruns RIP=0x0 root cause = NULL fn-ptr
+  var 0x1400c7fd8 filled by GetProcAddress(GetModuleHandleW("ntdll"),
+  "RtlGetVersion"). Fixed GetModuleHandleW (known DLLs -> 0xdead0001) +
+  named GetProcAddress hook RtlGetVersion (real struct fill) + RegCreateKeyW
+  honest 5 + SetWindowTextW/A TRUE + GetDlgItem pseudo handles + SendMessageW
+  real WNDPROC delivery + CreateDialogParamW/A modeless + GetSystemMetrics
+  real table + ImageList_* + SetWindowLongPtrW/A + SetWindowLongW/A.
+- Round-2: autoruns Signal 11 in libc memset (RtlGetVersion hook shadowed by
+  pseudo-range branch returning generic stub; garbage struct size). Batch 3:
+  hook moved BEFORE pseudo-range; RtlGetVersion fills struct itself (clamped
+  size); GetVersionExA clamp; Set/GetWindowLongPtr real per-(hwnd,index)
+  store (rammap GWLP_USERDATA round-trip; crash was `mov r10,[rcx+8]` with
+  RCX=0x10); SetPropW/GetPropW/RemovePropW.
+- Round-3: rammap SIGSEGV inside mw_GetPropW (guest passes MAKEINTATOM
+  0xc001 as prop name; *s deref). Batch 4: atom-safe prop keys; FF 25 ILT
+  thunk decode.
+- ROUND-4 RESULT: autoruns64 exit 0, rammap64 exit 0 (3x deterministic
+  each), procexp64 exit 2 (open, 1 stub to reach exit vs 21 before).
+- Full corpus resweep (74 tags): ns-produkey 1 -> 0 (RegisterClassA ->
+  ATOM + CreateWindowExA -> HWND full lifecycle); diskmon64/procmon64
+  exit 0; cports 1 -> 139 deeper; putty/pageant dialog BMPs re-confirmed.
+  MISSING tags = corpus pruned to 16 dirs (honest: not tested).
+- GUI evidence wave (5 programs): produkey exit 0 + full lifecycle trace;
+  putty dialog BMP sha f953a2f3...; pageant dialog BMP sha 3ce3b3a6...;
+  rammap64 exit 0 + CreateWindowExW x11 + ShowWindow x8 + GDI chain;
+  autoruns64 exit 0 + message loop ALIVE under MW_GUI_EVENTS=1.
+- Worklist x3: +100 items (SW-570..SW-669), 160 open total.
+- G1 re-pin: OK — sha 68f6a2d7899aa3ace0e1adaa4aa2ced95a0cff1d8431ac5d4615c530425716fb,
+  UPX banner exact, regression 12/12, evidence/master/g1/20261020_005409.
+
+Stage Summary:
+- SW-555..561 CLOSED. Gates 1/1/2 -> 0/0/2. First-ever autoruns64/rammap64
+  clean exits. 5 GUI programs with concrete evidence (2 BMPs, 3 traces).
+- New scripts: sweep008_resweep.sh, sweep008_delayload_decode.py,
+  sweep008_slot_owner.py. Evidence: evidence/sweep008_stubfix/.
+- Open: procexp64 exit-2 origin; rammap pump crash; autoruns paint path;
+  60 MISSING corpus tags need re-download (SW-661).

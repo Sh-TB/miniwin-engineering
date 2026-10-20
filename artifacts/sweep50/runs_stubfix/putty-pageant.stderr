@@ -1,0 +1,62 @@
+[TRACE] Command line: /home/z/my-project/workspace/miniwin-engineering/artifacts/sweep50/dl/pageant/pageant.exe
+[WARN]   unresolved: AllocateAndInitializeSid
+[WARN]   unresolved: CopySid
+[WARN]   unresolved: EqualSid
+[WARN]   unresolved: GetLengthSid
+[WARN]   unresolved: GetUserNameA
+[WARN]   unresolved: InitializeSecurityDescriptor
+[WARN]   unresolved: RegCreateKeyExA
+[WARN]   unresolved: RegOpenKeyA
+[WARN]   unresolved: SetSecurityDescriptorDacl
+[WARN]   unresolved: SetSecurityDescriptorOwner
+[WARN]   unresolved: GetTextExtentPoint32A
+[WARN]   unresolved: ShellExecuteA
+[WARN]   unresolved: Shell_NotifyIconA
+[WARN]   unresolved: AppendMenuA
+[WARN]   unresolved: CreateMenu
+[WARN]   unresolved: CreatePopupMenu
+[WARN]   unresolved: DestroyIcon
+[WARN]   unresolved: DestroyMenu
+[WARN]   unresolved: DialogBoxParamA
+[WARN]   unresolved: DrawFocusRect
+[WARN]   unresolved: EnableWindow
+[WARN]   unresolved: GetCursorPos
+[WARN]   unresolved: GetDesktopWindow
+[WARN]   unresolved: GetMenuDefaultItem
+[WARN]   unresolved: GetMenuItemCount
+[WARN]   unresolved: GetMenuItemInfoA
+[WARN]   unresolved: GetWindowRect
+[WARN]   unresolved: GetWindowTextA
+[WARN]   unresolved: GetWindowTextLengthA
+[WARN]   unresolved: InsertMenuItemA
+[WARN]   unresolved: IsDialogMessageA
+[WARN]   unresolved: IsWindow
+[WARN]   unresolved: MapDialogRect
+[WARN]   unresolved: MessageBeep
+[WARN]   unresolved: MessageBoxIndirectW
+[WARN]   unresolved: MoveWindow
+[WARN]   unresolved: MsgWaitForMultipleObjects
+[WARN]   unresolved: PostMessageA
+[WARN]   unresolved: RegisterWindowMessageA
+[WARN]   unresolved: RemoveMenu
+[WARN]   unresolved: SendDlgItemMessageA
+[WARN]   unresolved: SetActiveWindow
+[WARN]   unresolved: SetDlgItemTextA
+[WARN]   unresolved: SetForegroundWindow
+[WARN]   unresolved: SetMenuDefaultItem
+[WARN]   unresolved: SetWindowPos
+[WARN]   unresolved: TabbedTextOutA
+[WARN]   unresolved: TrackPopupMenu
+[WARN]   unresolved: ConnectNamedPipe
+[WARN]   unresolved: CreateNamedPipeA
+[WARN]   unresolved: GetCurrentDirectoryA
+[WARN]   unresolved: OpenFileMappingA
+[WARN]   unresolved: SetCurrentDirectoryA
+[WARN]   unresolved: GetOpenFileNameA
+[WARN]   unresolved: GetOpenFileNameW
+[WARN]   unresolved: GetSaveFileNameA
+[WARN]   unresolved: GetSaveFileNameW
+[WARN] 57 imports unresolved
+[MessageBoxA] Pageant Fatal Error: Unable to access security APIs. Pageant will
+not run, in case it causes a security breach.
+[MessageBox] dialog #1 rendered -> miniwin-results/pageant.exe/screenshots/messagebox_1.bmp
