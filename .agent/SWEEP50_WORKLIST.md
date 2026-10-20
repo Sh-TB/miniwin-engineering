@@ -1466,30 +1466,117 @@ gate that must be re-accepted when the port lands).
        end-to-end (10 frames, guest personalities decide), terminate->int3 (guest's own
        uncaught-exception path). G1 re-pinned, corpus 16/16 deterministic ZERO regressions.
 - [x] **SW-1151b winmergeu post-GS frontier** — -> REGISTERED SW-1201 (see below)
-- [ ] **SW-1201 winmergeu startup uncaught C++ exception** — exit 133: throw at
-       0x14032126f (class vtable 0x140506150) after SetWindowsHookExW(5); frames 0..9
-       guest personalities all ContinueSearch (Frame[7] GS shim ok, Frame[9] CRT-start
-       0x3184bc handler 0x3204b0); terminate->int3 0x2bd10e. Decode whether the catch
-       type match fails in guest __CxxFrameHandler3 (ThrowInfo 0x1404fd7b0, object
-       RTTI walk) or the catch genuinely lives elsewhere.
-- [ ] **SW-1202 zstd explicit output-arg ignored** — `zstd -f in.bin out.zst` writes
-       in.bin.zst (positional output lost; PRE-EXISTING — old SWEEP-029 binary behaves
-       identically); canonical `-q -f in.bin` + `-d -f in.bin.zst -o out` fine. Decode
-       argv[2] handoff (GetCommandLineW/__wargv or zstd UTIL_isFIFO/stat path).
+- [x] **SW-1201 winmergeu startup uncaught C++ exception** — -> LANDED SWEEP-031:
+       DOUBLE root cause. (1) SetWindowsHookExW(5) returned NULL -> MFC threw
+       CMemoryException (ThrowInfo 0x1404fd7b0 -> CMemoryException/CSimple/
+       CException/CObject/void*) that no frame catches BY DESIGN (Frame[7] GS
+       shim: GS_DATA 0x572 bit0=0 gates phase-1 FH4 off — real compiler data,
+       not an engine bug). Fix: real hook machinery — live HHOOK table
+       0x00B30001+i (low16=0 handle pattern), WH range validation (-1..14,
+       MSGFILTER needs tid), Unhook validates handles (bad -> 1400), CallNext
+       unchanged. (2) The catch in func 0x298db0 THEN matched but resumed ONE
+       BYTE EARLY (0x140298df4, mid `e8 rel32` -> SIGSEGV): the dispatcher
+       subtracted 1 from dc.ControlPc AND ctx.Rip for ALL personalities (GCC
+       hack) — FH4 echoed ctx.Rip-1 back as RtlUnwindEx TargetIp. Fix: the -1
+       is GCC-only (ER 0x20474343/0x21474343). MEASURED sha 83df098e:
+       winmergeu 133 -> 124 = LIVE GUI DAEMON (986K Sleep(0) message-loop
+       lines; FH4 catch -> RtlUnwindEx target_ip=0x140298df5 resume
+       e/sweep031/winmergeu_sw1201_key_lines.txt); hook trace: 3 installs
+       (ids -1/7/5 -> 0xb30001/2/3) + Unhook(0xb30002) TRUE (id=7).
+- [x] **SW-1202 zstd explicit output-arg ignored** — -> LANDED SWEEP-031:
+       premise was a MISDIAGNOSIS — the guest's own --help proves zstd v1.5.6
+       has NO positional-output form (usage: `[INPUT... | -] [-o OUTPUT]`);
+       `zstd -f in out` = TWO INPUTS, and "can't stat out -- ignored" for a
+       nonexistent 2nd input is REAL zstd behavior (FIO_openSrcFile). The real
+       defects, both fixed: (a) _stat64/_fstat64/_stat64i32 never bridged host
+       errno into the guest mirror (stale EPERM); (b) `strerror` was bound
+       DIRECTLY to SysV glibc — guest ms_abi calls passed errno in RCX while
+       glibc read RDI (garbage string "Operation not permitted" for errno=2).
+       Now: mw_strerror ms_abi wrapper + errno bridges; zstd prints the
+       correct "No such file or directory"; canonical/explicit -o/decompress
+       round trips re-verified on sha 83df098e.
 - [ ] **SW-1152 RtlCaptureContext SSE/debug regs** — FloatSave + Xmm + Dr stay zeroed;
        fill from sigcontext if a consumer appears.
 - [ ] **SW-1153 ODBC mini-driver** — SQLDriverConnectW/SQLExecDirectW/SQLFetch real
        against sqlite3 host (bginfo64 "save to DB" path).
-- [ ] **SW-1154 SafeArray real element store** — SafeArrayPutElement/GetElement
-       round-trip (SW-1148 pattern).
-- [ ] **SW-1155 CreatePolygonRgn true polygon raster** — bbox v1 -> scanline fill
-       (FillRgn consumer proof).
+- [x] **SW-1154 SafeArray real element store** — -> LANDED SWEEP-031: real
+       SAFEARRAY model (MwSa 0x00B40001+i): SafeArrayCreate allocates
+       vt-sized store (20 VT codes, 8 dims, 16M elem cap), LBound/UBound real
+       from bounds, AccessData -> pvData, Put/GetElement flat row-major with
+       per-dim range checks (DISP_E_BADINDEX), Destroy frees; BSTR/UNKNOWN
+       copy the guest pointer (SW-1148 pattern). +SafeArrayGetElement/Destroy
+       ENTRYs. winmergeu's ordinal path did not reach PutElement in-run (0
+       calls, no regression).
+- [x] **SW-1155 CreatePolygonRgn true polygon raster** — -> LANDED SWEEP-031:
+       even-odd scanline (half-open edge rule, per-row crossing sort, spans
+       coalesced vertically into the 16-rect region list; degenerate ->
+       NULLREGION; FillRgn/FrameRgn paint the spans = real raster; fill-mode
+       ALTERNATE/WINDING share even-odd v1). bginfo64 exercises it (exit 0 x3).
+- [x] **SW-1157 GetDIBits real for 32bpp topdown** — superseded: consumers
+       ride the MWBmp view format (SWEEP-028) + SW-1158 CBM_INIT copy.
+- [x] **SW-1158 CreateDIBitmap CBM_INIT pixel copy** — -> LANDED SWEEP-031:
+       CBM_INIT + BI_RGB 24/32bpp (bottom-up AND top-down via biHeight sign)
+       copies DIB [B,G,R] rows into the MWBmp view through mwb_set (4-align
+       stride honored); unsupported formats keep the blank-v1 path with a
+       trace saying so.
+- [x] **SW-1159 AlphaBlend real blend** — -> LANDED SWEEP-031: AC_SRC_OVER
+       enforced, per-channel out = (src*a + dst*(255-a) + 127)/255 with
+       a = SrcConstantAlpha (SCA=255 fast path = SRCCOPY); AC_SRC_ALPHA
+       per-pixel alpha collapses to opaque in the RGB view (documented v1).
+       bginfo64 exercises it (exit 0 x3).
+- [x] **SW-1160 K32EnumProcessModules real module list** — -> LANDED SWEEP-031:
+       /proc/self/maps executable file-backed mappings -> coalesced module
+       cookies 0x00B50001+i; guest image leads the list; GetModuleBaseNameW
+       resolves image + cookies. procexp64's pre-crash path (BUG-078) does
+       not reach it yet; no corpus delta.
 - [ ] **SW-1156 ExtFloodFill seed-fill raster** — scanline seed fill on MWBmp views.
-- [ ] **SW-1157 GetDIBits real for 32bpp topdown** — SW-1140 carry, winmergeu consumers.
-- [ ] **SW-1158 CreateDIBitmap CBM_INIT pixel copy** — blank v1 -> real DIB blit.
-- [ ] **SW-1159 AlphaBlend real blend** — SRCCOPY v1 -> BLENDFUNCTION alpha math.
-- [ ] **SW-1160 K32EnumProcessModules real module list** — read /proc/self/maps into
-       module handles (procexp64 consumers).
+
+## SWEEP-031 round summary «ادامه» — cheetah speed, owl eye, elephant load, train of wagons (2026-10-20)
+- SW-1201 LANDED (DOUBLE root cause, first MSVC C++ EH catch-AND-RESUME in engine
+  history): (1) SetWindowsHookExW returned NULL ("no hook machinery") -> MFC
+  threw CMemoryException that no frame catches BY DESIGN (decoded ThrowInfo
+  0x1404fd7b0: CMemoryException/CSimpleException/CException/CObject/void*;
+  Frame[7] GS shim GS_DATA 0x572 bit0=0 gates phase-1 FH4 off — real compiler
+  data). FIX: real hook machinery — HHOOK table 0x00B30001+i, WH range
+  validation (-1..14, MSGFILTER thread-scoped), Unhook handle validation
+  (foreign handle -> ERROR_INVALID_HANDLE 1400). (2) With hooks green the
+  guest's SECOND throw (a real internal C++ exception) matched a catch in
+  func 0x298db0 via guest __CxxFrameHandler4 (0x14031ffc8 — FH4 packed
+  FuncInfo, tables at image+0x3b6340/0x3b6350 confirmed in-binary) but the
+  engine's unconditional `ControlPc-1 / ctx.Rip-1` GCC hack made FH4 echo
+  TargetIp = RA-1 = 0x140298df4 (mid `e8 rel32`) -> SIGSEGV on resume. FIX:
+  the -1 is GCC-only (ER 0x20474343/0x21474343); MSVC personalities get the
+  TRUE return address per RtlDispatchException semantics. G1 (UPX GCC flows)
+  stays green.
+- RESULT: winmergeu exit 133 -> 124 = LIVE GUI DAEMON (3x deterministic;
+  986K Sleep(0) message-loop lines; hooks -1/7/5 -> 0xb30001/2/3 +
+  Unhook TRUE; FH4 catch -> RtlUnwindEx target_ip=0x140298df5 ->
+  resume -> pump). Evidence: evidence/sweep031/winmergeu_sw1201_key_lines.txt.
+- SW-1202 LANDED (decode + double fix): the "positional output" premise was a
+  MISDIAGNOSIS — zstd v1.5.6 usage (from the guest's own --help) has no
+  positional-output form; `can't stat <2nd input> -- ignored` is REAL zstd
+  behavior. Real defects fixed: (a) _stat64/_fstat64/_stat64i32 now bridge
+  host errno into the guest mirror (stale EPERM killed zstd's stat diagnostics);
+  (b) `strerror` was bound DIRECTLY to SysV glibc — ms_abi guests passed errno
+  in RCX, glibc read RDI -> wrong strings ("Operation not permitted" for
+  errno=2). mw_strerror ms_abi wrapper added. zstd round trips re-verified.
+- Wagon batch (SWEEP-031 engine upgrades, 7 wagons): SW-1154 SafeArray real
+  store (MwSa, 20 VT codes, Put/Get round-trip, +GetElement/Destroy ENTRYs);
+  SW-1155 CreatePolygonRgn even-odd scanline raster; SW-1158 CreateDIBitmap
+  CBM_INIT real pixel copy (24/32bpp, top-down + bottom-up); SW-1159
+  AlphaBlend real per-channel alpha (SCA, AC_SRC_OVER enforced); SW-1160
+  K32EnumProcessModules real /proc/self/maps module list + BaseNameW
+  resolution; SW-1202 stat/strerror; SW-1201 hooks. Handle-base pattern
+  enforced (low16=0): hooks 0x00B3, safearray 0x00B4, k32mod 0x00B5.
+- MEASURED sha 83df098e (G1 PIN OK 12/12, evidence/master/g1/20261020_154229):
+  corpus x3 16/16 deterministic, ZERO unresolved, ZERO regressions
+  (pageant 124, procexp64 139 BUG-078 pre-existing, zoomit64 1 SW-1106
+  pre-existing); 7za/zstd/lz4 round trips + jq re-verified.
+- Loader 2,698,920 -> 2,722,720 bytes (+23,800).
+- Next wagons queued: SW-1203 hook EVENT firing (CBT/GetMessage delivery into
+  guest procs), SW-1153 ODBC mini-driver, SW-1156 ExtFloodFill seed fill,
+  SW-1102 procexp jump-into-string, SW-1106 zoomit exit1, SW-1152
+  RtlCaptureContext SSE regs.
 
 ## SWEEP-029 round summary «قانون کلی» — cheetah speed, owl eye, elephant load, train of wagons (2026-10-20)
 - SW-1103 ENGINE ROOT-CAUSE FIX: mw_RtlCaptureContext was a NO-OP — every guest
