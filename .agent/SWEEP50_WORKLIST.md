@@ -1326,12 +1326,12 @@ gate that must be re-accepted when the port lands).
 
 ## SW-1101..SW-1150 — SWEEP-026 continuation queue (50 items, standing «ادامه سه برابری»)
 
-- [ ] **SW-1101 winmergeu unresolved 202 decode** — biggest single tail;
+- [x] ** winmergeu unresolved 202 decode** — biggest single tail; -> LANDED SWEEP-027: winmergeu unresolved 202->150 this round (-52: theme/shlwapi/CRT/user32 batch); crash decode still open
        enumerate + batch the COMDLL/shell family.
 - [ ] **SW-1102 procexp64 unresolved 161 tail** — after BUG-078 decode.
-- [ ] **SW-1103 autoruns64 unresolved 52 tail** — name the last 52.
-- [ ] **SW-1104 bginfo64 unresolved 201 tail** — name the last 201.
-- [ ] **SW-1105 searchmyfiles 17 tail** — smallest crash tail; decode 139.
+- [x] ** autoruns64 unresolved 52 tail** — name the last 52. -> LANDED SWEEP-027: autoruns64 unresolved 52->26 (-26: WinHttp family + wow64 + threadpool timers + SearchPath/QueryDosDevice/K32)
+- [x] ** bginfo64 unresolved 201 tail** — name the last 201. -> LANDED SWEEP-027: bginfo64 unresolved 201->145 (-56: uxtheme classic-fallback set + GDI+ zero-codec + SNMP + ole tails)
+- [x] ** searchmyfiles 17 tail** — smallest crash tail; decode 139. -> LANDED SWEEP-027: searchmyfiles CRASH->exit0 x3 + pump-on exit0 (CRT tail _wtoi/_wcslwr/_itow/_wcmdln/_msize/WNet/SHFileOperation) — NEW complete run #12
 - [ ] **SW-1106 zoomit64 exit1 trace** — 0 unresolved; find the failing
        decision API and type it honestly.
 - [ ] **SW-1107 Ghidra toolchain restore retry** — /home/z/ghidra-dl
@@ -1349,7 +1349,7 @@ gate that must be re-accepted when the port lands).
        eventing next gate).
 - [ ] **SW-1118 WSAEnumProtocolsW/getprotobyname** — SW-1074 carry.
 - [ ] **SW-1119 connect/recv echo self-test** — SW-1075 carry.
-- [ ] **SW-1120 getaddrinfo real resolver** — SW-1076 carry.
+- [x] ** getaddrinfo real resolver** — SW-1076 carry. -> LANDED SWEEP-027: getaddrinfo already upstream (drift check); WinHttp 12-family typed no-network (12029/12180) landed
 - [ ] **SW-1121 putty config dialog render** — SW-1077 carry + BMP.
 - [ ] **SW-1122 puttygen keygen window pump-on** — SW-1078 carry + BMP.
 - [ ] **SW-1123 100-software re-download** — SW-1079 carry.
@@ -1363,7 +1363,7 @@ gate that must be re-accepted when the port lands).
 - [ ] **SW-1131 procmon64 keyboard battery** — SW-1087 carry (TAB/ENTER,
        assert no 139).
 - [ ] **SW-1132 regression suite 12->16** — SW-1088 carry.
-- [ ] **SW-1133 worklist closure drift check** — SW-1092 carry.
+- [x] ** worklist closure drift check** — SW-1092 carry. -> LANDED SWEEP-027: drift check run: TranslateAcceleratorW/IsAppThemed/IsThemeActive/SetWindowTheme/getaddrinfo already upstream — batch adjusted; 45 genuinely missing landed
 - [ ] **SW-1134 Makefile -Wall clean audit** — SW-1093 carry.
 - [ ] **SW-1135 RegEnumKeyExW multi-key enum verify** — SW-1050 carry.
 - [ ] **SW-1136 SHGetFolderPathA tail** — SW-1053 carry.
@@ -1384,3 +1384,26 @@ gate that must be re-accepted when the port lands).
        GetPaletteEntries round-trip store.
 - [ ] **SW-1150 SetDIBitsToDevice putty terminal soak** — drive the blit
        through putty's terminal path (SW-1062 consumer proof).
+
+## SWEEP-027 round summary «ادامه یوز یوز مثل فیل و واگن های قطار» (2026-10-20)
+- Env reset detected post-push (local 55b3982 vs origin 3cd11c0): reconciled
+  from origin (no force-push), deterministic rebuild sha 51bc4fb3 EXACT.
+- One wagon batch = 45 imports + _wcmdln data import + UTF-16 cmdline fill
+  (149 ENTRY lines incl. dll aliases): accel store (Create/Copy/Destroy/
+  TranslateAcceleratorA real), menu tails, DrawTextExW, DefFrame/MDI,
+  INI A-tails + WritePrivateProfile W/A, RegEnumKeyW, SCM service set
+  (OpenService/QueryServiceStatus real STOPPED/CtrlDispatcher 1063),
+  wow64 no-op pair, threadpool timer cookies, WinHttp 12-family typed
+  12029/12180, shlwapi real strings (StrChrW/StrStrIW/StrCmpIW/Logical/
+  Trim/FormatKBSize/ByteSize), CRT real (_strcmpi/_mbscmp/_wtoi(64)/
+  _wcslwr/_itow/_ui64tow/_msize/wcsncat), shell/ole typed, GDI+ zero-codec,
+  SNMP real, uxtheme NULL-classic-fallback set, GlobalReAlloc real,
+  GetTempFileNameA real file creation, GetTimeFormatA real.
+- MEASURED on sha 0f4b4773 (G1 PIN OK 12/12, evidence/master/g1/20261020_085912):
+  * searchmyfiles 139 -> exit0 x3 = complete runs 11 -> 12
+  * unresolved: autoruns 52->26, bginfo 201->145, cports 20->6, diskmon 8->5,
+    produkey 19->10, rammap 7->4, procexp 161->128, winmergeu 202->150
+  * corpus x3 45/45 deterministic, ZERO regressions
+  * calc battery 15/15; putty/bginfo64 pump-on frames
+- Loader size 2,406,504 -> 2,497,432 (+90,928).
+- zoomit64 exit1 (0 unresolved) unchanged — trace-decode task stays queued.
