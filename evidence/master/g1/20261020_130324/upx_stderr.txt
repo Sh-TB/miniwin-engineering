@@ -1,0 +1,42 @@
+[TRACE] Command line: samples/upx_decompressed.exe --version
+
+[CRASH] Signal 11 at RIP=0x401561
+  RAX=0x0 RCX=0x7fff2e3ac498 RDX=0x0 R8=0x1 R9=0x7fff2e3ac450
+  RSP=0x7fff2e3ac470 RBP=0x1
+  g_image_base=0x400000 g_image_size=0x213000
+  RVA=0x1561 (inside loaded PE)
+  Bytes: 44 8b 00 42 8d 14 82 89 10 c3 0f 1f 44 00 00 41 
+  Return addr: 0x4015b2
+  RSI=0x0 RDI=0x7fff2e3abeb0
+  R8=0x1  R9=0x7fff2e3ac450 R10=0x0 R11=0x202
+  R12=0x2ee9d70 R13=0x0 R14=0x0 R15=0x7fff2e3ac420
+  [SCAN rsp+000] 0x4015b2 <PE>
+  [SCAN rsp+024] 0x4e02d9 <PE>
+  [SCAN rsp+040] 0x4e2778 <PE>
+  [SCAN rsp+072] 0x401593 <PE>
+  [SCAN rsp+112] 0x4e2778 <PE>
+  [SCAN rsp+152] 0x4032f2 <PE>
+  [SCAN rsp+208] 0x4e2778 <PE>
+  [SCAN rsp+264] 0x40351c <PE>
+  [SCAN rsp+296] 0x201424f <LOADER>
+  [SCAN rsp+376] 0x4200f1 <PE>
+  [SCAN rsp+488] 0x4e0784 <PE>
+  [SCAN rsp+536] 0x4013c4 <PE>
+  [SCAN rsp+744] 0x401506 <PE>
+  [SCAN rsp+792] 0x2008149 <LOADER>
+  [SCAN rsp+808] 0x4aae90 <PE>
+  [SCAN rsp+832] 0x2035080 <LOADER>
+  [SCAN rsp+1160] 0x20027ec <LOADER>
+  [SCAN rsp+1168] 0x20021a8 <LOADER>
+  [SCAN rsp+2616] 0x2006550 <LOADER>
+  [SCAN rsp+2768] 0x2006550 <LOADER>
+  [SCAN rsp+2808] 0x2008ae0 <LOADER>
+  [SCAN rsp+2840] 0x2008b01 <LOADER>
+  [SCAN rsp+3320] 0x2000040 <LOADER>
+  [SCAN rsp+3400] 0x2008ae0 <LOADER>
+  Backtrace (via stack walking):
+    [0] RIP=0x401561 RVA=0x1561
+      [RSP+0] = 0x4015b2 (return addr?)
+    [1] RIP=0x4015b2 RVA=0x15b2
+      [RSP+0] = 0xa (return addr?)
+  Likely: NULL or invalid function pointer call

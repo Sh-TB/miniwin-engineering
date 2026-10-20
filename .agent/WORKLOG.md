@@ -749,3 +749,32 @@ SWEEP-027 (2026-10-20) «واگن های قطار» — one wagon batch on recon
   cports 6, diskmon 5, produkey 10, rammap 4, procexp 128, winmerge 150.
 - G1 PIN OK sha 0f4b4773 12/12; corpus x3 45/45; calc battery 15/15.
 - Pushed as one commit; worklist marks + summary appended.
+
+---
+SWEEP-030 (2026-10-20) «قانون کلی قطار» — SW-1151 engine double-fix + fastfail honesty
+- SW-1151 full decode: Frame[7] func 0x2279a0 personality = __GSHandlerCheck_EH
+  shim 0x319158 -> GS-check core 0x319070 ([EstFrame+0x570] cookie slot, tail-jmp
+  __security_check_cookie 0x318660) -> __report_gsfailure 0x318730 ->
+  IsProcessorFeaturePresent(23) gate -> int 0x29. Cookie slot = frame_base+0x570
+  (prologue rbp=entry-0x4a8, cookie=[rbp+0x470], stored global^frame_base).
+- ROOT CAUSE 1: EstablisherFrame = post-undo RSP (entry RSP, +0x5a8 off) instead
+  of ReactOS GetEstablisherFrame semantics (call-boundary RSP for FrameReg==0 /
+  live FP - FrameOffset*16 for FrameReg!=0). Fixed via ms_est out-param flowing
+  to dc.EstablisherFrame + handler RDX (dispatch + BUG-031 walk + GCC-bridge
+  0x21474343 intercept) and mw_RtlVirtualUnwind est rules.
+- ROOT CAUSE 2: mw_RtlVirtualUnwind never advanced ctx.Rip (guest walkers decoded
+  the same pc twice with marching est). Windows contract: Rip=[rsp] RA pop,
+  rsp+=8, machframe exempt (ReactOS L557-562).
+- Resume convention change: mw_RtlUnwindEx resumes at tgt_frame DIRECTLY (ms_est
+  = frame base); old entry-alloc cancellation removed (main + continuation path).
+  UPX G1 regression caught mid-round by 3x discipline (0x21474343 intercept still
+  subtracted alloc) -> fixed -> G1 green.
+- Fastfail honesty: IsProcessorFeaturePresent(23)=1; crash_handler detects guest
+  `cd 29` -> [FASTFAIL] trace + exit 9 (UCRT takes the real fastfail path).
+- RESULT: winmergeu exit 9 -> 133: GS check PASSES; guest C++ EH chain runs
+  end-to-end (10 frames, guest personalities decide); terminate->int3.
+  New frontiers: SW-1201 (winmergeu catch-type decode), SW-1202 (zstd explicit
+  output-arg ignored — pre-existing, verified vs old binary).
+- MEASURED sha ddfa14a0: G1 PIN 12/12 (evidence/master/g1/20261020_130641);
+  corpus x3 16/16 deterministic, ZERO unresolved, ZERO regressions; 7za/zstd/lz4
+  round trips + jq re-verified. Loader 2,698,920 bytes. evidence/sweep030/.

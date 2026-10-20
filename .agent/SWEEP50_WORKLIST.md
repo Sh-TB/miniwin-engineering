@@ -1443,9 +1443,39 @@ gate that must be re-accepted when the port lands).
        SafeArrayPutElement/VarBstrFromDate (real BSTR)/DllUnregisterServer
 
 ## SW-1151..SW-1200 — SWEEP-029 continuation queue (standing «قانون کلی قطار»: like a train, dozens of wagons)
-- [ ] **SW-1151 winmergeu gs fail-fast decode** — exit 9 now runs gs_report with REAL
-       capture (rip=0x140318939, RtlVirtualUnwind walks 2 frames); find the /GS cookie
-       mismatch frame; candidate: our unwind resume Rsp vs guest cookie slot.
+- [x] **SW-1151 winmergeu gs fail-fast decode** — -> LANDED SWEEP-030 (ENGINE FIX, full
+       chain decoded): (a) failing fn = Frame[7] func RVA 0x2279a0, personality =
+       __GSHandlerCheck_EH shim 0x319158 -> GS-check core 0x319070 (reads stored cookie
+       at [EstFrame + LSDA_dword1(0x572&~7=0x570)], tail-jmps __security_check_cookie
+       0x318660) -> __report_gsfailure 0x318730 (IsProcessorFeaturePresent(23) gate ->
+       int 0x29 code=2) — cookie slot = frame_base + 0x570 (prologue: rbp=entry-0x4a8,
+       cookie=[rbp+0x470]=entry-0x38, stored global^frame_base, frame=0x5a8);
+       (b) ROOT CAUSE: our EstablisherFrame was the POST-UNDO RSP (function-entry RSP,
+       +0x5a8 off) — ReactOS GetEstablisherFrame: FrameReg==0 -> Context->Rsp BEFORE the
+       codes run (call-boundary RSP = frame base), FrameReg!=0 -> live FP - FrameOffset*16;
+       (c) FIX: ms_est computed in seh_internal_virtual_unwind (+out param), passed as
+       dc.EstablisherFrame + handler RDX; mw_RtlVirtualUnwind same rules + RETURN-ADDRESS
+       pop (ctx.Rip=[new_rsp], rsp+=8; machframe exempt) — Windows contract for guest
+       walkers (winmergeu walker loop-of-2 previously decoded the same pc twice with
+       marching est); mw_RtlUnwindEx resume = tgt_frame DIRECTLY (old entry-alloc
+       cancellation removed; GCC-bridge 0x21474343 intercept resume = est_va directly);
+       BUG-031 walk stop = pre_rsp == tgt_frame; (d) fastfail honesty:
+       IsProcessorFeaturePresent(23=PF_FASTFAIL_AVAILABLE)=1 + crash_handler detects
+       guest `cd 29` (#GP->SIGSEGV, RIP at instr) -> [FASTFAIL] trace + exit 9.
+       RESULT: winmergeu exit 9 -> 133 — GS check PASSES, guest C++ EH chain runs
+       end-to-end (10 frames, guest personalities decide), terminate->int3 (guest's own
+       uncaught-exception path). G1 re-pinned, corpus 16/16 deterministic ZERO regressions.
+- [x] **SW-1151b winmergeu post-GS frontier** — -> REGISTERED SW-1201 (see below)
+- [ ] **SW-1201 winmergeu startup uncaught C++ exception** — exit 133: throw at
+       0x14032126f (class vtable 0x140506150) after SetWindowsHookExW(5); frames 0..9
+       guest personalities all ContinueSearch (Frame[7] GS shim ok, Frame[9] CRT-start
+       0x3184bc handler 0x3204b0); terminate->int3 0x2bd10e. Decode whether the catch
+       type match fails in guest __CxxFrameHandler3 (ThrowInfo 0x1404fd7b0, object
+       RTTI walk) or the catch genuinely lives elsewhere.
+- [ ] **SW-1202 zstd explicit output-arg ignored** — `zstd -f in.bin out.zst` writes
+       in.bin.zst (positional output lost; PRE-EXISTING — old SWEEP-029 binary behaves
+       identically); canonical `-q -f in.bin` + `-d -f in.bin.zst -o out` fine. Decode
+       argv[2] handoff (GetCommandLineW/__wargv or zstd UTIL_isFIFO/stat path).
 - [ ] **SW-1152 RtlCaptureContext SSE/debug regs** — FloatSave + Xmm + Dr stay zeroed;
        fill from sigcontext if a consumer appears.
 - [ ] **SW-1153 ODBC mini-driver** — SQLDriverConnectW/SQLExecDirectW/SQLFetch real
@@ -1483,3 +1513,47 @@ gate that must be re-accepted when the port lands).
 - Loader size 2,497,432 -> 2,698,328 (+200,896).
 - Next: SW-1151 winmergeu gs fail-fast decode; SW-1102 procexp frontier; SW-1106
   zoomit exit1; SW-1153 ODBC mini-driver.
+
+## SWEEP-030 round summary «قانون کلی قطار» — wagon batch: SW-1151 ENGINE DOUBLE-FIX + fastfail honesty (2026-10-20)
+- SW-1151 ENGINE ROOT-CAUSE FIX (two engine bugs, one guest frontier):
+  * Bug 1 — EstablisherFrame semantics: our unwind reported the POST-UNDO RSP
+    (function-entry RSP) as the establisher frame; Windows/ReactOS
+    GetEstablisherFrame gives the call-boundary RSP (FrameReg==0) or
+    live_FP - FrameOffset*16 (FrameReg!=0). MSVC __GSHandlerCheck_EH indexes
+    its /GS cookie at [est + GS_offset]: WinMergeU func 0x2279a0 (frame 0x5a8,
+    cookie slot frame_base+0x570) failed the compare -> __report_gsfailure
+    0x318730 -> int 0x29 -> our old fallback chain -> exit 9.
+  * Bug 2 — mw_RtlVirtualUnwind never advanced ctx.Rip: guest stack walkers
+    re-read ctx.Rip per iteration (winmergeu walker loop-of-2 @0x318928) and
+    decoded the SAME frame twice with a marching establisher. Windows
+    contract: Rip=[unwound rsp] (return address), rsp+=8 (RA pop); machframe
+    exempt. Now matches ReactOS RtlVirtualUnwind L557-562.
+  * Fix set: ms_est out-param in seh_internal_virtual_unwind; dc.EstablisherFrame
+    + handler RDX = ms_est (dispatch + BUG-031 intermediate walk, stop
+    condition pre_rsp==tgt_frame); mw_RtlVirtualUnwind est rules + RA pop;
+    mw_RtlUnwindEx resume rsp = tgt_frame DIRECTLY (entry-alloc cancellation
+    removed — main path + BUG-031 continuation path); GCC-bridge 0x21474343
+    intercept resume = est_va directly. UPX G1 regression caught by the 3x
+    discipline during the sweep (resume landed 0x48 below the frame body,
+    pre-EXP-035 P-deref crash) -> intercept fixed -> G1 green again.
+  * Fastfail honesty: IsProcessorFeaturePresent(23=PF_FASTFAIL_AVAILABLE)=1;
+    crash_handler detects guest `cd 29` (#GP -> SIGSEGV, RIP at the
+    instruction) -> [FASTFAIL] trace (code + caller RA + stack window) +
+    exit 9 (STATUS_STACK_BUFFER_OVERRUN low byte). UCRT gs_report now takes
+    the real fastfail path, not the legacy walk+UEF fallback.
+- MEASURED on sha ddfa14a0 (G1 PIN OK 12/12, evidence/master/g1/20261020_130641):
+  * winmergeu exit 9 -> 133: /GS cookie check PASSES; guest C++ EH chain runs
+    end-to-end (throw 0x14032126f after SetWindowsHookExW(5), 10 frames,
+    guest __CxxFrameHandler3 personalities decide ContinueSearch, terminate ->
+    int3 0x2bd10e) — new frontier SW-1201 (guest-side catch-type decode).
+  * corpus x3 16/16 deterministic, ZERO unresolved, ZERO regressions
+    (pageant 124 daemon, procexp64 139 BUG-078, zoomit64 exit1 SW-1106)
+  * round trips re-verified: 7za create+extract SHA-OK 3/3; zstd canonical
+    -q -f round trip OK (SW-1202 = pre-existing explicit-output-arg frontier,
+    old binary behaves identically); lz4 round trip SHA-OK 3/3; jq OK.
+- Evidence: evidence/sweep030/ (corpus TSV, winmergeu + UPX post-fix traces);
+  artifacts/sweep030/sweep/. Recon scripts under /home/z/my-project/scripts/
+  (sweep030_recon.py, sweep030_disasm.py, sweep030_gschain.py, sweep030_ui2279a0.py).
+- Loader size 2,698,328 -> 2,698,920 (+592).
+- Next: SW-1201 winmergeu catch-type decode; SW-1153 ODBC mini-driver; SW-1154..1159
+  raster/OLE wagons; SW-1160 K32EnumProcessModules; SW-1202 zstd argv decode.

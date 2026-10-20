@@ -1651,7 +1651,8 @@ static void* seh_internal_virtual_unwind(
     uint8_t* ctx,
     uint64_t* establisher_frame,
     uint32_t* out_handler_rva,
-    void** out_lsda)
+    void** out_lsda,
+    uint64_t* out_est_ms)
 {
     /* NOTE: PUSH_NONVOL and PUSH_MACHFRAME safety bounds removed —
      * the original `new_rsp <= rsp + 4096` was always-true after
@@ -1671,6 +1672,37 @@ static void* seh_internal_virtual_unwind(
      * misread as FP=R8/offset=5. */
     uint8_t frame_reg   = ui_base[3] & 0x0f;
     uint8_t frame_off   = (ui_base[3] >> 4) & 0x0f;
+
+    /* SW-1151 (SWEEP-030): real-Windows EstablisherFrame — ReactOS
+     * GetEstablisherFrame (sdk/lib/rtl/amd64/unwind.c):
+     *   FrameRegister == 0                        -> est = Context->Rsp
+     *      measured BEFORE this frame's own unwind codes run, i.e. the
+     *      RSP at the frame's call boundary (== MSVC frame base for
+     *      standard frames, where calls are made at frame-base RSP).
+     *   FrameRegister != 0 and (CodeOffset >= SizeOfProlog or chained)
+     *                                             -> est = FP_value - FrameOffset*16
+     *      with FP read from the LIVE context (restored by the deeper
+     *      frames' unwind or live at the fault).
+     * The old code reported the POST-UNDO RSP (= function-entry RSP):
+     * for WinMergeU func 0x2279a0 (frame 0x5a8) the __GSHandlerCheck_EH
+     * personality read its cookie slot at [est + 0x570] — with the old
+     * entry-RSP est that landed 0x5a8 above the real cookie slot and
+     * failed the compare -> __report_gsfailure -> int 0x29 (exit 9).
+     * The internal consumers (parent-RA read at [old est], resume math
+     * tgt_frame - alloc) are updated together so the landing-pad resume
+     * RSP stays numerically identical. */
+    {
+        uint64_t pre_rsp = *(uint64_t*)(ctx + CTX_Rsp);
+        uint64_t est_ms = pre_rsp;
+        uint32_t pc_off = (uint32_t)(control_pc - (uint64_t)(uintptr_t)g_image_base) - rf->BeginAddress;
+        if (frame_reg != 0 &&
+            (pc_off >= prolog_size || (flags & UNW_FLAG_CHAININFO))) {
+            uint32_t fp_off = reg_to_ctx_offset(frame_reg);
+            uint64_t fp_live = fp_off ? *(uint64_t*)(ctx + fp_off) : 0;
+            est_ms = fp_live - (uint64_t)frame_off * 16;
+        }
+        if (out_est_ms) *out_est_ms = est_ms;
+    }
 
     (void)prolog_size;
 
@@ -2215,9 +2247,18 @@ static int seh_dispatch_exception(void) {
         && er.ExceptionInformation[2] < img_end) {
         uint64_t lp_va  = er.ExceptionInformation[2];
         uint64_t est_va = er.ExceptionInformation[1];
+        /* SW-1151 (SWEEP-030): est_va carries the REAL EstablisherFrame the
+         * GCC bridge received (ms_est = call-boundary RSP = frame base of
+         * the frame owning the cleanup LP) — the cleanup landing pad
+         * resumes at rsp = est_va DIRECTLY (ReactOS RtlpUnwindInternal:
+         * resume RSP = UnwindContext.Rsp at the target frame). The old
+         * est(entry-RSP) - prologue_alloc(LP) formula cancelled the old
+         * est convention; with ms_est the subtraction lands alloc bytes
+         * BELOW the frame body (G1 regression: UPX SIGSEGV at RVA 0x1561,
+         * the pre-EXP-035 P-deref site). alloc3 kept for the trace. */
         uint64_t alloc3 = seh_total_prologue_alloc(lp_va);
-        if (alloc3 != 0 && est_va != 0 && (est_va & 0x7ull) == 0) {
-            uint64_t resume_rsp = est_va - alloc3;
+        if (est_va != 0 && (est_va & 0x7ull) == 0) {
+            uint64_t resume_rsp = est_va;
             /* Registers: protocol values in RAX (object) / RDX (selector),
              * everything else from the throw-site snapshot (the cleanup LP
              * continues the frame that threw — its live callee-saved regs
@@ -2357,9 +2398,9 @@ static int seh_dispatch_exception(void) {
          * (RSP after the prologue, used by catch blocks for local variable access)
          * is the CTX.Rsp value BEFORE this call. */
         uint64_t est_frame = 0;
+        uint64_t est_ms = 0;   /* SW-1151: real-Windows EstablisherFrame for guests */
         uint32_t handler_rva = 0;
         void* lsda = NULL;
-        uint64_t pre_unwind_rsp = *(uint64_t*)(ctx + CTX_Rsp);
         /* BUG-039/B: snapshot the "returned into frame F" state BEFORE this
          * frame's own unwind codes are applied. If frame F owns the handler,
          * this snapshot — not the post-unwind context — is the correct
@@ -2367,7 +2408,7 @@ static int seh_dispatch_exception(void) {
         uint8_t pre_unwind_ctx[CONTEXT_SIZE];
         memcpy(pre_unwind_ctx, ctx, CONTEXT_SIZE);
         void* handler = seh_internal_virtual_unwind(
-            current_rip, rf, ctx, &est_frame, &handler_rva, &lsda);
+            current_rip, rf, ctx, &est_frame, &handler_rva, &lsda, &est_ms);
 
         MW_TRACE("[DISPATCH] Frame[%d]: Unwind est=0x%lx CTX.Rsp_after=0x%lx alloc=0x%x",
                  frame, est_frame, *(uint64_t*)(ctx + CTX_Rsp),
@@ -2424,7 +2465,11 @@ static int seh_dispatch_exception(void) {
         dc.ControlPc = current_rip > 0 ? current_rip - 1 : 0;
         dc.ImageBase = img_base;
         dc.FunctionEntry = rf;
-        dc.EstablisherFrame = est_frame;
+        /* SW-1151: guests receive the REAL Windows EstablisherFrame
+         * (call-boundary RSP / FP-anchored) — MSVC __GSHandlerCheck_EH
+         * indexes its cookie slot at [est + GS_offset] and WinMergeU's
+         * personality failed the compare with the old entry-RSP est. */
+        dc.EstablisherFrame = est_ms;
         dc.TargetIp = 0;
         dc.ContextRecord = ctx;
         dc.LanguageHandler = handler;
@@ -2513,8 +2558,10 @@ static int seh_dispatch_exception(void) {
         }
         MW_TRACE("[HANDLER_CALL] calling...");
 
-        /* Call handler via aligned trampoline */
-        int32_t disposition = call_handler_aligned(handler, &er, est_frame, ctx, &dc);
+        /* Call handler via aligned trampoline — RDX = REAL EstablisherFrame
+         * (SW-1151: ms_est; the guest __GSHandlerCheck shim verifies its
+         * cookie at [RDX + GS_offset] against this exact value). */
+        int32_t disposition = call_handler_aligned(handler, &er, est_ms, ctx, &dc);
 
         /* CRITICAL: flush immediately so we don't lose trace if handler crashes */
         if (g_trace_log) fflush(g_trace_log);
@@ -2848,11 +2895,15 @@ static void seh_walk_intermediate_cleanups(uint8_t* start_ctx, void* er_src,
             break;
         }
         uint64_t est = 0;
+        uint64_t est_ms = 0;
         uint32_t h_rva = 0;
         void* lsda = NULL;
-        void* handler = seh_internal_virtual_unwind(rip, rf, walk_ctx, &est, &h_rva, &lsda);
-        if (est == tgt_frame) {
-            MW_TRACE("[BUG-031] %s walk: reached target frame est=0x%lx — intermediate scan done", tag, est);
+        /* SW-1151: the stop condition uses the REAL EstablisherFrame
+         * (call-boundary RSP) — tgt_frame now carries ms_est semantics. */
+        uint64_t pre_rsp = *(uint64_t*)(walk_ctx + CTX_Rsp);
+        void* handler = seh_internal_virtual_unwind(rip, rf, walk_ctx, &est, &h_rva, &lsda, &est_ms);
+        if (pre_rsp == tgt_frame) {
+            MW_TRACE("[BUG-031] %s walk: reached target frame est_ms=0x%lx — intermediate scan done", tag, pre_rsp);
             break;
         }
         if (!handler) {
@@ -2866,7 +2917,7 @@ static void seh_walk_intermediate_cleanups(uint8_t* start_ctx, void* er_src,
         dc.ControlPc = rip - 1;
         dc.ImageBase = img_base;
         dc.FunctionEntry = rf;
-        dc.EstablisherFrame = est;
+        dc.EstablisherFrame = est_ms;   /* SW-1151: real-Windows est for guests */
         dc.TargetIp = 0;
         dc.ContextRecord = walk_ctx;
         dc.LanguageHandler = handler;
@@ -2876,10 +2927,10 @@ static void seh_walk_intermediate_cleanups(uint8_t* start_ctx, void* er_src,
         dc.Fill = 0;
         uint64_t saved_rip = rip;
         *(uint64_t*)(walk_ctx + CTX_Rip) = rip - 1;
-        MW_TRACE("[BUG-031] %s walk: personality fn=0x%lx est=0x%lx rip=0x%lx lsda=%p flags=0x%x (EH_UNWINDING)",
-                 tag, (uint64_t)(uintptr_t)handler, est, rip, lsda, er_u.ExceptionFlags);
+        MW_TRACE("[BUG-031] %s walk: personality fn=0x%lx est=0x%lx est_ms=0x%lx rip=0x%lx lsda=%p flags=0x%x (EH_UNWINDING)",
+                 tag, (uint64_t)(uintptr_t)handler, est, est_ms, rip, lsda, er_u.ExceptionFlags);
         if (g_trace_log) fflush(g_trace_log);
-        int32_t disp = call_handler_aligned(handler, &er_u, est, walk_ctx, &dc);
+        int32_t disp = call_handler_aligned(handler, &er_u, est_ms, walk_ctx, &dc);
         *(uint64_t*)(walk_ctx + CTX_Rip) = saved_rip;
         MW_TRACE("[BUG-031] %s walk: personality returned %d", tag, disp);
         if (disp == DISP_ExceptionContinueSearch) {
@@ -2924,8 +2975,8 @@ __attribute__((ms_abi)) void mw_RtlUnwindEx(void* target_frame, void* target_ip,
             }
         }
         if (rctx) {
-            uint64_t alloc_cont = seh_total_prologue_alloc(tgt_ip);
-            uint64_t post_prologue_rsp = (alloc_cont != 0) ? (tgt_frame - alloc_cont) : tgt_frame;
+            /* SW-1151: tgt_frame = ms_est = frame base — resume directly */
+            uint64_t post_prologue_rsp = tgt_frame;
             *(uint64_t*)(rctx + CTX_Rip) = tgt_ip;
             *(uint64_t*)(rctx + CTX_Rsp) = post_prologue_rsp;
             uint64_t exc_obj = (uint64_t)(uintptr_t)exc_record;
@@ -2962,8 +3013,8 @@ __attribute__((ms_abi)) void mw_RtlUnwindEx(void* target_frame, void* target_ip,
             g_unwind_target_ip = tgt_ip;
             g_unwind_target_frame = post_prologue_rsp;
             g_is_unwinding = 1;
-            MW_TRACE("[BUG-031] continuation resume: RIP=0x%lx RSP=0x%lx alloc=0x%lx",
-                     tgt_ip, post_prologue_rsp, (unsigned long)alloc_cont);
+            MW_TRACE("[BUG-031] continuation resume: RIP=0x%lx RSP=0x%lx (ms_est direct)",
+                     tgt_ip, post_prologue_rsp);
             if (g_trace_log) fflush(g_trace_log);
             fflush(stderr);
             /* Direct resume — same register restore as the naked stub's
@@ -3089,98 +3140,17 @@ __attribute__((ms_abi)) void mw_RtlUnwindEx(void* target_frame, void* target_ip,
          */
         uint64_t post_prologue_rsp = tgt_frame;
 
-        /* Look up the RUNTIME_FUNCTION for the target IP to find
-         * the total stack allocation of the target function. */
-        uint64_t tgt_rva = tgt_ip - (uint64_t)(uintptr_t)g_image_base;
-        RUNTIME_FUNCTION* tgt_rf = seh_internal_lookup(tgt_rva);
-        if (tgt_rf) {
-            uint8_t* tgt_ui = g_image_base + tgt_rf->UnwindInfo;
-            uint8_t tgt_count = tgt_ui[2];
-            /* BUG-027 fix: unwind code slots are 2 bytes each and must be
-             * addressed in BYTES. The previous declaration `uint16_t* tgt_codes`
-             * made `tgt_codes + tgt_slot * 2` advance 4 bytes per slot, so the
-             * loop read every other slot and then garbage past the codes array:
-             * for function 0xdcbf0 (codes 19 09 04 00 | 09 52 05 30 04 c0 02 d0 =
-             * ALLOC_SMALL 0x30 + PUSH R13/R12/RBX = 0x48 total) it computed
-             * alloc_total=0x40 instead of 0x48, resuming the landing pad with
-             * RSP 8 bytes too high -> SIGSEGV at heap RIP (EXP-036 §4). */
-            uint8_t* tgt_codes = tgt_ui + 4;
-            int tgt_slot = 0;
-            uint64_t alloc_total = 0;
-            for (int i = 0; i < tgt_count; i++) {
-                /* BUG-037: CountOfCodes counts SLOTS — bound on the slot
-                 * cursor, otherwise padding/handler bytes decode as
-                 * phantom codes (reproduced: alloc_total=0xff0191 came
-                 * from reading the handler RVA as ALLOC_LARGE). */
-                if (tgt_slot >= tgt_count ||
-                    tgt_slot * 2 + 1 >= (int)(tgt_count * 2 + 16)) break;
-                uint16_t cw = *(uint16_t*)(tgt_codes + tgt_slot * 2);
-                uint8_t op = (cw >> 8) & 0x0f;
-                uint8_t info = (cw >> 12) & 0x0f;
-                /* BUG-037: opcodes renumbered to the current spec
-                 * (XMM128=8, XMM128_FAR=9, MACHFRAME=10, EPILOG=6 v2-only,
-                 * SPARE=7); missing UWOP_SAVE_NONVOL slot advance added;
-                 * ALLOC_LARGE info==1 now unscaled u32 (TASK-API-006 rule). */
-                switch (op) {
-                case UWOP_ALLOC_LARGE:
-                    tgt_slot++;
-                    if (info == 0) {
-                        alloc_total += (uint64_t)(*(uint16_t*)(tgt_codes + tgt_slot * 2)) * 8;
-                    } else {
-                        tgt_slot++;
-                        alloc_total += (uint64_t)(*(uint32_t*)(tgt_codes + tgt_slot * 2 - 2));
-                    }
-                    break;
-                case UWOP_ALLOC_SMALL:
-                    alloc_total += (uint64_t)(info + 1) * 8;
-                    break;
-                case UWOP_PUSH_NONVOL:
-                    alloc_total += 8;
-                    break;
-                case UWOP_SAVE_NONVOL:
-                    tgt_slot++; break;
-                case UWOP_SAVE_NONVOL_FAR:
-                    tgt_slot++; tgt_slot++; break;
-                case UWOP_SAVE_XMM128:
-                    tgt_slot++; break;
-                case UWOP_SAVE_XMM128_FAR:
-                    tgt_slot++; tgt_slot++; break;
-                case UWOP_EPILOG:
-                    tgt_slot++; break;               /* 2 slots total, 0 stack */
-                case UWOP_SPARE_CODE:
-                    tgt_slot++; tgt_slot++; break;   /* 3 slots total, 0 stack */
-                case UWOP_PUSH_MACHFRAME:
-                    alloc_total += 40;
-                    break;
-                default:
-                    if (op >= 11) tgt_slot++;
-                    break;
-                }
-                tgt_slot++;
-            }
-            post_prologue_rsp = tgt_frame - alloc_total;
-            /* BUG-037: for frames with a frame pointer the establisher is
-             * the FP register value (mid-frame anchor), not the frame's
-             * entry RSP. The body RSP is FP - FrameOffset*16 (establishment
-             * happens after the last stack change in the prologue).
-             * CRT-startup frame: FP=RBP=entry-0x108, off=8 -> body RSP =
-             * entry-0x188; the old tgt_frame-alloc formula would have
-             * produced entry-0x290. */
-            {
-                uint8_t tgt_framebyte = tgt_ui[3];
-                uint8_t tgt_framereg  = tgt_framebyte & 0x0f;
-                uint8_t tgt_frameoff  = (tgt_framebyte >> 4) & 0x0f;
-                if (tgt_framereg) {
-                    post_prologue_rsp = tgt_frame - (uint64_t)tgt_frameoff * 16;
-                    MW_TRACE("RtlUnwindEx: FP frame reg=%u off=%u -> body RSP=0x%lx",
-                             tgt_framereg, tgt_frameoff, post_prologue_rsp);
-                }
-            }
-            MW_TRACE("RtlUnwindEx: target_func RVA=0x%x alloc_total=0x%lx post_prologue_RSP=0x%lx",
-                     tgt_rf->BeginAddress, alloc_total, post_prologue_rsp);
-        } else {
-            MW_TRACE("RtlUnwindEx: WARNING no RUNTIME_FUNCTION for target, using target_frame directly");
-        }
+        /* SW-1151 (SWEEP-030): tgt_frame now carries the REAL Windows
+         * EstablisherFrame semantics (ms_est = call-boundary RSP = frame
+         * base for standard frames / FP-anchored for FrameReg frames) —
+         * the landing pad resumes at rsp = tgt_frame DIRECTLY, exactly
+         * like ReactOS RtlpUnwindInternal (UnwindContext.Rsp at the
+         * target frame, TargetFrame only stops the loop).
+         * The old tgt_frame(=entry-RSP) - alloc_total decode reproduced
+         * the same number by cancelling the old est convention, but
+         * double-counted whenever alloc decoding misfired (BUG-027 era).
+         * Kept as evidence: BUG-027 slot-stride + BUG-037 slot-bounding
+         * fixes live in that decode's history. */
 
         /* Modify CONTEXT to target the landing pad */
         *(uint64_t*)(ctx + CTX_Rip) = tgt_ip;
@@ -3297,6 +3267,7 @@ __attribute__((ms_abi)) void* mw_RtlVirtualUnwind(uint32_t handler_type, uint64_
     uint64_t new_rsp = rsp;
     int fp_set = 0;
     uint64_t fp_reg = 0;
+    int machframe_applied = 0;   /* SW-1151: machframe installs Rip itself */
 
     /* Simulate unwind codes to "undo" the prolog */
     uint8_t* codes = ui_base + 4;
@@ -3400,6 +3371,7 @@ __attribute__((ms_abi)) void* mw_RtlVirtualUnwind(uint32_t handler_type, uint64_
             new_rsp += 40;
             *(uint64_t*)(ctx + CTX_Rip) = *(uint64_t*)(new_rsp + 16);
             new_rsp = *(uint64_t*)(new_rsp + 8);
+            machframe_applied = 1;
             break;
         }
         default: {
@@ -3421,12 +3393,48 @@ __attribute__((ms_abi)) void* mw_RtlVirtualUnwind(uint32_t handler_type, uint64_
         if (fp_off) *(uint64_t*)(ctx + fp_off) = fp_reg;
     }
 
-    /* Update RSP */
-    *(uint64_t*)(ctx + CTX_Rsp) = new_rsp;
+    /* SW-1151 (SWEEP-030): Windows semantics — RtlVirtualUnwind unwinds the
+     * context TO THE CALLER. After undoing the prolog, the return address
+     * sits at the top of the unwound stack: ctx->Rip = [new_rsp] and the
+     * caller's RSP = new_rsp + 8 (emulating the RET pop).
+     * The old code updated RSP but left Rip frozen at control_pc — every
+     * guest stack walker that re-reads ctx->Rip per iteration (winmergeu
+     * walker loop-of-2 @ RVA 0x318928, mingw gs_report, RtlCaptureContext
+     * + walk patterns) decoded the SAME frame twice with a marching
+     * establisher (live trace: est 0x...980 -> 0x...9d8 while pc stayed
+     * 0x140318939) and the /GS failure report context came out garbage.
+     * UWOP_PUSH_MACHFRAME exception: the machine frame already installed
+     * ctx->Rip (interrupted pc) — no RA pop on top of it.
+     * The internal dispatcher (seh_internal_virtual_unwind) is UNCHANGED:
+     * it must keep Rip = faulting pc for the handler's faulting context. */
+    if (!machframe_applied) {
+        *(uint64_t*)(ctx + CTX_Rip) = *(uint64_t*)new_rsp;
+        *(uint64_t*)(ctx + CTX_Rsp) = new_rsp + 8;
+    } else {
+        *(uint64_t*)(ctx + CTX_Rsp) = new_rsp;
+    }
 
-    /* Set establisher frame */
-    uint64_t establisher = fp_set ? fp_reg : new_rsp;
-    if (establisher_frame_ptr) *establisher_frame_ptr = establisher;
+    /* Update RSP + establisher frame — SW-1151 (SWEEP-030) real-Windows
+     * semantics, matching ReactOS GetEstablisherFrame called BEFORE the
+     * codes run:
+     *   FrameReg == 0: est = the caller's RSP at the frame's call boundary
+     *                  (pre-undo rsp == MSVC frame base for standard frames)
+     *   FrameReg != 0: est = live FP value - FrameOffset*16 (pc past prolog)
+     * The old code reported the post-undo RSP (frame pointer branch) or the
+     * raw restored FP (fp_set branch) — both deviated from Windows by the
+     * prologue consumption / the FP anchoring offset. */
+    {
+        uint64_t pre_rsp_vu = rsp;   /* rsp was read before the code loop */
+        uint64_t est_vu = pre_rsp_vu;
+        if (frame_reg != 0 &&
+            ((uint32_t)(rip_rva - rf->BeginAddress) >= prolog_size ||
+             (flags & UNW_FLAG_CHAININFO))) {
+            uint32_t fp_ctx_off = reg_to_ctx_offset(frame_reg);
+            uint64_t fp_live = fp_ctx_off ? *(uint64_t*)(ctx + fp_ctx_off) : 0;
+            est_vu = fp_live - (uint64_t)frame_off * 16;
+        }
+        if (establisher_frame_ptr) *establisher_frame_ptr = est_vu;
+    }
 
     /* Find handler and LSDA */
     uint32_t handler_rva = 0;
@@ -3442,8 +3450,8 @@ __attribute__((ms_abi)) void* mw_RtlVirtualUnwind(uint32_t handler_type, uint64_
         *(void**)handler_data_ptr = lsda;
     }
 
-    MW_TRACE("RtlVirtualUnwind: pc=0x%lx begin=0x%x handler=0x%x est=0x%lx",
-             (uint64_t)rip, rf->BeginAddress, handler_rva, establisher);
+    MW_TRACE("RtlVirtualUnwind: pc=0x%lx begin=0x%x handler=0x%x est_ms=0x%lx",
+             (uint64_t)rip, rf->BeginAddress, handler_rva, rsp);
 
     if (handler_rva == 0) return NULL;
     return (void*)(g_image_base + handler_rva);
@@ -7282,13 +7290,19 @@ __attribute__((ms_abi)) long mw_CoSetProxyBlanket(void* p, uint32_t a, uint32_t 
     return 0; /* S_OK: WMI probes call this before use; blanket is vacuous here */
 }
 __attribute__((ms_abi)) int mw_IsProcessorFeaturePresent(uint32_t feat) {
-    /* x64 hosts: SSE/SSE2/compare-exchange/3DNOW-none. Bits CRT checks. */
+    /* x64 hosts: SSE/SSE2/compare-exchange/3DNOW-none. Bits CRT checks.
+     * SW-1152 (SWEEP-030): 23 = PF_FASTFAIL_AVAILABLE — real x64 Windows
+     * always has it. Returning 0 drove UCRT __report_gsfailure down the
+     * legacy fallback path (walk + SetUEF(NULL)+UEF+TerminateProcess)
+     * instead of the direct `int 0x29` fastfail every real guest takes. */
     switch (feat) {
     case 0: case 1: case 2: case 3: case 4: case 5: case 6: case 7:
     case 8: case 9: case 10: case 11: case 12: case 13:
         return 1;                     /* PF_* integer/SSE family */
     case 17: case 18: case 19: case 20: case 21:
         return 1;                     /* PF_XSAVE / AVX family */
+    case 23: case 24: case 25: case 26: case 27:
+        return 1;                     /* PF_FASTFAIL/Setc: x64 host features */
     default:
         return 0;
     }
@@ -25704,6 +25718,49 @@ static void crash_handler(int sig, siginfo_t* info, void* ctx) {
     uint64_t r9  = uc->uc_mcontext.gregs[REG_R9];
     uint64_t rsp = uc->uc_mcontext.gregs[REG_RSP];
     uint64_t rbp = uc->uc_mcontext.gregs[REG_RBP];
+
+    /* SW-1151 (SWEEP-030): guest __fastfail (`mov ecx,code; int 0x29`).
+     * On Linux the DPL-violating int raises #GP -> SIGSEGV with RIP AT the
+     * instruction. Real Windows terminates the process with the fail-fast
+     * status (STATUS_STACK_BUFFER_OVERRUN for /GS = 0xC0000409, exit-code
+     * low byte 9 — same mapping as our TerminateProcess). [RSP] here is
+     * the return address INTO the failing function's epilogue (via
+     * __security_check_cookie tail-jmp) — the exact /GS culprit site. */
+    if (g_image_base && rip >= (uint64_t)(uintptr_t)g_image_base &&
+        rip + 2 < (uint64_t)(uintptr_t)g_image_base + g_image_size) {
+        uint8_t b0 = *(uint8_t*)(uintptr_t)rip, b1 = *(uint8_t*)(uintptr_t)(rip + 1);
+        if (b0 == 0xcd && b1 == 0x29) {
+            /* UCRT __report_gsfailure frame: sub rsp,0x38 before the int ->
+             * the failing function's RA sits at [rsp+0x38] (via
+             * __security_check_cookie tail-jmp, RA pushed at entry).
+             * Fastfail sites reached directly keep RA at [rsp]. */
+            uint64_t ra = *(uint64_t*)(uintptr_t)(rsp + 0x38);
+            uint64_t ra0 = *(uint64_t*)(uintptr_t)rsp;
+            uint64_t ffail_rva = 0;
+            if (ra >= (uint64_t)(uintptr_t)g_image_base &&
+                ra < (uint64_t)(uintptr_t)g_image_base + g_image_size)
+                ffail_rva = ra - (uint64_t)(uintptr_t)g_image_base;
+            fprintf(stderr, "[FASTFAIL] code=%llu (ECX) caller_RA=0x%llx RVA=0x%llx [rsp]=0x%llx RSP=0x%llx — fail-fast\n",
+                    (unsigned long long)rcx, (unsigned long long)ra,
+                    (unsigned long long)ffail_rva, (unsigned long long)ra0,
+                    (unsigned long long)rsp);
+            /* SW-1151 decode: stack window around the int — locate the real
+             * return chain (gs report frame layout varies by build). */
+            for (int fi = 0; fi < 16; fi++) {
+                uint64_t v = *(uint64_t*)(uintptr_t)(rsp + fi * 8);
+                uint64_t r = (v >= (uint64_t)(uintptr_t)g_image_base &&
+                              v < (uint64_t)(uintptr_t)g_image_base + g_image_size)
+                             ? v - (uint64_t)(uintptr_t)g_image_base : 0;
+                if (r) fprintf(stderr, "  [FASTFAIL rsp+%02d] 0x%llx <PE RVA 0x%llx>\n",
+                               fi * 8, (unsigned long long)v, (unsigned long long)r);
+            }
+            MW_TRACE("[FASTFAIL] code=%llu caller_RA=0x%llx RVA=0x%llx RSP=0x%llx — fail-fast",
+                     (unsigned long long)rcx, (unsigned long long)ra,
+                     (unsigned long long)ffail_rva, (unsigned long long)rsp);
+            mw_trace_shutdown_flush();
+            _exit(9);   /* STATUS_STACK_BUFFER_OVERRUN (0xC0000409) low byte */
+        }
+    }
 
     fprintf(stderr, "\n[CRASH] Signal %d at RIP=0x%lx\n", sig, rip);
     fprintf(stderr, "  RAX=0x%lx RCX=0x%lx RDX=0x%lx R8=0x%lx R9=0x%lx\n",

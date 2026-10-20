@@ -1,0 +1,20 @@
+  [SCAN rsp+480] 0x1405063f0 <PE>
+  [SCAN rsp+520] 0x140210db5 <PE>
+  [SCAN rsp+552] 0x140536f00 <PE>
+  [SCAN rsp+584] 0x1402f1248 <PE>
+  [SCAN rsp+648] 0x14022825c <PE>
+  [SCAN rsp+2040] 0x140536f00 <PE>
+  [SCAN rsp+2056] 0x1402ff0ad <PE>
+  [SCAN rsp+2072] 0x140536f00 <PE>
+  [SCAN rsp+2088] 0x140536f00 <PE>
+  [SCAN rsp+2096] 0x140000000 <PE>
+  [SCAN rsp+2104] 0x1403621eb <PE>
+  [SCAN rsp+2168] 0x1403185c2 <PE>
+  [SCAN rsp+2232] 0x2008149 <LOADER>
+  [SCAN rsp+2248] 0x140318e80 <PE>
+  [SCAN rsp+2600] 0x20027ec <LOADER>
+  [SCAN rsp+2608] 0x20021a8 <LOADER>
+  [SCAN rsp+4056] 0x2006550 <LOADER>
+  Backtrace (via stack walking):
+    [0] RIP=0x1402bd10e RVA=0x2bd10e
+      [RSP+0] = 0x0 (return addr?)
