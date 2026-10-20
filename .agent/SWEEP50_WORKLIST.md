@@ -1497,8 +1497,16 @@ gate that must be re-accepted when the port lands).
        round trips re-verified on sha 83df098e.
 - [ ] **SW-1152 RtlCaptureContext SSE/debug regs** — FloatSave + Xmm + Dr stay zeroed;
        fill from sigcontext if a consumer appears.
-- [ ] **SW-1153 ODBC mini-driver** — SQLDriverConnectW/SQLExecDirectW/SQLFetch real
-       against sqlite3 host (bginfo64 "save to DB" path).
+- [x] **SW-1153 ODBC mini-driver** — -> LANDED SWEEP-034: REAL sqlite3-backed
+       (host libsqlite3, Makefile -lsqlite3): DBC=sqlite3* (0x00B8 table),
+       STMT=sqlite3_stmt*+cursor (0x00B9); DriverConnectW opens real files
+       (DATABASE=/DBQ=/Data Source= keywords, sqlite3_open16 UTF-16),
+       ExecDirectW prepare16_v2+step (DML affected recorded), Fetch step,
+       GetData real conversion (C_WCHAR/C_CHAR/C_SLONG/C_LONG/C_DOUBLE,
+       SQL_NULL_DATA), BindCol, NumResultCols, RowCount (changes/-1),
+       Disconnect, DescribeCol (name16+value-type), DiagRecW (HY000 +
+       sqlite errmsg16). ENV keeps the 0x00031000 cookie pool. No pool
+       guest exercises ODBC in-run yet — honest note; corpus gates green.
 - [x] **SW-1154 SafeArray real element store** — -> LANDED SWEEP-031: real
        SAFEARRAY model (MwSa 0x00B40001+i): SafeArrayCreate allocates
        vt-sized store (20 VT codes, 8 dims, 16M elem cap), LBound/UBound real
