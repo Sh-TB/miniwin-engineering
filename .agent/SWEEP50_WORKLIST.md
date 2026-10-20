@@ -1704,3 +1704,21 @@ gate that must be re-accepted when the port lands).
 - Next wagons queued: SW-1203 hook EVENT firing, SW-1153 ODBC mini-driver,
   SW-1156 ExtFloodFill, SW-1102 procexp jump-into-string, SW-1156,
   SW-508 remainder (CompareStringOrdinal landed here).
+
+## SWEEP-035 round summary — TRAIN 4 of 5 «۵ قطار» (2026-10-21)
+- SW-1203 hook EVENT firing v1: CBT delivered to live guest hooks (CREATEWND
+  pre-create real CBT contract incl. cancel; DESTROYWND; ACTIVATE). No pool
+  guest reaches window creation post-hook-install yet — machinery verified
+  by construction + G1.
+- SW-1204 LANDED: AppPolicyGetThreadInitializationType (worker-thread unblock;
+  winmergeu worker completed init and now parks in a REAL blocked GetMessageW).
+- ENGINE BUG-FIX: W/A event split-brain (CreateEventW/MutexW/MutexA/WSA events
+  legacy pool vs mw_event_* registry waiters) — unified; winmergeu main's
+  WFSO(0x4) now resolves a real event (probe trace [KOBJ] added).
+- GetMessageW two-contract semantics: main-thread batch = instant WM_QUIT
+  (10 corpus programs exit-0 preserved — unconditional park regressed them,
+  caught 3x discipline), worker threads = real blocking park.
+- MEASURED sha 040f875e: G1 12/12; corpus x3 15/15 det, 0 unresolved, 0 regressions.
+- Next: SW-1205 winmergeu main-thread poll (waits for worker message-loop
+  progress; needs a PostThreadMessage producer or upstream window creation),
+  SW-1102 guest-write instrumentation, SW-1153 consumers.

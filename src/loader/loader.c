@@ -838,6 +838,7 @@ __attribute__((ms_abi)) long long mw_winapi_optional_stub(long long a, long long
     return 0;
 }
 static const char* mw_uxtheme_ord_lookup(uint16_t ordinal); /* SWEEP-015 SW-801g fwd */
+__attribute__((ms_abi)) int32_t mw_AppPolicyGetThreadInitializationType(void* process, uint32_t* policy); /* SW-1204 fwd */
 
 __attribute__((ms_abi)) void* mw_GetProcAddress(void* module, const char* name) {
     /* SWEEP-012: ordinal form — MAKEINTRESOURCEA(n) passes the ordinal in the
@@ -3967,11 +3968,13 @@ static uint32_t mw_sem_wait(MwKSem* s, uint32_t ms) {
 /* Unified wait dispatch: thread handle -> event -> semaphore -> legacy 0. */
 static uint32_t mw_kobj_wait(void* h, uint32_t ms) {
     MwThread* t = mw_thread_lookup(h);
-    if (t) return mw_thread_wait(h, ms);
+    if (t) { MW_TRACE("[KOBJ] wait(%p) -> thread", h); return mw_thread_wait(h, ms); }
     MwKEvent* e = mw_event_lookup(h);
-    if (e) return mw_event_wait(e, ms);
+    if (e) { MW_TRACE("[KOBJ] wait(%p) -> event sig=%d manual=%d", h, e->signaled, e->manual); return mw_event_wait(e, ms); }
     MwKSem* s = mw_sem_lookup(h);
-    if (s) return mw_sem_wait(s, ms);
+    if (s) { MW_TRACE("[KOBJ] wait(%p) -> sem", h); return mw_sem_wait(s, ms); }
+    MW_TRACE("[KOBJ] wait(%p) -> LEGACY PASSTHROUGH (no object: table[%d]=%p)",
+             h, (int)(uintptr_t)h - 4, (h && (uintptr_t)h >= 4) ? g_handle_table_lookup((int)(uintptr_t)h - 4) : NULL);
     return 0; /* WAIT_OBJECT_0 — legacy passthrough (process/pseudo handles) */
 }
 
@@ -7468,11 +7471,14 @@ static MwEvent* event_from_handle(void* h) {
     return &g_events[idx];
 }
 __attribute__((ms_abi)) void* mw_CreateEventW(void* attr, int manual, int init, const wchar_t* name) {
+    (void)attr; (void)name;
     MW_TRACE("CreateEventW(manual=%d init=%d)", manual, init);
-    if (g_event_count >= MAX_EVENTS) return NULL;
-    g_events[g_event_count].set = init;
-    g_events[g_event_count].manual = manual;
-    return alloc_handle((void*)(uintptr_t)(4 + g_event_count++));
+    /* SWEEP-035 BUG-FIX (split-brain handle tables): the W path wrote the
+     * legacy g_events[] pool while Set/Reset/Wait resolve through the
+     * mw_event_* registry — winmergeu's main thread waited INFINITE on a
+     * W-path event that never existed to the waiter (instant WAIT_OBJECT_0
+     * -> Sleep(0) spin x986K). Route W through the same registry as A. */
+    return mw_event_create(manual, init);
 }
 __attribute__((ms_abi)) uint32_t mw_WaitForMultipleObjectsEx(uint32_t n, void** hs, int wait_all, uint32_t ms, int alertable) {
     return mw_WaitForMultipleObjects(n, hs, wait_all, ms);
@@ -7482,11 +7488,9 @@ __attribute__((ms_abi)) uint32_t mw_SignalObjectAndWait(void* sig, void* wait, u
     return mw_WaitForSingleObject(wait, ms);
 }
 __attribute__((ms_abi)) void* mw_CreateMutexA(void* attr, int owner, const char* name) {
+    (void)attr; (void)name;
     MW_TRACE("CreateMutexA(owner=%d)", owner);
-    if (g_event_count >= MAX_EVENTS) return NULL;
-    g_events[g_event_count].set = 1 - owner;
-    g_events[g_event_count].manual = 1;
-    return alloc_handle((void*)(uintptr_t)(4 + g_event_count++));
+    return mw_event_create(1, 1 - owner); /* SWEEP-035: unified registry */
 }
 __attribute__((ms_abi)) int mw_ReleaseMutex(void* h) { return mw_SetEvent(h); }
 
@@ -11542,10 +11546,7 @@ __attribute__((ms_abi)) int mw_FlushViewOfFile(const void* base, size_t bytes) {
 __attribute__((ms_abi)) void* mw_CreateMutexW(void* attr, int owner, const uint16_t* name) {
     (void)attr; (void)name;
     MW_TRACE("CreateMutexW(owner=%d)", owner);
-    if (g_event_count >= MAX_EVENTS) return NULL;
-    g_events[g_event_count].set = 1 - owner;
-    g_events[g_event_count].manual = 1;
-    return alloc_handle((void*)(uintptr_t)(4 + g_event_count++));
+    return mw_event_create(1, 1 - owner); /* SWEEP-035: unified registry */
 }
 __attribute__((ms_abi)) int mw_HeapDestroy(void* h) { (void)h; return 1; }
 __attribute__((ms_abi)) uint32_t mw_TlsFree(uint32_t idx) { (void)idx; return 1; }
@@ -12621,10 +12622,9 @@ __attribute__((ms_abi)) void* mw_ldap_init(const char* host, int port) {
     return NULL; /* LDAP honestly unsupported */
 }
 __attribute__((ms_abi)) void* mw_WSACreateEvent(void) {
-    if (g_event_count >= MAX_EVENTS) { g_wsa_err = 10024; return NULL; }
-    g_events[g_event_count].set = 0;
-    g_events[g_event_count].manual = 1;
-    return alloc_handle((void*)(uintptr_t)(4 + g_event_count++));
+    void* h = mw_event_create(1, 0); /* manual-reset, initially unset */
+    if (!h) { g_wsa_err = 10024; return NULL; } /* WSA_MAX_EVENTS */
+    return h;
 }
 __attribute__((ms_abi)) int mw_WSACloseEvent(void* h) { (void)h; return 1; }
 __attribute__((ms_abi)) int mw_WSAEventSelect(unsigned long long s, void* ev, long mask) {
@@ -12637,16 +12637,10 @@ __attribute__((ms_abi)) int mw_WSAEnumNetworkEvents(unsigned long long s, void* 
     return 0;
 }
 __attribute__((ms_abi)) int mw_WSAResetEvent(void* h) {
-    int idx = (int)(uintptr_t)h - 4;
-    if (idx < 0 || idx >= g_event_count) return 0;
-    g_events[idx].set = 0;
-    return 1;
+    return mw_event_reset(h); /* SWEEP-035: unified registry */
 }
 __attribute__((ms_abi)) int mw_WSASetEvent(void* h) {
-    int idx = (int)(uintptr_t)h - 4;
-    if (idx < 0 || idx >= g_event_count) return 0;
-    g_events[idx].set = 1;
-    return 1;
+    return mw_event_set(h); /* SWEEP-035: unified registry */
 }
 __attribute__((ms_abi)) uint32_t mw_WSAWaitForMultipleEvents(uint32_t n, void** hs, int all, uint32_t ms, int alertable) {
     (void)all; (void)alertable;
@@ -13201,6 +13195,13 @@ static void* mw_child_register(int sc, void* parent, void* menu,
     MW_TRACE("[GUI] child table full -> NULL");
     return NULL;
 }
+/* SW-1203: WH_CBT event delivery (defined after the hook machinery) */
+int mw_hook_fire_create(uint32_t exstyle, uint32_t style, const void* winname,
+        const void* clsname, int x, int y, int w, int h, void* parent,
+        void* menu, void* inst, void* param);
+void mw_hook_fire_destroy(void* hwnd);
+void mw_hook_fire_activate(void* hwnd);
+
 __attribute__((ms_abi)) void* mw_CreateWindowExW(uint32_t exstyle, const void* cls,
         const uint16_t* win, uint32_t style, int x, int y, int w, int h,
         void* parent, void* menu, void* inst, void* param) {
@@ -13209,6 +13210,9 @@ __attribute__((ms_abi)) void* mw_CreateWindowExW(uint32_t exstyle, const void* c
         (void)exstyle; (void)x; (void)y; (void)style;
         return mw_child_register(sc, parent, menu, win, 1, NULL);
     }
+    /* SW-1203: WH_CBT pre-create notification — nonzero CANCELS (real CBT) */
+    if (mw_hook_fire_create(exstyle, style, win, cls, x, y, w, h, parent, menu, inst, param))
+        return NULL;
     g_create_param = param; /* SW-802..806: forward lpParam into CREATESTRUCT */
     mw_gui_store_window((int)w, (int)h); /* SWEEP-005: allocate paint surface */
     mw_gui_send_create(); /* SWEEP-006: synchronous WM_CREATE */
@@ -13224,6 +13228,11 @@ __attribute__((ms_abi)) void* mw_CreateWindowExA(uint32_t exstyle, const void* c
         (void)exstyle; (void)x; (void)y; (void)style;
         return mw_child_register(sc, parent, menu, win, 0, NULL);
     }
+    /* SW-1203: WH_CBT pre-create notification — nonzero CANCELS (real CBT);
+     * the A path passes the ANSI name reinterpreted — hooks read names
+     * through the same pointer the caller would have used on Windows. */
+    if (mw_hook_fire_create(exstyle, style, win, cls, x, y, w, h, parent, menu, inst, param))
+        return NULL;
     g_create_param = param; /* SW-802..806: forward lpParam into CREATESTRUCT */
     mw_gui_store_window((int)w, (int)h); /* SWEEP-005: allocate paint surface */
     mw_gui_send_create(); /* SWEEP-006: synchronous WM_CREATE */
@@ -13232,6 +13241,7 @@ __attribute__((ms_abi)) void* mw_CreateWindowExA(uint32_t exstyle, const void* c
     return MW_GUI_HWND;
 }
 __attribute__((ms_abi)) int mw_ShowWindow(void* hwnd, int cmd) {
+    mw_hook_fire_activate(hwnd); /* SW-1203: HCBT_ACTIVATE on first show */
     MW_TRACE("ShowWindow(hwnd=%p cmd=%d) -> TRUE", hwnd, cmd);
     return 1;
 }
@@ -13248,6 +13258,7 @@ __attribute__((ms_abi)) int mw_DestroyWindow(void* hwnd) {
         g_child[s].live = 0;
         return 1;
     }
+    mw_hook_fire_destroy(hwnd); /* SW-1203: HCBT_DESTROYWND pre-destroy */
     MW_TRACE("DestroyWindow(hwnd=%p)", hwnd);
     /* SWEEP-005: real semantics — WM_DESTROY is sent to the wndproc */
     mw_gui_send_destroy(hwnd);
@@ -13885,7 +13896,28 @@ static int mw_gui_next_event(void* msg, void* hwnd, int consume, const char* api
 
 static int mw_gui_pump_getmsg(void* msg, void* hwnd, const char* api) {
     if (!mw_gui_events_enabled()) {
-        MW_TRACE("%s(hwnd=%p) -> 0 (WM_QUIT: no event source)", api, hwnd);
+        /* SWEEP-035 (SW-1203/1204 chain): real GetMessageW BLOCKS until a
+         * message arrives — it never fabricates WM_QUIT. Two contracts:
+         *  - MAIN thread + MW_GUI_EVENTS=0 (headless batch): the pump is
+         *    the guest's exit gate — instant WM_QUIT keeps 10 corpus
+         *    programs at exit-0 (regression-tested 3x; parking them made
+         *    the whole corpus 124).
+         *  - SPAWNED worker threads (t_cur_thread set): park like Windows
+         *    — the old instant WM_QUIT killed winmergeu's worker mid-init
+         *    (26 calls then ExitThread(0)) while its main spun Sleep(0)
+         *    x986K on a flag the dead worker would have set. Workers park;
+         *    PostQuitMessage (g_quit_flag) still wakes them immediately. */
+        if (t_cur_thread != NULL) {
+            while (!g_quit_flag) {
+                MW_TRACE("%s(hwnd=%p) parked (worker thread, no event source)", api, hwnd);
+                struct timespec ts = { 0, 20 * 1000 * 1000 }; /* 20ms poll slice */
+                nanosleep(&ts, NULL);
+            }
+            MW_TRACE("%s() -> 0 (WM_QUIT code=%d, worker woke)", api, g_quit_code);
+            mw_gui_fill_msg(msg, hwnd, 0x0012u, (uintptr_t)g_quit_code, 0);
+            return 0;
+        }
+        MW_TRACE("%s(hwnd=%p) -> 0 (WM_QUIT: no event source, main-thread batch contract)", api, hwnd);
         return 0;
     }
     /* Win32: when GetMessage returns 0 the MSG holds WM_QUIT with wParam =
@@ -15955,6 +15987,79 @@ __attribute__((ms_abi)) int mw_UnhookWindowsHookEx(void* hhk) {
     MW_TRACE("UnhookWindowsHookEx(%p) -> FALSE (bad handle)", hhk);
     mw_SetLastError(1400); /* ERROR_INVALID_HANDLE */
     return 0;
+}
+/* Fired from CreateWindowExW/A, DestroyWindow, ShowWindow (prototypes are
+ * declared next to those functions — they are defined later in the file,
+ * after the hook machinery). */
+#define MW_HCBT_CREATEWND   3
+#define MW_HCBT_DESTROYWND  4
+#define MW_HCBT_ACTIVATE    5
+#define MW_WH_CBT           5
+static int mw_hook_fire(int idhook, int code, uintptr_t wp, void* lp) {
+    int fired = 0;
+    for (int i = 0; i < MW_HOOK_MAX; i++) {
+        if (!g_hook[i].live || g_hook[i].idhook != idhook) continue;
+        __attribute__((ms_abi)) long long (*proc)(int, uintptr_t, void*) =
+            (__attribute__((ms_abi)) long long (*)(int, uintptr_t, void*))g_hook[i].proc;
+        long long r = proc(code, wp, lp);
+        fired++;
+        MW_TRACE("[HOOK] CBT event %d -> hook[%d] %p returned %lld", code, i, g_hook[i].proc, r);
+        if (r != 0) return fired; /* stop the chain on cancel/handled */
+    }
+    return fired;
+}
+/* Returns nonzero if a live WH_CBT hook CANCELED the creation (real CBT
+ * contract: nonzero return from HCBT_CREATEWND prevents the window). */
+int mw_hook_fire_create(uint32_t exstyle, uint32_t style, const void* winname,
+        const void* clsname, int x, int y, int w, int h, void* parent,
+        void* menu, void* inst, void* param) {
+    if (x == 0x80000000) x = 0; /* CW_USEDEFAULT defensive normalization */
+    /* CREATESTRUCT (x64, winuser.h): 80 bytes */
+    struct {
+        void*     lpCreateParams;
+        void*     hInstance;
+        void*     hMenu;
+        void*     hwndParent;
+        int32_t   cy, cx, y, x;
+        int32_t   style;
+        const void* lpszName;
+        const void* lpszClass;
+        uint32_t  dwExStyle;
+    } cs;
+    memset(&cs, 0, sizeof(cs));
+    cs.lpCreateParams = param;
+    cs.hInstance = inst;
+    cs.hMenu = menu;
+    cs.hwndParent = parent;
+    cs.cy = h; cs.cx = w; cs.y = y; cs.x = x;
+    cs.style = (int32_t)style;
+    cs.lpszName = winname;
+    cs.lpszClass = clsname;
+    cs.dwExStyle = exstyle;
+    struct { void* lpcs; void* hwndInsertAfter; } cbtw;
+    cbtw.lpcs = &cs;
+    cbtw.hwndInsertAfter = (void*)0x00000002FFFFFFFFull; /* HWND_TOP bogus-safe */
+    for (int i = 0; i < MW_HOOK_MAX; i++) {
+        if (!g_hook[i].live || g_hook[i].idhook != MW_WH_CBT) continue;
+        __attribute__((ms_abi)) long long (*proc)(int, uintptr_t, void*) =
+            (__attribute__((ms_abi)) long long (*)(int, uintptr_t, void*))g_hook[i].proc;
+        long long r = proc(MW_HCBT_CREATEWND, (uintptr_t)MW_GUI_HWND, &cbtw);
+        MW_TRACE("[HOOK] HCBT_CREATEWND -> hook[%d] %p returned %lld", i, g_hook[i].proc, r);
+        if (r != 0) {
+            MW_TRACE("[HOOK] HCBT_CREATEWND canceled by hook -> NULL");
+            return 1; /* canceled (real CBT contract) */
+        }
+        break; /* one CBT hook consumed (Windows calls the newest first) */
+    }
+    return 0;
+}
+void mw_hook_fire_destroy(void* hwnd) {
+    mw_hook_fire(MW_WH_CBT, MW_HCBT_DESTROYWND, (uintptr_t)hwnd, NULL);
+}
+void mw_hook_fire_activate(void* hwnd) {
+    /* ACTIVATESTRUCT { hwndActive, hwndDeactivate } */
+    uintptr_t st[2] = { (uintptr_t)hwnd, 0 };
+    mw_hook_fire(MW_WH_CBT, MW_HCBT_ACTIVATE, (uintptr_t)hwnd, st);
 }
 
 /* advapi32!RegDeleteKeyW — real hive delete (SWEEP-022 SW-953):
@@ -24725,6 +24830,7 @@ static ImportEntry g_import_table[] = {
     ENTRY("KERNEL32.DLL", "QueryDepthSList", mw_QueryDepthSList),
     ENTRY("KERNEL32.DLL", "InitializeCriticalSectionEx", mw_InitializeCriticalSectionEx),
     ENTRY("KERNEL32.DLL", "GetCurrentProcessorNumber", mw_GetCurrentProcessorNumber),
+    ENTRY("api-ms-win-appmodel-runtime-l1-1-2.dll", "AppPolicyGetThreadInitializationType", mw_AppPolicyGetThreadInitializationType), /* SW-1204 */
     ENTRY("KERNEL32.DLL", "InitializeSRWLock", mw_InitializeSRWLock),
     ENTRY("KERNEL32.DLL", "AcquireSRWLockShared", mw_AcquireSRWLockShared),
     ENTRY("KERNEL32.DLL", "ReleaseSRWLockShared", mw_ReleaseSRWLockShared),
@@ -27938,3 +28044,18 @@ int main(int argc, char* argv[]) {
     return ret;
 }
 
+
+/* SW-1204 (SWEEP-035): winmergeu's worker thread died at
+ * GetProcAddress(api-ms-win-appmodel-runtime-l1-1-2,
+ * AppPolicyGetThreadInitializationType) -> NULL, then went silent (no API
+ * calls) while the main thread spun Sleep(0) x986K waiting for worker init
+ * (trace /tmp/wm1, T76c0 26 lines then nothing). Real API (appmodel.h):
+ * returns APPPOLICY_THREADINITIALIZATIONTYPE — 0 = NONE (no automatic
+ * apartment init), the honest headless answer that lets the worker
+ * proceed. Added to the dispatch table so GetProcAddress resolves it. */
+__attribute__((ms_abi)) int32_t mw_AppPolicyGetThreadInitializationType(void* process, uint32_t* policy) {
+    (void)process;
+    if (policy) *policy = 0; /* APPPOLICY_THREADINITIALIZATIONTYPE_NONE */
+    MW_TRACE("AppPolicyGetThreadInitializationType -> S_OK (NONE)");
+    return 0; /* S_OK */
+}
