@@ -1,0 +1,36 @@
+[TRACE] Command line: /home/z/my-project/workspace/miniwin-engineering/artifacts/sweep50/dl/winmergeu/WinMergeU.exe
+[WARN] 20 imports unresolved
+[STUB] unresolved import called -> returning 0 (call #1) guest_rip=0x1402b8dd7
+
+[CRASH] Signal 11 at RIP=0x1402b8de0
+  RAX=0x0 RCX=0x0 RDX=0x1 R8=0x0 R9=0x0
+  RSP=0x7ffd755aa430 RBP=0x7ffd755aa790
+  g_image_base=0x140000000 g_image_size=0x681000
+  RVA=0x2b8de0 (inside loaded PE)
+  Bytes: 48 8b 01 4c 8d 43 10 48 8d 15 da 47 1c 00 48 8b 
+  Return addr: 0x1
+  RSI=0x0 RDI=0x3282e40
+  R8=0x0  R9=0x0 R10=0x0 R11=0x246
+  R12=0x6 R13=0x232f000 R14=0x140536f00 R15=0x1
+  [SCAN rsp+008] 0x140536f00 <PE>
+  [SCAN rsp+248] 0x203e9a4 <LOADER>
+  [SCAN rsp+448] 0x14052f598 <PE>
+  [SCAN rsp+504] 0x140351cc4 <PE>
+  [SCAN rsp+552] 0x1402bb324 <PE>
+  [SCAN rsp+600] 0x1402280c2 <PE>
+  [SCAN rsp+1992] 0x140536f00 <PE>
+  [SCAN rsp+2008] 0x1402ff0ad <PE>
+  [SCAN rsp+2024] 0x140536f00 <PE>
+  [SCAN rsp+2040] 0x140536f00 <PE>
+  [SCAN rsp+2048] 0x140000000 <PE>
+  [SCAN rsp+2056] 0x1403621eb <PE>
+  [SCAN rsp+2120] 0x1403185c2 <PE>
+  [SCAN rsp+2184] 0x2008149 <LOADER>
+  [SCAN rsp+2200] 0x140318e80 <PE>
+  [SCAN rsp+2552] 0x20027ec <LOADER>
+  [SCAN rsp+2560] 0x20021a8 <LOADER>
+  [SCAN rsp+4008] 0x2006550 <LOADER>
+  Backtrace (via stack walking):
+    [0] RIP=0x1402b8de0 RVA=0x2b8de0
+      [RSP+0] = 0x1 (return addr?)
+  Likely: NULL or invalid function pointer call

@@ -1,0 +1,30 @@
+program	exit	unresolved_count
+autoruns64	0	0
+0
+bginfo64	0	54
+coreinfoex64	0	0
+0
+cports	0	0
+0
+diskmon64	0	0
+0
+pageant	124	0
+0
+procexp64	139	0
+0
+procmon64	0	0
+0
+produkey	0	0
+0
+putty	0	0
+0
+puttygen	0	0
+0
+rammap64	0	0
+0
+searchmyfiles	0	0
+0
+winmergeu	139	0
+0
+zoomit64	1	0
+0

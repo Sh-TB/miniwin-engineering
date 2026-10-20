@@ -1,0 +1,187 @@
+[TRACE] Command line: /home/z/my-project/workspace/miniwin-engineering/artifacts/sweep50/dl/winmergeu/WinMergeU.exe
+[WARN]   unresolved: PathStripToRootW
+[WARN]   unresolved: PathRemoveFileSpecW
+[WARN]   unresolved: PathCombineW
+[WARN]   unresolved: PathGetCharTypeW
+[WARN]   unresolved: PathCreateFromUrlW
+[WARN]   unresolved: PathIsDirectoryW
+[WARN]   unresolved: PathMatchSpecW
+[WARN]   unresolved: PathCompactPathW
+[WARN]   unresolved: PathFileExistsW
+[WARN]   unresolved: PathIsUNCW
+[WARN]   unresolved: ImmSetCompositionFontW
+[WARN]   unresolved: SetThreadUILanguage
+[WARN]   unresolved: FreeConsole
+[WARN]   unresolved: GetCompressedFileSizeW
+[WARN]   unresolved: ExpandEnvironmentStringsA
+[WARN]   unresolved: ActivateActCtx
+[WARN]   unresolved: DeactivateActCtx
+[WARN]   unresolved: FindActCtxSectionStringW
+[WARN]   unresolved: QueryActCtxW
+[WARN]   unresolved: lstrcmpA
+[WARN]   unresolved: CompareStringA
+[WARN]   unresolved: GlobalHandle
+[WARN]   unresolved: GetStringTypeExW
+[WARN]   unresolved: GlobalFlags
+[WARN]   unresolved: GetSystemDefaultUILanguage
+[WARN]   unresolved: ReadDirectoryChangesW
+[WARN]   unresolved: CreateActCtxW
+[WARN]   unresolved: CopyFileW
+[WARN]   unresolved: LockWindowUpdate
+[WARN]   unresolved: RealChildWindowFromPoint
+[WARN]   unresolved: ShowOwnedPopups
+[WARN]   unresolved: SetWindowRgn
+[WARN]   unresolved: DrawIcon
+[WARN]   unresolved: GetTabbedTextExtentW
+[WARN]   unresolved: DestroyCursor
+[WARN]   unresolved: ReuseDDElParam
+[WARN]   unresolved: BringWindowToTop
+[WARN]   unresolved: GetScrollRange
+[WARN]   unresolved: SetScrollRange
+[WARN]   unresolved: ScrollWindow
+[WARN]   unresolved: RegisterHotKey
+[WARN]   unresolved: GetScrollPos
+[WARN]   unresolved: GetDCEx
+[WARN]   unresolved: GetNextDlgTabItem
+[WARN]   unresolved: ChildWindowFromPointEx
+[WARN]   unresolved: GetLastActivePopup
+[WARN]   unresolved: DragDetect
+[WARN]   unresolved: GetTopWindow
+[WARN]   unresolved: ReplyMessage
+[WARN]   unresolved: GetClassInfoW
+[WARN]   unresolved: GrayStringW
+[WARN]   unresolved: SetParent
+[WARN]   unresolved: GetComboBoxInfo
+[WARN]   unresolved: LoadBitmapW
+[WARN]   unresolved: SetMenuItemBitmaps
+[WARN]   unresolved: PostThreadMessageW
+[WARN]   unresolved: CharPrevW
+[WARN]   unresolved: GetCaretPos
+[WARN]   unresolved: EnableScrollBar
+[WARN]   unresolved: SetLayout
+[WARN]   unresolved: GetLayout
+[WARN]   unresolved: SetPolyFillMode
+[WARN]   unresolved: SetViewportExtEx
+[WARN]   unresolved: SetWindowExtEx
+[WARN]   unresolved: SetWindowOrgEx
+[WARN]   unresolved: OffsetViewportOrgEx
+[WARN]   unresolved: ScaleViewportExtEx
+[WARN]   unresolved: SetRectRgn
+[WARN]   unresolved: GetROP2
+[WARN]   unresolved: GetNearestColor
+[WARN]   unresolved: GetPolyFillMode
+[WARN]   unresolved: GetStretchBltMode
+[WARN]   unresolved: GetWindowOrgEx
+[WARN]   unresolved: CreateEllipticRgn
+[WARN]   unresolved: GetCurrentPositionEx
+[WARN]   unresolved: GetClipBox
+[WARN]   unresolved: PtVisible
+[WARN]   unresolved: RectVisible
+[WARN]   unresolved: Escape
+[WARN]   unresolved: GetTextColor
+[WARN]   unresolved: RoundRect
+[WARN]   unresolved: CreateDCW
+[WARN]   unresolved: CopyMetaFileW
+[WARN]   unresolved: ScaleWindowExtEx
+[WARN]   unresolved: SetAbortProc
+[WARN]   unresolved: LPtoDP
+[WARN]   unresolved: GetMapMode
+[WARN]   unresolved: GetWindowExtEx
+[WARN]   unresolved: GetViewportExtEx
+[WARN]   unresolved: DPtoLP
+[WARN]   unresolved: GetViewportOrgEx
+[WARN]   unresolved: RegDeleteTreeW
+[WARN]   unresolved: RegQueryValueW
+[WARN]   unresolved: SHCreateShellItem
+[WARN]   unresolved: SHParseDisplayName
+[WARN]   unresolved: SHGetPropertyStoreFromParsingName
+[WARN]   unresolved: SHAddToRecentDocs
+[WARN]   unresolved: DragFinish
+[WARN]   unresolved: ExtractIconW
+[WARN]   unresolved: ImageList_Remove
+[WARN]   unresolved: ImageList_GetImageInfo
+[WARN]   unresolved: IsAccelerator
+[WARN]   unresolved: OleTranslateAccelerator
+[WARN]   unresolved: OleDestroyMenuDescriptor
+[WARN]   unresolved: OleCreateMenuDescriptor
+[WARN]   unresolved: DoDragDrop
+[WARN]   unresolved: OleIsCurrentClipboard
+[WARN]   unresolved: OleFlushClipboard
+[WARN]   unresolved: OleGetClipboard
+[WARN]   unresolved: OleDuplicateData
+[WARN]   unresolved: CLSIDFromProgID
+[WARN]   unresolved: CreateStreamOnHGlobal
+[WARN]   unresolved: RevokeDragDrop
+[WARN]   unresolved: OleRun
+[WARN]   unresolved: PropVariantClear
+[WARN]   unresolved: GdipFillRectangleI
+[WARN]   unresolved: GdipAddPathArcI
+[WARN]   unresolved: GdipDrawPath
+[WARN]   unresolved: GdipFillPath
+[WARN]   unresolved: GdipClosePathFigure
+[WARN]   unresolved: GdipAddPathLineI
+[WARN]   unresolved: GdipAddPathBezierI
+[WARN]   unresolved: GdipStartPathFigure
+[WARN]   unresolved: GdipDeletePath
+[WARN]   unresolved: GdipCreatePath
+[WARN]   unresolved: GdipDrawBezierI
+[WARN]   unresolved: GdipCreateFromHDC
+[WARN]   unresolved: GdipDeleteGraphics
+[WARN]   unresolved: GdipCreatePen1
+[WARN]   unresolved: GdipDeletePen
+[WARN]   unresolved: GdipDrawLineI
+[WARN]   unresolved: GdipCreateBitmapFromScan0
+[WARN]   unresolved: GdipFree
+[WARN]   unresolved: GdipAlloc
+[WARN]   unresolved: GdipSetInterpolationMode
+[WARN]   unresolved: GdipCreateHBITMAPFromBitmap
+[WARN]   unresolved: GdipBitmapUnlockBits
+[WARN]   unresolved: GdipBitmapLockBits
+[WARN]   unresolved: GdipCreateBitmapFromFile
+[WARN]   unresolved: GdipCreateBitmapFromHBITMAP
+[WARN]   unresolved: GdipGetImageEncoders
+[WARN]   unresolved: GdipSetSmoothingMode
+[WARN]   unresolved: GdipDrawLine
+[WARN]   unresolved: GdipCreateSolidFill
+[WARN]   unresolved: GdipDeleteBrush
+[WARN]   unresolved: GdipCloneBrush
+[WARN]   unresolved: GdipDrawLinesI
+[WARN]   unresolved: LresultFromObject
+[WARN]   unresolved: AccessibleObjectFromWindow
+[WARN]   unresolved: CreateStdAccessibleObject
+[WARN] 170 imports unresolved
+[STUB] unresolved import called -> returning 0 (call #1) guest_rip=0x1402b8dd7
+
+[CRASH] Signal 11 at RIP=0x1402b8de0
+  RAX=0x0 RCX=0x0 RDX=0x1 R8=0x0 R9=0x0
+  RSP=0x7ffe7efe34c0 RBP=0x7ffe7efe3820
+  g_image_base=0x140000000 g_image_size=0x681000
+  RVA=0x2b8de0 (inside loaded PE)
+  Bytes: 48 8b 01 4c 8d 43 10 48 8d 15 da 47 1c 00 48 8b 
+  Return addr: 0x1
+  RSI=0x0 RDI=0x333be40
+  R8=0x0  R9=0x0 R10=0x0 R11=0x246
+  R12=0x6 R13=0x2323000 R14=0x140536f00 R15=0x1
+  [SCAN rsp+008] 0x140536f00 <PE>
+  [SCAN rsp+248] 0x203c6a4 <LOADER>
+  [SCAN rsp+448] 0x14052f598 <PE>
+  [SCAN rsp+504] 0x140351cc4 <PE>
+  [SCAN rsp+552] 0x1402bb324 <PE>
+  [SCAN rsp+600] 0x1402280c2 <PE>
+  [SCAN rsp+1992] 0x140536f00 <PE>
+  [SCAN rsp+2008] 0x1402ff0ad <PE>
+  [SCAN rsp+2024] 0x140536f00 <PE>
+  [SCAN rsp+2040] 0x140536f00 <PE>
+  [SCAN rsp+2048] 0x140000000 <PE>
+  [SCAN rsp+2056] 0x1403621eb <PE>
+  [SCAN rsp+2120] 0x1403185c2 <PE>
+  [SCAN rsp+2184] 0x2008149 <LOADER>
+  [SCAN rsp+2200] 0x140318e80 <PE>
+  [SCAN rsp+2224] 0x200c450 <LOADER>
+  [SCAN rsp+2552] 0x20027ec <LOADER>
+  [SCAN rsp+2560] 0x20021a8 <LOADER>
+  [SCAN rsp+4008] 0x2006550 <LOADER>
+  Backtrace (via stack walking):
+    [0] RIP=0x1402b8de0 RVA=0x2b8de0
+      [RSP+0] = 0x1 (return addr?)
+  Likely: NULL or invalid function pointer call

@@ -738,3 +738,14 @@ SWEEP-026 (2026-10-20) «ادامه فیل یوز با ۵۰ تسک» — resumed
   zig 0.17 pip); snake/breakout exit0+frames.
 - Worklist: 32 items marked LANDED w/ evidence; SW-1101..1150 queued (50);
   sweep026 scripts committed (sweep.sh, gui_battery.sh, mark_landed.py).
+
+---
+SWEEP-027 (2026-10-20) «واگن های قطار» — one wagon batch on reconciled tree
+- Env reset detected (local 55b3982): reset to origin 3cd11c0; deterministic
+  rebuild reproduced SWEEP-026 pin sha 51bc4fb3 EXACTLY before new work.
+- 45 imports + _wcmdln data import in one splice (scripts/sweep027_impl.c
+  + apply.py); 4 drift conflicts caught pre-build and adjusted.
+- searchmyfiles 139->exit0 (run #12); unresolved: autoruns 26, bginfo 145,
+  cports 6, diskmon 5, produkey 10, rammap 4, procexp 128, winmerge 150.
+- G1 PIN OK sha 0f4b4773 12/12; corpus x3 45/45; calc battery 15/15.
+- Pushed as one commit; worklist marks + summary appended.

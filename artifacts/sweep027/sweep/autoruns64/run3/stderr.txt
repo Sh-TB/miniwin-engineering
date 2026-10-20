@@ -1,0 +1,28 @@
+[TRACE] Command line: /home/z/my-project/workspace/miniwin-engineering/artifacts/sweep50/dl/autoruns64/Autoruns64.exe
+[WARN]   unresolved: EnumDisplaySettingsW
+[WARN]   unresolved: CryptGetHashParam
+[WARN]   unresolved: RegRenameKey
+[WARN]   unresolved: DeleteService
+[WARN]   unresolved: ControlService
+[WARN]   unresolved: RegDeleteTreeW
+[WARN]   unresolved: RegCopyTreeW
+[WARN]   unresolved: RegLoadKeyW
+[WARN]   unresolved: QueryServiceConfig2W
+[WARN]   unresolved: CryptHashData
+[WARN]   unresolved: CryptCreateHash
+[WARN]   unresolved: CryptAcquireContextW
+[WARN]   unresolved: GetServiceDisplayNameW
+[WARN]   unresolved: CryptDestroyHash
+[WARN]   unresolved: SHGetStockIconInfo
+[WARN]   unresolved: SHEvaluateSystemCommandTemplate
+[WARN]   unresolved: ExtractAssociatedIconW
+[WARN]   unresolved: CLSIDFromString
+[WARN]   unresolved: StgCreateStorageEx
+[WARN]   unresolved: StgOpenStorageEx
+[WARN]   unresolved: SHCreateStreamOnFileW
+[WARN]   unresolved: ImageList_Duplicate
+[WARN]   unresolved: ImageList_Read
+[WARN]   unresolved: ImageList_WriteEx
+[WARN]   unresolved: GradientFill
+[WARN]   unresolved: CertGetNameStringW
+[WARN] 29 imports unresolved

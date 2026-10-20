@@ -1,0 +1,46 @@
+[TRACE] Command line: /home/z/my-project/workspace/miniwin-engineering/artifacts/sweep50/dl/searchmyfiles/SearchMyFiles.exe
+[WARN]   unresolved: _wcmdln
+[WARN]   unresolved: _msize
+[WARN]   unresolved: _wcslwr
+[WARN]   unresolved: _itow
+[WARN]   unresolved: _wtoi
+[WARN]   unresolved: _ui64tow
+[WARN]   unresolved: _wtoi64
+[WARN]   unresolved: wcsncat
+[WARN]   unresolved: WNetGetUniversalNameW
+[WARN]   unresolved: EnumResourceTypesW
+[WARN]   unresolved: WritePrivateProfileStringW
+[WARN]   unresolved: GetMenuStringW
+[WARN]   unresolved: DrawTextExW
+[WARN]   unresolved: SetClipboardViewer
+[WARN]   unresolved: ChangeClipboardChain
+[WARN]   unresolved: SHBindToParent
+[WARN]   unresolved: SHFileOperationW
+[WARN] 18 imports unresolved
+
+[CRASH] Signal 11 at RIP=0x140028001
+  RAX=0xffffffff RCX=0x120 RDX=0xf8e81cb5e281a14c R8=0x48000b8161058b48 R9=0x0
+  RSP=0x7ffdce9dab40 RBP=0x2dab2c0
+  g_image_base=0x140000000 g_image_size=0x3e000
+  RVA=0x28001 (inside loaded PE)
+  Bytes: 66 41 83 38 22 75 38 66 66 66 90 66 66 66 90 49 
+  Return addr: 0x7ffdce9dab50
+  RSI=0x0 RDI=0x140000000
+  R8=0x48000b8161058b48  R9=0x0 R10=0x0 R11=0x202
+  R12=0x231b000 R13=0x231a000 R14=0x7ffdce9db080 R15=0x7ffdce9dae80
+  [SCAN rsp+200] 0x2007c1c <LOADER>
+  [SCAN rsp+240] 0x204a320 <LOADER>
+  [SCAN rsp+456] 0x2000020 <LOADER>
+  [SCAN rsp+568] 0x20027ec <LOADER>
+  [SCAN rsp+576] 0x20021a8 <LOADER>
+  [SCAN rsp+2024] 0x2006550 <LOADER>
+  [SCAN rsp+2176] 0x2006550 <LOADER>
+  [SCAN rsp+2216] 0x2008a90 <LOADER>
+  [SCAN rsp+2248] 0x2008ab1 <LOADER>
+  [SCAN rsp+2728] 0x2000040 <LOADER>
+  [SCAN rsp+2808] 0x2008a90 <LOADER>
+  Backtrace (via stack walking):
+    [0] RIP=0x140028001 RVA=0x28001
+      [RSP+0] = 0x7ffdce9dab50 (return addr?)
+    [1] RIP=0x7ffdce9dab50 (outside PE, possible shared lib)
+    [2] RIP=0x7ffdce9dab50 (outside PE, possible shared lib)

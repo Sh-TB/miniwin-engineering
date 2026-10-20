@@ -1,0 +1,6 @@
+[TRACE] Command line: /home/z/my-project/workspace/miniwin-engineering/artifacts/sweep023/miniwin_calc.exe
+[GDI-FRAME] #1 -> miniwin-results/miniwin_calc.exe/screenshots/frame_001.bmp
+[GDI-FRAME] #2 -> miniwin-results/miniwin_calc.exe/screenshots/frame_002.bmp
+[GDI-FRAME] #3 -> miniwin-results/miniwin_calc.exe/screenshots/frame_003.bmp
+[GDI-FRAME] #4 -> miniwin-results/miniwin_calc.exe/screenshots/frame_004.bmp
+[GDI-FRAME] #5 -> miniwin-results/miniwin_calc.exe/screenshots/frame_005.bmp
