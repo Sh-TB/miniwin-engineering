@@ -686,3 +686,26 @@ Stage Summary:
   (-> SW-1006..1010), putty GDI font/comm (-> SW-1011..1015).
 - Worklist: SW-961..1000 marked LANDED (per-task evidence) + new queue
   SW-1001..1020 (20 items; 60-task mandate: 40 landed + 20 queued).
+
+---
+Task ID: SWEEP-008-reconcile
+Agent: main (z.ai)
+
+Task: Reconcile stale local clone with origin/main (SWEEP-023 era).
+
+Work Log:
+- Local clone was stale at b783c44; origin/main held SWEEP-008b..SWEEP-023
+  (6c5f651 WAS pushed by the prior session — local clone just never synced;
+  same divergence class as SWEEP-017/020 reconciles).
+- Local redone SWEEP-008 batch (commit 9bf6dcb) archived on branch
+  sweep008-local-divergent-3 and pushed (independent root-cause proofs:
+  RtlGetVersion hook ordering, MAKEINTATOM prop deref, memset clamps — all
+  landed upstream first via SWEEP-009/010/014).
+- Local main reset to origin/main 41a3c6d (no force-push).
+- Verified upstream ON THIS MACHINE: binary sha 43866c5d3594bc1317468b4dd6639b591406c3d716f146abba2088f1d31bbe7e
+  EXACT match to SWEEP-023 recorded pin; autoruns64/rammap64/produkey/cports
+  exit0; procexp64 exit139 = documented BUG-078 stub#1 frontier; G1 re-pin OK.
+
+Stage Summary:
+- Repo synced, verified, G1 pinned. Divergent work preserved on
+  sweep008-local-divergent-3.

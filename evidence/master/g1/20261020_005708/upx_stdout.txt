@@ -1,0 +1,12 @@
+[MiniWin] Loading samples/upx_decompressed.exe...
+upx 4.2.4
+NRV data compression library 0.84
+UCL data compression library 1.03
+zlib data compression library 1.3.1.1-motley
+LZMA SDK version 4.43
+Copyright (C) 1996-2024 Markus Franz Xaver Johannes Oberhumer
+Copyright (C) 1996-2024 Laszlo Molnar
+Copyright (C) 2000-2024 John F. Reiser
+Copyright (C) 1995-2024 Jean-loup Gailly and Mark Adler
+Copyright (C) 1999-2006 Igor Pavlov
+UPX comes with ABSOLUTELY NO WARRANTY; for details type 'upx_decompressed -L'.
