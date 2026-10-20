@@ -7,6 +7,26 @@ Format based on [Keep a Changelog](https://keepachangelog.com/).
 
 ## [Unreleased] — Current Development State
 
+### Added (SWEEP-032..036 — the five-train session «۵ قطار», 2026-10-21)
+- zoomit64 runs end-to-end (was loader-rejected at the 64MB file cap): 70-import
+  surface (GDI+ pen state/pixel store/effects, LCIDToLocaleName,
+  CompareStringOrdinal, threadpool-wait, WINMM timers, WTS, USER32 extras,
+  WinRT error-info, MF platform, real file-backed IStream, COM shells,
+  comctl32 subclass chain)
+- RtlCaptureContext full FPU/SSE capture (all 16 XMM, real MxCsr both slots,
+  fnstcw/fnstsw) — SW-1152
+- ODBC mini-driver real sqlite3-backed (DriverConnect/ExecDirect/Fetch/
+  GetData/BindCol/NumResultCols/RowCount/Disconnect/DiagRec) — SW-1153
+- ExtFloodFill real scanline seed fill (border/surface) — SW-1156
+- CBT hook event delivery (CREATEWND/DESTROYWND/ACTIVATE) — SW-1203
+- AppPolicyGetThreadInitializationType + event-registry unification bug fix
+  (W/A split-brain) + worker-thread honest GetMessageW park — SW-1204
+- procexp64 ordinal triage (IUnknown_QueryService, TaskDialogIndirect,
+  CreateSecurityPage) + BUG-078 root-cause class decode — SW-1102
+- crash-handler [STACKTOP raw] dump + [KOBJ] wait-kind probe (engine
+  instrumentation)
+
+
 ### Added
 - Complete PE64 loader with section mapping and relocation
 - Import resolver for KERNEL32.DLL (68) and msvcrt.dll (94)

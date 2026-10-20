@@ -3519,6 +3519,9 @@ __attribute__((ms_abi)) void* mw_SetUnhandledExceptionFilter(void* handler) {
 __attribute__((ms_abi)) void mw_Sleep(uint32_t ms) {
     MW_TRACE("Sleep(%u)", ms);
     if (ms > 0) usleep((useconds_t)ms * 1000);
+    else sched_yield(); /* SWEEP-036: Sleep(0) = yield the quantum (real
+                         * semantics) instead of a pure busy no-op; guests
+                         * that poll with Sleep(0) now actually rotate. */
 }
 
 __attribute__((ms_abi)) uint32_t mw_SuspendThread(void* h) {

@@ -1722,3 +1722,18 @@ gate that must be re-accepted when the port lands).
 - Next: SW-1205 winmergeu main-thread poll (waits for worker message-loop
   progress; needs a PostThreadMessage producer or upstream window creation),
   SW-1102 guest-write instrumentation, SW-1153 consumers.
+
+## SWEEP-036 round summary — TRAIN 5 of 5 «۵ قطار» (2026-10-21)
+- Sleep(0) -> sched_yield() (real yield-the-quantum semantics; winmergeu's
+  main-thread poll now rotates instead of a pure busy no-op).
+- ole32.277/16 evidence re-probe: wine ole32.spec is name-ordered, no public
+  ordinal table -> stay KNOWN-UNKNOWN stubs (Rule 1 upheld).
+- Round trips on the final binary (sha 48fac5a1): 7za create+extract
+  BYTE-EXACT (cmp x2), jq --version + query, sqlite3 CREATE/INSERT/SELECT.
+- G1 PIN 12/12 (evidence/master/g1/20261020_191444); corpus x3 15/15
+  deterministic, 0 unresolved, 0 regressions.
+- Session totals (SWEEP-032..036, five trains, one push each): zoomit64
+  1->0 (70 imports landed), winmergeu worker unblocked + parked honestly,
+  procexp crash class decoded + ordinals 7->2 KNOWN-UNKNOWN, SW-1152/1153/
+- 1156/1203/1204 LANDED; open frontiers: SW-1205 winmergeu main poll,
+  SW-1102 guest-write instrumentation, ole32.277/16 names.
