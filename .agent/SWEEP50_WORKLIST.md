@@ -1407,3 +1407,15 @@ gate that must be re-accepted when the port lands).
   * calc battery 15/15; putty/bginfo64 pump-on frames
 - Loader size 2,406,504 -> 2,497,432 (+90,928).
 - zoomit64 exit1 (0 unresolved) unchanged — trace-decode task stays queued.
+
+
+## SWEEP-028 round summary «ادامه یوز قطار فیل ۱۰۰ تسک جوا و پوش» (2026-10-20)
+- SW-1101 DOUBLE DECODE: (a) CreateDIBSection top-down 32bpp underflow -> MWBmp
+  view-format engine fix (SW-1101a); (b) OLEAUT32 by-ordinal map + typed
+  LoadTypeLib (SW-1101b). winmergeu 139->9, imports 150->0.
+- ~155 imports landed; unresolved totals 464->54 (-410); produkey/diskmon64/
+  rammap64/searchmyfiles/autoruns64 at zero-unresolved.
+- Gates: G1 PIN sha 2bfe6fc3 12/12 (20261020_105600); corpus x3 16/16
+  deterministic, zero regressions. Commit d2d5e46 pushed (no force).
+- Next: SW-1102 procexp zero-stub frontier decode; winmergeu exit-9 decode;
+  bginfo64 54-tail wagon; SW-1106 zoomit exit1 typing.
