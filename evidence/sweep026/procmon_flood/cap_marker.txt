@@ -1,0 +1,2 @@
+[TRACE] cap 1000000 reached; further file lines dropped (MINWIN_TRACE_UNLIMITED=1 opts out)
+998347

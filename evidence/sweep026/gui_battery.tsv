@@ -1,0 +1,10 @@
+program	mode	run	exit	frames	sendmsg	trace_lines
+bginfo64	pump-on	1	0	1	3	4822
+produkey	pump-on	1	0	0	0	501
+cports	pump-on	1	0	0	0	776
+diskmon64	pump-on	1	0	0	0	607
+autoruns64	pump-on	1	139	0	21	1331
+rammap64	pump-on	1	139	0	29	24238
+putty	pump-on	1	0	1	0	9405
+puttygen	pump-on	1	0	0	0	2479
+procmon64	pump-on	1	124	0	998347	1000002
