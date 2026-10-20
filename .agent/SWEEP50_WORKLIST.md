@@ -1419,3 +1419,67 @@ gate that must be re-accepted when the port lands).
   deterministic, zero regressions. Commit d2d5e46 pushed (no force).
 - Next: SW-1102 procexp zero-stub frontier decode; winmergeu exit-9 decode;
   bginfo64 54-tail wagon; SW-1106 zoomit exit1 typing.
+
+## SW-1101..SW-1150 queue marks — LANDED in SWEEP-029 «قانون کلی قطار» (2026-10-20)
+- [x] ** bginfo64 54-tail (SWEEP-028 next wagon)** — -> LANDED SWEEP-029: 54 unique
+       unresolved -> 0 (GDI raster/region family real: InvertRect/FillRgn/FrameRgn/
+       SetPixelV real pixels, CreatePolygonRgn/CreateRoundRectRgn/CreateDIBitmap/
+       CreateHatchBrush/GetObjectType/AlphaBlend->StretchBlt; USER32 tails: MapVirtualKeyW/
+       ExW, CharUpperBuffW real, IsCharLowerW real, GetWindowRgn NULLREGION, NotifyWinEvent,
+       SetSysColors, GetProcessWindowStation, DestroyAcceleratorTable; K32 REAL /proc enum:
+       K32EnumProcesses/K32EnumProcessModules/K32GetModuleBaseNameW; Net* static models:
+       NetWkstaUserGetInfo/NetWkstaGetInfo/NetServerGetInfo; printer/eventlog/service cookies:
+       OpenPrinterW/ClosePrinter, Open/Read/CloseEventLog, CreateServiceW typed ACCESS_DENIED +
+       RegisterServiceCtrlHandlerW/SetServiceStatus; Safer identity pipeline trio; LSA typed
+       NOT_IMPLEMENTED; env-block cookies; Imm/SHAppBar/OleLockRunning/CreateILockBytesOnHGlobal/
+       PlaySoundW typed)
+- [x] ** winmergeu 4 ordinal tail (counted nameless)** — -> LANDED SWEEP-029: SHELL32.155
+       SHCreateDirectory (real mkdir), SHELL32.701 CDefFolderMenu_Create2 (typed E_FAIL),
+       SHLWAPI.2 ParseURLW (real scheme parse), SHLWAPI.12 SHCreateMemStream (typed NULL,
+       mirrors CreateStreamOnHGlobal honesty); names via wine-mirror spec fetch 2026-10-20
+- [x] ** bginfo64 ODBC32 ordinal tail (9 -> 0 unresolved)** — -> LANDED SWEEP-029b: ODBC32
+       9/24/31/75/136/141 = SQLDescribeCol/SQLAllocHandle/SQLFreeHandle/SQLSetEnvAttr/
+       SQLGetDiagRecW (NO_DATA)/SQLSetConnectAttrW typed-honest; OLEAUT32 25/114/418 =
+       SafeArrayPutElement/VarBstrFromDate (real BSTR)/DllUnregisterServer
+
+## SW-1151..SW-1200 — SWEEP-029 continuation queue (standing «قانون کلی قطار»: like a train, dozens of wagons)
+- [ ] **SW-1151 winmergeu gs fail-fast decode** — exit 9 now runs gs_report with REAL
+       capture (rip=0x140318939, RtlVirtualUnwind walks 2 frames); find the /GS cookie
+       mismatch frame; candidate: our unwind resume Rsp vs guest cookie slot.
+- [ ] **SW-1152 RtlCaptureContext SSE/debug regs** — FloatSave + Xmm + Dr stay zeroed;
+       fill from sigcontext if a consumer appears.
+- [ ] **SW-1153 ODBC mini-driver** — SQLDriverConnectW/SQLExecDirectW/SQLFetch real
+       against sqlite3 host (bginfo64 "save to DB" path).
+- [ ] **SW-1154 SafeArray real element store** — SafeArrayPutElement/GetElement
+       round-trip (SW-1148 pattern).
+- [ ] **SW-1155 CreatePolygonRgn true polygon raster** — bbox v1 -> scanline fill
+       (FillRgn consumer proof).
+- [ ] **SW-1156 ExtFloodFill seed-fill raster** — scanline seed fill on MWBmp views.
+- [ ] **SW-1157 GetDIBits real for 32bpp topdown** — SW-1140 carry, winmergeu consumers.
+- [ ] **SW-1158 CreateDIBitmap CBM_INIT pixel copy** — blank v1 -> real DIB blit.
+- [ ] **SW-1159 AlphaBlend real blend** — SRCCOPY v1 -> BLENDFUNCTION alpha math.
+- [ ] **SW-1160 K32EnumProcessModules real module list** — read /proc/self/maps into
+       module handles (procexp64 consumers).
+
+## SWEEP-029 round summary «قانون کلی» — cheetah speed, owl eye, elephant load, train of wagons (2026-10-20)
+- SW-1103 ENGINE ROOT-CAUSE FIX: mw_RtlCaptureContext was a NO-OP — every guest
+  consumer (mingw gs_report) read ctx.Rip=0 -> RtlLookupFunctionEntry(pc=0)->NULL ->
+  UnhandledExceptionFilter -> TerminateProcess(0xC0000409). Real capture now fills
+  integer regs + segments + EFlags + MxCsr + Rip=caller RA. winmergeu exit-9 tail now
+  walks RtlVirtualUnwind 2 frames with REAL rip (0x140318939) before the genuine
+  /GS cookie failure terminates — frontier is now a real guest cookie mismatch
+  (SW-1151), not a zeroed context.
+- Wagon batch: 54 (bginfo64) + 4 (winmergeu SHELL32/SHLWAPI ordinals) + 6 ODBC32
+  + 3 OLEAUT32 ordinals = 67 imports/ENTRY lines across two splices
+  (scripts/sweep029_impl_a.c + _b.c, apply + apply2). All ordinal names
+  cross-checked against wine-mirror spec files (2026-10-20).
+- MEASURED on sha 1c8e23f7 (G1 PIN OK 12/12, evidence/master/g1/20261020_113847):
+  * bginfo64 54 -> 0 unresolved, exit0 x3, stderr byte-identical x3
+  * winmergeu 4 -> 0 unresolved (imports complete; exit 9 = gs fail-fast frontier)
+  * corpus x3 15/15 deterministic exits, ZERO unresolved on ALL programs, ZERO
+    regressions (pageant 124 daemon, procexp64 139 BUG-078, zoomit64 exit1 SW-1106)
+  * procexp64 stderr addr-diff PRE-EXISTING (SWEEP-028 hashes also differ; ASLR
+    addresses in crash dump only — exits/RIP identical)
+- Loader size 2,497,432 -> 2,698,328 (+200,896).
+- Next: SW-1151 winmergeu gs fail-fast decode; SW-1102 procexp frontier; SW-1106
+  zoomit exit1; SW-1153 ODBC mini-driver.
