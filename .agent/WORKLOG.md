@@ -806,3 +806,39 @@ SWEEP-038 (2026-10-21) «ادامه از جایی که ناقص مونده و پ
   0x14032126f corrected (EH-machinery C++-magic check, not throw site).
 - MEASURED: deterministic rebuild reproduced sha 2464ad23 BYTE-EXACT (0 errors);
   G1 PIN 12/12 (evidence/master/g1/20261021_095409).
+
+---
+SWEEP-039 (2026-10-21) «ادامه ۵۰ قطار و واگن» — SW-1102 train: SystemHandleInformation + ETW symbols + static decode
+- ENV-RESET RECONCILE first: workspace rolled back to 242af84 (local objects for
+  SWEEP-031..038 lost) while origin/main carried 1490f96 — reset to origin/main,
+  deterministic rebuild reproduced sha 2464ad23 BYTE-EXACT, G1 green; batch then
+  built on 1490f96.
+- SW-1102a SystemHandleInformation (class 64) + SystemExtendedHandleInformation
+  (76): real enumeration of the loader's live handle table (g_handle_table with
+  payload-kind verification: g_mw_events/g_mw_sems used-flag; generic bucket for
+  thread/other payloads). Headers 4B/8B, entries 16B legacy (PID 1234 = guest
+  GetCurrentProcessId, objtype 5 event / 6 sem / 8 generic, Object truncated) /
+  32B EX (full Object ptr). Two-pass contract: short buffer -> 0xC0000004 +
+  *retlen = needed — the size-retry loop procexp's NtQuerySystemInformation
+  wrapper implements. Old INVALID_INFO_CLASS answer seen once in run-1 trace
+  before the SCM/driver section.
+- SW-1102b ETW symbols: the window right before the fatal name-copy does
+  LoadLibraryA(Advapi32.dll) + GetProcAddress(EnableTraceEx) -> NULL (missing
+  from dispatch) — a not-on-Windows signal. Landed EnableTraceEx/Ex2/
+  EnableTrace/RegisterTraceGuidsW (family-typed 1168 + registration 0/synthetic
+  handle), dual-case entries. GetProcAddress now resolves. DUPLICATE guard:
+  StartTraceW/ControlTraceW/ProcessTrace/OpenTraceW/CloseTrace/FlushTraceW
+  already existed (typed 1168) — kept as-is.
+- SW-1102 STATIC DECODE (new evidence): embedded names at .rdata
+  0x14015ad10/40/70; rip-rel xrefs cluster in 0x1400a04xx (name search via call
+  0x1401025d8 over table r15={count, array}) and 0x1400a06xx-a08xx; crash-frame
+  stack holds the names packed sequentially ("...ns\0# bytes in all heaps\0\0#
+  Gen 0 collections\0" + 'Total # of contentions' in R12-R15) — copy overrun
+  clobbers frame RA with 'ntio' of 'contentions'. procexp64 still exit 139 x3
+  (deterministic) — final offending copy loop open, instrumentation next.
+- MEASURED sha 256d1e92: G1 PIN 12/12 (evidence/master/g1/20261021_123620);
+  census x3 15/15 DETERMINISTIC (sweep039): 11x exit0 unchanged, pageant 124 +
+  winmergeu 124 daemons unchanged, procexp64 139 frontier preserved,
+  autoruns64/searchmyfiles 1 K-U each (SWEEP-037 state), zoomit64 0. ZERO
+  regressions. Census-script bug (missing run dirs -> bogus exit-1) caught and
+  fixed before any conclusion was drawn — rerun clean.

@@ -1328,7 +1328,24 @@ gate that must be re-accepted when the port lands).
 
 - [x] ** winmergeu unresolved 202 decode** — biggest single tail; -> LANDED SWEEP-027: winmergeu unresolved 202->150 this round (-52: theme/shlwapi/CRT/user32 batch); crash decode still open
        enumerate + batch the COMDLL/shell family.
-- [ ] **SW-1102 procexp64 unresolved 161 tail** — after BUG-078 decode.
+- [ ] **SW-1102 procexp64 frontier** (SWEEP-039 PROGRESS, final overrun open):
+       LANDED this round: (a) NtQuerySystemInformation class 64/76
+       SystemHandleInformation/SystemExtendedHandleInformation v1 — the plane
+       procexp builds its handle view on; our INVALID_INFO_CLASS answer (seen
+       once at run-1 trace) steered the guest into fallback paths; v1
+       enumerates g_handle_table live payloads, two-pass
+       0xC0000004+retlen contract honored; (b) advapi32 EnableTraceEx/Ex2/
+       EnableTrace/RegisterTraceGuidsW symbols — GetProcAddress(EnableTraceEx)
+       returned NULL right before the fatal window (real advapi32 always
+       exports it); family-typed 1168 semantics. STATIC DECODE (evidence for
+       the final fix): embedded .NET CLR counter names at .rdata
+       0x14015ad10/40/70 ('Total # of contentions', '# bytes in all heaps',
+       '# Gen 0 collections'); name-table search loop at 0x1400a0486
+       (for i<r15->count: _wcsicmp(name, table[i]) via call 0x1401025d8);
+       crash stack holds the names PACKED back-to-back — copy overrun eats the
+       frame RA with 'ntio' of 'contentions' (SWEEP-033 class decode stands).
+       NEXT LEVER: guest-stack write instrumentation to catch the offending
+       copy loop (worklist SWEEP-036 note).
 - [x] ** autoruns64 unresolved 52 tail** — name the last 52. -> LANDED SWEEP-027: autoruns64 unresolved 52->26 (-26: WinHttp family + wow64 + threadpool timers + SearchPath/QueryDosDevice/K32)
 - [x] ** bginfo64 unresolved 201 tail** — name the last 201. -> LANDED SWEEP-027: bginfo64 unresolved 201->145 (-56: uxtheme classic-fallback set + GDI+ zero-codec + SNMP + ole tails)
 - [x] ** searchmyfiles 17 tail** — smallest crash tail; decode 139. -> LANDED SWEEP-027: searchmyfiles CRASH->exit0 x3 + pump-on exit0 (CRT tail _wtoi/_wcslwr/_itow/_wcmdln/_msize/WNet/SHFileOperation) — NEW complete run #12

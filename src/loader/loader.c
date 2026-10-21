@@ -17109,6 +17109,89 @@ __attribute__((ms_abi)) uint32_t mw_NtQuerySystemInformation(uint32_t cls, void*
         MW_TRACE("NtQuerySystemInformation(TimeOfDayInformation) -> STATUS_SUCCESS");
         return 0;
     }
+    /* SWEEP-039 SW-1102a: SystemHandleInformation (class 64) + SystemExtended-
+     * HandleInformation (class 76) — the plane procexp64 builds its whole
+     * handle view on. Our old INVALID_INFO_CLASS answer steered the guest into
+     * its embedded .NET perf-counter fallback path whose stack copy overruns
+     * (BUG-078 class decode, SWEEP-033: CLR counter names '# bytes in all
+     * heaps'/'contentions' clobber a saved RA -> SIGSEGV 0x6f00690074006e).
+     * v1 enumerates the loader's live handle table honestly: one entry per
+     * g_handle_table slot whose payload verifies as live (kobj used-flag for
+     * event/sem ranges; non-NULL otherwise). Two-pass contract honored: short
+     * buffer -> STATUS_INFO_LENGTH_MISMATCH (0xC0000004) + *retlen = needed,
+     * exactly what the guest's size-retry loop checks.
+     * struct SYSTEM_HANDLE_TABLE_ENTRY_INFO (legacy, 16B):
+     *   USHORT ProcessId@0, UCHAR ObjectTypeNumber@2, UCHAR Flags@3,
+     *   USHORT Handle@4, ULONG Object@8 (truncated), ACCESS_MASK@12
+     * struct SYSTEM_HANDLE_TABLE_ENTRY_INFO_EX (76, 32B):
+     *   ULONG_PTR Object@0, ProcessId@8, Handle@16, GrantedAccess@24,
+     *   ULONG Reserved@28. Headers: 4B count (64) / 8B count+reserved (76). */
+    if (cls == 64 || cls == 76) {
+        uint32_t need_hdr = (cls == 64) ? 4u : 8u;
+        uint32_t ent_sz   = (cls == 64) ? 16u : 32u;
+        /* pass 1: count live entries */
+        uint32_t count = 0;
+        for (int i = 0; i < MAX_HANDLES; i++) {
+            void* v = g_handle_table[i];
+            if (!v) continue;
+            MwKEvent* ev = (MwKEvent*)v;
+            MwKSem*   sm = (MwKSem*)v;
+            int live = 1;
+            if (ev >= &g_mw_events[0] && ev < &g_mw_events[32])
+                live = ev->used ? 1 : 0;
+            else if (sm >= &g_mw_sems[0] && sm < &g_mw_sems[32])
+                live = sm->used ? 1 : 0;
+            if (live) count++;
+        }
+        uint32_t need = need_hdr + count * ent_sz;
+        if (!buf || len < need) {
+            if (retlen) *retlen = need;
+            return 0xC0000004u; /* STATUS_INFO_LENGTH_MISMATCH (size-retry) */
+        }
+        uint8_t* p = (uint8_t*)buf;
+        memset(p, 0, need);
+        *(uint32_t*)(p + 0) = count;
+        if (cls == 76) *(uint32_t*)(p + 4) = 0; /* Reserved */
+        uint32_t pos = need_hdr;
+        for (int i = 0; i < MAX_HANDLES; i++) {
+            void* v = g_handle_table[i];
+            if (!v) continue;
+            uint8_t objtype = 8; /* generic (thread/job/other payload) */
+            int live = 1;
+            MwKEvent* ev = (MwKEvent*)v;
+            MwKSem*   sm = (MwKSem*)v;
+            if (ev >= &g_mw_events[0] && ev < &g_mw_events[32]) {
+                if (!ev->used) live = 0;
+                objtype = 5;  /* EventObject */
+            } else if (sm >= &g_mw_sems[0] && sm < &g_mw_sems[32]) {
+                if (!sm->used) live = 0;
+                objtype = 6;  /* SemaphoreObject */
+            }
+            if (!live) continue;
+            uint16_t h    = (uint16_t)(i + 4); /* alloc_handle: handles = idx+4 */
+            uint32_t acc  = 0x001F0003u;       /* EVENT_ALL_ACCESS-family */
+            if (cls == 64) {
+                *(uint16_t*)(p + pos + 0) = 1234;          /* ProcessId */
+                *(uint8_t*) (p + pos + 2) = objtype;
+                *(uint8_t*) (p + pos + 3) = 1;             /* Flags: KERNEL */
+                *(uint16_t*)(p + pos + 4) = h;
+                *(uint32_t*)(p + pos + 8) = (uint32_t)(uintptr_t)v;
+                *(uint32_t*)(p + pos + 12) = acc;
+            } else {
+                *(uint64_t*)(p + pos + 0)  = (uint64_t)(uintptr_t)v; /* Object */
+                *(uint64_t*)(p + pos + 8)  = 1234;                   /* ProcessId */
+                *(uint64_t*)(p + pos + 16) = h;                      /* Handle */
+                *(uint32_t*)(p + pos + 24) = acc;                    /* GrantedAccess */
+                *(uint32_t*)(p + pos + 28) = 0;                      /* Reserved */
+            }
+            pos += ent_sz;
+        }
+        if (retlen) *retlen = need;
+        MW_TRACE("NtQuerySystemInformation(%s) -> %lu entries",
+                 cls == 64 ? "SystemHandleInformation" : "SystemExtendedHandleInformation",
+                 (unsigned long)count);
+        return 0;
+    }
     MW_TRACE("NtQuerySystemInformation(class=%lu) -> STATUS_INVALID_INFO_CLASS",
              (unsigned long)cls);
     return NTSTATUS_INVALID_INFO_CLASS;
@@ -20780,6 +20863,48 @@ __attribute__((ms_abi)) int mw_StartServiceCtrlDispatcherW(const void* table) {
     MW_TRACE("StartServiceCtrlDispatcherW -> 1063 FAILED_SERVICE_CONTROLLER_CONNECT (app path)");
     mw_SetLastError(1063);
     return 0;
+}
+/* ---- advapi32!ETW family — SWEEP-039 SW-1102b: the window just before
+ * procexp64's fatal name-copy does LoadLibraryA(Advapi32.dll) +
+ * GetProcAddress(EnableTraceEx) and our dispatch table answered NULL (real
+ * advapi32 on Win7+ ALWAYS exports EnableTraceEx). A NULL there is a
+ * not-on-Windows signal no real guest expects. Symbols land in the SAME
+ * typed-honest family as the SWEEP-0xx ETW tails (StartTraceW/ControlTraceW
+ * -> 1168 ERROR_NOT_FOUND): the controller APIs EXIST, there is no active
+ * session/provider behind them. RegisterTraceGuidsW accepts registration
+ * (0 + synthetic handle) — registration is not tracing. */
+static uint64_t g_etw_seq = 0x45545731u; /* "ETW1" */
+__attribute__((ms_abi)) uint32_t mw_EnableTraceEx(const void* provider, const void* ctrl,
+        uint64_t session, uint32_t code, uint8_t level, uint64_t any_kw,
+        uint64_t all_kw, uint32_t prop, const void* filter) {
+    (void)provider; (void)ctrl; (void)filter;
+    MW_TRACE("EnableTraceEx(session=0x%llx code=%u level=%u kw=0x%llx/0x%llx prop=%u) -> 1168",
+             (unsigned long long)session, code, level,
+             (unsigned long long)any_kw, (unsigned long long)all_kw, prop);
+    return 1168u; /* ERROR_NOT_FOUND: no such provider/session (family-typed) */
+}
+__attribute__((ms_abi)) uint32_t mw_EnableTraceEx2(uint64_t session, const void* ctrl,
+        uint32_t code, uint8_t level, uint64_t any_kw, uint64_t all_kw,
+        uint32_t prop, const void* filter) {
+    (void)ctrl; (void)filter;
+    MW_TRACE("EnableTraceEx2(session=0x%llx code=%u level=%u) -> 1168",
+             (unsigned long long)session, code, level);
+    return 1168u; /* family-typed */
+}
+__attribute__((ms_abi)) uint32_t mw_EnableTrace(uint32_t code, uint8_t level,
+        uint64_t enable_flags, const void* session, const void* guid) {
+    (void)code; (void)level; (void)enable_flags; (void)session; (void)guid;
+    MW_TRACE("EnableTrace -> 1168");
+    return 1168u; /* family-typed */
+}
+__attribute__((ms_abi)) uint32_t mw_RegisterTraceGuidsW(const void* ctrl, const void* guids,
+        uint64_t session, uint32_t n, const void* tclass, const void* cb,
+        void* ctx, uint64_t* reg) {
+    (void)ctrl; (void)guids; (void)session; (void)n; (void)tclass; (void)cb; (void)ctx;
+    g_etw_seq += 0x9E3779B9u;
+    if (reg) *reg = g_etw_seq;
+    MW_TRACE("RegisterTraceGuidsW(n=%u) -> 0 (reg 0x%llx)", n, (unsigned long long)g_etw_seq);
+    return 0; /* ERROR_SUCCESS: registration accepted (no consumer) */
 }
 __attribute__((ms_abi)) int mw_GetSystemWow64DirectoryW(uint16_t* buf, uint32_t size) {
     MW_TRACE("GetSystemWow64DirectoryW -> ERROR_CALL_NOT_IMPLEMENTED (no wow64 layer)");
@@ -24513,6 +24638,18 @@ static ImportEntry g_import_table[] = {
     /* SWEEP-032 (SW-1106 zoomit64 registry tail) */
     ENTRY("advapi32.dll", "RegSetKeyValueW",                    mw_RegSetKeyValueW),
     ENTRY("advapi32.dll", "RegDeleteKeyValueW",                 mw_RegDeleteKeyValueW),
+    /* SWEEP-039 SW-1102b: EnableTraceEx/Ex2/EnableTrace/RegisterTraceGuidsW —
+     * symbols the dispatch table lacked (GetProcAddress -> NULL was a
+     * not-on-Windows signal). StartTraceW/ControlTraceW keep their existing
+     * SWEEP-tail impls (typed 1168) registered elsewhere. */
+    ENTRY("advapi32.dll", "EnableTraceEx",                      mw_EnableTraceEx),
+    ENTRY("ADVAPI32.DLL", "EnableTraceEx",                      mw_EnableTraceEx),
+    ENTRY("advapi32.dll", "EnableTraceEx2",                     mw_EnableTraceEx2),
+    ENTRY("ADVAPI32.DLL", "EnableTraceEx2",                     mw_EnableTraceEx2),
+    ENTRY("advapi32.dll", "EnableTrace",                        mw_EnableTrace),
+    ENTRY("ADVAPI32.DLL", "EnableTrace",                        mw_EnableTrace),
+    ENTRY("advapi32.dll", "RegisterTraceGuidsW",                mw_RegisterTraceGuidsW),
+    ENTRY("ADVAPI32.DLL", "RegisterTraceGuidsW",                mw_RegisterTraceGuidsW),
     ENTRY("sspicli.dll", "GetUserNameExW",                      mw_GetUserNameExW),
     ENTRY("ADVAPI32.DLL", "ConvertSidToStringSidA",             mw_ConvertSidToStringSidA), /* SW-1040 */
     ENTRY("advapi32.dll", "ConvertSidToStringSidA",             mw_ConvertSidToStringSidA),
