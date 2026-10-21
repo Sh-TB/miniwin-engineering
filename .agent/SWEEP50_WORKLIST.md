@@ -1926,3 +1926,96 @@ gate that must be re-accepted when the port lands).
   (Rule-1 blocked), SW-1153 consumers; NEW observation: winmergeu now runs the
   full app lifecycle — its post-daemon behavior is productive work, next
   frontier will be found by diffing its 36076-line trace.
+
+## SWEEP-042 round summary «۱۰ قطار، چند ده واگن ریزه» — 10 trains, ~42 micro-wagons LANDED (2026-10-22)
+Batch directive: 10 trains carrying several dozen SMALL wagons. Source of the
+wagons: adexplorer64's post-SW-1206 import surface (23 unresolved), the
+SWEEP-041 open note "diff winmergeu's full-lifecycle trace", putty's
+FormatMessage stale last error, pageant's CryptProtectMemory probe, and the
+ExitProcess(48925984) anomaly. One commit, no force-push.
+
+- SW-1209 LANDED (Train 1 + 2 — adexplorer64 23-import decode + land): the 23
+  unresolved = 9 named functions + 6 ACTIVEDS ordinals + 8 WLDAP32 ordinals.
+  Rule-1 decode via wine spec re-probe (2026-10-22, sha256 recorded in
+  evidence/sweep042/wine_specs/): activeds.spec carries EXPLICIT ordinals
+  7=ADsBuildVarArrayStr, 9=ADsOpenObject, 12=ADsSetLastError, 13=ADsGetLastError,
+  15=FreeADsMem, 20=ADsEncodeBinaryData (signatures mingw-w64 adshlp.h);
+  wldap32.spec explicit 13=ldap_unbind, 14=ldap_set_optionW, 73=ldap_bind_sW,
+  88=ldap_connect, 118=ldap_err2stringW, 145=ldap_initW, 155=ldap_modify_ext_sW,
+  188=ldap_rename_ext_sW; shell32.spec 88=SHDoDragDrop (the SWEEP-037 "no 88
+  in spec" note was WRONG — re-probe wins). Implemented typed-honest:
+  UuidFromStringW real 8-4-4-4-12 parse (RPC_S_INVALID_STRING_UUID 1707),
+  IIDFromString -> CLSIDFromString parse, MenuItemFromPoint -1, SD-relative
+  header family (GetSecurityDescriptorOwner/Group real x64 header parse with
+  SE_*_DEFAULTED control bits; GetSecurityDescriptorLength header-derived max;
+  ConvertSecurityDescriptorToStringSecurityDescriptorW emits derivable
+  O:/G: SDDL parts via ConvertSidToStringSidW), NetUserGetLocalGroups/
+  NetUserGetGroups NERR_Success + 0 entries (no account DB headless), ADs
+  family (ADsOpenObject E_ADS_BAD_PATHNAME 0x80005000, ADsEncodeBinaryData
+  real "\XX" wide escaping + S_OK, FreeADsMem local-free + TRUE, Set/Get
+ LastError global pair), WLDAP32 W-family (LDAP_SERVER_DOWN 0x51 /
+  LDAP_NOT_SUPPORTED 0x5C; ldap_initW delegates the existing ldap_init).
+  RESULT: adexplorer64 unresolved 23 -> 0 (exit 32 full lifecycle preserved).
+- SW-1210 LANDED (Train 3 — kernel32 Ex/localization family, ucrt probe
+  surface): GetTempPath2W/2A -> GetTempPathW/A delegates (Win8+ CRT probe),
+  FlsGetValue2 -> FlsGetValue (same slot table), EnumSystemLocalesEx with the
+  REAL 3-arg LOCALE_ENUMPROCEX ABI invoking L"en-US", GetDateFormatEx/
+  GetTimeFormatEx -> W delegates, GetUserDefaultLocaleName "en-US" (consistent
+  with LCID 0x0409), IsValidLocaleName "en*" grammar, LocaleNameToLCID
+  en/en-us 0x0409, en-gb 0x0809, unknown 0 + err 87. TRACES: every ucrt probe
+  that previously returned NULL (not in dispatch table) now RESOLVES
+  (winmergeu: GetTempPath2W/FlsGetValue2/EnumSystemLocalesEx/GetDateFormatEx/
+  GetTimeFormatEx/GetUserDefaultLocaleName/IsValidLocaleName/LocaleNameToLCID
+  all non-NULL).
+- SW-1211 LANDED (Train 4 — FormatMessage honesty): mw_FormatMessageA/W now
+  implement FORMAT_MESSAGE_FROM_STRING (copy src) + FORMAT_MESSAGE_FROM_SYSTEM
+  with a 12-entry canonical table (MS error texts: 2,3,4,5,6,32,87,126,127,
+  183,1444,1813) and on miss SetLastError(317 ERROR_MR_MID_NOT_FOUND) — the
+  old body returned 0 leaving the STALE last error in place; putty rendered
+  "FormatMessage returned 2" (leaked ERROR_FILE_NOT_FOUND) where REAL Windows
+  reports 317 for an unknown msgid. AFTER: putty messagebox renders
+  "(unable to format: FormatMessage returned 317)" = real-Windows fallback
+  shape. exit 0 preserved.
+- SW-1214 LANDED (Train 4 — SystemParametersInfoW SPI_GETNONCLIENTMETRICS
+  0x29 + SPI_SET 0x2A): real NONCLIENTMETRICSW fill — cbSize gate {500,504},
+  documented Win10 metrics (border 1, scroll 17x17, caption 17x22, smcaption
+  12x15, menu 17x17, padded 4) + five LOGFONTW faces (Segoe UI, lfHeight -12,
+  FW_NORMAL, DEFAULT_CHARSET). winmergeu probed 0x29 2x and fell back before;
+  now "-> TRUE" twice.
+- SW-1213 LANDED (Train 5 — crypt32 DPAPI surface): pageant probes
+  GetProcAddress(CryptProtectMemory) -> now resolves; pageant CALLS
+  CryptProtectMemory(cb=16 flags=1) 2x (session-key in-place contract) —
+  identity noop documented (process-lifetime confidentiality; no at-rest
+  encryption headless), CryptUnprotectMemory symmetric, CryptProtectData/
+  CryptUnprotectData honest FALSE + ERROR_ENCRYPTION_FAILED 6000 /
+  ERROR_DECRYPTION_FAILED 6001 (cross-process blob service unavailable).
+  pageant daemon 124 preserved (its park = correct message-loop wait).
+- SW-1212 LANDED (Train 6 — ExitProcess provenance): anomalous-code
+  instrumentation (code > 0xFFFF logs caller RA; exit-0 traces stay
+  byte-identical). DECODED: adexplorer64 exits with a HEAP POINTER
+  (run-1 0x2EA8D20, run-2 0x2565D20) whose low byte is stably 0x20 —
+  census exit 32 = code & 0xFF; caller RA=0x1400403f5 -> guest RVA 0x403f5
+  (guest returns an uninitialized/handle var from its entry path). GUEST-side
+  bug; engine exit passthrough is honest. All 23-import + trace variance
+  explained.
+- Train 2 diagnosability: unresolved ORDINAL imports now print their names
+  ("[WARN] unresolved: COMCTL32.DLL ordinal 344") — the SWEEP-001 count-only
+  gap hid autoruns64's COMCTL32.344 and searchmyfiles's SHELL32.88 for rounds.
+- Train 7 reconciliation: SW-1153 stale open-reference (LANDED SWEEP-034, the
+  SWEEP-041 "consumers" note was stale). SW-791 re-verified 2026-10-22:
+  curl-8.17.0 mingw single-exe fails CLEAN ("error initializing curl library",
+  exit 2, no loader crash) — needs libcurl-x64.dll; UCRT slice stays OPEN.
+  COMCTL32.344 stays KNOWN-UNKNOWN (Rule 1: wine comctl32.spec re-fetched
+  2026-10-22 has explicit ordinals only to 342; 345=TaskDialogIndirect is
+  MS-documented, 344 has no credible public name source).
+- MEASURED sha 9e30c16d G1 PIN 12/12 (evidence/master/g1/20261021_164933):
+  census x3 16/16 DETERMINISTIC — deltas ALL FORWARD: adexplorer64 unresolved
+  23 -> 0 (SW-1209), searchmyfiles unresolved 1 -> 0 (SHELL32.88=SHDoDragDrop),
+  autoruns64 unresolved 1 (COMCTL32.344, Rule-1 blocked, now NAMED in stderr);
+  exits preserved: adexplorer64 32, pageant 124, procexp64 139, 12x exit-0
+  (putty's 317 message text is the only rendered-output delta). Round trips
+  on the final binary (evidence/sweep042/roundtrips/): 7za x64 create+extract
+  BYTE-EXACT (cmp), jq-1.7.1 --version + '.a[1]' -> 2, sqlite3 in-memory
+  CREATE/INSERT/SELECT = 42. no force-push.
+- Open: SW-1102d BUG-078 copy-loop exact store instruction; ole32.277/16 +
+  COMCTL32.344 (Rule-1); SW-791 curl libcurl-x64.dll; procexp64 139 frontier.

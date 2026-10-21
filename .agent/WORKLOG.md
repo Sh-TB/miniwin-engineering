@@ -894,3 +894,57 @@ Two open frontiers from SWEEP-040 cleared in one round, both to FULL LIFECYCLE:
 - Lesson kept: the census caught nothing this time because the two fixes are
   pure forward motion; the 7za/jq/sqlite trio plus G1 regression 12/12 remain
   the regression net for the engine-wide surfaces (heap, windows, props).
+
+## SWEEP-042 «۱۰ قطار، چند ده واگن ریزه» — 10 trains, ~42 micro-wagons (2026-10-22, HEAD 9e30c16d)
+Directive: «۱۰ قطار چند ده واگن ریزه» — 10 trains carrying several dozen SMALL
+wagons. Base: origin/main a06f45b (SWEEP-041), tree clean. The micro-wagon
+veins came from mining the post-SWEEP-041 surfaces: adexplorer64's 23
+unresolved imports (9 named + 14 ordinals — the ordinals were invisible for
+rounds because the SWEEP-001 unresolved path counted but never printed them),
+winmergeu's full-lifecycle trace (SWEEP-041's own open note), putty's
+FormatMessage stale last error, pageant's CryptProtectMemory probe, and the
+adexplorer64 ExitProcess(48925984) anomaly.
+
+KEY DECODE — the 23/23 adexplorer64 import surface (SW-1209): wine spec
+re-probe with the SWEEP-037 stale notes corrected. activeds.spec (wine DOES
+ship it) carries EXPLICIT ordinals: 7/9/12/13/15/20 = ADsBuildVarArrayStr/
+ADsOpenObject/ADsSetLastError/ADsGetLastError/FreeADsMem/ADsEncodeBinaryData;
+wldap32.spec explicit 13/14/73/88/118/145/155/188 = ldap_unbind/
+ldap_set_optionW/ldap_bind_sW/ldap_connect/ldap_err2stringW/ldap_initW/
+ldap_modify_ext_sW/ldap_rename_ext_sW; shell32.spec 88 = SHDoDragDrop (the
+SWEEP-037 note claiming the spec lacks 88 was simply wrong — lesson: re-probe
+beats remembered absence). Spec sha256s recorded; all implementations typed-
+honest per the established contract families (no HEAP-TRAP, no returning-0
+lies where a real ABI shape exists).
+
+KEY FIX — putty's real-Windows parity (SW-1211): FormatMessage miss used to
+leave the STALE last error; putty's fallback string rendered "returned 2" (a
+leaked ERROR_FILE_NOT_FOUND). Real Windows sets 317 ERROR_MR_MID_NOT_FOUND on
+a failed format; after the fix putty renders "(unable to format: FormatMessage
+returned 317)" — the same string a real Windows putty prints for its private
+error -2. Plus a 12-entry canonical FROM_SYSTEM table for common Win32 errors.
+
+KEY DECODE — adexplorer64 exit 32 (SW-1212): new ExitProcess instrumentation
+logs the caller RA when code > 0xFFFF (exit-0 traces byte-identical). Two runs
+gave codes 0x2EA8D20 / 0x2565D20 — varying HEAP POINTERS with stable low byte
+0x20; census exit 32 = code & 0xFF. Caller RA 0x1400403f5 -> guest RVA 0x403f5
+(the guest's entry path returns an uninitialized/handle variable). Engine
+behavior is honest passthrough; the anomaly is guest-side and now PROVEN, not
+guessed.
+
+MEASURED sha 9e30c16d G1 PIN 12/12 (evidence/master/g1/20261021_164933):
+census x3 16/16 DETERMINISTIC, deltas all forward (adexplorer64 23->0
+unresolved, searchmyfiles 1->0, autoruns64's remaining 1 now NAMED in stderr
+via the new ordinal diagnosability); exits preserved (adexplorer64 32, pageant
+124 daemon, procexp64 139, 12x exit-0). Round trips on the final binary: 7za
+x64 create+extract BYTE-EXACT (cmp), jq-1.7.1 version + query = 2, sqlite3
+in-memory 42 exit 0 (paths: samples/real/7za.exe — NOTE 7z_x64/7za.exe is a
+32-bit trap, samples/real/jq-windows-amd64.exe, artifacts/opensource/sqlite/
+sqlite3.exe). ucrt Ex-family probes that returned NULL for rounds now RESOLVE
+in winmergeu's trace (GetTempPath2W/FlsGetValue2/EnumSystemLocalesEx/
+GetDateFormatEx/GetTimeFormatEx/GetUserDefaultLocaleName/IsValidLocaleName/
+LocaleNameToLCID); winmergeu SPI_GETNONCLIENTMETRICS -> TRUE (2x). pageant
+calls CryptProtectMemory(cb=16) 2x and keeps its (correct) daemon park.
+Evidence: evidence/sweep042/{wine_specs,census.tsv,roundtrips,binary_sha256}.
+Open: SW-1102d copy-loop store instruction, ole32.277/16 + COMCTL32.344
+(Rule-1), SW-791 libcurl-x64.dll, procexp64 139 frontier.
