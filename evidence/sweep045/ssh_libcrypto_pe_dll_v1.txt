@@ -1,0 +1,26 @@
+SW-509 v1: real PE-DLL loader — ssh.exe (OpenSSH-Win64 9.5.0.0p1 Beta) + libcrypto.dll
+======================================================================================
+Trace excerpt (miniwin-results/ssh.exe/api_trace.json, run: ssh.exe -V):
+
+  [API] Import DLL: libcrypto.dll (IAT RVA=0xd5798, ILT RVA=0x122950)
+  [API] LoadLibrary[PE-DLL] .../artifacts/sweep045/ssh/libcrypto.dll
+        -> base=0x7fa53ded0000 size=0x1d2000 exp=<dir> resolved=513 unresolved=37
+  [API] InitializeCriticalSectionEx(spin=4000)   x ~40 (DLL CRT boot)
+  [API] GetStartupInfoW()
+  [API] GetStdHandle(-10/-11/-12) = 0x4/0x5/0x6
+  [API] GetCommandLineA() = "ssh.exe -V"          <- the DLL's CRT startup
+  [API] GetCPInfo(cp=1252); MultiByteToWideChar(cp=1252,...)
+
+State: the v1 pipeline runs END-TO-END for a real 1.9 MB OpenSSL DLL:
+  descriptor detect -> disk load -> section map -> base relocations ->
+  513/550 imports resolved against the engine table -> export directory
+  registered -> DllMain(DLL_PROCESS_ATTACH) invoked -> the DLL's CRT
+  initializes deep into UCRT startup.
+Open frontier (SW-509 v2): the DLL's own CRT init crashes (Signal 11 inside
+  libcrypto at RVA 0x10312c after MultiByteToWideChar) — DLL-CRT-in-DllMain
+  needs the guest-CRT-in-DLL path (ucrt data imports of the DLL itself,
+  TLS of the DLL, __scrt conventions). 37 unresolved = the DLL's own imports
+  not in the engine table (api-ms-* tails), now stubbed honestly.
+Guard added this round: descriptors naming *.exe / *.sys are NOT disk-loaded
+  (procmon64 imports its OWN "Procmon64.exe" — loading it re-ran its CRT and
+  regressed the census; guard restored 15x exit-0 immediately).

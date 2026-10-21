@@ -1021,3 +1021,78 @@ Stage Summary:
 - Imports: 0 unresolved corpus-wide (first time in project history).
 - Next frontiers: SW-1228 (Go data plane), SW-1230 (Rust layer 2), SW-1219
   (famous game download, blocked by SW-509), SW-509 (PE-DLL loader).
+
+## SWEEP-045 «۵ قطار بزرگ همزمان» — 5 big trains in parallel (2026-10-22, HEAD 08350c3 → b33ec3f7)
+Directive: «۵ قطار بزرگ همزمان ادامه ریل ۵ تای» — five BIG trains on one rail.
+Base: origin/main 08350c3 (SWEEP-044). Env-reset reconcile first (workspace
+rolled back to 242af84 for the 5th time; adexplorer64 corpus re-recovered for
+the 5th time, sha-verified one-shot). Baseline rebuilt byte-exact: 71d19afd.
+
+Train 2 (SW-1230) — the round's headline: fd.exe (Rust 1.73 MSVC, fd 9.0.0,
+3.4 MB) went from fail-fast layer 2 to FULL LIFECYCLE:
+- 16 imports landed (12 named by SWEEP-044 + TzSpecificLocalTimeToSystemTime,
+  terminate, _initialize_onexit_table, _register_onexit_function, _set_fmode).
+- The boot blocker was MY OWN first-draft bug pattern: SetThreadStackGuarantee
+  with an invented "<64KiB invalid" gate — Rust std requests 0x5000 (20 KiB)
+  in stack_overflow.rs Handler::new and panics the process when it fails.
+  Real contract: *in = request, *out = previous. (Web source quoted; the
+  gate was deleted before landing.)
+- Three deep engine bugs surfaced one layer at a time, each caught by the
+  guest's own error output: (1) GetFileInformationByHandle hardcoded
+  ARCHIVE attributes — directories never reported DIRECTORY, so Rust
+  fs::metadata().is_dir() was false (fd: "Could not retrieve current
+  directory"); (2) nFileSizeHigh/nFileSizeLow REVERSED in
+  BY_HANDLE_FILE_INFORMATION — an 82-byte file read as 352 GB and Rust's
+  read_to_end preallocation died ("memory allocation of 352187318272 bytes
+  failed" = 0x5200000000, the .gitconfig byte count in the high dword —
+  the diagnostic that cracked it was a HeapAlloc[GIANT] guest-RA trace);
+  (3) spawned guest threads had NO implicit TLS (g_thread_tls[ti][0] NULL)
+  — real Windows copies the module static TLS block per thread; the first
+  draft copied the LIVE main block and inherited main's thread_info pointer
+  (Rust thread_info assertion) → pristine image snapshot is correct.
+- fd acceptance: --version → "fd 9.0.0" exit 0; no-args walk exit 0 with a
+  real sorted listing; 'fd txt' filter exit 0; --help exit 0.
+- Honest revert kept in history: the naked _CxxThrowException caller-RA
+  capture (which let fd's Rust panics really unwind to the Rust personality
+  at Frame[2]) was unwired the same round — the import table is name-only,
+  so mingw guests were captured too and 7za's swallowed-throw contract
+  broke. v2 = DLL-aware EH routing (registered as the SW-1230 note).
+
+Train 3 (SW-509 v1) — real PE-DLL loader, first slice:
+- ssh.exe + libcrypto.dll staged; the EXE import loop disk-loads unknown
+  descriptors; load_pe_dll: map → relocations (DIR64) → imports (513/550
+  against the engine table, honest stubs for the rest) → export directory →
+  DllMain(ATTACH) → the DLL's CRT boots deep into UCRT startup
+  (GetCommandLineA "ssh.exe -V" printed FROM the DLL's init).
+- GetProcAddress: DLL-image handles resolve first (names + ordinals).
+- Two guards learned the hard way: section table = optional-header END
+  (oh+SizeOfOptionalHeader — oh+112 is the data-directory start; the first
+  draft OOB-memcpy'd); *.exe/*.sys descriptors are NOT disk-loaded (procmon64
+  imports its OWN Procmon64.exe — self-load re-ran its CRT and 0→139'd the
+  census; the guard restored 15x exit-0 immediately).
+- V2 frontier (SW-1233): DLL-CRT-in-DllMain — ucrt data imports of the DLL,
+  DLL TLS, __scrt conventions (Signal 11 at libcrypto RVA 0x10312c).
+
+Train 1 (SW-1228) — decode round: the bombardier data-plane crash is in
+Go 1.20 initLongPathSupport's 10.0-build≥15063 branch; the chain
+0x434460→0x434380 (mOS cluster m+0x278..0x2b8) consumes global 0xd477e0
+(BSS-NULL) and the result is used as a GC-bitmap base (+3, OR 0x80).
+Next: pclntab symbolization, then whatever osinit step must initialize it.
+
+Train 5 — bookkeeping: fd.exe staged as the Rust-MSVC representative;
+SW-1232 registered (7za extract 139 — falsification-proven PRE-EXISTING at
+clean 08350c3, create still byte-exact); curl.se's mingw build is fully
+static so SW-791 needs the DLL-linked MSVC build of curl.
+
+Measurement: census x3 16/16 DETERMINISTIC (15x exit-0, pageant 124 park,
+ZERO unresolved corpus-wide, ZERO regressions); G1 PIN 12/12 twice
+(20261021_205933 sha 9910f09c pre-revert, final 20261021_210456
+sha b33ec3f7); round trips jq→2 sqlite3→42 7za-create byte-exact;
+games snake 30f / breakout 381f+13bricks / calc 9/9 — all green.
+
+Lesson kept: each fd.exe layer peeled exactly one engine lie (invented
+API-contract gate → hardcoded struct field → reversed field order →
+missing per-thread TLS init), and the guest's own error strings were the
+oracle at every step. The census caught the two real regressions I
+introduced (procmon64 self-load, 7za CxxThrow capture) and the falsification
+run on clean HEAD correctly exonerated the engine for 7za-extract.

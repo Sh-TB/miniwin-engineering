@@ -2201,3 +2201,104 @@ before: 14x exit-0, adexplorer64 32, pageant 124, 1 unresolved import (COMCTL32.
 - **Open**: SW-1228 (Go data plane), SW-1230 (Rust fail-fast layer 2), SW-1219
   (downloaded famous game, blocked by SW-509), SW-791 (curl libcurl-x64.dll),
   SW-509 (PE-DLL loader — the single biggest remaining unblock).
+
+## SW-1231..SW-1240 — SWEEP-045 «۵ قطار بزرگ همزمان» — 5 big trains in parallel (2026-10-22, HEAD 08350c3 base)
+Directive: «۵ قطار بزرگ همزمان ادامه ریل ۵ تای» — five BIG trains running at once on
+the same rail. Base: origin/main 08350c3 (SWEEP-044), tree clean. Env-reset RECONCILE
+first: workspace rolled back to 242af84 (5th), reset --hard to 08350c3, deterministic
+rebuild; adexplorer64 corpus re-recovered (5th loss, sha-verified zip 56536bff /
+exe e4512878 via the documented one-shot procedure).
+
+- [x] **SW-1230 LANDED — fd.exe (Rust 1.73 MSVC) FULL LIFECYCLE, fail-fast layer 2
+      CLEARED** (Train 2, six sub-wagons):
+  - (a) 16 imports landed with real contracts: GetTimeZoneInformationForYear +
+        TzSpecificLocalTimeToSystemTime (UTC engine model, identity conversion),
+        SetThreadStackGuarantee (REAL contract: *in = request, *out = previous;
+        the first draft invented a "<64KiB invalid" gate that rejected Rust std's
+        0x5000 request and panicked every Rust guest — removed), ImpersonateSelf
+        (TRUE) / OpenThreadToken (FALSE + ERROR_NO_TOKEN 1008) / AccessCheck
+        (FALSE + 1338/5 typed), NtReadFile/NtWriteFile (sync v1 over the proven
+        Read/Write layer, IO_STATUS_BLOCK filled, STATUS_UNSUCCESSFUL on fail),
+        GetUserProfileDirectoryW (C:\Users\miniwin, ERROR_INSUFFICIENT_BUFFER
+        two-pass), __current_exception/__current_exception_context (stable
+        writable slots), __CxxFrameHandler3 (alias) + terminate (alias),
+        _initialize_onexit_table/_register_onexit_function (REAL growth protocol:
+        {_first,_last,_end}, 4-then-doubling realloc), _set_fmode (0/0x8000 gate,
+        returns old), _get_initial_narrow_environment (g_initenv_ptr).
+  - (b) mw_SetThreadStackGuarantee was the REAL fd boot blocker (Rust
+        stack_overflow.rs Handler::new panics "failed to reserve stack space for
+        exception handling" when SetThreadStackGuarantee(0x5000) fails) — web
+        source of Rust 1.73 quoted in the worklog.
+  - (c) mw_GetFileInformationByHandle DOUBLE FIX: dwFileAttributes was hardcoded
+        0x20 ARCHIVE (dirs never reported 0x10 → fd "Could not retrieve current
+        directory" — Rust fs::metadata.is_dir() false); nFileSizeHigh/Low were
+        REVERSED (p+32 = High, p+36 = Low — an 82-byte .gitconfig reported
+        0x5200000000 = 352 GB → Rust read_to_end "memory allocation of
+        352187318272 bytes failed"). Both from fstat now.
+  - (d) Per-thread implicit TLS: g_thread_tls[ti][0] was NULL for every spawned
+        thread (the image static TLS block only reached the MAIN array) — any
+        guest thread reading gs:0x58[0] crashed (fd SIGSEGV at teardown
+        0x14021e0a3). Real Windows gives EVERY thread its own copy: per-thread
+        copies now memcpy from a PRISTINE image snapshot (copying the live main
+        block inherited main's thread_info pointer and tripped Rust's
+        thread_info.is_none() assertion — pristine-copy is the fix).
+  - (e) SW-1230 experiment REVERTED same round (documented): naked
+        _CxxThrowException capturing the caller's RA (Rust panics ARE 0xE06D7363
+        via vcruntime; the walk reached Rust's personality at fd's Frame[2])
+        ALSO captured mingw guests via the name-only import table → 7za x 139.
+        fd's lifecycle does NOT need it; v2 = DLL-aware EH routing.
+  - RESULT: fd 9.0.0 = --version exit 0 "fd 9.0.0"; no-args walk exit 0 (real
+    listing); 'fd txt' filter exit 0; --help exit 0. First Rust MSVC guest at
+    full lifecycle. Binaries staged at artifacts/sweep045/bin/ (sha in
+    evidence/sweep045/new_binaries_sha256.txt), acceptance in
+    evidence/sweep045/fd_acceptance.txt.
+- [x] **SW-509 v1 LANDED — real PE-DLL loader, first slice** (Train 3): ssh.exe
+      (OpenSSH-Win64, the P0 "openssh×13 needs libcrypto.dll" class) statically
+      imports libcrypto.dll; the EXE import loop now disk-loads unknown
+      descriptors (exe dir, then cwd; extension optional; refcounted
+      LoadLibrary/GetProcAddress/FreeLibrary surface):
+      load_pe_dll = read whole file → PE32+ gate → anonymous mmap RWX →
+      headers+sections copy → BASE RELOCATIONS (DIR64 type-10, delta from
+      preferred ImageBase) → imports resolved name-only against the dispatch
+      table (unresolved → the honest stub, counted: libcrypto 513/550) →
+      export directory registered → DllMain(DLL_PROCESS_ATTACH) invoked.
+      GetProcAddress resolves DLL-image handles FIRST (named + MAKEINTRESOURCE
+      ordinal forms) from the mapped export directory. Guard: *.exe/*.sys
+      descriptors NOT disk-loaded (procmon64 imports its own Procmon64.exe —
+      loading it re-ran its CRT inside DllMain and 0→139'd the census; the
+      guard restored 15x exit-0). Section-table fix: sectab = optional-header
+      END (oh+SizeOfOptionalHeader), not the data-directory start (oh+112) —
+      the first draft read data-dir bytes as section headers and memcpy'd OOB.
+      EVIDENCE: evidence/sweep045/ssh_libcrypto_pe_dll_v1.txt — libcrypto.dll
+      1.9 MB loads at 0x7fa53ded0000, 513/550 imports, DllMain runs the DLL's
+      CRT deep into UCRT startup (GetCommandLineA "ssh.exe -V" from the DLL!).
+      V2 frontier (SW-1233): DLL-CRT-in-DllMain (ucrt data imports + TLS of
+      the DLL + __scrt conventions) — Signal 11 at libcrypto RVA 0x10312c.
+- [x] **SW-1228 progress (Train 1, decode round)**: bombardier data path
+      reproduced (Signal 11 RIP=0x432768 movzbl (%rcx),%dl RCX=3 after the last
+      API RtlGetNtVersionNumbers). Chain decoded: the crash sits in the
+      10.0-build≥15063 branch of Go 1.20's initLongPathSupport (version fields
+      compared on-stack); 0x434460 = g.m toucher storing &local at m+0x288 and
+      delegating to 0x434380 (mOS cluster m+0x278..0x2b8, m+0xe0 busy gate,
+      result = *(m+0x290) treated as a BITMAP base, +3 byte OR 0x80 = mark bit);
+      the incoming pointer = global 0xd477e0 (BSS, never initialized). Next:
+      symbolize via pclntab and land whatever osinit step initializes it.
+- [x] **SW-1231 (Train 5): fd.exe added to the working set as the Rust-MSVC
+      representative** (17th program, outside the census dir for now);
+      bombardier/curl/ssh staged + sha-recorded for the trains.
+- [x] **SW-1232 (new): 7za x64 EXTRACT frontier** — `7za x` exits 139 at HEAD
+      (create stays byte-exact green); falsification run on a clean 08350c3
+      build (git show HEAD:src/loader/loader.c) reproduces the same 139 →
+      PRE-EXISTING, NOT a SWEEP-045 regression; the round-trip trio stays
+      create/jq/sqlite green. Open.
+- [x] **SW-1219 status**: unchanged (Chocolate-Doom/Zork/Frotz x86 or DLL-bound).
+- **Measurement (SWEEP-045)**: census x3 16/16 DETERMINISTIC
+  (evidence/sweep045/census.tsv) — 15x exit-0, pageant 124 documented park,
+  ZERO unresolved corpus-wide, ZERO regressions; G1 PIN 12/12
+  (evidence/master/g1/20261021_205933 sha 9910f09c, final pin 20261021_210456
+  sha b33ec3f7); round trips jq '.a[1]'→2, sqlite3 6*7→42, 7za create byte-exact
+  (evidence/sweep045/roundtrips.txt); games snake 30f + breakout 381f/13bricks
+  byte-identical, calc 9/9.
+- **Open**: SW-1228 (Go data plane), SW-509 v2 (DLL CRT init, SW-1233),
+  SW-1232 (7za extract), SW-1219 (famous game), SW-791 (curl MSVC variant with
+  libcurl-x64.dll — curl.se mingw build is static; need the DLL-linked build).

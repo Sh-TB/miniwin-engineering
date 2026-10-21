@@ -410,6 +410,9 @@ static uint8_t g_params_storage[4096] __attribute__((aligned(4096)));
  * to an array of slot pointers. Native-TLS PEs (e.g. libc++abi's
  * __cxa_get_globals) read gs:0x58 and index this array by __tls_index. */
 static void* g_tls_ptr_array[64];
+static uint8_t* g_static_tls_block = NULL;  /* SW-1230: image static TLS copy source */
+static uint8_t* g_static_tls_pristine = NULL; /* SW-1230: untouched initial TLS image */
+static size_t g_static_tls_size = 0;
 /* SW-1222 (SWEEP-044, Go boot): per-guest-thread TEBs. Guest code in spawned
  * threads reads gs:[0x08]/gs:[0x10] (StackBase/StackLimit) — Go's runtime
  * minit() throws "fatal error: bad g0 stack" (bombardier) when those hold
@@ -875,8 +878,85 @@ __attribute__((ms_abi)) uint32_t mw_I_QueryTagInformation(void* unk, uint32_t ty
 }
 static const char* mw_uxtheme_ord_lookup(uint16_t ordinal); /* SWEEP-015 SW-801g fwd */
 __attribute__((ms_abi)) int32_t mw_AppPolicyGetThreadInitializationType(void* process, uint32_t* policy); /* SW-1204 fwd */
+#define MW_DLL_MAX 12
+typedef struct MwDllImage {
+    int      in_use;
+    int      refcount;
+    int      attached;
+    uint8_t* base;
+    size_t   img_size;   /* SizeOfImage */
+    size_t   map_size;   /* rounded mapping length */
+    uint32_t exp_rva;    /* export directory RVA */
+    uint32_t exp_sz;
+    uint32_t exp_base;   /* Base (first ordinal) */
+    uint32_t exp_names;  /* NumberOfNames */
+    char     path[512];
+    char     name[96];   /* lowercase base name incl. ext */
+} MwDllImage;
+static MwDllImage g_dll_images[MW_DLL_MAX];
+
+static MwDllImage* mw_dll_find_by_base(void* base) {
+    for (int i = 0; i < MW_DLL_MAX; i++)
+        if (g_dll_images[i].in_use && (uint8_t*)base == g_dll_images[i].base)
+            return &g_dll_images[i];
+    return NULL;
+}
+static MwDllImage* mw_dll_find_by_name(const char* low) {
+    for (int i = 0; i < MW_DLL_MAX; i++)
+        if (g_dll_images[i].in_use && strcmp(g_dll_images[i].name, low) == 0)
+            return &g_dll_images[i];
+    return NULL;
+}
+
+/* Parse the mapped image's export directory: name or MAKEINTRESOURCE ordinal. */
+static void* mw_dll_export(MwDllImage* d, const char* name, uintptr_t ord_hint) {
+    uint8_t* b = d->base;
+    if (!d->exp_rva || d->exp_sz < 40) return NULL;
+    uint32_t* ed = (uint32_t*)(b + d->exp_rva);
+    uint32_t nfuncs = ed[6], nnames = ed[7];
+    uint32_t* eat = (uint32_t*)(b + ed[9]);   /* AddressOfFunctions */
+    uint32_t* npt = (uint32_t*)(b + ed[10]);  /* AddressOfNames */
+    uint16_t* aot = (uint16_t*)(b + ed[11]);  /* AddressOfNameOrdinals */
+    (void)d->exp_names;
+    void* by_name = NULL;
+    void* by_ord = NULL;
+    uint32_t want = (uint32_t)(ord_hint - d->exp_base);
+    if (want < nfuncs) by_ord = b + eat[want];
+    for (uint32_t i = 0; i < nnames && name; i++) {
+        const char* en = (const char*)(b + npt[i]);
+        if (strcmp(en, name) == 0) {
+            uint32_t ord = aot[i];
+            if (ord < nfuncs) by_name = b + eat[ord];
+            break;
+        }
+    }
+    void* r = by_name ? by_name : by_ord;
+    if (r) MW_TRACE("  dll-export %s!%s -> %p", d->name, name ? name : "<ord>", r);
+    return r;
+}
+
 
 __attribute__((ms_abi)) void* mw_GetProcAddress(void* module, const char* name) {
+    /* SW-509 v1: real DLL images FIRST (module == mapped base) — both the
+     * ordinal (MAKEINTRESOURCE) and named forms resolve from the image's
+     * export directory. */
+    {
+        MwDllImage* dimg = mw_dll_find_by_base(module);
+        if (dimg) {
+            void* r;
+            if ((uintptr_t)name > 0 && (uintptr_t)name <= 0xFFFF) {
+                MW_TRACE("GetProcAddress(dll %s, ordinal=%llu)", dimg->name,
+                         (unsigned long long)(uintptr_t)name);
+                r = mw_dll_export(dimg, NULL, (uintptr_t)name);
+            } else {
+                MW_TRACE("GetProcAddress(dll %s, name=%s)", dimg->name, name ? name : "NULL");
+                r = (name && name[0]) ? mw_dll_export(dimg, name, 0) : NULL;
+            }
+            if (r) return r;
+            mw_SetLastError(127); /* ERROR_PROC_NOT_FOUND */
+            return NULL;
+        }
+    }
     /* SWEEP-012: ordinal form — MAKEINTRESOURCEA(n) passes the ordinal in the
      * POINTER, not a string (autoruns64: GetProcAddress(h, (LPCSTR)0x87);
      * the old code printed name as %s -> strlen(0x87) -> SEGV in libc). */
@@ -1034,6 +1114,198 @@ __attribute__((ms_abi)) void* mw_WinStationOpenServerW(const void* name) {
 }
 
 
+/* ============================================================
+ * SW-509 (SWEEP-045 Train 3) v1: REAL PE-DLL images.
+ * Guests may LoadLibrary a DLL that exists ON DISK next to the exe
+ * (curl needs libcurl-x64.dll — the single biggest remaining unblock,
+ * openssh needs libcrypto.dll, wimlib needs libwim-15.dll). v1 pipeline:
+ *   map sections -> apply base relocations -> resolve imports against
+ *   the dispatch table (same name-only rule as the EXE loader) ->
+ *   record the export directory for GetProcAddress -> DllMain(ATTACH).
+ * v1 limits (documented): no recursive guest-DLL imports (a DLL importing
+ * ANOTHER disk DLL fails with 126), DLL TLS directory skipped, image
+ * stays mapped after FreeLibrary to 0 (retired — guests may hold code
+ * pointers), single RWX region (no per-section W^X yet).
+ * ============================================================ */
+__attribute__((ms_abi)) uint64_t mw_unresolved_import_stub(void); /* fwd (def at EXE import loop) */
+
+static int load_pe_dll(const char* fullpath, const char* lowname) {
+    struct stat st;
+    if (stat(fullpath, &st) != 0 || !S_ISREG(st.st_mode) || st.st_size <= 0 ||
+        st.st_size > (512L << 20)) return -1;
+    FILE* f = fopen(fullpath, "rb");
+    if (!f) return -1;
+    uint8_t* raw = (uint8_t*)malloc((size_t)st.st_size);
+    if (!raw) { fclose(f); return -1; }
+    if (fread(raw, 1, (size_t)st.st_size, f) != (size_t)st.st_size) {
+        free(raw); fclose(f); return -1;
+    }
+    fclose(f);
+    if (st.st_size < 0x200 || *(uint16_t*)raw != 0x5A4D) { free(raw); return -1; }
+    uint32_t peoff = *(uint32_t*)(raw + 0x3c);
+    if (peoff + 264 > (uint32_t)st.st_size || *(uint32_t*)(raw + peoff) != 0x00004550) {
+        free(raw); return -1;
+    }
+    uint16_t magic = *(uint16_t*)(raw + peoff + 24);
+    if (magic != 0x20b) { MW_TRACE("LoadLibrary[PE-DLL] %s: not PE32+", lowname); free(raw); return -1; }
+    uint8_t* oh = raw + peoff + 24;
+    uint64_t pref_base = *(uint64_t*)(oh + 24);
+    uint32_t size_img  = *(uint32_t*)(oh + 56);
+    uint32_t size_hdrs = *(uint32_t*)(oh + 60);
+    uint32_t ep_rva    = *(uint32_t*)(oh + 16);
+    uint16_t nsec      = *(uint16_t*)(raw + peoff + 6);
+    uint16_t osec_sz   = *(uint16_t*)(raw + peoff + 20); /* SizeOfOptionalHeader */
+    uint8_t* sectab    = oh + osec_sz; /* section table AFTER the optional header
+        (SW-509 fix: oh+112 is the DATA-DIRECTORY start, not the table end) */
+    uint32_t* dd       = (uint32_t*)(oh + 112);
+    if (nsec > 96 || size_img == 0 || size_img > (512u << 20)) { free(raw); return -1; }
+
+    int slot = -1;
+    for (int i = 0; i < MW_DLL_MAX; i++) if (!g_dll_images[i].in_use) { slot = i; break; }
+    if (slot < 0) { free(raw); return -1; }
+
+    size_t map_len = (size_img + 0xFFF) & ~(size_t)0xFFF;
+    uint8_t* img = (uint8_t*)mmap(NULL, map_len, PROT_READ | PROT_WRITE | PROT_EXEC,
+                                  MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
+    if (img == MAP_FAILED) { free(raw); return -1; }
+    memcpy(img, raw, size_hdrs < size_img ? size_hdrs : size_img);
+    for (uint16_t s = 0; s < nsec; s++) {
+        uint8_t* se = sectab + (size_t)s * 40;
+        uint32_t vsz = *(uint32_t*)(se + 8), va = *(uint32_t*)(se + 12);
+        uint32_t rsz = *(uint32_t*)(se + 16), ro = *(uint32_t*)(se + 20);
+        if (!va || va >= size_img) continue;
+        uint32_t n = rsz < vsz ? rsz : vsz;
+        if ((uint64_t)va + n > size_img) n = size_img - va;
+        if (ro + n > (uint32_t)st.st_size) n = (uint32_t)st.st_size > ro ? (uint32_t)st.st_size - ro : 0;
+        if (n) memcpy(img + va, raw + ro, n);
+    }
+    /* base relocations (DIR 5): delta applies to every DIR64 (type 10) slot */
+    uint64_t delta = (uint64_t)(uintptr_t)img - pref_base;
+    uint32_t rel_rva = dd[5 * 2], rel_sz = dd[5 * 2 + 1];
+    if (delta && rel_rva && rel_sz) {
+        uint8_t* rp = img + rel_rva;
+        uint8_t* rend = rp + rel_sz;
+        while (rp + 8 <= rend) {
+            uint32_t page_rva = *(uint32_t*)rp;
+            uint32_t blocksz = *(uint32_t*)(rp + 4);
+            if (!blocksz || rp + blocksz > rend) break;
+            uint16_t* ent = (uint16_t*)(rp + 8);
+            uint32_t nent = (blocksz - 8) / 2;
+            for (uint32_t e = 0; e < nent; e++) {
+                uint16_t v = ent[e];
+                uint16_t typ = v >> 12, ofs = v & 0xFFF;
+                if (typ == 0) continue; /* padding */
+                if (typ == 10) { /* IMAGE_REL_BASED_DIR64 */
+                    uint64_t* p = (uint64_t*)(img + page_rva + ofs);
+                    *p += delta;
+                }
+                /* other types: not produced by x64 MSVC/GCC linkers here */
+            }
+            rp += blocksz;
+        }
+    }
+    /* imports: name-only dispatch-table rule (same as the EXE loader);
+     * unresolved slots get the unresolved stub, never a silent NULL. */
+    uint32_t imp_rva = dd[1 * 2], imp_sz = dd[1 * 2 + 1];
+    size_t dll_unresolved = 0, dll_resolved = 0;
+    if (imp_rva && imp_sz) {
+        for (uint32_t o = 0; ; o += 20) {
+            if (o + 20 > imp_sz) break;
+            uint32_t* desc = (uint32_t*)(img + imp_rva + o);
+            uint32_t name_rva = desc[3], first_thunk = desc[4], oft = desc[0];
+            if (!name_rva && !first_thunk) break;
+            const char* dn = (const char*)(img + name_rva);
+            char dlow[64]; size_t k = 0;
+            for (; dn[k] && k < sizeof(dlow) - 1; k++)
+                dlow[k] = (dn[k] >= 'A' && dn[k] <= 'Z') ? (char)(dn[k] + 32) : dn[k];
+            dlow[k] = 0;
+            MwDllImage* dep = mw_dll_find_by_name(dlow); /* guest-DLL-on-guest-DLL v2 */
+            uint64_t* iat = (uint64_t*)(img + first_thunk);
+            uint64_t* int_ = oft ? (uint64_t*)(img + oft) : iat;
+            for (uint32_t t = 0; int_[t]; t++) {
+                void* fn = NULL;
+                if (int_[t] & 0x8000000000000000ULL) {
+                    /* import by ordinal from a guest DLL */
+                    if (dep) fn = mw_dll_export(dep, NULL, (uintptr_t)(int_[t] & 0xFFFF));
+                } else {
+                    const char* impname = (const char*)(img + (uint32_t)(int_[t] & 0xFFFFFFFF) + 2);
+                    if (dep) fn = mw_dll_export(dep, impname, 0);
+                    else if (g_resolve_proc_fn) fn = g_resolve_proc_fn((void*)0xdead0001, impname);
+                }
+                if (!fn) {
+                    MW_TRACE("  [dll %s] UNRESOLVED import t%u from %s", lowname, t, dlow);
+                    fn = (void*)mw_unresolved_import_stub;
+                    dll_unresolved++;
+                } else dll_resolved++;
+                iat[t] = (uint64_t)(uintptr_t)fn;
+            }
+        }
+    }
+    /* export directory record for GetProcAddress */
+    uint32_t exp_rva = dd[0 * 2], exp_sz = dd[0 * 2 + 1];
+    uint32_t exp_base = 1, exp_names = 0;
+    if (exp_rva && exp_sz >= 40) {
+        uint32_t* ed = (uint32_t*)(img + exp_rva);
+        exp_base = ed[8];
+        exp_names = ed[7];
+    }
+    MwDllImage* d = &g_dll_images[slot];
+    memset(d, 0, sizeof(*d));
+    d->in_use = 1; d->refcount = 1;
+    d->base = img; d->img_size = size_img; d->map_size = map_len;
+    d->exp_rva = exp_rva; d->exp_sz = exp_sz;
+    d->exp_base = exp_base; d->exp_names = exp_names;
+    snprintf(d->path, sizeof(d->path), "%s", fullpath);
+    snprintf(d->name, sizeof(d->name), "%s", lowname);
+    MW_TRACE("LoadLibrary[PE-DLL] %s -> base=%p size=0x%zx exp=%u names=%u resolved=%zu unresolved=%zu",
+             fullpath, img, (size_t)size_img, exp_rva, exp_names, dll_resolved, dll_unresolved);
+    /* DllMain(DLL_PROCESS_ATTACH) — v1: honest call, result traced */
+    if (ep_rva) {
+        typedef int (__attribute__((ms_abi)) *dllmain_t)(void*, uint32_t, void*);
+        dllmain_t dm = (dllmain_t)(img + ep_rva);
+        int r = dm(img, 1 /* DLL_PROCESS_ATTACH */, NULL);
+        d->attached = 1;
+        MW_TRACE("  dll %s DllMain(ATTACH) -> %d", lowname, r);
+    } else {
+        d->attached = 1;
+    }
+    free(raw);
+    return slot;
+}
+
+/* Disk search for a real DLL: exe dir first, then cwd; extension optional.
+ * v1 guard: .exe/.sys descriptors are NOT loaded (real Windows CAN map an
+ * exe as a module, but procmon64's import table names its OWN "Procmon64.exe"
+ * — loading it re-ran its CRT inside DllMain and crashed the census. A
+ * guest-DLL whose name ends in .exe needs the v2 treatment). */
+static void* mw_loadlibrary_disk_dll(const char* low, const char* base) {
+    size_t bl = strlen(base);
+    if (bl >= 4 && (strcasecmp(base + bl - 4, ".exe") == 0 ||
+                    strcasecmp(base + bl - 4, ".sys") == 0))
+        return NULL;
+    char dir[512] = {0};
+    if (g_exe_path) {
+        const char* sl = strrchr(g_exe_path, '/');
+        if (sl) snprintf(dir, sizeof(dir), "%.*s", (int)(sl - g_exe_path), g_exe_path);
+    }
+    const char* ext = strrchr(base, '.');
+    MwDllImage* prev = mw_dll_find_by_name(low);
+    if (prev) { prev->refcount++; return prev->base; }
+    char full[1024];
+    for (int which = 0; which < 2; which++) {
+        const char* d = which ? "." : dir;
+        if (!d || !d[0]) continue;
+        if (ext) snprintf(full, sizeof(full), "%s/%s", d, base);
+        else     snprintf(full, sizeof(full), "%s/%s.dll", d, base);
+        struct stat st;
+        if (stat(full, &st) == 0 && S_ISREG(st.st_mode)) {
+            int idx = load_pe_dll(full, low);
+            if (idx >= 0) return g_dll_images[idx].base;
+        }
+    }
+    return NULL;
+}
+
 __attribute__((ms_abi)) void* mw_LoadLibraryA(const char* name) {
     MW_TRACE("LoadLibraryA(%s)", name ? name : "NULL");
     /* Known system DLLs (case-insensitive, extension optional): pseudo-
@@ -1053,6 +1325,10 @@ __attribute__((ms_abi)) void* mw_LoadLibraryA(const char* name) {
             low[k] = (base[k] >= 'A' && base[k] <= 'Z') ? (char)(base[k] + 32) : base[k];
         low[k] = 0;
         void* h = mw_known_dll_handle(low);
+        if (h) return h;
+        /* SW-509 v1: real PE DLL from disk (exe dir, then cwd) — curl's
+         * libcurl-x64.dll is the motivating case (SW-791). */
+        h = mw_loadlibrary_disk_dll(low, base);
         if (h) return h;
         mw_SetLastError(126);
         return NULL;
@@ -3870,6 +4146,19 @@ static void* mw_thread_trampoline(void* p) {
         *(uint64_t*)(teb + 0x40) = 1234;                           /* UniqueProcess (PID convention) */
         *(uint64_t*)(teb + 0x48) = (uint64_t)self->win_tid;        /* UniqueThread */
         *(uint64_t*)(teb + 0x58) = (uint64_t)(uintptr_t)g_thread_tls[ti]; /* ThreadLocalStoragePointer */
+        /* SW-1230: install the image static TLS block into THIS thread's
+         * ThreadLocalStoragePointer[0]. g_thread_tls[ti][0] was NULL, so any
+         * guest thread reading its implicit TLS (gs:0x58[0]) crashed — fd.exe
+         * SIGSEGV at 0x14021e0a3 (Rust thread_local teardown after
+         * ExitProcess). Real Windows gives EVERY thread its own copy of the
+         * module static TLS block. */
+        if (g_static_tls_pristine && g_static_tls_size) {
+            uint8_t* tb = (uint8_t*)malloc(g_static_tls_size);
+            if (tb) {
+                memcpy(tb, g_static_tls_pristine, g_static_tls_size);
+                g_thread_tls[ti][0] = tb;
+            }
+        }
         *(uint64_t*)(teb + 0x60) = (uint64_t)(uintptr_t)g_peb_storage; /* PEB */
         syscall(SYS_arch_prctl, 0x1001 /* ARCH_SET_GS */, (uint64_t)(uintptr_t)teb);
     }
@@ -4241,6 +4530,163 @@ __attribute__((ms_abi)) int mw_UpdateProcThreadAttribute(void* list, uint32_t fl
     *(uint32_t*)((uint8_t*)list + 8) = used + 1;
     MW_TRACE("UpdateProcThreadAttribute(attr=0x%zx, val=%p, %zu bytes) -> TRUE", attr, val, sz);
     return 1;
+}
+
+/* ============================================================
+ * SW-1230 (SWEEP-045 Train 2): fd.exe (Rust MSVC) fail-fast LAYER 2.
+ * 16 imports the guest binds but the table lacked. Each lands with the
+ * real contract the name promises, at the engine's headless fidelity:
+ *  - timezone family: the engine is UTC (GetTimeZoneInformation bias 0)
+ *  - token family: threads have NO distinct token (ERROR_NO_TOKEN), the
+ *    process token IS the miniwin user (GetUserName model)
+ *  - Nt*File: sync delegation to the proven mw_ReadFile/mw_WriteFile
+ *  - vcruntime EH accessors: stable writable slots (guest-local chain)
+ *  - UCRT onexit tables: REAL grow protocol (4 -> doubling realloc)
+ * ============================================================ */
+
+/* --- kernel32 timezone family (UTC engine model) --- */
+__attribute__((ms_abi)) uint32_t mw_GetTimeZoneInformationForYear(uint16_t year,
+        void* pdtzi, void* ptzi) {
+    (void)year; (void)pdtzi; /* real Windows would locate the year's rule;
+        the engine's single UTC rule applies to every year */
+    if (ptzi) memset(ptzi, 0, 176);
+    MW_TRACE("GetTimeZoneInformationForYear(year=%u) -> UNKNOWN (UTC)", year);
+    return 0; /* TIME_ZONE_ID_UNKNOWN */
+}
+__attribute__((ms_abi)) int mw_TzSpecificLocalTimeToSystemTime(const void* tzi,
+        const void* local, void* utc) {
+    (void)tzi; /* NULL tzi = active zone = UTC in the engine; UTC -> system = identity */
+    if (!local || !utc) { mw_SetLastError(87); return 0; }
+    memcpy(utc, local, 16); /* SYSTEMTIME = 8 x uint16 */
+    MW_TRACE("TzSpecificLocalTimeToSystemTime -> identity (UTC)");
+    return 1;
+}
+
+/* --- kernel32 stack guarantee: Rust std raises the main-thread guarantee ---
+ * REAL contract (Rust 1.73 stack_overflow.rs calls SetThreadStackGuarantee(
+ * &mut 0x5000) — 20 KiB, no minimum gate; a previous "invalid <64KiB" check
+ * here was invented and broke every Rust guest): *size in = requested
+ * guarantee (0 = query only), *size out = PREVIOUS guarantee. */
+__attribute__((ms_abi)) int mw_SetThreadStackGuarantee(uint32_t* size) {
+    static uint32_t g_stack_guarantee = 0;
+    if (!size) { mw_SetLastError(87); return 0; }
+    uint32_t req = *size;
+    uint32_t old = g_stack_guarantee;
+    if (req) g_stack_guarantee = req; /* request honored */
+    *size = old; /* out: previous guarantee (0 = none) */
+    MW_TRACE("SetThreadStackGuarantee(req=%u) -> TRUE (old=%u)", req, old);
+    return 1;
+}
+
+/* --- advapi32 token family (headless: no per-thread token) --- */
+__attribute__((ms_abi)) int mw_ImpersonateSelf(uint32_t level) {
+    MW_TRACE("ImpersonateSelf(level=%u) -> TRUE", level);
+    return 1; /* same-thread token = process token conceptually */
+}
+__attribute__((ms_abi)) int mw_OpenThreadToken(void* hthread, uint32_t access,
+        int open_as_self, void** htoken) {
+    (void)hthread; (void)access;
+    if (open_as_self) { /* nothing to open */ }
+    if (htoken) *htoken = NULL;
+    mw_SetLastError(1008); /* ERROR_NO_TOKEN — the honest per-thread answer */
+    MW_TRACE("OpenThreadToken -> FALSE (ERROR_NO_TOKEN)");
+    return 0;
+}
+__attribute__((ms_abi)) int mw_AccessCheck(const void* sd, void* token, uint32_t desired,
+        void* generic, void* privset, uint32_t* privlen, uint32_t* granted, int* status) {
+    (void)token; (void)generic; (void)privset;
+    if (privlen) *privlen = 0;
+    if (granted) *granted = 0;
+    if (status) *status = 0;
+    if (!sd) { mw_SetLastError(1338); return 0; } /* ERROR_INVALID_SECURITY_DESCR */
+    /* no ACL walker for foreign SDs headless: the check cannot be granted
+     * honestly, so the typed failure is ERROR_ACCESS_DENIED shape */
+    mw_SetLastError(5); /* ERROR_ACCESS_DENIED */
+    MW_TRACE("AccessCheck(desired=0x%x) -> FALSE (no ACL model)", desired);
+    return 0;
+}
+
+/* --- ntdll file family: sync v1 over the proven Read/Write layer --- */
+__attribute__((ms_abi)) int64_t mw_NtReadFile(void* fh, void* event, void* apcr, void* apcc,
+        void* iosb, void* buf, uint32_t len, void* byteoff, uint32_t* key) {
+    (void)event; (void)apcr; (void)apcc; (void)byteoff; (void)key;
+    uint32_t got = 0;
+    int r = mw_ReadFile(fh, buf, len, &got, NULL);
+    if (iosb) { *(uint32_t*)iosb = 0; *(uint64_t*)((uint8_t*)iosb + 8) = r ? got : 0; }
+    MW_TRACE("NtReadFile(h=%p, len=%u) -> %s (%u bytes, sync v1)", fh, len, r ? "OK" : "FAIL", got);
+    return r ? 0 : 0xC0000001LL; /* STATUS_SUCCESS / STATUS_UNSUCCESSFUL */
+}
+__attribute__((ms_abi)) int64_t mw_NtWriteFile(void* fh, void* event, void* apcr, void* apcc,
+        void* iosb, const void* buf, uint32_t len, void* byteoff, uint32_t* key) {
+    (void)event; (void)apcr; (void)apcc; (void)byteoff; (void)key;
+    uint32_t got = 0;
+    int r = mw_WriteFile(fh, buf, len, &got, NULL);
+    if (iosb) { *(uint32_t*)iosb = 0; *(uint64_t*)((uint8_t*)iosb + 8) = r ? got : 0; }
+    MW_TRACE("NtWriteFile(h=%p, len=%u) -> %s (%u bytes, sync v1)", fh, len, r ? "OK" : "FAIL", got);
+    return r ? 0 : 0xC0000001LL;
+}
+
+/* --- userenv: the miniwin user's profile (GetUserName model) --- */
+__attribute__((ms_abi)) int mw_GetUserProfileDirectoryW(void* token, uint16_t* dir, uint32_t* len) {
+    static const uint16_t prof[] = { 'C',':','\\','U','s','e','r','s','\\','m','i','n','i','w','i','n', 0 };
+    uint32_t need = (uint32_t)(sizeof(prof) / 2); /* includes NUL */
+    if (!len) { mw_SetLastError(87); return 0; }
+    if (token == (void*)0 && !dir) { mw_SetLastError(6); return 0; }
+    if (!dir || *len < need) { *len = need; mw_SetLastError(122); return 0; }
+    memcpy(dir, prof, sizeof(prof));
+    *len = need - 1;
+    MW_TRACE("GetUserProfileDirectoryW -> C:\\Users\\miniwin");
+    return 1;
+}
+
+/* --- vcruntime140 EH accessors: stable writable slots --- */
+static void* g_mw_cur_exc = NULL;         /* __current_exception slot   */
+static void* g_mw_cur_exc_ctx = NULL;     /* __current_exception_context slot */
+__attribute__((ms_abi)) void** mw___current_exception(void) { return &g_mw_cur_exc; }
+__attribute__((ms_abi)) void** mw___current_exception_context(void) { return &g_mw_cur_exc_ctx; }
+
+/* --- UCRT onexit tables: REAL growth protocol (corecrt_startup.h contract:
+ * {_first, _last, _end}; register appends, growing min 4 then doubling) --- */
+__attribute__((ms_abi)) int mw__initialize_onexit_table(void* tbl) {
+    if (!tbl) return -1;
+    memset(tbl, 0, 24);
+    MW_TRACE("_initialize_onexit_table(%p) -> 0", tbl);
+    return 0;
+}
+__attribute__((ms_abi)) int mw__register_onexit_function(void* tbl, void* fn) {
+    if (!tbl || !fn) return -1;
+    void*** t = (void***)tbl;
+    void** first = t[0], **last = t[1], **end = t[2];
+    if (last == end) {
+        size_t cap = (size_t)(end - first);
+        size_t ncap = cap ? cap * 2 : 4;
+        void** nf = (void**)realloc(first, ncap * sizeof(void*));
+        if (!nf) return -1;
+        first = nf;
+        last = nf + cap;
+        end = nf + ncap;
+    }
+    *last++ = fn;
+    t[0] = first; t[1] = last; t[2] = end;
+    MW_TRACE("_register_onexit_function(%p) -> 0 (n=%zu)", fn, (size_t)(last - first));
+    return 0;
+}
+
+/* --- UCRT stdio FMODE global (0=O_TEXT / 0x8000=O_BINARY) --- */
+static int g_mw_fmode = 0;
+__attribute__((ms_abi)) int mw__set_fmode(int mode) {
+    if (mode != 0 && mode != 0x8000) { mw_SetLastError(87); return -1; }
+    int old = g_mw_fmode;
+    g_mw_fmode = mode;
+    MW_TRACE("_set_fmode(%d) -> old %d", mode, old);
+    return old;
+}
+
+/* --- UCRT narrow environment: same array __getmainargs hands out --- */
+static char** g_initenv_ptr; /* tentative fwd (definition below, __getmainargs section) */
+__attribute__((ms_abi)) char** mw__get_initial_narrow_environment(void) {
+    MW_TRACE("_get_initial_narrow_environment -> envp");
+    return g_initenv_ptr;
 }
 
 /* mingw SEH init registers guest unwind info; our EH walk reads .pdata
@@ -6987,6 +7433,8 @@ __attribute__((ms_abi)) void* mw_HeapAlloc(void* heap, uint32_t flags, size_t si
         return gp;
     }
     void* p = (flags & 0x08) ? calloc(1, size ? size : 1) : malloc(size ? size : 1);
+    if (size > 0x100000000ULL) /* SW-1230 diag: absurd allocations print the guest RA */
+        MW_TRACE("HeapAlloc[GIANT](size=0x%lx) = %p guest_RA=%p", (unsigned long)size, p, __builtin_return_address(0));
     MW_TRACE("HeapAlloc(size=0x%lx, zero=%d) = %p", (unsigned long)size, !!(flags & 0x08), p);
     if (!p) { mw_SetLastError(8); return NULL; }
     w3_reg_add_sz(p, size);
@@ -8522,13 +8970,12 @@ __attribute__((ms_abi)) int mw_GetFileInformationByHandle(void* h, void* info) {
     struct stat st;
     if (fstat(fd, &st) != 0) { mw_SetLastError(87); return 0; }
     uint8_t* p = (uint8_t*)info;
-    *(uint32_t*)(p + 0)  = st.st_dev;        /* dwFileAttributes: leave 0x20 archive */
-    *(uint32_t*)(p + 0)  = 0x20;
+    *(uint32_t*)(p + 0)  = 0x20; /* EXPERIMENT: original hardcode */
     *(uint32_t*)(p + 4)  = 0; *(uint32_t*)(p + 8) = 0;   /* creation time */
     *(uint32_t*)(p + 12) = 0; *(uint32_t*)(p + 16) = 0;
     *(uint32_t*)(p + 20) = 0; *(uint32_t*)(p + 24) = 0;
     *(uint32_t*)(p + 28) = (uint32_t)st.st_dev;          /* volume serial */
-    *(uint32_t*)(p + 32) = (uint32_t)st.st_size;
+    *(uint32_t*)(p + 32) = (uint32_t)st.st_size; /* EXPERIMENT: original order */
     *(uint32_t*)(p + 36) = (uint32_t)((uint64_t)st.st_size >> 32);
     *(uint32_t*)(p + 40) = (uint32_t)st.st_nlink;
     *(uint32_t*)(p + 44) = (uint32_t)((uint64_t)st.st_ino >> 32);
@@ -11574,6 +12021,25 @@ __attribute__((ms_abi)) int mw__CxxFrameHandler(void* er, void* est, void* ctx, 
     (void)er; (void)est; (void)ctx; (void)dc;
     return 1; /* ExceptionContinueSearch */
 }
+/* SW-1230 (SWEEP-045 Train 2): _CxxThrowException naked stub.
+ * The old C version called mw_RaiseException, whose naked entry captured
+ * ITS OWN caller's RA — an ENGINE address (mw__CxxThrowException+243) —
+ * so RtlDispatchException Frame[0] saw "RIP outside PE — walk ends" and
+ * every MSVC/Rust panic unwound to nothing (fd.exe: Rust panics are thrown
+ * as 0xE06D7363 C++ exceptions via vcruntime _CxxThrowException; winmergeu
+ * unaffected because its throw helper calls RaiseException directly).
+ * Real Windows walks THROUGH the vcruntime ThrowException frame to the
+ * guest throw site; the engine equivalent is capturing the guest RA
+ * directly at stub entry. Same register/slot geometry as the proven
+ * mw_RaiseException stub (BUG-031 volatile capture included). */
+/* SW-1230 experiment (kept in history, unwired): a naked _CxxThrowException
+ * capturing the CALLER's RA made the dispatch walk guest frames for MSVC/Rust
+ * throws (fd.exe Rust panics are 0xE06D7363 via vcruntime). Reverted the same
+ * round: the import table is name-only, so the naked version ALSO captured
+ * mingw guests (7za), whose throws must stay swallowed until the GCC
+ * personality chain (SW-1201 family) can really unwind them — 7za x went
+ * 0->139 at its own terminate handler. fd's full lifecycle does NOT depend
+ * on this (the real fixes are the 16 landed APIs). v2 = DLL-aware EH routing. */
 __attribute__((ms_abi)) void mw__CxxThrowException(void* object, void* throwinfo) {
     /* MS protocol: RaiseException(0xE06D7363, 0, 3, {magic, obj, throwinfo}) */
     uint64_t args[3] = { 0x19930520ULL, (uint64_t)(uintptr_t)object, (uint64_t)(uintptr_t)throwinfo };
@@ -26576,6 +27042,17 @@ static ImportEntry g_import_table[] = {
     /* msvcrt.dll — Code imports */
     ENTRY("msvcrt.dll", "__C_specific_handler",   mw___C_specific_handler),
     ENTRY("api-ms-win-crt-runtime-l1-1-0.dll", "__C_specific_handler", mw___C_specific_handler),
+    ENTRY("ntdll.dll", "NtReadFile",            mw_NtReadFile), /* SW-1230 sync v1 */
+    ENTRY("ntdll.dll", "NtWriteFile",           mw_NtWriteFile), /* SW-1230 sync v1 */
+    ENTRY("VCRUNTIME140.dll", "__current_exception",        mw___current_exception), /* SW-1230 */
+    ENTRY("VCRUNTIME140.dll", "__current_exception_context", mw___current_exception_context), /* SW-1230 */
+    ENTRY("VCRUNTIME140.dll", "__CxxFrameHandler3",          mw__CxxFrameHandler), /* SW-1230 alias */
+    ENTRY("VCRUNTIME140.dll", "_CxxThrowException",           mw__CxxThrowException), /* SW-1230 (legacy contract, see note) */
+    ENTRY("VCRUNTIME140.dll", "terminate",                   mw_msvcrt_terminate), /* SW-1230 alias */
+    ENTRY("api-ms-win-crt-runtime-l1-1-0.dll", "_initialize_onexit_table",     mw__initialize_onexit_table), /* SW-1230 */
+    ENTRY("api-ms-win-crt-runtime-l1-1-0.dll", "_register_onexit_function",    mw__register_onexit_function), /* SW-1230 */
+    ENTRY("api-ms-win-crt-runtime-l1-1-0.dll", "_get_initial_narrow_environment", mw__get_initial_narrow_environment), /* SW-1230 */
+    ENTRY("api-ms-win-crt-stdio-l1-1-0.dll", "_set_fmode",    mw__set_fmode), /* SW-1230 */
     ENTRY("msvcrt.dll", "__getmainargs",         mw___getmainargs),
     ENTRY("msvcrt.dll", "_ismbblead",            mw_ismbblead), /* SWEEP-013 */
     ENTRY("msvcrt.dll", "_mbsnbcat",             mw_mbsnbcat), /* SWEEP-014: cports 18x gate */
@@ -26839,6 +27316,9 @@ static ImportEntry g_import_table[] = {
     ENTRY("KERNEL32.DLL", "GetSystemTimePreciseAsFileTime", mw_GetSystemTimePreciseAsFileTime),
     ENTRY("KERNEL32.DLL", "GetTickCount64", mw_GetTickCount64),
     ENTRY("KERNEL32.DLL", "GetTimeZoneInformation", mw_GetTimeZoneInformation),
+    ENTRY("KERNEL32.DLL", "GetTimeZoneInformationForYear", mw_GetTimeZoneInformationForYear), /* SW-1230 */
+    ENTRY("KERNEL32.DLL", "TzSpecificLocalTimeToSystemTime", mw_TzSpecificLocalTimeToSystemTime), /* SW-1230 */
+    ENTRY("KERNEL32.DLL", "SetThreadStackGuarantee", mw_SetThreadStackGuarantee), /* SW-1230 */
     ENTRY("KERNEL32.DLL", "FileTimeToSystemTime", mw_FileTimeToSystemTime),
     ENTRY("KERNEL32.DLL", "SystemTimeToFileTime", mw_SystemTimeToFileTime),
     ENTRY("KERNEL32.DLL", "GetVersion", mw_GetVersion),
@@ -27968,6 +28448,9 @@ ENTRY("msvcrt.dll", "wctype", mw_wctype),
     ENTRY("advapi32.dll", "MapGenericMask",                     mw_MapGenericMask),
     ENTRY("advapi32.dll", "LookupAccountSidW",                  mw_LookupAccountSidW),
     ENTRY("advapi32.dll", "GetUserNameA",                       mw_GetUserNameA),
+    ENTRY("advapi32.dll", "ImpersonateSelf",                    mw_ImpersonateSelf), /* SW-1230 */
+    ENTRY("advapi32.dll", "OpenThreadToken",                    mw_OpenThreadToken), /* SW-1230 */
+    ENTRY("advapi32.dll", "AccessCheck",                        mw_AccessCheck), /* SW-1230 */
     ENTRY("advapi32.dll", "GetUserNameW",                       mw_GetUserNameW),
     ENTRY("ADVAPI32.DLL", "GetUserNameA",                       mw_GetUserNameA),
     ENTRY("ADVAPI32.DLL", "GetUserNameW",                       mw_GetUserNameW),
@@ -27996,6 +28479,7 @@ ENTRY("msvcrt.dll", "wctype", mw_wctype),
     ENTRY("KERNEL32.DLL", "InitializeProcThreadAttributeList",  mw_InitializeProcThreadAttributeList), /* SW-1229 */
     ENTRY("KERNEL32.DLL", "DeleteProcThreadAttributeList",      mw_DeleteProcThreadAttributeList), /* SW-1229 */
     ENTRY("KERNEL32.DLL", "UpdateProcThreadAttribute",          mw_UpdateProcThreadAttribute), /* SW-1229 */
+    ENTRY("KERNEL32.DLL", "GetUserProfileDirectoryW",           mw_GetUserProfileDirectoryW), /* SW-1230 (userenv) */
     ENTRY("KERNEL32.DLL", "ConnectNamedPipe",                   mw_ConnectNamedPipe),
     ENTRY("KERNEL32.DLL", "DisconnectNamedPipe",                mw_DisconnectNamedPipe),
     ENTRY("KERNEL32.DLL", "OpenFileMappingA",                   mw_OpenFileMappingA),
@@ -29290,6 +29774,22 @@ static int load_pe(const char* filepath) {
 
         MW_TRACE("Import DLL: %s (IAT RVA=0x%x, ILT RVA=0x%x)", dll_name, iat_off, ilt_rva);
 
+        /* SW-509 v1: a descriptor naming a DISK DLL (not a known system DLL)
+         * loads the real PE image now, and its functions resolve from the
+         * DLL's export table below. curl + libcurl-x64.dll = motivating case. */
+        {
+            char exelow[64]; size_t ek = 0;
+            for (; dll_name[ek] && ek < sizeof(exelow) - 1; ek++)
+                exelow[ek] = (dll_name[ek] >= 'A' && dll_name[ek] <= 'Z') ? (char)(dll_name[ek] + 32) : dll_name[ek];
+            exelow[ek] = 0;
+            if (!mw_known_dll_handle(exelow) && !mw_dll_find_by_name(exelow)) {
+                const char* exebase = dll_name;
+                for (const char* q = dll_name; *q; q++)
+                    if (*q == '\\' || *q == '/') exebase = q + 1;
+                mw_loadlibrary_disk_dll(exelow, exebase);
+            }
+        }
+
         /* Walk IAT/ILT entries */
         uint32_t lookup_rva = ilt_rva ? ilt_rva : iat_off;
         int slot = 0;
@@ -29529,6 +30029,31 @@ static int load_pe(const char* filepath) {
                 }
             }
 
+            /* SW-509 v1: functions of a DISK-DLL descriptor resolve from the
+             * loaded DLL image's export table (curl: curl_easy_init etc.).
+             * Engine-table lookup stays the fallback for mixed descriptors. */
+            {
+                char exelow2[64]; size_t e2 = 0;
+                for (; dll_name[e2] && e2 < sizeof(exelow2) - 1; e2++)
+                    exelow2[e2] = (dll_name[e2] >= 'A' && dll_name[e2] <= 'Z') ? (char)(dll_name[e2] + 32) : dll_name[e2];
+                exelow2[e2] = 0;
+                MwDllImage* xd = mw_dll_find_by_name(exelow2);
+                if (xd && func_name) {
+                    void* xfn = mw_dll_export(xd, func_name, 0);
+                    if (xfn) {
+                        void* patch_addr = g_image_base + iat_off + slot * 8;
+                        iat_page_ensure_writable((uint8_t*)(uintptr_t)patch_addr);
+                        if ((((uintptr_t)patch_addr & 0xFFF) + 8) > 0x1000)
+                            iat_page_ensure_writable((uint8_t*)(uintptr_t)patch_addr + 8);
+                        *(uint64_t*)patch_addr = (uint64_t)(uintptr_t)xfn;
+                        MW_TRACE("  [%d] %s -> dll %s!%s", slot, func_name, exelow2, func_name);
+                        total_resolved++;
+                        slot++;
+                        continue;
+                    }
+                }
+            }
+
             /* Search our dispatch table */
             int found = 0;
             for (size_t t = 0; t < NUM_IMPORTS; t++) {
@@ -29622,6 +30147,14 @@ static int load_pe(const char* filepath) {
             if (raw_size) memcpy(block, (void*)(uintptr_t)tls->StartAddressOfRawData, raw_size);
             if (tls->SizeOfZeroFill) memset(block + raw_size, 0, tls->SizeOfZeroFill);
             g_tls_ptr_array[0] = block;                 /* static TLS slot = 0 */
+            g_static_tls_block = block;                 /* SW-1230: per-thread copies */
+            g_static_tls_size = raw_size + tls->SizeOfZeroFill;
+            /* PRISTINE copy of the image's initial TLS data — per-thread copies
+             * must come from THIS (not from the live main block, which guest
+             * code mutates: fd.exe inherited the main thread's thread_info
+             * pointer and tripped Rust's thread_info.is_none() assertion). */
+            g_static_tls_pristine = (uint8_t*)malloc(g_static_tls_size);
+            if (g_static_tls_pristine) memcpy(g_static_tls_pristine, block, g_static_tls_size);
             if (tls->AddressOfIndex)
                 *(uint32_t*)(uintptr_t)tls->AddressOfIndex = 0;
             MW_TRACE("TLS: static block %p (%zu+%u bytes) -> slot 0",
