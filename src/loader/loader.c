@@ -6549,6 +6549,43 @@ static int w3_reg_has(void* p) {
     if (!p) return 1;
     return w3_reg_find(p) >= 0;
 }
+/* ---- SW-1208: GlobalHandle cookie registry (GMEM_MOVEABLE model) ----
+ * Real Win32: GlobalAlloc(GMEM_MOVEABLE) yields an opaque HGLOBAL handle;
+ * GlobalLock(handle) -> ptr, GlobalHandle(ptr) -> handle, GlobalFree(handle)
+ * frees the block. The engine hands out REAL pointers (fixed model), but
+ * winmergeu called GlobalHandle(ptr) and later freed the COOKIE
+ * (0xae0001) — without a registry the cookie was unresolvable and the old
+ * GlobalFree HEAP-TRAP killed the process on a value real Windows accepts.
+ * Cookies keep the exact 0x00AE0000|n shape the legacy GlobalHandle stub
+ * minted (g_gdesc_next moved here so the free path can see it). */
+#define MW_GHANDLE_BASE 0x00AE0000u
+#define MW_GHANDLE_MAX 64
+typedef struct { uintptr_t cookie; void* base; uint8_t live; } MWGHandle;
+static MWGHandle g_ghandle[MW_GHANDLE_MAX];
+static uint32_t g_gdesc_next = 1;
+static int mw_ghandle_slot_of(uintptr_t cookie) {
+    int i;
+    for (i = 0; i < MW_GHANDLE_MAX; i++)
+        if (g_ghandle[i].live && g_ghandle[i].cookie == cookie) return i;
+    return -1;
+}
+static void* mw_ghandle_base_of(void* h) {
+    uintptr_t v = (uintptr_t)h;
+    int i;
+    if (v <= MW_GHANDLE_BASE || (v & 0xFFFF0000u) != MW_GHANDLE_BASE) return NULL;
+    i = mw_ghandle_slot_of(v);
+    return i >= 0 ? g_ghandle[i].base : NULL;
+}
+static void* mw_ghandle_mint(void* p) {
+    int i;
+    for (i = 0; i < MW_GHANDLE_MAX; i++) if (!g_ghandle[i].live) {
+        g_ghandle[i].live = 1;
+        g_ghandle[i].cookie = MW_GHANDLE_BASE | (uint32_t)(g_gdesc_next++ & 0xFFFu);
+        g_ghandle[i].base = p;
+        return (void*)g_ghandle[i].cookie;
+    }
+    return (void*)(uintptr_t)(MW_GHANDLE_BASE | (uint32_t)(g_gdesc_next++ & 0xFFFu));
+}
 static void w3_trap_bad_free(void* p, const char* tag) {
     /* BUG-047: an aligned-family pointer freed through the generic path —
      * resolve the magic header and free the base instead of trapping. */
@@ -6936,7 +6973,12 @@ __attribute__((ms_abi)) void* mw_GlobalAlloc(uint32_t flags, size_t bytes) {
     w3_reg_add(p);
     return p;
 }
-__attribute__((ms_abi)) void* mw_GlobalLock(void* p) { return p; }
+/* SW-1208: GlobalLock resolves a GMEM_MOVEABLE cookie to its base pointer
+ * (fixed pointers pass through unchanged, as before). */
+__attribute__((ms_abi)) void* mw_GlobalLock(void* p) {
+    void* base = mw_ghandle_base_of(p);
+    return base ? base : p;
+}
 __attribute__((ms_abi)) int mw_GlobalUnlock(void* p) { return 1; }
 __attribute__((ms_abi)) size_t mw_GlobalSize(void* p) {
     if (!p) return 0;
@@ -6945,14 +6987,54 @@ __attribute__((ms_abi)) size_t mw_GlobalSize(void* p) {
         return g_alloc_reg[s].size & ~0x100000000ull;
     return malloc_usable_size(p);
 }
-__attribute__((ms_abi)) void* mw_GlobalFree(void* p) { if (!w3_reg_has(p)) w3_trap_bad_free(p, "GlobalFree"); w3_reg_del(p); free(p); return NULL; }
+/* SW-1208: GlobalFree accepts BOTH registered pointers and GMEM_MOVEABLE
+ * handle cookies; untracked values degrade to the documented Win32 failure
+ * contract (return the same value + ERROR_INVALID_HANDLE) instead of the
+ * old process-killing HEAP-TRAP — real Windows NEVER terminates here. */
+__attribute__((ms_abi)) void* mw_GlobalFree(void* p) {
+    void* base = mw_ghandle_base_of(p);
+    if (base) {
+        int gi = mw_ghandle_slot_of((uintptr_t)p);
+        if (w3_reg_has(base)) w3_reg_del(base);
+        free(base);
+        if (gi >= 0) g_ghandle[gi].live = 0;
+        MW_TRACE("GlobalFree(handle=0x%lx) -> base %p freed -> NULL",
+                 (unsigned long)(uintptr_t)p, (unsigned long)(uintptr_t)base);
+        return NULL;
+    }
+    if (!w3_reg_has(p)) {
+        mw_SetLastError(6); /* ERROR_INVALID_HANDLE */
+        MW_TRACE("GlobalFree(%p) -> fail (ERROR_INVALID_HANDLE)", p);
+        return p;
+    }
+    w3_reg_del(p);
+    free(p);
+    MW_TRACE("GlobalFree(%p) -> NULL", p);
+    return NULL;
+}
 __attribute__((ms_abi)) void* mw_LocalAlloc(uint32_t flags, size_t bytes) { return mw_GlobalAlloc(flags, bytes); } /* registry inside GlobalAlloc */
 __attribute__((ms_abi)) void* mw_LocalLock(void* p) { return p; }
 __attribute__((ms_abi)) int mw_LocalUnlock(void* p) { return 1; }
 __attribute__((ms_abi)) size_t mw_LocalSize(void* p) { return p ? malloc_usable_size(p) : 0; }
 __attribute__((ms_abi)) void* mw_LocalFree(void* p) {
     if (!p) return NULL;
-    if (!w3_reg_has(p)) w3_trap_bad_free(p, "LocalFree");
+    /* SW-1208: same handle-cookie + degrade-to-fail contract as GlobalFree
+     * (real LocalFree of an invalid handle returns it + last error 6). */
+    void* hbase = mw_ghandle_base_of(p);
+    if (hbase) {
+        int gi = mw_ghandle_slot_of((uintptr_t)p);
+        if (w3_reg_has(hbase)) w3_reg_del(hbase);
+        free(hbase);
+        if (gi >= 0) g_ghandle[gi].live = 0;
+        MW_TRACE("LocalFree(handle=0x%lx) -> base %p freed -> NULL",
+                 (unsigned long)(uintptr_t)p, (unsigned long)(uintptr_t)hbase);
+        return NULL;
+    }
+    if (!w3_reg_has(p)) {
+        mw_SetLastError(6); /* ERROR_INVALID_HANDLE */
+        MW_TRACE("LocalFree(%p) -> fail (ERROR_INVALID_HANDLE)", p);
+        return p;
+    }
     /* BUG-043 family: mirror mw_free — a guarded chunk is mmap'd; plain
      * free() on it faults inside libc (same class as BUG-041 mw_realloc). */
     if (w3_is_guarded(p)) { w3_guard_free(p); return NULL; }
@@ -13171,7 +13253,7 @@ static int mw_sysclass_w(const void* cls) {
     if (v && v < 0x10000u) {
         if ((v & 0xFF00u) == 0x8000u) {
             uint32_t c = v & 0xFFu;
-            if (c >= 0x80 && c <= 0x8C) return (int)c; /* SWEEP-019: +comctl children; SWEEP-021: +RICHEDIT */
+            if (c >= 0x80 && c <= 0x8D) return (int)c; /* SWEEP-019: +comctl children; SWEEP-021: +RICHEDIT; SW-1207: +tooltip */
         }
         return 0;
     }
@@ -13190,6 +13272,9 @@ static int mw_sysclass_w(const void* cls) {
         {"systabcontrol32", 0x8A}, {"sysheader32", 0x8B},
         /* SWEEP-021 SW-906..910: RICHEDIT family (prefix covers 20W/50W) */
         {"richedit", 0x8C},
+        /* SW-1207: comctl32 tooltip window class (popup AND owned forms;
+         * prefix covers tooltips_class32 W/A). */
+        {"tooltips_class32", 0x8D},
     };
     if (!cls) return 0;
     uint16_t tmp[16];
@@ -13200,7 +13285,7 @@ static int mw_sysclass_w(const void* cls) {
     a[i] = 0;
     /* SWEEP-018: prefix compare clamped to the probe width (15) — matches
      * toolbar* and the 15-char-truncated msctls_statusbar32 probe. */
-    for (i = 0; i < 14; i++) { /* SWEEP-021: 13 -> 14 (RICHEDIT) */
+    for (i = 0; i < 15; i++) { /* SWEEP-021: 13 -> 14 (RICHEDIT); SW-1207: -> 15 (tooltip) */
         size_t L = strlen(t[i].n);
         if (strncmp(a, t[i].n, L < 15 ? L : 15) == 0) return t[i].c;
     }
@@ -13211,7 +13296,7 @@ static int mw_sysclass_a(const void* cls) {
     if (v && v < 0x10000u) {
         if ((v & 0xFF00u) == 0x8000u) {
             uint32_t c = v & 0xFFu;
-            if (c >= 0x80 && c <= 0x8C) return (int)c; /* SWEEP-019: +comctl children; SWEEP-021: +RICHEDIT */
+            if (c >= 0x80 && c <= 0x8D) return (int)c; /* SWEEP-019: +comctl children; SWEEP-021: +RICHEDIT; SW-1207: +tooltip */
         }
         return 0;
     }
@@ -13230,6 +13315,9 @@ static int mw_sysclass_a(const void* cls) {
         {"systabcontrol32", 0x8A}, {"sysheader32", 0x8B},
         /* SWEEP-021 SW-906..910: RICHEDIT family (prefix covers 20W/50W) */
         {"richedit", 0x8C},
+        /* SW-1207: comctl32 tooltip window class (prefix covers
+         * tooltips_class32; the A probe truncates at 15 chars). */
+        {"tooltips_class32", 0x8D},
     };
     if (!cls) return 0;
     char a[16] = {0}; int i;
@@ -13237,7 +13325,7 @@ static int mw_sysclass_a(const void* cls) {
     for (i = 0; i < 15; i++)
         if (a[i] >= 'A' && a[i] <= 'Z') a[i] += 32;
     /* SWEEP-018: prefix compare clamped to the probe width (15). */
-    for (i = 0; i < 14; i++) { /* SWEEP-021: 13 -> 14 (RICHEDIT) */
+    for (i = 0; i < 15; i++) { /* SWEEP-021: 13 -> 14 (RICHEDIT); SW-1207: -> 15 (tooltip) */
         size_t L = strlen(t[i].n);
         if (strncmp(a, t[i].n, L < 15 ? L : 15) == 0) return t[i].c;
     }
@@ -13249,8 +13337,10 @@ static const char* mw_sysclass_name(int c) {
                               /* SWEEP-019 SW-831..840 */
                               "SysListView32","SysTreeView32","SysTabControl32","SysHeader32",
                               /* SWEEP-021 SW-906..910 */
-                              "RICHEDIT"};
-    return (c >= 0x80 && c <= 0x8C) ? n[c - 0x80] : "?";
+                              "RICHEDIT",
+                              /* SW-1207 */
+                              "Tooltips_Class32"};
+    return (c >= 0x80 && c <= 0x8D) ? n[c - 0x80] : "?";
 }
 /* Register one child-control identity; NULL when the 64-slot table is full. */
 static void* mw_child_register(int sc, void* parent, void* menu,
@@ -13291,10 +13381,33 @@ int mw_hook_fire_create(uint32_t exstyle, uint32_t style, const void* winname,
 void mw_hook_fire_destroy(void* hwnd);
 void mw_hook_fire_activate(void* hwnd);
 
+__attribute__((ms_abi)) int mw_SetPropW(void* h, const uint16_t* name, void* value); /* SW-1207 fwd */
+
 __attribute__((ms_abi)) void* mw_CreateWindowExW(uint32_t exstyle, const void* cls,
         const uint16_t* win, uint32_t style, int x, int y, int w, int h,
         void* parent, void* menu, void* inst, void* param) {
     int sc = mw_sysclass_w(cls);
+    /* SW-1207: comctl32 tooltips_class32 window object. Before this, a
+     * tooltip call (popup parent=NULL OR owned) fell into the main-window
+     * path and returned MW_GUI_HWND — rammap64 then did
+     * GetPropW(tooltip, atom 0xC000) -> NULL and crashed inside its own
+     * comctl32 subclass branch (RVA 0x1cfa9, mov rcx,[0x120] via RAX=0).
+     * Real comctl32: the tooltip window proc subclasses itself during
+     * WM_NCCREATE and stores SUBCLASS_INFO under global atom 0xC000
+     * ("CC32SubclassInfo") BEFORE CreateWindowEx returns — the guest's
+     * GetPropW(0xC000) must find a real block. Mint a DISTINCT identity
+     * and perform that contract with a registered zeroed 0x140-byte block
+     * (SUBCLASS_INFO-sized; zero counts = "no subclass frames"). */
+    if (sc == 0x8D) {
+        void* th = mw_child_register(sc, parent ? parent : MW_GUI_HWND, menu, win, 1, NULL);
+        if (th) {
+            void* si = mw_GlobalAlloc(0x40 /* GMEM_ZEROINIT */, 0x140);
+            if (si) mw_SetPropW(th, (const uint16_t*)(uintptr_t)0xC000, si);
+            MW_TRACE("[GUI] tooltips_class32 (ex=0x%x style=0x%x) -> HWND %p subclass-prop 0xC000 = %p",
+                     exstyle, style, th, si);
+        }
+        return th;
+    }
     if (sc && parent) { /* SWEEP-013: child control — engine-internal wndproc */
         (void)exstyle; (void)x; (void)y; (void)style;
         return mw_child_register(sc, parent, menu, win, 1, NULL);
@@ -13313,6 +13426,18 @@ __attribute__((ms_abi)) void* mw_CreateWindowExA(uint32_t exstyle, const void* c
         const char* win, uint32_t style, int x, int y, int w, int h,
         void* parent, void* menu, void* inst, void* param) {
     int sc = mw_sysclass_a(cls);
+    /* SW-1207: tooltip branch on the A path — same contract as the W path
+     * above (distinct identity + CC32SubclassInfo prop at atom 0xC000). */
+    if (sc == 0x8D) {
+        void* th = mw_child_register(sc, parent ? parent : MW_GUI_HWND, menu, win, 0, NULL);
+        if (th) {
+            void* si = mw_GlobalAlloc(0x40 /* GMEM_ZEROINIT */, 0x140);
+            if (si) mw_SetPropW(th, (const uint16_t*)(uintptr_t)0xC000, si);
+            MW_TRACE("[GUI] tooltips_class32A (ex=0x%x style=0x%x) -> HWND %p subclass-prop 0xC000 = %p",
+                     exstyle, style, th, si);
+        }
+        return th;
+    }
     if (sc && parent) { /* SWEEP-013: child control — engine-internal wndproc */
         (void)exstyle; (void)x; (void)y; (void)style;
         return mw_child_register(sc, parent, menu, win, 0, NULL);
@@ -21348,6 +21473,16 @@ __attribute__((ms_abi)) int mw_GetNumberFormatEx(uint32_t loc, uint32_t flags, c
 __attribute__((ms_abi)) void* mw_GlobalReAlloc(void* p, size_t bytes, uint32_t flags) {
     (void)flags;
     if (!p) return NULL;
+    /* SW-1208: accept handle cookies; probe-hardened so an untracked value
+     * fails the documented way instead of realloc()ing a foreign pointer. */
+    void* hbase = mw_ghandle_base_of(p);
+    if (hbase) p = hbase;
+    if (!w3_reg_has(p)) {
+        mw_SetLastError(6); /* ERROR_INVALID_HANDLE */
+        MW_TRACE("GlobalReAlloc(%p, 0x%lx) -> NULL (ERROR_INVALID_HANDLE)",
+                 p, (unsigned long)bytes);
+        return NULL;
+    }
     int s = w3_reg_find(p);
     void* q = realloc(p, bytes ? bytes : 1);
     if (q && q != p) {
@@ -21827,7 +21962,6 @@ __attribute__((ms_abi)) int mw_IsThemeBackgroundPartiallyTransparent(void* h, in
 #include <unistd.h>
 
 static uint32_t g_menu_desc_next = 1;
-static uint32_t g_gdesc_next = 1;
 static uint32_t g_rgn_next = 1;
 static uint32_t g_psp_next = 1;
 static uint32_t g_job_next = 1;
@@ -22190,10 +22324,20 @@ __attribute__((ms_abi)) uint16_t* mw_CharPrevW(const uint16_t* start, const uint
 }
 __attribute__((ms_abi)) int mw_FreeConsole(void) { return 1; }
 __attribute__((ms_abi)) void* mw_GlobalHandle(const void* p) {
-    (void)p;
-    return (void*)(uintptr_t)(0x00AE0000u | (g_gdesc_next++ & 0xFFFu)); /* cookie */
+    /* SW-1208: the cookie is now REGISTERED (mw_ghandle_mint) so
+     * GlobalLock/GlobalFree/GlobalReAlloc can resolve it back to the base
+     * pointer — the legacy stub forgot the base and doomed winmergeu's
+     * later GlobalFree(0xae0001) to the old HEAP-TRAP. */
+    void* h = mw_ghandle_mint((void*)p);
+    MW_TRACE("GlobalHandle(%p) -> cookie 0x%lx", p, (unsigned long)(uintptr_t)h);
+    return h;
 }
-__attribute__((ms_abi)) uint32_t mw_GlobalFlags(void* h) { (void)h; return 0; /* GMEM_FIXED-ish: no flags */ }
+__attribute__((ms_abi)) uint32_t mw_GlobalFlags(void* h) {
+    /* SW-1208: a registered cookie IS a moveable handle (GMEM_MOVEABLE=2);
+    real pointers stay the fixed-model 0. */
+    if (mw_ghandle_base_of(h)) return 2;
+    return 0; /* GMEM_FIXED-ish: no flags */
+}
 __attribute__((ms_abi)) uint32_t mw_SetThreadUILanguage(uint16_t lang) { (void)lang; return 0x0409; }
 __attribute__((ms_abi)) uint16_t mw_GetSystemDefaultUILanguage(void) { return 0x0409; }
 __attribute__((ms_abi)) void* mw_LoadBitmapW(void* hinst, const void* name) {

@@ -869,3 +869,28 @@ two new frontiers registered (SW-1207/SW-1208), corpus 15->16.
   census x3 16/16 deterministic, 7za/jq/sqlite3 round trips green on the
   final binary. Evidence: artifacts/sweep040/ (census.tsv, adexplorer64
   run1-3, roundtrip/). No force-push.
+
+## SWEEP-041 «ادامه ۲۰ قطار» — 2026-10-21 (sha 4ecab4c2, G1 12/12, pushed)
+Two open frontiers from SWEEP-040 cleared in one round, both to FULL LIFECYCLE:
+- SW-1207 (rammap64 139 -> 0): tooltips_class32 was landing on MW_GUI_HWND; the
+  guest's GetPropW(tooltip, atom 0xC000) NULL-fed its comctl32 subclass branch
+  into a null-page absolute read. Engine now mints a distinct tooltip identity
+  and auto-performs the CC32SubclassInfo prop contract (registered zeroed
+  0x140 block at atom 0xC000) before CreateWindowEx returns — the same
+  synchronous contract real comctl32 performs in WM_NCCREATE.
+- SW-1208 (winmergeu 4 -> 0): GlobalHandle cookies were minted and forgotten;
+  the guest's GlobalFree(0xae0001) hit the HEAP-TRAP. Engine now keeps a
+  64-slot cookie->base registry (GlobalLock/Flags/Free/ReAlloc all resolve),
+  and untracked frees degrade to the documented Win32 contract
+  (return value + ERROR_INVALID_HANDLE) instead of terminating.
+- Census x3 16/16 deterministic; all deltas forward; pageant/procexp64/
+  adexplorer64 preserved. adexplorer64 corpus re-recovered (3rd loss) with
+  sha-verified one-shot procedure now documented.
+- Round trips: 7za byte-exact, jq-1.7.1 + query, sqlite3 in-memory 42.
+- SW-1102d advanced (round 3): RA candidates classified; three .text functions
+  identified (0x140066130 / 0x1400a1380 / 0x1400c3340 = CLR perf-counter master
+  init with count*0x30/0x18/0x8 record arrays); crash-stack stride is 0x28
+  (32B name + 8B) — writer still open.
+- Lesson kept: the census caught nothing this time because the two fixes are
+  pure forward motion; the 7za/jq/sqlite trio plus G1 regression 12/12 remain
+  the regression net for the engine-wide surfaces (heap, windows, props).

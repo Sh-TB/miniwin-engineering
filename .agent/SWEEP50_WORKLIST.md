@@ -1851,3 +1851,78 @@ gate that must be re-accepted when the port lands).
 - Open: SW-1207 comctl32 tooltip object, SW-1208 GlobalFree(0xae0001)
   provenance, SW-1102d BUG-078 copy-loop static decode, ole32.277/16
   names (Rule-1 blocked), SW-1156 ExtFloodFill, SW-1153 consumers.
+
+## SWEEP-041 round summary «ادامه ۲۰ قطار» — 20-train batch, 3 wagons LANDED (2026-10-21)
+- SW-1207 LANDED: comctl32 tooltips_class32 window object + CC32SubclassInfo
+  creation contract. Root cause: CreateWindowExW('tooltips_class32') (popup,
+  parent NULL) fell into the main-window path and returned MW_GUI_HWND, so the
+  guest's GetPropW(tooltip, atom 0xC000) returned NULL and rammap64 crashed
+  inside its own comctl32 subclass branch (RVA 0x1cfa9, RAX=0 -> mov rcx,[0x120]
+  absolute null-page read; RDX=R12=0x10001 = the frame hwnd it was handed).
+  ENGINE: (1) sysclass tables W/A + "tooltips_class32" -> 0x8D (prefix compare,
+  bounds 0x8C -> 0x8D, name "Tooltips_Class32"); (2) dedicated tooltip branch in
+  CreateWindowExW/A BEFORE the child gate: mint a DISTINCT child identity via
+  mw_child_register (parent ?: MW_GUI_HWND), then perform the real-comctl32
+  creation contract — the tooltip window proc subclasses itself during
+  WM_NCCREATE and stores SUBCLASS_INFO under global atom 0xC000
+  ("CC32SubclassInfo") BEFORE CreateWindowEx returns; engine allocates a
+  registered GMEM_ZEROINIT 0x140-byte block (SUBCLASS_INFO-sized, zero counts =
+  "no subclass frames") and mw_SetPropW(hwnd, MAKEINTATOM(0xC000), block).
+  rammap64: 139 crash -> 0 FULL LIFECYCLE (1624 API lines, ExitProcess(0));
+  trace shows two tooltips minted (0x30013/0x30014, props 0x36bfff0/0x36c0140)
+  and GetPropW(hwnd=0x3000b, 0xC000) -> 0x36bfd50 non-NULL.
+- SW-1208 LANDED: GlobalHandle cookie registry + GlobalFree/LocalFree
+  degrade-to-fail. Root cause: legacy GlobalHandle stub minted 0x00AE0000|n
+  cookies and FORGOT the base pointer; winmergeu called
+  GlobalHandle(0x28128c0) -> 0xae0001 and its later GlobalFree(cookie) hit the
+  old HEAP-TRAP exit 4 — on real Windows GlobalFree(invalid) NEVER terminates:
+  it returns the same value + ERROR_INVALID_HANDLE. ENGINE: (1) MWGHandle
+  registry (64 slots, cookie 0x00AE0000|n, base ptr, g_gdesc_next moved next to
+  it); GlobalHandle now registers cookie->base; (2) GlobalLock resolves a
+  cookie to its base (GMEM_MOVEABLE lock contract); GlobalFlags(cookie) = 2
+  (GMEM_MOVEABLE); (3) GlobalFree/LocalFree accept cookies (resolve -> free
+  base -> retire -> NULL) and untracked values degrade to the documented
+  contract: return same value + SetLastError(6); (4) GlobalReAlloc
+  probe-hardened: cookie resolve + w3_reg_has gate -> NULL + last error 6
+  instead of realloc()ing a foreign pointer (SW-1205 hardening family).
+  winmergeu: exit 4 HEAP-TRAP -> 0 FULL LIFECYCLE; trace:
+  GlobalHandle(0x28128c0) -> cookie 0xae0001; GlobalFree(handle=0xae0001) ->
+  base 0x28128c0 freed -> NULL; full CRT rundown to ExitProcess(0) (36076 API
+  lines — first complete winmergeu lifecycle since the corpus landed).
+- SW-1156 LANDED (mark): ExtFloodFill real scanline seed fill already in the
+  engine (src/loader/loader.c mw_ExtFloodFill, "replaces no-op v1") — worklist
+  row was stale; marked closed. ole32.277/16: stays KNOWN-UNKNOWN (Rule 1 —
+  wine ole32.spec is name-ordered, no public ordinal table; re-probed
+  SWEEP-036, no new evidence).
+- SW-1102d PROGRESS (round 3, still open): procexp64 crash-stack RA candidates
+  classified by section — 0x140144bd8 (.rdata) and 0x140191bf0 (.data) are data
+  pointers, NOT return addresses; the three .text RAs resolve to:
+  0x140066130 (locals rsp+0x20..0x78, IAT call 0x140134ae8),
+  0x1400a1380 (builds {xmm0,ptr} locals at rsp+0x28/0x40, delegates to
+  0x140066130 and 0x1400a8a30 with .rdata name 0x14015aa48),
+  0x1400c3340 (CLR perf-counter master init: count*0x30 / count*0x18 /
+  count*0x8 record arrays via alloc 0x140101668 into 0x14019d208/200/1f8,
+  NtQuery-style call magic 0x83350008, VirtualAlloc 0x1000, five wide-string
+  length loops over .data 0x1401887c0/8a08/c50/e98/90e0 -> lengths to
+  0x140188a00/c48/e90/90d8/189320). Crash-stack records are 0x28-stride
+  (32B UTF-16 name + 8B field) — none of the heap arrays is 0x28, so the
+  writer is a stack-local record array in one of these frames; exact store
+  instruction still open. Scripts/sweep041_dis.py committed.
+- adexplorer64 corpus LOST AGAIN (third occurrence: sweep031->032, this reset)
+  — RECOVERED via the one-shot procedure: curl AdExplorer.zip from
+  download.sysinternals.com, sha256 must equal
+  56536bff1e9da136a53f68c6f4f1cd51f79be919a27249a193a2bc8fc472e89a, unzip,
+  rename ADExplorer64.exe -> adexplorer64.exe (sha e4512878...); recorded in
+  evidence/sweep041/adexplorer64_corpus_sha256.txt. Corpus shas verified
+  byte-exact before use.
+- MEASURED sha 4ecab4c2 G1 PIN 12/12 (evidence/master/g1/20261021_154005):
+  census x3 16/16 DETERMINISTIC — deltas ALL FORWARD: rammap64 139 -> 0
+  (SW-1207), winmergeu 4 -> 0 (SW-1208); adexplorer64 32 preserved, pageant 124
+  preserved, procexp64 139 preserved (SW-1102d frontier), 11 other programs
+  exit-0 unchanged. Round trips on the final binary: 7za x64 create+extract
+  BYTE-EXACT (cmp), jq-1.7.1 --version "jq-1.7.1" + query '.a[1]' -> 2,
+  sqlite3 in-memory CREATE/INSERT/SELECT = 42.
+- Open: SW-1102d BUG-078 copy-loop exact store instruction, ole32.277/16
+  (Rule-1 blocked), SW-1153 consumers; NEW observation: winmergeu now runs the
+  full app lifecycle — its post-daemon behavior is productive work, next
+  frontier will be found by diffing its 36076-line trace.
