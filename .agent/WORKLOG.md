@@ -948,3 +948,28 @@ calls CryptProtectMemory(cb=16) 2x and keeps its (correct) daemon park.
 Evidence: evidence/sweep042/{wine_specs,census.tsv,roundtrips,binary_sha256}.
 Open: SW-1102d copy-loop store instruction, ole32.277/16 + COMCTL32.344
 (Rule-1), SW-791 libcurl-x64.dll, procexp64 139 frontier.
+
+## SWEEP-043 «ادامه قطار» — BUG-078 solved, procexp64 139 -> 0 (2026-10-22)
+- Reconcile first (origin had advanced to SWEEP-042 339cc60 incl. the
+  «۱۰ قطار چند ده واگن ریزه» batch; workspace reset mid-round): reset --hard +
+  scripts/sweep043_apply.py re-lands 11 patches, assert-verified.
+- SW-1102e/g: the 'ntio' writer = mw_IsBadStringPtrW's own
+  mw_probe_copy(s+off, chunk*2, tmp[256]) overflow (1024B into 512B), proved
+  by the MW_BUG078_DIAG single-fire stack dump + static decode of the
+  0x1400a8a30/0x1400a1380/0x1400c3340 chain (RegQueryValueExW two-pass,
+  tokenizer L",", formatter "%u "/"%s ", CLR name pool .rdata 0x14015ad10+).
+- SW-1102h HKPD PERF_DATA_BLOCK (two-pass, empty block, NumObjectTypes 0);
+  SW-1102j WinStationGetProcessSid rc!=0 failure shape; SW-1102k
+  I_QueryTagInformation honest 1168 + optional-stub fallback trace;
+  SW-1102l NtQuerySystemInformation class 5 (SystemProcessInformation,
+  guest PID 1234 entry, two-pass).
+- SW-1102f: RegQueryValueExW hit+miss MW_TRACE (probe surface now visible:
+  98 Settings probes, HKPD chain).
+- adexplorer64 corpus re-recovered (4th), shas recorded.
+- MEASURED sha 89ce3cd9 G1 12/12; census x3 16/16 DETERMINISTIC;
+  procexp64 139 -> 0 (graceful ExitProcess(0)); 13x exit-0; round trips
+  7za byte-exact / jq '.a[1]'=2 / sqlite3 42. evidence/sweep043/. No
+  force-push.
+- Open frontiers: ole32.277/16 + COMCTL32.344 (Rule-1), SW-791 curl
+  libcurl-x64.dll, pageant 124 park (correct), adexplorer64 exit-32
+  (guest-side, proven).

@@ -2019,3 +2019,76 @@ ExitProcess(48925984) anomaly. One commit, no force-push.
   CREATE/INSERT/SELECT = 42. no force-push.
 - Open: SW-1102d BUG-078 copy-loop exact store instruction; ole32.277/16 +
   COMCTL32.344 (Rule-1); SW-791 curl libcurl-x64.dll; procexp64 139 frontier.
+
+## SWEEP-043 round summary «ادامه قطار» — BUG-078 SOLVED: procexp64 139 -> 0 (2026-10-22)
+Batch directive: continue the train (10-train micro-wagon format). THE round:
+the procexp64 'ntio' crash (SW-1102d, open since SWEEP-032) is fully decoded
+and FIXED — three engine bugs, one missing plane.
+
+- SW-1102e/g ROOT CAUSE (the exact store, found): mw_IsBadStringPtrW copied
+  chunk*2 = up to 1024 bytes into uint16_t tmp[256] = 512 bytes — a 512-byte
+  ENGINE-stack overflow on every call with a large max (procexp64 passes
+  0xffffffff). The overflow wrote the probed guest .rdata text over the
+  engine's own saved registers + return address -> ret jumped into a fragment
+  of the probed region -> RIP=0x6f00690074006e = 'ntio' inside the copied
+  ".NET CLR ..." string pool (0x14015aa48..+0x400). The SWEEP-032/038/041
+  "guest packing loop" attribution was WRONG: the packed 0x28-stride UTF-16
+  runs on the crash stack are the engine's own overflowing memcpy. Fixed:
+  tmp[512] = exactly chunk*2. Decode chain: crash-frame live geometry (RA
+  0x1400a13fd at rsp+0x268 = 3 pushes + sub 0x250 of 0x1400a8a30), .data
+  0x1401887c0/8a08/c50/e98/90e0 = registry ROOT PATHS (the SWEEP-041 "CLR
+  perf-counter master init" label on 0x1400c3340 was wrong — it is registry-
+  path canonicalization), .rdata 0x14015ad10/40/70 = CLR counter names,
+  chain 0x1400c3340 -> 0x1400a1380 -> 0x1400a8a30 (RegQueryValueExW two-pass,
+  tokenizer L",", formatter "%u "/"%s "). MW_BUG078_DIAG=1 diagnosability
+  added (IsBadStringPtrW stack dump + uni-name EMPTY OA/UNICODE_STRING dump).
+- SW-1102h HKPD contract: RegQueryValueExW(HKEY_PERFORMANCE_DATA 0x80000004 /
+  0x80000050 / 0x80000060) now serves the mandatory two-pass dance (pass 1 =
+  ERROR_MORE_DATA + need) and a minimal valid PERF_DATA_BLOCK (L"PERF",
+  LittleEndian 0x1000, Version/Revision 1, HeaderLength 0x54, system name
+  "MINIWIN", NumObjectTypes 0). After the IsBadStringPtrW fix procexp64
+  reached RegQueryValueExW(HKPD, '.NET CLR Memory ') -> old FILE_NOT_FOUND
+  with *size untouched -> NULL-block parse -> crash 0x14009be71
+  (mov (%rdx),%ecx, rdx=0); now skips .NET columns gracefully.
+- SW-1102j winsta!WinStationGetProcessSid ABI fix: procexp64 calls it as
+  (NULL, 3, &out) through CFG slot 0x140191cb8 and treats rc==0 as SUCCESS,
+  parsing + LocalFree-ing the out struct. Our old "return 0 = FALSE" was
+  success-shaped with an unfilled out -> NULL deref. Failure shape = rc != 0:
+  now returns 1 (TS session data unavailable).
+- SW-1102k advapi32!I_QueryTagInformation: procexp64 resolves it via
+  LoadLibraryA("advapi32.dll") + GetProcAddress; the anonymous
+  mw_winapi_optional_stub returned 0 = ERROR_SUCCESS with the query struct
+  untouched -> same NULL-deref class. Typed-honest entry: ERROR_NOT_FOUND
+  (1168) — no SCM service-tag database headless. Diagnosability: the
+  optional-stub fallback now prints "  -> optional-stub fallback" in traces
+  (it was invisible; this contract mismatch stayed unexplained for rounds).
+- SW-1102l NtQuerySystemInformation(class 5 = SystemProcessInformation): the
+  plane procexp64's whole process view builds on. After g/k the guest reached
+  its main refresh loop (HeapAlloc(grow) + class-5 query per pass) and our
+  INVALID_INFO_CLASS answer drove an endless size-retry park (exit 124).
+  Honest v1: ONE entry — the guest itself (PID 1234, loader convention), zero
+  threads, image name = argv[0] base, full x64 SYSTEM_PROCESS_INFORMATION
+  layout (record 0x100, name bytes after), two-pass 0xC0000004 + retlen.
+- SW-1102f trace honesty: RegQueryValueExW gained hit-path AND miss-path
+  MW_TRACE lines (registry queries were invisible in api_trace.json — the
+  entire crash-window probe surface hid behind this gap; 98 Settings probes
+  + the HKPD chain now visible).
+- Environment-reset recovery (round-start + mid-round): workspace rolled back
+  to 242af84 twice; origin/main carried 339cc60 (SWEEP-042, incl. the
+  10-train batch already landed remotely). Protocol: reset --hard to
+  origin/main + re-apply via scripts/sweep043_apply.py (11 patches, each
+  assert-verified) + rebuild. Census binary verified BEFORE and AFTER the
+  re-apply (procexp64 0 both times).
+- adexplorer64 corpus LOST AGAIN (4th): recovered via the one-shot procedure,
+  zip sha 56536bff... / exe sha e4512878... recorded in
+  evidence/sweep043_adexplorer64_corpus_sha256.txt; exit 32 preserved.
+- MEASURED sha 89ce3cd9 G1 PIN 12/12 (evidence/master/g1/20261021_181056):
+  census x3 16/16 DETERMINISTIC — deltas ALL FORWARD: procexp64 139 -> 0
+  (FULL LIFECYCLE, graceful FreeLibrary + ExitProcess(0)); exits preserved:
+  adexplorer64 32, pageant 124, 13x exit-0 (was 12x). Round trips on the
+  final binary: 7za x64 create+extract BYTE-EXACT (cmp), jq '.a[1]' -> 2,
+  sqlite3 :memory: SELECT -> 42. evidence/sweep043/. no force-push.
+- Open: ole32.277/16 + COMCTL32.344 (Rule-1); SW-791 curl libcurl-x64.dll;
+  pageant 124 daemon (message-loop wait = correct headless park);
+  adexplorer64 exit-32 (guest-side, SW-1212 proven); next frontiers via the
+  now-visible registry/stub trace surfaces.
