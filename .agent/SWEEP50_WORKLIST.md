@@ -1638,9 +1638,12 @@ gate that must be re-accepted when the port lands).
     the real fastfail path, not the legacy walk+UEF fallback.
 - MEASURED on sha ddfa14a0 (G1 PIN OK 12/12, evidence/master/g1/20261020_130641):
   * winmergeu exit 9 -> 133: /GS cookie check PASSES; guest C++ EH chain runs
-    end-to-end (throw 0x14032126f after SetWindowsHookExW(5), 10 frames,
-    guest __CxxFrameHandler3 personalities decide ContinueSearch, terminate ->
+    end-to-end (throw after SetWindowsHookExW(5), 10 frames, guest
+    __CxxFrameHandler3 personalities decide ContinueSearch, terminate ->
     int3 0x2bd10e) — new frontier SW-1201 (guest-side catch-type decode).
+    CORRECTION (SWEEP-038 reconcile): 0x14032126f was an EH-machinery
+    C++-magic check, NOT the throw site — real throw decode = SetWindowsHookExW
+    NULL -> CMemoryException, ThrowInfo 0x1404fd7b0 (see SW-1201 LANDED entry).
   * corpus x3 16/16 deterministic, ZERO unresolved, ZERO regressions
     (pageant 124 daemon, procexp64 139 BUG-078, zoomit64 exit1 SW-1106)
   * round trips re-verified: 7za create+extract SHA-OK 3/3; zstd canonical

@@ -778,3 +778,31 @@ SWEEP-030 (2026-10-20) «قانون کلی قطار» — SW-1151 engine double-
 - MEASURED sha ddfa14a0: G1 PIN 12/12 (evidence/master/g1/20261020_130641);
   corpus x3 16/16 deterministic, ZERO unresolved, ZERO regressions; 7za/zstd/lz4
   round trips + jq re-verified. Loader 2,698,920 bytes. evidence/sweep030/.
+
+---
+SWEEP-038 (2026-10-21) «ادامه از جایی که ناقص مونده و پوش» — RECONCILE train 2: local interrupted session merged into remote chain
+- Context: local session (base 242af84) independently re-landed SW-1106 + SW-1201
+  while a parallel remote chain (SWEEP-031..037) had already landed the SAME
+  wagons with deeper decodes. Push rejected (non-FF). Precedent: SWEEP-037
+  reconcile protocol.
+- CONVERGENCE (two independent sessions, same root causes — strong evidence):
+  (1) SW-1106 = 64MB file-size cap rejecting zoomit64 68MB BEFORE parse (not a
+  decision-API failure); (2) SW-1201 root cause = SetWindowsHookExW(5) NULL ->
+  guest C++ throw -> EH chain failure (local decoded the unwind side: resume at
+  TargetIp=RA-1 mid-instruction; remote decoded the resume fix: -1 offset is
+  GCC-ONLY, MSVC gets TRUE RA + FH4 catch-and-resume at 0x140298df5);
+  (3) procexp64 exit-139 wild jump RIP=0x6f00690074006e = UTF-16 bytes — local
+  read it as a string-blob IAT jump; remote SWEEP-033 decoded the full class:
+  guest copies CLR perf-counter names ('# bytes in all heaps', 'contentions')
+  through stack frames, one overruns, RET consumes 'ntio'. Both decodes agree
+  the bytes are 'ntio' from 'contentions'.
+- RECONCILE actions: main reset to origin/main 92cb959 (SWEEP-037); local
+  c455913 preserved as backup/sweep032-local-50qatar (contains: alternative EH
+  variant — ReactOS L709-734 target-frame EH_TARGET_UNWIND final call inside
+  seh_walk_intermediate_cleanups + walk-for-all-0xe06d7363 + MW_MAX_IMAGE_MB
+  env-overridable cap; NOT ported: remote's True-RA fix is measured end-to-end
+  (986K pump iterations), porting the second mechanism risks regression);
+  UNIQUE delta re-landed: worklist SWEEP-030 summary stale throw-point
+  0x14032126f corrected (EH-machinery C++-magic check, not throw site).
+- MEASURED: deterministic rebuild reproduced sha 2464ad23 BYTE-EXACT (0 errors);
+  G1 PIN 12/12 (evidence/master/g1/20261021_095409).
