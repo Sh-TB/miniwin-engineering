@@ -1737,3 +1737,28 @@ gate that must be re-accepted when the port lands).
   procexp crash class decoded + ordinals 7->2 KNOWN-UNKNOWN, SW-1152/1153/
 - 1156/1203/1204 LANDED; open frontiers: SW-1205 winmergeu main poll,
   SW-1102 guest-write instrumentation, ole32.277/16 names.
+
+## SWEEP-037 «ادامه ۱۰ قطار ۱۰۰ واگن» — RECONCILE train (2026-10-21)
+- RECONCILE DISCIPLINE (SWEEP-027 precedent): local SWEEP-031 (c23a63c,
+  preserved as branch backup/sweep031-local) duplicated wagons that the
+  parallel remote chain SWEEP-031..036 (0c191d1..cd5e044) already landed
+  with stronger semantics (winmergeu 124 live-daemon via FH4 RA fix,
+  zoomit 70-import surface @512MB gate, ODBC w/ SQLBindCol, SafeArray
+  20-VT store, BUG-078 'contentions' stack-overrun decode, CBT hook
+  delivery, Sleep(0)->sched_yield). main RESET to origin/main cd5e044;
+  deterministic rebuild reproduced sha 48fac5a1 byte-exact.
+- UNIQUE DELTAS re-landed on top (all wine-mirror spec sourced 2026-10-21):
+  * SW-1223/1225 procexp64 OLEAUT32.16=SafeArrayDestroy + 277=VarUI4FromStr
+    (oleaut32.spec — DISTINCT from ole32.277/16 KNOWN-UNKNOWN) -> procexp64
+    FIRST-TIME ZERO unresolved imports (exit 139 = BUG-078 frontier kept).
+  * SW-1220b autoruns64 SHLWAPI.487=SHLoadIndirectString (shlwapi.spec) +
+    REAL %name% environment resolution -> autoruns64 2->1 unresolved.
+  * COMCTL32.344 (autoruns64) + SHELL32.88 (searchmyfiles) stay
+    KNOWN-UNKNOWN per Rule 1 (no credible public source this round).
+- MEASURED sha 2464ad23 G1 PIN 12/12 (evidence/master/g1/20261021_053052):
+  corpus x3 15/15 deterministic, ZERO regressions; unresolved census:
+  procexp64 0, autoruns64 1 (COMCTL32.344 K-U), searchmyfiles 1
+  (SHELL32.88 K-U), all others 0. SWEEP-031 local-round decode records
+  (0x32126f validator correction, ThrowInfo vtable notes, 66-import
+  zoomit census, 7-ordinal procexp naming) filed in backup branch and
+  evidence/sweep031/.

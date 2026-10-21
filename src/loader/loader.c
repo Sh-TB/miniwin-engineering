@@ -15338,6 +15338,43 @@ __attribute__((ms_abi)) uint32_t mw_IUnknown_QueryService(void* punk, const void
     MW_TRACE("IUnknown_QueryService -> %08x (delegated QI)", hr);
     return hr;
 }
+
+/* SWEEP-037 (SW-1220b): shlwapi!SHLoadIndirectString — REAL (wine spec
+ * ordinal 487, autoruns64 binds it raw). Contract: pszSource may be
+ * "prefix:%name%" -> %name% resolves against the process environment,
+ * else the string copies verbatim into pszOutBuf (cchOutBuf chars). */
+__attribute__((ms_abi)) uint32_t mw_SHLoadIndirectString(const uint16_t* src, uint16_t* out, uint32_t cch, void** reserved) {
+    (void)reserved;
+    if (!out || cch == 0) return 0x80070057u; /* E_INVALIDARG */
+    out[0] = 0;
+    if (!src) return 0x80070057u;
+    const uint16_t* s = src;
+    while (*s == (uint16_t)' ') s++;
+    if (s[0] == (uint16_t)'%' ) {
+        const uint16_t* e = s + 1;
+        while (*e && *e != (uint16_t)'%') e++;
+        if (*e == (uint16_t)'%') { /* %name% -> environment */
+            size_t n = (size_t)(e - s - 1);
+            char name[128]; size_t k = 0;
+            for (; k < n && k < sizeof name - 1; k++) name[k] = (char)(uint8_t)s[k+1];
+            name[k] = 0;
+            const char* v = getenv(name);
+            if (v) {
+                uint32_t m = 0;
+                for (; v[m] && m + 1 < cch; m++) out[m] = (uint16_t)(uint8_t)v[m];
+                out[m] = 0;
+                MW_TRACE("[SHLWAPI] SHLoadIndirectString(%s) -> env", name);
+                return 0; /* S_OK */
+            }
+            /* unresolved env name -> copy raw (Windows keeps it verbatim) */
+        }
+    }
+    uint32_t m = 0;
+    for (; s[m] && m + 1 < cch; m++) out[m] = s[m];
+    out[m] = 0;
+    MW_TRACE("[SHLWAPI] SHLoadIndirectString -> verbatim");
+    return 0; /* S_OK */
+}
 /* TASKDIALOGCONFIG has buttons the headless host cannot show; the canned
  * user-CANCEL contract (SW-826..830 family) applies: S_OK + IDCANCEL. */
 __attribute__((ms_abi)) uint32_t mw_TaskDialogIndirect(const void* cfg, uint32_t* pnButton, int* pRadioButton, int* pfVerif) {
@@ -24398,6 +24435,32 @@ __attribute__((ms_abi)) uint32_t mw_SafeArrayDestroy(void* sa) {
     return 0; /* S_OK */
 }
 
+/* SWEEP-037 (SW-1225): oleaut32!VarUI4FromStr — REAL parse (wine spec
+ * ordinal 277, procexp64 binds it raw). HRESULT semantics: S_OK,
+ * E_INVALIDARG on NULL out, DISP_E_TYPEMISMATCH on non-digit/overflow.
+ * Windows accepts embedded sign for UI4? No: VT_UI4 from string is
+ * unsigned-only; whitespace tolerated per VarParse. */
+__attribute__((ms_abi)) uint32_t mw_VarUI4FromStr(const uint16_t* str, uint32_t lcid, uint32_t flags, uint32_t* out) {
+    (void)lcid; (void)flags;
+    if (!out) return 0x80070057u; /* E_INVALIDARG */
+    *out = 0;
+    if (!str) return 0x80070057u;
+    uint64_t v = 0;
+    int any = 0;
+    for (uint32_t i = 0; str[i]; i++) {
+        uint16_t c = str[i];
+        if (c == (uint16_t)' ' || c == (uint16_t)'\t') continue; /* VarParse skips ws */
+        if (c < (uint16_t)'0' || c > (uint16_t)'9') return 0x80020005u; /* DISP_E_TYPEMISMATCH */
+        v = v * 10 + (uint64_t)(c - (uint16_t)'0');
+        if (v > 0xFFFFFFFFull) return 0x80020005u; /* overflow: TYPEMISMATCH */
+        any = 1;
+    }
+    if (!any) return 0x80020005u;
+    *out = (uint32_t)v;
+    MW_TRACE("[OLEAUT] VarUI4FromStr -> %u", *out);
+    return 0; /* S_OK */
+}
+
 __attribute__((ms_abi)) uint32_t mw_VarBstrFromDate(double date, uint32_t lcid, uint32_t flags, void** bstrOut) {
     (void)lcid; (void)flags;
     if (!bstrOut) return 0x80070057u; /* E_INVALIDARG */
@@ -25600,6 +25663,7 @@ ENTRY("msvcrt.dll", "wctype", mw_wctype),
     /* SWEEP-033 (SW-1102 procexp64 ordinal wagons) */
     ENTRY("COMCTL32.dll", "TaskDialogIndirect",                 mw_TaskDialogIndirect),
     ENTRY("SHLWAPI.dll", "IUnknown_QueryService",               mw_IUnknown_QueryService),
+    ENTRY("SHLWAPI.dll", "SHLoadIndirectString",                mw_SHLoadIndirectString),
     ENTRY("ACLUI.dll", "CreateSecurityPage",                    mw_CreateSecurityPage),
     /* SWEEP-010: honest image lists (procexp64 toolbar init) */
     ENTRY("COMCTL32.DLL", "ImageList_Create",                   mw_ImageList_Create),
@@ -26895,6 +26959,7 @@ ENTRY("GDI32.DLL", "GetCharacterPlacementW",                mw_GetCharacterPlace
     ENTRY("OLEAUT32.DLL", "SafeArrayPutElement",                mw_SafeArrayPutElement),
     ENTRY("OLEAUT32.DLL", "SafeArrayGetElement",                mw_SafeArrayGetElement),
     ENTRY("OLEAUT32.DLL", "SafeArrayDestroy",                   mw_SafeArrayDestroy),
+    ENTRY("OLEAUT32.DLL", "VarUI4FromStr",                      mw_VarUI4FromStr),
     ENTRY("OLEAUT32.DLL", "VarBstrFromDate",                    mw_VarBstrFromDate),
     ENTRY("OLEAUT32.DLL", "DllUnregisterServer",                mw_DllUnregisterServer),
 };
@@ -27391,6 +27456,21 @@ static int load_pe(const char* filepath) {
                     { "SHLWAPI", 176, "IUnknown_QueryService" },
                     { "COMCTL32", 345, "TaskDialogIndirect" },
                     { "ACLUI", 1, "CreateSecurityPage" },
+                    /* SWEEP-037 (SW-1223/1225): procexp64 OLEAUT32 raw
+                     * ordinals — wine-mirror oleaut32.spec (2026-10-21
+                     * fetch): 16 stdcall SafeArrayDestroy(ptr); 277 stdcall
+                     * VarUI4FromStr(wstr long long ptr). DISTINCT from the
+                     * ole32.277/16 KNOWN-UNKNOWN pair (different DLL, no
+                     * public ordinal table) — Rule 1 respected: named from
+                     * the shipped wine spec, not guessed. */
+                    { "OLEAUT32", 16, "SafeArrayDestroy" },
+                    { "OLEAUT32", 277, "VarUI4FromStr" },
+                    /* SWEEP-037 (SW-1220b): autoruns64 SHLWAPI.487 — wine
+                     * shlwapi.spec: 487 stdcall -ordinal SHLoadIndirectString.
+                     * COMCTL32.344 (autoruns64) + SHELL32.88 (searchmyfiles)
+                     * stay KNOWN-UNKNOWN per Rule 1 (wine specs end at
+                     * 342/494-without-88; no credible public source found). */
+                    { "SHLWAPI", 487, "SHLoadIndirectString" },
                 };
                 const char* ord_name = NULL;
                 char up_dll[16];
