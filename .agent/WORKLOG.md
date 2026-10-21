@@ -973,3 +973,51 @@ Open: SW-1102d copy-loop store instruction, ole32.277/16 + COMCTL32.344
 - Open frontiers: ole32.277/16 + COMCTL32.344 (Rule-1), SW-791 curl
   libcurl-x64.dll, pageant 124 park (correct), adexplorer64 exit-32
   (guest-side, proven).
+
+---
+
+## SWEEP-044 «ادامه قطار» — 15/16 exit-0, 0 unresolved, Go+Rust frontiers breached (2026-10-22)
+
+Directive: continue the train (micro-wagon format). Start state: HEAD 7d0f8e5
+(SWEEP-043), binary 89ce3cd9, corpus 14x exit-0 + adexplorer64 32 + pageant 124,
+1 unresolved import (COMCTL32.344).
+
+Work Log:
+- Re-verified baseline at HEAD (single-pass census) before any change.
+- SW-1215: adexplorer64 exit-32 root cause = main-thread headless WM_QUIT path
+  returned 0 WITHOUT filling the guest MSG struct; guest `return (int)
+  msg.wParam` read a stale heap pointer (0x3ad3d20) -> ExitProcess(garbage).
+  Fixed: mw_gui_fill_msg(hwnd=NULL, WM_QUIT, g_quit_code, 0). 32 -> 0.
+- SW-1216: MsgWaitForMultipleObjects traced (pageant loop was invisible);
+  full-timeout honored; INFINITE = 20ms slices.
+- SW-1217: ConnectNamedPipe real state machine (name registry + client attach
+  via CreateFile pipe-path hook in w3_create_file + 535/995 error shapes).
+  Phantom-client storm (256 calls, dozens of threads) -> ONE park.
+- SW-1218: COMCTL32.344 = TaskDialog (Geoff Chappell 6.10 Named Exports, two
+  independent loader-error reports) -> corpus unresolved 1 -> 0.
+- SW-1220: timer-aware pump (BUG-079): gate-bypass no longer fires when a
+  timer is armed; pump waits for the tick and delivers WM_TIMER first.
+  snake 30f / breakout 381f 40->13 bricks / calc 9/9 — ALL golden numbers
+  restored byte-identical 3x3. Falsification proof: breakout was already
+  broken at clean HEAD (BUG-080, pre-existing).
+- SW-1221..1227 Go chain (bombardier Go 1.20.3): LoadLibraryExA delegate;
+  per-thread TEBs with real stack bounds; honest VirtualQuery (stack VMA /
+  image / free); 8 KiB TEBs + TEB-routed Tls family (x64 TlsSlots 0x1480);
+  TEB+0x68 lasterror (Go asmstdcall reads it directly); ConnectEx plane with
+  captured WSAID_CONNECTEX bytes + IOCP associations + WSAGetOverlappedResult;
+  ntdll NtWaitForSingleObject/RtlGetNtVersionNumbers/Power*.
+  Result: usage path exit 2 clean; benchmark loop runs ("Bombarding ... Done!
+  Statistics") exit 0; data path crash left OPEN as SW-1228.
+- SW-1229: Rust fail-fast layer 1 (CreateNamedPipeW, ReadFileEx/WriteFileEx
+  sync v1, ProcThreadAttributeList family). fd.exe advanced to layer 2
+  (12 APIs) = SW-1230 open.
+- Measurement: census x3 deterministic (sweep044_census.sh), 15x exit-0 +
+  pageant 124; ZERO unresolved; G1 PIN sha 71d19afd 12/12
+  (evidence/master/g1/20261021_192040); round trips 7za byte-exact / jq 2 /
+  sqlite 42; snake+breakout+calc acceptances all green.
+
+Stage Summary:
+- Corpus: 15/16 exit-0 (only pageant 124 = honest daemon park remains).
+- Imports: 0 unresolved corpus-wide (first time in project history).
+- Next frontiers: SW-1228 (Go data plane), SW-1230 (Rust layer 2), SW-1219
+  (famous game download, blocked by SW-509), SW-509 (PE-DLL loader).

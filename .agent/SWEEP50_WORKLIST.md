@@ -2092,3 +2092,112 @@ and FIXED — three engine bugs, one missing plane.
   pageant 124 daemon (message-loop wait = correct headless park);
   adexplorer64 exit-32 (guest-side, SW-1212 proven); next frontiers via the
   now-visible registry/stub trace surfaces.
+
+## SWEEP-044 round summary «ادامه قطار» — 15/16 exit-0, 0 unresolved, Go/Rust frontiers breached (2026-10-22)
+Batch directive: continue the train (10-train micro-wagon format). Corpus state
+before: 14x exit-0, adexplorer64 32, pageant 124, 1 unresolved import (COMCTL32.344).
+
+- **SW-1215 adexplorer64 exit-32 ROOT CAUSE (32 -> 0)**: the main-thread headless
+  WM_QUIT path in mw_gui_pump_getmsg returned 0 WITHOUT filling the guest MSG
+  struct (every other path calls mw_gui_fill_msg). Guest WinMain does
+  `return (int)msg.wParam;` — uninitialized guest-stack garbage: the WinMain
+  frame held a stale heap pointer (0x3ad3d20) at MSG.wParam -> CRT exit ->
+  ExitProcess(0x3ad3d20) = census exit 32. Fix: fill MSG(hwnd=NULL,
+  message=WM_QUIT, wParam=g_quit_code, lParam=0) exactly like the worker-woke
+  path. Real Win32 contract restored.
+- **SW-1216 MsgWaitForMultipleObjects diagnosability + honesty**: the whole wait
+  surface had NO MW_TRACE (pageant's main loop = alloc listener-array 0x608 ->
+  MsgWait -> free read as a mystery busy-spin for rounds). Now traced; finite
+  waits honor the FULL timeout (old cap 40 ms made guests loop 12x faster than
+  real Windows); timeout=0 = instant poll (real contract); INFINITE = 20 ms
+  park slices.
+- **SW-1217 ConnectNamedPipe state machine (pageant 124 decode)**: the old
+  "client-model: immediate connect" fabricated an INFINITE phantom-client storm
+  for a LISTENER: every call spawned a client thread + ~1.6 MB buffers for a
+  connection that did not exist (~70/s, hundreds of pipe instances). Real
+  contract landed: CreateNamedPipe registers name+state; ConnectNamedPipe BLOCKS
+  until a client CreateFile("\\\\.\\pipe\\<name>") attaches (or fails
+  ERROR_PIPE_CONNECTED 535 when the client attached first; quit aborts with 995);
+  DisconnectNamedPipe flips real state. After the fix: ONE ConnectNamedPipe call
+  (was 256), ONE CreateThread (was dozens), main thread parks on the first real
+  listener. pageant 124 = honest daemon park (real pageant runs forever),
+  now fully traceable.
+- **SW-1218 COMCTL32.344 = TaskDialog — LAST KNOWN-UNKNOWN ordinal DECODED
+  (corpus unresolved 1 -> 0)**: Geoff Chappell "COMCTL32 6.10 Named Exports"
+  (TaskDialog 344 / TaskDialogIndirect 345), confirmed by SO 43426776 +
+  MS Learn Q1184393 loader-error reports. Supersedes the Rule-1 stale note
+  (wine spec ends 342 — spec absence is not evidence of absence in the real
+  v6.10 export table). Typed-honest impl: S_OK + *pnButton=IDCANCEL (canned
+  headless contract, same as TaskDialogIndirect).
+- **SW-501 MICRO-GAME (user's 100% mandate) RE-VERIFIED + BUG-079 SOLVED**:
+  re-ran the official snake acceptance at HEAD -> FAILED with 1 frame (was 30
+  in SWEEP-005). Decode: the game arms SetTimer(50ms) but the SW-801f
+  gate-bypass delivered the whole 11-key script in <50 ms — ZERO WM_TIMER
+  ticks, one paint, instant ESC. SW-1220 fix: with a live timer the pump WAITS
+  for the tick and delivers WM_TIMER first (bypass no longer fires when a
+  timer is armed — the timer IS the event source; scripted input spreads via
+  its gate). Result: snake 30 frames BYTE-IDENTICAL 3x3 (exact SWEEP-005
+  golden), breakout RECOVERED 381 frames + bricks 40->13 (exact SWEEP-018
+  golden; was 1 frame / 0 bricks at HEAD — pre-existing BUG-080, NOT a
+  SW-1220 regression, proven by falsification run on clean HEAD), calc 9/9
+  both batteries. SW-501 marked LANDED (real win64 PE game, 3x3 acceptance,
+  frame-SHA determinism). SW-1219 (new): downloaded-famous-game class
+  (Chocolate-Doom/Zork/Frotz all x86 or DLL-bound) — blocked by SW-509.
+- **SW-507 Go optional syscalls LANDED (4/4)**: GetQueuedCompletionStatusEx
+  (real batch pop over the MwIocp model), CreateWaitableTimerExW (event-object
+  mapping), SetWaitableTimer (accepted+traced), SetProcessPriorityBoost (TRUE).
+- **Go boot chain (bombardier 9.8 MB Go 1.20.3, SW-1221..1227)**: usage path
+  FULLY GREEN — `bombardier` with no args prints the real usage
+  ("required argument 'url' not provided") exit 2; with a URL it boots the
+  whole Go runtime and runs the benchmark loop ("Bombarding ... 10 request(s)
+  ... Done! Statistics") exit 0 (data path errors are guest-side:
+  ConnectEx incomplete chain, see below). Wagons landed:
+  - SW-1221: LoadLibraryExA was a hardcoded NULL stub (Go's
+    loadOptionalSyscalls throws "advapi32.dll not found") — now delegates to
+    mw_LoadLibraryA like the W variant.
+  - SW-1222: per-guest-thread TEBs (real host stack bounds via
+    pthread_getattr_np, per-thread TLS pointer array, PEB shared) — Go's
+    runtime.minit reads gs:[0x08]/[0x10]; glibc-GS garbage gave "bad g0 stack".
+  - SW-1223: honest VirtualQuery classification (caller-stack VMA -> real
+    bounds MEM_PRIVATE; guest image -> MEM_IMAGE; else MEM_FREE). Go's minit
+    takes mbi.allocationBase+16K as the stack base — the old fixed 0x1000 gave
+    base=0x5000 vs 140 TB spread -> "bad g0 stack" (second half of that throw).
+  - SW-1224: 8 KiB TEBs (x64 inline TlsSlots live at TEB+0x1480 — the old 4 KiB
+    page put them OUTSIDE the TEB) + TlsAlloc/GetValue/SetValue route through
+    the TEB slots (per-thread; Go writes g via gs:(tls_g) DIRECTLY — same slot
+    space now).
+  - SW-1225: SetLastError/GetLastError write/read TEB+0x68 (real contract);
+    Go's asmstdcall reads lasterror from there DIRECTLY and netpoll treats
+    errno=0 as "fatal error: runtime: netpoll failed".
+  - SW-1226: ConnectEx plane — WSAIoctl(SIO_GET_EXTENSION_FUNCTION_POINTER)
+    returns mw_ConnectEx for WSAID_CONNECTEX {25a207b9-ddf3-4660-8ee9-76e58c74063e}
+    (bytes CAPTURED from the guest's own WSAIoctl request); ConnectEx v1 =
+    sync connect + completion packet posted to the socket's associated IOCP
+    (CreateIoCompletionPort now records (handle -> port,key) associations);
+    WSAGetOverlappedResult v1 = TRUE/0 bytes.
+  - SW-1227: ntdll family — NtWaitForSingleObject (Go's usleep2 SLEEP
+    mechanism; NULL made Go call address 0), RtlGetNtVersionNumbers (10.0
+    build 19045), PowerRegisterSuspendResumeNotification (0).
+  - OPEN SW-1228: the benchmark data path crashes in Go scheduler internals
+    (runtime.g0/heap-bitplane deref after our NtWaitForSingleObject v1) — next
+    round: decode the 0x434380/0x4326xx chain, likely needs a real g-pointer
+    plane (runtime.tls_g already works) + goroutine-aware stack bounds.
+- **SW-1229 Rust std remainder (SW-508) first 5 LANDED**: CreateNamedPipeW
+  (delegates to the SW-1217 pipe layer), ReadFileEx/WriteFileEx (sync v1),
+  InitializeProcThreadAttributeList/DeleteProcThreadAttributeList/
+  UpdateProcThreadAttribute (honest size accounting). fd.exe (Rust 10.2.0
+  MSVC) fail-fast advanced: first int3 layer cleared, NEXT layer = 12 APIs
+  (GetTimeZoneInformationForYear, SetThreadStackGuarantee, ImpersonateSelf,
+  OpenThreadToken, AccessCheck, NtReadFile, NtWriteFile,
+  GetUserProfileDirectoryW, __current_exception_context, __CxxFrameHandler3,
+  __current_exception, _get_initial_narrow_environment) = new SW-1230.
+- **SWEEP-044 measurement**: census x3 16/16 DETERMINISTIC
+  (scripts/sweep044_census.sh) — 15x exit-0 (was 13), pageant 124 (documented
+  daemon park). **ZERO unresolved imports corpus-wide (was 1)**. MEASURED sha
+  71d19afd G1 PIN 12/12 (evidence/master/g1/20261021_192040). Round trips on
+  the final binary: 7za x64 create+extract BYTE-EXACT (cmp), jq '.a[1]' -> 2,
+  sqlite3 :memory: SELECT -> 42. Game acceptances: snake 30f/3x identical,
+  breakout 381f 40->13 bricks, calc 9/9 x2. evidence/sweep044/. no force-push.
+- **Open**: SW-1228 (Go data plane), SW-1230 (Rust fail-fast layer 2), SW-1219
+  (downloaded famous game, blocked by SW-509), SW-791 (curl libcurl-x64.dll),
+  SW-509 (PE-DLL loader — the single biggest remaining unblock).

@@ -398,13 +398,32 @@ static void* alloc_handle(void* ptr) {
  * ============================================================ */
 
 /* Fake TEB (Thread Environment Block) - minimal fields */
-static uint8_t g_teb_storage[4096] __attribute__((aligned(4096)));
+/* SW-1224 (SWEEP-044, Go boot): 8 KiB — x64 TEB inline TlsSlots live at
+ * TEB+0x1480 (TlsAlloc index space; Go's wintls computes tls_g = 0x1480 +
+ * idx*8 and reads/writes g via GS DIRECTLY) and TlsExpansionSlots at
+ * 0x1780. The old 4 KiB TEB put those outside the page -> gs:(0x1480+..)
+ * read garbage -> "mov (%r14),%r14" fault (bombardier). */
+static uint8_t g_teb_storage[8192] __attribute__((aligned(4096)));
 static uint8_t g_peb_storage[4096] __attribute__((aligned(4096)));
 static uint8_t g_params_storage[4096] __attribute__((aligned(4096)));
 /* TASK-TLS-001: Windows x64 TEB+0x58 = ThreadLocalStoragePointer — a POINTER
  * to an array of slot pointers. Native-TLS PEs (e.g. libc++abi's
  * __cxa_get_globals) read gs:0x58 and index this array by __tls_index. */
 static void* g_tls_ptr_array[64];
+/* SW-1222 (SWEEP-044, Go boot): per-guest-thread TEBs. Guest code in spawned
+ * threads reads gs:[0x08]/gs:[0x10] (StackBase/StackLimit) — Go's runtime
+ * minit() throws "fatal error: bad g0 stack" (bombardier) when those hold
+ * glibc-TLS garbage. Each guest thread gets its own page-aligned TEB with
+ * its REAL host stack bounds; the PEB pointer is shared with the main TEB. */
+#define MW_THREAD_TEB_MAX 64
+static uint8_t g_thread_teb[MW_THREAD_TEB_MAX][8192] __attribute__((aligned(4096)));
+static void* g_thread_tls[MW_THREAD_TEB_MAX][64];
+static int g_thread_teb_i = 0;
+/* SW-1224: current thread's TEB (engine-side TLS var) — the TlsAlloc/
+ * TlsGetValue/TlsSetValue family routes through the TEB inline TlsSlots at
+ * TEB+0x1480 so guests that bypass our API (Go reads/writes gs:(tls_g)
+ * directly) and guests that use our API see the SAME per-thread slots. */
+static __thread uint8_t* t_cur_teb = NULL;
 
 /* RTL_USER_PROCESS_PARAMETERS layout (x64) */
 struct FakeProcessParams {
@@ -432,6 +451,7 @@ static void setup_teb_peb(void) {
     memset(g_teb_storage, 0, sizeof(g_teb_storage));
     memset(g_peb_storage, 0, sizeof(g_peb_storage));
     memset(g_params_storage, 0, sizeof(g_params_storage));
+    t_cur_teb = g_teb_storage; /* SW-1224: Tls family routes through here */
 
     uint8_t* teb = g_teb_storage;
     uint8_t* peb = g_peb_storage;
@@ -808,7 +828,9 @@ __attribute__((ms_abi)) int mw_GetHandleInformation(void* h, uint32_t* flags) {
 }
 
 __attribute__((ms_abi)) uint32_t mw_GetLastError(void) {
-    uint32_t err = g_last_error;
+    /* SW-1225: TEB+0x68 is authoritative when a TEB exists (same field Go's
+     * asmstdcall reads); engine var stays the fallback for TEB-less threads. */
+    uint32_t err = t_cur_teb ? *(uint32_t*)(t_cur_teb + 0x68) : g_last_error;
     MW_TRACE("GetLastError() = %u", err);
     return err;
 }
@@ -3527,6 +3549,12 @@ __attribute__((ms_abi)) int mw_SetFileTime(void* h, void* ct, void* at, void* wt
 
 __attribute__((ms_abi)) void mw_SetLastError(uint32_t err) {
     g_last_error = err;
+    /* SW-1225 (SWEEP-044, Go netpoll): real SetLastError writes TEB+0x68 —
+     * Go's asmstdcall reads GetLastError from there DIRECTLY (MOVL 0x68(DI),AX)
+     * and its netpoll treats a FALSE from GetQueuedCompletionStatusEx with
+     * getlasterror()==0 as "fatal error: runtime: netpoll failed". Our value
+     * was engine-side only, so Go always saw errno=0. */
+    if (t_cur_teb) *(uint32_t*)(t_cur_teb + 0x68) = err;
     MW_TRACE("SetLastError(%u)", err);
 }
 
@@ -3578,6 +3606,9 @@ __attribute__((ms_abi)) uint32_t mw_TlsAlloc(void) {
     pthread_mutex_unlock(&mu);
     if (idx < 64) {
         g_tls_ptr_array[idx] = NULL;
+        /* SW-1224: also init the TEB inline TlsSlots copy (same slot space
+         * Go's gs:(0x1480+idx*8) direct access uses) */
+        if (t_cur_teb) *(void**)(t_cur_teb + 0x1480 + (size_t)idx * 8) = NULL;
         MW_TRACE("TlsAlloc() = %u", idx);
         return idx;
     }
@@ -3585,13 +3616,20 @@ __attribute__((ms_abi)) uint32_t mw_TlsAlloc(void) {
 }
 
 __attribute__((ms_abi)) void* mw_TlsGetValue(uint32_t idx) {
-    void* val = (idx < 64) ? g_tls_ptr_array[idx] : NULL;
+    /* SW-1224: per-thread via the TEB inline TlsSlots (gs base). The old
+     * global g_tls_ptr_array shared values across threads (BUG-062 documented
+     * limitation) — real TlsGetValue is per-thread, and Go bypasses this
+     * API entirely by writing TEB+0x1480+idx*8 through GS. */
+    void* val = NULL;
+    if (t_cur_teb) val = *(void**)(const uint8_t*)(t_cur_teb + 0x1480 + (size_t)idx * 8);
+    else val = (idx < 64) ? g_tls_ptr_array[idx] : NULL;
     MW_TRACE("TlsGetValue(%u) = %p", idx, val);
     return val;
 }
 
 __attribute__((ms_abi)) int mw_TlsSetValue(uint32_t idx, void* val) {
-    if (idx < 64) g_tls_ptr_array[idx] = val;
+    if (t_cur_teb) *(void**)(t_cur_teb + 0x1480 + (size_t)idx * 8) = val;
+    else if (idx < 64) g_tls_ptr_array[idx] = val;
     MW_TRACE("TlsSetValue(%u, %p)", idx, val);
     return 1;
 }
@@ -3641,18 +3679,49 @@ __attribute__((ms_abi)) int mw_VirtualProtect(void* addr, size_t size, uint32_t 
 
 __attribute__((ms_abi)) size_t mw_VirtualQuery(void* addr, void* info, size_t len) {
     MW_TRACE("VirtualQuery(addr=%p)", addr);
-    if (info && len >= 48) {
-        memset(info, 0, 48);
-        *(uint64_t*)((uint8_t*)info + 0) = (uint64_t)(uintptr_t)addr; /* BaseAddress */
-        *(uint64_t*)((uint8_t*)info + 8) = 0x1000;                    /* AllocationBase */
-        *(uint32_t*)((uint8_t*)info + 16) = 0x1000;                   /* AllocationProtect */
-        *(uint64_t*)((uint8_t*)info + 24) = g_image_size;              /* RegionSize */
-        *(uint32_t*)((uint8_t*)info + 32) = 0x04;                     /* State = MEM_COMMIT */
-        *(uint32_t*)((uint8_t*)info + 36) = 0x40 | 0x20;             /* Protect = PAGE_READWRITE | RWX */
-        *(uint32_t*)((uint8_t*)info + 40) = 0x1000;                   /* Type = MEM_PRIVATE */
+    if (!info || len < 48) return 0;
+    uint8_t* p = (uint8_t*)info;
+    memset(p, 0, 48);
+    /* SW-1223 (SWEEP-044, Go boot): Go's minit() VirtualQuery-ies its OWN
+     * stack address and takes mbi.allocationBase + 16K as the true stack
+     * base. The old fixed answer (AllocationBase=0x1000 for EVERYTHING)
+     * made Go compute base=0x5000 against the real hi -> 140 TB spread ->
+     * "fatal error: bad g0 stack" (bombardier). Classify honestly:
+     * (1) the calling thread's stack VMA -> real bounds, MEM_PRIVATE;
+     * (2) the guest image -> image-shaped answer, MEM_IMAGE;
+     * (3) anything else -> MEM_FREE (real-Win32 answer for unmapped space). */
+    uintptr_t a = (uintptr_t)addr;
+    void* sb = NULL; size_t ss = 0;
+    pthread_attr_t attr;
+    pthread_getattr_np(pthread_self(), &attr);
+    pthread_attr_getstack(&attr, &sb, &ss);
+    pthread_attr_destroy(&attr);
+    uintptr_t sbl = (uintptr_t)sb, sbh = sbl + ss;
+    if (ss > 0 && a >= sbl && a < sbh) {
+        *(uint64_t*)(p + 0) = sbl;                 /* BaseAddress */
+        *(uint64_t*)(p + 8) = sbl;                 /* AllocationBase (real) */
+        *(uint32_t*)(p + 16) = 0x04;               /* AllocationProtect PAGE_READWRITE */
+        *(uint64_t*)(p + 24) = sbh - sbl;          /* RegionSize */
+        *(uint32_t*)(p + 32) = 0x04;               /* State MEM_COMMIT */
+        *(uint32_t*)(p + 36) = 0x04;               /* Protect PAGE_READWRITE */
+        *(uint32_t*)(p + 40) = 0x20000;            /* Type MEM_PRIVATE */
         return 48;
     }
-    return 0;
+    uintptr_t ib = (uintptr_t)g_image_base;
+    if (a >= ib && a < ib + g_image_size) {
+        *(uint64_t*)(p + 0) = (uint64_t)a;         /* BaseAddress (legacy) */
+        *(uint64_t*)(p + 8) = ib;                  /* AllocationBase */
+        *(uint32_t*)(p + 16) = 0x40;               /* AllocationProtect PAGE_EXECUTE_READWRITE */
+        *(uint64_t*)(p + 24) = (uint64_t)(ib + g_image_size - a); /* RegionSize to image end */
+        *(uint32_t*)(p + 32) = 0x04;               /* State MEM_COMMIT */
+        *(uint32_t*)(p + 36) = 0x40 | 0x20;        /* Protect RWX (legacy shape) */
+        *(uint32_t*)(p + 40) = 0x1000;             /* Type MEM_IMAGE */
+        return 48;
+    }
+    /* unmapped: MEM_FREE, RegionSize stays 0 (no VMA map kept — documented) */
+    *(uint32_t*)(p + 32) = 0x10000;                /* State MEM_FREE */
+    *(uint32_t*)(p + 36) = 0x01;                   /* Protect PAGE_NOACCESS */
+    return 48;
 }
 
 /* ============================================================
@@ -3779,6 +3848,31 @@ static void* mw_thread_trampoline(void* p) {
     free(b);
     t_cur_thread = self;
     t_win_tid = self->win_tid; /* SW-1205: id minted at creation */
+    /* SW-1222: per-thread TEB + GS base — guest code reads gs:[0x08]/[0x10]
+     * (StackBase/StackLimit), gs:[0x30] (Self), gs:[0x60] (PEB). Without it
+     * the thread inherits glibc's TLS-oriented GS and Go's runtime.minit
+     * throws "bad g0 stack" (bombardier). Ring allocation: >64 concurrent
+     * guest threads wrap (documented v1 limit; winmergeu peaks at ~6). */
+    {
+        int ti = __sync_fetch_and_add(&g_thread_teb_i, 1) & (MW_THREAD_TEB_MAX - 1);
+        uint8_t* teb = g_thread_teb[ti];
+        memset(teb, 0, 8192);
+        t_cur_teb = teb; /* SW-1224: Tls family routes through here */
+        void* sb = NULL; size_t ss = 0;
+        pthread_attr_t attr;
+        pthread_getattr_np(pthread_self(), &attr);
+        pthread_attr_getstack(&attr, &sb, &ss);
+        pthread_attr_destroy(&attr);
+        uint8_t* top = (uint8_t*)sb + ss;
+        *(uint64_t*)(teb + 0x08) = (uint64_t)top;                  /* StackBase */
+        *(uint64_t*)(teb + 0x10) = (uint64_t)sb;                   /* StackLimit */
+        *(uint64_t*)(teb + 0x30) = (uint64_t)(uintptr_t)teb;       /* Self */
+        *(uint64_t*)(teb + 0x40) = 1234;                           /* UniqueProcess (PID convention) */
+        *(uint64_t*)(teb + 0x48) = (uint64_t)self->win_tid;        /* UniqueThread */
+        *(uint64_t*)(teb + 0x58) = (uint64_t)(uintptr_t)g_thread_tls[ti]; /* ThreadLocalStoragePointer */
+        *(uint64_t*)(teb + 0x60) = (uint64_t)(uintptr_t)g_peb_storage; /* PEB */
+        syscall(SYS_arch_prctl, 0x1001 /* ARCH_SET_GS */, (uint64_t)(uintptr_t)teb);
+    }
     unsigned ret = start(arg);   /* MS-ABI call into guest code */
     pthread_mutex_lock(&t_exit_mu);
     if (!self->done) { self->exit_code = ret; self->done = 1; }
@@ -3866,23 +3960,40 @@ static MwIocp* mw_iocp_lookup(void* h) {
 
 static int g_doserrno_storage = 0;
 
+/* SW-1226: (handle -> port,key) association table — MwIocp is complete at
+ * this point (typedef above), so the table can live before its users. */
+static struct { void* h; MwIocp* p; unsigned long key; } g_iocp_assoc[64];
+
 __attribute__((ms_abi)) void* mw_CreateIoCompletionPort(void* file, void* existing,
     unsigned long key, unsigned long threads) {
-    (void)file; (void)key; (void)threads;
+    (void)threads;
     MW_TRACE("CreateIoCompletionPort(file=%p, existing=%p, key=%lu)", file, existing, key);
-    if (existing) return existing;      /* association: port reused as-is */
-    for (int i = 0; i < 16; i++) {
-        if (!g_iocp_tab[i].used) {
-            MwIocp* p = &g_iocp_tab[i];
-            memset(p, 0, sizeof(*p));
-            p->used = 1;
-            pthread_mutex_init(&p->mu, NULL);
-            pthread_cond_init(&p->cv, NULL);
-            return p;                    /* handle == slot pointer */
+    MwIocp* port = NULL;
+    if (existing) {
+        port = mw_iocp_lookup(existing);
+        if (!port) { mw_SetLastError(87); return NULL; }
+    } else {
+        for (int i = 0; i < 16; i++) {
+            if (!g_iocp_tab[i].used) {
+                MwIocp* p = &g_iocp_tab[i];
+                memset(p, 0, sizeof(*p));
+                p->used = 1;
+                pthread_mutex_init(&p->mu, NULL);
+                pthread_cond_init(&p->cv, NULL);
+                port = p;
+                break;
+            }
         }
+        if (!port) { mw_SetLastError(8); return NULL; } /* ERROR_NOT_ENOUGH_MEMORY */
     }
-    mw_SetLastError(8); /* ERROR_NOT_ENOUGH_MEMORY */
-    return NULL;
+    /* SW-1226: record (handle -> port,key) associations — ConnectEx needs
+     * the association to post its completion to the right port (Go's dialer
+     * associates every socket with the runtime IOCP at creation). */
+    for (int i = 0; i < 64; i++) {
+        if (g_iocp_assoc[i].h == file) { g_iocp_assoc[i].p = port; g_iocp_assoc[i].key = key; break; }
+        if (!g_iocp_assoc[i].h) { g_iocp_assoc[i].h = file; g_iocp_assoc[i].p = port; g_iocp_assoc[i].key = key; break; }
+    }
+    return port;
 }
 
 __attribute__((ms_abi)) int mw_PostQueuedCompletionStatus(void* port,
@@ -3942,6 +4053,194 @@ __attribute__((ms_abi)) int mw_GetQueuedCompletionStatus(void* port,
     }
     pthread_mutex_unlock(&p->mu);
     return ok;
+}
+
+/* ---- SW-507 Go optional syscalls (SWEEP-044): bombardier/Go link these 4
+ * but the old table had NO entries — 4 imports unresolved at load, and Go's
+ * boot only proceeds because it tolerates them until something calls one.
+ * Typed-honest entries wired to the existing object models. ---- */
+static void* mw_event_create(int manual, int init);            /* fwd (event model) */
+static int w3_w16_to_utf8z(const uint16_t* s, char* dst, size_t dstbytes); /* fwd (str utils) */
+/* x64 OVERLAPPED_ENTRY: ULONG_PTR lpCompletionKey, ULONG_PTR lpOverlapped,
+ * Internal, InternalHigh, DWORD dwNumberOfBytesTransferred (+pad) = 40 B. */
+__attribute__((ms_abi)) int mw_GetQueuedCompletionStatusEx(void* port,
+        void* entries, unsigned long count, unsigned long* removed,
+        uint32_t ms, int alertable) {
+    (void)alertable;
+    MW_TRACE("GetQueuedCompletionStatusEx(port=%p, count=%lu, ms=%lu)",
+             port, count, ms);
+    if (!entries || count == 0) { mw_SetLastError(87); if (removed) *removed = 0; return 0; }
+    MwIocp* p = mw_iocp_lookup(port);
+    if (!p) { mw_SetLastError(87); if (removed) *removed = 0; return 0; }
+    uint8_t* ent = (uint8_t*)entries;
+    unsigned long n = 0;
+    pthread_mutex_lock(&p->mu);
+    if (p->cnt == 0 && ms > 0) {
+        if (ms == 0xFFFFFFFFu) {
+            while (p->cnt == 0) pthread_cond_wait(&p->cv, &p->mu);
+        } else {
+            struct timespec ts;
+            clock_gettime(CLOCK_REALTIME, &ts);
+            ts.tv_sec += ms / 1000;
+            ts.tv_nsec += (long)(ms % 1000) * 1000000L;
+            if (ts.tv_nsec >= 1000000000L) { ts.tv_sec++; ts.tv_nsec -= 1000000000L; }
+            while (p->cnt == 0) {
+                int r = pthread_cond_timedwait(&p->cv, &p->mu, &ts);
+                if (r == ETIMEDOUT) break;
+            }
+        }
+    }
+    /* batch pop: real Win32 removes as many completed entries as fit */
+    while (n < count && p->cnt > 0) {
+        MwIocpEntry* e = &p->q[p->head];
+        *(void**)(ent + n * 40 + 0) = e->key;
+        *(void**)(ent + n * 40 + 8) = e->ovl;
+        *(void**)(ent + n * 40 + 16) = 0;               /* Internal */
+        *(void**)(ent + n * 40 + 24) = 0;               /* InternalHigh */
+        *(uint32_t*)(ent + n * 40 + 32) = e->count;     /* bytes transferred */
+        p->head = (p->head + 1) % 256;
+        p->cnt--;
+        n++;
+    }
+    pthread_mutex_unlock(&p->mu);
+    if (removed) *removed = n;
+    if (n == 0) { mw_SetLastError(258); return 0; } /* WAIT_TIMEOUT */
+    return 1;
+}
+/* Waitable timers: a waitable timer IS a synchronization object signaled at
+ * its due time — v1 maps it onto the event object model (manual-reset
+ * semantics). Due-time signaling is not scheduled yet (documented v1
+ * limitation: callers that BLOCK on the timer park; Go only needs the
+ * import to resolve at boot). */
+__attribute__((ms_abi)) void* mw_CreateWaitableTimerExW(void* attr, const uint16_t* name,
+        uint32_t flags, uint32_t access) {
+    (void)access;
+    char n8[128] = "";
+    if (name) w3_w16_to_utf8z((const uint16_t*)name, n8, sizeof n8);
+    MW_TRACE("CreateWaitableTimerExW(name='%s', flags=0x%x)", n8, flags);
+    return mw_event_create(1 /*manual-reset*/, 0);
+}
+__attribute__((ms_abi)) int mw_SetWaitableTimer(void* h, const void* liDueTime,
+        int32_t period, void* comp, void* arg, int resume) {
+    (void)liDueTime; (void)period; (void)comp; (void)arg; (void)resume;
+    if (!h) { mw_SetLastError(6); return 0; }
+    MW_TRACE("SetWaitableTimer(h=%p) -> TRUE (accepted, due-time signaling v1 unscheduled)", h);
+    return 1;
+}
+__attribute__((ms_abi)) int mw_SetProcessPriorityBoost(void* hProc, int disable) {
+    MW_TRACE("SetProcessPriorityBoost(disable=%d) -> TRUE (headless: no priority boost exists)", disable);
+    return 1;
+}
+
+/* ---- SW-1227 (SWEEP-044, Go runtime): ntdll family Go resolves at boot.
+ * NtWaitForSingleObject = Go's usleep2 SLEEP mechanism (waits its own
+ * process pseudo-handle -1 with a timeout); NULL here made Go call address
+ * 0 (RIP=0 crash). RtlGetNtVersionNumbers = Go's OS-version probe.
+ * PowerRegisterSuspendResumeNotification = power-notify registration. ---- */
+__attribute__((ms_abi)) uint32_t mw_NtWaitForSingleObject(void* h, int alertable, void* timeout_ptr) {
+    (void)alertable;
+    long long dt = 0;
+    if (timeout_ptr) dt = *(long long*)timeout_ptr;
+    if (!timeout_ptr) {
+        /* INFINITE wait on a foreign handle: v1 parks in 20 ms slices
+         * (no signal sources tracked for raw NT handles); Go only passes
+         * finite timeouts. */
+        usleep(20000);
+        MW_TRACE("NtWaitForSingleObject(h=%p, INFINITE) -> 20ms slice (SW-1227 v1)", h);
+        return 0x00000102u; /* STATUS_TIMEOUT */
+    }
+    if (dt >= 0) { /* absolute time: v1 treats as already due */
+        MW_TRACE("NtWaitForSingleObject(h=%p, abs) -> STATUS_TIMEOUT", h);
+        return 0x00000102u;
+    }
+    long long us = (-dt) / 10; /* 100 ns units -> microseconds (relative) */
+    if (us > 20000000) us = 20000000;
+    usleep((useconds_t)us);
+    MW_TRACE("NtWaitForSingleObject(h=%p, rel %.3f ms) -> STATUS_TIMEOUT", h, (-dt) / 10000.0);
+    return 0x00000102u; /* STATUS_TIMEOUT — unsignaled object, sleep honored */
+}
+__attribute__((ms_abi)) uint32_t mw_RtlGetNtVersionNumbers(uint32_t* maj, uint32_t* min, uint32_t* build) {
+    if (maj) *maj = 10;
+    if (min) *min = 0;
+    if (build) *build = 0xF0000000u | 19045u; /* Win10 22H2, real tagging bit */
+    MW_TRACE("RtlGetNtVersionNumbers -> 10.0 build 19045");
+    return 0;
+}
+__attribute__((ms_abi)) uint32_t mw_PowerRegisterSuspendResumeNotification(uint32_t flags, void* recipient, void* handle) {
+    (void)flags; (void)recipient;
+    if (handle) *(void**)handle = (void*)(uintptr_t)1; /* registration cookie */
+    MW_TRACE("PowerRegisterSuspendResumeNotification -> 0 (registered; no notifications headless)");
+    return 0; /* ERROR_SUCCESS */
+}
+
+/* ---- SW-1229 (SWEEP-044, Rust std remainder SW-508): fd.exe fail-fast
+ * surface (exit 133 = int3 on first use of a missing API). Typed-honest
+ * v1 for the five: ---- */
+__attribute__((ms_abi)) void* mw_CreateNamedPipeA(const char* name, uint32_t openMode,
+        uint32_t pipeMode, uint32_t instances, uint32_t outBuf, uint32_t inBuf,
+        uint32_t timeout, void* sa); /* fwd (pipe section) */
+__attribute__((ms_abi)) int mw_ReadFile(void* h, void* buf, uint32_t n, uint32_t* got, void* ovl); /* fwd */
+__attribute__((ms_abi)) int mw_WriteFile(void* h, const void* buf, uint32_t n, uint32_t* got, void* ovl); /* fwd */
+__attribute__((ms_abi)) void* mw_CreateNamedPipeW(const uint16_t* name, uint32_t openMode,
+        uint32_t pipeMode, uint32_t instances, uint32_t outBuf, uint32_t inBuf,
+        uint32_t timeout, void* sa) {
+    char n8[256] = {0};
+    if (name) w3_w16_to_utf8z(name, n8, sizeof n8);
+    MW_TRACE("CreateNamedPipeW('%s') -> delegated", n8);
+    return mw_CreateNamedPipeA(n8, openMode, pipeMode, instances, outBuf, inBuf, timeout, sa);
+}
+/* ReadFileEx/WriteFileEx: alertable IO. v1: the operation runs SYNCHRONOUSLY
+ * through the ordinary file layer and TRUE is returned; the APC completion
+ * is NOT queued (documented v1 limitation — callers that block on the
+ * completion event never wake; the ordinary GetOverlappedResult path sees
+ * the completed result). */
+__attribute__((ms_abi)) int mw_ReadFileEx(void* h, void* buf, uint32_t n, void* ovl, void* apc) {
+    (void)apc;
+    uint32_t got = 0;
+    int r = mw_ReadFile(h, buf, n, &got, ovl);
+    MW_TRACE("ReadFileEx(h=%p, n=%u) -> %d (%u bytes, sync v1)", h, n, r, got);
+    return r;
+}
+__attribute__((ms_abi)) int mw_WriteFileEx(void* h, const void* buf, uint32_t n, void* ovl, void* apc) {
+    (void)apc;
+    uint32_t got = 0;
+    int r = mw_WriteFile(h, (void*)buf, n, &got, ovl);
+    MW_TRACE("WriteFileEx(h=%p, n=%u) -> %d (%u bytes, sync v1)", h, n, r, got);
+    return r;
+}
+/* PROC_THREAD_ATTRIBUTE_LIST: x64 v1 layout = {DWORD version; DWORD count;
+ * DWORD used; pad; entries[count] x 32 B} — size accounting is honest, the
+ * attribute table records entries without acting on them (no real child
+ * process spawning headless). */
+__attribute__((ms_abi)) int mw_InitializeProcThreadAttributeList(void* list, uint32_t count, uint32_t flags, size_t* size) {
+    (void)flags;
+    size_t need = 24 + (size_t)count * 32;
+    if (!size) { mw_SetLastError(87); return 0; }
+    if (!list || *size < need) { *size = need; mw_SetLastError(122); return 0; } /* ERROR_INSUFFICIENT_BUFFER */
+    memset(list, 0, need);
+    *(uint32_t*)((uint8_t*)list + 0) = 0;      /* version */
+    *(uint32_t*)((uint8_t*)list + 4) = count;  /* capacity */
+    *(uint32_t*)((uint8_t*)list + 8) = 0;      /* used */
+    MW_TRACE("InitializeProcThreadAttributeList(count=%u) -> TRUE (%zu bytes)", count, need);
+    return 1;
+}
+__attribute__((ms_abi)) void mw_DeleteProcThreadAttributeList(void* list) {
+    MW_TRACE("DeleteProcThreadAttributeList(%p) (no-op v1)", list);
+}
+__attribute__((ms_abi)) int mw_UpdateProcThreadAttribute(void* list, uint32_t flags, uintptr_t attr,
+        void* val, size_t sz, void* prev, void* ret) {
+    (void)flags; (void)prev; (void)ret;
+    if (!list) { mw_SetLastError(87); return 0; }
+    uint32_t used = *(uint32_t*)((uint8_t*)list + 8);
+    uint32_t cap = *(uint32_t*)((uint8_t*)list + 4);
+    if (used >= cap) { mw_SetLastError(87); return 0; }
+    uint8_t* ent = (uint8_t*)list + 24 + (size_t)used * 32;
+    *(uintptr_t*)(ent + 0) = attr;
+    *(void**)(ent + 8) = val;
+    *(size_t*)(ent + 16) = sz;
+    *(uint32_t*)((uint8_t*)list + 8) = used + 1;
+    MW_TRACE("UpdateProcThreadAttribute(attr=0x%zx, val=%p, %zu bytes) -> TRUE", attr, val, sz);
+    return 1;
 }
 
 /* mingw SEH init registers guest unwind info; our EH walk reads .pdata
@@ -8069,7 +8368,15 @@ __attribute__((ms_abi)) void* mw_CreateFileA(const char* name, uint32_t access, 
     if (!name) { mw_SetLastError(87); return (void*)-1; }
     return w3_create_file(name, access, disp);
 }
+static void* mw_pipe_client_open(const char* name); /* SW-1217 fwd (def in pipe section) */
 static void* w3_create_file(const char* name8, uint32_t access, uint32_t disp) {
+    /* SW-1217: pipe-name client attach before the ordinary file layer
+     * (\\.\pipe\ paths never reach the probe/open path). */
+    if (name8 && name8[0]=='\\' && name8[1]=='\\' && name8[2]=='.' && name8[3]=='\\' && name8[4]=='p') {
+        void* ph = mw_pipe_client_open(name8);
+        if (ph) return ph;
+        if ((void*)-1 == ph) return ph; /* named pipe, no listening instance: FILE_NOT_FOUND set */
+    }
     char nn8[4096];
     snprintf(nn8, sizeof(nn8), "%s", name8);
     w3_normalize_path(nn8);
@@ -10996,22 +11303,87 @@ __attribute__((ms_abi)) int mw_ioctlsocket(unsigned long long s, long cmd, unsig
     }
     return ioctl((int)s, lcmd, arg);
 }
+/* ---- SW-1226 (SWEEP-044, Go networking): ConnectEx plane. Go's dialer
+ * fetches ConnectEx via WSAIoctl(SIO_GET_EXTENSION_FUNCTION_POINTER,
+ * WSAID_CONNECTEX) and calls it OVERLAPPED; without it: "dial tcp ...:
+ * failed to find ConnectEx: invalid argument" (bombardier). v1: the sync
+ * connect runs immediately, then the completion packet posts to the
+ * socket's associated IOCP (Go's netpoll wakes on it). ---- */
+/* WSAID_CONNECTEX {25a207b9-ddf3-4660-8ee9-76e58c74063e} — bytes CAPTURED
+ * from bombardier's real WSAIoctl request (GUID=b907a225f3dd60468ee976e58c74063e
+ * in the SWEEP-044 trace), little-endian GUID wire order. */
+static const uint8_t MW_WSAID_CONNECTEX[16] = {
+    0xb9, 0x07, 0xa2, 0x25, 0xf3, 0xdd, 0x60, 0x46,
+    0x8e, 0xe9, 0x76, 0xe5, 0x8c, 0x74, 0x06, 0x3e
+};
+__attribute__((ms_abi)) int mw_ConnectEx(unsigned long long s, void* name, int namelen,
+        void* sendbuf, unsigned long sendlen, unsigned long* sent, void* ovl) {
+    (void)sendbuf; (void)sendlen;
+    if (sent) *sent = 0;
+    int r = mw_connect(s, name, namelen);
+    MW_TRACE("ConnectEx(fd=%llu) -> %s (SW-1226 v1 sync connect)", s, r == 0 ? "TRUE" : "FALSE");
+    if (r != 0) return 0; /* FALSE; WSA error set by mw_connect */
+    /* completion packet to the socket's associated port (real ConnectEx is
+     * overlapped-only; the waiter wakes from GetQueuedCompletionStatusEx) */
+    for (int i = 0; i < 64; i++) {
+        if (g_iocp_assoc[i].h == (void*)(uintptr_t)s && g_iocp_assoc[i].p) {
+            mw_PostQueuedCompletionStatus((void*)g_iocp_assoc[i].p, 0, g_iocp_assoc[i].key, ovl);
+            break;
+        }
+    }
+    return 1; /* TRUE */
+}
+__attribute__((ms_abi)) int mw_WSAGetOverlappedResult(unsigned long long s, void* ovl,
+        unsigned long* count, int wait, unsigned long* flags) {
+    (void)s; (void)ovl; (void)wait;
+    /* v1: ConnectEx completes synchronously before returning TRUE, so the
+     * result is always ready; connect transfers 0 bytes. */
+    if (count) *count = 0;
+    if (flags) *flags = 0;
+    MW_TRACE("WSAGetOverlappedResult(fd=%llu) -> TRUE (0 bytes, SW-1226 v1)", s);
+    return 1;
+}
+
 __attribute__((ms_abi)) int mw_WSAIoctl(unsigned long long s, long cmd, void* in, int ilen, void* out, int olen, unsigned long* ret, void* ov1, void* ov2) {
-    (void)in; (void)ilen; (void)ov1; (void)ov2;
+    (void)ov1; (void)ov2;
     /* SW-986: only the translated FIONREAD/FIONBIO pair is routable; all
      * vendor/extension ioctls (SIO_GET_EXTENSION_FUNCTION_POINTER for the
-     * AcceptEx family included) fail typed WSAENOPROTOOPT. */
+     * AcceptEx family included) fail typed WSAENOPROTOOPT.
+     * SW-1226: EXCEPT ConnectEx — Go's dialer requires it. */
+    if (cmd == 0xC8000006L) { /* SIO_GET_EXTENSION_FUNCTION_POINTER */
+        char gh[40]; int gk = 0;
+        const uint8_t* g = (const uint8_t*)in;
+        if (in && ilen >= 16)
+            for (int i = 0; i < 16; i++) gk += snprintf(gh + gk, sizeof gh - gk, "%02x", g[i]);
+        else gh[0] = 0;
+        if (in && ilen >= 16 && memcmp(in, MW_WSAID_CONNECTEX, 16) == 0 && out && olen >= 8) {
+            *(void**)out = (void*)(uintptr_t)&mw_ConnectEx;
+            if (ret) *ret = 8;
+            MW_TRACE("WSAIoctl(SIO_GET_EXTENSION_FUNCTION_POINTER, GUID=%s) -> ConnectEx", gh);
+            return 0;
+        }
+        MW_TRACE("WSAIoctl(SIO_GET_EXTENSION_FUNCTION_POINTER, GUID=%s) -> WSAENOPROTOOPT (not ConnectEx)", gh);
+        g_wsa_err = 10042;
+        return -1;
+    }
     if (cmd == 0x40040007L || cmd == 0x48000000L || cmd == 0x80040000L) {
-        g_wsa_err = 10042; /* WSAENOPROTOOPT: no AcceptEx/ConnectEx/TransmitFile */
+        g_wsa_err = 10042; /* WSAENOPROTOOPT: no AcceptEx/TransmitFile */
         return -1;
     }
     return mw_ioctlsocket(s, cmd, (unsigned long*)out);
     (void)olen; (void)ret;
 }
 __attribute__((ms_abi)) void* mw_LoadLibraryExA(const char* name, void* file, uint32_t flags) {
-    MW_TRACE("LoadLibraryExA(%s, flags=%u) -> NULL", name ? name : "?", flags);
-    mw_SetLastError(126);
-    return NULL;
+    /* SW-1221 (SWEEP-044, Go boot): this was a hardcoded NULL + err126 stub.
+     * Go's runtime boot does LoadLibraryExA("advapi32.dll", 0,
+     * LOAD_LIBRARY_SEARCH_SYSTEM32) in loadOptionalSyscalls and THROWS
+     * "advapi32.dll not found" on NULL ("fatal error: advapi32.dll not
+     * found / runtime: panic before malloc heap initialized" = bombardier
+     * crash). The W variant delegates to mw_LoadLibraryA — do the same. */
+    char n8[256] = {0};
+    if (name) snprintf(n8, sizeof(n8), "%s", name);
+    MW_TRACE("LoadLibraryExA(%s, flags=%u)", n8, flags);
+    return mw_LoadLibraryA(n8);
 }
 
 /* ====================================================================
@@ -14263,14 +14635,47 @@ static int mw_gui_next_event(void* msg, void* hwnd, int consume, const char* api
      * first idle gap, which only timer-driven guests (snake) survived.
      * Paint-driven guests (tests/games/miniwin_calc.c) died after their
      * first key with "no event source: no timer/paint/keys left". */
-    if (g_keyi < g_keyn) {
+    /* SW-1220 (SWEEP-044, BUG-079): the SW-801f gate-bypass below delivered
+     * the whole scripted backlog INSTANTLY when nothing else was pending.
+     * With a live timer that is wrong twice over: real GetMessage BLOCKS
+     * between events while the system generates WM_TIMER on schedule.
+     * snake (SetTimer 50ms) used to paint ~30 frames — one per tick — but
+     * instant bypass ran its 11-key script in <50 ms: ZERO WM_TIMER
+     * delivered, ONE paint frame, immediate ESC. When a timer is armed and
+     * not yet due, wait for the tick and deliver the TIMER first (real
+     * order — the timer branch above already ran and skipped). Bounded 4 s
+     * cap, quit-checked. Peek (consume=0) never blocks — real PeekMessage
+     * returns 0 immediately. */
+    if (consume && g_timer_live && g_timer_elapse_ms && !g_quit_flag &&
+        (g_keyi < g_keyn || g_clicki < g_clickn) &&
+        mw_mono_ms() < g_timer_due_ms) {
+        uint64_t t0 = mw_mono_ms();
+        while (g_timer_live && g_timer_elapse_ms && !g_quit_flag &&
+               mw_mono_ms() < g_timer_due_ms &&
+               mw_mono_ms() - t0 < 4000) {
+            struct timespec ts = { 0, 5 * 1000 * 1000 };
+            nanosleep(&ts, NULL);
+        }
+        if (!g_quit_flag && g_timer_live &&
+            (g_timer_elapse_ms == 0 || mw_mono_ms() >= g_timer_due_ms)) {
+            /* the tick came due while waiting: deliver WM_TIMER NOW (the
+             * normal timer branch above already passed for this call) */
+            g_delivered++;
+            if (g_timer_elapse_ms) g_timer_due_ms = mw_mono_ms() + g_timer_elapse_ms;
+            mw_gui_fill_msg(msg, h, 0x0113u, (uintptr_t)g_timer_id, 0);
+            MW_TRACE("[GUI-EVENT] #%d %s -> WM_TIMER id=%lu (SW-1220 tick)",
+                     g_delivered, api, (unsigned long)g_timer_id);
+            return 1;
+        }
+    }
+    if (g_keyi < g_keyn && !g_timer_live) {
         uint32_t vk = g_keyv[g_keyi++];
         if (consume) g_delivered++;
         mw_gui_fill_msg(msg, h, 0x0100u, (uintptr_t)vk, 1);
         if (consume) MW_TRACE("[GUI-EVENT] #%d %s -> WM_KEYDOWN VK=0x%x (gate-bypass)", g_delivered, api, vk);
         return 1;
     }
-    if (g_clicki < g_clickn) {
+    if (g_clicki < g_clickn && !g_timer_live) {
         uint32_t id = g_clickv[g_clicki++];
         void* ctl = 0;
         for (int i = 0; i < MW_CHILD_MAX; i++)
@@ -14325,7 +14730,20 @@ static int mw_gui_pump_getmsg(void* msg, void* hwnd, const char* api) {
             mw_gui_fill_msg(msg, hwnd, 0x0012u, (uintptr_t)g_quit_code, 0);
             return 0;
         }
+        /* SW-1215 (SWEEP-044, adexplorer64 exit-32 ROOT CAUSE): this path
+         * returned 0 WITHOUT filling the guest's MSG struct. Every guest
+         * WinMain does `return (int)msg.wParam;` after the pump — with the
+         * struct untouched that is uninitialized guest-stack garbage.
+         * adexplorer64: WinMain frame held a stale heap pointer (0x3ad3d20)
+         * at the MSG.wParam offset -> CRT exit path -> ExitProcess(0x3ad3d20)
+         * = census exit 32 (code & 0xFF). Real Windows: GetMessage returning
+         * 0 means WM_QUIT with hwnd=NULL and wParam = PostQuitMessage code
+         * (same contract the worker-woke path above already implements).
+         * Fill it exactly like that path: message=WM_QUIT, hwnd=NULL,
+         * wParam = g_quit_code (0 when the quit is fabricated — no
+         * PostQuitMessage was ever processed in headless batch). */
         MW_TRACE("%s(hwnd=%p) -> 0 (WM_QUIT: no event source, main-thread batch contract)", api, hwnd);
+        mw_gui_fill_msg(msg, NULL, 0x0012u, (uintptr_t)g_quit_code, 0);
         return 0;
     }
     /* Win32: when GetMessage returns 0 the MSG holds WM_QUIT with wParam =
@@ -15800,6 +16218,27 @@ __attribute__((ms_abi)) uint32_t mw_TaskDialogIndirect(const void* cfg, uint32_t
     if (pfVerif) *pfVerif = 0;
     MW_TRACE("TaskDialogIndirect -> S_OK (canned IDCANCEL, headless)");
     return 0u;
+}
+/* SW-1218 (SWEEP-044): comctl32!TaskDialog — ordinal 344, DECODED AT LAST.
+ * Stale KNOWN-UNKNOWN (wine comctl32.spec ends at 342) replaced by the
+ * authoritative export study: Geoff Chappell "COMCTL32 6.10 Named Exports"
+ * lists TaskDialog (344) / TaskDialogIndirect (345); two independent
+ * loader-error reports (SO 43426776 "ordinal 344" on TaskDialog use,
+ * MS Learn Q1184393 + SO 37016803 "ordinal 345" on TaskDialogIndirect)
+ * confirm the mapping. autoruns64 binds 344 raw. Same headless canned
+ * user-CANCEL contract as TaskDialogIndirect above. */
+__attribute__((ms_abi)) uint32_t mw_TaskDialog(void* owner, void* hinst,
+        const uint16_t* title, const uint16_t* mainInst, const uint16_t* text,
+        uint32_t commonButtons, const uint16_t* icon, int* pnButton) {
+    (void)owner; (void)hinst; (void)icon;
+    char t8[256], m8[512], b8[512];
+    if (title) w3_w16_to_utf8z(title, t8, sizeof t8); else t8[0] = 0;
+    if (mainInst) w3_w16_to_utf8z(mainInst, m8, sizeof m8); else m8[0] = 0;
+    if (text) w3_w16_to_utf8z(text, b8, sizeof b8); else b8[0] = 0;
+    if (pnButton) *pnButton = 2; /* IDCANCEL */
+    MW_TRACE("TaskDialog('%s' | '%s' | buttons=0x%x) -> S_OK (canned IDCANCEL, headless)", t8, m8, commonButtons);
+    fprintf(stderr, "[TaskDialog] %s: %s %s\n", t8, m8, b8);
+    return 0u; /* S_OK */
 }
 #define MW_SECPAGE_BASE 0x00B70000u /* HPROPSHEETPAGE cookies (low16=0) */
 static uint8_t g_secpage_live[8];
@@ -19807,28 +20246,103 @@ __attribute__((ms_abi)) int mw_GetUserNameExA(uint32_t fmt, char* buf, uint32_t*
 /* ---- SW-1002: named pipes (pageant answer channel) ----
  * Handles come from a dedicated range so ConnectNamedPipe/PeekNamedPipe can
  * recognize them; no host pipe exists — the guest's own protocol drives
- * reads, which route through the ordinary file layer. */
+ * reads, which route through the ordinary file layer.
+ * SW-1217 (SWEEP-044, pageant 124 decode): real connection-state machine.
+ * The old contract returned TRUE from ConnectNamedPipe immediately
+ * ("client-model: immediate connect") — correct only for a guest that
+ * opens its own pipe as CLIENT before connecting. For a LISTENER like
+ * pageant it fabricated an infinite client storm: every call spawned a
+ * client thread + ~1.6 MB of request/response buffers for a connection
+ * that did not exist (~70/s for 12 s = the mystery HeapAlloc(0x608)/
+ * HeapFree busy-spin, ever-growing thread count, hundreds of pipe
+ * instances). Real Win32: CreateNamedPipe = instance LISTENING;
+ * ConnectNamedPipe BLOCKS until a client opens the pipe name (or fails
+ * ERROR_PIPE_CONNECTED 535 when the client attached first); a client
+ * CreateFile on \\.\pipe\<name> attaches to a listening instance. */
 #define MW_PIPE_BASE 0x00090000u
+#define MW_PIPE_MAX 256
 static uint32_t g_pipe_next = 1;
+static struct { char name[128]; uint8_t state; } g_pipes[MW_PIPE_MAX]; /* 0=LISTENING 1=CONNECTED 2=DISCONNECTED */
+static int mw_pipe_idx(void* h) {
+    uintptr_t v = (uintptr_t)h;
+    if ((v & 0xFFFF0000u) != MW_PIPE_BASE) return -1;
+    uint32_t i = (uint32_t)(v & 0xFFFFu);
+    if (i < 1 || i >= g_pipe_next || i > MW_PIPE_MAX) return -1;
+    return (int)(i - 1);
+}
 __attribute__((ms_abi)) void* mw_CreateNamedPipeA(const char* name, uint32_t openMode,
         uint32_t pipeMode, uint32_t instances, uint32_t outBuf, uint32_t inBuf,
         uint32_t timeout, void* sa) {
     (void)openMode; (void)pipeMode; (void)instances; (void)outBuf; (void)inBuf;
     (void)timeout; (void)sa;
-    if (g_pipe_next > 0xFF) { mw_SetLastError(231); return (void*)-1; } /* PIPE_BUSY */
-    void* h = (void*)(uintptr_t)(MW_PIPE_BASE | g_pipe_next++);
-    MW_TRACE("CreateNamedPipeA('%s') -> %p", name ? name : "?", h);
+    if (g_pipe_next > MW_PIPE_MAX) { mw_SetLastError(231); return (void*)-1; } /* PIPE_BUSY */
+    void* h = (void*)(uintptr_t)(MW_PIPE_BASE | g_pipe_next);
+    int i = (int)g_pipe_next - 1;
+    memset(&g_pipes[i], 0, sizeof(g_pipes[i]));
+    if (name) snprintf(g_pipes[i].name, sizeof(g_pipes[i].name), "%s", name);
+    g_pipes[i].state = 0; /* LISTENING */
+    g_pipe_next++;
+    MW_TRACE("CreateNamedPipeA('%s') -> %p (LISTENING)", g_pipes[i].name, h);
     return h;
+}
+/* SW-1217: client-side attach. CreateFile("\\\\.\\pipe\<name>") flips the
+ * first LISTENING instance of <name> to CONNECTED — that is what wakes a
+ * parked ConnectNamedPipe. v1: the client receives the instance handle;
+ * client-side reads/writes on it are not served yet (no corpus guest does
+ * this — pageant only LISTENS; a future guest becomes a new BUG-* wagon). */
+static void* mw_pipe_client_open(const char* name) {
+    const char* p = name;
+    if ((p[0]=='\\') && (p[1]=='\\') && (p[2]=='.') && (p[3]=='\\') &&
+        (p[4]=='p') && (p[5]=='i') && (p[6]=='p') && (p[7]=='e') && (p[8]=='\\')) p += 9;
+    else return NULL; /* not a pipe path */
+    for (uint32_t i = 0; i + 1 < g_pipe_next && i < MW_PIPE_MAX; i++) {
+        if (g_pipes[i].state == 0 && strcmp(g_pipes[i].name, p) == 0) {
+            g_pipes[i].state = 1; /* CONNECTED */
+            void* h = (void*)(uintptr_t)(MW_PIPE_BASE | (i + 1));
+            MW_TRACE("CreateFile(pipe '%s') -> %p (client attached, wakes ConnectNamedPipe)", p, h);
+            return h;
+        }
+    }
+    MW_TRACE("CreateFile(pipe '%s') -> NULL ERROR_FILE_NOT_FOUND (no listening instance)", p);
+    mw_SetLastError(2);
+    return (void*)-1;
 }
 __attribute__((ms_abi)) int mw_ConnectNamedPipe(void* h, void* ovl) {
     (void)ovl;
-    if (((uintptr_t)h & 0xFFFF0000u) != MW_PIPE_BASE) { mw_SetLastError(230); return 0; }
-    MW_TRACE("ConnectNamedPipe(%p) -> TRUE (client-model: immediate connect)", h);
-    return 1;
+    int i = mw_pipe_idx(h);
+    if (i < 0) { mw_SetLastError(230); return 0; }
+    if (g_pipes[i].state == 1) {
+        /* real Win32: client attached between CreateNamedPipe and
+         * ConnectNamedPipe -> FALSE + ERROR_PIPE_CONNECTED (535) */
+        MW_TRACE("ConnectNamedPipe(%p '%s') -> FALSE ERROR_PIPE_CONNECTED (client attached first)", h, g_pipes[i].name);
+        mw_SetLastError(535);
+        return 0;
+    }
+    if (g_pipes[i].state == 2) {
+        MW_TRACE("ConnectNamedPipe(%p '%s') -> FALSE (instance disconnected)", h, g_pipes[i].name);
+        mw_SetLastError(230);
+        return 0;
+    }
+    /* LISTENING, no client: BLOCK like real Windows (daemon contract).
+     * 20 ms slices; g_quit_flag (PostQuitMessage) aborts the wait. */
+    MW_TRACE("ConnectNamedPipe(%p '%s') parked (LISTENING, no client — real-Win32 block)", h, g_pipes[i].name);
+    while (!g_quit_flag) {
+        if (g_pipes[i].state == 1) {
+            MW_TRACE("ConnectNamedPipe(%p '%s') -> TRUE (client arrived)", h, g_pipes[i].name);
+            return 1;
+        }
+        struct timespec ts = { 0, 20 * 1000 * 1000 };
+        nanosleep(&ts, NULL);
+    }
+    MW_TRACE("ConnectNamedPipe(%p '%s') -> FALSE ERROR_OPERATION_ABORTED (quit)", h, g_pipes[i].name);
+    mw_SetLastError(995);
+    return 0;
 }
 __attribute__((ms_abi)) int mw_DisconnectNamedPipe(void* h) {
-    if (((uintptr_t)h & 0xFFFF0000u) != MW_PIPE_BASE) return 0;
-    MW_TRACE("DisconnectNamedPipe(%p) -> TRUE", h);
+    int i = mw_pipe_idx(h);
+    if (i < 0) return 0;
+    g_pipes[i].state = 2; /* DISCONNECTED (SW-1217: real state, was no-op) */
+    MW_TRACE("DisconnectNamedPipe(%p '%s') -> TRUE", h, g_pipes[i].name);
     return 1;
 }
 __attribute__((ms_abi)) void* mw_OpenFileMappingA(uint32_t access, int inherit, const char* name) {
@@ -20368,18 +20882,36 @@ __attribute__((ms_abi)) int mw_lstrcmpiW(const uint16_t* a, const uint16_t* b) {
  * (short real sleep to keep pump-off guests from burning the host). */
 __attribute__((ms_abi)) uint32_t mw_MsgWaitForMultipleObjects(uint32_t n, void* const* handles,
         int waitAll, uint32_t timeout, uint32_t wakeMask) {
-    (void)handles; (void)waitAll; (void)wakeMask;
+    (void)handles; (void)waitAll;
+    /* SW-1216 (SWEEP-044, pageant 124 decode): this wait surface had NO
+     * MW_TRACE — pageant's main loop (alloc listener-array 0x608 -> MsgWait
+     * -> free) read as a mystery HeapAlloc/HeapFree busy-spin for rounds.
+     * Same diagnosability gap class as SW-1102f (RegQueryValueExW). */
     if (mw_gui_events_enabled() && !g_quit_flag) {
         uint8_t tmp[64];
-        if (mw_gui_next_event(tmp, NULL, 0, "MsgWaitForMultipleObjects"))
+        if (mw_gui_next_event(tmp, NULL, 0, "MsgWaitForMultipleObjects")) {
+            MW_TRACE("MsgWaitForMultipleObjects(n=%u, timeout=%u, wake=0x%x) -> %u (input available)",
+                     n, timeout, wakeMask, 0u + n);
             return 0u + n; /* WAIT_OBJECT_0 + nCount: input available */
+        }
     }
-    if (timeout == 0 || timeout == 0xFFFFFFFFu) {
-        if (timeout == 0) return 0x102u; /* WAIT_TIMEOUT */
-        usleep(20000);
+    if (timeout == 0) {
+        /* real Win32: timeout 0 = pure poll, returns immediately */
+        MW_TRACE("MsgWaitForMultipleObjects(n=%u, timeout=0) -> WAIT_TIMEOUT (poll)", n);
         return 0x102u;
     }
-    usleep((timeout > 40u ? 40u : timeout) * 1000u);
+    /* SW-1216 honesty: finite waits used to be capped at 40 ms — a guest
+     * asking 500 ms looped 12x faster than real Windows. Honor the full
+     * requested timeout; INFINITE parks in 20 ms slices (matches the
+     * worker-park contract and stays interruptible by PostQuitMessage
+     * state on the next re-poll). */
+    if (timeout == 0xFFFFFFFFu) {
+        usleep(20000);
+        MW_TRACE("MsgWaitForMultipleObjects(n=%u, timeout=INFINITE) -> WAIT_TIMEOUT (20ms park slice)", n);
+        return 0x102u;
+    }
+    usleep(timeout * 1000u);
+    MW_TRACE("MsgWaitForMultipleObjects(n=%u, timeout=%u) -> WAIT_TIMEOUT (full wait honored)", n, timeout);
     return 0x102u;
 }
 __attribute__((ms_abi)) void* mw_GetCursor(void) {
@@ -25931,6 +26463,11 @@ static ImportEntry g_import_table[] = {
     ENTRY("KERNEL32.DLL", "CreateEventA",                       mw_CreateEventA),
     ENTRY("KERNEL32.DLL", "CreateIoCompletionPort",             mw_CreateIoCompletionPort),
     ENTRY("KERNEL32.DLL", "GetQueuedCompletionStatus",          mw_GetQueuedCompletionStatus),
+    ENTRY("KERNEL32.DLL", "GetQueuedCompletionStatusEx",        mw_GetQueuedCompletionStatusEx), /* SW-507 */
+    ENTRY("KERNEL32.DLL", "CreateWaitableTimerExW",             mw_CreateWaitableTimerExW), /* SW-507 */
+    ENTRY("KERNEL32.DLL", "CreateWaitableTimerW",               mw_CreateWaitableTimerExW), /* SW-507 */
+    ENTRY("KERNEL32.DLL", "SetWaitableTimer",                   mw_SetWaitableTimer), /* SW-507 */
+    ENTRY("KERNEL32.DLL", "SetProcessPriorityBoost",            mw_SetProcessPriorityBoost), /* SW-507 */
     ENTRY("KERNEL32.DLL", "PostQueuedCompletionStatus",         mw_PostQueuedCompletionStatus),
     ENTRY("KERNEL32.DLL", "RtlAddFunctionTable",                mw_RtlAddFunctionTable),
     ENTRY("KERNEL32.DLL", "CreateSemaphoreA",                   mw_CreateSemaphoreA),
@@ -26736,6 +27273,7 @@ ENTRY("msvcrt.dll", "wctype", mw_wctype),
     ENTRY("ws2_32.dll", "socket", mw_socket),
     ENTRY("ws2_32.dll", "closesocket", mw_closesocket),
     ENTRY("ws2_32.dll", "connect", mw_connect),
+    ENTRY("ws2_32.dll", "WSAGetOverlappedResult", mw_WSAGetOverlappedResult), /* SW-1226 */
     ENTRY("ws2_32.dll", "bind", mw_bind),
     ENTRY("ws2_32.dll", "listen", mw_listen),
     ENTRY("ws2_32.dll", "accept", mw_accept),
@@ -27037,6 +27575,7 @@ ENTRY("msvcrt.dll", "wctype", mw_wctype),
     ENTRY("COMCTL32.dll", "DefSubclassProc",                    mw_DefSubclassProc),
     /* SWEEP-033 (SW-1102 procexp64 ordinal wagons) */
     ENTRY("COMCTL32.dll", "TaskDialogIndirect",                 mw_TaskDialogIndirect),
+    ENTRY("COMCTL32.dll", "TaskDialog",                         mw_TaskDialog),
     ENTRY("SHLWAPI.dll", "IUnknown_QueryService",               mw_IUnknown_QueryService),
     ENTRY("SHLWAPI.dll", "SHLoadIndirectString",                mw_SHLoadIndirectString),
     ENTRY("ACLUI.dll", "CreateSecurityPage",                    mw_CreateSecurityPage),
@@ -27394,6 +27933,9 @@ ENTRY("msvcrt.dll", "wctype", mw_wctype),
     ENTRY("KERNEL32.DLL", "CreateEventExW",                     mw_CreateEventExW),
     /* ntdll late-bound (autoruns64/Sysinternals RtlGetVersion probe) */
     ENTRY("ntdll.dll", "RtlGetVersion",                         mw_RtlGetVersion),
+    ENTRY("ntdll.dll", "NtWaitForSingleObject",                 mw_NtWaitForSingleObject), /* SW-1227 */
+    ENTRY("ntdll.dll", "RtlGetNtVersionNumbers",                mw_RtlGetNtVersionNumbers), /* SW-1227 */
+    ENTRY("ntdll.dll", "PowerRegisterSuspendResumeNotification", mw_PowerRegisterSuspendResumeNotification), /* SW-1227 */
     ENTRY("ntdll.dll", "NtQuerySystemInformation",              mw_NtQuerySystemInformation), /* SWEEP-013 */
     ENTRY("ntdll.dll", "NtOpenSymbolicLinkObject",              mw_NtOpenSymbolicLinkObject), /* SWEEP-013 */
     ENTRY("ntdll.dll", "NtQuerySymbolicLinkObject",             mw_NtQuerySymbolicLinkObject), /* SWEEP-013 */
@@ -27448,6 +27990,12 @@ ENTRY("msvcrt.dll", "wctype", mw_wctype),
     ENTRY("KERNEL32.DLL", "GetComputerNameA",                   mw_GetComputerNameA),
     /* -- kernel32: pipes / mappings / cwd (SW-1002..1003) -- */
     ENTRY("KERNEL32.DLL", "CreateNamedPipeA",                   mw_CreateNamedPipeA),
+    ENTRY("KERNEL32.DLL", "CreateNamedPipeW",                   mw_CreateNamedPipeW), /* SW-1229 */
+    ENTRY("KERNEL32.DLL", "ReadFileEx",                         mw_ReadFileEx), /* SW-1229 */
+    ENTRY("KERNEL32.DLL", "WriteFileEx",                        mw_WriteFileEx), /* SW-1229 */
+    ENTRY("KERNEL32.DLL", "InitializeProcThreadAttributeList",  mw_InitializeProcThreadAttributeList), /* SW-1229 */
+    ENTRY("KERNEL32.DLL", "DeleteProcThreadAttributeList",      mw_DeleteProcThreadAttributeList), /* SW-1229 */
+    ENTRY("KERNEL32.DLL", "UpdateProcThreadAttribute",          mw_UpdateProcThreadAttribute), /* SW-1229 */
     ENTRY("KERNEL32.DLL", "ConnectNamedPipe",                   mw_ConnectNamedPipe),
     ENTRY("KERNEL32.DLL", "DisconnectNamedPipe",                mw_DisconnectNamedPipe),
     ENTRY("KERNEL32.DLL", "OpenFileMappingA",                   mw_OpenFileMappingA),
@@ -28904,11 +29452,18 @@ static int load_pe(const char* filepath) {
                      * the shipped wine spec, not guessed. */
                     { "OLEAUT32", 16, "SafeArrayDestroy" },
                     { "OLEAUT32", 277, "VarUI4FromStr" },
+                    /* SW-1218 (SWEEP-044): COMCTL32.344 = TaskDialog —
+                     * the last KNOWN-UNKNOWN ordinal DECODED. Source:
+                     * Geoff Chappell "COMCTL32 6.10 Named Exports"
+                     * (TaskDialog 344 / TaskDialogIndirect 345), confirmed
+                     * by SO 43426776 + MS Learn Q1184393 loader-error
+                     * reports. Supersedes the 2026-10-22 Rule-1 note
+                     * (wine spec ends 342 — spec absence is not evidence
+                     * of absence in the real v6.10 export table). */
+                    { "COMCTL32", 344, "TaskDialog" },
                     /* SWEEP-037 (SW-1220b): autoruns64 SHLWAPI.487 — wine
                      * shlwapi.spec: 487 stdcall -ordinal SHLoadIndirectString.
-                     * COMCTL32.344 (autoruns64) stays KNOWN-UNKNOWN per
-                     * Rule 1 (wine comctl32.spec re-fetched 2026-10-22 ends
-                     * at 342 — explicit 343/344 absent; no credible name). */
+                     */
                     { "SHLWAPI", 487, "SHLoadIndirectString" },
                     /* SWEEP-042 Train 2: wine spec re-probe (2026-10-22,
                      * sha256 in evidence/sweep042/wine_specs/) DECODED the
