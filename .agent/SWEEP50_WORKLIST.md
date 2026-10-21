@@ -1782,3 +1782,72 @@ gate that must be re-accepted when the port lands).
   (0x32126f validator correction, ThrowInfo vtable notes, 66-import
   zoomit census, 7-ordinal procexp naming) filed in backup branch and
   evidence/sweep031/.
+
+## SWEEP-040 «قطار ۵۰ تایی» — 3 wagons + 2 new frontiers (2026-10-21)
+- SW-1206 LANDED (double): adexplorer64 corpus RECOVERED
+  (artifacts/sweep50/dl/adexplorer64/ was EMPTY; AdExplorer.zip re-fetched
+  from download.sysinternals.com; sha256 e451287843b3927c...; x64 exe kept,
+  x86/ARM64 dropped). First run: exit 139, crash RVA 0x1da85
+  `mov [rax+8],esi` RAX=0 — decode: guest main window IS a modeless dialog
+  CreateDialogParamW(L"MAIN"); MAIN template (.rsrc RT_DIALOG name MAIN,
+  EX format, size 478) carries id=1002 SysTreeView32 + id=1070
+  SysListView32; guest's control-cache append at 0x14001da80 dereferenced
+  the NULL GetDlgItem result via the r14 path (0x14001da10).
+  ENGINE FIX: real named-dialog template resolution — mw_dlg_from_resource
+  (w3_res_find RT_DIALOG=5 + LockResource + SizeofResource) with a
+  bounds-checked DLGTEMPLATEEX parser (menu/class/title/font walk, DWORD
+  id items, string classes via mw_sysclass_w, atom classes 0x80..0x8C)
+  wired into CreateDialogParamW/A + CreateDialogIndirectParamW +
+  DialogBoxParamW/A; STD templates delegate to the proven SW-921 walker.
+  MW_DLG_ITEMS=0 = regression kill switch. adexplorer64 now: MAIN parsed
+  (cdit=4), children 1002/1070/1090/STATIC registered,
+  GetDlgItem(1002)->0x30001 — exit 139 -> exit 32 FULL LIFECYCLE
+  (CRT rundown: mscoree probe -> ExitProcess).
+- Regression caught by census x3: rammap64 0 -> 139. Decode: rammap
+  creates one dialog PER PROPERTY PAGE, each with its own id=1003
+  SysListView32; the first cut (fixed 0x10002 + dedupe) made every page
+  resolve to page 1's control -> crash 0x1cfa9 (`mov rcx,[0x120]` junk
+  branch after GetPropW NULL). FIXED properly: every CreateDialog* mints
+  a DISTINCT identity (g_dlg_id_next atomic, starts 0x10002) via
+  mw_dlg_create_common. rammap64 then went FURTHER (1413 API lines vs
+  the old 1-line silent exit-0 short-circuit) and reached a NEW frontier:
+  CreateWindowExW('tooltips_class32') returned the FRAME hwnd (top-level
+  windows all map to MW_GUI_HWND) -> GetPropW(tooltip, atom 0xC000)
+  -> NULL -> comctl32-internal-branch crash. NEW WAGON SW-1207
+  (comctl32 tooltips_class32 object + subclass-prop contract).
+- SW-1205 LANDED: per-thread Windows-style ids (main=5678 legacy, spawned
+  5679+ assigned at _beginthreadex *tid out-param) + REAL bounded
+  thread-message queues (32 queues x 64 msgs) + PostThreadMessageW/A
+  honest semantics (FALSE + ERROR_INVALID_THREAD_ID=1444 for unknown tid
+  — the old void-queue stub always lied TRUE) + worker-park drain
+  (posted WM_QUIT wakes the parked GetMessageW) + GetCurrentThreadId
+  per-thread. DECODE: winmergeu main poll = 0x140220068
+  `while(!done) { PeekMessageW(NULL,PM_NOREMOVE); idle: Sleep(0) }`
+  (2 callers 0x1402138e4 / 0x1402b46a6); producer = worker thread via
+  posted messages. WINMERGEU RESULT: guest posted WM_QUIT(5679) and the
+  worker WOKE — winmergeu passed the daemon for the first time since
+  SWEEP-031 (124 -> deeper path). Post-daemon frontier: guest called
+  GlobalFree(0xae0001) (handle-class value) -> engine HEAP-TRAP exit 4
+  (pre-existing honest trap with caller chain; probe-hardened
+  w3_aligned_base_of first — the loader itself crashed in it on
+  IsBadReadPtr-less magic read). NEW WAGON SW-1208
+  (0xae0001 provenance + GlobalFree degrade-to-fail decision).
+- SW-1102c LANDED: BUG-078 auto-decode instrumentation in crash_handler —
+  when crash RIP is outside the PE: RIP-as-UTF16 decode (procexp64:
+  "ntio" of 'contentions' — matches SWEEP-032/038 manual decode) +
+  packed-UTF-16 stack-run scan. MEASURED on every procexp64 run: write
+  region = 32-byte name records with 8-byte gaps (rsp+008..048,
+  +056..088, +096..128, +136..168, +176..208, +216..240, +248..272,
+  stray +1264..1272), RBP=0 at the crash frame. NEW WAGON SW-1102d
+  (static hunt for the 32-byte-stride record writer loop).
+- MEASURED sha a0d9e9c8 G1 PIN 12/12 (evidence/master/g1/20261021_133926):
+  census x3 16/16 DETERMINISTIC (corpus grew 15 -> 16 with adexplorer64);
+  deltas all FORWARD: adexplorer64 139->32 (SW-1206), rammap64 0->139
+  (SW-1207 frontier), winmergeu 124->4 (SW-1205/SW-1208 frontier);
+  pageant 124 preserved, procexp64 139 preserved (now auto-decoded),
+  10x exit-0 unchanged. Round trips on the final binary: 7za x64
+  create+extract BYTE-EXACT (cmp), jq-1.7.1 --version exit 0,
+  sqlite3 in-memory CREATE/INSERT/SELECT = 42 exit 0.
+- Open: SW-1207 comctl32 tooltip object, SW-1208 GlobalFree(0xae0001)
+  provenance, SW-1102d BUG-078 copy-loop static decode, ole32.277/16
+  names (Rule-1 blocked), SW-1156 ExtFloodFill, SW-1153 consumers.

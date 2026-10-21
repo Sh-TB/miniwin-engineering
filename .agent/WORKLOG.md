@@ -842,3 +842,30 @@ SWEEP-039 (2026-10-21) «ادامه ۵۰ قطار و واگن» — SW-1102 trai
   autoruns64/searchmyfiles 1 K-U each (SWEEP-037 state), zoomit64 0. ZERO
   regressions. Census-script bug (missing run dirs -> bogus exit-1) caught and
   fixed before any conclusion was drawn — rerun clean.
+
+## SWEEP-040 «قطار ۵۰ تایی» (2026-10-21) — SW-1206 + SW-1205 + SW-1102c
+Start: origin/main 8c3ede7 (SWEEP-039+addendum). Three wagons landed,
+two new frontiers registered (SW-1207/SW-1208), corpus 15->16.
+- SW-1206: adexplorer64 corpus recovered (AdExplorer.zip re-fetched;
+  e4512878...); crash chain fully decoded (MAIN dialog template,
+  id=1002/1070 children, NULL GetDlgItem -> r14 cache-append crash);
+  engine now parses the guest's OWN DLGTEMPLATE/DLGTEMPLATEEX resources
+  (EX parser bounds-checked; STD delegates to SW-921) on all four
+  Create/DialogBoxParam entries with distinct per-dialog identities;
+  adexplorer64 exit 139 -> 32 full lifecycle. rammap64 regression
+  (0->139) decoded and converted into a forward move: per-page dialogs
+  now real, comctl32 tooltips_class32 frontier = SW-1207.
+- SW-1205: per-thread win-ids + real thread-message queues +
+  PostThreadMessageW/A honest contract + worker-park drain; winmergeu
+  worker woke via guest's own PostThreadMessage(WM_QUIT,5679) and the
+  main thread left the 0x140220068 poll loop for the first time since
+  SWEEP-031 (124 -> heap-trap exit 4 on GlobalFree(0xae0001));
+  w3_aligned_base_of probe-hardened (loader must never die on a guest
+  pointer). 0xae0001 provenance = SW-1208.
+- SW-1102c: crash_handler BUG-078 auto-decode (RIP-as-UTF16 "ntio" +
+  packed-UTF-16 stack-run scan; 32-byte record stride with 8-byte gaps,
+  RBP=0). Copy-loop static hunt = SW-1102d.
+- MEASURED sha a0d9e9c8: G1 12/12 (evidence/master/g1/20261021_133926),
+  census x3 16/16 deterministic, 7za/jq/sqlite3 round trips green on the
+  final binary. Evidence: artifacts/sweep040/ (census.tsv, adexplorer64
+  run1-3, roundtrip/). No force-push.

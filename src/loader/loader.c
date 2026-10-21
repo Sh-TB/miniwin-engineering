@@ -792,8 +792,9 @@ __attribute__((ms_abi)) void* mw_GetCurrentThread(void) {
     return (void*)(uintptr_t)(-2); /* PSEUDO_HANDLE_CURRENT_THREAD */
 }
 
+static uint32_t mw_current_win_tid(void); /* SW-1205 fwd (defined with the thread queues) */
 __attribute__((ms_abi)) uint32_t mw_GetCurrentThreadId(void) {
-    return 5678;
+    return mw_current_win_tid(); /* SW-1205: per-thread (main stays 5678) */
 }
 
 __attribute__((ms_abi)) int mw_GetFileTime(void* h, void* ct, void* at, void* wt) {
@@ -3651,12 +3652,87 @@ typedef struct {
     int done;
     unsigned exit_code;
     pthread_t pt;
+    uint32_t win_tid; /* SW-1205: per-thread Windows-style id (main=5678) */
 } MwThread;
 static MwThread g_mw_threads[64];
 static pthread_mutex_t g_mw_threads_mu = PTHREAD_MUTEX_INITIALIZER;
 static pthread_mutex_t t_exit_mu = PTHREAD_MUTEX_INITIALIZER;
 static pthread_cond_t t_exit_cv = PTHREAD_COND_INITIALIZER;
 static __thread MwThread* t_cur_thread;
+static __thread uint32_t t_win_tid; /* SW-1205: 0 = main thread (legacy 5678) */
+static volatile uint32_t g_win_tid_next = 5679u;
+
+/* ---- SW-1205: per-thread message queues (PostThreadMessage contract) ----
+ * Decode (SWEEP-040): winmergeu's main thread spins PeekMessageW(NULL,
+ * PM_NOREMOVE)+Sleep(0) at 0x140220068 waiting for a done-flag its worker
+ * sets; the worker parks in blocked GetMessageW. On real Windows the two
+ * communicate through POSTED THREAD MESSAGES. The engine now keeps a real
+ * bounded queue per Windows-style thread id: PostThreadMessageW/A appends
+ * (honest FALSE + ERROR_INVALID_THREAD_ID=1444 for unknown ids — the old
+ * always-TRUE void-queue lied), and blocked workers drain it each poll
+ * slice. No synthetic producer: a headless session where nothing posts
+ * still parks (the winmergeu daemon stays honest). */
+#define MW_TQ_CAP 64
+#define MW_TQ_MAX 32
+#define MW_MAIN_TID 5678u
+typedef struct { uint32_t msg; uintptr_t wp; intptr_t lp; } MwThreadMsg;
+typedef struct {
+    uint32_t tid;
+    uint8_t  used;
+    int head, count;
+    MwThreadMsg q[MW_TQ_CAP];
+} MwTQueue;
+static MwTQueue g_tqueues[MW_TQ_MAX];
+static pthread_mutex_t g_tq_mu = PTHREAD_MUTEX_INITIALIZER;
+static MwTQueue* mw_tq_slot(uint32_t tid, int create) {
+    pthread_mutex_lock(&g_tq_mu);
+    for (int i = 0; i < MW_TQ_MAX; i++)
+        if (g_tqueues[i].used && g_tqueues[i].tid == tid) {
+            pthread_mutex_unlock(&g_tq_mu);
+            return &g_tqueues[i];
+        }
+    if (!create) { pthread_mutex_unlock(&g_tq_mu); return NULL; }
+    for (int i = 0; i < MW_TQ_MAX; i++)
+        if (!g_tqueues[i].used) {
+            g_tqueues[i].used = 1;
+            g_tqueues[i].tid = tid;
+            g_tqueues[i].head = 0;
+            g_tqueues[i].count = 0;
+            pthread_mutex_unlock(&g_tq_mu);
+            return &g_tqueues[i];
+        }
+    pthread_mutex_unlock(&g_tq_mu);
+    return NULL;
+}
+static int mw_tq_post(uint32_t tid, uint32_t msg, uintptr_t wp, intptr_t lp) {
+    MwTQueue* tq = mw_tq_slot(tid, 0);
+    if (!tq) return 0;
+    pthread_mutex_lock(&g_tq_mu);
+    if (tq->count >= MW_TQ_CAP) { pthread_mutex_unlock(&g_tq_mu); return -1; }
+    int tail = (tq->head + tq->count) % MW_TQ_CAP;
+    tq->q[tail].msg = msg; tq->q[tail].wp = wp; tq->q[tail].lp = lp;
+    tq->count++;
+    pthread_mutex_unlock(&g_tq_mu);
+    return 1;
+}
+/* destructive pop; 1 = message, 0 = empty. WM_QUIT passthrough. */
+static int mw_tq_poll(uint32_t tid, uint32_t* msg, uintptr_t* wp, intptr_t* lp) {
+    MwTQueue* tq = mw_tq_slot(tid, 0);
+    if (!tq) return 0;
+    pthread_mutex_lock(&g_tq_mu);
+    if (tq->count == 0) { pthread_mutex_unlock(&g_tq_mu); return 0; }
+    MwThreadMsg m = tq->q[tq->head];
+    tq->head = (tq->head + 1) % MW_TQ_CAP;
+    tq->count--;
+    pthread_mutex_unlock(&g_tq_mu);
+    if (msg) *msg = m.msg;
+    if (wp) *wp = m.wp;
+    if (lp) *lp = m.lp;
+    return 1;
+}
+static uint32_t mw_current_win_tid(void) {
+    return t_win_tid ? t_win_tid : MW_MAIN_TID;
+}
 
 typedef struct { MwGuestStart start; void* arg; MwThread* self; } MwThreadBoot;
 
@@ -3667,6 +3743,7 @@ static void* mw_thread_trampoline(void* p) {
     void* arg = b->arg;
     free(b);
     t_cur_thread = self;
+    t_win_tid = self->win_tid; /* SW-1205: id minted at creation */
     unsigned ret = start(arg);   /* MS-ABI call into guest code */
     pthread_mutex_lock(&t_exit_mu);
     if (!self->done) { self->exit_code = ret; self->done = 1; }
@@ -5717,8 +5794,13 @@ static size_t w3_align_up_sz(size_t v, size_t a) { return (v + a - 1) & ~(a - 1)
  * does), so the central bad-free path resolves the magic back to the base
  * instead of trapping (magick: '[HEAP-TRAP HeapFree] untracked 0x2656660'). */
 #define W3_ALIGNED_MAGIC 0x4D574147554E4957ULL
+__attribute__((ms_abi)) int mw_IsBadReadPtr(const void* p, uintptr_t n); /* SW-1205 fwd (probe guard) */
 static void* w3_aligned_base_of(void* p) {
     if (!p || (uintptr_t)p < 4096) return NULL;
+    /* SW-1205 hardening: winmergeu's post-daemon path passed a handle-class
+     * value (0xae0001) where a pointer was expected — probe before the
+     * magic read so the loader reports an honest miss instead of dying */
+    if (mw_IsBadReadPtr((const void*)((uintptr_t)p - 24), 32)) return NULL;
     if (*(uint64_t*)((uintptr_t)p - 24) == W3_ALIGNED_MAGIC)
         return *(void**)((uintptr_t)p - 16);
     return NULL;
@@ -5988,6 +6070,10 @@ __attribute__((ms_abi)) unsigned long mw__beginthreadex(void* sec, unsigned int 
     b->start = (MwGuestStart)(void*)start;
     b->arg = arg;
     b->self = slot;
+    /* SW-1205: Windows-style id assigned at CREATION (the guest may
+     * PostThreadMessage to it before the trampoline ever runs) */
+    slot->win_tid = __sync_fetch_and_add(&g_win_tid_next, 1);
+    mw_tq_slot(slot->win_tid, 1); /* queue exists from creation */
     pthread_t pt;
     if (pthread_create(&pt, NULL, mw_thread_trampoline, b) != 0) {
         free(b); slot->used = 0; return 0;
@@ -5995,7 +6081,7 @@ __attribute__((ms_abi)) unsigned long mw__beginthreadex(void* sec, unsigned int 
     slot->pt = pt;
     pthread_detach(pt); /* CloseHandle/Wait semantics; no join leak */
     void* h = alloc_handle((void*)slot);
-    if (tid) *tid = (unsigned)(uintptr_t)pt & 0xFFFFFFFFu;
+    if (tid) *tid = slot->win_tid;
     MW_TRACE("_beginthreadex() = %p", h);
     return (unsigned long)(uintptr_t)h;
 }
@@ -13912,6 +13998,21 @@ static int mw_gui_pump_getmsg(void* msg, void* hwnd, const char* api) {
          *    PostQuitMessage (g_quit_flag) still wakes them immediately. */
         if (t_cur_thread != NULL) {
             while (!g_quit_flag) {
+                /* SW-1205: drain the thread's own message queue — a posted
+                 * thread message wakes the parked worker (real Win32
+                 * semantics). WM_QUIT in the queue ends the park. */
+                uint32_t tmsg; uintptr_t twp; intptr_t tlp;
+                if (mw_tq_poll(mw_current_win_tid(), &tmsg, &twp, &tlp)) {
+                    if (tmsg == 0x0012u /* WM_QUIT */) {
+                        MW_TRACE("%s() -> 0 (WM_QUIT via PostThreadMessage, code=%llu)",
+                                 api, (unsigned long long)twp);
+                        mw_gui_fill_msg(msg, hwnd, 0x0012u, twp, 0);
+                        return 0;
+                    }
+                    MW_TRACE("%s() -> posted thread msg 0x%04x (SW-1205)", api, tmsg);
+                    mw_gui_fill_msg(msg, NULL, tmsg, twp, tlp);
+                    return 1;
+                }
                 MW_TRACE("%s(hwnd=%p) parked (worker thread, no event source)", api, hwnd);
                 struct timespec ts = { 0, 20 * 1000 * 1000 }; /* 20ms poll slice */
                 nanosleep(&ts, NULL);
@@ -14935,16 +15036,27 @@ __attribute__((ms_abi)) intptr_t mw_DialogBoxIndirectParamA(void* hinst,
     mw_dialog_create_children(MW_GUI_HWND, tmpl); /* SWEEP-022 SW-921 */
     return mw_dialog_run(proc, init);
 }
+static int mw_dlg_from_resource(void* dlg, void* hinst,
+                                const char* aname, const wchar_t* wname); /* SW-1206 fwd */
 __attribute__((ms_abi)) intptr_t mw_DialogBoxParamW(void* hinst,
         const uint16_t* name, void* parent, MwDlgProc proc, intptr_t init) {
-    (void)hinst; (void)name; (void)parent;
+    (void)parent;
     MW_TRACE("DialogBoxParamW(name=%p, proc=%p)", (const void*)name, (void*)proc);
+    if (name) /* SW-1206: named modal dialogs resolve their own template too */
+        mw_dlg_from_resource(MW_GUI_HWND, hinst, NULL,
+                             ((uintptr_t)name > 0xFFFFu) ? (const wchar_t*)name
+                                 : (const wchar_t*)(uintptr_t)((uintptr_t)name & 0xFFFFu));
     return mw_dialog_run(proc, init);
 }
 __attribute__((ms_abi)) intptr_t mw_DialogBoxParamA(void* hinst,
         const char* name, void* parent, MwDlgProc proc, intptr_t init) {
-    (void)hinst; (void)name; (void)parent;
+    (void)parent;
     MW_TRACE("DialogBoxParamA(name=%p, proc=%p)", (const void*)name, (void*)proc);
+    if (name) /* SW-1206 */
+        mw_dlg_from_resource(MW_GUI_HWND, hinst,
+                             ((uintptr_t)name > 0xFFFFu) ? name
+                                 : (const char*)(uintptr_t)((uintptr_t)name & 0xFFFFu),
+                             NULL);
     return mw_dialog_run(proc, init);
 }
 
@@ -17712,28 +17824,262 @@ __attribute__((ms_abi)) uint32_t mw_lstrcpyA(char* dst, const char* src) {
     memcpy(dst, tmp, n); dst[n] = 0;
     return 1;
 }
+/* ============================================================
+ * SW-1206 (SWEEP-040): real named-dialog template resolution on
+ * CreateDialogParam* / DialogBoxParam* — adexplorer64 decode.
+ * Evidence: artifacts/sweep040/adexplorer64/ — the guest's main window IS a
+ * modeless dialog created with CreateDialogParamW(hinst, L"MAIN", ...).
+ * Its RT_DIALOG template (name MAIN, .rdata 0x9b230, EX format) carries
+ *   id=1002 SysTreeView32 ("Tree1") + id=1070 SysListView32 ("List1")
+ * and the guest immediately does GetDlgItem(hDlg,1002) and writes through
+ * the result (crash RVA 0x1da85 `mov [rax+8],esi` with RAX=0 — the cache
+ * append at 0x14001da80; entry path mov rax,r14(0) at 0x14001da10 fires when
+ * GetDlgItem returned NULL). Engine now resolves the guest's OWN template
+ * resource and creates the children in the same registry CreateWindowEx
+ * uses. EX parser bounds-checked end-to-end; STD templates delegate to the
+ * proven SW-921 walker. MW_DLG_ITEMS=0 disables (regression kill switch).
+ * ============================================================ */
+static int mw_dlg_items_enabled(void) {
+    static int v = -1;
+    if (v < 0) {
+        const char* e = getenv("MW_DLG_ITEMS");
+        v = (e && e[0] == '0' && e[1] == 0) ? 0 : 1;
+    }
+    return v;
+}
+/* bounded UTF-16 length (words, excluding NUL); -1 when unterminated */
+static long mw_dlg_wlen_b(const uint16_t* p, const uint8_t* end) {
+    const uint8_t* b = (const uint8_t*)p;
+    for (const uint8_t* q = b; q + 2 <= end; q += 2)
+        if (*(const uint16_t*)q == 0) return (long)((q - b) / 2);
+    return -1;
+}
+static const uint16_t* mw_dlg_skip_szorord_b(const uint16_t* p, const uint8_t* end) {
+    if ((const uint8_t*)(p + 2) > end) return NULL;
+    if (*p == 0xFFFFu) return p + 2;
+    long n = mw_dlg_wlen_b(p, end);
+    return (n < 0) ? NULL : p + n + 1;
+}
+static void mw_dlg_register_item(int sc, void* dlg, uint32_t id,
+                                 const void* text, const char* cls_fallback) {
+    /* dedupe: repeated CreateDialogParam on the same identity must not pile
+     * up duplicate children (0x10002 is the standing modeless identity) */
+    for (int i = 0; i < MW_CHILD_MAX; i++)
+        if (g_child[i].live && g_child[i].parent == dlg && g_child[i].id == id) {
+            MW_TRACE("[GUI] dlg child id=%lu already registered (%s) — skip",
+                     (unsigned long)id, g_child[i].cls);
+            return;
+        }
+    for (int i = 0; i < MW_CHILD_MAX; i++) {
+        if (g_child[i].live) continue;
+        g_child[i].live = 1;
+        g_child[i].hwnd = (void*)(uintptr_t)(MW_CHILD_BASE + (uintptr_t)(i + 1));
+        g_child[i].parent = dlg;
+        g_child[i].id = id;
+        g_child[i].checked = 0;
+        g_child[i].enabled = 1;
+        snprintf(g_child[i].cls, sizeof(g_child[i].cls), "%s",
+                 sc ? mw_sysclass_name(sc) : cls_fallback);
+        if (text) mw_w16cpy(g_child[i].text, (const uint16_t*)text, 128);
+        MW_TRACE("[GUI] dlg child id=%lu %s -> HWND %p (SW-1206)",
+                 (unsigned long)id, g_child[i].cls, g_child[i].hwnd);
+        return;
+    }
+}
+/* EX item walker: p = first item; returns one-past-end or NULL on bounds fault */
+static const uint8_t* mw_dlg_ex_items(const uint8_t* p, const uint8_t* end,
+                                      uint16_t cdit, void* dlg) {
+    for (uint16_t i = 0; i < cdit; i++) {
+        p = (const uint8_t*)(((uintptr_t)p + 3u) & ~(uintptr_t)3u);
+        if ((const uint8_t*)(p + 24) > end) return NULL;
+        uint32_t id = *(const uint32_t*)(p + 20);
+        const uint8_t* q = p + 24;
+        /* class: 0xFFFF+atom | UTF-16 string */
+        int sc = 0;
+        char fb[16] = {0};
+        if ((const uint8_t*)(q + 2) > end) return NULL;
+        if (*(const uint16_t*)q == 0xFFFFu) {
+            if ((const uint8_t*)(q + 4) > end) return NULL;
+            uint16_t o = *(const uint16_t*)(q + 2);
+            if (o >= 0x80u && o <= 0x8Cu) sc = (int)o;
+            else snprintf(fb, sizeof(fb), "class%u", (unsigned)o);
+            q += 4;
+        } else {
+            long n = mw_dlg_wlen_b((const uint16_t*)q, end);
+            if (n < 0) return NULL;
+            /* map known string classes (SysTreeView32/SysListView32/...) */
+            uint16_t wbuf[17] = {0};
+            for (long k = 0; k < n && k < 16; k++) wbuf[k] = q[2 * k];
+            sc = mw_sysclass_w((const void*)wbuf);
+            if (!sc) {
+                char a[16] = {0};
+                for (long k = 0; k < n && k < 15; k++) {
+                    uint16_t c = q[2 * k];
+                    a[k] = (c >= 0x20 && c < 0x7F) ? (char)c : '?';
+                }
+                snprintf(fb, sizeof(fb), "%s", a);
+            }
+            q += 2 * (n + 1);
+        }
+        /* title: 0xFFFF+ordinal | UTF-16 string */
+        const void* txt = NULL;
+        if ((const uint8_t*)(q + 2) > end) return NULL;
+        if (*(const uint16_t*)q == 0xFFFFu) {
+            if ((const uint8_t*)(q + 4) > end) return NULL;
+            q += 4;
+        } else {
+            long n = mw_dlg_wlen_b((const uint16_t*)q, end);
+            if (n < 0) return NULL;
+            txt = (const void*)q;
+            q += 2 * (n + 1);
+        }
+        /* extra: WORD cbExtra + bytes */
+        if ((const uint8_t*)(q + 2) > end) return NULL;
+        uint16_t extra = *(const uint16_t*)q;
+        q += 2 + extra;
+        if (q > end) return NULL;
+        if (sc || fb[0])
+            mw_dlg_register_item(sc, dlg, id, txt, fb);
+        else
+            MW_TRACE("[GUI] dlg child id=%lu class unrecognized (skipped, SW-1206)",
+                     (unsigned long)id);
+        p = q;
+    }
+    return p;
+}
+/* resolve the guest's own RT_DIALOG template by name (string or ordinal) and
+ * create its children under `dlg`; returns 1 when children were created.
+ * NOTE: the enable-check lives in the caller (mw_dlg_create_common) so the
+ * indirect-template path shares one gate. */
+static int mw_dlg_from_resource(void* dlg, void* hinst,
+                                const char* aname, const wchar_t* wname) {
+    if (!g_image_base) return 0;
+    void* hrsrc = w3_res_find(hinst, aname, wname, NULL, (const wchar_t*)5 /*RT_DIALOG*/);
+    if (!hrsrc) return 0;
+    uint32_t size = mw_SizeofResource(hinst, hrsrc);
+    const uint8_t* p = (const uint8_t*)mw_LockResource(hrsrc);
+    if (!p || size < 26) return 0;
+    if (mw_IsBadReadPtr(p, size)) return 0;
+    const uint8_t* end = p + size;
+    uint16_t dlgver = *(const uint16_t*)(p + 0);
+    uint16_t sig    = *(const uint16_t*)(p + 2);
+    if (dlgver == 1 && sig == 0xFFFFu) {
+        /* DLGTEMPLATEEX: helpID@4 exStyle@8 style@12 cdit@16 x@18..cy@24 */
+        uint32_t style = *(const uint32_t*)(p + 12);
+        uint16_t cdit  = *(const uint16_t*)(p + 16);
+        const uint8_t* q = p + 26;
+        q = (const uint8_t*)mw_dlg_skip_szorord_b((const uint16_t*)q, end); /* menu */
+        if (!q) return 0;
+        q = (const uint8_t*)mw_dlg_skip_szorord_b((const uint16_t*)q, end); /* class */
+        if (!q) return 0;
+        long tn = mw_dlg_wlen_b((const uint16_t*)q, end);                   /* title */
+        if (tn < 0) return 0;
+        q += 2 * (tn + 1);
+        if (style & 0x48u) { /* DS_SETFONT|DS_SHELLFONT */
+            if ((const uint8_t*)(q + 6) > end) return 0;
+            q += 6; /* pointsize(2) weight(2) italic(1) charset(1) */
+            long fn = mw_dlg_wlen_b((const uint16_t*)q, end);
+            if (fn < 0) return 0;
+            q += 2 * (fn + 1);
+        }
+        MW_TRACE("[GUI] DLGTEMPLATEEX cdit=%u size=%u (SW-1206)", (unsigned)cdit, size);
+        return mw_dlg_ex_items(q, end, cdit, dlg) != NULL;
+    }
+    /* STD template: delegate to the proven SW-921 walker (bounds: it walks
+     * only what the template declares; sizes validated by callers' probes) */
+    mw_dialog_create_children(dlg, p);
+    return 1;
+}
+/* SW-1206 (rammap64 regression decode): every CreateDialog* call mints a
+ * DISTINCT dialog identity (real Win32 semantics — rammap64 creates one
+ * dialog per property page, each with its own id=1003 SysListView32; the
+ * previous fixed-0x10002 + dedupe made every page resolve to page 1's
+ * control and the guest crashed at RVA 0x1cfa9). Identities start at
+ * 0x10002 (the standing convention) and increment atomically. */
+static volatile uintptr_t g_dlg_id_next = 0x00010002u;
+static void* mw_dlg_new_identity(void) {
+    return (void*)__sync_fetch_and_add(&g_dlg_id_next, 1);
+}
+/* shared core: identity minting + template resolution + WM_INITDIALOG.
+ * tmpl != NULL -> parse in place; else resolve aname/wname from .rsrc. */
+static void* mw_dlg_create_common(void* hinst, const char* aname,
+        const wchar_t* wname, const void* tmpl, MwDlgProc proc, intptr_t init) {
+    void* hwnd = mw_dlg_new_identity();
+    if (tmpl && mw_dlg_items_enabled()) {
+        const uint8_t* p = (const uint8_t*)tmpl;
+        uint16_t dlgver = *(const uint16_t*)(p + 0);
+        uint16_t sig    = *(const uint16_t*)(p + 2);
+        if (dlgver == 1 && sig == 0xFFFFu) {
+            /* EX indirect: parse in place with a conservative probe bound —
+             * the image mapping is RW to us; cap the walk at 64 KiB */
+            const uint8_t* end = p + 0x10000;
+            uint32_t style = *(const uint32_t*)(p + 12);
+            uint16_t cdit  = *(const uint16_t*)(p + 16);
+            const uint8_t* q = p + 26;
+            q = (const uint8_t*)mw_dlg_skip_szorord_b((const uint16_t*)q, end);
+            if (q) { q = (const uint8_t*)mw_dlg_skip_szorord_b((const uint16_t*)q, end); }
+            if (q) {
+                long tn = mw_dlg_wlen_b((const uint16_t*)q, end);
+                if (tn >= 0) {
+                    q += 2 * (tn + 1);
+                    if (style & 0x48u) {
+                        if ((const uint8_t*)(q + 6) <= end) {
+                            q += 6;
+                            long fn = mw_dlg_wlen_b((const uint16_t*)q, end);
+                            if (fn >= 0) q += 2 * (fn + 1);
+                            else q = NULL;
+                        } else q = NULL;
+                    }
+                    if (q) mw_dlg_ex_items(q, end, cdit, hwnd);
+                }
+            }
+        } else {
+            mw_dialog_create_children(hwnd, p);
+        }
+    } else if (mw_dlg_items_enabled()) {
+        if (wname) {
+            mw_dlg_from_resource(hwnd, hinst, NULL,
+                                 ((uintptr_t)wname > 0xFFFFu) ? wname
+                                     : (const wchar_t*)(uintptr_t)((uintptr_t)wname & 0xFFFFu));
+        } else if (aname) {
+            mw_dlg_from_resource(hwnd, hinst,
+                                 ((uintptr_t)aname > 0xFFFFu) ? aname
+                                     : (const char*)(uintptr_t)((uintptr_t)aname & 0xFFFFu),
+                                 NULL);
+        }
+    }
+    if (proc) proc(hwnd, MWWM_INITDIALOG, 0, init);
+    return hwnd;
+}
 /* CreateDialogParamW/A — MODELESS dialog: run WM_INITDIALOG and return a
  * hwnd identity immediately (real semantics); the pump later delivers
  * WM_COMMAND(IDOK) through the normal message loop, so guests that pump
- * themselves (RAMMap, 7z) drive their own dialog to completion. */
+ * themselves (RAMMap, 7z) drive their own dialog to completion.
+ * SW-1206: the named template's children now really resolve from .rsrc,
+ * each dialog with its own identity and its own children. */
 __attribute__((ms_abi)) void* mw_CreateDialogParamW(void* hinst, const uint16_t* name,
         void* parent, MwDlgProc proc, intptr_t init) {
-    (void)hinst; (void)name; (void)parent;
-    if (proc) proc((void*)(uintptr_t)0x00010002u, MWWM_INITDIALOG, 0, init);
-    MW_TRACE("CreateDialogParamW(proc=%p) -> hwnd 0x10002 (modeless)", (void*)proc);
-    return (void*)(uintptr_t)0x00010002u;
+    (void)parent;
+    void* hwnd = mw_dlg_create_common(hinst, NULL, (const wchar_t*)name, NULL, proc, init);
+    MW_TRACE("CreateDialogParamW(name=%p, proc=%p) -> hwnd %p (modeless)",
+             (const void*)name, (void*)proc, hwnd);
+    return hwnd;
 }
 __attribute__((ms_abi)) void* mw_CreateDialogParamA(void* hinst, const char* name,
         void* parent, MwDlgProc proc, intptr_t init) {
-    (void)hinst; (void)name; (void)parent;
-    if (proc) proc((void*)(uintptr_t)0x00010002u, MWWM_INITDIALOG, 0, init);
-    MW_TRACE("CreateDialogParamA(proc=%p) -> hwnd 0x10002 (modeless)", (void*)proc);
-    return (void*)(uintptr_t)0x00010002u;
+    (void)parent;
+    void* hwnd = mw_dlg_create_common(hinst, name, NULL, NULL, proc, init);
+    MW_TRACE("CreateDialogParamA(name=%p, proc=%p) -> hwnd %p (modeless)",
+             (const void*)name, (void*)proc, hwnd);
+    return hwnd;
 }
 __attribute__((ms_abi)) void* mw_CreateDialogIndirectParamW(void* hinst, const void* tmpl,
         void* parent, MwDlgProc proc, intptr_t init) {
-    (void)tmpl;
-    return mw_CreateDialogParamW(hinst, NULL, parent, proc, init);
+    (void)parent;
+    void* hwnd = mw_dlg_create_common(hinst, NULL, NULL, tmpl, proc, init);
+    MW_TRACE("CreateDialogIndirectParamW(tmpl=%p, proc=%p) -> hwnd %p (modeless)",
+             tmpl, (void*)proc, hwnd);
+    return hwnd;
 }
 /* SWEEP-026 SW-1021: real TEXTMETRICW offsets — the pre-SWEEP-025 shape wrote
  * tmAveCharWidth into tmDescent etc. (any guest reading descent/ave/weight
@@ -18086,12 +18432,15 @@ __attribute__((ms_abi)) int mw_SetPropW(void* h, const uint16_t* name, void* val
     int i = mw_prop_slot(h, name, 1);
     if (i < 0) return 0;
     g_prop[i].value = (uintptr_t)value;
-    MW_TRACE("SetPropW(%p) -> TRUE", (const void*)name);
+    MW_TRACE("SetPropW(hwnd=%p, name=%p, val=%p) -> TRUE",
+             h, (const void*)name, value);
     return 1;
 }
 __attribute__((ms_abi)) void* mw_GetPropW(void* h, const uint16_t* name) {
     int i = mw_prop_slot(h, name, 0);
-    MW_TRACE("GetPropW -> 0x%llx", i >= 0 ? (unsigned long long)g_prop[i].value : 0ull);
+    MW_TRACE("GetPropW(hwnd=%p, name=%p) -> 0x%llx",
+             h, (const void*)name,
+             i >= 0 ? (unsigned long long)g_prop[i].value : 0ull);
     return i >= 0 ? (void*)g_prop[i].value : NULL;
 }
 __attribute__((ms_abi)) void* mw_RemovePropW(void* h, const uint16_t* name) {
@@ -22190,8 +22539,17 @@ __attribute__((ms_abi)) int mw_EnumResourceTypesW(void* hmod, void* cb, intptr_t
     return 0;
 }
 __attribute__((ms_abi)) int mw_PostThreadMessageA(uint32_t tid, uint32_t msg, uintptr_t wp, intptr_t lp) {
-    (void)tid; (void)msg; (void)wp; (void)lp;
-    return 1; /* queued to the void — thread model is single-pump */
+    /* SW-1205: real per-thread queues. Unknown tid = honest failure
+     * (ERROR_INVALID_THREAD_ID=1444) — the old void-queue stub always
+     * returned TRUE, hiding producer bugs from guests. */
+    int r = mw_tq_post(tid, msg, wp, lp);
+    if (r == 1) {
+        MW_TRACE("PostThreadMessageW(tid=%u, msg=0x%04x) -> TRUE", tid, msg);
+        return 1;
+    }
+    MW_TRACE("PostThreadMessageW(tid=%u, msg=0x%04x) -> FALSE (no such thread queue)", tid, msg);
+    mw_SetLastError(1444);
+    return 0;
 }
 __attribute__((ms_abi)) int mw_ChangeClipboardChain(void* h, void* next) { (void)h; (void)next; return 1; }
 __attribute__((ms_abi)) void* mw_SHGetPathFromIDListA(const void* pidl, char* path) {
@@ -27969,6 +28327,45 @@ static void crash_handler(int sig, siginfo_t* info, void* ctx) {
         for (int i = 0; i < 12; i++)
             fprintf(stderr, " %016llx", (unsigned long long)*(uint64_t*)(rsp + (uint64_t)(i * 8)));
         fprintf(stderr, "\n");
+        /* SWEEP-040 (SW-1102c): BUG-078 auto-decode — when the crash RIP is
+         * not inside the PE, interpret it as UTF-16LE text (procexp64's CLR
+         * perf-counter name packing overwrote a return address with the
+         * 'ntio' fragment of 'contentions': RIP=0x6f00690074006e) and scan
+         * the stack for further packed UTF-16 name fragments so the
+         * overrunning copy loop's write region is visible on every run. */
+        if (!g_image_base || rip < (uint64_t)(uintptr_t)g_image_base ||
+            rip >= (uint64_t)(uintptr_t)g_image_base + g_image_size) {
+            uint8_t rb[8];
+            memcpy(rb, &rip, 8);
+            int printable = 1;
+            char asci[5] = {0};
+            for (int i = 0; i < 4; i++) {
+                uint8_t lo = rb[i * 2], hi = rb[i * 2 + 1];
+                if (hi != 0 || lo < 0x20 || lo > 0x7e) { printable = 0; break; }
+                asci[i] = (char)lo;
+            }
+            if (printable)
+                fprintf(stderr, "  [BUG-078] RIP-as-UTF16: \"%s\" (return address "
+                        "overwritten by packed wide-char name data)\n", asci);
+            /* packed-name region scan: UTF-16LE 4-char printable qwords */
+            int frag_run = 0; uint64_t frag_start = 0;
+            for (int i = 0; i < 512; i++) {
+                uint64_t v = *(uint64_t*)(rsp + (uint64_t)(i * 8));
+                uint8_t b[8]; memcpy(b, &v, 8);
+                int ok = 1;
+                for (int k = 0; k < 4; k++)
+                    if (b[k*2+1] != 0 || b[k*2] < 0x20 || b[k*2] > 0x7e) { ok = 0; break; }
+                if (ok) {
+                    if (!frag_run) { frag_run = 1; frag_start = (uint64_t)(uintptr_t)(rsp + i * 8); }
+                } else if (frag_run) {
+                    fprintf(stderr, "  [BUG-078] packed UTF-16 run @rsp+%03d..+%03d "
+                            "(%d bytes) — guest stack write region\n",
+                            (int)(frag_start - (uint64_t)(uintptr_t)rsp),
+                            i * 8, (int)((uint64_t)(uintptr_t)(rsp + i * 8) - frag_start));
+                    frag_run = 0;
+                }
+            }
+        }
         uint64_t scan_rsp = rsp;
         for (int i = 0; i < 512; i++) {
             uint64_t v = *(uint64_t*)(scan_rsp + (uint64_t)(i * 8));
