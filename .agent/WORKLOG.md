@@ -1369,3 +1369,44 @@ calc battery 15/15. evidence/sweep050/ (census.tsv + expand_log.tsv +
 payloads_sha256.txt + wordpad/drwtsn32/everything traces). No force-push.
 Open: SW-1260 wordpad OnCreate -1 producer, SW-1261 soffice decode (LO MSI
 staged), Everything UI interaction.
+
+## SWEEP-051 (2026-10-22) — «قطار با برنامه های واقعی» Train: LibreOffice SW-1261 stage 1
+
+The user-mandated four real-graphical-program wagons: calc ✓ (battery 15/15),
+Windows-only Everything ✓ (exit-0, SWEEP-050), XP games ✓ (mshearts/winmine/
+sol/freecell exit-0), and the ODF display program = **this round's train**.
+
+- Payload: LO 26.8.1.1 x64 MSI (c6298b10, staged SWEEP-050) -> largest OLE
+  stream = MS-CAB **LZX** (typeComp 0x1503; the +4-shifted CFHEADER has
+  cFolders@0x1a, cFiles@0x1c=19427, flags=4, 128-byte MSI reserve, and
+  0xb0=176 at 0x10 = CFFOLDER byte offset). No cabextract/7z x64 available
+  and no root: **built libmspack from source** (gcc, no autotools needed for
+  the mspack core) + a 40-line extractor (scripts/sweep051_lo_extract.c) ->
+  19427/19427 files, 0 failures.
+- Guest staging: soffice.bin (2.7MB, 51 static imports) + sal3 + mergedlo
+  (151MB) + 54 more DLLs; MSI underscore-vs-hyphen renames handled
+  (orcus_parser->orcus-parser, libcrypto_3->libcrypto-3, libssl_3,
+  libxmlsec_mscng); VC runtime from the MSI's own amd64 payloads.
+- SIX root causes landed (instruments, not guesses): 4-arg
+  _get_stream_buffer_pointers (wine spec L380; the v1 8-arg stub zeroed
+  msvcp140 .text at its own return address — ptrace DR0 watchpoint made the
+  writer's RIP undeniable); disk-DLL static TLS plane (sal3 0x6D654);
+  MW_DLL_MAX 128 + early registration (re-entrancy dedupe); alloc registry
+  512K (HEAP-TRAP exit(4) killed mergedlo's init wave); DLL .pdata cap 4M
+  (mergedlo 756,578 entries — FH4 unwinding through mergedlo now works);
+  TlsAlloc static-TLS collision (cppu3 0x13fc5).
+- MEASURED binary **0d3b46b9**: soffice.bin x3 deterministic rc=99 / 10 stubs
+  — 57 DLLs mapped once each, msvcp140/sal3/mergedlo CRT init survive,
+  CreateWindowExW -> HWND 0x10001 + WM_CREATE, guest C++ throw unwinds via
+  REAL vcruntime140_1 __CxxFrameHandler4 through DLL frames to the UCRT
+  _seh_filter_exe -> _exit(0xE06D7363). Frontier SW-1262 = cross-DLL C++
+  catch-type matching (uno::Exception catch in mergedlo).
+- Gates: G1 PIN 12/12 (evidence/master/g1/20261022_184613); calc battery
+  15/15; census x3 zero regressions (19 SWEEP-050 guests byte-identical; DL
+  corpus = HEAD — autoruns64/zoomit64 139 A/B-verified pre-existing at
+  c1d45aac, not a SWEEP-051 regression).
+- Engine diagnostics added (env-gated): MINWIN_DLL_VERIFY (full reloc-aware
+  section verify), MINWIN_DLL_TRACE (memcpy/[SBPTR]/[WCSDUP] logs), [DLLSLOT]
+  crash-dump attribution; ptrace watchpoint tracer scripts/sweep051_watch.c.
+- evidence/sweep051/ (README with the full decode chain, milestones,
+  payloads_sha256, watchpoint hits, rc4/rc99 stderr); no force-push.

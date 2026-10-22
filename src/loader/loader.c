@@ -415,6 +415,13 @@ static uint8_t g_params_storage[4096] __attribute__((aligned(4096)));
  * to an array of slot pointers. Native-TLS PEs (e.g. libc++abi's
  * __cxa_get_globals) read gs:0x58 and index this array by __tls_index. */
 static void* g_tls_ptr_array[64];
+/* SW-1261 (SWEEP-051): module static-TLS registry — EVERY module's block
+ * (EXE slot 0 + one slot per disk DLL with a TLS directory) so guest threads
+ * get pristine per-thread copies like real Windows. Index = the slot written
+ * into the module's __tls_index. */
+static uint8_t* g_mod_tls_block[64];
+static uint8_t* g_mod_tls_pristine[64];
+static size_t   g_mod_tls_size[64];
 static uint8_t* g_static_tls_block = NULL;  /* SW-1230: image static TLS copy source */
 static uint8_t* g_static_tls_pristine = NULL; /* SW-1230: untouched initial TLS image */
 static size_t g_static_tls_size = 0;
@@ -904,7 +911,7 @@ __attribute__((ms_abi)) uint32_t mw_I_QueryTagInformation(void* unk, uint32_t ty
 }
 static const char* mw_uxtheme_ord_lookup(uint16_t ordinal); /* SWEEP-015 SW-801g fwd */
 __attribute__((ms_abi)) int32_t mw_AppPolicyGetThreadInitializationType(void* process, uint32_t* policy); /* SW-1204 fwd */
-#define MW_DLL_MAX 12
+#define MW_DLL_MAX 128
 typedef struct MwDllImage {
     int      in_use;
     int      refcount;
@@ -1218,13 +1225,44 @@ static int load_pe_dll(const char* fullpath, const char* lowname) {
 
     int slot = -1;
     for (int i = 0; i < MW_DLL_MAX; i++) if (!g_dll_images[i].in_use) { slot = i; break; }
-    if (slot < 0) { free(raw); return -1; }
+    if (slot < 0) {
+        fprintf(stderr, "[DLL] slot table full (%d) — cannot load %s\n", MW_DLL_MAX, lowname);
+        free(raw); return -1;
+    }
 
     size_t map_len = (size_img + 0xFFF) & ~(size_t)0xFFF;
     uint8_t* img = (uint8_t*)mmap(NULL, map_len, PROT_READ | PROT_WRITE | PROT_EXEC,
                                   MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
     if (img == MAP_FAILED) { free(raw); return -1; }
+    { static int dt = -1; if (dt < 0) { const char* d = getenv("MINWIN_DLL_TRACE"); dt = (d && d[0] && d[0] != '0') ? 1 : 0; }
+      if (dt) fprintf(stderr, "[DLLTRACE %s] memcpy hdr dst=%p src=%p n=%zu (size_hdrs=%u size_img=%u)\n", lowname, (void*)img, (void*)raw, (size_t)(size_hdrs < size_img ? size_hdrs : size_img), size_hdrs, size_img); }
     memcpy(img, raw, size_hdrs < size_img ? size_hdrs : size_img);
+    /* SW-1261 (SWEEP-051) ROOT CAUSE #3 — early slot registration: v1 set
+     * g_dll_images[slot] only AFTER the whole import binding finished, so a
+     * re-entrant dependency chain (clucene -> msvcp140 while msvcp140 itself
+     * was still mid-load) re-ran load_pe_dll for the SAME DLL: duplicate
+     * images, duplicate DllMain/CRT/TLS, and MW_DLL_MAX slot exhaustion that
+     * silently dropped mergedlo's tail deps (icuuc78/libxml2/skialo/pdfiumlo).
+     * Register the slot NOW (right after the headers land) with the export
+     * directory parsed early, so mw_dll_find_by_name dedupes re-entrancy;
+     * DllMain still runs once, at the end, as Windows does. */
+    {
+        uint32_t exp_rva_e = dd[0 * 2], exp_sz_e = dd[0 * 2 + 1];
+        uint32_t exp_base_e = 1, exp_names_e = 0;
+        if (exp_rva_e && exp_sz_e >= 40) {
+            uint32_t* ed_e = (uint32_t*)(img + exp_rva_e);
+            exp_base_e = ed_e[4];
+            exp_names_e = ed_e[6];
+        }
+        MwDllImage* de = &g_dll_images[slot];
+        memset(de, 0, sizeof(*de));
+        de->in_use = 1; de->refcount = 1;
+        de->base = img; de->img_size = size_img; de->map_size = map_len;
+        de->exp_rva = exp_rva_e; de->exp_sz = exp_sz_e;
+        de->exp_base = exp_base_e; de->exp_names = exp_names_e;
+        snprintf(de->name, sizeof(de->name), "%s", lowname);
+        snprintf(de->path, sizeof(de->path), "%s", fullpath);
+    }
     for (uint16_t s = 0; s < nsec; s++) {
         uint8_t* se = sectab + (size_t)s * 40;
         uint32_t vsz = *(uint32_t*)(se + 8), va = *(uint32_t*)(se + 12);
@@ -1233,7 +1271,11 @@ static int load_pe_dll(const char* fullpath, const char* lowname) {
         uint32_t n = rsz < vsz ? rsz : vsz;
         if ((uint64_t)va + n > size_img) n = size_img - va;
         if (ro + n > (uint32_t)st.st_size) n = (uint32_t)st.st_size > ro ? (uint32_t)st.st_size - ro : 0;
-        if (n) memcpy(img + va, raw + ro, n);
+        if (n) {
+            { static int dt2 = -1; if (dt2 < 0) { const char* d = getenv("MINWIN_DLL_TRACE"); dt2 = (d && d[0] && d[0] != '0') ? 1 : 0; }
+              if (dt2) fprintf(stderr, "[DLLTRACE %s] memcpy sec%u dst=%p src=%p n=%u (va=%u ro=%u rsz=%u vsz=%u)\n", lowname, s, (void*)(img + va), (void*)(raw + ro), n, va, ro, rsz, vsz); }
+            memcpy(img + va, raw + ro, n);
+        }
     }
     /* base relocations (DIR 5): delta applies to every DIR64 (type 10) slot */
     uint64_t delta = (uint64_t)(uintptr_t)img - pref_base;
@@ -1309,6 +1351,79 @@ static int load_pe_dll(const char* fullpath, const char* lowname) {
                 break; /* one honest mismatch line per section is enough */
             }
         }
+        /* SWEEP-051 SW-1261 deep verify (MINWIN_DLL_VERIFY=1): every qword of
+         * every section vs the file, skipping reloc targets. Proves whether a
+         * corrupted qword (e.g. msvcp140 RVA 0x1110 zeroing) exists ALREADY at
+         * load time (loader bug) or only later (runtime/guest store). */
+        {
+            static int g_deep_verify = -1;
+            if (g_deep_verify < 0) {
+                const char* dv = getenv("MINWIN_DLL_VERIFY");
+                g_deep_verify = (dv && dv[0] && dv[0] != '0') ? 1 : 0;
+            }
+            if (g_deep_verify) {
+                uint32_t mismatches = 0;
+                /* precollect ALL reloc targets once (sorted for binary search) */
+                uint64_t* rt = (uint64_t*)malloc((rel_sz ? rel_sz / 2 : 4) * sizeof(uint64_t) + 16);
+                uint32_t nrt = 0;
+                if (rt) {
+                    for (uint32_t rp2 = rel_rva; rp2 + 8 <= rel_rva + rel_sz; ) {
+                        uint32_t page_rva2 = *(uint32_t*)(img + rp2);
+                        uint32_t blocksz2 = *(uint32_t*)(img + rp2 + 4);
+                        if (!blocksz2 || rp2 + blocksz2 > rel_rva + rel_sz) break;
+                        uint16_t* ent2 = (uint16_t*)(img + rp2 + 8);
+                        uint32_t nent2 = (blocksz2 - 8) / 2;
+                        for (uint32_t e2 = 0; e2 < nent2; e2++) {
+                            uint16_t v2 = ent2[e2];
+                            uint32_t typ2 = v2 >> 12, ofs2 = v2 & 0xFFF;
+                            if (typ2 == 0) continue;
+                            rt[nrt++] = (uint64_t)page_rva2 + ofs2;
+                        }
+                        rp2 += blocksz2;
+                    }
+                    /* insertion sort (targets already nearly sorted by page) */
+                    for (uint32_t i = 1; i < nrt; i++) {
+                        uint64_t k = rt[i]; uint32_t j = i;
+                        while (j > 0 && rt[j-1] > k) { rt[j] = rt[j-1]; j--; }
+                        rt[j] = k;
+                    }
+                }
+                for (uint16_t s = 0; s < nsec && mismatches < 12; s++) {
+                    uint8_t* se = sectab + (size_t)s * 40;
+                    uint32_t vsz = *(uint32_t*)(se + 8), va = *(uint32_t*)(se + 12);
+                    uint32_t rsz = *(uint32_t*)(se + 16), ro = *(uint32_t*)(se + 20);
+                    if (!va || !rsz) continue;
+                    uint32_t cmp = rsz < vsz ? rsz : vsz;
+                    if (ro + cmp > (uint32_t)st.st_size)
+                        cmp = (uint32_t)st.st_size > ro ? (uint32_t)st.st_size - ro : 0;
+                    for (uint32_t q = 0; q + 8 <= cmp && mismatches < 12; q += 8) {
+                        /* binary search: any target in [va+q, va+q+8) */
+                        int is_rel = 0;
+                        if (rt) {
+                            uint32_t lo = 0, hi = nrt;
+                            while (lo < hi) {
+                                uint32_t mid = (lo + hi) / 2;
+                                if (rt[mid] < va + q) lo = mid + 1; else hi = mid;
+                            }
+                            if (lo < nrt && rt[lo] < va + q + 8) is_rel = 1;
+                        }
+                        if (is_rel) continue;
+                        uint64_t a = 0, b = 0;
+                        memcpy(&a, img + va + q, 8);
+                        memcpy(&b, raw + ro + q, 8);
+                        if (a != b) {
+                            mismatches++;
+                            fprintf(stderr, "  [DLL-VERIFY %s] sec%u RVA 0x%x+0x%x: img=0x%016llx file=0x%016llx\n",
+                                    lowname, s, va, q,
+                                    (unsigned long long)a, (unsigned long long)b);
+                        }
+                    }
+                }
+                fprintf(stderr, "  [DLL-VERIFY %s] done: %u mismatches (reloc-skipped, %u targets)\n",
+                        lowname, mismatches, nrt);
+                free(rt);
+            }
+        }
     }
     /* imports: name-only dispatch-table rule (same as the EXE loader);
      * unresolved slots get the unresolved stub, never a silent NULL. */
@@ -1380,9 +1495,7 @@ static int load_pe_dll(const char* fullpath, const char* lowname) {
         exp_names = ed[6];  /* SW-1233: NumberOfNames (was ed[7]=AddressOfFunctions) */
     }
     MwDllImage* d = &g_dll_images[slot];
-    memset(d, 0, sizeof(*d));
-    d->in_use = 1; d->refcount = 1;
-    d->base = img; d->img_size = size_img; d->map_size = map_len;
+    d->img_size = size_img; d->map_size = map_len;
     d->exp_rva = exp_rva; d->exp_sz = exp_sz;
     d->exp_base = exp_base; d->exp_names = exp_names;
     /* SW-1230v2: record the exception directory for DLL-frame unwinding */
@@ -1390,12 +1503,64 @@ static int load_pe_dll(const char* fullpath, const char* lowname) {
         uint32_t exc_rva = dd[3 * 2], exc_sz = dd[3 * 2 + 1];
         d->pdata_rva = exc_rva;
         d->pdata_count = (exc_rva && exc_sz >= 12) ? (exc_sz / 12) : 0;
-        if (d->pdata_count > 65536) d->pdata_count = 65536; /* sanity cap */
+        /* SW-1261: mergedlo's .pdata alone has 756,578 RUNTIME_FUNCTIONs —
+         * the v1 65536 cap truncated it so the DLL-frame unwinder could not
+         * find any function past ~8MB into the image ("walk ends", C++
+         * throws inside mergedlo went unhandled). Binary search over the
+         * mapped .pdata is fine at full size; cap raised to 4M entries. */
+        if (d->pdata_count > (4u << 20)) d->pdata_count = (4u << 20); /* sanity cap */
     }
     snprintf(d->path, sizeof(d->path), "%s", fullpath);
     snprintf(d->name, sizeof(d->name), "%s", lowname);
     MW_TRACE("LoadLibrary[PE-DLL] %s -> base=%p size=0x%zx exp=%u names=%u resolved=%zu unresolved=%zu",
              fullpath, img, (size_t)size_img, exp_rva, exp_names, dll_resolved, dll_unresolved);
+    /* SW-1261 (SWEEP-051) ROOT CAUSE #2 — disk-DLL static TLS: v1 skipped the
+     * DLL TLS directory ("v1 limits: DLL TLS directory skipped"), so sal3's
+     * CRT initializer read a __declspec(thread) variable through
+     * TEB->ThreadLocalStoragePointer[slot] with slot == NULL -> SIGSEGV at
+     * sal3 RVA 0x6D654 (mov edx,[rcx+rax] on gs:[0x58] indexing). Honest
+     * contract: allocate a fresh slot (0 = EXE), write it into the DLL's
+     * __tls_index (AddressOfIndex), publish the template+zero-fill block in
+     * g_tls_ptr_array[slot] for this thread, run the TLS callbacks. The TLS
+     * directory fields are absolute VAs ALREADY delta-relocated above, so
+     * they point at this mapping directly. */
+    {
+        uint32_t tls_rva = dd[9 * 2], tls_sz = dd[9 * 2 + 1];
+        if (tls_rva && tls_sz >= 40) {
+            typedef struct { uint64_t StartRaw, EndRaw, IdxAddr, CbAddr; uint32_t ZeroFill, Chars; } TlsDir64L;
+            TlsDir64L* tls = (TlsDir64L*)(img + tls_rva);
+            size_t raw_size = (tls->EndRaw > tls->StartRaw) ? (size_t)(tls->EndRaw - tls->StartRaw) : 0;
+            uint8_t* block = (uint8_t*)malloc(raw_size + tls->ZeroFill);
+            if (block) {
+                if (raw_size) memcpy(block, (void*)(uintptr_t)tls->StartRaw, raw_size);
+                if (tls->ZeroFill) memset(block + raw_size, 0, tls->ZeroFill);
+                static uint32_t g_dll_tls_next_slot = 1; /* 0 = EXE static TLS */
+                uint32_t idx = g_dll_tls_next_slot < 64 ? g_dll_tls_next_slot : 0;
+                if (g_dll_tls_next_slot < 64) g_dll_tls_next_slot++;
+                g_tls_ptr_array[idx] = block;
+                /* SW-1261: module registry — pristine copy for per-thread
+                 * installs in mw_thread_trampoline. */
+                g_mod_tls_block[idx] = block;
+                g_mod_tls_size[idx] = raw_size + tls->ZeroFill;
+                g_mod_tls_pristine[idx] = (uint8_t*)malloc(g_mod_tls_size[idx]);
+                if (g_mod_tls_pristine[idx])
+                    memcpy(g_mod_tls_pristine[idx], block, g_mod_tls_size[idx]);
+                if (tls->IdxAddr) *(uint32_t*)(uintptr_t)tls->IdxAddr = idx;
+                MW_TRACE("  dll %s TLS: slot=%u block=%p raw=%zu zerofill=%u idx->0x%lx",
+                         lowname, idx, block, raw_size, tls->ZeroFill,
+                         (unsigned long)tls->IdxAddr);
+                if (tls->CbAddr) {
+                    typedef void (__attribute__((ms_abi)) *tls_cb)(void*, uint32_t, void*);
+                    void** cb = (void**)(uintptr_t)tls->CbAddr;
+                    for (uint32_t i = 0; cb[i]; i++)
+                        ((tls_cb)cb[i])(img, 1 /* DLL_PROCESS_ATTACH */, NULL);
+                }
+            } else {
+                MW_TRACE("  dll %s TLS: alloc failed (%zu bytes)", lowname,
+                         raw_size + tls->ZeroFill);
+            }
+        }
+    }
     /* DllMain(DLL_PROCESS_ATTACH) — v1: honest call, result traced */
     if (ep_rva) {
         /* SW-1233: gs/TEB is guaranteed valid here since the setup_teb_peb()
@@ -4108,9 +4273,11 @@ __attribute__((ms_abi)) uint32_t mw_TlsAlloc(void) {
     uint32_t idx = next++;
     pthread_mutex_unlock(&mu);
     if (idx < 64) {
-        g_tls_ptr_array[idx] = NULL;
-        /* SW-1224: also init the TEB inline TlsSlots copy (same slot space
-         * Go's gs:(0x1480+idx*8) direct access uses) */
+        /* SW-1261: do NOT touch g_tls_ptr_array here — that array is the
+         * STATIC-TLS plane (loader-owned: EXE slot 0 + disk-DLL slots). Real
+         * Windows TlsAlloc uses the TEB+0x1480 TlsSlots space only; the v1
+         * write collided with DLL TLS slots (guest TlsAlloc()=1..4 nulled
+         * cppu3's slot-4 block -> SIGSEGV at cppu3 RVA 0x13fc5). */
         if (t_cur_teb) *(void**)(t_cur_teb + 0x1480 + (size_t)idx * 8) = NULL;
         MW_TRACE("TlsAlloc() = %u", idx);
         return idx;
@@ -4384,6 +4551,17 @@ static void* mw_thread_trampoline(void* p) {
             if (tb) {
                 memcpy(tb, g_static_tls_pristine, g_static_tls_size);
                 g_thread_tls[ti][0] = tb;
+            }
+        }
+        /* SW-1261: install EVERY module's static TLS block (disk-DLL slots
+         * 1..63) into this thread's ThreadLocalStoragePointer — real Windows
+         * gives every thread a pristine copy of each module's block. */
+        for (int mi = 1; mi < 64; mi++) {
+            if (!g_mod_tls_pristine[mi] || !g_mod_tls_size[mi]) continue;
+            uint8_t* tb = (uint8_t*)malloc(g_mod_tls_size[mi]);
+            if (tb) {
+                memcpy(tb, g_mod_tls_pristine[mi], g_mod_tls_size[mi]);
+                g_thread_tls[ti][mi] = tb;
             }
         }
         *(uint64_t*)(teb + 0x60) = (uint64_t)(uintptr_t)g_peb_storage; /* PEB */
@@ -5091,13 +5269,29 @@ __attribute__((ms_abi)) void mw__lock_locales(void) { }
 __attribute__((ms_abi)) void mw__unlock_locales(void) { }
 __attribute__((ms_abi)) int mw_DisableThreadLibraryCalls(void* h) { (void)h; return 1; }
 __attribute__((ms_abi)) void mw_FlushProcessWriteBuffers(void) { }
+/* SW-1261 (SWEEP-051) ROOT CAUSE #1: the engine implemented an 8-arg contract
+ * and wrote NULL through stack args 5-8. The REAL UCRT export (wine
+ * ucrtbase.spec L380: "_get_stream_buffer_pointers(ptr ptr ptr ptr)") takes
+ * FOUR args (stream, int* read_mode, char** buf, size_t* bufsz). Proof from
+ * the guest itself — msvcp140's stdio init (RVA 0x65e8..0x66de) zeroes three
+ * stack slots, passes their addresses in RDX/R8/R9 with the stream in RCX,
+ * and reads back ONLY those three slots after the call; its frame's "arg 6"
+ * position holds 0x65e8's own RETURN ADDRESS, so the v1 8-arg stub wrote 0
+ * over msvcp140 .text RVA 0x1110 (the call's return point) -> guest executed
+ * zeros -> SIGSEGV. Honest 4-arg contract: never read past arg 4. */
 __attribute__((ms_abi)) int mw__get_stream_buffer_pointers(void* stream, int* read_mode,
-        char** buf, size_t* bufsz, char** wbuf, size_t* wbufsz, char** rwbuf, size_t* rwbufsz) {
+        char** buf, size_t* bufsz) {
+    { static int sbt = -1; if (sbt < 0) { const char* d = getenv("MINWIN_DLL_TRACE"); sbt = (d && d[0] && d[0] != '0') ? 1 : 0; }
+      if (sbt) {
+          uint64_t ra = 0;
+          __asm__ volatile ("movq 0(%%rsp), %0" : "=r"(ra));
+          fprintf(stderr, "[SBPTR] stream=%p rm=%p buf=%p bufsz=%p ret=%lx (4-arg SW-1261)\n",
+                  stream, (void*)read_mode, (void*)buf, (void*)bufsz, (unsigned long)ra);
+      } }
     (void)stream;
     if (read_mode) *read_mode = 0;
-    if (buf) *buf = NULL; if (bufsz) *bufsz = 0;
-    if (wbuf) *wbuf = NULL; if (wbufsz) *wbufsz = 0;
-    if (rwbuf) *rwbuf = NULL; if (rwbufsz) *rwbufsz = 0;
+    if (buf) *buf = NULL;
+    if (bufsz) *bufsz = 0;
     return 0;
 }
 __attribute__((ms_abi)) void* mw__wfsopen(const uint16_t* name, const uint16_t* mode, int shflags) {
@@ -6252,7 +6446,10 @@ static void w3_run_tle_atexit(void);
  * are used by mw_free/mw_realloc above; their definitions live in the
  * ISS1-WAVE3B allocator section far below. Hoisted here verbatim (C23 rejects
  * implicit declarations and use-before-declaration of statics). */
-#define W3_REG_SIZE 8192
+#define W3_REG_SIZE (1u << 19) /* SW-1261: 8192 -> 524288; LibreOffice startup
+ * exceeds 8K LIVE allocations (mergedlo DllMain init wave alone), the v1
+ * table overflowed, frees went untracked -> HEAP-TRAP exit(4). 512K x 16B
+ * = 8 MiB static, still cheap. */
 #define W3_REG_TOMB ((void*)(uintptr_t)1)
 static struct { void* p; size_t size; uint32_t gen; } g_alloc_reg[W3_REG_SIZE];
 static unsigned w3_reg_slot(void* p);
@@ -11794,7 +11991,17 @@ __attribute__((ms_abi)) int mw__wcreat(const wchar_t* p, int mode) {
     return open(p8, O_CREAT | O_TRUNC | O_RDWR, mode);
 }
 __attribute__((ms_abi)) wchar_t* mw__wcsdup(const wchar_t* s) {
-    if (!s) return NULL;
+    { static int wd = -1; if (wd < 0) { const char* d = getenv("MINWIN_DLL_TRACE"); wd = (d && d[0] && d[0] != '0') ? 1 : 0; }
+      if (wd) {
+          uint64_t ra = 0;
+          __asm__ volatile ("movq 0(%%rsp), %0" : "=r"(ra));
+          fprintf(stderr, "[WCSDUP] s=%p ret=%lx\n", (void*)(uintptr_t)s, (unsigned long)ra);
+      } }
+    if (!s || (uintptr_t)s < 0x10000 || (uintptr_t)s > 0xffffffffffff0000ULL) return NULL;
+    /* SW-1261 guard: refuse obviously-invalid string pointers (0xffffffff,
+     * 0xffff0000 truncation sentinels from upstream guest math) instead of
+     * wstrlen-faulting inside the engine. */
+    if ((uintptr_t)s == 0xffffffffULL || (uintptr_t)s == 0xffff0000ULL) return NULL;
     /* BUG-055: register the allocation (guest frees via free) — guest
      * wchar_t is 2 bytes, so size in bytes = (units+1)*2 */
     size_t units = 0; while (((const uint16_t*)s)[units]) units++;
@@ -33959,6 +34166,10 @@ static int load_pe(const char* filepath) {
              * pointer and tripped Rust's thread_info.is_none() assertion). */
             g_static_tls_pristine = (uint8_t*)malloc(g_static_tls_size);
             if (g_static_tls_pristine) memcpy(g_static_tls_pristine, block, g_static_tls_size);
+            /* SW-1261: module registry slot 0 (EXE) for per-thread installs. */
+            g_mod_tls_block[0] = block;
+            g_mod_tls_size[0] = g_static_tls_size;
+            g_mod_tls_pristine[0] = g_static_tls_pristine;
             if (tls->AddressOfIndex)
                 *(uint32_t*)(uintptr_t)tls->AddressOfIndex = 0;
             MW_TRACE("TLS: static block %p (%zu+%u bytes) -> slot 0",
@@ -34191,6 +34402,16 @@ static void crash_handler(int sig, siginfo_t* info, void* ctx) {
                 if (!attributed) fprintf(stderr, "  [RIP-MAP] no mapping contains RIP\n");
                 fclose(mf);
             }
+        }
+        /* SWEEP-051 diag: attribute out-of-PE RIP to a LoadLibrary'd disk-DLL
+         * slot (g_dll_images) so mapped-code crashes name their owner. */
+        for (int di = 0; di < MW_DLL_MAX; di++) {
+            if (!g_dll_images[di].in_use) continue;
+            uint64_t db = (uint64_t)(uintptr_t)g_dll_images[di].base;
+            uint64_t de = db + g_dll_images[di].map_size;
+            fprintf(stderr, "  [DLLSLOT] %s base=0x%lx-0x%lx%s\n",
+                    g_dll_images[di].name, db, de,
+                    (rip >= db && rip < de) ? "  <<-- RIP IS INSIDE" : "");
         }
     }
 

@@ -1,0 +1,6 @@
+[TRACE] Command line: artifacts/sweep051/guests/soffice/soffice.bin
+[STUB] unresolved import called -> returning 0 (call #1) guest_rip=0x7fa95f80837e
+[STUB] unresolved import called -> returning 0 (call #2) guest_rip=0x7fa95f96baa6
+[STUB] unresolved import called -> returning 0 (call #3) guest_rip=0x7fa95c2d192e
+[HEAP-TRAP free] free of untracked/bad ptr 0x40f1ed0 — caller chain:
+[HEAP-TRAP free] [rsp+816] 0x2026943 <LOADER>

@@ -2627,7 +2627,36 @@ viewer, (2) Windows calculator, (3) a program that does not exist on Linux
   check that still fails after the toolbar (RICHEDIT child + toolbar mint
   OK; LoadStringW(61443)->0 resource-absent is the last API before the
   MFC string-conversion cycles). Target: full wordpad UI startup.
-- [ ] **SW-1261** LibreOffice soffice decode (payload staged, sha-exact):
-  SW-1252 msvcp140 .text zeroing now decodable through the reloc-aware
-  section verify. Everything 1.4.1 full lifecycle (UI interaction) also
-  queued behind the calc-battery-style click harness.
+- [x] **SW-1261 LANDED (stage 1) — LibreOffice (the ODF display program)
+  bootstraps end-to-end: 139 SIGSEGV -> deterministic rc=99 with the full
+  57-DLL graph mapped, CreateWindowExW + WM_CREATE delivered, real FH4 C++
+  EH unwinding through DLL frames**: SIX root causes, each proven with an
+  instrument (see evidence/sweep051/README.md): (1) engine's
+  _get_stream_buffer_pointers was 8-arg, real UCRT is 4-arg (wine
+  ucrtbase.spec L380) — the v1 stub zeroed 8 bytes of msvcp140 .text AT THE
+  CALL'S RETURN ADDRESS (guest's stdio-init thunk RVA 0x65e8 forwards its
+  own frame; caught with a ptrace DR0 hardware watchpoint, the decisive
+  instrument, scripts/sweep051_watch.c); (2) disk-DLL static TLS was skipped
+  (SW-509 v1 documented limit) — sal3 SIGSEGV RVA 0x6D654; full TLS plane
+  implemented: slot alloc + __tls_index write + g_tls_ptr_array publish +
+  ATTACH callbacks + module registry for per-thread pristine copies;
+  (3) MW_DLL_MAX 12->128 + EARLY slot registration (re-entrant dep chains
+  duplicated images and silently dropped mergedlo's tail deps);
+  (4) alloc registry 8192->524288 (mergedlo's init wave overflowed it ->
+  HEAP-TRAP exit(4)); (5) DLL .pdata cap 65536->4M (mergedlo has 756,578
+  entries — the truncation killed C++ EH through mergedlo frames);
+  (6) TlsAlloc no longer writes the static-TLS array (cppu3 slot-4 collision,
+  SIGSEGV RVA 0x13fc5). Payload chain: LO 26.8.1.1 MSI c6298b10 -> payload
+  CAB (LZX) extracted 19427/19427 via source-built libmspack (no root) ->
+  guest staging with hyphen-renames (orcus-parser, libcrypto-3, libssl-3,
+  libxmlsec-mscng). Census: soffice x3 deterministic rc=99 / 10 stubs; 19
+  SWEEP-050 guests byte-identical; DL corpus = HEAD (autoruns64/zoomit64 139
+  A/B-verified pre-existing, NOT a regression); G1 12/12; calc 15/15.
+- [ ] **SW-1262 (from SW-1261)** cross-DLL C++ catch-type matching: the
+  uno::Exception catch handlers in mergedlo do not yet claim the
+  cppuhelper3msc throw, so the bootstrap exits via the UCRT
+  _seh_filter_exe/_exit(0xE06D7363) path instead of continuing into the VCL
+  message pump. FH4 + ThrowInfo + image-relative type descriptors across
+  guest DLLs = the frontier. Target: soffice past bootstrap into the pump.
+- [ ] **SW-1261b** Everything 1.4.1 full lifecycle (UI interaction) queued
+  behind the calc-battery-style click harness (unchanged).
