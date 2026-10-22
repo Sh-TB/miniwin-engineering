@@ -1,0 +1,526 @@
+{
+  "trace": [
+[T94c0] [API] PE Loader: file=artifacts/sweep050/guests/winmine/winmine.exe size=139264
+[T94c0] [API] PE Loader: ImageBase=0x100000000 EP=0x7890 SizeOfImage=0x26000 Sections=4
+[T94c0] [API] PE Loader: Mapped at 0x100000000 (forced via MAP_FIXED)
+[T94c0] [API] KUSD: mapped 0x7ffe0000 (root C:\WINDOWS, ver 5.2, qpc 1e9)
+[T94c0] [API] Section [0] .text    VA=0x00001000 VS=0x00007fd4 Raw=0x00008000 Ch=0x60000020
+[T94c0] [API] Section [1] .data    VA=0x00009000 VS=0x00001360 Raw=0x00000400 Ch=0xc0000040
+[T94c0] [API] Section [2] .pdata   VA=0x0000b000 VS=0x000004b0 Raw=0x00000600 Ch=0x40000040
+[T94c0] [API] Section [3] .rsrc    VA=0x0000c000 VS=0x000191a8 Raw=0x00019200 Ch=0x40000040
+[T94c0] [API] Import Directory: RVA=0x8414 Size=0xb4
+[T94c0] [API] Import DLL: msvcrt.dll (IAT RVA=0x1330, ILT RVA=0x87f8)
+[T94c0] [API]   [0] exit -> 0x203dde0
+[T94c0] [API]   [1] _acmdln -> DATA 0x2f67660
+[T94c0] [API]   [2] __getmainargs -> 0x2026630
+[T94c0] [API]   [3] _initterm -> 0x20267e0
+[T94c0] [API]   [4] _cexit -> 0x20356a0
+[T94c0] [API]   [5] _commode -> DATA 0x30c230c
+[T94c0] [API]   [6] _fmode -> DATA 0x30c2310
+[T94c0] [API]   [7] __set_app_type -> 0x2059a90
+[T94c0] [API]   [8] __setusermatherr -> 0x2059bf0
+[T94c0] [API]   [9] _exit -> 0x203c2a0
+[T94c0] [API]   [10] _c_exit -> 0x206a000
+[T94c0] [API]   [11] _XcptFilter -> 0x205af90
+[T94c0] [API]   [12] __C_specific_handler -> 0x2067120
+[T94c0] [API]   [13] srand -> 0x201a350
+[T94c0] [API]   [14] rand -> 0x201a190
+[T94c0] [API] Import DLL: ADVAPI32.dll (IAT RVA=0x1000, ILT RVA=0x84c8)
+[T94c0] [API]   [0] RegCreateKeyExW -> 0x2090cf0
+[T94c0] [API]   [1] RegOpenKeyExA -> 0x20a5200
+[T94c0] [API]   [2] RegQueryValueExA -> 0x20a5420
+[T94c0] [API]   [3] RegCloseKey -> 0x200c100
+[T94c0] [API]   [4] RegQueryValueExW -> 0x208c690
+[T94c0] [API]   [5] RegSetValueExW -> 0x208d090
+[T94c0] [API] Import DLL: KERNEL32.dll (IAT RVA=0x10d0, ILT RVA=0x8598)
+[T94c0] [API]   [0] LockResource -> 0x207fed0
+[T94c0] [API]   [1] LoadResource -> 0x20291a0
+[T94c0] [API]   [2] lstrlenW -> 0x209d2e0
+[T94c0] [API]   [3] GetPrivateProfileIntW -> 0x200e0d0
+[T94c0] [API]   [4] GetPrivateProfileStringW -> 0x2023ba0
+[T94c0] [API]   [5] GetTickCount -> 0x203c8d0
+[T94c0] [API]   [6] GetModuleFileNameA -> 0x2043300
+[T94c0] [API]   [7] QueryPerformanceCounter -> 0x203ca60
+[T94c0] [API]   [8] GetCurrentThreadId -> 0x200a480
+[T94c0] [API]   [9] GetCurrentProcessId -> 0x200a460
+[T94c0] [API]   [10] GetSystemTimeAsFileTime -> 0x203c5a0
+[T94c0] [API]   [11] TerminateProcess -> 0x203def0
+[T94c0] [API]   [12] GetCurrentProcess -> 0x200a450
+[T94c0] [API]   [13] UnhandledExceptionFilter -> 0x2069d40
+[T94c0] [API]   [14] SetUnhandledExceptionFilter -> 0x20260a0
+[T94c0] [API]   [15] RtlVirtualUnwind -> 0x208ad10
+[T94c0] [API]   [16] RtlLookupFunctionEntry -> 0x2025d80
+[T94c0] [API]   [17] RtlCaptureContext -> 0x2073d30
+[T94c0] [API]   [18] GetStartupInfoA -> 0x2033ab0
+[T94c0] [API]   [19] FindResourceW -> 0x207d280
+[T94c0] [API]   [20] lstrcpyW -> 0x20a33d0
+[T94c0] [API]   [21] LoadLibraryA -> 0x2094e30
+[T94c0] [API]   [22] GetProcAddress -> 0x2050770
+[T94c0] [API]   [23] OutputDebugStringA -> 0x2025bc0
+[T94c0] [API] Import DLL: GDI32.dll (IAT RVA=0x1048, ILT RVA=0x8510)
+[T94c0] [API]   [0] LineTo -> 0x202a180
+[T94c0] [API]   [1] SetROP2 -> 0x200df00
+[T94c0] [API]   [2] SetLayout -> 0x200f800
+[T94c0] [API]   [3] SetDIBitsToDevice -> 0x203b200
+[T94c0] [API]   [4] DeleteObject -> 0x200d560
+[T94c0] [API]   [5] DeleteDC -> 0x202b2d0
+[T94c0] [API]   [6] CreatePen -> 0x202a5e0
+[T94c0] [API]   [7] CreateCompatibleDC -> 0x20363a0
+[T94c0] [API]   [8] BitBlt -> 0x20b94b0
+[T94c0] [API]   [9] GetDeviceCaps -> 0x202b090
+[T94c0] [API]   [10] SelectObject -> 0x202a940
+[T94c0] [API]   [11] GetLayout -> 0x207fad0
+[T94c0] [API]   [12] MoveToEx -> 0x205c8e0
+[T94c0] [API]   [13] GetStockObject -> 0x202a7e0
+[T94c0] [API]   [14] SetPixel -> 0x20a0370
+[T94c0] [API]   [15] CreateCompatibleBitmap -> 0x20a1fd0
+[T94c0] [API] Import DLL: USER32.dll (IAT RVA=0x11a8, ILT RVA=0x8670)
+[T94c0] [API]   [0] PostMessageW -> 0x205d710
+[T94c0] [API]   [1] GetDlgItemInt -> 0x2095b50
+[T94c0] [API]   [2] SetMenu -> 0x205dfe0
+[T94c0] [API]   [3] CheckMenuItem -> 0x205e2c0
+[T94c0] [API]   [4] LoadStringW -> 0x205dbc0
+[T94c0] [API]   [5] MessageBoxW -> 0x20aadc0
+[T94c0] [API]   [6] SetTimer -> 0x2086c30
+[T94c0] [API]   [7] GetDesktopWindow -> 0x206e040
+[T94c0] [API]   [8] LoadIconW -> 0x207f770
+[T94c0] [API]   [9] ReleaseCapture -> 0x206dd70
+[T94c0] [API]   [10] PeekMessageW -> 0x20bd090
+[T94c0] [API]   [11] MapWindowPoints -> 0x205ec50
+[T94c0] [API]   [12] SetCapture -> 0x202ef20
+[T94c0] [API]   [13] PtInRect -> 0x20a0730
+[T94c0] [API]   [14] WinHelpW -> 0x2061140
+[T94c0] [API]   [15] SetDlgItemInt -> 0x20b8fd0
+[T94c0] [API]   [16] EndDialog -> 0x205cd40
+[T94c0] [API]   [17] SetDlgItemTextW -> 0x20b8fa0
+[T94c0] [API]   [18] wsprintfW -> 0x20a6400
+[T94c0] [API]   [19] SendMessageW -> 0x20bf5a0
+[T94c0] [API]   [20] GetDlgItem -> 0x203be60
+[T94c0] [API]   [21] GetDlgItemTextW -> 0x2095b10
+[T94c0] [API]   [22] GetSystemMetrics -> 0x200bb00
+[T94c0] [API]   [23] InvalidateRect -> 0x206a420
+[T94c0] [API]   [24] SetRect -> 0x209f460
+[T94c0] [API]   [25] MoveWindow -> 0x205e800
+[T94c0] [API]   [26] GetMenuItemRect -> 0x20968a0
+[T94c0] [API]   [27] DialogBoxParamW -> 0x20b6630
+[T94c0] [API]   [28] DefWindowProcW -> 0x200cd90
+[T94c0] [API]   [29] ReleaseDC -> 0x200cf90
+[T94c0] [API]   [30] GetDC -> 0x200cf80
+[T94c0] [API]   [31] LoadCursorW -> 0x207f760
+[T94c0] [API]   [32] ShowWindow -> 0x2082460
+[T94c0] [API]   [33] PostQuitMessage -> 0x205c3e0
+[T94c0] [API]   [34] KillTimer -> 0x200d000
+[T94c0] [API]   [35] EndPaint -> 0x207ac10
+[T94c0] [API]   [36] BeginPaint -> 0x209f5b0
+[T94c0] [API]   [37] DispatchMessageW -> 0x20ba1c0
+[T94c0] [API]   [38] TranslateMessage -> 0x2029d10
+[T94c0] [API]   [39] TranslateAcceleratorW -> 0x200dd20
+[T94c0] [API]   [40] GetMessageW -> 0x20bce50
+[T94c0] [API]   [41] UpdateWindow -> 0x2045270
+[T94c0] [API]   [42] CreateWindowExW -> 0x20c8560
+[T94c0] [API]   [43] LoadAcceleratorsW -> 0x206b6c0
+[T94c0] [API]   [44] LoadMenuW -> 0x2089680
+[T94c0] [API]   [45] RegisterClassW -> 0x20a0da0
+[T94c0] [API] Import DLL: SHELL32.dll (IAT RVA=0x1198, ILT RVA=0x8660)
+[T94c0] [API]   [0] ShellAboutW -> 0x2062d50
+[T94c0] [API] Import DLL: WINMM.dll (IAT RVA=0x1320, ILT RVA=0x87e8)
+[T94c0] [API]   [0] PlaySoundW -> 0x207f0f0
+[T94c0] [API] Import DLL: COMCTL32.dll (IAT RVA=0x1038, ILT RVA=0x8500)
+[T94c0] [API]   [0] InitCommonControlsEx -> 0x2029bb0
+[T94c0] [API] Import resolution: 110 resolved, 0 unresolved (total 110)
+[T94c0] [API] Exception: .pdata RVA=0xb000 Size=0x4b0 Entries=100
+[T94c0] [API] [API-005] EH hacks DISABLED (default) (MINWIN_EH_HACKS=<unset>)
+[T94c0] [API] [API-005] CXX-EH-FIX (LSDA catch-all patch RVA 0x2010c8) skipped: MINWIN_EH_HACKS not set
+[T94c0] [API] Jumping to EP=0x100007890
+[T94c0] [API] GetStartupInfoA(info=0x7ffce281d730)
+[T94c0] [API] __set_app_type(2)
+[T94c0] [API] _initterm(start=0x1000013c8, end=0x1000013d0)
+[T94c0] [API] __getmainargs(argc=0x7ffce281d71c, argv=0x7ffce281d728, envp=0x7ffce281d720)
+[T94c0] [API] _initterm(start=0x1000013b0, end=0x1000013c0)
+[T94c0] [API] _initterm: calling 0x1000076a0
+[T94c0] [API] GetSystemTimeAsFileTime()
+[T94c0] [API] GetTickCount() = 11347112
+[T94c0] [API] QueryPerformanceCounter()
+[T94c0] [API] GetTickCount() = 11347112
+[T94c0] [API] LoadStringW(id=1) -> 0 (resource absent)
+[T94c0] [API] LoadStringW(id=6) -> 0 (resource absent)
+[T94c0] [API] LoadStringW(id=3) -> 0 (resource absent)
+[T94c0] [API] MessageBoxW(type=0x10) caption=''
+[T94c0] [API] [GDI-LITE] dialog #1 rendered 200x102 -> miniwin-results/winmine.exe/screenshots/messagebox_1.bmp
+[T94c0] [API] LoadStringW(id=7) -> 0 (resource absent)
+[T94c0] [API] LoadStringW(id=6) -> 0 (resource absent)
+[T94c0] [API] LoadStringW(id=3) -> 0 (resource absent)
+[T94c0] [API] MessageBoxW(type=0x10) caption=''
+[T94c0] [API] [GDI-LITE] dialog #2 rendered 200x102 -> miniwin-results/winmine.exe/screenshots/messagebox_2.bmp
+[T94c0] [API] LoadStringW(id=8) -> 0 (resource absent)
+[T94c0] [API] LoadStringW(id=6) -> 0 (resource absent)
+[T94c0] [API] LoadStringW(id=3) -> 0 (resource absent)
+[T94c0] [API] MessageBoxW(type=0x10) caption=''
+[T94c0] [API] [GDI-LITE] dialog #3 rendered 200x102 -> miniwin-results/winmine.exe/screenshots/messagebox_3.bmp
+[T94c0] [API] RegCreateKeyExW -> slot 7 (created=1)
+[T94c0] [API] RegQueryValueExW(key=0x90008 'AlreadyPlayed') -> ERROR_FILE_NOT_FOUND
+[T94c0] [API] SetLastError(2)
+[T94c0] [API] GetDesktopWindow() -> 0x00010000
+[T94c0] [API] [GDI] GetDeviceCaps(24) -> -1
+[T94c0] [API] GetDesktopWindow() -> 0x00010000
+[T94c0] [API] RegCreateKeyExW -> slot 7 (created=0)
+[T94c0] [API] RegSetValueExW -> slot 7, 4 bytes stored
+[T94c0] [API] RegSetValueExW -> slot 7, 4 bytes stored
+[T94c0] [API] RegSetValueExW -> slot 7, 4 bytes stored
+[T94c0] [API] RegSetValueExW -> slot 7, 4 bytes stored
+[T94c0] [API] RegSetValueExW -> slot 7, 4 bytes stored
+[T94c0] [API] RegSetValueExW -> slot 7, 4 bytes stored
+[T94c0] [API] RegSetValueExW -> slot 7, 4 bytes stored
+[T94c0] [API] RegSetValueExW -> slot 7, 4 bytes stored
+[T94c0] [API] RegSetValueExW -> slot 7, 4 bytes stored
+[T94c0] [API] RegSetValueExW -> slot 7, 4 bytes stored
+[T94c0] [API] RegSetValueExW -> slot 7, 4 bytes stored
+[T94c0] [API] RegSetValueExW -> slot 7, 4 bytes stored
+[T94c0] [API] RegSetValueExW -> slot 7, 4 bytes stored
+[T94c0] [API] RegSetValueExW -> slot 7, 2 bytes stored
+[T94c0] [API] RegSetValueExW -> slot 7, 2 bytes stored
+[T94c0] [API] RegSetValueExW -> slot 7, 2 bytes stored
+[T94c0] [API] InitCommonControlsEx(dwICC=0x16fd) -> TRUE
+[T94c0] [API] [GDI] GetStockObject(1)
+[T94c0] [API] RegisterClassW(wc=0x7ffce281d670) -> ATOM 0xc001
+[T94c0] [API] LoadMenuW() -> HMENU 0x50001
+[T94c0] [API] LoadAcceleratorsW() -> NULL (no accelerators; optional sugar)
+[T94c0] [API] RegCreateKeyExW -> slot 7 (created=0)
+[T94c0] [API] RegQueryValueExW(key=0x90008 'Height') -> 0 (type=4 size=4 data='	')
+[T94c0] [API] RegQueryValueExW(key=0x90008 'Width') -> 0 (type=4 size=4 data='	')
+[T94c0] [API] RegQueryValueExW(key=0x90008 'Difficulty') -> 0 (type=4 size=4 data='')
+[T94c0] [API] RegQueryValueExW(key=0x90008 'Mines') -> 0 (type=4 size=4 data='
+')
+[T94c0] [API] RegQueryValueExW(key=0x90008 'Xpos') -> 0 (type=4 size=4 data='P')
+[T94c0] [API] RegQueryValueExW(key=0x90008 'Ypos') -> 0 (type=4 size=4 data='P')
+[T94c0] [API] RegQueryValueExW(key=0x90008 'Sound') -> 0 (type=4 size=4 data='')
+[T94c0] [API] RegQueryValueExW(key=0x90008 'Mark') -> 0 (type=4 size=4 data='')
+[T94c0] [API] RegQueryValueExW(key=0x90008 'Tick') -> ERROR_FILE_NOT_FOUND
+[T94c0] [API] SetLastError(2)
+[T94c0] [API] RegQueryValueExW(key=0x90008 'Menu') -> ERROR_FILE_NOT_FOUND
+[T94c0] [API] SetLastError(2)
+[T94c0] [API] RegQueryValueExW(key=0x90008 'Time1') -> 0 (type=4 size=4 data='ç')
+[T94c0] [API] RegQueryValueExW(key=0x90008 'Time2') -> 0 (type=4 size=4 data='ç')
+[T94c0] [API] RegQueryValueExW(key=0x90008 'Time3') -> 0 (type=4 size=4 data='ç')
+[T94c0] [API] RegQueryValueExW(key=0x90008 'Name1') -> 0 (type=1 size=2 data='')
+[T94c0] [API] RegQueryValueExW(key=0x90008 'Name2') -> 0 (type=1 size=2 data='')
+[T94c0] [API] RegQueryValueExW(key=0x90008 'Name3') -> 0 (type=1 size=2 data='')
+[T94c0] [API] GetDesktopWindow() -> 0x00010000
+[T94c0] [API] [GDI] GetDeviceCaps(24) -> -1
+[T94c0] [API] RegQueryValueExW(key=0x90008 'Color') -> 0 (type=4 size=4 data='')
+[T94c0] [API] GetDesktopWindow() -> 0x00010000
+[T94c0] [API] [GUI] paint surface allocated 32x32 (SWEEP-005)
+[T94c0] [API] [GUI] event pump v3 ARMED (budget=300 keys=0 every=8 clicks=0)
+[T94c0] [API] [GUI] WM_CREATE(lparam=&CS lpParams=0x21afce0) -> wndproc -> 0
+[T94c0] [API] CreateWindowExW(ex=0x0 style=0xca0000 cls=0x10000a240 2x0@78,80) -> HWND 0x10001
+[T94c0] [API] SetLastError(87)
+[T94c0] [API] LoadResource(0x10000c470)
+[T94c0] [API] LoadResource(0x10000c490)
+[T94c0] [API] LoadResource(0x10000c4b0)
+[T94c0] [API] [GDI] CreatePen(w=1,#808080) -> h 0x00031000
+[T94c0] [API] [GDI] CreateCompatibleDC -> 0x00021001
+[T94c0] [API] [GDI] CreateCompatibleBitmap(16x16) -> 0x00052001
+[T94c0] [API] [GDI] SelectObject(memdc=0, 0x00052001) -> sel=0
+[T94c0] [API] [GDI] SetDIBitsToDevice(4bpp 16x16 at 0,0) 16 rows
+[T94c0] [API] [GDI] CreateCompatibleDC -> 0x00021002
+[T94c0] [API] [GDI] CreateCompatibleBitmap(16x16) -> 0x00052002
+[T94c0] [API] [GDI] SelectObject(memdc=1, 0x00052002) -> sel=1
+[T94c0] [API] [GDI] SetDIBitsToDevice(4bpp 16x16 at 0,0) 16 rows
+[T94c0] [API] [GDI] CreateCompatibleDC -> 0x00021003
+[T94c0] [API] [GDI] CreateCompatibleBitmap(16x16) -> 0x00052003
+[T94c0] [API] [GDI] SelectObject(memdc=2, 0x00052003) -> sel=2
+[T94c0] [API] [GDI] SetDIBitsToDevice(4bpp 16x16 at 0,0) 16 rows
+[T94c0] [API] [GDI] CreateCompatibleDC -> 0x00021004
+[T94c0] [API] [GDI] CreateCompatibleBitmap(16x16) -> 0x00052004
+[T94c0] [API] [GDI] SelectObject(memdc=3, 0x00052004) -> sel=3
+[T94c0] [API] [GDI] SetDIBitsToDevice(4bpp 16x16 at 0,0) 16 rows
+[T94c0] [API] [GDI] CreateCompatibleDC -> 0x00021005
+[T94c0] [API] [GDI] CreateCompatibleBitmap(16x16) -> 0x00052005
+[T94c0] [API] [GDI] SelectObject(memdc=4, 0x00052005) -> sel=4
+[T94c0] [API] [GDI] SetDIBitsToDevice(4bpp 16x16 at 0,0) 16 rows
+[T94c0] [API] [GDI] CreateCompatibleDC -> 0x00021006
+[T94c0] [API] [GDI] CreateCompatibleBitmap(16x16) -> 0x00052006
+[T94c0] [API] [GDI] SelectObject(memdc=5, 0x00052006) -> sel=5
+[T94c0] [API] [GDI] SetDIBitsToDevice(4bpp 16x16 at 0,0) 16 rows
+[T94c0] [API] [GDI] CreateCompatibleDC -> 0x00021007
+[T94c0] [API] [GDI] CreateCompatibleBitmap(16x16) -> 0x00052007
+[T94c0] [API] [GDI] SelectObject(memdc=6, 0x00052007) -> sel=6
+[T94c0] [API] [GDI] SetDIBitsToDevice(4bpp 16x16 at 0,0) 16 rows
+[T94c0] [API] [GDI] CreateCompatibleDC -> 0x00021008
+[T94c0] [API] [GDI] CreateCompatibleBitmap(16x16) -> 0x00052008
+[T94c0] [API] [GDI] SelectObject(memdc=7, 0x00052008) -> sel=7
+[T94c0] [API] [GDI] SetDIBitsToDevice(4bpp 16x16 at 0,0) 16 rows
+[T94c0] [API] [GDI] CreateCompatibleDC -> 0x00021009
+[T94c0] [API] [GDI] CreateCompatibleBitmap(16x16) -> 0x00052009
+[T94c0] [API] [GDI] SelectObject(memdc=8, 0x00052009) -> sel=8
+[T94c0] [API] [GDI] SetDIBitsToDevice(4bpp 16x16 at 0,0) 16 rows
+[T94c0] [API] [GDI] CreateCompatibleDC -> 0x0002100a
+[T94c0] [API] [GDI] CreateCompatibleBitmap(16x16) -> 0x0005200a
+[T94c0] [API] [GDI] SelectObject(memdc=9, 0x0005200a) -> sel=9
+[T94c0] [API] [GDI] SetDIBitsToDevice(4bpp 16x16 at 0,0) 16 rows
+[T94c0] [API] [GDI] CreateCompatibleDC -> 0x0002100b
+[T94c0] [API] [GDI] CreateCompatibleBitmap(16x16) -> 0x0005200b
+[T94c0] [API] [GDI] SelectObject(memdc=10, 0x0005200b) -> sel=10
+[T94c0] [API] [GDI] SetDIBitsToDevice(4bpp 16x16 at 0,0) 16 rows
+[T94c0] [API] [GDI] CreateCompatibleDC -> 0x0002100c
+[T94c0] [API] [GDI] CreateCompatibleBitmap(16x16) -> 0x0005200c
+[T94c0] [API] [GDI] SelectObject(memdc=11, 0x0005200c) -> sel=11
+[T94c0] [API] [GDI] SetDIBitsToDevice(4bpp 16x16 at 0,0) 16 rows
+[T94c0] [API] [GDI] CreateCompatibleDC -> 0x0002100d
+[T94c0] [API] [GDI] CreateCompatibleBitmap(16x16) -> 0x0005200d
+[T94c0] [API] [GDI] SelectObject(memdc=12, 0x0005200d) -> sel=12
+[T94c0] [API] [GDI] SetDIBitsToDevice(4bpp 16x16 at 0,0) 16 rows
+[T94c0] [API] [GDI] CreateCompatibleDC -> 0x0002100e
+[T94c0] [API] [GDI] CreateCompatibleBitmap(16x16) -> 0x0005200e
+[T94c0] [API] [GDI] SelectObject(memdc=13, 0x0005200e) -> sel=13
+[T94c0] [API] [GDI] SetDIBitsToDevice(4bpp 16x16 at 0,0) 16 rows
+[T94c0] [API] [GDI] CreateCompatibleDC -> 0x0002100f
+[T94c0] [API] [GDI] CreateCompatibleBitmap(16x16) -> 0x0005200f
+[T94c0] [API] [GDI] SelectObject(memdc=14, 0x0005200f) -> sel=14
+[T94c0] [API] [GDI] SetDIBitsToDevice(4bpp 16x16 at 0,0) 16 rows
+[T94c0] [API] [GDI] CreateCompatibleDC -> 0x00021010
+[T94c0] [API] [GDI] CreateCompatibleBitmap(16x16) -> 0x00052010
+[T94c0] [API] [GDI] SelectObject(memdc=15, 0x00052010) -> sel=15
+[T94c0] [API] [GDI] SetDIBitsToDevice(4bpp 16x16 at 0,0) 16 rows
+[T94c0] [API] CheckMenuItem(id=521, flags=0x8) -> prev 0
+[T94c0] [API] CheckMenuItem(id=522, flags=0) -> prev 0
+[T94c0] [API] CheckMenuItem(id=523, flags=0) -> prev 0
+[T94c0] [API] CheckMenuItem(id=524, flags=0) -> prev 0
+[T94c0] [API] CheckMenuItem(id=529, flags=0x8) -> prev 0
+[T94c0] [API] CheckMenuItem(id=527, flags=0x8) -> prev 0
+[T94c0] [API] CheckMenuItem(id=526, flags=0) -> prev 0
+[T94c0] [API] SetMenu(hwnd, menu=0x50001) -> TRUE
+[T94c0] [API] SetLastError(87)
+[T94c0] [API] MoveWindow(170x2156) -> TRUE
+[T94c0] [API] [GDI] SetDIBitsToDevice(4bpp 13x23 at 17,16) 23 rows
+[T94c0] [API] [GDI] SetDIBitsToDevice(4bpp 13x23 at 30,16) 23 rows
+[T94c0] [API] [GDI] SetDIBitsToDevice(4bpp 13x23 at 43,16) 23 rows
+[T94c0] [API] SetLastError(87)
+[T94c0] [API] [GUI] InvalidateRect -> paint pending
+[T94c0] [API] ShowWindow(hwnd=0x10001 cmd=1) -> TRUE
+[T94c0] [API] UpdateWindow(hwnd=0x10001)
+[T94c0] [API] [GUI-EVENT] #1 GetMessageW -> WM_LBUTTONDOWN 24,64
+[T94c0] [API] SetCapture(0x10001) -> prev (nil)
+[T94c0] [API] [GDI] SetDIBitsToDevice(4bpp 24x24 at 72,16) 24 rows
+[T94c0] [API] [GDI] BitBlt 16x16 @12,55 <- src@0,0 SRCCOPY (0 px)
+[T94c0] [API] [GUI-EVENT] dispatch WM_? wp=0x1 -> 0
+[T94c0] [API] [GUI-EVENT] #2 GetMessageW -> WM_PAINT
+[T94c0] [API] BeginPaint(hwnd=0x10001) -> hdc 0x20001 (32x32)
+[T94c0] [API] [GDI] MoveToEx(0,209)
+[T94c0] [API] [GDI] LineTo(0,0)
+[T94c0] [API] [GDI] LineTo(167,0)
+[T94c0] [API] [GDI] MoveToEx(1,208)
+[T94c0] [API] [GDI] LineTo(1,1)
+[T94c0] [API] [GDI] LineTo(166,1)
+[T94c0] [API] [GDI] MoveToEx(2,207)
+[T94c0] [API] [GDI] LineTo(2,2)
+[T94c0] [API] [GDI] LineTo(165,2)
+[T94c0] [API] [GDI] SelectObject(0x00031000)
+[T94c0] [API] [GDI] MoveToEx(3,208)
+[T94c0] [API] [GDI] LineTo(165,208)
+[T94c0] [API] [GDI] LineTo(165,2)
+[T94c0] [API] [GDI] MoveToEx(2,209)
+[T94c0] [API] [GDI] LineTo(166,209)
+[T94c0] [API] [GDI] LineTo(166,1)
+[T94c0] [API] [GDI] MoveToEx(1,210)
+[T94c0] [API] [GDI] LineTo(167,210)
+[T94c0] [API] [GDI] LineTo(167,0)
+[T94c0] [API] [GDI] SelectObject(0x00031000)
+[T94c0] [API] [GDI] MoveToEx(9,200)
+[T94c0] [API] [GDI] LineTo(9,52)
+[T94c0] [API] [GDI] LineTo(158,52)
+[T94c0] [API] [GDI] MoveToEx(10,199)
+[T94c0] [API] [GDI] LineTo(10,53)
+[T94c0] [API] [GDI] LineTo(157,53)
+[T94c0] [API] [GDI] MoveToEx(11,198)
+[T94c0] [API] [GDI] LineTo(11,54)
+[T94c0] [API] [GDI] LineTo(156,54)
+[T94c0] [API] [GDI] MoveToEx(12,199)
+[T94c0] [API] [GDI] LineTo(156,199)
+[T94c0] [API] [GDI] LineTo(156,54)
+[T94c0] [API] [GDI] MoveToEx(11,200)
+[T94c0] [API] [GDI] LineTo(157,200)
+[T94c0] [API] [GDI] LineTo(157,53)
+[T94c0] [API] [GDI] MoveToEx(10,201)
+[T94c0] [API] [GDI] LineTo(158,201)
+[T94c0] [API] [GDI] LineTo(158,52)
+[T94c0] [API] [GDI] SelectObject(0x00031000)
+[T94c0] [API] [GDI] MoveToEx(9,44)
+[T94c0] [API] [GDI] LineTo(9,9)
+[T94c0] [API] [GDI] LineTo(158,9)
+[T94c0] [API] [GDI] MoveToEx(10,43)
+[T94c0] [API] [GDI] LineTo(10,10)
+[T94c0] [API] [GDI] LineTo(157,10)
+[T94c0] [API] [GDI] MoveToEx(11,44)
+[T94c0] [API] [GDI] LineTo(157,44)
+[T94c0] [API] [GDI] LineTo(157,10)
+[T94c0] [API] [GDI] MoveToEx(10,45)
+[T94c0] [API] [GDI] LineTo(158,45)
+[T94c0] [API] [GDI] LineTo(158,9)
+[T94c0] [API] [GDI] SelectObject(0x00031000)
+[T94c0] [API] [GDI] MoveToEx(16,38)
+[T94c0] [API] [GDI] LineTo(16,15)
+[T94c0] [API] [GDI] LineTo(56,15)
+[T94c0] [API] [GDI] MoveToEx(17,39)
+[T94c0] [API] [GDI] LineTo(56,39)
+[T94c0] [API] [GDI] LineTo(56,15)
+[T94c0] [API] [GDI] SelectObject(0x00031000)
+[T94c0] [API] [GDI] MoveToEx(109,38)
+[T94c0] [API] [GDI] LineTo(109,15)
+[T94c0] [API] [GDI] LineTo(149,15)
+[T94c0] [API] [GDI] MoveToEx(110,39)
+[T94c0] [API] [GDI] LineTo(149,39)
+[T94c0] [API] [GDI] LineTo(149,15)
+[T94c0] [API] [GDI] SelectObject(0x00031000)
+[T94c0] [API] [GDI] MoveToEx(71,39)
+[T94c0] [API] [GDI] LineTo(71,15)
+[T94c0] [API] [GDI] LineTo(96,15)
+[T94c0] [API] [GDI] MoveToEx(72,40)
+[T94c0] [API] [GDI] LineTo(96,40)
+[T94c0] [API] [GDI] LineTo(96,15)
+[T94c0] [API] [GDI] SetDIBitsToDevice(4bpp 13x23 at 17,16) 23 rows
+[T94c0] [API] [GDI] SetDIBitsToDevice(4bpp 13x23 at 30,16) 23 rows
+[T94c0] [API] [GDI] SetDIBitsToDevice(4bpp 13x23 at 43,16) 23 rows
+[T94c0] [API] [GDI] SetDIBitsToDevice(4bpp 24x24 at 72,16) 24 rows
+[T94c0] [API] [GDI] SetDIBitsToDevice(4bpp 13x23 at 110,16) 23 rows
+[T94c0] [API] [GDI] SetDIBitsToDevice(4bpp 13x23 at 123,16) 23 rows
+[T94c0] [API] [GDI] SetDIBitsToDevice(4bpp 13x23 at 136,16) 23 rows
+[T94c0] [API] [GDI] BitBlt 16x16 @12,55 <- src@0,0 SRCCOPY (0 px)
+[T94c0] [API] [GDI] BitBlt 16x16 @28,55 <- src@0,0 SRCCOPY (0 px)
+[T94c0] [API] [GDI] BitBlt 16x16 @44,55 <- src@0,0 SRCCOPY (0 px)
+[T94c0] [API] [GDI] BitBlt 16x16 @60,55 <- src@0,0 SRCCOPY (0 px)
+[T94c0] [API] [GDI] BitBlt 16x16 @76,55 <- src@0,0 SRCCOPY (0 px)
+[T94c0] [API] [GDI] BitBlt 16x16 @92,55 <- src@0,0 SRCCOPY (0 px)
+[T94c0] [API] [GDI] BitBlt 16x16 @108,55 <- src@0,0 SRCCOPY (0 px)
+[T94c0] [API] [GDI] BitBlt 16x16 @124,55 <- src@0,0 SRCCOPY (0 px)
+[T94c0] [API] [GDI] BitBlt 16x16 @140,55 <- src@0,0 SRCCOPY (0 px)
+[T94c0] [API] [GDI] BitBlt 16x16 @12,71 <- src@0,0 SRCCOPY (0 px)
+[T94c0] [API] [GDI] BitBlt 16x16 @28,71 <- src@0,0 SRCCOPY (0 px)
+[T94c0] [API] [GDI] BitBlt 16x16 @44,71 <- src@0,0 SRCCOPY (0 px)
+[T94c0] [API] [GDI] BitBlt 16x16 @60,71 <- src@0,0 SRCCOPY (0 px)
+[T94c0] [API] [GDI] BitBlt 16x16 @76,71 <- src@0,0 SRCCOPY (0 px)
+[T94c0] [API] [GDI] BitBlt 16x16 @92,71 <- src@0,0 SRCCOPY (0 px)
+[T94c0] [API] [GDI] BitBlt 16x16 @108,71 <- src@0,0 SRCCOPY (0 px)
+[T94c0] [API] [GDI] BitBlt 16x16 @124,71 <- src@0,0 SRCCOPY (0 px)
+[T94c0] [API] [GDI] BitBlt 16x16 @140,71 <- src@0,0 SRCCOPY (0 px)
+[T94c0] [API] [GDI] BitBlt 16x16 @12,87 <- src@0,0 SRCCOPY (0 px)
+[T94c0] [API] [GDI] BitBlt 16x16 @28,87 <- src@0,0 SRCCOPY (0 px)
+[T94c0] [API] [GDI] BitBlt 16x16 @44,87 <- src@0,0 SRCCOPY (0 px)
+[T94c0] [API] [GDI] BitBlt 16x16 @60,87 <- src@0,0 SRCCOPY (0 px)
+[T94c0] [API] [GDI] BitBlt 16x16 @76,87 <- src@0,0 SRCCOPY (0 px)
+[T94c0] [API] [GDI] BitBlt 16x16 @92,87 <- src@0,0 SRCCOPY (0 px)
+[T94c0] [API] [GDI] BitBlt 16x16 @108,87 <- src@0,0 SRCCOPY (0 px)
+[T94c0] [API] [GDI] BitBlt 16x16 @124,87 <- src@0,0 SRCCOPY (0 px)
+[T94c0] [API] [GDI] BitBlt 16x16 @140,87 <- src@0,0 SRCCOPY (0 px)
+[T94c0] [API] [GDI] BitBlt 16x16 @12,103 <- src@0,0 SRCCOPY (0 px)
+[T94c0] [API] [GDI] BitBlt 16x16 @28,103 <- src@0,0 SRCCOPY (0 px)
+[T94c0] [API] [GDI] BitBlt 16x16 @44,103 <- src@0,0 SRCCOPY (0 px)
+[T94c0] [API] [GDI] BitBlt 16x16 @60,103 <- src@0,0 SRCCOPY (0 px)
+[T94c0] [API] [GDI] BitBlt 16x16 @76,103 <- src@0,0 SRCCOPY (0 px)
+[T94c0] [API] [GDI] BitBlt 16x16 @92,103 <- src@0,0 SRCCOPY (0 px)
+[T94c0] [API] [GDI] BitBlt 16x16 @108,103 <- src@0,0 SRCCOPY (0 px)
+[T94c0] [API] [GDI] BitBlt 16x16 @124,103 <- src@0,0 SRCCOPY (0 px)
+[T94c0] [API] [GDI] BitBlt 16x16 @140,103 <- src@0,0 SRCCOPY (0 px)
+[T94c0] [API] [GDI] BitBlt 16x16 @12,119 <- src@0,0 SRCCOPY (0 px)
+[T94c0] [API] [GDI] BitBlt 16x16 @28,119 <- src@0,0 SRCCOPY (0 px)
+[T94c0] [API] [GDI] BitBlt 16x16 @44,119 <- src@0,0 SRCCOPY (0 px)
+[T94c0] [API] [GDI] BitBlt 16x16 @60,119 <- src@0,0 SRCCOPY (0 px)
+[T94c0] [API] [GDI] BitBlt 16x16 @76,119 <- src@0,0 SRCCOPY (0 px)
+[T94c0] [API] [GDI] BitBlt 16x16 @92,119 <- src@0,0 SRCCOPY (0 px)
+[T94c0] [API] [GDI] BitBlt 16x16 @108,119 <- src@0,0 SRCCOPY (0 px)
+[T94c0] [API] [GDI] BitBlt 16x16 @124,119 <- src@0,0 SRCCOPY (0 px)
+[T94c0] [API] [GDI] BitBlt 16x16 @140,119 <- src@0,0 SRCCOPY (0 px)
+[T94c0] [API] [GDI] BitBlt 16x16 @12,135 <- src@0,0 SRCCOPY (0 px)
+[T94c0] [API] [GDI] BitBlt 16x16 @28,135 <- src@0,0 SRCCOPY (0 px)
+[T94c0] [API] [GDI] BitBlt 16x16 @44,135 <- src@0,0 SRCCOPY (0 px)
+[T94c0] [API] [GDI] BitBlt 16x16 @60,135 <- src@0,0 SRCCOPY (0 px)
+[T94c0] [API] [GDI] BitBlt 16x16 @76,135 <- src@0,0 SRCCOPY (0 px)
+[T94c0] [API] [GDI] BitBlt 16x16 @92,135 <- src@0,0 SRCCOPY (0 px)
+[T94c0] [API] [GDI] BitBlt 16x16 @108,135 <- src@0,0 SRCCOPY (0 px)
+[T94c0] [API] [GDI] BitBlt 16x16 @124,135 <- src@0,0 SRCCOPY (0 px)
+[T94c0] [API] [GDI] BitBlt 16x16 @140,135 <- src@0,0 SRCCOPY (0 px)
+[T94c0] [API] [GDI] BitBlt 16x16 @12,151 <- src@0,0 SRCCOPY (0 px)
+[T94c0] [API] [GDI] BitBlt 16x16 @28,151 <- src@0,0 SRCCOPY (0 px)
+[T94c0] [API] [GDI] BitBlt 16x16 @44,151 <- src@0,0 SRCCOPY (0 px)
+[T94c0] [API] [GDI] BitBlt 16x16 @60,151 <- src@0,0 SRCCOPY (0 px)
+[T94c0] [API] [GDI] BitBlt 16x16 @76,151 <- src@0,0 SRCCOPY (0 px)
+[T94c0] [API] [GDI] BitBlt 16x16 @92,151 <- src@0,0 SRCCOPY (0 px)
+[T94c0] [API] [GDI] BitBlt 16x16 @108,151 <- src@0,0 SRCCOPY (0 px)
+[T94c0] [API] [GDI] BitBlt 16x16 @124,151 <- src@0,0 SRCCOPY (0 px)
+[T94c0] [API] [GDI] BitBlt 16x16 @140,151 <- src@0,0 SRCCOPY (0 px)
+[T94c0] [API] [GDI] BitBlt 16x16 @12,167 <- src@0,0 SRCCOPY (0 px)
+[T94c0] [API] [GDI] BitBlt 16x16 @28,167 <- src@0,0 SRCCOPY (0 px)
+[T94c0] [API] [GDI] BitBlt 16x16 @44,167 <- src@0,0 SRCCOPY (0 px)
+[T94c0] [API] [GDI] BitBlt 16x16 @60,167 <- src@0,0 SRCCOPY (0 px)
+[T94c0] [API] [GDI] BitBlt 16x16 @76,167 <- src@0,0 SRCCOPY (0 px)
+[T94c0] [API] [GDI] BitBlt 16x16 @92,167 <- src@0,0 SRCCOPY (0 px)
+[T94c0] [API] [GDI] BitBlt 16x16 @108,167 <- src@0,0 SRCCOPY (0 px)
+[T94c0] [API] [GDI] BitBlt 16x16 @124,167 <- src@0,0 SRCCOPY (0 px)
+[T94c0] [API] [GDI] BitBlt 16x16 @140,167 <- src@0,0 SRCCOPY (0 px)
+[T94c0] [API] [GDI] BitBlt 16x16 @12,183 <- src@0,0 SRCCOPY (0 px)
+[T94c0] [API] [GDI] BitBlt 16x16 @28,183 <- src@0,0 SRCCOPY (0 px)
+[T94c0] [API] [GDI] BitBlt 16x16 @44,183 <- src@0,0 SRCCOPY (0 px)
+[T94c0] [API] [GDI] BitBlt 16x16 @60,183 <- src@0,0 SRCCOPY (0 px)
+[T94c0] [API] [GDI] BitBlt 16x16 @76,183 <- src@0,0 SRCCOPY (0 px)
+[T94c0] [API] [GDI] BitBlt 16x16 @92,183 <- src@0,0 SRCCOPY (0 px)
+[T94c0] [API] [GDI] BitBlt 16x16 @108,183 <- src@0,0 SRCCOPY (0 px)
+[T94c0] [API] [GDI] BitBlt 16x16 @124,183 <- src@0,0 SRCCOPY (0 px)
+[T94c0] [API] [GDI] BitBlt 16x16 @140,183 <- src@0,0 SRCCOPY (0 px)
+[T94c0] [API] [GDI] frame #1 (EndPaint) 32x32 -> miniwin-results/winmine.exe/screenshots/frame_001.bmp
+[T94c0] [API] [GUI-EVENT] dispatch WM_PAINT wp=0x0 -> 0
+[T94c0] [API] [GUI-EVENT] #3 GetMessageW -> WM_LBUTTONUP 24,64
+[T94c0] [API] ReleaseCapture() -> TRUE
+[T94c0] [API] [GDI] SetDIBitsToDevice(4bpp 13x23 at 110,16) 23 rows
+[T94c0] [API] [GDI] SetDIBitsToDevice(4bpp 13x23 at 123,16) 23 rows
+[T94c0] [API] [GDI] SetDIBitsToDevice(4bpp 13x23 at 136,16) 23 rows
+[T94c0] [API] [GUI] SetTimer(id=1, 1000ms) -> armed (real elapse gate)
+[T94c0] [API] [GDI] BitBlt 16x16 @12,55 <- src@0,0 SRCCOPY (0 px)
+[T94c0] [API] [GDI] BitBlt 16x16 @28,55 <- src@0,0 SRCCOPY (0 px)
+[T94c0] [API] [GDI] BitBlt 16x16 @12,71 <- src@0,0 SRCCOPY (0 px)
+[T94c0] [API] [GDI] BitBlt 16x16 @28,71 <- src@0,0 SRCCOPY (0 px)
+[T94c0] [API] [GDI] BitBlt 16x16 @44,55 <- src@0,0 SRCCOPY (0 px)
+[T94c0] [API] [GDI] BitBlt 16x16 @44,71 <- src@0,0 SRCCOPY (0 px)
+[T94c0] [API] [GDI] BitBlt 16x16 @12,87 <- src@0,0 SRCCOPY (0 px)
+[T94c0] [API] [GDI] BitBlt 16x16 @28,87 <- src@0,0 SRCCOPY (0 px)
+[T94c0] [API] [GDI] BitBlt 16x16 @44,87 <- src@0,0 SRCCOPY (0 px)
+[T94c0] [API] [GDI] BitBlt 16x16 @60,55 <- src@0,0 SRCCOPY (0 px)
+[T94c0] [API] [GDI] BitBlt 16x16 @60,71 <- src@0,0 SRCCOPY (0 px)
+[T94c0] [API] [GDI] BitBlt 16x16 @60,87 <- src@0,0 SRCCOPY (0 px)
+[T94c0] [API] [GDI] BitBlt 16x16 @12,103 <- src@0,0 SRCCOPY (0 px)
+[T94c0] [API] [GDI] BitBlt 16x16 @28,103 <- src@0,0 SRCCOPY (0 px)
+[T94c0] [API] [GDI] BitBlt 16x16 @44,103 <- src@0,0 SRCCOPY (0 px)
+[T94c0] [API] [GDI] BitBlt 16x16 @60,103 <- src@0,0 SRCCOPY (0 px)
+[T94c0] [API] [GDI] BitBlt 16x16 @76,55 <- src@0,0 SRCCOPY (0 px)
+[T94c0] [API] [GDI] BitBlt 16x16 @76,71 <- src@0,0 SRCCOPY (0 px)
+[T94c0] [API] [GDI] BitBlt 16x16 @76,87 <- src@0,0 SRCCOPY (0 px)
+[T94c0] [API] [GDI] BitBlt 16x16 @12,119 <- src@0,0 SRCCOPY (0 px)
+[T94c0] [API] [GDI] BitBlt 16x16 @28,119 <- src@0,0 SRCCOPY (0 px)
+[T94c0] [API] [GDI] BitBlt 16x16 @44,119 <- src@0,0 SRCCOPY (0 px)
+[T94c0] [API] [GDI] BitBlt 16x16 @60,119 <- src@0,0 SRCCOPY (0 px)
+[T94c0] [API] [GDI] BitBlt 16x16 @92,55 <- src@0,0 SRCCOPY (0 px)
+[T94c0] [API] [GDI] BitBlt 16x16 @92,71 <- src@0,0 SRCCOPY (0 px)
+[T94c0] [API] [GDI] BitBlt 16x16 @92,87 <- src@0,0 SRCCOPY (0 px)
+[T94c0] [API] [GDI] BitBlt 16x16 @108,55 <- src@0,0 SRCCOPY (0 px)
+[T94c0] [API] [GDI] BitBlt 16x16 @108,71 <- src@0,0 SRCCOPY (0 px)
+[T94c0] [API] [GDI] SetDIBitsToDevice(4bpp 24x24 at 72,16) 24 rows
+[T94c0] [API] [GUI-EVENT] dispatch WM_? wp=0x0 -> 0
+[T94c0] [API] GetMessageW() -> 0 (no event source: no timer/paint/keys left)
+[T94c0] [API] [GDI] DeleteDC(memdc=0) -> freed
+[T94c0] [API] [GDI] DeleteDC(memdc=1) -> freed
+[T94c0] [API] [GDI] DeleteDC(memdc=2) -> freed
+[T94c0] [API] [GDI] DeleteDC(memdc=3) -> freed
+[T94c0] [API] [GDI] DeleteDC(memdc=4) -> freed
+[T94c0] [API] [GDI] DeleteDC(memdc=5) -> freed
+[T94c0] [API] [GDI] DeleteDC(memdc=6) -> freed
+[T94c0] [API] [GDI] DeleteDC(memdc=7) -> freed
+[T94c0] [API] [GDI] DeleteDC(memdc=8) -> freed
+[T94c0] [API] [GDI] DeleteDC(memdc=9) -> freed
+[T94c0] [API] [GDI] DeleteDC(memdc=10) -> freed
+[T94c0] [API] [GDI] DeleteDC(memdc=11) -> freed
+[T94c0] [API] [GDI] DeleteDC(memdc=12) -> freed
+[T94c0] [API] [GDI] DeleteDC(memdc=13) -> freed
+[T94c0] [API] [GDI] DeleteDC(memdc=14) -> freed
+[T94c0] [API] [GDI] DeleteDC(memdc=15) -> freed
+[T94c0] [API] exit(0)
+  ]
+}

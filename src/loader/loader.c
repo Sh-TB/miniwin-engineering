@@ -16142,6 +16142,13 @@ static int       g_key_every = 8;
  * channel for dialog/child-control guests (calculator E2E math proof). */
 static uint32_t  g_clickv[64]; static int g_clickn = 0, g_clicki = 0;
 static int       g_click_every = 2;
+/* SW-1261b (SWEEP-051): coordinate MOUSE channel — custom-drawn boards
+ * (winmine/sol) take WM_LBUTTONDOWN/UP at CLIENT COORDINATES, not
+ * WM_COMMAND control ids. MINWIN_MOUSE="x,y;x,y;..." delivers a
+ * DOWN/UP pair per point, paced like the id-click channel. */
+static int       g_mouse_x[32], g_mouse_y[32];
+static int       g_mousen = 0, g_mousei = 0, g_mouse_phase = 0;
+static int       g_mouse_every = 2;
 static int       g_frame_no = 0;
 static char      g_frame_dir[600];
 
@@ -16319,6 +16326,20 @@ static int mw_gui_events_enabled(void) {
         }
         const char* ce = getenv("MINWIN_CLICK_EVERY");
         if (ce) { int v = atoi(ce); if (v > 0) g_click_every = v; }
+        const char* mse = getenv("MINWIN_MOUSE");
+        if (mse && g_events_mode) {
+            char tmp[1024]; strncpy(tmp, mse, sizeof(tmp) - 1); tmp[sizeof(tmp) - 1] = 0;
+            for (char* t = strtok(tmp, ";"); t && g_mousen < 32; t = strtok(NULL, ";")) {
+                char* comma = strchr(t, ',');
+                if (!comma) continue;
+                *comma = 0;
+                g_mouse_x[g_mousen] = atoi(t);
+                g_mouse_y[g_mousen] = atoi(comma + 1);
+                g_mousen++;
+            }
+        }
+        const char* me = getenv("MINWIN_MOUSE_EVERY");
+        if (me) { int v = atoi(me); if (v > 0) g_mouse_every = v; }
         if (g_events_mode)
             MW_TRACE("[GUI] event pump v3 ARMED (budget=%d keys=%d every=%d clicks=%d)",
                      g_budget, g_keyn, g_key_every, g_clickn);
@@ -16372,6 +16393,24 @@ static int mw_gui_next_event(void* msg, void* hwnd, int consume, const char* api
         if (consume)
             MW_TRACE("[GUI-EVENT] #%d %s -> WM_COMMAND id=%lu ctl=%p",
                      g_delivered, api, (unsigned long)id, ctl);
+        return 1;
+    }
+    /* SW-1261b: coordinate mouse — DOWN/UP pair per queued point */
+    if (g_mousei < g_mousen && (g_delivered % g_mouse_every) == 0) {
+        int x = g_mouse_x[g_mousei], y = g_mouse_y[g_mousei];
+        int was_down = (g_mouse_phase == 0);
+        uint32_t m = was_down ? 0x0201u /* WM_LBUTTONDOWN */ : 0x0202u /* WM_LBUTTONUP */;
+        uintptr_t wp = was_down ? 1u /* MK_LBUTTON */ : 0u;
+        long long lp = (long long)(((y & 0xFFFFu) << 16) | (x & 0xFFFFu));
+        if (consume) {
+            g_delivered++;
+            if (was_down) g_mouse_phase = 1;
+            else { g_mousei++; g_mouse_phase = 0; }
+        }
+        mw_gui_fill_msg(msg, h, m, wp, lp);
+        if (consume)
+            MW_TRACE("[GUI-EVENT] #%d %s -> WM_LBUTTON%s %d,%d",
+                     g_delivered, api, was_down ? "DOWN" : "UP", x, y);
         return 1;
     }
     if (g_paint_pending) {
