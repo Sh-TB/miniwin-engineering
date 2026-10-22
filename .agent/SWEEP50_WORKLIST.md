@@ -2652,11 +2652,44 @@ viewer, (2) Windows calculator, (3) a program that does not exist on Linux
   libxmlsec-mscng). Census: soffice x3 deterministic rc=99 / 10 stubs; 19
   SWEEP-050 guests byte-identical; DL corpus = HEAD (autoruns64/zoomit64 139
   A/B-verified pre-existing, NOT a regression); G1 12/12; calc 15/15.
-- [ ] **SW-1262 (from SW-1261)** cross-DLL C++ catch-type matching: the
-  uno::Exception catch handlers in mergedlo do not yet claim the
-  cppuhelper3msc throw, so the bootstrap exits via the UCRT
-  _seh_filter_exe/_exit(0xE06D7363) path instead of continuing into the VCL
-  message pump. FH4 + ThrowInfo + image-relative type descriptors across
-  guest DLLs = the frontier. Target: soffice past bootstrap into the pump.
+- [x] **SW-1262 LANDED (SWEEP-052 Train 1) — cross-DLL C++ catch-type matching
+  WORKS: the mergedlo catch now CLAIMS the cppuhelper3MSC throw end to end.**
+  Root cause #1: engine mw_RtlPcToFileHeader v1 knew only the EXE image, so
+  the guest's REAL vcruntime140!_CxxThrowException (disassembled: EI[3] =
+  RtlPcToFileHeader(ThrowInfo) = the THROWING image base; EI[0]=0x1994000 is
+  the fallback magic when that lookup FAILS) passed EI[3]=0 and the real
+  vcruntime140_1 __CxxFrameHandler4 resolved the FH4 image-relative
+  ThrowInfo4/CatchableTypeArray RVAs against base 0 — no catch could EVER
+  match. Fixed (mw_module_of). MEASURED: DeploymentException (".?AV
+  DeploymentException@uno@star@sun@com@@", base chain -> RuntimeException ->
+  Exception, disk-decoded from cppuhelper3MSC RVA 0x145bd8) now claimed —
+  RtlUnwindEx unwinds to the mergedlo catch landing pad. Root cause #2:
+  AccessCheck v1 answered FALSE unconditionally — sal3's pre-open check
+  (GetNamedSecurityInfoW -> DuplicateToken -> AccessCheck 0x120116)
+  concluded uno.ini/services.rdb inaccessible ('Cannot obtain UNO_SERVICES
+  from uno ini' — decoded via the new [CXEH] uno::Exception Message dump;
+  the non-polymorphic uno::Exception keeps its Message rtl_uString* at
+  object+0). Fixed: AccessCheck v2 REAL DACL semantics (NULL-DACL grant-all,
+  ACE walk, session SIDs, generic->file mapping) + DuplicateTokenEx v2 real
+  duplication + DuplicateToken (3-arg) added. uno.ini/fundamental.ini/
+  types.rdb/services.rdb now staged beside soffice.bin (SW-1261 had staged
+  only soffice.ini). MEASURED: soffice x3 deterministic rc=99 stub 8 (was
+  10); bootstrap reaches the services.rdb stage. G1 12/12
+  (evidence/master/g1/20261022_195936, binary 69a015b9); regression census
+  zero deltas vs SWEEP-051 baseline (evidence/sweep052/regression.tsv;
+  procexp64 124 IS its SWEEP-051 baseline value). Instruments: [CXEH] FH4
+  throw decoder (types + messages), [STUB] import-name registry, CreateFileW
+  caller attribution, GetModuleFileNameW output log; DR0 watch runs
+  (scripts/mw_watch build of scripts/sweep051_watch.c).
+- [ ] **SW-1263 (from SW-1262)** soffice services.rdb gate: sal3's
+  osl_openFile receives PROGRESSIVELY TRUNCATED directory prefixes of the
+  correct path ('C:\artifacts\s', 'C:\artifacts\sweep051\guests\',
+  'C:\artifacts\sweep051\', 'C:\artifacts\sweep051\gu' with
+  MINWIN_HEAP_GUARD=1) — the cut point moves with allocator layout, so the
+  rtl_uString length/header flowing into sal3's URL->system-path conversion
+  is corrupt (62 identical failed opens then 'Cannot obtain UNO_SERVICES').
+  GetModuleFileNameW output verified CLEAN (48 chars) — the corruption is in
+  the bootstrap string chain (allocator interaction class). Target: services
+  .rdb open -> UNO service manager -> past bootstrap into the VCL pump.
 - [ ] **SW-1261b** Everything 1.4.1 full lifecycle (UI interaction) queued
   behind the calc-battery-style click harness (unchanged).

@@ -1421,3 +1421,40 @@ sol/freecell exit-0), and the ODF display program = **this round's train**.
   contract: the clock starts on the first left click) and repaints the board
   (88-110 16x16 BitBlts); exit 0, zero crashes. 9/9 (3 checks x 3 runs).
 - G1 PIN 12/12 re-pinned on binary 0402f7de (evidence/master/g1/20261022_185323).
+
+## SWEEP-052 Train 1 — SW-1262 cross-DLL C++ catch matching LANDED
+
+- Inherited frontier: soffice rc=99, "mergedlo catch handlers do not claim
+  the cppuhelper3msc throw". Decoded with three instruments built this train:
+  (a) disk ThrowInfo4/CatchableTypeArray decoder (scripts/sweep052_eh_decode.py),
+  (b) [CXEH] dispatch-time FH4 throw decoder in the engine (throw image,
+  catchable type names, uno::Exception Message UTF-16 dump, object RTTI
+  probe), (c) DR0 hardware-watchpoint runs (scripts/mw_watch).
+- FH4 throw record disassembly (guest's REAL vcruntime140/_CxxThrowException
+  RVA 0x5230): EI[3] = RtlPcToFileHeader(ThrowInfo) = throwing image base;
+  EI[0]=0x1994000 only when that lookup FAILS; ThrowInfo4 = image-relative
+  DWORD RVAs in both cases. __CxxFrameHandler4 prologue confirmed:
+  FuncInfo4 = dc->ImageBase + *(DWORD*)dc->HandlerData.
+- ROOT CAUSE #1: engine RtlPcToFileHeader v1 = EXE-only. Fixed via
+  mw_module_of (guest-DLL registry). MEASURED: mergedlo's FH4 handler now
+  CLAIMS the DeploymentException throw and RtlUnwindEx unwinds to the
+  mergedlo catch landing pad — cross-DLL catch(uno::Exception&) matching
+  works end to end.
+- ROOT CAUSE #2: AccessCheck v1 = unconditional FALSE; sal3's pre-open gate
+  (GetNamedSecurityInfoW -> DuplicateToken -> AccessCheck) then denied
+  uno.ini/services.rdb. Fixed: AccessCheck v2 real DACL semantics (NULL-DACL
+  grant-all per Windows contract, DENIED-then-ALLOWED ACE walk, session
+  user+Administrators SIDs, generic->file mapping), DuplicateTokenEx v2 real
+  handle duplication, DuplicateToken (3-arg) table entry. SW-1261 staging
+  gap closed: uno.ini/fundamental.ini/types.rdb/services.rdb staged.
+- MEASURED binary 69a015b9: soffice x3 deterministic rc=99 stub 8 (was 10;
+  the -2 = DuplicateToken now resolved); regression census ZERO deltas vs
+  SWEEP-051 baseline (procexp64 124 IS its baseline); G1 PIN 12/12
+  (evidence/master/g1/20261022_195936); calc battery unchanged.
+- NEW FRONTIER registered SW-1263: sal3's osl_openFile receives truncated
+  directory prefixes of the services.rdb path; cut point moves with allocator
+  layout (heap-guard A/B moves it to '...sweep051\gu') = corrupt rtl_uString
+  length/header in the bootstrap string chain. GetModuleFileNameW verified
+  clean; corruption is downstream (allocator interaction class).
+- evidence/sweep052/ (README decode chain, cxeh_decode.log, catch_claimed.txt,
+  regression.tsv); worklist SW-1262 marked + SW-1263 registered; no force-push.

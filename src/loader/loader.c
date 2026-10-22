@@ -1190,6 +1190,7 @@ __attribute__((ms_abi)) void* mw_WinStationOpenServerW(const void* name) {
  * pointers), single RWX region (no per-section W^X yet).
  * ============================================================ */
 __attribute__((ms_abi)) uint64_t mw_unresolved_import_stub(void); /* fwd (def at EXE import loop) */
+static void mw_stubname_add(uint64_t slot_va, const char* dll, const char* fn); /* SW-1262 fwd */
 
 static void* mw_loadlibrary_disk_dll(const char* low, const char* base);
 static int load_pe_dll(const char* fullpath, const char* lowname) {
@@ -1480,6 +1481,16 @@ static int load_pe_dll(const char* fullpath, const char* lowname) {
                                  (const char*)(img + (uint32_t)(int_[t] & 0xFFFFFFFF) + 2),
                                  dlow);
                     fn = (void*)mw_unresolved_import_stub;
+                    /* SW-1262: register slot->name so the stub can print the
+                     * real import at call time (dlow is lowercase dll name). */
+                    if (int_[t] & 0x8000000000000000ULL) {
+                        char ordtag[24];
+                        snprintf(ordtag, sizeof(ordtag), "#%u", (unsigned)(int_[t] & 0xFFFF));
+                        mw_stubname_add((uint64_t)(uintptr_t)&iat[t], dlow, ordtag);
+                    } else {
+                        mw_stubname_add((uint64_t)(uintptr_t)&iat[t], dlow,
+                                        (const char*)(img + (uint32_t)(int_[t] & 0xFFFFFFFF) + 2));
+                    }
                     dll_unresolved++;
                 } else dll_resolved++;
                 iat[t] = (uint64_t)(uintptr_t)fn;
@@ -2312,6 +2323,201 @@ static void seh_diagnostic_walk(void) {
 }
 
 /* ============================================================
+ * SW-1262 (SWEEP-052): FH4 C++ throw decoder — INSTRUMENT, not policy.
+ *
+ * soffice rc=99 decode chain (evidence/sweep052/): the guest throws with
+ * EI[0]=0x01994000 (EH_PURE_MAGIC_NUMBER1) — the ThrowInfo pointed by
+ * EI[2] is the FH4 IMAGE-RELATIVE format (four DWORD RVAs into the
+ * THROWING image), not the classic absolute-pointer ThrowInfo. The
+ * on-disk probe (scripts/sweep052_eh_decode.py) proved cppuhelper3MSC
+ * throws '.?AVDeploymentException@uno@star@sun@com@@' with a 3-entry
+ * catchable chain (DeploymentException -> RuntimeException -> Exception).
+ *
+ * A catch(uno::Exception&) claims that throw only through RTTI
+ * base-class matching: FH4 reads the OBJECT's vftable[-1] Complete
+ * Object Locator (x64 COL = image-relative RVAs + signature 1),
+ * resolves it against the VFTABLE-OWNING image, and walks the class
+ * hierarchy names. If the vftable pointer does not land inside any
+ * loaded image, base-class matching CANNOT succeed -> ContinueSearch
+ * everywhere -> CRT top-level _seh_filter_exe -> _exit(0xE06D7363)
+ * (rc 99). This decoder prints every step of that chain at dispatch
+ * time so the failing link is measured, not guessed.
+ * ============================================================ */
+static int mw_guest_probe_read(uint64_t va, void* buf, size_t n) {
+    struct iovec liov = { buf, n };
+    struct iovec riov = { (void*)(uintptr_t)va, n };
+    return process_vm_readv(getpid(), &liov, 1, &riov, 1, 0) == (ssize_t)n;
+}
+/* Module (guest DLL or the EXE) containing va -> base/size/name. */
+static int mw_module_of(uint64_t va, uint64_t* base_out, uint64_t* size_out,
+                        const char** name_out) {
+    for (int i = 0; i < MW_DLL_MAX; i++) {
+        if (!g_dll_images[i].in_use) continue;
+        uint64_t b = (uint64_t)(uintptr_t)g_dll_images[i].base;
+        if (va >= b && va < b + g_dll_images[i].img_size) {
+            if (base_out) *base_out = b;
+            if (size_out) *size_out = g_dll_images[i].img_size;
+            if (name_out) *name_out = g_dll_images[i].name;
+            return 1;
+        }
+    }
+    uint64_t eb = (uint64_t)(uintptr_t)g_image_base;
+    if (va >= eb && va < eb + g_image_size) {
+        if (base_out) *base_out = eb;
+        if (size_out) *size_out = g_image_size;
+        if (name_out) *name_out = "<exe>";
+        return 1;
+    }
+    return 0;
+}
+static void mw_cxeh_read_name(uint64_t img_base, uint32_t td_rva,
+                              char* out, size_t cap) {
+    out[0] = 0;
+    if (!td_rva) { snprintf(out, cap, "<null>"); return; }
+    if (!mw_guest_probe_read(img_base + td_rva + 16, out, cap - 1)) {
+        snprintf(out, cap, "<unreadable@0x%lx>", (unsigned long)(img_base + td_rva + 16));
+        return;
+    }
+    out[cap - 1] = 0;
+}
+static void mw_cxeh_decode_throw(const EXCEPTION_RECORD* er) {
+    if (er->ExceptionCode != 0xe06d7363u || er->NumberParameters < 3) return;
+    uint64_t magic = er->ExceptionInformation[0];
+    /* SW-1262 note: FH4-era guests (VS2015+, disassembly-verified in
+     * vcruntime140!_CxxThrowException) ALWAYS pass an image-relative
+     * ThrowInfo4 as EI[2] plus the throwing image base as EI[3]. The magic
+     * is 0x01994000 only when the thrower's own RtlPcToFileHeader FAILED
+     * (now fixed); the healthy path keeps 0x19930520 with EI[3] set. Decode
+     * the RVA format for both magics and sanity-check before trusting. */
+    if (magic != 0x1994000u && magic != 0x19930520u) {
+        MW_TRACE("[CXEH] unknown throw magic=0x%lx — decoder idle", magic);
+        return;
+    }
+    if (magic == 0x19930520u && er->NumberParameters < 4) {
+        MW_TRACE("[CXEH] classic 3-param record (pre-FH4 guest) — decoder idle");
+        return;
+    }
+    uint64_t ti_va = er->ExceptionInformation[2];
+    uint64_t obj_va = er->ExceptionInformation[1];
+    uint64_t tbase = 0, tsize = 0;
+    const char* tname = NULL;
+    if (!mw_module_of(ti_va, &tbase, &tsize, &tname)) {
+        MW_TRACE("[CXEH] ThrowInfo4@0x%lx: OWNING MODULE NOT FOUND", ti_va);
+        return;
+    }
+    uint32_t t4[4] = { 0, 0, 0, 0 };
+    if (!mw_guest_probe_read(ti_va, t4, sizeof(t4))) {
+        MW_TRACE("[CXEH] ThrowInfo4@0x%lx (image %s): unreadable", ti_va, tname);
+        return;
+    }
+    MW_TRACE("[CXEH] throw image=%s base=0x%lx ThrowInfo4@RVA=0x%lx attrs=0x%x "
+             "unwind_rva=0x%x fwd_rva=0x%x cta_rva=0x%x EI3(throw base)=0x%lx",
+             tname, tbase, (unsigned long)(ti_va - tbase), t4[0], t4[1], t4[2], t4[3],
+             (unsigned long)er->ExceptionInformation[3]);
+    /* CatchableTypeArray4: DWORD count, then DWORD RVAs of CatchableType4 */
+    if (t4[3]) {
+        uint32_t n = 0;
+        mw_guest_probe_read(tbase + t4[3], &n, 4);
+        if (n > 16) {
+            MW_TRACE("[CXEH] cta n=%u absurd — abort decode", n);
+        } else {
+            for (uint32_t i = 0; i < n; i++) {
+                uint32_t ct_rva = 0;
+                mw_guest_probe_read(tbase + t4[3] + 4 + 4 * i, &ct_rva, 4);
+                uint32_t ct[6] = { 0, 0, 0, 0, 0, 0 };
+                if (!ct_rva || !mw_guest_probe_read(tbase + ct_rva, ct, sizeof(ct)))
+                    continue;
+                /* CatchableType4: props(0) dispType(4) mdisp(8) pdisp(12)
+                 * vdisp(16) sizeOrOffset(20) [+ dispCopy(24)] */
+                char tn[128];
+                mw_cxeh_read_name(tbase, ct[1], tn, sizeof(tn));
+                MW_TRACE("[CXEH] catchable[%u] rva=0x%x props=0x%x mdisp=%d pdisp=%d "
+                         "vdisp=%d size=%d type='%s'",
+                         i, ct_rva, ct[0], (int32_t)ct[2], (int32_t)ct[3],
+                         (int32_t)ct[4], (int32_t)ct[5], tn);
+            }
+        }
+    }
+    /* Object RTTI: vftable -> [-1] COL -> type + class hierarchy. */
+    uint64_t vptr = 0;
+    if (!obj_va || !mw_guest_probe_read(obj_va, &vptr, 8)) {
+        MW_TRACE("[CXEH] object@0x%lx: unreadable", obj_va);
+        return;
+    }
+    /* SW-1262: uno::Exception (LibreOffice) is NON-polymorphic — object+0 is
+     * the Message rtl_uString* (heap or a static literal in the image), so
+     * the "vftable" read above lands on heap data, not RTTI. Dump the Message
+     * (UTF-16) — it names the failing bootstrap subsystem directly, e.g. the
+     * 'null process service factory' DeploymentException. */
+    {
+        uint64_t msg = vptr; /* object+0 = rtl_uString* */
+        uint32_t hdr[2] = { 0, 0 };
+        if (msg && mw_guest_probe_read(msg, hdr, 8) && hdr[1] > 0 && hdr[1] < 2048) {
+            uint16_t* wbuf = malloc(hdr[1] * 2 + 2);
+            if (wbuf && mw_guest_probe_read(msg + 8, wbuf, hdr[1] * 2)) {
+                /* UTF-16 -> UTF-8 in a bounded local buffer */
+                char u8[1024];
+                size_t o = 0;
+                for (uint32_t i = 0; i < hdr[1] && o + 8 < sizeof(u8); i++) {
+                    uint32_t c = wbuf[i];
+                    if (c >= 0xD800 && c < 0xDC00 && i + 1 < hdr[1] &&
+                        wbuf[i + 1] >= 0xDC00 && wbuf[i + 1] < 0xE000) {
+                        c = 0x10000 + ((c - 0xD800) << 10) + (wbuf[i + 1] - 0xDC00);
+                        i++;
+                    }
+                    if (c < 0x80) u8[o++] = (char)c;
+                    else if (c < 0x800) { u8[o++] = 0xC0 | (c >> 6); u8[o++] = 0x80 | (c & 0x3F); }
+                    else if (c < 0x10000) { u8[o++] = 0xE0 | (c >> 12); u8[o++] = 0x80 | ((c >> 6) & 0x3F); u8[o++] = 0x80 | (c & 0x3F); }
+                    else { u8[o++] = 0xF0 | (c >> 18); u8[o++] = 0x80 | ((c >> 12) & 0x3F); u8[o++] = 0x80 | ((c >> 6) & 0x3F); u8[o++] = 0x80 | (c & 0x3F); }
+                }
+                u8[o] = 0;
+                MW_TRACE("[CXEH] uno::Exception Message = '%s'", u8);
+            }
+            free(wbuf);
+        }
+    }
+    uint64_t vbase = 0, vsize = 0;
+    const char* vname = NULL;
+    if (!vptr || !mw_module_of(vptr, &vbase, &vsize, &vname)) {
+        MW_TRACE("[CXEH] object vftable=0x%lx: OWNING MODULE NOT FOUND — "
+                 "RTTI base-class matching CANNOT succeed", vptr);
+        return;
+    }
+    uint64_t col_va = 0;
+    mw_guest_probe_read(vptr - 8, &col_va, 8); /* x64: vftable[-1] = COL* */
+    uint32_t col[6] = { 0, 0, 0, 0, 0, 0 };
+    if (!col_va || !mw_guest_probe_read(col_va, col, sizeof(col)) || col[0] != 1) {
+        MW_TRACE("[CXEH] vftable=0x%lx (image %s): COL@0x%lx sig=%u != 1 or unreadable — "
+                 "base-class matching degraded",
+                 vptr, vname, col_va, col[0]);
+        return;
+    }
+    char tn[128];
+    mw_cxeh_read_name(vbase, col[3], tn, sizeof(tn));
+    MW_TRACE("[CXEH] object vftable=0x%lx image=%s COL@RVA=0x%lx sig=1 type='%s'",
+             vptr, vname, (unsigned long)(col_va - vbase), tn);
+    /* x64 ClassHierarchyDescriptor: attrs(0) numBases(4) pBaseClassArray(8) */
+    uint32_t chd[3] = { 0, 0, 0 };
+    if (!mw_guest_probe_read(vbase + col[4], chd, sizeof(chd))) return;
+    uint32_t maxb = chd[1] > 12 ? 12 : chd[1];
+    for (uint32_t b = 0; b < maxb; b++) {
+        uint32_t bcd_rva = 0;
+        mw_guest_probe_read(vbase + chd[2] + 4 * b, &bcd_rva, 4);
+        /* x64 BaseClassDescriptor (28 bytes): pTypeDescriptor(0)
+         * numContainedBases(4) mdisp(8) pdisp(12) vdisp(16) attrs(20) pCHD(24) */
+        uint32_t bcd[7] = { 0, 0, 0, 0, 0, 0, 0 };
+        if (!bcd_rva || !mw_guest_probe_read(vbase + bcd_rva, bcd, sizeof(bcd)))
+            break;
+        char bn[128];
+        mw_cxeh_read_name(vbase, bcd[0], bn, sizeof(bn));
+        MW_TRACE("[CXEH]   base[%u/%u] contained=%u mdisp=%d pdisp=%d vdisp=%d type='%s'",
+                 b, chd[1], bcd[1], (int32_t)bcd[2], (int32_t)bcd[3], (int32_t)bcd[4], bn);
+    }
+    MW_TRACE("[CXEH] decode complete — frames whose HandlerType4 dispType names "
+             "match a catchable/base name above will claim the throw");
+}
+
+/* ============================================================
  * BUG-024: mw_RtlDispatchException
  * 
  * Real Windows x64 style exception dispatcher.
@@ -2934,6 +3140,8 @@ static int seh_dispatch_exception(void) {
         }
     }
     MW_TRACE("[EXC_STATE] EXCEPTION_END");
+    /* SW-1262: decode the FH4 C++ throw (types, object RTTI) at dispatch time */
+    mw_cxeh_decode_throw(&er);
 
     /* 2. Build CONTEXT */
     uint8_t ctx[CONTEXT_SIZE];
@@ -5034,6 +5242,22 @@ __attribute__((ms_abi)) int mw_OpenThreadToken(void* hthread, uint32_t access,
     MW_TRACE("OpenThreadToken -> FALSE (ERROR_NO_TOKEN)");
     return 0;
 }
+/* SW-1262 fwd: SID equality lives further down (SWEEP-026 session SIDs). */
+__attribute__((ms_abi)) int mw_EqualSid(const void* a, const void* b);
+static int mw_probe_copy(const void* src, size_t n, void* dst); /* SW-1262 fwd */
+/* SW-1262: session SIDs (defined with initializers further down, SWEEP-026).
+ * Tentative declarations keep the AccessCheck ACL walk in scope. */
+static uint8_t g_mw_user_sid[28];
+static uint8_t g_mw_admins_sid[16];
+/* SW-1262: generic-access-rights -> file-specific mapping (standard table). */
+static uint32_t mw_file_generic_map(uint32_t desired) {
+    uint32_t out = 0;
+    if (desired & 0x80000000u) out |= 0x120089u; /* GENERIC_READ */
+    if (desired & 0x40000000u) out |= 0x120116u; /* GENERIC_WRITE */
+    if (desired & 0x20000000u) out |= 0x1200A0u; /* GENERIC_EXECUTE */
+    if (desired & 0x10000000u) out |= 0x1F01FFu; /* GENERIC_ALL */
+    return out ? (out | (desired & 0x0F0FFFFFFu & 0xFFFFu)) : desired;
+}
 __attribute__((ms_abi)) int mw_AccessCheck(const void* sd, void* token, uint32_t desired,
         void* generic, void* privset, uint32_t* privlen, uint32_t* granted, int* status) {
     (void)token; (void)generic; (void)privset;
@@ -5041,10 +5265,70 @@ __attribute__((ms_abi)) int mw_AccessCheck(const void* sd, void* token, uint32_t
     if (granted) *granted = 0;
     if (status) *status = 0;
     if (!sd) { mw_SetLastError(1338); return 0; } /* ERROR_INVALID_SECURITY_DESCR */
-    /* no ACL walker for foreign SDs headless: the check cannot be granted
-     * honestly, so the typed failure is ERROR_ACCESS_DENIED shape */
-    mw_SetLastError(5); /* ERROR_ACCESS_DENIED */
-    MW_TRACE("AccessCheck(desired=0x%x) -> FALSE (no ACL model)", desired);
+    /* SW-1262 (SWEEP-052) v2: REAL DACL semantics over the engine's absolute
+     * SECURITY_DESCRIPTOR (GetSecurityInfo layout: control@+2, Dacl*@+32).
+     * Windows contract: DACL PRESENT but NULL pointer = grant EVERYONE full
+     * control; DACL ABSENT = deny. With ACEs: DENIED first, then ALLOWED,
+     * SIDs matched against the session identity (user + Administrators —
+     * the session's only token groups). v1 answered FALSE unconditionally,
+     * and sal3's pre-open access check concluded uno.ini / services.rdb were
+     * inaccessible -> 'Cannot obtain UNO_SERVICES from uno ini' ->
+     * DeploymentException('null process service factory') -> soffice rc 99. */
+    uint32_t want = mw_file_generic_map(desired);
+    uint16_t ctrl = 0;
+    uint64_t dacl_va = 0;
+    uint8_t hdr[40];
+    if (!mw_probe_copy(sd, 24, hdr)) { mw_SetLastError(1338); return 0; }
+    ctrl = (uint16_t)(hdr[2] | (hdr[3] << 8));
+    dacl_va = *(const uint64_t*)((const uint8_t*)sd + 32);
+    int dacl_present = (ctrl & 0x4u) != 0; /* SE_DACL_PRESENT */
+    if (!dacl_present) { mw_SetLastError(5); /* ERROR_ACCESS_DENIED */
+        MW_TRACE("AccessCheck(desired=0x%x) -> FALSE (no DACL)", desired);
+        return 0;
+    }
+    if (!dacl_va) {
+        /* NULL DACL: everyone, everything (real Windows semantics) */
+        if (granted) *granted = want;
+        MW_TRACE("AccessCheck(desired=0x%x) -> TRUE (NULL DACL grant-all)", desired);
+        return 1;
+    }
+    /* Real ACL walk: {rev,pad,size,count} header, then ACEs
+     * {type,flags,size,mask,sid...}; ALLOWED=0 DENIED=1. */
+    uint8_t ah[8];
+    if (!mw_probe_copy((void*)(uintptr_t)dacl_va, 8, ah)) { mw_SetLastError(1338); return 0; }
+    uint16_t acl_size = (uint16_t)(ah[2] | (ah[3] << 8));
+    uint16_t ace_count = (uint16_t)(ah[4] | (ah[5] << 8));
+    uint32_t off = 8;
+    int decided = 0;
+    for (uint16_t i = 0; i < ace_count && off + 8 <= acl_size; i++) {
+        uint8_t eh[8];
+        if (!mw_probe_copy((void*)(uintptr_t)(dacl_va + off), 8, eh)) break;
+        uint16_t ace_size = (uint16_t)(eh[2] | (eh[3] << 8));
+        if (ace_size < 8 || off + ace_size > acl_size) break;
+        uint8_t type = eh[0];
+        uint32_t mask = *(const uint32_t*)(eh + 4);
+        const void* ace_sid = (const void*)(uintptr_t)(dacl_va + off + 8);
+        if (mw_EqualSid(ace_sid, g_mw_user_sid) || mw_EqualSid(ace_sid, g_mw_admins_sid)) {
+            if (type == 1) { /* ACCESS_DENIED_ACE wins */
+                decided = 1;
+                if (mask & want) { mw_SetLastError(5);
+                    MW_TRACE("AccessCheck(desired=0x%x) -> FALSE (denied ACE)", desired);
+                    return 0;
+                }
+            } else if (type == 0) {
+                if ((mask & want) == want) {
+                    if (granted) *granted = want;
+                    decided = 1;
+                    MW_TRACE("AccessCheck(desired=0x%x) -> TRUE (allowed ACE)", desired);
+                    return 1;
+                }
+            }
+        }
+        off += ace_size;
+    }
+    (void)decided;
+    mw_SetLastError(5); /* no ACE granted the access */
+    MW_TRACE("AccessCheck(desired=0x%x) -> FALSE (no matching grant)", desired);
     return 0;
 }
 
@@ -7809,6 +8093,12 @@ __attribute__((ms_abi)) uint32_t mw_GetModuleFileNameW(void* mod, wchar_t* out, 
     size_t n = utf8_to_utf16(tmp, out, cap - 1);
     ((uint16_t*)out)[n] = 0;
     (void)n8;
+    /* SW-1262: the bootstrap chain (uno.ini ${ORIGIN} -> services.rdb) is
+     * derived from THIS string; log the delivered value once it differs in
+     * length from the source UTF-8 (an encoding truncation here poisons the
+     * whole bootstrap and shows up as CreateFileW('C:\artifacts\s')). */
+    MW_TRACE("GetModuleFileNameW out u16len=%llu utf8len=%llu '%s'",
+             (unsigned long long)n, (unsigned long long)strlen(tmp), tmp);
     return (uint32_t)n;
 }
 
@@ -9151,10 +9441,28 @@ __attribute__((ms_abi)) uint16_t mw_RtlCaptureStackBackTrace(uint32_t skip, uint
     return 0;
 }
 __attribute__((ms_abi)) void* mw_RtlPcToFileHeader(void* pc, void** base) {
+    /* SW-1262 (SWEEP-052) ROOT CAUSE: _CxxThrowException in the guest's REAL
+     * vcruntime140.dll (disassembled, RVA 0x5280/0x52b8) resolves the
+     * THROWING image base via THIS API and passes it as
+     * ExceptionInformation[3] of the 0xE06D7363 record (with the FH4 magic
+     * 0x01994000, whose ThrowInfo4/CatchableTypeArray are IMAGE-RELATIVE
+     * DWORD RVAs). The real vcruntime140_1 __CxxFrameHandler4 resolves those
+     * RVAs against EI[3]. v1 knew only the EXE image, so every C++ throw
+     * from a guest DLL carried EI[3]=0: the matcher read the CatchableType
+     * array at ~0x145b90 (unmapped) and no catch — not even
+     * catch(uno::Exception&) with the base chain right there in the throw's
+     * own CatchableTypeArray (DeploymentException -> RuntimeException ->
+     * Exception, disk-decoded from cppuhelper3MSC RVA 0x145bd8) — could ever
+     * claim. soffice bootstrap escaped to the CRT top-level
+     * _seh_filter_exe -> _exit(0xE06D7363) = rc 99. Consult the guest-DLL
+     * registry (mw_module_of) exactly like real Windows consults its module
+     * list for ANY loaded image. */
     uint64_t v = (uint64_t)(uintptr_t)pc;
-    if (g_image_base && v >= g_image_base && v < g_image_base + g_image_size) {
-        if (base) *base = (void*)(uintptr_t)g_image_base;
-        return (void*)(uintptr_t)g_image_base;
+    uint64_t b = 0, sz = 0;
+    const char* nm = NULL;
+    if (mw_module_of(v, &b, &sz, &nm)) {
+        if (base) *base = (void*)(uintptr_t)b;
+        return (void*)(uintptr_t)b;
     }
     if (base) *base = NULL;
     return NULL;
@@ -9736,6 +10044,27 @@ __attribute__((ms_abi)) void* mw_CreateFileW(const wchar_t* name, uint32_t acces
     if (w3_w16_to_utf8z((const uint16_t*)name, n8, sizeof(n8)) < 0) { mw_SetLastError(87); return (void*)-1; }
     n8[sizeof(n8) - 1] = '\0';
     MW_TRACE("CreateFileW(%s, acc=%08x, disp=%u)", n8, access, disp);
+    {
+        /* SW-1262: attribute the open to a guest module+offset (return addr
+         * is the instruction after the call — inside the caller's image). */
+        uint64_t ret = (uint64_t)(uintptr_t)__builtin_return_address(0);
+        uint64_t b = 0, sz = 0; const char* nm = NULL;
+        if (ret && mw_module_of(ret, &b, &sz, &nm))
+            MW_TRACE("CreateFileW caller=%s+0x%lx", nm,
+                     (unsigned long)(ret - b));
+        /* SW-1262: embedded-NUL probe — a path truncated mid-buffer shows up
+         * as u16 NULs past the terminating one. */
+        uint32_t wl = 0;
+        while (name[wl] && wl < 520) wl++;
+        if (wl < 64) {
+            MW_TRACE("CreateFileW u16len=%u name=%p", wl, (void*)name);
+            uint32_t k = 0;
+            for (; k <= wl && k < 24; k++) {
+                uint16_t c = ((const uint16_t*)name)[k];
+                MW_TRACE("  [%u]=%04x '%c'", k, c, (c >= 0x20 && c < 0x7F) ? (char)c : '.');
+            }
+        }
+    }
     return w3_create_file(n8, access, disp);
 }
 __attribute__((ms_abi)) int mw_ReadFile(void* h, void* buf, uint32_t n, uint32_t* bread, void* overlapped) {
@@ -26259,9 +26588,18 @@ __attribute__((ms_abi)) uint32_t mw_LsaEnumerateAccountRights(void* h, void* sid
 __attribute__((ms_abi)) int mw_RevertToSelf(void) { return 1; }
 __attribute__((ms_abi)) int mw_ImpersonateLoggedOnUser(void* tok) { (void)tok; return 0; }
 __attribute__((ms_abi)) int mw_DuplicateTokenEx(void* tok, uint32_t access, void* attr, int impLevel, int tokenType, void** out) {
-    (void)tok; (void)access; (void)attr; (void)impLevel;
-    if (out) *out = NULL;
-    return 0; /* FALSE: no token service */
+    (void)tok; (void)access; (void)attr; (void)impLevel; (void)tokenType;
+    /* SW-1262 (SWEEP-052) v2: real duplication = a NEW handle to the SAME
+     * session token. sal3 duplicates the process token before AccessCheck;
+     * v1 returned FALSE and the whole file-access chain concluded denial. */
+    if (!out) { mw_SetLastError(87); return 0; }
+    *out = alloc_handle((void*)(uintptr_t)(0x9000 + (unsigned)(++g_advapi_token_counter)));
+    MW_TRACE("DuplicateTokenEx -> TRUE (new session-token handle)");
+    return 1;
+}
+__attribute__((ms_abi)) int mw_DuplicateToken(void* tok, int level, void** out) {
+    /* SW-1262: DuplicateToken(h, level, *out) — the 3-arg form sal3 uses. */
+    return mw_DuplicateTokenEx(tok, 0, NULL, level, 1 /*SecurityImpersonation*/, out);
 }
 __attribute__((ms_abi)) int mw_CreateRestrictedToken(void* tok, uint32_t flags, uint32_t nSid, void* sids,
         uint32_t nPriv, void* privs, uint32_t nDis, void* dis, void** out) {
@@ -32860,6 +33198,8 @@ ENTRY("GDI32.DLL", "GetCharacterPlacementW",                mw_GetCharacterPlace
     ENTRY("ADVAPI32.DLL", "RevertToSelf",                       mw_RevertToSelf),
     ENTRY("ADVAPI32.DLL", "ImpersonateLoggedOnUser",            mw_ImpersonateLoggedOnUser),
     ENTRY("ADVAPI32.DLL", "DuplicateTokenEx",                   mw_DuplicateTokenEx),
+    ENTRY("ADVAPI32.DLL", "DuplicateToken",                     mw_DuplicateToken), /* SW-1262 */
+    ENTRY("advapi32.dll", "DuplicateToken",                     mw_DuplicateToken), /* SW-1262 */
     ENTRY("ADVAPI32.DLL", "CreateRestrictedToken",              mw_CreateRestrictedToken),
     ENTRY("ADVAPI32.DLL", "SetTokenInformation",                mw_SetTokenInformation),
     ENTRY("ADVAPI32.DLL", "GetSidIdentifierAuthority",          mw_GetSidIdentifierAuthority),
@@ -33485,6 +33825,35 @@ static void iat_pages_restore(void) {
  * change for fully-resolved binaries (G1/T0 all resolve every import).
  * ============================================================ */
 static uint64_t g_stub_calls = 0; /* rate-limiter only; racy count is fine */
+/* SW-1262 (SWEEP-052): name the unresolved import AT CALL TIME. The stub is
+ * one shared function patched into many IAT slots — it cannot know its own
+ * import statically. But the caller reaches it through `call qword
+ * [rip+disp32]` (ff 15, 6 bytes): the IAT slot address is ret + *(u32*)(ret-4).
+ * At bind time every stubbed slot is registered slot_va -> "dll!name"; at
+ * call time the stub decodes its slot and prints the real import name. The
+ * old line (guest_rip + optional funcmap caller) stays for slots reached
+ * through non-ff-15 paths (call rax), where the decode yields no match. */
+typedef struct { uint64_t slot_va; char name[120]; } MwStubName;
+static MwStubName g_stub_names[8192];
+static unsigned g_stub_name_count = 0;
+static void mw_stubname_add(uint64_t slot_va, const char* dll, const char* fn) {
+    if (!slot_va || !fn || !*fn) return;
+    for (unsigned i = 0; i < g_stub_name_count; i++)
+        if (g_stub_names[i].slot_va == slot_va) return;
+    if (g_stub_name_count >= sizeof(g_stub_names) / sizeof(g_stub_names[0])) return;
+    MwStubName* e = &g_stub_names[g_stub_name_count++];
+    e->slot_va = slot_va;
+    if (dll && *dll) snprintf(e->name, sizeof(e->name), "%s!%s", dll, fn);
+    else snprintf(e->name, sizeof(e->name), "%s", fn);
+}
+static const char* mw_stubname_lookup(uint64_t ret_addr) {
+    if (ret_addr < 6) return NULL;
+    uint32_t disp = *(const uint32_t*)(uintptr_t)(ret_addr - 4);
+    uint64_t slot = ret_addr + disp;
+    for (unsigned i = 0; i < g_stub_name_count; i++)
+        if (g_stub_names[i].slot_va == slot) return g_stub_names[i].name;
+    return NULL;
+}
 __attribute__((ms_abi)) uint64_t mw_unresolved_import_stub(void);
 __attribute__((ms_abi)) uint64_t mw_unresolved_import_stub(void) {
     uint64_t n = ++g_stub_calls;
@@ -33500,6 +33869,13 @@ __attribute__((ms_abi)) uint64_t mw_unresolved_import_stub(void) {
         fprintf(stderr, "[STUB] unresolved import called -> returning 0 (call #%llu) guest_rip=%p",
                 (unsigned long long)n, __builtin_return_address(0));
         {
+            /* SW-1262: the decoded import NAME (from the bind-time registry
+             * keyed by the ff 15 slot address). Renders as "-> name" before
+             * the caller annotation; absent when the call was not an ff 15. */
+            const char* mw_simp = mw_stubname_lookup(
+                (uint64_t)(uintptr_t)__builtin_return_address(0));
+            if (mw_simp)
+                fprintf(stderr, " import=%s", mw_simp);
             /* SWEEP-011: name the CALLER from the REA/Ghidra function map
              * (return address - 1 = last byte of the `call [rip+disp32]`).
              * Without MINWIN_FUNC_MAP the line is unchanged. */
@@ -34070,6 +34446,17 @@ static int load_pe(const char* filepath) {
                      * unresolved ordinal now surfaces like named ones do. */
                     fprintf(stderr, "[WARN]   unresolved: %s%s ordinal %u\n", up_dll,
                             (up_dll[0] && strchr(up_dll, '.')) ? "" : ".dll", ordinal);
+                    /* SW-1262: bind-time name registry for the [STUB] line */
+                    {
+                        char ordtag[24];
+                        snprintf(ordtag, sizeof(ordtag), "#%u", ordinal);
+                        char lowd[16];
+                        size_t k = 0;
+                        for (; k < sizeof(lowd) - 1 && dll_name[k]; k++)
+                            lowd[k] = (dll_name[k] >= 'A' && dll_name[k] <= 'Z') ? (char)(dll_name[k] + 32) : dll_name[k];
+                        lowd[k] = 0;
+                        mw_stubname_add((uint64_t)(uintptr_t)(g_image_base + iat_off + slot * 8), lowd, ordtag);
+                    }
                     /* SWEEP-001: stub the slot too — same crash class as
                      * name-unresolved if guest ever calls it. */
                     iat_patch_slot(iat_off, slot, (void*)mw_unresolved_import_stub);
@@ -34146,6 +34533,15 @@ static int load_pe(const char* filepath) {
                  * the summary line's neighbor so a run without MINWIN_TRACE
                  * still identifies them. */
                 fprintf(stderr, "[WARN]   unresolved: %s\n", func_name);
+                /* SW-1262: bind-time name registry for the [STUB] line */
+                {
+                    char lowd[16];
+                    size_t k = 0;
+                    for (; k < sizeof(lowd) - 1 && dll_name[k]; k++)
+                        lowd[k] = (dll_name[k] >= 'A' && dll_name[k] <= 'Z') ? (char)(dll_name[k] + 32) : dll_name[k];
+                    lowd[k] = 0;
+                    mw_stubname_add((uint64_t)(uintptr_t)(g_image_base + iat_off + slot * 8), lowd, func_name);
+                }
                 /* SWEEP-001: a NULL IAT slot is a delayed SIGSEGV — every
                  * sweep program that called one died with the loader. Wine
                  * never leaves a slot NULL; install the returning-0 stub. */

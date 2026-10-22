@@ -66,3 +66,9 @@ artifacts/sweep011_perf/runs_fast/
 artifacts/sweep047/stage/
 artifacts/sweep047/census/
 miniwin-results/
+
+# SWEEP-050/051/052 working artifact trees (curated copies live in evidence/)
+artifacts/sweep050/
+artifacts/sweep051/
+artifacts/sweep052/
+miniwin-results/
