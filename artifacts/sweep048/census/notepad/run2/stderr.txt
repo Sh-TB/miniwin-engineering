@@ -1,0 +1,11 @@
+[TRACE] Command line: artifacts/sweep048/stage/xp64/notepad.exe
+[WARN]   unresolved: PrintDlgExW
+[WARN]   unresolved: GetFileTitleW
+[WARN]   unresolved: DragAcceptFiles
+[WARN]   unresolved: ShellAboutW
+[WARN]   unresolved: GetPrinterDriverW
+[WARN]   unresolved: IsTextUnicode
+[WARN]   unresolved: FoldStringW
+[WARN]   unresolved: UnhookWinEvent
+[WARN]   unresolved: SetWinEventHook
+[WARN] 9 imports unresolved

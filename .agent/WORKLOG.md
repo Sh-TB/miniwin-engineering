@@ -1221,3 +1221,53 @@ calc 15/15; ssh -V falsified-unchanged vs HEAD (same message + exit 0);
 fd 9.0.0 intact. Lesson kept: the census caught nothing this round either
 — every fix is forward motion; the regression net (7za/jq/sqlite/G1/games)
 covered the engine-wide path-mapping change (SW-1234 was the riskiest).
+
+## SWEEP-048 «چهار قطار گرافیک» (2026-10-22) — four GUI trains
+
+Directive: test four GUI programs — ODF viewer, Windows calculator, a
+Windows-only program (free choice), an XP game. Start state: origin/main =
+bf0b9c9 (SWEEP-047), env had rolled back to 242af84 again (4th time);
+reconciled via reset --hard, baseline binary sha 3dbc56d5 reproduced.
+
+Payload sourcing: XP Pro x64 SP2 OEM ISO (crmpxoem-en) + XP SP3 x86 ISO
+(x14-80428) from archive.org via a 6-stream ranged downloader
+(scripts/sweep048_iso_dl.py, 617MB in 59s); pycdlib for i386/AMD64 listing;
+.EX_ expansion done BY THE ENGINE's own 7za (9/10; CARDS.DL_ = SW-1243).
+Everything x64 from voidtools; LibreOffice 26.8.1 x64 MSI from
+documentfoundation (375MB), CAB carved with olefile, expanded via the engine
+(19,427 files) after SW-1244.
+
+Engine work (all in src/loader/loader.c):
+1. SW-1244 handle table 64→8192 + CloseHandle w3-slot recycling — the 7za
+   63-file wall broken (811 errors → 0; 874/874). MINWIN_HEAP_TRAP=warn diag.
+2. SW-1245 case-insensitive disk DLL search (mw_dir_casefind) — MFC42U.DLL
+   now found despite case mismatch.
+3. SW-1246 crash_handler out-of-PE walker bounds — handler no longer dies on
+   garbage RBP frames (mspaint's libc crash exposed it).
+4. SW-1247 MFC42U x64 as real PE-DLL for mspaint + the whole msvcrt gap
+   (_ltow..fputws) + gdi32/user32/kernel32 tail + __argc/__wargv data plane.
+   mspaint: 633 unresolved → 0; crash 139 → abort-at-AfxInit 134.
+5. SW-1250 load_pe_dll recursive dep disk-load + msvcp140/vcruntime140 de-
+   pseudo'd — LibreOffice import forest 2,862 → 0 unresolved (mergedlo 50,142
+   export names = largest DLL ever loaded).
+6. SW-1251 UCRT tail (31 entries: stdio/locale/math/runtime/string).
+
+Four-train scoreboard (census x3 deterministic, artifacts/sweep048/census/):
+- calc.exe (XP x64 5.2.3790): exit 0; dialog cdit=30 resolved; scripted clicks
+  delivered as WM_COMMAND into the guest's own wndproc.
+- winmine.exe (XP x64): exit 0, ZERO stub calls, 3 MessageBox dialogs rendered
+  (messagebox_1..3.bmp) + GDI frame (frame_001.bmp) — evidence/sweep048/.
+- everything.exe x64: message-loop park 124 (honest GUI app behavior).
+- soffice.bin x64: SW-1252 frontier (msvcp140 DllMain zeroes 8 bytes of own
+  .text at RVA 0x1110; .text verified image==file pre-DllMain).
+- mspaint/mshearts: SW-1247-open (MFC AfxInit "corrupted top size" with 100%
+  import resolution).
+- spider/freecell/notepad/pinball: exit 0 (pinball = DirectDraw-era typed
+  stub plane, 200 stub calls, no crash).
+
+Gates: G1 PIN 12/12 (sha dce5784c), corpus census x3 15/15 deterministic ZERO
+regressions, batteries snake 30f byte-identical / calc 9/9 + 15/15 / breakout
+381f-13bricks / BUG-054b 3/3 — ALL GREEN on the final binary. Evidence:
+evidence/sweep048/ (README + provenance shas + screenshots + census). ASan
+diagnostic build attempted (blocked by guest-base/shadow-gap collision +
+RBP-asm — noted in SW-1249 notes).

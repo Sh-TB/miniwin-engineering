@@ -1,0 +1,10 @@
+[TRACE] Command line: artifacts/sweep048/stage/xp64/winmine.exe
+[WARN]   unresolved: ShellAboutW
+[WARN] 1 imports unresolved
+[MessageBoxW] : 
+[MessageBox] dialog #1 rendered -> miniwin-results/winmine.exe/screenshots/messagebox_1.bmp
+[MessageBoxW] : 
+[MessageBox] dialog #2 rendered -> miniwin-results/winmine.exe/screenshots/messagebox_2.bmp
+[MessageBoxW] : 
+[MessageBox] dialog #3 rendered -> miniwin-results/winmine.exe/screenshots/messagebox_3.bmp
+[GDI-FRAME] #1 -> miniwin-results/winmine.exe/screenshots/frame_001.bmp

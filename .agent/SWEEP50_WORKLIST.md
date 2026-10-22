@@ -2387,3 +2387,94 @@ after fast-forward; adexplorer64 corpus recovery #7 (zip 56536bff / exe e4512878
 - **Open**: SW-791 HTTP tail, SW-1228 (Go data plane), SW-1233 tail,
   SW-1230v2 tail (7z FH4), SW-1237 socket tail, SW-1238..1242, SW-1219,
   SW-1093 (97 -Wformat).
+
+## SWEEP-048 «چهار قطار گرافیک» — the four GUI trains (2026-10-22)
+
+User directive: «این چهار تا برنامه گرافیک دار رو باید تست بکنی» — (1) ODF
+viewer, (2) Windows calculator, (3) a program that does not exist on Linux
+(free choice), (4) a game from the Windows XP games list.
+
+- [x] **SW-1244 LANDED — w3 handle table** (the 7za-64-file wall): MAX_HANDLES
+  64→8192 + CloseHandle file-slot recycling (mw_kobj_release now returns int;
+  CloseHandle falls through to w3_release_handle which closes the backing fd
+  and frees the slot). Before: 7za create hit "Cannot open output file:
+  Error #80070004" on 811/874 files (slot 63 exhaustion — nothing ever set
+  in_use=0). After: 874/874 rc=0. Unlocked BOTH FreeOffice and LibreOffice
+  extraction through the engine's own 7za. MINWIN_HEAP_TRAP=warn diagnostic
+  mode (default hard _exit(4) unchanged).
+- [x] **SW-1245 LANDED — case-insensitive disk DLL search**: mspaint imports
+  "MFC42U.DLL", disk had "mfc42u.dll" (ext4 stat is case-sensitive) → every
+  MFC ordinal resolved to stub-0 → guest wrote rax+0x28 with rax=0 (SIGSEGV
+  RVA 0x5bb4d). mw_dir_casefind readdir fallback added to
+  mw_loadlibrary_disk_dll (exe dir then cwd, .exe/.sys guard kept).
+- [x] **SW-1246 LANDED — crash_handler walker bounds**: the out-of-PE branch
+  followed *(bt_rsp+8) as a RAW pointer chain with no stack bounds — a libc
+  crash frame with garbage RBP killed the handler itself (Signal 7 at the
+  walker, truncated diagnostics). Every deref now bounded to [rsp, rsp+0x8000]
+  and chain values must be stack-plausible.
+- [x] **SW-1247 LANDED — MFC42U.dll as a real PE-DLL (mspaint64)**: XP x64
+  SP2 media's MFC42U.DLL (x64, 1,460,992B) loads beside mspaint; 613
+  by-ordinal imports resolve from its 6,888-export table. mspaint's msvcrt
+  gap closed: _ltow/_ultow/labs/__CppXcptFilter + _wsplitpath/_wtol/wcstod/
+  time/localtime/gmtime/mktime/iswspace/_wcsdup/_wcsrev/_wcsupr/wcscspn/
+  wcspbrk/swprintf(16-bit formatter)/vswprintf/fgetws/fputws/_expand; gdi32
+  metafile family cookies (CreateMetaFileW/CloseMetaFile/PlayMetaFile/
+  EnumMetaFile...), PolyBezierTo/PolylineTo/PolyDraw/ExtCreatePen/GetDCOrgEx;
+  user32 wvsprintfW/GetTabbedTextExtentA/InSendMessage/WindowFromDC/
+  SetWindowContextHelpId/CountClipboardFormats; kernel32 GetProcessVersion
+  (0x00050002)/lstrcatW/lstrcmpiA; DATA plane __argc/__wargv (real UTF-16
+  argv built in main). mspaint went 139 (crash at first MFC import) →
+  **exit 134 at MFC AfxInit with 100% import resolution** (633 unresolved → 0).
+- [x] **SW-1251 LANDED — UCRT stdio/locale/math/runtime tail** (msvcp140 +
+  sal3/clucene boots): __stdio_common_vsprintf_s (mw_vfmt_a-backed
+  vsprintf_s), _execute_onexit_table (REAL reverse-run + empty, on the
+  SWEEP-045 growth table), strcpy_s/__strncnt/iswalnum/iswxdigit/btowc/
+  ldexp/copysign/_dclass/_ldclass (FP class bits)/_callnewh/_invoke_watson
+  (typed _exit(3))/ _set_new_handler/_get_stream_buffer_pointers/_wfsopen,
+  _Getdays/_Getmonths/_Gettnames/_W_* /_Strftime/_Wcsftime (C-locale plane),
+  ___lc_collate_cp_func/___lc_locale_name_func (L"C")/__pctype_func (real
+  256-entry _pctype)/_lock_locales/_unlock_locales, DisableThreadLibraryCalls/
+  FlushProcessWriteBuffers.
+- [x] **SW-1250 LANDED — load_pe_dll recursive dependency disk-load**: v1
+  matched only ALREADY-loaded deps; mergedlo.dll's libxml2/libxslt/sal3/
+  clucene descriptors all fell to the dispatch table (2,862 unresolved;
+  soffice died on the first libxslt call). Now disk-loads its own unknown
+  descriptors (idempotent via refcount registry); msvcp140/vcruntime140
+  dropped from the known-dll pseudo-handle list so the REAL DLLs load
+  (vcruntime140_1 x64 too). LibreOffice 26.8.1 x64: 19,427 files extracted
+  through the engine's 7za; import forest 2,862 → **0 unresolved** across
+  mergedlo (152MB, 50,142 export names) + sal3 + clucene + msvcp140 (1,515
+  names) + libxml2/libxslt/vcruntime140*.
+- [ ] **SW-1247-open** mspaint/mshearts: "malloc(): corrupted top size" abort
+  during MFC AfxInit AFTER 100% import resolution. Corruptor = an MFC init
+  initializer (MFC42U RVA 0xa3d60 → tail-jmp 0x4b400). MINWIN_HEAP_GUARD=1
+  regresses the DLL load (SW-1248) so the guard cannot localize it yet.
+  Next: fix SW-1248 then guard-run mspaint for the exact OOB writer.
+- [ ] **SW-1243** 7za-under-miniwin: `l -tISO` on a 617MB ISO = SIGSEGV
+  (RIP in 7za, RVA 0x5c125); CARDS.DL_ LZX expand = SIGSEGV (10/11 XP cabs
+  expand fine). Decode pending; workarounds used this round: pycdlib for
+  ISO listing/extract.
+- [ ] **SW-1248** MINWIN_HEAP_GUARD=1 regresses the SW-509 DLL load path
+  (MFC42U ordinals unresolved under guard; guard mode is diagnostic-only).
+- [ ] **SW-1252** soffice.bin: msvcp140.dll DllMain zeroes exactly 8 bytes of
+  its own .text (RVA 0x1110) during early CRT boot; section verify proves
+  image==file pre-DllMain; last traces = __acrt_iob_func(2) + malloc(2)/free
+  churn. Next: mprotect .text post-reloc to catch the writer, or decode
+  __acrt_iob_func's write path.
+- [x] **new corpus 10 guests staged** (artifacts/sweep048/stage, shas in
+  evidence/sweep048/provenance_sha256.txt): XP x64 SP2 OEM ISO
+  (archive.org crmpxoem-en, 628,617,216B) → AMD64 accessories expanded BY THE
+  ENGINE's own 7za (calc/winmine/mspaint/sol/freecell/mshearts/spider/notepad/
+  pinball + MFC42U.DLL); Everything 1.4.1.1028 x64 (voidtools zip); LibreOffice
+  26.8.1 x64 MSI (documentfoundation) → olefile CAB carve → engine 7za
+  extraction (19,427 files).
+- **Measurement** (final binary dce5784c...): G1 PIN 12/12 (evidence/master/g1/);
+  corpus census x3 DETERMINISTIC 14× exit-0 + pageant 124, ZERO regressions
+  (artifacts/sweep047/census.tsv); new census x3 DETERMINISTIC
+  (artifacts/sweep048/census/census.tsv): calc/winmine/spider/freecell/notepad/
+  pinball exit-0 (winmine ZERO stubs), everything 124 park, mspaint+mshearts
+  134 (SW-1247), soffice 139 (SW-1252); batteries: snake 30f byte-identical
+  3x3, calc 9/9 + 15/15, breakout 381f/13 bricks, BUG-054b 3/3; winmine
+  3 MessageBox dialogs RENDERED + GDI frame (evidence/sweep048/screenshots/);
+  real XP calc dialog clicks delivered (WM_COMMAND id=131/132 into the
+  guest's own wndproc). evidence/sweep048/. no force-push.

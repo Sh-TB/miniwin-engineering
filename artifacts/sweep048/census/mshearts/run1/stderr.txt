@@ -1,0 +1,23 @@
+[TRACE] Command line: artifacts/sweep048/stage/xp64/mshearts.exe
+malloc(): corrupted top size
+
+[CRASH] Signal 6 at RIP=0x7f48a261569c
+  RAX=0x0 RCX=0x7f48a261569c RDX=0x6 R8=0xffffffff R9=0x0
+  RSP=0x7fffdbcb8220 RBP=0x1000
+  g_image_base=0x100000000 g_image_size=0x28000
+  (NOT inside loaded PE)
+  [RIP-MAP] 0x7f48a261569c in 0x7f48a25a9000-0x7f48a270c000 r-xp /usr/lib/x86_64-linux-gnu/libc.so.6
+  Bytes: 89 c3 f7 db 3d 00 f0 ff ff b8 00 00 00 00 0f 47 
+  RSI=0x2b25 RDI=0x2b25
+  R8=0xffffffff  R9=0x0 R10=0x22 R11=0x246
+  R12=0x7fffdbcb8380 R13=0x6 R14=0x7fffdbcb8380 R15=0x7fffdbcb8380
+  [STACKTOP raw] 0000000000000000 f2b0b485d6771700 0000000000000006 0000000000001000 00007fffdbcb8380 00007fffdbcb8380 00007fffdbcb8380 00007f48a25c0c42 0000000000000000 00007f48a25a94ac 3861643736333261 38346637039062c0
+  [SCAN rsp+728] 0x2039933 <LOADER>
+  [SCAN rsp+1272] 0x2024483 <LOADER>
+  [SCAN rsp+1832] 0x2004b80 <LOADER>
+  [SCAN rsp+3032] 0x2002f44 <LOADER>
+  [SCAN rsp+3664] 0x100003630 <PE>
+  [SCAN rsp+3696] 0x100003630 <PE>
+  [SCAN rsp+3952] 0x100003630 <PE>
+  Backtrace (via stack walking):
+    [0] RIP=0x7f48a261569c (outside PE, possible shared lib)

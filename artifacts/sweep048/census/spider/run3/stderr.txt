@@ -1,0 +1,8 @@
+[TRACE] Command line: artifacts/sweep048/stage/xp64/spider.exe
+[WARN]   unresolved: FreeEnvironmentStringsA
+[WARN]   unresolved: GetEnvironmentStrings
+[WARN]   unresolved: SetHandleCount
+[WARN]   unresolved: GetStringTypeA
+[WARN]   unresolved: timeGetTime
+[WARN] 5 imports unresolved
+[STUB] unresolved import called -> returning 0 (call #1) guest_rip=0x10001050a

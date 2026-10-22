@@ -1,0 +1,20 @@
+[TRACE] Command line: artifacts/sweep048/stage/xp64/mspaint.exe
+malloc(): corrupted top size
+
+[CRASH] Signal 6 at RIP=0x7fbded26769c
+  RAX=0x0 RCX=0x7fbded26769c RDX=0x6 R8=0xffffffff R9=0x0
+  RSP=0x7fff2f05e2f0 RBP=0x1000
+  g_image_base=0x100000000 g_image_size=0x90000
+  (NOT inside loaded PE)
+  [RIP-MAP] 0x7fbded26769c in 0x7fbded1fb000-0x7fbded35e000 r-xp /usr/lib/x86_64-linux-gnu/libc.so.6
+  Bytes: 89 c3 f7 db 3d 00 f0 ff ff b8 00 00 00 00 0f 47 
+  RSI=0x2ad5 RDI=0x2ad5
+  R8=0xffffffff  R9=0x0 R10=0x22 R11=0x246
+  R12=0x7fff2f05e450 R13=0x6 R14=0x7fff2f05e450 R15=0x7fff2f05e450
+  [STACKTOP raw] 0000000000000000 a579222b9cad7300 0000000000000006 0000000000001000 00007fff2f05e450 00007fff2f05e450 00007fff2f05e450 00007fbded212c42 0000000000000000 00007fbded1fb4ac 3861643335666365 646266370274e2c0
+  [SCAN rsp+728] 0x2039933 <LOADER>
+  [SCAN rsp+1272] 0x2024483 <LOADER>
+  [SCAN rsp+1816] 0x2004b80 <LOADER>
+  [SCAN rsp+3032] 0x2002f44 <LOADER>
+  Backtrace (via stack walking):
+    [0] RIP=0x7fbded26769c (outside PE, possible shared lib)
