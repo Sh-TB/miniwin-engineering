@@ -64,6 +64,7 @@ static wchar_t g_cmdline_wide[4096];
 static char* g_argv[256];
 static int g_argc = 0;
 static char** g_argv_cell = g_argv;   /* TASK-API-011: __p___argv points here */
+
 static char** g_environ_cell = NULL;  /* TASK-API-011: __p__environ points here */
 static char* g_tzname[2] = { (char*)"UTC", (char*)"UTC" };
 static long g_timezone_val = 0;
@@ -380,7 +381,11 @@ static int mw_eh_hacks_enabled(void) {
 }
 
 /* Handle table */
-#define MAX_HANDLES 64
+/* SW-1244 (SWEEP-048): 64 -> 8192. 7za x64 creates ~900 output files
+   in one run; at 64 the w3 file table filled and every further
+   CreateFile returned ERROR_TOO_MANY_OPEN_FILES (7za surfaced it as
+   'Cannot open output file: Error #80070004', 811 of 874 files). */
+#define MAX_HANDLES 8192
 static void* g_handle_table[MAX_HANDLES];
 static int    g_handle_count = 0;
 
@@ -631,7 +636,8 @@ static void* mw_sem_create(int32_t init, int32_t max);
 static int mw_event_set(void* h);
 static int mw_event_reset(void* h);
 static int mw_sem_release(void* h, int32_t count, int32_t* prev);
-static void mw_kobj_release(void* h);
+static int mw_kobj_release(void* h);
+static void w3_release_handle(void* h);
 /* BUG-065: FILE* issuance registry (definitions below map_crt_stream). */
 static void mw_fileptr_register(FILE* f);
 static int mw_fileptr_is_valid(FILE* f);
@@ -639,7 +645,12 @@ static int mw_fileptr_is_valid(FILE* f);
 __attribute__((ms_abi)) int mw_CloseHandle(void* h) {
     MW_TRACE("CloseHandle(handle=%p)", h);
     /* BUG-062/064: thread + event + semaphore handles release their slots. */
-    mw_kobj_release(h);
+    if (!mw_kobj_release(h)) {
+        /* SW-1244: file handles (w3 table) recycle too — 7za create/extract
+         * opens+closes ~900 files; before this the slot was consumed for
+         * good and the 65th CreateFile failed with error 4. */
+        w3_release_handle(h);
+    }
     return 1; /* TRUE */
 }
 
@@ -1033,7 +1044,12 @@ static const char* g_known_dlls[] = {
     "mscoree.dll", "kernelbase.dll", "appmodel.dll", "cryptbase.dll",
     "sspicli.dll", "rpcrt4.dll", "uxtheme.dll", "apphelp.dll", "sxs.dll",
     "activeds.dll",
-    "msvcp140.dll", "vcruntime140.dll", "wintrust.dll", "cabinet.dll",
+    /* SW-1250: msvcp140/vcruntime140 dropped from known — LibreOffice's
+     * sal3/clucene import ~200 C++ names from the REAL msvcp140.dll sitting
+     * beside soffice.bin; the pseudo-handle skipped the SW-1250 disk load
+     * and 148 imports went unresolved. The real DLLs (incl. vcruntime140_1)
+     * now load through the PE-DLL path like any other dependency. */
+    "wintrust.dll", "cabinet.dll",
     "imagehlp.dll", "msimg32.dll", "opengl32.dll", "glu32.dll", "dwmapi.dll",
     "gdiplus.dll", "windowscodecs.dll", "propsys.dll", "setupapi.dll",
     "cfgmgr32.dll", "devobj.dll", "winusb.dll", "hid.dll", "ws2help.dll",
@@ -1146,6 +1162,7 @@ __attribute__((ms_abi)) void* mw_WinStationOpenServerW(const void* name) {
  * ============================================================ */
 __attribute__((ms_abi)) uint64_t mw_unresolved_import_stub(void); /* fwd (def at EXE import loop) */
 
+static void* mw_loadlibrary_disk_dll(const char* low, const char* base);
 static int load_pe_dll(const char* fullpath, const char* lowname) {
     struct stat st;
     if (stat(fullpath, &st) != 0 || !S_ISREG(st.st_mode) || st.st_size <= 0 ||
@@ -1221,6 +1238,20 @@ static int load_pe_dll(const char* fullpath, const char* lowname) {
             rp += blocksz;
         }
     }
+    /* SW-1250 diag: verify the first qwords of each section against the file
+     * AFTER relocs — distinguishes loader-side corruption from DllMain-side. */
+    for (uint16_t s = 0; s < nsec && s < 4; s++) {
+        uint8_t* se = sectab + (size_t)s * 40;
+        uint32_t vsz = *(uint32_t*)(se + 8), va = *(uint32_t*)(se + 12);
+        uint32_t rsz = *(uint32_t*)(se + 16), ro = *(uint32_t*)(se + 20);
+        if (!va || !rsz) continue;
+        uint64_t a = 0, b = 0;
+        memcpy(&a, img + va, 8);
+        memcpy(&b, raw + ro, 8);
+        if (a != b && ro + 8 <= (uint32_t)st.st_size)
+            MW_TRACE("  [dll %s] SECTION MISMATCH sec%u RVA 0x%x: img=0x%llx file=0x%llx",
+                     lowname, s, va, (unsigned long long)a, (unsigned long long)b);
+    }
     /* imports: name-only dispatch-table rule (same as the EXE loader);
      * unresolved slots get the unresolved stub, never a silent NULL. */
     uint32_t imp_rva = dd[1 * 2], imp_sz = dd[1 * 2 + 1];
@@ -1236,6 +1267,21 @@ static int load_pe_dll(const char* fullpath, const char* lowname) {
             for (; dn[k] && k < sizeof(dlow) - 1; k++)
                 dlow[k] = (dn[k] >= 'A' && dn[k] <= 'Z') ? (char)(dn[k] + 32) : dn[k];
             dlow[k] = 0;
+            /* SW-1250 (SWEEP-048): load_pe_dll v1 only matched deps that were
+             * ALREADY loaded, so mergedlo.dll's libxml2/libxslt descriptors
+             * fell to the dispatch table and 2862 imports went unresolved
+             * (soffice.bin died on the first libxslt call). Disk-load the
+             * dependency exactly like the EXE import loop does — the refcount
+             * registry makes the recursion idempotent. */
+            {
+                MwDllImage* pre = mw_dll_find_by_name(dlow);
+                if (!pre && !mw_known_dll_handle(dlow)) {
+                    const char* dbase = dlow;
+                    for (const char* dq = dlow; *dq; dq++)
+                        if (*dq == '\\' || *dq == '/') dbase = dq + 1;
+                    mw_loadlibrary_disk_dll(dlow, dbase);
+                }
+            }
             MwDllImage* dep = mw_dll_find_by_name(dlow); /* guest-DLL-on-guest-DLL v2 */
             uint64_t* iat = (uint64_t*)(img + first_thunk);
             uint64_t* int_ = oft ? (uint64_t*)(img + oft) : iat;
@@ -1250,7 +1296,16 @@ static int load_pe_dll(const char* fullpath, const char* lowname) {
                     else if (g_resolve_proc_fn) fn = g_resolve_proc_fn((void*)0xdead0001, impname);
                 }
                 if (!fn) {
-                    MW_TRACE("  [dll %s] UNRESOLVED import t%u from %s", lowname, t, dlow);
+                    /* SW-1247: name the missing import (slot index alone
+                     * forced a pefile slot-mapping round trip every round) */
+                    if (int_[t] & 0x8000000000000000ULL)
+                        MW_TRACE("  [dll %s] UNRESOLVED import t%u ord=%u from %s",
+                                 lowname, t, (unsigned)(int_[t] & 0xFFFF), dlow);
+                    else
+                        MW_TRACE("  [dll %s] UNRESOLVED import t%u '%s' from %s",
+                                 lowname, t,
+                                 (const char*)(img + (uint32_t)(int_[t] & 0xFFFFFFFF) + 2),
+                                 dlow);
                     fn = (void*)mw_unresolved_import_stub;
                     dll_unresolved++;
                 } else dll_resolved++;
@@ -1304,6 +1359,30 @@ static int load_pe_dll(const char* fullpath, const char* lowname) {
  * exe as a module, but procmon64's import table names its OWN "Procmon64.exe"
  * — loading it re-ran its CRT inside DllMain and crashed the census. A
  * guest-DLL whose name ends in .exe needs the v2 treatment). */
+/* SW-1245 (SWEEP-048): case-insensitive disk DLL search. mspaint64 imports
+ * "MFC42U.DLL" while the corpus file landed on disk as "mfc42u.dll" —
+ * ext4 stat() is case-SENSITIVE, so the SW-509 disk-load missed the real
+ * MFC next to the guest and every MFC42U ordinal resolved to the stub-0
+ * path (mspaint then wrote to rax+0x28 with rax=0 = SIGSEGV RVA 0x5bb4d).
+ * Real Win32 loader path search is case-insensitive; mirror that with a
+ * readdir strcasecmp fallback when the exact-name stat misses. */
+static int mw_dir_casefind(const char* dir, const char* base,
+                           char* out, size_t outn) {
+    DIR* dp = opendir(dir);
+    if (!dp) return 0;
+    struct dirent* e;
+    int found = 0;
+    while ((e = readdir(dp)) != NULL) {
+        if (strcasecmp(e->d_name, base) == 0) {
+            snprintf(out, outn, "%s/%s", dir, e->d_name);
+            found = 1;
+            break;
+        }
+    }
+    closedir(dp);
+    return found;
+}
+
 static void* mw_loadlibrary_disk_dll(const char* low, const char* base) {
     size_t bl = strlen(base);
     if (bl >= 4 && (strcasecmp(base + bl - 4, ".exe") == 0 ||
@@ -1324,10 +1403,16 @@ static void* mw_loadlibrary_disk_dll(const char* low, const char* base) {
         if (ext) snprintf(full, sizeof(full), "%s/%s", d, base);
         else     snprintf(full, sizeof(full), "%s/%s.dll", d, base);
         struct stat st;
-        if (stat(full, &st) == 0 && S_ISREG(st.st_mode)) {
-            int idx = load_pe_dll(full, low);
-            if (idx >= 0) return g_dll_images[idx].base;
+        if (stat(full, &st) != 0 || !S_ISREG(st.st_mode)) {
+            /* SW-1245: exact-case miss -> case-insensitive readdir match */
+            char cased[1024];
+            if (!mw_dir_casefind(d, full + strlen(d) + 1, cased, sizeof(cased)))
+                continue;
+            snprintf(full, sizeof(full), "%s", cased);
+            if (stat(full, &st) != 0 || !S_ISREG(st.st_mode)) continue;
         }
+        int idx = load_pe_dll(full, low);
+        if (idx >= 0) return g_dll_images[idx].base;
     }
     return NULL;
 }
@@ -4793,6 +4878,181 @@ __attribute__((ms_abi)) int mw__register_onexit_function(void* tbl, void* fn) {
     return 0;
 }
 
+static int mw_vfmt_a(char* dst, size_t cap, const char* fmt, __builtin_ms_va_list ap);
+/* standard C-locale _pctype table (256 entries) */
+static uint16_t g_mw_pctype_tbl[256];
+static int g_mw_pctype_ready = 0;
+static void mw_pctype_init(void) {
+    if (g_mw_pctype_ready) return;
+    g_mw_pctype_ready = 1;
+    for (int c = 0; c < 256; c++) {
+        unsigned v = 0;
+        if (c >= 'A' && c <= 'Z') v |= 0x0001 | 0x0100; /* _UPPER|_ALPHA */
+        if (c >= 'a' && c <= 'z') v |= 0x0002 | 0x0100; /* _LOWER|_ALPHA */
+        if (c >= '0' && c <= '9') v |= 0x0004 | 0x0100; /* _DIGIT|_ALPHA */
+        if (c == ' ' || (c >= 9 && c <= 13)) v |= 0x0008; /* _SPACE */
+        if (c < 0x20 || c == 0x7F) v |= 0x0010;           /* _CNTRL */
+        if (c > 0x7F) v |= 0x0080;                        /* _LEADBYTE */
+        if (ispunct(c)) v |= 0x0020;                      /* _PUNCT */
+        if (c == 0x7F) v |= 0x0040;                       /* _BLANK */
+        g_mw_pctype_tbl[c] = (uint16_t)v;
+    }
+}
+/* SW-1251 (SWEEP-048): the UCRT tail LibreOffice's sal3/clucene/msvcp140
+ * CRT boots need. Real semantics where cheap; typed-honest where the
+ * headless engine has no locale/clipboard substrate. */
+__attribute__((ms_abi)) int mw__execute_onexit_table(void* tbl) {
+    if (!tbl) return -1;
+    void*** t = (void***)tbl;
+    void** first = t[0], **last = t[1];
+    /* real UCRT runs the table in reverse and empties it */
+    while (last > first) {
+        last--;
+        void* fn = *last;
+        if (fn) {
+            int (*f)(void) = (int (*)(void))fn;
+            MW_TRACE("_execute_onexit_table: calling %p", fn);
+            f();
+        }
+    }
+    t[0] = t[1] = first;
+    MW_TRACE("_execute_onexit_table(%p) -> 0", tbl);
+    return 0;
+}
+__attribute__((ms_abi)) int mw___stdio_common_vsprintf_s(
+        unsigned long long options, char* buf, size_t size,
+        const char* fmt, void* ap_v) {
+    (void)options;
+    if (!buf || !size || !fmt) return -1;
+    __builtin_ms_va_list ap = (__builtin_ms_va_list)ap_v;
+    int n = mw_vfmt_a(buf, size - 1, fmt, ap);
+    if (n < 0) return -1;
+    if ((size_t)n >= size) return -1;   /* vsprintf_s: truncation is an error */
+    buf[n] = 0;
+    return n;
+}
+__attribute__((ms_abi)) size_t mw___strncnt(const uint16_t* s, size_t n) {
+    if (!s) return 0;
+    size_t i = 0;
+    while (i < n && s[i]) i++;
+    return i;
+}
+__attribute__((ms_abi)) int mw_strcpy_s(uint16_t* dst, size_t n, const uint16_t* src) {
+    if (!dst || n == 0) return 22; /* EINVAL */
+    if (!src) { dst[0] = 0; return 22; }
+    size_t i = 0;
+    for (; src[i]; i++) {
+        if (i + 1 >= n) { dst[0] = 0; return 34; } /* ERANGE */
+        dst[i] = src[i];
+    }
+    dst[i] = 0;
+    return 0;
+}
+__attribute__((ms_abi)) int mw_iswalnum(uint16_t c) {
+    return ((c >= L'0' && c <= L'9') || (c >= L'a' && c <= L'z') || (c >= L'A' && c <= L'Z'));
+}
+__attribute__((ms_abi)) int mw_iswxdigit(uint16_t c) {
+    return (c >= L'0' && c <= L'9') || (c >= L'a' && c <= L'f') || (c >= L'A' && c <= L'F');
+}
+__attribute__((ms_abi)) uint16_t mw_btowc(int c) {
+    return (c >= 0 && c <= 0xFF) ? (uint16_t)(unsigned char)c : 0xFFFF; /* WEOF */
+}
+__attribute__((ms_abi)) double mw_ldexp(double x, int e) { return ldexp(x, e); }
+__attribute__((ms_abi)) double mw_copysign(double x, double y) { return copysign(x, y); }
+/* _dclass/_ldclass: UCRT FP class bits (corecrt_math.h) */
+#define MW_FPCLASS_SNAN   0x0001
+#define MW_FPCLASS_QNAN   0x0002
+#define MW_FPCLASS_NINF   0x0004
+#define MW_FPCLASS_NN     0x0008
+#define MW_FPCLASS_ND     0x0010
+#define MW_FPCLASS_NZ     0x0020
+#define MW_FPCLASS_PZ     0x0040
+#define MW_FPCLASS_PD     0x0080
+#define MW_FPCLASS_PN     0x0100
+#define MW_FPCLASS_PINF   0x0200
+static int mw_fpclass_bits(double x) {
+    if (x == 0.0) return x > 0 ? MW_FPCLASS_PZ : MW_FPCLASS_NZ;
+    int c = fpclassify(x);
+    switch (c) {
+    case FP_NAN: return signbit(x) ? MW_FPCLASS_QNAN : MW_FPCLASS_QNAN;
+    case FP_INFINITE: return x > 0 ? MW_FPCLASS_PINF : MW_FPCLASS_NINF;
+    default: return x > 0 ? MW_FPCLASS_PN : MW_FPCLASS_NN;
+    }
+}
+__attribute__((ms_abi)) short mw__dclass(double x) { return (short)mw_fpclass_bits(x); }
+__attribute__((ms_abi)) short mw__ldclass(long double x) { return (short)mw_fpclass_bits((double)x); }
+__attribute__((ms_abi)) int mw__callnewh(size_t sz) { (void)sz; return 0; }
+__attribute__((ms_abi)) void mw__invoke_watson(const uint16_t* expr, const uint16_t* fn,
+                                               const uint16_t* file, unsigned line,
+                                               uintptr_t pinfo) {
+    fprintf(stderr, "[WATSON] invalid parameter expr=%p fn=%p file=%p line=%u\n",
+            (void*)expr, (void*)fn, (void*)file, line);
+    _exit(3);
+}
+__attribute__((ms_abi)) void* mw__set_new_handler(void* h) { (void)h; return NULL; }
+/* locale plane: engine = "C" locale, static name storage */
+static const char* g_mw_days[7] = { "Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday" };
+static const char* g_mw_months[12] = { "January","February","March","April","May","June","July",
+    "August","September","October","November","December" };
+static const char* g_mw_abbrev[12] = { "Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec" };
+__attribute__((ms_abi)) const char** mw__Getdays(void) { return g_mw_days; }
+__attribute__((ms_abi)) const char** mw__Getmonths(void) { return g_mw_months; }
+__attribute__((ms_abi)) const char** mw__Gettnames(void) { return g_mw_abbrev; }
+static const uint16_t g_mw_wdays[7][16] = { {0} };
+__attribute__((ms_abi)) const void* mw__W_Getdays(void) { return g_mw_wdays; }
+__attribute__((ms_abi)) const void* mw__W_Getmonths(void) { return g_mw_wdays; }
+__attribute__((ms_abi)) const void* mw__W_Gettnames(void) { return g_mw_wdays; }
+__attribute__((ms_abi)) size_t mw__Strftime(char* buf, size_t max, const char* fmt,
+                                            const void* tmv, void* pl) {
+    (void)pl;
+    if (!buf || !max || !fmt || !tmv) return 0;
+    struct tm t; memcpy(&t, tmv, sizeof(int) * 9);
+    return strftime(buf, max, fmt, &t);
+}
+__attribute__((ms_abi)) size_t mw__Wcsftime(uint16_t* buf, size_t max, const uint16_t* fmt,
+                                            const void* tmv, void* pl) {
+    (void)pl;
+    if (!buf || !max || !fmt || !tmv) return 0;
+    char f8[128]; size_t i = 0;
+    for (; fmt[i] && i + 1 < sizeof(f8); i++) f8[i] = (char)fmt[i];
+    f8[i] = 0;
+    struct tm t; memcpy(&t, tmv, sizeof(int) * 9);
+    char out[256];
+    size_t n = strftime(out, sizeof(out), f8, &t);
+    size_t k = 0;
+    for (; k < n && k + 1 < max; k++) buf[k] = (uint16_t)(unsigned char)out[k];
+    buf[k] = 0;
+    return k;
+}
+static uint16_t g_mw_locale_c[2] = { L'C', 0 };
+__attribute__((ms_abi)) const uint16_t* mw___lc_locale_name_func(void) { return g_mw_locale_c; }
+__attribute__((ms_abi)) int mw___lc_collate_cp_func(void) { return 0; }
+__attribute__((ms_abi)) const uint16_t* mw___pctype_func(void) { mw_pctype_init(); return g_mw_pctype_tbl; }
+static void mw_lock_noop(void) { }
+__attribute__((ms_abi)) void mw__lock_locales(void) { }
+__attribute__((ms_abi)) void mw__unlock_locales(void) { }
+__attribute__((ms_abi)) int mw_DisableThreadLibraryCalls(void* h) { (void)h; return 1; }
+__attribute__((ms_abi)) void mw_FlushProcessWriteBuffers(void) { }
+__attribute__((ms_abi)) int mw__get_stream_buffer_pointers(void* stream, int* read_mode,
+        char** buf, size_t* bufsz, char** wbuf, size_t* wbufsz, char** rwbuf, size_t* rwbufsz) {
+    (void)stream;
+    if (read_mode) *read_mode = 0;
+    if (buf) *buf = NULL; if (bufsz) *bufsz = 0;
+    if (wbuf) *wbuf = NULL; if (wbufsz) *wbufsz = 0;
+    if (rwbuf) *rwbuf = NULL; if (rwbufsz) *rwbufsz = 0;
+    return 0;
+}
+__attribute__((ms_abi)) void* mw__wfsopen(const uint16_t* name, const uint16_t* mode, int shflags) {
+    (void)shflags;
+    if (!name || !mode) return NULL;
+    char n8[512], m8[16];
+    size_t i = 0;
+    for (; name[i] && i + 1 < sizeof(n8); i++) n8[i] = (char)name[i];
+    n8[i] = 0;
+    for (i = 0; mode[i] && i + 1 < sizeof(m8); i++) m8[i] = (char)mode[i];
+    m8[i] = 0;
+    return fopen(n8, m8);
+}
 /* --- UCRT stdio FMODE global (0=O_TEXT / 0x8000=O_BINARY) --- */
 static int g_mw_fmode = 0;
 __attribute__((ms_abi)) int mw__set_fmode(int mode) {
@@ -4960,13 +5220,17 @@ static uint32_t mw_kobj_wait(void* h, uint32_t ms) {
 }
 
 /* Unified release for CloseHandle. */
-static void mw_kobj_release(void* h) {
+static int mw_kobj_release(void* h) {
+    /* SW-1244: returns 1 when a kernel object slot was released, 0 when the
+     * handle is not a kernel object (so CloseHandle can try the w3 file
+     * table — file handles were leaked FOREVER before this round). */
     MwThread* t = mw_thread_lookup(h);
-    if (t) { mw_thread_release(h); return; }
+    if (t) { mw_thread_release(h); return 1; }
     MwKEvent* e = mw_event_lookup(h);
-    if (e) { e->used = 0; return; }
+    if (e) { e->used = 0; return 1; }
     MwKSem* s = mw_sem_lookup(h);
-    if (s) { s->used = 0; return; }
+    if (s) { s->used = 0; return 1; }
+    return 0;
 }
 
 /* Real event/semaphore state transitions (registry block above). */
@@ -7694,6 +7958,21 @@ static void w3_trap_bad_free(void* p, const char* tag) {
         free(abase);
         return;
     }
+    /* SW-1244 DIAG: MINWIN_HEAP_TRAP=warn — LibreOffice's 7za open of the
+     * MSI-embedded cab freed a pointer whose allocation path the registry
+     * never saw (small host-heap block, real glibc chunk). The trap's job
+     * is catching REAL corruption at the free site with the caller on the
+     * stack; for decode sessions the warn mode keeps the run alive so the
+     * allocation origin can be found from the surviving trace. Default
+     * (unset / any other value) keeps the hard _exit(4). */
+    {
+        const char* tv = getenv("MINWIN_HEAP_TRAP");
+        if (tv && tv[0] == 'w' && (tv[1] == 'a')) {
+            fprintf(stderr, "[HEAP-TRAP %s] WARN untracked free 0x%lx (continue)\n",
+                    tag, (unsigned long)(uintptr_t)p);
+            return;
+        }
+    }
     fprintf(stderr, "[HEAP-TRAP %s] free of untracked/bad ptr 0x%lx — caller chain:\n",
             tag, (unsigned long)(uintptr_t)p);
     uint64_t scan_rsp = (uint64_t)(uintptr_t)&p;
@@ -9087,6 +9366,15 @@ static int w3fd_from_handle(void* h) {
     if (idx < 0 || idx >= MAX_HANDLES || !g_w3files[idx].in_use) return -1;
     return g_w3files[idx].fd;
 }
+/* SW-1244: close the backing fd and recycle the w3 slot (CloseHandle path) */
+static void w3_release_handle(void* h) {
+    int idx = (int)(uintptr_t)h - 4;
+    if (idx < 0 || idx >= MAX_HANDLES || !g_w3files[idx].in_use) return;
+    if (g_w3files[idx].fd >= 3) close(g_w3files[idx].fd); /* never the std fds */
+    g_w3files[idx].fd = -1;
+    g_w3files[idx].in_use = 0;
+}
+
 static void* w3_handle_for_fd(int fd) {
     if (!g_w3files_ready) { memset(g_w3files, 0, sizeof(g_w3files)); g_w3files_ready = 1; }
     for (int i = 0; i < MAX_HANDLES; i++) {
@@ -23800,6 +24088,382 @@ __attribute__((ms_abi)) uint16_t* mw__itow(int v, uint16_t* buf, int base) {
     buf[n] = 0;
     return buf;
 }
+/* SW-1247 (SWEEP-048): MFC42U.dll (real PE-DLL, mspaint64) imports four
+ * msvcrt names the dispatch lacked. _ltow/_ultow are the long twins of
+ * _itow (real CRT semantics, wchar out, honor base 10/16/8); labs is the
+ * long abs; __CppXcptFilter is the CRT C++-exception filter — returning 0
+ * = EXCEPTION_CONTINUE_SEARCH is the honest headless answer (real msvcrt
+ * returns 0 unless a C++ exception is being filtered). The stub-0 path for
+ * these left MFC init on a broken value trail and the next host malloc
+ * aborted with "corrupted top size". */
+__attribute__((ms_abi)) uint16_t* mw__ltow(long v, uint16_t* buf, int base) {
+    char tmp[40];
+    if (base == 16) snprintf(tmp, sizeof(tmp), "%lx", (unsigned long)v);
+    else if (base == 8) snprintf(tmp, sizeof(tmp), "%lo", (unsigned long)v);
+    else snprintf(tmp, sizeof(tmp), "%ld", v);
+    int n = 0;
+    for (; tmp[n]; n++) buf[n] = (uint16_t)(unsigned char)tmp[n];
+    buf[n] = 0;
+    return buf;
+}
+__attribute__((ms_abi)) uint16_t* mw__ultow(unsigned long v, uint16_t* buf, int base) {
+    char tmp[40];
+    if (base == 16) snprintf(tmp, sizeof(tmp), "%lx", v);
+    else if (base == 8) snprintf(tmp, sizeof(tmp), "%lo", v);
+    else snprintf(tmp, sizeof(tmp), "%lu", v);
+    int n = 0;
+    for (; tmp[n]; n++) buf[n] = (uint16_t)(unsigned char)tmp[n];
+    buf[n] = 0;
+    return buf;
+}
+__attribute__((ms_abi)) long mw_labs(long v) { return v < 0 ? -v : v; }
+__attribute__((ms_abi)) int mw__CppXcptFilter(unsigned long exc_type,
+                                              void* exc_ptr) {
+    (void)exc_type; (void)exc_ptr;
+    return 0; /* EXCEPTION_CONTINUE_SEARCH */
+}
+/* SW-1247 batch 2: the remaining msvcrt names MFC42U.dll imports.
+ * Guest wchar_t = 16-bit (uint16_t) — all wide loops are manual; host
+ * wchar_t is 32-bit so libc wcs* on guest buffers would misparse. */
+static long mw_wtol16(const uint16_t* s) {
+    if (!s) return 0;
+    long v = 0; int neg = 0;
+    while (*s == L' ' || (*s >= 9 && *s <= 13)) s++;
+    if (*s == L'-') { neg = 1; s++; } else if (*s == L'+') s++;
+    for (; *s >= L'0' && *s <= L'9'; s++) v = v * 10 + (*s - L'0');
+    return neg ? -v : v;
+}
+__attribute__((ms_abi)) long mw__wtol(const uint16_t* s) { return mw_wtol16(s); }
+__attribute__((ms_abi)) int mw_abs(int v) { return v < 0 ? -v : v; }
+__attribute__((ms_abi)) uint64_t mw_time(uint64_t* t) {
+    uint64_t now = (uint64_t)time(NULL);
+    if (t) *t = now;
+    return now;
+}
+static struct tm g_tm_out; /* real msvcrt returns a shared static struct */
+__attribute__((ms_abi)) void* mw_localtime(const uint64_t* t) {
+    time_t tt = t ? (time_t)*t : time(NULL);
+    if (!localtime_r(&tt, &g_tm_out)) return NULL;
+    return &g_tm_out;
+}
+__attribute__((ms_abi)) void* mw_gmtime(const uint64_t* t) {
+    time_t tt = t ? (time_t)*t : time(NULL);
+    if (!gmtime_r(&tt, &g_tm_out)) return NULL;
+    return &g_tm_out;
+}
+__attribute__((ms_abi)) uint64_t mw_mktime(void* tmp) {
+    if (!tmp) return (uint64_t)-1;
+    /* guest struct tm: 9 int fields, same order as host */
+    memcpy(&g_tm_out, tmp, sizeof(int) * 9);
+    return (uint64_t)mktime(&g_tm_out);
+}
+__attribute__((ms_abi)) int mw_iswspace(uint16_t c) {
+    return (c == L' ') || (c >= 9 && c <= 13);
+}
+__attribute__((ms_abi)) uint16_t* mw__wcsrev(uint16_t* s) {
+    if (!s) return s;
+    size_t n = 0; while (s[n]) n++;
+    for (size_t i = 0, j = n; i + 1 < j; i++, j--) {
+        uint16_t t = s[i]; s[i] = s[j - 1]; s[j - 1] = t;
+    }
+    return s;
+}
+__attribute__((ms_abi)) uint16_t* mw__wcsupr(uint16_t* s) {
+    if (!s) return s;
+    for (uint16_t* p = s; *p; p++)
+        if (*p >= L'a' && *p <= L'z') *p = (uint16_t)(*p - 32);
+    return s;
+}
+__attribute__((ms_abi)) size_t mw_wcscspn(const uint16_t* s, const uint16_t* rej) {
+    if (!s) return 0;
+    size_t n = 0;
+    for (; s[n]; n++)
+        for (const uint16_t* r = rej; ; r++) {
+            if (!*r) return n;
+            if (s[n] == *r) return n;
+        }
+    return n;
+}
+__attribute__((ms_abi)) uint16_t* mw_wcspbrk(const uint16_t* s, const uint16_t* acc) {
+    if (!s || !acc) return NULL;
+    for (const uint16_t* p = s; *p; p++)
+        for (const uint16_t* r = acc; *r; r++)
+            if (*p == *r) return (uint16_t*)p;
+    return NULL;
+}
+__attribute__((ms_abi)) double mw_wcstod(const uint16_t* s, uint16_t** endp) {
+    char a8[128]; size_t i = 0;
+    if (s) { while (s[i] && i + 1 < sizeof(a8)) { a8[i] = (char)s[i]; i++; } }
+    a8[i] = 0;
+    char* end8 = NULL;
+    double v = strtod(a8, &end8);
+    if (endp) *endp = (uint16_t*)(s + (int)(end8 - a8));
+    return v;
+}
+/* _splitpath: drive/dir/name/ext, each buffer optional */
+__attribute__((ms_abi)) void mw__wsplitpath(const uint16_t* path,
+                                            uint16_t* drive, uint16_t* dir,
+                                            uint16_t* name, uint16_t* ext) {
+    const uint16_t* p = path; size_t n = 0;
+    if (p) { while (p[n]) n++; }
+    /* drive: "X:" */
+    size_t drive_len = 0;
+    if (n >= 2 && p[1] == L':') drive_len = 2;
+    if (drive) { if (drive_len) memcpy(drive, p, drive_len * 2); if (drive) drive[drive_len] = 0; }
+    const uint16_t* rest = p + drive_len;
+    size_t rest_len = n - drive_len;
+    /* dir: up to last '/' or '\\' */
+    size_t last_sep = (size_t)-1;
+    for (size_t i = 0; i < rest_len; i++)
+        if (rest[i] == L'/' || rest[i] == L'\\') last_sep = i;
+    size_t dir_len = (last_sep == (size_t)-1) ? 0 : last_sep + 1;
+    if (dir) { if (dir_len) memcpy(dir, rest, dir_len * 2); dir[dir_len] = 0; }
+    /* ext: from last '.' after the dir */
+    size_t dot = (size_t)-1;
+    for (size_t i = dir_len; i < rest_len; i++)
+        if (rest[i] == L'.') dot = i;
+    size_t name_len = (dot == (size_t)-1) ? rest_len : dot - dir_len;
+    if (name) { if (name_len) memcpy(name, rest + dir_len, name_len * 2); name[name_len] = 0; }
+    if (ext) { size_t el = (dot == (size_t)-1) ? 0 : rest_len - dot;
+               if (el) memcpy(ext, rest + dot, el * 2); ext[el] = 0; }
+}
+/* _expand: real contract = grow IN PLACE, never moves; NULL on failure */
+__attribute__((ms_abi)) void* mw__expand(void* p, size_t size) {
+    if (!p) return NULL;
+    if (malloc_usable_size(p) >= size) return p;
+    return NULL; /* honest: no in-place room, real _expand returns NULL */
+}
+/* swprintf family: 16-bit formatter. %s = WIDE arg (MSVCRT wide-printf
+ * rule), %S/%hs = narrow arg, %d/%i/%u/%x/%X/%c/%% with width/pad. */
+static int mw_vfmt_w16(uint16_t* dst, size_t max, const uint16_t* fmt,
+                       __builtin_ms_va_list ap) {
+    if (!dst || !fmt) return 0;
+    size_t o = 0;
+    for (size_t i = 0; fmt[i] && o + 1 < max; ) {
+        if (fmt[i] != L'%') { dst[o++] = fmt[i++]; continue; }
+        i++;
+        if (fmt[i] == L'%') { dst[o++] = L'%'; i++; continue; }
+        int width = 0, zero = 0, lflag = 0;
+        if (fmt[i] == L'0') { zero = 1; i++; }
+        while (fmt[i] >= L'0' && fmt[i] <= L'9') { width = width * 10 + (fmt[i] - L'0'); i++; }
+        if (fmt[i] == L'l') { lflag = 1; i++; }
+        else if (fmt[i] == L'h') { i++; } /* short: ignore for values */
+        char num[32];
+        const char* s8 = NULL;
+        const uint16_t* s16 = NULL;
+        unsigned long long uv = 0;
+        long long sv = 0;
+        int is_str = 0, str_wide = 1;
+        switch (fmt[i]) {
+        case L'd': case L'i':
+            sv = lflag ? __builtin_va_arg(ap, long long)
+                       : (long long)__builtin_va_arg(ap, int);
+            snprintf(num, sizeof(num), "%lld", sv); s8 = num; break;
+        case L'u':
+            uv = lflag ? __builtin_va_arg(ap, unsigned long long)
+                       : (unsigned long long)__builtin_va_arg(ap, unsigned int);
+            snprintf(num, sizeof(num), "%llu", uv); s8 = num; break;
+        case L'x':
+            uv = lflag ? __builtin_va_arg(ap, unsigned long long)
+                       : (unsigned long long)__builtin_va_arg(ap, unsigned int);
+            snprintf(num, sizeof(num), "%llx", uv); s8 = num; break;
+        case L'X':
+            uv = lflag ? __builtin_va_arg(ap, unsigned long long)
+                       : (unsigned long long)__builtin_va_arg(ap, unsigned int);
+            snprintf(num, sizeof(num), "%llX", uv); s8 = num; break;
+        case L'c': {
+            unsigned c = __builtin_va_arg(ap, unsigned int);
+            dst[o++] = (uint16_t)c; i++;
+            continue; }
+        case L'S': str_wide = 0; /* fallthrough */
+        case L's': is_str = 1; break;
+        default:
+            dst[o++] = fmt[i++]; /* unknown conv: keep honest */
+            continue;
+        }
+        if (is_str) {
+            if (str_wide) s16 = __builtin_va_arg(ap, const uint16_t*);
+            else s8 = __builtin_va_arg(ap, const char*);
+            i++;
+        } else i++;
+        /* width + pad on the numeric/textual body */
+        char body[1024]; size_t bl = 0;
+        if (is_str) {
+            if (str_wide) {
+                for (; s16 && s16[bl] && bl + 1 < sizeof(body); bl++) body[bl] = (char)s16[bl];
+            } else {
+                for (; s8 && s8[bl] && bl + 1 < sizeof(body); bl++) body[bl] = s8[bl];
+            }
+            body[bl] = 0; s8 = body;
+        }
+        size_t len = s8 ? strlen(s8) : 0;
+        for (size_t k = len; k < (size_t)width && o + 1 < max; k++)
+            dst[o++] = zero ? L'0' : L' ';
+        for (size_t k = 0; s8 && s8[k] && o + 1 < max; k++)
+            dst[o++] = (uint16_t)(unsigned char)s8[k];
+    }
+    dst[o] = 0;
+    return (int)o;
+}
+__attribute__((ms_abi)) int mw_swprintf(uint16_t* buf, size_t n,
+                                        const uint16_t* fmt, ...) {
+    __builtin_ms_va_list ap;
+    __builtin_ms_va_start(ap, fmt);
+    int r = mw_vfmt_w16(buf, n, fmt, ap);
+    __builtin_ms_va_end(ap);
+    return r;
+}
+__attribute__((ms_abi)) int mw_vswprintf(uint16_t* buf, size_t n,
+                                         const uint16_t* fmt, void* ap_v) {
+    __builtin_ms_va_list ap = (__builtin_ms_va_list)ap_v;
+    return mw_vfmt_w16(buf, n, fmt, ap);
+}
+/* stdio w-family: line-oriented, ASCII-faithful for the 16-bit stream */
+__attribute__((ms_abi)) uint16_t* mw_fgetws(uint16_t* buf, int n, void* stream) {
+    if (!buf || n <= 0 || !stream) return NULL;
+    char line[512];
+    FILE* f = (FILE*)stream;
+    if (!fgets(line, sizeof(line), f)) return NULL;
+    int i = 0;
+    for (; line[i] && i < n - 1; i++) buf[i] = (uint16_t)(unsigned char)line[i];
+    buf[i] = 0;
+    return buf;
+}
+__attribute__((ms_abi)) int mw_fputws(const uint16_t* s, void* stream) {
+    if (!s || !stream) return -1;
+    char out[1024]; size_t i = 0;
+    for (; s[i] && i + 1 < sizeof(out); i++) out[i] = (char)s[i];
+    out[i] = 0;
+    return (int)fwrite(out, 1, i, (FILE*)stream) ? 0 : -1;
+}
+/* SW-1247 batch 3: MFC42U's gdi32/user32/kernel32 tail — typed-honest.
+ * GDI object cookies reuse the 0x0003xxxx slot shape (CreatePen family). */
+static uint8_t g_mf_live[16]; /* metafile DC / HMETAFILE slots */
+__attribute__((ms_abi)) int mw_ArcTo(void* hdc, int l, int t, int r, int b,
+                                     int x1, int y1, int x2, int y2) {
+    (void)hdc; (void)l; (void)t; (void)r; (void)b; (void)x1; (void)y1; (void)x2; (void)y2;
+    return 1; /* arc raster v2 — typed success keeps MFC flow honest */
+}
+__attribute__((ms_abi)) void* mw_CreateMetaFileW(const uint16_t* file) {
+    int slot = -1;
+    for (int i = 0; i < 16; i++) if (!g_mf_live[i]) { slot = i; break; }
+    if (slot < 0) slot = 0;
+    g_mf_live[slot] = 1;
+    (void)file;
+    return (void*)(uintptr_t)(0x00035000u | (unsigned)slot);
+}
+__attribute__((ms_abi)) void* mw_CloseMetaFile(void* hdc) {
+    uintptr_t v = (uintptr_t)hdc;
+    if ((v & 0xFFFF0000u) == 0x00030000u) {
+        int slot = (int)(v & 0xF);
+        if (slot < 16 && g_mf_live[slot]) {
+            g_mf_live[slot] = 0;
+            return (void*)(uintptr_t)(0x00036000u | (unsigned)slot);
+        }
+    }
+    return NULL;
+}
+__attribute__((ms_abi)) int mw_DeleteMetaFile(void* hmf) {
+    (void)hmf; return 1;
+}
+__attribute__((ms_abi)) int mw_PlayMetaFile(void* hdc, void* hmf) {
+    (void)hdc; (void)hmf; return 1;
+}
+__attribute__((ms_abi)) int mw_PlayMetaFileRecord(void* hdc, void* hand, void* rec, unsigned sz) {
+    (void)hdc; (void)hand; (void)rec; (void)sz; return 1;
+}
+__attribute__((ms_abi)) int mw_EnumMetaFile(void* hdc, void* hmf, void* proc, void* param) {
+    (void)hdc; (void)hmf; (void)proc; (void)param; return 0; /* no records */
+}
+__attribute__((ms_abi)) void* mw_ExtCreatePen(uint32_t style, uint32_t width,
+                                              const void* lop, uint32_t cnt,
+                                              const uint32_t* bits) {
+    (void)style; (void)lop; (void)cnt; (void)bits;
+    return mw_CreatePen(0, (int)width, 0x00000000u);
+}
+__attribute__((ms_abi)) int mw_GetClipRgn(void* hdc, void* rgn) {
+    (void)hdc; (void)rgn; return 0; /* no clip region */
+}
+__attribute__((ms_abi)) int mw_GetDCOrgEx(void* hdc, void* pt) {
+    (void)hdc;
+    if (pt) { int32_t* p = (int32_t*)pt; p[0] = 0; p[1] = 0; }
+    return 1;
+}
+__attribute__((ms_abi)) int mw_OffsetClipRgn(void* hdc, int x, int y) {
+    (void)hdc; (void)x; (void)y; return 1; /* SIMPLEREGION */
+}
+__attribute__((ms_abi)) int mw_PolyBezierTo(void* hdc, const void* pt, int cnt) {
+    (void)hdc; (void)pt; (void)cnt; return 1;
+}
+__attribute__((ms_abi)) int mw_PolylineTo(void* hdc, const void* pt, int cnt) {
+    (void)hdc; (void)pt; (void)cnt; return 1;
+}
+__attribute__((ms_abi)) int mw_PolyDraw(void* hdc, const void* pt, const uint8_t* types, int cnt) {
+    (void)hdc; (void)pt; (void)types; (void)cnt; return 1;
+}
+__attribute__((ms_abi)) int mw_SelectClipPath(void* hdc, int mode) {
+    (void)hdc; (void)mode; return 1; /* SIMPLEREGION */
+}
+__attribute__((ms_abi)) int mw_SetArcDirection(void* hdc, int dir) {
+    (void)hdc; (void)dir; return 1;
+}
+__attribute__((ms_abi)) int mw_SetColorAdjustment(void* hdc, const void* ca) {
+    (void)hdc; (void)ca; return 1;
+}
+__attribute__((ms_abi)) int mw_SetMapperFlags(void* hdc, uint32_t flag) {
+    (void)hdc; (void)flag; return 1;
+}
+__attribute__((ms_abi)) void* mw_CreateDIBPatternBrushPt(const void* hdr, uint32_t use) {
+    (void)hdr; (void)use;
+    return (void*)(uintptr_t)0x00037001u; /* brush cookie slot 1 */
+}
+__attribute__((ms_abi)) int mw_CountClipboardFormats(void) {
+    return 0; /* empty clipboard — real contract */
+}
+__attribute__((ms_abi)) uint32_t mw_GetTabbedTextExtentA(void* hdc, const char* s,
+                                                         int len, int tabs, const int* stops) {
+    (void)hdc; (void)tabs; (void)stops;
+    int n = 0;
+    if (s) { while (n < len && s[n]) n++; }
+    return ((uint32_t)8 << 16) | (uint32_t)(n * 8); /* 8x8 engine face */
+}
+__attribute__((ms_abi)) int mw_InSendMessage(void) { return 0; }
+__attribute__((ms_abi)) int mw_SetWindowContextHelpId(void* hwnd, uint32_t id) {
+    (void)hwnd; (void)id; return 1;
+}
+__attribute__((ms_abi)) void* mw_WindowFromDC(void* hdc) {
+    (void)hdc;
+    return g_main_hwnd ? g_main_hwnd : (void*)(uintptr_t)MW_GUI_HWND;
+}
+__attribute__((ms_abi)) int mw_wvsprintfW(uint16_t* buf, const uint16_t* fmt, void* ap_v) {
+    if (!buf) return 0;
+    __builtin_ms_va_list ap = (__builtin_ms_va_list)ap_v;
+    char f8[512];
+    if (fmt) w3_w16_to_utf8z(fmt, f8, sizeof(f8)); else f8[0] = 0;
+    char out[1024];
+    int n = mw_vfmt_a(out, sizeof(out), f8, ap);
+    int i = 0;
+    for (; i < n && i < 1023; i++) buf[i] = (uint16_t)(unsigned char)out[i];
+    buf[i] = 0;
+    return n;
+}
+__attribute__((ms_abi)) uint32_t mw_GetProcessVersion(uint32_t pid) {
+    (void)pid;
+    /* real GetProcessVersion(pid=self) = image target version; the loader
+     * parsed the PE header — Windows 5.2 plane for the XP-x64 corpus */
+    return 0x00050002u;
+}
+__attribute__((ms_abi)) uint16_t* mw_lstrcatW(uint16_t* dst, const uint16_t* src) {
+    if (!dst) return NULL;
+    if (!src) return dst;
+    uint16_t* p = dst; while (*p) p++;
+    while ((*p++ = *src++)) { }
+    return dst;
+}
+__attribute__((ms_abi)) int mw_lstrcmpiA(const char* a, const char* b) {
+    if (!a || !b) return a == b ? 0 : (a ? 1 : -1);
+    return strcasecmp(a, b);
+}
 __attribute__((ms_abi)) uint16_t* mw__ui64tow(unsigned long long v, uint16_t* buf, int base) {
     char tmp[80];
     if (base == 16) snprintf(tmp, sizeof(tmp), "%llx", v);
@@ -27805,6 +28469,37 @@ static ImportEntry g_import_table[] = {
     ENTRY("VCRUNTIME140.dll", "_CxxThrowException",           mw__CxxThrowException), /* SW-1230 (legacy contract, see note) */
     ENTRY("VCRUNTIME140.dll", "terminate",                   mw_msvcrt_terminate), /* SW-1230 alias */
     ENTRY("api-ms-win-crt-runtime-l1-1-0.dll", "_initialize_onexit_table",     mw__initialize_onexit_table), /* SW-1230 */
+    ENTRY("api-ms-win-crt-runtime-l1-1-0.dll", "_execute_onexit_table",  mw__execute_onexit_table), /* SW-1251 */
+    ENTRY("api-ms-win-crt-runtime-l1-1-0.dll", "_invoke_watson",  mw__invoke_watson), /* SW-1251 */
+    ENTRY("api-ms-win-crt-runtime-l1-1-0.dll", "_set_new_handler",  mw__set_new_handler), /* SW-1251 */
+    ENTRY("api-ms-win-crt-stdio-l1-1-0.dll", "__stdio_common_vsprintf_s",  mw___stdio_common_vsprintf_s), /* SW-1251 */
+    ENTRY("api-ms-win-crt-stdio-l1-1-0.dll", "_get_stream_buffer_pointers",  mw__get_stream_buffer_pointers), /* SW-1251 */
+    ENTRY("api-ms-win-crt-stdio-l1-1-0.dll", "_wfsopen",  mw__wfsopen), /* SW-1251 */
+    ENTRY("api-ms-win-crt-string-l1-1-0.dll", "__strncnt",  mw___strncnt), /* SW-1251 */
+    ENTRY("api-ms-win-crt-string-l1-1-0.dll", "strcpy_s",  mw_strcpy_s), /* SW-1251 */
+    ENTRY("api-ms-win-crt-string-l1-1-0.dll", "iswalnum",  mw_iswalnum), /* SW-1251 */
+    ENTRY("api-ms-win-crt-string-l1-1-0.dll", "iswxdigit",  mw_iswxdigit), /* SW-1251 */
+    ENTRY("api-ms-win-crt-heap-l1-1-0.dll", "_callnewh",  mw__callnewh), /* SW-1251 */
+    ENTRY("api-ms-win-crt-math-l1-1-0.dll", "_dclass",  mw__dclass), /* SW-1251 */
+    ENTRY("api-ms-win-crt-math-l1-1-0.dll", "_ldclass",  mw__ldclass), /* SW-1251 */
+    ENTRY("api-ms-win-crt-math-l1-1-0.dll", "ldexp",  mw_ldexp), /* SW-1251 */
+    ENTRY("api-ms-win-crt-math-l1-1-0.dll", "copysign",  mw_copysign), /* SW-1251 */
+    ENTRY("api-ms-win-crt-convert-l1-1-0.dll", "btowc",  mw_btowc), /* SW-1251 */
+    ENTRY("api-ms-win-crt-time-l1-1-0.dll", "_Getdays",  mw__Getdays), /* SW-1251 */
+    ENTRY("api-ms-win-crt-time-l1-1-0.dll", "_Getmonths",  mw__Getmonths), /* SW-1251 */
+    ENTRY("api-ms-win-crt-time-l1-1-0.dll", "_Gettnames",  mw__Gettnames), /* SW-1251 */
+    ENTRY("api-ms-win-crt-time-l1-1-0.dll", "_W_Getdays",  mw__W_Getdays), /* SW-1251 */
+    ENTRY("api-ms-win-crt-time-l1-1-0.dll", "_W_Getmonths",  mw__W_Getmonths), /* SW-1251 */
+    ENTRY("api-ms-win-crt-time-l1-1-0.dll", "_W_Gettnames",  mw__W_Gettnames), /* SW-1251 */
+    ENTRY("api-ms-win-crt-time-l1-1-0.dll", "_Strftime",  mw__Strftime), /* SW-1251 */
+    ENTRY("api-ms-win-crt-time-l1-1-0.dll", "_Wcsftime",  mw__Wcsftime), /* SW-1251 */
+    ENTRY("api-ms-win-crt-locale-l1-1-0.dll", "___lc_collate_cp_func",  mw___lc_collate_cp_func), /* SW-1251 */
+    ENTRY("api-ms-win-crt-locale-l1-1-0.dll", "___lc_locale_name_func",  mw___lc_locale_name_func), /* SW-1251 */
+    ENTRY("api-ms-win-crt-locale-l1-1-0.dll", "__pctype_func",  mw___pctype_func), /* SW-1251 */
+    ENTRY("api-ms-win-crt-locale-l1-1-0.dll", "_lock_locales",  mw__lock_locales), /* SW-1251 */
+    ENTRY("api-ms-win-crt-locale-l1-1-0.dll", "_unlock_locales",  mw__unlock_locales), /* SW-1251 */
+    ENTRY("KERNEL32.DLL", "DisableThreadLibraryCalls",  mw_DisableThreadLibraryCalls), /* SW-1251 */
+    ENTRY("KERNEL32.DLL", "FlushProcessWriteBuffers",  mw_FlushProcessWriteBuffers), /* SW-1251 */
     ENTRY("api-ms-win-crt-runtime-l1-1-0.dll", "_register_onexit_function",    mw__register_onexit_function), /* SW-1230 */
     ENTRY("api-ms-win-crt-runtime-l1-1-0.dll", "_get_initial_narrow_environment", mw__get_initial_narrow_environment), /* SW-1230 */
     ENTRY("api-ms-win-crt-stdio-l1-1-0.dll", "_set_fmode",    mw__set_fmode), /* SW-1230 */
@@ -29617,6 +30312,59 @@ ENTRY("GDI32.DLL", "GetCharacterPlacementW",                mw_GetCharacterPlace
     ENTRY("msvcrt.dll", "_wtoi64",                              mw__wtoi64),
     ENTRY("msvcrt.dll", "_wcslwr",                              mw__wcslwr),
     ENTRY("msvcrt.dll", "_itow",                                mw__itow),
+    ENTRY("msvcrt.dll", "_ltow",                                mw__ltow),
+    ENTRY("msvcrt.dll", "_ultow",                               mw__ultow),
+    ENTRY("msvcrt.dll", "labs",                                 mw_labs),
+    ENTRY("msvcrt.dll", "__CppXcptFilter",                      mw__CppXcptFilter),
+    ENTRY("msvcrt.dll", "_wtol",                 mw__wtol),
+    ENTRY("msvcrt.dll", "abs",                   mw_abs),
+    ENTRY("msvcrt.dll", "time",                  mw_time),
+    ENTRY("msvcrt.dll", "localtime",             mw_localtime),
+    ENTRY("msvcrt.dll", "gmtime",                mw_gmtime),
+    ENTRY("msvcrt.dll", "mktime",                mw_mktime),
+    ENTRY("msvcrt.dll", "iswspace",              mw_iswspace),
+    ENTRY("msvcrt.dll", "iswdigit",              mw_iswdigit),
+    ENTRY("msvcrt.dll", "_wcsdup",               mw__wcsdup),
+    ENTRY("msvcrt.dll", "_wcsrev",               mw__wcsrev),
+    ENTRY("msvcrt.dll", "_wcsupr",               mw__wcsupr),
+    ENTRY("msvcrt.dll", "wcscspn",               mw_wcscspn),
+    ENTRY("msvcrt.dll", "wcspbrk",               mw_wcspbrk),
+    ENTRY("msvcrt.dll", "wcstod",                mw_wcstod),
+    ENTRY("msvcrt.dll", "wcstol",                mw_wcstol),
+    ENTRY("msvcrt.dll", "_wsplitpath",           mw__wsplitpath),
+    ENTRY("msvcrt.dll", "_expand",               mw__expand),
+    ENTRY("msvcrt.dll", "swprintf",              mw_swprintf),
+    ENTRY("msvcrt.dll", "vswprintf",             mw_vswprintf),
+    ENTRY("msvcrt.dll", "fgetws",                mw_fgetws),
+    ENTRY("msvcrt.dll", "fputws",                mw_fputws),
+    ENTRY("GDI32.DLL", "ArcTo",                  mw_ArcTo),
+    ENTRY("GDI32.DLL", "CloseMetaFile",          mw_CloseMetaFile),
+    ENTRY("GDI32.DLL", "CreateDIBPatternBrushPt",  mw_CreateDIBPatternBrushPt),
+    ENTRY("GDI32.DLL", "CreateMetaFileW",        mw_CreateMetaFileW),
+    ENTRY("GDI32.DLL", "DeleteMetaFile",         mw_DeleteMetaFile),
+    ENTRY("GDI32.DLL", "EnumMetaFile",           mw_EnumMetaFile),
+    ENTRY("GDI32.DLL", "ExtCreatePen",           mw_ExtCreatePen),
+    ENTRY("GDI32.DLL", "GetClipRgn",             mw_GetClipRgn),
+    ENTRY("GDI32.DLL", "GetDCOrgEx",             mw_GetDCOrgEx),
+    ENTRY("GDI32.DLL", "OffsetClipRgn",          mw_OffsetClipRgn),
+    ENTRY("GDI32.DLL", "PlayMetaFile",           mw_PlayMetaFile),
+    ENTRY("GDI32.DLL", "PlayMetaFileRecord",     mw_PlayMetaFileRecord),
+    ENTRY("GDI32.DLL", "PolyBezierTo",           mw_PolyBezierTo),
+    ENTRY("GDI32.DLL", "PolyDraw",               mw_PolyDraw),
+    ENTRY("GDI32.DLL", "PolylineTo",             mw_PolylineTo),
+    ENTRY("GDI32.DLL", "SelectClipPath",         mw_SelectClipPath),
+    ENTRY("GDI32.DLL", "SetArcDirection",        mw_SetArcDirection),
+    ENTRY("GDI32.DLL", "SetColorAdjustment",     mw_SetColorAdjustment),
+    ENTRY("GDI32.DLL", "SetMapperFlags",         mw_SetMapperFlags),
+    ENTRY("USER32.DLL", "CountClipboardFormats",  mw_CountClipboardFormats),
+    ENTRY("USER32.DLL", "GetTabbedTextExtentA",  mw_GetTabbedTextExtentA),
+    ENTRY("USER32.DLL", "InSendMessage",         mw_InSendMessage),
+    ENTRY("USER32.DLL", "SetWindowContextHelpId",  mw_SetWindowContextHelpId),
+    ENTRY("USER32.DLL", "WindowFromDC",          mw_WindowFromDC),
+    ENTRY("USER32.DLL", "wvsprintfW",            mw_wvsprintfW),
+    ENTRY("KERNEL32.DLL", "GetProcessVersion",   mw_GetProcessVersion),
+    ENTRY("KERNEL32.DLL", "lstrcatW",            mw_lstrcatW),
+    ENTRY("KERNEL32.DLL", "lstrcmpiA",           mw_lstrcmpiA),
     ENTRY("msvcrt.dll", "_ui64tow",                             mw__ui64tow),
     ENTRY("msvcrt.dll", "_msize",                               mw__msize),
     ENTRY("msvcrt.dll", "wcsncat",                              mw_wcsncat),
@@ -30226,6 +30974,8 @@ static DataImportEntry g_data_imports[] = {
     { "api-ms-win-crt-runtime-l1-1-0.dll", "__sys_nerr",    &g_sys_nerr },    /* OPENSRC battery */
     /* LADDER-013 (md5deep64, BUG-065): old-mingw data surface */
     { "msvcrt.dll", "__argv",      &g_argv_cell },   /* slot = &var; guest derefs to char** */
+    { "msvcrt.dll", "__argc",      &g_argc },        /* SW-1247: int data */
+    { "msvcrt.dll", "__wargv",     &g_wargv_cell },  /* SW-1247: wchar_t** data */
     { "msvcrt.dll", "__mb_cur_max", &g_mb_cur_max },
     { "msvcrt.dll", "__pioinfo",   &g_pioinfo[0] },  /* ioinfo* [64] */
     /* TASK-API-011: UCRT-flavored data exports (__p_* return pointers to
@@ -31230,7 +31980,16 @@ static void crash_handler(int sig, siginfo_t* info, void* ctx) {
     /* Try to identify the function at RIP */
     fprintf(stderr, "  Backtrace (via stack walking):\n");
     uint64_t bt_rip = rip, bt_rsp = rsp;
+    /* SW-1246 (SWEEP-048): the out-of-PE branch followed *(bt_rsp+8) as a
+     * RAW POINTER CHAIN with NO stack bounds — mspaint64's libc SIGBUS left
+     * RBP holding string bytes ("[API] _i"), the walk chased garbage and
+     * the handler itself faulted (Signal 7 at the walker, exit 139/135,
+     * diagnostics truncated). Guard EVERY deref: bt_rsp must stay inside
+     * [rsp, rsp+0x8000] and a loaded chain value must be stack-plausible
+     * or the walk stops. The in-PE branch already had this hardening. */
+    uint64_t bt_lo = rsp, bt_hi = rsp + 0x8000;
     for (int i = 0; i < 8; i++) {
+        if (bt_rsp < bt_lo || bt_rsp > bt_hi) break;   /* SW-1246 */
         if (g_image_base && bt_rip >= (uint64_t)(uintptr_t)g_image_base &&
             bt_rip < (uint64_t)(uintptr_t)g_image_base + g_image_size) {
             uint64_t bt_rva = bt_rip - (uint64_t)(uintptr_t)g_image_base;
@@ -31261,7 +32020,10 @@ static void crash_handler(int sig, siginfo_t* info, void* ctx) {
             bt_rsp = bt_rsp_next + 8;  /* follow return chain */
         } else if (bt_rip > 0x100000 && bt_rip < 0x7fffffffffffULL) {
             fprintf(stderr, "    [%d] RIP=0x%lx (outside PE, possible shared lib)\n", i, bt_rip);
-            bt_rsp = *(uint64_t*)(uintptr_t)(bt_rsp + 8);
+            uint64_t nrsp = bt_rsp + 8;                    /* SW-1246: bounded by loop-top guard */
+            uint64_t v = *(uint64_t*)(uintptr_t)nrsp;
+            if (v < bt_lo - 0x10000 || v > bt_hi + 0x10000) break;  /* SW-1246: chain left the stack */
+            bt_rsp = v;
         } else {
             break;
         }
@@ -31406,6 +32168,9 @@ int main(int argc, char* argv[]) {
     }
     g_argv[argc - 1] = NULL;
     g_argc = argc - 1;
+
+    /* SW-1247: materialize the UCRT __wargv view for old-MSVCRT guests */
+    build_wargv_wenv();
 
     /* Set up signal handlers */
     setup_signal_handlers();
