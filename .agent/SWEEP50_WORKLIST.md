@@ -2323,3 +2323,67 @@ exe e4512878 via the documented one-shot procedure).
 - **Open**: SW-1228 (Go data plane), SW-1233 tail (w32posix fd-monitor
   thread), SW-1230v2 tail (7z.exe `i`/`a` FH4 chain), SW-1219 (famous game),
   SW-791 (curl MSVC variant with libcurl-x64.dll), SW-1093 (-Wformat audit).
+
+## SW-1234..SW-1242 — SWEEP-047 «ادامه قطار» — 20 trains (2026-10-22, base a418e5c)
+Directive: «ادامه قطار» (standing 20-train mandate). Baseline 848fa108 byte-exact
+after fast-forward; adexplorer64 corpus recovery #7 (zip 56536bff / exe e4512878).
+
+- [x] **SW-791 LANDED-PARTIAL — curl.exe (mingw 8.23.0 Schannel) `--version` exit 0 x3**:
+      (1) UCRT tail _byteswap_ulong/_byteswap_ushort (api-ms-win-crt-utility) +
+      freopen_s (stdio, errno_t contract); (2) SSPI gate — InitSecurityInterfaceA
+      returned NULL -> real SecurityFunctionTableA, 28 slots wine-sspi.h layout,
+      dwVersion=1, NTLM typed model (Enumerate/QuerySecPkg/AcquireCred real,
+      handshake slots SEC_E_UNSUPPORTED_FUNCTION 0x80090302); (3) BUG-035 TWIN —
+      raw glibc bsearch called curl's ms_abi comparator SysV-style (crash
+      0x14000cbf8 mov (%rcx),%rcx RCX=0x61 on the 284x16-byte table) -> fixed
+      with the proven qsort_r bridge pattern (mw_ms_bsearch_bridge).
+      FULL VERSION BANNER exit 0. TAIL (SW-791 open): real HTTP — thrdpool
+      resolver job never reaches getaddrinfo (WSAStartup ran, socket plane real).
+- [x] **SW-1234 LANDED — win32 drive-path mapping, 3 surfaces** (shared
+      (null) v(null) Sysinternals banner root cause): win32_module_path issues
+      "C:\..." but w3_normalize_path mapped "X:\a" -> host-root "/a" (unopenable).
+      Drive prefix now maps to the loader PROCESS CWD in w3_normalize_path +
+      mw_fopen/mw__wfopen + w_ver_read_from_file. Corpus census UNCHANGED
+      (15x exit-0 + pageant 124) = zero regressions.
+- [x] **SW-1235 LANDED — version-resource plane** (whois64 end-to-end decode):
+      (a) VerQueryValueA returned UTF-16 pointers into the block ("%s" read 1
+      char) -> ANSI transcode; (b) VarFileInfo\Translation binary pass-through
+      was position-fragile -> last-component detection; (c) all A-queries
+      aliased ONE static buffer (5 saved pointers -> last value) -> 16-slot
+      ring. RESULT: real "Whois v1.21 - Domain information lookup" banner;
+      shared gate for the 8 remaining Sysinternals tools (SW-1238..1241).
+- [x] **SW-1236 LANDED — gate batch**: GetComputerNameExA/W (identity +
+      typed 87 levels), LogonUserA/W (1326), FindFirstFileExA (W-walker
+      delegate), FillConsoleOutputCharacterA (vacuous), WNetAddConnection2A/W
+      (225) + WNetCancelConnection2A/W (2250). whois64 1->0, pslist64 5->0.
+- [x] **SW-1237 LANDED-PARTIAL — real DNS A-plane**: mw_gethostbyname was a
+      typed WSAHOST_NOT_FOUND stub -> real getaddrinfo(AF_INET) delegate +
+      winsock hostent builder. whois64 resolved COM.whois-servers.net (2),
+      whois.iana.org (1), EXAMPLE.COM (2) = REAL host DNS. TAIL: socket
+      connect never issues post-DNS (no socket()/connect() traced).
+- [x] **SW-1242..registered — new corpus 16 guests** (artifacts/sweep047/bin,
+      shas in evidence/sweep047/new_binaries_sha256.txt): NEW exit-0 FULL
+      LIFECYCLE x3 = listdlls64, pipelist64, psloggedon64; psinfo64 prints the
+      REAL SYSINTERNALS SOFTWARE LICENSE TERMS (two-language EULA, multi-KB);
+      trurl.exe real error path exit 7 reproduces; du64/strings64/sdelete64/
+      psservice64 real usage text exit 255.
+- [ ] **SW-1238** accesschk64: 16 unresolved (NetShareEnum/NetShareGetInfo/
+      GetEffectiveRightsFromAclW/EnumServicesStatusW/DeleteAce/RegGetKeySecurity/
+      LsaNtStatusToWinError/LsaEnumerateAccountsWithUserRight/LookupPrivilege
+      DisplayNameW/GetSecurityDescriptorSacl/GetSecurityDescriptorControl ...).
+- [ ] **SW-1239** pslist64: PDH plane — "Processor performance object not
+      found" (procexp64 'contentions' perf-counter class, BUG-078 kin).
+- [ ] **SW-1240** logonsessions64: LSA/session plane gate (exit 1).
+- [ ] **SW-1241** autologon64: "Could not open Winlogon registry key" —
+      HKLM Winlogon plane + MessageBox dialog rendered (BMP evidence exists).
+- [ ] **SW-1242** handle64: 139 crash, undecoded (first decode round pending).
+- **Measurement**: census x3 31 programs DETERMINISTIC (artifacts/sweep047/
+  census.tsv) — corpus 15x exit-0 + pageant 124 ZERO unresolved ZERO
+  regressions; new: 3x exit-0 + 4x exit-1 gates + 5x 255 usage/EULA + 139;
+  G1 12/12 (evidence/master/g1/20261022_050538); round trips jq 2/sqlite 42/
+  zstd/lz4/7za byte-exact; games snake 30f/breakout 381f/13bricks/calc 15/15;
+  ssh -V unchanged (falsified vs HEAD — message + exit 0 identical), fd 9.0.0
+  intact. evidence/sweep047/. no force-push.
+- **Open**: SW-791 HTTP tail, SW-1228 (Go data plane), SW-1233 tail,
+  SW-1230v2 tail (7z FH4), SW-1237 socket tail, SW-1238..1242, SW-1219,
+  SW-1093 (97 -Wformat).

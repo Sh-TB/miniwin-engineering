@@ -1173,3 +1173,51 @@ MEASUREMENT (final binary 848fa108da262351429caca7d5cf7244c65e75b1a9e02a9409d89a
   7za create+extract byte-exact x3 (evidence/sweep046/7za_roundtrip.txt)
 - games: snake 30f byte-identical 3x3, breakout 381f + 13 bricks, calc 9/9
 - no force-push; fast-forward base, single-round increment
+
+## SWEEP-047 «ادامه قطار» — 20 trains (2026-10-22, binary 3dbc56d5, pushed)
+Directive: «ادامه قطار» — standing 20-train mandate. Base: origin/main a418e5c
+(SWEEP-046); fast-forward, baseline rebuilt byte-exact 848fa108, adexplorer64
+corpus recovery #7 (sha-pinned). 16 NEW x64 guests staged (Sysinternals set +
+curl 8.23.0 mingw with libcurl-x64.dll) — each guest = a train.
+
+Train 1 — SW-791 curl --version exit 0: three root causes decoded off the
+guest's own behavior (UCRT 3-import tail; SSPI InitSecurityInterfaceA NULL ->
+real 28-slot wine-layout SecurityFunctionTableA with NTLM typed model; and
+the BUG-035 TWIN: glibc bsearch invoked curl's ms_abi comparator SysV-style
+— crash mov (%rcx),%rcx with RCX=0x61 from a qsort-comparator for a
+char** table — fixed with the qsort_r bridge pattern). Full real version
+banner: "curl 8.23.0 ... LibreSSL/4.3.3 ... HTTP3". Tail: HTTP thrdpool
+resolver starvation (socket plane real, WSAStartup ran, getaddrinfo wired).
+
+Train 2 — SW-1234 drive-path mapping: the (null) v(null) shared banner class
+root-caused to the "X:\..." mapping landing at host-root; now maps to the
+loader process cwd on THREE surfaces (normalize/CreateFile plane, CRT
+fopen/_wfopen plane, w_ver_read_from_file). Zero corpus regressions.
+
+Train 3 — SW-1235 version plane: VerQueryValueA now transcodes UTF-16 ->
+ANSI (guest %s read 1 char), binary pass-through fixed (Translation),
+16-slot pointer ring (all-queries-aliased-one-buffer bug caught because the
+guest saves five pointers then prints). Real "Whois v1.21" banner.
+
+Train 4 — SW-1236 gate batch: GetComputerNameExA/W, LogonUserA/W (1326),
+FindFirstFileExA, FillConsoleOutputCharacterA, WNetAdd/CancelConnection2A/W.
+
+Train 5 — SW-1237 real DNS: gethostbyname delegates to host getaddrinfo,
+winsock hostent built; whois64 resolved 3 real hosts (2+1+2 addrs). Tail:
+post-DNS socket stall.
+
+Trains 6-15 — corpus: listdlls64/pipelist64/psloggedon64 = NEW full
+lifecycles (exit 0 x3, zero staging); psinfo64 real EULA text; trurl real
+error path; usage/EULA paths real for du/strings/sdelete/psservice;
+frontiers registered SW-1238 (accesschk64 16-import ACL/LSA surface),
+SW-1239 (pslist64 PDH perf-counter), SW-1240 (logonsessions64 LSA),
+SW-1241 (autologon64 Winlogon), SW-1242 (handle64 139).
+
+MEASUREMENT (final 3dbc56d53bcf...): census x3 31 programs DETERMINISTIC
+(15x exit-0 + pageant 124 corpus, ZERO unresolved, ZERO regressions);
+G1 PIN 12/12 (20261022_050538); round trips jq 2 / sqlite 42 / zstd / lz4 /
+7za create+extract BYTE-EXACT; games snake 30f + breakout 381f/13bricks +
+calc 15/15; ssh -V falsified-unchanged vs HEAD (same message + exit 0);
+fd 9.0.0 intact. Lesson kept: the census caught nothing this round either
+— every fix is forward motion; the regression net (7za/jq/sqlite/G1/games)
+covered the engine-wide path-mapping change (SW-1234 was the riskiest).

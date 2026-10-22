@@ -5111,20 +5111,36 @@ static int w3_w16_to_utf8_size(const uint16_t* s) {
 /* BUG-054 (2026-10-17): guest paths use Windows separators. 7-Zip builds
  * "<posix-cwd>\<name>" because GetCurrentDirectoryW hands out the POSIX cwd
  * and the guest appends '\' — the result must be normalized before any
- * POSIX call: '\' -> '/', strip a single-letter drive prefix ("C:" -> "/"),
- * collapse duplicate slashes. In-place, returns the pointer. */
+ * POSIX call: '\' -> '/', map a single-letter drive prefix to the process
+ * cwd ("C:" -> <cwd>/ — SW-1234), collapse duplicate slashes. In-place. */
+/* SW-1234: cached process cwd — the drive-root identity for "X:\..." paths. */
+static const char* g_mw_drive_cwd(void) {
+    static char cwd[1024];
+    static int ready = 0;
+    if (!ready) {
+        ready = 1;
+        if (!getcwd(cwd, sizeof(cwd) - 1)) snprintf(cwd, sizeof(cwd), ".");
+    }
+    return cwd;
+}
 static char* w3_normalize_path(char* p) {
     if (!p) return p;
     for (char* q = p; *q; q++)
         if (*q == '\\') *q = '/';
     if (((p[0] >= 'A' && p[0] <= 'Z') || (p[0] >= 'a' && p[0] <= 'z')) && p[1] == ':') {
-        /* drive prefix: drop "X:" and make the rest absolute at '/' */
+        /* SW-1234 (SWEEP-047): drive prefix -> the loader PROCESS CWD, not
+         * the host root. win32_module_path() issues "C:\" + the exe path
+         * relative to the loader's cwd (pslist64's self-version read:
+         * GetModuleFileNameA -> CreateFileA(same path) — the old "/artifacts/..."
+         * absolute-at-host-root mapping could never be opened, so every
+         * Sysinternals banner rendered (null) v(null)). The drive letter is
+         * dropped; "C:\a\b" and "C:a\b" both land under the cwd. Buffers at
+         * every call site are >=1024; output is capped at 1023 bytes. */
         char* r = p + 2;
         if (*r == '/') r++;
-        memmove(p, "/", 1);
-        /* move the remainder (already slash-normalized) */
-        size_t rest = strlen(r);
-        memmove(p + 1, r, rest + 1);
+        char tmp[1024];
+        int k = snprintf(tmp, sizeof(tmp), "%s/%s", g_mw_drive_cwd(), r);
+        if (k > 0) snprintf(p, 1024, "%s", tmp);
     }
     /* collapse '//' (not leading) */
     char* w = p;
@@ -5451,9 +5467,16 @@ __attribute__((ms_abi)) char** mw___p__acmdln(void) {
 __attribute__((ms_abi)) void* mw_fopen(const char* path, const char* mode) {
     if (!path || !mode) return NULL;
     if (strstr(mode, "ccs=") != NULL) { errno = EINVAL; g_errno_storage = errno; return NULL; }
-    FILE* hf = fopen(path, mode);
+    /* SW-1234 (SWEEP-047): CRT fopen must map win32 paths like CreateFile does —
+     * the Sysinternals shared banner reads its own version resource via CRT
+     * fopen(GetModuleFileNameA(self)) and the raw "C:\..." host fopen always
+     * failed (silent 1813 loop, (null) v(null) banner class). */
+    char np[4096];
+    snprintf(np, sizeof(np), "%s", path);
+    w3_normalize_path(np);
+    FILE* hf = fopen(np, mode);
     if (!hf) { g_errno_storage = errno; /* ISS1: guest reads errno via _errno mirror */ }
-    MW_TRACE("fopen(%s, %s) = %p", path ? path : "NULL", mode ? mode : "NULL", hf);
+    MW_TRACE("fopen(%s, %s) = %p", np, mode ? mode : "NULL", hf);
     if (!hf) return NULL;
     mw_fileptr_register(hf); /* BUG-065: validate pass-throughs later */
     for (int i = 0; i < MW_FILE_MAX; ++i) {
@@ -6418,6 +6441,13 @@ static int mw_ms_qsort_bridge(const void* a, const void* b, void* ctx) {
 __attribute__((ms_abi)) void mw_qsort(void* base, size_t n, size_t sz, int (*cmp)(const void*, const void*)) {
     g_ms_qsort_cmp_ref = (const mw_ms_qsort_cmp*)(const void*)&cmp;
     qsort_r(base, n, sz, mw_ms_qsort_bridge, NULL);
+}
+
+/* SW-791 (SWEEP-047): bsearch twin of the qsort bridge — same BUG-035 class
+ * (glibc calls the comparator SysV-style; the guest's is ms_abi). */
+static const mw_ms_qsort_cmp* g_ms_bsearch_cmp_ref;
+static int mw_ms_bsearch_bridge(const void* a, const void* b) {
+    return (*g_ms_bsearch_cmp_ref)(a, b);
 }
 
 /* ============================================================
@@ -11525,6 +11555,7 @@ __attribute__((ms_abi)) void* mw__wfopen(const wchar_t* path, const wchar_t* mod
     if (w3_w16_to_utf8z((const uint16_t*)mode, m8, sizeof(m8)) < 0) return NULL;
     p8[sizeof(p8)-1] = 0; m8[sizeof(m8)-1] = 0;
     MW_TRACE("_wfopen(%s, %s)", p8, m8);
+    w3_normalize_path(p8); /* SW-1234: same drive mapping as fopen/CreateFile */
     FILE* f = fopen(p8, m8);
     mw_fileptr_register(f); /* BUG-065 */
     return f;
@@ -11812,7 +11843,16 @@ __attribute__((ms_abi)) size_t mw_wcsnlen(const wchar_t* a0, size_t a1) {
     while (n < a1 && ((const uint16_t*)a0)[n]) n++;
     return n;
 }
-__attribute__((ms_abi)) void* mw_bsearch(const void* a0, const void* a1, size_t a2, size_t a3, int (*a4)(const void*, const void*)) { return bsearch(a0, a1, a2, a3, a4); }
+__attribute__((ms_abi)) void* mw_bsearch(const void* a0, const void* a1, size_t a2, size_t a3, int (*a4)(const void*, const void*)) {
+    /* SW-791 (SWEEP-047): BUG-035 class fix. curl.exe bsearch()es a 284-entry
+     * 16-byte table with an ms_abi comparator (cmp = strcmp(*(char**)a,
+     * *(char**)b), crash 0x14000cbf8 mov (%rcx),%rcx with RCX=0x61). The raw
+     * glibc bsearch call above invoked the guest comparator SysV-style
+     * (RDI,RSI) so the comparator read Windows-register garbage. Bridge
+     * exactly like the proven mw_qsort/qsort_r pattern (BUG-035). */
+    g_ms_bsearch_cmp_ref = (const mw_ms_qsort_cmp*)(const void*)&a4;
+    return bsearch(a0, a1, a2, a3, mw_ms_bsearch_bridge);
+}
 __attribute__((ms_abi)) int mw_raise(int a0) { return raise(a0); }
 __attribute__((ms_abi)) void mw_clearerr(void* a0) { return clearerr(a0); }
 __attribute__((ms_abi)) int mw_ferror(void* a0) { return ferror(a0); }
@@ -13325,8 +13365,140 @@ __attribute__((ms_abi)) long mw_IdnToAscii(uint32_t flags, const uint16_t* src, 
 __attribute__((ms_abi)) long mw_IdnToUnicode(uint32_t flags, const uint16_t* src, int len, uint16_t* dst, int cap) {
     return mw_IdnToAscii(flags, src, len, dst, cap);
 }
+/* ---- SW-791 (SWEEP-047): SSPI SecurityFunctionTable, wine-verified layout ----
+ * Root cause chain: curl.exe (mingw 8.23, Schannel build) global_init ->
+ * Curl_sspi_global_init -> InitSecurityInterfaceA() == NULL -> CURLE_FAILED_INIT
+ * -> "error initializing curl library" exit 2. Real secur32 returns a dispatch
+ * table (28 slots, wine include/sspi.h _SECURITY_FUNCTION_TABLE_A, dwVersion=1).
+ * curl --version only needs the table to be NON-NULL; the member functions are
+ * typed honest stabs for now (SEC_E_UNSUPPORTED_FUNCTION = 0x80090302) except
+ * the trivial-protocol ones which are real. Package model: NTLM only. */
+#define MW_SEC_E_OK                    0x00000000L
+#define MW_SEC_E_UNSUPPORTED_FUNCTION  0x80090302L
+#define MW_SEC_E_NO_CREDENTIALS        0x8009030EL
+#define MW_SEC_E_INVALID_HANDLE        0x80090301L
+
+typedef struct {
+    uint32_t fCapabilities;
+    uint16_t wVersion;
+    uint16_t wRPCID;
+    uint32_t cbMaxToken;
+    const char* Name;
+    const char* Comment;
+} MwSecPkgInfoA;
+
+static MwSecPkgInfoA g_sspi_pkg_ntlm = {
+    0x0000002B, /* INTEGRITY|PRIVACY|TOKEN_ONLY|CONNECTION|UNSP — typed model */
+    1, 3, 0x6000, "NTLM", "NTLM Security Package (MiniWin typed model)"
+};
+
+__attribute__((ms_abi)) unsigned long mw_sspi_EnumerateSecurityPackagesA(
+        unsigned long* pcount, MwSecPkgInfoA** pkgs) {
+    if (!pcount || !pkgs) return MW_SEC_E_INVALID_HANDLE;
+    *pcount = 1;
+    *pkgs = &g_sspi_pkg_ntlm;
+    return MW_SEC_E_OK;
+}
+__attribute__((ms_abi)) unsigned long mw_sspi_QuerySecurityPackageInfoA(
+        const char* name, MwSecPkgInfoA** pp) {
+    if (!pp) return MW_SEC_E_INVALID_HANDLE;
+    if (name && strcasecmp(name, "NTLM") != 0 && strcasecmp(name, "Negotiate") != 0)
+        return 0x80090305L; /* SEC_E_SECPKG_NOT_FOUND */
+    *pp = &g_sspi_pkg_ntlm;
+    return MW_SEC_E_OK;
+}
+__attribute__((ms_abi)) unsigned long mw_sspi_AcquireCredentialsHandleA(
+        const void* principal, const void* package, unsigned long usage,
+        void* logonid, const void* authdata, void* getkey, void* getkeyarg,
+        unsigned long* cred, void** expiry) {
+    (void)principal; (void)package; (void)usage; (void)logonid;
+    (void)authdata; (void)getkey; (void)getkeyarg;
+    if (!cred) return MW_SEC_E_INVALID_HANDLE;
+    *cred = 0x5EC10001u; /* typed cookie handle */
+    if (expiry) *expiry = NULL;
+    return MW_SEC_E_OK;
+}
+__attribute__((ms_abi)) unsigned long mw_sspi_FreeCredentialsHandle(unsigned long* cred) {
+    if (!cred) return MW_SEC_E_INVALID_HANDLE;
+    return MW_SEC_E_OK;
+}
+__attribute__((ms_abi)) unsigned long mw_sspi_DeleteSecurityContext(void* ctx) {
+    (void)ctx; return MW_SEC_E_OK;
+}
+__attribute__((ms_abi)) unsigned long mw_sspi_FreeContextBuffer(void* buf) {
+    (void)buf; return MW_SEC_E_OK;
+}
+/* handshake/sign slots: typed unsupported until a guest drives real SSPI auth */
+__attribute__((ms_abi)) unsigned long mw_sspi_Unsupported(void) {
+    return MW_SEC_E_UNSUPPORTED_FUNCTION;
+}
+
+typedef struct {
+    uint32_t dwVersion;                    /* +0x00 (padding to +0x08) */
+    void*    EnumerateSecurityPackagesA;   /* +0x08 */
+    void*    QueryCredentialsAttributesA;  /* +0x10 */
+    void*    AcquireCredentialsHandleA;    /* +0x18 */
+    void*    FreeCredentialsHandle;        /* +0x20 */
+    void*    pvReserved2;                  /* +0x28 */
+    void*    InitializeSecurityContextA;   /* +0x30 */
+    void*    AcceptSecurityContext;        /* +0x38 */
+    void*    CompleteAuthToken;            /* +0x40 */
+    void*    DeleteSecurityContext;        /* +0x48 */
+    void*    ApplyControlToken;            /* +0x50 */
+    void*    QueryContextAttributesA;      /* +0x58 */
+    void*    ImpersonateSecurityContext;   /* +0x60 */
+    void*    RevertSecurityContext;        /* +0x68 */
+    void*    MakeSignature;                /* +0x70 */
+    void*    VerifySignature;              /* +0x78 */
+    void*    FreeContextBuffer;            /* +0x80 */
+    void*    QuerySecurityPackageInfoA;    /* +0x88 */
+    void*    pvReserved3;                  /* +0x90 */
+    void*    pvReserved4;                  /* +0x98 */
+    void*    ExportSecurityContext;        /* +0xA0 */
+    void*    ImportSecurityContextA;       /* +0xA8 */
+    void*    AddCredentialsA;              /* +0xB0 */
+    void*    pvReserved8;                  /* +0xB8 */
+    void*    QuerySecurityContextToken;    /* +0xC0 */
+    void*    EncryptMessage;               /* +0xC8 */
+    void*    DecryptMessage;               /* +0xD0 */
+    void*    SetContextAttributesA;        /* +0xD8 */
+} MwSecurityFunctionTableA;               /* 0xE0 bytes = 28 slots, wine layout */
+
+static MwSecurityFunctionTableA g_sspi_table = {
+    1, /* SECURITY_SUPPORT_PROVIDER_INTERFACE_VERSION (wine sspi.h L973) */
+    mw_sspi_EnumerateSecurityPackagesA,
+    mw_sspi_Unsupported,          /* QueryCredentialsAttributesA */
+    mw_sspi_AcquireCredentialsHandleA,
+    mw_sspi_FreeCredentialsHandle,
+    NULL,                         /* pvReserved2 */
+    mw_sspi_Unsupported,          /* InitializeSecurityContextA (handshake) */
+    mw_sspi_Unsupported,          /* AcceptSecurityContext */
+    mw_sspi_Unsupported,          /* CompleteAuthToken */
+    mw_sspi_DeleteSecurityContext,
+    mw_sspi_Unsupported,          /* ApplyControlToken */
+    mw_sspi_Unsupported,          /* QueryContextAttributesA */
+    mw_sspi_Unsupported,          /* ImpersonateSecurityContext */
+    mw_sspi_Unsupported,          /* RevertSecurityContext */
+    mw_sspi_Unsupported,          /* MakeSignature */
+    mw_sspi_Unsupported,          /* VerifySignature */
+    mw_sspi_FreeContextBuffer,
+    mw_sspi_QuerySecurityPackageInfoA,
+    NULL, NULL,                   /* pvReserved3/4 */
+    mw_sspi_Unsupported,          /* ExportSecurityContext */
+    mw_sspi_Unsupported,          /* ImportSecurityContextA */
+    mw_sspi_Unsupported,          /* AddCredentialsA */
+    NULL,                         /* pvReserved8 */
+    mw_sspi_Unsupported,          /* QuerySecurityContextToken */
+    mw_sspi_Unsupported,          /* EncryptMessage */
+    mw_sspi_Unsupported,          /* DecryptMessage */
+    mw_sspi_Unsupported           /* SetContextAttributesA */
+};
+
 __attribute__((ms_abi)) void* mw_InitSecurityInterfaceA(void) {
-    return NULL; /* SSPI unsupported honestly */
+    return &g_sspi_table; /* real secur32 contract: non-NULL dispatch table */
+}
+__attribute__((ms_abi)) void* mw_InitSecurityInterfaceW(void) {
+    return &g_sspi_table; /* W callers: same slot geometry, typed model */
 }
 __attribute__((ms_abi)) void* mw_FindWindowA(const char* cls, const char* title) {
     (void)cls; (void)title;
@@ -14298,6 +14470,22 @@ __attribute__((ms_abi)) void* mw_freopen_bridge(const char* path, const char* mo
 }
 __attribute__((ms_abi)) uint64_t mw__byteswap_uint64(uint64_t v) {
     return __builtin_bswap64(v);
+}
+/* SW-791 (SWEEP-047): curl.exe/libcurl-x64.dll UCRT tail — the 3 imports that
+ * failed libcurl's CRT init. _byteswap_ushort/ulong = R16/R32 bswap instructions
+ * (x64 has them natively); freopen_s = errno_t contract: *presult receives the
+ * freopen result, returns 0 on success / errno on failure (UCRT fre_s.cpp). */
+__attribute__((ms_abi)) uint16_t mw__byteswap_ushort(uint16_t v) {
+    return __builtin_bswap16(v);
+}
+__attribute__((ms_abi)) uint32_t mw__byteswap_ulong(uint32_t v) {
+    return __builtin_bswap32(v);
+}
+__attribute__((ms_abi)) int mw_freopen_s(void** presult, const char* path, const char* mode, void* stream) {
+    if (!presult) return 22; /* EINVAL: UCRT validates the out-pointer first */
+    void* r = freopen(path, mode, map_crt_stream(stream));
+    *presult = r;
+    return r ? 0 : errno;
 }
 
 __attribute__((ms_abi)) intptr_t mw__findfirst64(const char* spec, void* data) {
@@ -17187,7 +17375,13 @@ static int w_ver_key_eq(const uint16_t* k, uint16_t kc, const char* s) {
 /* read the file's first RT_VERSION(16) resource; copies data into out */
 static int w_ver_read_from_file(const char* path, uint8_t* out, uint32_t cap, uint32_t* size_out) {
     *size_out = 0;
-    FILE* f = fopen(path, "rb");
+    /* SW-1234 (SWEEP-047): guests pass the GetModuleFileNameA answer
+     * ("C:\..."); normalize like every other file surface or the host fopen
+     * can never open it (silent 1813 loop -> the (null) v(null) banner). */
+    char np[1024];
+    snprintf(np, sizeof(np), "%s", path ? path : "");
+    w3_normalize_path(np);
+    FILE* f = fopen(np, "rb");
     if (!f) return 0;
     fseek(f, 0, SEEK_END);
     long sz = ftell(f);
@@ -17277,6 +17471,7 @@ __attribute__((ms_abi)) uint32_t mw_GetFileVersionInfoSizeW(const uint16_t* path
     uint32_t sz = 0;
     if (!w_ver_read_from_file(p8, g_ver_block, MW_VER_BLOCK_CAP, &sz)) {
         mw_SetLastError(1813); /* ERROR_RESOURCE_TYPE_NOT_FOUND */
+        MW_TRACE("GetFileVersionInfoSizeW(%s) -> 0 (1813; no RT_VERSION or open fail)", p8);
         return 0;
     }
     g_ver_block_size = sz;
@@ -17397,6 +17592,14 @@ __attribute__((ms_abi)) int mw_VerQueryValueW(const void* block, const uint16_t*
                     if (eq && st.vlen) {
                         *buf = st.value;
                         *len = (uint32_t)st.vlen * 2; /* value bytes incl NUL */
+                        {
+                            char kk[128]; uint32_t z = 0;
+                            for (uint32_t t = 0; t < st.key_chars && z < 127; t++)
+                                kk[z++] = (st.key[t] < 128) ? (char)st.key[t] : '?';
+                            kk[z] = 0;
+                            MW_TRACE("VerQueryValueW string-match key='%s' keychars=%u n3=%d vlen=%u",
+                                     kk, st.key_chars, n3, st.vlen);
+                        }
                         return 1;
                     }
                 }
@@ -17410,10 +17613,46 @@ __attribute__((ms_abi)) int mw_VerQueryValueW(const void* block, const uint16_t*
 }
 __attribute__((ms_abi)) int mw_VerQueryValueA(const void* block, const char* sub,
         void** buf, uint32_t* len) {
+    /* SW-1235 (SWEEP-047): the A variant must hand back ANSI bytes. The W
+     * walker returns pointers INTO the UTF-16 block (st.value = "W\0h\0…");
+     * a guest printf("%s") on those renders exactly one char ("W v1 - D"
+     * whois64 banner). Transcode the matched wide value into a stable ANSI
+     * buffer. VS_FIXEDFILEINFO ("\") and Translation are binary — pass
+     * through untouched. */
     uint16_t w[512];
     if (sub) { size_t c = 0; for (; sub[c] && c < 511; c++) w[c] = (uint8_t)sub[c]; w[c] = 0; }
     else w[0] = 0;
-    return mw_VerQueryValueW(block, sub ? w : NULL, buf, len);
+    void* wbuf = NULL;
+    uint32_t wlen = 0;
+    if (!mw_VerQueryValueW(block, sub ? w : NULL, &wbuf, &wlen)) return 0;
+    /* binary values pass through untouched: "\" = VS_FIXEDFILEINFO,
+     * anything ending in "\Translation" = the lang/codepage DWORD pairs.
+     * (String-sub checks BEFORE this were position-fragile — strrchr(sub,'\\')
+     * == sub is false for VarFileInfo\Translation, which broke the lang-table
+     * match and made the banner (null) again.) */
+    if (!sub || !*sub || (sub[0] == '\\' && !sub[1])) { *buf = wbuf; *len = wlen; return 1; }
+    const char* lastc = strrchr(sub, '\\');
+    if (lastc && strcasecmp(lastc + 1, "Translation") == 0) { *buf = wbuf; *len = wlen; return 1; }
+    /* value = UTF-16LE string (wlen bytes incl NUL) -> ANSI. Guests keep the
+     * returned pointers (whois64 saves five keys, then prints them) — a single
+     * static buffer aliased every query (all banners showed the LAST value).
+     * Ring of 16: pointers stay stable across the queries a guest batches. */
+    static char a_ver_ring[16][1024];
+    static int a_ver_ring_i = 0;
+    char* a_ver = a_ver_ring[a_ver_ring_i];
+    a_ver_ring_i = (a_ver_ring_i + 1) % 16;
+    const uint16_t* s = (const uint16_t*)wbuf;
+    uint32_t chars = wlen / 2;
+    if (chars >= 1024) chars = 1023;
+    uint32_t o = 0;
+    for (uint32_t i = 0; i < chars && o < 1023; i++) {
+        if (!s[i]) break;
+        a_ver[o++] = (s[i] < 128) ? (char)s[i] : '?';
+    }
+    a_ver[o] = 0;
+    *buf = a_ver;
+    *len = o + 1;
+    return 1;
 }
 
 /* ---- user32 misc. RegisterWindowMessage/RegisterClipboardFormat return a
@@ -20313,10 +20552,49 @@ __attribute__((ms_abi)) const char* mw_PathFindFileNameA(const char* path) {
  * no sockets exist, so no events can ever be delivered (the caller gets a
  * queued-message contract that never fires — identical to a socket that
  * never becomes ready). */
+/* SW-1237 (SWEEP-047): real DNS for the A-plane. whois64 gate:
+ * gethostbyname('COM.whois-servers.net') was a typed WSAHOST_NOT_FOUND stub;
+ * the host resolver is reachable (getaddrinfo already delegates — SWEEP-023).
+ * Build the winsock hostent in engine memory: h_name + h_aliases[1] +
+ * h_addr_list[2] with in_addr entries. Linux host order = winsock host order
+ * (struct hostent layout identical on both). Failures map to the typed
+ * WSA codes (HOST_NOT_FOUND 11001 / TRY_AGAIN 11002 / NO_RECOVERY 11003). */
+static char g_hn_name[256];
+static char* g_hn_aliases[1] = { NULL };
+static uint32_t g_hn_addrs[8];
+static char* g_hn_addrptrs[9] = { NULL };
+struct hostent_hack { char* h_name; char** h_aliases; int h_addrtype; int h_length; char** h_addr_list; };
 __attribute__((ms_abi)) void* mw_gethostbyname(const char* name) {
-    MW_TRACE("gethostbyname('%s') -> NULL (WSAHOST_NOT_FOUND)", name ? name : "");
-    mw_WSASetLastError(11001); /* WSAHOST_NOT_FOUND */
-    return NULL;
+    if (!name || !name[0]) { mw_WSASetLastError(11001); return NULL; }
+    struct addrinfo hints, *res = NULL;
+    memset(&hints, 0, sizeof(hints));
+    hints.ai_family = AF_INET;       /* winsock gethostbyname = IPv4 only */
+    hints.ai_socktype = SOCK_STREAM;
+    int rc = getaddrinfo(name, NULL, &hints, &res);
+    if (rc != 0 || !res) {
+        mw_WSASetLastError(rc == EAI_AGAIN ? 11002 : 11001);
+        MW_TRACE("gethostbyname('%s') -> NULL (rc=%d)", name, rc);
+        return NULL;
+    }
+    int n = 0;
+    for (struct addrinfo* p = res; p && n < 8; p = p->ai_next) {
+        if (p->ai_family != AF_INET || p->ai_addrlen < 4) continue;
+        memcpy(&g_hn_addrs[n], &((struct sockaddr_in*)p->ai_addr)->sin_addr, 4);
+        g_hn_addrptrs[n] = (char*)&g_hn_addrs[n];
+        n++;
+    }
+    freeaddrinfo(res);
+    if (!n) { mw_WSASetLastError(11001); return NULL; }
+    g_hn_addrptrs[n] = NULL;
+    snprintf(g_hn_name, sizeof(g_hn_name), "%s", name);
+    static struct hostent_hack he;
+    he.h_name = g_hn_name;
+    he.h_aliases = g_hn_aliases;
+    he.h_addrtype = AF_INET;
+    he.h_length = 4;
+    he.h_addr_list = g_hn_addrptrs;
+    MW_TRACE("gethostbyname('%s') -> real %d addr(s)", name, n);
+    return (void*)&he;
 }
 __attribute__((ms_abi)) void* mw_gethostbyaddr(const void* addr, int len, int type) {
     (void)addr; (void)len; (void)type;
@@ -20984,6 +21262,103 @@ __attribute__((ms_abi)) int mw_GetComputerNameA(char* buf, uint32_t* size) {
     *size = need - 1;
     MW_TRACE("GetComputerNameA -> 'MINIWIN'");
     return 1;
+}
+/* ---- SW-1236 (SWEEP-047): the 5-import gate batch for the new Sysinternals
+ * corpus (pslist64 5, whois64 1, accesschk64 slice). All honest contracts:
+ * - GetComputerNameExA: ComputerNameNetBIOS/DnsHostname/DnsDomain return
+ *   the session identity ("MINIWIN"); physical variants same; unknown
+ *   levels ERROR_INVALID_PARAMETER (real contract).
+ * - LogonUserA/W: no auth subsystem — typed ERROR_LOGON_FAILURE (1326),
+ *   the same answer a machine with no domain and no matching account gives.
+ * - FindFirstFileExA: FIND_FIRST_EX_CASE_SENSITIVE flag ignored on Windows
+ *   for the standard info level; delegate to the W walker (level 0). */
+__attribute__((ms_abi)) int mw_GetComputerNameExA(int type, char* buf, uint32_t* size) {
+    static const char netbios[] = "MINIWIN";
+    static const char dns[] = "MINIWIN";
+    static const char domain[] = "";
+    const char* src = NULL;
+    uint32_t need = 0;
+    switch (type) {
+    case 0: case 1: case 5:      /* NetBIOS / DnsHostname / PhysicalDnsHostname */
+        src = netbios; need = (uint32_t)sizeof(netbios); break;
+    case 2: case 3: case 6: case 7: /* DnsDomain / DnsFullyQualified / Physical */
+        src = domain; need = 1; break;
+    default:
+        mw_SetLastError(87); return 0;
+    }
+    if (!buf || !size) { mw_SetLastError(87); return 0; }
+    if (*size < need) { *size = need; mw_SetLastError(122); return 0; }
+    memcpy(buf, src, need);
+    *size = need - 1;
+    MW_TRACE("GetComputerNameExA(type=%d) -> '%s'", type, buf);
+    return 1;
+}
+__attribute__((ms_abi)) int mw_GetComputerNameExW(int type, uint16_t* buf, uint32_t* size) {
+    static uint16_t w[] = { 'M','I','N','I','W','I','N',0 };
+    uint32_t need = 7;
+    if (type == 2 || type == 3 || type == 6 || type == 7) { w[0] = 0; need = 0; }
+    else if (type != 0 && type != 1 && type != 5) { mw_SetLastError(87); return 0; }
+    if (!buf || !size) { mw_SetLastError(87); return 0; }
+    /* *size is in UTF-16 units for the W variant */
+    if (*size < need + 1) { *size = need + 1; mw_SetLastError(122); return 0; }
+    for (uint32_t i = 0; i <= need; i++) buf[i] = w[i];
+    *size = need;
+    MW_TRACE("GetComputerNameExW(type=%d)", type);
+    return 1;
+}
+__attribute__((ms_abi)) int mw_LogonUserA(const char* user, const char* dom, const char* pass,
+        uint32_t logontype, uint32_t provider, void* token) {
+    (void)user; (void)dom; (void)pass; (void)logontype; (void)provider;
+    if (token) *(void**)token = NULL;
+    mw_SetLastError(1326); /* ERROR_LOGON_FAILURE */
+    MW_TRACE("LogonUserA -> FALSE 1326 (no auth subsystem)");
+    return 0;
+}
+__attribute__((ms_abi)) int mw_LogonUserW(const void* user, const void* dom, const void* pass,
+        uint32_t logontype, uint32_t provider, void* token) {
+    return mw_LogonUserA(NULL, NULL, NULL, logontype, provider, token);
+}
+__attribute__((ms_abi)) void* mw_FindFirstFileExA(const char* pattern, uint32_t infolevel,
+        void* data, uint32_t searchop, void* filter, uint32_t flags) {
+    (void)searchop; (void)filter; /* FIND_FIRST_EX_LARGE_FETCH etc: engine ignores */
+    if (!pattern || infolevel != 0) { mw_SetLastError(87); return (void*)-1; }
+    uint16_t wspec[4096];
+    size_t n = utf8_to_utf16(pattern, wspec, 4095);
+    ((uint16_t*)wspec)[n] = 0;
+    MW_TRACE("FindFirstFileExA(%s)", pattern);
+    return mw_FindFirstFileExW((const wchar_t*)wspec, 0, data, 0, NULL, 0);
+}
+__attribute__((ms_abi)) int mw_FillConsoleOutputCharacterA(void* con, char ch, uint32_t count,
+        void* coord, uint32_t* written) {
+    /* console model: headless — the write succeeds vacuously (real console
+     * contract: returns the number of cells actually written) */
+    if (!written) { mw_SetLastError(87); return 0; }
+    *written = count;
+    MW_TRACE("FillConsoleOutputCharacterA(ch=%#x n=%u) -> vacuous", ch, count);
+    return 1;
+}
+__attribute__((ms_abi)) uint32_t mw_WNetAddConnection2A(const void* netres, const char* pass,
+        const char* user, uint32_t flags) {
+    (void)netres; (void)pass; (void)user; (void)flags;
+    MW_TRACE("WNetAddConnection2A -> ERROR_NO_NETWORK");
+    return 225;
+}
+__attribute__((ms_abi)) uint32_t mw_WNetAddConnection2W(const void* netres, const void* pass,
+        const void* user, uint32_t flags) {
+    (void)netres; (void)pass; (void)user; (void)flags;
+    MW_TRACE("WNetAddConnection2W -> ERROR_NO_NETWORK");
+    return 225;
+}
+__attribute__((ms_abi)) uint32_t mw_WNetCancelConnection2A(const char* name, uint32_t flags, int force) {
+    (void)flags; (void)force;
+    if (!name) return 225; /* no network: even the name check is unreachable on a real box */
+    MW_TRACE("WNetCancelConnection2A(%s) -> ERROR_NOT_CONNECTED (2250) via no-network", name);
+    return 2250; /* ERROR_NOT_CONNECTED — real answer for a nonexistent connection */
+}
+__attribute__((ms_abi)) uint32_t mw_WNetCancelConnection2W(const void* name, uint32_t flags, int force) {
+    (void)name; (void)flags; (void)force;
+    MW_TRACE("WNetCancelConnection2W -> 2250");
+    return 2250;
 }
 /* SetEntriesInAcl: real ACL construction from EXPLICIT_ACCESS entries
  * (pageant's "unable to construct ACL" gate). x64 EXPLICIT_ACCESS = 48
@@ -27780,6 +28155,7 @@ static ImportEntry g_import_table[] = {
     ENTRY("KERNEL32.DLL", "lstrcpyA", mw_lstrcpyA), /* SWEEP-013 r2 */
     ENTRY("KERNEL32.DLL", "GetWindowsDirectoryW", mw_GetWindowsDirectoryW),
     ENTRY("KERNEL32.DLL", "FindFirstFileExW", mw_FindFirstFileExW),
+    ENTRY("KERNEL32.DLL", "FindFirstFileExA", mw_FindFirstFileExA), /* SW-1236 */
     ENTRY("KERNEL32.DLL", "FindNextFileW", mw_FindNextFileW),
     ENTRY("KERNEL32.DLL", "FindFirstFileA", mw_FindFirstFileA),
     ENTRY("KERNEL32.DLL", "FindNextFileA", mw_FindNextFileA),
@@ -28296,6 +28672,10 @@ ENTRY("msvcrt.dll", "wctype", mw_wctype),
     ENTRY("api-ms-win-crt-stdio-l1-1-0.dll", "_telli64",        mw__telli64),
     ENTRY("api-ms-win-crt-stdio-l1-1-0.dll", "freopen",         mw_freopen_bridge),
     ENTRY("api-ms-win-crt-utility-l1-1-0.dll", "_byteswap_uint64", mw__byteswap_uint64),
+    /* SW-791: curl/libcurl CRT-init tail */
+    ENTRY("api-ms-win-crt-utility-l1-1-0.dll", "_byteswap_ulong",  mw__byteswap_ulong),
+    ENTRY("api-ms-win-crt-utility-l1-1-0.dll", "_byteswap_ushort", mw__byteswap_ushort),
+    ENTRY("api-ms-win-crt-stdio-l1-1-0.dll",   "freopen_s",        mw_freopen_s),
     ENTRY("SHLWAPI.dll", "PathIsRelativeA",                     mw_PathIsRelativeA),
     ENTRY("CRYPT32.dll", "CertOpenSystemStoreA",                mw_CertOpenSystemStoreA),
     ENTRY("CRYPT32.dll", "CertCloseStore",                      mw_CertCloseStore),
@@ -28307,6 +28687,7 @@ ENTRY("msvcrt.dll", "wctype", mw_wctype),
     ENTRY("Normaliz.dll", "IdnToAscii",                         mw_IdnToAscii),
     ENTRY("Normaliz.dll", "IdnToUnicode",                       mw_IdnToUnicode),
     ENTRY("Secur32.dll", "InitSecurityInterfaceA",              mw_InitSecurityInterfaceA),
+    ENTRY("Secur32.dll", "InitSecurityInterfaceW",              mw_InitSecurityInterfaceW),
     ENTRY("USER32.DLL", "FindWindowA",                          mw_FindWindowA),
     ENTRY("USER32.DLL", "SendMessageA",                         mw_SendMessageA),
     /* SWEEP-003 GUI skeleton v1 (see functions above for contract) */
@@ -28851,6 +29232,16 @@ ENTRY("msvcrt.dll", "wctype", mw_wctype),
     ENTRY("ADVAPI32.DLL", "ConvertSidToStringSidW",             mw_ConvertSidToStringSidW),
     ENTRY("ADVAPI32.DLL", "ConvertStringSidToSidW",             mw_ConvertStringSidToSidW),
     ENTRY("KERNEL32.DLL", "GetComputerNameA",                   mw_GetComputerNameA),
+    /* SW-1236: Sysinternals gate batch */
+    ENTRY("KERNEL32.DLL", "GetComputerNameExA",                 mw_GetComputerNameExA),
+    ENTRY("KERNEL32.DLL", "GetComputerNameExW",                 mw_GetComputerNameExW),
+    ENTRY("KERNEL32.DLL", "FillConsoleOutputCharacterA",        mw_FillConsoleOutputCharacterA),
+    ENTRY("ADVAPI32.dll", "LogonUserA",                          mw_LogonUserA),
+    ENTRY("ADVAPI32.dll", "LogonUserW",                          mw_LogonUserW),
+    ENTRY("mpr.dll", "WNetAddConnection2A",                      mw_WNetAddConnection2A),
+    ENTRY("mpr.dll", "WNetAddConnection2W",                      mw_WNetAddConnection2W),
+    ENTRY("mpr.dll", "WNetCancelConnection2A",                   mw_WNetCancelConnection2A),
+    ENTRY("mpr.dll", "WNetCancelConnection2W",                   mw_WNetCancelConnection2W),
     /* -- kernel32: pipes / mappings / cwd (SW-1002..1003) -- */
     ENTRY("KERNEL32.DLL", "CreateNamedPipeA",                   mw_CreateNamedPipeA),
     ENTRY("KERNEL32.DLL", "CreateNamedPipeW",                   mw_CreateNamedPipeW), /* SW-1229 */

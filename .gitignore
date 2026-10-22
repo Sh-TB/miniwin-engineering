@@ -61,3 +61,8 @@ artifacts/sweep006/
 # SWEEP-011 raw timing runs (BMP-heavy parity captures kept out of git)
 artifacts/sweep011_perf/runs_baseline/
 artifacts/sweep011_perf/runs_fast/
+
+# SWEEP-047: staged downloads stay local (evidence TSVs + shas are committed)
+artifacts/sweep047/stage/
+artifacts/sweep047/census/
+miniwin-results/
