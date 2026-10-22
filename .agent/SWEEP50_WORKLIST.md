@@ -2699,3 +2699,59 @@ viewer, (2) Windows calculator, (3) a program that does not exist on Linux
   .rdb open -> UNO service manager -> past bootstrap into the VCL pump.
 - [ ] **SW-1261b** Everything 1.4.1 full lifecycle (UI interaction) queued
   behind the calc-battery-style click harness (unchanged).
+- [x] **SW-1264 LANDED (SWEEP-053 Train 1) — engine-internal resource
+  consumers now honor the LoadResource DATA_ENTRY->data contract**: v1
+  mw_dlg_from_resource handed the IMAGE_RESOURCE_DATA_ENTRY (from
+  w3_res_find) to mw_LockResource — an identity no-op since SW-1259 — so
+  the DLGTEMPLATE parser read the 16-byte ENTRY HEADER as the template
+  (dlgver = low half of the data RVA, sig = high half — never 1/0xFFFF),
+  the EX branch skipped and the STD walker consumed a header -> ZERO
+  dialog children -> every GetDlgItem NULL. Decoded from XP calc.exe
+  (dialog-based app: CreateDialogParamW(hInst, MAKEINTRESOURCE(0x66), 0,
+  NULL, 0)). Fix: convert entry -> g_image_base + entry.OffsetToData in
+  mw_dlg_from_resource AND mw_loadimage_bitmap_dib (RT_BITMAP DIBs were
+  equally unreadable). MEASURED (binary 4e6e4a44): calc dialog 0x66
+  resolves (size 1196, DLGTEMPLATEEX cdit=30) — EDIT id=403 + 29 BUTTONs
+  materialize with template rects.
+- [x] **SW-1265 LANDED (SWEEP-053 Train 2) — real LoadStringW/A**:
+  RT_STRING blocks (resource id = (id>>4)+1, 16 length-prefixed UTF-16
+  strings per block, index = id&15, real truncation contract). v1 stub
+  always answered 0 — XP calc's 86 control-label loads all came back
+  empty. MEASURED: id=0 -> 3 wchars, id=1 -> 1, id=3 -> 9 ... all 86
+  resolved.
+- [x] **SW-1266 LANDED (SWEEP-053 Train 3) — per-window subclass chain +
+  standard-control compositor; XP calc RENDERS**: calc WinMain
+  (0x100002364..0x1000023a7, disassembled) subclasses GetDlgItem(403) via
+  GetWindowLongPtrW(child, GWLP_WNDPROC) -> test -> SetWindowLongPtrW;
+  v1 answered 0 so the `test rax,rax; je` skipped the subclass and calc's
+  real WndProc 0x100008bc0 never ran. calc's proc is a pass-through
+  (HideCaret + CallWindowProc(saved old)) — painting belongs to the
+  ORIGINAL control proc. Fixes: (1) mw_engine_defproc — real
+  guest-callable DefWindowProc-subset; GetWindowLongPtrW(GWLP_WNDPROC)
+  answers it non-zero for engine windows (guest `if (old)` checks pass;
+  CallWindowProc chains honestly); (2) GWLP_WNDPROC is PER-WINDOW store
+  state, global g_wndproc_fwd stays the main-window channel; (3)
+  SendMessageW routes guest-subclassed children through their stored
+  proc; (4) mw_engine_paint_children — dialog-template children rendered
+  at template rects (DLU x2) with Win95 chrome into the paint surface,
+  one frame per UpdateWindow; template cx,cy sizes the surface
+  (grow-only mw_gui_store_window resize); (5) SW-1266b: SetWindowPos/
+  MoveWindow grow the surface (winmine sizes its board via MoveWindow
+  after a 2x0 create). MEASURED: **XP calc renders its full face
+  (338x258: display '0.', Backspace/CE/C, MC..M+, full keypad — 30
+  controls)**; winmine board chrome 170x230 area (LED counters, sunken
+  field, raised border) + 3 Win95 messageboxes; Everything main window at
+  its real 778x605; freecell card-back blits 640x480. G1 12/12
+  (evidence/master/g1/20261022_215001, binary f26bf49a pre-1266b; the
+  1266b change is census-covered); census zero deltas vs SWEEP-052
+  (artifacts/sweep053/census/regression.tsv; soffice rc=99 stub 8 = its
+  baseline). Screenshots: evidence/sweep053/shots_png/ (user copy
+  /home/z/my-project/download/screenshots/).
+- [ ] **SW-1267** sol/mshearts surface sizing: deck/board draws land
+  before MoveWindow grows the surface (sol frame 154x64 = status bar
+  only; mshearts create decodes 79712x0 -> clamped 1280x32 strip). Needs
+  the guests' sizing order decoded (MoveWindow fires pre-paint).
+- [ ] **SW-1268** Everything content paint: the guest paints white
+  because its list content is driven by its NTFS index (absent headless);
+  a fake index volume (or a stubbed index reader returning fixture rows)
+  would give the list real rows to paint.

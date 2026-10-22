@@ -14496,6 +14496,9 @@ typedef struct {
     uint16_t text[128]; /* control text (UTF-16, as the guest set/read it) */
     uint8_t  checked;   /* BM_SETCHECK state */
     uint8_t  enabled;
+    /* SW-1266: dialog-template rect in PIXELS (DLU x2, the engine's
+     * standard 8pt-dialog scale) for the standard-control compositor */
+    int16_t  rx, ry, rw, rh;
 } MwChild;
 static MwChild g_child[MW_CHILD_MAX];
 static uint16_t g_maintitle[128];
@@ -14505,6 +14508,27 @@ static void mw_class_name_store_w(const uint16_t* n); /* defined in SWEEP-013 ba
 static int mw_probe_copy(const void* src, size_t n, void* dst); /* defined in the pump block */
 typedef __attribute__((ms_abi)) long long (*MW_WNDPROC)(void*, uint32_t, uintptr_t, long long);
 static MW_WNDPROC g_wndproc_fwd = 0; /* guest window procedure (SWEEP-013: declared here) */
+/* SW-1266 (SWEEP-053, XP calc subclass decode): per-window subclass plumbing.
+ * The engine default proc address is what GetWindowLongPtrW(GWLP_WNDPROC)
+ * answers for engine windows with no guest subclass yet, so the classic
+ *   old = GetWindowLongPtrW(child, GWLP_WNDPROC);
+ *   if (old) SetWindowLongPtrW(child, GWLP_WNDPROC, myproc);
+ * pattern proceeds (v1 answered 0 -> XP calc's `test rax,rax; je` skipped
+ * the subclass and the real calc WndProc never ran). The defproc is a real
+ * guest-callable function so CallWindowProc(old, ...) chains honestly. */
+__attribute__((ms_abi)) long long mw_engine_defproc(void* hwnd, uint32_t m,
+                                                    uintptr_t wp, long long lp);
+static int mw_wndlong_slot(void* hwnd, int index, int create); /* defined at the wndlong store */
+/* SW-1266: per-window long/ptr store moved UP here (UpdateWindow's child
+ * paint delivery walks it from its definition site ~1.6k lines earlier).
+ * Same single definition — the old location below keeps its comment. */
+#define MW_WNDLONG_MAX 128
+typedef struct { void* hwnd; int index; uintptr_t value; uint8_t live; } MWWndLong;
+static MWWndLong g_wndlong[MW_WNDLONG_MAX];
+/* SW-1266: standard-control composite painter + surface dump (defined after
+ * the mwb_* raster helpers); fwd-declared for UpdateWindow/CreateWindow */
+static void mw_engine_paint_children(void* hwnd);
+static void mw_surface_dump(const char* kind);
 static const char* mw_wm_name(uint32_t m); /* defined in the pump block */
 
 static int mw_child_slot(void* hwnd) {
@@ -15294,6 +15318,20 @@ __attribute__((ms_abi)) long long mw_SendMessageW(void* h, uint32_t msg, uintptr
         MW_TRACE("SendMessageW(%s wp=0x%llx) -> wndproc -> %lld",
                  mw_wm_name(msg), (unsigned long long)wp, r);
         return r;
+    }
+    /* SW-1266: per-window subclass routing. A child whose GWLP_WNDPROC was
+     * guest-subclassed receives its messages through that proc (real
+     * SetWindowLongPtrW semantics); the engine default proc is invisible
+     * to this path (identity answer 0 — the pre-SW-1266 behavior). */
+    if (s >= 0) {
+        int wl = mw_wndlong_slot(h, -4, 0);
+        if (wl >= 0 && g_wndlong[wl].value &&
+            g_wndlong[wl].value != (uintptr_t)&mw_engine_defproc) {
+            long long r = ((MW_WNDPROC)(uintptr_t)g_wndlong[wl].value)(h, msg, wp, lp);
+            MW_TRACE("SendMessageW(hwnd=%p %s) -> subclass proc -> %lld",
+                     h, mw_wm_name(msg), r);
+            return r;
+        }
     }
     MW_TRACE("SendMessageW(hwnd=%p %s) -> 0", h, mw_wm_name(msg));
     return 0;
@@ -16111,6 +16149,25 @@ __attribute__((ms_abi)) int mw_ShowWindow(void* hwnd, int cmd) {
 __attribute__((ms_abi)) int mw_UpdateWindow(void* hwnd) {
     MW_TRACE("UpdateWindow(hwnd=%p)", hwnd);
     if (mw_gui_events_enabled()) mw_gui_request_paint(); /* update region -> WM_PAINT */
+    /* SW-1266: real UpdateWindow paints the update region SYNCHRONOUSLY.
+     * Engine model, two channels:
+     *  1. standard-control composite — the engine owns BUTTON/EDIT/STATIC
+     *     rendering (dialog-template rects, Win95 chrome, labels), one
+     *     surface frame (XP calc's whole face);
+     *  2. guest subclass delivery — children whose GWLP_WNDPROC was
+     *     guest-subclassed get WM_PAINT through that proc (calc's display
+     *     proc chains CallWindowProc(engine defproc) — identity 0). */
+    if (hwnd) mw_engine_paint_children(hwnd);
+    for (int i = 0; i < MW_CHILD_MAX; i++) {
+        if (!g_child[i].live || g_child[i].parent != hwnd) continue;
+        int wl = mw_wndlong_slot(g_child[i].hwnd, -4, 0);
+        if (wl < 0 || !g_wndlong[wl].value ||
+            g_wndlong[wl].value == (uintptr_t)&mw_engine_defproc) continue;
+        long long r = ((MW_WNDPROC)(uintptr_t)g_wndlong[wl].value)(
+            g_child[i].hwnd, 0x000Fu /* WM_PAINT */, 0, 0);
+        MW_TRACE("[GUI] UpdateWindow -> child id=%lu %s WM_PAINT -> %lld",
+                 (unsigned long)g_child[i].id, g_child[i].cls, r);
+    }
     return 1;
 }
 __attribute__((ms_abi)) int mw_DestroyWindow(void* hwnd) {
@@ -16194,6 +16251,7 @@ static int  g_dialog_count = 0;
  * guest RGBA loop wrote at NULL+off (SIGSEGV RVA 0x12d0c2, x3 deterministic).
  * Even non-NULL 32bpp requests overflowed the 3B/px allocation. */
 typedef struct { uint8_t* px; int w, h; uint16_t vbpp; uint16_t vtop; uint32_t vstride; } MWBmp;
+static MWBmp     g_surf = { 0, 0, 0 }; /* window framebuffer (0xRRGGBB pixels) — SW-1266: hoisted for the compositor */
 
 /* row start honoring the view format (legacy: w*3 stride) */
 static inline uint8_t* mwb_row(MWBmp* b, int y) {
@@ -16337,6 +16395,48 @@ static void mwb_text8(MWBmp* b, int x, int y, const char* s, uint32_t c, int sca
         }
     }
 }
+static int mwb_textw(const char* s, int scale); /* fwd: defined right below */
+static void mw_engine_paint_children(void* hwnd) {
+    if (!hwnd || !g_surf.px) return;
+    int painted = 0;
+    mwb_fill(&g_surf, 0, 0, g_surf.w, g_surf.h, 0xC0C0C0); /* dialog face */
+    for (int i = 0; i < MW_CHILD_MAX; i++) {
+        if (!g_child[i].live || g_child[i].parent != hwnd) continue;
+        if (g_child[i].rw <= 0 || g_child[i].rh <= 0) continue;
+        int x = g_child[i].rx, y = g_child[i].ry;
+        int w = g_child[i].rw, h = g_child[i].rh;
+        if (x + w > g_surf.w || y + h > g_surf.h) continue; /* bounds */
+        /* ASCII label from the UTF-16 store */
+        char label[24]; int li = 0;
+        for (; li < 23 && g_child[i].text[li]; li++) {
+            uint16_t c = g_child[i].text[li];
+            label[li] = (c >= 0x20 && c < 0x7F) ? (char)c : '?';
+        }
+        label[li] = 0;
+        if (!strcmp(g_child[i].cls, "EDIT")) {
+            /* display: white face, sunken border, left text */
+            mwb_fill(&g_surf, x, y, w, h, 0xFFFFFF);
+            mwb_fill(&g_surf, x, y, w, 2, 0x808080);
+            mwb_fill(&g_surf, x, y, 2, h, 0x808080);
+            mwb_fill(&g_surf, x, y + h - 2, w, 2, 0xFFFFFF);
+            mwb_fill(&g_surf, x + w - 2, y, 2, h, 0xFFFFFF);
+            mwb_text8(&g_surf, x + 6, y + h / 2 - 8, label, 0x000000, 1);
+        } else if (!strcmp(g_child[i].cls, "BUTTON")) {
+            mwb_3d(&g_surf, x, y, w, h, 1);
+            int tw8 = mwb_textw(label, 1);
+            mwb_text8(&g_surf, x + (w - tw8) / 2, y + (h - 8) / 2, label, 0x000000, 1);
+        } else if (!strcmp(g_child[i].cls, "STATIC")) {
+            mwb_text8(&g_surf, x + 2, y + 2, label, 0x000000, 1);
+        } else {
+            mwb_3d(&g_surf, x, y, w, h, 1);
+        }
+        painted++;
+    }
+    if (painted) {
+        MW_TRACE("[GUI] composite paint: %d standard controls (SW-1266)", painted);
+        mw_surface_dump("UpdateWindow");
+    }
+}
 static int mwb_textw(const char* s, int scale) { return (int)strlen(s) * 8 * scale; }
 static void mwb_circle(MWBmp* b, int cx, int cy, int r, uint32_t c) {
     for (int j = -r; j <= r; j++)
@@ -16472,7 +16572,8 @@ static int       g_win_w = 640, g_win_h = 480;
  * so we forward CreateWindowEx's lpParam and fall back to a scratch page. */
 static void*     g_create_param = 0;
 static unsigned char g_cs_scratch[256]; /* tolerate guests that passed NULL lpParam */
-static MWBmp     g_surf = { 0, 0, 0 }; /* window framebuffer (0xRRGGBB pixels) */
+/* SW-1266: g_surf definition moved above the standard-control compositor;
+ * this site keeps the neighboring pump globals. */
 static int       g_events_mode = -1;   /* -1 = not yet read from env */
 static int       g_paint_pending = 0;
 static int       g_quit_flag = 0, g_quit_code = 0;
@@ -16595,6 +16696,24 @@ static void mw_gui_store_window(int w, int h) {
         snprintf(g_frame_dir, sizeof(g_frame_dir), "%s/screenshots", g_result_base_dir);
         mkdir(g_result_base_dir, 0755); mkdir(g_frame_dir, 0755);
         MW_TRACE("[GUI] paint surface allocated %dx%d (SWEEP-005)", w, h);
+    } else if (w > g_surf.w || h > g_surf.h) {
+        /* SW-1266: GROW-ONLY resize. The first guest window is often a
+         * message-only helper (XP calc: 0x0) that clamps to 32x32; the real
+         * main surface arrives later (dialog template cx,cy or the real
+         * CreateWindowExW w,h). Growing keeps whatever is already on the
+         * surface valid (winmine board etc. recreate their content). */
+        int nw = (w > g_surf.w) ? w : g_surf.w;
+        int nh = (h > g_surf.h) ? h : g_surf.h;
+        uint8_t* np = (uint8_t*)calloc((size_t)nw * (size_t)nh, 3);
+        if (np) {
+            for (int y = 0; y < g_surf.h; y++)
+                memcpy(np + 3 * ((size_t)y * nw), g_surf.px + 3 * ((size_t)y * g_surf.w),
+                       (size_t)g_surf.w * 3);
+            free(g_surf.px);
+            g_surf.px = np; g_surf.w = nw; g_surf.h = nh;
+            mwb_fill(&g_surf, 0, 0, nw, nh, 0xFFFFFF);
+            MW_TRACE("[GUI] paint surface grew to %dx%d (SW-1266)", nw, nh);
+        }
     }
 }
 static void mw_gui_set_quit(int code) { g_quit_flag = 1; g_quit_code = code; }
@@ -19065,18 +19184,90 @@ __attribute__((ms_abi)) int32_t mw_MulDiv(int32_t a, int32_t b, int32_t den) {
     if (v < -0x80000000LL) { mw_SetLastError(158); return -1; }
     return (int32_t)v;
 }
-/* user32!LoadStringW/A — honest "resource absent": return 0, empty string.
- * Callers fall back to hardcoded text when the resource is missing. */
+/* user32!LoadStringW/A — SW-1265: real RT_STRING resolution (below). */
+/* SW-1265 (SWEEP-053, XP calc): REAL LoadString. RT_STRING layout:
+ * blocks of 16 strings, block resource id = (id >> 4) + 1, each string is
+ * a u16 char-count followed by that many UTF-16 code units (NO NUL);
+ * the string's index inside the block is id & 15. The v1 stub always
+ * answered 0 ("resource absent") so XP calc's 86 LoadStringW calls for
+ * its control labels (button captions, key labels) all came back empty
+ * and the subclassed main window painted empty captions. Uses the
+ * SW-1264 entry->data conversion on the FindResource handle. */
 __attribute__((ms_abi)) int mw_LoadStringW(void* hinst, uint32_t id, uint16_t* buf, int cch) {
-    (void)hinst; (void)id;
-    if (buf && cch > 0) buf[0] = 0;
-    MW_TRACE("LoadStringW(id=%u) -> 0 (resource absent)", id);
+    if (!buf || cch <= 0) return 0;
+    buf[0] = 0;
+    if (!g_image_base) return 0;
+    void* hrsrc = w3_res_find(hinst, NULL,
+                              (const wchar_t*)(uintptr_t)((id >> 4) + 1),
+                              NULL, (const wchar_t*)6 /*RT_STRING*/);
+    if (!hrsrc) {
+        MW_TRACE("LoadStringW(id=%u) -> 0 (no RT_STRING block %u)", id, (id >> 4) + 1);
+        return 0;
+    }
+    uint32_t size = *(const uint32_t*)((const uint8_t*)hrsrc + 4);
+    const uint8_t* p = (const uint8_t*)(g_image_base + *(const uint32_t*)hrsrc);
+    if (!p || mw_IsBadReadPtr(p, size ? size : 2)) return 0;
+    const uint8_t* end = p + size;
+    uint32_t idx = id & 15;
+    for (uint32_t i = 0; i <= idx; i++) {
+        if (p + 2 > end) return 0;
+        uint16_t len = *(const uint16_t*)p;
+        p += 2;
+        if (p + (size_t)len * 2 > end) return 0;
+        if (i == idx) {
+            if (!len) {
+                MW_TRACE("LoadStringW(id=%u) -> 0 (empty string)", id);
+                return 0;
+            }
+            int n = (len < (uint32_t)(cch - 1)) ? (int)len : cch - 1;
+            memcpy(buf, p, (size_t)n * 2);
+            buf[n] = 0;
+            MW_TRACE("LoadStringW(id=%u) -> %d wchars (block %u idx %u len %u)",
+                     id, n, (id >> 4) + 1, idx, len);
+            return n;
+        }
+        p += (size_t)len * 2;
+    }
     return 0;
 }
 __attribute__((ms_abi)) int mw_LoadStringA(void* hinst, uint32_t id, char* buf, int cch) {
-    (void)hinst; (void)id;
-    if (buf && cch > 0) buf[0] = 0;
-    MW_TRACE("LoadStringA(id=%u) -> 0 (resource absent)", id);
+    if (!buf || cch <= 0) return 0;
+    buf[0] = 0;
+    if (!g_image_base) return 0;
+    void* hrsrc = w3_res_find(hinst, NULL,
+                              (const wchar_t*)(uintptr_t)((id >> 4) + 1),
+                              NULL, (const wchar_t*)6 /*RT_STRING*/);
+    if (!hrsrc) {
+        MW_TRACE("LoadStringA(id=%u) -> 0 (no RT_STRING block %u)", id, (id >> 4) + 1);
+        return 0;
+    }
+    uint32_t size = *(const uint32_t*)((const uint8_t*)hrsrc + 4);
+    const uint8_t* p = (const uint8_t*)(g_image_base + *(const uint32_t*)hrsrc);
+    if (!p || mw_IsBadReadPtr(p, size ? size : 2)) return 0;
+    const uint8_t* end = p + size;
+    uint32_t idx = id & 15;
+    for (uint32_t i = 0; i <= idx; i++) {
+        if (p + 2 > end) return 0;
+        uint16_t len = *(const uint16_t*)p;
+        p += 2;
+        if (p + (size_t)len * 2 > end) return 0;
+        if (i == idx) {
+            if (!len) {
+                MW_TRACE("LoadStringA(id=%u) -> 0 (empty string)", id);
+                return 0;
+            }
+            int n = (len < (uint32_t)(cch - 1)) ? (int)len : cch - 1;
+            for (int k = 0; k < n; k++) {
+                uint16_t c = ((const uint16_t*)p)[k];
+                buf[k] = (c < 128) ? (char)c : '?';
+            }
+            buf[n] = 0;
+            MW_TRACE("LoadStringA(id=%u) -> %d chars (block %u idx %u len %u)",
+                     id, n, (id >> 4) + 1, idx, len);
+            return n;
+        }
+        p += (size_t)len * 2;
+    }
     return 0;
 }
 /* ---- SWEEP-031 SW-1201: real hook machinery ----
@@ -19862,6 +20053,9 @@ __attribute__((ms_abi)) int mw_GetWindowRect(void* hwnd, void* rc) {
 }
 __attribute__((ms_abi)) int mw_MoveWindow(void* hwnd, int x, int y, int w, int h, int repaint) {
     (void)hwnd; (void)x; (void)y; (void)repaint;
+    /* SW-1266b: grow the surface to the requested client size (see
+     * SetWindowPos note — winmine's post-create board sizing). */
+    if (w > 0 && h > 0) mw_gui_store_window(w, h);
     MW_TRACE("MoveWindow(%dx%d) -> TRUE", w, h);
     return 1;
 }
@@ -19928,8 +20122,15 @@ static void* mw_loadimage_bitmap_dib(void* hinst, const void* name) {
         hrsrc = mw_FindResourceW(hinst, (const wchar_t*)name,
                                  (const wchar_t*)(uintptr_t)2);
     if (!hrsrc) return NULL;
-    const uint8_t* dib = (const uint8_t*)mw_LockResource(hrsrc);
+    /* SW-1264: same DATA_ENTRY->data conversion as mw_dlg_from_resource —
+     * FindResourceW returns the IMAGE_RESOURCE_DATA_ENTRY; the DIB bits live
+     * at g_image_base + entry.OffsetToData (Size = entry.Size). The v1
+     * LockResource(hrsrc) identity handed the 16-byte header in, so the
+     * 'BM'/40-byte BITMAPINFOHEADER probe read the header fields and
+     * bailed for every real bitmap resource. */
+    const uint8_t* dib = (const uint8_t*)(g_image_base + *(const uint32_t*)hrsrc);
     if (!dib) return NULL;
+    if (mw_IsBadReadPtr(dib, 64)) return NULL;
     uint32_t hdr_size = *(const uint32_t*)(const void*)(dib);
     if (hdr_size < 40) return NULL;
     int32_t  w    = *(const int32_t*)(const void*)(dib + 4);
@@ -21025,7 +21226,8 @@ static const uint16_t* mw_dlg_skip_szorord_b(const uint16_t* p, const uint8_t* e
     return (n < 0) ? NULL : p + n + 1;
 }
 static void mw_dlg_register_item(int sc, void* dlg, uint32_t id,
-                                 const void* text, const char* cls_fallback) {
+                                 const void* text, const char* cls_fallback,
+                                 int rx, int ry, int rw, int rh) {
     /* dedupe: repeated CreateDialogParam on the same identity must not pile
      * up duplicate children (0x10002 is the standing modeless identity) */
     for (int i = 0; i < MW_CHILD_MAX; i++)
@@ -21042,11 +21244,13 @@ static void mw_dlg_register_item(int sc, void* dlg, uint32_t id,
         g_child[i].id = id;
         g_child[i].checked = 0;
         g_child[i].enabled = 1;
+        g_child[i].rx = (int16_t)rx; g_child[i].ry = (int16_t)ry;
+        g_child[i].rw = (int16_t)rw; g_child[i].rh = (int16_t)rh;
         snprintf(g_child[i].cls, sizeof(g_child[i].cls), "%s",
                  sc ? mw_sysclass_name(sc) : cls_fallback);
         if (text) mw_w16cpy(g_child[i].text, (const uint16_t*)text, 128);
-        MW_TRACE("[GUI] dlg child id=%lu %s -> HWND %p (SW-1206)",
-                 (unsigned long)id, g_child[i].cls, g_child[i].hwnd);
+        MW_TRACE("[GUI] dlg child id=%lu %s %dx%d@%d,%d -> HWND %p (SW-1206/1266)",
+                 (unsigned long)id, g_child[i].cls, rw, rh, rx, ry, g_child[i].hwnd);
         return;
     }
 }
@@ -21057,6 +21261,12 @@ static const uint8_t* mw_dlg_ex_items(const uint8_t* p, const uint8_t* end,
         p = (const uint8_t*)(((uintptr_t)p + 3u) & ~(uintptr_t)3u);
         if ((const uint8_t*)(p + 24) > end) return NULL;
         uint32_t id = *(const uint32_t*)(p + 20);
+        /* SW-1266: item rect x@12 y@14 cx@16 cy@18 (16-bit each) — pixels
+         * at the engine's standard DLU x2 dialog scale for the compositor */
+        int irx = (int)(int16_t)*(const uint16_t*)(p + 12) * 2;
+        int iry = (int)(int16_t)*(const uint16_t*)(p + 14) * 2;
+        int irw = (int)*(const uint16_t*)(p + 16) * 2;
+        int irh = (int)*(const uint16_t*)(p + 18) * 2;
         const uint8_t* q = p + 24;
         /* class: 0xFFFF+atom | UTF-16 string */
         int sc = 0;
@@ -21103,7 +21313,7 @@ static const uint8_t* mw_dlg_ex_items(const uint8_t* p, const uint8_t* end,
         q += 2 + extra;
         if (q > end) return NULL;
         if (sc || fb[0])
-            mw_dlg_register_item(sc, dlg, id, txt, fb);
+            mw_dlg_register_item(sc, dlg, id, txt, fb, irx, iry, irw, irh);
         else
             MW_TRACE("[GUI] dlg child id=%lu class unrecognized (skipped, SW-1206)",
                      (unsigned long)id);
@@ -21121,9 +21331,23 @@ static int mw_dlg_from_resource(void* dlg, void* hinst,
     void* hrsrc = w3_res_find(hinst, aname, wname, NULL, (const wchar_t*)5 /*RT_DIALOG*/);
     if (!hrsrc) return 0;
     uint32_t size = mw_SizeofResource(hinst, hrsrc);
-    const uint8_t* p = (const uint8_t*)mw_LockResource(hrsrc);
+    /* SW-1264 (SWEEP-053, XP calc decode): w3_res_find returns the
+     * IMAGE_RESOURCE_DATA_ENTRY (OffsetToData@0 Size@4 CodePage@8
+     * Reserved@12). The v1 code handed that ENTRY to mw_LockResource —
+     * an identity no-op (SW-1259) — so the template parser read the
+     * ENTRY HEADER as DLGTEMPLATE: dlgver = low half of the data RVA,
+     * sig = high half (never 1/0xFFFF), the EX branch was skipped and
+     * the STD walker consumed a 16-byte header -> zero children ->
+     * every GetDlgItem NULL (calc GetDlgItem(403) -> the subclass at
+     * SetWindowLongPtrW(GWLP_WNDPROC, 0x100008bc0) silently no-oped and
+     * the real calc WndProc never ran). Real LoadResource contract:
+     * entry -> data pointer (mw_LoadResource). Convert here — the
+     * engine-internal path must honor the same contract. */
+    const uint8_t* p = (const uint8_t*)(g_image_base + *(const uint32_t*)hrsrc);
     if (!p || size < 26) return 0;
     if (mw_IsBadReadPtr(p, size)) return 0;
+    MW_TRACE("[GUI] dlg template resolved: name=%p entry=%p data=%p size=%u",
+             (const void*)wname, hrsrc, (const void*)p, size);
     const uint8_t* end = p + size;
     uint16_t dlgver = *(const uint16_t*)(p + 0);
     uint16_t sig    = *(const uint16_t*)(p + 2);
@@ -21131,6 +21355,12 @@ static int mw_dlg_from_resource(void* dlg, void* hinst,
         /* DLGTEMPLATEEX: helpID@4 exStyle@8 style@12 cdit@16 x@18..cy@24 */
         uint32_t style = *(const uint32_t*)(p + 12);
         uint16_t cdit  = *(const uint16_t*)(p + 16);
+        /* SW-1266: the dialog IS the main window — size the paint surface
+         * from the template's own cx,cy (DLU x2). Grow-only (SW-1266
+         * store_window): the 0x0 helper window may have clamped it to 32x32. */
+        int tw = (int)*(const uint16_t*)(p + 22) * 2;
+        int th = (int)*(const uint16_t*)(p + 24) * 2;
+        if (tw >= 64 && th >= 64) mw_gui_store_window(tw, th);
         const uint8_t* q = p + 26;
         q = (const uint8_t*)mw_dlg_skip_szorord_b((const uint16_t*)q, end); /* menu */
         if (!q) return 0;
@@ -21516,10 +21746,9 @@ __attribute__((ms_abi)) unsigned char* mw_mbsnbcat(unsigned char* dest,
 /* ---- user32: per-window long/ptr store (RAMMap64 family) ----
  * The engine models each window as a registry record (SWEEP-013), so
  * per-window long words are honest state we fully own: GWL_STYLE,
- * GWLP_USERDATA, GWLP_WNDPROC (subclassing routes through g_wndproc_fwd). */
-#define MW_WNDLONG_MAX 128
-typedef struct { void* hwnd; int index; uintptr_t value; uint8_t live; } MWWndLong;
-static MWWndLong g_wndlong[MW_WNDLONG_MAX];
+ * GWLP_USERDATA, GWLP_WNDPROC (SW-1266: per-window subclass state; the
+ * store itself lives with the SW-1256 window registries above so the
+ * UpdateWindow child-paint walk can reach it). */
 static int mw_wndlong_slot(void* hwnd, int index, int create) {
     for (int i = 0; i < MW_WNDLONG_MAX; i++)
         if (g_wndlong[i].live && g_wndlong[i].hwnd == hwnd &&
@@ -21533,17 +21762,47 @@ static int mw_wndlong_slot(void* hwnd, int index, int create) {
         }
     return -1;
 }
+/* SW-1266: the engine's default window procedure — a real guest-callable
+ * function (CallWindowProc(old, ...) chains here) answering the
+ * DefWindowProc subset the engine models: 0 for everything not otherwise
+ * intercepted. Never paints; never stores state. */
+__attribute__((ms_abi)) long long mw_engine_defproc(void* hwnd, uint32_t m,
+                                                    uintptr_t wp, long long lp) {
+    (void)hwnd; (void)m; (void)wp; (void)lp;
+    return 0;
+}
+/* SW-1266: is h an engine-recognized window (main, dialog identity,
+ * toplevel mint, or registered child)? Gates the GWLP_WNDPROC default. */
+static int mw_wndlong_is_engine_window(void* h) {
+    if (h == MW_GUI_HWND || mw_child_slot(h) >= 0 || mw_toplevel_find(h) >= 0)
+        return 1;
+    uintptr_t v = (uintptr_t)h;
+    return v >= 0x00010000u && v < 0x00020000u; /* dlg identity range */
+}
 __attribute__((ms_abi)) intptr_t mw_GetWindowLongPtrW(void* h, int index) {
     int i = mw_wndlong_slot(h, index, 0);
+    intptr_t v = i >= 0 ? (intptr_t)g_wndlong[i].value : 0;
+    if (index == -4 && !v && mw_wndlong_is_engine_window(h)) {
+        /* SW-1266: the window's CURRENT wndproc — the engine default until
+         * a guest subclasses it. Non-zero so guest `if (old)` checks pass. */
+        v = (intptr_t)&mw_engine_defproc;
+    }
     MW_TRACE("GetWindowLongPtrW(%p,%d) -> 0x%llx", h, index,
-             i >= 0 ? (unsigned long long)g_wndlong[i].value : 0ull);
-    return i >= 0 ? (intptr_t)g_wndlong[i].value : 0;
+             (unsigned long long)(uintptr_t)v);
+    return v;
 }
 __attribute__((ms_abi)) intptr_t mw_SetWindowLongPtrW(void* h, int index, intptr_t v) {
     int i = mw_wndlong_slot(h, index, 1);
     intptr_t prev = 0;
     if (i >= 0) { prev = (intptr_t)g_wndlong[i].value; g_wndlong[i].value = (uintptr_t)v; }
-    if (index == -4 && v) g_wndproc_fwd = (MW_WNDPROC)v; /* GWLP_WNDPROC: real subclass */
+    if (index == -4 && v) {
+        /* SW-1266: GWLP_WNDPROC is now PER-WINDOW state. The global forward
+         * stays the main-window channel (SWEEP-013 semantics for the main
+         * hwnd); child subclasses route through their own stored proc
+         * (SendMessageW SW-1266 path + UpdateWindow child paint). */
+        if (h == MW_GUI_HWND || h == g_main_hwnd || mw_toplevel_find(h) >= 0)
+            g_wndproc_fwd = (MW_WNDPROC)v;
+    }
     MW_TRACE("SetWindowLongPtrW(%p,%d,0x%llx) -> 0x%llx", h, index,
              (unsigned long long)(uintptr_t)v, (unsigned long long)(uintptr_t)prev);
     return prev;
@@ -21853,6 +22112,10 @@ __attribute__((ms_abi)) int mw_SetWindowPos(void* h, void* after, int x, int y,
     (void)after;
     if (!(flags & 0x2u)) (void)x, (void)y;   /* no SWP_NOMOVE: still accept */
     if (!(flags & 0x1u)) (void)w, (void)hgt; /* no SWP_NOSIZE: still accept */
+    /* SW-1266b: a REAL size request grows the paint surface (winmine sizes
+     * its board via MoveWindow/SetWindowPos AFTER a 2x0 create; without the
+     * grow the board BitBlts clip at the 32x32 helper-window surface). */
+    if (!(flags & 0x1u) && w > 0 && hgt > 0) mw_gui_store_window(w, hgt);
     MW_TRACE("SetWindowPos(%p %dx%d@%d,%d flags=%#x) -> TRUE", h, w, hgt, x, y, flags);
     return 1;
 }

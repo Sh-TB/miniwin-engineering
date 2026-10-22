@@ -1520,3 +1520,34 @@ sol/freecell exit-0), and the ODF display program = **this round's train**.
   VCL pump), SW-1260 (wordpad LoadStringW(61443) resource work), SW-1247-
   residual per-guest import tails (clipbrd 49 / charmap 9 / sndvol32 5 /
   sol 3 / net 4).
+
+## SWEEP-053 — real-program SCREENSHOTS batch (SW-1264/1265/1266/1266b)
+
+- Mandate: «ادامه اسکرین شات اجرای برنامه ها رو هم نشون بده» — make the
+  four-program targets VISIBLE. Corpus re-staged from pins (XP ISO
+  19b5a382, LO MSI c6298b10 -> CAB 71dfff0b -> 19427/19427, soffice.bin
+  cb08cffd / mergedlo.dll 017d0c21 byte-exact); staging gaps fixed
+  (mfc42u beside mspaint/mshearts/wordpad — the MFC ordinal imports crash
+  the guests without it; riched20 beside wordpad; cards beside the card
+  games).
+- SW-1264: engine-internal resource consumers (mw_dlg_from_resource,
+  mw_loadimage_bitmap_dib) read the IMAGE_RESOURCE_DATA_ENTRY header as
+  the resource data (LockResource identity vs LoadResource conversion —
+  SW-1259 contract honored only on the guest path). XP calc's dialog
+  template 0x66 was unreadable -> zero children. Fix: entry -> data
+  conversion. MEASURED: cdit=30, 30 children with template rects.
+- SW-1265: real LoadStringW/A (RT_STRING blocks). calc's 86 label loads
+  resolve.
+- SW-1266: per-window subclass chain (engine defproc answer for
+  GetWindowLongPtrW(GWLP_WNDPROC), per-window store, SendMessageW routing,
+  UpdateWindow child-paint delivery + standard-control compositor,
+  template-sized grow-only surface, SW-1266b MoveWindow/SetWindowPos
+  grow). MEASURED: **XP calc renders (338x258, 30 controls, real face)**;
+  winmine board + 3 Win95 dialogs; Everything 778x605; freecell 640x480
+  card blits.
+- Gates: G1 12/12 (20261022_215001); census zero deltas vs SWEEP-052
+  (11 XP guests x2 + everything + soffice; soffice rc=99 stub 8 = its
+  baseline). Binary 4e6e4a44. Screenshots: evidence/sweep053/shots_png/.
+- New cars: SW-1267 (sol/mshearts surface sizing order), SW-1268
+  (Everything content paint via fake index); SW-1263 (soffice rtl_uString
+  truncation) remains the ODF frontier.
