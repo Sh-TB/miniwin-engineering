@@ -890,6 +890,11 @@ typedef struct MwDllImage {
     uint32_t exp_sz;
     uint32_t exp_base;   /* Base (first ordinal) */
     uint32_t exp_names;  /* NumberOfNames */
+    /* SW-1230v2 (SWEEP-046 Train 2): DLL-aware EH routing — the exception
+     * directory of the DLL image so the dispatcher can unwind frames that
+     * live INSIDE a loaded DLL (7z.dll C++ throws). */
+    uint32_t pdata_rva;  /* .pdata RVA (dir[3]) */
+    uint32_t pdata_count;/* RUNTIME_FUNCTION entries (0 = none) */
     char     path[512];
     char     name[96];   /* lowercase base name incl. ext */
 } MwDllImage;
@@ -913,10 +918,22 @@ static void* mw_dll_export(MwDllImage* d, const char* name, uintptr_t ord_hint) 
     uint8_t* b = d->base;
     if (!d->exp_rva || d->exp_sz < 40) return NULL;
     uint32_t* ed = (uint32_t*)(b + d->exp_rva);
-    uint32_t nfuncs = ed[6], nnames = ed[7];
-    uint32_t* eat = (uint32_t*)(b + ed[9]);   /* AddressOfFunctions */
-    uint32_t* npt = (uint32_t*)(b + ed[10]);  /* AddressOfNames */
-    uint16_t* aot = (uint16_t*)(b + ed[11]);  /* AddressOfNameOrdinals */
+    uint32_t nfuncs = ed[5], nnames = ed[6]; /* SW-1233: +0x14 NumberOfFunctions, +0x18 NumberOfNames */
+    /* SW-1233 (SWEEP-046 Train 1): the three directory arrays were read
+     * TWO slots off (ed[9]/ed[10]/ed[11]). IMAGE_EXPORT_DIRECTORY as
+     * uint32 words: ed[4]=Base, ed[5]=NumberOfFunctions, ed[6]=NumberOfNames,
+     * ed[7]=AddressOfFunctions, ed[8]=AddressOfNames, ed[9]=AddressOfNameOrdinals
+     * (verified byte-exact against libcrypto.dll: aof=0x194f78 aon=0x198978
+     * aoo=0x19c378, base=1, 3712 functions/names). The old indices fed the
+     * ordinal array (uint16 words) to strcmp as name RVAs -> evex strcmp on
+     * a wild pointer (observed RDI=0x7f77..0x7f7e.., libc __strcmp_evex
+     * SIGSEGV) on the FIRST ssh.exe->libcrypto import. Never exercised
+     * before because DllMain crashed earlier (the GS-base bug above) — the
+     * 513/550 figure was the DLL's OWN imports vs the engine table, a
+     * different path. */
+    uint32_t* eat = (uint32_t*)(b + ed[7]);   /* AddressOfFunctions  (dir +0x1C) */
+    uint32_t* npt = (uint32_t*)(b + ed[8]);   /* AddressOfNames      (dir +0x20) */
+    uint16_t* aot = (uint16_t*)(b + ed[9]);   /* AddressOfNameOrdinals (dir +0x24) */
     (void)d->exp_names;
     void* by_name = NULL;
     void* by_ord = NULL;
@@ -1246,8 +1263,8 @@ static int load_pe_dll(const char* fullpath, const char* lowname) {
     uint32_t exp_base = 1, exp_names = 0;
     if (exp_rva && exp_sz >= 40) {
         uint32_t* ed = (uint32_t*)(img + exp_rva);
-        exp_base = ed[8];
-        exp_names = ed[7];
+        exp_base = ed[4];   /* SW-1233: Base (was ed[8]=AddressOfFunctions!) */
+        exp_names = ed[6];  /* SW-1233: NumberOfNames (was ed[7]=AddressOfFunctions) */
     }
     MwDllImage* d = &g_dll_images[slot];
     memset(d, 0, sizeof(*d));
@@ -1255,12 +1272,21 @@ static int load_pe_dll(const char* fullpath, const char* lowname) {
     d->base = img; d->img_size = size_img; d->map_size = map_len;
     d->exp_rva = exp_rva; d->exp_sz = exp_sz;
     d->exp_base = exp_base; d->exp_names = exp_names;
+    /* SW-1230v2: record the exception directory for DLL-frame unwinding */
+    {
+        uint32_t exc_rva = dd[3 * 2], exc_sz = dd[3 * 2 + 1];
+        d->pdata_rva = exc_rva;
+        d->pdata_count = (exc_rva && exc_sz >= 12) ? (exc_sz / 12) : 0;
+        if (d->pdata_count > 65536) d->pdata_count = 65536; /* sanity cap */
+    }
     snprintf(d->path, sizeof(d->path), "%s", fullpath);
     snprintf(d->name, sizeof(d->name), "%s", lowname);
     MW_TRACE("LoadLibrary[PE-DLL] %s -> base=%p size=0x%zx exp=%u names=%u resolved=%zu unresolved=%zu",
              fullpath, img, (size_t)size_img, exp_rva, exp_names, dll_resolved, dll_unresolved);
     /* DllMain(DLL_PROCESS_ATTACH) — v1: honest call, result traced */
     if (ep_rva) {
+        /* SW-1233: gs/TEB is guaranteed valid here since the setup_teb_peb()
+         * reorder (TEB exists before the import loop that disk-loads DLLs). */
         typedef int (__attribute__((ms_abi)) *dllmain_t)(void*, uint32_t, void*);
         dllmain_t dm = (dllmain_t)(img + ep_rva);
         int r = dm(img, 1 /* DLL_PROCESS_ATTACH */, NULL);
@@ -1695,6 +1721,55 @@ uint64_t g_unwind_regs[16]; /* RAX=0, RCX=1, RDX=2, RBX=3, RSP=4, RBP=5, RSI=6, 
 #define UR_R15 15
 
 /* Internal SysV-only RF lookup (avoids ms_abi ABI issues) */
+static RUNTIME_FUNCTION* seh_internal_lookup(uint64_t rva); /* fwd: DLL-aware lookup below reuses the main-image search */
+
+/* SW-1230v2 (SWEEP-046 Train 2): DLL-aware EH routing.
+ * The dispatcher previously unwound ONLY the main image (RIP outside the
+ * EXE -> "walk ends" -> terminate -> int3). A C++ throw inside a loaded
+ * DLL (7z.dll!7-Zip codec init, observed Signal 5 RCX=0xe06d7363) must
+ * unwind through the DLL's own .pdata: find the owning image, binary-
+ * search ITS exception directory, and hand the dispatcher the matching
+ * ImageBase. Windows semantics: RtlLookupFunctionEntry consults every
+ * module's RUNTIME_FUNCTION table (LdrpInvertedFunctionTable). */
+static MwDllImage* mw_dll_image_for_pc(uint64_t pc) {
+    for (int i = 0; i < MW_DLL_MAX; i++) {
+        MwDllImage* d = &g_dll_images[i];
+        if (!d->in_use || !d->base) continue;
+        uint64_t b = (uint64_t)(uintptr_t)d->base;
+        if (pc >= b && pc < b + d->img_size) return d;
+    }
+    return NULL;
+}
+static uint64_t mw_img_base_for_pc(uint64_t pc) {
+    uint64_t main_b = (uint64_t)(uintptr_t)g_image_base;
+    if (g_image_base && pc >= main_b && pc < main_b + g_image_size) return main_b;
+    MwDllImage* d = mw_dll_image_for_pc(pc);
+    return d ? (uint64_t)(uintptr_t)d->base : main_b;
+}
+static RUNTIME_FUNCTION* seh_lookup_rf_for_pc(uint64_t pc, uint64_t* out_base) {
+    uint64_t main_b = (uint64_t)(uintptr_t)g_image_base;
+    if (g_image_base && pc >= main_b && pc < main_b + g_image_size) {
+        RUNTIME_FUNCTION* rf = seh_internal_lookup(pc - main_b);
+        if (rf) { if (out_base) *out_base = main_b; return rf; }
+    }
+    MwDllImage* d = mw_dll_image_for_pc(pc);
+    if (d && d->pdata_rva && d->pdata_count) {
+        uint64_t b = (uint64_t)(uintptr_t)d->base;
+        uint64_t rva = pc - b;
+        RUNTIME_FUNCTION* base = (RUNTIME_FUNCTION*)(uintptr_t)(b + d->pdata_rva);
+        int lo = 0, hi = (int)d->pdata_count - 1;
+        while (lo <= hi) {
+            int mid = lo + (hi - lo) / 2;
+            RUNTIME_FUNCTION* rf = &base[mid];
+            if (rva < rf->BeginAddress) hi = mid - 1;
+            else if (rva >= rf->EndAddress) lo = mid + 1;
+            else { if (out_base) *out_base = b; return rf; }
+        }
+    }
+    if (out_base) *out_base = main_b;
+    return NULL;
+}
+
 static RUNTIME_FUNCTION* seh_internal_lookup(uint64_t rva) {
     if (!g_pdata_rva || g_num_rt_functions == 0) return NULL;
     RUNTIME_FUNCTION* base = (RUNTIME_FUNCTION*)(g_image_base + g_pdata_rva);
@@ -1989,11 +2064,15 @@ static void* seh_internal_virtual_unwind(
     void** out_lsda,
     uint64_t* out_est_ms)
 {
+    /* SW-1230v2: the frame may belong to a loaded DLL — resolve the
+     * image base ONCE from the control PC instead of assuming the main
+     * image (all ui/pc-offset/handler arithmetic below uses this). */
+    const uint64_t vw_img_base = mw_img_base_for_pc(control_pc);
     /* NOTE: PUSH_NONVOL and PUSH_MACHFRAME safety bounds removed —
      * the original `new_rsp <= rsp + 4096` was always-true after
      * new_rsp += 8, making it a no-op check that added confusion.
      * Trust the unwind metadata instead. */
-    uint8_t* ui_base = g_image_base + rf->UnwindInfo;
+    uint8_t* ui_base = (uint8_t*)(uintptr_t)vw_img_base + rf->UnwindInfo;
 
     uint8_t version     = ui_base[0] & 0x07;
     uint8_t flags       = (ui_base[0] >> 3) & 0x07;
@@ -2029,7 +2108,7 @@ static void* seh_internal_virtual_unwind(
     {
         uint64_t pre_rsp = *(uint64_t*)(ctx + CTX_Rsp);
         uint64_t est_ms = pre_rsp;
-        uint32_t pc_off = (uint32_t)(control_pc - (uint64_t)(uintptr_t)g_image_base) - rf->BeginAddress;
+        uint32_t pc_off = (uint32_t)(control_pc - vw_img_base) - rf->BeginAddress;
         if (frame_reg != 0 &&
             (pc_off >= prolog_size || (flags & UNW_FLAG_CHAININFO))) {
             uint32_t fp_off = reg_to_ctx_offset(frame_reg);
@@ -2048,7 +2127,7 @@ static void* seh_internal_virtual_unwind(
         uint32_t chain_off = 4 + count_codes * 2;
         if (chain_off % 4) chain_off += 2;
         RUNTIME_FUNCTION* chained = (RUNTIME_FUNCTION*)(ui_base + chain_off);
-        uint8_t* chained_ui = g_image_base + chained->UnwindInfo;
+        uint8_t* chained_ui = (uint8_t*)(uintptr_t)vw_img_base + chained->UnwindInfo;
         uint8_t chained_version = chained_ui[0] & 0x07;
         uint8_t chained_flags = (chained_ui[0] >> 3) & 0x07;
         uint8_t chained_prolog_size = chained_ui[1];
@@ -2063,7 +2142,7 @@ static void* seh_internal_virtual_unwind(
         uint64_t chained_rsp = *(uint64_t*)(ctx + CTX_Rsp);
         int chained_fp_set = 0;
         uint64_t chained_fp_val = 0;
-        uint32_t chained_func_offset = (uint32_t)(chain_rip - (uint64_t)(uintptr_t)g_image_base) - chained->BeginAddress;
+        uint32_t chained_func_offset = (uint32_t)(chain_rip - vw_img_base) - chained->BeginAddress;
         uint8_t* chained_codes_ptr = chained_ui + 4;
         int chained_slot = 0;
         for (int i = 0; i < chained_count_codes; i++) {
@@ -2182,7 +2261,7 @@ static void* seh_internal_virtual_unwind(
             if (out_handler_rva) *out_handler_rva = handler_rva;
             if (out_lsda) *out_lsda = lsda;
             MW_TRACE("[DISPATCH] Unwind: CHAININFO handler=0x%x est=0x%lx", handler_rva, chained_est);
-            return (void*)(g_image_base + handler_rva);
+            return (void*)(uintptr_t)(vw_img_base + handler_rva);
         }
         if (out_handler_rva) *out_handler_rva = 0;
         if (out_lsda) *out_lsda = NULL;
@@ -2192,7 +2271,7 @@ static void* seh_internal_virtual_unwind(
     /* Read current register values from context */
     uint64_t rsp = *(uint64_t*)(ctx + CTX_Rsp);
     uint64_t rip = *(uint64_t*)(ctx + CTX_Rip);
-    uint32_t rip_rva = (uint32_t)(rip - (uint64_t)(uintptr_t)g_image_base);
+    uint32_t rip_rva = (uint32_t)(rip - vw_img_base);
     uint32_t func_offset = rip_rva - rf->BeginAddress;
 
     /* Track stack during prolog simulation */
@@ -2342,7 +2421,7 @@ static void* seh_internal_virtual_unwind(
              (uint64_t)rip, rf->BeginAddress, handler_rva, establisher);
 
     if (handler_rva == 0) return NULL;
-    return (void*)(g_image_base + handler_rva);
+    return (void*)(uintptr_t)(vw_img_base + handler_rva);
 }
 
 /* Build a CONTEXT buffer from captured register state.
@@ -2711,18 +2790,23 @@ static int seh_dispatch_exception(void) {
         MW_TRACE("[DISPATCH] Frame[%d]: RIP=0x%lx RVA=0x%lx CTX.Rsp=0x%lx",
                  frame, current_rip, current_rva, *(uint64_t*)(ctx + CTX_Rsp));
 
-        /* Check if still inside PE */
-        if (current_rip < img_base || current_rip >= img_end) {
-            MW_TRACE("[DISPATCH] Frame[%d]: RIP outside PE — walk ends", frame);
-            break;
-        }
-
-        /* Lookup RUNTIME_FUNCTION */
-        RUNTIME_FUNCTION* rf = seh_internal_lookup(current_rva);
+        /* SW-1230v2: the frame may live in the main image OR in a loaded
+         * DLL (7z.dll C++ throws). Locate the owning image's pdata. */
+        uint64_t frame_img_base = img_base;
+        RUNTIME_FUNCTION* rf = (g_image_base && current_rip >= img_base &&
+                                current_rip < img_end)
+            ? seh_internal_lookup(current_rva)
+            : NULL;
+        if (!rf) rf = seh_lookup_rf_for_pc(current_rip, &frame_img_base);
         if (!rf) {
-            MW_TRACE("[DISPATCH] Frame[%d]: No RUNTIME_FUNCTION — walk ends", frame);
+            if (frame_img_base == img_base)
+                MW_TRACE("[DISPATCH] Frame[%d]: RIP outside PE — walk ends", frame);
+            else
+                MW_TRACE("[DISPATCH] Frame[%d]: No RUNTIME_FUNCTION — walk ends", frame);
             break;
         }
+        MW_TRACE("[DISPATCH] Frame[%d]: image base=0x%lx", frame,
+                 (unsigned long)frame_img_base);
 
         MW_TRACE("[DISPATCH] Frame[%d]: RF begin=0x%x end=0x%x ui=0x%x",
                  frame, rf->BeginAddress, rf->EndAddress, rf->UnwindInfo);
@@ -2806,7 +2890,7 @@ static int seh_dispatch_exception(void) {
         int mw_gcc_compat_rip = (er.ExceptionCode == 0x20474343u ||
                                  er.ExceptionCode == 0x21474343u);
         dc.ControlPc = current_rip > 0 ? (mw_gcc_compat_rip ? current_rip - 1 : current_rip) : 0;
-        dc.ImageBase = img_base;
+        dc.ImageBase = frame_img_base; /* SW-1230v2: frame's owning image */
         dc.FunctionEntry = rf;
         /* SW-1151: guests receive the REAL Windows EstablisherFrame
          * (call-boundary RSP / FP-anchored) — MSVC __GSHandlerCheck_EH
@@ -3171,11 +3255,11 @@ __attribute__((ms_abi)) void* mw_RtlLookupFunctionEntry(uint64_t control_pc,
  * deviation and are deliberately left untouched by this task.
  * Returns 0 if the function cannot be resolved. */
 static uint64_t seh_total_prologue_alloc(uint64_t ip_va) {
-    if (g_image_base == NULL || ip_va < (uint64_t)(uintptr_t)g_image_base) return 0;
-    uint64_t rva = ip_va - (uint64_t)(uintptr_t)g_image_base;
-    RUNTIME_FUNCTION* rf = seh_internal_lookup(rva);
+    /* SW-1230v2: the landing pad may live in a loaded DLL (7z.dll catch) */
+    uint64_t pa_base = 0;
+    RUNTIME_FUNCTION* rf = seh_lookup_rf_for_pc(ip_va, &pa_base);
     if (!rf) return 0;
-    uint8_t* ui = g_image_base + rf->UnwindInfo;
+    uint8_t* ui = (uint8_t*)(uintptr_t)(pa_base + rf->UnwindInfo);
     uint8_t count = ui[2];
     uint8_t* codes = ui + 4;
     int slot = 0;
@@ -4408,6 +4492,43 @@ __attribute__((ms_abi)) void* mw_CreateWaitableTimerExW(void* attr, const uint16
     if (name) w3_w16_to_utf8z((const uint16_t*)name, n8, sizeof n8);
     MW_TRACE("CreateWaitableTimerExW(name='%s', flags=0x%x)", n8, flags);
     return mw_event_create(1 /*manual-reset*/, 0);
+}
+/* SW-1233 (SWEEP-046 Train 1): CreateWaitableTimerA/W — ssh.exe
+ * (Win32-OpenSSH w32posix_initialize) fail-fasts with
+ * "failed to initialize w32posix wrapper" when the A-form import
+ * resolves to the unresolved stub (NULL) BEFORE main. Same
+ * event-object v1 mapping as CreateWaitableTimerExW. */
+__attribute__((ms_abi)) void* mw_CreateWaitableTimerA(void* attr, int manual, const char* name) {
+    (void)attr;
+    MW_TRACE("CreateWaitableTimerA(manual=%d, name='%s')", manual, name ? name : "");
+    return mw_event_create(manual ? 1 : 0, 0);
+}
+__attribute__((ms_abi)) void* mw_CreateWaitableTimerW(void* attr, int manual, const uint16_t* name) {
+    (void)attr;
+    char n8[128] = "";
+    if (name) w3_w16_to_utf8z(name, n8, sizeof n8);
+    MW_TRACE("CreateWaitableTimerW(manual=%d, name='%s')", manual, n8);
+    return mw_event_create(manual ? 1 : 0, 0);
+}
+__attribute__((ms_abi)) int mw_QueueUserAPC(void* apc, void* thread, uintptr_t data) {
+    /* SW-1233 (SWEEP-046 Train 1): ssh.exe w32posix_initialize calls
+     * QueueUserAPC(user_apc, current_thread, ctx) and FAILS its init
+     * ("failed to initialize w32posix wrapper") when the BOOL return is 0
+     * (old unresolved stub). Real Windows queues the APC; it only FIRES at
+     * an alertable wait. v1: accept and park (honest — no alertable-wait
+     * scheduler exists yet); these guests never reach an alertable wait
+     * before exit, so nothing is lost. */
+    MW_TRACE("QueueUserAPC(apc=%p, thread=%p, data=%p) -> TRUE (v1 parked)",
+             apc, thread, (void*)data);
+    return 1;
+}
+__attribute__((ms_abi)) int mw_CancelWaitableTimer(void* h) {
+    /* SW-1233: cancel = back to the not-due state (event reset under the
+     * v1 event-object mapping). */
+    MW_TRACE("CancelWaitableTimer(h=%p)", h);
+    if (!h) { mw_SetLastError(6); return 0; }
+    mw_event_reset(h);
+    return 1;
 }
 __attribute__((ms_abi)) int mw_SetWaitableTimer(void* h, const void* liDueTime,
         int32_t period, void* comp, void* arg, int resume) {
@@ -7102,19 +7223,43 @@ static const char* get_exe_path(void) {
     }
     return w3_exe_path;
 }
+/* SW-1233 (SWEEP-046 Train 1): the guest module path must be a WIN32 path.
+ * get_exe_path() returns the host form ("./ssh.exe",
+ * "artifacts/sweep045/ssh/ssh.exe") — forward slashes, no drive. UCRT
+ * startup (ssh.exe __scrt init, RVA 0x411bb) does wcschr(_wpgmptr, '\\')
+ * and byte-terminates the result; with a Unix path wcschr returns NULL and
+ * the store faults at 0x0 (observed Signal 11 inside the PE). Real Windows
+ * ALWAYS hands out a backslash drive path here (LdrpInitializeProcess ->
+ * GetModuleFileNameW). Mapping: host path is transparent under C:\ (same
+ * convention as GetWindowsDirectory "C:\Windows" and SHGetFolderPath
+ * "C:\Users\MiniWin\..."): strip leading "./", turn '/' into '\', prefix
+ * "C:\". Deterministic, and relative guest navigation stays consistent. */
+static size_t win32_module_path(char* out, size_t cap) {
+    const char* p = get_exe_path();
+    while (p[0] == '.' && p[1] == '/') p += 2;      /* "./x" -> "x" */
+    size_t n = 0;
+    if (n < cap) out[n++] = 'C';
+    if (n < cap) out[n++] = ':';
+    if (n < cap) out[n++] = '\\';
+    if (p[0] == '/') p++;                            /* absolute host path maps under the drive root too */
+    for (; *p && n < cap - 1; p++) out[n++] = (*p == '/') ? '\\' : *p;
+    out[n] = 0;
+    return n;
+}
 __attribute__((ms_abi)) uint32_t mw_GetModuleFileNameA(void* mod, char* out, uint32_t cap) {
     MW_TRACE("GetModuleFileNameA(cap=%u)", cap);
     if (!out || !cap) return 0;
-    const char* p = get_exe_path();
-    snprintf(out, cap, "%s", p);
-    return (uint32_t)strlen(out);
+    size_t n = win32_module_path(out, cap);
+    return (uint32_t)n;
 }
 __attribute__((ms_abi)) uint32_t mw_GetModuleFileNameW(void* mod, wchar_t* out, uint32_t cap) {
     MW_TRACE("GetModuleFileNameW(cap=%u)", cap);
     if (!out || !cap) return 0;
-    const char* p = get_exe_path();
-    size_t n = utf8_to_utf16(p, out, cap - 1);
+    char tmp[4096];
+    size_t n8 = win32_module_path(tmp, sizeof(tmp));
+    size_t n = utf8_to_utf16(tmp, out, cap - 1);
     ((uint16_t*)out)[n] = 0;
+    (void)n8;
     return (uint32_t)n;
 }
 
@@ -7189,16 +7334,160 @@ __attribute__((ms_abi)) void mw_FreeLibraryAndExitThread(void* mod, uint32_t cod
 }
 
 /* ---- environment ---- */
+/* ============================================================
+ * SW-1233 (SWEEP-046 Train 1): Windows BASE environment.
+ * Evidence: ssh.exe (Win32-OpenSSH 9.5) CRT static initializer
+ * contrib/win32/win32compat/w32fd.c init_prog_paths() (runs from
+ * _initterm BEFORE main) fail-fasts at w32fd.c:217 with
+ * "couldn't find ProgramData environment variable" -> ExitProcess(255)
+ * before main; zero stdio calls, zero argv reads (decoded from the
+ * guest fail-fast site 0x140041558: rcx=w32fd.c r8d=0xd9=217,
+ * rdx=init_prog_paths, [rsp+0x30]="couldn't find ProgramData
+ * environment variable" -> helper 0x14006df80 -> ExitProcess).
+ * Real Windows bootstraps EVERY process with the standard machine
+ * environment (HKLM\Session Manager\Environment): ProgramData,
+ * SystemRoot, windir, PUBLIC, PATH, ComSpec, PROCESSOR_*, ...
+ * The loader represents a Windows machine, so the base env is part
+ * of the machine model. Merge order: base table first (guest C:\
+ * semantics stay deterministic — the host can never shadow them),
+ * then host environ entries whose names are NOT in the base set.
+ * PROCESSOR_IDENTIFIER/LEVEL/REVISION are derived from the HOST
+ * /proc/cpuinfo (honest per-machine, deterministic per-host).
+ * ============================================================ */
+static const char* const g_win_base_env[] = {
+    "ALLUSERSPROFILE=C:\\ProgramData",
+    "APPDATA=C:\\Users\\MiniWin\\AppData\\Roaming",
+    "CommonProgramFiles=C:\\Program Files\\Common Files",
+    "CommonProgramFiles(x86)=C:\\Program Files (x86)\\Common Files",
+    "CommonProgramW6432=C:\\Program Files\\Common Files",
+    "COMPUTERNAME=MINIWIN",
+    "ComSpec=C:\\Windows\\system32\\cmd.exe",
+    "DriverData=C:\\Windows\\System32\\Drivers\\DriverData",
+    "LOCALAPPDATA=C:\\Users\\MiniWin\\AppData\\Local",
+    "OS=Windows_NT",
+    "PATH=C:\\Windows\\system32;C:\\Windows;C:\\Windows\\System32\\Wbem;C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\",
+    "PATHEXT=.COM;.EXE;.BAT;.CMD;.VBS;.VBE;.JS;.JSE;.WSF;.WSH;.MSC",
+    "PROCESSOR_ARCHITECTURE=AMD64",
+    "ProgramData=C:\\ProgramData",
+    "ProgramFiles=C:\\Program Files",
+    "ProgramFiles(x86)=C:\\Program Files (x86)",
+    "ProgramW6432=C:\\Program Files",
+    "PROMPT=$P$G",
+    "PUBLIC=C:\\Users\\Public",
+    "SESSIONNAME=Console",
+    "SystemDrive=C:",
+    "SystemRoot=C:\\Windows",
+    "TEMP=C:\\Users\\MiniWin\\AppData\\Local\\Temp",
+    "TMP=C:\\Users\\MiniWin\\AppData\\Local\\Temp",
+    "USERDOMAIN=MINIWIN",
+    "USERNAME=MiniWin",
+    "USERPROFILE=C:\\Users\\MiniWin",
+    "windir=C:\\Windows",
+};
+#define MW_BASE_ENV_N (sizeof(g_win_base_env) / sizeof(g_win_base_env[0]))
+
+/* PROCESSOR_IDENTIFIER/LEVEL/REVISION from the host CPU (honest per machine) */
+static char g_proc_ident[96], g_proc_level[16], g_proc_rev[16];
+static int g_proc_ident_ready = 0;
+static void mw_cpu_identity_fill(void) {
+    if (g_proc_ident_ready) return;
+    char vendor[64] = "Unknown";
+    int fam = 0, model = 0, step = 0;
+    FILE* f = fopen("/proc/cpuinfo", "r");
+    if (f) {
+        char line[512];
+        while (fgets(line, sizeof line, f)) {
+            if (strncmp(line, "vendor_id", 9) == 0 && vendor[0] == 'U')
+                sscanf(line, "%*[^:]: %63s", vendor);
+            else if (strncmp(line, "cpu family", 10) == 0)
+                sscanf(line, "%*[^:]: %d", &fam);
+            else if (strncmp(line, "model", 5) == 0 && strncmp(line, "model name", 10) != 0)
+                sscanf(line, "%*[^:]: %d", &model);
+            else if (strncmp(line, "stepping", 8) == 0) {
+                sscanf(line, "%*[^:]: %d", &step);
+                break; /* first processor block complete */
+            }
+        }
+        fclose(f);
+    }
+    snprintf(g_proc_ident, sizeof g_proc_ident, "AMD64 Family %d Model %d Stepping %d, %s",
+             fam, model, step, vendor);
+    snprintf(g_proc_level, sizeof g_proc_level, "%d", fam);
+    snprintf(g_proc_rev, sizeof g_proc_rev, "%02x%02x", model & 0xFF, step & 0xFF);
+    g_proc_ident_ready = 1;
+}
+
+/* case-insensitive name compare against "NAME=VALUE" (A-side) */
+static int mw_env_name_eq(const char* entry, const char* name) {
+    size_t n = strlen(name);
+    if (strncasecmp(entry, name, n) != 0) return 0;
+    return entry[n] == '=';
+}
+
+const char* mw_env_lookup_a(const char* name) {
+    if (!name || !name[0]) return NULL;
+    for (size_t i = 0; i < MW_BASE_ENV_N; i++)
+        if (mw_env_name_eq(g_win_base_env[i], name)) return g_win_base_env[i] + strlen(name) + 1;
+    if (strcmp(name, "NUMBER_OF_PROCESSORS") == 0) {
+        static char nproc_buf[16];
+        if (!nproc_buf[0]) snprintf(nproc_buf, sizeof nproc_buf, "%d", (int)sysconf(_SC_NPROCESSORS_ONLN));
+        return nproc_buf;
+    }
+    mw_cpu_identity_fill();
+    if (strcmp(name, "PROCESSOR_IDENTIFIER") == 0) return g_proc_ident;
+    if (strcmp(name, "PROCESSOR_LEVEL") == 0) return g_proc_level;
+    if (strcmp(name, "PROCESSOR_REVISION") == 0) return g_proc_rev;
+    /* host environ: base names are already covered above; extras pass through */
+    for (char** e = environ; *e; e++)
+        if (mw_env_name_eq(*e, name)) return *e + strlen(name) + 1;
+    return NULL;
+}
+
 __attribute__((ms_abi)) wchar_t* mw_GetEnvironmentStringsW(void) {
     MW_TRACE("GetEnvironmentStringsW()");
     /* Build a double-NUL-terminated UTF-16 block; the loader never frees it
-     * (FreeEnvironmentStringsW is a no-op) so one static buffer suffices. */
+     * (FreeEnvironmentStringsW is a no-op) so one static buffer suffices.
+     * SW-1233: base Windows env first, then non-conflicting host entries. */
     static uint16_t block[16384];
     size_t o = 0;
+    for (size_t i = 0; i < MW_BASE_ENV_N && o < 16380; i++) {
+        int n = w3_utf8_to_utf16le(g_win_base_env[i], strlen(g_win_base_env[i]), block + o, 16380 - (int)o - 2);
+        if (n <= 0) break;
+        o += (size_t)n;
+        block[o++] = 0;
+    }
+    {
+        char nproc[24];
+        snprintf(nproc, sizeof nproc, "NUMBER_OF_PROCESSORS=%d", (int)sysconf(_SC_NPROCESSORS_ONLN));
+        int n = w3_utf8_to_utf16le(nproc, strlen(nproc), block + o, 16380 - (int)o - 2);
+        if (n > 0) { o += (size_t)n; block[o++] = 0; }
+        char idbuf[128];
+        mw_cpu_identity_fill();
+        snprintf(idbuf, sizeof idbuf, "PROCESSOR_IDENTIFIER=%s", g_proc_ident);
+        n = w3_utf8_to_utf16le(idbuf, strlen(idbuf), block + o, 16380 - (int)o - 2);
+        if (n > 0) { o += (size_t)n; block[o++] = 0; }
+        snprintf(idbuf, sizeof idbuf, "PROCESSOR_LEVEL=%s", g_proc_level);
+        n = w3_utf8_to_utf16le(idbuf, strlen(idbuf), block + o, 16380 - (int)o - 2);
+        if (n > 0) { o += (size_t)n; block[o++] = 0; }
+        snprintf(idbuf, sizeof idbuf, "PROCESSOR_REVISION=%s", g_proc_rev);
+        n = w3_utf8_to_utf16le(idbuf, strlen(idbuf), block + o, 16380 - (int)o - 2);
+        if (n > 0) { o += (size_t)n; block[o++] = 0; }
+    }
     for (char** e = environ; *e && o < 16380; e++) {
+        int dup = 0;
+        for (size_t i = 0; i < MW_BASE_ENV_N; i++) {
+            const char* eq = strchr(g_win_base_env[i], '=');
+            size_t bl = (size_t)(eq - g_win_base_env[i]);
+            if (strncasecmp(*e, g_win_base_env[i], bl) == 0 && (*e)[bl] == '=') { dup = 1; break; }
+        }
+        if (dup) continue;
+        if (strncmp(*e, "NUMBER_OF_PROCESSORS=", 21) == 0 ||
+            strncmp(*e, "PROCESSOR_IDENTIFIER=", 21) == 0 ||
+            strncmp(*e, "PROCESSOR_LEVEL=", 16) == 0 ||
+            strncmp(*e, "PROCESSOR_REVISION=", 19) == 0) continue;
         int n = w3_utf8_to_utf16le(*e, strlen(*e), block + o, 16380 - (int)o - 2);
         if (n <= 0) break;
-        o += n;
+        o += (size_t)n;
         block[o++] = 0;
     }
     block[o] = 0;
@@ -7211,7 +7500,7 @@ __attribute__((ms_abi)) uint32_t mw_GetEnvironmentVariableW(const wchar_t* name,
     char n8[256], v8[4096];
     if (!name) return 0;
     w3_w16_to_utf8z((const uint16_t*)name, n8, sizeof(n8));
-    const char* v = getenv(n8);
+    const char* v = mw_env_lookup_a(n8);
     MW_TRACE("GetEnvironmentVariableW(%s) = %s", n8, v ? v : "<null>");
     if (!v) { mw_SetLastError(203); return 0; }
     if (!out || !cap) return (uint32_t)strlen(v) + 1;
@@ -7220,7 +7509,7 @@ __attribute__((ms_abi)) uint32_t mw_GetEnvironmentVariableW(const wchar_t* name,
     return (uint32_t)n;
 }
 __attribute__((ms_abi)) uint32_t mw_GetEnvironmentVariableA(const char* name, char* out, uint32_t cap) {
-    const char* v = name ? getenv(name) : NULL;
+    const char* v = name ? mw_env_lookup_a(name) : NULL;
     MW_TRACE("GetEnvironmentVariableA(%s) = %s", name ? name : "?", v ? v : "<null>");
     if (!v) { mw_SetLastError(203); return 0; }
     if (!out || !cap) return (uint32_t)strlen(v) + 1;
@@ -9727,11 +10016,11 @@ static int32_t mw_reg_query(void* key, const uint16_t* name, uint32_t* type, voi
                 uint32_t k = 0, m = 0;
                 if (name) while (k + 1 < sizeof(nb) && name[k]) { nb[k] = (char)(name[k] & 0xFF); k++; }
                 nb[k] = 0;
-                if (val->data && (val->type == 1u || val->type == 2u || val->type == 4u)) {
+                if (val->size >= 2 && (val->type == 1u || val->type == 2u || val->type == 4u)) { /* SW-1093: data[] decays, size is the real guard */
                     const uint16_t* w = (const uint16_t*)val->data;
                     uint32_t nw = val->size / 2;
                     while (m + 1 < sizeof(pb) && m < nw && w[m]) { pb[m] = (char)(w[m] & 0xFF); m++; }
-                } else if (val->data) {
+                } else if (val->size) { /* SW-1093 */
                     const uint8_t* b = (const uint8_t*)val->data;
                     while (m + 2 < sizeof(pb) && m < val->size && m < 20) {
                         pb[m] = (b[m] >= 0x20 && b[m] < 0x7f) ? (char)b[m] : '.'; m++;
@@ -12040,7 +12329,88 @@ __attribute__((ms_abi)) int mw__CxxFrameHandler(void* er, void* est, void* ctx, 
  * personality chain (SW-1201 family) can really unwind them — 7za x went
  * 0->139 at its own terminate handler. fd's full lifecycle does NOT depend
  * on this (the real fixes are the 16 landed APIs). v2 = DLL-aware EH routing. */
+/* SW-1230v2 (SWEEP-046 Train 2): DLL-aware _CxxThrowException routing.
+ * v1 contract (kept below): EXE-image throws stay SWALLOWED — the raise
+ * RA captured by mw_RaiseException is this stub (mw__CxxThrowException+N),
+ * an engine address, so the dispatcher walk ends immediately (mingw guests
+ * rely on the swallow: 7za's create/extract contract).
+ * v2: a throw whose CALLER lives inside a LOADED DLL (7z.exe's codecs run
+ * in 7z.dll; fd.exe Rust panics via the vcruntime DLL when DLL-linked) must
+ * walk REAL guest frames. Naked stub geometry = the proven mw_RaiseException
+ * asm (BUG-031 volatile capture): capture the DLL call site + volatile regs,
+ * build ER {0xE06D7363, 0, 3, {0x19930520, obj, throwinfo}}, dispatch, and
+ * honor the unwind-return protocol. The dispatcher resolves DLL frames via
+ * seh_lookup_rf_for_pc (SW-1230v2 .pdata per DLL image). */
+__attribute__((ms_abi)) void mw_cxx_throw_dll(void* object, void* throwinfo) {
+    __asm__ volatile (
+        "pushq %rbx\n\t"
+        "pushq %rbp\n\t"
+        "pushq %r12\n\t"
+        "pushq %r13\n\t"
+        "pushq %r14\n\t"
+        "pushq %r15\n\t"
+        "subq $0x28, %rsp\n\t"
+        "movq %rax, g_cap_rax(%rip)\n\t"
+        "movq %r10, g_cap_r10(%rip)\n\t"
+        "movq %r11, g_cap_r11(%rip)\n\t"
+        "leaq 0x58(%rsp), %rax\n\t"
+        "movq %rax, 0x00(%rsp)\n\t"          /* rsp_entry */
+        "movq (%rax), %rbx\n\t"
+        "movq %rbx, 0x08(%rsp)\n\t"          /* rip = DLL call site */
+        "movl $0x19930520, 0x10(%rsp)\n\t"   /* args[0] magic (dword ok) */
+        "movq %rcx, 0x18(%rsp)\n\t"          /* args[1] object */
+        "movq %rdx, 0x20(%rsp)\n\t"          /* args[2] throwinfo */
+        "movq 0x08(%rsp), %rax\n\t"
+        "movq %rax, g_cap_rip(%rip)\n\t"
+        "movq 0x00(%rsp), %rax\n\t"
+        "movq %rax, g_cap_rsp_entry(%rip)\n\t"
+        "leaq 8(%rax), %rax\n\t"
+        "movq %rax, g_cap_rsp(%rip)\n\t"
+        "movl $0xE06D7363, g_cap_code(%rip)\n\t"
+        "movl $0, g_cap_flags(%rip)\n\t"
+        "movl $3, g_cap_nargs(%rip)\n\t"
+        "leaq 0x10(%rsp), %rax\n\t"
+        "movq %rax, g_cap_args(%rip)\n\t"
+        "call seh_dispatch_exception\n\t"
+        "cmpb $0, g_is_unwinding(%rip)\n\t"
+        "je .L_cxxdll_normal_return\n\t"
+        "movq g_unwind_regs+0(%rip), %rax\n\t"
+        "movq g_unwind_regs+8(%rip), %rcx\n\t"
+        "movq g_unwind_regs+16(%rip), %rdx\n\t"
+        "movq g_unwind_regs+24(%rip), %rbx\n\t"
+        "movq g_unwind_regs+40(%rip), %rbp\n\t"
+        "movq g_unwind_regs+48(%rip), %rsi\n\t"
+        "movq g_unwind_regs+56(%rip), %rdi\n\t"
+        "movq g_unwind_regs+64(%rip), %r8\n\t"
+        "movq g_unwind_regs+72(%rip), %r9\n\t"
+        "movq g_unwind_regs+80(%rip), %r10\n\t"
+        "movq g_unwind_regs+88(%rip), %r11\n\t"
+        "movq g_unwind_regs+96(%rip), %r12\n\t"
+        "movq g_unwind_regs+104(%rip), %r13\n\t"
+        "movq g_unwind_regs+112(%rip), %r14\n\t"
+        "movq g_unwind_regs+120(%rip), %r15\n\t"
+        "movq g_unwind_target_ip(%rip), %rcx\n\t"
+        "movq g_unwind_regs+32(%rip), %rsp\n\t"
+        "jmp *%rcx\n\t"
+        ".L_cxxdll_normal_return:\n\t"
+        "addq $0x28, %rsp\n\t"
+        "popq %r15\n\t"
+        "popq %r14\n\t"
+        "popq %r13\n\t"
+        "popq %r12\n\t"
+        "popq %rbp\n\t"
+        "popq %rbx\n\t"
+        "ret\n\t"
+    );
+}
 __attribute__((ms_abi)) void mw__CxxThrowException(void* object, void* throwinfo) {
+    void* ra = __builtin_return_address(0);
+    if (mw_dll_image_for_pc((uint64_t)(uintptr_t)ra)) {
+        MW_TRACE("_CxxThrowException(obj=%p, ti=%p) DLL-throw ra=%p -> real dispatch",
+                 object, throwinfo, ra);
+        mw_cxx_throw_dll(object, throwinfo);
+        return;
+    }
     /* MS protocol: RaiseException(0xE06D7363, 0, 3, {magic, obj, throwinfo}) */
     uint64_t args[3] = { 0x19930520ULL, (uint64_t)(uintptr_t)object, (uint64_t)(uintptr_t)throwinfo };
     MW_TRACE("_CxxThrowException(obj=%p, ti=%p)", object, throwinfo);
@@ -12274,12 +12644,19 @@ static int g_sema_count = 0;
 __attribute__((ms_abi)) void* mw_CreateSemaphoreW(void* attr, int32_t init, int32_t max, const uint16_t* name) {
     (void)attr; (void)name;
     MW_TRACE("CreateSemaphoreW(init=%d, max=%d)", init, max);
-    if (g_sema_count >= MAX_SEMAS || max <= 0 || init < 0 || init > max) {
-        mw_SetLastError(87); return NULL;
-    }
-    g_semas[g_sema_count].count = init;
-    g_semas[g_sema_count].max = max;
-    return alloc_handle((void*)(uintptr_t)(0x5000 + g_sema_count++));
+    /* SW-1232 (SWEEP-046 Train 3) ROOT CAUSE: the W-form was a LEGACY stub
+     * (private counter array, alloc_handle(0x5000+n)) whose waits passed
+     * through instantly, while the A-form (mw_CreateSemaphoreA) builds a
+     * REAL kernel semaphore via mw_sem_create. 7za's MT-LZMA compressor
+     * synchronizes through CreateSemaphoreW(init=0,max=3) +
+     * ReleaseSemaphore + WaitForSingleObject(INFINITE): with the fake the
+     * reader thread never blocked, the encoder pipeline desynced, and the
+     * "create" of a 1.3 MB payload produced a 123-byte archive that 7za
+     * itself believed OK ("Files read from disk: 1, Everything is Ok") —
+     * the downstream extract Data Error (SW-1232's 139/exit-2) was the
+     * honest symptom. W now shares the real object with A. */
+    if (max <= 0 || init < 0 || init > max) { mw_SetLastError(87); return NULL; }
+    return mw_sem_create(init, max);
 }
 __attribute__((ms_abi)) void* mw_OpenEventW(uint32_t access, int inherit, const uint16_t* name) {
     (void)access; (void)inherit;
@@ -18540,7 +18917,7 @@ __attribute__((ms_abi)) uint32_t mw_NtQuerySystemInformation(uint32_t cls, void*
      * memory counters @0x70..0xC8, IO counts @0xD0..0xF8, record = 0x100,
      * name bytes follow the record. Last entry: NextEntryOffset = 0. */
     if (cls == 5) {
-        const char* img = g_argv && g_argv[0] ? g_argv[0] : "guest.exe";
+        const char* img = g_argv[0] ? g_argv[0] : "guest.exe"; /* SW-1093: g_argv is a static array */
         size_t img_n = strlen(img);
         if (img_n > 60) img_n = 60;
         const uint32_t rec = 0x100;
@@ -26932,6 +27309,9 @@ static ImportEntry g_import_table[] = {
     ENTRY("KERNEL32.DLL", "GetQueuedCompletionStatusEx",        mw_GetQueuedCompletionStatusEx), /* SW-507 */
     ENTRY("KERNEL32.DLL", "CreateWaitableTimerExW",             mw_CreateWaitableTimerExW), /* SW-507 */
     ENTRY("KERNEL32.DLL", "CreateWaitableTimerW",               mw_CreateWaitableTimerExW), /* SW-507 */
+    ENTRY("KERNEL32.DLL", "CreateWaitableTimerA",               mw_CreateWaitableTimerA), /* SW-1233 */
+    ENTRY("KERNEL32.DLL", "CancelWaitableTimer",                mw_CancelWaitableTimer), /* SW-1233 */
+    ENTRY("KERNEL32.DLL", "QueueUserAPC",                       mw_QueueUserAPC), /* SW-1233 */
     ENTRY("KERNEL32.DLL", "SetWaitableTimer",                   mw_SetWaitableTimer), /* SW-507 */
     ENTRY("KERNEL32.DLL", "SetProcessPriorityBoost",            mw_SetProcessPriorityBoost), /* SW-507 */
     ENTRY("KERNEL32.DLL", "PostQueuedCompletionStatus",         mw_PostQueuedCompletionStatus),
@@ -30699,14 +31079,29 @@ int main(int argc, char* argv[]) {
 
     resolve_proc_init();
 
+    /* SW-1233 (SWEEP-046 Train 1) ROOT CAUSE: setup_teb_peb() used to run
+     * AFTER load_pe(), but the EXE import loop inside load_pe() disk-loads
+     * real PE DLLs (SW-509) and their DllMain executes guest CRT init —
+     * the first gs:[0x10] (TEB.StackLimit) probe (MSVC _chkstk inside
+     * libcrypto.dll at RVA 0x10312c: lea r10,[rsp+0x18]; sub r10,rax;
+     * mov r11,gs:[0x10]; cmp r10,r11; jae; page walk) ran with GS base 0
+     * -> SIGSEGV at address 0x10. Real Windows builds the TEB before ANY
+     * import resolves (ntdll!LdrpInitializeProcess maps TEB first).
+     * FIX: TEB/PEB now exists before load_pe(); PEB.ImageBaseAddress is
+     * patched right after load_pe() fills g_image_base. Command line and
+     * stack fields are already valid at this point (built above). */
+    setup_teb_peb();
+
     /* Load PE */
     if (load_pe(exe_path) != 0) {
         fprintf(stderr, "[ERROR] Failed to load PE\n");
         return 1;
     }
 
-    /* Set up fake TEB/PEB for Windows TLS (gs:0x30) access */
-    setup_teb_peb();
+    /* SW-1233: PEB.ImageBaseAddress (PEB+0x10) was written with
+     * g_image_base==NULL inside setup_teb_peb(); load_pe() now knows the
+     * real base — refresh the field so guest walkers read the truth. */
+    *(uint64_t*)(g_peb_storage + 0x10) = (uint64_t)(uintptr_t)g_image_base;
 
     /* Jump to entry point */
     MW_TRACE("Jumping to EP=0x%lx", g_entry_point);

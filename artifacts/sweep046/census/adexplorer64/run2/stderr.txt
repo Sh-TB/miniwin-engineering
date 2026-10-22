@@ -1,0 +1,1 @@
+[TRACE] Command line: artifacts/sweep50/dl/adexplorer64/adexplorer64.exe

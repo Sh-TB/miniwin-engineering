@@ -1096,3 +1096,80 @@ missing per-thread TLS init), and the guest's own error strings were the
 oracle at every step. The census caught the two real regressions I
 introduced (procmon64 self-load, 7za CxxThrow capture) and the falsification
 run on clean HEAD correctly exonerated the engine for 7za-extract.
+
+## SWEEP-046 «۲۰ قطار» — 20 trains (2026-10-22, binary 848fa108, pushed)
+Directive: «۲۰ قطار ادامه» — 20 trains. Base: origin/main 3ff438c (SWEEP-045);
+fast-forward (local had 0 unique commits), adexplorer64 corpus re-recovered for
+the 6th time (AdExplorer.zip sha 56536bff byte-exact, exe e4512878 pinned),
+baseline rebuilt byte-exact b33ec3f7, census x3 green.
+
+Train 1 — SW-1233 DLL-CRT-in-DllMain (ssh.exe + libcrypto.dll 1.9 MB):
+Five engine root causes, each decoded off the guest's own behavior:
+1. TEB/GS ordering: setup_teb_peb() ran AFTER load_pe(), but the EXE import
+   loop INSIDE load_pe() disk-loads DLLs and runs their DllMain — the first
+   guest gs:[0x10] probe (libcrypto _chkstk RVA 0x10312c) faulted with GS=0.
+   Real Windows builds the TEB before any import resolves. FIX: TEB/PEB
+   before load_pe + PEB.ImageBaseAddress refresh after.
+2. mw_dll_export: export-directory arrays read TWO slots off
+   (ed[9]/ed[10]/ed[11]; also exp_base=ed[8], nfuncs/nnames off-by-one).
+   Correct IMAGE_EXPORT_DIRECTORY as uint32 words: ed[4]=Base ed[5]=nfuncs
+   ed[6]=nnames ed[7]=AddressOfFunctions ed[8]=AddressOfNames
+   ed[9]=AddressOfNameOrdinals (byte-verified vs libcrypto: aof=0x194f78
+   aon=0x198978 aoo=0x19c378, base=1, 3712/3712). The old crash: libc
+   __strcmp_evex on a wild pointer (RDI=b+0x1F001E). Never exercised before
+   because DllMain crashed first (the "513/550" was the DLL's OWN imports).
+3. GetModuleFileNameW/A returned Unix paths — UCRT _wpgmptr init does
+   wcschr(path,'\\') + byte-terminate (ssh.exe RVA 0x411bb): NULL-store crash.
+   FIX: win32_module_path() — C:\-prefixed backslash form (./ stripped).
+4. Windows BASE environment absent — Win32-OpenSSH w32fd.c init_prog_paths
+   (CRT static initializer, BEFORE main) fail-fasts "couldn't find ProgramData
+   environment variable" (w32fd.c:217) -> ExitProcess(255) pre-main, zero
+   stdio calls. Decoded via the ExitProcess exit-scan (RVA chain ->
+   _invalid_parameter-style helper with file/line/expr strings). FIX:
+   g_win_base_env (ProgramData/SystemRoot/windir/PATH/ComSpec/PUBLIC/
+   PROCESSOR_* from host /proc/cpuinfo, NUMBER_OF_PROCESSORS from sysconf)
+   merged ahead of host environ; GetEnvironmentVariableA/W + the W block
+   share mw_env_lookup_a.
+5. w32posix init chain: CreateWaitableTimerA/W (ssh imports the A-form),
+   CancelWaitableTimer, QueueUserAPC (w32posix checks the BOOL; parked-v1,
+   honest) landed. "failed to initialize w32posix wrapper" no longer blocks
+   the boot path.
+RESULT: ssh.exe -V exit 0 x3 DETERMINISTIC (was instant pre-main fail-fast).
+Frontier (documented): w32posix fd-monitor thread select emulation + the
+OpenSSH version banner still pending; LoadLibraryW(L"a") probe = handled
+harmlessly by the engine exactly like real Windows (NULL + lasterror).
+
+Train 2 — SW-509 v2 + SW-1230v2 DLL-aware EH routing:
+- mw_dll_image_for_pc / mw_img_base_for_pc / seh_lookup_rf_for_pc: the
+  dispatcher walks frames inside LOADED DLL images (MwDllImage now records
+  .pdata rva/count from dir[3] at load). seh_internal_virtual_unwind +
+  seh_total_prologue_alloc are image-base threaded (vw_img_base from the
+  control PC).
+- mw_cxx_throw_dll: naked _CxxThrowException twin (same slot geometry as the
+  proven mw_RaiseException asm, BUG-031 volatile capture) GATED to throws
+  whose caller lives in a DLL image — EXE throws keep the v1 swallow
+  (mingw/7za contract intact; fd.exe full lifecycle intact). 7z.dll throw
+  trace: Frame[0] RIP in the DLL, RF found in the DLL's own pdata.
+- 7z.exe (full 7-Zip 25.01 + 7z.dll): usage banner exit 0 — the PE-DLL
+  loader's motivating case works end-to-end through the DLL's DllMain CRT.
+- Frontier: `7z i`/`7z a` — the throw chain reaches the guest's own
+  (statically-linked) FH4 in the main image, which returns
+  ExceptionContinueExecution at Frame[8] -> honest int3. Needs the
+  FH4-funcinfo depth SW-1201 gave winmergeu. Registered as the SW-1230v2 tail.
+
+Train 3 — SW-1232 SOLVED (see worklist; the one-line CreateSemaphoreW fix
+restored byte-exact create+extract of a 1.3 MB payload).
+
+Bookkeeping trains: adexplorer64 corpus recovery #6 (sha-pinned); census x3;
+G1 pin x2; round trips; games battery; 4 trivial -Waddress/-Wcomment fixes
+(SW-1093: 97 -Wformat sites left, recorded as the dedicated ticket);
+temporary round diagnostics removed before landing.
+
+MEASUREMENT (final binary 848fa108da262351429caca7d5cf7244c65e75b1a9e02a9409d89ab6aa15a045):
+- census x3 16/16 DETERMINISTIC: 15x exit-0, pageant 124 park, ZERO
+  unresolved corpus-wide, ZERO regressions (evidence/sweep046/census.tsv)
+- G1 PIN 12/12 (evidence/master/g1/20261022_032424)
+- round trips: jq '.a[1]'->2, sqlite3 6*7->42, zstd OK, lz4 OK,
+  7za create+extract byte-exact x3 (evidence/sweep046/7za_roundtrip.txt)
+- games: snake 30f byte-identical 3x3, breakout 381f + 13 bricks, calc 9/9
+- no force-push; fast-forward base, single-round increment

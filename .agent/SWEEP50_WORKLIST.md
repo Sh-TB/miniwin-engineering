@@ -2286,11 +2286,18 @@ exe e4512878 via the documented one-shot procedure).
 - [x] **SW-1231 (Train 5): fd.exe added to the working set as the Rust-MSVC
       representative** (17th program, outside the census dir for now);
       bombardier/curl/ssh staged + sha-recorded for the trains.
-- [x] **SW-1232 (new): 7za x64 EXTRACT frontier** — `7za x` exits 139 at HEAD
-      (create stays byte-exact green); falsification run on a clean 08350c3
-      build (git show HEAD:src/loader/loader.c) reproduces the same 139 →
-      PRE-EXISTING, NOT a SWEEP-045 regression; the round-trip trio stays
-      create/jq/sqlite green. Open.
+- [x] **SW-1232 LANDED (SWEEP-046 Train 3): 7za x64 EXTRACT SOLVED** — the
+      frontier was NEVER the extract path: mw_CreateSemaphoreW was a LEGACY
+      fake (private counter array + alloc_handle(0x5000+n), waits passed
+      through instantly) while CreateSemaphoreA was real. 7za's MT-LZMA
+      compressor synchronizes via CreateSemaphoreW(init=0,max=3) +
+      ReleaseSemaphore + WaitForSingleObject(INFINITE): with the fake, the
+      CREATE of a 1.3 MB payload produced a 123-byte archive 7za itself
+      reported OK — the extract "Data Error"/139 was the honest symptom.
+      Fix: W delegates to the real mw_sem_create. Round trip create+extract
+      BYTE-EXACT x3 (sha 15d4c788..., evidence/sweep046/7za_roundtrip.txt).
+      (The 139-vs-Data-Error shape difference between rounds = decode-side
+      manifestation of the same truncated archive.)
 - [x] **SW-1219 status**: unchanged (Chocolate-Doom/Zork/Frotz x86 or DLL-bound).
 - **Measurement (SWEEP-045)**: census x3 16/16 DETERMINISTIC
   (evidence/sweep045/census.tsv) — 15x exit-0, pageant 124 documented park,
@@ -2299,6 +2306,20 @@ exe e4512878 via the documented one-shot procedure).
   sha b33ec3f7); round trips jq '.a[1]'→2, sqlite3 6*7→42, 7za create byte-exact
   (evidence/sweep045/roundtrips.txt); games snake 30f + breakout 381f/13bricks
   byte-identical, calc 9/9.
-- **Open**: SW-1228 (Go data plane), SW-509 v2 (DLL CRT init, SW-1233),
-  SW-1232 (7za extract), SW-1219 (famous game), SW-791 (curl MSVC variant with
-  libcurl-x64.dll — curl.se mingw build is static; need the DLL-linked build).
+- **SWEEP-046 round summary «۲۰ قطار»** (2026-10-22, binary 848fa108, G1
+  20261022_032424): Train 1 SW-1233 LANDED-PARTIAL (five engine root causes:
+  TEB-before-load_pe, export-dir off-by-2, Win32 module paths, Windows base
+  environment, CreateWaitableTimerA/W+Cancel+QueueUserAPC — ssh.exe -V exit 0
+  x3 deterministic; frontier = w32posix fd-monitor thread + banner). Train 2
+  SW-509v2/SW-1230v2 LANDED-PARTIAL (DLL-aware EH: per-DLL .pdata in the
+  dispatcher, image-base-threaded virtual_unwind, mw_cxx_throw_dll gated to
+  DLL-image throws; 7z.exe full 7-Zip 25.01 usage banner exit 0 with 7z.dll
+  PE-DLL load + DllMain CRT boot; frontier = guest FH4 personality returning
+  ContinueExecution on the DLL-throw chain). Train 3 SW-1232 LANDED (see
+  above). Census x3 15x exit-0 + pageant 124, ZERO unresolved, ZERO
+  regressions; round trips jq/sqlite/zstd/lz4/7za-extract all green; games
+  snake/breakout/calc golden. SW-1093 plan: 97 -Wformat warnings left in
+  MW_TRACE call sites (4 trivial -Waddress/-Wcomment fixed this round).
+- **Open**: SW-1228 (Go data plane), SW-1233 tail (w32posix fd-monitor
+  thread), SW-1230v2 tail (7z.exe `i`/`a` FH4 chain), SW-1219 (famous game),
+  SW-791 (curl MSVC variant with libcurl-x64.dll), SW-1093 (-Wformat audit).
