@@ -1500,3 +1500,23 @@ sol/freecell exit-0), and the ODF display program = **this round's train**.
 - Note: the pump budget is the census baseline (MW_GUI_EVENTS_BUDGET=200);
   at 300 the app outlives a 60s timeout (it is a long-running indexer), so
   the battery pins the deterministic census profile.
+
+## SWEEP-052 batch close — gates
+
+- calc battery 15/15 (scripts/sweep023_calc_battery.sh) on the SWEEP-052
+  binary 565b0803.
+- Four-program mandate state after SWEEP-052: (1) ODF display = LibreOffice
+  bootstrap advanced two root causes deep (SW-1262 LANDED: cross-DLL catch
+  matching works; SW-1263 root cause #3 landed, allocator-class truncation
+  frontier continues); (2) Windows calculator = calc battery 15/15; (3)
+  Windows-exclusive = Everything exit-0 + NEW interaction battery 9/9
+  (SW-1261b LANDED); (4) XP game = winmine interaction battery 9/9
+  (SWEEP-051, unchanged this sweep).
+- Census snapshot (evidence/sweep052/regression.tsv): ZERO deltas vs the
+  SWEEP-051 baseline across 15 guests x3 (soffice stub 10 -> 8 is the
+  DuplicateToken fix, the only intended delta).
+- G1 PINs: 69a015b9 (Train 1), 565b0803 (Train 2/3) both 12/12.
+- Open cars: SW-1263 (soffice rtl_uString truncation -> services.rdb ->
+  VCL pump), SW-1260 (wordpad LoadStringW(61443) resource work), SW-1247-
+  residual per-guest import tails (clipbrd 49 / charmap 9 / sndvol32 5 /
+  sol 3 / net 4).
