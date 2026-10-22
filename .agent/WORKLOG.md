@@ -1458,3 +1458,28 @@ sol/freecell exit-0), and the ODF display program = **this round's train**.
   clean; corruption is downstream (allocator interaction class).
 - evidence/sweep052/ (README decode chain, cxeh_decode.log, catch_claimed.txt,
   regression.tsv); worklist SW-1262 marked + SW-1263 registered; no force-push.
+
+## SWEEP-052 Train 2 — SW-1263 root cause #3: per-module handle contract
+
+- The DR0 watchpoint data from Train 1 pointed at a corrupted rtl_uString
+  flowing into sal3's URL->system-path conversion. Cross-checked the guest's
+  own provenance chain: GetModuleHandleExW(flags=6 = FROM_ADDRESS|UNCHANGED_
+  REFCOUNT) appeared in the trace immediately before the poisoned
+  GetModuleFileNameW reads.
+- ROOT CAUSE #3: mw_GetModuleHandleExW v1 answered FROM_ADDRESS with the EXE
+  base unconditionally, and mw_GetModuleFileNameW v1 ignored the handle
+  entirely (EXE path for EVERY module query). Real Windows returns the module
+  containing the address and that module's path. The UNO bootstrap derives
+  per-module install dirs through exactly this pair.
+- Fix: FROM_ADDRESS -> mw_module_of(address) over the guest-DLL registry;
+  GetModuleFileNameW -> MwDllImage.path for guest-DLL handles (C:\-form), EXE
+  fallback unchanged.
+- MEASURED binary 565b0803 (G1 PIN 12/12, evidence/master/g1/20261022_203645):
+  FROM_ADDRESS answers cppuhelper3msc.dll / mergedlo.dll; per-module paths
+  exact (mergedlo.dll u16len=49, cppuhelper3MSC.dll u16len=55); bootstrap
+  file-I/O volume 63 -> 186 CreateFileW per run; soffice still rc=99 x-class
+  ('Cannot obtain UNO_SERVICES') with the truncated rtl_uString now
+  constructed downstream of the fixed queries (cut at 14/22/23 chars —
+  allocator/length-header class, SW-1263 continues).
+- Regression: calc/winmine/mspaint x1 exit-0 zero-stubs after the change.
+- evidence/sweep052/train2_decode.log + train2_opens.tsv; no force-push.

@@ -8024,7 +8024,24 @@ __attribute__((ms_abi)) int mw_GetModuleHandleExA(uint32_t flags, const char* na
 __attribute__((ms_abi)) int mw_GetModuleHandleExW(uint32_t flags, const wchar_t* name, void** mod) {
     MW_TRACE("GetModuleHandleExW(flags=%u)", flags);
     if (!mod) return 0;
-    if ((flags & 4) && name) { *mod = (void*)(uintptr_t)g_image_base; return 1; }
+    if ((flags & 4) && name) {
+        /* SW-1263 (SWEEP-052) ROOT CAUSE #3: FROM_ADDRESS must return the
+         * module CONTAINING the address (real Windows semantics over the
+         * loaded-module list). v1 always returned the EXE base, so the UNO
+         * bootstrap's GetModuleHandleExW(FROM_ADDRESS, &fn_in_dll) +
+         * GetModuleFileNameW chain derived poisoned install paths (observed
+         * as sal3 osl_openFile opening truncated prefixes like
+         * 'C:\\artifacts\\s' of the correct services.rdb path). */
+        uint64_t b = 0, sz = 0;
+        const char* nm = NULL;
+        if (mw_module_of((uint64_t)(uintptr_t)name, &b, &sz, &nm)) {
+            *mod = (void*)(uintptr_t)b;
+            MW_TRACE("GetModuleHandleExW(FROM_ADDRESS %p) -> %s base", name, nm ? nm : "?");
+            return 1;
+        }
+        *mod = (void*)(uintptr_t)g_image_base;
+        return 1;
+    }
     if (!name) { *mod = (void*)(uintptr_t)g_image_base; return 1; }
     {   /* OPENSRC battery: by-name lookups of system modules succeed with
          * the same pseudo-handle identity LoadLibrary hands out. */
@@ -8088,6 +8105,28 @@ __attribute__((ms_abi)) uint32_t mw_GetModuleFileNameA(void* mod, char* out, uin
 __attribute__((ms_abi)) uint32_t mw_GetModuleFileNameW(void* mod, wchar_t* out, uint32_t cap) {
     MW_TRACE("GetModuleFileNameW(cap=%u)", cap);
     if (!out || !cap) return 0;
+    /* SW-1263: a handle that maps to a loaded guest DLL names THAT dll's
+     * path (MwDllImage.path = the disk path it was loaded from). v1 ignored
+     * the handle and answered the EXE path for every module — the UNO
+     * bootstrap's per-module install-dir derivation then computed poisoned
+     * paths (the sal3 osl_openFile truncation frontier). */
+    if (mod && (uint8_t*)mod != g_image_base) {
+        MwDllImage* d = mw_dll_find_by_base(mod);
+        if (d && d->path[0]) {
+            char w32[1024];
+            size_t k = 0;
+            w32[k++] = 'C'; w32[k++] = ':'; w32[k++] = '\\';
+            const char* p = d->path;
+            if (p[0] == '/') p++;
+            for (; *p && k < sizeof(w32) - 1; p++) w32[k++] = (*p == '/') ? '\\' : *p;
+            w32[k] = 0;
+            size_t n = utf8_to_utf16(w32, out, cap - 1);
+            ((uint16_t*)out)[n] = 0;
+            MW_TRACE("GetModuleFileNameW out u16len=%llu '%s' (module %s)",
+                     (unsigned long long)n, w32, d->name);
+            return (uint32_t)n;
+        }
+    }
     char tmp[4096];
     size_t n8 = win32_module_path(tmp, sizeof(tmp));
     size_t n = utf8_to_utf16(tmp, out, cap - 1);

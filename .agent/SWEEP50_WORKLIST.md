@@ -2681,15 +2681,21 @@ viewer, (2) Windows calculator, (3) a program that does not exist on Linux
   throw decoder (types + messages), [STUB] import-name registry, CreateFileW
   caller attribution, GetModuleFileNameW output log; DR0 watch runs
   (scripts/mw_watch build of scripts/sweep051_watch.c).
-- [ ] **SW-1263 (from SW-1262)** soffice services.rdb gate: sal3's
-  osl_openFile receives PROGRESSIVELY TRUNCATED directory prefixes of the
-  correct path ('C:\artifacts\s', 'C:\artifacts\sweep051\guests\',
-  'C:\artifacts\sweep051\', 'C:\artifacts\sweep051\gu' with
-  MINWIN_HEAP_GUARD=1) — the cut point moves with allocator layout, so the
-  rtl_uString length/header flowing into sal3's URL->system-path conversion
-  is corrupt (62 identical failed opens then 'Cannot obtain UNO_SERVICES').
-  GetModuleFileNameW output verified CLEAN (48 chars) — the corruption is in
-  the bootstrap string chain (allocator interaction class). Target: services
+- [~] **SW-1263 (SWEEP-052 Train 2, IN PROGRESS) — root cause #3 LANDED**:
+  GetModuleHandleExW(FROM_ADDRESS) v1 always returned the EXE base and
+  GetModuleFileNameW v1 ignored the handle entirely (EXE path for every
+  module). Both fixed: FROM_ADDRESS resolves the address's OWNING module via
+  mw_module_of; GetModuleFileNameW resolves guest-DLL handles through
+  MwDllImage.path. MEASURED (binary 565b0803, G1 12/12 at
+  evidence/master/g1/20261022_203645): FROM_ADDRESS now answers
+  cppuhelper3msc.dll/mergedlo.dll correctly, per-module paths are exact
+  (mergedlo.dll 49 chars, cppuhelper3MSC.dll 55 chars), bootstrap file I/O
+  volume 63 -> 186 CreateFileW. REMAINING frontier: the rtl_uString holding
+  the uno.ini URL is still constructed truncated inside the sal3/cppuhelper
+  string chain (cut at 14/22/23 chars: 'C:\artifacts\s',
+  'C:\artifacts\sweep051\g') — an allocator/length-header class bug
+  downstream of the (now-correct) module queries; calc/winmine/mspaint
+  regression x1 green after the change. Target: clean rtl_uString -> services
   .rdb open -> UNO service manager -> past bootstrap into the VCL pump.
 - [ ] **SW-1261b** Everything 1.4.1 full lifecycle (UI interaction) queued
   behind the calc-battery-style click harness (unchanged).
