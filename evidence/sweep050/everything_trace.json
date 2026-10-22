@@ -1,0 +1,2668 @@
+{
+  "trace": [
+[Te4c0] [API] PE Loader: file=artifacts/sweep050/stage/everything/everything.exe size=2266280
+[Te4c0] [API] PE Loader: ImageBase=0x140000000 EP=0x1a9df0 SizeOfImage=0x22c000 Sections=6
+[Te4c0] [API] PE Loader: Mapped at 0x140000000 (forced via MAP_FIXED)
+[Te4c0] [API] KUSD: mapped 0x7ffe0000 (root C:\WINDOWS, ver 5.2, qpc 1e9)
+[Te4c0] [API] Section [0] .text    VA=0x00001000 VS=0x001aec3e Raw=0x001aee00 Ch=0x60000020
+[Te4c0] [API] Section [1] .rdata   VA=0x001b0000 VS=0x0004ba8e Raw=0x0004bc00 Ch=0x40000040
+[Te4c0] [API] Section [2] .data    VA=0x001fc000 VS=0x00013628 Raw=0x00011e00 Ch=0xc0000040
+[Te4c0] [API] Section [3] .pdata   VA=0x00210000 VS=0x0000ca44 Raw=0x0000cc00 Ch=0x40000040
+[Te4c0] [API] Section [4] .rsrc    VA=0x0021d000 VS=0x0000a1e4 Raw=0x0000a200 Ch=0x40000040
+[Te4c0] [API] Section [5] .reloc   VA=0x00228000 VS=0x000031b8 Raw=0x00003200 Ch=0x42000040
+[Te4c0] [API] Import Directory: RVA=0x1f8da8 Size=0xdc
+[Te4c0] [API] Import DLL: COMCTL32.dll (IAT RVA=0x1b00e8, ILT RVA=0x1f8f70)
+[Te4c0] [API]   [0] ImageList_GetIconSize -> 0x205ff30
+[Te4c0] [API]   [1] ImageList_DrawEx -> 0x200e050
+[Te4c0] [API]   [2] _TrackMouseEvent -> 0x206e970
+[Te4c0] [API]   [3] InitCommonControlsEx -> 0x2029830
+[Te4c0] [API] Import DLL: WS2_32.dll (IAT RVA=0x1b0cb8, ILT RVA=0x1f9b40)
+[Te4c0] [API]   [0] Ordinal 111 -> WSAGetLastError (fixed ordinal)
+[Te4c0] [API]   [0] WSAGetLastError -> 0x200c870
+[Te4c0] [API]   [1] Ordinal 116 -> WSACleanup (fixed ordinal)
+[Te4c0] [API]   [1] WSACleanup -> 0x200c860
+[Te4c0] [API]   [2] Ordinal 3 -> closesocket (fixed ordinal)
+[Te4c0] [API]   [2] closesocket -> 0x2011cc0
+[Te4c0] [API]   [3] Ordinal 19 -> send (fixed ordinal)
+[Te4c0] [API]   [3] send -> 0x2020b90
+[Te4c0] [API]   [4] Ordinal 16 -> recv (fixed ordinal)
+[Te4c0] [API]   [4] recv -> 0x2020c60
+[Te4c0] [API]   [5] Ordinal 4 -> connect (fixed ordinal)
+[Te4c0] [API]   [5] connect -> 0x2020650
+[Te4c0] [API]   [6] Ordinal 101 -> WSAAsyncSelect (fixed ordinal)
+[Te4c0] [API]   [6] WSAAsyncSelect -> 0x206c430
+[Te4c0] [API]   [7] Ordinal 21 -> setsockopt (fixed ordinal)
+[Te4c0] [API]   [7] setsockopt -> 0x20209a0
+[Te4c0] [API]   [8] Ordinal 23 -> socket (fixed ordinal)
+[Te4c0] [API]   [8] socket -> 0x2020560
+[Te4c0] [API]   [9] Ordinal 115 -> WSAStartup (fixed ordinal)
+[Te4c0] [API]   [9] WSAStartup -> 0x20396a0
+[Te4c0] [API]   [10] Ordinal 22 -> shutdown (fixed ordinal)
+[Te4c0] [API]   [10] shutdown -> 0x20450a0
+[Te4c0] [API]   [11] Ordinal 13 -> listen (fixed ordinal)
+[Te4c0] [API]   [11] listen -> 0x20207a0
+[Te4c0] [API]   [12] Ordinal 2 -> bind (fixed ordinal)
+[Te4c0] [API]   [12] bind -> 0x2020700
+[Te4c0] [API]   [13] Ordinal 5 -> getpeername (fixed ordinal)
+[Te4c0] [API]   [13] getpeername -> 0x2020af0
+[Te4c0] [API]   [14] Ordinal 15 -> ntohs (fixed ordinal)
+[Te4c0] [API]   [14] ntohs -> 0x207ff60
+[Te4c0] [API]   [15] Ordinal 6 -> getsockname (fixed ordinal)
+[Te4c0] [API]   [15] getsockname -> 0x2020a50
+[Te4c0] [API]   [16] Ordinal 1 -> accept (fixed ordinal)
+[Te4c0] [API]   [16] accept -> 0x2020840
+[Te4c0] [API]   [17] Ordinal 11 -> inet_addr (fixed ordinal)
+[Te4c0] [API]   [17] inet_addr -> 0x2020420
+[Te4c0] [API]   [18] Ordinal 9 -> htons (fixed ordinal)
+[Te4c0] [API]   [18] htons -> 0x2020410
+[Te4c0] [API]   [19] Ordinal 52 -> gethostbyname (fixed ordinal)
+[Te4c0] [API]   [19] gethostbyname -> 0x2045ed0
+[Te4c0] [API] Import DLL: SHLWAPI.dll (IAT RVA=0x1b07b8, ILT RVA=0x1f9640)
+[Te4c0] [API]   [0] SHRegGetUSValueW -> 0x203b900
+[Te4c0] [API]   [1] PathIsRootW -> 0x2044050
+[Te4c0] [API]   [2] PathCombineW -> 0x20a2980
+[Te4c0] [API]   [3] PathRemoveFileSpecW -> 0x2086350
+[Te4c0] [API] Import DLL: KERNEL32.dll (IAT RVA=0x1b0270, ILT RVA=0x1f90f8)
+[Te4c0] [API]   [0] GetSystemTime -> 0x2044270
+[Te4c0] [API]   [1] FreeResource -> 0x207f790
+[Te4c0] [API]   [2] LockResource -> 0x207fa90
+[Te4c0] [API]   [3] LoadResource -> 0x2028e30
+[Te4c0] [API]   [4] SizeofResource -> 0x200c3e0
+[Te4c0] [API]   [5] FindResourceW -> 0x207cec0
+[Te4c0] [API]   [6] GetSystemDefaultLangID -> 0x206b4c0
+[Te4c0] [API]   [7] LoadLibraryA -> 0x208e9a0
+[Te4c0] [API]   [8] CopyFileW -> 0x2092d70
+[Te4c0] [API]   [9] TerminateProcess -> 0x203db70
+[Te4c0] [API]   [10] OpenProcess -> 0x2048690
+[Te4c0] [API]   [11] CreateMutexW -> 0x204c7d0
+[Te4c0] [API]   [12] SetLastError -> 0x2047740
+[Te4c0] [API]   [13] GetStartupInfoW -> 0x2035480
+[Te4c0] [API]   [14] HeapAlloc -> 0x20544c0
+[Te4c0] [API]   [15] GetProcessHeap -> 0x200b650
+[Te4c0] [API]   [16] HeapFree -> 0x20b04e0
+[Te4c0] [API]   [17] VirtualAlloc -> 0x2050e80
+[Te4c0] [API]   [18] VirtualFree -> 0x2054bb0
+[Te4c0] [API]   [19] QueryDosDeviceW -> 0x2048290
+[Te4c0] [API]   [20] SetErrorMode -> 0x200c370
+[Te4c0] [API]   [21] DeleteFileW -> 0x20a1f20
+[Te4c0] [API]   [22] RemoveDirectoryW -> 0x20a0f60
+[Te4c0] [API]   [23] MoveFileW -> 0x20ad890
+[Te4c0] [API]   [24] MoveFileExW -> 0x20ac8f0
+[Te4c0] [API]   [25] CreateDirectoryW -> 0x20a2340
+[Te4c0] [API]   [26] GetFileAttributesW -> 0x20a1c70
+[Te4c0] [API]   [27] GlobalFree -> 0x20b15f0
+[Te4c0] [API]   [28] GlobalUnlock -> 0x207f740
+[Te4c0] [API]   [29] GlobalLock -> 0x2082f70
+[Te4c0] [API]   [30] GlobalAlloc -> 0x203dc60
+[Te4c0] [API]   [31] GetComputerNameW -> 0x209bff0
+[Te4c0] [API]   [32] GetVolumeInformationW -> 0x209bcf0
+[Te4c0] [API]   [33] GetDiskFreeSpaceW -> 0x20aabd0
+[Te4c0] [API]   [34] GetFullPathNameW -> 0x20a8f60
+[Te4c0] [API]   [35] GetFileSize -> 0x2057e30
+[Te4c0] [API]   [36] FindFirstFileW -> 0x209b3b0
+[Te4c0] [API]   [37] FindNextFileW -> 0x20743b0
+[Te4c0] [API]   [38] GetDriveTypeW -> 0x207fae0
+[Te4c0] [API]   [39] GetThreadPriority -> 0x2065ba0
+[Te4c0] [API]   [40] CreateEventW -> 0x204c390
+[Te4c0] [API]   [41] GetProcAddress -> 0x20502b0
+[Te4c0] [API]   [42] FreeLibrary -> 0x2067340
+[Te4c0] [API]   [43] GetModuleFileNameW -> 0x209a320
+[Te4c0] [API]   [44] FileTimeToSystemTime -> 0x2078180
+[Te4c0] [API]   [45] GetCurrentDirectoryW -> 0x20970c0
+[Te4c0] [API]   [46] GetFileAttributesExW -> 0x20a1ee0
+[Te4c0] [API]   [47] LocalFileTimeToFileTime -> 0x2078aa0
+[Te4c0] [API]   [48] SystemTimeToFileTime -> 0x20784a0
+[Te4c0] [API]   [49] FileTimeToLocalFileTime -> 0x2081260
+[Te4c0] [API]   [50] SystemTimeToTzSpecificLocalTime -> 0x200cb20
+[Te4c0] [API]   [51] __C_specific_handler -> 0x2066c60
+[Te4c0] [API]   [52] WaitForMultipleObjects -> 0x2096800
+[Te4c0] [API]   [53] GetSystemDirectoryW -> 0x2091810
+[Te4c0] [API]   [54] LoadLibraryW -> 0x20a63b0
+[Te4c0] [API]   [55] ExpandEnvironmentStringsW -> 0x20a8970
+[Te4c0] [API]   [56] GetSystemInfo -> 0x20430f0
+[Te4c0] [API]   [57] GetVersionExA -> 0x20641e0
+[Te4c0] [API]   [58] LocalFree -> 0x20b3450
+[Te4c0] [API]   [59] LocalAlloc -> 0x203de00
+[Te4c0] [API]   [60] ConnectNamedPipe -> 0x2053e90
+[Te4c0] [API]   [61] CreateNamedPipeW -> 0x20a6c40
+[Te4c0] [API]   [62] GetTimeZoneInformation -> 0x2035620
+[Te4c0] [API]   [63] MulDiv -> 0x2048120
+[Te4c0] [API]   [64] GetTimeFormatW -> 0x2050b40
+[Te4c0] [API]   [65] GetNumberFormatW -> 0x2023a60
+[Te4c0] [API]   [66] GetDateFormatW -> 0x2050a30
+[Te4c0] [API]   [67] MultiByteToWideChar -> 0x2052e20
+[Te4c0] [API]   [68] HeapCreate -> 0x200b660
+[Te4c0] [API]   [69] HeapSetInformation -> 0x200b680
+[Te4c0] [API]   [70] GetModuleFileNameA -> 0x2042f80
+[Te4c0] [API]   [71] FlsAlloc -> 0x2033150
+[Te4c0] [API]   [72] TlsSetValue -> 0x20589c0
+[Te4c0] [API]   [73] FlsFree -> 0x207fa60
+[Te4c0] [API]   [74] TlsFree -> 0x200cb10
+[Te4c0] [API]   [75] FlsSetValue -> 0x200b1d0
+[Te4c0] [API]   [76] FlsGetValue -> 0x200b1b0
+[Te4c0] [API]   [77] GetModuleHandleA -> 0x2038770
+[Te4c0] [API]   [78] RtlCaptureContext -> 0x2073970
+[Te4c0] [API]   [79] RtlLookupFunctionEntry -> 0x2025bc0
+[Te4c0] [API]   [80] RtlVirtualUnwind -> 0x208a8d0
+[Te4c0] [API]   [81] IsDebuggerPresent -> 0x2065d00
+[Te4c0] [API]   [82] SetUnhandledExceptionFilter -> 0x2025ee0
+[Te4c0] [API]   [83] UnhandledExceptionFilter -> 0x2069880
+[Te4c0] [API]   [84] GetCurrentProcess -> 0x200a410
+[Te4c0] [API]   [85] GetStartupInfoA -> 0x2033740
+[Te4c0] [API]   [86] GetCommandLineA -> 0x2073b40
+[Te4c0] [API]   [87] CreateThread -> 0x2063dc0
+[Te4c0] [API]   [88] ExitThread -> 0x2042e90
+[Te4c0] [API]   [89] SetFilePointer -> 0x2057ab0
+[Te4c0] [API]   [90] GetTempPathW -> 0x209b880
+[Te4c0] [API]   [91] CreateFileW -> 0x20a1a00
+[Te4c0] [API]   [92] FreeConsole -> 0x207ff10
+[Te4c0] [API]   [93] AllocConsole -> 0x200c0d0
+[Te4c0] [API]   [94] SetStdHandle -> 0x207f1f0
+[Te4c0] [API]   [95] SetConsoleScreenBufferSize -> 0x204b6b0
+[Te4c0] [API]   [96] ExitProcess -> 0x207da20
+[Te4c0] [API]   [97] QueryPerformanceFrequency -> 0x2034c70
+[Te4c0] [API]   [98] QueryPerformanceCounter -> 0x203c6e0
+[Te4c0] [API]   [99] WriteFile -> 0x2057380
+[Te4c0] [API]   [100] FlushFileBuffers -> 0x2058280
+[Te4c0] [API]   [101] GetStdHandle -> 0x20c6cf0
+[Te4c0] [API]   [102] GetFileType -> 0x201b460
+[Te4c0] [API]   [103] GetConsoleScreenBufferInfo -> 0x2033430
+[Te4c0] [API]   [104] SetConsoleTextAttribute -> 0x20475d0
+[Te4c0] [API]   [105] WriteConsoleW -> 0x20190f0
+[Te4c0] [API]   [106] GetLocaleInfoW -> 0x20a47a0
+[Te4c0] [API]   [107] GetCalendarInfoW -> 0x2055d00
+[Te4c0] [API]   [108] DeviceIoControl -> 0x2047950
+[Te4c0] [API]   [109] GetOverlappedResult -> 0x2047c70
+[Te4c0] [API]   [110] ResetEvent -> 0x2087610
+[Te4c0] [API]   [111] Sleep -> 0x203d150
+[Te4c0] [API]   [112] FindNextChangeNotification -> 0x2061ca0
+[Te4c0] [API]   [113] FindFirstChangeNotificationW -> 0x20315e0
+[Te4c0] [API]   [114] GetFileInformationByHandle -> 0x20580e0
+[Te4c0] [API]   [115] GetLocalTime -> 0x201bcc0
+[Te4c0] [API]   [116] FindCloseChangeNotification -> 0x2061e30
+[Te4c0] [API]   [117] FindClose -> 0x2014310
+[Te4c0] [API]   [118] GetSystemTimeAsFileTime -> 0x203c220
+[Te4c0] [API]   [119] GetCurrentThread -> 0x200a430
+[Te4c0] [API]   [120] SetThreadPriority -> 0x2066540
+[Te4c0] [API]   [121] InitializeCriticalSection -> 0x2070d40
+[Te4c0] [API]   [122] WaitForSingleObject -> 0x2096660
+[Te4c0] [API]   [123] DeleteCriticalSection -> 0x2070d60
+[Te4c0] [API]   [124] EnterCriticalSection -> 0x2084f80
+[Te4c0] [API]   [125] GetTickCount -> 0x203c550
+[Te4c0] [API]   [126] LeaveCriticalSection -> 0x2063810
+[Te4c0] [API]   [127] SetEvent -> 0x20878f0
+[Te4c0] [API]   [128] GetCommandLineW -> 0x2074090
+[Te4c0] [API]   [129] GetCurrentThreadId -> 0x200a440
+[Te4c0] [API]   [130] GetModuleHandleW -> 0x2038980
+[Te4c0] [API]   [131] ReadFile -> 0x2056c30
+[Te4c0] [API]   [132] GetLastError -> 0x20255a0
+[Te4c0] [API]   [133] CloseHandle -> 0x2097400
+[Te4c0] [API]   [134] WideCharToMultiByte -> 0x2048f60
+[Te4c0] [API]   [135] GetCPInfo -> 0x2033a60
+[Te4c0] [API]   [136] GetACP -> 0x200bf20
+[Te4c0] [API]   [137] GetOEMCP -> 0x200bf30
+[Te4c0] [API]   [138] IsValidCodePage -> 0x200bf40
+[Te4c0] [API]   [139] FreeEnvironmentStringsA -> 0x2067600
+[Te4c0] [API]   [140] GetEnvironmentStrings -> 0x2073040
+[Te4c0] [API]   [141] FreeEnvironmentStringsW -> 0x20674a0
+[Te4c0] [API]   [142] GetEnvironmentStringsW -> 0x2077b50
+[Te4c0] [API]   [143] SetHandleCount -> 0x2031770
+[Te4c0] [API]   [144] GetCurrentProcessId -> 0x200a420
+[Te4c0] [API]   [145] HeapReAlloc -> 0x20afa80
+[Te4c0] [API]   [146] LCMapStringA -> 0x2056a50
+[Te4c0] [API]   [147] LCMapStringW -> 0x2056870
+[Te4c0] [API]   [148] GetStringTypeA -> 0x2052a80
+[Te4c0] [API]   [149] GetStringTypeW -> 0x20753a0
+[Te4c0] [API]   [150] GetLocaleInfoA -> 0x20840d0
+[Te4c0] [API]   [151] HeapSize -> 0x209baa0
+[Te4c0] [API]   [152] GetWindowsDirectoryW -> 0x20918f0
+[Te4c0] [API] Import DLL: USER32.dll (IAT RVA=0x1b07e0, ILT RVA=0x1f9668)
+[Te4c0] [API]   [0] IsWindowVisible -> 0x205f900
+[Te4c0] [API]   [1] SetCursor -> 0x207fa80
+[Te4c0] [API]   [2] SetCapture -> 0x202eba0
+[Te4c0] [API]   [3] ChangeClipboardChain -> 0x207f2d0
+[Te4c0] [API]   [4] DrawEdge -> 0x20a6860
+[Te4c0] [API]   [5] DrawFrameControl -> 0x200df90
+[Te4c0] [API]   [6] EqualRect -> 0x20ade80
+[Te4c0] [API]   [7] GetSubMenu -> 0x208d1d0
+[Te4c0] [API]   [8] GetMenu -> 0x202c730
+[Te4c0] [API]   [9] SetClipboardViewer -> 0x207f4a0
+[Te4c0] [API]   [10] EnumWindows -> 0x200f890
+[Te4c0] [API]   [11] ActivateKeyboardLayout -> 0x2061fc0
+[Te4c0] [API]   [12] LoadIconW -> 0x207f330
+[Te4c0] [API]   [13] IsDlgButtonChecked -> 0x208a400
+[Te4c0] [API]   [14] SetScrollInfo -> 0x20a8300
+[Te4c0] [API]   [15] UpdateWindow -> 0x2044de0
+[Te4c0] [API]   [16] ScrollWindowEx -> 0x200dd10
+[Te4c0] [API]   [17] SetDlgItemInt -> 0x20b8190
+[Te4c0] [API]   [18] GetMenuState -> 0x200e2b0
+[Te4c0] [API]   [19] RemoveMenu -> 0x2098ae0
+[Te4c0] [API]   [20] GetMenuItemID -> 0x2095c50
+[Te4c0] [API]   [21] GetMenuDefaultItem -> 0x200dd20
+[Te4c0] [API]   [22] EnableMenuItem -> 0x205dfc0
+[Te4c0] [API]   [23] AdjustWindowRect -> 0x209ede0
+[Te4c0] [API]   [24] GetSysColorBrush -> 0x202c0a0
+[Te4c0] [API]   [25] OffsetRect -> 0x209f130
+[Te4c0] [API]   [26] InvalidateRgn -> 0x206a0d0
+[Te4c0] [API]   [27] MessageBeep -> 0x207fa20
+[Te4c0] [API]   [28] SetCursorPos -> 0x20609a0
+[Te4c0] [API]   [29] GetDlgItemInt -> 0x2094d10
+[Te4c0] [API]   [30] GetDlgCtrlID -> 0x2088a00
+[Te4c0] [API]   [31] SendDlgItemMessageW -> 0x20beec0
+[Te4c0] [API]   [32] GetDesktopWindow -> 0x206db80
+[Te4c0] [API]   [33] ValidateRect -> 0x200cfe0
+[Te4c0] [API]   [34] CharLowerW -> 0x20236d0
+[Te4c0] [API]   [35] CharUpperW -> 0x20233e0
+[Te4c0] [API]   [36] CreateIconIndirect -> 0x202f4f0
+[Te4c0] [API]   [37] UnregisterHotKey -> 0x207f1a0
+[Te4c0] [API]   [38] PostQuitMessage -> 0x205bf20
+[Te4c0] [API]   [39] IsClipboardFormatAvailable -> 0x200c160
+[Te4c0] [API]   [40] OpenIcon -> 0x204b850
+[Te4c0] [API]   [41] GetForegroundWindow -> 0x200d9e0
+[Te4c0] [API]   [42] AttachThreadInput -> 0x2062130
+[Te4c0] [API]   [43] SetActiveWindow -> 0x202e770
+[Te4c0] [API]   [44] BringWindowToTop -> 0x207f8c0
+[Te4c0] [API]   [45] EnumChildWindows -> 0x200e120
+[Te4c0] [API]   [46] CheckDlgButton -> 0x20948c0
+[Te4c0] [API]   [47] GetMenuItemInfoW -> 0x20b9b40
+[Te4c0] [API]   [48] GetKeyboardLayoutList -> 0x204fc10
+[Te4c0] [API]   [49] LoadCursorW -> 0x207f320
+[Te4c0] [API]   [50] GetScrollInfo -> 0x202d9e0
+[Te4c0] [API]   [51] InvalidateRect -> 0x2069f60
+[Te4c0] [API]   [52] ClientToScreen -> 0x207f210
+[Te4c0] [API]   [53] ScreenToClient -> 0x207f220
+[Te4c0] [API]   [54] ShowWindow -> 0x2082020
+[Te4c0] [API]   [55] IsIconic -> 0x207f540
+[Te4c0] [API]   [56] GetWindowPlacement -> 0x2036e00
+[Te4c0] [API]   [57] IsZoomed -> 0x207f550
+[Te4c0] [API]   [58] GetWindowTextLengthW -> 0x208d410
+[Te4c0] [API]   [59] GetWindowTextW -> 0x2094aa0
+[Te4c0] [API]   [60] GetParent -> 0x2093ef0
+[Te4c0] [API]   [61] CopyRect -> 0x206c2a0
+[Te4c0] [API]   [62] EmptyClipboard -> 0x2067b80
+[Te4c0] [API]   [63] SetClipboardData -> 0x2028880
+[Te4c0] [API]   [64] GetWindowLongPtrW -> 0x2088370
+[Te4c0] [API]   [65] SetWindowLongPtrW -> 0x202d370
+[Te4c0] [API]   [66] SetFocus -> 0x205d9c0
+[Te4c0] [API]   [67] PtInRect -> 0x209f8f0
+[Te4c0] [API]   [68] FindWindowW -> 0x206dfc0
+[Te4c0] [API]   [69] InsertMenuW -> 0x209a950
+[Te4c0] [API]   [70] SetDlgItemTextW -> 0x20b8160
+[Te4c0] [API]   [71] SetForegroundWindow -> 0x207f7f0
+[Te4c0] [API]   [72] BeginPaint -> 0x209e770
+[Te4c0] [API]   [73] EndPaint -> 0x207a850
+[Te4c0] [API]   [74] OpenClipboard -> 0x205b1c0
+[Te4c0] [API]   [75] GetClipboardData -> 0x2028a10
+[Te4c0] [API]   [76] CloseClipboard -> 0x20478e0
+[Te4c0] [API]   [77] FillRect -> 0x20a2f00
+[Te4c0] [API]   [78] CreateWindowExW -> 0x20c74a0
+[Te4c0] [API]   [79] GetClassInfoExW -> 0x20b6120
+[Te4c0] [API]   [80] RegisterClassExW -> 0x209fde0
+[Te4c0] [API]   [81] GetAsyncKeyState -> 0x207f720
+[Te4c0] [API]   [82] GetClientRect -> 0x205c090
+[Te4c0] [API]   [83] GetCapture -> 0x202ea30
+[Te4c0] [API]   [84] GetLastActivePopup -> 0x200f120
+[Te4c0] [API]   [85] ReleaseCapture -> 0x206d8b0
+[Te4c0] [API]   [86] IsWindowEnabled -> 0x20889b0
+[Te4c0] [API]   [87] GetFocus -> 0x202e8e0
+[Te4c0] [API]   [88] GetNextDlgTabItem -> 0x200f130
+[Te4c0] [API]   [89] EnableWindow -> 0x2093270
+[Te4c0] [API]   [90] SetWindowPos -> 0x205f100
+[Te4c0] [API]   [91] SetWindowTextW -> 0x20b7d80
+[Te4c0] [API]   [92] SetWindowLongW -> 0x202d540
+[Te4c0] [API]   [93] MessageBoxW -> 0x20a9f80
+[Te4c0] [API]   [94] DialogBoxIndirectParamW -> 0x20b4a40
+[Te4c0] [API]   [95] DrawTextW -> 0x20b6bd0
+[Te4c0] [API]   [96] GetMenuItemCount -> 0x20898f0
+[Te4c0] [API]   [97] CreatePopupMenu -> 0x2034180
+[Te4c0] [API]   [98] AppendMenuW -> 0x20b65a0
+[Te4c0] [API]   [99] DeleteMenu -> 0x2099990
+[Te4c0] [API]   [100] SetMenuItemInfoW -> 0x2098290
+[Te4c0] [API]   [101] GetWindowLongW -> 0x20885d0
+[Te4c0] [API]   [102] AdjustWindowRectEx -> 0x209eca0
+[Te4c0] [API]   [103] CallWindowProcW -> 0x2080e20
+[Te4c0] [API]   [104] GetDlgItem -> 0x203bae0
+[Te4c0] [API]   [105] GetWindowRect -> 0x202c8f0
+[Te4c0] [API]   [106] MapWindowPoints -> 0x205e790
+[Te4c0] [API]   [107] IntersectRect -> 0x20b20d0
+[Te4c0] [API]   [108] GetMonitorInfoW -> 0x20aa9b0
+[Te4c0] [API]   [109] SystemParametersInfoW -> 0x2047cc0
+[Te4c0] [API]   [110] GetDC -> 0x200cfc0
+[Te4c0] [API]   [111] ReleaseDC -> 0x200cfd0
+[Te4c0] [API]   [112] SetWindowsHookExW -> 0x204e3b0
+[Te4c0] [API]   [113] PeekMessageW -> 0x20bbfd0
+[Te4c0] [API]   [114] WaitMessage -> 0x207ff00
+[Te4c0] [API]   [115] SetMenu -> 0x205db20
+[Te4c0] [API]   [116] RegisterClipboardFormatW -> 0x202bef0
+[Te4c0] [API]   [117] RedrawWindow -> 0x206a0f0
+[Te4c0] [API]   [118] GetMessagePos -> 0x207fca0
+[Te4c0] [API]   [119] RegisterWindowMessageA -> 0x202d1c0
+[Te4c0] [API]   [120] ReplyMessage -> 0x207f8e0
+[Te4c0] [API]   [121] GetCursorPos -> 0x206adc0
+[Te4c0] [API]   [122] CreateMenu -> 0x20893f0
+[Te4c0] [API]   [123] SetMenuDefaultItem -> 0x206e540
+[Te4c0] [API]   [124] TrackPopupMenu -> 0x205e310
+[Te4c0] [API]   [125] DestroyMenu -> 0x2095820
+[Te4c0] [API]   [126] KillTimer -> 0x200d040
+[Te4c0] [API]   [127] GetDoubleClickTime -> 0x200dd70
+[Te4c0] [API]   [128] GetKeyState -> 0x200dd30
+[Te4c0] [API]   [129] RegisterHotKey -> 0x200f1e0
+[Te4c0] [API]   [130] PostThreadMessageW -> 0x2086fc0
+[Te4c0] [API]   [131] GetSysColor -> 0x2029b20
+[Te4c0] [API]   [132] EndDialog -> 0x205c880
+[Te4c0] [API]   [133] PostMessageW -> 0x205d250
+[Te4c0] [API]   [134] DestroyIcon -> 0x207f840
+[Te4c0] [API]   [135] SetTimer -> 0x20867f0
+[Te4c0] [API]   [136] DestroyWindow -> 0x2098730
+[Te4c0] [API]   [137] DefWindowProcW -> 0x200cdd0
+[Te4c0] [API]   [138] SendMessageTimeoutW -> 0x20bef10
+[Te4c0] [API]   [139] GetWindowThreadProcessId -> 0x200dce0
+[Te4c0] [API]   [140] IsWindow -> 0x208d670
+[Te4c0] [API]   [141] GetKeyNameTextW -> 0x200e330
+[Te4c0] [API]   [142] MapVirtualKeyExW -> 0x2010570
+[Te4c0] [API]   [143] GetKeyboardLayout -> 0x200dd40
+[Te4c0] [API]   [144] UnhookWindowsHookEx -> 0x2049f30
+[Te4c0] [API]   [145] CallNextHookEx -> 0x200e230
+[Te4c0] [API]   [146] GetClassNameW -> 0x205fa70
+[Te4c0] [API]   [147] SendMessageW -> 0x20be4e0
+[Te4c0] [API]   [148] GetMessageW -> 0x20bbd90
+[Te4c0] [API]   [149] TranslateMessage -> 0x2029990
+[Te4c0] [API]   [150] DispatchMessageW -> 0x20b9380
+[Te4c0] [API]   [151] GetSystemMetrics -> 0x200bb40
+[Te4c0] [API]   [152] LoadImageW -> 0x2084650
+[Te4c0] [API]   [153] CreateDialogIndirectParamW -> 0x20b51f0
+[Te4c0] [API] Import DLL: GDI32.dll (IAT RVA=0x1b0110, ILT RVA=0x1f8f98)
+[Te4c0] [API]   [0] GetDeviceCaps -> 0x202ad10
+[Te4c0] [API]   [1] GetDIBits -> 0x200dc90
+[Te4c0] [API]   [2] SelectClipRgn -> 0x2095030
+[Te4c0] [API]   [3] TextOutW -> 0x20b30e0
+[Te4c0] [API]   [4] SetStretchBltMode -> 0x200cfa0
+[Te4c0] [API]   [5] SetTextAlign -> 0x2029c90
+[Te4c0] [API]   [6] CreateCompatibleBitmap -> 0x20a1190
+[Te4c0] [API]   [7] OffsetClipRgn -> 0x207ece0
+[Te4c0] [API]   [8] OffsetRgn -> 0x2097fc0
+[Te4c0] [API]   [9] CombineRgn -> 0x20a03e0
+[Te4c0] [API]   [10] GetDCOrgEx -> 0x200e8d0
+[Te4c0] [API]   [11] GetRandomRgn -> 0x20622b0
+[Te4c0] [API]   [12] EnumFontFamiliesExW -> 0x20728c0
+[Te4c0] [API]   [13] GetTextAlign -> 0x200d590
+[Te4c0] [API]   [14] CreateCompatibleDC -> 0x2036020
+[Te4c0] [API]   [15] BitBlt -> 0x20b8670
+[Te4c0] [API]   [16] StretchDIBits -> 0x2051720
+[Te4c0] [API]   [17] GetRegionData -> 0x204bd20
+[Te4c0] [API]   [18] ExtCreateRegion -> 0x209a6b0
+[Te4c0] [API]   [19] GetObjectW -> 0x203a910
+[Te4c0] [API]   [20] CreateFontIndirectW -> 0x20afee0
+[Te4c0] [API]   [21] GetStockObject -> 0x202a460
+[Te4c0] [API]   [22] GetNearestColor -> 0x200f7a0
+[Te4c0] [API]   [23] CreateSolidBrush -> 0x202a060
+[Te4c0] [API]   [24] CreateRectRgn -> 0x2097ae0
+[Te4c0] [API]   [25] CreateDIBSection -> 0x203e590
+[Te4c0] [API]   [26] GetCurrentObject -> 0x202a5b0
+[Te4c0] [API]   [27] ExcludeClipRect -> 0x200dfb0
+[Te4c0] [API]   [28] RectVisible -> 0x207f2c0
+[Te4c0] [API]   [29] GetTextExtentExPointW -> 0x200fa20
+[Te4c0] [API]   [30] GetTextExtentPoint32W -> 0x20a31f0
+[Te4c0] [API]   [31] DeleteDC -> 0x202af50
+[Te4c0] [API]   [32] SetBkMode -> 0x205c5b0
+[Te4c0] [API]   [33] CreateBitmapIndirect -> 0x204ab30
+[Te4c0] [API]   [34] CreatePatternBrush -> 0x200dee0
+[Te4c0] [API]   [35] SetBrushOrgEx -> 0x200df50
+[Te4c0] [API]   [36] SetBkColor -> 0x202ab90
+[Te4c0] [API]   [37] SetTextColor -> 0x202aa10
+[Te4c0] [API]   [38] PatBlt -> 0x20b7660
+[Te4c0] [API]   [39] SelectObject -> 0x202a5c0
+[Te4c0] [API]   [40] GetTextMetricsW -> 0x206bd90
+[Te4c0] [API]   [41] StretchBlt -> 0x20b9ec0
+[Te4c0] [API]   [42] DeleteObject -> 0x200d5a0
+[Te4c0] [API] Import DLL: comdlg32.dll (IAT RVA=0x1b0d60, ILT RVA=0x1f9be8)
+[Te4c0] [API]   [0] GetOpenFileNameW -> 0x2067e60
+[Te4c0] [API]   [1] GetSaveFileNameW -> 0x2068120
+[Te4c0] [API]   [2] ChooseColorW -> 0x20683e0
+[Te4c0] [API]   [3] CommDlgExtendedError -> 0x207fc90
+[Te4c0] [API] Import DLL: ADVAPI32.dll (IAT RVA=0x1b0000, ILT RVA=0x1f8e88)
+[Te4c0] [API]   [0] RegisterServiceCtrlHandlerW -> 0x2010660
+[Te4c0] [API]   [1] StartServiceCtrlDispatcherW -> 0x204f180
+[Te4c0] [API]   [2] DeleteService -> 0x207f8f0
+[Te4c0] [API]   [3] CloseServiceHandle -> 0x205e4b0
+[Te4c0] [API]   [4] RegOpenKeyA -> 0x20a3d40
+[Te4c0] [API]   [5] RegQueryValueW -> 0x208c300
+[Te4c0] [API]   [6] InitializeSecurityDescriptor -> 0x20642f0
+[Te4c0] [API]   [7] SetSecurityDescriptorDacl -> 0x202dff0
+[Te4c0] [API]   [8] QueryServiceConfigW -> 0x2064fd0
+[Te4c0] [API]   [9] RegDeleteValueW -> 0x208c750
+[Te4c0] [API]   [10] RegSetValueExW -> 0x208cc50
+[Te4c0] [API]   [11] RegQueryValueExW -> 0x208c250
+[Te4c0] [API]   [12] RegCreateKeyExW -> 0x2092010
+[Te4c0] [API]   [13] RegOpenKeyExW -> 0x2091c00
+[Te4c0] [API]   [14] RegEnumKeyW -> 0x209d360
+[Te4c0] [API]   [15] RegCloseKey -> 0x200c140
+[Te4c0] [API]   [16] RegDeleteKeyW -> 0x2092780
+[Te4c0] [API]   [17] GetUserNameW -> 0x209c360
+[Te4c0] [API]   [18] QueryServiceStatusEx -> 0x2064dc0
+[Te4c0] [API]   [19] RegisterEventSourceW -> 0x20318d0
+[Te4c0] [API]   [20] ReportEventW -> 0x2062420
+[Te4c0] [API]   [21] DeregisterEventSource -> 0x20625a0
+[Te4c0] [API]   [22] CreateServiceW -> 0x20483c0
+[Te4c0] [API]   [23] StartServiceW -> 0x204b080
+[Te4c0] [API]   [24] OpenSCManagerW -> 0x204eb50
+[Te4c0] [API]   [25] OpenServiceW -> 0x2030a60
+[Te4c0] [API]   [26] ControlService -> 0x2064ea0
+[Te4c0] [API]   [27] SetServiceStatus -> 0x20619d0
+[Te4c0] [API] Import DLL: SHELL32.dll (IAT RVA=0x1b0740, ILT RVA=0x1f95c8)
+[Te4c0] [API]   [0] DragFinish -> 0x207f5d0
+[Te4c0] [API]   [1] DragAcceptFiles -> 0x2062730
+[Te4c0] [API]   [2] Shell_NotifyIconW -> 0x205e620
+[Te4c0] [API]   [3] SHBrowseForFolderW -> 0x2068ee0
+[Te4c0] [API]   [4] SHGetFileInfoW -> 0x20691a0
+[Te4c0] [API]   [5] DragQueryFileW -> 0x200e0d0
+[Te4c0] [API]   [6] SHGetSpecialFolderLocation -> 0x200e090
+[Te4c0] [API]   [7] Ordinal 16 -> ILFindLastID (fixed ordinal)
+[Te4c0] [API]   [7] ILFindLastID -> 0x2031bd0
+[Te4c0] [API]   [8] SHFileOperationW -> 0x206ed90
+[Te4c0] [API]   [9] ShellExecuteExW -> 0x20aa6a0
+[Te4c0] [API]   [10] SHGetDesktopFolder -> 0x203a140
+[Te4c0] [API]   [11] SHGetPathFromIDListW -> 0x200e0b0
+[Te4c0] [API]   [12] SHChangeNotify -> 0x200e080
+[Te4c0] [API]   [13] DragQueryPoint -> 0x2031a50
+[Te4c0] [API] Import DLL: ole32.dll (IAT RVA=0x1b0d88, ILT RVA=0x1f9c10)
+[Te4c0] [API]   [0] CoTaskMemFree -> 0x20393b0
+[Te4c0] [API]   [1] OleUninitialize -> 0x206ab00
+[Te4c0] [API]   [2] OleInitialize -> 0x206a840
+[Te4c0] [API]   [3] CoCreateInstance -> 0x205e910
+[Te4c0] [API]   [4] CoInitializeEx -> 0x205c9f0
+[Te4c0] [API]   [5] CoUninitialize -> 0x206a9a0
+[Te4c0] [API]   [6] CLSIDFromString -> 0x2024210
+[Te4c0] [API]   [7] CreateStreamOnHGlobal -> 0x200ed10
+[Te4c0] [API]   [8] CoTaskMemAlloc -> 0x2039ac0
+[Te4c0] [API]   [9] RevokeDragDrop -> 0x207f680
+[Te4c0] [API]   [10] DoDragDrop -> 0x200edd0
+[Te4c0] [API]   [11] RegisterDragDrop -> 0x200e0c0
+[Te4c0] [API]   [12] ReleaseStgMedium -> 0x207fe10
+[Te4c0] [API] Import resolution: 437 resolved, 0 unresolved (total 437)
+[Te4c0] [API] Exception: .pdata RVA=0x210000 Size=0xca44 Entries=4315
+[Te4c0] [API] [API-005] EH hacks DISABLED (default) (MINWIN_EH_HACKS=<unset>)
+[Te4c0] [API] [API-005] CXX-EH-FIX (LSDA catch-all patch RVA 0x2010c8) skipped: MINWIN_EH_HACKS not set
+[Te4c0] [API] Jumping to EP=0x1401a9df0
+[Te4c0] [API] GetSystemTimeAsFileTime()
+[Te4c0] [API] GetTickCount() = 4463377
+[Te4c0] [API] QueryPerformanceCounter()
+[Te4c0] [API] GetStartupInfoA(info=0x7ffd02a8cb00)
+[Te4c0] [API] HeapAlloc(size=0x94, zero=0) = 0x33d3650
+[Te4c0] [API] HeapFree(0x33d3650)
+[Te4c0] [API] GetModuleHandleA(name=KERNEL32.DLL)
+[Te4c0] [API] GetProcAddress(module=0xdead0001, name=EncodePointer)
+[Te4c0] [API]   -> 0x2019420
+[Te4c0] [API] GetModuleHandleA(name=KERNEL32.DLL)
+[Te4c0] [API] GetProcAddress(module=0xdead0001, name=EncodePointer)
+[Te4c0] [API]   -> 0x2019420
+[Te4c0] [API] GetModuleHandleA(name=KERNEL32.DLL)
+[Te4c0] [API] GetProcAddress(module=0xdead0001, name=EncodePointer)
+[Te4c0] [API]   -> 0x2019420
+[Te4c0] [API] GetModuleHandleA(name=KERNEL32.DLL)
+[Te4c0] [API] GetProcAddress(module=0xdead0001, name=DecodePointer)
+[Te4c0] [API]   -> 0x200be10
+[Te4c0] [API] GetModuleHandleA(name=kernel32.dll)
+[Te4c0] [API] GetProcAddress(module=0xdead0001, name=InitializeCriticalSectionAndSpinCount)
+[Te4c0] [API]   -> 0x2082820
+[Te4c0] [API] GetModuleHandleA(name=KERNEL32.DLL)
+[Te4c0] [API] GetProcAddress(module=0xdead0001, name=EncodePointer)
+[Te4c0] [API]   -> 0x2019420
+[Te4c0] [API] InitializeCriticalSection(0x14020f010)
+[Te4c0] [API] GetModuleHandleA(name=KERNEL32.DLL)
+[Te4c0] [API] GetProcAddress(module=0xdead0001, name=DecodePointer)
+[Te4c0] [API]   -> 0x200be10
+[Te4c0] [API] InitializeCriticalSection(0x14020f038)
+[Te4c0] [API] GetModuleHandleA(name=KERNEL32.DLL)
+[Te4c0] [API] GetProcAddress(module=0xdead0001, name=DecodePointer)
+[Te4c0] [API]   -> 0x200be10
+[Te4c0] [API] InitializeCriticalSection(0x14020f060)
+[Te4c0] [API] GetModuleHandleA(name=KERNEL32.DLL)
+[Te4c0] [API] GetProcAddress(module=0xdead0001, name=DecodePointer)
+[Te4c0] [API]   -> 0x200be10
+[Te4c0] [API] InitializeCriticalSection(0x14020f088)
+[Te4c0] [API] GetModuleHandleA(name=KERNEL32.DLL)
+[Te4c0] [API] GetProcAddress(module=0xdead0001, name=DecodePointer)
+[Te4c0] [API]   -> 0x200be10
+[Te4c0] [API] InitializeCriticalSection(0x14020f0b0)
+[Te4c0] [API] GetModuleHandleA(name=KERNEL32.DLL)
+[Te4c0] [API] GetProcAddress(module=0xdead0001, name=DecodePointer)
+[Te4c0] [API]   -> 0x200be10
+[Te4c0] [API] InitializeCriticalSection(0x14020f0d8)
+[Te4c0] [API] GetModuleHandleA(name=KERNEL32.DLL)
+[Te4c0] [API] GetProcAddress(module=0xdead0001, name=DecodePointer)
+[Te4c0] [API]   -> 0x200be10
+[Te4c0] [API] InitializeCriticalSection(0x14020f100)
+[Te4c0] [API] GetModuleHandleA(name=KERNEL32.DLL)
+[Te4c0] [API] GetProcAddress(module=0xdead0001, name=DecodePointer)
+[Te4c0] [API]   -> 0x200be10
+[Te4c0] [API] InitializeCriticalSection(0x14020f128)
+[Te4c0] [API] GetModuleHandleA(name=KERNEL32.DLL)
+[Te4c0] [API] GetProcAddress(module=0xdead0001, name=DecodePointer)
+[Te4c0] [API]   -> 0x200be10
+[Te4c0] [API] InitializeCriticalSection(0x14020f150)
+[Te4c0] [API] GetModuleHandleA(name=KERNEL32.DLL)
+[Te4c0] [API] GetProcAddress(module=0xdead0001, name=DecodePointer)
+[Te4c0] [API]   -> 0x200be10
+[Te4c0] [API] InitializeCriticalSection(0x14020f178)
+[Te4c0] [API] GetModuleHandleA(name=KERNEL32.DLL)
+[Te4c0] [API] GetProcAddress(module=0xdead0001, name=DecodePointer)
+[Te4c0] [API]   -> 0x200be10
+[Te4c0] [API] InitializeCriticalSection(0x14020f1a0)
+[Te4c0] [API] GetModuleHandleA(name=KERNEL32.DLL)
+[Te4c0] [API] GetProcAddress(module=0xdead0001, name=DecodePointer)
+[Te4c0] [API]   -> 0x200be10
+[Te4c0] [API] InitializeCriticalSection(0x14020f1c8)
+[Te4c0] [API] GetModuleHandleA(name=KERNEL32.DLL)
+[Te4c0] [API] GetProcAddress(module=0xdead0001, name=DecodePointer)
+[Te4c0] [API]   -> 0x200be10
+[Te4c0] [API] InitializeCriticalSection(0x14020f1f0)
+[Te4c0] [API] GetModuleHandleA(name=KERNEL32.DLL)
+[Te4c0] [API] GetProcAddress(module=0xdead0001, name=DecodePointer)
+[Te4c0] [API]   -> 0x200be10
+[Te4c0] [API] InitializeCriticalSection(0x14020f218)
+[Te4c0] [API] FlsAlloc(cb=0x1401aa4e0) = 0
+[Te4c0] [API] HeapAlloc(size=0x2d8, zero=1) = 0x33d3720
+[Te4c0] [API] GetModuleHandleA(name=KERNEL32.DLL)
+[Te4c0] [API] GetProcAddress(module=0xdead0001, name=EncodePointer)
+[Te4c0] [API]   -> 0x2019420
+[Te4c0] [API] GetProcAddress(module=0xdead0001, name=DecodePointer)
+[Te4c0] [API]   -> 0x200be10
+[Te4c0] [API] EnterCriticalSection(0x14020f150)
+[Te4c0] [API] LeaveCriticalSection(0x14020f150)
+[Te4c0] [API] GetStartupInfoA(info=0x7ffd02a8ca40)
+[Te4c0] [API] HeapAlloc(size=0xa00, zero=1) = 0x33d3a00
+[Te4c0] [API] GetStdHandle(-10) = 0x4
+[Te4c0] [API] InitializeCriticalSection(0x33d3a10)
+[Te4c0] [API] GetStdHandle(-11) = 0x5
+[Te4c0] [API] InitializeCriticalSection(0x33d3a60)
+[Te4c0] [API] GetStdHandle(-12) = 0x6
+[Te4c0] [API] InitializeCriticalSection(0x33d3ab0)
+[Te4c0] [API] SetHandleCount(32) -> 32
+[Te4c0] [API] GetCommandLineA() = "everything.exe"
+[Te4c0] [API] GetEnvironmentStringsW()
+[Te4c0] [API] WideCharToMultiByte(cp=0, srclen=2213, dstlen=0)
+[Te4c0] [API] HeapAlloc(size=0x8a5, zero=0) = 0x33d4410
+[Te4c0] [API] WideCharToMultiByte(cp=0, srclen=2213, dstlen=2213)
+[Te4c0] [API] FreeEnvironmentStringsW()
+[Te4c0] [API] GetLastError() = 0
+[Te4c0] [API] SetLastError(0)
+[Te4c0] [API] GetLastError() = 0
+[Te4c0] [API] SetLastError(0)
+[Te4c0] [API] EnterCriticalSection(0x14020f178)
+[Te4c0] [API] LeaveCriticalSection(0x14020f178)
+[Te4c0] [API] GetLastError() = 0
+[Te4c0] [API] SetLastError(0)
+[Te4c0] [API] HeapAlloc(size=0x220, zero=0) = 0x33d4cc0
+[Te4c0] [API] GetLastError() = 0
+[Te4c0] [API] SetLastError(0)
+[Te4c0] [API] GetCPInfo(cp=1252)
+[Te4c0] [API] GetCPInfo(cp=1252)
+[Te4c0] [API] GetLastError() = 0
+[Te4c0] [API] SetLastError(0)
+[Te4c0] [API] MultiByteToWideChar(cp=1252, srclen=256, dstlen=0)
+[Te4c0] [API] MultiByteToWideChar(cp=1252, srclen=256, dstlen=256)
+[Te4c0] [API] GetLastError() = 0
+[Te4c0] [API] SetLastError(0)
+[Te4c0] [API] MultiByteToWideChar(cp=1252, srclen=256, dstlen=0)
+[Te4c0] [API] MultiByteToWideChar(cp=1252, srclen=256, dstlen=256)
+[Te4c0] [API] WideCharToMultiByte(cp=1252, srclen=256, dstlen=256)
+[Te4c0] [API] GetLastError() = 0
+[Te4c0] [API] SetLastError(0)
+[Te4c0] [API] MultiByteToWideChar(cp=1252, srclen=256, dstlen=0)
+[Te4c0] [API] MultiByteToWideChar(cp=1252, srclen=256, dstlen=256)
+[Te4c0] [API] WideCharToMultiByte(cp=1252, srclen=256, dstlen=256)
+[Te4c0] [API] EnterCriticalSection(0x14020f178)
+[Te4c0] [API] LeaveCriticalSection(0x14020f178)
+[Te4c0] [API] GetModuleFileNameA(cap=260)
+[Te4c0] [API] GetLastError() = 0
+[Te4c0] [API] SetLastError(0)
+[Te4c0] [API] GetLastError() = 0
+[Te4c0] [API] SetLastError(0)
+[Te4c0] [API] GetLastError() = 0
+[Te4c0] [API] SetLastError(0)
+[Te4c0] [API] GetLastError() = 0
+[Te4c0] [API] SetLastError(0)
+[Te4c0] [API] GetLastError() = 0
+[Te4c0] [API] SetLastError(0)
+[Te4c0] [API] GetLastError() = 0
+[Te4c0] [API] SetLastError(0)
+[Te4c0] [API] GetLastError() = 0
+[Te4c0] [API] SetLastError(0)
+[Te4c0] [API] GetLastError() = 0
+[Te4c0] [API] SetLastError(0)
+[Te4c0] [API] GetLastError() = 0
+[Te4c0] [API] SetLastError(0)
+[Te4c0] [API] GetLastError() = 0
+[Te4c0] [API] SetLastError(0)
+[Te4c0] [API] GetLastError() = 0
+[Te4c0] [API] SetLastError(0)
+[Te4c0] [API] GetLastError() = 0
+[Te4c0] [API] SetLastError(0)
+[Te4c0] [API] GetLastError() = 0
+[Te4c0] [API] SetLastError(0)
+[Te4c0] [API] GetLastError() = 0
+[Te4c0] [API] SetLastError(0)
+[Te4c0] [API] GetLastError() = 0
+[Te4c0] [API] SetLastError(0)
+[Te4c0] [API] HeapAlloc(size=0x1f, zero=0) = 0x33d36f0
+[Te4c0] [API] GetLastError() = 0
+[Te4c0] [API] SetLastError(0)
+[Te4c0] [API] GetLastError() = 0
+[Te4c0] [API] SetLastError(0)
+[Te4c0] [API] GetLastError() = 0
+[Te4c0] [API] SetLastError(0)
+[Te4c0] [API] GetLastError() = 0
+[Te4c0] [API] SetLastError(0)
+[Te4c0] [API] GetLastError() = 0
+[Te4c0] [API] SetLastError(0)
+[Te4c0] [API] GetLastError() = 0
+[Te4c0] [API] SetLastError(0)
+[Te4c0] [API] GetLastError() = 0
+[Te4c0] [API] SetLastError(0)
+[Te4c0] [API] GetLastError() = 0
+[Te4c0] [API] SetLastError(0)
+[Te4c0] [API] GetLastError() = 0
+[Te4c0] [API] SetLastError(0)
+[Te4c0] [API] GetLastError() = 0
+[Te4c0] [API] SetLastError(0)
+[Te4c0] [API] GetLastError() = 0
+[Te4c0] [API] SetLastError(0)
+[Te4c0] [API] GetLastError() = 0
+[Te4c0] [API] SetLastError(0)
+[Te4c0] [API] GetLastError() = 0
+[Te4c0] [API] SetLastError(0)
+[Te4c0] [API] GetLastError() = 0
+[Te4c0] [API] SetLastError(0)
+[Te4c0] [API] GetLastError() = 0
+[Te4c0] [API] SetLastError(0)
+[Te4c0] [API] HeapAlloc(size=0x250, zero=1) = 0x33d4ef0
+[Te4c0] [API] HeapAlloc(size=0x1f, zero=1) = 0x33d3620
+[Te4c0] [API] HeapAlloc(size=0x29, zero=1) = 0x33d5150
+[Te4c0] [API] HeapAlloc(size=0x31, zero=1) = 0x33d5190
+[Te4c0] [API] HeapAlloc(size=0x3c, zero=1) = 0x33d51d0
+[Te4c0] [API] HeapAlloc(size=0x31, zero=1) = 0x33d5220
+[Te4c0] [API] HeapAlloc(size=0x15, zero=1) = 0x33d5260
+[Te4c0] [API] HeapAlloc(size=0x24, zero=1) = 0x33d5280
+[Te4c0] [API] HeapAlloc(size=0x32, zero=1) = 0x33d52b0
+[Te4c0] [API] HeapAlloc(size=0x2c, zero=1) = 0x33d52f0
+[Te4c0] [API] HeapAlloc(size=0xe, zero=1) = 0x33d5330
+[Te4c0] [API] HeapAlloc(size=0x69, zero=1) = 0x33d3090
+[Te4c0] [API] HeapAlloc(size=0x3e, zero=1) = 0x33d5350
+[Te4c0] [API] HeapAlloc(size=0x1d, zero=1) = 0x33d53a0
+[Te4c0] [API] HeapAlloc(size=0x1b, zero=1) = 0x33d53d0
+[Te4c0] [API] HeapAlloc(size=0x1e, zero=1) = 0x33d5400
+[Te4c0] [API] HeapAlloc(size=0x29, zero=1) = 0x33d5430
+[Te4c0] [API] HeapAlloc(size=0x1e, zero=1) = 0x33d5470
+[Te4c0] [API] HeapAlloc(size=0xc, zero=1) = 0x33d54a0
+[Te4c0] [API] HeapAlloc(size=0x17, zero=1) = 0x33d54c0
+[Te4c0] [API] HeapAlloc(size=0x14, zero=1) = 0x33d54e0
+[Te4c0] [API] HeapAlloc(size=0xf, zero=1) = 0x33d5500
+[Te4c0] [API] HeapAlloc(size=0x16, zero=1) = 0x33d5520
+[Te4c0] [API] HeapAlloc(size=0x29, zero=1) = 0x33d5540
+[Te4c0] [API] HeapAlloc(size=0x28, zero=1) = 0x33d5580
+[Te4c0] [API] HeapAlloc(size=0x13, zero=1) = 0x33d55b0
+[Te4c0] [API] HeapAlloc(size=0x11, zero=1) = 0x33d55d0
+[Te4c0] [API] HeapAlloc(size=0x1d, zero=1) = 0x33d55f0
+[Te4c0] [API] HeapAlloc(size=0x12, zero=1) = 0x33d5620
+[Te4c0] [API] HeapAlloc(size=0x17, zero=1) = 0x33d5640
+[Te4c0] [API] HeapAlloc(size=0x47, zero=1) = 0x33d5660
+[Te4c0] [API] HeapAlloc(size=0x12, zero=1) = 0x33d56b0
+[Te4c0] [API] HeapAlloc(size=0x18, zero=1) = 0x33d56d0
+[Te4c0] [API] HeapAlloc(size=0x19, zero=1) = 0x33d56f0
+[Te4c0] [API] HeapAlloc(size=0x10, zero=1) = 0x33d5720
+[Te4c0] [API] HeapAlloc(size=0x10, zero=1) = 0x33d5740
+[Te4c0] [API] HeapAlloc(size=0x1b, zero=1) = 0x33d5760
+[Te4c0] [API] HeapAlloc(size=0x13, zero=1) = 0x33d5790
+[Te4c0] [API] HeapAlloc(size=0x32, zero=1) = 0x33d57b0
+[Te4c0] [API] HeapAlloc(size=0x19, zero=1) = 0x33d57f0
+[Te4c0] [API] HeapAlloc(size=0x14, zero=1) = 0x33d5820
+[Te4c0] [API] HeapAlloc(size=0x35, zero=1) = 0x33d5840
+[Te4c0] [API] HeapAlloc(size=0x3a, zero=1) = 0x33d5880
+[Te4c0] [API] HeapAlloc(size=0xa, zero=1) = 0x33d58d0
+[Te4c0] [API] HeapAlloc(size=0x16, zero=1) = 0x33d58f0
+[Te4c0] [API] HeapAlloc(size=0xf, zero=1) = 0x33d5910
+[Te4c0] [API] HeapAlloc(size=0x31, zero=1) = 0x33d5930
+[Te4c0] [API] HeapAlloc(size=0x39, zero=1) = 0x33d5970
+[Te4c0] [API] HeapAlloc(size=0xd, zero=1) = 0x33d59c0
+[Te4c0] [API] HeapAlloc(size=0x1d, zero=1) = 0x33d59e0
+[Te4c0] [API] HeapAlloc(size=0x1a, zero=1) = 0x33d5a10
+[Te4c0] [API] HeapAlloc(size=0x1c, zero=1) = 0x33d5a40
+[Te4c0] [API] HeapAlloc(size=0x24, zero=1) = 0x33d5a70
+[Te4c0] [API] HeapAlloc(size=0x1b, zero=1) = 0x33d5aa0
+[Te4c0] [API] HeapAlloc(size=0xb, zero=1) = 0x33d5ad0
+[Te4c0] [API] HeapAlloc(size=0x11, zero=1) = 0x33d5af0
+[Te4c0] [API] HeapAlloc(size=0x22, zero=1) = 0x33d5b10
+[Te4c0] [API] HeapAlloc(size=0xa, zero=1) = 0x33d5b40
+[Te4c0] [API] HeapAlloc(size=0x7, zero=1) = 0x33d5b60
+[Te4c0] [API] HeapAlloc(size=0x8, zero=1) = 0x33d5b80
+[Te4c0] [API] HeapAlloc(size=0x19, zero=1) = 0x33d5ba0
+[Te4c0] [API] HeapAlloc(size=0x1a, zero=1) = 0x33d5bd0
+[Te4c0] [API] HeapAlloc(size=0xb, zero=1) = 0x33d5c00
+[Te4c0] [API] HeapAlloc(size=0x1f, zero=1) = 0x33d5c20
+[Te4c0] [API] HeapAlloc(size=0x11, zero=1) = 0x33d5c50
+[Te4c0] [API] HeapAlloc(size=0x15, zero=1) = 0x33d5c70
+[Te4c0] [API] HeapAlloc(size=0x19, zero=1) = 0x33d5c90
+[Te4c0] [API] HeapAlloc(size=0x11, zero=1) = 0x33d5cc0
+[Te4c0] [API] HeapAlloc(size=0x1f, zero=1) = 0x33d5ce0
+[Te4c0] [API] HeapAlloc(size=0x1f, zero=1) = 0x33d5d10
+[Te4c0] [API] HeapAlloc(size=0x30, zero=1) = 0x33d5d40
+[Te4c0] [API] HeapAlloc(size=0x23, zero=1) = 0x33d5d80
+[Te4c0] [API] HeapAlloc(size=0x38, zero=1) = 0x33d5db0
+[Te4c0] [API] HeapAlloc(size=0x13, zero=1) = 0x33d5df0
+[Te4c0] [API] HeapFree(0x33d4410)
+[Te4c0] [API] HeapAlloc(size=0x100, zero=1) = 0x33d4410
+[Te4c0] [API] SetUnhandledExceptionFilter(handler=0x1401ac7f0)
+[Te4c0] [API] EnterCriticalSection(0x14020f100)
+[Te4c0] [API] LeaveCriticalSection(0x14020f100)
+[Te4c0] [API] GetLastError() = 0
+[Te4c0] [API] SetLastError(0)
+[Te4c0] [API] GetLastError() = 0
+[Te4c0] [API] SetLastError(0)
+[Te4c0] [API] GetLastError() = 0
+[Te4c0] [API] SetLastError(0)
+[Te4c0] [API] GetLastError() = 0
+[Te4c0] [API] SetLastError(0)
+[Te4c0] [API] GetLastError() = 0
+[Te4c0] [API] SetLastError(0)
+[Te4c0] [API] GetLastError() = 0
+[Te4c0] [API] SetLastError(0)
+[Te4c0] [API] GetLastError() = 0
+[Te4c0] [API] SetLastError(0)
+[Te4c0] [API] GetLastError() = 0
+[Te4c0] [API] SetLastError(0)
+[Te4c0] [API] GetLastError() = 0
+[Te4c0] [API] SetLastError(0)
+[Te4c0] [API] GetLastError() = 0
+[Te4c0] [API] SetLastError(0)
+[Te4c0] [API] GetLastError() = 0
+[Te4c0] [API] SetLastError(0)
+[Te4c0] [API] GetLastError() = 0
+[Te4c0] [API] SetLastError(0)
+[Te4c0] [API] GetLastError() = 0
+[Te4c0] [API] SetLastError(0)
+[Te4c0] [API] GetLastError() = 0
+[Te4c0] [API] SetLastError(0)
+[Te4c0] [API] InitializeCriticalSection(0x14020e0e8)
+[Te4c0] [API] InitializeCriticalSection(0x14020f3a0)
+[Te4c0] [API] GetSystemInfo()
+[Te4c0] [API] [GDI] GetDeviceCaps(88) -> 96
+[Te4c0] [API] [GDI] GetDeviceCaps(90) -> 96
+[Te4c0] [API] GetModuleHandleW()
+[Te4c0] [API] GetProcAddress(module=0xdead0001, name=FindFirstVolumeW)
+[Te4c0] [API]   -> 0x2047c30
+[Te4c0] [API] GetProcAddress(module=0xdead0001, name=FindNextVolumeW)
+[Te4c0] [API]   -> 0x2047c50
+[Te4c0] [API] GetProcAddress(module=0xdead0001, name=FindVolumeClose)
+[Te4c0] [API]   -> 0x207f7c0
+[Te4c0] [API] GetProcAddress(module=0xdead0001, name=GetVolumeNameForVolumeMountPointW)
+[Te4c0] [API]   -> NULL (not in dispatch table)
+[Te4c0] [API]   -> optional-stub fallback (not in dispatch table)
+[Te4c0] [API] GetProcAddress(module=0xdead0001, name=FindFirstVolumeMountPointW)
+[Te4c0] [API]   -> NULL (not in dispatch table)
+[Te4c0] [API]   -> optional-stub fallback (not in dispatch table)
+[Te4c0] [API] GetProcAddress(module=0xdead0001, name=FindNextVolumeMountPointW)
+[Te4c0] [API]   -> NULL (not in dispatch table)
+[Te4c0] [API]   -> optional-stub fallback (not in dispatch table)
+[Te4c0] [API] GetProcAddress(module=0xdead0001, name=FindVolumeMountPointClose)
+[Te4c0] [API]   -> NULL (not in dispatch table)
+[Te4c0] [API]   -> optional-stub fallback (not in dispatch table)
+[Te4c0] [API] GetProcAddress(module=0xdead0001, name=GetDiskFreeSpaceExW)
+[Te4c0] [API]   -> 0x209fa20
+[Te4c0] [API] GetProcAddress(module=0xdead0001, name=GetLongPathNameW)
+[Te4c0] [API]   -> 0x2014b70
+[Te4c0] [API] GetProcAddress(module=0xdead0001, name=GetVolumePathNamesForVolumeNameW)
+[Te4c0] [API]   -> NULL (not in dispatch table)
+[Te4c0] [API]   -> optional-stub fallback (not in dispatch table)
+[Te4c0] [API] GetProcAddress(module=0xdead0001, name=CancelIo)
+[Te4c0] [API]   -> 0x207f7b0
+[Te4c0] [API] GetProcAddress(module=0xdead0001, name=GetUserDefaultUILanguage)
+[Te4c0] [API]   -> 0x200e350
+[Te4c0] [API] GetProcAddress(module=0xdead0001, name=OpenThread)
+[Te4c0] [API]   -> 0x2048190
+[Te4c0] [API] GetProcAddress(module=0xdead0001, name=OpenFileById)
+[Te4c0] [API]   -> NULL (not in dispatch table)
+[Te4c0] [API]   -> optional-stub fallback (not in dispatch table)
+[Te4c0] [API] GetProcAddress(module=0xdead0001, name=GetFileInformationByHandleEx)
+[Te4c0] [API]   -> 0x205b060
+[Te4c0] [API] GetProcAddress(module=0xdead0001, name=TzSpecificLocalTimeToSystemTime)
+[Te4c0] [API]   -> 0x204d2a0
+[Te4c0] [API] GetProcAddress(module=0xdead0001, name=ReadDirectoryChangesW)
+[Te4c0] [API]   -> 0x200f100
+[Te4c0] [API] GetProcAddress(module=0xdead0001, name=GetFileInformationByHandleEx)
+[Te4c0] [API]   -> 0x205b060
+[Te4c0] [API] GetProcAddress(module=0xdead0001, name=GetNativeSystemInfo)
+[Te4c0] [API]   -> 0x2043290
+[Te4c0] [API] GetProcAddress(module=0xdead0001, name=IsDebuggerPresent)
+[Te4c0] [API]   -> 0x2065d00
+[Te4c0] [API] GetProcAddress(module=0xdead0001, name=SetDllDirectoryW)
+[Te4c0] [API]   -> 0x2025890
+[Te4c0] [API] GetProcAddress(module=0xdead0001, name=SetDefaultDllDirectories)
+[Te4c0] [API]   -> 0x205c710
+[Te4c0] [API] GetSystemInfo()
+[Te4c0] [API] SetDllDirectoryW(0x1401d02f8)
+[Te4c0] [API] SetDefaultDllDirectories(0xc00) -> TRUE
+[Te4c0] [API] LoadLibraryW(C:\Windows\System32\user32.dll)
+[Te4c0] [API] LoadLibraryA(C:\Windows\System32\user32.dll)
+[Te4c0] [API] GetProcAddress(module=0xdead0002, name=AllowSetForegroundWindow)
+[Te4c0] [API]   -> 0x207fa30
+[Te4c0] [API] GetProcAddress(module=0xdead0002, name=MonitorFromWindow)
+[Te4c0] [API]   -> 0x207f350
+[Te4c0] [API] GetProcAddress(module=0xdead0002, name=EnumDisplayMonitors)
+[Te4c0] [API]   -> 0x2037450
+[Te4c0] [API] GetProcAddress(module=0xdead0002, name=MonitorFromRect)
+[Te4c0] [API]   -> 0x2036af0
+[Te4c0] [API] GetProcAddress(module=0xdead0002, name=RegisterDeviceNotificationW)
+[Te4c0] [API]   -> 0x2011760
+[Te4c0] [API] GetProcAddress(module=0xdead0002, name=UnregisterDeviceNotification)
+[Te4c0] [API]   -> 0x207f9f0
+[Te4c0] [API] GetProcAddress(module=0xdead0002, name=NotifyWinEvent)
+[Te4c0] [API]   -> 0x2010540
+[Te4c0] [API] GetProcAddress(module=0xdead0002, name=ChangeWindowMessageFilterEx)
+[Te4c0] [API]   -> 0x200fcf0
+[Te4c0] [API] GetProcAddress(module=0xdead0002, name=SetLayeredWindowAttributes)
+[Te4c0] [API]   -> 0x200fa10
+[Te4c0] [API] LoadLibraryW(C:\Windows\System32\shell32.dll)
+[Te4c0] [API] LoadLibraryA(C:\Windows\System32\shell32.dll)
+[Te4c0] [API] GetProcAddress(module=0xdead0004, name=SHMultiFileProperties)
+[Te4c0] [API]   -> NULL (not in dispatch table)
+[Te4c0] [API]   -> optional-stub fallback (not in dispatch table)
+[Te4c0] [API] GetProcAddress(module=0xdead0004, ordinal=701)
+[Te4c0] [API] GetProcAddress(module=0xdead0004, name=SHBindToParent)
+[Te4c0] [API]   -> 0x200ea00
+[Te4c0] [API] GetProcAddress(module=0xdead0004, name=IsUserAnAdmin)
+[Te4c0] [API]   -> NULL (not in dispatch table)
+[Te4c0] [API]   -> optional-stub fallback (not in dispatch table)
+[Te4c0] [API] GetProcAddress(module=0xdead0004, ordinal=727)
+[Te4c0] [API] GetProcAddress(module=0xdead0004, name=SHGetSettings)
+[Te4c0] [API]   -> 0x2065160
+[Te4c0] [API] GetProcAddress(module=0xdead0004, name=SHCreateItemFromIDList)
+[Te4c0] [API]   -> NULL (not in dispatch table)
+[Te4c0] [API]   -> optional-stub fallback (not in dispatch table)
+[Te4c0] [API] GetProcAddress(module=0xdead0004, name=SHGetPropertyStoreFromIDList)
+[Te4c0] [API]   -> NULL (not in dispatch table)
+[Te4c0] [API]   -> optional-stub fallback (not in dispatch table)
+[Te4c0] [API] GetProcAddress(module=0xdead0004, name=SHAddToRecentDocs)
+[Te4c0] [API]   -> 0x2010010
+[Te4c0] [API] GetProcAddress(module=0xdead0004, name=SHOpenFolderAndSelectItems)
+[Te4c0] [API]   -> NULL (not in dispatch table)
+[Te4c0] [API]   -> optional-stub fallback (not in dispatch table)
+[Te4c0] [API] GetProcAddress(module=0xdead0004, name=SHQueryUserNotificationState)
+[Te4c0] [API]   -> NULL (not in dispatch table)
+[Te4c0] [API]   -> optional-stub fallback (not in dispatch table)
+[Te4c0] [API] LoadLibraryW(C:\Windows\System32\shlwapi.dll)
+[Te4c0] [API] LoadLibraryA(C:\Windows\System32\shlwapi.dll)
+[Te4c0] [API] GetProcAddress(module=0xdead0014, name=AssocCreate)
+[Te4c0] [API]   -> NULL (not in dispatch table)
+[Te4c0] [API]   -> optional-stub fallback (not in dispatch table)
+[Te4c0] [API] LoadLibraryW(C:\Windows\System32\uxtheme.dll)
+[Te4c0] [API] LoadLibraryA(C:\Windows\System32\uxtheme.dll)
+[Te4c0] [API] GetProcAddress(module=0xdead0025, name=EnableThemeDialogTexture)
+[Te4c0] [API]   -> 0x207f170
+[Te4c0] [API] GetProcAddress(module=0xdead0025, name=OpenThemeData)
+[Te4c0] [API]   -> 0x206eef0
+[Te4c0] [API] GetProcAddress(module=0xdead0025, name=CloseThemeData)
+[Te4c0] [API]   -> 0x207f5b0
+[Te4c0] [API] GetProcAddress(module=0xdead0025, name=IsThemePartDefined)
+[Te4c0] [API]   -> NULL (not in dispatch table)
+[Te4c0] [API]   -> optional-stub fallback (not in dispatch table)
+[Te4c0] [API] GetProcAddress(module=0xdead0025, name=DrawThemeBackgroundEx)
+[Te4c0] [API]   -> NULL (not in dispatch table)
+[Te4c0] [API]   -> optional-stub fallback (not in dispatch table)
+[Te4c0] [API] GetProcAddress(module=0xdead0025, name=DrawThemeEdge)
+[Te4c0] [API]   -> NULL (not in dispatch table)
+[Te4c0] [API]   -> optional-stub fallback (not in dispatch table)
+[Te4c0] [API] GetProcAddress(module=0xdead0025, name=IsThemeBackgroundPartiallyTransparent)
+[Te4c0] [API]   -> 0x207ed90
+[Te4c0] [API] GetProcAddress(module=0xdead0025, name=IsAppThemed)
+[Te4c0] [API]   -> 0x207fec0
+[Te4c0] [API] GetProcAddress(module=0xdead0025, name=IsThemeActive)
+[Te4c0] [API]   -> 0x207feb0
+[Te4c0] [API] GetProcAddress(module=0xdead0025, name=GetThemeBackgroundContentRect)
+[Te4c0] [API]   -> NULL (not in dispatch table)
+[Te4c0] [API]   -> optional-stub fallback (not in dispatch table)
+[Te4c0] [API] GetProcAddress(module=0xdead0025, name=SetWindowTheme)
+[Te4c0] [API]   -> 0x200de70
+[Te4c0] [API] LoadLibraryW(C:\Windows\System32\ws2_32.dll)
+[Te4c0] [API] LoadLibraryA(C:\Windows\System32\ws2_32.dll)
+[Te4c0] [API] GetProcAddress(module=0xdead0009, name=getaddrinfo)
+[Te4c0] [API]   -> 0x20216b0
+[Te4c0] [API] GetProcAddress(module=0xdead0009, name=freeaddrinfo)
+[Te4c0] [API]   -> 0x2021610
+[Te4c0] [API] LoadLibraryW(C:\Windows\System32\gdi32.dll)
+[Te4c0] [API] LoadLibraryA(C:\Windows\System32\gdi32.dll)
+[Te4c0] [API] GetProcAddress(module=0xdead0003, name=SetLayout)
+[Te4c0] [API]   -> 0x200f840
+[Te4c0] [API] GetProcAddress(module=0xdead0003, name=GetLayout)
+[Te4c0] [API]   -> 0x207f690
+[Te4c0] [API] LoadLibraryW(C:\Windows\System32\advapi32.dll)
+[Te4c0] [API] LoadLibraryA(C:\Windows\System32\advapi32.dll)
+[Te4c0] [API] GetProcAddress(module=0xdead0005, name=QueryServiceStatusEx)
+[Te4c0] [API]   -> 0x2064dc0
+[Te4c0] [API] GetProcAddress(module=0xdead0005, name=RegDeleteKeyExW)
+[Te4c0] [API]   -> NULL (not in dispatch table)
+[Te4c0] [API]   -> optional-stub fallback (not in dispatch table)
+[Te4c0] [API] GetProcAddress(module=0xdead0005, name=RegisterServiceCtrlHandlerExW)
+[Te4c0] [API]   -> NULL (not in dispatch table)
+[Te4c0] [API]   -> optional-stub fallback (not in dispatch table)
+[Te4c0] [API] GetProcAddress(module=0xdead0005, name=ConvertStringSecurityDescriptorToSecurityDescriptorW)
+[Te4c0] [API]   -> 0x200fc80
+[Te4c0] [API] LoadLibraryW(C:\Windows\System32\urlmon.dll)
+[Te4c0] [API] LoadLibraryA(C:\Windows\System32\urlmon.dll)
+[Te4c0] [API] SetLastError(126)
+[Te4c0] [API] LoadLibraryW(C:\Windows\System32\imm32.dll)
+[Te4c0] [API] LoadLibraryA(C:\Windows\System32\imm32.dll)
+[Te4c0] [API] SetLastError(126)
+[Te4c0] [API] HeapAlloc(size=0x100, zero=0) = 0x33d4520
+[Te4c0] [API] HeapAlloc(size=0x100, zero=0) = 0x33d4630
+[Te4c0] [API] HeapAlloc(size=0x9c, zero=0) = 0x33d4740
+[Te4c0] [API] HeapAlloc(size=0x40, zero=0) = 0x33d47f0
+[Te4c0] [API] HeapAlloc(size=0x138, zero=0) = 0x33d4840
+[Te4c0] [API] HeapAlloc(size=0x1, zero=0) = 0x33d4980
+[Te4c0] [API] HeapAlloc(size=0x1, zero=0) = 0x33d49a0
+[Te4c0] [API] HeapAlloc(size=0x1, zero=0) = 0x33d49c0
+[Te4c0] [API] HeapAlloc(size=0x1, zero=0) = 0x33d49e0
+[Te4c0] [API] HeapAlloc(size=0x1, zero=0) = 0x33d4a00
+[Te4c0] [API] HeapAlloc(size=0x1, zero=0) = 0x33d4a20
+[Te4c0] [API] HeapAlloc(size=0x1, zero=0) = 0x33d4a40
+[Te4c0] [API] HeapAlloc(size=0x1, zero=0) = 0x33d4a60
+[Te4c0] [API] HeapAlloc(size=0x1, zero=0) = 0x33d4a80
+[Te4c0] [API] HeapAlloc(size=0x1, zero=0) = 0x33d4aa0
+[Te4c0] [API] HeapAlloc(size=0x1, zero=0) = 0x33d4ac0
+[Te4c0] [API] HeapAlloc(size=0x1, zero=0) = 0x33d4ae0
+[Te4c0] [API] HeapAlloc(size=0x1, zero=0) = 0x33d4b00
+[Te4c0] [API] HeapAlloc(size=0x1, zero=0) = 0x33d4b20
+[Te4c0] [API] HeapAlloc(size=0x1, zero=0) = 0x33d4b40
+[Te4c0] [API] HeapAlloc(size=0x1, zero=0) = 0x33d4b60
+[Te4c0] [API] HeapAlloc(size=0x1, zero=0) = 0x33d4b80
+[Te4c0] [API] HeapAlloc(size=0x1, zero=0) = 0x33d4ba0
+[Te4c0] [API] HeapAlloc(size=0x1, zero=0) = 0x33d4bc0
+[Te4c0] [API] HeapAlloc(size=0x1, zero=0) = 0x33d4be0
+[Te4c0] [API] HeapAlloc(size=0x1, zero=0) = 0x33d4c00
+[Te4c0] [API] HeapAlloc(size=0x1, zero=0) = 0x33d4c20
+[Te4c0] [API] HeapAlloc(size=0x1, zero=0) = 0x33d4c40
+[Te4c0] [API] HeapAlloc(size=0x1, zero=0) = 0x33d4c60
+[Te4c0] [API] HeapAlloc(size=0x1, zero=0) = 0x33d4c80
+[Te4c0] [API] HeapAlloc(size=0x1, zero=0) = 0x33d4ca0
+[Te4c0] [API] HeapAlloc(size=0x1, zero=0) = 0x33d5e10
+[Te4c0] [API] HeapAlloc(size=0x1, zero=0) = 0x33d5e30
+[Te4c0] [API] HeapAlloc(size=0x1, zero=0) = 0x33d5e50
+[Te4c0] [API] HeapAlloc(size=0x1, zero=0) = 0x33d5e70
+[Te4c0] [API] HeapAlloc(size=0x1, zero=0) = 0x33d5e90
+[Te4c0] [API] HeapAlloc(size=0x1, zero=0) = 0x33d5eb0
+[Te4c0] [API] HeapAlloc(size=0x1, zero=0) = 0x33d5ed0
+[Te4c0] [API] HeapAlloc(size=0x1, zero=0) = 0x33d5ef0
+[Te4c0] [API] HeapAlloc(size=0x1, zero=0) = 0x33d5f10
+[Te4c0] [API] HeapAlloc(size=0x1, zero=0) = 0x33d5f30
+[Te4c0] [API] HeapAlloc(size=0x1, zero=0) = 0x33d5f50
+[Te4c0] [API] HeapAlloc(size=0x1, zero=0) = 0x33d5f70
+[Te4c0] [API] HeapAlloc(size=0x1, zero=0) = 0x33d5f90
+[Te4c0] [API] HeapAlloc(size=0x1, zero=0) = 0x33d5fb0
+[Te4c0] [API] HeapAlloc(size=0x1, zero=0) = 0x33d5fd0
+[Te4c0] [API] HeapAlloc(size=0x1, zero=0) = 0x33d5ff0
+[Te4c0] [API] HeapAlloc(size=0x1, zero=0) = 0x33d6010
+[Te4c0] [API] HeapAlloc(size=0x1, zero=0) = 0x33d6030
+[Te4c0] [API] HeapAlloc(size=0x1, zero=0) = 0x33d6050
+[Te4c0] [API] HeapAlloc(size=0x1, zero=0) = 0x33d6070
+[Te4c0] [API] HeapAlloc(size=0x1, zero=0) = 0x33d6090
+[Te4c0] [API] HeapAlloc(size=0x1, zero=0) = 0x33d60b0
+[Te4c0] [API] HeapAlloc(size=0x1, zero=0) = 0x33d60d0
+[Te4c0] [API] HeapAlloc(size=0x1, zero=0) = 0x33d60f0
+[Te4c0] [API] HeapAlloc(size=0x1, zero=0) = 0x33d6110
+[Te4c0] [API] HeapAlloc(size=0x1, zero=0) = 0x33d6130
+[Te4c0] [API] HeapAlloc(size=0x1, zero=0) = 0x33d6150
+[Te4c0] [API] HeapAlloc(size=0x1, zero=0) = 0x33d6170
+[Te4c0] [API] HeapAlloc(size=0x18, zero=0) = 0x33d6190
+[Te4c0] [API] HeapAlloc(size=0x18, zero=0) = 0x33d61b0
+[Te4c0] [API] HeapAlloc(size=0x18, zero=0) = 0x33d61d0
+[Te4c0] [API] HeapAlloc(size=0x18, zero=0) = 0x33d61f0
+[Te4c0] [API] HeapAlloc(size=0x18, zero=0) = 0x33d6210
+[Te4c0] [API] HeapAlloc(size=0x18, zero=0) = 0x33d6230
+[Te4c0] [API] HeapAlloc(size=0x18, zero=0) = 0x33d6250
+[Te4c0] [API] HeapAlloc(size=0x18, zero=0) = 0x33d6270
+[Te4c0] [API] HeapAlloc(size=0x18, zero=0) = 0x33d6290
+[Te4c0] [API] HeapAlloc(size=0x18, zero=0) = 0x33d62b0
+[Te4c0] [API] HeapAlloc(size=0x18, zero=0) = 0x33d62d0
+[Te4c0] [API] HeapAlloc(size=0x18, zero=0) = 0x33d62f0
+[Te4c0] [API] HeapAlloc(size=0x18, zero=0) = 0x33d6310
+[Te4c0] [API] HeapAlloc(size=0x18, zero=0) = 0x33d6330
+[Te4c0] [API] HeapAlloc(size=0x18, zero=0) = 0x33d6350
+[Te4c0] [API] HeapAlloc(size=0x18, zero=0) = 0x33d6370
+[Te4c0] [API] HeapAlloc(size=0x18, zero=0) = 0x33d6390
+[Te4c0] [API] HeapAlloc(size=0x18, zero=0) = 0x33d63b0
+[Te4c0] [API] HeapAlloc(size=0x18, zero=0) = 0x33d63d0
+[Te4c0] [API] HeapAlloc(size=0x18, zero=0) = 0x33d63f0
+[Te4c0] [API] HeapAlloc(size=0x18, zero=0) = 0x33d6410
+[Te4c0] [API] HeapAlloc(size=0x18, zero=0) = 0x33d6430
+[Te4c0] [API] HeapAlloc(size=0x18, zero=0) = 0x33d6450
+[Te4c0] [API] HeapAlloc(size=0x18, zero=0) = 0x33d6470
+[Te4c0] [API] HeapAlloc(size=0x18, zero=0) = 0x33d6490
+[Te4c0] [API] HeapAlloc(size=0x18, zero=0) = 0x33d64b0
+[Te4c0] [API] HeapAlloc(size=0x18, zero=0) = 0x33d64d0
+[Te4c0] [API] HeapAlloc(size=0x18, zero=0) = 0x33d64f0
+[Te4c0] [API] HeapAlloc(size=0x18, zero=0) = 0x33d6510
+[Te4c0] [API] HeapAlloc(size=0x18, zero=0) = 0x33d6530
+[Te4c0] [API] HeapAlloc(size=0x18, zero=0) = 0x33d6550
+[Te4c0] [API] HeapAlloc(size=0x18, zero=0) = 0x33d6570
+[Te4c0] [API] HeapAlloc(size=0x18, zero=0) = 0x33d6590
+[Te4c0] [API] HeapAlloc(size=0x18, zero=0) = 0x33d65b0
+[Te4c0] [API] HeapAlloc(size=0x18, zero=0) = 0x33d65d0
+[Te4c0] [API] HeapAlloc(size=0x18, zero=0) = 0x33d65f0
+[Te4c0] [API] HeapAlloc(size=0x18, zero=0) = 0x33d6610
+[Te4c0] [API] HeapAlloc(size=0x18, zero=0) = 0x33d6630
+[Te4c0] [API] HeapAlloc(size=0x18, zero=0) = 0x33d6650
+[Te4c0] [API] HeapAlloc(size=0x18, zero=0) = 0x33d6670
+[Te4c0] [API] HeapAlloc(size=0x18, zero=0) = 0x33d6690
+[Te4c0] [API] HeapAlloc(size=0x18, zero=0) = 0x33d66b0
+[Te4c0] [API] HeapAlloc(size=0x18, zero=0) = 0x33d66d0
+[Te4c0] [API] HeapAlloc(size=0x18, zero=0) = 0x33d66f0
+[Te4c0] [API] HeapAlloc(size=0x18, zero=0) = 0x33d6710
+[Te4c0] [API] HeapAlloc(size=0x18, zero=0) = 0x33d6730
+[Te4c0] [API] HeapAlloc(size=0x18, zero=0) = 0x33d6750
+[Te4c0] [API] HeapAlloc(size=0x18, zero=0) = 0x33d6770
+[Te4c0] [API] HeapAlloc(size=0x18, zero=0) = 0x33d6790
+[Te4c0] [API] HeapAlloc(size=0x18, zero=0) = 0x33d67b0
+[Te4c0] [API] HeapAlloc(size=0x18, zero=0) = 0x33d67d0
+[Te4c0] [API] HeapAlloc(size=0x18, zero=0) = 0x33d67f0
+[Te4c0] [API] HeapAlloc(size=0x18, zero=0) = 0x33d6810
+[Te4c0] [API] HeapAlloc(size=0x18, zero=0) = 0x33d6830
+[Te4c0] [API] HeapAlloc(size=0x18, zero=0) = 0x33d6850
+[Te4c0] [API] HeapAlloc(size=0x18, zero=0) = 0x33d6870
+[Te4c0] [API] HeapAlloc(size=0x18, zero=0) = 0x33d6890
+[Te4c0] [API] HeapAlloc(size=0x18, zero=0) = 0x33d68b0
+[Te4c0] [API] HeapAlloc(size=0x18, zero=0) = 0x33d68d0
+[Te4c0] [API] HeapAlloc(size=0x18, zero=0) = 0x33d68f0
+[Te4c0] [API] HeapAlloc(size=0x18, zero=0) = 0x33d6910
+[Te4c0] [API] HeapAlloc(size=0x18, zero=0) = 0x33d6930
+[Te4c0] [API] HeapAlloc(size=0x18, zero=0) = 0x33d6950
+[Te4c0] [API] HeapAlloc(size=0x18, zero=0) = 0x33d6970
+[Te4c0] [API] HeapAlloc(size=0x18, zero=0) = 0x33d6990
+[Te4c0] [API] HeapAlloc(size=0x18, zero=0) = 0x33d69b0
+[Te4c0] [API] HeapAlloc(size=0x18, zero=0) = 0x33d69d0
+[Te4c0] [API] HeapAlloc(size=0x18, zero=0) = 0x33d69f0
+[Te4c0] [API] HeapAlloc(size=0x18, zero=0) = 0x33d6a10
+[Te4c0] [API] HeapAlloc(size=0x18, zero=0) = 0x33d6a30
+[Te4c0] [API] HeapAlloc(size=0x18, zero=0) = 0x33d6a50
+[Te4c0] [API] HeapAlloc(size=0x18, zero=0) = 0x33d6a70
+[Te4c0] [API] HeapAlloc(size=0x18, zero=0) = 0x33d6a90
+[Te4c0] [API] HeapAlloc(size=0x18, zero=0) = 0x33d6ab0
+[Te4c0] [API] HeapAlloc(size=0x18, zero=0) = 0x33d6ad0
+[Te4c0] [API] HeapAlloc(size=0x18, zero=0) = 0x33d6af0
+[Te4c0] [API] HeapAlloc(size=0x18, zero=0) = 0x33d6b10
+[Te4c0] [API] HeapAlloc(size=0x18, zero=0) = 0x33d6b30
+[Te4c0] [API] HeapAlloc(size=0x18, zero=0) = 0x33d6b50
+[Te4c0] [API] HeapAlloc(size=0x18, zero=0) = 0x33d6b70
+[Te4c0] [API] HeapAlloc(size=0x18, zero=0) = 0x33d6b90
+[Te4c0] [API] HeapAlloc(size=0x18, zero=0) = 0x33d6bb0
+[Te4c0] [API] HeapAlloc(size=0x18, zero=0) = 0x33d6bd0
+[Te4c0] [API] HeapAlloc(size=0x18, zero=0) = 0x33d6bf0
+[Te4c0] [API] HeapAlloc(size=0x18, zero=0) = 0x33d6c10
+[Te4c0] [API] HeapAlloc(size=0x18, zero=0) = 0x33d6c30
+[Te4c0] [API] HeapAlloc(size=0x18, zero=0) = 0x33d6c50
+[Te4c0] [API] HeapAlloc(size=0x18, zero=0) = 0x33d6c70
+[Te4c0] [API] HeapAlloc(size=0x18, zero=0) = 0x33d6c90
+[Te4c0] [API] HeapAlloc(size=0x18, zero=0) = 0x33d6cb0
+[Te4c0] [API] HeapAlloc(size=0x18, zero=0) = 0x33d6cd0
+[Te4c0] [API] HeapAlloc(size=0x18, zero=0) = 0x33d6cf0
+[Te4c0] [API] HeapAlloc(size=0x18, zero=0) = 0x33d6d10
+[Te4c0] [API] HeapAlloc(size=0x18, zero=0) = 0x33d6d30
+[Te4c0] [API] HeapAlloc(size=0x18, zero=0) = 0x33d6d50
+[Te4c0] [API] HeapAlloc(size=0x18, zero=0) = 0x33d6d70
+[Te4c0] [API] HeapAlloc(size=0x18, zero=0) = 0x33d6d90
+[Te4c0] [API] HeapAlloc(size=0x18, zero=0) = 0x33d6db0
+[Te4c0] [API] HeapAlloc(size=0x18, zero=0) = 0x33d6dd0
+[Te4c0] [API] HeapAlloc(size=0x18, zero=0) = 0x33d6df0
+[Te4c0] [API] HeapAlloc(size=0x18, zero=0) = 0x33d6e10
+[Te4c0] [API] HeapAlloc(size=0x18, zero=0) = 0x33d6e30
+[Te4c0] [API] HeapAlloc(size=0x18, zero=0) = 0x33d6e50
+[Te4c0] [API] HeapAlloc(size=0x18, zero=0) = 0x33d6e70
+[Te4c0] [API] HeapAlloc(size=0x18, zero=0) = 0x33d6e90
+[Te4c0] [API] HeapAlloc(size=0x18, zero=0) = 0x33d6eb0
+[Te4c0] [API] HeapAlloc(size=0x18, zero=0) = 0x33d6ed0
+[Te4c0] [API] HeapAlloc(size=0x18, zero=0) = 0x33d6ef0
+[Te4c0] [API] HeapAlloc(size=0x18, zero=0) = 0x33d6f10
+[Te4c0] [API] HeapAlloc(size=0x18, zero=0) = 0x33d6f30
+[Te4c0] [API] HeapAlloc(size=0x18, zero=0) = 0x33d6f50
+[Te4c0] [API] HeapAlloc(size=0x18, zero=0) = 0x33d6f70
+[Te4c0] [API] HeapAlloc(size=0x18, zero=0) = 0x33d6f90
+[Te4c0] [API] HeapAlloc(size=0x18, zero=0) = 0x33d6fb0
+[Te4c0] [API] HeapAlloc(size=0x18, zero=0) = 0x33d6fd0
+[Te4c0] [API] HeapAlloc(size=0x18, zero=0) = 0x33d6ff0
+[Te4c0] [API] HeapAlloc(size=0x18, zero=0) = 0x33d7010
+[Te4c0] [API] HeapAlloc(size=0x18, zero=0) = 0x33d7030
+[Te4c0] [API] HeapAlloc(size=0x18, zero=0) = 0x33d7050
+[Te4c0] [API] HeapAlloc(size=0x18, zero=0) = 0x33d7070
+[Te4c0] [API] HeapAlloc(size=0x18, zero=0) = 0x33d7090
+[Te4c0] [API] HeapAlloc(size=0x18, zero=0) = 0x33d70b0
+[Te4c0] [API] HeapAlloc(size=0x18, zero=0) = 0x33d70d0
+[Te4c0] [API] HeapAlloc(size=0x18, zero=0) = 0x33d70f0
+[Te4c0] [API] InitializeCriticalSection(0x14020e128)
+[Te4c0] [API] OleInitialize() -> S_OK
+[Te4c0] [API] GetCommandLineW()
+[Te4c0] [API] HeapAlloc(size=0x138, zero=0) = 0x33d7110
+[Te4c0] [API] InitCommonControlsEx(dwICC=0x42ff) -> TRUE
+[Te4c0] [API] ExpandEnvironmentStringsW() -> "Everything.ini"
+[Te4c0] [API] GetModuleFileNameW(cap=260)
+[Te4c0] [API] GetModuleFileNameW(cap=260)
+[Te4c0] [API] CreateFileW(C:\artifacts\sweep050\stage\everything\Everything.ini, acc=80000000, disp=3)
+[Te4c0] [API] SetLastError(2)
+[Te4c0] [API] GetLastError() = 2
+[Te4c0] [API] GetLastError() = 2
+[Te4c0] [API] OpenSCManagerW() -> NULL (ERROR_ACCESS_DENIED: no SCM in this session)
+[Te4c0] [API] SetLastError(5)
+[Te4c0] [API] GetCommandLineW()
+[Te4c0] [API] ExpandEnvironmentStringsW() -> "Everything.lng"
+[Te4c0] [API] GetModuleFileNameW(cap=260)
+[Te4c0] [API] GetModuleFileNameW(cap=260)
+[Te4c0] [API] CreateFileW(C:\artifacts\sweep050\stage\everything\Everything.lng, acc=80000000, disp=3)
+[Te4c0] [API] ReadFile(n=4)
+[Te4c0] [API] ReadFile(n=4)
+[Te4c0] [API] HeapAlloc(size=0x467, zero=0) = 0x33d7250
+[Te4c0] [API] ReadFile(n=1127)
+[Te4c0] [API] HeapAlloc(size=0xfa90, zero=0) = 0x33d76c0
+[Te4c0] [API] HeapAlloc(size=0x36ee80, zero=0) = 0x7febaf13f010
+[Te4c0] [API] HeapAlloc(size=0x2f0, zero=0) = 0x33e7160
+[Te4c0] [API] HeapAlloc(size=0xa, zero=0) = 0x33e7460
+[Te4c0] [API] HeapAlloc(size=0x9, zero=0) = 0x33e7480
+[Te4c0] [API] HeapAlloc(size=0x6, zero=0) = 0x33e74a0
+[Te4c0] [API] HeapAlloc(size=0x8, zero=0) = 0x33e74c0
+[Te4c0] [API] HeapAlloc(size=0xd, zero=0) = 0x33e74e0
+[Te4c0] [API] HeapAlloc(size=0xd, zero=0) = 0x33e7500
+[Te4c0] [API] HeapAlloc(size=0x15, zero=0) = 0x33e7520
+[Te4c0] [API] HeapAlloc(size=0x17, zero=0) = 0x33e7540
+[Te4c0] [API] HeapAlloc(size=0xb, zero=0) = 0x33e7560
+[Te4c0] [API] HeapAlloc(size=0xa, zero=0) = 0x33e7580
+[Te4c0] [API] HeapAlloc(size=0x9, zero=0) = 0x33e75a0
+[Te4c0] [API] HeapAlloc(size=0x9, zero=0) = 0x33e75c0
+[Te4c0] [API] HeapAlloc(size=0x11, zero=0) = 0x33e75e0
+[Te4c0] [API] HeapAlloc(size=0x15, zero=0) = 0x33e7600
+[Te4c0] [API] HeapAlloc(size=0x7, zero=0) = 0x33e7620
+[Te4c0] [API] HeapAlloc(size=0xb, zero=0) = 0x33e7640
+[Te4c0] [API] HeapAlloc(size=0xe, zero=0) = 0x33e7660
+[Te4c0] [API] HeapAlloc(size=0xb, zero=0) = 0x33e7680
+[Te4c0] [API] HeapAlloc(size=0x7, zero=0) = 0x33e76a0
+[Te4c0] [API] HeapAlloc(size=0x14, zero=0) = 0x33e76c0
+[Te4c0] [API] HeapAlloc(size=0x9, zero=0) = 0x33e76e0
+[Te4c0] [API] HeapAlloc(size=0x6, zero=0) = 0x33e7700
+[Te4c0] [API] HeapAlloc(size=0xc, zero=0) = 0x33e7720
+[Te4c0] [API] HeapAlloc(size=0xe, zero=0) = 0x33e7740
+[Te4c0] [API] HeapAlloc(size=0x7, zero=0) = 0x33e7760
+[Te4c0] [API] HeapAlloc(size=0x6, zero=0) = 0x33e7780
+[Te4c0] [API] HeapAlloc(size=0x8, zero=0) = 0x33e77a0
+[Te4c0] [API] HeapAlloc(size=0xf, zero=0) = 0x33e77c0
+[Te4c0] [API] HeapAlloc(size=0x9, zero=0) = 0x33e77e0
+[Te4c0] [API] HeapAlloc(size=0xa, zero=0) = 0x33e7800
+[Te4c0] [API] HeapAlloc(size=0x11, zero=0) = 0x33e7820
+[Te4c0] [API] HeapAlloc(size=0x15, zero=0) = 0x33e7840
+[Te4c0] [API] HeapAlloc(size=0xf, zero=0) = 0x33e7860
+[Te4c0] [API] HeapAlloc(size=0xd, zero=0) = 0x33e7880
+[Te4c0] [API] HeapAlloc(size=0x15, zero=0) = 0x33e78a0
+[Te4c0] [API] HeapAlloc(size=0xb, zero=0) = 0x33e78c0
+[Te4c0] [API] HeapAlloc(size=0x11, zero=0) = 0x33e78e0
+[Te4c0] [API] HeapAlloc(size=0x9, zero=0) = 0x33e7900
+[Te4c0] [API] HeapAlloc(size=0xb, zero=0) = 0x33e7920
+[Te4c0] [API] HeapAlloc(size=0x10, zero=0) = 0x33e7940
+[Te4c0] [API] HeapAlloc(size=0x18, zero=0) = 0x33e7960
+[Te4c0] [API] HeapAlloc(size=0x16, zero=0) = 0x33e7980
+[Te4c0] [API] HeapAlloc(size=0x16, zero=0) = 0x33e79a0
+[Te4c0] [API] HeapAlloc(size=0xa, zero=0) = 0x33e79c0
+[Te4c0] [API] HeapAlloc(size=0xd, zero=0) = 0x33e79e0
+[Te4c0] [API] HeapAlloc(size=0xd, zero=0) = 0x33e7a00
+[Te4c0] [API] HeapAlloc(size=0xa, zero=0) = 0x33e7a20
+[Te4c0] [API] HeapFree(0x7febaf13f010)
+[Te4c0] [API] HeapFree(0x33d76c0)
+[Te4c0] [API] HeapFree(0x33d7250)
+[Te4c0] [API] CloseHandle(handle=0x7)
+[Te4c0] [API] GetTickCount() = 4463378
+[Te4c0] [API] GetTickCount() = 4463378
+[Te4c0] [API] SetLastError(0)
+[Te4c0] [API] CreateMutexW(owner=0)
+[Te4c0] [API] GetLastError() = 0
+[Te4c0] [API] SHGetFileInfoW() -> 0 (no shell icon DB, honest failure)
+[Te4c0] [API] SHGetFileInfoW() -> 0 (no shell icon DB, honest failure)
+[Te4c0] [API] SHGetFileInfoW() -> 0 (no shell icon DB, honest failure)
+[Te4c0] [API] GlobalAlloc(flags=64, bytes=0x68) = 0x33d7250
+[Te4c0] [API] CreateDialogIndirectParamW(tmpl=0x33d7250, proc=0x1400dacc0) -> hwnd 0x10002 (modeless)
+[Te4c0] [API] DestroyWindow(hwnd=0x10002)
+[Te4c0] [API] [GUI] event pump v3 ARMED (budget=200 keys=0 every=8 clicks=0)
+[Te4c0] [API] GlobalFree(0x33d7250) -> NULL
+[Te4c0] [API] ExpandEnvironmentStringsW() -> "Everything.ico"
+[Te4c0] [API] GetModuleFileNameW(cap=260)
+[Te4c0] [API] GetModuleFileNameW(cap=260)
+[Te4c0] [API] LoadImageW(LR_LOADFROMFILE) -> NULL (file images unsupported)
+[Te4c0] [API] LoadImageW(LR_LOADFROMFILE) -> NULL (file images unsupported)
+[Te4c0] [API] LoadImageW(type=1) -> 0x60001
+[Te4c0] [API] LoadImageW(type=1) -> 0x60002
+[Te4c0] [API] ExpandEnvironmentStringsW() -> "Bookmarks.csv"
+[Te4c0] [API] GetModuleFileNameW(cap=260)
+[Te4c0] [API] GetModuleFileNameW(cap=260)
+[Te4c0] [API] CreateFileW(C:\artifacts\sweep050\stage\everything\Bookmarks.csv, acc=80000000, disp=3)
+[Te4c0] [API] SetLastError(2)
+[Te4c0] [API] GetLastError() = 2
+[Te4c0] [API] ExpandEnvironmentStringsW() -> "Filters.csv"
+[Te4c0] [API] GetModuleFileNameW(cap=260)
+[Te4c0] [API] GetModuleFileNameW(cap=260)
+[Te4c0] [API] CreateFileW(C:\artifacts\sweep050\stage\everything\Filters.csv, acc=80000000, disp=3)
+[Te4c0] [API] SetLastError(2)
+[Te4c0] [API] GetLastError() = 2
+[Te4c0] [API] HeapAlloc(size=0x38, zero=0) = 0x33d72c0
+[Te4c0] [API] HeapAlloc(size=0xb, zero=0) = 0x33d7300
+[Te4c0] [API] HeapAlloc(size=0x1, zero=0) = 0x33d7320
+[Te4c0] [API] HeapAlloc(size=0x1, zero=0) = 0x33d7340
+[Te4c0] [API] HeapAlloc(size=0x38, zero=0) = 0x33d7360
+[Te4c0] [API] HeapAlloc(size=0x6, zero=0) = 0x33d73a0
+[Te4c0] [API] HeapAlloc(size=0x8c, zero=0) = 0x33d3650
+[Te4c0] [API] HeapAlloc(size=0x6, zero=0) = 0x33d73c0
+[Te4c0] [API] HeapAlloc(size=0x38, zero=0) = 0x33d73e0
+[Te4c0] [API] HeapAlloc(size=0xb, zero=0) = 0x33d7420
+[Te4c0] [API] HeapAlloc(size=0xad, zero=0) = 0x33d7440
+[Te4c0] [API] HeapAlloc(size=0x4, zero=0) = 0x33d7500
+[Te4c0] [API] HeapAlloc(size=0x38, zero=0) = 0x33d7520
+[Te4c0] [API] HeapAlloc(size=0x9, zero=0) = 0x33d7560
+[Te4c0] [API] HeapAlloc(size=0xdc, zero=0) = 0x33d7580
+[Te4c0] [API] HeapAlloc(size=0x4, zero=0) = 0x33d7670
+[Te4c0] [API] HeapAlloc(size=0x38, zero=0) = 0x33d7690
+[Te4c0] [API] HeapAlloc(size=0xb, zero=0) = 0x33d76d0
+[Te4c0] [API] HeapAlloc(size=0x1c, zero=0) = 0x33d76f0
+[Te4c0] [API] HeapAlloc(size=0x4, zero=0) = 0x33d7720
+[Te4c0] [API] HeapAlloc(size=0x38, zero=0) = 0x33d7740
+[Te4c0] [API] HeapAlloc(size=0x7, zero=0) = 0x33d7780
+[Te4c0] [API] HeapAlloc(size=0x8, zero=0) = 0x33d77a0
+[Te4c0] [API] HeapAlloc(size=0x1, zero=0) = 0x33d77c0
+[Te4c0] [API] HeapAlloc(size=0x38, zero=0) = 0x33d77e0
+[Te4c0] [API] HeapAlloc(size=0x8, zero=0) = 0x33d7820
+[Te4c0] [API] HeapAlloc(size=0x43, zero=0) = 0x33d7840
+[Te4c0] [API] HeapAlloc(size=0x4, zero=0) = 0x33d7890
+[Te4c0] [API] HeapAlloc(size=0x38, zero=0) = 0x33d78b0
+[Te4c0] [API] HeapAlloc(size=0x6, zero=0) = 0x33d78f0
+[Te4c0] [API] HeapAlloc(size=0x123, zero=0) = 0x33d7910
+[Te4c0] [API] HeapAlloc(size=0x6, zero=0) = 0x33d7a40
+[Te4c0] [API] SetWindowsHookExW(id=-1, proc=0x1400ce6d0, hmod=(nil), tid=5678)
+[Te4c0] [API]   -> HHOOK 0xb30001
+[Te4c0] [API] GetStartupInfoW()
+[Te4c0] [API] RegisterWindowMessageA() -> 0xc000
+[Te4c0] [API] GetClassInfoExW('EVERYTHING_TASKBAR_NOTIFICATION') -> FALSE (not registered here)
+[Te4c0] [API] RegisterClassExW(wcex=0x7ffd02a8be20) -> ATOM 0xc001
+[Te4c0] [API] [GUI] paint surface allocated 32x32 (SWEEP-005)
+[Te4c0] [API] [GUI] WM_CREATE(lparam=&CS lpParams=0x21aebc0) -> wndproc -> 0
+[Te4c0] [API] CreateWindowExW(ex=0x0 style=0x80000000 cls=0x7ffd02a8be70 0x0@0,0) -> HWND 0x10001
+[Te4c0] [API] Shell_NotifyIconW(msg=0) -> TRUE (headless tray)
+[Te4c0] [API] RegisterWindowMessageA() -> 0xc001
+[Te4c0] [API] PostMessageW(msg=0xc001) dropped (headless) -> TRUE
+[Te4c0] [API] HeapAlloc(size=0x698, zero=0) = 0x33d8670
+[Te4c0] [API] InitializeCriticalSection(0x33d86d0)
+[Te4c0] [API] InitializeCriticalSection(0x33d8b60)
+[Te4c0] [API] HeapAlloc(size=0x800, zero=0) = 0x33d8d10
+[Te4c0] [API] EnterCriticalSection(0x33d86d0)
+[Te4c0] [API] HeapAlloc(size=0x14, zero=0) = 0x33d9520
+[Te4c0] [API] LeaveCriticalSection(0x33d86d0)
+[Te4c0] [API] HeapAlloc(size=0x48, zero=0) = 0x33d9540
+[Te4c0] [API] ExpandEnvironmentStringsW() -> ""
+[Te4c0] [API] GetModuleFileNameW(cap=260)
+[Te4c0] [API] HeapAlloc(size=0x35, zero=0) = 0x33d9590
+[Te4c0] [API] QueryPerformanceFrequency()
+[Te4c0] [API] QueryPerformanceCounter()
+[Te4c0] [API] SetLastError(18)
+[Te4c0] [API] SetLastError(2)
+[Te4c0] [API] SetLastError(2)
+[Te4c0] [API] SetLastError(2)
+[Te4c0] [API] SetLastError(2)
+[Te4c0] [API] SetLastError(2)
+[Te4c0] [API] SetLastError(2)
+[Te4c0] [API] SetLastError(2)
+[Te4c0] [API] SetLastError(2)
+[Te4c0] [API] SetLastError(2)
+[Te4c0] [API] SetLastError(2)
+[Te4c0] [API] SetLastError(2)
+[Te4c0] [API] SetLastError(2)
+[Te4c0] [API] SetLastError(2)
+[Te4c0] [API] SetLastError(2)
+[Te4c0] [API] SetLastError(2)
+[Te4c0] [API] SetLastError(2)
+[Te4c0] [API] SetLastError(2)
+[Te4c0] [API] SetLastError(2)
+[Te4c0] [API] SetLastError(2)
+[Te4c0] [API] SetLastError(2)
+[Te4c0] [API] SetLastError(2)
+[Te4c0] [API] SetLastError(2)
+[Te4c0] [API] SetLastError(2)
+[Te4c0] [API] SetLastError(2)
+[Te4c0] [API] SetLastError(2)
+[Te4c0] [API] SetLastError(2)
+[Te4c0] [API] QueryPerformanceFrequency()
+[Te4c0] [API] QueryPerformanceCounter()
+[Te4c0] [API] SetLastError(18)
+[Te4c0] [API] SetLastError(2)
+[Te4c0] [API] SetLastError(2)
+[Te4c0] [API] SetLastError(2)
+[Te4c0] [API] SetLastError(2)
+[Te4c0] [API] SetLastError(2)
+[Te4c0] [API] SetLastError(2)
+[Te4c0] [API] SetLastError(2)
+[Te4c0] [API] SetLastError(2)
+[Te4c0] [API] SetLastError(2)
+[Te4c0] [API] SetLastError(2)
+[Te4c0] [API] SetLastError(2)
+[Te4c0] [API] SetLastError(2)
+[Te4c0] [API] SetLastError(2)
+[Te4c0] [API] SetLastError(2)
+[Te4c0] [API] SetLastError(2)
+[Te4c0] [API] SetLastError(2)
+[Te4c0] [API] SetLastError(2)
+[Te4c0] [API] SetLastError(2)
+[Te4c0] [API] SetLastError(2)
+[Te4c0] [API] SetLastError(2)
+[Te4c0] [API] SetLastError(2)
+[Te4c0] [API] SetLastError(2)
+[Te4c0] [API] SetLastError(2)
+[Te4c0] [API] SetLastError(2)
+[Te4c0] [API] SetLastError(2)
+[Te4c0] [API] SetLastError(2)
+[Te4c0] [API] EnterCriticalSection(0x14020f3a0)
+[Te4c0] [API] LeaveCriticalSection(0x14020f3a0)
+[Te4c0] [API] HeapAlloc(size=0x38, zero=0) = 0x33d95d0
+[Te4c0] [API] CreateEventW(manual=1 init=0)
+[Te4c0] [API] CreateEventW(manual=1 init=0)
+[Te4c0] [API] HeapAlloc(size=0x2d8, zero=1) = 0x33d9610
+[Te4c0] [API] GetLastError() = 2
+[Te4c0] [API] SetLastError(2)
+[Te4c0] [API] GetModuleHandleA(name=KERNEL32.DLL)
+[Te4c0] [API] GetProcAddress(module=0xdead0001, name=EncodePointer)
+[Te4c0] [API]   -> 0x2019420
+[Te4c0] [API] GetProcAddress(module=0xdead0001, name=DecodePointer)
+[Te4c0] [API]   -> 0x200be10
+[Te4c0] [API] EnterCriticalSection(0x14020f150)
+[Te4c0] [API] LeaveCriticalSection(0x14020f150)
+[Te4c0] [API] CreateThread(fn=0x1401a9650, arg=0x33d9610, flags=0x0)
+[Te4c0] [API] _beginthreadex(start=0x1401a9650, arg=0x33d9610, init=0x0)
+[Te4c0] [API] _beginthreadex() = 0x7
+[Te4c0] [API] HeapAlloc(size=0x620, zero=0) = 0x33d9a40
+[Te4c0] [API] HeapAlloc(size=0x1, zero=0) = 0x33da070
+[Te4c0] [API] HeapAlloc(size=0x1, zero=0) = 0x33da090
+[Te4c0] [API] GetClassInfoExW('EVERYTHING') -> FALSE (not registered here)
+[Te4c0] [API] RegisterClassExW(wcex=0x7ffd02a8b5d0) -> ATOM 0xc001
+[Te4c0] [API] GetWindowLongPtrW(0x10001,-21) -> 0x0
+[Te4c0] [API] [GUI] WM_CREATE(lparam=&CS lpParams=0x21aebc0) -> wndproc -> 0
+[Te4c0] [API] CreateWindowExW(ex=0x40000 style=0x6cf0000 cls=0x7ffd02a8b620 778x605@-2147483648,-2147483648) -> HWND 0x10001
+[Te4c0] [API] SetWindowLongPtrW(0x10001,-21,0x33d9a40) -> 0x0
+[Te4c0] [API] GetClassInfoExW('EVERYTHING_TOOLBAR') -> FALSE (not registered here)
+[Te4c0] [API] RegisterClassExW(wcex=0x7ffd02a8b5d0) -> ATOM 0xc001
+[Te4c0] [API] GetWindowLongPtrW(0x10001,-21) -> 0x33d9a40
+[Te4c0] [API] [GUI] WM_CREATE(lparam=&CS lpParams=0x21aebc0) -> wndproc -> 0
+[Te4c0] [API] CreateWindowExW(ex=0x0 style=0x56000000 cls=0x7ffd02a8b620 0x0@0,0) -> HWND 0x10001
+[Te4c0] [API] GetWindowLongW(0x10001,-20) -> 0x0
+[Te4c0] [API] SetWindowLongPtrW(0x10001,-21,0x33d9a40) -> 0x33d9a40
+[Te4c0] [API] [GUI] child EDIT id=10007 -> HWND 0x30001 text='0 wchars'
+[Te4c0] [API] GetWindowLongW(0x10001,-20) -> 0x0
+[Te4c0] [API] SendMessageW(hwnd=0x30001 WM_?) -> 0
+[Te4c0] [API] SetWindowLongPtrW(0x30001,-21,0x33d9a40) -> 0x0
+[Te4c0] [API] SetWindowLongPtrW(0x30001,-4,0x140105e70) -> 0x0
+[Te4c0] [API] [GUI] child SysListView32 id=10020 -> HWND 0x30002 text='0 wchars'
+[Td6c0] [API] GetLastError() = 0
+[Td6c0] [API] SetLastError(0)
+[Te4c0] [API] GetWindowLongW(0x10001,-20) -> 0x0
+[Te4c0] [API] SetWindowLongPtrW(0x30002,-21,0x33d9a40) -> 0x0
+[Te4c0] [API] SetWindowLongPtrW(0x30002,-4,0x140140310) -> 0x0
+[Te4c0] [API] [GUI] child SysHeader32 id=10009 -> HWND 0x30003 text='0 wchars'
+[Te4c0] [API] GetWindowLongW(0x30002,-20) -> 0x0
+[Td6c0] [API] CoInitializeEx(model=0x2) -> S_OK
+[Td6c0] [API] ResetEvent(h=0x5)
+[Te4c0] [API] SetWindowLongPtrW(0x30003,-21,0x33d9a40) -> 0x0
+[Te4c0] [API] SetWindowLongPtrW(0x30003,-4,0x1400f9950) -> 0x0
+[Td6c0] [API] QueryPerformanceFrequency()
+[Te4c0] [API] [GUI] child STATUSBAR id=10010 -> HWND 0x30004 text='0 wchars'
+[Te4c0] [API] GetWindowLongW(0x10001,-20) -> 0x0
+[Te4c0] [API] [GDI] SelectObject(0x00000000)
+[Te4c0] [API] GetTextMetricsW -> 8x8 real offsets (ave@20 weight@28) TRUE
+[Td6c0] [API] QueryPerformanceCounter()
+[Te4c0] [API] [GDI] SelectObject(0x00040001)
+[Te4c0] [API] SendMessageW(hwnd=0x30004 WM_?) -> 0
+[Te4c0] [API] SendMessageW(hwnd=0x30004 WM_?) -> 0
+[Te4c0] [API] HeapAlloc(size=0x4, zero=0) = 0x33da0b0
+[Te4c0] [API] GetClientRect(hwnd=0x30004) -> 32x32
+[Td6c0] [API] CreateFileW(C:\artifacts\sweep050\stage\everything\Everything.db, acc=80000000, disp=3)
+[Te4c0] [API] HeapFree(0x33da0b0)
+[Td6c0] [API] SetLastError(2)
+[Td6c0] [API] GetLastError() = 2
+[Te4c0] [API] GetLocaleInfoW(type=f)
+[Te4c0] [API] GetLocaleInfoW(type=10)
+[Te4c0] [API] SendMessageW(hwnd=0x30004 WM_?) -> 0
+[Te4c0] [API] SendMessageW(hwnd=0x30004 WM_?) -> 0
+[Td6c0] [API] HeapAlloc(size=0x20, zero=0) = 0x7feba8000c40
+[Te4c0] [API] HeapAlloc(size=0x18, zero=0) = 0x33da0b0
+[Td6c0] [API] EnterCriticalSection(0x14020e128)
+[Td6c0] [API] LeaveCriticalSection(0x14020e128)
+[Td6c0] [API] PostMessageW(msg=0x1401) dropped (headless) -> TRUE
+[Td6c0] [API] QueryPerformanceFrequency()
+[Te4c0] [API] HeapAlloc(size=0xa, zero=0) = 0x33da0d0
+[Td6c0] [API] QueryPerformanceCounter()
+[Te4c0] [API] PostMessageW(msg=0x402) dropped (headless) -> TRUE
+[Te4c0] [API] GetWindowRect -> 32x32
+[Te4c0] [API] CopyRect -> TRUE
+[Te4c0] [API] GetClientRect(hwnd=0x10001) -> 32x32
+[Td6c0] [API] HeapAlloc(size=0x20, zero=0) = 0x7feba8000b70
+[Te4c0] [API] SetWindowPos(0x10001 32x14@0,0 flags=0x14) -> TRUE
+[Te4c0] [API] SendMessageW(hwnd=0x30004 WM_?) -> 0
+[Te4c0] [API] GetWindowRect -> 32x32
+[Te4c0] [API] HeapAlloc(size=0x4, zero=0) = 0x33da0f0
+[Td6c0] [API] EnterCriticalSection(0x14020e128)
+[Te4c0] [API] GetClientRect(hwnd=0x30004) -> 32x32
+[Te4c0] [API] HeapFree(0x33da0f0)
+[Te4c0] [API] SetWindowPos(0x30002 32x-14@0,14 flags=0x14) -> TRUE
+[Te4c0] [API] GetWindowLongW(0x30002,-16) -> 0x0
+[Te4c0] [API] GetClientRect(hwnd=0x30002) -> 32x32
+[Te4c0] [API] GetWindowLongW(0x30002,-16) -> 0x0
+[Te4c0] [API] GetClientRect(hwnd=0x30002) -> 32x32
+[Te4c0] [API] GetWindowLongW(0x30002,-16) -> 0x0
+[Te4c0] [API] GetWindowLongW(0x30002,-16) -> 0x0
+[Td6c0] [API] LeaveCriticalSection(0x14020e128)
+[Te4c0] [API] GetWindowLongW(0x30002,-16) -> 0x0
+[Td6c0] [API] HeapFree(0x33d9590)
+[Td6c0] [API] HeapFree(0x33d9540)
+[Td6c0] [API] SetEvent(h=0x6)
+[Te4c0] [API] GetWindowLongW(0x30002,-16) -> 0x0
+[Td6c0] [API] WaitForSingleObject(handle=0x5, ms=4294967295)
+[Td6c0] [API] [KOBJ] wait(0x5) -> event sig=0 manual=1
+[Te4c0] [API] GetWindowLongW(0x30002,-16) -> 0x0
+[Te4c0] [API] GetClientRect(hwnd=0x30002) -> 32x32
+[Te4c0] [API] SetWindowPos(0x30003 32x0@0,0 flags=0x14) -> TRUE
+[Te4c0] [API] CreateMenu() -> 0x50001
+[Te4c0] [API] CreatePopupMenu() -> 0x50002
+[Te4c0] [API] AppendMenuW(menu=0x50001 flags=0x10 id=327682) count->1
+[Te4c0] [API] SetMenuItemInfoW(item=0 mask=0x2) -> TRUE
+[Te4c0] [API] CreatePopupMenu() -> 0x50003
+[Te4c0] [API] AppendMenuW(menu=0x50001 flags=0x10 id=327683) count->2
+[Te4c0] [API] SetMenuItemInfoW(item=1 mask=0x2) -> TRUE
+[Te4c0] [API] CreatePopupMenu() -> 0x50004
+[Te4c0] [API] AppendMenuW(menu=0x50001 flags=0x10 id=327684) count->3
+[Te4c0] [API] SetMenuItemInfoW(item=2 mask=0x2) -> TRUE
+[Te4c0] [API] CreatePopupMenu() -> 0x50005
+[Te4c0] [API] AppendMenuW(menu=0x50001 flags=0x10 id=327685) count->4
+[Te4c0] [API] SetMenuItemInfoW(item=3 mask=0x2) -> TRUE
+[Te4c0] [API] CreatePopupMenu() -> 0x50006
+[Te4c0] [API] AppendMenuW(menu=0x50001 flags=0x10 id=327686) count->5
+[Te4c0] [API] SetMenuItemInfoW(item=4 mask=0x2) -> TRUE
+[Te4c0] [API] CreatePopupMenu() -> 0x50007
+[Te4c0] [API] AppendMenuW(menu=0x50001 flags=0x10 id=327687) count->6
+[Te4c0] [API] SetMenuItemInfoW(item=5 mask=0x2) -> TRUE
+[Te4c0] [API] CreatePopupMenu() -> 0x50008
+[Te4c0] [API] AppendMenuW(menu=0x50001 flags=0x10 id=327688) count->7
+[Te4c0] [API] SetMenuItemInfoW(item=6 mask=0x2) -> TRUE
+[Te4c0] [API] SetMenu(hwnd, menu=0x50001) -> TRUE
+[Te4c0] [API] CoTaskMemAlloc(48) -> 0x33da110
+[Te4c0] [API] CoCreateInstance(clsid=0x1401e8ef0) -> REGDB_E_CLASSNOTFOUND (0x80040154)
+[Te4c0] [API] SystemParametersInfoW(action=0x1f) -> FALSE (unsupported; caller falls back)
+[Te4c0] [API] CreateFontIndirectW -> HFONT 0x70001
+[Te4c0] [API] [GDI] SelectObject(0x00070001)
+[Te4c0] [API] GetTextMetricsW -> 8x8 real offsets (ave@20 weight@28) TRUE
+[Te4c0] [API] [GDI] DrawTextW DT_CALCRECT '...' -> 24x8
+[Te4c0] [API] [GDI] SelectObject(0x00040001)
+[Te4c0] [API] GetWindowRect -> 32x32
+[Te4c0] [API] CopyRect -> TRUE
+[Te4c0] [API] GetClientRect(hwnd=0x10001) -> 32x32
+[Te4c0] [API] SetWindowPos(0x10001 32x14@0,0 flags=0x14) -> TRUE
+[Te4c0] [API] SendMessageW(hwnd=0x30004 WM_?) -> 0
+[Te4c0] [API] GetWindowRect -> 32x32
+[Te4c0] [API] HeapAlloc(size=0x4, zero=0) = 0x33da0f0
+[Te4c0] [API] GetClientRect(hwnd=0x30004) -> 32x32
+[Te4c0] [API] HeapFree(0x33da0f0)
+[Te4c0] [API] SetWindowPos(0x30002 32x-14@0,14 flags=0x14) -> TRUE
+[Te4c0] [API] GetWindowLongW(0x30002,-16) -> 0x0
+[Te4c0] [API] GetClientRect(hwnd=0x30002) -> 32x32
+[Te4c0] [API] GetWindowLongW(0x30002,-16) -> 0x0
+[Te4c0] [API] GetClientRect(hwnd=0x30002) -> 32x32
+[Te4c0] [API] GetWindowLongW(0x30002,-16) -> 0x0
+[Te4c0] [API] GetWindowLongW(0x30002,-16) -> 0x0
+[Te4c0] [API] GetWindowLongW(0x30002,-16) -> 0x0
+[Te4c0] [API] GetWindowLongW(0x30002,-16) -> 0x0
+[Te4c0] [API] GetWindowLongW(0x30002,-16) -> 0x0
+[Te4c0] [API] GetClientRect(hwnd=0x30002) -> 32x32
+[Te4c0] [API] SetWindowPos(0x30003 32x0@0,0 flags=0x14) -> TRUE
+[Te4c0] [API] GetClientRect(hwnd=0x30002) -> 32x32
+[Te4c0] [API] [GUI] InvalidateRect -> paint pending
+[Te4c0] [API] RedrawWindow(0x10001) -> TRUE
+[Te4c0] [API] [GDI] SelectObject(0x00000000)
+[Te4c0] [API] GetTextMetricsW -> 8x8 real offsets (ave@20 weight@28) TRUE
+[Te4c0] [API] [GDI] SelectObject(0x00040001)
+[Te4c0] [API] SendMessageW(hwnd=0x30001 WM_?) -> 0
+[Te4c0] [API] SendMessageW(hwnd=0x30003 WM_?) -> 0
+[Te4c0] [API] [GDI] SelectObject(0x00000000)
+[Te4c0] [API] GetTextMetricsW -> 8x8 real offsets (ave@20 weight@28) TRUE
+[Te4c0] [API] [GDI] SelectObject(0x00040001)
+[Te4c0] [API] GetWindowLongW(0x30002,-16) -> 0x0
+[Te4c0] [API] GetClientRect(hwnd=0x30002) -> 32x32
+[Te4c0] [API] SetWindowPos(0x30003 32x19@0,0 flags=0x14) -> TRUE
+[Te4c0] [API] GetWindowRect -> 32x32
+[Te4c0] [API] CopyRect -> TRUE
+[Te4c0] [API] GetClientRect(hwnd=0x10001) -> 32x32
+[Te4c0] [API] SetWindowPos(0x10001 32x22@0,0 flags=0x14) -> TRUE
+[Te4c0] [API] SendMessageW(hwnd=0x30004 WM_?) -> 0
+[Te4c0] [API] GetWindowRect -> 32x32
+[Te4c0] [API] HeapAlloc(size=0x4, zero=0) = 0x33da0f0
+[Te4c0] [API] GetClientRect(hwnd=0x30004) -> 32x32
+[Te4c0] [API] HeapFree(0x33da0f0)
+[Te4c0] [API] SetWindowPos(0x30002 32x-22@0,22 flags=0x14) -> TRUE
+[Te4c0] [API] GetWindowLongW(0x30002,-16) -> 0x0
+[Te4c0] [API] GetClientRect(hwnd=0x30002) -> 32x32
+[Te4c0] [API] GetWindowLongW(0x30002,-16) -> 0x0
+[Te4c0] [API] GetClientRect(hwnd=0x30002) -> 32x32
+[Te4c0] [API] GetWindowLongW(0x30002,-16) -> 0x0
+[Te4c0] [API] GetWindowLongW(0x30002,-16) -> 0x0
+[Te4c0] [API] GetWindowLongW(0x30002,-16) -> 0x0
+[Te4c0] [API] GetWindowLongW(0x30002,-16) -> 0x0
+[Te4c0] [API] GetWindowLongW(0x30002,-16) -> 0x0
+[Te4c0] [API] GetClientRect(hwnd=0x30002) -> 32x32
+[Te4c0] [API] SetWindowPos(0x30003 32x19@0,0 flags=0x14) -> TRUE
+[Te4c0] [API] SendMessageW(hwnd=0x30003 WM_?) -> 0
+[Te4c0] [API] GetLocaleInfoW(type=f)
+[Te4c0] [API] GetLocaleInfoW(type=10)
+[Te4c0] [API] HeapFree(0x33da0d0)
+[Te4c0] [API] HeapAlloc(size=0xa, zero=0) = 0x33da0d0
+[Te4c0] [API] [GUI] InvalidateRect -> paint pending
+[Te4c0] [API] SendMessageW(hwnd=0x30003 WM_?) -> 0
+[Te4c0] [API] GetLocaleInfoW(type=f)
+[Te4c0] [API] GetLocaleInfoW(type=10)
+[Te4c0] [API] HeapFree(0x33da0d0)
+[Te4c0] [API] HeapAlloc(size=0xa, zero=0) = 0x33da0d0
+[Te4c0] [API] [GUI] InvalidateRect -> paint pending
+[Te4c0] [API] SendMessageW(hwnd=0x30003 WM_?) -> 0
+[Te4c0] [API] GetLocaleInfoW(type=f)
+[Te4c0] [API] GetLocaleInfoW(type=10)
+[Te4c0] [API] HeapFree(0x33da0d0)
+[Te4c0] [API] HeapAlloc(size=0xa, zero=0) = 0x33da0d0
+[Te4c0] [API] [GUI] InvalidateRect -> paint pending
+[Te4c0] [API] SendMessageW(hwnd=0x30003 WM_?) -> 0
+[Te4c0] [API] GetLocaleInfoW(type=f)
+[Te4c0] [API] GetLocaleInfoW(type=10)
+[Te4c0] [API] HeapFree(0x33da0d0)
+[Te4c0] [API] HeapAlloc(size=0xa, zero=0) = 0x33da0d0
+[Te4c0] [API] [GUI] InvalidateRect -> paint pending
+[Te4c0] [API] SendMessageW(hwnd=0x30003 WM_?) -> 0
+[Te4c0] [API] SendMessageW(hwnd=0x30003 WM_?) -> 0
+[Te4c0] [API] SetWindowTextW -> '10 wchars' TRUE
+[Te4c0] [API] SetWindowTextW -> '0 wchars' TRUE
+[Te4c0] [API] SendMessageW(hwnd=0x30001 WM_?) -> 0
+[Te4c0] [API] SendMessageW(hwnd=0x30001 WM_?) -> 0
+[Te4c0] [API] SendMessageW(hwnd=0x30001 WM_?) -> 0
+[Te4c0] [API] SendMessageW(hwnd=0x30001 WM_?) -> 0
+[Te4c0] [API] [GUI] InvalidateRect -> paint pending
+[Te4c0] [API] HeapAlloc(size=0x4, zero=0) = 0x33da0f0
+[Te4c0] [API] GetClientRect(hwnd=0x30004) -> 32x32
+[Te4c0] [API] HeapFree(0x33da0f0)
+[Te4c0] [API] GetWindowRect -> 32x32
+[Te4c0] [API] CopyRect -> TRUE
+[Te4c0] [API] GetClientRect(hwnd=0x10001) -> 32x32
+[Te4c0] [API] SetWindowPos(0x10001 32x22@0,0 flags=0x14) -> TRUE
+[Te4c0] [API] SendMessageW(hwnd=0x30004 WM_?) -> 0
+[Te4c0] [API] GetWindowRect -> 32x32
+[Te4c0] [API] HeapAlloc(size=0x4, zero=0) = 0x33da0f0
+[Te4c0] [API] GetClientRect(hwnd=0x30004) -> 32x32
+[Te4c0] [API] HeapFree(0x33da0f0)
+[Te4c0] [API] SetWindowPos(0x30002 32x-22@0,22 flags=0x14) -> TRUE
+[Te4c0] [API] GetWindowLongW(0x30002,-16) -> 0x0
+[Te4c0] [API] GetClientRect(hwnd=0x30002) -> 32x32
+[Te4c0] [API] GetWindowLongW(0x30002,-16) -> 0x0
+[Te4c0] [API] GetClientRect(hwnd=0x30002) -> 32x32
+[Te4c0] [API] GetWindowLongW(0x30002,-16) -> 0x0
+[Te4c0] [API] GetWindowLongW(0x30002,-16) -> 0x0
+[Te4c0] [API] GetWindowLongW(0x30002,-16) -> 0x0
+[Te4c0] [API] GetWindowLongW(0x30002,-16) -> 0x0
+[Te4c0] [API] GetWindowLongW(0x30002,-16) -> 0x0
+[Te4c0] [API] GetClientRect(hwnd=0x30002) -> 32x32
+[Te4c0] [API] SetWindowPos(0x30003 32x19@0,0 flags=0x14) -> TRUE
+[Te4c0] [API] ShowWindow(hwnd=0x10001 cmd=5) -> TRUE
+[Te4c0] [API] [GUI] InvalidateRect -> paint pending
+[Te4c0] [API] RedrawWindow(0x10001) -> TRUE
+[Te4c0] [API] OpenIcon(0x10001)
+[Te4c0] [API] SetActiveWindow(0x10001) -> prev (nil)
+[Te4c0] [API] GetLastError() = 2
+[Te4c0] [API] GetWindowLongW(0x10001,-20) -> 0x0
+[Te4c0] [API] SetWindowPos(0x10001 0x0@0,0 flags=0x3) -> TRUE
+[Te4c0] [API] SetFocus(0x10001) -> NULL (no previous focus tracked)
+[Te4c0] [API] SendMessageW(hwnd=0x30001 WM_?) -> 0
+[Te4c0] [API] SetFocus(0x30001) -> NULL (no previous focus tracked)
+[Te4c0] [API] GetLastError() = 2
+[Te4c0] [API] HeapAlloc(size=0x4f8, zero=0) = 0x33da150
+[Te4c0] [API] HeapAlloc(size=0x20, zero=0) = 0x33da650
+[Te4c0] [API] EnterCriticalSection(0x14020e128)
+[Te4c0] [API] LeaveCriticalSection(0x14020e128)
+[Te4c0] [API] InitializeCriticalSection(0x33da4d0)
+[Te4c0] [API] HeapAlloc(size=0x4, zero=0) = 0x33da0f0
+[Te4c0] [API] GetClientRect(hwnd=0x30004) -> 32x32
+[Te4c0] [API] HeapFree(0x33da0f0)
+[Te4c0] [API] EnterCriticalSection(0x33d86d0)
+[Te4c0] [API] LeaveCriticalSection(0x33d86d0)
+[Te4c0] [API] HeapFree(0x33da0d0)
+[Te4c0] [API] HeapAlloc(size=0x14, zero=0) = 0x33da0d0
+[Te4c0] [API] SetWindowTextW -> '10 wchars' TRUE
+[Te4c0] [API] GetWindowLongW(0x30002,-16) -> 0x0
+[Te4c0] [API] GetClientRect(hwnd=0x30002) -> 32x32
+[Te4c0] [API] SetWindowPos(0x30003 32x19@0,0 flags=0x14) -> TRUE
+[Te4c0] [API] GetWindowRect -> 32x32
+[Te4c0] [API] HeapAlloc(size=0x1, zero=0) = 0x33da0f0
+[Te4c0] [API] HeapAlloc(size=0x1, zero=0) = 0x33da680
+[Te4c0] [API] EnterCriticalSection(0x14020e128)
+[Te4c0] [API] LeaveCriticalSection(0x14020e128)
+[Te4c0] [API] HeapAlloc(size=0x20, zero=0) = 0x33da6a0
+[Te4c0] [API] EnterCriticalSection(0x14020e128)
+[Te4c0] [API] LeaveCriticalSection(0x14020e128)
+[Te4c0] [API] [GUI] SetTimer(id=0, 250ms) -> armed (real elapse gate)
+[Te4c0] [API] [GUI] InvalidateRect -> paint pending
+[Te4c0] [API] [GUI-EVENT] #1 GetMessageW -> WM_PAINT
+[Te4c0] [API] GetWindowLongPtrW(0x10001,-21) -> 0x33d9a40
+[Te4c0] [API] [GUI-EVENT] dispatch WM_PAINT wp=0x0 -> 0
+[Te4c0] [API] [GUI-EVENT] #2 GetMessageW -> WM_TIMER id=0
+[Te4c0] [API] GetWindowLongPtrW(0x10001,-21) -> 0x33d9a40
+[Te4c0] [API] [GUI-EVENT] dispatch WM_TIMER wp=0x0 -> 0
+[Te4c0] [API] [GUI-EVENT] #3 GetMessageW -> WM_TIMER id=0
+[Te4c0] [API] GetWindowLongPtrW(0x10001,-21) -> 0x33d9a40
+[Te4c0] [API] [GUI-EVENT] dispatch WM_TIMER wp=0x0 -> 0
+[Te4c0] [API] [GUI-EVENT] #4 GetMessageW -> WM_TIMER id=0
+[Te4c0] [API] GetWindowLongPtrW(0x10001,-21) -> 0x33d9a40
+[Te4c0] [API] [GUI-EVENT] dispatch WM_TIMER wp=0x0 -> 0
+[Te4c0] [API] [GUI-EVENT] #5 GetMessageW -> WM_TIMER id=0
+[Te4c0] [API] GetWindowLongPtrW(0x10001,-21) -> 0x33d9a40
+[Te4c0] [API] [GUI-EVENT] dispatch WM_TIMER wp=0x0 -> 0
+[Te4c0] [API] [GUI-EVENT] #6 GetMessageW -> WM_TIMER id=0
+[Te4c0] [API] GetWindowLongPtrW(0x10001,-21) -> 0x33d9a40
+[Te4c0] [API] [GUI-EVENT] dispatch WM_TIMER wp=0x0 -> 0
+[Te4c0] [API] [GUI-EVENT] #7 GetMessageW -> WM_TIMER id=0
+[Te4c0] [API] GetWindowLongPtrW(0x10001,-21) -> 0x33d9a40
+[Te4c0] [API] [GUI-EVENT] dispatch WM_TIMER wp=0x0 -> 0
+[Te4c0] [API] [GUI-EVENT] #8 GetMessageW -> WM_TIMER id=0
+[Te4c0] [API] GetWindowLongPtrW(0x10001,-21) -> 0x33d9a40
+[Te4c0] [API] [GUI-EVENT] dispatch WM_TIMER wp=0x0 -> 0
+[Te4c0] [API] [GUI-EVENT] #9 GetMessageW -> WM_TIMER id=0
+[Te4c0] [API] GetWindowLongPtrW(0x10001,-21) -> 0x33d9a40
+[Te4c0] [API] [GUI-EVENT] dispatch WM_TIMER wp=0x0 -> 0
+[Te4c0] [API] [GUI-EVENT] #10 GetMessageW -> WM_TIMER id=0
+[Te4c0] [API] GetWindowLongPtrW(0x10001,-21) -> 0x33d9a40
+[Te4c0] [API] [GUI-EVENT] dispatch WM_TIMER wp=0x0 -> 0
+[Te4c0] [API] [GUI-EVENT] #11 GetMessageW -> WM_TIMER id=0
+[Te4c0] [API] GetWindowLongPtrW(0x10001,-21) -> 0x33d9a40
+[Te4c0] [API] [GUI-EVENT] dispatch WM_TIMER wp=0x0 -> 0
+[Te4c0] [API] [GUI-EVENT] #12 GetMessageW -> WM_TIMER id=0
+[Te4c0] [API] GetWindowLongPtrW(0x10001,-21) -> 0x33d9a40
+[Te4c0] [API] [GUI-EVENT] dispatch WM_TIMER wp=0x0 -> 0
+[Te4c0] [API] [GUI-EVENT] #13 GetMessageW -> WM_TIMER id=0
+[Te4c0] [API] GetWindowLongPtrW(0x10001,-21) -> 0x33d9a40
+[Te4c0] [API] [GUI-EVENT] dispatch WM_TIMER wp=0x0 -> 0
+[Te4c0] [API] [GUI-EVENT] #14 GetMessageW -> WM_TIMER id=0
+[Te4c0] [API] GetWindowLongPtrW(0x10001,-21) -> 0x33d9a40
+[Te4c0] [API] [GUI-EVENT] dispatch WM_TIMER wp=0x0 -> 0
+[Te4c0] [API] [GUI-EVENT] #15 GetMessageW -> WM_TIMER id=0
+[Te4c0] [API] GetWindowLongPtrW(0x10001,-21) -> 0x33d9a40
+[Te4c0] [API] [GUI-EVENT] dispatch WM_TIMER wp=0x0 -> 0
+[Te4c0] [API] [GUI-EVENT] #16 GetMessageW -> WM_TIMER id=0
+[Te4c0] [API] GetWindowLongPtrW(0x10001,-21) -> 0x33d9a40
+[Te4c0] [API] [GUI-EVENT] dispatch WM_TIMER wp=0x0 -> 0
+[Te4c0] [API] [GUI-EVENT] #17 GetMessageW -> WM_TIMER id=0
+[Te4c0] [API] GetWindowLongPtrW(0x10001,-21) -> 0x33d9a40
+[Te4c0] [API] [GUI-EVENT] dispatch WM_TIMER wp=0x0 -> 0
+[Te4c0] [API] [GUI-EVENT] #18 GetMessageW -> WM_TIMER id=0
+[Te4c0] [API] GetWindowLongPtrW(0x10001,-21) -> 0x33d9a40
+[Te4c0] [API] [GUI-EVENT] dispatch WM_TIMER wp=0x0 -> 0
+[Te4c0] [API] [GUI-EVENT] #19 GetMessageW -> WM_TIMER id=0
+[Te4c0] [API] GetWindowLongPtrW(0x10001,-21) -> 0x33d9a40
+[Te4c0] [API] [GUI-EVENT] dispatch WM_TIMER wp=0x0 -> 0
+[Te4c0] [API] [GUI-EVENT] #20 GetMessageW -> WM_TIMER id=0
+[Te4c0] [API] GetWindowLongPtrW(0x10001,-21) -> 0x33d9a40
+[Te4c0] [API] [GUI-EVENT] dispatch WM_TIMER wp=0x0 -> 0
+[Te4c0] [API] [GUI-EVENT] #21 GetMessageW -> WM_TIMER id=0
+[Te4c0] [API] GetWindowLongPtrW(0x10001,-21) -> 0x33d9a40
+[Te4c0] [API] [GUI-EVENT] dispatch WM_TIMER wp=0x0 -> 0
+[Te4c0] [API] [GUI-EVENT] #22 GetMessageW -> WM_TIMER id=0
+[Te4c0] [API] GetWindowLongPtrW(0x10001,-21) -> 0x33d9a40
+[Te4c0] [API] [GUI-EVENT] dispatch WM_TIMER wp=0x0 -> 0
+[Te4c0] [API] [GUI-EVENT] #23 GetMessageW -> WM_TIMER id=0
+[Te4c0] [API] GetWindowLongPtrW(0x10001,-21) -> 0x33d9a40
+[Te4c0] [API] [GUI-EVENT] dispatch WM_TIMER wp=0x0 -> 0
+[Te4c0] [API] [GUI-EVENT] #24 GetMessageW -> WM_TIMER id=0
+[Te4c0] [API] GetWindowLongPtrW(0x10001,-21) -> 0x33d9a40
+[Te4c0] [API] [GUI-EVENT] dispatch WM_TIMER wp=0x0 -> 0
+[Te4c0] [API] [GUI-EVENT] #25 GetMessageW -> WM_TIMER id=0
+[Te4c0] [API] GetWindowLongPtrW(0x10001,-21) -> 0x33d9a40
+[Te4c0] [API] [GUI-EVENT] dispatch WM_TIMER wp=0x0 -> 0
+[Te4c0] [API] [GUI-EVENT] #26 GetMessageW -> WM_TIMER id=0
+[Te4c0] [API] GetWindowLongPtrW(0x10001,-21) -> 0x33d9a40
+[Te4c0] [API] [GUI-EVENT] dispatch WM_TIMER wp=0x0 -> 0
+[Te4c0] [API] [GUI-EVENT] #27 GetMessageW -> WM_TIMER id=0
+[Te4c0] [API] GetWindowLongPtrW(0x10001,-21) -> 0x33d9a40
+[Te4c0] [API] [GUI-EVENT] dispatch WM_TIMER wp=0x0 -> 0
+[Te4c0] [API] [GUI-EVENT] #28 GetMessageW -> WM_TIMER id=0
+[Te4c0] [API] GetWindowLongPtrW(0x10001,-21) -> 0x33d9a40
+[Te4c0] [API] [GUI-EVENT] dispatch WM_TIMER wp=0x0 -> 0
+[Te4c0] [API] [GUI-EVENT] #29 GetMessageW -> WM_TIMER id=0
+[Te4c0] [API] GetWindowLongPtrW(0x10001,-21) -> 0x33d9a40
+[Te4c0] [API] [GUI-EVENT] dispatch WM_TIMER wp=0x0 -> 0
+[Te4c0] [API] [GUI-EVENT] #30 GetMessageW -> WM_TIMER id=0
+[Te4c0] [API] GetWindowLongPtrW(0x10001,-21) -> 0x33d9a40
+[Te4c0] [API] [GUI-EVENT] dispatch WM_TIMER wp=0x0 -> 0
+[Te4c0] [API] [GUI-EVENT] #31 GetMessageW -> WM_TIMER id=0
+[Te4c0] [API] GetWindowLongPtrW(0x10001,-21) -> 0x33d9a40
+[Te4c0] [API] [GUI-EVENT] dispatch WM_TIMER wp=0x0 -> 0
+[Te4c0] [API] [GUI-EVENT] #32 GetMessageW -> WM_TIMER id=0
+[Te4c0] [API] GetWindowLongPtrW(0x10001,-21) -> 0x33d9a40
+[Te4c0] [API] [GUI-EVENT] dispatch WM_TIMER wp=0x0 -> 0
+[Te4c0] [API] [GUI-EVENT] #33 GetMessageW -> WM_TIMER id=0
+[Te4c0] [API] GetWindowLongPtrW(0x10001,-21) -> 0x33d9a40
+[Te4c0] [API] [GUI-EVENT] dispatch WM_TIMER wp=0x0 -> 0
+[Te4c0] [API] [GUI-EVENT] #34 GetMessageW -> WM_TIMER id=0
+[Te4c0] [API] GetWindowLongPtrW(0x10001,-21) -> 0x33d9a40
+[Te4c0] [API] [GUI-EVENT] dispatch WM_TIMER wp=0x0 -> 0
+[Te4c0] [API] [GUI-EVENT] #35 GetMessageW -> WM_TIMER id=0
+[Te4c0] [API] GetWindowLongPtrW(0x10001,-21) -> 0x33d9a40
+[Te4c0] [API] [GUI-EVENT] dispatch WM_TIMER wp=0x0 -> 0
+[Te4c0] [API] [GUI-EVENT] #36 GetMessageW -> WM_TIMER id=0
+[Te4c0] [API] GetWindowLongPtrW(0x10001,-21) -> 0x33d9a40
+[Te4c0] [API] [GUI-EVENT] dispatch WM_TIMER wp=0x0 -> 0
+[Te4c0] [API] [GUI-EVENT] #37 GetMessageW -> WM_TIMER id=0
+[Te4c0] [API] GetWindowLongPtrW(0x10001,-21) -> 0x33d9a40
+[Te4c0] [API] [GUI-EVENT] dispatch WM_TIMER wp=0x0 -> 0
+[Te4c0] [API] [GUI-EVENT] #38 GetMessageW -> WM_TIMER id=0
+[Te4c0] [API] GetWindowLongPtrW(0x10001,-21) -> 0x33d9a40
+[Te4c0] [API] [GUI-EVENT] dispatch WM_TIMER wp=0x0 -> 0
+[Te4c0] [API] [GUI-EVENT] #39 GetMessageW -> WM_TIMER id=0
+[Te4c0] [API] GetWindowLongPtrW(0x10001,-21) -> 0x33d9a40
+[Te4c0] [API] [GUI-EVENT] dispatch WM_TIMER wp=0x0 -> 0
+[Te4c0] [API] [GUI-EVENT] #40 GetMessageW -> WM_TIMER id=0
+[Te4c0] [API] GetWindowLongPtrW(0x10001,-21) -> 0x33d9a40
+[Te4c0] [API] [GUI-EVENT] dispatch WM_TIMER wp=0x0 -> 0
+[Te4c0] [API] [GUI-EVENT] #41 GetMessageW -> WM_TIMER id=0
+[Te4c0] [API] GetWindowLongPtrW(0x10001,-21) -> 0x33d9a40
+[Te4c0] [API] [GUI-EVENT] dispatch WM_TIMER wp=0x0 -> 0
+[Te4c0] [API] [GUI-EVENT] #42 GetMessageW -> WM_TIMER id=0
+[Te4c0] [API] GetWindowLongPtrW(0x10001,-21) -> 0x33d9a40
+[Te4c0] [API] [GUI-EVENT] dispatch WM_TIMER wp=0x0 -> 0
+[Te4c0] [API] [GUI-EVENT] #43 GetMessageW -> WM_TIMER id=0
+[Te4c0] [API] GetWindowLongPtrW(0x10001,-21) -> 0x33d9a40
+[Te4c0] [API] [GUI-EVENT] dispatch WM_TIMER wp=0x0 -> 0
+[Te4c0] [API] [GUI-EVENT] #44 GetMessageW -> WM_TIMER id=0
+[Te4c0] [API] GetWindowLongPtrW(0x10001,-21) -> 0x33d9a40
+[Te4c0] [API] [GUI-EVENT] dispatch WM_TIMER wp=0x0 -> 0
+[Te4c0] [API] [GUI-EVENT] #45 GetMessageW -> WM_TIMER id=0
+[Te4c0] [API] GetWindowLongPtrW(0x10001,-21) -> 0x33d9a40
+[Te4c0] [API] [GUI-EVENT] dispatch WM_TIMER wp=0x0 -> 0
+[Te4c0] [API] [GUI-EVENT] #46 GetMessageW -> WM_TIMER id=0
+[Te4c0] [API] GetWindowLongPtrW(0x10001,-21) -> 0x33d9a40
+[Te4c0] [API] [GUI-EVENT] dispatch WM_TIMER wp=0x0 -> 0
+[Te4c0] [API] [GUI-EVENT] #47 GetMessageW -> WM_TIMER id=0
+[Te4c0] [API] GetWindowLongPtrW(0x10001,-21) -> 0x33d9a40
+[Te4c0] [API] [GUI-EVENT] dispatch WM_TIMER wp=0x0 -> 0
+[Te4c0] [API] [GUI-EVENT] #48 GetMessageW -> WM_TIMER id=0
+[Te4c0] [API] GetWindowLongPtrW(0x10001,-21) -> 0x33d9a40
+[Te4c0] [API] [GUI-EVENT] dispatch WM_TIMER wp=0x0 -> 0
+[Te4c0] [API] [GUI-EVENT] #49 GetMessageW -> WM_TIMER id=0
+[Te4c0] [API] GetWindowLongPtrW(0x10001,-21) -> 0x33d9a40
+[Te4c0] [API] [GUI-EVENT] dispatch WM_TIMER wp=0x0 -> 0
+[Te4c0] [API] [GUI-EVENT] #50 GetMessageW -> WM_TIMER id=0
+[Te4c0] [API] GetWindowLongPtrW(0x10001,-21) -> 0x33d9a40
+[Te4c0] [API] [GUI-EVENT] dispatch WM_TIMER wp=0x0 -> 0
+[Te4c0] [API] [GUI-EVENT] #51 GetMessageW -> WM_TIMER id=0
+[Te4c0] [API] GetWindowLongPtrW(0x10001,-21) -> 0x33d9a40
+[Te4c0] [API] [GUI-EVENT] dispatch WM_TIMER wp=0x0 -> 0
+[Te4c0] [API] [GUI-EVENT] #52 GetMessageW -> WM_TIMER id=0
+[Te4c0] [API] GetWindowLongPtrW(0x10001,-21) -> 0x33d9a40
+[Te4c0] [API] [GUI-EVENT] dispatch WM_TIMER wp=0x0 -> 0
+[Te4c0] [API] [GUI-EVENT] #53 GetMessageW -> WM_TIMER id=0
+[Te4c0] [API] GetWindowLongPtrW(0x10001,-21) -> 0x33d9a40
+[Te4c0] [API] [GUI-EVENT] dispatch WM_TIMER wp=0x0 -> 0
+[Te4c0] [API] [GUI-EVENT] #54 GetMessageW -> WM_TIMER id=0
+[Te4c0] [API] GetWindowLongPtrW(0x10001,-21) -> 0x33d9a40
+[Te4c0] [API] [GUI-EVENT] dispatch WM_TIMER wp=0x0 -> 0
+[Te4c0] [API] [GUI-EVENT] #55 GetMessageW -> WM_TIMER id=0
+[Te4c0] [API] GetWindowLongPtrW(0x10001,-21) -> 0x33d9a40
+[Te4c0] [API] [GUI-EVENT] dispatch WM_TIMER wp=0x0 -> 0
+[Te4c0] [API] [GUI-EVENT] #56 GetMessageW -> WM_TIMER id=0
+[Te4c0] [API] GetWindowLongPtrW(0x10001,-21) -> 0x33d9a40
+[Te4c0] [API] [GUI-EVENT] dispatch WM_TIMER wp=0x0 -> 0
+[Te4c0] [API] [GUI-EVENT] #57 GetMessageW -> WM_TIMER id=0
+[Te4c0] [API] GetWindowLongPtrW(0x10001,-21) -> 0x33d9a40
+[Te4c0] [API] [GUI-EVENT] dispatch WM_TIMER wp=0x0 -> 0
+[Te4c0] [API] [GUI-EVENT] #58 GetMessageW -> WM_TIMER id=0
+[Te4c0] [API] GetWindowLongPtrW(0x10001,-21) -> 0x33d9a40
+[Te4c0] [API] [GUI-EVENT] dispatch WM_TIMER wp=0x0 -> 0
+[Te4c0] [API] [GUI-EVENT] #59 GetMessageW -> WM_TIMER id=0
+[Te4c0] [API] GetWindowLongPtrW(0x10001,-21) -> 0x33d9a40
+[Te4c0] [API] [GUI-EVENT] dispatch WM_TIMER wp=0x0 -> 0
+[Te4c0] [API] [GUI-EVENT] #60 GetMessageW -> WM_TIMER id=0
+[Te4c0] [API] GetWindowLongPtrW(0x10001,-21) -> 0x33d9a40
+[Te4c0] [API] [GUI-EVENT] dispatch WM_TIMER wp=0x0 -> 0
+[Te4c0] [API] [GUI-EVENT] #61 GetMessageW -> WM_TIMER id=0
+[Te4c0] [API] GetWindowLongPtrW(0x10001,-21) -> 0x33d9a40
+[Te4c0] [API] [GUI-EVENT] dispatch WM_TIMER wp=0x0 -> 0
+[Te4c0] [API] [GUI-EVENT] #62 GetMessageW -> WM_TIMER id=0
+[Te4c0] [API] GetWindowLongPtrW(0x10001,-21) -> 0x33d9a40
+[Te4c0] [API] [GUI-EVENT] dispatch WM_TIMER wp=0x0 -> 0
+[Te4c0] [API] [GUI-EVENT] #63 GetMessageW -> WM_TIMER id=0
+[Te4c0] [API] GetWindowLongPtrW(0x10001,-21) -> 0x33d9a40
+[Te4c0] [API] [GUI-EVENT] dispatch WM_TIMER wp=0x0 -> 0
+[Te4c0] [API] [GUI-EVENT] #64 GetMessageW -> WM_TIMER id=0
+[Te4c0] [API] GetWindowLongPtrW(0x10001,-21) -> 0x33d9a40
+[Te4c0] [API] [GUI-EVENT] dispatch WM_TIMER wp=0x0 -> 0
+[Te4c0] [API] [GUI-EVENT] #65 GetMessageW -> WM_TIMER id=0
+[Te4c0] [API] GetWindowLongPtrW(0x10001,-21) -> 0x33d9a40
+[Te4c0] [API] [GUI-EVENT] dispatch WM_TIMER wp=0x0 -> 0
+[Te4c0] [API] [GUI-EVENT] #66 GetMessageW -> WM_TIMER id=0
+[Te4c0] [API] GetWindowLongPtrW(0x10001,-21) -> 0x33d9a40
+[Te4c0] [API] [GUI-EVENT] dispatch WM_TIMER wp=0x0 -> 0
+[Te4c0] [API] [GUI-EVENT] #67 GetMessageW -> WM_TIMER id=0
+[Te4c0] [API] GetWindowLongPtrW(0x10001,-21) -> 0x33d9a40
+[Te4c0] [API] [GUI-EVENT] dispatch WM_TIMER wp=0x0 -> 0
+[Te4c0] [API] [GUI-EVENT] #68 GetMessageW -> WM_TIMER id=0
+[Te4c0] [API] GetWindowLongPtrW(0x10001,-21) -> 0x33d9a40
+[Te4c0] [API] [GUI-EVENT] dispatch WM_TIMER wp=0x0 -> 0
+[Te4c0] [API] [GUI-EVENT] #69 GetMessageW -> WM_TIMER id=0
+[Te4c0] [API] GetWindowLongPtrW(0x10001,-21) -> 0x33d9a40
+[Te4c0] [API] [GUI-EVENT] dispatch WM_TIMER wp=0x0 -> 0
+[Te4c0] [API] [GUI-EVENT] #70 GetMessageW -> WM_TIMER id=0
+[Te4c0] [API] GetWindowLongPtrW(0x10001,-21) -> 0x33d9a40
+[Te4c0] [API] [GUI-EVENT] dispatch WM_TIMER wp=0x0 -> 0
+[Te4c0] [API] [GUI-EVENT] #71 GetMessageW -> WM_TIMER id=0
+[Te4c0] [API] GetWindowLongPtrW(0x10001,-21) -> 0x33d9a40
+[Te4c0] [API] [GUI-EVENT] dispatch WM_TIMER wp=0x0 -> 0
+[Te4c0] [API] [GUI-EVENT] #72 GetMessageW -> WM_TIMER id=0
+[Te4c0] [API] GetWindowLongPtrW(0x10001,-21) -> 0x33d9a40
+[Te4c0] [API] [GUI-EVENT] dispatch WM_TIMER wp=0x0 -> 0
+[Te4c0] [API] [GUI-EVENT] #73 GetMessageW -> WM_TIMER id=0
+[Te4c0] [API] GetWindowLongPtrW(0x10001,-21) -> 0x33d9a40
+[Te4c0] [API] [GUI-EVENT] dispatch WM_TIMER wp=0x0 -> 0
+[Te4c0] [API] [GUI-EVENT] #74 GetMessageW -> WM_TIMER id=0
+[Te4c0] [API] GetWindowLongPtrW(0x10001,-21) -> 0x33d9a40
+[Te4c0] [API] [GUI-EVENT] dispatch WM_TIMER wp=0x0 -> 0
+[Te4c0] [API] [GUI-EVENT] #75 GetMessageW -> WM_TIMER id=0
+[Te4c0] [API] GetWindowLongPtrW(0x10001,-21) -> 0x33d9a40
+[Te4c0] [API] [GUI-EVENT] dispatch WM_TIMER wp=0x0 -> 0
+[Te4c0] [API] [GUI-EVENT] #76 GetMessageW -> WM_TIMER id=0
+[Te4c0] [API] GetWindowLongPtrW(0x10001,-21) -> 0x33d9a40
+[Te4c0] [API] [GUI-EVENT] dispatch WM_TIMER wp=0x0 -> 0
+[Te4c0] [API] [GUI-EVENT] #77 GetMessageW -> WM_TIMER id=0
+[Te4c0] [API] GetWindowLongPtrW(0x10001,-21) -> 0x33d9a40
+[Te4c0] [API] [GUI-EVENT] dispatch WM_TIMER wp=0x0 -> 0
+[Te4c0] [API] [GUI-EVENT] #78 GetMessageW -> WM_TIMER id=0
+[Te4c0] [API] GetWindowLongPtrW(0x10001,-21) -> 0x33d9a40
+[Te4c0] [API] [GUI-EVENT] dispatch WM_TIMER wp=0x0 -> 0
+[Te4c0] [API] [GUI-EVENT] #79 GetMessageW -> WM_TIMER id=0
+[Te4c0] [API] GetWindowLongPtrW(0x10001,-21) -> 0x33d9a40
+[Te4c0] [API] [GUI-EVENT] dispatch WM_TIMER wp=0x0 -> 0
+[Te4c0] [API] [GUI-EVENT] #80 GetMessageW -> WM_TIMER id=0
+[Te4c0] [API] GetWindowLongPtrW(0x10001,-21) -> 0x33d9a40
+[Te4c0] [API] [GUI-EVENT] dispatch WM_TIMER wp=0x0 -> 0
+[Te4c0] [API] [GUI-EVENT] #81 GetMessageW -> WM_TIMER id=0
+[Te4c0] [API] GetWindowLongPtrW(0x10001,-21) -> 0x33d9a40
+[Te4c0] [API] [GUI-EVENT] dispatch WM_TIMER wp=0x0 -> 0
+[Te4c0] [API] [GUI-EVENT] #82 GetMessageW -> WM_TIMER id=0
+[Te4c0] [API] GetWindowLongPtrW(0x10001,-21) -> 0x33d9a40
+[Te4c0] [API] [GUI-EVENT] dispatch WM_TIMER wp=0x0 -> 0
+[Te4c0] [API] [GUI-EVENT] #83 GetMessageW -> WM_TIMER id=0
+[Te4c0] [API] GetWindowLongPtrW(0x10001,-21) -> 0x33d9a40
+[Te4c0] [API] [GUI-EVENT] dispatch WM_TIMER wp=0x0 -> 0
+[Te4c0] [API] [GUI-EVENT] #84 GetMessageW -> WM_TIMER id=0
+[Te4c0] [API] GetWindowLongPtrW(0x10001,-21) -> 0x33d9a40
+[Te4c0] [API] [GUI-EVENT] dispatch WM_TIMER wp=0x0 -> 0
+[Te4c0] [API] [GUI-EVENT] #85 GetMessageW -> WM_TIMER id=0
+[Te4c0] [API] GetWindowLongPtrW(0x10001,-21) -> 0x33d9a40
+[Te4c0] [API] [GUI-EVENT] dispatch WM_TIMER wp=0x0 -> 0
+[Te4c0] [API] [GUI-EVENT] #86 GetMessageW -> WM_TIMER id=0
+[Te4c0] [API] GetWindowLongPtrW(0x10001,-21) -> 0x33d9a40
+[Te4c0] [API] [GUI-EVENT] dispatch WM_TIMER wp=0x0 -> 0
+[Te4c0] [API] [GUI-EVENT] #87 GetMessageW -> WM_TIMER id=0
+[Te4c0] [API] GetWindowLongPtrW(0x10001,-21) -> 0x33d9a40
+[Te4c0] [API] [GUI-EVENT] dispatch WM_TIMER wp=0x0 -> 0
+[Te4c0] [API] [GUI-EVENT] #88 GetMessageW -> WM_TIMER id=0
+[Te4c0] [API] GetWindowLongPtrW(0x10001,-21) -> 0x33d9a40
+[Te4c0] [API] [GUI-EVENT] dispatch WM_TIMER wp=0x0 -> 0
+[Te4c0] [API] [GUI-EVENT] #89 GetMessageW -> WM_TIMER id=0
+[Te4c0] [API] GetWindowLongPtrW(0x10001,-21) -> 0x33d9a40
+[Te4c0] [API] [GUI-EVENT] dispatch WM_TIMER wp=0x0 -> 0
+[Te4c0] [API] [GUI-EVENT] #90 GetMessageW -> WM_TIMER id=0
+[Te4c0] [API] GetWindowLongPtrW(0x10001,-21) -> 0x33d9a40
+[Te4c0] [API] [GUI-EVENT] dispatch WM_TIMER wp=0x0 -> 0
+[Te4c0] [API] [GUI-EVENT] #91 GetMessageW -> WM_TIMER id=0
+[Te4c0] [API] GetWindowLongPtrW(0x10001,-21) -> 0x33d9a40
+[Te4c0] [API] [GUI-EVENT] dispatch WM_TIMER wp=0x0 -> 0
+[Te4c0] [API] [GUI-EVENT] #92 GetMessageW -> WM_TIMER id=0
+[Te4c0] [API] GetWindowLongPtrW(0x10001,-21) -> 0x33d9a40
+[Te4c0] [API] [GUI-EVENT] dispatch WM_TIMER wp=0x0 -> 0
+[Te4c0] [API] [GUI-EVENT] #93 GetMessageW -> WM_TIMER id=0
+[Te4c0] [API] GetWindowLongPtrW(0x10001,-21) -> 0x33d9a40
+[Te4c0] [API] [GUI-EVENT] dispatch WM_TIMER wp=0x0 -> 0
+[Te4c0] [API] [GUI-EVENT] #94 GetMessageW -> WM_TIMER id=0
+[Te4c0] [API] GetWindowLongPtrW(0x10001,-21) -> 0x33d9a40
+[Te4c0] [API] [GUI-EVENT] dispatch WM_TIMER wp=0x0 -> 0
+[Te4c0] [API] [GUI-EVENT] #95 GetMessageW -> WM_TIMER id=0
+[Te4c0] [API] GetWindowLongPtrW(0x10001,-21) -> 0x33d9a40
+[Te4c0] [API] [GUI-EVENT] dispatch WM_TIMER wp=0x0 -> 0
+[Te4c0] [API] [GUI-EVENT] #96 GetMessageW -> WM_TIMER id=0
+[Te4c0] [API] GetWindowLongPtrW(0x10001,-21) -> 0x33d9a40
+[Te4c0] [API] [GUI-EVENT] dispatch WM_TIMER wp=0x0 -> 0
+[Te4c0] [API] [GUI-EVENT] #97 GetMessageW -> WM_TIMER id=0
+[Te4c0] [API] GetWindowLongPtrW(0x10001,-21) -> 0x33d9a40
+[Te4c0] [API] [GUI-EVENT] dispatch WM_TIMER wp=0x0 -> 0
+[Te4c0] [API] [GUI-EVENT] #98 GetMessageW -> WM_TIMER id=0
+[Te4c0] [API] GetWindowLongPtrW(0x10001,-21) -> 0x33d9a40
+[Te4c0] [API] [GUI-EVENT] dispatch WM_TIMER wp=0x0 -> 0
+[Te4c0] [API] [GUI-EVENT] #99 GetMessageW -> WM_TIMER id=0
+[Te4c0] [API] GetWindowLongPtrW(0x10001,-21) -> 0x33d9a40
+[Te4c0] [API] [GUI-EVENT] dispatch WM_TIMER wp=0x0 -> 0
+[Te4c0] [API] [GUI-EVENT] #100 GetMessageW -> WM_TIMER id=0
+[Te4c0] [API] GetWindowLongPtrW(0x10001,-21) -> 0x33d9a40
+[Te4c0] [API] [GUI-EVENT] dispatch WM_TIMER wp=0x0 -> 0
+[Te4c0] [API] [GUI-EVENT] #101 GetMessageW -> WM_TIMER id=0
+[Te4c0] [API] GetWindowLongPtrW(0x10001,-21) -> 0x33d9a40
+[Te4c0] [API] [GUI-EVENT] dispatch WM_TIMER wp=0x0 -> 0
+[Te4c0] [API] [GUI-EVENT] #102 GetMessageW -> WM_TIMER id=0
+[Te4c0] [API] GetWindowLongPtrW(0x10001,-21) -> 0x33d9a40
+[Te4c0] [API] [GUI-EVENT] dispatch WM_TIMER wp=0x0 -> 0
+[Te4c0] [API] [GUI-EVENT] #103 GetMessageW -> WM_TIMER id=0
+[Te4c0] [API] GetWindowLongPtrW(0x10001,-21) -> 0x33d9a40
+[Te4c0] [API] [GUI-EVENT] dispatch WM_TIMER wp=0x0 -> 0
+[Te4c0] [API] [GUI-EVENT] #104 GetMessageW -> WM_TIMER id=0
+[Te4c0] [API] GetWindowLongPtrW(0x10001,-21) -> 0x33d9a40
+[Te4c0] [API] [GUI-EVENT] dispatch WM_TIMER wp=0x0 -> 0
+[Te4c0] [API] [GUI-EVENT] #105 GetMessageW -> WM_TIMER id=0
+[Te4c0] [API] GetWindowLongPtrW(0x10001,-21) -> 0x33d9a40
+[Te4c0] [API] [GUI-EVENT] dispatch WM_TIMER wp=0x0 -> 0
+[Te4c0] [API] [GUI-EVENT] #106 GetMessageW -> WM_TIMER id=0
+[Te4c0] [API] GetWindowLongPtrW(0x10001,-21) -> 0x33d9a40
+[Te4c0] [API] [GUI-EVENT] dispatch WM_TIMER wp=0x0 -> 0
+[Te4c0] [API] [GUI-EVENT] #107 GetMessageW -> WM_TIMER id=0
+[Te4c0] [API] GetWindowLongPtrW(0x10001,-21) -> 0x33d9a40
+[Te4c0] [API] [GUI-EVENT] dispatch WM_TIMER wp=0x0 -> 0
+[Te4c0] [API] [GUI-EVENT] #108 GetMessageW -> WM_TIMER id=0
+[Te4c0] [API] GetWindowLongPtrW(0x10001,-21) -> 0x33d9a40
+[Te4c0] [API] [GUI-EVENT] dispatch WM_TIMER wp=0x0 -> 0
+[Te4c0] [API] [GUI-EVENT] #109 GetMessageW -> WM_TIMER id=0
+[Te4c0] [API] GetWindowLongPtrW(0x10001,-21) -> 0x33d9a40
+[Te4c0] [API] [GUI-EVENT] dispatch WM_TIMER wp=0x0 -> 0
+[Te4c0] [API] [GUI-EVENT] #110 GetMessageW -> WM_TIMER id=0
+[Te4c0] [API] GetWindowLongPtrW(0x10001,-21) -> 0x33d9a40
+[Te4c0] [API] [GUI-EVENT] dispatch WM_TIMER wp=0x0 -> 0
+[Te4c0] [API] [GUI-EVENT] #111 GetMessageW -> WM_TIMER id=0
+[Te4c0] [API] GetWindowLongPtrW(0x10001,-21) -> 0x33d9a40
+[Te4c0] [API] [GUI-EVENT] dispatch WM_TIMER wp=0x0 -> 0
+[Te4c0] [API] [GUI-EVENT] #112 GetMessageW -> WM_TIMER id=0
+[Te4c0] [API] GetWindowLongPtrW(0x10001,-21) -> 0x33d9a40
+[Te4c0] [API] [GUI-EVENT] dispatch WM_TIMER wp=0x0 -> 0
+[Te4c0] [API] [GUI-EVENT] #113 GetMessageW -> WM_TIMER id=0
+[Te4c0] [API] GetWindowLongPtrW(0x10001,-21) -> 0x33d9a40
+[Te4c0] [API] [GUI-EVENT] dispatch WM_TIMER wp=0x0 -> 0
+[Te4c0] [API] [GUI-EVENT] #114 GetMessageW -> WM_TIMER id=0
+[Te4c0] [API] GetWindowLongPtrW(0x10001,-21) -> 0x33d9a40
+[Te4c0] [API] [GUI-EVENT] dispatch WM_TIMER wp=0x0 -> 0
+[Te4c0] [API] [GUI-EVENT] #115 GetMessageW -> WM_TIMER id=0
+[Te4c0] [API] GetWindowLongPtrW(0x10001,-21) -> 0x33d9a40
+[Te4c0] [API] [GUI-EVENT] dispatch WM_TIMER wp=0x0 -> 0
+[Te4c0] [API] [GUI-EVENT] #116 GetMessageW -> WM_TIMER id=0
+[Te4c0] [API] GetWindowLongPtrW(0x10001,-21) -> 0x33d9a40
+[Te4c0] [API] [GUI-EVENT] dispatch WM_TIMER wp=0x0 -> 0
+[Te4c0] [API] [GUI-EVENT] #117 GetMessageW -> WM_TIMER id=0
+[Te4c0] [API] GetWindowLongPtrW(0x10001,-21) -> 0x33d9a40
+[Te4c0] [API] [GUI-EVENT] dispatch WM_TIMER wp=0x0 -> 0
+[Te4c0] [API] [GUI-EVENT] #118 GetMessageW -> WM_TIMER id=0
+[Te4c0] [API] GetWindowLongPtrW(0x10001,-21) -> 0x33d9a40
+[Te4c0] [API] [GUI-EVENT] dispatch WM_TIMER wp=0x0 -> 0
+[Te4c0] [API] [GUI-EVENT] #119 GetMessageW -> WM_TIMER id=0
+[Te4c0] [API] GetWindowLongPtrW(0x10001,-21) -> 0x33d9a40
+[Te4c0] [API] [GUI-EVENT] dispatch WM_TIMER wp=0x0 -> 0
+[Te4c0] [API] [GUI-EVENT] #120 GetMessageW -> WM_TIMER id=0
+[Te4c0] [API] GetWindowLongPtrW(0x10001,-21) -> 0x33d9a40
+[Te4c0] [API] [GUI-EVENT] dispatch WM_TIMER wp=0x0 -> 0
+[Te4c0] [API] [GUI-EVENT] #121 GetMessageW -> WM_TIMER id=0
+[Te4c0] [API] GetWindowLongPtrW(0x10001,-21) -> 0x33d9a40
+[Te4c0] [API] [GUI-EVENT] dispatch WM_TIMER wp=0x0 -> 0
+[Te4c0] [API] [GUI-EVENT] #122 GetMessageW -> WM_TIMER id=0
+[Te4c0] [API] GetWindowLongPtrW(0x10001,-21) -> 0x33d9a40
+[Te4c0] [API] [GUI-EVENT] dispatch WM_TIMER wp=0x0 -> 0
+[Te4c0] [API] [GUI-EVENT] #123 GetMessageW -> WM_TIMER id=0
+[Te4c0] [API] GetWindowLongPtrW(0x10001,-21) -> 0x33d9a40
+[Te4c0] [API] [GUI-EVENT] dispatch WM_TIMER wp=0x0 -> 0
+[Te4c0] [API] [GUI-EVENT] #124 GetMessageW -> WM_TIMER id=0
+[Te4c0] [API] GetWindowLongPtrW(0x10001,-21) -> 0x33d9a40
+[Te4c0] [API] [GUI-EVENT] dispatch WM_TIMER wp=0x0 -> 0
+[Te4c0] [API] [GUI-EVENT] #125 GetMessageW -> WM_TIMER id=0
+[Te4c0] [API] GetWindowLongPtrW(0x10001,-21) -> 0x33d9a40
+[Te4c0] [API] [GUI-EVENT] dispatch WM_TIMER wp=0x0 -> 0
+[Te4c0] [API] [GUI-EVENT] #126 GetMessageW -> WM_TIMER id=0
+[Te4c0] [API] GetWindowLongPtrW(0x10001,-21) -> 0x33d9a40
+[Te4c0] [API] [GUI-EVENT] dispatch WM_TIMER wp=0x0 -> 0
+[Te4c0] [API] [GUI-EVENT] #127 GetMessageW -> WM_TIMER id=0
+[Te4c0] [API] GetWindowLongPtrW(0x10001,-21) -> 0x33d9a40
+[Te4c0] [API] [GUI-EVENT] dispatch WM_TIMER wp=0x0 -> 0
+[Te4c0] [API] [GUI-EVENT] #128 GetMessageW -> WM_TIMER id=0
+[Te4c0] [API] GetWindowLongPtrW(0x10001,-21) -> 0x33d9a40
+[Te4c0] [API] [GUI-EVENT] dispatch WM_TIMER wp=0x0 -> 0
+[Te4c0] [API] [GUI-EVENT] #129 GetMessageW -> WM_TIMER id=0
+[Te4c0] [API] GetWindowLongPtrW(0x10001,-21) -> 0x33d9a40
+[Te4c0] [API] [GUI-EVENT] dispatch WM_TIMER wp=0x0 -> 0
+[Te4c0] [API] [GUI-EVENT] #130 GetMessageW -> WM_TIMER id=0
+[Te4c0] [API] GetWindowLongPtrW(0x10001,-21) -> 0x33d9a40
+[Te4c0] [API] [GUI-EVENT] dispatch WM_TIMER wp=0x0 -> 0
+[Te4c0] [API] [GUI-EVENT] #131 GetMessageW -> WM_TIMER id=0
+[Te4c0] [API] GetWindowLongPtrW(0x10001,-21) -> 0x33d9a40
+[Te4c0] [API] [GUI-EVENT] dispatch WM_TIMER wp=0x0 -> 0
+[Te4c0] [API] [GUI-EVENT] #132 GetMessageW -> WM_TIMER id=0
+[Te4c0] [API] GetWindowLongPtrW(0x10001,-21) -> 0x33d9a40
+[Te4c0] [API] [GUI-EVENT] dispatch WM_TIMER wp=0x0 -> 0
+[Te4c0] [API] [GUI-EVENT] #133 GetMessageW -> WM_TIMER id=0
+[Te4c0] [API] GetWindowLongPtrW(0x10001,-21) -> 0x33d9a40
+[Te4c0] [API] [GUI-EVENT] dispatch WM_TIMER wp=0x0 -> 0
+[Te4c0] [API] [GUI-EVENT] #134 GetMessageW -> WM_TIMER id=0
+[Te4c0] [API] GetWindowLongPtrW(0x10001,-21) -> 0x33d9a40
+[Te4c0] [API] [GUI-EVENT] dispatch WM_TIMER wp=0x0 -> 0
+[Te4c0] [API] [GUI-EVENT] #135 GetMessageW -> WM_TIMER id=0
+[Te4c0] [API] GetWindowLongPtrW(0x10001,-21) -> 0x33d9a40
+[Te4c0] [API] [GUI-EVENT] dispatch WM_TIMER wp=0x0 -> 0
+[Te4c0] [API] [GUI-EVENT] #136 GetMessageW -> WM_TIMER id=0
+[Te4c0] [API] GetWindowLongPtrW(0x10001,-21) -> 0x33d9a40
+[Te4c0] [API] [GUI-EVENT] dispatch WM_TIMER wp=0x0 -> 0
+[Te4c0] [API] [GUI-EVENT] #137 GetMessageW -> WM_TIMER id=0
+[Te4c0] [API] GetWindowLongPtrW(0x10001,-21) -> 0x33d9a40
+[Te4c0] [API] [GUI-EVENT] dispatch WM_TIMER wp=0x0 -> 0
+[Te4c0] [API] [GUI-EVENT] #138 GetMessageW -> WM_TIMER id=0
+[Te4c0] [API] GetWindowLongPtrW(0x10001,-21) -> 0x33d9a40
+[Te4c0] [API] [GUI-EVENT] dispatch WM_TIMER wp=0x0 -> 0
+[Te4c0] [API] [GUI-EVENT] #139 GetMessageW -> WM_TIMER id=0
+[Te4c0] [API] GetWindowLongPtrW(0x10001,-21) -> 0x33d9a40
+[Te4c0] [API] [GUI-EVENT] dispatch WM_TIMER wp=0x0 -> 0
+[Te4c0] [API] [GUI-EVENT] #140 GetMessageW -> WM_TIMER id=0
+[Te4c0] [API] GetWindowLongPtrW(0x10001,-21) -> 0x33d9a40
+[Te4c0] [API] [GUI-EVENT] dispatch WM_TIMER wp=0x0 -> 0
+[Te4c0] [API] [GUI-EVENT] #141 GetMessageW -> WM_TIMER id=0
+[Te4c0] [API] GetWindowLongPtrW(0x10001,-21) -> 0x33d9a40
+[Te4c0] [API] [GUI-EVENT] dispatch WM_TIMER wp=0x0 -> 0
+[Te4c0] [API] [GUI-EVENT] #142 GetMessageW -> WM_TIMER id=0
+[Te4c0] [API] GetWindowLongPtrW(0x10001,-21) -> 0x33d9a40
+[Te4c0] [API] [GUI-EVENT] dispatch WM_TIMER wp=0x0 -> 0
+[Te4c0] [API] [GUI-EVENT] #143 GetMessageW -> WM_TIMER id=0
+[Te4c0] [API] GetWindowLongPtrW(0x10001,-21) -> 0x33d9a40
+[Te4c0] [API] [GUI-EVENT] dispatch WM_TIMER wp=0x0 -> 0
+[Te4c0] [API] [GUI-EVENT] #144 GetMessageW -> WM_TIMER id=0
+[Te4c0] [API] GetWindowLongPtrW(0x10001,-21) -> 0x33d9a40
+[Te4c0] [API] [GUI-EVENT] dispatch WM_TIMER wp=0x0 -> 0
+[Te4c0] [API] [GUI-EVENT] #145 GetMessageW -> WM_TIMER id=0
+[Te4c0] [API] GetWindowLongPtrW(0x10001,-21) -> 0x33d9a40
+[Te4c0] [API] [GUI-EVENT] dispatch WM_TIMER wp=0x0 -> 0
+[Te4c0] [API] [GUI-EVENT] #146 GetMessageW -> WM_TIMER id=0
+[Te4c0] [API] GetWindowLongPtrW(0x10001,-21) -> 0x33d9a40
+[Te4c0] [API] [GUI-EVENT] dispatch WM_TIMER wp=0x0 -> 0
+[Te4c0] [API] [GUI-EVENT] #147 GetMessageW -> WM_TIMER id=0
+[Te4c0] [API] GetWindowLongPtrW(0x10001,-21) -> 0x33d9a40
+[Te4c0] [API] [GUI-EVENT] dispatch WM_TIMER wp=0x0 -> 0
+[Te4c0] [API] [GUI-EVENT] #148 GetMessageW -> WM_TIMER id=0
+[Te4c0] [API] GetWindowLongPtrW(0x10001,-21) -> 0x33d9a40
+[Te4c0] [API] [GUI-EVENT] dispatch WM_TIMER wp=0x0 -> 0
+[Te4c0] [API] [GUI-EVENT] #149 GetMessageW -> WM_TIMER id=0
+[Te4c0] [API] GetWindowLongPtrW(0x10001,-21) -> 0x33d9a40
+[Te4c0] [API] [GUI-EVENT] dispatch WM_TIMER wp=0x0 -> 0
+[Te4c0] [API] [GUI-EVENT] #150 GetMessageW -> WM_TIMER id=0
+[Te4c0] [API] GetWindowLongPtrW(0x10001,-21) -> 0x33d9a40
+[Te4c0] [API] [GUI-EVENT] dispatch WM_TIMER wp=0x0 -> 0
+[Te4c0] [API] [GUI-EVENT] #151 GetMessageW -> WM_TIMER id=0
+[Te4c0] [API] GetWindowLongPtrW(0x10001,-21) -> 0x33d9a40
+[Te4c0] [API] [GUI-EVENT] dispatch WM_TIMER wp=0x0 -> 0
+[Te4c0] [API] [GUI-EVENT] #152 GetMessageW -> WM_TIMER id=0
+[Te4c0] [API] GetWindowLongPtrW(0x10001,-21) -> 0x33d9a40
+[Te4c0] [API] [GUI-EVENT] dispatch WM_TIMER wp=0x0 -> 0
+[Te4c0] [API] [GUI-EVENT] #153 GetMessageW -> WM_TIMER id=0
+[Te4c0] [API] GetWindowLongPtrW(0x10001,-21) -> 0x33d9a40
+[Te4c0] [API] [GUI-EVENT] dispatch WM_TIMER wp=0x0 -> 0
+[Te4c0] [API] [GUI-EVENT] #154 GetMessageW -> WM_TIMER id=0
+[Te4c0] [API] GetWindowLongPtrW(0x10001,-21) -> 0x33d9a40
+[Te4c0] [API] [GUI-EVENT] dispatch WM_TIMER wp=0x0 -> 0
+[Te4c0] [API] [GUI-EVENT] #155 GetMessageW -> WM_TIMER id=0
+[Te4c0] [API] GetWindowLongPtrW(0x10001,-21) -> 0x33d9a40
+[Te4c0] [API] [GUI-EVENT] dispatch WM_TIMER wp=0x0 -> 0
+[Te4c0] [API] [GUI-EVENT] #156 GetMessageW -> WM_TIMER id=0
+[Te4c0] [API] GetWindowLongPtrW(0x10001,-21) -> 0x33d9a40
+[Te4c0] [API] [GUI-EVENT] dispatch WM_TIMER wp=0x0 -> 0
+[Te4c0] [API] [GUI-EVENT] #157 GetMessageW -> WM_TIMER id=0
+[Te4c0] [API] GetWindowLongPtrW(0x10001,-21) -> 0x33d9a40
+[Te4c0] [API] [GUI-EVENT] dispatch WM_TIMER wp=0x0 -> 0
+[Te4c0] [API] [GUI-EVENT] #158 GetMessageW -> WM_TIMER id=0
+[Te4c0] [API] GetWindowLongPtrW(0x10001,-21) -> 0x33d9a40
+[Te4c0] [API] [GUI-EVENT] dispatch WM_TIMER wp=0x0 -> 0
+[Te4c0] [API] [GUI-EVENT] #159 GetMessageW -> WM_TIMER id=0
+[Te4c0] [API] GetWindowLongPtrW(0x10001,-21) -> 0x33d9a40
+[Te4c0] [API] [GUI-EVENT] dispatch WM_TIMER wp=0x0 -> 0
+[Te4c0] [API] [GUI-EVENT] #160 GetMessageW -> WM_TIMER id=0
+[Te4c0] [API] GetWindowLongPtrW(0x10001,-21) -> 0x33d9a40
+[Te4c0] [API] [GUI-EVENT] dispatch WM_TIMER wp=0x0 -> 0
+[Te4c0] [API] [GUI-EVENT] #161 GetMessageW -> WM_TIMER id=0
+[Te4c0] [API] GetWindowLongPtrW(0x10001,-21) -> 0x33d9a40
+[Te4c0] [API] [GUI-EVENT] dispatch WM_TIMER wp=0x0 -> 0
+[Te4c0] [API] [GUI-EVENT] #162 GetMessageW -> WM_TIMER id=0
+[Te4c0] [API] GetWindowLongPtrW(0x10001,-21) -> 0x33d9a40
+[Te4c0] [API] [GUI-EVENT] dispatch WM_TIMER wp=0x0 -> 0
+[Te4c0] [API] [GUI-EVENT] #163 GetMessageW -> WM_TIMER id=0
+[Te4c0] [API] GetWindowLongPtrW(0x10001,-21) -> 0x33d9a40
+[Te4c0] [API] [GUI-EVENT] dispatch WM_TIMER wp=0x0 -> 0
+[Te4c0] [API] [GUI-EVENT] #164 GetMessageW -> WM_TIMER id=0
+[Te4c0] [API] GetWindowLongPtrW(0x10001,-21) -> 0x33d9a40
+[Te4c0] [API] [GUI-EVENT] dispatch WM_TIMER wp=0x0 -> 0
+[Te4c0] [API] [GUI-EVENT] #165 GetMessageW -> WM_TIMER id=0
+[Te4c0] [API] GetWindowLongPtrW(0x10001,-21) -> 0x33d9a40
+[Te4c0] [API] [GUI-EVENT] dispatch WM_TIMER wp=0x0 -> 0
+[Te4c0] [API] [GUI-EVENT] #166 GetMessageW -> WM_TIMER id=0
+[Te4c0] [API] GetWindowLongPtrW(0x10001,-21) -> 0x33d9a40
+[Te4c0] [API] [GUI-EVENT] dispatch WM_TIMER wp=0x0 -> 0
+[Te4c0] [API] [GUI-EVENT] #167 GetMessageW -> WM_TIMER id=0
+[Te4c0] [API] GetWindowLongPtrW(0x10001,-21) -> 0x33d9a40
+[Te4c0] [API] [GUI-EVENT] dispatch WM_TIMER wp=0x0 -> 0
+[Te4c0] [API] [GUI-EVENT] #168 GetMessageW -> WM_TIMER id=0
+[Te4c0] [API] GetWindowLongPtrW(0x10001,-21) -> 0x33d9a40
+[Te4c0] [API] [GUI-EVENT] dispatch WM_TIMER wp=0x0 -> 0
+[Te4c0] [API] [GUI-EVENT] #169 GetMessageW -> WM_TIMER id=0
+[Te4c0] [API] GetWindowLongPtrW(0x10001,-21) -> 0x33d9a40
+[Te4c0] [API] [GUI-EVENT] dispatch WM_TIMER wp=0x0 -> 0
+[Te4c0] [API] [GUI-EVENT] #170 GetMessageW -> WM_TIMER id=0
+[Te4c0] [API] GetWindowLongPtrW(0x10001,-21) -> 0x33d9a40
+[Te4c0] [API] [GUI-EVENT] dispatch WM_TIMER wp=0x0 -> 0
+[Te4c0] [API] [GUI-EVENT] #171 GetMessageW -> WM_TIMER id=0
+[Te4c0] [API] GetWindowLongPtrW(0x10001,-21) -> 0x33d9a40
+[Te4c0] [API] [GUI-EVENT] dispatch WM_TIMER wp=0x0 -> 0
+[Te4c0] [API] [GUI-EVENT] #172 GetMessageW -> WM_TIMER id=0
+[Te4c0] [API] GetWindowLongPtrW(0x10001,-21) -> 0x33d9a40
+[Te4c0] [API] [GUI-EVENT] dispatch WM_TIMER wp=0x0 -> 0
+[Te4c0] [API] [GUI-EVENT] #173 GetMessageW -> WM_TIMER id=0
+[Te4c0] [API] GetWindowLongPtrW(0x10001,-21) -> 0x33d9a40
+[Te4c0] [API] [GUI-EVENT] dispatch WM_TIMER wp=0x0 -> 0
+[Te4c0] [API] [GUI-EVENT] #174 GetMessageW -> WM_TIMER id=0
+[Te4c0] [API] GetWindowLongPtrW(0x10001,-21) -> 0x33d9a40
+[Te4c0] [API] [GUI-EVENT] dispatch WM_TIMER wp=0x0 -> 0
+[Te4c0] [API] [GUI-EVENT] #175 GetMessageW -> WM_TIMER id=0
+[Te4c0] [API] GetWindowLongPtrW(0x10001,-21) -> 0x33d9a40
+[Te4c0] [API] [GUI-EVENT] dispatch WM_TIMER wp=0x0 -> 0
+[Te4c0] [API] [GUI-EVENT] #176 GetMessageW -> WM_TIMER id=0
+[Te4c0] [API] GetWindowLongPtrW(0x10001,-21) -> 0x33d9a40
+[Te4c0] [API] [GUI-EVENT] dispatch WM_TIMER wp=0x0 -> 0
+[Te4c0] [API] [GUI-EVENT] #177 GetMessageW -> WM_TIMER id=0
+[Te4c0] [API] GetWindowLongPtrW(0x10001,-21) -> 0x33d9a40
+[Te4c0] [API] [GUI-EVENT] dispatch WM_TIMER wp=0x0 -> 0
+[Te4c0] [API] [GUI-EVENT] #178 GetMessageW -> WM_TIMER id=0
+[Te4c0] [API] GetWindowLongPtrW(0x10001,-21) -> 0x33d9a40
+[Te4c0] [API] [GUI-EVENT] dispatch WM_TIMER wp=0x0 -> 0
+[Te4c0] [API] [GUI-EVENT] #179 GetMessageW -> WM_TIMER id=0
+[Te4c0] [API] GetWindowLongPtrW(0x10001,-21) -> 0x33d9a40
+[Te4c0] [API] [GUI-EVENT] dispatch WM_TIMER wp=0x0 -> 0
+[Te4c0] [API] [GUI-EVENT] #180 GetMessageW -> WM_TIMER id=0
+[Te4c0] [API] GetWindowLongPtrW(0x10001,-21) -> 0x33d9a40
+[Te4c0] [API] [GUI-EVENT] dispatch WM_TIMER wp=0x0 -> 0
+[Te4c0] [API] [GUI-EVENT] #181 GetMessageW -> WM_TIMER id=0
+[Te4c0] [API] GetWindowLongPtrW(0x10001,-21) -> 0x33d9a40
+[Te4c0] [API] [GUI-EVENT] dispatch WM_TIMER wp=0x0 -> 0
+[Te4c0] [API] [GUI-EVENT] #182 GetMessageW -> WM_TIMER id=0
+[Te4c0] [API] GetWindowLongPtrW(0x10001,-21) -> 0x33d9a40
+[Te4c0] [API] [GUI-EVENT] dispatch WM_TIMER wp=0x0 -> 0
+[Te4c0] [API] [GUI-EVENT] #183 GetMessageW -> WM_TIMER id=0
+[Te4c0] [API] GetWindowLongPtrW(0x10001,-21) -> 0x33d9a40
+[Te4c0] [API] [GUI-EVENT] dispatch WM_TIMER wp=0x0 -> 0
+[Te4c0] [API] [GUI-EVENT] #184 GetMessageW -> WM_TIMER id=0
+[Te4c0] [API] GetWindowLongPtrW(0x10001,-21) -> 0x33d9a40
+[Te4c0] [API] [GUI-EVENT] dispatch WM_TIMER wp=0x0 -> 0
+[Te4c0] [API] [GUI-EVENT] #185 GetMessageW -> WM_TIMER id=0
+[Te4c0] [API] GetWindowLongPtrW(0x10001,-21) -> 0x33d9a40
+[Te4c0] [API] [GUI-EVENT] dispatch WM_TIMER wp=0x0 -> 0
+[Te4c0] [API] [GUI-EVENT] #186 GetMessageW -> WM_TIMER id=0
+[Te4c0] [API] GetWindowLongPtrW(0x10001,-21) -> 0x33d9a40
+[Te4c0] [API] [GUI-EVENT] dispatch WM_TIMER wp=0x0 -> 0
+[Te4c0] [API] [GUI-EVENT] #187 GetMessageW -> WM_TIMER id=0
+[Te4c0] [API] GetWindowLongPtrW(0x10001,-21) -> 0x33d9a40
+[Te4c0] [API] [GUI-EVENT] dispatch WM_TIMER wp=0x0 -> 0
+[Te4c0] [API] [GUI-EVENT] #188 GetMessageW -> WM_TIMER id=0
+[Te4c0] [API] GetWindowLongPtrW(0x10001,-21) -> 0x33d9a40
+[Te4c0] [API] [GUI-EVENT] dispatch WM_TIMER wp=0x0 -> 0
+[Te4c0] [API] [GUI-EVENT] #189 GetMessageW -> WM_TIMER id=0
+[Te4c0] [API] GetWindowLongPtrW(0x10001,-21) -> 0x33d9a40
+[Te4c0] [API] [GUI-EVENT] dispatch WM_TIMER wp=0x0 -> 0
+[Te4c0] [API] [GUI-EVENT] #190 GetMessageW -> WM_TIMER id=0
+[Te4c0] [API] GetWindowLongPtrW(0x10001,-21) -> 0x33d9a40
+[Te4c0] [API] [GUI-EVENT] dispatch WM_TIMER wp=0x0 -> 0
+[Te4c0] [API] [GUI-EVENT] #191 GetMessageW -> WM_TIMER id=0
+[Te4c0] [API] GetWindowLongPtrW(0x10001,-21) -> 0x33d9a40
+[Te4c0] [API] [GUI-EVENT] dispatch WM_TIMER wp=0x0 -> 0
+[Te4c0] [API] [GUI-EVENT] #192 GetMessageW -> WM_TIMER id=0
+[Te4c0] [API] GetWindowLongPtrW(0x10001,-21) -> 0x33d9a40
+[Te4c0] [API] [GUI-EVENT] dispatch WM_TIMER wp=0x0 -> 0
+[Te4c0] [API] [GUI-EVENT] #193 GetMessageW -> WM_TIMER id=0
+[Te4c0] [API] GetWindowLongPtrW(0x10001,-21) -> 0x33d9a40
+[Te4c0] [API] [GUI-EVENT] dispatch WM_TIMER wp=0x0 -> 0
+[Te4c0] [API] [GUI-EVENT] #194 GetMessageW -> WM_TIMER id=0
+[Te4c0] [API] GetWindowLongPtrW(0x10001,-21) -> 0x33d9a40
+[Te4c0] [API] [GUI-EVENT] dispatch WM_TIMER wp=0x0 -> 0
+[Te4c0] [API] [GUI-EVENT] #195 GetMessageW -> WM_TIMER id=0
+[Te4c0] [API] GetWindowLongPtrW(0x10001,-21) -> 0x33d9a40
+[Te4c0] [API] [GUI-EVENT] dispatch WM_TIMER wp=0x0 -> 0
+[Te4c0] [API] [GUI-EVENT] #196 GetMessageW -> WM_TIMER id=0
+[Te4c0] [API] GetWindowLongPtrW(0x10001,-21) -> 0x33d9a40
+[Te4c0] [API] [GUI-EVENT] dispatch WM_TIMER wp=0x0 -> 0
+[Te4c0] [API] [GUI-EVENT] #197 GetMessageW -> WM_TIMER id=0
+[Te4c0] [API] GetWindowLongPtrW(0x10001,-21) -> 0x33d9a40
+[Te4c0] [API] [GUI-EVENT] dispatch WM_TIMER wp=0x0 -> 0
+[Te4c0] [API] [GUI-EVENT] #198 GetMessageW -> WM_TIMER id=0
+[Te4c0] [API] GetWindowLongPtrW(0x10001,-21) -> 0x33d9a40
+[Te4c0] [API] [GUI-EVENT] dispatch WM_TIMER wp=0x0 -> 0
+[Te4c0] [API] [GUI-EVENT] #199 GetMessageW -> WM_TIMER id=0
+[Te4c0] [API] GetWindowLongPtrW(0x10001,-21) -> 0x33d9a40
+[Te4c0] [API] [GUI-EVENT] dispatch WM_TIMER wp=0x0 -> 0
+[Te4c0] [API] [GUI-EVENT] #200 GetMessageW -> WM_TIMER id=0
+[Te4c0] [API] GetWindowLongPtrW(0x10001,-21) -> 0x33d9a40
+[Te4c0] [API] [GUI-EVENT] dispatch WM_TIMER wp=0x0 -> 0
+[Te4c0] [API] [GUI] event budget 200 exhausted -> WM_QUIT
+[Te4c0] [API] UnhookWindowsHookEx(0xb30001) -> TRUE (id=-1)
+[Te4c0] [API] HeapFree(0x33da0d0)
+[Te4c0] [API] HeapFree(0x33da0b0)
+[Te4c0] [API] CoTaskMemFree(0x33da110)
+[Te4c0] [API] EnterCriticalSection(0x14020e128)
+[Te4c0] [API] HeapFree(0x33da6a0)
+[Te4c0] [API] LeaveCriticalSection(0x14020e128)
+[Te4c0] [API] EnterCriticalSection(0x14020e128)
+[Te4c0] [API] HeapFree(0x33da650)
+[Te4c0] [API] LeaveCriticalSection(0x14020e128)
+[Te4c0] [API] EnterCriticalSection(0x14020e128)
+[Te4c0] [API] LeaveCriticalSection(0x14020e128)
+[Te4c0] [API] EnterCriticalSection(0x14020e128)
+[Te4c0] [API] LeaveCriticalSection(0x14020e128)
+[Te4c0] [API] EnterCriticalSection(0x14020e128)
+[Te4c0] [API] LeaveCriticalSection(0x14020e128)
+[Te4c0] [API] EnterCriticalSection(0x14020e128)
+[Te4c0] [API] LeaveCriticalSection(0x14020e128)
+[Te4c0] [API] EnterCriticalSection(0x14020e128)
+[Te4c0] [API] LeaveCriticalSection(0x14020e128)
+[Te4c0] [API] EnterCriticalSection(0x14020e128)
+[Te4c0] [API] LeaveCriticalSection(0x14020e128)
+[Te4c0] [API] EnterCriticalSection(0x14020e128)
+[Te4c0] [API] LeaveCriticalSection(0x14020e128)
+[Te4c0] [API] DeleteCriticalSection(0x33da4d0)
+[Te4c0] [API] HeapFree(0x33da0f0)
+[Te4c0] [API] HeapFree(0x33da680)
+[Te4c0] [API] HeapFree(0x33da150)
+[Te4c0] [API] DestroyWindow(hwnd=0x10001)
+[Te4c0] [API] GetWindowLongPtrW(0x10001,-21) -> 0x33d9a40
+[Te4c0] [API] [GUI] WM_DESTROY -> wndproc -> 0
+[Te4c0] [API] HeapFree(0x33da070)
+[Te4c0] [API] HeapFree(0x33da090)
+[Te4c0] [API] HeapFree(0x33d9a40)
+[Te4c0] [API] Shell_NotifyIconW(msg=2) -> TRUE (headless tray)
+[Te4c0] [API] QueryPerformanceFrequency()
+[Te4c0] [API] QueryPerformanceCounter()
+[Te4c0] [API] QueryPerformanceFrequency()
+[Te4c0] [API] QueryPerformanceCounter()
+[Te4c0] [API] GetThreadPriority()
+[Te4c0] [API] WaitForSingleObject(handle=0x6, ms=4294967295)
+[Te4c0] [API] [KOBJ] wait(0x6) -> event sig=1 manual=1
+[Te4c0] [API] EnterCriticalSection(0x14020f3a0)
+[Te4c0] [API] LeaveCriticalSection(0x14020f3a0)
+[Te4c0] [API] QueryPerformanceFrequency()
+[Te4c0] [API] QueryPerformanceCounter()
+[Te4c0] [API] EnterCriticalSection(0x33d86d0)
+[Te4c0] [API] HeapFree(0x33d9520)
+[Te4c0] [API] HeapAlloc(size=0x12, zero=0) = 0x33d9520
+[Te4c0] [API] LeaveCriticalSection(0x33d86d0)
+[Te4c0] [API] QueryPerformanceFrequency()
+[Te4c0] [API] QueryPerformanceCounter()
+[Te4c0] [API] EnterCriticalSection(0x33d8b60)
+[Te4c0] [API] LeaveCriticalSection(0x33d8b60)
+[Te4c0] [API] QueryPerformanceFrequency()
+[Te4c0] [API] QueryPerformanceCounter()
+[Te4c0] [API] EnterCriticalSection(0x33d8b60)
+[Te4c0] [API] LeaveCriticalSection(0x33d8b60)
+[Te4c0] [API] QueryPerformanceFrequency()
+[Te4c0] [API] QueryPerformanceCounter()
+[Te4c0] [API] EnterCriticalSection(0x33d86d0)
+[Te4c0] [API] HeapFree(0x33d9520)
+[Te4c0] [API] LeaveCriticalSection(0x33d86d0)
+[Te4c0] [API] EnterCriticalSection(0x33d8b60)
+[Te4c0] [API] LeaveCriticalSection(0x33d8b60)
+[Te4c0] [API] EnterCriticalSection(0x33d8b60)
+[Te4c0] [API] LeaveCriticalSection(0x33d8b60)
+[Te4c0] [API] EnterCriticalSection(0x33d8b60)
+[Te4c0] [API] LeaveCriticalSection(0x33d8b60)
+[Te4c0] [API] EnterCriticalSection(0x33d8b60)
+[Te4c0] [API] LeaveCriticalSection(0x33d8b60)
+[Te4c0] [API] EnterCriticalSection(0x14020e128)
+[Te4c0] [API] LeaveCriticalSection(0x14020e128)
+[Te4c0] [API] EnterCriticalSection(0x14020e128)
+[Te4c0] [API] LeaveCriticalSection(0x14020e128)
+[Te4c0] [API] EnterCriticalSection(0x14020e128)
+[Te4c0] [API] LeaveCriticalSection(0x14020e128)
+[Te4c0] [API] EnterCriticalSection(0x14020e128)
+[Te4c0] [API] LeaveCriticalSection(0x14020e128)
+[Te4c0] [API] EnterCriticalSection(0x14020e128)
+[Te4c0] [API] LeaveCriticalSection(0x14020e128)
+[Te4c0] [API] EnterCriticalSection(0x14020e128)
+[Te4c0] [API] LeaveCriticalSection(0x14020e128)
+[Te4c0] [API] EnterCriticalSection(0x14020e128)
+[Te4c0] [API] LeaveCriticalSection(0x14020e128)
+[Te4c0] [API] EnterCriticalSection(0x14020e128)
+[Te4c0] [API] LeaveCriticalSection(0x14020e128)
+[Te4c0] [API] EnterCriticalSection(0x14020e128)
+[Te4c0] [API] LeaveCriticalSection(0x14020e128)
+[Te4c0] [API] EnterCriticalSection(0x14020e128)
+[Te4c0] [API] LeaveCriticalSection(0x14020e128)
+[Te4c0] [API] EnterCriticalSection(0x14020e128)
+[Te4c0] [API] LeaveCriticalSection(0x14020e128)
+[Te4c0] [API] DeleteCriticalSection(0x33d86d0)
+[Te4c0] [API] DeleteCriticalSection(0x33d8b60)
+[Te4c0] [API] HeapFree(0x33d8d10)
+[Te4c0] [API] EnterCriticalSection(0x14020e128)
+[Te4c0] [API] HeapFree(0x7feba8000b70)
+[Te4c0] [API] LeaveCriticalSection(0x14020e128)
+[Te4c0] [API] EnterCriticalSection(0x14020e128)
+[Te4c0] [API] HeapFree(0x7feba8000c40)
+[Te4c0] [API] LeaveCriticalSection(0x14020e128)
+[Te4c0] [API] EnterCriticalSection(0x14020e128)
+[Te4c0] [API] LeaveCriticalSection(0x14020e128)
+[Te4c0] [API] EnterCriticalSection(0x14020e128)
+[Te4c0] [API] LeaveCriticalSection(0x14020e128)
+[Te4c0] [API] EnterCriticalSection(0x14020e128)
+[Te4c0] [API] LeaveCriticalSection(0x14020e128)
+[Te4c0] [API] HeapFree(0x33d8670)
+[Te4c0] [API] DestroyWindow(hwnd=0x10001)
+[Te4c0] [API] GetWindowLongPtrW(0x10001,-21) -> 0x33d9a40
+[Te4c0] [API] [GUI] WM_DESTROY -> wndproc -> 0
+[Te4c0] [API] CloseHandle(handle=0x4)
+[Te4c0] [API] HeapFree(0x33d7340)
+[Te4c0] [API] HeapFree(0x33d7300)
+[Te4c0] [API] HeapFree(0x33d7320)
+[Te4c0] [API] HeapFree(0x33d72c0)
+[Te4c0] [API] HeapFree(0x33d73c0)
+[Te4c0] [API] HeapFree(0x33d73a0)
+[Te4c0] [API] HeapFree(0x33d3650)
+[Te4c0] [API] HeapFree(0x33d7360)
+[Te4c0] [API] HeapFree(0x33d7500)
+[Te4c0] [API] HeapFree(0x33d7420)
+[Te4c0] [API] HeapFree(0x33d7440)
+[Te4c0] [API] HeapFree(0x33d73e0)
+[Te4c0] [API] HeapFree(0x33d7670)
+[Te4c0] [API] HeapFree(0x33d7560)
+[Te4c0] [API] HeapFree(0x33d7580)
+[Te4c0] [API] HeapFree(0x33d7520)
+[Te4c0] [API] HeapFree(0x33d7720)
+[Te4c0] [API] HeapFree(0x33d76d0)
+[Te4c0] [API] HeapFree(0x33d76f0)
+[Te4c0] [API] HeapFree(0x33d7690)
+[Te4c0] [API] HeapFree(0x33d77c0)
+[Te4c0] [API] HeapFree(0x33d7780)
+[Te4c0] [API] HeapFree(0x33d77a0)
+[Te4c0] [API] HeapFree(0x33d7740)
+[Te4c0] [API] HeapFree(0x33d7890)
+[Te4c0] [API] HeapFree(0x33d7820)
+[Te4c0] [API] HeapFree(0x33d7840)
+[Te4c0] [API] HeapFree(0x33d77e0)
+[Te4c0] [API] HeapFree(0x33d7a40)
+[Te4c0] [API] HeapFree(0x33d78f0)
+[Te4c0] [API] HeapFree(0x33d7910)
+[Te4c0] [API] HeapFree(0x33d78b0)
+[Te4c0] [API] HeapFree(0x33d7110)
+[Te4c0] [API] OleUninitialize()
+[Te4c0] [API] HeapFree(0x33e7460)
+[Te4c0] [API] HeapFree(0x33e7480)
+[Te4c0] [API] HeapFree(0x33e74a0)
+[Te4c0] [API] HeapFree(0x33e74c0)
+[Te4c0] [API] HeapFree(0x33e74e0)
+[Te4c0] [API] HeapFree(0x33e7500)
+[Te4c0] [API] HeapFree(0x33e7520)
+[Te4c0] [API] HeapFree(0x33e7540)
+[Te4c0] [API] HeapFree(0x33e7560)
+[Te4c0] [API] HeapFree(0x33e7580)
+[Te4c0] [API] HeapFree(0x33e75a0)
+[Te4c0] [API] HeapFree(0x33e75c0)
+[Te4c0] [API] HeapFree(0x33e75e0)
+[Te4c0] [API] HeapFree(0x33e7600)
+[Te4c0] [API] HeapFree(0x33e7620)
+[Te4c0] [API] HeapFree(0x33e7640)
+[Te4c0] [API] HeapFree(0x33e7660)
+[Te4c0] [API] HeapFree(0x33e7680)
+[Te4c0] [API] HeapFree(0x33e76a0)
+[Te4c0] [API] HeapFree(0x33e76c0)
+[Te4c0] [API] HeapFree(0x33e76e0)
+[Te4c0] [API] HeapFree(0x33e7700)
+[Te4c0] [API] HeapFree(0x33e7720)
+[Te4c0] [API] HeapFree(0x33e7740)
+[Te4c0] [API] HeapFree(0x33e7760)
+[Te4c0] [API] HeapFree(0x33e7780)
+[Te4c0] [API] HeapFree(0x33e77a0)
+[Te4c0] [API] HeapFree(0x33e77c0)
+[Te4c0] [API] HeapFree(0x33e77e0)
+[Te4c0] [API] HeapFree(0x33e7800)
+[Te4c0] [API] HeapFree(0x33e7820)
+[Te4c0] [API] HeapFree(0x33e7840)
+[Te4c0] [API] HeapFree(0x33e7860)
+[Te4c0] [API] HeapFree(0x33e7880)
+[Te4c0] [API] HeapFree(0x33e78a0)
+[Te4c0] [API] HeapFree(0x33e78c0)
+[Te4c0] [API] HeapFree(0x33e78e0)
+[Te4c0] [API] HeapFree(0x33e7900)
+[Te4c0] [API] HeapFree(0x33e7920)
+[Te4c0] [API] HeapFree(0x33e7940)
+[Te4c0] [API] HeapFree(0x33e7960)
+[Te4c0] [API] HeapFree(0x33e7980)
+[Te4c0] [API] HeapFree(0x33e79a0)
+[Te4c0] [API] HeapFree(0x33e79c0)
+[Te4c0] [API] HeapFree(0x33e79e0)
+[Te4c0] [API] HeapFree(0x33e7a00)
+[Te4c0] [API] HeapFree(0x33e7a20)
+[Te4c0] [API] HeapFree(0x33e7160)
+[Te4c0] [API] DeleteCriticalSection(0x14020e128)
+[Te4c0] [API] HeapFree(0x33d4a00)
+[Te4c0] [API] HeapFree(0x33d4a20)
+[Te4c0] [API] HeapFree(0x33d4a40)
+[Te4c0] [API] HeapFree(0x33d4a60)
+[Te4c0] [API] HeapFree(0x33d4a80)
+[Te4c0] [API] HeapFree(0x33d4aa0)
+[Te4c0] [API] HeapFree(0x33d4ac0)
+[Te4c0] [API] HeapFree(0x33d4ae0)
+[Te4c0] [API] HeapFree(0x33d4b00)
+[Te4c0] [API] HeapFree(0x33d4b20)
+[Te4c0] [API] HeapFree(0x33d4b40)
+[Te4c0] [API] HeapFree(0x33d4b60)
+[Te4c0] [API] HeapFree(0x33d4b80)
+[Te4c0] [API] HeapFree(0x33d4ba0)
+[Te4c0] [API] HeapFree(0x33d4bc0)
+[Te4c0] [API] HeapFree(0x33d4be0)
+[Te4c0] [API] HeapFree(0x33d4c00)
+[Te4c0] [API] HeapFree(0x33d4c20)
+[Te4c0] [API] HeapFree(0x33d4c40)
+[Te4c0] [API] HeapFree(0x33d4c60)
+[Te4c0] [API] HeapFree(0x33d4c80)
+[Te4c0] [API] HeapFree(0x33d4ca0)
+[Te4c0] [API] HeapFree(0x33d5e10)
+[Te4c0] [API] HeapFree(0x33d5e30)
+[Te4c0] [API] HeapFree(0x33d5e50)
+[Te4c0] [API] HeapFree(0x33d5e70)
+[Te4c0] [API] HeapFree(0x33d5e90)
+[Te4c0] [API] HeapFree(0x33d5eb0)
+[Te4c0] [API] HeapFree(0x33d5ed0)
+[Te4c0] [API] HeapFree(0x33d5ef0)
+[Te4c0] [API] HeapFree(0x33d5f10)
+[Te4c0] [API] HeapFree(0x33d5f30)
+[Te4c0] [API] HeapFree(0x33d5f50)
+[Te4c0] [API] HeapFree(0x33d5f70)
+[Te4c0] [API] HeapFree(0x33d5f90)
+[Te4c0] [API] HeapFree(0x33d5fb0)
+[Te4c0] [API] HeapFree(0x33d5fd0)
+[Te4c0] [API] HeapFree(0x33d5ff0)
+[Te4c0] [API] HeapFree(0x33d6010)
+[Te4c0] [API] HeapFree(0x33d6030)
+[Te4c0] [API] HeapFree(0x33d6050)
+[Te4c0] [API] HeapFree(0x33d6070)
+[Te4c0] [API] HeapFree(0x33d6090)
+[Te4c0] [API] HeapFree(0x33d60b0)
+[Te4c0] [API] HeapFree(0x33d60d0)
+[Te4c0] [API] HeapFree(0x33d60f0)
+[Te4c0] [API] HeapFree(0x33d6110)
+[Te4c0] [API] HeapFree(0x33d6130)
+[Te4c0] [API] HeapFree(0x33d6150)
+[Te4c0] [API] HeapFree(0x33d6170)
+[Te4c0] [API] HeapFree(0x33d6190)
+[Te4c0] [API] HeapFree(0x33d61b0)
+[Te4c0] [API] HeapFree(0x33d61d0)
+[Te4c0] [API] HeapFree(0x33d61f0)
+[Te4c0] [API] HeapFree(0x33d6210)
+[Te4c0] [API] HeapFree(0x33d6230)
+[Te4c0] [API] HeapFree(0x33d6250)
+[Te4c0] [API] HeapFree(0x33d6270)
+[Te4c0] [API] HeapFree(0x33d6290)
+[Te4c0] [API] HeapFree(0x33d62b0)
+[Te4c0] [API] HeapFree(0x33d62d0)
+[Te4c0] [API] HeapFree(0x33d62f0)
+[Te4c0] [API] HeapFree(0x33d6310)
+[Te4c0] [API] HeapFree(0x33d6330)
+[Te4c0] [API] HeapFree(0x33d6350)
+[Te4c0] [API] HeapFree(0x33d6370)
+[Te4c0] [API] HeapFree(0x33d6390)
+[Te4c0] [API] HeapFree(0x33d63b0)
+[Te4c0] [API] HeapFree(0x33d63d0)
+[Te4c0] [API] HeapFree(0x33d63f0)
+[Te4c0] [API] HeapFree(0x33d6410)
+[Te4c0] [API] HeapFree(0x33d6430)
+[Te4c0] [API] HeapFree(0x33d6450)
+[Te4c0] [API] HeapFree(0x33d6470)
+[Te4c0] [API] HeapFree(0x33d6490)
+[Te4c0] [API] HeapFree(0x33d64b0)
+[Te4c0] [API] HeapFree(0x33d64d0)
+[Te4c0] [API] HeapFree(0x33d64f0)
+[Te4c0] [API] HeapFree(0x33d6510)
+[Te4c0] [API] HeapFree(0x33d6530)
+[Te4c0] [API] HeapFree(0x33d6550)
+[Te4c0] [API] HeapFree(0x33d6570)
+[Te4c0] [API] HeapFree(0x33d6590)
+[Te4c0] [API] HeapFree(0x33d65b0)
+[Te4c0] [API] HeapFree(0x33d65d0)
+[Te4c0] [API] HeapFree(0x33d65f0)
+[Te4c0] [API] HeapFree(0x33d6610)
+[Te4c0] [API] HeapFree(0x33d6630)
+[Te4c0] [API] HeapFree(0x33d6650)
+[Te4c0] [API] HeapFree(0x33d6670)
+[Te4c0] [API] HeapFree(0x33d6690)
+[Te4c0] [API] HeapFree(0x33d66b0)
+[Te4c0] [API] HeapFree(0x33d66d0)
+[Te4c0] [API] HeapFree(0x33d66f0)
+[Te4c0] [API] HeapFree(0x33d6710)
+[Te4c0] [API] HeapFree(0x33d6730)
+[Te4c0] [API] HeapFree(0x33d6750)
+[Te4c0] [API] HeapFree(0x33d6770)
+[Te4c0] [API] HeapFree(0x33d6790)
+[Te4c0] [API] HeapFree(0x33d67b0)
+[Te4c0] [API] HeapFree(0x33d67d0)
+[Te4c0] [API] HeapFree(0x33d67f0)
+[Te4c0] [API] HeapFree(0x33d6810)
+[Te4c0] [API] HeapFree(0x33d6830)
+[Te4c0] [API] HeapFree(0x33d6850)
+[Te4c0] [API] HeapFree(0x33d6870)
+[Te4c0] [API] HeapFree(0x33d6890)
+[Te4c0] [API] HeapFree(0x33d68b0)
+[Te4c0] [API] HeapFree(0x33d68d0)
+[Te4c0] [API] HeapFree(0x33d68f0)
+[Te4c0] [API] HeapFree(0x33d6910)
+[Te4c0] [API] HeapFree(0x33d6930)
+[Te4c0] [API] HeapFree(0x33d6950)
+[Te4c0] [API] HeapFree(0x33d6970)
+[Te4c0] [API] HeapFree(0x33d6990)
+[Te4c0] [API] HeapFree(0x33d69b0)
+[Te4c0] [API] HeapFree(0x33d69d0)
+[Te4c0] [API] HeapFree(0x33d69f0)
+[Te4c0] [API] HeapFree(0x33d6a10)
+[Te4c0] [API] HeapFree(0x33d6a30)
+[Te4c0] [API] HeapFree(0x33d6a50)
+[Te4c0] [API] HeapFree(0x33d6a70)
+[Te4c0] [API] HeapFree(0x33d6a90)
+[Te4c0] [API] HeapFree(0x33d6ab0)
+[Te4c0] [API] HeapFree(0x33d6ad0)
+[Te4c0] [API] HeapFree(0x33d6af0)
+[Te4c0] [API] HeapFree(0x33d6b10)
+[Te4c0] [API] HeapFree(0x33d6b30)
+[Te4c0] [API] HeapFree(0x33d6b50)
+[Te4c0] [API] HeapFree(0x33d6b70)
+[Te4c0] [API] HeapFree(0x33d6b90)
+[Te4c0] [API] HeapFree(0x33d6bb0)
+[Te4c0] [API] HeapFree(0x33d6bd0)
+[Te4c0] [API] HeapFree(0x33d6bf0)
+[Te4c0] [API] HeapFree(0x33d6c10)
+[Te4c0] [API] HeapFree(0x33d6c30)
+[Te4c0] [API] HeapFree(0x33d6c50)
+[Te4c0] [API] HeapFree(0x33d6c70)
+[Te4c0] [API] HeapFree(0x33d6c90)
+[Te4c0] [API] HeapFree(0x33d6cb0)
+[Te4c0] [API] HeapFree(0x33d6cd0)
+[Te4c0] [API] HeapFree(0x33d6cf0)
+[Te4c0] [API] HeapFree(0x33d6d10)
+[Te4c0] [API] HeapFree(0x33d6d30)
+[Te4c0] [API] HeapFree(0x33d6d50)
+[Te4c0] [API] HeapFree(0x33d6d70)
+[Te4c0] [API] HeapFree(0x33d6d90)
+[Te4c0] [API] HeapFree(0x33d6db0)
+[Te4c0] [API] HeapFree(0x33d6dd0)
+[Te4c0] [API] HeapFree(0x33d6df0)
+[Te4c0] [API] HeapFree(0x33d6e10)
+[Te4c0] [API] HeapFree(0x33d6e30)
+[Te4c0] [API] HeapFree(0x33d6e50)
+[Te4c0] [API] HeapFree(0x33d6e70)
+[Te4c0] [API] HeapFree(0x33d6e90)
+[Te4c0] [API] HeapFree(0x33d6eb0)
+[Te4c0] [API] HeapFree(0x33d6ed0)
+[Te4c0] [API] HeapFree(0x33d6ef0)
+[Te4c0] [API] HeapFree(0x33d6f10)
+[Te4c0] [API] HeapFree(0x33d6f30)
+[Te4c0] [API] HeapFree(0x33d6f50)
+[Te4c0] [API] HeapFree(0x33d6f70)
+[Te4c0] [API] HeapFree(0x33d6f90)
+[Te4c0] [API] HeapFree(0x33d6fb0)
+[Te4c0] [API] HeapFree(0x33d6fd0)
+[Te4c0] [API] HeapFree(0x33d6ff0)
+[Te4c0] [API] HeapFree(0x33d7010)
+[Te4c0] [API] HeapFree(0x33d7030)
+[Te4c0] [API] HeapFree(0x33d7050)
+[Te4c0] [API] HeapFree(0x33d7070)
+[Te4c0] [API] HeapFree(0x33d7090)
+[Te4c0] [API] HeapFree(0x33d70b0)
+[Te4c0] [API] HeapFree(0x33d70d0)
+[Te4c0] [API] HeapFree(0x33d70f0)
+[Te4c0] [API] HeapFree(0x33d4980)
+[Te4c0] [API] HeapFree(0x33d49a0)
+[Te4c0] [API] HeapFree(0x33d49c0)
+[Te4c0] [API] HeapFree(0x33d49e0)
+[Te4c0] [API] HeapFree(0x33d4840)
+[Te4c0] [API] HeapFree(0x33d47f0)
+[Te4c0] [API] HeapFree(0x33d4740)
+[Te4c0] [API] HeapFree(0x33d4520)
+[Te4c0] [API] HeapFree(0x33d4630)
+[Te4c0] [API] WaitForSingleObject(handle=0x6, ms=4294967295)
+[Te4c0] [API] [KOBJ] wait(0x6) -> event sig=1 manual=1
+[Te4c0] [API] SetEvent(h=0x5)
+[Te4c0] [API] WaitForSingleObject(handle=0x7, ms=4294967295)
+[Te4c0] [API] [KOBJ] wait(0x7) -> thread
+[Td6c0] [API] CoUninitialize()
+[Td6c0] [API] GetLastError() = 2
+[Td6c0] [API] SetLastError(2)
+[Td6c0] [API] EnterCriticalSection(0x14020f178)
+[Td6c0] [API] LeaveCriticalSection(0x14020f178)
+[Td6c0] [API] EnterCriticalSection(0x14020f150)
+[Td6c0] [API] LeaveCriticalSection(0x14020f150)
+[Td6c0] [API] HeapFree(0x33d9610)
+[Td6c0] [API] ExitThread(0)
+[Td6c0] [API] _endthreadex(0)
+[Te4c0] [API] CloseHandle(handle=0x6)
+[Te4c0] [API] CloseHandle(handle=0x5)
+[Te4c0] [API] CloseHandle(handle=0x7)
+[Te4c0] [API] HeapFree(0x33d95d0)
+[Te4c0] [API] DeleteCriticalSection(0x14020f3a0)
+[Te4c0] [API] FreeLibrary()
+[Te4c0] [API] FreeLibrary()
+[Te4c0] [API] FreeLibrary()
+[Te4c0] [API] FreeLibrary()
+[Te4c0] [API] FreeLibrary()
+[Te4c0] [API] FreeLibrary()
+[Te4c0] [API] FreeLibrary()
+[Te4c0] [API] FreeLibrary()
+[Te4c0] [API] DeleteCriticalSection(0x14020e0e8)
+[Te4c0] [API] EnterCriticalSection(0x14020f100)
+[Te4c0] [API] LeaveCriticalSection(0x14020f100)
+[Te4c0] [API] GetModuleHandleA(name=mscoree.dll)
+[Te4c0] [API] GetProcAddress(module=0xdead001f, name=CorExitProcess)
+[Te4c0] [API]   -> NULL (not in dispatch table)
+[Te4c0] [API]   -> optional-stub fallback (not in dispatch table)
+[Te4c0] [API] ExitProcess(0)
+  ]
+}

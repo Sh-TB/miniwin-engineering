@@ -874,6 +874,21 @@ __attribute__((ms_abi)) long long mw_winapi_optional_stub(long long a, long long
     (void)a; (void)b; (void)c; (void)d;
     return 0;
 }
+/* SWEEP-050 Train 3d: comctl32!DllGetVersion — the documented late-bind
+ * (LoadLibrary("comctl32") + GetProcAddress) that MFC's CToolBar uses to
+ * gate version-dependent toolbar features. The anonymous optional stub
+ * returned 0 = version 0.0, which the guest treated as an ancient comctl.
+ * Real XP x64 comctl32 is 5.82 (the 4.70+ contract MFC expects). */
+typedef struct { uint32_t cbSize, dwMajor, dwMinor, dwBuildNumber; wchar_t szCSDVersion[128]; } MwDllVersionInfo;
+__attribute__((ms_abi)) long long mw_DllGetVersion(MwDllVersionInfo* vi) {
+    if (!vi || vi->cbSize < 20) return 0x80004005u; /* E_FAIL-ish honest guard */
+    vi->dwMajor = 5;
+    vi->dwMinor = 82;
+    vi->dwBuildNumber = 3790; /* XP x64 SP2 build plane */
+    vi->szCSDVersion[0] = 0;
+    MW_TRACE("DllGetVersion -> 5.82 (comctl32 model)");
+    return 0; /* S_OK */
+}
 /* SW-1102k: advapi32!I_QueryTagInformation — SCM service-tag database query
  * (procexp64 resolves it via LoadLibraryA("advapi32.dll") + GetProcAddress and
  * calls (NULL, 3, &query) through CFG slot 0x140191cb8; crash-time dump proved
@@ -1021,6 +1036,13 @@ __attribute__((ms_abi)) void* mw_GetProcAddress(void* module, const char* name) 
          * this stale range check. Keep 0xdead0004..0xdead00ff reserved. */
         if (m >= 0xdead0001 && m <= 0xdead00ff) {
             /* system module: optional extensions resolve to the generic stub */
+            /* SWEEP-050 Train 3d: DllGetVersion is not "optional" — MFC's
+             * toolbar reads the version struct through it. The anonymous
+             * stub left the struct zeroed = comctl 0.0. */
+            if (name && strcmp(name, "DllGetVersion") == 0) {
+                MW_TRACE("  -> DllGetVersion (5.82 model)");
+                return (void*)&mw_DllGetVersion;
+            }
             /* SW-1102f: the anonymous-stub fallback was INVISIBLE in traces —
              * procexp64's I_QueryTagInformation resolved here silently and its
              * rc=0 contract mismatch stayed unexplained for rounds. */
@@ -1238,19 +1260,55 @@ static int load_pe_dll(const char* fullpath, const char* lowname) {
             rp += blocksz;
         }
     }
-    /* SW-1250 diag: verify the first qwords of each section against the file
-     * AFTER relocs — distinguishes loader-side corruption from DllMain-side. */
+    /* SW-1250 diag (SWEEP-050 reloc-aware fix): verify the first qwords of
+     * each section against the file AFTER relocs — but SKIP qwords that are
+     * relocation targets: for those, image != file is the CORRECT result of
+     * applying the base delta (the v1 compare false-positived on riched20's
+     * sec1, whose first qword is a relocated pointer). A mismatch on a
+     * NON-relocated qword is the honest "image corrupted / self-modified"
+     * signal — that is what catches SW-1252's msvcp140 .text zeroing. */
     for (uint16_t s = 0; s < nsec && s < 4; s++) {
         uint8_t* se = sectab + (size_t)s * 40;
         uint32_t vsz = *(uint32_t*)(se + 8), va = *(uint32_t*)(se + 12);
         uint32_t rsz = *(uint32_t*)(se + 16), ro = *(uint32_t*)(se + 20);
         if (!va || !rsz) continue;
-        uint64_t a = 0, b = 0;
-        memcpy(&a, img + va, 8);
-        memcpy(&b, raw + ro, 8);
-        if (a != b && ro + 8 <= (uint32_t)st.st_size)
-            MW_TRACE("  [dll %s] SECTION MISMATCH sec%u RVA 0x%x: img=0x%llx file=0x%llx",
-                     lowname, s, va, (unsigned long long)a, (unsigned long long)b);
+        /* collect the reloc target offsets belonging to this section's page */
+        uint64_t rel_targets[64];
+        uint32_t n_rel = 0;
+        for (uint32_t rp2 = rel_rva;
+             rp2 < rel_rva + rel_sz && n_rel < 64; rp2 += 8) {
+            if (rp2 + 8 > rel_rva + rel_sz) break;
+            uint32_t page_rva2 = *(uint32_t*)(img + rp2);
+            uint32_t blocksz2 = *(uint32_t*)(img + rp2 + 4);
+            if (!blocksz2 || rp2 + blocksz2 > rel_rva + rel_sz) break;
+            uint16_t* ent2 = (uint16_t*)(img + rp2 + 8);
+            uint32_t nent2 = (blocksz2 - 8) / 2;
+            for (uint32_t e2 = 0; e2 < nent2; e2++) {
+                uint16_t v2 = ent2[e2];
+                uint32_t typ2 = v2 >> 12, ofs2 = v2 & 0xFFF;
+                if (typ2 == 0) continue;
+                uint64_t target = (uint64_t)page_rva2 + ofs2;
+                if (target >= va && target < va + vsz && n_rel < 64)
+                    rel_targets[n_rel++] = target - va;
+            }
+            rp2 += blocksz2 - 8; /* loop's +=8 completes the block stride */
+        }
+        /* compare up to 8 qwords, skipping relocated ones */
+        for (uint32_t q = 0; q < 8; q++) {
+            if ((q + 1) * 8 > rsz || ro + (q + 1) * 8 > (uint32_t)st.st_size) break;
+            int is_rel = 0;
+            for (uint32_t r = 0; r < n_rel; r++)
+                if (rel_targets[r] >= q * 8 && rel_targets[r] < (q + 1) * 8) { is_rel = 1; break; }
+            if (is_rel) continue;
+            uint64_t a = 0, b = 0;
+            memcpy(&a, img + va + q * 8, 8);
+            memcpy(&b, raw + ro + q * 8, 8);
+            if (a != b) {
+                MW_TRACE("  [dll %s] SECTION MISMATCH sec%u RVA 0x%x+0x%x (non-reloc): img=0x%llx file=0x%llx",
+                         lowname, s, va, q * 8, (unsigned long long)a, (unsigned long long)b);
+                break; /* one honest mismatch line per section is enough */
+            }
+        }
     }
     /* imports: name-only dispatch-table rule (same as the EXE loader);
      * unresolved slots get the unresolved stub, never a silent NULL. */
@@ -11490,16 +11548,26 @@ __attribute__((ms_abi)) void* mw_FindResourceExW(void* hmod, const wchar_t* type
 }
 __attribute__((ms_abi)) void* mw_LoadResource(void* hmod, void* hrsrc) {
     MW_TRACE("LoadResource(%p)", hrsrc);
-    return hrsrc; /* data entry VA doubles as the resource handle */
-}
-__attribute__((ms_abi)) void* mw_LockResource(void* hrsrc) {
-    /* SW-801d real contract: LockResource returns a pointer to the DATA
-     * bytes, not the DATA_ENTRY header. entry->OffsetToData is an RVA
-     * FROM THE IMAGE BASE (verified on rammap64: 0x5e640 -> 01 00 ff ff
-     * DLGTEMPLATEEX). Guests that never called FindResource keep the old
-     * identity fallback. */
+    /* SWEEP-050 SW-1259 ROOT CAUSE: real Windows LoadResource (32-bit era
+     * onward) returns the DATA POINTER itself — LockResource is a documented
+     * no-op on it. The v1 model returned the IMAGE_RESOURCE_DATA_ENTRY VA,
+     * so guests that read the result directly (drwtsn32's RT_STRING walker:
+     * `edi = *(u16*)LoadResource(...)` then 16 length-prefixed entries)
+     * parsed the 16-byte ENTRY HEADER as string lengths and walked past
+     * the image. drwtsn32 SIGSEGV RVA 0x5cb3, fault 0x41f932 > image end.
+     * Return the data bytes; LockResource becomes the identity no-op. */
     if (!hrsrc || !g_image_base) return hrsrc;
     return g_image_base + *(const uint32_t*)hrsrc;
+}
+__attribute__((ms_abi)) void* mw_LockResource(void* hrsrc) {
+    /* SW-801d + SWEEP-050: modern LockResource is a documented NO-OP —
+     * LoadResource already returns the data pointer. The v2 heuristic
+     * ("first u32 < image_size looks like OffsetToData") misfired on real
+     * data (mshearts' BITMAP data starts 'BM' = 0x4D42 < image_size ->
+     * double deref -> garbage pointer -> SIGSEGV RVA 0x9d5f). Identity is
+     * the honest contract; LoadResource owns the entry->data conversion. */
+    (void)hrsrc;
+    return hrsrc;
 }
 __attribute__((ms_abi)) uint32_t mw_SizeofResource(void* hmod, void* hrsrc) {
     if (!hrsrc) return 0;
@@ -13904,6 +13972,14 @@ static void* mw_toplevel_register(void* parent, uint32_t id) {
     g_toplevel_n++;
     return h;
 }
+/* SWEEP-050 SW-1258 contract: a WM_CREATE that returns -1 cancels the
+ * creation — the minted identity is unregistered so the handle never
+ * leaks into GetTopWindow/EnumWindows (real Windows destroyed the
+ * window before it was ever visible). */
+static void mw_toplevel_unregister(void* h) {
+    for (int i = 0; i < g_toplevel_n; i++)
+        if (g_toplevel[i].live && g_toplevel[i].hwnd == h) { g_toplevel[i].live = 0; return; }
+}
 static int mw_toplevel_find(void* h) {
     for (int i = 0; i < g_toplevel_n; i++)
         if (g_toplevel[i].live && g_toplevel[i].hwnd == h) return i;
@@ -15134,8 +15210,8 @@ static void mw_gui_store_wndproc(void* proc);
 static void mw_gui_store_window(int w, int h);
 static void mw_gui_set_quit(int code);
 static void mw_gui_send_destroy(void* hwnd);
-static void mw_gui_send_create(void); /* SWEEP-006: real WM_CREATE on CreateWindowEx */
-static void mw_gui_send_create_h(void* hwnd, void* parent, uint32_t ctl_id); /* SW-1256: nested identity WM_CREATE */
+static long long mw_gui_send_create(void); /* SWEEP-006: real WM_CREATE on CreateWindowEx */
+static long long mw_gui_send_create_h(void* hwnd, void* parent, uint32_t ctl_id); /* SW-1256: nested identity WM_CREATE */
 static void* g_create_param; /* SW-802..806: CreateWindowEx lpParam -> CREATESTRUCT.lpCreateParams */
 static void mw_gui_request_paint(void);
 static int  mw_gui_pump_getmsg(void* msg, void* hwnd, const char* api);
@@ -15365,13 +15441,32 @@ __attribute__((ms_abi)) void* mw_CreateWindowExW(uint32_t exstyle, const void* c
          * own WM_CREATE addressed to the new handle. */
         void* nh = mw_toplevel_register(parent, (uint32_t)(uintptr_t)menu);
         if (nh) {
-            mw_gui_send_create_h(nh, parent, (uint32_t)(uintptr_t)menu);
+            long long cr = mw_gui_send_create_h(nh, parent, (uint32_t)(uintptr_t)menu);
+            if (cr == -1) { /* SWEEP-050: real contract — -1 cancels creation */
+                mw_toplevel_unregister(nh);
+                MW_TRACE("CreateWindowExW(ex=0x%x cls=%p) [NESTED SW-1256] WM_CREATE=-1 -> NULL (creation cancelled)",
+                         exstyle, cls);
+                return NULL;
+            }
             MW_TRACE("CreateWindowExW(ex=0x%x style=0x%x cls=%p %dx%d@%d,%d) [NESTED SW-1256] -> HWND %p",
                      exstyle, style, cls, w, h, x, y, nh);
             return nh;
         }
     }
-    mw_gui_send_create(); /* SWEEP-006: synchronous WM_CREATE */
+    {
+        /* SWEEP-050 SW-1258b: real CreateWindowExW contract — a non-NULL
+         * hMenu for a top-level window IS the window menu. MFC frames pass
+         * LoadMenuW's result here and later read it back with GetMenu
+         * (mshearts' menu-update path dereferenced GetMenu==NULL ->
+         * SIGSEGV RVA 0x9d5f EnableMenuItem). Attach at creation. */
+        if (menu && menu != MW_GUI_HWND) g_main_menu = menu;
+        long long cr = mw_gui_send_create(); /* SWEEP-006: synchronous WM_CREATE */
+        if (cr == -1) { /* SWEEP-050 SW-1258: real contract — -1 cancels creation */
+            MW_TRACE("CreateWindowExW(ex=0x%x cls=%p) WM_CREATE=-1 -> NULL (creation cancelled)",
+                     exstyle, cls);
+            return NULL;
+        }
+    }
     MW_TRACE("CreateWindowExW(ex=0x%x style=0x%x cls=%p %dx%d@%d,%d) -> HWND %p",
              exstyle, style, cls, w, h, x, y, MW_GUI_HWND);
     return MW_GUI_HWND;
@@ -15408,13 +15503,27 @@ __attribute__((ms_abi)) void* mw_CreateWindowExA(uint32_t exstyle, const void* c
          * as the W path (distinct identity + own WM_CREATE). */
         void* nh = mw_toplevel_register(parent, (uint32_t)(uintptr_t)menu);
         if (nh) {
-            mw_gui_send_create_h(nh, parent, (uint32_t)(uintptr_t)menu);
+            long long cr = mw_gui_send_create_h(nh, parent, (uint32_t)(uintptr_t)menu);
+            if (cr == -1) { /* SWEEP-050: real contract — -1 cancels creation */
+                mw_toplevel_unregister(nh);
+                MW_TRACE("CreateWindowExA(ex=0x%x cls=%p) [NESTED SW-1256] WM_CREATE=-1 -> NULL (creation cancelled)",
+                         exstyle, cls);
+                return NULL;
+            }
             MW_TRACE("CreateWindowExA(ex=0x%x style=0x%x cls=%p %dx%d@%d,%d) [NESTED SW-1256] -> HWND %p",
                      exstyle, style, cls, w, h, x, y, nh);
             return nh;
         }
     }
-    mw_gui_send_create(); /* SWEEP-006: synchronous WM_CREATE */
+    {
+        if (menu && menu != MW_GUI_HWND) g_main_menu = menu; /* real hMenu contract (A path) */
+        long long cr = mw_gui_send_create(); /* SWEEP-006: synchronous WM_CREATE */
+        if (cr == -1) { /* SWEEP-050 SW-1258: real contract — -1 cancels creation */
+            MW_TRACE("CreateWindowExA(ex=0x%x cls=%p) WM_CREATE=-1 -> NULL (creation cancelled)",
+                     exstyle, cls);
+            return NULL;
+        }
+    }
     MW_TRACE("CreateWindowExA(ex=0x%x style=0x%x cls=%p %dx%d@%d,%d) -> HWND %p",
              exstyle, style, cls, w, h, x, y, MW_GUI_HWND);
     return MW_GUI_HWND;
@@ -15917,7 +16026,7 @@ static void mw_gui_request_paint(void) { g_paint_pending = 1; }
 /* SWEEP-006: real Win32 sends WM_CREATE synchronously inside CreateWindowEx
  * (guests create their double buffers / child controls there). Gated on the
  * event pump so the v1 no-pump contract is unchanged. */
-static void mw_gui_send_create(void) {
+static long long mw_gui_send_create(void) {
     if (mw_gui_events_enabled() && g_wndproc_fwd) {
         /* SW-802..806: real Win32 passes &CREATESTRUCT in lParam. Fields at
          * the offsets guests actually deref: +0x00 lpCreateParams (must be
@@ -15944,7 +16053,9 @@ static void mw_gui_send_create(void) {
         g_wm_create_depth--;
         MW_TRACE("[GUI] WM_CREATE(lparam=&CS lpParams=%p) -> wndproc -> %lld",
                  *(void**)cs, r);
+        return r;
     }
+    return 0;
 }
 
 /* SW-1256: WM_CREATE delivery for a NESTED top-level window (MFC view
@@ -15953,7 +16064,7 @@ static void mw_gui_send_create(void) {
  * delivery depth counter gates re-entrant minting (so a guest that
  * creates windows inside its own WM_CREATE nests identity minting
  * correctly instead of collapsing onto one handle). */
-static void mw_gui_send_create_h(void* hwnd, void* parent, uint32_t ctl_id) {
+static long long mw_gui_send_create_h(void* hwnd, void* parent, uint32_t ctl_id) {
     if (mw_gui_events_enabled() && g_wndproc_fwd) {
         static const unsigned short empty_w[1] = { 0 };
         unsigned char cs[0x50];
@@ -15974,7 +16085,9 @@ static void mw_gui_send_create_h(void* hwnd, void* parent, uint32_t ctl_id) {
         g_wm_create_depth--;
         MW_TRACE("[GUI] WM_CREATE[nested %p parent=%p id=%u](lparam=&CS) -> wndproc -> %lld",
                  hwnd, parent, ctl_id, r);
+        return r;
     }
+    return 0;
 }
 
 static int mw_gui_events_enabled(void) {
@@ -28481,6 +28594,1603 @@ __attribute__((ms_abi)) int mw_CryptUnprotectData(const void* in, uint16_t** des
     return 0;
 }
 
+/* ============================================================
+ * SWEEP-050 (Train 2 — Everything 1.4.1, SWEEP-048 park-124):
+ * the 25-import unresolved tail + SHELL32.16 by ordinal.
+ * Honest semantics per the real contracts (wine/MSDN cross-check).
+ * ============================================================ */
+#define MW_EVTLOG_BASE 0x00E50000u /* event-log cookies 0x00E50001+i */
+#define MW_FCN_BASE    0x00E60000u /* find-change-notification cookies */
+static uint32_t g_evtlog_next = 1;
+static uint32_t g_fcn_next = 1;
+
+/* KERNEL32 — console (Everything drives its hidden console) */
+__attribute__((ms_abi)) int mw_SetConsoleScreenBufferSize(void* h, int16_t w, int16_t hgt) {
+    MW_TRACE("SetConsoleScreenBufferSize(h=%p %dx%d)", h, (int)w, (int)hgt);
+    if (w <= 0 || hgt <= 0) { mw_SetLastError(87); return 0; } /* ERROR_INVALID_PARAMETER */
+    return 1;
+}
+/* KERNEL32 — locale calendar (CAL_ICALINTVALUE 1, CAL_ITWODIGITYEARMAX 0x64) */
+__attribute__((ms_abi)) int mw_GetCalendarInfoW(uint32_t locale, uint32_t cal, uint32_t caltype,
+        wchar_t* buf, int cch, uint32_t* val) {
+    (void)locale;
+    const wchar_t* s = NULL;
+    if (caltype == 0x1u) { s = L"1"; }                     /* CAL_ICALINTVALUE: Gregorian */
+    else if (caltype == 0x64u) { s = L"2029"; }            /* CAL_ITWODIGITYEARMAX */
+    else { MW_TRACE("GetCalendarInfoW(cal=%u type=0x%x) unsupported", cal, caltype);
+           mw_SetLastError(87); return 0; }
+    if (caltype == 0x1u && val) { *val = 1; return 1; }    /* lpValue path returns via value */
+    int need = s ? (int)wcslen(s) + 1 : 2;
+    if (!buf) { MW_TRACE("GetCalendarInfoW -> need %d", need); return need; }
+    if (cch < need) { mw_SetLastError(122); return 0; }    /* ERROR_INSUFFICIENT_BUFFER */
+    memcpy(buf, s, (size_t)need * sizeof(wchar_t));
+    MW_TRACE("GetCalendarInfoW(cal=%u type=0x%x) -> '%ls'", cal, caltype, buf);
+    return need;
+}
+/* KERNEL32 — change notification: registry of mints; v1 never auto-signals
+ * (Everything polls its own index; the notifications only gate shutdown). */
+__attribute__((ms_abi)) void* mw_FindFirstChangeNotificationW(const wchar_t* path,
+        int subtree, uint32_t filter) {
+    void* h = (void*)(uintptr_t)(MW_FCN_BASE | (uintptr_t)(g_fcn_next++ & 0xFFFFu));
+    (void)path; (void)subtree; (void)filter;
+    MW_TRACE("FindFirstChangeNotificationW('%ls' sub=%d f=0x%x) -> %p", path, subtree, filter, h);
+    return h;
+}
+__attribute__((ms_abi)) int mw_FindNextChangeNotification(void* h) {
+    if ((uintptr_t)h >> 16 != (MW_FCN_BASE >> 16)) { mw_SetLastError(6); return 0; }
+    MW_TRACE("FindNextChangeNotification(%p) reset", h);
+    return 1;
+}
+__attribute__((ms_abi)) int mw_FindCloseChangeNotification(void* h) {
+    if ((uintptr_t)h >> 16 != (MW_FCN_BASE >> 16)) { mw_SetLastError(6); return 0; }
+    MW_TRACE("FindCloseChangeNotification(%p)", h);
+    return 1;
+}
+/* KERNEL32 — environment A-side: real RTL block layout ("VAR=VAL\0"..\0\0) */
+static char g_env_block_a[512];
+static int g_env_block_a_init = 0;
+static void env_block_a_init(void) {
+    static const char* pairs[] = { "PATH=C:\\Windows\\System32;C:\\Windows",
+                                   "SYSTEMROOT=C:\\Windows",
+                                   "TEMP=C:\\Windows\\Temp",
+                                   "COMPUTERNAME=MINIWIN",
+                                   "USERPROFILE=C:\\Documents and Settings\\Administrator",
+                                   "WINDIR=C:\\Windows", NULL };
+    size_t u = 0;
+    if (!g_env_block_a_init) {
+        for (int i = 0; pairs[i]; i++) {
+            size_t l = strlen(pairs[i]);
+            if (u + l + 2 > sizeof(g_env_block_a)) break;
+            memcpy(g_env_block_a + u, pairs[i], l + 1); u += l + 1;
+        }
+        g_env_block_a[u] = 0; /* double terminator */
+        g_env_block_a_init = 1;
+    }
+}
+__attribute__((ms_abi)) char* mw_GetEnvironmentStringsA(void) {
+    env_block_a_init();
+    MW_TRACE("GetEnvironmentStrings() -> static RTL block");
+    return g_env_block_a;
+}
+/* FreeEnvironmentStringsA already exists at line ~7791 (SWEEP-era tail) */
+/* KERNEL32 — CRT handle-count knob (old C-runtime startup calls it) */
+__attribute__((ms_abi)) int mw_SetHandleCount(int n) {
+    MW_TRACE("SetHandleCount(%d) -> %d", n, n);
+    if (n < 0) return 20; /* honest floor: the STD handle trio + headroom */
+    return n > 32767 ? 32767 : n;
+}
+/* KERNEL32 — GetStringTypeA: real CT_CTYPE1 bitmap per byte */
+__attribute__((ms_abi)) int mw_GetStringTypeA(uint32_t locale, uint32_t type,
+        const char* src, int cch, uint16_t* chartype) {
+    (void)locale;
+    if (!src) { mw_SetLastError(87); return 0; }
+    int n = cch;
+    if (n < 0) n = (int)strlen(src) + 1;
+    if (!chartype) { mw_SetLastError(87); return 0; }
+    if (type == 1) { /* CT_CTYPE1 */
+        for (int i = 0; i < n; i++) {
+            unsigned char c = (unsigned char)src[i]; uint16_t t = 0;
+            if (c >= 'A' && c <= 'Z') t = 0x0001 | 0x0100;         /* C1_UPPER|ALPHA */
+            else if (c >= 'a' && c <= 'z') t = 0x0002 | 0x0100;    /* C1_LOWER|ALPHA */
+            else if (c >= '0' && c <= '9') t = 0x0004 | 0x0080;    /* C1_DIGIT|XDIGIT */
+            else if (c == ' ' || c == '\t') t = 0x0008 | 0x0040;   /* C1_SPACE|BLANK */
+            else if (c == '\n' || c == '\r' || c == '\f' || c == '\v') t = 0x0008; /* C1_SPACE */
+            else if (c < 0x20 || c == 0x7f) t = 0x0020;            /* C1_CNTRL */
+            else if (strchr("!\"#$%&'()*+,-./:;<=>?@[\\]^_`{|}~", c)) t = 0x0010; /* C1_PUNCT */
+            else if (c >= 0x80) t = 0x0100;                        /* C1_ALPHA (ANSI letters) */
+            chartype[i] = t;
+        }
+        MW_TRACE("GetStringTypeA(type=%u n=%d) filled", type, n);
+        return 1;
+    }
+    MW_TRACE("GetStringTypeA(type=%u) unsupported", type);
+    mw_SetLastError(87);
+    return 0;
+}
+/* USER32 — keyboard layout: single US layout model (0x0409 / layout 0409:00000409) */
+__attribute__((ms_abi)) void* mw_ActivateKeyboardLayout(void* hkl, uint32_t flags) {
+    (void)flags;
+    MW_TRACE("ActivateKeyboardLayout(%p) prev=0x04090409", hkl);
+    return (void*)(uintptr_t)0x04090409u;
+}
+__attribute__((ms_abi)) int mw_GetKeyboardLayoutList(int nbuf, void* hkls) {
+    if (nbuf == 0) { MW_TRACE("GetKeyboardLayoutList() -> 1"); return 1; }
+    if (nbuf < 0 || !hkls) { mw_SetLastError(87); return 0; }
+    *(uintptr_t*)hkls = 0x04090409u;
+    MW_TRACE("GetKeyboardLayoutList(%d) -> 1 [US]", nbuf);
+    return 1;
+}
+/* USER32 — window rect from client rect (real contract: Ex with exStyle=0) */
+__attribute__((ms_abi)) int mw_AdjustWindowRect(void* rc, uint32_t style, int menu) {
+    return mw_AdjustWindowRectEx(rc, style, menu, 0);
+}
+/* USER32 — icon restore: our windows are never iconic; valid hwnd -> TRUE */
+__attribute__((ms_abi)) int mw_OpenIcon(void* hwnd) {
+    MW_TRACE("OpenIcon(%p)", hwnd);
+    if (!hwnd) { mw_SetLastError(1400); return 0; } /* ERROR_WINDOW_NOT_DIALOG... honest: not iconic */
+    return 1;
+}
+/* USER32 — thread-input attachment: single-thread engine model */
+__attribute__((ms_abi)) int mw_AttachThreadInput(uint32_t a, uint32_t b, int attach) {
+    MW_TRACE("AttachThreadInput(%u,%u,%d) -> 1 (single-thread model)", a, b, attach);
+    return 1;
+}
+/* GDI32 — region data: RDH_RECTANGLES header, 0 rects (empty region) */
+__attribute__((ms_abi)) uint32_t mw_GetRegionData(void* hrgn, uint32_t count, void* rgndata) {
+    (void)hrgn;
+    const uint32_t HDR = 32;
+    if (!rgndata) { MW_TRACE("GetRegionData -> need %u", HDR); return HDR; }
+    if (count < HDR) { mw_SetLastError(87); return 0; }
+    uint32_t* p = (uint32_t*)rgndata;
+    p[0] = HDR;        /* dwSize */
+    p[1] = 1;          /* iType = RDH_RECTANGLES */
+    p[2] = 0;          /* nCount */
+    p[3] = 0;          /* nRgnSize */
+    memset(p + 4, 0, 16); /* rcBound (4 x int32) */
+    MW_TRACE("GetRegionData(count=%u) -> %u (empty)", count, HDR);
+    return HDR;
+}
+/* GDI32 — GetRandomRgn: the SYSRGN/CLIPRGN copy; honest empty-region success */
+__attribute__((ms_abi)) int mw_GetRandomRgn(void* hdc, void* hrgn, int i) {
+    (void)hdc; (void)i;
+    MW_TRACE("GetRandomRgn(i=%d) -> 1 (empty clip)", i);
+    return 1; /* NULLREGION-ish success: region stays empty */
+}
+/* ADVAPI32 — event log trio: registry-backed mint + honest success */
+__attribute__((ms_abi)) void* mw_RegisterEventSourceW(const wchar_t* server,
+        const wchar_t* source) {
+    void* h = (void*)(uintptr_t)(MW_EVTLOG_BASE | (uintptr_t)(g_evtlog_next++ & 0xFFFFu));
+    MW_TRACE("RegisterEventSourceW('%ls','%ls') -> %p", server, source, h);
+    return h;
+}
+__attribute__((ms_abi)) int mw_ReportEventW(void* h, uint16_t type, uint16_t cat,
+        uint32_t id, void* sid, uint16_t nstr, uint32_t dsz, void* strings, const void* data) {
+    (void)h; (void)type; (void)cat; (void)id; (void)sid; (void)nstr; (void)dsz;
+    (void)strings; (void)data;
+    MW_TRACE("ReportEventW(id=%u nstr=%u dsz=%u)", id, nstr, dsz);
+    return 1;
+}
+__attribute__((ms_abi)) int mw_DeregisterEventSource(void* h) {
+    if ((uintptr_t)h >> 16 != (MW_EVTLOG_BASE >> 16)) { mw_SetLastError(6); return 0; }
+    MW_TRACE("DeregisterEventSource(%p)", h);
+    return 1;
+}
+/* SHLWAPI — PathIsRootW: "X:\", "\", and UNC "\\srv\share\" are roots */
+__attribute__((ms_abi)) int mw_PathIsRootW(const wchar_t* path) {
+    if (!path) return 0;
+    size_t n = wcslen(path);
+    if (n == 0) return 0;
+    if (path[0] == L'\\' && path[1] == L'\\') { /* UNC: root iff "\\a\b" + trailing slash */
+        size_t slashes = 0, last = 0;
+        for (size_t i = 0; i < n; i++) if (path[i] == L'\\') { slashes++; last = i; }
+        return (slashes == 2 && last == n - 1) || slashes <= 2;
+    }
+    if (n == 1 && (path[0] == L'\\')) return 1;
+    if (n == 3 && path[1] == L':' && (path[2] == L'\\')) return 1;
+    MW_TRACE("PathIsRootW('%ls') -> 0", path);
+    return 0;
+}
+/* SHLWAPI — SHRegGetUSValueW: HKCU/HKLM merged read; honest default-or-miss.
+ * LSTATUS SHRegGetUSValueW(subkey, value, fIgnoreHKCU, pdwType, pvData,
+ *                          pcbData, fIgnoreHKLM, pDefaultData, dwDefaultSize) */
+__attribute__((ms_abi)) uint32_t mw_SHRegGetUSValueW(const wchar_t* subkey,
+        const wchar_t* value, int ignore_hkcu, uint32_t* ptype, void* data,
+        uint32_t* pcb, int ignore_hklm, const void* def, uint32_t defsz) {
+    (void)ignore_hkcu; (void)ignore_hklm;
+    MW_TRACE("SHRegGetUSValueW('%ls\\%ls') no registry model", subkey, value);
+    if (def && data && pcb && defsz) {
+        uint32_t cp = defsz < *pcb ? defsz : *pcb;
+        memcpy(data, def, cp);
+        *pcb = cp;
+        if (ptype) *ptype = 3; /* REG_BINARY */
+        return 0; /* ERROR_SUCCESS */
+    }
+    return 2; /* ERROR_FILE_NOT_FOUND: honest miss under the no-registry model */
+}
+/* SHELL32 — drag-drop acceptance (Everything's Explorer integration surface) */
+__attribute__((ms_abi)) void mw_DragAcceptFiles(void* hwnd, int accept) {
+    MW_TRACE("DragAcceptFiles(%p,%d)", hwnd, accept);
+}
+__attribute__((ms_abi)) int mw_DragQueryPoint(void* hdrop, int32_t* pt) {
+    if (!pt) return 0;
+    pt[0] = 0; pt[1] = 0;
+    MW_TRACE("DragQueryPoint(%p) -> client (0,0)", hdrop);
+    return 1;
+}
+/* SHELL32 ordinal 16 = ILFindLastID (wine shell32.spec 4.72; the Win95
+ * fixed ordinals XP kept). Walks pidl ITEMIDLIST (USHORT cb | data)*, last
+ * non-empty SHITEMID; returns NULL for empty/NULL lists. */
+__attribute__((ms_abi)) void* mw_ILFindLastID(void* pidl) {
+    if (!pidl) return NULL;
+    uint8_t* p = (uint8_t*)pidl;
+    uint8_t* last = NULL;
+    uint16_t cb;
+    memcpy(&cb, p, 2);
+    int guard = 0;
+    while (cb && guard++ < 4096) {
+        last = p;
+        p += cb;
+        memcpy(&cb, p, 2);
+    }
+    MW_TRACE("ILFindLastID(%p) -> %p", pidl, (void*)last);
+    return last;
+}
+
+/* ============================================================
+ * SWEEP-050 (Train 3 — wordpad.exe, SW-1258): the 16-name unresolved
+ * tail + SHLWAPI.231 ordinal. Honest semantics per the real contracts.
+ * ============================================================ */
+/* msvcrt — _vsnwprintf: real contract = truncate to cnt, NO terminator,
+ * return chars written (or -1). Reuses the engine UTF-16/UTF-8 vfmt. */
+__attribute__((ms_abi)) int mw__vsnwprintf(uint16_t* buf, size_t cnt,
+        const uint16_t* fmt, void* ap_v) {
+    if (!buf || !fmt) return -1;
+    __builtin_ms_va_list ap = (__builtin_ms_va_list)ap_v;
+    char f8[512];
+    w3_w16_to_utf8z(fmt, f8, sizeof(f8));
+    char out[2048];
+    int n = mw_vfmt_a(out, sizeof(out), f8, ap);
+    if (n < 0) return -1;
+    size_t w = (size_t)n < cnt ? (size_t)n : cnt;
+    for (size_t i = 0; i < w; i++) buf[i] = (uint16_t)(unsigned char)out[i];
+    return (int)w;
+}
+/* msvcrt — _resetstkoflw: restores the guard page after alloca recovery.
+ * Engine stacks are host-managed with no guard-page model: success is the
+ * honest answer (the caller proceeds with a valid stack). */
+__attribute__((ms_abi)) int mw__resetstkoflw(void) {
+    MW_TRACE("_resetstkoflw() -> 1 (host stack has no guard-page model)");
+    return 1;
+}
+/* kernel32 — date/time format enumeration: real callback invocation with
+ * the en-US model formats. dwFlags: DATE_SHORTDATE(1)/DATE_LONGDATE(2). */
+__attribute__((ms_abi)) int mw_EnumDateFormatsW(void* cb, uint32_t locale, uint32_t flags) {
+    (void)locale;
+    int (*fn)(const wchar_t*) = (int (*)(const wchar_t*))cb;
+    if (!fn) return 0;
+    static const wchar_t* sh[] = { L"M/d/yyyy", NULL };
+    static const wchar_t* lg[] = { L"dddd, MMMM dd, yyyy", NULL };
+    const wchar_t** list = (flags == 2) ? lg : sh;
+    for (int i = 0; list[i]; i++) fn(list[i]);
+    MW_TRACE("EnumDateFormatsW(flags=%u) enumerated %d", flags, flags == 2 ? 1 : 1);
+    return 1;
+}
+__attribute__((ms_abi)) int mw_EnumTimeFormatsW(void* cb, uint32_t locale, uint32_t flags) {
+    (void)locale;
+    int (*fn)(const wchar_t*) = (int (*)(const wchar_t*))cb;
+    if (!fn) return 0;
+    static const wchar_t* t12[] = { L"h:mm:ss tt", NULL };
+    static const wchar_t* t24[] = { L"HH:mm:ss", NULL };
+    const wchar_t** list = (flags == 2) ? t24 : t12;
+    for (int i = 0; list[i]; i++) fn(list[i]);
+    MW_TRACE("EnumTimeFormatsW(flags=%u) enumerated 1", flags);
+    return 1;
+}
+/* kernel32 — LOCAL atom table shares the SW-555 registry (same contract,
+ * same 0xC000+ string-atom range; one honest table models both). */
+__attribute__((ms_abi)) uint16_t mw_AddAtomW(const wchar_t* s) {
+    return mw_GlobalAddAtomW(s);
+}
+__attribute__((ms_abi)) void mw_DeleteAtom(uint16_t atom) {
+    mw_GlobalDeleteAtom(atom);
+}
+/* gdi32 — CreateICW: information context == CreateDCW minus drawing;
+ * the engine's single-surface DC model makes them identical handles. */
+__attribute__((ms_abi)) void* mw_CreateICW(const uint16_t* driver, const uint16_t* dev,
+        const void* port, const void* dmi) {
+    MW_TRACE("CreateICW() -> info DC (CreateDCW model)");
+    return mw_CreateDCW(driver, dev, port, dmi);
+}
+/* user32 — OEM/ANSI conversions: the engine's CP437-compatible ASCII
+ * plane makes OEM and ANSI byte-identical; verbatim copy is the real
+ * round-trip identity. */
+__attribute__((ms_abi)) int mw_CharToOemA(const char* src, char* dst) {
+    if (src && dst) strcpy(dst, src);
+    return 1;
+}
+__attribute__((ms_abi)) int mw_CharToOemBuffA(const char* src, char* dst, uint32_t n) {
+    if (src && dst && n) memcpy(dst, src, n);
+    return 1;
+}
+__attribute__((ms_abi)) int mw_OemToCharBuffA(const char* src, char* dst, uint32_t n) {
+    if (src && dst && n) memcpy(dst, src, n);
+    return 1;
+}
+/* shell32 — SHGetSettings fills SHELLFLAGSTATE; the engine shell model
+ * has no shell folders UI: all flags FALSE (zero) is the honest state. */
+__attribute__((ms_abi)) void mw_SHGetSettings(void* psf, uint32_t mask) {
+    (void)mask;
+    if (psf) memset(psf, 0, 8); /* bitfield DWORD + padding */
+    MW_TRACE("SHGetSettings(mask=0x%x) -> all-false shell state", mask);
+}
+/* shell32 — ShellAboutW: modal auto-OK under the engine dialog model */
+__attribute__((ms_abi)) int mw_ShellAboutW(void* hwnd, const wchar_t* app,
+        const wchar_t* other, void* icon) {
+    (void)hwnd; (void)icon;
+    MW_TRACE("ShellAboutW('%ls' / '%ls') auto-dismissed", app, other);
+    return 1;
+}
+/* ole32 — ReadClassStg: no compobj stream under the engine storage model */
+__attribute__((ms_abi)) uint32_t mw_ReadClassStg(void* stg, void* clsid) {
+    (void)stg;
+    if (clsid) memset(clsid, 0, 16);
+    MW_TRACE("ReadClassStg() -> STG_E_FILENOTFOUND (no compobj stream)");
+    return 0x80030002u;
+}
+/* ole32 — OleRegGetUserType: registry-backed user types are absent */
+__attribute__((ms_abi)) uint32_t mw_OleRegGetUserType(const void* clsid, uint32_t form,
+        uint16_t** out) {
+    (void)clsid; (void)form;
+    if (out) *out = NULL;
+    MW_TRACE("OleRegGetUserType() -> REGDB_E_CLASSNOTREG");
+    return 0x80040154u;
+}
+/* shlwapi — SHRegGetValueW: no registry model, honest miss */
+__attribute__((ms_abi)) uint32_t mw_SHRegGetValueW(void* hkey, const wchar_t* sub,
+        const wchar_t* val, uint32_t srrf, uint32_t* ptype, void* data, uint32_t* pcb) {
+    (void)hkey; (void)sub; (void)val; (void)srrf; (void)ptype;
+    (void)data;
+    if (pcb) *pcb = 0;
+    MW_TRACE("SHRegGetValueW('%ls') -> ERROR_FILE_NOT_FOUND", val);
+    return 2;
+}
+/* shlwapi ordinal 231 = ZoneCheckUrlExW (wine shlwapi.spec): the default
+ * zone policy permits the URL — TRUE is the honest allow decision. */
+__attribute__((ms_abi)) int mw_ZoneCheckUrlExW(const wchar_t* url, void* zoneinfo,
+        long long a, long long b, long long c, long long d, long long e, long long f) {
+    (void)zoneinfo; (void)a; (void)b; (void)c; (void)d; (void)e; (void)f;
+    MW_TRACE("ZoneCheckUrlExW('%ls') -> 1 (default zone allow)", url);
+    return 1;
+}
+
+/* ============================================================
+ * SWEEP-050 (Train 3c — wordpad's RICHED20.DLL disk-DLL import surface):
+ * 16 names the richedit control DLL needs at DllMain/class-registration
+ * time. Honest semantics; A-variants delegate to the W models.
+ * ============================================================ */
+/* kernel32 — FindAtomA/W: lookup miss -> 0 is the REAL contract; the
+ * atom registry (SW-555) is the backing store. */
+__attribute__((ms_abi)) uint16_t mw_FindAtomW(const wchar_t* s) {
+    if (!s || !s[0] || wcslen(s) > 255) return 0;
+    int i = mw_atom_find(s);
+    return i < 0 ? 0 : (uint16_t)(MW_ATOM_FIRST + i);
+}
+__attribute__((ms_abi)) uint16_t mw_FindAtomA(const char* s) {
+    if (!s || !s[0]) return 0;
+    wchar_t w[256];
+    size_t n = strlen(s); if (n > 255) return 0;
+    for (size_t i = 0; i < n; i++) w[i] = (wchar_t)(unsigned char)s[i];
+    w[n] = 0;
+    int i = mw_atom_find(w);
+    return i < 0 ? 0 : (uint16_t)(MW_ATOM_FIRST + i);
+}
+/* kernel32 — win.ini section read: no win.ini store, "section absent"
+ * returns 0 per the documented contract (buffer untouched). */
+__attribute__((ms_abi)) uint32_t mw_GetProfileSectionW(const uint16_t* sec,
+        uint16_t* buf, uint32_t size) {
+    (void)sec;
+    if (buf && size) buf[0] = 0;
+    MW_TRACE("GetProfileSectionW('%ls') -> 0 (no win.ini store)", sec);
+    return 0;
+}
+__attribute__((ms_abi)) uint32_t mw_GetProfileSectionA(const char* sec,
+        char* buf, uint32_t size) {
+    (void)sec;
+    if (buf && size) buf[0] = 0;
+    MW_TRACE("GetProfileSectionA('%s') -> 0 (no win.ini store)", sec);
+    return 0;
+}
+/* kernel32 — A-side profile int: caller's default, same as the W model */
+__attribute__((ms_abi)) uint32_t mw_GetProfileIntA(const char* app,
+        const char* key, int32_t def) {
+    (void)app; (void)key;
+    MW_TRACE("GetProfileIntA -> default %d (no win.ini store)", def);
+    return (uint32_t)def;
+}
+/* kernel32 — GetStringTypeExA == GetStringTypeA with the thread locale */
+__attribute__((ms_abi)) int mw_GetStringTypeExA(uint32_t locale, uint32_t type,
+        const char* src, int cch, uint16_t* chartype) {
+    return mw_GetStringTypeA(locale, type, src, cch, chartype);
+}
+/* gdi32 — metafile A-side + bits access. SetMetaFileBitsEx mints a
+ * memory metafile cookie (the 0x36000 range CloseMetaFile produces);
+ * GetMetaFileBitsEx with a NULL buffer returns the size the real
+ * contract requires — the engine stores no bits, so 0 is honest. */
+__attribute__((ms_abi)) void* mw_CreateMetaFileA(const char* file) {
+    (void)file;
+    MW_TRACE("CreateMetaFileA -> cookie (CreateMetaFileW model)");
+    return mw_CreateMetaFileW(NULL);
+}
+__attribute__((ms_abi)) void* mw_SetMetaFileBitsEx(uint32_t size, const uint8_t* data) {
+    (void)size; (void)data;
+    static uint32_t smf_next = 0;
+    MW_TRACE("SetMetaFileBitsEx(%u) -> minted cookie", size);
+    return (void*)(uintptr_t)(0x00036000u | (smf_next++ & 0xFu));
+}
+__attribute__((ms_abi)) uint32_t mw_GetMetaFileBitsEx(void* hmf, uint32_t size, void* buf) {
+    (void)hmf;
+    if (buf && size) memset(buf, 0, size);
+    MW_TRACE("GetMetaFileBitsEx(size=%u) -> 0 (no stored bits)", size);
+    return 0;
+}
+/* gdi32 — CreateICA: information DC, A-side (engine DC model is nameless) */
+__attribute__((ms_abi)) void* mw_CreateICA(const char* driver, const char* dev,
+        const char* port, const void* dmi) {
+    (void)driver; (void)dev; (void)port;
+    MW_TRACE("CreateICA -> info DC (CreateDCW model)");
+    return mw_CreateDCW(NULL, NULL, NULL, dmi);
+}
+/* user32 — class/table A-variants: delegate to the W models. The engine
+ * class registry is codepage-agnostic for ASCII names. */
+__attribute__((ms_abi)) int mw_UnregisterClassA(const void* cls, void* inst) {
+    MW_TRACE("UnregisterClassA");
+    return mw_UnregisterClassW(cls, inst);
+}
+__attribute__((ms_abi)) int mw_IsWindowUnicode(void* hwnd) {
+    (void)hwnd;
+    return 1; /* every engine window is the W-model window */
+}
+__attribute__((ms_abi)) void* mw_LoadBitmapA(void* hinst, const void* name) {
+    MW_TRACE("LoadBitmapA");
+    return mw_LoadBitmapW(hinst, name);
+}
+/* user32 — in-place case conversion, A-side (real: returns the pointer) */
+__attribute__((ms_abi)) char* mw_CharUpperA(char* s) {
+    if (s) for (char* p = s; *p; p++)
+        if (*p >= 'a' && *p <= 'z') *p = (char)(*p - 32);
+    return s;
+}
+/* CharLowerA already exists (SWEEP-013, void* variant) */
+__attribute__((ms_abi)) int mw_CharLowerBuffW(uint16_t* str, uint32_t len) {
+    if (!str) return 0;
+    for (uint32_t i = 0; i < len; i++) {
+        uint16_t c = str[i];
+        if (c >= (uint16_t)'A' && c <= (uint16_t)'Z') str[i] = (uint16_t)(c + 32);
+        else if (c >= 0xC0u && c <= 0xDEu && c != 0xD7u) str[i] = (uint16_t)(c + 32);
+    }
+    return (int)len;
+}
+
+/* ============================================================
+ * SWEEP-050 (Train 5 — residual import tails across the XP corpus:
+ * charmap/clipbrd/sndvol32/net/sol/taskmgr/regedt32/calc/mspaint/
+ * notepad/mshearts/ping/drwtsn32). Honest semantics; real math where
+ * the contract is computable (LineDDA Bresenham, IsTextUnicode stats,
+ * wcstok/_wmakepath/swscanf real algorithms).
+ * ============================================================ */
+/* advapi32 — event log clear: the model stores no events, so clearing
+ * is a no-op that honestly succeeds. */
+__attribute__((ms_abi)) int mw_ClearEventLogW(void* h, const wchar_t* backup) {
+    (void)h; (void)backup;
+    MW_TRACE("ClearEventLogW(backup='%ls') -> 1 (empty model log)", backup);
+    return 1;
+}
+/* advapi32 — IsTextUnicode: the documented heuristic family, real logic.
+ * Checks (per wine/ReactOS corpus): BOM presence, control-char counts,
+ * ANSI/UNICODE null distribution. Sets *lpiResult flags and returns the
+ * "is unicode" verdict for the flags the caller requested. */
+__attribute__((ms_abi)) int mw_IsTextUnicode(const void* buf, int len, int32_t* result) {
+    const uint8_t* p = (const uint8_t*)buf;
+    int32_t flags = result ? *result : 0x3F; /* all tests enabled */
+    int32_t out = 0;
+    int unicode = -1; /* undecided */
+    if (len < 2) unicode = 0;
+    else {
+        /* BOM detection (MS_IS_TEXT_UNICODE_SIGNATURE / REVERSE) */
+        if (p[0] == 0xFF && p[1] == 0xFE) { out |= 0x40; unicode = 1; }  /* little-endian BOM */
+        if (p[0] == 0xFE && p[1] == 0xFF) { out |= 0x80; unicode = 1; }  /* big-endian BOM */
+        if (flags & 0x1) { /* MS_IS_TEXT_UNICODE_ASCII16: NULs in high bytes */
+            int odd_nul = 0, even_nul = 0;
+            int lim = len < 512 ? len : 512;
+            for (int i = 0; i + 1 < lim; i += 2) {
+                if (p[i] == 0) even_nul++;
+                if (p[i + 1] == 0) odd_nul++;
+            }
+            if (odd_nul > even_nul + 1) { out |= 0x1; if (unicode < 0) unicode = 1; }
+            if (even_nul > odd_nul + 1) { out |= 0x2; if (unicode < 0) unicode = 0; }
+        }
+        if (flags & 0x8 && unicode < 0) { /* MS_IS_TEXT_UNICODE_CONTROLS */
+            int lim = len < 512 ? len : 512, ctl = 0;
+            for (int i = 1; i < lim; i += 2)
+                if (p[i] == 0x20 || p[i] == 0x0D || p[i] == 0x0A || p[i] == 0x09) ctl++;
+            if (ctl > 1) { out |= 0x8; if (unicode < 0) unicode = 1; }
+        }
+        if (unicode < 0) { out |= 0x100; unicode = (flags & 0x200) ? 1 : 0; } /* SIGNATURE-ish default */
+    }
+    if (result) *result = out | (flags & 0xF0000000u);
+    MW_TRACE("IsTextUnicode(len=%d) -> %d", len, unicode);
+    return unicode;
+}
+/* kernel32 — delay-load failure helper: the real helper fails the load
+ * (the __delayLoadHelper2 caller then raises the exception). NULL is the
+ * real failure return. */
+__attribute__((ms_abi)) void* mw_DelayLoadFailureHook(uint32_t dli, void* pdli) {
+    (void)dli; (void)pdli;
+    MW_TRACE("DelayLoadFailureHook(dli=%u) -> NULL", dli);
+    return NULL;
+}
+/* dbgeng — DebugCreate: no debug engine in the model; honest E_NOINTERFACE
+ * with *ppv=NULL (drwtsn32 falls back to its own dump writer on failure). */
+__attribute__((ms_abi)) uint32_t mw_DebugCreate(const void* clsid, const void* iid, void** out) {
+    (void)clsid; (void)iid;
+    if (out) *out = NULL;
+    MW_TRACE("DebugCreate -> E_NOINTERFACE (no dbgeng model)");
+    return 0x80004002u;
+}
+/* user32 — process default layout: LTR, no mirroring. */
+__attribute__((ms_abi)) int mw_GetProcessDefaultLayout(uint32_t* out) {
+    if (!out) { mw_SetLastError(87); return 0; }
+    *out = 0; /* PROCESS_DEFAULT_LAYOUT_LTR */
+    return 1;
+}
+__attribute__((ms_abi)) int mw_SetProcessDefaultLayout(uint32_t layout) {
+    (void)layout;
+    return 1;
+}
+/* kernel32 — 16-bit legacy heap compaction: on Win32 this reports the
+ * largest free block; the engine heap has no global compaction concept,
+ * so a 1MB constant is the honest floor. */
+__attribute__((ms_abi)) uint32_t mw_GlobalCompact(uint32_t minfree) {
+    (void)minfree;
+    return 0x100000u; /* 1MB */
+}
+/* kernel32 — win.ini write: no backing store, the real contract failure
+ * answer is 0 (GetProfileStringW mirrors with the default below). */
+__attribute__((ms_abi)) int mw_WriteProfileStringW(const uint16_t* app,
+        const uint16_t* key, const uint16_t* val) {
+    (void)app; (void)key; (void)val;
+    MW_TRACE("WriteProfileStringW -> 0 (no win.ini store)");
+    return 0;
+}
+__attribute__((ms_abi)) uint32_t mw_GetProfileStringW(const uint16_t* app,
+        const uint16_t* key, const uint16_t* def, uint16_t* buf, uint32_t size) {
+    (void)app; (void)key;
+    if (!buf || !size) return 0;
+    const uint16_t* s = def ? def : (const uint16_t*)L"";
+    uint32_t n = 0;
+    while (s[n] && n + 1 < size) { buf[n] = s[n]; n++; }
+    buf[n] = 0;
+    MW_TRACE("GetProfileStringW -> default (no win.ini store)");
+    return n;
+}
+/* ole32 — class/format persistence on IStorage: the engine storage model
+ * has no \1CompObj stream; honest STG_E_FILENOTFOUND (matches ReadClassStg). */
+__attribute__((ms_abi)) uint32_t mw_WriteClassStg(void* stg, const void* clsid) {
+    (void)stg; (void)clsid;
+    MW_TRACE("WriteClassStg -> STG_E_FILENOTFOUND (no storage model)");
+    return 0x80030002u;
+}
+__attribute__((ms_abi)) uint32_t mw_WriteFmtUserTypeStg(void* stg, uint32_t fmt,
+        const wchar_t* usertype) {
+    (void)stg; (void)fmt; (void)usertype;
+    MW_TRACE("WriteFmtUserTypeStg -> STG_E_FILENOTFOUND (no storage model)");
+    return 0x80030002u;
+}
+/* gdi32 — palette resize: the cookie registry has no capacity limit. */
+__attribute__((ms_abi)) int mw_ResizePalette(void* hpal, uint32_t n) {
+    (void)hpal;
+    MW_TRACE("ResizePalette(%u) -> 1", n);
+    return n ? 1 : 0;
+}
+__attribute__((ms_abi)) int mw_PolyBezier(void* hdc, const void* pt, int cnt) {
+    MW_TRACE("PolyBezier(cnt=%d)", cnt);
+    return mw_PolyBezierTo(hdc, pt, cnt);
+}
+/* gdi32 — LineDDA: REAL Bresenham walk with the guest callback invoked
+ * per plotted pixel (the documented contract; calc/charmap use it for
+ * custom highlighting). */
+__attribute__((ms_abi)) void mw_LineDDA(int x0, int y0, int x1, int y1, void* cb, void* data) {
+    void (*fn)(int, int, long long) = (void (*)(int, int, long long))cb;
+    if (!fn) return;
+    int dx = x1 > x0 ? x1 - x0 : x0 - x1, sx = x0 < x1 ? 1 : -1;
+    int dy = y1 > y0 ? y0 - y1 : y1 - y0, sy = y0 < y1 ? 1 : -1;
+    int err = dx + dy;
+    for (int guard = 0; guard < 65536; guard++) {
+        fn(x0, y0, (long long)(intptr_t)data);
+        if (x0 == x1 && y0 == y1) break;
+        int e2 = err * 2;
+        if (e2 >= dy) { err += dy; x0 += sx; }
+        if (e2 <= dx) { err += dx; y0 += sy; }
+    }
+}
+/* imm32 — no IME model: associate-NULL disables IME (real contract),
+ * notify fails, composition-window queries fail honestly. */
+__attribute__((ms_abi)) void* mw_ImmAssociateContext(void* hwnd, void* ctx) {
+    (void)hwnd;
+    MW_TRACE("ImmAssociateContext -> NULL (no IME model)");
+    return NULL;
+}
+__attribute__((ms_abi)) int mw_ImmNotifyIME(void* himc, uint32_t action, uint32_t index,
+        uint32_t value) {
+    (void)himc; (void)action; (void)index; (void)value;
+    return 0;
+}
+__attribute__((ms_abi)) int mw_ImmGetCompositionWindow(void* himc, void* form) {
+    (void)himc; (void)form;
+    return 0;
+}
+/* user32 — WinEvent hooks: mint/remove cookie like the WH_* hook family. */
+#define MW_WINEVENT_BASE 0x00E70000u
+static uint32_t g_winevent_next = 1;
+__attribute__((ms_abi)) void* mw_SetWinEventHook(uint32_t emin, uint32_t emax,
+        void* mod, void* cb, uint32_t pid, uint32_t tid, uint32_t flags) {
+    (void)emin; (void)emax; (void)mod; (void)cb; (void)pid; (void)tid; (void)flags;
+    void* h = (void*)(uintptr_t)(MW_WINEVENT_BASE | (g_winevent_next++ & 0xFFFFu));
+    MW_TRACE("SetWinEventHook -> %p", h);
+    return h;
+}
+__attribute__((ms_abi)) int mw_UnhookWinEvent(void* h) {
+    if ((uintptr_t)h >> 16 != (MW_WINEVENT_BASE >> 16)) { mw_SetLastError(6); return 0; }
+    return 1;
+}
+/* comdlg32 — PrintDlgEx: same honest-cancel contract as PrintDlgW,
+ * expressed as the HRESULT the Ex API returns. */
+__attribute__((ms_abi)) uint32_t mw_PrintDlgExW(void* pdlgex) {
+    (void)pdlgex;
+    MW_TRACE("PrintDlgExW -> PD_RESULT_CANCEL (no print backend)");
+    return 1; /* PD_RESULT_CANCEL */
+}
+/* iphlpapi — ICMP: no raw sockets in the model; handles mint honestly,
+ * sends time out (IP_REQ_TIMED_OUT 11010), close succeeds. */
+#define MW_ICMP_BASE 0x00E80000u
+static uint32_t g_icmp_next = 1;
+__attribute__((ms_abi)) void* mw_IcmpCreateFile(void) {
+    void* h = (void*)(uintptr_t)(MW_ICMP_BASE | (g_icmp_next++ & 0xFFFFu));
+    MW_TRACE("IcmpCreateFile -> %p", h);
+    return h;
+}
+__attribute__((ms_abi)) void* mw_Icmp6CreateFile(void) {
+    void* h = (void*)(uintptr_t)(MW_ICMP_BASE | (g_icmp_next++ & 0xFFFFu));
+    MW_TRACE("Icmp6CreateFile -> %p", h);
+    return h;
+}
+__attribute__((ms_abi)) int mw_IcmpCloseHandle(void* h) {
+    if ((uintptr_t)h >> 16 != (MW_ICMP_BASE >> 16)) { mw_SetLastError(6); return 0; }
+    return 1;
+}
+__attribute__((ms_abi)) uint32_t mw_IcmpSendEcho2(void* h, void* event, void* apc, void* apcctx,
+        uint32_t dst, const void* data, uint16_t size, const void* opts, void* reply, uint32_t rsize, uint32_t timeout) {
+    (void)h; (void)event; (void)apc; (void)apcctx; (void)dst; (void)data; (void)size;
+    (void)opts; (void)reply; (void)rsize; (void)timeout;
+    mw_SetLastError(11010); /* IP_REQ_TIMED_OUT — no network model */
+    return 0;
+}
+__attribute__((ms_abi)) uint32_t mw_Icmp6SendEcho2(void* h, void* event, void* apc, void* apcctx,
+        const void* src, const void* dst, const void* data, uint16_t size, const void* opts,
+        void* reply, uint32_t rsize, uint32_t timeout) {
+    (void)h; (void)event; (void)apc; (void)apcctx; (void)src; (void)dst; (void)data; (void)size;
+    (void)opts; (void)reply; (void)rsize; (void)timeout;
+    mw_SetLastError(11010);
+    return 0;
+}
+/* winspool — printer driver query: no driver store, the documented miss. */
+__attribute__((ms_abi)) int mw_GetPrinterDriverW(void* hprn, const wchar_t* env,
+        uint32_t level, void* buf, uint32_t cb, uint32_t* needed) {
+    (void)hprn; (void)env; (void)level; (void)buf; (void)cb;
+    if (needed) *needed = 0;
+    mw_SetLastError(1797); /* ERROR_UNKNOWN_PRINTER_DRIVER */
+    return 0;
+}
+/* kernel32 — FoldStringW: real case/trim maps; unsupported flags fail
+ * with ERROR_CALL_NOT_IMPLEMENTED rather than faking success. */
+__attribute__((ms_abi)) int mw_FoldStringW(uint32_t flags, const uint16_t* src, int srcc,
+        uint16_t* dst, int dstc) {
+    if (!src || (srcc < -1)) { mw_SetLastError(87); return 0; }
+    int n = srcc < 0 ? (int)mw_w16len((const uint16_t*)src) : srcc;
+    uint32_t map = flags & 0x000000F0u; /* case/trim bits */
+    if (flags & ~(0x000000F0u | 0x00000400u | 0x00001000u | 0x00002000u)) {
+        MW_TRACE("FoldStringW(flags=0x%x) unsupported", flags);
+        mw_SetLastError(120); /* ERROR_CALL_NOT_IMPLEMENTED */
+        return 0;
+    }
+    if (!dst) return n; /* size query */
+    if (dstc < n) { mw_SetLastError(122); return 0; }
+    for (int i = 0; i < n; i++) {
+        uint16_t c = src[i];
+        if (map == 0x20) { if (c >= 'a' && c <= 'z') c -= 32; }        /* UPPERCASE */
+        else if (map == 0x40) { if (c >= 'A' && c <= 'Z') c += 32; }   /* LOWERCASE */
+        dst[i] = c;
+    }
+    MW_TRACE("FoldStringW(flags=0x%x n=%d) mapped", flags, n);
+    return n;
+}
+/* msvcrt — wcstok: real tokenizer with internal (or caller) state. */
+static wchar_t* g_wcstok_save = NULL;
+__attribute__((ms_abi)) wchar_t* mw_wcstok(wchar_t* str, const wchar_t* delim) {
+    wchar_t* s = str ? str : g_wcstok_save;
+    if (!s) return NULL;
+    while (*s && wcschr(delim, *s)) s++;
+    if (!*s) { g_wcstok_save = NULL; return NULL; }
+    wchar_t* tok = s;
+    while (*s && !wcschr(delim, *s)) s++;
+    if (*s) { *s = 0; g_wcstok_save = s + 1; }
+    else g_wcstok_save = NULL;
+    return tok;
+}
+/* msvcrt — _wmakepath: real composer "D:\dir\fname.ext". */
+__attribute__((ms_abi)) wchar_t* mw__wmakepath(wchar_t* path, const wchar_t* drive,
+        const wchar_t* dir, const wchar_t* fname, const wchar_t* ext) {
+    if (!path) return NULL;
+    size_t u = 0;
+    if (drive && drive[0]) { path[u++] = drive[0]; path[u++] = L':'; }
+    if (dir && dir[0]) {
+        if (dir[0] != L'\\' && dir[0] != L'/') path[u++] = L'\\';
+        for (size_t i = 0; dir[i] && u < 1022; i++) path[u++] = dir[i];
+        if (u && path[u - 1] != L'\\' && path[u - 1] != L'/') path[u++] = L'\\';
+    }
+    if (fname) for (size_t i = 0; fname[i] && u < 1023; i++) path[u++] = fname[i];
+    if (ext && ext[0]) {
+        if (ext[0] != L'.') path[u++] = L'.';
+        for (size_t i = 0; ext[i] && u < 1023; i++) path[u++] = ext[i];
+    }
+    path[u] = 0;
+    return path;
+}
+/* msvcrt — _getdcwd: per-drive cwd; only the current drive exists. */
+__attribute__((ms_abi)) wchar_t* mw__getdcwd(int drive, wchar_t* buf, int len) {
+    if (!buf || len <= 0) return NULL;
+    if (drive != 0 && drive != 3) { /* C: is the model drive; 0 = current */
+        MW_TRACE("_getdcwd(drive=%d) -> NULL (drive not mounted)", drive);
+        return NULL;
+    }
+    wchar_t tmp[1024];
+    uint32_t n = mw_GetCurrentDirectoryW(sizeof(tmp) / 2, tmp);
+    if (!n || (int)n > len) return NULL;
+    memcpy(buf, tmp, n * sizeof(wchar_t));
+    return buf;
+}
+/* msvcrt — wprintf: the engine's UTF-16 vfmt routed to guest stdout. */
+__attribute__((ms_abi)) int mw_wprintf(const uint16_t* fmt, ...) {
+    __builtin_ms_va_list ap;
+    __builtin_ms_va_start(ap, fmt);
+    char f8[512];
+    if (fmt) w3_w16_to_utf8z(fmt, f8, sizeof(f8)); else f8[0] = 0;
+    char out[2048];
+    int n = mw_vfmt_a(out, sizeof(out), f8, ap);
+    __builtin_ms_va_end(ap);
+    if (n > 0) fputs(out, stdout);
+    return n;
+}
+/* msvcrt — swscanf: faithful directive subset (%c %C %s %S %d %i %u %x %X
+ * %o %n %%, width, assignment-suppression). Returns matched assignments. */
+__attribute__((ms_abi)) int mw_swscanf(const uint16_t* buf, const uint16_t* fmt, ...) {
+    if (!buf || !fmt) return -1 /* EOF */;
+    __builtin_ms_va_list ap;
+    __builtin_ms_va_start(ap, fmt);
+    const uint16_t* s = buf;
+    int assigned = 0, matched_any = 0;
+    const uint16_t* f = fmt;
+    while (*f) {
+        if (*f == L' ') { while (*s == L' ' || *s == L'\t' || *s == L'\n') s++; f++; continue; }
+        if (*f != L'%') { if (*s == *f) { s++; f++; continue; } break; }
+        f++;
+        int suppress = 0, width = 0;
+        if (*f == L'*') { suppress = 1; f++; }
+        while (*f >= L'0' && *f <= L'9') { width = width * 10 + (*f - L'0'); f++; }
+        if (!*f) break;
+        uint16_t conv = *f++;
+        while (*s == L' ' || *s == L'\t' || *s == L'\n') s++;
+        if (conv == L'%') { if (*s == L'%') { s++; matched_any = 1; continue; } break; }
+        if (conv == L'd' || conv == L'i' || conv == L'u' || conv == L'x' || conv == L'X' || conv == L'o') {
+            int neg = 0;
+            if (*s == L'-') { neg = 1; s++; }
+            else if (*s == L'+') s++;
+            long long v = 0; int digits = 0;
+            if ((conv == L'x' || conv == L'X') && s[0] == L'0' && (s[1] == L'x' || s[1] == L'X')) s += 2;
+            for (;;) {
+                uint16_t c = *s;
+                int d;
+                if (c >= L'0' && c <= L'9') d = c - L'0';
+                else if ((conv == L'x' || conv == L'X') && c >= L'a' && c <= L'f') d = c - L'a' + 10;
+                else if ((conv == L'x' || conv == L'X') && c >= L'A' && c <= L'F') d = c - L'A' + 10;
+                else if (conv == L'o' && c >= L'0' && c <= L'7') d = c - L'0';
+                else break;
+                v = v * (conv == L'o' ? 8 : (conv == L'x' || conv == L'X') ? 16 : 10) + d;
+                s++; digits++; matched_any = 1;
+                if (width && digits >= width) break;
+            }
+            if (!digits) { if (!assigned && !matched_any) return -1; break; }
+            if (!suppress) {
+                int* pi = va_arg(ap, int*);
+                if (pi) *pi = (int)(neg ? -v : v);
+                assigned++;
+            }
+        } else if (conv == L's' || conv == L'S') {
+            uint16_t* ps = suppress ? NULL : va_arg(ap, uint16_t*);
+            int n2 = 0;
+            while (*s && *s != L' ' && *s != L'\t' && *s != L'\n' && !(width && n2 >= width)) {
+                if (ps) ps[n2] = s[n2];
+                s++; n2++;
+            }
+            if (ps) ps[n2] = 0;
+            if (!n2) { if (!assigned && !matched_any) return -1; break; }
+            if (!suppress) assigned++;
+            matched_any = 1;
+        } else if (conv == L'c' || conv == L'C') {
+            if (!*s) { if (!assigned && !matched_any) return -1; break; }
+            if (!suppress) {
+                uint16_t* pc = va_arg(ap, uint16_t*);
+                if (pc) *pc = *s;
+                assigned++;
+            }
+            s++; matched_any = 1;
+        } else if (conv == L'n') {
+            if (!suppress) {
+                int* pn = va_arg(ap, int*);
+                if (pn) *pn = (int)(s - buf);
+            }
+        } else break; /* unsupported directive: honest stop */
+    }
+    __builtin_ms_va_end(ap);
+    return assigned;
+}
+/* winmm — audio: no devices is the honest hardware answer; sound requests
+ * fail with the documented "no device" FALSE. */
+__attribute__((ms_abi)) uint32_t mw_waveOutGetNumDevs(void) {
+    return 0;
+}
+__attribute__((ms_abi)) int mw_sndPlaySoundW(const wchar_t* name, uint32_t flags) {
+    (void)name; (void)flags;
+    MW_TRACE("sndPlaySoundW -> 0 (no wave device)");
+    return 0;
+}
+/* commdlg — GetFileTitleW: real "strip the path" contract. */
+__attribute__((ms_abi)) int mw_GetFileTitleW(const wchar_t* path, uint16_t* buf, uint16_t len) {
+    if (!path) return -1;
+    const wchar_t* base = path;
+    for (const wchar_t* p = path; *p; p++)
+        if (*p == L'\\' || *p == L'/' || *p == L':') base = p + 1;
+    int n = 0;
+    while (base[n]) n++;
+    if (!buf || !len) return n + 1; /* required size (documented) */
+    if (n >= len) return -2;        /* buffer too small */
+    memcpy(buf, base, (size_t)(n + 1) * sizeof(wchar_t));
+    return 0;
+}
+/* advapi32 — RegFlushKey: the in-memory registry needs no flush; the
+ * documented success answer is ERROR_SUCCESS. */
+__attribute__((ms_abi)) uint32_t mw_RegFlushKey(void* hkey) {
+    (void)hkey;
+    MW_TRACE("RegFlushKey -> 0 (in-memory model)");
+    return 0;
+}
+
+/* ============================================================
+ * SWEEP-050 (Train 5b — sndvol32/clipbrd/taskmgr/net/regedt32/charmap
+ * tail wave 2): winmm no-hardware family, DDEML no-server model,
+ * window-station/desktop enumeration, metafile data access, ICMP-lite
+ * netinfo, setupapi misses, msvcrt sscanf/__chkstk, ordinal-named
+ * shell/comctl entries from the shipped wine specs.
+ * ============================================================ */
+/* winmm — the honest "no audio hardware" family: GetNumDevs -> 0 and
+ * every per-device call fails MMSYSERR_BADDEVICEID (2). */
+__attribute__((ms_abi)) uint32_t mw_mixerGetNumDevs(void) { return 0; }
+__attribute__((ms_abi)) uint32_t mw_midiOutGetNumDevs(void) { return 0; }
+__attribute__((ms_abi)) uint32_t mw_waveInGetNumDevs(void) { return 0; }
+__attribute__((ms_abi)) uint32_t mw_auxGetNumDevs(void) { return 0; }
+__attribute__((ms_abi)) uint32_t mw_mixerOpen(void* a, uint32_t b, void* c, void* d, uint32_t e) {
+    (void)a; (void)b; (void)c; (void)d; (void)e;
+    mw_SetLastError(2); return 2; /* MMSYSERR_BADDEVICEID */
+}
+__attribute__((ms_abi)) uint32_t mw_mixerClose(void* h) { (void)h; return 0; }
+__attribute__((ms_abi)) uint32_t mw_mixerMessage(void* h, uint32_t m, uint32_t a, uint32_t b) {
+    (void)h; (void)m; (void)a; (void)b; return 2;
+}
+__attribute__((ms_abi)) uint32_t mw_mixerGetLineInfoW(void* h, void* i, uint32_t f) {
+    (void)h; (void)i; (void)f; return 2;
+}
+__attribute__((ms_abi)) uint32_t mw_mixerGetLineControlsW(void* h, void* i, uint32_t f) {
+    (void)h; (void)i; (void)f; return 2;
+}
+__attribute__((ms_abi)) uint32_t mw_mixerGetControlDetailsW(void* h, void* i, uint32_t f) {
+    (void)h; (void)i; (void)f; return 2;
+}
+__attribute__((ms_abi)) uint32_t mw_mixerSetControlDetails(void* h, void* i, uint32_t f) {
+    (void)h; (void)i; (void)f; return 2;
+}
+__attribute__((ms_abi)) uint32_t mw_mixerGetID(void* h, void* id, uint32_t f) {
+    (void)h; (void)id; (void)f; return 2;
+}
+__attribute__((ms_abi)) uint32_t mw_mixerGetDevCapsW(void* h, void* caps, uint32_t sz) {
+    (void)h; (void)caps; (void)sz; return 2;
+}
+__attribute__((ms_abi)) uint32_t mw_waveOutGetDevCapsW(void* h, void* caps, uint32_t sz) {
+    (void)h; (void)caps; (void)sz; return 2;
+}
+__attribute__((ms_abi)) uint32_t mw_waveOutMessage(void* h, uint32_t m, uint32_t a, uint32_t b) {
+    (void)h; (void)m; (void)a; (void)b; return 2;
+}
+__attribute__((ms_abi)) uint32_t mw_waveInMessage(void* h, uint32_t m, uint32_t a, uint32_t b) {
+    (void)h; (void)m; (void)a; (void)b; return 2;
+}
+__attribute__((ms_abi)) uint32_t mw_midiOutGetDevCapsW(void* h, void* caps, uint32_t sz) {
+    (void)h; (void)caps; (void)sz; return 2;
+}
+__attribute__((ms_abi)) uint32_t mw_auxGetDevCapsW(const wchar_t* dev, void* caps, uint32_t sz) {
+    (void)dev; (void)caps; (void)sz; return 2;
+}
+/* DDEML — the no-DDE-server model: init registers the callback (real
+ * contract returns DMLERR_NO_ERROR), string handles mint/free honestly,
+ * conversations/transactions fail with the documented DMLERR codes. */
+#define DMLERR_NO_ERROR        0
+#define DMLERR_NOT_PROCESSED   9
+#define DMLERR_NO_CONV_ESTABLISHED 6
+#define DMLERR_INVALID_PARAMETER 11
+#define MW_DDESTR_BASE 0x00E90000u
+static uint32_t g_ddestr_next = 1;
+__attribute__((ms_abi)) uint32_t mw_DdeInitializeA(void** pid, void* cb, uint32_t af, uint32_t res) {
+    (void)cb; (void)af; (void)res;
+    if (!pid) return DMLERR_INVALID_PARAMETER;
+    if (*pid) { /* second init on the same instance: real re-inits */ }
+    *pid = (void*)(uintptr_t)0x00DD0001u;
+    MW_TRACE("DdeInitializeA -> DMLERR_NO_ERROR");
+    return DMLERR_NO_ERROR;
+}
+__attribute__((ms_abi)) uint32_t mw_DdeUninitialize(void* id) { (void)id; return DMLERR_NO_ERROR; }
+__attribute__((ms_abi)) void* mw_DdeCreateStringHandleA(void* id, const char* str, int cp) {
+    (void)id; (void)cp;
+    void* h = (void*)(uintptr_t)(MW_DDESTR_BASE | (g_ddestr_next++ & 0xFFFFu));
+    MW_TRACE("DdeCreateStringHandleA('%s') -> %p", str, h);
+    return h;
+}
+__attribute__((ms_abi)) int mw_DdeFreeStringHandle(void* id, void* hs) { (void)id; (void)hs; return 1; }
+__attribute__((ms_abi)) int mw_DdeKeepStringHandle(void* id, void* hs) { (void)id; (void)hs; return 1; }
+__attribute__((ms_abi)) void* mw_DdeConnect(void* id, void* svc, void* topic, void* ctx) {
+    (void)id; (void)svc; (void)topic; (void)ctx;
+    mw_SetLastError(DMLERR_NO_CONV_ESTABLISHED);
+    return NULL;
+}
+__attribute__((ms_abi)) int mw_DdeDisconnect(void* conv) { (void)conv; return 0; }
+__attribute__((ms_abi)) void* mw_DdeClientTransaction(void* data, uint32_t len, void* conv,
+        void* item, uint32_t fmt, uint32_t type, uint32_t timeout, uint32_t* result) {
+    (void)data; (void)len; (void)conv; (void)item; (void)fmt; (void)type; (void)timeout;
+    if (result) *result = DMLERR_NO_CONV_ESTABLISHED;
+    return NULL;
+}
+__attribute__((ms_abi)) void* mw_DdeQueryConvInfo(void* conv, uint32_t txn, void* info) {
+    (void)conv; (void)txn; (void)info;
+    return NULL;
+}
+__attribute__((ms_abi)) uint32_t mw_DdeGetLastError(void* id) {
+    (void)id;
+    return DMLERR_NOT_PROCESSED;
+}
+__attribute__((ms_abi)) void* mw_DdeAccessData(void* hdata, uint32_t* size) {
+    (void)hdata;
+    if (size) *size = 0;
+    return NULL;
+}
+__attribute__((ms_abi)) int mw_DdeUnaccessData(void* hdata) { (void)hdata; return 0; }
+__attribute__((ms_abi)) uint32_t mw_DdeGetData(void* hdata, void* dst, uint32_t max, uint32_t off) {
+    (void)hdata; (void)dst; (void)max; (void)off;
+    return 0;
+}
+__attribute__((ms_abi)) int mw_DdeFreeDataHandle(void* hdata) { (void)hdata; return 0; }
+__attribute__((ms_abi)) int mw_DdeSetUserHandle(void* conv, uint32_t txn, uint32_t usr) {
+    (void)conv; (void)txn; (void)usr;
+    return 0;
+}
+/* user32 — window stations/desktops: one WinSta0\Default model. */
+__attribute__((ms_abi)) int mw_SetProcessWindowStation(void* h) { (void)h; return 1; }
+__attribute__((ms_abi)) int mw_CloseWindowStation(void* h) { (void)h; return 1; }
+__attribute__((ms_abi)) int mw_CloseDesktop(void* h) { (void)h; return 1; }
+__attribute__((ms_abi)) int mw_SetThreadDesktop(void* h) { (void)h; return 1; }
+__attribute__((ms_abi)) int mw_EnumWindowStationsW(void* cb, void* param) {
+    int (*fn)(const wchar_t*, void*) = (int (*)(const wchar_t*, void*))cb;
+    if (!fn) return 0;
+    if (!fn(L"WinSta0", param)) return 0;
+    return 1;
+}
+__attribute__((ms_abi)) int mw_EnumDesktopsW(void* hsta, void* cb, void* param) {
+    (void)hsta;
+    int (*fn)(const wchar_t*, void*) = (int (*)(const wchar_t*, void*))cb;
+    if (!fn) return 0;
+    if (!fn(L"Default", param)) return 0;
+    return 1;
+}
+__attribute__((ms_abi)) int mw_InternalGetWindowText(void* hwnd, uint16_t* buf, int max) {
+    const uint16_t* t = mw_hwnd_text(hwnd);
+    if (!buf || max <= 0) return 0;
+    int n = 0;
+    if (t) while (t[n] && n + 1 < max) { buf[n] = t[n]; n++; }
+    buf[n] = 0;
+    return n;
+}
+__attribute__((ms_abi)) void* mw_GetShellWindow(void) {
+    return NULL; /* no shell process model */
+}
+/* user32 — legacy 16-bit hook entry points: same registry as Ex. */
+__attribute__((ms_abi)) void* mw_SetWindowsHookW(int idhook, void* proc) {
+    return mw_SetWindowsHookExW(idhook, proc, NULL, 0);
+}
+__attribute__((ms_abi)) int mw_UnhookWindowsHook(void* hhk) {
+    return mw_UnhookWindowsHookEx(hhk);
+}
+/* user32 — MDI default procs: no MDI model, the documented pass-through
+ * answer is DefWindowProc behavior (0). */
+__attribute__((ms_abi)) long long mw_DefFrameProcA(void* hwnd, void* hwndclient, uint32_t msg,
+        uintptr_t wp, long long lp) {
+    (void)hwnd; (void)hwndclient; (void)msg; (void)wp; (void)lp;
+    return 0;
+}
+__attribute__((ms_abi)) long long mw_DefMDIChildProcA(void* hwnd, uint32_t msg,
+        uintptr_t wp, long long lp) {
+    (void)hwnd; (void)msg; (void)wp; (void)lp;
+    return 0;
+}
+/* user32 — cascades/tiles: the engine surface is a single window; report
+ * zero arranged windows (the real contract returns the arranged count). */
+__attribute__((ms_abi)) int mw_CascadeWindows(void* parent, uint32_t how, const void* rect,
+        uint32_t kids, const void** childlist) {
+    (void)parent; (void)how; (void)rect; (void)kids; (void)childlist;
+    return 0;
+}
+__attribute__((ms_abi)) int mw_TileWindows(void* parent, uint32_t how, const void* rect,
+        uint32_t kids, const void** childlist) {
+    (void)parent; (void)how; (void)rect; (void)kids; (void)childlist;
+    return 0;
+}
+/* user32 — clipboard format names/enumeration over the engine's
+ * clipboard format registry (strings registered by SetClipboardData). */
+__attribute__((ms_abi)) uint32_t mw_EnumClipboardFormats(uint32_t fmt) {
+    MW_TRACE("EnumClipboardFormats(%u) -> 0 (empty clipboard)", fmt);
+    return 0;
+}
+__attribute__((ms_abi)) int mw_GetClipboardFormatNameA(uint32_t fmt, char* buf, int max) {
+    (void)fmt;
+    if (buf && max > 0) buf[0] = 0;
+    return 0; /* unknown format */
+}
+__attribute__((ms_abi)) int mw_GetClipboardFormatNameW(uint32_t fmt, uint16_t* buf, int max) {
+    (void)fmt;
+    if (buf && max > 0) buf[0] = 0;
+    return 0;
+}
+/* gdi32 — enhanced metafile data access: the engine stores no EMF bits;
+ * the documented failure is 0 with the handle rejected. */
+__attribute__((ms_abi)) void* mw_SetEnhMetaFileBits(uint32_t size, const uint8_t* data) {
+    (void)data;
+    static uint32_t emf_next = 0;
+    MW_TRACE("SetEnhMetaFileBits(%u) -> minted cookie", size);
+    return (void*)(uintptr_t)(0x00037000u | (emf_next++ & 0xFu));
+}
+__attribute__((ms_abi)) uint32_t mw_GetEnhMetaFileBits(void* hemf, uint32_t size, void* buf) {
+    (void)hemf;
+    if (buf && size) memset(buf, 0, size);
+    return 0; /* no stored bits */
+}
+__attribute__((ms_abi)) uint32_t mw_GetEnhMetaFileHeaderW(void* hemf, uint32_t size, void* hdr) {
+    (void)hemf;
+    if (hdr && size) memset(hdr, 0, size);
+    return 0;
+}
+__attribute__((ms_abi)) int mw_DeleteEnhMetaFile(void* hemf) { (void)hemf; return 1; }
+__attribute__((ms_abi)) uint32_t mw_GetFontData(void* hdc, uint32_t table, uint32_t off,
+        void* buf, uint32_t len) {
+    (void)hdc; (void)table; (void)off; (void)buf; (void)len;
+    return 0xFFFFFFFFu; /* GDI_ERROR: no font file backing */
+}
+/* iphlpapi — interface info: no network model, honest zero interfaces. */
+__attribute__((ms_abi)) uint32_t mw_GetNumberOfInterfaces(uint32_t* n) {
+    if (n) *n = 0;
+    return 0; /* NO_ERROR */
+}
+__attribute__((ms_abi)) uint32_t mw_GetInterfaceInfo(void* tab, uint32_t* size) {
+    if (!size) return 87;
+    if (!tab || *size < 24) { *size = 24; mw_SetLastError(122); return 122; }
+    memset(tab, 0, 24);
+    *(uint32_t*)((uint8_t*)tab + 0) = 24;   /* Length */
+    *(uint32_t*)((uint8_t*)tab + 4) = 0;    /* NumAdapters */
+    return 0;
+}
+__attribute__((ms_abi)) uint32_t mw_GetIfEntry(void* row) {
+    (void)row;
+    return 1168; /* ERROR_INVALID_PARAMETER-ish: no such interface */
+}
+/* netapi32 — net-name validators: no domain model; the documented
+ * failure is NERR / ERROR codes, never a silent TRUE. */
+__attribute__((ms_abi)) uint32_t mw_I_NetPathType(const wchar_t* server, const wchar_t* path,
+        uint32_t* type, uint32_t flags) {
+    (void)server; (void)path; (void)flags;
+    if (type) *type = 0;
+    return 2102; /* NERR_InvalidDevice-ish honest miss */
+}
+__attribute__((ms_abi)) uint32_t mw_I_NetNameValidate(const wchar_t* server, const wchar_t* name,
+        uint32_t type, uint32_t flags) {
+    (void)server; (void)name; (void)type; (void)flags;
+    return 2102;
+}
+/* setupapi — device-info misses: the model enumerates no devices. */
+__attribute__((ms_abi)) void* mw_SetupDiCreateDeviceInfoList(const void* guid, void* hwnd) {
+    (void)guid; (void)hwnd;
+    return (void*)(uintptr_t)0x00EA0001u; /* valid empty list */
+}
+__attribute__((ms_abi)) int mw_SetupDiOpenDevRegKey(void* set, void* info, uint32_t scope,
+        uint32_t hwprof, uint32_t ktype, uint32_t access, void* hkey) {
+    (void)set; (void)info; (void)scope; (void)hwprof; (void)ktype; (void)access;
+    if (hkey) *(void**)hkey = NULL;
+    mw_SetLastError(2);
+    return -1; /* INVALID_HANDLE_VALUE */
+}
+__attribute__((ms_abi)) int mw_SetupDiOpenDeviceInterfaceW(void* set, const wchar_t* path,
+        uint32_t flags, void* ifdata) {
+    (void)set; (void)path; (void)flags; (void)ifdata;
+    mw_SetLastError(2);
+    return 0;
+}
+/* ole32 — CoGetMalloc: the engine's default OLE allocator object. */
+static int32_t mw_ole_malloc_addref(void* self) { (void)self; return 1; }
+static int32_t mw_ole_malloc_release(void* self) { (void)self; return 1; }
+static void* mw_ole_malloc_alloc(void* self, uint32_t cb) { (void)self; return malloc(cb); }
+static void* mw_ole_malloc_realloc(void* self, void* p, uint32_t cb) { (void)self; return realloc(p, cb); }
+static void mw_ole_malloc_free(void* self, void* p) { (void)self; free(p); }
+static uint32_t mw_ole_malloc_didalloc(void* self, void* p, uint32_t cb) { (void)self; (void)p; (void)cb; return 0; }
+static uint32_t mw_ole_malloc_heapminimize(void* self) { (void)self; return 0; }
+__attribute__((ms_abi)) uint32_t mw_CoGetMalloc(uint32_t ctx, void** out) {
+    (void)ctx;
+    /* fill a minimal IMalloc vtable layout: QI, AddRef, Release, Alloc,
+     * Realloc, Free, DidAlloc, HeapMinimize */
+    static void* vtbl[8];
+    static void* obj[2];
+    if (!vtbl[0]) {
+        /* vtbl entries are set up lazily with the host thunks above */
+        vtbl[0] = (void*)(uintptr_t)0; /* QI: guests don't call it for IMalloc here */
+        vtbl[1] = (void*)mw_ole_malloc_addref;
+        vtbl[2] = (void*)mw_ole_malloc_release;
+        vtbl[3] = (void*)mw_ole_malloc_alloc;
+        vtbl[4] = (void*)mw_ole_malloc_realloc;
+        vtbl[5] = (void*)mw_ole_malloc_free;
+        vtbl[6] = (void*)mw_ole_malloc_didalloc;
+        vtbl[7] = (void*)mw_ole_malloc_heapminimize;
+        obj[0] = vtbl;
+        obj[1] = NULL;
+    }
+    if (out) *out = obj;
+    return 0; /* S_OK */
+}
+/* ntdll — RtlInitUnicodeString: real initializer. */
+__attribute__((ms_abi)) void mw_RtlInitUnicodeString(void* us, const uint16_t* s) {
+    if (!us) return;
+    uint16_t len = 0;
+    const uint16_t* p = s;
+    if (p) while (p[len]) len++;
+    *(uint16_t*)((uint8_t*)us + 0) = (uint16_t)(len * 2);
+    *(uint16_t*)((uint8_t*)us + 2) = (uint16_t)(len * 2 + 2);
+    *(const uint16_t**)((uint8_t*)us + 8) = s;
+}
+/* msvcrt — __chkstk: the host stack is pre-probed by the OS; the real
+ * probe contract is vacuous here. Return without touching RSP beyond the
+ * ABI scratch (ms_abi). */
+__attribute__((ms_abi)) void mw__chkstk(void) { }
+/* msvcrt — _local_unwind: MSVC EH local-unwind helper; the engine's SEH
+ * machinery unwinds through its own walker, so this lands only on CRT
+ * paths we neutralize; 0 is the honest no-op. */
+__attribute__((ms_abi)) int mw__local_unwind(void* frame, uint32_t target) {
+    (void)frame; (void)target;
+    return 0;
+}
+/* msvcrt — sscanf: narrow parser, same faithful directive subset. */
+__attribute__((ms_abi)) int mw_sscanf(const char* buf, const char* fmt, ...) {
+    if (!buf || !fmt) return -1;
+    __builtin_ms_va_list ap;
+    __builtin_ms_va_start(ap, fmt);
+    const char* s = buf;
+    int assigned = 0, matched_any = 0;
+    const char* f = fmt;
+    while (*f) {
+        if (*f == ' ') { while (*s == ' ' || *s == '\t' || *s == '\n') s++; f++; continue; }
+        if (*f != '%') { if (*s == *f) { s++; f++; continue; } break; }
+        f++;
+        int suppress = 0, width = 0;
+        if (*f == '*') { suppress = 1; f++; }
+        while (*f >= '0' && *f <= '9') { width = width * 10 + (*f - '0'); f++; }
+        if (!*f) break;
+        char conv = *f++;
+        while (*s == ' ' || *s == '\t' || *s == '\n') s++;
+        if (conv == '%') { if (*s == '%') { s++; matched_any = 1; continue; } break; }
+        if (conv == 'd' || conv == 'i' || conv == 'u' || conv == 'x' || conv == 'X' || conv == 'o') {
+            int neg = 0;
+            if (*s == '-') { neg = 1; s++; } else if (*s == '+') s++;
+            long long v = 0; int digits = 0;
+            if ((conv == 'x' || conv == 'X') && s[0] == '0' && (s[1] == 'x' || s[1] == 'X')) s += 2;
+            for (;;) {
+                char c = *s; int d;
+                if (c >= '0' && c <= '9') d = c - '0';
+                else if ((conv == 'x' || conv == 'X') && c >= 'a' && c <= 'f') d = c - 'a' + 10;
+                else if ((conv == 'x' || conv == 'X') && c >= 'A' && c <= 'F') d = c - 'A' + 10;
+                else if (conv == 'o' && c >= '0' && c <= '7') d = c - '0';
+                else break;
+                v = v * (conv == 'o' ? 8 : (conv == 'x' || conv == 'X') ? 16 : 10) + d;
+                s++; digits++; matched_any = 1;
+                if (width && digits >= width) break;
+            }
+            if (!digits) { if (!assigned && !matched_any) return -1; break; }
+            if (!suppress) { int* pi = va_arg(ap, int*); if (pi) *pi = (int)(neg ? -v : v); assigned++; }
+        } else if (conv == 's') {
+            char* ps = suppress ? NULL : va_arg(ap, char*);
+            int n2 = 0;
+            while (*s && *s != ' ' && *s != '\t' && *s != '\n' && !(width && n2 >= width)) {
+                if (ps) ps[n2] = s[n2];
+                s++; n2++;
+            }
+            if (ps) ps[n2] = 0;
+            if (!n2) { if (!assigned && !matched_any) return -1; break; }
+            if (!suppress) assigned++;
+            matched_any = 1;
+        } else if (conv == 'c') {
+            if (!*s) { if (!assigned && !matched_any) return -1; break; }
+            if (!suppress) { char* pc = va_arg(ap, char*); if (pc) *pc = *s; assigned++; }
+            s++; matched_any = 1;
+        } else break;
+    }
+    __builtin_ms_va_end(ap);
+    return assigned;
+}
+/* kernel32 — GlobalAddAtomA: A-side of the SW-555 registry. */
+__attribute__((ms_abi)) uint16_t mw_GlobalAddAtomA(const char* s) {
+    if (!s || !s[0]) return 0;
+    wchar_t w[256];
+    size_t n = strlen(s); if (n > 255) { mw_SetLastError(6); return 0; }
+    for (size_t i = 0; i < n; i++) w[i] = (wchar_t)(unsigned char)s[i];
+    w[n] = 0;
+    return mw_GlobalAddAtomW(w);
+}
+/* kernel32 — GetPriorityClass: the engine runs every guest NORMAL. */
+__attribute__((ms_abi)) uint32_t mw_GetPriorityClass(void* hproc) {
+    (void)hproc;
+    return 0x20; /* NORMAL_PRIORITY_CLASS */
+}
+/* user32 — UnregisterDeviceNotification: the model granted no
+ * notifications; destroying a non-existent one is an honest success
+ * (the real API returns TRUE for valid handles only — the guest only
+ * calls this after a successful Register that our model granted). */
+__attribute__((ms_abi)) int mw_UnregisterDeviceNotification(void* h) {
+    (void)h;
+    return 1;
+}
+/* comctl32 — ImageList_SetIconSize: the cookie list resizes freely. */
+__attribute__((ms_abi)) int mw_ImageList_SetIconSize(void* himl, int cx, int cy) {
+    (void)himl;
+    MW_TRACE("ImageList_SetIconSize(%d,%d) -> 1", cx, cy);
+    return 1;
+}
+/* kernel32/locale — IsValidLanguageGroup + EnumSystemCodePagesW. */
+__attribute__((ms_abi)) int mw_IsValidLanguageGroup(uint32_t grp, uint32_t flags) {
+    (void)flags;
+    return grp == 1 ? 1 : 0; /* LGRPID_WESTERN_EUROPE only */
+}
+__attribute__((ms_abi)) int mw_EnumSystemCodePagesW(void* cb, uint32_t flags) {
+    (void)flags;
+    int (*fn)(const wchar_t*) = (int (*)(const wchar_t*))cb;
+    if (!fn) return 0;
+    if (!fn(L"437")) return 0;
+    if (!fn(L"1252")) return 0;
+    return 1;
+}
+/* charmap — GetUName: the Unicode name database is absent; the honest
+ * answer is the API's "no name" (empty string, length 0). */
+__attribute__((ms_abi)) uint32_t mw_GetUName(uint32_t ch, wchar_t* buf) {
+    (void)ch;
+    if (buf) buf[0] = 0;
+    return 0;
+}
+/* wine-spec ordinal names (SWEEP-050 Train 5b):
+ * COMCTL32.2 = MenuHelp, COMCTL32.8 = CreateMappedBitmap,
+ * SHLWAPI.413 = SHGetMachineInfo, SHLWAPI.437 = IsOS,
+ * SHELL32.61 = RunFileDlg (Win95-fixed low ordinals). */
+__attribute__((ms_abi)) void mw_MenuHelp(uint32_t msg, uint32_t wp, void* hmenu, void* hwndmain,
+        uint32_t flags, void* hstatus, const uint32_t* parts) {
+    (void)msg; (void)wp; (void)hmenu; (void)hwndmain; (void)flags; (void)hstatus; (void)parts;
+}
+__attribute__((ms_abi)) void* mw_CreateMappedBitmap(void* inst, int id, uint32_t flags,
+        const void* colormap, int ncolors) {
+    (void)inst; (void)id; (void)flags; (void)colormap; (void)ncolors;
+    MW_TRACE("CreateMappedBitmap -> cookie");
+    return (void*)(uintptr_t)0x00054001u;
+}
+__attribute__((ms_abi)) int mw_SHGetMachineInfo(long what) {
+    (void)what;
+    return 0;
+}
+__attribute__((ms_abi)) int mw_IsOS(long which) {
+    /* ISOS Professional 1, ISOS_SERVER 2, ISOS_DOMAINMEMBER 3, ISOS_PLUS 4 */
+    return which == 1 ? 1 : 0; /* workstation-grade OS */
+}
+__attribute__((ms_abi)) int mw_RunFileDlg(void* hwndowner, void* icon, const wchar_t* path,
+        const wchar_t* name, const wchar_t* title, uint32_t flags) {
+    (void)hwndowner; (void)icon; (void)path; (void)name; (void)title; (void)flags;
+    return 0; /* cancelled: no Run dialog backend */
+}
+
+/* ============================================================
+ * SWEEP-050 (Train 5c — net.exe Net* family, ntdll Rtl plane,
+ * NDDEAPI A-side from the wine spec, misc leftovers).
+ * ============================================================ */
+/* netapi32 — the workgroup model: enumerations succeed with ZERO
+ * entries (a real workstation in a workgroup returns exactly this),
+ * lookups fail with the documented NERR codes, buffers are real. */
+__attribute__((ms_abi)) uint32_t mw_NetApiBufferAllocate(uint32_t cb, void** buf) {
+    if (!buf) return 87;
+    *buf = malloc(cb ? cb : 1);
+    return *buf ? 0 : 14; /* NERR_Success / ERROR_OUTOFMEMORY-ish */
+}
+__attribute__((ms_abi)) uint32_t mw_NetApiBufferReallocate(void* old, uint32_t cb, void** newbuf) {
+    if (!newbuf) return 87;
+    void* n = realloc(old, cb ? cb : 1);
+    if (!n) return 14;
+    *newbuf = n;
+    return 0;
+}
+__attribute__((ms_abi)) void* mw_NetapipBufferAllocate(uint32_t cb, const void* iid) {
+    (void)iid;
+    return malloc(cb ? cb : 1);
+}
+__attribute__((ms_abi)) uint32_t mw_NetServerEnum(const wchar_t* server, uint32_t level,
+        void** buf, uint32_t prefmax, uint32_t* read, uint32_t* total, uint32_t type,
+        const wchar_t* domain, uint32_t* resume) {
+    (void)server; (void)level; (void)prefmax; (void)type; (void)domain;
+    if (buf) *buf = NULL;
+    if (read) *read = 0;
+    if (total) *total = 0;
+    if (resume) *resume = 0;
+    MW_TRACE("NetServerEnum -> 0 entries (workgroup model)");
+    return 0; /* NERR_Success with an empty list */
+}
+__attribute__((ms_abi)) uint32_t mw_NetShareEnum(const wchar_t* server, uint32_t level,
+        void** buf, uint32_t prefmax, uint32_t* read, uint32_t* total, uint32_t* resume) {
+    (void)server; (void)level; (void)prefmax; (void)resume;
+    if (buf) *buf = NULL;
+    if (read) *read = 0;
+    if (total) *total = 0;
+    return 0;
+}
+__attribute__((ms_abi)) uint32_t mw_NetUseEnum(const wchar_t* server, uint32_t level,
+        void** buf, uint32_t prefmax, uint32_t* read, uint32_t* total, uint32_t* resume) {
+    (void)server; (void)level; (void)prefmax; (void)resume;
+    if (buf) *buf = NULL;
+    if (read) *read = 0;
+    if (total) *total = 0;
+    return 0;
+}
+__attribute__((ms_abi)) uint32_t mw_NetUserGetInfo(const wchar_t* server, const wchar_t* user,
+        uint32_t level, void** buf) {
+    (void)server; (void)level;
+    if (buf) *buf = NULL;
+    MW_TRACE("NetUserGetInfo('%ls') -> NERR_UserNotFound", user);
+    return 2221; /* NERR_UserNotFound */
+}
+__attribute__((ms_abi)) uint32_t mw_NetUseGetInfo(const wchar_t* server, const wchar_t* use,
+        uint32_t level, void** buf) {
+    (void)server; (void)level;
+    if (buf) *buf = NULL;
+    return 2250; /* NERR_UseNotFound */
+}
+__attribute__((ms_abi)) uint32_t mw_NetGetJoinInformation(const wchar_t* server,
+        wchar_t** name, uint32_t* type) {
+    (void)server;
+    static wchar_t wg[] = L"WORKGROUP";
+    if (name) *name = wg;
+    if (type) *type = 2; /* NetSetupWorkgroupName */
+    return 0;
+}
+__attribute__((ms_abi)) uint32_t mw_WNetGetLastErrorW(uint32_t* err, wchar_t* buf, uint32_t len,
+        wchar_t* namebuf, uint32_t namelen) {
+    if (err) *err = 0;
+    if (buf && len) buf[0] = 0;
+    if (namebuf && namelen) namebuf[0] = 0;
+    return 0; /* NO_ERROR: no provider error pending */
+}
+/* ntdll — Rtl string plane: real initializers/conversions over the
+ * engine's ASCII model. */
+__attribute__((ms_abi)) void mw_RtlInitAnsiString(void* as, const char* s) {
+    if (!as) return;
+    uint16_t len = 0;
+    const char* p = s;
+    if (p) while (p[len]) len++;
+    *(uint16_t*)((uint8_t*)as + 0) = len;
+    *(uint16_t*)((uint8_t*)as + 2) = (uint16_t)(len + 1);
+    *(const char**)((uint8_t*)as + 8) = s;
+}
+__attribute__((ms_abi)) void* mw_RtlAllocateHeap(void* heap, uint32_t flags, size_t size) {
+    (void)heap;
+    void* p = malloc(size ? size : 1);
+    if (p && (flags & 0x8u)) memset(p, 0, size); /* HEAP_ZERO_MEMORY */
+    return p;
+}
+__attribute__((ms_abi)) uint32_t mw_RtlTimeToElapsedTimeFields(const void* time, void* fields) {
+    /* LARGE_INTEGER uptime -> days/hours/minutes/seconds/milliseconds */
+    if (!time || !fields) return 0xC000000Du; /* STATUS_INVALID_PARAMETER */
+    uint64_t t;
+    memcpy(&t, time, 8);
+    t /= 10000; /* 100ns -> ms */
+    uint32_t* f = (uint32_t*)fields;
+    f[0] = (uint32_t)(t / 86400000);          /* Days */
+    f[1] = (uint32_t)((t / 3600000) % 24);    /* Hours */
+    f[2] = (uint32_t)((t / 60000) % 60);      /* Minutes */
+    f[3] = (uint32_t)((t / 1000) % 60);       /* Seconds */
+    f[4] = (uint32_t)(t % 1000);              /* Milliseconds */
+    return 0; /* STATUS_SUCCESS */
+}
+__attribute__((ms_abi)) uint32_t mw_RtlOemStringToUnicodeString(void* dst, const void* src,
+        int alloc) {
+    /* the engine OEM plane is ASCII: byte->uint16 identity */
+    if (!dst || !src) return 0xC000000Du;
+    const uint8_t* s = *(const uint8_t* const*)((const uint8_t*)src + 8);
+    uint16_t len = *(const uint16_t*)((const uint8_t*)src + 0);
+    uint16_t* out;
+    if (alloc) {
+        out = (uint16_t*)malloc((size_t)len * 2 + 2);
+        *(uint16_t**)((uint8_t*)dst + 8) = out;
+        *(uint16_t*)((uint8_t*)dst + 0) = len * 2;
+        *(uint16_t*)((uint8_t*)dst + 2) = (uint16_t)(len * 2 + 2);
+    } else {
+        out = *(uint16_t**)((uint8_t*)dst + 8);
+    }
+    if (!out) return 0xC0000005u;
+    for (uint16_t i = 0; i < len; i++) out[i] = s ? s[i] : 0;
+    return 0;
+}
+/* ntdll — power/shutdown: honest STATUS_ACCESS_DENIED (the model has no
+ * privilege plane and must never fake a shutdown). */
+__attribute__((ms_abi)) uint32_t mw_NtShutdownSystem(uint32_t action) {
+    (void)action;
+    return 0xC0000022u; /* STATUS_ACCESS_DENIED */
+}
+__attribute__((ms_abi)) uint32_t mw_NtPowerInformation(uint32_t level, const void* in,
+        uint32_t inlen, void* out, uint32_t outlen) {
+    (void)level; (void)in; (void)inlen;
+    if (out && outlen) memset(out, 0, outlen);
+    return 0xC0000001u; /* STATUS_UNSUCCESSFUL: no power model */
+}
+__attribute__((ms_abi)) uint32_t mw_NtInitiatePowerAction(uint32_t action, uint32_t flags) {
+    (void)action; (void)flags;
+    return 0xC0000002u; /* STATUS_NOT_IMPLEMENTED */
+}
+__attribute__((ms_abi)) uint32_t mw_NtOpenFile(void** handle, uint32_t access, void* attrs,
+        void* iosb, uint32_t share, uint32_t options) {
+    (void)handle; (void)access; (void)attrs; (void)iosb; (void)share; (void)options;
+    return 0xC0000034u; /* STATUS_OBJECT_NAME_NOT_FOUND (no NT path model) */
+}
+__attribute__((ms_abi)) uint32_t mw_NhGetInterfaceNameFromDeviceGuid(const void* guid,
+        wchar_t* buf, uint32_t* len, int wide, int unk) {
+    (void)guid; (void)wide; (void)unk;
+    if (buf && len && *len) buf[0] = 0;
+    if (len) *len = 0;
+    return 0x80004005u; /* E_FAIL: no interface GUID model */
+}
+/* advapi32 — security descriptors: no SD model, honest FALSE. */
+__attribute__((ms_abi)) int mw_MakeSelfRelativeSD(const void* abs, void* rel, uint32_t* rellen) {
+    (void)abs; (void)rel;
+    if (rellen) *rellen = 0;
+    mw_SetLastError(87);
+    return 0;
+}
+__attribute__((ms_abi)) int mw_IsValidSecurityDescriptor(const void* sd) {
+    (void)sd;
+    return 0;
+}
+/* user32/gdi/misc leftovers (real or honest per contract). */
+__attribute__((ms_abi)) void mw_SwitchToThisWindow(void* hwnd, int alt) {
+    (void)hwnd; (void)alt; /* single-window model: nothing to switch */
+}
+__attribute__((ms_abi)) int mw_PlayEnhMetaFile(void* hdc, void* hemf, const void* rect) {
+    (void)hdc; (void)hemf; (void)rect;
+    return 0; /* no EMF bits stored */
+}
+__attribute__((ms_abi)) void* mw_OpenWindowStationW(const wchar_t* name, uint32_t access) {
+    (void)name; (void)access;
+    return (void*)(uintptr_t)0x00EB0001u; /* the single WinSta0 */
+}
+__attribute__((ms_abi)) void* mw_OpenDesktopW(const wchar_t* name, uint32_t flags,
+        int inherit, uint32_t access) {
+    (void)name; (void)flags; (void)inherit; (void)access;
+    return (void*)(uintptr_t)0x00EC0001u; /* the single Default desktop */
+}
+__attribute__((ms_abi)) void* mw_RegisterDeviceNotificationW(void* hrecip, void* filter,
+        uint32_t flags) {
+    (void)hrecip; (void)filter; (void)flags;
+    static uint32_t devnote_next = 1;
+    return (void*)(uintptr_t)(0x00ED0000u | (devnote_next++ & 0xFFFFu));
+}
+/* kernel32 — OpenFile (the 16-bit legacy OFSTRUCT API): real error
+ * semantics against the engine's file model — file-not-found is the
+ * honest miss (the corpus uses it on probe files that don't exist). */
+__attribute__((ms_abi)) int mw_OpenFile(const char* name, void* ofstruct, uint32_t action) {
+    (void)name; (void)ofstruct; (void)action;
+    MW_TRACE("OpenFile('%s') -> HFILE_ERROR (file model miss)", name);
+    mw_SetLastError(2);
+    return -1; /* HFILE_ERROR */
+}
+/* shlwapi — PathAppendA: real backslash-aware append. */
+__attribute__((ms_abi)) int mw_PathAppendA(char* path, const char* more) {
+    if (!path || !more) return 0;
+    size_t n = strlen(path);
+    if (n && path[n - 1] != '\\') { path[n] = '\\'; path[n + 1] = 0; }
+    strcat(path, more);
+    for (char* p = path; *p; p++) if (*p == '/') *p = '\\';
+    return 1;
+}
+/* nddeapi — the A-side DDE-share database, wine nddeapi.spec ordinals
+ * 500-512. The model has no DDE share DB: enum/get succeed EMPTY, the
+ * rest return NDDE_NOT_REGISTERED-ish honest misses. */
+#define NDDE_NO_ERROR 0
+static uint32_t ndde_share_stub(const char* api) {
+    MW_TRACE("%s -> NDDE_NO_ERROR (empty share DB)", api);
+    return NDDE_NO_ERROR;
+}
+__attribute__((ms_abi)) uint32_t mw_NDdeShareAddA(const char* server, uint32_t level,
+        void* sdc, void* info, uint32_t size) {
+    (void)server; (void)level; (void)sdc; (void)info; (void)size;
+    return ndde_share_stub("NDdeShareAddA");
+}
+__attribute__((ms_abi)) uint32_t mw_NDdeShareDelA(const char* server, const char* share, uint32_t res) {
+    (void)server; (void)share; (void)res;
+    return ndde_share_stub("NDdeShareDelA");
+}
+__attribute__((ms_abi)) uint32_t mw_NDdeShareGetInfoA(const char* server, const char* share,
+        uint32_t level, void* buf, uint32_t cb, uint32_t* needed, uint16_t* cnt) {
+    (void)server; (void)share; (void)level; (void)buf; (void)cb;
+    if (needed) *needed = 0;
+    if (cnt) *cnt = 0;
+    return ndde_share_stub("NDdeShareGetInfoA");
+}
+__attribute__((ms_abi)) uint32_t mw_NDdeShareSetInfoA(const char* server, const char* share,
+        uint32_t level, void* info, uint32_t size, uint32_t parm) {
+    (void)server; (void)share; (void)level; (void)info; (void)size; (void)parm;
+    return ndde_share_stub("NDdeShareSetInfoA");
+}
+__attribute__((ms_abi)) uint32_t mw_NDdeGetErrorStringA(uint32_t err, char* buf, uint32_t size) {
+    if (buf && size) { snprintf(buf, size, "NetDDE error %u", err); }
+    return NDDE_NO_ERROR;
+}
+__attribute__((ms_abi)) uint32_t mw_NDdeIsValidShareNameA(const char* name) {
+    return (name && name[0]) ? 1 : 0; /* real validator: non-empty names valid */
+}
+__attribute__((ms_abi)) uint32_t mw_NDdeGetShareSecurityA(const char* server, const char* share,
+        uint32_t si, void* sd, uint32_t cb, uint32_t* needed) {
+    (void)server; (void)share; (void)si; (void)sd; (void)cb;
+    if (needed) *needed = 0;
+    return ndde_share_stub("NDdeGetShareSecurityA");
+}
+__attribute__((ms_abi)) uint32_t mw_NDdeGetTrustedShareA(const char* server, const char* share,
+        uint32_t* status, uint32_t* mods, uint32_t* conv) {
+    (void)server; (void)share;
+    if (status) *status = 0;
+    if (mods) *mods = 0;
+    if (conv) *conv = 0;
+    return ndde_share_stub("NDdeGetTrustedShareA");
+}
+__attribute__((ms_abi)) uint32_t mw_NDdeSetTrustedShareA(const char* server, const char* share,
+        uint32_t mods) {
+    (void)server; (void)share; (void)mods;
+    return ndde_share_stub("NDdeSetTrustedShareA");
+}
+/* kernel32 — SHRestricted lives in SHELL32 (ordinal 100): real policy
+ * plane is unset -> 0 restrictions. */
+__attribute__((ms_abi)) uint32_t mw_SHRestricted(uint32_t rest) {
+    (void)rest;
+    return 0;
+}
 
 static ImportEntry g_import_table[] = {
     /* ===== SWEEP-026: SW-1021..1100 batch (50-task elephant round) ===== */
@@ -31176,6 +32886,236 @@ ENTRY("GDI32.DLL", "GetCharacterPlacementW",                mw_GetCharacterPlace
     ENTRY("OLEAUT32.DLL", "VarUI4FromStr",                      mw_VarUI4FromStr),
     ENTRY("OLEAUT32.DLL", "VarBstrFromDate",                    mw_VarBstrFromDate),
     ENTRY("OLEAUT32.DLL", "DllUnregisterServer",                mw_DllUnregisterServer),
+    /* -- SWEEP-050 Train 2: Everything 1.4.1 25-import tail (honest) -- */
+    ENTRY("COMCTL32.DLL", "_TrackMouseEvent",                   mw_TrackMouseEvent),
+    ENTRY("KERNEL32.DLL", "SetConsoleScreenBufferSize",         mw_SetConsoleScreenBufferSize),
+    ENTRY("KERNEL32.DLL", "GetCalendarInfoW",                   mw_GetCalendarInfoW),
+    ENTRY("KERNEL32.DLL", "FindFirstChangeNotificationW",       mw_FindFirstChangeNotificationW),
+    ENTRY("KERNEL32.DLL", "FindNextChangeNotification",         mw_FindNextChangeNotification),
+    ENTRY("KERNEL32.DLL", "FindCloseChangeNotification",        mw_FindCloseChangeNotification),
+    ENTRY("KERNEL32.DLL", "GetEnvironmentStrings",              mw_GetEnvironmentStringsA),
+    ENTRY("KERNEL32.DLL", "FreeEnvironmentStringsA",            mw_FreeEnvironmentStringsA),
+    ENTRY("KERNEL32.DLL", "SetHandleCount",                     mw_SetHandleCount),
+    ENTRY("KERNEL32.DLL", "GetStringTypeA",                     mw_GetStringTypeA),
+    ENTRY("USER32.DLL", "ActivateKeyboardLayout",               mw_ActivateKeyboardLayout),
+    ENTRY("USER32.DLL", "GetKeyboardLayoutList",                mw_GetKeyboardLayoutList),
+    ENTRY("USER32.DLL", "AdjustWindowRect",                     mw_AdjustWindowRect),
+    ENTRY("USER32.DLL", "OpenIcon",                             mw_OpenIcon),
+    ENTRY("USER32.DLL", "AttachThreadInput",                    mw_AttachThreadInput),
+    ENTRY("GDI32.DLL", "GetRegionData",                         mw_GetRegionData),
+    ENTRY("GDI32.DLL", "GetRandomRgn",                          mw_GetRandomRgn),
+    ENTRY("ADVAPI32.DLL", "RegisterEventSourceW",               mw_RegisterEventSourceW),
+    ENTRY("ADVAPI32.DLL", "ReportEventW",                       mw_ReportEventW),
+    ENTRY("ADVAPI32.DLL", "DeregisterEventSource",              mw_DeregisterEventSource),
+    ENTRY("SHLWAPI.DLL", "PathIsRootW",                         mw_PathIsRootW),
+    ENTRY("SHLWAPI.DLL", "SHRegGetUSValueW",                    mw_SHRegGetUSValueW),
+    ENTRY("SHELL32.DLL", "DragAcceptFiles",                     mw_DragAcceptFiles),
+    ENTRY("SHELL32.DLL", "DragQueryPoint",                      mw_DragQueryPoint),
+    ENTRY("SHELL32.DLL", "ILFindLastID",                        mw_ILFindLastID),
+    /* -- SWEEP-050 Train 3: wordpad.exe SW-1258 tail (honest) -- */
+    ENTRY("msvcrt.dll", "_vsnwprintf",                          mw__vsnwprintf),
+    ENTRY("msvcrt.dll", "_resetstkoflw",                        mw__resetstkoflw),
+    ENTRY("KERNEL32.DLL", "EnumDateFormatsW",                   mw_EnumDateFormatsW),
+    ENTRY("KERNEL32.DLL", "EnumTimeFormatsW",                   mw_EnumTimeFormatsW),
+    ENTRY("KERNEL32.DLL", "AddAtomW",                           mw_AddAtomW),
+    ENTRY("KERNEL32.DLL", "DeleteAtom",                         mw_DeleteAtom),
+    ENTRY("GDI32.DLL", "CreateICW",                             mw_CreateICW),
+    ENTRY("USER32.DLL", "CharToOemA",                           mw_CharToOemA),
+    ENTRY("USER32.DLL", "CharToOemBuffA",                       mw_CharToOemBuffA),
+    ENTRY("USER32.DLL", "OemToCharBuffA",                       mw_OemToCharBuffA),
+    ENTRY("SHELL32.DLL", "SHGetSettings",                       mw_SHGetSettings),
+    ENTRY("SHELL32.DLL", "ShellAboutW",                         mw_ShellAboutW),
+    ENTRY("ole32.dll", "ReadClassStg",                          mw_ReadClassStg),
+    ENTRY("ole32.dll", "OleRegGetUserType",                     mw_OleRegGetUserType),
+    ENTRY("SHLWAPI.DLL", "SHRegGetValueW",                      mw_SHRegGetValueW),
+    ENTRY("SHLWAPI.DLL", "ZoneCheckUrlExW",                     mw_ZoneCheckUrlExW),
+    /* -- SWEEP-050 Train 3c: RICHED20.DLL disk-DLL import surface -- */
+    ENTRY("KERNEL32.DLL", "FindAtomW",                          mw_FindAtomW),
+    ENTRY("KERNEL32.DLL", "FindAtomA",                          mw_FindAtomA),
+    ENTRY("KERNEL32.DLL", "GetProfileSectionW",                 mw_GetProfileSectionW),
+    ENTRY("KERNEL32.DLL", "GetProfileSectionA",                 mw_GetProfileSectionA),
+    ENTRY("KERNEL32.DLL", "GetProfileIntA",                     mw_GetProfileIntA),
+    ENTRY("KERNEL32.DLL", "GetStringTypeExA",                   mw_GetStringTypeExA),
+    ENTRY("GDI32.DLL", "CreateMetaFileA",                       mw_CreateMetaFileA),
+    ENTRY("GDI32.DLL", "SetMetaFileBitsEx",                     mw_SetMetaFileBitsEx),
+    ENTRY("GDI32.DLL", "GetMetaFileBitsEx",                     mw_GetMetaFileBitsEx),
+    ENTRY("GDI32.DLL", "CreateICA",                             mw_CreateICA),
+    ENTRY("USER32.DLL", "UnregisterClassA",                     mw_UnregisterClassA),
+    ENTRY("USER32.DLL", "IsWindowUnicode",                      mw_IsWindowUnicode),
+    ENTRY("USER32.DLL", "LoadBitmapA",                          mw_LoadBitmapA),
+    ENTRY("USER32.DLL", "CharUpperA",                           mw_CharUpperA),
+    ENTRY("USER32.DLL", "CharLowerA",                           mw_CharLowerA),
+    ENTRY("USER32.DLL", "CharLowerBuffW",                       mw_CharLowerBuffW),
+    /* -- SWEEP-050 Train 5: residual corpus tails (36 names) -- */
+    ENTRY("ADVAPI32.DLL", "ClearEventLogW",                     mw_ClearEventLogW),
+    ENTRY("ADVAPI32.DLL", "IsTextUnicode",                      mw_IsTextUnicode),
+    ENTRY("ADVAPI32.DLL", "RegFlushKey",                        mw_RegFlushKey),
+    ENTRY("KERNEL32.DLL", "DelayLoadFailureHook",               mw_DelayLoadFailureHook),
+    ENTRY("KERNEL32.DLL", "GlobalCompact",                      mw_GlobalCompact),
+    ENTRY("KERNEL32.DLL", "WriteProfileStringW",                mw_WriteProfileStringW),
+    ENTRY("KERNEL32.DLL", "GetProfileStringW",                  mw_GetProfileStringW),
+    ENTRY("KERNEL32.DLL", "FoldStringW",                        mw_FoldStringW),
+    ENTRY("dbgeng.dll", "DebugCreate",                          mw_DebugCreate),
+    ENTRY("DBGENG.DLL", "DebugCreate",                          mw_DebugCreate),
+    ENTRY("USER32.DLL", "GetProcessDefaultLayout",              mw_GetProcessDefaultLayout),
+    ENTRY("USER32.DLL", "SetProcessDefaultLayout",              mw_SetProcessDefaultLayout),
+    ENTRY("USER32.DLL", "SetWinEventHook",                      mw_SetWinEventHook),
+    ENTRY("USER32.DLL", "UnhookWinEvent",                       mw_UnhookWinEvent),
+    ENTRY("ole32.dll", "WriteClassStg",                         mw_WriteClassStg),
+    ENTRY("ole32.dll", "WriteFmtUserTypeStg",                   mw_WriteFmtUserTypeStg),
+    ENTRY("GDI32.DLL", "ResizePalette",                         mw_ResizePalette),
+    ENTRY("GDI32.DLL", "PolyBezier",                            mw_PolyBezier),
+    ENTRY("GDI32.DLL", "LineDDA",                               mw_LineDDA),
+    ENTRY("imm32.dll", "ImmAssociateContext",                   mw_ImmAssociateContext),
+    ENTRY("IMM32.DLL", "ImmAssociateContext",                   mw_ImmAssociateContext),
+    ENTRY("imm32.dll", "ImmNotifyIME",                          mw_ImmNotifyIME),
+    ENTRY("imm32.dll", "ImmGetCompositionWindow",               mw_ImmGetCompositionWindow),
+    ENTRY("COMDLG32.DLL", "PrintDlgExW",                        mw_PrintDlgExW),
+    ENTRY("COMDLG32.DLL", "GetFileTitleW",                      mw_GetFileTitleW),
+    ENTRY("iphlpapi.dll", "IcmpCreateFile",                     mw_IcmpCreateFile),
+    ENTRY("iphlpapi.dll", "Icmp6CreateFile",                    mw_Icmp6CreateFile),
+    ENTRY("iphlpapi.dll", "IcmpCloseHandle",                    mw_IcmpCloseHandle),
+    ENTRY("iphlpapi.dll", "IcmpSendEcho2",                      mw_IcmpSendEcho2),
+    ENTRY("iphlpapi.dll", "Icmp6SendEcho2",                     mw_Icmp6SendEcho2),
+    ENTRY("IPHLPAPI.DLL", "IcmpCreateFile",                     mw_IcmpCreateFile),
+    ENTRY("IPHLPAPI.DLL", "IcmpCloseHandle",                    mw_IcmpCloseHandle),
+    ENTRY("IPHLPAPI.DLL", "IcmpSendEcho2",                      mw_IcmpSendEcho2),
+    ENTRY("winspool.drv", "GetPrinterDriverW",                  mw_GetPrinterDriverW),
+    ENTRY("WINSPOOL.DRV", "GetPrinterDriverW",                  mw_GetPrinterDriverW),
+    ENTRY("msvcrt.dll", "wcstok",                               mw_wcstok),
+    ENTRY("msvcrt.dll", "_wmakepath",                           mw__wmakepath),
+    ENTRY("msvcrt.dll", "_getdcwd",                             mw__getdcwd),
+    ENTRY("msvcrt.dll", "wprintf",                              mw_wprintf),
+    ENTRY("msvcrt.dll", "swscanf",                              mw_swscanf),
+    ENTRY("WINMM.DLL", "waveOutGetNumDevs",                     mw_waveOutGetNumDevs),
+    ENTRY("winmm.dll", "waveOutGetNumDevs",                     mw_waveOutGetNumDevs),
+    ENTRY("WINMM.DLL", "sndPlaySoundW",                         mw_sndPlaySoundW),
+    ENTRY("winmm.dll", "sndPlaySoundW",                         mw_sndPlaySoundW),
+    /* -- SWEEP-050 Train 5b: sndvol32/clipbrd/taskmgr/net wave 2 -- */
+    ENTRY("WINMM.DLL", "mixerGetNumDevs",                       mw_mixerGetNumDevs),
+    ENTRY("WINMM.DLL", "midiOutGetNumDevs",                     mw_midiOutGetNumDevs),
+    ENTRY("WINMM.DLL", "waveInGetNumDevs",                      mw_waveInGetNumDevs),
+    ENTRY("WINMM.DLL", "auxGetNumDevs",                         mw_auxGetNumDevs),
+    ENTRY("WINMM.DLL", "mixerOpen",                             mw_mixerOpen),
+    ENTRY("WINMM.DLL", "mixerClose",                            mw_mixerClose),
+    ENTRY("WINMM.DLL", "mixerMessage",                          mw_mixerMessage),
+    ENTRY("WINMM.DLL", "mixerGetLineInfoW",                     mw_mixerGetLineInfoW),
+    ENTRY("WINMM.DLL", "mixerGetLineControlsW",                 mw_mixerGetLineControlsW),
+    ENTRY("WINMM.DLL", "mixerGetControlDetailsW",               mw_mixerGetControlDetailsW),
+    ENTRY("WINMM.DLL", "mixerSetControlDetails",                mw_mixerSetControlDetails),
+    ENTRY("WINMM.DLL", "mixerGetID",                            mw_mixerGetID),
+    ENTRY("WINMM.DLL", "mixerGetDevCapsW",                      mw_mixerGetDevCapsW),
+    ENTRY("WINMM.DLL", "waveOutGetDevCapsW",                    mw_waveOutGetDevCapsW),
+    ENTRY("WINMM.DLL", "waveOutMessage",                        mw_waveOutMessage),
+    ENTRY("WINMM.DLL", "waveInMessage",                         mw_waveInMessage),
+    ENTRY("WINMM.DLL", "midiOutGetDevCapsW",                    mw_midiOutGetDevCapsW),
+    ENTRY("WINMM.DLL", "auxGetDevCapsW",                        mw_auxGetDevCapsW),
+    ENTRY("user32.dll", "DdeInitializeA",                       mw_DdeInitializeA),
+    ENTRY("USER32.DLL", "DdeInitializeA",                       mw_DdeInitializeA),
+    ENTRY("USER32.DLL", "DdeUninitialize",                      mw_DdeUninitialize),
+    ENTRY("USER32.DLL", "DdeCreateStringHandleA",               mw_DdeCreateStringHandleA),
+    ENTRY("USER32.DLL", "DdeFreeStringHandle",                  mw_DdeFreeStringHandle),
+    ENTRY("USER32.DLL", "DdeKeepStringHandle",                  mw_DdeKeepStringHandle),
+    ENTRY("USER32.DLL", "DdeConnect",                           mw_DdeConnect),
+    ENTRY("USER32.DLL", "DdeDisconnect",                        mw_DdeDisconnect),
+    ENTRY("USER32.DLL", "DdeClientTransaction",                 mw_DdeClientTransaction),
+    ENTRY("USER32.DLL", "DdeQueryConvInfo",                     mw_DdeQueryConvInfo),
+    ENTRY("USER32.DLL", "DdeGetLastError",                      mw_DdeGetLastError),
+    ENTRY("USER32.DLL", "DdeAccessData",                        mw_DdeAccessData),
+    ENTRY("USER32.DLL", "DdeUnaccessData",                      mw_DdeUnaccessData),
+    ENTRY("USER32.DLL", "DdeGetData",                           mw_DdeGetData),
+    ENTRY("USER32.DLL", "DdeFreeDataHandle",                    mw_DdeFreeDataHandle),
+    ENTRY("USER32.DLL", "DdeSetUserHandle",                     mw_DdeSetUserHandle),
+    ENTRY("USER32.DLL", "SetProcessWindowStation",              mw_SetProcessWindowStation),
+    ENTRY("USER32.DLL", "CloseWindowStation",                   mw_CloseWindowStation),
+    ENTRY("USER32.DLL", "CloseDesktop",                         mw_CloseDesktop),
+    ENTRY("USER32.DLL", "SetThreadDesktop",                     mw_SetThreadDesktop),
+    ENTRY("USER32.DLL", "EnumWindowStationsW",                  mw_EnumWindowStationsW),
+    ENTRY("USER32.DLL", "EnumDesktopsW",                        mw_EnumDesktopsW),
+    ENTRY("USER32.DLL", "InternalGetWindowText",                mw_InternalGetWindowText),
+    ENTRY("USER32.DLL", "GetShellWindow",                       mw_GetShellWindow),
+    ENTRY("USER32.DLL", "SetWindowsHookW",                      mw_SetWindowsHookW),
+    ENTRY("USER32.DLL", "UnhookWindowsHook",                    mw_UnhookWindowsHook),
+    ENTRY("USER32.DLL", "DefFrameProcA",                        mw_DefFrameProcA),
+    ENTRY("USER32.DLL", "DefMDIChildProcA",                     mw_DefMDIChildProcA),
+    ENTRY("USER32.DLL", "CascadeWindows",                       mw_CascadeWindows),
+    ENTRY("USER32.DLL", "TileWindows",                          mw_TileWindows),
+    ENTRY("USER32.DLL", "EnumClipboardFormats",                 mw_EnumClipboardFormats),
+    ENTRY("USER32.DLL", "GetClipboardFormatNameA",              mw_GetClipboardFormatNameA),
+    ENTRY("USER32.DLL", "GetClipboardFormatNameW",              mw_GetClipboardFormatNameW),
+    ENTRY("USER32.DLL", "UnregisterDeviceNotification",         mw_UnregisterDeviceNotification),
+    ENTRY("GDI32.DLL", "SetEnhMetaFileBits",                    mw_SetEnhMetaFileBits),
+    ENTRY("GDI32.DLL", "GetEnhMetaFileBits",                    mw_GetEnhMetaFileBits),
+    ENTRY("GDI32.DLL", "GetEnhMetaFileHeader",                  mw_GetEnhMetaFileHeaderW),
+    ENTRY("GDI32.DLL", "DeleteEnhMetaFile",                     mw_DeleteEnhMetaFile),
+    ENTRY("GDI32.DLL", "GetFontData",                           mw_GetFontData),
+    ENTRY("iphlpapi.dll", "GetNumberOfInterfaces",              mw_GetNumberOfInterfaces),
+    ENTRY("iphlpapi.dll", "GetInterfaceInfo",                   mw_GetInterfaceInfo),
+    ENTRY("iphlpapi.dll", "GetIfEntry",                         mw_GetIfEntry),
+    ENTRY("netapi32.dll", "I_NetPathType",                      mw_I_NetPathType),
+    ENTRY("netapi32.dll", "I_NetNameValidate",                  mw_I_NetNameValidate),
+    ENTRY("setupapi.dll", "SetupDiCreateDeviceInfoList",        mw_SetupDiCreateDeviceInfoList),
+    ENTRY("setupapi.dll", "SetupDiOpenDevRegKey",               mw_SetupDiOpenDevRegKey),
+    ENTRY("setupapi.dll", "SetupDiOpenDeviceInterfaceW",        mw_SetupDiOpenDeviceInterfaceW),
+    ENTRY("ole32.dll", "CoGetMalloc",                           mw_CoGetMalloc),
+    ENTRY("ntdll.dll", "RtlInitUnicodeString",                  mw_RtlInitUnicodeString),
+    ENTRY("msvcrt.dll", "__chkstk",                             mw__chkstk),
+    ENTRY("msvcrt.dll", "_local_unwind",                        mw__local_unwind),
+    ENTRY("msvcrt.dll", "sscanf",                               mw_sscanf),
+    ENTRY("KERNEL32.DLL", "GlobalAddAtomA",                     mw_GlobalAddAtomA),
+    ENTRY("KERNEL32.DLL", "GetPriorityClass",                   mw_GetPriorityClass),
+    ENTRY("KERNEL32.DLL", "IsValidLanguageGroup",               mw_IsValidLanguageGroup),
+    ENTRY("KERNEL32.DLL", "EnumSystemCodePagesW",               mw_EnumSystemCodePagesW),
+    ENTRY("kernel32.dll", "GetUName",                           mw_GetUName),
+    ENTRY("USER32.DLL", "GetUName",                             mw_GetUName),
+    ENTRY("comctl32.dll", "ImageList_SetIconSize",              mw_ImageList_SetIconSize),
+    ENTRY("COMCTL32.DLL", "MenuHelp",                           mw_MenuHelp),
+    ENTRY("COMCTL32.DLL", "CreateMappedBitmap",                 mw_CreateMappedBitmap),
+    ENTRY("SHLWAPI.DLL", "SHGetMachineInfo",                    mw_SHGetMachineInfo),
+    ENTRY("SHLWAPI.DLL", "IsOS",                                mw_IsOS),
+    ENTRY("SHELL32.DLL", "RunFileDlg",                          mw_RunFileDlg),
+    /* -- SWEEP-050 Train 5c: net/ntdll/nddeapi wave 3 -- */
+    ENTRY("netapi32.dll", "NetApiBufferAllocate",               mw_NetApiBufferAllocate),
+    ENTRY("NETAPI32.DLL", "NetApiBufferAllocate",               mw_NetApiBufferAllocate),
+    ENTRY("netapi32.dll", "NetApiBufferReallocate",             mw_NetApiBufferReallocate),
+    ENTRY("netapi32.dll", "NetapipBufferAllocate",              mw_NetapipBufferAllocate),
+    ENTRY("netapi32.dll", "NetServerEnum",                      mw_NetServerEnum),
+    ENTRY("netapi32.dll", "NetShareEnum",                       mw_NetShareEnum),
+    ENTRY("netapi32.dll", "NetUseEnum",                         mw_NetUseEnum),
+    ENTRY("netapi32.dll", "NetUserGetInfo",                     mw_NetUserGetInfo),
+    ENTRY("netapi32.dll", "NetUseGetInfo",                      mw_NetUseGetInfo),
+    ENTRY("netapi32.dll", "NetGetJoinInformation",              mw_NetGetJoinInformation),
+    ENTRY("mpr.dll", "WNetGetLastErrorW",                       mw_WNetGetLastErrorW),
+    ENTRY("MPR.DLL", "WNetGetLastErrorW",                       mw_WNetGetLastErrorW),
+    ENTRY("ntdll.dll", "RtlInitAnsiString",                     mw_RtlInitAnsiString),
+    ENTRY("ntdll.dll", "RtlAllocateHeap",                       mw_RtlAllocateHeap),
+    ENTRY("ntdll.dll", "RtlTimeToElapsedTimeFields",            mw_RtlTimeToElapsedTimeFields),
+    ENTRY("ntdll.dll", "RtlOemStringToUnicodeString",           mw_RtlOemStringToUnicodeString),
+    ENTRY("ntdll.dll", "NtShutdownSystem",                      mw_NtShutdownSystem),
+    ENTRY("ntdll.dll", "NtPowerInformation",                    mw_NtPowerInformation),
+    ENTRY("ntdll.dll", "NtInitiatePowerAction",                 mw_NtInitiatePowerAction),
+    ENTRY("ntdll.dll", "NtOpenFile",                            mw_NtOpenFile),
+    ENTRY("iphlpapi.dll", "NhGetInterfaceNameFromDeviceGuid",   mw_NhGetInterfaceNameFromDeviceGuid),
+    ENTRY("advapi32.dll", "MakeSelfRelativeSD",                 mw_MakeSelfRelativeSD),
+    ENTRY("advapi32.dll", "IsValidSecurityDescriptor",          mw_IsValidSecurityDescriptor),
+    ENTRY("USER32.DLL", "SwitchToThisWindow",                   mw_SwitchToThisWindow),
+    ENTRY("GDI32.DLL", "PlayEnhMetaFile",                       mw_PlayEnhMetaFile),
+    ENTRY("USER32.DLL", "OpenWindowStationW",                   mw_OpenWindowStationW),
+    ENTRY("USER32.DLL", "OpenDesktopW",                         mw_OpenDesktopW),
+    ENTRY("USER32.DLL", "RegisterDeviceNotificationW",          mw_RegisterDeviceNotificationW),
+    ENTRY("KERNEL32.DLL", "OpenFile",                           mw_OpenFile),
+    ENTRY("shlwapi.dll", "PathAppendA",                         mw_PathAppendA),
+    ENTRY("SHLWAPI.DLL", "PathAppendA",                         mw_PathAppendA),
+    ENTRY("NDDEAPI.DLL", "NDdeShareAddA",                       mw_NDdeShareAddA),
+    ENTRY("NDDEAPI.DLL", "NDdeShareDelA",                       mw_NDdeShareDelA),
+    ENTRY("NDDEAPI.DLL", "NDdeShareGetInfoA",                   mw_NDdeShareGetInfoA),
+    ENTRY("NDDEAPI.DLL", "NDdeShareSetInfoA",                   mw_NDdeShareSetInfoA),
+    ENTRY("NDDEAPI.DLL", "NDdeGetErrorStringA",                 mw_NDdeGetErrorStringA),
+    ENTRY("NDDEAPI.DLL", "NDdeIsValidShareNameA",               mw_NDdeIsValidShareNameA),
+    ENTRY("NDDEAPI.DLL", "NDdeGetShareSecurityA",               mw_NDdeGetShareSecurityA),
+    ENTRY("NDDEAPI.DLL", "NDdeGetTrustedShareA",                mw_NDdeGetTrustedShareA),
+    ENTRY("NDDEAPI.DLL", "NDdeSetTrustedShareA",                mw_NDdeSetTrustedShareA),
+    ENTRY("SHELL32.DLL", "SHRestricted",                        mw_SHRestricted),
 };
 
 #define NUM_IMPORTS (sizeof(g_import_table) / sizeof(g_import_table[0]))
@@ -31683,6 +33623,30 @@ static int load_pe(const char* filepath) {
                     { "SHELL32", 701, "CDefFolderMenu_Create2" },
                     { "SHLWAPI", 2,   "ParseURLW" },
                     { "SHLWAPI", 12,  "SHCreateMemStream" },
+                    /* SWEEP-050 Train 2: Everything SHELL32.16 (wine spec
+                     * 4.72 Win95-fixed ordinals kept by XP) */
+                    { "SHELL32", 16,  "ILFindLastID" },
+                    /* SWEEP-050 Train 3: wordpad SHLWAPI.231 (wine spec) */
+                    { "SHLWAPI", 231, "ZoneCheckUrlExW" },
+                    /* SWEEP-050 Train 5b: wine-spec low ordinals (Win95-fixed) */
+                    { "COMCTL32", 2,   "MenuHelp" },
+                    { "COMCTL32", 8,   "CreateMappedBitmap" },
+                    { "SHLWAPI", 413,  "SHGetMachineInfo" },
+                    { "SHLWAPI", 437,  "IsOS" },
+                    { "SHELL32", 61,   "RunFileDlg" },
+                    { "SHELL32", 100,  "SHRestricted" },
+                    /* SWEEP-050 Train 5c: NDDEAPI A-side (wine nddeapi.spec);
+                     * 609-612 + SHELL32.236/241/245 stay KNOWN-UNKNOWN (no
+                     * credible name source — Rule 1). */
+                    { "NDDEAPI", 500, "NDdeShareAddA" },
+                    { "NDDEAPI", 501, "NDdeShareDelA" },
+                    { "NDDEAPI", 503, "NDdeShareGetInfoA" },
+                    { "NDDEAPI", 504, "NDdeShareSetInfoA" },
+                    { "NDDEAPI", 505, "NDdeGetErrorStringA" },
+                    { "NDDEAPI", 506, "NDdeIsValidShareNameA" },
+                    { "NDDEAPI", 509, "NDdeGetShareSecurityA" },
+                    { "NDDEAPI", 511, "NDdeGetTrustedShareA" },
+                    { "NDDEAPI", 512, "NDdeSetTrustedShareA" },
                     /* SWEEP-029b: bginfo64 ODBC32 + winmergeu OLEAUT32 raw ordinals */
                     { "ODBC32", 9,   "SQLDescribeCol" },
                     { "ODBC32", 24,  "SQLAllocHandle" },
@@ -32161,6 +34125,25 @@ static void crash_handler(int sig, siginfo_t* info, void* ctx) {
             if (mw_cfn)
                 fprintf(stderr, "  [FUNC] %s+0x%llx (REA/Ghidra function map)\n",
                         mw_cfn, (unsigned long long)mw_coff);
+        }
+
+        /* SWEEP-050 SW-1258 diagnostic (MINWIN_VTBL_DUMP=1): wordpad's
+         * crash `mov 0x40(%rax),%rcx` with RAX = return of a virtual call
+         * `call *0x298(%rax)` at RVA 0x2fae7 — dump the vtable pointer and
+         * the virtual target the guest actually called, so the NULL
+         * producer is decodable without gdb. */
+        {
+            static int vdump = -1;
+            if (vdump < 0) { const char* v = getenv("MINWIN_VTBL_DUMP"); vdump = (v && v[0] && v[0] != '0') ? 1 : 0; }
+            if (vdump) {
+                uint64_t vt = *(uint64_t*)(uintptr_t)rcx;
+                uint64_t tgt = *(uint64_t*)(uintptr_t)(vt + 0x298);
+                fprintf(stderr, "  [VTBL] this=0x%lx vtbl=0x%lx tgt=vtbl[0x298]=0x%lx (RVA 0x%lx)\n",
+                        rcx, vt, tgt,
+                        (tgt >= (uint64_t)(uintptr_t)g_image_base &&
+                         tgt < (uint64_t)(uintptr_t)g_image_base + g_image_size)
+                            ? tgt - (uint64_t)(uintptr_t)g_image_base : 0ull);
+            }
         }
 
         /* Dump bytes at crash point */

@@ -1,0 +1,4 @@
+19b5a382bbe1c89d62a4c56da5470b9400039ca2591bf252a0e5e56f30ff4033  artifacts/sweep050/stage/xp_x64.iso
+c6298b10cfa1748bcbedad94c62ce771e240e5021bfd6d7a967cd571b04b5312  artifacts/sweep050/stage/LibreOffice.msi
+4f4a9b9299b608d48b065f95fd80b9c095cdc7114cd467cd9b54944b23559dfe  artifacts/sweep050/stage/Everything-1.4.1.1028.x64.zip
+c1d45aac732b6c385f522da4ee32a0c672f8bc5f64e63e22bc000ad7458b590c  minwin_loader

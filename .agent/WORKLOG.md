@@ -1321,3 +1321,51 @@ calc battery 15/15. evidence/sweep049/ (census.tsv + expand_log.tsv +
 provenance_sha256.txt + mspaint trace + 2 rendered messageboxes). No
 force-push. Open: SW-1258/1259 decode, tails, SW-1252 (LO staged),
 SW-1243 (needs x86 SP3 ISO), Everything full lifecycle.
+
+## SWEEP-050 (2026-10-22) «قطار با برنامه های واقعی» — five trains, two root causes, everything resurrected
+
+User directive: «ادامه بده عالیه اینطوری بهتر با برنامه های واقعی» + «ادامه ادامه».
+Reconciled first: local was 20 commits behind (origin advanced 242af84 -> 4aab7be,
+SWEEP-031..049 incl. the four-GUI-train rounds); pure ff-merge, binary reproduced
+byte-exact (a29ca1e7 = SWEEP-049 provenance). Payload re-staging: XP Pro x64 SP2
+OEM ISO (628,617,216B, sha 19b5a382 EXACT), LibreOffice 26.8.1.1 x64 MSI
+(374,870,016B, sha c6298b10 EXACT), Everything 1.4.1.1028 x64 zip (sha 4f4a9b92
+EXACT) — all sha-pinned vs evidence/sweep049. 23 XP payloads extracted (pycdlib)
+and expanded BY THE ENGINE's own 7za (21 rc=0).
+
+Train 1 — Everything 1.4.1 (SWEEP-048 park-124 -> exit 0): 25-import tail honest
++ SHELL32.16 = ILFindLastID (wine shell32.spec 4.72). Live pump -> budget exit 0 x3.
+Train 2 — wordpad (SW-1258 139 -> exit 0): three-layer decode — RICHED20 disk-DLL
+16-name surface, SHLWAPI.231 ZoneCheckUrlExW stub-0 -> virtual-call NULL deref
+(MINWIN_VTBL_DUMP diagnostic added), and the WM_CREATE=-1 contract (CreateWindowEx
+W/A now return NULL on base AND nested paths; MFC InitInstance=FALSE -> exit(0)).
+Train 3 — mshearts (139 -> exit 0): real hMenu contract — top-level
+CreateWindowExW attaches the guest menu (GetMenu==NULL crashed EnableMenuItem at
+RVA 0x9d5f). SWEEP-049's "mshearts exit-0" was measured under MW_GUI_EVENTS=0
+(no WM_CREATE delivery at all); the events=1 census exposed the gap.
+Train 4 — drwtsn32 (SW-1259 139 -> exit 0): ONE ROOT CAUSE = LoadResource returns
+the DATA POINTER on real Windows (LockResource = documented no-op); the engine
+returned the DATA_ENTRY VA so drwtsn32's RT_STRING walker read the entry header
+as string lengths (SIGSEGV RVA 0x5cb3, fault 0x41f932 > image end). Fixed
+LoadResource + LockResource identity (v2 heuristic "first u32 < image_size"
+misfired on 'BM' bitmap data — caught and removed same round).
+Train 5 — residual tails (~180 names, three waves): real implementations
+(LineDDA Bresenham + guest callback, IsTextUnicode, wcstok/_wmakepath/swscanf/
+sscanf, Rtl string plane, Net* workgroup-empty, GetFileTitleW, FoldStringW,
+DllGetVersion 5.82, GetCalendarInfoW, GetRegionData); honest-miss families
+(winmm no-hardware, DDEML no-server, NDDEAPI empty DB per wine nddeapi.spec
+500-512, setupapi, ICMP, ole32 storage). Ordinals from shipped wine specs:
+SHELL32.16/61/100, SHLWAPI.231/413/437, COMCTL32.2/8. KNOWN-UNKNOWN stays
+(Rule 1): NDDEAPI.609-612, SHELL32.236/241/245. SW-1250 section-verify made
+reloc-aware (riched20 sec1 false positive killed; the SW-1252 msvcp140 .text
+zeroing signal survives).
+
+Measurement (binary c1d45aac): census x3 ALL DETERMINISTIC over 19 SWEEP-050
+guests — everything/mspaint/mshearts/wordpad/drwtsn32/calc/winmine/notepad/
+write/winver/sol/freecell/charmap/clipbrd/sndvol32/taskmgr/regedt32 exit-0,
+net rc=2 + ping rc=1 honest usage; ZERO stub calls; DL corpus 14x exit-0 +
+pageant 124 ZERO regressions; G1 PIN 12/12 (evidence/master/g1/20261022_170026);
+calc battery 15/15. evidence/sweep050/ (census.tsv + expand_log.tsv +
+payloads_sha256.txt + wordpad/drwtsn32/everything traces). No force-push.
+Open: SW-1260 wordpad OnCreate -1 producer, SW-1261 soffice decode (LO MSI
+staged), Everything UI interaction.

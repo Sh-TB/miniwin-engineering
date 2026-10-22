@@ -2552,13 +2552,82 @@ viewer, (2) Windows calculator, (3) a program that does not exist on Linux
 - [x] **SWEEP-050 staging done** (payloads on disk, gitignored): LibreOffice
   26.8.1 x64 MSI (375MB, sha c6298b10...) for SW-1252 soffice decode;
   Everything 1.4.1.1028 x64 zip expanded (sha 4f4a9b92...).
-- [ ] **SW-1258** wordpad.exe x64: SIGSEGV RVA 0x2faf3 `mov rcx,[rax+0x40]`
-  with RAX=0 after MFC string-conversion WideCharToMultiByte cycles
-  (16→2 unresolved tail: _vsnwprintf/_resetstkoflw/EnumDateFormatsW/
-  DeleteAtom/AddAtomW...). Decode the NULL producer next round.
-- [ ] **SW-1259** drwtsn32.exe x64: SIGSEGV RVA 0x405cb3, 0 stubs, 0
-  unresolved — crash in guest code after full import resolution. Decode.
+- [x] **SW-1258 LANDED — wordpad 139→exit-0 (clean declined startup) + the
+  menu/hMenu contract**: decoded to a THREE-layer chain: (1) RICHED20.DLL
+  (disk-DLL) imported 16 missing names (FindAtomW/A, GetProfileSectionW/A,
+  GetProfileIntA, GetStringTypeExA, CreateMetaFileA, Set/GetMetaFileBitsEx,
+  CreateICA, UnregisterClassA, IsWindowUnicode, LoadBitmapA, CharUpperA/LowerA,
+  CharLowerBuffW) — implemented honest; (2) SHLWAPI.231 = ZoneCheckUrlExW
+  (wine shlwapi.spec) whose stub-0 return drove `mov rcx,[rax+0x40]` at RVA
+  0x2fae0 (RAX = virtual-call return) — named + implemented + the vtable
+  walker (vtbl 0xafd8 slot 83 -> RVA 0x2d4c0, "CRichEdit2View" IsKindOf
+  scan via MFC42u.4375) decoded through the MINWIN_VTBL_DUMP diagnostic
+  (new, env-gated); (3) the guest's frame WM_CREATE returns -1 (MFC
+  guest-internal decision after the toolbar — the RICHEDIT child + toolbar
+  BOTH mint successfully first). The engine violated the real contract by
+  minting the hwnd anyway; now: WM_CREATE=-1 -> CreateWindowEx(W/A)
+  returns NULL on BOTH the base and nested (SW-1256) paths, the mint is
+  unregistered, and MFC's InitInstance=FALSE path exits cleanly (exit(0)
+  in the trace). Also: real hMenu contract — CreateWindowExW attaches a
+  non-NULL top-level hMenu as the window menu (g_main_menu); mshearts'
+  menu-update path (GetMenu->EnableMenuItem 124,1) SIGSEGV'd RVA 0x9d5f
+  on GetMenu==NULL before this. Continuation SW-1260: which guest check
+  inside wordpad's OnCreate still fails (the -1 producer after the
+  toolbar's imagelist StretchDIBits + free).
+- [x] **SW-1259 LANDED — drwtsn32 139→exit-0, ONE ROOT CAUSE = LoadResource
+  contract**: drwtsn32 reads LoadResource's result DIRECTLY
+  (`edi = *(u16*)LoadResource(...)` then a 16-entry length-prefixed
+  RT_STRING walk) — real Windows LoadResource (32-bit era onward) returns
+  the DATA POINTER with LockResource as a documented no-op, but the engine
+  returned the IMAGE_RESOURCE_DATA_ENTRY VA, so the walker parsed the
+  16-byte ENTRY HEADER as string lengths and stepped past the image
+  (SIGSEGV RVA 0x5cb3, fault 0x41f932 > image end 0x417000). Fixed:
+  LoadResource returns g_image_base + entry->OffsetToData; LockResource
+  is the identity no-op. v2 heuristic LockResource ("first u32 <
+  image_size looks like OffsetToData") misfired on real data (mshearts
+  BITMAP 'BM' = 0x4D42 < image_size -> double deref -> SIGSEGV RVA
+  0x9d5f) and was removed — identity is the honest contract. drwtsn32's
+  7-name tail (ClearEventLogW, dbgeng!DebugCreate, DelayLoadFailureHook,
+  IsTextUnicode real heuristics, _wmakepath, swscanf real parser,
+  wprintf) implemented honest.
+- [x] **SW-1252 pre-work landed — section verify made RELOC-AWARE**: the
+  SW-1250 diagnostic compared each section's first qword to the RAW file
+  post-relocs, so a RELOCATED pointer false-positived (riched20 sec1 RVA
+  0xfc000). Now collects the section's reloc targets and skips covered
+  qwords; a NON-reloc mismatch is the honest SW-1252 "image corrupted /
+  DllMain self-modified" signal. LibreOffice 26.8.1.1 x64 MSI re-fetched
+  sha-EXACT (c6298b10...) for the SW-1261 soffice decode.
+- [x] **SW-1258b everything.exe (SWEEP-048 park-124) RESURRECTED exit-0**:
+  the 25-import tail implemented honest (kernel32 console/calendar/
+  FindFirst-Next-CloseChangeNotification/GetEnvironmentStrings A-side/
+  SetHandleCount/GetStringTypeA, user32 keyboard-layout/AdjustWindowRect
+  (=Ex with ex=0)/OpenIcon/AttachThreadInput, gdi32 GetRegionData
+  RDH_RECTANGLES + GetRandomRgn, advapi32 event-log trio, shlwapi
+  PathIsRootW/SHRegGetUSValueW, shell32 DragAcceptFiles/DragQueryPoint/
+  ILFindLastID via SHELL32.16 = ILFindLastID (wine shell32.spec 4.72),
+  COMCTL32._TrackMouseEvent). Live message pump (WM_TIMER dispatch,
+  GetWindowLongPtrW GWLP_USERDATA reads) then budget-WM_QUIT exit 0 x3.
+- [x] **SW-1247-residual CLOSED to KNOWN-UNKNOWN stubs**: ~180 names
+  across charmap/clipbrd/sndvol32/net/taskmgr/regedt32/wordpad/everything
+  implemented over three waves (real: LineDDA Bresenham + guest callback,
+  IsTextUnicode stats, wcstok/_wmakepath/swscanf/sscanf parsers, Rtl*
+  string plane, Net* workgroup-empty model, GetFileTitleW, FoldStringW
+  case maps, comctl DllGetVersion 5.82; honest-miss: winmm no-hardware
+  MMSYSERR_BADDEVICEID, DDEML no-server DMLERR codes, NDDEAPI empty share
+  DB (wine nddeapi.spec 500-512), setupapi ERROR_FILE_NOT_FOUND, ICMP
+  IP_REQ_TIMED_OUT, ole32 storage STG_E_FILENOTFOUND). Ordinals named
+  from shipped wine specs: COMCTL32.2/8, SHLWAPI.413/437, SHELL32.61/100.
+  REMAINING KNOWN-UNKNOWN (Rule 1, never called): NDDEAPI.609-612,
+  SHELL32.236/241/245.
 - [ ] **SW-1247-residual**: the remaining per-guest unresolved tails
   (sndvol32 5, taskmgr 1, regedit 1, sol 3, charmap 9, clipbrd 49, net 4)
   are the standard import-surface work; SW-1247 itself (AfxInit heap
   corruption) is CLOSED by the __dllonexit fix.
+- [ ] **SW-1260** wordpad OnCreate -1 deep decode: the guest-internal
+  check that still fails after the toolbar (RICHEDIT child + toolbar mint
+  OK; LoadStringW(61443)->0 resource-absent is the last API before the
+  MFC string-conversion cycles). Target: full wordpad UI startup.
+- [ ] **SW-1261** LibreOffice soffice decode (payload staged, sha-exact):
+  SW-1252 msvcp140 .text zeroing now decodable through the reloc-aware
+  section verify. Everything 1.4.1 full lifecycle (UI interaction) also
+  queued behind the calc-battery-style click harness.
