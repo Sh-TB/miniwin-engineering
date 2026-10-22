@@ -8000,22 +8000,35 @@ static int w3_guard_enabled(void) {
     return g_heap_guard;
 }
 static void* w3_guard_alloc(size_t size) {
+    /* SW-1257 (SWEEP-049): END-PLACED body. The v1 guard put the body at
+     * the START of the region — page-rounding slack absorbed adjacent
+     * OVERFLOWS (mspaint AfxInit corruptor wrote past its block and the
+     * guard-run exited 0!). Placing the body so it ENDS exactly at the
+     * guard page makes ANY overflow (even 1 byte) fault at the writing
+     * instruction -> the writer's guest RIP lands in the crash handler.
+     * Alignment: body pointer stays 16-byte aligned. */
     size_t page = 4096;
-    size_t body = (size + page - 1) & ~(page - 1);
-    uint8_t* mem = mmap(NULL, body + page, PROT_READ | PROT_WRITE,
+    size_t sz16 = (size + 15) & ~(size_t)15;
+    size_t body = ((sz16 + page - 1) & ~(page - 1));
+    size_t total = body + page;
+    uint8_t* mem = mmap(NULL, total, PROT_READ | PROT_WRITE,
                         MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
     if (mem == MAP_FAILED) return NULL;
     mprotect(mem + body, page, PROT_NONE);
-    w3_reg_add_sz(mem, size | 0x100000000ull); /* flag bit 32 = guarded */
-    return mem;
+    uint8_t* p = mem + body - sz16; /* ends exactly at the guard page */
+    w3_reg_add_sz(p, size | 0x100000000ull); /* flag bit 32 = guarded */
+    return p;
 }
 static void w3_guard_free(void* p) {
     int s = w3_reg_find(p);
     if (s < 0) return;
     size_t size = g_alloc_reg[s].size & ~0x100000000ull;
+    /* SW-1257: body ENDS at the guard page; region start = p + sz16 - body. */
     size_t page = 4096;
-    size_t body = (size + page - 1) & ~(page - 1);
-    munmap(p, body + page);
+    size_t sz16 = ((size ? size : 1) + 15) & ~(size_t)15;
+    size_t body = ((sz16 + page - 1) & ~(page - 1));
+    uint8_t* region = (uint8_t*)p + sz16 - body;
+    munmap(region, body + page);
     g_alloc_reg[s].p = W3_REG_TOMB;
     g_alloc_reg[s].size = 0;
 }
@@ -12610,12 +12623,28 @@ __attribute__((ms_abi)) void mw__c_exit(void) {
     MW_TRACE("_c_exit() (no-op: static-CRT bookkeeping)");
 }
 __attribute__((ms_abi)) void* mw___dllonexit(void* fn, void*** begin, void*** end) {
-    /* MS contract: insert fn at *end, bump *end. Static-CRT onexit tables
-     * are sized by the guest CRT — trust them like Windows does. */
-    if (begin && end && *begin && *end && *end >= *begin) {
-        *(*end) = (void**)fn;
-        (*end)++;
+    /* SW-1247 ROOT CAUSE (SWEEP-049): the old model "trust the table,
+     * write at *end" OVERFLOWS when the table is FULL — mspaint/mshearts/
+     * wordpad die in mfc42u DllMain AfxInit with glibc 'corrupted top
+     * size' (NG) and the end-placed heap guard catches the exact writer
+     * at mw___dllonexit+0x22 (`mov [rcx],rax`, rcx = guard page after a
+     * full 256-byte table). Real CRT contract (wine msvcrt __dllonexit):
+     * GROW the table with realloc to (count+1) entries, append, bump
+     * *pend, and publish the new *pbegin. */
+    if (!begin || !end || !*begin || !*end || *end < *begin) return fn;
+    size_t count = (size_t)(*(void***)end - *(void***)begin); /* entries */
+    /* SW-1257 consistency: grow through the SAME allocator family the
+     * guest used (mw_realloc handles guarded mmap-chunks + glibc heap) —
+     * a raw realloc here desyncs the guard registry and traps the later
+     * guest free. */
+    void** p = (void**)mw_realloc(*begin, (count + 1) * sizeof(void*));
+    if (!p) return NULL; /* OOM: honest NULL */
+    if (p != *begin) {
+        *begin = p;
+        *end = p + count; /* reseat end into the new block */
     }
+    p[count] = (void*)fn;
+    *end = p + count + 1;
     return fn;
 }
 __attribute__((ms_abi)) void mw_msvcrt_terminate(void) {
@@ -13841,7 +13870,48 @@ static int mw_child_slot(void* hwnd) {
     int i = (int)(v & 0xFFFFu) - 1;
     return (i >= 0 && i < MW_CHILD_MAX && g_child[i].live) ? i : -1;
 }
-static int mw_is_hwnd(void* h) { return h == MW_GUI_HWND || mw_child_slot(h) >= 0; }
+static int mw_is_hwnd(void* h); /* fwd: defined below SW-1256 block */
+
+/* ============================================================
+ * SW-1256 (SWEEP-049, mspaint/mshearts/wordpad MFC): distinct identities
+ * for NESTED top-level windows. Ancestral model: every top-level
+ * CreateWindowExW returned the single MW_GUI_HWND. MFC creates the frame
+ * view (child id AFX_IDW_PANE_FIRST = 0xE900) INSIDE the frame's
+ * synchronous WM_CREATE — the view got the SAME handle as its parent, so
+ * every parent/child walk became self-referential and MFC's view search
+ * recursed 104,715 x GetDlgItem(0xE900) -> 8MB stack overflow (witness:
+ * census new-mspaint SIGSEGV, RSP page-aligned, RIP in libc).
+ * v1 contract (additive; single-window guests stay byte-identical):
+ *  - window #1 = MW_GUI_HWND (unchanged legacy identity).
+ *  - a CreateWindowEx issued while a WM_CREATE delivery is on the stack
+ *    mints a DISTINCT handle 0x00011000+n*0x10, registers
+ *    {hwnd, parent, id=hmenu} and receives its own synchronous WM_CREATE
+ *    with hwndParent filled (real Windows contract).
+ *  - GetDlgItem/GetParent/mw_is_hwnd consult the registry.
+ * ============================================================ */
+typedef struct { void* hwnd; void* parent; uint32_t id; int live; } MwToplevel;
+#define MW_TOPLEVEL_MAX 64
+static MwToplevel g_toplevel[MW_TOPLEVEL_MAX];
+static int g_toplevel_n = 0;
+static int g_wm_create_depth = 0;
+static void* mw_toplevel_register(void* parent, uint32_t id) {
+    if (g_toplevel_n >= MW_TOPLEVEL_MAX) return NULL;
+    void* h = (void*)(uintptr_t)(0x00011000ull + 0x10ull * (unsigned)g_toplevel_n);
+    g_toplevel[g_toplevel_n].hwnd = h;
+    g_toplevel[g_toplevel_n].parent = parent;
+    g_toplevel[g_toplevel_n].id = id;
+    g_toplevel[g_toplevel_n].live = 1;
+    g_toplevel_n++;
+    return h;
+}
+static int mw_toplevel_find(void* h) {
+    for (int i = 0; i < g_toplevel_n; i++)
+        if (g_toplevel[i].live && g_toplevel[i].hwnd == h) return i;
+    return -1;
+}
+static int mw_is_hwnd(void* h) {
+    return h == MW_GUI_HWND || mw_child_slot(h) >= 0 || mw_toplevel_find(h) >= 0;
+}
 static size_t mw_w16len(const uint16_t* s) { size_t n = 0; if (s) while (s[n]) n++; return n; }
 static void mw_w16cpy(uint16_t* dst, const uint16_t* src, size_t cap) {
     size_t n = 0;
@@ -14568,7 +14638,7 @@ __attribute__((ms_abi)) long long mw_SendMessageW(void* h, uint32_t msg, uintptr
         long long ctl_r;
         if (s >= 0 && mw_commonctl_msg(s, msg, wp, lp, &ctl_r)) return ctl_r;
     }
-    if (h == MW_GUI_HWND && g_wndproc_fwd) {
+    if ((h == MW_GUI_HWND || mw_toplevel_find(h) >= 0) && g_wndproc_fwd) { /* SW-1256: nested mints forward too */
         long long r = g_wndproc_fwd(h, msg, wp, lp);
         MW_TRACE("SendMessageW(%s wp=0x%llx) -> wndproc -> %lld",
                  mw_wm_name(msg), (unsigned long long)wp, r);
@@ -14610,7 +14680,7 @@ __attribute__((ms_abi)) long mw_SendMessageA(void* h, uint32_t msg, uintptr_t wp
         long long ctl_r;
         if (s >= 0 && mw_commonctl_msg(s, msg, wp, lp, &ctl_r)) return (long)ctl_r;
     }
-    if (h == MW_GUI_HWND && g_wndproc_fwd)
+    if ((h == MW_GUI_HWND || mw_toplevel_find(h) >= 0) && g_wndproc_fwd) /* SW-1256 */
         return (long)g_wndproc_fwd(h, msg, wp, (long long)lp);
     return 0;
 }
@@ -15065,6 +15135,7 @@ static void mw_gui_store_window(int w, int h);
 static void mw_gui_set_quit(int code);
 static void mw_gui_send_destroy(void* hwnd);
 static void mw_gui_send_create(void); /* SWEEP-006: real WM_CREATE on CreateWindowEx */
+static void mw_gui_send_create_h(void* hwnd, void* parent, uint32_t ctl_id); /* SW-1256: nested identity WM_CREATE */
 static void* g_create_param; /* SW-802..806: CreateWindowEx lpParam -> CREATESTRUCT.lpCreateParams */
 static void mw_gui_request_paint(void);
 static int  mw_gui_pump_getmsg(void* msg, void* hwnd, const char* api);
@@ -15287,6 +15358,19 @@ __attribute__((ms_abi)) void* mw_CreateWindowExW(uint32_t exstyle, const void* c
         return NULL;
     g_create_param = param; /* SW-802..806: forward lpParam into CREATESTRUCT */
     mw_gui_store_window((int)w, (int)h); /* SWEEP-005: allocate paint surface */
+    if (g_wm_create_depth > 0) {
+        /* SW-1256: NESTED top-level creation (MFC creates the view inside
+         * the frame's synchronous WM_CREATE). Mint a DISTINCT identity
+         * registered as {hwnd, parent, id=hmenu}; the guest receives its
+         * own WM_CREATE addressed to the new handle. */
+        void* nh = mw_toplevel_register(parent, (uint32_t)(uintptr_t)menu);
+        if (nh) {
+            mw_gui_send_create_h(nh, parent, (uint32_t)(uintptr_t)menu);
+            MW_TRACE("CreateWindowExW(ex=0x%x style=0x%x cls=%p %dx%d@%d,%d) [NESTED SW-1256] -> HWND %p",
+                     exstyle, style, cls, w, h, x, y, nh);
+            return nh;
+        }
+    }
     mw_gui_send_create(); /* SWEEP-006: synchronous WM_CREATE */
     MW_TRACE("CreateWindowExW(ex=0x%x style=0x%x cls=%p %dx%d@%d,%d) -> HWND %p",
              exstyle, style, cls, w, h, x, y, MW_GUI_HWND);
@@ -15319,6 +15403,17 @@ __attribute__((ms_abi)) void* mw_CreateWindowExA(uint32_t exstyle, const void* c
         return NULL;
     g_create_param = param; /* SW-802..806: forward lpParam into CREATESTRUCT */
     mw_gui_store_window((int)w, (int)h); /* SWEEP-005: allocate paint surface */
+    if (g_wm_create_depth > 0) {
+        /* SW-1256: NESTED top-level creation on the A path — same contract
+         * as the W path (distinct identity + own WM_CREATE). */
+        void* nh = mw_toplevel_register(parent, (uint32_t)(uintptr_t)menu);
+        if (nh) {
+            mw_gui_send_create_h(nh, parent, (uint32_t)(uintptr_t)menu);
+            MW_TRACE("CreateWindowExA(ex=0x%x style=0x%x cls=%p %dx%d@%d,%d) [NESTED SW-1256] -> HWND %p",
+                     exstyle, style, cls, w, h, x, y, nh);
+            return nh;
+        }
+    }
     mw_gui_send_create(); /* SWEEP-006: synchronous WM_CREATE */
     MW_TRACE("CreateWindowExA(ex=0x%x style=0x%x cls=%p %dx%d@%d,%d) -> HWND %p",
              exstyle, style, cls, w, h, x, y, MW_GUI_HWND);
@@ -15844,9 +15939,41 @@ static void mw_gui_send_create(void) {
         *(const void**)(cs + 0x38) = empty_w; /* lpszName */
         *(const void**)(cs + 0x40) = empty_w; /* lpszClass */
         *(uint32_t*)(cs + 0x48) = 0;
+        g_wm_create_depth++; /* SW-1256: gate nested minting during base delivery too */
         long long r = g_wndproc_fwd(MW_GUI_HWND, 0x0001u, 0, (long long)(intptr_t)cs); /* WM_CREATE */
+        g_wm_create_depth--;
         MW_TRACE("[GUI] WM_CREATE(lparam=&CS lpParams=%p) -> wndproc -> %lld",
                  *(void**)cs, r);
+    }
+}
+
+/* SW-1256: WM_CREATE delivery for a NESTED top-level window (MFC view
+ * created inside the frame's WM_CREATE). Same CREATESTRUCT contract, but
+ * the message targets the MINTED handle, hwndParent is filled, and the
+ * delivery depth counter gates re-entrant minting (so a guest that
+ * creates windows inside its own WM_CREATE nests identity minting
+ * correctly instead of collapsing onto one handle). */
+static void mw_gui_send_create_h(void* hwnd, void* parent, uint32_t ctl_id) {
+    if (mw_gui_events_enabled() && g_wndproc_fwd) {
+        static const unsigned short empty_w[1] = { 0 };
+        unsigned char cs[0x50];
+        memset(cs, 0, sizeof(cs));
+        *(void**)(cs + 0x00) = g_create_param ? g_create_param : (void*)g_cs_scratch;
+        *(void**)(cs + 0x08) = g_image_base;
+        *(void**)(cs + 0x18) = parent;       /* hwndParent (SW-1256) */
+        *(int32_t*)(cs + 0x20) = g_win_h;
+        *(int32_t*)(cs + 0x24) = g_win_w;
+        *(int32_t*)(cs + 0x28) = 0;
+        *(int32_t*)(cs + 0x2c) = 0;
+        *(uint32_t*)(cs + 0x30) = 0x40CF0000u | 0x10000000u; /* WS_CHILD|WS_OVERLAPPEDWINDOW|WS_VISIBLE-ish */
+        *(const void**)(cs + 0x38) = empty_w;
+        *(const void**)(cs + 0x40) = empty_w;
+        *(uint32_t*)(cs + 0x48) = 0;
+        g_wm_create_depth++;
+        long long r = g_wndproc_fwd(hwnd, 0x0001u, (long long)(uintptr_t)ctl_id, (long long)(intptr_t)cs); /* WM_CREATE, wParam=id for children */
+        g_wm_create_depth--;
+        MW_TRACE("[GUI] WM_CREATE[nested %p parent=%p id=%u](lparam=&CS) -> wndproc -> %lld",
+                 hwnd, parent, ctl_id, r);
     }
 }
 
@@ -16723,6 +16850,21 @@ __attribute__((ms_abi)) int mw_GetDeviceCaps(void* hdc, int idx) {
     int v = 0;
     switch (idx) {
     case 2:  v = 1; break;          /* TECHNOLOGY = DT_RASDISPLAY */
+    case 4: {                       /* SW-1255 (mspaint SIGFPE): HORZSIZE =
+                                     * width in MILLIMETERS. Zero makes the
+                                     * guest's pixels->percent math idiv by
+                                     * zero (witness: idiv r10d, r10d=0 at
+                                     * mspaint RVA 0x35e8e, RAX=0x9c400=640k).
+                                     * Real Windows: HORZSIZE =
+                                     * round(HORZRES * 25.4 / LOGPIXELSX)
+                                     * = round(640*25.4/96) = 169. */
+             int horz = g_win_w ? g_win_w : 640;
+             v = (horz * 254 + 254 / 2) / (96 * 10);
+             break; }
+    case 6: {                       /* VERTSIZE same contract */
+             int vert = g_win_h ? g_win_h : 480;
+             v = (vert * 254 + 254 / 2) / (96 * 10);
+             break; }
     case 8:  v = g_win_w; break;    /* HORZRES */
     case 10: v = g_win_h; break;    /* VERTRES */
     case 12: v = 32; break;         /* BITSPIXEL */
@@ -18431,6 +18573,24 @@ __attribute__((ms_abi)) void* mw_GetDlgItem(void* dlg, uint32_t id) {
             MW_TRACE("GetDlgItem(id=%lu) -> HWND %p", (unsigned long)id, g_child[i].hwnd);
             return g_child[i].hwnd;
         }
+    /* SW-1256: MFC view children are TOP-LEVEL mints (created via the
+     * nested CreateWindowEx path), registered with {parent, id=hmenu}. */
+    for (int i = 0; i < g_toplevel_n; i++)
+        if (g_toplevel[i].live && g_toplevel[i].id == id &&
+            (!dlg || g_toplevel[i].parent == dlg)) {
+            MW_TRACE("GetDlgItem(id=%lu) -> toplevel HWND %p [SW-1256]", (unsigned long)id, g_toplevel[i].hwnd);
+            return g_toplevel[i].hwnd;
+        }
+    /* SW-1256 diag: identify runaway callers (mspaint 104,715 x id=0xE900). */
+    static unsigned long long g_gdi_0e900 = 0;
+    if (id == 0xE900u && ++g_gdi_0e900 == 2000) {
+        void* ra = __builtin_return_address(0);
+        uintptr_t ura = (uintptr_t)ra;
+        const char* tag = "?";
+        if (g_image_base && ura >= (uintptr_t)g_image_base && ura < (uintptr_t)g_image_base + g_image_size)
+            tag = "EXE";
+        fprintf(stderr, "[SW-1256-DIAG] GetDlgItem(0xE900) call#2000 caller=%p (module=%s)\n", ra, tag);
+    }
     MW_TRACE("GetDlgItem(id=%lu) -> NULL (no such control)", (unsigned long)id);
     return NULL;
 }
@@ -18516,6 +18676,9 @@ __attribute__((ms_abi)) int mw_EnableWindow(void* h, int enable) {
     return prev;
 }
 __attribute__((ms_abi)) void* mw_GetParent(void* h) {
+    /* SW-1256: nested top-level mints carry a real parent. */
+    int tl = mw_toplevel_find(h);
+    if (tl >= 0) return g_toplevel[tl].parent;
     int s = mw_child_slot(h);
     return (s >= 0) ? g_child[s].parent : NULL;
 }
@@ -22028,15 +22191,10 @@ __attribute__((ms_abi)) void* mw_GetAncestor(void* h, uint32_t flag) {
     MW_TRACE("GetAncestor(%p, %u) -> %p", h, flag, r);
     return r;
 }
-__attribute__((ms_abi)) void* mw_GetWindow(void* h, uint32_t cmd) {
-    (void)h; (void)cmd;
-    MW_TRACE("GetWindow(%p, %u) -> NULL (no relations modeled)", h, cmd);
-    return NULL;
-}
-__attribute__((ms_abi)) int mw_IsChild(void* parent, void* child) {
-    (void)parent; (void)child;
-    return 0; /* single-surface model: no parent/child chains */
-}
+/* SW-1256: mw_GetWindow / mw_IsChild moved to the honest window-tree
+ * implementation (registry-backed GW_* relations) near the SW-1101f
+ * user32 family — the constant-NULL / single-surface stubs here made
+ * MFC's GetDescendantWindow self-loop (see SW-1256 note there). */
 __attribute__((ms_abi)) int mw_IsWindowVisible(void* h) {
     MW_TRACE("IsWindowVisible(%p) -> TRUE", h);
     return 1;
@@ -25113,7 +25271,73 @@ __attribute__((ms_abi)) int mw_ReadDirectoryChangesW(void* h, void* buf, uint32_
 /* ---- SW-1101f: USER32 window family (winmergeu menu/dialog code) ---- */
 __attribute__((ms_abi)) int mw_ShowOwnedPopups(void* h, int show) { (void)h; (void)show; return 1; }
 __attribute__((ms_abi)) void* mw_SetParent(void* child, void* parent) { (void)child; (void)parent; return NULL; }
-__attribute__((ms_abi)) void* mw_GetTopWindow(void* h) { (void)h; return MW_GUI_HWND; }
+/* ---- SW-1256 (SWEEP-049): honest window-tree relations ----------------
+ * The old model: GetTopWindow(h) ALWAYS returned MW_GUI_HWND and
+ * GetWindow(h,*) always NULL. MFC's CWnd::GetDescendantWindow walks
+ *   child = GetTopWindow(h); while (child) { recurse(child);
+ *           child = GetWindow(child, GW_HWNDNEXT); }
+ * With a constant non-NULL GetTopWindow the walk self-loops:
+ * mspaint recursed 104,715 x GetDlgItem(0xE900) -> 8MB stack overflow
+ * (8388608 / 0x50 frame = 104857 - matches the census count).
+ * New model: registry-backed enumeration over BOTH child registries
+ * (g_child controls + g_toplevel nested mints), in registration order.
+ * Empty families return NULL per the real contract. */
+static int mw_family_collect(void* h, void** out, int cap) {
+    int n = 0;
+    if (!h) return 0;
+    for (int i = 0; i < MW_CHILD_MAX && n < cap; i++)
+        if (g_child[i].live && g_child[i].parent == h) out[n++] = g_child[i].hwnd;
+    for (int i = 0; i < g_toplevel_n && n < cap; i++)
+        if (g_toplevel[i].live && g_toplevel[i].parent == h) out[n++] = g_toplevel[i].hwnd;
+    return n;
+}
+__attribute__((ms_abi)) void* mw_GetTopWindow(void* h) {
+    void* fam[128];
+    int n = mw_family_collect(h, fam, 128);
+    void* r = (n > 0) ? fam[n - 1] : NULL; /* top of Z order = last created */
+    MW_TRACE("GetTopWindow(%p) -> %p (%d children)", h, r, n);
+    return r;
+}
+__attribute__((ms_abi)) void* mw_GetWindow(void* h, uint32_t cmd) {
+    /* GW_* codes: 0 FIRST, 1 LAST, 2 HWNDNEXT, 3 HWNDPREV, 4 OWNER, 5 CHILD */
+    void* r = NULL;
+    if (cmd == 5u) {                     /* GW_CHILD */
+        void* fam[128];
+        int n = mw_family_collect(h, fam, 128);
+        r = (n > 0) ? fam[0] : NULL;
+    } else if (cmd == 2u || cmd == 3u) { /* siblings */
+        int tl = mw_toplevel_find(h);
+        void* parent = (tl >= 0) ? g_toplevel[tl].parent : NULL;
+        int cs = mw_child_slot(h);
+        if (cs >= 0) parent = g_child[cs].parent;
+        void* fam[128];
+        int n = mw_family_collect(parent, fam, 128);
+        int idx = -1;
+        for (int i = 0; i < n; i++) if (fam[i] == h) { idx = i; break; }
+        if (idx >= 0) {
+            if (cmd == 2u && idx + 1 < n) r = fam[idx + 1];
+            if (cmd == 3u && idx > 0)     r = fam[idx - 1];
+        }
+    } else if (cmd == 4u) {              /* GW_HWNDOWNER: v1 = none modeled */
+        r = NULL;
+    } else if (cmd == 0u) {              /* GW_HWNDFIRST */
+        void* fam[128];
+        int n = mw_family_collect(h, fam, 128);
+        r = (n > 0) ? fam[0] : NULL;
+    } else if (cmd == 1u) {              /* GW_HWNDLAST */
+        void* fam[128];
+        int n = mw_family_collect(h, fam, 128);
+        r = (n > 0) ? fam[n - 1] : NULL;
+    }
+    MW_TRACE("GetWindow(%p, %u) -> %p", h, cmd, r);
+    return r;
+}
+__attribute__((ms_abi)) int mw_IsChild(void* parent, void* child) {
+    void* fam[128];
+    int n = mw_family_collect(parent, fam, 128);
+    for (int i = 0; i < n; i++) if (fam[i] == child) return 1;
+    return 0;
+}
 __attribute__((ms_abi)) void* mw_GetLastActivePopup(void* h) { return h ? h : MW_GUI_HWND; }
 __attribute__((ms_abi)) void* mw_GetNextDlgTabItem(void* dlg, void* ctl, int prev) {
     (void)dlg; (void)prev;
@@ -31118,6 +31342,67 @@ static void iat_patch_slot(uint64_t iat_off, int slot, void* target) {
  * PE Loading
  * ============================================================ */
 
+/* ============================================================
+ * SW-1253 (winver.exe): KUSER_SHARED_DATA page at 0x7FFE0000.
+ * Real Windows maps a kernel-shared READ-ONLY user page there;
+ * XP-era guests dereference it directly — winver.exe 5.2.3790 x64
+ * reads QpcFrequency at +0x2c8 in its first basic block
+ * (crash witness: `48 8b 04 25 c8 02 fe 7f` = mov rax,[0x7ffe02c8],
+ * RIP=guest RVA 0x11d8, Return addr 0x0). Without the mapping the
+ * read SIGSEGVs in the guest's own code.
+ * Layout notes (x64 KUSER_SHARED_DATA, classic offsets):
+ *   +0x008 InterruptTime KSYSTEM_TIME, +0x014 SystemTime KSYSTEM_TIME
+ *   +0x030 NtSystemRoot[260] wchar, +0x264 NtProductType,
+ *   +0x268 ProductTypeIsValid, +0x26c NtMajorVersion,
+ *   +0x270 NtMinorVersion, +0x274 SuiteMask, +0x275 KdDebuggerEnabled,
+ *   +0x2c0 QpcData, +0x2c4 ActiveProcessorCount, +0x2c8 QpcFrequency.
+ * QpcFrequency MUST match mw_QueryPerformanceFrequency (= 1e9 ns).
+ * ============================================================ */
+static void mw_map_kuser_shared_data(uint64_t guest_lo, uint64_t guest_size) {
+    const uint64_t KUSD = 0x7FFE0000ULL;
+    const uint64_t KUSD_SZ = 0x1000ULL;
+    if (guest_size > 0 && guest_lo <= KUSD && KUSD + KUSD_SZ <= guest_lo + guest_size) {
+        MW_TRACE("KUSD: guest image covers 0x7ffe0000, skipping");
+        return;
+    }
+    /* Map RW first, fill, then seal PROT_READ (kernel-owned page semantics). */
+    uint8_t* p = (uint8_t*)mmap((void*)(uintptr_t)KUSD, KUSD_SZ, PROT_READ | PROT_WRITE,
+                                MAP_PRIVATE | MAP_ANONYMOUS | MAP_FIXED, -1, 0);
+    if (p == MAP_FAILED) {
+        MW_TRACE("KUSD: mmap failed (%s)", strerror(errno));
+        return;
+    }
+    /* KSYSTEM_TIME { u32 LowPart; i32 High1Time; i32 High2Time; } */
+    struct timeval tv;
+    gettimeofday(&tv, NULL);
+    uint64_t ft = (uint64_t)tv.tv_sec * 10000000ULL + (uint64_t)tv.tv_usec * 10ULL
+                  + 116444736000000000ULL; /* FILETIME: 100ns since 1601 */
+    volatile uint32_t* k = (volatile uint32_t*)p;
+    k[0x008/4] = (uint32_t)(ft & 0xffffffffu);       /* InterruptTime.LowPart */
+    k[0x00c/4] = (uint32_t)(ft >> 32);               /* InterruptTime.High1Time */
+    k[0x010/4] = (uint32_t)(ft >> 32);               /* InterruptTime.High2Time */
+    k[0x014/4] = (uint32_t)(ft & 0xffffffffu);       /* SystemTime.LowPart */
+    k[0x018/4] = (uint32_t)(ft >> 32);               /* SystemTime.High1Time */
+    k[0x01c/4] = (uint32_t)(ft >> 32);               /* SystemTime.High2Time */
+    /* NtSystemRoot[260] at 0x030: L"C:\\WINDOWS" */
+    {
+        static const uint16_t root[] = {'C',':','\\','W','I','N','D','O','W','S',0};
+        volatile uint16_t* dst = (volatile uint16_t*)(p + 0x030);
+        for (size_t i = 0; i < sizeof(root)/sizeof(root[0]); i++) dst[i] = root[i];
+    }
+    *(volatile uint32_t*)(p + 0x264) = 1;            /* NtProductType = WinNt */
+    p[0x268] = 1;                                    /* ProductTypeIsValid */
+    *(volatile uint32_t*)(p + 0x26c) = 5;            /* NtMajorVersion (XP) */
+    *(volatile uint32_t*)(p + 0x270) = 2;            /* NtMinorVersion (XP x64 5.2) */
+    *(volatile uint32_t*)(p + 0x274) = 0x110;        /* SuiteMask (XP Pro classic) */
+    p[0x275] = 0;                                    /* KdDebuggerEnabled = 0 */
+    *(volatile uint32_t*)(p + 0x2c0) = 1;            /* QpcData = present */
+    *(volatile uint32_t*)(p + 0x2c4) = (uint32_t)sysconf(_SC_NPROCESSORS_ONLN);
+    *(volatile uint64_t*)(p + 0x2c8) = 1000000000ULL; /* QpcFrequency = ns (matches mw_QPF) */
+    mprotect(p, KUSD_SZ, PROT_READ);   /* seal: guest reads, writes fault */
+    MW_TRACE("KUSD: mapped 0x7ffe0000 (root C:\\WINDOWS, ver 5.2, qpc 1e9)");
+}
+
 static int load_pe(const char* filepath) {
     /* BUG-072: fopen() on a DIRECTORY succeeds on Linux, but ftell() then
      * fails (returns -1) and malloc((size_t)-1) returns NULL -> SEGV at the
@@ -31219,6 +31504,9 @@ static int load_pe(const char* filepath) {
     }
     MW_TRACE("PE Loader: Mapped at 0x%lx (forced via MAP_FIXED)", image_base);
     g_image_size = size_of_image;
+
+    /* SW-1253: map the KUSER_SHARED_DATA page (winver.exe reads +0x2c8). */
+    mw_map_kuser_shared_data((uint64_t)(uintptr_t)g_image_base, size_of_image);
 
     /* Fix up entry point to absolute address */
     g_entry_point = (uint64_t)(uintptr_t)(g_image_base + opt->AddressOfEntryPoint);
@@ -31333,6 +31621,37 @@ static int load_pe(const char* filepath) {
                  * Resolve through a small known-ordinal map; unknown
                  * (dll, ordinal) pairs remain honestly unresolved. */
                 uint16_t ordinal = (uint16_t)(entry & 0xFFFF);
+                /* SW-1254 (SWEEP-049, mspaint/mshearts/wordpad): a DISK-DLL
+                 * descriptor's raw ordinals resolve from the loaded DLL
+                 * image's export table FIRST. mspaint.exe imports 613
+                 * MFC42U thunks ALL BY ORDINAL (ILT byord=613 byname=0,
+                 * EAT 6,888 exports) — the SW-509 block below only handles
+                 * NAME lookups (mw_dll_export(xd, func_name, 0)), so every
+                 * raw ordinal fell to the static map -> "not supported" ->
+                 * stub-0. Guard-mode runs surfaced this because they
+                 * survive mfc42u DllMain long enough to reach binding.
+                 * The static map stays as fallback for system DLLs. */
+                {
+                    char exelow0[64]; size_t e0 = 0;
+                    for (; dll_name[e0] && e0 < sizeof(exelow0) - 1; e0++)
+                        exelow0[e0] = (dll_name[e0] >= 'A' && dll_name[e0] <= 'Z') ? (char)(dll_name[e0] + 32) : dll_name[e0];
+                    exelow0[e0] = 0;
+                    MwDllImage* xd0 = mw_dll_find_by_name(exelow0);
+                    if (xd0) {
+                        void* xfn0 = mw_dll_export(xd0, NULL, ordinal);
+                        if (xfn0) {
+                            void* patch_addr = g_image_base + iat_off + slot * 8;
+                            iat_page_ensure_writable((uint8_t*)(uintptr_t)patch_addr);
+                            if ((((uintptr_t)patch_addr & 0xFFF) + 8) > 0x1000)
+                                iat_page_ensure_writable((uint8_t*)(uintptr_t)patch_addr + 8);
+                            *(uint64_t*)patch_addr = (uint64_t)(uintptr_t)xfn0;
+                            MW_TRACE("  [%d] Ordinal %u -> dll %s!#%u", slot, ordinal, exelow0, ordinal);
+                            total_resolved++;
+                            slot++;
+                            continue;
+                        }
+                    }
+                }
                 static const struct { const char* dll; uint16_t ord; const char* name; } ole_ord[] = {
                     { "OLEAUT32", 2,  "SysAllocString" },
                     { "OLEAUT32", 4,  "SysAllocStringLen" },

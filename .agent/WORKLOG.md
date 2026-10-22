@@ -1271,3 +1271,53 @@ regressions, batteries snake 30f byte-identical / calc 9/9 + 15/15 / breakout
 evidence/sweep048/ (README + provenance shas + screenshots + census). ASan
 diagnostic build attempted (blocked by guest-base/shadow-gap collision +
 RBP-asm — noted in SW-1249 notes).
+
+## SWEEP-049 (2026-10-22) «ادامه با برنامه های واقعی» — five wagons, one root cause, three programs resurrected
+
+User directive: «ادامه بده عالیه اینطوری بهتر با برنامه های واقعی» — continue
+with REAL programs. Reconciled first: local was 20 behind origin/main (remote
+chain SWEEP-031..048 incl. the four-GUI-train round); ff-pulled to 13969d7;
+verified binary reproducibility dce5784c byte-exact vs SWEEP-048 provenance.
+
+Payload re-staging (the gitignored stage dir was wiped between rounds):
+XP Pro x64 SP2 OEM ISO re-downloaded via the 6-stream ranged downloader
+(628,617,216B, sha 19b5a382... EXACT provenance match), pycdlib 2.x keyword
+API adaptation, 23 payloads expanded BY THE ENGINE's own 7za (the round
+doubles as a 7za-under-miniwin exercise; 7z.exe 25.01 dies with 124 stubs —
+samples/real/7za.exe 26.04 is the honest corpus entry). LO 26.8.1 MSI +
+Everything 1.4.1.1028 zip fetched for SWEEP-050 staging.
+
+Wagon chain (each unlocked the next):
+1. SW-1253 KUSER_SHARED_DATA page — winver 139→0 (first-block
+   mov rax,[0x7ffe02c8] unmapped; RW-fill-then-seal, qpc 1e9 matches mw_QPF).
+2. SW-1254 raw ordinals vs real disk-DLL exports — mspaint's 613 MFC42U
+   ordinals never bound (SWEEP-048 "0 unresolved" was an early-death
+   artifact: the process died in mfc42u DllMain BEFORE the MFC import
+   descriptor was processed — single "Import DLL" line in the trace proves
+   it). Static ordinal map stays as fallback for system DLLs.
+3. SW-1255 GetDeviceCaps HORZSIZE/VERTSIZE — 0 → idiv-by-zero SIGFPE in
+   mspaint RVA 0x35e8e; now real mm math (169/127 @ 640x480 96dpi).
+4. SW-1256 window-tree honesty — the ancestral single-handle model
+   (every top-level window = MW_GUI_HWND; GetTopWindow always non-NULL;
+   GetWindow always NULL) made MFC's GetDescendantWindow self-loop
+   (104,715 x GetDlgItem(0xE900) = exact 8MB/0x50 stack division). Nested
+   window creation now mints distinct registered identities; GW_* relations
+   are registry-backed and honest (empty = NULL).
+5. SW-1257 end-placed heap guard → caught mw___dllonexit writing 1 byte
+   past a FULL 256-byte onexit table = THE SW-1247 'corrupted top size'
+   writer. Fixed with the real CRT contract (realloc-grow + append +
+   reseat begin/end) through mw_realloc for guard-registry consistency.
+   v1 guard's page slack had been ABSORBING this overflow (guard-mode
+   mspaint exited 0 with the writer uncaught) — end-placement is the
+   diagnostic that works.
+
+Measurement (binary a29ca1e7): census x3 DETERMINISTIC over 29 guests —
+DL corpus 14x exit-0 + pageant 124 (ZERO regressions vs SWEEP-048), new
+guests mspaint 134→0, mshearts 139→0, winver 139→0, plus charmap/clipbrd/
+write/sol/taskmgr/regedit/sndvol32 exit-0 (small unresolved tails remain,
+honest), net rc=2 / ping rc=1 (honest usage errors), wordpad 139 (SW-1258),
+drwtsn32 139 (SW-1259); G1 PIN 12/12 (evidence/master/g1/20261022_144016);
+calc battery 15/15. evidence/sweep049/ (census.tsv + expand_log.tsv +
+provenance_sha256.txt + mspaint trace + 2 rendered messageboxes). No
+force-push. Open: SW-1258/1259 decode, tails, SW-1252 (LO staged),
+SW-1243 (needs x86 SP3 ISO), Everything full lifecycle.

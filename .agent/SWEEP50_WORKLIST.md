@@ -2478,3 +2478,87 @@ viewer, (2) Windows calculator, (3) a program that does not exist on Linux
   3 MessageBox dialogs RENDERED + GDI frame (evidence/sweep048/screenshots/);
   real XP calc dialog clicks delivered (WM_COMMAND id=131/132 into the
   guest's own wndproc). evidence/sweep048/. no force-push.
+
+## SWEEP-049 «ادامه با برنامه های واقعی» — real-program deep-dive (2026-10-22)
+
+- [x] **SW-1253 LANDED — KUSER_SHARED_DATA page (0x7FFE0000)**: winver.exe
+  5.2.3790 x64 SIGSEGV'd in its first basic block: `48 8b 04 25 c8 02 fe 7f`
+  = `mov rax,[0x7ffe02c8]` (QpcFrequency) with NO page mapped (crash RIP =
+  guest RVA 0x11d8, Return addr 0x0). Engine now maps the 1-page KUSD
+  RW→fill→mprotect(PROT_READ): InterruptTime/SystemTime KSYSTEM_TIME (real
+  FILETIME), NtSystemRoot L"C:\WINDOWS", NtProductType=1, version 5.2,
+  SuiteMask 0x110, QpcData=1, ActiveProcessorCount=host, QpcFrequency=1e9
+  (MUST match mw_QueryPerformanceFrequency ns contract). winver 139→exit-0,
+  0 stubs. Guest-image-overlap guard included.
+- [x] **SW-1254 LANDED — raw ordinals bind against REAL disk-DLL exports**:
+  the SW-509 IAT block only tried mw_dll_export(xd, func_name, 0) — ordinals
+  missing from the static known-ordinal map fell to "not supported"→stub-0
+  WITHOUT consulting the loaded DLL (mspaint: 613 MFC42U ordinals, ILT
+  byord=613/byname=0, EAT 6,888 exports). New pre-static pass:
+  mw_dll_export(xd, NULL, ordinal) for disk-DLL descriptors. Guard-mode
+  mspaint unresolved 625→0. NOTE: SWEEP-048's "mspaint 633→0 unresolved"
+  was an early-death artifact — the process died inside mfc42u DllMain
+  BEFORE the import loop reached the MFC descriptor (trace: 1 Import DLL
+  line, no [N] Ordinal lines); the ordinals never bound.
+- [x] **SW-1255 LANDED — GetDeviceCaps HORZSIZE(4)/VERTSIZE(6) real math**:
+  both returned 0 → mspaint's pixels→percent math `idiv r10d` with r10d=0
+  → SIGFPE at RVA 0x35e8e (RAX=0x9c400=640k; witness bytes 41 f7 fa).
+  Now HORZSIZE = round(HORZRES*25.4/LOGPIXELSX) = 169mm @640x96dpi (VERTSIZE
+  127). Matches the real GDI contract.
+- [x] **SW-1256 LANDED — honest window-tree relations (MFC frame/view)**:
+  mspaint under guard-mode recursed 104,715 x GetDlgItem(0xE900
+  = AFX_IDW_PANE_FIRST) → 8MB stack overflow (8388608/0x50 frame ≈ 104857,
+  exact census match; RSP page-aligned, RIP in libc). Root chain:
+  (1) every top-level CreateWindowExW returned the single MW_GUI_HWND so
+  MFC's view created inside the frame's WM_CREATE shared its parent's
+  handle; (2) GetTopWindow(h) ALWAYS returned MW_GUI_HWND (non-NULL for
+  any input) and GetWindow(h,*) always NULL → MFC's GetDescendantWindow
+  walk (mfc42u 0x6533c: GetTopWindow → recurse → GetWindow(GW_HWNDNEXT))
+  self-looped forever. Fixes: nested top-level creations (g_wm_create_depth
+  gate) mint DISTINCT identities 0x11000+n*0x10 registered {hwnd,parent,
+  id=hmenu} + receive their own synchronous WM_CREATE with hwndParent;
+  GetTopWindow/GetWindow(GW_CHILD/HWNDNEXT/HWNDPREV/HWNDFIRST/HWNDLAST)/
+  IsChild now registry-backed over BOTH child registries (empty families
+  return NULL per the real contract); GetDlgItem/GetParent consult the
+  toplevel registry; SendMessage W/A forward to registered mints.
+  mspaint GetDlgItem count 104,715→3.
+- [x] **SW-1257 LANDED — end-placed heap guard catches the SW-1247 writer;
+  SW-1247 ROOT CAUSE FIXED = mw___dllonexit table overflow**: v1 guard put
+  the body at region START so page slack ABSORBED overflows (guard-mode
+  mspaint exited 0 with the corruptor uncaught!). End-placed bodies (body
+  ENDS exactly at the PROT_NONE page, 16-byte aligned) fault on ANY
+  overflow — first catch: mw___dllonexit+0x22 `mov [rcx],rax` writing 1
+  byte past a FULL 256-byte onexit table (RCX=guard page). Old contract
+  "trust the guest CRT table, write at *end" is WRONG: real CRT (wine
+  msvcrt __dllonexit) GROWS the table with realloc to count+1, appends,
+  bumps *pend, reseats *pbegin. Implemented via mw_realloc (guard-registry
+  consistent; raw realloc desyncs the registry and traps the later free).
+  RESULT: mspaint exit 134→**0** (NG), mshearts 139→**0** (after mfc42u.dll
+  staged next to it — it also imports MFC by ordinal), wordpad 134→139
+  (deeper frontier SW-1258). 'corrupted top size' GONE.
+- [x] **SWEEP-049 new real-guest corpus staged + censused x3** (payload
+  provenance sha-pinned in evidence/sweep049/provenance_sha256.txt): XP
+  Pro x64 SP2 OEM ISO re-fetched from archive.org (sha 19b5a382... = exact
+  SWEEP-048 provenance match) → 23 payloads (.EX_/.DL_) expanded BY THE
+  ENGINE's own 7za (samples/real/7za.exe) — x64 CARDS.DL_ expands fine
+  (the SW-1243 trap is the x86 SP3 CAB); guests: regedit(reget32 stub)/
+  taskmgr/charmap/clipbrd/write/winver/net/ping/sndvol32/drwtsn32/wordpad/
+  mspaint/mshearts/sol. census x3 DETERMINISTIC (artifacts/sweep049/census/
+  census.tsv): mspaint/mshearts/winver/charmap/clipbrd/write/sol/taskmgr/
+  regedit/sndvol32 exit-0; net rc=2 + ping rc=1 (honest usage errors);
+  wordpad 139 (SW-1258), drwtsn32 139 (SW-1259). DL corpus x3 14× exit-0 +
+  pageant 124 ZERO regressions. G1 PIN 12/12 (evidence/master/g1/
+  20261022_144016, binary a29ca1e7). calc battery 15/15.
+- [x] **SWEEP-050 staging done** (payloads on disk, gitignored): LibreOffice
+  26.8.1 x64 MSI (375MB, sha c6298b10...) for SW-1252 soffice decode;
+  Everything 1.4.1.1028 x64 zip expanded (sha 4f4a9b92...).
+- [ ] **SW-1258** wordpad.exe x64: SIGSEGV RVA 0x2faf3 `mov rcx,[rax+0x40]`
+  with RAX=0 after MFC string-conversion WideCharToMultiByte cycles
+  (16→2 unresolved tail: _vsnwprintf/_resetstkoflw/EnumDateFormatsW/
+  DeleteAtom/AddAtomW...). Decode the NULL producer next round.
+- [ ] **SW-1259** drwtsn32.exe x64: SIGSEGV RVA 0x405cb3, 0 stubs, 0
+  unresolved — crash in guest code after full import resolution. Decode.
+- [ ] **SW-1247-residual**: the remaining per-guest unresolved tails
+  (sndvol32 5, taskmgr 1, regedit 1, sol 3, charmap 9, clipbrd 49, net 4)
+  are the standard import-surface work; SW-1247 itself (AfxInit heap
+  corruption) is CLOSED by the __dllonexit fix.
