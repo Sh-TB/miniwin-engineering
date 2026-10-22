@@ -1483,3 +1483,20 @@ sol/freecell exit-0), and the ODF display program = **this round's train**.
   allocator/length-header class, SW-1263 continues).
 - Regression: calc/winmine/mspaint x1 exit-0 zero-stubs after the change.
 - evidence/sweep052/train2_decode.log + train2_opens.tsv; no force-push.
+
+## SWEEP-052 Train 3 — SW-1261b Everything 1.4.1 INTERACTION battery 9/9
+
+- Everything (the Windows-exclusive NTFS instant-search program; no Linux
+  equivalent) now driven through the coordinate-mouse channel built for
+  winmine: MINWIN_MOUSE="400,20;400,100" delivers WM_LBUTTONDOWN/UP pairs
+  into the search-box and listview coordinates through the live GUI pump.
+- The guest's own WndProc REACTS like real Everything: WM_PAINT dispatched
+  directly after the search-box click, then the WM_TIMER pump continues
+  (195 dispatches per run), then a clean budget exit.
+- Battery (scripts/sweep052_everything_battery.sh): 3 runs x 3 checks =
+  A both click pairs delivered, B paint reaction + timer pump alive,
+  C exit 0 no [CRASH] -> 9/9 PASS deterministic
+  (evidence/sweep052/everything_battery_9of9.log).
+- Note: the pump budget is the census baseline (MW_GUI_EVENTS_BUDGET=200);
+  at 300 the app outlives a 60s timeout (it is a long-running indexer), so
+  the battery pins the deterministic census profile.
