@@ -1410,3 +1410,14 @@ sol/freecell exit-0), and the ODF display program = **this round's train**.
   crash-dump attribution; ptrace watchpoint tracer scripts/sweep051_watch.c.
 - evidence/sweep051/ (README with the full decode chain, milestones,
   payloads_sha256, watchpoint hits, rc4/rc99 stderr); no force-push.
+
+## SWEEP-051 Train 2 — SW-1261b winmine INTERACTION battery (9/9)
+
+- New engine channel: MINWIN_MOUSE="x,y;x,y;..." — coordinate WM_LBUTTONDOWN/
+  WM_LBUTTONUP pairs paced through the GUI pump (the id-based MINWIN_CLICKS
+  cannot drive custom-drawn boards). Label-phase fix included.
+- winmine (XP Minesweeper) x3: click at (24,64) delivered as a DOWN/UP pair ->
+  the guest's own WndProc arms SetTimer(id=1,1000ms) (the real game-clock
+  contract: the clock starts on the first left click) and repaints the board
+  (88-110 16x16 BitBlts); exit 0, zero crashes. 9/9 (3 checks x 3 runs).
+- G1 PIN 12/12 re-pinned on binary 0402f7de (evidence/master/g1/20261022_185323).
