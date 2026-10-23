@@ -21274,15 +21274,24 @@ __attribute__((ms_abi)) uint32_t mw_NtQuerySystemInformation(uint32_t cls, void*
      * event/sem ranges; non-NULL otherwise). Two-pass contract honored: short
      * buffer -> STATUS_INFO_LENGTH_MISMATCH (0xC0000004) + *retlen = needed,
      * exactly what the guest's size-retry loop checks.
-     * struct SYSTEM_HANDLE_TABLE_ENTRY_INFO (legacy, 16B):
-     *   USHORT ProcessId@0, UCHAR ObjectTypeNumber@2, UCHAR Flags@3,
-     *   USHORT Handle@4, ULONG Object@8 (truncated), ACCESS_MASK@12
+     * struct SYSTEM_HANDLE_TABLE_ENTRY_INFO (legacy x64, 24B — SW-1242):
+     *   USHORT UniqueProcessId@0, USHORT CreatorBackTraceIndex@2,
+     *   UCHAR ObjectTypeIndex@4, UCHAR HandleAttributes@5,
+     *   USHORT HandleValue@6, PVOID Object@8, ACCESS_MASK@16
      * struct SYSTEM_HANDLE_TABLE_ENTRY_INFO_EX (76, 32B):
      *   ULONG_PTR Object@0, ProcessId@8, Handle@16, GrantedAccess@24,
      *   ULONG Reserved@28. Headers: 4B count (64) / 8B count+reserved (76). */
     if (cls == 64 || cls == 76) {
         uint32_t need_hdr = (cls == 64) ? 4u : 8u;
-        uint32_t ent_sz   = (cls == 64) ? 16u : 32u;
+        /* SW-1242 (SWEEP-057 Train 4): the REAL x64 legacy entry is 24 bytes
+         * (phnt SYSTEM_HANDLE_TABLE_ENTRY_INFO: USHORT UniqueProcessId@0,
+         * USHORT CreatorBackTraceIndex@2, UCHAR ObjectTypeIndex@4,
+         * UCHAR HandleAttributes@5, USHORT HandleValue@6, PVOID Object@8,
+         * ULONG GrantedAccess@16). The v1 16-byte 32-bit-era layout made
+         * handle64's per-entry parse read Object high halves as the
+         * type/backtrace index (word[entry+0x1E] = 0xD513 -> *128 index ->
+         * 0x6a8980 OOB word compare at 0x14000636a = SIGSEGV 139). */
+        uint32_t ent_sz   = (cls == 64) ? 24u : 32u;
         /* pass 1: count live entries */
         uint32_t count = 0;
         for (int i = 0; i < MAX_HANDLES; i++) {
@@ -21325,12 +21334,14 @@ __attribute__((ms_abi)) uint32_t mw_NtQuerySystemInformation(uint32_t cls, void*
             uint16_t h    = (uint16_t)(i + 4); /* alloc_handle: handles = idx+4 */
             uint32_t acc  = 0x001F0003u;       /* EVENT_ALL_ACCESS-family */
             if (cls == 64) {
-                *(uint16_t*)(p + pos + 0) = 1234;          /* ProcessId */
-                *(uint8_t*) (p + pos + 2) = objtype;
-                *(uint8_t*) (p + pos + 3) = 1;             /* Flags: KERNEL */
-                *(uint16_t*)(p + pos + 4) = h;
-                *(uint32_t*)(p + pos + 8) = (uint32_t)(uintptr_t)v;
-                *(uint32_t*)(p + pos + 12) = acc;
+                /* SW-1242: real x64 SYSTEM_HANDLE_TABLE_ENTRY_INFO (24B) */
+                *(uint16_t*)(p + pos + 0) = 1234;          /* UniqueProcessId */
+                *(uint16_t*)(p + pos + 2) = 0;             /* CreatorBackTraceIndex */
+                *(uint8_t*) (p + pos + 4) = objtype;       /* ObjectTypeIndex */
+                *(uint8_t*) (p + pos + 5) = 1;             /* HandleAttributes: KERNEL */
+                *(uint16_t*)(p + pos + 6) = h;             /* HandleValue */
+                *(uint64_t*)(p + pos + 8) = (uint64_t)(uintptr_t)v; /* Object */
+                *(uint32_t*)(p + pos + 16) = acc;          /* GrantedAccess */
             } else {
                 *(uint64_t*)(p + pos + 0)  = (uint64_t)(uintptr_t)v; /* Object */
                 *(uint64_t*)(p + pos + 8)  = 1234;                   /* ProcessId */

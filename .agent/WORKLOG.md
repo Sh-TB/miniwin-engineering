@@ -1792,3 +1792,20 @@ pins verified; 251->263 guest files.
    -> configmgr bootstrap fails -> throw -> no catch -> terminate.
 MEASURED: 139 -> 99 with only d2d1!#1 stub left (skia probe, harmless);
 census 42/42 x3 green; G1 12/12 (evidence/master/g1/20261023_194817).
+
+## SWEEP-057 Train 4 (2026-10-23) — SW-1242 handle64 first decode
+Crash: SIGSEGV 0x14000636a, cmp word [rax+rsi], r13w; RAX=0x6a8980 (=
+word[idx]*128 from word[entry+0x1E] = 0xD513 garbage), RSI = the 128-byte-
+stride type table at .data 0x14005cf00 (lea rsi,[rip+0x56bb8] @0x140006341).
+Guest parse helpers: count = [rcx] dword @0x1400078f0; entry walker
+@0x140007900 has TWO modes keyed by a global byte @0x14005ef08: EX =
+stride 40 + 16 hdr, returns entry ptr; LEGACY = stride 24, no hdr skip,
+reads fields +8/+A/+C/+D/+E/+10(q)/+18(w?) — the caller then reads
+word[entry+0x1E] as the type index into the 128B table.
+ENGINE FIX: class-64 writer 16B -> the REAL 24-byte x64 layout (phnt):
+UniqueProcessId@0 CreatorBackTraceIndex@2 ObjectTypeIndex@4
+HandleAttributes@5 HandleValue@6 Object@8(8B) GrantedAccess@16.
+RESULT: crash RIP unchanged (the guest's internal-array parse contract
+still mismatches — next layer: decode the NtQuery call site that fills
+the internal buffer global); census 42/42 x3; procexp64 139->124 (fix-F
+timer-wait = keep-running, deterministic); G1 12/12.

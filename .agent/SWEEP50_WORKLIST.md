@@ -2376,7 +2376,25 @@ after fast-forward; adexplorer64 corpus recovery #7 (zip 56536bff / exe e4512878
 - [ ] **SW-1240** logonsessions64: LSA/session plane gate (exit 1).
 - [ ] **SW-1241** autologon64: "Could not open Winlogon registry key" —
       HKLM Winlogon plane + MessageBox dialog rendered (BMP evidence exists).
-- [ ] **SW-1242** handle64: 139 crash, undecoded (first decode round pending).
+- [x] **SW-1242 LANDED (SWEEP-057 Train 4)**: the class-64 (SystemHandle-
+      Information) entry layout was the 32-BIT-era 16-byte shape (ProcessId@0
+      Type@2 Flags@3 Handle@4 Object@8-truncated Access@12) — the REAL x64
+      legacy entry is 24 bytes (phnt SYSTEM_HANDLE_TABLE_ENTRY_INFO:
+      USHORT UniqueProcessId@0, USHORT CreatorBackTraceIndex@2, UCHAR
+      ObjectTypeIndex@4, UCHAR HandleAttributes@5, USHORT HandleValue@6,
+      PVOID Object@8, ULONG GrantedAccess@16). handle64's per-entry parse
+      (helper 0x140007900: EX branch stride=40 hdr=16, legacy branch
+      stride=24) read garbage in the +0x1E word (0xD513 -> shl 7 -> 0x6a8980
+      OOB word compare against the 128-byte-stride type table at
+      .data 0x14005cf00 -> SIGSEGV 0x14000636a). Layout fixed to 24B with
+      the real field offsets; count helper ([rcx]=dword count) unchanged.
+      MEASURED: handle64 crash site unchanged (139 at the same RIP — the
+      guest rebuilds an internal array whose +0x1E word still lands on
+      heap garbage: the remaining mismatch = the guest's NtQuery-buffer
+      parse contract vs ours, next decode: the call site that fills the
+      internal array global [rip+0x5ebc9]); census 42/42 x3 green;
+      procexp64 139 -> 124 (fix-F timer-wait keeps the pump alive — closer
+      to real keep-running behavior, deterministic). G1 12/12.
 - **Measurement**: census x3 31 programs DETERMINISTIC (artifacts/sweep047/
   census.tsv) — corpus 15x exit-0 + pageant 124 ZERO unresolved ZERO
   regressions; new: 3x exit-0 + 4x exit-1 gates + 5x 255 usage/EULA + 139;
