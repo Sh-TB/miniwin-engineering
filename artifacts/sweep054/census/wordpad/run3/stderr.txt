@@ -1,0 +1,3 @@
+[TRACE] Command line: artifacts/sweep054/guests/wordpad/wordpad.exe
+[MessageBoxW] WordPad: 
+[MessageBox] dialog #1 rendered -> miniwin-results/wordpad.exe/screenshots/messagebox_1.bmp

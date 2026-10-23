@@ -1,0 +1,1 @@
+[TRACE] Command line: artifacts/sweep054/guests/notepad/notepad.exe

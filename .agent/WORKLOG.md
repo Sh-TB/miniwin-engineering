@@ -1551,3 +1551,40 @@ sol/freecell exit-0), and the ODF display program = **this round's train**.
 - New cars: SW-1267 (sol/mshearts surface sizing order), SW-1268
   (Everything content paint via fake index); SW-1263 (soffice rtl_uString
   truncation) remains the ODF frontier.
+
+---
+
+## SWEEP-054 (2026-10-23) — «۱۰ برنامه و ۵ بازی معرف دو بعدی قدیمی» + screenshots
+
+Reconcile: origin/main 0f7bd36 (SWEEP-053) fast-forwarded before work (user
+rule #1: GitHub first, verify pushes). Local stale loader rebuilt to the
+byte-exact SWEEP-053 pin 4e6e4a44 first — the stale Oct-21 binary was
+masking SW-1264/65/66 (15-guest census went 139-crash -> all-exit-0 after
+rebuild: staging was never the problem).
+
+Payload re-staging: XP x64 ISO 19b5a382 (628 MB, byte-verified) -> 26/29
+payloads (NEW: SPIDER.EX_ 268 KB) -> 22/22 expanded rc=0 via engine 7za;
+Everything zip 4f4a9b92 verified; LibreOffice archive URL 404 (SW-1273).
+
+Engine wagons (all trace/disassembly-root-caused):
+- SW-1269(+b) ShowWindow first-show WM_PAINT + SW_MAXIMIZE 1024x768 surface
+  grow — spider white-screen root cause (pump "no event source" quit).
+- SW-1270 posted-message queue (PostMessage A/W) — spider's own WM_COMMAND
+  deal action was dropped headlessly; now delivered first, real priority.
+- SW-1271 REAL accelerators — spider disassembly 0x10000bebf:
+  `test rbx,hAccel; je loop` skips Translate/Dispatch for main-window
+  messages when hAccel==NULL; RT_ACCELERATOR 16 entries now load for real
+  and TranslateAcceleratorW translates + sends WM_COMMAND. Pre-landing
+  regression (MAKEINTRESOURCE '%s' trace SEGV) caught via ProduKey/cports
+  0->139, bisected, IS_INTRESOURCE-guarded.
+- SW-1272(+b) BitBlt-into-window-surface frame capture + FRAME_EVERY
+  throttle (8.6 GB first capture filled the disk).
+- SW-1274 REAL timeGetTime — deal-animation clock froze at 0.
+
+MEASURED: XP spider renders REAL CARDS (5♥ 2♦ 10♣ + spider deck), deal
+completes rc=0 — first spider render ever; winmine 82 frames with
+mouse-revealed cells; mspaint fixed by SW-1269; 15 screenshots in
+evidence/sweep054/shots_png/; census 15 guests x3 45/45 exit-0 ZERO stubs;
+DL corpus 45/45 deterministic; G1 PIN 12/12
+(evidence/master/g1/20261023_030335, binary 09c33df201af8ade).
+Open: SW-1275 spider brush/card-face, SW-1273 LO mirror, SW-1206 corpus.

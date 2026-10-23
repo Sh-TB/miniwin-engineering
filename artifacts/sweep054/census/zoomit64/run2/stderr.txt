@@ -1,0 +1,3 @@
+[TRACE] Command line: artifacts/sweep50/dl/zoomit64/ZoomIt64.exe
+[ERROR] bad size 68768056 on artifacts/sweep50/dl/zoomit64/ZoomIt64.exe
+[ERROR] Failed to load PE

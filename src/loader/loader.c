@@ -13793,6 +13793,15 @@ __attribute__((ms_abi)) int mw_SetThreadpoolTimerEx(void* t, const void* due, ui
     MW_TRACE("SetThreadpoolTimerEx(%p) -> TRUE (arm acknowledged; firing=SW-1203)", t);
     return 1;
 }
+/* SW-1274 (SWEEP-054): REAL timeGetTime — spider's whole deal animation is
+ * paced by timeGetTime deltas (the ONE unresolved WINMM import; v1 stub
+ * fallback returned 0 forever, so the animation clock froze on the first
+ * card and the loop never advanced). Win32 contract: DWORD ms since boot,
+ * wraps at 49.7 days — the engine's monotonic ms clock is exactly that. */
+static long long mw_mono_ms(void);
+__attribute__((ms_abi)) uint32_t mw_timeGetTime(void) {
+    return (uint32_t)(unsigned long long)mw_mono_ms();
+}
 /* WINMM time events: real registration table (fire = event delivery SW-1203). */
 #define MW_TMREVT_MAX 16
 typedef struct { uint8_t live; uint32_t delay, user, flags; void* cb; } MwTmrEvt;
@@ -15827,6 +15836,22 @@ static long long mw_gui_send_create(void); /* SWEEP-006: real WM_CREATE on Creat
 static long long mw_gui_send_create_h(void* hwnd, void* parent, uint32_t ctl_id); /* SW-1256: nested identity WM_CREATE */
 static void* g_create_param; /* SW-802..806: CreateWindowEx lpParam -> CREATESTRUCT.lpCreateParams */
 static void mw_gui_request_paint(void);
+/* ---- SW-1128 accel store (moved up for SW-1271 TranslateAccelerator) ---- */
+#define MW_ACCEL_BASE 0x00AC0000u
+typedef struct { uint32_t fvirt_key_cmd[2]; int n; int live; } mw_accel_slot_t;
+static mw_accel_slot_t g_accel_slots[8];
+static uint32_t g_accel_next = 1;
+/* SW-1271: scripted-key modifier latch for TranslateAccelerator (declared
+ * here, defined with the pump; the accel store below reads it). */
+static uint32_t g_key_mods = 0;
+static void mw_accel_note_vk(uint32_t vk) {
+    switch (vk) {
+    case 0x10u: g_key_mods |= 0x1u; break; /* VK_SHIFT   -> FSHIFT   */
+    case 0x11u: g_key_mods |= 0x2u; break; /* VK_CONTROL -> FCONTROL */
+    case 0x12u: g_key_mods |= 0x4u; break; /* VK_MENU    -> FALT    */
+    default: break;
+    }
+}
 static int  mw_gui_pump_getmsg(void* msg, void* hwnd, const char* api);
 static long long mw_gui_dispatch_msg(const void* msg);
 static int  mw_gui_events_enabled(void);
@@ -16143,6 +16168,22 @@ __attribute__((ms_abi)) void* mw_CreateWindowExA(uint32_t exstyle, const void* c
 }
 __attribute__((ms_abi)) int mw_ShowWindow(void* hwnd, int cmd) {
     mw_hook_fire_activate(hwnd); /* SW-1203: HCBT_ACTIVATE on first show */
+    /* SW-1269 (SWEEP-054): real Windows paints a window when it is SHOWN —
+     * the system generates the first WM_PAINT after ShowWindow makes the
+     * window visible. v1 only fired the CBT hook, so guests that wait for
+     * the system's first paint (XP spider: ShowWindow(SW_MAXIMIZE) then a
+     * plain GetMessage loop, no InvalidateRect/UpdateWindow of its own)
+     * never painted: the pump found "no event source" and quit with a
+     * white screen. Request the paint here — the pump's paint branch
+     * delivers it on the next GetMessage. */
+    if (mw_gui_events_enabled()) mw_gui_request_paint();
+    /* SW-1269b: SW_MAXIMIZE sizes the window to the work area (real XP:
+     * full screen minus taskbar). Guests created with CW_USEDEFAULT (spider)
+     * keep a tiny surface otherwise; the game's board blits then clip to
+     * nothing. Grow the paint surface to the classic 1024x768 screen
+     * metric so maximized boards have room. */
+    if (mw_gui_events_enabled() && cmd == 3 /*SW_MAXIMIZE*/)
+        mw_gui_store_window(1024, 768);
     MW_TRACE("ShowWindow(hwnd=%p cmd=%d) -> TRUE", hwnd, cmd);
     return 1;
 }
@@ -16620,6 +16661,17 @@ static int       g_mousen = 0, g_mousei = 0, g_mouse_phase = 0;
 static int       g_mouse_every = 2;
 static int       g_frame_no = 0;
 static char      g_frame_dir[600];
+/* SW-1270 (SWEEP-054): posted-message queue — PostMessage A/W used to DROP
+ * every message headlessly. Real Win32 queues a posted message and delivers
+ * it from GetMessage BEFORE the generated (lower-priority) messages —
+ * XP spider posts its own WM_COMMAND (menu deal action) before its pump
+ * starts and waits for it to come back through GetMessage. */
+#define MW_POSTQ_MAX 64
+static void*     g_postq_hwnd[MW_POSTQ_MAX];
+static uint32_t  g_postq_msg[MW_POSTQ_MAX];
+static uintptr_t g_postq_wp[MW_POSTQ_MAX];
+static intptr_t  g_postq_lp[MW_POSTQ_MAX];
+static int       g_postq_head = 0, g_postq_n = 0;
 
 /* GDI draw state (colors stored as 0xRRGGBB, guest COLORREF is 0x00BBGGRR) */
 static uint32_t  g_cur_brush = 0xFFFFFF; static int g_brush_hollow = 0;
@@ -16852,6 +16904,13 @@ static void mw_gui_fill_msg(void* msg, void* hwnd, uint32_t m, uintptr_t wp, lon
  * and scripted keys were never delivered). */
 static int mw_gui_next_event(void* msg, void* hwnd, int consume, const char* api) {
     void* h = g_main_hwnd ? g_main_hwnd : hwnd;
+    /* SW-1271 (SWEEP-054): keyboard modifier state for TranslateAccelerator.
+     * Real TranslateAccelerator compares each table entry's FSHIFT/FCONTROL/
+     * FALT bits against GetKeyState. The engine has no OS keyboard: the
+     * scripted key channel (MW_GUI_KEYS) IS the state — a modifier VK
+     * delivered by the pump latches its flag for the keys that follow
+     * ("65,68" = A then Ctrl+D when written "17,68"). */
+    if (g_key_mods < 0) g_key_mods = 0; /* never reset mid-run */
     if (g_char_pending) { /* SWEEP-006: TranslateMessage-queued WM_CHAR comes next */
         uint32_t ch = g_char_pending;
         if (consume) { g_char_pending = 0; g_delivered++; }
@@ -16862,6 +16921,7 @@ static int mw_gui_next_event(void* msg, void* hwnd, int consume, const char* api
     }
     if (g_keyi < g_keyn && (g_delivered % g_key_every) == 0) {
         uint32_t vk = g_keyv[g_keyi++];
+        mw_accel_note_vk(vk);
         if (consume) g_delivered++;
         mw_gui_fill_msg(msg, h, 0x0100u, (uintptr_t)vk, 1);
         if (consume) MW_TRACE("[GUI-EVENT] #%d %s -> WM_KEYDOWN VK=0x%x", g_delivered, api, vk);
@@ -16898,6 +16958,23 @@ static int mw_gui_next_event(void* msg, void* hwnd, int consume, const char* api
         if (consume)
             MW_TRACE("[GUI-EVENT] #%d %s -> WM_LBUTTON%s %d,%d",
                      g_delivered, api, was_down ? "DOWN" : "UP", x, y);
+        return 1;
+    }
+    /* SW-1270: POSTED messages have queue priority over generated messages
+     * (real Win32: posted > WM_PAINT/WM_TIMER generated on demand). */
+    if (g_postq_n > 0) {
+        void*     ph = g_postq_hwnd[g_postq_head];
+        uint32_t  pm = g_postq_msg[g_postq_head];
+        uintptr_t pw = g_postq_wp[g_postq_head];
+        intptr_t  pl = g_postq_lp[g_postq_head];
+        if (consume) {
+            g_postq_head = (g_postq_head + 1) % MW_POSTQ_MAX;
+            g_postq_n--;
+            g_delivered++;
+        }
+        mw_gui_fill_msg(msg, h, pm, pw, pl);
+        if (consume) MW_TRACE("[GUI-EVENT] #%d %s -> POSTED 0x%04x hwnd=%p (SW-1270)",
+                              g_delivered, api, pm, ph);
         return 1;
     }
     if (g_paint_pending) {
@@ -16962,6 +17039,7 @@ static int mw_gui_next_event(void* msg, void* hwnd, int consume, const char* api
     }
     if (g_keyi < g_keyn && !g_timer_live) {
         uint32_t vk = g_keyv[g_keyi++];
+        mw_accel_note_vk(vk);
         if (consume) g_delivered++;
         mw_gui_fill_msg(msg, h, 0x0100u, (uintptr_t)vk, 1);
         if (consume) MW_TRACE("[GUI-EVENT] #%d %s -> WM_KEYDOWN VK=0x%x (gate-bypass)", g_delivered, api, vk);
@@ -17109,9 +17187,22 @@ static void mw_surface_dump(const char* kind) {
                  g_frame_no, kind);
         return;
     }
+    /* SW-1272b (SWEEP-054): MINWIN_FRAME_EVERY=N keeps every Nth frame only.
+     * XP spider's deal animation presents ~3700 BitBlt frames per run
+     * (1024x768x3 = 2.3 MB each = 8.6 GB — filled the disk during the
+     * first capture). Numbering stays unconditional so tooling that pins
+     * frame indices still aligns; only the DISK WRITES are thinned. */
+    static int g_frame_every = -1;
+    if (g_frame_every < 0) {
+        const char* e = getenv("MINWIN_FRAME_EVERY");
+        int v = e ? atoi(e) : 1;
+        g_frame_every = (v >= 1) ? v : 1;
+    }
+    g_frame_no++;
+    if (g_frame_every > 1 && (g_frame_no % g_frame_every) != 0) return;
     char path[768];
     snprintf(path, sizeof(path), "%s/frame_%03d.bmp",
-             g_frame_dir[0] ? g_frame_dir : "miniwin-results/screenshots", ++g_frame_no);
+             g_frame_dir[0] ? g_frame_dir : "miniwin-results/screenshots", g_frame_no);
     int W = g_surf.w, H = g_surf.h;
     int pad = (4 - (W * 3) % 4) % 4;
     uint32_t datasz = (uint32_t)((W * 3 + pad) * H);
@@ -17954,6 +18045,12 @@ __attribute__((ms_abi)) int mw_BitBlt(void* hdcDst, int x, int y, int w, int h,
     }
     MW_TRACE("[GDI] BitBlt %dx%d @%d,%d <- src@%d,%d SRCCOPY (%d px)",
              w, h, x, y, xs, ys, copied);
+    /* SW-1272 (SWEEP-054): a SRCCOPY INTO THE WINDOW SURFACE is a presented
+     * frame (SWEEP-006 breakout contract). XP spider never calls
+     * BeginPaint/EndPaint — its whole board is drawn by direct BitBlts, so
+     * the EndPaint dump never fires and the game had no screenshot path.
+     * Dump here (mw_surface_dump honors MINWIN_SCREENSHOT=0). */
+    if (D == &g_surf && copied > 0) mw_surface_dump("BitBlt");
     return 1;
 }
 
@@ -18960,11 +19057,31 @@ __attribute__((ms_abi)) int mw_GetCursorPos(void* pt) {
     return 1;
 }
 __attribute__((ms_abi)) int mw_PostMessageA(void* hwnd, uint32_t msg, uintptr_t wp, intptr_t lp) {
+    /* SW-1270: with the GUI pump live, posted messages QUEUE and are
+     * delivered first by GetMessage (posted > generated priority, real
+     * Win32 queue order). Headless batch keeps the v1 drop contract —
+     * that path is regression-pinned by the 10-program exit-0 census. */
+    if (mw_gui_events_enabled() && g_postq_n < MW_POSTQ_MAX) {
+        int tail = (g_postq_head + g_postq_n) % MW_POSTQ_MAX;
+        g_postq_hwnd[tail] = hwnd; g_postq_msg[tail] = msg;
+        g_postq_wp[tail] = wp;     g_postq_lp[tail] = lp;
+        g_postq_n++;
+        MW_TRACE("PostMessageA(msg=%#x) queued (SW-1270, depth=%d) -> TRUE", msg, g_postq_n);
+        return 1;
+    }
     (void)hwnd; (void)msg; (void)wp; (void)lp;
     MW_TRACE("PostMessageA(msg=%#x) dropped (headless) -> TRUE", msg);
     return 1;
 }
 __attribute__((ms_abi)) int mw_PostMessageW(void* hwnd, uint32_t msg, uintptr_t wp, intptr_t lp) {
+    if (mw_gui_events_enabled() && g_postq_n < MW_POSTQ_MAX) {
+        int tail = (g_postq_head + g_postq_n) % MW_POSTQ_MAX;
+        g_postq_hwnd[tail] = hwnd; g_postq_msg[tail] = msg;
+        g_postq_wp[tail] = wp;     g_postq_lp[tail] = lp;
+        g_postq_n++;
+        MW_TRACE("PostMessageW(msg=%#x) queued (SW-1270, depth=%d) -> TRUE", msg, g_postq_n);
+        return 1;
+    }
     (void)hwnd; (void)msg; (void)wp; (void)lp;
     MW_TRACE("PostMessageW(msg=%#x) dropped (headless) -> TRUE", msg);
     return 1;
@@ -19129,14 +19246,62 @@ __attribute__((ms_abi)) int mw_WTSUnRegisterSessionNotification(void* hwnd) {
     return 0;
 }
 __attribute__((ms_abi)) void* mw_LoadAcceleratorsA(void* hinst, const char* name) {
-    (void)hinst; (void)name;
-    MW_TRACE("LoadAcceleratorsA() -> NULL (no accelerators; optional sugar)");
-    return NULL;
+    /* SW-1271 (SWEEP-054): REAL accelerator-table load. XP spider's WinMain
+     * loop dispatches main-window messages ONLY when hAccel != NULL (its
+     * pump short-circuits TranslateAcceleratorW when the table is NULL —
+     * decoded at RVA 0x10000bebf: `test %rbx,%rbx; je loop` skips
+     * TranslateMessage+DispatchMessageW). A NULL stub therefore made spider
+     * white-screen: WM_PAINT was delivered but never dispatched. Parse
+     * RT_ACCELERATOR (type 9) with the same w3_res_find path that
+     * LoadStringW uses (SW-1264 entry->data semantics).
+     * NOTE: name may be MAKEINTRESOURCE (a small integer, never a string)
+     * — IS_INTRESOURCE guard on every trace format. */
+    const char* nm = ((uintptr_t)name > 0 && (uintptr_t)name <= 0xFFFF) ? NULL : name;
+    void* hrsrc = w3_res_find(hinst ? hinst : g_image_base, name, NULL, NULL,
+                              (const wchar_t*)9 /*RT_ACCELERATOR*/);
+    if (!hrsrc) {
+        if (nm) MW_TRACE("LoadAcceleratorsA(name='%s') -> NULL (no RT_ACCELERATOR)", nm);
+        else    MW_TRACE("LoadAcceleratorsA(id=%u) -> NULL (no RT_ACCELERATOR)",
+                         (unsigned)(uintptr_t)name);
+        return NULL;
+    }
+    uint32_t size = *(const uint32_t*)((const uint8_t*)hrsrc + 4);
+    const uint8_t* p = (const uint8_t*)(g_image_base + *(const uint32_t*)hrsrc);
+    if (!p || !size || mw_IsBadReadPtr(p, size)) return NULL;
+    int n = (int)(size / 6u); /* ACCEL = {BYTE fVirt; WORD key; WORD cmd;} = 6B */
+    if (n > 512) n = 512;
+    int slot = -1;
+    for (int i = 0; i < 8; i++) if (!g_accel_slots[i].live && slot < 0) slot = i;
+    if (slot < 0) return NULL;
+    memcpy(g_accel_slots[slot].fvirt_key_cmd, p, (size_t)n * 6u);
+    g_accel_slots[slot].n = n; g_accel_slots[slot].live = 1;
+    uintptr_t h = MW_ACCEL_BASE | (uintptr_t)(slot + 1);
+    if (nm) MW_TRACE("LoadAcceleratorsA(name='%s') -> %p (n=%d, REAL)", nm, (void*)h, n);
+    else    MW_TRACE("LoadAcceleratorsA(id=%u) -> %p (n=%d, REAL)",
+                     (unsigned)(uintptr_t)name, (void*)h, n);
+    return (void*)h;
 }
 __attribute__((ms_abi)) void* mw_LoadAcceleratorsW(void* hinst, const uint16_t* name) {
-    (void)hinst; (void)name;
-    MW_TRACE("LoadAcceleratorsW() -> NULL (no accelerators; optional sugar)");
-    return NULL;
+    void* hrsrc = w3_res_find(hinst ? hinst : g_image_base, NULL,
+                              (const wchar_t*)(const void*)name, NULL,
+                              (const wchar_t*)9 /*RT_ACCELERATOR*/);
+    if (!hrsrc) {
+        MW_TRACE("LoadAcceleratorsW() -> NULL (no RT_ACCELERATOR)");
+        return NULL;
+    }
+    uint32_t size = *(const uint32_t*)((const uint8_t*)hrsrc + 4);
+    const uint8_t* p = (const uint8_t*)(g_image_base + *(const uint32_t*)hrsrc);
+    if (!p || !size || mw_IsBadReadPtr(p, size)) return NULL;
+    int n = (int)(size / 6u);
+    if (n > 512) n = 512;
+    int slot = -1;
+    for (int i = 0; i < 8; i++) if (!g_accel_slots[i].live && slot < 0) slot = i;
+    if (slot < 0) return NULL;
+    memcpy(g_accel_slots[slot].fvirt_key_cmd, p, (size_t)n * 6u);
+    g_accel_slots[slot].n = n; g_accel_slots[slot].live = 1;
+    uintptr_t h = MW_ACCEL_BASE | (uintptr_t)(slot + 1);
+    MW_TRACE("LoadAcceleratorsW() -> %p (n=%d, REAL)", (void*)h, n);
+    return (void*)h;
 }
 __attribute__((ms_abi)) int mw_GetDialogBaseUnits(void) {
     /* default GUI font: 8 px horizontal, 16 px vertical (MAKELONG(8,16)) */
@@ -23478,8 +23643,47 @@ __attribute__((ms_abi)) int mw_ToAsciiEx(uint32_t vk, uint32_t scan, const uint8
     return 0; /* no translation */
 }
 __attribute__((ms_abi)) int mw_TranslateAcceleratorW(void* h, void* acc, const void* msg) {
-    (void)h; (void)acc; (void)msg;
-    return 0; /* not accelerated */
+    /* SW-1271 (SWEEP-054): REAL accelerator translation (ReactOS accel.c
+     * semantics). FVIRTKEY entries match WM_KEYDOWN/WM_SYSKEYDOWN with
+     * key == wParam VK and modifier bits == the pump's scripted-key latch;
+     * char entries match WM_CHAR/WM_SYSCHAR wParam. On match the command is
+     * SENT to the window (WM_COMMAND MAKEWPARAM(id,1)) and 1 returned —
+     * the guest skips its Translate/Dispatch for this message, like real
+     * Windows. */
+    (void)h;
+    uintptr_t v = (uintptr_t)acc;
+    if ((v & 0xFFFF0000u) != MW_ACCEL_BASE || !msg) return 0;
+    int slot = (int)(v & 0xFFu) - 1;
+    if (slot < 0 || slot >= 8 || !g_accel_slots[slot].live) return 0;
+    const uint8_t* ent = (const uint8_t*)g_accel_slots[slot].fvirt_key_cmd;
+    const uint8_t* m = (const uint8_t*)msg;
+    uint32_t message = *(const uint32_t*)(m + 8);
+    uintptr_t wp = *(const uintptr_t*)(m + 16);
+    int is_key = (message == 0x0100u /*WM_KEYDOWN*/ || message == 0x0104u /*WM_SYSKEYDOWN*/);
+    int is_char = (message == 0x0102u /*WM_CHAR*/ || message == 0x0106u /*WM_SYSCHAR*/);
+    if (!is_key && !is_char) return 0;
+    for (int i = 0; i < g_accel_slots[slot].n; i++, ent += 6) {
+        uint8_t fvirt = ent[0];
+        uint16_t key = (uint16_t)(ent[1] | (ent[2] << 8));
+        uint16_t cmd = (uint16_t)(ent[3] | (ent[4] << 8));
+        if (is_key) {
+            if (!(fvirt & 0x01u /*FVIRTKEY*/)) continue;
+            if ((uintptr_t)wp != (uintptr_t)key) continue;
+        } else {
+            if (fvirt & 0x01u /*FVIRTKEY*/) continue;
+            if ((uintptr_t)(wp & 0xFFu) != (uintptr_t)key) continue;
+        }
+        /* modifier bits must match the scripted-key latch */
+        uint32_t want = ((fvirt & 0x04u) ? 0x1u : 0) |  /* FSHIFT */
+                        ((fvirt & 0x08u) ? 0x2u : 0) |  /* FCONTROL */
+                        ((fvirt & 0x10u) ? 0x4u : 0);   /* FALT */
+        if (want != (g_key_mods & 0x7u)) continue;
+        MW_TRACE("TranslateAcceleratorW(entry=%d cmd=%u) -> SENT WM_COMMAND", i, cmd);
+        mw_SendMessageW(h ? h : g_main_hwnd, 0x0111u /*WM_COMMAND*/,
+                        (uintptr_t)(cmd | 0x00010000u) /*MAKEWPARAM(cmd,1)*/, 0);
+        return 1;
+    }
+    return 0;
 }
 __attribute__((ms_abi)) uint32_t mw_GetDoubleClickTime(void) { return 500; }
 __attribute__((ms_abi)) uint32_t mw_GetQueueStatus(uint32_t flags) { (void)flags; return 0; }
@@ -24633,11 +24837,9 @@ __attribute__((ms_abi)) uint32_t mw_GetSystemPaletteEntries(void* hdc, uint32_t 
  * services, wow64, themes->classic fallback, GDI+, net).
  * ============================================================ */
 
-/* ---- SW-1128 accel store: real create/copy/destroy ---- */
-#define MW_ACCEL_BASE 0x00AC0000u
-typedef struct { uint32_t fvirt_key_cmd[2]; int n; int live; } mw_accel_slot_t;
-static mw_accel_slot_t g_accel_slots[8];
-static uint32_t g_accel_next = 1;
+/* ---- SW-1128 accel store: real create/copy/destroy (store moved up; the
+ * SW-1271 LoadAccelerators/TranslateAccelerator implementations above share
+ * these slots) ---- */
 __attribute__((ms_abi)) void* mw_CreateAcceleratorTableW(const void* acc, int n) {
     if (!acc || n <= 0 || n > 512) return NULL;
     int slot = -1;
@@ -24670,8 +24872,7 @@ __attribute__((ms_abi)) int mw_DestroyAcceleratorTableW(void* h) {
     return 1;
 }
 __attribute__((ms_abi)) int mw_TranslateAcceleratorA(void* hwnd, void* tab, void* msg) {
-    (void)hwnd; (void)tab; (void)msg;
-    return 0; /* no translation: fall through to normal dispatch */
+    return mw_TranslateAcceleratorW(hwnd, tab, msg); /* SW-1271: shared body */
 }
 /* mw_TranslateAcceleratorW: already exists upstream (SWEEP-025) */
 
@@ -32109,6 +32310,7 @@ ENTRY("msvcrt.dll", "wctype", mw_wctype),
     ENTRY("KERNEL32.dll", "SetThreadpoolTimerEx",               mw_SetThreadpoolTimerEx),
     ENTRY("WINMM.dll", "timeSetEvent",                          mw_timeSetEvent),
     ENTRY("WINMM.dll", "timeKillEvent",                         mw_timeKillEvent),
+    ENTRY("WINMM.dll", "timeGetTime",                           mw_timeGetTime), /* SW-1274 */
     ENTRY("KERNEL32.DLL", "OpenEventW",                         mw_OpenEventW),
     ENTRY("KERNEL32.DLL", "FileTimeToLocalFileTime",            mw_FileTimeToLocalFileTime),
     ENTRY("KERNEL32.DLL", "LocalFileTimeToFileTime",            mw_LocalFileTimeToFileTime),

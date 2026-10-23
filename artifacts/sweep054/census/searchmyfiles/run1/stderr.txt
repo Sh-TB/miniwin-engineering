@@ -1,0 +1,2 @@
+[TRACE] Command line: artifacts/sweep50/dl/searchmyfiles/SearchMyFiles.exe
+[WARN] 1 imports unresolved

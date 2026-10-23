@@ -1,0 +1,5 @@
+[TRACE] Command line: artifacts/sweep50/dl/putty/putty.exe
+[MessageBoxA] PuTTY Error: Unable to open connection to
+
+Error -2: (unable to format: FormatMessage returned 2)
+[MessageBox] dialog #1 rendered -> miniwin-results/putty.exe/screenshots/messagebox_1.bmp

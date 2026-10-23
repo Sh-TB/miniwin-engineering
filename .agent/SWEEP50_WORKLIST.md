@@ -2755,3 +2755,67 @@ viewer, (2) Windows calculator, (3) a program that does not exist on Linux
   because its list content is driven by its NTFS index (absent headless);
   a fake index volume (or a stubbed index reader returning fixture rows)
   would give the list real rows to paint.
+
+---
+
+## SWEEP-054 «۱۰ برنامه و ۵ بازی معرف دو بعدی قدیمی» — marks (2026-10-23)
+
+- [x] **SW-1269 LANDED (SWEEP-054) — ShowWindow first-show paint + SW-1269b
+  SW_MAXIMIZE surface grow.** Real Windows generates the first WM_PAINT when
+  a window is shown; v1 only fired the CBT hook, so guests waiting for the
+  system's first paint (XP spider: ShowWindow(SW_MAXIMIZE) + plain GetMessage
+  loop, no InvalidateRect of its own) never painted — the pump saw "no event
+  source" and quit with a white screen. Fix: mw_ShowWindow requests paint
+  when events are live; SW_MAXIMIZE additionally grows the paint surface to
+  the 1024x768 work area (CW_USEDEFAULT had left it 32x32; spider's board is
+  704x540). MEASURED: spider's pump now delivers WM_PAINT; mspaint renders
+  too (same root cause).
+- [x] **SW-1270 LANDED (SWEEP-054) — posted-message queue.** PostMessage A/W
+  dropped every message headlessly; real Win32 queues posted messages and
+  delivers them from GetMessage BEFORE generated (lower-priority) messages.
+  Spider posts its own WM_COMMAND (menu deal) before its pump starts and
+  waits for it. Fix: 64-slot ring, delivered first in mw_gui_next_event;
+  headless batch keeps the v1 drop contract (regression-pinned exit-0).
+- [x] **SW-1271 LANDED (SWEEP-054) — REAL accelerators.** Root cause decoded
+  from spider disassembly (RVA 0x10000bebf): its classic pump
+  `cmp msg.hwnd,main; jne dispatch; test rbx,hAccel; je loop` — with
+  hAccel==NULL the MAIN window's messages skip TranslateMessage/
+  DispatchMessageW entirely; WM_PAINT was retrieved but never reached the
+  WndProc. Real XP spider.exe ships RT_ACCELERATOR id=1: 96 B = 16 entries
+  (F1..F5, D/M/N/O/S/Z + Ctrl/FALT variants — 6-byte ACCEL records).
+  LoadAcceleratorsW/A now parse type-9 resources via w3_res_find and mint
+  SW-1128 store handles; TranslateAcceleratorW/A translate WM_KEYDOWN/
+  WM_CHAR against the table (FVIRTKEY VK; FSHIFT/FCONTROL/FALT vs the
+  scripted-key latch) and SEND WM_COMMAND MAKEWPARAM(id,1) on match.
+  REGRESSION CAUGHT PRE-LANDING: the A-path trace formatted
+  MAKEINTRESOURCE names (small integers) as '%s' -> SEGV; ProduKey/cports
+  rc=0->139 in events mode, bisected to the trace, fixed with an
+  IS_INTRESOURCE guard (binary 09c33df2; G1 12/12 re-pinned).
+- [x] **SW-1272 LANDED (SWEEP-054) — BitBlt frame capture + SW-1272b
+  MINWIN_FRAME_EVERY throttle.** A SRCCOPY into the window surface is a
+  presented frame (SWEEP-006 breakout contract); XP spider never calls
+  BeginPaint/EndPaint — its whole board is direct BitBlts, so the EndPaint
+  dump path never fired. MINWIN_FRAME_EVERY=N thins DISK WRITES only
+  (numbering unconditional): spider's deal animation presented ~3,700
+  frames x 2.3 MB = 8.6 GB in one run and filled the disk during capture.
+- [x] **SW-1274 LANDED (SWEEP-054) — REAL timeGetTime.** Spider's deal
+  animation is paced by timeGetTime deltas; the v1 stub-fallback returned 0
+  forever, freezing the clock on the first card (identical blit pairs
+  looping). Now the engine's monotonic ms clock (Win32 DWORD-since-boot
+  contract). MEASURED: deal animation COMPLETES, rc=0.
+- [ ] **SW-1275** spider board polish: the class background brush is not
+  applied (gray surface instead of the classic spider green) and one card
+  face bitmap stays blank (LoadImage/RT_BITMAP path vs spider's cards).
+- [ ] **SW-1273** LibreOffice re-stage: downloadarchive 26.8.1.2 MSI URL
+  404s; find the new mirror path (sha c6298b10 pin) or pin the current
+  release; SW-1263 rtl_uString truncation frontier continues.
+- [x] **SWEEP-054 MANDATE MEASURED** — 10 famous programs + 5 classic 2D
+  games run with SCREENSHOTS (evidence/sweep054/shots_png/, 15 PNGs):
+  games winmine (82 frames, mouse-revealed cells), sol, freecell, mshearts,
+  **spider — REAL CARDS 5♥ 2♦ 10♣ + spider-logo deck, deal completes**
+  (first render ever); XP applets calc/mspaint/wordpad/notepad/charmap/
+  winver/sndvol32/clipbrd/write (census 45/45 exit-0 ZERO stubs); new
+  programs Everything 778x605 + putty dialog + RAMMap + Bginfo + DL corpus
+  census (12 exit-0, pageant live-pump 124, procexp 139 / winmergeu 133 /
+  zoomit rc=1 = their baselines). G1 PIN 12/12
+  (evidence/master/g1/20261023_030335, binary 09c33df201af8ade).
