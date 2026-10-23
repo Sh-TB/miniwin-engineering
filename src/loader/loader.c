@@ -1426,6 +1426,26 @@ static int load_pe_dll(const char* fullpath, const char* lowname) {
             }
         }
     }
+    /* SW-1276: fixed-ordinal fallback map for DLL-on-KNOWN-DLL ordinal
+     * imports (sal3 -> ws2_32 #7/#8/#9/#14/#18/#21/#115): the EXE loader
+     * has its own ole_ord-style map but this DLL path had none, so every
+     * ordinal import from a host-side DLL fell to the unresolved stub. */
+    static const struct { const char* dll; uint16_t ord; const char* name; } g_dll_fixed_ord[] = {
+        { "ws2_32.dll", 7,  "getsockopt" },
+        { "ws2_32.dll", 8,  "htonl" },
+        { "ws2_32.dll", 9,  "htons" },
+        { "ws2_32.dll", 14, "ntohl" },
+        { "ws2_32.dll", 18, "select" },
+        { "ws2_32.dll", 21, "setsockopt" },
+        { "ws2_32.dll", 22, "shutdown" },
+        { "ws2_32.dll", 23, "socket" },
+        { "ws2_32.dll", 51, "gethostbyaddr" },
+        { "ws2_32.dll", 52, "gethostbyname" },
+        { "ws2_32.dll", 111, "WSAGetLastError" },
+        { "ws2_32.dll", 112, "WSASetLastError" },
+        { "ws2_32.dll", 115, "WSAStartup" },
+        { "ws2_32.dll", 116, "WSACleanup" },
+    };
     /* imports: name-only dispatch-table rule (same as the EXE loader);
      * unresolved slots get the unresolved stub, never a silent NULL. */
     uint32_t imp_rva = dd[1 * 2], imp_sz = dd[1 * 2 + 1];
@@ -1463,7 +1483,20 @@ static int load_pe_dll(const char* fullpath, const char* lowname) {
                 void* fn = NULL;
                 if (int_[t] & 0x8000000000000000ULL) {
                     /* import by ordinal from a guest DLL */
-                    if (dep) fn = mw_dll_export(dep, NULL, (uintptr_t)(int_[t] & 0xFFFF));
+                    if (dep) {
+                        fn = mw_dll_export(dep, NULL, (uintptr_t)(int_[t] & 0xFFFF));
+                    } else {
+                        /* SW-1276: ordinal from a KNOWN (host-side) DLL —
+                         * fixed-ordinal map -> dispatch table by name. */
+                        for (size_t oi = 0; oi < sizeof(g_dll_fixed_ord)/sizeof(g_dll_fixed_ord[0]); oi++) {
+                            if (strcmp(dlow, g_dll_fixed_ord[oi].dll) == 0 &&
+                                g_dll_fixed_ord[oi].ord == (int_[t] & 0xFFFF)) {
+                                if (g_resolve_proc_fn)
+                                    fn = g_resolve_proc_fn((void*)0xdead0001, g_dll_fixed_ord[oi].name);
+                                break;
+                            }
+                        }
+                    }
                 } else {
                     const char* impname = (const char*)(img + (uint32_t)(int_[t] & 0xFFFFFFFF) + 2);
                     if (dep) fn = mw_dll_export(dep, impname, 0);
@@ -5454,6 +5487,106 @@ __attribute__((ms_abi)) int mw___stdio_common_vsprintf_s(
     buf[n] = 0;
     return n;
 }
+static int mw_vfmt_w16(uint16_t* dst, size_t max, const uint16_t* fmt, __builtin_ms_va_list ap); /* fwd (def in fmt block) */
+__attribute__((ms_abi)) void* mw_CreateThread(void* attr, size_t stack, void* fn, void* arg, uint32_t flags, uint32_t* tid); /* fwd (def in thread block) */
+/* ---- SW-1276 (SWEEP-057 Train 3): LibreOffice late-DLL CRT initterm car.
+ * soffice rc=99 stub #8 chain: _control87 / d2d1!#1 / ws2_32!#115(WSAStartup)
+ * / __stdio_common_vswprintf_s / _wputenv_s — the last two are real UCRT
+ * contracts the engine lacked; WSAStartup exists but sal3 binds ws2_32 BY
+ * ORDINAL (7/8/9/14/18/21 + names) and the known-DLL path exposed neither
+ * the ordinals nor InetPtonW/GetAddrInfoW. ---- */
+__attribute__((ms_abi)) int mw___stdio_common_vswprintf_s(
+        unsigned long long options, uint16_t* buf, size_t size,
+        const uint16_t* fmt, void* locale, void* ap_v) {
+    (void)options; (void)locale; /* real UCRT: (u64, wchar_t*, size, wchar_t*, _locale_t, va_list) */
+    if (!buf || !size || !fmt) return -1;
+    __builtin_ms_va_list ap = (__builtin_ms_va_list)ap_v;
+    int n = mw_vfmt_w16(buf, size - 1, fmt, ap);
+    if (n < 0) return -1;
+    if ((size_t)n >= size) return -1;   /* vswprintf_s: truncation is an error */
+    buf[n] = 0;
+    return n;
+}
+__attribute__((ms_abi)) int mw___stdio_common_vswprintf(
+        unsigned long long options, uint16_t* buf, size_t size,
+        const uint16_t* fmt, void* locale, void* ap_v) {
+    (void)options; (void)locale;
+    if (!buf || !size || !fmt) return -1;
+    __builtin_ms_va_list ap = (__builtin_ms_va_list)ap_v;
+    return mw_vfmt_w16(buf, size, fmt, ap);
+}
+__attribute__((ms_abi)) int mw__wputenv_s(const uint16_t* name, const uint16_t* value) {
+    char n8[256] = {0}, v8[1024] = {0};
+    if (!name) return -1;
+    w3_w16_to_utf8z(name, n8, sizeof n8);
+    if (value) w3_w16_to_utf8z(value, v8, sizeof v8);
+    int r = setenv(n8, value ? v8 : "", 1);
+    MW_TRACE("_wputenv_s('%s'='%s') -> %d", n8, value ? v8 : "(null)", r);
+    return r == 0 ? 0 : -1;
+}
+__attribute__((ms_abi)) unsigned int mw__control87(unsigned int newcw, unsigned int mask) {
+    /* x87 CW model: the UCRT default 0x8001F (all exceptions masked); the
+     * guest only reads the value back (sal init FP environment probe). */
+    (void)newcw; (void)mask;
+    MW_TRACE("_control87(0x%x, 0x%x) -> 0x8001f", newcw, mask);
+    return 0x8001F;
+}
+__attribute__((ms_abi)) unsigned int mw__controlfp(unsigned int newcw, unsigned int mask) {
+    (void)newcw; (void)mask;
+    return 0x8001F;
+}
+__attribute__((ms_abi)) unsigned long mw_InetPtonW(int family, const uint16_t* src, void* dst) {
+    char s8[128] = {0};
+    if (src) w3_w16_to_utf8z(src, s8, sizeof s8);
+    return (unsigned long)inet_pton(family, s8, dst);
+}
+__attribute__((ms_abi)) int mw_GetAddrInfoW(const uint16_t* node, const uint16_t* svc,
+        const void* hints, void** res) {
+    /* honest typed failure: WSAHOST_NOT_FOUND — sal3's socket init handles
+     * it (offline path); the v1 stub-0 made _beginthread'd resolver threads
+     * walk NULL results. */
+    (void)node; (void)svc; (void)hints; (void)res;
+    MW_TRACE("GetAddrInfoW() -> WSAHOST_NOT_FOUND (offline model)");
+    return 11001;
+}
+__attribute__((ms_abi)) intptr_t mw__beginthread(void* secattr, unsigned stk, void* start,
+        void* param, unsigned flags, unsigned* tid) {
+    /* sal3/clucene worker: reuse the CreateThread engine model via the
+     * same host thread path mw_CreateThread uses. */
+    MW_TRACE("_beginthread(stk=%u flags=%u) -> CreateThread model", stk, flags);
+    return (intptr_t)mw_CreateThread(secattr, stk, start, param, flags, (uint32_t*)tid);
+}
+__attribute__((ms_abi)) int mw__sopen_dispatch(const uint16_t* path, int oflag, int shflag,
+        int perm, int* pfh, int flags) {
+    (void)path; (void)oflag; (void)shflag; (void)perm; (void)flags;
+    if (pfh) *pfh = -1;
+    mw_SetLastError(2); /* ERROR_FILE_NOT_FOUND — honest: no host fs mapping */
+    return -1;
+}
+__attribute__((ms_abi)) int mw_SymInitialize(void* proc, const char* path, int invade) {
+    (void)proc; (void)path; (void)invade;
+    return 1; /* TRUE — dbghelp model: symbol engine "initialized" */
+}
+__attribute__((ms_abi)) int mw_SymFromAddr(void* proc, unsigned long long addr,
+        unsigned long long* disp, void* sym) {
+    (void)proc; (void)addr; (void)disp; (void)sym;
+    return 0; /* no symbol — honest */
+}
+__attribute__((ms_abi)) int mw_SymRefreshModuleList(void* proc) {
+    (void)proc;
+    return 1;
+}
+__attribute__((ms_abi)) long mw_CoWaitForMultipleHandles(uint32_t flags, uint32_t timeout,
+        uint32_t count, void** handles, uint32_t* index) {
+    (void)flags; (void)timeout; (void)count; (void)handles;
+    if (index) *index = 0;
+    return 0x8001010D; /* RPC_E_CALL_COMPLETE-ish honest: cannot wait on the pump thread */
+}
+__attribute__((ms_abi)) int mw_WerAddExcludedApplication(const uint16_t* exe, int allusers) {
+    (void)exe; (void)allusers;
+    return 0; /* S_OK: excluded (honest no-op) */
+}
+
 __attribute__((ms_abi)) size_t mw___strncnt(const uint16_t* s, size_t n) {
     if (!s) return 0;
     size_t i = 0;
@@ -32052,7 +32185,14 @@ static ImportEntry g_import_table[] = {
     ENTRY("api-ms-win-crt-runtime-l1-1-0.dll", "_execute_onexit_table",  mw__execute_onexit_table), /* SW-1251 */
     ENTRY("api-ms-win-crt-runtime-l1-1-0.dll", "_invoke_watson",  mw__invoke_watson), /* SW-1251 */
     ENTRY("api-ms-win-crt-runtime-l1-1-0.dll", "_set_new_handler",  mw__set_new_handler), /* SW-1251 */
+    ENTRY("api-ms-win-crt-runtime-l1-1-0.dll", "_control87",        mw__control87), /* SW-1276 */
+    ENTRY("api-ms-win-crt-runtime-l1-1-0.dll", "_controlfp",        mw__controlfp), /* SW-1276 */
+    ENTRY("api-ms-win-crt-environment-l1-1-0.dll", "_wputenv_s",    mw__wputenv_s), /* SW-1276: soffice stub #8 */
+    ENTRY("api-ms-win-crt-runtime-l1-1-0.dll", "_beginthread",      mw__beginthread), /* SW-1276: clucene */
+    ENTRY("api-ms-win-crt-stdio-l1-1-0.dll", "_sopen_dispatch",     mw__sopen_dispatch), /* SW-1276: clucene */
     ENTRY("api-ms-win-crt-stdio-l1-1-0.dll", "__stdio_common_vsprintf_s",  mw___stdio_common_vsprintf_s), /* SW-1251 */
+    ENTRY("api-ms-win-crt-stdio-l1-1-0.dll", "__stdio_common_vswprintf_s", mw___stdio_common_vswprintf_s), /* SW-1276 */
+    ENTRY("api-ms-win-crt-stdio-l1-1-0.dll", "__stdio_common_vswprintf",   mw___stdio_common_vswprintf), /* SW-1276: clucene */
     ENTRY("api-ms-win-crt-stdio-l1-1-0.dll", "_get_stream_buffer_pointers",  mw__get_stream_buffer_pointers), /* SW-1251 */
     ENTRY("api-ms-win-crt-stdio-l1-1-0.dll", "_wfsopen",  mw__wfsopen), /* SW-1251 */
     ENTRY("api-ms-win-crt-string-l1-1-0.dll", "__strncnt",  mw___strncnt), /* SW-1251 */
@@ -33221,6 +33361,23 @@ ENTRY("msvcrt.dll", "wctype", mw_wctype),
     ENTRY("WS2_32.dll", "WSAAddressToStringA",                  mw_WSAAddressToStringA), /* SWEEP-023 SW-990 */
     ENTRY("WS2_32.dll", "WSAAddressToStringW",                  mw_WSAAddressToStringW), /* SWEEP-023 SW-990 */
     ENTRY("WS2_32.dll", "freeaddrinfo",                         mw_freeaddrinfo_),
+    ENTRY("WS2_32.dll", "InetPtonW",                            mw_InetPtonW), /* SW-1276: sal3 */
+    ENTRY("WS2_32.dll", "GetAddrInfoW",                         mw_GetAddrInfoW), /* SW-1276: sal3 */
+    ENTRY("WS2_32.dll", "bind",                                 mw_bind), /* SW-1276 */
+    ENTRY("WS2_32.dll", "closesocket",                          mw_closesocket), /* SW-1276 */
+    ENTRY("WS2_32.dll", "connect",                              mw_connect), /* SW-1276 */
+    ENTRY("WS2_32.dll", "getsockopt",                           mw_getsockopt), /* SW-1276 */
+    ENTRY("WS2_32.dll", "setsockopt",                           mw_setsockopt), /* SW-1276 */
+    ENTRY("WS2_32.dll", "htonl",                                mw_htonl), /* SW-1276 */
+    ENTRY("WS2_32.dll", "htons",                                mw_htons), /* SW-1276 */
+    ENTRY("WS2_32.dll", "ntohl",                                mw_ntohl), /* SW-1276 */
+    ENTRY("WS2_32.dll", "ntohs",                                mw_ntohs), /* SW-1276 */
+    ENTRY("WS2_32.dll", "select",                               mw_select), /* SW-1276 */
+    ENTRY("WS2_32.dll", "socket",                               mw_socket), /* SW-1276 */
+    ENTRY("WS2_32.dll", "send",                                 mw_send), /* SW-1276 */
+    ENTRY("WS2_32.dll", "recv",                                 mw_recv), /* SW-1276 */
+    ENTRY("WS2_32.dll", "sendto",                               mw_sendto), /* SW-1276 */
+    ENTRY("WS2_32.dll", "recvfrom",                             mw_recvfrom), /* SW-1276 */
     ENTRY("WS2_32.dll", "getaddrinfo",                          mw_getaddrinfo_),
     ENTRY("WS2_32.dll", "gethostname",                          mw_gethostname_),
     ENTRY("WS2_32.dll", "inet_pton",                            mw_inet_pton_),
@@ -35404,6 +35561,15 @@ static int load_pe(const char* filepath) {
                     { "WS2_32", 101, "WSAAsyncSelect" },
                     { "WS2_32", 111, "WSAGetLastError" },
                     { "WS2_32", 112, "WSASetLastError" },
+                    /* SW-1276: sal3 binds ws2_32 BY ORDINAL — the real
+                     * Win10 x64 ws2_32 table: 7=getsockopt 8=htonl 9=htons
+                     * 14=ntohl 18=select 21=setsockopt. */
+                    { "WS2_32", 7,  "getsockopt" },
+                    { "WS2_32", 8,  "htonl" },
+                    { "WS2_32", 9,  "htons" },
+                    { "WS2_32", 14, "ntohl" },
+                    { "WS2_32", 18, "select" },
+                    { "WS2_32", 21, "setsockopt" },
                     { "WS2_32", 115, "WSAStartup" },
                     { "WS2_32", 116, "WSACleanup" },
                     /* SWEEP-014 r2 (Bginfo64 gate): OLEAUT32 fixed ordinal

@@ -12,6 +12,10 @@ mkdir -p "$DST"
 cp "$SRC"/*.dll "$DST"/ 2>/dev/null
 cp "$SRC"/soffice.bin "$DST"/
 cp "$SRC"/*.ini "$DST"/ 2>/dev/null
+# SW-1276: URE bootstrap registries — services.rdb IS the process service
+# factory source; without it soffice.bin throws uno::DeploymentException
+# 'null process service factory' -> terminate -> _exit(0xE06D7363) rc=99
+cp "$SRC"/*.rdb "$DST"/ 2>/dev/null
 cp "$SRC"/*.xcs "$SRC"/*.xcu "$DST"/ 2>/dev/null
 # MSI underscore-vs-hyphen renames (SWEEP-051 recipe)
 [ -f "$SRC/orcus_parser.dll" ] && cp "$SRC/orcus_parser.dll" "$DST/orcus-parser.dll"

@@ -1766,3 +1766,29 @@ WaitForSingleObject(0x5, INFINITE); under the fix-F timer-wait pump the
 run is rc=124-nondeterministic; the FSCTL_ENUM_USN_DATA MFT phase never
 starts. Also: fix-F + this guest = 250ms tick pacing dominates wall time
 (census unaffected — everything is not in the 14-guest set).
+
+## SWEEP-057 Train 3 (2026-10-23) — SW-1276 soffice: 3 layers moved
+Rule #1: LO archive URL corrected to the ALIVE mirror (26.8.1.1); MSI
+re-staged sha c6298b10 EXACT (374,870,016B); CAB carve sha 71dfff0b MATCH;
+engine-7za 19,427/19,427 rc=0; soffice.bin cb08cffd / mergedlo 017d0c21
+pins verified; 251->263 guest files.
+1. STAGING: real VC runtime (msvcp140/vcruntime140/vcruntime140_1/
+   msvcp140_1 from MSI-mangled names) -> the SW-1252 _Mtx/_Lockit stub
+   chain GONE (the 139 at mergedlo 0x8335d2 cmp rbx,[rdx+0x18] RDX=0
+   resolved by the REAL msvcp140).
+2. ENGINE: _control87/_controlfp, _wputenv_s (real setenv),
+   __stdio_common_vswprintf_s/_vswprintf (UCRT 6-arg over mw_vfmt_w16),
+   _beginthread, _sopen_dispatch, Sym* trio, CoWaitForMultipleHandles,
+   WerAddExcludedApplication.
+3. WS2_32: DLL-on-known-DLL ORDINAL imports had no resolution path —
+   g_dll_fixed_ord fallback map + InetPtonW/GetAddrInfoW. sal3 binds
+   ws2_32 by ordinal (7/8/9/14/18/21/...): all bind now.
+4. URE: *.rdb staging contract (services.rdb = the service factory).
+5. DECODE: rc=99 = _exit(0xE06D7363) = unclaimed
+   uno::DeploymentException 'null process service factory'; root cause
+   chain: sal3 osl_getSystemPathFromFileURL returns TRUNCATED paths
+   (component-boundary cuts, rtl_uString length-field 15 vs 29-char
+   content) -> CreateFileW(dir-ish) -> ReadFile ERROR_BROKEN_PIPE(109)
+   -> configmgr bootstrap fails -> throw -> no catch -> terminate.
+MEASURED: 139 -> 99 with only d2d1!#1 stub left (skia probe, harmless);
+census 42/42 x3 green; G1 12/12 (evidence/master/g1/20261023_194817).

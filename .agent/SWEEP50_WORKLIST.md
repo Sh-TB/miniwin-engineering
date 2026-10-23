@@ -2864,7 +2864,48 @@ viewer, (2) Windows calculator, (3) a program that does not exist on Linux
   internal chain — 0x1400d6df0 + 0x1400d6f30 user-mode checks fail
   without any API calls) -> the CreateFileW(GUID)+FSCTL path is never
   reached. -> SW-1278.
-- [ ] **SW-1276** soffice late-DLL CRT initterm: after stub #8
+- [x] **SW-1276 LANDED (SWEEP-057 Train 3, partial — initterm car moved 3
+      layers)**: (1) STAGING CONTRACT: the MSI payload names the VC runtime
+      with MSI-mangled names (msvcp140.dll_amd64.{GUID}) — the *.dll glob
+      missed them; real msvcp140.dll + vcruntime140.dll + vcruntime140_1.dll
+      + msvcp140_1.dll now staged (byte-pins unchanged: soffice.bin cb08cffd
+      / mergedlo.dll 017d0c21). Result: the SW-1252 msvcp140 DllMain NULLs
+      are gone — the _Mtx_lock/_Mtx_unlock/locale::_Init/_Lockit stub
+      chain (4 stubs -> 139 at mergedlo 0x8335d2 cmp rbx,[rdx+0x18] RDX=0)
+      is resolved by the REAL msvcp140. (2) ENGINE SURFACE (6 families):
+      _control87/_controlfp (0x8001F CW model), _wputenv_s (real setenv
+      via w16->utf8), __stdio_common_vswprintf_s/__stdio_common_vswprintf
+      (real UCRT 6-arg contract over mw_vfmt_w16), _beginthread
+      (CreateThread model), _sopen_dispatch (honest -1+ERROR_FILE_NOT_FOUND),
+      SymInitialize/SymFromAddr/SymRefreshModuleList, CoWaitForMultipleHandles,
+      WerAddExcludedApplication. (3) WS2_32: sal3 binds BY ORDINAL —
+      DLL-on-known-DLL ordinal imports had NO resolution path (dep==NULL ->
+      stub); added the g_dll_fixed_ord fallback map (7=getsockopt 8=htonl
+      9=htons 14=ntohl 18=select 21=setsockopt + 22/23/51/52/111/112/115/116)
+      + InetPtonW/GetAddrInfoW entries (GetAddrInfoW honest 11001 offline
+      model). ws2_32!#115 (WSAStartup) now binds. (4) URE BOOTSTRAP: *.rdb
+      staging contract (services.rdb IS the process service factory source;
+      12 rdb files now in the guest dir; stage script fixed). (5) DECODED:
+      the rc=99 = _exit(0xE06D7363) = the CRT terminate path after an
+      UNCLAIMED C++ throw: uno::DeploymentException 'null process service
+      factory' (ThrowInfo mergedlo RVA 0x81c4e80, catchable Deployment/
+      Runtime/Exception — the SW-1262 catch engine sees it, no handler
+      claims). The throw fires because sal3's own
+      osl_getSystemPathFromFileURL returns TRUNCATED paths — the guest's
+      own URI->path conversion cuts at component boundaries
+      ('C:\\artifacts\\sweep055\\guests\\' u16len-field=15 vs 29-char
+      content; 'C:\\artifacts\\s' 14) — fed by engine-modeled string
+      buffers; then CreateFileW(dir-ish path GENERIC_READ) -> ReadFile ->
+      ERROR_BROKEN_PIPE(109) -> configmgr bootstrap fails -> throw.
+      MEASURED: rc 139 (msvcp140 crash) -> 99 with ZERO new stubs beyond
+      d2d1!#1 (D2D1CreateFactory, skia probe — harmless); census 42/42
+      exit-0 ZERO stubs ZERO unresolved x3; G1 12/12
+      (evidence/master/g1/20261023_194817, binary rebuilt).
+- [~] **SW-1276 layer-2 frontier**: sal3 osl URI-path truncation (the
+      guest-internal conversion producing cut paths) + the unclaimed
+      DeploymentException catch. Also d2d1!#1 = D2D1CreateFactory typed
+      model (E_NOINTERFACE or a factory cookie) once skia probes it.
+- [ ] **SW-1276 [SUPERSEDED]** soffice late-DLL CRT initterm: after stub #8
   (msvcp140 ??0_Lockit) the libxslt/lpsolve55/libcrypto-3/libssl-3 load
   wave reaches `_initterm: calling 0x...` and jumps to a bogus RIP
   (RIP outside every mapped module). Bisect: same rc with HEAD binary ->

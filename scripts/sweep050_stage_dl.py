@@ -12,7 +12,7 @@ JOBS = [
      "19b5a382bbe1c89d62a4c56da5470b9400039ca2591bf252a0e5e56f30ff4033",
      628617216),
     ("LibreOffice.msi",
-     "https://downloadarchive.documentfoundation.org/libreoffice/old/26.8.1.2/win/x86_64/LibreOffice_26.8.1.2_Win_x86-64.msi",
+     "https://downloadarchive.documentfoundation.org/libreoffice/old/26.8.1.1/win/x86_64/LibreOffice_26.8.1.1_Win_x86-64.msi",
      "artifacts/sweep050/stage/LibreOffice.msi",
      "c6298b10cfa1748bcbedad94c62ce771e240e5021bfd6d7a967cd571b04b5312",
      None),
