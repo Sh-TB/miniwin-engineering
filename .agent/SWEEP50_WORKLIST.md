@@ -2901,7 +2901,51 @@ viewer, (2) Windows calculator, (3) a program that does not exist on Linux
   regression battery green (spider 651 frames unchanged, winmine 82,
   freecell 10, mshearts 2, calc 338x258, mspaint/wordpad/sndvol32 dialogs);
   G1 PIN 12/12 (evidence/master/g1/20261023_060132, bd7747c2a5ddbdb3).
-- [ ] **SW-1279 (NEW, SWEEP-056)** sol deal/paint chain: the window is now
+- [x] **SW-1279 LANDED (SWEEP-057 Train 1, binary ae4339bc)** — SIX root
+      causes, all named by disassembly decode of sol.exe (x64 PE32+, base
+      0x100000000; WndProc 0x100001bc0, deal cmd 0x3e8 -> handler
+      0x100001f2e -> srand(time(0)&0x7fff) -> game-obj 0x10000C298 ->
+      dispatcher 0x100007CF0 jump-table msg 8 -> Game_Deal 0x100006d00):
+      (A) CreateWindowEx W/A: WS_CHILD creations with an UNREGISTERED class
+      leaked into the TOP-LEVEL path and clamped the surface metrics
+      (sol's statusbar "Stat" 587x10@-1,375 -> g_win 587x32 while the
+      surface stayed 587x384 -> GetClientRect stale) — store_window now
+      guarded by (!(style&WS_CHILD) && !parent). (B) Unknown WS_CHILD+parent
+      routed into the engine child registry (STATUSBAR identity 0x87;
+      SB_* model keyed by child slot) instead of stealing the main hwnd.
+      (C) THE DEAL KILLER: every RegisterClass* overwrote the single
+      g_wndproc_fwd channel — sol registers "Solitaire" (proc 0x100001bc0,
+      the full message switch) and comctl-style code later registers "Stat"
+      (proc 0x100008f20) which STOLE all main-window dispatches: WM_COMMAND
+      0x3e8 and WM_PAINT were answered by the statusbar proc (trace:
+      dispatch -> 0, zero guest API calls). Fix: per-class {name -> proc}
+      registry (16 slots, probed guest memory) + main-window class-proc
+      snapshot (g_main_class_proc) taken at top-level creation; dispatch
+      prefers the snapshot; SetWindowLongPtrW(GWLP_WNDPROC) subclass
+      updates it (SW-1266 compatible). (D) BeginPaint no longer wipes the
+      surface white — real BeginPaint only REPORTS fErase; the erase
+      belongs to WM_ERASEBKGND (the wipe destroyed the dealt board).
+      (E) Per-child geometry: mw_child_set_rect records creation x/y/w/h;
+      GetClientRect answers children with their own rect in surface coords
+      — sol's statusbar paint used to receive the MAIN rect and PatBlt its
+      gray LTGRAY panel over the whole board (216k gray px). (F) The pump
+      waits for a due timer tick even with NO scripted input (real
+      GetMessage blocks; the old gate required keys||clicks pending so
+      sol's id=666 250ms clock starved — 120 ticks now delivered,
+      budget-exhaust -> WM_QUIT -> exit 0 deterministic). MEASURED: sol
+      renders the CLASSIC BOARD — green felt 0,128,0 (94% of surface) +
+      dealt deck fan (real cards.dll faces, 71x96) + status bar strip
+      (evidence/sweep057/shots_png/02_xp_solitaire.png); trace shows
+      srand(time) -> green PatBlt -> 52-rand shuffle -> card blits.
+      Census 42/42 exit-0 ZERO stubs ZERO unresolved (mshearts/mspaint
+      mfc42u.dll staging contract re-applied + stage script fixed); G1 PIN
+      12/12 (evidence/master/g1/20261023_190202, ae4339bc).
+- [~] **SW-1279 NEXT LAYER (SWEEP-058)**: tableau piles not drawn yet — the
+      deal fills the slot objects (5x52 rands) but pile draws never run
+      (all blits are the deck fan @0,0..@24,18); the slot->vfn draw chain
+      and the deal-animation timer path are the next decode target.
+      Also sol's About box (ShellAboutW) + menu wiring (F2 = deal) unmapped.
+- [ ] **SW-1279 (NEW, SWEEP-056)** [SUPERSEDED — see LANDED above] sol deal/paint chain: the window is now
   585x384 with a REAL status bar (Time: 0 / Score: 0 DrawTextW + PatBlt on
   the 587x32 client) but the board area renders WHITE — cdtDraw/cdtDrawExt
   are imported yet NEVER CALLED. Pump ends deterministically:
@@ -2930,6 +2974,30 @@ viewer, (2) Windows calculator, (3) a program that does not exist on Linux
   The direct FindFirstFileW-fails theory was DISPROVEN — the SetLastError(2)
   floods in the trace are the guest's own internal state signaling, not
   failed finds.
+- [x] **SW-1278 LANDED (SWEEP-057 Train 2): QueryDosDeviceW NULL-stub root
+      cause.** Caller-attribution instrumentation (mw_SetLastError logs
+      __builtin_return_address; addr2line) exposed the flood source: the
+      engine's own mw_QueryDosDeviceW (v1: always 0 + ERROR_FILE_NOT_FOUND)
+      — Everything probes the DOS-device map ~20x per scan pass AFTER
+      volume registration and BEFORE the DB/MFT phase; every probe failed,
+      the DB open chain stalled, and the volume walker retried (6 walks,
+      index empty, UI list blank). FIX: real model seeded from the SW-1268
+      fixture world — "C:" -> \Device\HarddiskVolume1 (NUL-separated target
+      list, chars-stored return), DevName NULL -> full DOS-device-name list,
+      unknown -> 0 + ERROR_FILE_NOT_FOUND. MEASURED: the chain ADVANCES —
+      the guest now reaches its own 'set last error %d' signaling sites
+      (0x1401aa429 = the 0x1401aa423 site from the 32-site scan) and probes
+      files via w3_create_file/mw_GetFileAttributesW (the Everything.db /
+      USN-journal paths — genuinely absent on a fresh install); volume walks
+      6 -> 52 (the guest enumerates the drive-letter space); rc=0 at
+      budget 60 (was rc=124 stall at budget 200 pre-fix). NEW FRONTIER
+      (SW-1278b): worker-thread race — a T* thread parks on
+      WaitForSingleObject(handle=0x5, INFINITE) and the pump sometimes
+      sleeps past its budget (rc=124 nondeterministic under the SW-1279
+      fix-F timer-wait pump: the walk/DB chain races the UI timer);
+      the MFT/USN enumeration phase (DeviceIoControl FSCTL_ENUM_USN_DATA,
+      SW-1268 fixtures) still never starts. Next decode: the handle-0x5
+      event contract + the walk-loop retry driver.
 - [x] **SWEEP-054 MANDATE MEASURED** — 10 famous programs + 5 classic 2D
   games run with SCREENSHOTS (evidence/sweep054/shots_png/, 15 PNGs):
   games winmine (82 frames, mouse-revealed cells), sol, freecell, mshearts,

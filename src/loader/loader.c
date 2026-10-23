@@ -4431,7 +4431,10 @@ __attribute__((ms_abi)) void mw_SetLastError(uint32_t err) {
      * getlasterror()==0 as "fatal error: runtime: netpoll failed". Our value
      * was engine-side only, so Go always saw errno=0. */
     if (t_cur_teb) *(uint32_t*)(t_cur_teb + 0x68) = err;
-    MW_TRACE("SetLastError(%u)", err);
+    /* SW-1278: caller attribution for the flood decodes (guest RIP at the
+     * call site: [rsp] holds the return address on x64 entry). */
+    void* ra = __builtin_return_address(0);
+    MW_TRACE("SetLastError(%u) caller=%p", err, ra);
 }
 
 __attribute__((ms_abi)) int mw_SetProcessAffinityMask(void* h, uint64_t mask) {
@@ -7704,8 +7707,8 @@ __attribute__((ms_abi)) int mw_fwprintf(void* file, const wchar_t* fmt, ...) {
     return f ? vfwprintf(f, fmt, sv) : -1;
 }
 
-__attribute__((ms_abi)) int mw_rand(void) { return rand(); }
-__attribute__((ms_abi)) void mw_srand(unsigned int seed) { srand(seed); }
+__attribute__((ms_abi)) int mw_rand(void) { int r = rand(); MW_TRACE("rand() -> %d", r); return r; }
+__attribute__((ms_abi)) void mw_srand(unsigned int seed) { MW_TRACE("srand(seed=%u)", seed); srand(seed); }
 
 __attribute__((ms_abi)) int mw__onexit(void (*func)(void)) {
     MW_TRACE("_onexit(func=%p)", func);
@@ -15527,6 +15530,17 @@ static int mw_commonctl_msg(int s, uint32_t msg, uintptr_t wp, long long lp, lon
     return 0;
 }
 
+/* SW-1279 fix C: forward decls + state (definitions live after SWEEP-004
+ * raster). Needed here because SendMessageW/A route main-window dispatches
+ * through the class-proc snapshot. */
+#define MW_CLASSPROC_MAX 16
+static struct { uint16_t name[24]; void* proc; } g_class_proc[MW_CLASSPROC_MAX];
+static int g_class_proc_n = 0;
+static MW_WNDPROC g_main_class_proc = 0;
+static void mw_class_proc_store(const void* name_ptr, int wide, void* proc);
+static void* mw_class_proc_lookup(const void* cls);
+static MW_WNDPROC mw_dispatch_proc(void);
+
 /* SWEEP-013: SendMessageW/A with real semantics — text I/O against the
  * child-control/main-window registries, BM_GETCHECK, and wndproc routing
  * for the main window (the old stub returned 0 for everything, which killed
@@ -15572,8 +15586,8 @@ __attribute__((ms_abi)) long long mw_SendMessageW(void* h, uint32_t msg, uintptr
         long long ctl_r;
         if (s >= 0 && mw_commonctl_msg(s, msg, wp, lp, &ctl_r)) return ctl_r;
     }
-    if ((h == MW_GUI_HWND || mw_toplevel_find(h) >= 0) && g_wndproc_fwd) { /* SW-1256: nested mints forward too */
-        long long r = g_wndproc_fwd(h, msg, wp, lp);
+    if ((h == MW_GUI_HWND || mw_toplevel_find(h) >= 0) && mw_dispatch_proc()) { /* SW-1256 + SW-1279 fix C: nested mints forward too */
+        long long r = mw_dispatch_proc()(h, msg, wp, lp);
         MW_TRACE("SendMessageW(%s wp=0x%llx) -> wndproc -> %lld",
                  mw_wm_name(msg), (unsigned long long)wp, r);
         return r;
@@ -15628,8 +15642,8 @@ __attribute__((ms_abi)) long mw_SendMessageA(void* h, uint32_t msg, uintptr_t wp
         long long ctl_r;
         if (s >= 0 && mw_commonctl_msg(s, msg, wp, lp, &ctl_r)) return (long)ctl_r;
     }
-    if ((h == MW_GUI_HWND || mw_toplevel_find(h) >= 0) && g_wndproc_fwd) /* SW-1256 */
-        return (long)g_wndproc_fwd(h, msg, wp, (long long)lp);
+    if ((h == MW_GUI_HWND || mw_toplevel_find(h) >= 0) && mw_dispatch_proc()) /* SW-1256 + SW-1279 fix C */
+        return (long)mw_dispatch_proc()(h, msg, wp, (long long)lp);
     return 0;
 }
 __attribute__((ms_abi)) void mw_ber_free(void* b, int flags) { (void)b; (void)flags; }
@@ -16080,6 +16094,10 @@ __attribute__((ms_abi)) char* mw__mktemp(char* tmpl) {
  * real paint surface + WNDPROC registry + gated event pump (MW_GUI_EVENTS). */
 static void mw_gui_store_wndproc(void* proc);
 static void mw_gui_store_window(int w, int h);
+/* SW-1279 fix C: per-class wndproc registry + main-window proc snapshot */
+static void mw_class_proc_store(const void* name_ptr, int wide, void* proc);
+static void* mw_class_proc_lookup(const void* cls);
+static MW_WNDPROC mw_dispatch_proc(void);
 static void mw_gui_set_quit(int code);
 static void mw_gui_send_destroy(void* hwnd);
 static long long mw_gui_send_create(void); /* SWEEP-006: real WM_CREATE on CreateWindowEx */
@@ -16117,15 +16135,21 @@ __attribute__((ms_abi)) void mw_InitCommonControls(void) {
 __attribute__((ms_abi)) uint16_t mw_RegisterClassExW(const void* wcex) {
     /* SWEEP-005: WNDCLASSEXW.lpfnWndProc lives at offset 8 (after cbSize) */
     if (wcex) {
-        mw_gui_store_wndproc(*(void* const*)((const char*)wcex + 8));
+        void* p = *(void* const*)((const char*)wcex + 8);
+        mw_gui_store_wndproc(p);
+        /* SW-1279 fix C: also record {class name -> proc} */
+        mw_class_proc_store(*(const void* const*)((const char*)wcex + 64), 1, p);
         mw_class_name_store_w(*(const uint16_t* const*)((const char*)wcex + 64)); /* SWEEP-013 */
     }
-    MW_TRACE("RegisterClassExW(wcex=%p) -> ATOM 0x%x", wcex, MW_GUI_ATOM);
+    MW_TRACE("RegisterClassExW(wcex=%p proc=%p) -> ATOM 0x%x", wcex,
+             wcex ? *(void* const*)((const char*)wcex + 8) : NULL, MW_GUI_ATOM);
     return MW_GUI_ATOM;
 }
 __attribute__((ms_abi)) uint16_t mw_RegisterClassExA(const void* wcex) {
     if (wcex) {
-        mw_gui_store_wndproc(*(void* const*)((const char*)wcex + 8));
+        void* p = *(void* const*)((const char*)wcex + 8);
+        mw_gui_store_wndproc(p);
+        mw_class_proc_store(*(const void* const*)((const char*)wcex + 64), 0, p); /* SW-1279 fix C */
         mw_class_name_store_a(*(const char* const*)((const char*)wcex + 64)); /* SWEEP-013 */
     }
     MW_TRACE("RegisterClassExA(wcex=%p) -> ATOM 0x%x", wcex, MW_GUI_ATOM);
@@ -16134,15 +16158,20 @@ __attribute__((ms_abi)) uint16_t mw_RegisterClassExA(const void* wcex) {
 __attribute__((ms_abi)) uint16_t mw_RegisterClassW(const void* wc) {
     /* WNDCLASSW.lpfnWndProc also at offset 8 (style is 4 bytes + pad) */
     if (wc) {
-        mw_gui_store_wndproc(*(void* const*)((const char*)wc + 8));
+        void* p = *(void* const*)((const char*)wc + 8);
+        mw_gui_store_wndproc(p);
+        mw_class_proc_store(*(const void* const*)((const char*)wc + 64), 1, p); /* SW-1279 fix C */
         mw_class_name_store_w(*(const uint16_t* const*)((const char*)wc + 64)); /* SWEEP-013 */
     }
-    MW_TRACE("RegisterClassW(wc=%p) -> ATOM 0x%x", wc, MW_GUI_ATOM);
+    MW_TRACE("RegisterClassW(wc=%p proc=%p) -> ATOM 0x%x", wc,
+             wc ? *(void* const*)((const char*)wc + 8) : NULL, MW_GUI_ATOM);
     return MW_GUI_ATOM;
 }
 __attribute__((ms_abi)) uint16_t mw_RegisterClassA(const void* wc) {
     if (wc) {
-        mw_gui_store_wndproc(*(void* const*)((const char*)wc + 8));
+        void* p = *(void* const*)((const char*)wc + 8);
+        mw_gui_store_wndproc(p);
+        mw_class_proc_store(*(const void* const*)((const char*)wc + 64), 0, p); /* SW-1279 fix C */
         mw_class_name_store_a(*(const char* const*)((const char*)wc + 64)); /* SWEEP-013 */
     }
     MW_TRACE("RegisterClassA(wc=%p) -> ATOM 0x%x", wc, MW_GUI_ATOM);
@@ -16279,6 +16308,23 @@ static void* mw_child_register(int sc, void* parent, void* menu,
     MW_TRACE("[GUI] child table full -> NULL");
     return NULL;
 }
+/* SW-1279 fix E: store creation geometry (x,y clamped into the surface; a
+ * statusbar at y=375 keeps its real on-board position) so GetClientRect can
+ * answer with the child's OWN rect — sol's statusbar paint used to receive
+ * the MAIN window rect (585x384) and PatBlt its gray LTGRAY panel over the
+ * whole board (wiping the green felt + the dealt cards). */
+static void mw_child_set_rect(void* h, int x, int y, int w, int hgt) {
+    int s = mw_child_slot(h);
+    if (s < 0 || !g_child[s].live) return;
+    if (x < 0) x = 0;
+    if (y < 0) y = 0;
+    if (w < 1) w = 1;
+    if (hgt < 1) hgt = 1;
+    if (x > 4095) x = 4095; if (y > 4095) y = 4095;
+    if (w > 4095) w = 4095; if (hgt > 4095) hgt = 4095;
+    g_child[s].rx = (int16_t)x; g_child[s].ry = (int16_t)y;
+    g_child[s].rw = (int16_t)w; g_child[s].rh = (int16_t)hgt;
+}
 /* SW-1203: WH_CBT event delivery (defined after the hook machinery) */
 int mw_hook_fire_create(uint32_t exstyle, uint32_t style, const void* winname,
         const void* clsname, int x, int y, int w, int h, void* parent,
@@ -16313,15 +16359,46 @@ __attribute__((ms_abi)) void* mw_CreateWindowExW(uint32_t exstyle, const void* c
         }
         return th;
     }
+    /* SW-1279 fix B: WS_CHILD creations with an UNREGISTERED class
+     * ("Stat" — sol.exe's own statusbar class) used to fall into the
+     * TOP-LEVEL path below: they took the main-hwnd identity, leaked into
+     * the surface metrics (SW-1279 fix A) and — fatally — every
+     * RegisterClass* overwrites the single g_wndproc_fwd channel, so the
+     * last registration ("Stat") stole ALL main-window dispatches:
+     * WM_COMMAND wp=0x3e8 (deal) and WM_PAINT were answered by the
+     * statusbar proc (trace: dispatch -> 0, zero guest API calls,
+     * status-bar-only paint). Real Windows: WS_CHILD is NEVER a top-level.
+     * Route unknown WS_CHILD+parent creations into the engine child
+     * registry (STATUSBAR identity 0x87; the SB_* message model is keyed
+     * by child slot, not class code, so SB_SETPARTS still honors it). */
+    if (!sc && (style & 0x40000000u) && parent) sc = 0x87;
     if (sc && parent) { /* SWEEP-013: child control — engine-internal wndproc */
-        (void)exstyle; (void)x; (void)y; (void)style;
-        return mw_child_register(sc, parent, menu, win, 1, NULL);
+        (void)exstyle;
+        void* ch = mw_child_register(sc, parent, menu, win, 1, NULL);
+        if (ch) mw_child_set_rect(ch, x, y, w, h); /* SW-1279 fix E */
+        return ch;
     }
     /* SW-1203: WH_CBT pre-create notification — nonzero CANCELS (real CBT) */
     if (mw_hook_fire_create(exstyle, style, win, cls, x, y, w, h, parent, menu, inst, param))
         return NULL;
     g_create_param = param; /* SW-802..806: forward lpParam into CREATESTRUCT */
-    mw_gui_store_window((int)w, (int)h); /* SWEEP-005: allocate paint surface */
+    /* SW-1279 fix A: only a REAL top-level creation may resize the main
+     * surface metrics. WS_CHILD windows (sol's statusbar 587x10@-1,375,
+     * class msctls_statusbar32 — no sysclass entry so it fell through to
+     * this path) previously leaked into mw_gui_store_window, clamping
+     * g_win_h to the 32 minimum; every later GetClientRect(hwnd) then
+     * returned 587x32 while the surface stayed 587x384 (SW-1279 census:
+     * board paint + deal engine guarded by the stale client height). */
+    if (!(style & 0x40000000u) && !parent) {
+        mw_gui_store_window((int)w, (int)h); /* SWEEP-005: allocate paint surface */
+        /* SW-1279 fix C: snapshot THIS top-level's class proc as the main
+         * dispatch channel. Later RegisterClass* calls (sol's "Stat"
+         * statusbar) can no longer steal main-window dispatches. */
+        if (!g_main_class_proc) {
+            void* cp = mw_class_proc_lookup(cls);
+            if (cp) g_main_class_proc = (MW_WNDPROC)cp;
+        }
+    }
     if (g_wm_create_depth > 0) {
         /* SW-1256: NESTED top-level creation (MFC creates the view inside
          * the frame's synchronous WM_CREATE). Mint a DISTINCT identity
@@ -16375,9 +16452,13 @@ __attribute__((ms_abi)) void* mw_CreateWindowExA(uint32_t exstyle, const void* c
         }
         return th;
     }
+    /* SW-1279 fix B (A path): same unknown-WS_CHILD guard as the W path. */
+    if (!sc && (style & 0x40000000u) && parent) sc = 0x87;
     if (sc && parent) { /* SWEEP-013: child control — engine-internal wndproc */
-        (void)exstyle; (void)x; (void)y; (void)style;
-        return mw_child_register(sc, parent, menu, win, 0, NULL);
+        (void)exstyle;
+        void* ch = mw_child_register(sc, parent, menu, win, 0, NULL);
+        if (ch) mw_child_set_rect(ch, x, y, w, h); /* SW-1279 fix E */
+        return ch;
     }
     /* SW-1203: WH_CBT pre-create notification — nonzero CANCELS (real CBT);
      * the A path passes the ANSI name reinterpreted — hooks read names
@@ -16385,7 +16466,15 @@ __attribute__((ms_abi)) void* mw_CreateWindowExA(uint32_t exstyle, const void* c
     if (mw_hook_fire_create(exstyle, style, win, cls, x, y, w, h, parent, menu, inst, param))
         return NULL;
     g_create_param = param; /* SW-802..806: forward lpParam into CREATESTRUCT */
-    mw_gui_store_window((int)w, (int)h); /* SWEEP-005: allocate paint surface */
+    /* SW-1279 fix A (A path): same WS_CHILD/parent guard as the W path. */
+    if (!(style & 0x40000000u) && !parent) {
+        mw_gui_store_window((int)w, (int)h); /* SWEEP-005: allocate paint surface */
+        /* SW-1279 fix C (A path): same class-proc snapshot as the W path. */
+        if (!g_main_class_proc) {
+            void* cp = mw_class_proc_lookup(cls);
+            if (cp) g_main_class_proc = (MW_WNDPROC)cp;
+        }
+    }
     if (g_wm_create_depth > 0) {
         /* SW-1256: NESTED top-level creation on the A path — same contract
          * as the W path (distinct identity + own WM_CREATE). */
@@ -17004,6 +17093,65 @@ static int mw_probe_copy(const void* src, size_t n, void* dst) {
 
 /* ---- registry / surface hooks (called from SWEEP-003 stubs) ---- */
 static void mw_gui_store_wndproc(void* proc) { if (proc) g_wndproc_fwd = (MW_WNDPROC)proc; }
+/* SW-1279 fix C: per-class wndproc registry ----
+ * Root cause: sol.exe registers its main class ("Solitaire", wndproc = the
+ * full message switch) and comctl-style code later registers the statusbar
+ * class ("Stat", sol's own). EVERY RegisterClass* overwrote the single
+ * g_wndproc_fwd channel, so the LAST registration stole all main-window
+ * dispatches (WM_COMMAND deal + WM_PAINT answered by the "Stat" proc).
+ * Fix: (1) remember {class name -> proc} for every RegisterClass*;
+ * (2) when a real top-level window is created, snapshot its class proc as
+ * the MAIN dispatch channel (g_main_class_proc); later class registrations
+ * cannot steal it; (3) SetWindowLongPtrW(GWLP_WNDPROC) on the main hwnd
+ * (SW-1266 subclassing) UPDATES the snapshot, so subclass wins. */
+static void mw_class_proc_store(const void* name_ptr, int wide, void* proc) {
+    if (!name_ptr || (uintptr_t)name_ptr < 0x10000u || !proc) return;
+    uint16_t tmp[24] = {0};
+    if (wide) {
+        if (!mw_probe_copy(name_ptr, 46, tmp)) return;
+    } else {
+        char a[24] = {0};
+        if (!mw_probe_copy(name_ptr, 23, a)) return;
+        for (int i = 0; i < 23 && a[i]; i++) tmp[i] = (uint16_t)(uint8_t)a[i];
+    }
+    if (!tmp[0]) return;
+    for (int i = 0; i < g_class_proc_n; i++) { /* same name -> update in place */
+        int eq = 1;
+        for (int k = 0; k < 24; k++) {
+            uint16_t x = g_class_proc[i].name[k], y = tmp[k];
+            if (x >= 'A' && x <= 'Z') x += 32;
+            if (y >= 'A' && y <= 'Z') y += 32;
+            if (x != y) { eq = 0; break; }
+            if (!y) break;
+        }
+        if (eq) { g_class_proc[i].proc = proc; return; }
+    }
+    if (g_class_proc_n < MW_CLASSPROC_MAX) {
+        mw_w16cpy(g_class_proc[g_class_proc_n].name, tmp, 24);
+        g_class_proc[g_class_proc_n].proc = proc;
+        g_class_proc_n++;
+    }
+}
+static void* mw_class_proc_lookup(const void* cls) {
+    if (!cls || (uintptr_t)cls < 0x10000u) return 0;
+    uint16_t tmp[24] = {0};
+    if (!mw_probe_copy(cls, 46, tmp)) return 0;
+    for (int i = 0; i < g_class_proc_n; i++) {
+        int eq = 1;
+        for (int k = 0; k < 24; k++) {
+            uint16_t x = g_class_proc[i].name[k], y = tmp[k];
+            if (x >= 'A' && x <= 'Z') x += 32;
+            if (y >= 'A' && y <= 'Z') y += 32;
+            if (x != y) { eq = 0; break; }
+            if (!y) break;
+        }
+        if (eq) return g_class_proc[i].proc;
+    }
+    return 0;
+}
+static MW_WNDPROC mw_dispatch_proc(void) {
+    return g_main_class_proc ? g_main_class_proc : g_wndproc_fwd;
+}
 static void mw_gui_store_window(int w, int h) {
     if (w < 32) w = 32; if (w > 1280) w = 1280;
     if (h < 32) h = 32; if (h > 1024) h = 1024;
@@ -17282,16 +17430,26 @@ static int mw_gui_next_event(void* msg, void* hwnd, int consume, const char* api
      * order — the timer branch above already ran and skipped). Bounded 4 s
      * cap, quit-checked. Peek (consume=0) never blocks — real PeekMessage
      * returns 0 immediately. */
+    /* SW-1279 fix F: wait for the due tick EVEN WITH NO scripted input.
+     * The old gate required (keys || clicks pending), so a timer guest with
+     * an empty input script (sol's clock/deal timer id=666, 250ms) quit at
+     * the FIRST idle GetMessage — the tick never came due and the pump
+     * exited before the game could animate. Real GetMessage BLOCKS until
+     * something happens; a live timer IS something. */
     if (consume && g_timer_live && g_timer_elapse_ms && !g_quit_flag &&
-        (g_keyi < g_keyn || g_clicki < g_clickn) &&
         mw_mono_ms() < g_timer_due_ms) {
         uint64_t t0 = mw_mono_ms();
+        int spins = 0;
         while (g_timer_live && g_timer_elapse_ms && !g_quit_flag &&
                mw_mono_ms() < g_timer_due_ms &&
                mw_mono_ms() - t0 < 4000) {
             struct timespec ts = { 0, 5 * 1000 * 1000 };
             nanosleep(&ts, NULL);
+            spins++;
         }
+        MW_TRACE("[GUI] fix-F wait done spins=%d due_in=%lldms live=%d quit=%d",
+                 spins, (long long)(g_timer_due_ms - mw_mono_ms()),
+                 g_timer_live, g_quit_flag);
         if (!g_quit_flag && g_timer_live &&
             (g_timer_elapse_ms == 0 || mw_mono_ms() >= g_timer_due_ms)) {
             /* the tick came due while waiting: deliver WM_TIMER NOW (the
@@ -17411,8 +17569,8 @@ static long long mw_gui_dispatch_msg(const void* msg) {
     uintptr_t wp = *(const uintptr_t*)(p + 16);
     long long lp = *(const long long*)(p + 24);
     if (m == 0x0012u) return 0; /* WM_QUIT is never dispatched */
-    if (g_wndproc_fwd && hwnd == g_main_hwnd) {
-        long long r = g_wndproc_fwd(hwnd, m, wp, lp);
+    if (mw_dispatch_proc() && hwnd == g_main_hwnd) { /* SW-1279 fix C */
+        long long r = mw_dispatch_proc()(hwnd, m, wp, lp);
         MW_TRACE("[GUI-EVENT] dispatch %s wp=0x%llx -> %lld",
                  mw_wm_name(m), (unsigned long long)wp, r);
         return r;
@@ -17433,7 +17591,11 @@ __attribute__((ms_abi)) void* mw_BeginPaint(void* hwnd, void* ps) {
         *(int32_t*)(p + 12) = 0; *(int32_t*)(p + 16) = 0;
         *(int32_t*)(p + 20) = g_win_w; *(int32_t*)(p + 24) = g_win_h;
     }
-    if (g_surf.px) mwb_fill(&g_surf, 0, 0, g_surf.w, g_surf.h, 0xFFFFFF); /* erase */
+    /* SW-1279 fix D: real BeginPaint NEVER clears the window surface — it
+     * only REPORTS fErase; the erase belongs to WM_ERASEBKGND. The old
+     * unconditional white wipe destroyed completed renders (sol's dealt
+     * board: green felt + 52 cards were wiped by the trailing no-op
+     * WM_PAINT -> final frame all white). */
     MW_TRACE("BeginPaint(hwnd=%p) -> hdc 0x20001 (%dx%d)", hwnd, g_win_w, g_win_h);
     return (void*)0x00020001;
 }
@@ -17541,9 +17703,27 @@ __attribute__((ms_abi)) int mw_GetClientRect(void* hwnd, void* rect) {
     (void)hwnd;
     if (rect) {
         int32_t* r = (int32_t*)rect;
-        r[0] = 0; r[1] = 0; r[2] = g_win_w; r[3] = g_win_h;
+        int s = mw_child_slot(hwnd); /* SW-1279 fix E: per-child client rect */
+        if (s >= 0 && g_child[s].rw > 0) {
+            /* Children paint through the parent surface DC in this engine,
+             * so hand back the rect in SURFACE coordinates (x, y, x+w, y+h)
+             * — a guest that queries its statusbar and PatBlts the result
+             * lands exactly on the statusbar strip instead of covering the
+             * whole board. */
+            r[0] = g_child[s].rx; r[1] = g_child[s].ry;
+            r[2] = g_child[s].rx + g_child[s].rw;
+            r[3] = g_child[s].ry + g_child[s].rh;
+        } else {
+            r[0] = 0; r[1] = 0; r[2] = g_win_w; r[3] = g_win_h;
+        }
     }
-    MW_TRACE("GetClientRect(hwnd=%p) -> %dx%d", hwnd, g_win_w, g_win_h);
+    {
+        int s = mw_child_slot(hwnd);
+        int cw = (s >= 0 && g_child[s].rw > 0) ? g_child[s].rw : g_win_w;
+        int chh = (s >= 0 && g_child[s].rw > 0) ? g_child[s].rh : g_win_h;
+        MW_TRACE("GetClientRect(hwnd=%p) -> %dx%d%s", hwnd, cw, chh,
+                 (s >= 0 && g_child[s].rw > 0) ? " (child)" : "");
+    }
     return 1;
 }
 __attribute__((ms_abi)) int mw_InvalidateRect(void* hwnd, const void* rect, int erase) {
@@ -22310,8 +22490,10 @@ __attribute__((ms_abi)) intptr_t mw_SetWindowLongPtrW(void* h, int index, intptr
          * stays the main-window channel (SWEEP-013 semantics for the main
          * hwnd); child subclasses route through their own stored proc
          * (SendMessageW SW-1266 path + UpdateWindow child paint). */
-        if (h == MW_GUI_HWND || h == g_main_hwnd || mw_toplevel_find(h) >= 0)
+        if (h == MW_GUI_HWND || h == g_main_hwnd || mw_toplevel_find(h) >= 0) {
             g_wndproc_fwd = (MW_WNDPROC)v;
+            g_main_class_proc = (MW_WNDPROC)v; /* SW-1279 fix C: subclass wins */
+        }
     }
     MW_TRACE("SetWindowLongPtrW(%p,%d,0x%llx) -> 0x%llx", h, index,
              (unsigned long long)(uintptr_t)v, (unsigned long long)(uintptr_t)prev);
@@ -25471,10 +25653,41 @@ __attribute__((ms_abi)) int32_t mw_FindPackagesByPackageFamily(const uint16_t* f
     if (count) *count = 0;
     return 0; /* success, zero packages */
 }
+/* SW-1278 (SWEEP-057 Train 2): REAL QueryDosDeviceW. The v1 NULL stub
+ * (ERROR_FILE_NOT_FOUND for everything) stalled Everything's post-volume-
+ * registration chain: the guest probes the DOS-device map ~20x per scan
+ * pass (its 'set last error %d' logger sites 0x1400e9432..0x1400eb612 all
+ * fired with 2), the DB open/index build never advanced and the volume
+ * walker retried forever (6+ FindFirstVolumeW passes in one run, index
+ * empty, UI list blank). Real contract: DevName "C:" -> NUL-separated NT
+ * device targets + terminating NUL, return = chars stored; DevName NULL ->
+ * the full DOS-device-name list; unknown name -> 0 + ERROR_FILE_NOT_FOUND.
+ * Seeded from the SW-1268 fixture world (volume {9B7A5B2E} = 'C:\'). */
+static const char* const g_dosdev_names[] = { "C:", NULL };
+static const char* const g_dosdev_target_C = "\Device\HarddiskVolume1";
 __attribute__((ms_abi)) uint32_t mw_QueryDosDeviceW(const char* dev, char* buf, int max) {
-    (void)dev;
-    if (buf && max > 0) buf[0] = 0;
-    mw_SetLastError(2);
+    if (!buf || max <= 0) { mw_SetLastError(2); return 0; }
+    if (!dev) { /* full DOS-device-name list: "C:" NUL NUL-terminated */
+        int n = 0;
+        for (int i = 0; g_dosdev_names[i]; i++) {
+            const char* nm = g_dosdev_names[i];
+            while (*nm && n < max - 2) buf[n++] = *nm++;
+            if (n < max - 1) buf[n++] = 0;
+        }
+        buf[n++] = 0; /* list-terminating NUL */
+        return (uint32_t)n;
+    }
+    /* named query (ANSI; W callers bind through the same model) */
+    if (dev[0] == 'C' && dev[1] == ':' && dev[2] == 0) {
+        int n = 0;
+        const char* t = g_dosdev_target_C;
+        while (*t && n < max - 2) buf[n++] = *t++;
+        buf[n++] = 0;
+        buf[n] = 0;
+        return (uint32_t)n;
+    }
+    buf[0] = 0;
+    mw_SetLastError(2); /* ERROR_FILE_NOT_FOUND: no such DOS device */
     return 0;
 }
 __attribute__((ms_abi)) uint32_t mw_K32GetMappedFileNameW(void* proc, void* addr, char* buf, uint32_t cch) {
@@ -25832,6 +26045,7 @@ __attribute__((ms_abi)) int mw_abs(int v) { return v < 0 ? -v : v; }
 __attribute__((ms_abi)) uint64_t mw_time(uint64_t* t) {
     uint64_t now = (uint64_t)time(NULL);
     if (t) *t = now;
+    MW_TRACE("time(%p) -> %llu", t, (unsigned long long)now);
     return now;
 }
 static struct tm g_tm_out; /* real msvcrt returns a shared static struct */

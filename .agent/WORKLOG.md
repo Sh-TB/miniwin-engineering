@@ -1698,3 +1698,71 @@ evidence/sweep056/shots_png/. G1 PIN 12/12 (evidence/master/g1/20261023_060132).
 called; WM_COMMAND 0x3e8 dispatch -> 0; client 587x32 vs surface 587x384
 bookkeeping); SW-1276 open (LibreOffice re-stage for the initterm decode —
 download interrupted, next train). SW-1268/SW-1278 continue.
+
+## SWEEP-057 Train 1 (2026-10-23) — SW-1279 sol deal/paint: SIX ROOT CAUSES
+Task: «۱۰ قطار واگن ادامه» — Train 1 of 10. Rule #1: fetched origin first
+(242af84 -> a23f69e, parallel chain SWEEP-039..056 landed 34 commits; ff-only,
+staged sweep030/031 artifacts moved aside, no RECONCILE needed).
+Decode method (SWEEP-011 discipline): sol.exe is x64 PE32+ base 0x100000000.
+WndProc 0x100001bc0 (from RegisterClassExW proc= trace), message switch:
+cmp edx,0x200 / sub eax,0x53 / 0xad / 0x11 -> WM_COMMAND -> movzx ecx,r8w ->
+sub ecx,0x3e8 -> deal handler 0x100001f2e: time(0)&0x7fff -> srand ->
+game-obj [0x10000C298] -> fn 0x100007CF0(obj, 8, 0, 0) -> jump table RVA
+0x7E94 idx 5 -> 0x100007d68 -> Game_Deal 0x100006d00 (guard 0x1000016c0 =
+lazy GetDC init; stock painter 0x100002c10 = the 71x96 deck blits).
+ROOT CAUSES (engine, loader.c):
+A. WS_CHILD+unknown-class creations took the TOP-LEVEL path: sol statusbar
+   "Stat" 587x10 clamped g_win_h to 32 -> every GetClientRect 587x32 stale.
+   Guard: store_window only when (!(style&0x40000000) && !parent).
+B. Same class now routes into the child registry (STATUSBAR 0x87) — real
+   Win32: WS_CHILD is never a top-level; no main-hwnd identity theft.
+C. THE DEAL KILLER: RegisterClass* overwrote the single g_wndproc_fwd —
+   "Stat" (0x100008f20) stole all dispatches from "Solitaire" (0x100001bc0):
+   WM_COMMAND 0x3e8 answered by the statusbar proc (dispatch -> 0, ZERO
+   guest API calls). Fix: per-class {name->proc} registry (16 slots,
+   mw_probe_copy'd names) + g_main_class_proc snapshot at top-level
+   creation; SetWindowLongPtrW subclass updates the snapshot.
+D. BeginPaint wiped the surface WHITE every paint — real BeginPaint only
+   sets fErase. The wipe destroyed the dealt board after the trailing
+   no-op WM_PAINT. Removed (fix D).
+E. GetClientRect returned the MAIN rect for children: sol's statusbar
+   paint PatBlt'd its gray LTGRAY panel 585x384 over the whole board
+   (216k gray px). mw_child_set_rect stores creation geometry; child
+   GetClientRect = (x, y, x+w, y+h) in surface coords.
+F. Pump quit at the first idle GetMessage despite a live timer (the
+   SW-1220 wait required keys||clicks pending): sol's 250ms id=666 clock
+   starved. Wait for the tick unconditionally (bounded 4s, quit-checked):
+   120 WM_TIMER delivered -> budget-exhaust -> WM_QUIT -> exit 0.
+STAGING: mshearts+mspaint need mfc42u.dll in-dir (the SWEEP-056 contract,
+documented in its commit message) — re-applied + stage script fixed; the
+"regression" seen mid-round was the staging artifact, not the engine.
+MEASURED (binary ae4339bc): sol renders the CLASSIC BOARD — green felt
+(0,128,0) 94% of surface + dealt deck fan (real cards.dll 71x96 faces) +
+status-bar strip; trace: srand(time) -> green PatBlt -> 52-rand shuffle ->
+card blits @0,0..@24,15. Census 42/42 exit-0 ZERO stubs ZERO unresolved
+x3 deterministic (stderr deltas = tick-count trace noise only); G1 PIN
+12/12 (evidence/master/g1/20261023_190202). 14 screenshots ->
+evidence/sweep057/shots_png/. NEXT (SWEEP-058): SW-1279 layer 2 — the
+tableau piles (slot->vfn draw chain + deal-animation timer), Everything
+SW-1278 DB state, soffice SW-1276.
+
+## SWEEP-057 Train 2 (2026-10-23) — SW-1278 QueryDosDeviceW root cause
+Corpus: Everything 1.4.1.1028 re-staged from the pinned zip (4f4a9b92
+sha-verified re-download; host-python unzip per the staging contract).
+Method: caller-attribution instrumentation on mw_SetLastError
+(__builtin_return_address -> addr2line) named the flood source — the
+ENGINE's own mw_QueryDosDeviceW stub (loader.c), called ~20x per scan
+pass by the guest's post-volume-registration chain (its 'set last error
+%d' logger sites 0x1400e9432..0x1400eb612 all fired with 2).
+FIX: real QueryDosDeviceW model ("C:" -> \Device\HarddiskVolume1;
+NULL -> full DOS-device list; unknown -> 0 + ERROR_FILE_NOT_FOUND),
+seeded from the SW-1268 fixture world.
+MEASURED: chain advances — guest reaches its own signaling sites
+(0x1401aa429), probes Everything.db/USN paths via CreateFileW /
+GetFileAttributesW (absent on fresh install = real), volume walks
+6 -> 52, rc=0 at budget 60 (was a budget-200 stall).
+NEW FRONTIER SW-1278b: worker-thread race — a worker parks on
+WaitForSingleObject(0x5, INFINITE); under the fix-F timer-wait pump the
+run is rc=124-nondeterministic; the FSCTL_ENUM_USN_DATA MFT phase never
+starts. Also: fix-F + this guest = 250ms tick pacing dominates wall time
+(census unaffected — everything is not in the 14-guest set).
