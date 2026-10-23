@@ -25,10 +25,10 @@ stage() { local name="$1"; shift; mkdir -p "$G/$name"; cp "$BIN/$name.exe" "$G/$
 stage winmine
 stage sol cards.dll
 stage freecell cards.dll
-stage mshearts cards.dll
+stage mshearts cards.dll mfc42u.dll
 stage spider cards.dll
 stage calc
-stage mspaint mspaint.chm
+stage mspaint mspaint.chm mfc42u.dll
 stage notepad
 stage wordpad riched20.dll mfc42u.dll
 stage charmap
