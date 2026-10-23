@@ -2870,17 +2870,66 @@ viewer, (2) Windows calculator, (3) a program that does not exist on Linux
   (RIP outside every mapped module). Bisect: same rc with HEAD binary ->
   staging-driven, not a SWEEP-055 engine regression. Decode the crashing
   module's initterm target.
-- [ ] **SW-1277** sol/mshearts layout: sol's main window is 152x64
-  because its CreateWindow w/h are COMPUTED from the game layout globals
-  (card metrics x N + borders, height clamped by a global) — disasm
-  0x100002580..0x10000261b; cdtInit (cards.dll, loaded as a REAL PE-DLL
-  by the engine) supplies the metrics. The "MoveWindow fires pre-paint"
-  hypothesis was wrong: sol's MoveWindow fit function (0x100008c40) only
-  runs on the fit-to-cards menu path, never headless. Decode cdtInit's
-  engine-side metric contract.
-- [ ] **SW-1278** Everything internal volume-DB/index registration chain
-  (continues SW-1268): volume walker 0x1400d24e0 -> user-mode checks
-  0x1400d6df0 / 0x1400d6f30 fail before any API call -> decode those.
+- [x] **SW-1277 LANDED (SWEEP-056) — per-module resource resolution + REAL
+  GetObject on HBITMAP handles. TWO engine root causes, both disassembly-
+  decoded (sol.exe + cards.dll)**: (1) w3_res_find walked the MAIN EXE's
+  .rsrc for EVERY module — the hmod parameter was accepted then ignored, and
+  the half-v2 trap (rsrc_rva read from hmod's PE header but
+  `base = g_image_base + rsrc_rva`) put cards.dll's RVA 0x5000 onto the EXE
+  base and walked sol's .text as a resource directory (named=9332/ided=47168
+  garbage -> SIGSEGV w3_res_find:12234). Fix: mw_res_pe_base(hmod) accepts an
+  hmod only when page-aligned + MZ + PE-sig; pe stays in scope;
+  base = pe + rsrc_rva. Applied across ALL 7 hrsrc data-resolution sites
+  (w3_res_find, LoadResource, LoadAccelerators A/W, LoadStringW/A,
+  mw_dlg_from_resource dialog template, mw_loadimage_bitmap_dib). Evidence:
+  cards.dll!cdtInit does LoadBitmapA(hinst_cards, 0x35/0x43/0x44) and reads
+  the card metrics from GetObject's bmWidth/bmHeight — the classic 71x96.
+  sol.exe calls cdtInit(&0x1000C9E8, &0x1000C9EC) at 0x1000022b1 (through the
+  FF15 thunk 0x100009572) and computes its main window from those globals.
+  (2) GetObjectW/A only knew MW_IMAGE_BASE (0x60000, the 16x16 placeholder
+  family) — mw_loadimage_bitmap_dib returns MW_HBITMAP_BASE (0x52000)
+  handles, so cdtInit's GetObjectA(hbitmap, 32, ...) returned 0 and sol
+  computed its window from stack garbage (31x0). GetObjectW now decodes the
+  HBITMAP family from g_bitmap_obj[] (bi = (v & 0xFF) - 1, g_bitmap_live).
+  MEASURED (binary bd7747c2): GetObjectW(HBITMAP 52001) -> BITMAP 71x96;
+  sol's CreateWindowExW 585x384 (was 152x64; SWEEP-054 baseline);
+  LoadBitmapA(0x35/0x43/0x44) -> REAL DIB decodes 0x52001/2/3 from
+  cards.dll's 74-entry RT_BITMAP dir (the v1 walk saw only the main exe's 8
+  TYPE ids {3,4,5,6,9,14,16,24} — they were never bitmaps at all, they are
+  sol.exe's RT_ICON/MENU/DIALOG/STRING/ACCELERATOR/GROUP_ICON/VERSION/RCDATA
+  type dirs). Census 14x3 exit-0 ZERO stubs ZERO unresolved deterministic;
+  regression battery green (spider 651 frames unchanged, winmine 82,
+  freecell 10, mshearts 2, calc 338x258, mspaint/wordpad/sndvol32 dialogs);
+  G1 PIN 12/12 (evidence/master/g1/20261023_060132, bd7747c2a5ddbdb3).
+- [ ] **SW-1279 (NEW, SWEEP-056)** sol deal/paint chain: the window is now
+  585x384 with a REAL status bar (Time: 0 / Score: 0 DrawTextW + PatBlt on
+  the 587x32 client) but the board area renders WHITE — cdtDraw/cdtDrawExt
+  are imported yet NEVER CALLED. Pump ends deterministically:
+  WM_COMMAND wp=0x3e8 (menu deal, SW-1270 pre-pump queue) dispatches -> 0,
+  WM_PAINT paints the status bar only, GetMessageW -> 0 (no timer/paint/
+  keys left), exit 0. Decode sol's WndProc 0x3e8 handler: the deal engine
+  should call cdtDrawExt for 52 cards + green felt via cards.dll; find where
+  it short-circuits (card metrics? deal RNG seeding? menu-state global?).
+  Also: client rect 587x32 while the surface is 587x384 — the engine's
+  GetClientRect height bookkeeping looks stale after the 152x64 -> 585x384
+  fix (status-bar-only client?).
+- [~] **SW-1278 decode progress (SWEEP-056)**: the SWEEP-055 gate decode was
+  WRONG in one half — the checks DO make API calls. check-a 0x1400d6df0 =
+  SetErrorMode(1) + **GetVolumeInformationW** wrapper (IAT 0x1401b0370;
+  save/restore error-mode around it; outputs vol name + fs name strings);
+  check-b 0x1400d6f30 = stricmp(fs_name, "ntfs") (the 'ntfs' constant at
+  0x1401d0438 through a tolower-table compare 0x14016efe0). Walker
+  0x1400d24e0 registers the volume (0x1400b3fe0) only when check-a returns
+  nonzero AND check-b matches. With the CURRENT fixtures both PASS
+  (GetVolumeInformationW -> "NTFS", GetDriveTypeW wrapper 0x1400d7f50 -> 3
+  ∈ {2,3,6} gate at the caller 0x1400d2c0c/0x1400d2c22). The volume
+  enumeration itself works (FindFirstVolumeW fixture -> 'C:\' via
+  GetVolumePathNamesForVolumeNameW, verified in trace). Frontier moves to
+  the POST-registration DB state: why the in-memory index is still empty
+  (Everything.db read? internal MFT-enumeration chain? UI list source?).
+  The direct FindFirstFileW-fails theory was DISPROVEN — the SetLastError(2)
+  floods in the trace are the guest's own internal state signaling, not
+  failed finds.
 - [x] **SWEEP-054 MANDATE MEASURED** — 10 famous programs + 5 classic 2D
   games run with SCREENSHOTS (evidence/sweep054/shots_png/, 15 PNGs):
   games winmine (82 frames, mouse-revealed cells), sol, freecell, mshearts,

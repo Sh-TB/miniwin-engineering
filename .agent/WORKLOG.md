@@ -1643,3 +1643,58 @@ Rule #1 (user standing law): git fetch first — origin/main = c59811a (SWEEP-05
 - G1 PIN 12/12 (evidence/master/g1/20261023_045212, binary c5635ee82bd5dd2b).
 Open: SW-1278 (Everything volume-DB), SW-1276 (soffice initterm), SW-1277
 (sol cards.dll layout), SW-1267/1268, SW-1273 render frontier (SW-1263).
+
+## SWEEP-056 «چنده قطار چنده واگن حرکت» — per-module resources + sol's REAL metrics (2026-10-23)
+
+**Rule #1 (standing law)**: fetched origin BEFORE work — remote had advanced
+242af84 -> 2156eed (SWEEP-039..055 landed by the parallel chain: four-program
+mandate covered, screenshots, 10+5 corpus). Fast-forward synced, no RECONCILE
+needed (local had no unique commits). This batch = SWEEP-056 on top of 2156eed.
+
+**Corpus re-staging train (wagons 1-4)**: the gitignored guest payloads were
+gone again (SW-1206 pattern, 9th recovery): xp_x64.iso re-downloaded
+(628,617,216 B, sha 19b5a382 MATCH, resumable 6-stream), 26/29 AMD64 payloads
+extracted (pycdlib), expanded BY THE ENGINE's own 7za, staged 14 guests
+(winmine/sol/freecell/mshearts/spider/calc/mspaint/notepad/wordpad/charmap/
+clipbrd/write/winver/sndvol32 + cards.dll/riched20/mfc42u/mspaint.chm).
+STAGING CONTRACT learned (register for the farm playbook): mshearts AND
+mspaint need mfc42u.dll in their OWN dir (MFC apps; without it every MFC42U
+ordinal stubs -> mspaint SIGSEGV RVA 0x5bb4d = the SW-1245 comment's crash).
+Everything 1.4.1.1028 re-staged from the pinned zip (4f4a9b92, host-python
+unzip; the engine's 7za mangles this zip's UTF-8 names + rc=134).
+
+**Train: SW-1277 LANDED — two engine root causes**:
+1. w3_res_find ignored hmod — walked the MAIN EXE's .rsrc for every module.
+   cards.dll!cdtInit does LoadBitmapA(hinst_cards, 0x35/0x43/0x44) and takes
+   the card metrics from GetObject's bmWidth/bmHeight; the v1 walk searched
+   sol.exe's resource dir (8 TYPE ids, none RT_BITMAP) -> miss -> 16x16
+   placeholder -> metrics 16x16 -> window 152x64 (the SWEEP-054 mystery).
+   The v2 half-fix (rsrc_rva from hmod's header but base = g_image_base +
+   rsrc_rva) walked sol's .text as a resource dir -> SIGSEGV (named=9332
+   garbage) — caught by the [RES] walk probe, fixed by hoisting pe.
+2. GetObjectW/A knew only MW_IMAGE_BASE (0x60000) placeholder handles;
+   mw_loadimage_bitmap_dib returns MW_HBITMAP_BASE (0x52000) handles ->
+   cdtInit's GetObjectA returned 0 -> metrics from stack garbage (31x0).
+   Added the HBITMAP family decode (g_bitmap_obj, bi=(v&0xFF)-1).
+   Applied mw_res_pe_base across ALL 7 hrsrc data-resolution sites.
+MEASURED (binary bd7747c2): GetObjectW(HBITMAP 52001) -> BITMAP 71x96;
+sol CreateWindowExW 585x384 (SWEEP-054: 152x64); LoadBitmapA(0x35/0x43/0x44)
+-> real DIB decodes 0x52001/2/3 from cards.dll's 74-bitmap dir; sol status
+bar renders (Time: 0 / Score: 0).
+
+**Train: SW-1278 decode progress**: check-a = SetErrorMode+GetVolumeInformationW
+wrapper (IAT 0x1401b0370), check-b = stricmp(fs,"ntfs"); both PASS with the
+current fixtures (the SWEEP-055 "no API calls" half was wrong); GetDriveTypeW
+gate {2,3,6} passes; enumeration verified in trace. Frontier -> post-
+registration in-memory DB state. SetLastError(2) floods = guest internal
+signaling, NOT failed FindFirstFileW (theory disproven).
+
+**Train: census + evidence**: 14 guests x3 = 42/42 exit-0, ZERO stubs, ZERO
+unresolved, deterministic. Regression battery green (spider 651 frames real
+cards, winmine 82, freecell 10, mshearts 2). Screenshots 9 PNGs ->
+evidence/sweep056/shots_png/. G1 PIN 12/12 (evidence/master/g1/20261023_060132).
+
+**New wagons registered**: SW-1279 (sol deal chain: cdtDraw imported, never
+called; WM_COMMAND 0x3e8 dispatch -> 0; client 587x32 vs surface 587x384
+bookkeeping); SW-1276 open (LibreOffice re-stage for the initterm decode —
+download interrupted, next train). SW-1268/SW-1278 continue.

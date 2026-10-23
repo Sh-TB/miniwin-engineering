@@ -1,0 +1,3 @@
+[TRACE] Command line: artifacts/sweep056/guests/mshearts/mshearts.exe
+[GDI-FRAME] #1 -> miniwin-results/mshearts.exe/screenshots/frame_001.bmp
+[GDI-FRAME] #2 -> miniwin-results/mshearts.exe/screenshots/frame_002.bmp

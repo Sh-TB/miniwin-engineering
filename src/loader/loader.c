@@ -12114,6 +12114,25 @@ __attribute__((ms_abi)) int mw_WaitOnAddress_stub(void) { return 0; }
  * LoadResource/LockResource resolve it to the data VA; SizeofResource reads
  * its Size field. */
 static uint8_t* g_res_dir_base = NULL; /* section base of the last resource walk (SW-801d) */
+/* SW-1277 (SWEEP-056): per-module resource resolution. The v1 walk hardcoded
+ * g_image_base (the main EXE) for EVERY module: cards.dll!cdtInit does
+ * LoadBitmapA(hinst_cards, 53/67/68) and sol.exe's RT_BITMAP dir has only 8
+ * ids {3,4,5,6,9,14,16,24} while cards.dll ships 74 — the walk searched the
+ * WRONG IMAGE, missed, and cdtInit fell into the 16x16 placeholder path, so
+ * every metric came back 16x16 and sol's window computed to 152x64. Real
+ * FindResource walks hmod's OWN PE header + .rsrc. Accept an hmod only when
+ * it looks like a mapped PE (page-aligned + MZ + PE sig); anything else
+ * (NULL, the exe base, synthetic handles) falls back to the main image. */
+static uint8_t* mw_res_pe_base(void* hmod) {
+    uint8_t* pe = g_image_base;
+    if (hmod && ((uintptr_t)hmod & 0xFFFu) == 0 && *(const uint16_t*)hmod == 0x5A4D) {
+        uint8_t* cand = (uint8_t*)hmod;
+        uint32_t po = *(const uint32_t*)(cand + 0x3c);
+        if (po && po < 0x1000000u && *(const uint32_t*)(cand + po) == 0x00004550u)
+            pe = cand;
+    }
+    return pe;
+}
 static int w3_res_cmp_name(const uint8_t* dir_base, uint32_t name_off, const char* aname, const wchar_t* wname) {
     /* SWEEP-015 SW-801a: IS_INTRESOURCE — FindResource*(NULL, MAKEINTRESOURCE(5),
      * ...) passes numeric type/name as low pointers, never strings. */
@@ -12185,18 +12204,22 @@ static int w3_res_cmp_name(const uint8_t* dir_base, uint32_t name_off, const cha
 
 static void* w3_res_find(void* hmod, const char* aname, const wchar_t* wname, const char* atype, const wchar_t* wtype) {
     if (!g_image_base) return NULL;
-    /* locate .rsrc via the resource data directory */
+    MW_TRACE("[RES] find hmod=%p a=%s/%s w=%p/%p", hmod, atype ? atype : "?",
+             aname ? (aname > (const char*)0xFFFF ? aname : "#num") : "-",
+             (const void*)wname, (const void*)wtype);
+    /* SW-1277: walk the CALLER's module (hmod), not always the main EXE */
     uint32_t rsrc_rva = 0;
-    {
-        uint8_t* pe = g_image_base;
-        uint32_t pe_off = *(uint32_t*)(pe + 0x3c);
-        uint16_t num_dd = *(uint16_t*)(pe + pe_off + 24 + 108);
-        if (num_dd < 3) return NULL;
-        uint32_t dd_rva = *(uint32_t*)(pe + pe_off + 24 + 112 + 2 * 8);
-        rsrc_rva = dd_rva;
-    }
+    /* SW-1277: pe must stay in scope — base is THIS module's rsrc dir, not
+     * the main exe's (the v2 half-fix kept base=g_image_base+rsrc_rva, which
+     * added cards.dll's RVA 0x5000 onto the EXE base and walked sol's .text
+     * as a resource directory: named=9332/ided=47168 garbage -> SIGSEGV). */
+    uint8_t* pe = mw_res_pe_base(hmod);
+    uint32_t pe_off = *(uint32_t*)(pe + 0x3c);
+    uint16_t num_dd = *(uint16_t*)(pe + pe_off + 24 + 108);
+    if (num_dd < 3) return NULL;
+    rsrc_rva = *(uint32_t*)(pe + pe_off + 24 + 112 + 2 * 8);
     if (!rsrc_rva) return NULL;
-    const uint8_t* base = g_image_base + rsrc_rva;
+    const uint8_t* base = pe + rsrc_rva;
     g_res_dir_base = (uint8_t*)base; /* SW-801d: LockResource/dialog data resolve */
     /* level 1: type, level 2: name, level 3: language */
     const uint8_t* level = base;
@@ -12210,6 +12233,8 @@ static void* w3_res_find(void* hmod, const char* aname, const wchar_t* wname, co
         uint16_t ided = *(const uint16_t*)(level + 14);
         uint16_t count = named + ided;
         const uint8_t* entries = level + 16;
+        MW_TRACE("[RES] walk depth=%d level=%p named=%u ided=%u (base=%p)",
+                 depth, (const void*)level, named, ided, (const void*)base);
         const uint8_t* next = NULL;
         for (uint16_t i = 0; i < count; i++) {
             uint32_t nm = *(const uint32_t*)(entries + i * 8);
@@ -12285,8 +12310,11 @@ __attribute__((ms_abi)) void* mw_LoadResource(void* hmod, void* hrsrc) {
      * parsed the 16-byte ENTRY HEADER as string lengths and walked past
      * the image. drwtsn32 SIGSEGV RVA 0x5cb3, fault 0x41f932 > image end.
      * Return the data bytes; LockResource becomes the identity no-op. */
-    if (!hrsrc || !g_image_base) return hrsrc;
-    return g_image_base + *(const uint32_t*)hrsrc;
+    /* SW-1277: resolve against the module the RESOURCE came from. hmod here
+     * is the guest's LoadResource(hmod, hrsrc) first arg — NULL = the exe. */
+    uint8_t* pe = mw_res_pe_base(hmod);
+    if (!hrsrc || !pe) return hrsrc;
+    return pe + *(const uint32_t*)hrsrc;
 }
 __attribute__((ms_abi)) void* mw_LockResource(void* hrsrc) {
     /* SW-801d + SWEEP-050: modern LockResource is a documented NO-OP —
@@ -19525,7 +19553,8 @@ __attribute__((ms_abi)) void* mw_LoadAcceleratorsA(void* hinst, const char* name
         return NULL;
     }
     uint32_t size = *(const uint32_t*)((const uint8_t*)hrsrc + 4);
-    const uint8_t* p = (const uint8_t*)(g_image_base + *(const uint32_t*)hrsrc);
+    /* SW-1277: accel table data lives in hinst's OWN image */
+    const uint8_t* p = (const uint8_t*)(mw_res_pe_base(hinst) + *(const uint32_t*)hrsrc);
     if (!p || !size || mw_IsBadReadPtr(p, size)) return NULL;
     int n = (int)(size / 6u); /* ACCEL = {BYTE fVirt; WORD key; WORD cmd;} = 6B */
     if (n > 512) n = 512;
@@ -19549,7 +19578,7 @@ __attribute__((ms_abi)) void* mw_LoadAcceleratorsW(void* hinst, const uint16_t* 
         return NULL;
     }
     uint32_t size = *(const uint32_t*)((const uint8_t*)hrsrc + 4);
-    const uint8_t* p = (const uint8_t*)(g_image_base + *(const uint32_t*)hrsrc);
+    const uint8_t* p = (const uint8_t*)(mw_res_pe_base(hinst) + *(const uint32_t*)hrsrc);
     if (!p || !size || mw_IsBadReadPtr(p, size)) return NULL;
     int n = (int)(size / 6u);
     if (n > 512) n = 512;
@@ -19629,7 +19658,8 @@ __attribute__((ms_abi)) int mw_LoadStringW(void* hinst, uint32_t id, uint16_t* b
         return 0;
     }
     uint32_t size = *(const uint32_t*)((const uint8_t*)hrsrc + 4);
-    const uint8_t* p = (const uint8_t*)(g_image_base + *(const uint32_t*)hrsrc);
+    /* SW-1277: string block data lives in hinst's OWN image */
+    const uint8_t* p = (const uint8_t*)(mw_res_pe_base(hinst) + *(const uint32_t*)hrsrc);
     if (!p || mw_IsBadReadPtr(p, size ? size : 2)) return 0;
     const uint8_t* end = p + size;
     uint32_t idx = id & 15;
@@ -19666,7 +19696,7 @@ __attribute__((ms_abi)) int mw_LoadStringA(void* hinst, uint32_t id, char* buf, 
         return 0;
     }
     uint32_t size = *(const uint32_t*)((const uint8_t*)hrsrc + 4);
-    const uint8_t* p = (const uint8_t*)(g_image_base + *(const uint32_t*)hrsrc);
+    const uint8_t* p = (const uint8_t*)(mw_res_pe_base(hinst) + *(const uint32_t*)hrsrc);
     if (!p || mw_IsBadReadPtr(p, size ? size : 2)) return 0;
     const uint8_t* end = p + size;
     uint32_t idx = id & 15;
@@ -20548,11 +20578,13 @@ static void* mw_loadimage_bitmap_dib(void* hinst, const void* name) {
     if (!hrsrc) return NULL;
     /* SW-1264: same DATA_ENTRY->data conversion as mw_dlg_from_resource —
      * FindResourceW returns the IMAGE_RESOURCE_DATA_ENTRY; the DIB bits live
-     * at g_image_base + entry.OffsetToData (Size = entry.Size). The v1
+     * at <module base> + entry.OffsetToData (Size = entry.Size). The v1
      * LockResource(hrsrc) identity handed the 16-byte header in, so the
      * 'BM'/40-byte BITMAPINFOHEADER probe read the header fields and
-     * bailed for every real bitmap resource. */
-    const uint8_t* dib = (const uint8_t*)(g_image_base + *(const uint32_t*)hrsrc);
+     * bailed for every real bitmap resource. SW-1277: the module is the
+     * hinst the GUEST passed (cards.dll bitmaps live in cards.dll, not the
+     * main exe) — resolve against its OWN image. */
+    const uint8_t* dib = (const uint8_t*)(mw_res_pe_base(hinst) + *(const uint32_t*)hrsrc);
     if (!dib) { MW_TRACE("[GDI] DIB decode miss: null data"); return NULL; }
     if (mw_IsBadReadPtr(dib, 64)) { MW_TRACE("[GDI] DIB decode miss: unreadable"); return NULL; }
     uint32_t hdr_size = *(const uint32_t*)(const void*)(dib);
@@ -20778,6 +20810,28 @@ __attribute__((ms_abi)) int mw_GetObjectW(void* h, int size, void* out) {
             *(uint16_t*)(p + 16) = 1;
             *(uint16_t*)(p + 18) = 24;
             MW_TRACE("GetObjectW(image) -> BITMAP %dx%d", g_img_w[i], g_img_h[i]);
+            return 32;
+        }
+    }
+    /* SW-1277 (SWEEP-056): REAL bitmap handles from mw_loadimage_bitmap_dib /
+     * CreateCompatibleBitmap live in the MW_HBITMAP_BASE (0x52000) family —
+     * g_bitmap_obj[]. The v1 GetObject only knew the MW_IMAGE_BASE (0x60000)
+     * 16x16 placeholders, so cards.dll!cdtInit's GetObjectA(hbitmap, 32, ...)
+     * returned 0 and sol computed its window from stack garbage (31x0).
+     * cdtInit's card metrics ARE GetObject's bmWidth/bmHeight of bitmap
+     * resource 0x35 (the classic 71x95 card face). */
+    if ((v & 0xFFFFF000u) == MW_HBITMAP_BASE && out && size >= 16) {
+        int bi = (int)(v & 0xFF) - 1;
+        if (bi >= 0 && bi < MW_MEMDC_MAX && g_bitmap_live[bi]) {
+            uint8_t* p = (uint8_t*)out;
+            memset(p, 0, 32);
+            *(int32_t*)(p + 4)  = g_bitmap_obj[bi].w;
+            *(int32_t*)(p + 8)  = g_bitmap_obj[bi].h;
+            *(int32_t*)(p + 12) = ((g_bitmap_obj[bi].w * 3 + 3) / 4) * 4;
+            *(uint16_t*)(p + 16) = 1;
+            *(uint16_t*)(p + 18) = 24;
+            MW_TRACE("GetObjectW(HBITMAP %x) -> BITMAP %dx%d",
+                     (unsigned)v, g_bitmap_obj[bi].w, g_bitmap_obj[bi].h);
             return 32;
         }
     }
@@ -21799,7 +21853,7 @@ static int mw_dlg_from_resource(void* dlg, void* hinst,
      * the real calc WndProc never ran). Real LoadResource contract:
      * entry -> data pointer (mw_LoadResource). Convert here — the
      * engine-internal path must honor the same contract. */
-    const uint8_t* p = (const uint8_t*)(g_image_base + *(const uint32_t*)hrsrc);
+    const uint8_t* p = (const uint8_t*)(mw_res_pe_base(hinst) + *(const uint32_t*)hrsrc);
     if (!p || size < 26) return 0;
     if (mw_IsBadReadPtr(p, size)) return 0;
     MW_TRACE("[GUI] dlg template resolved: name=%p entry=%p data=%p size=%u",
