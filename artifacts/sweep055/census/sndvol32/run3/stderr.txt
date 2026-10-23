@@ -1,0 +1,5 @@
+[TRACE] Command line: artifacts/sweep054/guests/sndvol32/sndvol32.exe
+[MessageBoxW] Volume Control: There are no active mixer devices available. To install mixer devices, go to Control Panel, click Printers and Other Hardware, and then click Add Hardware.
+
+This program will now close.
+[MessageBox] dialog #1 rendered -> miniwin-results/sndvol32.exe/screenshots/messagebox_1.bmp

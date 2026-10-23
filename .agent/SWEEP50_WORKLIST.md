@@ -2803,12 +2803,84 @@ viewer, (2) Windows calculator, (3) a program that does not exist on Linux
   forever, freezing the clock on the first card (identical blit pairs
   looping). Now the engine's monotonic ms clock (Win32 DWORD-since-boot
   contract). MEASURED: deal animation COMPLETES, rc=0.
-- [ ] **SW-1275** spider board polish: the class background brush is not
-  applied (gray surface instead of the classic spider green) and one card
-  face bitmap stays blank (LoadImage/RT_BITMAP path vs spider's cards).
-- [ ] **SW-1273** LibreOffice re-stage: downloadarchive 26.8.1.2 MSI URL
-  404s; find the new mirror path (sha c6298b10 pin) or pin the current
-  release; SW-1263 rtl_uString truncation frontier continues.
+- [x] **SW-1275 LANDED (SWEEP-055) — XP spider FULL GREEN BOARD. Three
+  engine root causes, all disassembly-decoded from spider.exe**:
+  (1) 29 of spider's 56 RT_BITMAPs are OS/2-format BITMAPCOREHEADER DIBs
+  (12-byte header, WORD w/h, RGBTRIPLE palette — CARD2/12/13/24...); the
+  v1 decode gate "hdr_size >= 40" rejected every one -> 16x16 placeholder
+  handles -> SelectObject(memdc, 0x0006xxxx IMAGE-space) -> first board-DC
+  BitBlt died "bad dst/src DC" -> blank faces. mw_loadimage_bitmap_dib now
+  decodes BOTH header formats (core: WORD fields + 3-byte BGR triples).
+  (2) The bitmap/DC slot pool (MW_MEMDC_MAX=32, shared by
+  CreateCompatibleBitmap/CreateDIBSection/LoadImage decodes) exhausted
+  mid-deal — each LoadImageW decode leaks its slot for the process life
+  (mw_DeleteObject only freed brush/pen). Pool 32 -> 256 (v&0xFF handle
+  ceiling) + DeleteObject now frees unselected HBITMAP slots (real GDI
+  refuses to delete selected objects — honored). (3) mw_engine_paint_children
+  wiped the WHOLE surface gray (dialog face) on every UpdateWindow even
+  for childless windows — spider's guest-blitted board was erased by its
+  own UpdateWindow. Fill only when the window has >=1 live child (calc's
+  dialog face unchanged). Also added DIB-miss/FRES diagnostics to the
+  LoadImage/FindResource paths. MEASURED (binary c5635ee8): spider renders
+  the classic green felt board (645 frames), 10 columns of striped backs,
+  face-up cards A♠ 3♦ 2♦ Q♥ 8♦ 4♥ 8♠ A♠ 4♥ 4♠ with real art, spider-logo
+  deck bottom-right; census 3x exit-0 ZERO stubs; regressions zero (calc
+  338x258 + winmine/sol/freecell/mshearts unchanged). Screenshots:
+  evidence/sweep055/shots_png/.
+- [x] **SW-1273 CORE LANDED (SWEEP-055) — LibreOffice mirror resolved,
+  payload re-staged byte-exact**: downloadarchive .../old/26.8.1.2/ 404s
+  but .../old/26.8.1.1/ is ALIVE (HTTP 200) and byte-identical to the
+  SWEEP-050 pin: MSI 374,870,016 B sha256 c6298b10... MATCH
+  (scripts/sweep055_lo_restage.py, 6-stream ranged). CAB carved from the
+  MSI via olefile (the payload stream is binary-UTF16-named; MSCF-magic
+  scan) sha 71dfff0b... MATCH (sweep055_lo_carve.py); expanded BY THE
+  ENGINE's own 7za: 19,427/19,427 files rc=0; soffice.bin cb08cffd /
+  mergedlo.dll 017d0c21 pins verified post-staging (sweep055_lo_stage.sh).
+  Static import closure computed (sweep055_lo_closure.py): soffice.bin's
+  51 static imports are all host DLLs — mergedlo/sal3 load DYNAMICALLY,
+  so the staging content itself drives the run profile. Fresh 251-file
+  staging runs deterministic rc=139/8 stubs (was 99/8 with the lost
+  SWEEP-051 57-file dir): the extra late-loaded DLLs (libxslt/lpsolve55/
+  libcrypto-3/libssl-3 wave) reach a CRT _initterm that jumps to a bogus
+  RIP — registered as SW-1276. The SW-1263 rtl_uString frontier continues.
+- [x] **SW-1206 LANDED (SWEEP-055) — adexplorer64 corpus recovered (8th
+  time, documented one-shot procedure)**: AdExplorer.zip sha 56536bff /
+  ADExplorer64.exe sha e4512878 byte-verified; census 3x exit-0 ZERO
+  stubs ZERO unresolved (artifacts/sweep055/census/).
+- [ ] **SW-1268 (PARTIAL — 5 contracts landed, paint gate remains)**:
+  Everything's index chain starts at FindFirstVolumeW (v1 honest-fail
+  error 18 -> NO volumes -> white list). LANDED: FindFirstVolumeW returns
+  the fixture \\?\Volume{GUID}\; GetVolumePathNamesForVolumeNameW +
+  GetVolumeNameForVolumeMountPointW map volume<->"C:\"; CreateFileW mints
+  volume handles (0x000B0000 namespace) for \\?\Volume{ and \\.\X:;
+  DeviceIoControl answers FSCTL_GET_NTFS_VOLUME_DATA (88-byte fixture) /
+  FSCTL_ENUM_USN_DATA (MFT_ENUM_DATA_V0 cursor protocol, 11-record FRN
+  fixture tree, USN_RECORD_V2 packing) / FSCTL_READ_USN_JOURNAL (empty) /
+  FSCTL_IS_VOLUME_MOUNTED; GetOverlappedResult reports InternalHigh for
+  volume ops. VERIFIED IN TRACE: Everything enumerates + maps the volume.
+  REMAINING GATE (decoded): Everything's internal volume-DB walker
+  (0x1400d24e0, linked-list of {next,name1,name2,name3}) matches the
+  volume against its OWN database (populated by its Everything.db /
+  internal chain — 0x1400d6df0 + 0x1400d6f30 user-mode checks fail
+  without any API calls) -> the CreateFileW(GUID)+FSCTL path is never
+  reached. -> SW-1278.
+- [ ] **SW-1276** soffice late-DLL CRT initterm: after stub #8
+  (msvcp140 ??0_Lockit) the libxslt/lpsolve55/libcrypto-3/libssl-3 load
+  wave reaches `_initterm: calling 0x...` and jumps to a bogus RIP
+  (RIP outside every mapped module). Bisect: same rc with HEAD binary ->
+  staging-driven, not a SWEEP-055 engine regression. Decode the crashing
+  module's initterm target.
+- [ ] **SW-1277** sol/mshearts layout: sol's main window is 152x64
+  because its CreateWindow w/h are COMPUTED from the game layout globals
+  (card metrics x N + borders, height clamped by a global) — disasm
+  0x100002580..0x10000261b; cdtInit (cards.dll, loaded as a REAL PE-DLL
+  by the engine) supplies the metrics. The "MoveWindow fires pre-paint"
+  hypothesis was wrong: sol's MoveWindow fit function (0x100008c40) only
+  runs on the fit-to-cards menu path, never headless. Decode cdtInit's
+  engine-side metric contract.
+- [ ] **SW-1278** Everything internal volume-DB/index registration chain
+  (continues SW-1268): volume walker 0x1400d24e0 -> user-mode checks
+  0x1400d6df0 / 0x1400d6f30 fail before any API call -> decode those.
 - [x] **SWEEP-054 MANDATE MEASURED** — 10 famous programs + 5 classic 2D
   games run with SCREENSHOTS (evidence/sweep054/shots_png/, 15 PNGs):
   games winmine (82 frames, mouse-revealed cells), sol, freecell, mshearts,

@@ -72,3 +72,10 @@ artifacts/sweep050/
 artifacts/sweep051/
 artifacts/sweep052/
 miniwin-results/
+
+# SWEEP-055: LibreOffice payload staging stays local (MSI 375MB / CAB 355MB / extract 1.6GB / guest 419MB)
+artifacts/sweep055/stage/
+artifacts/sweep055/lo_extract/
+artifacts/sweep055/guests/
+# SWEEP-055: recovered adexplorer64 corpus stays local (sha pins in WORKLOG)
+artifacts/sweep055/dl/

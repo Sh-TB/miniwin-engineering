@@ -1588,3 +1588,58 @@ evidence/sweep054/shots_png/; census 15 guests x3 45/45 exit-0 ZERO stubs;
 DL corpus 45/45 deterministic; G1 PIN 12/12
 (evidence/master/g1/20261023_030335, binary 09c33df201af8ade).
 Open: SW-1275 spider brush/card-face, SW-1273 LO mirror, SW-1206 corpus.
+
+
+## SWEEP-055 (2026-10-23) — «ادامه» SW-1275 spider board + SW-1273 LO mirror + SW-1206 corpus
+
+Rule #1 (user standing law): git fetch first — origin/main = c59811a (SWEEP-054)
+= local HEAD; worked on the true tip; tree had only untracked artifacts.
+
+- **SW-1275 LANDED — XP SPIDER RENDERS THE FULL GREEN BOARD (first ever).
+  Three engine root causes, all disassembly-decoded**:
+  1. OS/2 BITMAPCOREHEADER DIBs: 29 of spider's 56 RT_BITMAPs (CARD2/12/13/24,
+     71x96, 1/4bpp) carry the 12-byte core header — the v1 "hdr_size >= 40"
+     INFOHEADER gate rejected them all -> 16x16 placeholders -> SelectObject
+     of an IMAGE-space handle -> board-DC BitBlt "bad dst/src DC" -> blank
+     faces. mw_loadimage_bitmap_dib decodes both formats (core: WORD w/h,
+     3-byte BGR palette triples) + miss diagnostics in LoadImage/FindResource.
+  2. Bitmap slot pool: MW_MEMDC_MAX 32 -> 256 (v&0xFF handle ceiling; every
+     LoadImageW decode leaks its slot for the process life) + mw_DeleteObject
+     now frees unselected HBITMAP slots (selected-in-memDC refuse = real GDI).
+  3. mw_engine_paint_children wiped the WHOLE surface gray on UpdateWindow
+     even with ZERO children (spider erased its own guest-blitted board);
+     the dialog-face fill now requires >=1 live child (calc unchanged).
+  MEASURED (binary c5635ee8): green felt board 645 frames; 10 columns striped
+  backs; faces A♠ 3♦ 2♦ Q♥ 8♦ 4♥ 8♠ A♠ 4♥ 4♠ with real art; spider-logo deck;
+  census 3x exit-0 ZERO stubs; screenshots evidence/sweep055/shots_png/
+  (+ user copy /home/z/my-project/download/spider_sweep055.png).
+- **SW-1273 CORE LANDED — LibreOffice mirror resolved, payload byte-exact**:
+  downloadarchive .../old/26.8.1.1/ ALIVE (26.8.1.2 404s); MSI 374,870,016 B
+  sha c6298b10 MATCH (sweep055_lo_restage.py); CAB carved via MSCF-magic
+  stream scan (binary-UTF16 stream names) sha 71dfff0b MATCH
+  (sweep055_lo_carve.py); expanded BY THE ENGINE's 7za 19,427/19,427 rc=0;
+  pins cb08cffd (soffice.bin) / 017d0c21 (mergedlo.dll) verified
+  (sweep055_lo_stage.sh). Closure analysis: soffice.bin's 51 static imports
+  are all host DLLs — mergedlo/sal3 load dynamically. Fresh 251-file staging:
+  deterministic 139/8 (bisect: HEAD binary identical -> staging-driven) —
+  the libxslt/lpsolve55/libcrypto-3/libssl-3 wave dies in a CRT _initterm
+  jumping to a bogus RIP -> new car SW-1276; SW-1263 rtl_uString continues.
+- **SW-1206 LANDED — adexplorer64 corpus recovered (8th)**: zip 56536bff /
+  exe e4512878 sha-verified via the documented one-shot procedure; census
+  3x exit-0 ZERO stubs ZERO unresolved.
+- **SW-1268 PARTIAL (5 contracts landed)**: FindFirstVolumeW (fixture GUID
+  volume), GetVolumePathNamesForVolumeNameW + GetVolumeNameForVolumeMountPointW
+  (volume<->"C:\" mapping), CreateFileW volume handles (0x000B0000 namespace),
+  DeviceIoControl FSCTL contracts (GET_NTFS_VOLUME_DATA / ENUM_USN_DATA with
+  MFT_ENUM_DATA_V0 cursor protocol + 11-record FRN fixture / READ_USN_JOURNAL /
+  IS_VOLUME_MOUNTED), GetOverlappedResult InternalHigh. Trace-verified:
+  Everything enumerates + maps the volume. Remaining gate decoded: its
+  internal volume-DB walker (0x1400d24e0) + user-mode checks
+  (0x1400d6df0/0x1400d6f30) fail before any API call -> new car SW-1278.
+- Census (artifacts/sweep055/census/census.tsv): 16 guests x3 deterministic —
+  15 x exit-0 ZERO stubs ZERO unresolved (SWEEP-054 baseline preserved),
+  adexplorer64 exit-0 (SW-1206), soffice 139/8/8 (documented fresh-staging
+  profile).
+- G1 PIN 12/12 (evidence/master/g1/20261023_045212, binary c5635ee82bd5dd2b).
+Open: SW-1278 (Everything volume-DB), SW-1276 (soffice initterm), SW-1277
+(sol cards.dll layout), SW-1267/1268, SW-1273 render frontier (SW-1263).

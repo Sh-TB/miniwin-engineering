@@ -10076,6 +10076,13 @@ static void* w3_create_file(const char* name8, uint32_t access, uint32_t disp) {
     g_w3files[slot].in_use = 1;
     return (void*)(uintptr_t)(4 + slot);
 }
+/* SW-1268 (SWEEP-055): fixture volume namespace — defined here so the
+ * CreateFileW interception below can mint handles; the FSCTL contracts
+ * (USN/MFT fixture index) live with DeviceIoControl further down. */
+#define MW_VOLUME_BASE   0x000B0000u
+#define MW_VOLUME_MAX    4
+static uint8_t g_volume_live[MW_VOLUME_MAX];
+
 __attribute__((ms_abi)) void* mw_CreateFileW(const wchar_t* name, uint32_t access, uint32_t share,
         void* sec, uint32_t disp, uint32_t flags, void* tmpl) {
     char n8[4096];
@@ -10096,13 +10103,31 @@ __attribute__((ms_abi)) void* mw_CreateFileW(const wchar_t* name, uint32_t acces
         uint32_t wl = 0;
         while (name[wl] && wl < 520) wl++;
         if (wl < 64) {
-            MW_TRACE("CreateFileW u16len=%u name=%p", wl, (void*)name);
+            char n16[64];
+            w3_w16_to_utf8z((const uint16_t*)name, n16, sizeof(n16));
+            MW_TRACE("CreateFileW u16len=%u name=%p '%s'", wl, (void*)name, n16);
             uint32_t k = 0;
             for (; k <= wl && k < 24; k++) {
                 uint16_t c = ((const uint16_t*)name)[k];
                 MW_TRACE("  [%u]=%04x '%c'", k, c, (c >= 0x20 && c < 0x7F) ? (char)c : '.');
             }
         }
+    }
+    /* SW-1268: volume-device opens — \\?\Volume{GUID}\ (FindFirstVolumeW
+     * answer) and \\.\C: land on the fixture NTFS volume (DeviceIoControl
+     * FSCTL contracts live in mw_volume_index_device). */
+    if (strncmp(n8, "\\\\?\\Volume{", 11) == 0 ||
+        (strncmp(n8, "\\\\.\\", 4) == 0 && n8[5] == ':')) {
+        for (int i = 0; i < MW_VOLUME_MAX; i++) {
+            if (!g_volume_live[i]) {
+                g_volume_live[i] = 1;
+                MW_TRACE("CreateFileW(%s) -> VOLUME handle 0x000B000%d (SW-1268)",
+                         n8, i + 1);
+                return (void*)(uintptr_t)(MW_VOLUME_BASE | (uintptr_t)(i + 1));
+            }
+        }
+        mw_SetLastError(110); /* ERROR_OPEN_FAILED */
+        return (void*)-1;
     }
     return w3_create_file(n8, access, disp);
 }
@@ -11936,7 +11961,125 @@ __attribute__((ms_abi)) int mw_GetComputerNameW(wchar_t* out, uint32_t* cap) {
     *cap = (uint32_t)(n + 1);
     return 1;
 }
+/* ---- SW-1268 (SWEEP-055): fixture NTFS volume + USN/MFT index ----
+ * Everything builds its index from \\?\Volume{GUID}\ + DeviceIoControl
+ * FSCTL_* (GET_NTFS_VOLUME_DATA / ENUM_USN_DATA / READ_USN_JOURNAL).
+ * The v1 DeviceIoControl was an honest fail, so the list stayed white.
+ * A small deterministic FRN tree gives the list real rows to paint.
+ * (MW_VOLUME_BASE/MW_VOLUME_MAX/g_volume_live defined above CreateFileW.) */
+
+/* fixture index: sorted by FRN; Everything maps parent FRNs into paths */
+static const struct { uint64_t frn, parent; uint16_t attr; const char* name; } g_usn_fix[] = {
+    { 11,  5, 0x10, "Users" },
+    { 12,  5, 0x10, "Windows" },
+    { 13,  5, 0x10, "Program Files" },
+    { 14,  5, 0x10, "PerfLogs" },
+    { 15, 11, 0x20, "readme.txt" },
+    { 16, 12, 0x10, "system32" },
+    { 17, 12, 0x20, "notepad.exe" },
+    { 18, 13, 0x10, "Everything" },
+    { 19, 18, 0x20, "Everything.exe" },
+    { 20, 18, 0x20, "Everything.ini" },
+    { 21, 12, 0x20, "explorer.exe" },
+};
+#define USN_FIX_N ((int)(sizeof(g_usn_fix) / sizeof(g_usn_fix[0])))
+#define USN_JOURNAL_ID 0x0123456789ABCDEFull
+#define USN_NEXT_MAX   0x0000000000001000ull
+
+static void usn_pack_record(uint8_t* o, uint32_t cap, uint32_t* used,
+                            uint64_t frn, uint64_t parent, uint16_t attr,
+                            const char* name) {
+    uint32_t nl = (uint32_t)strlen(name) * 2;
+    uint32_t rl = (60 + nl + 7u) & ~7u;
+    if (*used + rl > cap) return; /* buffer full — guest continues via cursor */
+    memset(o + *used, 0, rl);
+    uint8_t* r = o + *used;
+    *(uint32_t*)(r + 0)  = rl;                /* RecordLength */
+    *(uint16_t*)(r + 4)  = 2;                 /* Major */
+    *(uint16_t*)(r + 6)  = 0;                 /* Minor */
+    *(uint64_t*)(r + 8)  = frn;               /* FileReferenceNumber */
+    *(uint64_t*)(r + 16) = parent;            /* ParentFileReferenceNumber */
+    *(uint64_t*)(r + 24) = USN_NEXT_MAX;      /* Usn */
+    *(uint64_t*)(r + 32) = 0x01D8000000000000ull; /* TimeStamp */
+    *(uint32_t*)(r + 40) = 0;                 /* Reason (close) */
+    *(uint32_t*)(r + 44) = 0;                 /* SourceInfo */
+    *(uint32_t*)(r + 48) = 0;                 /* SecurityId */
+    *(uint16_t*)(r + 52) = attr;              /* FileAttributes */
+    *(uint16_t*)(r + 54) = (uint16_t)nl;      /* FileNameLength (bytes) */
+    *(uint16_t*)(r + 56) = 60;                /* FileNameOffset */
+    for (uint32_t i = 0; i < nl / 2; i++)
+        ((uint16_t*)(r + 60))[i] = (uint16_t)(unsigned char)name[i];
+    *used += rl;
+}
+
+static int mw_volume_index_device(void* h, uint32_t code, void* in, uint32_t ilen,
+                                  void* out, uint32_t olen, uint32_t* ret) {
+    int vi = (int)((uintptr_t)h & 0xF) - 1;
+    if (vi < 0 || vi >= MW_VOLUME_MAX || !g_volume_live[vi]) return 0;
+    switch (code) {
+    case 0x00090048u: { /* FSCTL_IS_VOLUME_MOUNTED */
+        if (ret) *ret = 0;
+        return 1;
+    }
+    case 0x00090064u: { /* FSCTL_GET_NTFS_VOLUME_DATA (88 bytes) */
+        if (!out || olen < 88) { mw_SetLastError(122); return 0; }
+        memset(out, 0, 88);
+        *(uint64_t*)((uint8_t*)out + 0)  = 0x1A2B3C4D5E6F7081ull; /* SerialNumber */
+        *(uint64_t*)((uint8_t*)out + 8)  = 0x1000000ull;  /* TotalSectors */
+        *(uint64_t*)((uint8_t*)out + 16) = 0x800000ull;   /* FreeSectors */
+        *(uint64_t*)((uint8_t*)out + 24) = 0x1000000ull;  /* TotalClusters */
+        *(uint64_t*)((uint8_t*)out + 32) = 0x800000ull;   /* FreeClusters */
+        *(uint32_t*)((uint8_t*)out + 48) = 512;           /* BytesPerSector */
+        *(uint32_t*)((uint8_t*)out + 52) = 4096;          /* BytesPerCluster */
+        *(uint32_t*)((uint8_t*)out + 56) = 1024;          /* BytesPerMFTRecord */
+        *(uint32_t*)((uint8_t*)out + 60) = 0x1000;        /* MftStartLcn */
+        if (ret) *ret = 88;
+        return 1;
+    }
+    case 0x000E0EB7u: { /* FSCTL_ENUM_USN_DATA (MFT_ENUM_DATA_V0) */
+        /* in: u64 StartFileReferenceNumber (guest drives the cursor).
+         * out: u64 next cursor, then packed USN_RECORD_V2s (FRN >= start). */
+        if (!out || olen < 8) { mw_SetLastError(122); return 0; }
+        uint64_t start = (in && ilen >= 8) ? *(const uint64_t*)in : 0;
+        uint8_t* o = (uint8_t*)out;
+        *(uint64_t*)o = USN_NEXT_MAX; /* default: enumeration complete */
+        uint32_t used = 8;
+        for (int i = 0; i < USN_FIX_N; i++) {
+            if (g_usn_fix[i].frn < start) continue;
+            uint32_t before = used;
+            usn_pack_record(o, olen, &used, g_usn_fix[i].frn, g_usn_fix[i].parent,
+                            g_usn_fix[i].attr, g_usn_fix[i].name);
+            if (used == before) break; /* full */
+            *(uint64_t*)o = g_usn_fix[i].frn + 1; /* cursor past last record */
+        }
+        if (ret) *ret = used;
+        MW_TRACE("[VOL] ENUM_USN_DATA start=%llu -> %u bytes (%u records) (SW-1268)",
+                 (unsigned long long)start, used, (used - 8) ? (used - 8) / 8 : 0);
+        return 1;
+    }
+    case 0x000E0F00u: { /* FSCTL_READ_USN_JOURNAL — empty journal */
+        if (!out || olen < 8) { mw_SetLastError(122); return 0; }
+        *(uint64_t*)out = USN_NEXT_MAX; /* NextUsn — no change records */
+        if (ret) *ret = 8;
+        return 1;
+    }
+    default:
+        MW_TRACE("[VOL] DeviceIoControl code=0x%08x -> honest fail (no contract)", code);
+        mw_SetLastError(1);
+        return 0;
+    }
+}
+
 __attribute__((ms_abi)) int mw_DeviceIoControl(void* h, uint32_t code, void* in, uint32_t ilen, void* out, uint32_t olen, uint32_t* ret, void* ov) {
+    if ((uintptr_t)h >= MW_VOLUME_BASE && (uintptr_t)h < MW_VOLUME_BASE + 0x1000u) {
+        int ok = mw_volume_index_device(h, code, in, ilen, out, olen, ret);
+        if (ok && ov) { /* completion for FILE_FLAG_OVERLAPPED handles */
+            uint32_t n = ret ? *ret : 0;
+            *(uint64_t*)((uint8_t*)ov + 0) = 0;   /* Internal = STATUS_SUCCESS */
+            *(uint64_t*)((uint8_t*)ov + 8) = n;   /* InternalHigh = bytes */
+        }
+        return ok;
+    }
     mw_SetLastError(1);
     return 0;
 }
@@ -12089,7 +12232,28 @@ static void* w3_res_find(void* hmod, const char* aname, const wchar_t* wname, co
                 break;
             }
         }
-        if (!next) return NULL;
+        if (!next) {
+            /* SW-1275 diag: name lookup failed at this depth — dump the dir
+             * counters + entry names so a stateful break (header clobber,
+             * dir corruption) is visible from the trace alone. */
+            uint16_t f_named = *(const uint16_t*)(level + 12);
+            uint16_t f_ided  = *(const uint16_t*)(level + 14);
+            MW_TRACE("[RES] find miss depth=%d named=%u ided=%u base=%p rsrc_rva=%lu",
+                     depth, f_named, f_ided, (void*)base, (unsigned long)rsrc_rva);
+            for (uint16_t i = 0; i < f_named + f_ided && i < 64; i++) {
+                uint32_t nm = *(const uint32_t*)(entries + i * 8);
+                if (nm & 0x80000000u) {
+                    const uint8_t* s = base + (nm & 0x7FFFFFFFu);
+                    uint16_t ln = *(const uint16_t*)s;
+                    char a[40] = { 0 };
+                    for (uint16_t k = 0; k < ln && k < 19; k++) a[k] = (char)s[2 + 2 * k];
+                    MW_TRACE("[RES]   entry[%u] str '%s'", i, a);
+                } else {
+                    MW_TRACE("[RES]   entry[%u] id %lu", i, (unsigned long)nm);
+                }
+            }
+            return NULL;
+        }
         level = next;
     }
     return NULL;
@@ -14281,15 +14445,73 @@ __attribute__((ms_abi)) void* mw_CreateToolhelp32Snapshot(uint32_t flags, uint32
 __attribute__((ms_abi)) int mw_Module32First(void* snap, void* me) { (void)snap; (void)me; mw_SetLastError(18); return 0; }
 __attribute__((ms_abi)) int mw_Module32Next(void* snap, void* me) { (void)snap; (void)me; mw_SetLastError(18); return 0; }
 __attribute__((ms_abi)) void* mw_FindFirstVolumeW(uint16_t* name, uint32_t len) {
-    (void)name; (void)len;
-    mw_SetLastError(18); return (void*)-1;
+    /* SW-1268 (SWEEP-055): Everything's index starts at volume enumeration —
+     * the v1 honest-fail (error 18) meant NO volumes, NO USN/MFT index, and
+     * a permanently white list. Answer with the fixture NTFS volume. Real
+     * name format: \\?\Volume{GUID}\ (48 wchars incl. NUL). */
+    static const uint16_t vol[] = {
+        L'\\', L'\\', L'?', L'\\', L'V', L'o', L'l', L'u', L'm', L'e', L'{',
+        L'9', L'B', L'7', L'A', L'5', L'B', L'2', L'E', L'-', L'1', L'F', L'3',
+        L'C', L'-', L'4', L'D', L'5', L'E', L'-', L'8', L'A', L'9', L'B', L'-',
+        L'0', L'C', L'1', L'D', L'2', L'E', L'3', L'F', L'4', L'A', L'5', L'B',
+        L'}', L'\\', 0
+    };
+    uint32_t need = (uint32_t)(sizeof(vol) / 2);
+    if (!name || len < need) { mw_SetLastError(122); return (void*)-1; }
+    memcpy(name, vol, need * 2);
+    MW_TRACE("[VOL] FindFirstVolumeW -> 0x000B0001 '%s' (SW-1268 fixture)",
+             "\\\\?\\Volume{9B7A5B2E-...}\\");
+    return (void*)0x000B0001;
 }
 __attribute__((ms_abi)) int mw_FindNextVolumeW(void* h, uint16_t* name, uint32_t len) {
-    (void)h; (void)name; (void)len; mw_SetLastError(18); return 0;
+    (void)h; (void)name; (void)len;
+    mw_SetLastError(38); /* ERROR_NO_MORE_FILES — enumeration end */
+    return 0;
 }
 __attribute__((ms_abi)) int mw_FindVolumeClose(void* h) { (void)h; return 1; }
+/* SW-1268 (SWEEP-055): volume<->mount-point mapping. Everything maps the
+ * enumerated volume GUID to its drive letters (GetVolumePathNamesForVolumeNameW)
+ * and back (GetVolumeNameForVolumeMountPointW) before opening the device —
+ * without these the fixture volume never reaches CreateFileW. */
+__attribute__((ms_abi)) int mw_GetVolumePathNamesForVolumeNameW(const uint16_t* volume,
+        uint16_t* buf, uint32_t len, uint32_t* returnlen) {
+    static const uint16_t paths[] = { L'C', L':', L'\\', 0, 0 }; /* "C:\" + final NUL */
+    uint32_t need = (uint32_t)(sizeof(paths) / 2);
+    uint64_t ret = (uint64_t)(uintptr_t)__builtin_return_address(0);
+    uint64_t b = 0, sz = 0; const char* nm = NULL;
+    if (ret && mw_module_of(ret, &b, &sz, &nm))
+        MW_TRACE("[VOL] caller=%s+0x%lx", nm, (unsigned long)(ret - b));
+    if (returnlen) *returnlen = need;
+    if (!buf || len < need) { mw_SetLastError(234); return 0; } /* MORE_DATA */
+    memcpy(buf, paths, need * 2);
+    MW_TRACE("[VOL] GetVolumePathNamesForVolumeNameW -> 'C:\\' (SW-1268)");
+    return 1;
+}
+__attribute__((ms_abi)) int mw_GetVolumeNameForVolumeMountPointW(const uint16_t* mount,
+        uint16_t* name, uint32_t len, uint32_t* returnlen) {
+    static const uint16_t vol[] = {
+        L'\\', L'\\', L'?', L'\\', L'V', L'o', L'l', L'u', L'm', L'e', L'{',
+        L'9', L'B', L'7', L'A', L'5', L'B', L'2', L'E', L'-', L'1', L'F', L'3',
+        L'C', L'-', L'4', L'D', L'5', L'E', L'-', L'8', L'A', L'9', L'B', L'-',
+        L'0', L'C', L'1', L'D', L'2', L'E', L'3', L'F', L'4', L'A', L'5', L'B',
+        L'}', L'\\', 0
+    };
+    uint32_t need = (uint32_t)(sizeof(vol) / 2);
+    if (returnlen) *returnlen = need;
+    if (!name || len < need) { mw_SetLastError(234); return 0; }
+    memcpy(name, vol, need * 2);
+    MW_TRACE("[VOL] GetVolumeNameForVolumeMountPointW -> fixture GUID (SW-1268)");
+    return 1;
+}
 __attribute__((ms_abi)) int mw_GetOverlappedResult(void* h, void* ov, uint32_t* got, int wait) {
     (void)h; (void)ov; (void)wait;
+    /* SW-1268: completed volume DeviceIoControl ops carry their transfer
+     * size in OVERLAPPED.InternalHigh (real Win32 contract) — report it. */
+    if (ov && (uintptr_t)h >= MW_VOLUME_BASE && (uintptr_t)h < MW_VOLUME_BASE + 0x1000u) {
+        uint64_t n = *(uint64_t*)((uint8_t*)ov + 8);
+        if (got) *got = (uint32_t)n;
+        return 1;
+    }
     if (got) *got = 0;
     mw_SetLastError(87); return 0;
 }
@@ -16439,6 +16661,17 @@ static void mwb_text8(MWBmp* b, int x, int y, const char* s, uint32_t c, int sca
 static int mwb_textw(const char* s, int scale); /* fwd: defined right below */
 static void mw_engine_paint_children(void* hwnd) {
     if (!hwnd || !g_surf.px) return;
+    /* SW-1275 (SWEEP-055): the dialog-face fill wiped the WHOLE surface on
+     * every UpdateWindow even when the window has NO children — spider's
+     * main window lost its guest-blitted board (cards/felt) to a full gray
+     * fill on each update. Paint the dialog face only when there is at
+     * least one live child (dialog-template windows like XP calc); childless
+     * windows keep whatever the guest painted. */
+    int nchild = 0;
+    for (int i = 0; i < MW_CHILD_MAX; i++)
+        if (g_child[i].live && g_child[i].parent == hwnd &&
+            g_child[i].rw > 0 && g_child[i].rh > 0) nchild++;
+    if (!nchild) return;
     int painted = 0;
     mwb_fill(&g_surf, 0, 0, g_surf.w, g_surf.h, 0xC0C0C0); /* dialog face */
     for (int i = 0; i < MW_CHILD_MAX; i++) {
@@ -16692,7 +16925,13 @@ static int       g_obj_next = 0;
  * a guest that renders off-screen and blits once per frame works for real. */
 #define MW_MEMDC_BASE    0x00021000u  /* memDC handles   0x00021001+i */
 #define MW_HBITMAP_BASE  0x00052000u  /* HBITMAP handles 0x00052001+i (index=v&0xFF)-1 */
-#define MW_MEMDC_MAX     32 /* SW-803: 8 overflowed on NirSoft retry loops (produkey/cports: 2 DCs x ~15 controls) */
+/* SW-1275 (SWEEP-055): 32 slots exhausted inside one spider deal — each
+ * LoadImageW DIB decode (CARDBACK + card faces per column, ~40+ per game)
+ * takes a slot for the process lifetime, so loads 33+ returned NULL ->
+ * 16x16 placeholders -> "bad dst/src DC" -> blank faces/felt. Handles
+ * decode via (v & 0xFF), so 256 is the addressable ceiling — plenty for
+ * the guests' load volumes (SW-1244 analog: handle table 64 -> 8192). */
+#define MW_MEMDC_MAX     256
 static MWBmp   g_bitmap_obj[MW_MEMDC_MAX]; /* CreateCompatibleBitmap pixel store */
 static uint8_t g_bitmap_live[MW_MEMDC_MAX];
 static int     g_memdc_sel[MW_MEMDC_MAX];  /* selected bitmap index, -1 = none */
@@ -17755,6 +17994,26 @@ __attribute__((ms_abi)) int mw_DeleteObject(void* h) {
     uintptr_t v = (uintptr_t)h;
     if ((v & 0xFFFFF000u) == 0x00030000u) g_brush_live[v & 0x1F] = 0;
     if ((v & 0xFFFFF000u) == 0x00031000u) g_pen_live[v & 0x1F] = 0;
+    /* SW-1275 (SWEEP-055): real DeleteObject deletes BITMAPS too — the v1
+     * only freed brush/pen slots, so every LoadImageW DIB decode leaked its
+     * slot for the process life and the 32-slot pool died mid-deal (spider:
+     * blank faces after ~32 loads). Free the slot unless a live memDC still
+     * has it selected (real GDI refuses to delete selected objects). */
+    if ((v & 0xFFFFF000u) == MW_HBITMAP_BASE) {
+        int bi = (int)(v & 0xFF) - 1;
+        if (bi >= 0 && bi < MW_MEMDC_MAX && g_bitmap_live[bi]) {
+            for (int i = 0; i < MW_MEMDC_MAX; i++)
+                if (g_memdc_live[i] && g_memdc_sel[i] == bi) {
+                    MW_TRACE("[GDI] DeleteObject(HBITMAP %d) -> FALSE (selected)", bi);
+                    return 0;
+                }
+            free(g_bitmap_obj[bi].px);
+            g_bitmap_obj[bi].px = NULL;
+            g_bitmap_obj[bi].w = 0;
+            g_bitmap_obj[bi].h = 0;
+            g_bitmap_live[bi] = 0;
+        }
+    }
     return 1;
 }
 __attribute__((ms_abi)) uint32_t mw_SetTextColor(void* hdc, uint32_t colorref) {
@@ -20294,22 +20553,36 @@ static void* mw_loadimage_bitmap_dib(void* hinst, const void* name) {
      * 'BM'/40-byte BITMAPINFOHEADER probe read the header fields and
      * bailed for every real bitmap resource. */
     const uint8_t* dib = (const uint8_t*)(g_image_base + *(const uint32_t*)hrsrc);
-    if (!dib) return NULL;
-    if (mw_IsBadReadPtr(dib, 64)) return NULL;
+    if (!dib) { MW_TRACE("[GDI] DIB decode miss: null data"); return NULL; }
+    if (mw_IsBadReadPtr(dib, 64)) { MW_TRACE("[GDI] DIB decode miss: unreadable"); return NULL; }
     uint32_t hdr_size = *(const uint32_t*)(const void*)(dib);
-    if (hdr_size < 40) return NULL;
-    int32_t  w    = *(const int32_t*)(const void*)(dib + 4);
-    int32_t  h    = *(const int32_t*)(const void*)(dib + 8);
-    uint16_t bpp  = *(const uint16_t*)(const void*)(dib + 14);
-    uint32_t comp = *(const uint32_t*)(const void*)(dib + 16);
-    uint32_t clr_used = *(const uint32_t*)(const void*)(dib + 32);
-    if (w <= 0 || h == 0 || comp != 0 /* BI_RGB only */) return NULL;
+    if (hdr_size < 12) { MW_TRACE("[GDI] DIB decode miss: hdr_size=%lu", (unsigned long)hdr_size); return NULL; }
+    int32_t  w; int32_t h; uint16_t bpp; uint32_t comp = 0; uint32_t clr_used = 0;
+    /* SW-1275 (SWEEP-055): spider ships 29 of its 56 bitmaps as OS/2-format
+     * BITMAPCOREHEADER DIBs (12-byte header, WORD w/h, RGBTRIPLE palette) —
+     * every one was rejected by the v1 "hdr_size >= 40" INFOHEADER gate, so
+     * CARD2/12/13/24... fell back to 16x16 placeholders (blank card faces)
+     * and the first board-DC BitBlt died "bad dst/src DC". Decode both. */
+    int core_pal = 0; /* core headers use 3-byte RGBTRIPLE palette entries */
+    if (hdr_size == 12) {
+        w = *(const uint16_t*)(const void*)(dib + 4);
+        h = *(const uint16_t*)(const void*)(dib + 6);
+        bpp = *(const uint16_t*)(const void*)(dib + 10);
+        core_pal = 1;
+    } else {
+        w    = *(const int32_t*)(const void*)(dib + 4);
+        h    = *(const int32_t*)(const void*)(dib + 8);
+        bpp  = *(const uint16_t*)(const void*)(dib + 14);
+        comp = *(const uint32_t*)(const void*)(dib + 16);
+        clr_used = *(const uint32_t*)(const void*)(dib + 32);
+    }
+    if (w <= 0 || h == 0 || comp != 0 /* BI_RGB only */) { MW_TRACE("[GDI] DIB decode miss: %dx%d comp=%lu", w, h, (unsigned long)comp); return NULL; }
     int top_down = (h < 0); if (top_down) h = -h;
-    if (w > 4096 || h > 4096) return NULL;
-    if (bpp != 1 && bpp != 4 && bpp != 8 && bpp != 24 && bpp != 32) return NULL;
+    if (w > 4096 || h > 4096) { MW_TRACE("[GDI] DIB decode miss: size %dx%d", w, h); return NULL; }
+    if (bpp != 1 && bpp != 4 && bpp != 8 && bpp != 24 && bpp != 32) { MW_TRACE("[GDI] DIB decode miss: bpp=%u", bpp); return NULL; }
     int npal = (bpp <= 8) ? (clr_used ? (int)clr_used : (1 << bpp)) : 0;
     const uint8_t* pal = dib + hdr_size;
-    const uint8_t* pix = pal + (size_t)npal * 4;
+    const uint8_t* pix = pal + (size_t)npal * (core_pal ? 3 : 4);
     size_t stride = (((size_t)w * bpp + 31) / 32) * 4;
     MWBmp* B = mw_bitmap_slot(w, h);
     if (!B || !B->px) return NULL;
@@ -20324,7 +20597,8 @@ static void* mw_loadimage_bitmap_dib(void* hinst, const void* name) {
                 if (bpp == 8) idx = row[x];
                 else if (bpp == 4) idx = (x & 1) ? (row[x / 2] & 0xF) : (row[x / 2] >> 4);
                 else idx = (row[x / 8] >> (7 - (x & 7))) & 1;
-                const uint8_t* e = pal + (size_t)idx * 4; /* BGRx palette quad */
+                /* BGRx palette quad; OS/2 core headers pack BGR triples */
+                const uint8_t* e = pal + (size_t)idx * (core_pal ? 3 : 4);
                 c = (uint32_t)e[0] | ((uint32_t)e[1] << 8) | ((uint32_t)e[2] << 16);
             }
             mwb_set(B, x, y, c);
@@ -20342,6 +20616,23 @@ __attribute__((ms_abi)) void* mw_LoadImageW(void* hinst, const void* name, uint3
     if (type == 0u /* IMAGE_BITMAP */) { /* SW-803: resource DIB first */
         void* h = mw_loadimage_bitmap_dib(hinst, name);
         if (h) { MW_TRACE("LoadImageW(IMAGE_BITMAP res=%p) -> HBITMAP %p", name, h); return h; }
+        /* SW-1275: surface the miss — name + A/W so the decode gap is
+         * diagnosable from the trace alone (spider board DC blits failed
+         * with a placeholder image and the trace could not say why). */
+        if ((uintptr_t)name < 0x10000u)
+            MW_TRACE("LoadImageW(type=0) DIB MISS name=MAKEINTRESOURCE(%u)",
+                     (unsigned)(uintptr_t)name);
+        else {
+            char nm[64] = { 0 };
+            uint16_t wv[31];
+            if (mw_probe_copy(name, 62, wv)) {
+                int k = 0;
+                for (; k < 30 && wv[k] >= 0x20 && wv[k] < 0x7F; k++) nm[k] = (char)wv[k];
+                nm[k] = 0;
+            }
+            MW_TRACE("LoadImageW(type=0) DIB MISS name=%p wname='%s' (wlen %d), trying A-path",
+                     name, nm, (int)(uintptr_t)0);
+        }
     }
     void* h = mw_image_alloc(cx ? cx : 16, cy ? cy : 16);
     MW_TRACE("LoadImageW(type=%lu) -> %p", (unsigned long)type, h);
@@ -32363,6 +32654,8 @@ ENTRY("msvcrt.dll", "wctype", mw_wctype),
     ENTRY("KERNEL32.DLL", "FindFirstVolumeW",                   mw_FindFirstVolumeW),
     ENTRY("KERNEL32.DLL", "FindNextVolumeW",                    mw_FindNextVolumeW),
     ENTRY("KERNEL32.DLL", "FindVolumeClose",                    mw_FindVolumeClose),
+    ENTRY("KERNEL32.DLL", "GetVolumePathNamesForVolumeNameW",   mw_GetVolumePathNamesForVolumeNameW),
+    ENTRY("KERNEL32.DLL", "GetVolumeNameForVolumeMountPointW",  mw_GetVolumeNameForVolumeMountPointW),
     ENTRY("KERNEL32.DLL", "GetOverlappedResult",                mw_GetOverlappedResult),
     ENTRY("KERNEL32.DLL", "MoveFileExA",                        mw_MoveFileExA),
     ENTRY("KERNEL32.DLL", "SleepEx",                            mw_SleepEx),

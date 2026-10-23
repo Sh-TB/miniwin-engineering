@@ -1,0 +1,73 @@
+[TRACE] Command line: artifacts/sweep055/guests/soffice/soffice.bin
+[STUB] unresolved import called -> returning 0 (call #1) guest_rip=0x7f043529337e import=api-ms-win-crt-runtime-l1-1-0.dll!_control87
+[STUB] unresolved import called -> returning 0 (call #2) guest_rip=0x7f04353d8aa6 import=d2d1.dll!#1
+[STUB] unresolved import called -> returning 0 (call #3) guest_rip=0x7f0434904250 import=msvcp140.dll!_Mtx_lock
+[STUB] unresolved import called -> returning 0 (call #4) guest_rip=0x7f0434904327 import=msvcp140.dll!_Mtx_unlock
+[STUB] unresolved import called -> returning 0 (call #5) guest_rip=0x7f0434904250 import=msvcp140.dll!_Mtx_lock
+[STUB] unresolved import called -> returning 0 (call #6) guest_rip=0x7f0434904327 import=msvcp140.dll!_Mtx_unlock
+[STUB] unresolved import called -> returning 0 (call #7) guest_rip=0x7f04353e0b91 import=msvcp140.dll!?_Init@locale@std@@CAPEAV_Locimp@12@_N@Z
+[STUB] unresolved import called -> returning 0 (call #8) guest_rip=0x7f0437d69d22 import=msvcp140.dll!??0_Lockit@std@@QEAA@H@Z
+
+[CRASH] Signal 11 at RIP=0x7f0435c665d2
+  RAX=0x20 RCX=0x7f043db0a858 RDX=0x0 R8=0x0 R9=0x0
+  RSP=0x7ffdf5d4fbc0 RBP=0x7f043b45e5f0
+  g_image_base=0x140000000 g_image_size=0x29d000
+  (NOT inside loaded PE)
+  [RIP-MAP] 0x7f0435c665d2 in 0x7f0435149000-0x7f043e50e000 rwxp 
+  Bytes: 48 3b 5a 18 73 0f 48 8b 42 10 48 8b 04 07 48 85 
+  [DLLSLOT] mergedlo.dll base=0x7f04353bf000-0x7f043e50e000  <<-- RIP IS INSIDE
+  [DLLSLOT] clewlo.dll base=0x7f04353b4000-0x7f04353bf000
+  [DLLSLOT] clucene.dll base=0x7f0434ed7000-0x7f0435146000
+  [DLLSLOT] cppu3.dll base=0x7f0435323000-0x7f04353b4000
+  [DLLSLOT] sal3.dll base=0x7f0435245000-0x7f0435323000
+  [DLLSLOT] salhelper3msc.dll base=0x7f0435230000-0x7f0435245000
+  [DLLSLOT] cppuhelper3msc.dll base=0x7f0434d67000-0x7f0434ed7000
+  [DLLSLOT] reglo.dll base=0x7f04351df000-0x7f0435230000
+  [DLLSLOT] storelo.dll base=0x7f04351b4000-0x7f04351df000
+  [DLLSLOT] unoidllo.dll base=0x7f0434c7a000-0x7f0434d67000
+  [DLLSLOT] xmlreaderlo.dll base=0x7f0435196000-0x7f04351b4000
+  [DLLSLOT] epoxy.dll base=0x7f0434a9c000-0x7f0434c7a000
+  [DLLSLOT] etonyek.dll base=0x7f0434110000-0x7f04345d7000
+  [DLLSLOT] revenge.dll base=0x7f0434098000-0x7f0434110000
+  [DLLSLOT] libxml2.dll base=0x7f0433f6c000-0x7f0434098000
+  [DLLSLOT] icuuc78.dll base=0x7f0433d1c000-0x7f0433f6c000
+  [DLLSLOT] icudt78.dll base=0x7f042fdf0000-0x7f0431d85000
+  [DLLSLOT] gpgmepp.dll base=0x7f0434979000-0x7f0434a9c000
+  [DLLSLOT] i18nlangtag.dll base=0x7f04348f7000-0x7f0434979000
+  [DLLSLOT] jvmaccesslo.dll base=0x7f043517e000-0x7f0435196000
+  [DLLSLOT] jvmfwklo.dll base=0x7f043488b000-0x7f04348f7000
+  [DLLSLOT] mwaw.dll base=0x7f0433235000-0x7f0433d1c000
+  [DLLSLOT] odfgen.dll base=0x7f043470f000-0x7f043488b000
+  [DLLSLOT] orcus.dll base=0x7f0432fdd000-0x7f0433235000
+  [DLLSLOT] orcus-parser.dll base=0x7f0434658000-0x7f043470f000
+  [DLLSLOT] pdfiumlo.dll base=0x7f043298e000-0x7f0432fdd000
+  [DLLSLOT] lcms2.dll base=0x7f04328fd000-0x7f043298e000
+  [DLLSLOT] raptor2.dll base=0x7f0434601000-0x7f0434658000
+  [DLLSLOT] librdf.dll base=0x7f0435149000-0x7f043517e000
+  [DLLSLOT] rasqal.dll base=0x7f0432879000-0x7f04328fd000
+  [DLLSLOT] skialo.dll base=0x7f0431f84000-0x7f0432879000
+  [DLLSLOT] staroffice.dll base=0x7f042faa6000-0x7f042fdf0000
+  [DLLSLOT] wpd.dll base=0x7f0431e89000-0x7f0431f84000
+  [DLLSLOT] wpg.dll base=0x7f0431e5b000-0x7f0431e89000
+  [DLLSLOT] wps.dll base=0x7f042f74b000-0x7f042faa6000
+  [DLLSLOT] argon2optdll.dll base=0x7f04345f4000-0x7f0434601000
+  [DLLSLOT] coinmp.dll base=0x7f042f3c2000-0x7f042f74b000
+  [DLLSLOT] libcurl.dll base=0x7f0431dbf000-0x7f0431e5b000
+  [DLLSLOT] ifbclient.dll base=0x7f042f183000-0x7f042f3c2000
+  [DLLSLOT] icuin78.dll base=0x7f042ee00000-0x7f042f183000
+  [DLLSLOT] libexslt.dll base=0x7f0431d96000-0x7f0431daf000
+  [DLLSLOT] libxslt.dll base=0x7f042edc4000-0x7f042ee00000
+  [DLLSLOT] lpsolve55.dll base=0x7f042ed17000-0x7f042edc4000
+  [DLLSLOT] libcrypto-3.dll base=0x7f042e62c000-0x7f042ed17000
+  [DLLSLOT] libssl-3.dll base=0x7f042e4e6000-0x7f042e62c000
+  RSI=0x7f043db0a858 RDI=0x40010716c82c5a40
+  R8=0x0  R9=0x0 R10=0x0 R11=0x202
+  R12=0x20ddab8 R13=0x36de2c0 R14=0x7f04353e0b70 R15=0x36de2c0
+  [STACKTOP raw] 0000000000000000 0000000000000000 0000000000000202 00007f0435c665c0 0000000000000000 00007f0437d69d41 00007f043b45e048 0000000000000000 00007f04345e5670 00007f042eaf8220 00007f0400000000 00000000036de3a0
+  [SCAN rsp+296] 0x2026803 <LOADER>
+  [SCAN rsp+2280] 0x2002f63 <LOADER>
+  [SCAN rsp+3712] 0x140003ed0 <PE>
+  [SCAN rsp+3800] 0x140003ed0 <PE>
+  [SCAN rsp+3816] 0x20090ef <LOADER>
+  Backtrace (via stack walking):
+    [0] RIP=0x7f0435c665d2 (outside PE, possible shared lib)
