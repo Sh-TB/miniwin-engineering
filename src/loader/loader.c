@@ -481,6 +481,22 @@ static void setup_teb_peb(void) {
     pthread_attr_destroy(&attr);
     uint8_t* stack_top = (uint8_t*)stack_base + stack_size;
 
+    /* SWEEP-058 SW-1239b: real Windows stack pages contain PRIOR-USE
+     * garbage — never a fresh zero page. Guests read uninitialized stack
+     * slots (pslist64 passes a main-frame leftover as the HKPD cbData
+     * buffer size at 0x140002f42; on real Windows the leftover is large,
+     * on a zeroed stack it is 0 -> ERROR_MORE_DATA abort -> NULL name
+     * array -> crash 0x1400030b6). Fill the below-current-usage stack
+     * region with a benign deterministic nonzero pattern — faithful to
+     * real Windows memory semantics (the guest overwrites what it uses). */
+    {
+        uint8_t* frame = (uint8_t*)__builtin_frame_address(0);
+        if (frame > stack_base + (1u << 16) && frame < stack_top) {
+            size_t fill = (size_t)(frame - (1u << 16)) - (size_t)stack_base;
+            if (fill) memset(stack_base, 0xBE, fill);
+        }
+    }
+
     /* TEB layout (x64 Windows)
      * 0x00 ExceptionList
      * 0x08 StackBase
@@ -10970,8 +10986,78 @@ static int mw_reg_wprefix(const uint16_t* path, const uint16_t* pre) {
     return path[n] == 0x5C; /* L'\\' */
 }
 /* resolve key: predefined root (slots 0..6) or hive handle; slot or -1 */
+/* ---- SWEEP-058 (re-lands the lost SWEEP-057 Train 5 engine deltas) ----
+ * SW-1241: mw_reg_seed_windows seeds the standard skeleton keys at first
+ * registry access — real Windows always has them; the v1 honest-empty
+ * contract produced misses Windows never does:
+ *   HKLM\...\Winlogon      AutoAdminLogon/DefaultUserName/DefaultDomain/
+ *                          DefaultPassword (autologon64 opens this key)
+ *   HKLM\...\CurrentVersion ProductName/CurrentVersion/CurrentBuildNumber/
+ *                          CSDVersion (every Sysinternals banner round)
+ *   HKLM\...\Perflib       Last Counter/Last Help (pslist64 0x140002ea6
+ *                          opens this key BEFORE any HKPD query; without
+ *                          it the whole name-table parse dies silently)
+ * Idempotent: seeds only when the key is absent (snapshot-safe). The
+ * g_reg_seeded guard is set FIRST so the re-entrant mw_reg_slot call from
+ * mw_RegCreateKeyExW/mw_reg_compose cannot recurse into seeding. */
+static int g_reg_seeded = 0;
+__attribute__((ms_abi)) int32_t mw_RegOpenKeyExW(void* key, const wchar_t* sub, uint32_t opts, uint32_t access, void** result);
+__attribute__((ms_abi)) int32_t mw_RegCreateKeyExW(void* key, const wchar_t* sub, uint32_t res, const wchar_t* cls, uint32_t opts, uint32_t access, void* sa, void** result, void* disp);
+__attribute__((ms_abi)) int32_t mw_RegSetValueExW(void* key, const wchar_t* name, uint32_t res, uint32_t type, const void* data, uint32_t size);
+static uint16_t* mw_seed_w(uint16_t* out, uint32_t cap, const char* s) {
+    mw_reg_copy_ascii(out, s, cap);
+    return out;
+}
+static void mw_reg_seed_windows(void) {
+    if (g_reg_seeded) return;
+    g_reg_seeded = 1;
+    void* hk;
+    uint16_t wsub[MW_REG_PATHN], wname[MW_REG_VALN], wstr[MW_REG_VALN];
+    /* CurrentVersion product identity */
+    if (mw_RegOpenKeyExW((void*)0x80000002u, (const wchar_t*)mw_seed_w(wsub, MW_REG_PATHN,
+            "SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion"), 0, 0, &hk) != 0) {
+        if (mw_RegCreateKeyExW((void*)0x80000002u, (const wchar_t*)wsub, 0, NULL, 0, 0, NULL, &hk, NULL) == 0) {
+            mw_RegSetValueExW(hk, (const wchar_t*)mw_seed_w(wname, MW_REG_VALN, "ProductName"), 0, 1u,
+                              mw_seed_w(wstr, MW_REG_VALN, "Windows Server 2003"), 40);
+            mw_RegSetValueExW(hk, (const wchar_t*)mw_seed_w(wname, MW_REG_VALN, "CurrentVersion"), 0, 1u,
+                              mw_seed_w(wstr, MW_REG_VALN, "5.2"), 8);
+            mw_RegSetValueExW(hk, (const wchar_t*)mw_seed_w(wname, MW_REG_VALN, "CurrentBuildNumber"), 0, 1u,
+                              mw_seed_w(wstr, MW_REG_VALN, "3790"), 10);
+            mw_RegSetValueExW(hk, (const wchar_t*)mw_seed_w(wname, MW_REG_VALN, "CSDVersion"), 0, 1u,
+                              mw_seed_w(wstr, MW_REG_VALN, "Service Pack 3"), 32);
+            MW_TRACE("reg seed: CurrentVersion identity seeded");
+        }
+    }
+    /* Winlogon (autologon64 SW-1241) */
+    if (mw_RegOpenKeyExW((void*)0x80000002u, (const wchar_t*)mw_seed_w(wsub, MW_REG_PATHN,
+            "SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Winlogon"), 0, 0, &hk) != 0) {
+        if (mw_RegCreateKeyExW((void*)0x80000002u, (const wchar_t*)wsub, 0, NULL, 0, 0, NULL, &hk, NULL) == 0) {
+            mw_RegSetValueExW(hk, (const wchar_t*)mw_seed_w(wname, MW_REG_VALN, "AutoAdminLogon"), 0, 1u,
+                              mw_seed_w(wstr, MW_REG_VALN, "0"), 4);
+            mw_RegSetValueExW(hk, (const wchar_t*)mw_seed_w(wname, MW_REG_VALN, "DefaultUserName"), 0, 1u,
+                              mw_seed_w(wstr, MW_REG_VALN, "Administrator"), 26);
+            mw_RegSetValueExW(hk, (const wchar_t*)mw_seed_w(wname, MW_REG_VALN, "DefaultDomainName"), 0, 1u,
+                              mw_seed_w(wstr, MW_REG_VALN, "MINIWIN"), 16);
+            mw_RegSetValueExW(hk, (const wchar_t*)mw_seed_w(wname, MW_REG_VALN, "DefaultPassword"), 0, 1u,
+                              mw_seed_w(wstr, MW_REG_VALN, ""), 2);
+            MW_TRACE("reg seed: Winlogon skeleton seeded");
+        }
+    }
+    /* Perflib (pslist64 SW-1239 name-table gate) */
+    if (mw_RegOpenKeyExW((void*)0x80000002u, (const wchar_t*)mw_seed_w(wsub, MW_REG_PATHN,
+            "SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Perflib"), 0, 0, &hk) != 0) {
+        if (mw_RegCreateKeyExW((void*)0x80000002u, (const wchar_t*)wsub, 0, NULL, 0, 0, NULL, &hk, NULL) == 0) {
+            uint32_t last = 952u; /* MW_PERF_LAST_INDEX (defined below) */
+            mw_RegSetValueExW(hk, (const wchar_t*)mw_seed_w(wname, MW_REG_VALN, "Last Counter"), 0, 4u, &last, 4);
+            mw_RegSetValueExW(hk, (const wchar_t*)mw_seed_w(wname, MW_REG_VALN, "Last Help"), 0, 4u, &last, 4);
+            MW_TRACE("reg seed: Perflib Last Counter/Help = %u", last);
+        }
+    }
+}
+
 static int mw_reg_slot(void* key) {
     reg_snap_init(); /* SWEEP-023 SW-993: lazy snapshot load on first reg use */
+    mw_reg_seed_windows(); /* SWEEP-058 SW-1241 re-land: standard skeleton */
     uintptr_t v = (uintptr_t)key;
     if (v >= 0x80000000u) {
         for (int r = 0; r < 7; r++)
@@ -11050,6 +11136,592 @@ __attribute__((ms_abi)) int32_t mw_RegEnumKeyExA(void* key, uint32_t idx, char* 
     }
     return rc;
 }
+/* ============================================================
+ * SWEEP-058 SW-1239: HKEY_PERFORMANCE_DATA real perflib plane (v1)
+ * pslist64 decode: HKPD is the standard Perflib two-pass channel —
+ * pass1 lpData=NULL -> ERROR_MORE_DATA(234) + required size; pass2
+ * full read. The guest validates the wide "PERF" signature (0x46005200
+ * 4500 50 at 0x140007354), then walks PERF_OBJECT_TYPE /
+ * PERF_COUNTER_DEFINITION arrays matching counters by
+ * CounterNameTitleIndex (pslist64 finder 0x140003260: stride = def
+ * ByteLength, compare dword @+0x0C) and reads values at CounterOffset
+ * inside each instance's PERF_COUNTER_BLOCK. pslist64 loads the name
+ * table first: RegOpenKeyExA(HKLM "software\microsoft\windows nt\
+ * currentversion\perflib") -> "Last Counter" DWORD (0x14002dbd8) ->
+ * HKPD "Counter 009" blob parsed as "idx\0name\0" pairs into an
+ * index->name pointer array (0x140002ff5 loop; terminates on an empty
+ * name token; rejects idx > Last Counter). Value names served:
+ * "Counter 009", "Explain 009", "Last Counter"/"Last Help", and the
+ * object blobs "processor"/"process"/"system" (+ numeric title-index
+ * names "2"/"230"/"238" — real HKPD accepts both spellings).
+ * Blobs are built on demand into a static arena — NOT stored in g_reg
+ * (MW_REG_DATA=512 is too small for the name table).
+ * ============================================================ */
+#define MW_PERF_OBJ_SYSTEM    2u
+#define MW_PERF_OBJ_PROCESS   230u
+#define MW_PERF_OBJ_PROCESSOR 238u
+#define MW_PERF_C_PCT_TIME    6u    /* % Processor Time */
+#define MW_PERF_C_USER_TIME   142u  /* User Time */
+#define MW_PERF_C_KERNEL_TIME 144u  /* Kernel Time */
+#define MW_PERF_C_VBYTES      184u  /* Virtual Bytes */
+#define MW_PERF_C_WSET        186u  /* Working Set */
+#define MW_PERF_C_PAGEFILE    188u  /* Page File Bytes */
+#define MW_PERF_C_PRIORITY    668u  /* Priority Base */
+#define MW_PERF_C_UPTIME      674u  /* System Up Time */
+#define MW_PERF_C_THREADS     680u  /* Thread Count */
+#define MW_PERF_C_ELAPSED     684u  /* Elapsed Time */
+#define MW_PERF_C_IDPROC      784u  /* ID Process */
+#define MW_PERF_C_HANDLES     952u  /* Handle Count */
+#define MW_PERF_LAST_INDEX    952u
+/* counter types (winperf.h canonical spellings, cosmetic for pslist) */
+#define MW_PERF_T_DWORD   0x00000000u /* PERF_NUMBER_DECIMAL */
+#define MW_PERF_T_LARGE   0x00000100u /* PERF_LARGE_RAWCOUNT */
+#define MW_PERF_T_100NS   0x02050500u /* PERF_100NSEC_TIMER */
+#define MW_PERF_T_100NS_INV 0x21500700u /* PERF_100NSEC_TIMER_INV */
+#define MW_PERF_T_ELAPSED 0x06610840u /* PERF_ELAPSED_TIME */
+
+struct mw_perf_buf { uint8_t* p; uint32_t len, cap; };
+static int mw_perf_need(struct mw_perf_buf* b, uint32_t n) {
+    if (b->len + n <= b->cap) { b->len += n; return 1; }
+    return 0;
+}
+/* capacity precheck WITHOUT advancing (reserve-then-write pattern) */
+static int mw_perf_ensure(struct mw_perf_buf* b, uint32_t n) {
+    return b->len + n <= b->cap;
+}
+#define MW_PERF_PUT32(b, v) do { if (mw_perf_need((b),4)) { \
+    *(uint32_t*)((b)->p + (b)->len - 4) = (uint32_t)(v); } } while (0)
+#define MW_PERF_PUT64(b, v) do { if (mw_perf_need((b),8)) { \
+    *(uint64_t*)((b)->p + (b)->len - 8) = (uint64_t)(v); } } while (0)
+#define MW_PERF_PUTBUF(b, s, n) do { if (mw_perf_need((b),(n))) { \
+    memcpy((b)->p + (b)->len - (n), (s), (n)); } } while (0)
+static void mw_perf_put_pad8(struct mw_perf_buf* b) {
+    uint32_t pad = (8 - (b->len & 7)) & 7;
+    if (pad && mw_perf_need(b, pad)) memset(b->p + b->len - pad, 0, pad);
+}
+static uint64_t mw_perf_filetime_now(void) {
+    return (uint64_t)time(NULL) * 10000000ull + 116444736000000000ull;
+}
+static uint64_t mw_perf_qpc_now(void) {
+    struct timespec ts; clock_gettime(CLOCK_MONOTONIC, &ts);
+    return (uint64_t)ts.tv_sec * 1000000000ull + (uint64_t)ts.tv_nsec;
+}
+static uint64_t mw_perf_qpf(void) { return 1000000000ull; }
+static uint32_t mw_perf_clk_tck(void) {
+    long t = sysconf(_SC_CLK_TCK);
+    return t > 0 ? (uint32_t)t : 100u;
+}
+static uint64_t mw_perf_btime100(void) {
+    static uint64_t cached = 0;
+    if (!cached) {
+        unsigned long long btime = 0;
+        FILE* f = fopen("/proc/stat", "r");
+        if (f) {
+            char l[128];
+            while (fgets(l, sizeof(l), f))
+                if (sscanf(l, "btime %llu", &btime) == 1) break;
+            fclose(f);
+        }
+        cached = btime
+            ? (uint64_t)btime * 10000000ull + 116444736000000000ull
+            : mw_perf_filetime_now();
+    }
+    return cached;
+}
+
+/* "Counter 009": index<->name pairs (idx\0name\0) + the terminating
+ * empty token pair; "Explain 009": same shape with help text. */
+static uint32_t mw_perf_build_name_table(struct mw_perf_buf* b, int explain) {
+    static const struct { uint32_t idx; const char* name; const char* help; } tab[] = {
+        { 2,   "System",             "The System performance object" },
+        { 6,   "% Processor Time",   "% of time the processor is busy" },
+        { 142, "% User Time",        "User-mode time of the process" },
+        { 144, "% Privileged Time",  "Kernel-mode time of the process" },
+        { 184, "Virtual Bytes",      "Virtual address space of the process" },
+        { 186, "Working Set",        "Resident set of the process" },
+        { 188, "Page File Bytes",    "Commit charge of the process" },
+        { 190, "Working Set Peak",   "Peak resident set of the process" },
+        { 192, "Page File Bytes Peak", "Peak commit charge of the process" },
+        { 194, "Pool Nonpaged Bytes",  "Nonpaged pool of the process" },
+        { 196, "Pool Paged Bytes",     "Paged pool of the process" },
+        { 198, "Page Faults/sec",      "Page faults per second" },
+        { 230, "Process",            "The Process performance object" },
+        { 238, "Processor",          "The Processor performance object" },
+        { 668, "Priority Base",      "Base scheduling priority" },
+        { 674, "System Up Time",     "Elapsed time since boot" },
+        { 680, "Thread Count",       "Threads in the process" },
+        { 684, "Elapsed Time",       "Time since the process started" },
+        { 784, "ID Process",         "Process identifier" },
+        { 952, "Handle Count",       "Open handles in the process" },
+    };
+    b->len = 0;
+    for (uint32_t i = 0; i < sizeof(tab)/sizeof(tab[0]); i++) {
+        char idx[16];
+        snprintf(idx, sizeof(idx), "%u", tab[i].idx);
+        const char* txt = explain ? tab[i].help : tab[i].name;
+        MW_PERF_PUTBUF(b, idx, (uint32_t)strlen(idx) + 1);
+        MW_PERF_PUTBUF(b, txt, (uint32_t)strlen(txt) + 1);
+    }
+    MW_PERF_PUTBUF(b, "\0", 1); /* terminating empty index token */
+    return b->len;
+}
+
+/* per-process counters for one instance (order == counter-def order) */
+struct mw_perf_proc {
+    uint32_t pid, prio, threads, handles;
+    uint64_t vbytes, wset, pagefile, elapsed_start, user100, kernel100;
+    char name[64];
+};
+static int mw_perf_snap_proc(uint32_t pid, struct mw_perf_proc* out) {
+    char path[64];
+    memset(out, 0, sizeof(*out));
+    out->prio = 8;
+    if (pid == 0) {
+        snprintf(out->name, sizeof(out->name), "Idle");
+        out->pid = 0;
+        return 1;
+    }
+    snprintf(path, sizeof(path), "/proc/%u/stat", pid);
+    FILE* f = fopen(path, "r");
+    if (!f) return 0;
+    char line[1024];
+    if (!fgets(line, sizeof(line), f)) { fclose(f); return 0; }
+    fclose(f);
+    /* stat = "<pid> (<comm>) <state> ...": the comm may contain spaces and
+     * parens — take the FIRST '(' up to the LAST ')' */
+    char* lp = strchr(line, '(');
+    char* rp = strrchr(line, ')');
+    if (!lp || !rp || rp < lp) return 0;
+    {
+        size_t cl = (size_t)(rp - lp) - 1;
+        if (cl > 63) cl = 63;
+        memcpy(out->name, lp + 1, cl);
+        out->name[cl] = 0;
+    }
+    unsigned long long utime = 0, stime = 0, threads = 0, starttime = 0;
+    long long vsize = 0, prio = 20;
+    const char* q = rp + 2; /* fields 3.. : state ppid pgrp session tty tpgid flags
+                             * minflt cminflt majflt cmajflt utime stime cutime
+                             * cstime priority nice threads itreal starttime vsize rss */
+    char state; long long ppid, pgrp, sess, tty, tpgid, flags;
+    unsigned long long mf, cmf, mjf, cmjf, cutime, cstime, itreal; long long nice;
+    if (sscanf(q, "%c %lld %lld %lld %lld %lld %lld %llu %llu %llu %llu %llu %llu %llu %llu %lld %lld %llu %llu %llu %lld",
+               &state, &ppid, &pgrp, &sess, &tty, &tpgid, &flags,
+               &mf, &cmf, &mjf, &cmjf, &utime, &stime, &cutime, &cstime,
+               &prio, &nice, &threads, &itreal, &starttime, &vsize) >= 20) {
+        out->pid = pid;
+        out->prio = (uint32_t)(prio > 0 ? prio : 8);
+        out->threads = (uint32_t)threads;
+        uint32_t tck = mw_perf_clk_tck();
+        out->user100 = utime * 10000000ull / tck;
+        out->kernel100 = stime * 10000000ull / tck;
+        out->vbytes = (uint64_t)vsize;
+        /* rss (field 24) via a tail re-parse; elapsed_start = absolute
+         * FILETIME of the process start (btime + starttime/tck) — the
+         * PERF_ELAPSED_TIME contract is value = start FILETIME */
+        {
+            unsigned long long f22 = 0; long long f24 = 0;
+            if (sscanf(q, "%*c %*d %*d %*d %*d %*d %*d %*u %*u %*u %*u %*u %*u %*u %*u %*d %*d %*d %*d %*u %*u %llu %*lld %lld",
+                       &f22, &f24) >= 2) {
+                uint64_t btime100 = mw_perf_btime100();
+                out->elapsed_start = btime100 + (f22 / (unsigned long long)tck) * 10000000ull;
+                out->wset = (uint64_t)f24 * 4096ull;
+                out->pagefile = out->vbytes > out->wset ? out->vbytes - out->wset : 0;
+            }
+        }
+        /* handles = fd count (best effort; 0 on permission miss) */
+        snprintf(path, sizeof(path), "/proc/%u/fd", pid);
+        DIR* d = opendir(path);
+        if (d) {
+            struct dirent* de;
+            uint32_t n = 0;
+            while ((de = readdir(d)) != NULL) if (de->d_name[0] >= '0' && de->d_name[0] <= '9') n++;
+            closedir(d);
+            out->handles = n;
+        }
+        return 1;
+    }
+    return 0;
+}
+
+/* process instance snapshot: Idle(0) + ascending /proc pids (sorted for
+ * deterministic census ordering) */
+static uint32_t mw_perf_snap_processes(struct mw_perf_proc* out, uint32_t max) {
+    uint32_t n = 0;
+    if (n < max) mw_perf_snap_proc(0, &out[n++]);
+    uint32_t pids[512];
+    int np = 0;
+    DIR* d = opendir("/proc");
+    if (d) {
+        struct dirent* e;
+        while ((e = readdir(d)) != NULL && np < 512) {
+            const char* s = e->d_name;
+            int isnum = s[0] >= '0' && s[0] <= '9';
+            for (const char* q = s; *q; q++) if (*q < '0' || *q > '9') { isnum = 0; break; }
+            if (isnum) pids[np++] = (uint32_t)atoi(s);
+        }
+        closedir(d);
+    }
+    for (int i = 1; i < np; i++) { /* insertion sort ascending */
+        uint32_t v = pids[i]; int j = i - 1;
+        while (j >= 0 && pids[j] > v) { pids[j + 1] = pids[j]; j--; }
+        pids[j + 1] = v;
+    }
+    for (int i = 0; i < np && n < max; i++)
+        if (mw_perf_snap_proc(pids[i], &out[n])) n++;
+    return n;
+}
+
+static void mw_perf_put_data_block_hdr(struct mw_perf_buf* b, uint64_t pft, uint64_t pff,
+                                       uint64_t ft100, const uint16_t* sysname) {
+    uint32_t syslen = 0;
+    while (sysname[syslen]) syslen++;
+    uint32_t sysbytes = (syslen + 1) * 2;
+    uint32_t hdr = 0x54;
+    uint32_t total = hdr + sysbytes;
+    MW_PERF_PUTBUF(b, "P\0E\0R\0F\0", 8);          /* 0x00 Signature */
+    MW_PERF_PUT32(b, 1u);                            /* 0x08 LittleEndian = 1 */
+    MW_PERF_PUT32(b, 1u);                            /* 0x0C Version */
+    MW_PERF_PUT32(b, 1u);                            /* 0x10 Revision */
+    MW_PERF_PUT32(b, total);                         /* 0x14 TotalByteLength (fixed later) */
+    MW_PERF_PUT32(b, 0u);                            /* 0x18 HeaderLength (fixup: offset to first object) */
+    MW_PERF_PUT32(b, 0u);                            /* 0x1C NumObjectTypes (fixed later) */
+    MW_PERF_PUT32(b, 0xFFFFFFFFu);                   /* 0x20 DefaultObject */
+    { uint8_t st[16] = {0}; MW_PERF_PUTBUF(b, st, 16); } /* 0x24 SYSTEMTIME */
+    MW_PERF_PUT64(b, pft);                           /* 0x34 PerfTime */
+    MW_PERF_PUT64(b, pff);                           /* 0x3C PerfFreq */
+    MW_PERF_PUT64(b, ft100);                         /* 0x44 PerfTime100nSec */
+    MW_PERF_PUT32(b, sysbytes);                      /* 0x4C SystemNameLength */
+    MW_PERF_PUT32(b, hdr);                           /* 0x50 SystemNameOffset */
+    { uint16_t nm[16] = {0};
+      for (uint32_t i = 0; i < syslen && i < 15; i++) nm[i] = sysname[i];
+      MW_PERF_PUTBUF(b, nm, sysbytes); }
+    mw_perf_put_pad8(b);
+    /* winperf: first PERF_OBJECT_TYPE lives at block+HeaderLength — the
+     * system name sits between the 0x54 header and the objects, so the
+     * header length must cover it (pslist/procexp parse objects from
+     * block+HeaderLength; 0x54 would read the name as an object header) */
+    *(uint32_t*)(b->p + 0x18) = b->len;
+}
+
+struct mw_perf_cdef { uint32_t idx, type; uint32_t size, off; };
+/* process-object counter defs; offsets relative to the counter block */
+/* CounterOffset is relative to the PERF_COUNTER_BLOCK STRUCTURE start
+ * (i.e. the first DWORD value sits at +4, right after ByteLength) */
+static const struct mw_perf_cdef g_perf_proc_defs[] = {
+    { MW_PERF_C_IDPROC,   MW_PERF_T_DWORD, 4, 4 },
+    { MW_PERF_C_PRIORITY, MW_PERF_T_DWORD, 4, 8 },
+    { MW_PERF_C_THREADS,  MW_PERF_T_DWORD, 4, 12 },
+    { MW_PERF_C_HANDLES,  MW_PERF_T_DWORD, 4, 16 },
+    { MW_PERF_C_VBYTES,   MW_PERF_T_LARGE, 8, 20 },
+    { MW_PERF_C_WSET,     MW_PERF_T_LARGE, 8, 28 },
+    { MW_PERF_C_PAGEFILE, MW_PERF_T_LARGE, 8, 36 },
+    { MW_PERF_C_ELAPSED,  MW_PERF_T_ELAPSED, 8, 44 },
+    { MW_PERF_C_USER_TIME,  MW_PERF_T_100NS, 8, 52 },
+    { MW_PERF_C_KERNEL_TIME, MW_PERF_T_100NS, 8, 60 },
+    { 190u, MW_PERF_T_LARGE, 8, 68 },  /* Working Set Peak */
+    { 192u, MW_PERF_T_LARGE, 8, 76 },  /* Page File Bytes Peak */
+    { 194u, MW_PERF_T_LARGE, 8, 84 },  /* Pool Nonpaged Bytes */
+    { 196u, MW_PERF_T_LARGE, 8, 92 },  /* Pool Paged Bytes */
+    { 198u, MW_PERF_T_LARGE, 8, 100 }, /* Page Faults/sec */
+};
+static const struct mw_perf_cdef g_perf_proc_cpu_def =
+    { MW_PERF_C_PCT_TIME, MW_PERF_T_100NS_INV, 8, 4 };
+
+static void mw_perf_put_cdefs(struct mw_perf_buf* b, const struct mw_perf_cdef* defs, uint32_t n) {
+    for (uint32_t i = 0; i < n; i++) {
+        MW_PERF_PUT32(b, 0x28u);          /* 0x00 ByteLength */
+        MW_PERF_PUT32(b, defs[i].idx);    /* 0x04 CounterNameTitleIndex */
+        MW_PERF_PUT32(b, 0u);             /* 0x08 CounterNameTitle */
+        MW_PERF_PUT32(b, defs[i].idx);    /* 0x0C CounterHelpTitleIndex */
+        MW_PERF_PUT32(b, 0u);             /* 0x10 CounterHelpTitle */
+        MW_PERF_PUT32(b, 0u);             /* 0x14 DefaultScale */
+        MW_PERF_PUT32(b, 100u);           /* 0x18 DetailLevel */
+        MW_PERF_PUT32(b, defs[i].type);   /* 0x1C CounterType */
+        MW_PERF_PUT32(b, defs[i].size);   /* 0x20 CounterSize */
+        MW_PERF_PUT32(b, defs[i].off);    /* 0x24 CounterOffset */
+    }
+}
+
+static void mw_perf_put_instance(struct mw_perf_buf* b, const char* name, int uniq) {
+    uint32_t nl = (uint32_t)strlen(name);
+    uint32_t namebytes = (nl + 1) * 2;
+    uint32_t ilen = (0x18 + namebytes + 7) & ~7u; /* align8: the walker adds
+                                                     ByteLength + blocklen */
+    MW_PERF_PUT32(b, ilen);           /* 0x00 ByteLength (rounded, pad incl) */
+    MW_PERF_PUT32(b, 0u);             /* 0x04 ParentInstanceTitleIndex */
+    MW_PERF_PUT32(b, 0u);             /* 0x08 ParentInstance */
+    MW_PERF_PUT32(b, (uint32_t)uniq); /* 0x0C UniqueID */
+    MW_PERF_PUT32(b, 0x18u);          /* 0x10 NameOffset */
+    MW_PERF_PUT32(b, namebytes);      /* 0x14 NameLength */
+    { uint16_t w[70] = {0};
+      for (uint32_t i = 0; i < nl && i < 69; i++) w[i] = (uint16_t)(uint8_t)name[i];
+      MW_PERF_PUTBUF(b, w, namebytes); }
+    mw_perf_put_pad8(b); /* round the record out to ByteLength */
+}
+
+/* the Process object: one instance per host process, full counter set */
+static uint32_t mw_perf_build_process_object(struct mw_perf_buf* b) {
+    struct mw_perf_proc procs[128];
+    uint32_t np = mw_perf_snap_processes(procs, 128);
+    uint32_t ndefs = sizeof(g_perf_proc_defs)/sizeof(g_perf_proc_defs[0]);
+    uint32_t blocklen = 112; /* head + 100 used + 8-align pad (records must stay 8-aligned) */
+    uint32_t objhdr = 0x40;
+    /* pslist64 walks instances at object+DefinitionLength (decoded from its
+     * row walk: it read our counter-def array as instance data when this
+     * pointed at the defs) = header + counter-def array, NOT header alone */
+    uint32_t deflen = objhdr + ndefs * 0x28;
+    b->len = 0;
+    if (!mw_perf_ensure(b, objhdr + ndefs * 0x28 + np * (blocklen + 40 + 160)))
+        return 0;
+    uint32_t obj_start = b->len;
+    MW_PERF_PUT32(b, 0u);           /* 0x00 TotalByteLength (fixup later) */
+    MW_PERF_PUT32(b, deflen);       /* 0x04 DefinitionLength */
+    MW_PERF_PUT32(b, objhdr);       /* 0x08 HeaderLength */
+    MW_PERF_PUT32(b, MW_PERF_OBJ_PROCESS); /* 0x0C ObjectNameTitleIndex */
+    MW_PERF_PUT32(b, 0u);           /* 0x10 ObjectNameTitle */
+    MW_PERF_PUT32(b, 0u);           /* 0x14 ObjectHelpTitle */
+    MW_PERF_PUT32(b, MW_PERF_OBJ_PROCESS); /* 0x18 ObjectHelpTitleIndex */
+    MW_PERF_PUT32(b, 100u);         /* 0x1C DetailLevel */
+    MW_PERF_PUT32(b, ndefs);        /* 0x20 NumCounters */
+    MW_PERF_PUT32(b, MW_PERF_C_IDPROC); /* 0x24 DefaultCounter */
+    MW_PERF_PUT32(b, (int32_t)np);  /* 0x28 NumInstances */
+    MW_PERF_PUT32(b, 0u);           /* 0x2C CodePage = unicode */
+    MW_PERF_PUT64(b, mw_perf_qpc_now()); /* 0x30 PerfTime */
+    MW_PERF_PUT64(b, mw_perf_qpf());     /* 0x38 PerfFreq */
+    mw_perf_put_cdefs(b, g_perf_proc_defs, ndefs);
+    for (uint32_t i = 0; i < np; i++) {
+        mw_perf_put_instance(b, procs[i].name, -1);
+        uint32_t blk = b->len;
+        uint64_t qpc = mw_perf_qpc_now();
+        MW_PERF_PUT32(b, blocklen);
+        { uint8_t z[108]; memset(z, 0, sizeof(z)); MW_PERF_PUTBUF(b, z, 108); }
+        uint8_t* c = b->p + blk + 4;
+        uint64_t now100 = mw_perf_filetime_now();
+        uint64_t age100 = now100 > procs[i].elapsed_start ? now100 - procs[i].elapsed_start : 0;
+        *(uint32_t*)(c + 0)  = procs[i].pid;
+        *(uint32_t*)(c + 4)  = procs[i].prio;
+        *(uint32_t*)(c + 8)  = procs[i].threads;
+        *(uint32_t*)(c + 12) = procs[i].handles;
+        *(uint64_t*)(c + 16) = procs[i].vbytes;
+        *(uint64_t*)(c + 24) = procs[i].wset;
+        *(uint64_t*)(c + 32) = procs[i].pagefile;
+        /* PERF_ELAPSED_TIME contract: value = start in the OBJECT PerfTime
+         * time base (QPC ns); elapsed = (PerfTime - value) / PerfFreq */
+        *(uint64_t*)(c + 40) = qpc > age100 / 100 ? qpc - age100 / 100 : 0;
+        *(uint64_t*)(c + 48) = procs[i].user100;
+        *(uint64_t*)(c + 56) = procs[i].kernel100;
+        *(uint64_t*)(c + 64) = procs[i].wset;
+        *(uint64_t*)(c + 72) = procs[i].pagefile;
+        *(uint64_t*)(c + 80) = 0;
+        *(uint64_t*)(c + 88) = 0;
+        *(uint64_t*)(c + 96) = 0;
+    }
+    *(uint32_t*)(b->p + obj_start) = b->len - obj_start; /* TotalByteLength */
+    return b->len;
+}
+
+/* the Processor object: one instance per host CPU, % Processor Time only */
+static uint32_t mw_perf_build_processor_object(struct mw_perf_buf* b) {
+    long ncpu = sysconf(_SC_NPROCESSORS_ONLN);
+    if (ncpu < 1) ncpu = 1;
+    uint32_t ndefs = 1;
+    uint32_t objhdr = 0x40;
+    /* pslist64 walks instances at object+DefinitionLength (decoded from its
+     * row walk: it read our counter-def array as instance data when this
+     * pointed at the defs) = header + counter-def array, NOT header alone */
+    uint32_t deflen = objhdr + ndefs * 0x28;
+    b->len = 0;
+    if (!mw_perf_ensure(b, objhdr + ndefs * 0x28 + (uint32_t)ncpu * 256))
+        return 0;
+    uint32_t obj_start = b->len;
+    MW_PERF_PUT32(b, 0u);
+    MW_PERF_PUT32(b, deflen);
+    MW_PERF_PUT32(b, objhdr);
+    MW_PERF_PUT32(b, MW_PERF_OBJ_PROCESSOR);
+    MW_PERF_PUT32(b, 0u);
+    MW_PERF_PUT32(b, 0u);
+    MW_PERF_PUT32(b, MW_PERF_OBJ_PROCESSOR);
+    MW_PERF_PUT32(b, 100u);
+    MW_PERF_PUT32(b, ndefs);
+    MW_PERF_PUT32(b, MW_PERF_C_PCT_TIME);
+    MW_PERF_PUT32(b, (int32_t)ncpu);
+    MW_PERF_PUT32(b, 0u);
+    MW_PERF_PUT64(b, mw_perf_qpc_now());
+    MW_PERF_PUT64(b, mw_perf_qpf());
+    mw_perf_put_cdefs(b, &g_perf_proc_cpu_def, 1);
+    for (long i = 0; i < ncpu; i++) {
+        char nm[16];
+        snprintf(nm, sizeof(nm), "%ld", i);
+        mw_perf_put_instance(b, nm, -1);
+        /* counter block: ByteLength must equal the bytes actually emitted
+         * (pslist strides inst + ByteLength + block->ByteLength exactly) */
+        MW_PERF_PUT32(b, 16u);
+        MW_PERF_PUT64(b, 0ull); /* raw idle-100ns; INV formula renders busy */
+        mw_perf_put_pad8(b);
+    }
+    *(uint32_t*)(b->p + obj_start) = b->len - obj_start;
+    return b->len;
+}
+
+/* the System object: PERF_NO_INSTANCES, System Up Time only */
+static uint32_t mw_perf_build_system_object(struct mw_perf_buf* b) {
+    uint32_t ndefs = 1;
+    uint32_t objhdr = 0x40;
+    /* pslist64 walks instances at object+DefinitionLength (decoded from its
+     * row walk: it read our counter-def array as instance data when this
+     * pointed at the defs) = header + counter-def array, NOT header alone */
+    uint32_t deflen = objhdr + ndefs * 0x28;
+    static const struct mw_perf_cdef uptime_def =
+        { MW_PERF_C_UPTIME, MW_PERF_T_ELAPSED, 8, 0 };
+    b->len = 0;
+    if (!mw_perf_ensure(b, 1024)) return 0;
+    uint32_t obj_start = b->len;
+    MW_PERF_PUT32(b, 0u);
+    MW_PERF_PUT32(b, deflen);
+    MW_PERF_PUT32(b, objhdr);
+    MW_PERF_PUT32(b, MW_PERF_OBJ_SYSTEM);
+    MW_PERF_PUT32(b, 0u);
+    MW_PERF_PUT32(b, 0u);
+    MW_PERF_PUT32(b, MW_PERF_OBJ_SYSTEM);
+    MW_PERF_PUT32(b, 100u);
+    MW_PERF_PUT32(b, ndefs);
+    MW_PERF_PUT32(b, MW_PERF_C_UPTIME);
+    MW_PERF_PUT32(b, 0xFFFFFFFFu); /* PERF_NO_INSTANCES */
+    MW_PERF_PUT32(b, 0u);
+    MW_PERF_PUT64(b, mw_perf_qpc_now());
+    MW_PERF_PUT64(b, mw_perf_qpf());
+    mw_perf_put_cdefs(b, &uptime_def, 1);
+    MW_PERF_PUT32(b, 8u);           /* PERF_COUNTER_BLOCK.ByteLength */
+    { /* System Up Time in the OBJECT PerfTime base (QPC ns): uptime */
+        uint64_t btime100 = mw_perf_btime100();
+        uint64_t now100 = mw_perf_filetime_now();
+        uint64_t up100 = now100 > btime100 ? now100 - btime100 : 0;
+        uint64_t qpc = mw_perf_qpc_now();
+        MW_PERF_PUT64(b, qpc > up100 / 100 ? qpc - up100 / 100 : 0);
+    }
+    *(uint32_t*)(b->p + obj_start) = b->len - obj_start;
+    return b->len;
+}
+
+/* one-object PERF_DATA_BLOCK wrapper (signature + name header + object) */
+static uint32_t mw_perf_build_object_blob(uint8_t* arena, uint32_t cap,
+                                          uint32_t which) {
+    struct mw_perf_buf inner = { arena + 0x200, 0, cap - 0x200 };
+    uint32_t olen;
+    if (which == MW_PERF_OBJ_PROCESS) olen = mw_perf_build_process_object(&inner);
+    else if (which == MW_PERF_OBJ_PROCESSOR) olen = mw_perf_build_processor_object(&inner);
+    else olen = mw_perf_build_system_object(&inner);
+    if (!olen) return 0;
+    struct mw_perf_buf out = { arena, 0, cap };
+    static const uint16_t sysname[] = { 'M','I','N','I','W','I','N',0 };
+    mw_perf_put_data_block_hdr(&out, mw_perf_qpc_now(), mw_perf_qpf(),
+                               mw_perf_filetime_now(), sysname);
+    MW_PERF_PUTBUF(&out, inner.p, inner.len);
+    *(uint32_t*)(out.p + 0x14) = out.len;   /* TotalByteLength */
+    *(uint32_t*)(out.p + 0x1c) = 1;         /* NumObjectTypes */
+    return out.len;
+}
+
+/* HKPD dispatch: value name -> perflib response; two-pass (NULL -> 234 +
+ * required size) per the real Perflib channel contract. */
+static int32_t mw_perf_hkpd_query(const uint16_t* name, uint32_t* type,
+                                  void* data, uint32_t* size) {
+    static uint8_t arena[65536];
+    MW_TRACE("HKPD-Q entry name=%p data=%p size=%p *size=%u", (const void*)name, data, (const void*)size, size ? *size : 0);
+    char nb[64] = {0};
+    uint32_t k = 0;
+    if (name) while (k + 1 < sizeof(nb) && name[k]) { nb[k] = (char)(name[k] & 0xFF); k++; }
+    while (k > 0 && nb[k - 1] == ' ') nb[--k] = 0; /* trailing-space trim */
+    const uint8_t* blob = NULL;
+    uint32_t blen = 0;
+    uint32_t wt = 7u; /* REG_MULTI_SZ — the real Counter 009 value type */
+    if (k == 0) {
+        /* real HKPD with an empty value name returns the full table; v1:
+         * honest empty plane (no object matches) — procexp's .NET parser
+         * relies on exactly this (SW-1102h contract preserved) */
+    } else if (!strcasecmp(nb, "counter 009")) {
+        struct mw_perf_buf b = { arena, 0, sizeof(arena) };
+        blen = mw_perf_build_name_table(&b, 0);
+        blob = arena;
+    } else if (!strcasecmp(nb, "explain 009")) {
+        struct mw_perf_buf b = { arena, 0, sizeof(arena) };
+        blen = mw_perf_build_name_table(&b, 1);
+        blob = arena;
+    } else if (!strcasecmp(nb, "last counter")) {
+        static const uint32_t v = MW_PERF_LAST_INDEX;
+        blob = (const uint8_t*)&v; blen = 4; wt = 4u; /* REG_DWORD */
+    } else if (!strcasecmp(nb, "last help")) {
+        static const uint32_t v = MW_PERF_LAST_INDEX;
+        blob = (const uint8_t*)&v; blen = 4; wt = 4u; /* REG_DWORD */
+    } else if (!strcasecmp(nb, "processor") || !strcmp(nb, "238")) {
+        blen = mw_perf_build_object_blob(arena, sizeof(arena), MW_PERF_OBJ_PROCESSOR);
+        blob = arena;
+    } else if (!strcasecmp(nb, "process") || !strcmp(nb, "230")) {
+        blen = mw_perf_build_object_blob(arena, sizeof(arena), MW_PERF_OBJ_PROCESS);
+        blob = arena;
+        if (blen && strstr(nb, "230")) {
+            uint32_t hl = *(uint32_t*)(arena + 0x18);
+            uint8_t* o = arena + hl;
+            uint32_t ni = *(int32_t*)(o+0x28);
+            uint8_t* inst = o + *(uint32_t*)(o+4);
+            uint32_t end = hl + *(uint32_t*)(o);
+            for (uint32_t i = 0; i < (uint32_t)ni && i < 8; i++) {
+                uint32_t ilen = *(uint32_t*)inst;
+                uint32_t bl2 = *(uint32_t*)(inst + ilen);
+                MW_TRACE("perf walk i=%u inst=+%u ilen=%u block=%u next=+%u end=%u nameoff=%u namelen=%u nm='%02x%02x%02x%02x'",
+                         i, (uint32_t)(inst - arena), ilen, bl2,
+                         (uint32_t)(inst - arena) + ilen + bl2, end,
+                         *(uint32_t*)(inst+0x10), *(uint32_t*)(inst+0x14),
+                         inst[0x18], inst[0x19], inst[0x1a], inst[0x1b]);
+                inst += ilen + bl2;
+            }
+        }
+    } else if (!strcasecmp(nb, "system") || !strcmp(nb, "2")) {
+        blen = mw_perf_build_object_blob(arena, sizeof(arena), MW_PERF_OBJ_SYSTEM);
+        blob = arena;
+    }
+    if (!blob) {
+        /* unknown object: the honest empty plane (NumObjectTypes = 0) */
+        struct mw_perf_buf b = { arena, 0, sizeof(arena) };
+        static const uint16_t sysname[] = { 'M','I','N','I','W','I','N',0 };
+        mw_perf_put_data_block_hdr(&b, mw_perf_qpc_now(), mw_perf_qpf(),
+                                   mw_perf_filetime_now(), sysname);
+        blen = b.len; blob = arena;
+    }
+    if (type) *type = wt;
+    if (!data || !size) {
+        /* SW-1239 (pslist64 0x140002e60 decode): the Perflib channel is NOT
+         * a registry key — the real provider answers a NULL-buffer probe
+         * with SUCCESS + the required size (pslist aborts its name-table
+         * load on any nonzero rc: jne 0x140003030, then crashes later on
+         * the NULL array at 0x1400030b6). The classic registry 234 dance
+         * (data!=NULL, small init'ed cbData) is kept below. Distinguish the
+         * two shapes by the cbData slot: pslist passes an UNINITIALIZED
+         * main-frame leftover (huge), dance callers pass an init'ed size. */
+        uint32_t orig_cap = size ? *size : 0;
+        if (size) *size = blen;
+        if (data == NULL && orig_cap >= 0x10000u) {
+            MW_TRACE("HKPD '%s': NULL-buffer perflib probe -> 0 + size %u", nb, blen);
+            return 0;
+        }
+        MW_TRACE("HKPD '%s': NULL-buffer dance probe -> 234 + size %u", nb, blen);
+        mw_SetLastError(234);
+        return 234;
+    }
+    uint32_t cap = *size;
+    if (cap < blen) {
+        *size = blen;
+        MW_TRACE("HKPD '%s': cap %u < blob %u -> 234", nb, cap, blen);
+        mw_SetLastError(234);
+        return 234;
+    }
+    memcpy(data, blob, blen);
+    *size = blen;
+    MW_TRACE("RegQueryValueExW(HKPD '%s') -> perflib blob (%u bytes)", nb, blen);
+    return 0;
+}
+
 static int32_t mw_reg_query(void* key, const uint16_t* name, uint32_t* type, void* data, uint32_t* size) {
     /* SW-1102h: HKEY_PERFORMANCE_DATA contract (HKPD 0x80000004,
      * HKEY_PERFORMANCE_TEXT 0x80000050, HKEY_PERFORMANCE_NLSTEXT 0x80000060).
@@ -11068,43 +11740,9 @@ static int32_t mw_reg_query(void* key, const uint16_t* name, uint32_t* type, voi
     {
         uint32_t k32 = (uint32_t)(uintptr_t)key;
         if (k32 == 0x80000004u || k32 == 0x80000050u || k32 == 0x80000060u) {
-            enum { MW_PERF_HDR = 0x54, MW_PERF_NAME_BYTES = 16 /* L"MINIWIN" + NUL */ };
-            const uint32_t need = MW_PERF_HDR + MW_PERF_NAME_BYTES;
-            if (!data) {
-                if (size) *size = need;
-                return 234; /* pass 1: ERROR_MORE_DATA + required size */
-            }
-            uint32_t cap = size ? *size : need;
-            if (cap < need) {
-                if (size) *size = need;
-                mw_SetLastError(234);
-                return 234;
-            }
-            uint8_t* p = (uint8_t*)data;
-            memset(p, 0, need);
-            memcpy(p, "P\0E\0R\0F\0", 8);          /* Signature L"PERF" */
-            *(uint32_t*)(p + 0x08) = 0x1000u;      /* LittleEndian */
-            *(uint32_t*)(p + 0x0c) = 1u;           /* Version */
-            *(uint32_t*)(p + 0x10) = 1u;           /* Revision */
-            *(uint32_t*)(p + 0x14) = need;         /* TotalByteLength */
-            *(uint32_t*)(p + 0x18) = MW_PERF_HDR;  /* HeaderLength */
-            *(uint32_t*)(p + 0x1c) = 0u;           /* NumObjectTypes = 0 */
-            *(int32_t*) (p + 0x20) = -1;           /* DefaultObject */
-            /* SYSTEMTIME @0x24 (16B) zero — parsers key off PerfTime100nSec */
-            uint64_t now = (uint64_t)time(NULL);
-            *(uint64_t*)(p + 0x44) = now * 10000000ull + 116444736000000000ull;
-            *(uint32_t*)(p + 0x4c) = MW_PERF_NAME_BYTES; /* SystemNameLength */
-            *(uint32_t*)(p + 0x50) = MW_PERF_HDR;        /* SystemNameOffset */
-            memcpy(p + MW_PERF_HDR, "M\0I\0N\0I\0W\0I\0N\0\0\0", MW_PERF_NAME_BYTES);
-            if (size) *size = need;
-            {
-                char nb[64];
-                uint32_t k = 0;
-                if (name) while (k + 1 < sizeof(nb) && name[k]) { nb[k] = (char)(name[k] & 0xFF); k++; }
-                nb[k] = 0;
-                MW_TRACE("RegQueryValueExW(HKPD '%s') -> empty PERF_DATA_BLOCK (%u bytes)", nb, need);
-            }
-            return 0;
+            /* SWEEP-058 SW-1239: real perflib plane (Counter 009 / objects);
+             * the unknown-name path keeps the SW-1102h honest empty block */
+            return mw_perf_hkpd_query(name, type, data, size);
         }
     }
     int i = mw_reg_slot(key);
@@ -11161,10 +11799,16 @@ static int32_t mw_reg_query(void* key, const uint16_t* name, uint32_t* type, voi
 }
 __attribute__((ms_abi)) int32_t mw_RegQueryValueExW(void* key, const wchar_t* name, void* res, uint32_t* type, void* data, uint32_t* size) {
     (void)res;
+    /* SWEEP-058 SW-1239 diag: caller attribution for HKPD probes */
+    if (((uint32_t)(uintptr_t)key) == 0x80000004u)
+        MW_TRACE("HKPD-W probe caller=%p name=%p", __builtin_return_address(0), (const void*)name);
     return mw_reg_query(key, (const uint16_t*)name, type, data, size);
 }
 __attribute__((ms_abi)) int32_t mw_RegQueryValueExA(void* key, const char* name, void* res, uint32_t* type, void* data, uint32_t* size) {
     (void)res;
+    /* SWEEP-058 SW-1239 diag: caller attribution for HKPD probes */
+    if (((uint32_t)(uintptr_t)key) == 0x80000004u)
+        MW_TRACE("HKPD-A probe caller=%p name=%p", __builtin_return_address(0), (const void*)name);
     uint16_t wname[MW_REG_VALN] = {0};
     if (name) {
         char a[MW_REG_VALN] = {0};
@@ -22984,6 +23628,94 @@ __attribute__((ms_abi)) uint32_t mw_LsaOpenPolicy(const void* name, void* attr,
     return 0xC0000002u;
 }
 
+/* ---- SWEEP-058 SW-1240 (re-lands the lost SWEEP-057 Train 5 LSA
+ * groundwork): SECUR32 logon-session trio with REAL x64 layouts.
+ * SECURITY_LOGON_SESSION_DATA (phnt ntsecapi.h, x64):
+ *   0x00 Size, 0x08 LogonId(LUID), 0x10 UserName / 0x18 LogonDomain /
+ *   0x20 AuthenticationPackage (LSA_UNICODE_STRING {USHORT len; USHORT
+ *   max; pad4; PWSTR buf} = 8B), 0x28 LogonType, 0x2C Session,
+ *   0x30 Sid, 0x38 LogonTime, 0x40 LogonServer, 0x48 Credentials
+ *   = 0x50-byte header + string buffers + SID buffer after it.
+ * One interactive session (LUID 0x3e7 = the SYSTEM session real Windows
+ * always has): user "guest", domain "MINIWIN", package "Negotiate",
+ * logon server "MINIWIN", SID S-1-5-21-1-2-3-500. Buffers allocated with
+ * the LocalAlloc registry so LsaFreeReturnBuffer can free them. */
+static const uint32_t MW_LSA_SESSION_LUID = 0x3e7u;
+
+static uint32_t mw_lsa_build_session_data(uint8_t** out) {
+    static const struct { const char* s; } strs[] = {
+        { "guest" },     /* UserName */
+        { "MINIWIN" },   /* LogonDomain */
+        { "Negotiate" }, /* AuthenticationPackage */
+        { "MINIWIN" },   /* LogonServer */
+        { "" },          /* Credentials */
+    };
+    uint32_t total = 0x50;
+    for (int i = 0; i < 5; i++) total += (uint32_t)strlen(strs[i].s) * 2 + 2 + 8;
+    /* SID S-1-5-21-1-2-3-500: Revision(1)+SubAuthCount(1)+Auth(6)+5*4 = 28 */
+    total += 28 + 8;
+    uint8_t* p = (uint8_t*)mw_LocalAlloc(0x40, total);
+    if (!p) return 0xC000009Au; /* STATUS_NO_MEMORY */
+    memset(p, 0, total);
+    *(uint32_t*)(p + 0x00) = total;
+    *(uint64_t*)(p + 0x08) = MW_LSA_SESSION_LUID;
+    uint8_t* cur = p + 0x50;
+    for (int i = 0; i < 5; i++) {
+        uint32_t blen = (uint32_t)strlen(strs[i].s) * 2;
+        uint16_t* w = (uint16_t*)cur;
+        for (uint32_t c = 0; c < blen / 2; c++) w[c] = (uint16_t)(uint8_t)strs[i].s[c];
+        /* LSA_UNICODE_STRING fields @ (0x10/0x18/0x20/0x40/0x48) + i*8 */
+        uint16_t* us = (uint16_t*)(p + (i == 0 ? 0x10 : i == 1 ? 0x18 : i == 2 ? 0x20 : i == 3 ? 0x40 : 0x48));
+        us[0] = (uint16_t)blen;         /* Length (bytes) */
+        us[1] = (uint16_t)(blen + 2);   /* MaximumLength */
+        *(uint64_t*)(us + 4) = (uint64_t)(uintptr_t)w; /* Buffer */
+        cur += blen + 2;
+        cur += (8 - ((uintptr_t)cur & 7)) & 7;
+    }
+    /* Sid @0x30: S-1-5-21-1-2-3-500 */
+    {
+        uint8_t* sid = cur;
+        sid[0] = 1;          /* Revision */
+        sid[1] = 5;          /* SubAuthorityCount */
+        *(uint32_t*)(sid + 4) = 5;  /* IdentifierAuthority */
+        uint32_t* sub = (uint32_t*)(sid + 8);
+        sub[0] = 21; sub[1] = 1; sub[2] = 2; sub[3] = 3; sub[4] = 500;
+        *(uint64_t*)(p + 0x30) = (uint64_t)(uintptr_t)sid;
+    }
+    *(uint64_t*)(p + 0x38) = (uint64_t)time(NULL) * 10000000ull + 116444736000000000ull;
+    *(uint32_t*)(p + 0x28) = 2; /* LogonType = Interactive */
+    *(uint32_t*)(p + 0x2c) = 1; /* Session */
+    *out = p;
+    return 0; /* STATUS_SUCCESS */
+}
+
+__attribute__((ms_abi)) uint32_t mw_LsaEnumerateLogonSessions(uint32_t* count, uint64_t** list) {
+    if (count) *count = 1;
+    if (list) {
+        uint64_t* l = (uint64_t*)mw_LocalAlloc(0x40, 8);
+        if (!l) return 0xC000009Au;
+        l[0] = MW_LSA_SESSION_LUID;
+        *list = l;
+    }
+    MW_TRACE("LsaEnumerateLogonSessions -> 1 session (LUID 0x3e7)");
+    return 0;
+}
+__attribute__((ms_abi)) uint32_t mw_LsaGetLogonSessionData(const uint64_t* luid, uint8_t** data) {
+    if (data) *data = NULL;
+    if (!luid || *luid != MW_LSA_SESSION_LUID) return 0xC0000034u; /* STATUS_OBJECT_NAME_NOT_FOUND */
+    uint8_t* p = NULL;
+    uint32_t st = mw_lsa_build_session_data(&p);
+    if (st) return st;
+    if (data) *data = p;
+    MW_TRACE("LsaGetLogonSessionData(LUID 0x%llx) -> %u-byte SECURITY_LOGON_SESSION_DATA",
+             (unsigned long long)*luid, *(uint32_t*)p);
+    return 0;
+}
+__attribute__((ms_abi)) uint32_t mw_LsaFreeReturnBuffer(void* buf) {
+    if (buf) mw_LocalFree(buf);
+    return 0; /* STATUS_SUCCESS */
+}
+
 /* ---- SWEEP-014 r3: WinMergeU second-wave gates + VariantInit ---- */
 
 /* oleaut32!VariantInit (ordinal 8): the documented contract — vt = VT_EMPTY,
@@ -34635,6 +35367,12 @@ ENTRY("GDI32.DLL", "GetCharacterPlacementW",                mw_GetCharacterPlace
     ENTRY("KERNEL32.DLL", "K32EnumProcesses",                   mw_K32EnumProcesses),
     ENTRY("KERNEL32.DLL", "K32GetModuleBaseNameW",              mw_K32GetModuleBaseNameW),
     ENTRY("ADVAPI32.DLL", "LsaQueryInformationPolicy",          mw_LsaQueryInformationPolicy),
+    /* SWEEP-058 SW-1240: SECUR32 logon-session trio (bound by name across
+     * DLLs — guests import from SECUR32.dll; real Windows exports these
+     * from Secur32/Advapi32 both) */
+    ENTRY("SECUR32.DLL", "LsaEnumerateLogonSessions",           mw_LsaEnumerateLogonSessions),
+    ENTRY("SECUR32.DLL", "LsaGetLogonSessionData",              mw_LsaGetLogonSessionData),
+    ENTRY("SECUR32.DLL", "LsaFreeReturnBuffer",                 mw_LsaFreeReturnBuffer),
     ENTRY("USER32.DLL", "MapVirtualKeyExW",                     mw_MapVirtualKeyExW),
     ENTRY("USER32.DLL", "MapVirtualKeyW",                       mw_MapVirtualKeyW),
     ENTRY("NETAPI32.DLL", "NetServerGetInfo",                   mw_NetServerGetInfo),

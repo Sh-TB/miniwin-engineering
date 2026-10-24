@@ -1,0 +1,6 @@
+[TRACE] Command line: artifacts/sweep047/bin/pslist64.exe -accepteula
+
+PsList v1.41 - Process information lister
+Copyright (C) 2000-2023 Mark Russinovich
+Sysinternals - www.sysinternals.com
+
