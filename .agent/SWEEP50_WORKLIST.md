@@ -3396,3 +3396,50 @@ viewer, (2) Windows calculator, (3) a program that does not exist on Linux
 - [ ] SW-1284 (common-controls child-control lifecycle), SW-1283b
   (chocolate DLL-chain DllMain), SW-1281c/d (x86 api-set shim +
   deep-init), SW-1291's sibling SW-1290 consumers unchanged.
+
+## SWEEP-062 Train 2 «ادامه» — SW-1292 decode: the TRUE sol WM_PAINT chain (2026-10-25)
+
+- [x] **SW-1292 DECODED (instruction-level, probe-verified; fix deferred)**
+  — the earlier decode was against the WRONG wndproc. The REAL chain,
+  proven by a BeginPaint return-address probe ([PROBE] BeginPaint caller
+  RA = 0x100001d72):
+  1. sol's main WndProc = **0x100001bc0** (the FIRST RegisterClassExW
+     class; the 0x100008f20 class/proc pair is a second registration —
+     both were muddled in the earlier decode).
+  2. WM_PAINT branch @ 0x100001d5a: `cmpl $0x0,[0x10000c294]` (paint_lock,
+     the SW-1285 global) — probe-verified paint_lock=0 at paint time →
+     proceeds.
+  3. BeginPaint(hwnd, &ps@rsp+0x40) → `mov [0x10000c298],%r11` (game obj,
+     probe-verified non-NULL, vfn0=0x100007cf0, 13 piles, dealt state
+     cards=24/7/6/...) → `game->fn[0](game, cmd=7, &ps, 0)`.
+  4. 0x100007cf0 dispatch: eax=cmd-3=4 → jump table @0x10007e94 entry[4]
+     → 0x100007e78 → call 0x1000047a0 (the SWEEP-061 "common handler")
+     → second table @0x1000488c entry[7] → **0x100003f10**.
+  5. 0x100003f10: `mov 0x0(%rbp),%rcx` (ps.hdc) → call f_1690(hdc,0,0)
+     (the "set paint DC" internal: writes [c2a0]=hdc, [c2ac]/[c2b0]) →
+     loop gate `cmpl $0x0,0x30(%rbx)` ([game+0x30]) + `cmp [game+0x70]`
+     (slots=13) → per-pile draw loop.
+- [x] **MEASURED (probe evidence)**: at pre/post-paint, ALL guards pass
+  (paint_lock=0, game non-NULL, c124=1, canvas [c340]=0x30001 non-NULL)
+  YET [c2a0] (f_1690's store) stays NULL across the whole dispatch and
+  the trace shows ZERO guest API calls inside the paint — the chain dies
+  between the `call *(%r11)` at 0x100001d8d and 0x100003f10's first
+  store, with NO fault record (trace exits cleanly budget->WM_QUIT).
+  The earlier "c124=0 → canvas not created" hypothesis is DEAD (probe:
+  c124=1, canvas created as engine child 0x30001); the earlier
+  "[0x10000c340] guard" hypothesis is DEAD (non-NULL at paint time).
+- [x] **Probe assets kept (env-gated MINWIN_GAME_PROBE=1)**: extended
+  mw_sol_game_probe now dumps c124/c128/canvas c340/c334/c130 AND the
+  f_1690 DC store [c2a0]/[c2ac]/[c2b0], pre+post paint probes fire on
+  WM_PAINT dispatch, and BeginPaint logs its guest return address.
+  XP corpus 17/17 rc=0 with all instrumentation live.
+- [ ] **SW-1292 remains OPEN with the frontier now precise**: the gap is
+  engine-internal to the guest's own fn[0] call — candidates: (a) the
+  jump-table read `mov 0x7e94(%rcx,%rax,4)` semantics under the engine's
+  mapping, (b) the 0x100003f10 loop gate [game+0x30], (c) a silent early
+  ret inside 0x1000047a0's second dispatch. Next tool: engine-side
+  guest-PC sampler (REA) at the WM_PAINT dispatch window, or a guest
+  patch probe that writes [c2a0]=0x20001 pre-paint to see if the draw
+  loop then engages.
+- [ ] SW-1284 (common-controls child lifecycle), SW-1283b, SW-1281c/d
+  remain open.

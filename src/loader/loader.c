@@ -18664,8 +18664,24 @@ static void mw_sol_game_probe(const char* when) {
     uint32_t paint_lock = *(uint32_t*)(img + 0xc294);
     uint32_t g12c = *(uint32_t*)(img + 0xc12c);
     uint32_t g2b4 = *(uint32_t*)(img + 0xc2b4);
-    MW_TRACE("[PROBE %s] game=%p vfn0=%08x [+0x64]=%d [+0x70](slots)=%d paint_lock=%u g12c=%u g2b4=%u",
-             when, game, vt0, f64, f70, paint_lock, g12c, g2b4);
+    /* SW-1292 probe: canvas-window chain — c124 = options bit (canvas
+     * created when != 0), c340 = canvas hwnd, c334/c130 = state-change
+     * compare pair, c128 = second options bit. */
+    uint32_t g124 = *(uint32_t*)(img + 0xc124);
+    uint32_t g128 = *(uint32_t*)(img + 0xc128);
+    void* canvas  = *(void**)(img + 0xc340);
+    uint32_t g334 = *(uint32_t*)(img + 0xc334);
+    uint32_t g130 = *(uint32_t*)(img + 0xc130);
+    /* SW-1292: f_1690 "set paint DC" globals — [c2a0]=hdc written by the
+     * WM_PAINT handler's FIRST internal call after BeginPaint; c2ac/c2b0 =
+     * its edx/r8d stores. If c2a0 changed across the paint dispatch, the
+     * handler ran past 0x100008f6e. */
+    void* dc_a0   = *(void**)(img + 0xc2a0);
+    uint32_t dc_ac = *(uint32_t*)(img + 0xc2ac);
+    uint32_t dc_b0 = *(uint32_t*)(img + 0xc2b0);
+    MW_TRACE("[PROBE %s] game=%p vfn0=%08x [+0x64]=%d [+0x70](slots)=%d paint_lock=%u g12c=%u g2b4=%u c124=%u c128=%u canvas=%p c334=%u c130=%u dc=%p/%u/%u",
+             when, game, vt0, f64, f70, paint_lock, g12c, g2b4,
+             g124, g128, canvas, g334, g130, dc_a0, dc_ac, dc_b0);
     if (f78 && f70 > 0 && f70 < 64) {
         /* the 13 pile slots live INLINE at game+0x78..game+0xdf:
          * [game+0x78]=deck, [game+0x80]=waste, [game+0x88..a7]=4 foundations,
@@ -18693,10 +18709,12 @@ static long long mw_gui_dispatch_msg(const void* msg) {
     if (m == 0x0012u) return 0; /* WM_QUIT is never dispatched */
     if (mw_dispatch_proc() && hwnd == g_main_hwnd) { /* SW-1279 fix C */
         if (m == 0x111u || m == 0x113u) mw_sol_game_probe("pre-cmd");
+        if (m == 0x000Fu) mw_sol_game_probe("pre-paint"); /* SW-1292 */
         long long r = mw_dispatch_proc()(hwnd, m, wp, lp);
         MW_TRACE("[GUI-EVENT] dispatch %s wp=0x%llx -> %lld",
                  mw_wm_name(m), (unsigned long long)wp, r);
         if (m == 0x111u || m == 0x113u) mw_sol_game_probe("post-cmd");
+        if (m == 0x000Fu) mw_sol_game_probe("post-paint"); /* SW-1292 */
         return r;
     }
     MW_TRACE("[GUI-EVENT] dispatch %s -> 0 (no registered wndproc)", mw_wm_name(m));
@@ -18825,6 +18843,15 @@ __attribute__((ms_abi)) void* mw_BeginPaint(void* hwnd, void* ps) {
      * unconditional white wipe destroyed completed renders (sol's dealt
      * board: green felt + 52 cards were wiped by the trailing no-op
      * WM_PAINT -> final frame all white). */
+    { /* SW-1292: identify the guest caller (return address lands right
+       * after the BeginPaint IAT call — sol's WM_PAINT handler would be
+       * 0x100008f64; anything else means a different paint path). */
+        void* ra = __builtin_return_address(0);
+        static int ra_once = -1;
+        if (ra_once < 0) ra_once = getenv("MINWIN_GAME_PROBE") ? 1 : 0;
+        if (ra_once)
+            MW_TRACE("[PROBE] BeginPaint caller RA = %p", ra);
+    }
     MW_TRACE("BeginPaint(hwnd=%p) -> hdc 0x20001 (%dx%d)", hwnd, g_win_w, g_win_h);
     return (void*)0x00020001;
 }
