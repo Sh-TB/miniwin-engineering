@@ -1938,3 +1938,35 @@ DefWindowProc WM_ERASEBKGND semantics). sol felt = full board; 17/17 XP
 corpus rc=0 zero regressions; evidence/sweep061/shots_png refreshed.
 Open: SW-1291 (cosmetic), SW-1290 layer-2 (guests whose erase must skip
 incremental frames), SW-1284/1283b/1281c/d.
+
+---
+## SWEEP-063 (2026-10-24) — Ghidra tooling train: hours -> minutes, SW-1292 decoded
+
+Rule #1: fetched origin first — 97503e7 (SWEEP-062 Train 4) both sides, clean tree.
+
+Toolchain (user mandate: «از ابزار های کمکی استفاده بکنی»): Ghidra 12.2 from NSA
+GitHub (requires JDK 25 — Temurin 25.0.5 installed; JAVA_HOME_OVERRIDE), PyGhidra
+3.2.0 via bundled cp312 wheel. analyzeHeadless has NO PyGhidra runtime → wrote
+scripts/sweep063_driver.py using the pyghidra API directly (probe script retained).
+Exports per binary: functions/imports(+ordinal flag)/exports/entrypoints/
+resources/strings + targeted decompilation. 37 evidence files.
+
+Measured effect («ببینی واقعا چقدر تاثیر داشته یا نه»): procexp64 5.2MB full
+analysis 129s -> 2939 functions; four small binaries seconds; ~150s total for
+five programs, six export classes, plus decompilation of the full sol paint
+chain. Manual equivalent previously spanned SWEEP-060..062.
+
+SW-1292 DECODED (Ghidra): FUN_100007cf0 cmd7 -> default -> FUN_1000047a0 case7
+-> FUN_100003f10 (first stmt: FUN_100001690(ps.hdc) — unconditional [c2a0]
+store; per-pile virtual vfn[1] loop; DC restore). FUN_100001690 = pure setter,
+no branches. Since runtime shows [c2a0] NULL + zero guest APIs + no fault,
+control never reached FUN_100003f10: the indirect `call *(%r11)` @0x100001d8d
+silently no-ops in the engine. Frontier narrowed to that single call site
+(SW-1292b next).
+
+SW-1204: complete procexp64 ordinal import table extracted and cross-validated
+against SW-1223/1225 decodes (OLEAUT32.16/277 match). SW-1293: usbdeview CRT
+entry checklist decoded (MZ/PE, 0x10b magic, RvaAndSizes>=14, SEH). winmine
+.rsrc audit: bomb/LED bitmaps all intact (11 RT_BITMAP). Engine health: winmine
+rc=0 / 82 frames. New cars SW-1292b, SW-1204b, SW-1293b. No engine code changed
+this train. no force-push.

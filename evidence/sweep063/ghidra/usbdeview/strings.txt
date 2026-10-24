@@ -1,0 +1,501 @@
+address	value
+0041651c	%2.2X
+00416524	Arial
+0041657c	USBDeview
+00416588	advapi32.dll
+00416598	CreateProcessWithLogonW
+004165b0	CreateProcessWithTokenW
+004165c8	OpenProcessToken
+004165dc	DuplicateTokenEx
+004165f0	ImpersonateLoggedOnUser
+00416608	RevertToSelf
+00416628	ServicesActive
+00416638	RemoteRegistry
+00416648	X:\autorun.inf
+00416660	autorun
+00416668	shellexecute
+00416678	SYSTEM\CurrentControlSet\Services\usbhub\HubG
+004166a8	DisableOnSoftRemove
+004166bc	ShowGridLines
+004166cc	ShowInfoTip
+004166d8	DisplayDisconnected
+004166ec	DisplayNoPortSerial
+00416700	DisplayNoDriver
+00416710	DisplayHubs
+0041671c	BlackBackground
+0041672c	ShowDisconnectMessage
+00416744	TrayIcon
+00416750	ShowWindowOnDeviceConnect
+0041676c	DisplayOnlyDriveLetter
+00416784	AutoPlayOnDeviceConnect
+0041679c	DisplayBalloonOnDeviceConnect
+004167bc	StartAsHidden
+004167cc	ShowTimeInGMT
+004167dc	ShowMilliseconds
+004167f0	DisplayBalloonOnDeviceDisconnect
+00416814	RetrieveUSBPower
+00416828	MarkConnectedDevices
+00416840	SortOnEveryUpdate
+00416854	SaveFilterIndex
+00416864	DeviceConnectExecute
+0041687c	UseDeviceConnectExecute
+00416894	DeviceDisconnectExecute
+004168ac	UseDeviceDisconnectExecute
+004168c8	AddExportHeaderLine
+004168dc	MarkOddEvenRows
+004168ec	DecodeSerialNumbers
+00416900	MainFont
+0041690c	RemoteComputer
+0041691c	RemoteFile
+00416928	AutoStartRemoteRegistry
+00416940	DisableEnableWaitTime
+00416958	AlwaysOnTop
+00416964	RegEditOpenMode
+0041697c	%d mA
+00416984	%d.%2.2x
+00416990	%4.4x
+00416998	%2.2x
+004169a0	%2.2f
+004169a8	USB\%s\%s
+004169b4	usb.ids
+004169bc	usb.ids.txt
+004169c8	,; "'  
+004169d8	<meta http-equiv='content-type' content='text/html;charset=%s'>
+00416a18	<table dir="rtl"><tr><td> 
+00416a38	<br><h4>%s <a href="http://www.nirsoft.net/" target="newwin">%s</a></h4><p>
+00416a84	</table>
+00416a90	/RunAsAdmin /disable
+00416aa8	/RunAsAdmin /enable
+00416abc	/RunAsAdmin /disable_enable
+00416ad8	/stop
+00416ae0	%s "%s"
+00416b98	Error
+00416ba0	%device_name%  %device_desc%  %drive%  %serial_number%  %vid% %pid% %vid_hex% %pid_hex% %device_type% %service_name% %device_class% %device_mfg% %driver_file% %driver_version% %power% %firmware_revisi
+00416cdc	%0.2f  %s
+00416cf4	%%%2.2x
+00416d14	%0.2f
+00416d1c	dsize
+00416d24	rspeed
+00416d2c	wspeed
+00416d34	%s_%s_%s_%s_%s_%s_%s
+00416d4c	usb3_%s_%s_%s_%s_%s_%s_%s
+00416d70	usb3speed.nirsoft.net
+00416d88	usbspeed.nirsoft.net
+00416da0	POST %s HTTP/1.1 Content-Type: application/x-www-form-urlencoded User-Agent: USBDeview 1.42 Host: %s Content-Length: %d Connection: Close  %s
+00416e38	/publishtest.php
+00416e8c	$speed_test_nirsoft$.dat
+00416ec4	netmsg.dll
+00416ed0	Unknown Error
+00416ee4	Error %d: %s
+00416ef4	<>:"/\|
+00416f04	kernel32.dll
+00416f18	.%3.3d
+00416f24	%2.2X 
+00416f2c	%s (%s)
+00416f34	RunAs
+00416f3c	IsWow64Process
+00416f4c	kernel32
+00416f58	Wow64DisableWow64FsRedirection
+00416f78	Wow64RevertWow64FsRedirection
+00416f98	caption
+00416fa0	menu_%d
+00416fa8	dialog_%d
+00416fb4	strings
+00416fbc	general
+00416fc4	sysdatetimepick32
+00416fdc	charset
+00416fe4	TranslatorName
+00416ff4	TranslatorURL
+00417004	_lng.ini
+00417028	%-18s: %s 
+00417034	%%-%d.%ds 
+00417040	<td bgcolor=#%s nowrap>%s
+0041705c	<td bgcolor=#%s>%s
+00417078	&nbsp;
+00417080	<tr><td%s nowrap><b>%s</b><td bgcolor=#%s%s>%s 
+004170b4	 bgcolor="%s"
+004170c4	<table border="1" cellpadding="5"> 
+004170ec	 nowrap
+004170f4	<font color="%s">%s</font>
+00417110	</table><p>
+0041711c	<item> 
+00417128	<%s>%s</%s> 
+00417138	</item> 
+00417144	<?xml version="1.0"  encoding="ISO-8859-1" ?> 
+00417174	<%s> 
+0041717c	</%s> 
+00417208	%s - %s
+00417210	%device_name%
+00417220	%device_desc%
+00417230	%drive%
+00417238	%serial_number%
+00417248	%device_type%
+00417258	%service_name%
+00417268	%device_class%
+00417278	%device_mfg%
+00417288	%driver_file%
+00417298	%driver_version%
+004172ac	%firmware_revision%
+004172c0	%product_name%
+004172d0	%vendor_name%
+004172e0	%power%
+004172e8	%usb_version%
+004172f8	%vid%
+00417300	%pid%
+00417308	%vid_hex%
+00417314	%pid_hex%
+00417320	%s %s %s %s %s 
+00417338	/sort
+00417340	/nosort
+00417348	SysListView32
+00417358	/noreg
+00417360	report.html
+0041736c	commdlg_FindReplace
+00417380	%s:  %s
+00417388	*.txt
+00417390	*.htm;*.html
+004173a0	*.xml
+004173a8	*.csv
+004173b0	SYSTEM\CurrentControlSet
+004173cc	/remove "%s"
+004173dc	/disable "%s"
+004173ec	/disable_enable "%s"
+00417404	/enable "%s"
+00417414	/reload_hub "%s"
+0041742c	/regedit "%s"
+0041743c	notepad.exe
+0041745c	General
+00417464	WinPos
+00417474	Columns
+0041747c	Software\NirSoft\USBDeview
+00417498	http://www.linux-usb.org/usb.ids
+004174e8	/stext
+004174f0	/shtml
+004174f8	/sverhtml
+00417504	/sxml
+0041750c	/stab
+00417514	/scomma
+0041751c	/stabular
+00417528	/regfile
+00417534	/remote
+0041753c	/remotefile
+00417548	SeLoadDriverPrivilege
+00417560	SeUndockPrivilege
+00417574	SeRestorePrivilege
+00417588	/savelangfile
+00417598	/deleteregkey
+004175a8	/RunAsAdmin
+004175b4	/regedit
+004175c0	/remove
+004175c8	/disable_enable
+004175d8	/disable
+004175e4	/enable
+004175ec	/reload_hub
+004175f8	/is_connected
+00417608	/is_disabled
+00417618	_by_serial
+00417624	_by_drive
+00417638	_all_connected
+00417648	_all_disconnected
+0041765c	_by_class
+00417668	_by_pid
+00417670	/showmsg
+0041767c	;,\@!$
+004176c8	{Unknown}
+004176d8	Exception %8.8X at address %8.8X in module %s Registers:  EAX=%8.8X EBX=%8.8X ECX=%8.8X EDX=%8.8X ESI=%8.8X EDI=%8.8X EBP=%8.8X ESP=%8.8X EIP=%8.8X Stack Data: %s Code Data: %s 
+00417794	MySockWinCls
+004177d8	LookupPrivilegeValueA
+004177f0	AdjustTokenPrivileges
+00417808	# Version: 
+00417814	CreateToolhelp32Snapshot
+00417830	Module32First
+00417840	Module32Next
+00417850	Process32First
+00417860	Process32Next
+00417870	psapi.dll
+0041787c	GetModuleBaseNameA
+00417890	EnumProcessModules
+004178a4	GetModuleFileNameExA
+004178bc	EnumProcesses
+004178cc	GetModuleInformation
+004178e4	\systemroot
+004178f0	QueryFullProcessImageNameA
+0041790c	GetProcessTimes
+0041791c	EnumProcessModulesEx
+00417934	STATIC
+00417950	HKEY_LOCAL_MACHINE
+00417964	HKEY_CURRENT_USER
+00417978	HKEY_CLASSES_ROOT
+0041798c	HKEY_CURRENT_CONFIG
+004179e0	SysTreeView32
+004179f0	RegEdit_RegEdit
+00417a00	regedit.exe
+00417a0c	RunAsInvoker
+00417a1c	__COMPAT_LAYER
+00417a2c	setupapi.dll
+00417a3c	CM_Locate_DevNodeA
+00417a50	CM_Request_Device_EjectA
+00417a6c	CM_Locate_DevNode_ExA
+00417a84	CM_Connect_MachineA
+00417a98	CM_Disconnect_MachineA
+00417ab0	CM_Request_Device_Eject_ExA
+00417acc	SetupDiGetClassDevsA
+00417ae4	SetupDiDestroyDeviceInfoList
+00417b04	SetupDiRemoveDevice
+00417b18	SetupDiEnumDeviceInfo
+00417b30	SetupDiGetClassDevsExA
+00417b48	SetupDiCallClassInstaller
+00417b64	SetupDiSetClassInstallParamsA
+00417b84	SetupDiGetDeviceInstanceIdA
+00417ba0	devmgr.dll
+00417bac	DeviceProperties_RunDLLA
+00417bc8	/MachineName "%s" /DeviceID "%s"
+00417bec	shell32.dll
+00417bf8	SHGetSpecialFolderPathA
+00417c10	Desktop
+00417c18	Software\Microsoft\Windows\CurrentVersion\Explorer\Shell Folders
+00417c5c	%2.2X%2.2X%2.2X
+00417c7c	&quot;
+00417c84	&deg;
+00417c8c	&amp;
+00417c9c	<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN"> 
+00417cd8	<html><head>%s<title>%s</title></head> <body> %s <h3>%s</h3> 
+00417d1c	 </body></html>
+00417d30	<font
+00417d38	 size="%d"
+00417d44	 color="#%s"
+00417d64	</font>
+00417d6c	<font color="%s">
+00417d80	<table border="1" cellpadding="5"><tr%s> 
+00417dac	 width="%s"
+00417db8	<th%s>%s%s%s 
+00417dc8	</table> 
+00417de8	System\CurrentControlSet\Control\DeviceClasses\{3abf6f2d-71c4-462a-8a92-1e6861e6af27}
+00417e40	DeviceInstance
+00417e58	#{3abf6f2d-71c4-462a-8a92-1e6861e6af27}
+00417e88	SYSTEM
+00417e90	SYSTEM\MountedDevices
+00417ea8	\DosDevices\X:
+00417eb8	winlogon.exe
+00417ec8	SeImpersonatePrivilege
+00417ee0	$NIRSOFT_USBDEVIEW_KEY$
+00417ef8	\#\Control
+00417f04	Linked
+00417f0c	0000%s\00000000
+00417f24	Capabilities
+00417f34	ConfigFlags
+00417f40	Class
+00417f48	DeviceDesc
+00417f54	LocationInformation
+00417f6c	FriendlyName
+00417f7c	Service
+00417f84	ParentIdPrefix
+00417f94	Driver
+00417f9c	SymbolicName
+00417fac	Device Parameters
+00417fc0	PortName
+00417fcc	DisableCount
+00417fdc	Control
+00417fe4	HardwareID
+00417ff0	&Rev_
+00417ff8	LogConf
+00418000	CompatibleIDs
+00418010	USB\MS_COMP
+0041801c	USB\MS_COMP_
+0041802c	MS_SUBCOMP_
+00418040	class
+00418048	subclass
+0041805c	Properties\{83da6326-97a6-4088-9453-a1923f573b29}
+004180b0	HKEY_LOCAL_MACHINE\System\CurrentControlSet\Enum\USB\%s\%s
+004180ec	USB\%s
+004180f4	usbhub
+004180fc	Services\%s
+00418108	DisplayName
+00418114	ImagePath
+00418120	Control\Class\%s
+00418134	DriverDesc
+00418140	DriverVersion
+00418150	InfSection
+0041815c	InfPath
+00418168	Enum\
+00418178	Services\usbhub\Enum
+00418190	Count
+00418198	Enum\USB
+004181a4	Control\DeviceClasses\{a5dcbf10-6530-11d2-901f-00c04fb951ed}
+004181e4	{a5dcbf10-6530-11d2-901f-00c04fb951ed}
+0041820c	Control\DeviceClasses\%s
+00418228	USBSTOR
+00418230	Control\DeviceClasses
+00418248	%s#%s
+00418250	FTDIBUS
+00418258	Enum\FTDIBUS
+00418268	%s\0000\Device Parameters
+00418284	\DosDevices\A:
+0041829c	SYSTEM\CurrentControlSet\Services\Disk\Enum
+004182c8	USBSTOR\%s\%s
+004182d8	MountedDevices
+004182e8	Current
+004182f0	Select
+004182f8	ControlSet%3.3d
+0041891e	strcat
+00418928	sprintf
+00418932	strncat
+0041893c	memset
+00418946	strcpy
+00418950	atoi
+00418958	_snprintf
+00418964	_stricmp
+00418970	_purecall
+0041897c	memcpy
+00418986	strlen
+00418990	??2@YAPAXI@Z
+004189a0	??3@YAXPAX@Z
+004189b0	_itoa
+004189b8	_strupr
+004189c8	rand
+004189d0	srand
+004189d8	_strcmpi
+004189e4	malloc
+004189ee	strcmp
+004189f8	strrchr
+00418a02	_memicmp
+00418a0e	memcmp
+00418a18	strchr
+00418a22	modf
+00418a2a	strtoul
+00418a34	free
+00418a3c	_strnicmp
+00418a48	memmove
+00418a52	_mbschr
+00418a5c	_mbsicmp
+00418a68	_strlwr
+00418a72	qsort
+00418a7a	atol
+00418a82	_mbsrchr
+00418a8c	msvcrt.dll
+00418a9a	__dllonexit
+00418aa8	_onexit
+00418ab2	_c_exit
+00418abc	_exit
+00418ac4	_XcptFilter
+00418ad2	_cexit
+00418adc	exit
+00418ae4	_acmdln
+00418aee	__getmainargs
+00418afe	_initterm
+00418b0a	__setusermatherr
+00418b1e	_adjust_fdiv
+00418b2e	__p__commode
+00418b3e	__p__fmode
+00418b4c	__set_app_type
+00418b5e	_controlfp
+00418b6c	_except_handler3
+00418b80	ImageList_AddMasked
+00418b96	ImageList_SetImageCount
+00418bb0	ImageList_Create
+00418bc4	ImageList_Add
+00418bd4	CreateToolbarEx
+00418be4	COMCTL32.dll
+00418bf2	WS2_32.dll
+00418c00	FreeLibrary
+00418c0e	GetProcAddress
+00418c20	GetPrivateProfileStringA
+00418c3c	WinExec
+00418c46	GetModuleFileNameA
+00418c5c	GetComputerNameA
+00418c70	GetLastError
+00418c80	CompareFileTime
+00418c92	FileTimeToSystemTime
+00418caa	LoadLibraryA
+00418cba	GetModuleHandleA
+00418cce	SystemTimeToFileTime
+00418ce6	GetLogicalDrives
+00418cfa	GetWindowsDirectoryA
+00418d12	GetDriveTypeA
+00418d22	GetDiskFreeSpaceExA
+00418d38	CreateFileA
+00418d46	GetTickCount
+00418d56	WriteFile
+00418d62	ReadFile
+00418d6e	FlushFileBuffers
+00418d82	CloseHandle
+00418d90	DeleteFileA
+00418d9e	CreateThread
+00418dae	GetSystemDirectoryA
+00418dc4	GlobalAlloc
+00418dd2	GlobalLock
+00418de0	WideCharToMultiByte
+00418df6	MultiByteToWideChar
+00418e0c	GetVersionExA
+00418e1c	GetTimeFormatA
+00418e2e	GlobalUnlock
+00418e3e	FileTimeToLocalFileTime
+00418e58	GetTempPathA
+00418e68	LocalFree
+00418e74	GetFileAttributesA
+00418e8a	SystemTimeToTzSpecificLocalTime
+00418eac	FormatMessageA
+00418ebe	LoadLibraryExA
+00418ed0	GetDateFormatA
+00418ee2	GetCurrentProcess
+00418ef6	GetFileSize
+00418f04	GetTempFileNameA
+00418f18	GetPrivateProfileIntA
+00418f30	WritePrivateProfileStringA
+00418f4e	EnumResourceNamesA
+00418f64	GetStdHandle
+00418f74	SetErrorMode
+00418f84	Sleep
+00418f8c	CreateProcessA
+00418f9e	ExpandEnvironmentStringsA
+00418fba	ReadProcessMemory
+00418fce	GetCurrentProcessId
+00418fe4	ExitProcess
+00418ff2	Process32Next
+00419002	OpenProcess
+00419010	CreateToolhelp32Snapshot
+0041902c	Process32First
+0041903e	SetEnvironmentVariableA
+00419058	GetCurrentThreadId
+0041906e	DeviceIoControl
+00419080	GetStartupInfoA
+00419090	KERNEL32.dll
+004190a0	GetSysColorBrush
+004190b4	ShowWindow
+004190c2	LoadCursorA
+004190d0	ChildWindowFromPoint
+004190e8	GetDC
+004190f0	ReleaseDC
+004190fc	SetCursor
+00419108	GetWindow
+00419114	GetClientRect
+00419124	SetDlgItemTextA
+00419136	DrawFrameControl
+0041914a	GetDlgItemTextA
+0041915c	SetWindowTextA
+0041916e	GetSystemMetrics
+00419182	SendDlgItemMessageA
+00419198	GetWindowRect
+004191a8	GetDlgItemInt
+004191b8	DeferWindowPos
+004191ca	EndPaint
+004191d6	EndDialog
+004191e2	GetDlgItem
+004191f0	CreateWindowExA
+00419202	InvalidateRect
+00419214	SetDlgItemInt
+00419224	BeginPaint
+00419232	PostMessageA
+00419242	SetMenu
+0041924c	LoadAcceleratorsA
+00419260	SetWindowPos
+00419270	DefWindowProcA
+00419282	TranslateAcceleratorA
+0041929a	MessageBoxA
+004192a8	GetWindowPlacement
+004192be	SendMessageA
+004192ce	RegisterClassA
+004192e0	UpdateWindow
+004192f0	LoadImageA
+004192fe	GetWindowLongA
+00419310	SetWindowLongA

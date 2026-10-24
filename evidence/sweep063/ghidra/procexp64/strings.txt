@@ -1,0 +1,501 @@
+address	value
+140136a08	atlthunk.dll
+140136a18	AtlThunk_AllocateData
+140136a30	AtlThunk_InitData
+140136a48	AtlThunk_DataToCode
+140136a60	AtlThunk_FreeData
+140136aa8	bad allocation
+140136b70	device or resource busy
+140136b88	invalid argument
+140136ba0	no such process
+140136bb0	not enough memory
+140136bc8	operation not permitted
+140136be0	resource deadlock would occur
+140136c00	resource unavailable try again
+140136ca0	generic
+1401399b0	success
+1401399b8	address family not supported
+1401399d8	address in use
+1401399e8	address not available
+140139a00	already connected
+140139a18	argument list too long
+140139a30	argument out of domain
+140139a48	bad address
+140139a58	bad file descriptor
+140139a70	bad message
+140139a80	broken pipe
+140139a90	connection aborted
+140139aa8	connection already in progress
+140139ac8	connection refused
+140139ae0	connection reset
+140139af8	cross device link
+140139b10	destination address required
+140139b30	directory not empty
+140139b48	executable format error
+140139b60	file exists
+140139b70	file too large
+140139b80	filename too long
+140139b98	function not supported
+140139bb0	host unreachable
+140139bc8	identifier removed
+140139be0	illegal byte sequence
+140139bf8	inappropriate io control operation
+140139c20	interrupted
+140139c30	invalid seek
+140139c40	io error
+140139c50	is a directory
+140139c60	message size
+140139c70	network down
+140139c80	network reset
+140139c90	network unreachable
+140139ca8	no buffer space
+140139cb8	no child process
+140139cd0	no link
+140139cd8	no lock available
+140139cf0	no message available
+140139d08	no message
+140139d18	no protocol option
+140139d30	no space on device
+140139d48	no stream resources
+140139d60	no such device or address
+140139d80	no such device
+140139d90	no such file or directory
+140139db0	not a directory
+140139dc0	not a socket
+140139dd0	not a stream
+140139de0	not connected
+140139df0	not supported
+140139e00	operation canceled
+140139e18	operation in progress
+140139e30	operation not supported
+140139e48	operation would block
+140139e60	owner dead
+140139e70	permission denied
+140139e88	protocol error
+140139e98	protocol not supported
+140139eb0	read only file system
+140139ec8	result out of range
+140139ee0	state not recoverable
+140139ef8	stream timeout
+140139f08	text file busy
+140139f18	timed out
+140139f28	too many files open in system
+140139f48	too many files open
+140139f60	too many links
+140139f70	too many symbolic link levels
+140139f90	value too large
+140139fa0	wrong protocol type
+140139fb8	unknown error
+14013a018	0123456789abcdefghijklmnopqrstuvwxyz
+14013a068	0123456789abcdefghijklmnopqrstuvwxyz
+14013a1d8	GetSystemTimePreciseAsFileTime
+14013a1f8	GetTempPath2W
+14013a428	bad exception
+14013ab50	__based(
+14013ab60	__cdecl
+14013ab68	__stdcall
+14013ab78	__thiscall
+14013ab88	__fastcall
+14013ab98	__vectorcall
+14013aba8	__preserve_none
+14013abb8	__clrcall
+14013abd0	__swift_1
+14013abe0	__swift_2
+14013abf0	__swift_3
+14013ac08	__restrict
+14013ac18	__unaligned
+14013ac28	restrict(
+14013ac40	 delete
+14013ac68	operator
+14013ace8	`vftable'
+14013acf8	`vbtable'
+14013ad20	`local static guard'
+14013ad38	`string'
+14013ad48	`vbase destructor'
+14013ad60	`vector deleting destructor'
+14013ad80	`default constructor closure'
+14013ada0	`scalar deleting destructor'
+14013adc0	`vector constructor iterator'
+14013ade0	`vector destructor iterator'
+14013ae00	`vector vbase constructor iterator'
+14013ae28	`virtual displacement map'
+14013ae48	`eh vector constructor iterator'
+14013ae70	`eh vector destructor iterator'
+14013ae90	`eh vector vbase constructor iterator'
+14013aeb8	`copy constructor closure'
+14013aed8	`udt returning'
+14013aef8	`local vftable'
+14013af08	`local vftable constructor closure'
+14013af38	 delete[]
+14013af48	`omni callsig'
+14013af58	`placement delete closure'
+14013af78	`placement delete[] closure'
+14013af98	`managed vector constructor iterator'
+14013afc0	`managed vector destructor iterator'
+14013afe8	`eh vector copy constructor iterator'
+14013b010	`eh vector vbase copy constructor iterator'
+14013b040	`dynamic initializer for '
+14013b060	`dynamic atexit destructor for '
+14013b088	`vector copy constructor iterator'
+14013b0b0	`vector vbase copy constructor iterator'
+14013b0e0	`managed vector copy constructor iterator'
+14013b110	`local static thread guard'
+14013b130	operator "" 
+14013b140	operator co_await
+14013b158	operator<=>
+14013b168	 Type Descriptor'
+14013b180	 Base Class Descriptor at (
+14013b1a0	 Base Class Array'
+14013b1b8	 Class Hierarchy Descriptor'
+14013b1d8	 Complete Object Locator'
+14013b1f8	`anonymous namespace'
+14013b2d8	FlsAlloc
+14013b2f0	FlsFree
+14013b300	FlsGetValue
+14013b318	FlsSetValue
+14013b330	InitializeCriticalSectionEx
+14013b6d0	(null)
+14013c310	INITY
+14013c318	inity
+14013c3a0	CorExitProcess
+14013d5fc	Sunday
+14013d604	Monday
+14013d610	Tuesday
+14013d618	Wednesday
+14013d628	Thursday
+14013d634	Friday
+14013d640	Saturday
+14013d680	January
+14013d688	February
+14013d694	March
+14013d69c	April
+14013d6b4	August
+14013d6c0	September
+14013d6d0	October
+14013d6d8	November
+14013d6e8	December
+14013d700	MM/dd/yy
+14013d710	dddd, MMMM dd, yyyy
+14013d728	HH:mm:ss
+14013def0	AreFileApisANSI
+14013df08	CompareStringEx
+14013df20	EnumSystemLocalesEx
+14013df40	GetDateFormatEx
+14013df58	GetLocaleInfoEx
+14013df70	GetTimeFormatEx
+14013df98	IsValidLocaleName
+14013dfb8	LCMapStringEx
+14013dfd0	LCIDToLocaleName
+14013dff0	LocaleNameToLCID
+14013e008	RoInitialize
+14013e020	RoUninitialize
+14013e038	AppPolicyGetProcessTerminationMethod
+14013e068	AppPolicyGetThreadInitializationType
+14013e098	SetThreadStackGuarantee
+14013e140	NAN(SNAN)
+14013e150	nan(snan)
+14013e160	NAN(IND)
+14013e170	nan(ind)
+14013e17c	e+000
+14013e39c	log10
+14013e3f8	floor
+14013e450	_nextafter
+14013e4a8	SunMonTueWedThuFriSat
+14013e4c0	JanFebMarAprMayJunJulAugSepOctNovDec
+1401428c8	1#INF
+1401428d0	1#QNAN
+1401428d8	1#SNAN
+1401428e0	1#IND
+140145028	Wow64EnableWow64FsRedirection
+140145068	Wow64DisableWow64FsRedirection
+140145088	Wow64RevertWow64FsRedirection
+14014a960	vector too long
+14014a970	invalid string position
+14014aa10	map/set too long
+14014aa28	RegDeleteKeyExW
+14014aa38	RtlNtStatusToDosError
+14014aa88	RegCreateKeyTransactedW
+14014b310	string too long
+14014b320	bad array new length
+14014b338	Unknown exception
+14014baa8	GetSystemDefaultLocaleName
+14014bac8	GetUserDefaultLocaleName
+14014bbf8	gadget
+14014bc08	description
+14014bc14	author
+14014bc20	version
+14014bc28	icons
+14014bc30	height
+14014bc38	width
+14014bc48	SHCreateItemFromParsingName
+14014bc78	list too long
+14014cc48	WinVerifyTrust
+14014cc58	WTHelperGetProvSignerFromChain
+14014cc78	WTHelperProvDataFromStateData
+14014cc98	CryptCATAdminReleaseContext
+14014ccb8	CryptCATAdminReleaseCatalogContext
+14014cce0	CryptCATCatalogInfoFromContext
+14014cd00	CryptCATAdminEnumCatalogFromHash
+14014cd28	CryptCATAdminCalcHashFromFileHandle
+14014cd50	CryptCATAdminAcquireContext
+14014cd70	CryptCATAdminAddCatalog
+14014cd88	CryptCATAdminRemoveCatalog
+14014cda8	IsCatalogFile
+14014cdb8	CertNameToStrW
+14014d008	DrawThemeBackground
+14014d048	IsThemeActive
+14014d058	OpenThemeData
+14014d090	CloseThemeData
+14014d0d0	iostream
+14014d0e0	bad locale name
+14014d0f0	false
+14014d100	ios_base::badbit set
+14014d118	ios_base::failbit set
+14014d130	ios_base::eofbit set
+14014d160	0123456789ABCDEFabcdef-+XxPp
+14014d180	0123456789ABCDEFabcdef-+Xx
+14014d1b0	bad cast
+14014d1c0	iostream stream error
+14014d898	unordered_map/set too long
+14014d8b8	invalid hash bucket count
+14014dcf0	4e3202fdbe953d628f650229af5b3eb49cd46b2d3bfe5546ae3c5fa48b554e0c
+14014dd38	apikey=
+14014dd40	&resource=
+14014e2d0	"autostart_location": "
+14014e2f0	"autostart_entry": "
+14014e308	"hash": "
+14014e318	"image_path": "
+14014e328	"creation_datetime": "
+14014e3f8	result
+14014e458	message
+14014e460	{\rtf1\ansi\ansicpg1252\deff0\nouicompat\deflang1033{\fonttbl{\f0\fswiss\fprq2\fcharset0 Tahoma;}{\f1\fnil\fcharset0 Calibri;}}
+14014e4e0	{\colortbl ;\red0\green0\blue255;\red0\green0\blue0;}
+14014e518	{\*\generator Riched20 10.0.10240}\viewkind4\uc1 
+14014e550	\pard\brdrb\brdrs\brdrw10\brsp20 \sb120\sa120\b\f0\fs24 SYSINTERNALS SOFTWARE LICENSE TERMS\fs28\par
+14014e5c0	\pard\sb120\sa120\b0\fs19 These license terms are an agreement between Sysinternals (a wholly owned subsidiary of Microsoft Corporation) and you.  Please read them.  They apply to the software you are
+14014e718	\pard\fi-363\li720\sb120\sa120\tx720\'b7\tab updates,\par
+14014e758	\pard\fi-363\li720\sb120\sa120\'b7\tab supplements,\par
+14014e790	\'b7\tab Internet-based services, and \par
+14014e7c0	\'b7\tab support services\par
+14014e7e0	\pard\sb120\sa120 for this software, unless other terms accompany those items.  If so, those terms apply.\par
+14014e850	\b BY USING THE SOFTWARE, YOU ACCEPT THESE TERMS.  IF YOU DO NOT ACCEPT THEM, DO NOT USE THE SOFTWARE.\par
+14014e8c0	\pard\brdrt\brdrs\brdrw10\brsp20 \sb120\sa120 If you comply with these license terms, you have the rights below.\par
+14014e940	\pard\fi-357\li357\sb120\sa120\tx360\fs20 1.\tab\fs19 INSTALLATION AND USE RIGHTS.  \b0 You may install and use any number of copies of the software on your devices.\b\par
+14014e9f0	\caps\fs20 2.\tab\fs19 Scope of License\caps0 .\b0   The software is licensed, not sold. This agreement only gives you some rights to use the software.  Sysinternals reserves all other rights.  Unless
+14014ebd0	\pard\fi-363\li720\sb120\sa120\tx720\b0\'b7\tab work around any technical limitations in the binary versions of the software;\par
+14014ec60	\pard\fi-363\li720\sb120\sa120\'b7\tab reverse engineer, decompile or disassemble the binary versions of the software, except and only to the extent that applicable law expressly permits, despite this
+14014ed40	\'b7\tab make more copies of the software than specified in this agreement or allowed by applicable law, despite this limitation;\par
+14014edc8	\'b7\tab publish the software for others to copy;\par
+14014ee00	\'b7\tab rent, lease or lend the software;\par
+14014ee30	\'b7\tab transfer the software or this agreement to any third party; or\par
+14014ee80	\'b7\tab use the software for commercial software hosting services.\par
+14014eed0	\pard\fi-357\li357\sb120\sa120\tx360\b\fs20 3.\tab SENSITIVE INFORMATION. \b0  Please be aware that, similar to other debug tools that capture \ldblquote process state\rdblquote  information, files sa
+14014f140	\pard\fi-357\li357\sb120\sa120\tx360\b\fs20 4.\tab DATA COLLECTION.  \b0 The Sysinternals tools do not collect any data. Please refer to the {{\field{\*\fldinst{HYPERLINK "https://go.microsoft.com/fwl
+14014f300	\pard\fi-357\li357\sb120\sa120\tx360\b\fs20 5. \tab\fs19 DOCUMENTATION.\b0   Any person that has valid access to your computer or internal network may copy and use the documentation for your internal,
+14014f3f0	\caps\fs20 6.\tab\fs19 Export Restrictions\caps0 .\b0   The software is subject to United States export laws and regulations.  You must comply with all domestic and international export laws and regul
+14014f650	\caps\fs20 7.\tab\fs19 SUPPORT SERVICES.\caps0  \b0 Because this software is "as is, " we may not provide support services for it.\b\par
+14014f6e0	\caps\fs20 8.\tab\fs19 Entire Agreement.\b0\caps0   This agreement, and the terms for supplements, updates, Internet-based services and support services that you use, are the entire agreement for the 
+14014f7d0	\pard\keepn\fi-360\li360\sb120\sa120\tx360\cf2\b\caps\fs20 9.\tab\fs19 Applicable Law\caps0 .\par
+14014f840	\pard\fi-363\li720\sb120\sa120\tx720\cf0\fs20 a.\tab\fs19 United States.\b0   If you acquired the software in the United States, Washington state law governs the interpretation of this agreement and a
+14014fa00	\pard\fi-363\li720\sb120\sa120\fs20 b.\tab\fs19 Outside the United States.\b0   If you acquired the software in any other country, the laws of that country apply.\b\par
+14014fab0	\pard\fi-357\li357\sb120\sa120\tx360\caps\fs20 10.\tab\fs19 Legal Effect.\b0\caps0   This agreement describes certain legal rights.  You may have other rights under the laws of your country.  You may 
+14014fc60	\fs20 11.\tab\fs19 Disclaimer of Warranty.\caps0    \caps The software is licensed "as - is."  You bear the risk of using it.  SYSINTERNALS gives no express warranties, guarantees or conditions.  You 
+14014fe40	\pard\fi-360\li360\sb120\sa120\tx360\fs20 12.\tab\fs19 Limitation on and Exclusion of Remedies and Damages.  You can recover from SYSINTERNALS and its suppliers only direct damages up to U.S. $5.00.  
+14014ff90	\pard\li357\sb120\sa120\b0\caps0 This limitation applies to\par
+14014ffd0	\pard\fi-363\li720\sb120\sa120\tx720\'b7\tab anything related to the software, services, content (including code) on third party Internet sites, or third party programs; and\par
+140150090	\pard\fi-363\li720\sb120\sa120\'b7\tab claims for breach of contract, breach of warranty, guarantee or condition, strict liability, negligence, or other tort to the extent permitted by applicable law.
+140150160	\pard\li360\sb120\sa120 It also applies even if Sysinternals knew or should have known about the possibility of the damages.  The above limitation or exclusion may not apply to you because your countr
+140150290	\pard\b Please note: As this software is distributed in Quebec, Canada, some of the clauses in this agreement are provided below in French.\par
+140150320	\pard\sb240\lang1036 Remarque : Ce logiciel \'e9tant distribu\'e9 au Qu\'e9bec, Canada, certaines des clauses dans ce contrat sont fournies ci-dessous en fran\'e7ais.\par
+1401503d0	\pard\sb120\sa120 EXON\'c9RATION DE GARANTIE.\b0  Le logiciel vis\'e9 par une licence est offert \'ab tel quel \'bb. Toute utilisation de ce logiciel est \'e0 votre seule risque et p\'e9ril. Sysintern
+140150620	\pard\keepn\sb120\sa120\b LIMITATION DES DOMMAGES-INT\'c9R\'caTS ET EXCLUSION DE RESPONSABILIT\'c9 POUR LES DOMMAGES.\b0   Vous pouvez obtenir de Sysinternals et de ses fournisseurs une indemnisation 
+1401507d8	\lang1033 Cette limitation concerne :\par
+140150810	\pard\keepn\fi-360\li720\sb120\sa120\tx720\lang1036\'b7\tab tout  ce qui est reli\'e9 au logiciel, aux services ou au contenu (y compris le code) figurant sur des sites Internet tiers ou dans des prog
+1401508f0	\pard\fi-363\li720\sb120\sa120\tx720\'b7\tab les r\'e9clamations au titre de violation de contrat ou de garantie, ou au titre de responsabilit\'e9 stricte, de n\'e9gligence ou d'une autre faute dans l
+1401509f0	\pard\sb120\sa120 Elle s'applique \'e9galement, m\'eame si Sysinternals connaissait ou devrait conna\'eetre l'\'e9ventualit\'e9 d'un tel dommage.  Si votre pays n'autorise pas l'exclusion ou la limita
+140150b80	\b EFFET JURIDIQUE.\b0   Le pr\'e9sent contrat d\'e9crit certains droits juridiques. Vous pourriez avoir d'autres droits pr\'e9vus par les lois de votre pays.  Le pr\'e9sent contrat ne modifie pas les
+140150ca8	\pard\b0\fs20\lang1033\par
+140150cc8	\pard\sa200\sl276\slmult1\f1\fs22\lang9\par
+140154968	CommandLineToArgvW
+140154a38	Accept Eula (Y/N)?
+140154be0	RtlGetVersion
+140156080	EnableTraceEx
+140157058	RtlInitUnicodeString
+140157088	DXCoreCreateAdapterFactory
+1401570e8	D3DKMTOpenAdapterFromDeviceName
+140157120	D3DKMTCloseAdapter
+140157138	D3DKMTQueryStatistics
+1401572c0	DllGetVersion
+140157418	TCPV6
+140157420	UDPV6
+1401589e0	Package:    
+140158ff8	NtSystemDebugControl
+1401592c0	PAGEDU64
+1401592d0	PAGEDUMP
+14015a198	GetProcessInformation
+14015a1b0	SetProcessInformation
+14015a590	%d.%d.%d.%d
+14015a5a0	[%x:%x:%x:%x:%x:%x:%x:%x]
+14015aa30	ConvertStringSidToSidA
+14015b1c0	CLRCreateInstance
+14015b1f0	[Native Frame: IL Method without Metadata]
+14015b220	[Unmanaged to Managed Transition]
+14015b248	[Managed to Unmanaged Transition]
+14015b270	[AppDomain Transition]
+14015b288	[Lightweight function]
+14015b2a0	[Func Eval]
+14015b2b0	[Class Init]
+14015b2c0	[Exception]
+14015b2d0	[Security]
+14015b2e0	[JIT Compilation]
+14015e040	EnumDirTreeW
+14015e7b0	EdpGetContextForProcess
+14015e7c8	EdpFreeContext
+14015e7d8	ZwQueryWnfStateData
+14015e908	Network
+14015f0b8	SymInitialize
+14015f0c8	EnumerateLoadedModulesW64
+14015f0e8	SymRegisterCallback64
+14015f100	SymGetModuleInfoW64
+14015f118	SymCleanup
+14015f128	SymFromAddrW
+14015f138	SymGetSymFromName
+14015f150	MiniDumpWriteDump
+14015f168	SymSetOptions
+14015f178	SymGetOptions
+14015f188	SymLoadModuleExW
+14015f1a0	SymLoadModule64
+14015f1b0	SymUnloadModule64
+14015f1c8	ImageNtHeader
+14015f1d8	StackWalk64
+14015f1e8	SymGetModuleBase64
+14015f200	SymFunctionTableAccess64
+14015f2a8	GetProcessDpiAwareness
+14015f2d8	AllocateAndGetTcpExTable2FromStack
+14015f320	AllocateAndGetUdpExTable2FromStack
+14015f348	HungWindowFromGhostWindow
+14015f380	GetLogicalProcessorInformationEx
+14015f3a8	SetThreadGroupAffinity
+14015f3c0	WinStationConnectW
+14015f428	WinStationShadow
+14015f5f8	FindExecutableImageExW
+14015f610	FindExecutableImage
+14015f628	QueryProcessCycleTime
+14015f640	QueryIdleProcessorCycleTime
+14015f660	QueryThreadCycleTime
+14015f678	SHGetStockIconInfo
+14015f690	ChangeWindowMessageFilter
+14015f6b0	I_QueryTagInformation
+14015f6c8	CreateProcessWithTokenW
+14015f6e0	CpuGetContext
+14015f708	GetProcessorSystemCycleTime
+14015f728	GetThreadIdealProcessorEx
+14015f748	IsImmersiveProcess
+14015f760	GetPackageFullName
+14015f778	GetPackagePathByFullName
+14015f798	IsWow64Process2
+14015f950	WinStationGetProcessSid
+1401616d8	\AppxMetadata\CodeIntegrity.cat
+140161b60	MmMaximumNonPagedPoolInBytes
+140161b80	MmSizeOfPagedPoolInBytes
+140162618	GetProcessDEPPolicy
+140162630	GetProcessMitigationPolicy
+140163bc0	RegOpenKeyTransactedW
+140163bd8	RegDeleteKeyTransactedW
+14016b3a0	.rdata
+14016b3c4	.rdata$CastGuardVftablesA
+14016b3e8	.rdata$CastGuardVftablesB
+14016b40c	.rdata$CastGuardVftablesC
+14016b458	.rdata$voltmd
+14016b5a0	.data
+14016b5e4	.pdata
+1401818aa	UrlUnescapeW
+1401818ba	ColorRGBToHLS
+1401818ca	ColorHLSToRGB
+1401818da	StrStrIW
+1401818e6	SHAutoComplete
+1401818f8	PathIsNetworkPathW
+14018190e	StrCmpIW
+140181918	SHLWAPI.dll
+140181926	GetIfTable2
+140181934	FreeMibTable
+140181944	GetIfEntry2
+140181952	GetExtendedTcpTable
+140181968	GetExtendedUdpTable
+14018197c	IPHLPAPI.DLL
+14018198a	WS2_32.dll
+140181998	WNetGetConnectionW
+1401819ac	MPR.dll
+1401819b6	ImageList_ReplaceIcon
+1401819ce	ImageList_Add
+1401819de	InitCommonControlsEx
+1401819f6	ImageList_Destroy
+140181a0a	ImageList_DrawEx
+140181a1e	ImageList_GetIconSize
+140181a36	ImageList_Create
+140181a4a	ImageList_DragMove
+140181a60	ImageList_DragShowNolock
+140181a7c	ImageList_DragEnter
+140181a92	ImageList_BeginDrag
+140181aa8	ImageList_AddMasked
+140181abe	ImageList_EndDrag
+140181ad2	ImageList_DragLeave
+140181ae8	CreateStatusWindowW
+140181afe	PropertySheetW
+140181b10	ImageList_GetIcon
+140181b24	CreatePropertySheetPageW
+140181b3e	COMCTL32.dll
+140181b4e	VerQueryValueW
+140181b60	GetFileVersionInfoSizeW
+140181b7a	GetFileVersionInfoW
+140181b8e	VERSION.dll
+140181b9c	CredUIPromptForCredentialsW
+140181bb8	credui.dll
+140181bc6	SetupDiGetClassDevsW
+140181bde	SetupDiEnumDeviceInterfaces
+140181bfc	SetupDiGetDeviceInterfaceDetailW
+140181c20	SetupDiDestroyDeviceInfoList
+140181c3e	SETUPAPI.dll
+140181c4e	CertGetNameStringW
+140181c62	CRYPT32.dll
+140181c6e	ACLUI.dll
+140181c7a	IsPwrHibernateAllowed
+140181c92	IsPwrSuspendAllowed
+140181ca8	SetSuspendState
+140181cb8	POWRPROF.dll
+140181cc8	WTSEnumerateSessionsW
+140181ce0	WTSFreeMemory
+140181cf0	WTSQuerySessionInformationW
+140181d0e	WTSSendMessageW
+140181d20	WTSDisconnectSession
+140181d38	WTSLogoffSession
+140181d4a	WTSAPI32.dll
+140181d5a	SetWindowTheme
+140181d6c	OpenThemeData
+140181d7c	GetThemePartSize
+140181d90	DrawThemeBackground
+140181da6	CloseThemeData
+140181db8	EnableThemeDialogTexture
+140181dd2	UxTheme.dll
+140181de0	NtOpenKey
+140181dec	NtCreateKey
+140181dfa	NtLoadDriver
+140181e0a	NtUnloadDriver
+140181e1c	VerSetConditionMask
+140181e32	NtQueryInformationProcess
+140181e4e	NtQueryInformationThread
+140181e6a	NtSetInformationProcess
+140181e84	NtOpenThread
+140181e94	NtSuspendProcess
+140181ea8	NtResumeProcess
+140181eba	RtlQueryProcessDebugInformation
+140181edc	NtOpenSymbolicLinkObject
+140181ef8	NtQuerySymbolicLinkObject
+140181f14	NtQueryObject
+140181f24	NtQuerySystemInformation
+140181f40	NtQuerySemaphore
+140181f54	NtQueryEvent
+140181f64	NtQueryMutant
+140181f74	NtQuerySection
+140181f86	RtlCreateQueryDebugBuffer
+140181fa2	RtlDestroyQueryDebugBuffer

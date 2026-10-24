@@ -3492,3 +3492,37 @@ viewer, (2) Windows calculator, (3) a program that does not exist on Linux
     delivery compose into a complete, faithful, INTERACTIVE board.
 - [x] Corpus bookkeeping: SearchMyFiles x64 rc=124 (pump-budget hang,
       SW-1284 domain) — noted, next-batch entry point.
+
+## SW-1291..SW-1299 — SWEEP-063 Ghidra tooling train («ابزار های مثل Ghidra و پلاگین ها»)
+- [x] **SW-1294 Ghidra 12.2 toolchain** — NSA GitHub latest (JDK 25 required;
+      JAVA_HOME_OVERRIDE; PyGhidra 3.2.0 API driver, analyzeHeadless lacks PyGhidra
+      runtime). scripts/sweep063_driver.py + sweep063_ghidra_export.py.
+- [x] **SW-1295 measured effect** — 5 binaries full analysis ~150s total:
+      procexp64 5.2MB = 129s -> 2939 fns/767 imports; sol/winmine/cards/usbdeview
+      seconds each; project-cache reuse <1s. Report: artifacts/sweep063/GHIDRA_REPORT.md.
+- [x] **SW-1292 sol WM_PAINT chain DECODED** (was: engine-internal gap) —
+      decompiled FUN_100007cf0 (cmd7->default->FUN_1000047a0), FUN_1000047a0
+      (case7->FUN_100003f10 direct, no guard), FUN_100003f10 (first stmt =
+      FUN_100001690(ps.hdc) = unconditional [c2a0] store; then per-pile virtual
+      vfn[1] loop; restore). FUN_100001690 = pure 3-store setter, no branch.
+      Runtime facts ([c2a0] NULL, zero guest APIs, no fault) => control NEVER
+      reached FUN_100003f10's first instruction; the indirect `call *(%r11)`
+      @0x100001d8d silently no-ops in the engine. Evidence: evidence/sweep063/
+      ghidra/sol/decomp/*.c
+- [ ] **SW-1292b** (next): guest-PC sampler on `call *(%r11)` @0x100001d8d —
+      verify computed target == 0x100003f10; audit indirect-call block-cache
+      fast-path for silent no-op returns.
+- [x] **SW-1204 evidence refresh** — full ordinal import table via Ghidra:
+      SHLWAPI.176; WS2_32.{56,9,14,115,51,8,15}; COMCTL32.{413,410,17,345};
+      ACLUI.1; OLEAUT32.{6,2,277,4,25,16,24,23,19,20,12,9,8,7,150}.
+      Cross-validated: OLEAUT32.16=SafeArrayDestroy, .277=VarUI4FromStr (SW-1223/1225).
+- [ ] **SW-1204b**: name the remaining ordinals (Ghidra FID/BSim candidates):
+      SHLWAPI.176, COMCTL32.{413,410,17,345}, OLEAUT32 tail, WS2_32.{8,9,14,15,51,56,115}, ACLUI.1.
+- [x] **SW-1293 checklist** (NirSoft PE32 pre-load crash) — usbdeview entry
+      decompile: GetModuleHandle(0) MZ/PE check, OptionalHeader.Magic==0x10b,
+      NumberOfRvaAndSizes>=14, __SEH_epilog SEH frame. No TLS callbacks.
+- [ ] **SW-1293b**: land the PE32 pre-load CRT self-check list in the x86 subsystem.
+- [x] winmine resource audit: 8 icons + group icon + 11 RT_BITMAP bitmaps all
+      intact in .rsrc (bomb/LED art present) — supports SWEEP-062 Train 4 fidelity.
+- [x] Engine health: winmine rc=0, 82 frames (= SWEEP-061 baseline);
+      evidence/sweep063/shots_png/winmine_health_sweep063.png.
