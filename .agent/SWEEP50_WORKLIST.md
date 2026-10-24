@@ -3249,3 +3249,66 @@ viewer, (2) Windows calculator, (3) a program that does not exist on Linux
   ToolbarWindow32 creation inside WM_CREATE/dialog paths), (b) LVM/HDM/
   TCM planes, (c) 32bpp imagelist decode — SW-1284 remains OPEN with
   this measured entry point.
+
+## SWEEP-061 «ادامه» — Train A: sol full-deal fidelity + guest-DLL probes (2026-10-24)
+
+- [x] **SW-1286 LANDED** — guest-DLL export probe trampolines
+  (MW_GUEST_DLL_PROBE=1): disk-DLL exports with known signatures (cards.dll
+  cdtDraw/cdtDrawExt) bind through engine logging wrappers that forward to
+  the real fn — arg/retval visibility for guest->guest calls (invisible to
+  the API trace since the IAT patches straight to mapped DLL code). LESSON
+  (root-caused, keep): the v1 wrapper wrote the real-fn pointer through an
+  OUT-PARAM to a binding-scope LOCAL — the global g_*_real stayed NULL and
+  GCC -O2 IPA dead-code-eliminated the forward call entirely, so every
+  wrapped call returned 0 without drawing (sol: 41 cdtDrawExt -> 0, error
+  messagebox path, 1 frame). FIXED: store into the global inside
+  mw_dll_probe_wrap; after the fix 41/41 cdtDrawExt -> 1. cdtInit stays
+  UNWRAPPED (wrapping it perturbs cards.dll state init: bitmaps never load,
+  cdtInit returns 0, sol aborts via messagebox).
+- [x] **SW-1287/1287b/1287c/1287d LANDED** — first-show + resize WM_SIZE
+  contract. ROOT CAUSE (sol fidelity): real Win32 SENDS WM_SIZE
+  synchronously during ShowWindow/SetWindowPos/MoveWindow; v1 never
+  delivered WM_SIZE at all, so sol's pile-layout (computed in WM_SIZE)
+  stayed at the zero init and every card drawn to (0,0..18) — the board
+  rendered with the deck fan only, no tableau (the user's «ساختار گرافیکی
+  اصلی کاملا متفاوت» report). (b) WM_SIZE is now SENT synchronously inside
+  mw_ShowWindow BEFORE the first WM_PAINT and before any posted message
+  (the pump-queued variant let sol's posted WM_COMMAND deal run first).
+  (c) MoveWindow/SetWindowPos on the MAIN window now also send WM_SIZE
+  synchronously (real resize contract; winmine's MoveWindow(170x2156)
+  relayout depends on it). (d) CONVERGENCE GUARDS: no re-entry
+  (g_in_size_sync — sol's fit-to-board looped +2px per round through
+  SetWindowPos->WM_SIZE until the 1280 clamp) + same-dims dedup (real
+  Windows only sends WM_SIZE when the size actually changed).
+- [x] **SW-1288 LANDED** — child MoveWindow/SetWindowPos can no longer
+  resize the main paint surface (sol's statusbar MoveWindow(587,10) during
+  its own WM_SIZE shrank the main client to 587x32 → board painted into a
+  32px client). Children resize only their own child-rect record. SENTINEL
+  LESSON (keep): mw_child_slot returns -1 for non-children — `!(-1)==0`
+  misrouted MAIN windows to the child path (winmine surface stuck 32x32);
+  fixed to `< 0` / `>= 0` tests.
+- [x] **SW-1289 LANDED** — store_window GROW path no longer fills the whole
+  surface white: the memcpy already preserves existing content (sol: the
+  dealt board wiped white by the statusbar SetWindowPos grow during
+  WM_SIZE). New strips stay zero-filled.
+- [x] **MEASURED (binary this round, sha at commit)**: XP corpus 13/13
+  rc=0 ZERO regressions — winmine 82 frames, sol 38 frames WITH THE FULL
+  CLASSIC DEAL (7 tableau piles 10♦ 5♣ 7♣ 5♠ K♣ 3♦ 4♠ + striped stack
+  edges + frog card-back deck + 4 foundation slots + status bar — the
+  first complete XP solitaire board in engine history), freecell 10,
+  mshearts 2, spider 638, calc 338x258 face. Screenshots
+  evidence/sweep061/shots_png/ (sol/winmine/freecell/mshearts/spider/calc).
+- [x] XP guest farm re-staged at artifacts/sweep061/guests (17 guests,
+  scripts/sweep061_stage_xp.sh; expand via the engine's own 7za).
+- [ ] **SW-1290 (NEW)** — sol felt covers only the top strip after the
+  relayout (the deal's green PatBlt ran before the final surface grow);
+  needs the guest's own post-WM_SIZE repaint (game msg 7 → common handler
+  0x1000047a0 never reached the draw chain) or an engine-side
+  background-brush erase honoring the CLASS brush (green) instead of
+  white.
+- [ ] **SW-1291 (NEW)** — winmine surface 170x1024 vs board 170x220: black
+  tail below the board (grow-only surface cosmetic; fill new strips with
+  the window class background).
+- [ ] SW-1284 (common-controls child-control lifecycle), SW-1283b
+  (chocolate DLL-chain DllMain), SW-1281c/d (x86 api-set shim + deep-init)
+  remain open from SWEEP-059/060.

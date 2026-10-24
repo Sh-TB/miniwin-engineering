@@ -1890,3 +1890,41 @@ red exploded cell + LED 012. Original XP minesweeper look achieved.
   sparseness = SW-1284.
 Scripts kept: scripts/sweep059_download{,2,3}.sh, sweep059_expand.py,
 sweep059_stage.py, sweep059_chunk.sh, sweep059_games.sh, sweep059_shots.sh.
+
+---
+## SWEEP-061 Train A (2026-10-24) — sol full-deal fidelity + SW-1286..1289
+
+Rule #1: fetched origin first — parallel chain had advanced 242af84 ->
+dc19a0f (SWEEP-031..060); fast-forward synced (local untracked
+artifacts/sweep030|031 backed aside), no RECONCILE. Engine rebuilt clean.
+
+Decoded (probe-driven, sol.exe + cards.dll):
+- SW-1286 guest-DLL export probes (MW_GUEST_DLL_PROBE) — first arg/retval
+  visibility into guest->guest DLL calls. Caught TWO wrapper pitfalls:
+  (1) real-fn stored via out-param to a dead local -> global stayed NULL ->
+  GCC IPA eliminated the forward call (41 calls -> 0); (2) wrapping cdtInit
+  perturbs cards.dll state init (bitmaps never load, sol aborts via
+  messagebox). Both recorded on the worklist; fixed = store into the
+  global, wrap draw entry points only.
+- sol deal chain: WM_COMMAND 0x3e8 -> srand -> fn(8) -> Game_Deal ->
+  shuffle (261 rand) -> pile loop — the game-state deal COMPLETES (probe:
+  piles 1..7 cards, deck 24) but the DRAW collapsed: all cdtDrawExt
+  targets at (0,0..18) instead of the tableau.
+- ROOT CAUSE = the engine never delivered WM_SIZE (sol's layout runs
+  there). Chain landed: SW-1287 sync first-show WM_SIZE (inside
+  ShowWindow, before posted messages), 1287c resize WM_SIZE from
+  MoveWindow/SetWindowPos (winmine's 170x2156 relayout), 1287d convergence
+  guards (no re-entry + same-dims dedup — sol's fit-to-board loop),
+  SW-1288 child resize isolation (statusbar 587x32 shrink kill) + the
+  mw_child_slot -1 sentinel lesson, SW-1289 grow-wipe removal.
+
+Measured (XP corpus, this round's binary):
+- 13/13 rc=0, zero regressions; winmine 82 frames (baseline restored),
+  sol 38 frames = FULL CLASSIC DEAL (7 tableau piles real faces + stack
+  edges + frog-back deck + foundations + status bar) — first complete XP
+  solitaire board; spider 638, freecell 10, calc face.
+- Screenshots: evidence/sweep061/shots_png/ (6 PNGs).
+- Guest farm re-staged: artifacts/sweep061/guests (17 guests,
+  scripts/sweep061_stage_xp.sh).
+New cars: SW-1290 (sol felt strip / post-WM_SIZE repaint), SW-1291
+(winmine surface tail). Open: SW-1284, SW-1283b, SW-1281c/d.

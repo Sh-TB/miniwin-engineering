@@ -984,6 +984,50 @@ static MwDllImage* mw_dll_find_by_name(const char* low) {
     return NULL;
 }
 
+/* ---- SW-1286 (SWEEP-061): guest-DLL export probe trampolines ----
+ * A guest EXE calls a guest DLL's export DIRECTLY (IAT patched with the
+ * DLL's mapped-code pointer) — invisible to the API trace. For exports with
+ * KNOWN signatures we patch the IAT with an engine logging wrapper that
+ * forwards to the real fn: arg/retval visibility for the fidelity decode.
+ * MW_GUEST_DLL_PROBE=1 gates the wrapper install. */
+static int g_dll_probe_on; /* set once from env at first use */
+static int mw_dll_probe_enabled(void) {
+    if (!g_dll_probe_on) g_dll_probe_on = getenv("MW_GUEST_DLL_PROBE") ? 1 : -1;
+    return g_dll_probe_on > 0;
+}
+typedef int (__attribute__((ms_abi)) *mw_cdt_fn8)(void*, int, int, int, int, int, int, uint32_t);
+static mw_cdt_fn8 g_cdtDraw_real, g_cdtDrawExt_real;
+typedef int (__attribute__((ms_abi)) *mw_cdt_fn2)(int*, int*);
+static mw_cdt_fn2 g_cdtInit_real;
+__attribute__((ms_abi)) static int mw_cdtInit_probe(int* pw, int* ph) {
+    int r = g_cdtInit_real ? g_cdtInit_real(pw, ph) : 0;
+    MW_TRACE("[DLL-PROBE] cards!cdtInit(%p,%p) -> %d (w=%d h=%d)", pw, ph, r, pw?*pw:-1, ph?*ph:-1);
+    return r;
+}
+__attribute__((ms_abi)) static int mw_cdtDraw_probe(void* hdc, int x, int y, int dx, int dy, int card, int suit, uint32_t mode) {
+    int r = g_cdtDraw_real ? g_cdtDraw_real(hdc, x, y, dx, dy, card, suit, mode) : 0;
+    MW_TRACE("[DLL-PROBE] cards!cdtDraw(hdc=%p x=%d y=%d dx=%d dy=%d card=0x%x suit=%d mode=%u) -> %d",
+             hdc, x, y, dx, dy, card, suit, mode, r);
+    return r;
+}
+__attribute__((ms_abi)) static int mw_cdtDrawExt_probe(void* hdc, int x, int y, int dx, int dy, int card, int suit, uint32_t mode) {
+    int r = g_cdtDrawExt_real ? g_cdtDrawExt_real(hdc, x, y, dx, dy, card, suit, mode) : 0;
+    MW_TRACE("[DLL-PROBE] cards!cdtDrawExt(hdc=%p x=%d y=%d dx=%d dy=%d card=0x%x suit=%d mode=%u) -> %d",
+             hdc, x, y, dx, dy, card, suit, mode, r);
+    return r;
+}
+/* returns the probe wrapper for a known export, or NULL.
+ * SW-1286 FIX: store the real fn pointer into the GLOBAL here (an out-param
+ * to a caller-local died at scope exit, g_*_real stayed NULL and GCC IPA
+ * dead-code-eliminated the forward call — every wrapped call returned 0). */
+static void* mw_dll_probe_wrap(const char* dll_low, const char* fn, void* real) {
+    if (!mw_dll_probe_enabled()) return NULL;
+    if (strcmp(dll_low, "cards.dll") != 0) return NULL;
+    if (strcmp(fn, "cdtDraw") == 0)    { g_cdtDraw_real    = (mw_cdt_fn8)(uintptr_t)real;    return (void*)(uintptr_t)mw_cdtDraw_probe; }
+    if (strcmp(fn, "cdtDrawExt") == 0) { g_cdtDrawExt_real = (mw_cdt_fn8)(uintptr_t)real;    return (void*)(uintptr_t)mw_cdtDrawExt_probe; }
+    return NULL;
+}
+
 /* Parse the mapped image's export directory: name or MAKEINTRESOURCE ordinal. */
 static void* mw_dll_export(MwDllImage* d, const char* name, uintptr_t ord_hint) {
     uint8_t* b = d->base;
@@ -16983,6 +17027,8 @@ __attribute__((ms_abi)) char* mw__mktemp(char* tmpl) {
  * real paint surface + WNDPROC registry + gated event pump (MW_GUI_EVENTS). */
 static void mw_gui_store_wndproc(void* proc);
 static void mw_gui_store_window(int w, int h);
+static void mw_gui_request_size_now(void); /* SW-1287: first-show WM_SIZE */
+static void mw_gui_send_first_size(void);  /* SW-1287b: synchronous first-show WM_SIZE */
 /* SW-1279 fix C: per-class wndproc registry + main-window proc snapshot */
 static void mw_class_proc_store(const void* name_ptr, int wide, void* proc);
 static void* mw_class_proc_lookup(const void* cls);
@@ -17404,7 +17450,12 @@ __attribute__((ms_abi)) int mw_ShowWindow(void* hwnd, int cmd) {
      * never painted: the pump found "no event source" and quit with a
      * white screen. Request the paint here — the pump's paint branch
      * delivers it on the next GetMessage. */
-    if (mw_gui_events_enabled()) mw_gui_request_paint();
+    if (mw_gui_events_enabled()) {
+        /* SW-1287 + SW-1287b (SWEEP-061): real Win32 SENDS WM_SIZE
+         * synchronously inside ShowWindow — see mw_gui_send_first_size. */
+        mw_gui_send_first_size();
+        mw_gui_request_paint();
+    }
     /* SW-1269b: SW_MAXIMIZE sizes the window to the work area (real XP:
      * full screen minus taskbar). Guests created with CW_USEDEFAULT (spider)
      * keep a tiny surface otherwise; the game's board blits then clip to
@@ -17856,6 +17907,38 @@ static unsigned char g_cs_scratch[256]; /* tolerate guests that passed NULL lpPa
  * this site keeps the neighboring pump globals. */
 static int       g_events_mode = -1;   /* -1 = not yet read from env */
 static int       g_paint_pending = 0;
+/* SW-1287 (SWEEP-061): real Win32 delivers WM_SIZE(SIZE_RESTORED) when the
+ * window is first SHOWN (and on every size change) BEFORE the first
+ * WM_PAINT. Guests compute their LAYOUT in WM_SIZE — XP solitaire positions
+ * all 13 piles there; v1 never delivered WM_SIZE, so the layout stayed at
+ * the zero init and every card drawn to (0,0..18): the board rendered with
+ * the deck fan only, no tableau. State: dims snapshot + pending flag. */
+static int       g_size_pending = 0;
+static int       g_size_w = 0, g_size_h = 0;
+static void mw_gui_request_size(int w, int h) {
+    g_size_w = w; g_size_h = h; g_size_pending = 1;
+}
+/* SW-1287: snapshot the CURRENT stored window dims and arm the WM_SIZE
+ * delivery (called from mw_ShowWindow before the variable definitions
+ * below are in scope — hence this small wrapper next to them). */
+static void mw_gui_request_size_now(void) {
+    mw_gui_request_size(g_win_w, g_win_h);
+}
+/* SW-1287b (SWEEP-061): real Win32 SENDS WM_SIZE synchronously inside
+ * ShowWindow (SetWindowPos internal) — it is NOT a queued message and MUST
+ * arrive before any posted message. The v1 pump-queued variant let sol's
+ * posted WM_COMMAND (deal) run FIRST: the deal laid out all piles at the
+ * zero layout and the later WM_SIZE relayout never re-drew. Send WM_SIZE
+ * straight to the main wndproc here (same pattern as the synchronous
+ * WM_CREATE); the pump queue variant stays as fallback for guests whose
+ * wndproc is not yet registered at ShowWindow time. */
+static void mw_gui_send_size_sync(int w, int h, const char* tag);
+static void mw_gui_send_first_size(void) {
+    if (mw_dispatch_proc() && g_main_hwnd)
+        mw_gui_send_size_sync(g_win_w, g_win_h, "SW-1287b");
+    else
+        mw_gui_request_size_now(); /* pump-queue fallback */
+}
 static int       g_quit_flag = 0, g_quit_code = 0;
 static int       g_timer_live = 0; static uintptr_t g_timer_id = 0;
 /* SWEEP-026 SW-1023: real SetTimer elapse gate. The pump used to serve
@@ -18074,7 +18157,10 @@ static void mw_gui_store_window(int w, int h) {
                        (size_t)g_surf.w * 3);
             free(g_surf.px);
             g_surf.px = np; g_surf.w = nw; g_surf.h = nh;
-            mwb_fill(&g_surf, 0, 0, nw, nh, 0xFFFFFF);
+            /* SW-1289 (SWEEP-061): the v1 full-surface mwb_fill(WHITE) here
+             * DESTROYED the preserved content the memcpy just carried over
+             * (sol: the dealt board wiped white by the statusbar's SetWindowPos
+             * grow during WM_SIZE). Only the NEW strips stay zero-filled. */
             MW_TRACE("[GUI] paint surface grew to %dx%d (SW-1266)", nw, nh);
         }
     }
@@ -18087,6 +18173,31 @@ static void mw_gui_send_destroy(void* hwnd) {
     }
 }
 static void mw_gui_request_paint(void) { g_paint_pending = 1; }
+/* SW-1287c (SWEEP-061): the real MoveWindow/SetWindowPos contract — a size
+ * change SENDS WM_SIZE(SIZE_RESTORED, MAKELONG(w,h)) synchronously before
+ * returning. winmine's board sizing depends on it (MoveWindow(170x1024)
+ * must relayout the board; without the send its WM_SIZE handler only ever
+ * saw the 32x32 helper dims). */
+static void mw_gui_send_size_sync(int w, int h, const char* tag) {
+    MW_WNDPROC dp = mw_dispatch_proc();
+    if (!dp || !g_main_hwnd) return;
+    /* SW-1287d (SWEEP-061): convergence guards. (1) no re-entry: a guest
+     * WM_SIZE handler that itself calls SetWindowPos/MoveWindow must not
+     * recursively re-enter WM_SIZE delivery (sol's fit-to-board math looped
+     +2px per round until the clamp). (2) real Windows only SENDS WM_SIZE
+     * when the size actually CHANGED — same-dims no-ops are silent. */
+    static int g_in_size_sync;
+    static int g_last_sw = -1, g_last_sh = -1;
+    if (g_in_size_sync) return;
+    if (w == g_last_sw && h == g_last_sh) return;
+    g_in_size_sync = 1;
+    long long sr = dp(g_main_hwnd, 0x0005u, 0,
+                      (long long)(uint32_t)((w & 0xFFFFu) | ((h & 0xFFFFu) << 16)));
+    g_in_size_sync = 0;
+    g_last_sw = w; g_last_sh = h;
+    g_size_pending = 0; /* delivered synchronously */
+    MW_TRACE("[GUI] WM_SIZE sent sync %dx%d -> %lld (%s)", w, h, sr, tag);
+}
 /* SWEEP-006: real Win32 sends WM_CREATE synchronously inside CreateWindowEx
  * (guests create their double buffers / child controls there). Gated on the
  * event pump so the v1 no-pump contract is unchanged. */
@@ -18288,6 +18399,17 @@ static int mw_gui_next_event(void* msg, void* hwnd, int consume, const char* api
                               g_delivered, api, pm, ph);
         return 1;
     }
+    if (g_size_pending) {
+        /* SW-1287: deliver WM_SIZE(SIZE_RESTORED, MAKELONG(w,h)) before the
+         * first WM_PAINT — real first-show order. */
+        if (consume) { g_size_pending = 0; g_delivered++; }
+        mw_gui_fill_msg(msg, h, 0x0005u, 0,
+                        (uintptr_t)(uint32_t)((g_size_w & 0xFFFFu) |
+                                              ((g_size_h & 0xFFFFu) << 16)));
+        if (consume) MW_TRACE("[GUI-EVENT] #%d %s -> WM_SIZE %dx%d (SW-1287)",
+                              g_delivered, api, g_size_w, g_size_h);
+        return 1;
+    }
     if (g_paint_pending) {
         if (consume) { g_paint_pending = 0; g_delivered++; }
         mw_gui_fill_msg(msg, h, 0x000Fu, 0, 0);
@@ -18457,6 +18579,48 @@ static int mw_gui_pump_getmsg(void* msg, void* hwnd, const char* api) {
     return 0;
 }
 
+/* SW-1285 probe: dump sol.exe's game object (g_game_ptr @ base+0xc298) after
+ * command/timer dispatches — measures why the card-laying loop never draws.
+ * Env-gated (MINWIN_GAME_PROBE=1); reads only mapped guest memory, no writes. */
+static void mw_sol_game_probe(const char* when) {
+    if (!getenv("MINWIN_GAME_PROBE")) return;
+    uint8_t* img = (uint8_t*)(uintptr_t)g_image_base;
+    if (!img) return;
+    void* game = *(void**)(img + 0xc298);
+    if (!game) {
+        MW_TRACE("[PROBE %s] game-ptr NULL", when);
+        return;
+    }
+    uint8_t* g8 = (uint8_t*)game;
+    uint32_t vt0 = *(uint32_t*)(g8 + 0x00);
+    uint32_t vt8 = *(uint32_t*)(g8 + 0x08);
+    int32_t  f64 = *(int32_t*)(g8 + 0x64);
+    int32_t  f70 = *(int32_t*)(g8 + 0x70);
+    uint64_t f78 = *(uint64_t*)(g8 + 0x78);
+    /* paint-lock global @ base+0xc294 (WndProc WM_PAINT skips when non-0)
+     * + animation/seed globals c12c/c2b4 + anim record [game+0x64] */
+    uint32_t paint_lock = *(uint32_t*)(img + 0xc294);
+    uint32_t g12c = *(uint32_t*)(img + 0xc12c);
+    uint32_t g2b4 = *(uint32_t*)(img + 0xc2b4);
+    MW_TRACE("[PROBE %s] game=%p vfn0=%08x [+0x64]=%d [+0x70](slots)=%d paint_lock=%u g12c=%u g2b4=%u",
+             when, game, vt0, f64, f70, paint_lock, g12c, g2b4);
+    if (f78 && f70 > 0 && f70 < 64) {
+        /* the 13 pile slots live INLINE at game+0x78..game+0xdf:
+         * [game+0x78]=deck, [game+0x80]=waste, [game+0x88..a7]=4 foundations,
+         * [game+0xa8..df]=7 tableau piles — each a heap object whose +8 is
+         * its message handler. Dump each slot + its handler. */
+        uint64_t sa = (uint64_t)(g8 + 0x78);
+        for (int i = 0; i < f70 && i < 16; i++) {
+            uint64_t obj = *(uint64_t*)(sa + (uint64_t)i * 8);
+            if (!obj) { MW_TRACE("[PROBE]   pile[%d] = NULL", i); continue; }
+            uint64_t h8 = *(uint64_t*)(uintptr_t)(obj + 8);
+            int32_t  cnt = *(int32_t*)((uint8_t*)(uintptr_t)obj + 0x28);
+            MW_TRACE("[PROBE]   pile[%d] obj=%llx handler=%llx cards=%d",
+                     i, (unsigned long long)obj, (unsigned long long)h8, cnt);
+        }
+    }
+}
+
 static long long mw_gui_dispatch_msg(const void* msg) {
     if (!msg) return 0;
     const uint8_t* p = (const uint8_t*)msg;
@@ -18466,9 +18630,11 @@ static long long mw_gui_dispatch_msg(const void* msg) {
     long long lp = *(const long long*)(p + 24);
     if (m == 0x0012u) return 0; /* WM_QUIT is never dispatched */
     if (mw_dispatch_proc() && hwnd == g_main_hwnd) { /* SW-1279 fix C */
+        if (m == 0x111u || m == 0x113u) mw_sol_game_probe("pre-cmd");
         long long r = mw_dispatch_proc()(hwnd, m, wp, lp);
         MW_TRACE("[GUI-EVENT] dispatch %s wp=0x%llx -> %lld",
                  mw_wm_name(m), (unsigned long long)wp, r);
+        if (m == 0x111u || m == 0x113u) mw_sol_game_probe("post-cmd");
         return r;
     }
     MW_TRACE("[GUI-EVENT] dispatch %s -> 0 (no registered wndproc)", mw_wm_name(m));
@@ -21582,10 +21748,22 @@ __attribute__((ms_abi)) int mw_GetWindowRect(void* hwnd, void* rc) {
     return 1;
 }
 __attribute__((ms_abi)) int mw_MoveWindow(void* hwnd, int x, int y, int w, int h, int repaint) {
-    (void)hwnd; (void)x; (void)y; (void)repaint;
     /* SW-1266b: grow the surface to the requested client size (see
-     * SetWindowPos note — winmine's post-create board sizing). */
-    if (w > 0 && h > 0) mw_gui_store_window(w, h);
+     * SetWindowPos note — winmine's post-create board sizing).
+     * SW-1288 (SWEEP-061): ONLY the MAIN window may resize the paint
+     * surface. A child's MoveWindow (sol's statusbar MoveWindow(587,10)
+     * during its own WM_SIZE layout) used to shrink the MAIN surface to
+     * 587x32 — the board then painted into a 32px client and the final
+     * frame was blank. Children resize only their own child-rect record. */
+    if (w > 0 && h > 0) {
+        /* SW-1288: child iff the handle carries the child-hwnd marker */
+        int is_main = (mw_child_slot(hwnd) < 0); /* SW-1288 FIX: slot() returns -1 for non-children — !(-1)==0 misrouted MAIN windows to the child path */
+        if (is_main) {
+            mw_gui_store_window(w, h);
+            mw_gui_send_size_sync(g_win_w, g_win_h, "SW-1287c MoveWindow"); /* SW-1287c */
+        }
+        else mw_child_set_rect(hwnd, x, y, w, h);
+    }
     MW_TRACE("MoveWindow(%dx%d) -> TRUE", w, h);
     return 1;
 }
@@ -23716,8 +23894,17 @@ __attribute__((ms_abi)) int mw_SetWindowPos(void* h, void* after, int x, int y,
     if (!(flags & 0x1u)) (void)w, (void)hgt; /* no SWP_NOSIZE: still accept */
     /* SW-1266b: a REAL size request grows the paint surface (winmine sizes
      * its board via MoveWindow/SetWindowPos AFTER a 2x0 create; without the
-     * grow the board BitBlts clip at the 32x32 helper-window surface). */
-    if (!(flags & 0x1u) && w > 0 && hgt > 0) mw_gui_store_window(w, hgt);
+     * grow the board BitBlts clip at the 32x32 helper-window surface).
+     * SW-1288 (SWEEP-061): children NEVER resize the main surface (sol's
+     * statusbar SetWindowPos(587,32) shrank/clamped it mid-WM_SIZE);
+     * SW-1287c: a MAIN-window size change sends WM_SIZE synchronously. */
+    if (!(flags & 0x1u) && w > 0 && hgt > 0) {
+        if (mw_child_slot(h) >= 0) mw_child_set_rect(h, x, y, w, hgt); /* SW-1288 FIX: -1 means MAIN, not child */
+        else {
+            mw_gui_store_window(w, hgt);
+            mw_gui_send_size_sync(g_win_w, g_win_h, "SW-1287c SetWindowPos");
+        }
+    }
     MW_TRACE("SetWindowPos(%p %dx%d@%d,%d flags=%#x) -> TRUE", h, w, hgt, x, y, flags);
     return 1;
 }
@@ -36854,12 +37041,14 @@ static int load_pe(const char* filepath) {
                 if (xd && func_name) {
                     void* xfn = mw_dll_export(xd, func_name, 0);
                     if (xfn) {
+                        void* probe_fn = mw_dll_probe_wrap(exelow2, func_name, xfn); /* SW-1286 */
                         void* patch_addr = g_image_base + iat_off + slot * 8;
                         iat_page_ensure_writable((uint8_t*)(uintptr_t)patch_addr);
                         if ((((uintptr_t)patch_addr & 0xFFF) + 8) > 0x1000)
                             iat_page_ensure_writable((uint8_t*)(uintptr_t)patch_addr + 8);
-                        *(uint64_t*)patch_addr = (uint64_t)(uintptr_t)xfn;
-                        MW_TRACE("  [%d] %s -> dll %s!%s", slot, func_name, exelow2, func_name);
+                        *(uint64_t*)patch_addr = (uint64_t)(uintptr_t)(probe_fn ? probe_fn : xfn);
+                        MW_TRACE("  [%d] %s -> dll %s!%s%s", slot, func_name, exelow2, func_name,
+                                 probe_fn ? " [PROBE-WRAPPED]" : "");
                         total_resolved++;
                         slot++;
                         continue;
