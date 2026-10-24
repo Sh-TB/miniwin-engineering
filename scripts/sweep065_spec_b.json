@@ -1,0 +1,12 @@
+[
+ {
+  "binary": "/home/z/my-project/workspace/miniwin-engineering/artifacts/sweep065/dl/npp/notepad++.exe",
+  "out": "/home/z/my-project/workspace/miniwin-engineering/evidence/sweep065/ghidra/notepadpp",
+  "targets": []
+ },
+ {
+  "binary": "/home/z/my-project/workspace/miniwin-engineering/artifacts/sweep065/dl/7zr.exe",
+  "out": "/home/z/my-project/workspace/miniwin-engineering/evidence/sweep065/ghidra/7zr",
+  "targets": []
+ }
+]

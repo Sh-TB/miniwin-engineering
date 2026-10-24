@@ -3538,3 +3538,33 @@ viewer, (2) Windows calculator, (3) a program that does not exist on Linux
       guess, SWEEP-014) -> InitCommonControls (wine comctl32.spec). usbdeview
       imports ImageList_Create BY NAME = corroborates. Rebuild + regression
       all baseline.
+
+## SWEEP-065 — 20-program mass audit («۲۰ تا برنامه رو با این ابزارها بررسی بکن و اجرا ببین»)
+- [x] Ghidra 12.2 batch: 20 binaries -> 30,289 functions / 3,778 imports /
+      163,774 resource entries in ~726s total (avg ~36s/program).
+      evidence/sweep065/ghidra/<prog>/{functions,imports,exports,resources}.tsv
+      Big three: WinRAR 7.12 (40.5s, 1855 fn), Notepad++ 8.9.8.1 x86 from
+      GitHub (486.8s, 19048 fn, 22798 res — biggest guest ever analyzed),
+      7-Zip 7zr 19.00 (43.1s, 4375 fn).
+- [x] Engine battery 20/20 run: PASS freecell(10)/spider(621)/calc(1) rc=0;
+      winrar712 rc=1 with engine-rendered Error dialog «folder is not
+      accessible» (messagebox_1.bmp -> shots_png/winrar712.png) = real
+      program decision, matches SWEEP-062. mspaint rc=0 clean-exit (no
+      frames, same as SWEEP-061) — not a regression.
+- [x] SW-1204c independent corroboration: driverview (tiny NirSoft PE32)
+      imports COMCTL32.Ordinal_17 == InitCommonControls per wine spec —
+      while usbdeview/npp import ImageList_* BY NAME. Two opposite import
+      styles in the same vendor family, both consistent with the fix.
+- [ ] **SW-1296** (new): NirSoft tiny-tool class — 8 exes (driverview,
+      faview, heapmemview, recentfilesview, resourcesextract, urlprotocolview,
+      htmlastext, iconsext) yield 0-1 Ghidra functions despite visible
+      named imports (entry fn @00414250 = 399 bytes __stdcall); 13 NirSoft
+      all rc=139 in engine (SW-1293 frontier). Hypothesis: analysis needs
+      aggressive function discovery; engine needs SW-1293b CRT self-check.
+- [ ] **SW-1297** (new): notepadpp x86 DEEPEST x86 penetration yet — loads,
+      executes far past CRT, dies rc=86 at [PE32-FATAL] opcode 0xee (OUT
+      DX,AL privileged) at EIP=0x007ef329. Real npp code path or EIP
+      misdispatch; carve with Ghidra decompile of 0x7ef329 region next.
+- [ ] **SW-1298** (new): spider .rsrc = 87,992 resource entries (Ghidra
+      tree walk) — audit whether engine resource loader can surface all
+      card-back art variants (spider already renders 621-frame deal).

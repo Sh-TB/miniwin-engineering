@@ -1998,3 +1998,35 @@ ImageList_Create BY NAME — NirSoft imports ImageList APIs by name, never as
 ordinal 17. Map comment updated in loader.c; rebuilt; regression battery all
 baseline (winmine 82 / sol 38 / freecell 10 / spider 630 / calc 1 / notepad
 rc=0). Verdict file: evidence/sweep064/SW1292_SW1204B_VERDICT.md. no force-push.
+
+---
+## SWEEP-065 (2026-10-25) — 20-program mass audit: tooling = lubricant + jet fuel
+
+Rule #1: fetched origin first — e21e078 (SWEEP-064) both sides, clean tree.
+Ghidra latest re-checked (12.2 still latest). Notepad++ latest release via
+GitHub API: v8.9.8.1.
+
+Batch (user mandate: 20 programs incl. WinRAR + GitHub's most-popular Windows
+program): WinRAR 7.12 x64, Notepad++ 8.9.8.1 x86 (portable.7z via py7zr),
+7-Zip 7zr 19.00, 13 NirSoft tools, 4 XP classics (freecell/spider/calc/mspaint).
+7z1900-extra.7z un-extractable under py7zr (BCJ2) -> replaced with official
+7zr.exe direct download.
+
+Ghidra batch via sweep063_driver.py + 4 spec chunks (background nohup dies
+under the tool runner — foreground chunks required): 20/20 programs, 30,289
+functions, 3,778 imports, 163,774 resource entries, ~726s total. notepadpp
+486.8s/19,048 fn = biggest guest ever analyzed; winrar 40.5s/1,855 fn.
+Evidence: evidence/sweep065/ghidra/<prog>/ 120 files.
+
+Engine battery (scripts/sweep065_battery.sh): freecell 10 / spider 621 / calc
+1 frames rc=0; winrar rc=1 + engine-rendered Error dialog «folder is not
+accessible» (messagebox_1.bmp — battery now harvests messagebox_*.bmp too);
+notepadpp rc=86 = deepest x86 penetration (PE32-FATAL opcode 0xee OUT DX,AL @
+EIP=0x7ef329) -> SW-1297; 13 NirSoft rc=139 unchanged (SW-1293 frontier);
+mspaint rc=0 clean exit (same as SWEEP-061, not a regression).
+
+Cross-validation: driverview imports COMCTL32.Ordinal_17 == InitCommonControls
+(SW-1204c corroborated by an opposite import style in the same vendor family).
+New cars: SW-1296 (tiny-tool Ghidra function discovery), SW-1297 (npp 0xee),
+SW-1298 (spider 87,992-resource audit). Report: artifacts/sweep065/
+BATCH20_REPORT.md. no force-push.
