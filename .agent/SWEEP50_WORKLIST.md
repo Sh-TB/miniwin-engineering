@@ -3443,3 +3443,30 @@ viewer, (2) Windows calculator, (3) a program that does not exist on Linux
   loop then engages.
 - [ ] SW-1284 (common-controls child lifecycle), SW-1283b, SW-1281c/d
   remain open.
+
+## SWEEP-062 Train 3 «ادامه» — corpus expansion: +15 fresh programs (2026-10-25)
+
+- [x] **+15 fresh programs downloaded & staged** (artifacts/sweep062/dl/,
+  scripts/sweep062_download.sh; total corpus now 48 programs: 17 XP +
+  16 sweep50 + 15 sweep062 — inside the user's 20-50 mandate):
+  14 NirSoft tiny free tools (DriverView, USBDeview, Faview,
+  ResourcesExtract, IconsExt, DevManView, SimpleProgramDebugger,
+  HeapMemView, HtmlAsText, URLProtocolView, DNSQuerySniffer,
+  MultiMonitorTool, InstalledAppView, RecentFilesView) + WinRAR 7.12
+  (x64) + 7-zip 1900 extra pack + PortableGit 2.46 sfx (both staged;
+  BCJ2 packs kept for the 7za-based expansion path).
+- [x] **WinRAR 7.12 x64 RUNS** — loads, 1 unresolved import
+  (SetThreadExecutionState -> honest 0 stub), advances into real logic
+  and opens its OWN error dialog "folder is not accessible" (no args ->
+  WinRAR tries its default folder) — RENDERED by the engine messagebox
+  compositor: title bar + warning icon + text + OK button
+  (evidence/sweep062/dl_png/winrar712_msg.png). rc=1 = the dialog's
+  error exit, a REAL program decision, not an engine abort.
+- [x] **SW-1293 (NEW) registered with a live baseline**: all 14 NirSoft
+  tools are 32-BIT (PE machine 0x14c) and crash rc=139 in the PE32/x86
+  subsystem BEFORE image load (g_image_base=nil, Signal 11 in libc
+  during early init; first trace line only "Command line"). This is the
+  SW-1281c/d deep-init frontier with 14 reproducers staged. Engine
+  healthy in parallel: winmine rc=0 same binary.
+- [x] Engine health confirmed mid-battery (winmine 82-frame baseline
+  rc=0 on the same build).
