@@ -3212,3 +3212,23 @@ viewer, (2) Windows calculator, (3) a program that does not exist on Linux
   needs per-guest decode rounds.
 - [ ] SW-1283 (VirtualProtect RWX, Chocolate-Doom) + SW-1284 (common
   controls rendering) remain open from SWEEP-059.
+
+## SWEEP-060 Train 2 — SW-1283 VirtualProtect chain (2026-10-24)
+
+- [x] **SW-1283 LANDED (root cause NOT in VirtualProtect)** — chocolate-doom
+  suite aborted at "Mingw-w64 runtime failure: VirtualProtect failed with
+  code 0xcb". Trace decode: mingw's pseudo-relocator VirtualQuery-ies a
+  HEAP address (0x7ff2a03e1000) and derives its protect region from
+  mbi.AllocationBase — mw_VirtualQuery had only 3 classes (thread-stack /
+  image / MEM_FREE) so heap got MEM_FREE + AllocationBase=NULL ->
+  VirtualProtect(NULL, 0, PAGE_EXECUTE_READWRITE) -> abort. FIX: honest
+  4th class — probe /proc/self/maps for the real VMA (BaseAddress/
+  AllocationBase = VMA start, RegionSize = VMA extent, MEM_COMMIT |
+  MEM_PRIVATE, protect from perms). MEASURED: the mingw runtime failure is
+  GONE; all 4 games now load their REAL DISK DLL chains (libfluidsynth-3,
+  libgcc_s_seh-1, libwinpthread-1, libintl-8, libiconv-2 via the SW-509
+  pipeline) and advance into DllMain territory.
+- [ ] **SW-1283b (NEW)** — recursive guest-DLL-on-guest-DLL depth: chocolate
+  crashes inside the loaded-DLL chain (libiconv/libintl DllMain +
+  cross-DLL imports). SW-509 v2 already re-lands deps; the frontier is
+  DllMain execution + cross-DLL data imports at chain depth.

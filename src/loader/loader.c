@@ -4670,6 +4670,39 @@ __attribute__((ms_abi)) size_t mw_VirtualQuery(void* addr, void* info, size_t le
         *(uint32_t*)(p + 40) = 0x1000;             /* Type MEM_IMAGE */
         return 48;
     }
+    /* SW-1283 (SWEEP-060 Train 2): HEAP/other COMMITTED class. mingw-w64's
+     * pseudo-relocator VirtualQuery-ies a heap address and derives its
+     * VirtualProtect region from mbi.AllocationBase — the old MEM_FREE
+     * answer handed it AllocationBase=NULL -> VirtualProtect(NULL, 0,
+     * PAGE_EXECUTE_READWRITE) -> "Mingw-w64 runtime failure: VirtualProtect
+     * failed with code 0xcb" abort (chocolate-doom/heretic/hexen/strife).
+     * Honest model: probe the real VMA map — committed host allocations are
+     * MEM_PRIVATE / MEM_COMMIT / PAGE_READWRITE with the VMA as bounds. */
+    {
+        FILE* mf = fopen("/proc/self/maps", "r");
+        if (mf) {
+            char line[512];
+            while (fgets(line, sizeof(line), mf)) {
+                uintptr_t lo = 0, hi = 0;
+                char perms[8] = {0};
+                if (sscanf(line, "%lx-%lx %7s", &lo, &hi, perms) != 3) continue;
+                if (a < lo || a >= hi) continue;
+                fclose(mf);
+                uint32_t wp = 0x04; /* PAGE_READWRITE baseline */
+                if (perms[0] == 'r' && perms[1] == '-') wp = 0x02;
+                if (perms[2] == 'x') wp |= 0x20; /* PAGE_EXECUTE_READ-ish */
+                *(uint64_t*)(p + 0) = (uint64_t)lo;        /* BaseAddress */
+                *(uint64_t*)(p + 8) = (uint64_t)lo;        /* AllocationBase */
+                *(uint32_t*)(p + 16) = 0x04;               /* AllocationProtect */
+                *(uint64_t*)(p + 24) = (uint64_t)(hi - lo);/* RegionSize */
+                *(uint32_t*)(p + 32) = 0x1000;             /* State MEM_COMMIT */
+                *(uint32_t*)(p + 36) = wp;                 /* Protect */
+                *(uint32_t*)(p + 40) = 0x20000;            /* Type MEM_PRIVATE */
+                return 48;
+            }
+            fclose(mf);
+        }
+    }
     /* unmapped: MEM_FREE, RegionSize stays 0 (no VMA map kept — documented) */
     *(uint32_t*)(p + 32) = 0x10000;                /* State MEM_FREE */
     *(uint32_t*)(p + 36) = 0x01;                   /* Protect PAGE_NOACCESS */
