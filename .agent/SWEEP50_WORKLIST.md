@@ -3526,3 +3526,15 @@ viewer, (2) Windows calculator, (3) a program that does not exist on Linux
       intact in .rsrc (bomb/LED art present) — supports SWEEP-062 Train 4 fidelity.
 - [x] Engine health: winmine rc=0, 82 frames (= SWEEP-061 baseline);
       evidence/sweep063/shots_png/winmine_health_sweep063.png.
+
+## SWEEP-064 — verdicts and cross-validation (Ghidra tooling continues)
+- [x] **SW-1292 CLOSED (phantom)** — FUN_100003f10 is save/restore around
+      [c2a0]; post-paint NULL = correct steady state, not a dead chain. sol
+      38-frame run + full-board screenshot proves the WM_PAINT chain alive.
+      SW-1292b cancelled.
+- [x] **SW-1204b cross-validation** — all procexp64 ordinals in ole_ord[]
+      match wine specs (16/277/345/410/413/176/ACLUI.1 etc.).
+- [x] **SW-1204c COMCTL32.17 corrected** — ImageList_Create (slot-neighborhood
+      guess, SWEEP-014) -> InitCommonControls (wine comctl32.spec). usbdeview
+      imports ImageList_Create BY NAME = corroborates. Rebuild + regression
+      all baseline.

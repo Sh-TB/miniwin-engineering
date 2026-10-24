@@ -37076,11 +37076,16 @@ static int load_pe(const char* filepath) {
                     { "OLEAUT32", 114, "VarBstrFromDate" },
                     { "OLEAUT32", 418, "DllUnregisterServer" },
                     /* SWEEP-014 (7zG gate, BUG-052 kin): 7-Zip's MSVC import
-                     * lib binds COMCTL32 ordinals too. 17 = ImageList_Create
-                     * (classic comctl32 fixed ordinal, verified by slot
-                     * neighborhood 0x477080 between GDI32/KERNEL32 groups and
-                     * 7zG's installer ListView usage). */
-                    { "COMCTL32", 17, "ImageList_Create" },
+                     * lib binds COMCTL32 ordinals too. SWEEP-064 (SW-1204b)
+                     * CORRECTION: 17 = InitCommonControls per wine
+                     * comctl32.spec "17 stdcall InitCommonControls()"
+                     * (authoritative ordinal table); the old ImageList_Create
+                     * name was a slot-neighborhood guess with no named source
+                     * (Rule 1). Cross-validated by SWEEP-063: Ghidra
+                     * enumerated procexp64's full ordinal import set and all
+                     * other entries match this map (16/277/345/410/413/176/
+                     * ACLUI.1 confirmed). */
+                    { "COMCTL32", 17, "InitCommonControls" },
                     /* SWEEP-018 (SW-803..806): NirSoft GUI family binds
                      * COMCTL32 by old fixed ordinal. #6 called with
                      * (0x50000000=WS_CHILD|WS_VISIBLE|SBARS_SIZEGRIP, &text,

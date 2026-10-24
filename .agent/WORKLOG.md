@@ -1970,3 +1970,31 @@ entry checklist decoded (MZ/PE, 0x10b magic, RvaAndSizes>=14, SEH). winmine
 .rsrc audit: bomb/LED bitmaps all intact (11 RT_BITMAP). Engine health: winmine
 rc=0 / 82 frames. New cars SW-1292b, SW-1204b, SW-1293b. No engine code changed
 this train. no force-push.
+
+---
+## SWEEP-064 (2026-10-24) — SW-1292 closed (phantom gap), SW-1204b cross-val + COMCTL32.17 fix
+
+Rule #1: fetched origin first — 71febd8 both sides, clean tree.
+
+SW-1292 CLOSED — the "engine-internal gap" was a probe misread. SWEEP-063's
+Ghidra decompile shows FUN_100003f10 is SAVE/RESTORE: first stmt stores ps.hdc
+into [c2a0], LAST stmt stores the OLD value back. Post-paint [c2a0]=NULL is the
+correct steady state whether or not the chain ran; "zero guest API calls" is
+expected (DC swap = pure stores; pile draws go guest->guest cards.dll).
+Decisive experiment: sol GUI-pump run = 38 frames (= SWEEP-061 full-deal
+baseline) and the final frame shows the COMPLETE board (felt, deck, 4
+foundations, 7 tableau cascades with real faces, status bar).
+evidence/sweep064/shots_png/sol_board_sweep064.png. SW-1292b PC-sampler car
+cancelled — chain is alive.
+
+SW-1204b: independent cross-validation of the whole procexp64 ordinal set
+(Ghidra 12.2 enumeration x wine-mirror specs fetched 2026-10-24). Every map
+entry matches (OLEAUT32 2/4/6/7/8/9/12/16/19/20/23/24/25/150/277, WS2_32
+8/9/14/15/51/56/115, SHLWAPI.176, COMCTL32.345/410/413, ACLUI.1). ONE
+correction: COMCTL32.17 ImageList_Create -> InitCommonControls (wine
+comctl32.spec line 21; the old name was a SWEEP-014 slot-neighborhood guess,
+Rule-1 violation). Corroborating evidence: usbdeview imports Ordinal_6 AND
+ImageList_Create BY NAME — NirSoft imports ImageList APIs by name, never as
+ordinal 17. Map comment updated in loader.c; rebuilt; regression battery all
+baseline (winmine 82 / sol 38 / freecell 10 / spider 630 / calc 1 / notepad
+rc=0). Verdict file: evidence/sweep064/SW1292_SW1204B_VERDICT.md. no force-push.
