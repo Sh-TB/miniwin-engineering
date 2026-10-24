@@ -10203,6 +10203,33 @@ static void* w3_create_file(const char* name8, uint32_t access, uint32_t disp) {
     snprintf(nn8, sizeof(nn8), "%s", name8);
     w3_normalize_path(nn8);
     name8 = nn8;
+    /* SWEEP-058 SW-1240: real Windows ALWAYS has the standard directory
+     * skeleton under the system root (logonsessions64 extracts its embedded
+     * PROCEXP152.SYS to C:\Windows\System32\Drivers\ — CREATE_ALWAYS into a
+     * directory that exists on every real install). Seed it once on the
+     * first C:\Windows\... file access so admin-style driver drops work. */
+    {
+        static int g_win_dirs_seeded = 0;
+        if (!g_win_dirs_seeded && strstr(name8, "/Windows/")) {
+            g_win_dirs_seeded = 1;
+            static const char* dirs[] = {
+                "/Windows", "/Windows/System32", "/Windows/System32/Drivers",
+                "/Windows/System32/spool", "/Windows/Temp", NULL
+            };
+            char base[2048];
+            snprintf(base, sizeof(base), "%s", name8);
+            char* winp = strstr(base, "/Windows/");
+            if (winp) {
+                *winp = 0; /* base = the drive-cwd root */
+                for (int i = 0; dirs[i]; i++) {
+                    char full[2048];
+                    snprintf(full, sizeof(full), "%s%s", base, dirs[i]);
+                    mkdir(full, 0755); /* EEXIST fine */
+                }
+            }
+            MW_TRACE("file world: Windows dir skeleton seeded under %s", base);
+        }
+    }
     if (!g_w3files_ready) { memset(g_w3files, 0, sizeof(g_w3files)); g_w3files_ready = 1; }
     int slot = -1;
     for (int i = 0; i < MAX_HANDLES; i++) if (!g_w3files[i].in_use) { slot = i; break; }
@@ -22272,18 +22299,21 @@ __attribute__((ms_abi)) int mw_GetTokenInformation(void* token, uint32_t cls, vo
     mw_SetLastError(87);
     return 0;
 }
+/* SWEEP-058 SW-1238a: a REAL admin box opens the service database — the
+ * NULL+ACCESS_DENIED model left accesschk's -c plane on a stub-0
+ * EnumServicesStatusW (the RDX=-1 wild UTF-16 scan). Live SCM cookie. */
+#define MW_SCMSVC_BASE 0x005C0000u
+static uint32_t g_scmsvc_next = 1;
 __attribute__((ms_abi)) void* mw_OpenSCManagerW(const uint16_t* machine, const uint16_t* db,
         uint32_t access) {
     (void)machine; (void)db; (void)access;
-    MW_TRACE("OpenSCManagerW() -> NULL (ERROR_ACCESS_DENIED: no SCM in this session)");
-    mw_SetLastError(5);
-    return NULL;
+    MW_TRACE("OpenSCManagerW() -> SCManager cookie (live SCM world)");
+    return (void*)(uintptr_t)(MW_SCMSVC_BASE | (g_scmsvc_next++ & 0xFFFFu));
 }
 __attribute__((ms_abi)) void* mw_OpenSCManagerA(const char* machine, const char* db, uint32_t access) {
     (void)machine; (void)db; (void)access;
-    MW_TRACE("OpenSCManagerA() -> NULL (ERROR_ACCESS_DENIED: no SCM in this session)");
-    mw_SetLastError(5);
-    return NULL;
+    MW_TRACE("OpenSCManagerA() -> SCManager cookie (live SCM world)");
+    return (void*)(uintptr_t)(MW_SCMSVC_BASE | (g_scmsvc_next++ & 0xFFFFu));
 }
 __attribute__((ms_abi)) int mw_CloseServiceHandle(void* h) {
     MW_TRACE("CloseServiceHandle(%p) -> TRUE", h);
@@ -23631,11 +23661,11 @@ __attribute__((ms_abi)) uint32_t mw_LsaOpenPolicy(const void* name, void* attr,
 /* ---- SWEEP-058 SW-1240 (re-lands the lost SWEEP-057 Train 5 LSA
  * groundwork): SECUR32 logon-session trio with REAL x64 layouts.
  * SECURITY_LOGON_SESSION_DATA (phnt ntsecapi.h, x64):
- *   0x00 Size, 0x08 LogonId(LUID), 0x10 UserName / 0x18 LogonDomain /
- *   0x20 AuthenticationPackage (LSA_UNICODE_STRING {USHORT len; USHORT
- *   max; pad4; PWSTR buf} = 8B), 0x28 LogonType, 0x2C Session,
- *   0x30 Sid, 0x38 LogonTime, 0x40 LogonServer, 0x48 Credentials
- *   = 0x50-byte header + string buffers + SID buffer after it.
+ *   0x00 Size, 0x08 LogonId(LUID), 0x10 UserName, 0x20 LogonDomain,
+ *   0x30 AuthenticationPackage (LSA_UNICODE_STRING = 16B on x64:
+ *   {USHORT len; USHORT max; pad4; PWSTR buf@+8}), 0x40 LogonType,
+ *   0x44 Session, 0x48 Sid, 0x50 LogonTime, 0x58 LogonServer,
+ *   0x68 Credentials = 0x88 (136) byte header + string/SID buffers.
  * One interactive session (LUID 0x3e7 = the SYSTEM session real Windows
  * always has): user "guest", domain "MINIWIN", package "Negotiate",
  * logon server "MINIWIN", SID S-1-5-21-1-2-3-500. Buffers allocated with
@@ -23643,6 +23673,10 @@ __attribute__((ms_abi)) uint32_t mw_LsaOpenPolicy(const void* name, void* attr,
 static const uint32_t MW_LSA_SESSION_LUID = 0x3e7u;
 
 static uint32_t mw_lsa_build_session_data(uint8_t** out) {
+    /* x64 SECURITY_LOGON_SESSION_DATA: 0x88-byte header. LSA_UNICODE_STRING
+     * on x64 = {USHORT Length; USHORT MaximumLength; pad4; PWSTR Buffer}
+     * = 16 BYTES (the 8-byte variant made the guest read garbage field
+     * offsets -> ConvertSidToStringSidW(0x20000) SIGSEGV 0x204d4e5). */
     static const struct { const char* s; } strs[] = {
         { "guest" },     /* UserName */
         { "MINIWIN" },   /* LogonDomain */
@@ -23650,29 +23684,33 @@ static uint32_t mw_lsa_build_session_data(uint8_t** out) {
         { "MINIWIN" },   /* LogonServer */
         { "" },          /* Credentials */
     };
-    uint32_t total = 0x50;
+    const uint32_t LSAUS = 16;
+    uint32_t total = 0x88;
     for (int i = 0; i < 5; i++) total += (uint32_t)strlen(strs[i].s) * 2 + 2 + 8;
-    /* SID S-1-5-21-1-2-3-500: Revision(1)+SubAuthCount(1)+Auth(6)+5*4 = 28 */
-    total += 28 + 8;
+    total += 28 + 8; /* SID S-1-5-21-1-2-3-500 + slack */
     uint8_t* p = (uint8_t*)mw_LocalAlloc(0x40, total);
     if (!p) return 0xC000009Au; /* STATUS_NO_MEMORY */
     memset(p, 0, total);
     *(uint32_t*)(p + 0x00) = total;
     *(uint64_t*)(p + 0x08) = MW_LSA_SESSION_LUID;
-    uint8_t* cur = p + 0x50;
+    *(uint32_t*)(p + 0x40) = 2; /* LogonType = Interactive */
+    *(uint32_t*)(p + 0x44) = 1; /* Session */
+    *(uint64_t*)(p + 0x50) = (uint64_t)time(NULL) * 10000000ull + 116444736000000000ull;
+    /* LSA_UNICODE_STRING helper: fields at +0/+2/+8 within each 16B slot */
+    static const uint32_t usoff[5] = { 0x10, 0x20, 0x30, 0x58, 0x68 };
+    uint8_t* cur = p + 0x88;
     for (int i = 0; i < 5; i++) {
         uint32_t blen = (uint32_t)strlen(strs[i].s) * 2;
         uint16_t* w = (uint16_t*)cur;
         for (uint32_t c = 0; c < blen / 2; c++) w[c] = (uint16_t)(uint8_t)strs[i].s[c];
-        /* LSA_UNICODE_STRING fields @ (0x10/0x18/0x20/0x40/0x48) + i*8 */
-        uint16_t* us = (uint16_t*)(p + (i == 0 ? 0x10 : i == 1 ? 0x18 : i == 2 ? 0x20 : i == 3 ? 0x40 : 0x48));
-        us[0] = (uint16_t)blen;         /* Length (bytes) */
-        us[1] = (uint16_t)(blen + 2);   /* MaximumLength */
-        *(uint64_t*)(us + 4) = (uint64_t)(uintptr_t)w; /* Buffer */
+        uint16_t* us = (uint16_t*)(p + usoff[i]);
+        us[0] = (uint16_t)blen;       /* Length (bytes) */
+        us[1] = (uint16_t)(blen + 2); /* MaximumLength */
+        *(uint64_t*)((uint8_t*)us + 8) = (uint64_t)(uintptr_t)w; /* Buffer @+8 */
         cur += blen + 2;
         cur += (8 - ((uintptr_t)cur & 7)) & 7;
     }
-    /* Sid @0x30: S-1-5-21-1-2-3-500 */
+    /* Sid @0x48: S-1-5-21-1-2-3-500 */
     {
         uint8_t* sid = cur;
         sid[0] = 1;          /* Revision */
@@ -23680,11 +23718,8 @@ static uint32_t mw_lsa_build_session_data(uint8_t** out) {
         *(uint32_t*)(sid + 4) = 5;  /* IdentifierAuthority */
         uint32_t* sub = (uint32_t*)(sid + 8);
         sub[0] = 21; sub[1] = 1; sub[2] = 2; sub[3] = 3; sub[4] = 500;
-        *(uint64_t*)(p + 0x30) = (uint64_t)(uintptr_t)sid;
+        *(uint64_t*)(p + 0x48) = (uint64_t)(uintptr_t)sid;
     }
-    *(uint64_t*)(p + 0x38) = (uint64_t)time(NULL) * 10000000ull + 116444736000000000ull;
-    *(uint32_t*)(p + 0x28) = 2; /* LogonType = Interactive */
-    *(uint32_t*)(p + 0x2c) = 1; /* Session */
     *out = p;
     return 0; /* STATUS_SUCCESS */
 }
@@ -26431,13 +26466,155 @@ __attribute__((ms_abi)) int32_t mw_RegEnumKeyW(void* key, uint32_t idx, char* na
     uint32_t cap = namelen;
     return mw_RegEnumKeyExA(key, idx, name, &cap, NULL, NULL, NULL, NULL);
 }
-#define MW_SCMSVC_BASE 0x005C0000u
-static uint32_t g_scmsvc_next = 1;
 __attribute__((ms_abi)) void* mw_OpenServiceW(void* scm, const uint16_t* name, uint32_t access) {
     (void)scm; (void)access;
     MW_TRACE("OpenServiceW -> cookie %u", g_scmsvc_next);
     return (void*)(uintptr_t)(MW_SCMSVC_BASE | (g_scmsvc_next++ & 0xFFFFu));
 }
+
+/* ---- SWEEP-058 SW-1238a: accesschk64 security/Net plane, typed batch ----
+ * The 15 unresolved imports (accesschk64 usage: 183 resolved / 15
+ * unresolved) — every model below is the REAL Windows shape for a hardened
+ * fresh-install box: empty share list, empty user-right assignments,
+ * self-relative SDs with no SACL, the standard NTSTATUS->Win32 mapping. */
+
+/* SCM handle contract: OpenSCManagerW previously returned NULL +
+ * ERROR_ACCESS_DENIED — a REAL admin box opens the database (accesschk -c
+ * gates on it; the stub-0 EnumServicesStatusW then drove the RDX=-1 wild
+ * UTF-16 scan at 0x140057f5d / RA 0x140034bf8). */
+__attribute__((ms_abi)) int mw_EnumServicesStatusW(void* scm, uint32_t type, uint32_t state,
+        void* services, uint32_t cb, uint32_t* needed, uint32_t* returned, uint32_t* resume) {
+    (void)scm; (void)type; (void)state; (void)services; (void)resume;
+    if (needed) *needed = 0;
+    if (returned) *returned = 0;
+    MW_TRACE("EnumServicesStatusW -> TRUE, 0 services (empty SCM world)");
+    return 1; /* TRUE: enum succeeded, zero services in the fresh world */
+}
+/* NetShareEnum already exists in the Net plane (workgroup model). */
+__attribute__((ms_abi)) uint32_t mw_NetShareGetInfo(const uint16_t* server, const uint16_t* netname,
+        uint32_t level, uint8_t** buf) {
+    (void)server; (void)level;
+    if (buf) *buf = NULL;
+    return 2311; /* NERR_NetNameNotFound — the share does not exist */
+}
+__attribute__((ms_abi)) uint32_t mw_GetEffectiveRightsFromAclW(void* acl, const uint16_t* user,
+        uint32_t* mask) {
+    (void)acl; (void)user;
+    if (mask) *mask = 0; /* no rights granted in the trusted-installer world */
+    return 0;
+}
+__attribute__((ms_abi)) uint32_t mw_DeleteAce(void* acl, uint32_t index) {
+    (void)acl; (void)index;
+    return 87; /* ERROR_INVALID_PARAMETER: our SDs carry no editable ACE list */
+}
+__attribute__((ms_abi)) uint32_t mw_RegGetKeySecurity(void* key, uint32_t info, void* sd, uint32_t* cbs) {
+    (void)key;
+    uint32_t need = 20; /* minimal self-relative SD */
+    if (!sd || !cbs) { if (cbs) *cbs = need; return 87; }
+    if (*cbs < need) { *cbs = need; mw_SetLastError(122); return 122; }
+    uint8_t* s = (uint8_t*)sd;
+    memset(s, 0, need);
+    s[0] = 1;                                   /* Revision */
+    *(uint16_t*)(s + 2) = 0x8004u;              /* Control: SELF_RELATIVE | DaclPresent */
+    *(uint32_t*)(s + 4) = need;                 /* OffsetOwner = 0-length sentinel */
+    *(uint32_t*)(s + 8) = need;
+    *(uint32_t*)(s + 12) = need;
+    *(uint32_t*)(s + 16) = need;
+    *cbs = need;
+    MW_TRACE("RegGetKeySecurity(info=%u) -> 20-byte self-relative SD", info);
+    return 0;
+}
+__attribute__((ms_abi)) uint32_t mw_LsaNtStatusToWinError(uint32_t status) {
+    switch (status) {
+    case 0u:          return 0;      /* ERROR_SUCCESS */
+    case 0xC0000022u: return 5;      /* STATUS_ACCESS_DENIED -> ERROR_ACCESS_DENIED */
+    case 0xC0000034u: return 2;      /* STATUS_OBJECT_NAME_NOT_FOUND -> ERROR_FILE_NOT_FOUND */
+    case 0xC0000005u: return 998;    /* -> ERROR_NOACCESS */
+    case 0xC000000Du: return 87;     /* STATUS_INVALID_PARAMETER */
+    case 0xC000009Au: return 1450;   /* -> ERROR_NO_SYSTEM_RESOURCES */
+    case 0xC000007Fu: return 1439;   /* -> ERROR_INVALID_PARAMETER variant */
+    case 0xC0000001u: return 1459;   /* STATUS_UNSUCCESSFUL approx */
+    case 0xC0000101u: return 1317;   /* STATUS_NO_SUCH_PRIVILEGE -> ERROR_NO_SUCH_PRIVILEGE */
+    case 0xC0000060u: return 1307;   /* STATUS_PRIVILEGE_NOT_HELD */
+    default:          return 123;    /* ERROR_INVALID_NAME fallback for unmapped */
+    }
+}
+__attribute__((ms_abi)) uint32_t mw_LsaEnumerateAccountsWithUserRight(void* pol, const uint16_t* right,
+        void** buf, uint32_t* count) {
+    (void)pol; (void)right;
+    if (buf) *buf = NULL;
+    if (count) *count = 0;
+    MW_TRACE("LsaEnumerateAccountsWithUserRight -> 0 accounts (no rights assigned)");
+    return 0; /* STATUS_SUCCESS, empty list */
+}
+__attribute__((ms_abi)) int mw_LookupPrivilegeDisplayNameW(const uint16_t* system, const uint16_t* name,
+        uint16_t** display, uint32_t* cch, uint32_t* lang) {
+    (void)system; (void)lang;
+    static const struct { const char* n; const char* d; } privs[] = {
+        { "SeTakeOwnershipPrivilege",       "Take ownership of files or other objects" },
+        { "SeBackupPrivilege",              "Back up files and directories" },
+        { "SeRestorePrivilege",             "Restore files and directories" },
+        { "SeDebugPrivilege",               "Debug programs" },
+        { "SeShutdownPrivilege",            "Shut down the system" },
+        { "SeLoadDriverPrivilege",          "Load and unload device drivers" },
+        { "SeSecurityPrivilege",            "Manage auditing and security log" },
+        { "SeSystemtimePrivilege",          "Change the system time" },
+        { NULL, NULL }
+    };
+    if (!name || !display) { if (display) *display = NULL; mw_SetLastError(1317); return 0; }
+    char n8[64];
+    { uint32_t i = 0; for (; i + 1 < sizeof(n8) && name[i]; i++) n8[i] = (char)(name[i] & 0xFF); n8[i] = 0; }
+    for (int i = 0; privs[i].n; i++) {
+        if (strcasecmp(n8, privs[i].n) != 0) continue;
+        uint32_t dl = (uint32_t)strlen(privs[i].d) + 1;
+        uint16_t* w = (uint16_t*)mw_LocalAlloc(0x40, dl * 2 + 8);
+        if (!w) { mw_SetLastError(8); return 0; }
+        for (uint32_t c = 0; c < dl; c++) w[c] = (uint16_t)(uint8_t)privs[i].d[c];
+        if (cch) *cch = dl;
+        *display = w;
+        return 1;
+    }
+    mw_SetLastError(1317); /* ERROR_NO_SUCH_PRIVILEGE — honest miss */
+    return 0;
+}
+__attribute__((ms_abi)) int mw_GetSecurityDescriptorSacl(void* sd, int* present, void** sacl, int* defaulted) {
+    uint8_t* s = (uint8_t*)sd;
+    uint16_t ctrl = s ? *(uint16_t*)(s + 2) : 0;
+    if (present) *present = (ctrl & 0x0004u) ? 1 : 0; /* SE_SACL_PRESENT */
+    if (sacl) *sacl = NULL;
+    if (defaulted) *defaulted = 0;
+    return 1;
+}
+__attribute__((ms_abi)) int mw_GetSecurityDescriptorControl(void* sd, uint16_t* ctrl, uint32_t* rev) {
+    uint8_t* s = (uint8_t*)sd;
+    if (!s || !ctrl || !rev) { mw_SetLastError(87); return 0; }
+    *ctrl = *(uint16_t*)(s + 2); /* real control bits (SELF_RELATIVE etc.) */
+    *rev = s[0];
+    return 1;
+}
+/* ---- SW-1238a tail: WevEvt channel plane (wevtapi) — honest empty enum ---- */
+__attribute__((ms_abi)) void* mw_EvtOpenChannelEnum(void* session, uint32_t flags) {
+    (void)session; (void)flags;
+    return (void*)(uintptr_t)(0x0007B000u | (++g_scmsvc_next & 0xFFFu)); /* EVT handle cookie */
+}
+__attribute__((ms_abi)) int mw_EvtNextChannelPath(void* enumh, uint32_t cch, uint16_t* path, uint32_t* used) {
+    (void)enumh;
+    if (used) *used = 0;
+    return 0; /* FALSE: no channels left — empty event-log world */
+}
+__attribute__((ms_abi)) void* mw_EvtOpenChannelConfig(void* session, const uint16_t* path, uint32_t flags) {
+    (void)session; (void)path; (void)flags;
+    mw_SetLastError(15007); /* ERROR_EVT_CHANNEL_NOT_FOUND */
+    return NULL;
+}
+__attribute__((ms_abi)) int mw_EvtGetChannelConfigProperty(void* cfg, uint32_t prop, uint32_t flags,
+        uint32_t cbsize, void* buf, uint32_t* used) {
+    (void)cfg; (void)prop; (void)flags; (void)buf;
+    if (used) *used = 0;
+    mw_SetLastError(15007);
+    return 0;
+}
+__attribute__((ms_abi)) int mw_EvtClose(void* h) { (void)h; return 1; }
 __attribute__((ms_abi)) void* mw_OpenServiceA(void* scm, const char* name, uint32_t access) {
     (void)name;
     return (void*)(uintptr_t)(MW_SCMSVC_BASE | (g_scmsvc_next++ & 0xFFFFu));
@@ -34732,6 +34909,23 @@ ENTRY("GDI32.DLL", "GetCharacterPlacementW",                mw_GetCharacterPlace
     ENTRY("KERNEL32.DLL", "WritePrivateProfileStringW",         mw_WritePrivateProfileStringW),
     ENTRY("ADVAPI32.DLL", "RegEnumKeyW",                        mw_RegEnumKeyW),
     ENTRY("ADVAPI32.DLL", "OpenServiceW",                       mw_OpenServiceW),
+    /* SWEEP-058 SW-1238a: accesschk security/Net/eventlog plane */
+    ENTRY("ADVAPI32.DLL", "EnumServicesStatusW",                mw_EnumServicesStatusW),
+    ENTRY("ADVAPI32.DLL", "GetEffectiveRightsFromAclW",         mw_GetEffectiveRightsFromAclW),
+    ENTRY("ADVAPI32.DLL", "DeleteAce",                          mw_DeleteAce),
+    ENTRY("ADVAPI32.DLL", "RegGetKeySecurity",                  mw_RegGetKeySecurity),
+    ENTRY("ADVAPI32.DLL", "LsaNtStatusToWinError",              mw_LsaNtStatusToWinError),
+    ENTRY("ADVAPI32.DLL", "LsaEnumerateAccountsWithUserRight",  mw_LsaEnumerateAccountsWithUserRight),
+    ENTRY("ADVAPI32.DLL", "LookupPrivilegeDisplayNameW",        mw_LookupPrivilegeDisplayNameW),
+    ENTRY("ADVAPI32.DLL", "GetSecurityDescriptorSacl",          mw_GetSecurityDescriptorSacl),
+    ENTRY("ADVAPI32.DLL", "GetSecurityDescriptorControl",       mw_GetSecurityDescriptorControl),
+    ENTRY("NETAPI32.DLL", "NetShareEnum",                       mw_NetShareEnum),
+    ENTRY("NETAPI32.DLL", "NetShareGetInfo",                    mw_NetShareGetInfo),
+    ENTRY("WEVTAPI.DLL", "EvtOpenChannelEnum",                  mw_EvtOpenChannelEnum),
+    ENTRY("WEVTAPI.DLL", "EvtNextChannelPath",                  mw_EvtNextChannelPath),
+    ENTRY("WEVTAPI.DLL", "EvtOpenChannelConfig",                mw_EvtOpenChannelConfig),
+    ENTRY("WEVTAPI.DLL", "EvtGetChannelConfigProperty",         mw_EvtGetChannelConfigProperty),
+    ENTRY("WEVTAPI.DLL", "EvtClose",                            mw_EvtClose),
     ENTRY("ADVAPI32.DLL", "OpenServiceA",                       mw_OpenServiceA),
     ENTRY("ADVAPI32.DLL", "QueryServiceStatus",                 mw_QueryServiceStatus),
     ENTRY("ADVAPI32.DLL", "StartServiceW",                      mw_StartServiceW),
