@@ -2367,15 +2367,57 @@ after fast-forward; adexplorer64 corpus recovery #7 (zip 56536bff / exe e4512878
       REAL SYSINTERNALS SOFTWARE LICENSE TERMS (two-language EULA, multi-KB);
       trurl.exe real error path exit 7 reproduces; du64/strings64/sdelete64/
       psservice64 real usage text exit 255.
-- [ ] **SW-1238** accesschk64: 16 unresolved (NetShareEnum/NetShareGetInfo/
-      GetEffectiveRightsFromAclW/EnumServicesStatusW/DeleteAce/RegGetKeySecurity/
-      LsaNtStatusToWinError/LsaEnumerateAccountsWithUserRight/LookupPrivilege
-      DisplayNameW/GetSecurityDescriptorSacl/GetSecurityDescriptorControl ...).
-- [ ] **SW-1239** pslist64: PDH plane — "Processor performance object not
-      found" (procexp64 'contentions' perf-counter class, BUG-078 kin).
-- [ ] **SW-1240** logonsessions64: LSA/session plane gate (exit 1).
-- [ ] **SW-1241** autologon64: "Could not open Winlogon registry key" —
-      HKLM Winlogon plane + MessageBox dialog rendered (BMP evidence exists).
+- [x] **SW-1238a LANDED (SWEEP-058 Train 3)**: all 15 unresolved security/Net/
+      eventlog imports typed (real fresh-box shapes): EnumServicesStatusW (TRUE,
+      0 services), GetEffectiveRightsFromAclW (mask 0), DeleteAce (87), RegGetKey
+      Security (20B self-relative SD + 122 dance), LsaNtStatusToWinError (real
+      NTSTATUS map), LsaEnumerateAccountsWithUserRight (0 accounts), LookupPrivilege
+      DisplayNameW (8-privilege table + 1317 miss), GetSecurityDescriptorSacl/
+      Control (real control bits), NetShareGetInfo (2311), wevtapi channel plane
+      (EvtOpenChannelEnum cookie/EvtNextChannelPath FALSE/EvtOpenChannelConfig
+      15007/EvtClose). OpenSCManagerW NULL+ACCESS_DENIED -> LIVE SCM cookie (real
+      admin behavior).
+- [x] **SW-1238b LANDED (SWEEP-058 Train 4)**: '-c 0' wild-scan crash FIXED —
+      the stub-0 EnumServicesStatusW drove RDX=-1 (error-code-as-length UTF-16
+      scan, crash 0x140057f5d RA 0x140034bf8); with the live SCM + typed enum the
+      mode exits 0. accesschk usage = 0 unresolved, 0 stubs.
+- [~] **SW-1238c (SWEEP-058 frontier)**: '-d C:\' directory mode SIGSEGV
+      0x140004fee (cmp [eax],5 with eax=0) after a GetLastError()=6 retry loop
+      (guest sites 0x14005426b/0x1400540ef) — the named-object SD plane
+      (GetNamedSecurityInfoW/GetFileSecurityW for file paths) is the next layer.
+- [x] **SW-1239 LANDED (SWEEP-058 Train 1)** — pslist64 FULL LIFECYCLE rc=0,
+      real process table. HKEY_PERFORMANCE_DATA real perflib plane: HKLM Perflib
+      seeding + Counter 009/Explain 009 name tables + processor/process/system
+      object blobs (PERF_DATA_BLOCK builders, /proc process instances). Contracts
+      named by decode: perflib NULL-buffer probe = SUCCESS+size (NOT 234; pslist
+      aborts on any nonzero rc 0x140002f51 then crashes on the NULL array
+      0x1400030b6); HeaderLength = offset to FIRST OBJECT; DefinitionLength =
+      offset to INSTANCES; CounterOffset relative to the COUNTER_BLOCK STRUCTURE
+      start; instance records 8-aligned end-to-end (block 112 incl pad — a 108
+      block made records 4-mod-8 and pslist's stride 0x140007081 drifted);
+      SW-1239b: guest stack garbage contract (real Windows stack pages hold
+      prior-use garbage; below-usage region filled with deterministic 0xBE);
+      /proc stat comm = first '(' to last ')'. MEASURED binary e24b56fa:
+      pslist64 -accepteula rc=0 x3 (Idle/tini/caddy/uv/python/... real
+      pid/pri/thd/hnd/working-set/CPU/elapsed); G1 12/12; procexp64 124 -> 0
+      FULL LIFECYCLE (side effect). evidence/sweep058_pslist_run.txt.
+- [~] **SW-1240 (SWEEP-058 Train 2)**: Windows dir skeleton seeding landed
+      (C:\Windows\System32\Drivers auto-seeded on first /Windows/ file access
+      — logonsessions64's embedded PROCEXP152.SYS driver drop now WRITES, the
+      honest FILE_NOT_FOUND device probes are real non-admin behavior) + LSA
+      groundwork RE-LANDED with the corrected x64 layout (LSA_UNICODE_STRING =
+      16B on x64, header 0x88=136B — the 8B variant made the guest read garbage
+      Sid 0x20000 -> ConvertSidToStringSidW SIGSEGV 0x204d4e5). Exit 1 ->
+      133 (unclaimed exception in the guest's own session walk, EH dispatch
+      Frame[4] ContinueSearch to end) = NEW FRONTIER SW-1240b: the guest's
+      session-table walker (next decode: what it does with the session data
+      after LsaGetLogonSessionData).
+- [x] **SW-1241 LANDED (SWEEP-058 Train 5, re-lands the lost SWEEP-057
+      Train 5 delta)**: mw_reg_seed_windows seeds HKLM Winlogon (AutoAdminLogon/
+      DefaultUserName/DefaultDomainName/DefaultPassword) + CurrentVersion
+      identity + Perflib at first registry access; autologon64 rc=1 -> rc=0
+      FULL LIFECYCLE x3 (its "Could not open Winlogon registry key" gate is
+      gone). Remaining: LsaStorePrivateData typed model (save path only).
 - [x] **SW-1242 LANDED (SWEEP-057 Train 4)**: the class-64 (SystemHandle-
       Information) entry layout was the 32-BIT-era 16-byte shape (ProcessId@0
       Type@2 Flags@3 Handle@4 Object@8-truncated Access@12) — the REAL x64

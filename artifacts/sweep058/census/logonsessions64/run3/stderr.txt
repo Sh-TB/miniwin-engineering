@@ -1,0 +1,56 @@
+[TRACE] Command line: artifacts/sweep047/bin/logonsessions64.exe
+
+LogonSessions v1.41 - Lists logon session information
+Copyright (C) 2004-2020 Mark Russinovich
+Sysinternals - www.sysinternals.com
+
+
+[CRASH] Signal 5 at RIP=0x1400062a8
+  RAX=0x0 RCX=0x45202c0 RDX=0x7efedeca0563 R8=0x0 R9=0x0
+  RSP=0x7fffa6a5eec0 RBP=0x7fffa6a5f010
+  g_image_base=0x140000000 g_image_size=0x8d000
+  RVA=0x62a8 (inside loaded PE)
+  Bytes: cc cc cc cc cc cc cc cc 85 c9 7f 03 8b c1 c3 0f 
+  Return addr: 0x140000000
+  RSI=0x0 RDI=0x452a1b0
+  R8=0x0  R9=0x0 R10=0x0 R11=0x7fffa6a5eeb0
+  R12=0x0 R13=0x140052a28 R14=0x0 R15=0x140000000
+  [STACKTOP raw] 0000000140000000 000000000452a170 000000000452a1b0 0000000000000000 0000000140059940 0000000080020005 0000000000000000 0000000000000000 000000000452a1b0 000000014000254d 0000000140052cd8 0000000004526f10
+  [SCAN rsp+000] 0x140000000 <PE>
+  [SCAN rsp+032] 0x140059940 <PE>
+  [SCAN rsp+072] 0x14000254d <PE>
+  [SCAN rsp+080] 0x140052cd8 <PE>
+  [SCAN rsp+488] 0x140000000 <PE>
+  [SCAN rsp+504] 0x140002d28 <PE>
+  [SCAN rsp+512] 0x200a8a0 <LOADER>
+  [SCAN rsp+536] 0x200a8a0 <LOADER>
+  [SCAN rsp+1032] 0x14006c2e0 <PE>
+  [SCAN rsp+1096] 0x140005c58 <PE>
+  [SCAN rsp+1248] 0x140000000 <PE>
+  [SCAN rsp+1304] 0x2038b4f <LOADER>
+  [SCAN rsp+1352] 0x140005c58 <PE>
+  [SCAN rsp+1368] 0x2026614 <LOADER>
+  [SCAN rsp+1544] 0x140052530 <PE>
+  [SCAN rsp+1552] 0x140004b28 <PE>
+  [SCAN rsp+1576] 0x140004b36 <PE>
+  [SCAN rsp+1592] 0x14006c2b0 <PE>
+  [SCAN rsp+1616] 0x140052568 <PE>
+  [SCAN rsp+1624] 0x1400057d1 <PE>
+  [SCAN rsp+1664] 0x14006df00 <PE>
+  [SCAN rsp+1672] 0x140004c64 <PE>
+  [SCAN rsp+1736] 0x2009855 <LOADER>
+  [SCAN rsp+1808] 0x2010790 <LOADER>
+  [SCAN rsp+1816] 0x140000000 <PE>
+  [SCAN rsp+1992] 0x2000002 <LOADER>
+  [SCAN rsp+2136] 0x2002afe <LOADER>
+  [SCAN rsp+2144] 0x2002370 <LOADER>
+  [SCAN rsp+3592] 0x2007690 <LOADER>
+  [SCAN rsp+3744] 0x2007690 <LOADER>
+  [SCAN rsp+3784] 0x200a710 <LOADER>
+  [SCAN rsp+3816] 0x200a731 <LOADER>
+  Backtrace (via stack walking):
+    [0] RIP=0x1400062a8 RVA=0x62a8
+      [RSP+0] = 0x140000000 (return addr?)
+    [1] RIP=0x140000000 RVA=0x0
+      [RSP+0] = 0x452a170 (return addr?)
+    [2] RIP=0x452a170 (outside PE, possible shared lib)

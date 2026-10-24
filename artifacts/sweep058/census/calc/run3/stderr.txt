@@ -1,0 +1,2 @@
+[TRACE] Command line: artifacts/sweep056/guests/calc/calc.exe
+[GDI-FRAME] #1 -> miniwin-results/calc.exe/screenshots/frame_001.bmp

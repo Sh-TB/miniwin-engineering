@@ -1,0 +1,6 @@
+[TRACE] Command line: artifacts/sweep056/guests/clipbrd/clipbrd.exe
+[WARN]   unresolved: NDDEAPI.DLL ordinal 612
+[WARN]   unresolved: NDDEAPI.DLL ordinal 610
+[WARN]   unresolved: NDDEAPI.DLL ordinal 611
+[WARN]   unresolved: NDDEAPI.DLL ordinal 609
+[WARN] 4 imports unresolved

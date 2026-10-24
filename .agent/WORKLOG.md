@@ -1809,3 +1809,39 @@ RESULT: crash RIP unchanged (the guest's internal-array parse contract
 still mismatches — next layer: decode the NtQuery call site that fills
 the internal buffer global); census 42/42 x3; procexp64 139->124 (fix-F
 timer-wait = keep-running, deterministic); G1 12/12.
+
+## SWEEP-058 «۱۰ قطار واگن ادامه» / «ادامه از جایی قطع شده و ناقص» (2026-10-24)
+Rule #1: fetched origin — parallel chain had advanced 242af84 -> 989e77b
+(SWEEP-031..057); reset to 989e77b, worked on top. Guest farm re-staged
+(sweep056_stage_guests.sh).
+
+DISCOVERY (the "قطع شده و ناقص"): SWEEP-057 Train 5 (989e77b) committed only
+its scripts — the loader.c engine deltas (SW-1241 hive seeding + SW-1240 LSA
+groundwork) never landed. SWEEP-058 re-lands them.
+
+Train 1 — SW-1239 pslist64 FULL LIFECYCLE (rc=0, real process table):
+perflib plane (Counter 009/Explain 009/objects processor/process/system),
+7 contracts decoded (NULL-probe=SUCCESS+size; HeaderLength=first-object
+offset; DefinitionLength=instances offset; CounterOffset from block-struct
+start; 8-aligned records, block 112; stack garbage fill SW-1239b;
+/proc comm parse). G1 12/12 (evidence/master/g1/20261024_051355, e24b56fa);
+procexp64 124 -> 0 FULL LIFECYCLE.
+Train 2 — SW-1240: Windows dir skeleton seeding (PROCEXP152.SYS drop now
+writes); LSA x64 layout corrected (16B LSA_UNICODE_STRING, 0x88 header);
+exit 1 -> 133 = new frontier SW-1240b (guest session walker).
+Train 3 — SW-1238a: 15-import security/Net/eventlog plane typed; live SCM
+cookie. Train 4 — SW-1238b: '-c 0' crash fixed (rc=0); SW-1238c frontier
+(-d C:\ named-object SD plane).
+Train 5 — SW-1241 re-land: autologon64 rc=1 -> 0 FULL LIFECYCLE x3.
+Trains 6-7 (handle64 v2 / sol tableau) NOT started this round — deferred;
+frontiers unchanged (SW-1242 next layer, SW-1279 layer 2).
+Train 8 — screenshots: evidence/sweep058/shots_png/ (winmine 82f, sol board,
+spider 658f, calc, freecell, mshearts, wordpad + sndvol32 dialogs).
+Train 9 — census 19/19 programs x3 DETERMINISTIC, 48/57 exit-0, ZERO stubs,
+ZERO unresolved (artifacts/sweep058/census/census.tsv).
+Train 10 — this commit + push + origin verify.
+
+NEXT (SWEEP-059): Everything re-stage (SW-1278b; artifacts/sweep050/stage/
+everything gone — pinned zip 4f4a9b92 re-download needed), soffice SW-1276
+layer-2, sol SW-1279 tableau, handle64 SW-1242b, logonsessions SW-1240b,
+accesschk SW-1238c.
