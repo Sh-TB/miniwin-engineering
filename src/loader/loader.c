@@ -16467,11 +16467,13 @@ static int mw_commonctl_msg(int s, uint32_t msg, uintptr_t wp, long long lp, lon
  * raster). Needed here because SendMessageW/A route main-window dispatches
  * through the class-proc snapshot. */
 #define MW_CLASSPROC_MAX 16
-static struct { uint16_t name[24]; void* proc; } g_class_proc[MW_CLASSPROC_MAX];
+static struct { uint16_t name[24]; void* proc; void* hbr; } g_class_proc[MW_CLASSPROC_MAX]; /* SW-1291b: +per-class hbrBackground */
 static int g_class_proc_n = 0;
 static MW_WNDPROC g_main_class_proc = 0;
-static void mw_class_proc_store(const void* name_ptr, int wide, void* proc);
+static void* g_class_brush = NULL; /* SW-1290/1291b: the MAIN class's hbrBackground */
+static void mw_class_proc_store(const void* name_ptr, int wide, void* proc, void* hbr);
 static void* mw_class_proc_lookup(const void* cls);
+static void* mw_class_brush_lookup(const void* cls); /* SW-1291b: per-class hbrBackground */
 static MW_WNDPROC mw_dispatch_proc(void);
 
 /* SWEEP-013: SendMessageW/A with real semantics — text I/O against the
@@ -17030,9 +17032,13 @@ static void mw_gui_store_window(int w, int h);
 static void mw_gui_request_size_now(void); /* SW-1287: first-show WM_SIZE */
 static void mw_gui_send_first_size(void);  /* SW-1287b: synchronous first-show WM_SIZE */
 static void mw_class_brush_store(void* h); /* SW-1290: class hbrBackground record */
+static int mw_class_brush_color(uint32_t* out); /* SW-1291: decode class brush -> RGB */
+static void mw_paint_snap_save(void); /* SW-1291e: pre-erase surface snapshot */
+static void mw_paint_snap_mark_erased(void); /* SW-1291e: post-erase snapshot */
 /* SW-1279 fix C: per-class wndproc registry + main-window proc snapshot */
-static void mw_class_proc_store(const void* name_ptr, int wide, void* proc);
+static void mw_class_proc_store(const void* name_ptr, int wide, void* proc, void* hbr);
 static void* mw_class_proc_lookup(const void* cls);
+static void* mw_class_brush_lookup(const void* cls); /* SW-1291b: per-class hbrBackground */
 static MW_WNDPROC mw_dispatch_proc(void);
 static void mw_gui_set_quit(int code);
 static void mw_gui_send_destroy(void* hwnd);
@@ -17074,9 +17080,9 @@ __attribute__((ms_abi)) uint16_t mw_RegisterClassExW(const void* wcex) {
         void* p = *(void* const*)((const char*)wcex + 8);
         mw_gui_store_wndproc(p);
         /* SW-1279 fix C: also record {class name -> proc} */
-        mw_class_proc_store(*(const void* const*)((const char*)wcex + 64), 1, p);
+        mw_class_proc_store(*(const void* const*)((const char*)wcex + 64), 1, p,
+                            *(void* const*)((const char*)wcex + 48)); /* SW-1291b */
         mw_class_name_store_w(*(const uint16_t* const*)((const char*)wcex + 64)); /* SWEEP-013 */
-        mw_class_brush_store(*(void* const*)((const char*)wcex + 48)); /* SW-1290 */
     }
     MW_TRACE("RegisterClassExW(wcex=%p proc=%p) -> ATOM 0x%x", wcex,
              wcex ? *(void* const*)((const char*)wcex + 8) : NULL, MW_GUI_ATOM);
@@ -17086,9 +17092,9 @@ __attribute__((ms_abi)) uint16_t mw_RegisterClassExA(const void* wcex) {
     if (wcex) {
         void* p = *(void* const*)((const char*)wcex + 8);
         mw_gui_store_wndproc(p);
-        mw_class_proc_store(*(const void* const*)((const char*)wcex + 64), 0, p); /* SW-1279 fix C */
+        mw_class_proc_store(*(const void* const*)((const char*)wcex + 64), 0, p,
+                            *(void* const*)((const char*)wcex + 48)); /* SW-1291b */
         mw_class_name_store_a(*(const char* const*)((const char*)wcex + 64)); /* SWEEP-013 */
-        mw_class_brush_store(*(void* const*)((const char*)wcex + 48)); /* SW-1290 */
     }
     MW_TRACE("RegisterClassExA(wcex=%p) -> ATOM 0x%x", wcex, MW_GUI_ATOM);
     return MW_GUI_ATOM;
@@ -17098,13 +17104,16 @@ __attribute__((ms_abi)) uint16_t mw_RegisterClassW(const void* wc) {
     if (wc) {
         void* p = *(void* const*)((const char*)wc + 8);
         mw_gui_store_wndproc(p);
-        mw_class_proc_store(*(const void* const*)((const char*)wc + 64), 1, p); /* SW-1279 fix C */
+        mw_class_proc_store(*(const void* const*)((const char*)wc + 64), 1, p,
+                            *(void* const*)((const char*)wc + 48)); /* SW-1291b */
         mw_class_name_store_w(*(const uint16_t* const*)((const char*)wc + 64)); /* SWEEP-013 */
-        /* SW-1290 (SWEEP-061): record hbrBackground (WNDCLASSW offset 48 on
-         * x64: style@0 pad@4 proc@8 cbCls@16 cbWnd@20 hInst@24 hIcon@32
-         * hCursor@40 hbrBackground@48 menu@56 name@64). The erase phase of
-         * BeginPaint fills with this brush (real DefWindowProc semantics). */
-        mw_class_brush_store(*(void* const*)((const char*)wc + 48));
+        /* SW-1290/SW-1291b: hbrBackground (WNDCLASSW offset 48 on x64: style@0
+         * pad@4 proc@8 cbCls@16 cbWnd@20 hInst@24 hIcon@32 hCursor@40
+         * hbrBackground@48 menu@56 name@64) now rides the PER-CLASS registry;
+         * the main-window snapshot (CreateWindow path) selects the brush of
+         * the MAIN class — a later "Stat" statusbar registration no longer
+         * overwrites the sol main class's green brush (the v1 single-global
+         * last-wins store erased the final WM_PAINT frame WHITE). */
     }
     MW_TRACE("RegisterClassW(wc=%p proc=%p) -> ATOM 0x%x", wc,
              wc ? *(void* const*)((const char*)wc + 8) : NULL, MW_GUI_ATOM);
@@ -17114,9 +17123,9 @@ __attribute__((ms_abi)) uint16_t mw_RegisterClassA(const void* wc) {
     if (wc) {
         void* p = *(void* const*)((const char*)wc + 8);
         mw_gui_store_wndproc(p);
-        mw_class_proc_store(*(const void* const*)((const char*)wc + 64), 0, p); /* SW-1279 fix C */
+        mw_class_proc_store(*(const void* const*)((const char*)wc + 64), 0, p,
+                            *(void* const*)((const char*)wc + 48)); /* SW-1291b */
         mw_class_name_store_a(*(const char* const*)((const char*)wc + 64)); /* SWEEP-013 */
-        mw_class_brush_store(*(void* const*)((const char*)wc + 48)); /* SW-1290 */
     }
     MW_TRACE("RegisterClassA(wc=%p) -> ATOM 0x%x", wc, MW_GUI_ATOM);
     return MW_GUI_ATOM;
@@ -17337,10 +17346,15 @@ __attribute__((ms_abi)) void* mw_CreateWindowExW(uint32_t exstyle, const void* c
         mw_gui_store_window((int)w, (int)h); /* SWEEP-005: allocate paint surface */
         /* SW-1279 fix C: snapshot THIS top-level's class proc as the main
          * dispatch channel. Later RegisterClass* calls (sol's "Stat"
-         * statusbar) can no longer steal main-window dispatches. */
+         * statusbar) can no longer steal main-window dispatches.
+         * SW-1291b: snapshot THIS class's hbrBackground as the erase brush
+         * (the single-global last-wins store took sol's statusbar class's
+         * stock WHITE brush and the trailing WM_PAINT erased the board). */
         if (!g_main_class_proc) {
             void* cp = mw_class_proc_lookup(cls);
             if (cp) g_main_class_proc = (MW_WNDPROC)cp;
+            g_class_brush = mw_class_brush_lookup(cls);
+            MW_TRACE("[GUI] main class brush snapshot: %p (SW-1291b)", g_class_brush);
         }
     }
     if (g_wm_create_depth > 0) {
@@ -17413,10 +17427,13 @@ __attribute__((ms_abi)) void* mw_CreateWindowExA(uint32_t exstyle, const void* c
     /* SW-1279 fix A (A path): same WS_CHILD/parent guard as the W path. */
     if (!(style & 0x40000000u) && !parent) {
         mw_gui_store_window((int)w, (int)h); /* SWEEP-005: allocate paint surface */
-        /* SW-1279 fix C (A path): same class-proc snapshot as the W path. */
+        /* SW-1279 fix C (A path): same class-proc snapshot as the W path.
+         * SW-1291b (A path): same per-class background-brush snapshot. */
         if (!g_main_class_proc) {
             void* cp = mw_class_proc_lookup(cls);
             if (cp) g_main_class_proc = (MW_WNDPROC)cp;
+            g_class_brush = mw_class_brush_lookup(cls);
+            MW_TRACE("[GUI] main class brush snapshot: %p (SW-1291b)", g_class_brush);
         }
     }
     if (g_wm_create_depth > 0) {
@@ -17916,6 +17933,7 @@ static unsigned char g_cs_scratch[256]; /* tolerate guests that passed NULL lpPa
  * this site keeps the neighboring pump globals. */
 static int       g_events_mode = -1;   /* -1 = not yet read from env */
 static int       g_paint_pending = 0;
+static int       g_paint_erase_request = 1; /* SW-1291d: InvalidateRect bErase latch */
 /* SW-1287 (SWEEP-061): real Win32 delivers WM_SIZE(SIZE_RESTORED) when the
  * window is first SHOWN (and on every size change) BEFORE the first
  * WM_PAINT. Guests compute their LAYOUT in WM_SIZE — XP solitaire positions
@@ -18089,7 +18107,7 @@ static void mw_gui_store_wndproc(void* proc) {
  * the MAIN dispatch channel (g_main_class_proc); later class registrations
  * cannot steal it; (3) SetWindowLongPtrW(GWLP_WNDPROC) on the main hwnd
  * (SW-1266 subclassing) UPDATES the snapshot, so subclass wins. */
-static void mw_class_proc_store(const void* name_ptr, int wide, void* proc) {
+static void mw_class_proc_store(const void* name_ptr, int wide, void* proc, void* hbr) {
     if (!name_ptr || (uintptr_t)name_ptr < 0x10000u || !proc) return;
     uint16_t tmp[24] = {0};
     if (wide) {
@@ -18109,13 +18127,33 @@ static void mw_class_proc_store(const void* name_ptr, int wide, void* proc) {
             if (x != y) { eq = 0; break; }
             if (!y) break;
         }
-        if (eq) { g_class_proc[i].proc = proc; return; }
+        if (eq) { g_class_proc[i].proc = proc; g_class_proc[i].hbr = hbr; return; }
     }
     if (g_class_proc_n < MW_CLASSPROC_MAX) {
         mw_w16cpy(g_class_proc[g_class_proc_n].name, tmp, 24);
         g_class_proc[g_class_proc_n].proc = proc;
+        g_class_proc[g_class_proc_n].hbr = hbr; /* SW-1291b */
         g_class_proc_n++;
     }
+}
+/* SW-1291b: per-class hbrBackground lookup — same probe/name discipline as
+ * mw_class_proc_lookup (ATOM < 0x10000: MapID first, then guest pointer). */
+static void* mw_class_brush_lookup(const void* cls) {
+    if (!cls || (uintptr_t)cls < 0x10000u) return 0;
+    uint16_t tmp[24] = {0};
+    if (!mw_probe_copy(cls, 46, tmp)) return 0;
+    for (int i = 0; i < g_class_proc_n; i++) {
+        int eq = 1;
+        for (int k = 0; k < 24; k++) {
+            uint16_t x = g_class_proc[i].name[k], y = tmp[k];
+            if (x >= 'A' && x <= 'Z') x += 32;
+            if (y >= 'A' && y <= 'Z') y += 32;
+            if (x != y) { eq = 0; break; }
+            if (!y) break;
+        }
+        if (eq) return g_class_proc[i].hbr;
+    }
+    return 0;
 }
 static void* mw_class_proc_lookup(const void* cls) {
     if (!cls || (uintptr_t)cls < 0x10000u) return 0;
@@ -18159,6 +18197,7 @@ static void mw_gui_store_window(int w, int h) {
          * surface valid (winmine board etc. recreate their content). */
         int nw = (w > g_surf.w) ? w : g_surf.w;
         int nh = (h > g_surf.h) ? h : g_surf.h;
+        int g_surf_prev_w = g_surf.w, g_surf_prev_h = g_surf.h; /* SW-1291 */
         uint8_t* np = (uint8_t*)calloc((size_t)nw * (size_t)nh, 3);
         if (np) {
             for (int y = 0; y < g_surf.h; y++)
@@ -18169,7 +18208,21 @@ static void mw_gui_store_window(int w, int h) {
             /* SW-1289 (SWEEP-061): the v1 full-surface mwb_fill(WHITE) here
              * DESTROYED the preserved content the memcpy just carried over
              * (sol: the dealt board wiped white by the statusbar's SetWindowPos
-             * grow during WM_SIZE). Only the NEW strips stay zero-filled. */
+             * grow during WM_SIZE). Only the NEW strips are touched.
+             * SW-1291 (SWEEP-062): new strips take the CLASS BACKGROUND color
+             * (real WM_ERASEBKGND semantics for freshly exposed area) instead
+             * of zero — winmine grew 170x220 -> 170x1024 and the board sat on
+             * an 804px black tail because its class brush (stock LTGRAY,
+             * 0x40001) was neither honored here nor in the erase decoder. */
+            {
+                uint32_t bg;
+                if (mw_class_brush_color(&bg)) {
+                    if (nh > g_surf_prev_h)
+                        mwb_fill(&g_surf, 0, g_surf_prev_h, nw, nh - g_surf_prev_h, bg);
+                    if (nw > g_surf_prev_w)
+                        mwb_fill(&g_surf, g_surf_prev_w, 0, nw - g_surf_prev_w, g_surf_prev_h, bg);
+                }
+            }
             MW_TRACE("[GUI] paint surface grew to %dx%d (SW-1266)", nw, nh);
         }
     }
@@ -18658,24 +18711,82 @@ static long long mw_gui_dispatch_msg(const void* msg) {
  * (CreateSolidBrush: 0x00030000|slot with live slot) and the classic
  * stock window backgrounds are honored; everything else (NULL, patterns,
  * foreign handles) erases nothing. */
-static void* g_class_brush = NULL;
 static void mw_class_brush_store(void* h) {
-    g_class_brush = h; /* last main-class registration wins (sol/calc model) */
+    g_class_brush = h; /* SW-1291b: legacy path only — main selection is the per-class snapshot */
     MW_TRACE("[GUI] class hbrBackground stored: %p", h);
 }
-static void mw_class_brush_erase(void) {
-    uintptr_t v = (uintptr_t)g_class_brush;
-    if (!v || !g_surf.px) return;
-    uint32_t col;
+/* SW-1291 (SWEEP-062): decode a brush HANDLE to RGB. Handles BOTH encodings
+ * real guests register as class backgrounds:
+ *   0x00030000|slot — CreateSolidBrush slots (live check)
+ *   0x00040000|idx  — stock brushes (winmine: GetStockObject(LTGRAY_BRUSH)=
+ *                     0x40001 -> 0xC0C0C0 silver, calc: 0x4000f). Same
+ *                     table mw_FillRect already consumes (SWEEP-005).
+ * Everything else (NULL, patterns, foreign handles) returns 0. */
+static int mw_brush_color_decode(void* hb, uint32_t* out) {
+    uintptr_t v = (uintptr_t)hb;
+    if (!v) return 0;
     if ((v & 0xFFFFF000u) == 0x00030000u) {
         int slot = (int)(v & 0x1F);
-        if (!g_brush_live[slot]) return;
-        col = g_brush_rgb[slot];
-    } else {
-        return; /* pattern/foreign brush — engine has no bitmap to tile */
+        if (!g_brush_live[slot]) return 0;
+        *out = g_brush_rgb[slot];
+        return 1;
     }
-    mwb_fill(&g_surf, 0, 0, g_surf.w, g_surf.h, col);
-    MW_TRACE("[GDI] class-brush erase #%06x (SW-1290)", col);
+    if ((v & 0xFFFF0000u) == 0x00040000u) {
+        int idx = (int)(v & 0xFF);
+        switch (idx) { /* stock brushes — mirrors mw_FillRect */
+        case 0:  *out = 0xFFFFFF; break; case 1:  *out = 0xC0C0C0; break;
+        case 2:  *out = 0x808080; break; case 3:  *out = 0x404040; break;
+        case 4:  *out = 0x000000; break;
+        case 5:  return 0; /* NULL_BRUSH: erases nothing */
+        case 18: *out = 0xFFFFFF; break; /* DC_BRUSH */
+        default: *out = 0xC0C0C0; break;
+        }
+        return 1;
+    }
+    return 0; /* pattern/foreign brush — engine has no bitmap to tile */
+}
+static int mw_class_brush_color(uint32_t* out) {
+    return mw_brush_color_decode(g_class_brush, out);
+}
+/* SW-1291c (SWEEP-062): SCOPED class-brush erase — real BeginPaint erases
+ * THIS window's update area with THIS window's class brush, not the whole
+ * shared surface:
+ *   main window -> full surface with the MAIN class brush (snapshot at
+ *                  CreateWindow, SW-1291b);
+ *   child       -> ONLY the child's own rect, with ITS class brush if the
+ *                  guest registered that class (system classes BUTTON/EDIT/
+ *                  msctls_statusbar32 aren't in the guest registry -> no
+ *                  erase; the control paints itself). The v1/v2 full-surface
+ *                  erase let sol's statusbar BeginPaint wipe the dealt board
+ *                  green/white every trailing WM_PAINT. */
+static void mw_class_brush_erase_scoped(void* hwnd) {
+    uint32_t col;
+    int s = mw_child_slot(hwnd);
+    if (s < 0) { /* main window */
+        if (!g_surf.px || !mw_class_brush_color(&col)) return;
+        mwb_fill(&g_surf, 0, 0, g_surf.w, g_surf.h, col);
+        MW_TRACE("[GDI] class-brush erase #%06x full (SW-1291c)", col);
+        return;
+    }
+    if (!g_surf.px || !g_child[s].cls[0]) return;
+    void* hb = NULL;
+    for (int i = 0; i < g_class_proc_n && !hb; i++) {
+        int eq = 1;
+        for (int k = 0; k < 16; k++) {
+            uint16_t x = g_class_proc[i].name[k];
+            uint16_t y = (uint16_t)(uint8_t)g_child[s].cls[k];
+            if (x >= 'A' && x <= 'Z') x += 32;
+            if (y >= 'A' && y <= 'Z') y += 32;
+            if (x != y) { eq = 0; break; }
+            if (!y) break;
+        }
+        if (eq) hb = g_class_proc[i].hbr;
+    }
+    if (!hb || !mw_brush_color_decode(hb, &col)) return;
+    mwb_fill(&g_surf, g_child[s].rx, g_child[s].ry, g_child[s].rw, g_child[s].rh, col);
+    MW_TRACE("[GDI] class-brush erase #%06x child '%s' @%d,%d %dx%d (SW-1291c)",
+             col, g_child[s].cls, g_child[s].rx, g_child[s].ry,
+             g_child[s].rw, g_child[s].rh);
 }
 __attribute__((ms_abi)) void* mw_BeginPaint(void* hwnd, void* ps) {
     if (ps) {
@@ -18684,13 +18795,30 @@ __attribute__((ms_abi)) void* mw_BeginPaint(void* hwnd, void* ps) {
         uint8_t* p = (uint8_t*)ps;
         memset(p, 0, 72);
         *(void**)(p + 0) = (void*)0x00020001;
-        *(uint32_t*)(p + 8) = 1; /* fErase = TRUE */
+        /* SW-1291d: fErase = the update's own bErase request (real BeginPaint
+         * reports the InvalidateRect bErase; sol's WM_CREATE InvalidateRect
+         * chain must NOT wipe the dealt board when its WM_PAINT handler is a
+         * DefWindowProc-style empty BeginPaint/EndPaint pair). */
+        *(uint32_t*)(p + 8) = (uint32_t)(g_paint_erase_request ? 1 : 0);
         *(int32_t*)(p + 12) = 0; *(int32_t*)(p + 16) = 0;
         *(int32_t*)(p + 20) = g_win_w; *(int32_t*)(p + 24) = g_win_h;
         /* SW-1290: fErase=TRUE means the class brush must fill the update
          * region — do it here (the engine has no separate WM_ERASEBKGND
-         * pump round; real BeginPaint delivers the erase before returning). */
-        mw_class_brush_erase();
+         * pump round; real BeginPaint delivers the erase before returning).
+         * SW-1291c: SCOPED to this window's area + its own class brush.
+         * SW-1291d: ONLY when the update asked for an erase.
+         * SW-1291e: snapshot the surface BEFORE the erase; EndPaint restores
+         * it when the guest drew NOTHING after the erase (empty
+         * BeginPaint/EndPaint pair = DefWindowProc fallback) — on a real
+         * desktop such a paint pair leaves the SCREEN unchanged; our full-
+         * surface erase would otherwise wipe completed renders (sol's dealt
+         * board lost to its object-guarded empty WM_PAINT handler). */
+        if (g_paint_erase_request) {
+            mw_paint_snap_save();
+            mw_class_brush_erase_scoped(hwnd);
+            mw_paint_snap_mark_erased();
+        }
+        g_paint_erase_request = 1; /* consumed — next update defaults to erase */
     }
     /* SW-1279 fix D: real BeginPaint NEVER clears the window surface — it
      * only REPORTS fErase; the erase belongs to WM_ERASEBKGND. The old
@@ -18757,8 +18885,53 @@ static void mw_surface_dump(const char* kind) {
         fprintf(stderr, "[GDI-FRAME] #%d -> %s\n", g_frame_no, path);
     }
 }
+/* SW-1291e (SWEEP-062): empty-paint-pair composition guard. Snapshot of the
+ * surface taken at BeginPaint (pre-erase) + right after the erase; EndPaint
+ * compares and restores the pre-erase image when the guest painted NOTHING
+ * (surface still identical to the post-erase image = an empty
+ * BeginPaint/EndPaint pair — real desktop shows the PREVIOUS frame). */
+static uint8_t* g_snap_pre = NULL;   /* before the class-brush erase */
+static uint8_t* g_snap_erased = NULL;/* right after the erase */
+static size_t   g_snap_cap = 0;      /* allocated bytes */
+static int      g_snap_active = 0;
+static int mw_paint_snap_alloc(size_t need) {
+    if (g_snap_cap >= need) return 1;
+    free(g_snap_pre); free(g_snap_erased);
+    g_snap_pre = (uint8_t*)malloc(need);
+    g_snap_erased = (uint8_t*)malloc(need);
+    g_snap_cap = (g_snap_pre && g_snap_erased) ? need : 0;
+    if (!g_snap_cap) { free(g_snap_pre); free(g_snap_erased);
+                       g_snap_pre = g_snap_erased = NULL; return 0; }
+    return 1;
+}
+static void mw_paint_snap_save(void) {
+    if (!g_surf.px) return;
+    size_t need = (size_t)g_surf.w * g_surf.h * 3;
+    if (!mw_paint_snap_alloc(need)) return;
+    memcpy(g_snap_pre, g_surf.px, need);
+    g_snap_active = 0; /* not yet erased */
+}
+static void mw_paint_snap_mark_erased(void) {
+    if (!g_snap_pre || !g_surf.px) return;
+    size_t need = (size_t)g_surf.w * g_surf.h * 3;
+    if (g_snap_cap < need) return;
+    memcpy(g_snap_erased, g_surf.px, need);
+    g_snap_active = 1;
+}
+/* returns 1 when the pre-erase image was RESTORED (guest drew nothing) */
+static int mw_paint_snap_recover_if_untouched(void) {
+    if (!g_snap_active || !g_surf.px || !g_snap_pre) return 0;
+    size_t need = (size_t)g_surf.w * g_surf.h * 3;
+    if (g_snap_cap < need) { g_snap_active = 0; return 0; }
+    g_snap_active = 0;
+    if (memcmp(g_surf.px, g_snap_erased, need) != 0) return 0; /* guest painted */
+    memcpy(g_surf.px, g_snap_pre, need);
+    MW_TRACE("[GDI] empty paint pair -> pre-erase image restored (SW-1291e)");
+    return 1;
+}
 __attribute__((ms_abi)) int mw_EndPaint(void* hwnd, const void* ps) {
     (void)hwnd; (void)ps;
+    mw_paint_snap_recover_if_untouched(); /* SW-1291e */
     mw_surface_dump("EndPaint");
     return 1; /* TRUE */
 }
@@ -18828,9 +19001,12 @@ __attribute__((ms_abi)) int mw_GetClientRect(void* hwnd, void* rect) {
     return 1;
 }
 __attribute__((ms_abi)) int mw_InvalidateRect(void* hwnd, const void* rect, int erase) {
-    (void)hwnd; (void)rect; (void)erase;
+    (void)hwnd; (void)rect;
     g_paint_pending = 1;
-    MW_TRACE("[GUI] InvalidateRect -> paint pending");
+    /* SW-1291d: honor the caller's bErase — real BeginPaint reports
+     * fErase=bErase and only erases when the caller asked for it. */
+    g_paint_erase_request = erase;
+    MW_TRACE("[GUI] InvalidateRect erase=%d -> paint pending", erase);
     return 1;
 }
 __attribute__((ms_abi)) int mw_ValidateRect(void* hwnd, const void* rect) {

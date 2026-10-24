@@ -3327,3 +3327,72 @@ viewer, (2) Windows calculator, (3) a program that does not exist on Linux
   regressions (winmine 82 / sol 38 / spider 628 / freecell 10 / mshearts 2
   / calc face unchanged). SW-1291 (winmine surface tail) remains open —
   cosmetic only.
+
+## SWEEP-062 Train 1 «ادامه» — SW-1291 winmine silver tail + the erase contract family (2026-10-25)
+
+- [x] **SW-1291 LANDED** — winmine's 804px black tail below the board is
+  GONE. Root cause: the grow-only surface (SW-1266) zero-fills new strips
+  AND the SW-1290 class-brush erase only decoded CreateSolidBrush handles
+  (0x00030000|slot). winmine registers hbrBackground =
+  GetStockObject(LTGRAY_BRUSH) = 0x40001 (engine stock encoding
+  0x00040000|idx) — never decoded, so BeginPaint erased nothing and grown
+  strips stayed black. FIX (2 parts): (1) mw_brush_color_decode handles
+  BOTH encodings — 0x00040000|idx maps through the same stock table
+  mw_FillRect already consumes (idx1=LTGRAY 0xC0C0C0); (2) the
+  mw_gui_store_window GROW path fills new strips with the class
+  background color (real WM_ERASEBKGND semantics for freshly exposed
+  area) instead of zero. MEASURED: winmine frame 82 pixel (85,300) and
+  (85,1000) = (192,192,192) silver — full classic XP minesweeper face:
+  LED counters + smiley + 9x9 raised grid + silver everywhere.
+- [x] **SW-1291b LANDED (caught a self-inflicted regression, root-caused
+  to a SW-1290 architecture flaw)** — the single-global g_class_brush
+  ("last registration wins") actually held sol's STATUSBAR class's stock
+  WHITE brush (registered after the main "Solitaire" class), and the
+  moment the stock decoder landed (SW-1291) that wrong brush went LIVE:
+  the trailing WM_PAINT erased the dealt board WHITE (final frame all
+  white, felt/other probe 14112/0 vs committed evidence 8440/5672).
+  FIX: hbrBackground now rides the PER-CLASS registry
+  (g_class_proc[.hbr], mw_class_proc_store(+hbr),
+  mw_class_brush_lookup); the MAIN window's class brush is snapshotted
+  at CreateWindow (both W and A paths) beside the SW-1279 fix C proc
+  snapshot. A later "Stat" registration can no longer steal the main
+  class's green brush. RegisterClass* all four (W/A/ExW/ExA) pass the
+  brush through the per-class store now.
+- [x] **SW-1291c LANDED** — the erase is SCOPED: main window -> full
+  surface with the MAIN class brush; child -> ONLY the child's own rect
+  with ITS registered class brush (system classes like
+  msctls_statusbar32 aren't in the guest registry -> no erase; the
+  control paints itself). The v1/v2 full-surface erase let any child's
+  BeginPaint wipe the whole shared surface.
+- [x] **SW-1291d LANDED** — InvalidateRect's bErase parameter is honored
+  (g_paint_erase_request latch -> PAINTSTRUCT.fErase + erase only when
+  the caller asked; consumed at BeginPaint, defaults back to 1). sol's
+  WM_CREATE InvalidateRects pass erase=1 (measured), so the latch alone
+  doesn't save sol — but the contract is now real.
+- [x] **SW-1291e LANDED** — empty-paint-pair composition guard. sol's
+  WM_PAINT handler is DECODED to instruction level: BeginPaint ->
+  indirect vtable call through [0x10000c298] guarded by TWO object
+  pointers ([0x10000c298], [0x10000c340]) -> both NULL under the engine
+  -> ZERO draw calls -> EndPaint (a DefWindowProc-style empty pair).
+  With the erase contract live, that empty pair wiped the dealt board
+  green. Real desktop semantics: a paint pair that draws nothing leaves
+  the SCREEN unchanged. FIX: BeginPaint snapshots the surface pre-erase
+  (g_snap_pre) and post-erase (g_snap_erased); EndPaint memcmps and
+  RESTORES the pre-erase image when the guest drew nothing. MEASURED:
+  sol final frame back to felt 8440 / other 5672 — pixel-equal to the
+  committed SWEEP-061 evidence.
+- [x] **MEASURED**: XP corpus 17/17 rc=0 ZERO regressions (winmine 82 /
+  sol 38 WITH full deal / spider 623 / freecell 10 / mshearts 2 / calc
+  338x258 face). Screenshots evidence/sweep062/shots_png/ (6 PNGs).
+- [ ] **SW-1292 (NEW)** — sol scene-object chain: [0x10000c298] is
+  allocated by new(0xE0) + vtable 0x100007cf0 in the ctor at
+  0x100007ee0 (reached via jmp thunk 0x100003900 from call sites
+  0x100002667 [after IAT 0x1000012d8 succeeds] and 0x10000834c [state
+  change cmp 0x10000c334 vs 0x10000c130]); [0x10000c340] set at
+  0x100008b24, cleared at 0x100008b66. Both NULL under the engine ->
+  WM_PAINT draws nothing (SW-1291e compensates visually). Landing the
+  real object chain makes sol's WM_PAINT a true repaint (expose/occlude
+  correct) instead of the fallback.
+- [ ] SW-1284 (common-controls child-control lifecycle), SW-1283b
+  (chocolate DLL-chain DllMain), SW-1281c/d (x86 api-set shim +
+  deep-init), SW-1291's sibling SW-1290 consumers unchanged.
