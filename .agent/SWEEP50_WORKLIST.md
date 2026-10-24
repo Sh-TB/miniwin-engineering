@@ -3109,3 +3109,52 @@ viewer, (2) Windows calculator, (3) a program that does not exist on Linux
   census (12 exit-0, pageant live-pump 124, procexp 139 / winmergeu 133 /
   zoomit rc=1 = their baselines). G1 PIN 12/12
   (evidence/master/g1/20261023_030335, binary 09c33df201af8ade).
+
+## SWEEP-059 (2026-10-24) — «بازی بمب گرافیک کامل» + 108-guest download battery
+
+- [x] **SW-1280 LANDED (SWEEP-059 Train 1, binary 5450ba3a…, G1 12/12
+  evidence/master/g1/20261024_143552)** — minesweeper board painted all-black
+  (bombs/digits/faces invisible) ROOT-CAUSED to the DIB family and FIXED:
+  (1) **palette decode** — mw_dib_row_to_bgr24 memset 1/4/8bpp rows to
+  "honest black"; winmine's six RT_BITMAP strips (tiles 16x256, LED 13x276,
+  faces 24x120) are 4bpp+16-RGBQUAD. New mw_dib_materialize_ctab handles
+  INFOHEADER RGBQUAD tables, OS/2 COREHEADER RGBTRIPLE tables, and
+  DIB_PAL_COLORS WORD system-palette indices (stock-20 map, module moves
+  g_stock_palette above the DIB family); new mw_dib_row_to_bgr24_pal decodes
+  1/4/8bpp rows through it. Wired into SetDIBitsToDevice AND StretchDIBits.
+  (2) **scan-line window contract** — winmine disassembly (0x100002f1f /
+  0x100003391 / 0x1000037c8) PRE-ADVANCES bits to each tile's first file row
+  and passes startScan=0/scanLines=16 against the strip header
+  (biHeight=256): the v1 flip keyed off the FULL biHeight read past the tile
+  into garbage (red noise tiles; LED/face "worked" only by coincidence of
+  startScan=0+full-height flip). Windows contract now honored: flip within
+  [startScan, startScan+scanLines) relative to the caller bits pointer
+  (StretchDIBits: source-rect window, not biHeight). MEASURED: winmine
+  startup = LED "010" + yellow smiley + "000" + 9x9 raised gray bevel grid;
+  8 mouse clicks reveal 1-blue/2-green/3-red numbers + spiked black bombs +
+  red exploded cell + LED timer 012 — the ORIGINAL XP look, first time in
+  history. Screenshots evidence/sweep059/shots_png/01+02 (+03..13 battery).
+- [ ] **SW-1281 (NEW, SWEEP-059)** — PE32 (x86/0x10b) loader subsystem:
+  the engine rejects 0x10b at loader.c:36302 and LoadLibrary:1230. The
+  whole Win98-era + x86 corpus waits behind it: 57/108 battery guests
+  blocked EXACTLY there (winamp295 installer, pinball.exe 3D Space Cadet,
+  all NirSoft x86 builds, WEP games are NE16 = SW-1282 even deeper).
+- [ ] **SW-1282 (NEW, SWEEP-059)** — Win16 NE subsystem for the WEP pack
+  (Chip's Challenge, JezzBall, Tetris, SkiFree, Rodent's Revenge, Pipe…
+  20+ games staged in artifacts/sweep059/expanded/wep-games/WEP/).
+- [ ] **SW-1283 (NEW, SWEEP-059)** — Chocolate-Doom suite (4 games, MinGW
+  builds) aborts at bootstrap: "Mingw-w64 runtime failure: VirtualProtect
+  failed with code 0xcb" — VirtualProtect must succeed for image-range
+  RWX transitions (MinGW runtime self-modifying prologue registration).
+- [ ] **SW-1284 (NEW, SWEEP-059)** — modern common-controls rendering:
+  RAMMap64/RegScanner/shexview open real windows but listviews/toolbars/
+  imagelists paint sparse (HDI/HDN + LVM planes at 32bpp icon depth);
+  dbgview64 white body at budget 150; procmon64/produkey/winobj64 need
+  >30s budgets (rc=124 at the chunk cap).
+- [x] **SWEEP-059 BATTERY MEASURED** — 108 guests run under MW_GUI_EVENTS
+  (artifacts/sweep059/census_dl.tsv): 51 x64 = 14 exit-0 (4 with frames:
+  ADExplorer64, Cacheset64+dialog, RegScanner, shexview; RAMMap64 3 frames
+  at rc=139; dbgview64 1 frame at 124), 57 x86 = all blocked at SW-1281.
+  Corpus: 60 downloads (archive.org winamp295+WEP, sysinternals 28 tools,
+  nirsoft 15 tools, chocolate-doom x4, 3D Pinball) → 122 PEs inventoried →
+  99 guests staged (94 battery + pinball + chocolate main exes).

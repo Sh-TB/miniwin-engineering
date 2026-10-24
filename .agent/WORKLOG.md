@@ -1845,3 +1845,48 @@ NEXT (SWEEP-059): Everything re-stage (SW-1278b; artifacts/sweep050/stage/
 everything gone — pinned zip 4f4a9b92 re-download needed), soffice SW-1276
 layer-2, sol SW-1279 tableau, handle64 SW-1242b, logonsessions SW-1240b,
 accesschk SW-1238c.
+
+## SWEEP-059 (2026-10-24) — «ادامه از جایی قطع شده و ناقص» → the bomb-game
+graphics fix + the real-program battery the user asked for.
+
+### Rule #1 trail
+fetched origin first: parallel chain had advanced 242af84 → ecc1b73
+(SWEEP-031..058). Reset local main onto origin/main (ecc1b73), re-staged the
+XP guest farm from artifacts/sweep056/xp64_raw via scripts/sweep056_stage_guests.sh
+(the guests/ dirs were lost between rounds), read the SWEEP-058 shot battery,
+and reproduced the user's complaint on the current HEAD: minesweeper renders
+its panel but every tile/LED/face is a BLACK rectangle.
+
+### SW-1280 — winmine all-black root cause + fix (the user's #1 wagon)
+winmine imports NO LoadBitmap — it FindResourceW/LoadResource/LockResource
+then SetDIBitsToDevice straight from the resource DIBs (16 tiles 16x256,
+LED digits 13x276, faces 24x120, all 4bpp + 16-entry RGBQUAD tables) and
+LineTo/SetPixel for the bevels. Two engine bugs stacked:
+1. mw_dib_row_to_bgr24(memset black) for every 1/4/8bpp row — fixed with
+   mw_dib_materialize_ctab + mw_dib_row_to_bgr24_pal (RGBQUAD/COREHEADER/
+   DIB_PAL_COLORS) wired into SetDIBitsToDevice + StretchDIBits;
+2. the scan-line window: winmine pre-advances the bits pointer per tile
+   (disassembly 0x100002f1f: r11 += rax before the call, startScan slot =
+   ebp = 0) — the v1 fileRow = biHeight-1-(startScan+r) formula then read
+   PAST the tile (red noise). Contract fixed: flip within
+   [startScan, startScan+scanLines) relative to the caller's bits pointer.
+MEASURED (binary sha256 5450ba3a…, G1 PIN 12/12 evidence/master/g1/20261024_143552):
+startup frame = LED 010 + smiley + 000 + raised gray bevel grid; click
+battery reveals 1/2/3 numbers in blue/green/red + spiked black bombs +
+red exploded cell + LED 012. Original XP minesweeper look achieved.
+
+### The 108-guest download battery (Trains 3-7)
+60 downloads → 122 PEs → 99 staged guests → census_dl.tsv (108 rows run):
+- archive.org: winamp295_full_noaod (Winamp 2.95), WEP.zip (the Microsoft
+  Best-of-Windows Entertainment Pack: Chips/JezzBall/Tetris/SkiFree/Pipe/
+  Rodent…), 3D Pinball Space Cadet (pinball_202110).
+- sysinternals live: 28 tool zips; nirsoft: 15 tool zips; GitHub:
+  chocolate-doom/heretic/hexen/strife 3.1.1 win64.
+- RESULT split: 51 x64 → 14 exit-0, screenshots for ADExplorer64,
+  Cacheset64 (honest "Could not obtain cache settings" dialog), RegScanner,
+  shexview, RAMMap64 (3 frames), dbgview64; 57 x86 → ALL blocked by the
+  PE32+ loader gate = SW-1281 evidence; WEP games are Win16 NE = SW-1282;
+  chocolate-doom VirtualProtect 0xcb = SW-1283; modern common-controls
+  sparseness = SW-1284.
+Scripts kept: scripts/sweep059_download{,2,3}.sh, sweep059_expand.py,
+sweep059_stage.py, sweep059_chunk.sh, sweep059_games.sh, sweep059_shots.sh.

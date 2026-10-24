@@ -23866,6 +23866,88 @@ static void mw_dib_row_to_bgr24(const uint8_t* src, int w, uint16_t sbpp,
     }
     memset(dst, 0, (size_t)w * 3u); /* 1/4/8bpp palette sources: honest black */
 }
+
+/* ---- SW-1280 (SWEEP-059): stock 20-color system palette pulled up here —
+ * the DIB color-table materializer below needs it for DIB_PAL_COLORS and
+ * mw_SetDIBitsToDevice must decode palette DIBs BEFORE the palette family. ---- */
+#define MW_PAL_BASE 0x00AB0000u
+static const uint8_t g_stock_palette[20][3] = {
+    {0,0,0},{128,0,0},{0,128,0},{128,128,0},{0,0,128},{128,0,128},{0,128,128},{192,192,192},
+    {128,128,128},{255,0,0},{0,255,0},{255,255,0},{0,0,255},{255,0,255},{0,255,255},{255,255,255},
+    {192,220,192},{166,202,240},{255,251,240},{160,160,164}
+};
+/* SW-1280 (SWEEP-059): materialize a DIB color table into BGRX quads.
+ * winmine's six RT_BITMAP strips (tiles 16x256, LED digits 13x276, faces
+ * 24x120) are 4bpp + 16-entry RGBQUAD tables blitted with SetDIBitsToDevice
+ * using DIB_PAL_COLORS; the v1 converter memset those rows to "honest black"
+ * so the whole board (bombs/digits/faces) painted black. Handles the
+ * INFOHEADER 4-byte RGBQUAD table, the OS/2 COREHEADER 3-byte RGBTRIPLE
+ * table, and DIB_PAL_COLORS 16-bit system-palette indices (stock 20). */
+static void mw_dib_materialize_ctab(const uint8_t* h8, uint16_t bpp,
+                                    uint32_t usage, uint8_t* out /*256*4*/) {
+    memset(out, 0, 256 * 4);
+    if (bpp > 8u) return;
+    uint32_t n = 1u << bpp;
+    uint32_t hdr = *(const uint32_t*)(const void*)h8;
+    if (usage == 1u /*DIB_PAL_COLORS: WORD indices into the system palette*/) {
+        const uint8_t* t = h8 + hdr;
+        for (uint32_t i = 0; i < n; i++) {
+            uint16_t pi = 0;
+            memcpy(&pi, t + (size_t)i * 2u, 2u);
+            const uint8_t* c = g_stock_palette[pi % 20u];
+            out[i * 4 + 0] = c[0]; out[i * 4 + 1] = c[1]; out[i * 4 + 2] = c[2];
+        }
+        return;
+    }
+    if (hdr == 12u) { /* BITMAPCOREHEADER: RGBTRIPLE B,G,R */
+        const uint8_t* t = h8 + 12;
+        for (uint32_t i = 0; i < n; i++) {
+            out[i * 4 + 0] = t[i * 3 + 0];
+            out[i * 4 + 1] = t[i * 3 + 1];
+            out[i * 4 + 2] = t[i * 3 + 2];
+        }
+        return;
+    }
+    uint32_t clr_used = *(const uint32_t*)(const void*)(h8 + 32);
+    uint32_t phys = clr_used ? clr_used : n;
+    if (phys > n) phys = n;
+    const uint8_t* t = h8 + hdr;
+    for (uint32_t i = 0; i < phys; i++) {
+        out[i * 4 + 0] = t[i * 4 + 0];
+        out[i * 4 + 1] = t[i * 4 + 1];
+        out[i * 4 + 2] = t[i * 4 + 2];
+    }
+}
+/* SW-1280 (SWEEP-059): palette-aware row decode for 1/4/8bpp DIBs; the
+ * palette is the BGRX-quad table materialized by mw_dib_materialize_ctab. */
+static void mw_dib_row_to_bgr24_pal(const uint8_t* src, int w, uint16_t sbpp,
+                                    const uint8_t* pal, uint8_t* dst) {
+    if (!pal) { mw_dib_row_to_bgr24(src, w, sbpp, NULL, dst); return; }
+    if (sbpp == 8) {
+        for (int x = 0; x < w; x++) {
+            const uint8_t* e = pal + (size_t)src[x] * 4u;
+            dst[x * 3 + 0] = e[0]; dst[x * 3 + 1] = e[1]; dst[x * 3 + 2] = e[2];
+        }
+        return;
+    }
+    if (sbpp == 4) {
+        for (int x = 0; x < w; x++) {
+            uint8_t v = (x & 1) ? (src[x >> 1] & 0x0Fu) : (uint8_t)(src[x >> 1] >> 4);
+            const uint8_t* e = pal + (size_t)v * 4u;
+            dst[x * 3 + 0] = e[0]; dst[x * 3 + 1] = e[1]; dst[x * 3 + 2] = e[2];
+        }
+        return;
+    }
+    if (sbpp == 1) {
+        for (int x = 0; x < w; x++) {
+            uint8_t v = (src[x >> 3] >> (7 - (x & 7))) & 1u;
+            const uint8_t* e = pal + (size_t)v * 4u;
+            dst[x * 3 + 0] = e[0]; dst[x * 3 + 1] = e[1]; dst[x * 3 + 2] = e[2];
+        }
+        return;
+    }
+    mw_dib_row_to_bgr24(src, w, sbpp, NULL, dst);
+}
 static void mw_dib_row_from_bgr24(const uint8_t* src, int w, uint16_t dbpp, uint8_t* dst, uint32_t stride) {
     memset(dst, 0, stride);
     if (dbpp == 24) { memcpy(dst, src, (size_t)w * 3u); return; }
@@ -23987,6 +24069,10 @@ __attribute__((ms_abi)) int mw_StretchDIBits(void* hdc, int dx, int dy, int dw, 
     uint32_t comp = *(const uint32_t*)(h8 + 16);
     if (w <= 0 || h == 0) return 0;
     const uint32_t* masks = (comp == 3) ? (const uint32_t*)(h8 + 40) : NULL;
+    /* SW-1280: palette table for 1/4/8bpp sources — replaces "honest black" */
+    uint8_t mw_ctab2[256 * 4];
+    const uint8_t* pal2 = NULL;
+    if (sbpp <= 8u) { mw_dib_materialize_ctab(h8, sbpp, usage, mw_ctab2); pal2 = mw_ctab2; }
     uint32_t srch = (uint32_t)(h > 0 ? h : -h);
     uint32_t stride = mw_dib_stride((uint32_t)w, sbpp);
     uint8_t* row24 = (uint8_t*)malloc((size_t)w * 3u);
@@ -23994,10 +24080,15 @@ __attribute__((ms_abi)) int mw_StretchDIBits(void* hdc, int dx, int dy, int dw, 
     int copied = 0;
     for (int row = 0; row < dh; row++) {
         int srcrow = (int)((long long)sh * row / dh); /* nearest-neighbor */
-        uint32_t y = (h > 0) ? (uint32_t)(srch - 1 - srcrow) /* bottom-up */
-                             : (uint32_t)srcrow;             /* top-down */
+        /* SW-1280: flip within the caller's source-rect window [sy..sy+sh)
+         * relative to the bits pointer (bottom-up), NOT off the full
+         * biHeight — same contract fix as SetDIBitsToDevice. */
+        uint32_t y = (h > 0) ? (uint32_t)(sh - 1 - srcrow)   /* bottom-up */
+                             : (uint32_t)(sy + srcrow);      /* top-down */
         if (y >= srch) continue;
-        mw_dib_row_to_bgr24((const uint8_t*)bits + (size_t)y * stride, w,
+        if (pal2) mw_dib_row_to_bgr24_pal((const uint8_t*)bits + (size_t)y * stride, w,
+                            sbpp, pal2, row24);
+        else mw_dib_row_to_bgr24((const uint8_t*)bits + (size_t)y * stride, w,
                             sbpp, masks, row24);
         int ddy = dy + row;
         if (ddy < 0 || ddy >= D->h) continue;
@@ -26190,7 +26281,7 @@ __attribute__((ms_abi)) int mw_DrawStateW(void* hdc, void* hbr, void* cb, intptr
 __attribute__((ms_abi)) int mw_SetDIBitsToDevice(void* hdc, int xDst, int yDst, uint32_t w,
         uint32_t h, int xSrc, int ySrc, uint32_t startScan, uint32_t scanLines,
         const void* bits, const void* pbmi, uint32_t usage) {
-    (void)xSrc; (void)ySrc; (void)usage;
+    (void)xSrc;
     MWBmp* S = mw_dc_surface(hdc);
     if (!S || !bits || !pbmi) return 0;
     const uint8_t* h8 = (const uint8_t*)pbmi;
@@ -26200,18 +26291,34 @@ __attribute__((ms_abi)) int mw_SetDIBitsToDevice(void* hdc, int xDst, int yDst, 
     uint32_t comp = *(const uint32_t*)(h8 + 16);
     if (bw <= 0 || bh == 0 || !w || !h) return 0;
     const uint32_t* masks = (comp == 3 /*BI_BITFIELDS*/) ? (const uint32_t*)(h8 + 40) : NULL;
+    /* SW-1280: palette table for 1/4/8bpp sources (RGBQUAD / RGBTRIPLE /
+     * DIB_PAL_COLORS system-palette indices) — replaces "honest black". */
+    uint8_t mw_ctab[256 * 4];
+    const uint8_t* pal = NULL;
+    if (bpp <= 8u) { mw_dib_materialize_ctab(h8, bpp, usage, mw_ctab); pal = mw_ctab; }
     uint32_t nrows = h;
     if (nrows > scanLines && scanLines) nrows = scanLines;
     if (nrows > (uint32_t)(bh > 0 ? bh : -bh)) nrows = (uint32_t)(bh > 0 ? bh : -bh);
     if (nrows > (uint32_t)S->h) nrows = (uint32_t)S->h;
     if (w > (uint32_t)S->w) w = (uint32_t)S->w;
+    /* SW-1280 (SWEEP-059): the scan-line window. Windows reads the window
+     * [startScan, startScan+scanLines) RELATIVE TO THE CALLER-SUPPLIED bits
+     * pointer, flipped bottom-up WITHIN the window. winmine disassembly
+     * (0x100002f1f/0x100003391/0x1000037c8) pre-advances bits to each tile's
+     * first file row and passes startScan=0, scanLines=16 against the strip
+     * header (biHeight=256) — keying the flip off the full biHeight (v1)
+     * read past the tile into garbage (red noise tiles). */
+    uint32_t win = scanLines ? scanLines : h;
+    if (win > (uint32_t)(bh > 0 ? bh : -bh)) win = (uint32_t)(bh > 0 ? bh : -bh);
     uint32_t stride = mw_dib_stride((uint32_t)bw, bpp);
     uint8_t* row24 = (uint8_t*)malloc((size_t)bw * 3u);
     if (!row24) return 0;
     for (uint32_t r = 0; r < nrows; r++) {
-        uint32_t srcRow = startScan + r;                 /* scan line index */
-        uint32_t fileRow = (bh > 0) ? (uint32_t)bh - 1 - srcRow : srcRow; /* bottom-up */
-        mw_dib_row_to_bgr24((const uint8_t*)bits + (size_t)fileRow * stride,
+        uint32_t fileRow = (bh > 0) ? (startScan + win - 1 - r)   /* bottom-up window */
+                                    : (startScan + r);            /* top-down window */
+        if (pal) mw_dib_row_to_bgr24_pal((const uint8_t*)bits + (size_t)fileRow * stride,
+                                         bw, bpp, pal, row24);
+        else mw_dib_row_to_bgr24((const uint8_t*)bits + (size_t)fileRow * stride,
                             bw, bpp, masks, row24);
         for (uint32_t i = 0; i < w; i++) {
             const uint8_t* px = row24 + (size_t)i * 3u;
@@ -26223,14 +26330,10 @@ __attribute__((ms_abi)) int mw_SetDIBitsToDevice(void* hdc, int xDst, int yDst, 
     MW_TRACE("[GDI] SetDIBitsToDevice(%dbpp %ux%u at %d,%d) %u rows", bpp, w, h, xDst, yDst, nrows);
     return (int)nrows;
 }
-/* ---- SW-1064..1066: palette family — stock 20-color + halftone mint ---- */
-#define MW_PAL_BASE 0x00AB0000u
+/* ---- SW-1064..1066: palette family — stock 20-color + halftone mint.
+ * SW-1280: g_stock_palette/MW_PAL_BASE moved above the DIB family (the
+ * color-table materializer for SetDIBitsToDevice/StretchDIBits needs them). ---- */
 static uint32_t g_pal_next = 1;
-static const uint8_t g_stock_palette[20][3] = {
-    {0,0,0},{128,0,0},{0,128,0},{128,128,0},{0,0,128},{128,0,128},{0,128,128},{192,192,192},
-    {128,128,128},{255,0,0},{0,255,0},{255,255,0},{0,0,255},{255,0,255},{0,255,255},{255,255,255},
-    {192,220,192},{166,202,240},{255,251,240},{160,160,164}
-};
 __attribute__((ms_abi)) void* mw_CreateHalftonePalette(void* hdc) {
     (void)hdc;
     void* h = (void*)(uintptr_t)(MW_PAL_BASE | (g_pal_next++ & 0xFFFu));
