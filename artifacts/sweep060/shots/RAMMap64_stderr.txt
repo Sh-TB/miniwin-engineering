@@ -1,0 +1,46 @@
+[TRACE] Command line: artifacts/sweep059/guests/RAMMap64/RAMMap64.exe
+[MessageBoxW] RamMap: Unable to connect to the FileInfo driver.
+Would you like RamMap to configure it to start at the next boot?
+[MessageBox] dialog #1 rendered -> miniwin-results/RAMMap64.exe/screenshots/messagebox_1.bmp
+[GDI-FRAME] #1 -> miniwin-results/RAMMap64.exe/screenshots/frame_001.bmp
+[GDI-FRAME] #2 -> miniwin-results/RAMMap64.exe/screenshots/frame_002.bmp
+
+[CRASH] Signal 11 at RIP=0x1400047c5
+  RAX=0xc66ae31a4db8 RCX=0x0 RDX=0x20001 R8=0x0 R9=0x0
+  RSP=0x7ffe95801450 RBP=0x7ffe958014c0
+  g_image_base=0x140000000 g_image_size=0x63000
+  RVA=0x47c5 (inside loaded PE)
+  Bytes: 48 8b 09 48 8d 55 b8 ff 15 76 90 03 00 4c 8b 5f 
+  Return addr: 0x0
+  RSI=0x0 RDI=0x0
+  R8=0x0  R9=0x0 R10=0x0 R11=0x202
+  R12=0x140044798 R13=0x0 R14=0x20001 R15=0x0
+  [STACKTOP raw] 0000000000000000 0000000000000000 0000000000000000 0000000000000000 0000000000000000 0000000000000000 0000000000000000 0000000000000000 0000000000000000 0000c66ae31a4db8 0000000000000000 0000000000000000
+  [SCAN rsp+136] 0x140044798 <PE>
+  [SCAN rsp+168] 0x140004f21 <PE>
+  [SCAN rsp+416] 0x140000000 <PE>
+  [SCAN rsp+544] 0x140000000 <PE>
+  [SCAN rsp+744] 0x140017deb <PE>
+  [SCAN rsp+808] 0x140059608 <PE>
+  [SCAN rsp+1016] 0x14005ac20 <PE>
+  [SCAN rsp+1040] 0x140000000 <PE>
+  [SCAN rsp+1048] 0x1400203c6 <PE>
+  [SCAN rsp+1064] 0x14003d9a0 <PE>
+  [SCAN rsp+1080] 0x140033ef0 <PE>
+  [SCAN rsp+1128] 0x140058520 <PE>
+  [SCAN rsp+1160] 0x14002ef1d <PE>
+  [SCAN rsp+1200] 0x140000000 <PE>
+  [SCAN rsp+1208] 0x14001fed2 <PE>
+  [SCAN rsp+1272] 0x2009407 <LOADER>
+  [SCAN rsp+1672] 0x2002b1c <LOADER>
+  [SCAN rsp+1680] 0x2002388 <LOADER>
+  [SCAN rsp+3128] 0x2007690 <LOADER>
+  [SCAN rsp+3280] 0x2007690 <LOADER>
+  [SCAN rsp+3320] 0x200b770 <LOADER>
+  [SCAN rsp+3352] 0x200b791 <LOADER>
+  [SCAN rsp+3840] 0x2000040 <LOADER>
+  [SCAN rsp+3920] 0x200b770 <LOADER>
+  Backtrace (via stack walking):
+    [0] RIP=0x1400047c5 RVA=0x47c5
+      [RSP+0] = 0x0 (return addr?)
+  Likely: NULL or invalid function pointer call

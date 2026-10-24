@@ -3232,3 +3232,20 @@ viewer, (2) Windows calculator, (3) a program that does not exist on Linux
   crashes inside the loaded-DLL chain (libiconv/libintl DllMain +
   cross-DLL imports). SW-509 v2 already re-lands deps; the frontier is
   DllMain execution + cross-DLL data imports at chain depth.
+
+## SWEEP-060 Train 3 — screenshot battery + SW-1284 diagnostics (2026-10-24)
+
+- [x] **Screenshot battery refreshed** (evidence/sweep060/shots_png/, 10
+  PNGs): XP regression (winmine 82 frames / sol 38 / freecell 10 /
+  mshearts 2 / spider 649 / calc / wordpad) + SW-1284 targets
+  (RAMMap64 3 frames @rc139 / RegScanner / shexview / dbgview64).
+- [x] **SW-1284 DIAGNOSED** (measured, not landed): modern common-controls
+  guests paint FRAME ONLY — RegScanner creates exactly ONE window
+  (CreateWindowExA cls=<guest class> 640x480@CW_USEDEFAULT) and its
+  WndProc paints background+bevel; ZERO child controls (the app's
+  controls arrive after its interactive/dialog flow); RAMMap64 3 frames
+  then rc139; dbgview64 white body at budget 124. The fidelity gap for
+  the modern-app class = (a) child-control lifecycle (SysListView32/
+  ToolbarWindow32 creation inside WM_CREATE/dialog paths), (b) LVM/HDM/
+  TCM planes, (c) 32bpp imagelist decode — SW-1284 remains OPEN with
+  this measured entry point.
