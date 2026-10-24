@@ -1928,3 +1928,13 @@ Measured (XP corpus, this round's binary):
   scripts/sweep061_stage_xp.sh).
 New cars: SW-1290 (sol felt strip / post-WM_SIZE repaint), SW-1291
 (winmine surface tail). Open: SW-1284, SW-1283b, SW-1281c/d.
+
+---
+## SWEEP-061 Train B (2026-10-24) — SW-1290 class-brush erase
+
+RegisterClass{,Ex}{W,A} now records hbrBackground (x64 offset 48);
+BeginPaint's erase phase fills with the solid class brush (real
+DefWindowProc WM_ERASEBKGND semantics). sol felt = full board; 17/17 XP
+corpus rc=0 zero regressions; evidence/sweep061/shots_png refreshed.
+Open: SW-1291 (cosmetic), SW-1290 layer-2 (guests whose erase must skip
+incremental frames), SW-1284/1283b/1281c/d.

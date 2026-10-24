@@ -17029,6 +17029,7 @@ static void mw_gui_store_wndproc(void* proc);
 static void mw_gui_store_window(int w, int h);
 static void mw_gui_request_size_now(void); /* SW-1287: first-show WM_SIZE */
 static void mw_gui_send_first_size(void);  /* SW-1287b: synchronous first-show WM_SIZE */
+static void mw_class_brush_store(void* h); /* SW-1290: class hbrBackground record */
 /* SW-1279 fix C: per-class wndproc registry + main-window proc snapshot */
 static void mw_class_proc_store(const void* name_ptr, int wide, void* proc);
 static void* mw_class_proc_lookup(const void* cls);
@@ -17075,6 +17076,7 @@ __attribute__((ms_abi)) uint16_t mw_RegisterClassExW(const void* wcex) {
         /* SW-1279 fix C: also record {class name -> proc} */
         mw_class_proc_store(*(const void* const*)((const char*)wcex + 64), 1, p);
         mw_class_name_store_w(*(const uint16_t* const*)((const char*)wcex + 64)); /* SWEEP-013 */
+        mw_class_brush_store(*(void* const*)((const char*)wcex + 48)); /* SW-1290 */
     }
     MW_TRACE("RegisterClassExW(wcex=%p proc=%p) -> ATOM 0x%x", wcex,
              wcex ? *(void* const*)((const char*)wcex + 8) : NULL, MW_GUI_ATOM);
@@ -17086,6 +17088,7 @@ __attribute__((ms_abi)) uint16_t mw_RegisterClassExA(const void* wcex) {
         mw_gui_store_wndproc(p);
         mw_class_proc_store(*(const void* const*)((const char*)wcex + 64), 0, p); /* SW-1279 fix C */
         mw_class_name_store_a(*(const char* const*)((const char*)wcex + 64)); /* SWEEP-013 */
+        mw_class_brush_store(*(void* const*)((const char*)wcex + 48)); /* SW-1290 */
     }
     MW_TRACE("RegisterClassExA(wcex=%p) -> ATOM 0x%x", wcex, MW_GUI_ATOM);
     return MW_GUI_ATOM;
@@ -17097,6 +17100,11 @@ __attribute__((ms_abi)) uint16_t mw_RegisterClassW(const void* wc) {
         mw_gui_store_wndproc(p);
         mw_class_proc_store(*(const void* const*)((const char*)wc + 64), 1, p); /* SW-1279 fix C */
         mw_class_name_store_w(*(const uint16_t* const*)((const char*)wc + 64)); /* SWEEP-013 */
+        /* SW-1290 (SWEEP-061): record hbrBackground (WNDCLASSW offset 48 on
+         * x64: style@0 pad@4 proc@8 cbCls@16 cbWnd@20 hInst@24 hIcon@32
+         * hCursor@40 hbrBackground@48 menu@56 name@64). The erase phase of
+         * BeginPaint fills with this brush (real DefWindowProc semantics). */
+        mw_class_brush_store(*(void* const*)((const char*)wc + 48));
     }
     MW_TRACE("RegisterClassW(wc=%p proc=%p) -> ATOM 0x%x", wc,
              wc ? *(void* const*)((const char*)wc + 8) : NULL, MW_GUI_ATOM);
@@ -17108,6 +17116,7 @@ __attribute__((ms_abi)) uint16_t mw_RegisterClassA(const void* wc) {
         mw_gui_store_wndproc(p);
         mw_class_proc_store(*(const void* const*)((const char*)wc + 64), 0, p); /* SW-1279 fix C */
         mw_class_name_store_a(*(const char* const*)((const char*)wc + 64)); /* SWEEP-013 */
+        mw_class_brush_store(*(void* const*)((const char*)wc + 48)); /* SW-1290 */
     }
     MW_TRACE("RegisterClassA(wc=%p) -> ATOM 0x%x", wc, MW_GUI_ATOM);
     return MW_GUI_ATOM;
@@ -18642,6 +18651,32 @@ static long long mw_gui_dispatch_msg(const void* msg) {
 }
 
 /* ---- paint surface: BeginPaint/EndPaint + frame dump ---- */
+/* SW-1290 (SWEEP-061): the registered class's hbrBackground. The erase
+ * phase of BeginPaint fills the surface with this brush — real
+ * DefWindowProc semantics (BeginPaint sends WM_ERASEBKGND; the default
+ * proc fills with the class brush). Only SOLID engine brushes
+ * (CreateSolidBrush: 0x00030000|slot with live slot) and the classic
+ * stock window backgrounds are honored; everything else (NULL, patterns,
+ * foreign handles) erases nothing. */
+static void* g_class_brush = NULL;
+static void mw_class_brush_store(void* h) {
+    g_class_brush = h; /* last main-class registration wins (sol/calc model) */
+    MW_TRACE("[GUI] class hbrBackground stored: %p", h);
+}
+static void mw_class_brush_erase(void) {
+    uintptr_t v = (uintptr_t)g_class_brush;
+    if (!v || !g_surf.px) return;
+    uint32_t col;
+    if ((v & 0xFFFFF000u) == 0x00030000u) {
+        int slot = (int)(v & 0x1F);
+        if (!g_brush_live[slot]) return;
+        col = g_brush_rgb[slot];
+    } else {
+        return; /* pattern/foreign brush — engine has no bitmap to tile */
+    }
+    mwb_fill(&g_surf, 0, 0, g_surf.w, g_surf.h, col);
+    MW_TRACE("[GDI] class-brush erase #%06x (SW-1290)", col);
+}
 __attribute__((ms_abi)) void* mw_BeginPaint(void* hwnd, void* ps) {
     if (ps) {
         /* x64 PAINTSTRUCT: hdc@0 fErase@8 rcPaint@12 fRestore@28 fIncUpdate@32
@@ -18652,6 +18687,10 @@ __attribute__((ms_abi)) void* mw_BeginPaint(void* hwnd, void* ps) {
         *(uint32_t*)(p + 8) = 1; /* fErase = TRUE */
         *(int32_t*)(p + 12) = 0; *(int32_t*)(p + 16) = 0;
         *(int32_t*)(p + 20) = g_win_w; *(int32_t*)(p + 24) = g_win_h;
+        /* SW-1290: fErase=TRUE means the class brush must fill the update
+         * region — do it here (the engine has no separate WM_ERASEBKGND
+         * pump round; real BeginPaint delivers the erase before returning). */
+        mw_class_brush_erase();
     }
     /* SW-1279 fix D: real BeginPaint NEVER clears the window surface — it
      * only REPORTS fErase; the erase belongs to WM_ERASEBKGND. The old

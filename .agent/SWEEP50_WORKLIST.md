@@ -3312,3 +3312,18 @@ viewer, (2) Windows calculator, (3) a program that does not exist on Linux
 - [ ] SW-1284 (common-controls child-control lifecycle), SW-1283b
   (chocolate DLL-chain DllMain), SW-1281c/d (x86 api-set shim + deep-init)
   remain open from SWEEP-059/060.
+
+## SWEEP-061 Train B — SW-1290 class-brush erase (2026-10-24)
+
+- [x] **SW-1290 LANDED** — class hbrBackground recorded at
+  RegisterClass{,Ex}{W,A} (WNDCLASS x64 offset 48) and the BeginPaint
+  erase phase fills the surface with it (real DefWindowProc
+  WM_ERASEBKGND semantics; solid engine brushes only — CreateSolidBrush
+  slots + live check; pattern/foreign brushes erase nothing).
+  MEASURED: sol felt now covers the FULL board (pixel (300,300) =
+  0,128,0 green) — the complete classic XP solitaire board: full green
+  felt + 7 tableau piles real faces + striped stack edges + frog card-back
+  deck + 4 foundation slots + status bar. XP corpus 17/17 rc=0 zero
+  regressions (winmine 82 / sol 38 / spider 628 / freecell 10 / mshearts 2
+  / calc face unchanged). SW-1291 (winmine surface tail) remains open —
+  cosmetic only.
