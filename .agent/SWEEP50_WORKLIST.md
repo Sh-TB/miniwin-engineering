@@ -3470,3 +3470,25 @@ viewer, (2) Windows calculator, (3) a program that does not exist on Linux
   healthy in parallel: winmine rc=0 same binary.
 - [x] Engine health confirmed mid-battery (winmine 82-frame baseline
   rc=0 on the same build).
+
+## SWEEP-062 Train 4 «ادامه» — winmine INTERACTIVE fidelity: bombs, flags, numbers (2026-10-25)
+
+- [x] **USER'S ORIGINAL COMPLAINT CLOSED END-TO-END** («فقط بازی بمب رو
+      کامل لود نمی کند گرافیک مشکل دارد بمب ها و سایر موارد کامل نیست»):
+      the coordinate mouse channel (SW-1261b MINWIN_MOUSE="x,y;...") now
+      plays REAL minesweeper under the engine:
+  * reveal run (3 clicks): flood-fill opens a connected region, classic
+    number colors render (1=blue, 2=green), timer LED starts counting,
+    untouched cells keep the raised-silver bevel
+    (evidence/sweep062/shots_png/winmine_reveal.png).
+  * game-over run (24 clicks across the grid): mine hit → hit cell =
+    RED background + bomb bitmap; all remaining mines exposed as the
+    classic black circle bombs with white highlight; WRONG-FLAG cells
+    render the mine-flag glyph; number colors stay classic; the smiley
+    face switches to the dead face; LED mine-counter/time keep running
+    (evidence/sweep062/shots_png/winmine_gameover.png).
+  * winmine rt_BITMAP DIB palette path (SW-1280) + stock LTGRAY class
+    background (SW-1291) + WM_SIZE relayout (SW-1287) + sync WM_LBUTTON
+    delivery compose into a complete, faithful, INTERACTIVE board.
+- [x] Corpus bookkeeping: SearchMyFiles x64 rc=124 (pump-budget hang,
+      SW-1284 domain) — noted, next-batch entry point.
