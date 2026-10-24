@@ -1,0 +1,1 @@
+[TRACE] Command line: artifacts/sweep059/guests/ADInsight//ADInsight.exe

@@ -1,0 +1,23 @@
+[TRACE] Command line: artifacts/sweep059/guests/procexp//procexp.exe
+
+[CRASH] Signal 11 at RIP=0x200a76a
+  RAX=0x7373654d RCX=0x4cf5850 RDX=0x73b3654d R8=0x0 R9=0x0
+  RSP=0x7ffd3820e680 RBP=0x0
+  g_image_base=(nil) g_image_size=0x0
+  (NOT inside loaded PE)
+  [RIP-MAP] 0x200a76a in 0x2006000-0x20e1000 r-xp /home/z/my-project/workspace/miniwin-engineering/minwin_loader
+  Bytes: 8b 4a 04 8b 42 0c 44 8b 02 8b 52 10 89 cf 09 c7 
+  RSI=0x7373654d RDI=0x57656761
+  R8=0x0  R9=0x0 R10=0x0 R11=0x7ffd3820eb10
+  R12=0x18 R13=0x0 R14=0x400000 R15=0x57656761
+  [STACKTOP raw] 0000000000000000 0000000004cf5850 0000000000400000 00000000004ba000 00007ffd001466d0 00007ffd00000208 00007ffd3820eb10 00000000000d91c0 00007ffd00000000 000000000050fa24 00000000001472fc 000000000000000b
+  [SCAN rsp+392] 0x2002b1c <LOADER>
+  [SCAN rsp+400] 0x2002388 <LOADER>
+  [SCAN rsp+1848] 0x2007690 <LOADER>
+  [SCAN rsp+2000] 0x2007690 <LOADER>
+  [SCAN rsp+2040] 0x200b770 <LOADER>
+  [SCAN rsp+2072] 0x200b791 <LOADER>
+  [SCAN rsp+2560] 0x2000040 <LOADER>
+  [SCAN rsp+2640] 0x200b770 <LOADER>
+  Backtrace (via stack walking):
+    [0] RIP=0x200a76a (outside PE, possible shared lib)

@@ -88,6 +88,28 @@ static int g_trace_disabled = 0; /* SWEEP-011: MINWIN_TRACE=0 silences MW_TRACE 
 /* Forward declaration for GetProcAddress resolver (defined after import tables) */
 typedef void* (*resolve_proc_fn_t)(void* module, const char* name);
 static resolve_proc_fn_t g_resolve_proc_fn = NULL;
+/* SW-1281 (SWEEP-060): PE32/x86 subsystem forward declarations (bodies
+ * live in the SW-1281 block near end-of-file). */
+static int   mw32_mode(void);
+static uint32_t mw32_heap_alloc(uint32_t size, int zero);
+static int   g_ran_pe32;
+static int   g_pe32_exit;
+static volatile int g_cpu32_active;   /* x86 world mode flag */
+typedef struct { uint32_t start_eip, param; } Mw32ThreadArg;
+static void* mw32_thread_trampoline(void* p);
+static __attribute__((ms_abi)) long long mw_wndproc32_shim(void* hwnd, uint32_t msg, uintptr_t wp, long long lp);
+static uint32_t mw32_stdcall_arity(const char* name);
+static int cpu32_step2(uint8_t op, int o32, int arep, int frep);
+static int cpu32_sse2(uint8_t pfx, uint8_t op2);
+static uint32_t alu_rcr32(uint32_t v, unsigned c);
+static uint32_t alu_rcl32(uint32_t v, unsigned c);
+static float mdl_f32(uint32_t va);
+static uint32_t mdl_f32_from(double d);
+static int cpu32_run(uint64_t max_steps);
+static uint32_t cpu32_call(uint32_t eip, int nargs, const uint32_t* args);
+static int load_pe32(const char* filepath);
+static void mdl_st_f80(uint32_t va, double d);
+static uint32_t g_main_class_proc32; /* x86 wndproc EIP (SW-1281) */
 
 /* forward decl: used by early-defined conversion helpers (Wave-3B) */
 __attribute__((ms_abi)) void mw_SetLastError(uint32_t err);
@@ -8773,6 +8795,13 @@ static int w3_is_guarded(void* p) {
     return s >= 0 && (g_alloc_reg[s].size >> 32);
 }
 __attribute__((ms_abi)) void* mw_HeapAlloc(void* heap, uint32_t flags, size_t size) {
+    if (mw32_mode()) {
+        /* SW-1281: arena32 bump (x86 reachability); HeapFree is a no-op */
+        uint32_t va = mw32_heap_alloc((uint32_t)(size ? size : 1), !!(flags & 0x08));
+        if (!va) { mw_SetLastError(8); return NULL; }
+        MW_TRACE("HeapAlloc[32](size=0x%zx) = 0x%x", size, va);
+        return (void*)(uintptr_t)va;
+    }
     if (w3_guard_enabled()) {
         void* gp = w3_guard_alloc(size ? size : 1);
         MW_TRACE("HeapAlloc[GUARD](size=0x%lx) = %p", (unsigned long)size, gp);
@@ -9814,6 +9843,16 @@ __attribute__((ms_abi)) int mw_ReleaseMutex(void* h) { return mw_SetEvent(h); }
 
 /* ---- threads (single-team honest semantics) ---- */
 __attribute__((ms_abi)) void* mw_CreateThread(void* attr, size_t stack, void* fn, void* arg, uint32_t flags, uint32_t* tid) {
+    /* SW-1281: x86 thread starts are i386 EIPs — trampoline re-enters
+     * the interpreter on the new host thread (thread-local MwCpu32). */
+    if (mw32_mode()) {
+        Mw32ThreadArg* ta = (Mw32ThreadArg*)malloc(sizeof(Mw32ThreadArg));
+        if (!ta) return NULL;
+        ta->start_eip = (uint32_t)(uintptr_t)fn;
+        ta->param = (uint32_t)(uintptr_t)arg;
+        fn = (void*)mw32_thread_trampoline;
+        arg = ta;
+    }
     /* BUG-062: real threads via the _beginthreadex registry (ms_abi bridge).
      * CREATE_SUSPENDED (flags bit 4) is ignored — thread starts immediately. */
     (void)attr;
@@ -14447,6 +14486,19 @@ __attribute__((ms_abi)) void* mw_VirtualAlloc(void* addr, size_t size, uint32_t 
     int lp = w32_prot_from(prot);
     int flags = MAP_PRIVATE | MAP_ANONYMOUS;
     void* base;
+    if (mw32_mode()) {
+        /* SW-1281: x86 pointers must stay < 4GB — serve from arena32 */
+        if (addr) { mw_SetLastError(487); return NULL; } /* fixed-base v1: only arena-managed */
+        uint32_t va = mw32_heap_alloc((uint32_t)size, 0);
+        if (!va) { mw_SetLastError(1455); return NULL; }
+        if (g_valloc_count < MAX_VALLOC) {
+            g_valloc[g_valloc_count].base = (void*)(uintptr_t)va;
+            g_valloc[g_valloc_count].size = size;
+            g_valloc_count++;
+        }
+        MW_TRACE("VirtualAlloc[32](size=0x%zx) = 0x%x", size, va);
+        return (void*)(uintptr_t)va;
+    }
     if (addr) {
         if ((uintptr_t)addr & 0xFFF) { mw_SetLastError(87); return NULL; }
         flags |= MAP_FIXED;
@@ -17896,7 +17948,11 @@ static int mw_probe_copy(const void* src, size_t n, void* dst) {
 }
 
 /* ---- registry / surface hooks (called from SWEEP-003 stubs) ---- */
-static void mw_gui_store_wndproc(void* proc) { if (proc) g_wndproc_fwd = (MW_WNDPROC)proc; }
+static void mw_gui_store_wndproc(void* proc) {
+    /* SW-1281: x86 mode — `proc` is a guest i386 EIP (low-4GB VA). */
+    if (g_cpu32_active) g_main_class_proc32 = (uint32_t)(uintptr_t)proc;
+    if (proc) g_wndproc_fwd = (MW_WNDPROC)proc;
+}
 /* SW-1279 fix C: per-class wndproc registry ----
  * Root cause: sol.exe registers its main class ("Solitaire", wndproc = the
  * full message switch) and comctl-style code later registers the statusbar
@@ -17954,6 +18010,9 @@ static void* mw_class_proc_lookup(const void* cls) {
     return 0;
 }
 static MW_WNDPROC mw_dispatch_proc(void) {
+    /* SW-1281: x86 guests store an i386 EIP as the wndproc — re-entered
+     * through the interpreter shim, never called natively. */
+    if (g_main_class_proc32) return mw_wndproc32_shim;
     return g_main_class_proc ? g_main_class_proc : g_wndproc_fwd;
 }
 static void mw_gui_store_window(int w, int h) {
@@ -36299,6 +36358,13 @@ static int load_pe(const char* filepath) {
     CoffHeader* coff = (CoffHeader*)(filedata + pe_off + 4);
     PeOptHeader64* opt = (PeOptHeader64*)(filedata + pe_off + 4 + sizeof(CoffHeader));
 
+    if (opt->Magic == 0x10b) {
+        /* SW-1281 (SWEEP-060): PE32 (x86/0x10b) — the interpreted x86
+         * subsystem runs the guest to completion inside load_pe32. */
+        MW_TRACE("PE32 (x86/0x10b) detected -> load_pe32 interpreted path");
+        free(filedata);
+        return load_pe32(filepath);
+    }
     if (opt->Magic != PE32PLUS_MAGIC) {
         fprintf(stderr, "[ERROR] Not a PE32+ file (magic=0x%x)\n", opt->Magic);
         free(filedata);
@@ -37353,6 +37419,2664 @@ static void mw_install_watchdog(int seconds) {
     fprintf(stderr, "[WATCHDOG] armed for %ds\n", secs);
 }
 
+/* ============================================================
+ * SW-1281 (SWEEP-060 Train 1) «چند ده قطار»: PE32 (x86 / 0x10b)
+ * subsystem. Evidence (artifacts/sweep059/guest_inventory.tsv):
+ * 57/108 battery guests blocked EXACTLY at the 0x10b rejection
+ * (loader.c:36302 + LoadLibrary:1230) — winamp295, 3D Pinball,
+ * every NirSoft x86 build, Sysinternals x86 twins.
+ *
+ * Architecture (honest v1, measured):
+ *   1. LOADER PLANE — load_pe32(): PE32 opt header (ImageBase u32
+ *      @oh+28, DataDir @oh+96, NumberOfRvaAndSizes @oh+92), section
+ *      map, base relocations (HIGHLOW type-1 only; others counted),
+ *      import binding against the SAME name-only dispatch table but
+ *      IAT slots = synthesized x86 API THUNKS (low-4GB code page,
+ *      `mov eax,slot; jmp gate`), export dir recorded for
+ *      GetProcAddress.
+ *   2. CPU CORE — i386 interpreter (x86 code cannot execute natively
+ *      in this x64 process): thread-local MwCpu32, flat memory
+ *      (image mapped in-process at ImageBase), full integer core +
+ *      x87 stack subset + SSE2 scalar subset; unsupported opcodes
+ *      FAIL LOUD with decode context (repo discipline: honest).
+ *   3. API GATE — EIP == gate address: pop stdcall ret addr, widen
+ *      up to 16 dword args, call the host ms_abi mw_* through a
+ *      16-arg function-pointer cast (extra args ABI-ignored by the
+ *      callee), EAX = return, `esp += arity_bytes` (stdcall callee
+ *      pops; annotation table for the hot set, DEFAULT 32 bytes +
+ *      one-time log; guest ebp-frame prologues resync esp, so a
+ *      wrong default self-heals at the next function boundary).
+ *   4. LOW-4GB WORLD — x86 pointers must stay < 4GB: arena32 mmap
+ *      MAP_FIXED 0x10000000..0x3FFFFFFF serves TEB32/PEB32/stack/
+ *      VirtualAlloc/HeapAlloc in x86 mode (host non-PIE data at
+ *      ~0x2000000 is already 32-bit-reachable).
+ *   5. CALLBACKS — guest wndprocs/dialogprocs/timerprocs/threadprocs
+ *      are x86 EIPs: re-entered via cpu32_call() (state save /
+ *      restore, sentinel return address). mw_dispatch_proc() returns
+ *      a host MW_WNDPROC shim when the x86 CPU is active.
+ *   6. EXIT — ExitProcess/TerminateProcess intercepted at the gate
+ *      (host mw_ExitProcess _exit()s the whole engine); flag-unwind
+ *      through nested cpu32_run levels instead.
+ *
+ * v1 limits (documented): no 16-bit addressing sub-decoder edge
+ * cases beyond the common forms, no guest SEH dispatch (chain
+ * installs are data writes; a fault is a loud abort), FPU beyond
+ * the logged subset aborts, no per-thread TEB cloning beyond
+ * thread-local cpu + stack.
+ * ============================================================ */
+
+/* ---------------- arena32 + x86 world ---------------- */
+#define MW32_ARENA_BASE   0x10000000u
+#define MW32_ARENA_SIZE   0x30000000u   /* 768MB: 0x10000000..0x3FFFFFFF */
+#define MW32_THUNK_BASE   0x00A00000u   /* API thunk code page (16 pages) */
+#define MW32_THUNK_BYTES  (16u * 4096u)
+#define MW32_GATE_VA      MW32_THUNK_BASE  /* all thunks jmp here */
+#define MW32_TEB32_VA     (MW32_ARENA_BASE + 0x0000)
+#define MW32_PEB32_VA     (MW32_ARENA_BASE + 0x1000)
+#define MW32_TLSARR_VA    (MW32_ARENA_BASE + 0x2000)
+#define MW32_STRA_VA      (MW32_ARENA_BASE + 0x3000)  /* cmdline/str scratch */
+#define MW32_HEAP_BASE    (MW32_ARENA_BASE + 0x01000000)
+#define MW32_HEAP_END     (MW32_ARENA_BASE + 0x20000000)
+#define MW32_STACK_TOP    0x3FF00000u
+#define MW32_STACK_BYTES  0x00800000u   /* 8MB main stack */
+#define MW32_RET_SENTINEL_VA (MW32_THUNK_BASE + MW32_THUNK_BYTES - 16)
+static uint32_t MW32_RET_SENTINEL = MW32_RET_SENTINEL_VA; /* eager init: never 0 */
+
+static uint8_t* g_arena32 = NULL;
+static uint32_t g_heap32_next = MW32_HEAP_BASE;
+static uint32_t g_tls32_next  = MW32_TLSARR_VA + 4096; /* bump for _tls_array slots */
+static int      g_world32_up  = 0;
+static int      g_ran_pe32    = 0;
+static int      g_pe32_exit   = 0;
+
+static void mw32_world_init(void) {
+    if (g_world32_up) return;
+    void* p = mmap((void*)(uintptr_t)MW32_ARENA_BASE, MW32_ARENA_SIZE,
+                   PROT_READ | PROT_WRITE | PROT_EXEC,
+                   MAP_PRIVATE | MAP_ANONYMOUS | MAP_FIXED_NOREPLACE, -1, 0);
+    if (p == MAP_FAILED) {
+        fprintf(stderr, "[PE32] arena mmap failed at 0x%x: %s\n",
+                MW32_ARENA_BASE, strerror(errno));
+        exit(3);
+    }
+    g_arena32 = (uint8_t*)p;
+    void* t = mmap((void*)(uintptr_t)MW32_THUNK_BASE, MW32_THUNK_BYTES,
+                   PROT_READ | PROT_WRITE | PROT_EXEC,
+                   MAP_PRIVATE | MAP_ANONYMOUS | MAP_FIXED_NOREPLACE, -1, 0);
+    if (t == MAP_FAILED) {
+        fprintf(stderr, "[PE32] thunk page mmap failed at 0x%x: %s\n",
+                MW32_THUNK_BASE, strerror(errno));
+        exit(3);
+    }
+    g_world32_up = 1;
+    MW_TRACE("[PE32] world up: arena 0x%x..0x%x, thunks 0x%x..0x%x",
+             MW32_ARENA_BASE, MW32_ARENA_BASE + MW32_ARENA_SIZE - 1,
+             MW32_THUNK_BASE, MW32_THUNK_BASE + MW32_THUNK_BYTES - 1);
+}
+
+/* low-4GB bump allocator (VirtualAlloc/HeapAlloc/malloc-family for x86) */
+static uint32_t mw32_heap_alloc(uint32_t size, int zero) {
+    uint32_t sz = (size + 0xFFF) & ~0xFFFu;
+    if (g_heap32_next + sz > MW32_HEAP_END) {
+        fprintf(stderr, "[PE32] arena32 heap exhausted (need 0x%x)\n", sz);
+        return 0;
+    }
+    uint32_t va = g_heap32_next;
+    g_heap32_next += sz;
+    if (zero) memset(g_arena32 + (va - MW32_ARENA_BASE), 0, sz);
+    return va;
+}
+static void mw32_free_all(void) { /* bump arena: free is a no-op (logged once by caller) */ }
+
+/* ---------------- API thunk page + slots ---------------- */
+typedef struct {
+    const char* name;     /* dispatch-table name (owned: strdup'd) */
+    void*       fn;       /* host ms_abi mw_* (NULL = unresolved stub) */
+    uint32_t    arity;    /* stdcall pop bytes EXCLUDING ret addr; 0xFFFFFFFF = unresolved */
+    uint64_t    calls;
+    uint8_t     cdeclf;   /* 1 = cdecl (caller pops; gate pops nothing) */
+} MwApi32Slot;
+static MwApi32Slot* g_api32_slots = NULL;
+static uint32_t     g_api32_count = 0, g_api32_cap = 0;
+static uint32_t     g_thunk_next  = MW32_THUNK_BASE + 16; /* 0..15 reserved as gate landing pad */
+static uint32_t     g_api32_gate_calls = 0;
+
+static void mw32_thunk_emit(uint32_t slot_index) {
+    uint8_t* c = g_arena32; /* unused; thunks live in their own mapping */
+    (void)c;
+    uint8_t* page = (uint8_t*)(uintptr_t)MW32_THUNK_BASE;
+    uint8_t* at = page + (g_thunk_next - MW32_THUNK_BASE);
+    /* mov eax, imm32 */
+    at[0] = 0xB8;
+    memcpy(at + 1, &slot_index, 4);
+    /* jmp rel32 -> gate */
+    at[5] = 0xE9;
+    int32_t rel = (int32_t)(MW32_GATE_VA - (g_thunk_next + 10));
+    memcpy(at + 6, &rel, 4);
+    g_thunk_next += 10;
+}
+#define MW32_ARITY_DEFAULT 32u
+#define MW32_ARITY_CDECL   0u      /* caller pops; gate pops nothing */
+static int mw32_dll_is_crt(const char* dll) {
+    /* msvcrt.dll + the UCRT api-set families are ALL cdecl (caller pops);
+     * Win32 DLLs (kernel32/user32/gdi32/...) are stdcall. */
+    static const char* crt[] = { "msvcrt.dll", "msvcrtd.dll", "msvcr90.dll",
+        "msvcr100.dll", "msvcr110.dll", "msvcr120.dll", "ucrtbase.dll",
+        "ntdll.dll" };
+    for (size_t i = 0; i < sizeof(crt)/sizeof(crt[0]); i++)
+        if (strcmp(dll, crt[i]) == 0) return 1;
+    if (strncmp(dll, "api-ms-win-crt-", 15) == 0) return 1;
+    return 0;
+}
+static uint32_t mw32_api_thunk(const char* dll, const char* name) {
+    /* dedupe by name (dispatch table is module-agnostic: name-only rule) */
+    for (uint32_t i = 0; i < g_api32_count; i++)
+        if (strcmp(g_api32_slots[i].name, name) == 0)
+            return MW32_THUNK_BASE + 16 + i * 10;
+    if (g_api32_count == g_api32_cap) {
+        g_api32_cap = g_api32_cap ? g_api32_cap * 2 : 256;
+        g_api32_slots = (MwApi32Slot*)realloc(g_api32_slots,
+                        g_api32_cap * sizeof(MwApi32Slot));
+        if (!g_api32_slots) { fprintf(stderr, "[PE32] OOM api slots\n"); exit(3); }
+    }
+    MwApi32Slot* s = &g_api32_slots[g_api32_count];
+    s->name = strdup(name);
+    s->fn = g_resolve_proc_fn ? g_resolve_proc_fn((void*)0xdead0001, name) : NULL;
+    s->calls = 0;
+    uint32_t named = mw32_stdcall_arity(name);
+    if (named != MW32_ARITY_DEFAULT) {
+        s->arity = named; s->cdeclf = (named == MW32_ARITY_CDECL &&
+            mw32_dll_is_crt(dll)) ? 1 : 0;
+        /* explicit 0 in the table + CRT dll = cdecl; explicit 0 elsewhere
+         * (GetCommandLineA etc.) is a genuine 0-arg stdcall */
+        if (named == MW32_ARITY_CDECL && !mw32_dll_is_crt(dll)) s->cdeclf = 0;
+    } else if (mw32_dll_is_crt(dll)) {
+        s->arity = 0; s->cdeclf = 1; /* CRT default: cdecl */
+    } else {
+        s->arity = MW32_ARITY_DEFAULT; s->cdeclf = 0;
+    }
+    if (!s->fn) {
+        s->arity = 0xFFFFFFFFu; s->cdeclf = 0; /* unresolved-stub semantics */
+        MW_TRACE("[PE32] api '%s' (%s) UNRESOLVED -> stub thunk", name, dll);
+    }
+    mw32_thunk_emit(g_api32_count);
+    return MW32_THUNK_BASE + 16 + g_api32_count++ * 10;
+}
+/* reverse map for GetProcAddress-returns-host-ptr */
+static uint32_t mw32_thunk_for_host_fn(void* fn) {
+    for (uint32_t i = 0; i < g_api32_count; i++)
+        if (g_api32_slots[i].fn == fn) return MW32_THUNK_BASE + 16 + i * 10;
+    /* anonymous thunk wrapping a raw host pointer (default arity) */
+    if (g_api32_count == g_api32_cap) {
+        g_api32_cap = g_api32_cap ? g_api32_cap * 2 : 256;
+        g_api32_slots = (MwApi32Slot*)realloc(g_api32_slots,
+                        g_api32_cap * sizeof(MwApi32Slot));
+    }
+    MwApi32Slot* s = &g_api32_slots[g_api32_count];
+    char nm[64]; snprintf(nm, sizeof(nm), "@host:%p", fn);
+    s->name = strdup(nm); s->fn = fn; s->arity = 32; s->calls = 0;
+    mw32_thunk_emit(g_api32_count);
+    return MW32_THUNK_BASE + 16 + g_api32_count++ * 10;
+}
+
+/* stdcall pop-bytes for the hot set; measured against real exports.
+ * DEFAULT = 32 (8 args); guest ebp prologues resync esp so a wrong
+ * default is transient (logged once per API for refinement). */
+static const struct { const char* n; uint32_t b; } g_api32_arity[] = {
+/* SW-1281 v5: VERIFIED arity table (scripts/sw1281_arity_gen.py) */
+    { "AddAccessAllowedAce", 16 },
+    { "AdjustTokenPrivileges", 24 },
+    { "AllocateAndInitializeSid", 44 },
+    { "CloseServiceHandle", 12 },
+    { "ConvertSidToStringSidW", 8 },
+    { "ConvertStringSidToSidW", 8 },
+    { "CopySid", 12 },
+    { "CryptAcquireContextA", 20 },
+    { "CryptAcquireContextW", 20 },
+    { "CryptCreateHash", 20 },
+    { "CryptDecrypt", 24 },
+    { "CryptDeriveKey", 20 },
+    { "CryptDestroyHash", 4 },
+    { "CryptDestroyKey", 4 },
+    { "CryptEncrypt", 28 },
+    { "CryptGetHashParam", 20 },
+    { "CryptHashData", 16 },
+    { "CryptReleaseContext", 8 },
+    { "EqualSid", 8 },
+    { "FreeSid", 4 },
+    { "GetLengthSid", 4 },
+    { "GetSecurityDescriptorDacl", 16 },
+    { "GetSecurityInfo", 32 },
+    { "GetTokenInformation", 20 },
+    { "ImpersonateLoggedOnUser", 16 },
+    { "InitializeAcl", 12 },
+    { "InitializeSecurityDescriptor", 8 },
+    { "IsValidSid", 4 },
+    { "LookupAccountNameW", 28 },
+    { "LookupAccountSidA", 28 },
+    { "LookupAccountSidW", 28 },
+    { "LookupPrivilegeNameW", 12 },
+    { "LookupPrivilegeValueA", 12 },
+    { "LookupPrivilegeValueW", 12 },
+    { "MapGenericMask", 8 },
+    { "OpenProcessToken", 8 },
+    { "QueryServiceStatus", 12 },
+    { "RegCloseKey", 4 },
+    { "RegConnectRegistryA", 12 },
+    { "RegConnectRegistryW", 12 },
+    { "RegCreateKeyA", 12 },
+    { "RegCreateKeyExA", 36 },
+    { "RegCreateKeyExW", 36 },
+    { "RegCreateKeyW", 12 },
+    { "RegDeleteKeyA", 8 },
+    { "RegDeleteKeyW", 8 },
+    { "RegDeleteValueA", 8 },
+    { "RegDeleteValueW", 8 },
+    { "RegEnumKeyA", 16 },
+    { "RegEnumKeyExA", 32 },
+    { "RegEnumKeyExW", 32 },
+    { "RegEnumKeyW", 16 },
+    { "RegEnumValueA", 32 },
+    { "RegEnumValueW", 32 },
+    { "RegFlushKey", 4 },
+    { "RegLoadKeyA", 12 },
+    { "RegLoadKeyW", 12 },
+    { "RegOpenKeyA", 12 },
+    { "RegOpenKeyExA", 20 },
+    { "RegOpenKeyExW", 20 },
+    { "RegOpenKeyW", 12 },
+    { "RegQueryInfoKeyA", 48 },
+    { "RegQueryInfoKeyW", 48 },
+    { "RegQueryValueA", 16 },
+    { "RegQueryValueExA", 24 },
+    { "RegQueryValueExW", 24 },
+    { "RegQueryValueW", 16 },
+    { "RegSetValueExA", 24 },
+    { "RegSetValueExW", 24 },
+    { "RegUnLoadKeyA", 8 },
+    { "RegUnLoadKeyW", 8 },
+    { "RevertToSelf", 0 },
+    { "SetSecurityDescriptorDacl", 16 },
+    { "SetSecurityInfo", 28 },
+    { "SetTokenInformation", 16 },
+    { "CoCreateInstance", 20 },
+    { "CoInitializeEx", 8 },
+    { "CoTaskMemAlloc", 4 },
+    { "CoTaskMemFree", 4 },
+    { "GetConsoleCP", 4 },
+    { "GetConsoleMode", 4 },
+    { "GetConsoleOutputCP", 4 },
+    { "ReadConsoleInputW", 12 },
+    { "ReadConsoleW", 20 },
+    { "SetConsoleMode", 12 },
+    { "WriteConsoleW", 20 },
+    { "GetDateFormatA", 12 },
+    { "GetTimeFormatA", 12 },
+    { "IsDebuggerPresent", 0 },
+    { "GetLastError", 4 },
+    { "RaiseException", 4 },
+    { "SetLastError", 4 },
+    { "SetUnhandledExceptionFilter", 4 },
+    { "UnhandledExceptionFilter", 4 },
+    { "CreateFileA", 28 },
+    { "CreateFileW", 28 },
+    { "DeleteFileA", 4 },
+    { "FileTimeToLocalFileTime", 16 },
+    { "FindClose", 4 },
+    { "FindFirstFileExW", 24 },
+    { "FindNextFileW", 8 },
+    { "FlushFileBuffers", 16 },
+    { "GetFileAttributesA", 4 },
+    { "GetFileSize", 16 },
+    { "GetFileSizeEx", 8 },
+    { "GetFileType", 4 },
+    { "GetFullPathNameA", 16 },
+    { "ReadFile", 20 },
+    { "SetEndOfFile", 16 },
+    { "SetFilePointer", 12 },
+    { "SetFilePointerEx", 20 },
+    { "WriteFile", 20 },
+    { "CloseHandle", 4 },
+    { "GetProcessHeap", 0 },
+    { "HeapAlloc", 12 },
+    { "HeapFree", 12 },
+    { "HeapReAlloc", 20 },
+    { "HeapSize", 8 },
+    { "GlobalAlloc", 12 },
+    { "GlobalFree", 8 },
+    { "LocalAlloc", 8 },
+    { "LocalFree", 8 },
+    { "GlobalLock", 4 },
+    { "GlobalReAlloc", 12 },
+    { "GlobalUnlock", 4 },
+    { "InitializeSListHead", 16 },
+    { "InterlockedPushEntrySList", 4 },
+    { "DeviceIoControl", 32 },
+    { "GetOverlappedResult", 48 },
+    { "CreateFileMappingA", 24 },
+    { "FindResourceA", 4 },
+    { "GetComputerNameA", 8 },
+    { "GlobalMemoryStatus", 16 },
+    { "VerifyVersionInfoW", 8 },
+    { "MulDiv", 12 },
+    { "FreeLibrary", 4 },
+    { "FreeLibraryAndExitThread", 4 },
+    { "GetModuleHandleA", 4 },
+    { "GetModuleHandleExW", 4 },
+    { "GetModuleHandleW", 4 },
+    { "GetProcAddress", 8 },
+    { "LoadLibraryExA", 12 },
+    { "LoadLibraryExW", 12 },
+    { "LoadStringA", 16 },
+    { "LockResource", 4 },
+    { "SizeofResource", 4 },
+    { "LoadLibraryA", 4 },
+    { "LoadLibraryW", 4 },
+    { "FormatMessageA", 28 },
+    { "FormatMessageW", 28 },
+    { "GetACP", 0 },
+    { "GetCPInfo", 16 },
+    { "GetLocaleInfoA", 16 },
+    { "GetOEMCP", 0 },
+    { "IsValidCodePage", 16 },
+    { "LCMapStringW", 12 },
+    { "MapViewOfFile", 20 },
+    { "UnmapViewOfFile", 12 },
+    { "ExpandEnvironmentStringsA", 12 },
+    { "FreeEnvironmentStringsW", 4 },
+    { "GetCommandLineA", 0 },
+    { "GetCommandLineW", 0 },
+    { "GetCurrentDirectoryA", 16 },
+    { "GetEnvironmentVariableA", 12 },
+    { "GetStdHandle", 4 },
+    { "SetStdHandle", 4 },
+    { "CreateThread", 24 },
+    { "ExitProcess", 4 },
+    { "ExitThread", 4 },
+    { "GetCurrentProcess", 0 },
+    { "GetCurrentProcessId", 0 },
+    { "GetCurrentThreadId", 0 },
+    { "GetProcessId", 16 },
+    { "GetStartupInfoW", 8 },
+    { "ResumeThread", 4 },
+    { "TerminateProcess", 16 },
+    { "TerminateThread", 16 },
+    { "TlsAlloc", 0 },
+    { "TlsFree", 16 },
+    { "TlsGetValue", 4 },
+    { "TlsSetValue", 4 },
+    { "IsProcessorFeaturePresent", 0 },
+    { "QueryPerformanceCounter", 4 },
+    { "QueryPerformanceFrequency", 0 },
+    { "RtlUnwind", 0 },
+    { "GetStringTypeW", 12 },
+    { "MultiByteToWideChar", 24 },
+    { "WideCharToMultiByte", 32 },
+    { "lstrlenA", 8 },
+    { "OpenMutexA", 16 },
+    { "CreateEventA", 16 },
+    { "CreateMutexA", 12 },
+    { "DeleteCriticalSection", 16 },
+    { "EnterCriticalSection", 16 },
+    { "InitializeCriticalSectionAndSpinCount", 12 },
+    { "InitializeCriticalSectionEx", 12 },
+    { "LeaveCriticalSection", 16 },
+    { "OpenEventA", 16 },
+    { "ResetEvent", 8 },
+    { "SetEvent", 8 },
+    { "SleepEx", 24 },
+    { "WaitForSingleObject", 8 },
+    { "SleepConditionVariableCS", 48 },
+    { "WakeConditionVariable", 16 },
+    { "WaitForMultipleObjects", 16 },
+    { "GetSystemDirectoryA", 8 },
+    { "GetSystemTime", 8 },
+    { "GetSystemTimeAsFileTime", 4 },
+    { "GetTickCount", 0 },
+    { "GetVersionExA", 4 },
+    { "VerSetConditionMask", 8 },
+    { "FileTimeToSystemTime", 16 },
+    { "SystemTimeToFileTime", 16 },
+    { "DecodePointer", 4 },
+    { "EncodePointer", 4 },
+    { "GetSystemMetrics", 4 },
+    { "CommandLineToArgvW", 8 },
+    { "ImageList_Add", 12 },
+    { "ImageList_AddMasked", 12 },
+    { "ImageList_Create", 20 },
+    { "ImageList_Destroy", 4 },
+    { "ImageList_Draw", 24 },
+    { "ImageList_GetImageCount", 4 },
+    { "ImageList_SetBkColor", 8 },
+    { "ImageList_SetImageCount", 8 },
+    { "InitCommonControlsEx", 4 },
+    { "PropertySheetW", 4 },
+    { "ChooseColorA", 4 },
+    { "ChooseFontA", 4 },
+    { "CommDlgExtendedError", 0 },
+    { "FindTextA", 4 },
+    { "FindTextW", 12 },
+    { "GetOpenFileNameA", 4 },
+    { "GetOpenFileNameW", 4 },
+    { "GetSaveFileNameA", 4 },
+    { "GetSaveFileNameW", 4 },
+    { "PrintDlgA", 4 },
+    { "PrintDlgW", 12 },
+    { "AbortDoc", 16 },
+    { "BitBlt", 36 },
+    { "CombineRgn", 16 },
+    { "CreateBitmap", 20 },
+    { "CreateBitmapIndirect", 4 },
+    { "CreateCompatibleBitmap", 12 },
+    { "CreateCompatibleDC", 4 },
+    { "CreateDIBSection", 24 },
+    { "CreateDIBitmap", 24 },
+    { "CreateFontA", 56 },
+    { "CreateFontIndirectA", 4 },
+    { "CreateFontIndirectW", 4 },
+    { "CreateFontW", 56 },
+    { "CreatePalette", 4 },
+    { "CreatePen", 12 },
+    { "CreateRectRgn", 16 },
+    { "CreateRectRgnIndirect", 4 },
+    { "CreateSolidBrush", 4 },
+    { "DeleteDC", 4 },
+    { "DeleteObject", 4 },
+    { "Ellipse", 20 },
+    { "EndDoc", 16 },
+    { "EndPage", 16 },
+    { "ExcludeClipRect", 20 },
+    { "ExtTextOutA", 32 },
+    { "ExtTextOutW", 32 },
+    { "GdiFlush", 0 },
+    { "GetBitmapBits", 12 },
+    { "GetBkColor", 4 },
+    { "GetBkMode", 4 },
+    { "GetCurrentObject", 16 },
+    { "GetDIBits", 20 },
+    { "GetDeviceCaps", 8 },
+    { "GetLayout", 4 },
+    { "GetObjectA", 12 },
+    { "GetObjectW", 12 },
+    { "GetPaletteEntries", 16 },
+    { "GetPixel", 12 },
+    { "GetStockObject", 0 },
+    { "GetTextExtentExPointW", 24 },
+    { "GetTextExtentPoint32A", 16 },
+    { "GetTextExtentPoint32W", 16 },
+    { "GetTextExtentPointA", 16 },
+    { "GetTextMetricsA", 8 },
+    { "GetTextMetricsW", 8 },
+    { "LineTo", 12 },
+    { "MoveToEx", 16 },
+    { "PatBlt", 24 },
+    { "Polygon", 12 },
+    { "Polyline", 12 },
+    { "RealizePalette", 16 },
+    { "Rectangle", 20 },
+    { "ResizePalette", 8 },
+    { "RoundRect", 28 },
+    { "SaveDC", 4 },
+    { "SelectClipRgn", 8 },
+    { "SelectObject", 8 },
+    { "SelectPalette", 16 },
+    { "SetAbortProc", 16 },
+    { "SetBkColor", 8 },
+    { "SetBkMode", 4 },
+    { "SetBrushOrgEx", 16 },
+    { "SetLayout", 4 },
+    { "SetMapMode", 4 },
+    { "SetPaletteEntries", 16 },
+    { "SetPixel", 16 },
+    { "SetROP2", 4 },
+    { "SetStretchBltMode", 4 },
+    { "SetTextAlign", 4 },
+    { "SetTextColor", 8 },
+    { "SetViewportOrgEx", 12 },
+    { "StartDocA", 16 },
+    { "StartDocW", 16 },
+    { "StartPage", 16 },
+    { "StretchBlt", 44 },
+    { "StretchDIBits", 52 },
+    { "TextOutA", 20 },
+    { "TextOutW", 20 },
+    { "GdipCreateBitmapFromFile", 8 },
+    { "GdipCreateHBITMAPFromBitmap", 12 },
+    { "GdipDeleteGraphics", 4 },
+    { "GdipDisposeImage", 4 },
+    { "GdiplusShutdown", 4 },
+    { "GdiplusStartup", 12 },
+    { "AcquireSRWLockExclusive", 16 },
+    { "AcquireSRWLockShared", 16 },
+    { "AreFileApisANSI", 16 },
+    { "CancelIo", 4 },
+    { "CompareFileTime", 8 },
+    { "CompareStringA", 12 },
+    { "CompareStringW", 12 },
+    { "CopyFileA", 12 },
+    { "CopyFileW", 12 },
+    { "CreateDirectoryA", 8 },
+    { "CreateDirectoryW", 8 },
+    { "CreateEventW", 16 },
+    { "CreateFileMappingW", 24 },
+    { "CreateProcessA", 40 },
+    { "CreateProcessW", 40 },
+    { "CreateWaitableTimerW", 12 },
+    { "DebugBreak", 16 },
+    { "DeleteFileW", 4 },
+    { "EnumResourceNamesA", 8 },
+    { "EnumResourceNamesW", 8 },
+    { "EnumResourceTypesW", 16 },
+    { "EnumSystemLocalesA", 8 },
+    { "EnumSystemLocalesW", 8 },
+    { "ExpandEnvironmentStringsW", 12 },
+    { "FindFirstFileA", 8 },
+    { "FindFirstFileExA", 24 },
+    { "FindFirstFileW", 8 },
+    { "FindNextFileA", 8 },
+    { "FindResourceExW", 8 },
+    { "FindResourceW", 4 },
+    { "FlsAlloc", 4 },
+    { "FlsFree", 4 },
+    { "FlsGetValue", 4 },
+    { "FlsSetValue", 8 },
+    { "FlushInstructionCache", 0 },
+    { "FreeEnvironmentStringsA", 4 },
+    { "FreeResource", 4 },
+    { "GetActiveProcessorCount", 4 },
+    { "GetComputerNameW", 8 },
+    { "GetCurrentDirectoryW", 16 },
+    { "GetCurrentThread", 0 },
+    { "GetDateFormatW", 12 },
+    { "GetDiskFreeSpaceA", 56 },
+    { "GetDiskFreeSpaceExA", 16 },
+    { "GetDiskFreeSpaceExW", 16 },
+    { "GetDiskFreeSpaceW", 56 },
+    { "GetDriveTypeA", 4 },
+    { "GetDriveTypeW", 4 },
+    { "GetEnvironmentStrings", 0 },
+    { "GetEnvironmentVariableW", 12 },
+    { "GetExitCodeProcess", 8 },
+    { "GetFileAttributesExW", 8 },
+    { "GetFileAttributesW", 4 },
+    { "GetFullPathNameW", 16 },
+    { "GetLocalTime", 8 },
+    { "GetLocaleInfoW", 16 },
+    { "GetLogicalDrives", 0 },
+    { "GetLongPathNameW", 12 },
+    { "GetNativeSystemInfo", 4 },
+    { "GetNumberFormatW", 12 },
+    { "GetNumberOfConsoleInputEvents", 4 },
+    { "GetPrivateProfileIntA", 12 },
+    { "GetPrivateProfileIntW", 12 },
+    { "GetPrivateProfileStringA", 24 },
+    { "GetPrivateProfileStringW", 24 },
+    { "GetProcessTimes", 8 },
+    { "GetShortPathNameA", 12 },
+    { "GetShortPathNameW", 12 },
+    { "GetStartupInfoA", 8 },
+    { "GetStringTypeA", 12 },
+    { "GetSystemDefaultLangID", 8 },
+    { "GetSystemDirectoryW", 8 },
+    { "GetSystemInfo", 4 },
+    { "GetSystemTimePreciseAsFileTime", 4 },
+    { "GetSystemWow64DirectoryW", 4 },
+    { "GetTempFileNameA", 16 },
+    { "GetTempFileNameW", 16 },
+    { "GetTempPathA", 8 },
+    { "GetTempPathW", 8 },
+    { "GetThreadContext", 8 },
+    { "GetTickCount64", 0 },
+    { "GetTimeFormatW", 12 },
+    { "GetTimeZoneInformation", 8 },
+    { "GetUserDefaultLCID", 8 },
+    { "GetUserDefaultLangID", 8 },
+    { "GetVersion", 0 },
+    { "GetVersionExW", 4 },
+    { "GetVolumeInformationA", 32 },
+    { "GetVolumeInformationW", 32 },
+    { "GetWindowsDirectoryA", 8 },
+    { "GetWindowsDirectoryW", 8 },
+    { "GlobalAddAtomW", 16 },
+    { "GlobalHandle", 8 },
+    { "HeapCreate", 12 },
+    { "InterlockedDecrement", 8 },
+    { "InterlockedExchange", 8 },
+    { "InterlockedFlushSList", 12 },
+    { "InterlockedIncrement", 8 },
+    { "InterlockedPopEntrySList", 4 },
+    { "IsBadReadPtr", 8 },
+    { "IsWow64Process", 8 },
+    { "LCMapStringA", 12 },
+    { "MoveFileExA", 12 },
+    { "MoveFileExW", 12 },
+    { "OpenEventW", 16 },
+    { "OpenProcess", 16 },
+    { "OpenSemaphoreW", 16 },
+    { "OutputDebugStringA", 4 },
+    { "OutputDebugStringW", 4 },
+    { "PeekConsoleInputA", 12 },
+    { "PulseEvent", 16 },
+    { "QueryThreadCycleTime", 16 },
+    { "ReadConsoleInputA", 12 },
+    { "ReadProcessMemory", 8 },
+    { "ReleaseSRWLockExclusive", 16 },
+    { "ReleaseSRWLockShared", 16 },
+    { "RemoveDirectoryA", 4 },
+    { "RemoveDirectoryW", 4 },
+    { "RtlCaptureContext", 4 },
+    { "SearchPathA", 24 },
+    { "SearchPathW", 24 },
+    { "SetConsoleCtrlHandler", 8 },
+    { "SetConsoleTitleW", 12 },
+    { "SetCurrentDirectoryA", 4 },
+    { "SetEnvironmentVariableA", 8 },
+    { "SetEnvironmentVariableW", 8 },
+    { "SetErrorMode", 4 },
+    { "SetFileAttributesW", 12 },
+    { "SetHandleCount", 4 },
+    { "SetPriorityClass", 4 },
+    { "SetThreadContext", 8 },
+    { "SetWaitableTimer", 12 },
+    { "Sleep", 4 },
+    { "SleepConditionVariableSRW", 48 },
+    { "SuspendThread", 4 },
+    { "SwitchToThread", 0 },
+    { "TryAcquireSRWLockExclusive", 16 },
+    { "TryEnterCriticalSection", 16 },
+    { "VerifyVersionInfoA", 8 },
+    { "VirtualAlloc", 16 },
+    { "VirtualFree", 12 },
+    { "VirtualProtect", 16 },
+    { "VirtualQuery", 12 },
+    { "VirtualQueryEx", 20 },
+    { "WTSGetActiveConsoleSessionId", 8 },
+    { "WaitForSingleObjectEx", 24 },
+    { "WakeAllConditionVariable", 16 },
+    { "WinExec", 16 },
+    { "WriteConsoleA", 20 },
+    { "WritePrivateProfileStringA", 16 },
+    { "WritePrivateProfileStringW", 16 },
+    { "WriteProcessMemory", 8 },
+    { "lstrcatA", 8 },
+    { "lstrcatW", 8 },
+    { "lstrcmpA", 8 },
+    { "lstrcmpW", 8 },
+    { "lstrcmpiA", 8 },
+    { "lstrcmpiW", 8 },
+    { "lstrcpyA", 8 },
+    { "lstrcpyW", 8 },
+    { "lstrcpynA", 12 },
+    { "lstrcpynW", 12 },
+    { "lstrlenW", 8 },
+    { "WNetAddConnection2A", 16 },
+    { "WNetCancelConnection2A", 12 },
+    { "WNetCloseEnum", 4 },
+    { "AlphaBlend", 44 },
+    { "GradientFill", 24 },
+    { "NetApiBufferFree", 4 },
+    { "NetShareEnum", 24 },
+    { "NetWkstaUserGetInfo", 12 },
+    { "NtQueryInformationProcess", 20 },
+    { "NtQueryInformationThread", 20 },
+    { "NtQueryObject", 20 },
+    { "NtQuerySystemInformation", 16 },
+    { "RtlGetVersion", 4 },
+    { "RtlNtStatusToDosError", 4 },
+    { "CLSIDFromString", 8 },
+    { "CoCreateGuid", 4 },
+    { "CoInitialize", 4 },
+    { "CoTaskMemRealloc", 8 },
+    { "CoUninitialize", 0 },
+    { "PropVariantClear", 4 },
+    { "StringFromGUID2", 12 },
+    { "GetErrorInfo", 8 },
+    { "SysFreeString", 4 },
+    { "SysStringLen", 4 },
+    { "PdhCloseQuery", 4 },
+    { "PdhCollectQueryData", 4 },
+    { "PdhGetFormattedCounterValue", 16 },
+    { "SetupDiDestroyDeviceInfoList", 4 },
+    { "DragFinish", 4 },
+    { "DragQueryFileW", 16 },
+    { "ExtractIconExW", 20 },
+    { "SHBrowseForFolderA", 4 },
+    { "SHBrowseForFolderW", 4 },
+    { "SHChangeNotify", 16 },
+    { "SHGetDesktopFolder", 4 },
+    { "SHGetFileInfoA", 20 },
+    { "SHGetFileInfoW", 20 },
+    { "SHGetFolderPathW", 20 },
+    { "SHGetMalloc", 4 },
+    { "SHGetPathFromIDListA", 8 },
+    { "SHGetPathFromIDListW", 8 },
+    { "SHGetSpecialFolderLocation", 12 },
+    { "ShellExecuteA", 24 },
+    { "ShellExecuteExA", 4 },
+    { "ShellExecuteExW", 4 },
+    { "ShellExecuteW", 24 },
+    { "StrStrIW", 8 },
+    { "AdjustWindowRectEx", 12 },
+    { "AppendMenuA", 16 },
+    { "AppendMenuW", 16 },
+    { "BeginPaint", 16 },
+    { "CallWindowProcA", 16 },
+    { "CallWindowProcW", 16 },
+    { "CharLowerW", 4 },
+    { "CharNextA", 4 },
+    { "CharNextW", 4 },
+    { "CharPrevA", 4 },
+    { "CharPrevW", 4 },
+    { "CheckDlgButton", 16 },
+    { "CheckMenuItem", 12 },
+    { "CheckRadioButton", 16 },
+    { "ChildWindowFromPoint", 16 },
+    { "ChildWindowFromPointEx", 16 },
+    { "ClientToScreen", 8 },
+    { "CloseClipboard", 4 },
+    { "CopyIcon", 8 },
+    { "CopyRect", 8 },
+    { "CreateDialogParamA", 20 },
+    { "CreateDialogParamW", 20 },
+    { "CreatePopupMenu", 0 },
+    { "CreateWindowExA", 48 },
+    { "CreateWindowExW", 48 },
+    { "DefWindowProcA", 16 },
+    { "DefWindowProcW", 16 },
+    { "DeleteMenu", 12 },
+    { "DestroyAcceleratorTable", 12 },
+    { "DestroyMenu", 4 },
+    { "DestroyWindow", 4 },
+    { "DialogBoxIndirectParamA", 20 },
+    { "DialogBoxIndirectParamW", 20 },
+    { "DialogBoxParamA", 20 },
+    { "DialogBoxParamW", 20 },
+    { "DrawFocusRect", 16 },
+    { "DrawIconEx", 16 },
+    { "DrawMenuBar", 4 },
+    { "DrawTextA", 16 },
+    { "DrawTextExA", 16 },
+    { "DrawTextExW", 16 },
+    { "DrawTextW", 16 },
+    { "EmptyClipboard", 4 },
+    { "EnableMenuItem", 12 },
+    { "EnableWindow", 4 },
+    { "EndMenu", 16 },
+    { "EndPaint", 16 },
+    { "EnumChildWindows", 16 },
+    { "EnumDisplayDevicesW", 16 },
+    { "EnumDisplayMonitors", 16 },
+    { "EnumDisplaySettingsA", 12 },
+    { "EnumDisplaySettingsW", 12 },
+    { "EnumWindows", 16 },
+    { "EqualRect", 8 },
+    { "ExitWindowsEx", 8 },
+    { "FillRect", 12 },
+    { "FindWindowA", 16 },
+    { "FindWindowExA", 16 },
+    { "FindWindowExW", 16 },
+    { "FindWindowW", 16 },
+    { "FrameRect", 12 },
+    { "GetActiveWindow", 16 },
+    { "GetAncestor", 16 },
+    { "GetAsyncKeyState", 8 },
+    { "GetCapture", 0 },
+    { "GetClassInfoA", 8 },
+    { "GetClassInfoExW", 8 },
+    { "GetClassInfoW", 8 },
+    { "GetClassLongW", 8 },
+    { "GetClassNameA", 12 },
+    { "GetClassNameW", 12 },
+    { "GetClientRect", 8 },
+    { "GetCursor", 16 },
+    { "GetCursorPos", 16 },
+    { "GetDC", 4 },
+    { "GetDesktopWindow", 0 },
+    { "GetDialogBaseUnits", 0 },
+    { "GetDlgCtrlID", 12 },
+    { "GetDlgItem", 4 },
+    { "GetDlgItemInt", 16 },
+    { "GetDlgItemTextA", 16 },
+    { "GetDlgItemTextW", 16 },
+    { "GetFocus", 0 },
+    { "GetForegroundWindow", 0 },
+    { "GetKeyboardState", 8 },
+    { "GetLayeredWindowAttributes", 16 },
+    { "GetMenu", 4 },
+    { "GetMenuCheckMarkDimensions", 16 },
+    { "GetMenuItemCount", 4 },
+    { "GetMenuItemInfoA", 16 },
+    { "GetMenuItemInfoW", 16 },
+    { "GetMenuState", 12 },
+    { "GetMessagePos", 0 },
+    { "GetMonitorInfoW", 8 },
+    { "GetOpenClipboardWindow", 0 },
+    { "GetParent", 4 },
+    { "GetPropA", 4 },
+    { "GetPropW", 4 },
+    { "GetScrollInfo", 12 },
+    { "GetSubMenu", 8 },
+    { "GetSysColor", 4 },
+    { "GetSysColorBrush", 4 },
+    { "GetUpdateRect", 8 },
+    { "GetWindow", 4 },
+    { "GetWindowDC", 8 },
+    { "GetWindowLongA", 8 },
+    { "GetWindowLongW", 8 },
+    { "GetWindowModuleFileNameW", 12 },
+    { "GetWindowPlacement", 16 },
+    { "GetWindowRect", 8 },
+    { "GetWindowTextLengthW", 8 },
+    { "InflateRect", 8 },
+    { "InsertMenuItemA", 16 },
+    { "InsertMenuItemW", 16 },
+    { "IntersectRect", 8 },
+    { "InvalidateRect", 12 },
+    { "IsChild", 4 },
+    { "IsClipboardFormatAvailable", 0 },
+    { "IsDialogMessageA", 8 },
+    { "IsDialogMessageW", 8 },
+    { "IsDlgButtonChecked", 8 },
+    { "IsIconic", 4 },
+    { "IsRectEmpty", 8 },
+    { "IsWindow", 4 },
+    { "IsWindowEnabled", 16 },
+    { "IsWindowVisible", 4 },
+    { "IsZoomed", 4 },
+    { "KillTimer", 8 },
+    { "LoadAcceleratorsA", 8 },
+    { "LoadAcceleratorsW", 8 },
+    { "LoadBitmapA", 8 },
+    { "LoadCursorA", 8 },
+    { "LoadCursorW", 8 },
+    { "LoadIconA", 8 },
+    { "LoadIconW", 8 },
+    { "LoadImageA", 24 },
+    { "LoadImageW", 24 },
+    { "LoadMenuA", 8 },
+    { "LoadMenuW", 8 },
+    { "LoadStringW", 16 },
+    { "LockWorkStation", 16 },
+    { "MapVirtualKeyA", 8 },
+    { "MapVirtualKeyW", 8 },
+    { "MessageBeep", 4 },
+    { "MessageBoxA", 16 },
+    { "MessageBoxW", 16 },
+    { "MonitorFromRect", 8 },
+    { "MonitorFromWindow", 8 },
+    { "MoveWindow", 24 },
+    { "OffsetRect", 8 },
+    { "OpenClipboard", 16 },
+    { "PostMessageA", 16 },
+    { "PostMessageW", 16 },
+    { "PostQuitMessage", 4 },
+    { "PtInRect", 8 },
+    { "RegisterClassA", 4 },
+    { "RegisterClassExA", 4 },
+    { "RegisterClassExW", 4 },
+    { "RegisterClassW", 4 },
+    { "RegisterHotKey", 8 },
+    { "RegisterWindowMessageA", 8 },
+    { "RegisterWindowMessageW", 8 },
+    { "ReleaseCapture", 4 },
+    { "ReleaseDC", 16 },
+    { "RemoveMenu", 12 },
+    { "RemovePropA", 4 },
+    { "ScreenToClient", 8 },
+    { "SendDlgItemMessageA", 20 },
+    { "SendDlgItemMessageW", 20 },
+    { "SendMessageA", 16 },
+    { "SendMessageTimeoutA", 24 },
+    { "SendMessageTimeoutW", 24 },
+    { "SendMessageW", 16 },
+    { "SetActiveWindow", 16 },
+    { "SetCapture", 16 },
+    { "SetClipboardData", 12 },
+    { "SetCursor", 4 },
+    { "SetDlgItemInt", 16 },
+    { "SetDlgItemTextA", 12 },
+    { "SetDlgItemTextW", 12 },
+    { "SetFocus", 4 },
+    { "SetLayeredWindowAttributes", 16 },
+    { "SetMenu", 8 },
+    { "SetMenuItemBitmaps", 16 },
+    { "SetRect", 8 },
+    { "SetScrollInfo", 12 },
+    { "SetTimer", 16 },
+    { "SetWindowPlacement", 16 },
+    { "SetWindowPos", 28 },
+    { "SetWindowRgn", 12 },
+    { "SetWindowTextA", 8 },
+    { "SetWindowTextW", 8 },
+    { "SetWindowsHookExA", 16 },
+    { "SetWindowsHookExW", 16 },
+    { "ShowCursor", 4 },
+    { "ShowWindow", 16 },
+    { "ShowWindowAsync", 8 },
+    { "SystemParametersInfoA", 16 },
+    { "SystemParametersInfoW", 16 },
+    { "TrackPopupMenu", 20 },
+    { "TrackPopupMenuEx", 16 },
+    { "TranslateAcceleratorA", 12 },
+    { "TranslateAcceleratorW", 12 },
+    { "UnhookWindowsHookEx", 4 },
+    { "UnionRect", 8 },
+    { "UnregisterClassA", 8 },
+    { "UnregisterClassW", 8 },
+    { "UnregisterHotKey", 8 },
+    { "UpdateWindow", 4 },
+    { "ValidateRect", 8 },
+    { "VkKeyScanW", 8 },
+    { "WindowFromPoint", 16 },
+    { "CloseThemeData", 16 },
+    { "IsAppThemed", 16 },
+    { "IsThemeActive", 16 },
+    { "OpenThemeData", 16 },
+    { "GetFileVersionInfoA", 16 },
+    { "GetFileVersionInfoSizeA", 8 },
+    { "GetFileVersionInfoSizeW", 8 },
+    { "GetFileVersionInfoW", 16 },
+    { "VerQueryValueA", 16 },
+    { "VerQueryValueW", 16 },
+    { "WinHttpCloseHandle", 4 },
+    { "WinHttpConnect", 16 },
+    { "WinHttpGetProxyForUrl", 16 },
+    { "WinHttpOpen", 20 },
+    { "WinHttpOpenRequest", 28 },
+    { "WinHttpQueryDataAvailable", 8 },
+    { "WinHttpQueryHeaders", 24 },
+    { "WinHttpReadData", 16 },
+    { "WinHttpReceiveResponse", 8 },
+    { "WinHttpSendRequest", 28 },
+    { "WinHttpSetOption", 16 },
+    { "WinHttpWriteData", 16 },
+    { "PlaySoundW", 12 },
+    { "mciSendCommandA", 16 },
+    { "mciSendStringW", 12 },
+    { "sndPlaySoundA", 8 },
+    { "timeBeginPeriod", 4 },
+    { "timeEndPeriod", 4 },
+    { "timeGetTime", 0 },
+    { "timeKillEvent", 4 },
+    { "waveOutClose", 4 },
+    { "waveOutGetDevCapsA", 12 },
+    { "waveOutGetNumDevs", 0 },
+    { "waveOutOpen", 24 },
+    { "waveOutPrepareHeader", 12 },
+    { "waveOutUnprepareHeader", 12 },
+    { "waveOutWrite", 12 },
+    { "WSAIoctl", 36 },
+    { "WTSDisconnectSession", 12 },
+    { "WTSFreeMemory", 4 },
+    { "WTSLogoffSession", 12 },
+};
+static uint32_t mw32_stdcall_arity(const char* name) {
+    for (size_t i = 0; i < sizeof(g_api32_arity)/sizeof(g_api32_arity[0]); i++)
+        if (strcmp(g_api32_arity[i].n, name) == 0) return g_api32_arity[i].b;
+    static uint8_t warned[2048]; uint32_t h = 0;
+    for (const char* p = name; *p; p++) h = h * 131 + (uint8_t)*p;
+    h = (h ^ (h >> 13)) & 16383u; /* bounded 14-bit hash -> 2048-byte map */
+    if (!(warned[h >> 3] & (1u << (h & 7)))) {
+        warned[h >> 3] |= (uint8_t)(1u << (h & 7));
+        MW_TRACE("[PE32] arity('%s') unknown -> under-pop 0 (caller cleans or frame resync)", name);
+    }
+    return 0; /* under-pop: safest for unknown stdcall sizes */
+}
+
+
+/* ---------------- CPU32 state + memory ---------------- */
+typedef struct {
+    uint32_t r[8];      /* EAX ECX EDX EBX ESP EBP ESI EDI (index order) */
+    uint32_t eip;
+    uint32_t eflags;
+    uint32_t fsbase, gsbase;
+    /* x87 */
+    uint32_t ftop;              /* stack top index 0..7 */
+    uint64_t fst[8];            /* 80-bit truncated to f64 payload + sign exp stored as double bits */
+    double   freg[8];           /* v1: doubles (f64 precision; f80 extra bits not modeled) */
+    uint16_t fcw, fsw;
+    /* SSE regs v1: xmm0..7 low 128 bits */
+    uint8_t  xmm[8][16];
+} MwCpu32;
+
+static __thread MwCpu32 t_cpu32;
+static __thread int     t_cpu32_live = 0;
+/* g_cpu32_active defined in the SW-1281 fwd block (needed by earlier code) */
+static volatile uint32_t g_cpu32_exit_req = 0; /* ExitProcess interception */
+
+enum { EAXi = 0, ECXi, EDXi, EBXi, ESPi, EBPi, ESIi, EDIi };
+
+/* EFLAGS bits */
+#define F_CF 0x0001u
+#define F_PF 0x0004u
+#define F_AF 0x0010u
+#define F_ZF 0x0040u
+#define F_SF 0x0080u
+#define F_TF 0x0100u
+#define F_IF 0x0200u
+#define F_DF 0x0400u
+#define F_OF 0x0800u
+
+static inline void f_set(uint32_t f, int c) { if (c) t_cpu32.eflags |= f; else t_cpu32.eflags &= ~f; }
+static inline int  f_get(uint32_t f)        { return (t_cpu32.eflags & f) != 0; }
+static inline void f_setzsp32(uint32_t v) {
+    f_set(F_ZF, v == 0); f_set(F_SF, (int32_t)v < 0);
+    f_set(F_PF, !__builtin_parity(v & 0xFF));
+}
+static inline void f_setzsp16(uint16_t v) {
+    f_set(F_ZF, v == 0); f_set(F_SF, (int16_t)v < 0);
+    f_set(F_PF, !__builtin_parity(v & 0xFF));
+}
+static inline void f_setzsp8(uint8_t v) {
+    f_set(F_ZF, v == 0); f_set(F_SF, (int8_t)v < 0);
+    f_set(F_PF, !__builtin_parity(v & 0xFF));
+}
+
+/* guest memory (flat, in-process): image mapped at ImageBase, arena mapped.
+ * A wild pointer here segfaults the engine exactly like the native x64
+ * path — same crash discipline; the watchdog captures the trace. */
+static inline uint8_t* m32p(uint32_t va) { return (uint8_t*)(uintptr_t)va; }
+static inline uint8_t  m32_ld8 (uint32_t va) { return *(uint8_t*)m32p(va); }
+static inline uint16_t m32_ld16(uint32_t va) { uint16_t v; memcpy(&v, m32p(va), 2); return v; }
+static inline uint32_t m32_ld32(uint32_t va) { uint32_t v; memcpy(&v, m32p(va), 4); return v; }
+static inline uint64_t m32_ld64(uint32_t va) { uint64_t v; memcpy(&v, m32p(va), 8); return v; }
+static inline void m32_st8 (uint32_t va, uint8_t v)  { *(uint8_t*)m32p(va) = v; }
+static inline void m32_st16(uint32_t va, uint16_t v) { memcpy(m32p(va), &v, 2); }
+static inline void m32_st32(uint32_t va, uint32_t v) { memcpy(m32p(va), &v, 4); }
+static inline void m32_st64(uint32_t va, uint64_t v) { memcpy(m32p(va), &v, 8); }
+
+static inline uint32_t m32_push(uint32_t v) { t_cpu32.r[ESPi] -= 4; m32_st32(t_cpu32.r[ESPi], v); return t_cpu32.r[ESPi]; }
+static inline uint32_t m32_pop(void)        { uint32_t v = m32_ld32(t_cpu32.r[ESPi]); t_cpu32.r[ESPi] += 4; return v; }
+
+/* ---------------- ModRM / SIB ---------------- */
+typedef struct { int mod, reg, rm; uint32_t ea; int is_reg; } ModRM;
+static int g_segreg_ovr = -1; /* -1 none, else fs(4)/gs(5) base selector marker */
+
+static void modrm_decode(ModRM* m) {
+    uint8_t op = m32_ld8(t_cpu32.eip);
+    t_cpu32.eip++;
+    m->mod = op >> 6; m->reg = (op >> 3) & 7; m->rm = op & 7;
+    if (m->mod == 3) { m->is_reg = 1; m->ea = m->rm; return; }
+    m->is_reg = 0;
+    uint32_t base = 0, disp = 0; int have_disp = 0;
+    if (m->rm == 4) { /* SIB */
+        uint8_t sib = m32_ld8(t_cpu32.eip++);
+        int scale = sib >> 6, idx = (sib >> 3) & 7, b = sib & 7;
+        base = (b == 5 && m->mod == 0) ? 0 : t_cpu32.r[b];
+        if (b == 5 && m->mod == 0) have_disp = 1; /* disp32 follows */
+        if (idx != 4) base += t_cpu32.r[idx] << scale;
+    } else if (m->rm == 5 && m->mod == 0) {
+        have_disp = 1;
+    } else {
+        base = t_cpu32.r[m->rm];
+    }
+    if (have_disp) { disp = m32_ld32(t_cpu32.eip); t_cpu32.eip += 4; }
+    else if (m->mod == 1) { disp = (uint32_t)(int32_t)(int8_t)m32_ld8(t_cpu32.eip); t_cpu32.eip += 1; }
+    else if (m->mod == 2) { disp = m32_ld32(t_cpu32.eip); t_cpu32.eip += 4; }
+    m->ea = base + disp;
+    /* segment base applied ONCE by modrm_apply_seg() after prefix scan */
+}
+
+/* apply segment override to an EA (called when prefix seen) */
+static void modrm_apply_seg(ModRM* m) {
+    if (!m->is_reg) {
+        if (g_segreg_ovr == 0) m->ea += t_cpu32.fsbase;
+        else if (g_segreg_ovr == 1) m->ea += t_cpu32.gsbase;
+    }
+}
+
+
+/* ---------------- ALU helpers ---------------- */
+static uint32_t alu_add32(uint32_t a, uint32_t b, int cin) {
+    uint64_t r = (uint64_t)a + b + (uint32_t)cin;
+    uint32_t v = (uint32_t)r;
+    f_set(F_CF, r >> 32);
+    f_set(F_AF, ((a ^ b ^ v) & 0x10) != 0);
+    f_set(F_OF, (~(a ^ b) & (a ^ v) & 0x80000000u) != 0);
+    f_setzsp32(v); return v;
+}
+static uint32_t alu_sub32(uint32_t a, uint32_t b, int cin) {
+    uint64_t r = (uint64_t)a - b - (uint32_t)cin;
+    uint32_t v = (uint32_t)r;
+    f_set(F_CF, (r >> 32) & 1);
+    f_set(F_AF, ((a ^ b ^ v) & 0x10) != 0);
+    f_set(F_OF, ((a ^ b) & (a ^ v) & 0x80000000u) != 0);
+    f_setzsp32(v); return v;
+}
+static uint32_t alu_logic32(uint32_t v) { f_set(F_CF,0); f_set(F_OF,0); f_set(F_AF,0); f_setzsp32(v); return v; }
+static uint32_t alu_inc32(uint32_t a) { uint32_t cf = f_get(F_CF); uint32_t v = alu_add32(a,1,0); f_set(F_CF,cf); return v; }
+static uint32_t alu_dec32(uint32_t a) { uint32_t cf = f_get(F_CF); uint32_t v = alu_sub32(a,1,0); f_set(F_CF,cf); return v; }
+/* 16/8-bit narrow variants via widening to 32 helpers */
+static uint16_t alu_add16(uint16_t a, uint16_t b, int cin) {
+    uint32_t r = (uint32_t)a + b + (uint32_t)cin; uint16_t v = (uint16_t)r;
+    f_set(F_CF, r >> 16);
+    f_set(F_AF, ((a ^ b ^ v) & 0x10) != 0);
+    f_set(F_OF, (~(a ^ b) & (a ^ v) & 0x8000u) != 0);
+    f_setzsp16(v); return v;
+}
+static uint16_t alu_sub16(uint16_t a, uint16_t b, int cin) {
+    uint32_t r = (uint32_t)a - b - (uint32_t)cin; uint16_t v = (uint16_t)r;
+    f_set(F_CF, (r >> 16) & 1);
+    f_set(F_AF, ((a ^ b ^ v) & 0x10) != 0);
+    f_set(F_OF, ((a ^ b) & (a ^ v) & 0x8000u) != 0);
+    f_setzsp16(v); return v;
+}
+static uint16_t alu_logic16(uint16_t v) { f_set(F_CF,0); f_set(F_OF,0); f_set(F_AF,0); f_setzsp16(v); return v; }
+static uint8_t alu_add8(uint8_t a, uint8_t b, int cin) {
+    uint32_t r = (uint32_t)a + b + (uint32_t)cin; uint8_t v = (uint8_t)r;
+    f_set(F_CF, r >> 8);
+    f_set(F_AF, ((a ^ b ^ v) & 0x10) != 0);
+    f_set(F_OF, (~(a ^ b) & (a ^ v) & 0x80u) != 0);
+    f_setzsp8(v); return v;
+}
+static uint8_t alu_sub8(uint8_t a, uint8_t b, int cin) {
+    uint32_t r = (uint32_t)a - b - (uint32_t)cin; uint8_t v = (uint8_t)r;
+    f_set(F_CF, (r >> 8) & 1);
+    f_set(F_AF, ((a ^ b ^ v) & 0x10) != 0);
+    f_set(F_OF, ((a ^ b) & (a ^ v) & 0x80u) != 0);
+    f_setzsp8(v); return v;
+}
+static uint8_t alu_logic8(uint8_t v) { f_set(F_CF,0); f_set(F_OF,0); f_set(F_AF,0); f_setzsp8(v); return v; }
+
+static uint32_t alu_shl32(uint32_t v, unsigned c) {
+    c &= 31; if (!c) return v;
+    f_set(F_CF, (v >> (32 - c)) & 1);
+    v <<= c;
+    f_setzsp32(v);
+    f_set(F_OF, ((v >> 31) & 1) != f_get(F_CF)); /* MSB != CF */
+    return v;
+}
+static uint32_t alu_shr32(uint32_t v, unsigned c) {
+    c &= 31; if (!c) return v;
+    f_set(F_CF, (v >> (c - 1)) & 1);
+    v >>= c;
+    f_setzsp32(v); f_set(F_OF, 0);
+    return v;
+}
+static uint32_t alu_sar32(uint32_t v, unsigned c) {
+    c &= 31; if (!c) return v;
+    f_set(F_CF, ((int32_t)v >> (c - 1)) & 1);
+    v = (uint32_t)((int32_t)v >> c);
+    f_setzsp32(v); f_set(F_OF, 0);
+    return v;
+}
+static uint32_t alu_ror32(uint32_t v, unsigned c) {
+    c &= 31; if (!c) return v;
+    v = (v >> c) | (v << (32 - c));
+    f_set(F_CF, v & 1); return v;
+}
+static uint32_t alu_rol32(uint32_t v, unsigned c) {
+    c &= 31; if (!c) return v;
+    v = (v << c) | (v >> (32 - c));
+    f_set(F_CF, v & 1); return v;
+}
+static uint16_t alu_shl16(uint16_t v, unsigned c) {
+    c &= 31; if (!c) return v;
+    if (c <= 16) f_set(F_CF, (v >> (16 - c)) & 1); else f_set(F_CF, 0);
+    v = (uint16_t)(v << c); f_setzsp16(v); return v;
+}
+static uint16_t alu_shr16(uint16_t v, unsigned c) {
+    c &= 31; if (!c) return v;
+    f_set(F_CF, c <= 16 ? (v >> (c - 1)) & 1 : 0);
+    v = (uint16_t)(v >> c); f_setzsp16(v); return v;
+}
+static uint16_t alu_sar16(uint16_t v, unsigned c) {
+    c &= 31; if (!c) return v;
+    f_set(F_CF, c <= 16 ? ((int16_t)v >> (c - 1)) & 1 : ((int16_t)v < 0));
+    v = (uint16_t)((int16_t)v >> (c > 15 ? 15 : c)); f_setzsp16(v); return v;
+}
+static uint8_t alu_shl8(uint8_t v, unsigned c) {
+    c &= 31; if (!c) return v;
+    if (c <= 8) f_set(F_CF, (v >> (8 - c)) & 1); else f_set(F_CF, 0);
+    v = (uint8_t)(v << c); f_setzsp8(v); return v;
+}
+static uint8_t alu_shr8(uint8_t v, unsigned c) {
+    c &= 31; if (!c) return v;
+    f_set(F_CF, c <= 8 ? (v >> (c - 1)) & 1 : 0);
+    v = (uint8_t)(v >> c); f_setzsp8(v); return v;
+}
+static uint8_t alu_sar8(uint8_t v, unsigned c) {
+    c &= 31; if (!c) return v;
+    f_set(F_CF, c <= 8 ? ((int8_t)v >> (c - 1)) & 1 : ((int8_t)v < 0));
+    v = (uint8_t)((int8_t)v >> (c > 7 ? 7 : c)); f_setzsp8(v); return v;
+}
+
+/* ---------------- x87 v1 ---------------- */
+#define MW32_FCW_INIT 0x027Fu  /* all masks on, like real FPU init after FINIT */
+static inline int fpu_top(void) { return (int)(t_cpu32.ftop & 7); }
+static inline void fpu_push(double v) {
+    t_cpu32.ftop = (t_cpu32.ftop - 1) & 7;
+    t_cpu32.freg[t_cpu32.ftop] = v;
+}
+static inline double fpu_popv(void) {
+    double v = t_cpu32.freg[t_cpu32.ftop];
+    t_cpu32.ftop = (t_cpu32.ftop + 1) & 7;
+    return v;
+}
+static inline double fpu_st(int i) { return t_cpu32.freg[(t_cpu32.ftop + i) & 7]; }
+static inline void fpu_setst(int i, double v) { t_cpu32.freg[(t_cpu32.ftop + i) & 7] = v; }
+static void fpu_compare(double a, double b) {
+    t_cpu32.fsw &= ~0x4700u; /* C0 C2 C3 */
+    int unordered = (a != a) || (b != b);
+    uint32_t bits = 0;
+    if (unordered) bits = 0x4500;             /* C3|C2|C0 pattern for unordered */
+    else if (a > b) bits = 0x0000;
+    else if (a < b) bits = 0x0100;            /* C0 */
+    else            bits = 0x4000;            /* C3 */
+    t_cpu32.fsw |= bits;
+    f_set(F_ZF, bits == 0x4000u);
+    f_set(F_PF, bits == 0x4500u);
+    f_set(F_CF, bits == 0x0100u);
+}
+
+/* ---------------- SSE2 scalar v1 ---------------- */
+static void xmm_zero_all(void) { memset(t_cpu32.xmm, 0, sizeof(t_cpu32.xmm)); }
+static inline uint8_t* xmm_ptr(int i) { return t_cpu32.xmm[i & 7]; }
+
+
+/* ---------------- interpreter core ---------------- */
+static uint64_t g_cpu32_steps = 0;
+static uint32_t g_eip_hist[16]; static int g_eip_hist_n = 0; /* exit-debug ring */
+static int      g_cpu32_trace = 0;   /* MW32_TRACE=1: per-API lines */
+static int      g_cpu32_steptrace = 0; /* MW32_STEP_TRACE=1: per-instruction */
+static uint64_t g_cpu32_maxsteps = 0; /* MW32_MAX_STEPS=n: budget guard */
+
+/* API gate + host bridge: implemented after the arity table (above) and
+ * before cpu32_run so the interpreter can call it inline. */
+typedef __attribute__((ms_abi)) uint64_t (*mw32_fn16_t)(uint64_t, uint64_t, uint64_t, uint64_t,
+                                uint64_t, uint64_t, uint64_t, uint64_t,
+                                uint64_t, uint64_t, uint64_t, uint64_t,
+                                uint64_t, uint64_t, uint64_t, uint64_t);
+
+static uint32_t mw32_unresolved_thunk_name_at(uint32_t thunk_va, char* out, size_t n);
+
+/* forward: pump-side shim registration (defined with the GUI shims) */
+static void mw32_gui_install_shims(void);
+
+/* the gate: called with t_cpu32.eip == MW32_GATE_VA and the thunk slot
+ * index in EAX. Performs the host call and returns the new EIP. */
+static uint32_t mw32_api_gate(uint32_t slot_index) {
+    if (slot_index >= g_api32_count) {
+        fprintf(stderr, "[PE32] GATE slot %u out of range\n", slot_index);
+        exit(3);
+    }
+    MwApi32Slot* s = &g_api32_slots[slot_index];
+    s->calls++;
+    g_api32_gate_calls++;
+
+    uint32_t ret_addr = m32_pop();           /* stdcall ret addr */
+    uint32_t arity = (s->arity == 0xFFFFFFFFu) ? 32 : s->arity;
+    if (s->arity == 0xFFFFFFFFu) arity = 32; /* unresolved stub: args unknown */
+
+    /* widen up to 16 dword args; callee reads what its prototype needs */
+    uint64_t a[16];
+    for (int i = 0; i < 16; i++) a[i] = m32_ld32(t_cpu32.r[ESPi] + (uint32_t)(4 * i));
+
+    if (g_cpu32_trace) {
+        MW_TRACE("[API32 #%u] %s esp=0x%x args=[%x %x %x %x] ret=%x next=%02x %02x %02x %02x %02x %02x",
+                 slot_index,
+                 s->name, t_cpu32.r[ESPi], (uint32_t)a[0], (uint32_t)a[1],
+                 (uint32_t)a[2], (uint32_t)a[3], ret_addr,
+                 m32_ld8(ret_addr), m32_ld8(ret_addr+1), m32_ld8(ret_addr+2),
+                 m32_ld8(ret_addr+3), m32_ld8(ret_addr+4), m32_ld8(ret_addr+5));
+    }
+
+    uint32_t ret = 0;
+    if (s->arity == 0xFFFFFFFFu) {
+        /* unresolved import: mirror mw_unresolved_import_stub (trace+0) */
+        MW_TRACE("[PE32] UNRESOLVED call '%s' (gate) -> 0", s->name);
+        ret = 0;
+    } else {
+        mw32_fn16_t fn = (mw32_fn16_t)(void*)s->fn;
+        if (!fn) { fprintf(stderr, "[PE32] slot '%s' has NULL fn\n", s->name); exit(3); }
+        uint64_t r = fn(a[0], a[1], a[2], a[3], a[4], a[5], a[6], a[7],
+                        a[8], a[9], a[10], a[11], a[12], a[13], a[14], a[15]);
+        ret = (uint32_t)r;
+        /* GetProcAddress-returns-host-ptr: convert to a 32-bit thunk VA so
+         * the interpreter can gate it later (SW-1281 contract). */
+        if ((strcmp(s->name, "GetProcAddress") == 0 ||
+             strcmp(s->name, "GetProcAddressA") == 0 ||
+             strcmp(s->name, "GetProcAddressW") == 0) && ret != 0) {
+            ret = mw32_thunk_for_host_fn((void*)(uintptr_t)r);
+        }
+        /* host pointers that guests store/deref as data are fine (host is
+         * non-PIE, everything < 4GB). */
+    }
+
+    /* ExitProcess/TerminateProcess interception: flag-unwind, never _exit
+     * from inside the interpreter (pump/nested frames). */
+    if (strcmp(s->name, "ExitProcess") == 0 || strcmp(s->name, "TerminateProcess") == 0 ||
+        strcmp(s->name, "exit") == 0 || strcmp(s->name, "_exit") == 0 ||
+        strcmp(s->name, "abort") == 0) {
+        g_cpu32_exit_req = (uint32_t)a[0] ? (uint32_t)a[0] : ret;
+        MW_TRACE("[PE32] %s(%u) intercepted -> unwind", s->name, (uint32_t)a[0]);
+        t_cpu32.eip = ret_addr;
+        return ret_addr;
+    }
+
+    if (!s->cdeclf) t_cpu32.r[ESPi] += arity; /* stdcall callee pops; cdecl: caller cleans */
+    t_cpu32.r[EAXi] = ret;
+    t_cpu32.eip = ret_addr;
+    if (g_cpu32_trace)
+        MW_TRACE("[API32 #%u] <- %s = %x esp_after=0x%x", slot_index, s->name, ret, t_cpu32.r[ESPi]);
+    return ret_addr;
+}
+
+/* top-level run: executes until ExitProcess interception, gate-driven
+ * quit, or step budget. Returns the guest exit code. */
+static int cpu32_run(uint64_t max_steps);
+
+/* callback re-entry: run guest code at `eip` with stdcall args until the
+ * sentinel RET; saves/restores the caller's CPU state (nested pump calls). */
+static uint32_t cpu32_call(uint32_t eip, int nargs, const uint32_t* args) {
+    MwCpu32 save = t_cpu32;
+    int live = t_cpu32_live; t_cpu32_live = 1;
+    /* thread stack: carve per re-entry from the arena top region */
+    static __thread uint32_t t_cbstack;
+    if (!t_cbstack) t_cbstack = mw32_heap_alloc(0x40000, 0) + 0x40000;
+    t_cpu32.r[ESPi] = t_cbstack;
+    t_cpu32.r[EBPi] = t_cbstack;
+    m32_push(MW32_RET_SENTINEL);
+    for (int i = nargs - 1; i >= 0; i--) m32_push(args[i]);
+    t_cpu32.eip = eip;
+    t_cpu32.eflags = 0x202;
+    int exit_save = g_cpu32_exit_req; g_cpu32_exit_req = 0;
+    cpu32_run(0); /* budget 0 = unbounded; returns on sentinel/exit */
+    uint32_t rv = t_cpu32.r[EAXi];
+    int code = g_cpu32_exit_req; g_cpu32_exit_req = exit_save;
+    t_cpu32 = save; t_cpu32_live = live;
+    if (code) g_cpu32_exit_req = code; /* propagate ExitProcess upward */
+    return rv;
+}
+
+static void cpu32_fatal(const char* what, uint32_t op, uint32_t va) {
+    fprintf(stderr,
+        "[PE32-FATAL] %s opcode=0x%02x at EIP=0x%08x base=0x%x\n"
+        "  EAX=%08x ECX=%08x EDX=%08x EBX=%08x ESP=%08x EBP=%08x ESI=%08x EDI=%08x\n"
+        "  bytes: %02x %02x %02x %02x %02x %02x %02x %02x\n",
+        what, op, t_cpu32.eip, g_image_base ? (uint32_t)(uintptr_t)g_image_base : 0,
+        t_cpu32.r[0], t_cpu32.r[1], t_cpu32.r[2], t_cpu32.r[3],
+        t_cpu32.r[4], t_cpu32.r[5], t_cpu32.r[6], t_cpu32.r[7],
+        m32_ld8(t_cpu32.eip), m32_ld8(t_cpu32.eip+1), m32_ld8(t_cpu32.eip+2),
+        m32_ld8(t_cpu32.eip+3), m32_ld8(t_cpu32.eip+4), m32_ld8(t_cpu32.eip+5),
+        m32_ld8(t_cpu32.eip+6), m32_ld8(t_cpu32.eip+7));
+    fflush(stderr);
+    exit(86); /* 86 = SW-1281 interpreter abort code */
+}
+
+/* condition code evaluator (cc index = low nibble of jcc/setcc) */
+static int cond_eval(int cc) {
+    int r = 0;
+    switch (cc) {
+    case 0x0: r = f_get(F_OF); break;                     /* O  */
+    case 0x1: r = !f_get(F_OF); break;                    /* NO */
+    case 0x2: r = f_get(F_CF); break;                     /* B  */
+    case 0x3: r = !f_get(F_CF); break;                    /* AE */
+    case 0x4: r = f_get(F_ZF); break;                     /* E  */
+    case 0x5: r = !f_get(F_ZF); break;                    /* NE */
+    case 0x6: r = f_get(F_CF) || f_get(F_ZF); break;      /* BE */
+    case 0x7: r = !f_get(F_CF) && !f_get(F_ZF); break;    /* A  */
+    case 0x8: r = f_get(F_SF); break;                     /* S  */
+    case 0x9: r = !f_get(F_SF); break;                    /* NS */
+    case 0xA: r = f_get(F_PF); break;                     /* P  */
+    case 0xB: r = !f_get(F_PF); break;                    /* NP */
+    case 0xC: r = f_get(F_SF) != f_get(F_OF); break;      /* L  */
+    case 0xD: r = f_get(F_SF) == f_get(F_OF); break;      /* GE */
+    case 0xE: r = (f_get(F_SF) != f_get(F_OF)) || f_get(F_ZF); break; /* LE */
+    case 0xF: r = (f_get(F_SF) == f_get(F_OF)) && !f_get(F_ZF); break; /* G */
+    }
+    return r;
+}
+
+
+/* one instruction step. returns 0 = ok, -1 = stop (sentinel/exit). */
+static int cpu32_step(void) {
+    uint32_t op;
+    int o32 = 1;            /* operand size 32 (0x66 -> 16) */
+    int arep = 0, frep = 0; /* REPNE / REP(RE) */
+    g_segreg_ovr = -1;
+
+restart_prefix:
+    op = m32_ld8(t_cpu32.eip);
+    switch (op) {
+    case 0x66: t_cpu32.eip++; o32 = 0; goto restart_prefix;
+    case 0x67: t_cpu32.eip++; goto restart_prefix; /* 32-bit default already */
+    case 0x64: t_cpu32.eip++; g_segreg_ovr = 0; goto restart_prefix; /* FS: */
+    case 0x65: t_cpu32.eip++; g_segreg_ovr = 1; goto restart_prefix; /* GS: */
+    case 0x2E: case 0x36: case 0x3E: case 0x26: t_cpu32.eip++; goto restart_prefix; /* flat */
+    case 0xF0: t_cpu32.eip++; goto restart_prefix;  /* LOCK: ignore */
+    case 0xF2: t_cpu32.eip++; arep = 1; goto restart_prefix;
+    case 0xF3: t_cpu32.eip++; frep = 1; goto restart_prefix;
+    default: break;
+    }
+    t_cpu32.eip++; /* consume opcode */
+
+    /* API gate */
+    if ((t_cpu32.eip - 1) == MW32_GATE_VA) {
+        mw32_api_gate(t_cpu32.r[EAXi]);
+        return g_cpu32_exit_req ? -1 : 0;
+    }
+    /* sentinel return -> callback frame complete */
+    if ((t_cpu32.eip - 1) == MW32_RET_SENTINEL) return -1;
+
+    ModRM m; int have_m = 0;
+#define NEEDM() do { if (!have_m) { modrm_decode(&m); modrm_apply_seg(&m); have_m = 1; } } while (0)
+#define R32(i) (t_cpu32.r[i])
+#define LD_RorM32() (m.is_reg ? R32(m.rm) : (modrm_apply_seg(&m), m32_ld32(m.ea)))
+#define ST_RorM32(v) do { if (m.is_reg) R32(m.rm) = (v); else m32_st32(m.ea, (v)); } while (0)
+#define LD_RorM16() (m.is_reg ? (uint16_t)(R32(m.rm) & 0xFFFF) : (modrm_apply_seg(&m), m32_ld16(m.ea)))
+#define ST_RorM16(v) do { if (m.is_reg) R32(m.rm) = ((R32(m.rm) & 0xFFFF0000u) | (uint32_t)(uint16_t)(v)); else m32_st16(m.ea, (v)); } while (0)
+#define LD_RorM8() (m.is_reg ? (uint8_t)(R32(m.rm & 7) & 0xFF) : (modrm_apply_seg(&m), m32_ld8(m.ea)))
+/* 8-bit register mapping with the 0x04/0x05 AH/CH/DH/BH quirk handled by
+ * callers that need it; interpreter stores BH in EBX bits 8..15 as real. */
+#define ST_RorM8(v) do { if (m.is_reg) { \
+        if (m.rm < 4) R32(m.rm) = (R32(m.rm) & 0xFFFFFF00u) | (uint32_t)(v); \
+        else R32(m.rm - 4) = (R32(m.rm - 4) & 0xFFFF00FFu) | ((uint32_t)(v) << 8); \
+    } else m32_st8(m.ea, (v)); } while (0)
+
+    switch (op) {
+    /* ---- add / or / adc / sbb / and / sub / xor / cmp, r/m,r and r,r/m and imm ---- */
+    case 0x01: { NEEDM(); uint32_t v = LD_RorM32(); uint32_t r2 = alu_add32(v, R32(m.reg), 0); ST_RorM32(r2); break; }
+    case 0x03: { NEEDM(); R32(m.reg) = alu_add32(R32(m.reg), LD_RorM32(), 0); break; }
+    case 0x00: { NEEDM(); uint8_t v = LD_RorM8(); uint8_t r2 = alu_add8(v, (uint8_t)R32(m.reg & 7) & 0xFF, 0); ST_RorM8(r2); break; }
+    case 0x02: { NEEDM(); uint8_t v = LD_RorM8(); uint8_t regv = (m.reg < 4) ? (uint8_t)(R32(m.reg) & 0xFF) : (uint8_t)(R32(m.reg - 4) >> 8); uint8_t r2 = alu_add8(regv, v, 0); if (m.reg < 4) R32(m.reg) = (R32(m.reg) & 0xFFFFFF00u) | r2; else R32(m.reg - 4) = (R32(m.reg - 4) & 0xFFFF00FFu) | ((uint32_t)r2 << 8); break; }
+    case 0x05: R32(EAXi) = alu_add32(R32(EAXi), m32_ld32(t_cpu32.eip), 0); t_cpu32.eip += 4; break;
+    case 0x04: { uint8_t v = m32_ld8(t_cpu32.eip); t_cpu32.eip++; uint8_t nv = alu_add8((uint8_t)R32(EAXi), v, 0); R32(EAXi) = (R32(EAXi) & 0xFFFFFF00u) | nv; break; }
+    case 0x09: { NEEDM(); uint32_t v = LD_RorM32(); ST_RorM32(alu_logic32(v | R32(m.reg))); break; }
+    case 0x0B: { NEEDM(); R32(m.reg) = alu_logic32(R32(m.reg) | LD_RorM32()); break; }
+    case 0x08: { NEEDM(); uint8_t v = LD_RorM8(); ST_RorM8(alu_logic8(v | (uint8_t)R32(m.reg & 7))); break; }
+    case 0x0A: { NEEDM(); uint8_t v = LD_RorM8(); uint8_t regv = (m.reg < 4) ? (uint8_t)R32(m.reg) : (uint8_t)(R32(m.reg - 4) >> 8); uint8_t r2 = alu_logic8(regv | v); if (m.reg < 4) R32(m.reg) = (R32(m.reg) & 0xFFFFFF00u) | r2; else R32(m.reg - 4) = (R32(m.reg - 4) & 0xFFFF00FFu) | ((uint32_t)r2 << 8); break; }
+    case 0x0D: R32(EAXi) = alu_logic32(R32(EAXi) | m32_ld32(t_cpu32.eip)); t_cpu32.eip += 4; break;
+    case 0x11: { NEEDM(); uint32_t v = LD_RorM32(); ST_RorM32(alu_add32(v, R32(m.reg), f_get(F_CF))); break; }
+    case 0x13: { NEEDM(); R32(m.reg) = alu_add32(R32(m.reg), LD_RorM32(), f_get(F_CF)); break; }
+    case 0x15: R32(EAXi) = alu_add32(R32(EAXi), m32_ld32(t_cpu32.eip), f_get(F_CF)); t_cpu32.eip += 4; break;
+    case 0x19: { NEEDM(); uint32_t v = LD_RorM32(); ST_RorM32(alu_sub32(v, R32(m.reg), f_get(F_CF))); break; }
+    case 0x1B: { NEEDM(); R32(m.reg) = alu_sub32(R32(m.reg), LD_RorM32(), f_get(F_CF)); break; }
+    case 0x1D: R32(EAXi) = alu_sub32(R32(EAXi), m32_ld32(t_cpu32.eip), f_get(F_CF)); t_cpu32.eip += 4; break;
+    case 0x21: { NEEDM(); uint32_t v = LD_RorM32(); ST_RorM32(alu_logic32(v & R32(m.reg))); break; }
+    case 0x23: { NEEDM(); R32(m.reg) = alu_logic32(R32(m.reg) & LD_RorM32()); break; }
+    case 0x20: { NEEDM(); uint8_t v = LD_RorM8(); ST_RorM8(alu_logic8(v & (uint8_t)R32(m.reg & 7))); break; }
+    case 0x22: { NEEDM(); uint8_t v = LD_RorM8(); uint8_t regv = (m.reg < 4) ? (uint8_t)R32(m.reg) : (uint8_t)(R32(m.reg - 4) >> 8); uint8_t r2 = alu_logic8(regv & v); if (m.reg < 4) R32(m.reg) = (R32(m.reg) & 0xFFFFFF00u) | r2; else R32(m.reg - 4) = (R32(m.reg - 4) & 0xFFFF00FFu) | ((uint32_t)r2 << 8); break; }
+    case 0x25: R32(EAXi) = alu_logic32(R32(EAXi) & m32_ld32(t_cpu32.eip)); t_cpu32.eip += 4; break;
+    case 0x29: { NEEDM(); uint32_t v = LD_RorM32(); ST_RorM32(alu_sub32(v, R32(m.reg), 0)); break; }
+    case 0x2B: { NEEDM(); R32(m.reg) = alu_sub32(R32(m.reg), LD_RorM32(), 0); break; }
+    case 0x28: { NEEDM(); uint8_t v = LD_RorM8(); ST_RorM8(alu_sub8(v, (uint8_t)R32(m.reg & 7), 0)); break; }
+    case 0x2A: { NEEDM(); uint8_t v = LD_RorM8(); uint8_t regv = (m.reg < 4) ? (uint8_t)R32(m.reg) : (uint8_t)(R32(m.reg - 4) >> 8); uint8_t r2 = alu_sub8(regv, v, 0); if (m.reg < 4) R32(m.reg) = (R32(m.reg) & 0xFFFFFF00u) | r2; else R32(m.reg - 4) = (R32(m.reg - 4) & 0xFFFF00FFu) | ((uint32_t)r2 << 8); break; }
+    case 0x2D: R32(EAXi) = alu_sub32(R32(EAXi), m32_ld32(t_cpu32.eip), 0); t_cpu32.eip += 4; break;
+    /* SW-1281 battery fix: the AL,imm8 half of the ALU group */
+    case 0x0C: { uint8_t v = m32_ld8(t_cpu32.eip); t_cpu32.eip++; uint8_t r2 = alu_logic8((uint8_t)R32(EAXi) | v); R32(EAXi) = (R32(EAXi) & 0xFFFFFF00u) | r2; break; }
+    case 0x14: { uint8_t v = m32_ld8(t_cpu32.eip); t_cpu32.eip++; uint8_t r2 = alu_add8((uint8_t)R32(EAXi), v, f_get(F_CF)); R32(EAXi) = (R32(EAXi) & 0xFFFFFF00u) | r2; break; }
+    case 0x1C: { uint8_t v = m32_ld8(t_cpu32.eip); t_cpu32.eip++; uint8_t r2 = alu_sub8((uint8_t)R32(EAXi), v, f_get(F_CF)); R32(EAXi) = (R32(EAXi) & 0xFFFFFF00u) | r2; break; }
+    case 0x24: { uint8_t v = m32_ld8(t_cpu32.eip); t_cpu32.eip++; uint8_t r2 = alu_logic8((uint8_t)R32(EAXi) & v); R32(EAXi) = (R32(EAXi) & 0xFFFFFF00u) | r2; break; }
+    case 0x2C: { uint8_t v = m32_ld8(t_cpu32.eip); t_cpu32.eip++; uint8_t r2 = alu_sub8((uint8_t)R32(EAXi), v, 0); R32(EAXi) = (R32(EAXi) & 0xFFFFFF00u) | r2; break; }
+    case 0x34: { uint8_t v = m32_ld8(t_cpu32.eip); t_cpu32.eip++; uint8_t r2 = alu_logic8((uint8_t)R32(EAXi) ^ v); R32(EAXi) = (R32(EAXi) & 0xFFFFFF00u) | r2; break; }
+    case 0x3C: { uint8_t v = m32_ld8(t_cpu32.eip); t_cpu32.eip++; alu_sub8((uint8_t)R32(EAXi), v, 0); break; }
+    case 0x31: { NEEDM(); uint32_t v = LD_RorM32(); ST_RorM32(alu_logic32(v ^ R32(m.reg))); break; }
+    case 0x33: { NEEDM(); R32(m.reg) = alu_logic32(R32(m.reg) ^ LD_RorM32()); break; }
+    case 0x30: { NEEDM(); uint8_t v = LD_RorM8(); ST_RorM8(alu_logic8(v ^ (uint8_t)R32(m.reg & 7))); break; }
+    case 0x32: { NEEDM(); uint8_t v = LD_RorM8(); uint8_t regv = (m.reg < 4) ? (uint8_t)R32(m.reg) : (uint8_t)(R32(m.reg - 4) >> 8); uint8_t r2 = alu_logic8(regv ^ v); if (m.reg < 4) R32(m.reg) = (R32(m.reg) & 0xFFFFFF00u) | r2; else R32(m.reg - 4) = (R32(m.reg - 4) & 0xFFFF00FFu) | ((uint32_t)r2 << 8); break; }
+    case 0x35: R32(EAXi) = alu_logic32(R32(EAXi) ^ m32_ld32(t_cpu32.eip)); t_cpu32.eip += 4; break;
+    case 0x39: { NEEDM(); uint32_t v = LD_RorM32(); alu_sub32(v, R32(m.reg), 0); break; }
+    case 0x3B: { NEEDM(); alu_sub32(R32(m.reg), LD_RorM32(), 0); break; }
+    case 0x38: { NEEDM(); uint8_t v = LD_RorM8(); alu_sub8(v, (uint8_t)R32(m.reg & 7), 0); break; }
+    case 0x3A: { NEEDM(); uint8_t v = LD_RorM8(); uint8_t regv = (m.reg < 4) ? (uint8_t)R32(m.reg) : (uint8_t)(R32(m.reg - 4) >> 8); alu_sub8(regv, v, 0); break; }
+    case 0x3D: alu_sub32(R32(EAXi), m32_ld32(t_cpu32.eip), 0); t_cpu32.eip += 4; break;
+    case 0x83: { /* grp1 imm8 sign-extended (sub = REG field, imm8 follows) */
+        NEEDM(); uint8_t sub = (uint8_t)m.reg;
+        int32_t imm = (int8_t)m32_ld8(t_cpu32.eip); t_cpu32.eip++;
+        uint32_t v = LD_RorM32(), r2 = v;
+        switch (sub & 7) {
+        case 0: r2 = alu_add32(v, (uint32_t)imm, 0); break;
+        case 1: r2 = alu_logic32(v | (uint32_t)imm); break;
+        case 2: r2 = alu_add32(v, (uint32_t)imm, f_get(F_CF)); break;
+        case 3: r2 = alu_sub32(v, (uint32_t)imm, f_get(F_CF)); break;
+        case 4: r2 = alu_logic32(v & (uint32_t)imm); break;
+        case 5: r2 = alu_sub32(v, (uint32_t)imm, 0); break;
+        case 6: r2 = alu_logic32(v ^ (uint32_t)imm); break;
+        case 7: alu_sub32(v, (uint32_t)imm, 0); r2 = v; break;
+        }
+        if ((sub & 7) != 7) ST_RorM32(r2);
+        break; }
+    case 0x81: { /* grp1 imm32 (sub = REG field, imm32 follows) */
+        NEEDM(); uint8_t sub = (uint8_t)m.reg;
+        uint32_t imm = m32_ld32(t_cpu32.eip); t_cpu32.eip += 4;
+        uint32_t v = LD_RorM32(), r2 = v;
+        switch (sub & 7) {
+        case 0: r2 = alu_add32(v, imm, 0); break;
+        case 1: r2 = alu_logic32(v | imm); break;
+        case 2: r2 = alu_add32(v, imm, f_get(F_CF)); break;
+        case 3: r2 = alu_sub32(v, imm, f_get(F_CF)); break;
+        case 4: r2 = alu_logic32(v & imm); break;
+        case 5: r2 = alu_sub32(v, imm, 0); break;
+        case 6: r2 = alu_logic32(v ^ imm); break;
+        case 7: alu_sub32(v, imm, 0); r2 = v; break;
+        }
+        if ((sub & 7) != 7) ST_RorM32(r2);
+        break; }
+    case 0x80: { /* grp1 imm8 byte (sub = REG field, imm8 follows) */
+        NEEDM(); uint8_t sub = (uint8_t)m.reg;
+        uint8_t imm = m32_ld8(t_cpu32.eip); t_cpu32.eip++;
+        uint8_t v = LD_RorM8(), r2 = v;
+        switch (sub & 7) {
+        case 0: r2 = alu_add8(v, imm, 0); break;
+        case 1: r2 = alu_logic8(v | imm); break;
+        case 2: r2 = alu_add8(v, imm, f_get(F_CF)); break;
+        case 3: r2 = alu_sub8(v, imm, f_get(F_CF)); break;
+        case 4: r2 = alu_logic8(v & imm); break;
+        case 5: r2 = alu_sub8(v, imm, 0); break;
+        case 6: r2 = alu_logic8(v ^ imm); break;
+        case 7: alu_sub8(v, imm, 0); r2 = v; break;
+        }
+        if ((sub & 7) != 7) ST_RorM8(r2);
+        break; }
+    /* ---- inc/dec r/m and reg ---- */
+    case 0xFF: {
+        NEEDM(); uint8_t sub = m.reg;
+        switch (sub) {
+        case 0: { uint32_t v = LD_RorM32(); ST_RorM32(alu_inc32(v)); break; }
+        case 1: { uint32_t v = LD_RorM32(); ST_RorM32(alu_dec32(v)); break; }
+        case 2: { uint32_t t = LD_RorM32(); m32_push(t_cpu32.eip); t_cpu32.eip = t; break; } /* CALL r/m */
+        case 3: { /* CALL FAR m16:32 — v1 loud abort */
+            cpu32_fatal("CALL FAR m16:32 unsupported", op, t_cpu32.eip); break; }
+        case 4: { uint32_t t = LD_RorM32(); t_cpu32.eip = t; break; } /* JMP r/m */
+        case 5: cpu32_fatal("JMP FAR m16:32 unsupported", op, t_cpu32.eip); break;
+        case 6: { uint32_t v = LD_RorM32(); m32_push(v); break; } /* PUSH r/m */
+        case 7: cpu32_fatal("grp5 /7 undefined", op, t_cpu32.eip); break;
+        }
+        break; }
+    case 0xFE: {
+        NEEDM(); uint8_t sub = m.reg;
+        if (sub == 0) { uint8_t v = LD_RorM8(); ST_RorM8(alu_add8(v, 1, 0)); }
+        else if (sub == 1) { uint8_t v = LD_RorM8(); ST_RorM8(alu_sub8(v, 1, 0)); }
+        else cpu32_fatal("grp4 /r unsupported", op, t_cpu32.eip);
+        break; }
+    case 0x40: case 0x41: case 0x42: case 0x43: case 0x44: case 0x45: case 0x46: case 0x47:
+        R32(op & 7) = alu_inc32(R32(op & 7)); break;
+    case 0x48: case 0x49: case 0x4A: case 0x4B: case 0x4C: case 0x4D: case 0x4E: case 0x4F:
+        R32(op & 7) = alu_dec32(R32(op & 7)); break;
+    /* ---- push/pop ---- */
+    case 0x50: case 0x51: case 0x52: case 0x53: case 0x55: case 0x56: case 0x57:
+        m32_push(R32(op & 7)); break;
+    case 0x54: m32_push(R32(ESPi)); break; /* push esp pushes pre-increment value */
+    case 0x58: case 0x59: case 0x5A: case 0x5B: case 0x5C: case 0x5D: case 0x5E: case 0x5F:
+        R32(op & 7) = m32_pop(); break;
+    case 0x60: { uint32_t orig_esp = R32(ESPi);
+        for (int i = 0; i < 8; i++) m32_push(i == ESPi ? orig_esp : R32(i)); break; } /* pushad */
+    case 0x61: { for (int i = 7; i >= 0; i--) R32(i) = m32_pop(); break; } /* popad */
+    case 0x9C: m32_push(t_cpu32.eflags); break; /* pushfd */
+    case 0x9D: t_cpu32.eflags = m32_pop() | 0x2; break; /* popfd */
+    case 0x68: m32_push(m32_ld32(t_cpu32.eip)); t_cpu32.eip += 4; break;
+    case 0x6A: m32_push((uint32_t)(int32_t)(int8_t)m32_ld8(t_cpu32.eip)); t_cpu32.eip++; break;
+    case 0x8F: { NEEDM(); uint32_t v = m32_pop(); ST_RorM32(v); break; } /* pop r/m (ea computed BEFORE pop in real ISA: handled by decode-then-pop here — decode first) */
+    /* ---- mov family ---- */
+    case 0x89: { NEEDM(); ST_RorM32(R32(m.reg)); break; }
+    case 0x8B: { NEEDM(); R32(m.reg) = LD_RorM32(); break; }
+    case 0x88: { NEEDM(); uint8_t v = (m.reg < 4) ? (uint8_t)R32(m.reg) : (uint8_t)(R32(m.reg - 4) >> 8); ST_RorM8(v); break; }
+    case 0x8A: { NEEDM(); uint8_t v = LD_RorM8(); if (m.reg < 4) R32(m.reg) = (R32(m.reg) & 0xFFFFFF00u) | v; else R32(m.reg - 4) = (R32(m.reg - 4) & 0xFFFF00FFu) | ((uint32_t)v << 8); break; }
+    case 0xA1: { uint32_t off = m32_ld32(t_cpu32.eip); t_cpu32.eip += 4; if (g_segreg_ovr == 0) off += t_cpu32.fsbase; R32(EAXi) = m32_ld32(off); break; }
+    case 0xA3: { uint32_t off = m32_ld32(t_cpu32.eip); t_cpu32.eip += 4; if (g_segreg_ovr == 0) off += t_cpu32.fsbase; m32_st32(off, R32(EAXi)); break; }
+    case 0xA0: { uint32_t off = m32_ld32(t_cpu32.eip); t_cpu32.eip += 4; if (g_segreg_ovr == 0) off += t_cpu32.fsbase; uint8_t v = m32_ld8(off); R32(EAXi) = (R32(EAXi) & 0xFFFFFF00u) | v; break; }
+    case 0xA2: { uint32_t off = m32_ld32(t_cpu32.eip); t_cpu32.eip += 4; if (g_segreg_ovr == 0) off += t_cpu32.fsbase; m32_st8(off, (uint8_t)R32(EAXi)); break; }
+    case 0xB0: case 0xB1: case 0xB2: case 0xB3: case 0xB4: case 0xB5: case 0xB6: case 0xB7: {
+        uint8_t v = m32_ld8(t_cpu32.eip); t_cpu32.eip++;
+        int r8 = op & 7;
+        if (r8 < 4) R32(r8) = (R32(r8) & 0xFFFFFF00u) | v;
+        else R32(r8 - 4) = (R32(r8 - 4) & 0xFFFF00FFu) | ((uint32_t)v << 8);
+        break; }
+    case 0xB8: case 0xB9: case 0xBA: case 0xBB: case 0xBC: case 0xBD: case 0xBE: case 0xBF:
+        R32(op & 7) = m32_ld32(t_cpu32.eip); t_cpu32.eip += 4; break;
+    case 0xC7: { NEEDM(); ST_RorM32(m32_ld32(t_cpu32.eip)); t_cpu32.eip += 4; break; }
+    case 0xC6: { NEEDM(); ST_RorM8(m32_ld8(t_cpu32.eip)); t_cpu32.eip += 1; break; }
+    case 0x8D: { /* LEA r32, m */
+        NEEDM();
+        if (m.is_reg) cpu32_fatal("LEA r,r (invalid)", op, t_cpu32.eip);
+        R32(m.reg) = m.ea;
+        break; }
+    case 0x8C: { NEEDM(); ST_RorM32(0x23); break; } /* mov r/m, Sreg: fake flat data selector */
+    case 0x8E: { NEEDM(); (void)LD_RorM32(); break; } /* mov Sreg, r/m: ignore (flat) */
+    /* ---- movzx / movsx ---- */
+    case 0x0F: {
+        uint8_t op2 = m32_ld8(t_cpu32.eip++);
+        switch (op2) {
+        case 0xB6: { NEEDM(); uint8_t v = LD_RorM8(); R32(m.reg) = v; break; }             /* movzx r32, rm8 */
+        case 0xB7: { NEEDM(); uint16_t v = LD_RorM16(); R32(m.reg) = v; break; }           /* movzx r32, rm16 */
+        case 0xBE: { NEEDM(); uint8_t v = LD_RorM8(); R32(m.reg) = (uint32_t)(int32_t)(int8_t)v; break; } /* movsx */
+        case 0xBF: { NEEDM(); uint16_t v = LD_RorM16(); R32(m.reg) = (uint32_t)(int32_t)(int16_t)v; break; }
+        case 0xAF: { NEEDM(); uint32_t d = LD_RorM32(); /* imul r32, r/m32 */
+            int64_t p = (int64_t)(int32_t)R32(m.reg) * (int64_t)(int32_t)d;
+            R32(m.reg) = (uint32_t)p;
+            int ov = p != (int64_t)(int32_t)p;
+            f_set(F_CF, ov); f_set(F_OF, ov); f_setzsp32(R32(m.reg)); break; }
+        case 0x1F: { NEEDM(); (void)LD_RorM32(); break; } /* NOP multi-byte (hint nop) */
+        case 0x05: cpu32_fatal("syscall", op2, t_cpu32.eip); break;
+        case 0x0B: { fprintf(stderr, "[PE32] ud2 at 0x%x\n", t_cpu32.eip - 2); cpu32_fatal("ud2", op2, t_cpu32.eip); break; }
+        case 0x80: case 0x81: case 0x82: case 0x83: case 0x84: case 0x85: case 0x86: case 0x87:
+        case 0x88: case 0x89: case 0x8A: case 0x8B: case 0x8C: case 0x8D: case 0x8E: case 0x8F: {
+            int32_t rel = (int32_t)m32_ld32(t_cpu32.eip); t_cpu32.eip += 4;
+            if (cond_eval(op2 & 0xF)) t_cpu32.eip = (uint32_t)(int32_t)((int64_t)t_cpu32.eip + rel);
+            break; }
+        case 0x90: case 0x91: case 0x92: case 0x93: case 0x94: case 0x95: case 0x96: case 0x97:
+        case 0x98: case 0x99: case 0x9A: case 0x9B: case 0x9C: case 0x9D: case 0x9E: case 0x9F: {
+            NEEDM(); ST_RorM8(cond_eval(op2 & 0xF) ? 1 : 0); break; } /* setcc */
+        case 0x40: case 0x41: case 0x42: case 0x43: case 0x44: case 0x45: case 0x46: case 0x47:
+        case 0x48: case 0x49: case 0x4A: case 0x4B: case 0x4C: case 0x4D: case 0x4E: case 0x4F: {
+            NEEDM(); if (cond_eval(op2 & 0xF)) R32(m.reg) = LD_RorM32(); break; } /* cmovcc */
+        case 0xA2: { /* CPUID: honest modern-Intel v1 model */
+            uint32_t leaf = R32(EAXi);
+            switch (leaf) {
+            case 0: R32(EAXi) = 1; /* max std leaf */
+                R32(EBXi) = 0x756E6547; R32(EDXi) = 0x49656E69; R32(ECXi) = 0x6C65746E; /* GenuineIntel */
+                break;
+            case 1: R32(EAXi) = 0x00060F63; /* family 6 model 15 stepping 3 */
+                R32(EBXi) = 0x00000800;     /* APIC id 1, clflush 8 */
+                R32(ECXi) = 0x00040441;     /* SSE3|SSSE3|SSE4.1|SSE4.2|POPCNT|hypervisor-lite honest subset */
+                R32(EDXi) = 0x1FEBFBFF;     /* FPU TSC MSR PAE CX8 APIC SEP MTRR CLFSH MMX FXSR SSE SSE2 HTT */
+                break;
+            case 0x80000000u: R32(EAXi) = 0x80000001u; break;
+            case 0x80000001u: R32(EAXi) = 0; R32(EBXi) = 0; R32(ECXi) = 0;
+                R32(EDXi) = 0x20100000u; /* LM (64-bit) + NX-ish honest minimal */
+                break;
+            case 0x80000002u: R32(EAXi) = 0x65746E49; R32(EBXi) = 0x2952286C;
+                R32(ECXi) = 0x726F4320; R32(EDXi) = 0x4D542865; break; /* "Intel(R) Core(TM)..." */
+            case 0x80000003u: R32(EAXi) = 0x37692D20; R32(EBXi) = 0x2D37332D;
+                R32(ECXi) = 0x30303631; R32(EDXi) = 0x20205531; break;
+            case 0x80000004u: R32(EAXi) = 0x20404350; R32(EBXi) = 0x00000000;
+                R32(ECXi) = 0x00000000; R32(EDXi) = 0x00000000; break;
+            default: R32(EAXi) = 0; R32(EBXi) = 0; R32(ECXi) = 0; R32(EDXi) = 0; break;
+            }
+            break; } /* CPUID */
+        case 0xA3: { NEEDM(); uint32_t v = LD_RorM32(); int bit = (R32(m.reg) >> (v & 31)) & 1; f_set(F_CF, bit); break; } /* bt r/m, r */
+        case 0xAB: { NEEDM(); uint32_t v = LD_RorM32(); int bit = (R32(m.reg) >> (v & 31)) & 1; f_set(F_CF, bit); v |= (1u << (R32(m.reg) & 31)); ST_RorM32(v); break; } /* bts */
+        case 0xB3: { NEEDM(); uint32_t v = LD_RorM32(); int bit = (R32(m.reg) >> (v & 31)) & 1; f_set(F_CF, bit); v &= ~(1u << (R32(m.reg) & 31)); ST_RorM32(v); break; } /* btr */
+        case 0xBB: { NEEDM(); uint32_t v = LD_RorM32(); int bit = (R32(m.reg) >> (v & 31)) & 1; f_set(F_CF, bit); v ^= (1u << (R32(m.reg) & 31)); ST_RorM32(v); break; } /* btc */
+        case 0xBC: { NEEDM(); uint32_t v = LD_RorM32(); f_set(F_ZF, v == 0); if (v) { R32(m.reg) = __builtin_ctz(v); f_set(F_CF, 0); } else f_set(F_CF, 1); break; } /* bsf */
+        case 0xBD: { NEEDM(); uint32_t v = LD_RorM32(); f_set(F_ZF, v == 0); if (v) { R32(m.reg) = 31 - __builtin_clz(v); f_set(F_CF, 0); } else f_set(F_CF, 1); break; } /* bsr */
+        case 0xC0: { NEEDM(); uint8_t d = LD_RorM8(); uint8_t s = (m.reg < 4) ? (uint8_t)R32(m.reg) : (uint8_t)(R32(m.reg - 4) >> 8); uint8_t sum = alu_add8(d, s, 0); ST_RorM8(sum); if (m.reg < 4) R32(m.reg) = (R32(m.reg) & 0xFFFFFF00u) | d; else R32(m.reg - 4) = (R32(m.reg - 4) & 0xFFFF00FFu) | ((uint32_t)d << 8); break; } /* xadd 8 */
+        case 0xC1: { NEEDM(); uint32_t d = LD_RorM32(); uint32_t s = R32(m.reg); ST_RorM32(alu_add32(d, s, 0)); R32(m.reg) = d; break; } /* xadd 32 */
+        case 0xB0: { NEEDM(); uint8_t d = LD_RorM8(); uint8_t s = (m.reg < 4) ? (uint8_t)R32(m.reg) : (uint8_t)(R32(m.reg - 4) >> 8); uint8_t r2 = alu_sub8(d, s, 0); ST_RorM8(r2); break; } /* cmpxchg8 simplified (no cmp first) */
+        case 0xB1: { NEEDM(); uint32_t d = LD_RorM32(); uint32_t s = R32(m.reg); ST_RorM32(alu_sub32(d, s, 0)); break; } /* cmpxchg32 simplified */
+        case 0xAE: { NEEDM(); if (m.reg == 5 || m.reg == 3) { /* lfence/mfence */ break; } cpu32_fatal("0F AE /r", op2, t_cpu32.eip); break; }
+        /* ---- SSE2 scalar subset (prefix-dependent) ---- */
+        case 0x10: case 0x11: case 0x28: case 0x29: case 0x2A: case 0x2C: case 0x2D:
+        case 0x2E: case 0x2F: case 0x51: case 0x54: case 0x55: case 0x56: case 0x57:
+        case 0x58: case 0x59: case 0x5A: case 0x5C: case 0x5D: case 0x5E: case 0x5F:
+        case 0x12: case 0x13: case 0x14: case 0x15: case 0x16: case 0x17:
+        case 0x6E: case 0x7E: case 0xD6: case 0xEF: {
+            uint8_t pfx = arep ? 0xF2 : (frep ? 0xF3 : (o32 ? 0x00 : 0x66));
+            if (cpu32_sse2(pfx, op2) != 0) cpu32_fatal("SSE2 op failed", op2, t_cpu32.eip - 1);
+            break; }
+        case 0x38: case 0x3A: cpu32_fatal("SSE3+ extension op", op2, t_cpu32.eip); break;
+        default: cpu32_fatal("0F two-byte op not implemented", op2, t_cpu32.eip - 1); break;
+        }
+        break; }
+    default:
+        return cpu32_step2(op, o32, arep, frep); /* SW-1281: second dispatch plane */
+    }
+    g_cpu32_steps++;
+    if (g_cpu32_exit_req) return -1;
+    return 0;
+}
+
+
+/* continuation of the opcode dispatch: control flow, shifts, grp3,
+ * string ops, flags, x87 (Intel-accurate mod=3 map), SSE2 escape —
+ * called from cpu32_step for opcodes the first switch does not claim. */
+static int cpu32_step2(uint8_t op, int o32, int arep, int frep) {
+    ModRM m; int have_m = 0;
+#define NEEDM2() do { if (!have_m) { modrm_decode(&m); modrm_apply_seg(&m); have_m = 1; } } while (0)
+#define R32b(i) (t_cpu32.r[i])
+#define LD32M() (m.is_reg ? R32b(m.rm) : m32_ld32(m.ea))
+#define ST32M(v) do { if (m.is_reg) R32b(m.rm) = (v); else m32_st32(m.ea, (v)); } while (0)
+#define LD16M() (m.is_reg ? (uint16_t)(R32b(m.rm) & 0xFFFF) : m32_ld16(m.ea))
+#define ST16M(v) do { if (m.is_reg) R32b(m.rm) = ((R32b(m.rm) & 0xFFFF0000u) | (uint32_t)(uint16_t)(v)); else m32_st16(m.ea, (v)); } while (0)
+#define LD8M()  (m.is_reg ? (uint8_t)(R32b(m.rm & 7) & 0xFF) : m32_ld8(m.ea))
+#define ST8M(v) do { if (m.is_reg) { \
+        if (m.rm < 4) R32b(m.rm) = (R32b(m.rm) & 0xFFFFFF00u) | (uint32_t)(v); \
+        else R32b(m.rm - 4) = (R32b(m.rm - 4) & 0xFFFF00FFu) | ((uint32_t)(v) << 8); \
+    } else m32_st8(m.ea, (v)); } while (0)
+
+    switch (op) {
+    /* ---- test ---- */
+    case 0x85: { NEEDM2(); alu_logic32(LD32M() & R32b(m.reg)); break; }
+    case 0x84: { NEEDM2(); alu_logic8(LD8M() & (uint8_t)R32b(m.reg & 7)); break; }
+    case 0xA9: { alu_logic32(R32b(EAXi) & m32_ld32(t_cpu32.eip)); t_cpu32.eip += 4; break; }
+    case 0xA8: { alu_logic8((uint8_t)R32b(EAXi) & m32_ld8(t_cpu32.eip)); t_cpu32.eip++; break; }
+    /* ---- grp3 (F6/F7) ---- */
+    case 0xF7: { NEEDM2(); uint8_t sub = m.reg;
+        switch (sub) {
+        case 0: case 1: { uint32_t v = LD32M(); alu_logic32(v & m32_ld32(t_cpu32.eip)); t_cpu32.eip += 4; break; }
+        case 2: { uint32_t v = LD32M(); ST32M(~v); break; }
+        case 3: { uint32_t v = LD32M(); ST32M(alu_sub32(0, v, 0)); break; }
+        case 4: { uint32_t v = LD32M(); uint64_t p = (uint64_t)R32b(EAXi) * v;
+            R32b(EAXi) = (uint32_t)p; R32b(EDXi) = (uint32_t)(p >> 32);
+            f_set(F_CF, R32b(EDXi) != 0); f_set(F_OF, R32b(EDXi) != 0); f_setzsp32(R32b(EAXi)); break; }
+        case 5: { uint32_t v = LD32M(); int64_t p = (int64_t)(int32_t)R32b(EAXi) * (int64_t)(int32_t)v;
+            R32b(EAXi) = (uint32_t)(int64_t)p; R32b(EDXi) = (uint32_t)(((uint64_t)p) >> 32);
+            int ov = p != (int64_t)(int32_t)(uint32_t)p; f_set(F_CF, ov); f_set(F_OF, ov); break; }
+        case 6: { uint32_t v = LD32M();
+            if (!v) cpu32_fatal("div by 0", op, t_cpu32.eip);
+            uint64_t nn = ((uint64_t)R32b(EDXi) << 32) | R32b(EAXi);
+            if (nn / v > 0xFFFFFFFFull) cpu32_fatal("div overflow", op, t_cpu32.eip);
+            R32b(EAXi) = (uint32_t)(nn / v); R32b(EDXi) = (uint32_t)(nn % v); break; }
+        case 7: { uint32_t v = LD32M();
+            if (!v) cpu32_fatal("idiv by 0", op, t_cpu32.eip);
+            int64_t nn = ((int64_t)(int32_t)R32b(EDXi) << 32) | (uint32_t)R32b(EAXi);
+            int64_t q = nn / (int32_t)v;
+            if (q > 2147483647ll || q < -2147483648ll) cpu32_fatal("idiv overflow", op, t_cpu32.eip);
+            R32b(EAXi) = (uint32_t)(int32_t)q; R32b(EDXi) = (uint32_t)(int32_t)(nn % (int32_t)v); break; }
+        } break; }
+    case 0xF6: { NEEDM2(); uint8_t sub = m.reg;
+        switch (sub) {
+        case 0: case 1: { uint8_t v = LD8M(); alu_logic8(v & m32_ld8(t_cpu32.eip)); t_cpu32.eip++; break; }
+        case 2: { uint8_t v = LD8M(); ST8M(~v); break; }
+        case 3: { uint8_t v = LD8M(); ST8M(alu_sub8(0, v, 0)); break; }
+        case 4: { uint8_t v = LD8M(); uint16_t p = (uint16_t)((uint8_t)R32b(EAXi) * v);
+            R32b(EAXi) = (R32b(EAXi) & 0xFFFF0000u) | p;
+            f_set(F_CF, (p >> 8) != 0); f_set(F_OF, (p >> 8) != 0); break; }
+        case 5: { uint8_t v = LD8M(); int16_t p = (int16_t)((int8_t)(uint8_t)R32b(EAXi) * (int8_t)v);
+            R32b(EAXi) = (R32b(EAXi) & 0xFFFF0000u) | (uint16_t)p; break; }
+        case 6: { uint8_t v = LD8M(); uint16_t nn = (uint16_t)R32b(EAXi);
+            if (!v) cpu32_fatal("div8 by 0", op, t_cpu32.eip);
+            R32b(EAXi) = (R32b(EAXi) & 0xFFFF0000u) | ((uint32_t)(uint8_t)(nn % v) << 8) | (uint8_t)(nn / v); break; }
+        case 7: { uint8_t v = LD8M(); int16_t nn = (int16_t)R32b(EAXi);
+            if (!v) cpu32_fatal("idiv8 by 0", op, t_cpu32.eip);
+            R32b(EAXi) = (R32b(EAXi) & 0xFFFF0000u) | ((uint32_t)(uint8_t)(int8_t)(nn % (int8_t)v) << 8) | (uint8_t)(int8_t)(nn / (int8_t)v); break; }
+        } break; }
+    /* ---- imul r32, r/m32, imm ---- */
+    case 0x69: { NEEDM2(); uint32_t v = LD32M(); int32_t imm = (int32_t)m32_ld32(t_cpu32.eip); t_cpu32.eip += 4;
+        int64_t p = (int64_t)(int32_t)v * (int64_t)imm; R32b(m.reg) = (uint32_t)p;
+        int ov = p != (int64_t)(int32_t)p; f_set(F_CF, ov); f_set(F_OF, ov); break; }
+    case 0x6B: { NEEDM2(); uint32_t v = LD32M(); int32_t imm = (int8_t)m32_ld8(t_cpu32.eip); t_cpu32.eip++;
+        int64_t p = (int64_t)(int32_t)v * (int64_t)imm; R32b(m.reg) = (uint32_t)p;
+        int ov = p != (int64_t)(int32_t)p; f_set(F_CF, ov); f_set(F_OF, ov); break; }
+    /* ---- shift group ---- */
+    case 0xC1: { NEEDM2(); uint8_t sub = m.reg; uint32_t c = m32_ld8(t_cpu32.eip) & 31; t_cpu32.eip++;
+        if (!o32) { uint16_t v = LD16M(), r2 = v;
+            switch (sub) {
+            case 0: r2 = alu_shl16(v, c); break; case 1: case 5: r2 = alu_shr16(v, c); break;
+            case 7: r2 = alu_sar16(v, c); break;
+            default: cpu32_fatal("shift16 imm /r", op, t_cpu32.eip); break; }
+            ST16M(r2); break; }
+        uint32_t v = LD32M(), r2 = v;
+        switch (sub) {
+        case 0: case 4: r2 = alu_shl32(v, c); break; case 1: case 5: r2 = alu_shr32(v, c); break;
+        case 7: r2 = alu_sar32(v, c); break; case 6: r2 = alu_rol32(v, c); break;
+        case 3: r2 = alu_rcr32(v, c); break; case 2: r2 = alu_rcl32(v, c); break; }
+        ST32M(r2); break; }
+    case 0xD1: { NEEDM2(); uint8_t sub = m.reg;
+        if (!o32) { uint16_t v = LD16M(), r2 = v;
+            switch (sub) {
+            case 0: r2 = alu_shl16(v, 1); break; case 1: case 5: r2 = alu_shr16(v, 1); break;
+            case 7: r2 = alu_sar16(v, 1); break;
+            default: cpu32_fatal("shift16 /1", op, t_cpu32.eip); break; }
+            ST16M(r2); break; }
+        uint32_t v = LD32M(), r2 = v;
+        switch (sub) {
+        case 0: case 4: r2 = alu_shl32(v, 1); break; case 1: case 5: r2 = alu_shr32(v, 1); break;
+        case 7: r2 = alu_sar32(v, 1); break; case 6: r2 = alu_rol32(v, 1); break;
+        case 3: r2 = alu_rcr32(v, 1); break; case 2: r2 = alu_rcl32(v, 1); break; }
+        ST32M(r2); break; }
+    case 0xD3: { NEEDM2(); uint8_t sub = m.reg; uint32_t c = R32b(ECXi) & 31;
+        if (!o32) { uint16_t v = LD16M(), r2 = v;
+            switch (sub) {
+            case 0: r2 = alu_shl16(v, c); break; case 1: case 5: r2 = alu_shr16(v, c); break;
+            case 7: r2 = alu_sar16(v, c); break;
+            default: cpu32_fatal("shift16 cl /r", op, t_cpu32.eip); break; }
+            ST16M(r2); break; }
+        uint32_t v = LD32M(), r2 = v;
+        switch (sub) {
+        case 0: case 4: r2 = alu_shl32(v, c); break; case 1: case 5: r2 = alu_shr32(v, c); break;
+        case 7: r2 = alu_sar32(v, c); break; case 6: r2 = alu_rol32(v, c); break;
+        case 3: r2 = alu_rcr32(v, c); break; case 2: r2 = alu_rcl32(v, c); break; }
+        ST32M(r2); break; }
+    case 0xC0: { NEEDM2(); uint8_t sub = m.reg; uint32_t c = m32_ld8(t_cpu32.eip) & 31; t_cpu32.eip++;
+        uint8_t v = LD8M(), r2 = v;
+        switch (sub) {
+        case 0: case 4: r2 = alu_shl8(v, c); break; case 1: case 5: r2 = alu_shr8(v, c); break;
+        case 7: r2 = alu_sar8(v, c); break;
+        case 6: { c &= 7; if (c) { f_set(F_CF, (v >> (8 - c)) & 1); v = (uint8_t)((v << c) | (v >> (8 - c))); f_set(F_CF, v & 1); } r2 = v; break; }
+        default: cpu32_fatal("shift8 imm /r", op, t_cpu32.eip); break; }
+        ST8M(r2); break; }
+    case 0xD0: { NEEDM2(); uint8_t sub = m.reg; uint8_t v = LD8M(), r2 = v;
+        switch (sub) {
+        case 0: case 4: r2 = alu_shl8(v, 1); break; case 1: case 5: r2 = alu_shr8(v, 1); break;
+        case 7: r2 = alu_sar8(v, 1); break;
+        default: cpu32_fatal("shift8 /1", op, t_cpu32.eip); break; }
+        ST8M(r2); break; }
+    case 0xD2: { NEEDM2(); uint8_t sub = m.reg; uint32_t c = R32b(ECXi) & 31; uint8_t v = LD8M(), r2 = v;
+        switch (sub) {
+        case 0: case 4: r2 = alu_shl8(v, c); break; case 1: case 5: r2 = alu_shr8(v, c); break;
+        case 7: r2 = alu_sar8(v, c); break;
+        default: cpu32_fatal("shift8 cl /r", op, t_cpu32.eip); break; }
+        ST8M(r2); break; }
+    case 0x0F + 0x100: break; /* dead guard (real 0F handled in step1) */
+    /* ---- shld/shrd (0F A4/A5/AC/AD handled in step1's 0F switch) ---- */
+    /* ---- control flow ---- */
+    case 0xE8: { int32_t rel = (int32_t)m32_ld32(t_cpu32.eip); t_cpu32.eip += 4;
+        m32_push(t_cpu32.eip); t_cpu32.eip = (uint32_t)(int64_t)((int64_t)t_cpu32.eip + rel); break; }
+    case 0xE9: { int32_t rel = (int32_t)m32_ld32(t_cpu32.eip); t_cpu32.eip += 4;
+        t_cpu32.eip = (uint32_t)(int64_t)((int64_t)t_cpu32.eip + rel); break; }
+    case 0xEB: { int8_t rel = (int8_t)m32_ld8(t_cpu32.eip); t_cpu32.eip++;
+        t_cpu32.eip = (uint32_t)(int64_t)((int64_t)t_cpu32.eip + rel); break; }
+    case 0x70: case 0x71: case 0x72: case 0x73: case 0x74: case 0x75: case 0x76: case 0x77:
+    case 0x78: case 0x79: case 0x7A: case 0x7B: case 0x7C: case 0x7D: case 0x7E: case 0x7F: {
+        int8_t rel = (int8_t)m32_ld8(t_cpu32.eip); t_cpu32.eip++;
+        if (cond_eval(op & 0xF)) t_cpu32.eip = (uint32_t)(int64_t)((int64_t)t_cpu32.eip + rel);
+        break; }
+    case 0xC3: t_cpu32.eip = m32_pop(); break;
+    case 0xC2: { uint16_t n = m32_ld16(t_cpu32.eip); t_cpu32.eip += 2;
+        uint32_t t = m32_pop(); t_cpu32.r[ESPi] += n; t_cpu32.eip = t; break; }
+    case 0xC9: { t_cpu32.r[ESPi] = R32b(EBPi); R32b(EBPi) = m32_pop(); break; }
+    case 0xC8: { uint16_t sz = m32_ld16(t_cpu32.eip); t_cpu32.eip += 2; t_cpu32.eip++;
+        m32_push(R32b(EBPi)); uint32_t fp = R32b(ESPi);
+        if (sz) R32b(ESPi) -= sz; R32b(EBPi) = fp; break; }
+    case 0x90: break; /* nop */
+    case 0x98: { if (o32) R32b(EAXi) = (uint32_t)(int32_t)(int16_t)(R32b(EAXi) & 0xFFFF);
+                 else R32b(EAXi) = (R32b(EAXi) & 0xFFFF0000u) | (uint16_t)(int8_t)(uint8_t)R32b(EAXi); break; }
+    case 0x99: { if (o32) R32b(EDXi) = ((int32_t)R32b(EAXi) < 0) ? 0xFFFFFFFFu : 0;
+                 else R32b(EAXi) = (R32b(EAXi) & 0xFFFF0000u) | ((R32b(EAXi) & 0x8000u) ? 0xFFFFu : 0u); break; }
+    case 0x9E: { uint8_t ah = (uint8_t)(R32b(EAXi) >> 8);
+        t_cpu32.eflags = (t_cpu32.eflags & ~0xD5u) | (ah & 0xD5u); break; }
+    case 0x9F: { uint8_t f = (uint8_t)(t_cpu32.eflags & 0xD5u) | 0x02;
+        R32b(EAXi) = (R32b(EAXi) & 0xFFFF00FFu) | ((uint32_t)f << 8); break; }
+    case 0xF5: t_cpu32.eflags ^= F_CF; break;
+    case 0xF8: f_set(F_CF, 0); break;
+    case 0xF9: f_set(F_CF, 1); break;
+    case 0xFC: f_set(F_DF, 0); break;
+    case 0xFD: f_set(F_DF, 1); break;
+    case 0xFA: case 0xFB: break;
+    case 0xE0: case 0xE1: case 0xE2: { int8_t rel = (int8_t)m32_ld8(t_cpu32.eip); t_cpu32.eip++;
+        uint32_t c = --R32b(ECXi);
+        int taken = (op == 0xE2) ? (c != 0) : (op == 0xE0) ? (c != 0 && !f_get(F_ZF)) : (c != 0 && f_get(F_ZF));
+        if (taken) t_cpu32.eip = (uint32_t)(int64_t)((int64_t)t_cpu32.eip + rel); break; }
+    case 0xE3: { int8_t rel = (int8_t)m32_ld8(t_cpu32.eip); t_cpu32.eip++;
+        if (R32b(ECXi) == 0) t_cpu32.eip = (uint32_t)(int64_t)((int64_t)t_cpu32.eip + rel); break; }
+    case 0x91: case 0x92: case 0x93: case 0x94: case 0x95: case 0x96: case 0x97: {
+        uint32_t t = R32b(EAXi); R32b(EAXi) = R32b(op & 7); R32b(op & 7) = t; break; }
+    case 0x87: { NEEDM2(); uint32_t t = LD32M(); ST32M(R32b(m.reg)); R32b(m.reg) = t; break; }
+    case 0x86: { NEEDM2(); uint8_t d = LD8M();
+        uint8_t s = (m.reg < 4) ? (uint8_t)R32b(m.reg) : (uint8_t)(R32b(m.reg - 4) >> 8);
+        ST8M(s);
+        if (m.reg < 4) R32b(m.reg) = (R32b(m.reg) & 0xFFFFFF00u) | d;
+        else R32b(m.reg - 4) = (R32b(m.reg - 4) & 0xFFFF00FFu) | ((uint32_t)d << 8); break; }
+    /* ---- string ops (with rep/repe/repne) ---- */
+    case 0xA4: case 0xA5: case 0xA6: case 0xA7: case 0xAA: case 0xAB: case 0xAC: case 0xAD: case 0xAE: case 0xAF: {
+        int w32 = (op & 1);
+        uint32_t sz = w32 ? (o32 ? 4 : 2) : 1;
+        int dir = f_get(F_DF) ? -1 : 1;
+        uint32_t src = R32b(ESIi), dst = R32b(EDIi);
+        if (g_segreg_ovr == 0) src += t_cpu32.fsbase;
+        else if (g_segreg_ovr == 1) src += t_cpu32.gsbase;
+        if ((arep || frep) && R32b(ECXi) == 0) break;
+        uint32_t done = 0;
+        for (;;) {
+            if (arep || frep) {
+                if (R32b(ECXi) == 0) break;
+                R32b(ECXi)--;
+            }
+            switch (op) {
+            case 0xA4: m32_st8(dst, m32_ld8(src)); break;
+            case 0xA5: if (o32) m32_st32(dst, m32_ld32(src)); else m32_st16(dst, m32_ld16(src)); break;
+            case 0xA6: case 0xA7: { uint32_t a = (op == 0xA7) ? (o32 ? m32_ld32(src) : m32_ld16(src)) : m32_ld8(src);
+                                   uint32_t b = (op == 0xA7) ? (o32 ? m32_ld32(dst) : m32_ld16(dst)) : m32_ld8(dst);
+                if (op == 0xA7) { if (o32) alu_sub32(a, b, 0); else alu_sub16((uint16_t)a, (uint16_t)b, 0); }
+                else alu_sub8((uint8_t)a, (uint8_t)b, 0); break; }
+            case 0xAA: m32_st8(dst, (uint8_t)R32b(EAXi)); break;
+            case 0xAB: if (o32) m32_st32(dst, R32b(EAXi)); else m32_st16(dst, (uint16_t)R32b(EAXi)); break;
+            case 0xAC: case 0xAD: { uint32_t v = (op == 0xAD) ? (o32 ? m32_ld32(src) : m32_ld16(src)) : m32_ld8(src);
+                if (op == 0xAD) { if (o32) R32b(EAXi) = v; else R32b(EAXi) = (R32b(EAXi) & 0xFFFF0000u) | (uint16_t)v; }
+                else R32b(EAXi) = (R32b(EAXi) & 0xFFFFFF00u) | (uint8_t)v; break; }
+            case 0xAE: case 0xAF: { uint32_t a = (op == 0xAF) ? (o32 ? m32_ld32(src) : m32_ld16(src)) : m32_ld8(src);
+                if (op == 0xAF) { if (o32) alu_sub32(R32b(EAXi), a, 0); else alu_sub16((uint16_t)R32b(EAXi), (uint16_t)a, 0); }
+                else alu_sub8((uint8_t)R32b(EAXi), (uint8_t)a, 0); break; }
+            }
+            src += dir * sz; dst += dir * sz;
+            if (!(arep || frep)) break;
+            if (op == 0xA6 || op == 0xA7 || op == 0xAE || op == 0xAF) {
+                int z = f_get(F_ZF);
+                if (arep && z) break;
+                if (frep && !z) break;
+            }
+            if (++done > 0x10000000u) cpu32_fatal("rep runaway", op, t_cpu32.eip);
+        }
+        R32b(ESIi) = src; R32b(EDIi) = dst;
+        break; }
+    /* ---- x87 (D8-DF), Intel-accurate mod=3 map ---- */
+    case 0xD8: case 0xD9: case 0xDA: case 0xDB: case 0xDC: case 0xDD: case 0xDE: case 0xDF: {
+        NEEDM2();
+        if (m.mod == 3) {
+            int i = m.rm;
+            switch (op) {
+            case 0xD9:
+                switch (m.reg) {
+                case 0: { double v = fpu_st(i); fpu_push(v); break; }                     /* FLD st(i) */
+                case 1: { double t = fpu_st(0); fpu_setst(0, fpu_st(i)); fpu_setst(i, t); break; } /* FXCH */
+                case 2: if (i == 0) break; /* FNOP */ else cpu32_fatal("x87 D9 D8+", op, t_cpu32.eip); break;
+                case 4:
+                    if (i == 0) fpu_setst(0, -fpu_st(0));                                 /* FCHS */
+                    else if (i == 1) fpu_setst(0, fabs(fpu_st(0)));                       /* FABS */
+                    else if (i == 4) fpu_compare(fpu_st(0), 0.0);                         /* FTST */
+                    else cpu32_fatal("x87 D9 E4+", op, t_cpu32.eip);
+                    break;
+                case 5:
+                    if (i == 0) fpu_push(1.0);                                            /* FLD1 */
+                    else if (i == 1) fpu_push(3.3219280948873623);                        /* FLDL2T */
+                    else if (i == 2) fpu_push(1.4426950408889634);                        /* FLDL2E */
+                    else if (i == 3) fpu_push(3.141592653589793);                         /* FLDPI */
+                    else if (i == 6) fpu_push(0.0);                                       /* FLDZ */
+                    else cpu32_fatal("x87 D9 E8+", op, t_cpu32.eip);
+                    break;
+                case 7:
+                    if (i == 0) { double v = fpu_st(0), r = fmod(v, 1.0); /* FPREM v1 */
+                        double q = trunc(v / 1.0); fpu_setst(0, v - q); (void)r; break; }
+                    if (i == 1) { fpu_setst(0, pow(2.0, fpu_st(0)) - 1.0); break; }       /* F2XM1 */
+                    if (i == 2) { fpu_setst(0, sqrt(fpu_st(0))); break; }                 /* FSQRT */
+                    if (i == 4) { fpu_setst(0, round(fpu_st(0))); break; }                /* FRNDINT */
+                    if (i == 5) { break; }                                                /* FSCALE v1: no-op */
+                    if (i == 6) { fpu_setst(0, sin(fpu_st(0))); break; }                  /* FSIN */
+                    if (i == 7) { fpu_setst(0, cos(fpu_st(0))); break; }                  /* FCOS */
+                    break;
+                default: cpu32_fatal("x87 D9 mod3", op, t_cpu32.eip); break;
+                }
+                break;
+            case 0xD8:
+                switch (m.reg) {
+                case 0: fpu_setst(0, fpu_st(0) + fpu_st(i)); break;
+                case 1: fpu_setst(0, fpu_st(0) * fpu_st(i)); break;
+                case 2: fpu_compare(fpu_st(0), fpu_st(i)); break;
+                case 3: fpu_compare(fpu_st(0), fpu_st(i)); fpu_popv(); break;
+                case 4: fpu_setst(0, fpu_st(0) - fpu_st(i)); break;
+                case 5: fpu_setst(0, fpu_st(i) - fpu_st(0)); break;
+                case 6: fpu_setst(0, fpu_st(0) / fpu_st(i)); break;
+                case 7: fpu_setst(0, fpu_st(i) / fpu_st(0)); break;
+                }
+                break;
+            case 0xDC:
+                switch (m.reg) {
+                case 0: fpu_setst(i, fpu_st(i) + fpu_st(0)); break;
+                case 1: fpu_setst(i, fpu_st(i) * fpu_st(0)); break;
+                case 2: fpu_compare(fpu_st(0), fpu_st(i)); break;
+                case 3: fpu_compare(fpu_st(0), fpu_st(i)); fpu_popv(); break;
+                case 4: fpu_setst(i, fpu_st(i) - fpu_st(0)); break;
+                case 5: fpu_setst(i, fpu_st(0) - fpu_st(i)); break;
+                case 6: fpu_setst(i, fpu_st(i) / fpu_st(0)); break;
+                case 7: fpu_setst(i, fpu_st(0) / fpu_st(i)); break;
+                }
+                break;
+            case 0xDE:
+                if (m.reg == 2 && i == 1) { /* FCOMPP */
+                    fpu_compare(fpu_st(0), fpu_st(1)); fpu_popv(); fpu_popv(); break; }
+                switch (m.reg) {
+                case 0: fpu_setst(i, fpu_st(i) + fpu_st(0)); fpu_popv(); break;   /* FADDP */
+                case 1: fpu_setst(i, fpu_st(i) * fpu_st(0)); fpu_popv(); break;   /* FMULP */
+                case 2: fpu_compare(fpu_st(0), fpu_st(i)); fpu_popv(); break;     /* FCOMP */
+                case 4: fpu_setst(i, fpu_st(0) - fpu_st(i)); fpu_popv(); break;   /* FSUBRP */
+                case 5: fpu_setst(i, fpu_st(i) - fpu_st(0)); fpu_popv(); break;   /* FSUBP */
+                case 6: fpu_setst(i, fpu_st(0) / fpu_st(i)); fpu_popv(); break;   /* FDIVRP */
+                case 7: fpu_setst(i, fpu_st(i) / fpu_st(0)); fpu_popv(); break;   /* FDIVP */
+                default: cpu32_fatal("x87 DE mod3", op, t_cpu32.eip); break;
+                }
+                break;
+            case 0xDD:
+                switch (m.reg) {
+                case 0: break;                                                    /* FFREE */
+                case 2: fpu_setst(i, fpu_st(0)); break;                           /* FST st(i) */
+                case 3: fpu_setst(i, fpu_st(0)); fpu_popv(); break;               /* FSTP st(i) */
+                case 4: fpu_compare(fpu_st(0), fpu_st(i)); break;                 /* FUCOM */
+                case 5: fpu_compare(fpu_st(0), fpu_st(i)); fpu_popv(); break;     /* FUCOMP */
+                default: cpu32_fatal("x87 DD mod3", op, t_cpu32.eip); break;
+                }
+                break;
+            case 0xDB:
+                if (m.reg == 7 && i == 2) break;                                  /* FNCLEX */
+                if (m.reg == 7 && i == 3) { t_cpu32.ftop = 0; t_cpu32.fsw = 0; break; } /* FINIT */
+                cpu32_fatal("x87 DB mod3", op, t_cpu32.eip); break;
+            case 0xDA:
+                if (m.reg == 5 && i == 1) { /* FUCOMIP (DA E9) */
+                    fpu_compare(fpu_st(0), fpu_st(1)); fpu_popv(); break; }
+                cpu32_fatal("x87 DA mod3", op, t_cpu32.eip); break;
+            case 0xDF:
+                if (m.reg == 7 && i == 0) { /* FNSTSW AX */
+                    uint16_t sw = (uint16_t)((t_cpu32.fsw & ~0x3800u) | (t_cpu32.ftop << 11));
+                    R32b(EAXi) = (R32b(EAXi) & 0xFFFF0000u) | sw; break; }
+                cpu32_fatal("x87 DF mod3", op, t_cpu32.eip); break;
+            }
+        } else {
+            switch (op) {
+            case 0xD9:
+                switch (m.reg) {
+                case 0: fpu_push((double)mdl_f32(m.ea)); break;                   /* FLD m32 */
+                case 2: m32_st32(m.ea, mdl_f32_from(fpu_st(0))); break;           /* FST m32 */
+                case 3: m32_st32(m.ea, mdl_f32_from(fpu_st(0))); fpu_popv(); break; /* FSTP m32 */
+                case 4: break;                                                    /* FLDENV stub */
+                case 5: t_cpu32.fcw = m32_ld16(m.ea); break;                      /* FLDCW */
+                case 6: break;                                                    /* FNSTENV stub */
+                case 7: m32_st16(m.ea, t_cpu32.fcw); break;                       /* FNSTCW */
+                }
+                break;
+            case 0xD8: {
+                float mv = mdl_f32(m.ea);
+                switch (m.reg) {
+                case 0: fpu_setst(0, fpu_st(0) + mv); break;
+                case 1: fpu_setst(0, fpu_st(0) * mv); break;
+                case 2: fpu_compare(fpu_st(0), mv); break;
+                case 3: fpu_compare(fpu_st(0), mv); fpu_popv(); break;
+                case 4: fpu_setst(0, fpu_st(0) - mv); break;
+                case 5: fpu_setst(0, mv - fpu_st(0)); break;
+                case 6: fpu_setst(0, fpu_st(0) / mv); break;
+                case 7: fpu_setst(0, mv / fpu_st(0)); break;
+                }
+                break; }
+            case 0xDC: {
+                double mv = m32_ld64(m.ea);
+                switch (m.reg) {
+                case 0: fpu_setst(0, fpu_st(0) + mv); break;
+                case 1: fpu_setst(0, fpu_st(0) * mv); break;
+                case 2: fpu_compare(fpu_st(0), mv); break;
+                case 3: fpu_compare(fpu_st(0), mv); fpu_popv(); break;
+                case 4: fpu_setst(0, fpu_st(0) - mv); break;
+                case 5: fpu_setst(0, mv - fpu_st(0)); break;
+                case 6: fpu_setst(0, fpu_st(0) / mv); break;
+                case 7: fpu_setst(0, mv / fpu_st(0)); break;
+                }
+                break; }
+            case 0xDD:
+                switch (m.reg) {
+                case 0: fpu_push(m32_ld64(m.ea)); break;                          /* FLD m64 */
+                case 2: m32_st64(m.ea, fpu_st(0)); break;                         /* FST m64 */
+                case 3: m32_st64(m.ea, fpu_st(0)); fpu_popv(); break;             /* FSTP m64 */
+                case 7: m32_st16(m.ea, (uint16_t)((t_cpu32.fsw & ~0x3800u) | (t_cpu32.ftop << 11))); break; /* FNSTSW m16 */
+                default: cpu32_fatal("x87 DD m", op, t_cpu32.eip); break;
+                }
+                break;
+            case 0xDB: /* int32 / m80 */
+                switch (m.reg) {
+                case 0: fpu_push((double)(int32_t)m32_ld32(m.ea)); break;         /* FILD m32 */
+                case 2: m32_st32(m.ea, (uint32_t)(int32_t)fpu_st(0)); break;      /* FIST m32 */
+                case 3: m32_st32(m.ea, (uint32_t)(int32_t)fpu_st(0)); fpu_popv(); break; /* FISTP m32 */
+                case 5: { /* FLD m80 — decode 10-byte extended into double */
+                    uint8_t* b = m32p(m.ea);
+                    uint16_t e15 = (uint16_t)(b[8] | (b[9] << 8));
+                    uint64_t mant = (uint64_t)b[0] | ((uint64_t)b[1] << 8) | ((uint64_t)b[2] << 16) |
+                                    ((uint64_t)b[3] << 24) | ((uint64_t)b[4] << 32) | ((uint64_t)b[5] << 40) |
+                                    ((uint64_t)b[6] << 48) | ((uint64_t)b[7] << 56);
+                    int sign = (e15 >> 15) & 1;
+                    int exp = (e15 & 0x7FFF) - 16383 + 1023;
+                    double v;
+                    if ((e15 & 0x7FFF) == 0 && mant == 0) v = 0.0;
+                    else if (exp <= 0) v = ldexp((double)mant, exp - 63);
+                    else if (exp >= 0x7FF) v = 1.0 / 0.0;
+                    else v = ldexp((double)(mant | (1ULL << 63)), exp - 63 - 52);
+                    if (sign) v = -v;
+                    fpu_push(v); break; }
+                case 7: mdl_st_f80(m.ea, fpu_st(0)); fpu_popv(); break;           /* FSTP m80 */
+                default: cpu32_fatal("x87 DB m", op, t_cpu32.eip); break;
+                }
+                break;
+            case 0xDA: { int32_t mv = (int32_t)m32_ld32(m.ea);                    /* int32 arith */
+                switch (m.reg) {
+                case 0: fpu_setst(0, fpu_st(0) + mv); break;                      /* FIADD */
+                case 1: fpu_setst(0, fpu_st(0) * mv); break;                      /* FIMUL */
+                case 2: fpu_compare(fpu_st(0), mv); break;                        /* FICOM */
+                case 3: fpu_compare(fpu_st(0), mv); fpu_popv(); break;            /* FICOMP */
+                case 4: fpu_setst(0, fpu_st(0) - mv); break;                      /* FISUB */
+                case 5: fpu_setst(0, mv - fpu_st(0)); break;                      /* FISUBR */
+                case 6: fpu_setst(0, fpu_st(0) / mv); break;                      /* FIDIV */
+                case 7: fpu_setst(0, mv / fpu_st(0)); break;                      /* FIDIVR */
+                }
+                break; }
+            case 0xDE: { int16_t mv = (int16_t)m32_ld16(m.ea);                    /* int16 arith */
+                switch (m.reg) {
+                case 0: fpu_setst(0, fpu_st(0) + mv); break;
+                case 1: fpu_setst(0, fpu_st(0) * mv); break;
+                case 2: fpu_compare(fpu_st(0), mv); break;
+                case 3: fpu_compare(fpu_st(0), mv); fpu_popv(); break;
+                case 4: fpu_setst(0, fpu_st(0) - mv); break;
+                case 5: fpu_setst(0, mv - fpu_st(0)); break;
+                case 6: fpu_setst(0, fpu_st(0) / mv); break;
+                case 7: fpu_setst(0, mv / fpu_st(0)); break;
+                }
+                break; }
+            case 0xDF:
+                switch (m.reg) {
+                case 0: fpu_push((double)(int16_t)m32_ld16(m.ea)); break;         /* FILD m16 */
+                case 2: m32_st16(m.ea, (uint16_t)(int16_t)fpu_st(0)); break;      /* FIST m16 */
+                case 3: m32_st16(m.ea, (uint16_t)(int16_t)fpu_st(0)); fpu_popv(); break; /* FISTP m16 */
+                case 5: fpu_push(m32_ld64(m.ea)); break;                          /* FILD m64 */
+                case 7: m32_st64(m.ea, (uint64_t)(int64_t)fpu_st(0)); fpu_popv(); break; /* FISTP m64 */
+                default: cpu32_fatal("x87 DF m", op, t_cpu32.eip); break;
+                }
+                break;
+            }
+        }
+        break; }
+    default:
+        cpu32_fatal("opcode not implemented (step2)", op, t_cpu32.eip - 1);
+        break;
+    }
+    g_cpu32_steps++;
+    if (g_cpu32_exit_req) return -1;
+    return 0;
+}
+
+
+/* ---------------- glue helpers ---------------- */
+static float mdl_f32(uint32_t va) { uint32_t b = m32_ld32(va); float f; memcpy(&f, &b, 4); return f; }
+static uint32_t mdl_f32_from(double d) { float f = (float)d; uint32_t b; memcpy(&b, &f, 4); return b; }
+static double mdl_f64_from(double d) { return d; }
+static uint32_t alu_rcl32(uint32_t v, unsigned c) {
+    c &= 31; if (!c) return v;
+    for (unsigned i = 0; i < c; i++) {
+        uint32_t msb = (v >> 31) & 1, cf = (uint32_t)f_get(F_CF);
+        v = (v << 1) | cf; f_set(F_CF, msb);
+    }
+    f_set(F_OF, ((v >> 31) & 1) != f_get(F_CF));
+    return v;
+}
+static uint32_t alu_rcr32(uint32_t v, unsigned c) {
+    c &= 31; if (!c) return v;
+    for (unsigned i = 0; i < c; i++) {
+        uint32_t lsb = v & 1, cf = (uint32_t)f_get(F_CF);
+        v = (v >> 1) | (cf << 31); f_set(F_CF, lsb);
+    }
+    f_set(F_OF, ((v >> 31) ^ (v >> 30)) & 1);
+    return v;
+}
+/* F80 store (10-byte extended) synthesized from a double (v1 precision) */
+static void mdl_st_f80(uint32_t va, double d) {
+    uint8_t buf[10]; memset(buf, 0, 10);
+    uint64_t bits; memcpy(&bits, &d, 8);
+    int sign = (int)(bits >> 63);
+    int exp = (int)((bits >> 52) & 0x7FF);
+    uint64_t mant = bits & 0xFFFFFFFFFFFFFULL;
+    uint32_t mlo = (uint32_t)(mant & 0xFFFFFFFFu);
+    uint32_t mhi = (uint32_t)(mant >> 32);
+    uint16_t e15;
+    if (exp == 0) e15 = (uint16_t)(sign << 15);
+    else if (exp == 0x7FF) e15 = (uint16_t)((sign << 15) | 0x7FFF);
+    else e15 = (uint16_t)((sign << 15) | (uint16_t)(exp - 1023 + 16383));
+    buf[0] = (uint8_t)(mlo & 0xFF); buf[1] = (uint8_t)(mlo >> 8);
+    buf[2] = (uint8_t)(mlo >> 16); buf[3] = (uint8_t)(mlo >> 24);
+    buf[4] = (uint8_t)(mhi & 0xFF); buf[5] = (uint8_t)(mhi >> 8);
+    buf[6] = (uint8_t)(mhi >> 16); buf[7] = (uint8_t)(mhi >> 24);
+    buf[8] = (uint8_t)(e15 & 0xFF); buf[9] = (uint8_t)(e15 >> 8);
+    memcpy(m32p(va), buf, 10);
+}
+
+/* ---------------- SSE2 scalar subset ---------------- */
+/* executed for prefixes F2/F3/66 + 0F + op2. returns 0 handled, -1 fatal. */
+static int cpu32_sse2(uint8_t pfx, uint8_t op2) {
+    ModRM m; modrm_decode(&m); modrm_apply_seg(&m);
+    uint8_t* xr = xmm_ptr(m.reg);
+    switch (op2) {
+    case 0x10: case 0x11: { /* movups/movss/movupd/movsd */
+        int dbl = (pfx == 0x66), sc = (pfx == 0xF2), ss = (pfx == 0xF3);
+        if (op2 == 0x10) {
+            if (m.is_reg) { memcpy(xr, xmm_ptr(m.rm), 16); }
+            else if (sc) { uint64_t v = m32_ld64(m.ea); memcpy(xr, &v, 8); }
+            else if (ss) { uint32_t v = m32_ld32(m.ea); memcpy(xr, &v, 4); }
+            else if (dbl) { uint64_t v = m32_ld64(m.ea); memcpy(xr, &v, 8); }
+            else { for (int i = 0; i < 4; i++) { uint32_t v = m32_ld32(m.ea + 4 * i); memcpy(xr + 4 * i, &v, 4); } }
+        } else {
+            if (m.is_reg) { memcpy(xmm_ptr(m.rm), xr, 16); }
+            else if (ss) { m32_st32(m.ea, *(uint32_t*)xr); }
+            else if (dbl || sc) { m32_st64(m.ea, *(uint64_t*)xr); }
+            else { for (int i = 0; i < 4; i++) m32_st32(m.ea + 4 * i, *(uint32_t*)(xr + 4 * i)); }
+        }
+        return 0; }
+    case 0x12: case 0x13: case 0x16: case 0x17: { /* movlps/movhlps/movhps load+store */
+        if (op2 == 0x13 || op2 == 0x17) { uint64_t v; memcpy(&v, xr, 8);
+            if (m.is_reg) memcpy(xmm_ptr(m.rm), &v, 8); else m32_st64(m.ea, v); }
+        else { uint64_t v;
+            if (m.is_reg) memcpy(&v, xmm_ptr(m.rm), 8); else v = m32_ld64(m.ea);
+            if (op2 == 0x12) memcpy(xr, &v, 8);           /* movlps: low */
+            else memcpy(xr + 8, &v, 8); }                  /* movhps: high */
+        return 0; }
+    case 0x14: case 0x15: { /* unpcklps/unpckhps (v1: 64-bit lane unpack) */
+        uint8_t* xs = m.is_reg ? xmm_ptr(m.rm) : m32p(m.ea);
+        uint8_t tmp[16]; memcpy(tmp, xr, 16);
+        for (int i = 0; i < 2; i++) {
+            if (op2 == 0x14) { memcpy(xr + 8 * i,     tmp + 8 * i, 4); memcpy(xr + 8 * i + 4, xs + 8 * i, 4); }
+            else             { memcpy(xr + 8 * i,     xs + 8 * i + 4, 4); memcpy(xr + 8 * i + 4, tmp + 8 * i + 4, 4); }
+        }
+        return 0; }
+    case 0x28: case 0x29: { /* movaps/movapd */
+        if (op2 == 0x28) { if (m.is_reg) memcpy(xr, xmm_ptr(m.rm), 16); else memcpy(xr, m32p(m.ea), 16); }
+        else { if (m.is_reg) memcpy(xmm_ptr(m.rm), xr, 16); else memcpy(m32p(m.ea), xr, 16); }
+        return 0; }
+    case 0x2A: { /* cvtsi2sd (F2) / cvtsi2ss (F3) */
+        if (m.is_reg) { double v = (double)(int32_t)R32(m.rm); memcpy(xr, &v, 8); }
+        else { double v = (double)(int32_t)m32_ld32(m.ea); memcpy(xr, &v, 8); }
+        return 0; }
+    case 0x2C: { /* cvttss2si (F3) / cvttsd2si (F2) */
+        double v = (pfx == 0xF2) ? *(double*)xmm_ptr(m.rm & 7) : (double)*(float*)xmm_ptr(m.rm & 7);
+        R32(m.reg) = (uint32_t)(int32_t)v; return 0; }
+    case 0x2D: { R32(m.reg) = (uint32_t)(int32_t)*(double*)xmm_ptr(m.rm & 7); return 0; } /* cvtsd2si round */
+    case 0x2E: case 0x2F: { /* ucomisd/comisd */
+        double a = *(double*)xmm_ptr(m.reg), b;
+        if (m.is_reg) b = *(double*)xmm_ptr(m.rm); else b = m32_ld64(m.ea);
+        f_set(F_ZF, a == b); f_set(F_PF, (a != a) || (b != b)); f_set(F_CF, (a != a || b != b) ? 1 : a < b);
+        f_set(F_SF, 0); f_set(F_OF, 0);
+        return 0; }
+    case 0x51: { /* sqrtsd/sqrtss */
+        if (pfx == 0xF3) { float f = sqrtf(*(float*)xmm_ptr(m.rm & 7)); memcpy(xr, &f, 4); }
+        else { double v = sqrt(*(double*)xmm_ptr(m.rm & 7)); memcpy(xr, &v, 8); }
+        return 0; }
+    case 0x54: case 0x55: case 0x56: case 0x57: { /* and/andn/or/xor pd/ps */
+        uint8_t* xs = xmm_ptr(m.rm & 7);
+        for (int i = 0; i < 16; i++) {
+            switch (op2) {
+            case 0x54: xr[i] &= xs[i]; break;
+            case 0x55: xr[i] = (uint8_t)(~xr[i] & xs[i]); break;
+            case 0x56: xr[i] |= xs[i]; break;
+            case 0x57: xr[i] ^= xs[i]; break;
+            }
+        }
+        return 0; }
+    case 0x58: case 0x59: case 0x5C: case 0x5E: case 0x5D: case 0x5F: { /* add/sub/mul/div/min/max */
+        int dbl = (pfx == 0x66 || pfx == 0xF2), ss = (pfx == 0xF3);
+        double a, b;
+        if (dbl) { a = *(double*)xr; b = m.is_reg ? *(double*)xmm_ptr(m.rm) : m32_ld64(m.ea); }
+        else if (ss) { float fa = *(float*)xr, fb = m.is_reg ? *(float*)xmm_ptr(m.rm) : mdl_f32(m.ea); a = fa; b = fb; }
+        else { a = 0; b = 0; }
+        double r = a;
+        switch (op2) {
+        case 0x58: r = a + b; break; case 0x59: r = a * b; break;
+        case 0x5C: r = a - b; break; case 0x5E: r = b ? a / b : 0; break;
+        case 0x5D: r = a < b ? a : b; break; case 0x5F: r = a > b ? a : b; break;
+        }
+        if (dbl) memcpy(xr, &r, 8);
+        else if (ss) { float f = (float)r; memcpy(xr, &f, 4); }
+        return 0; }
+    case 0x5A: { /* cvtsd2ss (F2) / cvtss2sd (F3) */
+        if (pfx == 0xF2) { double d = *(double*)xmm_ptr(m.rm & 7); float f = (float)d; memcpy(xr, &f, 4); }
+        else { float f = *(float*)xmm_ptr(m.rm & 7); double d = f; memcpy(xr, &d, 8); }
+        return 0; }
+    case 0x6E: { uint32_t v = m.is_reg ? R32(m.rm) : m32_ld32(m.ea); memset(xr, 0, 16); memcpy(xr, &v, 4); return 0; } /* movd xmm, r/m */
+    case 0x7E: { if (pfx == 0xF3) { uint64_t v; if (m.is_reg) memcpy(&v, xmm_ptr(m.rm), 8); else v = m32_ld64(m.ea); memcpy(xr, &v, 8); }
+                  else { uint32_t v = *(uint32_t*)xr; if (m.is_reg) R32(m.rm) = v; else m32_st32(m.ea, v); } return 0; } /* movq/movd */
+    case 0xD6: { uint64_t v; memcpy(&v, xr, 8); if (m.is_reg) memcpy(xmm_ptr(m.rm), &v, 8); else m32_st64(m.ea, v); return 0; } /* movq */
+    case 0xEF: memset(xr, 0, 16); return 0; /* pxor */
+    default: return -1;
+    }
+}
+
+/* ---------------- run loop ---------------- */
+static int cpu32_run(uint64_t max_steps) {
+    uint64_t n = 0;
+    for (;;) {
+        if (g_cpu32_exit_req) return (int)g_cpu32_exit_req;
+        if (t_cpu32.eip == 0) return 0;      /* top-level startup ret -> clean exit */
+        if (t_cpu32.eip == MW32_RET_SENTINEL) return -2; /* callback frame done */
+        if (max_steps && n >= max_steps) return -3;
+        g_eip_hist[g_eip_hist_n++ & 15] = t_cpu32.eip;
+        if (g_cpu32_steptrace)
+            fprintf(stderr, "[I32] eip=%08x eax=%08x ecx=%08x edx=%08x ebx=%08x esp=%08x ebp=%08x esi=%08x edi=%08x\n",
+                    t_cpu32.eip, t_cpu32.r[0], t_cpu32.r[1], t_cpu32.r[2], t_cpu32.r[3],
+                    t_cpu32.r[4], t_cpu32.r[5], t_cpu32.r[6], t_cpu32.r[7]);
+        int rc = cpu32_step();
+        n++;
+        if (rc != 0) return rc;
+    }
+}
+
+
+/* ---------------- shim installation + pump-side glue ---------------- */
+static void mw32_gui_install_shims(void) {
+    /* g_main_class_proc32 is captured in mw_gui_store_wndproc (edit in
+     * place); nothing else to do — mw_dispatch_proc() branches on it. */
+    MW_TRACE("[PE32] GUI shims armed (x86 wndproc re-entry via cpu32_call)");
+}
+
+/* DialogBox-family dlgproc + timer/enum callbacks: any host site that
+ * would call a guest fn pointer natively goes through this generic
+ * dispatcher when the x86 CPU is live. Host APIs receive the guest EIP
+ * in the same field they'd receive an ms_abi pointer; the shim checks
+ * the mode flag. */
+__attribute__((ms_abi)) static long long mw32_generic_callback_shim(void* a0, uint32_t a1, uintptr_t a2, long long a3) {
+    /* a0 = guest EIP stored by the caller-side wrapper */
+    uint32_t eip = (uint32_t)(uintptr_t)a0;
+    if (!eip || !g_cpu32_active) return 0;
+    uint32_t args[3] = { a1, (uint32_t)a2, (uint32_t)a3 };
+    uint32_t r = cpu32_call(eip, 3, args);
+    return (long long)(int32_t)r;
+}
+
+
+/* ---------------- TEB32 / PEB32 / stack ---------------- */
+static void mw32_setup_world(uint32_t image_base, uint32_t cmdline_host) {
+    mw32_world_init();
+    /* TEB32 (classic NT_TIB + Win32 fields) */
+    uint8_t* teb = g_arena32 + (MW32_TEB32_VA - MW32_ARENA_BASE);
+    *(uint32_t*)(teb + 0x00) = 0xFFFFFFFFu;                       /* ExceptionList: empty chain */
+    *(uint32_t*)(teb + 0x04) = MW32_STACK_TOP;                    /* StackBase */
+    *(uint32_t*)(teb + 0x08) = MW32_STACK_TOP - MW32_STACK_BYTES; /* StackLimit */
+    *(uint32_t*)(teb + 0x18) = MW32_TEB32_VA;                     /* Self */
+    *(uint32_t*)(teb + 0x20) = 0x00001DB0u;                       /* ClientId.UniqueProcess (honest constant) */
+    *(uint32_t*)(teb + 0x24) = 0x00001DB8u;                       /* ClientId.UniqueThread */
+    *(uint32_t*)(teb + 0x2C) = MW32_TLSARR_VA;                    /* ThreadLocalStoragePointer */
+    *(uint32_t*)(teb + 0x30) = MW32_PEB32_VA;                     /* ProcessEnvironmentBlock */
+    *(uint32_t*)(teb + 0xF14) = 0x00000400u;                      /* GDI batch/handle hint (honest small) */
+    /* PEB32 */
+    uint8_t* peb = g_arena32 + (MW32_PEB32_VA - MW32_ARENA_BASE);
+    *(uint32_t*)(peb + 0x0C) = image_base;                        /* ImageBaseAddress */
+    *(uint32_t*)(peb + 0x64) = 5;                                 /* OSMajorVersion (NT family; env-tunable later) */
+    *(uint32_t*)(peb + 0x68) = 1;                                 /* OSMinorVersion */
+    *(uint32_t*)(peb + 0x6C) = 2600;                              /* OSBuildNumber */
+    *(uint32_t*)(peb + 0xA4) = 4;                                 /* NumberOfProcessors */
+    *(uint32_t*)(peb + 0xB8) = 0x00010000u;                       /* NtGlobalFlag (honest zero-ish) */
+    /* ANSI cmdline copy into low arena (guests read it as a 32-bit ptr) */
+    uint32_t strva = MW32_STRA_VA;
+    if (cmdline_host) {
+        size_t cl = strlen((const char*)(uintptr_t)cmdline_host) + 1;
+        if (cl < 0x10000) { memcpy(g_arena32 + (strva - MW32_ARENA_BASE), (const void*)(uintptr_t)cmdline_host, cl); }
+    }
+    t_cpu32.fsbase = MW32_TEB32_VA;
+    t_cpu32.gsbase = 0;
+    t_cpu32.fcw = MW32_FCW_INIT;
+    t_cpu32.eflags = 0x202;
+    xmm_zero_all();
+    MW_TRACE("[PE32] TEB32 @0x%x PEB32 @0x%x stack 0x%x..0x%x cmdline@0x%x",
+             MW32_TEB32_VA, MW32_PEB32_VA, MW32_STACK_TOP - MW32_STACK_BYTES,
+             MW32_STACK_TOP, strva);
+}
+
+/* ---------------- wndproc / callback shims ---------------- */
+static uint32_t g_main_class_proc32 = 0; /* x86 wndproc EIP */
+__attribute__((ms_abi)) static long long mw_wndproc32_shim(void* hwnd, uint32_t msg, uintptr_t wp, long long lp) {
+    if (!g_main_class_proc32) return 0;
+    uint32_t args[4] = { (uint32_t)(uintptr_t)hwnd, msg, (uint32_t)wp, (uint32_t)lp };
+    uint32_t r = cpu32_call(g_main_class_proc32, 4, args);
+    if (g_cpu32_exit_req) mw_gui_set_quit((int)g_cpu32_exit_req);
+    return (long long)(int32_t)r;
+}
+
+/* CreateThread shim: x86 thread start runs on its own host thread with a
+ * thread-local MwCpu32 (t_cpu32) — the interpreter is thread-safe by TLS.
+ * Mw32ThreadArg typedef lives in the SW-1281 fwd block (needed earlier). */
+static void* mw32_thread_trampoline(void* p) {
+    Mw32ThreadArg a = *(Mw32ThreadArg*)p; free(p);
+    t_cpu32.fsbase = MW32_TEB32_VA; t_cpu32.gsbase = 0;
+    t_cpu32.fcw = MW32_FCW_INIT; t_cpu32.eflags = 0x202;
+    uint32_t args[1] = { a.param };
+    cpu32_call(a.start_eip, 1, args);
+    return NULL;
+}
+
+/* ---------------- x86 mode hooks for host allocators ---------------- */
+static int mw32_mode(void) { return g_cpu32_active; }
+
+/* ---------------- load_pe32: the PE32 loader plane ---------------- */
+typedef struct { uint32_t base, size; } Mw32Section;
+#define MW32_MAXSEC 96
+static Mw32Section g_sec32[MW32_MAXSEC];
+static int      g_nsec32 = 0;
+static uint32_t g_image_base32 = 0;
+
+static int load_pe32(const char* filepath) {
+    mw32_world_init();
+    struct stat st;
+    if (stat(filepath, &st) != 0 || !S_ISREG(st.st_mode)) {
+        fprintf(stderr, "[PE32] not a regular file: %s\n", filepath);
+        return -1;
+    }
+    FILE* f = fopen(filepath, "rb");
+    if (!f) { fprintf(stderr, "[PE32] cannot open %s\n", filepath); return -1; }
+    fseek(f, 0, SEEK_END); long fsize = ftell(f); fseek(f, 0, SEEK_SET);
+    if (fsize <= 0 || fsize > (512L << 20)) {
+        fprintf(stderr, "[PE32] bad size %ld\n", fsize); fclose(f); return -1;
+    }
+    uint8_t* raw = (uint8_t*)malloc((size_t)fsize);
+    if (!raw) { fclose(f); return -1; }
+    if (fread(raw, 1, (size_t)fsize, f) != (size_t)fsize) { free(raw); fclose(f); return -1; }
+    fclose(f);
+
+    if (fsize < 0x40 || *(uint16_t*)raw != 0x5A4D) { free(raw); return -1; }
+    uint32_t peoff = *(uint32_t*)(raw + 0x3C);
+    if (peoff + 24 + 96 > (uint32_t)fsize || *(uint32_t*)(raw + peoff) != 0x00004550) { free(raw); return -1; }
+    uint16_t machine = *(uint16_t*)(raw + peoff + 4);
+    if (machine != 0x014C) {
+        fprintf(stderr, "[PE32] machine 0x%04x not I386 (0x014c) — SW-1282 Win16/NE is a separate wagon\n", machine);
+        free(raw); return -1;
+    }
+    uint16_t nsec = *(uint16_t*)(raw + peoff + 6);
+    uint8_t* oh = raw + peoff + 24;
+    uint16_t magic = *(uint16_t*)oh;
+    if (magic != 0x10B) { free(raw); return -1; }
+    uint32_t ep_rva     = *(uint32_t*)(oh + 16);
+    uint32_t image_base = *(uint32_t*)(oh + 28);
+    uint32_t sect_align = *(uint32_t*)(oh + 32);
+    uint32_t file_align = *(uint32_t*)(oh + 36);
+    uint32_t size_img   = *(uint32_t*)(oh + 56);
+    uint32_t size_hdrs  = *(uint32_t*)(oh + 60);
+    uint32_t nrva       = *(uint32_t*)(oh + 92);
+    uint32_t* dd        = (uint32_t*)(oh + 96);
+    (void)sect_align; (void)file_align;
+    if (nsec > MW32_MAXSEC || size_img == 0 || size_img > (512u << 20)) { free(raw); return -1; }
+    uint16_t osec_sz = *(uint16_t*)(raw + peoff + 20);
+    uint8_t* sectab  = oh + osec_sz;
+
+    /* Map image at preferred base (PE32 images sit low: 0x400000 typical) */
+    void* img = mmap((void*)(uintptr_t)image_base, (size_t)((size_img + 0xFFF) & ~0xFFFu),
+                     PROT_READ | PROT_WRITE | PROT_EXEC,
+                     MAP_PRIVATE | MAP_ANONYMOUS | MAP_FIXED, -1, 0);
+    if (img == MAP_FAILED) {
+        fprintf(stderr, "[PE32] cannot map image at 0x%x\n", image_base);
+        free(raw); return -1;
+    }
+    memcpy(img, raw, size_hdrs < size_img ? size_hdrs : size_img);
+    for (uint16_t s = 0; s < nsec; s++) {
+        uint8_t* se = sectab + 40 * s;
+        uint32_t va = *(uint32_t*)(se + 12), vsz = *(uint32_t*)(se + 8);
+        uint32_t ro = *(uint32_t*)(se + 20), rsz = *(uint32_t*)(se + 16);
+        uint32_t n = rsz < vsz ? rsz : vsz;
+        if (va + vsz > size_img) { fprintf(stderr, "[PE32] section %u overflows image\n", s); free(raw); return -1; }
+        if (ro + rsz > (uint32_t)fsize) rsz = (uint32_t)fsize - ro; /* clamp overlay-truncated */
+        if (n) memcpy((uint8_t*)img + va, raw + ro, n);
+        g_sec32[s].base = image_base + va; g_sec32[s].size = vsz;
+    }
+    g_nsec32 = nsec;
+    g_image_base32 = image_base;
+    free(raw);
+
+    /* Base relocations (HIGHLOW only for x86) */
+    uint32_t rel_rva = dd[5 * 2], rel_sz = dd[5 * 2 + 1];
+    uint32_t nreloc = 0, nrel_hi = 0;
+    if (rel_rva && rel_sz) {
+        uint8_t* rb = (uint8_t*)img + rel_rva;
+        uint32_t off = 0;
+        while (off + 8 <= rel_sz) {
+            uint32_t page = *(uint32_t*)(rb + off);
+            uint32_t blk = *(uint32_t*)(rb + off + 4);
+            if (!blk) break;
+            for (uint32_t e = 8; e + 2 <= blk; e += 2) {
+                uint16_t ent = *(uint16_t*)(rb + off + e);
+                uint32_t typ = ent >> 12, o = ent & 0xFFF;
+                if (!typ) continue;
+                if (typ == 1) { /* HIGHLOW */
+                    uint32_t va = image_base + page + o;
+                    m32_st32(va, m32_ld32(va) + image_base); /* delta = pref base (mapped at pref) */
+                    nreloc++;
+                } else nrel_hi++;
+            }
+            off += blk;
+        }
+    }
+    MW_TRACE("[PE32] %s: base=0x%x EP=0x%x size=0x%x secs=%u relocs=%u (hi=%u)",
+             filepath, image_base, ep_rva, size_img, nsec, nreloc, nrel_hi);
+
+    /* Import binding: IAT slots = x86 API thunks (name-only rule) */
+    uint32_t imp_rva = dd[1 * 2], imp_sz = dd[1 * 2 + 1];
+    uint32_t unresolved = 0, resolved = 0;
+    if (imp_rva && imp_sz) {
+        for (uint32_t o = 0; o + 20 <= imp_sz; o += 20) {
+            uint32_t* desc = (uint32_t*)((uint8_t*)img + imp_rva + o);
+            uint32_t name_rva = desc[3], first_thunk = desc[4], oft = desc[0];
+            if (!name_rva && !first_thunk) break;
+            const char* dn = (const char*)((uint8_t*)img + name_rva);
+            uint32_t* int_ = (uint32_t*)((uint8_t*)img + (oft ? oft : first_thunk));
+            uint32_t* iat = (uint32_t*)((uint8_t*)img + first_thunk);
+            for (uint32_t t = 0; int_[t]; t++) {
+                if (int_[t] & 0x80000000u) {
+                    /* ordinal import from a host-side DLL: v1 resolves via
+                     * the SW-1276 fixed-ordinal map through the gate table */
+                    const char* nm = NULL;
+                    static const struct { const char* dll; uint16_t ord; const char* name; } ord32[] = {
+                        { "ws2_32.dll", 115, "WSAStartup" }, { "ws2_32.dll", 111, "WSAGetLastError" },
+                        { "ws2_32.dll", 52, "gethostbyname" }, { "ws2_32.dll", 23, "socket" },
+                        { "ws2_32.dll", 16, "closesocket" }, { "ws2_32.dll", 9, "htons" },
+                        { "ws2_32.dll", 8, "htonl" }, { "ws2_32.dll", 14, "ntohl" },
+                        { "ws2_32.dll", 18, "select" },
+                    };
+                    char dlow[64]; size_t k = 0;
+                    for (; dn[k] && k < sizeof(dlow) - 1; k++)
+                        dlow[k] = (dn[k] >= 'A' && dn[k] <= 'Z') ? (char)(dn[k] + 32) : dn[k];
+                    dlow[k] = 0;
+                    for (size_t oi = 0; oi < sizeof(ord32)/sizeof(ord32[0]); oi++)
+                        if (strcmp(dlow, ord32[oi].dll) == 0 && ord32[oi].ord == (uint16_t)(int_[t] & 0xFFFF))
+                            nm = ord32[oi].name;
+                    if (!nm) { iat[t] = mw32_api_thunk(dlow, "#ordinal"); unresolved++; }
+                    else { iat[t] = mw32_api_thunk(dlow, nm); resolved++; }
+                    continue;
+                }
+                const char* impname = (const char*)((uint8_t*)img + (int_[t] & 0x7FFFFFFF) + 2);
+                uint32_t th = mw32_api_thunk(dn, impname);
+                if (g_api32_slots[(th - MW32_THUNK_BASE - 16) / 10].fn) resolved++;
+                else unresolved++;
+                iat[t] = th;
+            }
+        }
+    }
+    MW_TRACE("[PE32] imports: %u resolved, %u unresolved (thunk page %u APIs)",
+             resolved, unresolved, g_api32_count);
+
+    /* SW-1281b: EAGER DELAY-IMPORT BINDING (dd[13]). MSVC delayimp leaves
+     * each delay-IAT slot pointing at a per-import thunk/ret-gadget and
+     * resolves lazily via __delayLoadHelper2 (LoadLibraryExW/GetProcAddress
+     * dance + SEH). Under the interpreter the lazy chain diverges from the
+     * real helper's stack contract (measured on Clockres/Coreinfo/procexp:
+     * the wrapper's post-call ret pops a shifted frame). Real Windows
+     * semantics preserved by resolving UP FRONT: the guest's own
+     * `cmp ecx,gadget; setne` check then takes the already-loaded path and
+     * calls the API thunk directly with the caller's true arg count. */
+    uint32_t did_rva = dd[13 * 2], did_sz = dd[13 * 2 + 1];
+    uint32_t n_delay_bound = 0;
+    if (did_rva && did_sz >= 20) {
+        for (uint32_t o = 0; o + 20 <= did_sz; o += 20) {
+            uint8_t* ddesc = (uint8_t*)img + did_rva + o;
+            uint32_t grAttrs = *(uint32_t*)(ddesc + 0);
+            uint32_t szName  = *(uint32_t*)(ddesc + 4);
+            uint32_t pIAT    = *(uint32_t*)(ddesc + 12);
+            uint32_t pINT    = *(uint32_t*)(ddesc + 16);
+            if (!szName && !pIAT) break;
+            /* dlattrRva (0x1): fields are RVAs; else VAs (map at preferred
+             * base makes VA == image_base + (va - image_base) either way) */
+            uint32_t name_off = (grAttrs & 1) ? szName : (szName - image_base);
+            uint32_t iat_off  = (grAttrs & 1) ? pIAT : (pIAT - image_base);
+            uint32_t int_off  = (grAttrs & 1) ? pINT : (pINT ? (pINT - image_base) : 0);
+            if (name_off >= size_img || iat_off >= size_img) continue;
+            const char* dn = (const char*)((uint8_t*)img + name_off);
+            char dlow[64]; size_t k = 0;
+            for (; dn[k] && k < sizeof(dlow) - 1; k++)
+                dlow[k] = (dn[k] >= 'A' && dn[k] <= 'Z') ? (char)(dn[k] + 32) : dn[k];
+            dlow[k] = 0;
+            uint32_t* iat = (uint32_t*)((uint8_t*)img + iat_off);
+            uint32_t* int_ = int_off ? (uint32_t*)((uint8_t*)img + int_off) : NULL;
+            for (uint32_t t = 0; t < 4096; t++) {
+                uint32_t thunk_val = iat[t];
+                uint32_t name_thunk = int_ ? int_[t] : 0;
+                if (!thunk_val && !name_thunk) break;
+                const char* nm = NULL;
+                if (name_thunk && !(name_thunk & 1) && (name_thunk & 0x7FFFFFFF) < size_img) {
+                    uint32_t hno = (name_thunk & 0x7FFFFFFF);
+                    const uint8_t* hb = (const uint8_t*)img + hno;
+                    nm = (const char*)(hb + 2);
+                }
+                if (!nm) break; /* ordinal delay-import: v1 skip */
+                iat[t] = mw32_api_thunk(dlow, nm);
+                n_delay_bound++;
+            }
+        }
+        if (n_delay_bound)
+            MW_TRACE("[PE32] delay-imports: %u bound eagerly (SW-1281b)", n_delay_bound);
+    }
+
+    /* Data imports: IAT slot = host data address (non-PIE host: < 4GB) */
+    for (uint32_t i = 0; i < NUM_DATA_IMPORTS; i++) {
+        /* walk the import descriptors again and patch matching names */
+        if (!imp_rva || !imp_sz) break;
+        for (uint32_t o = 0; o + 20 <= imp_sz; o += 20) {
+            uint32_t* desc = (uint32_t*)((uint8_t*)img + imp_rva + o);
+            uint32_t name_rva = desc[3], first_thunk = desc[4], oft = desc[0];
+            if (!name_rva && !first_thunk) break;
+            const char* dn = (const char*)((uint8_t*)img + name_rva);
+            char dlow[64]; size_t k = 0;
+            for (; dn[k] && k < sizeof(dlow) - 1; k++)
+                dlow[k] = (dn[k] >= 'A' && dn[k] <= 'Z') ? (char)(dn[k] + 32) : dn[k];
+            dlow[k] = 0;
+            if (strcmp(dlow, g_data_imports[i].dll) != 0) continue;
+            uint32_t* int_ = (uint32_t*)((uint8_t*)img + (oft ? oft : first_thunk));
+            uint32_t* iat = (uint32_t*)((uint8_t*)img + first_thunk);
+            for (uint32_t t = 0; int_[t]; t++) {
+                if (int_[t] & 0x80000000u) continue;
+                const char* impname = (const char*)((uint8_t*)img + (int_[t] & 0x7FFFFFFF) + 2);
+                if (strcmp(impname, g_data_imports[i].name) == 0) {
+                    uint64_t hostptr = (uint64_t)(uintptr_t)g_data_imports[i].data_addr;
+                    if (hostptr > 0xFFFFFFFFull) {
+                        MW_TRACE("[PE32] data import %s NOT 32-bit reachable", impname);
+                    } else {
+                        iat[t] = (uint32_t)hostptr;
+                        resolved++; if (unresolved) unresolved--;
+                    }
+                }
+            }
+        }
+    }
+
+    /* export directory (for x86 GetProcAddress — served as thunks at gate) */
+    uint32_t exp_rva = dd[0 * 2], exp_sz = dd[0 * 2 + 1];
+    (void)exp_rva; (void)exp_sz;
+
+    /* World + entry */
+    uint32_t cmdline_va = 0;
+    if (g_cmdline_ansi[0]) {
+        /* copy into arena scratch so guest 32-bit GetCommandLineA works */
+        size_t cl = strlen(g_cmdline_ansi) + 1;
+        if (cl < 0x10000) {
+            memcpy(g_arena32 + (MW32_STRA_VA - MW32_ARENA_BASE), g_cmdline_ansi, cl);
+            cmdline_va = MW32_STRA_VA;
+        }
+    }
+    mw32_setup_world(image_base, cmdline_va);
+
+    /* Entry state: stdcall WinMainCRTStartup gets no stack args in practice;
+     * x86 CRT startup reads its own env/args via the data imports. */
+    t_cpu32.r[ESPi] = MW32_STACK_TOP - 0x1000;   /* leave a guard hole */
+    t_cpu32.r[EBPi] = t_cpu32.r[ESPi];
+    t_cpu32.eip = image_base + ep_rva;
+    m32_st32(t_cpu32.r[ESPi], 0);                /* fake ret addr 0 */
+    MW_TRACE("[PE32] jumping to EP 0x%x (interpreted i386)", t_cpu32.eip);
+
+    g_cpu32_active = 1;
+    mw32_gui_install_shims();
+    { const char* t = getenv("MW32_TRACE"); g_cpu32_trace = (t && t[0] && t[0] != '0');
+      const char* s = getenv("MW32_STEP_TRACE"); g_cpu32_steptrace = (s && s[0] && s[0] != '0');
+      const char* m = getenv("MW32_MAX_STEPS"); if (m && m[0]) g_cpu32_maxsteps = strtoull(m, NULL, 0); }
+    int rc = cpu32_run(g_cpu32_maxsteps);
+    g_cpu32_active = 0;
+    MW_TRACE("[PE32] cpu32_run rc=%d steps=%llu last_eip=0x%08x esp=0x%08x",
+             rc, (unsigned long long)g_cpu32_steps, t_cpu32.eip, t_cpu32.r[ESPi]);
+    { char b[256]; int o = 0;
+      for (int i = (g_eip_hist_n > 12 ? g_eip_hist_n - 12 : 0); i < g_eip_hist_n; i++)
+          o += snprintf(b + o, sizeof(b) - o, "%08x ", g_eip_hist[i & 15]);
+      MW_TRACE("[PE32] eip-hist: %s", b); }
+    if (rc > 0) { g_pe32_exit = rc; g_ran_pe32 = 1; return 0; }
+    if (rc == -2 || rc == 0) { g_pe32_exit = 0; g_ran_pe32 = 1; return 0; }
+    if (rc == -3) { fprintf(stderr, "[PE32] step budget exhausted (%llu steps, eip=0x%08x)\n",
+                            (unsigned long long)g_cpu32_steps, t_cpu32.eip); return 1; }
+    return 1;
+}
+
 int main(int argc, char* argv[]) {
     /* full Unicode through wcstombs/wcstombs (Wave-3B conversion APIs) */
     setlocale(LC_ALL, "C.UTF-8");
@@ -37500,8 +40224,16 @@ int main(int argc, char* argv[]) {
     fflush(stderr);
 
     typedef int (*pe_entry_fn)(void);
-    pe_entry_fn entry = (pe_entry_fn)(void*)(uintptr_t)g_entry_point;
-    int ret = entry();
+    int ret;
+    if (g_ran_pe32) {
+        /* SW-1281: the x86 guest already ran to completion inside
+         * load_pe32 (interpreted); do NOT jump into an i386 image. */
+        ret = g_pe32_exit;
+        MW_TRACE("PE32 guest exit code %d", ret);
+    } else {
+        pe_entry_fn entry = (pe_entry_fn)(void*)(uintptr_t)g_entry_point;
+        ret = entry();
+    }
 
     MW_TRACE("Entry point returned %d", ret);
 

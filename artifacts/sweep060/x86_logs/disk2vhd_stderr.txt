@@ -1,0 +1,4 @@
+[TRACE] Command line: artifacts/sweep059/guests/disk2vhd//disk2vhd.exe
+[PE32-FATAL] opcode not implemented (step2) opcode=0xef at EIP=0x3fefefbe base=0x0
+  EAX=00000000 ECX=00a008d0 EDX=1febfbff EBX=00000000 ESP=3fefefac EBP=00000000 ESI=0041b977 EDI=00000000
+  bytes: ef 3f 7a 96 41 00 01 00

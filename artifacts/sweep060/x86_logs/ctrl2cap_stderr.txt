@@ -1,0 +1,4 @@
+[TRACE] Command line: artifacts/sweep059/guests/ctrl2cap//ctrl2cap.exe
+[PE32-FATAL] opcode not implemented (step2) opcode=0xef at EIP=0x3fefefbe base=0x0
+  EAX=00000000 ECX=00a0043e EDX=0043b770 EBX=00000000 ESP=3fefefac EBP=00000000 ESI=0040bd50 EDI=00000000
+  bytes: ef 3f 65 87 40 00 01 00

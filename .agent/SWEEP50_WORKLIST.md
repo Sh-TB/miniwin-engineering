@@ -3158,3 +3158,57 @@ viewer, (2) Windows calculator, (3) a program that does not exist on Linux
   Corpus: 60 downloads (archive.org winamp295+WEP, sysinternals 28 tools,
   nirsoft 15 tools, chocolate-doom x4, 3D Pinball) → 122 PEs inventoried →
   99 guests staged (94 battery + pinball + chocolate main exes).
+
+## SWEEP-060 (2026-10-24) — «ادانه چند ده قطار» Train 1: SW-1281 PE32/x86 SUBSYSTEM
+
+- [x] **SW-1281 LANDED (SWEEP-060 Train 1)** — the 0x10b wall is BROKEN: full
+  PE32 (x86/0x10b) loader plane + i386 interpreter + stdcall API gate:
+  (1) load_pe32(): PE32 opt header (ImageBase u32 @oh+28, DataDir @oh+96),
+  section map at preferred base, HIGHLOW relocations, name-only import
+  binding with IAT slots = synthesized x86 THUNKS (`mov eax,slot; jmp gate`
+  code page @0x00A00000), export dir skipped v1.
+  (2) i386 interpreter (x86 cannot execute natively here): thread-local
+  MwCpu32, full integer core (incl. grp1/grp3, LEA, CPUID honest model,
+  string ops with rep, shld/shrd v1, xchg, xadd, setcc, jcc32, cmovcc,
+  bt/bts/bsf/bsr), x87 stack subset (Intel-accurate mod=3 map: FLD/FXCH/
+  FCHS/FABS/FTST/FLD1/FLDZ/FLDPI/FSQRT/FPREM/FST/FSTP/FCOM/FCOMP/FCOMPP/
+  FADDp family/FILD/FIST/FSTP m80), SSE2 scalar subset (movups/ss/apd/
+  movlps/movhps/unpck/ucomisd/add/sub/mul/div/cvt), AL-imm8 group,
+  thread-local world: arena32 @0x10000000 (768MB), TEB32/PEB32, 8MB stack.
+  (3) API gate: ret-addr pop, 16-dword arg widen, host ms_abi call via
+  fn16 cast, **ms_abi on the fn-ptr type (ROOT-CAUSE FIX: SysV-vs-ms_abi
+  register order shifted every arg one slot)**, stdcall arity table
+  **785 verified entries** (scripts/sw1281_arity_gen.py, corpus-driven:
+  generated from the 57 x86 guests' real import tables + per-signature
+  hand-check; CRT dlls cdecl-by-class; unknown = under-pop 0 + one-time
+  log), GetProcAddress returns converted to thunks, ExitProcess/exit
+  family intercepted (flag-unwind, never _exit inside the interpreter).
+  (4) Callback re-entry: cpu32_call with state save/restore + sentinel;
+  wndproc shim wired into mw_dispatch_proc; CreateThread trampoline.
+  (5) FIXES on the way (each battery-measured): grp1 sub-field read bug
+  (imm8 consumed as opcode), warned[] hash OOB, MW32_RET_SENTINEL==0
+  collision with the top-level fake ret, LoadLibraryExW=12 not 4,
+  QueryPerformanceCounter=4 not 16, InitializeCriticalSectionEx=12 (3 args),
+  FLS family, jcc32 0F 88-8F, AL-imm8 half, SSE2 0F 12/13/16/17/14/15.
+- [x] **FIRST X86 EXECUTION CENSUS IN HISTORY** (artifacts/sweep060/
+  census_x86.tsv, 57 guests): 23 rc0-CLEAN-EXIT (du, strings, sync,
+  junction, movefile, pendmoves, diskext, regjump, streams, Volumeid,
+  sdelete/pipelist/Dbgview/RAMMap 277-step full-CRT, Clockres 339,
+  ADExplorer/AccessEnum/Cacheset/Diskmon/ShareEnum/ShellRunas 276,
+  ADInsight/Coreinfo339-class), 10 @op0xef api-set-shim contract frontier
+  (Coreinfo/procexp/Procmon/sigcheck/PsInfo — the guest's OWN
+  LoadLibraryExW("api-ms-*")+GetProcAddress resolution shim works through
+  the FIRST resolved call (FlsAlloc gate args verified correct + balanced),
+  then the shim's frame contract diverges), 24 rc139 deep-init (Delphi/
+  NirSoft family + winamp295 + pinball — SW-1281d).
+- [ ] **SW-1281c (NEW)** — api-set shim contract: after the first
+  resolved-call gate returns (verified balanced), the shim's ebp chain
+  breaks (ebp=0 at the next ret). Needs the guest-side shim pattern
+  decoded (ret=418b6d `5e 5d c3` next=... '85 c0 75 32') — likely one
+  more stdcall/cdecl mismatch in the shim's OWN callers.
+- [ ] **SW-1281d (NEW)** — Delphi/NirSoft deep init (24 rc139): crashes
+  are honest guest derefs AFTER the UCRT shim plane (winamp: interpreter
+  deref inside libc-called path, RBP=0x10003000 = arena cmdline page);
+  needs per-guest decode rounds.
+- [ ] SW-1283 (VirtualProtect RWX, Chocolate-Doom) + SW-1284 (common
+  controls rendering) remain open from SWEEP-059.

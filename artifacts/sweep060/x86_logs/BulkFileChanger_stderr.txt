@@ -1,0 +1,24 @@
+[TRACE] Command line: artifacts/sweep059/guests/BulkFileChanger//BulkFileChanger.exe
+
+[CRASH] Signal 11 at RIP=0x7fe512b35052
+  RAX=0xb7c00000 RCX=0x0 RDX=0x0 R8=0x0 R9=0x0
+  RSP=0x7ffc367c3f68 RBP=0x0
+  g_image_base=(nil) g_image_size=0x0
+  (NOT inside loaded PE)
+  [RIP-MAP] 0x7fe512b35052 in 0x7fe5129e8000-0x7fe512b4b000 r-xp /usr/lib/x86_64-linux-gnu/libc.so.6
+  Bytes: 62 e1 fe 28 6f 07 62 b2 7d 20 26 d0 62 f1 7d 22 
+  RSI=0x20e9b34 RDI=0xe00058
+  R8=0x0  R9=0x0 R10=0x0 R11=0x7ffc367c4400
+  R12=0x64 R13=0x7ffc367c4400 R14=0x400000 R15=0x2151960
+  [STACKTOP raw] 000000000200b0ec 0000000000000000 000000000001e0b0 0000000000400000 000000000041e0b0 00007ffc0001dfbc 00007ffc00000214 00007ffc00000064 000000000001c100 00007ffc00000000 0000000000000000 000000000001e0d0
+  [SCAN rsp+000] 0x200b0ec <LOADER>
+  [SCAN rsp+400] 0x2002b1c <LOADER>
+  [SCAN rsp+408] 0x2002388 <LOADER>
+  [SCAN rsp+1856] 0x2007690 <LOADER>
+  [SCAN rsp+2008] 0x2007690 <LOADER>
+  [SCAN rsp+2048] 0x200b770 <LOADER>
+  [SCAN rsp+2080] 0x200b791 <LOADER>
+  [SCAN rsp+2568] 0x2000040 <LOADER>
+  [SCAN rsp+2648] 0x200b770 <LOADER>
+  Backtrace (via stack walking):
+    [0] RIP=0x7fe512b35052 (outside PE, possible shared lib)
