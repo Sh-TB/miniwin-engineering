@@ -5,7 +5,20 @@ Format based on [Keep a Changelog](https://keepachangelog.com/).
 
 ---
 
-## [Unreleased] — Current Development State
+## [v0.001] — 2026-10-25 — FIRST TAGGED RELEASE
+
+Everything below ships in v0.001. Release assets: `minwin_loader-linux-x64` (4.1MB
+engine binary, clean — no unwanted files) and `miniwin-v0.001-linux-x64.tar.gz`
+(binary + README + this changelog only). Highlights across SWEEP-030..070:
+- Engine: x64/PE32+ AND x86/PE32 interpreter, C++ EH/SEH unwind, /GS cookie pass,
+  flat IAT 2,900+ imports arity-checked vs wine.spec (226 fixes), fastfail honesty,
+  G1 gate 12/12 + 3x determinism discipline on every commit
+- Guests: 66-program corpus — XP classics (games playable, interactive minesweeper),
+  Sysinternals x64, NirSoft, famous installers (IDM/VLC/qBittorrent/Audacity/ShareX/
+  PuTTY/7-Zip/WinRAR/Notepad++ x86+x64), 70MB Stockfish past the old 64MB cap
+- Signature results: PuTTY genuine error dialog rendered, ShareX full CRT+CLR clean
+  run, Notepad++ x64 2 real MessageBoxes, DriverView 794,322-step OEP penetration,
+  winmine interactive board with classic number colors and bomb art
 
 ### Added (SWEEP-070 — heavy parallel train: famous programs fetched+run «قطار سنگین موازی ابزار هدفمند», 2026-10-25)
 - Targeted fetch wave (-P6, magic-sniffed): 19/26 famous Windows products LANDED (498MB):
