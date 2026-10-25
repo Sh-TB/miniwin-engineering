@@ -1,0 +1,143 @@
+program	exename	run	exit	stub_calls	unresolved	stdout_bytes	stderr_bytes
+adexplorer64	NO-EXE	-	-	-	-	-	-
+autoruns64	Autoruns64.exe	1	0	0
+0	0
+0	117	118
+autoruns64	Autoruns64.exe	2	0	0
+0	0
+0	117	118
+autoruns64	Autoruns64.exe	3	0	0
+0	0
+0	117	118
+bginfo64	Bginfo64.exe	1	0	0
+0	0
+0	113	187
+bginfo64	Bginfo64.exe	2	0	0
+0	0
+0	113	187
+bginfo64	Bginfo64.exe	3	0	0
+0	0
+0	113	187
+coreinfoex64	Coreinfo64.exe	1	0	0
+0	0
+0	119	165
+coreinfoex64	Coreinfo64.exe	2	0	0
+0	0
+0	119	165
+coreinfoex64	Coreinfo64.exe	3	0	0
+0	0
+0	119	165
+cports	cports.exe	1	0	0
+0	0
+0	109	110
+cports	cports.exe	2	0	0
+0	0
+0	109	110
+cports	cports.exe	3	0	0
+0	0
+0	109	110
+diskmon64	Diskmon64.exe	1	0	0
+0	0
+0	115	116
+diskmon64	Diskmon64.exe	2	0	0
+0	0
+0	115	116
+diskmon64	Diskmon64.exe	3	0	0
+0	0
+0	115	116
+notepadpp	notepad++.exe	1	139	0
+0	3	115	6047
+notepadpp	notepad++.exe	2	139	0
+0	3	115	6084
+notepadpp	notepad++.exe	3	139	0
+0	3	115	6084
+pageant	pageant.exe	1	124	0
+0	0
+0	111	112
+pageant	pageant.exe	2	124	0
+0	0
+0	111	112
+pageant	pageant.exe	3	124	0
+0	0
+0	111	112
+procexp64	procexp64.exe	1	0	0
+0	0
+0	115	116
+procexp64	procexp64.exe	2	0	0
+0	0
+0	115	116
+procexp64	procexp64.exe	3	0	0
+0	0
+0	115	116
+procmon64	Procmon64.exe	1	0	0
+0	0
+0	115	116
+procmon64	Procmon64.exe	2	0	0
+0	0
+0	115	116
+procmon64	Procmon64.exe	3	0	0
+0	0
+0	115	116
+produkey	ProduKey.exe	1	0	0
+0	0
+0	113	114
+produkey	ProduKey.exe	2	0	0
+0	0
+0	113	114
+produkey	ProduKey.exe	3	0	0
+0	0
+0	113	114
+putty	putty.exe	1	0	0
+0	0
+0	107	312
+putty	putty.exe	2	0	0
+0	0
+0	107	312
+putty	putty.exe	3	0	0
+0	0
+0	107	312
+puttygen	puttygen.exe	1	0	0
+0	0
+0	113	114
+puttygen	puttygen.exe	2	0	0
+0	0
+0	113	114
+puttygen	puttygen.exe	3	0	0
+0	0
+0	113	114
+rammap64	RAMMap64.exe	1	139	0
+0	0
+0	113	2368
+rammap64	RAMMap64.exe	2	139	0
+0	0
+0	113	2368
+rammap64	RAMMap64.exe	3	139	0
+0	0
+0	113	2368
+searchmyfiles	SearchMyFiles.exe	1	0	0
+0	0
+0	123	124
+searchmyfiles	SearchMyFiles.exe	2	0	0
+0	0
+0	123	124
+searchmyfiles	SearchMyFiles.exe	3	0	0
+0	0
+0	123	124
+winmergeu	WinMergeU.exe	1	0	0
+0	0
+0	115	116
+winmergeu	WinMergeU.exe	2	0	0
+0	0
+0	115	116
+winmergeu	WinMergeU.exe	3	0	0
+0	0
+0	115	116
+zoomit64	ZoomIt64.exe	1	0	0
+0	0
+0	113	114
+zoomit64	ZoomIt64.exe	2	0	0
+0	0
+0	113	114
+zoomit64	ZoomIt64.exe	3	0	0
+0	0
+0	113	114

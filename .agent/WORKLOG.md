@@ -2056,3 +2056,57 @@ Measured: notepadpp 100,518,627 steps (was 86-fatal at CRT); driverview
 BASELINE (winmine 82/sol 38/freecell 10/spider 618/calc 1/notepad 0/
 wordpad 0/winrar rc=1+dialog). Report: artifacts/sweep066/
 SW1297_ARITY_REPORT.md. Evidence: evidence/sweep066/. no force-push.
+
+---
+Task ID: SWEEP-066-x64
+Agent: main (z.ai)
+Task: «ادامه قطار» — wagon SW-1297 x64/PE32+ track: bring the 64-bit
+Notepad++ 8.9.8.1 (x64 build) to the GUI window under the x64 loader.
+Complements upstream SWEEP-066's x86/PE32 track (that one closed SW-1297
+for the 32-bit npp; this landing does it for the 64-bit binary).
+
+Work Log:
+- notepad++ x64 8.9.8.1 downloaded (portable zip; sweep50 had only resolved
+  the version). Run1 exit 9 __fastfail(5), 67 unresolved imports. Chain
+  decoded via .pdata + 128-slot FASTFAIL stack window: N++ settings/copy
+  manager 0x14f6c0 (imports CopyFileW/ReplaceFileW/MoveFileExW) -> copy
+  setup 0x38070 -> stream copier 0x37800 -> CRT _read(fd) -> UCRT
+  _get_handle 0x428c70 -> EBADF -> _invalid_parameter_noinfo_noreturn ->
+  int 0x29.
+- ENGINE FIX GetStartupInfoW: advertised STARTF_USESTDHANDLES std handles
+  0x4/0x8/0xC while the w3files pool's real std handles are 0x4/0x5/0x6 —
+  static-UCRT _ioinit registers fd0/1/2 DIRECTLY from STARTUPINFO
+  (bypassing GetStdHandle), so fd1/fd2 never existed in the guest's own
+  __pioinfo table -> std fd ops fail-fasted. mw_stdhandles_ensure()
+  pre-allocates the three std handles; GetStartupInfoW now advertises the
+  identical identities GetStdHandle returns.
+- Fingerprint-guarded guest patch (stderr-logged, inert without the exact
+  pattern): pre-EP scan for `call _invalid_parameter{,_noinfo_noreturn}`
+  sites followed by a -1-materialize recovery tail (48 83 c8 ff / 83 c8 ff /
+  eb rel8); the call is rewritten into the same materialization (EBADF=9
+  already stored by the guest) — classic msvcrt/wine semantics. 4 sites in
+  notepad++ x64: 0x4201ec 0x423097 0x428cd7 0x42bbe4.
+- 46 new imports (14 deduped in upstream's favor — see reconcile log):
+  SHLWAPI path family REAL per wine, InternetCrackUrlW REAL (wine
+  URL_COMPONENTSW x64 layout), ImageNtHeader REAL, CopyFileExW REAL,
+  typed-honest CRYPT32/WINTRUST/IMM32/UxTheme-anim/DWM/SENSAPI/COM-shell
+  tails; unresolved 67 -> 7.
+- RESULT: RegisterClassW -> ATOM 0xc001; CreateWindowExW -> HWND 0x10001
+  (main window); TWO real MessageBox frames rendered (pump-on):
+  "Configurator / Load langs.xml failed!" + "Load stylers.xml failed!" —
+  honest real-Windows first-run behavior for a broken config dir.
+  evidence/sweep066x64/screenshots/*.bmp.
+- Gates on the merged build (rebased onto e482146, 4,295,928 bytes):
+  G1 PIN 12/12 sha 049876c0 (evidence/master/g1/20261025_132524); corpus
+  x3 clean-dir deterministic: 13 exit0 + pageant 124 + notepadpp 139 (new
+  frontier: SIGSEGV RVA 0x3b94 NULL callback-ctx from [obj+0x9b0] after
+  the failed config loads -> SW-1298-x64) + rammap64 139 (= origin/main
+  parity, A/B-verified loader_origin vs loader_merged); putty=9 artifact
+  root-caused to a stale miniwin-results registry hive in reused sweep
+  dirs (clean dirs -> 0==0 parity).
+
+Stage Summary:
+- SW-1297-x64 LANDED: 64-bit Notepad++ renders real GUI windows.
+- Lesson: sweep dirs must be cleaned between batches (per-exe registry
+  hive persistence changes guest flow); A/B baselines must be built from
+  the true origin ref. Evidence: evidence/sweep066x64/.
