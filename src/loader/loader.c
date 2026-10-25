@@ -1068,6 +1068,93 @@ static void* mw_dll_export(MwDllImage* d, const char* name, uintptr_t ord_hint) 
 }
 
 
+static uint32_t mw32_thunk_for_host_fn(void* fn); /* fwd: SW-1281 gate contract */
+
+/* ---- SW-1322 (sweep073 phase4): pseudo-modules are REAL image bases ----
+ * Live root cause (notepadpp64.exe, reproduced this sweep): N++ x64 calls
+ * LoadLibraryA("comctl32.dll"), gets the old pseudo-handle 0xdead000c, then
+ * introspects the module like real Windows allows — `movsxd rax,[rcx+0x3c]`
+ * (e_lfanew) at RVA 0x1d04 -> SIGSEGV si_addr=0xdead0048 (crash log kept).
+ * Contract (wine dlls/ntdll/loader.c get_modref: HMODULE == DllBase;
+ * reactos sdk/lib/rtl/image.c RtlImageNtHeaderEx): every module handle is
+ * an image base with readable MZ/e_lfanew/PE headers. The loader now maps
+ * one header page per system module and hands out those bases; the old
+ * 0xdead000X sentinel space is retired. Header introspection works on
+ * every pseudo-module; exports still resolve via the name-keyed dispatch
+ * table (GetProcAddress/resolve_proc are module-agnostic). */
+static const char* g_known_dlls[] = {
+    "kernel32.dll", "user32.dll", "gdi32.dll", "shell32.dll", "advapi32.dll",
+    "ole32.dll", "oleaut32.dll", "ntdll.dll", "ws2_32.dll", "msvcrt.dll",
+    "ucrtbase.dll", "comctl32.dll", "comdlg32.dll", "version.dll", "crypt32.dll",
+    "secur32.dll", "normaliz.dll", "iphlpapi.dll", "winmm.dll", "shlwapi.dll",
+    "winspool.drv", "dnsapi.dll", "mswsock.dll", "powrprof.dll", "sechost.dll",
+    "bcrypt.dll", "ncrypt.dll", "userenv.dll", "dbghelp.dll", "psapi.dll",
+    "mscoree.dll", "kernelbase.dll", "appmodel.dll", "cryptbase.dll",
+    "sspicli.dll", "rpcrt4.dll", "uxtheme.dll", "apphelp.dll", "sxs.dll",
+    "activeds.dll",
+    /* SW-1250: msvcp140/vcruntime140 dropped from known — LibreOffice's
+     * sal3/clucene import ~200 C++ names from the REAL msvcp140.dll sitting
+     * beside soffice.bin; the pseudo-handle skipped the SW-1250 disk load
+     * and 148 imports went unresolved. The real DLLs (incl. vcruntime140_1)
+     * now load through the PE-DLL path like any other dependency. */
+    "wintrust.dll", "cabinet.dll",
+    "imagehlp.dll", "msimg32.dll", "opengl32.dll", "glu32.dll", "dwmapi.dll",
+    "gdiplus.dll", "windowscodecs.dll", "propsys.dll", "setupapi.dll",
+    "cfgmgr32.dll", "devobj.dll", "winusb.dll", "hid.dll", "ws2help.dll",
+    "bcryptprimitives.dll", /* SWEEP-002: Go runtime.osinit + Rust std */
+    "mpr.dll",              /* SWEEP-019 SW-856..860: WNet* (produkey) */
+    "winsta.dll",           /* SWEEP-016 SW-801k: Procexp64 version probe via GetProcAddress */
+};
+
+#define MW_PSEUDO_BASE   0xDEA00000u
+#define MW_PSEUDO_STRIDE 0x10000u
+
+
+static int mw_pseudo_slot_count(void) {
+    return (int)(sizeof(g_known_dlls) / sizeof(g_known_dlls[0])) + 1; /* +1 = api-ms set */
+}
+static int g_pseudo_headers_ready = 0;
+static void mw_pseudo_headers_init(void) {
+    if (g_pseudo_headers_ready) return;
+    g_pseudo_headers_ready = 1;
+    int n = mw_pseudo_slot_count() + 1;
+    size_t bytes = (size_t)n * MW_PSEUDO_STRIDE;
+    uint8_t* region = (uint8_t*)mmap((void*)(uintptr_t)MW_PSEUDO_BASE, bytes,
+                                     PROT_READ | PROT_WRITE,
+                                     MAP_PRIVATE | MAP_ANONYMOUS | MAP_FIXED, -1, 0);
+    if (region == MAP_FAILED) return; /* honest: sentinel semantics degrade */
+    /* Synthesized headers are PE32+/x64 regardless of guest width: the
+     * introspection contract is MZ + e_lfanew + "PE\0\0" (what N++ and the
+     * packer/tamper-check family read); width-specific fields are honest
+     * about the HOST runtime, which IS x64. */
+    for (int i = 0; i < n; i++) {
+        uint8_t* p = region + (size_t)i * MW_PSEUDO_STRIDE;
+        p[0] = 'M'; p[1] = 'Z';
+        *(uint32_t*)(p + 0x3c) = 0x40u;                 /* e_lfanew */
+        *(uint32_t*)(p + 0x40) = 0x00004550u;           /* "PE\0\0" */
+        *(uint16_t*)(p + 0x44) = 0x8664u;               /* Machine */
+        *(uint16_t*)(p + 0x46) = 0;                     /* NumberOfSections */
+        *(uint16_t*)(p + 0x54) = 0x00f0u;               /* SizeOfOptionalHeader */
+        *(uint16_t*)(p + 0x56) = 0x2022u;               /* DLL|LARGE_ADDRESS_AWARE */
+        *(uint16_t*)(p + 0x58) = 0x020bu;               /* OptionalHeader.Magic */
+        *(uint32_t*)(p + 0x58 + 56) = 0x1000u;          /* SizeOfHeaders */
+        *(uint32_t*)(p + 0x58 + 32) = MW_PSEUDO_STRIDE; /* SizeOfImage */
+        *(uint16_t*)(p + 0x58 + 68) = 2;                /* Subsystem GUI */
+        *(uint32_t*)(p + 0x58 + 108) = 16;              /* NumberOfRvaAndSizes */
+    }
+    mprotect(region, bytes, PROT_READ);
+}
+
+static void* mw_pseudo_handle(int slot) {
+    mw_pseudo_headers_init();
+    return (void*)(uintptr_t)(MW_PSEUDO_BASE + (uintptr_t)slot * MW_PSEUDO_STRIDE);
+}
+static int mw_is_pseudo_module(const void* m) {
+    uintptr_t v = (uintptr_t)m;
+    if (v < MW_PSEUDO_BASE) return 0;
+    return (int)((v - MW_PSEUDO_BASE) / MW_PSEUDO_STRIDE) <= mw_pseudo_slot_count();
+}
+
 __attribute__((ms_abi)) void* mw_GetProcAddress(void* module, const char* name) {
     /* SW-509 v1: real DLL images FIRST (module == mapped base) — both the
      * ordinal (MAKEINTRESOURCE) and named forms resolve from the image's
@@ -1100,14 +1187,14 @@ __attribute__((ms_abi)) void* mw_GetProcAddress(void* module, const char* name) 
          * real contracts beat the anonymous optional stub. The UXTHEME
          * rows live in g_uxtheme_ord (defined below with the shared DLL
          * table); the uxtheme.dll slot index is 36 in g_known_dlls. */
-        if (m == 0xdead0001 + 36) { /* uxtheme.dll */
+        if (m == (uintptr_t)mw_pseudo_handle(36)) { /* uxtheme.dll */
             const char* fn = mw_uxtheme_ord_lookup((uint16_t)(uintptr_t)name);
             if (fn && g_resolve_proc_fn) {
                 void* r = g_resolve_proc_fn(module, fn);
                 if (r) return r;
             }
         }
-        if (m >= 0xdead0001 && m <= 0xdead00ff)
+        if (mw_is_pseudo_module((const void*)m))
             return (void*)&mw_winapi_optional_stub; /* known system module */
         return NULL; /* our image: ordinal-only exports unsupported (honest) */
     }
@@ -1123,7 +1210,7 @@ __attribute__((ms_abi)) void* mw_GetProcAddress(void* module, const char* name) 
          * (bounded by the table size), NOT just 3 slots — winmm.dll is
          * slot 18 (0xdead0013) and Go's timeBeginPeriod lookup died on
          * this stale range check. Keep 0xdead0004..0xdead00ff reserved. */
-        if (m >= 0xdead0001 && m <= 0xdead00ff) {
+        if (mw_is_pseudo_module((const void*)m)) {
             /* system module: optional extensions resolve to the generic stub */
             /* SWEEP-050 Train 3d: DllGetVersion is not "optional" — MFC's
              * toolbar reads the version struct through it. The anonymous
@@ -1145,40 +1232,17 @@ __attribute__((ms_abi)) void* mw_GetProcAddress(void* module, const char* name) 
 /* SWEEP-012: shared known-system-DLL table (was: static inside LoadLibraryA).
  * GetModuleHandleA/W must hand out the SAME pseudo-handles — guests late-bind
  * through GetModuleHandle + GetProcAddress and a NULL here is a crash. */
-static const char* g_known_dlls[] = {
-    "kernel32.dll", "user32.dll", "gdi32.dll", "shell32.dll", "advapi32.dll",
-    "ole32.dll", "oleaut32.dll", "ntdll.dll", "ws2_32.dll", "msvcrt.dll",
-    "ucrtbase.dll", "comctl32.dll", "comdlg32.dll", "version.dll", "crypt32.dll",
-    "secur32.dll", "normaliz.dll", "iphlpapi.dll", "winmm.dll", "shlwapi.dll",
-    "winspool.drv", "dnsapi.dll", "mswsock.dll", "powrprof.dll", "sechost.dll",
-    "bcrypt.dll", "ncrypt.dll", "userenv.dll", "dbghelp.dll", "psapi.dll",
-    "mscoree.dll", "kernelbase.dll", "appmodel.dll", "cryptbase.dll",
-    "sspicli.dll", "rpcrt4.dll", "uxtheme.dll", "apphelp.dll", "sxs.dll",
-    "activeds.dll",
-    /* SW-1250: msvcp140/vcruntime140 dropped from known — LibreOffice's
-     * sal3/clucene import ~200 C++ names from the REAL msvcp140.dll sitting
-     * beside soffice.bin; the pseudo-handle skipped the SW-1250 disk load
-     * and 148 imports went unresolved. The real DLLs (incl. vcruntime140_1)
-     * now load through the PE-DLL path like any other dependency. */
-    "wintrust.dll", "cabinet.dll",
-    "imagehlp.dll", "msimg32.dll", "opengl32.dll", "glu32.dll", "dwmapi.dll",
-    "gdiplus.dll", "windowscodecs.dll", "propsys.dll", "setupapi.dll",
-    "cfgmgr32.dll", "devobj.dll", "winusb.dll", "hid.dll", "ws2help.dll",
-    "bcryptprimitives.dll", /* SWEEP-002: Go runtime.osinit + Rust std */
-    "mpr.dll",              /* SWEEP-019 SW-856..860: WNet* (produkey) */
-    "winsta.dll",           /* SWEEP-016 SW-801k: Procexp64 version probe via GetProcAddress */
-};
 static void* mw_known_dll_handle(const char* low) {
     size_t nl = strlen(low);
     /* api-ms-win-* API-set names are OS-guaranteed redirections — always
      * "present" (sqlite3 loads api-ms-win-appmodel-runtime-l1-1-2 during
      * winOpen; failure aborts its DB-open path). */
     if (nl >= 10 && memcmp(low, "api-ms-win", 10) == 0)
-        return (void*)(uintptr_t)0xdead0002;
+        return mw_pseudo_handle(mw_pseudo_slot_count() - 1); /* api-ms-win-* set */
     for (size_t i = 0; i < sizeof(g_known_dlls)/sizeof(g_known_dlls[0]); i++) {
         size_t kl = strlen(g_known_dlls[i]);
         if (nl == kl && memcmp(low, g_known_dlls[i], kl) == 0)
-            return (void*)(uintptr_t)(0xdead0001 + (uintptr_t)i);
+            return mw_pseudo_handle((int)i);
         /* No-extension form ("user32" -> user32.dll): the extension is
          * ".dll"/".drv"/".ocx" — always exactly the last 4 chars with the
          * dot. (Old check `nl + 1 == kl` only matched names that had lost
@@ -1186,7 +1250,7 @@ static void* mw_known_dll_handle(const char* low) {
          * fail 126 — pageant's CRT does exactly that probe.) */
         if (kl >= 4 && nl == kl - 4 &&
             memcmp(low, g_known_dlls[i], nl) == 0 && g_known_dlls[i][nl] == '.')
-            return (void*)(uintptr_t)(0xdead0001 + (uintptr_t)i);
+            return mw_pseudo_handle((int)i);
     }
     return NULL;
 }
@@ -1574,7 +1638,7 @@ static int load_pe_dll(const char* fullpath, const char* lowname) {
                             if (strcmp(dlow, g_dll_fixed_ord[oi].dll) == 0 &&
                                 g_dll_fixed_ord[oi].ord == (int_[t] & 0xFFFF)) {
                                 if (g_resolve_proc_fn)
-                                    fn = g_resolve_proc_fn((void*)0xdead0001, g_dll_fixed_ord[oi].name);
+                                    fn = g_resolve_proc_fn(mw_pseudo_handle(0), g_dll_fixed_ord[oi].name);
                                 break;
                             }
                         }
@@ -1582,7 +1646,7 @@ static int load_pe_dll(const char* fullpath, const char* lowname) {
                 } else {
                     const char* impname = (const char*)(img + (uint32_t)(int_[t] & 0xFFFFFFFF) + 2);
                     if (dep) fn = mw_dll_export(dep, impname, 0);
-                    else if (g_resolve_proc_fn) fn = g_resolve_proc_fn((void*)0xdead0001, impname);
+                    else if (g_resolve_proc_fn) fn = g_resolve_proc_fn(mw_pseudo_handle(0), impname);
                 }
                 if (!fn) {
                     /* SW-1247: name the missing import (slot index alone
@@ -1793,7 +1857,7 @@ __attribute__((ms_abi)) void* mw_LoadLibraryA(const char* name) {
         mw_SetLastError(126);
         return NULL;
     }
-    return (void*)(uintptr_t)0xdead0001;
+    return mw_pseudo_handle(0); /* module-agnostic fallback identity */
 }
 
 /* TASK-OPENSRC-1 (ffmpeg CRT/constructor chain): SetDllDirectoryA — winbase
@@ -5581,7 +5645,11 @@ __attribute__((ms_abi)) int mw__execute_onexit_table(void* tbl) {
         last--;
         void* fn = *last;
         if (fn) {
-            int (*f)(void) = (int (*)(void))fn;
+            /* SW-1316: guest handlers must be called ms_abi (UCRT _PVFV =
+             * void(void)) — this runs in guest context only; the host never
+             * executes these tables at its own teardown. */
+            void (__attribute__((ms_abi)) *f)(void) =
+                (void (__attribute__((ms_abi)) *)(void))fn;
             MW_TRACE("_execute_onexit_table: calling %p", fn);
             f();
         }
@@ -6361,13 +6429,32 @@ __attribute__((ms_abi)) int mw__initterm(void** start, void** end) {
     MW_TRACE("_initterm(start=%p, end=%p)", start, end);
     int ret = 0;
     if (!start || !end) return 0;
+    if (g_cpu32_active) {
+        /* SW-1316b (sweep073 phase1): PE32 initializer tables hold 32-bit
+         * PVFV entries — 7zr.exe's second table 0x48e000..0x48e0a4 is 164
+         * bytes = 41 clean 4-byte slots (NOT 20.5 8-byte slots). Iterating
+         * with a 64-bit stride merged neighbor dwords ({0x00000000,
+         * 0x00401598} became 0x0040159800000000) and "called" the merged
+         * value as a host function -> Signal 11 at RIP=0x40159800000000,
+         * steps=74. 32-bit stride, guest re-entry via cpu32_call. */
+        uint32_t* p = (uint32_t*)start;
+        uint32_t* e = (uint32_t*)end;
+        for (; p < e; p++) {
+            uint32_t fn32 = *p;
+            if (!fn32) continue;
+            MW_TRACE("_initterm[PE32]: calling 0x%08x", fn32);
+            cpu32_call(fn32, 0, NULL);
+        }
+        return ret;
+    }
     for (void** p = start; p < end; p++) {
         if (*p != NULL) {
             MW_TRACE("_initterm: calling %p", *p);
-            /* Call the function pointer using ms_abi since these are
-             * internal CRT functions compiled with MSVC */
-            int (*fn)(void) = (int (*)(void))*p;
-            ret = fn();
+            /* CRT initializers are PVFV = void(void); ms_abi because these
+             * execute native PE32+ guest code under the host CPU. */
+            void (__attribute__((ms_abi)) *fn)(void) =
+                (void (__attribute__((ms_abi)) *)(void))*p;
+            fn();
         }
     }
     return ret;
@@ -6499,6 +6586,38 @@ __attribute__((ms_abi)) char*** mw___p___argv(void) {
 __attribute__((ms_abi)) char*** mw___p__environ(void) {
     MW_TRACE("__p__environ() = %p", &g_environ_cell);
     return &g_environ_cell;
+}
+
+/* SW-1319 (sweep073): msvcrt __p___initenv — &__initenv, the INITIAL narrow
+ * environment slot. 7zr.exe's CRT _setenvp initializer (0x45dd90) writes
+ * through it; the old unresolved-gate returned NULL and the guest stored
+ * to EA=0 (m32_st32 si_addr=0, steps=118032). Same contract as
+ * __p__environ: stable cell the CRT may read and overwrite. */
+static char** g_initenv_cell = NULL;
+__attribute__((ms_abi)) char*** mw___p___initenv(void) {
+    if (!g_initenv_cell) g_initenv_cell = g_initenv_ptr;
+    MW_TRACE("__p___initenv() = %p (env=%p)", (void*)&g_initenv_cell,
+             (void*)g_initenv_cell);
+    return &g_initenv_cell;
+}
+
+/* SW-1323 (sweep073): UCRT _get_narrow_winmain_command_line — returns the
+ * narrow command line WITHOUT the leading program token (WinMain lpCmdLine
+ * semantics, UCRT exe_common.inl contract). mingw UCRT builds import it for
+ * their WinMain path; the unresolved-gate returned NULL and the CRT argv
+ * splitter crashed on `mov al,[rcx]` rcx=0 BEFORE main — the single shared
+ * root cause of ALL 20 sgtatham puzzle guests (rc=139 x60 runs, uniform
+ * RIP RVA 0x8919 class) plus Notepad3/AHK-x86. */
+static void build_cmdline(void); /* fwd: defined with the cmdline block (SW-1323) */
+static char g_cmdline_buf[8192]; /* fwd decl of storage: real def + builder below */
+__attribute__((ms_abi)) const char* mw__get_narrow_winmain_command_line(void) {
+    build_cmdline();
+    const char* p = g_cmdline_buf;
+    if (*p == '"') { p++; while (*p && *p != '"') p++; if (*p) p++; }
+    else { while (*p && *p != ' ' && *p != '\t') p++; }
+    while (*p == ' ' || *p == '\t') p++;
+    MW_TRACE("_get_narrow_winmain_command_line() = \"%s\"", p);
+    return p;
 }
 
 /* BUG-067 (SWEEP-005): zig/mingw ucrt startup imports __p__acmdln from
@@ -6779,6 +6898,12 @@ __attribute__((ms_abi)) int mw_fprintf(void* file, const char* fmt, ...) {
 __attribute__((ms_abi)) int mw_vfprintf(void* file, const char* fmt, void* ap) {
     MW_TRACE("vfprintf(file=%p, fmt=%s)", file, fmt ? fmt : "NULL");
     FILE* f = map_crt_stream(file);
+    /* SW-1324 (sweep074): guest-constructed UCRT FILE blocks (mingw stdio
+     * wrappers built on the engine heap) do not match any registry layout;
+     * forwarding NULL made the HOST vfprintf fault (blackbox + the whole
+     * sgtatham family: si_addr=0xc0 inside libc vfprintf). Route unmappable
+     * streams to stderr so the guest keeps running. */
+    if (!f) f = stderr;
     unsigned char cls[MW_PRINTF_MAX_ARGS];
     int nargs = mw_printf_classify(fmt, cls);
     unsigned long long slots[MW_PRINTF_MAX_ARGS];
@@ -7958,21 +8083,15 @@ __attribute__((ms_abi)) int mw_fwprintf(void* file, const wchar_t* fmt, ...) {
 __attribute__((ms_abi)) int mw_rand(void) { int r = rand(); MW_TRACE("rand() -> %d", r); return r; }
 __attribute__((ms_abi)) void mw_srand(unsigned int seed) { MW_TRACE("srand(seed=%u)", seed); srand(seed); }
 
-__attribute__((ms_abi)) int mw__onexit(void (*func)(void)) {
-    MW_TRACE("_onexit(func=%p)", func);
-    return atexit(func);
-}
-
-/* ---- TASK-API-007 wave 1 (appcompat sweep APP-F-02): CRT startup surface.
- * mingw-w64 CRT startup imports these unconditionally; with them unresolved
- * the IAT slot keeps the raw hint/name RVA and `call [iat]` faults at that
- * RVA (observed RIP=0x92f8, SIGSEGV before main in every mingw PE). */
-
-/* ISS1-WAVE4: guest atexit registry. Passing PE code pointers to the HOST
- * atexit() made glibc jump into the guest image during process teardown —
- * outside the loader's execution context (live: ffmpeg "malloc(): invalid
- * size (unsorted)" + SIGABRT at exit). Windows semantics: the CRT exit path
- * runs these in reverse order BEFORE the process terminates. */
+/* ---- ISS1-WAVE4 + SW-1316 (sweep073 phase1): guest atexit/_onexit registry.
+ * Passing PE code pointers to the HOST atexit() made glibc jump into the
+ * guest image during process teardown — outside the loader's execution
+ * context. Two live signatures: ffmpeg "malloc(): invalid size (unsorted)" +
+ * SIGABRT at exit (atexit, fixed ISS1-WAVE4), and 7zr.exe rc=139 at host
+ * RIP=0x40159800000000 with guest EIP steps=74 (_onexit, reproduced
+ * pre-fix this sweep). Windows semantics: the CRT exit path runs these in
+ * reverse order BEFORE the process terminates, from the guest runtime —
+ * never from glibc. msvcrt models atexit == _onexit (one LIFO table). */
 #define MW_ATEXIT_MAX 128
 static void (__attribute__((ms_abi)) *g_guest_atexit[MW_ATEXIT_MAX])(void);
 static int g_guest_atexit_count = 0;
@@ -7983,10 +8102,33 @@ __attribute__((ms_abi)) int mw_atexit(void (__attribute__((ms_abi)) *func)(void)
     g_guest_atexit[g_guest_atexit_count++] = func;
     return 0;
 }
+/* SW-1316: msvcrt _onexit contract is _onexit_t _onexit(_onexit_t func):
+ * it registers func and returns the PREVIOUS registered handler (NULL if
+ * none or on error) — a function pointer at full 64-bit width, never an
+ * int, and never forwarded to a host atexit(). */
+__attribute__((ms_abi)) void* mw__onexit(void (__attribute__((ms_abi)) *func)(void)) {
+    MW_TRACE("_onexit(func=%p)", (void*)func);
+    if (!func) return NULL;
+    if (g_guest_atexit_count >= MW_ATEXIT_MAX) return NULL;
+    void* prev = g_guest_atexit_count
+        ? (void*)g_guest_atexit[g_guest_atexit_count - 1] : NULL;
+    g_guest_atexit[g_guest_atexit_count++] = func;
+    return prev;
+}
+
+/* ---- TASK-API-007 wave 1 (appcompat sweep APP-F-02): CRT startup surface.
+ * mingw-w64 CRT startup imports these unconditionally; with them unresolved
+ * the IAT slot keeps the raw hint/name RVA and `call [iat]` faults at that
+ * RVA (observed RIP=0x92f8, SIGSEGV before main in every mingw PE). */
 static void w3_run_guest_atexit(void) {
     for (int i = g_guest_atexit_count - 1; i >= 0; i--) {
         MW_TRACE("guest atexit run [%d] = %p", i, g_guest_atexit[i]);
-        g_guest_atexit[i]();
+        /* SW-1316b: PE32 handlers are x86 VAs — re-enter via cpu32_call.
+         * A direct host call of an x86 guest VA is the 7zr signature. */
+        if (g_cpu32_active)
+            cpu32_call((uint32_t)(uintptr_t)g_guest_atexit[i], 0, NULL);
+        else
+            g_guest_atexit[i]();
     }
     g_guest_atexit_count = 0;
     w3_run_tle_atexit();
@@ -8143,6 +8285,8 @@ static void build_cmdline(void) {
     }
     g_cmdline_buf[o] = '\0';
     g_cmdline_ready = 1;
+    if (getenv("MW_CMDLINE_DEBUG"))
+        fprintf(stderr, "[CMDLINE-A] argc-host-visible='%s' g_argc=%d\n", g_cmdline_buf, g_argc);
 }
 static size_t utf8_to_utf16(const char* s, void* out, size_t cap_units) {
     /* BUG-050: emits 2-byte UTF-16LE units (guest ABI), not 4-byte glibc
@@ -8165,6 +8309,12 @@ static void build_cmdline_w(void) {
     if (n < 0) n = 0;
     g_cmdline_bufw16[n] = 0;
     g_cmdline_w_ready = 1;
+    if (getenv("MW_CMDLINE_DEBUG")) {
+        fprintf(stderr, "[CMDLINE-W] n=%d hex[0..15]=", n);
+        for (int i = 0; i < 16 && i <= n; i++)
+            fprintf(stderr, "%04x ", g_cmdline_bufw16[i]);
+        fprintf(stderr, "\n");
+    }
 }
 
 __attribute__((ms_abi)) const char* mw_GetCommandLineA(void) {
@@ -8314,7 +8464,7 @@ __attribute__((ms_abi)) int mw_GetModuleHandleExW(uint32_t flags, const wchar_t*
         for (; n8[k] && k < sizeof(low) - 1; k++)
             low[k] = (n8[k] >= 'A' && n8[k] <= 'Z') ? (char)(n8[k] + 32) : n8[k];
         low[k] = 0;
-        if (memcmp(low, "api-ms-win", 10) == 0) { *mod = (void*)(uintptr_t)0xdead0002; return 1; }
+        if (memcmp(low, "api-ms-win", 10) == 0) { *mod = mw_pseudo_handle(mw_pseudo_slot_count() - 1); return 1; }
         void* h = mw_LoadLibraryA(low);
         if (h) { *mod = h; return 1; }
     }
@@ -13326,9 +13476,23 @@ __attribute__((ms_abi)) int mw__get_errno(int* out, int* dos) {
     if (dos) *dos = 0;
     return 0;
 }
-/* _initterm_e: table of int(void) initializers, stop on nonzero */
+/* _initterm_e: table of int(void) initializers, stop on nonzero.
+ * SW-1316b: PE32 guests store 32-bit entries — same width dispatch as
+ * mw__initterm (7zr root cause class). */
 __attribute__((ms_abi)) int mw__initterm_e(void (**start)(void), void (**end)(void)) {
     MW_TRACE("_initterm_e(%p..%p)", start, end);
+    if (g_cpu32_active) {
+        uint32_t* p = (uint32_t*)start;
+        uint32_t* e = (uint32_t*)end;
+        for (; p < e; p++) {
+            uint32_t fn32 = *p;
+            if (!fn32) continue;
+            MW_TRACE("_initterm_e[PE32]: calling 0x%08x", fn32);
+            uint32_t r = cpu32_call(fn32, 0, NULL);
+            if (r != 0) return (int)r;
+        }
+        return 0;
+    }
     for (; start < end; start++) {
         if (!*start) continue;
         int (__attribute__((ms_abi)) *fn)(void) = (int (__attribute__((ms_abi)) *)(void))*start;
@@ -17086,9 +17250,28 @@ static long long mw_gui_send_create(void); /* SWEEP-006: real WM_CREATE on Creat
 static long long mw_gui_send_create_h(void* hwnd, void* parent, uint32_t ctl_id); /* SW-1256: nested identity WM_CREATE */
 static void* g_create_param; /* SW-802..806: CreateWindowEx lpParam -> CREATESTRUCT.lpCreateParams */
 static void mw_gui_request_paint(void);
-/* ---- SW-1128 accel store (moved up for SW-1271 TranslateAccelerator) ---- */
+/* ---- SW-1128 accel store (moved up for SW-1271 TranslateAccelerator) ----
+ * SW-1317 (sweep073 phase2): resource slots held uint32_t[2] (8B) while the
+ * writer memcpy'd up to 512*6=3072B into them — every table with >=2 entries
+ * overflowed the slot and larger tables ran off the end of g_accel_slots[8],
+ * silently corrupting adjacent engine globals. Live corpus impact measured
+ * pre-fix: XP calc.exe id=0x69 = 760 bytes, spider id=0x66 = 96, winmine
+ * id=0x1f5 = 16.
+ * SW-1317b (Wine/ReactOS cross-check, sweep073): PE RT_ACCELERATOR records
+ * are EIGHT bytes on disk — {WORD fVirt; WORD key; WORD cmd; WORD pad}
+ * (wine dlls/user32/resource.c PE_ACCEL, count = SizeofResource()/8;
+ * reactos win32ss/user/user32/windows/accel.c same). The supplied report's
+ * "six-byte Win32 representation" describes the GUEST-SIDE ACCEL struct
+ * {BYTE fVirt; WORD key; WORD cmd} used by CreateAcceleratorTableW/
+ * CopyAcceleratorTableW, NOT the resource format. Proof from the corpus:
+ * calc.exe's table is 760 bytes = 95x8 exactly, NOT divisible by 6. The
+ * store therefore NORMALIZES both formats into mw_accel_ent_t entries;
+ * readers never touch raw bytes. Tables are size-counted like Wine (no
+ * trusted terminator); every write/read is bounded by MW_ACCEL_MAX. */
 #define MW_ACCEL_BASE 0x00AC0000u
-typedef struct { uint32_t fvirt_key_cmd[2]; int n; int live; } mw_accel_slot_t;
+#define MW_ACCEL_MAX 512
+typedef struct { uint8_t fvirt; uint16_t key; uint16_t cmd; } mw_accel_ent_t;
+typedef struct { mw_accel_ent_t ent[MW_ACCEL_MAX]; int n; int live; } mw_accel_slot_t;
 static mw_accel_slot_t g_accel_slots[8];
 static uint32_t g_accel_next = 1;
 /* SW-1271: scripted-key modifier latch for TranslateAccelerator (declared
@@ -17101,6 +17284,27 @@ static void mw_accel_note_vk(uint32_t vk) {
     case 0x12u: g_key_mods |= 0x4u; break; /* VK_MENU    -> FALT    */
     default: break;
     }
+}
+/* ---- SW-1318 (sweep073 phase3): canonical guest keyboard state ----
+ * One 256-entry table consumed by GetAsyncKeyState / GetKeyState /
+ * GetKeyboardState, updated by the SAME pump sites that deliver
+ * WM_KEYDOWN/WM_KEYUP and the mouse button events, so generated messages
+ * and asynchronous polling cannot disagree. High bit (0x80) = currently
+ * down; latch = "went down since the last GetAsyncKeyState(vk) query"
+ * (the Win32 low-bit contract: a poller that misses the down window still
+ * sees it exactly once). The scripted channel models keys the harness
+ * HOLDS: by default a scripted key stays down (state consistent, no up
+ * event — legacy behavior preserved); MW_GUI_KEYUP=1 delivers the matched
+ * WM_KEYUP one pump slot after each WM_KEYDOWN (a real DOWN->UP keystroke). */
+static uint8_t g_mw_key_down[256];
+static uint8_t g_mw_key_latch[256];
+static uint32_t g_keyup_pending = 0; /* VK awaiting its WM_KEYUP pump slot */
+static int   g_keyup_enable = -1;
+static void mw_key_set_down(uint32_t vk) {
+    if (vk < 256) { g_mw_key_down[vk] = 0x80; g_mw_key_latch[vk] = 1; }
+}
+static void mw_key_set_up(uint32_t vk) {
+    if (vk < 256) g_mw_key_down[vk] = 0; /* latch survives the release */
 }
 static int  mw_gui_pump_getmsg(void* msg, void* hwnd, const char* api);
 static long long mw_gui_dispatch_msg(const void* msg);
@@ -18381,6 +18585,10 @@ static int mw_gui_events_enabled(void) {
         if (b) { int v = atoi(b); if (v > 0) g_budget = v; }
         const char* ke = getenv("MW_GUI_KEY_EVERY");
         if (ke) { int v = atoi(ke); if (v > 0) g_key_every = v; }
+        { /* SW-1318: matched WM_KEYUP delivery after each scripted down */
+            const char* ku = getenv("MW_GUI_KEYUP");
+            g_keyup_enable = (ku && ku[0] && ku[0] != '0') ? 1 : 0;
+        }
         const char* ck = getenv("MINWIN_CLICKS");
         if (ck && g_events_mode) {
             char tmp[512]; strncpy(tmp, ck, sizeof(tmp) - 1); tmp[sizeof(tmp) - 1] = 0;
@@ -18443,9 +18651,24 @@ static int mw_gui_next_event(void* msg, void* hwnd, int consume, const char* api
             MW_TRACE("[GUI-EVENT] #%d %s -> WM_CHAR 0x%x", g_delivered, api, ch);
         return 1;
     }
+    /* SW-1318: matched WM_KEYUP for the previous scripted WM_KEYDOWN
+     * (MW_GUI_KEYUP=1). Delivered BEFORE the next scripted key so a
+     * keystroke is DOWN then UP, like a real keyboard. */
+    if (g_keyup_pending) {
+        uint32_t vk = g_keyup_pending;
+        if (consume) { g_keyup_pending = 0; g_delivered++; }
+        mw_key_set_up(vk);
+        mw_gui_fill_msg(msg, h, 0x0101u /*WM_KEYUP*/, (uintptr_t)vk,
+                        (long long)0xC0000001u /* scan 1|prev|transition */);
+        if (consume)
+            MW_TRACE("[GUI-EVENT] #%d %s -> WM_KEYUP VK=0x%x", g_delivered, api, vk);
+        return 1;
+    }
     if (g_keyi < g_keyn && (g_delivered % g_key_every) == 0) {
         uint32_t vk = g_keyv[g_keyi++];
         mw_accel_note_vk(vk);
+        mw_key_set_down(vk); /* SW-1318: async state = delivered key */
+        if (g_keyup_enable == 1) g_keyup_pending = vk;
         if (consume) g_delivered++;
         mw_gui_fill_msg(msg, h, 0x0100u, (uintptr_t)vk, 1);
         if (consume) MW_TRACE("[GUI-EVENT] #%d %s -> WM_KEYDOWN VK=0x%x", g_delivered, api, vk);
@@ -18473,6 +18696,9 @@ static int mw_gui_next_event(void* msg, void* hwnd, int consume, const char* api
         uint32_t m = was_down ? 0x0201u /* WM_LBUTTONDOWN */ : 0x0202u /* WM_LBUTTONUP */;
         uintptr_t wp = was_down ? 1u /* MK_LBUTTON */ : 0u;
         long long lp = (long long)(((y & 0xFFFFu) << 16) | (x & 0xFFFFu));
+        /* SW-1318: the left mouse button is VK_LBUTTON in the canonical key
+         * table — apps polling GetAsyncKeyState(VK_LBUTTON) see the click */
+        if (was_down) mw_key_set_down(0x01u); else mw_key_set_up(0x01u);
         if (consume) {
             g_delivered++;
             if (was_down) g_mouse_phase = 1;
@@ -18585,6 +18811,8 @@ static int mw_gui_next_event(void* msg, void* hwnd, int consume, const char* api
     if (g_keyi < g_keyn && !g_timer_live) {
         uint32_t vk = g_keyv[g_keyi++];
         mw_accel_note_vk(vk);
+        mw_key_set_down(vk); /* SW-1318: gate-bypass delivers real keys too */
+        if (g_keyup_enable == 1) g_keyup_pending = vk;
         if (consume) g_delivered++;
         mw_gui_fill_msg(msg, h, 0x0100u, (uintptr_t)vk, 1);
         if (consume) MW_TRACE("[GUI-EVENT] #%d %s -> WM_KEYDOWN VK=0x%x (gate-bypass)", g_delivered, api, vk);
@@ -21080,12 +21308,19 @@ __attribute__((ms_abi)) void* mw_LoadAcceleratorsA(void* hinst, const char* name
     /* SW-1277: accel table data lives in hinst's OWN image */
     const uint8_t* p = (const uint8_t*)(mw_res_pe_base(hinst) + *(const uint32_t*)hrsrc);
     if (!p || !size || mw_IsBadReadPtr(p, size)) return NULL;
-    int n = (int)(size / 6u); /* ACCEL = {BYTE fVirt; WORD key; WORD cmd;} = 6B */
-    if (n > 512) n = 512;
+    /* SW-1317b: PE records are 8 bytes {WORD fVirt; WORD key; WORD cmd;
+     * WORD pad} — normalize into the slot (Wine resource.c contract) */
+    int n = (int)(size / 8u);
+    if (n > MW_ACCEL_MAX) n = MW_ACCEL_MAX;
     int slot = -1;
     for (int i = 0; i < 8; i++) if (!g_accel_slots[i].live && slot < 0) slot = i;
     if (slot < 0) return NULL;
-    memcpy(g_accel_slots[slot].fvirt_key_cmd, p, (size_t)n * 6u);
+    for (int i = 0; i < n; i++) {
+        const uint8_t* r = p + (size_t)i * 8u;
+        g_accel_slots[slot].ent[i].fvirt = r[0];
+        g_accel_slots[slot].ent[i].key   = (uint16_t)(r[2] | (r[3] << 8));
+        g_accel_slots[slot].ent[i].cmd   = (uint16_t)(r[4] | (r[5] << 8));
+    }
     g_accel_slots[slot].n = n; g_accel_slots[slot].live = 1;
     uintptr_t h = MW_ACCEL_BASE | (uintptr_t)(slot + 1);
     if (nm) MW_TRACE("LoadAcceleratorsA(name='%s') -> %p (n=%d, REAL)", nm, (void*)h, n);
@@ -21104,12 +21339,17 @@ __attribute__((ms_abi)) void* mw_LoadAcceleratorsW(void* hinst, const uint16_t* 
     uint32_t size = *(const uint32_t*)((const uint8_t*)hrsrc + 4);
     const uint8_t* p = (const uint8_t*)(mw_res_pe_base(hinst) + *(const uint32_t*)hrsrc);
     if (!p || !size || mw_IsBadReadPtr(p, size)) return NULL;
-    int n = (int)(size / 6u);
-    if (n > 512) n = 512;
+    int n = (int)(size / 8u); /* SW-1317b: PE record stride 8 */
+    if (n > MW_ACCEL_MAX) n = MW_ACCEL_MAX;
     int slot = -1;
     for (int i = 0; i < 8; i++) if (!g_accel_slots[i].live && slot < 0) slot = i;
     if (slot < 0) return NULL;
-    memcpy(g_accel_slots[slot].fvirt_key_cmd, p, (size_t)n * 6u);
+    for (int i = 0; i < n; i++) {
+        const uint8_t* r = p + (size_t)i * 8u;
+        g_accel_slots[slot].ent[i].fvirt = r[0];
+        g_accel_slots[slot].ent[i].key   = (uint16_t)(r[2] | (r[3] << 8));
+        g_accel_slots[slot].ent[i].cmd   = (uint16_t)(r[4] | (r[5] << 8));
+    }
     g_accel_slots[slot].n = n; g_accel_slots[slot].live = 1;
     uintptr_t h = MW_ACCEL_BASE | (uintptr_t)(slot + 1);
     MW_TRACE("LoadAcceleratorsW() -> %p (n=%d, REAL)", (void*)h, n);
@@ -25716,10 +25956,28 @@ __attribute__((ms_abi)) long long mw_DefDlgProcA(void* h, uint32_t msg, uintptr_
     return 0;
 }
 /* ---- SW-1010: keyboard / input / misc user32 ---- */
-__attribute__((ms_abi)) int16_t mw_GetKeyState(int vk) { (void)vk; return 0; }
-__attribute__((ms_abi)) int16_t mw_GetAsyncKeyState(int vk) { (void)vk; return 0; }
+__attribute__((ms_abi)) int16_t mw_GetKeyState(int vk) {
+    /* SW-1318: synchronized view of the canonical key table (real
+     * GetKeyState returns the state used to generate the current message;
+     * our pump state IS that state). High bit = down. */
+    if (vk < 0 || vk > 255) return 0;
+    int16_t r = g_mw_key_down[vk] ? (int16_t)(int16_t)0x8000 : 0;
+    return r;
+}
+__attribute__((ms_abi)) int16_t mw_GetAsyncKeyState(int vk) {
+    /* SW-1318: async view — high bit = down right now, low bit = went down
+     * since the previous async query of this VK (latch consumed on read).
+     * The old `return 0` made every polling app (game paddles, idle loops)
+     * see a permanently idle keyboard. */
+    if (vk < 0 || vk > 255) return 0;
+    int16_t r = g_mw_key_down[vk] ? (int16_t)(int16_t)0x8000 : 0;
+    if (g_mw_key_latch[vk]) { r |= 0x0001; g_mw_key_latch[vk] = 0; }
+    return r;
+}
 __attribute__((ms_abi)) int mw_GetKeyboardState(uint8_t* buf) {
-    if (buf) memset(buf, 0, 256);
+    /* SW-1318: the canonical table (256 bytes, high bit = down) */
+    if (!buf) return 0;
+    memcpy(buf, g_mw_key_down, 256);
     return 1;
 }
 __attribute__((ms_abi)) int mw_SetKeyboardState(const uint8_t* buf) { (void)buf; return 1; }
@@ -25745,17 +26003,17 @@ __attribute__((ms_abi)) int mw_TranslateAcceleratorW(void* h, void* acc, const v
     if ((v & 0xFFFF0000u) != MW_ACCEL_BASE || !msg) return 0;
     int slot = (int)(v & 0xFFu) - 1;
     if (slot < 0 || slot >= 8 || !g_accel_slots[slot].live) return 0;
-    const uint8_t* ent = (const uint8_t*)g_accel_slots[slot].fvirt_key_cmd;
+    const mw_accel_ent_t* ents = g_accel_slots[slot].ent;
     const uint8_t* m = (const uint8_t*)msg;
     uint32_t message = *(const uint32_t*)(m + 8);
     uintptr_t wp = *(const uintptr_t*)(m + 16);
     int is_key = (message == 0x0100u /*WM_KEYDOWN*/ || message == 0x0104u /*WM_SYSKEYDOWN*/);
     int is_char = (message == 0x0102u /*WM_CHAR*/ || message == 0x0106u /*WM_SYSCHAR*/);
     if (!is_key && !is_char) return 0;
-    for (int i = 0; i < g_accel_slots[slot].n; i++, ent += 6) {
-        uint8_t fvirt = ent[0];
-        uint16_t key = (uint16_t)(ent[1] | (ent[2] << 8));
-        uint16_t cmd = (uint16_t)(ent[3] | (ent[4] << 8));
+    for (int i = 0; i < g_accel_slots[slot].n; i++) {
+        uint8_t fvirt = ents[i].fvirt;
+        uint16_t key = ents[i].key;
+        uint16_t cmd = ents[i].cmd;
         if (is_key) {
             if (!(fvirt & 0x01u /*FVIRTKEY*/)) continue;
             if ((uintptr_t)wp != (uintptr_t)key) continue;
@@ -26943,12 +27201,19 @@ __attribute__((ms_abi)) uint32_t mw_GetSystemPaletteEntries(void* hdc, uint32_t 
  * SW-1271 LoadAccelerators/TranslateAccelerator implementations above share
  * these slots) ---- */
 __attribute__((ms_abi)) void* mw_CreateAcceleratorTableW(const void* acc, int n) {
-    if (!acc || n <= 0 || n > 512) return NULL;
+    if (!acc || n <= 0 || n > MW_ACCEL_MAX) return NULL;
     int slot = -1;
     for (int i = 0; i < 8; i++) if (!g_accel_slots[i].live && slot < 0) slot = i;
     if (slot < 0) return NULL;
-    int copy = n > 256 ? 256 : n;
-    memcpy(g_accel_slots[slot].fvirt_key_cmd, acc, (size_t)copy * 6u);
+    /* SW-1317b: the guest passes ACCEL[] = {BYTE fVirt; WORD key; WORD cmd}
+     * (6-byte stride, guest struct alignment) — normalize ALL n records;
+     * the old code capped the copy at 256 while storing n. */
+    const uint8_t* r = (const uint8_t*)acc;
+    for (int i = 0; i < n; i++, r += 6) {
+        g_accel_slots[slot].ent[i].fvirt = r[0];
+        g_accel_slots[slot].ent[i].key   = (uint16_t)(r[1] | (r[2] << 8));
+        g_accel_slots[slot].ent[i].cmd   = (uint16_t)(r[3] | (r[4] << 8));
+    }
     g_accel_slots[slot].n = n; g_accel_slots[slot].live = 1;
     uintptr_t h = MW_ACCEL_BASE | (uintptr_t)(slot + 1);
     MW_TRACE("CreateAcceleratorTableW(n=%d) -> %p", n, (void*)h);
@@ -26961,7 +27226,16 @@ __attribute__((ms_abi)) int mw_CopyAcceleratorTableW(void* h, void* out, int n) 
     if (slot < 0 || slot >= 8 || !g_accel_slots[slot].live) return 0;
     if (!out) return g_accel_slots[slot].n;
     int copy = g_accel_slots[slot].n < n ? g_accel_slots[slot].n : n;
-    if (copy > 0) memcpy(out, g_accel_slots[slot].fvirt_key_cmd, (size_t)copy * 6u);
+    /* SW-1317b: emit the guest-side 6-byte ACCEL struct stride */
+    uint8_t* o = (uint8_t*)out;
+    for (int i = 0; i < copy; i++, o += 6) {
+        o[0] = g_accel_slots[slot].ent[i].fvirt;
+        o[1] = (uint8_t)(g_accel_slots[slot].ent[i].key & 0xFFu);
+        o[2] = (uint8_t)(g_accel_slots[slot].ent[i].key >> 8);
+        o[3] = (uint8_t)(g_accel_slots[slot].ent[i].cmd & 0xFFu);
+        o[4] = (uint8_t)(g_accel_slots[slot].ent[i].cmd >> 8);
+        o[5] = 0;
+    }
     MW_TRACE("CopyAcceleratorTableW(%p, n=%d) -> %d", h, n, copy);
     return copy;
 }
@@ -30763,7 +31037,11 @@ __attribute__((ms_abi)) int mw_CharUpperBuffW(uint16_t* str, uint32_t len) {
     }
     return (int)len;
 }
-__attribute__((ms_abi)) int mw_DestroyAcceleratorTable(void* hacc) { (void)hacc; return 1; }
+__attribute__((ms_abi)) int mw_DestroyAcceleratorTable(void* hacc) {
+    /* SW-1317: free the slot (old no-op leaked all 8 slots on the ANSI-name
+     * export, so the 9th LoadAccelerators honestly failed forever). */
+    return mw_DestroyAcceleratorTableW(hacc);
+}
 __attribute__((ms_abi)) int mw_GetWindowRgn(void* hwnd, void* hrgn) {
     (void)hwnd; (void)hrgn;
     return 0; /* NULLREGION — windows are rectangular v1 */
@@ -34355,6 +34633,7 @@ static ImportEntry g_import_table[] = {
     ENTRY("api-ms-win-crt-runtime-l1-1-0.dll", "_get_initial_narrow_environment", mw__get_initial_narrow_environment), /* SW-1230 */
     ENTRY("api-ms-win-crt-stdio-l1-1-0.dll", "_set_fmode",    mw__set_fmode), /* SW-1230 */
     ENTRY("msvcrt.dll", "__getmainargs",         mw___getmainargs),
+    ENTRY("msvcrt.dll", "__p___initenv",         mw___p___initenv), /* SW-1319: 7zr _setenvp */
     ENTRY("msvcrt.dll", "_ismbblead",            mw_ismbblead), /* SWEEP-013 */
     ENTRY("msvcrt.dll", "_mbsnbcat",             mw_mbsnbcat), /* SWEEP-014: cports 18x gate */
     ENTRY("msvcrt.dll", "??2@YAPEAX_K@Z",        mw_msvcrt_op_new), /* SWEEP-014: operator new */
@@ -34362,6 +34641,7 @@ static ImportEntry g_import_table[] = {
     ENTRY("msvcrt.dll", "??3@YAXPEAX@Z",         mw_msvcrt_op_delete), /* SWEEP-014: operator delete */
     ENTRY("msvcrt.dll", "??_V@YAXPEAX@Z",        mw_msvcrt_op_delete_arr), /* SWEEP-014: operator delete[] */
     ENTRY("api-ms-win-crt-runtime-l1-1-0.dll", "_configure_narrow_argv", mw__configure_narrow_argv),
+    ENTRY("api-ms-win-crt-runtime-l1-1-0.dll", "_get_narrow_winmain_command_line", mw__get_narrow_winmain_command_line), /* SW-1323: puzzle family */
     ENTRY("api-ms-win-crt-runtime-l1-1-0.dll", "_initialize_narrow_environment", mw__initialize_narrow_environment),
     ENTRY("api-ms-win-crt-runtime-l1-1-0.dll", "_set_new_mode", mw__set_new_mode),
     ENTRY("api-ms-win-crt-runtime-l1-1-0.dll", "_set_invalid_parameter_handler", mw__set_invalid_parameter_handler),
@@ -37189,7 +37469,7 @@ static void* resolve_proc_from_table(void* module, const char* name) {
      * image base resolves by NAME — the table is module-agnostic. */
     /* SWEEP-002 fix: same stale-range bug as mw_GetProcAddress — the
      * pseudo-handle space grew with known[] (57 DLLs). Bound: +0xff. */
-    if ((uintptr_t)module >= 0xdead0001 && (uintptr_t)module <= 0xdead00ff) {
+    if (mw_is_pseudo_module(module)) {
         for (size_t i = 0; i < NUM_IMPORTS; i++) {
             if (strcmp(g_import_table[i].name, name) == 0) {
                 MW_TRACE("  -> %p", g_import_table[i].func);
@@ -38740,7 +39020,7 @@ static uint32_t mw32_api_thunk(const char* dll, const char* name) {
     }
     MwApi32Slot* s = &g_api32_slots[g_api32_count];
     s->name = strdup(name);
-    s->fn = g_resolve_proc_fn ? g_resolve_proc_fn((void*)0xdead0001, name) : NULL;
+    s->fn = g_resolve_proc_fn ? g_resolve_proc_fn(mw_pseudo_handle(0), name) : NULL;
     s->calls = 0;
     uint32_t named = mw32_stdcall_arity(name);
     if (mw32_regparm_count(name)) {
@@ -38786,6 +39066,7 @@ static uint32_t mw32_thunk_for_host_fn(void* fn) {
  * default is transient (logged once per API for refinement). */
 static const struct { const char* n; uint32_t b; } g_api32_arity[] = {
 /* SW-1281 v5: VERIFIED arity table (scripts/sw1281_arity_gen.py) */
+    { "SetDefaultDllDirectories", 4 }, /* SW-1320: DWORD flags, 1 arg (7zr late-bind) */
     { "AddAccessAllowedAce", 16 },
     { "AdjustTokenPrivileges", 24 },
     { "AllocateAndInitializeSid", 44 },
@@ -39947,11 +40228,39 @@ static uint32_t mw32_api_gate(uint32_t slot_index) {
                         a[8], a[9], a[10], a[11], a[12], a[13], a[14], a[15]);
         ret = (uint32_t)r;
         /* GetProcAddress-returns-host-ptr: convert to a 32-bit thunk VA so
-         * the interpreter can gate it later (SW-1281 contract). */
+         * the interpreter can gate it later (SW-1281 contract).
+         * SW-1320 (sweep073): prefer a NAMED slot via mw32_api_thunk so the
+         * real stdcall arity table applies. The old anonymous fallback
+         * hardcoded arity=32 (8 args): 7zr.exe late-bound
+         * SetDefaultDllDirectories(1 arg) and came back with ESP +28 past
+         * its return address -> the guest's next ret fetched garbage
+         * EIP=0xc00. Named slots dedupe with the import-time thunk. */
         if ((strcmp(s->name, "GetProcAddress") == 0 ||
              strcmp(s->name, "GetProcAddressA") == 0 ||
              strcmp(s->name, "GetProcAddressW") == 0) && ret != 0) {
-            ret = mw32_thunk_for_host_fn((void*)(uintptr_t)r);
+            uint32_t thunk = 0;
+            uintptr_t nmp = (uintptr_t)a[1];
+            if (nmp > 0xFFFFu) {
+                char nb[80]; size_t k = 0;
+                size_t sl = strlen(s->name);
+                if (s->name[sl - 1] == 'W') { /* LPWSTR name (UTF-16LE) */
+                    for (; k + 1 < sizeof nb; k++) {
+                        uint16_t ch = (uint16_t)(m32_ld8((uint32_t)nmp + 2 * k) |
+                                                 (m32_ld8((uint32_t)nmp + 2 * k + 1) << 8));
+                        if (!ch) break;
+                        nb[k] = (ch < 0x80u) ? (char)ch : '?';
+                    }
+                } else {                      /* LPCSTR name */
+                    for (; k + 1 < sizeof nb; k++) {
+                        char ch = (char)m32_ld8((uint32_t)nmp + k);
+                        if (!ch) break;
+                        nb[k] = ch;
+                    }
+                }
+                nb[k] = 0;
+                if (nb[0]) thunk = mw32_api_thunk("kernel32.dll", nb);
+            }
+            ret = thunk ? thunk : mw32_thunk_for_host_fn((void*)(uintptr_t)r);
         }
         /* host pointers that guests store/deref as data are fine (host is
          * non-PIE, everything < 4GB). */
@@ -40313,6 +40622,45 @@ restart_prefix:
         case 0xAB: { NEEDM(); uint32_t v = LD_RorM32(); int bit = (R32(m.reg) >> (v & 31)) & 1; f_set(F_CF, bit); v |= (1u << (R32(m.reg) & 31)); ST_RorM32(v); break; } /* bts */
         case 0xB3: { NEEDM(); uint32_t v = LD_RorM32(); int bit = (R32(m.reg) >> (v & 31)) & 1; f_set(F_CF, bit); v &= ~(1u << (R32(m.reg) & 31)); ST_RorM32(v); break; } /* btr */
         case 0xBB: { NEEDM(); uint32_t v = LD_RorM32(); int bit = (R32(m.reg) >> (v & 31)) & 1; f_set(F_CF, bit); v ^= (1u << (R32(m.reg) & 31)); ST_RorM32(v); break; } /* btc */
+        case 0xBA: { /* SW-1319 (sweep073): bt/bts/btr/btc r/m32, imm8 — the
+                      * immediate BT group. 7zr.exe CRT init (0x401e67 ->
+                      * 0x472270) executes 0F BA /7 btc [esp+d8], imm8; only
+                      * the register forms (0F A3/AB/B3/BB) existed. */
+            NEEDM(); uint32_t v = LD_RorM32();
+            uint8_t imm = m32_ld8(t_cpu32.eip); t_cpu32.eip += 1;
+            int bit = (v >> (imm & 31)) & 1;
+            f_set(F_CF, bit);
+            switch (m.reg) {
+            case 4: break;                                        /* bt  */
+            case 5: v |=  (1u << (imm & 31)); ST_RorM32(v); break; /* bts */
+            case 6: v &= ~(1u << (imm & 31)); ST_RorM32(v); break; /* btr */
+            case 7: v ^=  (1u << (imm & 31)); ST_RorM32(v); break; /* btc */
+            default: cpu32_fatal("0F BA /dig", op2, t_cpu32.eip); break;
+            }
+            break; }
+        case 0xA4: case 0xA5: case 0xAC: case 0xAD: { /* SW-1319: shld/shrd
+            r/m32, r32, imm8|CL (0F A4/A5 = shld, 0F AC/AD = shrd). MSVC
+            emits these for 64-bit shifts in 32-bit code — 7zr.exe 0x4714f2
+            hits 0F AC imm8 inside the LZ decoder. */
+            NEEDM(); uint32_t dst = LD_RorM32();
+            uint32_t src = R32(m.reg);
+            uint32_t cnt = (op2 == 0xA4 || op2 == 0xAC)
+                ? (uint32_t)m32_ld8(t_cpu32.eip) : (uint32_t)(R32(ECXi) & 0xFFu);
+            if (op2 == 0xA4 || op2 == 0xAC) t_cpu32.eip += 1;
+            cnt &= 31u;
+            if (cnt) {
+                uint32_t res;
+                if (op2 == 0xA4 || op2 == 0xA5) { /* shld */
+                    res = (dst << cnt) | (src >> (32 - cnt));
+                    f_set(F_CF, (dst >> (32 - cnt)) & 1u);
+                } else {                          /* shrd */
+                    res = (dst >> cnt) | (src << (32 - cnt));
+                    f_set(F_CF, (dst >> (cnt - 1)) & 1u);
+                }
+                ST_RorM32(res);
+                f_setzsp32(res);
+            }
+            break; }
         case 0xBC: { NEEDM(); uint32_t v = LD_RorM32(); f_set(F_ZF, v == 0); if (v) { R32(m.reg) = __builtin_ctz(v); f_set(F_CF, 0); } else f_set(F_CF, 1); break; } /* bsf */
         case 0xBD: { NEEDM(); uint32_t v = LD_RorM32(); f_set(F_ZF, v == 0); if (v) { R32(m.reg) = 31 - __builtin_clz(v); f_set(F_CF, 0); } else f_set(F_CF, 1); break; } /* bsr */
         case 0xC0: { NEEDM(); uint8_t d = LD_RorM8(); uint8_t s = (m.reg < 4) ? (uint8_t)R32(m.reg) : (uint8_t)(R32(m.reg - 4) >> 8); uint8_t sum = alu_add8(d, s, 0); ST_RorM8(sum); if (m.reg < 4) R32(m.reg) = (R32(m.reg) & 0xFFFFFF00u) | d; else R32(m.reg - 4) = (R32(m.reg - 4) & 0xFFFF00FFu) | ((uint32_t)d << 8); break; } /* xadd 8 */
