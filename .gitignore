@@ -89,3 +89,5 @@ artifacts/sweep059/shots/
 # SWEEP-059: re-staged XP guest farm stays local (xp64_raw payloads are local-only per SWEEP-056)
 artifacts/sweep056/guests/
 artifacts/sweep056/bin/
+artifacts/sweep070/dl/
+artifacts/sweep070/guests/

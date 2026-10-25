@@ -7,6 +7,23 @@ Format based on [Keep a Changelog](https://keepachangelog.com/).
 
 ## [Unreleased] — Current Development State
 
+### Added (SWEEP-070 — heavy parallel train: famous programs fetched+run «قطار سنگین موازی ابزار هدفمند», 2026-10-25)
+- Targeted fetch wave (-P6, magic-sniffed): 19/26 famous Windows products LANDED (498MB):
+  IDM 6.42b2, VLC 3.0.21 (45MB), qBittorrent 4.6.4, Audacity 3.5.1, MPC-HC 2.3.9,
+  WinMerge 2.16.36, Everything, CPU-Z, PuTTY, 7-Zip 24.08, NVM, yt-dlp + ZIP exes
+  ShareX(+ffmpeg), ripgrep, bat, NSSM, SteamCMD, Stockfish 16.1 AVX2 (70MB — biggest
+  guest ever); 8 misses (403/404 asset drift) queued as SW-1310; wave2 manifest honest
+- Heavy battery xargs -P6: 18/18 executed, zero unresolved on 16/18 — bat + ShareX CLEAN
+  (full CRT+CLR .NET load path), PuTTY renders genuine 'Unable to open connection' error
+  dialog, ripgrep real CLI exit 2, 7zip 47,478-step x86 penetration, everything 4,953,
+  audacity/cpuz/mpchc/nvm 551-565-step common-signature family (SW-1309), idm/steamcmd/
+  winmerge rc=86 PE32-FATAL class, stockfish 70MB past old 64MB cap then SIGABRT (SW-1311),
+  ytdlp PyInstaller x64 bootstrap (SW-1312)
+- Load-fidelity verdict: load->run->own-decision Windows-like behavior on classes never
+  touched before; binaries not committed (gitignored, reproducible via recorded URLs)
+- evidence/sweep070/ (README + battery.tsv 18 rows + manifests + putty dialog shot);
+  no force-push
+
 ### Added (SWEEP-069 — 29 new guests + tool-impact audit «ابزار های کمکی چقدر بهت کمک کرده», 2026-10-25)
 - 29 NEW guests one parallel wave (3 XP + 12 NirSoft + 13 Sysinternals x64 + GUP) — 29/29
   executed, zero regressions; winmine smoke 82-frames EXACT after env-reset rebuild
