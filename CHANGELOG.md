@@ -7,6 +7,22 @@ Format based on [Keep a Changelog](https://keepachangelog.com/).
 
 ## [Unreleased] — Current Development State
 
+### Added (SWEEP-068 — 24-guest mass-run battery «۱۰ تا ۲۰ تا برنامه و بازی رو اجرا بکنی پوش بکن گیت هاب», 2026-10-25)
+- Parallel battery harness `scripts/sweep068_battery.sh`: xargs -P4, fresh per-exe
+  registry hive per run (SWEEP-066x64 lesson), renamed npp64 staging to avoid result-dir
+  collision with x86 notepad++.exe
+- 24 guests executed in one wave — 7 games (winmine 82 EXACT, sol 38-frame full deal
+  EXACT, freecell 10 EXACT, spider 491, breakout 48-frame loop NEW, snake 29+dialog NEW,
+  mshearts 2 NEW), 9 XP apps (all rc=0; wordpad renders its real 'Failed to create
+  empty document.' dialog), 6 modern tools (7zr 74/74 EXACT, npp-x64 2 MessageBoxes
+  SWEEP-066x64 parity, npp-x86 2450 EXACT, winrar rc=1+dialog EXACT, usbdeview 27
+  EXACT, driverview 794,322 EXACT), 2 Sysinternals x64 (pslist64 clean NEW, handle64
+  rc=139 NEW frontier -> SW-1305)
+- ZERO regressions: every comparable number EXACT origin parity; evidence/sweep068/
+  (battery.tsv 24 rows, battery_raw.txt, 12 curated shots)
+- New worklist car SW-1305 (handle64 x64 handle-table path; pslist64 clean isolates
+  the delta to handle-specific APIs)
+
 ### Added (SWEEP-032..036 — the five-train session «۵ قطار», 2026-10-21)
 - zoomit64 runs end-to-end (was loader-rejected at the 64MB file cap): 70-import
   surface (GDI+ pen state/pixel store/effects, LCIDToLocaleName,
