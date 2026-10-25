@@ -3568,3 +3568,24 @@ viewer, (2) Windows calculator, (3) a program that does not exist on Linux
 - [ ] **SW-1298** (new): spider .rsrc = 87,992 resource entries (Ghidra
       tree walk) — audit whether engine resource loader can surface all
       card-back art variants (spider already renders 621-frame deal).
+
+## SWEEP-066 — SW-1297 CLOSED: reloc-delta + 226-entry arity table fix
+- [x] **SW-1297** — npp wild jump root-caused (two stacked bugs):
+      (1) load_pe32 applied +image_base to every HIGHLOW reloc while mapped
+      AT the preferred base (delta must be 0) — corrupted all absolute
+      pointers; (2) g_api32_arity had 226 wrong stdcall pop-bytes (wine
+      spec cross-check, scripts/sweep066_arity_check.py) — EnterCriticalSection
+      popped 16 instead of 4 -> npp's push/call/pop/ret tail shape read a
+      garbage ret -> executed .rdata -> opcode 0xee fatal. Both fixed.
+- [x] Diagnostics: cpu32_fatal eip-ring dump; crash_handler guest-context
+      report (EIP/ESP/steps + ring); host-image access guard in m32_*
+      (guest stores into the non-PIE host span were corrupting host memory);
+      import-hint bounds check.
+- [x] Measured: notepadpp 86-fatal -> 100,518,627 steps; driverview 139 ->
+      794,071 steps (EBP=0xdead0001 uxtheme pseudo-handle escape); usbdeview
+      -> real .text execution; x64 regression ALL BASELINE.
+- [ ] **SW-1293b** (standing, now with signatures): 7zr gate host-RIP =
+      guest_va<<32 corruption; usbdeview m32 wild read needs si_addr in
+      crash prints; driverview 0xdead0001 escape; npp 0x693fefee branch.
+- [ ] **SW-1299** (new): SList x86-ECX family + RtlUnwind arity manual
+      review (excluded from the automated wine fix).

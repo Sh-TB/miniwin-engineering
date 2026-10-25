@@ -2030,3 +2030,29 @@ Cross-validation: driverview imports COMCTL32.Ordinal_17 == InitCommonControls
 New cars: SW-1296 (tiny-tool Ghidra function discovery), SW-1297 (npp 0xee),
 SW-1298 (spider 87,992-resource audit). Report: artifacts/sweep065/
 BATCH20_REPORT.md. no force-push.
+
+---
+## SWEEP-066 (2026-10-25) — SW-1297 closed: reloc-delta + 226 arity fixes, npp hits 100M steps
+
+Rule #1: fetched origin first — 180c249 (SWEEP-065) both sides. ENV-RESET
+reconcile: sandbox had rolled workspace back to SWEEP-030; hard-reset to
+origin/main (documented protocol), rebuilt, regression re-pinned.
+
+SW-1297 root cause (two stacked bugs, both fixed in load_pe32/gate):
+(1) HIGHLOW relocations applied +image_base while mapped AT the preferred
+base — delta must be 0; npp EIP 0x7ef329 = 0x3ef329+0x400000 (.rdata).
+(2) g_api32_arity[] cross-validated vs wine .spec (8345 names, 23 DLLs,
+new scripts/sweep066_arity_check.py): 226 wrong pop-bytes (EnterCS 16->4,
+BeginPaint 16->8, ShowWindow 16->8, DebugBreak 16->0, ...). npp chain
+decoded via new fatal eip-ring: call [0x7cb388]=EnterCS -> pop ebp; ret
+-> garbage ret 0x7ef318 -> data-as-code.
+
+Diagnostics: cpu32_fatal + crash_handler now print guest EIP/ring;
+m32_* host-image guard (guest writes into non-PIE host span refused);
+import-hint bounds check. SList-ECX family + RtlUnwind excluded -> SW-1299.
+
+Measured: notepadpp 100,518,627 steps (was 86-fatal at CRT); driverview
+794,071 steps (was 139 at 0); usbdeview real .text; x64 regression ALL
+BASELINE (winmine 82/sol 38/freecell 10/spider 618/calc 1/notepad 0/
+wordpad 0/winrar rc=1+dialog). Report: artifacts/sweep066/
+SW1297_ARITY_REPORT.md. Evidence: evidence/sweep066/. no force-push.

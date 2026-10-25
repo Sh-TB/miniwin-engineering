@@ -1,0 +1,1 @@
+[TRACE] Command line: /home/z/my-project/workspace/miniwin-engineering/artifacts/sweep50/dl/cports/cports.exe
