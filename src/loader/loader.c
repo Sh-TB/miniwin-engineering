@@ -41365,13 +41365,28 @@ int main(int argc, char* argv[]) {
     }
     MW_TRACE("Command line: %s", g_cmdline_ansi);
 
-    /* Build wide command line */
-    mbstowcs(g_cmdline_wide, g_cmdline_ansi, sizeof(g_cmdline_wide)/sizeof(wchar_t));
+    /* Build wide command line — SWEEP-072-a: PEB CmdBuffer is now UTF-16LE
+     * (the old mbstowcs fill is removed; see the BUG-043-family block below). */
     { /* SWEEP-027: widen to real UTF-16 for msvcrt _wcmdln (wchar_t is 4B on host) */
         size_t i = 0;
         for (; g_cmdline_ansi[i] && i + 1 < sizeof(g_cmdline_utf16) / sizeof(g_cmdline_utf16[0]); i++)
             g_cmdline_utf16[i] = (uint16_t)(unsigned char)g_cmdline_ansi[i];
         g_cmdline_utf16[i] = 0;
+    }
+
+    { /* SWEEP-072-a (BUG-043 family, PEB consumer): the PEB ProcessParameters
+       * CmdBuffer must hold UTF-16LE. The old mbstowcs fill produced 4-byte
+       * host wchars, so the guest CRT — reading the buffer as UTF-16 — saw
+       * L"p\0u\0t..." = the string terminated after ONE character ("p" for
+       * putty.exe): every PEB-cmdline consumer got a phantom argv0 of one
+       * letter and putty.exe skipped its config dialog entirely (started a
+       * session with an empty host -> 'Unable to open connection to').
+       * Fix: proper UTF-16LE via w3_utf8_to_utf16le (same as build_cmdline_w). */
+        int n = w3_utf8_to_utf16le(g_cmdline_ansi, strlen(g_cmdline_ansi),
+                                   (uint16_t*)(void*)g_cmdline_wide,
+                                   (int)(sizeof(g_cmdline_wide) / 2 - 1));
+        if (n < 0) n = 0;
+        ((uint16_t*)(void*)g_cmdline_wide)[n] = 0;
     }
 
     /* Set up CRT data */

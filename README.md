@@ -58,7 +58,7 @@ numbers, LED timer, game-over bomb art).
 | **Regression gate** | G1 PIN 12/12 + corpus ×3 determinism, every single commit |
 | **Sweeps landed** | SWEEP-030 → 070 — 40+ sweeps, ~10 engine root-cause classes fixed |
 
-## Load fidelity — «دقیقا شبیه ویندوز»
+## Load fidelity — exactly like Windows
 
 MiniWin replicates the **Windows load sequence** step by step: MZ/PE parse → section
 mapping → relocations → flat IAT import resolution (arity-verified against Wine
@@ -157,6 +157,6 @@ bash scripts/sweep070_download.sh && bash scripts/sweep070_battery.sh
 
 <div align="center">
 
-**v0.001** — first tagged release · the train rolls: «ادامه»
+**v0.001** — first tagged release · the train rolls on.
 
 </div>

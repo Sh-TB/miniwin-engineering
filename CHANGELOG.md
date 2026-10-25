@@ -20,7 +20,7 @@ engine binary, clean — no unwanted files) and `miniwin-v0.001-linux-x64.tar.gz
   run, Notepad++ x64 2 real MessageBoxes, DriverView 794,322-step OEP penetration,
   winmine interactive board with classic number colors and bomb art
 
-### Added (SWEEP-070 — heavy parallel train: famous programs fetched+run «قطار سنگین موازی ابزار هدفمند», 2026-10-25)
+### Added (SWEEP-070 — heavy parallel train with targeted tools: famous programs fetched and run, 2026-10-25)
 - Targeted fetch wave (-P6, magic-sniffed): 19/26 famous Windows products LANDED (498MB):
   IDM 6.42b2, VLC 3.0.21 (45MB), qBittorrent 4.6.4, Audacity 3.5.1, MPC-HC 2.3.9,
   WinMerge 2.16.36, Everything, CPU-Z, PuTTY, 7-Zip 24.08, NVM, yt-dlp + ZIP exes
@@ -37,7 +37,25 @@ engine binary, clean — no unwanted files) and `miniwin-v0.001-linux-x64.tar.gz
 - evidence/sweep070/ (README + battery.tsv 18 rows + manifests + putty dialog shot);
   no force-push
 
-### Added (SWEEP-069 — 29 new guests + tool-impact audit «ابزار های کمکی چقدر بهت کمک کرده», 2026-10-25)
+### Added (SWEEP-072 — engine fix SWEEP-072-a, issue #1 closed, portable wave, de-Persian GitHub content, 2026-10-25)
+- ENGINE FIX SWEEP-072-a (BUG-043 family, PEB consumer): PEB ProcessParameters CmdBuffer
+  now holds real UTF-16LE (old mbstowcs fill = 4-byte host wchars -> guest CRT read
+  L"p" for putty.exe); G1 PIN 12/12 sha 08f85c71 on rebuilt binary
+- putty.exe startup fully decoded (api_trace + disassembly + upstream source): config
+  dialog created via CreateDialogParamA renders stub, modal loop exits immediately,
+  session auto-launch with empty host -> genuine 'Unable to open connection to' dialog;
+  registered as SW-1313 (CreateDialogParam real template rendering) + SW-1314
+  (PUTTY.RND /GS failfast with seeded Windows skeleton)
+- Issue #1 (Master Engineering Campaign) CLOSED completed: evidence-mapped report
+  evidence/sweep072/ISSUE1_COMPLETION_REPORT.md covering all 8 success criteria
+- GitHub content de-Persianized: README.md, CHANGELOG.md, v0.001 release notes
+  (API PATCH) — English-only per policy
+- Portable wave (scripts/sweep072_portable.sh, 11 Sysinternals/NirSoft tools):
+  bginfo64 rc=0 + 2 GUI frames, cports/diskmon64 clean, pageant 124 / rammap64 139 =
+  origin parity, autoruns64/zoomit64 rc=139 (zoomit64 delta flagged -> SW-1315)
+- evidence/sweep072/ (ISSUE1_COMPLETION_REPORT.md, portable_raw.txt); no force-push
+
+### Added (SWEEP-069 — 29 new guests + measured tool-impact audit, 2026-10-25)
 - 29 NEW guests one parallel wave (3 XP + 12 NirSoft + 13 Sysinternals x64 + GUP) — 29/29
   executed, zero regressions; winmine smoke 82-frames EXACT after env-reset rebuild
 - NirSoft family STRATIFIED (was blanket 13x rc=139 in SWEEP-065): faview + recentfilesview
@@ -55,7 +73,7 @@ engine binary, clean — no unwanted files) and `miniwin-v0.001-linux-x64.tar.gz
   caught mid-round regression, git ff-only recovered sandbox reset in ~5 min
 - evidence/sweep069/ (battery.tsv 29 rows, battery_raw.txt, shots/); no force-push
 
-### Added (SWEEP-068 — 24-guest mass-run battery «۱۰ تا ۲۰ تا برنامه و بازی رو اجرا بکنی پوش بکن گیت هاب», 2026-10-25)
+### Added (SWEEP-068 — 24-guest mass-run battery: run 10-20+ programs and games, push to GitHub, 2026-10-25)
 - Parallel battery harness `scripts/sweep068_battery.sh`: xargs -P4, fresh per-exe
   registry hive per run (SWEEP-066x64 lesson), renamed npp64 staging to avoid result-dir
   collision with x86 notepad++.exe
@@ -71,7 +89,7 @@ engine binary, clean — no unwanted files) and `miniwin-v0.001-linux-x64.tar.gz
 - New worklist car SW-1305 (handle64 x64 handle-table path; pslist64 clean isolates
   the delta to handle-specific APIs)
 
-### Added (SWEEP-032..036 — the five-train session «۵ قطار», 2026-10-21)
+### Added (SWEEP-032..036 — the five-train session, 2026-10-21)
 - zoomit64 runs end-to-end (was loader-rejected at the 64MB file cap): 70-import
   surface (GDI+ pen state/pixel store/effects, LCIDToLocaleName,
   CompareStringOrdinal, threadpool-wait, WINMM timers, WTS, USER32 extras,
