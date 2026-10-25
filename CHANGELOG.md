@@ -7,6 +7,24 @@ Format based on [Keep a Changelog](https://keepachangelog.com/).
 
 ## [Unreleased] — Current Development State
 
+### Added (SWEEP-069 — 29 new guests + tool-impact audit «ابزار های کمکی چقدر بهت کمک کرده», 2026-10-25)
+- 29 NEW guests one parallel wave (3 XP + 12 NirSoft + 13 Sysinternals x64 + GUP) — 29/29
+  executed, zero regressions; winmine smoke 82-frames EXACT after env-reset rebuild
+- NirSoft family STRATIFIED (was blanket 13x rc=139 in SWEEP-065): faview + recentfilesview
+  CLEAN rc=0 (new), heapmemview 794,277 / iconsext 603,019 / htmlastext 460,750 steps DEEP
+  past UPX stub into real OEP (new car SW-1306), 5 early-crash at 26 steps, 2 rc=86
+- gup.exe hits EXACT notepadpp 2450-step signature (same codebase, 8.5x smaller A/B for
+  SW-1297-x86 -> car SW-1307)
+- Sysinternals x64: 5 clean exits (autologon/listdlls/pipelist/psloggedon/psservice),
+  curl prints REAL usage error + exit 2, 4 real-banner 255 exits, logonsessions64 rc=133
+  = winmergeu EH-chain class (first x64 data point -> car SW-1308)
+- XP trio: drwtsn32/regedt32 rc=0, sndvol32 renders real 'This program will now close.'
+  MessageBox (evidence/sweep069/shots/)
+- Tool-impact audit (measured): Ghidra hours->minutes (x20 = 30,289 fns in ~726s), parallel
+  agents 4 fixes/sweep, xargs -P4 ~5x throughput, spec cross-check 226 arity fixes, G1 gate
+  caught mid-round regression, git ff-only recovered sandbox reset in ~5 min
+- evidence/sweep069/ (battery.tsv 29 rows, battery_raw.txt, shots/); no force-push
+
 ### Added (SWEEP-068 — 24-guest mass-run battery «۱۰ تا ۲۰ تا برنامه و بازی رو اجرا بکنی پوش بکن گیت هاب», 2026-10-25)
 - Parallel battery harness `scripts/sweep068_battery.sh`: xargs -P4, fresh per-exe
   registry hive per run (SWEEP-066x64 lesson), renamed npp64 staging to avoid result-dir
