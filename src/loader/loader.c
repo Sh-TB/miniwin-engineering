@@ -13138,9 +13138,17 @@ static void* w3_res_find(void* hmod, const char* aname, const wchar_t* wname, co
      * as a resource directory: named=9332/ided=47168 garbage -> SIGSEGV). */
     uint8_t* pe = mw_res_pe_base(hmod);
     uint32_t pe_off = *(uint32_t*)(pe + 0x3c);
-    uint16_t num_dd = *(uint16_t*)(pe + pe_off + 24 + 108);
+    /* SW-1301: the optional header differs PE32 vs PE32+ — NumberOfRvaAndSizes
+     * sits at opt+92 (PE32) / opt+108 (PE32+), DataDirectory right after. The
+     * old code hardcoded the PE32+ offsets, so PE32 guests read the Import
+     * dir size as num_dd and the DEBUG dir as .rsrc — FindResource honestly
+     * failed on every PE32 module (spider/sol are PE32+, masking it).
+     * Branch on the magic. */
+    uint16_t pe_magic = *(uint16_t*)(pe + pe_off + 24);
+    uint32_t dd_off = (pe_magic == 0x20b) ? 108u : 92u; /* NumberOfRvaAndSizes */
+    uint16_t num_dd = *(uint16_t*)(pe + pe_off + 24 + dd_off);
     if (num_dd < 3) return NULL;
-    rsrc_rva = *(uint32_t*)(pe + pe_off + 24 + 112 + 2 * 8);
+    rsrc_rva = *(uint32_t*)(pe + pe_off + 24 + dd_off + 4 + 2 * 8); /* DataDirectory[2] */
     if (!rsrc_rva) return NULL;
     const uint8_t* base = pe + rsrc_rva;
     g_res_dir_base = (uint8_t*)base; /* SW-801d: LockResource/dialog data resolve */
@@ -37566,6 +37574,12 @@ static void crash_handler(int sig, siginfo_t* info, void* ctx) {
     }
 
     fprintf(stderr, "\n[CRASH] Signal %d at RIP=0x%lx\n", sig, rip);
+    /* SW-1293b: report the faulting ADDRESS, not just RIP — usbdeview's
+     * m32 wild read class (valid RIP, garbage data pointer) is invisible
+     * without si_addr; si_code distinguishes MAPERR (unmapped) vs ACCERR
+     * (mapped, wrong perms). */
+    fprintf(stderr, "  si_addr=0x%lx si_code=%d (1=MAPERR 2=ACCERR)\n",
+            (unsigned long)(uintptr_t)info->si_addr, info->si_code);
     fprintf(stderr, "  RAX=0x%lx RCX=0x%lx RDX=0x%lx R8=0x%lx R9=0x%lx\n",
             rax, rcx, rdx, r8, r9);
     fprintf(stderr, "  RSP=0x%lx RBP=0x%lx\n", rsp, rbp);
@@ -38032,6 +38046,27 @@ static void mw32_thunk_emit(uint32_t slot_index) {
 }
 #define MW32_ARITY_DEFAULT 32u
 #define MW32_ARITY_CDECL   0u      /* caller pops; gate pops nothing */
+/* SW-1299: x86 regparm APIs — real Windows passes their args in ECX/EDX
+ * (fastcall-like), NOT on the stack (wine kernel32.spec marks the SList
+ * family -regparm). The gate must deliver ECX/EDX into arg slots 0/1 and
+ * pop 0 bytes; the stdcall arity table can never describe them. */
+static int mw32_regparm_count(const char* name) {
+    if (!name) return 0;
+    switch (name[0]) {
+    case 'I':
+        if (!strcmp(name, "InterlockedPushEntrySList")) return 2; /* ECX=head, EDX=entry */
+        if (!strcmp(name, "InterlockedPopEntrySList"))  return 1; /* ECX */
+        if (!strcmp(name, "InterlockedFlushSList"))     return 1; /* ECX */
+        break;
+    case 'Q':
+        if (!strcmp(name, "QueryDepthSList"))           return 1; /* ECX */
+        break;
+    case 'N':
+        if (!strcmp(name, "InitializeSListHead"))       return 1; /* ECX */
+        break;
+    }
+    return 0;
+}
 static int mw32_dll_is_crt(const char* dll) {
     /* msvcrt.dll + the UCRT api-set families are ALL cdecl (caller pops);
      * Win32 DLLs (kernel32/user32/gdi32/...) are stdcall. */
@@ -38059,7 +38094,10 @@ static uint32_t mw32_api_thunk(const char* dll, const char* name) {
     s->fn = g_resolve_proc_fn ? g_resolve_proc_fn((void*)0xdead0001, name) : NULL;
     s->calls = 0;
     uint32_t named = mw32_stdcall_arity(name);
-    if (named != MW32_ARITY_DEFAULT) {
+    if (mw32_regparm_count(name)) {
+        /* SW-1299: SList regparm family — args in ECX/EDX, zero stack pop. */
+        s->arity = 0; s->cdeclf = 0;
+    } else if (named != MW32_ARITY_DEFAULT) {
         s->arity = named; s->cdeclf = (named == MW32_ARITY_CDECL &&
             mw32_dll_is_crt(dll)) ? 1 : 0;
         /* explicit 0 in the table + CRT dll = cdecl; explicit 0 elsewhere
@@ -38224,8 +38262,11 @@ static const struct { const char* n; uint32_t b; } g_api32_arity[] = {
     { "GlobalLock", 4 },
     { "GlobalReAlloc", 12 },
     { "GlobalUnlock", 4 },
-    { "InitializeSListHead", 16 },
-    { "InterlockedPushEntrySList", 4 },
+    /* SW-1299: the SList family is x86 regparm (ECX/EDX), NOT stdcall —
+     * arity 0 + gate register delivery via mw32_regparm_count(). The old
+     * stdcall guesses (16/4) corrupted the guest stack. */
+    { "InitializeSListHead", 0 },
+    { "InterlockedPushEntrySList", 0 },
     { "DeviceIoControl", 32 },
     { "GetOverlappedResult", 16 },
     { "CreateFileMappingA", 24 },
@@ -38283,7 +38324,8 @@ static const struct { const char* n; uint32_t b; } g_api32_arity[] = {
     { "IsProcessorFeaturePresent", 4 },
     { "QueryPerformanceCounter", 4 },
     { "QueryPerformanceFrequency", 4 },
-    { "RtlUnwind", 0 },
+    { "RtlUnwind", 16 }, /* SW-1299: stdcall 4 args (frame/ip/rec/val); x86
+                          * resume-at-target semantics = SW-1303 frontier */
     { "GetStringTypeW", 16 },
     { "MultiByteToWideChar", 24 },
     { "WideCharToMultiByte", 32 },
@@ -38517,9 +38559,9 @@ static const struct { const char* n; uint32_t b; } g_api32_arity[] = {
     { "HeapCreate", 12 },
     { "InterlockedDecrement", 4 },
     { "InterlockedExchange", 8 },
-    { "InterlockedFlushSList", 12 },
+    { "InterlockedFlushSList", 0 }, /* SW-1299 regparm */
     { "InterlockedIncrement", 4 },
-    { "InterlockedPopEntrySList", 4 },
+    { "InterlockedPopEntrySList", 0 }, /* SW-1299 regparm */
     { "IsBadReadPtr", 8 },
     { "IsWow64Process", 8 },
     { "LCMapStringA", 24 },
@@ -39228,6 +39270,12 @@ static uint32_t mw32_api_gate(uint32_t slot_index) {
     /* widen up to 16 dword args; callee reads what its prototype needs */
     uint64_t a[16];
     for (int i = 0; i < 16; i++) a[i] = m32_ld32(t_cpu32.r[ESPi] + (uint32_t)(4 * i));
+    /* SW-1299: regparm delivery — real Windows passes the SList family in
+     * ECX (and EDX for push); the guest stack slots hold stale junk, so
+     * overlay the register args AFTER the stack widen. */
+    int rp = mw32_regparm_count(s->name);
+    if (rp >= 1) a[0] = t_cpu32.r[ECXi];
+    if (rp >= 2) a[1] = t_cpu32.r[EDXi];
 
     if (g_cpu32_trace) {
         MW_TRACE("[API32 #%u] %s esp=0x%x args=[%x %x %x %x] ret=%x next=%02x %02x %02x %02x %02x %02x",
@@ -39834,6 +39882,7 @@ static int cpu32_step2(uint8_t op, int o32, int arep, int frep) {
         uint32_t src = R32b(ESIi), dst = R32b(EDIi);
         if (g_segreg_ovr == 0) src += t_cpu32.fsbase;
         else if (g_segreg_ovr == 1) src += t_cpu32.gsbase;
+        uint32_t src0 = src; /* SW-1300: cursor after base-add, before advance */
         if ((arep || frep) && R32b(ECXi) == 0) break;
         uint32_t done = 0;
         for (;;) {
@@ -39866,7 +39915,25 @@ static int cpu32_step2(uint8_t op, int o32, int arep, int frep) {
             }
             if (++done > 0x10000000u) cpu32_fatal("rep runaway", op, t_cpu32.eip);
         }
-        R32b(ESIi) = src; R32b(EDIi) = dst;
+        /* SW-1300 (ISA accuracy — UPX NirSoft class): write back ONLY the
+         * registers each opcode really touches. Intel SDM: MOVS/CMPS update
+         * BOTH ESI and EDI; STOS/SCAS update EDI only; LODS updates ESI
+         * only. The old code advanced BOTH for every opcode, so UPX stubs'
+         * `repne scasb` strlen corrupted ESI -> the next `call [esi+off]`
+         * read a misaligned IAT dword (DriverView 0xA0007E00 -> SIGSEGV).
+         * ESI also gets its pre-instruction value back: src had the FS/GS
+         * base folded in for addressing, which must never leak into the
+         * register file. */
+        int32_t sadv = (int32_t)(src - src0);
+        switch (op) {
+        case 0xAC: case 0xAD:                    /* LODS: ESI only */
+            R32b(ESIi) += sadv; break;
+        case 0xAA: case 0xAB:                    /* STOS: EDI only */
+        case 0xAE: case 0xAF:                    /* SCAS: EDI only */
+            R32b(EDIi) = dst; break;
+        default:                                 /* MOVS/CMPS: both */
+            R32b(ESIi) += sadv; R32b(EDIi) = dst; break;
+        }
         break; }
     /* ---- x87 (D8-DF), Intel-accurate mod=3 map ---- */
     case 0xD8: case 0xD9: case 0xDA: case 0xDB: case 0xDC: case 0xDD: case 0xDE: case 0xDF: {

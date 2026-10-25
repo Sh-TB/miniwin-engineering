@@ -1,0 +1,12 @@
+guest	rc	frames	steps	baseline(SWEEP-066)	verdict
+winmine	0	82	-	82	BASELINE
+sol	124	38	-	38	BASELINE (pump timeout normal)
+freecell	0	10	-	10	BASELINE
+spider	0	645	-	618 timer-noise	BASELINE (timer-noise)
+calc	0	1	-	1	BASELINE
+notepad	0	0	-	rc=0	BASELINE
+wordpad	0	0	-	rc=0	BASELINE
+driverview	139	0	794322	794071	ADVANCED past UPX stub into real NirSoft OEP (SW-1300)
+usbdeview	139	0	27	27	BASELINE + si_addr diagnostic landed (si_addr=0x0 MAPERR @0x4159e8)
+notepadpp	139	0	2450	2450	EXACT committed baseline
+7zr	139	0	74	74	EXACT baseline

@@ -3589,3 +3589,60 @@ viewer, (2) Windows calculator, (3) a program that does not exist on Linux
       crash prints; driverview 0xdead0001 escape; npp 0x693fefee branch.
 - [ ] **SW-1299** (new): SList x86-ECX family + RtlUnwind arity manual
       review (excluded from the automated wine fix).
+
+## SWEEP-067 — tool-flywheel round «ادامه + ابزار ها همیشه کمکت بشن» (2026-10-25)
+- [x] **SW-1299 LANDED** — SList x86 regparm class + RtlUnwind arity:
+      (1) real Windows passes the SList family in ECX/EDX (wine kernel32.spec
+      -regparm), NOT on the stack — new mw32_regparm_count() + gate register
+      delivery (ECX->arg0, EDX->arg1 for Push) + arity 0 (old table guesses
+      InitializeSListHead=16 / Push=4 / Flush=12 / Pop=4 corrupted the guest
+      stack); (2) RtlUnwind 0 -> 16 (stdcall 4 args); x86 resume-at-target
+      semantics registered as SW-1303 (never returns to RA on real Windows).
+- [x] **SW-1300 LANDED (ISA accuracy — the driverview root cause)** — x86
+      string-op handler wrote back BOTH ESI and EDI for ALL opcodes 0xA4..0xAF;
+      Intel SDM: MOVS/CMPS both, STOS/SCAS EDI only, LODS ESI only. UPX stubs'
+      `repne scasb` strlen corrupted ESI -> `call [esi+off]` read a MISALIGNED
+      IAT dword (DriverView 0xA0007E00 -> host SIGSEGV at 794,071 steps).
+      Fixed per-opcode writeback + ESI restored relative to pre-instruction
+      value (FS/GS base fold can never leak into the register file).
+      CORRECTION of SWEEP-066 record: driverview "uxtheme pseudo-handle
+      escape" was a MISDIAGNOSIS — 0xdead0001 in EBP is the kernel32 handle
+      parked by the stub (red herring); the fatal transfer was ESI corruption.
+- [x] **SW-1301 LANDED** — w3_res_find hardcoded PE32+ optional-header
+      offsets (NumberOfRvaAndSizes at opt+108, dirs at +112): PE32 modules
+      read Import-dir size as num_dd and the DEBUG dir as .rsrc -> every
+      PE32 FindResource honestly failed (masked because spider/sol/cards
+      are PE32+). Now branches on PE magic (0x20b vs 0x10b).
+- [x] **SW-1293b diagnostics LANDED** — crash_handler now prints si_addr +
+      si_code (1=MAPERR 2=ACCERR). usbdeview signature recorded: guest EIP
+      0x4159e8, si_addr=0x0 MAPERR, passed thunk 0xa00394 (eip-hist
+      00a00394 00a00399 00a00000) — null deref right after an API call.
+- [x] **SW-1298 CLOSED** — spider .rsrc audit (agent 2-b): 90 leaf entries
+      (190 nodes), NOT 87,992 (byte-count artifact); 56 RT_BITMAPs (54 named
+      CARD1..52/CARDBACK/FELT + int 106/108); NO engine gap — FindResource/
+      LoadImage surface every card-back; card-back "12 variants" live in
+      cards.dll RT_BITMAP 54-65, spider.exe doesn't import cards.dll.
+      Report: artifacts/sweep067/SW1298_RSRC_AUDIT.md.
+- [x] **SW-1296 recon (agent 2-a)** — all 4 tiny NirSoft exes are UPX-packed
+      with the 13-import stub signature; static capstone IAT mapping finds
+      ZERO resolvable call sites on packed tools (Ghidra-class discovery
+      unnecessary: one upx -d pass or MW32_TRACE runtime ground truth).
+      Reports: artifacts/sweep067/{SW1293b_DRIVERVIEW_DECODE,SW1296_STATIC_RECON}.md
+- [ ] **SW-1302 (new)** — DriverView past the UPX stub into REAL NirSoft OEP
+      (794,322 steps, eip-hist ...0040a605 -> 004010e4): dies at OEP+4
+      `mov eax,[ebx]` (0x4010e8) with EBX=0 -> si_addr=0x4. Decode whether
+      the UPX popad context must carry non-zero EBX (real Windows process
+      start regs) or the stub's unpacked OEP differs. Car: compare
+      `upx -d` static OEP (via the engine's own UPX guest if no host upx).
+- [ ] **SW-1303 (new)** — x86 RtlUnwind resume-at-target semantics (gate
+      currently returns to RA; real Windows transfers to TargetFrame/IP).
+- [ ] **SW-1304 (new)** — npp frontier decode: table walk 0x78eb78..0x78eb92
+      (mov ebx,[esi]; add esi,8) exits wild (0x693fefee in SWEEP-066 100M run;
+      si_addr wild read in the fast path) — decode the table at 0x7ef2e0 and
+      its terminator; same region in both engines, now reachable in 2,450
+      steps (SW-1300 removed the pre-loop spin).
+- [x] Gates: G1 PIN OK sha 198bcf7e (evidence/master/g1/20261025_051339),
+      battery x64 ALL BASELINE (winmine 82/sol 38/freecell 10/spider 645
+      timer-noise/calc 1/notepad+wordpad rc=0), PE32: 7zr 74 EXACT,
+      usbdeview 27, npp 2450 (= committed baseline), driverview 794,322
+      ADVANCED past stub to real OEP. ZERO regressions.
