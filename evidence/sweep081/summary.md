@@ -73,12 +73,18 @@
     (`lea rcx,[rbx+0x20]` first — a C++ intrusive-list/sentinel store on
     a NULL object), rdi=0x10001 (the window handle), reached through the
     SW-1334 class-proc re-entry (the [rsp]=0 sentinel return frame).
-  - the crashing path is NOTepad++'s wndproc itself but a callee chain
-    (0x1fd90/0x1fcb0/0x1f0d0 all called with rcx=rdi) that ended up with
-    rbx=0 — an earlier API in that chain returned NULL and the guest
-    proceeded. Next train: identify 0x1f0d0's `r8d=0x2a` call (a
-    LoadStringW/MessageBoxW-class wrapper) and walk back to the NULL
-    producer.
+  - the SW-1334 [msg] trace + rerun PINNED the producer: the last APIs
+    before the crash are GetWindowLongPtrW(0x10001, -21=GWLP_USERDATA)
+    -> 0x0, HeapAlloc(0x10), SetWindowSubclass(hwnd=0x10001 id=0x2a)
+    chain 1 + chain 2 (TRUE) — and the trace contains ZERO
+    SetWindowLongPtrW calls: the guest's per-window C++ object store was
+    NEVER populated. The guest reads USERDATA -> 0 and executes
+    `lea rcx,[rbx+0x20]; mov [rcx],rbx` on the NULL object (si_addr=0x20).
+  - NEXT STEP (concrete): the producer should be the WM_NCCREATE /
+    WM_CREATE lpCreateParams path of CreateWindowExW for guest-registered
+    classes — verify our x64 CREATESTRUCT delivery stores what the guest
+    expects, and that the guest's SetWindowLongPtrW(GWLP_USERDATA) store
+    actually runs (it never did in this trace).
 
 ## New app-plugins (first results)
 - **winnc 11.6 x86 (Inno Setup)**: FRONTIER **SW-1374** — Inno's runtime

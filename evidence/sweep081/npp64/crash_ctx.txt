@@ -1,0 +1,8 @@
+[CRASH] Signal 11 at RIP=0x1401099b3
+  si_addr=0x20 si_code=1 (1=MAPERR 2=ACCERR)
+  RAX=0x1 RCX=0x20 RDX=0xffffffffffffffff R8=0x0 R9=0x0
+  RSP=0x7ffdfbde3980 RBP=0x0
+[T7640] [API]   [21] SetWindowSubclass -> 0x2042540
+[T7640] [API] GetWindowLongPtrW(0x10001,-21) -> 0x0
+[T7640] [API] SetWindowSubclass(hwnd=0x10001 id=2a) -> TRUE (chain 1)
+[T7640] [API] SetWindowSubclass(hwnd=0x10001 id=2a) -> TRUE (chain 2)
