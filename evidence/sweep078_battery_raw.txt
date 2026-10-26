@@ -1,0 +1,9 @@
+W04	shexview	 rc=0/0 rc=0/0 rc=0/0	frames=1	uniq=1	diff_at=	PASS_LAUNCH_RENDER
+W06	Winobj	 rc=0/0 rc=0/0 rc=0/0	frames=0	uniq=0	diff_at=	FAIL_NO_FRAMES
+W03	RegScanner	 rc=0/0 rc=0/0 rc=0/0	frames=1	uniq=1	diff_at=	PASS_LAUNCH_RENDER
+W02	FileTypesMan	 rc=0/0 rc=0/0 rc=0/0	frames=2	uniq=1	diff_at=	PASS_LAUNCH_RENDER
+W07	RegScanner	 rc=0/0 rc=0/0 rc=0/0	frames=0	uniq=0	diff_at=	FAIL_NO_FRAMES
+W08	winlister	 rc=139/1 rc=139/1 rc=139/1	frames=0	uniq=0	diff_at=	FAIL_NO_FRAMES
+W09	ZoomIt	 rc=0/0 rc=0/0 rc=0/0	frames=0	uniq=0	diff_at=	FAIL_NO_FRAMES
+W01	cports	 rc=0/0 rc=0/0 rc=0/0	frames=1	uniq=1	diff_at=	PASS_LAUNCH_RENDER
+W05	WhatInStartup	 rc=0/0 rc=0/0 rc=0/0	frames=1	uniq=1	diff_at=	PASS_LAUNCH_RENDER

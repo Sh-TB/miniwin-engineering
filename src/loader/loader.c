@@ -107,6 +107,25 @@ static float mdl_f32(uint32_t va);
 static uint32_t mdl_f32_from(double d);
 static int cpu32_run(uint64_t max_steps);
 static uint32_t cpu32_call(uint32_t eip, int nargs, const uint32_t* args);
+/* SW-1349: MW32_DUMP_VA="va:len[,va:len]" — hexdump guest ranges (host VA ==
+ * guest VA in the PE32 world). Pre-run = image-mapping truth; the same helper
+ * runs from the crash reporter so the post-mortem state is inspectable. */
+static void mw32_dump_va_ranges(const char* tag) {
+    const char* dv = getenv("MW32_DUMP_VA");
+    if (!dv || !dv[0]) return;
+    const char* p = dv;
+    while (*p) {
+        uint32_t va = (uint32_t)strtoul(p, (char**)&p, 16);
+        size_t len = 16;
+        if (*p == ':') { len = (size_t)strtoul(p + 1, (char**)&p, 16); }
+        if (*p == ',') p++;
+        fprintf(stderr, "[PE32] %s @0x%08x len=0x%zx:", tag, va, len);
+        for (size_t i = 0; i < len; i++)
+            fprintf(stderr, " %02x", *(volatile const uint8_t*)(uintptr_t)(va + i));
+        fprintf(stderr, "\n");
+    }
+}
+
 static int load_pe32(const char* filepath);
 static void mdl_st_f80(uint32_t va, double d);
 static uint32_t g_main_class_proc32; /* x86 wndproc EIP (SW-1281) */
@@ -35256,6 +35275,13 @@ static ImportEntry g_import_table[] = {
     ENTRY("msvcrt.dll", "_ismbblead",            mw_ismbblead), /* SWEEP-013 */
     ENTRY("msvcrt.dll", "_mbsnbcat",             mw_mbsnbcat), /* SWEEP-014: cports 18x gate */
     ENTRY("msvcrt.dll", "??2@YAPEAX_K@Z",        mw_msvcrt_op_new), /* SWEEP-014: operator new */
+    /* SW-1353b: x86-mangled C++ memory operators (RegScanner x86 imports
+     * ??2@YAPAXI@Z straight from msvcrt.dll; unresolved -> NULL -> the CRT
+     * derefs NULL and dies during startup). */
+    ENTRY("msvcrt.dll", "??2@YAPAXI@Z",          mw_msvcrt_op_new),
+    ENTRY("msvcrt.dll", "??3@YAXPAX@Z",          mw_msvcrt_op_delete),
+    ENTRY("msvcrt.dll", "??_U@YAPAXI@Z",         mw_msvcrt_op_new_arr),
+    ENTRY("msvcrt.dll", "??_V@YAXPAX@Z",         mw_msvcrt_op_delete_arr),
     ENTRY("msvcrt.dll", "??_U@YAPEAX_K@Z",       mw_msvcrt_op_new_arr), /* SWEEP-014: operator new[] */
     ENTRY("msvcrt.dll", "??3@YAXPEAX@Z",         mw_msvcrt_op_delete), /* SWEEP-014: operator delete */
     ENTRY("msvcrt.dll", "??_V@YAXPEAX@Z",        mw_msvcrt_op_delete_arr), /* SWEEP-014: operator delete[] */
@@ -40278,6 +40304,8 @@ static const struct { const char* n; uint32_t b; } g_api32_arity[] = {
     { "SHGetPathFromIDListA", 8 },
     { "SHGetPathFromIDListW", 8 },
     { "SHGetSpecialFolderLocation", 12 },
+    { "SHGetSpecialFolderPathA", 16 }, /* SW-1353: HWND+path+csidl+create (RegScanner x86 stack fix) */
+    { "SHGetSpecialFolderPathW", 16 },
     { "ShellExecuteA", 24 },
     { "ShellExecuteExA", 4 },
     { "ShellExecuteExW", 4 },
@@ -40536,6 +40564,49 @@ static const struct { const char* n; uint32_t b; } g_api32_arity[] = {
     { "WTSDisconnectSession", 12 },
     { "WTSFreeMemory", 4 },
     { "WTSLogoffSession", 12 },
+    /* SW-1353: user32/shell32/advapi32 stdcall arities observed missing in the
+     * RegScanner x86 UPX run — every unknown arity under-pops 0 and leaves the
+     * args on the guest stack; the CRT's next ret then pops a data pointer as
+     * a return address (EIP=0x100). Cdecl msvcrt names intentionally stay
+     * absent (caller cleans = under-pop 0 is correct for them). */
+    { "AttachThreadInput", 12 },
+    { "BeginDeferWindowPos", 4 },
+    { "ChangeServiceConfigA", 44 },
+    { "ControlService", 12 },
+    { "CreateToolhelp32Snapshot", 8 },
+    { "DeferWindowPos", 32 },
+    { "DispatchMessageA", 4 },
+    { "DispatchMessageW", 4 },
+    { "DrawFrameControl", 16 },
+    { "EndDeferWindowPos", 4 },
+    { "EndDialog", 8 },
+    { "GetClipboardData", 4 },
+    { "GetMenuStringA", 20 },
+    { "GetMenuStringW", 20 },
+    { "GetMessageA", 16 },
+    { "GetMessageW", 16 },
+    { "GetModuleFileNameA", 12 },
+    { "GetModuleFileNameW", 12 },
+    { "GetNumberFormatA", 24 },
+    { "GetWindowTextA", 12 },
+    { "GetWindowTextW", 12 },
+    { "GetWindowThreadProcessId", 8 },
+    { "ImageList_ReplaceIcon", 12 },
+    { "MapWindowPoints", 16 },
+    { "ModifyMenuA", 20 },
+    { "OpenSCManagerA", 12 },
+    { "OpenServiceA", 12 },
+    { "PeekMessageA", 20 },
+    { "PeekMessageW", 20 },
+    { "Process32First", 8 },
+    { "Process32Next", 8 },
+    { "RegGetKeySecurity", 16 },
+    { "SetForegroundWindow", 4 },
+    { "SetWindowLongA", 12 },
+    { "SetWindowLongW", 12 },
+    { "StartServiceA", 12 },
+    { "SystemTimeToTzSpecificLocalTime", 12 },
+    { "TranslateMessage", 4 },
 };
 static uint32_t mw32_stdcall_arity(const char* name) {
     for (size_t i = 0; i < sizeof(g_api32_arity)/sizeof(g_api32_arity[0]); i++)
@@ -40772,12 +40843,44 @@ static uint32_t alu_sar32(uint32_t v, unsigned c) {
 static uint32_t alu_ror32(uint32_t v, unsigned c) {
     c &= 31; if (!c) return v;
     v = (v >> c) | (v << (32 - c));
-    f_set(F_CF, v & 1); return v;
+    f_set(F_CF, (v >> 31) & 1); /* SW-1349: ROR CF = last bit rotated out = MSB(result) */
+    return v;
 }
 static uint32_t alu_rol32(uint32_t v, unsigned c) {
     c &= 31; if (!c) return v;
     v = (v << c) | (v >> (32 - c));
-    f_set(F_CF, v & 1); return v;
+    f_set(F_CF, v & 1); return v; /* ROL CF = last bit rotated out = LSB(result) */
+}
+/* SW-1349: 16/8-bit rotates (UPX filter 0x49 unfilter uses rol r32,16 through
+ * C1 /0; the 16-bit group previously had NO rol/ror at all and 8-bit /0 /1
+ * were aliased to shl/shr). Intel: rotates touch only CF (+ OF at count 1). */
+static uint16_t alu_rol16(uint16_t v, unsigned c) {
+    c &= 15; if (!c) return v;
+    v = (uint16_t)((v << c) | (v >> (16 - c)));
+    f_set(F_CF, v & 1);
+    if (c == 1) f_set(F_OF, ((v >> 15) & 1) != f_get(F_CF));
+    return v;
+}
+static uint16_t alu_ror16(uint16_t v, unsigned c) {
+    c &= 15; if (!c) return v;
+    v = (uint16_t)((v >> c) | (v << (16 - c)));
+    f_set(F_CF, (v >> 15) & 1);
+    if (c == 1) f_set(F_OF, ((v >> 15) & 1) != ((v >> 14) & 1));
+    return v;
+}
+static uint8_t alu_rol8(uint8_t v, unsigned c) {
+    c &= 7; if (!c) return v;
+    v = (uint8_t)((v << c) | (v >> (8 - c)));
+    f_set(F_CF, v & 1);
+    if (c == 1) f_set(F_OF, ((v >> 7) & 1) != f_get(F_CF));
+    return v;
+}
+static uint8_t alu_ror8(uint8_t v, unsigned c) {
+    c &= 7; if (!c) return v;
+    v = (uint8_t)((v >> c) | (v << (8 - c)));
+    f_set(F_CF, (v >> 7) & 1);
+    if (c == 1) f_set(F_OF, ((v >> 7) & 1) != ((v >> 6) & 1));
+    return v;
 }
 static uint16_t alu_shl16(uint16_t v, unsigned c) {
     c &= 31; if (!c) return v;
@@ -40938,9 +41041,27 @@ static uint32_t mw32_api_gate(uint32_t slot_index) {
                     }
                 }
                 nb[k] = 0;
-                if (nb[0]) thunk = mw32_api_thunk("kernel32.dll", nb);
+                /* SW-1352: data exports must return the DATA ADDRESS, not a
+                 * code thunk. Real GetProcAddress on a data export (msvcrt
+                 * _acmdln/_iob/__argv class) yields the variable's address;
+                 * UPX stubs store it straight into the rebuilt IAT and guest
+                 * code derefs it as data (RegScanner: mov eax,[__imp__acmdln];
+                 * mov esi,[eax] -> crashed reading thunk-page bytes). */
+                int is_data_export = 0;
+                for (uint32_t gdi = 0; gdi < NUM_DATA_IMPORTS; gdi++) {
+                    if (strcmp(g_data_imports[gdi].name, nb) == 0 &&
+                        (uintptr_t)g_data_imports[gdi].data_addr <= 0xFFFFFFFFu) {
+                        ret = (uint32_t)(uintptr_t)g_data_imports[gdi].data_addr;
+                        is_data_export = 1;
+                        break;
+                    }
+                }
+                if (!is_data_export) {
+                    if (nb[0]) thunk = mw32_api_thunk("kernel32.dll", nb);
+                    ret = thunk ? thunk : mw32_thunk_for_host_fn((void*)(uintptr_t)r);
+                }
             }
-            ret = thunk ? thunk : mw32_thunk_for_host_fn((void*)(uintptr_t)r);
+            if (!ret) ret = mw32_thunk_for_host_fn((void*)(uintptr_t)r);
         }
         /* host pointers that guests store/deref as data are fine (host is
          * non-PIE, everything < 4GB). */
@@ -41079,7 +41200,7 @@ restart_prefix:
 #define ST_RorM32(v) do { if (m.is_reg) R32(m.rm) = (v); else m32_st32(m.ea, (v)); } while (0)
 #define LD_RorM16() (m.is_reg ? (uint16_t)(R32(m.rm) & 0xFFFF) : (modrm_apply_seg(&m), m32_ld16(m.ea)))
 #define ST_RorM16(v) do { if (m.is_reg) R32(m.rm) = ((R32(m.rm) & 0xFFFF0000u) | (uint32_t)(uint16_t)(v)); else m32_st16(m.ea, (v)); } while (0)
-#define LD_RorM8() (m.is_reg ? (uint8_t)(R32(m.rm & 7) & 0xFF) : (modrm_apply_seg(&m), m32_ld8(m.ea)))
+#define LD_RorM8() (m.is_reg ? ((m.rm < 4) ? (uint8_t)R32(m.rm) : (uint8_t)(R32(m.rm - 4) >> 8)) : (modrm_apply_seg(&m), m32_ld8(m.ea))) /* SW-1351: 8-bit reg indexes 4..7 are AH/CH/DH/BH (high bytes) — the old `R32(m.rm & 7) & 0xFF` read ESP/EBP/ESI/EDI low bytes for indexes 4..7 */
 /* 8-bit register mapping with the 0x04/0x05 AH/CH/DH/BH quirk handled by
  * callers that need it; interpreter stores BH in EBX bits 8..15 as real. */
 #define ST_RorM8(v) do { if (m.is_reg) { \
@@ -41381,7 +41502,7 @@ static int cpu32_step2(uint8_t op, int o32, int arep, int frep) {
 #define ST32M(v) do { if (m.is_reg) R32b(m.rm) = (v); else m32_st32(m.ea, (v)); } while (0)
 #define LD16M() (m.is_reg ? (uint16_t)(R32b(m.rm) & 0xFFFF) : m32_ld16(m.ea))
 #define ST16M(v) do { if (m.is_reg) R32b(m.rm) = ((R32b(m.rm) & 0xFFFF0000u) | (uint32_t)(uint16_t)(v)); else m32_st16(m.ea, (v)); } while (0)
-#define LD8M()  (m.is_reg ? (uint8_t)(R32b(m.rm & 7) & 0xFF) : m32_ld8(m.ea))
+#define LD8M()  (m.is_reg ? ((m.rm < 4) ? (uint8_t)R32b(m.rm) : (uint8_t)(R32b(m.rm - 4) >> 8)) : m32_ld8(m.ea)) /* SW-1351 */
 #define ST8M(v) do { if (m.is_reg) { \
         if (m.rm < 4) R32b(m.rm) = (R32b(m.rm) & 0xFFFFFF00u) | (uint32_t)(v); \
         else R32b(m.rm - 4) = (R32b(m.rm - 4) & 0xFFFF00FFu) | ((uint32_t)(v) << 8); \
@@ -41445,59 +41566,71 @@ static int cpu32_step2(uint8_t op, int o32, int arep, int frep) {
     case 0xC1: { NEEDM2(); uint8_t sub = m.reg; uint32_t c = m32_ld8(t_cpu32.eip) & 31; t_cpu32.eip++;
         if (!o32) { uint16_t v = LD16M(), r2 = v;
             switch (sub) {
-            case 0: r2 = alu_shl16(v, c); break; case 1: case 5: r2 = alu_shr16(v, c); break;
+            /* SW-1349: correct x86 group mapping — /0=ROL /1=ROR /4,/6=SHL(SAL)
+             * /5=SHR /7=SAR. The old table aliased /0->SHL and /1->SHR, so any
+             * guest rotate (UPX filter unfilter, CRC loops) silently corrupted
+             * its data. */
+            case 0: r2 = alu_rol16(v, c); break; case 1: r2 = alu_ror16(v, c); break;
+            case 4: case 6: r2 = alu_shl16(v, c); break; case 5: r2 = alu_shr16(v, c); break;
             case 7: r2 = alu_sar16(v, c); break;
             default: cpu32_fatal("shift16 imm /r", op, t_cpu32.eip); break; }
             ST16M(r2); break; }
         uint32_t v = LD32M(), r2 = v;
         switch (sub) {
-        case 0: case 4: r2 = alu_shl32(v, c); break; case 1: case 5: r2 = alu_shr32(v, c); break;
-        case 7: r2 = alu_sar32(v, c); break; case 6: r2 = alu_rol32(v, c); break;
-        case 3: r2 = alu_rcr32(v, c); break; case 2: r2 = alu_rcl32(v, c); break; }
+        case 0: r2 = alu_rol32(v, c); break; case 1: r2 = alu_ror32(v, c); break;
+        case 2: r2 = alu_rcl32(v, c); break; case 3: r2 = alu_rcr32(v, c); break;
+        case 4: case 6: r2 = alu_shl32(v, c); break; case 5: r2 = alu_shr32(v, c); break;
+        case 7: r2 = alu_sar32(v, c); break; }
         ST32M(r2); break; }
     case 0xD1: { NEEDM2(); uint8_t sub = m.reg;
         if (!o32) { uint16_t v = LD16M(), r2 = v;
             switch (sub) {
-            case 0: r2 = alu_shl16(v, 1); break; case 1: case 5: r2 = alu_shr16(v, 1); break;
+            case 0: r2 = alu_rol16(v, 1); break; case 1: r2 = alu_ror16(v, 1); break; /* SW-1349 */
+            case 4: case 6: r2 = alu_shl16(v, 1); break; case 5: r2 = alu_shr16(v, 1); break;
             case 7: r2 = alu_sar16(v, 1); break;
             default: cpu32_fatal("shift16 /1", op, t_cpu32.eip); break; }
             ST16M(r2); break; }
         uint32_t v = LD32M(), r2 = v;
         switch (sub) {
-        case 0: case 4: r2 = alu_shl32(v, 1); break; case 1: case 5: r2 = alu_shr32(v, 1); break;
-        case 7: r2 = alu_sar32(v, 1); break; case 6: r2 = alu_rol32(v, 1); break;
-        case 3: r2 = alu_rcr32(v, 1); break; case 2: r2 = alu_rcl32(v, 1); break; }
+        case 0: r2 = alu_rol32(v, 1); break; case 1: r2 = alu_ror32(v, 1); break; /* SW-1349 */
+        case 2: r2 = alu_rcl32(v, 1); break; case 3: r2 = alu_rcr32(v, 1); break;
+        case 4: case 6: r2 = alu_shl32(v, 1); break; case 5: r2 = alu_shr32(v, 1); break;
+        case 7: r2 = alu_sar32(v, 1); break; }
         ST32M(r2); break; }
     case 0xD3: { NEEDM2(); uint8_t sub = m.reg; uint32_t c = R32b(ECXi) & 31;
         if (!o32) { uint16_t v = LD16M(), r2 = v;
             switch (sub) {
-            case 0: r2 = alu_shl16(v, c); break; case 1: case 5: r2 = alu_shr16(v, c); break;
+            case 0: r2 = alu_rol16(v, c); break; case 1: r2 = alu_ror16(v, c); break; /* SW-1349 */
+            case 4: case 6: r2 = alu_shl16(v, c); break; case 5: r2 = alu_shr16(v, c); break;
             case 7: r2 = alu_sar16(v, c); break;
             default: cpu32_fatal("shift16 cl /r", op, t_cpu32.eip); break; }
             ST16M(r2); break; }
         uint32_t v = LD32M(), r2 = v;
         switch (sub) {
-        case 0: case 4: r2 = alu_shl32(v, c); break; case 1: case 5: r2 = alu_shr32(v, c); break;
-        case 7: r2 = alu_sar32(v, c); break; case 6: r2 = alu_rol32(v, c); break;
-        case 3: r2 = alu_rcr32(v, c); break; case 2: r2 = alu_rcl32(v, c); break; }
+        case 0: r2 = alu_rol32(v, c); break; case 1: r2 = alu_ror32(v, c); break; /* SW-1349 */
+        case 2: r2 = alu_rcl32(v, c); break; case 3: r2 = alu_rcr32(v, c); break;
+        case 4: case 6: r2 = alu_shl32(v, c); break; case 5: r2 = alu_shr32(v, c); break;
+        case 7: r2 = alu_sar32(v, c); break; }
         ST32M(r2); break; }
     case 0xC0: { NEEDM2(); uint8_t sub = m.reg; uint32_t c = m32_ld8(t_cpu32.eip) & 31; t_cpu32.eip++;
         uint8_t v = LD8M(), r2 = v;
         switch (sub) {
-        case 0: case 4: r2 = alu_shl8(v, c); break; case 1: case 5: r2 = alu_shr8(v, c); break;
+        case 0: r2 = alu_rol8(v, c); break; case 1: r2 = alu_ror8(v, c); break; /* SW-1349 */
+        case 4: case 6: r2 = alu_shl8(v, c); break; case 5: r2 = alu_shr8(v, c); break;
         case 7: r2 = alu_sar8(v, c); break;
-        case 6: { c &= 7; if (c) { f_set(F_CF, (v >> (8 - c)) & 1); v = (uint8_t)((v << c) | (v >> (8 - c))); f_set(F_CF, v & 1); } r2 = v; break; }
         default: cpu32_fatal("shift8 imm /r", op, t_cpu32.eip); break; }
         ST8M(r2); break; }
     case 0xD0: { NEEDM2(); uint8_t sub = m.reg; uint8_t v = LD8M(), r2 = v;
         switch (sub) {
-        case 0: case 4: r2 = alu_shl8(v, 1); break; case 1: case 5: r2 = alu_shr8(v, 1); break;
+        case 0: r2 = alu_rol8(v, 1); break; case 1: r2 = alu_ror8(v, 1); break; /* SW-1349 */
+        case 4: case 6: r2 = alu_shl8(v, 1); break; case 5: r2 = alu_shr8(v, 1); break;
         case 7: r2 = alu_sar8(v, 1); break;
         default: cpu32_fatal("shift8 /1", op, t_cpu32.eip); break; }
         ST8M(r2); break; }
     case 0xD2: { NEEDM2(); uint8_t sub = m.reg; uint32_t c = R32b(ECXi) & 31; uint8_t v = LD8M(), r2 = v;
         switch (sub) {
-        case 0: case 4: r2 = alu_shl8(v, c); break; case 1: case 5: r2 = alu_shr8(v, c); break;
+        case 0: r2 = alu_rol8(v, c); break; case 1: r2 = alu_ror8(v, c); break; /* SW-1349 */
+        case 4: case 6: r2 = alu_shl8(v, c); break; case 5: r2 = alu_shr8(v, c); break;
         case 7: r2 = alu_sar8(v, c); break;
         default: cpu32_fatal("shift8 cl /r", op, t_cpu32.eip); break; }
         ST8M(r2); break; }
@@ -41579,7 +41712,12 @@ static int cpu32_step2(uint8_t op, int o32, int arep, int frep) {
             case 0xAC: case 0xAD: { uint32_t v = (op == 0xAD) ? (o32 ? m32_ld32(src) : m32_ld16(src)) : m32_ld8(src);
                 if (op == 0xAD) { if (o32) R32b(EAXi) = v; else R32b(EAXi) = (R32b(EAXi) & 0xFFFF0000u) | (uint16_t)v; }
                 else R32b(EAXi) = (R32b(EAXi) & 0xFFFFFF00u) | (uint8_t)v; break; }
-            case 0xAE: case 0xAF: { uint32_t a = (op == 0xAF) ? (o32 ? m32_ld32(src) : m32_ld16(src)) : m32_ld8(src);
+            case 0xAE: case 0xAF: { /* SW-1350: SCAS compares AL/eAX with [EDI] —
+                the memory operand is EDI (dst), never ESI. The old code read
+                `src`, so UPX stubs' `repne scasb` strlen scanned the image
+                header zeros instead of the name blob and stopped at the wrong
+                place (RegScanner walk ran past the import-table end). */
+                uint32_t a = (op == 0xAF) ? (o32 ? m32_ld32(dst) : m32_ld16(dst)) : m32_ld8(dst);
                 if (op == 0xAF) { if (o32) alu_sub32(R32b(EAXi), a, 0); else alu_sub16((uint16_t)R32b(EAXi), (uint16_t)a, 0); }
                 else alu_sub8((uint8_t)R32b(EAXi), (uint8_t)a, 0); break; }
             }
@@ -41984,6 +42122,61 @@ static void mw_cpu32_crash_report(void) {
                     "  [PE32] eip-hist: %s\n",
             t_cpu32.eip, t_cpu32.r[4], t_cpu32.r[5],
             (unsigned long long)g_cpu32_steps, b);
+    /* SW-1348: guest instruction bytes at the fault site — the PE32 twin of
+     * the x64 "Bytes:" line. Page-clamped forward reads only: the fetcher
+     * just executed at these VAs so the pages are mapped, but the byte after
+     * a mapping end must never be touched inside a signal handler. Also
+     * dumps from the PREVIOUS eip-hist entry: stores/faults often advance
+     * EIP before the access fires, so the faulting instruction begins there
+     * (UPX stub tail: mov [edx],al advanced 2 bytes before the store). */
+    {
+        uint32_t addrs[6]; int na = 0;
+        for (int k = (g_eip_hist_n >= 6 ? g_eip_hist_n - 6 : 0); k < g_eip_hist_n; k++) {
+            uint32_t va = g_eip_hist[k & 15];
+            int dup = 0;
+            for (int j = 0; j < na; j++) if (addrs[j] == va) dup = 1;
+            if (va && !dup && na < 6) addrs[na++] = va;
+        }
+        addrs[na++] = t_cpu32.eip;
+        for (int k = 0; k < na; k++) {
+            uint32_t va = addrs[k];
+            if (!va) continue;
+            uint32_t page_left = 0x1000u - (va & 0xfffu);
+            int nb = page_left < 16 ? (int)page_left : 16;
+            fprintf(stderr, "  [PE32] Bytes@0x%08x:", va);
+            for (int i = 0; i < nb; i++)
+                fprintf(stderr, " %02x", *(volatile const uint8_t*)(uintptr_t)(va + i));
+            fprintf(stderr, "\n");
+        }
+    }
+    /* SW-1349b: post-mortem ranges (same MW32_DUMP_VA syntax) */
+    mw32_dump_va_ranges("crashdump");
+    /* SW-1348b: guarded pointer-context dump. For each of ESI/EDI/EBX/EDX/EBP,
+     * print 8 guest bytes AT the pointer — only if the VA falls inside a
+     * known guest mapping (image / arena / thunk / stack / heap). Wild
+     * pointers (the crash cause itself) are skipped, never dereferenced. */
+    {
+        const char* rn[5] = { "ESI", "EDI", "EBX", "EDX", "EBP" };
+        uint32_t rv[5] = { t_cpu32.r[6], t_cpu32.r[7], t_cpu32.r[3],
+                           t_cpu32.r[2], t_cpu32.r[5] };
+        for (int k = 0; k < 5; k++) {
+            uint32_t va = rv[k];
+            if (!va) { fprintf(stderr, "  [PE32] @%s=0 -> NULL\n", rn[k]); continue; }
+            int ok = 0;
+            if (g_image_base32 && va >= g_image_base32 &&
+                va < g_image_base32 + 0x02000000u) ok = 1;               /* image 32MB */
+            else if (va >= MW32_ARENA_BASE && va < MW32_ARENA_BASE + MW32_ARENA_SIZE) ok = 1;
+            else if (va >= MW32_THUNK_BASE && va < MW32_THUNK_BASE + MW32_THUNK_BYTES) ok = 1;
+            else if (va >= MW32_STACK_TOP - MW32_STACK_BYTES && va < MW32_STACK_TOP) ok = 1;
+            if (!ok) { fprintf(stderr, "  [PE32] @%s=0x%08x (unmapped)\n", rn[k], va); continue; }
+            uint32_t page_left = 0x1000u - (va & 0xfffu);
+            int nb = page_left < 8 ? (int)page_left : 8;
+            fprintf(stderr, "  [PE32] @%s=0x%08x:", rn[k], va);
+            for (int i = 0; i < nb; i++)
+                fprintf(stderr, " %02x", *(volatile const uint8_t*)(uintptr_t)(va + i));
+            fprintf(stderr, "\n");
+        }
+    }
 }
 
 static int cpu32_run(uint64_t max_steps) {
@@ -42418,9 +42611,11 @@ static int load_pe32(const char* filepath) {
     mw32_gui_install_shims();
     { const char* t = getenv("MW32_TRACE"); g_cpu32_trace = (t && t[0] && t[0] != '0');
       const char* s = getenv("MW32_STEP_TRACE"); g_cpu32_steptrace = (s && s[0] && s[0] != '0');
-      const char* m = getenv("MW32_MAX_STEPS"); if (m && m[0]) g_cpu32_maxsteps = strtoull(m, NULL, 0); }
+      const char* m = getenv("MW32_MAX_STEPS"); if (m && m[0]) g_cpu32_maxsteps = strtoull(m, NULL, 0);
+      mw32_dump_va_ranges("dump"); }
     int rc = cpu32_run(g_cpu32_maxsteps);
     g_cpu32_active = 0;
+    mw32_dump_va_ranges("postdump");
     MW_TRACE("[PE32] cpu32_run rc=%d steps=%llu last_eip=0x%08x esp=0x%08x",
              rc, (unsigned long long)g_cpu32_steps, t_cpu32.eip, t_cpu32.r[ESPi]);
     { char b[256]; int o = 0;

@@ -93,3 +93,53 @@ Stage Summary:
   change), 4 B-group probes recorded; 2 engine-generic root causes removed
   (keyboard extended-bit model, GDI polygon raster); engine 4,363,528
   bytes; no per-app hacks; no third-party binaries committed; no force-push.
+
+---
+Task ID: SWEEP-078
+Agent: main (z.ai)
+Task: «ادامه ادامه» — B-group tool wagon: 9 official downloads, input battery, generic engine root causes
+
+Work Log:
+- Reconciled: local == origin 87fe73d (SWEEP-077). Engine rebuilt byte-exact,
+  G1 green before changes.
+- Re-downloaded 9 official B-group assets after sandbox reset (nirsoft x6 +
+  Sysinternals ZoomIt/WinObj + winlister x86); SHA-256 logged, RegScanner x86
+  and ZoomIt byte-identical to SWEEP-076's verified copies. Honest
+  BLOCKED_DOWNLOAD rows: SciTE/ResourceHacker/KeePass/HxD/ShellMenuView/
+  Notepad3 (hosts down, 404s, HTML-not-zip) — no mirror substitutes.
+- Battery: 9 tools x 3 cold runs with keys+mouse through the guest pipeline.
+- ROOT CAUSES (all generic, loader.c):
+  SW-1349 shift-group mapping /0=ROL /1=ROR /6=SAL was aliased to SHL/SHR/ROL
+  across C0/C1/D0/D1/D2/D3 at 8/16/32-bit (UPX filter-0x49 unfilter proved it:
+  rol eax,16 -> 0x00010000 instead of 0x000103a4; added rol16/ror16/rol8/ror8,
+  fixed ROR CF=MSB);
+  SW-1350 REP SCAS compared AL vs [ESI] not [EDI] (UPX strlen scanned header
+  zeros, stopped 12 late, import walk ran off the image);
+  SW-1351 8-bit reg reads for indexes 4..7 pulled ESP/EBP/ESI/EDI low bytes
+  instead of AH/CH/DH/BH (86 c4 read ESP&0xFF=0xe0);
+  SW-1352 GetProcAddress on DATA exports (_acmdln class) returned a code thunk
+  — UPX stubs store it raw into the rebuilt IAT, guests deref it as data;
+  SW-1353 ~38 missing stdcall arities (GetMessage/PeekMessage family,
+  AttachThreadInput, DeferWindowPos, service trio, SHGetSpecialFolderPathA/W,
+  Process32First/Next...) — each under-pop left args on the stack and the CRT's
+  ret popped data as EIP (0x100); plus x86-mangled msvcrt operator new/delete
+  (??2@YAPAXI@Z) were UNRESOLVED -> NULL -> CRT died;
+  SW-1348 PE32 crash diagnostics: page-clamped guest byte dumps (6 eip sites),
+  guarded pointer context, MW32_DUMP_VA dump facility (pre/post/crash).
+- Proof chain for RegScanner x86: rc=139 (UPX unpack corrupt via SW-1349) ->
+  rc=0 standalone (SW-1350/1351) -> GUI-mode IAT data-export crash (SW-1352)
+  -> arity/operator-new crash (SW-1353) -> rc=0 x3 under the input battery.
+- Verification: corpus 7/7 deterministic parity EXACT x3 (winmine 82, sol 69,
+  freecell 10, calc 1, breakout 10, snake 13), ZERO crashes, G1 PIN 12/12
+  (master/g1/20261026_111644), engine 335e08ce6f0c038f.
+- evidence/sweep078: summary.md, results.tsv, dl_sha256.tsv, engine_sha256.txt,
+  frames/ (5 PNGs). Commit pushed (no force).
+
+Stage Summary:
+- 6 new tools at the clean-run bar (cports, FileTypesMan, RegScanner x64+x86,
+  shexview, WhatInStartup), winlister fixed standalone (GUI-mode frontier
+  SW-1354 recorded honestly), WinObj/ZoomIt honest NO_HEADLESS_UI rows.
+- Four interpreter ISA correctness bugs (rotate mapping, SCAS operand, 8-bit
+  register reads, ROR CF) + two ABI bugs (data exports, arity table) fixed in
+  one wagon — all found by disciplined crash archaeology on real UPX-packed
+  NirSoft tools, all verified regression-free on the canonical corpus.
