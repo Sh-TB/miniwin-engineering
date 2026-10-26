@@ -1,0 +1,10 @@
+id	tool	arch	rc_3runs	frames_uniq	input_state_change	verdict	note
+X01	shmnview x64 (ShellMenuView)	PE32	139/139/139	0	n	FRONTIER_SW1358e	was untested (U21 blocked until this window); SW-1354a..e+SW-1358a..d landed on its path: UPX unpack OK, CRT init OK, dialog UI builds (906K->907K steps), wild indirect call in rendering code remains
+X02	FreeCommander x64 (PE32 Delphi)	PE32	139/139/139	0	n	FRONTIER_SW1359	new target (28MB Delphi-class); dies at step 544 in early startup (executes arena heap data at 0x4111f023, then PE-header page); queued for decode
+W01	cports x64	PE32+	0/0/0	1	no	PASS_LAUNCH_RENDER	carried from SWEEP-078
+W02	FileTypesMan x64	PE32+	0/0/0	2	no	PASS_LAUNCH_RENDER	carried
+W03	RegScanner x64	PE32+	0/0/0	1	no	PASS_LAUNCH_RENDER	carried
+W04	shexview x64	PE32+	0/0/0	1	no	PASS_LAUNCH_RENDER	carried
+W05	WhatInStartup x64	PE32+	0/0/0	1	no	PASS_LAUNCH_RENDER	carried
+P01-P20	sgtatham puzzles x20	PE32+	0/0/0 x20	2-20 uniq each	YES x20	PASS_INPUT_STATE_CHANGE	x3 cold runs, scripted keys+clicks through the real guest pipeline (sweep077 battery v2); ZERO regressions from the 11 SWEEP-079 engine fixes
+corpus	winmine/sol/freecell/calc/breakout/snake/spider	mixed	0/0/0	82/69/10/1/10/13/506-643	n	PARITY_EXACT	x3 runs; frames EXACT vs sweep077/078 baseline; spider wall-clock band

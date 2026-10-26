@@ -99,7 +99,10 @@ typedef struct { uint32_t start_eip, param; } Mw32ThreadArg;
 static void* mw32_thread_trampoline(void* p);
 static __attribute__((ms_abi)) long long mw_wndproc32_shim(void* hwnd, uint32_t msg, uintptr_t wp, long long lp);
 static uint32_t mw32_stdcall_arity(const char* name);
+static int g_arity_found; /* SW-1358b: found-flag for the arity lookup (def near the table) */
 static int cpu32_step2(uint8_t op, int o32, int arep, int frep);
+static int mw_call_cb2(void* proc, uint32_t a0, uint32_t a1); /* SW-1354e fwd */
+static int mw_call_cb4(void* proc, uint32_t a0, uint32_t a1, uintptr_t a2, intptr_t a3); /* SW-1354e fwd */
 static int cpu32_sse2(uint8_t pfx, uint8_t op2);
 static uint32_t alu_rcr32(uint32_t v, unsigned c);
 static uint32_t alu_rcl32(uint32_t v, unsigned c);
@@ -1940,8 +1943,13 @@ __attribute__((ms_abi)) int mw_GetProcessAffinityMask(void* h, uint64_t* mask, u
     return 1;
 }
 
+__attribute__((ms_abi)) void mw_GetStartupInfoW(void* si); /* SW-1357 fwd (i386 STARTUPINFO contract) */
 __attribute__((ms_abi)) void mw_GetStartupInfoA(void* info) {
     MW_TRACE("GetStartupInfoA(info=%p)", info);
+    if (g_cpu32_active) { /* SW-1357: same i386 STARTUPINFO contract as the W path */
+        mw_GetStartupInfoW(info);
+        return;
+    }
     if (info) {
         memset(info, 0, 104); /* STARTUPINFOA is 104 bytes on x64 */
         *(uint32_t*)((uint8_t*)info + 0) = 104; /* cb = sizeof(STARTUPINFOA) */
@@ -6349,6 +6357,17 @@ static size_t w16spn(const uint16_t* s, const uint16_t* set) {
     return n;
 }
 
+/* SW-1355b: guest buffers are GUEST VAs — a wild pointer (winlister x86
+ * passed dst=0x4 into WideCharToMultiByte) must fail the API cleanly
+ * (ERROR_INVALID_USER_BUFFER), never fault the HOST. Real Windows faults
+ * the guest process via SEH; the engine surfaces the same contract as a
+ * failed call so guest retry/fallback logic runs. */
+static int mw_wbuf_writable(void* dst, size_t n) {
+    if (!dst || !n) return 1; /* size-query forms never write */
+    char probe = 0;
+    struct iovec l = { &probe, 1 }, r = { dst, 1 };
+    return process_vm_writev(getpid(), &l, 1, &r, 1, 0) == 1;
+}
 __attribute__((ms_abi)) int mw_WideCharToMultiByte(uint32_t cp, uint32_t flags,
     const wchar_t* src, int srclen, char* dst, int dstlen, char* defc, int* used) {
     MW_TRACE("WideCharToMultiByte(cp=%u, srclen=%d, dstlen=%d)", cp, srclen, dstlen);
@@ -6367,6 +6386,7 @@ __attribute__((ms_abi)) int mw_WideCharToMultiByte(uint32_t cp, uint32_t flags,
         if (used) *used = 0;
         if (!dst || dstlen == 0) return need;
         if (dstlen < 0 || dstlen < need) { mw_SetLastError(122); return 0; }
+        if (!mw_wbuf_writable(dst, (size_t)need)) { mw_SetLastError(1784); return 0; } /* SW-1355b */
         int got = w3_utf16le_to_utf8(u, units, dst, dstlen);
         if (got < 0) { mw_SetLastError(got == -2 ? 122 : 1113); return 0; }
         if (include_null) dst[got++] = '\0';
@@ -6387,6 +6407,7 @@ __attribute__((ms_abi)) int mw_WideCharToMultiByte(uint32_t cp, uint32_t flags,
     if (used) *used = 0;
     if (!dst || dstlen == 0) return (int)need;
     if (dstlen < 0 || (size_t)dstlen < need) { mw_SetLastError(122); return 0; }
+    if (!mw_wbuf_writable(dst, need)) { mw_SetLastError(1784); return 0; } /* SW-1355b */
     size_t got = 0;
     for (int i = 0; i < units && (size_t)got < (size_t)dstlen; i++) {
         uint16_t c = u[i];
@@ -8440,6 +8461,25 @@ static void mw_stdhandles_ensure(uint64_t* out);
 __attribute__((ms_abi)) void mw_GetStartupInfoW(void* si) {
     MW_TRACE("GetStartupInfoW()");
     if (!si) return;
+    uint64_t sh[3];
+    mw_stdhandles_ensure(sh);
+    if (getenv("MINWIN_GSI_LEGACY")) { sh[0]=4; sh[1]=8; sh[2]=0xC; }
+    if (g_cpu32_active) {
+        /* SW-1357 (SWEEP-079): i386 STARTUPINFO is 68 bytes with 4-byte
+         * fields (cb@0, dwFlags@44, hStdInput/Output/Error @56/60/64). The
+         * x64 path memset 104 bytes over the guest's 68-byte stack slot —
+         * Winobj x86 kept its STARTUPINFO at [ebp-0x48]; the overflow
+         * zeroed the saved EBP/return address and the function's leave;ret
+         * landed on EIP=0 (clean-looking exit, no window ever created). */
+        uint8_t* p = (uint8_t*)si;
+        memset(p, 0, 68);
+        *(uint32_t*)(p + 0)  = 68;           /* cb = sizeof(STARTUPINFOW) x86 */
+        *(uint32_t*)(p + 44) = 0x00000100;   /* dwFlags = STARTF_USESTDHANDLES */
+        *(uint32_t*)(p + 56) = (uint32_t)sh[0]; /* hStdInput */
+        *(uint32_t*)(p + 60) = (uint32_t)sh[1]; /* hStdOutput */
+        *(uint32_t*)(p + 64) = (uint32_t)sh[2]; /* hStdError */
+        return;
+    }
     /* STARTUPINFOW = 104 bytes on x64. Field offsets: cb=0, lpReserved=8,
      * lpDesktop=16, lpTitle=24, dwX..dwFlags=32..60, wShowWindow=64,
      * wCbReserved2=66, lpReserved2=72, hStdInput=80, hStdOutput=88,
@@ -8455,9 +8495,6 @@ __attribute__((ms_abi)) void mw_GetStartupInfoW(void* si) {
      * to a live w3files slot, so fd1/fd2 were never registered in the guest's
      * own __pioinfo table -> UCRT validate_fd -> _invalid_parameter ->
      * __fastfail(FAST_FAIL_INVALID_ARG=5) on the first std _read/_write. */
-    uint64_t sh[3];
-    mw_stdhandles_ensure(sh);
-    if (getenv("MINWIN_GSI_LEGACY")) { sh[0]=4; sh[1]=8; sh[2]=0xC; }
     *(uint64_t*)((uint8_t*)si + 80) = sh[0];  /* hStdInput  */
     *(uint64_t*)((uint8_t*)si + 88) = sh[1];  /* hStdOutput */
     *(uint64_t*)((uint8_t*)si + 96) = sh[2];  /* hStdError  */
@@ -16777,7 +16814,7 @@ __attribute__((ms_abi)) long long mw_SendMessageW(void* h, uint32_t msg, uintptr
      * children whose class the GUEST registered carry one (engine sysclass
      * models above keep priority, matching the engine's control emulations). */
     if (s >= 0 && g_child[s].class_proc) {
-        long long r = ((MW_WNDPROC)(uintptr_t)g_child[s].class_proc)(h, msg, wp, lp);
+        long long r = mw_call_cb4(g_child[s].class_proc, (uint32_t)(uintptr_t)h, msg, wp, (intptr_t)lp);
         MW_TRACE("SendMessageW(hwnd=%p %s) -> class proc -> %lld (SW-1334)",
                  h, mw_wm_name(msg), r);
         return r;
@@ -16796,7 +16833,7 @@ __attribute__((ms_abi)) long long mw_SendMessageW(void* h, uint32_t msg, uintptr
         int wl = mw_wndlong_slot(h, -4, 0);
         if (wl >= 0 && g_wndlong[wl].value &&
             g_wndlong[wl].value != (uintptr_t)&mw_engine_defproc) {
-            long long r = ((MW_WNDPROC)(uintptr_t)g_wndlong[wl].value)(h, msg, wp, lp);
+            long long r = mw_call_cb4((void*)(uintptr_t)g_wndlong[wl].value, (uint32_t)(uintptr_t)h, msg, wp, (intptr_t)lp);
             MW_TRACE("SendMessageW(hwnd=%p %s) -> subclass proc -> %lld",
                      h, mw_wm_name(msg), r);
             return r;
@@ -16840,7 +16877,7 @@ __attribute__((ms_abi)) long mw_SendMessageA(void* h, uint32_t msg, uintptr_t wp
     }
     /* SW-1334 (A path): same per-child class-proc routing as the W path. */
     if (s >= 0 && g_child[s].class_proc) {
-        long long r = ((MW_WNDPROC)(uintptr_t)g_child[s].class_proc)(h, msg, wp, lp);
+        long long r = mw_call_cb4(g_child[s].class_proc, (uint32_t)(uintptr_t)h, msg, wp, (intptr_t)lp);
         MW_TRACE("SendMessageA(hwnd=%p msg=%u) -> class proc -> %lld (SW-1334)", h, msg, r);
         return (long)r;
     }
@@ -17373,6 +17410,27 @@ static int  mw_gui_pump_getmsg(void* msg, void* hwnd, const char* api);
 static long long mw_gui_dispatch_msg(const void* msg);
 static int  mw_gui_events_enabled(void);
 static uint32_t g_char_pending = 0; /* SWEEP-006: WM_CHAR queued by TranslateMessage */
+/* ---- SW-1354 (SWEEP-079): x86 (cpu32) guest GUI plumbing ----
+ * winlister x86 died at the FIRST WM_CREATE delivery: host RIP=0x400000000.
+ * Chain: RegisterClassA read lpfnWndProc with the x64 layout (qword @+8 =
+ * cbClsExtra|cbWndExtra<<32 = 0|4<<32 = 0x400000000), stored that garbage
+ * into the host-callable channel g_wndproc_fwd, and mw_gui_send_create
+ * called it as host code. Three generic gaps, fixed together:
+ *   (1) RegisterClass/Ex + GetClassInfoEx must read the i386 struct offsets
+ *       for cpu32 guests (4-byte fields, different layout);
+ *   (2) a guest EIP must NEVER be stored into a host fn pointer — the
+ *       dispatch goes through mw_wndproc32_shim (cpu32_call re-entry);
+ *   (3) the WM_CREATE CREATESTRUCT must be staged in guest-visible low
+ *       arena memory (the shim truncates lp to 32 bits, so a 0x7ffd... host
+ *       stack VA is unreadable by the interpreter world). */
+static uint8_t* g_arena32; /* tentative: real def in the PE32 plane */
+#define MW32_CS32_VA 0x10004000u /* i386 CREATESTRUCT scratch (arena base 0x10000000 + 0x4000) */
+static uint32_t m32_ld32(uint32_t va); /* inline def in the PE32 plane */
+static uint64_t mw_main_image_base(void); /* def in the PE32 plane */
+__attribute__((ms_abi)) static long long mw_wndproc32_shim(void* hwnd, uint32_t msg, uintptr_t wp, long long lp);
+/* last top-level CreateWindowEx* args — inputs for the i386 CREATESTRUCT */
+static struct { uint32_t style, exstyle, cls, win, parent, menu, inst, param;
+                int x, y, w, h; } g_cw32_last;
 __attribute__((ms_abi)) int mw_InitCommonControlsEx(const void* picc) {
     uint32_t classes = picc ? *(const uint32_t*)((const char*)picc + 4) : 0;
     MW_TRACE("InitCommonControlsEx(dwICC=0x%x) -> TRUE", classes);
@@ -17384,12 +17442,21 @@ __attribute__((ms_abi)) void mw_InitCommonControls(void) {
 __attribute__((ms_abi)) uint16_t mw_RegisterClassExW(const void* wcex) {
     /* SWEEP-005: WNDCLASSEXW.lpfnWndProc lives at offset 8 (after cbSize) */
     if (wcex) {
-        void* p = *(void* const*)((const char*)wcex + 8);
+        void* p; const void* cname; void* hbr;
+        if (g_cpu32_active) { /* SW-1354: i386 WNDCLASSEXW: cbSize@0 style@4 proc@8 cbCls@12 cbWnd@16 hInst@20 hIcon@24 hCursor@28 hbr@32 menu@36 name@40 hIconSm@44 */
+            uint32_t b = (uint32_t)(uintptr_t)wcex;
+            p = (void*)(uintptr_t)m32_ld32(b + 8);
+            cname = (const void*)(uintptr_t)m32_ld32(b + 40);
+            hbr = (void*)(uintptr_t)m32_ld32(b + 32);
+        } else {
+            p = *(void* const*)((const char*)wcex + 8);
+            cname = *(const void* const*)((const char*)wcex + 64);
+            hbr = *(void* const*)((const char*)wcex + 48);
+        }
         mw_gui_store_wndproc(p);
         /* SW-1279 fix C: also record {class name -> proc} */
-        mw_class_proc_store(*(const void* const*)((const char*)wcex + 64), 1, p,
-                            *(void* const*)((const char*)wcex + 48)); /* SW-1291b */
-        mw_class_name_store_w(*(const uint16_t* const*)((const char*)wcex + 64)); /* SWEEP-013 */
+        mw_class_proc_store(cname, 1, p, hbr); /* SW-1291b */
+        mw_class_name_store_w((const uint16_t*)cname); /* SWEEP-013 */
     }
     MW_TRACE("RegisterClassExW(wcex=%p proc=%p) -> ATOM 0x%x", wcex,
              wcex ? *(void* const*)((const char*)wcex + 8) : NULL, MW_GUI_ATOM);
@@ -17397,11 +17464,20 @@ __attribute__((ms_abi)) uint16_t mw_RegisterClassExW(const void* wcex) {
 }
 __attribute__((ms_abi)) uint16_t mw_RegisterClassExA(const void* wcex) {
     if (wcex) {
-        void* p = *(void* const*)((const char*)wcex + 8);
+        void* p; const void* cname; void* hbr;
+        if (g_cpu32_active) { /* SW-1354: i386 WNDCLASSEXA layout (see ExW) */
+            uint32_t b = (uint32_t)(uintptr_t)wcex;
+            p = (void*)(uintptr_t)m32_ld32(b + 8);
+            cname = (const void*)(uintptr_t)m32_ld32(b + 40);
+            hbr = (void*)(uintptr_t)m32_ld32(b + 32);
+        } else {
+            p = *(void* const*)((const char*)wcex + 8);
+            cname = *(const void* const*)((const char*)wcex + 64);
+            hbr = *(void* const*)((const char*)wcex + 48);
+        }
         mw_gui_store_wndproc(p);
-        mw_class_proc_store(*(const void* const*)((const char*)wcex + 64), 0, p,
-                            *(void* const*)((const char*)wcex + 48)); /* SW-1291b */
-        mw_class_name_store_a(*(const char* const*)((const char*)wcex + 64)); /* SWEEP-013 */
+        mw_class_proc_store(cname, 0, p, hbr); /* SW-1291b */
+        mw_class_name_store_a((const char*)cname); /* SWEEP-013 */
     }
     MW_TRACE("RegisterClassExA(wcex=%p) -> ATOM 0x%x", wcex, MW_GUI_ATOM);
     return MW_GUI_ATOM;
@@ -17409,11 +17485,20 @@ __attribute__((ms_abi)) uint16_t mw_RegisterClassExA(const void* wcex) {
 __attribute__((ms_abi)) uint16_t mw_RegisterClassW(const void* wc) {
     /* WNDCLASSW.lpfnWndProc also at offset 8 (style is 4 bytes + pad) */
     if (wc) {
-        void* p = *(void* const*)((const char*)wc + 8);
+        void* p; const void* cname; void* hbr;
+        if (g_cpu32_active) { /* SW-1354: i386 WNDCLASSW: style@0 proc@4 cbCls@8 cbWnd@12 hInst@16 hIcon@20 hCursor@24 hbr@28 menu@32 name@36 */
+            uint32_t b = (uint32_t)(uintptr_t)wc;
+            p = (void*)(uintptr_t)m32_ld32(b + 4);
+            cname = (const void*)(uintptr_t)m32_ld32(b + 36);
+            hbr = (void*)(uintptr_t)m32_ld32(b + 28);
+        } else {
+            p = *(void* const*)((const char*)wc + 8);
+            cname = *(const void* const*)((const char*)wc + 64);
+            hbr = *(void* const*)((const char*)wc + 48);
+        }
         mw_gui_store_wndproc(p);
-        mw_class_proc_store(*(const void* const*)((const char*)wc + 64), 1, p,
-                            *(void* const*)((const char*)wc + 48)); /* SW-1291b */
-        mw_class_name_store_w(*(const uint16_t* const*)((const char*)wc + 64)); /* SWEEP-013 */
+        mw_class_proc_store(cname, 1, p, hbr); /* SW-1291b */
+        mw_class_name_store_w((const uint16_t*)cname); /* SWEEP-013 */
         /* SW-1290/SW-1291b: hbrBackground (WNDCLASSW offset 48 on x64: style@0
          * pad@4 proc@8 cbCls@16 cbWnd@20 hInst@24 hIcon@32 hCursor@40
          * hbrBackground@48 menu@56 name@64) now rides the PER-CLASS registry;
@@ -17428,11 +17513,20 @@ __attribute__((ms_abi)) uint16_t mw_RegisterClassW(const void* wc) {
 }
 __attribute__((ms_abi)) uint16_t mw_RegisterClassA(const void* wc) {
     if (wc) {
-        void* p = *(void* const*)((const char*)wc + 8);
+        void* p; const void* cname; void* hbr;
+        if (g_cpu32_active) { /* SW-1354: i386 WNDCLASSA layout (see W) */
+            uint32_t b = (uint32_t)(uintptr_t)wc;
+            p = (void*)(uintptr_t)m32_ld32(b + 4);
+            cname = (const void*)(uintptr_t)m32_ld32(b + 36);
+            hbr = (void*)(uintptr_t)m32_ld32(b + 28);
+        } else {
+            p = *(void* const*)((const char*)wc + 8);
+            cname = *(const void* const*)((const char*)wc + 64);
+            hbr = *(void* const*)((const char*)wc + 48);
+        }
         mw_gui_store_wndproc(p);
-        mw_class_proc_store(*(const void* const*)((const char*)wc + 64), 0, p,
-                            *(void* const*)((const char*)wc + 48)); /* SW-1291b */
-        mw_class_name_store_a(*(const char* const*)((const char*)wc + 64)); /* SWEEP-013 */
+        mw_class_proc_store(cname, 0, p, hbr); /* SW-1291b */
+        mw_class_name_store_a((const char*)cname); /* SWEEP-013 */
     }
     MW_TRACE("RegisterClassA(wc=%p) -> ATOM 0x%x", wc, MW_GUI_ATOM);
     return MW_GUI_ATOM;
@@ -17646,6 +17740,12 @@ __attribute__((ms_abi)) int mw_SetPropW(void* h, const uint16_t* name, void* val
 __attribute__((ms_abi)) void* mw_CreateWindowExW(uint32_t exstyle, const void* cls,
         const uint16_t* win, uint32_t style, int x, int y, int w, int h,
         void* parent, void* menu, void* inst, void* param) {
+    /* SW-1354: remember the top-level args for the i386 CREATESTRUCT staging */
+    g_cw32_last.exstyle = exstyle; g_cw32_last.style = style;
+    g_cw32_last.cls = (uint32_t)(uintptr_t)cls; g_cw32_last.win = (uint32_t)(uintptr_t)win;
+    g_cw32_last.parent = (uint32_t)(uintptr_t)parent; g_cw32_last.menu = (uint32_t)(uintptr_t)menu;
+    g_cw32_last.inst = (uint32_t)(uintptr_t)inst; g_cw32_last.param = (uint32_t)(uintptr_t)param;
+    g_cw32_last.x = x; g_cw32_last.y = y; g_cw32_last.w = w; g_cw32_last.h = h;
     int sc = mw_sysclass_w(cls);
     /* SW-1207: comctl32 tooltips_class32 window object. Before this, a
      * tooltip call (popup parent=NULL OR owned) fell into the main-window
@@ -17769,6 +17869,12 @@ __attribute__((ms_abi)) void* mw_CreateWindowExW(uint32_t exstyle, const void* c
 __attribute__((ms_abi)) void* mw_CreateWindowExA(uint32_t exstyle, const void* cls,
         const char* win, uint32_t style, int x, int y, int w, int h,
         void* parent, void* menu, void* inst, void* param) {
+    /* SW-1354: remember the top-level args for the i386 CREATESTRUCT staging */
+    g_cw32_last.exstyle = exstyle; g_cw32_last.style = style;
+    g_cw32_last.cls = (uint32_t)(uintptr_t)cls; g_cw32_last.win = (uint32_t)(uintptr_t)win;
+    g_cw32_last.parent = (uint32_t)(uintptr_t)parent; g_cw32_last.menu = (uint32_t)(uintptr_t)menu;
+    g_cw32_last.inst = (uint32_t)(uintptr_t)inst; g_cw32_last.param = (uint32_t)(uintptr_t)param;
+    g_cw32_last.x = x; g_cw32_last.y = y; g_cw32_last.w = w; g_cw32_last.h = h;
     int sc = mw_sysclass_a(cls);
     /* SW-1207: tooltip branch on the A path — same contract as the W path
      * above (distinct identity + CC32SubclassInfo prop at atom 0xC000). */
@@ -17900,8 +18006,8 @@ __attribute__((ms_abi)) int mw_UpdateWindow(void* hwnd) {
         int wl = mw_wndlong_slot(g_child[i].hwnd, -4, 0);
         if (wl < 0 || !g_wndlong[wl].value ||
             g_wndlong[wl].value == (uintptr_t)&mw_engine_defproc) continue;
-        long long r = ((MW_WNDPROC)(uintptr_t)g_wndlong[wl].value)(
-            g_child[i].hwnd, 0x000Fu /* WM_PAINT */, 0, 0);
+        long long r = mw_call_cb4((void*)(uintptr_t)g_wndlong[wl].value,
+            (uint32_t)(uintptr_t)g_child[i].hwnd, 0x000Fu /* WM_PAINT */, 0, 0);
         MW_TRACE("[GUI] UpdateWindow -> child id=%lu %s WM_PAINT -> %lld",
                  (unsigned long)g_child[i].id, g_child[i].cls, r);
     }
@@ -18510,7 +18616,17 @@ static int mw_probe_copy(const void* src, size_t n, void* dst) {
 /* ---- registry / surface hooks (called from SWEEP-003 stubs) ---- */
 static void mw_gui_store_wndproc(void* proc) {
     /* SW-1281: x86 mode — `proc` is a guest i386 EIP (low-4GB VA). */
-    if (g_cpu32_active) g_main_class_proc32 = (uint32_t)(uintptr_t)proc;
+    if (g_cpu32_active) {
+        /* SW-1354: capture the EIP for the interpreter shim and NEVER store a
+         * guest VA into the host-callable channel. The old code also ran
+         * `g_wndproc_fwd = (MW_WNDPROC)proc`, so the first WM_CREATE delivery
+         * executed a guest address as HOST code (winlister x86: host
+         * RIP=0x400000000 = the x64-offset qword read of cbClsExtra|cbWndExtra). */
+        uint32_t eip = (uint32_t)(uintptr_t)proc;
+        g_main_class_proc32 = eip;
+        if (eip) g_wndproc_fwd = (MW_WNDPROC)mw_wndproc32_shim;
+        return;
+    }
     if (proc) g_wndproc_fwd = (MW_WNDPROC)proc;
 }
 /* SW-1279 fix C: per-class wndproc registry ----
@@ -18689,24 +18805,52 @@ static long long mw_gui_send_create(void) {
          * +0x24 cx, +0x28 y, +0x2c x, +0x30 style, +0x38 lpszName,
          * +0x40 lpszClass, +0x48 dwExStyle. x64 size = 0x50. */
         static const unsigned short empty_w[1] = { 0 };
-        unsigned char cs[0x50];
-        memset(cs, 0, sizeof(cs));
-        *(void**)(cs + 0x00) = g_create_param ? g_create_param : (void*)g_cs_scratch;
-        *(void**)(cs + 0x08) = g_image_base; /* hInstance = main module */
-        *(void**)(cs + 0x18) = NULL;         /* hwndParent */
-        *(int32_t*)(cs + 0x20) = g_win_h;
-        *(int32_t*)(cs + 0x24) = g_win_w;
-        *(int32_t*)(cs + 0x28) = 0;
-        *(int32_t*)(cs + 0x2c) = 0;
-        *(uint32_t*)(cs + 0x30) = 0x00CF0000u | 0x10000000u; /* WS_OVERLAPPEDWINDOW|WS_VISIBLE */
-        *(const void**)(cs + 0x38) = empty_w; /* lpszName */
-        *(const void**)(cs + 0x40) = empty_w; /* lpszClass */
-        *(uint32_t*)(cs + 0x48) = 0;
+        long long r;
         g_wm_create_depth++; /* SW-1256: gate nested minting during base delivery too */
-        long long r = g_wndproc_fwd(MW_GUI_HWND, 0x0001u, 0, (long long)(intptr_t)cs); /* WM_CREATE */
+        if (g_cpu32_active) {
+            /* SW-1354: stage the i386 CREATESTRUCT (48 bytes) in guest-visible
+             * low arena memory. The x64 struct on the HOST stack is unreadable
+             * for a cpu32 guest: the interpreter shim truncates lp to 32 bits,
+             * so a 0x7ffd... stack VA arrives as garbage. Field layout (i386):
+             * params@0 inst@4 menu@8 parent@12 cy@16 cx@20 y@24 x@28 style@32
+             * name@36 class@40 exstyle@44. Name/class stay the GUEST VAs the
+             * guest passed in (identity-mapped, readable through the shim). */
+            uint8_t* cs = g_arena32 ? g_arena32 + (MW32_CS32_VA - 0x10000000u) : NULL;
+            if (cs) {
+                memset(cs, 0, 0x40);
+                *(uint32_t*)(cs + 0x00) = g_cw32_last.param;
+                *(uint32_t*)(cs + 0x04) = g_cw32_last.inst ? g_cw32_last.inst : (uint32_t)mw_main_image_base();
+                *(uint32_t*)(cs + 0x08) = g_cw32_last.menu;
+                *(uint32_t*)(cs + 0x0C) = 0; /* hwndParent: main top-level has none */
+                *(uint32_t*)(cs + 0x10) = (uint32_t)g_cw32_last.h;
+                *(uint32_t*)(cs + 0x14) = (uint32_t)g_cw32_last.w;
+                *(uint32_t*)(cs + 0x18) = (uint32_t)g_cw32_last.y;
+                *(uint32_t*)(cs + 0x1C) = (uint32_t)g_cw32_last.x;
+                *(uint32_t*)(cs + 0x20) = g_cw32_last.style;
+                *(uint32_t*)(cs + 0x24) = g_cw32_last.win;
+                *(uint32_t*)(cs + 0x28) = g_cw32_last.cls;
+                *(uint32_t*)(cs + 0x2C) = g_cw32_last.exstyle;
+                r = g_wndproc_fwd(MW_GUI_HWND, 0x0001u, 0, (long long)MW32_CS32_VA); /* WM_CREATE */
+            } else r = 0;
+        } else {
+            unsigned char cs[0x50];
+            memset(cs, 0, sizeof(cs));
+            *(void**)(cs + 0x00) = g_create_param ? g_create_param : (void*)g_cs_scratch;
+            *(void**)(cs + 0x08) = g_image_base; /* hInstance = main module */
+            *(void**)(cs + 0x18) = NULL;         /* hwndParent */
+            *(int32_t*)(cs + 0x20) = g_win_h;
+            *(int32_t*)(cs + 0x24) = g_win_w;
+            *(int32_t*)(cs + 0x28) = 0;
+            *(int32_t*)(cs + 0x2c) = 0;
+            *(uint32_t*)(cs + 0x30) = 0x00CF0000u | 0x10000000u; /* WS_OVERLAPPEDWINDOW|WS_VISIBLE */
+            *(const void**)(cs + 0x38) = empty_w; /* lpszName */
+            *(const void**)(cs + 0x40) = empty_w; /* lpszClass */
+            *(uint32_t*)(cs + 0x48) = 0;
+            r = g_wndproc_fwd(MW_GUI_HWND, 0x0001u, 0, (long long)(intptr_t)cs); /* WM_CREATE */
+        }
         g_wm_create_depth--;
         MW_TRACE("[GUI] WM_CREATE(lparam=&CS lpParams=%p) -> wndproc -> %lld",
-                 *(void**)cs, r);
+                 g_create_param, r);
         return r;
     }
     return 0;
@@ -18721,21 +18865,42 @@ static long long mw_gui_send_create(void) {
 static long long mw_gui_send_create_h(void* hwnd, void* parent, uint32_t ctl_id) {
     if (mw_gui_events_enabled() && g_wndproc_fwd) {
         static const unsigned short empty_w[1] = { 0 };
-        unsigned char cs[0x50];
-        memset(cs, 0, sizeof(cs));
-        *(void**)(cs + 0x00) = g_create_param ? g_create_param : (void*)g_cs_scratch;
-        *(void**)(cs + 0x08) = g_image_base;
-        *(void**)(cs + 0x18) = parent;       /* hwndParent (SW-1256) */
-        *(int32_t*)(cs + 0x20) = g_win_h;
-        *(int32_t*)(cs + 0x24) = g_win_w;
-        *(int32_t*)(cs + 0x28) = 0;
-        *(int32_t*)(cs + 0x2c) = 0;
-        *(uint32_t*)(cs + 0x30) = 0x40CF0000u | 0x10000000u; /* WS_CHILD|WS_OVERLAPPEDWINDOW|WS_VISIBLE-ish */
-        *(const void**)(cs + 0x38) = empty_w;
-        *(const void**)(cs + 0x40) = empty_w;
-        *(uint32_t*)(cs + 0x48) = 0;
+        long long r;
         g_wm_create_depth++;
-        long long r = g_wndproc_fwd(hwnd, 0x0001u, (long long)(uintptr_t)ctl_id, (long long)(intptr_t)cs); /* WM_CREATE, wParam=id for children */
+        if (g_cpu32_active) { /* SW-1354: i386 CREATESTRUCT staged guest-side (see mw_gui_send_create) */
+            uint8_t* cs = g_arena32 ? g_arena32 + (MW32_CS32_VA - 0x10000000u) : NULL;
+            if (cs) {
+                memset(cs, 0, 0x40);
+                *(uint32_t*)(cs + 0x00) = g_cw32_last.param;
+                *(uint32_t*)(cs + 0x04) = g_cw32_last.inst ? g_cw32_last.inst : (uint32_t)mw_main_image_base();
+                *(uint32_t*)(cs + 0x08) = g_cw32_last.menu;
+                *(uint32_t*)(cs + 0x0C) = (uint32_t)(uintptr_t)parent; /* hwndParent (SW-1256) */
+                *(uint32_t*)(cs + 0x10) = (uint32_t)g_cw32_last.h;
+                *(uint32_t*)(cs + 0x14) = (uint32_t)g_cw32_last.w;
+                *(uint32_t*)(cs + 0x18) = 0;
+                *(uint32_t*)(cs + 0x1C) = 0;
+                *(uint32_t*)(cs + 0x20) = 0x40CF0000u | 0x10000000u; /* WS_CHILD|WS_OVERLAPPEDWINDOW|WS_VISIBLE-ish */
+                *(uint32_t*)(cs + 0x24) = g_cw32_last.win;
+                *(uint32_t*)(cs + 0x28) = g_cw32_last.cls;
+                *(uint32_t*)(cs + 0x2C) = 0;
+                r = g_wndproc_fwd(hwnd, 0x0001u, (long long)(uintptr_t)ctl_id, (long long)MW32_CS32_VA); /* WM_CREATE, wParam=id for children */
+            } else r = 0;
+        } else {
+            unsigned char cs[0x50];
+            memset(cs, 0, sizeof(cs));
+            *(void**)(cs + 0x00) = g_create_param ? g_create_param : (void*)g_cs_scratch;
+            *(void**)(cs + 0x08) = g_image_base;
+            *(void**)(cs + 0x18) = parent;       /* hwndParent (SW-1256) */
+            *(int32_t*)(cs + 0x20) = g_win_h;
+            *(int32_t*)(cs + 0x24) = g_win_w;
+            *(int32_t*)(cs + 0x28) = 0;
+            *(int32_t*)(cs + 0x2c) = 0;
+            *(uint32_t*)(cs + 0x30) = 0x40CF0000u | 0x10000000u; /* WS_CHILD|WS_OVERLAPPEDWINDOW|WS_VISIBLE-ish */
+            *(const void**)(cs + 0x38) = empty_w;
+            *(const void**)(cs + 0x40) = empty_w;
+            *(uint32_t*)(cs + 0x48) = 0;
+            r = g_wndproc_fwd(hwnd, 0x0001u, (long long)(uintptr_t)ctl_id, (long long)(intptr_t)cs); /* WM_CREATE, wParam=id for children */
+        }
         g_wm_create_depth--;
         MW_TRACE("[GUI] WM_CREATE[nested %p parent=%p id=%u](lparam=&CS) -> wndproc -> %lld",
                  hwnd, parent, ctl_id, r);
@@ -19542,12 +19707,12 @@ __attribute__((ms_abi)) void* mw_LoadIconW(void* h, const uint16_t* name) {
 __attribute__((ms_abi)) long long mw_CallWindowProcA(void* proc, void* hwnd, uint32_t m,
         uintptr_t wp, long long lp) {
     if (!proc) return 0;
-    return ((MW_WNDPROC)proc)(hwnd, m, wp, lp);
+    return mw_call_cb4(proc, (uint32_t)(uintptr_t)hwnd, m, wp, lp); /* SW-1354e */
 }
 __attribute__((ms_abi)) long long mw_CallWindowProcW(void* proc, void* hwnd, uint32_t m,
         uintptr_t wp, long long lp) {
     if (!proc) return 0;
-    return ((MW_WNDPROC)proc)(hwnd, m, wp, lp);
+    return mw_call_cb4(proc, (uint32_t)(uintptr_t)hwnd, m, wp, lp); /* SW-1354e */
 }
 __attribute__((ms_abi)) uintptr_t mw_SetTimer(void* hwnd, uintptr_t id, uint32_t elapse, void* proc) {
     (void)hwnd; (void)proc;
@@ -20388,14 +20553,38 @@ static void mw_dialog_create_children(void* dlg, const void* tmpl) {
         p = mw_align4_w(after + 1 + extra); /* extraCount + creation data */
     }
 }
+/* SW-1354e: mode-aware guest callback invocation. x64 guests execute
+ * natively — the "proc" is a host address. cpu32 (PE32) guests store a
+ * guest EIP, which must re-enter through the interpreter with a real
+ * stdcall frame (args below the sentinel RA — see cpu32_call). A native
+ * call of a guest EIP executes guest bytes as HOST code (winlister x86
+ * EnumWindows: host RIP=0x4031ee inside the guest image). */
+static int mw_call_cb2(void* proc, uint32_t a0, uint32_t a1) {
+    if (!proc) return 0;
+    if (g_cpu32_active) {
+        uint32_t args[2] = { a0, a1 };
+        return (int)(int32_t)cpu32_call((uint32_t)(uintptr_t)proc, 2, args);
+    }
+    typedef int (*cb_t)(void*, intptr_t);
+    return ((cb_t)proc)((void*)(uintptr_t)a0, (intptr_t)(int32_t)a1);
+}
+static int mw_call_cb4(void* proc, uint32_t a0, uint32_t a1, uintptr_t a2, intptr_t a3) {
+    if (!proc) return 0;
+    if (g_cpu32_active) {
+        uint32_t args[4] = { a0, a1, (uint32_t)a2, (uint32_t)a3 };
+        return (int)(int32_t)cpu32_call((uint32_t)(uintptr_t)proc, 4, args);
+    }
+    typedef int (*cb_t)(void*, uint32_t, uintptr_t, intptr_t);
+    return ((cb_t)proc)((void*)(uintptr_t)a0, a1, a2, a3);
+}
 static int mw_dialog_run(MwDlgProc proc, intptr_t init_param) {
     if (!proc) return MW_IDOK;
     void* hwnd = (void*)(uintptr_t)0x00010001; /* pseudo-HWND (house style) */
     g_dialog_result = 0;
     MW_TRACE("Dialog: WM_INITDIALOG proc=%p", (void*)proc);
-    proc(hwnd, MWWM_INITDIALOG, 0, init_param);
+    mw_call_cb4(proc, (uint32_t)(uintptr_t)hwnd, MWWM_INITDIALOG, 0, (uint32_t)init_param);
     MW_TRACE("Dialog: WM_COMMAND(IDOK) proc=%p", (void*)proc);
-    proc(hwnd, MWWM_COMMAND, (uintptr_t)MW_IDOK, 0); /* lparam = control hwnd = none */
+    mw_call_cb4(proc, (uint32_t)(uintptr_t)hwnd, MWWM_COMMAND, (uintptr_t)MW_IDOK, 0); /* lparam = control hwnd = none */
     return g_dialog_result ? g_dialog_result : MW_IDOK;
 }
 __attribute__((ms_abi)) int mw_EndDialog(void* hwnd, intptr_t result) {
@@ -20805,10 +20994,8 @@ __attribute__((ms_abi)) long long mw_DefSubclassProc(void* hwnd, uint32_t msg, u
     for (int i = start; i < g_sub_n; i++) {
         if (g_sub[i].hwnd != hwnd) continue;
         g_sub_cur.hwnd = hwnd; g_sub_cur.msg = msg; g_sub_cur.idx = i + 1; g_sub_cur.active = 1;
-        long long r;
-        __attribute__((ms_abi)) long long (*proc)(void*, uint32_t, uintptr_t, intptr_t) =
-            (__attribute__((ms_abi)) long long (*)(void*, uint32_t, uintptr_t, intptr_t))g_sub[i].proc;
-        r = proc(hwnd, msg, wp, (long long)lp);
+        /* SW-1354e: mode-aware — cpu32 subclass procs are guest EIPs */
+        long long r = mw_call_cb4(g_sub[i].proc, (uint32_t)(uintptr_t)hwnd, msg, wp, (intptr_t)lp);
         g_sub_cur.active = 0;
         MW_TRACE("DefSubclassProc(hwnd=%p msg=%#x) -> proc[%d] = %llx", hwnd, msg, i, (unsigned long long)r);
         return r;
@@ -22766,9 +22953,15 @@ __attribute__((ms_abi)) int mw_GetClassInfoExW(void* hinst, const void* name, vo
         mw_probe_copy(p, 4, &cbsize);
         memset(p + 4, 0, (cbsize > 4 && cbsize <= 80) ? cbsize - 4 : 76);
         *(uint32_t*)(p + 4) = 0;
-        *(void**)(p + 8) = (void*)g_wndproc_fwd;
-        *(void**)(p + 64) = (void*)name; /* lpszClassName (same offset W/A-EX) */
-        MW_TRACE("GetClassInfoExW('%s') -> TRUE (proc=%p)", a, (void*)g_wndproc_fwd);
+        if (g_cpu32_active) { /* SW-1354: i386 WNDCLASSEX — proc@8 is 4 bytes, name@40 */
+            *(uint32_t*)(p + 8) = g_main_class_proc32;
+            *(uint32_t*)(p + 40) = (uint32_t)(uintptr_t)name;
+            MW_TRACE("GetClassInfoExW('%s') -> TRUE (proc32=0x%x)", a, g_main_class_proc32);
+        } else {
+            *(void**)(p + 8) = (void*)g_wndproc_fwd;
+            *(void**)(p + 64) = (void*)name; /* lpszClassName (same offset W/A-EX) */
+            MW_TRACE("GetClassInfoExW('%s') -> TRUE (proc=%p)", a, (void*)g_wndproc_fwd);
+        }
     }
     return 1;
 }
@@ -22783,8 +22976,13 @@ __attribute__((ms_abi)) int mw_GetClassInfoExA(void* hinst, const void* name, vo
         uint32_t cbsize = 0;
         mw_probe_copy(p, 4, &cbsize);
         memset(p + 4, 0, (cbsize > 4 && cbsize <= 80) ? cbsize - 4 : 76);
-        *(void**)(p + 8) = (void*)g_wndproc_fwd;
-        *(void**)(p + 64) = (void*)name;
+        if (g_cpu32_active) { /* SW-1354: i386 WNDCLASSEXA — proc@8 is 4 bytes, name@40 */
+            *(uint32_t*)(p + 8) = g_main_class_proc32;
+            *(uint32_t*)(p + 40) = (uint32_t)(uintptr_t)name;
+        } else {
+            *(void**)(p + 8) = (void*)g_wndproc_fwd;
+            *(void**)(p + 64) = (void*)name;
+        }
     }
     return 1;
 }
@@ -23102,6 +23300,59 @@ __attribute__((ms_abi)) uint32_t mw_NtQuerySystemInformation(uint32_t cls, void*
         memset(p, 0, need);
         uint64_t now100 = (uint64_t)time(NULL) * 10000000ull + 116444736000000000ull;
         long ncpu = sysconf(_SC_NPROCESSORS_ONLN);
+        if (g_cpu32_active) {
+            /* SW-1355: i386 SYSTEM_PROCESS_INFORMATION (XP layout, decoded
+             * from winlister x86's own consumer code): it converts the image
+             * name from [rec+0x3C] (ImageName UNICODE_STRING at +0x38,
+             * 8-byte x86 form: Length@0x38 Max@0x3A Buffer@0x3C) and keys
+             * its window->process map on UniqueProcessId at +0x44. The x64
+             * record (name@0x38 16-byte form, pid@0x50) read as pid=0 /
+             * name-buffer=HandleCount(0x80) -> lookup NULL -> crash. */
+            *(uint32_t*)(p + 0x00) = 0;              /* NextEntryDelta: last entry */
+            *(uint32_t*)(p + 0x04) = 0;              /* ThreadCount */
+            *(uint64_t*)(p + 0x08) = 2345678;        /* Reserved1[0] KernelTime */
+            *(uint64_t*)(p + 0x10) = 1234567;        /* Reserved1[1] UserTime */
+            *(uint64_t*)(p + 0x18) = now100 - 6000000000ull; /* Reserved1[2] CreateTime */
+            *(uint32_t*)(p + 0x20) = 0;              /* Reserved2 */
+            *(uint32_t*)(p + 0x24) = 0;              /* Reserved3 */
+            *(uint32_t*)(p + 0x28) = 0;              /* Reserved4 */
+            *(uint32_t*)(p + 0x2C) = 0;              /* Reserved5 */
+            *(uint32_t*)(p + 0x30) = 0;              /* Reserved6[0] */
+            *(uint32_t*)(p + 0x34) = 0;              /* Reserved6[1] */
+            *(uint16_t*)(p + 0x38) = (uint16_t)(img_n * 2);     /* ImageName.Length */
+            *(uint16_t*)(p + 0x3A) = (uint16_t)(img_n * 2 + 2); /* ImageName.MaximumLength */
+            *(uint32_t*)(p + 0x3C) = (uint32_t)(uintptr_t)(p + rec); /* ImageName.Buffer */
+            for (size_t i = 0; i < img_n; i++)
+                ((uint16_t*)(p + rec))[i] = (uint16_t)(uint8_t)img[i];
+            ((uint16_t*)(p + rec))[img_n] = 0;
+            *(uint32_t*)(p + 0x40) = 8;              /* BasePriority */
+            *(uint32_t*)(p + 0x44) = 1234;           /* UniqueProcessId (guest PID) */
+            *(uint32_t*)(p + 0x48) = 600;            /* InheritedFromUniqueProcessId */
+            *(uint32_t*)(p + 0x4C) = 128;            /* HandleCount */
+            *(uint32_t*)(p + 0x50) = 0;              /* SessionId */
+            *(uint32_t*)(p + 0x54) = 512u << 20;     /* PeakVirtualSize */
+            *(uint32_t*)(p + 0x58) = 384u << 20;     /* VirtualSize */
+            *(uint32_t*)(p + 0x5C) = 4096;           /* PageFaultCount */
+            *(uint32_t*)(p + 0x60) = 64u << 20;      /* PeakWorkingSetSize */
+            *(uint32_t*)(p + 0x64) = 48u << 20;      /* WorkingSetSize */
+            *(uint32_t*)(p + 0x68) = 16u << 20;      /* QuotaPeakPagedPoolUsage */
+            *(uint32_t*)(p + 0x6C) = 8u << 20;       /* QuotaPagedPoolUsage */
+            *(uint32_t*)(p + 0x70) = 4u << 20;       /* QuotaPeakNonPagedPoolUsage */
+            *(uint32_t*)(p + 0x74) = 2u << 20;       /* QuotaNonPagedPoolUsage */
+            *(uint32_t*)(p + 0x78) = 24u << 20;      /* PagefileUsage */
+            *(uint32_t*)(p + 0x7C) = 32u << 20;      /* PeakPagefileUsage */
+            *(uint32_t*)(p + 0x80) = 20u << 20;      /* PrivatePageCount */
+            *(uint64_t*)(p + 0x84) = 1024ull * (uint64_t)ncpu; /* ReadOperationCount */
+            *(uint64_t*)(p + 0x8C) = 2048ull * (uint64_t)ncpu; /* WriteOperationCount */
+            *(uint64_t*)(p + 0x94) = 256;            /* OtherOperationCount */
+            *(uint64_t*)(p + 0x9C) = 4ull << 20;     /* ReadTransferCount */
+            *(uint64_t*)(p + 0xA4) = 8ull << 20;     /* WriteTransferCount */
+            *(uint64_t*)(p + 0xAC) = 4096;           /* OtherTransferCount */
+            if (retlen) *retlen = need;
+            MW_TRACE("NtQuerySystemInformation(SystemProcessInformation x86) -> 1 entry (pid 1234 '%s')",
+                     img);
+            return 0;
+        }
         *(uint32_t*)(p + 0x00) = 0;              /* NextEntryOffset: last entry */
         *(uint32_t*)(p + 0x04) = 0;              /* NumberOfThreads */
         *(uint32_t*)(p + 0x10) = 0;              /* HardFaultCount */
@@ -23999,7 +24250,7 @@ static void* mw_dlg_create_common(void* hinst, const char* aname,
                                  NULL);
         }
     }
-    if (proc) proc(hwnd, MWWM_INITDIALOG, 0, init);
+    if (proc) mw_call_cb4(proc, (uint32_t)(uintptr_t)hwnd, MWWM_INITDIALOG, 0, (uint32_t)init); /* SW-1354e: mode-aware (cpu32 dlgproc re-entry) */
     return hwnd;
 }
 /* CreateDialogParamW/A — MODELESS dialog: run WM_INITDIALOG and return a
@@ -24111,7 +24362,8 @@ __attribute__((ms_abi)) int mw_EnumFontFamiliesW(void* hdc, const uint16_t* fami
     uint8_t tmw[60]; memset(tmw, 0, sizeof(tmw));
     *(long*)(tmw + 0) = 8;
     MW_TRACE("EnumFontFamiliesW -> 1 font (Raster)");
-    return proc(lfw, tmw, 0x0004u /*RASTER_FONTTYPE*/, lparam) ? 1 : 0;
+    return mw_call_cb4(proc, (uint32_t)(uintptr_t)lfw, (uint32_t)(uintptr_t)tmw,
+                       0x0004u /*RASTER_FONTTYPE*/, (uint32_t)lparam) ? 1 : 0;
 }
 __attribute__((ms_abi)) int mw_EnumFontFamiliesA(void* hdc, const char* family,
         MW_FontEnumProc proc, intptr_t lparam) {
@@ -24122,7 +24374,8 @@ __attribute__((ms_abi)) int mw_EnumFontFamiliesA(void* hdc, const char* family,
     memcpy(lfa + 28, "Raster", 7);
     uint8_t tma[60]; memset(tma, 0, sizeof(tma));
     *(long*)(tma + 0) = 8;
-    return proc(lfa, tma, 0x0004u /*RASTER_FONTTYPE*/, lparam) ? 1 : 0;
+    return mw_call_cb4(proc, (uint32_t)(uintptr_t)lfa, (uint32_t)(uintptr_t)tma,
+                       0x0004u /*RASTER_FONTTYPE*/, (uint32_t)lparam) ? 1 : 0;
 }
 /* ---- SWEEP-022 SW-941..945: font family completion ----
  * EnumFontFamiliesEx*: the guest proc receives an ENUMLOGFONTEX (LOGFONT
@@ -24138,7 +24391,8 @@ __attribute__((ms_abi)) int mw_EnumFontFamiliesExW(void* hdc, const void* lf,
     uint8_t tmw[160]; memset(tmw, 0, sizeof(tmw));    /* NEWTEXTMETRICW span */
     *(long*)(tmw + 0) = 8;
     MW_TRACE("EnumFontFamiliesExW -> 1 font (Raster)");
-    return proc(elfw, tmw, 0x0004u, lparam) ? 1 : 0;
+    return mw_call_cb4(proc, (uint32_t)(uintptr_t)elfw, (uint32_t)(uintptr_t)tmw,
+                       0x0004u, (uint32_t)lparam) ? 1 : 0;
 }
 __attribute__((ms_abi)) int mw_EnumFontFamiliesExA(void* hdc, const void* lf,
         MW_FontEnumProc proc, intptr_t lparam, uint32_t flags) {
@@ -24149,7 +24403,8 @@ __attribute__((ms_abi)) int mw_EnumFontFamiliesExA(void* hdc, const void* lf,
     memcpy(elfa + 28, "Raster", 7);
     uint8_t tma2[160]; memset(tma2, 0, sizeof(tma2));
     *(long*)(tma2 + 0) = 8;
-    return proc(elfa, tma2, 0x0004u, lparam) ? 1 : 0;
+    return mw_call_cb4(proc, (uint32_t)(uintptr_t)elfa, (uint32_t)(uintptr_t)tma2,
+                       0x0004u, (uint32_t)lparam) ? 1 : 0;
 }
 __attribute__((ms_abi)) int mw_GetTextFaceW(void* hdc, int count, uint16_t* buf) {
     (void)hdc;
@@ -24264,8 +24519,19 @@ __attribute__((ms_abi)) void* mw_SysAllocStringByteLen(const char* s, uint32_t l
  * ffmpeg-era winsock work (WSADataT 408-byte struct, line ~9045) yet gated
  * three programs — the ENTRY lines were missing from the dispatch table.
  * Wired via ENTRY only; the function bodies above the table are canonical. */
-/* ---- msvcrt: C++ operator new/delete (guest heap == host heap) ---- */
+/* ---- msvcrt: C++ operator new/delete ----
+ * SW-1358d: for cpu32 guests the block MUST live in the GUEST heap. A
+ * host-malloc'd pointer is identity-visible to the interpreter and the
+ * guest's own CRT writes its heap bookkeeping around/behind it — that
+ * trashed glibc's main arena top chunk (shmnview x86: malloc.c sysmalloc
+ * assert after three operator-news). x64 native guests keep host malloc
+ * (guest heap == host heap there by design). */
 __attribute__((ms_abi)) void* mw_msvcrt_op_new(uint64_t size) {
+    if (g_cpu32_active) {
+        uint32_t p = mw32_heap_alloc((uint32_t)(size ? size : 1), 0);
+        MW_TRACE("msvcrt operator new32(%llu) -> %x", (unsigned long long)size, p);
+        return (void*)(uintptr_t)p; /* NULL on failure — the real operator's contract */
+    }
     void* p = size ? malloc((size_t)size) : malloc(1);
     MW_TRACE("msvcrt operator new(%llu) -> %p", (unsigned long long)size, p);
     return p; /* NULL on failure — the real operator's contract */
@@ -24274,10 +24540,16 @@ __attribute__((ms_abi)) void* mw_msvcrt_op_new_arr(uint64_t size) {
     return mw_msvcrt_op_new(size); /* new[] shares the heap, honest alias */
 }
 __attribute__((ms_abi)) void mw_msvcrt_op_delete(void* p) {
+    if (g_cpu32_active) {
+        /* guest-heap blocks are arena-managed (bump); no per-block free —
+         * matches the arena model every other x86 allocation path uses */
+        MW_TRACE("msvcrt operator delete32(%p)", p);
+        return;
+    }
     free(p); /* free(NULL) is a no-op — matches operator delete */
 }
 __attribute__((ms_abi)) void mw_msvcrt_op_delete_arr(void* p) {
-    free(p);
+    mw_msvcrt_op_delete(p); /* SW-1358d: same per-world heap routing */
 }
 
 /* ---- msvcrt!_mbsnbcat (cports' sole hard gate, 18 calls) ----
@@ -24361,8 +24633,13 @@ __attribute__((ms_abi)) intptr_t mw_SetWindowLongPtrW(void* h, int index, intptr
          * hwnd); child subclasses route through their own stored proc
          * (SendMessageW SW-1266 path + UpdateWindow child paint). */
         if (h == MW_GUI_HWND || h == g_main_hwnd || mw_toplevel_find(h) >= 0) {
-            g_wndproc_fwd = (MW_WNDPROC)v;
-            g_main_class_proc = (MW_WNDPROC)v; /* SW-1279 fix C: subclass wins */
+            if (g_cpu32_active) { /* SW-1354: guest EIP rides the interpreter shim, never the host channel */
+                g_main_class_proc32 = (uint32_t)(uintptr_t)v;
+                g_wndproc_fwd = (MW_WNDPROC)mw_wndproc32_shim;
+            } else {
+                g_wndproc_fwd = (MW_WNDPROC)v;
+                g_main_class_proc = (MW_WNDPROC)v; /* SW-1279 fix C: subclass wins */
+            }
         }
     }
     if (index == -4 && !prev && v) {
@@ -30028,7 +30305,8 @@ __attribute__((ms_abi)) int mw_EnumWindows(void* cb, intptr_t lp) {
     typedef int (*MwEnumCb)(void*, intptr_t);
     MwEnumCb f = (MwEnumCb)cb;
     if (!f) return 0;
-    int r = f(MW_GUI_HWND, lp); /* honest: exactly one top-level window */
+    /* SW-1354e: mode-aware delivery — cpu32 guest procs re-enter via cpu32_call */
+    int r = mw_call_cb2(cb, (uint32_t)(uintptr_t)MW_GUI_HWND, (uint32_t)lp); /* honest: exactly one top-level window */
     return r ? 1 : 0;
 }
 __attribute__((ms_abi)) int mw_EnumResourceNamesA(void* hmod, const void* type, void* cb, intptr_t lp) {
@@ -39664,6 +39942,11 @@ static MwApi32Slot* g_api32_slots = NULL;
 static uint32_t     g_api32_count = 0, g_api32_cap = 0;
 static uint32_t     g_thunk_next  = MW32_THUNK_BASE + 16; /* 0..15 reserved as gate landing pad */
 static uint32_t     g_api32_gate_calls = 0;
+/* SW-1354b: bounded gate-call ring — the last API32 thunks the guest entered
+ * (slot, ESP, return addr), printed by both crash reports so an arity/stack
+ * mismatch after a gate call is decodable without a per-step trace flood. */
+static struct { uint32_t slot, esp, ret; } g_api32_hist[8];
+static int g_api32_hist_n = 0;
 
 static void mw32_thunk_emit(uint32_t slot_index) {
     uint8_t* c = g_arena32; /* unused; thunks live in their own mapping */
@@ -39729,10 +40012,14 @@ static uint32_t mw32_api_thunk(const char* dll, const char* name) {
     s->fn = g_resolve_proc_fn ? g_resolve_proc_fn(mw_pseudo_handle(0), name) : NULL;
     s->calls = 0;
     uint32_t named = mw32_stdcall_arity(name);
+    int named_found = g_arity_found;
     if (mw32_regparm_count(name)) {
         /* SW-1299: SList regparm family — args in ECX/EDX, zero stack pop. */
         s->arity = 0; s->cdeclf = 0;
-    } else if (named != MW32_ARITY_DEFAULT) {
+    } else if (named_found) {
+        /* SW-1358b: an explicit table entry ALWAYS wins — arity 32 entries
+         * (LCMapStringEx class) used to fall through to the CRT cdecl
+         * default because 32 == MW32_ARITY_DEFAULT. */
         s->arity = named; s->cdeclf = (named == MW32_ARITY_CDECL &&
             mw32_dll_is_crt(dll)) ? 1 : 0;
         /* explicit 0 in the table + CRT dll = cdecl; explicit 0 elsewhere
@@ -39763,6 +40050,28 @@ static uint32_t mw32_thunk_for_host_fn(void* fn) {
     MwApi32Slot* s = &g_api32_slots[g_api32_count];
     char nm[64]; snprintf(nm, sizeof(nm), "@host:%p", fn);
     s->name = strdup(nm); s->fn = fn; s->arity = 32; s->calls = 0;
+    mw32_thunk_emit(g_api32_count);
+    return MW32_THUNK_BASE + 16 + g_api32_count++ * 10;
+}
+/* SW-1354d: anonymous UNRESOLVED-semantics thunk. Arity 0xFFFFFFFF makes the
+ * gate trace the call honestly and return 0 with a bounded 32-byte pop —
+ * the same contract as an unresolved import. Used for ordinal GetProcAddress
+ * answers whose export name we cannot recover: the raw host pointer class
+ * (mw_winapi_optional_stub) must never land in a rebuilt IAT, because the
+ * guest executes it as code (winlister x86: EIP=0x2008620 = host loader text). */
+static uint32_t mw32_unresolved_thunk32(const char* label) {
+    for (uint32_t i = 0; i < g_api32_count; i++)
+        if (strcmp(g_api32_slots[i].name, label) == 0)
+            return MW32_THUNK_BASE + 16 + i * 10;
+    if (g_api32_count == g_api32_cap) {
+        g_api32_cap = g_api32_cap ? g_api32_cap * 2 : 256;
+        g_api32_slots = (MwApi32Slot*)realloc(g_api32_slots,
+                        g_api32_cap * sizeof(MwApi32Slot));
+        if (!g_api32_slots) { fprintf(stderr, "[PE32] OOM api slots\n"); exit(3); }
+    }
+    MwApi32Slot* s = &g_api32_slots[g_api32_count];
+    s->name = strdup(label); s->fn = NULL;
+    s->arity = 0xFFFFFFFFu; s->cdeclf = 0; s->calls = 0;
     mw32_thunk_emit(g_api32_count);
     return MW32_THUNK_BASE + 16 + g_api32_count++ * 10;
 }
@@ -39932,6 +40241,26 @@ static const struct { const char* n; uint32_t b; } g_api32_arity[] = {
     { "GetOEMCP", 0 },
     { "IsValidCodePage", 4 },
     { "LCMapStringW", 24 },
+    /* SW-1358b: Ex-family locale APIs are kernel32 STCALL forwarders even when
+     * the UCRT's api-ms-win-crt-locale DLL re-exports them. Without an explicit
+     * arity the CRT-dll default made them cdecl(0-pop) — Winobj x86's locale
+     * init called LCMapStringEx (8 args) and the 32-byte desync sent the next
+     * ret into stack data (EIP=0x3fefe55a). */
+    { "LCMapStringEx", 32 },
+    { "CompareStringEx", 32 },
+    { "GetStringTypeExW", 28 },
+    { "GetStringTypeExA", 28 },
+    { "LCIDToLocaleName", 12 },
+    { "GetLocaleInfoEx", 20 },
+    { "ResolveLocaleName", 12 },
+    { "GetUserDefaultLocaleName", 8 },
+    { "GetSystemDefaultLocaleName", 8 },
+    { "GetUserDefaultLCID", 0 },
+    { "GetSystemDefaultLCID", 0 },
+    { "GetThreadLocale", 0 },
+    { "SetThreadLocale", 4 },
+    { "GetCalendarInfoA", 24 },
+    { "GetCalendarInfoW", 24 },
     { "MapViewOfFile", 20 },
     { "UnmapViewOfFile", 4 },
     { "ExpandEnvironmentStringsA", 12 },
@@ -40609,8 +40938,9 @@ static const struct { const char* n; uint32_t b; } g_api32_arity[] = {
     { "TranslateMessage", 4 },
 };
 static uint32_t mw32_stdcall_arity(const char* name) {
+    g_arity_found = 0;
     for (size_t i = 0; i < sizeof(g_api32_arity)/sizeof(g_api32_arity[0]); i++)
-        if (strcmp(g_api32_arity[i].n, name) == 0) return g_api32_arity[i].b;
+        if (strcmp(g_api32_arity[i].n, name) == 0) { g_arity_found = 1; return g_api32_arity[i].b; }
     static uint8_t warned[2048]; uint32_t h = 0;
     for (const char* p = name; *p; p++) h = h * 131 + (uint8_t)*p;
     h = (h ^ (h >> 13)) & 16383u; /* bounded 14-bit hash -> 2048-byte map */
@@ -40977,6 +41307,8 @@ static uint32_t mw32_api_gate(uint32_t slot_index) {
     g_api32_gate_calls++;
 
     uint32_t ret_addr = m32_pop();           /* stdcall ret addr */
+    g_api32_hist[g_api32_hist_n & 7] = (typeof(g_api32_hist[0])){ slot_index, t_cpu32.r[ESPi], ret_addr };
+    g_api32_hist_n++;
     uint32_t arity = (s->arity == 0xFFFFFFFFu) ? 32 : s->arity;
     if (s->arity == 0xFFFFFFFFu) arity = 32; /* unresolved stub: args unknown */
 
@@ -41057,9 +41389,40 @@ static uint32_t mw32_api_gate(uint32_t slot_index) {
                     }
                 }
                 if (!is_data_export) {
-                    if (nb[0]) thunk = mw32_api_thunk("kernel32.dll", nb);
+                    /* SW-1358c: bind the named thunk under the DLL the guest
+                     * ACTUALLY asked about — the old hardcode ("kernel32.dll")
+                     * defeated the CRT cdecl default for msvcrt/api-ms names
+                     * (shmnview x86 UPX: __set_app_type got stdcall arity 32,
+                     * 28 bytes of over-pop desynced the CRT startup). */
+                    const char* bound_dll = "kernel32.dll";
+                    uintptr_t mh = (uintptr_t)a[0];
+                    if (mh >= MW_PSEUDO_BASE) {
+                        uint32_t pidx = (uint32_t)((mh - MW_PSEUDO_BASE) / MW_PSEUDO_STRIDE);
+                        size_t nd = sizeof(g_known_dlls) / sizeof(g_known_dlls[0]);
+                        if (pidx < nd) bound_dll = g_known_dlls[pidx];
+                        else bound_dll = "api-ms-win-crt-runtime-l1-1-0.dll"; /* catch-all slot = UCRT set */
+                    }
+                    if (nb[0]) thunk = mw32_api_thunk(bound_dll, nb);
                     ret = thunk ? thunk : mw32_thunk_for_host_fn((void*)(uintptr_t)r);
                 }
+            } else {
+                /* SW-1354d: ORDINAL lookup — no name string exists. The raw
+                 * host answer (mw_winapi_optional_stub class) stored into a
+                 * rebuilt IAT is executed by the guest as code (winlister x86
+                 * crash: EIP=0x2008620 = host loader text). Wrap it in an
+                 * unresolved-semantics thunk: honest trace + 0 return + a
+                 * bounded stack pop, exactly like an unresolved import. */
+                const char* dname = NULL;
+                uintptr_t m = (uintptr_t)a[0];
+                if (m >= MW_PSEUDO_BASE) {
+                    uint32_t pidx = (uint32_t)((m - MW_PSEUDO_BASE) / MW_PSEUDO_STRIDE);
+                    size_t nd = sizeof(g_known_dlls) / sizeof(g_known_dlls[0]);
+                    if (pidx < nd) dname = g_known_dlls[pidx];
+                }
+                char ob[64];
+                if (dname) snprintf(ob, sizeof(ob), "ordinal:%u@%s", (uint32_t)nmp, dname);
+                else snprintf(ob, sizeof(ob), "ordinal:%u@%08x", (uint32_t)nmp, (uint32_t)a[0]);
+                ret = mw32_unresolved_thunk32(ob);
             }
             if (!ret) ret = mw32_thunk_for_host_fn((void*)(uintptr_t)r);
         }
@@ -41100,8 +41463,14 @@ static uint32_t cpu32_call(uint32_t eip, int nargs, const uint32_t* args) {
     if (!t_cbstack) t_cbstack = mw32_heap_alloc(0x40000, 0) + 0x40000;
     t_cpu32.r[ESPi] = t_cbstack;
     t_cpu32.r[EBPi] = t_cbstack;
-    m32_push(MW32_RET_SENTINEL);
+    /* SW-1354c: real call frame — args BELOW the sentinel RA. The old order
+     * (sentinel first, args on top) put arg0 where the return address lives,
+     * so any stdcall callee with args popped its first argument as EIP on
+     * `ret N` (winlister x86 wndproc: EIP=0x10001 = the hwnd arg). All
+     * earlier cpu32 re-entries were 0-arg (atexit class) so the defect was
+     * invisible until the first args-carrying callback. */
     for (int i = nargs - 1; i >= 0; i--) m32_push(args[i]);
+    m32_push(MW32_RET_SENTINEL);
     t_cpu32.eip = eip;
     t_cpu32.eflags = 0x202;
     int exit_save = g_cpu32_exit_req; g_cpu32_exit_req = 0;
@@ -41134,6 +41503,17 @@ static void cpu32_fatal(const char* what, uint32_t op, uint32_t va) {
       for (int i = (g_eip_hist_n > 16 ? g_eip_hist_n - 16 : 0); i < g_eip_hist_n; i++)
           o += snprintf(b + o, sizeof(b) - o, "%08x ", g_eip_hist[i & 15]);
       fprintf(stderr, "  eip-hist: %s\n", b); }
+    if (g_api32_hist_n) { /* SW-1354b: last gate calls (slot->name, esp, ret) */
+      fprintf(stderr, "  api32 ring (last %d of %d):\n",
+              g_api32_hist_n > 8 ? 8 : g_api32_hist_n, g_api32_gate_calls);
+      for (int i = (g_api32_hist_n > 8 ? g_api32_hist_n - 8 : 0); i < g_api32_hist_n; i++) {
+          uint32_t s = g_api32_hist[i & 7].slot;
+          const char* nm = (s < g_api32_count) ? g_api32_slots[s].name : "?";
+          fprintf(stderr, "    #%u %s esp=%08x ret=%08x arity=%u\n", s, nm,
+                  g_api32_hist[i & 7].esp, g_api32_hist[i & 7].ret,
+                  (s < g_api32_count) ? g_api32_slots[s].arity : 0);
+      }
+    }
     fflush(stderr);
     exit(86); /* 86 = SW-1281 interpreter abort code */
 }
@@ -41474,7 +41854,11 @@ restart_prefix:
         case 0x2E: case 0x2F: case 0x51: case 0x54: case 0x55: case 0x56: case 0x57:
         case 0x58: case 0x59: case 0x5A: case 0x5C: case 0x5D: case 0x5E: case 0x5F:
         case 0x12: case 0x13: case 0x14: case 0x15: case 0x16: case 0x17:
-        case 0x6E: case 0x7E: case 0xD6: case 0xEF: {
+        case 0x6E: case 0x7E: case 0xD6: case 0xEF:
+        case 0x70: /* SW-1358: pshufd/pshuflw/pshufhw — Winobj UCRT init */
+        case 0x6F: case 0x7F: { /* SW-1358: movdqa/movdqu — the UCRT memcpy
+            core (F3 0F 6F/7F 16-byte block moves); winlister/winobj UCRT hit
+            these constantly. Unaligned-safe by construction. */
             uint8_t pfx = arep ? 0xF2 : (frep ? 0xF3 : (o32 ? 0x00 : 0x66));
             if (cpu32_sse2(pfx, op2) != 0) cpu32_fatal("SSE2 op failed", op2, t_cpu32.eip - 1);
             break; }
@@ -42049,6 +42433,31 @@ static int cpu32_sse2(uint8_t pfx, uint8_t op2) {
             else             { memcpy(xr + 8 * i,     xs + 8 * i + 4, 4); memcpy(xr + 8 * i + 4, tmp + 8 * i + 4, 4); }
         }
         return 0; }
+    case 0x6F: { /* movdqa/movdqu load (any prefix): 16 bytes mem->xmm */
+        if (m.is_reg) memcpy(xr, xmm_ptr(m.rm), 16);
+        else for (int i = 0; i < 4; i++) { uint32_t v = m32_ld32(m.ea + 4 * i); memcpy(xr + 4 * i, &v, 4); }
+        return 0; }
+    case 0x7F: { /* movdqa/movdqu store (any prefix): 16 bytes xmm->mem */
+        if (m.is_reg) memcpy(xmm_ptr(m.rm), xr, 16);
+        else for (int i = 0; i < 4; i++) m32_st32(m.ea + 4 * i, *(uint32_t*)(xr + 4 * i));
+        return 0; }
+    case 0x70: { /* pshufd (66) / pshuflw (F2) / pshufhw (F3) / pshufw (none) */
+        uint8_t imm = m32_ld8(t_cpu32.eip); t_cpu32.eip += 1;
+        uint8_t* xs = m.is_reg ? xmm_ptr(m.rm) : m32p(m.ea);
+        uint8_t src[16]; memcpy(src, xs, 16);
+        if (pfx == 0x66) {          /* pshufd: four 32-bit lanes */
+            for (int i = 0; i < 4; i++) memcpy(xr + 4 * i, src + 4 * ((imm >> (2 * i)) & 3), 4);
+        } else if (pfx == 0xF2) {   /* pshuflw: low four 16-bit words */
+            for (int i = 0; i < 4; i++) memcpy(xr + 2 * i, src + 2 * ((imm >> (2 * i)) & 3), 2);
+            memcpy(xr + 8, src + 8, 8);
+        } else if (pfx == 0xF3) {   /* pshufhw: high four 16-bit words */
+            memcpy(xr, src, 8);
+            for (int i = 0; i < 4; i++) memcpy(xr + 8 + 2 * i, src + 8 + 2 * ((imm >> (2 * i)) & 3), 2);
+        } else {                    /* pshufw (MMX legacy): low four words */
+            for (int i = 0; i < 4; i++) memcpy(xr + 2 * i, src + 2 * ((imm >> (2 * i)) & 3), 2);
+            memcpy(xr + 8, src + 8, 8);
+        }
+        return 0; }
     case 0x28: case 0x29: { /* movaps/movapd */
         if (op2 == 0x28) { if (m.is_reg) memcpy(xr, xmm_ptr(m.rm), 16); else memcpy(xr, m32p(m.ea), 16); }
         else { if (m.is_reg) memcpy(xmm_ptr(m.rm), xr, 16); else memcpy(m32p(m.ea), xr, 16); }
@@ -42122,6 +42531,17 @@ static void mw_cpu32_crash_report(void) {
                     "  [PE32] eip-hist: %s\n",
             t_cpu32.eip, t_cpu32.r[4], t_cpu32.r[5],
             (unsigned long long)g_cpu32_steps, b);
+    if (g_api32_hist_n) { /* SW-1354b: last gate calls (slot->name, esp, ret) */
+        fprintf(stderr, "  [PE32] api32 ring (last %d of %d):\n",
+                g_api32_hist_n > 8 ? 8 : g_api32_hist_n, g_api32_gate_calls);
+        for (int i = (g_api32_hist_n > 8 ? g_api32_hist_n - 8 : 0); i < g_api32_hist_n; i++) {
+            uint32_t s = g_api32_hist[i & 7].slot;
+            const char* nm = (s < g_api32_count) ? g_api32_slots[s].name : "?";
+            fprintf(stderr, "  [PE32]   #%u %s esp=%08x ret=%08x arity=%u\n", s, nm,
+                    g_api32_hist[i & 7].esp, g_api32_hist[i & 7].ret,
+                    (s < g_api32_count) ? g_api32_slots[s].arity : 0);
+        }
+    }
     /* SW-1348: guest instruction bytes at the fault site — the PE32 twin of
      * the x64 "Bytes:" line. Page-clamped forward reads only: the fetcher
      * just executed at these VAs so the pages are mapped, but the byte after
@@ -42229,8 +42649,8 @@ static void mw32_setup_world(uint32_t image_base, uint32_t cmdline_host) {
     *(uint32_t*)(teb + 0x04) = MW32_STACK_TOP;                    /* StackBase */
     *(uint32_t*)(teb + 0x08) = MW32_STACK_TOP - MW32_STACK_BYTES; /* StackLimit */
     *(uint32_t*)(teb + 0x18) = MW32_TEB32_VA;                     /* Self */
-    *(uint32_t*)(teb + 0x20) = 0x00001DB0u;                       /* ClientId.UniqueProcess (honest constant) */
-    *(uint32_t*)(teb + 0x24) = 0x00001DB8u;                       /* ClientId.UniqueThread */
+    *(uint32_t*)(teb + 0x20) = 1234;                              /* ClientId.UniqueProcess — SW-1355: ONE guest pid everywhere (NtQSI class 5 + GetCurrentProcessId say 1234) */
+    *(uint32_t*)(teb + 0x24) = 5678;                              /* ClientId.UniqueThread (main engine thread) */
     *(uint32_t*)(teb + 0x2C) = MW32_TLSARR_VA;                    /* ThreadLocalStoragePointer */
     *(uint32_t*)(teb + 0x30) = MW32_PEB32_VA;                     /* ProcessEnvironmentBlock */
     *(uint32_t*)(teb + 0xF14) = 0x00000400u;                      /* GDI batch/handle hint (honest small) */
