@@ -162,3 +162,31 @@ Work Log:
 Stage Summary:
 - The x86 (cpu32) GUI world now runs dialogs, window classes, NtQSI-driven UI and C++ heaps correctly; winlister reached its tree-walk frontier, shmnview 907K steps.
 - Queued: SW-1356 guest-SEH delivery, SW-1358e shmnview wild call, SW-1359 FreeCommander Delphi startup, WinObj detour machinery.
+
+---
+Task ID: SWEEP-080
+Agent: main (z.ai)
+Task: «ادامه بده ببینم winrar idm notpad++ رو تونستی اجرایی کامل بکنی یا نه» — the user-named trio: winrar712 x64, idman 6.42b2 x86, notepad++ 8.9.8.1 x64+x86; decode their blockers, land generic engine fixes, push
+
+Work Log:
+- Env-reset reconcile: local 242af84 (SWEEP-030 shell) vs origin f08dc8b (SWEEP-079); ff-reset to origin, rebuilt byte-exact 5a8d5a72, G1 pre-change 12/12 (20261026_143555).
+- Downloads preflighted+hashed (dl_sha256.tsv): IDM 6.42b2 (mirror2.internetdownloadmanager.com, 276aa7e4), npp 8.9.8.1 x64 portable zip (beddf554, 231 files), winrar712 stock 80ab6824.
+- SW-1360 (winrar712 STARTDLG): DLGTEMPLATE walker triple off-by-one — header skip p+=10->9 words, item id it[9]->it[8], class it+10->it+9. Byte-level walker simulation on the real template reproduces the traced garbage ids EXACTLY; the fixed walk yields the true 13 ids. Result: WinRAR's installer wizard parses 13/13 controls (STATIC/COMBOBOX/BUTTON/RICHEDIT).
+- SW-1360b: msctls_progress32 = sysclass 0x8E (w/a/name/ordinal ranges); class-table loop bound was table length AND probe width fused at 15 — entries beyond idx14 unreachable (sizeof(t) now).
+- SW-1360c/d/e observability: dialog APIs traced (SendDlgItemMessageW family); MW32_DUMP_VA extended to x64 (x64dump/x64postdump incl. ExitProcess) + uintptr width fix (32-bit truncation crashed the host dump loop); SetFilePointer/Ex + GetFileSize traced (winrar SFX self-scan = stride-8176 sliding window finding Rar! at 0x76200).
+- SW-1361 (frontier, documented): winrar SFX custom delay-load machinery — SRW+VirtualProtect self-rebind of .didat slots, own resolver lookup(table,key);jmp rax; only ~20 APIs resolve via our GetProcAddress; dialog phase resolves outside dispatch.
+- SW-1362: InterlockedIncrement/Decrement/Exchange/ExchangeAdd/CompareExchange/CompareExchangePointer implemented as real atomics over guest pointers (was: NO entries; idman CRT init died at 1,936 steps).
+- SW-1363: 12 missing arity entries (GetEnvironmentStringsW 0, GetMessageTime 0, GetDoubleClickTime 0, GetClipboardOwner 0, CountClipboardFormats 0, ReleaseMutex 4, GetKeyboardLayout 4, IsWindowUnicode 4, GetTopWindow 4, GetLastActivePopup 4, ShowOwnedPopups 8, SetRectEmpty 4) — the ESP+32 corruption class; proven by the [API32] gate trace (GetEnvironmentStringsW esp_after +0x20 on a 0-arg call; then malloc frame overlapped caller locals -> WCTMB srclen garbage -> HeapFree wild -> exit 4).
+- SW-1364/1364b: arena32 HeapFree no-op (documented contract; was HEAP-TRAP exit 4) + HeapReAlloc alloc-new+clamp-at-live-edge copy.
+- SW-1365: wsprintfA/W/wvsprintfA/W are CDECL varargs (arity 0; was 32 -> ESP+32 -> IDM jumped into thunk page 0x00a00000) + REAL ms_abi varargs gate path (16-arg SysV cast-call misplaced buf/fmt for __builtin_ms_va_list callees).
+- SW-1366: %S/%ls/%hS wide-source in the ANSI formatter (mojibake dialog path).
+- SW-1369: GetFileAttributesW path normalization ("/tmp/" + L'\\' + name kept a literal backslash -> stat missed the created dir -> IDM "Error ID: 2").
+- idman final: 1,936 steps -> 76K+ steps; full unpacker run (registry seeding RegCreateKeyExW/RegSetValueExW real, temp dir create+check, /s probe, CreateProcessW honest fail, FormatMessageA(2)); renders CLEAN "Could not create/open error log file" dialog (636x122). Frontier SW-1370 (CreateProcess child chain).
+- notepad++ x64 8.9.8.1: parity+ vs SWEEP-066x64 — same 2 real MessageBoxW frames (Configurator / Load stylers.xml failed) + RegisterClassW ATOM 0xc001 + dialog children NOW registered (SW-1360); crash moved into guest class proc [rcx+0x20] rcx=0x20 RVA 0x1099b3 (SW-1298-x64 continues). x86 unchanged (SW-1371 pre-existing SW-1341-relocation crash @2450 steps, same step count as sweep067 evidence).
+- Gates: G1 12/12 post-change (20261026_154619, 123d7750); corpus x3 EXACT (winmine 82, sol 69, freecell 10, calc 1, breakout 10, snake 13; spider wall-clock band); puzzle spot-check 4/4 sha-verified (blackbox/bridges/cube/dominosa) rc=0 2 frames 0 crashes.
+- evidence/sweep080 curated; commit pushed (no force).
+
+Stage Summary:
+- All three user-named programs ADVANCE: winrar 7.12 installer wizard now parses 100% of its controls; idman runs its whole unpacker with real registry writes and renders a clean honest dialog; npp64 registers dialog children past the previous record.
+- 11 generic fixes landed (dialog walker ABI, class table, Interlocked, arity ESP-corruption class, arena32 heap, cdecl varargs gate, %S, path normalization, x64 dump facility).
+- Next wagons: SW-1361 winrar SFX resolver decode, SW-1370 IDM CreateProcess child support, SW-1298-x64 npp64 class-proc ctx, SW-1371 npp86 relocation crash.

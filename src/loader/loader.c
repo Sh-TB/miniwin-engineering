@@ -91,6 +91,10 @@ static resolve_proc_fn_t g_resolve_proc_fn = NULL;
 /* SW-1281 (SWEEP-060): PE32/x86 subsystem forward declarations (bodies
  * live in the SW-1281 block near end-of-file). */
 static int   mw32_mode(void);
+static int   mw32_heap_owns(const void* p); /* SW-1364: arena32 ownership test */
+static uint8_t* mw32_arena_host(uint32_t va); /* SW-1364b: arena VA -> host ptr */
+static uint32_t mw32_arena_live_edge(void);  /* SW-1364b: g_heap32_next */
+static size_t mw32_arena_copyable(uint32_t src_va); /* SW-1364b: clamp at live edge */
 static uint32_t mw32_heap_alloc(uint32_t size, int zero);
 static int   g_ran_pe32;
 static int   g_pe32_exit;
@@ -118,13 +122,17 @@ static void mw32_dump_va_ranges(const char* tag) {
     if (!dv || !dv[0]) return;
     const char* p = dv;
     while (*p) {
-        uint32_t va = (uint32_t)strtoul(p, (char**)&p, 16);
+        /* SW-1360d: uintptr_t not uint32_t — the x64 guest image lives at
+         * 0x140000000 and the old 32-bit truncation turned 0x140040900 into
+         * 0x40040900 -> host SIGSEGV in the dump loop itself. Width-agnostic
+         * so the same env var serves PE32 and PE32+ guests. */
+        uintptr_t va = (uintptr_t)strtoull(p, (char**)&p, 16);
         size_t len = 16;
         if (*p == ':') { len = (size_t)strtoul(p + 1, (char**)&p, 16); }
         if (*p == ',') p++;
-        fprintf(stderr, "[PE32] %s @0x%08x len=0x%zx:", tag, va, len);
+        fprintf(stderr, "[PE32] %s @0%lx len=0x%zx:", tag, (unsigned long)va, len);
         for (size_t i = 0; i < len; i++)
-            fprintf(stderr, " %02x", *(volatile const uint8_t*)(uintptr_t)(va + i));
+            fprintf(stderr, " %02x", *(volatile const uint8_t*)(va + i));
         fprintf(stderr, "\n");
     }
 }
@@ -1932,6 +1940,10 @@ __attribute__((noreturn)) __attribute__((ms_abi)) void mw_ExitProcess(unsigned i
         MW_TRACE("ExitProcess SUSPICIOUS-CODE %u (0x%x) caller RA=%p — decode against image base", code, code, ra);
     }
     MW_TRACE("ExitProcess(%u)", code);
+    /* SW-1360d: x64 post-run memory dump (MW32_DUMP_VA) — mw_ExitProcess is
+     * noreturn, so the x64postdump call after entry() never fires for guests
+     * that exit here (winrar712 does exactly that). Same helper, same env. */
+    mw32_dump_va_ranges("x64postdump");
     w3_run_guest_atexit();          /* Windows: CRT handlers run before exit */
     mw_trace_shutdown_flush();
     _exit(code);
@@ -2154,6 +2166,47 @@ __attribute__((ms_abi)) int mw_QueryPerformanceCounter(int64_t* lp) {
         *lp = (int64_t)ts.tv_sec * 1000000000LL + ts.tv_nsec;
     }
     return 1;
+}
+
+/* ---- SW-1362 (idman642build2, PE32): the Interlocked family had NO dispatch
+ * entries at all — every guest that imported them got unresolved gate slots
+ * (arity 0xFFFFFFFF -> return 0). IDM's CRT init called InterlockedIncrement,
+ * ignored the 0, and its startup state machine then jumped through a null
+ * pointer (cpu32 eip-hist ... -> 00a00000 gate -> 0). On Windows these are
+ * REAL kernel32 exports with well-defined semantics; implement them as true
+ * host atomics over the guest's raw pointer (host VA == guest VA in both the
+ * x64 image map and the cpu32 PE32 world, same discipline as m32_ld32). ---- */
+__attribute__((ms_abi)) int32_t mw_InterlockedIncrement(volatile int32_t* v) {
+    if (!v) return 0;
+    return __atomic_add_fetch(v, 1, __ATOMIC_SEQ_CST);
+}
+__attribute__((ms_abi)) int32_t mw_InterlockedDecrement(volatile int32_t* v) {
+    if (!v) return 0;
+    return __atomic_sub_fetch(v, 1, __ATOMIC_SEQ_CST);
+}
+__attribute__((ms_abi)) int32_t mw_InterlockedExchange(volatile int32_t* v, int32_t x) {
+    if (!v) return 0;
+    return __atomic_exchange_n(v, x, __ATOMIC_SEQ_CST);
+}
+__attribute__((ms_abi)) int32_t mw_InterlockedExchangeAdd(volatile int32_t* v, int32_t x) {
+    if (!v) return 0;
+    return __atomic_fetch_add(v, x, __ATOMIC_SEQ_CST);
+}
+__attribute__((ms_abi)) int32_t mw_InterlockedCompareExchange(volatile int32_t* v,
+                                                              int32_t exch, int32_t comp) {
+    if (!v) return 0;
+    int32_t expected = comp;
+    __atomic_compare_exchange_n(v, &expected, exch, 0,
+                                __ATOMIC_SEQ_CST, __ATOMIC_SEQ_CST);
+    return expected; /* Windows contract: returns the ORIGINAL value */
+}
+__attribute__((ms_abi)) void* mw_InterlockedCompareExchangePointer(void* volatile* v,
+                                                                   void* exch, void* comp) {
+    if (!v) return NULL;
+    void* expected = comp;
+    __atomic_compare_exchange_n(v, &expected, exch, 0,
+                                __ATOMIC_SEQ_CST, __ATOMIC_SEQ_CST);
+    return expected;
 }
 
 __attribute__((ms_abi)) int mw_QueryPerformanceFrequency(int64_t* lp) {
@@ -9153,6 +9206,24 @@ static void w3_validate_chunk(void* p, const char* tag) {
 }
 __attribute__((ms_abi)) void* mw_HeapReAlloc(void* heap, uint32_t flags, void* p, size_t size) {
     if (!p) return mw_HeapAlloc(heap, flags, size);
+    /* SW-1364b (idman642build2): arena32 pointers cannot realloc() in place —
+     * they are bump-arena slices, not glibc chunks. Windows semantics = new
+     * block + copy + old block abandoned (the arena never gives memory back). */
+    if (mw32_mode() || mw32_heap_owns(p)) {
+        uint32_t n32 = mw32_heap_alloc((uint32_t)(size ? size : 1), !!(flags & 0x08));
+        if (!n32) { mw_SetLastError(8); return NULL; }
+        /* Arena memory is host-addressable via g_arena32 (same translation
+         * mw32_heap_alloc's memset uses). The old block's true extent is
+         * unknown (bump arena tracks no sizes) — clamp the copy at the arena
+         * live edge so we can never read unmapped memory. */
+        uint8_t* dst = mw32_arena_host(n32);
+        size_t live = mw32_arena_copyable((uint32_t)(uintptr_t)p);
+        size_t copy = (size ? size : 1) < live ? (size ? size : 1) : live;
+        if (copy && dst) memcpy(dst, (const void*)(uintptr_t)p, copy);
+        MW_TRACE("HeapReAlloc arena32 %p -> %p (size=0x%zx, copied 0x%zx)",
+                 p, (void*)(uintptr_t)n32, size, copy);
+        return (void*)(uintptr_t)n32;
+    }
     if (w3_is_guarded(p)) {
         int s0 = w3_reg_find(p);
         size_t old = (s0 >= 0) ? (g_alloc_reg[s0].size & ~0x100000000ull) : 0;
@@ -9177,6 +9248,15 @@ __attribute__((ms_abi)) void* mw_HeapReAlloc(void* heap, uint32_t flags, void* p
 __attribute__((ms_abi)) int mw_HeapFree(void* heap, uint32_t flags, void* p) {
     MW_TRACE("HeapFree(%p)", p);
     if (!p) return 1;
+    /* SW-1364 (idman642build2): arena32 (PE32 bump) pointers have NO glibc
+     * chunk header and are NOT in the tracking registry — mw_HeapAlloc's own
+     * contract comment says "arena32 bump; HeapFree is a no-op". The old path
+     * fell through to the chunk-header read -> HEAP-TRAP -> _exit(4) on the
+     * guest's first legitimate free of a conversion buffer. */
+    if (mw32_mode() || mw32_heap_owns(p)) {
+        MW_TRACE("HeapFree arena32 ptr %p -> no-op (bump arena)", p);
+        return 1;
+    }
     /* guarded allocations must be checked BEFORE touching p-8 (their header
      * word lives inside the PROT_NONE guard page) */
     if (w3_is_guarded(p)) { w3_guard_free(p); return 1; }
@@ -10736,6 +10816,9 @@ __attribute__((ms_abi)) uint32_t mw_SetFilePointer(void* h, int32_t dist, int32_
     off_t r = lseek(fd, dist, whence);
     if (r == (off_t)-1) { mw_SetLastError(87); return 0xFFFFFFFFu; }
     if (high) *high = (int32_t)((uint64_t)r >> 32);
+    /* SW-1360e: traced (see SetFilePointerEx). */
+    MW_TRACE("SetFilePointer(dist=%d, whence=%s) -> %lld", dist,
+             method == 0 ? "SET" : method == 1 ? "CUR" : "END", (long long)r);
     return (uint32_t)(uint64_t)r;
 }
 __attribute__((ms_abi)) int mw_SetFilePointerEx(void* h, int64_t dist, int64_t* newpos, uint32_t method) {
@@ -10745,6 +10828,10 @@ __attribute__((ms_abi)) int mw_SetFilePointerEx(void* h, int64_t dist, int64_t* 
     off_t r = lseek(fd, (off_t)dist, whence);
     if (r == (off_t)-1) { mw_SetLastError(87); return 0; }
     if (newpos) *newpos = (int64_t)r;
+    /* SW-1360e: traced — winrar712's SFX archive positioning was invisible in
+     * the trace (the stub's whole install decision depends on it). */
+    MW_TRACE("SetFilePointerEx(dist=%lld, whence=%s) -> %lld", (long long)dist,
+             method == 0 ? "SET" : method == 1 ? "CUR" : "END", (long long)r);
     return 1;
 }
 __attribute__((ms_abi)) int mw_SetEndOfFile(void* h) {
@@ -10759,6 +10846,8 @@ __attribute__((ms_abi)) uint32_t mw_GetFileSize(void* h, uint32_t* high) {
     struct stat st;
     if (fstat(fd, &st) != 0) { mw_SetLastError(87); return 0xFFFFFFFFu; }
     if (high) *high = (uint32_t)((uint64_t)st.st_size >> 32);
+    /* SW-1360e: traced (see SetFilePointerEx). */
+    MW_TRACE("GetFileSize() -> %lld", (long long)st.st_size);
     return (uint32_t)st.st_size;
 }
 __attribute__((ms_abi)) int mw_GetFileSizeEx(void* h, int64_t* size) {
@@ -10812,6 +10901,12 @@ __attribute__((ms_abi)) uint32_t mw_GetFileAttributesW(const wchar_t* name) {
     char n8[4096];
     if (!name || w3_w16_to_utf8z((const uint16_t*)name, n8, sizeof(n8)) < 0) { mw_SetLastError(87); return 0xFFFFFFFFu; }
     n8[sizeof(n8) - 1] = '\0';
+    /* SW-1369 (idman642build2): guests concatenate Windows-style paths
+     * ("/tmp/" + L'\\' + "IDM_Setup_Temp") — the literal backslash made
+     * stat() miss an existing directory, so IDM's unpacker concluded
+     * "Could not create temp dir" (its Error ID: 2) on a directory that
+     * WAS created. Same normalization rule as CreateFileW/BUG-054b. */
+    w3_normalize_path(n8);
     MW_TRACE("GetFileAttributesW(%s)", n8);
     struct stat st;
     if (stat(n8, &st) != 0) { mw_SetLastError(2); return 0xFFFFFFFFu; }
@@ -17541,7 +17636,7 @@ static int mw_sysclass_w(const void* cls) {
     if (v && v < 0x10000u) {
         if ((v & 0xFF00u) == 0x8000u) {
             uint32_t c = v & 0xFFu;
-            if (c >= 0x80 && c <= 0x8D) return (int)c; /* SWEEP-019: +comctl children; SWEEP-021: +RICHEDIT; SW-1207: +tooltip */
+            if (c >= 0x80 && c <= 0x8E) return (int)c; /* SWEEP-019/021/SW-1207 ranges; SW-1360b: +progress */
         }
         return 0;
     }
@@ -17563,6 +17658,10 @@ static int mw_sysclass_w(const void* cls) {
         /* SW-1207: comctl32 tooltip window class (popup AND owned forms;
          * prefix covers tooltips_class32 W/A). */
         {"tooltips_class32", 0x8D},
+        /* SW-1360b (winrar712 STARTDLG): PROGRESS_CLASS installer progress
+         * bars (msctls_progress32); honest headless model = registered child,
+         * PBM_* messages state-tracked, no raster. */
+        {"msctls_progress32", 0x8E},
     };
     if (!cls) return 0;
     uint16_t tmp[16];
@@ -17573,7 +17672,11 @@ static int mw_sysclass_w(const void* cls) {
     a[i] = 0;
     /* SWEEP-018: prefix compare clamped to the probe width (15) — matches
      * toolbar* and the 15-char-truncated msctls_statusbar32 probe. */
-    for (i = 0; i < 15; i++) { /* SWEEP-021: 13 -> 14 (RICHEDIT); SW-1207: -> 15 (tooltip) */
+    /* SW-1360b: loop bound = TABLE LENGTH (16 entries incl. msctls_progress32),
+     * decoupled from the 15-char probe width. The old `i < 15` silently hid
+     * every table entry beyond index 14 — the progress class parsed from the
+     * template but never matched. */
+    for (i = 0; i < (int)(sizeof(t) / sizeof(t[0])); i++) {
         size_t L = strlen(t[i].n);
         if (strncmp(a, t[i].n, L < 15 ? L : 15) == 0) return t[i].c;
     }
@@ -17584,7 +17687,7 @@ static int mw_sysclass_a(const void* cls) {
     if (v && v < 0x10000u) {
         if ((v & 0xFF00u) == 0x8000u) {
             uint32_t c = v & 0xFFu;
-            if (c >= 0x80 && c <= 0x8D) return (int)c; /* SWEEP-019: +comctl children; SWEEP-021: +RICHEDIT; SW-1207: +tooltip */
+            if (c >= 0x80 && c <= 0x8E) return (int)c; /* SW-1360b: +progress */
         }
         return 0;
     }
@@ -17613,7 +17716,11 @@ static int mw_sysclass_a(const void* cls) {
     for (i = 0; i < 15; i++)
         if (a[i] >= 'A' && a[i] <= 'Z') a[i] += 32;
     /* SWEEP-018: prefix compare clamped to the probe width (15). */
-    for (i = 0; i < 15; i++) { /* SWEEP-021: 13 -> 14 (RICHEDIT); SW-1207: -> 15 (tooltip) */
+    /* SW-1360b: loop bound = TABLE LENGTH (16 entries incl. msctls_progress32),
+     * decoupled from the 15-char probe width. The old `i < 15` silently hid
+     * every table entry beyond index 14 — the progress class parsed from the
+     * template but never matched. */
+    for (i = 0; i < (int)(sizeof(t) / sizeof(t[0])); i++) {
         size_t L = strlen(t[i].n);
         if (strncmp(a, t[i].n, L < 15 ? L : 15) == 0) return t[i].c;
     }
@@ -17627,8 +17734,10 @@ static const char* mw_sysclass_name(int c) {
                               /* SWEEP-021 SW-906..910 */
                               "RICHEDIT",
                               /* SW-1207 */
-                              "Tooltips_Class32"};
-    return (c >= 0x80 && c <= 0x8D) ? n[c - 0x80] : "?";
+                              "Tooltips_Class32",
+                              /* SW-1360b: PROGRESS_CLASS */
+                              "msctls_progress32"};
+    return (c >= 0x80 && c <= 0x8E) ? n[c - 0x80] : "?";
 }
 /* Register one child-control identity; NULL when the 64-slot table is full. */
 /* SW-1334: capture the guest class proc for a just-registered child.
@@ -19753,11 +19862,27 @@ static int mw_vfmt_a(char* dst, size_t cap, const char* fmt, __builtin_ms_va_lis
         p++;
         while (*p == '-' || *p == '0' || *p == '+' || *p == ' ' ||
                *p == '.' || (*p >= '0' && *p <= '9')) p++;
-        if (*p == 'l') p++;
-        if (*p == 'l') p++;
+        /* SW-1366 (idman642build2 unpacker): MS varargs string conventions in
+         * ANSI format functions — %S and %ls/%hS mean a WIDE (UTF-16LE)
+         * source argument; the old loop skipped the 'l' and treated 'S' as an
+         * unknown conversion, so the temp-dir path printed as '??$3? ??E...'
+         * mojibake and the unpacker error dialog showed garbage. */
+        int wide_src = 0;
+        if (*p == 'S') { wide_src = 1; }
+        else if ((*p == 'l' || *p == 'h') && p[1] == 'S') { wide_src = 1; p++; }
+        else if (*p == 'l' && p[1] == 's') { wide_src = 1; p++; }
         char c = *p;
+        if (wide_src) c = 'S'; /* route %S/%ls/%hS through the wide path */
         if (!c) break;
-        if (c == 'd' || c == 'i') {
+        if (c == 'S' && wide_src) {
+            const uint16_t* w = va_arg(ap, const uint16_t*);
+            static const uint16_t wnull[] = { '(', 'n', 'u', 'l', 'l', ')', 0 };
+            if (!w) w = wnull;
+            while (*w && o + 1 < cap) {
+                uint16_t ch = *w++;
+                dst[o++] = (ch < 0x80u) ? (char)ch : '?';
+            }
+        } else if (c == 'd' || c == 'i') {
             long long v = va_arg(ap, int);
             char t[24]; int k = 0; unsigned long long u;
             if (v < 0) { if (o + 1 < cap) dst[o++] = '-'; u = (unsigned long long)(-(v + 1)) + 1ULL; }
@@ -20518,7 +20643,16 @@ static void mw_dialog_create_children(void* dlg, const void* tmpl) {
     const uint16_t* p = (const uint16_t*)tmpl;
     uint32_t style = *(const uint32_t*)p;
     uint16_t cdit = p[4];
-    p += 10;                    /* style+exstyle(8B) cdit(2B) x,y,cx,cy(8B) */
+    /* SW-1360 (winrar712 STARTDLG): DLGTEMPLATE header = style(4B)+exstyle(4B)
+     * +cdit(2B)+x,y,cx,cy(8B) = 18 bytes = NINE words, not ten. The old
+     * p += 10 over-skipped 2 bytes, desynchronizing every subsequent
+     * sz_OrOrd read; templates with a real title (WinRAR installer) misparsed
+     * ALL children (trace showed ids 0/73/67/222... instead of
+     * 200/109/110/65535/101/102/103/104/105/106/111/1/2). Templates with
+     * menu=0/class=0/empty title accidentally compensated — why Sysinternals
+     * EULA dialogs looked fine. Simulated walker on the real template bytes
+     * reproduces the trace EXACTLY with +=10 and the correct ids with +=9. */
+    p += 9;                     /* style+exstyle(8B) cdit(2B) x,y,cx,cy(8B) = 9 words */
     p = mw_szorord_next(p);     /* menu */
     p = mw_szorord_next(p);     /* class */
     while (*p) p++; p++;        /* title (always present) */
@@ -20526,12 +20660,18 @@ static void mw_dialog_create_children(void* dlg, const void* tmpl) {
     p = mw_align4_w(p);
     for (uint16_t i = 0; i < cdit; i++) {
         const uint16_t* it = p;
-        uint16_t id = it[9];    /* style(4)+ex(4)+x,y,cx,cy(8) = id @ +16 */
-        const uint16_t* cls = it + 10;
+        /* SW-1360: DLGITEMTEMPLATE = style(2W)+exstyle(2W)+x,y,cx,cy(4W)
+         * + id(1W @ word 8) + class sz_OrOrd (@ word 9). Old code read id at
+         * it[9] (the class ordinal low word!) and class at it+10 (one word
+         * into the ordinal atom / string) — both off by one. */
+        uint16_t id = it[8];
+        const uint16_t* cls = it + 9;
         int sc = 0;
         if (cls[0] == 0xFFFFu) {
             uint16_t o = cls[1];
-            if (o >= 0x80u && o <= 0x85u) sc = (int)o;
+            /* SW-1360b: 0x85 -> 0x8E (comctl ordinals: toolbar..progress) —
+             * the EX walker already mapped the wider range; align it here. */
+            if (o >= 0x80u && o <= 0x8Eu) sc = (int)o;
         } else {
             uint16_t wname[16] = {0};
             for (int k = 0; k < 15 && cls[k]; k++) wname[k] = cls[k];
@@ -22137,8 +22277,11 @@ __attribute__((ms_abi)) void* mw_GetDlgItem(void* dlg, uint32_t id) {
 /* ---- SWEEP-022 SW-922: SendDlgItemMessage — GetDlgItem + forward ---- */
 __attribute__((ms_abi)) long long mw_SendDlgItemMessageW(void* dlg, uint32_t id,
         uint32_t msg, uintptr_t wp, long long lp) {
+    /* SW-1360c: traced — winrar712 STARTDLG makes its whole install decision
+     * through this API and the old untraced path made the dialog invisible. */
+    MW_TRACE("SendDlgItemMessageW(id=%lu, msg=%#x)", (unsigned long)id, msg);
     void* h = mw_GetDlgItem(dlg, id);
-    if (!h) return 0;
+    if (!h) { MW_TRACE("SendDlgItemMessageW(id=%lu) -> 0 (no child)", (unsigned long)id); return 0; }
     return mw_SendMessageW(h, msg, wp, lp);
 }
 __attribute__((ms_abi)) long mw_SendDlgItemMessageA(void* dlg, uint32_t id,
@@ -22231,6 +22374,8 @@ __attribute__((ms_abi)) void* mw_SetFocus(void* h) {
     return NULL;
 }
 __attribute__((ms_abi)) int mw_GetDlgItemTextW(void* dlg, uint32_t id, uint16_t* buf, int max) {
+    /* SW-1360c: traced (see SendDlgItemMessageW). */
+    MW_TRACE("GetDlgItemTextW(id=%lu, max=%d)", (unsigned long)id, max);
     void* h = mw_GetDlgItem(dlg, id);
     return h ? mw_GetWindowTextW(h, buf, max) : 0;
 }
@@ -22239,6 +22384,8 @@ __attribute__((ms_abi)) int mw_GetDlgItemTextA(void* dlg, uint32_t id, char* buf
     return h ? mw_GetWindowTextA(h, buf, max) : 0;
 }
 __attribute__((ms_abi)) int mw_SetDlgItemTextW(void* dlg, uint32_t id, const uint16_t* t) {
+    /* SW-1360c: traced (see SendDlgItemMessageW). */
+    MW_TRACE("SetDlgItemTextW(id=%lu)", (unsigned long)id);
     void* h = mw_GetDlgItem(dlg, id);
     return h ? mw_SetWindowTextW(h, t) : 0;
 }
@@ -35784,6 +35931,14 @@ static ImportEntry g_import_table[] = {
     ENTRY("KERNEL32.DLL", "EncodePointer", mw_EncodePointer),
     ENTRY("KERNEL32.DLL", "DecodePointer", mw_DecodePointer),
     ENTRY("KERNEL32.DLL", "InitializeSListHead", mw_InitializeSListHead),
+    /* SW-1362: real atomic semantics for the Interlocked family (idman CRT
+     * init called InterlockedIncrement and died on the anonymous 0). */
+    ENTRY("KERNEL32.DLL", "InterlockedIncrement", mw_InterlockedIncrement),
+    ENTRY("KERNEL32.DLL", "InterlockedDecrement", mw_InterlockedDecrement),
+    ENTRY("KERNEL32.DLL", "InterlockedExchange", mw_InterlockedExchange),
+    ENTRY("KERNEL32.DLL", "InterlockedExchangeAdd", mw_InterlockedExchangeAdd),
+    ENTRY("KERNEL32.DLL", "InterlockedCompareExchange", mw_InterlockedCompareExchange),
+    ENTRY("KERNEL32.DLL", "InterlockedCompareExchangePointer", mw_InterlockedCompareExchangePointer),
     ENTRY("KERNEL32.DLL", "InterlockedPushEntrySList", mw_InterlockedPushEntrySList),
     ENTRY("KERNEL32.DLL", "InterlockedFlushSList", mw_InterlockedFlushSList),
     ENTRY("KERNEL32.DLL", "QueryDepthSList", mw_QueryDepthSList),
@@ -39867,6 +40022,22 @@ static uint32_t MW32_RET_SENTINEL = MW32_RET_SENTINEL_VA; /* eager init: never 0
 
 static uint8_t* g_arena32 = NULL;
 static uint32_t g_heap32_next = MW32_HEAP_BASE;
+/* SW-1364: arena32 ownership test — HeapFree must no-op for bump-arena
+ * pointers (they carry no glibc chunk header and no tracking entry). */
+static int mw32_heap_owns(const void* p) {
+    uintptr_t v = (uintptr_t)p;
+    return v >= MW32_HEAP_BASE && v < MW32_HEAP_END;
+}
+/* SW-1364b: bounded probe of one guest byte (used before the m32_* helpers
+ * are defined); defers to the real m32_ld8 semantics via the host-hit guard. */
+static uint8_t* mw32_arena_host(uint32_t va) {
+    return (g_arena32 && va >= MW32_ARENA_BASE) ? g_arena32 + (va - MW32_ARENA_BASE) : NULL;
+}
+static uint32_t mw32_arena_live_edge(void) { return g_heap32_next; }
+static size_t mw32_arena_copyable(uint32_t src_va) {
+    if (!g_arena32 || src_va < MW32_HEAP_BASE || src_va >= g_heap32_next) return 0;
+    return (size_t)(g_heap32_next - src_va);
+}
 static uint32_t g_tls32_next  = MW32_TLSARR_VA + 4096; /* bump for _tls_array slots */
 static int      g_world32_up  = 0;
 /* SW-1332 (SWEEP-076) fwd: main-EXE module handle must answer the ACTIVE
@@ -40267,6 +40438,37 @@ static const struct { const char* n; uint32_t b; } g_api32_arity[] = {
     { "FreeEnvironmentStringsW", 4 },
     { "GetCommandLineA", 0 },
     { "GetCommandLineW", 0 },
+    /* SW-1363 (idman642build2): these were MISSING from the arity table, so
+     * every call popped the MW32_ARITY_DEFAULT 32 bytes instead of the true
+     * stack cost. For a 0-arg stdcall call that leaves the guest ESP +32
+     * permanently shifted -> subsequent frames overlap the caller's locals
+     * (IDM: malloc's frame clobbered [ebp-0xc] between two
+     * WideCharToMultiByte calls -> srclen=garbage -> conversion failed ->
+     * HeapFree(0xa00394) heap-trap -> exit 4). SDK arities, verified:
+     * GetEnvironmentStringsW 0; GetMessageTime 0; GetDoubleClickTime 0;
+     * GetClipboardOwner 0; CountClipboardFormats 0; ReleaseMutex 1;
+     * GetKeyboardLayout 1; IsWindowUnicode 1; GetTopWindow 1;
+     * GetLastActivePopup 1; ShowOwnedPopups 2; SetRectEmpty 1. */
+    { "GetEnvironmentStringsW", 0 },
+    /* SW-1365 (idman642build2): the wsprintf/wvsprintf family is CDECL
+     * varargs (USER32) — the caller pops its own args. Missing entries made
+     * the gate pop 32 -> ESP +32 after every format call -> IDM's startup
+     * string path jumped into the thunk page (eip 0x00a00000) -> SIGSEGV. */
+    { "wsprintfA", 0 },
+    { "wsprintfW", 0 },
+    { "wvsprintfA", 0 },
+    { "wvsprintfW", 0 },
+    { "GetMessageTime", 0 },
+    { "GetDoubleClickTime", 0 },
+    { "GetClipboardOwner", 0 },
+    { "CountClipboardFormats", 0 },
+    { "ReleaseMutex", 4 },
+    { "GetKeyboardLayout", 4 },
+    { "IsWindowUnicode", 4 },
+    { "GetTopWindow", 4 },
+    { "GetLastActivePopup", 4 },
+    { "ShowOwnedPopups", 8 },
+    { "SetRectEmpty", 4 },
     { "GetCurrentDirectoryA", 8 },
     { "GetEnvironmentVariableA", 12 },
     { "GetStdHandle", 4 },
@@ -41336,6 +41538,47 @@ static uint32_t mw32_api_gate(uint32_t slot_index) {
         /* unresolved import: mirror mw_unresolved_import_stub (trace+0) */
         MW_TRACE("[PE32] UNRESOLVED call '%s' (gate) -> 0", s->name);
         ret = 0;
+    } else if (strcmp(s->name, "wsprintfA") == 0 || strcmp(s->name, "wsprintfW") == 0 ||
+               strcmp(s->name, "wvsprintfA") == 0 || strcmp(s->name, "wvsprintfW") == 0) {
+        /* SW-1365 (idman642build2): these four are CDECL VARARGS functions.
+         * Calling them through the 16-arg mw32_fn16_t cast is doubly wrong:
+         * (1) SysV register/stack layout vs the callee's ms_abi varargs read
+         * (rcx/rdx/r8/r9 + MS shadow stack) — buf/fmt would land in the wrong
+         * registers; (2) arity 0 means the guest pops its own args, which the
+         * generic pop path already honors. Here we issue a REAL ms_abi
+         * varargs call so __builtin_ms_va_start inside the callee sees the
+         * guest's arguments in the exact Windows x64 vararg layout GCC
+         * materializes (AL=0, 32-byte shadow space, args 5+ on the MS stack).
+         * Guest VA == host VA (PE32 world), so pointer args need no fixup. */
+        if (strcmp(s->name, "wsprintfA") == 0) {
+            typedef __attribute__((ms_abi)) int (*wsA_t)(char*, const char*, ...);
+            wsA_t f = (wsA_t)(void*)s->fn;
+            ret = (uint32_t)f((char*)(uintptr_t)a[0], (const char*)(uintptr_t)a[1],
+                              (uintptr_t)a[2], (uintptr_t)a[3], (uintptr_t)a[4],
+                              (uintptr_t)a[5], (uintptr_t)a[6], (uintptr_t)a[7],
+                              (uintptr_t)a[8], (uintptr_t)a[9], (uintptr_t)a[10],
+                              (uintptr_t)a[11], (uintptr_t)a[12], (uintptr_t)a[13],
+                              (uintptr_t)a[14], (uintptr_t)a[15]);
+        } else if (strcmp(s->name, "wsprintfW") == 0) {
+            typedef __attribute__((ms_abi)) int (*wsW_t)(uint16_t*, const uint16_t*, ...);
+            wsW_t f = (wsW_t)(void*)s->fn;
+            ret = (uint32_t)f((uint16_t*)(uintptr_t)a[0], (const uint16_t*)(uintptr_t)a[1],
+                              (uintptr_t)a[2], (uintptr_t)a[3], (uintptr_t)a[4],
+                              (uintptr_t)a[5], (uintptr_t)a[6], (uintptr_t)a[7],
+                              (uintptr_t)a[8], (uintptr_t)a[9], (uintptr_t)a[10],
+                              (uintptr_t)a[11], (uintptr_t)a[12], (uintptr_t)a[13],
+                              (uintptr_t)a[14], (uintptr_t)a[15]);
+        } else if (strcmp(s->name, "wvsprintfA") == 0) {
+            typedef __attribute__((ms_abi)) int (*wvsA_t)(char*, const char*, void*);
+            wvsA_t f = (wvsA_t)(void*)s->fn;
+            ret = (uint32_t)f((char*)(uintptr_t)a[0], (const char*)(uintptr_t)a[1],
+                              (void*)(uintptr_t)a[2]);
+        } else { /* wvsprintfW */
+            typedef __attribute__((ms_abi)) int (*wvsW_t)(uint16_t*, const uint16_t*, void*);
+            wvsW_t f = (wvsW_t)(void*)s->fn;
+            ret = (uint32_t)f((uint16_t*)(uintptr_t)a[0], (const uint16_t*)(uintptr_t)a[1],
+                              (void*)(uintptr_t)a[2]);
+        }
     } else {
         mw32_fn16_t fn = (mw32_fn16_t)(void*)s->fn;
         if (!fn) { fprintf(stderr, "[PE32] slot '%s' has NULL fn\n", s->name); exit(3); }
@@ -43258,6 +43501,11 @@ int main(int argc, char* argv[]) {
     fflush(stdout);
     fflush(stderr);
 
+    /* SW-1360d: MW32_DUMP_VA works on the x86 path ("dump"/"postdump") but
+     * never fired for x64 guests — extend the same facility here so x64
+     * memory state (e.g. winrar712's runtime-resolved SFX API pointer table
+     * at .rdata 0x40a00-0x40d40) is inspectable before/after the guest runs. */
+    mw32_dump_va_ranges("x64dump");
     typedef int (*pe_entry_fn)(void);
     int ret;
     if (g_ran_pe32) {
@@ -43269,6 +43517,7 @@ int main(int argc, char* argv[]) {
         pe_entry_fn entry = (pe_entry_fn)(void*)(uintptr_t)g_entry_point;
         ret = entry();
     }
+    mw32_dump_va_ranges("x64postdump");
 
     MW_TRACE("Entry point returned %d", ret);
 
