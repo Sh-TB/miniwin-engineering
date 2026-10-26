@@ -143,3 +143,22 @@ Stage Summary:
   register reads, ROR CF) + two ABI bugs (data exports, arity table) fixed in
   one wagon — all found by disciplined crash archaeology on real UPX-packed
   NirSoft tools, all verified regression-free on the canonical corpus.
+---
+Task ID: SWEEP-079
+Agent: main (z.ai)
+Task: «ادامه ناقص ناقص» — finish the incomplete: SW-1354 winlister x86 GUI frontier, WinObj zero-frames, retry the 11 BLOCKED_DOWNLOADs
+
+Work Log:
+- Env-reset recovery: local 5 commits behind origin (242af84 -> 40eefc3), ff-only merged, stale binary rebuilt byte-exact (70fbb03e == evidence/sweep078/engine_sha256.txt), G1 pre-change pin 12/12 (20261026_121846).
+- SW-1354 winlister x86 full decode (5 generic fixes a-e: i386 WNDCLASS layouts; guest-EIP/host-channel separation + api32 gate ring; cpu32_call inverted frame; ordinal GP raw-host-ptr thunks; mode-aware callback routing + guest-staged i386 CREATESTRUCT).
+- SW-1355 process identity unification (TEB32 ClientId 1234) + XP-i386 NtQSI class-5 record (decoded from winlister's own consumer bytes).
+- SW-1355b WCTMB dst probe (guest wild buffers fail cleanly).
+- SW-1357 i386 STARTUPINFO 68B (Winobj EIP=0 root cause).
+- SW-1358 SSE2 movdqa/movdqu/pshufd; SW-1358b arity found-flag + locale Ex-family arities; SW-1358c GP real-dll binding; SW-1358d x86 operator new in guest heap.
+- Downloads: shmnview.zip (ShellMenuView correct name) + FreeCommander portable landed+hashed; 20/20 puzzles refetched byte-verified; 8 honest BLOCKED rows.
+- Gates: corpus 7/7 EXACT x3 zero regressions; 20/20 puzzles PASS_INPUT_STATE_CHANGE x3; G1 12/12 (20261026_140651); engine 5a8d5a72.
+- evidence/sweep079 curated; commit 06f20bb pushed (no force).
+
+Stage Summary:
+- The x86 (cpu32) GUI world now runs dialogs, window classes, NtQSI-driven UI and C++ heaps correctly; winlister reached its tree-walk frontier, shmnview 907K steps.
+- Queued: SW-1356 guest-SEH delivery, SW-1358e shmnview wild call, SW-1359 FreeCommander Delphi startup, WinObj detour machinery.
