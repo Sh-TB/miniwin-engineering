@@ -1,0 +1,15 @@
+name	tcpview64
+arch	x64
+desc	TCPView 4.19 x64 (Sysinternals network viewer) - SWEEP-082 new-unknown plugin (SWEEP-072 B-group U23)
+source_url	https://download.sysinternals.com/files/TCPView.zip
+source_sha256	4fc5ceba3e1b27ad95a24df35d094b454ec5f9478e12a8ca2b1b222705b9683b
+artifact	artifacts/sweep082/dl/TCPView.zip
+unpack	zip
+exe	tcpview64.exe
+args
+runs	3
+timeout	75
+keys
+mouse
+known	NEW
+note	Sysinternals GUI; probes: IPHLPAPI + netstat-class enumeration, ListView UI, EULA dialog path (Eula.txt beside exe)

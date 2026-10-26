@@ -212,3 +212,46 @@ Stage Summary:
 - Every application is now a PLUGIN: manifest + runner + ledger make failures directly comparable across trains, exactly as the user asked.
 - Trio verified at parity with SWEEP-080 through the new pipeline; notepad2-mod (new unknown) advanced 23-unresolved -> message pump.
 - 7 honest frontiers queued (SW-1298-x64 decoded, SW-1361/1370/1373/1374/1375/1376) + HxD download retry.
+---
+## SWEEP-082 (2026-10-26) — trio driven to full graphical init; the ms_abi callback class fix; WinNc/renamer/notepad2mod un-crashed
+
+Resumed from 12d7c8b after a sandbox reset (local was 75 commits behind; pulled,
+stray untracked artifacts moved aside). Pre-change rebuild byte-exact 92e7df46,
+G1 12/12.
+
+ENGINE FIXES (all generic):
+- SW-1380 top-level WM_NCCREATE->WM_NCCALCSIZE->WM_CREATE delivery (x64 + i386
+  staged paths; FALSE cancels creation). The child path had it since SW-1335;
+  top-level never did — every GWLP_USERDATA-based guest framework proc never
+  registered its object (npp64: zero SetWindowLongPtrW in any trace).
+- SW-1381 COMCTL32.411 GetWindowSubclass (real chain search, honest FALSE) +
+  SHELL32.165 SHCreateDirectory wiring; CORRECTION: SHELL32.155 = ILFree per
+  live wine shell32.spec (was mis-mapped to SHCreateDirectory in SWEEP-029);
+  ILFree implemented.
+- SW-1382 top-level identity minting for window #2+ (g_toplvl_main_taken);
+  surface store + class snapshot gated to window #1 only.
+- SW-1383 GetWindowLongPtrW caller-RVA in trace (pinned SW-1384 in one rerun).
+- SW-1384 ms_abi cb_t in mw_call_cb2/cb4 (SysV-vs-MSx64 register shuffle: the
+  guest's arg0 was our arg3!) + SW-1384b 64-bit LRESULT returns (int cb_t
+  truncated Scintilla's DirectFunction pointer) + uintptr_t pointer args
+  (font-enum staged LOGFONT host-stack pointers were truncated to 32 bits).
+- SW-1385 cpu32 o32 immediate family: 66-prefixed B8-BF/C7 and the accumulator
+  ALU ops (05/0D/15/1D/25/2D/35/3D) now read imm16 and honor 16-bit results
+  (the imm32 reads desynced eip -> NULL-ea store crash; WinNc Delphi CRT).
+
+RESULTS (3x cold runs each, plugin runner):
+- npp64 SW-1298-x64 RESOLVED: crash@0x1099b3 x3 -> PASS_INPUT_STATE_CHANGE
+  rc=0 x3 (13,876 API calls, ExitProcess(0), Scintilla handshake works).
+- winnc SW-1374 crash -> EXIT rc=86 crash=0 (CRT runs; installer stub exits).
+- renamer SW-1376 crash -> EXIT rc=86 crash=0.
+- notepad2mod SW-1373 crash -> EXIT rc=0 crash=0.
+- winrar/idman unchanged (no regression); everything TIMEOUT unchanged.
+- NEW plugin tcpview64 (SWEEP-072 B-group U23, official zip sha 4fc5ceba...):
+  real EULA dialog reached, TOOLBAR poll-loop frontier -> TIMEOUT (honest).
+- HxD: BLOCKED_DOWNLOAD (8th TCP refusal; no mirrors per protocol).
+
+GATES: G1 12/12 x2 (92e7df46 pre, 0eaff275 post); corpus 3x ZERO regressions;
+final engine sha256 4f9cc889...? — see evidence/sweep082/engine_sha256.txt.
+Evidence: evidence/sweep082/; ledger rows tagged sweep082 in plugins/status.tsv.
+Next wagons: npp64 interactive probes (menus/tabs/edit), tcpview64 toolbar loop
+(SW-1386-tail), winnc unpacked payload route, everything poll loop.
