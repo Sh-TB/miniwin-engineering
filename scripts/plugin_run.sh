@@ -1,0 +1,154 @@
+#!/bin/bash
+# plugin_run.sh — MiniWin app-plugin runner (SWEEP-081).
+#
+# Every tested application lives in plugins/<name>/plugin.tsv (a manifest).
+# The runner turns one manifest into: verified artifact -> run battery ->
+# frames -> verdict + frontier -> evidence row + status.tsv update.
+# This makes each app a self-contained "plugin": its download, its input
+# probes, its known SW-numbers and its status live in ONE directory.
+#
+# Usage: scripts/plugin_run.sh <plugin-name> [runs] [timeout]
+#        scripts/plugin_run.sh --all [runs] [timeout]
+#
+# Manifest keys (TAB-separated, # = comment):
+#   name arch desc source_url source_sha256 artifact unpack exe args
+#   runs timeout keys mouse known note
+set -u
+REPO="$(cd "$(dirname "$0")/.." && pwd)"
+cd "$REPO" || exit 1
+SWEEP="${SWEEP:-sweep081}"
+EV="evidence/$SWEEP"
+
+say() { printf '%s\n' "$*"; }
+
+manifest_get() { # file key
+    awk -F'\t' -v k="$1" '$1==k {print $2; exit}' "$2"
+}
+
+classify() { # log rc frames diff_frame -> verdict string
+    local log="$1" rc="$2" frames="$3" diff="$4"
+    local crash steps frontier
+    crash=$(grep -ac '\[CRASH\]' "$log" 2>/dev/null)
+    steps=$(grep -aoE 'steps[= ][0-9]+' "$log" 2>/dev/null | tail -1 | grep -oE '[0-9]+')
+    if [ "$frames" -gt 0 ] && [ -n "$diff" ] && [ "$rc" -eq 0 ]; then
+        echo "PASS_INPUT_STATE_CHANGE"
+    elif [ "$frames" -gt 0 ]; then
+        echo "PASS_LAUNCH_RENDER rc=$rc"
+    elif [ "$crash" -gt 0 ]; then
+        frontier=$(grep -aoE 'FRONTIER[_A-Z0-9]*|SW-[0-9]+' "$log" 2>/dev/null | tail -3 | tr '\n' ',')
+        echo "FRONTIER_SW crash=$crash ${frontier:-undecoded} steps=${steps:-?}"
+    elif [ "$rc" -eq 124 ]; then
+        echo "TIMEOUT frames=$frames"
+    else
+        echo "EXIT rc=$rc frames=$frames"
+    fi
+}
+
+frame_stats() { # base -> "frames uniq first_diff"
+    python3 - "$1" <<'PYEOF'
+import sys, os, hashlib
+d = f"miniwin-results/{sys.argv[1]}/screenshots"
+try:
+    fs = sorted(f for f in os.listdir(d) if f.endswith(".bmp"))
+    if not fs: print("0 0 "); raise SystemExit
+    h0 = hashlib.md5(open(f"{d}/{fs[0]}","rb").read()).hexdigest()
+    diff = [f for f in fs[1:] if hashlib.md5(open(f"{d}/{f}","rb").read()).hexdigest() != h0]
+    print(len(fs), len(set(hashlib.md5(open(f"{d}/{f}","rb").read()).hexdigest() for f in fs)), diff[0] if diff else "")
+except SystemExit: pass
+except Exception:
+    print("0 0 ")
+PYEOF
+}
+
+run_plugin() {
+    local name="$1" nruns="${2:-3}" tmo="${3:-75}"
+    local mf="plugins/$name/plugin.tsv"
+    [ -f "$mf" ] || { say "NO MANIFEST plugins/$name/plugin.tsv"; return 1; }
+    local arch desc url sha artifact unpack exe args keys mouse known
+    arch=$(manifest_get arch "$mf"); desc=$(manifest_get desc "$mf")
+    url=$(manifest_get source_url "$mf"); sha=$(manifest_get source_sha256 "$mf")
+    artifact=$(manifest_get artifact "$mf"); unpack=$(manifest_get unpack "$mf")
+    exe=$(manifest_get exe "$mf"); args=$(manifest_get args "$mf")
+    keys=$(manifest_get keys "$mf"); mouse=$(manifest_get mouse "$mf")
+    known=$(manifest_get known "$mf")
+    [ -n "$keys" ] || keys="37,38,39,40,13,32,9,9"
+    [ -n "$mouse" ] || mouse="45,45;90,90;135,135"
+
+    say "== plugin: $name ($arch) — $desc"
+    # 1. artifact present + hash recorded
+    if [ ! -f "$artifact" ]; then
+        say "   artifact missing: $artifact ($url)"
+        echo -e "$name\t$arch\tBLOCKED_DOWNLOAD\t$url\tno artifact (download blocked)\t$known\t$SWEEP" >> plugins/status.tsv
+        return 2
+    fi
+    local have; have=$(sha256sum "$artifact" | cut -d' ' -f1)
+    if [ -n "$sha" ] && [ "$have" != "$sha" ]; then
+        say "   SHA MISMATCH have=$have want=$sha"
+        echo -e "$name\t$arch\tBLOCKED_SHA\t$artifact\tsha mismatch\t$known\t$SWEEP" >> plugins/status.tsv
+        return 2
+    fi
+    say "   artifact ok ${have:0:12} ($(stat -c%s "$artifact")B)"
+
+    # 2. unpack if required
+    local exe_path
+    if [ "$unpack" = "zip" ]; then
+        local dest="${artifact%.zip}.x"
+        if [ ! -f "$dest/$(basename "$exe")" ]; then
+            mkdir -p "$dest"
+            unzip -o -q "$artifact" -d "$dest" 2>/dev/null || { say "   unzip FAILED"; echo -e "$name\t$arch\tFAIL_UNPACK\t\t\t$known\t$SWEEP" >> plugins/status.tsv; return 2; }
+        fi
+        exe_path="$dest/$exe"
+    else
+        exe_path="$artifact"
+    fi
+    [ -f "$exe_path" ] || { say "   exe missing: $exe_path"; echo -e "$name\t$arch\tFAIL_NOEXE\t\t\t$known\t$SWEEP" >> plugins/status.tsv; return 2; }
+    say "   exe: $exe_path"
+
+    # 3. battery
+    mkdir -p "$EV/$name" plugins/$name
+    local base run rc out crash frames uniq diff verdict result_row=""
+    for run in $(seq 1 "$nruns"); do
+        rm -rf "miniwin-results/$(basename "$exe_path")"
+        out="/tmp/plug_${name}_r${run}.log"
+        MW_GUI_EVENTS=1 MW_GUI_EVENTS_BUDGET=220 \
+        MW_GUI_KEYS="$keys" MW_GUI_KEY_EVERY=7 MW_GUI_KEYUP=1 \
+        MINWIN_MOUSE="$mouse" MINWIN_MOUSE_EVERY=6 \
+        timeout "$tmo" ./minwin_loader "$exe_path" $args > "$out" 2>&1
+        rc=$?
+        result_row="$result_row rc=$rc"
+        cp "$out" "$EV/$name/run${run}.log"
+        say "   run$run rc=$rc crash=$(grep -ac '\[CRASH\]' "$out")"
+    done
+    read -r frames uniq diff <<< "$(frame_stats "$(basename "$exe_path")")"
+    verdict=$(classify "$out" "$rc" "$frames" "$diff")
+
+    # 4. frames -> evidence PNG
+    local fsdir="miniwin-results/$(basename "$exe_path")/screenshots"
+    if [ -d "$fsdir" ]; then
+        python3 - "$fsdir" "$EV/$name" <<'PYEOF'
+import sys, os
+from PIL import Image
+src, dst = sys.argv[1], sys.argv[2]
+os.makedirs(dst, exist_ok=True)
+for f in sorted(os.listdir(src)):
+    if f.endswith(".bmp"):
+        Image.open(os.path.join(src, f)).save(os.path.join(dst, f[:-4] + ".png"), optimize=True)
+PYEOF
+    fi
+
+    # 5. status row
+    echo -e "$name\t$arch\t$verdict\t$exe_path\t$result_row\tframes=$frames uniq=$uniq diff=$diff\t$known\t$SWEEP" >> plugins/status.tsv
+    say "   VERDICT: $verdict (frames=$frames uniq=$uniq)"
+}
+
+# --- main ---
+mkdir -p plugins "$EV"
+touch plugins/status.tsv
+if [ "$1" = "--all" ]; then
+    for mf in plugins/*/plugin.tsv; do
+        n=$(basename "$(dirname "$mf")")
+        run_plugin "$n" "${2:-3}" "${3:-75}"
+    done
+else
+    run_plugin "$1" "${2:-3}" "${3:-75}"
+fi

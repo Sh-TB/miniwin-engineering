@@ -1,0 +1,15 @@
+name	everything
+arch	x64
+desc	voidtools Everything 1.4.1.1028 x64 (tiny, SWEEP-081)
+source_url	https://www.voidtools.com/Everything-1.4.1.1028.x64.zip
+source_sha256	4f4a9b9299b608d48b065f95fd80b9c095cdc7114cd467cd9b54944b23559dfe
+artifact	artifacts/sweep081/dl/everything.1.4.1.1028.x64.zip
+unpack	zip
+exe	everything.exe
+args	
+runs	3
+timeout	75
+keys	37,38,39,40,13
+mouse	150,150
+known	NEW
+note	search utility; NTFS MFT + window class UI

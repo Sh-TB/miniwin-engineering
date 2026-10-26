@@ -190,3 +190,24 @@ Stage Summary:
 - All three user-named programs ADVANCE: winrar 7.12 installer wizard now parses 100% of its controls; idman runs its whole unpacker with real registry writes and renders a clean honest dialog; npp64 registers dialog children past the previous record.
 - 11 generic fixes landed (dialog walker ABI, class table, Interlocked, arity ESP-corruption class, arena32 heap, cdecl varargs gate, %S, path normalization, x64 dump facility).
 - Next wagons: SW-1361 winrar SFX resolver decode, SW-1370 IDM CreateProcess child support, SW-1298-x64 npp64 class-proc ctx, SW-1371 npp86 relocation crash.
+
+---
+Task ID: SWEEP-081
+Agent: main (z.ai)
+Task: «ادامه این سه برنامه رو برسون در حد اجرای گرافیکی کامل ... hxd و برنامه winnc و چند تا برنامه ریزه میزه دیگه ... هر برنامه چیزی شبیه یک پلاگین باشه» — plugin architecture + trio re-verify + new app-plugins (winnc/hxd/everything/renamer/notepad2-mod)
+
+Work Log:
+- Baseline: origin 829d1560 == local; byte-exact rebuild 123d7750; G1 pre-change 12/12 (20261026_161027).
+- PLUGIN FRAMEWORK (user-directed): plugins/<name>/plugin.tsv manifests (8 plugins: winrar/idman/npp64/winnc/hxd/everything/renamer/notepad2mod) + scripts/plugin_run.sh generic runner (hash verify -> unpack -> cold runs -> frames -> verdict -> evidence PNGs -> status row) + plugins/status.tsv ledger + plugins/README.md contract. Standing rule: trio every train + one NEW unknown per train.
+- Downloads (official, dl_sha256.tsv): WinNc 11.6 setup.exe bef0fcaf, Everything x64 4f4a9b92, ReNamer 7.5 b11342a5 (den4b key flow), notepad2-mod c893ce4a. HxD = BLOCKED_DOWNLOAD (mh-nexus.de TCP-443 refused, 6 attempts across 2 sweeps; substitutes Frhed/XVI32/Okteta dead, ImHex not tiny) — plugin stays, retries next train.
+- SW-1372: 23-API shlwapi/user32/kernel32 batch (Str*/Path* string ops, PrivateProfile Section pair, IsChar A-variants, MessageBoxExW, DrawAnimatedRects, SHCreateDirectoryExW recursive mkdir, SHGetDataFromIDListW E_FAIL) + x86 arity rows + SHELL32.180 (wine spec SHGetDataFromIDListW). notepad2-mod unresolved 23 -> 0.
+- SW-1334 observability: class-proc trace now prints numeric message id.
+- Trio re-verified via plugin runner, NO regression: winrar 13/13 STARTDLG children with texts, clean rc=0 at SW-1361 frontier; idman honest dialog rendered (messagebox_1.png) rc=0, SW-1370 frontier; npp64 2 real MessageBox frames, SW-1298-x64 crash DECODED to instruction level (mov [rcx],rbx @0x1099b3, lea rcx,[rbx+0x20], rbx=0 NULL object, via SW-1334 re-entry [rsp]=0 sentinel).
+- New plugins first results: winnc FRONTIER SW-1374 (Inno wine_get_version probe -> host SIGSEGV in cpu32 interpreter @guest 0x40722A, step 551); everything FRONTIER SW-1375 (C++ throw then mov rcx,[rsi+0x98] rsi=0 — MFT/DeviceIoControl class); renamer FRONTIER SW-1376 (Delphi TlsGetValue probe loop -> wild stack jump, SW-1358b class); notepad2-mod ADVANCED SW-1373 (message pump 44 SendMessage cycles, then COM vtable [rax+0x208] on NULL this).
+- Gates: G1 post-change 12/12 (20261026_165111, 92e7df46, 4,465,312 B); corpus x3 EXACT (winmine 82, sol 69, freecell 10, calc 1, breakout 10, snake 13, spider 627-633 band) ZERO crashes/fatals; puzzles 4/4 rc=0.
+- evidence/sweep081 curated (summary.md, dl_sha256.tsv, corpus_parity.tsv, per-plugin run logs + crash contexts + frames); plugins/status.tsv written; commit pushed (no force).
+
+Stage Summary:
+- Every application is now a PLUGIN: manifest + runner + ledger make failures directly comparable across trains, exactly as the user asked.
+- Trio verified at parity with SWEEP-080 through the new pipeline; notepad2-mod (new unknown) advanced 23-unresolved -> message pump.
+- 7 honest frontiers queued (SW-1298-x64 decoded, SW-1361/1370/1373/1374/1375/1376) + HxD download retry.

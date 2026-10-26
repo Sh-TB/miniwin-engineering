@@ -1,0 +1,9 @@
+name	arch	verdict	exe	runs	frames	known	sweep
+winrar	x64	PARITY_FRONTIER_SW-1361 rc=0	artifacts/sweep062/dl/winrar712.exe	rc=0/0	x3 runs, 13/13 STARTDLG children with texts	SW-1361 SW-1360	sweep081
+idman	x86	PASS_LAUNCH_RENDER rc=0	artifacts/sweep080/dl/idman642build2.exe	rc=0/0	messagebox_1.png (honest error dialog)	SW-1370 SW-1362 SW-1363	sweep081
+npp64	x64	PARITY_FRONTIER_SW-1298-x64	artifacts/sweep080/dl/npp.portable.x64.x/notepad++.exe	rc=139/139	messagebox_1.png + messagebox_2.png, crash @RVA 0x1099b3 (decoded)	SW-1298-x64 SW-1371	sweep081
+winnc	x86	FRONTIER_SW-1374 crash=1 steps=551	artifacts/sweep081/dl/winnc11.setup.exe	rc=139/139	0 frames	SW-1374	sweep081
+hxd	x64	BLOCKED_DOWNLOAD	artifacts/sweep081/dl/HxDPortableSetup.zip	-	-	BLOCKED_DOWNLOAD	sweep081
+everything	x64	FRONTIER_SW-1375 crash=1	artifacts/sweep081/dl/everything.1.4.1.1028.x64.x/everything.exe	rc=139/139	0 frames	SW-1375	sweep081
+renamer	x86	FRONTIER_SW-1376 rc=86	artifacts/sweep081/dl/renamer75.portable.x/ReNamer.exe	rc=86/86	0 frames	SW-1376	sweep081
+notepad2mod	x64	ADVANCED_FRONTIER_SW-1373 crash=1	artifacts/sweep081/dl/notepad2mod.x64.x/Notepad2.exe	rc=139/139	0 frames	SW-1373 (was 23 unresolved imports; now 0)	sweep081

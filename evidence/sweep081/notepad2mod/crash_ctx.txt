@@ -1,0 +1,11 @@
+[MiniWin] Loading artifacts/sweep081/dl/notepad2mod.x64.x/Notepad2.exe...
+
+[CRASH] Signal 11 at RIP=0x1400691c8
+  si_addr=0x0 si_code=1 (1=MAPERR 2=ACCERR)
+  RAX=0x0 RCX=0x0 RDX=0x8c0 R8=0x0 R9=0x0
+  RSP=0x7ffd55190590 RBP=0x0
+  g_image_base=0x140000000 g_image_size=0x1ee000
+  RVA=0x691c8 (inside loaded PE)
+  Bytes: 48 8b 01 45 8d 41 02 ff 90 08 02 00 00 48 8b 0d 
+  Return addr: 0x3032323146746547
+  RSI=0x140000000 RDI=0x10001

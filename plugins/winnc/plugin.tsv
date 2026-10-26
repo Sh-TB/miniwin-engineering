@@ -1,0 +1,15 @@
+name	winnc
+arch	x86
+desc	WinNc 11.6.0.0 Norton-Commander file manager (user-named, SWEEP-081)
+source_url	https://www.winnc.com/setup.exe
+source_sha256	bef0fcafd7ce5b111beb61923b304c3f001a53061200ba65cdbc19c441ec011a
+artifact	artifacts/sweep081/dl/winnc11.setup.exe
+unpack	none
+exe	artifacts/sweep081/dl/winnc11.setup.exe
+args	
+runs	3
+timeout	90
+keys	13,13
+mouse	150,150
+known	NEW
+note	Inno Setup installer; run in-loader (installer itself is the target, idman-class path)

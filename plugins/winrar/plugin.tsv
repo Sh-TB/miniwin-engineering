@@ -1,0 +1,15 @@
+name	winrar
+arch	x64
+desc	WinRAR 7.12 x64 SFX installer (user-named base app #1)
+source_url	https://www.rarlab.com/rar/winrar-x64-712.exe (stock artifact from SWEEP-062)
+source_sha256	80ab68244a0d86600ab250e8dba551b87f7f8b4603e2300b3bcbd7e870e90f91
+artifact	artifacts/sweep062/dl/winrar712.exe
+unpack	none
+exe	artifacts/sweep062/dl/winrar712.exe
+args	
+runs	3
+timeout	90
+keys	13,13
+mouse	150,150
+known	SW-1361 SW-1360
+note	SFX: STARTDLG 13/13 controls parse; frontier = own .didat self-resolver (SW-1361)

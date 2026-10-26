@@ -16910,8 +16910,8 @@ __attribute__((ms_abi)) long long mw_SendMessageW(void* h, uint32_t msg, uintptr
      * models above keep priority, matching the engine's control emulations). */
     if (s >= 0 && g_child[s].class_proc) {
         long long r = mw_call_cb4(g_child[s].class_proc, (uint32_t)(uintptr_t)h, msg, wp, (intptr_t)lp);
-        MW_TRACE("SendMessageW(hwnd=%p %s) -> class proc -> %lld (SW-1334)",
-                 h, mw_wm_name(msg), r);
+        MW_TRACE("SendMessageW(hwnd=%p %s[%u]) -> class proc -> %lld (SW-1334)",
+                 h, mw_wm_name(msg), msg, r);
         return r;
     }
     if ((h == MW_GUI_HWND || mw_toplevel_find(h) >= 0) && mw_dispatch_proc()) { /* SW-1256 + SW-1279 fix C: nested mints forward too */
@@ -27281,6 +27281,265 @@ __attribute__((ms_abi)) uint32_t mw_GetPrivateProfileStringW(const uint16_t* app
     buf[n] = 0;
     return n;
 }
+
+/* ---- SW-1372 (SWEEP-081, notepad2-mod x64): shlwapi/user32/kernel32
+ * string+profile batch. All pure guest-buffer operations over UTF-16
+ * (char for the two A entries); no global state, no per-app branches. ---- */
+static int w16_ieq(uint16_t a, uint16_t b) {
+    if (a >= L'A' && a <= L'Z') a = (uint16_t)(a + 32);
+    if (b >= L'A' && b <= L'Z') b = (uint16_t)(b + 32);
+    return a == b;
+}
+static size_t w16_len(const uint16_t* s) { size_t n = 0; if (s) while (s[n]) n++; return n; }
+
+__attribute__((ms_abi)) uint16_t* mw_StrCpyW(uint16_t* dst, const uint16_t* src) {
+    if (!dst) return NULL;
+    if (!src) { dst[0] = 0; return dst; }
+    size_t n = w16_len(src);
+    memmove(dst, src, (n + 1) * sizeof(uint16_t));
+    return dst;
+}
+__attribute__((ms_abi)) uint16_t* mw_StrCpyNW(uint16_t* dst, const uint16_t* src, size_t n) {
+    if (!dst || n == 0) return dst;
+    size_t i = 0;
+    if (src) { for (; i < n - 1 && src[i]; i++) dst[i] = src[i]; }
+    dst[i] = 0; /* StrCpyNW always NUL-terminates within n */
+    return dst;
+}
+__attribute__((ms_abi)) uint16_t* mw_StrCatW(uint16_t* dst, const uint16_t* src) {
+    if (!dst) return NULL;
+    size_t d = w16_len(dst);
+    if (src) {
+        size_t n = w16_len(src);
+        memmove(dst + d, src, (n + 1) * sizeof(uint16_t));
+    } else dst[d] = 0;
+    return dst;
+}
+__attribute__((ms_abi)) uint16_t* mw_StrNCatW(uint16_t* dst, const uint16_t* src, size_t n) {
+    if (!dst || n == 0) return dst;
+    size_t d = w16_len(dst), i = 0;
+    if (src) { for (; i < n && src[i]; i++) dst[d + i] = src[i]; }
+    dst[d + i] = 0;
+    return dst;
+}
+__attribute__((ms_abi)) uint16_t* mw_StrCatBuffW(uint16_t* dst, const uint16_t* src, int dstbuf) {
+    if (!dst || dstbuf <= 0) return dst;
+    size_t d = w16_len(dst), i = 0;
+    if (src) { for (; d + i + 1 < (size_t)dstbuf && src[i]; i++) dst[d + i] = src[i]; }
+    dst[d + i] = 0;
+    return dst;
+}
+__attribute__((ms_abi)) char* mw_StrCatBuffA(char* dst, const char* src, int dstbuf) {
+    if (!dst || dstbuf <= 0) return dst;
+    size_t d = strlen(dst), i = 0;
+    if (src) { for (; d + i + 1 < (size_t)dstbuf && src[i]; i++) dst[d + i] = src[i]; }
+    dst[d + i] = 0;
+    return dst;
+}
+__attribute__((ms_abi)) int mw_PathIsPrefixW(const uint16_t* prefix, const uint16_t* path) {
+    if (!prefix || !path) return 0;
+    size_t n = w16_len(prefix);
+    /* "C:\" root prefixes everything under the drive (documented special) */
+    for (size_t i = 0; i < n; i++) if (!w16_ieq(prefix[i], path[i])) return 0;
+    if (n == 0) return 0;
+    uint16_t c = path[n];
+    if (c == 0) return 1;                              /* equal path */
+    if (c == (uint16_t)'\\' || c == (uint16_t)'/') return 1; /* component boundary */
+    return 0;
+}
+__attribute__((ms_abi)) int mw_PathCommonPrefixW(const uint16_t* f1, const uint16_t* f2, uint16_t* path) {
+    if (!f1 || !f2) return 0;
+    size_t n = 0;
+    while (f1[n] && f2[n] && w16_ieq(f1[n], f2[n])) n++;
+    /* snap back to a component boundary (slash or drive-colon) */
+    if (f1[n] && f2[n] && f1[n] != (uint16_t)'\\' && f1[n] != (uint16_t)'/') {
+        while (n > 0 && f1[n] != (uint16_t)'\\' && f1[n] != (uint16_t)'/' && f1[n] != (uint16_t)':') n--;
+    }
+    if (path && n) { memmove(path, f1, n * sizeof(uint16_t)); path[n] = 0; }
+    else if (path) path[0] = 0;
+    return (int)n;
+}
+__attribute__((ms_abi)) int mw_PathRenameExtensionW(uint16_t* path, const uint16_t* ext) {
+    if (!path) return 0;
+    size_t n = w16_len(path), last_sep = 0; int has_sep = 0;
+    for (size_t i = 0; i < n; i++)
+        if (path[i] == (uint16_t)'\\' || path[i] == (uint16_t)'/') { has_sep = 1; last_sep = i; }
+    size_t dot = 0; int has_dot = 0;
+    for (size_t i = (has_sep ? last_sep + 1 : 0); i < n; i++)
+        if (path[i] == (uint16_t)'.') { has_dot = 1; dot = i; }
+    if (!ext) return 1;
+    size_t e = w16_len(ext);
+    size_t base = has_dot ? dot : n;
+    if ((uintptr_t)base + e + 1 >= 0x10000u) return 0; /* no room (path buffer unknown; honest guard) */
+    memmove(path + base, ext, (e + 1) * sizeof(uint16_t));
+    MW_TRACE("PathRenameExtensionW -> ext applied");
+    return 1;
+}
+__attribute__((ms_abi)) void mw_PathQuoteSpacesW(uint16_t* path) {
+    if (!path) return;
+    int has_space = 0;
+    for (size_t i = 0; path[i]; i++) if (path[i] == (uint16_t)' ') { has_space = 1; break; }
+    if (!has_space) return;
+    size_t n = w16_len(path);
+    memmove(path + 1, path, n * sizeof(uint16_t));
+    path[0] = (uint16_t)'"'; path[n + 1] = (uint16_t)'"'; path[n + 2] = 0;
+}
+__attribute__((ms_abi)) void mw_PathUnquoteSpacesW(uint16_t* path) {
+    if (!path) return;
+    size_t n = w16_len(path);
+    if (n >= 2 && path[0] == (uint16_t)'"' && path[n - 1] == (uint16_t)'"') {
+        memmove(path, path + 1, (n - 2) * sizeof(uint16_t));
+        n -= 2;
+        path[n] = 0;
+    }
+    /* unescape "" -> " inside */
+    size_t r = 0, wr = 0;
+    while (r < n) {
+        if (path[r] == (uint16_t)'"' && path[r + 1] == (uint16_t)'"') r++;
+        path[wr++] = path[r++];
+    }
+    path[wr] = 0;
+}
+#define MW_PPUT(path_, out_, c_) do { if ((out_) + 1 < 0x1000u) (path_)[(out_)++] = (uint16_t)(c_); } while (0)
+/* documented unexpansion set, longest-match wins; env falls back to defaults */
+__attribute__((ms_abi)) int mw_PathUnExpandEnvStringsW(const uint16_t* path, uint16_t* buf, uint32_t cch) {
+    if (!path || !buf || cch == 0) return 0;
+    static const struct { const char* var; const char* def; } kset[] = {
+        { "CommonProgramFiles", "C:\\Program Files\\Common Files" },
+        { "ProgramFiles",       "C:\\Program Files" },
+        { "SystemRoot",         "C:\\Windows" },
+        { "SystemDrive",        "C:" },
+        { "ProgramData",        "C:\\ProgramData" },
+    };
+    char p8[4096];
+    w3_w16_to_utf8z(path, p8, sizeof(p8));
+    w3_normalize_path(p8);
+    /* W-path keep case-insensitive compare on the UTF-8 form (ASCII paths) */
+    for (unsigned k = 0; k < sizeof(kset) / sizeof(kset[0]); k++) {
+        char v8[1024]; const char* v = getenv(kset[k].var);
+        snprintf(v8, sizeof(v8), "%s", v && *v ? v : kset[k].def);
+        w3_normalize_path(v8);
+        size_t vl = strlen(v8);
+        if (vl == 0 || strncasecmp(p8, v8, vl) != 0) continue;
+        if (p8[vl] != 0 && p8[vl] != '\\' && p8[vl] != '/') continue;
+        char out8[4096];
+        snprintf(out8, sizeof(out8), "%%%s%%%s", kset[k].var, p8[vl] ? p8 + vl : "");
+        size_t need = strlen(out8);
+        if (need + 1 > cch) { mw_SetLastError(122); return 0; } /* ERROR_INSUFFICIENT_BUFFER */
+        uint32_t i = 0;
+        for (; i < need; i++) buf[i] = (uint16_t)(unsigned char)out8[i];
+        buf[i] = 0;
+        MW_TRACE("PathUnExpandEnvStringsW -> %s", out8);
+        return 1;
+    }
+    return 0;
+}
+__attribute__((ms_abi)) int mw_PathRelativePathToW(uint16_t* path, const uint16_t* from,
+        uint32_t attrFrom, const uint16_t* to, uint32_t attrTo) {
+    if (!path || !from || !to) return 0;
+    /* split each path into components; attr DIRECTORY bit decides whether the
+     * last component is kept (files keep, dirs drop — real Shlwapi rule) */
+    const uint16_t* comp[2][64]; size_t clen[2][64]; int ncomp[2] = { 0, 0 };
+    const uint16_t* pp[2] = { from, to };
+    uint32_t at[2] = { attrFrom, attrTo };
+    for (int w = 0; w < 2; w++) {
+        const uint16_t* s = pp[w];
+        while (*s) {
+            while (*s == (uint16_t)'\\' || *s == (uint16_t)'/') s++;
+            if (!*s) break;
+            const uint16_t* e = s;
+            while (*e && *e != (uint16_t)'\\' && *e != (uint16_t)'/') e++;
+            if (ncomp[w] < 64) { comp[w][ncomp[w]] = s; clen[w][ncomp[w]] = (size_t)(e - s); ncomp[w]++; }
+            s = e;
+        }
+        if (!(at[w] & 0x10)) ncomp[w] = ncomp[w] > 0 ? ncomp[w] : 0; /* file keeps last part later */
+        else if (ncomp[w] > 0) ncomp[w]--;                            /* dir: drop last (the dir itself) */
+    }
+    /* files keep their last component as the destination part */
+    int keep1 = !(at[1] & 0x10);
+    /* common prefix over component lists (case-insensitive) */
+    int common = 0;
+    int lim = ncomp[0] + (keep1 ? 1 : 0); /* to's kept component handled below */
+    while (common < ncomp[0] && common < lim && common < ncomp[1] &&
+           clen[0][common] == clen[1][common]) {
+        size_t j = 0;
+        while (j < clen[0][common] && w16_ieq(comp[0][common][j], comp[1][common][j])) j++;
+        if (j != clen[0][common]) break;
+        common++;
+    }
+    size_t out = 0;
+    for (int i = common; i < ncomp[0]; i++) { MW_PPUT(path, out, '.'); MW_PPUT(path, out, '.'); MW_PPUT(path, out, '\\'); }
+    for (int i = common; i < ncomp[1]; i++) {
+        for (size_t j = 0; j < clen[1][i]; j++) MW_PPUT(path, out, comp[1][i][j]);
+        if (i + 1 < ncomp[1] || (i + 1 == ncomp[1] && !keep1)) MW_PPUT(path, out, '\\');
+    }
+    if (out && path[out - 1] == (uint16_t)'\\') out--;
+    path[out] = 0;
+    MW_TRACE("PathRelativePathToW -> %d ups", ncomp[0] - common);
+    return 1;
+}
+__attribute__((ms_abi)) uint32_t mw_GetPrivateProfileSectionW(const uint16_t* app,
+        uint16_t* buf, uint32_t size, const uint16_t* file) {
+    (void)app; (void)file;
+    if (!buf || size == 0) return 0;
+    buf[0] = 0;
+    if (size > 1) buf[1] = 0; /* empty section = documented file-missing answer */
+    return 0;
+}
+__attribute__((ms_abi)) int mw_WritePrivateProfileSectionW(const uint16_t* app,
+        const uint16_t* str, const uint16_t* file) {
+    (void)app; (void)str; (void)file;
+    MW_TRACE("WritePrivateProfileSectionW -> TRUE (no ini store; documented family contract)");
+    return 1;
+}
+__attribute__((ms_abi)) int mw_IsCharLowerA(char c) { return c >= 'a' && c <= 'z'; }
+__attribute__((ms_abi)) int mw_IsCharUpperA(char c) { return c >= 'A' && c <= 'Z'; }
+/* mw_IsCharLowerW: pre-existing definition at the USER32 block (accented
+ * range-aware) — the SW-1372 ENTRY binds to it; no duplicate here. */
+__attribute__((ms_abi)) int mw_IsCharUpperW(uint16_t c) { return c >= L'A' && c <= L'Z'; }
+__attribute__((ms_abi)) int mw_IsCharAlphaNumericA(char c) {
+    return mw_IsCharLowerA(c) || mw_IsCharUpperA(c) || (c >= '0' && c <= '9');
+}
+__attribute__((ms_abi)) int mw_MessageBoxExW(void* hwnd, const uint16_t* text,
+        const uint16_t* caption, uint32_t type, uint16_t langid) {
+    (void)langid;
+    return mw_MessageBoxW(hwnd, text, caption, type);
+}
+__attribute__((ms_abi)) int mw_DrawAnimatedRects(void* hwnd, int idAni, const void* from, const void* to) {
+    (void)hwnd; (void)idAni; (void)from; (void)to;
+    MW_TRACE("DrawAnimatedRects -> TRUE (no animation layer)");
+    return 1;
+}
+/* SHCreateDirectoryExW: recursive mkdir over the host FS (SW-1372) */
+__attribute__((ms_abi)) int mw_SHCreateDirectoryExW(void* hwnd, const uint16_t* path, void* sec) {
+    (void)hwnd; (void)sec;
+    if (!path) return 87; /* ERROR_INVALID_PARAMETER */
+    char n8[4096];
+    if (w3_w16_to_utf8z(path, n8, sizeof(n8)) < 0) return 87;
+    n8[sizeof(n8) - 1] = '\0';
+    w3_normalize_path(n8); /* same rule as CreateDirectoryW/BUG-054b */
+    MW_TRACE("SHCreateDirectoryExW(%s)", n8);
+    struct stat st0;
+    if (stat(n8, &st0) == 0 && S_ISDIR(st0.st_mode))
+        return 183; /* ERROR_ALREADY_EXISTS (SHCreateDirectoryExW contract) */
+    char tmp[4096];
+    snprintf(tmp, sizeof(tmp), "%s", n8);
+    for (char* q = tmp + 1; *q; q++) {
+        if (*q == '/') {
+            *q = 0;
+            mkdir(tmp, 0755); /* EEXIST tolerated */
+            *q = '/';
+        }
+    }
+    if (mkdir(tmp, 0755) != 0 && errno != EEXIST) return 3; /* ERROR_PATH_NOT_FOUND */
+    return 0; /* ERROR_SUCCESS */
+}
+__attribute__((ms_abi)) long mw_SHGetDataFromIDListW(void* psf, const void* pidl, int nFolder,
+        void* pv, int cb) {
+    (void)psf; (void)pidl; (void)nFolder; (void)pv; (void)cb;
+    MW_TRACE("SHGetDataFromIDListW -> E_FAIL (no shell namespace backing PIDL data)");
+    return (long)0x80004005; /* E_FAIL — honest */
+}
 __attribute__((ms_abi)) int mw_GetNumberFormatW(uint32_t locale, uint32_t flags, const uint16_t* value,
         const void* fmt, uint16_t* buf, int cch) {
     (void)locale; (void)flags; (void)fmt;
@@ -36894,6 +37153,20 @@ ENTRY("msvcrt.dll", "wctype", mw_wctype),
     ENTRY("shlwapi.dll", "SHGetValueW",                         mw_SHGetValueW), /* SWEEP-023 SW-995 */
     ENTRY("shlwapi.dll", "SHGetValueA",                         mw_SHGetValueA), /* SWEEP-023 SW-995 */
     ENTRY("shlwapi.dll", "PathFindFileNameA",                   mw_PathFindFileNameA), /* SWEEP-014 r2 */
+    /* SW-1372 (SWEEP-081, notepad2-mod): shlwapi string/path batch */
+    ENTRY("shlwapi.dll", "StrCpyW",                             mw_StrCpyW),
+    ENTRY("shlwapi.dll", "StrCpyNW",                            mw_StrCpyNW),
+    ENTRY("shlwapi.dll", "StrCatW",                             mw_StrCatW),
+    ENTRY("shlwapi.dll", "StrNCatW",                            mw_StrNCatW),
+    ENTRY("shlwapi.dll", "StrCatBuffW",                         mw_StrCatBuffW),
+    ENTRY("shlwapi.dll", "StrCatBuffA",                         mw_StrCatBuffA),
+    ENTRY("shlwapi.dll", "PathIsPrefixW",                       mw_PathIsPrefixW),
+    ENTRY("shlwapi.dll", "PathCommonPrefixW",                   mw_PathCommonPrefixW),
+    ENTRY("shlwapi.dll", "PathRenameExtensionW",                 mw_PathRenameExtensionW),
+    ENTRY("shlwapi.dll", "PathQuoteSpacesW",                     mw_PathQuoteSpacesW),
+    ENTRY("shlwapi.dll", "PathUnquoteSpacesW",                   mw_PathUnquoteSpacesW),
+    ENTRY("shlwapi.dll", "PathUnExpandEnvStringsW",               mw_PathUnExpandEnvStringsW),
+    ENTRY("shlwapi.dll", "PathRelativePathToW",                   mw_PathRelativePathToW),
 
     /* ---- SWEEP-012 honest batch #2 (program-count driven; see block above) ---- */
     /* dialog protocol (autoruns64/procexp64/procmon64/coreinfo64/diskmon64) */
@@ -37416,6 +37689,9 @@ ENTRY("msvcrt.dll", "wctype", mw_wctype),
     ENTRY("ADVAPI32.DLL", "RegSetValueW",                       mw_RegSetValueW),
     ENTRY("advapi32.dll", "RegSetValueW",                       mw_RegSetValueW),
     ENTRY("KERNEL32.DLL", "GetPrivateProfileIntW",              mw_GetPrivateProfileIntW),
+    /* SW-1372 (SWEEP-081): PrivateProfile section family (notepad2-mod) */
+    ENTRY("KERNEL32.DLL", "GetPrivateProfileSectionW",           mw_GetPrivateProfileSectionW),
+    ENTRY("KERNEL32.DLL", "WritePrivateProfileSectionW",          mw_WritePrivateProfileSectionW),
     ENTRY("KERNEL32.DLL", "GetPrivateProfileStringW",           mw_GetPrivateProfileStringW),
     ENTRY("KERNEL32.DLL", "GetNumberFormatW",                   mw_GetNumberFormatW),
     ENTRY("USER32.DLL", "EnumChildWindows",                     mw_EnumChildWindows),
@@ -38271,6 +38547,9 @@ ENTRY("GDI32.DLL", "GetCharacterPlacementW",                mw_GetCharacterPlace
     ENTRY("SHELL32.DLL", "DragAcceptFiles",                     mw_DragAcceptFiles),
     ENTRY("SHELL32.DLL", "DragQueryPoint",                      mw_DragQueryPoint),
     ENTRY("SHELL32.DLL", "ILFindLastID",                        mw_ILFindLastID),
+    /* SW-1372 (SWEEP-081, notepad2-mod): shell32 create-dir + PIDL data */
+    ENTRY("SHELL32.DLL", "SHCreateDirectoryExW",                 mw_SHCreateDirectoryExW),
+    ENTRY("SHELL32.DLL", "SHGetDataFromIDListW",                  mw_SHGetDataFromIDListW),
     /* -- SWEEP-050 Train 3: wordpad.exe SW-1258 tail (honest) -- */
     ENTRY("msvcrt.dll", "_vsnwprintf",                          mw__vsnwprintf),
     ENTRY("msvcrt.dll", "_resetstkoflw",                        mw__resetstkoflw),
@@ -38516,6 +38795,14 @@ ENTRY("GDI32.DLL", "GetCharacterPlacementW",                mw_GetCharacterPlace
     ENTRY("WININET.dll", "InternetCrackUrlW",                   mw_InternetCrackUrlW),
     ENTRY("USER32.dll", "IsCharAlphaNumericW",                  mw_IsCharAlphaNumericW),
     ENTRY("USER32.dll", "IsCharAlphaW",                         mw_IsCharAlphaW),
+    /* SW-1372 (SWEEP-081): IsChar A-variants + UpperW + MessageBoxExW/DrawAnimatedRects (notepad2-mod) */
+    ENTRY("USER32.dll", "IsCharLowerA",                         mw_IsCharLowerA),
+    ENTRY("USER32.dll", "IsCharLowerW",                         mw_IsCharLowerW),
+    ENTRY("USER32.dll", "IsCharUpperA",                         mw_IsCharUpperA),
+    ENTRY("USER32.dll", "IsCharUpperW",                         mw_IsCharUpperW),
+    ENTRY("USER32.dll", "IsCharAlphaNumericA",                   mw_IsCharAlphaNumericA),
+    ENTRY("USER32.dll", "MessageBoxExW",                         mw_MessageBoxExW),
+    ENTRY("USER32.dll", "DrawAnimatedRects",                     mw_DrawAnimatedRects),
     ENTRY("SensApi.dll", "IsDestinationReachableW",             mw_IsDestinationReachableW),
     ENTRY("SensApi.dll", "IsNetworkAlive",                      mw_IsNetworkAlive),
     ENTRY("ADVAPI32.dll", "IsTextUnicode",                      mw_IsTextUnicode),
@@ -39086,6 +39373,11 @@ static int load_pe(const char* filepath) {
                     /* SWEEP-029: winmergeu SHELL32/SHLWAPI raw ordinals */
                     { "SHELL32", 155, "SHCreateDirectory" },
                     { "SHELL32", 701, "CDefFolderMenu_Create2" },
+                    /* SW-1372 (SWEEP-081): notepad2-mod SHELL32.180 —
+                     * wine shell32.spec: 179=SHGetDataFromIDListA,
+                     * 180=SHGetDataFromIDListW (same exe imports the W name
+                     * beside it, the classic lib-by-ordinal duplicate). */
+                    { "SHELL32", 180, "SHGetDataFromIDListW" },
                     { "SHLWAPI", 2,   "ParseURLW" },
                     { "SHLWAPI", 12,  "SHCreateMemStream" },
                     /* SWEEP-050 Train 2: Everything SHELL32.16 (wine spec
@@ -40988,6 +41280,32 @@ static const struct { const char* n; uint32_t b; } g_api32_arity[] = {
     { "MessageBeep", 4 },
     { "MessageBoxA", 16 },
     { "MessageBoxW", 16 },
+    /* SW-1372 (SWEEP-081): x86 stdcall arities for the notepad2-mod batch */
+    { "MessageBoxExA", 20 },
+    { "MessageBoxExW", 20 },
+    { "DrawAnimatedRects", 16 },
+    { "IsCharLowerA", 4 },
+    { "IsCharLowerW", 4 },
+    { "IsCharUpperA", 4 },
+    { "IsCharUpperW", 4 },
+    { "IsCharAlphaNumericA", 4 },
+    { "SHCreateDirectoryExW", 12 },
+    { "SHGetDataFromIDListW", 20 },
+    { "StrCpyW", 8 },
+    { "StrCpyNW", 12 },
+    { "StrCatW", 8 },
+    { "StrNCatW", 12 },
+    { "StrCatBuffW", 12 },
+    { "StrCatBuffA", 12 },
+    { "PathIsPrefixW", 8 },
+    { "PathCommonPrefixW", 12 },
+    { "PathRenameExtensionW", 8 },
+    { "PathQuoteSpacesW", 4 },
+    { "PathUnquoteSpacesW", 4 },
+    { "PathUnExpandEnvStringsW", 12 },
+    { "PathRelativePathToW", 20 },
+    { "GetPrivateProfileSectionW", 16 },
+    { "WritePrivateProfileSectionW", 12 },
     { "MonitorFromRect", 8 },
     { "MonitorFromWindow", 8 },
     { "MoveWindow", 24 },

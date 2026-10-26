@@ -1,0 +1,15 @@
+name	npp64
+arch	x64
+desc	Notepad++ 8.9.8.1 x64 portable (user-named base app #3)
+source_url	https://github.com/Notepad-/Notepad--releases (portable x64 zip 8.9.8.1)
+source_sha256	beddf5548e75c97930d1575ba1c7d113e6e2b33d0a200310e734ca08e225f414
+artifact	artifacts/sweep080/dl/npp.portable.x64.zip
+unpack	zip
+exe	notepad++.exe
+args	
+runs	3
+timeout	90
+keys	65,66,13
+mouse	150,150
+known	SW-1298-x64 SW-1371 SW-1360
+note	past RegisterClass+children; crash inside guest class proc [rcx+0x20] (SW-1298-x64)
