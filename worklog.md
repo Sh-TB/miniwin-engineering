@@ -255,3 +255,26 @@ final engine sha256 4f9cc889...? — see evidence/sweep082/engine_sha256.txt.
 Evidence: evidence/sweep082/; ledger rows tagged sweep082 in plugins/status.tsv.
 Next wagons: npp64 interactive probes (menus/tabs/edit), tcpview64 toolbar loop
 (SW-1386-tail), winnc unpacked payload route, everything poll loop.
+
+---
+Task ID: SWEEP-083
+Agent: main (z.ai)
+Task: «ادامه بده تا تکمیل شدن» — elephant train: o32/SEH class fix set, new program (mines), gates, push
+
+Work Log:
+- Baseline: origin==local 9bc8009; G1 PIN 12/12 clean build 4f9cc889; trio re-verified via plugin runner (npp64 PASS_INPUT_STATE_CHANGE x3, idman PASS_LAUNCH_RENDER x3, winrar parity) — zero regressions.
+- SW-1387 decode: winnc `66 81 c7 ef 00` executed by the 32-bit-only grp1 0x81 handler (imm32 read, 7 bytes consumed, eip landed on modrm byte 0xe7 -> PE32-FATAL rc=86 "opcode not implemented (step2)"). Added the o32 modrm-group plane (grp1 81/83 imm16, ALU r/m<->r family, mov 89/8B, test 85, imul 69/6B, shifts C1/D1/D3, grp3 F7) — one pre-dispatch, 32-bit cases untouched.
+- SW-1388: winnc esp drift +32 decoded to MISSING "InitializeCriticalSection" in the g_api32_arity table (fallback arity 32; Delphi lazy-helper ret consumed the installed SEH handler slot). Audited all 883 entries vs canonical stdcall sizes: 0 wrong, 18 missing added.
+- SW-1389: GetSystemInfo wrote the 48-byte x64 SYSTEM_INFO through a 32-bit pointer — offset 36 (granularity 0x10000) landed on the saved return address (ret to 0x10000). Bitness-aware 36-byte x86 layout (t_cpu32_live || g_image_base32 — top-level runs never arm t_cpu32_live; fwd-decl added).
+- SW-1390: FNCLEX/FNINIT (DB E2/E3, reg field 4) had reg==7 checks — never fired. Real DB mod3 group + FUCOMI/FCOMI + FWAIT(0x9B).
+- SW-1391: modrm_apply_seg not idempotent (NEEDM + LD_RorM* double-applied FS base; padding-lea corrupted a copy source). seg_applied flag; LEA now strips the base it must ignore.
+- SW-1392: full i386 SEH dispatch — RaiseException no longer returns (guest-scratch ER+CONTEXT, FS:[0] walk, CDECL handlers on the guest stack, disposition protocols); RtlUnwind = normal stdcall call that unwinds above-target and RETURNS (guest passed TargetIp=RA as formality; post-unwind code reads the handler's own frame); MW32_SEH_RESUME_CODE pump-stop through nested pumps; SW-1392e: push %fs:[0] read 2*fsbase -> every SEH frame registered prev=0 -> chain collapsed (fixed by the idempotence flag).
+- SW-1394 (renamer): 0F AE /3 mislabeled fence (stmxcsr), /2 ldmxcsr refused. Real 0F AE group (fxsave/fxrstor/ldmxcsr/stmxcsr/fences).
+- NEW plugin mines (Simon Tatham puzzle collection, SWEEP-072 A-group U10, official zip sha a5b00f63): PASS_INPUT_STATE_CHANGE FIRST RUN (rc=0 x3, 6 frames/3 uniq).
+- Gates: corpus 3x 21/21 GREEN zero regressions; G1 post-fix 12/12 (80bca026); evidence/sweep083 curated (summary.md + frontier stderrs + ledger rows); commit af624e3 PUSHED (fast-forward 9bc8009..af624e3, no force); Issue #1 comment 6426184495 posted.
+
+Stage Summary:
+- winnc: 551 -> 14556 steps; SEH chain + dispatch + unwind + Delphi finally machinery reached for the first time in engine history. Frontier SW-1393: Delphi finally-retry router (call *[node+4]+5 -> 0x4a8a2c -> jmp 0x4a899b) re-entry contract.
+- renamer: interpreter abort -> clean guest RunError(204) exit.
+- mines: new-program first-run PASS — the collection is a high-yield battery for future trains.
+- Next wagons: SW-1393 router decode, renamer rc=204 pre-render path, notepad2mod x64 early-exit, everything/tcpview64 poll loops, more A-group puzzles as new-program wagons.
