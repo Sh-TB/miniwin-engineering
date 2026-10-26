@@ -105,6 +105,14 @@ static __attribute__((ms_abi)) long long mw_wndproc32_shim(void* hwnd, uint32_t 
 static uint32_t mw32_stdcall_arity(const char* name);
 static int g_arity_found; /* SW-1358b: found-flag for the arity lookup (def near the table) */
 static int cpu32_step2(uint8_t op, int o32, int arep, int frep);
+static int cpu32_step_o32(uint8_t op); /* SW-1387: 66-prefixed modrm-group plane */
+static uint32_t g_image_base32; /* SW-1297 (fwd for mw_GetSystemInfo SW-1389) */
+static __thread int t_cpu32_live; /* fwd: defined with MwCpu32 (SW-1389) */
+#define MW32_SEH_RESUME_CODE 0x7FFFFFFEu /* SW-1392: pump stop = SEH resumed elsewhere */
+static int mw32_i386_seh_raise(uint32_t code, uint32_t flags, uint32_t nargs,
+                               uint32_t args_va, uint32_t ret_addr);
+static int mw32_i386_seh_unwind(uint32_t target_frame, uint32_t target_ip,
+                                uint32_t er_arg, uint32_t retval);
 static long long mw_call_cb2(void* proc, uintptr_t a0, intptr_t a1); /* SW-1354e fwd */
 static long long mw_call_cb4(void* proc, uintptr_t a0, uintptr_t a1, uintptr_t a2, intptr_t a3); /* SW-1354e fwd */
 static int cpu32_sse2(uint8_t pfx, uint8_t op2);
@@ -9616,6 +9624,32 @@ __attribute__((ms_abi)) int mw_GlobalMemoryStatusEx(void* ms) {
 __attribute__((ms_abi)) void mw_GetSystemInfo(void* si) {
     MW_TRACE("GetSystemInfo()");
     if (!si) return;
+    if (t_cpu32_live || g_image_base32) { /* SW-1389: i386 plane (top-level
+        runs never set t_cpu32_live — arm on the PE32 world instead) */
+        /* SW-1389 (winnc): the i386 plane must get the 36-BYTE x86
+         * SYSTEM_INFO. The old code wrote the 48-byte x64 layout through
+         * the guest's 32-bit pointer — offset 36 (dwAllocationGranularity
+         * =65536) landed exactly on the caller's saved return address
+         * (winnc wrapper 0x40f570: `add esp,-0x24; push esp; call
+         * GetSystemInfo; mov eax,[esp+0x14]; add esp,0x24; ret`) -> the
+         * epilogue ret jumped to 0x00010000 -> SIGSEGV. x86 layout:
+         * arch-union@0, pageSize@4, min/max@8/0xc, mask@0x10,
+         * numProcessors@0x14, processorType@0x18, granularity@0x1c,
+         * level/revision@0x20/0x22. */
+        uint8_t* p = (uint8_t*)si;
+        *(uint16_t*)(p + 0)  = 0;          /* wProcessorArchitecture = INTEL */
+        *(uint16_t*)(p + 2)  = 0;          /* wReserved */
+        *(uint32_t*)(p + 4)  = 4096;       /* dwPageSize */
+        *(uint32_t*)(p + 8)  = 0x10000;    /* lpMinimumApplicationAddress */
+        *(uint32_t*)(p + 12) = 0x7FFFFFFE; /* lpMaximumApplicationAddress */
+        *(uint32_t*)(p + 16) = 1;          /* dwActiveProcessorMask */
+        *(uint32_t*)(p + 20) = (uint32_t)sysconf(_SC_NPROCESSORS_ONLN);
+        *(uint32_t*)(p + 24) = 586;        /* dwProcessorType = PENTIUM */
+        *(uint32_t*)(p + 28) = 65536;      /* dwAllocationGranularity */
+        *(uint16_t*)(p + 32) = 6;          /* wProcessorLevel */
+        *(uint16_t*)(p + 34) = 0x0101;     /* wProcessorRevision */
+        return;
+    }
     memset(si, 0, 48);
     uint8_t* p = (uint8_t*)si;
     *(uint16_t*)(p + 0)  = 9;          /* wProcessorArchitecture = AMD64 */
@@ -40891,14 +40925,39 @@ static const struct { const char* n; uint32_t b; } g_api32_arity[] = {
     { "OpenMutexA", 12 },
     { "CreateEventA", 16 },
     { "CreateMutexA", 12 },
+    { "CreateMutexW", 12 },
+    { "CreateSemaphoreA", 16 },
     { "DeleteCriticalSection", 4 },
     { "EnterCriticalSection", 4 },
+    { "GetFileTime", 16 },
+    { "HeapDestroy", 4 },
+    { "HeapValidate", 12 },
+    /* SW-1388 (winnc): plain InitializeCriticalSection was MISSING here ->
+     * non-CRT fallback arity MW32_ARITY_DEFAULT(32) -> the gate over-popped
+     * 28 bytes after every CS init during Delphi SysUtils init -> the whole
+     * rest of init ran with esp=true+32 -> the helper's ret consumed the
+     * installed SEH handler slot (0x409482) -> Delphi except-handler entered
+     * with ER*=[esp+4]=0 -> test [0+4] host SIGSEGV. */
+    { "InitializeCriticalSection", 4 },
     { "InitializeCriticalSectionAndSpinCount", 8 },
     { "InitializeCriticalSectionEx", 12 },
+    { "InterlockedCompareExchange", 12 },
+    { "InterlockedExchangeAdd", 8 },
+    { "IsBadCodePtr", 4 },
+    { "IsBadStringPtrA", 8 },
+    { "IsBadWritePtr", 8 },
     { "LeaveCriticalSection", 4 },
+    { "LocalLock", 4 },
+    { "LocalUnlock", 4 },
+    { "MoveFileA", 8 },
+    { "MoveFileW", 8 },
     { "OpenEventA", 12 },
+    { "ReleaseSemaphore", 12 },
     { "ResetEvent", 4 },
+    { "SetCurrentDirectoryW", 4 },
     { "SetEvent", 4 },
+    { "VirtualLock", 8 },
+    { "VirtualUnlock", 8 },
     { "SleepEx", 8 },
     { "WaitForSingleObject", 8 },
     { "SleepConditionVariableCS", 12 },
@@ -41679,13 +41738,14 @@ static inline uint32_t m32_push(uint32_t v) { t_cpu32.r[ESPi] -= 4; m32_st32(t_c
 static inline uint32_t m32_pop(void)        { uint32_t v = m32_ld32(t_cpu32.r[ESPi]); t_cpu32.r[ESPi] += 4; return v; }
 
 /* ---------------- ModRM / SIB ---------------- */
-typedef struct { int mod, reg, rm; uint32_t ea; int is_reg; } ModRM;
+typedef struct { int mod, reg, rm; uint32_t ea; int is_reg; int seg_applied; } ModRM;
 static int g_segreg_ovr = -1; /* -1 none, else fs(4)/gs(5) base selector marker */
 
 static void modrm_decode(ModRM* m) {
     uint8_t op = m32_ld8(t_cpu32.eip);
     t_cpu32.eip++;
     m->mod = op >> 6; m->reg = (op >> 3) & 7; m->rm = op & 7;
+    m->seg_applied = 0; /* SW-1392e: reset per decode (apply_seg idempotence) */
     if (m->mod == 3) { m->is_reg = 1; m->ea = m->rm; return; }
     m->is_reg = 0;
     uint32_t base = 0, disp = 0; int have_disp = 0;
@@ -41709,7 +41769,14 @@ static void modrm_decode(ModRM* m) {
 
 /* apply segment override to an EA (called when prefix seen) */
 static void modrm_apply_seg(ModRM* m) {
-    if (!m->is_reg) {
+    /* SW-1392e (winnc): idempotent. NEEDM() applies the override, then the
+     * LD_RorM* helpers applied it AGAIN — `push %fs:(%eax)` (the Delphi SEH
+     * install `push fs:[0]`) read 2*fsbase = heap zero instead of the chain
+     * head, so every SEH frame registered with prev=0 and the whole chain
+     * collapsed to empty at the first try/finally pop -> RaiseException saw
+     * no handler -> "unhandled". */
+    if (!m->is_reg && !m->seg_applied) {
+        m->seg_applied = 1;
         if (g_segreg_ovr == 0) m->ea += t_cpu32.fsbase;
         else if (g_segreg_ovr == 1) m->ea += t_cpu32.gsbase;
     }
@@ -41997,6 +42064,24 @@ static uint32_t mw32_api_gate(uint32_t slot_index) {
             ret = (uint32_t)f((uint16_t*)(uintptr_t)a[0], (const uint16_t*)(uintptr_t)a[1],
                               (void*)(uintptr_t)a[2]);
         }
+    } else if (g_image_base32 && strcmp(s->name, "RaiseException") == 0) {
+        /* SW-1392: real x86 SEH dispatch. RaiseException NEVER returns on
+         * Windows — it walks FS:[0] and either resumes elsewhere or dies.
+         * The old flow returned to the guest, whose unreachable `ret` after
+         * the call executed heap garbage (winnc eip=0x1112a680). */
+        mw32_i386_seh_raise((uint32_t)a[0], (uint32_t)a[1], (uint32_t)a[2],
+                            (uint32_t)a[3], ret_addr);
+        return ret_addr; /* resumed: exit_req carries MW32_SEH_RESUME_CODE */
+    } else if (g_image_base32 && strcmp(s->name, "RtlUnwind") == 0) {
+        /* SW-1392: x86 RtlUnwind — unwind frames above the target, then
+         * RETURN normally to the handler (it owns the resume). */
+        mw32_i386_seh_unwind((uint32_t)a[0], (uint32_t)a[1], (uint32_t)a[2],
+                             (uint32_t)a[3]);
+        if (g_cpu32_exit_req == MW32_SEH_RESUME_CODE) return ret_addr;
+        t_cpu32.r[ESPi] += (s->arity == 0xFFFFFFFFu) ? 32 : s->arity;
+        t_cpu32.r[EAXi] = 0;
+        t_cpu32.eip = ret_addr;
+        return ret_addr;
     } else {
         mw32_fn16_t fn = (mw32_fn16_t)(void*)s->fn;
         if (!fn) { fprintf(stderr, "[PE32] slot '%s' has NULL fn\n", s->name); exit(3); }
@@ -42136,6 +42221,13 @@ static uint32_t cpu32_call(uint32_t eip, int nargs, const uint32_t* args) {
     t_cpu32.eflags = 0x202;
     int exit_save = g_cpu32_exit_req; g_cpu32_exit_req = 0;
     cpu32_run(0); /* budget 0 = unbounded; returns on sentinel/exit */
+    if (g_cpu32_exit_req == MW32_SEH_RESUME_CODE) {
+        /* SW-1392: an SEH unwind resumed the guest elsewhere — the resume
+         * state in t_cpu32 must SURVIVE; skip the restore and let the
+         * sentinel ride up through the shim chain via exit_req. */
+        g_cpu32_exit_req = exit_save; t_cpu32_live = live;
+        return t_cpu32.r[EAXi];
+    }
     uint32_t rv = t_cpu32.r[EAXi];
     int code = g_cpu32_exit_req; g_cpu32_exit_req = exit_save;
     t_cpu32 = save; t_cpu32_live = live;
@@ -42229,10 +42321,21 @@ restart_prefix:
     /* API gate */
     if ((t_cpu32.eip - 1) == MW32_GATE_VA) {
         mw32_api_gate(t_cpu32.r[EAXi]);
+        /* SW-1392: an SEH unwind/continue-execution rewrote the guest state
+         * mid-gate; the pump must stop so the top loop re-enters at the new
+         * eip (the sentinel rides up through nested pumps via exit_req). */
+        if (g_cpu32_exit_req == MW32_SEH_RESUME_CODE) return (int)MW32_SEH_RESUME_CODE;
         return g_cpu32_exit_req ? -1 : 0;
     }
     /* sentinel return -> callback frame complete */
     if ((t_cpu32.eip - 1) == MW32_RET_SENTINEL) return -1;
+
+    /* SW-1387: 66-prefixed modrm-group opcodes (grp1 imm, ALU r/m<->r,
+     * mov/test r/m, imul-imm, shift groups, grp3) run the 16-bit plane
+     * here. SW-1385/1386 already cover B8-BF, C7 and the accumulator
+     * family inline below; those opcodes are NOT claimed by this plane
+     * (returns 0) and fall through to the normal 32-bit dispatch. */
+    if (!o32 && cpu32_step_o32(op)) { g_cpu32_steps++; return 0; }
 
     ModRM m; int have_m = 0;
 #define NEEDM() do { if (!have_m) { modrm_decode(&m); modrm_apply_seg(&m); have_m = 1; } } while (0)
@@ -42450,10 +42553,17 @@ restart_prefix:
         }
         break; }
     case 0xC6: { NEEDM(); ST_RorM8(m32_ld8(t_cpu32.eip)); t_cpu32.eip += 1; break; }
-    case 0x8D: { /* LEA r32, m */
+    case 0x8D: { /* LEA r32, m — SW-1391 (winnc): segment prefixes are
+        * IGNORED by LEA on real hardware. The guest's `64 66 8d 80 00 00
+        * 00 00` (fs: lea ax,[eax+0] — a compiler padding-lea) got +0x10000000
+        * (FS base) applied by modrm_apply_seg, corrupting a copy source
+        * pointer 0x3fefed9c -> 0x4fefed9c -> movups host SIGSEGV. Undo the
+        * base that NEEDM already added. */
         NEEDM();
         if (m.is_reg) cpu32_fatal("LEA r,r (invalid)", op, t_cpu32.eip);
-        R32(m.reg) = m.ea;
+        uint32_t segbase = (g_segreg_ovr == 0) ? t_cpu32.fsbase
+                         : (g_segreg_ovr == 1) ? t_cpu32.gsbase : 0;
+        R32(m.reg) = m.ea - segbase;
         break; }
     case 0x8C: { NEEDM(); ST_RorM32(0x23); break; } /* mov r/m, Sreg: fake flat data selector */
     case 0x8E: { NEEDM(); (void)LD_RorM32(); break; } /* mov Sreg, r/m: ignore (flat) */
@@ -42557,7 +42667,34 @@ restart_prefix:
         case 0xC1: { NEEDM(); uint32_t d = LD_RorM32(); uint32_t s = R32(m.reg); ST_RorM32(alu_add32(d, s, 0)); R32(m.reg) = d; break; } /* xadd 32 */
         case 0xB0: { NEEDM(); uint8_t d = LD_RorM8(); uint8_t s = (m.reg < 4) ? (uint8_t)R32(m.reg) : (uint8_t)(R32(m.reg - 4) >> 8); uint8_t r2 = alu_sub8(d, s, 0); ST_RorM8(r2); break; } /* cmpxchg8 simplified (no cmp first) */
         case 0xB1: { NEEDM(); uint32_t d = LD_RorM32(); uint32_t s = R32(m.reg); ST_RorM32(alu_sub32(d, s, 0)); break; } /* cmpxchg32 simplified */
-        case 0xAE: { NEEDM(); if (m.reg == 5 || m.reg == 3) { /* lfence/mfence */ break; } cpu32_fatal("0F AE /r", op2, t_cpu32.eip); break; }
+        case 0xAE: { NEEDM();
+            /* SW-1394 (renamer): real 0F AE group. The old code treated
+             * /3 as a fence (it is stmxcsr) and refused /2 entirely —
+             * Delphi's CPU-detect runs `ldmxcsr -0x4(%ebp)` (0x404248)
+             * during CRT init -> [PE32-FATAL] rc=86. Intel map: /0 fxsave,
+             * /1 fxrstor, /2 ldmxcsr, /3 stmxcsr, /4 xsave, /5 lfence,
+             * /6 xrstor|mfence, /7 sfence. */
+            static uint32_t g_mxcsr = 0x1F80u; /* default: all masks on */
+            switch (m.reg) {
+            case 0: { /* fxsave m512: FCW/FSW/MXCSR honest, rest zero */
+                m32_st16(m.ea, t_cpu32.fcw);
+                m32_st16(m.ea + 2, t_cpu32.fsw);
+                for (int off = 4; off < 512; off += 4)
+                    m32_st32((uint32_t)(m.ea + off), 0);
+                m32_st32(m.ea + 0x18, g_mxcsr);
+                break; }
+            case 1: g_mxcsr = m32_ld32(m.ea + 0x18); break;      /* fxrstor: take MXCSR */
+            case 2: g_mxcsr = LD_RorM32(); break;                /* ldmxcsr m32 */
+            case 3: if (!m.is_reg) { m32_st32(m.ea, g_mxcsr); break; }
+                    cpu32_fatal("0F AE /3 mod3", op2, t_cpu32.eip); break;
+            case 5: break;                                       /* lfence */
+            case 6: if (m.is_reg) break;                         /* mfence */
+                    cpu32_fatal("0F AE /6 xrstor", op2, t_cpu32.eip); break;
+            case 7: if (m.is_reg) break;                         /* sfence */
+                    cpu32_fatal("0F AE /7", op2, t_cpu32.eip); break;
+            default: cpu32_fatal("0F AE /r", op2, t_cpu32.eip); break;
+            }
+            break; }
         /* ---- SSE2 scalar subset (prefix-dependent) ---- */
         case 0x10: case 0x11: case 0x28: case 0x29: case 0x2A: case 0x2C: case 0x2D:
         case 0x2E: case 0x2F: case 0x51: case 0x54: case 0x55: case 0x56: case 0x57:
@@ -42583,6 +42720,149 @@ restart_prefix:
     return 0;
 }
 
+
+/* SW-1387: o32 (0x66) modrm-group plane. Root cause (WinNc SW-1374):
+ * `66 81 c7 ef 00` (add di,0xef) was executed by the 32-bit-only grp1
+ * case 0x81 which reads imm32 — it consumed 7 bytes instead of 5 and
+ * landed eip mid-instruction, where the modrm byte (0xe7) was fetched
+ * as an opcode -> [PE32-FATAL] rc=86. The whole modrm imm-group + ALU
+ * r/m<->r family + mov/test/imul/shift/grp3 groups were in the same
+ * class (only B8-BF/C7/accumulator-ALU were o32-aware since SW-1385/86).
+ * 16-bit semantics: result written back to the low 16 bits of the
+ * 32-bit register (upper bits preserved, Intel contract), imm16 read
+ * as 2 bytes, flags via the alu_*16 helpers. Returns 1 = executed,
+ * 0 = opcode not claimed (caller falls through). */
+static int cpu32_step_o32(uint8_t op) {
+    ModRM m; int have_m = 0;
+    switch (op) {
+    /* ---- grp1 ALU r/m16, r16 (add/or/adc/sbb/and/sub/xor/cmp) ---- */
+    case 0x01: case 0x09: case 0x11: case 0x19:
+    case 0x21: case 0x29: case 0x31: case 0x39: {
+        NEEDM(); uint16_t v = LD_RorM16(), r2 = v;
+        switch ((op >> 3) & 7) {
+        case 0: r2 = alu_add16(v, (uint16_t)R32(m.reg), 0); break;
+        case 1: r2 = alu_logic16(v | (uint16_t)R32(m.reg)); break;
+        case 2: r2 = alu_add16(v, (uint16_t)R32(m.reg), f_get(F_CF)); break;
+        case 3: r2 = alu_sub16(v, (uint16_t)R32(m.reg), f_get(F_CF)); break;
+        case 4: r2 = alu_logic16(v & (uint16_t)R32(m.reg)); break;
+        case 5: r2 = alu_sub16(v, (uint16_t)R32(m.reg), 0); break;
+        case 6: r2 = alu_logic16(v ^ (uint16_t)R32(m.reg)); break;
+        case 7: alu_sub16(v, (uint16_t)R32(m.reg), 0); r2 = v; break;
+        }
+        if ((((op >> 3) & 7) & 7) != 7) ST_RorM16(r2);
+        break; }
+    /* ---- grp1 ALU r16, r/m16 ---- */
+    case 0x03: case 0x0B: case 0x13: case 0x1B:
+    case 0x23: case 0x2B: case 0x33: case 0x3B: {
+        NEEDM(); uint16_t v = LD_RorM16(), r2;
+        switch ((op >> 3) & 7) {
+        case 0: r2 = alu_add16((uint16_t)R32(m.reg), v, 0); break;
+        case 1: r2 = alu_logic16((uint16_t)R32(m.reg) | v); break;
+        case 2: r2 = alu_add16((uint16_t)R32(m.reg), v, f_get(F_CF)); break;
+        case 3: r2 = alu_sub16((uint16_t)R32(m.reg), v, f_get(F_CF)); break;
+        case 4: r2 = alu_logic16((uint16_t)R32(m.reg) & v); break;
+        case 5: r2 = alu_sub16((uint16_t)R32(m.reg), v, 0); break;
+        case 6: r2 = alu_logic16((uint16_t)R32(m.reg) ^ v); break;
+        case 7: alu_sub16((uint16_t)R32(m.reg), v, 0); r2 = (uint16_t)R32(m.reg); break;
+        }
+        R32(m.reg) = (R32(m.reg) & 0xFFFF0000u) | r2;
+        break; }
+    /* ---- grp1 imm16: 81 /r, iw ---- */
+    case 0x81: {
+        NEEDM(); uint8_t sub = (uint8_t)m.reg;
+        uint16_t imm = m32_ld16(t_cpu32.eip); t_cpu32.eip += 2;
+        uint16_t v = LD_RorM16(), r2 = v;
+        switch (sub & 7) {
+        case 0: r2 = alu_add16(v, imm, 0); break;
+        case 1: r2 = alu_logic16(v | imm); break;
+        case 2: r2 = alu_add16(v, imm, f_get(F_CF)); break;
+        case 3: r2 = alu_sub16(v, imm, f_get(F_CF)); break;
+        case 4: r2 = alu_logic16(v & imm); break;
+        case 5: r2 = alu_sub16(v, imm, 0); break;
+        case 6: r2 = alu_logic16(v ^ imm); break;
+        case 7: alu_sub16(v, imm, 0); r2 = v; break;
+        }
+        if ((sub & 7) != 7) ST_RorM16(r2);
+        break; }
+    /* ---- grp1 imm8 sign-extended to 16: 83 /r, ib ---- */
+    case 0x83: {
+        NEEDM(); uint8_t sub = (uint8_t)m.reg;
+        uint16_t imm = (uint16_t)(int16_t)(int8_t)m32_ld8(t_cpu32.eip); t_cpu32.eip += 1;
+        uint16_t v = LD_RorM16(), r2 = v;
+        switch (sub & 7) {
+        case 0: r2 = alu_add16(v, imm, 0); break;
+        case 1: r2 = alu_logic16(v | imm); break;
+        case 2: r2 = alu_add16(v, imm, f_get(F_CF)); break;
+        case 3: r2 = alu_sub16(v, imm, f_get(F_CF)); break;
+        case 4: r2 = alu_logic16(v & imm); break;
+        case 5: r2 = alu_sub16(v, imm, 0); break;
+        case 6: r2 = alu_logic16(v ^ imm); break;
+        case 7: alu_sub16(v, imm, 0); r2 = v; break;
+        }
+        if ((sub & 7) != 7) ST_RorM16(r2);
+        break; }
+    case 0x85: { NEEDM(); alu_logic16(LD_RorM16() & (uint16_t)R32(m.reg)); break; } /* test r/m16, r16 */
+    case 0x89: { NEEDM(); ST_RorM16((uint16_t)R32(m.reg)); break; }                  /* mov r/m16, r16 */
+    case 0x8B: { NEEDM(); R32(m.reg) = (R32(m.reg) & 0xFFFF0000u) | LD_RorM16(); break; } /* mov r16, r/m16 */
+    /* ---- imul r16, r/m16, imm (69: imm16 / 6B: imm8 sign-ext) ---- */
+    case 0x69: case 0x6B: {
+        NEEDM();
+        uint16_t v = LD_RorM16();
+        uint16_t imm = (op == 0x69) ? (m32_ld16(t_cpu32.eip), t_cpu32.eip += 2, m32_ld16(t_cpu32.eip - 2))
+                                    : (uint16_t)(int16_t)(int8_t)(m32_ld8(t_cpu32.eip), t_cpu32.eip += 1, m32_ld8(t_cpu32.eip - 1));
+        int32_t p = (int32_t)(int16_t)v * (int32_t)(int16_t)imm;
+        int ov = p != (int32_t)(int16_t)p;
+        f_set(F_CF, ov); f_set(F_OF, ov); f_setzsp16((uint16_t)p);
+        R32(m.reg) = (R32(m.reg) & 0xFFFF0000u) | (uint16_t)p;
+        break; }
+    /* ---- shift groups with 16-bit r/m: C1 ib, D1 (1), D3 (CL) ---- */
+    case 0xC1: case 0xD1: case 0xD3: {
+        NEEDM();
+        unsigned cnt = (op == 0xC1) ? (m32_ld8(t_cpu32.eip), t_cpu32.eip += 1, m32_ld8(t_cpu32.eip - 1))
+                                    : (op == 0xD1) ? 1u : (R32(1) & 0x1Fu);
+        uint16_t v = LD_RorM16(), r2 = v;
+        switch (m.reg) {
+        case 0: { unsigned c = cnt & 15; if (c) { f_set(F_CF, (v >> (16 - c)) & 1); r2 = (uint16_t)((v << c) | (v >> (16 - c))); f_set(F_OF, ((r2 & 1) != (f_get(F_CF)))); } break; } /* rol */
+        case 1: { unsigned c = cnt & 15; if (c) { f_set(F_CF, v & 1); r2 = (uint16_t)((v >> c) | (v << (16 - c))); f_set(F_OF, ((r2 >> 15) & 1) != (f_get(F_CF))); } break; } /* ror */
+        case 2: { unsigned c = cnt & 31; if (c) { uint32_t w = ((uint32_t)f_get(F_CF) << 16) | v; w = (w << c) | (w >> (17 - c)); w &= 0x1FFFFu; r2 = (uint16_t)w; f_set(F_CF, (w >> 16) & 1); } break; } /* rcl */
+        case 3: { unsigned c = cnt & 31; if (c) { uint32_t w = ((uint32_t)f_get(F_CF) << 16) | v; w = (w >> c) | (w << (17 - c)); w &= 0x1FFFFu; r2 = (uint16_t)w; f_set(F_CF, w & 1); } break; } /* rcr */
+        case 4: case 6: r2 = alu_shl16(v, cnt); break;
+        case 5: r2 = alu_shr16(v, cnt); break;
+        case 7: r2 = alu_sar16(v, cnt); break;
+        }
+        ST_RorM16(r2);
+        break; }
+    /* ---- grp3 with 16-bit r/m: F7 ---- */
+    case 0xF7: {
+        NEEDM();
+        switch (m.reg) {
+        case 0: case 1: { uint16_t imm = m32_ld16(t_cpu32.eip); t_cpu32.eip += 2; alu_logic16(LD_RorM16() & imm); break; } /* test rm16, imm16 */
+        case 2: ST_RorM16((uint16_t)~LD_RorM16()); break;                                          /* not */
+        case 3: ST_RorM16(alu_sub16(0, LD_RorM16(), 0)); break;                                    /* neg */
+        case 4: { uint32_t p = (uint32_t)(R32(EAXi) & 0xFFFF) * LD_RorM16();                        /* mul */
+                  R32(EAXi) = (R32(EAXi) & 0xFFFF0000u) | (uint16_t)p;
+                  R32(EDXi) = (R32(EDXi) & 0xFFFF0000u) | (uint16_t)(p >> 16);
+                  f_set(F_CF, (p >> 16) != 0); f_set(F_OF, (p >> 16) != 0); f_setzsp16((uint16_t)p); break; }
+        case 5: { int32_t p = (int32_t)(int16_t)(R32(EAXi) & 0xFFFF) * (int32_t)(int16_t)LD_RorM16(); /* imul */
+                  R32(EAXi) = (R32(EAXi) & 0xFFFF0000u) | (uint16_t)p;
+                  R32(EDXi) = (R32(EDXi) & 0xFFFF0000u) | (uint16_t)((uint32_t)p >> 16);
+                  int ov = p != (int32_t)(int16_t)p; f_set(F_CF, ov); f_set(F_OF, ov); break; }
+        case 6: { uint32_t d = LD_RorM16(); if (!d) cpu32_fatal("div16 by 0", op, t_cpu32.eip);      /* div */
+                  uint32_t n = ((R32(EDXi) & 0xFFFFu) << 16) | (R32(EAXi) & 0xFFFFu);
+                  uint32_t q = n / d; if (q > 0xFFFFu) cpu32_fatal("div16 overflow", op, t_cpu32.eip);
+                  R32(EAXi) = (R32(EAXi) & 0xFFFF0000u) | (uint16_t)q;
+                  R32(EDXi) = (R32(EDXi) & 0xFFFF0000u) | (uint16_t)(n % d); break; }
+        case 7: { int32_t d = (int16_t)LD_RorM16(); if (!d) cpu32_fatal("idiv16 by 0", op, t_cpu32.eip); /* idiv */
+                  int32_t n = (int32_t)((((R32(EDXi) & 0xFFFFu) << 16) | (R32(EAXi) & 0xFFFFu)) & 0xFFFFFFFFu);
+                  int32_t q = n / d; if (q > 32767 || q < -32768) cpu32_fatal("idiv16 overflow", op, t_cpu32.eip);
+                  R32(EAXi) = (R32(EAXi) & 0xFFFF0000u) | (uint16_t)(int16_t)q;
+                  R32(EDXi) = (R32(EDXi) & 0xFFFF0000u) | (uint16_t)(int16_t)(n % d); break; }
+        }
+        break; }
+    default: return 0; /* not claimed -> 32-bit dispatch continues */
+    }
+    return 1;
+}
 
 /* continuation of the opcode dispatch: control flow, shifts, grp3,
  * string ops, flags, x87 (Intel-accurate mod=3 map), SSE2 escape —
@@ -42749,6 +43029,7 @@ static int cpu32_step2(uint8_t op, int o32, int arep, int frep) {
         m32_push(R32b(EBPi)); uint32_t fp = R32b(ESPi);
         if (sz) R32b(ESPi) -= sz; R32b(EBPi) = fp; break; }
     case 0x90: break; /* nop */
+    case 0x9B: break; /* SW-1390b (winnc): FWAIT/WAIT — model is always-sync, no-op */
     case 0x98: { if (o32) R32b(EAXi) = (uint32_t)(int32_t)(int16_t)(R32b(EAXi) & 0xFFFF);
                  else R32b(EAXi) = (R32b(EAXi) & 0xFFFF0000u) | (uint16_t)(int8_t)(uint8_t)R32b(EAXi); break; }
     case 0x99: { if (o32) R32b(EDXi) = ((int32_t)R32b(EAXi) < 0) ? 0xFFFFFFFFu : 0;
@@ -42929,10 +43210,24 @@ static int cpu32_step2(uint8_t op, int o32, int arep, int frep) {
                 default: cpu32_fatal("x87 DD mod3", op, t_cpu32.eip); break;
                 }
                 break;
-            case 0xDB:
-                if (m.reg == 7 && i == 2) break;                                  /* FNCLEX */
-                if (m.reg == 7 && i == 3) { t_cpu32.ftop = 0; t_cpu32.fsw = 0; break; } /* FINIT */
-                cpu32_fatal("x87 DB mod3", op, t_cpu32.eip); break;
+            case 0xDB: /* SW-1390 (winnc): real DB mod=3 group. The old checks
+                * (`m.reg==7 && i==2` FNCLEX / `==7 && i==3` FINIT) never
+                * fired — FNCLEX=DB E2 and FNINIT=DB E3 have reg field 4 —
+                * so every guest FPU re-init died with [PE32-FATAL] rc=86. */
+                if (m.reg == 4) {
+                    switch (i) {
+                    case 0: case 1: case 4: break;                    /* FENI/FDISI/FSETPM: 8087/287 legacy no-ops */
+                    case 2: t_cpu32.fsw = 0; break;                   /* FNCLEX: clear all status */
+                    case 3:                                           /* FNINIT: CW=0x037F, SW=0, tag=empty, top=0 */
+                        t_cpu32.fcw = 0x037F; t_cpu32.fsw = 0; t_cpu32.ftop = 0;
+                        for (int k = 0; k < 8; k++) t_cpu32.freg[k] = 0;
+                        break;
+                    default: cpu32_fatal("x87 DB mod3", op, t_cpu32.eip); break;
+                    }
+                } else if ((m.reg == 5 || m.reg == 6) && 1) {          /* FUCOMI / FCOMI st(0), st(i) */
+                    fpu_compare(fpu_st(0), fpu_st(i));                 /* same C0/C2/C3 + ZF/PF/CF contract */
+                } else cpu32_fatal("x87 DB mod3", op, t_cpu32.eip);
+                break;
             case 0xDA:
                 if (m.reg == 5 && i == 1) { /* FUCOMIP (DA E9) */
                     fpu_compare(fpu_st(0), fpu_st(1)); fpu_popv(); break; }
@@ -43324,6 +43619,153 @@ static int cpu32_run(uint64_t max_steps) {
         n++;
         if (rc != 0) return rc;
     }
+}
+
+/* ---------------- SW-1392: i386 SEH dispatch ----------------
+ * Windows RaiseException NEVER returns: it walks the FS:[0] chain calling
+ * each frame's handler CDECL ON THE GUEST STACK with (ER, frame, ctx, dc),
+ * then either resumes at ExceptionAddress (ContinueExecution) or — the
+ * Delphi/MSVC except pattern — the winning handler calls RtlUnwind(frame,
+ * ip, ER, 0), which unwinds the frames BELOW, pops them from the chain, and
+ * resumes at ip with esp=ebp=frame+8 (the saved-ebp slot of the try-frame:
+ * `push ebp / push $handler / push fs:[0] / mov fs:[0],esp` puts the node at
+ * ebp-8). The old engine made RaiseException return, so the unreachable
+ * `ret` after the call site executed heap garbage (winnc eip=0x1112a680).
+ * Pump protocol: after rewriting the guest state we set
+ * g_cpu32_exit_req = MW32_SEH_RESUME_CODE; every pump level stops and the
+ * top loop (load_pe32 interpreted path) re-enters cpu32_run at the new eip. */
+static void mw32_i386_seh_fill_ctx(uint32_t ctx_va) {
+    for (uint32_t off = 0; off < 0x2cc; off += 4) m32_st32(ctx_va + off, 0);
+    m32_st32(ctx_va + 0x00, 0x10007u);       /* ContextFlags = CONTEXT_FULL */
+    m32_st32(ctx_va + 0x1c + 0x00, t_cpu32.fcw); /* FloatSave.ControlWord */
+    m32_st32(ctx_va + 0x1c + 0x04, t_cpu32.fsw); /* FloatSave.StatusWord */
+    m32_st32(ctx_va + 0x8c, 0x0u);           /* SegGs */
+    m32_st32(ctx_va + 0x90, 0x53u);          /* SegFs (fake flat) */
+    m32_st32(ctx_va + 0x94, 0x23u);          /* SegEs */
+    m32_st32(ctx_va + 0x98, 0x23u);          /* SegDs */
+    m32_st32(ctx_va + 0x9c, t_cpu32.r[EDIi]);
+    m32_st32(ctx_va + 0xa0, t_cpu32.r[ESIi]);
+    m32_st32(ctx_va + 0xa4, t_cpu32.r[EBXi]);
+    m32_st32(ctx_va + 0xa8, t_cpu32.r[EDXi]);
+    m32_st32(ctx_va + 0xac, t_cpu32.r[ECXi]);
+    m32_st32(ctx_va + 0xb0, t_cpu32.r[EAXi]);
+    m32_st32(ctx_va + 0xb4, t_cpu32.r[EBPi]);
+    m32_st32(ctx_va + 0xb8, t_cpu32.eip);
+    m32_st32(ctx_va + 0xbc, 0x1bu);          /* SegCs */
+    m32_st32(ctx_va + 0xc0, t_cpu32.eflags);
+    m32_st32(ctx_va + 0xc4, t_cpu32.r[ESPi]);
+    m32_st32(ctx_va + 0xc8, 0x23u);          /* SegSs */
+}
+
+static uint32_t g_i386_seh_scratch; /* guest VA of the ER/CTX scratch, lazy */
+
+/* run one handler CDECL on the guest stack above the node; returns the
+ * disposition (eax). Sets MW32_SEH_RESUME_CODE via exit_req if the handler
+ * unwound/resumed (caller must propagate immediately). */
+static uint32_t mw32_i386_seh_call_handler(uint32_t node, uint32_t er,
+                                           uint32_t ctx, uint32_t handler) {
+    fprintf(stderr, "[SEH-CALL] node=%08x h=%08x er=%08x er.flags=%x esp_before=%x\n",
+            node, handler, er, er ? m32_ld32(er + 4) : 0, t_cpu32.r[ESPi]);
+    m32_push(0);              /* DispatcherContext (unused v1) */
+    m32_push(ctx);            /* CONTEXT* */
+    m32_push(node);           /* EstablisherFrame */
+    m32_push(er);             /* EXCEPTION_RECORD* */
+    m32_push(MW32_RET_SENTINEL);
+    t_cpu32.eip = handler;
+    cpu32_run(0);
+    uint32_t disp = t_cpu32.r[EAXi];
+    if (g_cpu32_exit_req != MW32_SEH_RESUME_CODE)
+        t_cpu32.r[ESPi] = node; /* cdecl: pop our args off the guest stack */
+    return disp;
+}
+
+static int mw32_i386_seh_raise(uint32_t code, uint32_t flags, uint32_t nargs,
+                               uint32_t args_va, uint32_t ret_addr) {
+    if (!g_i386_seh_scratch)
+        g_i386_seh_scratch = mw32_heap_alloc(0x400, 0); /* ER + CTX + uw-ER */
+    uint32_t er = g_i386_seh_scratch, ctx = er + 0x60;
+    m32_st32(er + 0x00, code);
+    m32_st32(er + 0x04, flags);
+    m32_st32(er + 0x08, 0);                  /* ExceptionRecord chain */
+    m32_st32(er + 0x0c, ret_addr);           /* ExceptionAddress = call site */
+    uint32_t n = nargs > 15 ? 15 : nargs;
+    m32_st32(er + 0x10, n);
+    for (uint32_t i = 0; i < 15; i++)
+        m32_st32(er + 0x14 + 4 * i, i < n ? m32_ld32(args_va + 4 * i) : 0);
+    mw32_i386_seh_fill_ctx(ctx);
+    MW_TRACE("[PE32-SEH] RaiseException code=%08x flags=%x nargs=%u from=%08x",
+             code, flags, nargs, ret_addr);
+    uint32_t node = m32_ld32(t_cpu32.fsbase);
+    while (node && node != 0xFFFFFFFFu) {
+        uint32_t handler = m32_ld32(node + 4);
+        if (!handler) { node = m32_ld32(node); continue; }
+        uint32_t disp = mw32_i386_seh_call_handler(node, er, ctx, handler);
+        if (g_cpu32_exit_req == MW32_SEH_RESUME_CODE) return 1; /* unwound/resumed */
+        if (disp == 1) { node = m32_ld32(node); continue; }     /* ContinueSearch */
+        if (disp == 0) {                                        /* ContinueExecution */
+            t_cpu32.eip = m32_ld32(er + 0x0c);
+            g_cpu32_exit_req = MW32_SEH_RESUME_CODE;
+            return 1;
+        }
+        cpu32_fatal("SEH disposition unsupported", disp, node);
+    }
+    { /* SW-1392b: chain diagnostic — dump up to 4 nodes before aborting */
+        uint32_t n2 = m32_ld32(t_cpu32.fsbase);
+        fprintf(stderr, "[PE32-SEH] chain dump fsbase=%08x:", t_cpu32.fsbase);
+        for (int k = 0; k < 4 && n2 && n2 != 0xFFFFFFFFu; k++) {
+            fprintf(stderr, " [%08x]->next=%08x h=%08x", n2, m32_ld32(n2),
+                    m32_ld32(n2 + 4));
+            n2 = m32_ld32(n2);
+        }
+        fprintf(stderr, "%s\n", (n2 || !m32_ld32(t_cpu32.fsbase)) ? " (end)" : "");
+    }
+    fprintf(stderr, "[PE32-SEH] exception %08x UNHANDLED (FS:[0] chain exhausted)\n", code);
+    cpu32_fatal("unhandled exception", code, t_cpu32.eip);
+    return 0;
+}
+
+static int mw32_i386_seh_unwind(uint32_t target_frame, uint32_t target_ip,
+                                uint32_t er_arg, uint32_t retval) {
+    (void)retval;
+    if (!g_i386_seh_scratch)
+        g_i386_seh_scratch = mw32_heap_alloc(0x400, 0);
+    uint32_t ctx = g_i386_seh_scratch + 0x60;
+    uint32_t er = er_arg;
+    if (er) m32_st32(er + 0x04, m32_ld32(er + 0x04) | 2u); /* EH_UNWINDING */
+    else {   /* synthetic STATUS_UNWIND record (Windows contract) */
+        er = g_i386_seh_scratch + 0x360;
+        m32_st32(er + 0x00, 0xC0000029u);    /* STATUS_UNWIND */
+        m32_st32(er + 0x04, 2u);
+        m32_st32(er + 0x08, 0);
+        m32_st32(er + 0x0c, 0);
+        m32_st32(er + 0x10, 0);
+    }
+    mw32_i386_seh_fill_ctx(ctx);
+    fprintf(stderr, "[PE32-SEH] RtlUnwind target=%08x ip=%08x er=%08x er.code=%08x esp=%x\n",
+            target_frame, target_ip, er, er ? m32_ld32(er) : 0, t_cpu32.r[ESPi]);
+    uint32_t node = m32_ld32(t_cpu32.fsbase);
+    while (node && node != 0xFFFFFFFFu && node != target_frame) {
+        uint32_t handler = m32_ld32(node + 4);
+        uint32_t next = m32_ld32(node);
+        if (handler) {
+            uint32_t disp = mw32_i386_seh_call_handler(node, er, ctx, handler);
+            if (g_cpu32_exit_req == MW32_SEH_RESUME_CODE) return 1;
+            (void)disp; /* ContinueSearch expected during unwind */
+        }
+        m32_st32(t_cpu32.fsbase, next);      /* pop the unwound node */
+        node = next;
+    }
+    /* SW-1392f: x86 RtlUnwind is a NORMAL STDCLASS CALL THAT RETURNS to
+     * its caller — the handler itself continues (it owns the resume: it
+     * restores ebp from its frame and jumps to the except body). Evidence
+     * (winnc): the guest passed TargetIp = the RA (0x408e78) as a
+     * formality, and the post-unwind code reads [esp+0x28] — a slot in the
+     * HANDLER's own frame, which only exists if esp is still the handler's
+     * live stack. The old resume-at-target+8 stomped the handler frame ->
+     * edi=[esp+0x28]=0 -> mov 0x8(%edi),%ebp host SIGSEGV. FS:[0] must end
+     * at the target node (it stays registered — its handler wins). */
+    m32_st32(t_cpu32.fsbase, target_frame);
+    return 0; /* normal return; the gate pops the stdcall args (arity 16) */
 }
 
 
@@ -43743,6 +44185,12 @@ static int load_pe32(const char* filepath) {
       const char* m = getenv("MW32_MAX_STEPS"); if (m && m[0]) g_cpu32_maxsteps = strtoull(m, NULL, 0);
       mw32_dump_va_ranges("dump"); }
     int rc = cpu32_run(g_cpu32_maxsteps);
+    while (rc == (int)MW32_SEH_RESUME_CODE) { /* SW-1392: SEH rewrote the
+        * guest state (except-body resume / ContinueExecution) — clear the
+        * pump-stop flag and continue at the new eip. */
+        g_cpu32_exit_req = 0;
+        rc = cpu32_run(g_cpu32_maxsteps);
+    }
     g_cpu32_active = 0;
     mw32_dump_va_ranges("postdump");
     MW_TRACE("[PE32] cpu32_run rc=%d steps=%llu last_eip=0x%08x esp=0x%08x",

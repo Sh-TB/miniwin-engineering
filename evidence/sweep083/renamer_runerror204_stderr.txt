@@ -1,0 +1,1 @@
+[TRACE] Command line: artifacts/sweep081/dl/renamer75.portable.x/ReNamer.exe
