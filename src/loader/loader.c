@@ -6130,6 +6130,14 @@ __attribute__((ms_abi)) int mw__vsnprintf(char* buf, size_t n, const char* fmt, 
     char tmp[16384];
     FILE* mf = fmemopen(tmp, sizeof tmp, "w");
     if (!mf) return -1;
+    /* SW-1325 (sweep075): internally-created streams must be registered or
+     * mw_vfprintf's map_crt_stream REFUSES them (BUG-065 gate) and the
+     * formatted bytes go to the stderr fallback — the caller's buffer then
+     * keeps its stale content. Repro: every sgtatham puzzle — mingw sprintf
+     * (obfuscate_bitmap's numberbuf) stayed empty -> strlen picked up stack
+     * garbage -> SHA_Bytes consumed junk -> obfuscate masks wrong AND
+     * non-deterministic -> game descs decoded to garbage w/h -> OOB. */
+    mw_fileptr_register(mf);
     int r = mw_vfprintf(mf, fmt, ap);
     fclose(mf);
     if (r < 0) return -1;
@@ -6929,6 +6937,11 @@ __attribute__((ms_abi)) int mw___stdio_common_vsprintf(
     char tmp[16384];
     FILE* mf = fmemopen(tmp, sizeof tmp, "w");
     if (!mf) return -1;
+    /* SW-1325: register the internal fmemopen stream — the BUG-065 validity
+     * gate in map_crt_stream refuses unregistered pointers, which routed the
+     * formatted bytes to stderr and left the guest's buffer stale (see the
+     * mw__vsnprintf comment; broke every sprintf in the sgtatham family). */
+    mw_fileptr_register(mf);
     int n = mw_vfprintf(mf, fmt, ap);
     fclose(mf);
     if (n < 0) return -1;
@@ -7114,13 +7127,15 @@ static void w3_run_tle_atexit(void);
 static struct { void* p; size_t size; uint32_t gen; } g_alloc_reg[W3_REG_SIZE];
 static unsigned w3_reg_slot(void* p);
 static int w3_reg_find(void* p);
+
 __attribute__((ms_abi)) void* mw_malloc(size_t size) {
+    void* p;
     if (w3_guard_enabled()) {
-        void* gp = w3_guard_alloc(size ? size : 1);
-        MW_TRACE("malloc[GUARD](%zu) = %p", size, gp);
-        return gp;
+        p = w3_guard_alloc(size ? size : 1);
+        MW_TRACE("malloc[GUARD](%zu) = %p", size, p);
+        return p;
     }
-    void* p = malloc(size);
+    p = malloc(size);
     MW_TRACE("malloc(%zu) = %p", size, p);
     w3_reg_add_sz(p, size);
     return p;
@@ -17576,6 +17591,17 @@ __attribute__((ms_abi)) void* mw_CreateWindowExW(uint32_t exstyle, const void* c
         return ch;
     }
     /* SW-1203: WH_CBT pre-create notification — nonzero CANCELS (real CBT) */
+    /* SW-1326 (sweep075): WS_CHILD without a parent is invalid — real
+     * Windows fails with ERROR_TLW_WITH_WSCHILD (1406). The old fall-through
+     * returned MW_GUI_HWND, colliding the child with the main window (the
+     * puzzles statusbar: create->destroy tore down the MAIN window -> early
+     * teardown -> use-after-free). Guests handle NULL statusbars fine. */
+    if ((style & 0x40000000u) && !parent) {
+        mw_SetLastError(1406); /* ERROR_TLW_WITH_WSCHILD */
+        MW_TRACE("CreateWindowExW(ex=0x%x style=0x%x cls=%p) WS_CHILD without parent -> NULL (1406, SW-1326)",
+                 exstyle, style, cls);
+        return NULL;
+    }
     if (mw_hook_fire_create(exstyle, style, win, cls, x, y, w, h, parent, menu, inst, param))
         return NULL;
     g_create_param = param; /* SW-802..806: forward lpParam into CREATESTRUCT */
@@ -17665,6 +17691,20 @@ __attribute__((ms_abi)) void* mw_CreateWindowExA(uint32_t exstyle, const void* c
     /* SW-1203: WH_CBT pre-create notification — nonzero CANCELS (real CBT);
      * the A path passes the ANSI name reinterpreted — hooks read names
      * through the same pointer the caller would have used on Windows. */
+    /* SW-1326 (sweep075): WS_CHILD without a parent is invalid — real
+     * Windows fails the call with ERROR_TLW_WITH_WSCHILD (1406). The old
+     * fall-through returned MW_GUI_HWND for such calls, colliding the child
+     * with the MAIN window: the puzzles statusbar create (parent=NULL,
+     * WS_CHILD) got the main window's HWND, its DestroyWindow then tore down
+     * the main window itself -> full early teardown -> use-after-free crash
+     * (blackbox + every sgtatham puzzle, RVA 0x124e0 getter on freed fe).
+     * The guests already handle a NULL statusbar — NULL is the real answer. */
+    if ((style & 0x40000000u) && !parent) {
+        mw_SetLastError(1406); /* ERROR_TLW_WITH_WSCHILD */
+        MW_TRACE("CreateWindowExA(ex=0x%x style=0x%x cls=%p) WS_CHILD without parent -> NULL (1406, SW-1326)",
+                 exstyle, style, cls);
+        return NULL;
+    }
     if (mw_hook_fire_create(exstyle, style, win, cls, x, y, w, h, parent, menu, inst, param))
         return NULL;
     g_create_param = param; /* SW-802..806: forward lpParam into CREATESTRUCT */
@@ -18329,6 +18369,25 @@ static const char* mw_wm_name(uint32_t m) {
 }
 /* safe guest-memory probe (BUG-066 discipline: never trust readability) */
 static int mw_probe_copy(const void* src, size_t n, void* dst) {
+    /* SW-1328 (sweep075): the readability-probe callers pass dst=NULL, but
+     * process_vm_readv FAILS with EFAULT when the LOCAL iovec base is NULL —
+     * so every probe returned 0 for every pointer. Consequence: mw_rc_ok()
+     * was always false and every rect API gated on it (SetRect/OffsetRect/
+     * IntersectRect/UnionRect/InflateRect/EqualRect) returned 0 WITHOUT
+     * writing — blackbox's WM_PAINT IntersectRect left rcDest uninitialized
+     * -> garbage BitBlt args -> a 32x32 white tile on a black 352x353 frame.
+     * NULL-dst probes now read into scratch memory. */
+    char scratch[256];
+    if (!dst) {
+        if (n <= sizeof(scratch)) dst = scratch;
+        else { /* probe the head and the tail separately for large spans */
+            struct iovec l1 = { scratch, 1 }, l2 = { scratch + 1, 1 };
+            struct iovec r1 = { (void*)src, 1 };
+            struct iovec r2 = { (char*)src + n - 1, 1 };
+            return process_vm_readv(getpid(), &l1, 1, &r1, 1, 0) == 1 &&
+                   process_vm_readv(getpid(), &l2, 1, &r2, 1, 0) == 1;
+        }
+    }
     struct iovec l = { dst, n }, r = { (void*)src, n };
     ssize_t got = process_vm_readv(getpid(), &l, 1, &r, 1, 0);
     return (got == (ssize_t)n) ? (int)n : 0;
@@ -18690,7 +18749,14 @@ static int mw_gui_next_event(void* msg, void* hwnd, int consume, const char* api
         return 1;
     }
     /* SW-1261b: coordinate mouse — DOWN/UP pair per queued point */
-    if (g_mousei < g_mousen && (g_delivered % g_mouse_every) == 0) {
+    /* SW-1330 (sweep075): a pending UP bypasses the pacing gate. With
+     * MOUSE_EVERY>2 the DOWN landed on a %==0 slot but the UP waited for the
+     * next multiple; no other event source existed, the pump declared
+     * "no event source" and the guest quit with a half-click (fifteen: the
+     * WM_LBUTTONDOWN arrived, the WM_LBUTTONUP never did, the tile never
+     * moved). Real input never strands a pressed button. */
+    if (g_mousei < g_mousen &&
+        ((g_delivered % g_mouse_every) == 0 || g_mouse_phase == 1)) {
         int x = g_mouse_x[g_mousei], y = g_mouse_y[g_mousei];
         int was_down = (g_mouse_phase == 0);
         uint32_t m = was_down ? 0x0201u /* WM_LBUTTONDOWN */ : 0x0202u /* WM_LBUTTONUP */;
@@ -19571,6 +19637,23 @@ __attribute__((ms_abi)) int mw_ExtTextOutA(void* hdc, int x, int y, uint32_t opt
         const void* rect, const char* s, int len, const void* dx) {
     (void)opts; (void)rect; (void)dx;
     return mw_TextOutA(hdc, x, y, s, len);
+}
+/* SW-1329 (sweep075): the W variant has its OWN 8-arg ABI — binding
+ * ExtTextOutW to the 5-arg mw_TextOutW made the callee read s from the
+ * lprc slot (NULL) and len from the string-pointer slot, so every glyph
+ * was silently dropped (the puzzles' tile numbers, Notepad3-style UIs).
+ * The options/rect args are honored for ETO_OPAQUE/ETO_CLIPPED fills. */
+static int mw_rc_ok(const void* rc); /* fwd: defined with the rect family */
+__attribute__((ms_abi)) int mw_ExtTextOutW(void* hdc, int x, int y, uint32_t opts,
+        const void* rect, const uint16_t* s, int len, const void* dx) {
+    (void)dx;
+    MWBmp* S = mw_dc_surface(hdc);
+    if (!S) return 0;
+    if ((opts & 0x6) && rect && mw_rc_ok(rect)) { /* ETO_OPAQUE|ETO_CLIPPED */
+        const int32_t* r = (const int32_t*)rect;
+        mwb_fill(S, r[0], r[1], r[2] - r[0], r[3] - r[1], g_bk_col);
+    }
+    return mw_TextOutW(hdc, x, y, s, len);
 }
 __attribute__((ms_abi)) int mw_DrawTextA(void* hdc, const char* s, int n, void* rect, uint32_t flags) {
     MWBmp* S = mw_dc_surface(hdc); /* SWEEP-006: route by DC */
@@ -22265,6 +22348,23 @@ __attribute__((ms_abi)) int mw_GetWindowPlacement(void* hwnd, void* wp) {
 __attribute__((ms_abi)) int mw_GetWindowRect(void* hwnd, void* rc) {
     if (!rc) return 0;
     int32_t* r = (int32_t*)rc;
+    /* SW-1327 (sweep075): a CHILD window answers with its OWN rect (the
+     * mw_child_set_rect record, parent-client-relative like real Windows).
+     * The old code returned the MAIN surface rect for every handle, so the
+     * puzzles' get_statusbar_height() read the MAIN height (427) as the
+     * statusbar height -> adjust_statusbar resized the main window to
+     * 11x427 -> new_bitmap(11x11) -> the board painted into 32x32. Same
+     * contract family as SW-1288 (children own their rect records). */
+    int slot = mw_child_slot(hwnd);
+    if (slot >= 0 && g_child[slot].live) {
+        r[0] = g_child[slot].rx; r[1] = g_child[slot].ry;
+        r[2] = g_child[slot].rx + g_child[slot].rw;
+        r[3] = g_child[slot].ry + g_child[slot].rh;
+        MW_TRACE("GetWindowRect(child slot %d) -> %dx%d@%d,%d", slot,
+                 g_child[slot].rw, g_child[slot].rh,
+                 g_child[slot].rx, g_child[slot].ry);
+        return 1;
+    }
     r[0] = 0; r[1] = 0; r[2] = g_win_w; r[3] = g_win_h;
     MW_TRACE("GetWindowRect -> %dx%d", g_win_w, g_win_h);
     return 1;
@@ -35666,7 +35766,7 @@ ENTRY("msvcrt.dll", "wctype", mw_wctype),
     ENTRY("USER32.DLL", "FillRect",                             mw_FillRect),
     ENTRY("USER32.DLL", "DrawTextA",                            mw_DrawTextA),
     ENTRY("USER32.DLL", "DrawTextW",                            mw_DrawTextW), /* SWEEP-013 */
-    ENTRY("USER32.DLL", "ExtTextOutW",                          mw_TextOutW), /* SWEEP-013: same W body */
+    ENTRY("USER32.DLL", "ExtTextOutW",                          mw_ExtTextOutW), /* SW-1329: real 8-arg ABI */
     ENTRY("USER32.DLL", "CreateFontIndirectW",                  mw_CreateFontIndirectW), /* SWEEP-013 */
     ENTRY("USER32.DLL", "CreateFontIndirectA",                  mw_CreateFontIndirectA), /* SWEEP-013 */
     ENTRY("USER32.DLL", "GetObjectW",                           mw_GetObjectW), /* SWEEP-013 */
@@ -35712,6 +35812,11 @@ ENTRY("msvcrt.dll", "wctype", mw_wctype),
     ENTRY("GDI32.DLL", "EndPage",                               mw_EndPage),
     ENTRY("GDI32.DLL", "EndDoc",                                mw_EndDoc),
     ENTRY("GDI32.DLL", "ExtTextOutA",                           mw_ExtTextOutA),
+    /* SW-1329 (sweep075): GDI32!ExtTextOutW was missing — the puzzles'
+     * win_draw_text imports it from GDI32 (not USER32), so every tile
+     * number silently hit the generic stub and no text rendered anywhere
+     * (fifteen/mines/solo/towers boards: shapes only, zero glyphs). */
+    ENTRY("GDI32.DLL", "ExtTextOutW",                           mw_ExtTextOutW), /* SW-1329: real 8-arg ABI */
     ENTRY("GDI32.DLL", "Rectangle",                             mw_Rectangle),
     ENTRY("GDI32.DLL", "Ellipse",                               mw_Ellipse),
     ENTRY("GDI32.DLL", "MoveToEx",                              mw_MoveToEx),
