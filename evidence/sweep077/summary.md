@@ -89,3 +89,18 @@ pixel-level different post-input frame through the real guest pipeline.
 PASS_BEHAVIOR = program computed real observable output. UNCHANGED_RUNNING
 = alive, no crash, frame capture frontier unchanged. No per-app hacks; both
 fixes are generic engine corrections (keyboard model, GDI raster).
+
+## Wagon 2 (same sweep): input evidence for the corpus games
+
+snake (tests/games, rebuilt with llvm-mingw 20240917 after the sandbox
+reset): steer-key battery -> 25 frames, 25/25 unique — every keystroke
+changed the board. breakout: paddle/launch/brick battery -> 760 frames,
+380 unique. Both PASS_INPUT_STATE_CHANGE (before/after PNGs in frames/).
+The 48-target campaign plus the canonical corpus now has input-state
+evidence on 22 programs total (20 puzzles + snake + breakout).
+
+Network note: a second B-group wagon (Notepad3/RegScanner/WinLister
+typing probes) was attempted but every upstream host returned
+connection failures (http=000) during this window; recorded honestly
+as NOT DOWNLOADED this round. U03/U04/U07/R3 already hold PASS rc=0 x3
+from SWEEP-076 on byte-verified binaries.

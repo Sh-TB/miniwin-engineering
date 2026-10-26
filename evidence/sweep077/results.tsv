@@ -25,3 +25,5 @@ U17	BgInfo x64	0/0/0	2	renders report window (2 frames, no crash)	PASS_LAUNCH_RE
 U25	TcpView x64	124/124/124	0	alive: event loop, no crash at 70s	UNCHANGED_RUNNING	SW-1338 held
 R-snake	snake (corpus parity)	0/0/0	13/13/13	YES (steer keys)	CORPUS_PARITY_EXACT	zero regression
 R-breakout	breakout (corpus parity)	0/0/0	10/10/10	YES (paddle+launch)	CORPUS_PARITY_EXACT	zero regression
+snake	0/0/0	25	YES (steer keys, 25/25 frames unique)	PASS_INPUT_STATE_CHANGE	SW-1344
+breakout	0/0/0	380	YES (paddle+launch+brick break)	PASS_INPUT_STATE_CHANGE	SW-1344
