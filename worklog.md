@@ -278,3 +278,21 @@ Stage Summary:
 - renamer: interpreter abort -> clean guest RunError(204) exit.
 - mines: new-program first-run PASS — the collection is a high-yield battery for future trains.
 - Next wagons: SW-1393 router decode, renamer rc=204 pre-render path, notepad2mod x64 early-exit, everything/tcpview64 poll loops, more A-group puzzles as new-program wagons.
+
+---
+Task ID: SWEEP-084
+Agent: main (z.ai)
+Task: «ادامه — تصویر اجرا کامل برنامه‌ها را بده، هر ادامه یک برنامه جدید، گیت‌هاب را بررسی کن» — visual-execution-proof train + new program (solo) + gates + push
+
+Work Log:
+- Baseline: origin==local f2f9c01 (SWEEP-083 tip; API-verified, last push 2026-10-26T20:10Z); Issue #1 closed, 46 comments. Engine UNCHANGED this train — clean rebuild byte-exact 80bca026 (matches SWEEP-083 final pin); G1 pre-train PIN 12/12 (20261026_201417).
+- Trio re-verified via plugin runner (SWEEP=sweep084): npp64 PASS_INPUT_STATE_CHANGE x3 (rc=0, 2 frames), idman PASS_LAUNCH_RENDER x3 (rc=0, 1 frame), winrar EXIT rc=0 x3 (parity frontier SW-1361) — zero regressions.
+- NEW plugin solo (Simon Tatham Solo/Sudoku, SWEEP-072 A-group U19, official puzzles.zip sha a5b00f63 verified): PASS_INPUT_STATE_CHANGE on first contact (rc=0 x3, 6 frames/3 uniq, cursor cell visibly moves under the arrow-key probe + grid re-renders). Second consecutive Simon Tatham first-run PASS (mines SWEEP-083) — the collection is a reliable high-yield battery.
+- VISUAL PROOF DELIVERY (user request): trimmed per-app frames + labeled contact sheet exported to the session download area (miniwin_frames_sweep084/: Notepad++ dialogs, IDM error dialog, solo sudoku sequence, mines flood-fill battery proof). Montage labels English (no Persian shaping in PIL) — chat reply is Persian.
+- Gates: corpus parity scripts/sweep084_corpus.sh 21/21 rc=0 crash=0 fatal=0 x3 (evidence/sweep084/corpus_parity.tsv); G1 train-end PIN 12/12 (20261026_201812, binary 80bca026 byte-exact).
+- Evidence evidence/sweep084/ curated (summary.md + frames + ledger rows tagged sweep084); commit + push HEAD:main (no force); Issue #1 progress comment posted.
+
+Stage Summary:
+- No engine change needed this train: the SWEEP-083 fix set holds; all four graphical guests reproduce their verdicts deterministically.
+- solo = new-program first-run PASS; visual execution proof delivered for Notepad++/IDM/solo/mines.
+- Next wagons: npp64 interactive deepening, winnc SW-1393 finally-retry router, everything/tcpview64 poll loops, renamer rc=204 pre-render path, more A-group puzzles (netgame/lightup/pattern/towers), hxd download retry.
