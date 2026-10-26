@@ -895,10 +895,11 @@ __attribute__((ms_abi)) uint32_t mw_GetLastError(void) {
 }
 
 static void* mw_known_dll_handle(const char* low); /* SWEEP-012 shared known-DLL lookup */
+static uint64_t mw_main_image_base(void); /* SW-1332 fwd: main-EXE handle for the active world */
 
 __attribute__((ms_abi)) void* mw_GetModuleHandleA(const char* name) {
     MW_TRACE("GetModuleHandleA(name=%s)", name ? name : "NULL");
-    if (name == NULL || name[0] == '\0') return g_image_base;
+    if (name == NULL || name[0] == '\0') return (void*)(uintptr_t)mw_main_image_base(); /* SW-1332 */
     /* SWEEP-012: named system DLLs ARE loaded in this emulation — return the
      * same pseudo-handles LoadLibraryA hands out (was: NULL for every name,
      * which made GetProcAddress(NULL, fn) -> NULL -> jmp-rax SIGSEGV at the
@@ -1601,7 +1602,7 @@ static int load_pe_dll(const char* fullpath, const char* lowname) {
             if (o + 20 > imp_sz) break;
             uint32_t* desc = (uint32_t*)(img + imp_rva + o);
             uint32_t name_rva = desc[3], first_thunk = desc[4], oft = desc[0];
-            if (!name_rva && !first_thunk) break;
+            if (!name_rva || !first_thunk) break; /* SW-1342: Wine/Windows stop when EITHER field is zero */
             const char* dn = (const char*)(img + name_rva);
             char dlow[64]; size_t k = 0;
             for (; dn[k] && k < sizeof(dlow) - 1; k++)
@@ -7633,6 +7634,8 @@ static int mw_ms_qsort_bridge(const void* a, const void* b, void* ctx) {
 }
 
 __attribute__((ms_abi)) void mw_qsort(void* base, size_t n, size_t sz, int (*cmp)(const void*, const void*)) {
+    MW_TRACE("qsort(base=%p n=%zu sz=%zu cmp=%p) [SW-1339 probe]",
+             base, n, sz, (void*)(uintptr_t)cmp);
     g_ms_qsort_cmp_ref = (const mw_ms_qsort_cmp*)(const void*)&cmp;
     qsort_r(base, n, sz, mw_ms_qsort_bridge, NULL);
 }
@@ -7882,7 +7885,7 @@ __attribute__((ms_abi)) void mw_RtlRestoreContext(void* ctx, void* exc) {
 /* ---- misc kernel32 ---- */
 __attribute__((ms_abi)) void* mw_GetModuleHandleW(const uint16_t* name) {
     MW_TRACE("GetModuleHandleW()");
-    if (name == NULL || name[0] == 0) return g_image_base;
+    if (name == NULL || name[0] == 0) return (void*)(uintptr_t)mw_main_image_base(); /* SW-1332 */
     /* SWEEP-012: same contract as the A variant — system DLLs are loaded.
      * Windows wchar_t = 2 bytes (UTF-16), so the parameter is uint16_t* —
      * the old wchar_t* stub read 4-byte units and mangled 'kernel32.dll'
@@ -8445,8 +8448,8 @@ __attribute__((ms_abi)) int mw_GetModuleHandleExA(uint32_t flags, const char* na
     MW_TRACE("GetModuleHandleExA(flags=%u)", flags);
     if (!mod) return 0;
     /* FROM_ADDRESS: the PE is one module — any image address resolves to it */
-    if ((flags & 4) && name) { *mod = (void*)(uintptr_t)g_image_base; return 1; }
-    if (!name) { *mod = (void*)(uintptr_t)g_image_base; return 1; }
+    if ((flags & 4) && name) { *mod = (void*)(uintptr_t)mw_main_image_base(); return 1; } /* SW-1332 */
+    if (!name) { *mod = (void*)(uintptr_t)mw_main_image_base(); return 1; } /* SW-1332 */
     return 0;
 }
 __attribute__((ms_abi)) int mw_GetModuleHandleExW(uint32_t flags, const wchar_t* name, void** mod) {
@@ -15913,6 +15916,16 @@ typedef struct {
     /* SW-1266: dialog-template rect in PIXELS (DLU x2, the engine's
      * standard 8pt-dialog scale) for the standard-control compositor */
     int16_t  rx, ry, rw, rh;
+    /* SW-1334 (SWEEP-076): guest-registered class proc captured at
+     * creation (x64 path only — the guest VA is host-callable natively;
+     * x86 class procs are raw EIPs and must go through the cpu32 shim,
+     * so they stay NULL here). SendMessage routes non-engine messages to
+     * it: real Windows sends every window message to the window's class
+     * wndproc. Notepad3 x64 sends SCI messages (0x889=2185) to its
+     * statically-linked Scintilla window; v1 answered 0 and the guest
+     * stored the NULL as an object pointer -> first virtual call died
+     * (mov rax,[rcx]; jmp [rax+0x218], RVA 0x1b2d50). */
+    void*    class_proc;
 } MwChild;
 static MwChild g_child[MW_CHILD_MAX];
 static uint16_t g_maintitle[128];
@@ -16740,6 +16753,16 @@ __attribute__((ms_abi)) long long mw_SendMessageW(void* h, uint32_t msg, uintptr
         long long ctl_r;
         if (s >= 0 && mw_commonctl_msg(s, msg, wp, lp, &ctl_r)) return ctl_r;
     }
+    /* SW-1334: guest-registered class proc for this child window — real
+     * Windows routes every message to the window's class wndproc. Only
+     * children whose class the GUEST registered carry one (engine sysclass
+     * models above keep priority, matching the engine's control emulations). */
+    if (s >= 0 && g_child[s].class_proc) {
+        long long r = ((MW_WNDPROC)(uintptr_t)g_child[s].class_proc)(h, msg, wp, lp);
+        MW_TRACE("SendMessageW(hwnd=%p %s) -> class proc -> %lld (SW-1334)",
+                 h, mw_wm_name(msg), r);
+        return r;
+    }
     if ((h == MW_GUI_HWND || mw_toplevel_find(h) >= 0) && mw_dispatch_proc()) { /* SW-1256 + SW-1279 fix C: nested mints forward too */
         long long r = mw_dispatch_proc()(h, msg, wp, lp);
         MW_TRACE("SendMessageW(%s wp=0x%llx) -> wndproc -> %lld",
@@ -16795,6 +16818,12 @@ __attribute__((ms_abi)) long mw_SendMessageA(void* h, uint32_t msg, uintptr_t wp
     { /* SWEEP-019 SW-831..840: common-control routing (A path) */
         long long ctl_r;
         if (s >= 0 && mw_commonctl_msg(s, msg, wp, lp, &ctl_r)) return (long)ctl_r;
+    }
+    /* SW-1334 (A path): same per-child class-proc routing as the W path. */
+    if (s >= 0 && g_child[s].class_proc) {
+        long long r = ((MW_WNDPROC)(uintptr_t)g_child[s].class_proc)(h, msg, wp, lp);
+        MW_TRACE("SendMessageA(hwnd=%p msg=%u) -> class proc -> %lld (SW-1334)", h, msg, r);
+        return (long)r;
     }
     if ((h == MW_GUI_HWND || mw_toplevel_find(h) >= 0) && mw_dispatch_proc()) /* SW-1256 + SW-1279 fix C */
         return (long)mw_dispatch_proc()(h, msg, wp, (long long)lp);
@@ -17489,6 +17518,55 @@ static const char* mw_sysclass_name(int c) {
     return (c >= 0x80 && c <= 0x8D) ? n[c - 0x80] : "?";
 }
 /* Register one child-control identity; NULL when the 64-slot table is full. */
+/* SW-1334: capture the guest class proc for a just-registered child.
+ * x86 guard: guest class procs are raw EIPs under the interpreter — only
+ * x64 guest VAs are host-callable, so seeding is x64-only. */
+static void mw_child_seed_class_proc(void* hwnd, const void* cls) {
+    if (!hwnd || !cls || (uintptr_t)cls < 0x10000u) return;
+    if (g_cpu32_active) return;
+    void* cp = mw_class_proc_lookup(cls);
+    if (!cp) return;
+    int s = mw_child_slot(hwnd);
+    if (s >= 0) g_child[s].class_proc = cp;
+    MW_TRACE("[GUI] child %p class proc captured %p (SW-1334)", hwnd, cp);
+}
+/* SW-1335 (SWEEP-076): deliver the real-Windows creation message sequence
+ * (WM_NCCREATE 0x81 -> WM_NCCALCSIZE 0x83 -> WM_CREATE 0x01) to a child
+ * window that carries a GUEST class proc. Scintilla constructs its C++
+ * window object inside WM_NCCREATE/WM_CREATE; without the sequence the
+ * first SCI message hits an uninitialized object (Notepad3 x64: proc
+ * returned 0, the guest stored it as a pointer, first virtual call died
+ * at RVA 0x1b2d50). WM_CREATE returning -1 cancels creation (real). */
+static int mw_child_send_create_seq(void* hwnd, const void* cls_name, int wide,
+                                    void* parent, void* menu, void* inst,
+                                    uint32_t style, uint32_t exstyle,
+                                    int x, int y, int w, int h, void* param) {
+    int s = mw_child_slot(hwnd);
+    if (s < 0 || !g_child[s].class_proc) return 1;
+    uint64_t cs[12]; /* CREATESTRUCT (x64, 96 bytes) */
+    memset(cs, 0, sizeof(cs));
+    cs[0] = (uint64_t)(uintptr_t)param;   /* lpCreateParams */
+    cs[1] = (uint64_t)(uintptr_t)inst;    /* hInstance */
+    cs[2] = (uint64_t)(uintptr_t)menu;    /* hMenu */
+    cs[3] = (uint64_t)(uintptr_t)parent;  /* hwndParent */
+    cs[4] = (uint64_t)(int64_t)h;         /* cy */
+    cs[5] = (uint64_t)(int64_t)w;         /* cx */
+    cs[6] = (uint64_t)(int64_t)y;         /* y */
+    cs[7] = (uint64_t)(int64_t)x;         /* x */
+    cs[8] = style;
+    cs[9] = (uint64_t)(uintptr_t)0;       /* lpszName: text is stored in the child record */
+    cs[10] = (uint64_t)(uintptr_t)cls_name;
+    cs[11] = exstyle;
+    MW_WNDPROC p = (MW_WNDPROC)(uintptr_t)g_child[s].class_proc;
+    long long r1 = p(hwnd, 0x81u, 0, (long long)(uintptr_t)cs);   /* WM_NCCREATE */
+    if (!r1) { MW_TRACE("[GUI] child %p WM_NCCREATE=FALSE -> cancel (SW-1335)", hwnd); return 0; }
+    p(hwnd, 0x83u, 0, 0);                                         /* WM_NCCALCSIZE */
+    long long r3 = p(hwnd, 0x01u, 0, (long long)(uintptr_t)cs);   /* WM_CREATE */
+    if (r3 == -1) { MW_TRACE("[GUI] child %p WM_CREATE=-1 -> cancel (SW-1335)", hwnd); return 0; }
+    MW_TRACE("[GUI] child %p creation sequence delivered (SW-1335)", hwnd);
+    (void)wide;
+    return 1;
+}
 static void* mw_child_register(int sc, void* parent, void* menu,
                                const void* text, int wide, void* hwnd_out_cap) {
     (void)hwnd_out_cap;
@@ -17587,7 +17665,12 @@ __attribute__((ms_abi)) void* mw_CreateWindowExW(uint32_t exstyle, const void* c
     if (sc && parent) { /* SWEEP-013: child control — engine-internal wndproc */
         (void)exstyle;
         void* ch = mw_child_register(sc, parent, menu, win, 1, NULL);
-        if (ch) mw_child_set_rect(ch, x, y, w, h); /* SW-1279 fix E */
+        if (ch) { mw_child_set_rect(ch, x, y, w, h); /* SW-1279 fix E */
+                  mw_child_seed_class_proc(ch, cls); /* SW-1334 */
+                  if (!mw_child_send_create_seq(ch, cls, 1, parent, menu, inst,
+                                                style, exstyle, x, y, w, h,
+                                                param)) /* SW-1335 */
+                      return NULL; }
         return ch;
     }
     /* SW-1203: WH_CBT pre-create notification — nonzero CANCELS (real CBT) */
@@ -17685,7 +17768,12 @@ __attribute__((ms_abi)) void* mw_CreateWindowExA(uint32_t exstyle, const void* c
     if (sc && parent) { /* SWEEP-013: child control — engine-internal wndproc */
         (void)exstyle;
         void* ch = mw_child_register(sc, parent, menu, win, 0, NULL);
-        if (ch) mw_child_set_rect(ch, x, y, w, h); /* SW-1279 fix E */
+        if (ch) { mw_child_set_rect(ch, x, y, w, h); /* SW-1279 fix E */
+                  mw_child_seed_class_proc(ch, cls); /* SW-1334 */
+                  if (!mw_child_send_create_seq(ch, cls, 0, parent, menu, inst,
+                                                style, exstyle, x, y, w, h,
+                                                param)) /* SW-1335 */
+                      return NULL; }
         return ch;
     }
     /* SW-1203: WH_CBT pre-create notification — nonzero CANCELS (real CBT);
@@ -17848,12 +17936,19 @@ __attribute__((ms_abi)) long long mw_DispatchMessageA(const void* msg) {
 }
 __attribute__((ms_abi)) long long mw_DefWindowProcW(void* hwnd, uint32_t msg,
         uintptr_t wp, long long lp) {
-    (void)hwnd; (void)msg; (void)wp; (void)lp;
+    (void)hwnd; (void)wp; (void)lp;
+    /* SW-1335b (SWEEP-076): DefWindowProc has DOCUMENTED nonzero answers for
+     * some messages. WM_NCCREATE must return TRUE — a guest class proc that
+     * forwards it (Scintilla does) saw 0 = FALSE -> CreateWindowEx cancelled
+     * the creation that real Windows completes. */
+    if (msg == 0x81u) return 1;  /* WM_NCCREATE -> TRUE */
     return 0;
 }
 __attribute__((ms_abi)) long long mw_DefWindowProcA(void* hwnd, uint32_t msg,
         uintptr_t wp, long long lp) {
-    (void)hwnd; (void)msg; (void)wp; (void)lp;
+    (void)hwnd; (void)wp; (void)lp;
+    /* SW-1335b: A path mirrors the W path (WM_NCCREATE -> TRUE). */
+    if (msg == 0x81u) return 1;
     return 0;
 }
 __attribute__((ms_abi)) void mw_PostQuitMessage(int code) {
@@ -22550,6 +22645,29 @@ __attribute__((ms_abi)) void* mw_LoadImageA(void* hinst, const void* name, uint3
         int cx, int cy, uint32_t flags) {
     return mw_LoadImageW(hinst, name, type, cx, cy, flags);
 }
+/* SW-1333 (SWEEP-076): comctl32!#381 = LoadIconWithScaleDown — decoded from
+ * Notepad3 x64: 5-arg call (hinst, MAKEINTRESOURCE(id) in edx, cx=r8d,
+ * cy=r9d, HICON* phico on the stack) with the result tested by
+ * `test eax,eax; jns` = HRESULT semantics (S_OK=0, failures negative).
+ * Real Windows comctl32 v6 exports LoadIconWithScaleDown at ordinal 381
+ * (LoadIconMetric is 380; the subclass family sits at 410-413 — Notepad3
+ * imports exactly 410/412/413 alongside 381). v1 left #381 unresolved ->
+ * stub returned 0 = S_OK with *phico untouched (NULL) -> the guest stored
+ * the NULL icon object and later died on its first virtual call
+ * (mov rax,[rcx]; jmp [rax+0x218], rcx=0, RVA 0x1b2d50). */
+__attribute__((ms_abi)) uint32_t mw_LoadIconWithScaleDown(void* hinst, const void* name,
+        int cx, int cy, void** phico) {
+    if (!phico) return 0x80070057u; /* E_INVALIDARG */
+    void* h = mw_LoadImageW(hinst, name, 1u /* IMAGE_ICON */, cx, cy, 0);
+    if (!h) {
+        MW_TRACE("LoadIconWithScaleDown(name=%p %dx%d) -> E_FAIL",
+                 name, cx, cy);
+        return 0x8000FFFFu; /* honest E_FAIL */
+    }
+    *phico = h;
+    MW_TRACE("LoadIconWithScaleDown(name=%p %dx%d) -> HICON %p", name, cx, cy, h);
+    return 0; /* S_OK */
+}
 __attribute__((ms_abi)) int mw_SetRectEmpty(void* rc) {
     if (!rc) return 0;
     memset(rc, 0, 16);
@@ -24168,7 +24286,10 @@ static int mw_wndlong_slot(void* hwnd, int index, int create) {
  * intercepted. Never paints; never stores state. */
 __attribute__((ms_abi)) long long mw_engine_defproc(void* hwnd, uint32_t m,
                                                     uintptr_t wp, long long lp) {
-    (void)hwnd; (void)m; (void)wp; (void)lp;
+    (void)hwnd; (void)wp; (void)lp;
+    /* SW-1335b: same documented answer as mw_DefWindowProcW (subclass
+     * chains forward WM_NCCREATE through here). */
+    if (m == 0x81u) return 1;  /* WM_NCCREATE -> TRUE */
     return 0;
 }
 /* SW-1266: is h an engine-recognized window (main, dialog identity,
@@ -24204,6 +24325,22 @@ __attribute__((ms_abi)) intptr_t mw_SetWindowLongPtrW(void* h, int index, intptr
             g_wndproc_fwd = (MW_WNDPROC)v;
             g_main_class_proc = (MW_WNDPROC)v; /* SW-1279 fix C: subclass wins */
         }
+    }
+    if (index == -4 && !prev && v) {
+        /* SW-1338 (SWEEP-076): real Windows returns the window's CURRENT
+         * wndproc — the CLASS proc when no subclass exists yet — never NULL
+         * for a live window. TcpView x64 subclasses its list-view control
+         * (GetDlgItem id=1007) and treats a NULL old-proc as failure
+         * (sub_0xfda0 abort path returned 0 -> caller's NULL-vtable call,
+         * RVA 0x25b75). Answer the effective current proc: the child's
+         * captured class proc, the main dispatch channel, else the engine
+         * default. */
+        int s = mw_child_slot(h);
+        if (s >= 0 && g_child[s].class_proc) prev = (intptr_t)g_child[s].class_proc;
+        else if (h == MW_GUI_HWND || h == g_main_hwnd || mw_toplevel_find(h) >= 0) {
+            if (g_main_class_proc) prev = (intptr_t)g_main_class_proc;
+        }
+        if (!prev && mw_wndlong_is_engine_window(h)) prev = (intptr_t)&mw_engine_defproc;
     }
     MW_TRACE("SetWindowLongPtrW(%p,%d,0x%llx) -> 0x%llx", h, index,
              (unsigned long long)(uintptr_t)v, (unsigned long long)(uintptr_t)prev);
@@ -28041,6 +28178,281 @@ __attribute__((ms_abi)) int mw_UrlIsW(const uint16_t* url, uint32_t scheme) {
     return 0;
 }
 __attribute__((ms_abi)) int mw_PathIsNetworkPathW(const uint16_t* p) { (void)p; return 0; }
+/* SW-1337 (SWEEP-076): SHGetPropertyStoreForWindow — honest E_FAIL (see
+ * ENTRY comment; stub-0 = S_OK-with-NULL-out crashed the caller). */
+__attribute__((ms_abi)) uint32_t mw_SHGetPropertyStoreForWindow(void* hwnd, void* riid, void** ppv) {
+    (void)hwnd; (void)riid;
+    if (ppv) *ppv = NULL;
+    MW_TRACE("SHGetPropertyStoreForWindow() -> E_FAIL (headless, SW-1337)");
+    return 0x80004005u; /* E_FAIL */
+}
+
+/* ---- SW-1336 (SWEEP-076): shlwapi string family — Notepad3 x64 imports 20
+ * Str/Url functions that v1 left unresolved; each stub-0 poisoned the
+ * guest's config/locale parsing flow. Real semantics on 16-bit Windows
+ * strings (UTF-16), case rules per shlwapi docs. ---- */
+__attribute__((ms_abi)) const uint16_t* mw_StrStrW(const uint16_t* hay, const uint16_t* needle) {
+    if (!hay || !needle) return NULL; /* case-SENSITIVE (StrStrW vs StrStrIW) */
+    for (const uint16_t* p = hay; *p; p++) {
+        const uint16_t* a = p; const uint16_t* b = needle;
+        while (*a && *b && *a == *b) { a++; b++; }
+        if (!*b) return p;
+    }
+    return NULL;
+}
+__attribute__((ms_abi)) const char* mw_StrStrA(const char* hay, const char* needle) {
+    if (!hay || !needle) return NULL;
+    return strstr(hay, needle);
+}
+__attribute__((ms_abi)) const char* mw_StrChrA(const char* s, uint8_t c) {
+    if (!s) return NULL;
+    return strchr(s, (int)(unsigned char)c);
+}
+__attribute__((ms_abi)) const char* mw_StrChrIA(const char* s, uint8_t c) {
+    if (!s) return NULL;
+    uint8_t lc = (c >= 'A' && c <= 'Z') ? (uint8_t)(c + 32) : c;
+    for (const char* p = s; *p; p++) {
+        char k = *p;
+        if (k >= 'A' && k <= 'Z') k = (char)(k + 32);
+        if ((uint8_t)k == lc) return p;
+    }
+    return c ? NULL : (s + strlen(s));
+}
+__attribute__((ms_abi)) const uint16_t* mw_StrChrIW(const uint16_t* s, uint16_t c) {
+    if (!s) return NULL;
+    uint16_t lc = (c >= L'A' && c <= L'Z') ? (uint16_t)(c + 32) : c;
+    for (const uint16_t* p = s; *p; p++) {
+        uint16_t k = *p;
+        if (k >= L'A' && k <= L'Z') k = (uint16_t)(k + 32);
+        if (k == lc) return p;
+    }
+    return c ? NULL : (s + mw_w16len((const uint16_t*)s));
+}
+__attribute__((ms_abi)) const uint16_t* mw_StrRChrW(const uint16_t* s, const uint16_t* end, uint16_t c) {
+    if (!s) return NULL;
+    const uint16_t* last = NULL;
+    for (const uint16_t* p = s; *p && p != end; p++) if (*p == c) last = p;
+    return last;
+}
+__attribute__((ms_abi)) int mw_StrCmpW(const uint16_t* a, const uint16_t* b) {
+    if (!a || !b) return a ? 1 : (b ? -1 : 0);
+    while (*a && *a == *b) { a++; b++; }
+    return (int)*a - (int)*b;
+}
+__attribute__((ms_abi)) int mw_StrCmpNW(const uint16_t* a, const uint16_t* b, int n) {
+    if (!a || !b) return a ? 1 : (b ? -1 : 0);
+    for (int i = 0; i < n; i++) {
+        if (*a != *b) return (int)*a - (int)*b;
+        if (!*a) return 0;
+        a++; b++;
+    }
+    return 0;
+}
+__attribute__((ms_abi)) int mw_StrCmpNA(const char* a, const char* b, int n) {
+    if (!a || !b) return a ? 1 : (b ? -1 : 0);
+    return strncmp(a, b, (size_t)(n < 0 ? 0 : n));
+}
+__attribute__((ms_abi)) int mw_StrCmpNIW(const uint16_t* a, const uint16_t* b, int n) {
+    if (!a || !b) return a ? 1 : (b ? -1 : 0);
+    for (int i = 0; i < n; i++) {
+        uint16_t ca = *a, cb = *b;
+        if (ca >= L'A' && ca <= L'Z') ca = (uint16_t)(ca + 32);
+        if (cb >= L'A' && cb <= L'Z') cb = (uint16_t)(cb + 32);
+        if (ca != cb) return (int)ca - (int)cb;
+        if (!*a) return 0;
+        a++; b++;
+    }
+    return 0;
+}
+__attribute__((ms_abi)) int mw_StrCmpNIA(const char* a, const char* b, int n) {
+    if (!a || !b) return a ? 1 : (b ? -1 : 0);
+    for (int i = 0; i < n; i++) {
+        char ca = a[i], cb = b[i];
+        if (ca >= 'A' && ca <= 'Z') ca = (char)(ca + 32);
+        if (cb >= 'A' && cb <= 'Z') cb = (char)(cb + 32);
+        if ((unsigned char)ca != (unsigned char)cb) return (int)(unsigned char)ca - (int)(unsigned char)cb;
+        if (!ca) return 0;
+    }
+    return 0;
+}
+__attribute__((ms_abi)) uint16_t* mw_StrDupW(const uint16_t* s) {
+    if (!s) return NULL;
+    size_t n = mw_w16len(s);
+    uint16_t* p = (uint16_t*)mw_LocalAlloc(0x40 /* LMEM_ZEROINIT|LMEM_FIXED */, (n + 1) * 2);
+    if (!p) return NULL;
+    memcpy(p, s, (n + 1) * 2);
+    return p;
+}
+__attribute__((ms_abi)) char* mw_StrDupA(const char* s) {
+    if (!s) return NULL;
+    size_t n = strlen(s);
+    char* p = (char*)mw_LocalAlloc(0x40, n + 1);
+    if (!p) return NULL;
+    memcpy(p, s, n + 1);
+    return p;
+}
+__attribute__((ms_abi)) uint32_t mw_SHStrDupW(const uint16_t* s, uint16_t** ppsz) {
+    if (!ppsz) return 0x80004003u; /* E_POINTER */
+    if (!s) { *ppsz = NULL; return 0x80070057u; /* E_INVALIDARG */ }
+    size_t n = mw_w16len(s);
+    uint16_t* p = (uint16_t*)mw_CoTaskMemAlloc((n + 1) * 2);
+    if (!p) { *ppsz = NULL; return 0x8007000Eu; /* E_OUTOFMEMORY */ }
+    memcpy(p, s, (n + 1) * 2);
+    *ppsz = p;
+    MW_TRACE("SHStrDupW(len=%zu) -> S_OK", n);
+    return 0; /* S_OK */
+}
+__attribute__((ms_abi)) uint32_t mw_SHStrDupA(const char* s, uint16_t** ppsz) {
+    if (!ppsz) return 0x80004003u;
+    if (!s) { *ppsz = NULL; return 0x80070057u; }
+    size_t n = strlen(s);
+    uint16_t* p = (uint16_t*)mw_CoTaskMemAlloc((n + 1) * 2);
+    if (!p) { *ppsz = NULL; return 0x8007000Eu; }
+    for (size_t i = 0; i <= n; i++) p[i] = (uint16_t)(uint8_t)s[i];
+    *ppsz = p;
+    return 0;
+}
+__attribute__((ms_abi)) int mw_StrToIntExW(const uint16_t* psz, uint32_t flags, int* ret) {
+    if (!psz || !ret) return 0;
+    const uint16_t* p = psz;
+    int sign = 1;
+    if (*p == L'-') { sign = -1; p++; }
+    else if (*p == L'+') p++;
+    unsigned long long v = 0;
+    if ((flags & 1u) && p[0] == L'0' && (p[1] == L'x' || p[1] == L'X')) { /* STIF_SUPPORT_HEX */
+        p += 2;
+        int any = 0;
+        for (;; p++) {
+            unsigned d;
+            if (*p >= L'0' && *p <= L'9') d = (unsigned)(*p - L'0');
+            else if (*p >= L'a' && *p <= L'f') d = (unsigned)(*p - L'a' + 10);
+            else if (*p >= L'A' && *p <= L'F') d = (unsigned)(*p - L'A' + 10);
+            else break;
+            v = v * 16 + d; any = 1;
+        }
+        if (!any) return 0;
+    } else {
+        if (*p < L'0' || *p > L'9') return 0;
+        for (; *p >= L'0' && *p <= L'9'; p++) v = v * 10 + (unsigned)(*p - L'0');
+    }
+    *ret = (int)(sign * (long long)v);
+    return 1; /* TRUE */
+}
+__attribute__((ms_abi)) int mw_StrSpnW(const uint16_t* s, const uint16_t* set) {
+    if (!s) return 0;
+    if (!set) { set = (const uint16_t*)""; } /* typed empty L-string */
+    int n = 0;
+    for (; s[n]; n++) {
+        int found = 0;
+        for (const uint16_t* t = set; *t; t++) if (s[n] == *t) { found = 1; break; }
+        if (!found) break;
+    }
+    return n;
+}
+__attribute__((ms_abi)) int mw_StrCSpnA(const char* s, const char* set) {
+    if (!s) return 0;
+    if (!set) set = "";
+    int n = 0;
+    for (; s[n]; n++) {
+        int found = 0;
+        for (const char* t = set; *t; t++) if (s[n] == *t) { found = 1; break; }
+        if (found) break; /* StrCSpn: index of FIRST char that IS in set */
+    }
+    return n;
+}
+__attribute__((ms_abi)) int mw_StrTrimA(char* s, const char* set) {
+    if (!s) return 0;
+    if (!set) set = "";
+    size_t n = strlen(s);
+    size_t e = n;
+    while (e > 0) {
+        int found = 0;
+        for (const char* t = set; *t; t++) if (s[e - 1] == *t) { found = 1; break; }
+        if (!found) break;
+        e--;
+    }
+    size_t b = 0;
+    while (b < e) {
+        int found = 0;
+        for (const char* t = set; *t; t++) if (s[b] == *t) { found = 1; break; }
+        if (!found) break;
+        b++;
+    }
+    size_t m = e - b;
+    if (m > 0 && b > 0) memmove(s, s + b, m);
+    s[m] = 0;
+    return m > 0;
+}
+__attribute__((ms_abi)) uint32_t mw_StrRetToBufW(void* psr, void* pidl, uint16_t* buf, uint32_t cch) {
+    /* STRRET: uType 0=WSTR(pOleStr@+8, CoTaskMemFree) 1=OFFSET(uOffset@+4,
+     * ANSI bytes in pidl) 2=CSTR(char[260]@+8) */
+    if (!psr || !buf || !cch) return 0x80070057u;
+    uint8_t* sr = (uint8_t*)psr;
+    uint32_t type = *(uint32_t*)(sr + 0);
+    if (type == 0) {
+        uint16_t* s = *(uint16_t**)(sr + 8);
+        uint32_t i = 0;
+        if (s) for (; s[i] && i + 1 < cch; i++) buf[i] = s[i];
+        buf[i] = 0;
+        if (s) mw_CoTaskMemFree(s);
+    } else if (type == 1) {
+        uint32_t off = *(uint32_t*)(sr + 4);
+        const uint8_t* p = (const uint8_t*)pidl + off;
+        uint32_t i = 0;
+        for (; p[i] && i + 1 < cch; i++) buf[i] = (uint16_t)p[i];
+        buf[i] = 0;
+    } else {
+        const char* s = (const char*)(sr + 8);
+        uint32_t i = 0;
+        for (; s[i] && i + 1 < cch; i++) buf[i] = (uint16_t)(uint8_t)s[i];
+        buf[i] = 0;
+    }
+    MW_TRACE("StrRetToBufW(type=%u cch=%u) -> S_OK", type, cch);
+    return 0; /* S_OK */
+}
+__attribute__((ms_abi)) uint32_t mw_UrlEscapeW(const uint16_t* url, uint16_t* out,
+        uint32_t* pcch, uint32_t flags) {
+    (void)flags;
+    if (!url || !out || !pcch) return 0x80070057u;
+    uint32_t n = mw_w16len(url);
+    if (n + 1 > *pcch) { *pcch = n + 1; return 0x8007007Au; /* E_POINTER/STRSAFE_E_INSUFFICIENT_BUFFER */ }
+    memcpy(out, url, (n + 1) * 2);
+    *pcch = n;
+    return 0; /* S_OK */
+}
+__attribute__((ms_abi)) uint32_t mw_UrlCreateFromPathW(const uint16_t* path, uint16_t* out,
+        uint32_t* pcch, uint32_t flags) {
+    (void)flags;
+    if (!path || !out || !pcch) return 0x80070057u;
+    /* file URL form: file:<path> (Drive-letter form file:///C:/... is the
+     * display convention; the honest minimal contract is a valid URL whose
+     * UrlIsFile/PathCreateFromUrl round-trips, so keep the path visible). */
+    static const uint16_t pre[] = { 'f','i','l','e',':','/','/', 0 };
+    uint32_t pn = mw_w16len(path);
+    if (pn + 7 + 1 > *pcch) { *pcch = pn + 8; return 0x8007007Au; }
+    memcpy(out, pre, sizeof(pre));
+    memcpy(out + 7, path, (pn + 1) * 2);
+    *pcch = pn + 7;
+    MW_TRACE("UrlCreateFromPathW(cch=%u) -> file URL", pn);
+    return 0; /* S_OK */
+}
+__attribute__((ms_abi)) uint32_t mw_StrFormatByteSizeEx(unsigned long long ull,
+        uint32_t flags, uint16_t* buf, uint32_t cch) {
+    (void)flags;
+    if (!buf || !cch) return 0x80070057u;
+    char tmp[64];
+    double v = (double)ull;
+    const char* unit = " bytes";
+    if (v >= 1073741824.0) { v /= 1073741824.0; unit = " GB"; }
+    else if (v >= 1048576.0) { v /= 1048576.0; unit = " MB"; }
+    else if (v >= 1024.0) { v /= 1024.0; unit = " KB"; }
+    if (v >= 10.0 || ull < 1024) snprintf(tmp, sizeof(tmp), "%.0f%s", v, unit);
+    else snprintf(tmp, sizeof(tmp), "%.1f%s", v, unit);
+    uint32_t i = 0;
+    for (; tmp[i] && i + 1 < cch; i++) buf[i] = (uint16_t)(uint8_t)tmp[i];
+    buf[i] = 0;
+    return 0; /* S_OK */
+}
 
 /* ---- SW-1128 CRT (msvcrt) tails: real ---- */
 __attribute__((ms_abi)) int mw__strcmpi(const char* a, const char* b) {
@@ -35738,6 +36150,7 @@ ENTRY("msvcrt.dll", "wctype", mw_wctype),
     ENTRY("USER32.DLL", "DefWindowProcA",                       mw_DefWindowProcA),
     ENTRY("USER32.DLL", "PostQuitMessage",                      mw_PostQuitMessage),
     ENTRY("COMCTL32.DLL", "InitCommonControlsEx",               mw_InitCommonControlsEx),
+    ENTRY("COMCTL32.DLL", "LoadIconWithScaleDown",              mw_LoadIconWithScaleDown), /* SW-1333 ord 381 */
     ENTRY("COMCTL32.DLL", "InitCommonControls",                 mw_InitCommonControls),
     /* SWEEP-032 (SW-1106): COMCTL32 raw ordinals 410/412/413 (wine spec) */
     ENTRY("COMCTL32.dll", "SetWindowSubclass",                  mw_SetWindowSubclass),
@@ -35989,6 +36402,13 @@ ENTRY("msvcrt.dll", "wctype", mw_wctype),
     ENTRY("shell32.dll", "ShellExecuteW",                       mw_ShellExecuteW),
     ENTRY("shell32.dll", "ShellExecuteExA",                     mw_ShellExecuteExA),
     ENTRY("shell32.dll", "ShellExecuteExW",                     mw_ShellExecuteExW),
+    /* SW-1337 (SWEEP-076): SHGetPropertyStoreForWindow — headless honest
+     * failure. The unresolved stub returned 0 = S_OK with *ppv untouched,
+     * so Notepad3 x64 dereferenced the NULL store on its first virtual call
+     * (RVA 0x173a3f). Modeling a full IPropertyStore vtable is out of the
+     * engine's COM plane; E_FAIL sends the guest down its documented
+     * failure path (AppUserModelID is decorative — the app logs and goes). */
+    ENTRY("shell32.dll", "SHGetPropertyStoreForWindow",         mw_SHGetPropertyStoreForWindow),
     ENTRY("shell32.dll", "SHGetMalloc",                         mw_SHGetMalloc),
     ENTRY("mpr.dll", "WNetOpenEnumA",                           mw_WNetOpenEnumA),
     ENTRY("mpr.dll", "WNetOpenEnumW",                           mw_WNetOpenEnumW),
@@ -36571,6 +36991,32 @@ ENTRY("GDI32.DLL", "GetCharacterPlacementW",                mw_GetCharacterPlace
     ENTRY("winhttp.dll", "WinHttpGetProxyForUrl",               mw_WinHttpGetProxyForUrl),
     ENTRY("WINHTTP.dll", "WinHttpGetProxyForUrl",               mw_WinHttpGetProxyForUrl),
     ENTRY("shlwapi.dll", "StrChrW",                             mw_StrChrW),
+    /* SW-1336 (SWEEP-076): shlwapi string family — real semantics batch
+     * (Notepad3 x64 import closure; 20 names) */
+    ENTRY("shlwapi.dll", "StrStrW",                             mw_StrStrW),
+    ENTRY("shlwapi.dll", "StrStrA",                             mw_StrStrA),
+    ENTRY("shlwapi.dll", "StrStrIA",                            mw_StrStrIW),
+    ENTRY("shlwapi.dll", "StrChrA",                             mw_StrChrA),
+    ENTRY("shlwapi.dll", "StrChrIA",                            mw_StrChrIA),
+    ENTRY("shlwapi.dll", "StrChrIW",                            mw_StrChrIW),
+    ENTRY("shlwapi.dll", "StrRChrW",                            mw_StrRChrW),
+    ENTRY("shlwapi.dll", "StrCmpW",                             mw_StrCmpW),
+    ENTRY("shlwapi.dll", "StrCmpNW",                            mw_StrCmpNW),
+    ENTRY("shlwapi.dll", "StrCmpNA",                            mw_StrCmpNA),
+    ENTRY("shlwapi.dll", "StrCmpNIW",                           mw_StrCmpNIW),
+    ENTRY("shlwapi.dll", "StrCmpNIA",                           mw_StrCmpNIA),
+    ENTRY("shlwapi.dll", "StrDupW",                             mw_StrDupW),
+    ENTRY("shlwapi.dll", "StrDupA",                             mw_StrDupA),
+    ENTRY("shlwapi.dll", "SHStrDupW",                           mw_SHStrDupW),
+    ENTRY("shlwapi.dll", "SHStrDupA",                           mw_SHStrDupA),
+    ENTRY("shlwapi.dll", "StrToIntExW",                         mw_StrToIntExW),
+    ENTRY("shlwapi.dll", "StrSpnW",                             mw_StrSpnW),
+    ENTRY("shlwapi.dll", "StrCSpnA",                            mw_StrCSpnA),
+    ENTRY("shlwapi.dll", "StrTrimA",                            mw_StrTrimA),
+    ENTRY("shlwapi.dll", "StrRetToBufW",                        mw_StrRetToBufW),
+    ENTRY("shlwapi.dll", "UrlEscapeW",                          mw_UrlEscapeW),
+    ENTRY("shlwapi.dll", "UrlCreateFromPathW",                  mw_UrlCreateFromPathW),
+    ENTRY("shlwapi.dll", "StrFormatByteSizeEx",                 mw_StrFormatByteSizeEx),
     ENTRY("shlwapi.dll", "StrStrIW",                            mw_StrStrIW),
     ENTRY("shlwapi.dll", "StrCmpIW",                            mw_StrCmpIW),
     ENTRY("shlwapi.dll", "StrCmpLogicalW",                      mw_StrCmpLogicalW),
@@ -38084,6 +38530,12 @@ static int load_pe(const char* filepath) {
                     /* SWEEP-050 Train 5b: wine-spec low ordinals (Win95-fixed) */
                     { "COMCTL32", 2,   "MenuHelp" },
                     { "COMCTL32", 8,   "CreateMappedBitmap" },
+                    /* SW-1333 (SWEEP-076): Notepad3 x64 imports #381 =
+                     * LoadIconWithScaleDown (decoded from call sites:
+                     * 5-arg (hinst, resid, cx, cy, HICON*) + HRESULT jns
+                     * check; the class sits with the 410-413 subclass
+                     * family Notepad3 imports alongside). */
+                    { "COMCTL32", 381, "LoadIconWithScaleDown" },
                     { "SHLWAPI", 413,  "SHGetMachineInfo" },
                     { "SHLWAPI", 437,  "IsOS" },
                     { "SHELL32", 61,   "RunFileDlg" },
@@ -39006,8 +39458,24 @@ static uint8_t* g_arena32 = NULL;
 static uint32_t g_heap32_next = MW32_HEAP_BASE;
 static uint32_t g_tls32_next  = MW32_TLSARR_VA + 4096; /* bump for _tls_array slots */
 static int      g_world32_up  = 0;
+/* SW-1332 (SWEEP-076) fwd: main-EXE module handle must answer the ACTIVE
+ * world (x86 interpreter maps the guest at g_image_base32; x64 native path
+ * at g_image_base). GetModuleHandleA/W(NULL) returned the x64 global, which
+ * is NULL in PE32 mode — LastActivityView.exe crashed 26 steps in on
+ * `call GetModuleHandleA(NULL); cmp word[eax],'MZ'; mov ecx,[eax+0x3c]`.
+ * The x86 image carries its real PE headers (header block is memcpy'd), so
+ * returning the true base lets inline PE parsers work unmodified. */
+static uint64_t mw_main_image_base(void);
 static int      g_ran_pe32    = 0;
 static int      g_pe32_exit   = 0;
+
+/* SW-1332: main-EXE module handle = the ACTIVE world's image base.
+ * x86 interpreter: g_image_base32 (set by load_pe32); x64 native: g_image_base. */
+static uint32_t g_image_base32; /* tentative def; real def in the x86 section */
+static uint64_t mw_main_image_base(void) {
+    if (g_world32_up && g_image_base32) return (uint64_t)g_image_base32;
+    return (uint64_t)(uintptr_t)g_image_base;
+}
 
 static void mw32_host_span_init(void); /* SW-1297b fwd: host-image guard */
 
@@ -41560,17 +42028,67 @@ static int load_pe32(const char* filepath) {
     uint32_t size_hdrs  = *(uint32_t*)(oh + 60);
     uint32_t nrva       = *(uint32_t*)(oh + 92);
     uint32_t* dd        = (uint32_t*)(oh + 96);
+    /* SW-1331 (SWEEP-076): dd points into `raw`, which is FREED right after
+     * the section copy. Every dd[] read after that free was a use-after-free:
+     * for guests whose file size crosses the glibc mmap/trim threshold
+     * (AutoHotkeyU32.exe ~0.9MB: rc=139 in load_pe32 reading a wild
+     * ddesc=0x43a76552 in the dd[13] delay walk) the freed region is
+     * trimmed/reused and the directory entries come back as garbage.
+     * Snapshot the whole directory array NOW (raw still valid) and use the
+     * snapshot everywhere below. Entries beyond NumberOfRvaAndSizes are
+     * zeroed instead of read (a short table previously exposed section-
+     * header bytes as phantom directory entries). */
+    uint32_t ddsnap[32];
+    {
+        uint32_t keep = nrva > 16 ? 16 : nrva;
+        for (uint32_t i = 0; i < 32; i++)
+            ddsnap[i] = (i < keep * 2) ? dd[i] : 0;
+    }
     (void)sect_align; (void)file_align;
     if (nsec > MW32_MAXSEC || size_img == 0 || size_img > (512u << 20)) { free(raw); return -1; }
     uint16_t osec_sz = *(uint16_t*)(raw + peoff + 20);
     uint8_t* sectab  = oh + osec_sz;
 
-    /* Map image at preferred base (PE32 images sit low: 0x400000 typical) */
-    void* img = mmap((void*)(uintptr_t)image_base, (size_t)((size_img + 0xFFF) & ~0xFFFu),
+    /* Map image at preferred base (PE32 images sit low: 0x400000 typical).
+     * SW-1341 (SWEEP-076): a MAP_FIXED at the preferred base must NEVER
+     * overlap the host loader's own image — ZoomIt x86 (ImageBase 0x400000,
+     * SizeOfImage 0x8389000) spans 0x400000..0x83c9000 and STEPPED ALL OVER
+     * the running loader text at 0x2006000..0x20ed000: silent SIGSEGV with
+     * the crash handler itself dead on zeroed text (core: RIP=handler entry,
+     * zero bytes). When the preferred window collides with any engine plane
+     * (host loader span, arena32, thunk page, guest stack), relocate to the
+     * first free slot below 0x7F000000 and let the HIGHLOW reloc loop apply
+     * delta32 (it already handles delta != 0). Images without a .reloc
+     * directory fail honestly (an un-relocatable image cannot move). */
+    uint32_t load_base = image_base;
+    {
+        uint32_t img_lo = image_base, img_hi = image_base + ((size_img + 0xFFFu) & ~0xFFFu);
+        int collide =
+            (g_host_img_lo && img_lo < g_host_img_hi && img_hi > g_host_img_lo) ||
+            (img_lo < (MW32_ARENA_BASE + MW32_ARENA_SIZE) && img_hi > MW32_ARENA_BASE) ||
+            (img_lo < (MW32_THUNK_BASE + MW32_THUNK_BYTES) && img_hi > MW32_THUNK_BASE);
+        if (collide) {
+            /* does the image carry HIGHLOW relocations? */
+            uint32_t rr = ddsnap[5 * 2], rsz2 = ddsnap[5 * 2 + 1];
+            if (!rr || rsz2 < 8) {
+                fprintf(stderr, "[PE32] preferred base 0x%x..0x%x collides with the engine plane "
+                                "and the image has no .reloc — refusing (SW-1341)\n", img_lo, img_hi);
+                free(raw); return -1;
+            }
+            /* first free slot above the engine planes, 64KB aligned */
+            uint32_t cand = (MW32_ARENA_BASE + MW32_ARENA_SIZE > g_host_img_hi
+                             ? (MW32_ARENA_BASE + MW32_ARENA_SIZE) : g_host_img_hi);
+            cand = (cand + 0xFFFFu) & ~0xFFFFu;
+            load_base = cand;
+            fprintf(stderr, "[PE32] SW-1341: preferred base 0x%x..0x%x overlaps the engine plane — "
+                            "relocating image to 0x%x\n", img_lo, img_hi, load_base);
+        }
+    }
+    void* img = mmap((void*)(uintptr_t)load_base, (size_t)((size_img + 0xFFF) & ~0xFFFu),
                      PROT_READ | PROT_WRITE | PROT_EXEC,
                      MAP_PRIVATE | MAP_ANONYMOUS | MAP_FIXED, -1, 0);
     if (img == MAP_FAILED) {
-        fprintf(stderr, "[PE32] cannot map image at 0x%x\n", image_base);
+        fprintf(stderr, "[PE32] cannot map image at 0x%x\n", load_base);
         free(raw); return -1;
     }
     memcpy(img, raw, size_hdrs < size_img ? size_hdrs : size_img);
@@ -41582,10 +42100,10 @@ static int load_pe32(const char* filepath) {
         if (va + vsz > size_img) { fprintf(stderr, "[PE32] section %u overflows image\n", s); free(raw); return -1; }
         if (ro + rsz > (uint32_t)fsize) rsz = (uint32_t)fsize - ro; /* clamp overlay-truncated */
         if (n) memcpy((uint8_t*)img + va, raw + ro, n);
-        g_sec32[s].base = image_base + va; g_sec32[s].size = vsz;
+        g_sec32[s].base = load_base + va; g_sec32[s].size = vsz; /* SW-1341 actual base */
     }
     g_nsec32 = nsec;
-    g_image_base32 = image_base;
+    g_image_base32 = load_base; /* SW-1341 actual base */
     free(raw);
 
     /* Base relocations (HIGHLOW only for x86). SW-1297 FIX (SWEEP-066):
@@ -41598,8 +42116,8 @@ static int load_pe32(const char* filepath) {
      * 0x7ef329 = 0x3ef329+0x400000 landed inside .rdata). delta is kept
      * generic (actual - preferred) so a future fallback mapping still
      * relocates correctly. */
-    uint32_t delta32 = (uint32_t)(uintptr_t)img - image_base;
-    uint32_t rel_rva = dd[5 * 2], rel_sz = dd[5 * 2 + 1];
+    uint32_t delta32 = (uint32_t)(uintptr_t)img - image_base; /* SW-1341: nonzero when relocated */
+    uint32_t rel_rva = ddsnap[5 * 2], rel_sz = ddsnap[5 * 2 + 1]; /* SW-1331 snapshot */
     uint32_t nreloc = 0, nrel_hi = 0;
     if (rel_rva && rel_sz) {
         uint8_t* rb = (uint8_t*)img + rel_rva;
@@ -41612,8 +42130,20 @@ static int load_pe32(const char* filepath) {
                 uint16_t ent = *(uint16_t*)(rb + off + e);
                 uint32_t typ = ent >> 12, o = ent & 0xFFF;
                 if (!typ) continue;
-                if (typ == 1) { /* HIGHLOW */
-                    uint32_t va = image_base + page + o;
+                if (typ == 3) { /* HIGHLOW — SW-1341b: PE32 HIGHLOW is type 3,
+                                 * NOT 1 (1 = IMAGE_REL_BASED_HIGH, which
+                                 * patches the HIGH HALF only). The old
+                                 * typ==1 check applied ZERO fixups to every
+                                 * x86 image ever (harmless while delta==0:
+                                 * SW-1297 maps at the preferred base). It
+                                 * became fatal with SW-1341's relocation:
+                                 * ZoomIt x86 (37180 type-3 entries) kept its
+                                 * disk-absolute pointers and died on the
+                                 * __security_cookie read at RVA 0x1431be. */
+                    uint32_t va = load_base + page + o; /* SW-1341b: patch the
+                                ACTUAL mapping (load_base), not the preferred
+                                VA — the image was relocated; delta below is
+                                still (load_base - image_base) by definition */
                     if (delta32) m32_st32(va, m32_ld32(va) + delta32);
                     nreloc++;
                 } else nrel_hi++;
@@ -41625,13 +42155,13 @@ static int load_pe32(const char* filepath) {
              filepath, image_base, ep_rva, size_img, nsec, nreloc, nrel_hi);
 
     /* Import binding: IAT slots = x86 API thunks (name-only rule) */
-    uint32_t imp_rva = dd[1 * 2], imp_sz = dd[1 * 2 + 1];
+    uint32_t imp_rva = ddsnap[1 * 2], imp_sz = ddsnap[1 * 2 + 1]; /* SW-1331 snapshot */
     uint32_t unresolved = 0, resolved = 0;
     if (imp_rva && imp_sz) {
         for (uint32_t o = 0; o + 20 <= imp_sz; o += 20) {
             uint32_t* desc = (uint32_t*)((uint8_t*)img + imp_rva + o);
             uint32_t name_rva = desc[3], first_thunk = desc[4], oft = desc[0];
-            if (!name_rva && !first_thunk) break;
+            if (!name_rva || !first_thunk) break; /* SW-1342: Wine/Windows stop when EITHER field is zero */
             const char* dn = (const char*)((uint8_t*)img + name_rva);
             uint32_t* int_ = (uint32_t*)((uint8_t*)img + (oft ? oft : first_thunk));
             uint32_t* iat = (uint32_t*)((uint8_t*)img + first_thunk);
@@ -41678,7 +42208,7 @@ static int load_pe32(const char* filepath) {
      * semantics preserved by resolving UP FRONT: the guest's own
      * `cmp ecx,gadget; setne` check then takes the already-loaded path and
      * calls the API thunk directly with the caller's true arg count. */
-    uint32_t did_rva = dd[13 * 2], did_sz = dd[13 * 2 + 1];
+    uint32_t did_rva = ddsnap[13 * 2], did_sz = ddsnap[13 * 2 + 1]; /* SW-1331 snapshot */
     uint32_t n_delay_bound = 0;
     if (did_rva && did_sz >= 20) {
         for (uint32_t o = 0; o + 20 <= did_sz; o += 20) {
@@ -41690,7 +42220,7 @@ static int load_pe32(const char* filepath) {
             if (!szName && !pIAT) break;
             /* dlattrRva (0x1): fields are RVAs; else VAs (map at preferred
              * base makes VA == image_base + (va - image_base) either way) */
-            uint32_t name_off = (grAttrs & 1) ? szName : (szName - image_base);
+            uint32_t name_off = (grAttrs & 1) ? szName : (szName - image_base); /* VA-mode fields stay preferred-space */
             uint32_t iat_off  = (grAttrs & 1) ? pIAT : (pIAT - image_base);
             uint32_t int_off  = (grAttrs & 1) ? pINT : (pINT ? (pINT - image_base) : 0);
             if (name_off >= size_img || iat_off >= size_img) continue;
@@ -41727,7 +42257,7 @@ static int load_pe32(const char* filepath) {
         for (uint32_t o = 0; o + 20 <= imp_sz; o += 20) {
             uint32_t* desc = (uint32_t*)((uint8_t*)img + imp_rva + o);
             uint32_t name_rva = desc[3], first_thunk = desc[4], oft = desc[0];
-            if (!name_rva && !first_thunk) break;
+            if (!name_rva || !first_thunk) break; /* SW-1342: Wine/Windows stop when EITHER field is zero */
             const char* dn = (const char*)((uint8_t*)img + name_rva);
             char dlow[64]; size_t k = 0;
             for (; dn[k] && k < sizeof(dlow) - 1; k++)
@@ -41754,7 +42284,7 @@ static int load_pe32(const char* filepath) {
     }
 
     /* export directory (for x86 GetProcAddress — served as thunks at gate) */
-    uint32_t exp_rva = dd[0 * 2], exp_sz = dd[0 * 2 + 1];
+    uint32_t exp_rva = ddsnap[0 * 2], exp_sz = ddsnap[0 * 2 + 1]; /* SW-1331 snapshot */
     (void)exp_rva; (void)exp_sz;
 
     /* World + entry */
@@ -41767,13 +42297,13 @@ static int load_pe32(const char* filepath) {
             cmdline_va = MW32_STRA_VA;
         }
     }
-    mw32_setup_world(image_base, cmdline_va);
+    mw32_setup_world(load_base, cmdline_va); /* SW-1341: actual load base */
 
     /* Entry state: stdcall WinMainCRTStartup gets no stack args in practice;
      * x86 CRT startup reads its own env/args via the data imports. */
     t_cpu32.r[ESPi] = MW32_STACK_TOP - 0x1000;   /* leave a guard hole */
     t_cpu32.r[EBPi] = t_cpu32.r[ESPi];
-    t_cpu32.eip = image_base + ep_rva;
+    t_cpu32.eip = load_base + ep_rva; /* SW-1341: actual load base */
     m32_st32(t_cpu32.r[ESPi], 0);                /* fake ret addr 0 */
     MW_TRACE("[PE32] jumping to EP 0x%x (interpreted i386)", t_cpu32.eip);
 
