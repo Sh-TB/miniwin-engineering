@@ -49,3 +49,9 @@ winrar	x64	EXIT rc=0 frames=0	artifacts/sweep062/dl/winrar712.exe	 rc=0 rc=0 rc=
 idman	x86	PASS_LAUNCH_RENDER rc=0	artifacts/sweep080/dl/idman642build2.exe	 rc=0 rc=0 rc=0	frames=1 uniq=1 diff=	SW-1370 SW-1362 SW-1363	sweep084
 npp64	x64	PASS_INPUT_STATE_CHANGE	artifacts/sweep080/dl/npp.portable.x64.x/notepad++.exe	 rc=0 rc=0 rc=0	frames=2 uniq=2 diff=messagebox_2.bmp	SW-1298-x64 SW-1371 SW-1360	sweep084
 solo	x64	PASS_INPUT_STATE_CHANGE	artifacts/sweep083/dl/puzzles.x/solo.exe	 rc=0 rc=0 rc=0	frames=6 uniq=3 diff=frame_003.bmp	NEW	sweep084
+winrar	x64	EXIT rc=0 frames=0	artifacts/sweep062/dl/winrar712.exe	 rc=0 rc=0 rc=0	frames=0 uniq=0 diff=	SW-1361 SW-1360	sweep085
+idman	x86	PASS_LAUNCH_RENDER rc=0	artifacts/sweep080/dl/idman642build2.exe	 rc=0 rc=0 rc=0	frames=1 uniq=1 diff=	SW-1370 SW-1362 SW-1363	sweep085
+npp64	x64	PASS_LAUNCH_RENDER rc=0	artifacts/sweep080/dl/npp.portable.x64.x/notepad++.exe	 rc=0 rc=0 rc=0	frames=1 uniq=1 diff=	SW-1298-x64 SW-1371 SW-1360	sweep085
+fifteen	x64	PASS_INPUT_STATE_CHANGE	artifacts/sweep083/dl/puzzles.x/fifteen.exe	 rc=0 rc=0 rc=0	frames=30 uniq=15 diff=frame_003.bmp	NEW	sweep085
+resourcesextract	x64	BLOCKED_SHA	artifacts/sweep062/dl/resourcesextract.zip	sha mismatch	NEW	sweep085
+resourcesextract	x64	EXIT rc=0 frames=0	artifacts/sweep062/dl/resourcesextract.x/ResourcesExtract.exe	 rc=0 rc=0 rc=0	frames=0 uniq=0 diff=	NEW	sweep085

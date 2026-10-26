@@ -296,3 +296,25 @@ Stage Summary:
 - No engine change needed this train: the SWEEP-083 fix set holds; all four graphical guests reproduce their verdicts deterministically.
 - solo = new-program first-run PASS; visual execution proof delivered for Notepad++/IDM/solo/mines.
 - Next wagons: npp64 interactive deepening, winnc SW-1393 finally-retry router, everything/tcpview64 poll loops, renamer rc=204 pre-render path, more A-group puzzles (netgame/lightup/pattern/towers), hxd download retry.
+
+---
+Task ID: SWEEP-085
+Agent: main (z.ai)
+Task: «برنامه‌هایی که صفحه خطا می‌دهند اجرا نشده‌اند — مشکل را حل کن؛ پوشه‌بندی پیش‌نیازها کامل شود؛ شبیه‌سازی نصب» — generic file/focus/paint fix set + honest reclassification
+
+Work Log:
+- User critique adopted: prior npp64/idman "PASS" frames were ERROR dialogs. Decoded FOUR generic engine defects and fixed them in src/loader/loader.c (zero app special-casing):
+- SW-1395: the SW-1101e tails block (PathIsDirectoryW/PathFileExistsW/CopyFileW/GetCompressedFileSizeW) passed raw "C:\..." to access/stat/fopen — always-false on the host while CreateFileW normalizes (SW-1234). All four now route through w3_normalize_path (buffers 1024). MEASURED: Notepad++ langs.xml + stylers.xml SELF-CREATE at first run; both first-run error dialogs GONE.
+- SW-1396: SetFocus stub/ShowWindow never tracked focus -> GetFocus() always NULL; npp64's main wndproc thunk (0x140109870) passes GetFocus() as hwnd to its dispatcher (disasm: IAT call + mov rax->rcx) and early-returned on NULL. Real focus tracking (SetFocus returns prev; ShowWindow show-states 1/3/5/9 focus+activate).
+- SW-1397: ReadFile observability (fd/result/bytes/first-8 for n>=1024) — pinned the langs.xml byte story (546572 delivered, valid XML head).
+- SW-1398: real per-window paint delivery — dispatch routes child hwnds to guest-owned procs (subclass wndlong(-4) first, else SW-1334 captured class_proc); pump arms a child-paint round-robin after the main paint. MEASURED: WM_PAINT child=0x30001 delivered; Scintilla proc EXECUTES BeginPaint.
+- Frontier decodes (queued): SW-1399 npp (shipped langs.model.xml has 3 raw '&' = malformed XML for strict parsers; recover loop re-copies same bytes; + guest computes 32x32 MoveWindow(hwnd=NULL) layout); SW-1400 winrar SFX (wizard template RESOLVED 890B + children minted + real dlg proc; modal lifecycle needed); SW-1401 idman (CreateProcessW fail -> setup opens its silent switch "/s" as log path; generic fix = loader re-exec child).
+- NEW game fifteen (SWEEP-072 A-group U05): PASS_INPUT_STATE_CHANGE FIRST CONTACT (rc=0 x3, 30 frames/15 uniq — third consecutive Simon Tatham first-run PASS).
+- NEW program resourcesextract (NirSoft): official re-download verified byte-exact (cdccfe00...), x86 guest 402k steps, main() returns 0 pre-dialog — x86 dialog-path frontier queued.
+- Gates: corpus 21/21 x3 (evidence/sweep085/corpus_parity.tsv); G1 12/12 pre (80bca026) + post (ad0e9a35, 20261026_205504).
+- Evidence evidence/sweep085/ curated (summary.md + frames + ledger rows); commit + push HEAD:main (no force); Issue #1 comment posted.
+
+Stage Summary:
+- The "error dialog" era is reclassified honestly: npp64 now self-provisions its config files and shows its own designed recovery UX only on first run; the remaining npp64/winrar/idman frontiers are DECODED with root causes and queued as SW-1399/1400/1401.
+- fifteen = new-program PASS; per-train protocol (one new game + one new program) satisfied.
+- Next wagons: SW-1399 layout decode, SW-1400 modal pump, SW-1401 CreateProcessW v1, more puzzles, hxd retry.

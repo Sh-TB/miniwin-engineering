@@ -1,0 +1,15 @@
+name	resourcesextract
+arch	x64
+desc	NirSoft ResourcesExtract (resource extractor GUI, SWEEP-072 B-group - NEW program this train)
+source_url	https://www.nirsoft.net/utils/resourcesextract.zip
+source_sha256	cdccfe0063a66f95cb47127f351416423c960df6260c321ab587f33df0d8a417
+artifact	artifacts/sweep062/dl/resourcesextract.zip
+unpack	zip
+exe	ResourcesExtract.exe
+args
+runs	3
+timeout	75
+keys	13,27
+mouse	200,150
+known	NEW
+note	single dialog GUI (source file, resource types, save options); NirSoft official zip

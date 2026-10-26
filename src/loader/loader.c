@@ -10819,6 +10819,17 @@ __attribute__((ms_abi)) int mw_ReadFile(void* h, void* buf, uint32_t n, uint32_t
     }
     if (r < 0) { mw_SetLastError(109); if (bread) *bread = 0; return 0; }
     if (bread) *bread = (uint32_t)r;
+    /* SW-1397: honest read-result observability — the v1 trace printed only
+     * the request size, so a zero-byte/wrong-content read (langs.xml parse
+     * failure class) was invisible. Large reads: log result, bytes got, the
+     * first 8 payload bytes, and the host fd (slot-mixup detector). */
+    if (n >= 1024) {
+        unsigned char p8[8] = {0};
+        if (r > 0) memcpy(p8, buf, (size_t)r < sizeof p8 ? (size_t)r : sizeof p8);
+        MW_TRACE("ReadFile(fd=%d, n=%u) -> %d got=%u first=%02x %02x %02x %02x %02x %02x %02x %02x",
+                 real, n, r, (unsigned)r, p8[0], p8[1], p8[2], p8[3],
+                 p8[4], p8[5], p8[6], p8[7]);
+    }
     return 1;
 }
 __attribute__((ms_abi)) int mw_WriteFile(void* h, const void* buf, uint32_t n, uint32_t* written, void* overlapped) {
@@ -18120,8 +18131,32 @@ __attribute__((ms_abi)) void* mw_CreateWindowExA(uint32_t exstyle, const void* c
              exstyle, style, cls, w, h, x, y, MW_GUI_HWND);
     return MW_GUI_HWND;
 }
+/* SW-1396: focus/activation state — definitions live in the user32
+ * window-state block (g_mw_active_win / g_mw_focus_win, later in this
+ * translation unit); ShowWindow below now tracks them, so forward-declare
+ * here (tentative definitions merge with the initialized ones). */
+static void*     g_mw_active_win;
+static void*     g_mw_focus_win;
 __attribute__((ms_abi)) int mw_ShowWindow(void* hwnd, int cmd) {
     mw_hook_fire_activate(hwnd); /* SW-1203: HCBT_ACTIVATE on first show */
+    /* SW-1396: real ShowWindow with a show-state (SW_SHOW/SW_SHOWNORMAL/
+     * SW_RESTORE/SW_SHOWMAXIMIZED) ACTIVATES the window and gives it
+     * keyboard focus; the *NOACTIVATE variants (4/8/SW_SHOWMINNOACTIVE=7)
+     * must not. Track it so GetFocus()/GetActiveWindow() answer honestly —
+     * guests route their whole wndproc dispatch through GetFocus() (npp64
+     * thunk) or query focus in WM_PAINT. */
+    if (hwnd) {
+        switch (cmd) {
+        case 1: /* SW_SHOWNORMAL */ case 3: /* SW_SHOWMAXIMIZED */
+        case 5: /* SW_SHOW */        case 9: /* SW_RESTORE */
+            g_mw_active_win = hwnd;
+            g_mw_focus_win = hwnd;
+            break;
+        default: /* SW_HIDE=0, SW_MINIMIZE=6, SW_SHOWMINNOACTIVE=7,
+                  * SW_SHOWNA=8, SW_SHOWNOACTIVATE=4: no focus change */
+            break;
+        }
+    }
     /* SW-1269 (SWEEP-054): real Windows paints a window when it is SHOWN —
      * the system generates the first WM_PAINT after ShowWindow makes the
      * window visible. v1 only fired the CBT hook, so guests that wait for
@@ -18594,6 +18629,10 @@ static unsigned char g_cs_scratch[256]; /* tolerate guests that passed NULL lpPa
  * this site keeps the neighboring pump globals. */
 static int       g_events_mode = -1;   /* -1 = not yet read from env */
 static int       g_paint_pending = 0;
+/* SW-1398: per-round child paint round-robin state (armed when the main
+ * frame's WM_PAINT is consumed; one child WM_PAINT per pump round after). */
+static int       g_child_paint_round = 0;
+static int       g_child_paint_cursor = 0;
 static int       g_paint_erase_request = 1; /* SW-1291d: InvalidateRect bErase latch */
 /* SW-1287 (SWEEP-061): real Win32 delivers WM_SIZE(SIZE_RESTORED) when the
  * window is first SHOWN (and on every size change) BEFORE the first
@@ -19289,10 +19328,43 @@ static int mw_gui_next_event(void* msg, void* hwnd, int consume, const char* api
         return 1;
     }
     if (g_paint_pending) {
-        if (consume) { g_paint_pending = 0; g_delivered++; }
+        if (consume) {
+            g_paint_pending = 0; g_delivered++;
+            /* SW-1398: real Windows paints EVERY window with a non-empty
+             * update region — the main frame AND guest-owned children
+             * (Scintilla). Arm the child paint round-robin here: the next
+             * pump rounds deliver WM_PAINT to each live child whose
+             * window proc is guest-owned, until exhausted. */
+            g_child_paint_round = 1;
+            g_child_paint_cursor = 0;
+        }
         mw_gui_fill_msg(msg, h, 0x000Fu, 0, 0);
         if (consume) MW_TRACE("[GUI-EVENT] #%d %s -> WM_PAINT", g_delivered, api);
         return 1;
+    }
+    /* SW-1398: the child paint round — one child WM_PAINT per pump round,
+     * exactly like a real queue holding one paint per invalid window. */
+    if (g_child_paint_round) {
+        for (; g_child_paint_cursor < MW_CHILD_MAX; g_child_paint_cursor++) {
+            if (!g_child[g_child_paint_cursor].live) continue;
+            /* SW-1398: guest-owned painters are either SUBCLASSED procs
+             * (wndlong -4) or captured class procs (SW-1334). Engine-owned
+             * controls (defproc, no class proc) stay compositor-drawn. */
+            int wl = mw_wndlong_slot(g_child[g_child_paint_cursor].hwnd, -4, 0);
+            uintptr_t pv = (wl >= 0) ? g_wndlong[wl].value : 0;
+            if (!pv || pv == (uintptr_t)&mw_engine_defproc)
+                pv = (uintptr_t)g_child[g_child_paint_cursor].class_proc;
+            if (!pv || pv == (uintptr_t)&mw_engine_defproc)
+                continue; /* engine-owned control: compositor paints it */
+            void* ch = g_child[g_child_paint_cursor].hwnd;
+            g_child_paint_cursor++;
+            if (consume) { g_delivered++; }
+            mw_gui_fill_msg(msg, ch, 0x000Fu, 0, 0);
+            if (consume) MW_TRACE("[GUI-EVENT] #%d %s -> WM_PAINT child=%p (SW-1398)",
+                                  g_delivered, api, ch);
+            return 1;
+        }
+        g_child_paint_round = 0; /* round exhausted */
     }
     /* SWEEP-026 SW-1023: WM_TIMER fires on the real elapse schedule, not at
      * pump spin rate. Refire arms the next due time on consumption. */
@@ -19534,6 +19606,33 @@ static long long mw_gui_dispatch_msg(const void* msg) {
         if (m == 0x111u || m == 0x113u) mw_sol_game_probe("post-cmd");
         if (m == 0x000Fu) mw_sol_game_probe("post-paint"); /* SW-1292 */
         return r;
+    }
+    /* SW-1398: real DispatchMessage routes by the TARGET hwnd's window
+     * procedure — guests that registered their own classes (Scintilla) own
+     * real procs captured in the child registry (SW-1334). The v1 router
+     * answered "no registered wndproc" for every child hwnd, so pump-
+     * delivered WM_PAINTs to guest-owned children never ran their real
+     * painters (Notepad++ main frame: the Scintilla edit child 0x30001 kept
+     * focus, the frame paint early-returned, the edit area never rendered).
+     * Engine-owned controls (defproc) still go through the compositor. */
+    {
+        int cs = mw_child_slot(hwnd);
+        if (cs >= 0) {
+            /* SW-1398: instance subclass (wndlong -4) wins, else the SW-1334
+             * captured class proc — real DispatchMessage routing. */
+            int wl = mw_wndlong_slot(hwnd, -4, 0);
+            uintptr_t pv = (wl >= 0) ? g_wndlong[wl].value : 0;
+            if (!pv || pv == (uintptr_t)&mw_engine_defproc)
+                pv = (uintptr_t)g_child[cs].class_proc;
+            if (pv && pv != (uintptr_t)&mw_engine_defproc) {
+                long long r = mw_call_cb4((void*)pv,
+                                          (uintptr_t)(uint32_t)(uintptr_t)hwnd,
+                                          (uintptr_t)m, wp, (intptr_t)lp);
+                MW_TRACE("[GUI-EVENT] dispatch %s child=%p -> %lld (SW-1398)",
+                         mw_wm_name(m), hwnd, r);
+                return r;
+            }
+        }
     }
     MW_TRACE("[GUI-EVENT] dispatch %s -> 0 (no registered wndproc)", mw_wm_name(m));
     return 0;
@@ -22480,8 +22579,17 @@ __attribute__((ms_abi)) uint32_t mw_GetDlgCtrlID(void* h) {
     return (s >= 0) ? g_child[s].id : 0;
 }
 __attribute__((ms_abi)) void* mw_SetFocus(void* h) {
-    MW_TRACE("SetFocus(%p) -> NULL (no previous focus tracked)", h);
-    return NULL;
+    /* SW-1396: real SetFocus tracks and returns the PREVIOUS focus window.
+     * The v1 stub returned NULL and never stored the handle, so GetFocus()
+     * was always NULL — Notepad++'s main wndproc thunk passes GetFocus() as
+     * the target hwnd to its inner dispatcher (IAT call at 0x1401098a1 then
+     * mov rax->rcx): with NULL it early-returned and the main window never
+     * painted a single frame (app quit with rc=0 and 0 frames). */
+    void* prev = g_mw_focus_win;
+    g_mw_focus_win = h;
+    if (h) g_mw_active_win = h; /* focusing a window also activates it */
+    MW_TRACE("SetFocus(%p) -> prev %p", h, prev);
+    return prev;
 }
 __attribute__((ms_abi)) int mw_GetDlgItemTextW(void* dlg, uint32_t id, uint16_t* buf, int max) {
     /* SW-1360c: traced (see SendDlgItemMessageW). */
@@ -22964,7 +23072,8 @@ __attribute__((ms_abi)) int mw_MoveWindow(void* hwnd, int x, int y, int w, int h
         }
         else mw_child_set_rect(hwnd, x, y, w, h);
     }
-    MW_TRACE("MoveWindow(%dx%d) -> TRUE", w, h);
+    MW_TRACE("MoveWindow(hwnd=%p main=%d, %dx%d@%d,%d) -> TRUE", hwnd,
+             (int)(mw_child_slot(hwnd) < 0), w, h, x, y);
     return 1;
 }
 __attribute__((ms_abi)) void* mw_GetForegroundWindow(void) { return MW_GUI_HWND; }
@@ -30292,13 +30401,24 @@ __attribute__((ms_abi)) uint32_t mw_PathGetCharTypeW(uint32_t ch) {
 }
 __attribute__((ms_abi)) int mw_PathIsDirectoryW(const uint16_t* path) {
     if (!path || !path[0]) return 0;
-    char a[512]; sw28_w2a(a, path, sizeof a);
+    char a[1024]; sw28_w2a(a, path, sizeof a);
+    /* SW-1395: same host-path mapping as the rest of the file family — the raw
+     * "C:\\..." string can never stat() on the host (shlwapi plane is absolute,
+     * not cwd-relative), so every real file looked "missing" to guests that
+     * probe with PathIsDirectory* (Notepad++ first-run model-file probe). */
+    w3_normalize_path(a);
     struct stat st;
     return (stat(a, &st) == 0 && S_ISDIR(st.st_mode)) ? 1 : 0; /* FILE_ATTRIBUTE_DIRECTORY */
 }
 __attribute__((ms_abi)) int mw_PathFileExistsW(const uint16_t* path) {
     if (!path || !path[0]) return 0;
-    char a[512]; sw28_w2a(a, path, sizeof a);
+    char a[1024]; sw28_w2a(a, path, sizeof a);
+    /* SW-1395: normalize like CreateFileW/w3_create_file does — without this
+     * the shlwapi plane answered F_OK on the raw "C:\\..." literal, so files
+     * that EXIST were reported missing (Notepad++ "Load langs.xml failed!"
+     * and "Load stylers.xml failed:" — the first-run model->real copy never
+     * fired because PathFileExistsW(langs.model.xml) said FALSE). */
+    w3_normalize_path(a);
     return access(a, F_OK) == 0 ? 1 : 0;
 }
 __attribute__((ms_abi)) int mw_PathIsUNCW(const uint16_t* path) {
@@ -30352,8 +30472,11 @@ __attribute__((ms_abi)) int mw_PathCreateFromUrlW(const uint16_t* url, uint16_t*
 /* ---- SW-1101e: kernel32 file/string tails — real ---- */
 __attribute__((ms_abi)) int mw_CopyFileW(const uint16_t* src, const uint16_t* dst, int failIfExists) {
     if (!src || !dst) return 0;
-    char a[512], b[512];
+    char a[1024], b[1024];
     sw28_w2a(a, src, sizeof a); sw28_w2a(b, dst, sizeof b);
+    /* SW-1395: normalize both ends — CopyFile2 already did, the W entry did
+     * not; guests mixing PathFileExistsW + CopyFileW saw inconsistent worlds. */
+    w3_normalize_path(a); w3_normalize_path(b);
     if (failIfExists && access(b, F_OK) == 0) return 0;
     FILE* fi = fopen(a, "rb"); if (!fi) return 0;
     FILE* fo = fopen(b, "wb");
@@ -30367,7 +30490,8 @@ __attribute__((ms_abi)) int mw_CopyFileW(const uint16_t* src, const uint16_t* ds
 }
 __attribute__((ms_abi)) uint32_t mw_GetCompressedFileSizeW(const uint16_t* path, uint32_t* hi) {
     if (!path) return (uint32_t)-1;
-    char a[512]; sw28_w2a(a, path, sizeof a);
+    char a[1024]; sw28_w2a(a, path, sizeof a);
+    w3_normalize_path(a); /* SW-1395: same mapping as GetFileAttributesW */
     struct stat st;
     if (stat(a, &st) != 0) return (uint32_t)-1;
     if (hi) *hi = (uint32_t)((uint64_t)st.st_size >> 32);
