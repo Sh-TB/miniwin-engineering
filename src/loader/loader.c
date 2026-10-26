@@ -18772,6 +18772,26 @@ static int mw_gui_events_enabled(void) {
     return g_events_mode;
 }
 
+/* SW-1344 (SWEEP-077): extended-key flag in scripted keyboard lParam.
+ * Real keyboards set lParam bit 24 (KF_EXTENDED) for the arrow/PgUp/PgDn/
+ * Home/End/Ins/Del cluster; guests decode arrows through that bit exactly
+ * as documented (sgtatham windows.c translate_key: bit24 set -> CURSOR_*,
+ * bit24 clear -> MOD_NUM_KEYPAD digit). Our pump delivered lParam=1 for
+ * every key, so each arrow arrived as a NUMPAD digit and cursor movement
+ * never happened headlessly. lParam layout kept intact: bits0-7 scan=1,
+ * bit24 extended, bit30 prev-state, bit31 transition (keyup only). */
+static long long mw_key_lparam(uint32_t vk, int down) {
+    long long lp = down ? 0x00000001LL : 0xC0000001LL;
+    switch (vk) {
+    case 0x21: case 0x22: case 0x23: case 0x24: /* PRIOR NEXT HOME END   */
+    case 0x25: case 0x26: case 0x27: case 0x28: /* LEFT  UP   RIGHT DOWN */
+    case 0x2D: case 0x2E: case 0x6F:            /* INSERT DELETE DIVIDE  */
+        lp |= 0x01000000LL;
+        break;
+    }
+    return lp;
+}
+
 /* fill an x64 MSG: hwnd@0 message@8 wParam@16 lParam@24 time@32 pt@36 */
 static void mw_gui_fill_msg(void* msg, void* hwnd, uint32_t m, uintptr_t wp, long long lp) {
     if (!msg) return;
@@ -18813,7 +18833,7 @@ static int mw_gui_next_event(void* msg, void* hwnd, int consume, const char* api
         if (consume) { g_keyup_pending = 0; g_delivered++; }
         mw_key_set_up(vk);
         mw_gui_fill_msg(msg, h, 0x0101u /*WM_KEYUP*/, (uintptr_t)vk,
-                        (long long)0xC0000001u /* scan 1|prev|transition */);
+                        mw_key_lparam(vk, 0) /* scan 1|prev|transition (+ext) */);
         if (consume)
             MW_TRACE("[GUI-EVENT] #%d %s -> WM_KEYUP VK=0x%x", g_delivered, api, vk);
         return 1;
@@ -18824,7 +18844,7 @@ static int mw_gui_next_event(void* msg, void* hwnd, int consume, const char* api
         mw_key_set_down(vk); /* SW-1318: async state = delivered key */
         if (g_keyup_enable == 1) g_keyup_pending = vk;
         if (consume) g_delivered++;
-        mw_gui_fill_msg(msg, h, 0x0100u, (uintptr_t)vk, 1);
+        mw_gui_fill_msg(msg, h, 0x0100u, (uintptr_t)vk, mw_key_lparam(vk, 1));
         if (consume) MW_TRACE("[GUI-EVENT] #%d %s -> WM_KEYDOWN VK=0x%x", g_delivered, api, vk);
         return 1;
     }
@@ -18975,7 +18995,7 @@ static int mw_gui_next_event(void* msg, void* hwnd, int consume, const char* api
         mw_key_set_down(vk); /* SW-1318: gate-bypass delivers real keys too */
         if (g_keyup_enable == 1) g_keyup_pending = vk;
         if (consume) g_delivered++;
-        mw_gui_fill_msg(msg, h, 0x0100u, (uintptr_t)vk, 1);
+        mw_gui_fill_msg(msg, h, 0x0100u, (uintptr_t)vk, mw_key_lparam(vk, 1));
         if (consume) MW_TRACE("[GUI-EVENT] #%d %s -> WM_KEYDOWN VK=0x%x (gate-bypass)", g_delivered, api, vk);
         return 1;
     }
@@ -26453,12 +26473,99 @@ __attribute__((ms_abi)) int mw_SetViewportOrgEx(void* dc, int x, int y, void* pr
     if (prev) { int32_t* p = (int32_t*)prev; p[0] = 0; p[1] = 0; }
     return 1;
 }
+/* SW-1345 (SWEEP-077): REAL GDI Polygon/Polyline. cube draws its entire
+ * board (every tile AND the rolling solid) through Polygon(); the old
+ * silent TRUE stub painted nothing, so all 46 paints were byte-identical
+ * and input state changes were invisible (uniq=1). Scanline fill with the
+ * current brush + closed outline with the current pen (GDI Polygon closes
+ * last->first automatically). Fill rule = ALTERNATE (even-odd), the GDI
+ * default — no corpus guest sets WINDING (SetPolyFillMode has zero callers;
+ * when one appears, wire the DC's polyfill state here). Polyline
+ * draws the vertex chain with the pen, unclosed. POINT = {LONG x, LONG y}
+ * (8 bytes on x64, 8 on x86 — same layout). */
+static void mwb_polygon_fill(MWBmp* S, const int32_t* xs, const int32_t* ys,
+                             int n, uint32_t c, int winding) {
+    if (!S || n < 3) return;
+    int miny = ys[0], maxy = ys[0];
+    for (int i = 1; i < n; i++) {
+        if (ys[i] < miny) miny = ys[i];
+        if (ys[i] > maxy) maxy = ys[i];
+    }
+    if (miny < 0) miny = 0;
+    if (maxy > S->h - 1) maxy = S->h - 1;
+    int xint[1024], xdir[1024];
+    for (int y = miny; y <= maxy; y++) {
+        float cy = (float)y + 0.5f;
+        int ni = 0;
+        for (int i = 0; i < n; i++) {
+            int j = (i + 1) % n;
+            float y0 = (float)ys[i], y1 = (float)ys[j];
+            if ((y0 <= cy && y1 > cy) || (y1 <= cy && y0 > cy)) {
+                float t = (cy - y0) / (y1 - y0);
+                if (ni < 1024) {
+                    xint[ni] = (int)(xs[i] + t * (float)(xs[j] - xs[i]));
+                    xdir[ni] = (y1 > y0) ? 1 : -1;
+                    ni++;
+                }
+            }
+        }
+        for (int a = 1; a < ni; a++) { /* insertion sort by x */
+            int v = xint[a], d = xdir[a], b2 = a - 1;
+            while (b2 >= 0 && xint[b2] > v) { xint[b2+1] = xint[b2]; xdir[b2+1] = xdir[b2]; b2--; }
+            xint[b2+1] = v; xdir[b2+1] = d;
+        }
+        if (!winding) {
+            for (int a = 0; a + 1 < ni; a += 2) {
+                int x0 = xint[a], x1 = xint[a+1];
+                if (x0 < 0) x0 = 0;
+                if (x1 > S->w - 1) x1 = S->w - 1;
+                if (x1 >= x0) mwb_fill(S, x0, y, x1 - x0 + 1, 1, c);
+            }
+        } else {
+            int acc = 0, span_start = 0, in_span = 0;
+            for (int a = 0; a < ni; a++) {
+                int prev = acc;
+                acc += xdir[a];
+                if (!in_span && prev == 0 && acc != 0) { span_start = xint[a]; in_span = 1; }
+                else if (in_span && acc == 0) {
+                    int x0 = span_start, x1 = xint[a];
+                    if (x0 < 0) x0 = 0;
+                    if (x1 > S->w - 1) x1 = S->w - 1;
+                    if (x1 >= x0) mwb_fill(S, x0, y, x1 - x0 + 1, 1, c);
+                    in_span = 0;
+                }
+            }
+        }
+    }
+}
 __attribute__((ms_abi)) int mw_Polygon(void* dc, const void* pts, int n) {
-    (void)dc; (void)pts;
+    if (n > 1 && pts) {
+        MWBmp* S = mw_dc_surface(dc); /* SWEEP-006: route by DC */
+        if (S) {
+            const int32_t* p = (const int32_t*)pts;
+            int32_t xs[1024], ys[1024];
+            if (n > 1024) n = 1024;
+            for (int i = 0; i < n; i++) { xs[i] = p[i*2]; ys[i] = p[i*2+1]; }
+            if (!g_brush_hollow) mwb_polygon_fill(S, xs, ys, n, g_cur_brush, 0);
+            for (int i = 0; i < n; i++) { /* closed pen outline */
+                int j = (i + 1) % n;
+                mwb_line(S, xs[i], ys[i], xs[j], ys[j], g_cur_pen);
+            }
+            MW_TRACE("[GDI] Polygon(n=%d) fill=#%06x pen=#%06x", n, g_cur_brush, g_cur_pen);
+        }
+    }
     return n > 1 ? 1 : 0;
 }
 __attribute__((ms_abi)) int mw_Polyline(void* dc, const void* pts, int n) {
-    (void)dc; (void)pts;
+    if (n > 1 && pts) {
+        MWBmp* S = mw_dc_surface(dc);
+        if (S) {
+            const int32_t* p = (const int32_t*)pts;
+            for (int i = 0; i + 1 < n; i++)
+                mwb_line(S, p[i*2], p[i*2+1], p[i*2+2], p[i*2+3], g_cur_pen);
+            MW_TRACE("[GDI] Polyline(n=%d) pen=#%06x", n, g_cur_pen);
+        }
+    }
     return n > 1 ? 1 : 0;
 }
 __attribute__((ms_abi)) int mw_FrameRect(void* dc, const void* rc, void* brush) {

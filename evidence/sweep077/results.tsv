@@ -1,0 +1,27 @@
+id	name	rc_3runs	frames_uniq	input_state_change	verdict	car
+P01	blackbox	0/0/0	11	YES (cursor+clicks)	PASS_INPUT_STATE_CHANGE	SW-1344
+P02	bridges	0/0/0	6	YES (clicks)	PASS_INPUT_STATE_CHANGE	SW-1344
+P03	cube	0/0/0	21	YES (cursor roll)	PASS_INPUT_STATE_CHANGE	SW-1344+SW-1345
+P04	dominosa	0/0/0	7	YES (cursor)	PASS_INPUT_STATE_CHANGE	SW-1344
+P05	fifteen	0/0/0	20	YES (tiles slide)	PASS_INPUT_STATE_CHANGE	SW-1344
+P06	flood	0/0/0	10	YES (palette clicks)	PASS_INPUT_STATE_CHANGE	SW-1344
+P07	guess	0/0/0	6	YES (cursor)	PASS_INPUT_STATE_CHANGE	SW-1344
+P08	lightup	0/0/0	10	YES (cursor)	PASS_INPUT_STATE_CHANGE	SW-1344
+P09	map	0/0/0	6	YES (clicks)	PASS_INPUT_STATE_CHANGE	SW-1344
+P10	mines	0/0/0	14	YES (cells reveal)	PASS_INPUT_STATE_CHANGE	SW-1344
+P11	netgame	0/0/0	11	YES (cursor)	PASS_INPUT_STATE_CHANGE	SW-1344
+P12	pattern	0/0/0	7	YES (cursor)	PASS_INPUT_STATE_CHANGE	SW-1344
+P13	pegs	0/0/0	5	YES (clicks)	PASS_INPUT_STATE_CHANGE	SW-1344
+P14	range	0/0/0	9	YES (cursor)	PASS_INPUT_STATE_CHANGE	SW-1344
+P15	rect	0/0/0	9	YES (cursor)	PASS_INPUT_STATE_CHANGE	SW-1344
+P16	samegame	0/0/0	8	YES (block groups)	PASS_INPUT_STATE_CHANGE	SW-1344
+P17	signpost	0/0/0	6	YES (cursor)	PASS_INPUT_STATE_CHANGE	SW-1344
+P18	slant	0/0/0	12	YES (cursor)	PASS_INPUT_STATE_CHANGE	SW-1344
+P19	solo	0/0/0	6	YES (cursor+digits)	PASS_INPUT_STATE_CHANGE	SW-1344
+P20	towers	0/0/0	10	YES (cursor+digits)	PASS_INPUT_STATE_CHANGE	SW-1344
+U08	AutoHotkey v2 x64	0/0/0	n/a (CLI engine)	YES (script computes 6*7 -> stdout "MiniWin-AHK:42")	PASS_BEHAVIOR	probe
+U28	Sigcheck x64 CLI	255/255/255	n/a (CLI)	YES (UTF-16 usage text byte-identical x3, sha aa27fc289bf1b796)	PASS_EXPECTED_CLI_ERROR	stable
+U17	BgInfo x64	0/0/0	2	renders report window (2 frames, no crash)	PASS_LAUNCH_RENDER	rc=0
+U25	TcpView x64	124/124/124	0	alive: event loop, no crash at 70s	UNCHANGED_RUNNING	SW-1338 held
+R-snake	snake (corpus parity)	0/0/0	13/13/13	YES (steer keys)	CORPUS_PARITY_EXACT	zero regression
+R-breakout	breakout (corpus parity)	0/0/0	10/10/10	YES (paddle+launch)	CORPUS_PARITY_EXACT	zero regression
