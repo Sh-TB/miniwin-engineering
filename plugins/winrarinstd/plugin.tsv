@@ -1,6 +1,6 @@
 name	winrarinstd
 arch	x64
-desc	WinRAR 7.12 INSTALLED by the official installer inside MiniWin (SWEEP-087 NEW program — the installed exe, not the portable one)
+desc	WinRAR 7.12 INSTALLED by the official installer inside MiniWin (SWEEP-087 NEW program - the installed exe, not the portable one)
 source_url	artifacts/sweep086/winrar-installed/WinRAR/WinRAR.exe (installed by winrar712.exe SFX in SWEEP-086, evidence/sweep086/winrar/sandbox)
 source_sha256	7415b18099d47a37d187e6c94371ae81b2e600c412b215704d709348d331a3a4
 artifact	artifacts/sweep086/winrar-installed/WinRAR/WinRAR.exe
@@ -11,7 +11,8 @@ runs	3
 timeout	90
 keys	37,38,39,40,13,9
 mouse	150,150;300,200;450,300
-known	NEW
-note	installed payload runs from its own install dir (CWD = install dir via sandbox=yes); full install tree (27 sibling files incl. Rar.dll formats, SFX modules, RarExt.dll) present next to the exe
+known	NEW SW-1412
+note	installed payload runs from its own install dir (CWD = install dir via sandbox=yes); full install tree (27 sibling files) next to the exe; SW-1419 reg_seed = first-run defaults fixture (setup-phase keys; installer options dialog = SW-1417)
 sandbox	yes
 sandbox_tree	artifacts/sweep086/winrar-installed
+reg_seed	plugins/winrarinstd/regseed_firstrun.bin

@@ -11505,6 +11505,15 @@ static int mw_probe_copy(const void* src, size_t n, void* dst); /* pump block */
 #define MW_REG_VALN   64
 #define MW_REG_DATA   1024
 #define MW_REGKEY_BASE 0x00090000u
+/* SW-1419 (SWEEP-091): root table hoisted above the snapshot loader — load-time
+ * root reservation needs the prefixes before mw_reg_slot ever runs. Slots 0..6
+ * are the predefined roots (HKCR..HKDD); live key slots start at 7. */
+static const struct { uint32_t h; const char* pfx; } g_reg_roots[7] = {
+    { 0x80000000u, "HKCR" }, { 0x80000001u, "HKCU" },
+    { 0x80000002u, "HKLM" }, { 0x80000003u, "HKU"  },
+    { 0x80000004u, "HKPD" }, { 0x80000005u, "HKCC" },
+    { 0x80000006u, "HKDD" },
+};
 typedef struct {
     uint16_t name[MW_REG_VALN];
     uint32_t type;
@@ -11523,6 +11532,7 @@ static MwRegKey g_reg[MW_REG_MAXKEY];
  * loaded (magic "MWREG001"), and at process exit the live hive is written
  * back. Binary, versioned, self-contained; corrupt/foreign files are skipped. */
 static int g_reg_snap_tried = 0;
+static uint32_t mw_reg_copy_ascii(uint16_t* d, const char* s, uint32_t cap); /* SW-1419: root reservation below uses it */
 static void reg_snap_save(void);
 static uint32_t mw_reg_wlen(const uint16_t* s); /* fwd: defined below (snapshot uses it) */
 static void reg_snap_init(void) {
@@ -11541,6 +11551,33 @@ static void reg_snap_init(void) {
             for (int i = 0; i < MW_REG_MAXKEY; i++) {
                 uint8_t live = 0;
                 if (fread(&live, 1, 1, f) != 1) break;
+                if (i < 7) {
+                    /* SW-1419: slots 0..6 are the predefined roots — the file
+                     * cannot redefine them (a foreign/crafted snapshot that
+                     * packs keys into the root slots used to have its first
+                     * 7 keys silently destroyed by root re-resolution). The
+                     * file's slot-0..6 payload is parsed and discarded so the
+                     * stream stays aligned for slots 7+. Field order in the
+                     * stream: len, path, nvals, vals (must match the save). */
+                    uint32_t rn = 0, rnv = 0;
+                    if (!live) continue;
+                    if (fread(&rn, 4, 1, f) != 1) break;
+                    if (rn >= MW_REG_PATHN) break;
+                    if (rn && fseek(f, (long)rn * 2, SEEK_CUR) != 0) break; /* path */
+                    if (fread(&rnv, 4, 1, f) != 1 || rnv > MW_REG_MAXVAL) break; /* nvals AFTER path */
+                    uint32_t rvn, rvt, rvs;
+                    for (uint32_t v = 0; v < rnv; v++) {
+                        if (fread(&rvn, 4, 1, f) != 1 || rvn >= MW_REG_VALN) break;
+                        if (rvn && fseek(f, (long)rvn * 2, SEEK_CUR) != 0) break;
+                        if (fread(&rvt, 4, 1, f) != 1) break; /* type */
+                        if (fread(&rvs, 4, 1, f) != 1 || rvs > MW_REG_DATA) break; /* size */
+                        if (rvs && fseek(f, (long)rvs, SEEK_CUR) != 0) break; /* data */
+                    }
+                    g_reg[i].live = 1;
+                    mw_reg_copy_ascii(g_reg[i].path, g_reg_roots[i].pfx, MW_REG_PATHN);
+                    g_reg[i].nvals = 0;
+                    continue;
+                }
                 if (!live) continue;
                 uint32_t n = 0;
                 if (fread(&n, 4, 1, f) != 1 || n >= MW_REG_PATHN) break;
@@ -11679,12 +11716,7 @@ static void reg_snap_save(void) {
 static int32_t mw_reg_query(void* key, const uint16_t* name, uint32_t* type, void* data, uint32_t* size);
 __attribute__((ms_abi)) int32_t mw_RegCreateKeyExW(void* key, const wchar_t* sub, uint32_t res, const wchar_t* cls, uint32_t opts, uint32_t access, void* sa, void** result, void* disp);
 __attribute__((ms_abi)) int32_t mw_RegEnumKeyExW(void* key, uint32_t idx, wchar_t* name, uint32_t* ncap, void* res, wchar_t* cls, uint32_t* ccap, void* time);
-static const struct { uint32_t h; const char* pfx; } g_reg_roots[7] = {
-    { 0x80000000u, "HKCR" }, { 0x80000001u, "HKCU" },
-    { 0x80000002u, "HKLM" }, { 0x80000003u, "HKU"  },
-    { 0x80000004u, "HKPD" }, { 0x80000005u, "HKCC" },
-    { 0x80000006u, "HKDD" },
-};
+/* g_reg_roots: SW-1419 hoisted above the snapshot loader (single definition) */
 static uint32_t mw_reg_wlen(const uint16_t* s) {
     uint32_t n = 0; if (s) while (s[n]) n++; return n;
 }
@@ -11785,6 +11817,26 @@ static void mw_reg_seed_windows(void) {
             MW_TRACE("reg seed: Perflib Last Counter/Help = %u", last);
         }
     }
+    /* SW-1418 (SWEEP-091): HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion —
+     * the non-NT twin of the identity key. Every real Windows box has it
+     * (ProgramFilesDir/ProgramFilesPath/CommonFilesDir/DevicePath); WinRAR's
+     * SFX installer probes it via GetProcAddress(RegOpenKeyExW) during its
+     * setup phase and the v1 hive missed it (RegOpenKeyExW(miss) in the
+     * sweep091 install trace). */
+    if (mw_RegOpenKeyExW((void*)0x80000002u, (const wchar_t*)mw_seed_w(wsub, MW_REG_PATHN,
+            "SOFTWARE\\Microsoft\\Windows\\CurrentVersion"), 0, 0, &hk) != 0) {
+        if (mw_RegCreateKeyExW((void*)0x80000002u, (const wchar_t*)wsub, 0, NULL, 0, 0, NULL, &hk, NULL) == 0) {
+            mw_RegSetValueExW(hk, (const wchar_t*)mw_seed_w(wname, MW_REG_VALN, "ProgramFilesDir"), 0, 1u,
+                              mw_seed_w(wstr, MW_REG_VALN, "C:\\Program Files"), 32);
+            mw_RegSetValueExW(hk, (const wchar_t*)mw_seed_w(wname, MW_REG_VALN, "CommonFilesDir"), 0, 1u,
+                              mw_seed_w(wstr, MW_REG_VALN, "C:\\Program Files\\Common Files"), 60);
+            mw_RegSetValueExW(hk, (const wchar_t*)mw_seed_w(wname, MW_REG_VALN, "ProgramFilesPath"), 0, 1u,
+                              mw_seed_w(wstr, MW_REG_VALN, "C:\\Program Files"), 32);
+            mw_RegSetValueExW(hk, (const wchar_t*)mw_seed_w(wname, MW_REG_VALN, "DevicePath"), 0, 2u /*REG_EXPAND_SZ*/,
+                              mw_seed_w(wstr, MW_REG_VALN, "%SystemRoot%\\inf"), 28);
+            MW_TRACE("reg seed: HKLM Windows CurrentVersion ProgramFiles skeleton seeded");
+        }
+    }
 }
 
 static int mw_reg_slot(void* key) {
@@ -11827,7 +11879,18 @@ __attribute__((ms_abi)) int32_t mw_RegOpenKeyExW(void* key, const wchar_t* sub, 
     uint16_t path[MW_REG_PATHN];
     if (mw_reg_compose(key, sub, path) < 0) { mw_SetLastError(6); return 6; }
     int i = mw_reg_find_path(path);
-    if (i < 0) { mw_SetLastError(2); return 2; } /* FILE_NOT_FOUND: honest miss */
+    if (i < 0) {
+        /* SW-1412 (SWEEP-091): the miss path used to be silent; WinRAR polled
+         * a missing key 300+ times and the loop was invisible. Log the full
+         * composed path on every miss (reg-poll diagnosis). */
+        char pb[MW_REG_PATHN > 260 ? 260 : MW_REG_PATHN];
+        uint32_t k = 0;
+        while (k + 1 < sizeof(pb) && path[k]) { pb[k] = (char)(path[k] & 0xFF); k++; }
+        pb[k] = 0;
+        MW_TRACE("RegOpenKeyExW(miss) '%s' -> ERROR_FILE_NOT_FOUND", pb);
+        mw_SetLastError(2);
+        return 2; /* FILE_NOT_FOUND: honest miss */
+    }
     if (result) *result = (void*)(uintptr_t)(MW_REGKEY_BASE | (uintptr_t)(i + 1));
     MW_TRACE("RegOpenKeyExW -> handle slot %d", i);
     return 0;
@@ -12994,22 +13057,97 @@ __attribute__((ms_abi)) int mw_ShellExecuteExW(void* sei) {
     MW_TRACE("ShellExecuteExW(file=%s) -> %d", ok ? a : "(null)", ok);
     return ok;
 }
+/* ---- SW-1412 (SWEEP-091): COM/CoTask allocator ownership registry ----
+ * WinRAR passed a garbage "PIDL" (uninitialized out-param of an API whose
+ * generic stub lied S_OK) to CoTaskMemFree; the shim called host free() on
+ * it and libc SIGSEGV'd walking the fake chunk header — one guest lie
+ * killed the whole engine. Root cause is the unguarded boundary: blocks
+ * handed to the guest through CoTaskMemAlloc / IMalloc::Alloc must be
+ * freed ONLY while the engine still owns them. Every allocation through
+ * those entry points is tracked here; free/realloc of a foreign pointer
+ * is logged and refused (NULL where a return value is expected). */
+typedef struct mw_cotask_node { void* p; struct mw_cotask_node* next; } mw_cotask_node;
+#define MW_COTASK_BUCKETS 1024
+static mw_cotask_node* g_cotask_owned[MW_COTASK_BUCKETS];
+static unsigned mw_cotask_hash(void* p) {
+    uintptr_t v = (uintptr_t)p;
+    return (unsigned)(((v >> 4) * 2654435761u) >> 22) & (MW_COTASK_BUCKETS - 1);
+}
+static void mw_cotask_track(void* p) {
+    if (!p) return;
+    unsigned h = mw_cotask_hash(p);
+    mw_cotask_node* n;
+    for (n = g_cotask_owned[h]; n; n = n->next)
+        if (n->p == p) return; /* already tracked (realloc kept the block) */
+    n = (mw_cotask_node*)malloc(sizeof *n);
+    if (!n) return; /* tracking is best-effort; the block stays usable */
+    n->p = p; n->next = g_cotask_owned[h]; g_cotask_owned[h] = n;
+}
+static int mw_cotask_owned(void* p) {
+    if (!p) return 0;
+    mw_cotask_node* n;
+    for (n = g_cotask_owned[mw_cotask_hash(p)]; n; n = n->next)
+        if (n->p == p) return 1;
+    return 0;
+}
+static int mw_cotask_untrack(void* p) {
+    if (!p) return 0;
+    unsigned h = mw_cotask_hash(p);
+    mw_cotask_node** pp;
+    for (pp = &g_cotask_owned[h]; *pp; pp = &(*pp)->next) {
+        if ((*pp)->p == p) {
+            mw_cotask_node* dead = *pp; *pp = dead->next; free(dead);
+            return 1;
+        }
+    }
+    return 0;
+}
 /* SHGetMalloc: malloc-backed IMalloc (vtbl: QI/AddRef/Release/Alloc/Free/
  * Realloc/GetSize/DidAlloc/HeapMinimize).
  * SW-1410 (SWEEP-087): these are called by the GUEST with the MICROSOFT x64
  * calling convention (args in RCX,RDX,R8,R9) — plain SysV definitions took
  * self from RDI and p from RSI (both garbage), so IMalloc::Free(-0x100)
- * crashed inside libc reading the chunk header. ms_abi on every member. */
+ * crashed inside libc reading the chunk header. ms_abi on every member.
+ * SW-1412 (SWEEP-091): ms_abi fixed the ABI but the POINTER VALUE coming
+ * from the guest can still be garbage — every member now goes through the
+ * ownership registry above. */
 __attribute__((ms_abi)) static long mw_shmalloc_qi(void* self, const void* iid, void** out) {
     (void)self; (void)iid; if (out) *out = NULL; return 0x80004002L; /* E_NOINTERFACE */
 }
 __attribute__((ms_abi)) static uint32_t mw_shmalloc_addref(void* self) { (void)self; return 2; }
 __attribute__((ms_abi)) static uint32_t mw_shmalloc_release(void* self) { (void)self; return 1; }
-__attribute__((ms_abi)) static void* mw_shmalloc_alloc(void* self, size_t cb) { (void)self; return cb ? malloc(cb) : NULL; }
-__attribute__((ms_abi)) static void* mw_shmalloc_realloc(void* self, void* p, size_t cb) { (void)self; return realloc(p, cb); }
-__attribute__((ms_abi)) static void mw_shmalloc_free(void* self, void* p) { (void)self; free(p); }
+__attribute__((ms_abi)) static void* mw_shmalloc_alloc(void* self, size_t cb) {
+    (void)self;
+    void* p = cb ? malloc(cb) : NULL;
+    if (p) mw_cotask_track(p);
+    return p;
+}
+__attribute__((ms_abi)) static void* mw_shmalloc_realloc(void* self, void* p, size_t cb) {
+    (void)self;
+    if (p && !mw_cotask_owned(p)) {
+        MW_TRACE("IMalloc::Realloc(foreign %p, %zu) -> NULL (ownership refused)", p, cb);
+        return NULL;
+    }
+    if (cb == 0) { if (p) mw_cotask_untrack(p); free(p); return NULL; }
+    void* np = realloc(p, cb);
+    if (np) { mw_cotask_untrack(p); mw_cotask_track(np); }
+    return np;
+}
+__attribute__((ms_abi)) static void mw_shmalloc_free(void* self, void* p) {
+    (void)self;
+    if (!p) return;
+    if (!mw_cotask_untrack(p)) {
+        MW_TRACE("IMalloc::Free(foreign %p) refused (not engine-owned)", p);
+        return;
+    }
+    free(p);
+}
 __attribute__((ms_abi)) static size_t mw_shmalloc_getsize(void* self, void* p) { (void)self; (void)p; return 0; }
-__attribute__((ms_abi)) static int mw_shmalloc_didalloc(void* self, void* p) { (void)self; (void)p; return -1; }
+__attribute__((ms_abi)) static int mw_shmalloc_didalloc(void* self, void* p) {
+    (void)self;
+    if (!p) return -1; /* unknown for NULL, like Windows */
+    return mw_cotask_owned(p) ? 1 : 0; /* honest: registry answers */
+}
 __attribute__((ms_abi)) static void mw_shmalloc_heapmin(void* self) { (void)self; }
 static void* const g_shmalloc_vtbl[9] = {
     (void*)mw_shmalloc_qi, (void*)mw_shmalloc_addref, (void*)mw_shmalloc_release,
@@ -13224,11 +13362,19 @@ __attribute__((ms_abi)) uint32_t mw_CoGetClassObject(const void* clsid, uint32_t
 }
 __attribute__((ms_abi)) void* mw_CoTaskMemAlloc(size_t cb) {
     void* p = cb ? malloc(cb) : NULL;
+    if (p) mw_cotask_track(p); /* SW-1412: boundary ownership */
     MW_TRACE("CoTaskMemAlloc(%zu) -> %p", cb, p);
     return p;
 }
 __attribute__((ms_abi)) void mw_CoTaskMemFree(void* p) {
     MW_TRACE("CoTaskMemFree(%p)", p);
+    if (!p) return;
+    if (!mw_cotask_untrack(p)) {
+        /* SW-1412: a guest-supplied pointer the engine never allocated must
+         * never reach host free() — that SIGSEGV'd libc in WinRAR's boot. */
+        MW_TRACE("CoTaskMemFree(foreign %p) refused (not engine-owned)", p);
+        return;
+    }
     free(p);
 }
 __attribute__((ms_abi)) uint32_t mw_CoCreateGuid(void* guid) {
@@ -17195,7 +17341,7 @@ __attribute__((ms_abi)) long long mw_SendMessageW(void* h, uint32_t msg, uintptr
             return r;
         }
     }
-    MW_TRACE("SendMessageW(hwnd=%p %s) -> 0", h, mw_wm_name(msg));
+    MW_TRACE("SendMessageW(hwnd=%p %s msg=0x%x) -> 0", h, mw_wm_name(msg), msg);
     return 0;
 }
 __attribute__((ms_abi)) long mw_SendMessageA(void* h, uint32_t msg, uintptr_t wp, long lp) {
@@ -27671,6 +27817,19 @@ __attribute__((ms_abi)) long mw_SHGetSpecialFolderLocation(void* hwnd, int csidl
     *pidl = NULL;
     return (long)0x80004005; /* honest: no shell namespace to enumerate */
 }
+/* SW-1412 (SWEEP-091): SHGetFolderLocation — the generic stub answered 0
+ * (S_OK) WITHOUT writing the out-param; the guest read stack garbage as a
+ * PIDL and handed it to CoTaskMemFree, whose host free() SIGSEGV'd. Same
+ * honest contract as SHGetSpecialFolderLocation: E_FAIL + *ppidl = NULL so
+ * the guest takes its documented fallback path instead of dereferencing
+ * garbage. (Windows: HRESULT SHGetFolderLocation(HWND, int csidl, HANDLE
+ * hToken, DWORD dwFlags, PIDLIST_ABSOLUTE *ppidl).) */
+__attribute__((ms_abi)) long mw_SHGetFolderLocation(void* hwnd, int csidl, void* token, uint32_t flags, void** ppidl) {
+    (void)hwnd; (void)csidl; (void)token; (void)flags;
+    if (!ppidl) return (long)0x80004003; /* E_POINTER */
+    *ppidl = NULL;
+    return (long)0x80004005; /* honest: no shell namespace to enumerate */
+}
 __attribute__((ms_abi)) int mw_SHGetPathFromIDListW(const void* pidl, uint16_t* buf) {
     (void)pidl;
     if (buf) buf[0] = 0;
@@ -27688,6 +27847,12 @@ __attribute__((ms_abi)) void mw_ReleaseStgMedium(void* stg) { (void)stg; }
 __attribute__((ms_abi)) void* mw_CoTaskMemRealloc(void* pv, size_t cb) {
     if (!cb) { return NULL; }
     if (!pv) return mw_CoTaskMemAlloc(cb);
+    if (!mw_cotask_owned(pv)) {
+        /* SW-1412: foreign pointer — mw_GlobalSize would read a bogus header;
+         * hand out a fresh block instead and leave the foreign memory alone. */
+        MW_TRACE("CoTaskMemRealloc(foreign %p, %zu) -> fresh block", pv, cb);
+        return mw_CoTaskMemAlloc(cb);
+    }
     /* GlobalAlloc-backed pool: realloc via size-preserving copy */
     size_t old = mw_GlobalSize(pv);
     void* p = mw_CoTaskMemAlloc(cb);
@@ -35182,10 +35347,39 @@ __attribute__((ms_abi)) int mw_SetupDiOpenDeviceInterfaceW(void* set, const wcha
 /* ole32 — CoGetMalloc: the engine's default OLE allocator object. */
 __attribute__((ms_abi)) static int32_t mw_ole_malloc_addref(void* self) { (void)self; return 1; }
 __attribute__((ms_abi)) static int32_t mw_ole_malloc_release(void* self) { (void)self; return 1; }
-__attribute__((ms_abi)) static void* mw_ole_malloc_alloc(void* self, uint32_t cb) { (void)self; return malloc(cb); }
-__attribute__((ms_abi)) static void* mw_ole_malloc_realloc(void* self, void* p, uint32_t cb) { (void)self; return realloc(p, cb); }
-__attribute__((ms_abi)) static void mw_ole_malloc_free(void* self, void* p) { (void)self; free(p); }
-__attribute__((ms_abi)) static uint32_t mw_ole_malloc_didalloc(void* self, void* p, uint32_t cb) { (void)self; (void)p; (void)cb; return 0; }
+/* SW-1412 (SWEEP-091): CoGetMalloc's IMalloc joins the ownership registry —
+ * same crash class as SHGetMalloc's (guest pointer value is untrusted). */
+__attribute__((ms_abi)) static void* mw_ole_malloc_alloc(void* self, uint32_t cb) {
+    (void)self;
+    void* p = cb ? malloc(cb) : NULL;
+    if (p) mw_cotask_track(p);
+    return p;
+}
+__attribute__((ms_abi)) static void* mw_ole_malloc_realloc(void* self, void* p, uint32_t cb) {
+    (void)self;
+    if (p && !mw_cotask_owned(p)) {
+        MW_TRACE("CoGetMalloc::Realloc(foreign %p, %u) -> NULL (ownership refused)", p, cb);
+        return NULL;
+    }
+    if (cb == 0) { if (p) mw_cotask_untrack(p); free(p); return NULL; }
+    void* np = realloc(p, cb);
+    if (np) { mw_cotask_untrack(p); mw_cotask_track(np); }
+    return np;
+}
+__attribute__((ms_abi)) static void mw_ole_malloc_free(void* self, void* p) {
+    (void)self;
+    if (!p) return;
+    if (!mw_cotask_untrack(p)) {
+        MW_TRACE("CoGetMalloc::Free(foreign %p) refused (not engine-owned)", p);
+        return;
+    }
+    free(p);
+}
+__attribute__((ms_abi)) static uint32_t mw_ole_malloc_didalloc(void* self, void* p, uint32_t cb) {
+    (void)self; (void)cb;
+    if (!p) return 1;
+    return mw_cotask_owned(p) ? 1 : 0; /* honest: registry answers */
+}
 __attribute__((ms_abi)) static uint32_t mw_ole_malloc_heapminimize(void* self) { (void)self; return 0; }
 __attribute__((ms_abi)) uint32_t mw_CoGetMalloc(uint32_t ctx, void** out) {
     (void)ctx;
@@ -38156,6 +38350,7 @@ ENTRY("msvcrt.dll", "wctype", mw_wctype),
     ENTRY("shell32.dll", "SHChangeNotify",                      mw_SHChangeNotify),
     ENTRY("shell32.dll", "SHGetPathFromIDListW",                mw_SHGetPathFromIDListW),
     ENTRY("shell32.dll", "SHGetSpecialFolderLocation",          mw_SHGetSpecialFolderLocation),
+    ENTRY("shell32.dll", "SHGetFolderLocation",                 mw_SHGetFolderLocation), /* SW-1412 */
     ENTRY("ole32.dll", "RegisterDragDrop",                      mw_RegisterDragDrop),
     ENTRY("shell32.dll", "DragQueryFileW",                      mw_DragQueryFileW),
     ENTRY("shell32.dll", "ExtractIconExW",                      mw_ExtractIconExW),
@@ -41637,6 +41832,7 @@ static const struct { const char* n; uint32_t b; } g_api32_arity[] = {
     { "SHGetPathFromIDListA", 8 },
     { "SHGetPathFromIDListW", 8 },
     { "SHGetSpecialFolderLocation", 12 },
+    { "SHGetFolderLocation", 20 }, /* SW-1412: HWND+csidl+token+flags+ppidl */
     { "SHGetSpecialFolderPathA", 16 }, /* SW-1353: HWND+path+csidl+create (RegScanner x86 stack fix) */
     { "SHGetSpecialFolderPathW", 16 },
     { "ShellExecuteA", 24 },

@@ -13,6 +13,12 @@
 # Manifest keys (TAB-separated, # = comment):
 #   name arch desc source_url source_sha256 artifact unpack exe args
 #   runs timeout keys mouse known note
+#   sandbox=yes              run with CWD inside a per-plugin sandbox (SW-1404)
+#   sandbox_tree=<dir>       stage a whole Windows-style tree into the sandbox
+#   reg_seed=<file>          SW-1419 (SWEEP-091): MWREG001 snapshot copied to
+#                            the sandbox as registry_snapshot.bin BEFORE the
+#                            runs — the installed app boots with the
+#                            installer's written registry (install→app chain)
 set -u
 REPO="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$REPO" || exit 1
@@ -129,6 +135,15 @@ run_plugin() {
         stree=$(manifest_get sandbox_tree "$mf")
         if [ -n "$stree" ] && [ -d "$stree" ]; then
             cp -a "$stree/." "$SB/"
+        fi
+        # SW-1419 (SWEEP-091): reg_seed=<snapshot file> — stage the installer's
+        # registry snapshot so the app run sees the keys the installer wrote.
+        # This closes the install→installed-app registry chain (real Windows:
+        # HKCU keys written by setup are read by the program at first launch).
+        rseed=$(manifest_get reg_seed "$mf")
+        if [ -n "$rseed" ] && [ -f "$rseed" ]; then
+            cp -f "$rseed" "$SB/registry_snapshot.bin"
+            say "   reg seed: $rseed ($(stat -c%s "$rseed")B)"
         fi
         if [ -n "$stree" ] && [ -f "$SB/$exe" ]; then
             exe_path="$SB/$exe"

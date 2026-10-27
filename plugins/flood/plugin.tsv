@@ -1,0 +1,15 @@
+name	flood
+arch	x64
+desc	Simon Tatham Flood (puzzle collection, SWEEP-091 NEW game)
+source_url	https://www.chiark.greenend.org.uk/~sgtatham/puzzles/puzzles.zip
+source_sha256	a5b00f6301510b7ab19eea92af91f71db71b59391f8d24d4801efde648db9707
+artifact	artifacts/sweep083/dl/puzzles.zip
+unpack	zip
+exe	flood.exe
+args
+runs	3
+timeout	75
+keys	37,38,39,40,13,32
+mouse	150,150
+known	NEW
+note	single-window GDI puzzle; flood-fill colour game; menus + timer + grid redraw; official portable zip sha a5b00f63

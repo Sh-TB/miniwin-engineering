@@ -89,3 +89,10 @@ winraruninst	x64	FRONTIER_SW-1415 silent EXIT rc=0 after CRT init (uninstaller U
 WinRAR/Uninstall.exe (installed tree)	 rc=0 x3	0 frames, install_log empty	NEW	sweep089
 netgame	x64	PASS_INPUT_STATE_CHANGE	artifacts/sweep083/dl/puzzles.x/netgame.exe	 rc=0 rc=0 rc=0	frames=20 uniq=10 diff=frame_003.bmp	NEW	sweep090
 shexview	x64	PASS_LAUNCH_RENDER rc=0	artifacts/sweep090_shexview.x/shexview.exe	 rc=0 rc=0 rc=0	frames=1 uniq=1 diff=	NEW	sweep090
+winrarinstd	x64	FRONTIER_SW crash=1 undecoded steps=?	/home/z/my-project/workspace/miniwin-engineering/evidence/sweep091/winrarinstd/sandbox/WinRAR/WinRAR.exe	 rc=139 rc=139 rc=139	frames=0 uniq=0 diff=	NEW	sweep091
+winrar	x64	EXIT rc=0 frames=0	/home/z/my-project/workspace/miniwin-engineering/evidence/sweep091/winrar/sandbox/Installers/winrar712.exe	 rc=0 rc=0 rc=0	frames=0 uniq=0 diff=	SW-1361 SW-1360	sweep091
+winrarinstd		BLOCKED_DOWNLOAD		no artifact (download blocked)		sweep091
+winrarinstd	x64	TIMEOUT frames=0	/home/z/my-project/workspace/miniwin-engineering/evidence/sweep091/winrarinstd/sandbox/WinRAR/WinRAR.exe	 rc=124 rc=124 rc=124	frames=0 uniq=0 diff=	NEW SW-1412	sweep091
+winrarinstd	x64	TIMEOUT frames=0	/home/z/my-project/workspace/miniwin-engineering/evidence/sweep091/winrarinstd/sandbox/WinRAR/WinRAR.exe	 rc=124 rc=124 rc=124	frames=0 uniq=0 diff=	NEW SW-1412	sweep091
+flood	x64	PASS_INPUT_STATE_CHANGE	artifacts/sweep083/dl/puzzles.x/flood.exe	 rc=0 rc=0 rc=0	frames=6 uniq=3 diff=frame_003.bmp	NEW	sweep091
+produkey	x64	PASS_LAUNCH_RENDER rc=124	artifacts/sweep50/dl/produkey/produkey-x64.x/ProduKey.exe	 rc=124 rc=124 rc=124	frames=1 uniq=1 diff=	NEW	sweep091

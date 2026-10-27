@@ -418,3 +418,63 @@ Work Log:
 Stage Summary:
 - First post-recovery train landed on the true mainline; one real
   memory-corruption bug fixed; two first-contact PASS wagons.
+
+---
+Task ID: SWEEP-091
+Agent: main (z.ai)
+Task: «ادامه قطار قطار» — SW-1412 ownership-registry fix (installed-WinRAR SIGSEGV), registry chain install→app (SW-1418/1419), +1 game +1 program, gates
+
+Work Log:
+- Post-crash recovery: local workspace was a STALE SWEEP-030 snapshot; ff-only
+  merged origin/main (SWEEP-090, 5aae5e2); stale sweep030/031 artifacts moved
+  to /home/z/my-project/backup_old_untracked. Disk was 100% full — removed
+  unused mingw toolchains (3.3G) to 68%.
+- SW-1412 ROOT CAUSE (crash class): mw_CoTaskMemFree + IMalloc::Free/Realloc
+  (SHGetMalloc AND CoGetMalloc variants) called host free()/realloc() on
+  guest-supplied pointers with NO ownership check; installed WinRAR passed a
+  garbage PIDL (from SHGetFolderLocation whose generic stub returned S_OK
+  without writing the out-param) and libc SIGSEGV'd in the chunk walk (rc=139
+  x3, 0 frames). Fix: engine-wide CoTask/IMalloc ownership registry
+  (mw_cotask_track/owned/untrack, 1024 buckets) wired into all FIVE free
+  paths; foreign pointers are logged and refused. DidAlloc now answers
+  honestly from the registry (1 owned / 0 foreign / -1 NULL).
+- SW-1412b: mw_SHGetFolderLocation implemented with the honest contract
+  (E_POINTER on NULL out, else E_FAIL + *ppidl=NULL, same stance as
+  SHGetSpecialFolderLocation); registered + x86 arg-bytes 20.
+- RegOpenKeyExW miss path now logs the full composed path (was silent; the
+  160x Toolbar\Buttons poll was invisible).
+- SW-1418: seeded HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion
+  (ProgramFilesDir/CommonFilesDir/ProgramFilesPath/DevicePath) — the non-NT
+  twin probed by the WinRAR SFX installer; hive missed it.
+- SW-1419: registry chain install→installed-app. plugin_run.sh reg_seed=
+  stages an MWREG001 snapshot into the sandbox before the runs. Root-slot
+  reservation on load (slots 0..6 = HKCR..HKDD are authoritative; field
+  order len→path→nvals honored — the first parse had nvals/path swapped and
+  silently broke at slot 0). Fixture plugins/winrarinstd/regseed_firstrun.bin
+  = first-run defaults (16 HKCU\Software\WinRAR keys, setup-phase equivalents
+  pending the installer options dialog = SW-1417 family).
+- MEASURED winrarinstd: rc=139 crash=1 x3 (0 frames) → rc=124 crash=0 x3
+  (crash class ELIMINATED); full main-UI skeleton observed in trace: 6
+  children (2x STATUSBAR, COMBOBOX, 2x TOOLBAR, SysListView32 file list),
+  3x ShowWindow(cmd=5), TB_SAVERESTOREW/TB_INSERTBUTTONA/LVM_SETITEMTEXTW
+  traffic, reg misses 296→17 (one-time honest probes: Policy, Policies\
+  Explorer, Profiles\4). Reg-poll loop GONE. Frontier SW-1417 registered:
+  boot completion + first paint (guest runs to timeout; no frame yet).
+- NEW game flood = PASS_INPUT_STATE_CHANGE first contact (rc=0 x3, 6 frames
+  3 uniq) — 7th Simon Tatham PASS (mines/solo/fifteen/lightup/pattern/
+  towers/netgame/flood).
+- NEW program produkey = PASS_LAUNCH_RENDER first contact (rc=124 x3 = GUI
+  message pump alive, 1 real frame) — registry-heavy NirSoft x64, unpacked
+  sha 6cf9dbed273e35c0, zip sha e4604e0ee6803704.
+- Gates: corpus 21/21 x3 rc=0 crash=0 (evidence/sweep091/corpus_parity.tsv);
+  G1 PIN 12/12 binary 38a787f8 (evidence/master/g1/20261027_142322).
+
+Stage Summary:
+- The 'installed programs' chain is now mechanically complete end to end:
+  installer writes files+registry in their own correct paths (sandbox +
+  regtree mirror + install_log), the snapshot persists, and the installed
+  app boots with the installer's registry via reg_seed. WinRAR-installed
+  no longer crashes: the ownership registry kills the whole
+  guest-garbage→host-free() class. Next train: SW-1417 (WinRAR boot paint),
+  SW-1413 (7zsetup CRT), SW-1414 (untangle SIGABRT), SW-1415 (uninstaller
+  UI), SW-1416 (handle value-space collision).
