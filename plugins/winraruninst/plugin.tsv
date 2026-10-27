@@ -1,0 +1,17 @@
+name	winraruninst
+arch	x64
+desc	WinRAR 7.12 UNINSTALLER (installed by the official installer, SWEEP-089 NEW program — install/uninstall lifecycle)
+source_url	artifacts/sweep086/winrar-installed/WinRAR/Uninstall.exe
+source_sha256
+artifact	artifacts/sweep086/winrar-installed/WinRAR/Uninstall.exe
+unpack
+exe	WinRAR/Uninstall.exe
+args
+runs	3
+timeout	75
+keys	13,9,32
+mouse	200,300;400,300
+known	NEW
+note	runs from its own install dir via sandbox_tree staging; uninstall phase of the installer simulation
+sandbox	yes
+sandbox_tree	artifacts/sweep086/winrar-installed

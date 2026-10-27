@@ -372,3 +372,16 @@ Work Log:
 Stage Summary:
 - Three installer technologies now characterized honestly: WinRAR SFX = INSTALL_OK; NSIS = deep LZMA frontier; 7-Zip = CRT-init frontier.
 - Next: SW-1412 heap-guard decode (installed WinRAR), SW-1413 CRT-init (7zsetup), SW-1401/SW-1400, +1 game/program per train.
+
+---
+Task ID: SWEEP-089
+Agent: main (z.ai)
+Task: +1 game +1 program — uninstall lifecycle + Untangle
+
+Work Log:
+- NEW program winraruninst = the INSTALLED WinRAR Uninstall.exe (runs from its own install dir via sandbox_tree; engine UNCHANGED binary 62dea8e0) = FRONTIER_SW-1415: silent EXIT rc=0 after CRT init (UCRT shutdown sequence incl. mscoree/CorExitProcess probe; uninstaller UI not reached).
+- NEW game untangle = FRONTIER_SW-1414: SIGABRT (Signal 6) in libc — guest CRT abort path, decode queued.
+- Gates: corpus 21/21 x3 (sweep089_corpus.sh); engine byte-identical 62dea8e0 (G1 evidence 20261027_055732 remains valid).
+
+Stage Summary:
+- 4 trains this session (086-089): installer ground-truth subsystem live (regtree + install-log + sandbox), WinRAR SFX INSTALL_OK, installed WinRAR.exe boot layer-by-layer, 3 installer technologies mapped honestly, 4 new games PASS first-contact (lightup/pattern/towers + solo/mines/fifteen prior), frontiers decoded and queued with SW numbers.
