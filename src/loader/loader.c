@@ -8766,6 +8766,20 @@ __attribute__((ms_abi)) void* mw_LoadLibraryExW(const wchar_t* name, void* file,
     MW_TRACE("LoadLibraryExW(flags=%u)", flags);
     char n8[256] = {0};
     if (name) w3_w16_to_utf8z((const uint16_t*)name, n8, sizeof(n8));
+    /* SW-1469 diag (temporary): garbage-name probe — when the converted
+     * name contains '?' where ASCII should be, dump the raw wide bytes so
+     * the guest-side string corruption is decodable from the trace. */
+    if (name && strchr(n8, '?')) {
+        MW_TRACE("LoadLibraryExW[DIAG] wname bytes:");
+        const uint16_t* w = (const uint16_t*)name;
+        char hex[200]; size_t o = 0;
+        for (int i = 0; i < 24 && w[i]; i++) {
+            o += (size_t)snprintf(hex + o, sizeof(hex) - o, "%04x ", w[i]);
+            if (o > sizeof(hex) - 8) break;
+        }
+        hex[o] = 0;
+        MW_TRACE("LoadLibraryExW[DIAG] %s", hex);
+    }
     return mw_LoadLibraryA(n8);
     mw_SetLastError(126);
     return NULL;
@@ -9544,6 +9558,21 @@ __attribute__((ms_abi)) int mw_GetSystemMetrics(int index) {
 }
 
 __attribute__((ms_abi)) void* mw_GlobalAlloc(uint32_t flags, size_t bytes) {
+    /* SW-1466 (SWEEP-094): x86 guests must receive arena32 VAs, never host
+     * malloc pointers. Small host allocations happen to land in the low brk
+     * heap and worked by accident; anything >= the glibc mmap threshold
+     * (~128KB) returns a 64-bit host address — npp.8.9.8.1.Installer.x64.exe
+     * asked GlobalAlloc(GHND, 0x800000), got 0x7f58a2cc5010, truncated it to
+     * 32 bits and SIGSEGV'd at si_addr=0xdb000f. Same contract as
+     * mw_HeapAlloc's SW-1281 branch: bump-arena slice, zero-filled on
+     * GMEM_ZEROINIT (0x40), size registered so GlobalSize answers exactly. */
+    if (mw32_mode()) {
+        uint32_t va = mw32_heap_alloc((uint32_t)(bytes ? bytes : 1), !!(flags & 0x40));
+        if (!va) { mw_SetLastError(8); return NULL; }
+        w3_reg_add_sz((void*)(uintptr_t)va, (size_t)bytes | 0x100000000ull);
+        MW_TRACE("GlobalAlloc[32](flags=%u, bytes=0x%lx) = 0x%x", flags, (unsigned long)bytes, va);
+        return (void*)(uintptr_t)va;
+    }
     void* p = (flags & 0x40) ? calloc(1, bytes ? bytes : 1) : malloc(bytes ? bytes : 1);
     MW_TRACE("GlobalAlloc(flags=%u, bytes=0x%lx) = %p", flags, (unsigned long)bytes, p);
     w3_reg_add(p);
@@ -9561,6 +9590,10 @@ __attribute__((ms_abi)) size_t mw_GlobalSize(void* p) {
     int s = w3_reg_find(p);
     if (s >= 0 && (g_alloc_reg[s].size >> 32))
         return g_alloc_reg[s].size & ~0x100000000ull;
+    /* SW-1466: an untracked arena32 VA is not a global memory object —
+     * malloc_usable_size on it would read arena bytes as a fake chunk
+     * header. Answer 0 the way real GlobalSize answers an invalid handle. */
+    if (mw32_mode() || mw32_heap_owns(p)) return 0;
     return malloc_usable_size(p);
 }
 /* SW-1208: GlobalFree accepts BOTH registered pointers and GMEM_MOVEABLE
@@ -9583,6 +9616,14 @@ __attribute__((ms_abi)) void* mw_GlobalFree(void* p) {
         MW_TRACE("GlobalFree(%p) -> fail (ERROR_INVALID_HANDLE)", p);
         return p;
     }
+    /* SW-1466: arena32 VAs carry no glibc chunk header — free() on them
+     * faults (SW-1364 class). Bump arena: drop the tracking entry, no free. */
+    if (mw32_mode() || mw32_heap_owns(p)) {
+        w3_reg_del(p);
+        MW_TRACE("GlobalFree[32](0x%lx) -> NULL (arena slice, no-op free)",
+                 (unsigned long)(uintptr_t)p);
+        return NULL;
+    }
     w3_reg_del(p);
     free(p);
     MW_TRACE("GlobalFree(%p) -> NULL", p);
@@ -9591,7 +9632,15 @@ __attribute__((ms_abi)) void* mw_GlobalFree(void* p) {
 __attribute__((ms_abi)) void* mw_LocalAlloc(uint32_t flags, size_t bytes) { return mw_GlobalAlloc(flags, bytes); } /* registry inside GlobalAlloc */
 __attribute__((ms_abi)) void* mw_LocalLock(void* p) { return p; }
 __attribute__((ms_abi)) int mw_LocalUnlock(void* p) { return 1; }
-__attribute__((ms_abi)) size_t mw_LocalSize(void* p) { return p ? malloc_usable_size(p) : 0; }
+__attribute__((ms_abi)) size_t mw_LocalSize(void* p) {
+    if (!p) return 0;
+    /* SW-1466: arena32 VAs answer their registered size (0 when untracked). */
+    if (mw32_mode() || mw32_heap_owns(p)) {
+        int s = w3_reg_find(p);
+        return (s >= 0) ? (g_alloc_reg[s].size & ~0x100000000ull) : 0;
+    }
+    return malloc_usable_size(p);
+}
 __attribute__((ms_abi)) void* mw_LocalFree(void* p) {
     if (!p) return NULL;
     /* SW-1208: same handle-cookie + degrade-to-fail contract as GlobalFree
@@ -9614,6 +9663,13 @@ __attribute__((ms_abi)) void* mw_LocalFree(void* p) {
     /* BUG-043 family: mirror mw_free — a guarded chunk is mmap'd; plain
      * free() on it faults inside libc (same class as BUG-041 mw_realloc). */
     if (w3_is_guarded(p)) { w3_guard_free(p); return NULL; }
+    /* SW-1466: arena32 slice — no glibc chunk header, free() would fault. */
+    if (mw32_mode() || mw32_heap_owns(p)) {
+        w3_reg_del(p);
+        MW_TRACE("LocalFree[32](0x%lx) -> NULL (arena slice, no-op free)",
+                 (unsigned long)(uintptr_t)p);
+        return NULL;
+    }
     w3_reg_del(p);
     free(p);
     return NULL;
@@ -10395,14 +10451,79 @@ __attribute__((ms_abi)) int mw_SystemTimeToFileTime(const void* st, void* ft) {
     *(uint64_t*)ft = (uint64_t)(secs + 11644473600LL) * 10000000ULL + w[7] * 10000;
     return 1;
 }
-__attribute__((ms_abi)) int mw_GetVersion(void) { return 0x000A0006; } /* 10.6 */
+/* ---- SW-1468 (SWEEP-094): unified configurable OS version plane ----
+ * The version story was inconsistent across surfaces: GetVersion/GetVersionEx
+ * claimed 10.0 while the KUSD page and the HKLM registry seed reported the
+ * XP-x64 plane 5.2 ("Windows Server 2003"). Modern installers consult the
+ * registry and the KUSD, saw 5.2 and refused to run their real logic —
+ * npp.8.9.8.1 rendered its honest "This version of Notepad++ doesn't
+ * support [this OS]" error dialog and stopped.
+ * Fix: ONE helper parses MINWIN_OSVER="major.minor" (e.g. "6.1"). When the
+ * variable is set, every version surface reports it coherently:
+ *   - KUSD NtMajorVersion/NtMinorVersion
+ *   - registry seed ProductName / CurrentVersion / CurrentBuildNumber
+ *   - GetVersion / GetVersionExA / GetVersionExW dwMajorVersion/dwMinorVersion
+ * When it is unset every surface keeps its pre-existing default, so the
+ * XP-era corpus (5.2 plane) and the Win10-claiming guests are untouched.
+ * VerifyVersionInfo keeps its "claim compatibility" contract. */
+static int g_osver_major = -1, g_osver_minor = -1; /* -1 = unset (per-surface defaults) */
+static void mw_osver(int* major, int* minor) {
+    if (g_osver_major < 0) {
+        g_osver_major = 0; g_osver_minor = 0;
+        const char* e = getenv("MINWIN_OSVER");
+        if (e && e[0]) {
+            int ma = 0, mi = 0;
+            if (sscanf(e, "%d.%d", &ma, &mi) == 2 && ma > 0 && mi >= 0) {
+                g_osver_major = ma; g_osver_minor = mi;
+            }
+        }
+    }
+    *major = g_osver_major; *minor = g_osver_minor;
+}
+static const char* mw_osver_product(void) {
+    int ma, mi; mw_osver(&ma, &mi);
+    if (ma == 10 && mi == 0) return "Windows 10";
+    if (ma == 6 && mi == 3)  return "Windows 8.1";
+    if (ma == 6 && mi == 2)  return "Windows 8";
+    if (ma == 6 && mi == 1)  return "Windows 7";
+    if (ma == 6 && mi == 0)  return "Windows Vista";
+    if (ma == 5 && mi == 2)  return "Windows Server 2003";
+    if (ma == 5 && mi == 1)  return "Windows XP";
+    return "Windows";
+}
+static const char* mw_osver_build(void) {
+    int ma, mi; mw_osver(&ma, &mi);
+    if (ma == 10 && mi == 0) return "19045";
+    if (ma == 6 && mi == 3)  return "9600";
+    if (ma == 6 && mi == 2)  return "9200";
+    if (ma == 6 && mi == 1)  return "7601";
+    if (ma == 6 && mi == 0)  return "6002";
+    if (ma == 5 && mi == 2)  return "3790";
+    if (ma == 5 && mi == 1)  return "2600";
+    return "0";
+}
+static const char* mw_osver_csd(void) {
+    int ma, mi; mw_osver(&ma, &mi);
+    if (ma == 6 && mi == 1)  return "Service Pack 1";
+    if (ma == 5 && mi == 2)  return "Service Pack 3";
+    return "";
+}
+
+__attribute__((ms_abi)) int mw_GetVersion(void) {
+    int ma, mi; mw_osver(&ma, &mi);
+    if (ma > 0) return (int)(((ma & 0xFFFFu) << 16) | (mi & 0xFFFFu));
+    return 0x000A0006; /* pre-existing default: 10.6 packed */
+}
 __attribute__((ms_abi)) int mw_GetVersionExA(void* vi) {
     if (!vi) return 0;
     uint32_t sz = *(uint32_t*)vi;
     memset(vi, 0, sz);
     *(uint32_t*)vi = sz;
     uint8_t* p = (uint8_t*)vi;
-    *(uint32_t*)(p + 4)  = 10; *(uint32_t*)(p + 8) = 0; *(uint32_t*)(p + 12) = 0;
+    int ma, mi; mw_osver(&ma, &mi);
+    if (ma > 0) { *(uint32_t*)(p + 4) = (uint32_t)ma; *(uint32_t*)(p + 8) = (uint32_t)mi; }
+    else       { *(uint32_t*)(p + 4)  = 10; *(uint32_t*)(p + 8) = 0; }
+    *(uint32_t*)(p + 12) = 0;
     *(uint32_t*)(p + 16) = 2;  /* VER_PLATFORM_WIN32_NT */
     return 1;
 }
@@ -10420,7 +10541,10 @@ __attribute__((ms_abi)) int mw_GetVersionExW(void* vi) {
     memset(vi, 0, sz);
     *(uint32_t*)vi = sz;
     uint8_t* p = (uint8_t*)vi;
-    *(uint32_t*)(p + 4)  = 10; *(uint32_t*)(p + 8) = 0; *(uint32_t*)(p + 12) = 0;
+    int ma, mi; mw_osver(&ma, &mi); /* SW-1468: unified plane when set */
+    if (ma > 0) { *(uint32_t*)(p + 4) = (uint32_t)ma; *(uint32_t*)(p + 8) = (uint32_t)mi; }
+    else       { *(uint32_t*)(p + 4)  = 10; *(uint32_t*)(p + 8) = 0; }
+    *(uint32_t*)(p + 12) = 0;
     *(uint32_t*)(p + 16) = 2;  /* VER_PLATFORM_WIN32_NT */
     return 1;
 }
@@ -11781,15 +11905,23 @@ static void mw_reg_seed_windows(void) {
     if (mw_RegOpenKeyExW((void*)0x80000002u, (const wchar_t*)mw_seed_w(wsub, MW_REG_PATHN,
             "SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion"), 0, 0, &hk) != 0) {
         if (mw_RegCreateKeyExW((void*)0x80000002u, (const wchar_t*)wsub, 0, NULL, 0, 0, NULL, &hk, NULL) == 0) {
+            /* SW-1468: report the unified version plane. Unset = the exact
+             * pre-existing 5.2 identity (XP-era corpus untouched). */
+            int ov_ma, ov_mi; mw_osver(&ov_ma, &ov_mi);
+            char pv[MW_REG_VALN], cv[MW_REG_VALN], cb[MW_REG_VALN], cs[MW_REG_VALN];
+            snprintf(pv, sizeof(pv), "%s", ov_ma > 0 ? mw_osver_product() : "Windows Server 2003");
+            snprintf(cv, sizeof(cv), "%d.%d", ov_ma > 0 ? ov_ma : 5, ov_ma > 0 ? ov_mi : 2);
+            snprintf(cb, sizeof(cb), "%s", ov_ma > 0 ? mw_osver_build() : "3790");
+            snprintf(cs, sizeof(cs), "%s", ov_ma > 0 ? mw_osver_csd() : "Service Pack 3");
             mw_RegSetValueExW(hk, (const wchar_t*)mw_seed_w(wname, MW_REG_VALN, "ProductName"), 0, 1u,
-                              mw_seed_w(wstr, MW_REG_VALN, "Windows Server 2003"), 40);
+                              mw_seed_w(wstr, MW_REG_VALN, pv), (uint32_t)(strlen(pv) + 1) * 2);
             mw_RegSetValueExW(hk, (const wchar_t*)mw_seed_w(wname, MW_REG_VALN, "CurrentVersion"), 0, 1u,
-                              mw_seed_w(wstr, MW_REG_VALN, "5.2"), 8);
+                              mw_seed_w(wstr, MW_REG_VALN, cv), (uint32_t)(strlen(cv) + 1) * 2);
             mw_RegSetValueExW(hk, (const wchar_t*)mw_seed_w(wname, MW_REG_VALN, "CurrentBuildNumber"), 0, 1u,
-                              mw_seed_w(wstr, MW_REG_VALN, "3790"), 10);
+                              mw_seed_w(wstr, MW_REG_VALN, cb), (uint32_t)(strlen(cb) + 1) * 2);
             mw_RegSetValueExW(hk, (const wchar_t*)mw_seed_w(wname, MW_REG_VALN, "CSDVersion"), 0, 1u,
-                              mw_seed_w(wstr, MW_REG_VALN, "Service Pack 3"), 32);
-            MW_TRACE("reg seed: CurrentVersion identity seeded");
+                              mw_seed_w(wstr, MW_REG_VALN, cs), (uint32_t)(strlen(cs) + 1) * 2);
+            MW_TRACE("reg seed: CurrentVersion identity seeded (%s %s b%s)", pv, cv, cb);
         }
     }
     /* Winlogon (autologon64 SW-1241) */
@@ -11806,6 +11938,50 @@ static void mw_reg_seed_windows(void) {
                               mw_seed_w(wstr, MW_REG_VALN, ""), 2);
             MW_TRACE("reg seed: Winlogon skeleton seeded");
         }
+    }
+    /* SW-1472 (SWEEP-094): EventLog service keys — real Windows ALWAYS has
+     * HKLM\System\CurrentControlSet\Services\EventLog with Application/
+     * Security/System subkeys; every event-log reader opens them first.
+     * psloglist64 exit-2'd with "Could not open the specified event log
+     * Registry key" when the key was absent (trace: 1x miss on
+     * ...\EventLog\System). Seed the standard trio (empty source lists =
+     * honest: no events recorded in a fresh VM). */
+    {
+        static const char* const evlog_subs[] = { "Application", "Security", "System" };
+        int evlog_seeded = 0;
+        for (int esi = 0; esi < 3; esi++) {
+            char evpath[160];
+            snprintf(evpath, sizeof(evpath),
+                     "System\\CurrentControlSet\\Services\\EventLog\\%s", evlog_subs[esi]);
+            if (mw_RegOpenKeyExW((void*)0x80000002u, (const wchar_t*)mw_seed_w(wsub, MW_REG_PATHN, evpath),
+                                 0, 0, &hk) != 0) {
+                if (mw_RegCreateKeyExW((void*)0x80000002u, (const wchar_t*)wsub, 0, NULL, 0, 0, NULL, &hk, NULL) == 0)
+                    evlog_seeded++;
+            }
+        }
+        if (evlog_seeded) MW_TRACE("reg seed: EventLog service keys seeded (%d)", evlog_seeded);
+    }
+    /* SW-1472b (SWEEP-094): Sysinternals EULA-accepted markers. Real
+     * machines that ran a Sysinternals tool carry
+     * HKCU\Software\Sysinternals\<Tool>\EulaAccepted=1; the tools read it
+     * before every launch (the headless dialog protocol already accepts
+     * the EULA box when it appears, so pre-accepting in the base image is
+     * the same honest state, one step earlier). */
+    {
+        static const char* const si_tools[] = { "PsLoglist", "PsInfo", "PsList", "PsPasswd", "PsService" };
+        for (int tsi = 0; tsi < 5; tsi++) {
+            char sipath[160];
+            snprintf(sipath, sizeof(sipath), "Software\\Sysinternals\\%s", si_tools[tsi]);
+            void* hk2 = NULL;
+            if (mw_RegOpenKeyExW((void*)0x80000001u, (const wchar_t*)mw_seed_w(wsub, MW_REG_PATHN, sipath),
+                                 0, 0, &hk2) != 0) {
+                if (mw_RegCreateKeyExW((void*)0x80000001u, (const wchar_t*)wsub, 0, NULL, 0, 0, NULL, &hk2, NULL) == 0) {
+                    uint32_t one = 1u;
+                    mw_RegSetValueExW(hk2, (const wchar_t*)mw_seed_w(wname, MW_REG_VALN, "EulaAccepted"), 0, 4u, &one, 4);
+                }
+            }
+        }
+        MW_TRACE("reg seed: Sysinternals EulaAccepted markers seeded");
     }
     /* Perflib (pslist64 SW-1239 name-table gate) */
     if (mw_RegOpenKeyExW((void*)0x80000002u, (const wchar_t*)mw_seed_w(wsub, MW_REG_PATHN,
@@ -18341,7 +18517,17 @@ __attribute__((ms_abi)) void* mw_CreateWindowExW(uint32_t exstyle, const void* c
      * SW-1382: and only the FIRST top-level (window #1) — a later 0x0
      * helper window used to shrink the main surface to 32x32. */
     if (!(style & 0x40000000u) && !parent && !g_toplvl_main_taken) {
-        mw_gui_store_window((int)w, (int)h); /* SWEEP-005: allocate paint surface */
+        /* SW-1471 (SWEEP-094): CW_USEDEFAULT (0x80000000 as int = INT_MIN)
+         * used to clamp at the 32px minimum -> 32x32 main windows. Both
+         * Notepad++ 8.9.8.1 portable and the installed WinRAR 7.12 create
+         * their main frame with CW_USEDEFAULT; every paint was a 32x32
+         * sliver. Real Windows sizes a CW_USEDEFAULT top-level from the
+         * work area — use the engine's classic 1024x768 metric (the same
+         * metric SW-1269b picked for SW_MAXIMIZE). */
+        int cw_w = (int)w, cw_h = (int)h;
+        if (cw_w == (int)0x80000000u || cw_w == 0) cw_w = 1024;
+        if (cw_h == (int)0x80000000u || cw_h == 0) cw_h = 768;
+        mw_gui_store_window(cw_w, cw_h); /* SWEEP-005: allocate paint surface */
         /* SW-1279 fix C: snapshot THIS top-level's class proc as the main
          * dispatch channel. Later RegisterClass* calls (sol's "Stat"
          * statusbar) can no longer steal main-window dispatches.
@@ -18450,7 +18636,17 @@ __attribute__((ms_abi)) void* mw_CreateWindowExA(uint32_t exstyle, const void* c
     /* SW-1279 fix A (A path): same WS_CHILD/parent guard as the W path.
      * SW-1382 (A path): surface store = window #1 only. */
     if (!(style & 0x40000000u) && !parent && !g_toplvl_main_taken) {
-        mw_gui_store_window((int)w, (int)h); /* SWEEP-005: allocate paint surface */
+        /* SW-1471 (SWEEP-094): CW_USEDEFAULT (0x80000000 as int = INT_MIN)
+         * used to clamp at the 32px minimum -> 32x32 main windows. Both
+         * Notepad++ 8.9.8.1 portable and the installed WinRAR 7.12 create
+         * their main frame with CW_USEDEFAULT; every paint was a 32x32
+         * sliver. Real Windows sizes a CW_USEDEFAULT top-level from the
+         * work area — use the engine's classic 1024x768 metric (the same
+         * metric SW-1269b picked for SW_MAXIMIZE). */
+        int cw_w = (int)w, cw_h = (int)h;
+        if (cw_w == (int)0x80000000u || cw_w == 0) cw_w = 1024;
+        if (cw_h == (int)0x80000000u || cw_h == 0) cw_h = 768;
+        mw_gui_store_window(cw_w, cw_h); /* SWEEP-005: allocate paint surface */
         /* SW-1279 fix C (A path): same class-proc snapshot as the W path.
          * SW-1291b (A path): same per-class background-brush snapshot. */
         if (!g_main_class_proc) {
@@ -23823,8 +24019,11 @@ __attribute__((ms_abi)) int mw_GetObjectA(void* h, int size, void* out) {
 
 /* ---- kernel32: memory/dirs/misc with real bodies ---- */
 __attribute__((ms_abi)) void* mw_LocalReAlloc(void* p, size_t bytes, uint32_t flags) {
-    (void)flags;
     if (!p) return mw_LocalAlloc(0, bytes);
+    /* SW-1466: route arena32 slices through HeapReAlloc's SW-1364b branch
+     * (new block + bounded copy); mw_realloc would trap or corrupt. */
+    if (mw32_mode() || mw32_heap_owns(p))
+        return mw_HeapReAlloc(NULL, flags, p, bytes);
     void* np = mw_realloc(p, bytes);
     MW_TRACE("LocalReAlloc(%p, %zu) -> %p", p, bytes, np);
     return np;
@@ -27236,7 +27435,27 @@ typedef struct {
     void* callback; uintptr_t langId;
 } MwMsgBoxParams;
 __attribute__((ms_abi)) int mw_MessageBoxIndirectW(const MwMsgBoxParams* p) {
-    if (!p || p->cbSize < 40) { mw_SetLastError(87); return 0; }
+    if (!p) { mw_SetLastError(87); return 0; }
+    /* SW-1467 (SWEEP-094): x86 guests build the 32-bit MSGBOXPARAMSW layout
+     * (all fields 4 bytes, cbSize=40); the MwMsgBoxParams struct above is the
+     * host x64 layout (pointers 8 bytes). Reading guest memory through the
+     * x64 offsets assembled garbage text pointers and crashed inside
+     * MessageBoxW (npp.8.9.8.1.Installer.x64.exe: si_addr=0x67, RIP in
+     * mw_MessageBoxIndirectW+0x36). Decode the active world's layout
+     * explicitly; guest string VAs are host-identity-mapped in the x86 plane
+     * (m32p), so they pass to MessageBoxW unchanged. */
+    if (mw32_mode()) {
+        const uint8_t* q = (const uint8_t*)p;
+        uint32_t cbSize = *(const uint32_t*)(const void*)(q + 0);
+        if (cbSize < 40) { mw_SetLastError(87); return 0; }
+        uint32_t owner32 = *(const uint32_t*)(const void*)(q + 4);
+        const uint16_t* text    = (const uint16_t*)(const void*)(uintptr_t)*(const uint32_t*)(const void*)(q + 12);
+        const uint16_t* caption = (const uint16_t*)(const void*)(uintptr_t)*(const uint32_t*)(const void*)(q + 16);
+        uint32_t style = *(const uint32_t*)(const void*)(q + 20);
+        MW_TRACE("MessageBoxIndirectW[32](style=0x%x) -> routed to MessageBoxW", style);
+        return mw_MessageBoxW((void*)(uintptr_t)owner32, text, caption, style);
+    }
+    if (p->cbSize < 40) { mw_SetLastError(87); return 0; }
     MW_TRACE("MessageBoxIndirectW(style=0x%x) -> routed to MessageBoxW", p->style);
     return mw_MessageBoxW(p->owner, p->text, p->caption, p->style);
 }
@@ -29431,6 +29650,22 @@ __attribute__((ms_abi)) void* mw_GlobalReAlloc(void* p, size_t bytes, uint32_t f
         MW_TRACE("GlobalReAlloc(%p, 0x%lx) -> NULL (ERROR_INVALID_HANDLE)",
                  p, (unsigned long)bytes);
         return NULL;
+    }
+    /* SW-1466: arena32 slices cannot realloc() in place (no glibc chunk
+     * header). Windows semantics = new block + copy + old block abandoned,
+     * mirroring mw_HeapReAlloc's SW-1364b branch. */
+    if (mw32_mode() || mw32_heap_owns(p)) {
+        uint32_t n32 = mw32_heap_alloc((uint32_t)(bytes ? bytes : 1), 0);
+        if (!n32) { mw_SetLastError(8); return NULL; }
+        uint8_t* dst = mw32_arena_host(n32);
+        size_t live = mw32_arena_copyable((uint32_t)(uintptr_t)p);
+        size_t copy = (bytes ? bytes : 1) < live ? (bytes ? bytes : 1) : live;
+        if (copy && dst) memcpy(dst, (const void*)(uintptr_t)p, copy);
+        w3_reg_del(p);
+        w3_reg_add_sz((void*)(uintptr_t)n32, bytes | 0x100000000ull);
+        MW_TRACE("GlobalReAlloc[32](%p, 0x%lx) = 0x%x (copied 0x%zx)",
+                 p, (unsigned long)bytes, n32, copy);
+        return (void*)(uintptr_t)n32;
     }
     int s = w3_reg_find(p);
     void* q = realloc(p, bytes ? bytes : 1);
@@ -39761,15 +39996,26 @@ static void mw_map_kuser_shared_data(uint64_t guest_lo, uint64_t guest_size) {
     }
     *(volatile uint32_t*)(p + 0x264) = 1;            /* NtProductType = WinNt */
     p[0x268] = 1;                                    /* ProductTypeIsValid */
-    *(volatile uint32_t*)(p + 0x26c) = 5;            /* NtMajorVersion (XP) */
-    *(volatile uint32_t*)(p + 0x270) = 2;            /* NtMinorVersion (XP x64 5.2) */
+    /* SW-1468: KUSD version follows the unified plane when MINWIN_OSVER is
+     * set; pre-existing default stays the XP-x64 5.2 plane. */
+    {
+        int kma, kmi; mw_osver(&kma, &kmi);
+        *(volatile uint32_t*)(p + 0x26c) = (kma > 0) ? (uint32_t)kma : 5u;
+        *(volatile uint32_t*)(p + 0x270) = (kma > 0) ? (uint32_t)kmi : 2u;
+    }
     *(volatile uint32_t*)(p + 0x274) = 0x110;        /* SuiteMask (XP Pro classic) */
     p[0x275] = 0;                                    /* KdDebuggerEnabled = 0 */
     *(volatile uint32_t*)(p + 0x2c0) = 1;            /* QpcData = present */
     *(volatile uint32_t*)(p + 0x2c4) = (uint32_t)sysconf(_SC_NPROCESSORS_ONLN);
     *(volatile uint64_t*)(p + 0x2c8) = 1000000000ULL; /* QpcFrequency = ns (matches mw_QPF) */
     mprotect(p, KUSD_SZ, PROT_READ);   /* seal: guest reads, writes fault */
-    MW_TRACE("KUSD: mapped 0x7ffe0000 (root C:\\WINDOWS, ver 5.2, qpc 1e9)");
+    {
+        int kma, kmi; mw_osver(&kma, &kmi);
+        if (kma > 0)
+            MW_TRACE("KUSD: mapped 0x7ffe0000 (root C:\\WINDOWS, ver %d.%d [MINWIN_OSVER], qpc 1e9)", kma, kmi);
+        else
+            MW_TRACE("KUSD: mapped 0x7ffe0000 (root C:\\WINDOWS, ver 5.2, qpc 1e9)");
+    }
 }
 
 static int load_pe(const char* filepath) {

@@ -85,6 +85,10 @@ run_plugin() {
     exe=$(manifest_get exe "$mf"); args=$(manifest_get args "$mf")
     keys=$(manifest_get keys "$mf"); mouse=$(manifest_get mouse "$mf")
     known=$(manifest_get known "$mf")
+    # SW-1468 (SWEEP-094): optional per-plugin extra environment (KEY=VAL;KEY=VAL)
+    # — e.g. MINWIN_OSVER=6.1 makes the unified version plane report Windows 7
+    # for installers that version-check. Unset = engine defaults (corpus-safe).
+    local penv="$(manifest_get env "$mf")"
     sandbox=$(manifest_get sandbox "$mf")
     guest=$(manifest_get guest "$mf")
     [ -n "$keys" ] || keys="37,38,39,40,13,32,9,9"
@@ -150,8 +154,14 @@ run_plugin() {
 
     # 2. unpack if required (SWEEP-092: guest zips extract via the guarded
     #    fetch_guest extractor; legacy local zips keep the unzip path)
+    # SW-1462 (SWEEP-094): derived installed payloads (source_url GENERATED /
+    # evidence-relative) exist ONLY inside the provisioned sandbox tree after
+    # the source-only cleanup removed artifacts/ — resolve those in-tree FIRST
+    # so the legacy artifact existence check cannot kill the install->run chain.
     local exe_path
-    if [ "$unpack" = "zip" ]; then
+    if [ "$intree" = "1" ]; then
+        exe_path="$stree/$exe"
+    elif [ "$unpack" = "zip" ]; then
         local dest=""
         if [ -n "$guest" ] && [ -f "$artifact" ]; then
             dest=$(bash "$REPO/scripts/fetch_guest.sh" "$guest" --extract 2>/dev/null | awk '/^EXTRACT /{print $2; exit}')
@@ -164,6 +174,17 @@ run_plugin() {
             fi
         fi
         exe_path="$dest/$exe"
+        # SW-1470 (SWEEP-094): a portable (zip, non-sandbox) app runs from its
+        # OWN directory on real Windows — the user cds into the folder and
+        # launches the exe. The drive-root mapping (SW-1234) maps C:\ to the
+        # process cwd, so the cwd IS the app's C:\ here. Notepad++ portable
+        # proved the need: langs.xml sits beside the exe; run from the repo
+        # root the loader's C:\ had no langs.xml -> the editor's real
+        # "Load langs.xml failed!" recovery dialog fired instead of loading it.
+        if [ "${SB:-}" = "" ] && [ "$intree" = "0" ]; then
+            PORTABLE_CWD="$dest"
+            case "$exe_path" in /*) ;; *) exe_path="$(cd "$dest" && pwd)/$exe";; esac
+        fi
     else
         exe_path="$artifact"
     fi
@@ -225,12 +246,20 @@ run_plugin() {
             MINWIN_REG_TREE="$SB/registry_tree" \
             MINWIN_REG_SNAPSHOT="$SB/registry_snapshot.bin" \
             MINWIN_WINTEMP=1 \
-            timeout "$tmo" "$REPO/minwin_loader" "$exe_path" $args ) > "$out" 2>&1
+            timeout "$tmo" env $penv "$REPO/minwin_loader" "$exe_path" $args ) > "$out" 2>&1
         else
-            MW_GUI_EVENTS=1 MW_GUI_EVENTS_BUDGET=220 \
-            MW_GUI_KEYS="$keys" MW_GUI_KEY_EVERY=7 MW_GUI_KEYUP=1 \
-            MINWIN_MOUSE="$mouse" MINWIN_MOUSE_EVERY=6 \
-            timeout "$tmo" ./minwin_loader "$exe_path" $args > "$out" 2>&1
+            if [ -n "$PORTABLE_CWD" ]; then
+                ( cd "$PORTABLE_CWD" && \
+                MW_GUI_EVENTS=1 MW_GUI_EVENTS_BUDGET=220 \
+                MW_GUI_KEYS="$keys" MW_GUI_KEY_EVERY=7 MW_GUI_KEYUP=1 \
+                MINWIN_MOUSE="$mouse" MINWIN_MOUSE_EVERY=6 \
+                timeout "$tmo" env $penv "$REPO/minwin_loader" "$exe_path" $args ) > "$out" 2>&1
+            else
+                MW_GUI_EVENTS=1 MW_GUI_EVENTS_BUDGET=220 \
+                MW_GUI_KEYS="$keys" MW_GUI_KEY_EVERY=7 MW_GUI_KEYUP=1 \
+                MINWIN_MOUSE="$mouse" MINWIN_MOUSE_EVERY=6 \
+                timeout "$tmo" env $penv ./minwin_loader "$exe_path" $args > "$out" 2>&1
+            fi
         fi
         rc=$?
         result_row="$result_row rc=$rc"

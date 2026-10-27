@@ -108,3 +108,28 @@ winrarinstd	x64	TIMEOUT frames=0	/home/z/my-project/workspace/miniwin-engineerin
 puzzles	x64	FRONTIER_SW family crash=1	flood/fifteen/mines/towers/lightup	all rc=139, same unresolved-import family; VCRUNTIME140/UCRT guests; MSVC2015+ profile	SW-1415	sweep092
 winrarinstd	x64	TIMEOUT frames=0 (SW-1417 dialog)	Program Files/WinRAR/WinRAR.exe	rc=124 x1, crash=0; reg_seed placeholder chain OK (1756B)	SW-1417 SW-1412	sweep092
 corpus-gate	-	OK 21/21 rc=0 crash=0	manifest pipeline	xp.winmine/sol/freecell/calc/spider + breakout/snake; guests via tests/corpus/manifest.tsv	-	sweep092
+winrar	x64	EXIT rc=0 frames=0	/home/z/my-project/workspace/miniwin-engineering/evidence/sweep094/winrar/sandbox/Installers/winrar712.exe	 rc=0 rc=0 rc=0	frames=0 uniq=0 diff=	SW-1361 SW-1360	sweep094
+winrarinstd	x64	FAIL_NOEXE			NEW SW-1412	sweep094
+winrarinstd	x64	TIMEOUT frames=0	/home/z/my-project/workspace/miniwin-engineering/evidence/sweep094/winrarinstd/sandbox/Program Files/WinRAR/WinRAR.exe	 rc=124 rc=124 rc=124	frames=0 uniq=0 diff=	NEW SW-1412	sweep094
+nppsetup	x86	BLOCKED_DOWNLOAD	https://github.com/notepad-plus-plus/notepad-plus-plus/releases/download/v8.9.8.1/npp.8.9.8.1.Installer.x64.exe	no verified artifact (fetch_guest failed, no legacy copy)	NEW	sweep094
+nppsetup	x86	BLOCKED_DOWNLOAD	https://github.com/notepad-plus-plus/notepad-plus-plus/releases/download/v8.9.8.1/npp.8.9.8.1.Installer.x64.exe	no verified artifact (fetch_guest failed, no legacy copy)	NEW	sweep094
+nppsetup	x86	FRONTIER_SW crash=1 undecoded steps=69739081	/home/z/my-project/workspace/miniwin-engineering/evidence/sweep094/nppsetup/sandbox/Installers/npp.8.9.8.1.Installer.x64.exe	 rc=139 rc=139 rc=139	frames=0 uniq=0 diff=	NEW	sweep094
+nppsetup	x86	FRONTIER_SW crash=1 undecoded steps=139551723	/home/z/my-project/workspace/miniwin-engineering/evidence/sweep094/nppsetup/sandbox/Installers/npp.8.9.8.1.Installer.x64.exe	 rc=139 rc=139 rc=139	frames=0 uniq=0 diff=	NEW	sweep094
+nppsetup	x86	PASS_LAUNCH_RENDER rc=139	/home/z/my-project/workspace/miniwin-engineering/evidence/sweep094/nppsetup/sandbox/Installers/npp.8.9.8.1.Installer.x64.exe	 rc=139 rc=139 rc=139	frames=1 uniq=1 diff=	NEW	sweep094
+nppsetup	x86	EXIT rc=127 frames=0	/home/z/my-project/workspace/miniwin-engineering/evidence/sweep094/nppsetup/sandbox/Installers/npp.8.9.8.1.Installer.x64.exe	 rc=127 rc=127 rc=127	frames=0 uniq=0 diff=	NEW	sweep094
+nppsetup	x86	FRONTIER_SW crash=1 undecoded steps=139972897	/home/z/my-project/workspace/miniwin-engineering/evidence/sweep094/nppsetup/sandbox/Installers/npp.8.9.8.1.Installer.x64.exe	 rc=139 rc=139 rc=139	frames=0 uniq=0 diff=	NEW	sweep094
+npp64	x64	PASS_LAUNCH_RENDER rc=0	.cache/miniwin/guests/npp.portable.x64.x/notepad++.exe	 rc=0 rc=0 rc=0	frames=1 uniq=1 diff=	SW-1298-x64 SW-1371 SW-1360	sweep094
+npp64	x64	EXIT rc=1 frames=0	.cache/miniwin/guests/npp.portable.x64.x/notepad++.exe	 rc=1 rc=1 rc=1	frames=0 uniq=0 diff=	SW-1298-x64 SW-1371 SW-1360	sweep094
+npp64	x64	EXIT rc=0 frames=0	/home/z/my-project/workspace/miniwin-engineering/.cache/miniwin/guests/npp.portable.x64.x/notepad++.exe	 rc=0 rc=0 rc=0	frames=0 uniq=0 diff=	SW-1298-x64 SW-1371 SW-1360	sweep094
+7zsetup	x86	EXIT rc=86 frames=0	/home/z/my-project/workspace/miniwin-engineering/evidence/sweep094/7zsetup/sandbox/Installers/7z2501-x64.exe	 rc=86 rc=86 rc=86	frames=0 uniq=0 diff=	NEW	sweep094
+everything	x64	TIMEOUT frames=0	/home/z/my-project/workspace/miniwin-engineering/.cache/miniwin/guests/everything.x/everything.exe	 rc=124 rc=124 rc=124	frames=0 uniq=0 diff=	NEW	sweep094
+tcpview64	x64	TIMEOUT frames=0	/home/z/my-project/workspace/miniwin-engineering/.cache/miniwin/guests/tcpview64.x/tcpview64.exe	 rc=124 rc=124 rc=124	frames=0 uniq=0 diff=	NEW	sweep094
+7zsetup	x86	EXIT rc=86 frames=0	/home/z/my-project/workspace/miniwin-engineering/evidence/sweep094/7zsetup/sandbox/Installers/7z2501-x64.exe	 rc=86 rc=86 rc=86	frames=0 uniq=0 diff=	NEW	sweep094
+produkey	x64	TIMEOUT frames=0	/home/z/my-project/workspace/miniwin-engineering/.cache/miniwin/guests/produkey.x/ProduKey.exe	 rc=124 rc=124 rc=124	frames=0 uniq=0 diff=	NEW	sweep094
+resourcesextract	x64	EXIT rc=0 frames=0	/home/z/my-project/workspace/miniwin-engineering/.cache/miniwin/guests/resourcesextract.x/ResourcesExtract.exe	 rc=0 rc=0 rc=0	frames=0 uniq=0 diff=	NEW	sweep094
+idman	x86	EXIT rc=0 frames=0	/home/z/my-project/workspace/miniwin-engineering/evidence/sweep094/idman/sandbox/Installers/idman642build2.exe	 rc=0 rc=0 rc=0	frames=0 uniq=0 diff=	SW-1370 SW-1362 SW-1363	sweep094
+everything	x64	TIMEOUT frames=0	/home/z/my-project/workspace/miniwin-engineering/.cache/miniwin/guests/everything.x/everything.exe	 rc=124 rc=124 rc=124	frames=0 uniq=0 diff=	NEW	sweep094
+tcpview64	x64	TIMEOUT frames=0	/home/z/my-project/workspace/miniwin-engineering/.cache/miniwin/guests/tcpview64.x/tcpview64.exe	 rc=124 rc=124 rc=124	frames=0 uniq=0 diff=	NEW	sweep094
+produkey	x64	TIMEOUT frames=0	/home/z/my-project/workspace/miniwin-engineering/.cache/miniwin/guests/produkey.x/ProduKey.exe	 rc=124 rc=124 rc=124	frames=0 uniq=0 diff=	NEW	sweep094
+resourcesextract	x64	EXIT rc=0 frames=0	/home/z/my-project/workspace/miniwin-engineering/.cache/miniwin/guests/resourcesextract.x/ResourcesExtract.exe	 rc=0 rc=0 rc=0	frames=0 uniq=0 diff=	NEW	sweep094
+idman	x86	EXIT rc=0 frames=0	/home/z/my-project/workspace/miniwin-engineering/evidence/sweep094/idman/sandbox/Installers/idman642build2.exe	 rc=0 rc=0 rc=0	frames=0 uniq=0 diff=	SW-1370 SW-1362 SW-1363	sweep094

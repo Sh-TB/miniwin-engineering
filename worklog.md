@@ -557,3 +557,27 @@ Stage Summary:
   discipline forbids without owner approval.
 - Next: SW-1415 puzzle-family unresolved import (VCRUNTIME140), SW-1417
   WinRAR first-run dialog, re-pin UNVERIFIED_URL rows.
+
+---
+Task ID: SWEEP-094
+Agent: main (autonomous train)
+Task: Run WinRAR, Notepad++ and several popular Windows programs through MiniWin (user: "ادامه بده برنامه رو اجرا بکن winrara notpadd++ و چند برنامه محبوب ویندوز رو"), all-English repo content.
+
+Work Log:
+- SW-1462 (scripts/plugin_run.sh): derived installed payloads (winrarinstd) resolved in-tree FIRST — the source-only cleanup removed artifacts/sweep086, which used to satisfy the legacy existence check before the in-tree override ran. Install->run chain restored.
+- WinRAR: SW-1463 (scripts/regseed_extend.py) extends the MWREG001 reg_seed fixture with HKCU\Software\WinRAR\Setup (post-install state the SFX leaves). Result: the first-run setup poll loop passed; the installed WinRAR.exe proceeded into MAIN WINDOW init (children 0x30002/3/6 shown, toolbar msgs, settings timer armed, MoveWindow executed) — alive at timeout, crash=0. Frontiers moved from "setup dialog forever" (SW-1417).
+- Notepad++ URLs re-pinned (scripts/pin_npp_urls.py): both GitHub release assets downloaded, SHA-256 re-measured, matched pinned hashes byte-for-byte; manifest rows npp.installer.x64 / npp.portable.x64 now carry exact URLs (zero Persian, English notes only).
+- SW-1466 (loader.c): x86 guests must receive arena32 VAs from GlobalAlloc/GlobalFree/GlobalReAlloc/GlobalSize/LocalSize/LocalFree/LocalReAlloc — npp installer asked GlobalAlloc(GHND,0x800000), got a 64-bit host mmap pointer, truncated it, SIGSEGV'd (si_addr=0xdb000f). Same contract as HeapAlloc's SW-1281 branch; sizes registered so GlobalSize answers exactly.
+- SW-1467 (loader.c): MessageBoxIndirectW decoded the HOST x64 MSGBOXPARAMS layout against the guest's 32-bit struct -> garbage text pointers -> crash inside MessageBoxW (si_addr=0x67). Added the mw32_mode() 32-bit layout decode; result: the NPP installer rendered its REAL dialog to evidence/sweep094/nppsetup/messagebox_1.png.
+- SW-1468 (loader.c): unified configurable OS version plane (MINWIN_OSVER=major.minor) wired through KUSD + registry seed (ProductName/CurrentVersion/CurrentBuildNumber/CSDVersion) + GetVersion/GetVersionExA/W. Defaults unchanged (XP corpus safe). With MINWIN_OSVER=6.1 the NPP installer's "This version of Notepad++ doesn't support..." version gate PASSED (reg seed: "Windows 7 6.1 b7601") and the run reached the file-extraction phase. plugin.tsv grew an optional `env` field; plugin_run passes it via `timeout N env $penv <loader>` (bash does not treat expanded VAR=VAL words as assignment prefixes — verified rc=127 case).
+- SW-1469 (documented frontier): unicode NSIS loads C:\Windows\System32\<garbled 0x3f-heavy>.dll 23x -> ERROR 126 loop; hex-dump diagnostic added (temporary, in LoadLibraryExW) proved the '?' chars are literal U+003F in the GUEST buffer (an earlier A->W conversion's default-char replacements). Crash at guest NULL-deref after the loop (139.9M steps). Next: identify the conversion that produced the '?'s.
+- SW-1470 (scripts/plugin_run.sh): portable (zip, non-sandbox) apps now run with cwd = their own extracted directory (real Windows: the user cds into the folder). Notepad++ portable: "Load langs.xml failed!" recovery dialog -> langs.xml found and loaded (clean rc=0 x3, no dialog).
+- SW-1471 (loader.c): CW_USEDEFAULT (INT_MIN) used to clamp to the 32px minimum -> 32x32 main windows (Notepad++ + installed WinRAR). First top-level CW_USEDEFAULT now sizes 1024x768 (same metric as SW-1269b SW_MAXIMIZE). NPP frames went 32x32 -> 1024x768 (content paint = next frontier).
+- SW-1472/1472b (loader.c): registry seeds for the standard EventLog service trio (psloglist64 exit-2 "Could not open the specified event log Registry key" -> key opens, rc=0 with honest ReadEventLogA-stub output) + Sysinternals EulaAccepted markers (HKCU\Software\Sysinternals\<Tool>).
+- Battery (SWEEP=sweep094): winrar rc=0 x3; winrarinstd main-window-alive (124, crash=0); nppsetup FRONTIER_SW-1469 (documented); npp64 EXIT rc=0 x3 clean; 7zsetup EXIT 86 (own decision, crash=0); everything/tcpview64/produkey TIMEOUT 124 crash=0 (alive, paint pending); resourcesextract EXIT 0 x3; idman EXIT 0 x3. ZERO crashes in the whole battery.
+- Gates: corpus_gate.sh 17 rows, rc=0 in 12 (was 9), crash total 0; xp.* seeds honestly MISSING (licensed media only — operator places them in .cache/miniwin/seed/, never redistributed). g1_accept.sh: G1 PIN OK (build sha de2b1f2ca962d153, 12/12 regression, no crash). repo_size_guard.sh: GUARD OK (2 documented re-pin WARNs: shexview, hxd).
+
+Stage Summary:
+- Crash class eliminated for the SW-1466 family (32-bit large allocations); Notepad++ portable = clean rc=0 x3 with langs.xml loaded; installed WinRAR = main window up for the first time; NPP installer = real dialogs rendered + version gate passed.
+- Evidence: evidence/sweep094/ (gate tsv, 2 dialog PNGs, compact run logs), evidence/master/g1/20261027_201546/.
+- Next: SW-1469 unicode-NSIS garbled system-DLL names; main-window content paint for NPP/WinRAR (children round-robin); CW_USEDEFAULT positioning; ReadEventLogA honest empty-log contract.
