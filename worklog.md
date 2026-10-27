@@ -357,3 +357,18 @@ Work Log:
 Stage Summary:
 - The installed program now boots, inits COM, builds its main window and pumps child messages — two crash layers removed this train, one frontier decoded and queued (SW-1412).
 - Next: SW-1412 heap-guard decode, SW-1409 LZMA, SW-1401/SW-1400, +1 game/program per train.
+
+---
+Task ID: SWEEP-088
+Agent: main (z.ai)
+Task: +1 game +1 program; SW-1409 LZMA decode refinement
+
+Work Log:
+- Downloaded official 7-Zip 25.01 x64 installer (sha 78afa2a1) as NEW program (7zsetup, sandboxed); towers (Simon Tatham) as NEW game.
+- SW-1409 decode refined: ReadFile(fd=5,16384)@190492 delivered BYTE-EXACT LZMA stream (5d 00 00 80 00 00 35 00 = props 0x5D + 8MB dict, matching GlobalAlloc(0x800000)); NSIS temp-stage + self-reopen + trailer probe (6951149) all correct. Frontier = divergence INSIDE guest LZMA decoder execution (PE32 CPU emulation), not the file plane.
+- Battery: towers = PASS_INPUT_STATE_CHANGE first contact; 7zsetup = FRONTIER_SW-1413 (PE32-FATAL rc=86 during CRT init: __set_app_type/__p__fmode stage, 7-Zip's own installer tech).
+- Gates: corpus 21/21 x3 (sweep088_corpus.sh); G1 12/12 (20261027_055732).
+
+Stage Summary:
+- Three installer technologies now characterized honestly: WinRAR SFX = INSTALL_OK; NSIS = deep LZMA frontier; 7-Zip = CRT-init frontier.
+- Next: SW-1412 heap-guard decode (installed WinRAR), SW-1413 CRT-init (7zsetup), SW-1401/SW-1400, +1 game/program per train.
