@@ -1,4 +1,0 @@
-[TRACE] Command line: artifacts/sweep059/guests/shexview/shexview.exe
-[WARN]   unresolved: WS2_32.DLL ordinal 103
-[WARN] 1 imports unresolved
-[GDI-FRAME] #1 -> miniwin-results/shexview.exe/screenshots/frame_001.bmp

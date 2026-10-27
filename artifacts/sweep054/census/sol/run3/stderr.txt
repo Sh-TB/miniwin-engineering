@@ -1,2 +1,0 @@
-[TRACE] Command line: artifacts/sweep054/guests/sol/sol.exe
-[GDI-FRAME] #1 -> miniwin-results/sol.exe/screenshots/frame_001.bmp

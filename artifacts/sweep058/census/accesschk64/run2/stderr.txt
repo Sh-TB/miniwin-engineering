@@ -1,6 +1,0 @@
-[TRACE] Command line: artifacts/sweep047/bin/accesschk64.exe
-
-Accesschk v6.15 - Reports effective permissions for securable objects
-Copyright (C) 2006-2022 Mark Russinovich
-Sysinternals - www.sysinternals.com
-

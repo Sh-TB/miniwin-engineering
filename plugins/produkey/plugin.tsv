@@ -13,3 +13,4 @@ keys	37,38,39,40,13
 mouse	150,150
 known	NEW
 note	registry-heavy GUI (Enumerate HKLM\\...\\DigitalProductId); unpacked exe sha 6cf9dbed273e35c0; synergy with SW-1418/1419 registry train
+guest	produkey

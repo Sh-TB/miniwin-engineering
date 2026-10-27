@@ -1,3 +1,0 @@
-[TRACE] Command line: /home/z/my-project/workspace/miniwin-engineering/artifacts/opensource/_dl/sqlite/sqldiff.exe
-sqldiff.exe: two database arguments required
-"sqldiff.exe --help" for more help

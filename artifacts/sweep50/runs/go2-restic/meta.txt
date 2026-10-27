@@ -1,5 +1,0 @@
-exe=restic/restic_0.19.1_windows_amd64.exe
-sha256=b0dd1fd21eea5d8fe1325f55f7118213c21f36de8a261e04c0624a5ab9fd7830
-timeout=10s
-args=none
-date_utc=2026-10-17T18:39:39Z

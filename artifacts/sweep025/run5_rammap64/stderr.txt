@@ -1,9 +1,0 @@
-[TRACE] Command line: /home/z/my-project/workspace/miniwin-engineering/artifacts/sweep50/dl/rammap64/RAMMap64.exe
-[WARN]   unresolved: QueryDosDeviceW
-[WARN]   unresolved: GetClassLongW
-[WARN]   unresolved: DefDlgProcW
-[WARN]   unresolved: StartServiceW
-[WARN]   unresolved: QueryServiceStatusEx
-[WARN]   unresolved: OpenServiceW
-[WARN]   unresolved: ControlService
-[WARN] 8 imports unresolved

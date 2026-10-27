@@ -13,3 +13,4 @@ keys	37,38,39,40,13,32
 mouse	150,150
 known	NEW
 note	GUI ListView over HKCR CLSID registry walk; pairs with SWEEP-086 regtree + installer-written shell-extension keys
+guest	shexview

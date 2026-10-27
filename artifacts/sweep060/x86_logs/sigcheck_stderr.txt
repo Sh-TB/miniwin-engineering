@@ -1,4 +1,0 @@
-[TRACE] Command line: artifacts/sweep059/guests/sigcheck//sigcheck.exe
-[PE32-FATAL] opcode not implemented (step2) opcode=0xef at EIP=0x3fefefbe base=0x0
-  EAX=00000000 ECX=00a0079a EDX=004681b8 EBX=00000000 ESP=3fefefac EBP=00000000 ESI=0041edc0 EDI=00000000
-  bytes: ef 3f 05 92 41 00 01 00

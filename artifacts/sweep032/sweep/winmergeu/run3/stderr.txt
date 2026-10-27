@@ -1,2 +1,0 @@
-[TRACE] Command line: /home/z/my-project/workspace/miniwin-engineering/artifacts/sweep50/dl/winmergeu/WinMergeU.exe
-[TRACE] cap 1000000 reached; further file lines dropped (MINWIN_TRACE_UNLIMITED=1 opts out)

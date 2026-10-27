@@ -1,3 +1,0 @@
-[TRACE] Command line: /home/z/my-project/workspace/miniwin-engineering/artifacts/sweep50/dl/zoomit64/ZoomIt64.exe
-[ERROR] bad size 68768056 on /home/z/my-project/workspace/miniwin-engineering/artifacts/sweep50/dl/zoomit64/ZoomIt64.exe
-[ERROR] Failed to load PE

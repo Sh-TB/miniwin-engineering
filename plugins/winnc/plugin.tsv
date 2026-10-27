@@ -13,3 +13,4 @@ keys	13,13
 mouse	150,150
 known	NEW
 note	Inno Setup installer; run in-loader (installer itself is the target, idman-class path)
+guest	winnc.installer

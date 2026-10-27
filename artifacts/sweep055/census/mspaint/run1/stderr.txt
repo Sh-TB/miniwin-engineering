@@ -1,2 +1,0 @@
-[TRACE] Command line: artifacts/sweep054/guests/mspaint/mspaint.exe
-[GDI-FRAME] #1 -> miniwin-results/mspaint.exe/screenshots/frame_001.bmp

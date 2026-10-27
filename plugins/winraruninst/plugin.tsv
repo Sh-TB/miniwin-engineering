@@ -5,7 +5,7 @@ source_url	artifacts/sweep086/winrar-installed/WinRAR/Uninstall.exe
 source_sha256
 artifact	artifacts/sweep086/winrar-installed/WinRAR/Uninstall.exe
 unpack
-exe	WinRAR/Uninstall.exe
+exe	Program Files/WinRAR/Uninstall.exe
 args
 runs	3
 timeout	75
@@ -14,4 +14,5 @@ mouse	200,300;400,300
 known	NEW
 note	runs from its own install dir via sandbox_tree staging; uninstall phase of the installer simulation
 sandbox	yes
-sandbox_tree	artifacts/sweep086/winrar-installed
+sandbox_tree	$SANDBOX_OF:winrar
+provision	winrar

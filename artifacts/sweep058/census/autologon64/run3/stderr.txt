@@ -1,3 +1,0 @@
-[TRACE] Command line: artifacts/sweep047/bin/autologon64.exe
-[WARN]   unresolved: LsaStorePrivateData
-[WARN] 1 imports unresolved

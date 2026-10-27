@@ -13,3 +13,4 @@ keys
 mouse
 known	NEW
 note	Sysinternals GUI; probes: IPHLPAPI + netstat-class enumeration, ListView UI, EULA dialog path (Eula.txt beside exe)
+guest	tcpview64

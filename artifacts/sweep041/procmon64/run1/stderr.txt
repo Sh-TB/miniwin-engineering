@@ -1,1 +1,0 @@
-[TRACE] Command line: artifacts/sweep50/dl/procmon64/Procmon64.exe

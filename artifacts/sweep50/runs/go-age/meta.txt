@@ -1,5 +1,0 @@
-exe=age/age.exe
-sha256=2821a4ed191da07372acd302e5f6feae7a7985e285e1417765ebe74025af45f0
-timeout=10s
-args=none
-date_utc=2026-10-17T18:39:37Z

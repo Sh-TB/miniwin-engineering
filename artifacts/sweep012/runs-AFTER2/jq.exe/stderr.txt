@@ -1,2 +1,0 @@
-[TRACE] Command line: /home/z/my-project/workspace/miniwin-engineering/artifacts/opensource/_dl/jq.exe
-jq: parse error: Invalid numeric literal at line 2, column 0

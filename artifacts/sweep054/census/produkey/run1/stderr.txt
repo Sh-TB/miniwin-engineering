@@ -1,2 +1,0 @@
-[TRACE] Command line: artifacts/sweep50/dl/produkey/ProduKey.exe
-[WARN] 1 imports unresolved

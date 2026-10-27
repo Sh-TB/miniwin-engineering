@@ -1,5 +1,0 @@
-exe=winmerge/WinMergeU.exe
-sha256=a14132ee6a395da2b3e15c4166ff261dd30cb57bf8669b81aa8896e06f14503e
-timeout=10s
-args=none
-date_utc=2026-10-17T18:39:39Z

@@ -1,3 +1,0 @@
-[TRACE] Command line: artifacts/sweep056/guests/spider/spider.exe
-[GDI-FRAME] #300 -> miniwin-results/spider.exe/screenshots/frame_300.bmp
-[GDI-FRAME] #600 -> miniwin-results/spider.exe/screenshots/frame_600.bmp

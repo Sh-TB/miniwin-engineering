@@ -1,3 +1,0 @@
-[TRACE] Command line: ../../../../miniwin-results/calc.exe
-[ERROR] Not a regular file: ../../../../miniwin-results/calc.exe
-[ERROR] Failed to load PE

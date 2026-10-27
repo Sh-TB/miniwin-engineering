@@ -1,5 +1,0 @@
-exe=age/age-plugin-batchpass.exe
-sha256=cfc08ce451552ba12de0a7ec350c4cfbdc3dc7114dbf8ea564562cac770dc5d8
-timeout=10s
-args=none
-date_utc=2026-10-17T18:39:39Z

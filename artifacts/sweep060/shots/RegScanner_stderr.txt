@@ -1,7 +1,0 @@
-[TRACE] Command line: artifacts/sweep059/guests/RegScanner/RegScanner.exe
-[WARN]   unresolved: _mbctoupper
-[WARN]   unresolved: Process32First
-[WARN]   unresolved: Process32Next
-[WARN]   unresolved: ChangeServiceConfigA
-[WARN] 4 imports unresolved
-[GDI-FRAME] #1 -> miniwin-results/RegScanner.exe/screenshots/frame_001.bmp

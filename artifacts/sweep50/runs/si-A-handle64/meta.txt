@@ -1,5 +1,0 @@
-exe=si-handle/handle64.exe
-sha256=24bafcc570cc9bbb6b6e6652a57a519e0464e3996891aaba6f55299cce20b04f
-timeout=10s
-args=none
-date_utc=2026-10-17T18:39:37Z

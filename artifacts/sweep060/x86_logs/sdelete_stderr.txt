@@ -1,1 +1,0 @@
-[TRACE] Command line: artifacts/sweep059/guests/sdelete//sdelete.exe

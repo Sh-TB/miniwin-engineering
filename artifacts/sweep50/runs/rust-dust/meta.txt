@@ -1,5 +1,0 @@
-exe=dust/dust.exe
-sha256=a5808da05fba9a5ea11019d6692f66b7447a2e517ca6c7c950087d5eeb04d682
-timeout=10s
-args=none
-date_utc=2026-10-17T18:39:38Z

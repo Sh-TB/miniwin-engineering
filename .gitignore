@@ -95,3 +95,58 @@ artifacts/sweep073/
 artifacts/sweep074/
 /Windows/
 artifacts/sweep078/dl/x/ZoomIt.exe
+
+# ==================================================================
+# SWEEP-092 source-only repository policy (centralized).
+# Guests and generated artifacts are NEVER tracked. Guests are
+# fetched on demand and SHA-256-verified via scripts/fetch_guest.sh
+# (see tests/corpus/manifest.tsv and docs/GUEST_ARTIFACTS.md).
+# ==================================================================
+
+# Downloaded Windows guests, installers, archives, extracted trees
+.cache/
+artifacts/
+evidence/**/sandbox/
+evidence/**/Installers/
+evidence/**/dl/
+miniwin-results/
+working-tree/
+checkpoints/
+out/
+
+# Binary artifact categories (any location)
+*.exe
+*.dll
+*.zip
+*.7z
+*.msi
+*.cab
+*.sfx
+*.pdb
+*.lib
+*.a
+*.tar.gz
+*.tgz
+
+# Raw generated evidence (keep compact summaries instead)
+*.bmp
+evidence/**/raw/
+evidence/**/screenshots/
+evidence/**/*.dmp
+evidence/**/*.core
+
+# Documented exceptions (small, essential, reproducible-value fixtures)
+!samples/upx_decompressed.exe
+!tests/corpus/bin/**
+!tests/gui/**
+!tests/appcompat/**
+!tools/**
+
+# Large one-off analysis dumps (kept local; compact summaries retained)
+evidence/sweep008_rea/pageant_fatal_function.json
+evidence/sweep008_rea/puttygen_winmain_function.json
+evidence/sweep008_rea/cports_crash_function.json
+evidence/sweep008_rea/puttygen_writer_candidate.json
+evidence/sweep008_rea/autoruns64_eula_function.yaml
+evidence/sweep063/ghidra/
+evidence/sweep065/ghidra/

@@ -14,3 +14,4 @@ mouse	200,300;400,300;400,450
 known	NEW
 note	7-Zip's own installer tech (not NSIS); runs INSIDE SW-1404 sandbox with install_log + registry_tree + snapshot
 sandbox	yes
+guest	7zip.installer.x64

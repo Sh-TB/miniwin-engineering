@@ -1,5 +1,0 @@
-[TRACE] Command line: /home/z/my-project/workspace/miniwin-engineering/tests/gui/calc.exe
-[IMPDBG] desc[0] name_rva=0x109dc ilt=0x10068 iat=0x102e8 name='GDI32.dll'
-[IMPDBG] desc[1] name_rva=0x10a20 ilt=0x10090 iat=0x10310 name='KERNEL32.dll'
-[IMPDBG] desc[2] name_rva=0x10ac4 ilt=0x10108 iat=0x10388 name='msvcrt.dll'
-[IMPDBG] desc[3] name_rva=0x10b24 ilt=0x10238 iat=0x104b8 name='USER32.dll'

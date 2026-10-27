@@ -13,3 +13,4 @@ keys	37,38,39,40
 mouse	150,150
 known	BLOCKED_DOWNLOAD
 note	mh-nexus.de TCP-443 refused from sandbox (DNS ok): 6 attempts over SW-079+SW-081; substitutes tried: Frhed(SF), XVI32(dead), ImHex(66MB), Okteta(no win zip). NO unofficial mirrors. Retry next sweep.
+guest	hxd.portable.setup

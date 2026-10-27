@@ -478,3 +478,82 @@ Stage Summary:
   guest-garbage→host-free() class. Next train: SW-1417 (WinRAR boot paint),
   SW-1413 (7zsetup CRT), SW-1414 (untangle SIGABRT), SW-1415 (uninstaller
   UI), SW-1416 (handle value-space collision).
+
+---
+Task ID: SWEEP-092
+Agent: main (z.ai)
+Task: Repository size reduction — source-only, hash-pinned, reproducible test corpus; install/run contract extraction; simple-game corpus gate
+
+Work Log:
+- Measured BEFORE: 5,558 tracked MB (9,646 files); git pack 213.97 MiB.
+  Root cause: 90 sweeps committed downloads, installers, extracted guest
+  trees, sandbox copies (artifacts/ 406 MB, evidence/ 125 MB incl.
+  evidence/**/sandbox, checkpoints/ 12 MB, duplicate guest copies).
+- Canonical manifest tests/corpus/manifest.tsv: 24 entries, 13 columns
+  (id/version/arch/source_url/source_page_url/filename/sha256/size_bytes/
+  license/redistribution_notes/extraction_subdirectory/launch_target/
+  test_profile). Classes: official-URL pinned (rarlab, chiark, sysinternals,
+  voidtools, 7-zip, tonec, nirsoft), UNVERIFIED_URL (hash pinned, URL
+  re-pin follow-up: npp x2, notepad2mod, renamer, winnc, shexview), SEED
+  (XP-era binaries: hash pinned, acquire locally), GENERATED (installed
+  WinRAR payload/uninstaller), BLOCKED (hxd).
+- scripts/fetch_guest.sh: on-demand download -> SHA-256 verify -> atomic
+  rename -> .cache/miniwin/guests/<id>/; guarded extraction (path traversal
+  refused); offline mode; never executes unverified artifacts; caches
+  verified entries. MEASURED: fetch + verify + cache-reuse green for
+  resourcesextract/produkey/tcpview64/everything/7zip/winrar/puzzles/idman;
+  planted bad SHA-256 refused rc=3 (no staging); offline miss BLOCKED rc=2.
+- scripts/plugin_run.sh: `guest` field resolution via manifest+cache;
+  provision chain (missing sandbox_tree -> producer plugin run);
+  placeholders $SANDBOX_OF:<p> / $SNAPSHOT_OF:<p>; in-tree exe detection;
+  zip extraction routed through the guarded extractor.
+- MEASURED install->run chain (SWEEP-092): winrarinstd auto-provisioned by
+  running the WinRAR 7.12 installer once (rc=0 crash=0); the installer now
+  installs into Program Files/WinRAR (SW-1418 ProgramFilesDir seed takes
+  effect — real Windows behavior); reg seed 1756B staged from the fresh
+  installer snapshot (SW-1419 via placeholder); installed payload launched
+  in-tree rc=124 TIMEOUT crash=0 = first-run setup-options dialog frontier
+  (SW-1417). SW-1412 crash class stays dead.
+- Install contract (user question: where files land / what goes into the
+  registry / what the program reads): scripts/install_contract.py ->
+  evidence/sweep092/winrar_install_contract.tsv. WinRAR: 29 payload files
+  (WinRAR/UnRAR/Rar/Uninstall exe, 3 DLLs, 6 SFX modules, RarExt shell
+  extension + msix) under Program Files/WinRAR; registry: 15 values
+  (HKLM 14 incl ProgramFilesDir, HKCU Software/WinRAR SFX install-location
+  key); at run the installed WinRAR reads back its own installer-written
+  profile/settings keys (Default Profile, Create e-mail attachment,
+  Backup selected files, Create 10 MB volumes, LastFolder, Priority,
+  Threads, LargePages, OnTop, RestoreFolder) + ProgramFilesDir.
+- Guest profiles (user question: language/compiler/prerequisites):
+  scripts/guest_profile.py -> docs/analysis/guest_profiles.tsv. WinRAR.exe
+  + Uninstall.exe = C/C++ static CRT (RAR SFX payload); flood.exe = MSVC
+  2015+ UCRT; notepad++.exe = C/C++ static CRT; NPP installer = NSIS;
+  everything.exe = C/C++ static CRT; idman642build2 = stub (3 imports).
+- Simon Tatham puzzle family (flood/fifteen/mines/towers/lightup): all
+  rc=139 at the same unresolved-import frontier during CRT _initterm
+  (VCRUNTIME140/UCRT guests) — SW-1415 queued.
+- Corpus gate scripts/corpus_gate.sh (manifest-resolved guests, SEED
+  fallback hash-checked, honest MISSING): 21/21 rows rc=0, crash=0, fatal=0
+  (xp.winmine/sol/freecell/calc/spider + breakout/snake). Simple games run.
+- Untrack: artifacts/ (all), checkpoints/, samples except UPX fixture,
+  working-tree/, evidence sandboxes/dl/Installers/binaries/bmp/>256KB text
+  dumps, tests guest copy + pdb. MEASURED AFTER: 22.1 MB tracked (2,973
+  files). Centralized .gitignore policy + documented exceptions
+  (samples/upx_decompressed.exe, tests/corpus/bin, tests/gui,
+  tests/appcompat, tools).
+- Guardrail scripts/repo_size_guard.sh (forbidden paths, binary threshold,
+  manifest validation, ignored-but-tracked check) — final run GUARD OK;
+  2 documented re-pin WARNs (shexview, hxd). scripts/repo_size_audit.sh +
+  docs/audit/repository_size_audit_20261027.md.
+- G1 PIN OK (evidence/master/g1/20261027_151640): clean build, binary sha
+  38a787f8dfcd256d, regression 12/12, no crash.
+
+Stage Summary:
+- Repo: 555.8 MB -> 22.1 MB tracked (96% reduction); fresh clones fetch
+  guests on demand with fail-closed hash verification.
+- Remaining limitation (documented, not fixed): git history still carries
+  ~214 MiB pack of historical evidence blobs; removal requires a
+  filter-repo history rewrite + force-push, which the standing no-force
+  discipline forbids without owner approval.
+- Next: SW-1415 puzzle-family unresolved import (VCRUNTIME140), SW-1417
+  WinRAR first-run dialog, re-pin UNVERIFIED_URL rows.

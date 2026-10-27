@@ -1,5 +1,0 @@
-exe=pageant/pageant.exe
-sha256=3bd76b57fcd09acc948268c753ea2077b0c557ca435323301a9b572661f98ecd
-timeout=10s
-args=none
-date_utc=2026-10-17T18:39:37Z

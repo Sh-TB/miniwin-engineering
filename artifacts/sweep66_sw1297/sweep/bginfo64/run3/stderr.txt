@@ -1,2 +1,0 @@
-[TRACE] Command line: /home/z/my-project/workspace/miniwin-engineering/artifacts/sweep50/dl/bginfo64/Bginfo64.exe
-[GDI-FRAME] #1 -> miniwin-results/Bginfo64.exe/screenshots/frame_001.bmp

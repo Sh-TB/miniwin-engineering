@@ -1,1 +1,0 @@
-[TRACE] Command line: artifacts/sweep50/dl/bginfo64/Bginfo64.exe

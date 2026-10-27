@@ -1,3 +1,0 @@
-[TRACE] Command line: artifacts/sweep056/guests/wordpad/wordpad.exe
-[MessageBoxW] WordPad: Failed to create empty document.
-[MessageBox] dialog #1 rendered -> miniwin-results/wordpad.exe/screenshots/messagebox_1.bmp

@@ -1,4 +1,0 @@
-[TRACE] Command line: artifacts/sweep059/guests/notmyfault//notmyfault.exe
-[PE32-FATAL] opcode not implemented (step2) opcode=0xef at EIP=0x3fefef7f base=0x0
-  EAX=00000000 ECX=0047e590 EDX=00486170 EBX=00486684 ESP=3fefef64 EBP=00486458 ESI=00a005ec EDI=0047ea6c
-  bytes: 3f 5b 8b 45 00 03 00 00
