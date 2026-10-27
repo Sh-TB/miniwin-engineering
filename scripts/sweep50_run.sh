@@ -1,6 +1,6 @@
 #!/bin/bash
 # SWEEP-50 phase 3: run-only pass over 50 selected programs (user directive
-# 2026-10-18: "فقط اجرا بزن" — just run them all, map where each gets stuck).
+# 2026-10-18: (just run them) — just run them all, map where each gets stuck).
 #
 # Selection (50) across spectra:
 #   A. Sysinternals x64 console x11 (old-era MSVC/msvcrt)

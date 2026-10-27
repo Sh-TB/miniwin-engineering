@@ -6,7 +6,7 @@
 - Final engine sha256 92e7df46... (G1 post-change PIN 12/12, 20261026_165111);
   loader 4,465,312 B (+35,064).
 
-## The plugin architecture (user-directed: "هر برنامه چیزی شبیه یک پلاگین")
+## The plugin architecture (user-directed: (every program should behave like a plugin))
 - `plugins/<name>/plugin.tsv` — one manifest per application: official
   source_url + source_sha256, artifact path, unpack mode, exe, input probes
   (MW_GUI_KEYS/MINWIN_MOUSE), known root-cause numbers, note.

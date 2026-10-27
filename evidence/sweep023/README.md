@@ -1,4 +1,4 @@
-# SWEEP-023 — «ادامه ۶۰ تسک» 60-task batch evidence (2026-10-19)
+# SWEEP-023 — (60-task continuation) 60-task batch evidence (2026-10-19)
 
 One loader.c batch: SW-961..1000 LANDED (25 imports + 3 data models + registry
 overwrite FIX) + SW-1001..1020 queued. Commit series on top of 05449c5.

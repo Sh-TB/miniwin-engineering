@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # SWEEP-065 — build the 20-program Ghidra batch spec.
-# Batch audit mandate («۲۰ تا برنامه رو با این ابزارها بررسی بکن و اجرا ببین»):
+# Batch audit mandate ((inspect 20 programs with these tools and watch them run)):
 # WinRAR + Notepad++ (GitHub #1 Windows program) + 7-Zip 7zr + 13 NirSoft tools
 # + 4 XP classics. Output: scripts/sweep065_spec.json
 import json

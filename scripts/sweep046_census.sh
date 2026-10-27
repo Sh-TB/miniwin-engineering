@@ -1,5 +1,5 @@
 #!/bin/bash
-# SWEEP-046 «۲۰ قطار» baseline census: 3 runs per corpus program, deterministic exit/stub/unresolved tally.
+# SWEEP-046 (20 trains) baseline census: 3 runs per corpus program, deterministic exit/stub/unresolved tally.
 # (adapted from sweep043_census.sh; corpus unchanged, binary b33ec3f7 at HEAD 3ff438c baseline verification)
 cd /home/z/my-project/workspace/miniwin-engineering || exit 1
 mkdir -p artifacts/sweep046

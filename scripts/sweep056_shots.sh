@@ -1,6 +1,6 @@
 #!/bin/bash
 # SWEEP-056 SCREENSHOT battery — the standing mandate:
-# «ادانه اسکرین شات اجرای برنامه ها رو هم نشون بده» (show screenshots of the
+# (continue: also show screenshots of the programs running) (show screenshots of the
 # programs running). This round's engine work: SW-1277 per-module resources +
 # GetObject HBITMAP family -> sol's REAL 585x384 board from cards.dll metrics.
 # Guests: the re-staged SWEEP-056 XP farm (14 applets/games).

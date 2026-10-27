@@ -1,5 +1,5 @@
 #!/bin/bash
-# SWEEP-070 — «قطار سنگین موازی ابزار هدفمند»: fetch several dozen FAMOUS Windows programs
+# SWEEP-070 — (heavy parallel train, targeted tooling): fetch several dozen FAMOUS Windows programs
 # (IDM, PuTTY, Everything, CPU-Z, IrfanView, SumatraPDF, AutoHotkey, WinMerge, MPC-HC,
 #  ShareX, qBittorrent, Audacity, 7-Zip, HxD, VLC, OpenTTD (game), Stockfish (chess),
 #  SteamCMD, ProcessHacker, TreeSize, foobar2000, ripgrep, bat, yt-dlp, NSSM, nvm-windows)

@@ -1,8 +1,8 @@
 #!/bin/bash
 # SWEEP-059 Train 2 — regenerate the XP battery screenshots on top of the
 # SW-1280 palette-DIB engine fix. The user's mandate:
-#   «بازی بمب رو کامل لود نمی کند گرافیک مشکل دارد بمب ها و سایر موارد کامل نیست»
-#   + standing «اسکرین شات اجرای برنامه ها رو هم نشون بده»
+#   (the bomb game does not load completely; the graphics are broken; bombs and other elements are incomplete)
+#   + standing (also show screenshots of the programs running)
 # winmine now renders tiles/LED/faces; interactive clicks reveal bombs+numbers.
 set -u
 cd /home/z/my-project/workspace/miniwin-engineering || exit 1

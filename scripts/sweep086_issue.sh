@@ -5,7 +5,7 @@ TOKEN=$(git remote get-url origin | sed -n 's|.*://\([^:]*\):\(.*\)@github.*|\2|
 BODY=$(cat <<'EOF'
 ## SWEEP-086 — installer ground-truth train: registry tree + install log + sandbox; **the official WinRAR installer installed 28 files / 9.56 MB**
 
-**User mandate:** «برنامه‌های نصبی — فایل‌های ریجیستری و پوشه‌ها باید درست در مسیرهای خودشان ساخته شوند» (for installers, registry files and folders must be created correctly in their own paths) + one new game + one new program. Commit b4223ab. Engine **changed** — G1 **12/12** (`evidence/master/g1/20261027_053105`, binary `b24475ff`); corpus parity **21/21 ×3** (7 guests × 3, rc=0 crash=0 fatal=0).
+**User mandate:** (installers — registry files and folders must be created correctly in their own paths) (for installers, registry files and folders must be created correctly in their own paths) + one new game + one new program. Commit b4223ab. Engine **changed** — G1 **12/12** (`evidence/master/g1/20261027_053105`, binary `b24475ff`); corpus parity **21/21 ×3** (7 guests × 3, rc=0 crash=0 fatal=0).
 
 ### Engine subsystems (all generic; zero app special-casing)
 - **SW-1402 — on-disk registry tree mirror** (`MINWIN_REG_TREE=<dir>`): at exit the live hive is exported as a **real filesystem tree** — key paths become directories (`HKLM\SOFTWARE\X` → `<tree>/HKLM/SOFTWARE/X`), values become `@<name>` files rendered by type (REG_SZ text / `dword:0x…` / hex), plus a `_REG_MANIFEST.tsv` ledger (regpath, value, type, size, hostfile). Registry files are now literally created in their own paths. **SW-1402b**: installer-grade hive caps (256 keys / 24 values / 256-char paths / 1 KiB data; snapshot format load-compatible).

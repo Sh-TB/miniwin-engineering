@@ -1,4 +1,4 @@
-# SWEEP-028 «ادامه یوز قطار فیل ۱۰۰ تسک جوا و پوش» (2026-10-20)
+# SWEEP-028 (continue cheetah train elephant: 100 tasks, give and push) (2026-10-20)
 
 Wagon batch: SW-1101 winmergeu crash decode + cross-program unresolved tails.
 

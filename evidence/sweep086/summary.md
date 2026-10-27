@@ -1,7 +1,6 @@
 # SWEEP-086 — the installer-ground-truth train
 
-User mandate: «برنامه‌های نصبی — فایل‌های ریجیستری و پوشه‌ها باید درست در مسیرهای
-خودشان ساخته شوند» + the standing protocol (one new game + one new program per train).
+User mandate: (installers — registry files and folders must be created correctly in their own paths) + the standing protocol (one new game + one new program per train).
 
 ## Engine changes (all generic, zero app special-casing) — src/loader/loader.c
 

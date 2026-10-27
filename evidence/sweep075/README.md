@@ -1,6 +1,6 @@
 # SWEEP-075 — the sgtatham puzzle family: 27 FAIL_CRASH -> 20 clean runs
 
-Continuation instruction: "ادامه لیست بزرگ رو حل بکن" (continue solving the
+Continuation instruction: (continue solving the big list) (continue solving the
 big list). The big list = the honest remaining frontier recorded in
 evidence/sweep074/summary.md, item 1: the 20-puzzle GDI/paint/teardown
 family (27 FAIL_CRASH rows in sweep074/results.tsv).

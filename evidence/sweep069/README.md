@@ -1,4 +1,4 @@
-# SWEEP-069 — 29 NEW guests + tool-impact audit «بهتر سریعتر ... ابزار های کمکی چقدر بهت کمک کرده ... باز همون تعداد برنامه و بازی رو اضافه بکن»
+# SWEEP-069 — 29 NEW guests + tool-impact audit (better and faster ... how much did the auxiliary tools help ... add the same number of programs and games again)
 
 Date: 2026-10-25 · Base: 48e468b (origin/main, post SWEEP-068) · Binary rebuilt from source
 4,295,920 bytes (41,579-line `src/loader/loader.c`, gcc -O2, one translation unit) ·
@@ -34,7 +34,7 @@ New worklist cars: **SW-1306** (NirSoft deep-diver trio: heapmemview 794,277 —
 driver the common frontier), **SW-1307** (gup 2450 A/B for SW-1297-x86),
 **SW-1308** (logonsessions64 exit-133 x64 EH chain).
 
-## Part 2 — Tool-impact audit (measured, not vibes) «ابزار های کمکی چقدر بهت کمک کرده»
+## Part 2 — Tool-impact audit (measured, not vibes) (how much did the auxiliary tools help you)
 
 | Tool | Measured impact (from git history + this session) |
 |---|---|
@@ -50,7 +50,7 @@ driver the common frontier), **SW-1307** (gup 2450 A/B for SW-1297-x86),
 
 **Net effect**: SWEEP-065→069 = five sweeps in one day, 100+ program-runs, ~10 engine
 root-cause fixes, each push machine-verified. The tool flywheel is the reason the train
-moves at this speed — user's standing rule «ابزار ها همیشه کمکت بشن» is load-bearing.
+moves at this speed — user's standing rule (always let the tools help you) is load-bearing.
 
 ## Method notes
 

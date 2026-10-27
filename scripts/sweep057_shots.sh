@@ -1,5 +1,5 @@
 #!/bin/bash
-# SWEEP-057 SCREENSHOT battery — «اسکرین شات اجرای برنامه ها رو هم نشون بده»
+# SWEEP-057 SCREENSHOT battery — (also show screenshots of the programs running)
 # Engine work this round: SW-1279 fix chain A-F (WS_CHILD top-level leak,
 # class-proc steal, BeginPaint white wipe, per-child rects, timer-idle wait)
 # -> sol.exe renders the CLASSIC BOARD: green felt + deck fan + status bar,

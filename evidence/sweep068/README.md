@@ -1,14 +1,14 @@
-# SWEEP-068 — Mass-run battery: 24 programs & games executed, evidence pushed «پوش بکن گیت هاب»
+# SWEEP-068 — Mass-run battery: 24 programs & games executed, evidence pushed (push to GitHub)
 
 Date: 2026-10-25 · Base: 997a68b (origin/main, post SWEEP-066x64) · Binary: `minwin_loader`
 4,295,928 bytes (merged SWEEP-066x64 build, sha 049876c0 G1 PIN 12/12) · **ZERO rebuilds
-needed — the user's standing tool-flywheel rule («ابزار ها همیشه کمکت بشن») means the
+needed — the user's standing tool-flywheel rule ((always let the tools help you)) means the
 existing binary + parallel xargs harness ran the whole battery in one wave.**
 
 ## User directive
 
-«ادامه از ابزار ها نهایت استفاده رو بکن تا بتونی واقعا سری ۱۰ تا ۲۰ تا برنامه و بازی رو
-اجرا بکنی پوش بکن گیت هاب» — maximize tool leverage, actually RUN 10–20 programs and
+(continue: maximize tool leverage so you can really quickly run 10-20 programs and
+games, push to GitHub) — maximize tool leverage, actually RUN 10–20 programs and
 games fast, then push to GitHub.
 
 ## What ran (24 guests, target 20 exceeded)
@@ -50,4 +50,4 @@ Frontier cars confirmed alive for the queue: **SW-1298-x64** (npp64 NULL cbx-ctx
   dir does not collide with the x86 one (both exes are literally named `notepad++.exe`).
 - Parallel -P4 is safe because result dirs are keyed by exe filename — all 24 names distinct.
 - No engine changes this sweep: this is a **measure-and-ship** round per the user's
-  «واقعا سری» (really fast) directive — binary untouched, G1 pin 049876c0 still valid.
+  (really fast) (really fast) directive — binary untouched, G1 pin 049876c0 still valid.

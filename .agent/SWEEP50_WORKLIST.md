@@ -1,4 +1,4 @@
-# SWEEP-50 WORKLIST — 50 items (user mandate 2026-10-18: «۵۰ مورد تسک باید بزاری تو لیست کاری»)
+# SWEEP-50 WORKLIST — 50 items (user mandate 2026-10-18: (put 50 items on the worklist))
 
 **Source:** mass-sweep of 100 downloaded programs (72 executed: 70 x64 + 2 x86 probes).
 Every item below cites its blocking evidence from `artifacts/sweep50/STAGE_TABLE_100.tsv`.
@@ -131,7 +131,7 @@ Rules unchanged: 3x acceptance, irreversible status labels, no fake success.
 **Status vocabulary:** PLANNED → TRIAGED → IN-PROGRESS → TESTED → VERIFIED (irreversible).
 **Micro-game SW-501 is the user's 100% mandate — nothing else outranks it.**
 
-## SWEEP-003 wave (2026-10-18) — GUI skeleton + BUG-066, user mandate «برنامه‌های گرافیکی متوسط»
+## SWEEP-003 wave (2026-10-18) — GUI skeleton + BUG-066, user mandate (medium graphical programs)
 
 **Landed (code, VERIFIED 3×3 + G1 12/12 re-pinned):**
 - SWEEP-003 GUI skeleton v1: RegisterClass{,Ex}{W,A}→ATOM, CreateWindowEx{W,A}→HWND,
@@ -255,7 +255,7 @@ puttygen RIP=0x0).
   -> dialog #1 (evidence/sweep004_gdi/putty_messagebox_1.bmp, 604x122,
   3 runs byte-identical SHA f953a2f3ec131b3a*).
 
-**2 NEW programs tested (user mandate «یکی دوتا برنامه جدید»):**
+**2 NEW programs tested (user mandate (one or two new programs)):**
 - DriverView.exe (NirSoft x64 GUI): CRASH-GUEST 139 @ 0x14000cd1d, after
   advapi32 privilege phase (LookupPrivilegeValueA/AdjustTokenPrivileges
   resolved, ERROR 1300 honest path) — SW-557.
@@ -296,7 +296,7 @@ puttygen RIP=0x0).
 - BUG-067c: pump priority PAINT-before-KEY let the per-tick pending paint steal
   every key-parity slot -> scripted keys never delivered. Fix: KEY first.
 
-**SW-501 ACCEPTANCE (user mandate «شبیه سازی بازی میکرو ... ۱۰۰ درصد»): DELIVERED.**
+**SW-501 ACCEPTANCE (user mandate (100 percent micro game simulation)): DELIVERED.**
 - tests/games/miniwin_snake.c — a REAL Win32 GDI game (RegisterClassA -> CreateWindowExA
   -> ShowWindow/UpdateWindow -> SetTimer loop -> WndProc WM_TIMER step /
   WM_KEYDOWN turn / WM_PAINT draw with FillRect/Ellipse/Rectangle/TextOutA via
@@ -349,8 +349,7 @@ puttygen RIP=0x0).
       sweep562_battery.sh + sweep562_images.py; exe SHA manifest in
       artifacts/sweep50/sweep007_redownload_manifest.tsv.
 - [x] **SW-011** REA-powered speed sweep — DONE (SWEEP-011): user directive
-      «از rea نهایت استفاده برای کمتر شدن زمان اجرا برنامه‌ها، سرعت دیباگر
-      بهتر بشه». Landed in loader.c (all env-gated, defaults unchanged):
+      (use the REA tooling to the maximum to cut run time and give the debugger better speed.) Landed in loader.c (all env-gated, defaults unchanged):
       (1) MINWIN_FUNC_MAP=<json>[,<json>] O(log n) function-map symbolizer —
       auto-names [STUB] caller=, [CRASH] [FUNC], [SCAN] stack values,
       backtrace frames, profiler output; maps built ONCE per PE via
@@ -378,7 +377,7 @@ puttygen RIP=0x0).
 ---
 ## SWEEP-013 (2026-10-19) — DONE block
 - [x] **SW-013** "5x multiplication" sweep — DONE: user directives
-      «حداقل یک برنامه گرافیکی ساده ماشین حساب» + «تسک رو حداقل ۵ برابر بکن».
+      (at least one simple graphical calculator) + (make the task queue at least 5x bigger).
       (1) GUI calculator tests/gui/calc.c delivered: real Win32 EDIT+16 BUTTON
       children, WM_COMMAND via MINWIN_CLICKS, 3x deterministic exit 0,
       stdout "[CALC] 12+45 = 57", guest-drawn screenshot
@@ -679,7 +678,7 @@ gate that must be re-accepted when the port lands).
       (lz4/zstd/trurl re-pin after every loader change; 14-section report
       update per user mandate).
 
-<!-- ============ SWEEP-018 (2026-10-19) — «ادامه و پوش» elephant batch ============ -->
+<!-- ============ SWEEP-018 (2026-10-19) — (continue and push) elephant batch ============ -->
 
 ## SWEEP-018 results (measurable progress per user mandate)
 
@@ -741,7 +740,7 @@ gate that must be re-accepted when the port lands).
 - [ ] **SW-809** procexp64 RIP=0x6f00690074006e UTF-16-bytes-as-code (still
       open; CLR-adjacent init).
 
-## SW-816..SW-880 — «ادامه سه برابری» continuation queue (65 items) — LANDED in SWEEP-019 «چند ده تسک همزمان»
+## SW-816..SW-880 — (triple-parity continuation) continuation queue (65 items) — LANDED in SWEEP-019 (dozens of tasks at once)
 
 - [x] **SW-816..820 menu family x5 LANDED**: MwMenu[8] x 16-item model
       (id/state/text/submenu); CreateMenu/CreatePopupMenu/DestroyMenu (real
@@ -805,7 +804,7 @@ gate that must be re-accepted when the port lands).
       artifacts/sweep019/sweep/sweep019_sweep.tsv (16-prog corpus x3 +
       produkey pump-on + calc/snake/breakout x3).
 
-## SW-881..SW-920 — SWEEP-019 continuation queue (40 items) — LANDED in SWEEP-021 «چند ده تسک همزمان» (remainder: 35 imports; WSA/network tail SW-911..915 was already covered by SWEEP-014 r2 — verified present)
+## SW-881..SW-920 — SWEEP-019 continuation queue (40 items) — LANDED in SWEEP-021 (dozens of tasks at once) (remainder: 35 imports; WSA/network tail SW-911..915 was already covered by SWEEP-014 r2 — verified present)
 
 - [x] **SW-881..885 menu deepening x5**: InsertMenuItemA/W, RemoveMenu,
       DeleteMenu, GetMenuItemRect, TrackPopupMenuEx — completes the menu
@@ -837,7 +836,7 @@ gate that must be re-accepted when the port lands).
       fn-ptr, procexp64 UTF-16-as-code, searchmyfiles cmpw 0x22, winmergeu.
 
 
-## SW-921..SW-960 — SWEEP-021 continuation queue (40 items) — LANDED in SWEEP-022 «ادامه» one batch (~45 new/updated imports + BUG-074/075 fixes)
+## SW-921..SW-960 — SWEEP-021 continuation queue (40 items) — LANDED in SWEEP-022 (continue) one batch (~45 new/updated imports + BUG-074/075 fixes)
 
 - [x] **SW-921..925 dialog deepening x5 LANDED**: DialogBoxIndirectParamW/A
       now WALK the real DLGTEMPLATE (word-aligned SZ_OrOrd menu/class/title,
@@ -891,7 +890,7 @@ gate that must be re-accepted when the port lands).
       verified pre-existing; MBCS/WCMB round-trips audited (existing
       MultiByteToWideChar/WideCharToMultiByte native encoders).
 
-## SW-961..SW-1000 — SWEEP-022 continuation queue (40 items) — LANDED in SWEEP-023 «ادامه ۶۰ تسک» one batch (~25 imports + 3 data models + registry overwrite FIX + zig restore)
+## SW-961..SW-1000 — SWEEP-022 continuation queue (40 items) — LANDED in SWEEP-023 (60-task continuation) one batch (~25 imports + 3 data models + registry overwrite FIX + zig restore)
 
 - [x] **SW-961..965 crash frontier x5 LANDED (signature docs)**: puttygen 139
       NULL fn-ptr .data 0x14008a8e8 re-verified -> BUG-079; searchmyfiles 139
@@ -969,7 +968,7 @@ gate that must be re-accepted when the port lands).
       WM_KEYDOWN); sweep023 stub decoder committed (sweep023_decode_stubs.py)
       + BUG-078 records why static naming is impossible for packed procexp64.
 
-## SW-1001..SW-1020 — SWEEP-023 continuation queue (20 items, «ادامه سه برابری» standing order — 60-task mandate satisfied: 40 landed + 20 queued)
+## SW-1001..SW-1020 — SWEEP-023 continuation queue (20 items, (triple-parity continuation) standing order — 60-task mandate satisfied: 40 landed + 20 queued)
 
 - [ ] **SW-1001..1005 pageant unlock x5**: CopySid, GetLengthSid,
       InitializeSecurityDescriptor, SetSecurityDescriptorDacl,
@@ -990,7 +989,7 @@ gate that must be re-accepted when the port lands).
       time; BUG-079 puttygen .data 0x14008a8e8 initializer hunt; SW-1003
       100-software corpus re-download + full STAGE_TABLE_100 refresh.
 
-## SW-1001..SW-1020 — LANDED in SWEEP-025 «ادامه فیل و یوز» (elephant round, 2026-10-20)
+## SW-1001..SW-1020 — LANDED in SWEEP-025 (continue elephant and cheetah) (elephant round, 2026-10-20)
 
 - [x] **SW-1001 pageant security x5**: CopySid, GetLengthSid,
       InitializeSecurityDescriptor, SetSecurityDescriptorDacl,
@@ -1098,7 +1097,7 @@ gate that must be re-accepted when the port lands).
       BMP; procmon64 pump-on 26.35M SendMessageW/12s (window loop alive);
       5 GUI programs with fresh evidence. G1 PIN OK sha c490f1fc 12/12.
 
-## SW-1021..SW-1100 — SWEEP-025 continuation queue — 32 LANDED in SWEEP-026 «ادامه فیل یوز با ۵۰ تسک» one batch (see -> LANDED SWEEP-026 marks); 48 remain queued below
+## SW-1021..SW-1100 — SWEEP-025 continuation queue — 32 LANDED in SWEEP-026 (continue elephant-cheetah with 50 tasks) one batch (see -> LANDED SWEEP-026 marks); 48 remain queued below
 
 - [x] **SW-1021 mw_GetTextMetricsW real TEXTMETRICW offsets** — the
       -> LANDED SWEEP-026: real TEXTMETRICW offsets (height/ascent/descent/ave chain) -> putty BUG-082 GS-cookie gate BROKEN: exit 9->0, MessageBoxA error dialog rendered (artifacts/sweep026/sweep/putty/run1, miniwin-results/putty.exe/screenshots/messagebox_1.bmp)
@@ -1302,7 +1301,7 @@ gate that must be re-accepted when the port lands).
       combined acceptance: client signs a challenge through the engine
       pipe stack; record evidence + close the pageant arc.
 
-## SWEEP-026 round summary «ادامه فیل یوز با ۵۰ تسک» (2026-10-20)
+## SWEEP-026 round summary (continue elephant-cheetah with 50 tasks) (2026-10-20)
 
 - 32 items LANDED in one batch (SW-1021..1097 tags above) + 2 build fixes
   (SetDIBitsToDevice row-helper direction; DIB blit verified).
@@ -1324,7 +1323,7 @@ gate that must be re-accepted when the port lands).
 - Frontiers unchanged: procexp64 139 (BUG-078), winmergeu 139 (202 unres),
   searchmyfiles 139 (17), zoomit64 exit1 (0 unres).
 
-## SW-1101..SW-1150 — SWEEP-026 continuation queue (50 items, standing «ادامه سه برابری»)
+## SW-1101..SW-1150 — SWEEP-026 continuation queue (50 items, standing (triple-parity continuation))
 
 - [x] ** winmergeu unresolved 202 decode** — biggest single tail; -> LANDED SWEEP-027: winmergeu unresolved 202->150 this round (-52: theme/shlwapi/CRT/user32 batch); crash decode still open
        enumerate + batch the COMDLL/shell family.
@@ -1402,7 +1401,7 @@ gate that must be re-accepted when the port lands).
 - [ ] **SW-1150 SetDIBitsToDevice putty terminal soak** — drive the blit
        through putty's terminal path (SW-1062 consumer proof).
 
-## SWEEP-027 round summary «ادامه یوز یوز مثل فیل و واگن های قطار» (2026-10-20)
+## SWEEP-027 round summary (continue cheetah-cheetah like the elephant and train wagons) (2026-10-20)
 - Env reset detected post-push (local 55b3982 vs origin 3cd11c0): reconciled
   from origin (no force-push), deterministic rebuild sha 51bc4fb3 EXACT.
 - One wagon batch = 45 imports + _wcmdln data import + UTF-16 cmdline fill
@@ -1426,7 +1425,7 @@ gate that must be re-accepted when the port lands).
 - zoomit64 exit1 (0 unresolved) unchanged — trace-decode task stays queued.
 
 
-## SWEEP-028 round summary «ادامه یوز قطار فیل ۱۰۰ تسک جوا و پوش» (2026-10-20)
+## SWEEP-028 round summary (continue cheetah train elephant: 100 tasks, give and push) (2026-10-20)
 - SW-1101 DOUBLE DECODE: (a) CreateDIBSection top-down 32bpp underflow -> MWBmp
   view-format engine fix (SW-1101a); (b) OLEAUT32 by-ordinal map + typed
   LoadTypeLib (SW-1101b). winmergeu 139->9, imports 150->0.
@@ -1437,7 +1436,7 @@ gate that must be re-accepted when the port lands).
 - Next: SW-1102 procexp zero-stub frontier decode; winmergeu exit-9 decode;
   bginfo64 54-tail wagon; SW-1106 zoomit exit1 typing.
 
-## SW-1101..SW-1150 queue marks — LANDED in SWEEP-029 «قانون کلی قطار» (2026-10-20)
+## SW-1101..SW-1150 queue marks — LANDED in SWEEP-029 (general train law) (2026-10-20)
 - [x] ** bginfo64 54-tail (SWEEP-028 next wagon)** — -> LANDED SWEEP-029: 54 unique
        unresolved -> 0 (GDI raster/region family real: InvertRect/FillRgn/FrameRgn/
        SetPixelV real pixels, CreatePolygonRgn/CreateRoundRectRgn/CreateDIBitmap/
@@ -1459,7 +1458,7 @@ gate that must be re-accepted when the port lands).
        SQLGetDiagRecW (NO_DATA)/SQLSetConnectAttrW typed-honest; OLEAUT32 25/114/418 =
        SafeArrayPutElement/VarBstrFromDate (real BSTR)/DllUnregisterServer
 
-## SW-1151..SW-1200 — SWEEP-029 continuation queue (standing «قانون کلی قطار»: like a train, dozens of wagons)
+## SW-1151..SW-1200 — SWEEP-029 continuation queue (standing (general train law): like a train, dozens of wagons)
 - [x] **SW-1151 winmergeu gs fail-fast decode** — -> LANDED SWEEP-030 (ENGINE FIX, full
        chain decoded): (a) failing fn = Frame[7] func RVA 0x2279a0, personality =
        __GSHandlerCheck_EH shim 0x319158 -> GS-check core 0x319070 (reads stored cookie
@@ -1556,7 +1555,7 @@ gate that must be re-accepted when the port lands).
        not reach it yet; no corpus delta.
 - [ ] **SW-1156 ExtFloodFill seed-fill raster** — scanline seed fill on MWBmp views.
 
-## SWEEP-031 round summary «ادامه» — cheetah speed, owl eye, elephant load, train of wagons (2026-10-20)
+## SWEEP-031 round summary (continue) — cheetah speed, owl eye, elephant load, train of wagons (2026-10-20)
 - SW-1201 LANDED (DOUBLE root cause, first MSVC C++ EH catch-AND-RESUME in engine
   history): (1) SetWindowsHookExW returned NULL ("no hook machinery") -> MFC
   threw CMemoryException that no frame catches BY DESIGN (decoded ThrowInfo
@@ -1603,7 +1602,7 @@ gate that must be re-accepted when the port lands).
   SW-1102 procexp jump-into-string, SW-1106 zoomit exit1, SW-1152
   RtlCaptureContext SSE regs.
 
-## SWEEP-029 round summary «قانون کلی» — cheetah speed, owl eye, elephant load, train of wagons (2026-10-20)
+## SWEEP-029 round summary (general law) — cheetah speed, owl eye, elephant load, train of wagons (2026-10-20)
 - SW-1103 ENGINE ROOT-CAUSE FIX: mw_RtlCaptureContext was a NO-OP — every guest
   consumer (mingw gs_report) read ctx.Rip=0 -> RtlLookupFunctionEntry(pc=0)->NULL ->
   UnhandledExceptionFilter -> TerminateProcess(0xC0000409). Real capture now fills
@@ -1626,7 +1625,7 @@ gate that must be re-accepted when the port lands).
 - Next: SW-1151 winmergeu gs fail-fast decode; SW-1102 procexp frontier; SW-1106
   zoomit exit1; SW-1153 ODBC mini-driver.
 
-## SWEEP-030 round summary «قانون کلی قطار» — wagon batch: SW-1151 ENGINE DOUBLE-FIX + fastfail honesty (2026-10-20)
+## SWEEP-030 round summary (general train law) — wagon batch: SW-1151 ENGINE DOUBLE-FIX + fastfail honesty (2026-10-20)
 - SW-1151 ENGINE ROOT-CAUSE FIX (two engine bugs, one guest frontier):
   * Bug 1 — EstablisherFrame semantics: our unwind reported the POST-UNDO RSP
     (function-entry RSP) as the establisher frame; Windows/ReactOS
@@ -1673,7 +1672,7 @@ gate that must be re-accepted when the port lands).
 - Next: SW-1201 winmergeu catch-type decode; SW-1153 ODBC mini-driver; SW-1154..1159
   raster/OLE wagons; SW-1160 K32EnumProcessModules; SW-1202 zstd argv decode.
 
-## SWEEP-032 round summary — TRAIN 1 of 5 «۵ قطار» (2026-10-21)
+## SWEEP-032 round summary — TRAIN 1 of 5 (5 trains) (2026-10-21)
 - SW-1106 LANDED: zoomit64 was NEVER broken — the loader's 64MB file cap
   rejected its 68,768,056-byte PE (valid PE32+, SizeOfImage 0x4264000,
   .rsrc 60.5MB embedded media, overlay 10,040B — pefile-verified) before a
@@ -1725,7 +1724,7 @@ gate that must be re-accepted when the port lands).
   SW-1156 ExtFloodFill, SW-1102 procexp jump-into-string, SW-1156,
   SW-508 remainder (CompareStringOrdinal landed here).
 
-## SWEEP-035 round summary — TRAIN 4 of 5 «۵ قطار» (2026-10-21)
+## SWEEP-035 round summary — TRAIN 4 of 5 (5 trains) (2026-10-21)
 - SW-1203 hook EVENT firing v1: CBT delivered to live guest hooks (CREATEWND
   pre-create real CBT contract incl. cancel; DESTROYWND; ACTIVATE). No pool
   guest reaches window creation post-hook-install yet — machinery verified
@@ -1743,7 +1742,7 @@ gate that must be re-accepted when the port lands).
   progress; needs a PostThreadMessage producer or upstream window creation),
   SW-1102 guest-write instrumentation, SW-1153 consumers.
 
-## SWEEP-036 round summary — TRAIN 5 of 5 «۵ قطار» (2026-10-21)
+## SWEEP-036 round summary — TRAIN 5 of 5 (5 trains) (2026-10-21)
 - Sleep(0) -> sched_yield() (real yield-the-quantum semantics; winmergeu's
   main-thread poll now rotates instead of a pure busy no-op).
 - ole32.277/16 evidence re-probe: wine ole32.spec is name-ordered, no public
@@ -1758,7 +1757,7 @@ gate that must be re-accepted when the port lands).
 - 1156/1203/1204 LANDED; open frontiers: SW-1205 winmergeu main poll,
   SW-1102 guest-write instrumentation, ole32.277/16 names.
 
-## SWEEP-037 «ادامه ۱۰ قطار ۱۰۰ واگن» — RECONCILE train (2026-10-21)
+## SWEEP-037 (continue 10 trains, 100 wagons) — RECONCILE train (2026-10-21)
 - RECONCILE DISCIPLINE (SWEEP-027 precedent): local SWEEP-031 (c23a63c,
   preserved as branch backup/sweep031-local) duplicated wagons that the
   parallel remote chain SWEEP-031..036 (0c191d1..cd5e044) already landed
@@ -1783,7 +1782,7 @@ gate that must be re-accepted when the port lands).
   zoomit census, 7-ordinal procexp naming) filed in backup branch and
   evidence/sweep031/.
 
-## SWEEP-040 «قطار ۵۰ تایی» — 3 wagons + 2 new frontiers (2026-10-21)
+## SWEEP-040 (50-car train) — 3 wagons + 2 new frontiers (2026-10-21)
 - SW-1206 LANDED (double): adexplorer64 corpus RECOVERED
   (artifacts/sweep50/dl/adexplorer64/ was EMPTY; AdExplorer.zip re-fetched
   from download.sysinternals.com; sha256 e451287843b3927c...; x64 exe kept,
@@ -1852,7 +1851,7 @@ gate that must be re-accepted when the port lands).
   provenance, SW-1102d BUG-078 copy-loop static decode, ole32.277/16
   names (Rule-1 blocked), SW-1156 ExtFloodFill, SW-1153 consumers.
 
-## SWEEP-041 round summary «ادامه ۲۰ قطار» — 20-train batch, 3 wagons LANDED (2026-10-21)
+## SWEEP-041 round summary (continue 20 trains) — 20-train batch, 3 wagons LANDED (2026-10-21)
 - SW-1207 LANDED: comctl32 tooltips_class32 window object + CC32SubclassInfo
   creation contract. Root cause: CreateWindowExW('tooltips_class32') (popup,
   parent NULL) fell into the main-window path and returned MW_GUI_HWND, so the
@@ -1927,7 +1926,7 @@ gate that must be re-accepted when the port lands).
   full app lifecycle — its post-daemon behavior is productive work, next
   frontier will be found by diffing its 36076-line trace.
 
-## SWEEP-042 round summary «۱۰ قطار، چند ده واگن ریزه» — 10 trains, ~42 micro-wagons LANDED (2026-10-22)
+## SWEEP-042 round summary (10 trains, dozens of micro-wagons) — 10 trains, ~42 micro-wagons LANDED (2026-10-22)
 Batch directive: 10 trains carrying several dozen SMALL wagons. Source of the
 wagons: adexplorer64's post-SW-1206 import surface (23 unresolved), the
 SWEEP-041 open note "diff winmergeu's full-lifecycle trace", putty's
@@ -2020,7 +2019,7 @@ ExitProcess(48925984) anomaly. One commit, no force-push.
 - Open: SW-1102d BUG-078 copy-loop exact store instruction; ole32.277/16 +
   COMCTL32.344 (Rule-1); SW-791 curl libcurl-x64.dll; procexp64 139 frontier.
 
-## SWEEP-043 round summary «ادامه قطار» — BUG-078 SOLVED: procexp64 139 -> 0 (2026-10-22)
+## SWEEP-043 round summary (continue the train) — BUG-078 SOLVED: procexp64 139 -> 0 (2026-10-22)
 Batch directive: continue the train (10-train micro-wagon format). THE round:
 the procexp64 'ntio' crash (SW-1102d, open since SWEEP-032) is fully decoded
 and FIXED — three engine bugs, one missing plane.
@@ -2093,7 +2092,7 @@ and FIXED — three engine bugs, one missing plane.
   adexplorer64 exit-32 (guest-side, SW-1212 proven); next frontiers via the
   now-visible registry/stub trace surfaces.
 
-## SWEEP-044 round summary «ادامه قطار» — 15/16 exit-0, 0 unresolved, Go/Rust frontiers breached (2026-10-22)
+## SWEEP-044 round summary (continue the train) — 15/16 exit-0, 0 unresolved, Go/Rust frontiers breached (2026-10-22)
 Batch directive: continue the train (10-train micro-wagon format). Corpus state
 before: 14x exit-0, adexplorer64 32, pageant 124, 1 unresolved import (COMCTL32.344).
 
@@ -2202,8 +2201,8 @@ before: 14x exit-0, adexplorer64 32, pageant 124, 1 unresolved import (COMCTL32.
   (downloaded famous game, blocked by SW-509), SW-791 (curl libcurl-x64.dll),
   SW-509 (PE-DLL loader — the single biggest remaining unblock).
 
-## SW-1231..SW-1240 — SWEEP-045 «۵ قطار بزرگ همزمان» — 5 big trains in parallel (2026-10-22, HEAD 08350c3 base)
-Directive: «۵ قطار بزرگ همزمان ادامه ریل ۵ تای» — five BIG trains running at once on
+## SW-1231..SW-1240 — SWEEP-045 (5 big trains in parallel) — 5 big trains in parallel (2026-10-22, HEAD 08350c3 base)
+Directive: (5 big trains at once, continue the 5-way rail) — five BIG trains running at once on
 the same rail. Base: origin/main 08350c3 (SWEEP-044), tree clean. Env-reset RECONCILE
 first: workspace rolled back to 242af84 (5th), reset --hard to 08350c3, deterministic
 rebuild; adexplorer64 corpus re-recovered (5th loss, sha-verified zip 56536bff /
@@ -2306,7 +2305,7 @@ exe e4512878 via the documented one-shot procedure).
   sha b33ec3f7); round trips jq '.a[1]'→2, sqlite3 6*7→42, 7za create byte-exact
   (evidence/sweep045/roundtrips.txt); games snake 30f + breakout 381f/13bricks
   byte-identical, calc 9/9.
-- **SWEEP-046 round summary «۲۰ قطار»** (2026-10-22, binary 848fa108, G1
+- **SWEEP-046 round summary (20 trains)** (2026-10-22, binary 848fa108, G1
   20261022_032424): Train 1 SW-1233 LANDED-PARTIAL (five engine root causes:
   TEB-before-load_pe, export-dir off-by-2, Win32 module paths, Windows base
   environment, CreateWaitableTimerA/W+Cancel+QueueUserAPC — ssh.exe -V exit 0
@@ -2324,8 +2323,8 @@ exe e4512878 via the documented one-shot procedure).
   thread), SW-1230v2 tail (7z.exe `i`/`a` FH4 chain), SW-1219 (famous game),
   SW-791 (curl MSVC variant with libcurl-x64.dll), SW-1093 (-Wformat audit).
 
-## SW-1234..SW-1242 — SWEEP-047 «ادامه قطار» — 20 trains (2026-10-22, base a418e5c)
-Directive: «ادامه قطار» (standing 20-train mandate). Baseline 848fa108 byte-exact
+## SW-1234..SW-1242 — SWEEP-047 (continue the train) — 20 trains (2026-10-22, base a418e5c)
+Directive: (continue the train) (standing 20-train mandate). Baseline 848fa108 byte-exact
 after fast-forward; adexplorer64 corpus recovery #7 (zip 56536bff / exe e4512878).
 
 - [x] **SW-791 LANDED-PARTIAL — curl.exe (mingw 8.23.0 Schannel) `--version` exit 0 x3**:
@@ -2448,9 +2447,9 @@ after fast-forward; adexplorer64 corpus recovery #7 (zip 56536bff / exe e4512878
   SW-1230v2 tail (7z FH4), SW-1237 socket tail, SW-1238..1242, SW-1219,
   SW-1093 (97 -Wformat).
 
-## SWEEP-048 «چهار قطار گرافیک» — the four GUI trains (2026-10-22)
+## SWEEP-048 (four graphics trains) — the four GUI trains (2026-10-22)
 
-User directive: «این چهار تا برنامه گرافیک دار رو باید تست بکنی» — (1) ODF
+User directive: (you must test these four graphical programs) — (1) ODF
 viewer, (2) Windows calculator, (3) a program that does not exist on Linux
 (free choice), (4) a game from the Windows XP games list.
 
@@ -2539,7 +2538,7 @@ viewer, (2) Windows calculator, (3) a program that does not exist on Linux
   real XP calc dialog clicks delivered (WM_COMMAND id=131/132 into the
   guest's own wndproc). evidence/sweep048/. no force-push.
 
-## SWEEP-049 «ادامه با برنامه های واقعی» — real-program deep-dive (2026-10-22)
+## SWEEP-049 (continue with real programs) — real-program deep-dive (2026-10-22)
 
 - [x] **SW-1253 LANDED — KUSER_SHARED_DATA page (0x7FFE0000)**: winver.exe
   5.2.3790 x64 SIGSEGV'd in its first basic block: `48 8b 04 25 c8 02 fe 7f`
@@ -2818,7 +2817,7 @@ viewer, (2) Windows calculator, (3) a program that does not exist on Linux
 
 ---
 
-## SWEEP-054 «۱۰ برنامه و ۵ بازی معرف دو بعدی قدیمی» — marks (2026-10-23)
+## SWEEP-054 (10 famous programs and 5 famous old 2D games) — marks (2026-10-23)
 
 - [x] **SW-1269 LANDED (SWEEP-054) — ShowWindow first-show paint + SW-1269b
   SW_MAXIMIZE surface grow.** Real Windows generates the first WM_PAINT when
@@ -3110,7 +3109,7 @@ viewer, (2) Windows calculator, (3) a program that does not exist on Linux
   zoomit rc=1 = their baselines). G1 PIN 12/12
   (evidence/master/g1/20261023_030335, binary 09c33df201af8ade).
 
-## SWEEP-059 (2026-10-24) — «بازی بمب گرافیک کامل» + 108-guest download battery
+## SWEEP-059 (2026-10-24) — (the bomb game with complete graphics) + 108-guest download battery
 
 - [x] **SW-1280 LANDED (SWEEP-059 Train 1, binary 5450ba3a…, G1 12/12
   evidence/master/g1/20261024_143552)** — minesweeper board painted all-black
@@ -3159,7 +3158,7 @@ viewer, (2) Windows calculator, (3) a program that does not exist on Linux
   nirsoft 15 tools, chocolate-doom x4, 3D Pinball) → 122 PEs inventoried →
   99 guests staged (94 battery + pinball + chocolate main exes).
 
-## SWEEP-060 (2026-10-24) — «ادانه چند ده قطار» Train 1: SW-1281 PE32/x86 SUBSYSTEM
+## SWEEP-060 (2026-10-24) — (continue dozens of trains) Train 1: SW-1281 PE32/x86 SUBSYSTEM
 
 - [x] **SW-1281 LANDED (SWEEP-060 Train 1)** — the 0x10b wall is BROKEN: full
   PE32 (x86/0x10b) loader plane + i386 interpreter + stdcall API gate:
@@ -3250,7 +3249,7 @@ viewer, (2) Windows calculator, (3) a program that does not exist on Linux
   TCM planes, (c) 32bpp imagelist decode — SW-1284 remains OPEN with
   this measured entry point.
 
-## SWEEP-061 «ادامه» — Train A: sol full-deal fidelity + guest-DLL probes (2026-10-24)
+## SWEEP-061 (continue) — Train A: sol full-deal fidelity + guest-DLL probes (2026-10-24)
 
 - [x] **SW-1286 LANDED** — guest-DLL export probe trampolines
   (MW_GUEST_DLL_PROBE=1): disk-DLL exports with known signatures (cards.dll
@@ -3270,8 +3269,8 @@ viewer, (2) Windows calculator, (3) a program that does not exist on Linux
   synchronously during ShowWindow/SetWindowPos/MoveWindow; v1 never
   delivered WM_SIZE at all, so sol's pile-layout (computed in WM_SIZE)
   stayed at the zero init and every card drawn to (0,0..18) — the board
-  rendered with the deck fan only, no tableau (the user's «ساختار گرافیکی
-  اصلی کاملا متفاوت» report). (b) WM_SIZE is now SENT synchronously inside
+  rendered with the deck fan only, no tableau (the user's (the main graphical
+  structure is completely different) report). (b) WM_SIZE is now SENT synchronously inside
   mw_ShowWindow BEFORE the first WM_PAINT and before any posted message
   (the pump-queued variant let sol's posted WM_COMMAND deal run first).
   (c) MoveWindow/SetWindowPos on the MAIN window now also send WM_SIZE
@@ -3328,7 +3327,7 @@ viewer, (2) Windows calculator, (3) a program that does not exist on Linux
   / calc face unchanged). SW-1291 (winmine surface tail) remains open —
   cosmetic only.
 
-## SWEEP-062 Train 1 «ادامه» — SW-1291 winmine silver tail + the erase contract family (2026-10-25)
+## SWEEP-062 Train 1 (continue) — SW-1291 winmine silver tail + the erase contract family (2026-10-25)
 
 - [x] **SW-1291 LANDED** — winmine's 804px black tail below the board is
   GONE. Root cause: the grow-only surface (SW-1266) zero-fills new strips
@@ -3397,7 +3396,7 @@ viewer, (2) Windows calculator, (3) a program that does not exist on Linux
   (chocolate DLL-chain DllMain), SW-1281c/d (x86 api-set shim +
   deep-init), SW-1291's sibling SW-1290 consumers unchanged.
 
-## SWEEP-062 Train 2 «ادامه» — SW-1292 decode: the TRUE sol WM_PAINT chain (2026-10-25)
+## SWEEP-062 Train 2 (continue) — SW-1292 decode: the TRUE sol WM_PAINT chain (2026-10-25)
 
 - [x] **SW-1292 DECODED (instruction-level, probe-verified; fix deferred)**
   — the earlier decode was against the WRONG wndproc. The REAL chain,
@@ -3444,7 +3443,7 @@ viewer, (2) Windows calculator, (3) a program that does not exist on Linux
 - [ ] SW-1284 (common-controls child lifecycle), SW-1283b, SW-1281c/d
   remain open.
 
-## SWEEP-062 Train 3 «ادامه» — corpus expansion: +15 fresh programs (2026-10-25)
+## SWEEP-062 Train 3 (continue) — corpus expansion: +15 fresh programs (2026-10-25)
 
 - [x] **+15 fresh programs downloaded & staged** (artifacts/sweep062/dl/,
   scripts/sweep062_download.sh; total corpus now 48 programs: 17 XP +
@@ -3471,10 +3470,10 @@ viewer, (2) Windows calculator, (3) a program that does not exist on Linux
 - [x] Engine health confirmed mid-battery (winmine 82-frame baseline
   rc=0 on the same build).
 
-## SWEEP-062 Train 4 «ادامه» — winmine INTERACTIVE fidelity: bombs, flags, numbers (2026-10-25)
+## SWEEP-062 Train 4 (continue) — winmine INTERACTIVE fidelity: bombs, flags, numbers (2026-10-25)
 
-- [x] **USER'S ORIGINAL COMPLAINT CLOSED END-TO-END** («فقط بازی بمب رو
-      کامل لود نمی کند گرافیک مشکل دارد بمب ها و سایر موارد کامل نیست»):
+- [x] **USER'S ORIGINAL COMPLAINT CLOSED END-TO-END** ((the bomb game does not
+      load completely; the graphics are broken; bombs and other elements are incomplete)):
       the coordinate mouse channel (SW-1261b MINWIN_MOUSE="x,y;...") now
       plays REAL minesweeper under the engine:
   * reveal run (3 clicks): flood-fill opens a connected region, classic
@@ -3493,7 +3492,7 @@ viewer, (2) Windows calculator, (3) a program that does not exist on Linux
 - [x] Corpus bookkeeping: SearchMyFiles x64 rc=124 (pump-budget hang,
       SW-1284 domain) — noted, next-batch entry point.
 
-## SW-1291..SW-1299 — SWEEP-063 Ghidra tooling train («ابزار های مثل Ghidra و پلاگین ها»)
+## SW-1291..SW-1299 — SWEEP-063 Ghidra tooling train ((tools like Ghidra and its plugins))
 - [x] **SW-1294 Ghidra 12.2 toolchain** — NSA GitHub latest (JDK 25 required;
       JAVA_HOME_OVERRIDE; PyGhidra 3.2.0 API driver, analyzeHeadless lacks PyGhidra
       runtime). scripts/sweep063_driver.py + sweep063_ghidra_export.py.
@@ -3539,7 +3538,7 @@ viewer, (2) Windows calculator, (3) a program that does not exist on Linux
       imports ImageList_Create BY NAME = corroborates. Rebuild + regression
       all baseline.
 
-## SWEEP-065 — 20-program mass audit («۲۰ تا برنامه رو با این ابزارها بررسی بکن و اجرا ببین»)
+## SWEEP-065 — 20-program mass audit ((inspect 20 programs with these tools and watch them run))
 - [x] Ghidra 12.2 batch: 20 binaries -> 30,289 functions / 3,778 imports /
       163,774 resource entries in ~726s total (avg ~36s/program).
       evidence/sweep065/ghidra/<prog>/{functions,imports,exports,resources}.tsv
@@ -3590,7 +3589,7 @@ viewer, (2) Windows calculator, (3) a program that does not exist on Linux
 - [ ] **SW-1299** (new): SList x86-ECX family + RtlUnwind arity manual
       review (excluded from the automated wine fix).
 
-## SWEEP-067 — tool-flywheel round «ادامه + ابزار ها همیشه کمکت بشن» (2026-10-25)
+## SWEEP-067 — tool-flywheel round (continue + always let the tools help you) (2026-10-25)
 - [x] **SW-1299 LANDED** — SList x86 regparm class + RtlUnwind arity:
       (1) real Windows passes the SList family in ECX/EDX (wine kernel32.spec
       -regparm), NOT on the stack — new mw32_regparm_count() + gate register

@@ -7,7 +7,7 @@ by the census below + a second G1-equivalent run note in README).
 
 ## Mandate context
 
-User: «ادامه اسکرین شات اجرای برنامه ها رو هم نشون بده» — continue the train
+User: (continue: also show screenshots of the programs running) — continue the train
 AND show screenshots of the running programs. This batch makes the four
 real-program mandate targets VISIBLE, not just exit-code-clean.
 

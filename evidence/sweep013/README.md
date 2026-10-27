@@ -1,10 +1,9 @@
 # SWEEP-013 — "5x multiplication" + GUI calculator acceptance (2026-10-19)
 
 User directives this sweep:
-1. «حداقل یک برنامه گرافیکی ساده ماشین حساب یا برنامه دیگه رو هم تست بکن» —
+1. (test at least one simple graphical calculator or another program) —
    test at least one simple graphical program (a calculator).
-2. «تمامی برنامه پیشنهادی و ادامه پیشنهادی رو تسک رو حداقل ۵ برابر بکن تا
-   تعداد زیادی مشکل حل بشه» — multiply the task queue ~5x, solve MANY problems
+2. (multiply all suggested programs and follow-ups into a task queue at least 5x bigger so that many problems get solved) — multiply the task queue ~5x, solve MANY problems
    per sweep, keep measuring per-program progress.
 
 ## A. Calculator GUI program (DELIVERED)

@@ -1,7 +1,6 @@
 # SWEEP-008 — REA (Reverse Engineer Anything) evaluation (2026-10-18)
 
-User directive: «تو گیت هاب rea برای مهندسی معکوس هست خیلی معرف شده ببین میتونه
-بهت کمک بکنه روی چند تا برنامه تست بکن» — the trending GitHub RE tool "REA"
+User directive: (the trending GitHub RE tool REA might help; test it on a few programs) — the trending GitHub RE tool "REA"
 (morluto/rea) was suggested; test it on a few of our programs and see whether
 it helps MiniWin.
 
@@ -98,8 +97,7 @@ it helps MiniWin.
 
 ## SWEEP-008b — API-free wiring + named-stub gate identity (2026-10-18)
 
-User directive: «اگر برای rea توکن یا ای پی ای می خواد خودتو بهش وصل بکن بدون
-api فکر کنم برای برنامه های ویندوزی خیلی کمک بکنه» — verify REA needs no
+User directive: (if REA needs a token or an API, hook it up without; it should help a lot for Windows programs) — verify REA needs no
 token/API, wire it up without one, keep applying it to Windows programs.
 
 ### API/token audit — RESULT: NONE needed

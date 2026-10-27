@@ -1,6 +1,6 @@
 #!/bin/bash
 # SWEEP-061 Train 2 — XP regression screenshot battery + winmine fidelity audit.
-# User mandate «اسکرین شات اجرای برنامه ها رو هم نشون بده» + the standing
+# User mandate (also show screenshots of the programs running) + the standing
 # graphics-fidelity complaint (winmine bombs/elements complete render).
 set -u
 cd /home/z/my-project/workspace/miniwin-engineering || exit 1

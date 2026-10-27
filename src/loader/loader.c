@@ -189,8 +189,8 @@ static unsigned long long mw_trace_cap_init(void) {
 /* ============================================================
  * SWEEP-011 (2026-10-18): REA-powered debugger-speed facilities
  * ------------------------------------------------------------
- * User directive: «از ابزارهای rea نهایت استفاده رو بکن برای کمتر شدن
- * زمان اجرا برنامه‌ها، سرعت دیباگر بهتر بشه».
+ * User directive: (use the REA tooling to the maximum to cut program
+ * run time and give the debugger better speed).
  *
  * Measured baseline (artifacts/sweep011_perf/baseline.tsv): guest code
  * runs natively (whole battery < 2 s); the real per-run I/O tax is the
@@ -16273,6 +16273,14 @@ __attribute__((ms_abi)) int mw_VerifyVersionInfoW(void* vi, uint32_t mask, uint6
     (void)vi; (void)mask; (void)cond;
     return 1; /* claim compatibility */
 }
+__attribute__((ms_abi)) int mw_VerifyVersionInfoA(void* vi, uint32_t mask, uint64_t cond) {
+    /* SW-1461 (SWEEP-093): the A variant was missing entirely; psloglist64
+     * probed it and the unresolved-import stub returned FALSE, so the guest
+     * printed "requires Windows XP or higher" and exited 255. Mirror the W
+     * honesty: claim compatibility so the guest runs its real logic. */
+    (void)vi; (void)mask; (void)cond;
+    return 1;
+}
 __attribute__((ms_abi)) int mw_WaitNamedPipeA(const char* name, uint32_t ms) {
     (void)name; (void)ms;
     mw_SetLastError(2); return 0;
@@ -16432,7 +16440,7 @@ __attribute__((ms_abi)) void* mw_FindWindowA(const char* cls, const char* title)
  * SWEEP-013 (2026-10-19): mini window manager — real child controls.
  * Evidence: artifacts/sweep012/runs-AFTER gate_imports (GetDlgItem 5x,
  * SendMessageW 4x, SetWindowTextW 4x = the #1 program-count frontier) and
- * the user demand «حداقل یک برنامه گرافیکی ساده ماشین حساب» — a calculator
+ * the user demand (at least one simple graphical calculator) — a calculator
  * GUI app needs EDIT/BUTTON children, WM_COMMAND routing and text I/O.
  * Honest contract: children live in an engine registry with their own
  * pseudo-HWNDs (0x0003xxxx), text store, check state and control id —
@@ -18626,7 +18634,7 @@ __attribute__((ms_abi)) void mw_PostQuitMessage(int code) {
 /* ==== end SWEEP-003 GUI skeleton ==== */
 
 /* ---- SWEEP-004: GDI-lite dialog raster — MessageBoxW/A render to BMP ----
- * User mandate (2026-10-18): «از برنامه گرافیکی تصویر هم بده» — produce a
+ * User mandate (2026-10-18): (also provide a graphical image program) — produce a
  * real image from a graphical program. Classic Win95-style dialog drawn into
  * an RGB buffer with the public-domain font8x8 (D. Hepper, U+0000..007F),
  * written as 24-bit BMP into <results>/screenshots/messagebox_N.bmp.
@@ -25212,7 +25220,7 @@ __attribute__((ms_abi)) void* mw_SysAllocStringByteLen(const char* s, uint32_t l
 
 /* ============================================================
  * SWEEP-014 (2026-10-19): honest batch #4 — "3x continuation" per user
- * directive («ادامه سه برابری»). Same evidence discipline as batches #1-#3:
+ * directive ((triple-parity continuation)). Same evidence discipline as batches #1-#3:
  * every target below is a NAMED gate from artifacts/sweep012/runs-AFTER2
  * (progress.json gate_imports) re-decoded with the fixed thunk-walking
  * decoder (BUG-069: guests call imports via `call rel32` -> `jmp [rip+disp]`
@@ -26323,7 +26331,7 @@ __attribute__((ms_abi)) uint32_t mw_GdipDisposeImage(void* img) {
 }
 
 /* ============================================================
- * SWEEP-025 — SW-1001..1015 batch («ادامه فیل و یوز» 60-task mandate).
+ * SWEEP-025 — SW-1001..1015 batch ((continue elephant and cheetah) 60-task mandate).
  * One edit round implementing the union of the unresolved-import sets of
  * the three exit-1 gates measured fresh on the SWEEP-023 binary
  * (artifacts/sweep025/baseline/): pageant 26 ("Unable to access security
@@ -28330,7 +28338,7 @@ __attribute__((ms_abi)) uint32_t mw_GetCharacterPlacementW(void* dc, const uint1
 }
 
 /* ============================================================
- * SWEEP-026 — «ادامه فیل یوز با ۵۰ تسک» 50-task elephant round
+ * SWEEP-026 — (continue elephant-cheetah with 50 tasks) 50-task elephant round
  * (SW-1021..1100 queue: text/registry/SID-ACL/icon/palette tails)
  * Every function here is real math/parse or an honest typed contract,
  * matching the family conventions set by SWEEP-023/025.
@@ -33801,7 +33809,7 @@ __attribute__((ms_abi)) uint32_t mw_DllUnregisterServer(void) {
 
 
 /* ==================================================================
- * SWEEP-042 «۱۰ قطار، چند ده واگن ریزه» — micro-wagon batch.
+ * SWEEP-042 (10 trains, dozens of micro-wagons) — micro-wagon batch.
  * Train 1: adexplorer64 named imports (UuidFromStringW, IIDFromString,
  *   MenuItemFromPoint, SD owner/group/length, SD->SDDL, NetUserGet*).
  * Train 2: wine-spec-named ordinals (activeds.spec + wldap32.spec +
@@ -37489,6 +37497,7 @@ ENTRY("msvcrt.dll", "wctype", mw_wctype),
     ENTRY("KERNEL32.DLL", "SleepEx",                            mw_SleepEx),
     ENTRY("KERNEL32.DLL", "VerSetConditionMask",                mw_VerSetConditionMask),
     ENTRY("KERNEL32.DLL", "VerifyVersionInfoW",                 mw_VerifyVersionInfoW),
+    ENTRY("KERNEL32.DLL", "VerifyVersionInfoA",                 mw_VerifyVersionInfoA),
     ENTRY("KERNEL32.DLL", "WaitNamedPipeA",                     mw_WaitNamedPipeA),
     ENTRY("api-ms-win-crt-environment-l1-1-0.dll", "__p__wenviron", mw___p__wenviron),
     ENTRY("api-ms-win-crt-runtime-l1-1-0.dll", "__p___wargv",   mw___p___wargv),
@@ -38628,7 +38637,7 @@ ENTRY("GDI32.DLL", "GetCharacterPlacementW",                mw_GetCharacterPlace
     ENTRY("snmpapi.dll", "SnmpUtilOidCpy",                      mw_SnmpUtilOidCpy),
     ENTRY("snmpapi.dll", "SnmpSvcGetUptime",                    mw_SnmpSvcGetUptime),
     ENTRY("NETAPI32.dll", "NetApiBufferFree",                   mw_NetApiBufferFree),
-    /* ===== SWEEP-042 «۱۰ قطار، چند ده واگن ریزه» — micro-wagon batch =====
+    /* ===== SWEEP-042 (10 trains, dozens of micro-wagons) — micro-wagon batch =====
      * Train 1 (adexplorer64 named imports) + Train 2 (wine-spec ordinals)
      * + Train 3 (kernel32 Ex family) + Train 5 (DPAPI). Name-only strcmp
      * resolution means one ENTRY per API serves both paths. */
@@ -40930,7 +40939,7 @@ static void mw_install_watchdog(int seconds) {
 }
 
 /* ============================================================
- * SW-1281 (SWEEP-060 Train 1) «چند ده قطار»: PE32 (x86 / 0x10b)
+ * SW-1281 (SWEEP-060 Train 1) (dozens of trains): PE32 (x86 / 0x10b)
  * subsystem. Evidence (artifacts/sweep059/guest_inventory.tsv):
  * 57/108 battery guests blocked EXACTLY at the 0x10b rejection
  * (loader.c:36302 + LoadLibrary:1230) — winamp295, 3D Pinball,

@@ -120,7 +120,7 @@ Stage Summary:
 ---
 Task ID: SWEEP-007 (SW-562)
 Agent: Super Z (engineering agent)
-Task: User «ادامه بده» — continue per worklist: SW-562 battery (all GUI programs
+Task: User (continue) — continue per worklist: SW-562 battery (all GUI programs
       under MW_GUI_EVENTS=1), honest post-SWEEP-005/006 frontier measurement.
 
 Work Log:
@@ -232,7 +232,7 @@ Stage Summary:
 ---
 Task ID: SWEEP-009
 Agent: Super Z (main session)
-Task: «ادامه» — land the queued honest-stub batch (SW-555), re-measure the
+Task: (continue) — land the queued honest-stub batch (SW-555), re-measure the
   three gate programs, push.
 
 Work Log:
@@ -264,7 +264,7 @@ Stage Summary:
 ---
 Task ID: SWEEP-010
 Agent: Super Z (main session)
-Task: «ادامه» — procexp64 UI-init batch (GetSystemMetrics + ImageList_* +
+Task: (continue) — procexp64 UI-init batch (GetSystemMetrics + ImageList_* +
   SetDefaultDllDirectories), re-measure gates, push.
 
 Work Log:
@@ -329,7 +329,7 @@ artifacts/sweep011_perf/ (TSVs, COMPARISON.md, funcmaps/), 4 new scripts,
 ---
 Task ID: SWEEP-012
 Agent: Super Z (main agent)
-Task: User directive 2026-10-18: "از اون لیست ۱۰۰ نرم افزاری هر چی میتونی تست بکن، ببین چقدر پیشرفت اجرا داشتن — تغییرات بدون پیشرفت ارزشی نداره" (test as many of the 100-program list as available; measure EXECUTION PROGRESS; changes without progress are worthless).
+Task: User directive 2026-10-18: (test as many of the 100-program list as you can, measure the execution progress — changes without progress are worthless) (test as many of the 100-program list as available; measure EXECUTION PROGRESS; changes without progress are worthless).
 
 Work Log:
 - Built scripts/sweep012_progsweep.sh (full-pool discovery, resumable, MINWIN_SCREENSHOT=0, api_trace ON) + scripts/sweep012_progress.py (guest_rip -> dll!import decoder via FF15/disp32/IAT + progress score 0..5 + named-gate clusterer + before/after differ).
@@ -411,7 +411,7 @@ Stage Summary:
 - Next lever: SW-601 InvalidateRgn (RAMMap64), SW-602/608/609 guest-level
   crash symbolization, SW-603 Bginfo64 8-stub family.
 
-## 2026-10-18 (SWEEP-014) — «ادامه سه برابری»: batch #4 + 3x queue + calc scenario D
+## 2026-10-18 (SWEEP-014) — (triple-parity continuation): batch #4 + 3x queue + calc scenario D
 - **BUG-069 CLOSED (fixed)**: sweep012_progress.py decoder handled only direct
   `FF 15` calls; ProduKey/cports/7zG/sqlite3_analyzer call imports via
   `E8 rel32 -> FF 25` jmp-thunks, so their gates printed ??NOT-FF15??.
@@ -468,7 +468,7 @@ Stage Summary:
 ---
 Task ID: SWEEP-015
 Agent: Super Z (main agent)
-Task: «ادامه سه برابری» — honest-stub continuation, broad sweep, GUI calc, worklist x3
+Task: (triple-parity continuation) — honest-stub continuation, broad sweep, GUI calc, worklist x3
 
 Work Log:
 - Discovered upstream had advanced to f64290e (SWEEP-014) via `git fetch` — local b783c44 was stale; fast-forwarded main to f64290e (clean ff, no divergence).
@@ -496,7 +496,7 @@ Stage Summary:
 
 ---
 
-## SWEEP-018 (2026-10-19) — «ادامه و پوش» elephant batch: 5x139->exit0, G1 green
+## SWEEP-018 (2026-10-19) — (continue and push) elephant batch: 5x139->exit0, G1 green
 
 Work Log:
 - Decoded produkey/cports/diskmon64/rammap64/searchmyfiles crash RIPs with
@@ -524,7 +524,7 @@ Work Log:
   breakout 3x (bricks 40->13); miniwin_calc rebuilt (lost untracked binary,
   SW-801h class) 3x exit0 4 frames SHA 7e8821ae x3.
 - New evidence: evidence/sweep018/README.md; artifacts/sweep018/.
-- Worklist: SW-812..815 filed; «ادامه سه برابری» queue SW-816..880 (65 items)
+- Worklist: SW-812..815 filed; (triple-parity continuation) queue SW-816..880 (65 items)
   appended to .agent/SWEEP50_WORKLIST.md.
 
 Stage Summary:
@@ -536,7 +536,7 @@ Stage Summary:
 ---
 Task ID: SWEEP-019
 Agent: main agent
-Task: «ادامه چند ده تسک همزمان و پوش در گیت هاب» — execute the queued
+Task: (continue dozens of tasks at once and push to GitHub) — execute the queued
   SW-816..880 continuation queue (65 items, 13 families) as ONE elephant
   batch, measured sweep, push to GitHub.
 
@@ -588,7 +588,7 @@ Stage Summary:
 - Evidence: evidence/master/g1/20261019_173159, fresh
   artifacts/sweep019/sweep/sweep019_sweep.tsv + acceptance outputs.
 
-## SWEEP-021 — 2026-10-19 — «ادامه چند ده تسک همزمان» elephant batch
+## SWEEP-021 — 2026-10-19 — (continue dozens of tasks at once) elephant batch
 - LANDED (one batch): SW-881..920 remainder — 24 new functions + 35 ENTRY rows in
   src/loader/loader.c: menu deepening (InsertMenuItemA/W, RemoveMenu, DeleteMenu,
   GetMenuItemRect, TrackPopupMenuEx), ListView deepening (LVM_GETNEXTITEM/SETITEM/
@@ -610,7 +610,7 @@ Stage Summary:
   order). Carried open: SW-800, SW-801i/j, SW-807/809/814/815 crash signatures.
 - evidence/sweep021/README.md + scripts/sweep021_chunk.sh + sweep021_gui_evidence.py.
 
-## SWEEP-022 (2026-10-19) — «ادامه» elephant batch: SW-921..960 LANDED + BUG-074/075
+## SWEEP-022 (2026-10-19) — (continue) elephant batch: SW-921..960 LANDED + BUG-074/075
 
 - Synced local to origin/main 0bc6ba3 (SWEEP-021; local had been rewound to b783c44).
 - ONE loader.c batch (~45 new/updated imports):
@@ -642,7 +642,7 @@ Stage Summary:
 - evidence/sweep022/README.md + scripts/sweep022_chunk.sh + sweep022_calc_accept.sh;
   artifacts/sweep022/{sweep,pumpon,pumpon_baseline} + artifacts/sweep022_calc.
 
-## SWEEP-023 (2026-10-19) — «ادامه ۶۰ تسک رو یکی یکی اجرا بکن» 60-task batch: SW-961..1000 LANDED + SW-1001..1020 queued
+## SWEEP-023 (2026-10-19) — (continue: execute 60 tasks one by one) 60-task batch: SW-961..1000 LANDED + SW-1001..1020 queued
 
 - ONE loader.c batch (~25 new/updated imports + 3 data models + 1 REAL bug fix):
   * ListView: per-item LPARAM store (insert/set/get/delete-shift) + LVM_SORTITEMS
@@ -711,7 +711,7 @@ Stage Summary:
   sweep008-local-divergent-3.
 
 ---
-SWEEP-025 (2026-10-20) «ادامه فیل و یوز» — SW-1001..1020 + 10 root-cause fixes
+SWEEP-025 (2026-10-20) (continue elephant and cheetah) — SW-1001..1020 + 10 root-cause fixes
 - Gates: pageant 1->124 daemon, procmon64 1->0, putty 1->9, puttygen 139->0.
 - Root causes: LoadLibraryA full-path + no-ext, TokenUser/TokenGroups,
   OpenProcess self, SetEntriesInAclA, GetUserNameExA SPN, BUG-081 GCP fix.
@@ -722,7 +722,7 @@ SWEEP-025 (2026-10-20) «ادامه فیل و یوز» — SW-1001..1020 + 10 ro
 - BUG-082 open (putty GS-cookie; Ghidra env lost -> requeue SW-1022/1030).
 
 ---
-SWEEP-026 (2026-10-20) «ادامه فیل یوز با ۵۰ تسک» — resumed interrupted batch, closed it
+SWEEP-026 (2026-10-20) (continue elephant-cheetah with 50 tasks) — resumed interrupted batch, closed it
 - Found SWEEP-026 mid-flight at session resume: 764 lines uncommitted in
   loader.c (SW-1021..1097 batch + SW-1023 timer + SW-1090 trace cap).
 - Build fix: mw_SetDIBitsToDevice called the wrong-direction row helper
@@ -740,7 +740,7 @@ SWEEP-026 (2026-10-20) «ادامه فیل یوز با ۵۰ تسک» — resumed
   sweep026 scripts committed (sweep.sh, gui_battery.sh, mark_landed.py).
 
 ---
-SWEEP-027 (2026-10-20) «واگن های قطار» — one wagon batch on reconciled tree
+SWEEP-027 (2026-10-20) (train wagons) — one wagon batch on reconciled tree
 - Env reset detected (local 55b3982): reset to origin 3cd11c0; deterministic
   rebuild reproduced SWEEP-026 pin sha 51bc4fb3 EXACTLY before new work.
 - 45 imports + _wcmdln data import in one splice (scripts/sweep027_impl.c
@@ -751,7 +751,7 @@ SWEEP-027 (2026-10-20) «واگن های قطار» — one wagon batch on recon
 - Pushed as one commit; worklist marks + summary appended.
 
 ---
-SWEEP-030 (2026-10-20) «قانون کلی قطار» — SW-1151 engine double-fix + fastfail honesty
+SWEEP-030 (2026-10-20) (general train law) — SW-1151 engine double-fix + fastfail honesty
 - SW-1151 full decode: Frame[7] func 0x2279a0 personality = __GSHandlerCheck_EH
   shim 0x319158 -> GS-check core 0x319070 ([EstFrame+0x570] cookie slot, tail-jmp
   __security_check_cookie 0x318660) -> __report_gsfailure 0x318730 ->
@@ -780,7 +780,7 @@ SWEEP-030 (2026-10-20) «قانون کلی قطار» — SW-1151 engine double-
   round trips + jq re-verified. Loader 2,698,920 bytes. evidence/sweep030/.
 
 ---
-SWEEP-038 (2026-10-21) «ادامه از جایی که ناقص مونده و پوش» — RECONCILE train 2: local interrupted session merged into remote chain
+SWEEP-038 (2026-10-21) (continue from where it was left incomplete, and push) — RECONCILE train 2: local interrupted session merged into remote chain
 - Context: local session (base 242af84) independently re-landed SW-1106 + SW-1201
   while a parallel remote chain (SWEEP-031..037) had already landed the SAME
   wagons with deeper decodes. Push rejected (non-FF). Precedent: SWEEP-037
@@ -808,7 +808,7 @@ SWEEP-038 (2026-10-21) «ادامه از جایی که ناقص مونده و پ
   G1 PIN 12/12 (evidence/master/g1/20261021_095409).
 
 ---
-SWEEP-039 (2026-10-21) «ادامه ۵۰ قطار و واگن» — SW-1102 train: SystemHandleInformation + ETW symbols + static decode
+SWEEP-039 (2026-10-21) (continue 50 trains and wagons) — SW-1102 train: SystemHandleInformation + ETW symbols + static decode
 - ENV-RESET RECONCILE first: workspace rolled back to 242af84 (local objects for
   SWEEP-031..038 lost) while origin/main carried 1490f96 — reset to origin/main,
   deterministic rebuild reproduced sha 2464ad23 BYTE-EXACT, G1 green; batch then
@@ -843,7 +843,7 @@ SWEEP-039 (2026-10-21) «ادامه ۵۰ قطار و واگن» — SW-1102 trai
   regressions. Census-script bug (missing run dirs -> bogus exit-1) caught and
   fixed before any conclusion was drawn — rerun clean.
 
-## SWEEP-040 «قطار ۵۰ تایی» (2026-10-21) — SW-1206 + SW-1205 + SW-1102c
+## SWEEP-040 (50-car train) (2026-10-21) — SW-1206 + SW-1205 + SW-1102c
 Start: origin/main 8c3ede7 (SWEEP-039+addendum). Three wagons landed,
 two new frontiers registered (SW-1207/SW-1208), corpus 15->16.
 - SW-1206: adexplorer64 corpus recovered (AdExplorer.zip re-fetched;
@@ -870,7 +870,7 @@ two new frontiers registered (SW-1207/SW-1208), corpus 15->16.
   final binary. Evidence: artifacts/sweep040/ (census.tsv, adexplorer64
   run1-3, roundtrip/). No force-push.
 
-## SWEEP-041 «ادامه ۲۰ قطار» — 2026-10-21 (sha 4ecab4c2, G1 12/12, pushed)
+## SWEEP-041 (continue 20 trains) — 2026-10-21 (sha 4ecab4c2, G1 12/12, pushed)
 Two open frontiers from SWEEP-040 cleared in one round, both to FULL LIFECYCLE:
 - SW-1207 (rammap64 139 -> 0): tooltips_class32 was landing on MW_GUI_HWND; the
   guest's GetPropW(tooltip, atom 0xC000) NULL-fed its comctl32 subclass branch
@@ -895,8 +895,8 @@ Two open frontiers from SWEEP-040 cleared in one round, both to FULL LIFECYCLE:
   pure forward motion; the 7za/jq/sqlite trio plus G1 regression 12/12 remain
   the regression net for the engine-wide surfaces (heap, windows, props).
 
-## SWEEP-042 «۱۰ قطار، چند ده واگن ریزه» — 10 trains, ~42 micro-wagons (2026-10-22, HEAD 9e30c16d)
-Directive: «۱۰ قطار چند ده واگن ریزه» — 10 trains carrying several dozen SMALL
+## SWEEP-042 (10 trains, dozens of micro-wagons) — 10 trains, ~42 micro-wagons (2026-10-22, HEAD 9e30c16d)
+Directive: (10 trains, dozens of micro-wagons) — 10 trains carrying several dozen SMALL
 wagons. Base: origin/main a06f45b (SWEEP-041), tree clean. The micro-wagon
 veins came from mining the post-SWEEP-041 surfaces: adexplorer64's 23
 unresolved imports (9 named + 14 ordinals — the ordinals were invisible for
@@ -949,9 +949,9 @@ Evidence: evidence/sweep042/{wine_specs,census.tsv,roundtrips,binary_sha256}.
 Open: SW-1102d copy-loop store instruction, ole32.277/16 + COMCTL32.344
 (Rule-1), SW-791 libcurl-x64.dll, procexp64 139 frontier.
 
-## SWEEP-043 «ادامه قطار» — BUG-078 solved, procexp64 139 -> 0 (2026-10-22)
+## SWEEP-043 (continue the train) — BUG-078 solved, procexp64 139 -> 0 (2026-10-22)
 - Reconcile first (origin had advanced to SWEEP-042 339cc60 incl. the
-  «۱۰ قطار چند ده واگن ریزه» batch; workspace reset mid-round): reset --hard +
+  (10 trains, dozens of micro-wagons) batch; workspace reset mid-round): reset --hard +
   scripts/sweep043_apply.py re-lands 11 patches, assert-verified.
 - SW-1102e/g: the 'ntio' writer = mw_IsBadStringPtrW's own
   mw_probe_copy(s+off, chunk*2, tmp[256]) overflow (1024B into 512B), proved
@@ -976,7 +976,7 @@ Open: SW-1102d copy-loop store instruction, ole32.277/16 + COMCTL32.344
 
 ---
 
-## SWEEP-044 «ادامه قطار» — 15/16 exit-0, 0 unresolved, Go+Rust frontiers breached (2026-10-22)
+## SWEEP-044 (continue the train) — 15/16 exit-0, 0 unresolved, Go+Rust frontiers breached (2026-10-22)
 
 Directive: continue the train (micro-wagon format). Start state: HEAD 7d0f8e5
 (SWEEP-043), binary 89ce3cd9, corpus 14x exit-0 + adexplorer64 32 + pageant 124,
@@ -1022,8 +1022,8 @@ Stage Summary:
 - Next frontiers: SW-1228 (Go data plane), SW-1230 (Rust layer 2), SW-1219
   (famous game download, blocked by SW-509), SW-509 (PE-DLL loader).
 
-## SWEEP-045 «۵ قطار بزرگ همزمان» — 5 big trains in parallel (2026-10-22, HEAD 08350c3 → b33ec3f7)
-Directive: «۵ قطار بزرگ همزمان ادامه ریل ۵ تای» — five BIG trains on one rail.
+## SWEEP-045 (5 big trains in parallel) — 5 big trains in parallel (2026-10-22, HEAD 08350c3 → b33ec3f7)
+Directive: (5 big trains at once, continue the 5-way rail) — five BIG trains on one rail.
 Base: origin/main 08350c3 (SWEEP-044). Env-reset reconcile first (workspace
 rolled back to 242af84 for the 5th time; adexplorer64 corpus re-recovered for
 the 5th time, sha-verified one-shot). Baseline rebuilt byte-exact: 71d19afd.
@@ -1097,8 +1097,8 @@ oracle at every step. The census caught the two real regressions I
 introduced (procmon64 self-load, 7za CxxThrow capture) and the falsification
 run on clean HEAD correctly exonerated the engine for 7za-extract.
 
-## SWEEP-046 «۲۰ قطار» — 20 trains (2026-10-22, binary 848fa108, pushed)
-Directive: «۲۰ قطار ادامه» — 20 trains. Base: origin/main 3ff438c (SWEEP-045);
+## SWEEP-046 (20 trains) — 20 trains (2026-10-22, binary 848fa108, pushed)
+Directive: (20 trains, continue) — 20 trains. Base: origin/main 3ff438c (SWEEP-045);
 fast-forward (local had 0 unique commits), adexplorer64 corpus re-recovered for
 the 6th time (AdExplorer.zip sha 56536bff byte-exact, exe e4512878 pinned),
 baseline rebuilt byte-exact b33ec3f7, census x3 green.
@@ -1174,8 +1174,8 @@ MEASUREMENT (final binary 848fa108da262351429caca7d5cf7244c65e75b1a9e02a9409d89a
 - games: snake 30f byte-identical 3x3, breakout 381f + 13 bricks, calc 9/9
 - no force-push; fast-forward base, single-round increment
 
-## SWEEP-047 «ادامه قطار» — 20 trains (2026-10-22, binary 3dbc56d5, pushed)
-Directive: «ادامه قطار» — standing 20-train mandate. Base: origin/main a418e5c
+## SWEEP-047 (continue the train) — 20 trains (2026-10-22, binary 3dbc56d5, pushed)
+Directive: (continue the train) — standing 20-train mandate. Base: origin/main a418e5c
 (SWEEP-046); fast-forward, baseline rebuilt byte-exact 848fa108, adexplorer64
 corpus recovery #7 (sha-pinned). 16 NEW x64 guests staged (Sysinternals set +
 curl 8.23.0 mingw with libcurl-x64.dll) — each guest = a train.
@@ -1222,7 +1222,7 @@ fd 9.0.0 intact. Lesson kept: the census caught nothing this round either
 — every fix is forward motion; the regression net (7za/jq/sqlite/G1/games)
 covered the engine-wide path-mapping change (SW-1234 was the riskiest).
 
-## SWEEP-048 «چهار قطار گرافیک» (2026-10-22) — four GUI trains
+## SWEEP-048 (four graphics trains) (2026-10-22) — four GUI trains
 
 Directive: test four GUI programs — ODF viewer, Windows calculator, a
 Windows-only program (free choice), an XP game. Start state: origin/main =
@@ -1272,9 +1272,9 @@ evidence/sweep048/ (README + provenance shas + screenshots + census). ASan
 diagnostic build attempted (blocked by guest-base/shadow-gap collision +
 RBP-asm — noted in SW-1249 notes).
 
-## SWEEP-049 (2026-10-22) «ادامه با برنامه های واقعی» — five wagons, one root cause, three programs resurrected
+## SWEEP-049 (2026-10-22) (continue with real programs) — five wagons, one root cause, three programs resurrected
 
-User directive: «ادامه بده عالیه اینطوری بهتر با برنامه های واقعی» — continue
+User directive: (continue, great, this way is better — with real programs) — continue
 with REAL programs. Reconciled first: local was 20 behind origin/main (remote
 chain SWEEP-031..048 incl. the four-GUI-train round); ff-pulled to 13969d7;
 verified binary reproducibility dce5784c byte-exact vs SWEEP-048 provenance.
@@ -1322,9 +1322,9 @@ provenance_sha256.txt + mspaint trace + 2 rendered messageboxes). No
 force-push. Open: SW-1258/1259 decode, tails, SW-1252 (LO staged),
 SW-1243 (needs x86 SP3 ISO), Everything full lifecycle.
 
-## SWEEP-050 (2026-10-22) «قطار با برنامه های واقعی» — five trains, two root causes, everything resurrected
+## SWEEP-050 (2026-10-22) (train with real programs) — five trains, two root causes, everything resurrected
 
-User directive: «ادامه بده عالیه اینطوری بهتر با برنامه های واقعی» + «ادامه ادامه».
+User directive: (continue, great, this way is better — with real programs) + «continue-continue».
 Reconciled first: local was 20 commits behind (origin advanced 242af84 -> 4aab7be,
 SWEEP-031..049 incl. the four-GUI-train rounds); pure ff-merge, binary reproduced
 byte-exact (a29ca1e7 = SWEEP-049 provenance). Payload re-staging: XP Pro x64 SP2
@@ -1370,7 +1370,7 @@ payloads_sha256.txt + wordpad/drwtsn32/everything traces). No force-push.
 Open: SW-1260 wordpad OnCreate -1 producer, SW-1261 soffice decode (LO MSI
 staged), Everything UI interaction.
 
-## SWEEP-051 (2026-10-22) — «قطار با برنامه های واقعی» Train: LibreOffice SW-1261 stage 1
+## SWEEP-051 (2026-10-22) — (train with real programs) Train: LibreOffice SW-1261 stage 1
 
 The user-mandated four real-graphical-program wagons: calc ✓ (battery 15/15),
 Windows-only Everything ✓ (exit-0, SWEEP-050), XP games ✓ (mshearts/winmine/
@@ -1523,7 +1523,7 @@ sol/freecell exit-0), and the ODF display program = **this round's train**.
 
 ## SWEEP-053 — real-program SCREENSHOTS batch (SW-1264/1265/1266/1266b)
 
-- Mandate: «ادامه اسکرین شات اجرای برنامه ها رو هم نشون بده» — make the
+- Mandate: (continue: also show screenshots of the programs running) — make the
   four-program targets VISIBLE. Corpus re-staged from pins (XP ISO
   19b5a382, LO MSI c6298b10 -> CAB 71dfff0b -> 19427/19427, soffice.bin
   cb08cffd / mergedlo.dll 017d0c21 byte-exact); staging gaps fixed
@@ -1554,7 +1554,7 @@ sol/freecell exit-0), and the ODF display program = **this round's train**.
 
 ---
 
-## SWEEP-054 (2026-10-23) — «۱۰ برنامه و ۵ بازی معرف دو بعدی قدیمی» + screenshots
+## SWEEP-054 (2026-10-23) — (10 famous programs and 5 famous old 2D games) + screenshots
 
 Reconcile: origin/main 0f7bd36 (SWEEP-053) fast-forwarded before work (user
 rule #1: GitHub first, verify pushes). Local stale loader rebuilt to the
@@ -1590,7 +1590,7 @@ DL corpus 45/45 deterministic; G1 PIN 12/12
 Open: SW-1275 spider brush/card-face, SW-1273 LO mirror, SW-1206 corpus.
 
 
-## SWEEP-055 (2026-10-23) — «ادامه» SW-1275 spider board + SW-1273 LO mirror + SW-1206 corpus
+## SWEEP-055 (2026-10-23) — (continue) SW-1275 spider board + SW-1273 LO mirror + SW-1206 corpus
 
 Rule #1 (user standing law): git fetch first — origin/main = c59811a (SWEEP-054)
 = local HEAD; worked on the true tip; tree had only untracked artifacts.
@@ -1644,7 +1644,7 @@ Rule #1 (user standing law): git fetch first — origin/main = c59811a (SWEEP-05
 Open: SW-1278 (Everything volume-DB), SW-1276 (soffice initterm), SW-1277
 (sol cards.dll layout), SW-1267/1268, SW-1273 render frontier (SW-1263).
 
-## SWEEP-056 «چنده قطار چنده واگن حرکت» — per-module resources + sol's REAL metrics (2026-10-23)
+## SWEEP-056 (several trains, several wagons, move) — per-module resources + sol's REAL metrics (2026-10-23)
 
 **Rule #1 (standing law)**: fetched origin BEFORE work — remote had advanced
 242af84 -> 2156eed (SWEEP-039..055 landed by the parallel chain: four-program
@@ -1700,7 +1700,7 @@ bookkeeping); SW-1276 open (LibreOffice re-stage for the initterm decode —
 download interrupted, next train). SW-1268/SW-1278 continue.
 
 ## SWEEP-057 Train 1 (2026-10-23) — SW-1279 sol deal/paint: SIX ROOT CAUSES
-Task: «۱۰ قطار واگن ادامه» — Train 1 of 10. Rule #1: fetched origin first
+Task: (10 train-wagons continue) — Train 1 of 10. Rule #1: fetched origin first
 (242af84 -> a23f69e, parallel chain SWEEP-039..056 landed 34 commits; ff-only,
 staged sweep030/031 artifacts moved aside, no RECONCILE needed).
 Decode method (SWEEP-011 discipline): sol.exe is x64 PE32+ base 0x100000000.
@@ -1810,12 +1810,12 @@ still mismatches — next layer: decode the NtQuery call site that fills
 the internal buffer global); census 42/42 x3; procexp64 139->124 (fix-F
 timer-wait = keep-running, deterministic); G1 12/12.
 
-## SWEEP-058 «۱۰ قطار واگن ادامه» / «ادامه از جایی قطع شده و ناقص» (2026-10-24)
+## SWEEP-058 (10 train-wagons continue) / (continue from where it was cut off and left incomplete) (2026-10-24)
 Rule #1: fetched origin — parallel chain had advanced 242af84 -> 989e77b
 (SWEEP-031..057); reset to 989e77b, worked on top. Guest farm re-staged
 (sweep056_stage_guests.sh).
 
-DISCOVERY (the "قطع شده و ناقص"): SWEEP-057 Train 5 (989e77b) committed only
+DISCOVERY (the "cut off and left incomplete"): SWEEP-057 Train 5 (989e77b) committed only
 its scripts — the loader.c engine deltas (SW-1241 hive seeding + SW-1240 LSA
 groundwork) never landed. SWEEP-058 re-lands them.
 
@@ -1846,7 +1846,7 @@ everything gone — pinned zip 4f4a9b92 re-download needed), soffice SW-1276
 layer-2, sol SW-1279 tableau, handle64 SW-1242b, logonsessions SW-1240b,
 accesschk SW-1238c.
 
-## SWEEP-059 (2026-10-24) — «ادامه از جایی قطع شده و ناقص» → the bomb-game
+## SWEEP-059 (2026-10-24) — (continue from where it was cut off and left incomplete) → the bomb-game
 graphics fix + the real-program battery the user asked for.
 
 ### Rule #1 trail
@@ -1944,14 +1944,14 @@ incremental frames), SW-1284/1283b/1281c/d.
 
 Rule #1: fetched origin first — 97503e7 (SWEEP-062 Train 4) both sides, clean tree.
 
-Toolchain (user mandate: «از ابزار های کمکی استفاده بکنی»): Ghidra 12.2 from NSA
+Toolchain (user mandate: (use the auxiliary tools)): Ghidra 12.2 from NSA
 GitHub (requires JDK 25 — Temurin 25.0.5 installed; JAVA_HOME_OVERRIDE), PyGhidra
 3.2.0 via bundled cp312 wheel. analyzeHeadless has NO PyGhidra runtime → wrote
 scripts/sweep063_driver.py using the pyghidra API directly (probe script retained).
 Exports per binary: functions/imports(+ordinal flag)/exports/entrypoints/
 resources/strings + targeted decompilation. 37 evidence files.
 
-Measured effect («ببینی واقعا چقدر تاثیر داشته یا نه»): procexp64 5.2MB full
+Measured effect ((see whether it really had an effect or not)): procexp64 5.2MB full
 analysis 129s -> 2939 functions; four small binaries seconds; ~150s total for
 five programs, six export classes, plus decompilation of the full sol paint
 chain. Manual equivalent previously spanned SWEEP-060..062.
@@ -2060,7 +2060,7 @@ SW1297_ARITY_REPORT.md. Evidence: evidence/sweep066/. no force-push.
 ---
 Task ID: SWEEP-066-x64
 Agent: main (z.ai)
-Task: «ادامه قطار» — wagon SW-1297 x64/PE32+ track: bring the 64-bit
+Task: (continue the train) — wagon SW-1297 x64/PE32+ track: bring the 64-bit
 Notepad++ 8.9.8.1 (x64 build) to the GUI window under the x64 loader.
 Complements upstream SWEEP-066's x86/PE32 track (that one closed SW-1297
 for the 32-bit npp; this landing does it for the 64-bit binary).

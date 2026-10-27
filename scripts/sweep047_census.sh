@@ -1,5 +1,5 @@
 #!/bin/bash
-# SWEEP-047 «ادامه قطار» census: 3 runs per program, deterministic exit/stub/unresolved tally.
+# SWEEP-047 (continue the train) census: 3 runs per program, deterministic exit/stub/unresolved tally.
 # Corpus = artifacts/sweep50/dl/* (16) + new SWEEP-047 guests from artifacts/sweep047/stage/*.
 cd /home/z/my-project/workspace/miniwin-engineering || exit 1
 mkdir -p artifacts/sweep047

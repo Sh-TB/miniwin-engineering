@@ -1,7 +1,7 @@
 /* MiniWinCalc — SWEEP-008 simple-GUI acceptance target for MiniWin.
  *
- * User mandate (2026-10-18): «حداقل یک برنامه گرافیکی ساده ماشین حساب
- * یا برنامه دیگه رو هم تست بکن» — a real Win32 GUI calculator, built as
+ * User mandate (2026-10-18): (test at least one simple graphical
+ * calculator or another program) — a real Win32 GUI calculator, built as
  * PE x64 and run under the loader's event pump with a scripted key
  * sequence: 1, 2, +, 3, Enter(=), ESC. The display and keypad are drawn
  * with real GDI (FillRect / Rectangle / TextOutA); every WM_PAINT frame

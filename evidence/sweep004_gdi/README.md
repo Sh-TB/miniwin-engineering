@@ -1,6 +1,6 @@
 # SWEEP-004 — GDI-lite dialog raster (2026-10-18)
 
-User mandate: «ببین نمیتونی از برنامه گرافیکی تصویر هم بدی» — produce a real
+User mandate: (see if you can also provide a graphical image program) — produce a real
 image from a graphical program.
 
 ## What landed

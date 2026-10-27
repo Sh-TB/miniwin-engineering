@@ -37,4 +37,4 @@ note | free text
 - BLOCKED_DOWNLOAD / BLOCKED_SHA / FAIL_UNPACK / FAIL_NOEXE / NO MANIFEST
 
 The three user-named base apps (winrar, idman, npp64) run on EVERY train;
-each "ادامه/قطار" additionally runs one NEW unknown plugin.
+each (continue/train) additionally runs one NEW unknown plugin.

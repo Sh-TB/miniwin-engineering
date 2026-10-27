@@ -1,7 +1,7 @@
 #!/bin/bash
 # SWEEP-054 SCREENSHOT battery — the user's standing mandate:
-# «ادانه اسکرین شات اجرای برنامه ها رو هم نشون بده» (show screenshots of the
-# programs running) + this round's «۱۰ برنامه و ۵ بازی معرف دو بعدی قدیمی»
+# (continue: also show screenshots of the programs running) (show screenshots of the
+# programs running) + this round's (10 famous programs and 5 famous old 2D games)
 # (10 famous programs + 5 famous old 2D games, XP-era + new).
 #
 # For each guest: 1 GUI-pump run with events on, harvest frame_NNN.bmp /

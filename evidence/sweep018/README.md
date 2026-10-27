@@ -1,7 +1,6 @@
-# SWEEP-018 — «ادامه و پوش» elephant batch (2026-10-19)
+# SWEEP-018 — (continue and push) elephant batch (2026-10-19)
 
-User directive: «ادامه و پوش» + standing elephant/cheetah mandate («مثل فیل و یوز
-قوانینن») — single-pass batch execution, measured progress per change.
+User directive: (continue and push) + standing elephant/cheetah mandate (like the elephant and the cheetah) — single-pass batch execution, measured progress per change.
 
 ## What changed (one loader.c batch, five root-cause fixes)
 
@@ -32,7 +31,7 @@ User directive: «ادامه و پوش» + standing elephant/cheetah mandate («
    silent-139 class eliminated (produkey/rammap64 previously lost ALL
    diagnostics on stack-overflow crashes).
 
-## Measured progress (user mandate: «تغییرات بدون پیشرفت ارزشی نداره»)
+## Measured progress (user mandate: (changes without measured progress are worthless))
 
 artifacts/sweep018/sweep/sweep018_sweep.tsv (MW_GUI_EVENTS=0, x3, all runs
 deterministic — identical exit/stub/stdout/stderr per program):

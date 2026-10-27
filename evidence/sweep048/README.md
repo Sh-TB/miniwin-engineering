@@ -1,8 +1,8 @@
-# SWEEP-048 «چهار قطار گرافیک» — the four GUI trains
+# SWEEP-048 (four graphics trains) — the four GUI trains
 
 User directive: test FOUR GUI programs — (1) an ODF viewer, (2) a Windows
 calculator, (3) a program that does not exist on Linux at all (free choice),
-(4) a game from the Windows XP games list. ادامه قطار.
+(4) a game from the Windows XP games list. continue the train.
 
 ## The four trains
 

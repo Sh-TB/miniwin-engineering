@@ -1,4 +1,4 @@
-# SWEEP-066 — SW-1297: Notepad++ 8.9.8.1 به پنجره GUI رسید (Reached the GUI window)
+# SWEEP-066 — SW-1297: Notepad++ 8.9.8.1 reached the GUI window (Reached the GUI window)
 
 Date: 2026-10-25 · Base: e482146 (origin/main, post SWEEP-067) · Binary sha256 049876c0… (merged-build G1 pin)
 

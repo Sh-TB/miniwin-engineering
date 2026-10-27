@@ -1,8 +1,7 @@
 #!/bin/bash
 # SWEEP-059 Trains 4-6 — run the whole downloaded fleet under miniwin.
 # Per guest: MW_GUI_EVENTS pump, harvest screenshots, census row.
-# Mandate: «۲۰ تا ۵۰ تا برنامه رایگان رو دانلود و تست بکن تا ببینم واقعا چقدر
-# پیشرفت داشتیم» + screenshot evidence for every run.
+# Mandate: (download and test 20 to 50 free programs so I can see how much real progress we made) + screenshot evidence for every run.
 set -u
 cd /home/z/my-project/workspace/miniwin-engineering || exit 1
 G=artifacts/sweep059/guests

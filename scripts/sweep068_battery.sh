@@ -1,5 +1,5 @@
 #!/bin/bash
-# SWEEP-068 — «از ابزار ها نهایت استفاده رو بکن ... ۱۰ تا ۲۰ تا برنامه و بازی رو اجرا بکنی پوش بکن گیت هاب»
+# SWEEP-068 — (use the tools to the maximum ... run 10 to 20 programs and games, push to GitHub)
 # Mass-run battery: 24 guests (7 games, 9 XP apps, 6 modern tools, 2 Sysinternals x64).
 # Parallel via xargs -P4; per-exe result dirs are distinct -> safe.
 # Baselines from SWEEP-066/067: winmine 82 / sol 38 / freecell 10 / spider ~618-645 /

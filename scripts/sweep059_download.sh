@@ -1,8 +1,8 @@
 #!/bin/bash
 # SWEEP-059 Trains 3-7 — the user's mandate:
-#   «چند تا برنامه بازی از ویندوز قدم حتی ویندوز ۹۸ بیار»  (old Win98-era programs)
-#   «۲۰ تا ۵۰ تا برنامه رایگان رو دانلود و تست بکن»        (20-50 free programs)
-#   «چند تا بازی و برنامه جدید خیلی ریز رو تست بکن»        (new small games)
+#   (bring several game programs from old Windows, even Windows 98)  (old Win98-era programs)
+#   (download and test 20 to 50 free programs)        (20-50 free programs)
+#   (test several brand-new tiny games and programs)        (new small games)
 # Download battery: Win98-era classics (archive.org) + modern small freeware
 # (GitHub releases / direct vendor URLs). Everything lands in
 # artifacts/sweep059/dl/<name>/ and is verified with `file`.

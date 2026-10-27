@@ -24,6 +24,8 @@ xp.freecell:60:artifacts/sweep061/guests/freecell/freecell.exe
 xp.calc:60:artifacts/sweep061/guests/calc/calc.exe
 mini.breakout:60:artifacts/sweep006/breakout.exe
 mini.snake:60:artifacts/sweep005/snake.exe
+mini.flood:60:.cache/miniwin/built/mini_flood.exe
+psloglist64:60:-
 xp.spider:90:artifacts/sweep061/guests/spider/spider.exe"
 
 MANIFEST="tests/corpus/manifest.tsv"

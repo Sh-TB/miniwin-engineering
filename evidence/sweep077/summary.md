@@ -1,6 +1,6 @@
 # SWEEP-077 — the 20-puzzle INPUT campaign: 20/20 PASS_INPUT_STATE_CHANGE
 
-Continuation of «ادامه ادامه ۲۰ برنامه» (continue — 20 programs). SWEEP-075
+Continuation of «continue-continue: 20 programs» (continue — 20 programs). SWEEP-075
 made all 20 sgtatham puzzles launch and render; only 2 of them (fifteen,
 mines) had a demonstrated INPUT state change. The evidence bar for the
 campaign is initial frame + valid input + post-input frame that differs.

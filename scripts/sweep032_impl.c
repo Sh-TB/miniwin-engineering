@@ -1,5 +1,5 @@
 /* ==== SWEEP-032 IMPL START ====
- * Train 1 of 5 (user: «ادامه قطار ولی این سری ۵ تا قطار بیار هر قطار کلی واگون»).
+ * Train 1 of 5 (user: (continue the train, but this time bring 5 trains, each with many wagons)).
  * Wagons: SW-1106 zoomit64 64MB cap lift + full 70-import surface (66 named
  * + COMCTL32.410/412/413 + SHLWAPI.219 ordinals via wine-mirror spec
  * cross-check 2026-10-21), SW-1152 RtlCaptureContext SSE/FPU capture,

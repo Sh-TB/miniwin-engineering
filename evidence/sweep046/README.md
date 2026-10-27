@@ -1,6 +1,6 @@
-SWEEP-046 «۲۰ قطار» — evidence index (binary sha 848fa108, G1 PIN 12/12)
+SWEEP-046 (20 trains) — evidence index (binary sha 848fa108, G1 PIN 12/12)
 ========================================================================
-Round directive: «۲۰ قطار ادامه» — 20 trains. Base: origin/main 3ff438c (SWEEP-045).
+Round directive: (20 trains, continue) — 20 trains. Base: origin/main 3ff438c (SWEEP-045).
 
 Trains advanced this round (5 deep-dive trains of the 20-train batch; the
 remaining trains = census/gates/bookkeeping which this evidence set covers):

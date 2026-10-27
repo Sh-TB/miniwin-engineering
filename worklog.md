@@ -2,7 +2,7 @@
 ---
 Task ID: SWEEP-076
 Agent: main (z.ai)
-Task: «ادامه ادامه قطار قطار حداقل چند ده برنامه رو کامل بکن» — B-group rescue train: 8 FAIL-state utilities from the 48-target campaign
+Task: «continue-continue train-train: complete at least dozens of programs» — B-group rescue train: 8 FAIL-state utilities from the 48-target campaign
 
 Work Log:
 - Reconciled: local 242af84 -> origin 0b7cb7d (SWEEP-075, puzzles 20/20).
@@ -49,7 +49,7 @@ Stage Summary:
 ---
 Task ID: SWEEP-077
 Agent: main (z.ai)
-Task: «ادامه ادامه ۲۰ برنامه» — the 20-puzzle input campaign: initial frame + valid input + post-input frame for all 20 sgtatham puzzles, plus B-group probes
+Task: «continue-continue: 20 programs» — the 20-puzzle input campaign: initial frame + valid input + post-input frame for all 20 sgtatham puzzles, plus B-group probes
 
 Work Log:
 - Baseline: ff to origin ad1524b (SWEEP-076); engine 33661afa rebuilt
@@ -97,7 +97,7 @@ Stage Summary:
 ---
 Task ID: SWEEP-078
 Agent: main (z.ai)
-Task: «ادامه ادامه» — B-group tool wagon: 9 official downloads, input battery, generic engine root causes
+Task: «continue-continue» — B-group tool wagon: 9 official downloads, input battery, generic engine root causes
 
 Work Log:
 - Reconciled: local == origin 87fe73d (SWEEP-077). Engine rebuilt byte-exact,
@@ -146,7 +146,7 @@ Stage Summary:
 ---
 Task ID: SWEEP-079
 Agent: main (z.ai)
-Task: «ادامه ناقص ناقص» — finish the incomplete: SW-1354 winlister x86 GUI frontier, WinObj zero-frames, retry the 11 BLOCKED_DOWNLOADs
+Task: «continue: finish the incomplete» — finish the incomplete: SW-1354 winlister x86 GUI frontier, WinObj zero-frames, retry the 11 BLOCKED_DOWNLOADs
 
 Work Log:
 - Env-reset recovery: local 5 commits behind origin (242af84 -> 40eefc3), ff-only merged, stale binary rebuilt byte-exact (70fbb03e == evidence/sweep078/engine_sha256.txt), G1 pre-change pin 12/12 (20261026_121846).
@@ -166,7 +166,7 @@ Stage Summary:
 ---
 Task ID: SWEEP-080
 Agent: main (z.ai)
-Task: «ادامه بده ببینم winrar idm notpad++ رو تونستی اجرایی کامل بکنی یا نه» — the user-named trio: winrar712 x64, idman 6.42b2 x86, notepad++ 8.9.8.1 x64+x86; decode their blockers, land generic engine fixes, push
+Task: (continue and show me whether you can bring winrar/idm/notepad++ to a complete run» — the user-named trio: winrar712 x64, idman 6.42b2 x86, notepad++ 8.9.8.1 x64+x86; decode their blockers, land generic engine fixes, push
 
 Work Log:
 - Env-reset reconcile: local 242af84 (SWEEP-030 shell) vs origin f08dc8b (SWEEP-079); ff-reset to origin, rebuilt byte-exact 5a8d5a72, G1 pre-change 12/12 (20261026_143555).
@@ -194,7 +194,7 @@ Stage Summary:
 ---
 Task ID: SWEEP-081
 Agent: main (z.ai)
-Task: «ادامه این سه برنامه رو برسون در حد اجرای گرافیکی کامل ... hxd و برنامه winnc و چند تا برنامه ریزه میزه دیگه ... هر برنامه چیزی شبیه یک پلاگین باشه» — plugin architecture + trio re-verify + new app-plugins (winnc/hxd/everything/renamer/notepad2-mod)
+Task: «bring these three programs to a complete graphical run ... hxd plus winnc and a few other tiny programs ... every program should behave like a plugin» — plugin architecture + trio re-verify + new app-plugins (winnc/hxd/everything/renamer/notepad2-mod)
 
 Work Log:
 - Baseline: origin 829d1560 == local; byte-exact rebuild 123d7750; G1 pre-change 12/12 (20261026_161027).
@@ -259,7 +259,7 @@ Next wagons: npp64 interactive probes (menus/tabs/edit), tcpview64 toolbar loop
 ---
 Task ID: SWEEP-083
 Agent: main (z.ai)
-Task: «ادامه بده تا تکمیل شدن» — elephant train: o32/SEH class fix set, new program (mines), gates, push
+Task: (continue until completion) — elephant train: o32/SEH class fix set, new program (mines), gates, push
 
 Work Log:
 - Baseline: origin==local 9bc8009; G1 PIN 12/12 clean build 4f9cc889; trio re-verified via plugin runner (npp64 PASS_INPUT_STATE_CHANGE x3, idman PASS_LAUNCH_RENDER x3, winrar parity) — zero regressions.
@@ -282,7 +282,7 @@ Stage Summary:
 ---
 Task ID: SWEEP-084
 Agent: main (z.ai)
-Task: «ادامه — تصویر اجرا کامل برنامه‌ها را بده، هر ادامه یک برنامه جدید، گیت‌هاب را بررسی کن» — visual-execution-proof train + new program (solo) + gates + push
+Task: (continue — show visual proof of complete program runs, one new program per continue, survey GitHub) — visual-execution-proof train + new program (solo) + gates + push
 
 Work Log:
 - Baseline: origin==local f2f9c01 (SWEEP-083 tip; API-verified, last push 2026-10-26T20:10Z); Issue #1 closed, 46 comments. Engine UNCHANGED this train — clean rebuild byte-exact 80bca026 (matches SWEEP-083 final pin); G1 pre-train PIN 12/12 (20261026_201417).
@@ -300,7 +300,7 @@ Stage Summary:
 ---
 Task ID: SWEEP-085
 Agent: main (z.ai)
-Task: «برنامه‌هایی که صفحه خطا می‌دهند اجرا نشده‌اند — مشکل را حل کن؛ پوشه‌بندی پیش‌نیازها کامل شود؛ شبیه‌سازی نصب» — generic file/focus/paint fix set + honest reclassification
+Task: (programs showing an error dialog have not run — fix the cause; complete the prerequisite folder layout; simulate installation) — generic file/focus/paint fix set + honest reclassification
 
 Work Log:
 - User critique adopted: prior npp64/idman "PASS" frames were ERROR dialogs. Decoded FOUR generic engine defects and fixed them in src/loader/loader.c (zero app special-casing):
@@ -322,7 +322,7 @@ Stage Summary:
 ---
 Task ID: SWEEP-086
 Agent: main (z.ai)
-Task: «ریجیستری و پوشه‌ها باید درست در مسیرهای خودشان ساخته شوند» — installer ground-truth foundation + one new game + one new program
+Task: (registry and folders must be created correctly in their own paths) — installer ground-truth foundation + one new game + one new program
 
 Work Log:
 - Recovered workspace after sandbox restart: fast-forwarded local main 242af84(SWEEP-030) -> 0b5b4a1(SWEEP-085) from origin; re-downloaded puzzles.zip (sha a5b00f63 exact) + official npp 8.9.8.1 NSIS installer (sha 26f3bcce).
@@ -344,7 +344,7 @@ Stage Summary:
 ---
 Task ID: SWEEP-087
 Agent: main (z.ai)
-Task: «نصبی رو نمی‌تونی» — run the INSTALLED WinRAR.exe + one new game + one new program
+Task: (you cannot run the installed one) — run the INSTALLED WinRAR.exe + one new game + one new program
 
 Work Log:
 - SW-1410: all 16 fake-COM vtable members (IMalloc x9, IShellFolder x7, CoGetMalloc x8 fns) re-attributed ms_abi — guests call with MS x64 convention (RCX/RDX), SysV bodies read RDI/RSI garbage; IMalloc::Free crashed libc. This unblocked the installed WinRAR's first COM round-trip.
@@ -389,7 +389,7 @@ Stage Summary:
 ---
 Task ID: SWEEP-090
 Agent: main (z.ai)
-Task: «ادامه» — adopt mainline frontier after stale-local recovery; port the one still-live engine bug (SW-1305); train protocol wagons
+Task: (continue) — adopt mainline frontier after stale-local recovery; port the one still-live engine bug (SW-1305); train protocol wagons
 
 Work Log:
 - Sandbox crash recovery: local workspace was a STALE SWEEP-030-era snapshot;
@@ -422,7 +422,7 @@ Stage Summary:
 ---
 Task ID: SWEEP-091
 Agent: main (z.ai)
-Task: «ادامه قطار قطار» — SW-1412 ownership-registry fix (installed-WinRAR SIGSEGV), registry chain install→app (SW-1418/1419), +1 game +1 program, gates
+Task: (continue train train) — SW-1412 ownership-registry fix (installed-WinRAR SIGSEGV), registry chain install→app (SW-1418/1419), +1 game +1 program, gates
 
 Work Log:
 - Post-crash recovery: local workspace was a STALE SWEEP-030 snapshot; ff-only

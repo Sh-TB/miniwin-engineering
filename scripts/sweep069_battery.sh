@@ -1,5 +1,5 @@
 #!/bin/bash
-# SWEEP-069 — «بهتر سریعتر ... ابزار های کمکی چقدر بهت کمک کرده ... باز همون تعداد برنامه و بازی رو اضافه بکن»
+# SWEEP-069 — (better and faster ... how much did the auxiliary tools help ... add the same number of programs and games again)
 # 29 NEW guests (none of these ran in SWEEP-065..068 batteries):
 #   3 XP classics + 12 NirSoft + 13 Sysinternals x64 + GUP.exe (N++ updater)
 # Same harness as SWEEP-068: xargs -P4, fresh per-exe hive, distinct result dirs.

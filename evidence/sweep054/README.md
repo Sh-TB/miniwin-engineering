@@ -1,4 +1,4 @@
-# SWEEP-054 — «۱۰ برنامه و ۵ بازی معرف دو بعدی قدیمی» — 10 famous programs +
+# SWEEP-054 — (10 famous programs and 5 famous old 2D games) — 10 famous programs +
 # 5 classic 2D games, XP-era and new, ALL WITH SCREENSHOTS
 
 Binary: **09c33df201af8ade** (sha256 prefix; G1 PIN 12/12 at
@@ -8,13 +8,12 @@ first, always).
 
 ## Mandate
 
-User: «قانون اول همیشه گیت هاب رو جستجو بکن به روز و اخرین نسخه باشی و هر
-چیزی رو هم پوش بکنی ببین ۱۰ برنامه و ۵ بازی معرف دو بعدی قدیمی رو پیدا بکن
-اونا رو هم اجرا بکن برنامه های قدیمی رو هم تست بکن برنامه ویندوز xpو برنامه
-های جدید» — (1) always check GitHub first and verify pushes; (2) find and RUN
+User: (rule one: always search GitHub first, stay up to date, verify every push;
+find 10 famous programs and 5 famous old 2D games, run them too, test the old
+programs — Windows XP era — and the new ones) — (1) always check GitHub first and verify pushes; (2) find and RUN
 10 famous programs; (3) find and RUN 5 famous old 2D games; (4) test old
 (Windows XP) programs and new programs; plus the standing screenshot mandate
-«اسکرین شات اجرای برنامه ها رو هم نشون بده».
+(also show screenshots of the programs running).
 
 ## Corpus re-staging (sha-pinned, gitignored payloads rebuilt)
 

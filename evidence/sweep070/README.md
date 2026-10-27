@@ -1,4 +1,4 @@
-# SWEEP-070 — Heavy parallel train: famous Windows programs fetched + run «قطار سنگین موازی ابزار هدفمند»
+# SWEEP-070 — Heavy parallel train: famous Windows programs fetched + run (heavy parallel train, targeted tooling)
 
 Date: 2026-10-25 · Base: ac588f8 (origin/main, post SWEEP-069) · Engine rebuilt after
 second sandbox reset (Rule #1 caught it; `git pull --ff-only` + make, winmine-class
@@ -23,7 +23,7 @@ upstream. Car SW-1310 keeps the corrected-URL hunt alive.
 **Games**: Stockfish = chess engine (UCI CLI); game GUIs (OpenTTD/SuperTux) blocked on
 asset URLs this round — SW-1310.
 
-## Part 2 — Heavy battery: 18/18 executed, load-fidelity stratified «لود شدن باید دقیقا شبیه ویندوز»
+## Part 2 — Heavy battery: 18/18 executed, load-fidelity stratified (loading must behave exactly like Windows)
 
 Harness: `scripts/sweep070_battery.sh` (xargs **-P6**, fresh per-exe hive, flags
 F=FASTFAIL P=PE32-FATAL B=host-backtrace). Table: `battery.tsv` · raw: `battery_raw.txt`.

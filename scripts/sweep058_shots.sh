@@ -1,6 +1,6 @@
 #!/bin/bash
 # SWEEP-058 screenshot battery — the user's standing mandate:
-# «ادانه اسکرین شات اجرای برنامه ها رو هم نشون بده»
+# (continue: also show screenshots of the programs running)
 # GUI-pump runs with events on; harvest frame_*.bmp / messagebox_*.bmp and
 # convert to PNG into evidence/sweep058/shots_png/.
 set -u

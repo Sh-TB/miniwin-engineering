@@ -1,6 +1,6 @@
-# SWEEP-047 «ادامه قطار» — 20 trains (2026-10-22)
+# SWEEP-047 (continue the train) — 20 trains (2026-10-22)
 
-Directive: «ادامه قطار» (standing 20-train mandate). Base: origin/main a418e5c
+Directive: (continue the train) (standing 20-train mandate). Base: origin/main a418e5c
 (SWEEP-046); fast-forward (local 0 unique commits), tree clean, baseline
 rebuilt byte-exact 848fa108. adexplorer64 corpus re-recovered for the 7th
 time (AdExplorer.zip sha 56536bff byte-exact, exe e4512878 pinned).

@@ -1,6 +1,6 @@
 #!/bin/bash
-# SWEEP-062 Train 3 — corpus expansion battery (user mandate «۲۰ تا ۵۰ تا برنامه
-# ویندوز رو دانلود و تست بکن» + Win98-era classics + tiny new free apps).
+# SWEEP-062 Train 3 — corpus expansion battery (user mandate (download and test 20 to 50
+# Windows programs) + Win98-era classics + tiny new free apps).
 # Sources probed 2026-10-25: nirsoft.net direct zips (14), 7-zip.org extra
 # pack (1), git-for-windows portable sfx (1), rarlab winrar (1).
 set -u
