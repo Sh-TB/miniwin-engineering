@@ -340,3 +340,20 @@ Stage Summary:
 - The "folders/registry in their own paths" mandate is now a working subsystem: regtree + install-log + sandbox produce per-installer ground truth under evidence/.
 - WinRAR = first real installer->installed-program conversion; installed WinRAR.exe is the SWEEP-087 target.
 - Next: SW-1409 LZMA desync, SW-1401 idman child exec, SW-1400 winrar interactive modal, run installed WinRAR.exe, +1 game/program.
+
+---
+Task ID: SWEEP-087
+Agent: main (z.ai)
+Task: «نصبی رو نمی‌تونی» — run the INSTALLED WinRAR.exe + one new game + one new program
+
+Work Log:
+- SW-1410: all 16 fake-COM vtable members (IMalloc x9, IShellFolder x7, CoGetMalloc x8 fns) re-attributed ms_abi — guests call with MS x64 convention (RCX/RDX), SysV bodies read RDI/RSI garbage; IMalloc::Free crashed libc. This unblocked the installed WinRAR's first COM round-trip.
+- SW-1411: CharLowerW/CharLowerA/CharUpperA low-word single-character contract (installed WinRAR passes CharLowerW(1) at init — SIGSEGV @0x1 before fix).
+- SW-1407b: runner sandbox_tree=<dir> — installed-program plugins stage their full install tree into the sandbox and run the exe from its own dir.
+- Battery: winrarinstd (NEW program = installed WinRAR 7.12, 28-file tree) = FRONTIER_SW-1412 (init + main-window + child SendMessageW stage reached; libc heap-corruption crash queued for decode); pattern (NEW game) = PASS_INPUT_STATE_CHANGE first contact.
+- Gates: corpus 21/21 x3 (sweep087_corpus.sh); G1 12/12 (evidence/master/g1/20261027_055118, binary 62dea8e0).
+- Incident: disk pressure from the dead-session mirror again — cleanup backgrounded, gates run with headroom.
+
+Stage Summary:
+- The installed program now boots, inits COM, builds its main window and pumps child messages — two crash layers removed this train, one frontier decoded and queued (SW-1412).
+- Next: SW-1412 heap-guard decode, SW-1409 LZMA, SW-1401/SW-1400, +1 game/program per train.

@@ -121,10 +121,24 @@ run_plugin() {
         mkdir -p "$SB"
         SB="$(cd "$SB" && pwd)" # absolute: the guest subshell cwd IS the sandbox
         RESROOT="$SB/miniwin-results"
-        mkdir -p "$SB/Installers"
-        cp -f "$exe_path" "$SB/Installers/$(basename "$exe_path")"
-        exe_path="$SB/Installers/$(basename "$exe_path")"
-        say "   sandbox exe: $exe_path"
+        # SW-1407b: sandbox_tree=<dir> — a whole Windows-style tree staged into
+        # the sandbox before the run (installed-program plugins need their
+        # sibling files, like a real C: drive layout). If the exe exists inside
+        # the staged tree it runs from there; otherwise it is copied to
+        # Installers/ (the installer path).
+        stree=$(manifest_get sandbox_tree "$mf")
+        if [ -n "$stree" ] && [ -d "$stree" ]; then
+            cp -a "$stree/." "$SB/"
+        fi
+        if [ -n "$stree" ] && [ -f "$SB/$exe" ]; then
+            exe_path="$SB/$exe"
+            say "   sandbox exe (in-tree): $exe_path"
+        else
+            mkdir -p "$SB/Installers"
+            cp -f "$exe_path" "$SB/Installers/$(basename "$exe_path")"
+            exe_path="$SB/Installers/$(basename "$exe_path")"
+            say "   sandbox exe: $exe_path"
+        fi
     fi
 
     # 3. battery

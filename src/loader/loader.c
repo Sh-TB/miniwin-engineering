@@ -12966,18 +12966,22 @@ __attribute__((ms_abi)) int mw_ShellExecuteExW(void* sei) {
     return ok;
 }
 /* SHGetMalloc: malloc-backed IMalloc (vtbl: QI/AddRef/Release/Alloc/Free/
- * Realloc/GetSize/DidAlloc/HeapMinimize). */
-static long mw_shmalloc_qi(void* self, const void* iid, void** out) {
+ * Realloc/GetSize/DidAlloc/HeapMinimize).
+ * SW-1410 (SWEEP-087): these are called by the GUEST with the MICROSOFT x64
+ * calling convention (args in RCX,RDX,R8,R9) — plain SysV definitions took
+ * self from RDI and p from RSI (both garbage), so IMalloc::Free(-0x100)
+ * crashed inside libc reading the chunk header. ms_abi on every member. */
+__attribute__((ms_abi)) static long mw_shmalloc_qi(void* self, const void* iid, void** out) {
     (void)self; (void)iid; if (out) *out = NULL; return 0x80004002L; /* E_NOINTERFACE */
 }
-static uint32_t mw_shmalloc_addref(void* self) { (void)self; return 2; }
-static uint32_t mw_shmalloc_release(void* self) { (void)self; return 1; }
-static void* mw_shmalloc_alloc(void* self, size_t cb) { (void)self; return cb ? malloc(cb) : NULL; }
-static void* mw_shmalloc_realloc(void* self, void* p, size_t cb) { (void)self; return realloc(p, cb); }
-static void mw_shmalloc_free(void* self, void* p) { (void)self; free(p); }
-static size_t mw_shmalloc_getsize(void* self, void* p) { (void)self; (void)p; return 0; }
-static int mw_shmalloc_didalloc(void* self, void* p) { (void)self; (void)p; return -1; }
-static void mw_shmalloc_heapmin(void* self) { (void)self; }
+__attribute__((ms_abi)) static uint32_t mw_shmalloc_addref(void* self) { (void)self; return 2; }
+__attribute__((ms_abi)) static uint32_t mw_shmalloc_release(void* self) { (void)self; return 1; }
+__attribute__((ms_abi)) static void* mw_shmalloc_alloc(void* self, size_t cb) { (void)self; return cb ? malloc(cb) : NULL; }
+__attribute__((ms_abi)) static void* mw_shmalloc_realloc(void* self, void* p, size_t cb) { (void)self; return realloc(p, cb); }
+__attribute__((ms_abi)) static void mw_shmalloc_free(void* self, void* p) { (void)self; free(p); }
+__attribute__((ms_abi)) static size_t mw_shmalloc_getsize(void* self, void* p) { (void)self; (void)p; return 0; }
+__attribute__((ms_abi)) static int mw_shmalloc_didalloc(void* self, void* p) { (void)self; (void)p; return -1; }
+__attribute__((ms_abi)) static void mw_shmalloc_heapmin(void* self) { (void)self; }
 static void* const g_shmalloc_vtbl[9] = {
     (void*)mw_shmalloc_qi, (void*)mw_shmalloc_addref, (void*)mw_shmalloc_release,
     (void*)mw_shmalloc_alloc, (void*)mw_shmalloc_free, (void*)mw_shmalloc_realloc,
@@ -23249,11 +23253,25 @@ __attribute__((ms_abi)) uint32_t mw_GetMessagePos(void) { return 0; }
 __attribute__((ms_abi)) int mw_GetMessageTime(void) { return g_delivered * 16; }
 __attribute__((ms_abi)) int mw_MessageBeep(uint32_t type) { (void)type; return 1; }
 __attribute__((ms_abi)) void* mw_CharLowerW(uint16_t* s) {
+    /* SW-1411 (SWEEP-087): real WinAPI contract — HIWORD==0 means the value is
+     * a single CHARACTER, not a pointer. Installed WinRAR 7.12 passes
+     * CharLowerW(1) during init; dereferencing it was SIGSEGV @0x1. */
+    if ((uintptr_t)s < 0x10000) {
+        uint16_t c = (uint16_t)(uintptr_t)s;
+        if (c >= (uint16_t)'A' && c <= (uint16_t)'Z') c += 32;
+        return (void*)(uintptr_t)c;
+    }
     if (s) for (uint16_t* p = s; *p; p++)
         if (*p >= (uint16_t)'A' && *p <= (uint16_t)'Z') *p += 32;
     return s;
 }
 __attribute__((ms_abi)) void* mw_CharLowerA(char* s) {
+    /* SW-1411: same low-word single-character contract as CharLowerW. */
+    if ((uintptr_t)s < 0x10000) {
+        char c = (char)(uintptr_t)s;
+        if (c >= 'A' && c <= 'Z') c = (char)(c + 32);
+        return (void*)(uintptr_t)(uint8_t)c;
+    }
     if (s) for (char* p = s; *p; p++) if (*p >= 'A' && *p <= 'Z') *p += 32;
     return s;
 }
@@ -24241,7 +24259,7 @@ __attribute__((ms_abi)) uint32_t mw_SHGetKnownFolderPath(const void* rfid, uint3
 }
 /* minimal IShellFolder: QI(IUnknown|IShellFolder) real, empty enumerator,
  * everything else typed E_NOTIMPL / E_FAIL */
-static long long mw_sf_queryinterface(void* self, const void* riid, void** out) {
+__attribute__((ms_abi)) static long long mw_sf_queryinterface(void* self, const void* riid, void** out) {
     if (out) *out = NULL;
     if (!riid || !out) return 0x80004003u; /* E_POINTER */
     const uint32_t* g = (const uint32_t*)riid;
@@ -24253,24 +24271,24 @@ static long long mw_sf_queryinterface(void* self, const void* riid, void** out) 
     }
     return 0x80004002u; /* E_NOINTERFACE */
 }
-static uint32_t mw_sf_addref(void* self) { (void)self; return 2; }
-static uint32_t mw_sf_release(void* self) { (void)self; return 1; }
-static long long mw_sf_parsename(void* self, void* hwnd, const void* name, uint32_t at, void** ppmk) {
+__attribute__((ms_abi)) static uint32_t mw_sf_addref(void* self) { (void)self; return 2; }
+__attribute__((ms_abi)) static uint32_t mw_sf_release(void* self) { (void)self; return 1; }
+__attribute__((ms_abi)) static long long mw_sf_parsename(void* self, void* hwnd, const void* name, uint32_t at, void** ppmk) {
     (void)self; (void)hwnd; (void)name; (void)at;
     if (ppmk) *ppmk = NULL;
     return 0x80004005u; /* E_FAIL */
 }
-static long long mw_sf_enumobjects(void* self, uint32_t flags, void* reserved, void** ppenum) {
+__attribute__((ms_abi)) static long long mw_sf_enumobjects(void* self, uint32_t flags, void* reserved, void** ppenum) {
     (void)self; (void)flags; (void)reserved;
     if (ppenum) *ppenum = NULL; /* honest empty: no shell items */
     return 0; /* S_OK */
 }
-static long long mw_sf_getattrs(void* self, uint32_t cidl, const void* apidl, uint32_t* attrs) {
+__attribute__((ms_abi)) static long long mw_sf_getattrs(void* self, uint32_t cidl, const void* apidl, uint32_t* attrs) {
     (void)self; (void)apidl; (void)cidl;
     if (attrs) *attrs = 0x60000000u; /* SFGAO_FOLDER|SFGAO_FILESYSTEM */
     return 0; /* S_OK */
 }
-static long long mw_sf_notimpl(void) { return 0x80004001u; } /* E_NOTIMPL */
+__attribute__((ms_abi)) static long long mw_sf_notimpl(void) { return 0x80004001u; } /* E_NOTIMPL */
 __attribute__((ms_abi)) uint32_t mw_SHGetDesktopFolder(void** pp) {
     if (!pp) return 0x80070057u; /* E_INVALIDARG */
     *pp = NULL;
@@ -34436,6 +34454,12 @@ __attribute__((ms_abi)) void* mw_LoadBitmapA(void* hinst, const void* name) {
 }
 /* user32 — in-place case conversion, A-side (real: returns the pointer) */
 __attribute__((ms_abi)) char* mw_CharUpperA(char* s) {
+    /* SW-1411: same low-word single-character contract as CharUpperW. */
+    if ((uintptr_t)s < 0x10000) {
+        char c = (char)(uintptr_t)s;
+        if (c >= 'a' && c <= 'z') c = (char)(c - 32);
+        return (char*)(uintptr_t)(uint8_t)c;
+    }
     if (s) for (char* p = s; *p; p++)
         if (*p >= 'a' && *p <= 'z') *p = (char)(*p - 32);
     return s;
@@ -35119,13 +35143,13 @@ __attribute__((ms_abi)) int mw_SetupDiOpenDeviceInterfaceW(void* set, const wcha
     return 0;
 }
 /* ole32 — CoGetMalloc: the engine's default OLE allocator object. */
-static int32_t mw_ole_malloc_addref(void* self) { (void)self; return 1; }
-static int32_t mw_ole_malloc_release(void* self) { (void)self; return 1; }
-static void* mw_ole_malloc_alloc(void* self, uint32_t cb) { (void)self; return malloc(cb); }
-static void* mw_ole_malloc_realloc(void* self, void* p, uint32_t cb) { (void)self; return realloc(p, cb); }
-static void mw_ole_malloc_free(void* self, void* p) { (void)self; free(p); }
-static uint32_t mw_ole_malloc_didalloc(void* self, void* p, uint32_t cb) { (void)self; (void)p; (void)cb; return 0; }
-static uint32_t mw_ole_malloc_heapminimize(void* self) { (void)self; return 0; }
+__attribute__((ms_abi)) static int32_t mw_ole_malloc_addref(void* self) { (void)self; return 1; }
+__attribute__((ms_abi)) static int32_t mw_ole_malloc_release(void* self) { (void)self; return 1; }
+__attribute__((ms_abi)) static void* mw_ole_malloc_alloc(void* self, uint32_t cb) { (void)self; return malloc(cb); }
+__attribute__((ms_abi)) static void* mw_ole_malloc_realloc(void* self, void* p, uint32_t cb) { (void)self; return realloc(p, cb); }
+__attribute__((ms_abi)) static void mw_ole_malloc_free(void* self, void* p) { (void)self; free(p); }
+__attribute__((ms_abi)) static uint32_t mw_ole_malloc_didalloc(void* self, void* p, uint32_t cb) { (void)self; (void)p; (void)cb; return 0; }
+__attribute__((ms_abi)) static uint32_t mw_ole_malloc_heapminimize(void* self) { (void)self; return 0; }
 __attribute__((ms_abi)) uint32_t mw_CoGetMalloc(uint32_t ctx, void** out) {
     (void)ctx;
     /* fill a minimal IMalloc vtable layout: QI, AddRef, Release, Alloc,
