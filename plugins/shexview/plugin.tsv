@@ -1,0 +1,15 @@
+name	shexview
+arch	x64
+desc	NirSoft ShellExView x64 2.01 (SWEEP-090 NEW program; shell-extension manager enumerating HKCR CLSID)
+source_url	http://www.nirsoft.net/utils/shexview-x64.zip
+source_sha256	73248fb48ee6387cadbd6bdde5265cbef465cea7fca8f3b72eac5c408f4e7ccb
+artifact	artifacts/sweep090_shexview.zip
+unpack	zip
+exe	shexview.exe
+args
+runs	3
+timeout	75
+keys	37,38,39,40,13,32
+mouse	150,150
+known	NEW
+note	GUI ListView over HKCR CLSID registry walk; pairs with SWEEP-086 regtree + installer-written shell-extension keys

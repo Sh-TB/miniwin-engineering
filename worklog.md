@@ -385,3 +385,36 @@ Work Log:
 
 Stage Summary:
 - 4 trains this session (086-089): installer ground-truth subsystem live (regtree + install-log + sandbox), WinRAR SFX INSTALL_OK, installed WinRAR.exe boot layer-by-layer, 3 installer technologies mapped honestly, 4 new games PASS first-contact (lightup/pattern/towers + solo/mines/fifteen prior), frontiers decoded and queued with SW numbers.
+
+---
+Task ID: SWEEP-090
+Agent: main (z.ai)
+Task: «ادامه» — adopt mainline frontier after stale-local recovery; port the one still-live engine bug (SW-1305); train protocol wagons
+
+Work Log:
+- Sandbox crash recovery: local workspace was a STALE SWEEP-030-era snapshot;
+  origin/main had advanced 86 commits to SWEEP-089 (0f61e2f). Local-only
+  SWEEP-031 work (drive-tree sandbox, registry tree mirror, handle release,
+  FindFirstFileA fix, lstrcatW) re-derived fixes the mainline already landed
+  better (SW-1234/1244/1402/1405/1407/1408). Adopted mainline per no-rewrite
+  rule; divergent work kept on branch sweep031-local-divergent.
+- Reconciliation: only ONE finding still live on mainline = SW-1305
+  FindFirstFileA/FindNextFileA wrote the 592-byte W struct into guests'
+  318-byte WIN32_FIND_DATAA -> 274-byte stack overflow -> /GS cookie smash ->
+  FASTFAIL(2) (latent since BUG-049; proven on stale snapshot via putty with a
+  seeded C:\Windows). Ported as sweep090_findfix.py: W3Find.wide flag +
+  fill_find_data_a (318B CHAR layout) + wide param through find_first_impl;
+  FindFirstFileA/NextA fixed, W/ExW paths unchanged. lstrcatW already on
+  mainline; drive/registry/handle-release mechanisms already train-hardened.
+- MEASURED: build clean (4,615,008 bytes); G1 PIN 12/12
+  (evidence/master/g1/20261027_081203); corpus 21/21 x3 rc=0 crash=0 fatal=0,
+  identical to SWEEP-089 except breakout/snake now render frames (10/13 vs 0)
+  = improvement; NEW game netgame = PASS_INPUT_STATE_CHANGE first contact
+  (rc=0 x3, frames=20 uniq=10); NEW program shexview (NirSoft ShellExView x64,
+  HKCR CLSID walker) = PASS_LAUNCH_RENDER first contact (rc=0 x3, 1 frame).
+- Queued: SW-1416 handle value-space collision (file 4..67 vs kobj small ints,
+  latent); SW-1306 PE32/WoW64; SW-1307 real guest-DLL module loading.
+
+Stage Summary:
+- First post-recovery train landed on the true mainline; one real
+  memory-corruption bug fixed; two first-contact PASS wagons.
