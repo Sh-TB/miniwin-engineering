@@ -1938,6 +1938,7 @@ static void mw_trace_shutdown_flush(void) {
  * and C23 rejects implicit declarations). Declaration-order fix only. */
 static void w3_run_guest_atexit(void);
 
+static void reg_snap_save(void); /* fwd: registry snapshot + SW-1402 regtree export (def ~11470) */
 __attribute__((noreturn)) __attribute__((ms_abi)) void mw_ExitProcess(unsigned int code) {
     /* SWEEP-042 Train 6: adexplorer64 exited with 48925984 = a heap
      * pointer (guest WinMain returned an uninitialized/handle var).
@@ -1952,6 +1953,10 @@ __attribute__((noreturn)) __attribute__((ms_abi)) void mw_ExitProcess(unsigned i
      * noreturn, so the x64postdump call after entry() never fires for guests
      * that exit here (winrar712 does exactly that). Same helper, same env. */
     mw32_dump_va_ranges("x64postdump");
+    /* SW-1402/1403 (SWEEP-086): ExitProcess is noreturn via _exit() — loader
+     * atexit handlers never run. Flush the installer ground truth explicitly
+     * (registry snapshot + regtree export; both no-op when env unset). */
+    reg_snap_save();
     w3_run_guest_atexit();          /* Windows: CRT handlers run before exit */
     mw_trace_shutdown_flush();
     _exit(code);
@@ -8635,11 +8640,23 @@ static const char* get_exe_path(void) {
 static size_t win32_module_path(char* out, size_t cap) {
     const char* p = get_exe_path();
     while (p[0] == '.' && p[1] == '/') p += 2;      /* "./x" -> "x" */
+    /* SW-1407 (SWEEP-086): express the module path relative to the DRIVE ROOT
+     * (the loader cwd, SW-1234) whenever the exe lives under it. The old
+     * strip-leading-slash form ("C:home\z\...") could never re-normalize:
+     * NSIS/Inno re-open their own image with CreateFile(GetModuleFileName())
+     * to read the embedded payload — that self-reopen failed with ENOENT and
+     * the installer exited before the first wizard page. Relative form
+     * round-trips through w3_normalize_path exactly. */
+    if (p[0] == '/') {
+        const char* cwd = g_mw_drive_cwd();
+        size_t cl = strlen(cwd);
+        if (strncmp(p, cwd, cl) == 0 && p[cl] == '/') p = p + cl + 1;
+        else p++; /* outside the drive root: prior strip-root fallback */
+    }
     size_t n = 0;
     if (n < cap) out[n++] = 'C';
     if (n < cap) out[n++] = ':';
     if (n < cap) out[n++] = '\\';
-    if (p[0] == '/') p++;                            /* absolute host path maps under the drive root too */
     for (; *p && n < cap - 1; p++) out[n++] = (*p == '/') ? '\\' : *p;
     out[n] = 0;
     return n;
@@ -10670,6 +10687,31 @@ __attribute__((ms_abi)) void* mw_GetStdHandle_impl(int32_t nStdHandle) {
 
 /* helper shared by A/W: returns handle or INVALID_HANDLE_VALUE */
 static void* w3_create_file(const char* name8, uint32_t access, uint32_t disp);
+
+/* ---- SWEEP-086 SW-1403: guest install-log (FS-mutation ledger) ----
+ * When MINWIN_INSTALL_LOG names a file, every guest filesystem MUTATION
+ * (dir create/remove, create-with-write file open, copy, move, delete)
+ * appends one tab-separated line: op<TAB>guest-path<TAB>host-path<TAB>result.
+ * The guest-path column keeps the raw Windows-style string the guest passed
+ * (backslashes intact, BEFORE normalization) — this is the honest
+ * "what did this installer actually create, where" ground truth. Read-only
+ * opens are NOT logged. Log failures never alter guest return codes. */
+static FILE* g_mw_instlog_f = NULL;
+static void mw_instlog_atexit(void) {
+    if (g_mw_instlog_f) { fclose(g_mw_instlog_f); g_mw_instlog_f = NULL; }
+}
+static void mw_install_log(const char* op, const char* guest, const char* host, int res) {
+    const char* p = getenv("MINWIN_INSTALL_LOG");
+    if (!p || !p[0]) return;
+    if (!g_mw_instlog_f) {
+        g_mw_instlog_f = fopen(p, "a");
+        if (!g_mw_instlog_f) return;
+        atexit(mw_instlog_atexit);
+    }
+    fprintf(g_mw_instlog_f, "%s\t%s\t%s\t%d\n",
+            op ? op : "-", guest ? guest : "-", host ? host : "-", res);
+    fflush(g_mw_instlog_f);
+}
 __attribute__((ms_abi)) void* mw_CreateFileA(const char* name, uint32_t access, uint32_t share,
         void* sec, uint32_t disp, uint32_t flags, void* tmpl) {
     MW_TRACE("CreateFileA(%s, acc=%08x, disp=%u)", name ? name : "NULL", access, disp);
@@ -10677,7 +10719,35 @@ __attribute__((ms_abi)) void* mw_CreateFileA(const char* name, uint32_t access, 
     return w3_create_file(name, access, disp);
 }
 static void* mw_pipe_client_open(const char* name); /* SW-1217 fwd (def in pipe section) */
+/* SW-1405 (SWEEP-086): the standard Windows directory skeleton, shared by the
+ * file path (SWEEP-058 SW-1240) AND CreateDirectoryW. On a real Windows boot
+ * C:\Windows\System32\... always exists — NSIS/Inno installers create their
+ * temp dirs UNDER it (CreateDirectory "$TEMP\nsXXX.tmp") and a missing parent
+ * turns "no writable temp" into a silent installer exit. Seeding the skeleton
+ * at first touch of any \Windows\ path models the booted-system truth. */
+static void w3_seed_windows_skeleton(const char* name8) {
+    static int g_win_dirs_seeded = 0;
+    if (g_win_dirs_seeded || !name8 || !strstr(name8, "/Windows/")) return;
+    g_win_dirs_seeded = 1;
+    static const char* dirs[] = {
+        "/Windows", "/Windows/System32", "/Windows/System32/Drivers",
+        "/Windows/System32/spool", "/Windows/Temp", NULL
+    };
+    char base[2048];
+    snprintf(base, sizeof(base), "%s", name8);
+    char* winp = strstr(base, "/Windows/");
+    if (winp) {
+        *winp = 0; /* base = the drive-cwd root */
+        for (int i = 0; dirs[i]; i++) {
+            char full[2048];
+            snprintf(full, sizeof(full), "%s%s", base, dirs[i]);
+            mkdir(full, 0755); /* EEXIST fine */
+        }
+    }
+    MW_TRACE("file world: Windows dir skeleton seeded under %s", base);
+}
 static void* w3_create_file(const char* name8, uint32_t access, uint32_t disp) {
+    const char* guest0 = name8; /* SW-1403: raw guest path for the install log */
     /* SW-1217: pipe-name client attach before the ordinary file layer
      * (\\.\pipe\ paths never reach the probe/open path). */
     if (name8 && name8[0]=='\\' && name8[1]=='\\' && name8[2]=='.' && name8[3]=='\\' && name8[4]=='p') {
@@ -10689,33 +10759,10 @@ static void* w3_create_file(const char* name8, uint32_t access, uint32_t disp) {
     snprintf(nn8, sizeof(nn8), "%s", name8);
     w3_normalize_path(nn8);
     name8 = nn8;
-    /* SWEEP-058 SW-1240: real Windows ALWAYS has the standard directory
-     * skeleton under the system root (logonsessions64 extracts its embedded
-     * PROCEXP152.SYS to C:\Windows\System32\Drivers\ — CREATE_ALWAYS into a
-     * directory that exists on every real install). Seed it once on the
-     * first C:\Windows\... file access so admin-style driver drops work. */
-    {
-        static int g_win_dirs_seeded = 0;
-        if (!g_win_dirs_seeded && strstr(name8, "/Windows/")) {
-            g_win_dirs_seeded = 1;
-            static const char* dirs[] = {
-                "/Windows", "/Windows/System32", "/Windows/System32/Drivers",
-                "/Windows/System32/spool", "/Windows/Temp", NULL
-            };
-            char base[2048];
-            snprintf(base, sizeof(base), "%s", name8);
-            char* winp = strstr(base, "/Windows/");
-            if (winp) {
-                *winp = 0; /* base = the drive-cwd root */
-                for (int i = 0; dirs[i]; i++) {
-                    char full[2048];
-                    snprintf(full, sizeof(full), "%s%s", base, dirs[i]);
-                    mkdir(full, 0755); /* EEXIST fine */
-                }
-            }
-            MW_TRACE("file world: Windows dir skeleton seeded under %s", base);
-        }
-    }
+    /* SWEEP-058 SW-1240 + SW-1405: real Windows ALWAYS has the standard
+     * directory skeleton under the system root — seed it on first touch
+     * (shared helper, also used by CreateDirectoryW). */
+    w3_seed_windows_skeleton(name8);
     if (!g_w3files_ready) { memset(g_w3files, 0, sizeof(g_w3files)); g_w3files_ready = 1; }
     int slot = -1;
     for (int i = 0; i < MAX_HANDLES; i++) if (!g_w3files[i].in_use) { slot = i; break; }
@@ -10733,6 +10780,10 @@ static void* w3_create_file(const char* name8, uint32_t access, uint32_t disp) {
     default: break;
     }
     int fd = open(name8, oflags, 0644);
+    /* SW-1403: mutating opens only (create flags or write access) go to the
+     * install ledger; read-only opens never touch it. */
+    if ((oflags & O_CREAT) || wr)
+        mw_install_log("CreateFile", guest0, name8, fd >= 0);
     if (fd < 0) {
         mw_SetLastError(errno == ENOENT ? 2 : (errno == EACCES ? 5 : 87));
         return (void*)-1;
@@ -10972,19 +11023,29 @@ __attribute__((ms_abi)) int mw_DeleteFileW(const wchar_t* name) {
     char n8[4096];
     if (!name || w3_w16_to_utf8z((const uint16_t*)name, n8, sizeof(n8)) < 0) { mw_SetLastError(87); return 0; }
     n8[sizeof(n8) - 1] = '\0';
-    w3_normalize_path(n8); /* BUG-054b: same Windows-path rule as CreateDirectoryW */
-    MW_TRACE("DeleteFileW(%s)", n8);
-    if (unlink(n8) != 0) { mw_SetLastError(errno == ENOENT ? 2 : 5); return 0; }
-    return 1;
+    {
+        char g8[4096]; snprintf(g8, sizeof(g8), "%s", n8); /* SW-1403 guest path */
+        w3_normalize_path(n8);
+        MW_TRACE("DeleteFileW(%s)", n8);
+        int uok = (unlink(n8) == 0);
+        mw_install_log("DeleteFileW", g8, n8, uok);
+        if (!uok) { mw_SetLastError(errno == ENOENT ? 2 : 5); return 0; }
+        return 1;
+    }
 }
 __attribute__((ms_abi)) int mw_RemoveDirectoryW(const wchar_t* name) {
     char n8[4096];
     if (!name || w3_w16_to_utf8z((const uint16_t*)name, n8, sizeof(n8)) < 0) { mw_SetLastError(87); return 0; }
     n8[sizeof(n8) - 1] = '\0';
-    w3_normalize_path(n8); /* BUG-054b: same Windows-path rule as CreateDirectoryW */
-    MW_TRACE("RemoveDirectoryW(%s)", n8);
-    if (rmdir(n8) != 0) { mw_SetLastError(2); return 0; }
-    return 1;
+    {
+        char g8[4096]; snprintf(g8, sizeof(g8), "%s", n8); /* SW-1403 guest path */
+        w3_normalize_path(n8); /* BUG-054b: same Windows-path rule as CreateDirectoryW */
+        MW_TRACE("RemoveDirectoryW(%s)", n8);
+        int rok = (rmdir(n8) == 0);
+        mw_install_log("RemoveDirectoryW", g8, n8, rok);
+        if (!rok) { mw_SetLastError(2); return 0; }
+        return 1;
+    }
 }
 __attribute__((ms_abi)) int mw_CreateDirectoryW(const wchar_t* name, void* sa) {
     char n8[4096];
@@ -10993,10 +11054,16 @@ __attribute__((ms_abi)) int mw_CreateDirectoryW(const wchar_t* name, void* sa) {
     /* BUG-054b (2026-10-17): the -o extraction root arrives as a Windows-style
      * absolute path ("\\tmp\\7ztest\\out"); without normalization mkdir created
      * a literal backslash-named directory in the CWD. Same rule as CreateFileW. */
-    w3_normalize_path(n8);
-    MW_TRACE("CreateDirectoryW(%s)", n8);
-    if (mkdir(n8, 0755) != 0) { mw_SetLastError(errno == EEXIST ? 183 : 3); return 0; }
-    return 1;
+    {
+        char g8[4096]; snprintf(g8, sizeof(g8), "%s", n8); /* SW-1403 guest path */
+        w3_normalize_path(n8);
+        w3_seed_windows_skeleton(n8); /* SW-1405: C:\Windows\... parent must exist */
+        MW_TRACE("CreateDirectoryW(%s)", n8);
+        int cok = (mkdir(n8, 0755) == 0);
+        mw_install_log("CreateDirectoryW", g8, n8, cok);
+        if (!cok) { mw_SetLastError(errno == EEXIST ? 183 : 3); return 0; }
+        return 1;
+    }
 }
 __attribute__((ms_abi)) int mw_CreateDirectoryExW(const wchar_t* tmpl, const wchar_t* name, void* sa) {
     return mw_CreateDirectoryW(name, sa);
@@ -11005,11 +11072,15 @@ __attribute__((ms_abi)) int mw_MoveFileExW(const wchar_t* from, const wchar_t* t
     char f8[4096], t8[4096];
     if (!from || !to || w3_w16_to_utf8z((const uint16_t*)from, f8, sizeof(f8)) < 0
         || w3_w16_to_utf8z((const uint16_t*)to, t8, sizeof(t8)) < 0) { mw_SetLastError(87); return 0; }
+    char fg8[4096], tg8[4096]; /* SW-1403 guest paths, pre-normalization */
+    snprintf(fg8, sizeof(fg8), "%s", f8); snprintf(tg8, sizeof(tg8), "%s", t8);
     w3_normalize_path(f8);
     w3_normalize_path(t8);
     f8[sizeof(f8)-1] = '\0'; t8[sizeof(t8)-1] = '\0';
     MW_TRACE("MoveFileExW(%s -> %s)", f8, t8);
-    if (rename(f8, t8) != 0) { mw_SetLastError(2); return 0; }
+    int mok = (rename(f8, t8) == 0);
+    mw_install_log("MoveFileExW", fg8, t8, mok);
+    if (!mok) { mw_SetLastError(2); return 0; }
     return 1;
 }
 __attribute__((ms_abi)) int mw_ReplaceFileW(const wchar_t* dst, const wchar_t* src, const wchar_t* bak, uint32_t flags, void* e1, void* e2) {
@@ -11023,18 +11094,21 @@ __attribute__((ms_abi)) int mw_CopyFile2(const wchar_t* from, const wchar_t* to,
     char f8[4096], t8[4096];
     if (!from || !to || w3_w16_to_utf8z((const uint16_t*)from, f8, sizeof(f8)) < 0
         || w3_w16_to_utf8z((const uint16_t*)to, t8, sizeof(t8)) < 0) { mw_SetLastError(87); return 0x80070057u; }
+    char fg8[4096], tg8[4096]; /* SW-1403 guest paths, pre-normalization */
+    snprintf(fg8, sizeof(fg8), "%s", f8); snprintf(tg8, sizeof(tg8), "%s", t8);
     w3_normalize_path(f8);
     w3_normalize_path(t8);
     f8[sizeof(f8)-1] = '\0'; t8[sizeof(t8)-1] = '\0';
     MW_TRACE("CopyFile2(%s -> %s)", f8, t8);
     FILE* a = fopen(f8, "rb");
-    if (!a) return 0x80070002u;
+    if (!a) { mw_install_log("CopyFile2", fg8, t8, 0); return 0x80070002u; }
     FILE* b = fopen(t8, "wb");
-    if (!b) { fclose(a); return 0x80070005u; }
+    if (!b) { fclose(a); mw_install_log("CopyFile2", fg8, t8, 0); return 0x80070005u; }
     char buf[65536];
     size_t n;
     while ((n = fread(buf, 1, sizeof(buf), a)) > 0) fwrite(buf, 1, n, b);
     fclose(a); fclose(b);
+    mw_install_log("CopyFile2", fg8, t8, 1);
     return 0; /* S_OK */
 }
 __attribute__((ms_abi)) int mw_CreateSymbolicLinkW(const wchar_t* link, const wchar_t* target, uint32_t flags) {
@@ -11103,9 +11177,18 @@ __attribute__((ms_abi)) uint32_t mw_GetFinalPathNameByHandleW(void* h, wchar_t* 
 __attribute__((ms_abi)) uint32_t mw_GetTempPathW(uint32_t cap, wchar_t* out) {
     MW_TRACE("GetTempPathW()");
     const char* t = getenv("TMPDIR");
-    if (!t || !t[0]) t = "/tmp";
-    char buf[4096];
-    snprintf(buf, sizeof(buf), "%s/", t);
+    /* SW-1405 (SWEEP-086): MINWIN_WINTEMP=1 — sandboxed installer world mode.
+     * Windows-style system temp ("C:\Windows\Temp\") so NSIS/Inno create
+     * their ns-NNN.tmp stage dirs at the real Windows location; the SW-1234
+     * drive-root mapping + SW-1405 skeleton seed make those paths land inside
+     * the sandbox. Default (no env): POSIX TMPDIR — corpus is byte-identical. */
+    char buf[512];
+    if (getenv("MINWIN_WINTEMP")) {
+        snprintf(buf, sizeof(buf), "C:\\Windows\\Temp\\");
+    } else {
+        if (!t || !t[0]) t = "/tmp";
+        snprintf(buf, sizeof(buf), "%s/", t);
+    }
     if (!out || !cap) return (uint32_t)strlen(buf) + 1;
     size_t n = utf8_to_utf16(buf, out, cap - 1);
     ((uint16_t*)out)[n] = 0;
@@ -11387,11 +11470,11 @@ __attribute__((ms_abi)) int mw_ReadConsoleInputA(void* h, void* buf, uint32_t n,
  * GUI settings persistence now work end to end. */
 static int mw_probe_copy(const void* src, size_t n, void* dst); /* pump block */
 
-#define MW_REG_MAXKEY 64
-#define MW_REG_MAXVAL 16
-#define MW_REG_PATHN  160
+#define MW_REG_MAXKEY 256  /* SW-1402b: installer-grade capacity (NSIS/Inno write dozens) */
+#define MW_REG_MAXVAL 24
+#define MW_REG_PATHN  256
 #define MW_REG_VALN   64
-#define MW_REG_DATA   512
+#define MW_REG_DATA   1024
 #define MW_REGKEY_BASE 0x00090000u
 typedef struct {
     uint16_t name[MW_REG_VALN];
@@ -11416,6 +11499,10 @@ static uint32_t mw_reg_wlen(const uint16_t* s); /* fwd: defined below (snapshot 
 static void reg_snap_init(void) {
     if (g_reg_snap_tried) return;
     g_reg_snap_tried = 1;
+    /* SW-1402: ALWAYS register the exit hook — regtree_export must run even
+     * when no binary snapshot env is set. reg_snap_save itself no-ops the
+     * binary part when MINWIN_REG_SNAPSHOT is unset. */
+    atexit(reg_snap_save);
     const char* p = getenv("MINWIN_REG_SNAPSHOT");
     if (!p || !p[0]) return;
     FILE* f = fopen(p, "rb");
@@ -11450,37 +11537,114 @@ static void reg_snap_init(void) {
         }
         fclose(f);
     }
-    atexit(reg_snap_save);
 }
 static void snap_wstr(FILE* f, const uint16_t* s) {
     uint32_t n = mw_reg_wlen(s);
     fwrite(&n, 4, 1, f);
     if (n) fwrite(s, 2, n, f);
 }
-static void reg_snap_save(void) {
-    const char* p = getenv("MINWIN_REG_SNAPSHOT");
-    if (!p || !p[0]) return;
-    FILE* f = fopen(p, "wb");
-    if (!f) return;
-    fwrite("MWREG001", 1, 8, f);
+/* ---- SWEEP-086 SW-1402: on-disk registry tree mirror ("regtree") ----
+ * When MINWIN_REG_TREE names a directory, the live hive is ALSO exported at
+ * process exit as a browsable filesystem tree: each key path becomes real
+ * directories under the tree root (HKLM\SOFTWARE\X -> <tree>/HKLM/SOFTWARE/X),
+ * each value becomes a file named "@<name>" ("@(Default)" for the unnamed
+ * value) rendered by type (REG_SZ/EXPAND_SZ = UTF-8 text, REG_DWORD =
+ * "dword:0x...", REG_BINARY/other = hex). Plus a _REG_MANIFEST.tsv ledger:
+ * regpath<TAB>value<TAB>type<TAB>size<TAB>hostfile. This is the literal
+ * "registry files created in their own paths" ground truth for installer
+ * simulation; the binary MWREG001 snapshot remains the load side. */
+static void regtree_export(void) {
+    const char* root = getenv("MINWIN_REG_TREE");
+    if (!root || !root[0]) return;
+    mkdir(root, 0755); /* SW-1402: root may not exist yet — key dirs follow */
+    char mfpath[2048];
+    snprintf(mfpath, sizeof(mfpath), "%s/_REG_MANIFEST.tsv", root);
+    FILE* mf = fopen(mfpath, "wb");
+    if (!mf) return;
     for (int i = 0; i < MW_REG_MAXKEY; i++) {
-        uint8_t live = (uint8_t)g_reg[i].live;
-        fwrite(&live, 1, 1, f);
-        if (!live) continue;
-        uint32_t n = mw_reg_wlen(g_reg[i].path);
-        fwrite(&n, 4, 1, f);
-        if (n) fwrite(g_reg[i].path, 2, n, f);
-        fwrite(&g_reg[i].nvals, 4, 1, f);
+        if (!g_reg[i].live) continue;
+        /* key path -> host dir (backslash = separator, sanitize the rest) */
+        char dir[2048];
+        int dn = snprintf(dir, sizeof(dir), "%s/", root);
+        for (uint32_t c = 0; g_reg[i].path[c] && dn < (int)sizeof(dir) - 2; c++) {
+            uint16_t ch = g_reg[i].path[c];
+            dir[dn++] = (ch == 0x5C) ? '/' : (ch >= 32 && ch < 127 && ch != '/') ? (char)ch : '_';
+        }
+        dir[dn] = 0;
+        for (char* q = dir + strlen(root) + 1; *q; q++)
+            if (*q == '/') { *q = 0; mkdir(dir, 0755); *q = '/'; }
+        mkdir(dir, 0755);
         for (uint32_t v = 0; v < g_reg[i].nvals; v++) {
             MwRegVal* val = &g_reg[i].vals[v];
-            snap_wstr(f, val->name);
-            fwrite(&val->type, 4, 1, f);
-            fwrite(&val->size, 4, 1, f);
-            if (val->size) fwrite(val->data, 1, val->size, f);
+            char vname[256];
+            uint32_t vn = mw_reg_wlen(val->name);
+            if (vn == 0) snprintf(vname, sizeof(vname), "(Default)");
+            else for (uint32_t c = 0; c < vn && c < sizeof(vname) - 1; c++) {
+                uint16_t ch = val->name[c];
+                vname[c] = (ch >= 32 && ch < 127 && ch != '/' && ch != '\\') ? (char)ch : '_';
+                vname[c + 1] = 0;
+            }
+            char fname[2304];
+            snprintf(fname, sizeof(fname), "%s/@%s", dir, vname);
+            FILE* vf = fopen(fname, "wb");
+            if (vf) {
+                if ((val->type == 1 || val->type == 2) && val->size >= 2) {
+                    char txt[1024];
+                    if (w3_w16_to_utf8z((const uint16_t*)val->data, txt, sizeof(txt)) >= 0)
+                        fprintf(vf, "%s\n", txt);
+                } else if (val->type == 4 && val->size >= 4) {
+                    uint32_t dw = (uint32_t)val->data[0] | ((uint32_t)val->data[1] << 8)
+                                | ((uint32_t)val->data[2] << 16) | ((uint32_t)val->data[3] << 24);
+                    fprintf(vf, "dword:0x%08x\n", dw);
+                } else {
+                    fprintf(vf, "hex:");
+                    for (uint32_t b = 0; b < val->size && b < 256; b++)
+                        fprintf(vf, "%s%02x", b ? " " : "", val->data[b]);
+                    fprintf(vf, "\n");
+                }
+                fclose(vf);
+            }
+            /* manifest regpath keeps Windows backslashes */
+            char rp[1024];
+            int rn = 0;
+            for (uint32_t c = 0; g_reg[i].path[c] && rn < (int)sizeof(rp) - 2; c++) {
+                uint16_t ch = g_reg[i].path[c];
+                rp[rn++] = (ch >= 32 && ch < 127) ? (char)ch : '_';
+            }
+            rp[rn] = 0;
+            fprintf(mf, "%s\t%s\t%u\t%u\t%s\n", rp, vname, val->type, val->size, fname);
         }
     }
-    fclose(f);
-    MW_TRACE("reg snapshot saved to %s", p);
+    fclose(mf);
+    MW_TRACE("regtree exported to %s", root);
+}
+static void reg_snap_save(void) {
+    const char* p = getenv("MINWIN_REG_SNAPSHOT");
+    if (p && p[0]) {
+        FILE* f = fopen(p, "wb");
+        if (f) {
+            fwrite("MWREG001", 1, 8, f);
+            for (int i = 0; i < MW_REG_MAXKEY; i++) {
+                uint8_t live = (uint8_t)g_reg[i].live;
+                fwrite(&live, 1, 1, f);
+                if (!live) continue;
+                uint32_t n = mw_reg_wlen(g_reg[i].path);
+                fwrite(&n, 4, 1, f);
+                if (n) fwrite(g_reg[i].path, 2, n, f);
+                fwrite(&g_reg[i].nvals, 4, 1, f);
+                for (uint32_t v = 0; v < g_reg[i].nvals; v++) {
+                    MwRegVal* val = &g_reg[i].vals[v];
+                    snap_wstr(f, val->name);
+                    fwrite(&val->type, 4, 1, f);
+                    fwrite(&val->size, 4, 1, f);
+                    if (val->size) fwrite(val->data, 1, val->size, f);
+                }
+            }
+            fclose(f);
+            MW_TRACE("reg snapshot saved to %s", p);
+        }
+    }
+    regtree_export(); /* SW-1402: always attempt when MINWIN_REG_TREE is set */
 }
 /* forward decls (A-tails + EnumKeyA above use these below) */
 static int32_t mw_reg_query(void* key, const uint16_t* name, uint32_t* type, void* data, uint32_t* size);
@@ -30476,16 +30640,19 @@ __attribute__((ms_abi)) int mw_CopyFileW(const uint16_t* src, const uint16_t* ds
     sw28_w2a(a, src, sizeof a); sw28_w2a(b, dst, sizeof b);
     /* SW-1395: normalize both ends — CopyFile2 already did, the W entry did
      * not; guests mixing PathFileExistsW + CopyFileW saw inconsistent worlds. */
+    char ag8[1024], bg8[1024]; /* SW-1403 guest paths, pre-normalization */
+    snprintf(ag8, sizeof ag8, "%s", a); snprintf(bg8, sizeof bg8, "%s", b);
     w3_normalize_path(a); w3_normalize_path(b);
     if (failIfExists && access(b, F_OK) == 0) return 0;
-    FILE* fi = fopen(a, "rb"); if (!fi) return 0;
+    FILE* fi = fopen(a, "rb"); if (!fi) { mw_install_log("CopyFileW", ag8, b, 0); return 0; }
     FILE* fo = fopen(b, "wb");
-    if (!fo) { fclose(fi); return 0; }
+    if (!fo) { fclose(fi); mw_install_log("CopyFileW", ag8, b, 0); return 0; }
     char buf[65536]; size_t n; int ok = 1;
     while ((n = fread(buf, 1, sizeof buf, fi)) > 0)
         if (fwrite(buf, 1, n, fo) != n) { ok = 0; break; }
     fclose(fi); fclose(fo);
     MW_TRACE("CopyFileW -> %d", ok);
+    mw_install_log("CopyFileW", ag8, b, ok);
     return ok;
 }
 __attribute__((ms_abi)) uint32_t mw_GetCompressedFileSizeW(const uint16_t* path, uint32_t* hi) {
@@ -41565,6 +41732,12 @@ static const struct { const char* n; uint32_t b; } g_api32_arity[] = {
     /* SW-1372 (SWEEP-081): x86 stdcall arities for the notepad2-mod batch */
     { "MessageBoxExA", 20 },
     { "MessageBoxExW", 20 },
+    /* SW-1408 (SWEEP-086): MessageBoxIndirectW takes ONE pointer arg (the
+     * MSGBOXPARAMSW struct) — arity-0 under-pop left 16 bytes on the guest
+     * stack after the call; NSIS 8.9.8.1's error box then returned into the
+     * thunk region on a drifted RSP (SIGSEGV @0x67, RBP=style leak). */
+    { "MessageBoxIndirectA", 4 },
+    { "MessageBoxIndirectW", 4 },
     { "DrawAnimatedRects", 16 },
     { "IsCharLowerA", 4 },
     { "IsCharLowerW", 4 },

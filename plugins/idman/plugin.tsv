@@ -13,3 +13,4 @@ keys	13,13
 mouse	150,150
 known	SW-1370 SW-1362 SW-1363
 note	full unpacker+registry run; renders honest log-file dialog; frontier = CreateProcessW child chain (SW-1370)
+sandbox	yes

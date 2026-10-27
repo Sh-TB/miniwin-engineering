@@ -44,10 +44,10 @@ classify() { # log rc frames diff_frame -> verdict string
     fi
 }
 
-frame_stats() { # base -> "frames uniq first_diff"
+frame_stats() { # screenshots_dir -> "frames uniq first_diff"
     python3 - "$1" <<'PYEOF'
 import sys, os, hashlib
-d = f"miniwin-results/{sys.argv[1]}/screenshots"
+d = sys.argv[1]
 try:
     fs = sorted(f for f in os.listdir(d) if f.endswith(".bmp"))
     if not fs: print("0 0 "); raise SystemExit
@@ -71,8 +71,14 @@ run_plugin() {
     exe=$(manifest_get exe "$mf"); args=$(manifest_get args "$mf")
     keys=$(manifest_get keys "$mf"); mouse=$(manifest_get mouse "$mf")
     known=$(manifest_get known "$mf")
+    sandbox=$(manifest_get sandbox "$mf")
     [ -n "$keys" ] || keys="37,38,39,40,13,32,9,9"
     [ -n "$mouse" ] || mouse="45,45;90,90;135,135"
+    # SW-1404 (SWEEP-086): installer sandbox. When the manifest sets
+    # sandbox=yes the guest runs with CWD = evidence/<sweep>/<name>/sandbox
+    # (SW-1234 drive-root = loader CWD), so guest C:\... writes land INSIDE
+    # the sandbox; MINWIN_INSTALL_LOG/REG_TREE/REG_SNAPSHOT capture the full
+    # installer ground truth. Non-sandbox plugins: byte-identical behavior.
 
     say "== plugin: $name ($arch) — $desc"
     # 1. artifact present + hash recorded
@@ -104,26 +110,55 @@ run_plugin() {
     [ -f "$exe_path" ] || { say "   exe missing: $exe_path"; echo -e "$name\t$arch\tFAIL_NOEXE\t\t\t$known\t$SWEEP" >> plugins/status.tsv; return 2; }
     say "   exe: $exe_path"
 
+    # 2b. SW-1407 (SWEEP-086): sandboxed installers run from INSIDE the sandbox
+    # ("C:\Installers\<exe>") — the module self-path (GetModuleFileName ->
+    # CreateFile self-reopen for the embedded payload) then round-trips through
+    # the SW-1234 drive-root mapping; an exe outside the drive root cannot.
+    local SB=""
+    local RESROOT="miniwin-results"
+    if [ "$sandbox" = "yes" ]; then
+        SB="$EV/$name/sandbox"
+        mkdir -p "$SB"
+        SB="$(cd "$SB" && pwd)" # absolute: the guest subshell cwd IS the sandbox
+        RESROOT="$SB/miniwin-results"
+        mkdir -p "$SB/Installers"
+        cp -f "$exe_path" "$SB/Installers/$(basename "$exe_path")"
+        exe_path="$SB/Installers/$(basename "$exe_path")"
+        say "   sandbox exe: $exe_path"
+    fi
+
     # 3. battery
     mkdir -p "$EV/$name" plugins/$name
     local base run rc out crash frames uniq diff verdict result_row=""
     for run in $(seq 1 "$nruns"); do
-        rm -rf "miniwin-results/$(basename "$exe_path")"
+        rm -rf "${RESROOT}/$(basename "$exe_path")"
         out="/tmp/plug_${name}_r${run}.log"
-        MW_GUI_EVENTS=1 MW_GUI_EVENTS_BUDGET=220 \
-        MW_GUI_KEYS="$keys" MW_GUI_KEY_EVERY=7 MW_GUI_KEYUP=1 \
-        MINWIN_MOUSE="$mouse" MINWIN_MOUSE_EVERY=6 \
-        timeout "$tmo" ./minwin_loader "$exe_path" $args > "$out" 2>&1
+        if [ -n "$SB" ]; then
+            ( cd "$SB" && \
+            MW_GUI_EVENTS=1 MW_GUI_EVENTS_BUDGET=220 \
+            MW_GUI_KEYS="$keys" MW_GUI_KEY_EVERY=7 MW_GUI_KEYUP=1 \
+            MINWIN_MOUSE="$mouse" MINWIN_MOUSE_EVERY=6 \
+            MINWIN_INSTALL_LOG="$SB/install_log.tsv" \
+            MINWIN_REG_TREE="$SB/registry_tree" \
+            MINWIN_REG_SNAPSHOT="$SB/registry_snapshot.bin" \
+            MINWIN_WINTEMP=1 \
+            timeout "$tmo" "$REPO/minwin_loader" "$exe_path" $args ) > "$out" 2>&1
+        else
+            MW_GUI_EVENTS=1 MW_GUI_EVENTS_BUDGET=220 \
+            MW_GUI_KEYS="$keys" MW_GUI_KEY_EVERY=7 MW_GUI_KEYUP=1 \
+            MINWIN_MOUSE="$mouse" MINWIN_MOUSE_EVERY=6 \
+            timeout "$tmo" ./minwin_loader "$exe_path" $args > "$out" 2>&1
+        fi
         rc=$?
         result_row="$result_row rc=$rc"
         cp "$out" "$EV/$name/run${run}.log"
         say "   run$run rc=$rc crash=$(grep -ac '\[CRASH\]' "$out")"
     done
-    read -r frames uniq diff <<< "$(frame_stats "$(basename "$exe_path")")"
+    read -r frames uniq diff <<< "$(frame_stats "${RESROOT}/$(basename "$exe_path")/screenshots")"
     verdict=$(classify "$out" "$rc" "$frames" "$diff")
 
     # 4. frames -> evidence PNG
-    local fsdir="miniwin-results/$(basename "$exe_path")/screenshots"
+    local fsdir="${RESROOT}/$(basename "$exe_path")/screenshots"
     if [ -d "$fsdir" ]; then
         python3 - "$fsdir" "$EV/$name" <<'PYEOF'
 import sys, os

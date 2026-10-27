@@ -13,3 +13,4 @@ keys	13,13
 mouse	150,150
 known	SW-1361 SW-1360
 note	SFX: STARTDLG 13/13 controls parse; frontier = own .didat self-resolver (SW-1361)
+sandbox	yes

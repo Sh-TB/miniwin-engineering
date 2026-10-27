@@ -318,3 +318,25 @@ Stage Summary:
 - The "error dialog" era is reclassified honestly: npp64 now self-provisions its config files and shows its own designed recovery UX only on first run; the remaining npp64/winrar/idman frontiers are DECODED with root causes and queued as SW-1399/1400/1401.
 - fifteen = new-program PASS; per-train protocol (one new game + one new program) satisfied.
 - Next wagons: SW-1399 layout decode, SW-1400 modal pump, SW-1401 CreateProcessW v1, more puzzles, hxd retry.
+
+---
+Task ID: SWEEP-086
+Agent: main (z.ai)
+Task: «ریجیستری و پوشه‌ها باید درست در مسیرهای خودشان ساخته شوند» — installer ground-truth foundation + one new game + one new program
+
+Work Log:
+- Recovered workspace after sandbox restart: fast-forwarded local main 242af84(SWEEP-030) -> 0b5b4a1(SWEEP-085) from origin; re-downloaded puzzles.zip (sha a5b00f63 exact) + official npp 8.9.8.1 NSIS installer (sha 26f3bcce).
+- SW-1402: on-disk registry tree mirror (MINWIN_REG_TREE) — hive exported as real directories + @value files + _REG_MANIFEST.tsv; SW-1402b installer-grade hive caps (256 keys/24 vals/256 path/1024 data), snapshot-format compatible.
+- SW-1403: guest install-log (MINWIN_INSTALL_LOG) — every FS mutation (dir/create/copy/move/delete, create-mode CreateFile) appended op<TAB>guest<TAB>host<TAB>result; 8 call sites; ExitProcess flushes regtree+snapshot explicitly (_exit skips loader atexit).
+- SW-1404: runner sandbox mode (manifest sandbox=yes) — guest CWD = evidence/<sweep>/<name>/sandbox, drive-root mapping lands C:\ paths inside; install_log/regtree/snapshot/MINWIN_WINTEMP captured.
+- SW-1405: Windows skeleton seeding shared with CreateDirectoryW + GetTempPathW MINWIN_WINTEMP=1 world mode (C:\Windows\Temp) — corpus default unchanged (POSIX TMPDIR).
+- SW-1407: win32_module_path drive-root-relative (self-reopen round-trip) + runner copies sandboxed installers into <sandbox>/Installers/.
+- SW-1408: PE32 arity MessageBoxIndirectW/A=4 (under-pop stack drift crashed NSIS after its first MessageBox).
+- Battery: winrar INSTALL_OK 28 files/9.56MB into sandbox/WinRAR (WinRAR.exe installed!); idman IDM_Setup_Temp created (historical blocker gone); nppsetup NEW = LZMA-extract desync frontier (69.7M steps, System.dll staged, SW-1409 queued); lightup NEW = PASS_INPUT_STATE_CHANGE first contact; npp64/mines re-verified zero regressions.
+- Gates: corpus 7x3=21/21 (sweep086_corpus.sh), G1 12/12 (evidence/master/g1/20261027_053105, binary b24475ff).
+- Incident: disk filled twice (stale 8.6GB /tmp/my-project mirror from the dead session) — cleaned; G1 re-run green.
+
+Stage Summary:
+- The "folders/registry in their own paths" mandate is now a working subsystem: regtree + install-log + sandbox produce per-installer ground truth under evidence/.
+- WinRAR = first real installer->installed-program conversion; installed WinRAR.exe is the SWEEP-087 target.
+- Next: SW-1409 LZMA desync, SW-1401 idman child exec, SW-1400 winrar interactive modal, run installed WinRAR.exe, +1 game/program.
