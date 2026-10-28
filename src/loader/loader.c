@@ -31367,12 +31367,28 @@ __attribute__((ms_abi)) int mw_GetComboBoxInfo(void* h, MwComboInfo* ci) {
     return 1;
 }
 __attribute__((ms_abi)) int mw_GetCaretPos(void* pt) { if (pt) memset(pt, 0, 8); return 1; }
-typedef struct { const char* clsStyle; void* hCursor; uint16_t* menu; void* inst; void* icon; void* cursor; void* br; void* iconSm; int cbExtra; } MwClassA;
-__attribute__((ms_abi)) int mw_GetClassInfoW(void* inst, const uint16_t* cls, MwClassA* wc) {
+__attribute__((ms_abi)) int mw_GetClassInfoW(void* inst, const uint16_t* cls, void* wc) {
     (void)inst; (void)cls;
     if (!wc) return 0;
-    memset(wc, 0, sizeof *wc);
-    wc->clsStyle = "EDIT"; /* honest v1: system class identity only */
+    /* SW-1477 (SWEEP-098): write EXACTLY the guest's WNDCLASSW size. The old
+     * code memset a HOST x86-64 struct (MwClassA, ~72B) through the guest's
+     * 40-byte (i386) structure pointer — for the NSIS exehead the WNDCLASSW
+     * lives at .data 0x428a00 with adjacent globals 0x428a2c (flag),
+     * 0x428a3c (langstring base pointer, set by the language selector) and
+     * 0x428a40 (language-dialog template id) — the 80B zero-fill wiped them,
+     * so the language dialog opened with template 0+0x69 and its string
+     * resolver dereferenced the zeroed base (guest 0x406740, mov eax,[ecx]
+     * with ecx=0, rc=139 at a fixed ~139.97M steps). Honest v1 struct: all
+     * zeros (system-class query answered TRUE as before). */
+    if (g_cpu32_active) {
+        uint32_t w[10]; /* i386 WNDCLASSW: style, lpfnWndProc, cbClsExtra,
+                         * cbWndExtra, hInstance, hIcon, hCursor,
+                         * hbrBackground, lpszMenuName, lpszClassName */
+        memset(w, 0, sizeof w);
+        memcpy(wc, w, sizeof w);
+    } else {
+        memset(wc, 0, 72); /* x64 WNDCLASSW: 4+4+8+4+4+8*6 = 72 */
+    }
     return 1;
 }
 __attribute__((ms_abi)) void* mw_RealChildWindowFromPoint(void* h, void* pt) { (void)pt; return h; }
