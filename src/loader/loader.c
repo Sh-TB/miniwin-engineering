@@ -12056,14 +12056,24 @@ static void mw_reg_seed_windows(void) {
     if (mw_RegOpenKeyExW((void*)0x80000002u, (const wchar_t*)mw_seed_w(wsub, MW_REG_PATHN,
             "SOFTWARE\\Microsoft\\Windows\\CurrentVersion"), 0, 0, &hk) != 0) {
         if (mw_RegCreateKeyExW((void*)0x80000002u, (const wchar_t*)wsub, 0, NULL, 0, 0, NULL, &hk, NULL) == 0) {
+            /* SW-1498 (SWEEP-106): REG_SZ seed sizes must INCLUDE the null
+             * terminator (real RegQueryValueExW returns cbData with the
+             * terminating null). The old hardcoded sizes stored 16 wchars
+             * for "C:\Program Files" (32B, no null) -> NSIS's string engine
+             * read past the value into stale stack/heap bytes -> the famous
+             * 'Program Filesry' FindFirstFile path (decode: nppsetup sweep105
+             * api_trace: RegQueryValueExW('ProgramFilesDir') size=32 data
+             * unterminated -> FindFirstFile('...\Program Filesry\...') rc=2).
+             * DevicePath was worse: 28B truncated "%SystemRoot%\i". Matches
+             * the SW-1468 (strlen+1)*2 pattern already used above. */
             mw_RegSetValueExW(hk, (const wchar_t*)mw_seed_w(wname, MW_REG_VALN, "ProgramFilesDir"), 0, 1u,
-                              mw_seed_w(wstr, MW_REG_VALN, "C:\\Program Files"), 32);
+                              mw_seed_w(wstr, MW_REG_VALN, "C:\\Program Files"), (uint32_t)(strlen("C:\\Program Files") + 1) * 2);
             mw_RegSetValueExW(hk, (const wchar_t*)mw_seed_w(wname, MW_REG_VALN, "CommonFilesDir"), 0, 1u,
-                              mw_seed_w(wstr, MW_REG_VALN, "C:\\Program Files\\Common Files"), 60);
+                              mw_seed_w(wstr, MW_REG_VALN, "C:\\Program Files\\Common Files"), (uint32_t)(strlen("C:\\Program Files\\Common Files") + 1) * 2);
             mw_RegSetValueExW(hk, (const wchar_t*)mw_seed_w(wname, MW_REG_VALN, "ProgramFilesPath"), 0, 1u,
-                              mw_seed_w(wstr, MW_REG_VALN, "C:\\Program Files"), 32);
+                              mw_seed_w(wstr, MW_REG_VALN, "C:\\Program Files"), (uint32_t)(strlen("C:\\Program Files") + 1) * 2);
             mw_RegSetValueExW(hk, (const wchar_t*)mw_seed_w(wname, MW_REG_VALN, "DevicePath"), 0, 2u /*REG_EXPAND_SZ*/,
-                              mw_seed_w(wstr, MW_REG_VALN, "%SystemRoot%\\inf"), 28);
+                              mw_seed_w(wstr, MW_REG_VALN, "%SystemRoot%\\inf"), (uint32_t)(strlen("%SystemRoot%\\inf") + 1) * 2);
             MW_TRACE("reg seed: HKLM Windows CurrentVersion ProgramFiles skeleton seeded");
         }
     }
@@ -41843,6 +41853,17 @@ static const struct { const char* n; uint32_t b; } g_api32_arity[] = {
     { "LoadStringA", 16 },
     { "LockResource", 4 },
     { "SizeofResource", 8 },
+    /* SW-1495 (winnc11.setup.exe / Inno SetupLdr): LoadResource(HMODULE, HRSRC)
+     * = 2 stdcall args = 8 bytes. MISSING here meant every call popped the
+     * MW32_ARITY_DEFAULT 32 -> guest ESP +24 after each LoadResource ->
+     * GetSetupLdrOffsetTable's final ret (4a180f) consumed a stale stack slot
+     * (0x3fefeffc = outer saved-EBP window) -> jump into the stack ->
+     * [PE32-FATAL] opcode=0xef. Verified against jrsoftware/issrc
+     * Projects/SetupLdr.dpr GetSetupLdrOffsetTable: FindResource(MAKEINTRESOURCE
+     * (SetupLdrOffsetTableResID), RT_RCDATA) -> SizeofResource must equal
+     * SizeOf(TSetupLdrOffsetTable) (0x2c=44 per stub cmp) -> LoadResource ->
+     * LockResource -> ret. Same class as SW-1363/1365/1388. */
+    { "LoadResource", 8 },
     { "LoadLibraryA", 4 },
     { "LoadLibraryW", 4 },
     { "FormatMessageA", 28 },
@@ -44232,8 +44253,32 @@ static int cpu32_step2(uint8_t op, int o32, int arep, int frep) {
                     else if (i == 1) fpu_push(3.3219280948873623);                        /* FLDL2T */
                     else if (i == 2) fpu_push(1.4426950408889634);                        /* FLDL2E */
                     else if (i == 3) fpu_push(3.141592653589793);                         /* FLDPI */
+                    else if (i == 4) fpu_push(0.30102999566398120);                       /* FLDLG2 (SW-1495b) */
+                    else if (i == 5) fpu_push(0.69314718055994531);                       /* FLDLN2 (SW-1495b) */
                     else if (i == 6) fpu_push(0.0);                                       /* FLDZ */
                     else cpu32_fatal("x87 D9 E8+", op, t_cpu32.eip);
+                    break;
+                case 6: /* SW-1495b (winnc/Inno SetupLdr): the F0-F7 group was
+                     * ENTIRELY missing -> Delphi's FFREE+FINCSTP fpu-pop idiom
+                     * after FPU array zero-init (fldz; fstl loop; ffree st(0);
+                     * fincstp) died with [PE32-FATAL] x87 D9 mod3 rc=86 at
+                     * 0x406322. Intel map: F0 F2XM1, F1 FYL2X, F2 FPTAN,
+                     * F3 FPATAN, F4 FXTRACT, F5 FPREM1, F6 FDECSTP, F7 FINCSTP. */
+                    switch (i) {
+                    case 0: fpu_setst(0, pow(2.0, fpu_st(0)) - 1.0); break;               /* F2XM1 */
+                    case 1: { double x = fpu_st(0), y = fpu_st(1);                        /* FYL2X */
+                              fpu_popv(); fpu_setst(0, y * log2(x)); break; }
+                    case 2: { double v = tan(fpu_st(0));                                  /* FPTAN */
+                              fpu_setst(0, v); fpu_push(1.0); break; }
+                    case 3: { double x = fpu_st(0), y = fpu_st(1);                        /* FPATAN */
+                              fpu_popv(); fpu_setst(0, atan2(y, x)); break; }
+                    case 4: { int e; double m = frexp(fpu_st(0), &e);                     /* FXTRACT v1 */
+                              fpu_setst(0, (double)e); fpu_push(m); break; }
+                    case 5: { double x = fpu_st(0), d = fpu_st(1);                        /* FPREM1 v1 */
+                              double q = round(x / d); fpu_setst(0, x - q * d); break; }
+                    case 6: t_cpu32.ftop = (t_cpu32.ftop - 1) & 7; break;                 /* FDECSTP */
+                    case 7: t_cpu32.ftop = (t_cpu32.ftop + 1) & 7; break;                 /* FINCSTP */
+                    }
                     break;
                 case 7:
                     if (i == 0) { double v = fpu_st(0), r = fmod(v, 1.0); /* FPREM v1 */
@@ -44774,9 +44819,23 @@ static uint32_t g_i386_seh_scratch; /* guest VA of the ER/CTX scratch, lazy */
  * disposition (eax). Sets MW32_SEH_RESUME_CODE via exit_req if the handler
  * unwound/resumed (caller must propagate immediately). */
 static uint32_t mw32_i386_seh_call_handler(uint32_t node, uint32_t er,
-                                           uint32_t ctx, uint32_t handler) {
+                                           uint32_t ctx, uint32_t handler,
+                                           int unwinding) {
     fprintf(stderr, "[SEH-CALL] node=%08x h=%08x er=%08x er.flags=%x esp_before=%x\n",
             node, handler, er, er ? m32_ld32(er + 4) : 0, t_cpu32.r[ESPi]);
+    /* SW-1496 (winnc): the post-call ESP restore is PHASE-DEPENDENT.
+     * RAISE phase: the old esp=node reset is LOAD-BEARING — each handler is
+     * entered at its own registration level, so Delphi's frame handler reads
+     * its EstablisherFrame arg as [esp+0x28] and uses it as the RtlUnwind
+     * target (measured: TargetFrame=node2=0x3fefef7c correct).
+     * UNWIND phase: the call happens at the LIVE level inside the pending
+     * RtlUnwind callee frame (measured esp_before=0x3fefef2c), and RtlUnwind
+     * (SW-1392f) will return NORMALLY to its caller — so esp must be restored
+     * EXACTLY to esp_before (args popped). The old esp=node reset left esp
+     * 0x44 too high (gate +16 from node=0x3fefef70 -> 0x3fefef80), the caller
+     * read edi=[esp+0x28]=[0x3fefefa8]=0 -> mov ebp,[edi+8] near-null host
+     * deref SIGSEGV at 37.4M steps. */
+    uint32_t esp0 = t_cpu32.r[ESPi];
     m32_push(0);              /* DispatcherContext (unused v1) */
     m32_push(ctx);            /* CONTEXT* */
     m32_push(node);           /* EstablisherFrame */
@@ -44786,7 +44845,7 @@ static uint32_t mw32_i386_seh_call_handler(uint32_t node, uint32_t er,
     cpu32_run(0);
     uint32_t disp = t_cpu32.r[EAXi];
     if (g_cpu32_exit_req != MW32_SEH_RESUME_CODE)
-        t_cpu32.r[ESPi] = node; /* cdecl: pop our args off the guest stack */
+        t_cpu32.r[ESPi] = unwinding ? esp0 : node;
     return disp;
 }
 
@@ -44810,7 +44869,7 @@ static int mw32_i386_seh_raise(uint32_t code, uint32_t flags, uint32_t nargs,
     while (node && node != 0xFFFFFFFFu) {
         uint32_t handler = m32_ld32(node + 4);
         if (!handler) { node = m32_ld32(node); continue; }
-        uint32_t disp = mw32_i386_seh_call_handler(node, er, ctx, handler);
+        uint32_t disp = mw32_i386_seh_call_handler(node, er, ctx, handler, 0);
         if (g_cpu32_exit_req == MW32_SEH_RESUME_CODE) return 1; /* unwound/resumed */
         if (disp == 1) { node = m32_ld32(node); continue; }     /* ContinueSearch */
         if (disp == 0) {                                        /* ContinueExecution */
@@ -44859,7 +44918,7 @@ static int mw32_i386_seh_unwind(uint32_t target_frame, uint32_t target_ip,
         uint32_t handler = m32_ld32(node + 4);
         uint32_t next = m32_ld32(node);
         if (handler) {
-            uint32_t disp = mw32_i386_seh_call_handler(node, er, ctx, handler);
+            uint32_t disp = mw32_i386_seh_call_handler(node, er, ctx, handler, 1);
             if (g_cpu32_exit_req == MW32_SEH_RESUME_CODE) return 1;
             (void)disp; /* ContinueSearch expected during unwind */
         }

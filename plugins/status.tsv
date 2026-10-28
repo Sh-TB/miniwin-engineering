@@ -212,3 +212,10 @@ tcpview64	x64	SPIN_AT_TIMEOUT frames=0	/home/z/my-project/workspace/miniwin-engi
 winrar	x64	EXIT rc=0 frames=0	/home/z/my-project/workspace/miniwin-engineering/evidence/sweep105/winrar/sandbox/Installers/winrar712.exe	 rc=0	frames=0 uniq=0 diff=	SW-1361 SW-1360	sweep105
 winrarinstd	x64	SPIN_AT_TIMEOUT frames=0	/home/z/my-project/workspace/miniwin-engineering/evidence/sweep105/winrarinstd/sandbox/Program Files/WinRAR/WinRAR.exe	 rc=124 rc=124 rc=124	frames=0 uniq=0 diff=	NEW SW-1412	sweep105
 winnc	x86	EXIT rc=86 frames=0	.cache/miniwin/guests/winnc.installer/winnc11.setup.exe	 rc=86 rc=86 rc=86	frames=0 uniq=0 diff=	NEW	sweep105
+winnc	x86	EXIT rc=86 frames=0	.cache/miniwin/guests/winnc.installer/winnc11.setup.exe	 rc=86	frames=0 uniq=0 diff=	NEW	sweep081
+winnc	x86	FRONTIER_SW crash=1 undecoded steps=37452746	.cache/miniwin/guests/winnc.installer/winnc11.setup.exe	 rc=139	frames=0 uniq=0 diff=	NEW	sweep081
+winnc	x86	FRONTIER_SW crash=1 undecoded steps=37452746	.cache/miniwin/guests/winnc.installer/winnc11.setup.exe	 rc=139 rc=139 rc=139	frames=0 uniq=0 diff=	NEW	sweep081
+winnc	x86	PASS_LAUNCH_RENDER rc=1	.cache/miniwin/guests/winnc.installer/winnc11.setup.exe	 rc=1	frames=1 uniq=1 diff=	NEW	sweep081
+winnc	x86	PASS_LAUNCH_RENDER rc=1	.cache/miniwin/guests/winnc.installer/winnc11.setup.exe	 rc=1 rc=1 rc=1	frames=1 uniq=1 diff=	NEW	sweep081
+nppsetup	x86	FRONTIER_SW crash=1 undecoded steps=191602595	/home/z/my-project/workspace/miniwin-engineering/evidence/sweep081/nppsetup/sandbox/Installers/npp.8.9.8.1.Installer.x64.exe	 rc=139 rc=0 rc=139	frames=0 uniq=0 diff=	NEW	sweep081
+nppsetup	x86	FRONTIER_SW crash=1 undecoded steps=191602595	/home/z/my-project/workspace/miniwin-engineering/evidence/sweep081/nppsetup/sandbox/Installers/npp.8.9.8.1.Installer.x64.exe	 rc=124 rc=139 rc=139	frames=0 uniq=0 diff=	NEW	sweep081

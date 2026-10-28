@@ -3645,3 +3645,65 @@ viewer, (2) Windows calculator, (3) a program that does not exist on Linux
       timer-noise/calc 1/notepad+wordpad rc=0), PE32: 7zr 74 EXACT,
       usbdeview 27, npp 2450 (= committed baseline), driverview 794,322
       ADVANCED past stub to real OEP. ZERO regressions.
+
+## SWEEP-106 (2026-10-29) — internet-first frontier round (user rule: search internet+GitHub BEFORE decoding)
+
+- [x] **SW-1495 LANDED** — winnc m32 `LoadResource` arity: missing from the arity
+  table -> every call popped MW32_ARITY_DEFAULT 32 instead of 8 (2 stdcall args)
+  -> ESP +24 after each LoadResource -> GetSetupLdrOffsetTable's final ret
+  (0x4a180f) consumed a stale slot -> jump into stack -> [PE32-FATAL] opcode=0xef.
+  Contract verified against jrsoftware/issrc Projects/SetupLdr.dpr
+  GetSetupLdrOffsetTable (FindResource(MAKEINTRESOURCE(11111),RT_RCDATA) ->
+  SizeofResource must equal 0x2c -> Load -> Lock -> ret). Same class as
+  SW-1363/1365/1388. Resource plane verified: RCDATA id=11111, 44 bytes at file
+  0xcd9b0, bytes match the real offset table.
+- [x] **SW-1495b LANDED** — x87 D9 mod3 reg=6 group (F0 F2XM1, F1 FYL2X, F2 FPTAN,
+  F3 FPATAN, F4 FXTRACT v1, F5 FPREM1 v1, F6 FDECSTP, F7 FINCSTP) was ENTIRELY
+  missing -> Delphi FFREE+FINCSTP fpu-pop idiom after FPU array zero-init
+  (fldz; fstl loop) died rc=86 at 0x406322. Also added reg=5 i==4 FLDLG2 /
+  i==5 FLDLN2. No reshuffle of existing reg=7 mappings (regression discipline).
+- [x] **SW-1496 LANDED** — m32 SEH unwind-phase handler-call ESP restore.
+  RAISE-phase esp=node reset kept (LOAD-BEARING: Delphi's frame handler reads its
+  EstablisherFrame arg at [esp+0x28] and uses it as the RtlUnwind target —
+  measured TargetFrame=node2 correct). UNWIND-phase calls (flags=3) happen at the
+  LIVE level inside the pending RtlUnwind callee frame and RtlUnwind (SW-1392f)
+  returns NORMALLY, so esp must be restored EXACTLY to esp_before. Old esp=node
+  reset left esp 0x44 too high -> edi=[esp+0x28]=0 -> mov ebp,[edi+8] near-null
+  host deref at 37.4M steps (MW32_WATCH 3fefef40:3fefefb0 gave the decisive
+  esp/val evidence chain).
+- [x] **SW-1497 winnc frontier moved** — 551 steps (sweep081 abort) -> 37.4M steps
+  (SEH crash) -> **PASS_LAUNCH_RENDER rc=1 x3 deterministic**: the Inno SetupLdr
+  stub now runs offset-table validation, LZMA1SmallDecompressor SetupHeader
+  decompress, temp-file creation + full embedded-EXE extraction, then hits its
+  OWN honest self-check: "The setup files are corrupted" MessageBoxW (rendered,
+  messagebox_1.bmp) -> clean ExitProcess(1) with VirtualFree of the 0x11000000
+  extraction buffer. OPEN question (decode next): which self-check fails
+  (TestID / encryption-header CRC / OffsetTable CRC / CRCEXE after
+  TransformCallInstructions) — file plane looks healthy (GetFileSize exact,
+  LZMA props byte 0x5d read).
+- [x] **SW-1498 LANDED + 'Program Filesry' CLOSED** — SW-1418 registry seed
+  stored REG_SZ values WITHOUT the terminating null (ProgramFilesDir/
+  ProgramFilesPath 32B = 16 wchars; real RegQueryValueExW returns cbData WITH
+  null = 34). NSIS's unterminated buffer exposed stale bytes -> the famous
+  FindFirstFile('...\Program Filesry\...') path (decoded from the sweep105
+  nppsetup api_trace: two ProgramFilesDir queries size=32 then the bad join).
+  DevicePath was worse: 28B = truncated "%SystemRoot%\i". Fixed to the
+  (strlen+1)*2 pattern (matches SW-1468 identity block).
+- [ ] **SW-1499 OPEN (next wagon)** — nppsetup deterministic NEW frontier exposed
+  BY SW-1498 (the corrected ProgramFilesDir makes NSIS walk the real install
+  path deeper): host SIGSEGV in the m32 interpreter guest 0x40696c `mov bp,[edi]`
+  with EDI=0 (wide-string copy/trim loop walking source to 0) at exactly
+  191,602,595 steps x3; context: CharNextW/CharPrevW/lstrlenW ring (path
+  processing near "Notepad++" 0x427a00 strings). Zero SEH-CALL events (SW-1496
+  not involved). Decode plan: MW32_WATCH on the 0x427xxx string window + the
+  CharPrevW trim loop at 0x406a27.
+- [x] **hxd stays honestly BLOCKED** — mh-nexus.de + www + web.archive.org all
+  unreachable from the sandbox this sweep (curl connect fail, HTTP 000); plugin
+  has NO pinned SHA so no mirror can be verified. No dishonest re-pin. Guard
+  WARN documented (unchanged).
+- [x] **SW-1494 renamer insight recorded** — 0x11000000 = a mw32-heap block base
+  (winnc exit trace: VirtualFree(0x11000000) of the extraction buffer; arena
+  0x10000000..0x3fffffff) -> the TlsGetValue(1)=0x11000000 in the renamer init
+  loop is plausibly the Delphi threadvar BLOCK pointer (allocated at the first
+  heap block), i.e. possibly BENIGN; the reInvalidPtr(204) trigger remains
+  UNRESOLVED — needs the W8 watch round (queued next sweep).
