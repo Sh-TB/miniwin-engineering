@@ -1143,6 +1143,15 @@ static const char* g_known_dlls[] = {
     "bcryptprimitives.dll", /* SWEEP-002: Go runtime.osinit + Rust std */
     "mpr.dll",              /* SWEEP-019 SW-856..860: WNet* (produkey) */
     "winsta.dll",           /* SWEEP-016 SW-801k: Procexp64 version probe via GetProcAddress */
+    "riched20.dll",         /* SW-1474 (SWEEP-096): NSIS unicode installers late-load
+                             * RichEd20/RichEd32 (LOAD_WITH_ALTERED_SEARCH_PATH) purely so
+                             * DllMain registers the RichEdit20W/50W classes — the DLLs
+                             * export nothing public. Before this the loads answered
+                             * ERROR 126 and the NPP installer degraded around its license
+                             * dialog. The RichEdit child class itself already exists in
+                             * the engine (SWEEP-021 SW-906..910, prefix "richedit" 0x8C),
+                             * so class creation needs no new dispatch entries. */
+    "riched32.dll",         /* SW-1474: legacy A-side counterpart, same registration model */
 };
 
 #define MW_PSEUDO_BASE   0xDEA00000u
@@ -13961,8 +13970,16 @@ static uint8_t* g_res_dir_base = NULL; /* section base of the last resource walk
  * FindResource walks hmod's OWN PE header + .rsrc. Accept an hmod only when
  * it looks like a mapped PE (page-aligned + MZ + PE sig); anything else
  * (NULL, the exe base, synthetic handles) falls back to the main image. */
+static uint64_t mw_main_image_base(void); /* SW-1475 fwd: active-world image base (def in the x86 section) */
 static uint8_t* mw_res_pe_base(void* hmod) {
-    uint8_t* pe = g_image_base;
+    /* SW-1475 (SWEEP-096): the default base must come from the ACTIVE world.
+     * For PE32/cpu32 guests g_image_base stays NULL (the x64-native mmap
+     * never ran) while the interpreted image is identity-mapped at
+     * g_image_base32 — so the resource layer answered "no resources" for
+     * EVERY PE32 guest: DialogBoxParamW resolved zero children (NPP
+     * installer: GetDlgItem(1/2) -> NULL -> guest NULL-deref crash at
+     * 0x406740 after 139.9M steps) and LoadStringW always returned 0. */
+    uint8_t* pe = (uint8_t*)(uintptr_t)mw_main_image_base();
     if (hmod && ((uintptr_t)hmod & 0xFFFu) == 0 && *(const uint16_t*)hmod == 0x5A4D) {
         uint8_t* cand = (uint8_t*)hmod;
         uint32_t po = *(const uint32_t*)(cand + 0x3c);
@@ -14041,7 +14058,7 @@ static int w3_res_cmp_name(const uint8_t* dir_base, uint32_t name_off, const cha
 }
 
 static void* w3_res_find(void* hmod, const char* aname, const wchar_t* wname, const char* atype, const wchar_t* wtype) {
-    if (!g_image_base) return NULL;
+    if (!mw_main_image_base()) return NULL; /* SW-1475: active world (x64 native OR x86 interpreter) */
     MW_TRACE("[RES] find hmod=%p a=%s/%s w=%p/%p", hmod, atype ? atype : "?",
              aname ? (aname > (const char*)0xFFFF ? aname : "#num") : "-",
              (const void*)wname, (const void*)wtype);
@@ -22725,7 +22742,7 @@ __attribute__((ms_abi)) int32_t mw_MulDiv(int32_t a, int32_t b, int32_t den) {
 __attribute__((ms_abi)) int mw_LoadStringW(void* hinst, uint32_t id, uint16_t* buf, int cch) {
     if (!buf || cch <= 0) return 0;
     buf[0] = 0;
-    if (!g_image_base) return 0;
+    if (!mw_main_image_base()) return 0; /* SW-1475: PE32 guests carry RT_STRING too */
     void* hrsrc = w3_res_find(hinst, NULL,
                               (const wchar_t*)(uintptr_t)((id >> 4) + 1),
                               NULL, (const wchar_t*)6 /*RT_STRING*/);
@@ -22763,7 +22780,7 @@ __attribute__((ms_abi)) int mw_LoadStringW(void* hinst, uint32_t id, uint16_t* b
 __attribute__((ms_abi)) int mw_LoadStringA(void* hinst, uint32_t id, char* buf, int cch) {
     if (!buf || cch <= 0) return 0;
     buf[0] = 0;
-    if (!g_image_base) return 0;
+    if (!mw_main_image_base()) return 0; /* SW-1475: PE32 guests carry RT_STRING too */
     void* hrsrc = w3_res_find(hinst, NULL,
                               (const wchar_t*)(uintptr_t)((id >> 4) + 1),
                               NULL, (const wchar_t*)6 /*RT_STRING*/);
@@ -25077,7 +25094,7 @@ static const uint8_t* mw_dlg_ex_items(const uint8_t* p, const uint8_t* end,
  * indirect-template path shares one gate. */
 static int mw_dlg_from_resource(void* dlg, void* hinst,
                                 const char* aname, const wchar_t* wname) {
-    if (!g_image_base) return 0;
+    if (!mw_main_image_base()) return 0; /* SW-1475: PE32 dialogs resolve from the x86 image */
     void* hrsrc = w3_res_find(hinst, aname, wname, NULL, (const wchar_t*)5 /*RT_DIALOG*/);
     if (!hrsrc) return 0;
     uint32_t size = mw_SizeofResource(hinst, hrsrc);

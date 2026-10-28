@@ -598,3 +598,20 @@ Stage Summary:
 - Issue #3's headline research finding is now a landed, measured engine fix. The A03 attribution is superseded: guest correct, loader wsprintfW was the bug.
 - Queued (not implemented): riched20/riched32 known-DLL plane; main-window content paint (children round-robin); ReadEventLogA honest empty-log; CW_USEDEFAULT positioning; "Program Filesry" join decode.
 - Evidence: evidence/sweep095/issue_body.md + corpus_parity.tsv; scripts/sweep095_idm_cmdline.{sh,gdb}.
+
+---
+Task ID: SWEEP-096
+Agent: main (autonomous train)
+Task: SW-1474 + SW-1475 — NPP installer chain: riched known-DLL plane + mode-aware resource layer for PE32 guests.
+
+Work Log:
+- SW-1474 (loader.c): riched20.dll/riched32.dll added to g_known_dlls (NSIS loads them purely for class registration; the DLLs export nothing public). NPP installer RichEd20 load now succeeds; the ERROR 126 retry loop is gone.
+- SW-1475 (loader.c) ROOT CAUSE: w3_res_find / mw_LoadStringA / mw_LoadStringW / mw_dlg_from_resource all gated on g_image_base (x64-native base, NULL for PE32/cpu32 guests) — every PE32 guest lived in a resources-free world (FindResource ERROR 1814, LoadString 0, dialogs with zero children). Gates + mw_res_pe_base default now go through the active-world helper mw_main_image_base() (g_image_base32 for the x86 interpreter, identity-mapped). x64 path returns the same base as before (bit-identical by construction).
+- Measured (nppsetup): DLGTEMPLATE 0x69 resolved (EX, cdit=14, size 512); 14/14 children created (BUTTONs 3/1/2, STATICs 1018/1044/1035/1036/1045, ...); GetDlgItem(1/2) -> HWND 0x30002/0x30003 (was NULL).
+- Remaining crash DECODED (was undecoded): guest EIP 0x406740, NSIS exehead string resolver NEGATIVE-index branch (lea eax,[eax*4+4]; sub ecx,eax; mov eax,[ecx]) reading global 0x428a3c (g_stacktop slot) = 0 -> derived-pointer deref. Path identical pre/post SW-1475 (pre-existing). g_stacktop init decode = next train entry point.
+- Gates: G1 PIN OK evidence/master/g1/20261028_054121 (binary sha bb0ac7e17a2e1f41, 4,652,256 B, regression 12/12); corpus_gate sweep096 = 17 rows, rc=0 in 12, crash total 0; battery 10 programs x3 zero unexpected outcomes (procedure note: an interrupted gate window briefly removed minwin_loader via make clean; three plugins recorded runner-level rc=127 and were re-run clean); repo_size_guard GUARD OK.
+
+Stage Summary:
+- PE32 guests regained the resource layer (a class-level fix: FindResource/LoadString/dialog templates for every x86 guest, not just NPP).
+- Queued: NSIS g_stacktop init decode; main-window content paint; "Program Filesry" join; ReadEventLogA; CW_USEDEFAULT positioning.
+- Evidence: evidence/sweep096/issue_body.md + corpus_parity.tsv.
