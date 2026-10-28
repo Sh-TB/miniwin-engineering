@@ -631,3 +631,25 @@ Work Log:
 Stage Summary:
 - psloglist64 fully resolved at the API-contract level; stale-last-error class fixed for the eventlog family.
 - Evidence: evidence/sweep097/issue_body.md + corpus_parity.tsv; scripts/sweep097_nppsetup_probe.gdb.
+
+Task ID: SWEEP-103
+Agent: main (autonomous train)
+Task: honest re-test round (user instruction translated: "continue; also re-test the programs you previously could not run, and see whether progress was made"). No engine change; binary + evidence round.
+
+Work Log:
+- Sandbox-reset recovery: local clone was 104 commits behind (242af84 SWEEP-030 -> 821cc84 SWEEP-102); stale untracked artifacts backed up out of tree; git reset --hard origin/main; gdb/ziglang user-space toolchains re-provisioned as needed.
+- Binary rebuilt deterministically: minwin_loader sha256 9e3e0e09... byte-identical to the SWEEP-102 G1 pin; G1 PIN OK 12/12 (evidence/master/g1/20261028_173735).
+- Serial re-test battery (SWEEP-101/102 wall-clock lesson honored — no parallel runs):
+  * nppsetup x3: rc=0 crash=0, run logs byte-identical (1 unique md5), install_log 75 ops, HKLM\SOFTWARE\Notepad++ registry tree captured — the sweep081 rc=139 crash @ 139,972,856 steps frontier is confirmed FIXED end-to-end on a fresh clone (SW-1477/SW-1478/SW-1485 chain).
+  * notepad2mod x3: rc=0 crash=0 (was ADVANCED_FRONTIER_SW-1373 crash=1 rc=139) — fixed as an untracked side effect of the sweep082..102 engine work; first time recorded.
+  * winrar provision run rc=0 (stages winrarinstd tree + 2702B reg seed).
+  * tcpview64/everything/produkey/winrarinstd: rc=124 x3 each, crash=0 — unchanged, all inside the SWEEP-102 wait-family decode (WaitForMultipleObjects REALTIME-seconds vs guest-ms unit mix; SW-1489 spec parked = next fix train).
+  * winnc/renamer: honest BLOCKED_DOWNLOAD — historical pinned bytes no longer served (winnc.com now ships a different 1,912,832 B build vs pinned 12,964,000 B; den4b flow JS-gated; archive.org unreachable). No dishonest re-pin.
+- manifest.tsv: row 52 notepad2mod.portable UNVERIFIED_URL -> exact URL re-verified by fresh download + byte-for-byte SHA match (c893ce4a..., 814,355 B); row 58 mini.flood re-pinned b406517a... (SEED rebuilt from tracked tests/games/miniwin_flood.c via ziglang 0.17.0 after sandbox reset; 223,744 B byte-count matches the SWEEP-093 pin; zig-timestamp non-reproducibility documented).
+- corpus_gate.sh sweep103: 17 rows, rc=0 in 12, crash total 0 — canonical shape restored.
+- repo_size_guard: carried-over violation FIXED — evidence/sweep099/nppsetup/probe_sandbox/probe_install_log.tsv was still tracked since SWEEP-099 023e897 (the SWEEP-100 "remediation carried" note never actually landed in git); git rm --cached applied, file stays on disk; guard now GUARD OK (2 pre-existing documented WARNs unchanged).
+
+Stage Summary:
+- Progress quantified: 2 of 4 crash/exit frontiers from the sweep081 era now run rc=0 deterministically; 4 rc=124 frontiers unchanged and converge on one parked root cause (SW-1489 time plane); 2 guests honestly blocked on stale sources.
+- Queued next train: SW-1489 time-plane implementation (all clock consumers audited TOGETHER per the SWEEP-102 spec) targeting the rc=124 quartet; winnc/renamer exact-URL re-pin hunt; "Program Filesry" join decode (still untouched upstream since SWEEP-095).
+- Evidence: evidence/sweep103/summary.md + corpus_parity.tsv; plugins/status.tsv rows; evidence/master/g1/20261028_173735. No force-push.
