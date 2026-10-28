@@ -42776,7 +42776,7 @@ static inline uint8_t  m32_ld8 (uint32_t va) { return m32_host_hit(va) ? 0 : *(u
 static inline uint16_t m32_ld16(uint32_t va) { if (m32_host_hit(va)) return 0; uint16_t v; memcpy(&v, m32p(va), 2); MW32W_LOG("R16", va, v); return v; }
 static inline uint32_t m32_ld32(uint32_t va) { if (m32_host_hit(va)) return 0; uint32_t v; memcpy(&v, m32p(va), 4); MW32W_LOG("R32", va, v); return v; }
 static inline uint64_t m32_ld64(uint32_t va) { if (m32_host_hit(va)) return 0; uint64_t v; memcpy(&v, m32p(va), 8); return v; }
-static inline void m32_st8 (uint32_t va, uint8_t v)  { if (m32_host_hit(va)) return; *(uint8_t*)m32p(va) = v; }
+static inline void m32_st8 (uint32_t va, uint8_t v)  { if (m32_host_hit(va)) return; MW32W_LOG("W8", va, (uint32_t)v); *(uint8_t*)m32p(va) = v; } /* SW-1494: byte-store watch (renamer .bss 0xCC decode) */
 static inline void m32_st16(uint32_t va, uint16_t v) { if (m32_host_hit(va)) return; MW32W_LOG("W16", va, v); memcpy(m32p(va), &v, 2); }
 static inline void m32_st32(uint32_t va, uint32_t v) { if (m32_host_hit(va)) return; MW32W_LOG("W32", va, v); memcpy(m32p(va), &v, 4); }
 static inline void m32_st64(uint32_t va, uint64_t v) { if (m32_host_hit(va)) return; memcpy(m32p(va), &v, 8); }

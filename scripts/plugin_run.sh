@@ -277,7 +277,12 @@ run_plugin() {
             MINWIN_WINTEMP=1 \
             timeout "$tmo" env $penv "$REPO/minwin_loader" "$exe_path" $args ) > "$out" 2>&1
         else
-            if [ -n "$PORTABLE_CWD" ]; then
+            # SW-1493 (SWEEP-105): ${PORTABLE_CWD:-} guard — this branch only
+            # fires for non-portable AND non-sandbox plugins (e.g. winnc,
+            # unpack=none), where line 206 never ran and the variable is
+            # undefined; under `set -u` the bare reference killed the whole
+            # battery (SWEEP-105 winnc: "PORTABLE_CWD: unbound variable").
+            if [ -n "${PORTABLE_CWD:-}" ]; then
                 ( cd "$PORTABLE_CWD" && \
                 MW_GUI_EVENTS=1 MW_GUI_EVENTS_BUDGET=220 \
                 MW_GUI_KEYS="$keys" MW_GUI_KEY_EVERY=7 MW_GUI_KEYUP=1 \

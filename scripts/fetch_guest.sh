@@ -147,6 +147,31 @@ if [ $rc -ne 0 ] || [ ! -s "$TMP" ]; then
 fi
 have=$(sha256sum "$TMP" | cut -d' ' -f1)
 if [ "$have" != "$want" ]; then
+    # Tokenized-download-page retry (SWEEP-105): some publishers (den4b)
+    # serve an HTML interstitial whose body carries tokenized link(s) of
+    # the form <path>?key=<hex>. One deterministic two-step fetch is
+    # allowed: extract the tokenized URL(s) from the interstitial and
+    # retry each ONCE. The SHA-256 gate below is unchanged — the retry
+    # only automates the click a human would perform; bytes stay pinned.
+    if [ -s "$TMP" ] && head -c 200 "$TMP" | grep -qi '<!DOCTYPE html\|<html'; then
+        base=$(printf '%s' "$url" | grep -oE '^https?://[^/]+')
+        for rel in $(tr -d '\r' < "$TMP" | grep -oE 'href="[^"]*\?key=[a-f0-9]{16,}"' \
+                     | sed -E 's/^href="//; s/"$//' | sort -u | head -4); do
+            case "$rel" in
+                http*)  cand="$rel" ;;
+                /*)     cand="$base$rel" ;;
+                *)      continue ;;
+            esac
+            say "  HTML interstitial detected; tokenized retry (one shot): ${cand%%\?*}"
+            curl -fSL --retry 3 --retry-delay 2 --connect-timeout 20 --max-time 900 \
+                 -o "$TMP" "$cand" 2>>"$GDIR/curl.err" || { rm -f "$TMP"; continue; }
+            [ -s "$TMP" ] || continue
+            have=$(sha256sum "$TMP" | cut -d' ' -f1)
+            [ "$have" = "$want" ] && break
+        done
+    fi
+fi
+if [ "$have" != "$want" ]; then
     say "  observed sha256=$have"
     rm -f "$TMP"
     fail "$guest" "SHA-256 MISMATCH: refusing to stage or execute (expected $want)" 3
