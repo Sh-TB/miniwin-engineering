@@ -11327,21 +11327,55 @@ __attribute__((ms_abi)) uint32_t mw_GetTempPathW(uint32_t cap, wchar_t* out) {
     ((uint16_t*)out)[n] = 0;
     return (uint32_t)n;
 }
+/* SW-1478 (SWEEP-099): GetTempFileNameW used to return the POSIX-MAPPED full
+ * path to the guest (utf8_to_utf16 of the fopen target — probe-named writer:
+ * w3_utf8_to_utf16le dst=0x42a000 straight out of mw_GetTempFileNameW, slot
+ * 100). NSIS 3's Ui.c takes that string as the $PLUGINSDIR basis, so every
+ * later guest composition carried "/home/..." with forward slashes; NSIS
+ * validate_filename then ate the separators and the LoadLibrary/CreateFile
+ * retry loop dead-ended in the Error-opening-file box (SWEEP-098 frontier).
+ * The contract is now the real one:
+ *   - the FILE is created at the mapped POSIX location (sandbox ground truth);
+ *   - the GUEST receives the DOS form <path><prefix><hex>.tmp with NO added
+ *     separator (lpPathName arrives with its own trailing backslash);
+ *   - unique==0 walks 1..0xFFFF until fopen succeeds (MSDN loop), unique!=0
+ *     uses the low 16 bits as-is; returns the unique number, 0 on failure. */
 __attribute__((ms_abi)) uint32_t mw_GetTempFileNameW(const wchar_t* path, const wchar_t* prefix, uint32_t uniq, wchar_t* out) {
-    char p8[2048], u8[64];
-    if (path) w3_w16_to_utf8z((const uint16_t*)path, p8, sizeof(p8)); else snprintf(p8, sizeof(p8), "%s", "/tmp");
-w3_normalize_path(p8);
+    char p8[2048], u8[64], raw[2048];
+    if (path) w3_w16_to_utf8z((const uint16_t*)path, p8, sizeof(p8)); else snprintf(p8, sizeof(p8), "%s", ".");
+    snprintf(raw, sizeof(raw), "%s", p8); /* SW-1478: DOS form basis for the guest */
+    w3_normalize_path(p8);
     if (prefix) w3_w16_to_utf8z((const uint16_t*)prefix, u8, sizeof(u8)); else u8[0] = '\0';
-w3_normalize_path(u8);
+    size_t pl = strlen(p8);
+    if (pl && p8[pl - 1] == '/') p8[--pl] = 0;
     char full[4096];
-    snprintf(full, sizeof(full), "%s/%s%04x.tmp", p8, u8, (uint32_t)(time(NULL) & 0xffff) + uniq);
-    FILE* f = fopen(full, "wb");
-    if (f) fclose(f);
-    if (out) {
-        size_t n = utf8_to_utf16(full, out, 4095);
+    uint32_t t = 0;
+    uint32_t first = uniq ? (uniq & 0xFFFFu) : 1u;
+    uint32_t last = uniq ? first : 0xFFFFu;
+    for (t = first; t <= last; t++) {
+        snprintf(full, sizeof(full), "%s/%s%04X.tmp", p8, u8, (unsigned)t);
+        FILE* f = fopen(full, "wb");
+        if (f) { fclose(f); break; }
+        if (uniq) { t = 0; break; } /* unique!=0: single shot, no scan */
+    }
+    if (t > last) t = 0;
+    if (t && out) {
+        char dos[2048];
+        /* Real GetTempFileNameW (wine path.c) ADDS the separator when the
+         * caller's lpPathName lacks the trailing backslash — NSIS passes
+         * "C:\Windows\Temp" bare, and without this the guest composes
+         * "Tempnsf0001.tmp" (separator eaten at birth). */
+        size_t rl = strlen(raw);
+        if (rl && raw[rl - 1] != '\\') {
+            snprintf(dos, sizeof(dos), "%s\\%s%04X.tmp", raw, u8, (unsigned)t);
+        } else {
+            snprintf(dos, sizeof(dos), "%s%s%04X.tmp", raw, u8, (unsigned)t);
+        }
+        /* Windows requires a MAX_PATH (260) caller buffer — cap the write */
+        size_t n = utf8_to_utf16(dos, out, 260);
         ((uint16_t*)out)[n] = 0;
     }
-    return 1;
+    return t;
 }
 __attribute__((ms_abi)) int mw_GetDiskFreeSpaceExW(const wchar_t* dir, void* free_caller, void* total, void* free_total) {
     char d8[2048];
@@ -24579,6 +24613,15 @@ __attribute__((ms_abi)) int mw_CloseServiceHandle(void* h) {
     return 1;
 }
 
+/* ---- SW-1480 (SWEEP-099): shell32!#680 IsUserAnAdmin (NSIS 3 util.c
+ * MGA_FUNCS[6] = {"SHELL32", (CHAR*)680} — observed zero-arg call at
+ * exehead 0x405cbf: push 6; call myGetProcAddress; call eax; test eax,eax.
+ * Model: the SW-1405 installer world runs as the elevated user (HKLM writes
+ * already succeed), so TRUE is the world-consistent answer. */
+__attribute__((ms_abi)) int mw_IsUserAnAdmin(void) {
+    MW_TRACE("IsUserAnAdmin() -> TRUE (elevated world)");
+    return 1;
+}
 /* ---- shell32: SHGetFolderPathW (honest path set) + tray ---- */
 __attribute__((ms_abi)) uint32_t mw_SHGetFolderPathW(void* hwnd, int csidl, void* token,
         uint32_t flags, uint16_t* path) {
@@ -36856,6 +36899,7 @@ static ImportEntry g_import_table[] = {
     ENTRY("SHELL32.DLL", "CommandLineToArgvW",                   mw_CommandLineToArgvW),
     ENTRY("SHELL32.DLL", "SetCurrentProcessExplicitAppUserModelID", mw_SetCurrentProcessExplicitAppUserModelID), /* SWEEP-014 r3: WinMergeU */
     ENTRY("SHELL32.DLL", "SHGetFolderPathW",                     mw_SHGetFolderPathW), /* SWEEP-013 */
+    ENTRY("SHELL32.DLL", "IsUserAnAdmin",                        mw_IsUserAnAdmin), /* SW-1480: shell32!680 */
     /* SWEEP-021 SW-901..905: shell deepening */
     ENTRY("SHELL32.DLL", "SHGetFolderPathA",                     mw_SHGetFolderPathA),
     ENTRY("SHELL32.DLL", "SHGetKnownFolderPath",                 mw_SHGetKnownFolderPath),
@@ -40422,6 +40466,14 @@ static int load_pe(const char* filepath) {
                     { "SHELL32", 155, "ILFree" },
                     { "SHELL32", 165, "SHCreateDirectory" },
                     { "SHELL32", 701, "CDefFolderMenu_Create2" },
+                    /* SW-1480 (SWEEP-099): nppsetup NSIS 3.12 resolves
+                     * SHGetFolderPathW by RAW ORDINAL 680 ONLY
+                     * (GetProcAddress(ordinal=680) — wine shell32.spec:
+                     * 679=SHGetFolderPathA, 680=SHGetFolderPathW, the
+                     * Win2K+ numbering). Unresolved->0 made the exehead
+                     * call through a null pointer (last_eip=0, honest
+                     * rc=0 exit before the language dialog). */
+                    { "SHELL32", 680, "SHGetFolderPathW" },
                     /* SW-1372 (SWEEP-081): notepad2-mod SHELL32.180 —
                      * wine shell32.spec: 179=SHGetDataFromIDListA,
                      * 180=SHGetDataFromIDListW (same exe imports the W name
@@ -42198,6 +42250,7 @@ static const struct { const char* n; uint32_t b; } g_api32_arity[] = {
     { "SHGetDesktopFolder", 4 },
     { "SHGetFileInfoA", 20 },
     { "SHGetFileInfoW", 20 },
+    { "IsUserAnAdmin", 0 }, /* SW-1480: 0-arg BOOL (NSIS MGA_6) */
     { "SHGetFolderPathW", 20 },
     { "SHGetMalloc", 4 },
     { "SHGetPathFromIDListA", 8 },
@@ -43090,10 +43143,49 @@ static uint32_t mw32_api_gate(uint32_t slot_index) {
                     size_t nd = sizeof(g_known_dlls) / sizeof(g_known_dlls[0]);
                     if (pidx < nd) dname = g_known_dlls[pidx];
                 }
-                char ob[64];
-                if (dname) snprintf(ob, sizeof(ob), "ordinal:%u@%s", (uint32_t)nmp, dname);
-                else snprintf(ob, sizeof(ob), "ordinal:%u@%08x", (uint32_t)nmp, (uint32_t)a[0]);
-                ret = mw32_unresolved_thunk32(ob);
+                /* SW-1480 (SWEEP-099): raw-ordinal late-binds against model
+                 * DLLs consult the wine-spec ordinal->name map BEFORE the
+                 * honest unresolved thunk. Driver: nppsetup (NSIS 3.12 Ui.c)
+                 * resolves SHGetFolderPathW via GetProcAddress(shell32,
+                 * (LPCSTR)680) ONLY — the Win2K+ numbering (679=A, 680=W,
+                 * wine shell32.spec). The plain unresolved thunk made the
+                 * exehead null-call (last_eip=0, honest rc=0 exit, no
+                 * language dialog). NOTE: the fallback below MUST overwrite
+                 * ret unconditionally — ret holds the RAW HOST pointer
+                 * (&mw_winapi_optional_stub) here, and a guest-callable
+                 * answer is mandatory (SW-1354d: the guest executes the
+                 * answer as code; a raw host address = interpreter decodes
+                 * loader text, SW-1281 fatal). */
+                uint32_t mapped_thunk = 0;
+                if (dname) {
+                    static const struct { uint16_t ord; const char* dll; const char* name; } ordmap32[] = {
+                        /* SW-1480: NSIS 3 util.c MGA_FUNCS authority —
+                         * SHELL32!680 = IsUserAnAdmin (0 args, BOOL),
+                         * SHLWAPI!437 = IsOS. NOT SHGetFolderPathW: the
+                         * 679/680=SHGetFolderPathA/W numbering is the
+                         * shfolder-forwarding era, gone in modern shell32. */
+                        { 680, "shell32.dll", "IsUserAnAdmin" },
+                        { 437, "shlwapi.dll", "IsOS" },
+                    };
+                    for (size_t oi = 0; oi < sizeof(ordmap32) / sizeof(ordmap32[0]); oi++) {
+                        if ((uint32_t)ordmap32[oi].ord == (uint32_t)nmp &&
+                            strcasecmp(dname, ordmap32[oi].dll) == 0) {
+                            mapped_thunk = mw32_api_thunk(dname, ordmap32[oi].name);
+                            if (mapped_thunk) {
+                                MW_TRACE("  GetProcAddress ordinal %u@%s -> %s (SW-1480)",
+                                         (uint32_t)nmp, dname, ordmap32[oi].name);
+                                ret = mapped_thunk;
+                            }
+                            break;
+                        }
+                    }
+                }
+                if (!mapped_thunk) {
+                    char ob[64];
+                    if (dname) snprintf(ob, sizeof(ob), "ordinal:%u@%s", (uint32_t)nmp, dname);
+                    else snprintf(ob, sizeof(ob), "ordinal:%u@%08x", (uint32_t)nmp, (uint32_t)a[0]);
+                    ret = mw32_unresolved_thunk32(ob);
+                }
             }
             if (!ret) ret = mw32_thunk_for_host_fn((void*)(uintptr_t)r);
         }
@@ -44972,6 +45064,12 @@ static int load_pe32(const char* filepath) {
                         { "ws2_32.dll", 16, "closesocket" }, { "ws2_32.dll", 9, "htons" },
                         { "ws2_32.dll", 8, "htonl" }, { "ws2_32.dll", 14, "ntohl" },
                         { "ws2_32.dll", 18, "select" },
+                        /* SW-1480 (SWEEP-099): NSIS 3 util.c MGA_FUNCS —
+                         * SHELL32!680 = IsUserAnAdmin (0-arg BOOL),
+                         * SHLWAPI!437 = IsOS. Without these the IAT got the
+                         * shared "#ordinal" stub -> 0 (last_eip=0 frontier). */
+                        { "shell32.dll", 680, "IsUserAnAdmin" },
+                        { "shlwapi.dll", 437, "IsOS" },
                     };
                     char dlow[64]; size_t k = 0;
                     for (; dn[k] && k < sizeof(dlow) - 1; k++)
