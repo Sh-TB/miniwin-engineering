@@ -1,0 +1,11 @@
+# WaitForMultipleObjects finite-wait unit bug (SW-1489 spec input):
+# now.tv_sec (REALTIME seconds) compared against deadline/1000 (guest ms)
+# -> every finite wait returns WAIT_TIMEOUT instantly; INFINITE waits
+# poll forever (10ms slices) — the hang shape behind the SW-1487 probe
+# divergence (process: 1 thread, state S, utime frozen, hrtimer_nanosleep).
+        clock_gettime(CLOCK_REALTIME, &now);
+        if (deadline != 0xFFFFFFFFu) {
+            if (now.tv_sec > (time_t)(deadline / 1000)) return 0x102;
+        }
+        nanosleep(&ts, NULL);
+        (void)done;

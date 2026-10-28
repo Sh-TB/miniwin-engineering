@@ -44689,9 +44689,10 @@ static void entry_trace_check(void) {
         if (t_cpu32.eip != g_entry_trace[i]) continue;
         unsigned h = ++g_entry_trace_hits[i];
         if (h <= 6 || (h & 0xFFFFF) == 0)
-            fprintf(stderr, "[ENTRY] va=%08x hit=%u prev=%08x esp=%08x [esp]=%08x eax=%08x ecx=%08x edx=%08x ebx=%08x ebp=%08x esi=%08x edi=%08x\n",
+            fprintf(stderr, "[ENTRY] va=%08x hit=%u prev=%08x esp=%08x [esp]=%08x arg1=%08x arg2=%08x eax=%08x ecx=%08x edx=%08x ebx=%08x ebp=%08x esi=%08x edi=%08x\n",
                     t_cpu32.eip, h, g_eip_hist[(g_eip_hist_n - 1) & 15], t_cpu32.r[4],
-                    m32_ld32(t_cpu32.r[4]), t_cpu32.r[0], t_cpu32.r[1], t_cpu32.r[2],
+                    m32_ld32(t_cpu32.r[4]), m32_ld32(t_cpu32.r[4] + 4), m32_ld32(t_cpu32.r[4] + 8),
+                    t_cpu32.r[0], t_cpu32.r[1], t_cpu32.r[2],
                     t_cpu32.r[3], t_cpu32.r[5], t_cpu32.r[6], t_cpu32.r[7]);
     }
 }
