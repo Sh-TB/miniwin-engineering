@@ -15,4 +15,4 @@ known	NEW
 note	NSIS self-extracting installer (file(1) confirmed); runs INSIDE SW-1404 sandbox: install_log.tsv + registry_tree + snapshot capture every wizard mutation
 sandbox	yes
 guest	npp.installer.x64
-env	MINWIN_OSVER=6.1
+env	MINWIN_OSVER=6.1 MINWIN_PUMP_YIELD_US=0

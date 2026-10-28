@@ -180,3 +180,4 @@ nppsetup	x86	PASS_LAUNCH_RENDER rc=139	/home/z/my-project/workspace/miniwin-engi
 nppsetup	x86	FRONTIER_SW crash=1 undecoded steps=192740428	/home/z/my-project/workspace/miniwin-engineering/evidence/sweep099/nppsetup/sandbox/Installers/npp.8.9.8.1.Installer.x64.exe	 rc=139	frames=0 uniq=0 diff=	NEW	sweep099
 nppsetup	x86	FRONTIER_SW crash=1 undecoded steps=192740428	/home/z/my-project/workspace/miniwin-engineering/evidence/sweep099/nppsetup/sandbox/Installers/npp.8.9.8.1.Installer.x64.exe	 rc=139 rc=139 rc=139	frames=0 uniq=0 diff=	NEW	sweep099
 nppsetup	x86	EXIT rc=0 frames=0	/home/z/my-project/workspace/miniwin-engineering/evidence/sweep100/nppsetup/sandbox/Installers/npp.8.9.8.1.Installer.x64.exe	 rc=124 rc=0 rc=0	frames=0 uniq=0 diff=	NEW	sweep100
+nppsetup	x86	EXIT rc=0 frames=0	/home/z/my-project/workspace/miniwin-engineering/evidence/sweep100/nppsetup/sandbox/Installers/npp.8.9.8.1.Installer.x64.exe	 rc=0 rc=0 rc=0	frames=0 uniq=0 diff=	NEW	sweep100
