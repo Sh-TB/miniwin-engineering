@@ -20655,17 +20655,21 @@ __attribute__((ms_abi)) int mw_wsprintfA(char* buf, const char* fmt, ...) {
     __builtin_ms_va_end(ap);
     return n;
 }
+/* SW-1473 (SWEEP-095): wsprintfW used to convert the WIDE format to UTF-8
+ * and reuse the ANSI engine, whose %s reads a narrow char* — a wide argument
+ * was consumed as (char*) and stopped at the first 0x00 high byte, so every
+ * %s produced exactly 1 character (measured: IDM 6.42 build2 unpacker
+ * launch L"\"%s%s\" -d \"%s\"%s" produced "\"CI\" -d \"C\"" instead of the
+ * real quoted paths). MS/Wine contract (dlls/user32/wsprintf.c
+ * WPRINTF_ParseFormatW): in a W format %s = wide arg, %S and %hs = narrow.
+ * Fixed by routing through the native wide engine mw_vfmt_w16 (declared
+ * above); output stays UTF-16 end to end, cap 1024 chars per MSDN. */
 __attribute__((ms_abi)) int mw_wsprintfW(uint16_t* buf, const uint16_t* fmt, ...) {
     if (!buf) return 0;
-    char f8[512], out[1024];
-    if (fmt) w3_w16_to_utf8z(fmt, f8, sizeof(f8)); else f8[0] = 0;
     __builtin_ms_va_list ap;
     __builtin_ms_va_start(ap, fmt);
-    int n = mw_vfmt_a(out, sizeof(out), f8, ap);
+    int n = mw_vfmt_w16(buf, 1024, fmt, ap);
     __builtin_ms_va_end(ap);
-    int i = 0;
-    for (; i < n && i < 1023; i++) buf[i] = (uint16_t)(uint8_t)out[i];
-    buf[i] = 0;
     return n;
 }
 static int mw_safe_strlen_a(const char* s) {
@@ -30325,11 +30329,22 @@ static int mw_vfmt_w16(uint16_t* dst, size_t max, const uint16_t* fmt,
         if (fmt[i] != L'%') { dst[o++] = fmt[i++]; continue; }
         i++;
         if (fmt[i] == L'%') { dst[o++] = L'%'; i++; continue; }
-        int width = 0, zero = 0, lflag = 0;
+        /* SW-1473 (SWEEP-095): width/pad parse now also honors the string
+         * size modifiers the MS wide-printf contract defines:
+         *   %ls/%ws      -> explicit WIDE string arg
+         *   %hs (and %hS)-> explicit NARROW string arg
+         * Previously 'h' was consumed and silently ignored, so %hs in a
+         * wide format read a wide arg (wrong half of the varargs) and %ws
+         * fell through to the honest-literal path printing 'w'. */
+        int width = 0, zero = 0, lflag = 0, hflag = 0;
         if (fmt[i] == L'0') { zero = 1; i++; }
         while (fmt[i] >= L'0' && fmt[i] <= L'9') { width = width * 10 + (fmt[i] - L'0'); i++; }
         if (fmt[i] == L'l') { lflag = 1; i++; }
-        else if (fmt[i] == L'h') { i++; } /* short: ignore for values */
+        else if (fmt[i] == L'w' &&
+                 (fmt[i + 1] == L's' || fmt[i + 1] == L'S' || fmt[i + 1] == L'c')) {
+            lflag = 1; i++; /* %ws family only — keeps plain '%w' honest-literal */
+        }
+        else if (fmt[i] == L'h') { hflag = 1; i++; }
         char num[32];
         const char* s8 = NULL;
         const uint16_t* s16 = NULL;
@@ -30357,8 +30372,14 @@ static int mw_vfmt_w16(uint16_t* dst, size_t max, const uint16_t* fmt,
             unsigned c = __builtin_va_arg(ap, unsigned int);
             dst[o++] = (uint16_t)c; i++;
             continue; }
-        case L'S': str_wide = 0; /* fallthrough */
-        case L's': is_str = 1; break;
+        /* SW-1473: W-format string-arg contract (MS wsprintf/printf-w family,
+         * cf. Wine dlls/user32/wsprintf.c WPRINTF_ParseFormatW):
+         *   %s  -> WIDE arg (the MSVCRT wide-printf rule)
+         *   %S  -> NARROW arg (case-inverted in a W format)
+         *   %hs -> NARROW (explicit h wins over the %s default)
+         *   %ls/%ws -> WIDE (explicit l/w wins over the %S default) */
+        case L'S': is_str = 1; str_wide = lflag ? 1 : 0; break;
+        case L's': is_str = 1; str_wide = hflag ? 0 : 1; break;
         default:
             dst[o++] = fmt[i++]; /* unknown conv: keep honest */
             continue;
@@ -30517,17 +30538,12 @@ __attribute__((ms_abi)) void* mw_WindowFromDC(void* hdc) {
     (void)hdc;
     return g_main_hwnd ? g_main_hwnd : (void*)(uintptr_t)MW_GUI_HWND;
 }
+/* SW-1473 (SWEEP-095): same contract violation as wsprintfW (wide %s read
+ * as narrow char*); wvsprintfW now uses the native wide engine as well. */
 __attribute__((ms_abi)) int mw_wvsprintfW(uint16_t* buf, const uint16_t* fmt, void* ap_v) {
     if (!buf) return 0;
     __builtin_ms_va_list ap = (__builtin_ms_va_list)ap_v;
-    char f8[512];
-    if (fmt) w3_w16_to_utf8z(fmt, f8, sizeof(f8)); else f8[0] = 0;
-    char out[1024];
-    int n = mw_vfmt_a(out, sizeof(out), f8, ap);
-    int i = 0;
-    for (; i < n && i < 1023; i++) buf[i] = (uint16_t)(unsigned char)out[i];
-    buf[i] = 0;
-    return n;
+    return mw_vfmt_w16(buf, 1024, fmt, ap);
 }
 __attribute__((ms_abi)) uint32_t mw_GetProcessVersion(uint32_t pid) {
     (void)pid;
@@ -34684,18 +34700,21 @@ __attribute__((ms_abi)) void* mw_ILFindLastID(void* pidl) {
  * tail + SHLWAPI.231 ordinal. Honest semantics per the real contracts.
  * ============================================================ */
 /* msvcrt — _vsnwprintf: real contract = truncate to cnt, NO terminator,
- * return chars written (or -1). Reuses the engine UTF-16/UTF-8 vfmt. */
+ * return chars written (or -1). */
+/* SW-1473 (SWEEP-095): _vsnwprintf is a WIDE printf family member — its %s
+ * means a wide arg (MSVCRT wide-printf rule). Previously routed through the
+ * ANSI engine with a UTF-8 round trip, truncating every %s at the first
+ * high 0x00 byte. Now formats natively in UTF-16; real contract kept:
+ * truncate to cnt, NO terminator, return chars written. */
 __attribute__((ms_abi)) int mw__vsnwprintf(uint16_t* buf, size_t cnt,
         const uint16_t* fmt, void* ap_v) {
     if (!buf || !fmt) return -1;
     __builtin_ms_va_list ap = (__builtin_ms_va_list)ap_v;
-    char f8[512];
-    w3_w16_to_utf8z(fmt, f8, sizeof(f8));
-    char out[2048];
-    int n = mw_vfmt_a(out, sizeof(out), f8, ap);
+    uint16_t out[2048];
+    int n = mw_vfmt_w16(out, sizeof(out) / sizeof(out[0]), fmt, ap);
     if (n < 0) return -1;
     size_t w = (size_t)n < cnt ? (size_t)n : cnt;
-    for (size_t i = 0; i < w; i++) buf[i] = (uint16_t)(unsigned char)out[i];
+    memcpy(buf, out, w * sizeof(uint16_t)); /* real contract: NO terminator */
     return (int)w;
 }
 /* msvcrt — _resetstkoflw: restores the guard page after alloca recovery.
@@ -35208,16 +35227,21 @@ __attribute__((ms_abi)) wchar_t* mw__getdcwd(int drive, wchar_t* buf, int len) {
     memcpy(buf, tmp, n * sizeof(wchar_t));
     return buf;
 }
-/* msvcrt — wprintf: the engine's UTF-16 vfmt routed to guest stdout. */
+/* msvcrt — wprintf: SW-1473 (SWEEP-095) formats natively in UTF-16 (%s =
+ * wide arg) and converts the finished wide string to UTF-8 for host stdout.
+ * The old path ran the wide format through the ANSI engine (1-char %s bug
+ * shared with wsprintfW). */
 __attribute__((ms_abi)) int mw_wprintf(const uint16_t* fmt, ...) {
     __builtin_ms_va_list ap;
     __builtin_ms_va_start(ap, fmt);
-    char f8[512];
-    if (fmt) w3_w16_to_utf8z(fmt, f8, sizeof(f8)); else f8[0] = 0;
-    char out[2048];
-    int n = mw_vfmt_a(out, sizeof(out), f8, ap);
+    uint16_t out[2048];
+    int n = mw_vfmt_w16(out, sizeof(out) / sizeof(out[0]), fmt, ap);
     __builtin_ms_va_end(ap);
-    if (n > 0) fputs(out, stdout);
+    if (n > 0) {
+        char u8[4096];
+        w3_w16_to_utf8z(out, u8, sizeof(u8));
+        fputs(u8, stdout);
+    }
     return n;
 }
 /* msvcrt — swscanf: faithful directive subset (%c %C %s %S %d %i %u %x %X

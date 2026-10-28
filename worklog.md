@@ -561,7 +561,7 @@ Stage Summary:
 ---
 Task ID: SWEEP-094
 Agent: main (autonomous train)
-Task: Run WinRAR, Notepad++ and several popular Windows programs through MiniWin (user: "ادامه بده برنامه رو اجرا بکن winrara notpadd++ و چند برنامه محبوب ویندوز رو"), all-English repo content.
+Task: Run WinRAR, Notepad++ and several popular Windows programs through MiniWin (user instruction translated: "continue; run WinRAR, Notepad++ and several popular Windows programs"), all-English repo content.
 
 Work Log:
 - SW-1462 (scripts/plugin_run.sh): derived installed payloads (winrarinstd) resolved in-tree FIRST — the source-only cleanup removed artifacts/sweep086, which used to satisfy the legacy existence check before the in-tree override ran. Install->run chain restored.
@@ -581,3 +581,20 @@ Stage Summary:
 - Crash class eliminated for the SW-1466 family (32-bit large allocations); Notepad++ portable = clean rc=0 x3 with langs.xml loaded; installed WinRAR = main window up for the first time; NPP installer = real dialogs rendered + version gate passed.
 - Evidence: evidence/sweep094/ (gate tsv, 2 dialog PNGs, compact run logs), evidence/master/g1/20261027_201546/.
 - Next: SW-1469 unicode-NSIS garbled system-DLL names; main-window content paint for NPP/WinRAR (children round-robin); CW_USEDEFAULT positioning; ReadEventLogA honest empty-log contract.
+
+---
+Task ID: SWEEP-095
+Agent: main (autonomous train)
+Task: SW-1473 — fix the wsprintfW wide-%s contract violation identified by the closed TOOL-EVAL research Issue #3 (user instruction translated: "continue, several big trains").
+
+Work Log:
+- SW-1473 (src/loader/loader.c): wsprintfW / wvsprintfW / _vsnwprintf / wprintf used to convert the WIDE format to UTF-8 and call the ANSI engine (mw_vfmt_a), whose %s reads a narrow char* — every %s produced exactly 1 character. All four now route through the native wide engine mw_vfmt_w16; %hs now forces a narrow arg (h modifier was silently ignored), %ws routes wide. _vsnwprintf keeps truncate-to-cnt/NO-terminator/return-written; wprintf converts the finished wide string to UTF-8 for host stdout. Contract per MS docs + Wine dlls/user32/wsprintf.c WPRINTF_ParseFormatW.
+- Direct evidence (gdb probe, full battery env, scripts/sweep095_idm_cmdline.{sh,gdb}): IDM 6.42b2 unpacker CreateProcessW cmd BEFORE = "\"CI\" -d \"C\""; AFTER = "\"C:\Windows\Temp\IDM_Setup_Temp\IDM1.tmp\" -d \"C:\Windows\Temp\IDM_Setup_Temp\"". Guest was always correct; the loader's wsprintfW broke the string. CreateProcessW capability refusal unchanged (engine decision).
+- Secondary effect (nppsetup): the SW-1469 0x3f-garbled System32 DLL names are GONE — 23/23 clean loads (UXTHEME/USERENV/SHFOLDER/SETUPAPI/RichEd32/RichEd20/PROPSYS/OLEACC...); the mangling was downstream damage of the same %s bug (retry loop re-fed truncated buffers). Run now reaches DialogBoxParamW + WM_INITDIALOG; remaining frontier = unresolved RichEd20/RichEd32 (honest ERROR_MOD_NOT_FOUND) + undecoded crash at 139,972,897 steps. New observation recorded: destination path joins as "Program Filesry" (missing separator).
+- mini.flood rebuilt from tracked source after sandbox reset (ziglang 0.17.0, tests/games/miniwin_flood.c unchanged); size matches the SWEEP-093 pin byte-count exactly (223,744 B); manifest re-pinned (a0102b83..., zig timestamps documented); gate 3x rc=0, 13 frames, crash=0 fatal=0.
+- Gates: G1 PIN OK evidence/master/g1/20261028_045014 (binary sha c630edb6a9377582, 4,654,488 B, regression 12/12); corpus_gate.sh sweep095 = 17 rows, rc=0 in 12, crash total 0 (identical shape to SWEEP-094); battery 10 programs x3 runs with ZERO unexpected outcomes (idman/npp64/winrar/resourcesextract rc=0; 7zsetup rc=86 own decision; winrarinstd/everything/tcpview64/produkey alive-at-timeout 124 crash=0; nppsetup documented frontier); repo_size_guard GUARD OK (2 documented WARNs unchanged).
+
+Stage Summary:
+- Issue #3's headline research finding is now a landed, measured engine fix. The A03 attribution is superseded: guest correct, loader wsprintfW was the bug.
+- Queued (not implemented): riched20/riched32 known-DLL plane; main-window content paint (children round-robin); ReadEventLogA honest empty-log; CW_USEDEFAULT positioning; "Program Filesry" join decode.
+- Evidence: evidence/sweep095/issue_body.md + corpus_parity.tsv; scripts/sweep095_idm_cmdline.{sh,gdb}.
