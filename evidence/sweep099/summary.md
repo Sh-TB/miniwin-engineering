@@ -101,9 +101,38 @@ mapped_thunk flag so the unresolved fallback stays unconditional).
   the call happened — unbalanced callback-stack exit family, NOT the
   SW-1478 clobber: that is fixed).
 
+## SW-1479 decode advanced this round (OBSERVED; parked at a precise boundary)
+
+- PROBE-I (gdb, mw_DialogBoxParamW entry): language-dialog gate entry guest
+  ESP=0x3fefec38, ret-slot [0x3fefec34]=0x40404a; gate return esp_after=
+  0x3fefec4c (MW32_TRACE parity line) — the gate's own stack math is exact.
+- PROBE-J (hw watch on 0x3fefec6c from load_pe): the watched slot receives
+  EXACTLY TWO writes all run — (1) anonymous-page zero-fill, (2) a GUEST
+  store of 0x43403a via the m32_st32 path (host EIP 0x20e2044). NO
+  call-push ever writes it → the driver's epilogue ret consumes a stale
+  .ndata value.
+- 0x43403a = .ndata (NSIS VM area, 0x42a000+0xa03a) — the g_stacktop family
+  (SWEEP-096 decode thread).
+- The exehead's driver epilogue (pop edi,esi,ebp,ebx; add esp,0x10; ret at
+  0x404090) is frame-arithmetic-consistent with entry ESP=0x3fefec5c; its
+  true ret slot was never watched — the next micro-steps are: (a) pin the
+  driver's prologue (backwards from 0x403fcf; the push ebx/ebp/esi/edi
+  pattern scan at 0x403a00-0x403f10 found none — different reg order or
+  interleaved), (b) watch the TRUE entry-adjacent slots, (c) name the
+  guest store site (MW32_STEP_TRACE=1 filtered to writes at 0x3fefec6c).
+- SW-1481 enabler landed: the API trace now FLUSHES on the generic crash
+  path (the SWEEP-011 64KiB buffer used to lose the run tail on SIGSEGV;
+  the first post-fix run captured 96,818 [API32] lines vs 1,336).
+
+## SW-1481 (landed this round)
+
+crash_handler generic path now calls mw_trace_shutdown_flush() before the
+report continues (parity with the SW-1151 FASTFAIL path). Behavior-neutral
+for guests (nppsetup re-run: identical rc=139 steps=192,740,428).
+
 ## Gates
 
-- Clean build; binary 4,654,248 B sha 798d5005; G1 PIN 12/12
+- Clean build; binary 4,654,288 B sha 4b16cbd1 (post-SW-1481); G1 PIN 12/12 (pre-SW-1481: 20261028_124332; post-SW-1481: 20261028_130534)
   (evidence/master/g1/20261028_124332).
 - corpus_gate sweep099: 17 rows, rc=0 in 12, crash total 0 (shape identical
   to SWEEP-098). mini.flood rebuilt from tracked source (ziglang 0.17.0,

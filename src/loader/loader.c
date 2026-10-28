@@ -41021,6 +41021,12 @@ static void crash_handler(int sig, siginfo_t* info, void* ctx) {
     }
 
     fprintf(stderr, "\n[CRASH] Signal %d at RIP=0x%lx\n", sig, rip);
+    /* SW-1481 (SWEEP-099): flush the API trace on the generic crash path too
+     * — the 64KiB stdio buffer (SWEEP-011) loses the run TAIL on SIGSEGV
+     * (_exit skips atexit), and nppsetup's SW-1479 decode needs the last
+     * [API32] esp= lines right before the bad-ret. FASTFAIL already flushed
+     * (SW-1151 path); this covers the interpreter crash family. */
+    mw_trace_shutdown_flush();
     /* SW-1293b: report the faulting ADDRESS, not just RIP — usbdeview's
      * m32 wild read class (valid RIP, garbage data pointer) is invisible
      * without si_addr; si_code distinguishes MAPERR (unmapped) vs ACCERR
