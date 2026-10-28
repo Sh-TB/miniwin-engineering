@@ -22983,6 +22983,15 @@ void mw_hook_fire_activate(void* hwnd) {
     mw_hook_fire(MW_WH_CBT, MW_HCBT_ACTIVATE, (uintptr_t)hwnd, st);
 }
 
+/* advapi32!RegDeleteKeyExW — real hive delete (SWEEP-022 SW-953 plane):
+ * same semantics as RegDeleteKeyW on the single flat registry view; the
+ * REGSAM wow64 flags are ignored (SW-1485: NSIS MGA_3, 4 stack args). */
+__attribute__((ms_abi)) uint32_t mw_RegDeleteKeyW(void* key, const uint16_t* sub); /* fwd: defined below */
+__attribute__((ms_abi)) uint32_t mw_RegDeleteKeyExW(void* key, const uint16_t* sub, uint32_t sam, uint32_t resvd) {
+    (void)sam; (void)resvd;
+    return mw_RegDeleteKeyW(key, sub);
+}
+
 /* advapi32!RegDeleteKeyW — real hive delete (SWEEP-022 SW-953):
  * created keys go away, never-created keys stay ERROR_FILE_NOT_FOUND. */
 __attribute__((ms_abi)) uint32_t mw_RegDeleteKeyW(void* key, const uint16_t* sub) {
@@ -32059,6 +32068,16 @@ __attribute__((ms_abi)) int mw_ChangeWindowMessageFilterEx(void* h, uint32_t msg
 __attribute__((ms_abi)) int mw_EnableThemeDialogTexture(void* h, uint32_t flags) { (void)h; (void)flags; return 1; }
 /* ---- exit/session tails ---- */
 __attribute__((ms_abi)) int mw_ExitWindowsEx(uint32_t flags, uint32_t reason) { (void)flags; (void)reason; return 0; }
+
+/* advapi32!InitiateShutdownW — NSIS MGA_4 (reboot-at-end plane). Headless
+ * sandbox: no shutdown plane exists; honest failure mirrors mw_ExitWindowsEx
+ * (return 0, guest takes its error path) (SW-1485). */
+__attribute__((ms_abi)) uint32_t mw_InitiateShutdownW(const uint16_t* machine, const uint16_t* msg,
+                                                      uint32_t grace, uint32_t flags, uint32_t reason) {
+    (void)machine; (void)msg; (void)grace; (void)flags; (void)reason;
+    MW_TRACE("InitiateShutdownW -> 0 (headless: no shutdown plane)");
+    return 0;
+}
 __attribute__((ms_abi)) int mw_LockWorkStation(void) { return 1; }
 __attribute__((ms_abi)) int mw_SetSuspendState(int hibernate, int force, int wake) { (void)hibernate; (void)force; (void)wake; return 0; }
 __attribute__((ms_abi)) int mw_IsPwrSuspendAllowed(void) { return 0; }
@@ -37316,6 +37335,10 @@ static ImportEntry g_import_table[] = {
     ENTRY("KERNEL32.DLL", "IsValidLocale", mw_IsValidLocale),
     ENTRY("KERNEL32.DLL", "GetUserDefaultLCID", mw_GetUserDefaultLCID),
     ENTRY("KERNEL32.DLL", "GetUserDefaultLangID", mw_GetUserDefaultLangID),
+    /* SW-1485: moved from the USER32 row — kernel32 is the real export home
+     * (Vista+); NSIS's MGA_2 resolves it from KERNEL32 and a USER32-scoped
+     * dispatch row misses that lookup (fallback thunk arity 32 = SW-1479). */
+    ENTRY("KERNEL32.DLL", "GetUserDefaultUILanguage",           mw_GetUserDefaultUILanguage),
     ENTRY("KERNEL32.DLL", "GetSystemDefaultLCID", mw_GetSystemDefaultLCID),
     ENTRY("KERNEL32.DLL", "GetThreadLocale", mw_GetThreadLocale),
     ENTRY("KERNEL32.DLL", "SetThreadLocale", mw_SetThreadLocale),
@@ -38471,6 +38494,11 @@ ENTRY("msvcrt.dll", "wctype", mw_wctype),
     ENTRY("USER32.DLL", "SetWindowsHookExA",                    mw_SetWindowsHookExA),
     ENTRY("USER32.DLL", "UnhookWindowsHookEx",                  mw_UnhookWindowsHookEx),
     ENTRY("advapi32.dll", "RegDeleteKeyW",                      mw_RegDeleteKeyW),
+    /* SW-1485: NSIS MGA_3/MGA_4 — resolved through the dynamic GetProcAddress
+     * plane; without dispatch rows they fell to the optional-stub + anonymous
+     * thunk arity-32 class (the SW-1479 over-pop family). */
+    ENTRY("ADVAPI32.DLL", "RegDeleteKeyExW",                    mw_RegDeleteKeyExW),
+    ENTRY("ADVAPI32.DLL", "InitiateShutdownW",                  mw_InitiateShutdownW),
     ENTRY("advapi32.dll", "RegDeleteKeyA",                      mw_RegDeleteKeyA), /* SWEEP-022 SW-953 */
     ENTRY("advapi32.dll", "I_QueryTagInformation",              mw_I_QueryTagInformation), /* SW-1102k: SCM tag query, honest 1168 */
     /* msvcrt wide CRT init (searchmyfiles + NirSoft family) */
@@ -38820,7 +38848,6 @@ ENTRY("GDI32.DLL", "GetCharacterPlacementW",                mw_GetCharacterPlace
     ENTRY("USER32.DLL", "UnregisterHotKey",                     mw_UnregisterHotKey),
     ENTRY("USER32.DLL", "SetClipboardViewer",                   mw_SetClipboardViewer),
     ENTRY("USER32.DLL", "GetKeyNameTextW",                      mw_GetKeyNameTextW),
-    ENTRY("USER32.DLL", "GetUserDefaultUILanguage",             mw_GetUserDefaultUILanguage),
     ENTRY("USER32.DLL", "CopyImage",                            mw_CopyImage),
     ENTRY("USER32.DLL", "SetWindowLongA",                       mw_SetWindowLongA),
     ENTRY("USER32.DLL", "GetWindowLongA",                       mw_GetWindowLongA),
@@ -41700,6 +41727,8 @@ static const struct { const char* n; uint32_t b; } g_api32_arity[] = {
     { "RegCreateKeyW", 12 },
     { "RegDeleteKeyA", 8 },
     { "RegDeleteKeyW", 8 },
+    { "RegDeleteKeyExW", 16 }, /* SW-1485: HKEY+sub+sam+reserved (NSIS MGA_3) */
+    { "InitiateShutdownW", 20 }, /* SW-1485: mach+msg+grace+flags+reason (NSIS MGA_4) */
     { "RegDeleteValueA", 8 },
     { "RegDeleteValueW", 8 },
     { "RegEnumKeyA", 16 },
@@ -42141,6 +42170,11 @@ static const struct { const char* n; uint32_t b; } g_api32_arity[] = {
     { "GetTimeZoneInformation", 4 },
     { "GetUserDefaultLCID", 0 },
     { "GetUserDefaultLangID", 0 },
+    { "GetUserDefaultUILanguage", 0 }, /* SW-1485: 0-arg LANGID (NSIS MGA_2) — the
+        * missing row fell to MW32_ARITY_DEFAULT=32 and the gate popped 0x20 the
+        * exehead never pushed: the driver 0x403dbb frame was destroyed at the
+        * zero-arg `call eax` (0x403dd5) and the epilogue ret consumed the
+        * caller's saved CharNextW cursor 0x43403a (SW-1479 crash decode). */
     { "GetVersion", 0 },
     { "GetVersionExW", 4 },
     { "GetVolumeInformationA", 32 },
@@ -42257,6 +42291,9 @@ static const struct { const char* n; uint32_t b; } g_api32_arity[] = {
     { "SHGetFileInfoA", 20 },
     { "SHGetFileInfoW", 20 },
     { "IsUserAnAdmin", 0 }, /* SW-1480: 0-arg BOOL (NSIS MGA_6) */
+    { "IsOS", 4 }, /* SW-1485: DWORD which (shlwapi!437, NSIS MGA_8) */
+    { "SHAutoComplete", 8 }, /* SW-1485: hwnd+flags (NSIS MGA_9) */
+    { "SHGetKnownFolderPath", 16 }, /* SW-1485: rfid+flags+token+ppPath (NSIS MGA_5) */
     { "SHGetFolderPathW", 20 },
     { "SHGetMalloc", 4 },
     { "SHGetPathFromIDListA", 8 },
@@ -42708,14 +42745,29 @@ static inline int m32_host_hit(uint32_t va) {
     return 0;
 }
 
+/* SW-1482 (SWEEP-100): MW32_WATCH="lo:hi" (hex u32) — interpreter-level memory
+ * watchpoint. Every ld/st whose guest VA falls in [lo,hi) logs value + guest
+ * EIP/ESP + host return site. Replaces gdb hw-watch probes (PROBE-J) which
+ * cannot run this interpreter to completion (sandbox gdb stall, SWEEP-099). */
+static uint32_t g_m32w_lo = 0, g_m32w_hi = 0;
+static unsigned g_m32w_n = 0;
+static inline int m32w_hit(uint32_t va) {
+    return g_m32w_lo != 0 && va >= g_m32w_lo && va < g_m32w_hi;
+}
+#define MW32W_LOG(rd, va, val) \
+    do { if (__builtin_expect(m32w_hit(va), 0)) \
+        fprintf(stderr, "[WATCH32-%s] va=%08x val=%08x eip=%08x esp=%08x ebp=%08x from=%p n=%u\n", \
+                rd, (uint32_t)(va), (uint32_t)(val), t_cpu32.eip, t_cpu32.r[4], t_cpu32.r[5], \
+                __builtin_return_address(0), ++g_m32w_n); } while (0)
+
 static inline uint8_t* m32p(uint32_t va) { return (uint8_t*)(uintptr_t)va; }
 static inline uint8_t  m32_ld8 (uint32_t va) { return m32_host_hit(va) ? 0 : *(uint8_t*)m32p(va); }
-static inline uint16_t m32_ld16(uint32_t va) { if (m32_host_hit(va)) return 0; uint16_t v; memcpy(&v, m32p(va), 2); return v; }
-static inline uint32_t m32_ld32(uint32_t va) { if (m32_host_hit(va)) return 0; uint32_t v; memcpy(&v, m32p(va), 4); return v; }
+static inline uint16_t m32_ld16(uint32_t va) { if (m32_host_hit(va)) return 0; uint16_t v; memcpy(&v, m32p(va), 2); MW32W_LOG("R16", va, v); return v; }
+static inline uint32_t m32_ld32(uint32_t va) { if (m32_host_hit(va)) return 0; uint32_t v; memcpy(&v, m32p(va), 4); MW32W_LOG("R32", va, v); return v; }
 static inline uint64_t m32_ld64(uint32_t va) { if (m32_host_hit(va)) return 0; uint64_t v; memcpy(&v, m32p(va), 8); return v; }
 static inline void m32_st8 (uint32_t va, uint8_t v)  { if (m32_host_hit(va)) return; *(uint8_t*)m32p(va) = v; }
-static inline void m32_st16(uint32_t va, uint16_t v) { if (m32_host_hit(va)) return; memcpy(m32p(va), &v, 2); }
-static inline void m32_st32(uint32_t va, uint32_t v) { if (m32_host_hit(va)) return; memcpy(m32p(va), &v, 4); }
+static inline void m32_st16(uint32_t va, uint16_t v) { if (m32_host_hit(va)) return; MW32W_LOG("W16", va, v); memcpy(m32p(va), &v, 2); }
+static inline void m32_st32(uint32_t va, uint32_t v) { if (m32_host_hit(va)) return; MW32W_LOG("W32", va, v); memcpy(m32p(va), &v, 4); }
 static inline void m32_st64(uint32_t va, uint64_t v) { if (m32_host_hit(va)) return; memcpy(m32p(va), &v, 8); }
 
 static inline uint32_t m32_push(uint32_t v) { t_cpu32.r[ESPi] -= 4; m32_st32(t_cpu32.r[ESPi], v); return t_cpu32.r[ESPi]; }
@@ -44626,6 +44678,29 @@ static void mw_cpu32_crash_report(void) {
     }
 }
 
+/* SW-1483 (SWEEP-100): MW32_ENTRY_TRACE="va1,va2,..." — log every interpreter
+ * arrival at the given guest EIPs: full regs + [esp] + previous EIP. Names
+ * HOW control entered a function (call-push / ret-into / interpreter rewrite)
+ * — the SW-1479 bad-ret decode needed exactly this at the driver 0x403dbb. */
+static uint32_t g_entry_trace[8]; static int g_entry_trace_n = 0;
+static unsigned g_entry_trace_hits[8];
+static void entry_trace_check(void) {
+    for (int i = 0; i < g_entry_trace_n; i++) {
+        if (t_cpu32.eip != g_entry_trace[i]) continue;
+        unsigned h = ++g_entry_trace_hits[i];
+        if (h <= 6 || (h & 0xFFFFF) == 0)
+            fprintf(stderr, "[ENTRY] va=%08x hit=%u prev=%08x esp=%08x [esp]=%08x eax=%08x ecx=%08x edx=%08x ebx=%08x ebp=%08x esi=%08x edi=%08x\n",
+                    t_cpu32.eip, h, g_eip_hist[(g_eip_hist_n - 1) & 15], t_cpu32.r[4],
+                    m32_ld32(t_cpu32.r[4]), t_cpu32.r[0], t_cpu32.r[1], t_cpu32.r[2],
+                    t_cpu32.r[3], t_cpu32.r[5], t_cpu32.r[6], t_cpu32.r[7]);
+    }
+}
+
+/* SW-1484 (SWEEP-100): MW32_TRACE_RANGE="lo:hi" — per-instruction I32 trace
+ * only when eip is inside [lo,hi). Full-register trajectory of a hot suspect
+ * region without the 23 GB full-step-trace firehose. */
+static uint32_t g_tr_lo = 0, g_tr_hi = 0;
+
 static int cpu32_run(uint64_t max_steps) {
     uint64_t n = 0;
     for (;;) {
@@ -44634,10 +44709,11 @@ static int cpu32_run(uint64_t max_steps) {
         if (t_cpu32.eip == MW32_RET_SENTINEL) return -2; /* callback frame done */
         if (max_steps && n >= max_steps) return -3;
         g_eip_hist[g_eip_hist_n++ & 15] = t_cpu32.eip;
-        if (g_cpu32_steptrace)
+        if (g_cpu32_steptrace && (!g_tr_lo || (t_cpu32.eip >= g_tr_lo && t_cpu32.eip < g_tr_hi)))
             fprintf(stderr, "[I32] eip=%08x eax=%08x ecx=%08x edx=%08x ebx=%08x esp=%08x ebp=%08x esi=%08x edi=%08x\n",
                     t_cpu32.eip, t_cpu32.r[0], t_cpu32.r[1], t_cpu32.r[2], t_cpu32.r[3],
                     t_cpu32.r[4], t_cpu32.r[5], t_cpu32.r[6], t_cpu32.r[7]);
+        if (__builtin_expect(g_entry_trace_n != 0, 0)) entry_trace_check();
         int rc = cpu32_step();
         n++;
         if (rc != 0) return rc;
@@ -45212,6 +45288,15 @@ static int load_pe32(const char* filepath) {
     { const char* t = getenv("MW32_TRACE"); g_cpu32_trace = (t && t[0] && t[0] != '0');
       const char* s = getenv("MW32_STEP_TRACE"); g_cpu32_steptrace = (s && s[0] && s[0] != '0');
       const char* m = getenv("MW32_MAX_STEPS"); if (m && m[0]) g_cpu32_maxsteps = strtoull(m, NULL, 0);
+      const char* w = getenv("MW32_WATCH"); /* SW-1482: "lo:hi" hex guest-VA watch window */
+      if (w && w[0]) sscanf(w, "%x:%x", &g_m32w_lo, &g_m32w_hi);
+      { const char* tr = getenv("MW32_TRACE_RANGE"); /* SW-1484: I32 eip-range filter */
+        if (tr && tr[0]) sscanf(tr, "%x:%x", &g_tr_lo, &g_tr_hi); }
+      { const char* et = getenv("MW32_ENTRY_TRACE"); /* SW-1483: "va1,va2,..." */
+        if (et && et[0]) { const char* p = et;
+          while (*p && g_entry_trace_n < 8) {
+            g_entry_trace[g_entry_trace_n++] = (uint32_t)strtoul(p, (char**)&p, 16);
+            if (*p == ',') p++; } } }
       mw32_dump_va_ranges("dump"); }
     int rc = cpu32_run(g_cpu32_maxsteps);
     while (rc == (int)MW32_SEH_RESUME_CODE) { /* SW-1392: SEH rewrote the
