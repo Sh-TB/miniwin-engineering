@@ -653,3 +653,21 @@ Stage Summary:
 - Progress quantified: 2 of 4 crash/exit frontiers from the sweep081 era now run rc=0 deterministically; 4 rc=124 frontiers unchanged and converge on one parked root cause (SW-1489 time plane); 2 guests honestly blocked on stale sources.
 - Queued next train: SW-1489 time-plane implementation (all clock consumers audited TOGETHER per the SWEEP-102 spec) targeting the rc=124 quartet; winnc/renamer exact-URL re-pin hunt; "Program Filesry" join decode (still untouched upstream since SWEEP-095).
 - Evidence: evidence/sweep103/summary.md + corpus_parity.tsv; plugins/status.tsv rows; evidence/master/g1/20261028_173735. No force-push.
+
+Task ID: SWEEP-104
+Agent: main (autonomous train)
+Task: SW-1489 first wagon per the SWEEP-102 parked spec; round reshaped by observation — the rc=124 quartet decoded as ALIVE-AT-TIMEOUT (not wait-gate hangs); landed SW-1490 (runner frame accounting) + SW-1489 wagon 1 (MFO unit fix) + SW-1491 (honest rc=124 taxonomy).
+
+Work Log:
+- Observation (evidence/sweep103/probes/): /proc sampling + trace tails under battery env — produkey state S hrtimer_nanosleep (fix-F/WM_TIMER id=1 pump park), everything state S (WM_PAINT pump park), tcpview64 state R ~100% core (SendMessageW msg=0x43f refresh storm), winrarinstd state R ~100% core (HKCU\Software\WinRAR\Setup registry-miss re-read). NONE parks in WaitForMultipleObjects — the SW-1489 unit bug is real but latent; the quartet is ALIVE at timeout (two honest interactive pumps, two spin frontiers).
+- SW-1490 (scripts/plugin_run.sh): the SW-1470 portable branch runs zip guests from $PORTABLE_CWD but frames/PNG/trace were read from $RESROOT (repo root) — every portable-zip plugin silently lost all frame evidence. RESROOT_EFF now tracks the real results dir. Measured: produkey frames=1 recovered; notepad2mod rc=0 frames=0 -> PASS_INPUT_STATE_CHANGE frames=4 uniq=3 (first full input-state evidence ever for it).
+- SW-1489 wagon 1 (src/loader/loader.c mw_WaitForMultipleObjects): deadline was now.tv_sec (REALTIME epoch seconds) vs deadline/1000 (guest ms) — always-true -> every finite wait WAIT_TIMEOUT after one 10ms slice, INFINITE waits poll forever. Now CLOCK_MONOTONIC elapsed-ms anchor, full-budget finite waits, jump-immune. WSA/Ex wrappers inherit. Verified: no pump-path caller (guest ENTRY rows + 2 guest-facing wrappers only).
+- SW-1491 (classify): rc=124 decodes parking shape from api_trace tail — ALIVE_PUMP_AT_TIMEOUT (GetMessage->WM_/fix-F signature) vs SPIN_AT_TIMEOUT (SendMessage re-fire) vs TIMEOUT; branch order fixed so frames>0 + rc=124 can never read as PASS.
+- Regression watch: nppsetup first post-fix battery 0/0/124 = SWEEP-102 documented load-gated bistability (post-G1 load window); idle re-runs rc=0 x3 byte-identical x2 batteries. ONE new rare shape in the loaded window (1/12 runs): 'Error decompressing data! Corrupted installer?' MessageBox at exehead init then byte-identical clean flow — never seen before, unreplicated since; registered SW-1492 (decode queued).
+- Gates: G1 PIN 12/12 (evidence/master/g1/20261028_181913, binary a09aa334); corpus_gate sweep104 = 17 rows rc=0 in 12 crash total 0; repo_size_guard GUARD OK (2 documented WARNs unchanged); serial battery: nppsetup rc=0 x3 byte-identical, notepad2mod PASS_INPUT_STATE_CHANGE (4 frames, 3 uniq), produkey ALIVE_PUMP_AT_TIMEOUT frames=1, everything ALIVE_PUMP_AT_TIMEOUT, tcpview64/winrarinstd SPIN_AT_TIMEOUT. No manifest changes.
+
+Stage Summary:
+- The rc=124 quartet's honest state is recorded: alive pumps (produkey/everything) and spin frontiers (tcpview64 msg=0x43f pacing; winrarinstd SW-1412-family registry re-read) — next-train decodes named.
+- SW-1490 unlocks the portable-plugin evidence chain project-wide (frames + PNGs + input-state PASSes that were silently dropped since SWEEP-094).
+- Queued: SW-1489 core time plane (parked, now with measured input); SW-1492 decompression-error decode; spin-frontier decodes; winnc/renamer URL re-pin hunt; 'Program Filesry' join decode.
+- Evidence: evidence/sweep104/summary.md; evidence/sweep103/probes/ (park-shape sampling); plugins/status.tsv rows. No force-push.

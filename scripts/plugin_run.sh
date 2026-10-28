@@ -31,20 +31,41 @@ manifest_get() { # file key
     awk -F'\t' -v k="$1" '$1==k {print $2; exit}' "$2"
 }
 
-classify() { # log rc frames diff_frame -> verdict string
-    local log="$1" rc="$2" frames="$3" diff="$4"
+classify() { # log rc frames diff_frame [trace_file] -> verdict string
+    local log="$1" rc="$2" frames="$3" diff="$4" trace="$5"
     local crash steps frontier
     crash=$(grep -ac '\[CRASH\]' "$log" 2>/dev/null)
     steps=$(grep -aoE 'steps[= ][0-9]+' "$log" 2>/dev/null | tail -1 | grep -oE '[0-9]+')
-    if [ "$frames" -gt 0 ] && [ -n "$diff" ] && [ "$rc" -eq 0 ]; then
-        echo "PASS_INPUT_STATE_CHANGE"
-    elif [ "$frames" -gt 0 ]; then
-        echo "PASS_LAUNCH_RENDER rc=$rc"
-    elif [ "$crash" -gt 0 ]; then
+    if [ "$crash" -gt 0 ]; then
         frontier=$(grep -aoE 'FRONTIER[_A-Z0-9]*|SW-[0-9]+' "$log" 2>/dev/null | tail -3 | tr '\n' ',')
         echo "FRONTIER_SW crash=$crash ${frontier:-undecoded} steps=${steps:-?}"
     elif [ "$rc" -eq 124 ]; then
-        echo "TIMEOUT frames=$frames"
+        # SW-1491 (SWEEP-104): an rc=124 guest is not necessarily hung. Decode
+        # the parking shape from the api_trace tail (raw text survives SIGKILL:
+        # the 64KiB stdio buffer flushed everything except the last chunk):
+        #   ALIVE_PUMP = paced message-pump park (GetMessage -> WM_TIMER/
+        #                WM_PAINT dispatch loop) — the interactive-app
+        #                contract, killed by the battery timeout like real
+        #                Windows would be.
+        #   SPIN       = unbounded busy loop (SendMessage re-fire / registry
+        #                miss re-read) — alive but burning host CPU; an
+        #                engine-modeling frontier, not a guest crash.
+        # Produkey/everything = ALIVE_PUMP (state S, hrtimer_nanosleep);
+        # tcpview64/winrarinstd = SPIN (state R, ~100% core). /proc-sampled
+        # evidence/sweep103/probes/.
+        local shape=""
+        if [ -n "$trace" ] && [ -f "$trace" ]; then
+            if tail -c 262144 "$trace" 2>/dev/null | grep -aq 'GetMessage[AW] -> WM_\|fix-F wait done'; then
+                shape="ALIVE_PUMP_AT_TIMEOUT"
+            elif tail -c 262144 "$trace" 2>/dev/null | grep -aq 'SendMessage'; then
+                shape="SPIN_AT_TIMEOUT"
+            fi
+        fi
+        echo "${shape:-TIMEOUT} frames=$frames"
+    elif [ "$frames" -gt 0 ] && [ -n "$diff" ] && [ "$rc" -eq 0 ]; then
+        echo "PASS_INPUT_STATE_CHANGE"
+    elif [ "$frames" -gt 0 ]; then
+        echo "PASS_LAUNCH_RENDER rc=$rc"
     else
         echo "EXIT rc=$rc frames=$frames"
     fi
@@ -232,10 +253,18 @@ run_plugin() {
     fi
 
     # 3. battery
+    # SW-1490 (SWEEP-104): the loader writes miniwin-results/ relative to its
+    # CWD. The SW-1470 portable branch RUNS the guest from $PORTABLE_CWD, so
+    # the results land THERE — reading $RESROOT (repo root) found nothing and
+    # every portable-zip plugin (produkey/everything/tcpview64/notepad2mod...)
+    # silently lost its frame evidence (frames=0 verdicts on real renders).
+    # RESROOT_EFF = where THIS plugin's runs actually write.
+    local RESROOT_EFF="$RESROOT"
     mkdir -p "$EV/$name" plugins/$name
     local base run rc out crash frames uniq diff verdict result_row=""
     for run in $(seq 1 "$nruns"); do
-        rm -rf "${RESROOT}/$(basename "$exe_path")"
+        if [ -n "${PORTABLE_CWD:-}" ]; then RESROOT_EFF="$PORTABLE_CWD/miniwin-results"; fi
+        rm -rf "${RESROOT_EFF}/$(basename "$exe_path")"
         out="/tmp/plug_${name}_r${run}.log"
         if [ -n "$SB" ]; then
             ( cd "$SB" && \
@@ -266,11 +295,11 @@ run_plugin() {
         cp "$out" "$EV/$name/run${run}.log"
         say "   run$run rc=$rc crash=$(grep -ac '\[CRASH\]' "$out")"
     done
-    read -r frames uniq diff <<< "$(frame_stats "${RESROOT}/$(basename "$exe_path")/screenshots")"
-    verdict=$(classify "$out" "$rc" "$frames" "$diff")
+    read -r frames uniq diff <<< "$(frame_stats "${RESROOT_EFF}/$(basename "$exe_path")/screenshots")"
+    verdict=$(classify "$out" "$rc" "$frames" "$diff" "${RESROOT_EFF}/$(basename "$exe_path")/api_trace.json")
 
     # 4. frames -> evidence PNG
-    local fsdir="${RESROOT}/$(basename "$exe_path")/screenshots"
+    local fsdir="${RESROOT_EFF}/$(basename "$exe_path")/screenshots"
     if [ -d "$fsdir" ]; then
         python3 - "$fsdir" "$EV/$name" <<'PYEOF'
 import sys, os

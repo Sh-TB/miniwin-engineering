@@ -6262,6 +6262,16 @@ __attribute__((ms_abi)) uint32_t mw_WaitForMultipleObjects(uint32_t count, void*
      * kobj_wait returns 0 instantly) are treated as signaled. */
     if (count == 0 || !handles) return 0;
     uint32_t deadline = ms;
+    /* SW-1489 (SWEEP-104) — finite-wait deadline anchored on a MONOTONIC
+     * clock. The old gate compared now.tv_sec (CLOCK_REALTIME epoch seconds,
+     * ~1.79e9 today) against deadline/1000 (guest ms -> seconds): the
+     * comparison was ALWAYS true, so every finite wait returned WAIT_TIMEOUT
+     * after one 10ms slice (pre-existing, masked by guest fallbacks), and
+     * INFINITE waits polled forever — the SWEEP-102 decode
+     * (evidence/sweep102/probes/wait_gate_deadline_bug.txt). Elapsed ms on
+     * CLOCK_MONOTONIC is jump-immune (the wall-clock coupling lesson). */
+    struct timespec t0;
+    clock_gettime(CLOCK_MONOTONIC, &t0);
     for (uint32_t done = 0;;) {
         int pending = 0;
         for (uint32_t i = 0; i < count; i++) {
@@ -6273,15 +6283,16 @@ __attribute__((ms_abi)) uint32_t mw_WaitForMultipleObjects(uint32_t count, void*
         }
         if (!pending) return 0;                 /* all (or any) satisfied */
         if (deadline == 0) return 0x102;        /* WAIT_TIMEOUT */
-        struct timespec ts;
-        clock_gettime(CLOCK_REALTIME, &ts);
-        ts.tv_nsec += 10000000L; /* 10ms poll slice */
-        if (ts.tv_nsec >= 1000000000L) { ts.tv_sec++; ts.tv_nsec -= 1000000000L; }
-        struct timespec now;
-        clock_gettime(CLOCK_REALTIME, &now);
+        struct timespec tn;
+        clock_gettime(CLOCK_MONOTONIC, &tn);
         if (deadline != 0xFFFFFFFFu) {
-            if (now.tv_sec > (time_t)(deadline / 1000)) return 0x102;
+            int64_t elapsed_ms = (int64_t)(tn.tv_sec - t0.tv_sec) * 1000
+                               + (tn.tv_nsec - t0.tv_nsec) / 1000000;
+            if (elapsed_ms >= (int64_t)deadline) return 0x102;
         }
+        struct timespec ts;
+        ts.tv_sec = 0;
+        ts.tv_nsec = 10000000L; /* 10ms poll slice */
         nanosleep(&ts, NULL);
         (void)done;
     }
