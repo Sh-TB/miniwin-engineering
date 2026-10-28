@@ -33456,18 +33456,69 @@ __attribute__((ms_abi)) int mw_OpenPrinterW(uint16_t* name, void** ph, void* def
 }
 __attribute__((ms_abi)) int mw_ClosePrinter(void* h) { (void)h; return 1; }
 
-/* ---- event log: cookie handle, EOF reads (honest: no log source) ---- */
+/* ---- event log: cookie handle, EOF reads (honest: no log source) ----
+ * SW-1476 (SWEEP-097): the empty-log contract is now explicit. Real
+ * ReadEventLog on a log with zero records returns FALSE and
+ * GetLastError()==ERROR_HANDLE_EOF (259) — the v1 W model returned 0
+ * WITHOUT setting last-error, so guests read a STALE error and reported
+ * "Error reading ..." (psloglist64) instead of their clean no-events path.
+ * The A-side twins exist because Sysinternals tools import ReadEventLogA/
+ * OpenBackupEventLogA directly; before this they were unresolved imports
+ * served by the generic 0-stub. */
 static int g_mw29_evtlog = 0;
 __attribute__((ms_abi)) void* mw_OpenEventLogW(const uint16_t* server, const uint16_t* src) {
     (void)server; (void)src;
     return (void*)(uintptr_t)(0x0002B000u | (unsigned)(++g_mw29_evtlog));
 }
+__attribute__((ms_abi)) void* mw_OpenEventLogA(const char* server, const char* src) {
+    (void)server; (void)src;
+    return (void*)(uintptr_t)(0x0002B000u | (unsigned)(++g_mw29_evtlog));
+}
+static int mw_evtlog_read_eof(uint32_t* read, uint32_t* needed) {
+    if (read) *read = 0;
+    if (needed) *needed = 0;
+    mw_SetLastError(259); /* ERROR_HANDLE_EOF: the log has zero records */
+    return 0;
+}
 __attribute__((ms_abi)) int mw_ReadEventLogW(void* h, uint32_t flags, uint32_t off,
         void* buf, uint32_t cb, uint32_t* read, uint32_t* needed) {
     (void)h; (void)flags; (void)off; (void)buf; (void)cb;
-    if (read) *read = 0;
-    if (needed) *needed = 0;
-    return 0; /* ERROR_HANDLE_EOF: no events */
+    return mw_evtlog_read_eof(read, needed);
+}
+__attribute__((ms_abi)) int mw_ReadEventLogA(void* h, uint32_t flags, uint32_t off,
+        void* buf, uint32_t cb, uint32_t* read, uint32_t* needed) {
+    (void)h; (void)flags; (void)off; (void)buf; (void)cb;
+    return mw_evtlog_read_eof(read, needed);
+}
+__attribute__((ms_abi)) void* mw_OpenBackupEventLogA(const char* server, const char* fname) {
+    (void)server; (void)fname;
+    mw_SetLastError(50); /* ERROR_NOT_SUPPORTED: saved .evt files are not modeled */
+    return NULL;
+}
+__attribute__((ms_abi)) int mw_BackupEventLogA(void* h, const char* fname) {
+    (void)h; (void)fname;
+    mw_SetLastError(50); /* ERROR_NOT_SUPPORTED: nothing to save (no log source) */
+    return 0;
+}
+__attribute__((ms_abi)) int mw_ClearEventLogA(void* h, const char* fname) {
+    (void)h; (void)fname;
+    mw_SetLastError(5); /* ERROR_ACCESS_DENIED: cannot mutate a log we do not have */
+    return 0;
+}
+__attribute__((ms_abi)) int mw_NotifyChangeEventLog(void* h, void* event) {
+    (void)h; (void)event;
+    mw_SetLastError(50); /* ERROR_NOT_SUPPORTED: no events will ever arrive */
+    return 0;
+}
+__attribute__((ms_abi)) int mw_GetNumberOfEventLogRecords(void* h, uint32_t* n) {
+    (void)h;
+    if (n) *n = 0; /* honest: the modeled log is empty */
+    return 1;
+}
+__attribute__((ms_abi)) int mw_GetOldestEventLogRecord(void* h, uint32_t* oldest) {
+    (void)h;
+    if (oldest) *oldest = 0; /* 0 = no records */
+    return 1;
 }
 __attribute__((ms_abi)) int mw_CloseEventLog(void* h) { (void)h; return 1; }
 
@@ -39375,6 +39426,13 @@ ENTRY("GDI32.DLL", "GetCharacterPlacementW",                mw_GetCharacterPlace
     ENTRY("MSIMG32.DLL", "AlphaBlend",                          mw_AlphaBlend),
     ENTRY("USER32.DLL", "CharUpperBuffW",                       mw_CharUpperBuffW),
     ENTRY("ADVAPI32.DLL", "CloseEventLog",                      mw_CloseEventLog),
+    ENTRY("ADVAPI32.DLL", "OpenEventLogA",                      mw_OpenEventLogA),          /* SW-1476 */
+    ENTRY("ADVAPI32.DLL", "OpenBackupEventLogA",                mw_OpenBackupEventLogA),    /* SW-1476 */
+    ENTRY("ADVAPI32.DLL", "BackupEventLogA",                    mw_BackupEventLogA),        /* SW-1476 */
+    ENTRY("ADVAPI32.DLL", "ClearEventLogA",                     mw_ClearEventLogA),         /* SW-1476 */
+    ENTRY("ADVAPI32.DLL", "NotifyChangeEventLog",               mw_NotifyChangeEventLog),   /* SW-1476 */
+    ENTRY("ADVAPI32.DLL", "GetNumberOfEventLogRecords",         mw_GetNumberOfEventLogRecords), /* SW-1476 */
+    ENTRY("ADVAPI32.DLL", "GetOldestEventLogRecord",           mw_GetOldestEventLogRecord),    /* SW-1476 */
     ENTRY("WINSPOOL.DRV", "ClosePrinter",                       mw_ClosePrinter),
     ENTRY("USER32.DLL", "CopyIcon",                             mw_CopyIcon),
     ENTRY("GDI32.DLL", "CreateDIBitmap",                        mw_CreateDIBitmap),
@@ -39444,6 +39502,7 @@ ENTRY("GDI32.DLL", "GetCharacterPlacementW",                mw_GetCharacterPlace
     ENTRY("WINSPOOL.DRV", "OpenPrinterW",                       mw_OpenPrinterW),
     ENTRY("WINMM.DLL", "PlaySoundW",                            mw_PlaySoundW),
     ENTRY("ADVAPI32.DLL", "ReadEventLogW",                      mw_ReadEventLogW),
+    ENTRY("ADVAPI32.DLL", "ReadEventLogA",                      mw_ReadEventLogA),          /* SW-1476 */
     ENTRY("ADVAPI32.DLL", "RegisterServiceCtrlHandlerW",        mw_RegisterServiceCtrlHandlerW),
     ENTRY("SHELL32.DLL", "SHAppBarMessage",                     mw_SHAppBarMessage),
     ENTRY("ADVAPI32.DLL", "SaferCloseLevel",                    mw_SaferCloseLevel),

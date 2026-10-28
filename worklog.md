@@ -615,3 +615,19 @@ Stage Summary:
 - PE32 guests regained the resource layer (a class-level fix: FindResource/LoadString/dialog templates for every x86 guest, not just NPP).
 - Queued: NSIS g_stacktop init decode; main-window content paint; "Program Filesry" join; ReadEventLogA; CW_USEDEFAULT positioning.
 - Evidence: evidence/sweep096/issue_body.md + corpus_parity.tsv.
+
+---
+Task ID: SWEEP-097
+Agent: main (autonomous train)
+Task: SW-1476 honest empty-log eventlog plane + SWEEP-096 crash decode follow-up.
+
+Work Log:
+- SW-1476 (loader.c): psloglist64 ran with 2 unresolved imports (ReadEventLogA, OpenBackupEventLogA) and ReadEventLogW never set last-error (stale-error bug). Landed the honest empty-log plane: OpenEventLogA (cookie), ReadEventLogA/W = FALSE + SetLastError(ERROR_HANDLE_EOF=259) + *read=0 *needed=0, OpenBackupEventLogA = NULL + ERROR_NOT_SUPPORTED, BackupEventLogA = FALSE + 50, ClearEventLogA = FALSE + ERROR_ACCESS_DENIED, NotifyChangeEventLog = FALSE + 50, GetNumberOfEventLogRecords = TRUE + *n=0, GetOldestEventLogRecord = TRUE + *oldest=0. 8 dispatch entries added.
+- Measured (psloglist64 2.82): unresolved imports 2 -> 0 (all 8 advapi32 eventlog IAT slots resolved); GetLastError after read = 259 consistently; tool takes its read-failure branch and exits rc=0.
+- SWEEP-096 crash decode follow-up (gdb probe at SIGSEGV, research-only): [0x428a3c] g_stacktop slot = 0x111301c2 — NOT null (SWEEP-096 hypothesis CONTRADICTED); value points into the extracted NSIS header data (writer: mov [0x428a3c], edx with edx=header_ptr+10 at 0x404106). Faulting guest instruction mov eax,[ecx] (0x406740) with derived pointer 0 cannot result from the negative-branch math over a non-null g_stacktop — the faulting call's frame ([esp+8] arg2 / stack window) is the anomaly. Status UNRESOLVED, decode advanced; next experiment = frame-integrity probe at 0x406726. No code changed for the decode.
+- CW_USEDEFAULT positioning parked (no guest evidence; sizing already landed SW-1471).
+- Gates: G1 PIN OK evidence/master/g1/20261028_060651 (binary sha d61c7a6e1cdd2119, regression 12/12); corpus_gate sweep097 = 17 rows, rc=0 in 12, crash total 0; battery spot-check idman/npp64/winrar rc=0 x3; repo_size_guard GUARD OK.
+
+Stage Summary:
+- psloglist64 fully resolved at the API-contract level; stale-last-error class fixed for the eventlog family.
+- Evidence: evidence/sweep097/issue_body.md + corpus_parity.tsv; scripts/sweep097_nppsetup_probe.gdb.
