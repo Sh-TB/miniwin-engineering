@@ -13352,7 +13352,23 @@ static int mw_cotask_untrack(void* p) {
  * from the guest can still be garbage — every member now goes through the
  * ownership registry above. */
 __attribute__((ms_abi)) static long mw_shmalloc_qi(void* self, const void* iid, void** out) {
-    (void)self; (void)iid; if (out) *out = NULL; return 0x80004002L; /* E_NOINTERFACE */
+    /* APP-TEST-2 (SW-1501): real QI — the old stub answered E_NOINTERFACE
+     * for EVERYTHING, breaking the COM identity contract (any guest that
+     * QI'd the SHGetMalloc allocator for IUnknown/IMalloc got a failure
+     * Windows never returns for these two IIDs). Same IID table as
+     * mw_ole_malloc_qi (little-endian GUID memory image). */
+    static const unsigned char iid_iunknown[16] = {
+        0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0xC0,0x00,0x00,0x00,0x00,0x00,0x00,0x46 };
+    static const unsigned char iid_imalloc[16] = {
+        0xDA,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0xC0,0x00,0x00,0x00,0x00,0x00,0x00,0x46 };
+    if (!out) return 0x80004003L; /* E_POINTER */
+    *out = NULL;
+    if (!iid) return 0x80004003L;
+    if (memcmp(iid, iid_iunknown, 16) == 0 || memcmp(iid, iid_imalloc, 16) == 0) {
+        *out = self;
+        return 0; /* S_OK */
+    }
+    return 0x80004002L; /* E_NOINTERFACE */
 }
 __attribute__((ms_abi)) static uint32_t mw_shmalloc_addref(void* self) { (void)self; return 2; }
 __attribute__((ms_abi)) static uint32_t mw_shmalloc_release(void* self) { (void)self; return 1; }
@@ -13382,16 +13398,33 @@ __attribute__((ms_abi)) static void mw_shmalloc_free(void* self, void* p) {
     }
     free(p);
 }
-__attribute__((ms_abi)) static size_t mw_shmalloc_getsize(void* self, void* p) { (void)self; (void)p; return 0; }
+/* APP-TEST-2 (SW-1501): IMalloc::GetSize — the old always-0 stub lied to
+ * guests that size their allocations (WinRAR's shell-extension path and
+ * shell copy hooks size buffers via GetSize before reuse). Answer with the
+ * glibc usable-size of engine-owned blocks; 0 for foreign/NULL (Windows
+ * itself returns garbage for foreign pointers, 0 is the honest refusal). */
+__attribute__((ms_abi)) static size_t mw_shmalloc_getsize(void* self, void* p) {
+    (void)self;
+    if (!p || !mw_cotask_owned(p)) return 0;
+    return malloc_usable_size(p);
+}
 __attribute__((ms_abi)) static int mw_shmalloc_didalloc(void* self, void* p) {
     (void)self;
     if (!p) return -1; /* unknown for NULL, like Windows */
     return mw_cotask_owned(p) ? 1 : 0; /* honest: registry answers */
 }
 __attribute__((ms_abi)) static void mw_shmalloc_heapmin(void* self) { (void)self; }
+/* APP-TEST-2 (SW-1501): vtable slot ORDER is the ABI. The Microsoft IMalloc
+ * layout (objidl.h / objidlbase.idl, Wine dlls/ole32/imalloc.c) is:
+ *   [0]QI [1]AddRef [2]Release [3]Alloc [4]Realloc [5]Free
+ *   [6]GetSize [7]DidAlloc [8]HeapMinimize.
+ * The old table put Free at [4] and Realloc at [5]: any guest calling
+ * vtbl[4](self, p, newcb) via the documented order executed Free(p) and
+ * the returned pointer was then used -> use-after-free heap corruption.
+ * Slot order fixed; ownership registry unchanged. */
 static void* const g_shmalloc_vtbl[9] = {
     (void*)mw_shmalloc_qi, (void*)mw_shmalloc_addref, (void*)mw_shmalloc_release,
-    (void*)mw_shmalloc_alloc, (void*)mw_shmalloc_free, (void*)mw_shmalloc_realloc,
+    (void*)mw_shmalloc_alloc, (void*)mw_shmalloc_realloc, (void*)mw_shmalloc_free,
     (void*)mw_shmalloc_getsize, (void*)mw_shmalloc_didalloc, (void*)mw_shmalloc_heapmin,
 };
 static void* g_shmalloc_obj[1] = { (void*)g_shmalloc_vtbl };
@@ -18197,6 +18230,46 @@ __attribute__((ms_abi)) int mw_InitCommonControlsEx(const void* picc) {
 __attribute__((ms_abi)) void mw_InitCommonControls(void) {
     MW_TRACE("InitCommonControls()");
 }
+/* APP-TEST-2: class menu support — wine-notepad passes its menu via the
+ * WINDOW CLASS lpszMenuName (offset 56 in both WNDCLASS and WNDCLASSEX on
+ * x64; menu@32 in WNDCLASSA/W i386, menu@36 in WNDCLASSEXA/W i386); real
+ * Windows loads that menu inside CreateWindowExW when hMenu is NULL.
+ * Capture at RegisterClass time, build + attach at CreateWindow time. */
+static int      g_class_menu_is_id = 0;
+static uint32_t g_class_menu_id = 0;
+static uint16_t g_class_menu_name[64];
+static void*    mw_menu_load_from_res(void* hinst, const uint16_t* name); /* def in menu block */
+static void mw_class_menu_store_w(const void* nm) {
+    g_class_menu_is_id = 0; g_class_menu_id = 0; g_class_menu_name[0] = 0;
+    if (!nm) return;
+    uintptr_t v = (uintptr_t)nm;
+    if (v < 0x10000u) { g_class_menu_is_id = 1; g_class_menu_id = (uint32_t)v; return; }
+    uint16_t tmp[64];
+    if (!mw_probe_copy(nm, sizeof(tmp), tmp)) return;
+    for (int i = 0; i < 64; i++) { g_class_menu_name[i] = tmp[i]; if (!tmp[i]) break; }
+}
+static void mw_class_menu_store_a(const void* nm) {
+    g_class_menu_is_id = 0; g_class_menu_id = 0; g_class_menu_name[0] = 0;
+    if (!nm) return;
+    uintptr_t v = (uintptr_t)nm;
+    if (v < 0x10000u) { g_class_menu_is_id = 1; g_class_menu_id = (uint32_t)v; return; }
+    char tmp[64];
+    if (!mw_probe_copy(nm, sizeof(tmp), tmp)) return;
+    for (int i = 0; i < 64; i++) {
+        if (!tmp[i]) break;
+        g_class_menu_name[i] = (uint16_t)(uint8_t)tmp[i];
+        g_class_menu_name[i + 1] = 0;
+    }
+}
+/* real Win32 contract: a top-level CreateWindowEx with hMenu=NULL loads the
+ * CLASS menu resource (RegisterClass lpszMenuName) and attaches it. */
+static void mw_class_menu_attach(void) {
+    if (g_main_menu || (!g_class_menu_is_id && !g_class_menu_name[0])) return;
+    const uint16_t* mname = g_class_menu_is_id
+        ? (const uint16_t*)(uintptr_t)g_class_menu_id : g_class_menu_name;
+    void* hm = mw_menu_load_from_res((void*)(uintptr_t)mw_main_image_base(), mname);
+    if (hm) { g_main_menu = hm; MW_TRACE("[GUI] class menu -> HMENU %p (lpszMenuName)", hm); }
+}
 __attribute__((ms_abi)) uint16_t mw_RegisterClassExW(const void* wcex) {
     /* SWEEP-005: WNDCLASSEXW.lpfnWndProc lives at offset 8 (after cbSize) */
     if (wcex) {
@@ -18208,13 +18281,15 @@ __attribute__((ms_abi)) uint16_t mw_RegisterClassExW(const void* wcex) {
             hbr = (void*)(uintptr_t)m32_ld32(b + 32);
         } else {
             p = *(void* const*)((const char*)wcex + 8);
-            cname = *(const void* const*)((const char*)wcex + 64);
+            cname = *(void* const*)((const char*)wcex + 64);
             hbr = *(void* const*)((const char*)wcex + 48);
         }
         mw_gui_store_wndproc(p);
         /* SW-1279 fix C: also record {class name -> proc} */
         mw_class_proc_store(cname, 1, p, hbr); /* SW-1291b */
         mw_class_name_store_w((const uint16_t*)cname); /* SWEEP-013 */
+        /* APP-TEST-2: WNDCLASSEXW x64 lpszMenuName@56 (name@64) */
+        mw_class_menu_store_w(*(void* const*)((const char*)wcex + 56));
     }
     MW_TRACE("RegisterClassExW(wcex=%p proc=%p) -> ATOM 0x%x", wcex,
              wcex ? *(void* const*)((const char*)wcex + 8) : NULL, MW_GUI_ATOM);
@@ -18236,6 +18311,8 @@ __attribute__((ms_abi)) uint16_t mw_RegisterClassExA(const void* wcex) {
         mw_gui_store_wndproc(p);
         mw_class_proc_store(cname, 0, p, hbr); /* SW-1291b */
         mw_class_name_store_a((const char*)cname); /* SWEEP-013 */
+        /* APP-TEST-2: WNDCLASSEXA x64 lpszMenuName@56 */
+        mw_class_menu_store_a(*(void* const*)((const char*)wcex + 56));
     }
     MW_TRACE("RegisterClassExA(wcex=%p) -> ATOM 0x%x", wcex, MW_GUI_ATOM);
     return MW_GUI_ATOM;
@@ -18257,6 +18334,10 @@ __attribute__((ms_abi)) uint16_t mw_RegisterClassW(const void* wc) {
         mw_gui_store_wndproc(p);
         mw_class_proc_store(cname, 1, p, hbr); /* SW-1291b */
         mw_class_name_store_w((const uint16_t*)cname); /* SWEEP-013 */
+        /* APP-TEST-2: WNDCLASSW x64 lpszMenuName@56 (style@0 pad@4 proc@8
+         * cbCls@16 cbWnd@20 hInst@24 hIcon@32 hCursor@40 hbr@48 menu@56
+         * name@64 — the layout the SW-1291b brush comment already records) */
+        mw_class_menu_store_w(*(void* const*)((const char*)wc + 56));
         /* SW-1290/SW-1291b: hbrBackground (WNDCLASSW offset 48 on x64: style@0
          * pad@4 proc@8 cbCls@16 cbWnd@20 hInst@24 hIcon@32 hCursor@40
          * hbrBackground@48 menu@56 name@64) now rides the PER-CLASS registry;
@@ -18285,6 +18366,8 @@ __attribute__((ms_abi)) uint16_t mw_RegisterClassA(const void* wc) {
         mw_gui_store_wndproc(p);
         mw_class_proc_store(cname, 0, p, hbr); /* SW-1291b */
         mw_class_name_store_a((const char*)cname); /* SWEEP-013 */
+        /* APP-TEST-2: WNDCLASSA x64 lpszMenuName@56 */
+        mw_class_menu_store_a(*(void* const*)((const char*)wc + 56));
     }
     MW_TRACE("RegisterClassA(wc=%p) -> ATOM 0x%x", wc, MW_GUI_ATOM);
     return MW_GUI_ATOM;
@@ -18638,6 +18721,10 @@ __attribute__((ms_abi)) void* mw_CreateWindowExW(uint32_t exstyle, const void* c
          * (mshearts' menu-update path dereferenced GetMenu==NULL ->
          * SIGSEGV RVA 0x9d5f EnableMenuItem). Attach at creation. */
         if (menu && menu != MW_GUI_HWND) g_main_menu = menu;
+        /* APP-TEST-2: real Win32 also loads the CLASS menu (RegisterClass
+         * lpszMenuName) inside CreateWindowEx when hMenu==NULL — wine-notepad
+         * registers its menu this way and built its UI around GetMenu()!=NULL */
+        mw_class_menu_attach();
         long long cr = mw_gui_send_create(); /* SWEEP-006: synchronous WM_CREATE */
         if (cr == -1) { /* SWEEP-050 SW-1258: real contract — -1 cancels creation */
             MW_TRACE("CreateWindowExW(ex=0x%x cls=%p) WM_CREATE=-1 -> NULL (creation cancelled)",
@@ -18746,6 +18833,8 @@ __attribute__((ms_abi)) void* mw_CreateWindowExA(uint32_t exstyle, const void* c
     }
     {
         if (menu && menu != MW_GUI_HWND) g_main_menu = menu; /* real hMenu contract (A path) */
+        /* APP-TEST-2: class-menu attach (see ExW path) */
+        mw_class_menu_attach();
         long long cr = mw_gui_send_create(); /* SWEEP-006: synchronous WM_CREATE */
         if (cr == -1) { /* SWEEP-050 SW-1258: real contract — -1 cancels creation */
             MW_TRACE("CreateWindowExA(ex=0x%x cls=%p) WM_CREATE=-1 -> NULL (creation cancelled)",
@@ -23351,15 +23440,173 @@ static int mw_menu_find(int s, uint32_t item, uint32_t flags) {
         if (g_menus[s].item[i].id == item) return (int)i;
     return -1;
 }
+/* APP-TEST-2: LoadMenuW/A — REAL RT_MENU template parse (evidence:
+ * wine-notepad builds its whole UI around the menu resource; the old stub
+ * returned an empty menu and GetMenu(hwnd) was nil for the app's lifetime).
+ * Template layout (MENUTEMPLATE v0/v1, winuser.h MENUITEMTEMPLATE):
+ *   WORD wVersion; WORD wOffset;
+ *   items: WORD mtOption; [WORD mtID unless MF_POPUP]; WCHAR title NUL-term;
+ *   if (mtOption & MF_POPUP) a nested item list follows the title.
+ * Wine reference: dlls/user32/menu.c (MENU_ParseMenu resource loop). */
+static int mw_menu_add_item(int slot, uint32_t id, uint32_t flags, const uint16_t* txt) {
+    if (slot < 0 || g_menus[slot].count >= MW_MENU_NITEM) return 0;
+    MwMenuItem* it = &g_menus[slot].item[g_menus[slot].count++];
+    it->id = id;
+    /* MENUITEMTEMPLATE options -> stored state uses the same Win32 MF_ bits
+     * the rest of the menu model keeps (MF_CHECKED=8 MF_GRAYED=1 MF_DISABLED=2) */
+    it->state = (uint16_t)(flags & (8u | 1u | 2u));
+    size_t n = 0;
+    while (txt[n] && n < 31) { it->txt[n] = txt[n]; n++; }
+    it->txt[n] = 0;
+    return 1;
+}
+/* recursive walker; returns 0 on clean parse, -1 on malformed data */
+static int mw_menu_parse_items(const uint16_t** pp, const uint16_t* end, int slot) {
+    while (*pp < end) {
+        uint32_t opt = (*pp)[0];
+        (*pp)++;
+        uint32_t id = 0;
+        if (!(opt & 0x0010u)) { /* not MF_POPUP -> carries an ID */
+            if (*pp >= end) return -1;
+            id = (*pp)[0];
+            (*pp)++;
+        }
+        /* NUL-terminated wide title */
+        const uint16_t* title = *pp;
+        while (*pp < end && **pp) (*pp)++;
+        if (*pp >= end) return -1;
+        (*pp)++; /* skip NUL */
+        if (opt & 0x0010u) { /* MF_POPUP: submenu with nested items */
+            void* sub = mw_menu_alloc(1);
+            int sslot = (int)((uintptr_t)sub & 0xFFFFu) - 1;
+            mw_menu_add_item(slot, id, opt, title);
+            if (g_menus[slot].count > 0)
+                g_menus[slot].item[g_menus[slot].count - 1].sub = sub;
+            if (mw_menu_parse_items(pp, end, sslot) < 0) return -1;
+        } else {
+            mw_menu_add_item(slot, id, opt, title);
+        }
+        if (opt & 0x0080u) break; /* MF_END: last item of this list */
+    }
+    return 0;
+}
+static void* mw_menu_load_from_res(void* hinst, const uint16_t* name) {
+    /* w3_res_find returns the IMAGE_RESOURCE_DATA_ENTRY (DataRVA@0 Size@4);
+     * deref exactly like mw_LoadStringW does (SW-1277: data lives in
+     * hinst's OWN image). LockResource is a no-op — do NOT feed it the
+     * entry (the first port attempt did: menu data looked like a garbage
+     * template and the parser bailed with 'malformed'). */
+    void* hrsrc = w3_res_find(hinst, NULL, (const wchar_t*)name, NULL, (const wchar_t*)4 /* RT_MENU */);
+    if (hrsrc) {
+        uint32_t size = *(const uint32_t*)((const uint8_t*)hrsrc + 4);
+        const uint8_t* base = mw_res_pe_base(hinst);
+        const uint16_t* data = (const uint16_t*)(base ? base + *(const uint32_t*)hrsrc : NULL);
+        const uint16_t* end = (const uint16_t*)((const uint8_t*)data + size);
+        if (data && size >= 4 && end > data + 2) {
+            /* WORD wVersion; WORD wOffset (bytes to skip after header) */
+            uint16_t ver = data[0];
+            uint16_t off = data[1];
+            const uint16_t* items = (const uint16_t*)((const uint8_t*)data + 4 + off);
+            void* h = mw_menu_alloc(0);
+            int slot = (int)((uintptr_t)h & 0xFFFFu) - 1;
+            if (mw_menu_parse_items(&items, end, slot) == 0) {
+                MW_TRACE("LoadMenuW(RT_MENU ver=%u) -> HMENU %p (%u top items)",
+                         ver, h, g_menus[slot].count);
+                return h;
+            }
+            MW_TRACE("LoadMenuW(RT_MENU) -> malformed template, fallback empty");
+        }
+    } else {
+        MW_TRACE("LoadMenuW() -> no RT_MENU resource, empty menu");
+    }
+    return NULL;
+}
 __attribute__((ms_abi)) void* mw_LoadMenuW(void* hinst, const uint16_t* name) {
-    (void)hinst; (void)name;
-    void* h = mw_menu_alloc(0);
-    MW_TRACE("LoadMenuW() -> HMENU %p", h);
-    return h;
+    void* h = mw_menu_load_from_res(hinst, name);
+    return h ? h : mw_menu_alloc(0);
 }
 __attribute__((ms_abi)) void* mw_LoadMenuA(void* hinst, const char* name) {
-    (void)hinst; (void)name;
-    return mw_menu_alloc(0);
+    uint16_t w[256];
+    if (name && ((uintptr_t)name > 0x10000u)) {
+        size_t n = 0;
+        for (; name[n] && n < 255; n++) w[n] = (uint16_t)(uint8_t)name[n];
+        w[n] = 0;
+        return mw_LoadMenuW(hinst, w);
+    }
+    /* numeric atom (MAKEINTRESOURCE) */
+    uint32_t id = name ? (uint32_t)(uintptr_t)name & 0xFFFFu : 0;
+    return mw_LoadMenuW(hinst, (const uint16_t*)(uintptr_t)id);
+}
+/* ---- APP-TEST-2: small real-contract imports still missing upstream ---- */
+/* KERNELBASE!GetCPInfoExW: real codepage descriptor. Rar/7z CLSDs and CRT
+ * locale bootstrap probe it; the old absence fell to the anonymous-stub
+ * arity-32 class. Honest answer: fill the CPINFOEXW layout (x64:
+ * UINT MaxCharSize@0, BYTE DefaultChar[2]@4, BYTE LeadByte[12]@6,
+ * WCHAR UnicodeDefaultChar@18, UINT CodePage@20, WCHAR CodePageName[260]@24)
+ * for the codepages the engine models, ERROR_INVALID_PARAMETER else. */
+__attribute__((ms_abi)) int mw_GetCPInfoExW(unsigned codepage, unsigned long flags, void* cpinfo) {
+    (void)flags;
+    if (!cpinfo) return 0;
+    switch (codepage) {
+    case 0: case 1252: case 1251: case 1254: case 437: case 850: case 65001: break;
+    default: mw_SetLastError(87); return 0;
+    }
+    uint8_t* p = (uint8_t*)cpinfo;
+    *(uint32_t*)(p + 0) = (codepage == 65001) ? 4 : 1;      /* MaxCharSize */
+    p[4] = '?'; p[5] = 0;                                   /* DefaultChar */
+    memset(p + 6, 0, 12);                                   /* LeadByte */
+    *(uint16_t*)(p + 18) = '?';                             /* UnicodeDefaultChar */
+    *(uint32_t*)(p + 20) = codepage;                        /* CodePage */
+    uint16_t* nm = (uint16_t*)(p + 24);                     /* CodePageName[260] */
+    const char* tag = (codepage == 65001) ? "65001 (UTF-8)" :
+                      (codepage == 0 || codepage == 1252) ? "1252  (ANSI-Latin-1)" :
+                      (codepage == 437) ? "437   (OEM-United-States)" : "cp";
+    size_t i = 0;
+    for (; tag[i] && i < 259; i++) nm[i] = (uint16_t)(uint8_t)tag[i];
+    nm[i] = 0;
+    MW_TRACE("GetCPInfoExW(cp=%u) -> TRUE", codepage);
+    return 1;
+}
+/* USER32!GetDpiForWindow: engine renders at the classic 96-DPI metric. */
+__attribute__((ms_abi)) unsigned int mw_GetDpiForWindow(void* hwnd) {
+    (void)hwnd; return 96; /* USER_DEFAULT_SCREEN_DPI */
+}
+/* SHLWAPI!wnsprintfW/A: truncating wide formatter, ALWAYS NUL-terminates,
+ * returns the character count written (never the would-be length).
+ * Route through the native wide engine mw_vfmt_w16 (same engine the UCRT
+ * __stdio_common_vswprintf row uses) so format semantics stay in one place. */
+__attribute__((ms_abi)) int mw_wnsprintfW(uint16_t* buf, int cch, const uint16_t* fmt, ...) {
+    if (!buf || cch <= 0 || !fmt) { if (buf && cch > 0) buf[0] = 0; return 0; }
+    __builtin_ms_va_list ap;
+    __builtin_ms_va_start(ap, fmt);
+    int n = mw_vfmt_w16(buf, (size_t)(cch - 1), fmt, ap);
+    __builtin_ms_va_end(ap);
+    if (n < 0) n = 0;
+    if (n > cch - 1) n = cch - 1;
+    buf[n] = 0;
+    MW_TRACE("wnsprintfW(cch=%d) -> %d", cch, n);
+    return n;
+}
+__attribute__((ms_abi)) int mw_wnsprintfA(char* buf, int cch, const char* fmt, ...) {
+    if (!buf || cch <= 0 || !fmt) { if (buf && cch > 0) buf[0] = 0; return 0; }
+    /* lift the narrow format + varargs into the wide engine, then narrow */
+    uint16_t wfmt[512];
+    size_t f = 0;
+    for (; fmt[f] && f < 511; f++) wfmt[f] = (uint16_t)(uint8_t)fmt[f];
+    wfmt[f] = 0;
+    uint16_t wbuf[2048];
+    __builtin_ms_va_list ap;
+    __builtin_ms_va_start(ap, fmt);
+    int n = mw_vfmt_w16(wbuf, sizeof(wbuf) / 2 - 1, wfmt, ap);
+    __builtin_ms_va_end(ap);
+    if (n < 0) n = 0;
+    if (n > (int)(sizeof(wbuf) / 2 - 1)) n = (int)(sizeof(wbuf) / 2 - 1);
+    wbuf[n] = 0;
+    int out = 0;
+    for (; out < cch - 1 && out < n; out++) buf[out] = (char)(wbuf[out] & 0xFF);
+    buf[out] = 0;
+    MW_TRACE("wnsprintfA(cch=%d) -> %d", cch, out);
+    return out;
 }
 __attribute__((ms_abi)) int mw_SetMenu(void* hwnd, void* menu) {
     if (hwnd == MW_GUI_HWND) g_main_menu = menu;
@@ -29867,6 +30114,29 @@ __attribute__((ms_abi)) const uint16_t* mw_StrStrIW(const uint16_t* hay, const u
     }
     return NULL;
 }
+/* APP-TEST-2 (SW-1502): StrRStrIW — reverse case-insensitive substring search
+ * over [start,end). Wine dlls/shlwapi/ordinal.c matches; notepad.exe resolves
+ * it for its find/replace tail. Empty needle -> start (Windows contract). */
+__attribute__((ms_abi)) const uint16_t* mw_StrRStrIW(const uint16_t* start, const uint16_t* end,
+        const uint16_t* sub) {
+    if (!start || !sub || !sub[0]) return start;
+    size_t slen = 0;
+    while (sub[slen]) slen++;
+    if (!end || (size_t)(end - start) < slen) return NULL;
+    size_t n = (size_t)(end - start);
+    for (size_t i = n - slen + 1; i-- > 0;) {
+        size_t j = 0;
+        while (j < slen) {
+            uint16_t ca = start[i + j], cb = sub[j];
+            if (ca >= L'A' && ca <= L'Z') ca = (uint16_t)(ca + 32);
+            if (cb >= L'A' && cb <= L'Z') cb = (uint16_t)(cb + 32);
+            if (ca != cb) break;
+            j++;
+        }
+        if (j == slen) return start + i;
+    }
+    return NULL;
+}
 __attribute__((ms_abi)) int mw_StrCmpIW(const uint16_t* a, const uint16_t* b) {
     while (*a && *b) {
         uint16_t ca = *a, cb = *b;
@@ -34960,6 +35230,29 @@ __attribute__((ms_abi)) int mw_CharToOemBuffW(const uint16_t* src, char* dst, ui
     for (uint32_t i = 0; i < n; i++) dst[i] = (char)(src[i] & 0xFF); /* latin1 truncate */
     return 1;
 }
+/* APP-TEST-2 (SW-1502): the W twins the parallel timeline missed — Rar.exe
+ * resolves OemToCharBuffW for its IntToExt name path; the A-only coverage
+ * left the W row unresolved on the merged engine (re-run evidence). */
+__attribute__((ms_abi)) int mw_OemToCharBuffW(const char* src, uint16_t* dst, uint32_t n) {
+    if (!src || !dst) return 0;
+    for (uint32_t i = 0; i < n; i++) dst[i] = (uint16_t)(uint8_t)src[i]; /* cp437 ASCII identity */
+    return 1;
+}
+/* APP-TEST-2 (SW-1502): power/config tails — Rar.exe (SetThreadExecutionState
+ * keeps the host awake during long archives) and UnRAR.exe (LsaAddAccountRights
+ * probe) both resolve them; honest no-progress models below. */
+static uint32_t g_thread_exec_state = 0x80000000u; /* ES_CONTINUOUS */
+__attribute__((ms_abi)) uint32_t mw_SetThreadExecutionState(uint32_t flags) {
+    uint32_t prev = g_thread_exec_state;
+    g_thread_exec_state = flags;
+    MW_TRACE("SetThreadExecutionState(%#x) -> prev %#x", flags, prev);
+    return prev; /* real contract: previous state, even when unsupported bits ignored */
+}
+__attribute__((ms_abi)) unsigned long mw_LsaAddAccountRights(void* pol, void* sid,
+        void* rights, unsigned long count) {
+    (void)pol; (void)sid; (void)rights; (void)count;
+    return 0; /* STATUS_SUCCESS — no LSA store: grant-and-forget is honest here */
+}
 __attribute__((ms_abi)) int mw_SetFileAttributesA(const char* name, uint32_t attr) {
     /* route the A-tail through the real W implementation */
     if (!name) { mw_SetLastError(87); return 0; }
@@ -35896,26 +36189,57 @@ __attribute__((ms_abi)) static uint32_t mw_ole_malloc_didalloc(void* self, void*
     return mw_cotask_owned(p) ? 1 : 0; /* honest: registry answers */
 }
 __attribute__((ms_abi)) static uint32_t mw_ole_malloc_heapminimize(void* self) { (void)self; return 0; }
+/* APP-TEST-2 (SW-1501): real IMalloc::QueryInterface. The old lazy table
+ * left slot 0 = NULL — a guest calling pMalloc->lpVtbl->QueryInterface(...)
+ * jumped to address 0 (guaranteed SIGSEGV). Windows contract: S_OK +
+ * the same object for IID_IUnknown and IID_IMalloc, E_NOINTERFACE else.
+ * IID bytes are the little-endian GUID memory image. */
+__attribute__((ms_abi)) static int32_t mw_ole_malloc_qi(void* self, const void* iid, void** out) {
+    static const unsigned char iid_iunknown[16] = {
+        0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0xC0,0x00,0x00,0x00,0x00,0x00,0x00,0x46 };
+    static const unsigned char iid_imalloc[16] = {
+        0xDA,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0xC0,0x00,0x00,0x00,0x00,0x00,0x00,0x46 };
+    if (!out) return 0x80004003L; /* E_POINTER */
+    *out = NULL;
+    if (!iid) return 0x80004003L;
+    if (memcmp(iid, iid_iunknown, 16) == 0 || memcmp(iid, iid_imalloc, 16) == 0) {
+        *out = self;
+        return 0; /* S_OK */
+    }
+    return 0x80004002L; /* E_NOINTERFACE */
+}
+/* APP-TEST-2 (SW-1501): CoGetMalloc lacked GetSize entirely — slot 6 was
+ * DidAlloc and every later slot shifted by one vs the Microsoft ABI, so a
+ * documented-order guest read GetSize as DidAlloc and HeapMinimize as
+ * HeapMinimize-at-wrong-index. Added GetSize + full 9-slot layout. */
+__attribute__((ms_abi)) static size_t mw_ole_malloc_getsize(void* self, void* p) {
+    (void)self;
+    if (!p || !mw_cotask_owned(p)) return 0;
+    return malloc_usable_size(p);
+}
 __attribute__((ms_abi)) uint32_t mw_CoGetMalloc(uint32_t ctx, void** out) {
     (void)ctx;
-    /* fill a minimal IMalloc vtable layout: QI, AddRef, Release, Alloc,
-     * Realloc, Free, DidAlloc, HeapMinimize */
-    static void* vtbl[8];
+    /* APP-TEST-2 (SW-1501): full 9-slot Microsoft IMalloc layout
+     * (objidl.h / Wine dlls/ole32/imalloc.c):
+     *   [0]QI [1]AddRef [2]Release [3]Alloc [4]Realloc [5]Free
+     *   [6]GetSize [7]DidAlloc [8]HeapMinimize. */
+    static void* vtbl[9];
     static void* obj[2];
     if (!vtbl[0]) {
-        /* vtbl entries are set up lazily with the host thunks above */
-        vtbl[0] = (void*)(uintptr_t)0; /* QI: guests don't call it for IMalloc here */
+        vtbl[0] = (void*)mw_ole_malloc_qi;
         vtbl[1] = (void*)mw_ole_malloc_addref;
         vtbl[2] = (void*)mw_ole_malloc_release;
         vtbl[3] = (void*)mw_ole_malloc_alloc;
         vtbl[4] = (void*)mw_ole_malloc_realloc;
         vtbl[5] = (void*)mw_ole_malloc_free;
-        vtbl[6] = (void*)mw_ole_malloc_didalloc;
-        vtbl[7] = (void*)mw_ole_malloc_heapminimize;
+        vtbl[6] = (void*)mw_ole_malloc_getsize;
+        vtbl[7] = (void*)mw_ole_malloc_didalloc;
+        vtbl[8] = (void*)mw_ole_malloc_heapminimize;
         obj[0] = vtbl;
         obj[1] = NULL;
     }
-    if (out) *out = obj;
+    if (!out) return 0x80004003L; /* E_POINTER (APP-TEST-2) */
+    *out = obj;
     return 0; /* S_OK */
 }
 /* ntdll — RtlInitUnicodeString: real initializer. */
@@ -36994,6 +37318,8 @@ static ImportEntry g_import_table[] = {
     ENTRY("KERNEL32.DLL", "GetConsoleCursorInfo",               mw_GetConsoleCursorInfo),
     ENTRY("KERNEL32.DLL", "GetConsoleMode",                      mw_GetConsoleMode),
     ENTRY("KERNEL32.DLL", "GetCPInfo",                          mw_GetCPInfo),
+    ENTRY("KERNELBASE.DLL", "GetCPInfoExW",                     mw_GetCPInfoExW), /* APP-TEST-2 */
+    ENTRY("KERNEL32.DLL", "GetCPInfoExW",                       mw_GetCPInfoExW), /* APP-TEST-2 */
     ENTRY("KERNEL32.DLL", "GetConsoleScreenBufferInfo",          mw_GetConsoleScreenBufferInfo),
     ENTRY("KERNEL32.DLL", "GetCurrentProcess",                   mw_GetCurrentProcess),
     ENTRY("KERNEL32.DLL", "GetCurrentProcessId",                 mw_GetCurrentProcessId),
@@ -37991,6 +38317,8 @@ ENTRY("msvcrt.dll", "wctype", mw_wctype),
     ENTRY("KERNEL32.DLL", "TlsFree",                            mw_TlsFree),
     ENTRY("KERNEL32.DLL", "FlsFree",                            mw_FlsFree),
     ENTRY("KERNEL32.DLL", "SetStdHandle",                       mw_SetStdHandle2),
+    ENTRY("KERNEL32.DLL", "SetThreadExecutionState",            mw_SetThreadExecutionState), /* APP-TEST-2 */
+    ENTRY("ADVAPI32.DLL", "LsaAddAccountRights",                mw_LsaAddAccountRights), /* APP-TEST-2 */
     ENTRY("KERNEL32.DLL", "SystemTimeToTzSpecificLocalTime",    mw_SystemTimeToTzSpecificLocalTime),
     ENTRY("KERNEL32.DLL", "GetDateFormatW",                     mw_GetDateFormatW),
     ENTRY("KERNEL32.DLL", "GetTimeFormatW",                     mw_GetTimeFormatW),
@@ -38036,6 +38364,8 @@ ENTRY("msvcrt.dll", "wctype", mw_wctype),
     ENTRY("api-ms-win-crt-utility-l1-1-0.dll", "_byteswap_ushort", mw__byteswap_ushort),
     ENTRY("api-ms-win-crt-stdio-l1-1-0.dll",   "freopen_s",        mw_freopen_s),
     ENTRY("SHLWAPI.dll", "PathIsRelativeA",                     mw_PathIsRelativeA),
+    ENTRY("SHLWAPI.dll", "wnsprintfW",                          mw_wnsprintfW), /* APP-TEST-2 */
+    ENTRY("SHLWAPI.dll", "wnsprintfA",                          mw_wnsprintfA), /* APP-TEST-2 */
     ENTRY("CRYPT32.dll", "CertOpenSystemStoreA",                mw_CertOpenSystemStoreA),
     ENTRY("CRYPT32.dll", "CertCloseStore",                      mw_CertCloseStore),
     ENTRY("CRYPT32.dll", "CertEnumCertificatesInStore",         mw_CertEnumCertificatesInStore),
@@ -38086,6 +38416,7 @@ ENTRY("msvcrt.dll", "wctype", mw_wctype),
     ENTRY("USER32.DLL", "CheckRadioButton",                     mw_CheckRadioButton), /* SWEEP-013 */
     ENTRY("USER32.DLL", "LoadMenuW",                            mw_LoadMenuW), /* SWEEP-013 */
     ENTRY("USER32.DLL", "LoadMenuA",                            mw_LoadMenuA), /* SWEEP-013 */
+    ENTRY("USER32.DLL", "GetDpiForWindow",                      mw_GetDpiForWindow), /* APP-TEST-2 */
     ENTRY("USER32.DLL", "SetMenu",                              mw_SetMenu), /* SWEEP-013 */
     ENTRY("USER32.DLL", "GetMenu",                              mw_GetMenu), /* SWEEP-013 */
     ENTRY("USER32.DLL", "DrawMenuBar",                          mw_DrawMenuBar), /* SWEEP-013 */
@@ -38136,6 +38467,7 @@ ENTRY("msvcrt.dll", "wctype", mw_wctype),
     ENTRY("USER32.DLL", "CheckRadioButton",                     mw_CheckRadioButton), /* SWEEP-013 */
     ENTRY("USER32.DLL", "LoadMenuW",                            mw_LoadMenuW), /* SWEEP-013 */
     ENTRY("USER32.DLL", "LoadMenuA",                            mw_LoadMenuA), /* SWEEP-013 */
+    ENTRY("USER32.DLL", "GetDpiForWindow",                      mw_GetDpiForWindow), /* APP-TEST-2 */
     ENTRY("USER32.DLL", "SetMenu",                              mw_SetMenu), /* SWEEP-013 */
     ENTRY("USER32.DLL", "GetMenu",                              mw_GetMenu), /* SWEEP-013 */
     ENTRY("USER32.DLL", "DrawMenuBar",                          mw_DrawMenuBar), /* SWEEP-013 */
@@ -39059,6 +39391,7 @@ ENTRY("GDI32.DLL", "GetCharacterPlacementW",                mw_GetCharacterPlace
     ENTRY("shlwapi.dll", "UrlCreateFromPathW",                  mw_UrlCreateFromPathW),
     ENTRY("shlwapi.dll", "StrFormatByteSizeEx",                 mw_StrFormatByteSizeEx),
     ENTRY("shlwapi.dll", "StrStrIW",                            mw_StrStrIW),
+    ENTRY("shlwapi.dll", "StrRStrIW",                           mw_StrRStrIW), /* APP-TEST-2 */
     ENTRY("shlwapi.dll", "StrCmpIW",                            mw_StrCmpIW),
     ENTRY("shlwapi.dll", "StrCmpLogicalW",                      mw_StrCmpLogicalW),
     ENTRY("shlwapi.dll", "StrTrimW",                            mw_StrTrimW),
@@ -39769,6 +40102,7 @@ ENTRY("GDI32.DLL", "GetCharacterPlacementW",                mw_GetCharacterPlace
     ENTRY("USER32.DLL", "CharToOemA",                           mw_CharToOemA),
     ENTRY("USER32.DLL", "CharToOemBuffA",                       mw_CharToOemBuffA),
     ENTRY("USER32.DLL", "OemToCharBuffA",                       mw_OemToCharBuffA),
+    ENTRY("USER32.DLL", "OemToCharBuffW",                       mw_OemToCharBuffW), /* APP-TEST-2 */
     /* ===== SWEEP-032-upstream-gap: winrar/notepad++/idm train ===== */
     ENTRY("USER32.DLL", "OemToCharA",                            mw_OemToCharA),
     ENTRY("USER32.DLL", "CharToOemBuffW",                        mw_CharToOemBuffW),
