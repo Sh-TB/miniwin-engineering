@@ -1,2 +1,0 @@
-3c24d0d678dd65f9b382f676b73b81d132b508705a9fa55a01179788a3ce1952  out_dir/doc_a.txt
-b98f64f5ba1b0ddbcd0dcff48d7034dc113f2963ae880f56bb5c391d62b12a6e  out_dir/doc_b.bin

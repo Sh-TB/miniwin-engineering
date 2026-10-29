@@ -92,8 +92,14 @@ def serialize(slots):
 
 def val_sz(text):
     """REG_SZ value: UTF-16LE bytes including the NUL terminator (loader
-    RegQueryValueExW copies size bytes; guests expect a terminated string)."""
-    return 1, text.encode("utf-16-le")
+    RegQueryValueExW copies size bytes; guests expect a terminated string).
+    SW-1505 (SWEEP-107): the terminator is now APPENDED — the old
+    `encode("utf-16-le")` dropped it, so L"" serialized as size=0 and
+    WinRAR's Setup\\CustomExt wait-loop rejected the value as invalid
+    (same defect class the loader's own seed had as SW-1498: real size
+    for "abc" is (3+1)*2=8, for "" it is 2)."""
+    raw = text.encode("utf-16-le") + b"\x00\x00"
+    return 1, raw
 
 
 def val_dw(n):

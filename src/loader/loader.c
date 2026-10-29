@@ -11949,15 +11949,44 @@ typedef struct {
     uint16_t name[MW_REG_VALN];
     uint32_t type;
     uint32_t size;
-    uint8_t  data[MW_REG_DATA];
+    uint8_t* data; /* SW-1504 (issue #4 REG-1): heap data, exact-size — was a
+                    * fixed 1024B in-struct buffer; real installers write
+                    * larger REG_BINARY/SZ blobs (WinRAR profiles, UI state). */
 } MwRegVal;
 typedef struct {
-    uint8_t  live;
-    uint16_t path[MW_REG_PATHN];
-    uint32_t nvals;
-    MwRegVal vals[MW_REG_MAXVAL];
+    uint8_t   live;
+    uint16_t  path[MW_REG_PATHN];
+    uint32_t  nvals;
+    uint32_t  vals_cap; /* SW-1504: allocated capacity of vals */
+    MwRegVal* vals;     /* SW-1504: grow-by-doubling — was fixed [24]; the cap
+                         * made WinRAR's default-profile writer fail with
+                         * ERROR_OUT_OF_MEMORY(14) and loop forever (SW-1504
+                         * decode: 77x rewrite of Profiles\0..4). */
 } MwRegKey;
 static MwRegKey g_reg[MW_REG_MAXKEY];
+/* SW-1504: grow the per-key value array to hold >= want entries. */
+static int mw_reg_vals_reserve(MwRegKey* k, uint32_t want) {
+    if (want <= k->vals_cap) return 1;
+    uint32_t nc = k->vals_cap ? k->vals_cap : 16;
+    while (nc < want) nc *= 2;
+    MwRegVal* nv = (MwRegVal*)realloc(k->vals, (size_t)nc * sizeof(MwRegVal));
+    if (!nv) return 0;
+    memset(nv + k->nvals, 0, (size_t)(nc - k->nvals) * sizeof(MwRegVal));
+    k->vals = nv;
+    k->vals_cap = nc;
+    return 1;
+}
+/* SW-1504: store type+payload on a value slot (exact-size heap buffer). */
+static int mw_reg_val_store(MwRegVal* v, uint32_t type, uint32_t size, const void* data) {
+    if (size > (16u << 20)) return 0; /* sanity: 16 MiB per value */
+    uint8_t* nd = (uint8_t*)realloc(v->data, size ? size : 1);
+    if (!nd) return 0;
+    v->data = nd;
+    if (size && data) memcpy(nd, data, size);
+    v->type = type;
+    v->size = size;
+    return 1;
+}
 /* ---- SWEEP-023 SW-993: hive snapshot/restore via MINWIN_REG_SNAPSHOT ----
  * When the env var names a file: on first registry access an existing file is
  * loaded (magic "MWREG001"), and at process exit the live hive is written
@@ -11995,13 +12024,13 @@ static void reg_snap_init(void) {
                     if (fread(&rn, 4, 1, f) != 1) break;
                     if (rn >= MW_REG_PATHN) break;
                     if (rn && fseek(f, (long)rn * 2, SEEK_CUR) != 0) break; /* path */
-                    if (fread(&rnv, 4, 1, f) != 1 || rnv > MW_REG_MAXVAL) break; /* nvals AFTER path */
+                    if (fread(&rnv, 4, 1, f) != 1 || rnv > (16u << 20)) break; /* nvals AFTER path (SW-1504: cap removed) */
                     uint32_t rvn, rvt, rvs;
                     for (uint32_t v = 0; v < rnv; v++) {
                         if (fread(&rvn, 4, 1, f) != 1 || rvn >= MW_REG_VALN) break;
                         if (rvn && fseek(f, (long)rvn * 2, SEEK_CUR) != 0) break;
                         if (fread(&rvt, 4, 1, f) != 1) break; /* type */
-                        if (fread(&rvs, 4, 1, f) != 1 || rvs > MW_REG_DATA) break; /* size */
+                        if (fread(&rvs, 4, 1, f) != 1 || rvs > (16u << 20)) break; /* size */
                         if (rvs && fseek(f, (long)rvs, SEEK_CUR) != 0) break; /* data */
                     }
                     g_reg[i].live = 1;
@@ -12015,8 +12044,13 @@ static void reg_snap_init(void) {
                 g_reg[i].live = 1;
                 g_reg[i].path[n] = 0;
                 if (n && fread(g_reg[i].path, 2, n, f) != n) break;
-                if (fread(&g_reg[i].nvals, 4, 1, f) != 1 ||
-                    g_reg[i].nvals > MW_REG_MAXVAL) break;
+                { /* SW-1504: dynamic value array — old load rejected snapshots
+                   * with more than MW_REG_MAXVAL(24) values per key. */
+                    uint32_t nv2 = 0;
+                    if (fread(&nv2, 4, 1, f) != 1 || nv2 > (16u << 20)) break;
+                    if (!mw_reg_vals_reserve(&g_reg[i], nv2)) break;
+                    g_reg[i].nvals = nv2;
+                }
                 for (uint32_t v = 0; v < g_reg[i].nvals; v++) {
                     MwRegVal* val = &g_reg[i].vals[v];
                     uint32_t vn = 0;
@@ -12024,8 +12058,15 @@ static void reg_snap_init(void) {
                     val->name[vn] = 0;
                     if (vn && fread(val->name, 2, vn, f) != vn) break;
                     if (fread(&val->type, 4, 1, f) != 1) break;
-                    if (fread(&val->size, 4, 1, f) != 1 || val->size > MW_REG_DATA) break;
-                    if (val->size && fread(val->data, 1, val->size, f) != val->size) break;
+                    { /* SW-1504: exact-size heap payload (format unchanged) */
+                        uint32_t sz2 = 0;
+                        if (fread(&sz2, 4, 1, f) != 1 || sz2 > (16u << 20)) break;
+                        uint8_t* nd = (uint8_t*)realloc(val->data, sz2 ? sz2 : 1);
+                        if (!nd) break;
+                        val->data = nd;
+                        val->size = sz2;
+                        if (sz2 && fread(val->data, 1, sz2, f) != sz2) break;
+                    }
                 }
             }
             MW_TRACE("reg snapshot loaded from %s", p);
@@ -12398,7 +12439,13 @@ __attribute__((ms_abi)) int32_t mw_RegOpenKeyExW(void* key, const wchar_t* sub, 
         return 2; /* FILE_NOT_FOUND: honest miss */
     }
     if (result) *result = (void*)(uintptr_t)(MW_REGKEY_BASE | (uintptr_t)(i + 1));
-    MW_TRACE("RegOpenKeyExW -> handle slot %d", i);
+    { /* SW-1503c: log the opened PATH on success too (spin decode) */
+        char pb[MW_REG_PATHN > 260 ? 260 : MW_REG_PATHN];
+        uint32_t k = 0;
+        while (k + 1 < sizeof(pb) && path[k]) { pb[k] = (char)(path[k] & 0xFF); k++; }
+        pb[k] = 0;
+        MW_TRACE("RegOpenKeyExW '%s' -> handle slot %d", pb, i);
+    }
     return 0;
 }
 __attribute__((ms_abi)) int32_t mw_RegOpenKeyExA(void* key, const char* sub, uint32_t opts, uint32_t access, void** result) {
@@ -13104,11 +13151,98 @@ static int32_t mw_reg_query(void* key, const uint16_t* name, uint32_t* type, voi
     mw_SetLastError(2);
     return 2;
 }
+/* SW-1503: wide-string equality for the backtrace gate */
+static int mw_reg_name_is(const uint16_t* a, const uint16_t* b) {
+    if (!a) return 0;
+    for (int i = 0; i < 64; i++) {
+        if (a[i] != b[i]) return 0;
+        if (!a[i]) return 1;
+    }
+    return 1;
+}
 __attribute__((ms_abi)) int32_t mw_RegQueryValueExW(void* key, const wchar_t* name, void* res, uint32_t* type, void* data, uint32_t* size) {
+    /* SW-1503b: rsp AT ENTRY — [entry_rsp] is the guest return address slot
+     * (captured before the compiler allocates locals). */
+    uint64_t entry_rsp;
+    __asm__ volatile ("mov %%rsp, %0" : "=r"(entry_rsp));
     (void)res;
     /* SWEEP-058 SW-1239 diag: caller attribution for HKPD probes */
     if (((uint32_t)(uintptr_t)key) == 0x80000004u)
         MW_TRACE("HKPD-W probe caller=%p name=%p", __builtin_return_address(0), (const void*)name);
+    /* SW-1503 (SWEEP-107): guest-caller attribution for registry queries,
+     * gated by MINWIN_REG_CALLER=1 — decodes winrarinstd's 'CustomExt'
+     * re-read spin (SW-1412 family) by naming the guest module+offset that
+     * issues each read (same attribution pattern as SW-1262 CreateFileW). */
+    static int reg_caller_diag = -1;
+    if (reg_caller_diag < 0) {
+        const char* rc_ = getenv("MINWIN_REG_CALLER");
+        reg_caller_diag = (rc_ && rc_[0] && rc_[0] != '0') ? 1 : 0;
+    }
+    if (reg_caller_diag) {
+        uint64_t ret = (uint64_t)(uintptr_t)__builtin_return_address(0);
+        uint64_t b = 0, sz = 0; const char* nm = NULL;
+        if (ret && mw_module_of(ret, &b, &sz, &nm))
+            MW_TRACE("RegQueryValueExW caller=%s+0x%llx name=%p",
+                     nm, (unsigned long long)(ret - b), (const void*)name);
+        else
+            MW_TRACE("RegQueryValueExW caller=%p name=%p", (const void*)ret,
+                     (const void*)name);
+        /* SW-1503b: RAW stack probe — 12 unfiltered qwords + rsp, plus
+         * exe-range return addresses up to +0x400. One line each, manual
+         * decode against the WinRAR disassembly. */
+        if (name) { /* Linux wchar_t is 32-bit: build the compare string in uint16 */
+            static const uint16_t ce_name[10] = { 'C','u','s','t','o','m','E','x','t',0 };
+            if (mw_reg_name_is((const uint16_t*)name, ce_name)) {
+            static int bt_done = 0;
+            if (bt_done < 6) {
+                bt_done++;
+                uint64_t ret = (uint64_t)(uintptr_t)__builtin_return_address(0);
+                /* find every slot above entry_rsp that holds the RA value:
+                 * the engine's own spill + the TRUE guest RA slot. Unwind a
+                 * short chain from each candidate; the real one walks ≥5
+                 * exe frames with rising rsp. */
+                uint64_t cands[8]; int ncand = 0;
+                for (uint64_t a = (entry_rsp + 7) & ~7ull; a < entry_rsp + 0x800 && ncand < 8; a += 8) {
+                    uint64_t v = 0;
+                    if (!mw_probe_copy((const void*)a, 8, (char*)&v)) break;
+                    if (v == ret) cands[ncand++] = a + 8;
+                }
+                MW_TRACE("  BT start ret=%llx candidates=%d", (unsigned long long)ret, ncand);
+                for (int ci = 0; ci < ncand; ci++) {
+                    uint64_t grsp = cands[ci];
+                    uint8_t ctx[0x4D0];
+                    memset(ctx, 0, sizeof(ctx));
+                    *(uint64_t*)(ctx + 0x98) = grsp;  /* CONTEXT.Rsp */
+                    *(uint64_t*)(ctx + 0xF8) = ret;   /* CONTEXT.Rip */
+                    MW_TRACE("  BT cand%d grsp=%llx:", ci, (unsigned long long)grsp);
+                    for (int f = 0; f < 12; f++) {
+                        uint64_t pc = *(uint64_t*)(ctx + 0xF8);
+                        uint64_t base = 0;
+                        RUNTIME_FUNCTION* rf = seh_lookup_rf_for_pc(pc, &base);
+                        MW_TRACE("  BT frame%d rip=%llx (img+%llx) rsp=%llx rf=%d",
+                                 f, (unsigned long long)pc,
+                                 (unsigned long long)(pc ? pc - 0x140000000ull : 0),
+                                 (unsigned long long)*(uint64_t*)(ctx + 0x98),
+                                 rf ? 1 : 0);
+                        if (!rf) break;
+                        uint64_t est = 0; uint32_t hrva = 0; void* lsda = NULL; uint64_t ms = 0;
+                        seh_internal_virtual_unwind(pc, rf, ctx, &est, &hrva, &lsda, &ms);
+                        /* the internal unwinder restores RSP but leaves RIP:
+                         * pop the return address at the new RSP (call-site
+                         * semantics — [unwound_rsp] is the RA slot). */
+                        uint64_t nrsp = *(uint64_t*)(ctx + 0x98);
+                        uint64_t pc2 = 0;
+                        if (mw_probe_copy((const void*)nrsp, 8, (char*)&pc2)) {
+                            *(uint64_t*)(ctx + 0x98) = nrsp + 8;
+                            *(uint64_t*)(ctx + 0xF8) = pc2;
+                        }
+                        if (pc2 == pc) { MW_TRACE("  BT stop (no progress)"); break; }
+                    }
+                }
+            }
+            }
+        }
+    }
     return mw_reg_query(key, (const uint16_t*)name, type, data, size);
 }
 __attribute__((ms_abi)) int32_t mw_RegQueryValueExA(void* key, const char* name, void* res, uint32_t* type, void* data, uint32_t* size) {
@@ -13267,7 +13401,13 @@ __attribute__((ms_abi)) int32_t mw_RegCreateKeyExW(void* key, const wchar_t* sub
     }
     if (result) *result = (void*)(uintptr_t)(MW_REGKEY_BASE | (uintptr_t)(i + 1));
     if (disp) *(uint32_t*)disp = created ? 1u /*CREATED_NEW_KEY*/ : 2u /*OPENED_EXISTING_KEY*/;
-    MW_TRACE("RegCreateKeyExW -> slot %d (created=%d)", i, created);
+    { /* SW-1503c: log the created path (spin decode) */
+        char pb[MW_REG_PATHN > 260 ? 260 : MW_REG_PATHN];
+        uint32_t k = 0;
+        while (k + 1 < sizeof(pb) && path[k]) { pb[k] = (char)(path[k] & 0xFF); k++; }
+        pb[k] = 0;
+        MW_TRACE("RegCreateKeyExW '%s' -> slot %d (created=%d)", pb, i, created);
+    }
     return 0;
 }
 /* SW-555 honest batch (SWEEP-009): W short forms. Real RegOpenKeyW ==
@@ -13288,8 +13428,14 @@ __attribute__((ms_abi)) int32_t mw_RegDeleteValueW(void* key, const wchar_t* nam
     if (i < 0) { mw_SetLastError(6); return 6; }
     for (uint32_t v = 0; v < g_reg[i].nvals; v++) {
         if (!mw_reg_weq(g_reg[i].vals[v].name, (const uint16_t*)name)) continue;
+        /* SW-1504: vals[] is heap-backed now — free the deleted slot's
+         * payload BEFORE the shift so its pointer is not duplicated into
+         * the tail (double-free when the array is grown/realloc'd later). */
+        free(g_reg[i].vals[v].data);
+        g_reg[i].vals[v].data = NULL;
         for (uint32_t k = v; k + 1 < g_reg[i].nvals; k++)
             g_reg[i].vals[k] = g_reg[i].vals[k + 1];
+        memset(&g_reg[i].vals[g_reg[i].nvals - 1], 0, sizeof(MwRegVal));
         g_reg[i].nvals--;
         return 0;
     }
@@ -13451,28 +13597,38 @@ __attribute__((ms_abi)) int32_t mw_RegSetValueExW(void* key, const wchar_t* name
     (void)res;
     int i = mw_reg_slot(key);
     if (i < 0) { mw_SetLastError(6); return 6; }
-    if (size > MW_REG_DATA) { mw_SetLastError(234); return 234; }
-    /* SWEEP-023 SW-992: overwrite the existing value (Windows contract); the
-     * old append-only path made double-writes read back the FIRST value. */
+    /* SW-1504 (issue #4 REG-1): no per-key value cap — the old
+     * `nvals >= MW_REG_MAXVAL(24)` failure answered ERROR_OUT_OF_MEMORY(14)
+     * to real installers (WinRAR's default-profile writer then looped
+     * forever rewriting Profiles\0..4, SW-1504 decode). Values grow by
+     * doubling; the only honest failure left is host OOM. */
     static const uint16_t empty_name[1] = {0};
     const uint16_t* nm = name ? (const uint16_t*)name : empty_name;
     for (uint32_t e = 0; e < g_reg[i].nvals; e++) {
         if (!mw_reg_weq(g_reg[i].vals[e].name, nm)) continue;
         MwRegVal* v = &g_reg[i].vals[e];
-        v->type = type;
-        v->size = size;
-        if (size && data) memcpy(v->data, data, size);
-        MW_TRACE("RegSetValueExW -> slot %d value overwritten (%u bytes)", i, size);
+        if (!mw_reg_val_store(v, type, size, data)) { mw_SetLastError(14); return 14; }
+        { /* SW-1504: name in the trace (spin decode) */
+            char nb2[MW_REG_VALN > 80 ? 80 : MW_REG_VALN];
+            uint32_t k2 = 0;
+            while (k2 + 1 < sizeof(nb2) && nm[k2]) { nb2[k2] = (char)(nm[k2] & 0xFF); k2++; }
+            nb2[k2] = 0;
+            MW_TRACE("RegSetValueExW -> slot %d '%s' overwritten (%u bytes)", i, nb2, size);
+        }
         return 0;
     }
-    if (g_reg[i].nvals >= MW_REG_MAXVAL) { mw_SetLastError(14); return 14; }
+    if (!mw_reg_vals_reserve(&g_reg[i], g_reg[i].nvals + 1)) { mw_SetLastError(14); return 14; }
     MwRegVal* v = &g_reg[i].vals[g_reg[i].nvals];
     mw_reg_wcopy(v->name, nm, MW_REG_VALN);
-    v->type = type;
-    v->size = size;
-    if (size && data) memcpy(v->data, data, size);
+    if (!mw_reg_val_store(v, type, size, data)) { mw_SetLastError(14); return 14; }
     g_reg[i].nvals++;
-    MW_TRACE("RegSetValueExW -> slot %d, %u bytes stored", i, size);
+    { /* SW-1504: name in the trace (spin decode) */
+        char nb2[MW_REG_VALN > 80 ? 80 : MW_REG_VALN];
+        uint32_t k2 = 0;
+        while (k2 + 1 < sizeof(nb2) && nm[k2]) { nb2[k2] = (char)(nm[k2] & 0xFF); k2++; }
+        nb2[k2] = 0;
+        MW_TRACE("RegSetValueExW -> slot %d '%s', %u bytes stored", i, nb2, size);
+    }
     return 0;
 }
 __attribute__((ms_abi)) int32_t mw_RegLoadMUIStringW(void* key, const wchar_t* v, wchar_t* out, uint32_t cap, uint32_t* len, uint32_t flags, const wchar_t* dir) {
