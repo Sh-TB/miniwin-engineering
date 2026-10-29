@@ -16566,6 +16566,62 @@ __attribute__((ms_abi)) int mw_WaitNamedPipeA(const char* name, uint32_t ms) {
     (void)name; (void)ms;
     mw_SetLastError(2); return 0;
 }
+/* ---- SW-1321: WinRAR 7.12 GUI tail (issue #17 load banner) ---- */
+__attribute__((ms_abi)) int mw_WaitNamedPipeW(const uint16_t* name, uint32_t ms) {
+    (void)name; (void)ms;
+    mw_SetLastError(2); /* ERROR_FILE_NOT_FOUND: no pipe objects exist */
+    MW_TRACE("WaitNamedPipeW -> FALSE (ERROR_FILE_NOT_FOUND)");
+    return 0;
+}
+__attribute__((ms_abi)) int mw_GetPhysicallyInstalledSystemMemory(uint64_t* total_kb) {
+    if (!total_kb) { mw_SetLastError(87); return 0; }
+    long pages = sysconf(_SC_PHYS_PAGES);
+    long psize = sysconf(_SC_PAGE_SIZE);
+    if (pages <= 0 || psize <= 0) { mw_SetLastError(1); return 0; }
+    *total_kb = (uint64_t)pages * (uint64_t)psize / 1024ull;
+    MW_TRACE("GetPhysicallyInstalledSystemMemory -> %llu KB TRUE",
+             (unsigned long long)*total_kb);
+    return 1;
+}
+__attribute__((ms_abi)) int mw_GetScrollBarInfo(void* hwnd, uint32_t idObject, void* psbi) {
+    (void)hwnd;
+    if (!psbi) { mw_SetLastError(87); return 0; }
+    memset(psbi, 0, 60); /* SCROLLBARINFO: cbSize + rc + thumb + rgstate[6] */
+    *(uint32_t*)psbi = 60;
+    MW_TRACE("GetScrollBarInfo(hwnd=%p obj=%u) -> TRUE (default geometry)", hwnd, idObject);
+    return 1;
+}
+__attribute__((ms_abi)) int mw_SetUserObjectInformationW(void* hobj, uint32_t idx, const void* info, uint32_t len) {
+    (void)hobj; (void)idx; (void)info; (void)len;
+    mw_SetLastError(5); /* ERROR_ACCESS_DENIED: station is read-only */
+    MW_TRACE("SetUserObjectInformationW -> FALSE (ERROR_ACCESS_DENIED)");
+    return 0;
+}
+__attribute__((ms_abi)) void mw_keybd_event(uint8_t vk, uint8_t scan, uint32_t flags, uintptr_t extra) {
+    (void)scan; (void)flags; (void)extra;
+    MW_TRACE("keybd_event(vk=%u flags=0x%x) -> no-op (no input injection)", vk, flags);
+}
+__attribute__((ms_abi)) int32_t mw_comctl_ordinal380(void) {
+    MW_TRACE("[STUB] COMCTL32.380 (nameless ordinal, no public table) -> 0");
+    return 0;
+}
+__attribute__((ms_abi)) uint32_t mw_SafeArrayCopy(void* src, void** dest) {
+    if (!dest) return 0x80070057u; /* E_INVALIDARG */
+    *dest = NULL;
+    if (!src) return 0; /* S_OK: NULL copy is valid */
+    const uint8_t* s = (const uint8_t*)src;
+    uint32_t cDims = *(const uint32_t*)(s + 20);
+    if (cDims == 0 || cDims > 64) return 0x80070057u;
+    uint32_t cb = *(const uint32_t*)(s + 16);
+    size_t count = 1;
+    for (uint32_t d = 0; d < cDims; d++) count *= *(const uint32_t*)(s + 32 + d * 8);
+    size_t total = 32 + (size_t)cDims * 8 + (size_t)cb * count;
+    uint8_t* out = (uint8_t*)malloc(total);
+    if (!out) return 0x8007000Eu; /* E_OUTOFMEMORY */
+    memcpy(out, src, total);
+    *dest = out;
+    return 0; /* S_OK */
+}
 __attribute__((ms_abi)) long mw_IdnToAscii(uint32_t flags, const uint16_t* src, int len, uint16_t* dst, int cap) {
     (void)flags;
     if (!src || len < 0) return 0;
@@ -19009,6 +19065,17 @@ static int  g_dialog_count = 0;
  * guest RGBA loop wrote at NULL+off (SIGSEGV RVA 0x12d0c2, x3 deterministic).
  * Even non-NULL 32bpp requests overflowed the 3B/px allocation. */
 typedef struct { uint8_t* px; int w, h; uint16_t vbpp; uint16_t vtop; uint32_t vstride; } MWBmp;
+
+/* SW-1301: shared GDI draw state declared early — StretchBlt (rop-aware)
+ * runs before the original declaration site below. */
+static uint32_t g_cur_brush = 0xFFFFFF; static int g_brush_hollow = 0;
+
+/* SW-1310: font slot state declared early — SelectObject (SW-1310 branch)
+ * runs before the original font block below. */
+static uint8_t g_lf_live[8];    /* HFONT slots live */
+static uint8_t g_lf_raw[8][92]; /* LOGFONTW/A raw bytes */
+static int      g_lf_size[8];   /* 92 (W) or 60 (A) */
+static int      g_font_face[8]; /* per-slot face index */
 static MWBmp     g_surf = { 0, 0, 0 }; /* window framebuffer (0xRRGGBB pixels) — SW-1266: hoisted for the compositor */
 
 /* row start honoring the view format (legacy: w*3 stride) */
@@ -19084,6 +19151,7 @@ __attribute__((ms_abi)) int mw_StretchBlt(void* hdcDst, int x, int y, int w, int
     if (!D || !S || w <= 0 || h <= 0 || ws <= 0 || hs <= 0) return 0;
     if (rop == 0x00000042u) { mwb_fill(D, x, y, w, h, 0x000000); return 1; } /* BLACKNESS */
     if (rop == 0x00FF0062u) { mwb_fill(D, x, y, w, h, 0xFFFFFF); return 1; } /* WHITENESS */
+    uint32_t sbase = rop & 0x00FFFFFFu; /* SW-1301: rop-aware scaled blit */
     /* nearest-neighbor scale — COLORONCOLOR equivalent, honest pixels */
     int copied = 0;
     for (int row = 0; row < h; row++) {
@@ -19094,7 +19162,22 @@ __attribute__((ms_abi)) int mw_StretchBlt(void* hdcDst, int x, int y, int w, int
             int sx = xs + (int)((long long)ws * col / w);
             int dx = x + col;
             if (sx < 0 || dx < 0 || sx >= S->w || dx >= D->w) continue;
-            mwb_set(D, dx, dy, mwb_get(S, sx, sy)); /* SWEEP-028: view-format aware */
+            uint32_t c = mwb_get(S, sx, sy); /* SWEEP-028: view-format aware */
+            if (sbase != 0x00CC0020u) {
+                uint32_t d = mwb_get(D, dx, dy), p = g_cur_brush, r = p;
+                switch (sbase) {
+                case 0x00F00021u: r = p; break;
+                case 0x005A0049u: r = d ^ p; break;
+                case 0x008800C6u: r = c & p; break;
+                case 0x00EE0086u: r = c | p; break;
+                case 0x00330008u: r = ~c; break;
+                case 0x00BB0226u: r = (~c) | d; break;
+                case 0x00550009u: r = ~d; break;
+                default: r = p; break;
+                }
+                c = r & 0xFFFFFFu;
+            }
+            mwb_set(D, dx, dy, c);
             copied++;
         }
     }
@@ -19204,6 +19287,43 @@ static void mw_engine_paint_children(void* hwnd) {
     if (painted) {
         MW_TRACE("[GUI] composite paint: %d standard controls (SW-1266)", painted);
         mw_surface_dump("UpdateWindow");
+    }
+}
+/* ---- SW-1310 (GFX-2 G2-1): multi-size built-in faces driving BOTH metrics
+ * and raster (Wine win32u/font.c model). The 8x8 engine cell is the single
+ * raster source; larger faces are nearest-neighbor resamples. ---- */
+typedef struct { int16_t h, aw, ascent, descent, weight; } MwFace;
+static const MwFace g_faces[4] = {
+    {  8, 8,  7, 1, 400 },  /* [0] engine 8x8 */
+    { 13, 7, 11, 2, 400 },  /* [1] MS Sans Serif 13px surrogate */
+    { 16, 8, 14, 2, 400 },  /* [2] 16px */
+    { 16, 8, 14, 2, 700 },  /* [3] 16px bold */
+};
+static int g_cur_font = 0; /* selected face index (global draw state) */
+static const MwFace* mw_face_cur(void) {
+    int f = g_cur_font;
+    if (f < 0 || f > 3) f = 0;
+    return &g_faces[f];
+}
+static int mw_face_pick(int lf_height, int lf_weight) {
+    int h = lf_height < 0 ? -lf_height : lf_height; /* signed per MSDN */
+    if (h == 0) h = 13;
+    if (h > 14) return (lf_weight >= 700) ? 3 : 2;
+    if (h > 10) return 1;
+    return 0;
+}
+static void mwb_text_face(MWBmp* b, int x, int y, const char* s, uint32_t c) {
+    const MwFace* F = mw_face_cur();
+    for (; *s; s++, x += F->aw) {
+        uint8_t ch = (uint8_t)*s;
+        if (ch > 0x7F) ch = '?';
+        for (int dy = 0; dy < F->h; dy++) {
+            int ry = dy * 8 / F->h;
+            uint8_t row = font8x8_basic[ch][ry];
+            for (int dx = 0; dx < F->aw; dx++)
+                if (row & (1 << (dx * 8 / F->aw)))
+                    mwb_set(b, x + dx, y + dy, c);
+        }
     }
 }
 static int mwb_textw(const char* s, int scale) { return (int)strlen(s) * 8 * scale; }
@@ -19439,7 +19559,7 @@ static intptr_t  g_postq_lp[MW_POSTQ_MAX];
 static int       g_postq_head = 0, g_postq_n = 0;
 
 /* GDI draw state (colors stored as 0xRRGGBB, guest COLORREF is 0x00BBGGRR) */
-static uint32_t  g_cur_brush = 0xFFFFFF; static int g_brush_hollow = 0;
+/* g_cur_brush/g_brush_hollow live at the GDI top (SW-1301) */
 static uint32_t  g_cur_pen = 0x000000;
 static int       g_pen_x = 0, g_pen_y = 0;
 static uint32_t  g_text_col = 0x000000;
@@ -20895,11 +21015,13 @@ __attribute__((ms_abi)) int mw_TextOutW(void* hdc, int x, int y, const uint16_t*
     char buf[1025];
     w3_w16_to_utf8z(wbuf, buf, sizeof(buf));
     int alen = (int)strlen(buf); /* wide glyphs collapse; align on engine cols */
-    if (g_text_align & 0x6) x -= (g_text_align & 0x6) == 0x6 ? (alen * 4) : (alen * 8);
-    if (g_text_align & 0x18) y -= (g_text_align & 0x18) == 0x18 ? 6 : 8;
-    if (g_bk_mode != 1) mwb_fill(S, x, y, alen * 8, 8, g_bk_col);
-    mwb_text8(S, x, y, buf, g_text_col, 1);
-    MW_TRACE("[GDI] TextOutW(%d,%d) '%s'", x, y, buf);
+    const MwFace* F = mw_face_cur(); /* SW-1310: selected face drives align+bg+raster */
+    if (g_text_align & 0x6) x -= (g_text_align & 0x6) == 0x6 ? (alen * F->aw) / 2 : (alen * F->aw);
+    if (g_text_align & 0x18) y -= (g_text_align & 0x18) == 0x18 ? F->ascent / 2 : F->ascent;
+    if (g_bk_mode != 1) mwb_fill(S, x, y, alen * F->aw, F->h, g_bk_col);
+    if (F->h == 8 && F->aw == 8) mwb_text8(S, x, y, buf, g_text_col, 1);
+    else mwb_text_face(S, x, y, buf, g_text_col);
+    MW_TRACE("[GDI] TextOutW(%d,%d) face=%d '%s'", x, y, g_cur_font, buf);
     return 1;
 }
 /* ---- SWEEP-023 SW-985: text alignment + extent (8x8 engine face metrics) ---- */
@@ -21155,6 +21277,14 @@ __attribute__((ms_abi)) void* mw_SelectObject(void* hdc, void* h) {
     } else if ((v & 0xFFFFF000u) == 0x00031000u) {
         int i = (int)(v & 0x1F);
         if (g_pen_live[i]) g_cur_pen = g_pen_rgb[i];
+    } else if ((v & 0xFFFF0000u) == 0x00070000u) {
+        /* SW-1310 (GFX-2 G2-1): SelectObject(HFONT) switches the active face —
+         * metrics AND raster follow (0x00070000 literal: MW_HFONT_BASE is
+         * defined later in the font block). */
+        int i = (int)(v & 0xFFFFu) - 1;
+        if (i >= 0 && i < 8 && g_lf_live[i]) g_cur_font = g_font_face[i];
+        else g_cur_font = 1; /* default GUI surrogate */
+        MW_TRACE("[GDI] SelectObject(HFONT %p) -> face %d", h, g_cur_font);
     } else if ((v & 0xFFFF0000u) == 0x00040000u) {
         int idx = (int)(v & 0xFF);
         switch (idx) {
@@ -21166,6 +21296,8 @@ __attribute__((ms_abi)) void* mw_SelectObject(void* hdc, void* h) {
         case 5: g_brush_hollow = 1; break;                    /* NULL_BRUSH */
         case 6: g_cur_pen = 0xFFFFFF; break;                  /* WHITE_PEN */
         case 7: g_cur_pen = 0x000000; break;                  /* BLACK_PEN */
+        case 13: g_cur_font = 0; break;                       /* SYSTEM_FONT: 8x8 */
+        case 17: g_cur_font = 1; break;                       /* DEFAULT_GUI_FONT */
         default: break; /* fonts: font8x8 used regardless */
         }
     }
@@ -21467,11 +21599,42 @@ __attribute__((ms_abi)) int mw_BitBlt(void* hdcDst, int x, int y, int w, int h,
         MW_TRACE("[GDI] BitBlt -> 0 (bad dst/src DC)");
         return 0;
     }
-    if (base != 0x00CC0020u) { /* SRCCOPY is the contract; honest fallback */
-        mwb_fill(D, x, y, w, h, g_cur_brush);
-        MW_TRACE("[GDI] BitBlt rop=0x%x -> brush fill fallback", rop);
+    if (base == 0x00CC0020u) goto srccopy_path; /* fast path below */
+    /* SW-1301 (GFX-1 G1-2): rop-dispatched ternary raster (Wine bitblt.c
+     * model) — result = f(src, dst, pattern) per pixel; pattern = current
+     * brush. The 8 common rops; anything else keeps the honest brush-fill
+     * fallback (G1-6 reject scope). */
+    {
+        int composed = 0;
+        for (int row = 0; row < h; row++) {
+            int sy = ys + row, dy = y + row;
+            if (sy < 0 || dy < 0 || sy >= S->h || dy >= D->h) continue;
+            for (int col = 0; col < w; col++) {
+                int sx = xs + col, dx = x + col;
+                if (sx < 0 || dx < 0 || sx >= S->w || dx >= D->w) continue;
+                uint32_t s = mwb_get(S, sx, sy); /* 0x00BBGGRR engine order */
+                uint32_t d = mwb_get(D, dx, dy);
+                uint32_t p = g_cur_brush, r = p;
+                switch (base) {
+                case 0x00F00021u: r = p; break;              /* PATCOPY */
+                case 0x005A0049u: r = d ^ p; break;          /* PATINVERT */
+                case 0x008800C6u: r = s & p; break;          /* SRCAND */
+                case 0x00EE0086u: r = s | p; break;          /* SRCPAINT */
+                case 0x00330008u: r = ~s; break;             /* NOTSRCCOPY */
+                case 0x00BB0226u: r = (~s) | d; break;       /* MERGEPAINT */
+                case 0x00550009u: r = ~d; break;             /* DSTINVERT */
+                case 0x00FB0A09u: r = d | (p | (~s)); break; /* PATPAINT */
+                default: r = p; break;
+                }
+                mwb_set(D, dx, dy, r & 0xFFFFFFu);
+                composed++;
+            }
+        }
+        MW_TRACE("[GDI] BitBlt %dx%d @%d,%d rop=0x%08x (%d px composed)",
+                 w, h, x, y, rop, composed);
         return 1;
     }
+srccopy_path:;
     int copied = 0;
     for (int row = 0; row < h; row++) {
         int sy = ys + row, dy = y + row;
@@ -24255,10 +24418,7 @@ __attribute__((ms_abi)) int mw_GetClassInfoExA(void* hinst, const void* name, vo
 }
 
 /* ---- gdi32: fonts + GetObject (real LOGFONT round-trip) ---- */
-#define MW_HFONT_BASE 0x00070000u
-static uint8_t g_lf_live[8];
-static uint8_t g_lf_raw[8][92]; /* LOGFONTW raw bytes */
-static int      g_lf_size[8];   /* 92 (W) or 60 (A) */
+#define MW_HFONT_BASE 0x00070000u /* handle base; state arrays live at GDI top (SW-1310) */
 __attribute__((ms_abi)) void* mw_CreateFontIndirectW(const void* lf) {
     if (!lf) return NULL;
     for (int i = 0; i < 8; i++)
@@ -26849,15 +27009,14 @@ __attribute__((ms_abi)) uint32_t mw_GdipCreateBitmapFromStream(void* stream, voi
     MW_TRACE("GdipCreateBitmapFromStream(%p) -> GenericError (no codecs)", stream);
     return 1;
 }
+/* SW-1320: real image objects — routed to helpers defined in the GDI+ block */
+static uint32_t mw_gdimg_size(void* img, uint32_t* w, uint32_t* h);
+static uint32_t mw_gdimg_dispose(void* img);
 __attribute__((ms_abi)) uint32_t mw_GdipGetImageWidth(void* img, uint32_t* w) {
-    (void)img; (void)w;
-    MW_TRACE("GdipGetImageWidth -> InvalidParameter (no image object)");
-    return 2;
+    return mw_gdimg_size(img, w, NULL);
 }
 __attribute__((ms_abi)) uint32_t mw_GdipGetImageHeight(void* img, uint32_t* h) {
-    (void)img; (void)h;
-    MW_TRACE("GdipGetImageHeight -> InvalidParameter (no image object)");
-    return 2;
+    return mw_gdimg_size(img, NULL, h);
 }
 __attribute__((ms_abi)) uint32_t mw_GdipGetImagePixelFormat(void* img, uint32_t* fmt) {
     (void)img; (void)fmt;
@@ -26865,9 +27024,7 @@ __attribute__((ms_abi)) uint32_t mw_GdipGetImagePixelFormat(void* img, uint32_t*
     return 2;
 }
 __attribute__((ms_abi)) uint32_t mw_GdipDisposeImage(void* img) {
-    (void)img;
-    MW_TRACE("GdipDisposeImage -> InvalidParameter (no image object)");
-    return 2;
+    return mw_gdimg_dispose(img);
 }
 
 /* ============================================================
@@ -31040,20 +31197,12 @@ __attribute__((ms_abi)) int mw_GdipGetImagePaletteSize(void* img, int* size) {
     return 1;
 }
 __attribute__((ms_abi)) int mw_GdipCloneImage(void* img, void** out) { (void)img; if (out) *out = NULL; return 1; }
-__attribute__((ms_abi)) int mw_GdipDrawImageI(void* gfx, void* img, int x, int y) {
-    (void)gfx; (void)img; (void)x; (void)y;
-    return 1;
-}
-__attribute__((ms_abi)) int mw_GdipDrawImageRectI(void* gfx, void* img, int x, int y, int w, int h) {
-    (void)gfx; (void)img; (void)x; (void)y; (void)w; (void)h;
-    return 1;
-}
+/* SW-1320: DrawImage* moved into the GDI+ object block (real blits there);
+ * only declarations needed before the ENTRY table. */
+__attribute__((ms_abi)) int mw_GdipDrawImageI(void* gfx, void* img, int x, int y);
+__attribute__((ms_abi)) int mw_GdipDrawImageRectI(void* gfx, void* img, int x, int y, int w, int h);
 __attribute__((ms_abi)) int mw_GdipDrawImageRectRectI(void* gfx, void* img, int dx, int dy, int dw, int dh,
-        int sx, int sy, int sw, int sh, int unit, const void* attrs, void* cb, void* cbd) {
-    (void)gfx; (void)img; (void)dx; (void)dy; (void)dw; (void)dh;
-    (void)sx; (void)sy; (void)sw; (void)sh; (void)unit; (void)attrs; (void)cb; (void)cbd;
-    return 1;
-}
+        int sx, int sy, int sw, int sh, int unit, const void* attrs, void* cb, void* cbd);
 __attribute__((ms_abi)) int mw_GdipSaveImageToStream(void* img, void* stream, const void* clsid, const void* params) {
     (void)img; (void)stream; (void)clsid; (void)params;
     return 1;
@@ -32479,6 +32628,10 @@ typedef struct {
     uint32_t w, h, stride; uint8_t* px; uint8_t px_owned;
     /* effect (kind 6) */
     uint8_t guid[16]; uint32_t effect_params;
+    /* SW-1320 (GFX-3, issue #17): real-raster additions */
+    void* dc;               /* graphics (kind 1): target DC handle */
+    int n, cap, closed;     /* path (kind 4): point list */
+    float* ppx, *ppy;       /* path point coordinates */
 } MwGdObj;
 static MwGdObj g_gdobj[64];
 static void* mw_gdobj_new(uint8_t kind) {
@@ -32502,14 +32655,125 @@ static int mw_gdobj_kind(void* h) {
     MwGdObj* s = mw_gdobj_state(h);
     return s ? s->kind : 0;
 }
+/* ---- SW-1320 (GFX-3): raster helpers — draws land real pixels on the
+ * graphics target DC surface (Wine gdiplus/graphics.c model). ---- */
+static uint32_t gd_argb2eng(uint32_t argb) { /* ARGB -> 0x00BBGGRR engine */
+    return ((argb & 0xFFu) << 16) | (argb & 0xFF00u) | ((argb >> 16) & 0xFFu);
+}
+static int gd_visible(uint32_t argb) { return (argb >> 24) >= 0x80u; }
+static MWBmp* gd_surf(void* g) {
+    MwGdObj* o = mw_gdobj_state(g);
+    return (o && o->kind == 1) ? mw_dc_surface(o->dc) : 0;
+}
+static int gd_wpx(const MwGdObj* pen) {
+    int w = pen ? (int)(pen->pen_width < 1 ? 1 : pen->pen_width) : 1;
+    return w > 8 ? 8 : w;
+}
+static void gd_line(MWBmp* S, int x0, int y0, int x1, int y1, uint32_t eng, int wpx) {
+    int dx = x1 > x0 ? x1 - x0 : x0 - x1, sx = x0 < x1 ? 1 : -1;
+    int dy = y1 > y0 ? y1 - y0 : y0 - y1, sy = y0 < y1 ? 1 : -1;
+    int err = dx - dy, pad = wpx / 2;
+    for (;;) {
+        if (wpx <= 1) mwb_set(S, x0, y0, eng);
+        else mwb_fill(S, x0 - pad, y0 - pad, wpx, wpx, eng);
+        if (x0 == x1 && y0 == y1) break;
+        int e2 = 2 * err;
+        if (e2 > -dy) { err -= dy; x0 += sx; }
+        if (e2 <  dx) { err += dx; y0 += sy; }
+    }
+}
+static void gd_rect_out(MWBmp* S, int x, int y, int w, int h, uint32_t eng, int wpx) {
+    if (w <= 0 || h <= 0) return;
+    gd_line(S, x, y, x + w - 1, y, eng, wpx);
+    gd_line(S, x, y + h - 1, x + w - 1, y + h - 1, eng, wpx);
+    gd_line(S, x, y, x, y + h - 1, eng, wpx);
+    gd_line(S, x + w - 1, y, x + w - 1, y + h - 1, eng, wpx);
+}
+static void gd_ellipse_out(MWBmp* S, float cx, float cy, float rx, float ry,
+                           float a0, float a1, uint32_t eng, int wpx) {
+    if (rx <= 0 || ry <= 0) return;
+    float span = a1 - a0;
+    if (span <= 0) span += 360.0f;
+    int steps = (int)(span * 2.0f); if (steps < 8) steps = 8; if (steps > 720) steps = 720;
+    int px0 = (int)(cx + rx * cosf(a0 * 3.14159265f / 180.0f) + 0.5f);
+    int py0 = (int)(cy + ry * sinf(a0 * 3.14159265f / 180.0f) + 0.5f);
+    for (int i = 1; i <= steps; i++) {
+        float t = (a0 + span * (float)i / (float)steps) * 3.14159265f / 180.0f;
+        int x = (int)(cx + rx * cosf(t) + 0.5f), y = (int)(cy + ry * sinf(t) + 0.5f);
+        gd_line(S, px0, py0, x, y, eng, wpx);
+        px0 = x; py0 = y;
+    }
+}
+static void gd_poly_fill(MWBmp* S, const float* vx, const float* vy, int n, uint32_t eng) {
+    if (n < 3 || !S) return;
+    int miny = S->h, maxy = 0;
+    for (int i = 0; i < n; i++) {
+        int y = (int)vy[i];
+        if (y < miny) miny = y;
+        if (y > maxy) maxy = y;
+    }
+    if (miny < 0) miny = 0;
+    if (maxy > S->h - 1) maxy = S->h - 1;
+    for (int y = miny; y <= maxy; y++) {
+        float fy = (float)y + 0.5f;
+        float xs[64]; int nx = 0;
+        for (int i = 0; i < n && nx < 64; i++) {
+            int j = (i + 1) % n;
+            float y1 = vy[i], y2 = vy[j];
+            if ((y1 <= fy && y2 > fy) || (y2 <= fy && y1 > fy)) {
+                float t = (fy - y1) / (y2 - y1);
+                xs[nx++] = vx[i] + t * (vx[j] - vx[i]);
+            }
+        }
+        for (int i = 0; i + 1 < nx; i += 2) {
+            int xa = (int)xs[i], xb = (int)xs[i + 1];
+            if (xa > xb) { int tmp = xa; xa = xb; xb = tmp; }
+            for (int x = xa; x <= xb; x++) mwb_set(S, x, y, eng);
+        }
+    }
+}
+/* RGBA canonical bitmap -> surface nearest-scale blit (alpha>=0x80 opaque) */
+static void gd_blit_rgba(const MwGdObj* B, MWBmp* S, int dx, int dy, int dw, int dh,
+                         int sx0, int sy0, int sw, int sh) {
+    if (!B || B->kind != 5 || !B->px || !S || dw <= 0 || dh <= 0) return;
+    if (sw <= 0 || sh <= 0) { sw = (int)B->w; sh = (int)B->h; }
+    for (int row = 0; row < dh; row++) {
+        int sy = sy0 + (int)((long long)sh * row / dh);
+        if (sy < 0 || sy >= (int)B->h) continue;
+        int ty = dy + row;
+        if (ty < 0 || ty >= S->h) continue;
+        const uint8_t* srow = B->px + (size_t)sy * B->stride;
+        for (int col = 0; col < dw; col++) {
+            int sx = sx0 + (int)((long long)sw * col / dw);
+            if (sx < 0 || sx >= (int)B->w) continue;
+            const uint8_t* p = srow + (size_t)sx * 4;
+            if (p[3] >= 0x80) /* RGBA -> engine 0x00BBGGRR */
+                mwb_set(S, dx + col, ty, ((uint32_t)p[2] << 16) | ((uint32_t)p[1] << 8) | p[0]);
+        }
+    }
+}
+static void mw_gdpath_free(MwGdObj* p) { free(p->ppx); free(p->ppy); p->ppx = p->ppy = NULL; p->n = p->cap = 0; }
+static int mw_gdpath_push(MwGdObj* p, float x, float y) {
+    if (p->n >= p->cap) {
+        int nc = p->cap ? p->cap * 2 : 32;
+        float* nx = (float*)realloc(p->ppx, (size_t)nc * sizeof(float));
+        float* ny = (float*)realloc(p->ppy, (size_t)nc * sizeof(float));
+        if (!nx || !ny) { free(nx); return 0; }
+        p->ppx = nx; p->ppy = ny; p->cap = nc;
+    }
+    p->ppx[p->n] = x; p->ppy[p->n] = y; p->n++;
+    return 1;
+}
 __attribute__((ms_abi)) void* mw_GdipAlloc(size_t n) { return calloc(1, n ? n : 1); }
 __attribute__((ms_abi)) void mw_GdipFree(void* p) { free(p); }
 __attribute__((ms_abi)) uint32_t mw_GdipCreateFromHDC(void* hdc, void** graphics) {
     if (!graphics) return MW_GDIPLUS_INVALIDPARAM;
     void* g = mw_gdobj_new(1);
     if (!g) return MW_GDIPLUS_GENERICERR;
+    MwGdObj* s = mw_gdobj_state(g);
+    if (s) s->dc = hdc; /* SW-1320: real target binding */
     *graphics = g;
-    (void)hdc;
+    MW_TRACE("[GDI+] CreateFromHDC(%p) -> GpGraphics %p", hdc, g);
     return MW_GDIPLUS_OK;
 }
 __attribute__((ms_abi)) uint32_t mw_GdipDeleteGraphics(void* g) { return mw_gdobj_kind(g) == 1 ? MW_GDIPLUS_OK : MW_GDIPLUS_INVALIDPARAM; }
@@ -32551,28 +32815,156 @@ __attribute__((ms_abi)) uint32_t mw_GdipCreatePath(uint32_t fill, void** path) {
     return MW_GDIPLUS_OK;
 }
 __attribute__((ms_abi)) uint32_t mw_GdipDeletePath(void* path) { return mw_gdobj_kind(path) == 4 ? MW_GDIPLUS_OK : MW_GDIPLUS_INVALIDPARAM; }
+static uint32_t mw_gdpath_add(void* path, float x, float y) {
+    MwGdObj* o = mw_gdobj_state(path);
+    if (!o || o->kind != 4) return MW_GDIPLUS_INVALIDPARAM;
+    return mw_gdpath_push(o, x, y) ? MW_GDIPLUS_OK : MW_GDIPLUS_GENERICERR;
+}
 __attribute__((ms_abi)) uint32_t mw_GdipAddPathLineI(void* path, int x1, int y1, int x2, int y2) {
-    (void)path; (void)x1; (void)y1; (void)x2; (void)y2; return MW_GDIPLUS_OK;
+    uint32_t s = mw_gdpath_add(path, (float)x1, (float)y1);
+    if (s) return s;
+    return mw_gdpath_add(path, (float)x2, (float)y2);
+}
+__attribute__((ms_abi)) uint32_t mw_GdipAddPathLine(void* path, float x1, float y1, float x2, float y2) {
+    uint32_t s = mw_gdpath_add(path, x1, y1);
+    if (s) return s;
+    return mw_gdpath_add(path, x2, y2);
+}
+static void mw_gdpath_bezier(MwGdObj* o, float x1, float y1, float x2, float y2,
+                             float x3, float y3, float x4, float y4) {
+    for (int i = 0; i <= 24; i++) {
+        float t = (float)i / 24.0f, u = 1.0f - t;
+        float a = u * u * u, b = 3.0f * u * u * t, c = 3.0f * u * t * t, d = t * t * t;
+        mw_gdpath_push(o, a * x1 + b * x2 + c * x3 + d * x4,
+                          a * y1 + b * y2 + c * y3 + d * y4);
+    }
 }
 __attribute__((ms_abi)) uint32_t mw_GdipAddPathBezierI(void* path, int x1, int y1, int x2, int y2, int x3, int y3, int x4, int y4) {
-    (void)path; (void)x1; (void)x2; (void)x3; (void)x4; (void)y1; (void)y2; (void)y3; (void)y4;
+    MwGdObj* o = mw_gdobj_state(path);
+    if (!o || o->kind != 4) return MW_GDIPLUS_INVALIDPARAM;
+    mw_gdpath_bezier(o, (float)x1, (float)y1, (float)x2, (float)y2,
+                        (float)x3, (float)y3, (float)x4, (float)y4);
+    return MW_GDIPLUS_OK;
+}
+__attribute__((ms_abi)) uint32_t mw_GdipAddPathBezier(void* path, float x1, float y1, float x2, float y2, float x3, float y3, float x4, float y4) {
+    MwGdObj* o = mw_gdobj_state(path);
+    if (!o || o->kind != 4) return MW_GDIPLUS_INVALIDPARAM;
+    mw_gdpath_bezier(o, x1, y1, x2, y2, x3, y3, x4, y4);
+    return MW_GDIPLUS_OK;
+}
+static uint32_t mw_gdpath_arc(MwGdObj* o, float x, float y, float w, float h,
+                              float start, float sweep) {
+    if (w <= 0 || h <= 0) return MW_GDIPLUS_INVALIDPARAM;
+    float span = sweep;
+    if (span <= 0) span += 360.0f;
+    int steps = (int)(span * 2.0f); if (steps < 8) steps = 8; if (steps > 720) steps = 720;
+    float cx = x + w / 2.0f, cy = y + h / 2.0f, rx = w / 2.0f, ry = h / 2.0f;
+    for (int i = 0; i <= steps; i++) {
+        float t = (start + span * (float)i / (float)steps) * 3.14159265f / 180.0f;
+        mw_gdpath_push(o, cx + rx * cosf(t), cy + ry * sinf(t));
+    }
     return MW_GDIPLUS_OK;
 }
 __attribute__((ms_abi)) uint32_t mw_GdipAddPathArcI(void* path, int x, int y, int w, int h, float start, float sweep) {
-    (void)path; (void)x; (void)y; (void)w; (void)h; (void)start; (void)sweep; return MW_GDIPLUS_OK;
+    MwGdObj* o = mw_gdobj_state(path);
+    if (!o || o->kind != 4) return MW_GDIPLUS_INVALIDPARAM;
+    return mw_gdpath_arc(o, (float)x, (float)y, (float)w, (float)h, start, sweep);
 }
-__attribute__((ms_abi)) uint32_t mw_GdipStartPathFigure(void* path) { (void)path; return MW_GDIPLUS_OK; }
-__attribute__((ms_abi)) uint32_t mw_GdipClosePathFigure(void* path) { (void)path; return MW_GDIPLUS_OK; }
-__attribute__((ms_abi)) uint32_t mw_GdipDrawLineI(void* g, void* pen, int x1, int y1, int x2, int y2) {
-    (void)g; (void)pen; (void)x1; (void)y1; (void)x2; (void)y2;
-    return MW_GDIPLUS_OK; /* v1: status-honest, pixels unrendered */
+__attribute__((ms_abi)) uint32_t mw_GdipAddPathArc(void* path, float x, float y, float w, float h, float start, float sweep) {
+    MwGdObj* o = mw_gdobj_state(path);
+    if (!o || o->kind != 4) return MW_GDIPLUS_INVALIDPARAM;
+    return mw_gdpath_arc(o, x, y, w, h, start, sweep);
 }
-__attribute__((ms_abi)) uint32_t mw_GdipDrawLine(void* g, void* pen, float x1, float y1, float x2, float y2) {
-    (void)g; (void)pen; (void)x1; (void)y1; (void)x2; (void)y2;
+__attribute__((ms_abi)) uint32_t mw_GdipStartPathFigure(void* path) {
+    MwGdObj* o = mw_gdobj_state(path);
+    if (!o || o->kind != 4) return MW_GDIPLUS_INVALIDPARAM;
+    if (o->n > 0) mw_gdpath_push(o, o->ppx[o->n - 1], o->ppy[o->n - 1]);
     return MW_GDIPLUS_OK;
 }
+__attribute__((ms_abi)) uint32_t mw_GdipClosePathFigure(void* path) {
+    MwGdObj* o = mw_gdobj_state(path);
+    if (!o || o->kind != 4) return MW_GDIPLUS_INVALIDPARAM;
+    o->closed = 1;
+    if (o->n > 0) mw_gdpath_push(o, o->ppx[0], o->ppy[0]);
+    return MW_GDIPLUS_OK;
+}
+__attribute__((ms_abi)) uint32_t mw_GdipDrawLineI(void* g, void* pen, int x1, int y1, int x2, int y2) {
+    MWBmp* S = gd_surf(g);
+    MwGdObj* P = mw_gdobj_state(pen);
+    if (!S) return MW_GDIPLUS_INVALIDPARAM;
+    if (P && P->kind == 2 && gd_visible(P->pen_color))
+        gd_line(S, x1, y1, x2, y2, gd_argb2eng(P->pen_color), gd_wpx(P));
+    return MW_GDIPLUS_OK;
+}
+__attribute__((ms_abi)) uint32_t mw_GdipDrawLine(void* g, void* pen, float x1, float y1, float x2, float y2) {
+    return mw_GdipDrawLineI(g, pen, (int)(x1 + 0.5f), (int)(y1 + 0.5f),
+                                (int)(x2 + 0.5f), (int)(y2 + 0.5f));
+}
 __attribute__((ms_abi)) uint32_t mw_GdipDrawLinesI(void* g, void* pen, const void* pts, int n) {
-    (void)g; (void)pen; (void)pts; (void)n; return MW_GDIPLUS_OK;
+    if (!pts || n < 2) return MW_GDIPLUS_INVALIDPARAM;
+    MWBmp* S = gd_surf(g);
+    if (!S) return MW_GDIPLUS_INVALIDPARAM;
+    MwGdObj* P = mw_gdobj_state(pen);
+    if (!(P && P->kind == 2 && gd_visible(P->pen_color))) return MW_GDIPLUS_OK;
+    const int32_t* p = (const int32_t*)pts;
+    uint32_t eng = gd_argb2eng(P->pen_color); int wpx = gd_wpx(P);
+    for (int i = 0; i + 1 < n; i++)
+        gd_line(S, p[2 * i], p[2 * i + 1], p[2 * i + 2], p[2 * i + 3], eng, wpx);
+    return MW_GDIPLUS_OK;
+}
+/* ---- SW-1320: float + rect/arc/pie/polygon/bezier real raster ---- */
+__attribute__((ms_abi)) uint32_t mw_GdipDrawLines(void* g, void* pen, const void* pts, int n) {
+    if (!pts || n < 2) return MW_GDIPLUS_INVALIDPARAM;
+    MWBmp* S = gd_surf(g);
+    if (!S) return MW_GDIPLUS_INVALIDPARAM;
+    MwGdObj* P = mw_gdobj_state(pen);
+    if (!(P && P->kind == 2 && gd_visible(P->pen_color))) return MW_GDIPLUS_OK;
+    const float* p = (const float*)pts;
+    uint32_t eng = gd_argb2eng(P->pen_color); int wpx = gd_wpx(P);
+    for (int i = 0; i + 1 < n; i++)
+        gd_line(S, (int)(p[2 * i] + 0.5f), (int)(p[2 * i + 1] + 0.5f),
+                   (int)(p[2 * i + 2] + 0.5f), (int)(p[2 * i + 3] + 0.5f), eng, wpx);
+    return MW_GDIPLUS_OK;
+}
+__attribute__((ms_abi)) uint32_t mw_GdipDrawRectangleI(void* g, void* pen, int x, int y, int w, int h) {
+    MWBmp* S = gd_surf(g);
+    MwGdObj* P = mw_gdobj_state(pen);
+    if (!S) return MW_GDIPLUS_INVALIDPARAM;
+    if (P && P->kind == 2 && gd_visible(P->pen_color) && w > 0 && h > 0)
+        gd_rect_out(S, x, y, w, h, gd_argb2eng(P->pen_color), gd_wpx(P));
+    return MW_GDIPLUS_OK;
+}
+__attribute__((ms_abi)) uint32_t mw_GdipDrawRectangle(void* g, void* pen, float x, float y, float w, float h) {
+    return mw_GdipDrawRectangleI(g, pen, (int)(x + 0.5f), (int)(y + 0.5f),
+                                     (int)(w + 0.5f), (int)(h + 0.5f));
+}
+__attribute__((ms_abi)) uint32_t mw_GdipDrawArcI(void* g, void* pen, int x, int y, int w, int h, float start, float sweep) {
+    MWBmp* S = gd_surf(g);
+    MwGdObj* P = mw_gdobj_state(pen);
+    if (!S) return MW_GDIPLUS_INVALIDPARAM;
+    if (P && P->kind == 2 && gd_visible(P->pen_color) && w > 0 && h > 0)
+        gd_ellipse_out(S, x + w / 2.0f, y + h / 2.0f, w / 2.0f, h / 2.0f,
+                       start, sweep, gd_argb2eng(P->pen_color), gd_wpx(P));
+    return MW_GDIPLUS_OK;
+}
+__attribute__((ms_abi)) uint32_t mw_GdipDrawArc(void* g, void* pen, float x, float y, float w, float h, float start, float sweep) {
+    return mw_GdipDrawArcI(g, pen, (int)x, (int)y, (int)w, (int)h, start, sweep);
+}
+__attribute__((ms_abi)) uint32_t mw_GdipDrawPieI(void* g, void* pen, int x, int y, int w, int h, float start, float sweep) {
+    MWBmp* S = gd_surf(g);
+    MwGdObj* P = mw_gdobj_state(pen);
+    if (!S || w <= 0 || h <= 0) return MW_GDIPLUS_INVALIDPARAM;
+    if (!(P && P->kind == 2 && gd_visible(P->pen_color))) return MW_GDIPLUS_OK;
+    float cx = x + w / 2.0f, cy = y + h / 2.0f;
+    uint32_t eng = gd_argb2eng(P->pen_color); int wpx = gd_wpx(P);
+    gd_ellipse_out(S, cx, cy, w / 2.0f, h / 2.0f, start, sweep, eng, wpx);
+    float r0 = start * 3.14159265f / 180.0f, r1 = (start + sweep) * 3.14159265f / 180.0f;
+    gd_line(S, (int)cx, (int)cy, (int)(cx + (w / 2.0f) * cosf(r0)), (int)(cy + (h / 2.0f) * sinf(r0)), eng, wpx);
+    gd_line(S, (int)cx, (int)cy, (int)(cx + (w / 2.0f) * cosf(r1)), (int)(cy + (h / 2.0f) * sinf(r1)), eng, wpx);
+    return MW_GDIPLUS_OK;
+}
+__attribute__((ms_abi)) uint32_t mw_GdipDrawPolygonI(void* g, void* pen, const void* pts, int n) {
+    return mw_GdipDrawLinesI(g, pen, pts, n);
 }
 /* ---- SW-1106 zoomit64 GDI+ tail (wine gdiplus semantics, 2026-10-21):
  * pen state real (store), shape draws status-honest v1 (matching the
@@ -32607,40 +32999,73 @@ static uint32_t mw_gd_shape(void* g, void* h, int want_kind, const char* fn) {
     MW_TRACE("%s (status-honest v1, pixels unrendered)", fn);
     return MW_GDIPLUS_OK;
 }
-__attribute__((ms_abi)) uint32_t mw_GdipDrawRectangleI(void* g, void* pen, int x, int y, int w, int h) {
-    (void)x; (void)y; (void)w; (void)h;
-    return mw_gd_shape(g, pen, 2, "GdipDrawRectangleI");
-}
+/* SW-1320: DrawRectangleI real raster lives above (line family block);
+ * mw_gd_shape remains for any not-yet-rasterized tail draws. */
+__attribute__((ms_abi)) uint32_t mw_GdipFillRectangleI(void* g, void* brush, int x, int y, int w, int h);
+__attribute__((ms_abi)) uint32_t mw_GdipFillEllipseI(void* g, void* brush, int x, int y, int w, int h);
+__attribute__((ms_abi)) uint32_t mw_GdipDrawArcI(void* g, void* pen, int x, int y, int w, int h, float start, float sweep);
 __attribute__((ms_abi)) uint32_t mw_GdipDrawEllipse(void* g, void* pen, float x, float y, float w, float h) {
-    (void)x; (void)y; (void)w; (void)h;
-    return mw_gd_shape(g, pen, 2, "GdipDrawEllipse");
+    return mw_GdipDrawArcI(g, pen, (int)x, (int)y, (int)w, (int)h, 0.0f, 360.0f);
 }
 __attribute__((ms_abi)) uint32_t mw_GdipDrawEllipseI(void* g, void* pen, int x, int y, int w, int h) {
-    (void)x; (void)y; (void)w; (void)h;
-    return mw_gd_shape(g, pen, 2, "GdipDrawEllipseI");
-}
-__attribute__((ms_abi)) uint32_t mw_GdipDrawArc(void* g, void* pen, float x, float y, float w, float h, float start, float sweep) {
-    (void)x; (void)y; (void)w; (void)h; (void)start; (void)sweep;
-    return mw_gd_shape(g, pen, 2, "GdipDrawArc");
+    return mw_GdipDrawArcI(g, pen, x, y, w, h, 0.0f, 360.0f);
 }
 __attribute__((ms_abi)) uint32_t mw_GdipFillRectangle(void* g, void* brush, float x, float y, float w, float h) {
-    (void)x; (void)y; (void)w; (void)h;
-    return mw_gd_shape(g, brush, 3, "GdipFillRectangle");
+    return mw_GdipFillRectangleI(g, brush, (int)(x + 0.5f), (int)(y + 0.5f),
+                                     (int)(w + 0.5f), (int)(h + 0.5f));
 }
 __attribute__((ms_abi)) uint32_t mw_GdipFillEllipse(void* g, void* brush, float x, float y, float w, float h) {
-    (void)x; (void)y; (void)w; (void)h;
-    return mw_gd_shape(g, brush, 3, "GdipFillEllipse");
+    return mw_GdipFillEllipseI(g, brush, (int)(x + 0.5f), (int)(y + 0.5f),
+                                   (int)(w + 0.5f), (int)(h + 0.5f));
 }
 __attribute__((ms_abi)) uint32_t mw_GdipFillEllipseI(void* g, void* brush, int x, int y, int w, int h) {
-    (void)x; (void)y; (void)w; (void)h;
-    return mw_gd_shape(g, brush, 3, "GdipFillEllipseI");
+    MWBmp* S = gd_surf(g);
+    MwGdObj* B = mw_gdobj_state(brush);
+    if (!S || w <= 0 || h <= 0) return MW_GDIPLUS_INVALIDPARAM;
+    if (!(B && B->kind == 3 && gd_visible(B->pen_color))) return MW_GDIPLUS_OK;
+    float cx = x + w / 2.0f, cy = y + h / 2.0f, rx = w / 2.0f, ry = h / 2.0f;
+    uint32_t eng = gd_argb2eng(B->pen_color);
+    for (int row = y; row < y + h; row++) {
+        float dy = ((float)row + 0.5f - cy) / ry;
+        if (dy < -1.0f || dy > 1.0f) continue;
+        float span = rx * sqrtf(1.0f - dy * dy);
+        mwb_fill(S, (int)(cx - span + 0.5f), row, (int)(2.0f * span + 0.5f), 1, eng);
+    }
+    return MW_GDIPLUS_OK;
+}
+__attribute__((ms_abi)) uint32_t mw_GdipFillPieI(void* g, void* brush, int x, int y, int w, int h, float start, float sweep) {
+    MWBmp* S = gd_surf(g);
+    MwGdObj* B = mw_gdobj_state(brush);
+    if (!S || w <= 0 || h <= 0) return MW_GDIPLUS_INVALIDPARAM;
+    if (!(B && B->kind == 3 && gd_visible(B->pen_color))) return MW_GDIPLUS_OK;
+    float vx[200], vy[200]; int n = 0;
+    float cx = x + w / 2.0f, cy = y + h / 2.0f;
+    vx[n] = cx; vy[n] = cy; n++;
+    for (int i = 0; i <= 96 && n < 200; i++) {
+        float t = (start + sweep * (float)i / 96.0f) * 3.14159265f / 180.0f;
+        vx[n] = cx + (w / 2.0f) * cosf(t); vy[n] = cy + (h / 2.0f) * sinf(t); n++;
+    }
+    gd_poly_fill(S, vx, vy, n, gd_argb2eng(B->pen_color));
+    return MW_GDIPLUS_OK;
+}
+__attribute__((ms_abi)) uint32_t mw_GdipGraphicsClear(void* g, uint32_t argb) {
+    MWBmp* S = gd_surf(g);
+    if (!S) return MW_GDIPLUS_INVALIDPARAM;
+    mwb_fill(S, 0, 0, S->w, S->h, gd_argb2eng(argb));
+    return MW_GDIPLUS_OK;
 }
 __attribute__((ms_abi)) uint32_t mw_GdipFillPolygon(void* g, void* brush, const void* pts, uint32_t n, uint32_t fill) {
-    (void)pts; (void)fill;
+    (void)fill;
     if (mw_gdobj_kind(g) != 1) return MW_GDIPLUS_INVALIDPARAM;
     if (mw_gdobj_kind(brush) != 3) return MW_GDIPLUS_INVALIDPARAM;
-    if (!pts || n < 2) return MW_GDIPLUS_INVALIDPARAM;
-    MW_TRACE("GdipFillPolygon(n=%u) (status-honest v1, pixels unrendered)", n);
+    if (!pts || n < 3) return MW_GDIPLUS_INVALIDPARAM;
+    MWBmp* S = gd_surf(g);
+    if (!S) return MW_GDIPLUS_INVALIDPARAM;
+    MwGdObj* B = mw_gdobj_state(brush);
+    if (!(B && B->kind == 3 && gd_visible(B->pen_color))) return MW_GDIPLUS_OK;
+    const float* p = (const float*)pts; /* PointF array */
+    gd_poly_fill(S, p, p + 1, n > 256 ? 256 : (int)n, gd_argb2eng(B->pen_color));
+    MW_TRACE("[GDI+] FillPolygon(n=%u) rasterized", n);
     return MW_GDIPLUS_OK;
 }
 __attribute__((ms_abi)) uint32_t mw_GdipBitmapGetPixel(void* bmp, int x, int y, uint32_t* color) {
@@ -32655,6 +33080,130 @@ __attribute__((ms_abi)) uint32_t mw_GdipBitmapGetPixel(void* bmp, int x, int y, 
 }
 /* Effects: real object lifecycle (GUID stored), apply honest NotImplemented:
  * no filter engine — GDI+ Status::NotImplemented = 6 (SWEEP-032 engine fix). */
+__attribute__((ms_abi)) uint32_t mw_GdipBitmapSetPixel(void* bmp, int x, int y, uint32_t argb) {
+    MwGdObj* s = mw_gdobj_state(bmp);
+    if (!s || s->kind != 5 || !s->px) return MW_GDIPLUS_INVALIDPARAM;
+    if (x < 0 || (uint32_t)x >= s->w || y < 0 || (uint32_t)y >= s->h)
+        return MW_GDIPLUS_INVALIDPARAM;
+    uint8_t* p = s->px + (size_t)y * s->stride + (size_t)x * 4;
+    p[0] = (uint8_t)((argb >> 16) & 0xFF); /* R */
+    p[1] = (uint8_t)((argb >> 8) & 0xFF);  /* G */
+    p[2] = (uint8_t)(argb & 0xFF);         /* B */
+    p[3] = (uint8_t)((argb >> 24) & 0xFF); /* A */
+    return MW_GDIPLUS_OK;
+}
+/* ---- SW-1320b: pen/solidfill state + fill variants (issue #17 names) ---- */
+__attribute__((ms_abi)) uint32_t mw_GdipCreateFromHDC2(void* hdc, void* hnd, void** graphics) {
+    (void)hnd;
+    return mw_GdipCreateFromHDC(hdc, graphics);
+}
+__attribute__((ms_abi)) uint32_t mw_GdipCreatePen2(void* brush, float width, uint32_t unit, void** pen) {
+    (void)unit;
+    if (!pen) return MW_GDIPLUS_INVALIDPARAM;
+    void* p = mw_gdobj_new(2);
+    MwGdObj* s = (p) ? mw_gdobj_state(p) : NULL;
+    if (!s) return MW_GDIPLUS_GENERICERR;
+    MwGdObj* b = mw_gdobj_state(brush);
+    s->pen_color = (b && b->kind == 3) ? b->pen_color : 0xFF000000u;
+    if (width > 0.0f) s->pen_width = width;
+    *pen = p;
+    return MW_GDIPLUS_OK;
+}
+__attribute__((ms_abi)) uint32_t mw_GdipSetPenColor(void* pen, uint32_t argb) {
+    MwGdObj* s = mw_gdobj_state(pen);
+    if (!s || s->kind != 2) return MW_GDIPLUS_INVALIDPARAM;
+    s->pen_color = argb; return MW_GDIPLUS_OK;
+}
+__attribute__((ms_abi)) uint32_t mw_GdipGetPenColor(void* pen, uint32_t* argb) {
+    MwGdObj* s = mw_gdobj_state(pen);
+    if (!s || s->kind != 2 || !argb) return MW_GDIPLUS_INVALIDPARAM;
+    *argb = s->pen_color; return MW_GDIPLUS_OK;
+}
+__attribute__((ms_abi)) uint32_t mw_GdipSetPenWidth(void* pen, float width) {
+    MwGdObj* s = mw_gdobj_state(pen);
+    if (!s || s->kind != 2) return MW_GDIPLUS_INVALIDPARAM;
+    s->pen_width = (width < 1.0f) ? 1.0f : width; return MW_GDIPLUS_OK;
+}
+__attribute__((ms_abi)) uint32_t mw_GdipGetPenWidth(void* pen, float* width) {
+    MwGdObj* s = mw_gdobj_state(pen);
+    if (!s || s->kind != 2 || !width) return MW_GDIPLUS_INVALIDPARAM;
+    *width = s->pen_width; return MW_GDIPLUS_OK;
+}
+__attribute__((ms_abi)) uint32_t mw_GdipSetSolidFillColor(void* brush, uint32_t argb) {
+    MwGdObj* s = mw_gdobj_state(brush);
+    if (!s || s->kind != 3) return MW_GDIPLUS_INVALIDPARAM;
+    s->pen_color = argb; return MW_GDIPLUS_OK; /* brush color rides pen_color */
+}
+__attribute__((ms_abi)) uint32_t mw_GdipGetSolidFillColor(void* brush, uint32_t* argb) {
+    MwGdObj* s = mw_gdobj_state(brush);
+    if (!s || s->kind != 3 || !argb) return MW_GDIPLUS_INVALIDPARAM;
+    *argb = s->pen_color; return MW_GDIPLUS_OK;
+}
+__attribute__((ms_abi)) uint32_t mw_GdipResetPath(void* path) {
+    MwGdObj* o = mw_gdobj_state(path);
+    if (!o || o->kind != 4) return MW_GDIPLUS_INVALIDPARAM;
+    mw_gdpath_free(o); o->closed = 0;
+    return MW_GDIPLUS_OK;
+}
+__attribute__((ms_abi)) uint32_t mw_GdipGetPointCount(void* path, int* count) {
+    MwGdObj* o = mw_gdobj_state(path);
+    if (!o || o->kind != 4 || !count) return MW_GDIPLUS_INVALIDPARAM;
+    *count = o->n; return MW_GDIPLUS_OK;
+}
+__attribute__((ms_abi)) uint32_t mw_GdipAddPathLine2I(void* path, const void* pts, int n) {
+    if (!pts || n <= 0) return MW_GDIPLUS_INVALIDPARAM;
+    const int32_t* p = (const int32_t*)pts;
+    for (int i = 0; i < n; i++) mw_gdpath_add(path, (float)p[2 * i], (float)p[2 * i + 1]);
+    return MW_GDIPLUS_OK;
+}
+__attribute__((ms_abi)) uint32_t mw_GdipAddPathLine2(void* path, const void* pts, int n) {
+    if (!pts || n <= 0) return MW_GDIPLUS_INVALIDPARAM;
+    const float* p = (const float*)pts;
+    for (int i = 0; i < n; i++) mw_gdpath_add(path, p[2 * i], p[2 * i + 1]);
+    return MW_GDIPLUS_OK;
+}
+__attribute__((ms_abi)) uint32_t mw_GdipAddPathEllipseI(void* path, int x, int y, int w, int h) {
+    MwGdObj* o = mw_gdobj_state(path);
+    if (!o || o->kind != 4) return MW_GDIPLUS_INVALIDPARAM;
+    return mw_gdpath_arc(o, (float)x, (float)y, (float)w, (float)h, 0.0f, 360.0f);
+}
+__attribute__((ms_abi)) uint32_t mw_GdipAddPathRectangleI(void* path, int x, int y, int w, int h) {
+    uint32_t s = mw_gdpath_add(path, (float)x, (float)y);
+    if (s) return s;
+    mw_gdpath_add(path, (float)(x + w), (float)y);
+    mw_gdpath_add(path, (float)(x + w), (float)(y + h));
+    return mw_gdpath_add(path, (float)x, (float)(y + h));
+}
+__attribute__((ms_abi)) uint32_t mw_GdipDrawRectanglesI(void* g, void* pen, const void* rects, int n) {
+    if (!rects || n <= 0) return MW_GDIPLUS_INVALIDPARAM;
+    const int32_t* r = (const int32_t*)rects;
+    for (int i = 0; i < n; i++)
+        mw_GdipDrawRectangleI(g, pen, r[4 * i], r[4 * i + 1], r[4 * i + 2], r[4 * i + 3]);
+    return MW_GDIPLUS_OK;
+}
+__attribute__((ms_abi)) uint32_t mw_GdipFillRectanglesI(void* g, void* brush, const void* rects, int n) {
+    if (!rects || n <= 0) return MW_GDIPLUS_INVALIDPARAM;
+    const int32_t* r = (const int32_t*)rects;
+    for (int i = 0; i < n; i++)
+        mw_GdipFillRectangleI(g, brush, r[4 * i], r[4 * i + 1], r[4 * i + 2], r[4 * i + 3]);
+    return MW_GDIPLUS_OK;
+}
+__attribute__((ms_abi)) uint32_t mw_GdipFillPolygonI(void* g, void* brush, const void* pts, int n, uint32_t fill) {
+    (void)fill;
+    if (!pts || n < 3) return MW_GDIPLUS_INVALIDPARAM;
+    MWBmp* S = gd_surf(g);
+    MwGdObj* B = mw_gdobj_state(brush);
+    if (!S) return MW_GDIPLUS_INVALIDPARAM;
+    if (!(B && B->kind == 3 && gd_visible(B->pen_color))) return MW_GDIPLUS_OK;
+    const int32_t* p = (const int32_t*)pts;
+    float vx[256], vy[256];
+    if (n > 256) n = 256;
+    for (int i = 0; i < n; i++) { vx[i] = (float)p[2 * i]; vy[i] = (float)p[2 * i + 1]; }
+    gd_poly_fill(S, vx, vy, n, gd_argb2eng(B->pen_color));
+    return MW_GDIPLUS_OK;
+}
+__attribute__((ms_abi)) uint32_t mw_GdipSetCompositingMode(void* g, uint32_t mode) { (void)g; (void)mode; return MW_GDIPLUS_OK; }
+__attribute__((ms_abi)) uint32_t mw_GdipSetRenderingOrigin(void* g, int x, int y) { (void)g; (void)x; (void)y; return MW_GDIPLUS_OK; }
 __attribute__((ms_abi)) uint32_t mw_GdipCreateEffect(const uint8_t* guid, void** effect) {
     if (!guid || !effect) return MW_GDIPLUS_INVALIDPARAM;
     void* e = mw_gdobj_new(6);
@@ -32691,18 +33240,99 @@ __attribute__((ms_abi)) uint32_t mw_GdipSaveImageToFile(void* img, const uint16_
     return MW_GDIPLUS_INVALIDPARAM;
 }
 __attribute__((ms_abi)) uint32_t mw_GdipDrawBezierI(void* g, void* pen, int x1, int y1, int x2, int y2, int x3, int y3, int x4, int y4) {
-    (void)g; (void)pen; (void)x1; (void)x2; (void)x3; (void)x4; (void)y1; (void)y2; (void)y3; (void)y4;
+    MwGdObj tmp; memset(&tmp, 0, sizeof(tmp)); tmp.kind = 4;
+    mw_gdpath_bezier(&tmp, (float)x1, (float)y1, (float)x2, (float)y2,
+                        (float)x3, (float)y3, (float)x4, (float)y4);
+    MWBmp* S = gd_surf(g);
+    MwGdObj* P = mw_gdobj_state(pen);
+    if (S && P && P->kind == 2 && gd_visible(P->pen_color)) {
+        uint32_t eng = gd_argb2eng(P->pen_color); int wpx = gd_wpx(P);
+        for (int i = 0; i + 1 < tmp.n; i++)
+            gd_line(S, (int)(tmp.ppx[i] + 0.5f), (int)(tmp.ppy[i] + 0.5f),
+                       (int)(tmp.ppx[i + 1] + 0.5f), (int)(tmp.ppy[i + 1] + 0.5f), eng, wpx);
+    }
+    mw_gdpath_free(&tmp);
     return MW_GDIPLUS_OK;
 }
 __attribute__((ms_abi)) uint32_t mw_GdipDrawPath(void* g, void* pen, void* path) {
-    (void)g; (void)pen; (void)path; return MW_GDIPLUS_OK;
+    MwGdObj* o = mw_gdobj_state(path);
+    if (!o || o->kind != 4 || o->n < 2) return MW_GDIPLUS_INVALIDPARAM;
+    MWBmp* S = gd_surf(g);
+    MwGdObj* P = mw_gdobj_state(pen);
+    if (!S) return MW_GDIPLUS_INVALIDPARAM;
+    if (P && P->kind == 2 && gd_visible(P->pen_color)) {
+        uint32_t eng = gd_argb2eng(P->pen_color); int wpx = gd_wpx(P);
+        for (int i = 0; i + 1 < o->n; i++)
+            gd_line(S, (int)(o->ppx[i] + 0.5f), (int)(o->ppy[i] + 0.5f),
+                       (int)(o->ppx[i + 1] + 0.5f), (int)(o->ppy[i + 1] + 0.5f), eng, wpx);
+        if (o->closed)
+            gd_line(S, (int)(o->ppx[o->n - 1] + 0.5f), (int)(o->ppy[o->n - 1] + 0.5f),
+                       (int)(o->ppx[0] + 0.5f), (int)(o->ppy[0] + 0.5f), eng, wpx);
+        MW_TRACE("[GDI+] DrawPath(%d pts)", o->n);
+    }
+    return MW_GDIPLUS_OK;
 }
 __attribute__((ms_abi)) uint32_t mw_GdipFillRectangleI(void* g, void* brush, int x, int y, int w, int h) {
-    (void)g; (void)brush; (void)x; (void)y; (void)w; (void)h;
+    MWBmp* S = gd_surf(g);
+    MwGdObj* B = mw_gdobj_state(brush);
+    if (!S) return MW_GDIPLUS_INVALIDPARAM;
+    if (B && B->kind == 3 && gd_visible(B->pen_color) && w > 0 && h > 0)
+        mwb_fill(S, x, y, w, h, gd_argb2eng(B->pen_color));
     return MW_GDIPLUS_OK;
 }
 __attribute__((ms_abi)) uint32_t mw_GdipFillPath(void* g, void* brush, void* path) {
-    (void)g; (void)brush; (void)path; return MW_GDIPLUS_OK;
+    MwGdObj* o = mw_gdobj_state(path);
+    if (!o || o->kind != 4 || o->n < 3) return MW_GDIPLUS_INVALIDPARAM;
+    MWBmp* S = gd_surf(g);
+    MwGdObj* B = mw_gdobj_state(brush);
+    if (!S) return MW_GDIPLUS_INVALIDPARAM;
+    if (B && B->kind == 3 && gd_visible(B->pen_color))
+        gd_poly_fill(S, o->ppx, o->ppy, o->n, gd_argb2eng(B->pen_color));
+    return MW_GDIPLUS_OK;
+}
+/* ---- SW-1320: real DrawImage blits + image object helpers ---- */
+static uint32_t mw_gdimg_size(void* img, uint32_t* w, uint32_t* h) {
+    MwGdObj* o = mw_gdobj_state(img);
+    if (!o || o->kind != 5 || !w || !h) return MW_GDIPLUS_INVALIDPARAM;
+    *w = o->w; *h = o->h;
+    return MW_GDIPLUS_OK;
+}
+static uint32_t mw_gdimg_dispose(void* img) {
+    MwGdObj* o = mw_gdobj_state(img);
+    if (!o || o->kind != 5) return MW_GDIPLUS_INVALIDPARAM;
+    if (o->px && o->px_owned) free(o->px);
+    o->px = NULL; o->px_owned = 0;
+    o->kind = 0; /* slot free */
+    return MW_GDIPLUS_OK;
+}
+__attribute__((ms_abi)) int mw_GdipDrawImageI(void* gfx, void* img, int x, int y) {
+    MwGdObj* B = mw_gdobj_state(img);
+    if (!B || B->kind != 5) return 2; /* GpStatus InvalidParameter */
+    MWBmp* S = gd_surf(gfx);
+    if (!S) return 2;
+    gd_blit_rgba(B, S, x, y, (int)B->w, (int)B->h, 0, 0, (int)B->w, (int)B->h);
+    MW_TRACE("[GDI+] DrawImage %ux%u @%d,%d", B->w, B->h, x, y);
+    return 0; /* Ok */
+}
+__attribute__((ms_abi)) int mw_GdipDrawImageRectI(void* gfx, void* img, int x, int y, int w, int h) {
+    MwGdObj* B = mw_gdobj_state(img);
+    if (!B || B->kind != 5 || w <= 0 || h <= 0) return 2;
+    MWBmp* S = gd_surf(gfx);
+    if (!S) return 2;
+    gd_blit_rgba(B, S, x, y, w, h, 0, 0, (int)B->w, (int)B->h);
+    MW_TRACE("[GDI+] DrawImageRect %dx%d @%d,%d", w, h, x, y);
+    return 0;
+}
+__attribute__((ms_abi)) int mw_GdipDrawImageRectRectI(void* gfx, void* img, int dx, int dy, int dw, int dh,
+        int sx, int sy, int sw, int sh, int unit, const void* attrs, void* cb, void* cbd) {
+    (void)unit; (void)attrs; (void)cb; (void)cbd;
+    MwGdObj* B = mw_gdobj_state(img);
+    if (!B || B->kind != 5 || dw <= 0 || dh <= 0 || sw <= 0 || sh <= 0) return 2;
+    MWBmp* S = gd_surf(gfx);
+    if (!S) return 2;
+    gd_blit_rgba(B, S, dx, dy, dw, dh, sx, sy, sw, sh);
+    MW_TRACE("[GDI+] DrawImageRectRect %dx%d@%d,%d <- %dx%d@%d,%d", dw, dh, dx, dy, sw, sh, sx, sy);
+    return 0;
 }
 __attribute__((ms_abi)) uint32_t mw_GdipSetSmoothingMode(void* g, uint32_t mode) { (void)g; (void)mode; return MW_GDIPLUS_OK; }
 __attribute__((ms_abi)) uint32_t mw_GdipSetInterpolationMode(void* g, uint32_t mode) { (void)g; (void)mode; return MW_GDIPLUS_OK; }
@@ -32730,11 +33360,30 @@ __attribute__((ms_abi)) uint32_t mw_GdipCreateBitmapFromScan0(int w, int h, int 
     return MW_GDIPLUS_OK;
 }
 __attribute__((ms_abi)) uint32_t mw_GdipCreateBitmapFromHBITMAP(void* hbm, void* pal, void** bmp) {
-    (void)hbm; (void)pal;
+    (void)pal;
     if (!bmp) return MW_GDIPLUS_INVALIDPARAM;
+    *bmp = NULL;
+    uintptr_t v = (uintptr_t)hbm;
+    if ((v & 0xFFFFF000u) != MW_HBITMAP_BASE) return MW_GDIPLUS_INVALIDPARAM;
+    int bi = (int)(v & 0xFF) - 1;
+    if (bi < 0 || bi >= MW_MEMDC_MAX || !g_bitmap_live[bi]) return MW_GDIPLUS_INVALIDPARAM;
     void* b = mw_gdobj_new(5);
-    if (!b) return MW_GDIPLUS_GENERICERR;
+    MwGdObj* s = b ? mw_gdobj_state(b) : NULL;
+    if (!s) return MW_GDIPLUS_GENERICERR;
+    MWBmp* src = &g_bitmap_obj[bi];
+    s->w = (uint32_t)src->w; s->h = (uint32_t)src->h; s->stride = (uint32_t)src->w * 4u;
+    s->px = (uint8_t*)calloc(1, (size_t)s->stride * (size_t)s->h);
+    if (!s->px) return 3u; /* OutOfMemory */
+    s->px_owned = 1;
+    for (int j = 0; j < src->h; j++)
+        for (int i = 0; i < src->w; i++) {
+            uint32_t eng = mwb_get(src, i, j); /* 0x00BBGGRR -> RGBA */
+            uint8_t* p = s->px + (size_t)j * s->stride + (size_t)i * 4;
+            p[0] = (uint8_t)((eng >> 16) & 0xFF); p[1] = (uint8_t)((eng >> 8) & 0xFF);
+            p[2] = (uint8_t)(eng & 0xFF); p[3] = 0xFF;
+        }
     *bmp = b;
+    MW_TRACE("[GDI+] CreateBitmapFromHBITMAP(%p) -> %dx%d RGBA", hbm, s->w, s->h);
     return MW_GDIPLUS_OK;
 }
 __attribute__((ms_abi)) uint32_t mw_GdipCreateBitmapFromFile(const uint16_t* file, void** bmp) {
@@ -32743,9 +33392,29 @@ __attribute__((ms_abi)) uint32_t mw_GdipCreateBitmapFromFile(const uint16_t* fil
     return MW_GDIPLUS_GENERICERR; /* honest: no image decode service */
 }
 __attribute__((ms_abi)) uint32_t mw_GdipCreateHBITMAPFromBitmap(void* bmp, void** hbm, uint32_t bg) {
-    (void)bmp; (void)bg;
-    if (hbm) *hbm = NULL;
-    return MW_GDIPLUS_GENERICERR;
+    (void)bg;
+    if (!hbm) return MW_GDIPLUS_INVALIDPARAM;
+    *hbm = NULL;
+    MwGdObj* s = mw_gdobj_state(bmp);
+    if (!s || s->kind != 5 || !s->px || !s->w || !s->h) return MW_GDIPLUS_INVALIDPARAM;
+    int slot = -1;
+    for (int i = 0; i < MW_MEMDC_MAX; i++) if (!g_bitmap_live[i]) { slot = i; break; }
+    if (slot < 0) return MW_GDIPLUS_GENERICERR;
+    MWBmp* dst = &g_bitmap_obj[slot];
+    dst->px = (uint8_t*)calloc((size_t)s->w * (size_t)s->h, 3);
+    if (!dst->px) return MW_GDIPLUS_GENERICERR;
+    dst->w = (int)s->w; dst->h = (int)s->h; dst->vbpp = 0; dst->vtop = 0; dst->vstride = 0;
+    g_bitmap_live[slot] = 1;
+    for (uint32_t j = 0; j < s->h; j++)
+        for (uint32_t i = 0; i < s->w; i++) {
+            const uint8_t* p = s->px + (size_t)j * s->stride + (size_t)i * 4;
+            uint32_t eng = ((uint32_t)p[2] << 16) | ((uint32_t)p[1] << 8) | p[0];
+            uint8_t* q = dst->px + 3 * ((size_t)j * (size_t)s->w + (size_t)i);
+            q[0] = (uint8_t)(eng & 0xFF); q[1] = (uint8_t)((eng >> 8) & 0xFF); q[2] = (uint8_t)((eng >> 16) & 0xFF);
+        }
+    *hbm = (void*)(uintptr_t)(MW_HBITMAP_BASE | (unsigned)(slot + 1));
+    MW_TRACE("[GDI+] CreateHBITMAPFromBitmap -> HBITMAP %p (%ux%u)", *hbm, s->w, s->h);
+    return MW_GDIPLUS_OK;
 }
 __attribute__((ms_abi)) uint32_t mw_GdipBitmapLockBits(void* bmp, const void* rc, uint32_t flags, uint32_t fmt, void* data) {
     (void)bmp; (void)rc; (void)flags; (void)fmt; (void)data;
@@ -38339,6 +39008,14 @@ ENTRY("msvcrt.dll", "wctype", mw_wctype),
     ENTRY("KERNEL32.DLL", "VerifyVersionInfoW",                 mw_VerifyVersionInfoW),
     ENTRY("KERNEL32.DLL", "VerifyVersionInfoA",                 mw_VerifyVersionInfoA),
     ENTRY("KERNEL32.DLL", "WaitNamedPipeA",                     mw_WaitNamedPipeA),
+    ENTRY("KERNEL32.DLL", "WaitNamedPipeW",                     mw_WaitNamedPipeW), /* SW-1321 WinRAR */
+    ENTRY("KERNEL32.DLL", "GetPhysicallyInstalledSystemMemory", mw_GetPhysicallyInstalledSystemMemory), /* SW-1321 */
+    /* SW-1322 (procexp64): typed-stub residua — OLEAUT32.16 maps to
+     * mw_SafeArrayCopy via name; the rest are unidentified-ordinal no-ops */
+    ENTRY("IPHLPAPI.DLL", "Ordinal176",                         mw_unresolved_import_stub), /* honest 0+trace */
+    ENTRY("POWRPROF.DLL", "Ordinal277",                         mw_unresolved_import_stub),
+    ENTRY("ACLUI.DLL", "Ordinal1",                              mw_unresolved_import_stub),
+    ENTRY("OLEAUT32.dll", "SafeArrayCopy",                      mw_SafeArrayCopy), /* SW-1322 */
     ENTRY("api-ms-win-crt-environment-l1-1-0.dll", "__p__wenviron", mw___p__wenviron),
     ENTRY("api-ms-win-crt-runtime-l1-1-0.dll", "__p___wargv",   mw___p___wargv),
     ENTRY("api-ms-win-crt-runtime-l1-1-0.dll", "_configure_wide_argv", mw__configure_wide_argv),
@@ -39867,6 +40544,37 @@ ENTRY("GDI32.DLL", "GetCharacterPlacementW",                mw_GetCharacterPlace
     ENTRY("gdiplus.dll", "GdipSaveImageToFile",                 mw_GdipSaveImageToFile),
     ENTRY("gdiplus.dll", "GdipDrawBezierI",                     mw_GdipDrawBezierI),
     ENTRY("gdiplus.dll", "GdipDrawPath",                        mw_GdipDrawPath),
+    /* SW-1320 (GFX-3, issue #17): real-raster flat API — WinRAR toolbar path */
+    ENTRY("gdiplus.dll", "GdipCreateFromHDC2",                  mw_GdipCreateFromHDC2),
+    ENTRY("gdiplus.dll", "GdipCreatePen2",                      mw_GdipCreatePen2),
+    ENTRY("gdiplus.dll", "GdipSetPenColor",                     mw_GdipSetPenColor),
+    ENTRY("gdiplus.dll", "GdipGetPenColor",                     mw_GdipGetPenColor),
+    ENTRY("gdiplus.dll", "GdipSetPenWidth",                     mw_GdipSetPenWidth),
+    ENTRY("gdiplus.dll", "GdipGetPenWidth",                     mw_GdipGetPenWidth),
+    ENTRY("gdiplus.dll", "GdipSetSolidFillColor",               mw_GdipSetSolidFillColor),
+    ENTRY("gdiplus.dll", "GdipGetSolidFillColor",               mw_GdipGetSolidFillColor),
+    ENTRY("gdiplus.dll", "GdipResetPath",                       mw_GdipResetPath),
+    ENTRY("gdiplus.dll", "GdipGetPointCount",                   mw_GdipGetPointCount),
+    ENTRY("gdiplus.dll", "GdipAddPathLine",                     mw_GdipAddPathLine),
+    ENTRY("gdiplus.dll", "GdipAddPathLine2I",                   mw_GdipAddPathLine2I),
+    ENTRY("gdiplus.dll", "GdipAddPathLine2",                    mw_GdipAddPathLine2),
+    ENTRY("gdiplus.dll", "GdipAddPathBezier",                   mw_GdipAddPathBezier),
+    ENTRY("gdiplus.dll", "GdipAddPathArc",                      mw_GdipAddPathArc),
+    ENTRY("gdiplus.dll", "GdipAddPathEllipseI",                 mw_GdipAddPathEllipseI),
+    ENTRY("gdiplus.dll", "GdipAddPathRectangleI",               mw_GdipAddPathRectangleI),
+    ENTRY("gdiplus.dll", "GdipDrawRectangle",                   mw_GdipDrawRectangle),
+    ENTRY("gdiplus.dll", "GdipDrawRectanglesI",                 mw_GdipDrawRectanglesI),
+    ENTRY("gdiplus.dll", "GdipDrawLines",                       mw_GdipDrawLines),
+    ENTRY("gdiplus.dll", "GdipDrawPieI",                        mw_GdipDrawPieI),
+    ENTRY("gdiplus.dll", "GdipDrawPolygonI",                    mw_GdipDrawPolygonI),
+    ENTRY("gdiplus.dll", "GdipFillPieI",                        mw_GdipFillPieI),
+    ENTRY("gdiplus.dll", "GdipFillPolygonI",                    mw_GdipFillPolygonI),
+    ENTRY("gdiplus.dll", "GdipFillRectanglesI",                 mw_GdipFillRectanglesI),
+    ENTRY("gdiplus.dll", "GdipGraphicsClear",                   mw_GdipGraphicsClear),
+    ENTRY("gdiplus.dll", "GdipSetCompositingMode",              mw_GdipSetCompositingMode),
+    ENTRY("gdiplus.dll", "GdipSetRenderingOrigin",              mw_GdipSetRenderingOrigin),
+    ENTRY("gdiplus.dll", "GdipBitmapSetPixel",                  mw_GdipBitmapSetPixel),
+    ENTRY("gdiplus.dll", "GdipFillEllipseI",                    mw_GdipFillEllipseI),
     ENTRY("gdiplus.dll", "GdipFillRectangleI",                  mw_GdipFillRectangleI),
     ENTRY("gdiplus.dll", "GdipFillPath",                        mw_GdipFillPath),
     ENTRY("gdiplus.dll", "GdipSetSmoothingMode",                mw_GdipSetSmoothingMode),
@@ -39992,6 +40700,10 @@ ENTRY("GDI32.DLL", "GetCharacterPlacementW",                mw_GetCharacterPlace
     ENTRY("SECUR32.DLL", "LsaFreeReturnBuffer",                 mw_LsaFreeReturnBuffer),
     ENTRY("USER32.DLL", "MapVirtualKeyExW",                     mw_MapVirtualKeyExW),
     ENTRY("USER32.DLL", "MapVirtualKeyW",                       mw_MapVirtualKeyW),
+    ENTRY("USER32.DLL", "GetScrollBarInfo",                     mw_GetScrollBarInfo), /* SW-1321 WinRAR */
+    ENTRY("USER32.DLL", "SetUserObjectInformationW",            mw_SetUserObjectInformationW), /* SW-1321 */
+    ENTRY("USER32.DLL", "keybd_event",                          mw_keybd_event), /* SW-1321 */
+    ENTRY("COMCTL32.DLL", "Ordinal380",                         mw_comctl_ordinal380), /* SW-1321 nameless */
     ENTRY("NETAPI32.DLL", "NetServerGetInfo",                   mw_NetServerGetInfo),
     ENTRY("NETAPI32.DLL", "NetWkstaGetInfo",                    mw_NetWkstaGetInfo),
     ENTRY("NETAPI32.DLL", "NetWkstaUserGetInfo",                mw_NetWkstaUserGetInfo),
@@ -41089,6 +41801,8 @@ static int load_pe(const char* filepath) {
                     { "OLEAUT32", 8, "VariantInit" },
                     /* SWEEP-032 (SW-1106): zoomit64 raw ordinals — names via
                      * wine-mirror comctl32.spec/shlwapi.spec (2026-10-21) */
+                    { "COMCTL32", 380, "Ordinal380" }, /* SW-1321 WinRAR nameless */
+                    { "OLEAUT32", 16, "SafeArrayCopy" }, /* SW-1322 procexp */
                     { "COMCTL32", 410, "SetWindowSubclass" },
                     { "COMCTL32", 411, "GetWindowSubclass" }, /* SW-1381: npp64 (wine comctl32.spec) */
                     { "COMCTL32", 412, "RemoveWindowSubclass" },
