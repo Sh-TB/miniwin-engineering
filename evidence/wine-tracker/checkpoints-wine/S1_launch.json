@@ -1,0 +1,25 @@
+{
+  "id": "S1_launch",
+  "desc": "launch pinned Rar.exe; banner + usage prove real execution",
+  "start": "2026-10-29T19:49:12.713+00:00",
+  "host": false,
+  "argv": [
+    "/home/z/my-project/tools/wine-10.0/bin/wine64",
+    "/home/z/my-project/workspace/miniwin-engineering/evidence/app-tests/winrar/Rar.exe"
+  ],
+  "engine_used": "wine",
+  "exit_code": 0,
+  "duration_s": 4.42,
+  "stdout_bytes": 5758,
+  "stderr_bytes": 0,
+  "stdout_head": "\nRAR 7.12 x64   Copyright (c) 1993-2025 Alexander Roshal   23 Jun 2025\nTrial version             Type 'rar -?' for help\n\nUsage:     rar <command> -<switch 1> -<switch N> <archive> <files...>\n               <@listfiles...> <path_to_extract\\>\n\n<Commands>\n  a             Add files to archive\n  c             Add archive comment\n  ch            Change archive parameters\n  cw            Write archive comment to file\n  d             Delete files from archive\n  e             Extract files without archiv",
+  "verifications": [
+    {
+      "name": "banner_says_rar712",
+      "ok": true
+    }
+  ],
+  "pass": true,
+  "outcome": "pass",
+  "finish": "2026-10-29T19:49:17.131+00:00"
+}

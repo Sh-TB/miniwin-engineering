@@ -1,0 +1,25 @@
+# Bounded +relay capture of the archive-create step (short workflow, spec 2.2)
+name: winrar-create-relay-wine
+engine: wine
+engine_detail: "wine-10.0 (Debian 10.0~repack-6); WINEDEBUG=+relay,+module bounded sample (measured: bare +loaddll is an invalid channel in this build and POISONS the whole WINEDEBUG spec — relay silently dies)"
+wine_path: /home/z/my-project/tools/wine-10.0
+wine_bin: wine64
+disposable_prefix: true
+winedebug: "+relay,+module"
+timeout_s: 90
+app:
+  name: WinRAR console archiver (Rar.exe)
+  version: "7.12 x64"
+  executable: /home/z/my-project/workspace/miniwin-engineering/evidence/app-tests/winrar/Rar.exe
+  sha256: bdbe2bde697c45e02902f19415d7af07dc871f30a3ac84fb552657aeddc38714
+fixtures:
+  doc_a.txt: "MiniWin wine-tracker fixture doc_a: known UTF-8 text. Archive workflow acceptance line 1.\nLine 2: deterministic content for SHA-256 comparison.\n"
+  doc_b.bin: "\x00\x01\x02\x03\x04\x05\x06\x07DETERMINISTIC-BYTES-\x00\x00\xff\xfe\x11\x22\x33\x44\x55\x66\x77\x88\x99\xaa\xbb\xcc\xdd\xee\xff"
+checkpoints:
+  - id: S2_create_relayed
+    desc: create demo.rar with +relay+loaddll capture (raw log kept for parsing)
+    argv: ["/home/z/my-project/workspace/miniwin-engineering/evidence/app-tests/winrar/Rar.exe", "a", "-y", "demo_relay.rar", "doc_a.txt", "doc_b.bin"]
+    capture_stdout_head: 200
+    verify:
+      - name: archive_created
+        expr: "(Path(workdir)/'demo_relay.rar').exists()"

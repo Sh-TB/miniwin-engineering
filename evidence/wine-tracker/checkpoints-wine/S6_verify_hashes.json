@@ -1,0 +1,33 @@
+{
+  "id": "S6_verify_hashes",
+  "desc": "SHA-256 compare extracted vs originals (host-side, engine-independent)",
+  "start": "2026-10-29T19:49:34.949+00:00",
+  "host": true,
+  "argv": [
+    "python3",
+    "-c",
+    "print('host-verify-only')"
+  ],
+  "engine_used": "none (host)",
+  "exit_code": 0,
+  "duration_s": 0.01,
+  "stdout_bytes": 17,
+  "stderr_bytes": 0,
+  "verifications": [
+    {
+      "name": "doc_a_hash_match",
+      "ok": true
+    },
+    {
+      "name": "doc_b_hash_match",
+      "ok": true
+    },
+    {
+      "name": "no_path_traversal",
+      "ok": true
+    }
+  ],
+  "pass": true,
+  "outcome": "pass",
+  "finish": "2026-10-29T19:49:34.964+00:00"
+}

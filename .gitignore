@@ -157,3 +157,11 @@ evidence/app-tests/*.exe
 evidence/app-tests/winrar/
 evidence/app-tests/wine-pkg/
 evidence/app-tests/fixtures/
+
+# wine-tracker: raw relay logs + parsed event streams + per-run wine work dirs stay local (83MB relay sample, 560k-event JSONL); run.json/checkpoints/snapshots/reports are committed
+artifacts/wine-tracker/runs/*/raw/*.log
+artifacts/wine-tracker/runs/*/parsed/events.jsonl
+artifacts/wine-tracker/runs/*/work/
+artifacts/wine-tracker/runs/*/prefix/
+artifacts/wine-tracker/runs/*/miniwin-results/
+tools/wine_behavior_tracker/*.egg-info/

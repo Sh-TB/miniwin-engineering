@@ -1,0 +1,33 @@
+{
+  "id": "S7b_extract_rerun",
+  "desc": "extract the rerun archive",
+  "start": "2026-10-29T19:49:44.885+00:00",
+  "host": false,
+  "argv": [
+    "/home/z/my-project/workspace/miniwin-engineering/minwin_loader",
+    "/home/z/my-project/workspace/miniwin-engineering/evidence/app-tests/winrar/Rar.exe",
+    "x",
+    "-y",
+    "demo2.rar",
+    "out2\\\\"
+  ],
+  "engine_used": "miniwin",
+  "exit_code": 0,
+  "duration_s": 0.01,
+  "stdout_bytes": 516,
+  "stderr_bytes": 127,
+  "stdout_head": "[MiniWin] Loading /home/z/my-project/workspace/miniwin-engineering/evidence/app-tests/winrar/Rar.exe...\n\nRAR 7.12 x64   Copyright (c) 1993-2025 Alexander Roshal   23 Jun 2025\nTrial version            ",
+  "verifications": [
+    {
+      "name": "rerun_doc_a_hash_match",
+      "ok": true
+    },
+    {
+      "name": "rerun_doc_b_hash_match",
+      "ok": true
+    }
+  ],
+  "pass": true,
+  "outcome": "pass",
+  "finish": "2026-10-29T19:49:44.895+00:00"
+}

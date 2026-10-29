@@ -1,0 +1,28 @@
+{
+  "id": "S4_test",
+  "desc": "integrity test of the created archive",
+  "start": "2026-10-29T19:49:25.995+00:00",
+  "host": false,
+  "argv": [
+    "/home/z/my-project/tools/wine-10.0/bin/wine64",
+    "/home/z/my-project/workspace/miniwin-engineering/evidence/app-tests/winrar/Rar.exe",
+    "t",
+    "-y",
+    "demo.rar"
+  ],
+  "engine_used": "wine",
+  "exit_code": 0,
+  "duration_s": 4.45,
+  "stdout_bytes": 338,
+  "stderr_bytes": 0,
+  "stdout_head": "\nRAR 7.12 x64   Copyright (c) 1993-2025 Alexander Roshal   23 Jun 2025\nTrial version             Type 'rar -?' for help\n\nTesting archive demo.rar\n\nTesting     doc_a.txt                                                    \b\b\b\b 71%\b\b\b\b\b  OK \nTesting     doc_b.bin                                                    \b\b\b\b100%\b\b\b\b\b  OK \nAll OK\n",
+  "verifications": [
+    {
+      "name": "test_ok",
+      "ok": true
+    }
+  ],
+  "pass": true,
+  "outcome": "pass",
+  "finish": "2026-10-29T19:49:30.449+00:00"
+}
