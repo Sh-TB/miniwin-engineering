@@ -121,3 +121,29 @@ MW_GUI_EVENTS=1 ../../minwin_loader notepad.exe # GUI + pump; expect exit 124
 ../../minwin_loader idman642build33.exe         # expect: Not a PE32+ (magic=0x10b)
 ```
 Logs: `*_baseline_full.log` (BEFORE), `*_after*.log` (AFTER), `notepad_final.log`.
+
+## Re-verification on the merged engine (2026-10-30, HEAD 2990355 = 8748880 + APP-TEST rounds)
+
+The parallel SWEEP-100..106/032/033 trains landed overlapping fixes upstream
+(LoadStringW SW-1475, blocking GetMessageW SWEEP-035, OemToCharA SWEEP-032,
+probe/IsTextUnicode/FoldString families). The APP-TEST fixes were re-landed
+on upstream as commit 2990355 (only genuinely-missing work), and every app
+was re-run. Numbers below are from the MERGED engine:
+
+| Program | Merged-engine result | Evidence |
+|---|---|---|
+| Rar.exe 7.12 | 0 unresolved, RAR 7.12 banner + full usage, exit 0 | `merged_rar712_usage.log` |
+| UnRAR.exe 7.12 | 0 unresolved, banner + help | session log |
+| notepad.exe (Wine 10.0) | 0 unresolved; **LoadMenuW(RT_MENU) -> HMENU 0x50001 (5 top items)**; class menu (lpszMenuName) attached; GetMenu(hwnd) -> 0x50001; CheckMenuItem(id=281) on real items | `merged_notepad_gui.log`, `merged_notepad_api_trace.json` |
+| WinRAR.exe GUI | alive at 120s timeout (old tree: SIGSEGV in libc); 0 painted frames; 10 unresolved (GdipDrawRectangle/GdipAddPathArc/GdipAddPathLine/GdipBitmapSetPixel, WaitNamedPipeW, GetPhysicallyInstalledSystemMemory, GetScrollBarInfo, SetUserObjectInformationW, keybd_event, COMCTL32 ordinal 380) | `merged_winrar_gui.log` |
+| idman642build33.exe (PE32) | **runs under the SW-1281 x86 interpreter** (cpu32_run 76125 steps, exit 0, 368x76 paint surface) — the old "Not a PE32+ (magic=0x10b)" refusal is SUPERSEDED upstream | `merged_idm_pe32.log` |
+
+Regression suite 12/12 PASS; new IMalloc vtable ABI test 34/34 PASS
+(`tests/imalloc_abi/`). Fix details: commit 2990355 (SW-1501 IMalloc ABI,
+SW-1502 LoadMenuW/class-menu/StrRStrIW/OemToCharBuffW/GetCPInfoExW/
+GetDpiForWindow/wnsprintfW tails).
+
+Frontiers opened on the merged engine:
+1. WinRAR 7.12 GUI: alive but unpainted — GDI+ flat API (Gdip*) missing.
+2. notepad menu bar contents: parsed HMENU exists; item text → screen paint
+   not yet verified (no GDI-FRAME in the notepad GUI log).

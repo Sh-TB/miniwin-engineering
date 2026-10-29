@@ -1,0 +1,329 @@
+{
+  "trace": [
+[T2640] [API] PE Loader: file=notepad.exe size=509804
+[T2640] [API] PE Loader: ImageBase=0x140000000 EP=0x6c10 SizeOfImage=0x6e000 Sections=18
+[T2640] [API] PE Loader: Mapped at 0x140000000 (forced via MAP_FIXED)
+[T2640] [API] KUSD: mapped 0x7ffe0000 (root C:\WINDOWS, ver 5.2, qpc 1e9)
+[T2640] [API] Section [0] .text    VA=0x00001000 VS=0x00005ee0 Raw=0x00006000 Ch=0x60000020
+[T2640] [API] Section [1] .data    VA=0x00007000 VS=0x00000220 Raw=0x00001000 Ch=0xc0000040
+[T2640] [API] Section [2] .rodata  VA=0x00008000 VS=0x00000140 Raw=0x00001000 Ch=0xc0000040
+[T2640] [API] Section [3] .rdata   VA=0x00009000 VS=0x00000810 Raw=0x00001000 Ch=0x40000040
+[T2640] [API] Section [4] .pdata   VA=0x0000a000 VS=0x00000234 Raw=0x00001000 Ch=0x40000040
+[T2640] [API] Section [5] .xdata   VA=0x0000b000 VS=0x00000230 Raw=0x00001000 Ch=0x40000040
+[T2640] [API] Section [6] .bss     VA=0x0000c000 VS=0x000012c0 Raw=0x00000000 Ch=0xc0000080
+[T2640] [API] Section [7] .idata   VA=0x0000e000 VS=0x00001450 Raw=0x00002000 Ch=0x40000040
+[T2640] [API] Section [8] .rsrc    VA=0x00010000 VS=0x00032a70 Raw=0x00033000 Ch=0x40000040
+[T2640] [API] Section [9] .reloc   VA=0x00043000 VS=0x0000000c Raw=0x00001000 Ch=0x42000040
+[T2640] [API] Section [10] /4       VA=0x00044000 VS=0x00000390 Raw=0x00001000 Ch=0x42000040
+[T2640] [API] Section [11] /19      VA=0x00045000 VS=0x00015c45 Raw=0x00016000 Ch=0x42000040
+[T2640] [API] Section [12] /31      VA=0x0005b000 VS=0x0000150a Raw=0x00002000 Ch=0x42000040
+[T2640] [API] Section [13] /45      VA=0x0005d000 VS=0x0000459e Raw=0x00005000 Ch=0x42000040
+[T2640] [API] Section [14] /57      VA=0x00062000 VS=0x00000b88 Raw=0x00001000 Ch=0x42000040
+[T2640] [API] Section [15] /70      VA=0x00063000 VS=0x00000270 Raw=0x00001000 Ch=0x42000040
+[T2640] [API] Section [16] /81      VA=0x00064000 VS=0x00007bf6 Raw=0x00008000 Ch=0x42000040
+[T2640] [API] Section [17] /92      VA=0x0006c000 VS=0x00001a80 Raw=0x00002000 Ch=0x42000040
+[T2640] [API] Import Directory: RVA=0xe000 Size=0x1450
+[T2640] [API] Import DLL: advapi32.dll (IAT RVA=0xe508, ILT RVA=0xe0c8)
+[T2640] [API]   [0] IsTextUnicode -> 0x2033680
+[T2640] [API]   [1] RegCloseKey -> 0x200a3a0
+[T2640] [API]   [2] RegCreateKeyExW -> 0x20cfcf0
+[T2640] [API]   [3] RegOpenKeyW -> 0x20cfaa0
+[T2640] [API]   [4] RegQueryValueExW -> 0x20d18e0
+[T2640] [API]   [5] RegSetValueExW -> 0x20d31d0
+[T2640] [API] Import DLL: comctl32.dll (IAT RVA=0xe540, ILT RVA=0xe100)
+[T2640] [API]   [0] InitCommonControls -> 0x206dec0
+[T2640] [API]   [1] Ordinal 410 -> SetWindowSubclass (fixed ordinal)
+[T2640] [API]   [1] SetWindowSubclass -> 0x2043cc0
+[T2640] [API]   [2] Ordinal 413 -> DefSubclassProc (fixed ordinal)
+[T2640] [API]   [2] DefSubclassProc -> 0x20f2250
+[T2640] [API] Import DLL: comdlg32.dll (IAT RVA=0xe560, ILT RVA=0xe120)
+[T2640] [API]   [0] ChooseFontW -> 0x20875d0
+[T2640] [API]   [1] FindTextW -> 0x206c760
+[T2640] [API]   [2] GetFileTitleW -> 0x2077480
+[T2640] [API]   [3] GetOpenFileNameW -> 0x206bf20
+[T2640] [API]   [4] GetSaveFileNameW -> 0x206c1e0
+[T2640] [API]   [5] PrintDlgW -> 0x203dba0
+[T2640] [API]   [6] ReplaceTextW -> 0x206ca20
+[T2640] [API] Import DLL: gdi32.dll (IAT RVA=0xe5a0, ILT RVA=0xe160)
+[T2640] [API]   [0] CreateFontIndirectW -> 0x204bb50
+[T2640] [API]   [1] DeleteDC -> 0x202c0c0
+[T2640] [API]   [2] DeleteObject -> 0x203b3d0
+[T2640] [API]   [3] EndDoc -> 0x20877d0
+[T2640] [API]   [4] EndPage -> 0x20877c0
+[T2640] [API]   [5] ExtTextOutW -> 0x20bff20
+[T2640] [API]   [6] GetDeviceCaps -> 0x202be80
+[T2640] [API]   [7] GetTextExtentExPointW -> 0x200e250
+[T2640] [API]   [8] GetTextExtentPoint32W -> 0x20af350
+[T2640] [API]   [9] GetTextMetricsW -> 0x206f880
+[T2640] [API]   [10] SelectObject -> 0x202b720
+[T2640] [API]   [11] SetMapMode -> 0x20871c0
+[T2640] [API]   [12] StartDocW -> 0x206b820
+[T2640] [API]   [13] StartPage -> 0x206bae0
+[T2640] [API] Import DLL: kernel32.dll (IAT RVA=0xe618, ILT RVA=0xe1d8)
+[T2640] [API]   [0] CloseHandle -> 0x20a36f0
+[T2640] [API]   [1] CreateFileW -> 0x20ca550
+[T2640] [API]   [2] ExitProcess -> 0x20f05c0
+[T2640] [API]   [3] FindClose -> 0x2013dd0
+[T2640] [API]   [4] FindFirstFileW -> 0x20a8e40
+[T2640] [API]   [5] FormatMessageW -> 0x2043020
+[T2640] [API]   [6] GetCPInfoExW -> 0x20786e0
+[T2640] [API]   [7] GetCommandLineA -> 0x207b0a0
+[T2640] [API]   [8] GetCommandLineW -> 0x207b560
+[T2640] [API]   [9] GetDateFormatW -> 0x203de60
+[T2640] [API]   [10] GetFileSize -> 0x2058ba0
+[T2640] [API]   [11] GetLocalTime -> 0x201c7e0
+[T2640] [API]   [12] GetModuleHandleA -> 0x203a570
+[T2640] [API]   [13] GetStartupInfoA -> 0x2036bc0
+[T2640] [API]   [14] GetTimeFormatW -> 0x203df70
+[T2640] [API]   [15] HeapAlloc -> 0x204f430
+[T2640] [API]   [16] HeapFree -> 0x20c3f70
+[T2640] [API]   [17] LocalFree -> 0x20c58e0
+[T2640] [API]   [18] MulDiv -> 0x203e1d0
+[T2640] [API]   [19] MultiByteToWideChar -> 0x204b490
+[T2640] [API]   [20] ReadFile -> 0x2057580
+[T2640] [API]   [21] SetEndOfFile -> 0x203fd10
+[T2640] [API]   [22] WideCharToMultiByte -> 0x207d4f0
+[T2640] [API]   [23] WriteFile -> 0x2057f90
+[T2640] [API]   [24] lstrcmpW -> 0x200c370
+[T2640] [API] Import DLL: shell32.dll (IAT RVA=0xe6e8, ILT RVA=0xe2a8)
+[T2640] [API]   [0] DragAcceptFiles -> 0x2065b10
+[T2640] [API]   [1] DragFinish -> 0x2087630
+[T2640] [API]   [2] DragQueryFileW -> 0x200c6a0
+[T2640] [API]   [3] ShellAboutW -> 0x2065c70
+[T2640] [API] Import DLL: shlwapi.dll (IAT RVA=0xe710, ILT RVA=0xe2d0)
+[T2640] [API]   [0] PathFindFileNameW -> 0x2062000
+[T2640] [API]   [1] StrCmpNIW -> 0x20244d0
+[T2640] [API]   [2] StrCmpNW -> 0x2024460
+[T2640] [API]   [3] StrRStrIW -> 0x2024200
+[T2640] [API]   [4] StrStrIW -> 0x2024150
+[T2640] [API]   [5] StrStrW -> 0x2024300
+[T2640] [API]   [6] wnsprintfW -> 0x20516d0
+[T2640] [API] Import DLL: ucrtbase.dll (IAT RVA=0xe750, ILT RVA=0xe310)
+[T2640] [API]   [0] __p___argc -> 0x205df90
+[T2640] [API]   [1] __p___argv -> 0x205e100
+[T2640] [API]   [2] __stdio_common_vswprintf -> 0x2012db0
+[T2640] [API]   [3] _assert -> 0x201aa80
+[T2640] [API]   [4] _configure_narrow_argv -> 0x205d730
+[T2640] [API]   [5] _get_initial_narrow_environment -> 0x2036600
+[T2640] [API]   [6] _initialize_narrow_environment -> 0x206ae80
+[T2640] [API]   [7] _set_app_type -> 0x205d300
+[T2640] [API]   [8] exit -> 0x204a480
+[T2640] [API]   [9] memcpy -> 0x20147c0
+[T2640] [API]   [10] wcschr -> 0x200a7a0
+[T2640] [API] Import DLL: user32.dll (IAT RVA=0xe7b0, ILT RVA=0xe370)
+[T2640] [API]   [0] CheckMenuItem -> 0x2061410
+[T2640] [API]   [1] CreateWindowExW -> 0x21051e0
+[T2640] [API]   [2] DefWindowProcW -> 0x2087370
+[T2640] [API]   [3] DestroyWindow -> 0x20b0be0
+[T2640] [API]   [4] DialogBoxParamW -> 0x20f1f30
+[T2640] [API]   [5] DispatchMessageW -> 0x20f18d0
+[T2640] [API]   [6] EnableMenuItem -> 0x20615d0
+[T2640] [API]   [7] EndDialog -> 0x2060760
+[T2640] [API]   [8] GetClientRect -> 0x20b17f0
+[T2640] [API]   [9] GetDesktopWindow -> 0x2071290
+[T2640] [API]   [10] GetDlgItem -> 0x2049710
+[T2640] [API]   [11] GetDlgItemInt -> 0x20ab8d0
+[T2640] [API]   [12] GetDlgItemTextW -> 0x20ab6e0
+[T2640] [API]   [13] GetDpiForWindow -> 0x200bd80
+[T2640] [API]   [14] GetMenu -> 0x202d8a0
+[T2640] [API]   [15] GetMessageW -> 0x20d7500
+[T2640] [API]   [16] GetMonitorInfoW -> 0x207bff0
+[T2640] [API]   [17] GetParent -> 0x20aa430
+[T2640] [API]   [18] GetSystemMetrics -> 0x2009cc0
+[T2640] [API]   [19] GetWindowPlacement -> 0x20385b0
+[T2640] [API]   [20] GetWindowRect -> 0x20b1210
+[T2640] [API]   [21] GetWindowTextLengthW -> 0x20ad8c0
+[T2640] [API]   [22] GetWindowTextW -> 0x20ab4b0
+[T2640] [API]   [23] InvalidateRect -> 0x205ff70
+[T2640] [API]   [24] IsClipboardFormatAvailable -> 0x200a3c0
+[T2640] [API]   [25] IsDialogMessageW -> 0x2086fa0
+[T2640] [API]   [26] LoadAcceleratorsW -> 0x20bd3b0
+[T2640] [API]   [27] LoadCursorW -> 0x2087390
+[T2640] [API]   [28] LoadIconW -> 0x20873a0
+[T2640] [API]   [29] LoadImageW -> 0x20d4080
+[T2640] [API]   [30] LoadStringW -> 0x20bd730
+[T2640] [API]   [31] MessageBoxW -> 0x20b67c0
+[T2640] [API]   [32] MonitorFromRect -> 0x20382a0
+[T2640] [API]   [33] PostMessageW -> 0x2059cd0
+[T2640] [API]   [34] PostQuitMessage -> 0x205fe00
+[T2640] [API]   [35] RegisterClassExW -> 0x20c2230
+[T2640] [API]   [36] RegisterWindowMessageW -> 0x202cd40
+[T2640] [API]   [37] SendMessageW -> 0x20f2ba0
+[T2640] [API]   [38] SetActiveWindow -> 0x202f520
+[T2640] [API]   [39] SetDlgItemInt -> 0x20c7d10
+[T2640] [API]   [40] SetDlgItemTextW -> 0x20c7b80
+[T2640] [API]   [41] SetFocus -> 0x202d730
+[T2640] [API]   [42] SetWindowPos -> 0x20c8af0
+[T2640] [API]   [43] SetWindowTextW -> 0x20c77b0
+[T2640] [API]   [44] ShowWindow -> 0x20c8f50
+[T2640] [API]   [45] TranslateAcceleratorW -> 0x20f3d10
+[T2640] [API]   [46] TranslateMessage -> 0x202a710
+[T2640] [API]   [47] UpdateWindow -> 0x20f4dd0
+[T2640] [API]   [48] WinHelpW -> 0x2064510
+[T2640] [API]   [49] wsprintfW -> 0x2018ca0
+[T2640] [API] Import resolution: 127 resolved, 0 unresolved (total 127)
+[T2640] [API] Exception: .pdata RVA=0xa000 Size=0x234 Entries=47
+[T2640] [API] [API-005] EH hacks DISABLED (default) (MINWIN_EH_HACKS=<unset>)
+[T2640] [API] [API-005] CXX-EH-FIX (LSDA catch-all patch RVA 0x2010c8) skipped: MINWIN_EH_HACKS not set
+[T2640] [API] SW-1297 validate_fd patch: fingerprint not found (guest unaffected)
+[T2640] [API] Jumping to EP=0x140006c10
+[T2640] [API] _configure_narrow_argv(mode=1) -> 0
+[T2640] [API] _initialize_narrow_environment() -> 0
+[T2640] [API] __p___argc() = 0x387c340
+[T2640] [API] __p___argv() = 0x219c5f0
+[T2640] [API] _get_initial_narrow_environment -> envp
+[T2640] [API] __set_app_type(2)
+[T2640] [API] GetCommandLineA() = "notepad.exe"
+[T2640] [API] GetStartupInfoA(info=0x7ffd08fefe70)
+[T2640] [API] GetModuleHandleA(name=NULL)
+[T2640] [API] InitCommonControls()
+[T2640] [API] RegisterWindowMessageW() -> 0xc000
+[T2640] [API] [RES] find hmod=0x140000000 a=?/- w=0x17/0x6
+[T2640] [API] [RES] walk depth=0 level=0x140010000 named=0 ided=7 (base=0x140010000)
+[T2640] [API] [RES] walk depth=1 level=0x140010790 named=0 ided=4 (base=0x140010000)
+[T2640] [API] [RES] walk depth=2 level=0x1400107c0 named=0 ided=40 (base=0x140010000)
+[T2640] [API] LoadStringW(id=352) -> 2 wchars (block 23 idx 0 len 2)
+[T2640] [API] [RES] find hmod=0x140000000 a=?/- w=0x17/0x6
+[T2640] [API] [RES] walk depth=0 level=0x140010000 named=0 ided=7 (base=0x140010000)
+[T2640] [API] [RES] walk depth=1 level=0x140010790 named=0 ided=4 (base=0x140010000)
+[T2640] [API] [RES] walk depth=2 level=0x1400107c0 named=0 ided=40 (base=0x140010000)
+[T2640] [API] LoadStringW(id=353) -> 7 wchars (block 23 idx 1 len 7)
+[T2640] [API] RegOpenKeyExW(miss) 'HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion' -> ERROR_FILE_NOT_FOUND
+[T2640] [API] SetLastError(2) caller=0x20cf7ca
+[T2640] [API] RegCreateKeyExW -> slot 7 (created=1)
+[T2640] [API] RegSetValueExW -> slot 7, 40 bytes stored
+[T2640] [API] RegSetValueExW -> slot 7, 8 bytes stored
+[T2640] [API] RegSetValueExW -> slot 7, 10 bytes stored
+[T2640] [API] RegSetValueExW -> slot 7, 30 bytes stored
+[T2640] [API] reg seed: CurrentVersion identity seeded (Windows Server 2003 5.2 b3790)
+[T2640] [API] RegOpenKeyExW(miss) 'HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon' -> ERROR_FILE_NOT_FOUND
+[T2640] [API] SetLastError(2) caller=0x20cf7ca
+[T2640] [API] RegCreateKeyExW -> slot 8 (created=1)
+[T2640] [API] RegSetValueExW -> slot 8, 4 bytes stored
+[T2640] [API] RegSetValueExW -> slot 8, 26 bytes stored
+[T2640] [API] RegSetValueExW -> slot 8, 16 bytes stored
+[T2640] [API] RegSetValueExW -> slot 8, 2 bytes stored
+[T2640] [API] reg seed: Winlogon skeleton seeded
+[T2640] [API] RegOpenKeyExW(miss) 'HKLM\System\CurrentControlSet\Services\EventLog\Application' -> ERROR_FILE_NOT_FOUND
+[T2640] [API] SetLastError(2) caller=0x20cf7ca
+[T2640] [API] RegCreateKeyExW -> slot 9 (created=1)
+[T2640] [API] RegOpenKeyExW(miss) 'HKLM\System\CurrentControlSet\Services\EventLog\Security' -> ERROR_FILE_NOT_FOUND
+[T2640] [API] SetLastError(2) caller=0x20cf7ca
+[T2640] [API] RegCreateKeyExW -> slot 10 (created=1)
+[T2640] [API] RegOpenKeyExW(miss) 'HKLM\System\CurrentControlSet\Services\EventLog\System' -> ERROR_FILE_NOT_FOUND
+[T2640] [API] SetLastError(2) caller=0x20cf7ca
+[T2640] [API] RegCreateKeyExW -> slot 11 (created=1)
+[T2640] [API] reg seed: EventLog service keys seeded (3)
+[T2640] [API] RegOpenKeyExW(miss) 'HKCU\Software\Sysinternals\PsLoglist' -> ERROR_FILE_NOT_FOUND
+[T2640] [API] SetLastError(2) caller=0x20cf7ca
+[T2640] [API] RegCreateKeyExW -> slot 12 (created=1)
+[T2640] [API] RegSetValueExW -> slot 12, 4 bytes stored
+[T2640] [API] RegOpenKeyExW(miss) 'HKCU\Software\Sysinternals\PsInfo' -> ERROR_FILE_NOT_FOUND
+[T2640] [API] SetLastError(2) caller=0x20cf7ca
+[T2640] [API] RegCreateKeyExW -> slot 13 (created=1)
+[T2640] [API] RegSetValueExW -> slot 13, 4 bytes stored
+[T2640] [API] RegOpenKeyExW(miss) 'HKCU\Software\Sysinternals\PsList' -> ERROR_FILE_NOT_FOUND
+[T2640] [API] SetLastError(2) caller=0x20cf7ca
+[T2640] [API] RegCreateKeyExW -> slot 14 (created=1)
+[T2640] [API] RegSetValueExW -> slot 14, 4 bytes stored
+[T2640] [API] RegOpenKeyExW(miss) 'HKCU\Software\Sysinternals\PsPasswd' -> ERROR_FILE_NOT_FOUND
+[T2640] [API] SetLastError(2) caller=0x20cf7ca
+[T2640] [API] RegCreateKeyExW -> slot 15 (created=1)
+[T2640] [API] RegSetValueExW -> slot 15, 4 bytes stored
+[T2640] [API] RegOpenKeyExW(miss) 'HKCU\Software\Sysinternals\PsService' -> ERROR_FILE_NOT_FOUND
+[T2640] [API] SetLastError(2) caller=0x20cf7ca
+[T2640] [API] RegCreateKeyExW -> slot 16 (created=1)
+[T2640] [API] RegSetValueExW -> slot 16, 4 bytes stored
+[T2640] [API] reg seed: Sysinternals EulaAccepted markers seeded
+[T2640] [API] RegOpenKeyExW(miss) 'HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Perflib' -> ERROR_FILE_NOT_FOUND
+[T2640] [API] SetLastError(2) caller=0x20cf7ca
+[T2640] [API] RegCreateKeyExW -> slot 17 (created=1)
+[T2640] [API] RegSetValueExW -> slot 17, 4 bytes stored
+[T2640] [API] RegSetValueExW -> slot 17, 4 bytes stored
+[T2640] [API] reg seed: Perflib Last Counter/Help = 952
+[T2640] [API] RegOpenKeyExW(miss) 'HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion' -> ERROR_FILE_NOT_FOUND
+[T2640] [API] SetLastError(2) caller=0x20cf7ca
+[T2640] [API] RegCreateKeyExW -> slot 18 (created=1)
+[T2640] [API] RegSetValueExW -> slot 18, 34 bytes stored
+[T2640] [API] RegSetValueExW -> slot 18, 60 bytes stored
+[T2640] [API] RegSetValueExW -> slot 18, 34 bytes stored
+[T2640] [API] RegSetValueExW -> slot 18, 34 bytes stored
+[T2640] [API] reg seed: HKLM Windows CurrentVersion ProgramFiles skeleton seeded
+[T2640] [API] RegOpenKeyExW(miss) 'HKCU\Software\Microsoft\Notepad' -> ERROR_FILE_NOT_FOUND
+[T2640] [API] SetLastError(2) caller=0x20cf7ca
+[T2640] [API] LoadImageW(type=1) -> 0x60001
+[T2640] [API] RegisterClassExW(wcex=0x7ffd08fef7a0 proc=0x1400042c0) -> ATOM 0xc001
+[T2640] [API] MonitorFromRect -> primary (intersects)
+[T2640] [API] [GUI] paint surface allocated 1026x769 (SWEEP-005)
+[T2640] [API] [GUI] main class brush snapshot: 0x6 (SW-1291b)
+[T2640] [API] [RES] find hmod=0x140000000 a=?/- w=0x201/0x4
+[T2640] [API] [RES] walk depth=0 level=0x140010000 named=0 ided=7 (base=0x140010000)
+[T2640] [API] [RES] walk depth=1 level=0x140010198 named=0 ided=1 (base=0x140010000)
+[T2640] [API] [RES] walk depth=2 level=0x1400101b0 named=0 ided=49 (base=0x140010000)
+[T2640] [API] LoadMenuW(RT_MENU ver=0) -> HMENU 0x50001 (5 top items)
+[T2640] [API] [GUI] class menu -> HMENU 0x50001 (lpszMenuName)
+[T2640] [API] [GUI] event pump v3 ARMED (budget=400 keys=0 every=8 clicks=0)
+[T2640] [API] GetClientRect(hwnd=0x10001) -> 1026x769
+[T2640] [API] [GUI] child EDIT id=0 -> HWND 0x30001 text='0 wchars'
+[T2640] [API] SetWindowSubclass(hwnd=0x30001 proc=0x140003f40 id=0 ref=0) -> TRUE (chain 1)
+[T2640] [API] CreateFontIndirectW -> HFONT 0x70001
+[T2640] [API] SendMessageW(hwnd=0x30001 WM_? msg=0x30) -> 0
+[T2640] [API] SendMessageW(hwnd=0x30001 WM_? msg=0xc5) -> 0
+[T2640] [API] [GUI] child STATUSBAR id=0 -> HWND 0x30002 text='0 wchars'
+[T2640] [API] SendMessageW(hwnd=0x30001 WM_? msg=0xb0) -> 0
+[T2640] [API] SendMessageW(hwnd=0x30001 WM_? msg=0xc9) -> 0
+[T2640] [API] SendMessageW(hwnd=0x30001 WM_? msg=0xbb) -> 0
+[T2640] [API] SendMessageW(hwnd=0x30002 WM_? msg=0x40b) -> 0
+[T2640] [API] [GUI] WM_CREATE(lparam=&CS lpParams=(nil)) -> wndproc -> 0
+[T2640] [API] CreateWindowExW(ex=0x0 style=0xcf0000 cls=0x140009700 1026x769@-2147483648,-2147483648) -> HWND 0x10001
+[T2640] [API] [RES] find hmod=0x140000000 a=?/- w=0x18/0x6
+[T2640] [API] [RES] walk depth=0 level=0x140010000 named=0 ided=7 (base=0x140010000)
+[T2640] [API] [RES] walk depth=1 level=0x140010790 named=0 ided=4 (base=0x140010000)
+[T2640] [API] [RES] walk depth=2 level=0x140010910 named=0 ided=44 (base=0x140010000)
+[T2640] [API] LoadStringW(id=374) -> 20 wchars (block 24 idx 6 len 20)
+[T2640] [API] [RES] find hmod=0x140000000 a=?/- w=0x18/0x6
+[T2640] [API] [RES] walk depth=0 level=0x140010000 named=0 ided=7 (base=0x140010000)
+[T2640] [API] [RES] walk depth=1 level=0x140010790 named=0 ided=4 (base=0x140010000)
+[T2640] [API] [RES] walk depth=2 level=0x140010910 named=0 ided=44 (base=0x140010000)
+[T2640] [API] LoadStringW(id=373) -> 16 wchars (block 24 idx 5 len 16)
+[T2640] [API] GetMenu(hwnd=0x10001) -> 0x50001
+[T2640] [API] CheckMenuItem(id=281, flags=0x8) -> prev 0
+[T2640] [API] GetMenu(hwnd=0x10001) -> 0x50001
+[T2640] [API] CheckMenuItem(id=517, flags=0x8) -> prev 0
+[T2640] [API] SendMessageW(hwnd=0x30002 WM_? msg=0x5) -> 0
+[T2640] [API] GetWindowRect(child slot 1) -> 1x1@0,0
+[T2640] [API] SetWindowPos(0x30001 1026x768@0,0 flags=0x204) -> TRUE
+[T2640] [API] [GUI] WM_SIZE sent sync 1026x769 -> 0 (SW-1287b)
+[T2640] [API] ShowWindow(hwnd=0x30002 cmd=5) -> TRUE
+[T2640] [API] SendMessageW(hwnd=0x30001 WM_? msg=0xb8) -> 0
+[T2640] [API] [RES] find hmod=0x140000000 a=?/- w=0x18/0x6
+[T2640] [API] [RES] walk depth=0 level=0x140010000 named=0 ided=7 (base=0x140010000)
+[T2640] [API] [RES] walk depth=1 level=0x140010790 named=0 ided=4 (base=0x140010000)
+[T2640] [API] [RES] walk depth=2 level=0x140010910 named=0 ided=44 (base=0x140010000)
+[T2640] [API] LoadStringW(id=372) -> 9 wchars (block 24 idx 4 len 9)
+[T2640] [API] [RES] find hmod=0x140000000 a=?/- w=0x18/0x6
+[T2640] [API] [RES] walk depth=0 level=0x140010000 named=0 ided=7 (base=0x140010000)
+[T2640] [API] [RES] walk depth=1 level=0x140010790 named=0 ided=4 (base=0x140010000)
+[T2640] [API] [RES] walk depth=2 level=0x140010910 named=0 ided=44 (base=0x140010000)
+[T2640] [API] LoadStringW(id=368) -> 7 wchars (block 24 idx 0 len 7)
+[T2640] [API] SetWindowTextW -> '19 wchars' TRUE
+[T2640] [API] SetWindowTextW -> '0 wchars' TRUE
+[T2640] [API] SendMessageW(hwnd=0x30001 WM_? msg=0xcd) -> 0
+[T2640] [API] SetFocus(0x30001) -> prev 0x30002
+[T2640] [API] ShowWindow(hwnd=0x10001 cmd=1) -> TRUE
+[T2640] [API] UpdateWindow(hwnd=0x10001)
+[T2640] [API] [GUI] composite paint: 2 standard controls (SW-1266)
+[T2640] [API] [GDI] frame #1 (UpdateWindow) 1026x769 -> miniwin-results/notepad.exe/screenshots/frame_001.bmp
+[T2640] [API] DragAcceptFiles(0x10001,1)
+[T2640] [API] GetCommandLineW()
+[T2640] [API] [RES] find hmod=0x140000000 a=?/- w=0x203/0x9
+[T2640] [API] [RES] walk depth=0 level=0x140010000 named=0 ided=7 (base=0x140010000)
+[T2640] [API] [RES] walk depth=1 level=0x140010c48 named=0 ided=1 (base=0x140010000)
+[T2640] [API] [RES] walk depth=2 level=0x140010c60 named=0 ided=42 (base=0x140010000)
+[T2640] [API] LoadAcceleratorsW() -> 0xac0001 (n=18, REAL)
+[T2640] [API] [GUI-EVENT] #1 GetMessageW -> WM_PAINT
+[T2640] [API] [GUI-EVENT] dispatch WM_PAINT wp=0x0 -> 0
+[T2640] [API] GetMessageW() -> 0 (no event source: no timer/paint/keys left)
+[T2640] [API] exit(0)
+  ]
+}
