@@ -151,3 +151,9 @@ evidence/sweep008_rea/autoruns64_eula_function.yaml
 evidence/sweep063/ghidra/
 evidence/sweep065/ghidra/
 scrub_persian.py
+
+# APP-TEST round: real application binaries stay local (WinRAR 7.12 / IDM 6.42 / notepad), evidence report + import-table JSONs are committed
+evidence/app-tests/*.exe
+evidence/app-tests/winrar/
+evidence/app-tests/wine-pkg/
+evidence/app-tests/fixtures/
