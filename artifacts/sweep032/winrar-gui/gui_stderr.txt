@@ -1,0 +1,1 @@
+[TRACE] Command line: /tmp/winrar/Program Files/WinRAR/WinRAR.exe

@@ -1,0 +1,10 @@
+[MiniWin] Loading /tmp/winrar/Program Files/WinRAR/Rar.exe...
+
+RAR 7.12 x64   Copyright (c) 1993-2025 Alexander Roshal   23 Jun 2025
+Trial version             Type 'rar -?' for help
+
+Testing archive demo.rar
+
+Testing     doc_a.txt                                                     69%  OK 
+Testing     doc_b.bin                                                    100%  OK 
+All OK

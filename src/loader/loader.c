@@ -12015,6 +12015,19 @@ static void mw_reg_seed_windows(void) {
         }
         if (evlog_seeded) MW_TRACE("reg seed: EventLog service keys seeded (%d)", evlog_seeded);
     }
+    /* SW-1327 (issue #17 GUI): WinRAR 7.12 config-init skeleton. WinRAR.exe
+     * spins an infinite RegOpenKeyExW(HKCU\Software\WinRAR\Setup) retry loop
+     * when the key is absent (trace: 60s alive, zero CreateWindowEx, loop of
+     * Open-miss/HeapAlloc/HeapFree) — real installs always have this key
+     * because the installer writes it. Seed the empty Setup key (values read
+     * back as WinRAR's own defaults on miss; the key existence is what
+     * terminates the retry loop). */
+    if (mw_RegOpenKeyExW((void*)0x80000001u, (const wchar_t*)mw_seed_w(wsub, MW_REG_PATHN,
+            "Software\\WinRAR\\Setup"), 0, 0, &hk) != 0) {
+        if (mw_RegCreateKeyExW((void*)0x80000001u, (const wchar_t*)wsub, 0, NULL, 0, 0, NULL, &hk, NULL) == 0) {
+            MW_TRACE("reg seed: WinRAR Setup key seeded (no close: handle released at exit)");
+        }
+    }
     /* SW-1472b (SWEEP-094): Sysinternals EULA-accepted markers. Real
      * machines that ran a Sysinternals tool carry
      * HKCU\Software\Sysinternals\<Tool>\EulaAccepted=1; the tools read it
