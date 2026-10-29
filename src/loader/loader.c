@@ -19,6 +19,7 @@
 #include <sys/mman.h>
 #include <sys/syscall.h>
 #include <sys/time.h>
+#include <sys/wait.h> /* SW-1500 (issue #16): waitpid for real child processes */
 #include <time.h>
 #include <errno.h>
 #include <signal.h>
@@ -6164,8 +6165,148 @@ static uint32_t mw_sem_wait(MwKSem* s, uint32_t ms) {
     return rc;
 }
 
+/* ============================================================
+ * SW-1500 (issue #16 PROC-1, 2026-10-30): REAL child processes.
+ * CreateProcessW/A previously failed with ERROR_FILE_NOT_FOUND and
+ * GetExitCodeProcess answered 0 forever — both lying per the issue's
+ * evidence table (P2-a/P2-b). Model (Wine dlls/kernel32/process.c as the
+ * contract, Linux as the substrate): the guest exe spawns a HOST child by
+ * fork+execv("/proc/self/exe", loader, child-exe, args...) — a nested PE
+ * load in an isolated host process whose exit code IS the child's. The
+ * parent records the child in this registry (same alloc_handle pattern as
+ * events/semaphores/threads); WaitForSingleObject polls waitpid(2),
+ * GetExitCodeProcess answers STILL_ACTIVE(259) until reaped, and signal
+ * deaths map to NTSTATUS-style Win32 codes exactly like Windows exception
+ * exits (SIGSEGV->0xC0000005 STATUS_ACCESS_VIOLATION,
+ * SIGILL->0xC000001D STATUS_ILLEGAL_INSTRUCTION,
+ * SIGABRT->0x40000015 STATUS_FATAL_APP_EXIT,
+ * SIGFPE->0xC0000090 STATUS_FLOAT_INVALID_OPERATION,
+ * SIGINT/SIGTERM->0xC000013A STATUS_CONTROL_C_EXIT).
+ * Honest limitations (documented, Wine-acceptable for this tier):
+ *  - CREATE_SUSPENDED starts the child anyway (no pre-exec suspension yet);
+ *  - stdio is inherited (shared console, like an unredirected child);
+ *  - closing the last process handle while the child still runs orphans
+ *    the slot (freed on the next poll after exit; no zombie leak beyond
+ *    the parent engine's own lifetime).
+ * ============================================================ */
+typedef struct {
+    int used;
+    int done;
+    uint32_t exit_code;
+    pid_t pid;          /* host child pid (0 = slot free) */
+    uint32_t win_pid;   /* id reported to the guest */
+} MwProcess;
+static MwProcess g_mw_processes[16];
+static volatile uint32_t g_win_pid_next = 4240u;
+
+static MwProcess* mw_process_lookup(void* h) {
+    if (!h || (uintptr_t)h < 4) return NULL;
+    int idx = (int)(uintptr_t)h - 4;
+    if (idx < 0 || idx >= MAX_HANDLES) return NULL;
+    void* v = g_handle_table[idx];
+    if (!v) return NULL;
+    MwProcess* base = &g_mw_processes[0];
+    if ((MwProcess*)v < base || (MwProcess*)v >= base + 16) return NULL;
+    MwProcess* p = (MwProcess*)v;
+    return p->used ? p : NULL;
+}
+
+/* Non-blocking reap: updates done/exit_code from waitpid(WNOHANG). */
+static void mw_process_poll(MwProcess* p) {
+    if (!p || p->done || p->pid <= 0) return;
+    int st = 0;
+    pid_t r = waitpid(p->pid, &st, WNOHANG);
+    if (r == p->pid) {
+        p->done = 1;
+        if (WIFEXITED(st)) p->exit_code = (uint32_t)WEXITSTATUS(st);
+        else if (WIFSIGNALED(st)) {
+            switch (WTERMSIG(st)) {
+            case SIGSEGV: p->exit_code = 0xC0000005u; break; /* STATUS_ACCESS_VIOLATION */
+            case SIGILL:  p->exit_code = 0xC000001Du; break; /* STATUS_ILLEGAL_INSTRUCTION */
+            case SIGABRT: p->exit_code = 0x40000015u; break; /* STATUS_FATAL_APP_EXIT */
+            case SIGFPE:  p->exit_code = 0xC0000090u; break; /* STATUS_FLOAT_INVALID_OPERATION */
+            case SIGINT: case SIGTERM:
+                p->exit_code = 0xC000013Au; break;           /* STATUS_CONTROL_C_EXIT */
+            default: p->exit_code = 0xC0000409u; break;      /* STATUS_STACK_BUFFER_OVERRUN */
+            }
+        } else p->exit_code = 0xFFFFFFFFu;
+        MW_TRACE("[PROC] child pid=%d reaped exit_code=0x%08x", (int)p->pid, p->exit_code);
+    } else if (r < 0 && errno == ECHILD) {
+        p->done = 1; /* status consumed elsewhere — no exit code available */
+    }
+}
+
+/* Blocking/deadline wait over the host child (monotonic deadline, same
+ * jump-immune pattern as mw_WaitForMultipleObjects SW-1489). */
+static uint32_t mw_process_wait(void* h, uint32_t ms) {
+    MwProcess* p = mw_process_lookup(h);
+    if (!p) return 0; /* legacy passthrough for non-process handles */
+    struct timespec t0;
+    clock_gettime(CLOCK_MONOTONIC, &t0);
+    for (;;) {
+        mw_process_poll(p);
+        if (p->done) return 0; /* WAIT_OBJECT_0 */
+        if (ms != 0xFFFFFFFFu) {
+            struct timespec tn;
+            clock_gettime(CLOCK_MONOTONIC, &tn);
+            int64_t el = (int64_t)(tn.tv_sec - t0.tv_sec) * 1000
+                       + (tn.tv_nsec - t0.tv_nsec) / 1000000;
+            if (el >= (int64_t)ms) return 0x102; /* WAIT_TIMEOUT */
+        }
+        struct timespec ts = { 0, 2000000 }; /* 2ms poll slice */
+        nanosleep(&ts, NULL);
+    }
+}
+
+/* Spawn the host child: execv(/proc/self/exe, loader, exe, args...).
+ * Returns host pid or -1. app/cmd are narrow normalized guest paths. */
+static pid_t mw_proc_spawn_host(const char* exe, const char* argline) {
+    char* argv[256];
+    int argc = 0;
+    char exebuf[4096];
+    snprintf(exebuf, sizeof(exebuf), "%s", exe);
+    argv[argc++] = (char*)"/proc/self/exe";
+    argv[argc++] = exebuf;
+    /* split argline on whitespace respecting double quotes */
+    {
+        const char* q = argline ? argline : "";
+        static char argbuf[8192];
+        snprintf(argbuf, sizeof(argbuf), "%s", q);
+        char* c = argbuf;
+        while (*c && argc < 254) {
+            while (*c == ' ' || *c == '\t') c++;
+            if (!*c) break;
+            char* out = c;
+            if (*c == '"') {
+                c++;
+                out = c;
+                char* w = out;
+                while (*c && *c != '"') *w++ = *c++;
+                if (*c == '"') c++;
+                *w = 0;
+            } else {
+                while (*c && *c != ' ' && *c != '\t') c++;
+                if (*c) { *c = 0; c++; }
+            }
+            if (*out) argv[argc++] = out;
+        }
+    }
+    argv[argc] = NULL;
+    fflush(stdout); fflush(stderr); /* avoid duplicated buffered output */
+    pid_t pid = fork();
+    if (pid < 0) return -1;
+    if (pid == 0) {
+        execv("/proc/self/exe", argv);
+        _exit(127); /* only reached if execv fails */
+    }
+    MW_TRACE("[PROC] spawned host pid=%d exe=%s argc=%d", (int)pid, exe, argc);
+    return pid;
+}
+
 /* Unified wait dispatch: thread handle -> event -> semaphore -> legacy 0. */
 static uint32_t mw_kobj_wait(void* h, uint32_t ms) {
+    MwProcess* pr = mw_process_lookup(h);
+    if (pr) { MW_TRACE("[KOBJ] wait(%p) -> process pid=%d", h, (int)pr->pid); return mw_process_wait(h, ms); }
     MwThread* t = mw_thread_lookup(h);
     if (t) { MW_TRACE("[KOBJ] wait(%p) -> thread", h); return mw_thread_wait(h, ms); }
     MwKEvent* e = mw_event_lookup(h);
@@ -6188,6 +6329,17 @@ static int mw_kobj_release(void* h) {
     if (e) { e->used = 0; return 1; }
     MwKSem* s = mw_sem_lookup(h);
     if (s) { s->used = 0; return 1; }
+    /* SW-1500: process handles reap-or-release (CloseHandle contract). */
+    {
+        MwProcess* pr = mw_process_lookup(h);
+        if (pr) {
+            mw_process_poll(pr);
+            if (pr->done) pr->used = 0; /* fully reaped -> free slot */
+            /* still running: keep the slot so the exit status survives
+             * (same policy as mw_thread_release for live threads) */
+            return 1;
+        }
+    }
     return 0;
 }
 
@@ -11137,6 +11289,31 @@ __attribute__((ms_abi)) int mw_GetFileInformationByHandleEx(void* h, int cls, vo
 __attribute__((ms_abi)) int mw_SetFileInformationByHandle(void* h, int cls, void* info, uint32_t len) {
     return 0;
 }
+/* SW-1501 (issue #9 FILE-1 F1-c/F1-d, 2026-10-30): real attribute fidelity.
+ * SetFileAttributesW previously returned 1 and dropped every attribute
+ * (F1-d evidence) and GetFileAttributesW never answered READONLY. Model:
+ * an overlay keyed by the normalized HOST path (the host FS has no
+ * DOS-attribute plane, so our own table holds the authoritative bits) plus
+ * a host-visible READONLY mapping through chmod(2) — the same mapping
+ * Wine's ntdll/unix/file.c applies (FILE_ATTRIBUTE_READONLY <-> mode w
+ * bits). GetFileAttributesW consults the overlay first, then falls back to
+ * stat() + the write-bit -> READONLY derivation for files never Set.
+ * HIDDEN stays overlay-only (host dot-file convention is a lossy guess and
+ * renaming files behind the guest's back corrupts open handles). */
+#define MW_ATTR_OV_MAX 256
+typedef struct { int used; char path[1024]; uint32_t attr; } MwAttrOv;
+static MwAttrOv g_attr_ov[MW_ATTR_OV_MAX];
+
+static int mw_attr_ov_find(const char* path) {
+    if (!path || !path[0]) return -1;
+    for (int i = 0; i < MW_ATTR_OV_MAX; i++)
+        if (g_attr_ov[i].used && strcmp(g_attr_ov[i].path, path) == 0) return i;
+    return -1;
+}
+static void mw_attr_ov_remove(const char* path) {
+    int i = mw_attr_ov_find(path);
+    if (i >= 0) g_attr_ov[i].used = 0;
+}
 __attribute__((ms_abi)) uint32_t mw_GetFileAttributesW(const wchar_t* name) {
     char n8[4096];
     if (!name || w3_w16_to_utf8z((const uint16_t*)name, n8, sizeof(n8)) < 0) { mw_SetLastError(87); return 0xFFFFFFFFu; }
@@ -11149,10 +11326,38 @@ __attribute__((ms_abi)) uint32_t mw_GetFileAttributesW(const wchar_t* name) {
     w3_normalize_path(n8);
     MW_TRACE("GetFileAttributesW(%s)", n8);
     struct stat st;
-    if (stat(n8, &st) != 0) { mw_SetLastError(2); return 0xFFFFFFFFu; }
-    uint32_t a = 0x20; /* ARCHIVE */
-    if (S_ISDIR(st.st_mode)) a = 0x10; /* DIRECTORY */
-    if (name[0] && n8[0] == '.') a |= 0x2; /* HIDDEN (approximation) */
+    if (stat(n8, &st) != 0) {
+        /* SW-1501 (issue #9 F1-c): distinguish FILE_NOT_FOUND(2) from
+         * PATH_NOT_FOUND(3) — Windows does, and uninstallers/coverage
+         * probes branch on the difference. */
+        if (errno == ENOENT) {
+            char dir[4096];
+            snprintf(dir, sizeof(dir), "%s", n8);
+            char* slash = strrchr(dir, '/');
+            if (slash && slash != dir) {
+                *slash = 0;
+                if (stat(dir, &st) != 0) { mw_SetLastError(3); return 0xFFFFFFFFu; }
+            }
+        }
+        mw_SetLastError(2);
+        return 0xFFFFFFFFu;
+    }
+    uint32_t a;
+    int ov = mw_attr_ov_find(n8);
+    if (ov >= 0) {
+        /* overlay is authoritative for the DOS bits we track */
+        a = g_attr_ov[ov].attr;
+        if (S_ISDIR(st.st_mode)) a |= 0x10; /* DIRECTORY always live */
+        else a &= ~0x10u;
+    } else {
+        a = 0x20; /* ARCHIVE */
+        if (S_ISDIR(st.st_mode)) a = 0x10; /* DIRECTORY */
+        if (name[0] && n8[0] == '.') a |= 0x2; /* HIDDEN (approximation) */
+        /* SW-1501: host write-bit -> READONLY (files only; a directory
+         * without w still allows file creation under it, so the bit would
+         * lie in the opposite direction). */
+        if (S_ISREG(st.st_mode) && access(n8, W_OK) != 0 && errno == EACCES) a |= 0x1;
+    }
     return a;
 }
 __attribute__((ms_abi)) uint32_t mw_GetFileAttributesExW(const wchar_t* name, int cls, void* info) {
@@ -11162,7 +11367,54 @@ __attribute__((ms_abi)) uint32_t mw_GetFileAttributesExW(const wchar_t* name, in
     if (info) *(uint32_t*)info = a;
     return 1;
 }
-__attribute__((ms_abi)) int mw_SetFileAttributesW(const wchar_t* name, uint32_t attr) { return 1; }
+__attribute__((ms_abi)) int mw_SetFileAttributesW(const wchar_t* name, uint32_t attr) {
+    /* SW-1501 (issue #9 F1-d): real write-back — store the DOS bits in the
+     * overlay AND make READONLY host-visible via chmod (files only). The
+     * Guest re-reading via GetFileAttributesW/FindFirstFile sees the bits
+     * it wrote, matching the Win32 contract that attributes persist. */
+    char n8[4096];
+    if (!name || w3_w16_to_utf8z((const uint16_t*)name, n8, sizeof(n8)) < 0) { mw_SetLastError(87); return 0; }
+    n8[sizeof(n8) - 1] = '\0';
+    w3_normalize_path(n8);
+    MW_TRACE("SetFileAttributesW(%s, 0x%08x)", n8, attr);
+    struct stat st;
+    if (stat(n8, &st) != 0) {
+        if (errno == ENOENT) {
+            char dir[4096];
+            snprintf(dir, sizeof(dir), "%s", n8);
+            char* slash = strrchr(dir, '/');
+            if (slash && slash != dir) {
+                *slash = 0;
+                if (stat(dir, &st) != 0) { mw_SetLastError(3); return 0; }
+            }
+        }
+        mw_SetLastError(2);
+        return 0;
+    }
+    /* keep the DIRECTORY bit live; everything else is the caller's value
+     * with ARCHIVE as the ever-present default (NTFS semantics) */
+    uint32_t keep = S_ISDIR(st.st_mode) ? 0x10u : 0u;
+    uint32_t stored = (attr & ~0x10u) | keep;
+    if (!(stored & 0x20u) && !S_ISDIR(st.st_mode)) stored |= 0x20u;
+    int idx = mw_attr_ov_find(n8);
+    if (idx < 0) {
+        for (int i = 0; i < MW_ATTR_OV_MAX; i++) if (!g_attr_ov[i].used) { idx = i; break; }
+        if (idx < 0) { mw_SetLastError(112); return 0; } /* ERROR_DISK_FULL-class exhaustion */
+        snprintf(g_attr_ov[idx].path, sizeof(g_attr_ov[idx].path), "%s", n8);
+        g_attr_ov[idx].used = 1;
+    }
+    g_attr_ov[idx].attr = stored;
+    if (S_ISREG(st.st_mode)) {
+        struct stat st2;
+        if (stat(n8, &st2) == 0) {
+            mode_t m = st2.st_mode;
+            if (stored & 0x1u) m &= ~(mode_t)(S_IWUSR | S_IWGRP | S_IWOTH); /* READONLY */
+            else m |= (S_IWUSR | S_IWGRP | S_IWOTH);                        /* writable again */
+            if (chmod(n8, m) != 0) { mw_SetLastError(5); return 0; } /* ACCESS_DENIED */
+        }
+    }
+    return 1;
+}
 __attribute__((ms_abi)) int mw_DeleteFileW(const wchar_t* name) {
     char n8[4096];
     if (!name || w3_w16_to_utf8z((const uint16_t*)name, n8, sizeof(n8)) < 0) { mw_SetLastError(87); return 0; }
@@ -11172,6 +11424,7 @@ __attribute__((ms_abi)) int mw_DeleteFileW(const wchar_t* name) {
         w3_normalize_path(n8);
         MW_TRACE("DeleteFileW(%s)", n8);
         int uok = (unlink(n8) == 0);
+        if (uok) mw_attr_ov_remove(n8); /* SW-1501: attributes die with the file */
         mw_install_log("DeleteFileW", g8, n8, uok);
         if (!uok) { mw_SetLastError(errno == ENOENT ? 2 : 5); return 0; }
         return 1;
@@ -12795,6 +13048,12 @@ static int32_t mw_reg_query(void* key, const uint16_t* name, uint32_t* type, voi
     }
     int i = mw_reg_slot(key);
     if (i < 0) { mw_SetLastError(6); return 6; } /* INVALID_HANDLE */
+    /* SW-1502 (issue #8 REG-5 R5-b): lpValueName NULL and L"" BOTH address
+     * the key's DEFAULT value — the write path stores it as L"" (evidence
+     * :8896-8897) but the read path skipped the scan for NULL and answered
+     * ERROR_FILE_NOT_FOUND: a write-only default. Normalize once here. */
+    static const uint16_t w_empty[1] = { 0 };
+    if (!name) name = w_empty;
     if (name) {
         for (uint32_t v = 0; v < g_reg[i].nvals; v++) {
             MwRegVal* val = &g_reg[i].vals[v];
@@ -12866,13 +13125,128 @@ __attribute__((ms_abi)) int32_t mw_RegQueryValueExA(void* key, const char* name,
     return mw_reg_query(key, wname, type, data, size);
 }
 __attribute__((ms_abi)) int32_t mw_RegGetValueW(void* key, const wchar_t* sub, const wchar_t* name, uint32_t flags, uint32_t* type, void* data, uint32_t* size) {
-    (void)flags;
+    /* SW-1502 (issue #8 REG-5 R5-c/R5-d, 2026-10-30): REAL flag semantics.
+     * The old body discarded `flags` entirely. Contract (MSDN RegGetValueW,
+     * Wine kernelbase/registry.c): RRF_RT_* (low 16 bits) is a type MASK —
+     * a value whose type is outside it fails with ERROR_UNSUPPORTED_TYPE
+     * (5729). REG_EXPAND_SZ is expanded through the environment UNLESS
+     * RRF_NOEXPAND(0x10000); after expansion the reported type is REG_SZ.
+     * RRF_RT_REG_SZ alone therefore also ACCEPTS REG_EXPAND_SZ (auto-expand
+     * path); to observe the raw string you must pass
+     * RRF_RT_REG_EXPAND_SZ|RRF_NOEXPAND. RRF_ZEROONFAILURE(0x20000) zeroes
+     * the caller buffer on the ERROR_MORE_DATA path. */
     uint16_t path[MW_REG_PATHN];
-    if (mw_reg_compose(key, sub, path) < 0) { mw_SetLastError(2); return 2; }
-    int i = mw_reg_find_path(path);
-    if (i < 0) { mw_SetLastError(2); return 2; }
-    return mw_reg_query((void*)(uintptr_t)(MW_REGKEY_BASE | (uintptr_t)(i + 1)),
-                        (const uint16_t*)name, type, data, size);
+    /* SW-1502b: an OPENED SUBKEY handle (MW_REGKEY_BASE range, non-root)
+     * must resolve through its own stored path — the old compose() only
+     * accepted predefined roots (rs>=7 -> -1), so every RegGetValueW call
+     * on an opened key answered ERROR_FILE_NOT_FOUND. Win32 contract: hkey
+     * is the base, lpSubKey (often NULL) is relative to it. */
+    uintptr_t kv = (uintptr_t)key;
+    int i;
+    if ((kv & 0xFFFF0000u) == MW_REGKEY_BASE && !(kv & 0x80000000u)) {
+        i = mw_reg_slot(key);
+        if (i < 7) { mw_SetLastError(6); return 6; }
+        if (sub && ((const uint16_t*)sub)[0]) {
+            uint32_t n = mw_reg_wlen(g_reg[i].path);
+            if (n + 1 >= MW_REG_PATHN) { mw_SetLastError(2); return 2; }
+            mw_reg_wcopy(path, g_reg[i].path, MW_REG_PATHN);
+            path[n++] = 0x5C;
+            mw_reg_wcopy(path + n, (const uint16_t*)sub, MW_REG_PATHN - n);
+            i = mw_reg_find_path(path);
+            if (i < 0) { mw_SetLastError(2); return 2; }
+        }
+    } else {
+        if (mw_reg_compose(key, sub, path) < 0) { mw_SetLastError(2); return 2; }
+        i = mw_reg_find_path(path);
+        if (i < 0) { mw_SetLastError(2); return 2; }
+    }
+    static const uint16_t w_empty[1] = { 0 };
+    const uint16_t* vname = name ? (const uint16_t*)name : w_empty;
+    /* pass 1: size+type probe (no data) */
+    uint32_t rtype = 0, rsize = 0;
+    int32_t rc = mw_reg_query((void*)(uintptr_t)(MW_REGKEY_BASE | (uintptr_t)(i + 1)),
+                              vname, &rtype, NULL, &rsize);
+    if (rc != 0) return rc;
+    /* type-mask enforcement (bit n = value type n: REG_NONE=0, SZ=1,
+     * EXPAND_SZ=2, BINARY=3, DWORD=4, MULTI_SZ=7, QWORD=11) */
+    uint32_t mask = flags & 0xFFFFu;
+    if (mask) {
+        uint32_t tbit = (rtype <= 11) ? (1u << rtype) : 0;
+        uint32_t allowed = 0;
+        if (mask & 0x01u) allowed |= (1u << 0);  /* REG_NONE */
+        if (mask & 0x02u) allowed |= (1u << 1);  /* REG_SZ */
+        if (mask & 0x04u) allowed |= (1u << 2);  /* REG_EXPAND_SZ */
+        if (mask & 0x08u) allowed |= (1u << 3);  /* REG_BINARY */
+        if (mask & 0x10u) allowed |= (1u << 4);  /* REG_DWORD */
+        if (mask & 0x20u) allowed |= (1u << 7);  /* REG_MULTI_SZ */
+        if (mask & 0x40u) { allowed |= (1u << 11) | (1u << 3); } /* RRF_RT_QWORD: QWORD+BINARY */
+        if (mask & 0x18u) allowed |= (1u << 3);  /* RRF_RT_DWORD includes BINARY */
+        int expandable = (rtype == 2u /*REG_EXPAND_SZ*/ && !(flags & 0x10000u) && (allowed & (1u << 1)));
+        if (tbit && !(tbit & allowed) && !expandable) {
+            mw_SetLastError(5729); /* ERROR_UNSUPPORTED_TYPE */
+            return 5729;
+        }
+    }
+    /* pass 2: fetch into a temp, expand if needed, then honor caller size */
+    {
+        static uint8_t tmp[32768];
+        uint32_t cap = rsize < sizeof(tmp) ? rsize : sizeof(tmp);
+        uint32_t got = cap;
+        rc = mw_reg_query((void*)(uintptr_t)(MW_REGKEY_BASE | (uintptr_t)(i + 1)),
+                          vname, &rtype, tmp, &got);
+        if (rc != 0) return rc;
+        const uint8_t* src = tmp;
+        uint32_t srclen = got;
+        uint8_t expanded[32768];
+        if (rtype == 2u /*REG_EXPAND_SZ*/ && !(flags & 0x10000u)) {
+            /* %VAR% expansion over UTF-16LE; unknown names stay literal
+             * (Win32 ExpandEnvironmentStrings contract) */
+            uint32_t o = 0;
+            for (uint32_t s = 0; s + 1 < got && o + 512 < sizeof(expanded);) {
+                const uint16_t* w = (const uint16_t*)(tmp + s);
+                if (*w == L'%') {
+                    const uint16_t* e = w + 1;
+                    while ((const uint8_t*)e + 1 < tmp + got && *e && *e != L'%') e++;
+                    if ((const uint8_t*)e + 1 < tmp + got && *e == L'%') {
+                        char vname8[256]; uint32_t vn = 0;
+                        for (const uint16_t* q = w + 1; q < e && vn + 1 < sizeof(vname8); q++)
+                            vname8[vn++] = (char)(*q & 0xFF);
+                        vname8[vn] = 0;
+                        const char* val = getenv(vname8);
+                        if (val) {
+                            for (const char* q = val; *q && o + 3 < sizeof(expanded); q++) {
+                                expanded[o++] = (uint8_t)*q;
+                                expanded[o++] = 0;
+                            }
+                            s = (uint32_t)((const uint8_t*)e - tmp) + 2;
+                            continue;
+                        }
+                        /* unknown: copy literally through the '%' */
+                        expanded[o++] = tmp[s]; expanded[o++] = tmp[s + 1];
+                        s += 2;
+                        continue;
+                    }
+                }
+                expanded[o++] = tmp[s];
+                expanded[o++] = tmp[s + 1];
+                s += 2;
+            }
+            if (o + 2 <= sizeof(expanded)) { expanded[o++] = 0; expanded[o++] = 0; }
+            src = expanded; srclen = o;
+            rtype = 1u; /* REG_SZ after expansion */
+        }
+        if (type) *type = rtype;
+        uint32_t caller_cap = size ? *size : srclen;
+        if (srclen > caller_cap) {
+            if (size) *size = srclen;
+            if (data && (flags & 0x20000u)) memset(data, 0, caller_cap); /* RRF_ZEROONFAILURE */
+            mw_SetLastError(234);
+            return 234;
+        }
+        if (data && srclen) memcpy(data, src, srclen);
+        if (size) *size = srclen;
+        return 0;
+    }
 }
 __attribute__((ms_abi)) int32_t mw_RegCloseKey(void* key) { (void)key; return 0; }
 __attribute__((ms_abi)) int32_t mw_RegCreateKeyExW(void* key, const wchar_t* sub, uint32_t res, const wchar_t* cls, uint32_t opts, uint32_t access, void* sa, void** result, void* disp) {
@@ -13886,6 +14260,21 @@ __attribute__((ms_abi)) void mw_OutputDebugStringW(const wchar_t* s) {
     if (s) { size_t n = w3_w16_to_utf8z((const uint16_t*)s, u8, sizeof(u8)); u8[n >= 0 ? n : 0] = '\0'; MW_TRACE("OutputDebugStringW(%s)", u8); }
 }
 __attribute__((ms_abi)) int mw_TerminateProcess(void* h, uint32_t code) {
+    /* SW-1500: a registry process object kills its HOST child (SIGKILL) and
+     * records the requested Win32 exit code; everything else (pseudo
+     * current-process handle) keeps the old terminate-self semantics. */
+    MwProcess* p = mw_process_lookup(h);
+    if (p) {
+        if (!p->done && p->pid > 0) {
+            kill(p->pid, SIGKILL);
+            int st = 0;
+            waitpid(p->pid, &st, 0); /* reap so no zombie */
+        }
+        p->done = 1;
+        p->exit_code = code;
+        MW_TRACE("TerminateProcess(pid=%d code=%u)", (int)p->pid, code);
+        return 1;
+    }
     MW_TRACE("TerminateProcess(%u)", code);
     exit(code);
 }
@@ -14045,15 +14434,111 @@ __attribute__((ms_abi)) int mw_CreatePipe(void** rh, void** wh, void* sa, uint32
     return 0;
 }
 __attribute__((ms_abi)) int mw_CreateProcessW(const wchar_t* app, wchar_t* cmd, void* pa, void* ta, int inherit, uint32_t flags, void* env, const wchar_t* dir, void* si, void* pi) {
-    MW_TRACE("CreateProcessW() -> fail (no child process support)");
-    mw_SetLastError(2);
-    return 0;
+    /* SW-1500 (issue #16 P2-1/P2-2): real nested child execution. The child
+     * re-enters THIS loader binary (/proc/self/exe) with the guest exe — a
+     * full isolated PE load whose exit code is observable through the
+     * returned process handle (GetExitCodeProcess/WaitForSingleObject). */
+    (void)pa; (void)ta; (void)inherit; (void)env; (void)dir; (void)si;
+    char exe8[1024] = {0}, cmd8[4096] = {0}, argtail[4096] = {0};
+    if (app && w3_w16_to_utf8z((const uint16_t*)app, exe8, sizeof(exe8) - 1) < 0) { mw_SetLastError(87); return 0; }
+    if (cmd && w3_w16_to_utf8z((const uint16_t*)cmd, cmd8, sizeof(cmd8) - 1) < 0) { mw_SetLastError(87); return 0; }
+    /* Command line: first token (quotes-aware) is the image; lpApplicationName
+     * wins when present (Win32 CreateProcess contract). */
+    char* line = cmd8;
+    if (!exe8[0] && line) {
+        const char* q = line;
+        while (*q == ' ' || *q == '\t') q++;
+        if (*q == '"') {
+            q++;
+            size_t n = 0;
+            while (q[n] && q[n] != '"' && n < sizeof(exe8) - 1) { exe8[n] = q[n]; n++; }
+            exe8[n] = 0;
+            while (*q && *q != '"') q++;
+            if (*q == '"') q++;
+            snprintf(argtail, sizeof(argtail), "%s", q);
+        } else {
+            size_t n = 0;
+            while (q[n] && q[n] != ' ' && q[n] != '\t' && n < sizeof(exe8) - 1) { exe8[n] = q[n]; n++; }
+            exe8[n] = 0;
+            snprintf(argtail, sizeof(argtail), "%s", q + n);
+        }
+    } else if (line) {
+        /* app given: skip its first token in the command line, keep the rest */
+        const char* q = line;
+        while (*q == ' ' || *q == '\t') q++;
+        if (*q == '"') { q++; while (*q && *q != '"') q++; if (*q == '"') q++; }
+        else { while (*q && *q != ' ' && *q != '\t') q++; }
+        snprintf(argtail, sizeof(argtail), "%s", q);
+    }
+    w3_normalize_path(exe8);
+    if (!exe8[0]) { mw_SetLastError(87); return 0; }
+    /* MZ probe: honest ERROR_BAD_EXE_FORMAT(193) for non-PE targets — this is
+     * the same discriminator that flags PE32 guests to the WOW64 path. */
+    {
+        int fd = open(exe8, O_RDONLY);
+        if (fd < 0) { mw_SetLastError(errno == ENOENT ? 2 : (errno == EACCES ? 5 : 3)); return 0; }
+        char mz[2] = {0, 0};
+        int got = (int)read(fd, mz, 2);
+        close(fd);
+        if (got < 2 || mz[0] != 'M' || mz[1] != 'Z') { mw_SetLastError(193); return 0; }
+    }
+    /* Drop a leading .exe-less name? Windows appends .exe when the image has
+     * no extension; try the literal path first (MZ probe above passed). */
+    pid_t hostpid = mw_proc_spawn_host(exe8, argtail);
+    if (hostpid < 0) { mw_SetLastError(8); return 0; }
+    MwProcess* p = NULL;
+    for (int i = 0; i < 16; i++) if (!g_mw_processes[i].used) { p = &g_mw_processes[i]; break; }
+    if (!p) { kill(hostpid, SIGKILL); waitpid(hostpid, NULL, 0); mw_SetLastError(8); return 0; }
+    memset(p, 0, sizeof(*p));
+    p->used = 1; p->done = 0; p->exit_code = 259 /* STILL_ACTIVE */; p->pid = hostpid;
+    p->win_pid = __atomic_fetch_add(&g_win_pid_next, 1, __ATOMIC_RELAXED);
+    MW_TRACE("CreateProcessW(exe=%s args='%s') -> hProcess pid=%d winpid=%u flags=0x%x",
+             exe8, argtail, (int)hostpid, p->win_pid, flags);
+    if (pi) {
+        /* PROCESS_INFORMATION {hProcess, hThread, dwProcessId, dwThreadId} (x64) */
+        void** php = (void**)pi;
+        uint32_t* pids = (uint32_t*)((uint8_t*)pi + 16);
+        void* hproc = alloc_handle((void*)p);
+        /* hThread: a pre-completed thread slot — the child's main thread is
+         * opaque from the parent (documented); wait returns 0, CloseHandle
+         * releases the slot cleanly. */
+        void* hthr = NULL;
+        for (int i = 0; i < 64; i++) {
+            if (!g_mw_threads[i].used) {
+                memset(&g_mw_threads[i], 0, sizeof(g_mw_threads[i]));
+                g_mw_threads[i].used = 1; g_mw_threads[i].done = 1; g_mw_threads[i].exit_code = 0;
+                hthr = alloc_handle((void*)&g_mw_threads[i]);
+                break;
+            }
+        }
+        php[0] = hproc;
+        php[1] = hthr;
+        pids[0] = p->win_pid;
+        pids[1] = p->win_pid; /* main thread id == process id in our model */
+    }
+    return 1;
 }
 __attribute__((ms_abi)) int mw_CreateProcessA(const char* app, char* cmd, void* pa, void* ta, int inherit, uint32_t flags, void* env, const char* dir, void* si, void* pi) {
-    mw_SetLastError(2);
-    return 0;
+    wchar_t wapp[1024] = {0}, wcmd[4096] = {0}, wdir[1024] = {0};
+    if (app) for (size_t i = 0; i < 1023 && app[i]; i++) wapp[i] = (unsigned char)app[i];
+    if (cmd) for (size_t i = 0; i < 4095 && cmd[i]; i++) wcmd[i] = (unsigned char)cmd[i];
+    if (dir) for (size_t i = 0; i < 1023 && dir[i]; i++) wdir[i] = (unsigned char)dir[i];
+    return mw_CreateProcessW(wapp[0] ? wapp : NULL, wcmd[0] ? wcmd : NULL, pa, ta, inherit, flags, env, wdir[0] ? wdir : NULL, si, pi);
 }
-__attribute__((ms_abi)) int mw_GetExitCodeProcess(void* h, uint32_t* code) { if (code) *code = 0; return 1; }
+__attribute__((ms_abi)) int mw_GetExitCodeProcess(void* h, uint32_t* code) {
+    /* SW-1500 (issue #16 P2-2): real exit status for registry process
+     * objects; STILL_ACTIVE(259) until the child is reaped. Legacy/pseudo
+     * handles keep the old never-fail passthrough (pseudo handles like
+     * GetCurrentProcess() have no exit status here). */
+    MwProcess* p = mw_process_lookup(h);
+    if (p) {
+        mw_process_poll(p);
+        if (code) *code = p->done ? p->exit_code : 259u /* STILL_ACTIVE */;
+        return 1;
+    }
+    if (code) *code = 0;
+    return 1;
+}
 __attribute__((ms_abi)) int mw_WaitOnAddress_stub(void) { return 0; }
 
 
@@ -32293,7 +32778,10 @@ __attribute__((ms_abi)) uint32_t mw_QueryFullProcessImageNameW(void* h, uint32_t
     return 1;
 }
 __attribute__((ms_abi)) uint32_t mw_GetProcessId(void* h) {
-    (void)h; return mw_GetCurrentProcessId();
+    /* SW-1500: real child process objects answer their guest pid. */
+    MwProcess* p = mw_process_lookup(h);
+    if (p) return p->win_pid;
+    return mw_GetCurrentProcessId();
 }
 __attribute__((ms_abi)) int mw_QueryThreadCycleTime(void* h, uint64_t* cycles) {
     (void)h;
