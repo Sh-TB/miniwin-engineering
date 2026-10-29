@@ -34945,6 +34945,87 @@ __attribute__((ms_abi)) int mw_OemToCharBuffA(const char* src, char* dst, uint32
     if (src && dst && n) memcpy(dst, src, n);
     return 1;
 }
+/* SWEEP-032-upstream-gap (train winrar/notepad++/idm): the A-family names a
+ * parallel timeline landed upstream but these were still absent. Contracts
+ * per winuser.h/advapi32: OemToCharA = LPSTR dst (A->A!) — the W-style dst
+ * truncates every converted name to its first char (proven on Rar/UnRAR
+ * IntToExt extraction: "abc.bin" -> "a"); BackupRead/Seek typed FALSE so
+ * archivers fall back to plain reads; security A-tails mirror the W twins. */
+__attribute__((ms_abi)) int mw_OemToCharA(const char* src, char* dst) {
+    if (src && dst) strcpy(dst, src); /* cp437->cp1252 ASCII identity */
+    return 1;
+}
+__attribute__((ms_abi)) int mw_CharToOemBuffW(const uint16_t* src, char* dst, uint32_t n) {
+    if (!src || !dst) return 0;
+    for (uint32_t i = 0; i < n; i++) dst[i] = (char)(src[i] & 0xFF); /* latin1 truncate */
+    return 1;
+}
+__attribute__((ms_abi)) int mw_SetFileAttributesA(const char* name, uint32_t attr) {
+    /* route the A-tail through the real W implementation */
+    if (!name) { mw_SetLastError(87); return 0; }
+    uint16_t w[4096];
+    int n = w3_utf8_to_utf16le(name, strlen(name), w, 4095);
+    if (n < 0) { mw_SetLastError(87); return 0; }
+    w[n] = 0;
+    return mw_SetFileAttributesW((const wchar_t*)w, attr);
+}
+__attribute__((ms_abi)) int mw_BackupRead(void* h, uint8_t* buf, uint32_t n, uint32_t* read,
+        int abortp, int security, void** ctx) {
+    (void)h; (void)buf; (void)n; (void)read; (void)abortp; (void)security; (void)ctx;
+    mw_SetLastError(50); /* ERROR_NOT_SUPPORTED — guests fall back to plain reads */
+    return 0;
+}
+__attribute__((ms_abi)) int mw_BackupSeek(void* h, uint32_t lo, uint32_t hi,
+        uint32_t* sread, uint32_t* swritten, int64_t* processed) {
+    (void)h; (void)lo; (void)hi; (void)sread; (void)swritten; (void)processed;
+    mw_SetLastError(50);
+    return 0;
+}
+__attribute__((ms_abi)) int mw_GetFileSecurityA(const char* name, uint32_t info, void* sd,
+        uint32_t sdlen, uint32_t* needed) {
+    (void)name; (void)info; (void)sd; (void)sdlen;
+    if (needed) *needed = 0;
+    mw_SetLastError(50);
+    return 0;
+}
+__attribute__((ms_abi)) int mw_SetFileSecurityA(const char* name, uint32_t info, void* sd) {
+    (void)name; (void)info; (void)sd;
+    mw_SetLastError(50);
+    return 0;
+}
+__attribute__((ms_abi)) void* mw_CreateIcon(void* inst, int w, int h, uint8_t planes,
+        uint8_t bits, const void* andbits, const void* xorbits) {
+    (void)inst; (void)w; (void)h; (void)planes; (void)bits; (void)andbits; (void)xorbits;
+    return (void*)(uintptr_t)0xB0000001; /* cookie icon handle */
+}
+__attribute__((ms_abi)) void* mw_FindExecutableW(const uint16_t* file, uint16_t* dir, uint16_t* out) {
+    (void)file; (void)dir;
+    if (out) out[0] = 0;
+    return (void*)(uintptr_t)1; /* >31 = success-empty per ShellExecute SE_ERR space */
+}
+__attribute__((ms_abi)) int mw_EnumResourceLanguagesW(void* hmod, const uint16_t* type,
+        const uint16_t* name, void* cb, intptr_t param) {
+    (void)hmod; (void)type; (void)name; (void)cb; (void)param;
+    return 0; /* no language enumeration — honest */
+}
+__attribute__((ms_abi)) void* mw_BeginUpdateResourceW(const uint16_t* file, int del) {
+    (void)file; (void)del;
+    mw_SetLastError(50); /* ERROR_NOT_SUPPORTED */
+    return NULL;
+}
+__attribute__((ms_abi)) int mw_UpdateResourceW(void* up, const uint16_t* type, const uint16_t* name,
+        uint16_t lang, void* data, uint32_t len) {
+    (void)up; (void)type; (void)name; (void)lang; (void)data; (void)len;
+    return 0;
+}
+__attribute__((ms_abi)) int mw_EndUpdateResourceW(void* up, int discard) {
+    (void)up; (void)discard;
+    return 0;
+}
+__attribute__((ms_abi)) int32_t mw_OleSetClipboard(void* dataobj) {
+    (void)dataobj;
+    return (int32_t)0x80004005LL; /* E_FAIL — no OLE clipboard model */
+}
 /* shell32 — SHGetSettings fills SHELLFLAGSTATE; the engine shell model
  * has no shell folders UI: all flags FALSE (zero) is the honest state. */
 __attribute__((ms_abi)) void mw_SHGetSettings(void* psf, uint32_t mask) {
@@ -39688,6 +39769,21 @@ ENTRY("GDI32.DLL", "GetCharacterPlacementW",                mw_GetCharacterPlace
     ENTRY("USER32.DLL", "CharToOemA",                           mw_CharToOemA),
     ENTRY("USER32.DLL", "CharToOemBuffA",                       mw_CharToOemBuffA),
     ENTRY("USER32.DLL", "OemToCharBuffA",                       mw_OemToCharBuffA),
+    /* ===== SWEEP-032-upstream-gap: winrar/notepad++/idm train ===== */
+    ENTRY("USER32.DLL", "OemToCharA",                            mw_OemToCharA),
+    ENTRY("USER32.DLL", "CharToOemBuffW",                        mw_CharToOemBuffW),
+    ENTRY("KERNEL32.DLL", "SetFileAttributesA",                  mw_SetFileAttributesA),
+    ENTRY("KERNEL32.DLL", "BackupRead",                          mw_BackupRead),
+    ENTRY("KERNEL32.DLL", "BackupSeek",                          mw_BackupSeek),
+    ENTRY("ADVAPI32.DLL", "GetFileSecurityA",                    mw_GetFileSecurityA),
+    ENTRY("ADVAPI32.DLL", "SetFileSecurityA",                    mw_SetFileSecurityA),
+    ENTRY("USER32.DLL", "CreateIcon",                            mw_CreateIcon),
+    ENTRY("SHELL32.DLL", "FindExecutableW",                      mw_FindExecutableW),
+    ENTRY("KERNEL32.DLL", "EnumResourceLanguagesW",              mw_EnumResourceLanguagesW),
+    ENTRY("KERNEL32.DLL", "BeginUpdateResourceW",                mw_BeginUpdateResourceW),
+    ENTRY("KERNEL32.DLL", "UpdateResourceW",                     mw_UpdateResourceW),
+    ENTRY("KERNEL32.DLL", "EndUpdateResourceW",                  mw_EndUpdateResourceW),
+    ENTRY("ole32.dll", "OleSetClipboard",                        mw_OleSetClipboard),
     ENTRY("SHELL32.DLL", "SHGetSettings",                       mw_SHGetSettings),
     ENTRY("SHELL32.DLL", "ShellAboutW",                         mw_ShellAboutW),
     ENTRY("ole32.dll", "ReadClassStg",                          mw_ReadClassStg),
