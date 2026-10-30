@@ -38,14 +38,31 @@ def main(src, dst):
     # a.<id>=1 as well: 'a' may be the archive-toolbar mirror of the flag set
     avals = dict(vals)
     avals.update({f"a.{b}": R.val_dw(1) for b in BTN_IDS})
+    # SW-1554: real first-run values (any.run sandbox traces of real
+    # WinRAR.exe runs, cross-checked with the guest disassembly cap 0x64):
+    #   Layout\Band76_0..3 = 100 (the 0x14586d normalize loop caps at 100
+    #   and the 0x1458c9 'first slot == 100' shortcut takes the completed
+    #   layout branch; the old all-miss defaults (1,2,3 + 12) never reached
+    #   the button-add phase)
+    #   Buttons\View* / LargeButtons / ButtonsText = the size-flag family
+    #   named by the guest binary strings (read through 0x14780c).
+    b76 = {f"Band76_{i}": R.val_dw(100) for i in range(5)}
+    avals.update({
+        "Lock": R.val_dw(0),
+        "ViewMain": R.val_dw(1),
+        "ViewSmall": R.val_dw(0),
+        "ViewAddress": R.val_dw(1),
+        "LargeButtons": R.val_dw(0),
+        "ButtonsText": R.val_dw(0),
+    })
     R.upsert(slots, BTN_KEY, avals)
-    R.upsert(slots, LAY_KEY, vals)
+    R.upsert(slots, LAY_KEY, b76)
     blob = R.serialize(slots)
     live_after = sum(1 for s in slots if s)
     with open(dst, "wb") as f:
         f.write(blob)
     print(f"seeded {dst}: live keys {live_before} -> {live_after} "
-          f"({len(avals)} values on Buttons, {len(vals)} on Layout)")
+          f"({len(avals)} values on Buttons, {len(b76)} Band76_x on Layout)")
 
 
 if __name__ == "__main__":

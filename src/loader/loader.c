@@ -107,6 +107,21 @@ typedef struct { uint32_t start_eip, param; } Mw32ThreadArg;
 
 static void mw32w_engine_write(const char* rd, uint32_t va, uint32_t val);
 static void mw32w_engine_span(const char* rd, uint32_t va, uint32_t bytes); /* SW-1549: word-granular span scan for buffer writers */
+static void mw32_sentinel_check_at(const char* where); /* SW-1558 fwd (def at cpu32_run; called from the api32 gate + Reg* probes) */
+#define mw32_sentinel_check() mw32_sentinel_check_at("plain")
+/* SW-1559 (issue #25 IDM): HANDLE-typed out-params must be 4 bytes for a
+ * 32-bit guest. The engine's `*result = handle` is an 8-byte host void*
+ * store; the guest's HKEY local is 4 bytes, so the HIGH DWORD (always 0)
+ * landed on the caller's saved-EBP slot 4 bytes above — the "ghost writer"
+ * the SWEEP-111r2 watch chased (probe trail: RegOpen-pre-out GOOD ->
+ * RegOpen-post-out FLIPPED, no store primitive involved: a raw host C
+ * store). Real Windows: HKEY/HANDLE are DWORD-width in a WOW32 process. */
+static uint32_t g_image_base32; /* SW-1559 fwd (def in the PE32 plane) */
+static inline void mw32_out_handle(void* p, uint32_t v) {
+    if (!p) return;
+    if (g_cpu32_active || g_image_base32) { *(uint32_t*)p = v; }
+    else { *(void**)p = (void*)(uintptr_t)v; }
+}
 /* SW-1482 (SWEEP-100): MW32_WATCH="lo:hi" (hex u32) — interpreter-level memory
  * watchpoint globals (hoisted: engine-side write logging shares them). */
 static uint32_t g_m32w_lo = 0, g_m32w_hi = 0;
@@ -12686,10 +12701,47 @@ static int mw_reg_compose(void* root, const wchar_t* sub, uint16_t* out) {
 }
 __attribute__((ms_abi)) int32_t mw_RegOpenKeyExW(void* key, const wchar_t* sub, uint32_t opts, uint32_t access, void** result) {
     (void)opts; (void)access;
+    mw32_sentinel_check_at("RegOpen-entry"); /* SW-1558 */
     uint16_t path[MW_REG_PATHN];
     if (mw_reg_compose(key, sub, path) < 0) { mw_SetLastError(6); return 6; }
+    mw32_sentinel_check_at("RegOpen-post-compose"); /* SW-1558 */
     int i = mw_reg_find_path(path);
     if (i < 0) {
+        /* SW-1552 (this sweep): HIERARCHY INVARIANT — a key whose DESCENDANTS
+         * exist IS a key. The MWREG001 snapshot stores leaves as flat path
+         * slots; the SWEEP-111 toolbar seed created ...\Toolbar\Buttons and
+         * ...\Toolbar\Layout without a ...\Toolbar slot of its own, so the
+         * guest's parent-first probe (RegOpenKeyExW 'HKCU\...\General\Toolbar'
+         * after every Layout query) answered ERROR_FILE_NOT_FOUND(2) = "leaf
+         * deleted" — on real Windows creating a subkey auto-creates every
+         * ancestor (advapi32/registry.c) and the ancestor open always
+         * succeeds. Materialize the missing intermediate on open. */
+        int anc_child = -1;
+        for (int k = 7; k < MW_REG_MAXKEY; k++) {
+            if (!g_reg[k].live) continue;
+            uint32_t c2 = 0;
+            while (path[c2] && g_reg[k].path[c2] && g_reg[k].path[c2] == path[c2]) c2++;
+            if (path[c2] == 0 && g_reg[k].path[c2] == 0x5C) { anc_child = k; break; }
+        }
+        if (anc_child >= 0) {
+            int k2;
+            for (k2 = 7; k2 < MW_REG_MAXKEY; k2++) if (!g_reg[k2].live) break;
+            if (k2 < MW_REG_MAXKEY) {
+                g_reg[k2].live = 1;
+                mw_reg_wcopy(g_reg[k2].path, path, MW_REG_PATHN);
+                g_reg[k2].nvals = 0;
+                mw32_out_handle(result, (uint32_t)(MW_REGKEY_BASE | (uintptr_t)(k2 + 1))); /* SW-1559 */
+                {
+                    char pb[MW_REG_PATHN > 260 ? 260 : MW_REG_PATHN];
+                    uint32_t k3 = 0;
+                    while (k3 + 1 < sizeof(pb) && path[k3]) { pb[k3] = (char)(path[k3] & 0xFF); k3++; }
+                    pb[k3] = 0;
+                    MW_TRACE("RegOpenKeyExW '%s' -> slot %d (SW-1552 ancestor materialized, child slot %d)",
+                             pb, k2, anc_child);
+                }
+                return 0;
+            }
+        }
         /* SW-1412 (SWEEP-091): the miss path used to be silent; WinRAR polled
          * a missing key 300+ times and the loop was invisible. Log the full
          * composed path on every miss (reg-poll diagnosis). */
@@ -12722,10 +12774,14 @@ __attribute__((ms_abi)) int32_t mw_RegOpenKeyExW(void* key, const wchar_t* sub, 
         }
         MW_TRACE("RegOpenKeyExW(miss) '%s' -> ERROR_%s", pb,
                  err == 3 ? "PATH_NOT_FOUND" : "FILE_NOT_FOUND");
+        mw32_sentinel_check_at("RegOpen-pre-SLE"); /* SW-1558 */
         mw_SetLastError(err);
+        mw32_sentinel_check_at("RegOpen-post-SLE"); /* SW-1558 */
         return err; /* honest miss, hierarchy-aware (SW-1522) */
     }
-    if (result) *result = (void*)(uintptr_t)(MW_REGKEY_BASE | (uintptr_t)(i + 1));
+    mw32_sentinel_check_at("RegOpen-pre-out"); /* SW-1558 */
+    mw32_out_handle(result, (uint32_t)(MW_REGKEY_BASE | (uintptr_t)(i + 1))); /* SW-1559: 4-byte store for a 32-bit guest */
+    mw32_sentinel_check_at("RegOpen-post-out"); /* SW-1558 */
     { /* SW-1503c: log the opened PATH on success too (spin decode) */
         char pb[MW_REG_PATHN > 260 ? 260 : MW_REG_PATHN];
         uint32_t k = 0;
@@ -13453,6 +13509,15 @@ __attribute__((ms_abi)) int32_t mw_RegQueryValueExW(void* key, const wchar_t* na
     uint64_t entry_rsp;
     __asm__ volatile ("mov %%rsp, %0" : "=r"(entry_rsp));
     (void)res;
+    /* SW-1556 (issue #25 IDM ghost-writer hunt): the SWEEP-111r2 watch caught
+     * a 0-dword write to the live saved-EBP slot [3fefed10] between the
+     * callee's push (n=64) and its leave (n=65) with NO interpreter store —
+     * the window contains exactly RegOpenKeyExW x2 / RegQueryValueExW /
+     * RegCloseKey / wcschr / wcslen / wsprintfW. The Reg* host-side
+     * out-param stores (*type / *size / *phkResult / data copy-back) are
+     * raw host stores that bypass m32_st32 — name every pointer here. */
+    MW_TRACE("RegQueryValueExW args: key=%p name=%p res=%p TYPE=%p DATA=%p SIZE=%p",
+             key, (const void*)name, res, (void*)type, data, (void*)size);
     /* SWEEP-058 SW-1239 diag: caller attribution for HKPD probes */
     if (((uint32_t)(uintptr_t)key) == 0x80000004u)
         MW_TRACE("HKPD-W probe caller=%p name=%p", __builtin_return_address(0), (const void*)name);
@@ -13479,7 +13544,13 @@ __attribute__((ms_abi)) int32_t mw_RegQueryValueExW(void* key, const wchar_t* na
          * decode against the WinRAR disassembly. */
         if (name) { /* Linux wchar_t is 32-bit: build the compare string in uint16 */
             static const uint16_t ce_name[10] = { 'C','u','s','t','o','m','E','x','t',0 };
-            if (mw_reg_name_is((const uint16_t*)name, ce_name)) {
+            /* SW-1553: same instrument, Band76_0 gate (toolbar band-layout
+             * decode — WinRAR reads it per band and never adds toolbar
+             * buttons; the backtrace names the deciding code path). */
+            static const uint16_t b76_name[9] = { 'B','a','n','d','7','6','_','0',0 };
+            const uint16_t* np = (const uint16_t*)name;
+            int bt_hit = mw_reg_name_is(np, ce_name) || mw_reg_name_is(np, b76_name);
+            if (bt_hit) {
             static int bt_done = 0;
             if (bt_done < 6) {
                 bt_done++;
@@ -13672,6 +13743,7 @@ __attribute__((ms_abi)) int32_t mw_RegGetValueW(void* key, const wchar_t* sub, c
 __attribute__((ms_abi)) int32_t mw_RegCloseKey(void* key) { (void)key; return 0; }
 __attribute__((ms_abi)) int32_t mw_RegCreateKeyExW(void* key, const wchar_t* sub, uint32_t res, const wchar_t* cls, uint32_t opts, uint32_t access, void* sa, void** result, void* disp) {
     (void)res; (void)cls; (void)opts; (void)access; (void)sa;
+    mw32_sentinel_check_at("RegCreate-entry"); /* SW-1558 */
     uint16_t path[MW_REG_PATHN];
     if (mw_reg_compose(key, sub, path) < 0) { mw_SetLastError(6); return 6; }
     int i = mw_reg_find_path(path);
@@ -13686,7 +13758,9 @@ __attribute__((ms_abi)) int32_t mw_RegCreateKeyExW(void* key, const wchar_t* sub
         g_reg[i].nvals = 0;
         created = 1;
     }
-    if (result) *result = (void*)(uintptr_t)(MW_REGKEY_BASE | (uintptr_t)(i + 1));
+    mw32_sentinel_check_at("RegCreate-pre-out"); /* SW-1558 */
+    mw32_out_handle(result, (uint32_t)(MW_REGKEY_BASE | (uintptr_t)(i + 1))); /* SW-1559: 4-byte store for a 32-bit guest */
+    mw32_sentinel_check_at("RegCreate-post-out"); /* SW-1558 */
     if (disp) *(uint32_t*)disp = created ? 1u /*CREATED_NEW_KEY*/ : 2u /*OPENED_EXISTING_KEY*/;
     { /* SW-1503c: log the created path (spin decode) */
         char pb[MW_REG_PATHN > 260 ? 260 : MW_REG_PATHN];
@@ -13881,6 +13955,7 @@ __attribute__((ms_abi)) int32_t mw_RegDeleteKeyValueW(void* key, const uint16_t*
     return (int32_t)r;
 }
 __attribute__((ms_abi)) int32_t mw_RegSetValueExW(void* key, const wchar_t* name, uint32_t res, uint32_t type, const void* data, uint32_t size) {
+    mw32_sentinel_check_at("RegSet-entry"); /* SW-1558 */
     (void)res;
     int i = mw_reg_slot(key);
     if (i < 0) { mw_SetLastError(6); return 6; }
@@ -15005,10 +15080,23 @@ __attribute__((ms_abi)) int mw_CreateProcessW(const wchar_t* app, wchar_t* cmd, 
                 break;
             }
         }
-        php[0] = hproc;
-        php[1] = hthr;
-        pids[0] = p->win_pid;
-        pids[1] = p->win_pid; /* main thread id == process id in our model */
+        if (g_cpu32_active || g_image_base32) {
+            /* SW-1559: Win32 PROCESS_INFORMATION is 16 bytes (HANDLE=4B):
+             * +0 hProcess, +4 hThread, +8 dwProcessId, +12 dwThreadId. The
+             * x64 fill above wrote 24 bytes — hThread's high dword landed on
+             * dwProcessId and the pids landed PAST the struct (the same
+             * pointer-width overflow class as the Reg* HKEY stores). */
+            uint32_t* p32 = (uint32_t*)pi;
+            p32[0] = (uint32_t)(uintptr_t)hproc;
+            p32[1] = (uint32_t)(uintptr_t)hthr;
+            p32[2] = p->win_pid;
+            p32[3] = p->win_pid; /* main thread id == process id in our model */
+        } else {
+            php[0] = hproc;
+            php[1] = hthr;
+            pids[0] = p->win_pid;
+            pids[1] = p->win_pid; /* main thread id == process id in our model */
+        }
     }
     return 1;
 }
@@ -18169,6 +18257,256 @@ static int mw_tbbtn_parse(uintptr_t lp, int wide, int32_t* bmp, int32_t* cmd,
     { int32_t d = 0; memcpy(&d, b + 16, 4); *istr = d; }
     return 1;
 }
+
+/* ============================================================
+ * SW-1551: REBAR band model + ComboBoxEx32 — wine dlls/comctl32/rebar.c.
+ * Measured decode (winrarinstd, SWEEP-111r2 trace): WinRAR 7.12 sends
+ * RB_INSERTBANDW (WM_USER+10) x4 -> all 0, then RB_GETBANDCOUNT
+ * (WM_USER+12) x2 -> 0, and its own GetWindowRect(child) reads back 1x1 —
+ * the toolbar button-add phase never starts. Wine contract:
+ * REBAR_InsertBandT validates cbSize >= REBARBANDINFOA_V3_SIZE, stores the
+ * RBBIM_*-gated fields, calls REBAR_Layout (which sizes the band child via
+ * MoveWindow) and returns TRUE; RB_GETBANDCOUNT returns uNumBands.
+ * Message ids are wine include/commctrl.h (verified this sweep).
+ * ============================================================ */
+__attribute__((ms_abi)) int mw_MoveWindow(void* hwnd, int x, int y, int w, int h, int repaint); /* fwd: defined below */
+__attribute__((ms_abi)) int mw_InvalidateRect(void* hwnd, const void* rect, int erase); /* fwd: defined below */
+typedef struct {
+    uint32_t fStyle, cx, cxmin, cymin, cychild, wID;
+    int32_t  iImage;
+    void*    child;                    /* hwndChild */
+    uint16_t text[48];
+} MwRbBand;
+typedef struct { int slot; int n; MwRbBand b[16]; } MwRebar;
+static MwRebar g_rebar[8];
+static int g_rebar_used[8];
+static MwRebar* mw_rebar_of(int s) {
+    for (int i = 0; i < 8; i++)
+        if (g_rebar_used[i] && g_rebar[i].slot == s) return &g_rebar[i];
+    for (int i = 0; i < 8; i++)
+        if (!g_rebar_used[i]) {
+            g_rebar_used[i] = 1; g_rebar[i].slot = s; g_rebar[i].n = 0;
+            return &g_rebar[i];
+        }
+    return NULL;
+}
+/* REBAR_Layout essence (wine REBAR_CalcHorzBand): bands share one row; each
+ * band's child is MoveWindow'd to (x,0,width,height) with width from
+ * RBBIM_SIZE cx (else cxMinChild), height from cyMinChild (else default). */
+static void mw_rebar_layout(MwRebar* rb) {
+    int x = 0;
+    for (int i = 0; i < rb->n; i++) {
+        MwRbBand* b = &rb->b[i];
+        int w = b->cx ? (int)b->cx : (b->cxmin ? (int)b->cxmin : 64);
+        int h = b->cymin ? (int)b->cymin : 24;
+        if (b->child && w > 0 && h > 0) mw_MoveWindow(b->child, x, 0, w, h, 1);
+        x += w;
+    }
+}
+static int mw_rebar_copy_fields(MwRbBand* b, const uint8_t* bi, uint32_t fMask, int wide) {
+    /* RBBIM: STYLE 0x1, COLORS 0x2, TEXT 0x4, IMAGE 0x8, CHILD 0x10,
+     * CHILDSIZE 0x20, SIZE 0x40, BACKGROUND 0x80, ID 0x100 (wine commctrl.h) */
+    if (fMask & 0x01u) memcpy(&b->fStyle, bi + 0x08, 4);
+    if (fMask & 0x08u) memcpy(&b->iImage, bi + 0x24, 4);
+    if (fMask & 0x10u) memcpy(&b->child, bi + 0x28, 8);
+    if (fMask & 0x20u) {
+        memcpy(&b->cxmin, bi + 0x30, 4);
+        memcpy(&b->cymin, bi + 0x34, 4);
+        if (*(uint32_t*)(bi + 0) >= 0x40) memcpy(&b->cychild, bi + 0x38, 4);
+    }
+    if (fMask & 0x40u) memcpy(&b->cx, bi + 0x38, 4);
+    if ((fMask & 0x100u) && *(uint32_t*)(bi + 0) >= 0x50) memcpy(&b->wID, bi + 0x48, 4);
+    if (fMask & 0x04u) {
+        if (wide) {
+            const uint16_t* t = *(const uint16_t* const*)(bi + 0x18);
+            if (t && mw_probe_copy(t, 94, b->text)) b->text[47] = 0;
+        } else {
+            const char* t = *(const char* const*)(bi + 0x18);
+            uint16_t tmp[48] = {0};
+            if (t && mw_probe_copy(t, 47, tmp)) {
+                for (int k = 0; k < 47 && tmp[k]; k++) {
+                    uint8_t ch = (uint8_t)(tmp[k] & 0xFF);
+                    tmp[k] = (ch >= 0x20 && ch < 0x7F) ? ch : '?';
+                }
+                memcpy(b->text, tmp, sizeof(b->text));
+            }
+        }
+    }
+    return 1;
+}
+static int mw_rebar_msg(int s, uint32_t msg, uintptr_t wp, long long lp, long long* out) {
+    MwRebar* rb = mw_rebar_of(s);
+    if (!rb) return 0;
+    switch (msg) {
+    case 0x40Au: case 0x401u: { /* RB_INSERTBANDW/A */
+        *out = 0;
+        if (!lp || rb->n >= 16) return 1;
+        uint8_t* bi = (uint8_t*)(uintptr_t)lp;
+        uint32_t cbSize = 0, fMask = 0;
+        uint8_t hdr[8];
+        if (!mw_probe_copy(bi, 8, hdr)) return 1;
+        memcpy(&cbSize, hdr, 4); memcpy(&fMask, hdr + 4, 4);
+        /* wine: cbSize < REBARBANDINFOA_V3_SIZE -> FALSE. x64 V3=72(0x48),
+         * V6=80(0x50) — WinRAR passes 0x50. Accept the mask-gated core. */
+        MW_TRACE("RB_INSERTBAND%c at=%d cbSize=%u mask=%#x",
+                 msg == 0x40Au ? 'W' : 'A', (int)wp, cbSize, fMask);
+        if (cbSize < 0x30) return 1;
+        MwRbBand nb; memset(&nb, 0, sizeof(nb)); nb.iImage = -1;
+        mw_rebar_copy_fields(&nb, bi, fMask, msg == 0x40Au);
+        int idx = ((int)wp == -1 || (int)wp > rb->n) ? rb->n : (int)wp;
+        if (idx < 0 || idx > 15) { *out = 0; return 1; }
+        for (int i = rb->n; i > idx; i--) rb->b[i] = rb->b[i - 1];
+        rb->b[idx] = nb; rb->n++;
+        mw_rebar_layout(rb);
+        mw_InvalidateRect(MW_CHILD_BASE ? (void*)(uintptr_t)(MW_CHILD_BASE + (uintptr_t)s + 1) : NULL, NULL, 1);
+        *out = 1;
+        return 1;
+    }
+    case 0x40Bu: case 0x406u: { /* RB_SETBANDINFOW/A */
+        *out = 0;
+        int idx = (int)wp;
+        if (!lp || idx < 0 || idx >= rb->n) return 1;
+        uint8_t* bi = (uint8_t*)(uintptr_t)lp;
+        uint8_t hdr[8];
+        if (!mw_probe_copy(bi, 8, hdr)) return 1;
+        uint32_t cbSize, fMask;
+        memcpy(&cbSize, hdr, 4); memcpy(&fMask, hdr + 4, 4);
+        if (cbSize < 0x30) return 1;
+        mw_rebar_copy_fields(&rb->b[idx], bi, fMask, msg == 0x40Bu);
+        mw_rebar_layout(rb);
+        MW_TRACE("RB_SETBANDINFO%c band=%d mask=%#x -> TRUE",
+                 msg == 0x40Bu ? 'W' : 'A', idx, fMask);
+        *out = 1;
+        return 1;
+    }
+    case 0x402u: { /* RB_DELETEBAND */
+        int idx = (int)wp;
+        if (idx >= 0 && idx < rb->n) {
+            for (int i = idx; i < rb->n - 1; i++) rb->b[i] = rb->b[i + 1];
+            rb->n--;
+            mw_rebar_layout(rb);
+        }
+        *out = 1; return 1;
+    }
+    case 0x403u: { /* RB_GETBARINFO: REBARINFO.cBands @+0x10 */
+        *out = 1;
+        if (lp) { uint32_t n = (uint32_t)rb->n; memcpy((uint8_t*)(uintptr_t)lp + 0x10, &n, 4); }
+        return 1;
+    }
+    case 0x404u: *out = 1; return 1;                 /* RB_SETBARINFO */
+    case 0x40Cu: *out = rb->n; return 1;             /* RB_GETBANDCOUNT */
+    case 0x40Du: *out = (rb->n > 0) ? 1 : 0; return 1; /* RB_GETROWCOUNT */
+    case 0x41Eu: case 0x41Fu: *out = 1; return 1;    /* RB_MINIMIZEBAND / RB_MAXIMIZEBAND */
+    case 0x40Eu: case 0x41Bu: { /* RB_GETROWHEIGHT / RB_GETBARHEIGHT */
+        *out = (rb->n && rb->b[0].cymin) ? rb->b[0].cymin : 24;
+        return 1;
+    }
+    case 0x409u: { /* RB_GETRECT: band rect (single row layout) */
+        *out = 0;
+        int idx = (int)wp;
+        if (!lp || idx < 0 || idx >= rb->n) return 1;
+        int x = 0;
+        for (int i = 0; i < idx; i++)
+            x += rb->b[i].cx ? (int)rb->b[i].cx : (rb->b[i].cxmin ? (int)rb->b[i].cxmin : 64);
+        int w = rb->b[idx].cx ? (int)rb->b[idx].cx
+                : (rb->b[idx].cxmin ? (int)rb->b[idx].cxmin : 64);
+        int h = rb->b[idx].cymin ? (int)rb->b[idx].cymin : 24;
+        int32_t* r = (int32_t*)(uintptr_t)lp;
+        r[0] = x; r[1] = 0; r[2] = x + w; r[3] = h;
+        *out = 1; return 1;
+    }
+    case 0x410u: { /* RB_IDTOINDEX */
+        for (int i = 0; i < rb->n; i++)
+            if (rb->b[i].wID == (uint32_t)wp) { *out = i; return 1; }
+        *out = -1; return 1;
+    }
+    case 0x417u: *out = 1; return 1;                 /* RB_SIZETORECT */
+    case 0x413u: case 0x414u: case 0x415u: case 0x416u:
+        *out = 0; return 1;                          /* RB_(SET|GET)BK/TEXTCOLOR */
+    case 0x41Cu: case 0x41Du: { /* RB_GETBANDINFOW/A */
+        *out = 0;
+        int idx = (int)wp;
+        if (!lp || idx < 0 || idx >= rb->n) return 1;
+        uint8_t* bi = (uint8_t*)(uintptr_t)lp;
+        uint8_t hdr[8];
+        if (!mw_probe_copy(bi, 8, hdr)) return 1;
+        uint32_t fMask;
+        memcpy(&fMask, hdr + 4, 4);
+        MwRbBand* b = &rb->b[idx];
+        if (fMask & 0x01u) memcpy(bi + 0x08, &b->fStyle, 4);
+        if (fMask & 0x08u) memcpy(bi + 0x24, &b->iImage, 4);
+        if (fMask & 0x20u) { memcpy(bi + 0x30, &b->cxmin, 4); memcpy(bi + 0x34, &b->cymin, 4); }
+        if (fMask & 0x40u) memcpy(bi + 0x38, &b->cx, 4);
+        if (fMask & 0x100u) memcpy(bi + 0x48, &b->wID, 4);
+        *out = 1; return 1;
+    }
+    }
+    return 0; /* not an RB_ message: caller falls through (TB_ identity kept) */
+}
+/* ComboBoxEx32 — wine dlls/comctl32/comboex.c. WinRAR's address combo sends
+ * CBEM_INSERTITEMW x5 (must return the new item index), CBEM_GETCOMBOCONTROL
+ * /CBEM_GETEDITCONTROL (return the control hwnd), plus plain CB_* messages
+ * the real control forwards to its inner combo. */
+static int mw_comboex_msg(int s, uint32_t msg, uintptr_t wp, long long lp,
+                          long long* out, void* hwnd) {
+    MwChild* c = &g_child[s];
+    switch (msg) {
+    case 0x40Bu: case 0x401u: { /* CBEM_INSERTITEMW/A */
+        if (!lp) { *out = -1; return 1; }
+        uint8_t bi[48];
+        if (!mw_probe_copy((void*)(uintptr_t)lp, msg == 0x40Bu ? 48 : 44, bi)) { *out = -1; return 1; }
+        int32_t iitem = 0; const void* t = NULL;
+        memcpy(&iitem, bi + 4, 4);
+        memcpy(&t, bi + 8, 8);
+        int slot = (iitem == -1 || iitem >= c->cb_items || c->cb_items >= 8)
+                   ? (c->cb_items < 8 ? c->cb_items : 7) : (int)iitem;
+        if (t && mw_probe_copy(t, 94, c->cb_item[slot])) {
+            c->cb_item[slot][47] = 0;
+            if (c->cb_items < 8) c->cb_items++;
+        }
+        MW_TRACE("CBEM_INSERTITEM%c item=%d -> idx %d", msg == 0x40Bu ? 'W' : 'A', iitem, slot);
+        *out = slot; return 1;
+    }
+    case 0x406u: case 0x407u: /* CBEM_GETCOMBOCONTROL / CBEM_GETEDITCONTROL */
+        *out = (long long)(intptr_t)hwnd; return 1;
+    case 0x402u: case 0x403u: case 0x408u: case 0x40Au:
+        *out = 0; return 1; /* CBEM_(SET|GET)IMAGELIST / (SET|GET)EXTENDEDSTYLE */
+    case 0x40Du: case 0x404u: { /* CBEM_GETITEMW/A */
+        *out = 0;
+        if (!lp) return 1;
+        uint8_t bi[48];
+        if (!mw_probe_copy((void*)(uintptr_t)lp, 48, bi)) return 1;
+        int32_t iitem; memcpy(&iitem, bi + 4, 4);
+        void* t = NULL; memcpy(&t, bi + 8, 8);
+        if (t && iitem >= 0 && iitem < c->cb_items) {
+            uint16_t* d = (uint16_t*)t;
+            int k = 0;
+            for (; k < 47 && c->cb_item[iitem][k]; k++) d[k] = c->cb_item[iitem][k];
+            d[k] = 0;
+            *out = 1;
+        }
+        return 1;
+    }
+    /* plain CB_* traffic on the CBEX hwnd (real control forwards to inner) */
+    case 0x143u: case 0x14Au: { /* CB_ADDSTRING / CB_INSERTSTRING */
+        *out = (msg == 0x14Au) ? (long long)(int32_t)wp : (long long)c->cb_items;
+        const uint16_t* t = (const uint16_t*)(uintptr_t)lp;
+        int slot = (c->cb_items < 8) ? c->cb_items : 7;
+        if (t && mw_probe_copy(t, 94, c->cb_item[slot])) {
+            c->cb_item[slot][47] = 0;
+            if (c->cb_items < 8) c->cb_items++;
+        }
+        return 1;
+    }
+    case 0x14Bu: c->cb_items = 0; *out = 0; return 1; /* CB_RESETCONTENT */
+    case 0x14Eu: *out = 0; return 1;                  /* CB_SETCURSEL */
+    case 0x146u: *out = c->cb_items; return 1;        /* CB_GETCOUNT */
+    case 0x147u: *out = 0; return 1;                  /* CB_GETCURSEL */
+    case 0x14Fu: *out = 1; return 1;                  /* CB_SHOWDROPDOWN */
+    }
+    return 0;
+}
+
 static int mw_tb_pool_add(MwChild* c, const uint16_t* s) {
     if (!c || c->tb_pool_n >= 64) return -1;
     int idx = c->tb_pool_n++;
@@ -18179,6 +18517,10 @@ static int mw_tb_pool_add(MwChild* c, const uint16_t* s) {
 }
 static int mw_commonctl_msg(int s, uint32_t msg, uintptr_t wp, long long lp, long long* out) {
     MwChild* c = &g_child[s];
+    if (mw_child_cls_is(s, "ComboBoxEx32")) { /* SW-1551 */
+        long long ce_r;
+        if (mw_comboex_msg(s, msg, wp, lp, &ce_r, c->hwnd)) { *out = ce_r; return 1; }
+    }
     if (mw_child_cls_is(s, "STATUSBAR")) {
         switch (msg) {
         case 0x404u: { /* SB_SETPARTS: capture + TRUE (SW-803 contract) */
@@ -18244,7 +18586,13 @@ static int mw_commonctl_msg(int s, uint32_t msg, uintptr_t wp, long long lp, lon
         }
         }
     }
-    if (mw_child_cls_is(s, "TOOLBAR")) {
+    if (mw_child_cls_is(s, "TOOLBAR") || mw_child_cls_is(s, "ReBarWindow32")) {
+        if (mw_child_cls_is(s, "ReBarWindow32")) { /* SW-1551: RB_* on the rebar class */
+            long long rb_r;
+            if (mw_rebar_msg(s, msg, wp, lp, &rb_r)) { *out = rb_r; return 1; }
+            /* non-RB traffic keeps the SW-1521 TB_ identity: fall through
+               to the TOOLBAR switch below */
+        }
         switch (msg) {
         case 0x444u: case 0x414u: { /* TB_ADDBUTTONSW/A */
             int n = (int)wp; *out = 1;
@@ -19976,7 +20324,7 @@ static int mw_sysclass_w(const void* cls) {
     if (v && v < 0x10000u) {
         if ((v & 0xFF00u) == 0x8000u) {
             uint32_t c = v & 0xFFu;
-            if (c >= 0x80 && c <= 0x8E) return (int)c; /* SWEEP-019/021/SW-1207 ranges; SW-1360b: +progress */
+            if (c >= 0x80 && c <= 0x90) return (int)c; /* SWEEP-019/021/SW-1207 ranges; SW-1360b: +progress; SW-1551: +rebar/cboex */
         }
         return 0;
     }
@@ -19987,11 +20335,13 @@ static int mw_sysclass_w(const void* cls) {
          * (SW-803..806). Prefix match: toolbar* / msctls_statusbar32. */
         {"toolbar", 0x86}, {"msctls_statusbar32", 0x87},
         {"statuswindow", 0x87},
-        /* SW-1521 (SWEEP-108): WinRAR's first toolbar container is a rebar
-         * (ReBarWindow32); the TB_ traffic targets the rebar hwnd, so the
-         * rebar carries the TOOLBAR identity (the old fallback minted it
-         * STATUSBAR and the toolbar never got buttons). */
-        {"rebarwindow32", 0x86}, {"msctls_rebar32", 0x86},
+        /* SW-1551 (this sweep): the rebar is a real BAND CONTAINER — the
+           SW-1521 TOOLBAR identity answered RB_INSERTBANDW 0 (fail) and the
+           toolbar button-add phase never started. ReBarWindow32 keeps a
+           TOOLBAR fall-through for TB_ traffic but now owns the RB_ family. */
+        {"rebarwindow32", 0x8F}, {"msctls_rebar32", 0x8F},
+        /* SW-1551: WinRAR's address combo (CBEM_INSERTITEMW x5) */
+        {"comboboxex32", 0x90},
         /* SWEEP-019 SW-831..840: common-controls children (NirSoft main
          * lists, MFC trees, property sheets). Before this, a guest-created
          * SysListView32 got sc=0 and fell into the main-window path — the
@@ -20032,7 +20382,7 @@ static int mw_sysclass_a(const void* cls) {
     if (v && v < 0x10000u) {
         if ((v & 0xFF00u) == 0x8000u) {
             uint32_t c = v & 0xFFu;
-            if (c >= 0x80 && c <= 0x8E) return (int)c; /* SW-1360b: +progress */
+            if (c >= 0x80 && c <= 0x90) return (int)c; /* SW-1360b: +progress; SW-1551: +rebar/cboex */
         }
         return 0;
     }
@@ -20043,11 +20393,9 @@ static int mw_sysclass_a(const void* cls) {
          * (SW-803..806). Prefix match: toolbar* / msctls_statusbar32. */
         {"toolbar", 0x86}, {"msctls_statusbar32", 0x87},
         {"statuswindow", 0x87},
-        /* SW-1521 (SWEEP-108): WinRAR's first toolbar container is a rebar
-         * (ReBarWindow32); the TB_ traffic targets the rebar hwnd, so the
-         * rebar carries the TOOLBAR identity (the old fallback minted it
-         * STATUSBAR and the toolbar never got buttons). */
-        {"rebarwindow32", 0x86}, {"msctls_rebar32", 0x86},
+        /* SW-1551: rebar band container (see the W table) + ComboBoxEx32 */
+        {"rebarwindow32", 0x8F}, {"msctls_rebar32", 0x8F},
+        {"comboboxex32", 0x90},
         /* SWEEP-019 SW-831..840: common-controls children (NirSoft main
          * lists, MFC trees, property sheets). Before this, a guest-created
          * SysListView32 got sc=0 and fell into the main-window path — the
@@ -20086,8 +20434,10 @@ static const char* mw_sysclass_name(int c) {
                               /* SW-1207 */
                               "Tooltips_Class32",
                               /* SW-1360b: PROGRESS_CLASS */
-                              "msctls_progress32"};
-    return (c >= 0x80 && c <= 0x8E) ? n[c - 0x80] : "?";
+                              "msctls_progress32",
+                              /* SW-1551: rebar band container + ComboBoxEx32 */
+                              "ReBarWindow32","ComboBoxEx32"};
+    return (c >= 0x80 && c <= 0x90) ? n[c - 0x80] : "?";
 }
 /* Register one child-control identity; NULL when the 64-slot table is full. */
 /* SW-1334: capture the guest class proc for a just-registered child.
@@ -21406,6 +21756,9 @@ static const char* mw_wm_name(uint32_t m) {
     case 0x444u: return "TB_ADDBUTTONSW";
     case 0x454u: return "TB_SETEXTENDEDSTYLE";
     case 0x455u: return "TB_GETEXTENDEDSTYLE";
+    /* SW-1551: rebar band family (the rebar hwnd is class-dispatched, the
+     * raw ids overlap TB_ — names here are the RB_ reading) */
+    case 0x40Au: return "RB_INSERTBANDW"; /* unambiguous: no TB_ 0x40A */
     default: return "WM_?";
     }
 }
@@ -46463,6 +46816,11 @@ static const struct { const char* n; uint32_t b; } g_api32_arity[] = {
     { "ExitProcess", 4 },
     { "ExitThread", 4 },
     { "GetCurrentProcess", 0 },
+    /* SW-1560 (issue #25 IDM): the parent installer calls this between the
+     * child wait and the /GS-protected epilogue; the unknown-arity default
+     * popped 0 for a 1-arg stdcall, drifting the caller's esp by +4 and
+     * failing the /GS cookie compare -> 0xC0000409 fastfail. */
+    { "AllowSetForegroundWindow", 4 },
     { "GetCurrentProcessId", 0 },
     { "GetCurrentThreadId", 0 },
     { "GetProcessId", 4 },
@@ -47346,7 +47704,7 @@ static inline uint64_t m32_ld64(uint32_t va) { if (m32_host_hit(va)) return 0; u
 static inline void m32_st8 (uint32_t va, uint8_t v)  { if (m32_host_hit(va)) return; MW32W_LOG("W8", va, (uint32_t)v); *(uint8_t*)m32p(va) = v; } /* SW-1494: byte-store watch (renamer .bss 0xCC decode) */
 static inline void m32_st16(uint32_t va, uint16_t v) { if (m32_host_hit(va)) return; MW32W_LOG("W16", va, v); memcpy(m32p(va), &v, 2); }
 static inline void m32_st32(uint32_t va, uint32_t v) { if (m32_host_hit(va)) return; MW32W_LOG("W32", va, v); memcpy(m32p(va), &v, 4); }
-static inline void m32_st64(uint32_t va, uint64_t v) { if (m32_host_hit(va)) return; memcpy(m32p(va), &v, 8); }
+static inline void m32_st64(uint32_t va, uint64_t v) { if (m32_host_hit(va)) return; MW32W_LOG("W64", va, (uint32_t)v); MW32W_LOG("W64h", va + 4, (uint32_t)(v >> 32)); memcpy(m32p(va), &v, 8); } /* SW-1557: watch-visible (x87 FSTP/FISTP + SSE2 MOVSD were the last unwatched store class — the IDM ghost-writer wrote its 0 dword as the HIGH half of a 64-bit FPU/SSE store) */
 
 static inline uint32_t m32_push(uint32_t v) { t_cpu32.r[ESPi] -= 4; m32_st32(t_cpu32.r[ESPi], v); return t_cpu32.r[ESPi]; }
 static inline uint32_t m32_pop(void)        { uint32_t v = m32_ld32(t_cpu32.r[ESPi]); t_cpu32.r[ESPi] += 4; return v; }
@@ -47609,10 +47967,12 @@ static uint32_t mw32_api_gate(uint32_t slot_index) {
         exit(3);
     }
     MwApi32Slot* s = &g_api32_slots[slot_index];
+    mw32_sentinel_check_at("gate-head"); /* SW-1558 */
     s->calls++;
     g_api32_gate_calls++;
 
     uint32_t ret_addr = m32_pop();           /* stdcall ret addr */
+    mw32_sentinel_check_at("gate-post-pop"); /* SW-1558 */
     g_api32_hist[g_api32_hist_n & 7] = (typeof(g_api32_hist[0])){ slot_index, t_cpu32.r[ESPi], ret_addr };
     g_api32_hist_n++;
     uint32_t arity = (s->arity == 0xFFFFFFFFu) ? 32 : s->arity;
@@ -47624,6 +47984,7 @@ static uint32_t mw32_api_gate(uint32_t slot_index) {
     /* SW-1299: regparm delivery — real Windows passes the SList family in
      * ECX (and EDX for push); the guest stack slots hold stale junk, so
      * overlay the register args AFTER the stack widen. */
+    mw32_sentinel_check_at("gate-post-widen"); /* SW-1558 */
     int rp = mw32_regparm_count(s->name);
     if (rp >= 1) a[0] = t_cpu32.r[ECXi];
     if (rp >= 2) a[1] = t_cpu32.r[EDXi];
@@ -47638,6 +47999,7 @@ static uint32_t mw32_api_gate(uint32_t slot_index) {
     }
 
     uint32_t ret = 0;
+    mw32_sentinel_check_at("gate-pre-call"); /* SW-1558 */
     if (s->arity == 0xFFFFFFFFu) {
         /* unresolved import: mirror mw_unresolved_import_stub (trace+0) */
         MW_TRACE("[PE32] UNRESOLVED call '%s' (gate) -> 0", s->name);
@@ -47846,6 +48208,7 @@ static uint32_t mw32_api_gate(uint32_t slot_index) {
     }
 
     if (!s->cdeclf) t_cpu32.r[ESPi] += arity; /* stdcall callee pops; cdecl: caller cleans */
+    mw32_sentinel_check_at("gate-post-call"); /* SW-1558 */
     t_cpu32.r[EAXi] = ret;
     t_cpu32.eip = ret_addr;
     if (g_cpu32_trace)
@@ -49318,6 +49681,67 @@ static void entry_trace_check(void) {
  * region without the 23 GB full-step-trace firehose. */
 static uint32_t g_tr_lo = 0, g_tr_hi = 0;
 
+/* SW-1555 (issue #25 IDM): MW32_PROTECT_AT=<hex eip> — DEFERRED arming of the
+ * SW-1550 read-only guard. Measured decode (SWEEP-111r2): the boot's own
+ * stack build shares page 0x3fefe000 with the hunted live frame, so arming
+ * at boot faults the boot first. The guard instead arms at FETCH time when
+ * the interpreter first reaches the given guest EIP — set it to the
+ * instruction AFTER the frame's `push ebp` so the push itself stores
+ * legally and every later writer of the protected page faults into
+ * crash_handler's [PROTECT-HIT] banner with the host rip/backtrace. */
+static uint32_t g_m32p_at = 0;
+static int g_m32p_armed = 0;
+/* SW-1558 (issue #25 IDM): MW32_SENTINEL="va:expect" — after EVERY interpreter
+ * step, host-read the 4 bytes at va and compare; on mismatch print the exact
+ * post-step EIP + registers. Arming is DEFERRED to the MW32_PROTECT_AT
+ * trigger (the sentinel would fire on the slot's pre-push contents at
+ * boot). The SWEEP-111r2 watch proved NO store primitive (8/16/32/64 + REP
+ * + engine writers, all instrumented) writes the ghost zero — the sentinel
+ * names the step boundary where it flips. */
+static uint32_t g_sent_va = 0, g_sent_expect = 0;
+static int g_sent_armed = 0;
+static int g_sent_verbose = -1;
+static void mw32_sentinel_check_at(const char* where);
+#define mw32_sentinel_check() mw32_sentinel_check_at("plain")
+static void mw32_sentinel_check_at(const char* where) {
+    if (!g_sent_armed || !g_sent_va || g_arena32 == NULL) return;
+    uint32_t cur;
+    memcpy(&cur, g_arena32 + (g_sent_va - MW32_ARENA_BASE), 4);
+    if (g_sent_verbose < 0) { const char* v = getenv("MW32_SENTINEL_VERBOSE"); g_sent_verbose = (v && v[0] && v[0] != '0') ? 1 : 0; }
+    if (g_sent_verbose && g_sent_armed) {
+        static int vn = 0;
+        if (vn < 4000) { vn++;
+            fprintf(stderr, "[SENTINEL-v] %s va=%08x cur=%08x eip=%08x esp=%08x ebp=%08x steps=%llu\n",
+                    where, g_sent_va, cur, t_cpu32.eip, t_cpu32.r[4], t_cpu32.r[5], (unsigned long long)g_cpu32_steps); }
+    }
+    if (cur != g_sent_expect) {
+        fprintf(stderr, "[SENTINEL] %08x flipped %08x -> %08x right after eip=%08x esp=%08x ebp=%08x steps=%llu (SW-1558)\n",
+                g_sent_va, g_sent_expect, cur, t_cpu32.eip, t_cpu32.r[4], t_cpu32.r[5],
+                (unsigned long long)g_cpu32_steps);
+        { char b[256]; int o = 0;
+          for (int i = (g_eip_hist_n > 16 ? g_eip_hist_n - 16 : 0); i < g_eip_hist_n; i++)
+              o += snprintf(b + o, sizeof(b) - o, "%08x ", g_eip_hist[i & 15]);
+          fprintf(stderr, "[SENTINEL] eip-hist: %s\n", b); }
+        fflush(stderr);
+        g_sent_armed = 0; /* report once */
+    }
+}
+static void mw32_protect_arm_now(void) {
+    if (g_m32p_hi > g_m32p_lo) {
+        uintptr_t plo = (uintptr_t)g_m32p_lo & ~0xFFFUL;
+        uintptr_t phi = ((uintptr_t)g_m32p_hi + 0xFFF) & ~0xFFFUL;
+        if (mprotect((void*)plo, phi - plo, PROT_READ | PROT_EXEC) == 0)
+            fprintf(stderr, "[PROTECT] armed at eip=%08x: guest range %08x..%08x read-only (SW-1555)\n",
+                    t_cpu32.eip, g_m32p_lo, g_m32p_hi);
+        else
+            fprintf(stderr, "[PROTECT] deferred mprotect(%08x..) failed: %s\n",
+                    g_m32p_lo, strerror(errno));
+    }
+    fflush(stderr);
+    g_m32p_armed = 1;
+    if (g_sent_va) g_sent_armed = 1; /* SW-1558: sentinel arms with the trigger (no MW32_PROTECT range required) */
+}
+
 static int cpu32_run(uint64_t max_steps) {
     uint64_t n = 0;
     for (;;) {
@@ -49331,8 +49755,12 @@ static int cpu32_run(uint64_t max_steps) {
                     t_cpu32.eip, t_cpu32.r[0], t_cpu32.r[1], t_cpu32.r[2], t_cpu32.r[3],
                     t_cpu32.r[4], t_cpu32.r[5], t_cpu32.r[6], t_cpu32.r[7]);
         if (__builtin_expect(g_entry_trace_n != 0, 0)) entry_trace_check();
+        if (__builtin_expect(g_m32p_at != 0 && !g_m32p_armed, 0) &&
+            t_cpu32.eip == g_m32p_at)
+            mw32_protect_arm_now(); /* SW-1555/1558 (range or sentinel) */
         int rc = cpu32_step();
         n++;
+        if (__builtin_expect(g_sent_armed != 0, 0)) mw32_sentinel_check(); /* SW-1558 */
         if (rc != 0) return rc;
     }
 }
@@ -49957,6 +50385,17 @@ static int load_pe32(const char* filepath) {
                     fprintf(stderr, "[PROTECT] guest range %08x..%08x now read-only (SW-1550)\n", g_m32p_lo, g_m32p_hi);
                 else
                     fprintf(stderr, "[PROTECT] mprotect(%08x..) failed: %s\n", g_m32p_lo, strerror(errno));
+            }
+        } }
+      { const char* pa = getenv("MW32_PROTECT_AT"); /* SW-1555: defer the arm to fetch-time at this guest EIP */
+        if (pa && pa[0]) g_m32p_at = (uint32_t)strtoul(pa, NULL, 16);
+        if (g_m32p_at) { g_m32p_armed = 0; fprintf(stderr, "[PROTECT] deferred arm at eip=%08x (SW-1555)\n", g_m32p_at); } }
+      { const char* sn = getenv("MW32_SENTINEL"); /* SW-1558: "va:expect" — per-step verify, arms at the PROTECT_AT trigger */
+        if (sn && sn[0]) {
+            unsigned va = 0, ex = 0;
+            if (sscanf(sn, "%x:%x", &va, &ex) == 2) {
+                g_sent_va = va; g_sent_expect = ex;
+                fprintf(stderr, "[SENTINEL] va=%08x expect=%08x (arms at PROTECT_AT trigger) (SW-1558)\n", va, ex);
             }
         } }
       { const char* tr = getenv("MW32_TRACE_RANGE"); /* SW-1484: I32 eip-range filter */

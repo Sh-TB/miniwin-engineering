@@ -1,0 +1,466 @@
+{
+  "trace": [
+[T8cc0] [API] PE Loader: file=/home/z/my-project/workspace/miniwin-engineering/evidence/111r2/idman/sandbox/Windows/Temp/IDM_Setup_Temp/IDM1.tmp size=167280
+[T8cc0] [API] PE32 (x86/0x10b) detected -> load_pe32 interpreted path
+[T8cc0] [API] [PE32] host-image guard armed: 0x2000000..0x21b6000 (guest access refused)
+[T8cc0] [API] [PE32] world up: arena 0x10000000..0x3fffffff, thunks 0xa00000..0xa0ffff
+[T8cc0] [API] [PE32] /home/z/my-project/workspace/miniwin-engineering/evidence/111r2/idman/sandbox/Windows/Temp/IDM_Setup_Temp/IDM1.tmp: base=0x400000 EP=0x1122c size=0x2b000 secs=4 relocs=0 (hi=0)
+[T8cc0] [API] [PE32] __wgetmainargs arena: argc=3 argv=0x11000000 env=0x11005000
+[T8cc0] [API] [PE32] data-import plane: wcmdln=0x1100c000 acmdln=0x1100e000 wargv=0x11000000 argc=0x1100a000
+[T8cc0] [API]   -> 0x202bcd0
+[T8cc0] [API]   -> NULL (not in dispatch table)
+[T8cc0] [API] [PE32] arity('SHDeleteKeyW') unknown -> under-pop 0 (caller cleans or frame resync)
+[T8cc0] [API] [PE32] api 'SHDeleteKeyW' (SHLWAPI.dll) UNRESOLVED -> stub thunk
+[T8cc0] [API]   -> 0x20a3ef0
+[T8cc0] [API]   -> 0x20cdcd0
+[T8cc0] [API]   -> 0x2087fa0
+[T8cc0] [API]   -> 0x208bfc0
+[T8cc0] [API]   -> 0x2050990
+[T8cc0] [API]   -> 0x2056f70
+[T8cc0] [API]   -> 0x20b9220
+[T8cc0] [API]   -> 0x210b270
+[T8cc0] [API]   -> 0x20b64a0
+[T8cc0] [API]   -> 0x200c7b0
+[T8cc0] [API]   -> 0x20402b0
+[T8cc0] [API]   -> 0x204c7b0
+[T8cc0] [API]   -> 0x2058a70
+[T8cc0] [API]   -> 0x20421b0
+[T8cc0] [API]   -> 0x20c2460
+[T8cc0] [API]   -> 0x206ba30
+[T8cc0] [API]   -> 0x206af00
+[T8cc0] [API]   -> 0x205a280
+[T8cc0] [API]   -> 0x205a540
+[T8cc0] [API]   -> 0x20c2d90
+[T8cc0] [API]   -> 0x209dcd0
+[T8cc0] [API]   -> 0x2042c50
+[T8cc0] [API]   -> 0x20b67d0
+[T8cc0] [API]   -> 0x20b5840
+[T8cc0] [API]   -> 0x2013f50
+[T8cc0] [API]   -> 0x20cfaf0
+[T8cc0] [API]   -> 0x20ab910
+[T8cc0] [API]   -> 0x2041390
+[T8cc0] [API]   -> 0x2059da0
+[T8cc0] [API]   -> 0x208c300
+[T8cc0] [API]   -> 0x2059670
+[T8cc0] [API]   -> 0x20ce650
+[T8cc0] [API]   -> 0x2051080
+[T8cc0] [API]   -> 0x2088710
+[T8cc0] [API]   -> 0x2070630
+[T8cc0] [API]   -> 0x20b5b60
+[T8cc0] [API]   -> 0x2050c90
+[T8cc0] [API]   -> 0x2090cd0
+[T8cc0] [API] [PE32] arity('GetExitCodeThread') unknown -> under-pop 0 (caller cleans or frame resync)
+[T8cc0] [API]   -> 0x2087ff0
+[T8cc0] [API]   -> 0x2088320
+[T8cc0] [API]   -> 0x202b300
+[T8cc0] [API]   -> 0x202b470
+[T8cc0] [API]   -> 0x20c6030
+[T8cc0] [API]   -> 0x203f950
+[T8cc0] [API]   -> 0x2068e20
+[T8cc0] [API]   -> 0x20504b0
+[T8cc0] [API]   -> 0x20ccbf0
+[T8cc0] [API]   -> 0x2009a90
+[T8cc0] [API]   -> 0x20bf2b0
+[T8cc0] [API]   -> 0x206b770
+[T8cc0] [API]   -> 0x206bfb0
+[T8cc0] [API]   -> 0x207e2f0
+[T8cc0] [API]   -> 0x203f780
+[T8cc0] [API]   -> 0x2092600
+[T8cc0] [API]   -> 0x2027940
+[T8cc0] [API]   -> 0x20d7d20
+[T8cc0] [API]   -> 0x20b4ae0
+[T8cc0] [API]   -> 0x203c0a0
+[T8cc0] [API]   -> 0x2008890
+[T8cc0] [API]   -> 0x20891a0
+[T8cc0] [API]   -> 0x20ab780
+[T8cc0] [API]   -> 0x20a1370
+[T8cc0] [API]   -> 0x204e610
+[T8cc0] [API]   -> 0x209d720
+[T8cc0] [API]   -> 0x20425f0
+[T8cc0] [API]   -> NULL (not in dispatch table)
+[T8cc0] [API] [PE32] arity('OpenMutexW') unknown -> under-pop 0 (caller cleans or frame resync)
+[T8cc0] [API] [PE32] api 'OpenMutexW' (KERNEL32.dll) UNRESOLVED -> stub thunk
+[T8cc0] [API]   -> 0x20b0dd0
+[T8cc0] [API]   -> 0x2091190
+[T8cc0] [API]   -> 0x20a5b80
+[T8cc0] [API]   -> 0x200c7f0
+[T8cc0] [API]   -> 0x20b9810
+[T8cc0] [API]   -> 0x208ac50
+[T8cc0] [API]   -> 0x206cc40
+[T8cc0] [API]   -> 0x20bab80
+[T8cc0] [API]   -> 0x200d660
+[T8cc0] [API]   -> 0x20893a0
+[T8cc0] [API]   -> 0x2037fc0
+[T8cc0] [API]   -> 0x2072a90
+[T8cc0] [API]   -> 0x20be260
+[T8cc0] [API]   -> 0x2026d10
+[T8cc0] [API]   -> 0x200c2b0
+[T8cc0] [API]   -> 0x210db10
+[T8cc0] [API]   -> 0x20d3f00
+[T8cc0] [API]   -> 0x210ea70
+[T8cc0] [API]   -> 0x2019200
+[T8cc0] [API]   -> 0x20acfd0
+[T8cc0] [API]   -> 0x204a7d0
+[T8cc0] [API]   -> 0x210fd20
+[T8cc0] [API]   -> 0x202be30
+[T8cc0] [API]   -> 0x20e7480
+[T8cc0] [API]   -> 0x20e7560
+[T8cc0] [API] [PE32] arity('MsgWaitForMultipleObjects') unknown -> under-pop 0 (caller cleans or frame resync)
+[T8cc0] [API]   -> 0x20617a0
+[T8cc0] [API]   -> 0x204a040
+[T8cc0] [API] [PE32] arity('GetKeyboardLayoutList') unknown -> under-pop 0 (caller cleans or frame resync)
+[T8cc0] [API]   -> 0x2088050
+[T8cc0] [API]   -> 0x20d2e90
+[T8cc0] [API]   -> 0x20b6fe0
+[T8cc0] [API]   -> 0x209ef40
+[T8cc0] [API]   -> 0x2030eb0
+[T8cc0] [API]   -> 0x210c650
+[T8cc0] [API]   -> 0x2072650
+[T8cc0] [API]   -> 0x20cb110
+[T8cc0] [API]   -> 0x200e9e0
+[T8cc0] [API]   -> 0x200b750
+[T8cc0] [API]   -> 0x200b760
+[T8cc0] [API]   -> 0x20f47e0
+[T8cc0] [API]   -> 0x21100c0
+[T8cc0] [API]   -> 0x20adc90
+[T8cc0] [API]   -> 0x202ef50
+[T8cc0] [API]   -> 0x2087dc0
+[T8cc0] [API]   -> 0x20d8b00
+[T8cc0] [API]   -> 0x2009f80
+[T8cc0] [API]   -> 0x2092230
+[T8cc0] [API] [PE32] arity('DrawIcon') unknown -> under-pop 0 (caller cleans or frame resync)
+[T8cc0] [API]   -> 0x20b7800
+[T8cc0] [API]   -> 0x2087aa0
+[T8cc0] [API]   -> 0x20d55b0
+[T8cc0] [API]   -> 0x2023e60
+[T8cc0] [API] [PE32] arity('CharUpperW') unknown -> under-pop 0 (caller cleans or frame resync)
+[T8cc0] [API]   -> 0x20d3b30
+[T8cc0] [API]   -> 0x210fe60
+[T8cc0] [API]   -> 0x200c5c0
+[T8cc0] [API]   -> 0x20c05e0
+[T8cc0] [API]   -> 0x20b9e30
+[T8cc0] [API]   -> 0x209e0f0
+[T8cc0] [API]   -> 0x202fb10
+[T8cc0] [API]   -> 0x205b670
+[T8cc0] [API]   -> 0x2070200
+[T8cc0] [API]   -> 0x210cec0
+[T8cc0] [API]   -> 0x20c9570
+[T8cc0] [API]   -> 0x20d32f0
+[T8cc0] [API]   -> 0x20e7240
+[T8cc0] [API]   -> 0x20877d0
+[T8cc0] [API]   -> 0x208a8e0
+[T8cc0] [API] [PE32] arity('LPtoDP') unknown -> under-pop 0 (caller cleans or frame resync)
+[T8cc0] [API]   -> 0x202d6a0
+[T8cc0] [API]   -> 0x200e260
+[T8cc0] [API] [PE32] arity('DPtoLP') unknown -> under-pop 0 (caller cleans or frame resync)
+[T8cc0] [API]   -> 0x20879f0
+[T8cc0] [API]   -> 0x200e060
+[T8cc0] [API] [PE32] arity('GetMapMode') unknown -> under-pop 0 (caller cleans or frame resync)
+[T8cc0] [API]   -> 0x200cb40
+[T8cc0] [API] [PE32] arity('TranslateCharsetInfo') unknown -> under-pop 0 (caller cleans or frame resync)
+[T8cc0] [API]   -> 0x20e3f70
+[T8cc0] [API]   -> 0x20c7fd0
+[T8cc0] [API]   -> 0x20e4e80
+[T8cc0] [API]   -> 0x2077300
+[T8cc0] [API]   -> 0x200adc0
+[T8cc0] [API]   -> 0x203f6f0
+[T8cc0] [API]   -> 0x20ad280
+[T8cc0] [API] [PE32] arity('GetUserNameW') unknown -> under-pop 0 (caller cleans or frame resync)
+[T8cc0] [API]   -> 0x20e33e0
+[T8cc0] [API]   -> 0x20e4250
+[T8cc0] [API]   -> 0x21186e0
+[T8cc0] [API]   -> 0x20e1540
+[T8cc0] [API]   -> 0x20e3820
+[T8cc0] [API]   -> 0x203f670
+[T8cc0] [API]   -> 0x200a660
+[T8cc0] [API]   -> 0x20e2190
+[T8cc0] [API]   -> 0x20e29e0
+[T8cc0] [API]   -> 0x20e2e00
+[T8cc0] [API]   -> 0x200ca40
+[T8cc0] [API]   -> 0x20bb3c0
+[T8cc0] [API]   -> 0x2038650
+[T8cc0] [API]   -> 0x206e8e0
+[T8cc0] [API]   -> 0x200ca00
+[T8cc0] [API]   -> 0x20bbbe0
+[T8cc0] [API]   -> 0x20ae340
+[T8cc0] [API] [PE32] arity('CreateStreamOnHGlobal') unknown -> under-pop 0 (caller cleans or frame resync)
+[T8cc0] [API]   -> 0x206f800
+[T8cc0] [API]   -> 0x20635b0
+[T8cc0] [API]   -> 0x206ff40
+[T8cc0] [API]   -> 0x203cd50
+[T8cc0] [API]   -> NULL (not in dispatch table)
+[T8cc0] [API] [PE32] arity('#ordinal') unknown -> under-pop 0 (caller cleans or frame resync)
+[T8cc0] [API] [PE32] api '#ordinal' (oleaut32.dll) UNRESOLVED -> stub thunk
+[T8cc0] [API]   -> 0x2009000
+[T8cc0] [API] [PE32] arity('_controlfp') unknown -> under-pop 0 (caller cleans or frame resync)
+[T8cc0] [API]   -> 0x205eca0
+[T8cc0] [API] [PE32] arity('__setusermatherr') unknown -> under-pop 0 (caller cleans or frame resync)
+[T8cc0] [API]   -> 0x210b5b0
+[T8cc0] [API] [PE32] arity('_initterm') unknown -> under-pop 0 (caller cleans or frame resync)
+[T8cc0] [API]   -> 0x20ca4d0
+[T8cc0] [API] [PE32] arity('__wgetmainargs') unknown -> under-pop 0 (caller cleans or frame resync)
+[T8cc0] [API]   -> 0x204b1d0
+[T8cc0] [API] [PE32] arity('exit') unknown -> under-pop 0 (caller cleans or frame resync)
+[T8cc0] [API]   -> 0x20601e0
+[T8cc0] [API] [PE32] arity('_XcptFilter') unknown -> under-pop 0 (caller cleans or frame resync)
+[T8cc0] [API]   -> 0x204ac30
+[T8cc0] [API] [PE32] arity('_exit') unknown -> under-pop 0 (caller cleans or frame resync)
+[T8cc0] [API]   -> NULL (not in dispatch table)
+[T8cc0] [API] [PE32] arity('??1type_info@@UAE@XZ') unknown -> under-pop 0 (caller cleans or frame resync)
+[T8cc0] [API] [PE32] api '??1type_info@@UAE@XZ' (MSVCRT.dll) UNRESOLVED -> stub thunk
+[T8cc0] [API]   -> 0x202a600
+[T8cc0] [API] [PE32] arity('_onexit') unknown -> under-pop 0 (caller cleans or frame resync)
+[T8cc0] [API]   -> 0x20cb0a0
+[T8cc0] [API] [PE32] arity('__dllonexit') unknown -> under-pop 0 (caller cleans or frame resync)
+[T8cc0] [API]   -> 0x201b040
+[T8cc0] [API] [PE32] arity('?terminate@@YAXXZ') unknown -> under-pop 0 (caller cleans or frame resync)
+[T8cc0] [API]   -> NULL (not in dispatch table)
+[T8cc0] [API] [PE32] arity('_except_handler3') unknown -> under-pop 0 (caller cleans or frame resync)
+[T8cc0] [API] [PE32] api '_except_handler3' (MSVCRT.dll) UNRESOLVED -> stub thunk
+[T8cc0] [API]   -> 0x201bf10
+[T8cc0] [API] [PE32] arity('_wcsnicmp') unknown -> under-pop 0 (caller cleans or frame resync)
+[T8cc0] [API]   -> 0x2019c90
+[T8cc0] [API] [PE32] arity('strcpy') unknown -> under-pop 0 (caller cleans or frame resync)
+[T8cc0] [API]   -> 0x2012d40
+[T8cc0] [API] [PE32] arity('strrchr') unknown -> under-pop 0 (caller cleans or frame resync)
+[T8cc0] [API]   -> 0x2010de0
+[T8cc0] [API] [PE32] arity('atoi') unknown -> under-pop 0 (caller cleans or frame resync)
+[T8cc0] [API]   -> 0x2012610
+[T8cc0] [API] [PE32] arity('strcmp') unknown -> under-pop 0 (caller cleans or frame resync)
+[T8cc0] [API]   -> 0x2023190
+[T8cc0] [API] [PE32] arity('_snwprintf') unknown -> under-pop 0 (caller cleans or frame resync)
+[T8cc0] [API]   -> 0x20bcc40
+[T8cc0] [API] [PE32] arity('_wfopen') unknown -> under-pop 0 (caller cleans or frame resync)
+[T8cc0] [API]   -> 0x2029180
+[T8cc0] [API] [PE32] arity('fgets') unknown -> under-pop 0 (caller cleans or frame resync)
+[T8cc0] [API]   -> 0x20197d0
+[T8cc0] [API] [PE32] arity('sscanf') unknown -> under-pop 0 (caller cleans or frame resync)
+[T8cc0] [API]   -> 0x20897e0
+[T8cc0] [API] [PE32] arity('fclose') unknown -> under-pop 0 (caller cleans or frame resync)
+[T8cc0] [API]   -> 0x20f4200
+[T8cc0] [API] [PE32] arity('_CxxThrowException') unknown -> under-pop 0 (caller cleans or frame resync)
+[T8cc0] [API]   -> 0x2013810
+[T8cc0] [API] [PE32] arity('_itow') unknown -> under-pop 0 (caller cleans or frame resync)
+[T8cc0] [API]   -> 0x2017420
+[T8cc0] [API] [PE32] arity('strstr') unknown -> under-pop 0 (caller cleans or frame resync)
+[T8cc0] [API]   -> 0x2017580
+[T8cc0] [API] [PE32] arity('strchr') unknown -> under-pop 0 (caller cleans or frame resync)
+[T8cc0] [API]   -> 0x2010aa0
+[T8cc0] [API] [PE32] arity('memmove') unknown -> under-pop 0 (caller cleans or frame resync)
+[T8cc0] [API]   -> 0x200aa20
+[T8cc0] [API] [PE32] arity('wcschr') unknown -> under-pop 0 (caller cleans or frame resync)
+[T8cc0] [API]   -> 0x208b580
+[T8cc0] [API] [PE32] arity('wcsncpy') unknown -> under-pop 0 (caller cleans or frame resync)
+[T8cc0] [API]   -> 0x204c310
+[T8cc0] [API] [PE32] arity('_ftime') unknown -> under-pop 0 (caller cleans or frame resync)
+[T8cc0] [API]   -> NULL (not in dispatch table)
+[T8cc0] [API] [PE32] arity('_ftol') unknown -> under-pop 0 (caller cleans or frame resync)
+[T8cc0] [API] [PE32] api '_ftol' (MSVCRT.dll) UNRESOLVED -> stub thunk
+[T8cc0] [API]   -> 0x2014940
+[T8cc0] [API] [PE32] arity('memcpy') unknown -> under-pop 0 (caller cleans or frame resync)
+[T8cc0] [API]   -> 0x2012ad0
+[T8cc0] [API] [PE32] arity('_stricmp') unknown -> under-pop 0 (caller cleans or frame resync)
+[T8cc0] [API]   -> 0x2020af0
+[T8cc0] [API] [PE32] arity('strncpy') unknown -> under-pop 0 (caller cleans or frame resync)
+[T8cc0] [API]   -> 0x2025070
+[T8cc0] [API] [PE32] arity('_wcsupr') unknown -> under-pop 0 (caller cleans or frame resync)
+[T8cc0] [API]   -> 0x208a0d0
+[T8cc0] [API] [PE32] arity('wcscmp') unknown -> under-pop 0 (caller cleans or frame resync)
+[T8cc0] [API]   -> 0x2055d80
+[T8cc0] [API] [PE32] arity('time') unknown -> under-pop 0 (caller cleans or frame resync)
+[T8cc0] [API]   -> 0x2015370
+[T8cc0] [API] [PE32] arity('_wsplitpath') unknown -> under-pop 0 (caller cleans or frame resync)
+[T8cc0] [API]   -> 0x2011b00
+[T8cc0] [API] [PE32] arity('strlen') unknown -> under-pop 0 (caller cleans or frame resync)
+[T8cc0] [API]   -> 0x200aaa0
+[T8cc0] [API] [PE32] arity('wcsncmp') unknown -> under-pop 0 (caller cleans or frame resync)
+[T8cc0] [API]   -> 0x20bc9a0
+[T8cc0] [API] [PE32] arity('free') unknown -> under-pop 0 (caller cleans or frame resync)
+[T8cc0] [API]   -> 0x208e610
+[T8cc0] [API] [PE32] arity('malloc') unknown -> under-pop 0 (caller cleans or frame resync)
+[T8cc0] [API]   -> 0x2012150
+[T8cc0] [API] [PE32] arity('memcmp') unknown -> under-pop 0 (caller cleans or frame resync)
+[T8cc0] [API]   -> 0x20c4ab0
+[T8cc0] [API] [PE32] arity('??2@YAPAXI@Z') unknown -> under-pop 0 (caller cleans or frame resync)
+[T8cc0] [API]   -> 0x200ab60
+[T8cc0] [API] [PE32] arity('wcsstr') unknown -> under-pop 0 (caller cleans or frame resync)
+[T8cc0] [API]   -> 0x2011320
+[T8cc0] [API] [PE32] arity('memset') unknown -> under-pop 0 (caller cleans or frame resync)
+[T8cc0] [API]   -> 0x200aa70
+[T8cc0] [API] [PE32] arity('wcsrchr') unknown -> under-pop 0 (caller cleans or frame resync)
+[T8cc0] [API]   -> 0x2023800
+[T8cc0] [API] [PE32] arity('wcslen') unknown -> under-pop 0 (caller cleans or frame resync)
+[T8cc0] [API]   -> 0x200aae0
+[T8cc0] [API] [PE32] arity('wcscat') unknown -> under-pop 0 (caller cleans or frame resync)
+[T8cc0] [API]   -> 0x200ab20
+[T8cc0] [API] [PE32] arity('wcscpy') unknown -> under-pop 0 (caller cleans or frame resync)
+[T8cc0] [API]   -> 0x2077490
+[T8cc0] [API] [PE32] arity('??3@YAXPAX@Z') unknown -> under-pop 0 (caller cleans or frame resync)
+[T8cc0] [API]   -> 0x200ade0
+[T8cc0] [API] [PE32] arity('__CxxFrameHandler') unknown -> under-pop 0 (caller cleans or frame resync)
+[T8cc0] [API]   -> 0x205f660
+[T8cc0] [API] [PE32] arity('__p__commode') unknown -> under-pop 0 (caller cleans or frame resync)
+[T8cc0] [API]   -> 0x205f4f0
+[T8cc0] [API] [PE32] arity('__p__fmode') unknown -> under-pop 0 (caller cleans or frame resync)
+[T8cc0] [API]   -> 0x205eb40
+[T8cc0] [API] [PE32] arity('__set_app_type') unknown -> under-pop 0 (caller cleans or frame resync)
+[T8cc0] [API] [PE32] imports: 218 resolved, 8 unresolved (thunk page 222 APIs)
+[T8cc0] [API] [PE32] data import _wcmdln -> arena 0x1100c000 (SW-1536b)
+[T8cc0] [API] [PE32] TEB32 @0x10000000 PEB32 @0x10001000 stack 0x3f700000..0x3ff00000 cmdline@0x10003000
+[T8cc0] [API] [PE32] jumping to EP 0x41122c (interpreted i386)
+[T8cc0] [API] [PE32] GUI shims armed (x86 wndproc re-entry via cpu32_call)
+[T8cc0] [API] __set_app_type(2)
+[T8cc0] [API] __p__fmode() = 0x3453340
+[T8cc0] [API] __p__commode() = 0x345333c
+[T8cc0] [API] _initterm(start=0x4150a8, end=0x4150ac)
+[T8cc0] [API] _initterm(start=0x415000, end=0x4150a4)
+[T8cc0] [API] _initterm[PE32]: calling 0x0040688e
+[T8cc0] [API] msvcrt operator new32(8004) -> 11055000
+[T8cc0] [API] msvcrt operator new32(324) -> 11057000
+[T8cc0] [API] msvcrt operator new32(604) -> 11058000
+[T8cc0] [API] _onexit(func=0x4068ae)
+[T8cc0] [API] _initterm[PE32]: calling 0x004068b8
+[T8cc0] [API] _onexit(func=0x4068eb)
+[T8cc0] [API] _initterm[PE32]: calling 0x004068f5
+[T8cc0] [API] _onexit(func=0x406928)
+[T8cc0] [API] _initterm[PE32]: calling 0x00406932
+[T8cc0] [API] _onexit(func=0x406965)
+[T8cc0] [API] _initterm[PE32]: calling 0x0040696f
+[T8cc0] [API] _onexit(func=0x4069a2)
+[T8cc0] [API] _initterm[PE32]: calling 0x004069ac
+[T8cc0] [API] _onexit(func=0x4069df)
+[T8cc0] [API] _initterm[PE32]: calling 0x004069e9
+[T8cc0] [API] _onexit(func=0x406a1c)
+[T8cc0] [API] _initterm[PE32]: calling 0x00406a26
+[T8cc0] [API] _onexit(func=0x406a59)
+[T8cc0] [API] _initterm[PE32]: calling 0x00406a63
+[T8cc0] [API] _onexit(func=0x406a96)
+[T8cc0] [API] _initterm[PE32]: calling 0x00406aa0
+[T8cc0] [API] _onexit(func=0x406ad3)
+[T8cc0] [API] _initterm[PE32]: calling 0x00406add
+[T8cc0] [API] _onexit(func=0x406b10)
+[T8cc0] [API] _initterm[PE32]: calling 0x00406b1a
+[T8cc0] [API] _onexit(func=0x406b4d)
+[T8cc0] [API] _initterm[PE32]: calling 0x00406b57
+[T8cc0] [API] _onexit(func=0x406b8a)
+[T8cc0] [API] _initterm[PE32]: calling 0x00406b94
+[T8cc0] [API] _onexit(func=0x406bc7)
+[T8cc0] [API] _initterm[PE32]: calling 0x00406bd1
+[T8cc0] [API] _onexit(func=0x406c04)
+[T8cc0] [API] _initterm[PE32]: calling 0x00406c0e
+[T8cc0] [API] _onexit(func=0x406c41)
+[T8cc0] [API] _initterm[PE32]: calling 0x00406c4b
+[T8cc0] [API] _onexit(func=0x406c7e)
+[T8cc0] [API] _initterm[PE32]: calling 0x00406c88
+[T8cc0] [API] _onexit(func=0x406cbb)
+[T8cc0] [API] _initterm[PE32]: calling 0x00406cc5
+[T8cc0] [API] _onexit(func=0x406cf8)
+[T8cc0] [API] _initterm[PE32]: calling 0x00406d02
+[T8cc0] [API] _onexit(func=0x406d35)
+[T8cc0] [API] _initterm[PE32]: calling 0x00406d3f
+[T8cc0] [API] _onexit(func=0x406d72)
+[T8cc0] [API] _initterm[PE32]: calling 0x00406d7c
+[T8cc0] [API] _onexit(func=0x406daf)
+[T8cc0] [API] _initterm[PE32]: calling 0x00406db9
+[T8cc0] [API] _onexit(func=0x406dec)
+[T8cc0] [API] _initterm[PE32]: calling 0x00406df6
+[T8cc0] [API] _onexit(func=0x406e29)
+[T8cc0] [API] _initterm[PE32]: calling 0x00406e33
+[T8cc0] [API] _onexit(func=0x406e66)
+[T8cc0] [API] _initterm[PE32]: calling 0x00406e70
+[T8cc0] [API] _onexit(func=0x406ea3)
+[T8cc0] [API] _initterm[PE32]: calling 0x00406ead
+[T8cc0] [API] _onexit(func=0x406ee0)
+[T8cc0] [API] _initterm[PE32]: calling 0x00406eea
+[T8cc0] [API] _onexit(func=0x406f1d)
+[T8cc0] [API] _initterm[PE32]: calling 0x00406f27
+[T8cc0] [API] _onexit(func=0x406f5a)
+[T8cc0] [API] _initterm[PE32]: calling 0x00406f64
+[T8cc0] [API] _onexit(func=0x406f97)
+[T8cc0] [API] _initterm[PE32]: calling 0x00406fa1
+[T8cc0] [API] _onexit(func=0x406fd4)
+[T8cc0] [API] _initterm[PE32]: calling 0x00406fde
+[T8cc0] [API] _onexit(func=0x407011)
+[T8cc0] [API] _initterm[PE32]: calling 0x0040701b
+[T8cc0] [API] _onexit(func=0x40704e)
+[T8cc0] [API] _initterm[PE32]: calling 0x00407058
+[T8cc0] [API] _onexit(func=0x40708b)
+[T8cc0] [API] _initterm[PE32]: calling 0x00407095
+[T8cc0] [API] _onexit(func=0x4070c8)
+[T8cc0] [API] _initterm[PE32]: calling 0x004070d2
+[T8cc0] [API] _onexit(func=0x407105)
+[T8cc0] [API] _initterm[PE32]: calling 0x0040710f
+[T8cc0] [API] _onexit(func=0x407142)
+[T8cc0] [API] _initterm[PE32]: calling 0x0040714c
+[T8cc0] [API] _onexit(func=0x40717f)
+[T8cc0] [API] _initterm[PE32]: calling 0x00407189
+[T8cc0] [API] _onexit(func=0x4071bc)
+[T8cc0] [API] _initterm[PE32]: calling 0x0040c4c8
+[T8cc0] [API] _onexit(func=0x40c4e8)
+[T8cc0] [API] GetStartupInfoW()
+[T8cc0] [API] GetModuleHandleW()
+[T8cc0] [API] GetModuleHandleW()
+[T8cc0] [API] GetProcAddress(module=0xdea00000, name=IsWow64Process2)
+[T8cc0] [API]   -> 0x203a980
+[T8cc0] [API]   -> 0x203a980
+[T8cc0] [API] IsWow64Process2 -> TRUE
+[T8cc0] [API] reg snapshot loaded from /home/z/my-project/workspace/miniwin-engineering/evidence/111r2/idman/sandbox/registry_snapshot.bin
+[T8cc0] [API] RegOpenKeyExW 'HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion' -> handle slot 7
+[T8cc0] [API] RegOpenKeyExW 'HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon' -> handle slot 8
+[T8cc0] [API] RegOpenKeyExW 'HKLM\System\CurrentControlSet\Services\EventLog\Application' -> handle slot 9
+[T8cc0] [API] RegOpenKeyExW 'HKLM\System\CurrentControlSet\Services\EventLog\Security' -> handle slot 10
+[T8cc0] [API] RegOpenKeyExW 'HKLM\System\CurrentControlSet\Services\EventLog\System' -> handle slot 11
+[T8cc0] [API] RegOpenKeyExW 'HKCU\Software\WinRAR\Setup' -> handle slot 12
+[T8cc0] [API] RegOpenKeyExW 'HKCU\Software\Sysinternals\PsLoglist' -> handle slot 13
+[T8cc0] [API] RegOpenKeyExW 'HKCU\Software\Sysinternals\PsInfo' -> handle slot 14
+[T8cc0] [API] RegOpenKeyExW 'HKCU\Software\Sysinternals\PsList' -> handle slot 15
+[T8cc0] [API] RegOpenKeyExW 'HKCU\Software\Sysinternals\PsPasswd' -> handle slot 16
+[T8cc0] [API] RegOpenKeyExW 'HKCU\Software\Sysinternals\PsService' -> handle slot 17
+[T8cc0] [API] RegOpenKeyExW 'HKCU\Software\Sysinternals\Coreinfo' -> handle slot 18
+[T8cc0] [API] RegOpenKeyExW 'HKCU\Software\Sysinternals\RAMMap' -> handle slot 19
+[T8cc0] [API] RegOpenKeyExW 'HKCU\Software\Sysinternals\Process Explorer' -> handle slot 20
+[T8cc0] [API] RegOpenKeyExW 'HKCU\Software\Sysinternals\Process Monitor' -> handle slot 21
+[T8cc0] [API] RegOpenKeyExW 'HKCU\Software\Sysinternals\Autoruns' -> handle slot 22
+[T8cc0] [API] RegOpenKeyExW 'HKCU\Software\Sysinternals\ZoomIt' -> handle slot 23
+[T8cc0] [API] RegOpenKeyExW 'HKCU\Software\Sysinternals\DiskMon' -> handle slot 24
+[T8cc0] [API] RegOpenKeyExW 'HKCU\Software\Sysinternals\BgInfo' -> handle slot 25
+[T8cc0] [API] RegOpenKeyExW 'HKCU\Software\Sysinternals\AdExplorer' -> handle slot 26
+[T8cc0] [API] RegOpenKeyExW 'HKCU\Software\Sysinternals\AdInsight' -> handle slot 27
+[T8cc0] [API] RegOpenKeyExW 'HKCU\Software\Sysinternals\TcpvCon' -> handle slot 28
+[T8cc0] [API] RegOpenKeyExW 'HKCU\Software\Sysinternals\Whois' -> handle slot 29
+[T8cc0] [API] reg seed: Sysinternals EulaAccepted markers seeded
+[T8cc0] [API] RegOpenKeyExW 'HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Perflib' -> handle slot 30
+[T8cc0] [API] RegOpenKeyExW 'HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion' -> handle slot 31
+[T8cc0] [API] RegOpenKeyExW 'HKLM\HARDWARE\DESCRIPTION\System' -> handle slot 32
+[T8cc0] [API] RegOpenKeyExW 'HKLM\HARDWARE\DESCRIPTION\System\CentralProcessor\0' -> handle slot 33
+[T8cc0] [API] RegOpenKeyExW 'HKLM\System\CurrentControlSet\Control\Session Manager\Environment' -> handle slot 34
+[T8cc0] [API] RegOpenKeyExW(miss) 'HKCU\Software\DownloadManager' -> ERROR_PATH_NOT_FOUND
+[T8cc0] [API] SetLastError(3) caller=0x20e1b18
+[T8cc0] [API] RegOpenKeyExW 'HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion' -> handle slot 31
+[T8cc0] [API] RegQueryValueExW args: key=0x90020 name=0x41909c res=(nil) TYPE=(nil) DATA=0x3fefeafc SIZE=0x3fefed04
+[T8cc0] [API] RegQueryValueExW(key=0x90020 'ProgramFilesDir') -> 0 (type=1 size=34 data='C:\Program Files')
+[T8cc0] [API] InitCommonControlsEx(dwICC=0x20) -> TRUE
+[T8cc0] [API] GetModuleFileNameW(cap=260)
+[T8cc0] [API] GetModuleFileNameW out u16len=39 utf8len=39 'C:\Windows\Temp\IDM_Setup_Temp\IDM1.tmp'
+[T8cc0] [API] SetCurrentDirectoryW(/home/z/my-project/workspace/miniwin-engineering/evidence/111r2/idman/sandbox/Windows/Temp/IDM_Setup_Temp)
+[T8cc0] [API] GetSystemDefaultLangID() -> 0x0409 (en-US)
+[T8cc0] [API] GetModuleHandleW()
+[T8cc0] [API] GetProcAddress(module=0xdea00000, name=GetSystemDefaultUILanguage)
+[T8cc0] [API]   -> 0x2088740
+[T8cc0] [API]   -> 0x2088740
+[T8cc0] [API] [PE32] arity('GetSystemDefaultUILanguage') unknown -> under-pop 0 (caller cleans or frame resync)
+[T8cc0] [API] GetProcAddress(module=0xdea00000, name=GetUserDefaultUILanguage)
+[T8cc0] [API]   -> 0x200cd50
+[T8cc0] [API]   -> 0x200cd50
+[T8cc0] [API] GetKeyboardLayoutList() -> 1
+[T8cc0] [API] msvcrt operator new32(16) -> 11059000
+[T8cc0] [API] GetKeyboardLayoutList(1) -> 1 [US]
+[T8cc0] [API] msvcrt operator delete32(0x11059000)
+[T8cc0] [API] [PE32] cpu32_run rc=0 steps=17535 last_eip=0x00000000 esp=0x3fefecf4
+[T8cc0] [API] [PE32] eip-hist: 00407e3e 00407e44 00407e46 00407e4b 00407e4d 00407e4f 00407e55 00407e5d 00407e5e 00407e5f 00407e60 00407e61 
+[T8cc0] [API] SW-1297 validate_fd patch: fingerprint not found (guest unaffected)
+[T8cc0] [API] Jumping to EP=0x0
+[T8cc0] [API] PE32 guest exit code 0
+[T8cc0] [API] Entry point returned 0
+  ]
+}
