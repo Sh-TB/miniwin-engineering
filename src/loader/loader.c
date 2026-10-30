@@ -6530,10 +6530,23 @@ static char* w3_normalize_path(char* p) {
          * dropped; "C:\a\b" and "C:a\b" both land under the cwd. Buffers at
          * every call site are >=1024; output is capped at 1023 bytes. */
         char* r = p + 2;
-        if (*r == '/') r++;
-        char tmp[1024];
-        int k = snprintf(tmp, sizeof(tmp), "%s/%s", g_mw_drive_cwd(), r);
-        if (k > 0) snprintf(p, 1024, "%s", tmp);
+        if (r[0] == '/') {
+            /* SW-1509 (SWEEP-033): host-ABSOLUTE path smuggled behind a
+             * drive prefix. win32_module_path issues "C:\" + path; when the
+             * loader itself was invoked with an absolute path (campaign:
+             * minwin_loader /abs/path/Coreinfo64.exe) GetModuleFileNameA
+             * answers "C:\home\z\..." and the old cwd-prepend turned it
+             * into "<cwd>/home/z/..." -> fopen fail -> every Sysinternals
+             * version banner rendered "(null) v(null) - (null)".
+             * Host-absolute after the drive strip wins as-is. */
+            snprintf(p, 1024, "%s", r);
+        } else {
+            /* SW-1234: relative under the loader process cwd ("C:\a\b" and
+             * "C:a\b" both land under the cwd). */
+            char tmp[1024];
+            int k = snprintf(tmp, sizeof(tmp), "%s/%s", g_mw_drive_cwd(), r);
+            if (k > 0) snprintf(p, 1024, "%s", tmp);
+        }
     }
     /* collapse '//' (not leading) */
     char* w = p;
@@ -12329,8 +12342,16 @@ static void mw_reg_seed_windows(void) {
      * the EULA box when it appears, so pre-accepting in the base image is
      * the same honest state, one step earlier). */
     {
-        static const char* const si_tools[] = { "PsLoglist", "PsInfo", "PsList", "PsPasswd", "PsService" };
-        for (int tsi = 0; tsi < 5; tsi++) {
+        static const char* const si_tools[] = { "PsLoglist", "PsInfo", "PsList", "PsPasswd", "PsService",
+                                                /* SW-1507b (SWEEP-033): corpus tools — under wine these
+                                                 * carried EulaAccepted=1 in the shared prefix (level-0
+                                                 * campaign ran them accepted); coreinfo64 without the
+                                                 * marker dumps the EULA text and exits before its CPU
+                                                 * census. Same honest state, one step earlier. */
+                                                "Coreinfo", "RAMMap", "Process Explorer", "Process Monitor",
+                                                "Autoruns", "ZoomIt", "DiskMon", "BgInfo", "AdExplorer",
+                                                "AdInsight", "TcpvCon", "Whois" };
+        for (int tsi = 0; tsi < 17; tsi++) {
             char sipath[160];
             snprintf(sipath, sizeof(sipath), "Software\\Sysinternals\\%s", si_tools[tsi]);
             void* hk2 = NULL;
@@ -12382,6 +12403,106 @@ static void mw_reg_seed_windows(void) {
             mw_RegSetValueExW(hk, (const wchar_t*)mw_seed_w(wname, MW_REG_VALN, "DevicePath"), 0, 2u /*REG_EXPAND_SZ*/,
                               mw_seed_w(wstr, MW_REG_VALN, "%SystemRoot%\\inf"), (uint32_t)(strlen("%SystemRoot%\\inf") + 1) * 2);
             MW_TRACE("reg seed: HKLM Windows CurrentVersion ProgramFiles skeleton seeded");
+        }
+    }
+    /* SW-1507 (SWEEP-033, Wine contract port — user's level-0 methodology
+     * found the gap): HKLM\HARDWARE\DESCRIPTION\System + CentralProcessor.
+     * wineboot.c create_hardware_registry_keys() (wine-10.0,
+     * programs/wineboot/wineboot.c:859-957) ALWAYS creates these volatile
+     * keys on real Wine and Windows alike: System\Identifier="AT
+     * compatible", CentralProcessor\{0..n} with Identifier
+     * ("Intel64 Family %u Model %u Stepping %u"), VendorIdentifier,
+     * ProcessorNameString, ~MHz (REG_DWORD), plus Session
+     * Manager\Environment PROCESSOR_* / NUMBER_OF_PROCESSORS. Measured
+     * gap: coreinfo64 printed "(null)" CPU lines and exit 1 — its CPU
+     * census is CentralProcessor registry reads returning empty. Data
+     * source = the HOST itself (/proc/cpuinfo), the same honesty level as
+     * wine reading its own SMBIOS. Idempotent like the other seeds. */
+    {
+        char name[96] = {0}, vendor[32] = {0};
+        int fam = 0, model = 0, step = 0, ncpu = 0;
+        double mhz = 0;
+        FILE* ci = fopen("/proc/cpuinfo", "r");
+        if (ci) {
+            char line[256];
+            while (fgets(line, sizeof(line), ci)) {
+                char* colon = strchr(line, ':');
+                if (!colon) continue;
+                char key[64]; uint32_t ki = 0;
+                const char* p = line;
+                while (*p && p < colon && ki + 1 < sizeof(key)) {
+                    if (*p != '\t' && *p != ' ') key[ki++] = *p;
+                    p++;
+                }
+                key[ki] = 0;
+                const char* v = colon + 1;
+                while (*v == ' ') v++;
+                size_t vl = strlen(v);
+                while (vl && (v[vl-1] == '\n' || v[vl-1] == '\r')) vl--;
+                if (!strcmp(key, "processor")) ncpu++;
+                else if (!strcmp(key, "modelname") && !name[0]) {
+                    size_t c = vl < sizeof(name)-1 ? vl : sizeof(name)-1;
+                    memcpy(name, v, c);
+                } else if (!strcmp(key, "vendor_id") && !vendor[0]) {
+                    size_t c = vl < sizeof(vendor)-1 ? vl : sizeof(vendor)-1;
+                    memcpy(vendor, v, c);
+                } else if (!strcmp(key, "cpufamily")) fam = atoi(v);
+                else if (!strcmp(key, "model")) model = atoi(v);
+                else if (!strcmp(key, "stepping")) step = atoi(v);
+                else if (!strcmp(key, "cpuMHz")) mhz = atof(v);
+            }
+            fclose(ci);
+        }
+        if (name[0]) {
+            if (mw_RegOpenKeyExW((void*)0x80000002u, (const wchar_t*)mw_seed_w(wsub, MW_REG_PATHN,
+                    "HARDWARE\\DESCRIPTION\\System"), 0, 0, &hk) != 0) {
+                if (mw_RegCreateKeyExW((void*)0x80000002u, (const wchar_t*)wsub, 0, NULL, 0, 0, NULL, &hk, NULL) == 0) {
+                    mw_RegSetValueExW(hk, (const wchar_t*)mw_seed_w(wname, MW_REG_VALN, "Identifier"), 0, 1u,
+                                      mw_seed_w(wstr, MW_REG_VALN, "AT compatible"), (uint32_t)(strlen("AT compatible") + 1) * 2);
+                }
+            }
+            char cpkey[96];
+            snprintf(cpkey, sizeof(cpkey), "HARDWARE\\DESCRIPTION\\System\\CentralProcessor\\0");
+            if (mw_RegOpenKeyExW((void*)0x80000002u, (const wchar_t*)mw_seed_w(wsub, MW_REG_PATHN, cpkey),
+                                 0, 0, &hk) != 0) {
+                if (mw_RegCreateKeyExW((void*)0x80000002u, (const wchar_t*)wsub, 0, NULL, 0, 0, NULL, &hk, NULL) == 0) {
+                    char idstr[96], *arch64 = vendor[0] ? ((strncmp(vendor, "AuthenticAMD", 12) == 0) ? "AMD64" : "Intel64") : "Intel64";
+                    snprintf(idstr, sizeof(idstr), "%s Family %d Model %d Stepping %d", arch64, fam, model, step);
+                    mw_RegSetValueExW(hk, (const wchar_t*)mw_seed_w(wname, MW_REG_VALN, "Identifier"), 0, 1u,
+                                      mw_seed_w(wstr, MW_REG_VALN, idstr), (uint32_t)(strlen(idstr) + 1) * 2);
+                    if (vendor[0])
+                        mw_RegSetValueExW(hk, (const wchar_t*)mw_seed_w(wname, MW_REG_VALN, "VendorIdentifier"), 0, 1u,
+                                          mw_seed_w(wstr, MW_REG_VALN, vendor), (uint32_t)(strlen(vendor) + 1) * 2);
+                    mw_RegSetValueExW(hk, (const wchar_t*)mw_seed_w(wname, MW_REG_VALN, "ProcessorNameString"), 0, 1u,
+                                      mw_seed_w(wstr, MW_REG_VALN, name), (uint32_t)(strlen(name) + 1) * 2);
+                    uint32_t mhzd = (mhz > 1.0) ? (uint32_t)(mhz + 0.5) : 0u;
+                    mw_RegSetValueExW(hk, (const wchar_t*)mw_seed_w(wname, MW_REG_VALN, "~MHz"), 0, 4u, &mhzd, 4);
+                    MW_TRACE("reg seed: CentralProcessor\\0 seeded (%s, %s, %u MHz)", name, idstr, mhzd);
+                }
+            }
+            if (mw_RegOpenKeyExW((void*)0x80000002u, (const wchar_t*)mw_seed_w(wsub, MW_REG_PATHN,
+                    "System\\CurrentControlSet\\Control\\Session Manager\\Environment"), 0, 0, &hk) != 0) {
+                if (mw_RegCreateKeyExW((void*)0x80000002u, (const wchar_t*)wsub, 0, NULL, 0, 0, NULL, &hk, NULL) == 0) {
+                    char pident[128], plev[16], prev[16], pnproc[16];
+                    const char* arch64 = vendor[0] ? ((strncmp(vendor, "AuthenticAMD", 12) == 0) ? "AMD64" : "Intel64") : "Intel64";
+                    snprintf(pident, sizeof(pident), "%s Family %d Model %d Stepping %d, %s",
+                             arch64, fam, model, step, vendor[0] ? vendor : "Unknown");
+                    snprintf(plev, sizeof(plev), "%d", fam);
+                    snprintf(prev, sizeof(prev), "%04x", (model << 8) | (step & 0xFF));
+                    snprintf(pnproc, sizeof(pnproc), "%d", ncpu > 0 ? ncpu : 1);
+                    mw_RegSetValueExW(hk, (const wchar_t*)mw_seed_w(wname, MW_REG_VALN, "PROCESSOR_ARCHITECTURE"), 0, 1u,
+                                      mw_seed_w(wstr, MW_REG_VALN, "AMD64"), (uint32_t)(strlen("AMD64") + 1) * 2);
+                    mw_RegSetValueExW(hk, (const wchar_t*)mw_seed_w(wname, MW_REG_VALN, "PROCESSOR_IDENTIFIER"), 0, 1u,
+                                      mw_seed_w(wstr, MW_REG_VALN, pident), (uint32_t)(strlen(pident) + 1) * 2);
+                    mw_RegSetValueExW(hk, (const wchar_t*)mw_seed_w(wname, MW_REG_VALN, "PROCESSOR_LEVEL"), 0, 1u,
+                                      mw_seed_w(wstr, MW_REG_VALN, plev), (uint32_t)(strlen(plev) + 1) * 2);
+                    mw_RegSetValueExW(hk, (const wchar_t*)mw_seed_w(wname, MW_REG_VALN, "PROCESSOR_REVISION"), 0, 1u,
+                                      mw_seed_w(wstr, MW_REG_VALN, prev), (uint32_t)(strlen(prev) + 1) * 2);
+                    mw_RegSetValueExW(hk, (const wchar_t*)mw_seed_w(wname, MW_REG_VALN, "NUMBER_OF_PROCESSORS"), 0, 1u,
+                                      mw_seed_w(wstr, MW_REG_VALN, pnproc), (uint32_t)(strlen(pnproc) + 1) * 2);
+                    MW_TRACE("reg seed: Session Manager Environment PROCESSOR_* seeded (ncpu=%d)", ncpu);
+                }
+            }
         }
     }
 }
@@ -25308,6 +25429,26 @@ __attribute__((ms_abi)) uint32_t mw_NtQuerySystemInformation(uint32_t cls, void*
         *(uint64_t*)((uint8_t*)buf + 8)  = ft;  /* CurrentTime */
         if (retlen) *retlen = 44;
         MW_TRACE("NtQuerySystemInformation(TimeOfDayInformation) -> STATUS_SUCCESS");
+        return 0;
+    }
+    /* SW-1508 (SWEEP-033): SystemLogicalProcessorAndGroupInformation (221).
+     * Coreinfo64 GetProcAddress(NtQuerySystemInformation) and queries class
+     * 221 directly — the native form of GetLogicalProcessorInformationEx
+     * (wine-10.0 ntdll/unix/system.c fills both from the same
+     * fill_system_logical_processor_information_ex). Two-pass contract:
+     * NULL/short buffer -> 0xC0000004 + *retlen = needed size. The Win32
+     * RelationAll(-1) fill is reused verbatim (same wire format). */
+    if (cls == 221) {
+        uint32_t need = 0, probe = len;
+        if (!buf) {
+            mw_GetLogicalProcessorInformationEx(-1, NULL, &need);
+            if (retlen) *retlen = need;
+            return NTSTATUS_INFO_LENGTH_CONFLICT_LOCAL;
+        }
+        uint32_t ok = mw_GetLogicalProcessorInformationEx(-1, buf, &probe);
+        if (retlen) *retlen = probe;
+        if (!ok) return NTSTATUS_INFO_LENGTH_CONFLICT_LOCAL;
+        MW_TRACE("NtQuerySystemInformation(LogicalProcessorAndGroup) -> %u bytes", probe);
         return 0;
     }
     /* SWEEP-039 SW-1102a: SystemHandleInformation (class 64) + SystemExtended-
