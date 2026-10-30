@@ -14387,6 +14387,18 @@ __attribute__((ms_abi)) int32_t mw_FormatMessageA(uint32_t flags, const void* sr
 }
 __attribute__((ms_abi)) int32_t mw_FormatMessageW(uint32_t flags, const void* src, uint32_t msgid, uint32_t lang, wchar_t* out, uint32_t cap, void* args) {
     MW_TRACE("FormatMessageW(msgid=%u)", msgid);
+    /* SW-1214 (SWEEP-031): FORMAT_MESSAGE_ALLOCATE_BUFFER (0x100) — out is a
+     * wchar_t** and the API ALLOCATES the string, storing the POINTER at
+     * *(wchar_t**)out. Notepad++ uses this flag; writing out[0] there
+     * corrupts the guest pointer (SIGSEGV at NPP RVA 0xac4d5). */
+    if (flags & 0x100u) {
+        if (out) {
+            uint16_t* s = (uint16_t*)mw_LocalAlloc(0x40 /*LMEM_FIXED*/, 2 * sizeof(uint16_t));
+            if (s) { s[0] = 0; s[1] = 0; }
+            *(uint16_t**)out = s;
+        }
+        return 0;
+    }
     (void)lang; (void)args;
     if (flags & 0x00000400u) {
         const uint16_t* s = (const uint16_t*)src;
@@ -14409,6 +14421,9 @@ __attribute__((ms_abi)) int32_t mw_FormatMessageW(uint32_t flags, const void* sr
         }
     }
     mw_SetLastError(317);
+    /* SW-1214: on failure the Win32 caller still owns a (empty) string —
+     * Notepad++ wcslen()s the buffer unconditionally. */
+    if (out && cap) out[0] = 0;
     return 0;
 }
 __attribute__((ms_abi)) void mw_OutputDebugStringW(const wchar_t* s) {
@@ -16965,20 +16980,41 @@ __attribute__((ms_abi)) int mw_SystemTimeToTzSpecificLocalTime(void* tz, const v
 }
 __attribute__((ms_abi)) int mw_GetDateFormatW(uint32_t locale, uint32_t flags, const void* st,
         const uint16_t* fmt, uint16_t* out, int cap) {
+    /* SW-1213 (SWEEP-031): Win32 contract — lpDate==NULL means "use today".
+     * Notepad++ passes NULL (GetDateFormatEx) and wcslen()s the result; the
+     * old failure-on-NULL left the guest buffer uninitialized -> SIGSEGV
+     * wcslen loop at NPP RVA 0xac4d5. */
     (void)locale; (void)flags; (void)fmt;
-    if (!st || !out || cap < 11) { mw_SetLastError(122); return 0; }
-    const uint16_t* t = (const uint16_t*)st;
-    int n = snprintf((char*)out, (size_t)cap * 2, "%04d-%02d-%02d",
-                     (int)t[0], (int)t[1], (int)t[3]);
+    if (!out || cap < 11) { mw_SetLastError(122); return 0; }
+    int y, m, d;
+    if (st) {
+        const uint16_t* t = (const uint16_t*)st;
+        y = (int)t[0]; m = (int)t[1]; d = (int)t[3];
+    } else {
+        time_t now = time(NULL);
+        struct tm tmv;
+        localtime_r(&now, &tmv);
+        y = tmv.tm_year + 1900; m = tmv.tm_mon + 1; d = tmv.tm_mday;
+    }
+    int n = snprintf((char*)out, (size_t)cap * 2, "%04d-%02d-%02d", y, m, d);
     return n > 0 ? n + 1 : 0; /* chars incl NUL (ASCII in UTF-16 = same count) */
 }
 __attribute__((ms_abi)) int mw_GetTimeFormatW(uint32_t locale, uint32_t flags, const void* st,
         const uint16_t* fmt, uint16_t* out, int cap) {
+    /* SW-1213: lpTime==NULL means "use now" (same Win32 contract as date) */
     (void)locale; (void)flags; (void)fmt;
-    if (!st || !out || cap < 9) { mw_SetLastError(122); return 0; }
-    const uint16_t* t = (const uint16_t*)st;
-    int n = snprintf((char*)out, (size_t)cap * 2, "%02d:%02d:%02d",
-                     (int)t[4], (int)t[5], (int)t[6]);
+    if (!out || cap < 9) { mw_SetLastError(122); return 0; }
+    int hh, mm, ss;
+    if (st) {
+        const uint16_t* t = (const uint16_t*)st;
+        hh = (int)t[4]; mm = (int)t[5]; ss = (int)t[6];
+    } else {
+        time_t now = time(NULL);
+        struct tm tmv;
+        localtime_r(&now, &tmv);
+        hh = tmv.tm_hour; mm = tmv.tm_min; ss = tmv.tm_sec;
+    }
+    int n = snprintf((char*)out, (size_t)cap * 2, "%02d:%02d:%02d", hh, mm, ss);
     return n > 0 ? n + 1 : 0;
 }
 __attribute__((ms_abi)) void mw_RtlUnwind(void* est, void* ip, void* er, uint64_t rax) {
@@ -23701,8 +23737,12 @@ __attribute__((ms_abi)) int32_t mw_MulDiv(int32_t a, int32_t b, int32_t den) {
  * and the subclassed main window painted empty captions. Uses the
  * SW-1264 entry->data conversion on the FindResource handle. */
 __attribute__((ms_abi)) int mw_LoadStringW(void* hinst, uint32_t id, uint16_t* buf, int cch) {
-    if (!buf || cch <= 0) return 0;
-    buf[0] = 0;
+    /* SW-1203b (SWEEP-031): cch==0 is the Win32 READ-ONLY POINTER contract —
+     * buf receives a pointer INTO the resource and the return is the length.
+     * Wine notepad does LoadStringW(hInst, STRING_STATUSBAR, &ptr, 0) and the
+     * merged engine crashed at guest RVA 0x9365 walking the untouched ptr. */
+    if (!buf || cch < 0) return 0;
+    if (cch == 0) buf[0] = 0; /* copy mode writes here; pointer mode rewrites buf */
     if (!mw_main_image_base()) return 0; /* SW-1475: PE32 guests carry RT_STRING too */
     void* hrsrc = w3_res_find(hinst, NULL,
                               (const wchar_t*)(uintptr_t)((id >> 4) + 1),
@@ -23723,6 +23763,11 @@ __attribute__((ms_abi)) int mw_LoadStringW(void* hinst, uint32_t id, uint16_t* b
         p += 2;
         if (p + (size_t)len * 2 > end) return 0;
         if (i == idx) {
+            if (cch == 0) { /* SW-1203b: pointer mode — resource points at the string */
+                *(const uint16_t**)(const void*)buf = (const uint16_t*)p;
+                MW_TRACE("LoadStringW(id=%u cch=0) -> ptr len=%u", id, len);
+                return len;
+            }
             if (!len) {
                 MW_TRACE("LoadStringW(id=%u) -> 0 (empty string)", id);
                 return 0;
@@ -28172,7 +28217,7 @@ __attribute__((ms_abi)) uint32_t mw_GetCurrentDirectoryA(uint32_t len, char* buf
 /* GetCurrentDirectoryW / SetCurrentDirectoryW exist at line ~8160 (wchar_t*
  * engine-native); only the A tail was missing. */
 __attribute__((ms_abi)) int mw_SetCurrentDirectoryA(const char* path) {
-    if (!path || !mw_probe_copy(path, 1, NULL)) { mw_SetLastError(87); return 0; }
+    if (!path || !mw_probe_copy(path, 1, NULL)) { mw_SetLastError(87); return 0; } /* SW-1328 handles NULL-dst */
     snprintf(g_mw_cwd, sizeof(g_mw_cwd), "%.250s", path);
     MW_TRACE("SetCurrentDirectoryA('%s') -> TRUE", g_mw_cwd);
     return 1;
@@ -28180,7 +28225,7 @@ __attribute__((ms_abi)) int mw_SetCurrentDirectoryA(const char* path) {
 
 /* ---- SW-1006: rect math — REAL implementations (pure math, zero risk) ---- */
 typedef struct { int32_t l, t, r, b; } MwRect4;
-static int mw_rc_ok(const void* rc) { return rc && mw_probe_copy(rc, 16, NULL); }
+static int mw_rc_ok(const void* rc) { return rc && mw_probe_copy(rc, 16, NULL); } /* SW-1328 handles NULL-dst */
 __attribute__((ms_abi)) int mw_SetRect(void* rc, int l, int t, int r, int b) {
     if (!mw_rc_ok(rc)) return 0;
     int32_t* p = (int32_t*)rc;
@@ -28452,7 +28497,7 @@ static int mw_scroll_slot(void* h, int bar, int create) {
 }
 __attribute__((ms_abi)) int mw_SetScrollInfo(void* h, int bar, const void* si, int redraw) {
     (void)redraw;
-    if (!si || !mw_probe_copy(si, 8, NULL)) return 0;
+    if (!si || !mw_probe_copy(si, 8, NULL)) return 0; /* SW-1328 */
     int s = mw_scroll_slot(h, bar, 1);
     if (s >= 0) {
         const uint32_t* m = (const uint32_t*)si;
@@ -28480,7 +28525,7 @@ __attribute__((ms_abi)) int mw_GetUpdateRect(void* h, void* rc, int erase) {
 /* ---- SW-1009: menu extensions on the real menu model ---- */
 __attribute__((ms_abi)) int mw_GetMenuInfo(void* h, void* mi) {
     (void)h;
-    if (!mi || !mw_probe_copy(mi, 4, NULL)) return 0;
+    if (!mi || !mw_probe_copy(mi, 4, NULL)) return 0; /* SW-1328 */
     uint32_t* m = (uint32_t*)mi;
     if (m[0] >= 28) { m[2] = 0; m[3] = 0; } /* fMask, dwStyle cleared */
     MW_TRACE("GetMenuInfo -> TRUE");
@@ -38084,6 +38129,26 @@ __attribute__((ms_abi)) uint16_t* mw_PathAppendW(uint16_t* path, const uint16_t*
     return path;
 }
 
+/* SW-1212b (SWEEP-031 reconcile): PathAddExtensionW — Wine shlwapi path.c:
+ * append ext only when the final component has no '.' yet. Notepad++
+ * (real 8.6.9 x64) calls it on its plugin/config paths; the missing import
+ * left the slot stubbed on the merged engine. */
+__attribute__((ms_abi)) int mw_PathAddExtensionW(uint16_t* path, const uint16_t* ext) {
+    if (!path) return 0;
+    int l = sw66_wlen(path);
+    int cut = 0;
+    for (int i = 0; i < l; i++) if (path[i] == '\\' || path[i] == '/') cut = i + 1;
+    for (int i = cut; i < l; i++)
+        if (path[i] == '.') return 1; /* has an extension already */
+    if (ext) {
+        int e = sw66_wlen(ext);
+        for (int i = 0; i < e && l + 1 < 2046; i++) path[l++] = ext[i];
+        path[l] = 0;
+    }
+    MW_TRACE("PathAddExtensionW -> TRUE (added)");
+    return 1;
+}
+
 /* PathStripPathW: keep only the final component (in place). */
 __attribute__((ms_abi)) void mw_PathStripPathW(uint16_t* path) {
     if (!path) return;
@@ -41740,6 +41805,7 @@ ENTRY("GDI32.DLL", "GetCharacterPlacementW",                mw_GetCharacterPlace
     ENTRY("SHLWAPI.dll", "PathIsRelativeW",                     mw_PathIsRelativeW),
     ENTRY("SHLWAPI.dll", "PathRemoveExtensionW",                mw_PathRemoveExtensionW),
     ENTRY("SHLWAPI.dll", "PathStripPathW",                      mw_PathStripPathW),
+    ENTRY("SHLWAPI.dll", "PathAddExtensionW",                   mw_PathAddExtensionW), /* SW-1212b */
     ENTRY("KERNEL32.dll", "QueueUserAPC",                       mw_QueueUserAPC),
     ENTRY("KERNEL32.dll", "RegisterApplicationRestart",         mw_RegisterApplicationRestart),
     ENTRY("USER32.dll", "RemoveClipboardFormatListener",        mw_RemoveClipboardFormatListener),
