@@ -46821,6 +46821,7 @@ static const struct { const char* n; uint32_t b; } g_api32_arity[] = {
      * popped 0 for a 1-arg stdcall, drifting the caller's esp by +4 and
      * failing the /GS cookie compare -> 0xC0000409 fastfail. */
     { "AllowSetForegroundWindow", 4 },
+    { "GetExitCodeThread", 8 }, /* SW-1560b: the IDM parent probes the child thread; 0-pop drifted esp */
     { "GetCurrentProcessId", 0 },
     { "GetCurrentThreadId", 0 },
     { "GetProcessId", 4 },
