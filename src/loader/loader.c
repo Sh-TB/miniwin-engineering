@@ -6520,32 +6520,52 @@ static char* w3_normalize_path(char* p) {
     if (!p) return p;
     for (char* q = p; *q; q++)
         if (*q == '\\') *q = '/';
+    /* SW-1515 (SWEEP-108): \\?\ verbatim prefix = the SAME file. WinRAR's
+     * long-path fallback re-opens its own image as
+     * \\?\C:\Installers\winrar712.exe after the plain form; the old code
+     * fell into the non-drive branch and open("//?/C:/...") ENOENT'd.
+     * Contract: real Windows (and Wine nt_to_unix_layout,
+     * dlls/ntdll/unix/file.c) resolves \\?\C:\a identically to C:\a. */
+    if (p[0] == '/' && p[1] == '/' && p[2] == '?' && p[3] == '/') {
+        if (p[4] == 'U' && p[5] == 'N' && p[6] == 'C' && p[7] == '/') {
+            /* \\?\UNC\server\share -> //server/share (host form kept) */
+            memmove(p, p + 6, strlen(p + 6) + 1);
+        } else {
+            memmove(p, p + 4, strlen(p + 4) + 1); /* -> "C:/..." re-mapped below */
+        }
+    }
     if (((p[0] >= 'A' && p[0] <= 'Z') || (p[0] >= 'a' && p[0] <= 'z')) && p[1] == ':') {
         /* SW-1234 (SWEEP-047): drive prefix -> the loader PROCESS CWD, not
          * the host root. win32_module_path() issues "C:\" + the exe path
-         * relative to the loader's cwd (pslist64's self-version read:
-         * GetModuleFileNameA -> CreateFileA(same path) — the old "/artifacts/..."
-         * absolute-at-host-root mapping could never be opened, so every
-         * Sysinternals banner rendered (null) v(null)). The drive letter is
-         * dropped; "C:\a\b" and "C:a\b" both land under the cwd. Buffers at
+         * relative to the loader's cwd. The drive letter is dropped;
+         * "C:\a\b" and "C:a\b" both land under the cwd. Buffers at
          * every call site are >=1024; output is capped at 1023 bytes. */
-        char* r = p + 2;
-        if (r[0] == '/') {
-            /* SW-1509 (SWEEP-033): host-ABSOLUTE path smuggled behind a
-             * drive prefix. win32_module_path issues "C:\" + path; when the
-             * loader itself was invoked with an absolute path (campaign:
-             * minwin_loader /abs/path/Coreinfo64.exe) GetModuleFileNameA
-             * answers "C:\home\z\..." and the old cwd-prepend turned it
-             * into "<cwd>/home/z/..." -> fopen fail -> every Sysinternals
-             * version banner rendered "(null) v(null) - (null)".
-             * Host-absolute after the drive strip wins as-is. */
-            snprintf(p, 1024, "%s", r);
+        char* r0 = p + 2;               /* unstripped: may start with '/' */
+        char* r = r0 + (r0[0] == '/' ? 1 : 0);
+        /* SW-1515: SW-1234 is the CONTRACT (real Windows: C:\a is always
+         * drive-root-anchored, and the drive root == loader cwd, SW-1234).
+         * SW-1509 (SWEEP-033) made every root-anchored drive path
+         * host-ABSOLUTE — that silently broke the SWEEP-086 WinRAR SFX
+         * self-reopen (CreateFileW('C:\Installers\winrar712.exe') ->
+         * open("/Installers/...") ENOENT -> "Errors encountered" rc=6).
+         * The SW-1509 case survives as a measured fallback: when the
+         * cwd-relative form does not exist but the host-absolute form does
+         * (loader invoked with an absolute exe path: GetModuleFileName
+         * answers 'C:\home\z\...'), keep the host form. stat() probes
+         * disambiguate; create-mode opens (neither exists) stay
+         * cwd-relative per SW-1234. */
+        char tmp[1024];
+        int k = snprintf(tmp, sizeof(tmp), "%s/%s", g_mw_drive_cwd(), r);
+        if (k > 0 && k < (int)sizeof(tmp)) {
+            struct stat st_rel, st_abs;
+            int have_rel = (stat(tmp, &st_rel) == 0);
+            int have_abs = (r0[0] == '/') && (stat(r0, &st_abs) == 0);
+            if (!have_rel && have_abs)
+                snprintf(p, 1024, "%s", r0);  /* SW-1509 measured escape */
+            else
+                snprintf(p, 1024, "%s", tmp); /* SW-1234 contract */
         } else {
-            /* SW-1234: relative under the loader process cwd ("C:\a\b" and
-             * "C:a\b" both land under the cwd). */
-            char tmp[1024];
-            int k = snprintf(tmp, sizeof(tmp), "%s/%s", g_mw_drive_cwd(), r);
-            if (k > 0) snprintf(p, 1024, "%s", tmp);
+            snprintf(p, 1024, "%s", r);
         }
     }
     /* collapse '//' (not leading) */
@@ -8970,9 +8990,19 @@ __attribute__((ms_abi)) void* mw_LoadLibraryExW(const wchar_t* name, void* file,
     return NULL;
 }
 __attribute__((ms_abi)) int mw_FreeLibrary(void* mod) { MW_TRACE("FreeLibrary()"); return 1; }
+__attribute__((ms_abi)) void mw_ExitThread(uint32_t code); /* SW-1518 fwd (def ~10573) */
 __attribute__((ms_abi)) void mw_FreeLibraryAndExitThread(void* mod, uint32_t code) {
     MW_TRACE("FreeLibraryAndExitThread(code=%u)", code);
-    mw_ExitProcess(code);
+    /* SW-1518 (SWEEP-108): real contract = FreeLibrary(mod); ExitThread(code)
+     * — kernelbase/thread.c (Wine): the CALLING THREAD ends, the process
+     * lives. The old mw_ExitProcess mapping killed the whole guest whenever
+     * a worker DLL finished: WinRAR GUI's temp-cleanup thread
+     * (FindFirstFile('Windows\Temp\Rar$*') -> PATH_NOT_FOUND ->
+     * FreeLibraryAndExitThread(0)) tore down the just-painted main window
+     * (rc=0 within ~1s, frames never refreshed). mw_ExitThread = BUG-062
+     * endthreadex path (calling thread only); mw_FreeLibrary is refcount-safe. */
+    mw_FreeLibrary(mod);
+    mw_ExitThread(code);
 }
 
 /* ---- environment ---- */
@@ -11124,9 +11154,18 @@ __attribute__((ms_abi)) void* mw_CreateFileW(const wchar_t* name, uint32_t acces
             MW_TRACE("CreateFileW caller=%s+0x%lx", nm,
                      (unsigned long)(ret - b));
         /* SW-1262: embedded-NUL probe — a path truncated mid-buffer shows up
-         * as u16 NULs past the terminating one. */
+         * as u16 NULs past the terminating one.
+         * SW-1517: the probe MUST index 16-bit units. The parameter is
+         * declared wchar_t* but Linux wchar_t is 4 bytes — the old loop
+         * stepped over PAIRS of UTF-16 chars, read heap garbage past the
+         * string and stopped at arbitrary NUL words: the logged u16len was
+         * fiction (u16len=15 for a 27-char path) and misled the SWEEP-108
+         * SFX decode for an hour. */
         uint32_t wl = 0;
-        while (name[wl] && wl < 520) wl++;
+        {
+            const uint16_t* u16name = (const uint16_t*)name;
+            while (u16name[wl] && wl < 520) wl++;
+        }
         if (wl < 64) {
             char n16[64];
             w3_w16_to_utf8z((const uint16_t*)name, n16, sizeof(n16));
@@ -11693,8 +11732,26 @@ w3_normalize_path(d8);
 __attribute__((ms_abi)) uint32_t mw_GetCurrentDirectoryW(uint32_t cap, wchar_t* out) {
     char cwd[2048];
     if (!getcwd(cwd, sizeof(cwd))) { mw_SetLastError(3); return 0; }
-    if (!out || !cap) return (uint32_t)strlen(cwd) + 1;
-    size_t n = utf8_to_utf16(cwd, out, cap - 1);
+    /* SW-1516 (SWEEP-108): drive-namespace form. Real Windows answers
+     * GetCurrentDirectoryW with 'C:\...' (wine dlls/kernelbase/path.c);
+     * the engine leaked the raw host path ('/home/z/.../sandbox') into the
+     * guest namespace — the WinRAR SFX used it as its install destination
+     * and walked /home creating host dirs. The drive root is the loader
+     * process cwd (SW-1234), so the current dir is 'C:\' + the path
+     * relative to that root; a cwd outside the root keeps the SW-1509
+     * absolute-smuggling form (w3_normalize_path maps it back). */
+    char w32[2048];
+    const char* root = g_mw_drive_cwd();
+    size_t rl = strlen(root);
+    if (strncmp(cwd, root, rl) == 0 && (cwd[rl] == '/' || cwd[rl] == '\0')) {
+        snprintf(w32, sizeof(w32), "C:\\%s", cwd[rl] ? cwd + rl + 1 : "");
+    } else {
+        snprintf(w32, sizeof(w32), "C:\\%s", cwd); /* SW-1515 escape maps it */
+    }
+    for (char* q = w32; *q; q++)
+        if (*q == '/') *q = '\\';
+    if (!out || !cap) return (uint32_t)strlen(w32) + 1;
+    size_t n = utf8_to_utf16(w32, out, cap - 1);
     ((uint16_t*)out)[n] = 0;
     return (uint32_t)n;
 }
@@ -11818,6 +11875,14 @@ static void* find_first_impl(const char* p8, void* data, int wide) {
     snprintf(np8, sizeof(np8), "%s", p8);
     w3_normalize_path(np8);
     p8 = np8;
+    /* SW-1518b (SWEEP-108): the SW-1240 skeleton contract applies to
+     * enumeration too. WinRAR GUI's temp-cleanup thread enumerates
+     * 'Windows\Temp\Rar$*' at startup; C:\Windows\Temp exists on every real
+     * Windows (and every Wine prefix, wineboot skeleton) but the find path
+     * never seeded it — opendir failed ERROR_PATH_NOT_FOUND(3) where real
+     * Windows returns "no matches" (2). The seed is once-per-process and
+     * no-ops for non-/Windows/ paths. */
+    w3_seed_windows_skeleton(np8);
     MW_TRACE("FindFirstFile(%s)", p8);
     if (g_find_count >= 64) { mw_SetLastError(4); return (void*)-1; }
     char dirpart[4096];
@@ -12555,9 +12620,33 @@ __attribute__((ms_abi)) int32_t mw_RegOpenKeyExW(void* key, const wchar_t* sub, 
         uint32_t k = 0;
         while (k + 1 < sizeof(pb) && path[k]) { pb[k] = (char)(path[k] & 0xFF); k++; }
         pb[k] = 0;
-        MW_TRACE("RegOpenKeyExW(miss) '%s' -> ERROR_FILE_NOT_FOUND", pb);
-        mw_SetLastError(2);
-        return 2; /* FILE_NOT_FOUND: honest miss */
+        /* SW-1522 (SWEEP-108): hierarchy-aware miss codes — real Windows
+         * (and Wine advapi32/registry.c) answers ERROR_PATH_NOT_FOUND(3)
+         * when the PARENT of the requested key is missing and
+         * ERROR_FILE_NOT_FOUND(2) only when the parent exists and the leaf
+         * does not. The flat 2 made WinRAR's per-button scan
+         * (HKCU\Software\WinRAR\General\Toolbar\Buttons\*) read every miss
+         * as "this button was deleted" — 160 opens, no default toolbar.
+         * PATH_NOT_FOUND(3) = "no custom toolbar at all" -> WinRAR builds
+         * its default layout and calls TB_ADDBUTTONSW. */
+        int err = 2; /* leaf-miss default (direct root child: root exists) */
+        {
+            int last_bs = -1;
+            for (uint32_t c2 = 0; path[c2]; c2++)
+                if (path[c2] == 0x5C) last_bs = (int)c2; /* '\\' */
+            if (last_bs > 0) {
+                uint16_t anc[MW_REG_PATHN];
+                uint32_t plen = (uint32_t)last_bs;
+                if (plen >= MW_REG_PATHN) plen = MW_REG_PATHN - 1;
+                for (uint32_t c2 = 0; c2 < plen; c2++) anc[c2] = path[c2];
+                anc[plen] = 0;
+                err = (mw_reg_find_path(anc) >= 0) ? 2 : 3;
+            }
+        }
+        MW_TRACE("RegOpenKeyExW(miss) '%s' -> ERROR_%s", pb,
+                 err == 3 ? "PATH_NOT_FOUND" : "FILE_NOT_FOUND");
+        mw_SetLastError(err);
+        return err; /* honest miss, hierarchy-aware (SW-1522) */
     }
     if (result) *result = (void*)(uintptr_t)(MW_REGKEY_BASE | (uintptr_t)(i + 1));
     { /* SW-1503c: log the opened PATH on success too (spin decode) */
@@ -17629,6 +17718,24 @@ typedef struct {
      * stored the NULL as an object pointer -> first virtual call died
      * (mov rax,[rcx]; jmp [rax+0x218], RVA 0x1b2d50). */
     void*    class_proc;
+    /* SW-1520 (SWEEP-108): standard-control CONTENT for the composite
+     * painter — toolbar buttons/labels, statusbar parts/cells, combo items.
+     * Captured on the TB_/SB_/CB_ message paths (mw_commonctl_msg) and
+     * rendered by mw_engine_paint_children. Display-model caps (a real
+     * toolbar can hold hundreds of buttons; the painter shows the first 40). */
+    int      tb_nbtn;
+    int      tb_bw, tb_bh;          /* TB_SETBUTTONSIZE; 0 -> engine default */
+    uint8_t  tb_style[40];          /* BTNS_SEP = 0x01 */
+    int32_t  tb_cmd[40];
+    int32_t  tb_bmp[40];
+    int      tb_stridx[40];         /* tb_pool index, -1 = no label */
+    int      tb_pool_n;
+    uint16_t tb_pool[64][20];
+    int      sb_parts;
+    int32_t  sb_partx[4];
+    uint16_t sb_text[4][80];
+    int      cb_items;
+    uint16_t cb_item[8][48];
 } MwChild;
 static MwChild g_child[MW_CHILD_MAX];
 static uint16_t g_maintitle[128];
@@ -17660,6 +17767,9 @@ static MWWndLong g_wndlong[MW_WNDLONG_MAX];
 static void mw_engine_paint_children(void* hwnd);
 static void mw_surface_dump(const char* kind);
 static const char* mw_wm_name(uint32_t m); /* defined in the pump block */
+/* SW-1520: menu band texts for the composite painter (model lives later in
+ * the file; the painter only consumes top-level item texts). */
+static int mw_menu_band_items(uint16_t out[][32], int maxi);
 
 static int mw_child_slot(void* hwnd) {
     uintptr_t v = (uintptr_t)hwnd;
@@ -17830,8 +17940,251 @@ static void mw_lv_store_text(uint16_t* dst, const uint16_t* src) {
         mw_w16cpy(dst, tmp, MW_LV_TEXTN);
 }
 /* returns 1 with *out set when handled, 0 to fall through */
+/* ---- SW-1520 (SWEEP-108): toolbar/statusbar/combo content + metrics ----
+ * Contracts (winuser.h/commctrl.h; wine include/commctrl.h):
+ *  STATUSBAR: SB_SETTEXTA(0x401) SB_GETTEXTA(0x402) SB_SETPARTS(0x404)
+ *    SB_GETPARTS(0x406) SB_GETRECT(0x40A) SB_SETTEXTW(0x40B) SB_GETTEXTW(0x40D).
+ *    Height = 23px (draws its own bottom-docked cell band); WinRAR's layout
+ *    asked SB_GETRECT and got nothing -> laid the bar 2x2 px.
+ *  TOOLBAR: TB_ADDBUTTONSA(0x414) TB_INSERTBUTTONA(0x415) TB_GETBUTTON(0x417)
+ *    TB_BUTTONCOUNT(0x418) TB_ADDSTRINGA(0x41C) TB_GETITEMRECT(0x41D)
+ *    TB_SETBUTTONSIZE(0x41F) TB_SETBITMAPSIZE(0x420) TB_ADDBITMAP(0x413)
+ *    TB_ADDBUTTONSW(0x444) TB_INSERTBUTTONW(0x443) TB_GETBUTTONSIZE(0x43A)
+ *    TB_ADDSTRINGW(0x44D). Constants VERIFIED against wine
+ *    include/commctrl.h:1200-1247 (TB_ADDBUTTONSW=WM_USER+68,
+ *    TB_INSERTBUTTONW=WM_USER+67, TB_SETBUTTONSIZE=WM_USER+31).
+ *    x64 TBBUTTON = 32B: iBitmap@0 idCommand@4 fsState@8 fsStyle@9
+ *    bReserved[6]@10 dwData@16 iString@24. TB_GETITEMRECT answers the real
+ *    cumulative layout so the GUEST's own WM_SIZE code positions the row.
+ *  COMBOBOX: CB_ADDSTRING(0x143) CB_GETCOUNT(0x146) CB_GETLBTEXT(0x148)
+ *    CB_GETLBTEXTLEN(0x149) CB_GETITEMHEIGHT(0x154). */
+#define MW_SB_H        23   /* real statusbar height px */
+#define MW_TB_BTN_DEF  23   /* default button width px */
+#define MW_TB_H_DEF    21   /* default toolbar band height px */
 typedef __attribute__((ms_abi)) uint32_t (*MW_STREAM_CB)(uintptr_t, uint8_t*, int32_t, int32_t*);
+static int mw_tbbtn_parse(uintptr_t lp, int wide, int32_t* bmp, int32_t* cmd,
+                          uint8_t* st, long long* istr) {
+    if (!lp) return 0;
+    uint8_t b[32];
+    if (wide) {
+        if (!mw_probe_copy((void*)lp, 32, b)) return 0;
+        memcpy(bmp, b, 4); memcpy(cmd, b + 4, 4); *st = b[9];
+        memcpy(istr, b + 24, 8);
+        return 1;
+    }
+    if (!mw_probe_copy((void*)lp, 20, b)) return 0; /* x86 TBBUTTON 20B */
+    memcpy(bmp, b, 4); memcpy(cmd, b + 4, 4); *st = b[9];
+    { int32_t d = 0; memcpy(&d, b + 16, 4); *istr = d; }
+    return 1;
+}
+static int mw_tb_pool_add(MwChild* c, const uint16_t* s) {
+    if (!c || c->tb_pool_n >= 64) return -1;
+    int idx = c->tb_pool_n++;
+    int k = 0;
+    for (; s && s[k] && k < 19; k++) c->tb_pool[idx][k] = s[k];
+    c->tb_pool[idx][k] = 0;
+    return idx;
+}
 static int mw_commonctl_msg(int s, uint32_t msg, uintptr_t wp, long long lp, long long* out) {
+    MwChild* c = &g_child[s];
+    if (mw_child_cls_is(s, "STATUSBAR")) {
+        switch (msg) {
+        case 0x404u: { /* SB_SETPARTS: capture + TRUE (SW-803 contract) */
+            int n = (int)wp; *out = 1;
+            if (n > 4) n = 4;
+            if (lp && n > 0 && mw_probe_copy((void*)(uintptr_t)lp, (size_t)n * 4, c->sb_partx))
+                c->sb_parts = n;
+            return 1;
+        }
+        case 0x401u: case 0x40Bu: { /* SB_SETTEXTA/W: capture cell text */
+            int part = (int)(wp & 0xFFu); *out = 1;
+            if (part > 3) part = 3;
+            if (msg == 0x40Bu) {
+                const uint16_t* t = (const uint16_t*)lp;
+                if (t && mw_probe_copy(t, 158, c->sb_text[part])) {
+                    c->sb_text[part][79] = 0;
+                    if (part >= c->sb_parts) c->sb_parts = part + 1;
+                }
+            } else {
+                const char* t = (const char*)lp;
+                uint16_t tmp[80] = {0};
+                if (t && mw_probe_copy(t, 79, tmp)) {
+                    for (int k = 0; k < 79 && tmp[k]; k++) { /* ANSI -> UTF16 */
+                        uint8_t ch = (uint8_t)(tmp[k] & 0xFF);
+                        tmp[k] = (ch >= 0x20 && ch < 0x7F) ? ch : '?';
+                    }
+                    tmp[79] = 0;
+                    memcpy(c->sb_text[part], tmp, sizeof(tmp));
+                    if (part >= c->sb_parts) c->sb_parts = part + 1;
+                }
+            }
+            return 1;
+        }
+        case 0x406u: { /* SB_GETPARTS */
+            int n = (int)wp; if (n > c->sb_parts) n = c->sb_parts;
+            if (lp && n > 0) memcpy((void*)(uintptr_t)lp, c->sb_partx, (size_t)n * 4);
+            *out = c->sb_parts; return 1;
+        }
+        case 0x40Au: { /* SB_GETRECT: the guest's layout uses this height */
+            *out = 1;
+            if (lp) {
+                int32_t* rct = (int32_t*)(uintptr_t)lp;
+                int part = (int)wp;
+                int left = (part > 0 && part <= c->sb_parts) ? c->sb_partx[part - 1] : 0;
+                int right = (part >= 0 && part < c->sb_parts) ? c->sb_partx[part]
+                            : (c->sb_parts > 0 ? c->sb_partx[c->sb_parts - 1] : 0);
+                if (c->sb_parts == 0 || right <= left) right = 32767;
+                rct[0] = left; rct[1] = 0; rct[2] = right; rct[3] = MW_SB_H;
+            }
+            return 1;
+        }
+        case 0x402u: case 0x40Du: { /* SB_GETTEXTA/W */
+            int part = (int)(wp & 0xFFu); if (part > 3) part = 3;
+            uint16_t* t = c->sb_text[part];
+            if (msg == 0x40Du) {
+                uint16_t* dst = (uint16_t*)(uintptr_t)lp;
+                if (dst) { int k = 0; for (; k < 79 && t[k]; k++) dst[k] = t[k]; dst[k] = 0; }
+            } else {
+                char* dst = (char*)(uintptr_t)lp;
+                if (dst) { int k = 0; for (; k < 79 && t[k]; k++) dst[k] = (char)(t[k] & 0xFF); dst[k] = 0; }
+            }
+            *out = mw_w16len(t); return 1;
+        }
+        }
+    }
+    if (mw_child_cls_is(s, "TOOLBAR")) {
+        switch (msg) {
+        case 0x444u: case 0x414u: { /* TB_ADDBUTTONSW/A */
+            int n = (int)wp; *out = 1;
+            for (int i = 0; i < n && c->tb_nbtn < 40; i++) {
+                int32_t bmp = 0, cmd = 0; uint8_t st = 0; long long istr = 0;
+                if (!mw_tbbtn_parse((uintptr_t)lp + (uintptr_t)i * 32,
+                                    1, &bmp, &cmd, &st, &istr)) break;
+                int bi = c->tb_nbtn++;
+                c->tb_bmp[bi] = bmp; c->tb_cmd[bi] = cmd; c->tb_style[bi] = st;
+                c->tb_stridx[bi] = -1;
+                if (istr > 0xFFFFull) { /* direct string pointer */
+                    uint16_t tmp[20] = {0};
+                    if (mw_probe_copy((void*)(uintptr_t)istr, 38, tmp))
+                        c->tb_stridx[bi] = mw_tb_pool_add(c, tmp);
+                } else if (istr >= 0)
+                    c->tb_stridx[bi] = (int)istr;
+            }
+            return 1;
+        }
+        case 0x443u: case 0x415u: { /* TB_INSERTBUTTONW/A */
+            int32_t bmp = 0, cmd = 0; uint8_t st = 0; long long istr = 0;
+            *out = 1;
+            if (mw_tbbtn_parse((uintptr_t)lp, 1, &bmp, &cmd, &st, &istr) &&
+                c->tb_nbtn < 40) {
+                int bi = c->tb_nbtn++;
+                c->tb_bmp[bi] = bmp; c->tb_cmd[bi] = cmd; c->tb_style[bi] = st;
+                c->tb_stridx[bi] = (istr >= 0 && istr < 0x10000) ? (int)istr : -1;
+            }
+            return 1;
+        }
+        case 0x41Cu: case 0x44Du: { /* TB_ADDSTRINGA/W: pool the labels */
+            *out = c->tb_pool_n; /* returned base index */
+            if (msg == 0x44Du) {
+                const uint16_t* t = (const uint16_t*)lp;
+                while (t && c->tb_pool_n < 64) {
+                    if (!*t) break; /* double-NUL ends the pool */
+                    mw_tb_pool_add(c, t);
+                    while (*t) t++;
+                    t++; /* skip NUL */
+                }
+            } else {
+                const char* t = (const char*)lp;
+                while (t && c->tb_pool_n < 64) {
+                    if (!*t) break;
+                    uint16_t tmp[20] = {0}; int k = 0;
+                    for (; k < 19 && t[k]; k++) {
+                        uint8_t ch = (uint8_t)t[k];
+                        tmp[k] = (ch >= 0x20 && ch < 0x7F) ? ch : '?';
+                    }
+                    mw_tb_pool_add(c, tmp);
+                    t += k + 1;
+                }
+            }
+            return 1;
+        }
+        case 0x418u: *out = c->tb_nbtn; return 1;            /* TB_BUTTONCOUNT */
+        case 0x41Fu: /* TB_SETBUTTONSIZE (wine commctrl.h:1220, WM_USER+31) */
+            c->tb_bw = (int16_t)(lp & 0xFFFFu);
+            c->tb_bh = (int16_t)((lp >> 16) & 0xFFFFu);
+            *out = 1; return 1;
+        case 0x420u: *out = 1; return 1;                     /* TB_SETBITMAPSIZE */
+        case 0x413u: { /* TB_ADDBITMAP: honest monotonic image index */
+            static int tb_bmidx;
+            *out = tb_bmidx++ & 0xFFFFu; return 1;
+        }
+        case 0x43Au: /* TB_GETBUTTONSIZE */
+            *out = (long long)(uint32_t)
+                   (((c->tb_bh ? c->tb_bh : MW_TB_H_DEF) << 16) |
+                    (c->tb_bw ? c->tb_bw : MW_TB_BTN_DEF));
+            return 1;
+        case 0x41Du: { /* TB_GETITEMRECT: cumulative real layout */
+            *out = 1;
+            if (lp) {
+                int32_t* rct = (int32_t*)(uintptr_t)lp;
+                int idx = (int)wp;
+                int bw = c->tb_bw ? c->tb_bw : MW_TB_BTN_DEF;
+                int bh = c->tb_bh ? c->tb_bh : MW_TB_H_DEF;
+                int x = 0;
+                for (int i = 0; i < idx && i < c->tb_nbtn; i++)
+                    x += (c->tb_style[i] & 0x01u) ? 6 : bw;
+                int w = (idx < c->tb_nbtn && (c->tb_style[idx] & 0x01u)) ? 6 : bw;
+                rct[0] = x; rct[1] = 0; rct[2] = x + w; rct[3] = bh;
+            }
+            return 1;
+        }
+        case 0x417u: { /* TB_GETBUTTON: read back the store */
+            *out = 1;
+            int idx = (int)wp;
+            if (lp && idx >= 0 && idx < c->tb_nbtn) {
+                uint8_t b[32] = {0};
+                memcpy(b, &c->tb_bmp[idx], 4);
+                memcpy(b + 4, &c->tb_cmd[idx], 4);
+                b[9] = c->tb_style[idx];
+                long long istr = (c->tb_stridx[idx] >= 0) ? c->tb_stridx[idx] : 0;
+                memcpy(b + 24, &istr, 8);
+                memcpy((void*)(uintptr_t)lp, b, 32);
+            }
+            return 1;
+        }
+        }
+    }
+    if (mw_child_cls_is(s, "COMBOBOX")) {
+        switch (msg) {
+        case 0x143u: case 0x14Au: { /* CB_ADDSTRING / CB_INSERTSTRING */
+            *out = (msg == 0x14Au) ? (long long)(int32_t)wp : (long long)c->cb_items;
+            const uint16_t* t = (const uint16_t*)lp;
+            int slot = (c->cb_items < 8) ? c->cb_items : 7;
+            if (t && mw_probe_copy(t, 94, c->cb_item[slot])) {
+                c->cb_item[slot][47] = 0;
+                if (c->cb_items < 8) c->cb_items++;
+            }
+            return 1;
+        }
+        case 0x146u: *out = c->cb_items; return 1;           /* CB_GETCOUNT */
+        case 0x154u: *out = 14; return 1;                    /* CB_GETITEMHEIGHT */
+        case 0x148u: { /* CB_GETLBTEXT */
+            int idx = (int)wp;
+            uint16_t* dst = (uint16_t*)(uintptr_t)lp;
+            if (dst && idx >= 0 && idx < c->cb_items) {
+                int k = 0;
+                for (; k < 47 && c->cb_item[idx][k]; k++) dst[k] = c->cb_item[idx][k];
+                dst[k] = 0;
+                *out = k;
+            } else *out = 0;
+            return 1;
+        }
+        case 0x149u: /* CB_GETLBTEXTLEN */
+            *out = ((int)wp >= 0 && (int)wp < c->cb_items)
+                   ? (long long)mw_w16len(c->cb_item[(int)wp]) : 0;
+            return 1;
+        }
+    }
     if (mw_child_cls_is(s, "SysListView32")) {
         MwLvState* lv = mw_lv_state(s);
         if (!lv) return 0;
@@ -17864,8 +18217,32 @@ static int mw_commonctl_msg(int s, uint32_t msg, uintptr_t wp, long long lp, lon
             lv->items++;
             *out = (long long)idx; return 1;
         }
-        case 0x101Bu: case 0x1045u: /* LVM_INSERTCOLUMNA/W */
-            *out = (long long)lv->cols++; return 1;
+        case 0x101Bu: case 0x1045u: { /* LVM_INSERTCOLUMNA/W: SW-1520 capture
+             * header text + width (painter draws the real header band) */
+            *out = (long long)lv->cols++;
+            if (lp) {
+                int idx = (int)(int32_t)wp;
+                if (idx < 0 || idx >= MW_LV_MAXCOL) idx = (int)lv->cols - 1;
+                if (idx >= 0 && idx < MW_LV_MAXCOL) {
+                    lv->colw[idx] = *(int32_t*)((uint8_t*)lp + 8);
+                    const void* tp = *(void* const*)((uint8_t*)lp + 16);
+                    if ((*(uint32_t*)lp & 0x1u) && tp) { /* LVCF_TEXT */
+                        if (msg == 0x1045u) {
+                            mw_lv_store_text(lv->coltxt[idx], (const uint16_t*)tp);
+                        } else {
+                            char a[MW_LV_TEXTN];
+                            if (mw_probe_copy(tp, MW_LV_TEXTN - 1, a)) {
+                                int j;
+                                for (j = 0; j < MW_LV_TEXTN - 1 && a[j]; j++)
+                                    lv->coltxt[idx][j] = (uint16_t)(uint8_t)a[j];
+                                lv->coltxt[idx][j] = 0;
+                            }
+                        }
+                    }
+                }
+            }
+            return 1;
+        }
         case 0x1073u: { /* LVM_GETITEMTEXTW: wp=item, lp=LVITEMW */
             *out = 0;
             if (!lp) return 1;
@@ -19350,6 +19727,11 @@ static int mw_sysclass_w(const void* cls) {
          * (SW-803..806). Prefix match: toolbar* / msctls_statusbar32. */
         {"toolbar", 0x86}, {"msctls_statusbar32", 0x87},
         {"statuswindow", 0x87},
+        /* SW-1521 (SWEEP-108): WinRAR's first toolbar container is a rebar
+         * (ReBarWindow32); the TB_ traffic targets the rebar hwnd, so the
+         * rebar carries the TOOLBAR identity (the old fallback minted it
+         * STATUSBAR and the toolbar never got buttons). */
+        {"rebarwindow32", 0x86}, {"msctls_rebar32", 0x86},
         /* SWEEP-019 SW-831..840: common-controls children (NirSoft main
          * lists, MFC trees, property sheets). Before this, a guest-created
          * SysListView32 got sc=0 and fell into the main-window path — the
@@ -19401,6 +19783,11 @@ static int mw_sysclass_a(const void* cls) {
          * (SW-803..806). Prefix match: toolbar* / msctls_statusbar32. */
         {"toolbar", 0x86}, {"msctls_statusbar32", 0x87},
         {"statuswindow", 0x87},
+        /* SW-1521 (SWEEP-108): WinRAR's first toolbar container is a rebar
+         * (ReBarWindow32); the TB_ traffic targets the rebar hwnd, so the
+         * rebar carries the TOOLBAR identity (the old fallback minted it
+         * STATUSBAR and the toolbar never got buttons). */
+        {"rebarwindow32", 0x86}, {"msctls_rebar32", 0x86},
         /* SWEEP-019 SW-831..840: common-controls children (NirSoft main
          * lists, MFC trees, property sheets). Before this, a guest-created
          * SysListView32 got sc=0 and fell into the main-window path — the
@@ -19528,9 +19915,17 @@ static void* mw_child_register(int sc, void* parent, void* menu,
  * answer with the child's OWN rect — sol's statusbar paint used to receive
  * the MAIN window rect (585x384) and PatBlt its gray LTGRAY panel over the
  * whole board (wiping the green felt + the dealt cards). */
+static int mw_menu_band(void); /* SW-1520 fwd: menu NC band height (def after menu model) */
+static void* g_main_hwnd;      /* SW-1520 fwd: menu'd main window (def in GUI block) */
 static void mw_child_set_rect(void* h, int x, int y, int w, int hgt) {
     int s = mw_child_slot(h);
     if (s < 0 || !g_child[s].live) return;
+    /* SW-1520: child coords are CLIENT-relative; the surface covers the
+     * whole window, so children of the menu'd main window shift down by
+     * the menu band (real Windows: the menu lives in the non-client area,
+     * wine user32/menu.c). Dialogs (no menu) are unaffected. */
+    if (g_child[s].parent == MW_GUI_HWND || g_child[s].parent == g_main_hwnd)
+        y += mw_menu_band();
     if (x < 0) x = 0;
     if (y < 0) y = 0;
     if (w < 1) w = 1;
@@ -19592,7 +19987,22 @@ __attribute__((ms_abi)) void* mw_CreateWindowExW(uint32_t exstyle, const void* c
      * Route unknown WS_CHILD+parent creations into the engine child
      * registry (STATUSBAR identity 0x87; the SB_* message model is keyed
      * by child slot, not class code, so SB_SETPARTS still honors it). */
-    if (!sc && (style & 0x40000000u) && parent) sc = 0x87;
+    if (!sc && (style & 0x40000000u) && parent) {
+        /* SW-1521 (SWEEP-108): log the RAW class of every unmatched child —
+         * WinRAR's first toolbar arrives here and was silently minted
+         * STATUSBAR (its TB_ADDSTRINGA traffic then fell into the SB model
+         * and the toolbar never got buttons). */
+        char cn[32] = {0};
+        uint16_t cw[16] = {0};
+        if (cls && mw_probe_copy(cls, 30, cw)) {
+            int ci2;
+            for (ci2 = 0; ci2 < 15 && cw[ci2]; ci2++)
+                cn[ci2] = (cw[ci2] >= 0x20 && cw[ci2] < 0x7F) ? (char)cw[ci2] : '?';
+            cn[ci2] = 0;
+        }
+        MW_TRACE("[GUI] unmatched WS_CHILD class '%s' -> STATUSBAR identity (SW-1521)", cn);
+        sc = 0x87;
+    }
     if (sc && parent) { /* SWEEP-013: child control — engine-internal wndproc */
         (void)exstyle;
         void* ch = mw_child_register(sc, parent, menu, win, 1, NULL);
@@ -19722,7 +20132,15 @@ __attribute__((ms_abi)) void* mw_CreateWindowExA(uint32_t exstyle, const void* c
         return th;
     }
     /* SW-1279 fix B (A path): same unknown-WS_CHILD guard as the W path. */
-    if (!sc && (style & 0x40000000u) && parent) sc = 0x87;
+    if (!sc && (style & 0x40000000u) && parent) {
+        char cn[32] = {0};
+        if (cls && mw_probe_copy(cls, 15, cn)) {
+            for (int ci2 = 0; ci2 < 15; ci2++)
+                if (cn[ci2] && (cn[ci2] < 0x20 || cn[ci2] >= 0x7F)) cn[ci2] = '?';
+        }
+        MW_TRACE("[GUI] unmatched WS_CHILD(A) class '%s' -> STATUSBAR identity (SW-1521)", cn);
+        sc = 0x87;
+    }
     if (sc && parent) { /* SWEEP-013: child control — engine-internal wndproc */
         (void)exstyle;
         void* ch = mw_child_register(sc, parent, menu, win, 0, NULL);
@@ -20164,9 +20582,30 @@ static void mw_engine_paint_children(void* hwnd) {
     for (int i = 0; i < MW_CHILD_MAX; i++)
         if (g_child[i].live && g_child[i].parent == hwnd &&
             g_child[i].rw > 0 && g_child[i].rh > 0) nchild++;
-    if (!nchild) return;
+    int band = mw_menu_band(); /* SW-1520: 20px NC menu band (menu'd windows) */
+    if (!nchild && !band) return;
     int painted = 0;
     mwb_fill(&g_surf, 0, 0, g_surf.w, g_surf.h, 0xC0C0C0); /* dialog face */
+    /* SW-1520: the app menu band — top-level item texts from the RT_MENU
+     * model (File Commands Favorites Options View Help for WinRAR). */
+    if (band) {
+        uint16_t mtxt[16][32];
+        int mitems = mw_menu_band_items(mtxt, 16);
+        int mx = 8;
+        for (int mi = 0; mi < mitems && mx < g_surf.w - 40; mi++) {
+            char mt[24]; int k = 0;
+            for (int j = 0; j < 31 && mtxt[mi][j]; j++) {
+                uint16_t ch = mtxt[mi][j];
+                if (ch == '&') continue; /* accelerator marker hidden */
+                if (k < 23) mt[k++] = (ch >= 0x20 && ch < 0x7F) ? (char)ch : '?';
+            }
+            mt[k] = 0;
+            if (!mt[0]) continue;
+            mwb_text8(&g_surf, mx, 6, mt, 0x000000, 1);
+            mx += mwb_textw(mt, 1) + 24;
+        }
+        mwb_fill(&g_surf, 0, band - 2, g_surf.w, 2, 0x808080); /* band underline */
+    }
     for (int i = 0; i < MW_CHILD_MAX; i++) {
         if (!g_child[i].live || g_child[i].parent != hwnd) continue;
         if (g_child[i].rw <= 0 || g_child[i].rh <= 0) continue;
@@ -20194,13 +20633,127 @@ static void mw_engine_paint_children(void* hwnd) {
             mwb_text8(&g_surf, x + (w - tw8) / 2, y + (h - 8) / 2, label, 0x000000, 1);
         } else if (!strcmp(g_child[i].cls, "STATIC")) {
             mwb_text8(&g_surf, x + 2, y + 2, label, 0x000000, 1);
+        } else if (!strcmp(g_child[i].cls, "TOOLBAR") && g_child[i].tb_nbtn > 0) {
+            /* SW-1520: raised button row with captured labels/glyphs */
+            int bw = g_child[i].tb_bw ? g_child[i].tb_bw : 23;
+            int bh = g_child[i].tb_bh ? g_child[i].tb_bh : 21;
+            if (bh > h) bh = h;
+            mwb_fill(&g_surf, x, y, w, h, 0xC0C0C0);
+            int bx = x + 2;
+            for (int b = 0; b < g_child[i].tb_nbtn && bx + 8 < x + w; b++) {
+                if (g_child[i].tb_style[b] & 0x01u) { bx += 6; continue; } /* BTNS_SEP */
+                mwb_3d(&g_surf, bx, y + 1, bw, bh - 2, 1);
+                /* deterministic mini glyph: icon square + slash */
+                uint32_t gc = 0x404040u + (uint32_t)((g_child[i].tb_cmd[b] * 97) & 0x3Fu) * 0x010101u;
+                mwb_fill(&g_surf, bx + (bw - 12) / 2, y + 1 + (bh - 4 - 12) / 2 + 1, 12, 12, gc);
+                mwb_fill(&g_surf, bx + (bw - 12) / 2 + 2, y + 1 + (bh - 4 - 12) / 2 + 9, 8, 2, 0xFFFFFF);
+                if (g_child[i].tb_stridx[b] >= 0 &&
+                    g_child[i].tb_stridx[b] < g_child[i].tb_pool_n) {
+                    char bl[18]; int kk = 0;
+                    const uint16_t* s = g_child[i].tb_pool[g_child[i].tb_stridx[b]];
+                    for (; kk < 17 && s[kk]; kk++)
+                        bl[kk] = (s[kk] >= 0x20 && s[kk] < 0x7F) ? (char)s[kk] : '?';
+                    bl[kk] = 0;
+                    if (bl[0]) mwb_text8(&g_surf, bx + 2, y + bh - 9, bl, 0x000000, 1);
+                }
+                bx += bw;
+            }
+        } else if (!strcmp(g_child[i].cls, "STATUSBAR")) {
+            /* SW-1520: sunken cell band with captured cell texts */
+            mwb_fill(&g_surf, x, y, w, h, 0xC0C0C0);
+            mwb_fill(&g_surf, x, y, w, 2, 0x808080);
+            mwb_fill(&g_surf, x, y, 2, h, 0x808080);
+            mwb_fill(&g_surf, x, y + h - 2, w, 2, 0xFFFFFF);
+            mwb_fill(&g_surf, x + w - 2, y, 2, h, 0xFFFFFF);
+            int cells = g_child[i].sb_parts > 0 ? g_child[i].sb_parts : 1;
+            int cx0 = x + 2;
+            for (int p2 = 0; p2 < cells && cx0 < x + w - 4; p2++) {
+                int right = (g_child[i].sb_parts > 0 && p2 < g_child[i].sb_parts)
+                            ? x + 2 + g_child[i].sb_partx[p2] : x + w - 2;
+                if (right > x + w - 4) right = x + w - 4;
+                if (right <= cx0 + 8) { cx0 = right; continue; }
+                if (p2 < cells - 1) mwb_fill(&g_surf, right, y + 2, 2, h - 4, 0x808080);
+                char st[40]; int k2 = 0;
+                const uint16_t* s2 = g_child[i].sb_text[p2 > 3 ? 3 : p2];
+                for (; k2 < 39 && s2[k2]; k2++)
+                    st[k2] = (s2[k2] >= 0x20 && s2[k2] < 0x7F) ? (char)s2[k2] : '?';
+                st[k2] = 0;
+                if (st[0]) mwb_text8(&g_surf, cx0 + 4, y + (h - 16) / 2, st, 0x000000, 1);
+                cx0 = right + 2;
+            }
+        } else if (!strcmp(g_child[i].cls, "COMBOBOX")) {
+            /* SW-1520: white field + captured item text + dropdown arrow */
+            mwb_fill(&g_surf, x, y, w, h, 0xFFFFFF);
+            mwb_fill(&g_surf, x, y, w, 2, 0x808080);
+            mwb_fill(&g_surf, x, y, 2, h, 0x808080);
+            mwb_fill(&g_surf, x, y + h - 2, w, 2, 0xFFFFFF);
+            mwb_fill(&g_surf, x + w - 2, y, 2, h, 0xFFFFFF);
+            char ct[30]; int k3 = 0;
+            const uint16_t* s3 = (g_child[i].cb_items > 0)
+                                 ? g_child[i].cb_item[0] : g_child[i].text;
+            for (; k3 < 29 && s3[k3]; k3++)
+                ct[k3] = (s3[k3] >= 0x20 && s3[k3] < 0x7F) ? (char)s3[k3] : '?';
+            ct[k3] = 0;
+            if (ct[0]) mwb_text8(&g_surf, x + 6, y + (h - 16) / 2, ct, 0x000000, 1);
+            int aw = 14; int ax = x + w - aw - 2;
+            if (ax > x + 20) {
+                mwb_3d(&g_surf, ax, y + 2, aw, h - 4, 1);
+                int triy = y + h / 2 - 2;
+                for (int t = 0; t < 5; t++)
+                    mwb_fill(&g_surf, ax + 4 + t, triy + t, 1, 1, 0x000000);
+                for (int t = 0; t < 5; t++)
+                    mwb_fill(&g_surf, ax + 8 - t, triy + t, 1, 1, 0x000000);
+            }
+        } else if (!strcmp(g_child[i].cls, "SysListView32")) {
+            /* SW-1520: sunken white pane + real header band + item rows */
+            MwLvState* lv = mw_lv_state(i);
+            mwb_fill(&g_surf, x, y, w, h, 0xFFFFFF);
+            mwb_fill(&g_surf, x, y, w, 2, 0x808080);
+            mwb_fill(&g_surf, x, y, 2, h, 0x808080);
+            mwb_fill(&g_surf, x, y + h - 2, w, 2, 0xFFFFFF);
+            mwb_fill(&g_surf, x + w - 2, y, 2, h, 0xFFFFFF);
+            int hy = y + 2;
+            int hx = x + 2;
+            int cols = lv ? (int)lv->cols : 0;
+            if (cols <= 0) cols = 1;
+            for (int ci = 0; ci < cols && hx < x + w - 8; ci++) {
+                int cw = (lv && lv->colw[ci] > 10) ? lv->colw[ci] : 100;
+                if (hx + cw > x + w - 4) cw = x + w - 4 - hx;
+                if (cw < 8) break;
+                mwb_3d(&g_surf, hx, hy, cw - 1, 18, 1);
+                char ht[24]; int k4 = 0;
+                const uint16_t* s4 = (lv && cols > 0) ? lv->coltxt[ci] : NULL;
+                for (; k4 < 23 && s4 && s4[k4]; k4++)
+                    ht[k4] = (s4[k4] >= 0x20 && s4[k4] < 0x7F) ? (char)s4[k4] : '?';
+                ht[k4] = 0;
+                if (ht[0]) mwb_text8(&g_surf, hx + 4, hy + 5, ht, 0x000000, 1);
+                hx += cw;
+            }
+            int ry2 = hy + 18;
+            int rows = lv ? (int)lv->items : 0;
+            if (rows > (h - (ry2 - y)) / 12) rows = (h - (ry2 - y)) / 12;
+            for (int r2 = 0; r2 < rows; r2++) {
+                for (int sub = 0; sub < 2; sub++) {
+                    char it[32]; int k5 = 0;
+                    const uint16_t* s5 = lv->txt[r2][sub];
+                    for (; k5 < 31 && s5[k5]; k5++)
+                        it[k5] = (s5[k5] >= 0x20 && s5[k5] < 0x7F) ? (char)s5[k5] : '?';
+                    it[k5] = 0;
+                    if (!it[0]) continue;
+                    int ix = x + 6;
+                    if (sub == 1 && lv->colw[0] > 10) ix = x + 6 + lv->colw[0];
+                    mwb_text8(&g_surf, ix, ry2 + 2 + r2 * 12, it, 0x000000, 1);
+                }
+                mwb_fill(&g_surf, x + 2, ry2 + 2 + r2 * 12 + 10, w - 4, 1, 0xF0F0F0);
+            }
         } else {
             mwb_3d(&g_surf, x, y, w, h, 1);
         }
         painted++;
     }
-    if (painted) {
-        MW_TRACE("[GUI] composite paint: %d standard controls (SW-1266)", painted);
+    if (painted || band) {
+        MW_TRACE("[GUI] composite paint: %d standard controls + menu=%d (SW-1266/1520)",
+                 painted, band);
         mw_surface_dump("UpdateWindow");
     }
 }
@@ -20839,8 +21392,11 @@ static void mw_gui_send_size_sync(int w, int h, const char* tag) {
     if (g_in_size_sync) return;
     if (w == g_last_sw && h == g_last_sh) return;
     g_in_size_sync = 1;
+    /* SW-1520: WM_SIZE lParam carries the CLIENT size (winuser.h) — the
+     * menu band is non-client and excluded on the menu'd main window. */
+    int hcl = h - mw_menu_band(); if (hcl < 1) hcl = 1;
     long long sr = dp(g_main_hwnd, 0x0005u, 0,
-                      (long long)(uint32_t)((w & 0xFFFFu) | ((h & 0xFFFFu) << 16)));
+                      (long long)(uint32_t)((w & 0xFFFFu) | ((hcl & 0xFFFFu) << 16)));
     g_in_size_sync = 0;
     g_last_sw = w; g_last_sh = h;
     g_size_pending = 0; /* delivered synchronously */
@@ -21806,7 +22362,10 @@ __attribute__((ms_abi)) int mw_GetClientRect(void* hwnd, void* rect) {
             r[2] = g_child[s].rx + g_child[s].rw;
             r[3] = g_child[s].ry + g_child[s].rh;
         } else {
-            r[0] = 0; r[1] = 0; r[2] = g_win_w; r[3] = g_win_h;
+            /* SW-1520: the menu band is non-client — real Windows client
+             * rect excludes it (wine user32/menu.c GetClientRect). */
+            r[0] = 0; r[1] = 0; r[2] = g_win_w;
+            r[3] = g_win_h - mw_menu_band();
         }
     }
     {
@@ -24631,6 +25190,25 @@ static int mw_menu_slot(void* menu) {
     if ((v & 0xFFFF0000u) != MW_MENU_BASE) return -1;
     int i = (int)(v & 0xFFFFu) - 1;
     return (i >= 0 && i < MW_MENU_NSLOT && g_menus[i].live) ? i : -1;
+}
+/* SW-1520 (SWEEP-108): the main menu renders as a 20px non-client band;
+ * the client begins below it (GetClientRect/WM_SIZE/child rects honor it
+ * via the mw_menu_band() call sites). 0 when no menu is attached. */
+#define MW_MENU_BAND_PX 20
+static int mw_menu_band(void) {
+    int slot = mw_menu_slot(g_main_menu);
+    if (slot < 0 || g_menus[slot].popup || g_menus[slot].count == 0) return 0;
+    return MW_MENU_BAND_PX;
+}
+/* SW-1520: top-level item texts of the MAIN menu for the painter. */
+static int mw_menu_band_items(uint16_t out[][32], int maxi) {
+    int slot = mw_menu_slot(g_main_menu);
+    if (slot < 0 || !out) return 0;
+    int n = (int)g_menus[slot].count;
+    if (n > maxi) n = maxi;
+    for (int i = 0; i < n; i++)
+        for (int k = 0; k < 32; k++) out[i][k] = g_menus[slot].item[i].txt[k];
+    return n;
 }
 static void* mw_menu_alloc(int popup) {
     for (int i = 0; i < MW_MENU_NSLOT; i++) {
@@ -28575,11 +29153,26 @@ __attribute__((ms_abi)) void* mw_OpenFileMappingA(uint32_t access, int inherit, 
  * A real store beats returning failure: get/set round-trip. */
 static char g_mw_cwd[260] = "C:\\miniwin"; /* MAX_PATH without winnt.h */
 __attribute__((ms_abi)) uint32_t mw_GetCurrentDirectoryA(uint32_t len, char* buf) {
-    uint32_t need = (uint32_t)strlen(g_mw_cwd) + 1;
+    /* SW-1516: same drive-namespace plane as the W variant (one cwd, one
+     * form). The old virtual 'C:\miniwin' phantom contradicted the real
+     * chdir the W variant performs; guests mixing A and W probes saw two
+     * different current directories. */
+    char cwd[2048];
+    if (!getcwd(cwd, sizeof(cwd))) { mw_SetLastError(3); return 0; }
+    char a8[2048];
+    const char* root = g_mw_drive_cwd();
+    size_t rl = strlen(root);
+    if (strncmp(cwd, root, rl) == 0 && (cwd[rl] == '/' || cwd[rl] == '\0'))
+        snprintf(a8, sizeof(a8), "C:\\%s", cwd[rl] ? cwd + rl + 1 : "");
+    else
+        snprintf(a8, sizeof(a8), "C:\\%s", cwd);
+    for (char* q = a8; *q; q++)
+        if (*q == '/') *q = '\\';
+    uint32_t need = (uint32_t)strlen(a8) + 1;
     if (!buf) return need;
     if (len < need) return need;
-    memcpy(buf, g_mw_cwd, need);
-    MW_TRACE("GetCurrentDirectoryA -> '%s'", g_mw_cwd);
+    memcpy(buf, a8, need);
+    MW_TRACE("GetCurrentDirectoryA -> '%s'", a8);
     return need - 1;
 }
 /* GetCurrentDirectoryW / SetCurrentDirectoryW exist at line ~8160 (wchar_t*
