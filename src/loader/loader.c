@@ -28,6 +28,7 @@
 #include <ctype.h>
 #include <stdarg.h>
 #include <pthread.h>
+#include <png.h> /* SW-1546 (SWEEP-110): real PNG codec — WinRAR 7.x toolbar button images are PNG resources decoded through IStream + GdipCreateBitmapFromStream */
 #include <wchar.h>
 #include <dlfcn.h>
 
@@ -9806,7 +9807,8 @@ __attribute__((ms_abi)) void* mw_GlobalAlloc(uint32_t flags, size_t bytes) {
         return (void*)(uintptr_t)va;
     }
     void* p = (flags & 0x40) ? calloc(1, bytes ? bytes : 1) : malloc(bytes ? bytes : 1);
-    MW_TRACE("GlobalAlloc(flags=%u, bytes=0x%lx) = %p", flags, (unsigned long)bytes, p);
+    MW_TRACE("GlobalAlloc(flags=%u, bytes=0x%lx) = %p caller=%p", flags, (unsigned long)bytes, p,
+             __builtin_return_address(0)); /* SW-1546 probe: caller VA decodes the executing call site */
     w3_reg_add(p);
     return p;
 }
@@ -9814,7 +9816,9 @@ __attribute__((ms_abi)) void* mw_GlobalAlloc(uint32_t flags, size_t bytes) {
  * (fixed pointers pass through unchanged, as before). */
 __attribute__((ms_abi)) void* mw_GlobalLock(void* p) {
     void* base = mw_ghandle_base_of(p);
-    return base ? base : p;
+    void* r = base ? base : p;
+    MW_TRACE("GlobalLock(%p) -> %p (SW-1546 probe)", p, r); /* SW-1546: was silent — the WinRAR toolbar decode needed it visible */
+    return r;
 }
 __attribute__((ms_abi)) int mw_GlobalUnlock(void* p) { return 1; }
 __attribute__((ms_abi)) size_t mw_GlobalSize(void* p) {
@@ -15243,7 +15247,9 @@ __attribute__((ms_abi)) void* mw_LockResource(void* hrsrc) {
 }
 __attribute__((ms_abi)) uint32_t mw_SizeofResource(void* hmod, void* hrsrc) {
     if (!hrsrc) return 0;
-    return *(const uint32_t*)((const uint8_t*)hrsrc + 4); /* DATA_ENTRY.Size */
+    uint32_t r = *(const uint32_t*)((const uint8_t*)hrsrc + 4); /* DATA_ENTRY.Size */
+    MW_TRACE("SizeofResource(%p) -> %u (SW-1546 probe)", hrsrc, r);
+    return r;
 }
 __attribute__((ms_abi)) int mw_FreeResource(void* hrsrc) { (void)hrsrc; return 1; }
 __attribute__((ms_abi)) int mw_EnumResourceNamesW(void* hmod, const wchar_t* type, void* cb, long param) {
@@ -21346,6 +21352,36 @@ static const char* mw_wm_name(uint32_t m) {
     case 0x0100u: return "WM_KEYDOWN";
     case 0x0102u: return "WM_CHAR";
     case 0x0113u: return "WM_TIMER";
+    /* SW-1545 (SWEEP-110): comctl TB_* ids (commctrl.h, WM_USER+n) seen on
+     * the child-control channels — decodable names instead of WM_? traces. */
+    case 0x404u: return "TB_HIDEBUTTON/SB_SETPARTS";
+    case 0x409u: return "TB_ISBUTTONHIGHLIGHTED";
+    case 0x411u: return "TB_SETSTATE";
+    case 0x412u: return "TB_GETSTATE";
+    case 0x413u: return "TB_ADDBITMAP";
+    case 0x414u: return "TB_ADDBUTTONSA";
+    case 0x415u: return "TB_INSERTBUTTONA";
+    case 0x416u: return "TB_DELETEBUTTON";
+    case 0x417u: return "TB_GETBUTTON";
+    case 0x418u: return "TB_BUTTONCOUNT";
+    case 0x419u: return "TB_COMMANDTOINDEX";
+    case 0x41Bu: return "TB_CUSTOMIZE";
+    case 0x41Cu: return "TB_GETBUTTONTEXT?"; /* 0x41B/0x41C pairs vary; raw id below */
+    case 0x41Du: return "TB_GETITEMRECT";
+    case 0x41Eu: return "TB_BUTTONSTRUCTSIZE";
+    case 0x41Fu: return "TB_SETBUTTONSIZE";
+    case 0x420u: return "TB_SETBUTTONWIDTH";
+    case 0x427u: return "TB_GETRECT";
+    case 0x430u: return "TB_SETIMAGELIST";
+    case 0x431u: return "TB_GETIMAGELIST";
+    case 0x432u: return "TB_LOADIMAGES";
+    case 0x43Au: return "TB_GETBUTTONSIZE";
+    case 0x43Bu: return "TB_SETMAXTEXTROWS";
+    case 0x446u: return "TB_SETDRAWTEXTFLAGS";
+    case 0x443u: return "TB_INSERTBUTTONW";
+    case 0x444u: return "TB_ADDBUTTONSW";
+    case 0x454u: return "TB_SETEXTENDEDSTYLE";
+    case 0x455u: return "TB_GETEXTENDEDSTYLE";
     default: return "WM_?";
     }
 }
@@ -29381,15 +29417,12 @@ __attribute__((ms_abi)) uint32_t mw_SetCurrentProcessExplicitAppUserModelID(cons
     return 0; /* S_OK */
 }
 
-/* gdiplus!Gdip* — no GDI+ object model exists; honest GpStatus failures.
- * GdipCreateBitmapFromStream: no image decoders are wired, so any stream
- * fails GenericError (1) with *bitmap = NULL — identical to GDI+ without
- * the PNG/JPEG codecs registered. Getters on an invalid image return
- * InvalidParameter (2), the real contract for a NULL image. */
+/* gdiplus!Gdip* — SW-1546: the bitmap-from-stream path is REAL now
+ * (PNG codec via libpng + IStream drain; see the SW-1546 block at the
+ * GDI+ object store). Other codecs stay honest GenericError. */
+static uint32_t mw_gdip_bmp_from_stream(void* stream, void** bitmap);
 __attribute__((ms_abi)) uint32_t mw_GdipCreateBitmapFromStream(void* stream, void** bitmap) {
-    if (bitmap) *bitmap = NULL;
-    MW_TRACE("GdipCreateBitmapFromStream(%p) -> GenericError (no codecs)", stream);
-    return 1;
+    return mw_gdip_bmp_from_stream(stream, bitmap);
 }
 /* SW-1320: real image objects — routed to helpers defined in the GDI+ block */
 static uint32_t mw_gdimg_size(void* img, uint32_t* w, uint32_t* h);
@@ -33931,10 +33964,148 @@ __attribute__((ms_abi)) uint32_t mw_CLSIDFromString(const uint16_t* str, void* c
     if (bit < 8 * 2) return 0x80004005u;
     return 0; /* S_OK */
 }
-__attribute__((ms_abi)) uint32_t mw_CreateStreamOnHGlobal(void* hglobal, int del, void** ppstm) {
+/* 32 MB stream-drain cap (PNG toolbar images are 2-40 KB) */
+#define MW_PNG_STREAM_MAX (32u * 1024u * 1024u)
+/* ---- real IStream over an in-memory buffer (wine ole32/istream.c) ---- */
+typedef struct {
+    void**  vtbl;
+    int32_t refcnt;
+    uint8_t* base;      /* buffer start (owned copy when owned=1) */
+    size_t  size;
+    size_t  pos;
+    int     del_on_release; /* GlobalFree(hglobal) at final Release */
+    void*   hglobal;
+} MwIStream;
+__attribute__((ms_abi)) static long mw_istream_qi(void* self, const void* iid, void** out) {
+    if (out) *out = NULL;
+    if (!iid || !out) return 0x80004003L; /* E_POINTER */
+    const uint32_t* g = (const uint32_t*)iid;
+    /* GUID in memory: g[0]=Data1, g[1]=Data2|Data3, g[2]=Data4[0..3] LE,
+     * g[3]=Data4[4..7] LE. IID_IUnknown {00000000-0000-0000-C000-...046}:
+     * g[0]=0, g[1]=0, g[2]=0x000000C0, g[3]=0x46000000. */
+    if (g[0] == 0x00000000u && g[1] == 0x00000000u &&
+        g[2] == 0x000000C0u && g[3] == 0x46000000u) { *out = self; return 0; }
+    /* IID_IStream {0000000C-0000-0000-C000-...046} */
+    if (g[0] == 0x0000000Cu && g[1] == 0x00000000u &&
+        g[2] == 0x000000C0u && g[3] == 0x46000000u) { *out = self; return 0; }
+    /* IID_ISequentialStream {0C733A30-2A1C-11CE-ADE5-00AA0044773D} */
+    if (g[0] == 0x0C733A30u && g[1] == 0x11CE2A1Cu &&
+        g[2] == 0x00ADE500u && g[3] == 0x3D777700u) { *out = self; return 0; }
+    return 0x80004002L; /* E_NOINTERFACE */
+}
+__attribute__((ms_abi)) static uint32_t mw_istream_addref(void* self) {
+    MwIStream* s = (MwIStream*)self;
+    return (uint32_t)++s->refcnt;
+}
+__attribute__((ms_abi)) static uint32_t mw_istream_release(void* self) {
+    MwIStream* s = (MwIStream*)self;
+    if (--s->refcnt > 0) return (uint32_t)s->refcnt;
+    if (s->del_on_release && s->hglobal)
+        mw_GlobalFree(s->hglobal); /* fDeleteOnRelease contract */
+    free(s->base);
+    free(s);
+    return 0;
+}
+__attribute__((ms_abi)) static long mw_istream_read(void* self, void* pv, uint32_t cb, uint32_t* read) {
+    MwIStream* s = (MwIStream*)self;
+    if (read) *read = 0;
+    if (!pv) return 0x80004003L; /* E_POINTER */
+    size_t n = s->size - s->pos;
+    if (n > cb) n = cb;
+    memcpy(pv, s->base + s->pos, n);
+    s->pos += n;
+    if (read) *read = (uint32_t)n;
+    return 0; /* S_OK (S_FALSE on 0 bytes is also legal; callers check *read) */
+}
+__attribute__((ms_abi)) static long mw_istream_write(void* self, const void* pv, uint32_t cb, uint32_t* written) {
+    (void)self; (void)pv;
+    if (written) *written = 0;
+    return 0x80004001L; /* E_NOTIMPL: read-only stream (toolbar images) */
+}
+__attribute__((ms_abi)) static long mw_istream_seek(void* self, int64_t move, uint32_t origin, uint64_t* newpos) {
+    MwIStream* s = (MwIStream*)self;
+    int64_t np;
+    switch (origin) {
+        case 0: np = move; break;                                  /* STREAM_SEEK_SET */
+        case 1: np = (int64_t)s->pos + move; break;                /* STREAM_SEEK_CUR */
+        case 2: np = (int64_t)s->size + move; break;               /* STREAM_SEEK_END */
+        default: return 0x80070057L; /* STG_E_INVALIDFUNCTION */
+    }
+    if (np < 0 || (uint64_t)np > s->size) return 0x80070057L;      /* STG_E_INVALIDPOINTER-ish */
+    s->pos = (size_t)np;
+    if (newpos) *newpos = (uint64_t)np;
+    return 0;
+}
+__attribute__((ms_abi)) static long mw_istream_setsize(void* self, uint64_t sz) {
+    MwIStream* s = (MwIStream*)self;
+    if (sz < s->size) s->size = (size_t)sz; /* grow unsupported: read-only */
+    return 0;
+}
+__attribute__((ms_abi)) static long mw_istream_copyto(void* self, void* other, uint64_t cb, uint64_t* rd, uint64_t* wr) {
+    (void)self; (void)other; (void)cb;
+    if (rd) *rd = 0;
+    if (wr) *wr = 0;
+    return 0x80004001L; /* E_NOTIMPL */
+}
+__attribute__((ms_abi)) static long mw_istream_commit(void* self, uint32_t flags) { (void)self; (void)flags; return 0; }
+__attribute__((ms_abi)) static long mw_istream_revert(void* self) { (void)self; return 0; }
+__attribute__((ms_abi)) static long mw_istream_lockregion(void* self, uint64_t a, uint64_t b, uint32_t c) {
+    (void)self; (void)a; (void)b; (void)c; return 0;
+}
+__attribute__((ms_abi)) static long mw_istream_unlockregion(void* self, uint64_t a, uint64_t b, uint32_t c) {
+    (void)self; (void)a; (void)b; (void)c; return 0;
+}
+__attribute__((ms_abi)) static long mw_istream_stat(void* self, void* statstg, uint32_t flag) {
+    MwIStream* s = (MwIStream*)self;
+    if (!statstg) return 0x80004003L;
+    memset(statstg, 0, 80); /* STATSTG x64 with CLSID + tail = 80 bytes */
+    if (!(flag & 1)) { /* STATFLAG_DEFAULT asks for the name — we pass none
+                        * (allocated names would leak; guests only need size) */
+    }
+    *(uint32_t*)((uint8_t*)statstg + 8) = 2;            /* STGTY_STREAM */
+    *(uint64_t*)((uint8_t*)statstg + 16) = (uint64_t)s->size;
+    return 0;
+}
+__attribute__((ms_abi)) static long mw_istream_clone(void* self, void** ppstm) {
     if (ppstm) *ppstm = NULL;
-    (void)hglobal; (void)del;
-    return 0x80004005u; /* E_FAIL — honest: no IStream marshal host-side */
+    return 0x80004001L; /* E_NOTIMPL */
+}
+static void* const g_istream_vtbl[14] = {
+    (void*)mw_istream_qi, (void*)mw_istream_addref, (void*)mw_istream_release,
+    (void*)mw_istream_read, (void*)mw_istream_write, (void*)mw_istream_seek,
+    (void*)mw_istream_setsize, (void*)mw_istream_copyto, (void*)mw_istream_commit,
+    (void*)mw_istream_revert, (void*)mw_istream_lockregion, (void*)mw_istream_unlockregion,
+    (void*)mw_istream_stat, (void*)mw_istream_clone,
+};
+
+__attribute__((ms_abi)) uint32_t mw_CreateStreamOnHGlobal(void* hglobal, int del, void** ppstm) {
+    /* SW-1546 (SWEEP-110): REAL IStream over the HGLOBAL contents — the old
+     * E_FAIL stub was the silent root blocker of the WinRAR 7 toolbar: the
+     * guest allocates the PNG bytes, CreateStreamOnHGlobal fails, the guest
+     * frees the buffer and skips the button (trace: GlobalAlloc(flags=2)
+     * -> GlobalFree with zero engine calls between). Wine parallel:
+     * ole32/istream.c create_stream_on_hglobal. */
+    if (ppstm) *ppstm = NULL;
+    if (!hglobal) { if (ppstm) *ppstm = NULL; return 0x80070057u; /* E_INVALIDARG */ }
+    uint8_t* base = (uint8_t*)mw_GlobalLock(hglobal);
+    if (!base) return 0x8007000Eu; /* E_OUTOFMEMORY */
+    size_t sz = mw_GlobalSize(hglobal);
+    if (sz == 0 || sz > MW_PNG_STREAM_MAX) sz = 0; /* degenerate: empty stream */
+    MwIStream* s = (MwIStream*)calloc(1, sizeof *s);
+    if (!s) return 0x8007000Eu;
+    s->vtbl = (void**)g_istream_vtbl;
+    s->refcnt = 1;
+    s->size = sz;
+    s->pos = 0;
+    s->base = (uint8_t*)malloc(sz ? sz : 1);
+    if (!s->base) { free(s); return 0x8007000Eu; }
+    if (sz) memcpy(s->base, base, sz);
+    s->del_on_release = del ? 1 : 0;
+    s->hglobal = hglobal;
+    if (ppstm) *ppstm = s;
+    MW_TRACE("CreateStreamOnHGlobal(%p, %u bytes, del=%d) -> IStream %p",
+             hglobal, (unsigned)sz, del, (void*)s);
+    return 0; /* S_OK */
 }
 /* ---- Ole clipboard / drag-drop / menu descriptor: typed honest ---- */
 __attribute__((ms_abi)) uint32_t mw_OleGetClipboard(void** pp) { if (pp) *pp = NULL; return 0x80004005u; }
@@ -35285,6 +35456,106 @@ static void gd_blit_rgba(const MwGdObj* B, MWBmp* S, int dx, int dy, int dw, int
     }
 }
 static void mw_gdpath_free(MwGdObj* p) { free(p->ppx); free(p->ppy); p->ppx = p->ppy = NULL; p->n = p->cap = 0; }
+
+/* ====================================================================
+ * SW-1546 (SWEEP-110, issues #17 + #26): PNG codec + real IStream +
+ * GdipCreateBitmapFromStream — the WinRAR 7.x toolbar-image chain.
+ *
+ * Root cause chain measured in evidence/sweep110 (winrarinstd trace):
+ *   FindResourceW(type="PNG", id=1003..) -> LoadResource (VALID PNG,
+ *   48x36 toolbar glyphs, magic 89504E47, all DIB-free) ->
+ *   GlobalAlloc(GMEM_MOVEABLE, size) -> [CreateStreamOnHGlobal returned
+ *   E_FAIL "no IStream marshal host-side"] -> guest freed the buffer and
+ *   skipped the button -> toolbar stayed button-less -> TB_ADDBUTTONSW
+ *   never sent (issue #26). Fixed here end-to-end, Wine parallel
+ *   ole32/istream.c + gdiplus/bitmap.c (PNG decoder via libpng):
+ *     1. mw_png_decode: PNG bytes -> RGBA (libpng, alpha honored)
+ *     2. mw_CreateStreamOnHGlobal: REAL IStream COM object (ms_abi
+ *        14-slot vtable) over the HGLOBAL bytes, fDeleteOnRelease honored
+ *     3. mw_gdip_bmp_from_stream: reads the stream via its OWN vtable
+ *        Read slot (works for engine AND guest-provided streams), decodes
+ *        the PNG into a kind-5 GpBitmap with real pixels
+ *     4. GdipDrawImageRectI/RectRectI (already real since SW-1320) blit
+ *        it into the graphics target DC surface.
+ * ==================================================================== */
+static uint8_t* mw_png_decode(const uint8_t* data, uint32_t size, uint32_t* ow, uint32_t* oh) {
+    if (!data || size < 8 || !data[0] || data[1] != 'P' || data[2] != 'N' || data[3] != 'G')
+        return NULL;
+    png_image pi;
+    memset(&pi, 0, sizeof pi);
+    pi.version = PNG_IMAGE_VERSION;
+    if (!png_image_begin_read_from_memory(&pi, data, size)) return NULL;
+    pi.format = PNG_FORMAT_RGBA;
+    uint32_t w = pi.width, h = pi.height;
+    if (!w || !h || w > 8192 || h > 8192) { png_image_free(&pi); return NULL; }
+    uint8_t* out = (uint8_t*)malloc((size_t)w * h * 4);
+    if (!out) { png_image_free(&pi); return NULL; }
+    if (!png_image_finish_read(&pi, NULL, out, 0, NULL)) {
+        free(out); return NULL;
+    }
+    if (ow) *ow = w;
+    if (oh) *oh = h;
+    return out; /* RGBA, straight alpha */
+}
+
+/* pull the WHOLE stream through its own vtable Read slot (works for both
+ * engine streams and guest-provided IStreams — wine gdiplus calls the
+ * same ISequentialStream::Read the app would) */
+static uint8_t* mw_istream_drain(void* stream, uint32_t* out_size) {
+    if (!stream) return NULL;
+    void** vt = *(void***)stream;
+    if (!vt || !vt[3] || !vt[5]) return NULL;
+    typedef __attribute__((ms_abi)) long (*MwReadFn)(void*, void*, uint32_t, uint32_t*);
+    typedef __attribute__((ms_abi)) long (*MwSeekFn)(void*, int64_t, uint32_t, uint64_t*);
+    MwReadFn rd = (MwReadFn)vt[3];
+    MwSeekFn sk = (MwSeekFn)vt[5];
+    sk(stream, 0, 0 /* STREAM_SEEK_SET */, NULL); /* rewind if seekable */
+    uint32_t cap = 1u << 16, len = 0;
+    uint8_t* buf = (uint8_t*)malloc(cap);
+    if (!buf) return NULL;
+    for (;;) {
+        if (len == cap) {
+            if (cap >= MW_PNG_STREAM_MAX) break;
+            uint32_t ncap = cap * 2;
+            uint8_t* nb = (uint8_t*)realloc(buf, ncap);
+            if (!nb) break;
+            buf = nb; cap = ncap;
+        }
+        uint32_t got = 0;
+        long hr = rd(stream, buf + len, cap - len, &got);
+        if (got == 0 || (hr != 0 && hr != 1)) break; /* S_OK/S_FALSE/empty */
+        len += got;
+    }
+    if (len == 0) { free(buf); return NULL; }
+    if (out_size) *out_size = len;
+    return buf;
+}
+/* GdipCreateBitmapFromStream core: drain -> PNG decode -> kind-5 GpBitmap */
+static uint32_t mw_gdip_bmp_from_stream(void* stream, void** bitmap) {
+    if (bitmap) *bitmap = NULL;
+    if (!stream) return MW_GDIPLUS_INVALIDPARAM;
+    uint32_t sz = 0;
+    uint8_t* raw = mw_istream_drain(stream, &sz);
+    if (!raw) {
+        MW_TRACE("[GDI+] CreateBitmapFromStream: stream drain failed -> GenericError");
+        return MW_GDIPLUS_GENERICERR;
+    }
+    uint32_t w = 0, h = 0;
+    uint8_t* rgba = mw_png_decode(raw, sz, &w, &h);
+    free(raw);
+    if (!rgba) {
+        MW_TRACE("[GDI+] CreateBitmapFromStream: not a decodable PNG (%u bytes) -> GenericError", sz);
+        return MW_GDIPLUS_GENERICERR; /* other codecs stay honest failures */
+    }
+    void* b = mw_gdobj_new(5);
+    MwGdObj* s = b ? mw_gdobj_state(b) : NULL;
+    if (!s) { free(rgba); return MW_GDIPLUS_GENERICERR; }
+    s->w = w; s->h = h; s->stride = w * 4u; s->px = rgba; s->px_owned = 1;
+    if (bitmap) *bitmap = b;
+    MW_TRACE("[GDI+] CreateBitmapFromStream -> GpBitmap %p %ux%u (PNG decoded, %u bytes)",
+             b, w, h, sz);
+    return MW_GDIPLUS_OK;
+}
 static int mw_gdpath_push(MwGdObj* p, float x, float y) {
     if (p->n >= p->cap) {
         int nc = p->cap ? p->cap * 2 : 32;
