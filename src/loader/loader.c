@@ -106,9 +106,11 @@ typedef struct { uint32_t start_eip, param; } Mw32ThreadArg;
 
 
 static void mw32w_engine_write(const char* rd, uint32_t va, uint32_t val);
+static void mw32w_engine_span(const char* rd, uint32_t va, uint32_t bytes); /* SW-1549: word-granular span scan for buffer writers */
 /* SW-1482 (SWEEP-100): MW32_WATCH="lo:hi" (hex u32) — interpreter-level memory
  * watchpoint globals (hoisted: engine-side write logging shares them). */
 static uint32_t g_m32w_lo = 0, g_m32w_hi = 0;
+static uint32_t g_m32p_lo = 0, g_m32p_hi = 0; /* SW-1550: MW32_PROTECT read-only page guard (ghost-writer hunt) */
 static unsigned g_m32w_n = 0;
 static inline int m32w_hit(uint32_t va) {
     return g_m32w_lo != 0 && va >= g_m32w_lo && va < g_m32w_hi;
@@ -11844,12 +11846,14 @@ __attribute__((ms_abi)) uint32_t mw_GetWindowsDirectoryW(wchar_t* out, uint32_t 
     if (!out || !cap) return 14;
     size_t n = utf8_to_utf16("C:\\Windows", out, cap - 1);
     ((uint16_t*)out)[n] = 0;
+    mw32w_engine_span("EWINDIR", (uint32_t)(uintptr_t)out, (uint32_t)((n + 1) * 2)); /* SW-1549 */
     return (uint32_t)n;
 }
 /* SWEEP-013: A variant (Diskmon64 2000s-era binary imports the ANSI form) */
 __attribute__((ms_abi)) uint32_t mw_GetWindowsDirectoryA(char* out, uint32_t cap) {
     if (!out || cap < 11) return 0;
     strcpy(out, "C:\\Windows");
+    mw32w_engine_span("EWINDIRA", (uint32_t)(uintptr_t)out, 11); /* SW-1549 */
     return 10;
 }
 
@@ -28021,6 +28025,7 @@ __attribute__((ms_abi)) uint32_t mw_lstrcpyW(uint16_t* dst, const uint16_t* src)
     size_t n = 0;
     while (n < 511 && tmp[n]) n++;
     memcpy(dst, tmp, n * 2); dst[n] = 0;
+    mw32w_engine_span("ELSTRCPYW", (uint32_t)(uintptr_t)dst, (uint32_t)((n + 1) * 2)); /* SW-1549 */
     return 1;
 }
 __attribute__((ms_abi)) uint32_t mw_lstrcpyA(char* dst, const char* src) {
@@ -28030,6 +28035,7 @@ __attribute__((ms_abi)) uint32_t mw_lstrcpyA(char* dst, const char* src) {
     size_t n = 0;
     while (n < 511 && tmp[n]) n++;
     memcpy(dst, tmp, n); dst[n] = 0;
+    mw32w_engine_span("ELSTRCPYA", (uint32_t)(uintptr_t)dst, (uint32_t)(n + 1)); /* SW-1549 */
     return 1;
 }
 /* ============================================================
@@ -33783,6 +33789,7 @@ static int mw_vfmt_w16(uint16_t* dst, size_t max, const uint16_t* fmt,
             dst[o++] = (uint16_t)(unsigned char)s8[k];
     }
     dst[o] = 0;
+    mw32w_engine_span("EVFMT", (uint32_t)(uintptr_t)dst, (uint32_t)((o + 1) * 2)); /* SW-1549: wsprintf-family output is an engine guest-write — make it watch-visible */
     return (int)o;
 }
 __attribute__((ms_abi)) int mw_swprintf(uint16_t* buf, size_t n,
@@ -45296,6 +45303,33 @@ static void mw_crash_nested_fault(int sg) {
 static void mw_cpu32_crash_report(void); /* SW-1297 fwd: guest context on host faults (defined in the PE32 section) */
 
 static void crash_handler(int sig, siginfo_t* info, void* ctx) {
+    /* SW-1550 (SWEEP-111, issue #25 IDM): MW32_PROTECT="lo:hi" mprotects the
+     * guest range read-only. A write there faults HERE with si_addr inside
+     * the range — the ghost-writer (the writer that updates guest memory
+     * without any store instruction the watch can see: mmap overlap, engine
+     * memcpy, JIT-ish path) identifies itself by the HOST rip/backtrace the
+     * standard report below prints. Banner first so the case is greppable. */
+    if (sig == SIGSEGV && info && g_m32p_hi > g_m32p_lo) {
+        uintptr_t fa = (uintptr_t)info->si_addr;
+        if (fa >= g_m32p_lo && fa < g_m32p_hi) {
+            ucontext_t* uc2 = (ucontext_t*)ctx;
+            fprintf(stderr, "[PROTECT-HIT] write fault at guest va=%p inside protected range %08x..%08x (SW-1550)\n",
+                    info->si_addr, g_m32p_lo, g_m32p_hi);
+            fprintf(stderr, "[PROTECT-HIT] host rip=%llx rsp=%llx rbp=%llx rax=%llx rcx=%llx rdx=%llx rsi=%llx rdi=%llx\n",
+                    (unsigned long long)uc2->uc_mcontext.gregs[REG_RIP],
+                    (unsigned long long)uc2->uc_mcontext.gregs[REG_RSP],
+                    (unsigned long long)uc2->uc_mcontext.gregs[REG_RBP],
+                    (unsigned long long)uc2->uc_mcontext.gregs[REG_RAX],
+                    (unsigned long long)uc2->uc_mcontext.gregs[REG_RCX],
+                    (unsigned long long)uc2->uc_mcontext.gregs[REG_RDX],
+                    (unsigned long long)uc2->uc_mcontext.gregs[REG_RSI],
+                    (unsigned long long)uc2->uc_mcontext.gregs[REG_RDI]);
+            fflush(stderr);
+            /* fall through to the standard crash report: the backtrace names
+             * the writer (m32_st32 = interpreter store at guest EIP; anything
+             * else = the engine function that did it). */
+        }
+    }
     /* SW-802 family (SWEEP-018): every raw read in this handler (bytes at
      * RIP, return addr at rsp, 4KB stack scan, backtrace chain) can itself
      * fault when the crash IS a stack overflow — the old handler died at
@@ -47199,6 +47233,23 @@ static void mw32w_engine_write(const char* rd, uint32_t va, uint32_t val) {
     if (!m32w_hit(va)) return;
     fprintf(stderr, "[WATCH32-%s] va=%08x val=%08x eip=%08x esp=%08x ebp=%08x n=%u\n",
             rd, va, val, t_cpu32.eip, t_cpu32.r[4], t_cpu32.r[5], ++g_m32w_n);
+}
+/* SW-1549 (SWEEP-111, issue #25 IDM): buffer writers (wsprintf family output,
+ * GetWindowsDirectory, lstrcpy) fill GUEST memory word-by-word through direct
+ * pointers — the old single-value hook could not say WHICH word inside the
+ * buffer hit the watch window, or whether the zero ever came from an engine
+ * writer at all. Scan the span at 4-byte granularity; log every word that
+ * lands in the MW32_WATCH range. The tag identifies the writer family. */
+static void mw32w_engine_span(const char* rd, uint32_t va, uint32_t bytes) {
+    if (!g_m32w_lo) return;
+    for (uint32_t off = 0; off + 4 <= bytes; off += 4) {
+        uint32_t wva = va + off;
+        if (!m32w_hit(wva)) continue;
+        uint32_t wval = 0;
+        __builtin_memcpy(&wval, (const void*)(uintptr_t)wva, 4);
+        fprintf(stderr, "[WATCH32-%s] va=%08x val=%08x eip=%08x esp=%08x ebp=%08x n=%u\n",
+                rd, wva, wval, t_cpu32.eip, t_cpu32.r[4], t_cpu32.r[5], ++g_m32w_n);
+    }
 }
 static __thread int     t_cpu32_live = 0;
 /* g_cpu32_active defined in the SW-1281 fwd block (needed by earlier code) */
@@ -49896,6 +49947,18 @@ static int load_pe32(const char* filepath) {
       const char* m = getenv("MW32_MAX_STEPS"); if (m && m[0]) g_cpu32_maxsteps = strtoull(m, NULL, 0);
       const char* w = getenv("MW32_WATCH"); /* SW-1482: "lo:hi" hex guest-VA watch window */
       if (w && w[0]) sscanf(w, "%x:%x", &g_m32w_lo, &g_m32w_hi);
+      { const char* pr = getenv("MW32_PROTECT"); /* SW-1550: "lo:hi" — mprotect the range read-only; the next writer faults into crash_handler with the [PROTECT-HIT] banner */
+        if (pr && pr[0]) {
+            sscanf(pr, "%x:%x", &g_m32p_lo, &g_m32p_hi);
+            if (g_m32p_hi > g_m32p_lo) {
+                uintptr_t plo = (uintptr_t)g_m32p_lo & ~0xFFFUL;
+                uintptr_t phi = ((uintptr_t)g_m32p_hi + 0xFFF) & ~0xFFFUL;
+                if (mprotect((void*)plo, phi - plo, PROT_READ | PROT_EXEC) == 0)
+                    fprintf(stderr, "[PROTECT] guest range %08x..%08x now read-only (SW-1550)\n", g_m32p_lo, g_m32p_hi);
+                else
+                    fprintf(stderr, "[PROTECT] mprotect(%08x..) failed: %s\n", g_m32p_lo, strerror(errno));
+            }
+        } }
       { const char* tr = getenv("MW32_TRACE_RANGE"); /* SW-1484: I32 eip-range filter */
         if (tr && tr[0]) sscanf(tr, "%x:%x", &g_tr_lo, &g_tr_hi); }
       { const char* et = getenv("MW32_ENTRY_TRACE"); /* SW-1483: "va1,va2,..." */
