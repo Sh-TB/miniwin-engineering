@@ -165,3 +165,6 @@ artifacts/wine-tracker/runs/*/work/
 artifacts/wine-tracker/runs/*/prefix/
 artifacts/wine-tracker/runs/*/miniwin-results/
 tools/wine_behavior_tracker/*.egg-info/
+
+# SWEEP-110: battery sandbox trees stay local (installed apps, temp payloads)
+evidence/sweep110/*/sandbox/

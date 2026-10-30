@@ -17897,6 +17897,11 @@ typedef struct {
 static MwChild g_child[MW_CHILD_MAX];
 static uint16_t g_maintitle[128];
 static void*    g_main_menu = 0;
+/* SW-1542 (SWEEP-110): the window's own icons — captured from RegisterClass
+ * (WNDCLASS.hIcon @+32 / WNDCLASSEX.hIconSm @+72) and WM_SETICON (0x80),
+ * rendered by the non-client frame compositor in mw_surface_dump. */
+static void*    g_wicon_big = 0;
+static void*    g_wicon_small = 0;
 static void mw_class_name_store_a(const char* n);
 static void mw_class_name_store_w(const uint16_t* n); /* defined in SWEEP-013 batch */
 static int mw_probe_copy(const void* src, size_t n, void* dst); /* defined in the pump block */
@@ -18998,6 +19003,20 @@ static MW_WNDPROC mw_window_proc(void* hwnd); /* SW-1513: per-window routing */
  * every dialog/control program at its first SendMessage). */
 __attribute__((ms_abi)) long long mw_SendMessageW(void* h, uint32_t msg, uintptr_t wp, long long lp) {
     int s = mw_child_slot(h);
+    if (msg == 0x80u /* WM_SETICON */) {
+        /* SW-1542: wParam 1 = ICON_BIG, 0 = ICON_SMALL; lParam = HICON.
+         * Wine: user32/message.c WM_SETICON -> NtUserSetIcon. */
+        if (wp == 1u) g_wicon_big = (void*)(uintptr_t)lp;
+        else          g_wicon_small = (void*)(uintptr_t)lp;
+        MW_TRACE("SendMessageW(WM_SETICON %s = %p) -> 0 (prev)",
+                 wp == 1u ? "ICON_BIG" : "ICON_SMALL", (void*)(uintptr_t)lp);
+        return 0;
+    }
+    if (msg == 0x7Fu /* WM_GETICON */) {
+        void* hi = (wp == 1u) ? g_wicon_big : g_wicon_small;
+        MW_TRACE("SendMessageW(WM_GETICON %s) -> %p", wp == 1u ? "ICON_BIG" : "ICON_SMALL", hi);
+        return (long long)(intptr_t)hi;
+    }
     if (msg == MWWM_SETTEXT) {
         const uint16_t* t = (const uint16_t*)lp;
         uint16_t tmp[128];
@@ -19799,6 +19818,19 @@ __attribute__((ms_abi)) uint16_t mw_RegisterClassExW(const void* wcex) {
         mw_class_name_store_w((const uint16_t*)cname); /* SWEEP-013 */
         /* APP-TEST-2: WNDCLASSEXW x64 lpszMenuName@56 (name@64) */
         mw_class_menu_store_w(*(void* const*)((const char*)wcex + 56));
+        /* SW-1542: hIcon@32 / hIconSm@72 (x64) — the window-icon source for
+         * the non-client frame. cpu32: hIcon@24 / hIconSm@44. */
+        if (g_cpu32_active) {
+            void* hi  = (void*)(uintptr_t)m32_ld32((uint32_t)(uintptr_t)wcex + 24);
+            void* his = (void*)(uintptr_t)m32_ld32((uint32_t)(uintptr_t)wcex + 44);
+            if (hi)  g_wicon_big = hi;
+            if (his) g_wicon_small = his;
+        } else {
+            void* hi  = *(void* const*)((const char*)wcex + 32);
+            void* his = *(void* const*)((const char*)wcex + 72);
+            if (hi)  g_wicon_big = hi;
+            if (his) g_wicon_small = his;
+        }
     }
     MW_TRACE("RegisterClassExW(wcex=%p proc=%p) -> ATOM 0x%x", wcex,
              wcex ? *(void* const*)((const char*)wcex + 8) : NULL, atom);
@@ -19823,6 +19855,18 @@ __attribute__((ms_abi)) uint16_t mw_RegisterClassExA(const void* wcex) {
         mw_class_name_store_a((const char*)cname); /* SWEEP-013 */
         /* APP-TEST-2: WNDCLASSEXA x64 lpszMenuName@56 */
         mw_class_menu_store_a(*(void* const*)((const char*)wcex + 56));
+        /* SW-1542: A-family hIcon capture (same offsets as ExW). */
+        if (g_cpu32_active) {
+            void* hi  = (void*)(uintptr_t)m32_ld32((uint32_t)(uintptr_t)wcex + 24);
+            void* his = (void*)(uintptr_t)m32_ld32((uint32_t)(uintptr_t)wcex + 44);
+            if (hi)  g_wicon_big = hi;
+            if (his) g_wicon_small = his;
+        } else {
+            void* hi  = *(void* const*)((const char*)wcex + 32);
+            void* his = *(void* const*)((const char*)wcex + 72);
+            if (hi)  g_wicon_big = hi;
+            if (his) g_wicon_small = his;
+        }
     }
     MW_TRACE("RegisterClassExA(wcex=%p) -> ATOM 0x%x", wcex, atom);
     return atom;
@@ -19849,6 +19893,14 @@ __attribute__((ms_abi)) uint16_t mw_RegisterClassW(const void* wc) {
          * cbCls@16 cbWnd@20 hInst@24 hIcon@32 hCursor@40 hbr@48 menu@56
          * name@64 — the layout the SW-1291b brush comment already records) */
         mw_class_menu_store_w(*(void* const*)((const char*)wc + 56));
+        /* SW-1542: WNDCLASSW.hIcon@32 / (no hIconSm in the non-Ex struct) */
+        {
+            void* hi = (g_cpu32_active)
+                ? (void*)(uintptr_t)m32_ld32((uint32_t)(uintptr_t)wc + 20)
+                : *(void* const*)((const char*)wc + 32);
+            MW_TRACE("RegisterClassW hIcon=%p (SW-1542 probe)", hi);
+            if (hi) g_wicon_big = hi;
+        }
         /* SW-1290/SW-1291b: hbrBackground (WNDCLASSW offset 48 on x64: style@0
          * pad@4 proc@8 cbCls@16 cbWnd@20 hInst@24 hIcon@32 hCursor@40
          * hbrBackground@48 menu@56 name@64) now rides the PER-CLASS registry;
@@ -20734,6 +20786,38 @@ static void mwb_3d(MWBmp* b, int x, int y, int w, int h, int raised) {
     mwb_fill(b, x + w - 2, y, 2, h, raised ? dk : lt);/* right */
     mwb_fill(b, x, y, 1, 1, blk); mwb_fill(b, x + w - 1, y, 1, 1, blk);
     mwb_fill(b, x, y + h - 1, 1, 1, blk); mwb_fill(b, x + w - 1, y + h - 1, 1, 1, blk);
+}
+/* ====================================================================
+ * SWEEP-110 SW-1540: REAL ICON PLANE — storage (decoders sit after the
+ * DIB reader, ~line 26100; they need FindResourceW/mw_res_pe_base). The
+ * store must precede every consumer: DrawIconEx, the frame compositor
+ * (mw_surface_dump), ImageList_*, LoadIcon*, CreateIcon*.
+ * ==================================================================== */
+#define MW_HICON_BASE   0x00062000u /* distinct from IMGL(0x61000)/IMAGE(0x60000) */
+#define MW_ICONS_MAX    256
+typedef struct { int live, w, h; uint8_t* bgra; } MwIconSlot; /* straight BGRA, 4 B/px */
+static MwIconSlot g_icons[MW_ICONS_MAX];
+static MwIconSlot* mw_icon_lookup(void* h) {
+    uintptr_t v = (uintptr_t)h;
+    if ((v & 0xFFFFF000u) != MW_HICON_BASE) return 0;
+    int i = (int)(v & 0xFFFu) - 1;
+    if (i < 0 || i >= MW_ICONS_MAX || !g_icons[i].live) return 0;
+    return &g_icons[i];
+}
+/* store a copy of bgra (w*h*4); returns the HICON */
+static void* mw_icon_store(int w, int h, const uint8_t* bgra) {
+    if (w <= 0 || h <= 0 || w > 256 || h > 256) return 0;
+    for (int i = 0; i < MW_ICONS_MAX; i++) {
+        if (!g_icons[i].live) {
+            g_icons[i].bgra = (uint8_t*)malloc((size_t)w * h * 4);
+            if (!g_icons[i].bgra) return 0;
+            g_icons[i].live = 1; g_icons[i].w = w; g_icons[i].h = h;
+            if (bgra) memcpy(g_icons[i].bgra, bgra, (size_t)w * h * 4);
+            else memset(g_icons[i].bgra, 0, (size_t)w * h * 4);
+            return (void*)(uintptr_t)(MW_HICON_BASE | (unsigned)(i + 1));
+        }
+    }
+    return 0;
 }
 static void mwb_text8(MWBmp* b, int x, int y, const char* s, uint32_t c, int scale) {
     for (; *s; s++, x += 8 * scale) {
@@ -22422,10 +22506,88 @@ static void mw_surface_dump(const char* kind) {
     }
     g_frame_no++;
     if (g_frame_every > 1 && (g_frame_no % g_frame_every) != 0) return;
+    /* SW-1543 (SWEEP-110): NON-CLIENT FRAME COMPOSITOR — decorate the
+     * client surface with the window frame before the disk write: caption
+     * bar + title + window icon + min/max/close glyphs + classic border.
+     * The guest-visible plane (g_surf) is untouched: this is purely the
+     * evidence image, so no guest can observe or regress on it.
+     * Wine parallel: win32u/nonclient.c NC paint. MINWIN_FRAME=0 disables. */
+    static int g_frame_off = -1;
+    if (g_frame_off < 0) {
+        const char* e = getenv("MINWIN_FRAME");
+        g_frame_off = (e && e[0] == '0' && e[1] == 0) ? 1 : 0;
+    }
+    int B = 6, CAP = 26;               /* border, caption height */
+    int FW = g_surf.w + 2 * B;
+    int FH = g_surf.h + CAP + B;
+    MWBmp fr;                          /* framed plane (BGR, 3 B/px) */
+    fr.px = 0; fr.w = FW; fr.h = FH; fr.vbpp = 0; fr.vstride = 0;
+    uint8_t* frpx = (uint8_t*)malloc((size_t)FW * FH * 3);
+    if (g_frame_off || !frpx) {        /* fallback: old undecorated dump */
+        free(frpx);
+        fr.px = g_surf.px; fr.w = g_surf.w; fr.h = g_surf.h;
+    } else {
+        fr.px = frpx;
+        /* base: classic 3D chrome */
+        mwb_fill(&fr, 0, 0, FW, FH, 0xC0C0C0);            /* whole frame BTNFACE */
+        mwb_fill(&fr, 0, 0, FW, 1, 0xFFFFFF);             /* top light */
+        mwb_fill(&fr, 0, 0, 1, FH, 0xFFFFFF);             /* left light */
+        mwb_fill(&fr, 0, FH - 1, FW, 1, 0x000000);        /* bottom dark */
+        mwb_fill(&fr, FW - 1, 0, 1, FH, 0x000000);        /* right dark */
+        mwb_fill(&fr, 0, CAP - 1, FW, 1, 0x808080);       /* caption bottom edge */
+        /* caption: active gradient (flat navy, engine classic look) */
+        mwb_fill(&fr, B, 0, FW - 2 * B, CAP - 1, 0x0A246A);
+        /* window icon (16x16) in the caption */
+        MwIconSlot* wico = mw_icon_lookup(g_wicon_small);
+        if (!wico) wico = mw_icon_lookup(g_wicon_big);
+        if (wico && wico->bgra) {
+            for (int y = 0; y < 16; y++)
+                for (int x = 0; x < 16; x++) {
+                    int sx = x * wico->w / 16, sy = y * wico->h / 16;
+                    const uint8_t* p = wico->bgra + ((size_t)sy * wico->w + sx) * 4;
+                    if (p[3] < 128) continue;
+                    mwb_set(&fr, B + 5 + x, 5 + y,
+                            (uint32_t)p[2] << 16 | (uint32_t)p[1] << 8 | p[0]);
+                }
+        }
+        /* title text (UTF-16 -> ASCII, white) */
+        char t8[128]; int tn = 0;
+        for (; tn < 120 && g_maintitle[tn]; tn++)
+            t8[tn] = (g_maintitle[tn] >= 0x20 && g_maintitle[tn] < 0x7F) ? (char)g_maintitle[tn] : '?';
+        t8[tn] = 0;
+        if (tn) mwb_text8(&fr, B + 5 + 18 + 3, 9, t8, 0xFFFFFF, 1);
+        /* caption buttons: minimize / maximize / close (26x18 each) */
+        int bx = FW - B - 26 * 3 - 2;
+        for (int k = 0; k < 3; k++) {
+            int x0 = bx + k * 26;
+            mwb_fill(&fr, x0, 4, 22, 17, 0xC0C0C0);       /* button face */
+            mwb_fill(&fr, x0, 4, 22, 1, 0xFFFFFF);
+            mwb_fill(&fr, x0, 4, 1, 17, 0xFFFFFF);
+            mwb_fill(&fr, x0, 20, 22, 1, 0x000000);
+            mwb_fill(&fr, x0 + 21, 4, 1, 17, 0x000000);
+            if (k == 0) {                                  /* minimize _ */
+                mwb_fill(&fr, x0 + 6, 15, 10, 2, 0x000000);
+            } else if (k == 1) {                           /* maximize [] */
+                mwb_fill(&fr, x0 + 6, 7, 10, 9, 0x000000);
+                mwb_fill(&fr, x0 + 7, 8, 8, 7, 0xC0C0C0);
+            } else {                                       /* close X */
+                mwb_fill(&fr, x0 + 6, 7, 10, 10, 0x000000);
+                mwb_fill(&fr, x0 + 7, 8, 8, 8, 0xC0C0C0);
+                for (int d = 0; d < 8; d++) {
+                    mwb_set(&fr, x0 + 7 + d, 8 + d, 0x000000);
+                    mwb_set(&fr, x0 + 14 - d, 8 + d, 0x000000);
+                }
+            }
+        }
+        /* client area copy */
+        for (int y = 0; y < g_surf.h; y++)
+            for (int x = 0; x < g_surf.w; x++)
+                mwb_set(&fr, B + x, CAP + y, mwb_get(&g_surf, x, y));
+    }
     char path[768];
     snprintf(path, sizeof(path), "%s/frame_%03d.bmp",
              g_frame_dir[0] ? g_frame_dir : "miniwin-results/screenshots", g_frame_no);
-    int W = g_surf.w, H = g_surf.h;
+    int W = fr.w, H = fr.h;
     int pad = (4 - (W * 3) % 4) % 4;
     uint32_t datasz = (uint32_t)((W * 3 + pad) * H);
     uint8_t hdr[54] = { 'B','M',0,0,0,0,0,0,0,0,54,0,0,0,40,0,0,0,0,0,0,0,0,0,0,0,1,0,24,0 };
@@ -22438,16 +22600,18 @@ static void mw_surface_dump(const char* kind) {
         uint8_t* row = (uint8_t*)malloc((size_t)W * 3 + 4);
         if (row) {
             for (int y = H - 1; y >= 0; y--) {
-                memcpy(row, g_surf.px + 3 * ((size_t)y * W), (size_t)W * 3);
+                memcpy(row, fr.px + 3 * ((size_t)y * W), (size_t)W * 3);
                 memset(row + W * 3, 0, (size_t)pad);
                 fwrite(row, 1, (size_t)W * 3 + pad, f);
             }
             free(row);
         }
         fclose(f);
-        MW_TRACE("[GDI] frame #%d (%s) %dx%d -> %s", g_frame_no, kind, W, H, path);
+        MW_TRACE("[GDI] frame #%d (%s) %dx%d framed %dx%d -> %s", g_frame_no, kind,
+                 g_surf.w, g_surf.h, W, H, path);
         fprintf(stderr, "[GDI-FRAME] #%d -> %s\n", g_frame_no, path);
     }
+    if (fr.px != g_surf.px) free(fr.px);
 }
 /* SW-1291e (SWEEP-062): empty-paint-pair composition guard. Snapshot of the
  * surface taken at BeginPaint (pre-erase) + right after the erase; EndPaint
@@ -22603,13 +22767,47 @@ __attribute__((ms_abi)) void* mw_LoadCursorW(void* h, const uint16_t* name) {
     (void)h; (void)name;
     return (void*)0x00050001;
 }
+/* SW-1542 icon plane (defined after the DIB decoder, ~line 26200) */
+static void* mw_icon_from_group(void* hinst, const void* name, int want_cx, int want_cy);
+static void* mw_icon_from_resource(const uint8_t* dib, uint32_t size, const char* tag);
+static void* mw_icon_stock(uint32_t oic); /* SW-1544: OIC_* built-ins */
+/* SW-1544: LoadIcon(NULL, IDI_*) / LoadImage(NULL, OIC_*) must return a real
+ * stock icon (wine user32/icon.c maps IDI_*->OIC_* built-ins; a NULL here
+ * sends MFC/CRT guests down their failure paths). IDs: 32512 IDI_APPLICATION
+ * 32513 IDI_ERROR(hand) 32514 IDI_QUESTION 32515 IDI_WARNING 32516 IDI_ASTERISK
+ * 32517 IDI_WINLOGO 32518 IDI_SHIELD. Gate: hinst==NULL (the documented
+ * stock form); a module handle + missing id stays an honest NULL. */
+static int mw_is_stock_icon_id(uint32_t v) { return v >= 32512u && v <= 32518u; }
 __attribute__((ms_abi)) void* mw_LoadIconA(void* h, const char* name) {
-    (void)h; (void)name;
-    return (void*)0x00050002;
+    /* SW-1540: real icon plane. MAKEINTRESOURCE ids route through the
+     * RT_GROUP_ICON walk (32x32 = SM_CXICON). */
+    if (name && (uintptr_t)name < 0x10000u) {
+        void* hi = mw_icon_from_group(h, (const void*)(uintptr_t)name, 32, 32);
+        if (hi) { MW_TRACE("LoadIconA(id=%u) -> HICON %p (real pixels)", (unsigned)(uintptr_t)name, hi); return hi; }
+        /* SW-1544: stock form LoadIcon(NULL, IDI_*) */
+        if (!h && mw_is_stock_icon_id((uint32_t)(uintptr_t)name)) {
+            void* st = mw_icon_stock((uint32_t)(uintptr_t)name);
+            if (st) { MW_TRACE("LoadIconA(stock=%u) -> HICON %p (synthesized)", (unsigned)(uintptr_t)name, st); return st; }
+        }
+    }
+    MW_TRACE("LoadIconA(h=%p name=%p) -> NULL (no group)", h, name);
+    return NULL;
 }
 __attribute__((ms_abi)) void* mw_LoadIconW(void* h, const uint16_t* name) {
-    (void)h; (void)name;
-    return (void*)0x00050002;
+    if (name && (uintptr_t)name < 0x10000u) {
+        void* hi = mw_icon_from_group(h, (const void*)name, 32, 32);
+        if (hi) { MW_TRACE("LoadIconW(id=%u) -> HICON %p (real pixels)", (unsigned)(uintptr_t)name, hi); return hi; }
+        /* SW-1544: stock form LoadIconW(NULL, IDI_APPLICATION etc.) — wine
+         * user32/icon.c maps the IDI_* ids to OIC_* built-ins; returning
+         * NULL here (the pre-1544 state) sent MFC guests like WinMergeU
+         * down failure paths (LoadIconW(0x7f00) -> NULL x2). */
+        if (!h && mw_is_stock_icon_id((uint32_t)(uintptr_t)name)) {
+            void* st = mw_icon_stock((uint32_t)(uintptr_t)name);
+            if (st) { MW_TRACE("LoadIconW(stock=%u) -> HICON %p (synthesized)", (unsigned)(uintptr_t)name, st); return st; }
+        }
+    }
+    MW_TRACE("LoadIconW(h=%p name=%p) -> NULL (no group)", h, name);
+    return NULL;
 }
 __attribute__((ms_abi)) long long mw_CallWindowProcA(void* proc, void* hwnd, uint32_t m,
         uintptr_t wp, long long lp) {
@@ -26080,9 +26278,237 @@ static void* mw_loadimage_bitmap_dib(void* hinst, const void* name) {
     }
     return (void*)(uintptr_t)(MW_HBITMAP_BASE | (unsigned)((B - g_bitmap_obj) + 1));
 }
+
+/* ====================================================================
+ * SWEEP-110 SW-1540: REAL ICON PLANE — decoders (storage sits with the
+ * raster helpers at ~20780, before every consumer). Wine parallel:
+ * user32/icon.c CURSORICON_* — LoadImage(IMAGE_ICON) walks RT_GROUP_ICON,
+ * picks the best-size GRPICONDIRENTRY, decodes the RT_ICON DIB
+ * (BITMAPINFOHEADER with height = 2*icon_h: XOR plane + 1bpp AND mask)
+ * into a 32bpp surface; DrawIconEx blits it with alpha.
+ * ==================================================================== */
+/* decode one RT_ICON / CreateIconFromResource blob into an HICON.
+ * Layout: BITMAPINFOHEADER (biHeight = 2*icon height), palette, XOR bits,
+ * then a 1bpp AND mask. Mirrors the DIB reader in mw_loadimage_bitmap_dib
+ * (both header families, 1/4/8/24/32 bpp, BI_RGB only). */
+static void* mw_icon_from_resource(const uint8_t* dib, uint32_t size, const char* tag) {
+    if (!dib || size < 16 || mw_IsBadReadPtr(dib, 64)) goto miss;
+    {
+    uint32_t hdr_size = *(const uint32_t*)(const void*)dib;
+    int32_t w, h2; uint16_t bpp; uint32_t comp = 0, clr_used = 0; int core_pal = 0;
+    if (hdr_size == 12) {
+        w = *(const uint16_t*)(const void*)(dib + 4);
+        h2 = *(const uint16_t*)(const void*)(dib + 6);
+        bpp = *(const uint16_t*)(const void*)(dib + 10);
+        core_pal = 1;
+    } else if (hdr_size >= 40) {
+        w = *(const int32_t*)(const void*)(dib + 4);
+        h2 = *(const int32_t*)(const void*)(dib + 8);
+        bpp = *(const uint16_t*)(const void*)(dib + 14);
+        comp = *(const uint32_t*)(const void*)(dib + 16);
+        clr_used = *(const uint32_t*)(const void*)(dib + 32);
+    } else goto miss;
+    if (w <= 0 || h2 <= 0 || comp != 0) goto miss;
+    int h = h2 / 2;            /* XOR plane height; h2/2 = icon height */
+    if (h < 1 || w > 256 || h > 256) goto miss;
+    if (bpp != 1 && bpp != 4 && bpp != 8 && bpp != 24 && bpp != 32) goto miss;
+    int npal = (bpp <= 8) ? (clr_used ? (int)clr_used : (1 << bpp)) : 0;
+    const uint8_t* pal = dib + hdr_size;
+    const uint8_t* xor = pal + (size_t)npal * (core_pal ? 3 : 4);
+    size_t xstride = (((size_t)w * bpp + 31) / 32) * 4;
+    const uint8_t* and = xor + xstride * (size_t)h;
+    size_t astride = (((size_t)w * 1) + 31) / 32 * 4;
+    if ((uint32_t)((and - dib) + astride * (size_t)h) > size) {
+        /* some RT_ICON blobs carry no AND mask (32bpp with real alpha) */
+        and = 0;
+    }
+    uint8_t* out = (uint8_t*)malloc((size_t)w * h * 4);
+    if (!out) return 0;
+    int any_alpha = 0;
+    for (int y = 0; y < h; y++) {
+        const uint8_t* xrow = xor + (size_t)y * xstride;       /* bottom-up XOR */
+        const uint8_t* arow = and ? and + (size_t)(h - 1 - y) * astride : 0;
+        uint8_t* orow = out + (size_t)(h - 1 - y) * w * 4;     /* top-down out */
+        for (int x = 0; x < w; x++) {
+            uint32_t b = 0, g = 0, r = 0, a = 255;
+            if (bpp == 32) {
+                const uint8_t* p = xrow + (size_t)x * 4;
+                b = p[0]; g = p[1]; r = p[2]; a = p[3]; any_alpha |= (a != 255);
+            } else if (bpp == 24) {
+                const uint8_t* p = xrow + (size_t)x * 3;
+                b = p[0]; g = p[1]; r = p[2];
+            } else {
+                uint32_t idx;
+                if (bpp == 8) idx = xrow[x];
+                else if (bpp == 4) idx = (x & 1) ? (xrow[x / 2] & 0xF) : (xrow[x / 2] >> 4);
+                else idx = (xrow[x / 8] >> (7 - (x & 7))) & 1;
+                const uint8_t* e = pal + (size_t)idx * (core_pal ? 3 : 4);
+                b = e[0]; g = e[1]; r = e[2];
+            }
+            if (arow && ((arow[x / 8] >> (7 - (x & 7))) & 1)) a = 0; /* AND mask */
+            orow[x * 4 + 0] = (uint8_t)b; orow[x * 4 + 1] = (uint8_t)g;
+            orow[x * 4 + 2] = (uint8_t)r; orow[x * 4 + 3] = (uint8_t)a;
+        }
+    }
+    if (bpp == 32 && !any_alpha) {
+        /* legacy 32bpp icon with no alpha channel and no AND usage:
+         * the XOR plane is fully opaque (Wine treats 32bpp the same) */
+    }
+    void* hicon = mw_icon_store(w, h, out);
+    free(out);
+    if (hicon) MW_TRACE("[ICON] %s decode %dx%d bpp=%u -> HICON %p", tag, w, h, bpp, hicon);
+    else MW_TRACE("[ICON] %s decode: store full", tag);
+    return hicon;
+    }
+miss:
+    MW_TRACE("[ICON] %s decode miss (blob=%p size=%u)", tag, (const void*)dib, size);
+    return 0;
+}
+/* RT_GROUP_ICON walk + best-size pick + RT_ICON decode. GRPICONDIR:
+ * {WORD reserved=0; WORD type=1; WORD count} + count * GRPICONDIRENTRY
+ * {BYTE w,h,colorCount,res; WORD planes,bpp; DWORD bytes; WORD iconId}. */
+static void* mw_icon_from_group(void* hinst, const void* name, int want_cx, int want_cy) {
+    if ((uintptr_t)name >= 0x10000u && mw_IsBadReadPtr(name, 4)) return 0;
+    void* hgrp = mw_FindResourceW(hinst, (const wchar_t*)name,
+                                  (const wchar_t*)(uintptr_t)14 /* RT_GROUP_ICON */);
+    if (!hgrp) return 0;
+    const uint8_t* pe_base = (const uint8_t*)mw_res_pe_base(hinst);
+    if (!pe_base) return 0;
+    /* w3_res_find returns the IMAGE_RESOURCE_DATA_ENTRY: {DataRVA, Size,...} */
+    const uint8_t* grp = pe_base + *(const uint32_t*)hgrp;
+    uint32_t grp_size = *(const uint32_t*)((const uint8_t*)hgrp + 4);
+    if (mw_IsBadReadPtr(grp, 6) || grp_size < 6) return 0;
+    uint16_t count = *(const uint16_t*)(grp + 4);
+    if (count == 0 || grp_size < (uint32_t)(6 + count * 14)) return 0;
+    if (want_cx <= 0) want_cx = 32;
+    if (want_cy <= 0) want_cy = 32;
+    int best = -1; long best_score = 0x7FFFFFFFL;
+    for (int i = 0; i < count; i++) {
+        const uint8_t* e = grp + 6 + i * 14;
+        int ew = e[0] ? e[0] : 256;
+        int eh = e[1] ? e[1] : 256;
+        /* Wine lookup_icon_cursor ranking: exact match wins; else the
+         * smallest icon that is >= requested; else the largest below. */
+        long dx = (long)ew - want_cx, dy = (long)eh - want_cy;
+        long score;
+        if (dx == 0 && dy == 0) score = 0;
+        else if (dx >= 0 && dy >= 0) score = 100000 + dx * dy + dx + dy;
+        else score = 200000 + (-dx) * (-dy) + (-dx) + (-dy);
+        if (score < best_score) { best_score = score; best = i; }
+    }
+    if (best < 0) return 0;
+    const uint8_t* be = grp + 6 + best * 14;
+    uint16_t icon_id = *(const uint16_t*)(be + 12);
+    int ew = be[0] ? be[0] : 256, eh = be[1] ? be[1] : 256;
+    void* hico_res = mw_FindResourceW(hinst,
+            (const wchar_t*)(uintptr_t)icon_id, (const wchar_t*)(uintptr_t)3 /* RT_ICON */);
+    if (!hico_res) { MW_TRACE("[ICON] group pick id=%u %dx%d: RT_ICON missing", icon_id, ew, eh); return 0; }
+    const uint8_t* icon_data = pe_base + *(const uint32_t*)hico_res;
+    uint32_t icon_size = *(const uint32_t*)((const uint8_t*)hico_res + 4);
+    void* h = mw_icon_from_resource(icon_data, icon_size, "RT_ICON");
+    if (h) MW_TRACE("[ICON] group id=%u picked RT_ICON %u (%dx%d want %dx%d) -> %p",
+                    (unsigned)(uintptr_t)name, icon_id, ew, eh, want_cx, want_cy, h);
+    return h;
+}
+/* SW-1544: OIC_* stock icons synthesized at 32x32 BGRA. Wine ships real
+ * .ico built-ins (win32u resources); we raster the classic glyphs with
+ * the same shapes: app = framed window, error = red disc X, question =
+ * blue disc ?, warning = yellow triangle !, info = blue disc i, winlogo
+ * = 4-color flag, shield = shield outline. */
+static void mw_stock_put(uint8_t* bgra, int x, int y, uint32_t rgb, uint8_t a) {
+    if (x < 0 || y < 0 || x >= 32 || y >= 32) return;
+    uint8_t* p = bgra + ((size_t)y * 32 + x) * 4;
+    p[0] = (uint8_t)(rgb & 0xFF); p[1] = (uint8_t)((rgb >> 8) & 0xFF);
+    p[2] = (uint8_t)((rgb >> 16) & 0xFF); p[3] = a;
+}
+static void mw_stock_disc(uint8_t* bgra, int cx, int cy, int r, uint32_t col) {
+    for (int y = cy - r - 1; y <= cy + r + 1; y++)
+        for (int x = cx - r - 1; x <= cx + r + 1; x++) {
+            int d2 = (x - cx) * (x - cx) + (y - cy) * (y - cy);
+            if (d2 <= r * r) mw_stock_put(bgra, x, y, col, 255);
+            else if (d2 <= (r + 1) * (r + 1)) mw_stock_put(bgra, x, y, 0x000000, 255);
+        }
+}
+static void mw_stock_glyph(uint8_t* bgra, const char* g[8], int ox, int oy, uint32_t col) {
+    for (int r = 0; r < 8; r++)
+        for (int c = 0; c < 8 && g[r][c]; c++)
+            if (g[r][c] != ' ') mw_stock_put(bgra, ox + c * 2, oy + r * 2, col, 255),
+                                 mw_stock_put(bgra, ox + c * 2 + 1, oy + r * 2, col, 255),
+                                 mw_stock_put(bgra, ox + c * 2, oy + r * 2 + 1, col, 255),
+                                 mw_stock_put(bgra, ox + c * 2 + 1, oy + r * 2 + 1, col, 255);
+}
+static void* mw_icon_stock(uint32_t oic) {
+    uint8_t* bgra = (uint8_t*)malloc(32 * 32 * 4);
+    if (!bgra) return 0;
+    memset(bgra, 0, 32 * 32 * 4); /* transparent base */
+    if (oic == 32512u) {          /* IDI_APPLICATION: framed window */
+        static const char* g[8] = {"XXXXXXXX","X......X","X.XXXX.X","X.X..X.X","X.X..X.X","X.XXXX.X","X......X","XXXXXXXX"};
+        mw_stock_glyph(bgra, g, 8, 8, 0x0000C0);
+    } else if (oic == 32513u) {   /* IDI_ERROR: red disc X */
+        mw_stock_disc(bgra, 16, 16, 13, 0xC00000);
+        for (int d = 0; d < 8; d++) {
+            mw_stock_put(bgra, 11 + d, 11 + d, 0xFFFFFF, 255); mw_stock_put(bgra, 12 + d, 11 + d, 0xFFFFFF, 255);
+            mw_stock_put(bgra, 20 - d, 11 + d, 0xFFFFFF, 255); mw_stock_put(bgra, 21 - d, 11 + d, 0xFFFFFF, 255);
+            mw_stock_put(bgra, 11 + d, 20 - d, 0xFFFFFF, 255); mw_stock_put(bgra, 12 + d, 20 - d, 0xFFFFFF, 255);
+            mw_stock_put(bgra, 20 - d, 20 - d, 0xFFFFFF, 255); mw_stock_put(bgra, 21 - d, 20 - d, 0xFFFFFF, 255);
+        }
+    } else if (oic == 32514u) {   /* IDI_QUESTION: blue disc ? */
+        mw_stock_disc(bgra, 16, 16, 13, 0x0000C0);
+        static const char* g[8] = {" XXX ","X   X","X   X","XXXXX","    X","    X","    X","    "};
+        mw_stock_glyph(bgra, g, 12, 8, 0xFFFFFF);
+        mw_stock_put(bgra, 16, 24, 0xFFFFFF, 255); mw_stock_put(bgra, 17, 24, 0xFFFFFF, 255);
+        mw_stock_put(bgra, 16, 25, 0xFFFFFF, 255); mw_stock_put(bgra, 17, 25, 0xFFFFFF, 255);
+    } else if (oic == 32515u) {   /* IDI_WARNING: yellow triangle ! */
+        for (int r = 0; r < 20; r++) {
+            int half = (r * 8) / 20 + 1;
+            for (int x = 16 - half; x <= 16 + half; x++) {
+                mw_stock_put(bgra, x, 8 + r, 0xFFFF00, 255);
+            }
+        }
+        for (int r = 0; r < 20; r++) mw_stock_put(bgra, 16, 8 + r, 0x000000, 255);
+        mw_stock_put(bgra, 15, 27, 0x000000, 255); mw_stock_put(bgra, 16, 27, 0x000000, 255);
+        mw_stock_put(bgra, 17, 27, 0x000000, 255);
+    } else if (oic == 32516u) {   /* IDI_ASTERISK: blue disc i */
+        mw_stock_disc(bgra, 16, 16, 13, 0x0000C0);
+        mw_stock_put(bgra, 16, 9, 0xFFFFFF, 255); mw_stock_put(bgra, 17, 9, 0xFFFFFF, 255);
+        for (int r = 0; r < 8; r++) { mw_stock_put(bgra, 16, 13 + r, 0xFFFFFF, 255); mw_stock_put(bgra, 17, 13 + r, 0xFFFFFF, 255); }
+    } else if (oic == 32517u) {   /* IDI_WINLOGO: 4-color flag */
+        uint32_t cols[4] = { 0xC00000, 0x00C000, 0x0000C0, 0xC0C000 };
+        for (int q = 0; q < 4; q++)
+            for (int y = 0; y < 12; y++)
+                for (int x = 0; x < 12; x++) {
+                    int wavy = (x >= 4 && x <= 7);
+                    mw_stock_put(bgra, 4 + (q & 1) * 12 + x, 4 + (q >> 1) * 12 + y - (wavy ? 1 : 0),
+                                 cols[q], 255);
+                }
+    } else {                      /* IDI_SHIELD: shield outline */
+        for (int y = 4; y < 28; y++) {
+            int half = (y < 16) ? 12 : 12 - (y - 16) * 3 / 4;
+            for (int x = 16 - half; x <= 16 + half; x++)
+                mw_stock_put(bgra, x, y, 0xC0C000, 255);
+        }
+    }
+    void* hicon = mw_icon_store(32, 32, bgra);
+    free(bgra);
+    return hicon;
+}
 __attribute__((ms_abi)) void* mw_LoadImageW(void* hinst, const void* name, uint32_t type,
         int cx, int cy, uint32_t flags) {
-    (void)hinst;
+    (void)flags;
+    if (type == 1u /* IMAGE_ICON */) {
+        /* SW-1540: real RT_GROUP_ICON walk + decode; SW-1544: the stock form
+         * LoadImage(NULL, IDI_*) gets a synthesized OIC built-in. */
+        void* h = 0;
+        if ((uintptr_t)name < 0x10000u)
+            h = mw_icon_from_group(hinst, name, cx, cy);
+        if (!h && !hinst && (uintptr_t)name < 0x10000u &&
+            mw_is_stock_icon_id((uint32_t)(uintptr_t)name))
+            h = mw_icon_stock((uint32_t)(uintptr_t)name);
+        if (h) { MW_TRACE("LoadImageW(IMAGE_ICON res=%u %dx%d) -> HICON %p",
+                          (unsigned)(uintptr_t)name, cx, cy, h); return h; }
+        MW_TRACE("LoadImageW(IMAGE_ICON name=%p) -> NULL (no decodable group)", name);
+        return NULL;
+    }
     if (flags & 0x10u) { /* LR_LOADFROMFILE */
         MW_TRACE("LoadImageW(LR_LOADFROMFILE) -> NULL (file images unsupported)");
         return NULL;
@@ -28318,23 +28744,45 @@ __attribute__((ms_abi)) uint32_t mw_ImageList_SetBkColor(void* himl, uint32_t co
 __attribute__((ms_abi)) int mw_ImageList_ReplaceIcon(void* himl, int i, void* hicon) {
     MWImgList* L = mw_imgl_decode(himl);
     if (!L) return -1;
-    /* Index contract is real; pixel content stays placeholder until an
-     * HICON rasterizer exists (LoadIcon pool icons are handle-only). */
+    /* SW-1540: real pixels — blit the HICON's BGRA (alpha flattened onto
+     * the list's background) into the image cell. Index contract is real. */
+    MwIconSlot* ico = mw_icon_lookup(hicon);
     int idx;
     if (i < 0) { /* I_IMAGECALLBACK / -1 == append */
-        if (L->count >= L->cap && L->count < MW_IMGL_IMGMAX) {
-            int ncap = L->cap * 2;
-            uint8_t* np = (uint8_t*)realloc(L->px, (size_t)ncap * L->cx * L->cy * 3);
-            if (!np) return -1;
-            L->px = np; L->cap = ncap;
-        }
         if (L->count >= MW_IMGL_IMGMAX) return -1;
-        idx = L->count++;
+        idx = L->count;
+        L->count++;
     } else {
-        if (i >= L->count) return -1;
+        if (i >= MW_IMGL_IMGMAX) return -1;
         idx = i;
+        if (idx >= L->count) L->count = idx + 1;
     }
-    MW_TRACE("ImageList_ReplaceIcon(i=%d) -> %d (placeholder pixels)", i, idx);
+    if (L->count > L->cap) {
+        int ncap = L->cap;
+        while (ncap < L->count) ncap *= 2;
+        uint8_t* np = (uint8_t*)realloc(L->px, (size_t)ncap * L->cx * L->cy * 3);
+        if (!np) { L->count--; return -1; }
+        memset(np + (size_t)L->cap * L->cx * L->cy * 3, 0,
+               (size_t)(ncap - L->cap) * L->cx * L->cy * 3);
+        L->px = np; L->cap = ncap;
+    }
+    uint8_t* cell = L->px + (size_t)idx * L->cx * L->cy * 3;
+    memset(cell, 0xFF, (size_t)L->cx * L->cy * 3); /* white base */
+    if (ico && ico->bgra) {
+        for (int y = 0; y < L->cy; y++) {
+            int sy = (int)((int64_t)y * ico->h / L->cy);
+            for (int x = 0; x < L->cx; x++) {
+                int sx = (int)((int64_t)x * ico->w / L->cx);
+                const uint8_t* p = ico->bgra + ((size_t)sy * ico->w + sx) * 4;
+                uint8_t* q = cell + ((size_t)y * L->cx + x) * 3;
+                if (p[3] < 128) { q[0] = q[1] = q[2] = 0xFF; }
+                else { q[0] = p[0]; q[1] = p[1]; q[2] = p[2]; }
+            }
+        }
+        MW_TRACE("ImageList_ReplaceIcon(i=%d) -> %d (blit %dx%d)", i, idx, ico->w, ico->h);
+    } else {
+        MW_TRACE("ImageList_ReplaceIcon(i=%d) -> %d (cookie icon, white cell)", i, idx);
+    }
     return idx;
 }
 __attribute__((ms_abi)) int mw_SetWindowPos(void* h, void* after, int x, int y,
@@ -30294,7 +30742,40 @@ __attribute__((ms_abi)) int mw_DrawFrameControl(void* dc, void* rc, uint32_t typ
 }
 __attribute__((ms_abi)) int mw_DrawIconEx(void* dc, int x, int y, void* icon, int cx, int cy,
         uint32_t step, void* brush, uint32_t flags) {
-    (void)dc; (void)x; (void)y; (void)icon; (void)cx; (void)cy; (void)step; (void)brush; (void)flags;
+    (void)step; (void)brush; (void)flags;
+    /* SW-1540: real raster — alpha-blit the icon's BGRA into the DC's
+     * surface (window framebuffer or memory-DC bitmap), nearest-neighbor
+     * scaled to (cx, cy). Wine: user32/icon.c DrawIconEx ->
+     * NtUserDrawIconEx blits both planes; DI_DEFAULTSIZE uses 32x32. */
+    MwIconSlot* ico = mw_icon_lookup(icon);
+    if (!ico) { MW_TRACE("DrawIconEx(icon=%p) -> TRUE (cookie/no pixels)", icon); return 1; }
+    if (cx == 0 || cy == 0) { cx = 32; cy = 32; } /* DI_DEFAULTSIZE */
+    if (cx < 0) cx = ico->w;
+    if (cy < 0) cy = ico->h;
+    MWBmp* dst = mw_dc_surface(dc);
+    if (!dst || !dst->px) { MW_TRACE("DrawIconEx(icon=%p %dx%d) -> no DC surface", icon, cx, cy); return 1; }
+    for (int dy = 0; dy < cy; dy++) {
+        int sy = (int)((int64_t)dy * ico->h / cy);
+        for (int dx = 0; dx < cx; dx++) {
+            int sx = (int)((int64_t)dx * ico->w / cx);
+            const uint8_t* p = ico->bgra + ((size_t)sy * ico->w + sx) * 4;
+            uint32_t a = p[3];
+            if (a == 0) continue;              /* transparent */
+            int px = x + dx, py = y + dy;
+            if (px < 0 || py < 0 || px >= dst->w || py >= dst->h) continue;
+            if (a >= 255) {
+                mwb_set(dst, px, py, (uint32_t)p[2] << 16 | (uint32_t)p[1] << 8 | p[0]);
+            } else {
+                uint32_t bg = mwb_get(dst, px, py);
+                uint32_t br = (bg >> 16) & 0xFF, bgc = (bg >> 8) & 0xFF, bb = bg & 0xFF;
+                uint32_t r = (p[2] * a + br * (255 - a) + 127) / 255;
+                uint32_t g = (p[1] * a + bgc * (255 - a) + 127) / 255;
+                uint32_t b = (p[0] * a + bb * (255 - a) + 127) / 255;
+                mwb_set(dst, px, py, r << 16 | g << 8 | b);
+            }
+        }
+    }
+    MW_TRACE("DrawIconEx(icon=%p %dx%d at %d,%d) -> BLITTED", icon, cx, cy, x, y);
     return 1;
 }
 __attribute__((ms_abi)) int mw_ExcludeClipRect(void* dc, int l, int t, int r, int b) {
@@ -30406,24 +30887,59 @@ __attribute__((ms_abi)) uint32_t mw_GetOutlineTextMetricsA(void* dc, uint32_t cb
 /* ---- icons ---- */
 typedef struct { int32_t fIcon; uint32_t xHot, yHot; void* mask; void* color; } MwIconInfo;
 __attribute__((ms_abi)) int mw_GetIconInfo(void* icon, MwIconInfo* ii) {
-    (void)icon;
+    MwIconSlot* ico = mw_icon_lookup(icon);
+    if (!ico) { MW_TRACE("GetIconInfo(%p) -> FALSE (not an icon-plane handle)", icon); return 0; }
     if (!ii) return 0;
-    ii->fIcon = 1; ii->xHot = 0; ii->yHot = 0;
-    ii->mask = (void*)0x00030002u; ii->color = NULL;
+    /* SW-1540: honest geometry from the decoded pixels. mask/color are
+     * HBITMAP cookies (the engine has no per-icon plane split); xHot/yHot
+     * follow the MS rule (w/2, h/2 for icons). */
+    ii->fIcon = 1; ii->xHot = (uint32_t)(ico->w / 2); ii->yHot = (uint32_t)(ico->h / 2);
+    ii->mask = (void*)0x00030002u; ii->color = (void*)0x00030001u;
+    MW_TRACE("GetIconInfo(%p) -> %dx%d", icon, ico->w, ico->h);
     return 1;
 }
 __attribute__((ms_abi)) void* mw_CreateIconIndirect(const MwIconInfo* ii) {
-    (void)ii;
-    void* h = (void*)(uintptr_t)(MW_GDI_ICON_BASE | (g_gdi_icon_next++ & 0xFFFu));
-    MW_TRACE("CreateIconIndirect -> %p", h);
-    return h;
+    /* SW-1540: composite from the two HBITMAPs (color + mask) the guest
+     * provides. Wine: user32/icon.c CreateIconIndirect builds a 32bpp
+     * surface: color supplies BGR, mask zeroes the matching pixels. */
+    if (!ii) return NULL;
+    MWBmp* col = mw_imgl_srcbmp(ii->color);
+    MWBmp* msk = mw_imgl_srcbmp(ii->mask);
+    if (!col || !col->px) {
+        MW_TRACE("CreateIconIndirect(no color bmp) -> NULL");
+        return NULL;
+    }
+    int w = col->w, h = col->h;
+    uint8_t* bgra = (uint8_t*)malloc((size_t)w * h * 4);
+    if (!bgra) return NULL;
+    for (int y = 0; y < h; y++)
+        for (int x = 0; x < w; x++) {
+            uint32_t c = mwb_get(col, x, y);           /* 0xRRGGBB */
+            uint8_t a = 255;
+            if (msk && msk->px) {
+                uint32_t m = mwb_get(msk, x, y);
+                if ((m & 0xFFFFFF) == 0) a = 0;        /* mask black = transparent */
+            }
+            uint8_t* p = bgra + ((size_t)y * w + x) * 4;
+            p[0] = (uint8_t)(c & 0xFF); p[1] = (uint8_t)((c >> 8) & 0xFF);
+            p[2] = (uint8_t)((c >> 16) & 0xFF); p[3] = a;
+        }
+    void* hicon = mw_icon_store(w, h, bgra);
+    free(bgra);
+    MW_TRACE("CreateIconIndirect(%dx%d) -> HICON %p", w, h, hicon);
+    return hicon;
 }
 __attribute__((ms_abi)) void* mw_CreateIconFromResourceEx(const uint8_t* pres, uint32_t size,
         int fIcon, uint32_t ver, int cx, int cy, uint32_t flags) {
-    (void)pres; (void)size; (void)fIcon; (void)ver; (void)cx; (void)cy; (void)flags;
-    void* h = (void*)(uintptr_t)(MW_GDI_ICON_BASE | (g_gdi_icon_next++ & 0xFFFu));
-    MW_TRACE("CreateIconFromResourceEx(%u bytes) -> %p", size, h);
-    return h;
+    (void)ver; (void)flags;
+    /* SW-1540: pres IS an RT_ICON-format DIB (the group entry's
+     * dwBytesInRes blob) — decode it for real. Wine: user32/icon.c
+     * CreateIconFromResourceEx -> create_icon_from_bits. */
+    if (!fIcon) return NULL; /* cursors: not modeled */
+    void* h = mw_icon_from_resource(pres, size, "CreateIconFromResourceEx");
+    if (h) { MW_TRACE("CreateIconFromResourceEx(%u bytes) -> HICON %p (real)", size, h); return h; }
+    MW_TRACE("CreateIconFromResourceEx(%u bytes) -> NULL (undecodable)", size);
+    return NULL;
 }
 __attribute__((ms_abi)) uint32_t mw_ExtractIconExW(const uint16_t* file, int idx, void** large, void** small, uint32_t n) {
     (void)file; (void)idx;
@@ -30434,7 +30950,19 @@ __attribute__((ms_abi)) uint32_t mw_ExtractIconExW(const uint16_t* file, int idx
     MW_TRACE("ExtractIconExW -> %u", produced);
     return produced;
 }
-__attribute__((ms_abi)) int mw_DestroyIcon(void* h) { (void)h; return 1; }
+__attribute__((ms_abi)) int mw_DestroyIcon(void* h) {
+    /* SW-1540: free the pixel slot; cookie handles stay a no-op TRUE. */
+    uintptr_t v = (uintptr_t)h;
+    if ((v & 0xFFFFF000u) == MW_HICON_BASE) {
+        int i = (int)(v & 0xFFFu) - 1;
+        if (i >= 0 && i < MW_ICONS_MAX && g_icons[i].live) {
+            free(g_icons[i].bgra);
+            g_icons[i].live = 0; g_icons[i].bgra = 0;
+            MW_TRACE("DestroyIcon(%p) -> TRUE (pixels freed)", h);
+        }
+    }
+    return 1;
+}
 /* ---- ImageList family on the existing ImageList model ---- */
 __attribute__((ms_abi)) int mw_ImageList_AddMasked(void* il, void* bm, uint32_t mask) {
     (void)bm; (void)mask;
@@ -30451,18 +30979,69 @@ __attribute__((ms_abi)) int mw_ImageList_DragLeave(void* lock) { (void)lock; ret
 __attribute__((ms_abi)) int mw_ImageList_DragMove(int x, int y) { (void)x; (void)y; return 1; }
 __attribute__((ms_abi)) int mw_ImageList_DragShowNolock(int show) { (void)show; return 1; }
 __attribute__((ms_abi)) int mw_ImageList_Draw(void* il, int i, void* dc, int x, int y, uint32_t style) {
-    (void)il; (void)i; (void)dc; (void)x; (void)y; (void)style;
+    /* SW-1540: real blit of the stored cell into the DC surface. */
+    MWImgList* L = mw_imgl_decode(il);
+    if (!L || i < 0 || i >= L->count) return 0;
+    MWBmp* dst = mw_dc_surface(dc);
+    if (!dst || !dst->px || !L->px) { MW_TRACE("ImageList_Draw(i=%d) -> no surface", i); return 1; }
+    const uint8_t* cell = L->px + (size_t)i * L->cx * L->cy * 3;
+    for (int dy = 0; dy < L->cy; dy++)
+        for (int dx = 0; dx < L->cx; dx++) {
+            int px = x + dx, py = y + dy;
+            if (px < 0 || py < 0 || px >= dst->w || py >= dst->h) continue;
+            const uint8_t* q = cell + ((size_t)dy * L->cx + dx) * 3;
+            uint32_t c = (uint32_t)q[2] << 16 | (uint32_t)q[1] << 8 | q[0];
+            if ((style & 0x5u) == 0x5u && (q[0] | q[1] | q[2]) == 0xFF) continue; /* ILD_MASK|ILD_TRANSPARENT: white = transparent */
+            mwb_set(dst, px, py, c);
+        }
+    MW_TRACE("ImageList_Draw(i=%d at %d,%d %dx%d) -> BLITTED", i, x, y, L->cx, L->cy);
     return 1;
 }
 __attribute__((ms_abi)) int mw_ImageList_DrawEx(void* il, int i, void* dc, int x, int y, int dx, int dy,
         uint32_t bg, uint32_t fg, uint32_t style) {
-    (void)il; (void)i; (void)dc; (void)x; (void)y; (void)dx; (void)dy; (void)bg; (void)fg; (void)style;
+    /* SW-1540: scaled variant of ImageList_Draw (dx/dy = destination size). */
+    MWImgList* L = mw_imgl_decode(il);
+    if (!L || i < 0 || i >= L->count) return 0;
+    if (dx <= 0) dx = L->cx;
+    if (dy <= 0) dy = L->cy;
+    MWBmp* dst = mw_dc_surface(dc);
+    if (!dst || !dst->px || !L->px) { MW_TRACE("ImageList_DrawEx(i=%d) -> no surface", i); return 1; }
+    const uint8_t* cell = L->px + (size_t)i * L->cx * L->cy * 3;
+    (void)bg; (void)fg;
+    for (int yy = 0; yy < dy; yy++) {
+        int sy = (int)((int64_t)yy * L->cy / dy);
+        for (int xx = 0; xx < dx; xx++) {
+            int sx = (int)((int64_t)xx * L->cx / dx);
+            int px = x + xx, py = y + yy;
+            if (px < 0 || py < 0 || px >= dst->w || py >= dst->h) continue;
+            const uint8_t* q = cell + ((size_t)sy * L->cx + sx) * 3;
+            if ((style & 0x5u) == 0x5u && (q[0] | q[1] | q[2]) == 0xFF) continue;
+            mwb_set(dst, px, py, (uint32_t)q[2] << 16 | (uint32_t)q[1] << 8 | q[0]);
+        }
+    }
+    MW_TRACE("ImageList_DrawEx(i=%d %dx%d) -> BLITTED", i, dx, dy);
     return 1;
 }
 __attribute__((ms_abi)) int mw_ImageList_DrawIndirect(const void* pims) { (void)pims; return 1; }
 __attribute__((ms_abi)) void* mw_ImageList_GetIcon(void* il, int i, uint32_t flags) {
-    (void)il; (void)i; (void)flags;
-    return (void*)(uintptr_t)(MW_GDI_ICON_BASE | (g_gdi_icon_next++ & 0xFFFu));
+    /* SW-1540: materialize a real HICON from the stored cell. */
+    (void)flags;
+    MWImgList* L = mw_imgl_decode(il);
+    if (!L || i < 0 || i >= L->count || !L->px) return NULL;
+    const uint8_t* cell = L->px + (size_t)i * L->cx * L->cy * 3;
+    uint8_t* bgra = (uint8_t*)malloc((size_t)L->cx * L->cy * 4);
+    if (!bgra) return NULL;
+    for (int y = 0; y < L->cy; y++)
+        for (int x = 0; x < L->cx; x++) {
+            const uint8_t* q = cell + ((size_t)y * L->cx + x) * 3;
+            uint8_t* p = bgra + ((size_t)y * L->cx + x) * 4;
+            p[0] = q[0]; p[1] = q[1]; p[2] = q[2];
+            p[3] = ((q[0] | q[1] | q[2]) == 0xFF) ? 0 : 255; /* white = transparent */
+        }
+    void* hicon = mw_icon_store(L->cx, L->cy, bgra);
+    free(bgra);
+    MW_TRACE("ImageList_GetIcon(i=%d) -> HICON %p", i, hicon);
+    return hicon;
 }
 typedef struct { uint32_t* cx; uint32_t* cy; } MwDummy;
 __attribute__((ms_abi)) int mw_ImageList_GetIconSize(void* il, int* cx, int* cy) {
@@ -33859,7 +34438,8 @@ __attribute__((ms_abi)) int mw_GrayStringW(void* hdc, void* br, void* cb, intptr
     (void)hdc; (void)x; (void)y; (void)cx; return 1; /* v1: text renders normally */
 }
 __attribute__((ms_abi)) int mw_DrawIcon(void* hdc, int x, int y, void* icon) {
-    (void)hdc; (void)x; (void)y; (void)icon; return 1; /* v1: no pixels */
+    /* SW-1540: DrawIcon = DrawIconEx 32x32 (wine user32/icon.c). */
+    return mw_DrawIconEx(hdc, x, y, icon, 32, 32, 0, NULL, 0);
 }
 __attribute__((ms_abi)) uint16_t mw_SetAbortProc(void* hdc, void* proc) { (void)hdc; (void)proc; return 0; }
 __attribute__((ms_abi)) int mw_Escape(void* hdc, int esc, int nin, const char* in, void* out) {
@@ -37909,8 +38489,47 @@ __attribute__((ms_abi)) int mw_SetFileSecurityA(const char* name, uint32_t info,
 }
 __attribute__((ms_abi)) void* mw_CreateIcon(void* inst, int w, int h, uint8_t planes,
         uint8_t bits, const void* andbits, const void* xorbits) {
-    (void)inst; (void)w; (void)h; (void)planes; (void)bits; (void)andbits; (void)xorbits;
-    return (void*)(uintptr_t)0xB0000001; /* cookie icon handle */
+    (void)inst;
+    /* SW-1540: real decode from the raw planes the guest supplies
+     * (wine user32/icon.c CreateIcon -> the same XOR/AND walk). */
+    if (w <= 0 || h <= 0 || w > 256 || h > 256) return NULL;
+    if (!xorbits || mw_IsBadReadPtr(xorbits, 16)) return NULL;
+    if (planes != 1 || (bits != 1 && bits != 4 && bits != 8 && bits != 24 && bits != 32)) {
+        MW_TRACE("CreateIcon(planes=%u bits=%u) -> NULL (unsupported)", planes, bits);
+        return NULL;
+    }
+    size_t xstride = (((size_t)w * bits + 31) / 32) * 4;
+    size_t astride = (((size_t)w) + 31) / 32 * 4;
+    if (mw_IsBadReadPtr(xorbits, xstride * (size_t)h)) return NULL;
+    if (andbits && mw_IsBadReadPtr(andbits, astride * (size_t)h)) return NULL;
+    uint8_t* bgra = (uint8_t*)malloc((size_t)w * h * 4);
+    if (!bgra) return NULL;
+    const uint8_t* xor = (const uint8_t*)xorbits;
+    const uint8_t* and = (const uint8_t*)andbits;
+    for (int y = 0; y < h; y++) {
+        const uint8_t* xrow = xor + (size_t)y * xstride;
+        const uint8_t* arow = and ? and + (size_t)y * astride : 0;
+        uint8_t* orow = bgra + (size_t)(h - 1 - y) * w * 4;
+        for (int x = 0; x < w; x++) {
+            uint32_t b = 0, g = 0, r = 0;
+            if (bits == 32) { const uint8_t* p = xrow + (size_t)x * 4; b = p[0]; g = p[1]; r = p[2]; }
+            else if (bits == 24) { const uint8_t* p = xrow + (size_t)x * 3; b = p[0]; g = p[1]; r = p[2]; }
+            else {
+                uint32_t idx;
+                if (bits == 8) idx = xrow[x];
+                else if (bits == 4) idx = (x & 1) ? (xrow[x / 2] & 0xF) : (xrow[x / 2] >> 4);
+                else idx = (xrow[x / 8] >> (7 - (x & 7))) & 1;
+                b = idx ? 0 : 255; g = b; r = b; /* mono: 1=black */
+            }
+            uint32_t a = (arow && ((arow[x / 8] >> (7 - (x & 7))) & 1)) ? 0 : 255;
+            orow[x * 4 + 0] = (uint8_t)b; orow[x * 4 + 1] = (uint8_t)g;
+            orow[x * 4 + 2] = (uint8_t)r; orow[x * 4 + 3] = (uint8_t)a;
+        }
+    }
+    void* hicon = mw_icon_store(w, h, bgra);
+    free(bgra);
+    MW_TRACE("CreateIcon(%dx%d planes=%u bits=%u) -> HICON %p", w, h, planes, bits, hicon);
+    return hicon;
 }
 __attribute__((ms_abi)) void* mw_FindExecutableW(const uint16_t* file, uint16_t* dir, uint16_t* out) {
     (void)file; (void)dir;
