@@ -168,3 +168,6 @@ tools/wine_behavior_tracker/*.egg-info/
 
 # SWEEP-110: battery sandbox trees stay local (installed apps, temp payloads)
 evidence/sweep110/*/sandbox/
+
+# SWEEP-111: seed-experiment sandbox copy stays local (guest binaries policy)
+evidence/sweep111/seedexp/
