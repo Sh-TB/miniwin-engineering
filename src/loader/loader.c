@@ -97,11 +97,23 @@ static uint8_t* mw32_arena_host(uint32_t va); /* SW-1364b: arena VA -> host ptr 
 static uint32_t mw32_arena_live_edge(void);  /* SW-1364b: g_heap32_next */
 static size_t mw32_arena_copyable(uint32_t src_va); /* SW-1364b: clamp at live edge */
 static uint32_t mw32_heap_alloc(uint32_t size, int zero);
+static int mw32_wgetmainargs_arena(int* pargc, uint16_t*** pwargv, uint16_t*** pwenv); /* SW-1535 (def in the PE32 plane) */
 static int   g_ran_pe32;
 static int   g_pe32_exit;
 static volatile int g_cpu32_active;   /* x86 world mode flag */
 typedef struct { uint32_t start_eip, param; } Mw32ThreadArg;
-static void* mw32_thread_trampoline(void* p);
+
+
+static void mw32w_engine_write(const char* rd, uint32_t va, uint32_t val);
+/* SW-1482 (SWEEP-100): MW32_WATCH="lo:hi" (hex u32) — interpreter-level memory
+ * watchpoint globals (hoisted: engine-side write logging shares them). */
+static uint32_t g_m32w_lo = 0, g_m32w_hi = 0;
+static unsigned g_m32w_n = 0;
+static inline int m32w_hit(uint32_t va) {
+    return g_m32w_lo != 0 && va >= g_m32w_lo && va < g_m32w_hi;
+}
+#define MW32W_LOG(rd, va, val) mw32w_log((rd), (uint32_t)(uintptr_t)(va), (uint32_t)(uintptr_t)(val))
+static __attribute__((ms_abi)) void* mw32_thread_trampoline(void* p); /* SW-1528: ms_abi — boot calls MwGuestStart (ms_abi, arg in RCX) */
 static __attribute__((ms_abi)) long long mw_wndproc32_shim(void* hwnd, uint32_t msg, uintptr_t wp, long long lp);
 static uint32_t mw32_stdcall_arity(const char* name);
 static int g_arity_found; /* SW-1358b: found-flag for the arity lookup (def near the table) */
@@ -123,6 +135,11 @@ static float mdl_f32(uint32_t va);
 static uint32_t mdl_f32_from(double d);
 static int cpu32_run(uint64_t max_steps);
 static uint32_t cpu32_call(uint32_t eip, int nargs, const uint32_t* args);
+/* SW-1527 (issue #25 IDM): DialogProc registry + routing — defined with the
+ * dialog block; SendMessageW/A and the pump dispatch route through these. */
+static void mw_dlg_proc_store(void* hwnd, void* proc, int is32);
+static long long mw_dlg_proc_route(void* hwnd, uint32_t msg, uintptr_t wp,
+                                   long long lp, int* found);
 /* SW-1349: MW32_DUMP_VA="va:len[,va:len]" — hexdump guest ranges (host VA ==
  * guest VA in the PE32 world). Pre-run = image-mapping truth; the same helper
  * runs from the crash reporter so the post-mortem state is inspectable. */
@@ -11064,24 +11081,76 @@ static void* mw_pipe_client_open(const char* name); /* SW-1217 fwd (def in pipe 
  * temp dirs UNDER it (CreateDirectory "$TEMP\nsXXX.tmp") and a missing parent
  * turns "no writable temp" into a silent installer exit. Seeding the skeleton
  * at first touch of any \Windows\ path models the booted-system truth. */
+/* SW-1524 (SWEEP-109, issue #25 IDM): the shared boot-state directory list.
+ * Extended to the real booted-Windows set (Users profile tree, Program Files,
+ * SysWOW64, Fonts, ProgramData) — guests probe these before writing (IDM's
+ * unpacker checks %TEMP% parents; Notepad++ maps C:\Users\MiniWin\AppData). */
+static const char* const MW_WIN_DIRS[] = {
+    "/Windows", "/Windows/System32", "/Windows/System32/Drivers",
+    "/Windows/System32/spool", "/Windows/System32/config",
+    "/Windows/SysWOW64", "/Windows/Fonts", "/Windows/Temp",
+    "/Users", "/Users/MiniWin", "/Users/MiniWin/Desktop",
+    "/Users/MiniWin/Documents", "/Users/MiniWin/Downloads",
+    "/Users/MiniWin/AppData", "/Users/MiniWin/AppData/Local",
+    "/Users/MiniWin/AppData/Local/Temp",
+    "/Users/MiniWin/AppData/Roaming",
+    "/Program Files", "/Program Files (x86)",
+    "/ProgramData",
+    NULL
+};
+/* SW-1524: hoisted to file scope so the world-seed can disarm the lazy one. */
+static int g_win_dirs_seeded = 0;
+/* SW-1524 (SWEEP-109, issue #25 IDM): the full Windows boot skeleton must
+ * exist BEFORE the guest's first filesystem probe, not lazily mid-chain.
+ * Real evidence (evidence/sweep109/idman): IDM 6.42's unpacker runs a
+ * check-then-create recursion for C:\Windows\Temp\IDM_Setup_Temp:
+ *   GetFileAttributes(leaf)=2 -> CreateDirectory(Windows) ->
+ *   GetFileAttributes(Temp)=2 -> CreateDirectory(Temp) -> EEXIST(183) FALSE
+ * The old lazy seed fired INSIDE that last CreateDirectory (it materialized
+ * Temp first), so mkdir hit EEXIST -> ERROR_ALREADY_EXISTS(183) -> FALSE;
+ * the guest aborted the chain, skipped the leaf create, re-checked the leaf
+ * (still missing) and rendered "Could not create temp dir in unpacker,
+ * Error ID: 2" -> silent exit 0 with NOTHING installed (77k steps, issue
+ * #25's open question). On a real Windows box C:\Windows\Temp predates
+ * every installer: the guest's recursion checks Temp, finds it EXISTING,
+ * and creates the leaf directly. w3_seed_windows_world() models the
+ * booted-machine state: called once at loader start in installer world
+ * (MINWIN_WINTEMP=1), it materializes the standard directories under the
+ * C:\ plane (the loader cwd, SW-1234) so the guest NEVER observes a
+ * transient half-built system. Wine parallel: wineboot creates dosdevices/
+ * the full prefix tree before any Windows process runs (ntdll/unix/loader.c
+ * + wineserver prefix init) — a guest is NEVER handed a prefix mid-build. */
+static void w3_seed_windows_world(void) {
+    if (g_win_dirs_seeded) return;
+    const char* root = g_mw_drive_cwd();
+    for (int i = 0; MW_WIN_DIRS[i]; i++) {
+        char full[2048];
+        snprintf(full, sizeof(full), "%s%s", root, MW_WIN_DIRS[i]);
+        mkdir(full, 0755); /* EEXIST fine */
+    }
+    g_win_dirs_seeded = 1; /* the lazy seeder becomes a no-op */
+    MW_TRACE("file world: Windows boot skeleton seeded under %s (SW-1524)", root);
+}
 static void w3_seed_windows_skeleton(const char* name8) {
-    static int g_win_dirs_seeded = 0;
-    if (g_win_dirs_seeded || !name8 || !strstr(name8, "/Windows/")) return;
+    if (g_win_dirs_seeded || !name8) return;
+    /* SW-1524: match the system root with or without a trailing slash —
+     * CreateDirectoryW(".../Windows") (no slash) previously failed the
+     * "/Windows/" strstr and seeded nothing, pushing the whole skeleton
+     * one guest step later, right into IDM's create chain. "/WindowsXP"
+     * style names are NOT the system root. */
+    const char* winp = strstr(name8, "/Windows");
+    if (!winp) return;
+    if (winp[8] && winp[8] != '/') return;
     g_win_dirs_seeded = 1;
-    static const char* dirs[] = {
-        "/Windows", "/Windows/System32", "/Windows/System32/Drivers",
-        "/Windows/System32/spool", "/Windows/Temp", NULL
-    };
     char base[2048];
-    snprintf(base, sizeof(base), "%s", name8);
-    char* winp = strstr(base, "/Windows/");
-    if (winp) {
-        *winp = 0; /* base = the drive-cwd root */
-        for (int i = 0; dirs[i]; i++) {
-            char full[2048];
-            snprintf(full, sizeof(full), "%s%s", base, dirs[i]);
-            mkdir(full, 0755); /* EEXIST fine */
-        }
+    size_t bl = (size_t)(winp - name8);
+    if (bl >= sizeof(base)) bl = sizeof(base) - 1;
+    memcpy(base, name8, bl);
+    base[bl] = '\0'; /* base = the drive-cwd root */
+    for (int i = 0; MW_WIN_DIRS[i]; i++) {
+        char full[2048];
+        snprintf(full, sizeof(full), "%s%s", base, MW_WIN_DIRS[i]);
+        mkdir(full, 0755); /* EEXIST fine */
     }
     MW_TRACE("file world: Windows dir skeleton seeded under %s", base);
 }
@@ -13315,16 +13384,16 @@ static int32_t mw_reg_query(void* key, const uint16_t* name, uint32_t* type, voi
         for (uint32_t v = 0; v < g_reg[i].nvals; v++) {
             MwRegVal* val = &g_reg[i].vals[v];
             if (!mw_reg_weq(val->name, name)) continue;
-            if (type) *type = val->type;
-            if (!data) { if (size) *size = val->size; return 0; }
+            if (type) { *type = val->type; mw32w_engine_write("EW32", (uint32_t)(uintptr_t)type, val->type); } /* SW-1538: engine guest-writes must be watch-visible */
+            if (!data) { if (size) { *size = val->size; mw32w_engine_write("EW32", (uint32_t)(uintptr_t)size, val->size); } return 0; }
             uint32_t cap = size ? *size : val->size;
             if (cap < val->size) {
-                if (size) *size = val->size;
+                if (size) { *size = val->size; mw32w_engine_write("EW32", (uint32_t)(uintptr_t)size, val->size); }
                 mw_SetLastError(234); /* MORE_DATA */
                 return 234;
             }
-            if (val->size) memcpy(data, val->data, val->size);
-            if (size) *size = val->size;
+            if (val->size) { memcpy(data, val->data, val->size); mw32w_engine_write("EMCPY", (uint32_t)(uintptr_t)data, val->size); } /* SW-1538 */
+            if (size) { *size = val->size; mw32w_engine_write("EW32", (uint32_t)(uintptr_t)size, val->size); }
             /* SW-1102f: hit-path visibility (registry queries were invisible
              * in api_trace.json — procexp64's BUG-078 crash window hid its
              * whole RegQueryValueExW probe surface behind this gap). */
@@ -14821,6 +14890,17 @@ __attribute__((ms_abi)) int mw_CreateProcessW(const wchar_t* app, wchar_t* cmd, 
      * returned process handle (GetExitCodeProcess/WaitForSingleObject). */
     (void)pa; (void)ta; (void)inherit; (void)env; (void)dir; (void)si;
     char exe8[1024] = {0}, cmd8[4096] = {0}, argtail[4096] = {0};
+    /* SW-1526 (SWEEP-109, issue #25 IDM): the old MW_TRACE sat AFTER the MZ
+     * probe, so a failed CreateProcessW left NO trace of its target path —
+     * the guest saw only GetLastError()=2 + "Could not create process in
+     * unpacker, Error ID=2". Log the inputs at entry (SW-1262 caller-
+     * attribution discipline; the failed-call path must be decodable). */
+    {
+        char a8[256] = {0}, c8[1024] = {0};
+        if (app) w3_w16_to_utf8z((const uint16_t*)app, a8, sizeof(a8) - 1);
+        if (cmd) w3_w16_to_utf8z((const uint16_t*)cmd, c8, sizeof(c8) - 1);
+        MW_TRACE("CreateProcessW(app='%s' cmd='%s' flags=0x%x)", a8, c8, flags);
+    }
     if (app && w3_w16_to_utf8z((const uint16_t*)app, exe8, sizeof(exe8) - 1) < 0) { mw_SetLastError(87); return 0; }
     if (cmd && w3_w16_to_utf8z((const uint16_t*)cmd, cmd8, sizeof(cmd8) - 1) < 0) { mw_SetLastError(87); return 0; }
     /* Command line: first token (quotes-aware) is the image; lpApplicationName
@@ -14857,7 +14937,12 @@ __attribute__((ms_abi)) int mw_CreateProcessW(const wchar_t* app, wchar_t* cmd, 
      * the same discriminator that flags PE32 guests to the WOW64 path. */
     {
         int fd = open(exe8, O_RDONLY);
-        if (fd < 0) { mw_SetLastError(errno == ENOENT ? 2 : (errno == EACCES ? 5 : 3)); return 0; }
+        if (fd < 0) {
+            /* SW-1526: name the missing image in the trace (issue #25 decode) */
+            MW_TRACE("CreateProcessW MZ probe open('%s') failed errno=%d -> error %d",
+                     exe8, errno, errno == ENOENT ? 2 : (errno == EACCES ? 5 : 3));
+            mw_SetLastError(errno == ENOENT ? 2 : (errno == EACCES ? 5 : 3)); return 0;
+        }
         char mz[2] = {0, 0};
         int got = (int)read(fd, mz, 2);
         close(fd);
@@ -16550,12 +16635,15 @@ static int g_mapview_count = 0;
  * (file mapping family, near mw_CreateFileMappingW). */
 static int filemap_lookup(void* h, void** hfile, long long* size_out);
 static int w3fd_from_handle(void* h);
+static int filemap_fd(int idx); /* SW-1530: section-owned fd accessor (def at the FileMap block) */
 
 __attribute__((ms_abi)) void* mw_MapViewOfFile(void* h, uint32_t access, uint32_t hi, uint32_t lo, size_t bytes) {
     MW_TRACE("MapViewOfFile(h=%p, access=0x%x, off=%u:%u, bytes=0x%zx)", h, access, hi, lo, bytes);
     void* hfile = NULL; long long msize = 0;
-    if (!filemap_lookup(h, &hfile, &msize)) { mw_SetLastError(6); return NULL; } /* ERROR_INVALID_HANDLE */
-    int fd = w3fd_from_handle(hfile);
+    int midx = filemap_lookup(h, &hfile, &msize); /* SW-1529: returns the mapping index */
+    if (midx < 0) { mw_SetLastError(6); return NULL; } /* ERROR_INVALID_HANDLE */
+    int fd = filemap_fd(midx); /* SW-1530: section-owned fd survives file CloseHandle */
+    if (fd < 0) fd = w3fd_from_handle(hfile);
     if (fd < 0) { mw_SetLastError(6); return NULL; }
     long long fsize = (long long)lseek(fd, 0, SEEK_END);
     lseek(fd, 0, SEEK_CUR);
@@ -16569,8 +16657,22 @@ __attribute__((ms_abi)) void* mw_MapViewOfFile(void* h, uint32_t access, uint32_
     if (access & 0x2) prot |= PROT_WRITE;                       /* FILE_MAP_WRITE */
     if ((access & 0xF001Fu) == 0xF001Fu) prot |= PROT_WRITE;    /* FILE_MAP_ALL_ACCESS */
     if (access & 0x20u) prot |= PROT_EXEC;                      /* FILE_MAP_EXECUTE */
-    void* base = mmap(NULL, view, prot, MAP_SHARED, fd, (off_t)off);
-    if (base == MAP_FAILED) { mw_SetLastError(8); return NULL; }
+    void* base;
+    if (g_image_base32 || g_cpu32_active) {
+        /* SW-1530 (m32): the view must live BELOW 4GB — a NULL-hint mmap
+         * lands at 0x7f... and the 32-bit guest truncates it. Carve the
+         * pages out of the arena bump (page-aligned) and MAP_FIXED the
+         * file backing over them (SHARED = write-back semantics for
+         * FILE_MAP_WRITE views). */
+        uint32_t va = mw32_heap_alloc((uint32_t)((view + 0xFFF) & ~0xFFFu), 0);
+        if (!va) { mw_SetLastError(8); return NULL; }
+        base = mmap((void*)(uintptr_t)va, view, prot,
+                    MAP_SHARED | MAP_FIXED, fd, (off_t)off);
+        if (base == MAP_FAILED) { mw_SetLastError(8); return NULL; }
+    } else {
+        base = mmap(NULL, view, prot, MAP_SHARED, fd, (off_t)off);
+        if (base == MAP_FAILED) { mw_SetLastError(8); return NULL; }
+    }
     if (g_mapview_count < MAX_MAPVIEWS) {
         g_mapviews[g_mapview_count].base = base;
         g_mapviews[g_mapview_count].size = view;
@@ -17044,19 +17146,39 @@ __attribute__((ms_abi)) int mw___intrinsic_setjmp(void* jb);
 
 /* ---- file mapping: REAL mmap-backed objects (sqlite needs them) ---- */
 #define MAX_FILEMAPS 64
-typedef struct { void* handle; long long size; } FileMap;
+/* SW-1530 (SWEEP-109, issue #25 IDM): the SECTION owns its fd. Real Windows
+ * keeps the file object alive through the section even after the guest
+ * closes the file handle (CreateFileMapping -> CloseHandle(file) is the
+ * canonical map-read-unmap dance — the Tonec unpacker does exactly this).
+ * The old design re-resolved the guest's hfile at MapViewOfFile time; a
+ * guest that closed the file first got ERROR_INVALID_HANDLE(6) from
+ * w3fd_from_handle -> "Could not create map view file in GetViewFile,
+ * Error ID=6". dup() at creation holds the section alive. */
+typedef struct { void* handle; long long size; int fd; } FileMap;
 static FileMap g_filemaps[MAX_FILEMAPS];
 static int g_filemap_count = 0;
+static int filemap_fd(int idx) { /* SW-1530 accessor (fwd-declared at MapViewOfFile) */
+    if (idx < 0 || idx >= g_filemap_count) return -1;
+    return g_filemaps[idx].fd;
+}
 
 /* LADDER-009: resolve a mapping-object handle (0x6000+N from
- * mw_CreateFileMappingW) to its backing file handle + recorded size. */
+ * mw_CreateFileMappingW) to its backing file handle + recorded size.
+ * SW-1529: accepts BOTH the raw object id (0x6000+N) and the real
+ * handle-table handle (alloc_handle small ints) — see the block comment
+ * above the LADDER-009 original. Returns the mapping index or -1. */
 static int filemap_lookup(void* h, void** hfile, long long* size_out) {
-    if ((uintptr_t)h < 0x6000) return 0;
+    if ((uintptr_t)h >= 4 && (uintptr_t)h < 0x6000) {
+        int hs = (int)(uintptr_t)h - 4;
+        if (hs >= 0 && hs < g_handle_count && g_handle_table[hs])
+            h = g_handle_table[hs]; /* -> 0x6000+N object id */
+    }
+    if ((uintptr_t)h < 0x6000) return -1;
     int idx = (int)((uintptr_t)h - 0x6000);
-    if (idx < 0 || idx >= g_filemap_count) return 0;
+    if (idx < 0 || idx >= g_filemap_count) return -1;
     if (hfile) *hfile = g_filemaps[idx].handle;
     if (size_out) *size_out = g_filemaps[idx].size;
-    return 1;
+    return idx;
 }
 
 __attribute__((ms_abi)) void* mw_CreateFileMappingW(void* hfile, void* sa, uint32_t prot,
@@ -17065,11 +17187,31 @@ __attribute__((ms_abi)) void* mw_CreateFileMappingW(void* hfile, void* sa, uint3
     MW_TRACE("CreateFileMappingW(h=%p, prot=0x%x, max=%u:%u)", hfile, prot, maxhi, maxlo);
     if (g_filemap_count >= MAX_FILEMAPS) { mw_SetLastError(4); return NULL; }
     long long size = ((long long)maxhi << 32) | maxlo;
+    /* SW-1530: the section owns a dup() of the fd — the guest may legally
+     * CloseHandle(file) right after this call and still map the view. */
+    int sfd = -1;
+    if (hfile) { int f0 = w3fd_from_handle(hfile); if (f0 >= 0) sfd = dup(f0); }
+    /* SW-1531 (SWEEP-109, issue #25 IDM): a Windows section EXTENDS the
+     * backing file to the requested size (NTFS grows on demand) — writes
+     * through the view past EOF are legal on Windows. Linux mmap does NOT
+     * extend: MAP_SHARED writes beyond EOF raise SIGBUS. The Tonec
+     * unpacker creates the output section (IDM0.tmp) at the decompressed
+     * size BEFORE writing the decompressed stream -> ftruncate here makes
+     * those writes land exactly like on NTFS. Read-only-backed sections
+     * (ftruncate fails EACCES) keep the old behavior. Wine parallel:
+     * NtCreateSection -> get_nt_file_size + extend when
+     * SEC_COMMIT && size > file (dlls/ntdll/unix/virtual.c
+     * map_view / section creation extends with ftruncate). */
+    if (sfd >= 0 && size > 0) {
+        long long fsz = (long long)lseek(sfd, 0, SEEK_END);
+        if (fsz >= 0 && size > fsz) (void)ftruncate(sfd, (off_t)size);
+    }
     /* size-from-file: our file objects are loader-registry entries, not
      * POSIX fds; a 0-sized mapping stays 0 here (sqlite passes explicit
      * sizes for its shm mappings). */
     g_filemaps[g_filemap_count].handle = hfile;
     g_filemaps[g_filemap_count].size = size;
+    g_filemaps[g_filemap_count].fd = sfd;
     return alloc_handle((void*)(uintptr_t)(0x6000 + g_filemap_count++));
 }
 __attribute__((ms_abi)) void* mw_CreateFileMappingA(void* hfile, void* sa, uint32_t prot,
@@ -17293,6 +17435,21 @@ __attribute__((ms_abi)) int mw__configure_wide_argv(int mode) { (void)mode; retu
 __attribute__((ms_abi)) int mw___wgetmainargs(int* pargc, uint16_t*** pwargv,
     uint16_t*** pwenv, int dowildcard, void* startup) {
     (void)dowildcard; (void)startup;
+    /* SW-1535 (SWEEP-109, issue #25 IDM): the extracted IDM1.tmp is the
+     * FIRST m32 guest that CRT-inits through __wgetmainargs. The old path
+     * returned the HOST-resident g_wargv_arr pointers (0x2xxxxxx = inside
+     * the host-image guard region the interpreter refuses) — the guest's
+     * CRT read argv[0] as 0 and bailed out WITHOUT calling WinMain:
+     *   40112fb  mov eax,[0x4121b4]; mov esi,[eax]
+     *   4011302  cmp esi,ebx(=0); jne 1f1319   <- argv[0]==NULL taken
+     *   4011306  or [ebp-4],-1; ...; ret       <- silent exit 0, 16.4k steps
+     * Fix: build the argv/env arrays in the 32-bit ARENA (guest-visible
+     * low addresses), exactly like every other guest-facing block in the
+     * cpu32 world. argv[0] defaults to the module path (real Windows:
+     * argv[0] is NEVER NULL — wine's msvcrt __wgetmainargs fills it from
+     * GetCommandLine/GetModuleFileName). */
+    if (g_cpu32_active || g_image_base32)
+        return mw32_wgetmainargs_arena(pargc, pwargv, pwenv);
     build_wargv_wenv();
     MW_TRACE("__wgetmainargs(argc=%p, wargv=%p, wenv=%p)", pargc, pwargv, pwenv);
     if (pargc) *pargc = g_argc;
@@ -18915,6 +19072,17 @@ __attribute__((ms_abi)) long long mw_SendMessageW(void* h, uint32_t msg, uintptr
             return r;
         }
     }
+    { /* SW-1527: modeless-dialog hwnds route to their own stored DialogProc
+         (real DWLP_MSGPROC contract). IDM's unpacker extraction trigger
+         (SendMessage hDlg 0x7E8) died here before. */
+        int found = 0;
+        long long dr = mw_dlg_proc_route(h, msg, wp, lp, &found);
+        if (found) {
+            MW_TRACE("SendMessageW(hwnd=%p %s) -> dlgproc -> %lld (SW-1527)",
+                     h, mw_wm_name(msg), dr);
+            return dr;
+        }
+    }
     MW_TRACE("SendMessageW(hwnd=%p %s msg=0x%x) -> 0", h, mw_wm_name(msg), msg);
     return 0;
 }
@@ -18960,6 +19128,16 @@ __attribute__((ms_abi)) long mw_SendMessageA(void* h, uint32_t msg, uintptr_t wp
     if (h == MW_GUI_HWND || mw_toplevel_find(h) >= 0) { /* SW-1256 + SW-1279 + SW-1513 */
         MW_WNDPROC dp = mw_window_proc(h);
         if (dp) return (long)dp(h, msg, wp, (long long)lp);
+    }
+    { /* SW-1527: modeless-dialog routing (A path) — same contract as the
+         W path above; the IDM 6.42 unpacker is an ANSI guest. */
+        int found = 0;
+        long long dr = mw_dlg_proc_route(h, msg, wp, lp, &found);
+        if (found) {
+            MW_TRACE("SendMessageA(hwnd=%p %s) -> dlgproc -> %lld (SW-1527)",
+                     h, mw_wm_name(msg), dr);
+            return (long)dr;
+        }
     }
     return 0;
 }
@@ -22062,6 +22240,18 @@ static long long mw_gui_dispatch_msg(const void* msg) {
                          mw_wm_name(m), hwnd, r);
                 return r;
             }
+        }
+    }
+    { /* SW-1527: pump dispatch for modeless-dialog hwnds — real
+         DispatchMessage routes a dialog hwnd through its stored DialogProc
+         (DefDlgProc wraps it). Before this, pumped messages to a dialog
+         died with "no registered wndproc". */
+        int found = 0;
+        long long r = mw_dlg_proc_route(hwnd, m, wp, lp, &found);
+        if (found) {
+            MW_TRACE("[GUI-EVENT] dispatch %s dlg=%p -> %lld (SW-1527)",
+                     mw_wm_name(m), hwnd, r);
+            return r;
         }
     }
     MW_TRACE("[GUI-EVENT] dispatch %s -> 0 (no registered wndproc)", mw_wm_name(m));
@@ -27286,6 +27476,63 @@ static volatile uintptr_t g_dlg_id_next = 0x00010002u;
 static void* mw_dlg_new_identity(void) {
     return (void*)__sync_fetch_and_add(&g_dlg_id_next, 1);
 }
+/* SW-1527 (SWEEP-109, issue #25 IDM): DialogProc registry — real Win32 stores
+ * the modeless dialog's DialogProc ON the window (DWLP_MSGPROC); EVERY
+ * message to that hwnd (SendMessage/PostMessage/pump DispatchMessage)
+ * invokes it. The engine minted the hwnd, delivered WM_INITDIALOG once and
+ * DROPPED the proc pointer, so all later messages to the dialog answered 0.
+ * Measured impact (evidence/sweep109/idman): the IDM 6.42 unpacker drives
+ * its payload extraction by SendMessageA(hDlg, 0x7E8) — a Tonec-private
+ * "start extraction" message handled inside its dlgproc at EIP 0x401640.
+ * With the proc dropped the message returned 0, the extraction never ran,
+ * no IDM1.tmp appeared in IDM_Setup_Temp, and the following
+ * CreateProcessW("...IDM1.tmp" -d ...) failed with ERROR_FILE_NOT_FOUND(2)
+ * -> "Could not create process in unpacker. Error ID=2" -> silent exit 0.
+ * Wine parallel: DIALOG_window_proc (dlls/user32/dialog.c) routes every
+ * message through the stored dlgproc. */
+static struct { void* hwnd; void* proc; int is32; } g_dlg_procs[32];
+static int g_dlg_procs_n = 0;
+static void mw_dlg_proc_store(void* hwnd, void* proc, int is32) {
+    if (!hwnd || !proc) return;
+    for (int i = 0; i < g_dlg_procs_n; i++) {
+        if (g_dlg_procs[i].hwnd == hwnd) {
+            g_dlg_procs[i].proc = proc; g_dlg_procs[i].is32 = is32;
+            return;
+        }
+    }
+    if (g_dlg_procs_n < (int)(sizeof(g_dlg_procs) / sizeof(g_dlg_procs[0]))) {
+        g_dlg_procs[g_dlg_procs_n].hwnd = hwnd;
+        g_dlg_procs[g_dlg_procs_n].proc = proc;
+        g_dlg_procs[g_dlg_procs_n].is32 = is32;
+        g_dlg_procs_n++;
+    }
+}
+/* Route one message to a dialog's stored proc. found=0 -> hwnd is not a
+ * registered dialog (caller falls through to its own routing). */
+static long long mw_dlg_proc_route(void* hwnd, uint32_t msg, uintptr_t wp,
+                                   long long lp, int* found) {
+    *found = 0;
+    if (!hwnd) return 0;
+    for (int i = 0; i < g_dlg_procs_n; i++) {
+        if (g_dlg_procs[i].hwnd != hwnd) continue;
+        *found = 1;
+        void* proc = g_dlg_procs[i].proc;
+        if (!proc) return 0;
+        if (g_dlg_procs[i].is32 || g_cpu32_active) {
+            /* cpu32 dlgproc re-entry (SW-1354e contract): the proc is a
+             * guest i386 EIP — re-enter through the interpreter with a real
+             * stdcall frame; a native call executes guest bytes as HOST
+             * code (winlister x86 class). */
+            uint32_t args[4] = { (uint32_t)(uintptr_t)hwnd, msg,
+                                 (uint32_t)wp, (uint32_t)(uintptr_t)lp };
+            return (int32_t)cpu32_call((uint32_t)(uintptr_t)proc, 4, args);
+        }
+        typedef long long (__attribute__((ms_abi)) *cb_t)(void*, uint32_t,
+                                                          uintptr_t, intptr_t);
+        return ((cb_t)proc)(hwnd, msg, wp, lp);
+    }
+    return 0;
+}
 /* shared core: identity minting + template resolution + WM_INITDIALOG.
  * tmpl != NULL -> parse in place; else resolve aname/wname from .rsrc. */
 static void* mw_dlg_create_common(void* hinst, const char* aname,
@@ -27335,6 +27582,7 @@ static void* mw_dlg_create_common(void* hinst, const char* aname,
         }
     }
     if (proc) mw_call_cb4(proc, (uintptr_t)hwnd, MWWM_INITDIALOG, 0, init); /* SW-1354e: mode-aware (cpu32 dlgproc re-entry) */
+    mw_dlg_proc_store(hwnd, proc, g_cpu32_active); /* SW-1527: keep the proc for later messages */
     return hwnd;
 }
 /* CreateDialogParamW/A — MODELESS dialog: run WM_INITDIALOG and return a
@@ -27871,8 +28119,49 @@ __attribute__((ms_abi)) uint32_t mw_GetProfileIntW(const uint16_t* app,
 __attribute__((ms_abi)) int mw_IsWow64Process(void* h, int32_t* wow64) {
     (void)h;
     if (!wow64) return 0;
+    /* SW-1525 (SWEEP-109, issue #25 IDM): a PE32 guest on the x64 engine IS
+     * the WOW64 situation — real Windows answers TRUE for a 32-bit process
+     * on x64 (WOW64 is hosting it). The old constant FALSE is only correct
+     * for native x64 PE guests. Measured impact (evidence/sweep109/idman):
+     * the IDM 6.42 unpacker calls GetProcAddress(IsWow64Process) right after
+     * its status dialog and branches on the answer before spawning the
+     * next stage — a 32-bit installer told "native 64-bit" walks the wrong
+     * process-creation branch. Wine parallel: WOW64 IsWow64Process is
+     * thunked in dlls/wow64/syscall.c to report the 32-bit truth. */
+    if (t_cpu32_live || g_image_base32) {
+        *wow64 = 1;
+        MW_TRACE("IsWow64Process -> TRUE, *Wow64Process=TRUE (PE32 guest on x64 host = WOW64 semantics)");
+        return 1;
+    }
     *wow64 = 0; /* x64 PE on the x64 engine — not under WOW64 */
     MW_TRACE("IsWow64Process -> TRUE, *Wow64Process=FALSE (native x64)");
+    return 1;
+}
+/* SW-1537 (SWEEP-109, issue #25 IDM): IsWow64Process2 — the Tonec installer
+ * (IDM1.tmp) resolves it via GetProcAddress and calls it at WinMain start:
+ *   IsWow64Process2(hProcess=-1, &processMachine, &nativeMachine)
+ * The old engine had NO implementation: the unresolved stub thunk popped the
+ * DEFAULT 32 bytes for a 12-byte (3-arg) stdcall call — every call leaked
+ * +20 bytes off the guest stack. WinMain's esp drifted +20, its frame
+ * overlapped the callee's (0x40952b) saved-ebp slot, the callee's `leave`
+ * restored ebp=0 and WinMain's first [ebp-0x14] write faulted (evidence:
+ * [WATCH32] n=216 ebx push @3fefed24 vs n=551 arg push @3fefed2c, +20;
+ * api32 ring "#222 IsWow64Process2 esp=3fefed10 ... arity-default pop").
+ * Windows x64 semantics: processMachine = IMAGE_FILE_MACHINE_I386 (0x14c)
+ * for a WOW64 process, nativeMachine = IMAGE_FILE_MACHINE_AMD64 (9).
+ * Wine parallel: wow64 IsWow64Process2 reports the 32-bit process machine
+ * with the true native machine (dlls/wow64 + kernelbase). */
+#define MW_IMAGE_FILE_MACHINE_I386  0x014cu
+#define MW_IMAGE_FILE_MACHINE_AMD64 0x8664u
+__attribute__((ms_abi)) int mw_IsWow64Process2(void* h, uint16_t* process_machine, uint16_t* native_machine) {
+    (void)h;
+    MW_TRACE("IsWow64Process2 -> TRUE");
+    if (native_machine) *native_machine = MW_IMAGE_FILE_MACHINE_AMD64; /* x64 host */
+    if (process_machine) {
+        /* a PE32 guest on the x64 engine IS the WOW64 situation (SW-1525) */
+        *process_machine = (g_cpu32_active || g_image_base32)
+                           ? MW_IMAGE_FILE_MACHINE_I386 : MW_IMAGE_FILE_MACHINE_AMD64;
+    }
     return 1;
 }
 
@@ -39691,6 +39980,7 @@ static ImportEntry g_import_table[] = {
     ENTRY("KERNEL32.DLL", "GetSystemTimeAsFileTime",             mw_GetSystemTimeAsFileTime),
     ENTRY("KERNEL32.DLL", "GetProfileIntW",                      mw_GetProfileIntW), /* SWEEP-014: Bginfo64 gate */
     ENTRY("KERNEL32.DLL", "IsWow64Process",                      mw_IsWow64Process), /* SWEEP-014: Bginfo64 gate */
+    ENTRY("KERNEL32.DLL", "IsWow64Process2",                     mw_IsWow64Process2), /* SW-1537: IDM1.tmp WOW64 gate */
     ENTRY("KERNEL32.DLL", "SetSearchPathMode",                   mw_SetSearchPathMode), /* SWEEP-014 r3: WinMergeU */
     ENTRY("KERNEL32.DLL", "GetThreadContext",                    mw_GetThreadContext),
     ENTRY("KERNEL32.DLL", "GetThreadPriority",                   mw_GetThreadPriority),
@@ -44378,6 +44668,164 @@ static uint32_t mw32_heap_alloc(uint32_t size, int zero) {
 }
 static void mw32_free_all(void) { /* bump arena: free is a no-op (logged once by caller) */ }
 
+/* SW-1535 (SWEEP-109, issue #25 IDM): __wgetmainargs for the cpu32 world —
+ * the argv/env arrays MUST live in the 32-bit arena (guest-visible low
+ * addresses); the host .data copies are inside the interpreter's
+ * host-image guard and read back as 0. argv[0] = module path (never NULL:
+ * the VC6 CRT bails to a silent exit-0 without calling WinMain when
+ * argv[0]==NULL — see the mw___wgetmainargs block comment for the decoded
+ * bail at 0x4011302). Wine parallel: msvcrt's _wgetmainargs builds argv
+ * from the module command line with argv[0] always populated. */
+static int mw32_wgetmainargs_arena(int* pargc, uint16_t*** pwargv, uint16_t*** pwenv) {
+    /* SW-1536: one-shot cache — the CRT's __wgetmainargs result and the
+     * __wargv data import MUST be the same block (the VC6 startup parses
+     * _wcmdln/__wargv independently of the __wgetmainargs out-params). */
+    static uint32_t s_blk = 0, s_eblk = 0;
+    static int s_argc_cached = 0;
+    static int s_built = 0;
+    int n = g_argc;
+    if (n > 255) n = 255;
+    if (n < 1) n = 1;
+    if (s_built) {
+        if (pargc) *pargc = s_argc_cached;
+        if (pwargv) *pwargv = (uint16_t**)(uintptr_t)s_blk;
+        if (pwenv) *pwenv = (uint16_t**)(uintptr_t)(s_eblk ? s_eblk : s_blk);
+        return 0;
+    }
+    uint32_t ptr_bytes = (uint32_t)((n + 1) * 4);
+    uint32_t blk = mw32_heap_alloc(ptr_bytes + 16384, 1);
+    if (!blk) return 3; /* ENOMEM-class failure; CRT prints "not enough space" */
+    uint8_t* base = g_arena32 + (blk - MW32_ARENA_BASE);
+    uint32_t str_off = ptr_bytes;
+    for (int i = 0; i < n; i++) {
+        const char* a = g_argv[i];
+        if (!a || !a[0]) {
+            /* argv[0] falls back to the module path — never NULL */
+            a = (i == 0) ? (g_exe_path ? g_exe_path : "guest.exe") : "";
+        }
+        int got = w3_utf8_to_utf16le(a, strlen(a), (uint16_t*)(void*)(base + str_off), 4095);
+        if (got < 0) got = 0;
+        *(uint32_t*)(void*)(base + (size_t)i * 4) = blk + str_off;
+        str_off += (uint32_t)got * 2u + 2u;
+    }
+    *(uint32_t*)(void*)(base + (size_t)n * 4) = 0; /* argv[n] = NULL */
+    /* wide environment: same arena treatment (cap 256 vars) */
+    uint32_t eblk = mw32_heap_alloc(257 * 4 + 16384, 1);
+    if (eblk) {
+        uint8_t* ebase = g_arena32 + (eblk - MW32_ARENA_BASE);
+        uint32_t eoff = 257 * 4;
+        int wi = 0;
+        for (char** e = environ; *e && wi < 256 && eoff < 257 * 4 + 16000; e++) {
+            int got = w3_utf8_to_utf16le(*e, strlen(*e),
+                                         (uint16_t*)(void*)(ebase + eoff), 4095);
+            if (got <= 0) continue;
+            *(uint32_t*)(void*)(ebase + (size_t)wi * 4) = eblk + eoff;
+            eoff += (uint32_t)got * 2u + 2u;
+            wi++;
+        }
+        *(uint32_t*)(void*)(ebase + (size_t)wi * 4) = 0;
+    }
+    if (pargc) *pargc = n;
+    if (pwargv) *pwargv = (uint16_t**)(uintptr_t)blk;
+    if (pwenv) *pwenv = (uint16_t**)(uintptr_t)(eblk ? eblk : blk);
+    s_blk = blk; s_eblk = eblk; s_argc_cached = n; s_built = 1; /* SW-1536 cache */
+    MW_TRACE("[PE32] __wgetmainargs arena: argc=%d argv=0x%x env=0x%x", n, blk, eblk);
+    return 0;
+}
+
+/* SW-1536 (SWEEP-109, issue #25 IDM): DATA imports for the cpu32 world.
+ * msvcrt's CRT variables (_wcmdln/_acmdln/__argc/__wargv/__argv/__initenv/
+ * _commode/_fmode/_adjust_fdiv) are DATA exports — the IAT slot must hold
+ * the ADDRESS of guest-visible storage, NOT a function thunk. The old m32
+ * loop bound every name to a thunk: the VC6 startup's
+ *   mov eax,[iat _wcmdln]; mov esi,[eax]; cmp esi,0; je bail
+ * read the THUNK CODE as a wchar_t* and the argv[0]==NULL bail fired
+ * (silent exit 0, WinMain never ran — the second stage of the IDM
+ * installer never opened its UI). Cells live in the arena (guest-visible
+ * low 4GB) and are built once. Wine parallel: data imports resolve to
+ * the export's ADDRESS in wine's loader (get_full_pointer/data thunks). */
+static uint32_t mw32_data_import_va(const char* dll, const char* name) {
+    (void)dll;
+    if (!name || !name[0]) return 0;
+    static uint32_t s_wcmdln, s_acmdln, s_argc, s_wargv, s_argv, s_initenv,
+                    s_commode, s_fmode, s_fdiv;
+    static int s_ready = 0;
+    if (!s_ready) {
+        s_ready = 1;
+        /* __wargv/__argc/__initenv via the cached SW-1535 builder */
+        int n = 0; uint16_t** wa = NULL; uint16_t** we = NULL;
+        mw32_wgetmainargs_arena(&n, &wa, &we);
+        s_wargv = (uint32_t)(uintptr_t)wa;
+        s_initenv = (uint32_t)(uintptr_t)we;
+        s_argc = mw32_heap_alloc(4, 1);
+        if (s_argc)
+            *(uint32_t*)(void*)(g_arena32 + (s_argc - MW32_ARENA_BASE)) = (uint32_t)(n > 0 ? n : 1);
+        /* _wcmdln: cell -> arena UTF-16 command line */
+        const char* cl = (g_cmdline_ansi[0] ? g_cmdline_ansi
+                          : (g_exe_path ? g_exe_path : "guest.exe"));
+        uint32_t wblk = mw32_heap_alloc(4096, 1);
+        if (wblk) {
+            uint8_t* b = g_arena32 + (wblk - MW32_ARENA_BASE);
+            w3_utf8_to_utf16le(cl, strlen(cl), (uint16_t*)(void*)b, 2047);
+            s_wcmdln = mw32_heap_alloc(4, 1);
+            if (s_wcmdln)
+                *(uint32_t*)(void*)(g_arena32 + (s_wcmdln - MW32_ARENA_BASE)) = wblk;
+        }
+        /* _acmdln: cell -> arena ANSI command line */
+        uint32_t ablk = mw32_heap_alloc(4096, 1);
+        if (ablk) {
+            uint8_t* b = g_arena32 + (ablk - MW32_ARENA_BASE);
+            snprintf((char*)b, 4095, "%s", cl);
+            s_acmdln = mw32_heap_alloc(4, 1);
+            if (s_acmdln)
+                *(uint32_t*)(void*)(g_arena32 + (s_acmdln - MW32_ARENA_BASE)) = ablk;
+        }
+        /* __argv: ANSI argv array (mirrors the wide builder) */
+        {
+            int an = (g_argc > 255) ? 255 : g_argc; if (an < 1) an = 1;
+            uint32_t ablk2 = mw32_heap_alloc((uint32_t)((an + 1) * 4) + 8192, 1);
+            if (ablk2) {
+                uint8_t* b = g_arena32 + (ablk2 - MW32_ARENA_BASE);
+                uint32_t so = (uint32_t)((an + 1) * 4);
+                for (int i = 0; i < an; i++) {
+                    const char* a = g_argv[i];
+                    if (!a || !a[0]) a = (i == 0) ? cl : "";
+                    size_t al = strlen(a);
+                    if (al > 2047) al = 2047;
+                    memcpy(b + so, a, al); b[so + al] = 0;
+                    *(uint32_t*)(void*)(b + (size_t)i * 4) = ablk2 + so;
+                    so += (uint32_t)al + 1;
+                }
+                *(uint32_t*)(void*)(b + (size_t)an * 4) = 0;
+                s_argv = ablk2;
+            }
+        }
+        s_commode = mw32_heap_alloc(4, 1); /* _commode = 0 (translated) */
+        s_fmode = mw32_heap_alloc(4, 1);   /* _fmode = 0 (binary) */
+        s_fdiv = mw32_heap_alloc(4, 1);    /* _adjust_fdiv = 0 */
+        MW_TRACE("[PE32] data-import plane: wcmdln=0x%x acmdln=0x%x wargv=0x%x argc=0x%x",
+                 s_wcmdln, s_acmdln, s_wargv, s_argc);
+    }
+    /* case-insensitive name match (PE import names are case-insensitive) */
+    static const struct { const char* n; uint32_t* cell; } map[] = {
+        { "_wcmdln",      &s_wcmdln },
+        { "_acmdln",      &s_acmdln },
+        { "__argc",       &s_argc },
+        { "__wargv",      &s_wargv },
+        { "__argv",       &s_argv },
+        { "__initenv",    &s_initenv },
+        { "_commode",     &s_commode },
+        { "_fmode",       &s_fmode },
+        { "_adjust_fdiv", &s_fdiv },
+    };
+    for (size_t i = 0; i < sizeof(map)/sizeof(map[0]); i++) {
+        const char* a = name; const char* b = map[i].n;
+        while (*a && *b && tolower((unsigned char)*a) == tolower((unsigned char)*b)) { a++; b++; }
+        if (*a == '\0' && *b == '\0') return *map[i].cell;
+    }
+    return 0; /* not a data import -> function thunk path */
+}
+
 /* ---------------- API thunk page + slots ---------------- */
 typedef struct {
     const char* name;     /* dispatch-table name (owned: strdup'd) */
@@ -44436,12 +44884,25 @@ static int mw32_regparm_count(const char* name) {
 static int mw32_dll_is_crt(const char* dll) {
     /* msvcrt.dll + the UCRT api-set families are ALL cdecl (caller pops);
      * Win32 DLLs (kernel32/user32/gdi32/...) are stdcall. */
+    /* SW-1534 (SWEEP-109, issue #25 IDM): DLL names are CASE-INSENSITIVE
+     * per the PE spec — VC6-era binaries import the CRT as "MSVCRT.dll"
+     * (uppercase), and the old strcmp missed it. Measured impact: every
+     * cdecl CRT call in the extracted IDM1.tmp (__set_app_type,
+     * __p__fmode, __p__commode, _controlfp) resolved as stdcall arity 32,
+     * the caller-pops contract was violated 4x at CRT startup, the stack
+     * desynced and the first ret landed on FF /7 (undefined group) ->
+     * [PE32-FATAL] at 0x41245a. wine's import resolution (ntdll/unix/loader.c
+     * find_named_export) compares import names case-insensitively. */
     static const char* crt[] = { "msvcrt.dll", "msvcrtd.dll", "msvcr90.dll",
         "msvcr100.dll", "msvcr110.dll", "msvcr120.dll", "ucrtbase.dll",
         "ntdll.dll" };
-    for (size_t i = 0; i < sizeof(crt)/sizeof(crt[0]); i++)
-        if (strcmp(dll, crt[i]) == 0) return 1;
-    if (strncmp(dll, "api-ms-win-crt-", 15) == 0) return 1;
+    for (size_t i = 0; i < sizeof(crt)/sizeof(crt[0]); i++) {
+        const char* a = dll; const char* b = crt[i];
+        while (*a && *b &&
+               tolower((unsigned char)*a) == tolower((unsigned char)*b)) { a++; b++; }
+        if (*a == '\0' && *b == '\0') return 1;
+    }
+    if (strncasecmp(dll, "api-ms-win-crt-", 15) == 0) return 1;
     return 0;
 }
 static uint32_t mw32_api_thunk(const char* dll, const char* name) {
@@ -44642,6 +45103,18 @@ static const struct { const char* n; uint32_t b; } g_api32_arity[] = {
     { "ReadFile", 20 },
     { "SetEndOfFile", 4 },
     { "SetFilePointer", 16 },
+    /* SW-1532 (SWEEP-109, issue #25 IDM): extracted-file timestamp stamping.
+     * SetFileTime(h, creation, access, write) = 4 args = 16 bytes; the old
+     * fall-through to MW32_ARITY_DEFAULT(32) over-popped the guest stack by
+     * 16 bytes -> the unpacker thread's next ret fetched a stale slot ->
+     * wild EIP -> interpreter fetch SIGSEGV (evidence/sweep109 idm run:
+     * api32 ring "#53 SetFileTime arity=32" followed by fetch fault at
+     * 0x17420). GetFileTime same shape, added with it. */
+    { "SetFileTime", 16 },
+    { "GetFileTime", 16 },
+    /* SW-1537: 3-arg stdcall — the old default-32 pop leaked +20/call and
+     * desynced the Tonec installer's WinMain frame (see mw_IsWow64Process2) */
+    { "IsWow64Process2", 12 },
     { "SetFilePointerEx", 20 },
     { "WriteFile", 20 },
     { "CloseHandle", 4 },
@@ -45527,7 +46000,17 @@ typedef struct {
     uint8_t  xmm[8][16];
 } MwCpu32;
 
+
 static __thread MwCpu32 t_cpu32;
+/* SW-1538 (SWEEP-109, issue #25 IDM): engine-side guest writes (registry
+ * read-back, wsprintfW output, ...) bypass m32_st32 and were INVISIBLE to
+ * MW32_WATCH — the IDM1.tmp saved-EBP zero-write hunt needed them. Same
+ * log format as the interpreter watch. */
+static void mw32w_engine_write(const char* rd, uint32_t va, uint32_t val) {
+    if (!m32w_hit(va)) return;
+    fprintf(stderr, "[WATCH32-%s] va=%08x val=%08x eip=%08x esp=%08x ebp=%08x n=%u\n",
+            rd, va, val, t_cpu32.eip, t_cpu32.r[4], t_cpu32.r[5], ++g_m32w_n);
+}
 static __thread int     t_cpu32_live = 0;
 /* g_cpu32_active defined in the SW-1281 fwd block (needed by earlier code) */
 static volatile uint32_t g_cpu32_exit_req = 0; /* ExitProcess interception */
@@ -45605,21 +46088,16 @@ static inline int m32_host_hit(uint32_t va) {
     return 0;
 }
 
-/* SW-1482 (SWEEP-100): MW32_WATCH="lo:hi" (hex u32) — interpreter-level memory
- * watchpoint. Every ld/st whose guest VA falls in [lo,hi) logs value + guest
- * EIP/ESP + host return site. Replaces gdb hw-watch probes (PROBE-J) which
- * cannot run this interpreter to completion (sandbox gdb stall, SWEEP-099). */
-static uint32_t g_m32w_lo = 0, g_m32w_hi = 0;
-static unsigned g_m32w_n = 0;
-static inline int m32w_hit(uint32_t va) {
-    return g_m32w_lo != 0 && va >= g_m32w_lo && va < g_m32w_hi;
-}
-#define MW32W_LOG(rd, va, val) \
-    do { if (__builtin_expect(m32w_hit(va), 0)) \
-        fprintf(stderr, "[WATCH32-%s] va=%08x val=%08x eip=%08x esp=%08x ebp=%08x from=%p n=%u\n", \
-                rd, (uint32_t)(va), (uint32_t)(val), t_cpu32.eip, t_cpu32.r[4], t_cpu32.r[5], \
-                __builtin_return_address(0), ++g_m32w_n); } while (0)
 
+void mw32w_log(const char* rd, uint32_t va, uint32_t val) {
+    if (!m32w_hit(va)) return;
+    /* SW-1538b: NO __builtin_return_address(1) — the walk crashes when the
+     * caller's caller is an inlined/omitted-FP frame (m32_ld32 inside
+     * cpu32_step2): [rbp] garbage -> mov 0x8(%rcx),%rcx fault at the va_start
+     * register save. The interpreter watch never needed it. */
+    fprintf(stderr, "[WATCH32-%s] va=%08x val=%08x eip=%08x esp=%08x ebp=%08x n=%u\n",
+            rd, va, val, t_cpu32.eip, t_cpu32.r[4], t_cpu32.r[5], ++g_m32w_n);
+}
 static inline uint8_t* m32p(uint32_t va) { return (uint8_t*)(uintptr_t)va; }
 static inline uint8_t  m32_ld8 (uint32_t va) { return m32_host_hit(va) ? 0 : *(uint8_t*)m32p(va); }
 static inline uint16_t m32_ld16(uint32_t va) { if (m32_host_hit(va)) return 0; uint16_t v; memcpy(&v, m32p(va), 2); MW32W_LOG("R16", va, v); return v; }
@@ -45862,6 +46340,11 @@ static inline uint8_t* xmm_ptr(int i) { return t_cpu32.xmm[i & 7]; }
 /* ---------------- interpreter core ---------------- */
 static uint64_t g_cpu32_steps = 0;
 static uint32_t g_eip_hist[16]; static int g_eip_hist_n = 0; /* exit-debug ring */
+/* SW-1482 (SWEEP-100): MW32_WATCH="lo:hi" (hex u32) — interpreter-level memory
+ * watchpoint. Every ld/st whose guest VA falls in [lo,hi) logs value + guest
+ * EIP/ESP + host return site. Replaces gdb hw-watch probes (PROBE-J) which
+ * cannot run this interpreter to completion (sandbox gdb stall, SWEEP-099). */
+void mw32w_log(const char* rd, uint32_t va, uint32_t val);
 static int      g_cpu32_trace = 0;   /* MW32_TRACE=1: per-API lines */
 static int      g_cpu32_steptrace = 0; /* MW32_STEP_TRACE=1: per-instruction */
 static uint64_t g_cpu32_maxsteps = 0; /* MW32_MAX_STEPS=n: budget guard */
@@ -46313,11 +46796,20 @@ restart_prefix:
         break;
     case 0x11: { NEEDM(); uint32_t v = LD_RorM32(); ST_RorM32(alu_add32(v, R32(m.reg), f_get(F_CF))); break; }
     case 0x13: { NEEDM(); R32(m.reg) = alu_add32(R32(m.reg), LD_RorM32(), f_get(F_CF)); break; }
+    case 0x12: { NEEDM(); uint8_t v = LD_RorM8(); uint8_t regv = (m.reg < 4) ? (uint8_t)R32(m.reg) : (uint8_t)(R32(m.reg - 4) >> 8); uint8_t r2 = alu_add8(regv, v, f_get(F_CF)); if (m.reg < 4) R32(m.reg) = (R32(m.reg) & 0xFFFFFF00u) | r2; else R32(m.reg - 4) = (R32(m.reg - 4) & 0xFFFF00FFu) | ((uint32_t)r2 << 8); break; } /* SW-1533: ADC r8, r/m8 */
     case 0x15:
         if (o32) { R32(EAXi) = alu_add32(R32(EAXi), m32_ld32(t_cpu32.eip), f_get(F_CF)); t_cpu32.eip += 4; }
         else { uint16_t v16 = IMM16(); SETAX16(alu_add32(AX16(), v16, f_get(F_CF)) & 0xFFFFu); }
         break;
     case 0x19: { NEEDM(); uint32_t v = LD_RorM32(); ST_RorM32(alu_sub32(v, R32(m.reg), f_get(F_CF))); break; }
+    /* SW-1533 (SWEEP-109, issue #25 IDM): SBB byte forms — the Tonec
+     * unpacker's decompressor at 0x4044be executes `1a d2` (SBB DL, DL) as
+     * part of its bit-reader carry chain; opcode 0x1a was unimplemented ->
+     * [PE32-FATAL] opcode=0x1a mid-extraction (IDM0.tmp frozen at 18441
+     * bytes). 0x18 = SBB r/m8, r8 (store form, mirrors case 0x28),
+     * 0x1A = SBB r8, r/m8 (load form, mirrors case 0x2A with borrow-in). */
+    case 0x18: { NEEDM(); uint8_t v = LD_RorM8(); ST_RorM8(alu_sub8(v, (uint8_t)R32(m.reg & 7), f_get(F_CF))); break; } /* SW-1533 */
+    case 0x1A: { NEEDM(); uint8_t v = LD_RorM8(); uint8_t regv = (m.reg < 4) ? (uint8_t)R32(m.reg) : (uint8_t)(R32(m.reg - 4) >> 8); uint8_t r2 = alu_sub8(regv, v, f_get(F_CF)); if (m.reg < 4) R32(m.reg) = (R32(m.reg) & 0xFFFFFF00u) | r2; else R32(m.reg - 4) = (R32(m.reg - 4) & 0xFFFF00FFu) | ((uint32_t)r2 << 8); break; } /* SW-1533 */
     case 0x1B: { NEEDM(); R32(m.reg) = alu_sub32(R32(m.reg), LD_RorM32(), f_get(F_CF)); break; }
     case 0x1D:
         if (o32) { R32(EAXi) = alu_sub32(R32(EAXi), m32_ld32(t_cpu32.eip), f_get(F_CF)); t_cpu32.eip += 4; }
@@ -47840,7 +48332,14 @@ __attribute__((ms_abi)) static long long mw_wndproc32_shim(void* hwnd, uint32_t 
 /* CreateThread shim: x86 thread start runs on its own host thread with a
  * thread-local MwCpu32 (t_cpu32) — the interpreter is thread-safe by TLS.
  * Mw32ThreadArg typedef lives in the SW-1281 fwd block (needed earlier). */
-static void* mw32_thread_trampoline(void* p) {
+/* SW-1528 (SWEEP-109, issue #25 IDM): the boot trampoline stores every
+ * thread start as MwGuestStart = MS-x64 ABI (arg in RCX — it calls with
+ * `mov %rcx,arg; call *%rax`). The old SysV declaration made the callee
+ * read RDI (stale garbage 0x1001) -> `mov 0x4(%rdi),%ebp` SIGSEGV inside
+ * the trampoline prologue on the FIRST m32 guest thread creation
+ * (evidence/sweep109 idman run4: RIP=0x20fe3a6 = trampoline+6).
+ * ms_abi on both sides aligns the contract. */
+static __attribute__((ms_abi)) void* mw32_thread_trampoline(void* p) {
     Mw32ThreadArg a = *(Mw32ThreadArg*)p; free(p);
     t_cpu32.fsbase = MW32_TEB32_VA; t_cpu32.gsbase = 0;
     t_cpu32.fcw = MW32_FCW_INIT; t_cpu32.eflags = 0x202;
@@ -48064,6 +48563,10 @@ static int load_pe32(const char* filepath) {
                     continue;
                 }
                 const char* impname = (const char*)((uint8_t*)img + (int_[t] & 0x7FFFFFFF) + 2);
+                /* SW-1536: DATA imports get an arena variable cell, not a
+                 * function thunk (the VC6 CRT reads _wcmdln/__wargv as DATA). */
+                uint32_t dva = mw32_data_import_va(dn, impname);
+                if (dva) { iat[t] = dva; resolved++; continue; }
                 uint32_t th = mw32_api_thunk(dn, impname);
                 if (g_api32_slots[(th - MW32_THUNK_BASE - 16) / 10].fn) resolved++;
                 else unresolved++;
@@ -48146,6 +48649,21 @@ static int load_pe32(const char* filepath) {
                 if ((int_[t] & 0x7FFFFFFF) + 2 >= size_img) continue; /* SW-1297b: corrupt hint guard */
                 const char* impname = (const char*)((uint8_t*)img + (int_[t] & 0x7FFFFFFF) + 2);
                 if (strcmp(impname, g_data_imports[i].name) == 0) {
+                    /* SW-1536b (SWEEP-109, issue #25 IDM): in the cpu32 world
+                     * the arena cell wins — the interpreter REFUSES host-image
+                     * reads (SW-1297b guard), so the old non-PIE "<4GB" host
+                     * address read back as 0 in the guest: the VC6 CRT's
+                     * `mov eax,[iat _wcmdln]; mov esi,[eax]; cmp esi,0`
+                     * bailed to a silent exit-0 and WinMain never ran. The
+                     * host .data address stays the answer for native x64
+                     * guests (they read host memory directly). */
+                    uint32_t dva = g_image_base32 ? mw32_data_import_va(dn, impname) : 0;
+                    if (dva) {
+                        iat[t] = dva;
+                        resolved++; if (unresolved) unresolved--;
+                        MW_TRACE("[PE32] data import %s -> arena 0x%x (SW-1536b)", impname, dva);
+                        break;
+                    }
                     uint64_t hostptr = (uint64_t)(uintptr_t)g_data_imports[i].data_addr;
                     if (hostptr > 0xFFFFFFFFull) {
                         MW_TRACE("[PE32] data import %s NOT 32-bit reachable", impname);
@@ -48231,6 +48749,17 @@ int main(int argc, char* argv[]) {
 
     const char* exe_path = argv[1];
     g_exe_path = exe_path;
+
+    /* SW-1524 (SWEEP-109, issue #25 IDM): installer world (MINWIN_WINTEMP=1)
+     * boots with the standard Windows directory tree ALREADY present — the
+     * real-machine truth. The old first-touch lazy seed materialized
+     * C:\Windows\Temp in the MIDDLE of IDM's check-then-create recursion
+     * (CreateDirectory(Temp) -> EEXIST 183 -> guest abort -> "Could not
+     * create temp dir in unpacker, Error ID: 2" -> silent exit 0, nothing
+     * installed). Wine parallel: wineboot builds the full prefix tree
+     * BEFORE any guest runs. No-op without the env (corpus byte-parity
+     * preserved; the lazy seeder stays the default in non-installer mode). */
+    if (getenv("MINWIN_WINTEMP")) w3_seed_windows_world();
 
     /* Build command line */
     snprintf(g_cmdline_ansi, sizeof(g_cmdline_ansi), "%s", exe_path);
