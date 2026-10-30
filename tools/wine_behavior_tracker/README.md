@@ -35,14 +35,29 @@ a 10 GB sandbox disk once, measured 2026-10-30).
 
 ## Wine install note (non-root sandbox)
 
-The tracked wine is a deb-extract install (`tools/wine-10.0`), not a system
-package. Three measured repairs were needed and are documented in
-`wine_behavior_tracker/runner.py` + `scripts/patch_wine_nls.py`:
-nls files beside the loader (`usr/lib/wine/nls/` + `/home/z/my-project/p/w`),
-a zlib1.dll seed into each fresh prefix (`USER32.dll` imports it; without it
-every guest exits 53/status c0000135), and `x86_64-windows`/`x86_64-unix`
-symlinks. Channel syntax measured on this build: `+relay,+module` works;
-bare `+loaddll` is INVALID and poisons the entire WINEDEBUG spec.
+**Current build (2026-10-30, SWEEP-033): WineHQ noble `wine-stable-amd64 +
+wine-stable 10.0.0.0~noble-1` debs extracted to `tools/wine-10.0`
+(layout `bin/wine64`, `share/wine/nls`, `lib64/wine/*`).** The Debian
+trixie `wine 10.0~repack-6` and `repack-12+b1` builds both abort with
+glibc `free(): invalid pointer` inside the loader right after prefix
+creation in this sandbox (strace: abort immediately after the
+`<prefix>/wineserver` marker write, before any guest code; setarch -R,
+glibc malloc tunables and preloader invocation do not change it) — the
+WineHQ build runs the identical prefix fine. Remaining measured repairs:
+1. seed `zlib1.dll` (msvcrt flavor, from Debian `libz-mingw-w64`
+   1.3.2 `usr/x86_64-w64-mingw32/lib/zlib1.dll`, stashed at
+   `tools/wine-10.0/seeds/`) into each fresh prefix `system32` —
+   USER32.dll imports it and guests die 0xc0000135 without it;
+2. `TMPDIR` must point at a user-owned dir (`/tmp` is root-owned here);
+3. `x86_64-windows`/`x86_64-unix` symlinks next to the loader (WineHQ
+   layout already has its own under `lib64/wine/`). Channel syntax
+   measured on this build: `+relay,+module` works; bare `+loaddll` is
+   INVALID and poisons the entire WINEDEBUG spec.
+
+SWEEP-033 note: Debian-repack wineserver64 also embeds
+`/usr/share/wine/wine/nls`, unwritable on this host — the old binary
+patch (`patch_wine_nls.py`) is only needed for the Debian layout, the
+WineHQ layout loads nls from its own `share/wine/nls`.
 
 ## JSONL schema (v1)
 

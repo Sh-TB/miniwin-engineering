@@ -1,0 +1,734 @@
+{
+  "trace": [
+[Td640] [API] PE Loader: file=/home/z/my-project/workspace/miniwin-engineering/artifacts/sweep50/dl/coreinfoex64/Coreinfo64.exe size=517408
+[Td640] [API] PE Loader: ImageBase=0x140000000 EP=0x12030 SizeOfImage=0x80000 Sections=6
+[Td640] [API] PE Loader: Mapped at 0x140000000 (forced via MAP_FIXED)
+[Td640] [API] KUSD: mapped 0x7ffe0000 (root C:\WINDOWS, ver 5.2, qpc 1e9)
+[Td640] [API] Section [0] .text    VA=0x00001000 VS=0x0003b48c Raw=0x0003b600 Ch=0x60000020
+[Td640] [API] Section [1] .rdata   VA=0x0003d000 VS=0x0002190c Raw=0x00021a00 Ch=0x40000040
+[Td640] [API] Section [2] .data    VA=0x0005f000 VS=0x00002d68 Raw=0x00001400 Ch=0xc0000040
+[Td640] [API] Section [3] .pdata   VA=0x00062000 VS=0x00002e74 Raw=0x00003000 Ch=0x40000040
+[Td640] [API] Section [4] .rsrc    VA=0x00065000 VS=0x00019a08 Raw=0x00019c00 Ch=0x40000040
+[Td640] [API] Section [5] .reloc   VA=0x0007f000 VS=0x000009e0 Raw=0x00000a00 Ch=0x42000040
+[Td640] [API] Import Directory: RVA=0x5d83c Size=0xb4
+[Td640] [API] Import DLL: VERSION.dll (IAT RVA=0x3d4c0, ILT RVA=0x5ddb0)
+[Td640] [API]   [0] GetFileVersionInfoSizeW -> 0x20be670
+[Td640] [API]   [1] VerQueryValueW -> 0x2083fd0
+[Td640] [API]   [2] GetFileVersionInfoW -> 0x2077d70
+[Td640] [API] Import DLL: KERNEL32.dll (IAT RVA=0x3d0a0, ILT RVA=0x5d990)
+[Td640] [API]   [0] GetCurrentThread -> 0x2008630
+[Td640] [API]   [1] CloseHandle -> 0x20a48f0
+[Td640] [API]   [2] GetCurrentProcessId -> 0x2008620
+[Td640] [API]   [3] FreeLibrary -> 0x206c4c0
+[Td640] [API]   [4] FormatMessageA -> 0x2043b00
+[Td640] [API]   [5] GetTickCount64 -> 0x2017610
+[Td640] [API]   [6] SetThreadGroupAffinity -> 0x200ad20
+[Td640] [API]   [7] IsProcessorFeaturePresent -> 0x2009f40
+[Td640] [API]   [8] GetProcessWorkingSetSize -> 0x2009d30
+[Td640] [API]   [9] GetCurrentProcess -> 0x2008610
+[Td640] [API]   [10] DeviceIoControl -> 0x2078740
+[Td640] [API]   [11] SetThreadPriority -> 0x206b6d0
+[Td640] [API]   [12] GetSystemDirectoryW -> 0x209e780
+[Td640] [API]   [13] OutputDebugStringW -> 0x20ac3e0
+[Td640] [API]   [14] GetNumaNodeProcessorMask -> 0x207f780
+[Td640] [API]   [15] DeleteFileW -> 0x20b7170
+[Td640] [API]   [16] GetLastError -> 0x2026c20
+[Td640] [API]   [17] VirtualLock -> 0x2009d60
+[Td640] [API]   [18] SetProcessWorkingSetSize -> 0x2009d50
+[Td640] [API]   [19] QueryPerformanceCounter -> 0x204bca0
+[Td640] [API]   [20] SizeofResource -> 0x200a650
+[Td640] [API]   [21] CreateFileW -> 0x20d1c30
+[Td640] [API]   [22] LockResource -> 0x2088bf0
+[Td640] [API]   [23] LoadResource -> 0x202a5c0
+[Td640] [API]   [24] FindResourceW -> 0x20c2770
+[Td640] [API]   [25] HeapReAlloc -> 0x20ccc30
+[Td640] [API]   [26] GetProcessHeap -> 0x2009810
+[Td640] [API]   [27] SetEnvironmentVariableW -> 0x20c06f0
+[Td640] [API]   [28] FreeEnvironmentStringsW -> 0x206c620
+[Td640] [API]   [29] GetEnvironmentStringsW -> 0x207d9f0
+[Td640] [API]   [30] GetOEMCP -> 0x200a080
+[Td640] [API]   [31] GetACP -> 0x200a070
+[Td640] [API]   [32] IsValidCodePage -> 0x200a090
+[Td640] [API]   [33] FindNextFileW -> 0x2089c70
+[Td640] [API]   [34] WriteFile -> 0x2058f10
+[Td640] [API]   [35] SetThreadAffinityMask -> 0x200ad10
+[Td640] [API]   [36] GetNumaHighestNodeNumber -> 0x203ec10
+[Td640] [API]   [37] GetModuleFileNameW -> 0x20b2ae0
+[Td640] [API]   [38] GetModuleHandleW -> 0x203b2e0
+[Td640] [API]   [39] GetFileType -> 0x201c610
+[Td640] [API]   [40] GetProcAddress -> 0x208b550
+[Td640] [API]   [41] LocalFree -> 0x20cc320
+[Td640] [API]   [42] LocalAlloc -> 0x20502e0
+[Td640] [API]   [43] GetStdHandle -> 0x210d630
+[Td640] [API]   [44] GetCommandLineW -> 0x207c640
+[Td640] [API]   [45] LoadLibraryExW -> 0x20c1770
+[Td640] [API]   [46] GetVersionExW -> 0x2089a70
+[Td640] [API]   [47] SetLastError -> 0x203e550
+[Td640] [API]   [48] HeapSize -> 0x20aa980
+[Td640] [API]   [49] WriteConsoleW -> 0x201a450
+[Td640] [API]   [50] SetEndOfFile -> 0x20407d0
+[Td640] [API]   [51] LoadLibraryW -> 0x20b7770
+[Td640] [API]   [52] RtlLookupFunctionEntry -> 0x2027240
+[Td640] [API]   [53] FindFirstFileExW -> 0x20aa3f0
+[Td640] [API]   [54] FindClose -> 0x2014090
+[Td640] [API]   [55] SetFilePointerEx -> 0x20598b0
+[Td640] [API]   [56] GetFileSizeEx -> 0x20408d0
+[Td640] [API]   [57] ReadFile -> 0x2058500
+[Td640] [API]   [58] GetConsoleOutputCP -> 0x20890e0
+[Td640] [API]   [59] FlushFileBuffers -> 0x2040bd0
+[Td640] [API]   [60] ReadConsoleW -> 0x2058a30
+[Td640] [API]   [61] ReadConsoleInputW -> 0x2088c70
+[Td640] [API]   [62] RtlCaptureContext -> 0x207b4f0
+[Td640] [API]   [63] RtlUnwind -> 0x209e2d0
+[Td640] [API]   [64] RtlVirtualUnwind -> 0x2098190
+[Td640] [API]   [65] UnhandledExceptionFilter -> 0x206ea00
+[Td640] [API]   [66] SetUnhandledExceptionFilter -> 0x2027560
+[Td640] [API]   [67] TerminateProcess -> 0x209edb0
+[Td640] [API]   [68] ReleaseSRWLockExclusive -> 0x207f460
+[Td640] [API]   [69] AcquireSRWLockExclusive -> 0x207f300
+[Td640] [API]   [70] WakeAllConditionVariable -> 0x207d610
+[Td640] [API]   [71] SleepConditionVariableSRW -> 0x2055d70
+[Td640] [API]   [72] GetCurrentThreadId -> 0x2008640
+[Td640] [API]   [73] GetSystemTimeAsFileTime -> 0x204b7e0
+[Td640] [API]   [74] InitializeSListHead -> 0x2009fa0
+[Td640] [API]   [75] IsDebuggerPresent -> 0x206ae90
+[Td640] [API]   [76] GetStartupInfoW -> 0x2037400
+[Td640] [API]   [77] MultiByteToWideChar -> 0x204be20
+[Td640] [API]   [78] GetStringTypeW -> 0x207e3a0
+[Td640] [API]   [79] WideCharToMultiByte -> 0x207e5f0
+[Td640] [API]   [80] EnterCriticalSection -> 0x208fcf0
+[Td640] [API]   [81] LeaveCriticalSection -> 0x20680f0
+[Td640] [API]   [82] InitializeCriticalSectionEx -> 0x203aba0
+[Td640] [API]   [83] DeleteCriticalSection -> 0x2076080
+[Td640] [API]   [84] EncodePointer -> 0x201a780
+[Td640] [API]   [85] DecodePointer -> 0x2009f80
+[Td640] [API]   [86] LCMapStringEx -> 0x20405e0
+[Td640] [API]   [87] GetCPInfo -> 0x2035b80
+[Td640] [API]   [88] RtlUnwindEx -> 0x209d1e0
+[Td640] [API]   [89] RtlPcToFileHeader -> 0x2083a80
+[Td640] [API]   [90] RaiseException -> 0x2008ae0
+[Td640] [API]   [91] InitializeCriticalSectionAndSpinCount -> 0x208c0b0
+[Td640] [API]   [92] TlsAlloc -> 0x20350c0
+[Td640] [API]   [93] TlsGetValue -> 0x20276c0
+[Td640] [API]   [94] TlsSetValue -> 0x205d6c0
+[Td640] [API]   [95] TlsFree -> 0x200ad90
+[Td640] [API]   [96] ExitProcess -> 0x20f91c0
+[Td640] [API]   [97] GetModuleHandleExW -> 0x20c7e40
+[Td640] [API]   [98] GetConsoleCP -> 0x200a1f0
+[Td640] [API]   [99] SetStdHandle -> 0x2088320
+[Td640] [API]   [100] GetCommandLineA -> 0x207c180
+[Td640] [API]   [101] HeapFree -> 0x20ca9b0
+[Td640] [API]   [102] HeapAlloc -> 0x204fb10
+[Td640] [API]   [103] FlsAlloc -> 0x2035260
+[Td640] [API]   [104] FlsGetValue -> 0x2009370
+[Td640] [API]   [105] FlsSetValue -> 0x2009390
+[Td640] [API]   [106] FlsFree -> 0x2088bd0
+[Td640] [API]   [107] CompareStringW -> 0x201ba60
+[Td640] [API]   [108] LCMapStringW -> 0x2040410
+[Td640] [API]   [109] GetLocaleInfoW -> 0x20b6030
+[Td640] [API]   [110] IsValidLocale -> 0x200a0c0
+[Td640] [API]   [111] GetUserDefaultLCID -> 0x200a0d0
+[Td640] [API]   [112] EnumSystemLocalesW -> 0x200a0f0
+[Td640] [API]   [113] GetConsoleMode -> 0x2041ef0
+[Td640] [API]   [114] SetConsoleMode -> 0x200a200
+[Td640] [API] Import DLL: USER32.dll (IAT RVA=0x3d470, ILT RVA=0x5dd60)
+[Td640] [API]   [0] InflateRect -> 0x2009d70
+[Td640] [API]   [1] SendMessageW -> 0x20fb7a0
+[Td640] [API]   [2] EndDialog -> 0x2061840
+[Td640] [API]   [3] SetWindowTextW -> 0x20cec50
+[Td640] [API]   [4] DialogBoxIndirectParamW -> 0x20fa810
+[Td640] [API]   [5] LoadCursorW -> 0x2088470
+[Td640] [API]   [6] SetCursor -> 0x2088be0
+[Td640] [API]   [7] GetDlgItem -> 0x204a190
+[Td640] [API]   [8] GetSysColorBrush -> 0x202da20
+[Td640] [API] Import DLL: GDI32.dll (IAT RVA=0x3d068, ILT RVA=0x5d958)
+[Td640] [API]   [0] EndDoc -> 0x2088890
+[Td640] [API]   [1] GetDeviceCaps -> 0x202c800
+[Td640] [API]   [2] SetMapMode -> 0x20882a0
+[Td640] [API]   [3] StartDocW -> 0x206c8e0
+[Td640] [API]   [4] EndPage -> 0x2088880
+[Td640] [API]   [5] StartPage -> 0x206cba0
+[Td640] [API] Import DLL: COMDLG32.dll (IAT RVA=0x3d058, ILT RVA=0x5d948)
+[Td640] [API]   [0] PrintDlgW -> 0x203e9a0
+[Td640] [API] Import DLL: ADVAPI32.dll (IAT RVA=0x3d000, ILT RVA=0x5d8f0)
+[Td640] [API]   [0] LookupPrivilegeValueW -> 0x200ab60
+[Td640] [API]   [1] AdjustTokenPrivileges -> 0x203eb30
+[Td640] [API]   [2] RegDeleteKeyW -> 0x20d80e0
+[Td640] [API]   [3] OpenProcessToken -> 0x203eab0
+[Td640] [API]   [4] RegCloseKey -> 0x200a3e0
+[Td640] [API]   [5] RegSetValueExW -> 0x20dbdf0
+[Td640] [API]   [6] RegOpenKeyExW -> 0x20d70c0
+[Td640] [API]   [7] RegCreateKeyW -> 0x20d7e40
+[Td640] [API]   [8] RegOpenKeyW -> 0x20d7620
+[Td640] [API]   [9] RegQueryValueExW -> 0x20d95f0
+[Td640] [API] Import DLL: ole32.dll (IAT RVA=0x3d4e0, ILT RVA=0x5ddd0)
+[Td640] [API]   [0] CoSetProxyBlanket -> 0x2009f30
+[Td640] [API]   [1] CoInitializeSecurity -> 0x2070e50
+[Td640] [API]   [2] CoCreateInstance -> 0x2062cf0
+[Td640] [API]   [3] CoUninitialize -> 0x206f980
+[Td640] [API] Import DLL: OLEAUT32.dll (IAT RVA=0x3d440, ILT RVA=0x5dd30)
+[Td640] [API]   [0] Ordinal 8 -> VariantInit (fixed ordinal)
+[Td640] [API]   [0] VariantInit -> 0x2071410
+[Td640] [API]   [1] Ordinal 6 -> SysFreeString (fixed ordinal)
+[Td640] [API]   [1] SysFreeString -> 0x2076b20
+[Td640] [API]   [2] Ordinal 7 -> SysStringLen (fixed ordinal)
+[Td640] [API]   [2] SysStringLen -> 0x200ab10
+[Td640] [API]   [3] Ordinal 9 -> VariantClear (fixed ordinal)
+[Td640] [API]   [3] VariantClear -> 0x2076cf0
+[Td640] [API]   [4] Ordinal 2 -> SysAllocString (fixed ordinal)
+[Td640] [API]   [4] SysAllocString -> 0x2089ff0
+[Td640] [API] Import resolution: 153 resolved, 0 unresolved (total 153)
+[Td640] [API] TLS: StartRaw=0x140059490 EndRaw=0x140059498 Callbacks=0x14003d5f0
+[Td640] [API] TLS: static block 0x3d18720 (8+0 bytes) -> slot 0
+[Td640] [API] Exception: .pdata RVA=0x62000 Size=0x2e74 Entries=991
+[Td640] [API] [API-005] EH hacks DISABLED (default) (MINWIN_EH_HACKS=<unset>)
+[Td640] [API] [API-005] CXX-EH-FIX (LSDA catch-all patch RVA 0x2010c8) skipped: MINWIN_EH_HACKS not set
+[Td640] [API] SW-1297 validate_fd patch: fingerprint not found (guest unaffected)
+[Td640] [API] Jumping to EP=0x140012030
+[Td640] [API] GetSystemTimeAsFileTime()
+[Td640] [API] QueryPerformanceCounter()
+[Td640] [API] LoadLibraryExW(flags=2048)
+[Td640] [API] LoadLibraryA(api-ms-win-core-synch-l1-2-0)
+[Td640] [API] GetProcAddress(module=0xdedd0000, name=InitializeCriticalSectionEx)
+[Td640] [API]   -> 0x203aba0
+[Td640] [API] InitializeCriticalSectionEx(spin=4000)
+[Td640] [API] LoadLibraryExW(flags=2048)
+[Td640] [API] LoadLibraryA(api-ms-win-core-fibers-l1-1-1)
+[Td640] [API] GetProcAddress(module=0xdedd0000, name=FlsAlloc)
+[Td640] [API]   -> 0x2035260
+[Td640] [API] FlsAlloc(cb=0x140016fe0) = 0
+[Td640] [API] GetProcAddress(module=0xdedd0000, name=FlsSetValue)
+[Td640] [API]   -> 0x2009390
+[Td640] [API] LoadLibraryExW(flags=2048)
+[Td640] [API] LoadLibraryA(api-ms-win-core-synch-l1-2-0)
+[Td640] [API] GetProcAddress(module=0xdedd0000, name=InitializeCriticalSectionEx)
+[Td640] [API]   -> 0x203aba0
+[Td640] [API] InitializeCriticalSectionEx(spin=4000)
+[Td640] [API] InitializeCriticalSectionEx(spin=4000)
+[Td640] [API] InitializeCriticalSectionEx(spin=4000)
+[Td640] [API] InitializeCriticalSectionEx(spin=4000)
+[Td640] [API] InitializeCriticalSectionEx(spin=4000)
+[Td640] [API] InitializeCriticalSectionEx(spin=4000)
+[Td640] [API] InitializeCriticalSectionEx(spin=4000)
+[Td640] [API] InitializeCriticalSectionEx(spin=4000)
+[Td640] [API] InitializeCriticalSectionEx(spin=4000)
+[Td640] [API] InitializeCriticalSectionEx(spin=4000)
+[Td640] [API] InitializeCriticalSectionEx(spin=4000)
+[Td640] [API] InitializeCriticalSectionEx(spin=4000)
+[Td640] [API] InitializeCriticalSectionEx(spin=4000)
+[Td640] [API] InitializeCriticalSectionEx(spin=4000)
+[Td640] [API] FlsAlloc(cb=0x140029940) = 1
+[Td640] [API] GetLastError() = 0
+[Td640] [API] HeapAlloc(size=0x3c8, zero=1) = 0x3d18760
+[Td640] [API] EnterCriticalSection(0x140061248)
+[Td640] [API] LeaveCriticalSection(0x140061248)
+[Td640] [API] EnterCriticalSection(0x140061220)
+[Td640] [API] LeaveCriticalSection(0x140061220)
+[Td640] [API] SetLastError(0) caller=0x140029ced
+[Td640] [API] EnterCriticalSection(0x140061298)
+[Td640] [API] EnterCriticalSection(0x140061298)
+[Td640] [API] HeapAlloc(size=0x1200, zero=1) = 0x3d18b30
+[Td640] [API] InitializeCriticalSectionEx(spin=4000)
+[Td640] [API] InitializeCriticalSectionEx(spin=4000)
+[Td640] [API] InitializeCriticalSectionEx(spin=4000)
+[Td640] [API] InitializeCriticalSectionEx(spin=4000)
+[Td640] [API] InitializeCriticalSectionEx(spin=4000)
+[Td640] [API] InitializeCriticalSectionEx(spin=4000)
+[Td640] [API] InitializeCriticalSectionEx(spin=4000)
+[Td640] [API] InitializeCriticalSectionEx(spin=4000)
+[Td640] [API] InitializeCriticalSectionEx(spin=4000)
+[Td640] [API] InitializeCriticalSectionEx(spin=4000)
+[Td640] [API] InitializeCriticalSectionEx(spin=4000)
+[Td640] [API] InitializeCriticalSectionEx(spin=4000)
+[Td640] [API] InitializeCriticalSectionEx(spin=4000)
+[Td640] [API] InitializeCriticalSectionEx(spin=4000)
+[Td640] [API] InitializeCriticalSectionEx(spin=4000)
+[Td640] [API] InitializeCriticalSectionEx(spin=4000)
+[Td640] [API] InitializeCriticalSectionEx(spin=4000)
+[Td640] [API] InitializeCriticalSectionEx(spin=4000)
+[Td640] [API] InitializeCriticalSectionEx(spin=4000)
+[Td640] [API] InitializeCriticalSectionEx(spin=4000)
+[Td640] [API] InitializeCriticalSectionEx(spin=4000)
+[Td640] [API] InitializeCriticalSectionEx(spin=4000)
+[Td640] [API] InitializeCriticalSectionEx(spin=4000)
+[Td640] [API] InitializeCriticalSectionEx(spin=4000)
+[Td640] [API] InitializeCriticalSectionEx(spin=4000)
+[Td640] [API] InitializeCriticalSectionEx(spin=4000)
+[Td640] [API] InitializeCriticalSectionEx(spin=4000)
+[Td640] [API] InitializeCriticalSectionEx(spin=4000)
+[Td640] [API] InitializeCriticalSectionEx(spin=4000)
+[Td640] [API] InitializeCriticalSectionEx(spin=4000)
+[Td640] [API] InitializeCriticalSectionEx(spin=4000)
+[Td640] [API] InitializeCriticalSectionEx(spin=4000)
+[Td640] [API] InitializeCriticalSectionEx(spin=4000)
+[Td640] [API] InitializeCriticalSectionEx(spin=4000)
+[Td640] [API] InitializeCriticalSectionEx(spin=4000)
+[Td640] [API] InitializeCriticalSectionEx(spin=4000)
+[Td640] [API] InitializeCriticalSectionEx(spin=4000)
+[Td640] [API] InitializeCriticalSectionEx(spin=4000)
+[Td640] [API] InitializeCriticalSectionEx(spin=4000)
+[Td640] [API] InitializeCriticalSectionEx(spin=4000)
+[Td640] [API] InitializeCriticalSectionEx(spin=4000)
+[Td640] [API] InitializeCriticalSectionEx(spin=4000)
+[Td640] [API] InitializeCriticalSectionEx(spin=4000)
+[Td640] [API] InitializeCriticalSectionEx(spin=4000)
+[Td640] [API] InitializeCriticalSectionEx(spin=4000)
+[Td640] [API] InitializeCriticalSectionEx(spin=4000)
+[Td640] [API] InitializeCriticalSectionEx(spin=4000)
+[Td640] [API] InitializeCriticalSectionEx(spin=4000)
+[Td640] [API] InitializeCriticalSectionEx(spin=4000)
+[Td640] [API] InitializeCriticalSectionEx(spin=4000)
+[Td640] [API] InitializeCriticalSectionEx(spin=4000)
+[Td640] [API] InitializeCriticalSectionEx(spin=4000)
+[Td640] [API] InitializeCriticalSectionEx(spin=4000)
+[Td640] [API] InitializeCriticalSectionEx(spin=4000)
+[Td640] [API] InitializeCriticalSectionEx(spin=4000)
+[Td640] [API] InitializeCriticalSectionEx(spin=4000)
+[Td640] [API] InitializeCriticalSectionEx(spin=4000)
+[Td640] [API] InitializeCriticalSectionEx(spin=4000)
+[Td640] [API] InitializeCriticalSectionEx(spin=4000)
+[Td640] [API] InitializeCriticalSectionEx(spin=4000)
+[Td640] [API] InitializeCriticalSectionEx(spin=4000)
+[Td640] [API] InitializeCriticalSectionEx(spin=4000)
+[Td640] [API] InitializeCriticalSectionEx(spin=4000)
+[Td640] [API] InitializeCriticalSectionEx(spin=4000)
+[Td640] [API] LeaveCriticalSection(0x140061298)
+[Td640] [API] GetStartupInfoW()
+[Td640] [API] GetStdHandle(-10) = 0x4
+[Td640] [API] GetStdHandle(-11) = 0x5
+[Td640] [API] GetStdHandle(-12) = 0x6
+[Td640] [API] LeaveCriticalSection(0x140061298)
+[Td640] [API] GetCommandLineA() = "Coreinfo64.exe"
+[Td640] [API] GetCommandLineW()
+[Td640] [API] EnterCriticalSection(0x140061248)
+[Td640] [API] LeaveCriticalSection(0x140061248)
+[Td640] [API] HeapAlloc(size=0x228, zero=0) = 0x3d19d40
+[Td640] [API] GetCPInfo(cp=1252)
+[Td640] [API] GetCPInfo(cp=1252)
+[Td640] [API] MultiByteToWideChar(cp=1252, srclen=256, dstlen=0)
+[Td640] [API] MultiByteToWideChar(cp=1252, srclen=256, dstlen=256)
+[Td640] [API] MultiByteToWideChar(cp=1252, srclen=256, dstlen=0)
+[Td640] [API] MultiByteToWideChar(cp=1252, srclen=256, dstlen=256)
+[Td640] [API] LoadLibraryExW(flags=2048)
+[Td640] [API] LoadLibraryA(api-ms-win-core-localization-l1-2-1)
+[Td640] [API] GetProcAddress(module=0xdedd0000, name=LCMapStringEx)
+[Td640] [API]   -> 0x20405e0
+[Td640] [API] WideCharToMultiByte(cp=1252, srclen=256, dstlen=256)
+[Td640] [API] MultiByteToWideChar(cp=1252, srclen=256, dstlen=0)
+[Td640] [API] MultiByteToWideChar(cp=1252, srclen=256, dstlen=256)
+[Td640] [API] WideCharToMultiByte(cp=1252, srclen=256, dstlen=256)
+[Td640] [API] EnterCriticalSection(0x140061248)
+[Td640] [API] LeaveCriticalSection(0x140061248)
+[Td640] [API] EnterCriticalSection(0x1400611d0)
+[Td640] [API] HeapAlloc(size=0x100, zero=0) = 0x3d19f70
+[Td640] [API] LeaveCriticalSection(0x1400611d0)
+[Td640] [API] GetModuleFileNameW(cap=260)
+[Td640] [API] GetModuleFileNameW out u16len=99 utf8len=99 'C:\home\z\my-project\workspace\miniwin-engineering\artifacts\sweep50\dl\coreinfoex64\Coreinfo64.exe'
+[Td640] [API] HeapAlloc(size=0x2e, zero=1) = 0x3d1a080
+[Td640] [API] GetLastError() = 0
+[Td640] [API] SetLastError(0) caller=0x140029b75
+[Td640] [API] GetEnvironmentStringsW()
+[Td640] [API] HeapAlloc(size=0x10ce, zero=0) = 0x3d1a0c0
+[Td640] [API] FreeEnvironmentStringsW()
+[Td640] [API] HeapAlloc(size=0x240, zero=1) = 0x3d1b1a0
+[Td640] [API] HeapAlloc(size=0x3e, zero=1) = 0x3d1b3f0
+[Td640] [API] HeapAlloc(size=0x52, zero=1) = 0x3d1b440
+[Td640] [API] HeapAlloc(size=0x62, zero=1) = 0x3d1b4a0
+[Td640] [API] HeapAlloc(size=0x78, zero=1) = 0x3d18090
+[Td640] [API] HeapAlloc(size=0x62, zero=1) = 0x3d1b510
+[Td640] [API] HeapAlloc(size=0x2a, zero=1) = 0x3d1b580
+[Td640] [API] HeapAlloc(size=0x48, zero=1) = 0x3d1b5c0
+[Td640] [API] HeapAlloc(size=0x64, zero=1) = 0x3d1b610
+[Td640] [API] HeapAlloc(size=0x58, zero=1) = 0x3d1b680
+[Td640] [API] HeapAlloc(size=0x1c, zero=1) = 0x3d186f0
+[Td640] [API] HeapAlloc(size=0xd2, zero=1) = 0x3d1b6e0
+[Td640] [API] HeapAlloc(size=0x7c, zero=1) = 0x3d1b7c0
+[Td640] [API] HeapAlloc(size=0x3a, zero=1) = 0x3d1b850
+[Td640] [API] HeapAlloc(size=0x36, zero=1) = 0x3d1b8a0
+[Td640] [API] HeapAlloc(size=0x3c, zero=1) = 0x3d1b8e0
+[Td640] [API] HeapAlloc(size=0x52, zero=1) = 0x3d1b930
+[Td640] [API] HeapAlloc(size=0x3c, zero=1) = 0x3d1b990
+[Td640] [API] HeapAlloc(size=0x18, zero=1) = 0x3d1b9e0
+[Td640] [API] HeapAlloc(size=0x2e, zero=1) = 0x3d1ba00
+[Td640] [API] HeapAlloc(size=0x28, zero=1) = 0x3d18620
+[Td640] [API] HeapAlloc(size=0x1e, zero=1) = 0x3d1ba40
+[Td640] [API] HeapAlloc(size=0x2c, zero=1) = 0x3d1ba70
+[Td640] [API] HeapAlloc(size=0x52, zero=1) = 0x3d1bab0
+[Td640] [API] HeapAlloc(size=0x50, zero=1) = 0x3d1bb10
+[Td640] [API] HeapAlloc(size=0x26, zero=1) = 0x3d1bb70
+[Td640] [API] HeapAlloc(size=0x22, zero=1) = 0x3d1bba0
+[Td640] [API] HeapAlloc(size=0x3a, zero=1) = 0x3d1bbd0
+[Td640] [API] HeapAlloc(size=0x24, zero=1) = 0x3d1bc20
+[Td640] [API] HeapAlloc(size=0x2e, zero=1) = 0x3d1bc50
+[Td640] [API] HeapAlloc(size=0x8e, zero=1) = 0x3d18650
+[Td640] [API] HeapAlloc(size=0x24, zero=1) = 0x3d1bc90
+[Td640] [API] HeapAlloc(size=0x30, zero=1) = 0x3d1bcc0
+[Td640] [API] HeapAlloc(size=0x20, zero=1) = 0x3d1bd00
+[Td640] [API] HeapAlloc(size=0x36, zero=1) = 0x3d1bd30
+[Td640] [API] HeapAlloc(size=0x26, zero=1) = 0x3d1bd70
+[Td640] [API] HeapAlloc(size=0x64, zero=1) = 0x3d1bda0
+[Td640] [API] HeapAlloc(size=0x32, zero=1) = 0x3d1be10
+[Td640] [API] HeapAlloc(size=0x28, zero=1) = 0x3d1be50
+[Td640] [API] HeapAlloc(size=0x6a, zero=1) = 0x3d1be80
+[Td640] [API] HeapAlloc(size=0x74, zero=1) = 0x3d1bf00
+[Td640] [API] HeapAlloc(size=0x14, zero=1) = 0x3d1bf80
+[Td640] [API] HeapAlloc(size=0x2c, zero=1) = 0x3d1bfa0
+[Td640] [API] HeapAlloc(size=0x1e, zero=1) = 0x3d1bfe0
+[Td640] [API] HeapAlloc(size=0x62, zero=1) = 0x3d1c010
+[Td640] [API] HeapAlloc(size=0x72, zero=1) = 0x3d1c080
+[Td640] [API] HeapAlloc(size=0x1a, zero=1) = 0x3d1c100
+[Td640] [API] HeapAlloc(size=0x3a, zero=1) = 0x3d1c130
+[Td640] [API] HeapAlloc(size=0x34, zero=1) = 0x3d1c180
+[Td640] [API] HeapAlloc(size=0x38, zero=1) = 0x3d1c1c0
+[Td640] [API] HeapAlloc(size=0x48, zero=1) = 0x3d1c200
+[Td640] [API] HeapAlloc(size=0x36, zero=1) = 0x3d1c250
+[Td640] [API] HeapAlloc(size=0x16, zero=1) = 0x3d1c290
+[Td640] [API] HeapAlloc(size=0x22, zero=1) = 0x3d1c2b0
+[Td640] [API] HeapAlloc(size=0x44, zero=1) = 0x3d1c2e0
+[Td640] [API] HeapAlloc(size=0x14, zero=1) = 0x3d1c330
+[Td640] [API] HeapAlloc(size=0xe, zero=1) = 0x3d1c350
+[Td640] [API] HeapAlloc(size=0x10, zero=1) = 0x3d1c370
+[Td640] [API] HeapAlloc(size=0x32, zero=1) = 0x3d1c390
+[Td640] [API] HeapAlloc(size=0x34, zero=1) = 0x3d1c3d0
+[Td640] [API] HeapAlloc(size=0x16, zero=1) = 0x3d1c410
+[Td640] [API] HeapAlloc(size=0x3e, zero=1) = 0x3d1c430
+[Td640] [API] HeapAlloc(size=0x2a, zero=1) = 0x3d1c480
+[Td640] [API] HeapAlloc(size=0x22, zero=1) = 0x3d1c4c0
+[Td640] [API] HeapAlloc(size=0x32, zero=1) = 0x3d1c4f0
+[Td640] [API] HeapAlloc(size=0x22, zero=1) = 0x3d1c530
+[Td640] [API] HeapAlloc(size=0x3e, zero=1) = 0x3d1c560
+[Td640] [API] HeapAlloc(size=0x3e, zero=1) = 0x3d1c5b0
+[Td640] [API] HeapAlloc(size=0x60, zero=1) = 0x3d1c600
+[Td640] [API] HeapAlloc(size=0x46, zero=1) = 0x3d1c670
+[Td640] [API] HeapAlloc(size=0x34, zero=1) = 0x3d1c6c0
+[Td640] [API] HeapAlloc(size=0x38, zero=1) = 0x3d1c700
+[Td640] [API] HeapFree(0x3d1a0c0)
+[Td640] [API] HeapAlloc(size=0x1000, zero=1) = 0x3d1a0c0
+[Td640] [API] InitializeCriticalSectionEx(spin=4000)
+[Td640] [API] InitializeCriticalSectionEx(spin=4000)
+[Td640] [API] InitializeCriticalSectionEx(spin=4000)
+[Td640] [API] SetUnhandledExceptionFilter(handler=0x1400127c0)
+[Td640] [API] InitializeCriticalSectionEx(spin=4000)
+[Td640] [API] InitializeCriticalSectionEx(spin=4000)
+[Td640] [API] InitializeCriticalSectionEx(spin=4000)
+[Td640] [API] InitializeCriticalSectionEx(spin=4000)
+[Td640] [API] InitializeCriticalSectionEx(spin=4000)
+[Td640] [API] InitializeCriticalSectionEx(spin=4000)
+[Td640] [API] InitializeCriticalSectionEx(spin=4000)
+[Td640] [API] InitializeCriticalSectionEx(spin=4000)
+[Td640] [API] EnterCriticalSection(0x1400611d0)
+[Td640] [API] LeaveCriticalSection(0x1400611d0)
+[Td640] [API] EnterCriticalSection(0x1400611d0)
+[Td640] [API] LeaveCriticalSection(0x1400611d0)
+[Td640] [API] HeapAlloc(size=0x10, zero=0) = 0x3d1b0d0
+[Td640] [API] LoadLibraryExW(flags=2048)
+[Td640] [API] LoadLibraryA(kernel32)
+[Td640] [API] GetProcAddress(module=0xdea00000, name=AreFileApisANSI)
+[Td640] [API]   -> 0x2089040
+[Td640] [API] LoadLibraryExW(flags=2048)
+[Td640] [API] LoadLibraryA(api-ms-win-core-string-l1-1-0)
+[Td640] [API] GetProcAddress(module=0xdedd0000, name=CompareStringEx)
+[Td640] [API]   -> 0x201bf80
+[Td640] [API] GetProcAddress(module=0xdedd0000, name=EnumSystemLocalesEx)
+[Td640] [API]   -> 0x200f470
+[Td640] [API] LoadLibraryExW(flags=2048)
+[Td640] [API] LoadLibraryA(api-ms-win-core-datetime-l1-1-1)
+[Td640] [API] GetProcAddress(module=0xdedd0000, name=GetDateFormatEx)
+[Td640] [API]   -> 0x2091210
+[Td640] [API] GetProcAddress(module=0xdedd0000, name=GetLocaleInfoEx)
+[Td640] [API]   -> 0x20b63a0
+[Td640] [API] GetProcAddress(module=0xdedd0000, name=GetTimeFormatEx)
+[Td640] [API]   -> 0x2090800
+[Td640] [API] GetProcAddress(module=0xdedd0000, name=GetUserDefaultLocaleName)
+[Td640] [API]   -> 0x207ab00
+[Td640] [API] GetProcAddress(module=0xdedd0000, name=IsValidLocaleName)
+[Td640] [API]   -> 0x2025f30
+[Td640] [API] LoadLibraryExW(flags=2048)
+[Td640] [API] LoadLibraryA(api-ms-win-core-localization-obsolete-l1-2-0)
+[Td640] [API] GetProcAddress(module=0xdedd0000, name=LCIDToLocaleName)
+[Td640] [API]   -> 0x20440b0
+[Td640] [API] GetProcAddress(module=0xdedd0000, name=LocaleNameToLCID)
+[Td640] [API]   -> 0x20b3f70
+[Td640] [API] EnterCriticalSection(0x140061220)
+[Td640] [API] HeapAlloc(size=0x38, zero=0) = 0x3d1b0f0
+[Td640] [API] HeapAlloc(size=0x2, zero=0) = 0x3d1b130
+[Td640] [API] HeapFree(0x3d1b130)
+[Td640] [API] HeapAlloc(size=0x2, zero=0) = 0x3d1b130
+[Td640] [API] LeaveCriticalSection(0x140061220)
+[Td640] [API] EnterCriticalSection(0x1400611d0)
+[Td640] [API] LeaveCriticalSection(0x1400611d0)
+[Td640] [API] HeapAlloc(size=0x10, zero=0) = 0x3d1b150
+[Td640] [API] EnterCriticalSection(0x140061220)
+[Td640] [API] LeaveCriticalSection(0x140061220)
+[Td640] [API] EnterCriticalSection(0x140061220)
+[Td640] [API] EnterCriticalSection(0x140061220)
+[Td640] [API] LeaveCriticalSection(0x140061220)
+[Td640] [API] HeapAlloc(size=0x60, zero=0) = 0x3d1c740
+[Td640] [API] EnterCriticalSection(0x140061220)
+[Td640] [API] EnterCriticalSection(0x140061220)
+[Td640] [API] GetLastError() = 0
+[Td640] [API] SetLastError(0) caller=0x140029b75
+[Td640] [API] GetLastError() = 0
+[Td640] [API] SetLastError(0) caller=0x140029b75
+[Td640] [API] EnterCriticalSection(0x140061220)
+[Td640] [API] LeaveCriticalSection(0x140061220)
+[Td640] [API] HeapAlloc(size=0x158, zero=1) = 0x3d1c7b0
+[Td640] [API] EnterCriticalSection(0x140061220)
+[Td640] [API] HeapAlloc(size=0x6a6, zero=0) = 0x3d1c910
+[Td640] [API] HeapFree(0x3d1c910)
+[Td640] [API] LeaveCriticalSection(0x140061220)
+[Td640] [API] GetLastError() = 0
+[Td640] [API] SetLastError(0) caller=0x140029b75
+[Td640] [API] HeapAlloc(size=0x6, zero=0) = 0x3d1b170
+[Td640] [API] LeaveCriticalSection(0x140061220)
+[Td640] [API] HeapAlloc(size=0x2, zero=0) = 0x3d1c910
+[Td640] [API] EnterCriticalSection(0x140061220)
+[Td640] [API] HeapAlloc(size=0x4, zero=1) = 0x3d1c930
+[Td640] [API] GetLastError() = 0
+[Td640] [API] SetLastError(0) caller=0x140029b75
+[Td640] [API] GetLastError() = 0
+[Td640] [API] SetLastError(0) caller=0x140029b75
+[Td640] [API] EnterCriticalSection(0x140061220)
+[Td640] [API] LeaveCriticalSection(0x140061220)
+[Td640] [API] HeapAlloc(size=0x158, zero=1) = 0x3d1c950
+[Td640] [API] EnterCriticalSection(0x140061220)
+[Td640] [API] HeapAlloc(size=0x6a6, zero=0) = 0x3d1cab0
+[Td640] [API] HeapFree(0x3d1cab0)
+[Td640] [API] HeapFree(0x3d1b170)
+[Td640] [API] HeapFree(0x3d1c7b0)
+[Td640] [API] LeaveCriticalSection(0x140061220)
+[Td640] [API] HeapFree(0x3d1c930)
+[Td640] [API] GetLastError() = 0
+[Td640] [API] SetLastError(0) caller=0x140029b75
+[Td640] [API] HeapAlloc(size=0x6, zero=0) = 0x3d1c930
+[Td640] [API] LeaveCriticalSection(0x140061220)
+[Td640] [API] HeapAlloc(size=0x2, zero=0) = 0x3d1cab0
+[Td640] [API] GetLastError() = 0
+[Td640] [API] SetLastError(0) caller=0x140029b75
+[Td640] [API] HeapAlloc(size=0x200, zero=1) = 0x3d1cad0
+[Td640] [API] GetLastError() = 0
+[Td640] [API] SetLastError(0) caller=0x140029b75
+[Td640] [API] GetLastError() = 0
+[Td640] [API] SetLastError(0) caller=0x140029b75
+[Td640] [API] GetLastError() = 0
+[Td640] [API] SetLastError(0) caller=0x140029b75
+[Td640] [API] GetLastError() = 0
+[Td640] [API] SetLastError(0) caller=0x140029b75
+[Td640] [API] GetLastError() = 0
+[Td640] [API] SetLastError(0) caller=0x140029b75
+[Td640] [API] EnterCriticalSection(0x140061220)
+[Td640] [API] HeapAlloc(size=0x4, zero=1) = 0x3d1cce0
+[Td640] [API] GetLastError() = 0
+[Td640] [API] SetLastError(0) caller=0x140029b75
+[Td640] [API] GetLastError() = 0
+[Td640] [API] SetLastError(0) caller=0x140029b75
+[Td640] [API] EnterCriticalSection(0x140061220)
+[Td640] [API] LeaveCriticalSection(0x140061220)
+[Td640] [API] HeapAlloc(size=0x158, zero=1) = 0x3d1c7b0
+[Td640] [API] EnterCriticalSection(0x140061220)
+[Td640] [API] HeapAlloc(size=0x6a6, zero=0) = 0x3d1cd00
+[Td640] [API] HeapFree(0x3d1cd00)
+[Td640] [API] HeapFree(0x3d1c930)
+[Td640] [API] HeapFree(0x3d1c950)
+[Td640] [API] LeaveCriticalSection(0x140061220)
+[Td640] [API] HeapFree(0x3d1cce0)
+[Td640] [API] GetLastError() = 0
+[Td640] [API] SetLastError(0) caller=0x140029b75
+[Td640] [API] HeapAlloc(size=0x6, zero=0) = 0x3d1cce0
+[Td640] [API] LeaveCriticalSection(0x140061220)
+[Td640] [API] HeapFree(0x3d1cab0)
+[Td640] [API] HeapFree(0x3d1c910)
+[Td640] [API] LeaveCriticalSection(0x140061220)
+[Td640] [API] HeapAlloc(size=0x10, zero=0) = 0x3d1c910
+[Td640] [API] LeaveCriticalSection(0x140061220)
+[Td640] [API] EnterCriticalSection(0x1400611d0)
+[Td640] [API] LeaveCriticalSection(0x1400611d0)
+[Td640] [API] EnterCriticalSection(0x1400611d0)
+[Td640] [API] LeaveCriticalSection(0x1400611d0)
+[Td640] [API] EnterCriticalSection(0x1400611d0)
+[Td640] [API] LeaveCriticalSection(0x1400611d0)
+[Td640] [API] EnterCriticalSection(0x1400611d0)
+[Td640] [API] LeaveCriticalSection(0x1400611d0)
+[Td640] [API] EnterCriticalSection(0x1400611d0)
+[Td640] [API] LeaveCriticalSection(0x1400611d0)
+[Td640] [API] GetModuleFileNameW(cap=260)
+[Td640] [API] GetModuleFileNameW out u16len=99 utf8len=99 'C:\home\z\my-project\workspace\miniwin-engineering\artifacts\sweep50\dl\coreinfoex64\Coreinfo64.exe'
+[Td640] [API] SetLastError(1813) caller=0x20be7ee
+[Td640] [API] GetFileVersionInfoSizeW(C:\home\z\my-project\workspace\miniwin-engineering\artifacts\sweep50\dl\coreinfoex64\Coreinfo64.exe) -> 0 (1813; no RT_VERSION or open fail)
+[Td640] [API] HeapAlloc(size=0x1, zero=0) = 0x3d1cab0
+[Td640] [API] EnterCriticalSection(0x3d18b78)
+[Td640] [API] LeaveCriticalSection(0x3d18b78)
+[Td640] [API] RegOpenKeyExW(miss) 'HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion' -> ERROR_FILE_NOT_FOUND
+[Td640] [API] SetLastError(2) caller=0x20d735f
+[Td640] [API] RegCreateKeyExW 'HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion' -> slot 7 (created=1)
+[Td640] [API] RegSetValueExW -> slot 7 'ProductName', 40 bytes stored
+[Td640] [API] RegSetValueExW -> slot 7 'CurrentVersion', 8 bytes stored
+[Td640] [API] RegSetValueExW -> slot 7 'CurrentBuildNumber', 10 bytes stored
+[Td640] [API] RegSetValueExW -> slot 7 'CSDVersion', 30 bytes stored
+[Td640] [API] reg seed: CurrentVersion identity seeded (Windows Server 2003 5.2 b3790)
+[Td640] [API] RegOpenKeyExW(miss) 'HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon' -> ERROR_FILE_NOT_FOUND
+[Td640] [API] SetLastError(2) caller=0x20d735f
+[Td640] [API] RegCreateKeyExW 'HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon' -> slot 8 (created=1)
+[Td640] [API] RegSetValueExW -> slot 8 'AutoAdminLogon', 4 bytes stored
+[Td640] [API] RegSetValueExW -> slot 8 'DefaultUserName', 26 bytes stored
+[Td640] [API] RegSetValueExW -> slot 8 'DefaultDomainName', 16 bytes stored
+[Td640] [API] RegSetValueExW -> slot 8 'DefaultPassword', 2 bytes stored
+[Td640] [API] reg seed: Winlogon skeleton seeded
+[Td640] [API] RegOpenKeyExW(miss) 'HKLM\System\CurrentControlSet\Services\EventLog\Application' -> ERROR_FILE_NOT_FOUND
+[Td640] [API] SetLastError(2) caller=0x20d735f
+[Td640] [API] RegCreateKeyExW 'HKLM\System\CurrentControlSet\Services\EventLog\Application' -> slot 9 (created=1)
+[Td640] [API] RegOpenKeyExW(miss) 'HKLM\System\CurrentControlSet\Services\EventLog\Security' -> ERROR_FILE_NOT_FOUND
+[Td640] [API] SetLastError(2) caller=0x20d735f
+[Td640] [API] RegCreateKeyExW 'HKLM\System\CurrentControlSet\Services\EventLog\Security' -> slot 10 (created=1)
+[Td640] [API] RegOpenKeyExW(miss) 'HKLM\System\CurrentControlSet\Services\EventLog\System' -> ERROR_FILE_NOT_FOUND
+[Td640] [API] SetLastError(2) caller=0x20d735f
+[Td640] [API] RegCreateKeyExW 'HKLM\System\CurrentControlSet\Services\EventLog\System' -> slot 11 (created=1)
+[Td640] [API] reg seed: EventLog service keys seeded (3)
+[Td640] [API] RegOpenKeyExW(miss) 'HKCU\Software\WinRAR\Setup' -> ERROR_FILE_NOT_FOUND
+[Td640] [API] SetLastError(2) caller=0x20d735f
+[Td640] [API] RegCreateKeyExW 'HKCU\Software\WinRAR\Setup' -> slot 12 (created=1)
+[Td640] [API] reg seed: WinRAR Setup key seeded (no close: handle released at exit)
+[Td640] [API] RegOpenKeyExW(miss) 'HKCU\Software\Sysinternals\PsLoglist' -> ERROR_FILE_NOT_FOUND
+[Td640] [API] SetLastError(2) caller=0x20d735f
+[Td640] [API] RegCreateKeyExW 'HKCU\Software\Sysinternals\PsLoglist' -> slot 13 (created=1)
+[Td640] [API] RegSetValueExW -> slot 13 'EulaAccepted', 4 bytes stored
+[Td640] [API] RegOpenKeyExW(miss) 'HKCU\Software\Sysinternals\PsInfo' -> ERROR_FILE_NOT_FOUND
+[Td640] [API] SetLastError(2) caller=0x20d735f
+[Td640] [API] RegCreateKeyExW 'HKCU\Software\Sysinternals\PsInfo' -> slot 14 (created=1)
+[Td640] [API] RegSetValueExW -> slot 14 'EulaAccepted', 4 bytes stored
+[Td640] [API] RegOpenKeyExW(miss) 'HKCU\Software\Sysinternals\PsList' -> ERROR_FILE_NOT_FOUND
+[Td640] [API] SetLastError(2) caller=0x20d735f
+[Td640] [API] RegCreateKeyExW 'HKCU\Software\Sysinternals\PsList' -> slot 15 (created=1)
+[Td640] [API] RegSetValueExW -> slot 15 'EulaAccepted', 4 bytes stored
+[Td640] [API] RegOpenKeyExW(miss) 'HKCU\Software\Sysinternals\PsPasswd' -> ERROR_FILE_NOT_FOUND
+[Td640] [API] SetLastError(2) caller=0x20d735f
+[Td640] [API] RegCreateKeyExW 'HKCU\Software\Sysinternals\PsPasswd' -> slot 16 (created=1)
+[Td640] [API] RegSetValueExW -> slot 16 'EulaAccepted', 4 bytes stored
+[Td640] [API] RegOpenKeyExW(miss) 'HKCU\Software\Sysinternals\PsService' -> ERROR_FILE_NOT_FOUND
+[Td640] [API] SetLastError(2) caller=0x20d735f
+[Td640] [API] RegCreateKeyExW 'HKCU\Software\Sysinternals\PsService' -> slot 17 (created=1)
+[Td640] [API] RegSetValueExW -> slot 17 'EulaAccepted', 4 bytes stored
+[Td640] [API] reg seed: Sysinternals EulaAccepted markers seeded
+[Td640] [API] RegOpenKeyExW(miss) 'HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Perflib' -> ERROR_FILE_NOT_FOUND
+[Td640] [API] SetLastError(2) caller=0x20d735f
+[Td640] [API] RegCreateKeyExW 'HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Perflib' -> slot 18 (created=1)
+[Td640] [API] RegSetValueExW -> slot 18 'Last Counter', 4 bytes stored
+[Td640] [API] RegSetValueExW -> slot 18 'Last Help', 4 bytes stored
+[Td640] [API] reg seed: Perflib Last Counter/Help = 952
+[Td640] [API] RegOpenKeyExW(miss) 'HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion' -> ERROR_FILE_NOT_FOUND
+[Td640] [API] SetLastError(2) caller=0x20d735f
+[Td640] [API] RegCreateKeyExW 'HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion' -> slot 19 (created=1)
+[Td640] [API] RegSetValueExW -> slot 19 'ProgramFilesDir', 34 bytes stored
+[Td640] [API] RegSetValueExW -> slot 19 'CommonFilesDir', 60 bytes stored
+[Td640] [API] RegSetValueExW -> slot 19 'ProgramFilesPath', 34 bytes stored
+[Td640] [API] RegSetValueExW -> slot 19 'DevicePath', 34 bytes stored
+[Td640] [API] reg seed: HKLM Windows CurrentVersion ProgramFiles skeleton seeded
+[Td640] [API] RegOpenKeyExW(miss) 'HKLM\Software\Sysinternals' -> ERROR_FILE_NOT_FOUND
+[Td640] [API] SetLastError(2) caller=0x20d735f
+[Td640] [API] RegOpenKeyExW(miss) 'HKCU\Software\Sysinternals' -> ERROR_FILE_NOT_FOUND
+[Td640] [API] SetLastError(2) caller=0x20d735f
+[Td640] [API] RegOpenKeyExW(miss) 'HKCU\Software\Sysinternals\(null)' -> ERROR_FILE_NOT_FOUND
+[Td640] [API] SetLastError(2) caller=0x20d735f
+[Td640] [API] EnterCriticalSection(0x14005f168)
+[Td640] [API] EnterCriticalSection(0x3d18b78)
+[Td640] [API] SetLastError(87) caller=0x2059aca
+[Td640] [API] GetLastError() = 87
+[Td640] [API] LeaveCriticalSection(0x3d18b78)
+[Td640] [API] LeaveCriticalSection(0x14005f168)
+[Td640] [API] GetLastError() = 87
+[Td640] [API] SetLastError(87) caller=0x14001d12e
+[Td640] [API] GetModuleFileNameW(cap=260)
+[Td640] [API] GetModuleFileNameW out u16len=99 utf8len=99 'C:\home\z\my-project\workspace\miniwin-engineering\artifacts\sweep50\dl\coreinfoex64\Coreinfo64.exe'
+[Td640] [API] SetLastError(1813) caller=0x20be7ee
+[Td640] [API] GetFileVersionInfoSizeW(C:\home\z\my-project\workspace\miniwin-engineering\artifacts\sweep50\dl\coreinfoex64\Coreinfo64.exe) -> 0 (1813; no RT_VERSION or open fail)
+[Td640] [API] HeapAlloc(size=0x1, zero=0) = 0x3d22130
+[Td640] [API] GetStdHandle(-11) = 0x5
+[Td640] [API] EnterCriticalSection(0x14005f168)
+[Td640] [API] HeapAlloc(size=0x1000, zero=1) = 0x3d22150
+[Td640] [API] LeaveCriticalSection(0x14005f168)
+[Td640] [API] EnterCriticalSection(0x14005f168)
+[Td640] [API] EnterCriticalSection(0x3d18b78)
+[Td640] [API] WriteFile(n=90)
+[Td640] [API] LeaveCriticalSection(0x3d18b78)
+[Td640] [API] LeaveCriticalSection(0x14005f168)
+[Td640] [API] RegOpenKeyExW(miss) 'HKLM\Software\Sysinternals' -> ERROR_FILE_NOT_FOUND
+[Td640] [API] SetLastError(2) caller=0x20d735f
+[Td640] [API] RegOpenKeyExW(miss) 'HKCU\Software\Sysinternals' -> ERROR_FILE_NOT_FOUND
+[Td640] [API] SetLastError(2) caller=0x20d735f
+[Td640] [API] RegOpenKeyExW(miss) 'HKCU\Software\Sysinternals\(null)' -> ERROR_FILE_NOT_FOUND
+[Td640] [API] SetLastError(2) caller=0x20d735f
+[Td640] [API] RegOpenKeyExW 'HKLM\Software\Microsoft\windows nt\currentversion' -> handle slot 7
+[Td640] [API] RegQueryValueExW(key=0x90008 'ProductName') -> 0 (type=1 size=40 data='Windows Server 2003')
+[Td640] [API] RegOpenKeyExW(miss) 'HKLM\Software\Microsoft\Windows NT\CurrentVersion\Server\ServerLevels' -> ERROR_FILE_NOT_FOUND
+[Td640] [API] SetLastError(2) caller=0x20d735f
+[Td640] [API] GetStdHandle(-11) = 0x5
+[Td640] [API] EnterCriticalSection(0x14005f168)
+[Td640] [API] EnterCriticalSection(0x3d18b78)
+[Td640] [API] WriteFile(n=4144)
+[Td640] [API] LeaveCriticalSection(0x3d18b78)
+[Td640] [API] EnterCriticalSection(0x3d18b78)
+[Td640] [API] WriteFile(n=4146)
+[Td640] [API] LeaveCriticalSection(0x3d18b78)
+[Td640] [API] EnterCriticalSection(0x3d18b78)
+[Td640] [API] WriteFile(n=4118)
+[Td640] [API] LeaveCriticalSection(0x3d18b78)
+[Td640] [API] LeaveCriticalSection(0x14005f168)
+[Td640] [API] EnterCriticalSection(0x14005f168)
+[Td640] [API] LeaveCriticalSection(0x14005f168)
+[Td640] [API] EnterCriticalSection(0x14005f168)
+[Td640] [API] LeaveCriticalSection(0x14005f168)
+[Td640] [API] GetModuleHandleW()
+[Td640] [API] EnterCriticalSection(0x1400611d0)
+[Td640] [API] EnterCriticalSection(0x1400611d0)
+[Td640] [API] HeapFree(0x3d1cad0)
+[Td640] [API] HeapFree(0x3d1c740)
+[Td640] [API] HeapFree(0x3d1c910)
+[Td640] [API] EnterCriticalSection(0x140061220)
+[Td640] [API] LeaveCriticalSection(0x140061220)
+[Td640] [API] HeapFree(0x3d1b150)
+[Td640] [API] EnterCriticalSection(0x140061220)
+[Td640] [API] LeaveCriticalSection(0x140061220)
+[Td640] [API] HeapFree(0x3d1b130)
+[Td640] [API] HeapFree(0x3d1b0f0)
+[Td640] [API] HeapFree(0x3d1b0d0)
+[Td640] [API] DeleteCriticalSection(0x140060850)
+[Td640] [API] DeleteCriticalSection(0x140060878)
+[Td640] [API] DeleteCriticalSection(0x1400608a0)
+[Td640] [API] DeleteCriticalSection(0x1400608c8)
+[Td640] [API] DeleteCriticalSection(0x1400608f0)
+[Td640] [API] DeleteCriticalSection(0x140060918)
+[Td640] [API] DeleteCriticalSection(0x140060940)
+[Td640] [API] DeleteCriticalSection(0x140060968)
+[Td640] [API] HeapFree(0x3d19f70)
+[Td640] [API] LeaveCriticalSection(0x1400611d0)
+[Td640] [API] EnterCriticalSection(0x140061220)
+[Td640] [API] LeaveCriticalSection(0x140061220)
+[Td640] [API] EnterCriticalSection(0x1400612c0)
+[Td640] [API] EnterCriticalSection(0x14005f168)
+[Td640] [API] EnterCriticalSection(0x3d18b78)
+[Td640] [API] WriteFile(n=2888)
+[Td640] [API] LeaveCriticalSection(0x3d18b78)
+[Td640] [API] LeaveCriticalSection(0x14005f168)
+[Td640] [API] LeaveCriticalSection(0x1400612c0)
+[Td640] [API] EnterCriticalSection(0x1400612c0)
+[Td640] [API] LeaveCriticalSection(0x1400612c0)
+[Td640] [API] DeleteCriticalSection(0x14005f110)
+[Td640] [API] HeapFree(0x3d22150)
+[Td640] [API] DeleteCriticalSection(0x14005f168)
+[Td640] [API] DeleteCriticalSection(0x14005f1c0)
+[Td640] [API] HeapFree(0x3d1a0c0)
+[Td640] [API] LeaveCriticalSection(0x1400611d0)
+[Td640] [API] LoadLibraryExW(flags=2048)
+[Td640] [API] LoadLibraryA(api-ms-win-appmodel-runtime-l1-1-2)
+[Td640] [API] GetProcAddress(module=0xdedd0000, name=AppPolicyGetProcessTerminationMethod)
+[Td640] [API]   -> NULL (not in dispatch table)
+[Td640] [API]   -> optional-stub fallback (not in dispatch table)
+[Td640] [API] GetModuleHandleExW(flags=0)
+[Td640] [API] LoadLibraryA(mscoree.dll)
+[Td640] [API] GetProcAddress(module=0xdebe0000, name=CorExitProcess)
+[Td640] [API]   -> NULL (not in dispatch table)
+[Td640] [API]   -> optional-stub fallback (not in dispatch table)
+[Td640] [API] FreeLibrary()
+[Td640] [API] ExitProcess(1)
+  ]
+}

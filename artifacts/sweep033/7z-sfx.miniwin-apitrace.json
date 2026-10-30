@@ -1,0 +1,233 @@
+{
+  "trace": [
+[T6640] [API] PE Loader: file=/home/z/my-project/workspace/miniwin-engineering/samples/real/7z2604-x64.exe size=1664082
+[T6640] [API] PE Loader: ImageBase=0x400000 EP=0x8630 SizeOfImage=0x11000 Sections=5
+[T6640] [API] PE Loader: Mapped at 0x400000 (forced via MAP_FIXED)
+[T6640] [API] KUSD: mapped 0x7ffe0000 (root C:\WINDOWS, ver 5.2, qpc 1e9)
+[T6640] [API] Section [0] .text    VA=0x00001000 VS=0x00007b24 Raw=0x00007c00 Ch=0x60000020
+[T6640] [API] Section [1] .rdata   VA=0x00009000 VS=0x00001a98 Raw=0x00001c00 Ch=0x40000040
+[T6640] [API] Section [2] .data    VA=0x0000b000 VS=0x00003960 Raw=0x00000200 Ch=0xc0000040
+[T6640] [API] Section [3] .pdata   VA=0x0000f000 VS=0x0000036c Raw=0x00000400 Ch=0x40000040
+[T6640] [API] Section [4] .rsrc    VA=0x00010000 VS=0x00000fe8 Raw=0x00001000 Ch=0x40000040
+[T6640] [API] Import Directory: RVA=0xa270 Size=0x8c
+[T6640] [API] Import DLL: ole32.dll (IAT RVA=0x9278, ILT RVA=0xa578)
+[T6640] [API]   [0] CoInitialize -> 0x206f240
+[T6640] [API]   [1] CoCreateInstance -> 0x2062cf0
+[T6640] [API] Import DLL: USER32.dll (IAT RVA=0x9148, ILT RVA=0xa448)
+[T6640] [API]   [0] MessageBoxW -> 0x20bbc80
+[T6640] [API]   [1] DestroyWindow -> 0x20b46e0
+[T6640] [API]   [2] ShowWindow -> 0x20d03f0
+[T6640] [API]   [3] SetWindowTextW -> 0x20cec50
+[T6640] [API]   [4] EnableWindow -> 0x20aae50
+[T6640] [API]   [5] GetDlgItem -> 0x204a190
+[T6640] [API]   [6] SetDlgItemTextW -> 0x20cf020
+[T6640] [API]   [7] GetDlgItemTextW -> 0x20ac630
+[T6640] [API]   [8] ExitWindowsEx -> 0x200e500
+[T6640] [API]   [9] PeekMessageW -> 0x20e0360
+[T6640] [API]   [10] DispatchMessageW -> 0x20fa4d0
+[T6640] [API]   [11] TranslateMessage -> 0x202af90
+[T6640] [API]   [12] IsDialogMessageW -> 0x2088080
+[T6640] [API]   [13] GetMessageW -> 0x20e0120
+[T6640] [API]   [14] LoadIconW -> 0x2088480
+[T6640] [API]   [15] CreateDialogParamW -> 0x20fd550
+[T6640] [API]   [16] SendMessageW -> 0x20fb7a0
+[T6640] [API] Import DLL: ADVAPI32.dll (IAT RVA=0x9000, ILT RVA=0xa300)
+[T6640] [API]   [0] LookupPrivilegeValueW -> 0x200ab60
+[T6640] [API]   [1] AdjustTokenPrivileges -> 0x203eb30
+[T6640] [API]   [2] RegCreateKeyExW -> 0x20d7870
+[T6640] [API]   [3] RegSetValueExW -> 0x20dbdf0
+[T6640] [API]   [4] RegOpenKeyExW -> 0x20d70c0
+[T6640] [API]   [5] RegCloseKey -> 0x200a3e0
+[T6640] [API]   [6] RegQueryValueExW -> 0x20d95f0
+[T6640] [API]   [7] OpenProcessToken -> 0x203eab0
+[T6640] [API] Import DLL: SHELL32.dll (IAT RVA=0x9128, ILT RVA=0xa428)
+[T6640] [API]   [0] SHGetFolderPathW -> 0x202e550
+[T6640] [API]   [1] SHGetPathFromIDListW -> 0x200c6c0
+[T6640] [API]   [2] SHBrowseForFolderW -> 0x206e060
+[T6640] [API] Import DLL: msvcrt.dll (IAT RVA=0x91d8, ILT RVA=0xa4d8)
+[T6640] [API]   [0] memcpy -> 0x2014a80
+[T6640] [API]   [1] _c_exit -> 0x206ecc0
+[T6640] [API]   [2] __C_specific_handler -> 0x206bde0
+[T6640] [API]   [3] free -> 0x20ba5a0
+[T6640] [API]   [4] malloc -> 0x2090330
+[T6640] [API]   [5] memmove -> 0x20105c0
+[T6640] [API]   [6] memcmp -> 0x2011c10
+[T6640] [API]   [7] exit -> 0x204af00
+[T6640] [API]   [8] __set_app_type -> 0x205e280
+[T6640] [API]   [9] _fmode -> DATA 0x3208328
+[T6640] [API]   [10] _commode -> DATA 0x3208324
+[T6640] [API]   [11] __setusermatherr -> 0x205e3e0
+[T6640] [API]   [12] _initterm -> 0x20f95f0
+[T6640] [API]   [13] __getmainargs -> 0x2027b00
+[T6640] [API]   [14] _acmdln -> DATA 0x30ad8e0
+[T6640] [API]   [15] _cexit -> 0x20372a0
+[T6640] [API]   [16] memset -> 0x2010e40
+[T6640] [API]   [17] _exit -> 0x204a5e0
+[T6640] [API]   [18] _XcptFilter -> 0x205f920
+[T6640] [API] Import DLL: KERNEL32.dll (IAT RVA=0x9048, ILT RVA=0xa348)
+[T6640] [API]   [0] CloseHandle -> 0x20a48f0
+[T6640] [API]   [1] CreateFileW -> 0x20d1c30
+[T6640] [API]   [2] GetCommandLineW -> 0x207c640
+[T6640] [API]   [3] GetModuleFileNameW -> 0x20b2ae0
+[T6640] [API]   [4] ReadFile -> 0x2058500
+[T6640] [API]   [5] SetFileTime -> 0x206b2b0
+[T6640] [API]   [6] MoveFileExW -> 0x20bf950
+[T6640] [API]   [7] GetCurrentProcess -> 0x2008610
+[T6640] [API]   [8] FormatMessageW -> 0x20506e0
+[T6640] [API]   [9] LocalFree -> 0x20cc320
+[T6640] [API]   [10] DeleteFileW -> 0x20b7170
+[T6640] [API]   [11] WriteFile -> 0x2058f10
+[T6640] [API]   [12] SetFilePointer -> 0x2059640
+[T6640] [API]   [13] GetModuleHandleW -> 0x203b2e0
+[T6640] [API]   [14] LoadLibraryExW -> 0x20c1770
+[T6640] [API]   [15] GetStartupInfoA -> 0x2037700
+[T6640] [API]   [16] SetFileAttributesW -> 0x20bd560
+[T6640] [API]   [17] GetFileAttributesW -> 0x20b8780
+[T6640] [API]   [18] CreateDirectoryW -> 0x20b5450
+[T6640] [API]   [19] GetLastError -> 0x2026c20
+[T6640] [API]   [20] GetSystemDirectoryW -> 0x209e780
+[T6640] [API]   [21] lstrcpyW -> 0x20b2100
+[T6640] [API]   [22] LoadLibraryW -> 0x20b7770
+[T6640] [API]   [23] GetProcAddress -> 0x208b550
+[T6640] [API]   [24] lstrcatW -> 0x200d2e0
+[T6640] [API]   [25] lstrlenW -> 0x20a9d60
+[T6640] [API]   [26] GetVersion -> 0x2017ff0
+[T6640] [API] Import resolution: 76 resolved, 0 unresolved (total 76)
+[T6640] [API] Exception: .pdata RVA=0xf000 Size=0x36c Entries=73
+[T6640] [API] [API-005] EH hacks DISABLED (default) (MINWIN_EH_HACKS=<unset>)
+[T6640] [API] [API-005] CXX-EH-FIX (LSDA catch-all patch RVA 0x2010c8) skipped: MINWIN_EH_HACKS not set
+[T6640] [API] SW-1297 validate_fd patch: fingerprint not found (guest unaffected)
+[T6640] [API] Jumping to EP=0x408630
+[T6640] [API] GetStartupInfoA(info=0x7ffe2e039710)
+[T6640] [API] __set_app_type(2)
+[T6640] [API] _initterm(start=0x4092a0, end=0x4092a8)
+[T6640] [API] __getmainargs(argc=0x7ffe2e0396fc, argv=0x7ffe2e039708, envp=0x7ffe2e039700)
+[T6640] [API] _initterm(start=0x409290, end=0x409298)
+[T6640] [API] LoadLibraryExW(flags=8)
+[T6640] [API] LoadLibraryA(C:\Windows\System32\userenv.dll)
+[T6640] [API] LoadLibraryExW(flags=8)
+[T6640] [API] LoadLibraryA(C:\Windows\System32\setupapi.dll)
+[T6640] [API] LoadLibraryExW(flags=8)
+[T6640] [API] LoadLibraryA(C:\Windows\System32\apphelp.dll)
+[T6640] [API] LoadLibraryExW(flags=8)
+[T6640] [API] LoadLibraryA(C:\Windows\System32\propsys.dll)
+[T6640] [API] LoadLibraryExW(flags=8)
+[T6640] [API] LoadLibraryA(C:\Windows\System32\dwmapi.dll)
+[T6640] [API] LoadLibraryExW(flags=8)
+[T6640] [API] LoadLibraryA(C:\Windows\System32\cryptbase.dll)
+[T6640] [API] LoadLibraryExW(flags=8)
+[T6640] [API] LoadLibraryA(C:\Windows\System32\oleacc.dll)
+[T6640] [API] SetLastError(126) caller=0x20a1c55
+[T6640] [API] LoadLibraryExW(flags=8)
+[T6640] [API] LoadLibraryA(C:\Windows\System32\clbcatq.dll)
+[T6640] [API] SetLastError(126) caller=0x20a1c55
+[T6640] [API] LoadLibraryExW(flags=8)
+[T6640] [API] LoadLibraryA(C:\Windows\System32\version.dll)
+[T6640] [API] LoadLibraryExW(flags=8)
+[T6640] [API] LoadLibraryA(C:\Windows\System32\uxtheme.dll)
+[T6640] [API] CoInitialize() -> S_OK
+[T6640] [API] GetCommandLineW()
+[T6640] [API] RegOpenKeyExW(miss) 'HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion' -> ERROR_FILE_NOT_FOUND
+[T6640] [API] SetLastError(2) caller=0x20d735f
+[T6640] [API] RegCreateKeyExW 'HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion' -> slot 7 (created=1)
+[T6640] [API] RegSetValueExW -> slot 7 'ProductName', 40 bytes stored
+[T6640] [API] RegSetValueExW -> slot 7 'CurrentVersion', 8 bytes stored
+[T6640] [API] RegSetValueExW -> slot 7 'CurrentBuildNumber', 10 bytes stored
+[T6640] [API] RegSetValueExW -> slot 7 'CSDVersion', 30 bytes stored
+[T6640] [API] reg seed: CurrentVersion identity seeded (Windows Server 2003 5.2 b3790)
+[T6640] [API] RegOpenKeyExW(miss) 'HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon' -> ERROR_FILE_NOT_FOUND
+[T6640] [API] SetLastError(2) caller=0x20d735f
+[T6640] [API] RegCreateKeyExW 'HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon' -> slot 8 (created=1)
+[T6640] [API] RegSetValueExW -> slot 8 'AutoAdminLogon', 4 bytes stored
+[T6640] [API] RegSetValueExW -> slot 8 'DefaultUserName', 26 bytes stored
+[T6640] [API] RegSetValueExW -> slot 8 'DefaultDomainName', 16 bytes stored
+[T6640] [API] RegSetValueExW -> slot 8 'DefaultPassword', 2 bytes stored
+[T6640] [API] reg seed: Winlogon skeleton seeded
+[T6640] [API] RegOpenKeyExW(miss) 'HKLM\System\CurrentControlSet\Services\EventLog\Application' -> ERROR_FILE_NOT_FOUND
+[T6640] [API] SetLastError(2) caller=0x20d735f
+[T6640] [API] RegCreateKeyExW 'HKLM\System\CurrentControlSet\Services\EventLog\Application' -> slot 9 (created=1)
+[T6640] [API] RegOpenKeyExW(miss) 'HKLM\System\CurrentControlSet\Services\EventLog\Security' -> ERROR_FILE_NOT_FOUND
+[T6640] [API] SetLastError(2) caller=0x20d735f
+[T6640] [API] RegCreateKeyExW 'HKLM\System\CurrentControlSet\Services\EventLog\Security' -> slot 10 (created=1)
+[T6640] [API] RegOpenKeyExW(miss) 'HKLM\System\CurrentControlSet\Services\EventLog\System' -> ERROR_FILE_NOT_FOUND
+[T6640] [API] SetLastError(2) caller=0x20d735f
+[T6640] [API] RegCreateKeyExW 'HKLM\System\CurrentControlSet\Services\EventLog\System' -> slot 11 (created=1)
+[T6640] [API] reg seed: EventLog service keys seeded (3)
+[T6640] [API] RegOpenKeyExW(miss) 'HKCU\Software\WinRAR\Setup' -> ERROR_FILE_NOT_FOUND
+[T6640] [API] SetLastError(2) caller=0x20d735f
+[T6640] [API] RegCreateKeyExW 'HKCU\Software\WinRAR\Setup' -> slot 12 (created=1)
+[T6640] [API] reg seed: WinRAR Setup key seeded (no close: handle released at exit)
+[T6640] [API] RegOpenKeyExW(miss) 'HKCU\Software\Sysinternals\PsLoglist' -> ERROR_FILE_NOT_FOUND
+[T6640] [API] SetLastError(2) caller=0x20d735f
+[T6640] [API] RegCreateKeyExW 'HKCU\Software\Sysinternals\PsLoglist' -> slot 13 (created=1)
+[T6640] [API] RegSetValueExW -> slot 13 'EulaAccepted', 4 bytes stored
+[T6640] [API] RegOpenKeyExW(miss) 'HKCU\Software\Sysinternals\PsInfo' -> ERROR_FILE_NOT_FOUND
+[T6640] [API] SetLastError(2) caller=0x20d735f
+[T6640] [API] RegCreateKeyExW 'HKCU\Software\Sysinternals\PsInfo' -> slot 14 (created=1)
+[T6640] [API] RegSetValueExW -> slot 14 'EulaAccepted', 4 bytes stored
+[T6640] [API] RegOpenKeyExW(miss) 'HKCU\Software\Sysinternals\PsList' -> ERROR_FILE_NOT_FOUND
+[T6640] [API] SetLastError(2) caller=0x20d735f
+[T6640] [API] RegCreateKeyExW 'HKCU\Software\Sysinternals\PsList' -> slot 15 (created=1)
+[T6640] [API] RegSetValueExW -> slot 15 'EulaAccepted', 4 bytes stored
+[T6640] [API] RegOpenKeyExW(miss) 'HKCU\Software\Sysinternals\PsPasswd' -> ERROR_FILE_NOT_FOUND
+[T6640] [API] SetLastError(2) caller=0x20d735f
+[T6640] [API] RegCreateKeyExW 'HKCU\Software\Sysinternals\PsPasswd' -> slot 16 (created=1)
+[T6640] [API] RegSetValueExW -> slot 16 'EulaAccepted', 4 bytes stored
+[T6640] [API] RegOpenKeyExW(miss) 'HKCU\Software\Sysinternals\PsService' -> ERROR_FILE_NOT_FOUND
+[T6640] [API] SetLastError(2) caller=0x20d735f
+[T6640] [API] RegCreateKeyExW 'HKCU\Software\Sysinternals\PsService' -> slot 17 (created=1)
+[T6640] [API] RegSetValueExW -> slot 17 'EulaAccepted', 4 bytes stored
+[T6640] [API] reg seed: Sysinternals EulaAccepted markers seeded
+[T6640] [API] RegOpenKeyExW(miss) 'HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Perflib' -> ERROR_FILE_NOT_FOUND
+[T6640] [API] SetLastError(2) caller=0x20d735f
+[T6640] [API] RegCreateKeyExW 'HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Perflib' -> slot 18 (created=1)
+[T6640] [API] RegSetValueExW -> slot 18 'Last Counter', 4 bytes stored
+[T6640] [API] RegSetValueExW -> slot 18 'Last Help', 4 bytes stored
+[T6640] [API] reg seed: Perflib Last Counter/Help = 952
+[T6640] [API] RegOpenKeyExW(miss) 'HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion' -> ERROR_FILE_NOT_FOUND
+[T6640] [API] SetLastError(2) caller=0x20d735f
+[T6640] [API] RegCreateKeyExW 'HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion' -> slot 19 (created=1)
+[T6640] [API] RegSetValueExW -> slot 19 'ProgramFilesDir', 34 bytes stored
+[T6640] [API] RegSetValueExW -> slot 19 'CommonFilesDir', 60 bytes stored
+[T6640] [API] RegSetValueExW -> slot 19 'ProgramFilesPath', 34 bytes stored
+[T6640] [API] RegSetValueExW -> slot 19 'DevicePath', 34 bytes stored
+[T6640] [API] reg seed: HKLM Windows CurrentVersion ProgramFiles skeleton seeded
+[T6640] [API] RegOpenKeyExW(miss) 'HKCU\Software\7-Zip' -> ERROR_FILE_NOT_FOUND
+[T6640] [API] SetLastError(2) caller=0x20d735f
+[T6640] [API] RegOpenKeyExW 'HKLM\Software\Microsoft\Windows\CurrentVersion' -> handle slot 19
+[T6640] [API] RegQueryValueExW(key=0x90014 'ProgramFilesDir') -> 0 (type=1 size=34 data='C:\Program Files')
+[T6640] [API] [RES] find hmod=0x400000 a=?/- w=0x64/0x5
+[T6640] [API] [RES] walk depth=0 level=0x410000 named=0 ided=5 (base=0x410000)
+[T6640] [API] [RES] walk depth=1 level=0x410058 named=0 ided=1 (base=0x410000)
+[T6640] [API] [RES] walk depth=2 level=0x4100e8 named=0 ided=1 (base=0x410000)
+[T6640] [API] [GUI] dlg template resolved: name=0x64 entry=0x410168 data=0x4108b8 size=374
+[T6640] [API] [GUI] child STATIC id=110 -> HWND 0x30001 text='19 wchars'
+[T6640] [API] [GUI] dlg child id=110 cls=STATIC -> 0x30001
+[T6640] [API] [GUI] child EDIT id=111 -> HWND 0x30002 text='0 wchars'
+[T6640] [API] [GUI] dlg child id=111 cls=EDIT -> 0x30002
+[T6640] [API] [GUI] child BUTTON id=112 -> HWND 0x30003 text='3 wchars'
+[T6640] [API] [GUI] dlg child id=112 cls=BUTTON -> 0x30003
+[T6640] [API] [GUI] child STATIC id=113 -> HWND 0x30004 text='0 wchars'
+[T6640] [API] [GUI] dlg child id=113 cls=STATIC -> 0x30004
+[T6640] [API] [GUI] child msctls_progress id=114 -> HWND 0x30005 text='0 wchars'
+[T6640] [API] [GUI] dlg child id=114 cls=msctls_progress32 -> 0x30005
+[T6640] [API] [GUI] child BUTTON id=1 -> HWND 0x30006 text='8 wchars'
+[T6640] [API] [GUI] dlg child id=1 cls=BUTTON -> 0x30006
+[T6640] [API] [GUI] child BUTTON id=2 -> HWND 0x30007 text='6 wchars'
+[T6640] [API] [GUI] dlg child id=2 cls=BUTTON -> 0x30007
+[T6640] [API] GetDlgItem(id=111) -> HWND 0x30002
+[T6640] [API] GetDlgItem(id=113) -> HWND 0x30004
+[T6640] [API] GetDlgItem(id=114) -> HWND 0x30005
+[T6640] [API] SetWindowTextW -> '23 wchars' TRUE
+[T6640] [API] SetDlgItemTextW(id=111)
+[T6640] [API] GetDlgItem(id=111) -> HWND 0x30002
+[T6640] [API] SetWindowTextW -> '23 wchars' TRUE
+[T6640] [API] ShowWindow(hwnd=0x30005 cmd=0) -> TRUE
+[T6640] [API] ShowWindow(hwnd=0x30004 cmd=0) -> TRUE
+[T6640] [API] CreateDialogParamW(name=0x64, proc=0x401808) -> hwnd 0x10002 (modeless)
+[T6640] [API] SendMessageW(hwnd=0x10002 WM_? msg=0x80) -> 0
+[T6640] [API] GetMessageW(hwnd=(nil)) -> 0 (WM_QUIT: no event source, main-thread batch contract)
+[T6640] [API] DestroyWindow(hwnd=0x10002)
+[T6640] [API] exit(1)
+  ]
+}
