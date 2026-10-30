@@ -746,3 +746,61 @@ Work Log:
 Stage Summary:
 - The IDM installer ladder went from "one honest error dialog" to "65-file extraction + second-stage WinMain running real installer logic" in one round — eight root-cause classes (world-boot state, WOW64 gates, DialogProc routing, thread ABI, file-mapping identity/ownership/extension, arity table, CRT dll casing, CRT argv/data planes) each with the Wine-parallel contract cited.
 - Queued: SW-1539 (saved-EBP zero-writer decode), issue #24's provisioning item, issue #26's TB_ADDBUTTONSW decode, issue #17's GDI-FRAME paint-ordering gate.
+
+Task ID: SWEEP-110
+Agent: main (z.ai)
+Task: "Continue from where you were cut off" — the user's named gaps: icons do not
+load, give WinRAR its window frame, complete fine-grained tracker of what Wine
+loads, English-only issues.
+
+Work Log:
+- Reconciled with the parallel remote session: origin/main was 11+ commits ahead
+  (SWEEP-034/108/109: PE32 cpu32 for IDM, WinRAR SFX INSTALL_OK, LOADER_STRUCTURE_
+  DIFF.md, sweep033 level-0 relay campaign with API_BASELINE.md 349-API base list).
+  Local SWEEP-031 (IMalloc order/LLEA/CharLowerW) was independently landed
+  upstream as SW-1501/SW-1221/SW-1411 — reset to origin/main (no force-push).
+- Round 1 (SW-1540..1545): real icon plane — RT_GROUP_ICON walk (wine
+  lookup_icon_cursor ranking) + RT_ICON DIB decode (biHeight=2*h XOR+AND,
+  1/4/8/24/32bpp, both header families) into a 256-slot 32bpp BGRA HICON store;
+  LoadImageW(ICON)/LoadIcon A/W/CreateIconFromResource(Ex)/CreateIconIndirect/
+  CreateIcon real; DrawIcon/DrawIconEx alpha-blit; ImageList_ReplaceIcon/Draw/
+  DrawEx/GetIcon carry pixels; stock IDI_* 32512..32518 synthesized (the
+  0x8000 gate missed IDI_APPLICATION=0x7F00 -> MFC NULL paths); RegisterClass
+  hIcon@+32/hIconSm@+72 (cpu32 +24/+44) + WM_SETICON/WM_GETICON capture;
+  NON-CLIENT FRAME COMPOSITOR in mw_surface_dump (caption+title+window icon+
+  min/max/close+border; guest plane untouched; MINWIN_FRAME=0 opt-out).
+  WinRAR caption icon renders from group 101 -> RT_ICON 6 (frame 1036x800).
+- ICON_PARITY.md: wine relay profile mined for icon calls (6x LoadImageW +
+  3x LoadIconW init window; miniwin 1/9 reached, decodes real) + guest PNG
+  resource inventory (6 groups, 46 DIB RT_ICONs, 0 PNG there).
+- Round 2 (SW-1546): toolbar images are a NAMED "PNG" resource type (ids
+  1003+, 48x36). Chain decode: GlobalAlloc -> GlobalLock -> memcpy ->
+  CreateStreamOnHGlobal (was E_FAIL stub = the silent button-killer) ->
+  GdipCreateBitmapFromStream (was GenericError no-codecs) -> GdipCreateHBITMAP
+  FromBitmap. Landed: real IStream COM object (14-slot ms_abi vtable, QI for
+  IUnknown/IStream/ISequentialStream, refcount, fDeleteOnRelease), libpng
+  codec (Makefile +lpng +lz), stream drain through the stream's OWN vtable
+  Read (engine + guest streams), kind-5 GpBitmap with pixels. Measured: 21x
+  stream -> 21x "GpBitmap 48x36 (PNG decoded)" -> HBITMAPs 0x52001..; toolbar
+  band renders raised button faces (10,983 non-white px in the band).
+- Mid-round catch: Makefile line 11 had 8-space indent (missing separator) —
+  rebuilds silently skipped; the caller-VA probe exposed stale output; fixed.
+- Gates: G1 PIN 12/12 (20261030_172206); corpus 15 rows rc=0-in-9 crash 0
+  (pin); npp64 PASS_INPUT_STATE_CHANGE 28/13; idman rc=9 x3 (SW-1539);
+  winmergeu clean exit 0 x3 (was SW-1201 SIGTRAP 133 — honest stock-icon
+  contract routes it through a clean exit, zero CRASH/FASTFAIL lines).
+- Issues (all English): #23 WinRAR icons+frame evidence; #24 npp64 held;
+  #25 idman frontier unchanged + icon plane arch-neutral; #10 icon-group
+  resolution LANDED; #26 root cause corrected (registry theory -> stream
+  E_FAIL) + images decoding; #17 GDI+ decode path REAL (PNG+IStream), open
+  items: drawing primitives fidelity, JPEG/BMP codecs, GdipCreateBitmap
+  FromFile.
+- Commits 517416d + 6cadab0 + d7106eb pushed (no force-push).
+
+Stage Summary:
+- WinRAR evidence frame now shows: caption + window icon + title + buttons +
+  menu band + TOOLBAR BAND with real button faces — all from decoded guest
+  art (RT_ICON DIB + PNG resources).
+- Next wagons: toolbar icon rasters into the band via the ImageList pixel
+  path; TB message-id probe for the exact button-array carrier; JPEG/BMP
+  stream codecs; GdipCreateBitmapFromFile -> PNG.
