@@ -17686,7 +17686,8 @@ static int mw_is_hwnd(void* h); /* fwd: defined below SW-1256 block */
  *    with hwndParent filled (real Windows contract).
  *  - GetDlgItem/GetParent/mw_is_hwnd consult the registry.
  * ============================================================ */
-typedef struct { void* hwnd; void* parent; uint32_t id; int live; } MwToplevel;
+typedef struct { void* hwnd; void* parent; uint32_t id; int live;
+                 MW_WNDPROC proc; /* SW-1513: THIS window's class proc */ } MwToplevel;
 #define MW_TOPLEVEL_MAX 64
 static MwToplevel g_toplevel[MW_TOPLEVEL_MAX];
 static int g_toplevel_n = 0;
@@ -17707,9 +17708,18 @@ static void* mw_toplevel_register(void* parent, uint32_t id) {
     g_toplevel[g_toplevel_n].parent = parent;
     g_toplevel[g_toplevel_n].id = id;
     g_toplevel[g_toplevel_n].live = 1;
+    g_toplevel[g_toplevel_n].proc = 0; /* SW-1513: bound by the create path */
     g_toplevel_n++;
     return h;
 }
+/* SW-1513: bind a minted toplevel to its OWN class proc — real Windows
+ * dispatches every window through ITS class's lpfnWndProc. Before this,
+ * minted windows had no proc of their own: create-seq went through the
+ * global g_wndproc_fwd (last registered — often a DIFFERENT class) and
+ * pump-delivered messages were dropped with "no registered wndproc".
+ * Definitions live with the dispatch helpers (mw_dispatch_proc block). */
+static void mw_toplevel_bind_proc(void* h, MW_WNDPROC proc);
+static MW_WNDPROC mw_window_proc(void* hwnd);
 /* SWEEP-050 SW-1258 contract: a WM_CREATE that returns -1 cancels the
  * creation — the minted identity is unregistered so the handle never
  * leaks into GetTopWindow/EnumWindows (real Windows destroyed the
@@ -18410,15 +18420,43 @@ static int mw_commonctl_msg(int s, uint32_t msg, uintptr_t wp, long long lp, lon
 /* SW-1279 fix C: forward decls + state (definitions live after SWEEP-004
  * raster). Needed here because SendMessageW/A route main-window dispatches
  * through the class-proc snapshot. */
-#define MW_CLASSPROC_MAX 16
-static struct { uint16_t name[24]; void* proc; void* hbr; } g_class_proc[MW_CLASSPROC_MAX]; /* SW-1291b: +per-class hbrBackground */
+#define MW_CLASSPROC_MAX 64
+/* SW-1511 (SWEEP-034): 16 entries + 23-char names were both too small for
+ * real multi-class guests — putty 0.85 alone registers 3 classes
+ * (PuTTYTimerWindow / PuTTYConfigBox / PuTTY) and .NET guests use 30+-char
+ * WinForms class names. Name now 48 wchars, 64 entries.
+ * SW-1512: each registration gets a DISTINCT atom (0xC001+) like real
+ * Windows — Wine relay on the same putty binary measured 0xc03b/0xc03c/0xc013
+ * for its three classes while the engine collapsed ALL classes onto 0xC001.
+ * Colliding atoms made atom-keyed class identity impossible. */
+static struct { uint16_t name[48]; void* proc; void* hbr; uint16_t atom; } g_class_proc[MW_CLASSPROC_MAX]; /* SW-1291b hbr + SW-1512 atom */
 static int g_class_proc_n = 0;
+static uint16_t g_next_class_atom = 0xC001;
+static uint16_t mw_class_atom_next(void) {
+    uint16_t a = g_next_class_atom;
+    if (g_next_class_atom < 0xFFFEu) g_next_class_atom++;
+    return a;
+}
+/* SW-1512: atom-keyed class resolution — MAKEINTATOM params (0xC000-0xFFFF). */
+static void* mw_class_proc_by_atom(uint16_t atom) {
+    for (int i = 0; i < g_class_proc_n; i++)
+        if (g_class_proc[i].atom == atom) return g_class_proc[i].proc;
+    return 0;
+}
+static void* mw_class_brush_by_atom(uint16_t atom) {
+    for (int i = 0; i < g_class_proc_n; i++)
+        if (g_class_proc[i].atom == atom) return g_class_proc[i].hbr;
+    return 0;
+}
 static MW_WNDPROC g_main_class_proc = 0;
 static void* g_class_brush = NULL; /* SW-1290/1291b: the MAIN class's hbrBackground */
-static void mw_class_proc_store(const void* name_ptr, int wide, void* proc, void* hbr);
+static void mw_class_proc_store(const void* name_ptr, int wide, void* proc, void* hbr, uint16_t atom);
 static void* mw_class_proc_lookup(const void* cls);
+static void* mw_class_proc_lookup_a(const void* cls); /* SW-1511: ANSI create path */
 static void* mw_class_brush_lookup(const void* cls); /* SW-1291b: per-class hbrBackground */
+static void* mw_class_brush_lookup_a(const void* cls); /* SW-1511 */
 static MW_WNDPROC mw_dispatch_proc(void);
+static MW_WNDPROC mw_window_proc(void* hwnd); /* SW-1513: per-window routing */
 
 /* SWEEP-013: SendMessageW/A with real semantics — text I/O against the
  * child-control/main-window registries, BM_GETCHECK, and wndproc routing
@@ -18477,11 +18515,14 @@ __attribute__((ms_abi)) long long mw_SendMessageW(void* h, uint32_t msg, uintptr
                  h, mw_wm_name(msg), msg, r);
         return r;
     }
-    if ((h == MW_GUI_HWND || mw_toplevel_find(h) >= 0) && mw_dispatch_proc()) { /* SW-1256 + SW-1279 fix C: nested mints forward too */
-        long long r = mw_dispatch_proc()(h, msg, wp, lp);
-        MW_TRACE("SendMessageW(%s wp=0x%llx) -> wndproc -> %lld",
-                 mw_wm_name(msg), (unsigned long long)wp, r);
-        return r;
+    if (h == MW_GUI_HWND || mw_toplevel_find(h) >= 0) { /* SW-1256 + SW-1279 + SW-1513: route by THIS window's proc */
+        MW_WNDPROC dp = mw_window_proc(h);
+        if (dp) {
+            long long r = dp(h, msg, wp, lp);
+            MW_TRACE("SendMessageW(%s wp=0x%llx) -> wndproc -> %lld",
+                     mw_wm_name(msg), (unsigned long long)wp, r);
+            return r;
+        }
     }
     /* SW-1266: per-window subclass routing. A child whose GWLP_WNDPROC was
      * guest-subclassed receives its messages through that proc (real
@@ -18539,8 +18580,10 @@ __attribute__((ms_abi)) long mw_SendMessageA(void* h, uint32_t msg, uintptr_t wp
         MW_TRACE("SendMessageA(hwnd=%p msg=%u) -> class proc -> %lld (SW-1334)", h, msg, r);
         return (long)r;
     }
-    if ((h == MW_GUI_HWND || mw_toplevel_find(h) >= 0) && mw_dispatch_proc()) /* SW-1256 + SW-1279 fix C */
-        return (long)mw_dispatch_proc()(h, msg, wp, (long long)lp);
+    if (h == MW_GUI_HWND || mw_toplevel_find(h) >= 0) { /* SW-1256 + SW-1279 + SW-1513 */
+        MW_WNDPROC dp = mw_window_proc(h);
+        if (dp) return (long)dp(h, msg, wp, (long long)lp);
+    }
     return 0;
 }
 __attribute__((ms_abi)) void mw_ber_free(void* b, int flags) { (void)b; (void)flags; }
@@ -18666,8 +18709,49 @@ __attribute__((ms_abi)) int mw_WSAAddressToStringW(void* addr, int alen, void* u
     return 0;
 }
 __attribute__((ms_abi)) int mw_freeaddrinfo_(void* ai) { freeaddrinfo(ai); return 0; }
+/* SW-1514 (SWEEP-034): WinSock getaddrinfo ERROR-VECTOR contract. On Windows
+ * (ws2tcpip.h) the EAI_* codes ARE the WSA codes: EAI_NONAME==WSAHOST_NOT_FOUND
+ * (11001), EAI_AGAIN==WSATRY_AGAIN (11002), EAI_NODATA==WSANO_DATA (11004),
+ * EAI_FAIL==WSANO_RECOVERY (11003), EAI_FAMILY==WSAEAFNOSUPPORT (10047),
+ * EAI_BADFLAGS==WSAEINVAL (10022), EAI_SERVICE==WSATYPE_NOT_FOUND (10109),
+ * EAI_SOCKTYPE==WSAESOCKTNOSUPPORT (10044), EAI_MEMORY==WSA_NOT_ENOUGH_MEMORY.
+ * The engine forwarded the HOST libc's getaddrinfo return verbatim, so an
+ * empty host produced Linux EAI_NONAME(-2) on the WinSock surface: putty
+ * 0.85 sk_namelookup("") -> win_strerror(-2) -> FormatMessage(-2) fails ->
+ * 'Error -2: (unable to format: FormatMessage returned 317)' MessageBox +
+ * exit(0) (measured, miniwin-results/putty.exe round). With the mapping,
+ * putty sees WSAHOST_NOT_FOUND and prints its own 'Host does not exist'
+ * (namelockup_strerror, windows/network.c:466-472). Same conversion Wine's
+ * dlls/ws2_32/unixlib.c addrinfo_err_from_unix() applies. */
 __attribute__((ms_abi)) int mw_getaddrinfo_(const char* host, const char* svc, const void* hints, void** res) {
-    return getaddrinfo(host, svc, (const struct addrinfo*)hints, (struct addrinfo**)res);
+    int rc = getaddrinfo(host, svc, (const struct addrinfo*)hints, (struct addrinfo**)res);
+    if (rc == 0) { g_wsa_err = 0; return 0; }
+    int wsa;
+    switch (rc) {
+    case EAI_AGAIN:    wsa = 11002; break; /* WSATRY_AGAIN */
+    case EAI_BADFLAGS: wsa = 10022; break; /* WSAEINVAL */
+    case EAI_FAIL:     wsa = 11003; break; /* WSANO_RECOVERY */
+    case EAI_FAMILY:   wsa = 10047; break; /* WSAEAFNOSUPPORT */
+    case EAI_MEMORY:   wsa = 8;     break; /* WSA_NOT_ENOUGH_MEMORY */
+    case EAI_NODATA:   wsa = 11004; break; /* WSANO_DATA */
+    case EAI_NONAME:   wsa = 11001; break; /* WSAHOST_NOT_FOUND */
+    case EAI_SERVICE:  wsa = 10109; break; /* WSATYPE_NOT_FOUND */
+    case EAI_SOCKTYPE: wsa = 10044; break; /* WSAESOCKTNOSUPPORT */
+    case EAI_SYSTEM: {
+        switch (errno) {
+        case ENETDOWN: wsa = 10050; break; /* WSAENETDOWN */
+        case ENOBUFS:  wsa = 10055; break; /* WSAENOBUFS */
+        case EACCES:   wsa = 10013; break; /* WSAEACCES */
+        case EAFNOSUPPORT: wsa = 10047; break;
+        case ENOMEM:   wsa = 8;     break;
+        default:       wsa = 11003; break; /* WSANO_RECOVERY (EAI_FAIL-ish) */
+        }
+        break;
+    }
+    default:           wsa = 11001; break; /* unknown -> WSAHOST_NOT_FOUND */
+    }
+    g_wsa_err = wsa;
+    return wsa;
 }
 __attribute__((ms_abi)) int mw_gethostname_(char* name, int len) {
     return gethostname(name, (size_t)len);
@@ -18998,9 +19082,11 @@ static int mw_class_brush_color(uint32_t* out); /* SW-1291: decode class brush -
 static void mw_paint_snap_save(void); /* SW-1291e: pre-erase surface snapshot */
 static void mw_paint_snap_mark_erased(void); /* SW-1291e: post-erase snapshot */
 /* SW-1279 fix C: per-class wndproc registry + main-window proc snapshot */
-static void mw_class_proc_store(const void* name_ptr, int wide, void* proc, void* hbr);
+static void mw_class_proc_store(const void* name_ptr, int wide, void* proc, void* hbr, uint16_t atom);
 static void* mw_class_proc_lookup(const void* cls);
+static void* mw_class_proc_lookup_a(const void* cls); /* SW-1511: ANSI create path */
 static void* mw_class_brush_lookup(const void* cls); /* SW-1291b: per-class hbrBackground */
+static void* mw_class_brush_lookup_a(const void* cls); /* SW-1511 */
 static MW_WNDPROC mw_dispatch_proc(void);
 static void mw_gui_set_quit(int code);
 static void mw_gui_send_destroy(void* hwnd);
@@ -19139,6 +19225,7 @@ static void mw_class_menu_attach(void) {
 }
 __attribute__((ms_abi)) uint16_t mw_RegisterClassExW(const void* wcex) {
     /* SWEEP-005: WNDCLASSEXW.lpfnWndProc lives at offset 8 (after cbSize) */
+    uint16_t atom = mw_class_atom_next(); /* SW-1512: distinct per registration */
     if (wcex) {
         void* p; const void* cname; void* hbr;
         if (g_cpu32_active) { /* SW-1354: i386 WNDCLASSEXW: cbSize@0 style@4 proc@8 cbCls@12 cbWnd@16 hInst@20 hIcon@24 hCursor@28 hbr@32 menu@36 name@40 hIconSm@44 */
@@ -19153,16 +19240,17 @@ __attribute__((ms_abi)) uint16_t mw_RegisterClassExW(const void* wcex) {
         }
         mw_gui_store_wndproc(p);
         /* SW-1279 fix C: also record {class name -> proc} */
-        mw_class_proc_store(cname, 1, p, hbr); /* SW-1291b */
+        mw_class_proc_store(cname, 1, p, hbr, atom); /* SW-1291b + SW-1512 */
         mw_class_name_store_w((const uint16_t*)cname); /* SWEEP-013 */
         /* APP-TEST-2: WNDCLASSEXW x64 lpszMenuName@56 (name@64) */
         mw_class_menu_store_w(*(void* const*)((const char*)wcex + 56));
     }
     MW_TRACE("RegisterClassExW(wcex=%p proc=%p) -> ATOM 0x%x", wcex,
-             wcex ? *(void* const*)((const char*)wcex + 8) : NULL, MW_GUI_ATOM);
-    return MW_GUI_ATOM;
+             wcex ? *(void* const*)((const char*)wcex + 8) : NULL, atom);
+    return atom;
 }
 __attribute__((ms_abi)) uint16_t mw_RegisterClassExA(const void* wcex) {
+    uint16_t atom = mw_class_atom_next(); /* SW-1512 */
     if (wcex) {
         void* p; const void* cname; void* hbr;
         if (g_cpu32_active) { /* SW-1354: i386 WNDCLASSEXA layout (see ExW) */
@@ -19176,16 +19264,17 @@ __attribute__((ms_abi)) uint16_t mw_RegisterClassExA(const void* wcex) {
             hbr = *(void* const*)((const char*)wcex + 48);
         }
         mw_gui_store_wndproc(p);
-        mw_class_proc_store(cname, 0, p, hbr); /* SW-1291b */
+        mw_class_proc_store(cname, 0, p, hbr, atom); /* SW-1291b + SW-1512 */
         mw_class_name_store_a((const char*)cname); /* SWEEP-013 */
         /* APP-TEST-2: WNDCLASSEXA x64 lpszMenuName@56 */
         mw_class_menu_store_a(*(void* const*)((const char*)wcex + 56));
     }
-    MW_TRACE("RegisterClassExA(wcex=%p) -> ATOM 0x%x", wcex, MW_GUI_ATOM);
-    return MW_GUI_ATOM;
+    MW_TRACE("RegisterClassExA(wcex=%p) -> ATOM 0x%x", wcex, atom);
+    return atom;
 }
 __attribute__((ms_abi)) uint16_t mw_RegisterClassW(const void* wc) {
     /* WNDCLASSW.lpfnWndProc also at offset 8 (style is 4 bytes + pad) */
+    uint16_t atom = mw_class_atom_next(); /* SW-1512 */
     if (wc) {
         void* p; const void* cname; void* hbr;
         if (g_cpu32_active) { /* SW-1354: i386 WNDCLASSW: style@0 proc@4 cbCls@8 cbWnd@12 hInst@16 hIcon@20 hCursor@24 hbr@28 menu@32 name@36 */
@@ -19199,7 +19288,7 @@ __attribute__((ms_abi)) uint16_t mw_RegisterClassW(const void* wc) {
             hbr = *(void* const*)((const char*)wc + 48);
         }
         mw_gui_store_wndproc(p);
-        mw_class_proc_store(cname, 1, p, hbr); /* SW-1291b */
+        mw_class_proc_store(cname, 1, p, hbr, atom); /* SW-1291b + SW-1512 */
         mw_class_name_store_w((const uint16_t*)cname); /* SWEEP-013 */
         /* APP-TEST-2: WNDCLASSW x64 lpszMenuName@56 (style@0 pad@4 proc@8
          * cbCls@16 cbWnd@20 hInst@24 hIcon@32 hCursor@40 hbr@48 menu@56
@@ -19214,10 +19303,11 @@ __attribute__((ms_abi)) uint16_t mw_RegisterClassW(const void* wc) {
          * last-wins store erased the final WM_PAINT frame WHITE). */
     }
     MW_TRACE("RegisterClassW(wc=%p proc=%p) -> ATOM 0x%x", wc,
-             wc ? *(void* const*)((const char*)wc + 8) : NULL, MW_GUI_ATOM);
-    return MW_GUI_ATOM;
+             wc ? *(void* const*)((const char*)wc + 8) : NULL, atom);
+    return atom;
 }
 __attribute__((ms_abi)) uint16_t mw_RegisterClassA(const void* wc) {
+    uint16_t atom = mw_class_atom_next(); /* SW-1512 */
     if (wc) {
         void* p; const void* cname; void* hbr;
         if (g_cpu32_active) { /* SW-1354: i386 WNDCLASSA layout (see W) */
@@ -19231,13 +19321,13 @@ __attribute__((ms_abi)) uint16_t mw_RegisterClassA(const void* wc) {
             hbr = *(void* const*)((const char*)wc + 48);
         }
         mw_gui_store_wndproc(p);
-        mw_class_proc_store(cname, 0, p, hbr); /* SW-1291b */
+        mw_class_proc_store(cname, 0, p, hbr, atom); /* SW-1291b + SW-1512 */
         mw_class_name_store_a((const char*)cname); /* SWEEP-013 */
         /* APP-TEST-2: WNDCLASSA x64 lpszMenuName@56 */
         mw_class_menu_store_a(*(void* const*)((const char*)wc + 56));
     }
-    MW_TRACE("RegisterClassA(wc=%p) -> ATOM 0x%x", wc, MW_GUI_ATOM);
-    return MW_GUI_ATOM;
+    MW_TRACE("RegisterClassA(wc=%p) -> ATOM 0x%x", wc, atom);
+    return atom;
 }
 /* SWEEP-013: system control-class detection. Guests pass either a
  * MAKEINTATOM class code (BUTTON=0x8080..COMBOBOX=0x8085 on x64) or a
@@ -19569,6 +19659,11 @@ __attribute__((ms_abi)) void* mw_CreateWindowExW(uint32_t exstyle, const void* c
     if (g_wm_create_depth > 0 || g_toplvl_main_taken) {
         void* nh = mw_toplevel_register(parent, (uint32_t)(uintptr_t)menu);
         if (nh) {
+            /* SW-1513: bind THIS window's class proc — putty's minted main
+             * window must dispatch through the 'PuTTY' class proc, not the
+             * global channel (whose last registration was another class). */
+            void* cp = mw_class_proc_lookup(cls);
+            if (cp) mw_toplevel_bind_proc(nh, (MW_WNDPROC)cp);
             long long cr = mw_gui_send_create_h(nh, parent, (uint32_t)(uintptr_t)menu);
             if (cr == -1) { /* SWEEP-050: real contract — -1 cancels creation */
                 mw_toplevel_unregister(nh);
@@ -19674,18 +19769,27 @@ __attribute__((ms_abi)) void* mw_CreateWindowExA(uint32_t exstyle, const void* c
         if (cw_h == (int)0x80000000u || cw_h == 0) cw_h = 768;
         mw_gui_store_window(cw_w, cw_h); /* SWEEP-005: allocate paint surface */
         /* SW-1279 fix C (A path): same class-proc snapshot as the W path.
-         * SW-1291b (A path): same per-class background-brush snapshot. */
+         * SW-1291b (A path): same per-class background-brush snapshot.
+         * SW-1511 (SWEEP-034): the A path MUST look the class up with the
+         * ANSI probe — the old wide probe read "PuTTYTimerWindow" as garbage
+         * wide chars, the snapshot silently failed (g_main_class_proc=NULL)
+         * and every dispatch fell back to the last-registered channel, which
+         * for putty was the 'PuTTY' main WndProc running on the TIMER hwnd
+         * (GWLP_USERDATA NULL) -> SIGSEGV at putty RVA 0x18aa. */
         if (!g_main_class_proc) {
-            void* cp = mw_class_proc_lookup(cls);
+            void* cp = mw_class_proc_lookup_a(cls);
             if (cp) g_main_class_proc = (MW_WNDPROC)cp;
-            g_class_brush = mw_class_brush_lookup(cls);
-            MW_TRACE("[GUI] main class brush snapshot: %p (SW-1291b)", g_class_brush);
+            g_class_brush = mw_class_brush_lookup_a(cls);
+            MW_TRACE("[GUI] main class brush snapshot: %p (SW-1291b, SW-1511 A-path)", g_class_brush);
         }
     }
     /* SW-1382 (A path): mint for window #2+ — same contract as the W path. */
     if (g_wm_create_depth > 0 || g_toplvl_main_taken) {
         void* nh = mw_toplevel_register(parent, (uint32_t)(uintptr_t)menu);
         if (nh) {
+            /* SW-1513 (A path): bind this window's own class proc. */
+            void* cp = mw_class_proc_lookup_a(cls);
+            if (cp) mw_toplevel_bind_proc(nh, (MW_WNDPROC)cp);
             long long cr = mw_gui_send_create_h(nh, parent, (uint32_t)(uintptr_t)menu);
             if (cr == -1) { /* SWEEP-050: real contract — -1 cancels creation */
                 mw_toplevel_unregister(nh);
@@ -20308,7 +20412,7 @@ static void mw_gui_request_size_now(void) {
  * wndproc is not yet registered at ShowWindow time. */
 static void mw_gui_send_size_sync(int w, int h, const char* tag);
 static void mw_gui_send_first_size(void) {
-    if (mw_dispatch_proc() && g_main_hwnd)
+    if (mw_window_proc(g_main_hwnd) && g_main_hwnd) /* SW-1513: target's own proc */
         mw_gui_send_size_sync(g_win_w, g_win_h, "SW-1287b");
     else
         mw_gui_request_size_now(); /* pump-queue fallback */
@@ -20483,44 +20587,82 @@ static void mw_gui_store_wndproc(void* proc) {
  * the MAIN dispatch channel (g_main_class_proc); later class registrations
  * cannot steal it; (3) SetWindowLongPtrW(GWLP_WNDPROC) on the main hwnd
  * (SW-1266 subclassing) UPDATES the snapshot, so subclass wins. */
-static void mw_class_proc_store(const void* name_ptr, int wide, void* proc, void* hbr) {
+static void mw_class_proc_store(const void* name_ptr, int wide, void* proc, void* hbr, uint16_t atom) {
     if (!name_ptr || (uintptr_t)name_ptr < 0x10000u || !proc) return;
-    uint16_t tmp[24] = {0};
+    uint16_t tmp[48] = {0};
     if (wide) {
-        if (!mw_probe_copy(name_ptr, 46, tmp)) return;
+        if (!mw_probe_copy(name_ptr, 94, tmp)) return;
     } else {
-        char a[24] = {0};
-        if (!mw_probe_copy(name_ptr, 23, a)) return;
-        for (int i = 0; i < 23 && a[i]; i++) tmp[i] = (uint16_t)(uint8_t)a[i];
+        char a[48] = {0};
+        if (!mw_probe_copy(name_ptr, 47, a)) return;
+        for (int i = 0; i < 47 && a[i]; i++) tmp[i] = (uint16_t)(uint8_t)a[i];
     }
     if (!tmp[0]) return;
     for (int i = 0; i < g_class_proc_n; i++) { /* same name -> update in place */
         int eq = 1;
-        for (int k = 0; k < 24; k++) {
+        for (int k = 0; k < 48; k++) {
             uint16_t x = g_class_proc[i].name[k], y = tmp[k];
             if (x >= 'A' && x <= 'Z') x += 32;
             if (y >= 'A' && y <= 'Z') y += 32;
             if (x != y) { eq = 0; break; }
             if (!y) break;
         }
-        if (eq) { g_class_proc[i].proc = proc; g_class_proc[i].hbr = hbr; return; }
+        if (eq) { g_class_proc[i].proc = proc; g_class_proc[i].hbr = hbr;
+                  g_class_proc[i].atom = atom; return; }
     }
     if (g_class_proc_n < MW_CLASSPROC_MAX) {
-        mw_w16cpy(g_class_proc[g_class_proc_n].name, tmp, 24);
+        mw_w16cpy(g_class_proc[g_class_proc_n].name, tmp, 48);
         g_class_proc[g_class_proc_n].proc = proc;
         g_class_proc[g_class_proc_n].hbr = hbr; /* SW-1291b */
+        g_class_proc[g_class_proc_n].atom = atom; /* SW-1512 */
         g_class_proc_n++;
     }
 }
-/* SW-1291b: per-class hbrBackground lookup — same probe/name discipline as
- * mw_class_proc_lookup (ATOM < 0x10000: MapID first, then guest pointer). */
+/* SW-1291b: per-class hbrBackground lookup. SW-1511: the cls param arrives
+ * in the encoding of the CREATE call — CreateWindowExA passes an ANSI
+ * string, CreateWindowExW a wide string, either may pass MAKEINTATOM
+ * (0xC000-0xFFFF). The old single probe read ANSI bytes AS wide chars
+ * (byte0|byte1<<8), so e.g. "PuTTYTimerWindow" probed as 0x7550,0x5454...
+ * and NEVER matched its own registration: putty's timer-window class proc
+ * lookup failed -> dispatch fell back to the last-registered channel
+ * (putty's main WndProc) -> that ran on the timer hwnd whose
+ * GWLP_USERDATA is NULL -> putty SIGSEGV at RVA 0x18aa (mov r13+0xbc8). */
 static void* mw_class_brush_lookup(const void* cls) {
-    if (!cls || (uintptr_t)cls < 0x10000u) return 0;
-    uint16_t tmp[24] = {0};
-    if (!mw_probe_copy(cls, 46, tmp)) return 0;
+    uintptr_t v = (uintptr_t)cls;
+    if (!v) return 0;
+    if (v < 0x10000u) { /* SW-1512: MAKEINTATOM */
+        if ((v & 0xFF00u) != 0xC000u) return 0;
+        return mw_class_brush_by_atom((uint16_t)v);
+    }
+    uint16_t tmp[48] = {0};
+    if (!mw_probe_copy(cls, 94, tmp)) return 0;
     for (int i = 0; i < g_class_proc_n; i++) {
         int eq = 1;
-        for (int k = 0; k < 24; k++) {
+        for (int k = 0; k < 48; k++) {
+            uint16_t x = g_class_proc[i].name[k], y = tmp[k];
+            if (x >= 'A' && x <= 'Z') x += 32;
+            if (y >= 'A' && y <= 'Z') y += 32;
+            if (x != y) { eq = 0; break; }
+            if (!y) break;
+        }
+        if (eq) return g_class_proc[i].hbr;
+    }
+    return 0;
+}
+static void* mw_class_brush_lookup_a(const void* cls) {
+    uintptr_t v = (uintptr_t)cls;
+    if (!v) return 0;
+    if (v < 0x10000u) {
+        if ((v & 0xFF00u) != 0xC000u) return 0;
+        return mw_class_brush_by_atom((uint16_t)v);
+    }
+    char a[48] = {0};
+    if (!mw_probe_copy(cls, 47, a)) return 0;
+    uint16_t tmp[48] = {0};
+    for (int i = 0; i < 47 && a[i]; i++) tmp[i] = (uint16_t)(uint8_t)a[i];
+    for (int i = 0; i < g_class_proc_n; i++) {
+        int eq = 1;
+        for (int k = 0; k < 48; k++) {
             uint16_t x = g_class_proc[i].name[k], y = tmp[k];
             if (x >= 'A' && x <= 'Z') x += 32;
             if (y >= 'A' && y <= 'Z') y += 32;
@@ -20532,12 +20674,17 @@ static void* mw_class_brush_lookup(const void* cls) {
     return 0;
 }
 static void* mw_class_proc_lookup(const void* cls) {
-    if (!cls || (uintptr_t)cls < 0x10000u) return 0;
-    uint16_t tmp[24] = {0};
-    if (!mw_probe_copy(cls, 46, tmp)) return 0;
+    uintptr_t v = (uintptr_t)cls;
+    if (!v) return 0;
+    if (v < 0x10000u) {
+        if ((v & 0xFF00u) != 0xC000u) return 0;
+        return mw_class_proc_by_atom((uint16_t)v);
+    }
+    uint16_t tmp[48] = {0};
+    if (!mw_probe_copy(cls, 94, tmp)) return 0;
     for (int i = 0; i < g_class_proc_n; i++) {
         int eq = 1;
-        for (int k = 0; k < 24; k++) {
+        for (int k = 0; k < 48; k++) {
             uint16_t x = g_class_proc[i].name[k], y = tmp[k];
             if (x >= 'A' && x <= 'Z') x += 32;
             if (y >= 'A' && y <= 'Z') y += 32;
@@ -20548,11 +20695,70 @@ static void* mw_class_proc_lookup(const void* cls) {
     }
     return 0;
 }
-static MW_WNDPROC mw_dispatch_proc(void) {
+static void* mw_class_proc_lookup_a(const void* cls) {
+    uintptr_t v = (uintptr_t)cls;
+    if (!v) return 0;
+    if (v < 0x10000u) {
+        if ((v & 0xFF00u) != 0xC000u) return 0;
+        return mw_class_proc_by_atom((uint16_t)v);
+    }
+    char a[48] = {0};
+    if (!mw_probe_copy(cls, 47, a)) return 0;
+    uint16_t tmp[48] = {0};
+    for (int i = 0; i < 47 && a[i]; i++) tmp[i] = (uint16_t)(uint8_t)a[i];
+    for (int i = 0; i < g_class_proc_n; i++) {
+        int eq = 1;
+        for (int k = 0; k < 48; k++) {
+            uint16_t x = g_class_proc[i].name[k], y = tmp[k];
+            if (x >= 'A' && x <= 'Z') x += 32;
+            if (y >= 'A' && y <= 'Z') y += 32;
+            if (x != y) { eq = 0; break; }
+            if (!y) break;
+        }
+        if (eq) return g_class_proc[i].proc;
+    }
+    return 0;
+}
+__attribute__((unused)) static MW_WNDPROC mw_dispatch_proc(void) {
     /* SW-1281: x86 guests store an i386 EIP as the wndproc — re-entered
      * through the interpreter shim, never called natively. */
     if (g_main_class_proc32) return mw_wndproc32_shim;
     return g_main_class_proc ? g_main_class_proc : g_wndproc_fwd;
+}
+/* SW-1513: bind a minted toplevel to its OWN class proc — real Windows
+ * dispatches every window through ITS class's lpfnWndProc. Before this,
+ * minted windows had no proc of their own: create-seq went through the
+ * global g_wndproc_fwd (last registered — often a DIFFERENT class) and
+ * pump-delivered messages were dropped with "no registered wndproc". */
+static void mw_toplevel_bind_proc(void* h, MW_WNDPROC proc) {
+    int t = mw_toplevel_find(h);
+    if (t >= 0) g_toplevel[t].proc = proc;
+}
+/* SW-1513: per-window proc resolver — the real DispatchMessage contract.
+ * Order: (1) cpu32 interpreter shim; (2) per-window GWLP_WNDPROC subclass
+ * override (SW-1266); (3) the window's own class proc (toplevel mint bind
+ * or the main-window snapshot); (4) the legacy global channel — TOPLEVELS
+ * ONLY. SW-1513b: window #1 (MW_GUI_HWND) has NO fallback to the
+ * last-registered channel: RAMMap64 registers its frame class
+ * (proc=0x140004a30) but never reaches CreateWindowEx before its init —
+ * the phantom main window then received engine-generated WM_SIZE through
+ * that unrelated class proc with hwnd=0x10001, its handler did
+ * GetPropW(0x10001,PROP) -> NULL and dereferenced [rax+8] -> SIGSEGV at
+ * RamMap RVA 0x4cce (measured). Real Windows: a window that was never
+ * created receives no messages; the resolver answers NULL and every
+ * dispatch site (all `if (dp)`) skips the send. */
+static MW_WNDPROC mw_window_proc(void* hwnd) {
+    if (g_main_class_proc32) return mw_wndproc32_shim;
+    int wl = mw_wndlong_slot(hwnd, -4, 0);
+    uintptr_t ov = (wl >= 0) ? g_wndlong[wl].value : 0;
+    if (ov && ov != (uintptr_t)&mw_engine_defproc) return (MW_WNDPROC)ov;
+    if (hwnd == MW_GUI_HWND || hwnd == g_main_hwnd) {
+        /* SW-1513b: no phantom fallback — a guest-bound main proc only. */
+        return g_main_class_proc;
+    }
+    int t = mw_toplevel_find(hwnd);
+    if (t >= 0 && g_toplevel[t].proc) return g_toplevel[t].proc;
+    return g_wndproc_fwd ? g_wndproc_fwd : (g_main_class_proc ? g_main_class_proc : 0);
 }
 static void mw_gui_store_window(int w, int h) {
     if (w < 32) w = 32; if (w > 1280) w = 1280;
@@ -20605,8 +20811,9 @@ static void mw_gui_store_window(int w, int h) {
 }
 static void mw_gui_set_quit(int code) { g_quit_flag = 1; g_quit_code = code; }
 static void mw_gui_send_destroy(void* hwnd) {
-    if (mw_gui_events_enabled() && g_wndproc_fwd) {
-        long long r = g_wndproc_fwd(hwnd, 0x0002u, 0, 0);
+    MW_WNDPROC dp = mw_gui_events_enabled() ? mw_window_proc(hwnd) : NULL; /* SW-1513 */
+    if (dp) {
+        long long r = dp(hwnd, 0x0002u, 0, 0);
         MW_TRACE("[GUI] WM_DESTROY -> wndproc -> %lld", r);
     }
 }
@@ -20617,7 +20824,10 @@ static void mw_gui_request_paint(void) { g_paint_pending = 1; }
  * must relayout the board; without the send its WM_SIZE handler only ever
  * saw the 32x32 helper dims). */
 static void mw_gui_send_size_sync(int w, int h, const char* tag) {
-    MW_WNDPROC dp = mw_dispatch_proc();
+    /* SW-1513: dispatch through the TARGET window's own proc — putty's
+     * timer-window main hwnd must not receive its sibling's WM_SIZE through
+     * the last-registered global channel. */
+    MW_WNDPROC dp = mw_window_proc(g_main_hwnd);
     if (!dp || !g_main_hwnd) return;
     /* SW-1287d (SWEEP-061): convergence guards. (1) no re-entry: a guest
      * WM_SIZE handler that itself calls SetWindowPos/MoveWindow must not
@@ -20640,7 +20850,10 @@ static void mw_gui_send_size_sync(int w, int h, const char* tag) {
  * (guests create their double buffers / child controls there). Gated on the
  * event pump so the v1 no-pump contract is unchanged. */
 static long long mw_gui_send_create(void) {
-    if (mw_gui_events_enabled() && g_wndproc_fwd) {
+    /* SW-1513: window #1's create-seq goes through window #1's OWN class
+     * proc (g_main_class_proc snapshot), not the last-registered channel. */
+    MW_WNDPROC dp = mw_gui_events_enabled() ? mw_window_proc(MW_GUI_HWND) : NULL;
+    if (dp) {
         /* SW-802..806: real Win32 passes &CREATESTRUCT in lParam. Fields at
          * the offsets guests actually deref: +0x00 lpCreateParams (must be
          * guest-writable: cports/produkey store hwnd at +0x110 of it,
@@ -20680,10 +20893,10 @@ static long long mw_gui_send_create(void) {
                  * CS->lpCreateParams)" family never registers its C++ window
                  * object (npp64 SW-1298-x64: ZERO SetWindowLongPtrW in trace).
                  * Real contract: FALSE cancels the creation. */
-                long long n1 = g_wndproc_fwd(MW_GUI_HWND, 0x0081u, 0, (long long)MW32_CS32_VA); /* WM_NCCREATE */
+                long long n1 = dp(MW_GUI_HWND, 0x0081u, 0, (long long)MW32_CS32_VA); /* WM_NCCREATE */
                 if (!n1) { MW_TRACE("[GUI] WM_NCCREATE=FALSE -> cancel (SW-1380)"); g_wm_create_depth--; return -1; }
-                g_wndproc_fwd(MW_GUI_HWND, 0x0083u, 0, 0); /* WM_NCCALCSIZE (SW-1335 params) */
-                r = g_wndproc_fwd(MW_GUI_HWND, 0x0001u, 0, (long long)MW32_CS32_VA); /* WM_CREATE */
+                dp(MW_GUI_HWND, 0x0083u, 0, 0); /* WM_NCCALCSIZE (SW-1335 params) */
+                r = dp(MW_GUI_HWND, 0x0001u, 0, (long long)MW32_CS32_VA); /* WM_CREATE */
             } else r = 0;
         } else {
             unsigned char cs[0x50];
@@ -20703,10 +20916,10 @@ static long long mw_gui_send_create(void) {
              * branch above) — WM_NCCREATE(0x81) with the SAME &CREATESTRUCT,
              * then WM_NCCALCSIZE(0x83), then WM_CREATE(0x01). Same CREATESTRUCT
              * pointer for 0x81 and 0x01 is what real Windows passes. */
-            long long n1 = g_wndproc_fwd(MW_GUI_HWND, 0x0081u, 0, (long long)(intptr_t)cs); /* WM_NCCREATE */
+            long long n1 = dp(MW_GUI_HWND, 0x0081u, 0, (long long)(intptr_t)cs); /* WM_NCCREATE */
             if (!n1) { MW_TRACE("[GUI] WM_NCCREATE=FALSE -> cancel (SW-1380)"); g_wm_create_depth--; return -1; }
-            g_wndproc_fwd(MW_GUI_HWND, 0x0083u, 0, 0); /* WM_NCCALCSIZE (SW-1335 params) */
-            r = g_wndproc_fwd(MW_GUI_HWND, 0x0001u, 0, (long long)(intptr_t)cs); /* WM_CREATE */
+            dp(MW_GUI_HWND, 0x0083u, 0, 0); /* WM_NCCALCSIZE (SW-1335 params) */
+            r = dp(MW_GUI_HWND, 0x0001u, 0, (long long)(intptr_t)cs); /* WM_CREATE */
         }
         g_wm_create_depth--;
         MW_TRACE("[GUI] WM_CREATE(lparam=&CS lpParams=%p) -> wndproc -> %lld",
@@ -20723,7 +20936,12 @@ static long long mw_gui_send_create(void) {
  * creates windows inside its own WM_CREATE nests identity minting
  * correctly instead of collapsing onto one handle). */
 static long long mw_gui_send_create_h(void* hwnd, void* parent, uint32_t ctl_id) {
-    if (mw_gui_events_enabled() && g_wndproc_fwd) {
+    /* SW-1513: deliver to THIS window's own proc (its class proc, or a
+     * subclass override) — the global channel's last registration may be a
+     * different class entirely (putty: 'PuTTYConfigBox'/'PuTTYTimerWindow'
+     * vs the minted main window's 'PuTTY'). */
+    MW_WNDPROC dp = mw_gui_events_enabled() ? mw_window_proc(hwnd) : NULL;
+    if (dp) {
         static const unsigned short empty_w[1] = { 0 };
         long long r;
         g_wm_create_depth++;
@@ -20745,10 +20963,10 @@ static long long mw_gui_send_create_h(void* hwnd, void* parent, uint32_t ctl_id)
                 *(uint32_t*)(cs + 0x2C) = 0;
                 /* SW-1380: full creation sequence on the nested path too
                  * (WM_NCCREATE -> WM_NCCALCSIZE -> WM_CREATE, see above). */
-                long long n1 = g_wndproc_fwd(hwnd, 0x0081u, 0, (long long)MW32_CS32_VA); /* WM_NCCREATE */
+                long long n1 = dp(hwnd, 0x0081u, 0, (long long)MW32_CS32_VA); /* WM_NCCREATE */
                 if (!n1) { MW_TRACE("[GUI] WM_NCCREATE[nested %p]=FALSE -> cancel (SW-1380)", hwnd); g_wm_create_depth--; return -1; }
-                g_wndproc_fwd(hwnd, 0x0083u, 0, 0); /* WM_NCCALCSIZE */
-                r = g_wndproc_fwd(hwnd, 0x0001u, (long long)(uintptr_t)ctl_id, (long long)MW32_CS32_VA); /* WM_CREATE, wParam=id for children */
+                dp(hwnd, 0x0083u, 0, 0); /* WM_NCCALCSIZE */
+                r = dp(hwnd, 0x0001u, (long long)(uintptr_t)ctl_id, (long long)MW32_CS32_VA); /* WM_CREATE, wParam=id for children */
             } else r = 0;
         } else {
             unsigned char cs[0x50];
@@ -20767,10 +20985,10 @@ static long long mw_gui_send_create_h(void* hwnd, void* parent, uint32_t ctl_id)
             /* SW-1380: full creation sequence on the nested path (x64).
              * WM_NCCREATE carries &CREATESTRUCT with lpCreateParams = the
              * guest's lpParam; FALSE cancels the creation (real contract). */
-            long long n1 = g_wndproc_fwd(hwnd, 0x0081u, 0, (long long)(intptr_t)cs); /* WM_NCCREATE */
+            long long n1 = dp(hwnd, 0x0081u, 0, (long long)(intptr_t)cs); /* WM_NCCREATE */
             if (!n1) { MW_TRACE("[GUI] WM_NCCREATE[nested %p]=FALSE -> cancel (SW-1380)", hwnd); g_wm_create_depth--; return -1; }
-            g_wndproc_fwd(hwnd, 0x0083u, 0, 0); /* WM_NCCALCSIZE */
-            r = g_wndproc_fwd(hwnd, 0x0001u, (long long)(uintptr_t)ctl_id, (long long)(intptr_t)cs); /* WM_CREATE, wParam=id for children */
+            dp(hwnd, 0x0083u, 0, 0); /* WM_NCCALCSIZE */
+            r = dp(hwnd, 0x0001u, (long long)(uintptr_t)ctl_id, (long long)(intptr_t)cs); /* WM_CREATE, wParam=id for children */
         }
         g_wm_create_depth--;
         MW_TRACE("[GUI] WM_CREATE[nested %p parent=%p id=%u](lparam=&CS) -> wndproc -> %lld",
@@ -21244,15 +21462,24 @@ static long long mw_gui_dispatch_msg(const void* msg) {
     uintptr_t wp = *(const uintptr_t*)(p + 16);
     long long lp = *(const long long*)(p + 24);
     if (m == 0x0012u) return 0; /* WM_QUIT is never dispatched */
-    if (mw_dispatch_proc() && hwnd == g_main_hwnd) { /* SW-1279 fix C */
-        if (m == 0x111u || m == 0x113u) mw_sol_game_probe("pre-cmd");
-        if (m == 0x000Fu) mw_sol_game_probe("pre-paint"); /* SW-1292 */
-        long long r = mw_dispatch_proc()(hwnd, m, wp, lp);
-        MW_TRACE("[GUI-EVENT] dispatch %s wp=0x%llx -> %lld",
-                 mw_wm_name(m), (unsigned long long)wp, r);
-        if (m == 0x111u || m == 0x113u) mw_sol_game_probe("post-cmd");
-        if (m == 0x000Fu) mw_sol_game_probe("post-paint"); /* SW-1292 */
-        return r;
+    /* SW-1513: real DispatchMessage routes by the TARGET hwnd's OWN window
+     * procedure — main hwnd through its class-proc snapshot, minted
+     * toplevels through their SW-1513 class-proc bind. Previously a minted
+     * toplevel (putty's real main window 0x11000) had NO route: its pumped
+     * messages fell to "no registered wndproc" and were dropped, while the
+     * main-hwnd branch sent a DIFFERENT class's proc to window #1. */
+    if (hwnd == g_main_hwnd || mw_toplevel_find(hwnd) >= 0) {
+        MW_WNDPROC dp = mw_window_proc(hwnd);
+        if (dp) {
+            if (m == 0x111u || m == 0x113u) mw_sol_game_probe("pre-cmd");
+            if (m == 0x000Fu) mw_sol_game_probe("pre-paint"); /* SW-1292 */
+            long long r = dp(hwnd, m, wp, lp);
+            MW_TRACE("[GUI-EVENT] dispatch %s hwnd=%p wp=0x%llx -> %lld",
+                     mw_wm_name(m), hwnd, (unsigned long long)wp, r);
+            if (m == 0x111u || m == 0x113u) mw_sol_game_probe("post-cmd");
+            if (m == 0x000Fu) mw_sol_game_probe("post-paint"); /* SW-1292 */
+            return r;
+        }
     }
     /* SW-1398: real DispatchMessage routes by the TARGET hwnd's window
      * procedure — guests that registered their own classes (Scintilla) own
