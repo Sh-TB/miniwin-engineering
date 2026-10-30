@@ -14060,15 +14060,35 @@ __attribute__((ms_abi)) int mw_SHGetSpecialFolderPathW(void* hwnd, uint16_t* out
 }
 __attribute__((ms_abi)) void* mw_SHBrowseForFolderA(void* bi) { (void)bi; MW_TRACE("SHBrowseForFolderA() -> NULL (cancel)"); return NULL; }
 __attribute__((ms_abi)) void* mw_SHBrowseForFolderW(void* bi) { (void)bi; MW_TRACE("SHBrowseForFolderW() -> NULL (cancel)"); return NULL; }
+/* SW-1547 (SWEEP-111): the meat lives after the SW-1544 glyph rasterizers
+ * (it synthesizes per-class file icons with them); declared here, defined
+ * next to mw_icon_stock. */
+static int mw_shell_fileinfo_impl(const uint16_t* wpath, const char* apath,
+                                  uint32_t attrs, void* sfi, uint32_t cb,
+                                  uint32_t flags);
 __attribute__((ms_abi)) int mw_SHGetFileInfoA(const void* path, uint32_t attrs, void* sfi, uint32_t cb, uint32_t flags) {
-    (void)path; (void)attrs; (void)sfi; (void)cb; (void)flags;
-    MW_TRACE("SHGetFileInfoA() -> 0 (no shell icon DB, honest failure)");
-    return 0;
+    uint16_t w[520];
+    const char* p = (const char*)path;
+    uint32_t n = 0;
+    if (p) for (; n < 519 && p[n]; n++) w[n] = (uint16_t)(uint8_t)p[n];
+    w[n] = 0;
+    int r = mw_shell_fileinfo_impl(w, p, attrs, sfi, cb, flags);
+    MW_TRACE("SHGetFileInfoA(path='%s' attrs=%#x flags=%#x) -> %d",
+             p ? p : "(null)", attrs, flags, r);
+    return r;
 }
 __attribute__((ms_abi)) int mw_SHGetFileInfoW(const void* path, uint32_t attrs, void* sfi, uint32_t cb, uint32_t flags) {
-    (void)path; (void)attrs; (void)sfi; (void)cb; (void)flags;
-    MW_TRACE("SHGetFileInfoW() -> 0 (no shell icon DB, honest failure)");
-    return 0;
+    uint16_t w[520];
+    if (path) mw_w16cpy(w, (const uint16_t*)path, 519);
+    else w[0] = 0;
+    int r = mw_shell_fileinfo_impl(w, NULL, attrs, sfi, cb, flags);
+    {
+        char pb[300]; uint32_t k = 0;
+        while (k + 1 < sizeof(pb) && w[k]) { pb[k] = (char)(w[k] & 0xFF); k++; }
+        pb[k] = 0;
+        MW_TRACE("SHGetFileInfoW(path='%s' attrs=%#x flags=%#x) -> %d", pb, attrs, flags, r);
+    }
+    return r;
 }
 __attribute__((ms_abi)) void* mw_ShellExecuteA(void* hwnd, const char* verb, const char* file, const char* params, const char* dir, int show) {
     (void)hwnd; (void)verb; (void)params; (void)dir; (void)show;
@@ -26528,6 +26548,281 @@ static void* mw_icon_stock(uint32_t oic) {
     free(bgra);
     return hicon;
 }
+/* ====================================================================
+ * SWEEP-111 SW-1547: SHELL FILE-INFO — the per-file icon DB.
+ * Wine parallel: shell32/sic.c SIC_Initialize + SIC_GetIconIndex — a
+ * per-extension icon cache whose icons come from the HKCR DefaultIcon
+ * contract. Before this fix every SHGetFileInfoW returned a silent
+ * honest-0 ("no shell icon DB") and WinRAR's file panel had no
+ * per-file icons at all.
+ * MiniWin contract, in order:
+ *  1. HKCR\<ext>\DefaultIcon (Default) value honored when provisioning
+ *     wrote it ("path,index" — logged; in-guest PE extraction is a
+ *     measured follow-up, the probe path is wired and traced).
+ *  2. Otherwise a per-class glyph synthesized with the SW-1544 raster
+ *     helpers (folder / drive / text / archive / app / image / file).
+ *  3. SHFILEINFOW fields filled per SHGFI_* flags: ICON(0x100),
+ *     DISPLAYNAME(0x200), TYPENAME(0x400), ATTRIBUTES(0x800),
+ *     ICONLOCATION(0x1000), SYSICONINDEX(0x4000); USEFILEATTRIBUTES
+ *     (0x10) skips the stat() and trusts dwFileAttributes.
+ * ==================================================================== */
+#define MWSFI_CLS_FILE    0
+#define MWSFI_CLS_FOLDER  1
+#define MWSFI_CLS_DRIVE   2
+#define MWSFI_CLS_TEXT    3
+#define MWSFI_CLS_ARCHIVE 4
+#define MWSFI_CLS_APP     5
+#define MWSFI_CLS_IMAGE   6
+
+static int mw_sfi_ext_class(const char* ext, int is_dir, int is_drive) {
+    if (is_drive) return MWSFI_CLS_DRIVE;
+    if (is_dir) return MWSFI_CLS_FOLDER;
+    if (!ext[0]) return MWSFI_CLS_FILE;
+    static const char* const arch_ext[] = {
+        "rar", "r00", "r01", "rev", "zip", "7z", "arj", "cab", "lzh", "lha",
+        "tar", "gz", "tgz", "bz2", "xz", "zst", "ace", "uue", "jar", "iso",
+        "sfx", "z", 0 };
+    static const char* const text_ext[] = {
+        "txt", "log", "ini", "inf", "nfo", "cfg", "conf", "xml", "htm",
+        "html", "c", "h", "cpp", "hpp", "diz", "me", "bat", "cmd", "url",
+        "reg", "md", "s", 0 };
+    static const char* const img_ext[] = {
+        "bmp", "png", "jpg", "jpeg", "gif", "ico", "tif", "tiff", "pcx",
+        "tga", "webp", 0 };
+    for (int i = 0; arch_ext[i]; i++) if (!strcmp(ext, arch_ext[i])) return MWSFI_CLS_ARCHIVE;
+    for (int i = 0; text_ext[i]; i++) if (!strcmp(ext, text_ext[i])) return MWSFI_CLS_TEXT;
+    for (int i = 0; img_ext[i]; i++) if (!strcmp(ext, img_ext[i])) return MWSFI_CLS_IMAGE;
+    if (!strcmp(ext, "exe") || !strcmp(ext, "com") || !strcmp(ext, "scr"))
+        return MWSFI_CLS_APP;
+    if (!strcmp(ext, "dll") || !strcmp(ext, "ocx") || !strcmp(ext, "cpl"))
+        return MWSFI_CLS_APP;
+    return MWSFI_CLS_FILE;
+}
+
+static const char* mw_sfi_type_name(int cls) {
+    switch (cls) {
+    case MWSFI_CLS_FOLDER: return "File Folder";
+    case MWSFI_CLS_DRIVE: return "Local Disk";
+    case MWSFI_CLS_TEXT: return "Text Document";
+    case MWSFI_CLS_ARCHIVE: return "WinRAR archive";
+    case MWSFI_CLS_APP: return "Application";
+    case MWSFI_CLS_IMAGE: return "Image";
+    default: return "File";
+    }
+}
+
+/* SW-1547 glyph synthesizer: 32x32 BGRA through the SW-1544 helpers. */
+static void* mw_sfi_glyph(int cls) {
+    uint8_t* b = (uint8_t*)malloc(32 * 32 * 4);
+    if (!b) return 0;
+    memset(b, 0, 32 * 32 * 4);
+    if (cls == MWSFI_CLS_FOLDER) {
+        /* classic manila folder: tab + body + outline + inner light edge */
+        for (int y = 6; y <= 10; y++)
+            for (int x = 4; x <= 14; x++) mw_stock_put(b, x, y, 0xFFD640, 255);
+        for (int y = 9; y <= 25; y++)
+            for (int x = 3; x <= 28; x++) mw_stock_put(b, x, y, 0xFFD640, 255);
+        for (int x = 3; x <= 28; x++) {
+            mw_stock_put(b, x, 9, 0xC89A00, 255); mw_stock_put(b, x, 25, 0xC89A00, 255);
+        }
+        for (int y = 6; y <= 25; y++) {
+            mw_stock_put(b, 3, y, 0xC89A00, 255); mw_stock_put(b, 28, y, 0xC89A00, 255);
+        }
+        for (int y = 10; y <= 15; y++)
+            for (int x = 4; x <= 13; x++) mw_stock_put(b, x, y, 0xFFE27A, 255);
+    } else if (cls == MWSFI_CLS_DRIVE) {
+        for (int y = 10; y <= 22; y++)
+            for (int x = 3; x <= 28; x++) mw_stock_put(b, x, y, 0xB4BEC8, 255);
+        for (int x = 3; x <= 28; x++) {
+            mw_stock_put(b, x, 10, 0x606870, 255); mw_stock_put(b, x, 22, 0x606870, 255);
+        }
+        for (int y = 10; y <= 22; y++) {
+            mw_stock_put(b, 3, y, 0x606870, 255); mw_stock_put(b, 28, y, 0x606870, 255);
+        }
+        for (int x = 6; x <= 25; x++) mw_stock_put(b, x, 13, 0x808890, 255);
+        for (int x = 22; x <= 25; x++) { mw_stock_put(b, x, 19, 0x00C000, 255); mw_stock_put(b, x, 20, 0x00C000, 255); }
+    } else if (cls == MWSFI_CLS_TEXT || cls == MWSFI_CLS_FILE) {
+        for (int y = 3; y <= 28; y++)
+            for (int x = 7; x <= 24; x++) mw_stock_put(b, x, y, cls ? 0xFFFFFF : 0xF8F8F8, 255);
+        for (int x = 7; x <= 24; x++) { mw_stock_put(b, x, 3, 0x808080, 255); mw_stock_put(b, x, 28, 0x808080, 255); }
+        for (int y = 3; y <= 28; y++) { mw_stock_put(b, 7, y, 0x808080, 255); mw_stock_put(b, 24, y, 0x808080, 255); }
+        for (int d = 0; d <= 5; d++) mw_stock_put(b, 19 + d, 3 + 5 - d, 0x808080, 255); /* folded corner */
+        for (int r = 0; r < 6; r++)
+            for (int x = 10; x <= 21; x++) mw_stock_put(b, x, 8 + r * 3, 0x606060, 255);
+        if (cls == MWSFI_CLS_FILE)
+            for (int y = 12; y <= 20; y++) mw_stock_put(b, 16, y, 0xB0B0B0, 255); /* blank-page mark */
+    } else if (cls == MWSFI_CLS_ARCHIVE) {
+        /* the archive "book": purple-brown cover, white pages edge, spine */
+        for (int y = 4; y <= 27; y++)
+            for (int x = 6; x <= 26; x++) mw_stock_put(b, x, y, 0x7B4F9E, 255);
+        for (int y = 4; y <= 27; y++)
+            for (int x = 23; x <= 26; x++) mw_stock_put(b, x, y, 0xF0EAD8, 255); /* pages */
+        for (int y = 4; y <= 27; y++) {
+            mw_stock_put(b, 6, y, 0x4A2E62, 255); mw_stock_put(b, 7, y, 0x4A2E62, 255);
+        }
+        for (int x = 6; x <= 26; x++) {
+            mw_stock_put(b, x, 4, 0x4A2E62, 255); mw_stock_put(b, x, 27, 0x4A2E62, 255);
+        }
+        static const char* g[5] = {"RRRR", "R  R", "RRR ", "R.R ", "R  R"};
+        for (int r = 0; r < 5; r++)
+            for (int c = 0; c < 4 && g[r][c]; c++)
+                if (g[r][c] != ' ') mw_stock_put(b, 10 + c, 12 + r * 2, 0xFFFFFF, 255);
+    } else if (cls == MWSFI_CLS_APP) {
+        for (int y = 5; y <= 26; y++)
+            for (int x = 4; x <= 27; x++) mw_stock_put(b, x, y, 0xC0C0C0, 255);
+        for (int y = 5; y <= 9; y++)
+            for (int x = 4; x <= 27; x++) mw_stock_put(b, x, y, 0x0000C0, 255);
+        for (int x = 4; x <= 27; x++) { mw_stock_put(b, x, 5, 0x606060, 255); mw_stock_put(b, x, 26, 0x606060, 255); }
+        for (int y = 5; y <= 26; y++) { mw_stock_put(b, 4, y, 0x606060, 255); mw_stock_put(b, 27, y, 0x606060, 255); }
+        for (int d = 0; d < 3; d++) {
+            mw_stock_put(b, 22 + d, 6, 0xFFFFFF, 255); mw_stock_put(b, 22 + d, 8, 0xFFFFFF, 255);
+        }
+        mw_stock_put(b, 25, 7, 0xFFFFFF, 255);
+    } else { /* MWSFI_CLS_IMAGE */
+        for (int y = 5; y <= 25; y++)
+            for (int x = 4; x <= 27; x++) mw_stock_put(b, x, y, 0xFFFFFF, 255);
+        for (int x = 4; x <= 27; x++) { mw_stock_put(b, x, 5, 0x606060, 255); mw_stock_put(b, x, 25, 0x606060, 255); }
+        for (int y = 5; y <= 25; y++) { mw_stock_put(b, 4, y, 0x606060, 255); mw_stock_put(b, 27, y, 0x606060, 255); }
+        for (int y = 7; y <= 17; y++)
+            for (int x = 7; x <= 24; x++) mw_stock_put(b, x, y, 0x8CD8FF, 255); /* sky */
+        mw_stock_disc(b, 11, 11, 3, 0xFFE000); /* sun */
+        for (int r = 0; r < 7; r++)
+            for (int x = 7 + r; x <= 24 - r; x++) mw_stock_put(b, x, 24 - r, 0x00A000, 255); /* hill */
+    }
+    void* hicon = mw_icon_store(32, 32, b);
+    free(b);
+    return hicon;
+}
+
+/* HKCR\<ext>\DefaultIcon (Default) probe — the Wine SIC contract. Returns
+ * 1 when a "path,index" string was found (copied to out, cap bytes). */
+static int mw_sfi_defaulticon(const char* ext, char* out, size_t cap) {
+    out[0] = 0;
+    if (!ext[0]) return 0;
+    uint16_t path[MW_REG_PATHN];
+    const char* pfx = "HKCR\\.";
+    uint32_t n = 0;
+    for (; pfx[n]; n++) path[n] = (uint16_t)(uint8_t)pfx[n];
+    for (const char* e = ext; *e && n < MW_REG_PATHN - 1; e++) path[n++] = (uint16_t)(uint8_t)*e;
+    const char* tail = "\\DefaultIcon";
+    for (const char* t = tail; *t && n < MW_REG_PATHN - 1; t++) path[n++] = (uint16_t)(uint8_t)*t;
+    path[n] = 0;
+    int slot = mw_reg_find_path(path);
+    if (slot < 0) return 0;
+    for (uint32_t v = 0; v < g_reg[slot].nvals; v++) {
+        MwRegVal* val = &g_reg[slot].vals[v];
+        if (val->name[0] && !(val->name[0] == 'D' && val->name[1] == 'e' &&
+                              val->name[2] == 'f' && val->name[3] == 'a' &&
+                              val->name[4] == 'u' && val->name[5] == 'l' &&
+                              val->name[6] == 't' && val->name[7] == 0))
+            continue;
+        if (val->type != 1u /* REG_SZ */ || !val->data || val->size < 2) return 0;
+        size_t o = 0;
+        for (uint32_t c = 0; c + 1 < val->size && o + 1 < cap; c += 2)
+            out[o++] = (char)(val->data[c] & 0xFF);
+        out[o] = 0;
+        return 1;
+    }
+    return 0;
+}
+
+static int mw_shell_fileinfo_impl(const uint16_t* wpath, const char* apath,
+                                  uint32_t attrs, void* sfi, uint32_t cb,
+                                  uint32_t flags) {
+    (void)apath;
+    /* SHFILEINFOW x64: hIcon@0 (8), iIcon@8 (4), dwAttributes@12 (4),
+     * szDisplayName@16 (260 uint16), szTypeName@536 (80 uint16), size 696. */
+    if (!sfi || cb < 696u) return 0;
+    uint8_t* p = (uint8_t*)sfi;
+    uint16_t (*disp)[260] = (uint16_t (*)[260])(p + 16);
+    uint16_t (*tname)[80] = (uint16_t (*)[80])(p + 536);
+    /* path -> ascii host form for stat()/extension work */
+    char a[1024]; uint32_t al = 0;
+    for (; al + 1 < sizeof(a) && wpath[al]; al++) a[al] = (char)(wpath[al] & 0xFF);
+    a[al] = 0;
+    char host[1024]; snprintf(host, sizeof(host), "%s", a);
+    w3_normalize_path(host);
+    /* extension + basename (ascii, case-folded) */
+    char base[300]; base[0] = 0;
+    {
+        const char* s = a;
+        const char* lastbs = 0; const char* lastfs = 0;
+        for (const char* q = s; *q; q++) {
+            if (*q == '\\') lastbs = q;
+            if (*q == '/') lastfs = q;
+        }
+        const char* bn = (lastbs && lastbs > lastfs) ? lastbs + 1 :
+                         lastfs ? lastfs + 1 : s;
+        if (bn[0] == '"' && bn[1] && s[strlen(s) - 1] == '"') { bn++; /* quoted */ }
+        snprintf(base, sizeof(base), "%s", bn);
+        char* end = base + strlen(base);
+        while (end > base && (end[-1] == '"' || end[-1] == ' ')) *--end = 0;
+    }
+    char ext[16] = {0};
+    {
+        const char* dot = 0;
+        for (const char* q = base; *q; q++) if (*q == '.') dot = q;
+        if (dot && dot[1] && dot > base) {
+            uint32_t e = 0;
+            for (dot++; *dot && e + 1 < sizeof(ext); dot++)
+                ext[e++] = (*dot >= 'A' && *dot <= 'Z') ? (char)(*dot + 32) : *dot;
+        }
+    }
+    int is_drive = (a[0] && a[1] == ':' && (!a[2] || !a[3]));
+    int is_dir = 0;
+    if (flags & 0x10u /* SHGFI_USEFILEATTRIBUTES */) {
+        is_dir = (attrs & 0x10u) != 0; /* FILE_ATTRIBUTE_DIRECTORY */
+    } else if (!is_drive) {
+        struct stat st;
+        is_dir = (stat(host, &st) == 0 && S_ISDIR(st.st_mode));
+    }
+    int cls = mw_sfi_ext_class(ext, is_dir, is_drive);
+    /* the SW-1547 registry contract probe (DefaultIcon) */
+    char deficon[300];
+    int have_deficon = mw_sfi_defaulticon(ext, deficon, sizeof(deficon));
+    /* cache: 8 slots keyed by class+small — the file panel repeats calls */
+    static struct { int used; int cls; void* h; } g_sfi_cache[8];
+    void* hicon = 0;
+    if (flags & (0x100u /*SHGFI_ICON*/ | 0x4000u /*SHGFI_SYSICONINDEX*/)) {
+        for (int i = 0; i < 8 && !hicon; i++)
+            if (g_sfi_cache[i].used && g_sfi_cache[i].cls == cls) hicon = g_sfi_cache[i].h;
+        if (!hicon) {
+            hicon = mw_sfi_glyph(cls);
+            for (int i = 0; i < 8; i++)
+                if (!g_sfi_cache[i].used) {
+                    g_sfi_cache[i].used = 1; g_sfi_cache[i].cls = cls; g_sfi_cache[i].h = hicon;
+                    break;
+                }
+        }
+    }
+    if (flags & 0x100u) *(void**)p = hicon;                      /* hIcon */
+    if (flags & 0x4000u) *(int32_t*)(p + 8) = (int32_t)(cls + 1);/* iIcon */
+    if (flags & 0x800u) *(uint32_t*)(p + 12) = is_dir ? 0x40000010u : 0x40000001u;
+    if (flags & 0x200u) {                                        /* DISPLAYNAME */
+        uint32_t n = 0;
+        for (; n < 259 && base[n]; n++) (*disp)[n] = (uint16_t)(uint8_t)base[n];
+        (*disp)[n] = 0;
+    }
+    if (flags & 0x1000u /* ICONLOCATION */) {                    /* szDisplayName = path,index */
+        if (have_deficon) {
+            uint32_t n = 0;
+            for (; n < 259 && deficon[n]; n++) (*disp)[n] = (uint16_t)(uint8_t)deficon[n];
+            (*disp)[n] = 0;
+        } else if (flags & 0x200u) { /* leave display name as-is */ }
+        else (*disp)[0] = 0;
+    }
+    if (flags & 0x400u /* TYPENAME */) {
+        const char* tn = mw_sfi_type_name(cls);
+        uint32_t n = 0;
+        for (; n < 79 && tn[n]; n++) (*tname)[n] = (uint16_t)(uint8_t)tn[n];
+        (*tname)[n] = 0;
+    }
+    MW_TRACE("[SHELL-INFO] class=%s ext='%s' dir=%d deficon=%s flags=%#x -> hIcon %p iIcon %d",
+             mw_sfi_type_name(cls), ext, is_dir,
+             have_deficon ? deficon : "(none)", flags, hicon,
+             (flags & 0x4000u) ? (int)(cls + 1) : 0);
+    return 1;
+}
 __attribute__((ms_abi)) void* mw_LoadImageW(void* hinst, const void* name, uint32_t type,
         int cx, int cy, uint32_t flags) {
     (void)flags;
@@ -27369,6 +27664,8 @@ __attribute__((ms_abi)) uint32_t mw_SHGetFolderPathW(void* hwnd, int csidl, void
         { 0x0025, "C:\\Windows\\System32" },                             /* CSIDL_SYSTEM */
         { 0x0026, "C:\\Program Files" },                                 /* CSIDL_PROGRAM_FILES */
         { 0x0005, "C:\\Users\\MiniWin\\Documents" },                     /* CSIDL_PERSONAL */
+        { 0x0000, "C:\\Users\\MiniWin\\Desktop" },                       /* CSIDL_DESKTOP */
+        { 0x0010, "C:\\Users\\MiniWin\\Desktop" },                       /* CSIDL_DESKTOPDIRECTORY (SW-1548: WinRAR 7.12 probes 0x10 in its first-run scan) */
         { 0x0028, "C:\\Users\\MiniWin\\AppData\\Local\\Temp" },          /* CSIDL_LOCAL_APPDATA? no: PROFILE */
     };
     for (size_t i = 0; i < sizeof(t) / sizeof(t[0]); i++)
@@ -27400,6 +27697,8 @@ __attribute__((ms_abi)) uint32_t mw_SHGetFolderPathA(void* hwnd, int csidl, void
         { 0x0025, "C:\\Windows\\System32" },
         { 0x0026, "C:\\Program Files" },
         { 0x0005, "C:\\Users\\MiniWin\\Documents" },
+        { 0x0000, "C:\\Users\\MiniWin\\Desktop" },
+        { 0x0010, "C:\\Users\\MiniWin\\Desktop" }, /* SW-1548 */
         { 0x0028, "C:\\Users\\MiniWin" },
     };
     for (size_t i = 0; i < sizeof(t) / sizeof(t[0]); i++)

@@ -17,3 +17,4 @@ sandbox	yes
 sandbox_tree	$SANDBOX_OF:winrar
 provision	winrar
 reg_seed	$SNAPSHOT_OF:winrar
+reg_seed_extend	scripts/sweep111_seed.py

@@ -241,6 +241,21 @@ run_plugin() {
             cp -f "$rseed" "$SB/registry_snapshot.bin"
             say "   reg seed: $rseed ($(stat -c%s "$rseed")B)"
         fi
+        # SW-1546 (SWEEP-111): reg_seed_extend=<script> — post-process the
+        # staged snapshot before the battery. Use case: the "prefix has one
+        # GUI run behind it" fixture. On a real box WinRAR's own first GUI
+        # run writes the default toolbar state into HKCU\...\Toolbar; the
+        # headless install run never reaches that code, so the fixture
+        # extends the installer snapshot with the measured default
+        # (scripts/sweep111_seed.py — issue #26 discriminating experiment).
+        rext=$(manifest_get reg_seed_extend "$mf")
+        if [ -n "$rext" ] && [ -f "$REPO/$rext" ] && [ -f "$SB/registry_snapshot.bin" ]; then
+            if python3 "$REPO/$rext" "$SB/registry_snapshot.bin" "$SB/registry_snapshot.bin" 2>/dev/null; then
+                say "   reg seed extend: $rext applied ($(stat -c%s "$SB/registry_snapshot.bin")B)"
+            else
+                say "   reg seed extend: $rext FAILED (snapshot left as staged)"
+            fi
+        fi
         if [ -n "$stree" ] && [ -f "$SB/$exe" ]; then
             exe_path="$SB/$exe"
             say "   sandbox exe (in-tree): $exe_path"
