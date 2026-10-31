@@ -22722,6 +22722,38 @@ static int mw_gui_pump_getmsg(void* msg, void* hwnd, const char* api) {
         return 0;
     }
     if (mw_gui_next_event(msg, hwnd, 1, api)) return 1;
+    /* Wagon 21 (2026-10-31): optional REAL Win32 blocking semantics.
+     * Wine win32u NtUserGetMessage WAITS on the message queue; it only
+     * returns 0 for a real WM_QUIT. The dry-source WM_QUIT above is the
+     * SWEEP-035 headless batch contract (corpus exit-0), but with
+     * MW_GUI_EVENTS_PARK=1 the interactive run models the booted-machine
+     * behavior instead: park in 20ms slices until a message arrives
+     * (paint/timer/posted) or PostQuitMessage lands. Measured without
+     * this: Notepad++ 8.8.2 registers no timers, so its pump's FIRST idle
+     * iteration got the fabricated WM_QUIT and WinMain returned 0 —
+     * message pump never started (0 GetMessage calls post-init), menus
+     * never attached, clean ExitProcess(0) right after the last WM_PAINT.
+     * WinRAR only survived the old path because its SW-1220 timer keeps
+     * the queue fed. */
+    static signed char park_enable = -1;
+    if (park_enable < 0) park_enable = getenv("MW_GUI_EVENTS_PARK") ? 1 : 0;
+    if (park_enable) {
+        while (!g_quit_flag) {
+            if (g_delivered >= g_budget) {
+                MW_TRACE("[GUI] event budget %d exhausted -> WM_QUIT (park mode)", g_budget);
+                g_quit_flag = 1;
+                break;
+            }
+            if (mw_gui_next_event(msg, hwnd, 1, api)) return 1;
+            struct timespec ts = { 0, 20 * 1000 * 1000 }; /* 20ms re-check slice */
+            nanosleep(&ts, NULL);
+        }
+        if (g_quit_flag) {
+            MW_TRACE("%s() -> 0 (WM_QUIT code=%d, main parked woke)", api, g_quit_code);
+            mw_gui_fill_msg(msg, hwnd, 0x0012u, (uintptr_t)g_quit_code, 0);
+            return 0;
+        }
+    }
     MW_TRACE("%s() -> 0 (no event source: no timer/paint/keys left)", api);
     g_quit_flag = 1;
     mw_gui_fill_msg(msg, hwnd, 0x0012u, 0, 0);
@@ -23205,6 +23237,40 @@ static void mw_nc_paint_frame(void) {
                    mwb_set(&g_surf, bx0 + 4 + k, cy0 + ch / 2 - 3 + k, darkest);
                    mwb_set(&g_surf, bx0 + 9 - k, cy0 + ch / 2 - 3 + k, darkest);
                } }
+    }
+    /* Wagon 22 (2026-10-31): the menu band is NONCLIENT. SW-1520 drew it
+     * only inside mw_engine_paint_children (UpdateWindow channel), so any
+     * guest that paints its own client every WM_PAINT wiped the band:
+     * Notepad++ fills its whole client on each paint and the menu bar
+     * vanished (empty blue strip). Real Windows renders the menu bar in
+     * DefWindowProc's WM_NCPAINT — over the finished client pixels — which
+     * is exactly this pass (engine frame before every EndPaint dump).
+     * WinRAR only kept its band through the SW-1291e empty-paint-pair
+     * restore; a guest that truly paints loses it without this. */
+    {
+        int band = mw_menu_band();
+        if (band > 0) {
+            int by = MW_NC_FRAME + MW_NC_CAP_H;
+            if (by + band <= H) {
+                mwb_fill(&g_surf, MW_NC_FRAME, by, W - 2 * MW_NC_FRAME, band, face);
+                uint16_t mtxt[16][32];
+                int mitems = mw_menu_band_items(mtxt, 16);
+                int mx = MW_NC_FRAME + 8;
+                for (int mi = 0; mi < mitems && mx < W - 40; mi++) {
+                    char mt[24]; int k = 0;
+                    for (int j = 0; j < 31 && mtxt[mi][j]; j++) {
+                        uint16_t mc = mtxt[mi][j];
+                        if (mc == '&') continue; /* accelerator marker hidden */
+                        if (k < 23) mt[k++] = (mc >= 0x20 && mc < 0x7F) ? (char)mc : '?';
+                    }
+                    mt[k] = 0;
+                    if (!mt[0]) continue;
+                    mwb_text8(&g_surf, mx, by + 6, mt, 0x000000, 1);
+                    mx += mwb_textw(mt, 1) + 24;
+                }
+                mwb_fill(&g_surf, MW_NC_FRAME, by + band - 2, W - 2 * MW_NC_FRAME, 2, 0x808080);
+            }
+        }
     }
     MW_TRACE("[NC] frame painted %dx%d (title %s, icon %p)", W, H,
              g_maintitle[0] ? "set" : "(empty)", g_wicon_small);
