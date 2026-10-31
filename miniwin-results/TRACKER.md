@@ -4,7 +4,9 @@ Wagon ledger for the 2026-10-31 session; every item verified against
 
 the Wine 10.0/master source tree cloned to `ref/wine-src` (read-only).
 
-Commits: 4463d8d (w1-7), 90ee42a (w8-14), 3bad8f7 (w15), 6f9788a (w16-17).
+Commits: 4463d8d (w1-7), 90ee42a (w8-14), 3bad8f7 (w15), 6f9788a (w16-17),
+
+f9d9f67/6f597d1 (SWEEP-112b/ICON-TRAIN re-land), 3 wagons 18-20, 21-22, 23 (88ed316).
 
 
 ## 1. Program status
@@ -60,12 +62,28 @@ Commits: 4463d8d (w1-7), 90ee42a (w8-14), 3bad8f7 (w15), 6f9788a (w16-17).
 | CreateIcon family | absent from import table | registered; frames carry real geometry |
 | DrawIconEx | no-op | blits through mw_dc_surface with AND-mask transparency |
 
+## 2b. Wagon ledger, continued (wagons 18-24, this session)
+
+| # | fix | Wine/NPP/WinRAR reference | detail |
+|---|---|---|---|
+| 18 | PNG-compressed RT_ICON members | Wine 10.0 user32/cursoricon.c create_icon_frame + load_png | biSize==PNG_SIGN(0x474e5089) -> decode via libpng -> synthesize BITMAPINFOHEADER biHeight=2h bottom-up 32bpp -> re-enter DIB path. NPP RT_GROUP_ICON 1530/1531/1533/1534/1535 + group 100 #4 are PNG members; fixed the iconList::addIcon "LoadIcon() returns -1" loop (22 identical boxes -> 0) |
+| 19 | NPP config world-state | NPP installer copy step | langs.model.xml + stylers.model.xml (v8.8.2 PowerEditor/src) staged next to the exe + as APPDATA langs.xml/stylers.xml; "Load stylers.xml failed!" gone |
+| 20 | GetFileAttributesExW full struct | Wine kernelbase/file.c | filled the whole 36-byte WIN32_FILE_ATTRIBUTE_DATA (3 FILETIMEs + sizeHi/Lo; NPP 8.8.2 Parameters.cpp treats size==0 as corrupt langs.xml despite the 535 KB file) |
+| 21 | MW_GUI_EVENTS_PARK | Wine win32u NtUserGetMessage blocks | main-thread idle parked in 20ms slices until paint/timer/posted/PostQuitMessage; NPP's pump no longer unwinds on the first dry iteration (was: clean ExitProcess(0) right after the last WM_PAINT, 0 GetMessage calls post-init). Headless batch contract unchanged (12/12) |
+| 22 | menu band is NONCLIENT | DefWindowProc WM_NCPAINT | band + item texts drawn in the NC pass before every EndPaint dump; guests that paint their own client no longer wipe the menu bar |
+| 23 | menu model 24x64 + opt bits + shared band renderer | wine user32/menu.c dynamic lists; NPP RT_MENU 1500 | 17 top entries now all load (was 16-cap truncated); MF_HELP/tab-prefixed/triangle items right-justified as a group ('+' 0xa029, 'v' U+25BC, 'x' 0xa02b — NPP's tab-bar gadgets); NPP band = File..Window ?  + v x, WinRAR band unchanged (pixel-verified) |
+| 24a | TB_INSERTBUTTON 0x401 accepted | commctrl.h TB_INSERTBUTTONA=WM_USER+1 | WinRAR 7.12's pre-layout pass sends 0x401 x13 to ToolbarWindow32; was dropped in the default hole (tb_nbtn==0 -> blank chrome). 0x444/0x414 TB_ADDBUTTONW already handled |
+| 24b | WinRAR toolbar registry seed | any.run first-run traces + SW-1554 | artifacts/app3/winrar/registry_seed.bin: f./a.<id>=1 x20, Lock/View*/LargeButtons/ButtonsText, Band76_0..4=100; root-slot padding so the seeded keys land at slots >= 8 (SW-1419 discards 0..6). Verified: Buttons key opens (handle slot 8), all 40 f./a. reads succeed (was honest-miss storm) |
+
 ## 4. Frontier (next wagons, registered not forgotten)
 
 - **F1 WinRAR native spin**: initialization tail loop at guest RVA 0x100cc (strcmp-heavy, no API calls, thread State=R) after the working-directory scan; measured by ptrace sampling (scripts/ptrace_stack.py). Not a loader crash — the process must be timed out.
-- **F2 Notepad++ deep init**: fault inside guest RVA 0x131ad0 (on_create chain after WM_NCCREATE/CREATE both delivered and this=0x38aa0a0 stored). Next wagon will trace the member-init call tree.
+- **F2 Notepad++ deep init**: RESOLVED this session — NPP now runs to a live message pump (wagons 18-23: PNG icons, config world-state, GetFileAttributesExW, park mode, NC menu band). Remaining NPP gap moved to F5.
 - **F3 IDM WOW64**: loader refuses PE32 (magic 0x10b, machine 0x14c) with a typed error and exit=1. Supporting 32-bit guests requires a second loader mode (PE32 image layout + WOW64 thunks), a project-sized change documented here as an explicit blocker, not a silent failure.
 - **F4 GDI+ paths**: GdipDrawPath/FillPath/DrawBezierI/AddPath* accept coordinates but do not accumulate/replay path geometry yet; direct shapes (line/rect/ellipse/polygon) render for real.
+- **F5 NPP client content**: menus/icons/frame/title live; the client area is still engine-white — Scintilla child content (0x30001.. children exist, no paint dispatch to them yet) and the toolbar strip under the caption render as default chrome.
+- **F6 WinRAR button-add gate (top of queue)**: with the registry seed the guest takes the completed-layout shortcut (Band76_0==100 -> je 0x145903) which runs helpers 0x145324 + 0x1494b0 and returns after SendMessage(hwnd,5=WM_SIZE) — the TB_ADDBUTTONW loop 0x140145948..BA0 (send @0x140145B1E) is a SEPARATE function never reached from the shortcut; inside 0x145324/0x1494b0 a gate ([rcx]==0 / [rcx+0x10]==0 heads) bails silently. The unseeded 13x0x401 fallback is flow-nondeterministic across runs. Next: decode 0x145324/0x1494b0 call trees + the walker 0x146FA0..0x147075, or satisfy the NM_CUSTOMDRAW contract so real comctl-style paint reaches GdipDrawImage.
+- **F7 menu tail parse divergence**: the engine's RT_MENU 1500 tail parse yields "\tCtrl+N"/"\tCtrl+W" for the gadget titles where a linear file-offset walk reads U+FF0B/U+2715 — sub-item alignment inside the Help child list; renderer maps by command id so the visual is right, the byte-level divergence is queued.
 
 ## 5. G1 regression pin
 

@@ -18648,7 +18648,11 @@ static int mw_commonctl_msg(int s, uint32_t msg, uintptr_t wp, long long lp, lon
             }
             return 1;
         }
-        case 0x443u: case 0x415u: { /* TB_INSERTBUTTONW/A */
+        /* Wagon 24 (2026-10-31): accept TB_INSERTBUTTON (WM_USER+1 = 0x401).
+         * WinRAR 7.12's pre-layout pass sends 0x401 per button (13x to
+         * ToolbarWindow32 0x30003); TB_ADDBUTTONW 0x444 (the add loop at
+         * 0x140145B1E, SW-1562) is handled above. Both share TBBUTTON. */
+        case 0x443u: case 0x415u: case 0x401u: { /* TB_INSERTBUTTONW/A */
             int32_t bmp = 0, cmd = 0; uint8_t st = 0; long long istr = 0;
             *out = 1;
             if (mw_tbbtn_parse((uintptr_t)lp, 1, &bmp, &cmd, &st, &istr) &&
@@ -18656,6 +18660,8 @@ static int mw_commonctl_msg(int s, uint32_t msg, uintptr_t wp, long long lp, lon
                 int bi = c->tb_nbtn++;
                 c->tb_bmp[bi] = bmp; c->tb_cmd[bi] = cmd; c->tb_style[bi] = st;
                 c->tb_stridx[bi] = (istr >= 0 && istr < 0x10000) ? (int)istr : -1;
+                MW_TRACE("TB_INSERTBUTTON[%d] bmp=%d cmd=%#x style=%#x",
+                         bi, bmp, cmd, st);
             }
             return 1;
         }
@@ -20527,10 +20533,17 @@ static void mw_child_seed_class_proc(void* hwnd, const void* cls) {
     if (!hwnd || !cls || (uintptr_t)cls < 0x10000u) return;
     if (g_cpu32_active) return;
     void* cp = mw_class_proc_lookup(cls);
-    if (!cp) return;
     int s = mw_child_slot(hwnd);
-    if (s >= 0) g_child[s].class_proc = cp;
-    MW_TRACE("[GUI] child %p class proc captured %p (SW-1334)", hwnd, cp);
+    if (cp && s >= 0) g_child[s].class_proc = cp;
+    if (getenv("MINWIN_SEED_PROBE")) {
+        char cn[40] = {0};
+        uint16_t cw[20] = {0};
+        if (cls && mw_probe_copy(cls, 38, cw))
+            for (int i = 0; i < 19 && cw[i]; i++)
+                cn[i] = (cw[i] >= 0x20 && cw[i] < 0x7F) ? (char)cw[i] : '?';
+        MW_TRACE("[SEED-PROBE] child %p cls='%s' lookup=%p (captured=%s, classes=%d)",
+                 hwnd, cn, cp, cp ? "yes" : "no", g_class_proc_n);
+    }
 }
 /* SW-1335 (SWEEP-076): deliver the real-Windows creation message sequence
  * (WM_NCCREATE 0x81 -> WM_NCCALCSIZE 0x83 -> WM_CREATE 0x01) to a child
@@ -21947,10 +21960,17 @@ static void mw_gui_store_wndproc(void* proc) {
  * cannot steal it; (3) SetWindowLongPtrW(GWLP_WNDPROC) on the main hwnd
  * (SW-1266 subclassing) UPDATES the snapshot, so subclass wins. */
 static void mw_class_proc_store(const void* name_ptr, int wide, void* proc, void* hbr, uint16_t atom) {
-    if (!name_ptr || (uintptr_t)name_ptr < 0x10000u || !proc) return;
+    if (!name_ptr || (uintptr_t)name_ptr < 0x10000u || !proc) {
+        if (getenv("MINWIN_SEED_PROBE"))
+            MW_TRACE("[SEED-PROBE] store REJECT name=%p proc=%p (ptr/proc gate)", name_ptr, proc);
+        return;
+    }
     uint16_t tmp[48] = {0};
     if (wide) {
-        if (!mw_probe_copy(name_ptr, 94, tmp)) return;
+        if (!mw_probe_copy(name_ptr, 94, tmp)) {
+            if (getenv("MINWIN_SEED_PROBE")) MW_TRACE("[SEED-PROBE] store REJECT: name unreadable");
+            return;
+        }
     } else {
         char a[48] = {0};
         if (!mw_probe_copy(name_ptr, 47, a)) return;
