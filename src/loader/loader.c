@@ -18000,6 +18000,7 @@ typedef struct {
      * toolbar can hold hundreds of buttons; the painter shows the first 40). */
     int      tb_nbtn;
     int      tb_bw, tb_bh;          /* TB_SETBUTTONSIZE; 0 -> engine default */
+    int      tb_bsize;              /* TB_BUTTONSTRUCTSIZE (SW-1562) */
     uint8_t  tb_style[40];          /* BTNS_SEP = 0x01 */
     int32_t  tb_cmd[40];
     int32_t  tb_bmp[40];
@@ -18649,6 +18650,15 @@ static int mw_commonctl_msg(int s, uint32_t msg, uintptr_t wp, long long lp, lon
             return 1;
         }
         case 0x418u: *out = c->tb_nbtn; return 1;            /* TB_BUTTONCOUNT */
+        case 0x41Eu: /* TB_BUTTONSTRUCTSIZE (WM_USER+30): real comctl stores
+                      * the guest's TBBUTTON size and returns TRUE — WinRAR
+                      * 7.12 sends it before every add phase and the
+                      * 0x145948 button loop treats the toolbar as unusable
+                      * without it (SW-1562: the loop's rebuild gate reads
+                      * back TB_GETBUTTON into that size; return 0 = the
+                      * whole add phase silently never runs). */
+            c->tb_bsize = (int)wp;
+            *out = 1; return 1;
         case 0x41Fu: /* TB_SETBUTTONSIZE (wine commctrl.h:1220, WM_USER+31) */
             c->tb_bw = (int16_t)(lp & 0xFFFFu);
             c->tb_bh = (int16_t)((lp >> 16) & 0xFFFFu);

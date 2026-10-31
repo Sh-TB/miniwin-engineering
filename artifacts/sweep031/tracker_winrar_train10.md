@@ -32,3 +32,35 @@ clean CRT exit path (DeleteCriticalSection -> mscoree probe -> ExitProcess(0)).
 ## Frontier (next train)
 - Pump delivers 1 WM_PAINT then WM_QUIT (headless budget design).
 - Guest C++ EH unwinding (SW-1201 class) not exercised by WinRAR's exit path.
+
+## SW-1562 decode addendum (SWEEP-112, subagent disassembly with capstone, all VAs verified)
+
+Full node map (corrects the "dynamic counts" reading): the 20 static nodes live
+at 0x14024B1B0, stride 0x60: +0x00 id (0x190..0x1A4), +0x10/+0x13 in-f/a-set
+(static 1), +0x11/+0x14 default visibility, +0x12/+0x15 f/a visible flags
+(runtime), +0x18 name ptr (L"add".."L"bnc"), +0x20/+0x24 f/a position,
++0x28/+0x29 f/a separator markers. "0x24B1D0/D4" = node[0]+0x20/+0x24.
+
+Runtime fill = registry loader 0x140148934: per node queries
+HKCU\Software\WinRAR\General\Toolbar\Buttons (delay-loaded ADVAPI32 via
+sub_14012B12C -> sub_14012C72C -> RegOpenKeyExW/RegQueryValueExW/RegCloseKey):
+`f.<name>` -> +0x12 (setne of the value), `f.<name>.pos` -> +0x20 (default =
+static index), `f.<name>.sep` -> +0x28; a.<name> family -> +0x15/+0x24/+0x29.
+Twin saver 0x1401495B0 persists live TB indices back (0x140146388/0x140146DB8
+sync writes node+0x20/+0x24 from TB_BUTTONCOUNT/TB_GETBUTTON).
+
+TB_ADDBUTTONW loop 0x140145948..0x140145BA0 (send 0x444 @0x140145B1E):
+gates = toolbar hwnd non-null; per-chain presence (+0x12/+0x15); mode =
+global in-archive byte 0x14024DC94 selects f(+0x20) vs a(+0x24); the min-next
+walker 0x146FA0 scans 20 nodes for the smallest mode-field value strictly
+greater than current (tie -> later array index), NULL terminates -> surplus
+TB_DELETEBUTTON; rebuild gate compares TB_GETBUTTON idCommand vs node id.
+
+Engine-side landed this round: TB_BUTTONSTRUCTSIZE (0x41e) now stores
+cbSize and returns TRUE (was 0 — real comctl refuses adds without it).
+Seeded-values evidence from the live run: all 40 f./a. values consumed
+(40 SUCCESS / 120 .pos/.sep honest misses -> static defaults), View*/Lock
+queried on the Toolbar key (slot 45) not Buttons — seed placement note for
+the next round. Remaining gap: the loop still does not reach 0x444; next
+instrument = breakpoint-equivalent trace at the walker return (0x14706A
+NULL path vs presence advance) to see which gate breaks first.
