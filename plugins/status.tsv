@@ -275,3 +275,8 @@ idman	x86	EXIT rc=0 frames=0	/home/z/my-project/workspace/miniwin-engineering/ev
 winrarinstd	x64	ALIVE_PUMP_AT_TIMEOUT frames=1	/home/z/my-project/workspace/miniwin-engineering/evidence/111r2/winrarinstd/sandbox/Program Files/WinRAR/WinRAR.exe	 rc=124	frames=1 uniq=1 diff=	NEW SW-1412	111r2
 idman	x86	EXIT rc=0 frames=0	/home/z/my-project/workspace/miniwin-engineering/evidence/p12_idm/idman/sandbox/Installers/idman642build2.exe	 rc=0 rc=0 rc=0	frames=0 uniq=0 diff=	SW-1370 SW-1362 SW-1363	p12_idm
 idman	x86	EXIT rc=0 frames=0	/home/z/my-project/workspace/miniwin-engineering/evidence/p13_idm/idman/sandbox/Installers/idman642build2.exe	 rc=0 rc=0 rc=0	frames=0 uniq=0 diff=	SW-1370 SW-1362 SW-1363	p13_idm
+winrar	x64	EXIT rc=0 frames=0	/home/z/my-project/workspace/miniwin-engineering/evidence/p13_winrar/winrar/sandbox/Installers/winrar712.exe	 rc=0 rc=0 rc=0	frames=0 uniq=0 diff=	SW-1361 SW-1360	p13_winrar
+winrar	x64	EXIT rc=0 frames=0	/home/z/my-project/workspace/miniwin-engineering/evidence/p13_rinstd/winrar/sandbox/Installers/winrar712.exe	 rc=0	frames=0 uniq=0 diff=	SW-1361 SW-1360	p13_rinstd
+winrarinstd	x64	ALIVE_PUMP_AT_TIMEOUT frames=1	/home/z/my-project/workspace/miniwin-engineering/evidence/p13_rinstd/winrarinstd/sandbox/Program Files/WinRAR/WinRAR.exe	 rc=124 rc=124 rc=124	frames=1 uniq=1 diff=	NEW SW-1412	p13_rinstd
+winrar	x64	EXIT rc=0 frames=0	/home/z/my-project/workspace/miniwin-engineering/evidence/p13_rinstd2/winrar/sandbox/Installers/winrar712.exe	 rc=0	frames=0 uniq=0 diff=	SW-1361 SW-1360	p13_rinstd2
+winrarinstd	x64	ALIVE_PUMP_AT_TIMEOUT frames=1	/home/z/my-project/workspace/miniwin-engineering/evidence/p13_rinstd2/winrarinstd/sandbox/Program Files/WinRAR/WinRAR.exe	 rc=124	frames=1 uniq=1 diff=	NEW SW-1412	p13_rinstd2
