@@ -1,0 +1,31 @@
+[TRACE] Command line: /home/z/my-project/workspace/miniwin-engineering/artifacts/sweep50/dl/winrar/Rar.exe
+
+[CRASH] Signal 11 at RIP=0x140055fab
+  RAX=0x140000000 RCX=0x140055fab RDX=0x1 R8=0x4 R9=0x7fff84e683f8
+  RSP=0x7fff84e68930 RBP=0x31432c0
+  g_image_base=0x140000000 g_image_size=0xd9000
+  RVA=0x55fab (inside loaded PE)
+  Bytes: ff 90 48 8b cb e8 f3 c3 fa ff ba c8 09 00 00 48 
+  Return addr: 0x314b0a0
+  RSI=0x3149060 RDI=0x0
+  R8=0x4  R9=0x7fff84e683f8 R10=0x0 R11=0x202
+  R12=0x2340000 R13=0x0 R14=0x7fff84e68e50 R15=0x7fff84e68c50
+  [SCAN rsp+088] 0x14009c6d0 <PE>
+  [SCAN rsp+104] 0x14007fed8 <PE>
+  [SCAN rsp+120] 0x14007ff59 <PE>
+  [SCAN rsp+168] 0x2007c97 <LOADER>
+  [SCAN rsp+208] 0x200db00 <LOADER>
+  [SCAN rsp+536] 0x200280c <LOADER>
+  [SCAN rsp+544] 0x20021c0 <LOADER>
+  [SCAN rsp+1992] 0x2006550 <LOADER>
+  [SCAN rsp+2144] 0x2006550 <LOADER>
+  [SCAN rsp+2184] 0x2008da0 <LOADER>
+  [SCAN rsp+2216] 0x2008dc1 <LOADER>
+  [SCAN rsp+2696] 0x2000040 <LOADER>
+  [SCAN rsp+2776] 0x2008da0 <LOADER>
+  Backtrace (via stack walking):
+    [0] RIP=0x140055fab RVA=0x55fab
+      [RSP+0] = 0x314b0a0 (return addr?)
+    [1] RIP=0x314b0a0 (outside PE, possible shared lib)
+    [2] RIP=0x314b0a0 (outside PE, possible shared lib)
+    [3] RIP=0x314b0a0 (outside PE, possible shared lib)

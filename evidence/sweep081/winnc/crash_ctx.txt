@@ -1,0 +1,11 @@
+[TRACE] Command line: artifacts/sweep081/dl/winnc11.setup.exe
+
+[CRASH] Signal 11 at RIP=0x20dbf5f
+  si_addr=0x0 si_code=1 (1=MAPERR 2=ACCERR)
+  RAX=0x2000000 RCX=0x0 RDX=0x4072c3 R8=0x4072c4 R9=0x2000000
+  RSP=0x7ffea6463eb0 RBP=0x0
+  g_image_base=(nil) g_image_size=0x0
+  [PE32] guest EIP=0x004072c4 ESP=0x3fefef48 EBP=0x3fefef5c steps=551
+  [PE32] eip-hist: 00407b1e 00407b21 00407b24 00407b26 00407b29 00407b2a 00407b2b 00407b2c 004a7023 004077ac 004077b3 004077bf 004a7028 004072d0 004072bc 004072c2 
+  [PE32] api32 ring (last 3 of 3):
+  [PE32]   #16 GetModuleHandleW esp=3fefef88 ret=0040fd4d arity=4

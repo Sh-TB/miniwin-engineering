@@ -1,0 +1,51 @@
+[TRACE] Command line: artifacts/sweep081/dl/winnc11.setup.exe
+[PE32-SEH] RtlUnwind target=3fefef7c ip=00408e78 er=11140000 er.code=0eedfade
+
+[CRASH] Signal 11 at RIP=0x20dfb5c
+  si_addr=0x8 si_code=1 (1=MAPERR 2=ACCERR)
+  RAX=0x1ffffff RCX=0x7 RDX=0x8 R8=0x408e8f R9=0x2000000
+  RSP=0x7ffe5ce3dce0 RBP=0x0
+  g_image_base=(nil) g_image_size=0x0
+  [PE32] guest EIP=0x00408e90 ESP=0x3fefef7c EBP=0x3fefeffc steps=14556
+  [PE32] eip-hist: 0040f7d0 0040f7d6 0040f7db 0040f7dd 0040f805 0040f806 0040f6fc 00a0039e 00a003a3 00a00000 0040f80b 0040f80d 0040f80f 00408e81 00408e87 00408e8d 
+  [PE32] api32 ring (last 8 of 41):
+  [PE32]   #13 RtlUnwind esp=3fefef2c ret=00408e78 arity=16
+  [PE32]   #91 TlsGetValue esp=3fefeee4 ret=0040f80b arity=4
+  [PE32]   #99 LocalAlloc esp=3fefeed4 ret=0040f73c arity=8
+  [PE32]   #95 TlsSetValue esp=3fefeed8 ret=0040f78a arity=8
+  [PE32]   #91 TlsGetValue esp=3fefeee4 ret=0040f7fa arity=4
+  [PE32]   #2 CloseHandle esp=3fefeed0 ret=0049d302 arity=4
+  [PE32]   #91 TlsGetValue esp=3fefeee0 ret=0040f80b arity=4
+  [PE32]   #91 TlsGetValue esp=3fefef78 ret=0040f80b arity=4
+  [PE32] Bytes@0x0040f80b: 85 c0 74 db c3 b8 30 9c 4a 00 e8 02 e8 ff ff c3
+  [PE32] Bytes@0x0040f80d: 74 db c3 b8 30 9c 4a 00 e8 02 e8 ff ff c3 90 c3
+  [PE32] Bytes@0x0040f80f: c3 b8 30 9c 4a 00 e8 02 e8 ff ff c3 90 c3 8d 40
+  [PE32] Bytes@0x00408e81: ff b0 00 00 00 00 89 a0 00 00 00 00 8b 6f 08 8b
+  [PE32] Bytes@0x00408e87: 89 a0 00 00 00 00 8b 6f 08 8b 5f 04 c7 47 04 a4
+  [PE32] Bytes@0x00408e8d: 8b 6f 08 8b 5f 04 c7 47 04 a4 8e 40 00 83 c3 05
+  [PE32] Bytes@0x00408e90: 8b 5f 04 c7 47 04 a4 8e 40 00 83 c3 05 e8 66 fe
+  [PE32] @ESI=0 -> NULL
+  [PE32] @EDI=0 -> NULL
+  [PE32] @EBX=0x3fefef70: 7c ef ef 3f 0b f8 40 00
+  [PE32] @EDX=0x3fefef70: 7c ef ef 3f 0b f8 40 00
+  [PE32] @EBP=0x3fefeffc: 00 f0 ef 3f
+  (NOT inside loaded PE)
+  [RIP-MAP] 0x20dfb5c in 0x2006000-0x20fa000 r-xp /home/z/my-project/workspace/miniwin-engineering/minwin_loader
+  Bytes: 67 8b 02 64 89 04 9d a0 fa ff ff e9 d4 e0 ff ff 
+  RSI=0x1 RDI=0x1ffffff
+  R8=0x408e8f  R9=0x2000000 R10=0x0 R11=0x202
+  R12=0x0 R13=0x0 R14=0x0 R15=0x4a1642
+  [STACKTOP raw] 0000000000000054 00007effb55d2030 0000000500000001 0000000800000007 0000000000000000 00007effb5478419 0000000004d752c0 ffffffffffffffff 00000000021d8260 000000000212ad90 0000000000000030 0000000000000000
+  [SCAN rsp+264] 0x200e5f0 <LOADER>
+  [SCAN rsp+1496] 0x2007e0e <LOADER>
+  [SCAN rsp+1640] 0x2000002 <LOADER>
+  [SCAN rsp+1768] 0x2002b46 <LOADER>
+  [SCAN rsp+1776] 0x20023a0 <LOADER>
+  [SCAN rsp+3224] 0x2007670 <LOADER>
+  [SCAN rsp+3376] 0x2007670 <LOADER>
+  [SCAN rsp+3416] 0x2008490 <LOADER>
+  [SCAN rsp+3448] 0x20084b1 <LOADER>
+  [SCAN rsp+3920] 0x2000040 <LOADER>
+  [SCAN rsp+4000] 0x2008490 <LOADER>
+  Backtrace (via stack walking):
+    [0] RIP=0x20dfb5c (outside PE, possible shared lib)

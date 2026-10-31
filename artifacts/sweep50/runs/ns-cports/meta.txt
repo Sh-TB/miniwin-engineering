@@ -1,5 +1,0 @@
-exe=cports/cports.exe
-sha256=8f16759318ad9a708dd787891de737a89063142b573d4199aeb965edb98f902e
-timeout=10s
-args=none
-date_utc=2026-10-17T18:39:37Z

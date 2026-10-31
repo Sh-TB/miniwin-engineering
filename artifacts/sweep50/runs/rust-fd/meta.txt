@@ -1,5 +1,0 @@
-exe=fd/fd.exe
-sha256=d67d27a8e375ed7e9bca2b506a9dd5082bc24547aeba908b863f6f8b8ab0c3b9
-timeout=10s
-args=none
-date_utc=2026-10-17T18:39:38Z

@@ -1,0 +1,11 @@
+[TRACE] Command line: artifacts/sweep50/dl/adexplorer64/adexplorer64.exe
+[WARN]   unresolved: NetUserGetLocalGroups
+[WARN]   unresolved: NetUserGetGroups
+[WARN]   unresolved: UuidFromStringW
+[WARN]   unresolved: MenuItemFromPoint
+[WARN]   unresolved: ConvertSecurityDescriptorToStringSecurityDescriptorW
+[WARN]   unresolved: GetSecurityDescriptorOwner
+[WARN]   unresolved: GetSecurityDescriptorGroup
+[WARN]   unresolved: GetSecurityDescriptorLength
+[WARN]   unresolved: IIDFromString
+[WARN] 23 imports unresolved

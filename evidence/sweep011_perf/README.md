@@ -1,7 +1,6 @@
 # SWEEP-011 — REA-powered speed: program wall time + debugger speed (2026-10-18)
 
-User directive: «پس از ابزارهای rea نهایت استفاده رو بکن برای کمتر شدن زمان اجرا
-برنامه‌ها، سرعت دیباگر بهتر بشه» — maximize the use of the REA toolchain to
+User directive: (make maximum use of the REA tooling to cut program run time and give the debugger better speed) — maximize the use of the REA toolchain to
 reduce program execution time and make the debugger faster.
 
 ## Measured starting point (13-program battery, 3x each, engine df28de0f)

@@ -1,0 +1,11 @@
+autoruns64	rc=139	frames=0	msgbox=0	steps=0
+bginfo64	rc=0	frames=2	msgbox=0	steps=0
+cports	rc=0	frames=0	msgbox=0	steps=0
+diskmon64	rc=0	frames=0	msgbox=0	steps=0
+pageant	rc=124	frames=0	msgbox=0	steps=0
+procexp64	rc=124	frames=0	msgbox=0	steps=0
+procmon64	rc=124	frames=0	msgbox=0	steps=0
+produkey	rc=124	frames=0	msgbox=0	steps=0
+rammap64	rc=139	frames=0	msgbox=1	steps=0
+searchmyfiles	rc=124	frames=0	msgbox=0	steps=0
+zoomit64	rc=139	frames=0	msgbox=0	steps=0

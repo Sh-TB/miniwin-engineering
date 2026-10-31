@@ -1,0 +1,15 @@
+DefSubclassProc
+DragAcceptFiles
+GetCPInfoExW
+GetDpiForWindow
+GetFileTitleW
+IsTextUnicode
+MonitorFromRect
+SetWindowSubclass
+ShellAboutW
+StrCmpNIW
+StrCmpNW
+StrRStrIW
+StrStrW
+lstrcatW
+wnsprintfW

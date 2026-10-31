@@ -1,0 +1,1 @@
+[TRACE] Command line: artifacts/sweep050/guests/mspaint/mspaint.exe

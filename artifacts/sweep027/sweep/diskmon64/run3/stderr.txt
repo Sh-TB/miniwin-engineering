@@ -1,7 +1,0 @@
-[TRACE] Command line: /home/z/my-project/workspace/miniwin-engineering/artifacts/sweep50/dl/diskmon64/Diskmon64.exe
-[WARN]   unresolved: lstrcatA
-[WARN]   unresolved: WinHelpA
-[WARN]   unresolved: PrintDlgA
-[WARN]   unresolved: LookupAccountSidA
-[WARN]   unresolved: LookupPrivilegeValueA
-[WARN] 12 imports unresolved

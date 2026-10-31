@@ -1,5 +1,0 @@
-exe=bombardier/bombardier-windows-amd64.exe
-sha256=715b733157f1bc79fe788d2fd335a2997c753db9c1f8a8ede9b2306042caa4b7
-timeout=10s
-args=none
-date_utc=2026-10-17T18:39:37Z

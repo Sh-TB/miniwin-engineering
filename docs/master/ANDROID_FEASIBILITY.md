@@ -1,8 +1,8 @@
 # Android Feasibility Study — can MiniWin run Windows PE on Android?
 
 **Status:** ACTIVE (ADR-013). **Created:** 2026-10-17. **Driver:** user directive —
-"ببین میشه تو اندروید اجراشون کرد و چه پیش‌نیازهای نصبی لازم دارن؛ شاید راه‌های
-میانبری باشه؛ گیت‌هاب رو عمیق بررسی کن" — answered with a deep GitHub survey.
+(check whether they can run on Android and what install prerequisites they need;
+maybe there are shortcuts; survey GitHub deeply) — answered with a deep GitHub survey.
 
 ---
 
@@ -33,7 +33,7 @@ engine, and how much glue?*
 
 ## 3. The three viable paths
 
-### Path A — راه میانبر (the shortcut, zero porting): Termux → proot-distro → Debian x86_64 + qemu-user-x86_64 → MiniWin unmodified
+### Path A — the shortcut (the shortcut, zero porting): Termux → proot-distro → Debian x86_64 + qemu-user-x86_64 → MiniWin unmodified
 MiniWin already builds and runs on Debian x86_64; inside an emulated x86_64
 Debian it runs *unchanged*. Guest PE code executes under qemu's TCG JIT, which
 itself runs as ARM64 code on the phone. Two emulation layers (TCG + native),

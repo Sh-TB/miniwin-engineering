@@ -1,0 +1,2034 @@
+{
+  "trace": [
+[Tfcc0] [API] PE Loader: file=/home/z/my-project/workspace/miniwin-engineering/artifacts/sweep50/dl/diskmon64/Diskmon64.exe size=634760
+[Tfcc0] [API] PE Loader: ImageBase=0x140000000 EP=0xe538 SizeOfImage=0xa2000 Sections=7
+[Tfcc0] [API] PE Loader: Mapped at 0x140000000 (forced via MAP_FIXED)
+[Tfcc0] [API] KUSD: mapped 0x7ffe0000 (root C:\WINDOWS, ver 5.2, qpc 1e9)
+[Tfcc0] [API] Section [0] .text    VA=0x00001000 VS=0x00071150 Raw=0x00071200 Ch=0x60000020
+[Tfcc0] [API] Section [1] .rdata   VA=0x00073000 VS=0x0001c930 Raw=0x0001ca00 Ch=0x40000040
+[Tfcc0] [API] Section [2] .data    VA=0x00090000 VS=0x00006f08 Raw=0x00001200 Ch=0xc0000040
+[Tfcc0] [API] Section [3] .pdata   VA=0x00097000 VS=0x00005f04 Raw=0x00006000 Ch=0x40000040
+[Tfcc0] [API] Section [4] _RDATA   VA=0x0009d000 VS=0x000000f4 Raw=0x00000200 Ch=0x40000040
+[Tfcc0] [API] Section [5] .rsrc    VA=0x0009e000 VS=0x00002d18 Raw=0x00002e00 Ch=0x40000040
+[Tfcc0] [API] Section [6] .reloc   VA=0x000a1000 VS=0x00000890 Raw=0x00000a00 Ch=0x42000040
+[Tfcc0] [API] Import Directory: RVA=0x8de64 Size=0xdc
+[Tfcc0] [API] Import DLL: COMCTL32.dll (IAT RVA=0x73070, ILT RVA=0x8dfb0)
+[Tfcc0] [API]   [0] Ordinal 17 -> InitCommonControls (fixed ordinal)
+[Tfcc0] [API]   [0] InitCommonControls -> 0x206fde0
+[Tfcc0] [API]   [1] CreateToolbarEx -> 0x20ce260
+[Tfcc0] [API] Import DLL: VERSION.dll (IAT RVA=0x73828, ILT RVA=0x8e768)
+[Tfcc0] [API]   [0] GetFileVersionInfoA -> 0x20790a0
+[Tfcc0] [API]   [1] GetFileVersionInfoSizeA -> 0x20c3260
+[Tfcc0] [API]   [2] VerQueryValueA -> 0x2084cf0
+[Tfcc0] [API] Import DLL: KERNEL32.dll (IAT RVA=0x73158, ILT RVA=0x8e098)
+[Tfcc0] [API]   [0] ReadProcessMemory -> 0x208b0f0
+[Tfcc0] [API]   [1] GetUserDefaultLangID -> 0x2089100
+[Tfcc0] [API]   [2] CreateFileA -> 0x20a4cb0
+[Tfcc0] [API]   [3] QueryPerformanceFrequency -> 0x2037b30
+[Tfcc0] [API]   [4] EnterCriticalSection -> 0x208ef90
+[Tfcc0] [API]   [5] LeaveCriticalSection -> 0x2068fa0
+[Tfcc0] [API]   [6] lstrlenW -> 0x20ad180
+[Tfcc0] [API]   [7] InitializeCriticalSection -> 0x2076ec0
+[Tfcc0] [API]   [8] MultiByteToWideChar -> 0x204cbf0
+[Tfcc0] [API]   [9] WideCharToMultiByte -> 0x207ecf0
+[Tfcc0] [API]   [10] lstrcpynA -> 0x2024680
+[Tfcc0] [API]   [11] SetEndOfFile -> 0x20417b0
+[Tfcc0] [API]   [12] WriteConsoleW -> 0x201a770
+[Tfcc0] [API]   [13] ReadFile -> 0x20590a0
+[Tfcc0] [API]   [14] HeapReAlloc -> 0x20d1db0
+[Tfcc0] [API]   [15] HeapSize -> 0x20ae760
+[Tfcc0] [API]   [16] SetFilePointerEx -> 0x205a450
+[Tfcc0] [API]   [17] GetFileSizeEx -> 0x20418b0
+[Tfcc0] [API]   [18] GetConsoleOutputCP -> 0x2089200
+[Tfcc0] [API]   [19] FlushFileBuffers -> 0x2041bb0
+[Tfcc0] [API]   [20] SetConsoleCtrlHandler -> 0x200a4c0
+[Tfcc0] [API]   [21] GetStringTypeW -> 0x207eaa0
+[Tfcc0] [API]   [22] SetStdHandle -> 0x2088480
+[Tfcc0] [API]   [23] SetEnvironmentVariableW -> 0x20c5720
+[Tfcc0] [API]   [24] FreeEnvironmentStringsW -> 0x206d5e0
+[Tfcc0] [API]   [25] GetEnvironmentStringsW -> 0x207f360
+[Tfcc0] [API]   [26] GetCommandLineA -> 0x207d000
+[Tfcc0] [API]   [27] GetCPInfo -> 0x2036ac0
+[Tfcc0] [API]   [28] GetOEMCP -> 0x200a300
+[Tfcc0] [API]   [29] GetACP -> 0x200a2f0
+[Tfcc0] [API]   [30] IsValidCodePage -> 0x200a310
+[Tfcc0] [API]   [31] FindNextFileW -> 0x2089d90
+[Tfcc0] [API]   [32] FindFirstFileExW -> 0x20ad810
+[Tfcc0] [API]   [33] FindClose -> 0x2014270
+[Tfcc0] [API]   [34] OutputDebugStringW -> 0x20b0bf0
+[Tfcc0] [API]   [35] ReadConsoleW -> 0x20595d0
+[Tfcc0] [API]   [36] PeekConsoleInputA -> 0x200a4f0
+[Tfcc0] [API]   [37] ReadConsoleInputW -> 0x2088d90
+[Tfcc0] [API]   [38] GetNumberOfConsoleInputEvents -> 0x200a4d0
+[Tfcc0] [API]   [39] SetConsoleMode -> 0x200a480
+[Tfcc0] [API]   [40] GetConsoleMode -> 0x2042ed0
+[Tfcc0] [API]   [41] CreateFileW -> 0x20dab60
+[Tfcc0] [API]   [42] EnumSystemLocalesW -> 0x200a370
+[Tfcc0] [API]   [43] GetUserDefaultLCID -> 0x200a350
+[Tfcc0] [API]   [44] IsValidLocale -> 0x200a340
+[Tfcc0] [API]   [45] GetLocaleInfoW -> 0x20b9c20
+[Tfcc0] [API]   [46] LCMapStringW -> 0x20413f0
+[Tfcc0] [API]   [47] CompareStringW -> 0x201bd60
+[Tfcc0] [API]   [48] GetTimeFormatW -> 0x2042150
+[Tfcc0] [API]   [49] GetDateFormatW -> 0x2041fe0
+[Tfcc0] [API]   [50] GetCurrentThread -> 0x20088b0
+[Tfcc0] [API]   [51] GetModuleFileNameW -> 0x20b63e0
+[Tfcc0] [API]   [52] WriteFile -> 0x2059ab0
+[Tfcc0] [API]   [53] FreeLibraryAndExitThread -> 0x206d4e0
+[Tfcc0] [API]   [54] ResumeThread -> 0x206beb0
+[Tfcc0] [API]   [55] ExitThread -> 0x20573b0
+[Tfcc0] [API]   [56] CreateThread -> 0x2069560
+[Tfcc0] [API]   [57] GetConsoleCP -> 0x200a470
+[Tfcc0] [API]   [58] GetModuleHandleExW -> 0x20cf1c0
+[Tfcc0] [API]   [59] ExitProcess -> 0x210cbf0
+[Tfcc0] [API]   [60] RtlPcToFileHeader -> 0x2083cc0
+[Tfcc0] [API]   [61] RaiseException -> 0x2008d60
+[Tfcc0] [API]   [62] EncodePointer -> 0x201ab20
+[Tfcc0] [API]   [63] LoadLibraryExW -> 0x20c7050
+[Tfcc0] [API]   [64] TlsFree -> 0x200aff0
+[Tfcc0] [API]   [65] TlsSetValue -> 0x205e3c0
+[Tfcc0] [API]   [66] TlsGetValue -> 0x2028780
+[Tfcc0] [API]   [67] TlsAlloc -> 0x2036000
+[Tfcc0] [API]   [68] InitializeCriticalSectionAndSpinCount -> 0x208c190
+[Tfcc0] [API]   [69] DeleteCriticalSection -> 0x2076ee0
+[Tfcc0] [API]   [70] InterlockedFlushSList -> 0x200a250
+[Tfcc0] [API]   [71] InterlockedPushEntrySList -> 0x200a230
+[Tfcc0] [API]   [72] RtlUnwindEx -> 0x209cdb0
+[Tfcc0] [API]   [73] GetModuleHandleW -> 0x203c420
+[Tfcc0] [API]   [74] GetStartupInfoW -> 0x2038340
+[Tfcc0] [API]   [75] IsDebuggerPresent -> 0x206bd50
+[Tfcc0] [API]   [76] InitializeSListHead -> 0x200a220
+[Tfcc0] [API]   [77] GetSystemTimeAsFileTime -> 0x204c5b0
+[Tfcc0] [API]   [78] GetCurrentThreadId -> 0x20088c0
+[Tfcc0] [API]   [79] GetCurrentProcessId -> 0x20088a0
+[Tfcc0] [API]   [80] QueryPerformanceCounter -> 0x204ca70
+[Tfcc0] [API]   [81] IsProcessorFeaturePresent -> 0x200a1c0
+[Tfcc0] [API]   [82] TerminateProcess -> 0x209ef50
+[Tfcc0] [API]   [83] SetUnhandledExceptionFilter -> 0x2028620
+[Tfcc0] [API]   [84] UnhandledExceptionFilter -> 0x206f700
+[Tfcc0] [API]   [85] RtlVirtualUnwind -> 0x2097c30
+[Tfcc0] [API]   [86] RtlLookupFunctionEntry -> 0x20282e0
+[Tfcc0] [API]   [87] Sleep -> 0x204ea50
+[Tfcc0] [API]   [88] GetLastError -> 0x2027cc0
+[Tfcc0] [API]   [89] CloseHandle -> 0x20a6fa0
+[Tfcc0] [API]   [90] lstrlenA -> 0x20c32d0
+[Tfcc0] [API]   [91] lstrcatA -> 0x20784e0
+[Tfcc0] [API]   [92] lstrcpyA -> 0x20b77a0
+[Tfcc0] [API]   [93] GlobalLock -> 0x208ca00
+[Tfcc0] [API]   [94] GlobalUnlock -> 0x2088990
+[Tfcc0] [API]   [95] GlobalReAlloc -> 0x20d85d0
+[Tfcc0] [API]   [96] GlobalAlloc -> 0x2050dd0
+[Tfcc0] [API]   [97] GetTickCount -> 0x204c8e0
+[Tfcc0] [API]   [98] GetProcessHeap -> 0x2009a90
+[Tfcc0] [API]   [99] HeapFree -> 0x20cfa30
+[Tfcc0] [API]   [100] HeapAlloc -> 0x20508f0
+[Tfcc0] [API]   [101] GetTimeFormatA -> 0x2080d20
+[Tfcc0] [API]   [102] SystemTimeToFileTime -> 0x2080780
+[Tfcc0] [API]   [103] FileTimeToSystemTime -> 0x2080460
+[Tfcc0] [API]   [104] VerifyVersionInfoW -> 0x200b080
+[Tfcc0] [API]   [105] FormatMessageA -> 0x2044ae0
+[Tfcc0] [API]   [106] OpenProcess -> 0x2043070
+[Tfcc0] [API]   [107] LoadLibraryA -> 0x20a2000
+[Tfcc0] [API]   [108] FreeLibrary -> 0x206d380
+[Tfcc0] [API]   [109] GetSystemTime -> 0x2058eb0
+[Tfcc0] [API]   [110] GetCurrentProcess -> 0x2008890
+[Tfcc0] [API]   [111] FileTimeToLocalFileTime -> 0x208a760
+[Tfcc0] [API]   [112] VerSetConditionMask -> 0x200b070
+[Tfcc0] [API]   [113] LocalFree -> 0x20d1490
+[Tfcc0] [API]   [114] LocalAlloc -> 0x20510d0
+[Tfcc0] [API]   [115] GetProcAddress -> 0x208b630
+[Tfcc0] [API]   [116] GetModuleHandleA -> 0x203c1f0
+[Tfcc0] [API]   [117] GetFileType -> 0x201c910
+[Tfcc0] [API]   [118] GetCommandLineW -> 0x207d4c0
+[Tfcc0] [API]   [119] GetStdHandle -> 0x20f5950
+[Tfcc0] [API]   [120] LoadLibraryExA -> 0x20a22c0
+[Tfcc0] [API]   [121] GetVersionExA -> 0x2089ea0
+[Tfcc0] [API]   [122] SetLastError -> 0x203f490
+[Tfcc0] [API]   [123] RtlCaptureContext -> 0x207c690
+[Tfcc0] [API]   [124] RtlUnwind -> 0x209dea0
+[Tfcc0] [API] Import DLL: USER32.dll (IAT RVA=0x735d0, ILT RVA=0x8e510)
+[Tfcc0] [API]   [0] EndDialog -> 0x2062540
+[Tfcc0] [API]   [1] GetDlgItem -> 0x204ac10
+[Tfcc0] [API]   [2] SendMessageA -> 0x2112010
+[Tfcc0] [API]   [3] SetWindowTextA -> 0x20d4780
+[Tfcc0] [API]   [4] DialogBoxIndirectParamA -> 0x210f430
+[Tfcc0] [API]   [5] SetCursor -> 0x2088d00
+[Tfcc0] [API]   [6] GetSysColorBrush -> 0x202ec40
+[Tfcc0] [API]   [7] IsZoomed -> 0x20887c0
+[Tfcc0] [API]   [8] IsIconic -> 0x20887b0
+[Tfcc0] [API]   [9] DestroyIcon -> 0x2078020
+[Tfcc0] [API]   [10] SetWindowLongPtrA -> 0x20d5230
+[Tfcc0] [API]   [11] ScreenToClient -> 0x20884b0
+[Tfcc0] [API]   [12] ClientToScreen -> 0x20884a0
+[Tfcc0] [API]   [13] GetClientRect -> 0x20b9fa0
+[Tfcc0] [API]   [14] DrawTextA -> 0x20d10f0
+[Tfcc0] [API]   [15] GetFocus -> 0x2031230
+[Tfcc0] [API]   [16] EmptyClipboard -> 0x206dcc0
+[Tfcc0] [API]   [17] SetClipboardData -> 0x202b0d0
+[Tfcc0] [API]   [18] CloseClipboard -> 0x203f920
+[Tfcc0] [API]   [19] OpenClipboard -> 0x2060d10
+[Tfcc0] [API]   [20] CallWindowProcA -> 0x2112f20
+[Tfcc0] [API]   [21] IsWindowEnabled -> 0x20a0190
+[Tfcc0] [API]   [22] EnableWindow -> 0x20aec30
+[Tfcc0] [API]   [23] IsDlgButtonChecked -> 0x20a8a50
+[Tfcc0] [API]   [24] CheckRadioButton -> 0x209af70
+[Tfcc0] [API]   [25] CheckDlgButton -> 0x20b0660
+[Tfcc0] [API]   [26] GetDlgItemTextA -> 0x20c2cb0
+[Tfcc0] [API]   [27] SetDlgItemTextA -> 0x20d4ad0
+[Tfcc0] [API]   [28] WinHelpA -> 0x200e610
+[Tfcc0] [API]   [29] IsDialogMessageA -> 0x20881d0
+[Tfcc0] [API]   [30] LoadIconA -> 0x20cb430
+[Tfcc0] [API]   [31] GetCursorPos -> 0x2070aa0
+[Tfcc0] [API]   [32] MessageBoxA -> 0x20c02a0
+[Tfcc0] [API]   [33] InvalidateRgn -> 0x2061ed0
+[Tfcc0] [API]   [34] ReleaseDC -> 0x200b760
+[Tfcc0] [API]   [35] GetDC -> 0x200b750
+[Tfcc0] [API]   [36] UpdateWindow -> 0x210d7a0
+[Tfcc0] [API]   [37] TrackPopupMenu -> 0x207ae10
+[Tfcc0] [API]   [38] GetSubMenu -> 0x209b750
+[Tfcc0] [API]   [39] EnableMenuItem -> 0x20633b0
+[Tfcc0] [API]   [40] CheckMenuItem -> 0x20631f0
+[Tfcc0] [API]   [41] DestroyMenu -> 0x20a6db0
+[Tfcc0] [API]   [42] GetMenu -> 0x202f440
+[Tfcc0] [API]   [43] LoadMenuA -> 0x20c8af0
+[Tfcc0] [API]   [44] GetSystemMetrics -> 0x2009f80
+[Tfcc0] [API]   [45] TranslateAcceleratorA -> 0x2111fd0
+[Tfcc0] [API]   [46] LoadAcceleratorsA -> 0x20c8c20
+[Tfcc0] [API]   [47] KillTimer -> 0x200b790
+[Tfcc0] [API]   [48] SetTimer -> 0x2092cd0
+[Tfcc0] [API]   [49] ReleaseCapture -> 0x2072ac0
+[Tfcc0] [API]   [50] SetCapture -> 0x2031510
+[Tfcc0] [API]   [51] SetFocus -> 0x202f2d0
+[Tfcc0] [API]   [52] DialogBoxParamA -> 0x210f750
+[Tfcc0] [API]   [53] SetWindowPos -> 0x20d5cd0
+[Tfcc0] [API]   [54] ShowWindow -> 0x20d6130
+[Tfcc0] [API]   [55] DestroyWindow -> 0x20b8b20
+[Tfcc0] [API]   [56] CreateWindowExA -> 0x20f7030
+[Tfcc0] [API]   [57] RegisterClassA -> 0x20f9120
+[Tfcc0] [API]   [58] PostQuitMessage -> 0x2061be0
+[Tfcc0] [API]   [59] DefWindowProcA -> 0x20cf1a0
+[Tfcc0] [API]   [60] PostMessageA -> 0x205b840
+[Tfcc0] [API]   [61] DispatchMessageA -> 0x2112d80
+[Tfcc0] [API]   [62] TranslateMessage -> 0x202c1b0
+[Tfcc0] [API]   [63] GetMessageA -> 0x20e8bd0
+[Tfcc0] [API]   [64] RegisterWindowMessageA -> 0x202fce0
+[Tfcc0] [API]   [65] LoadStringA -> 0x20c9960
+[Tfcc0] [API]   [66] GetParent -> 0x20af8d0
+[Tfcc0] [API]   [67] GetSysColor -> 0x202c800
+[Tfcc0] [API]   [68] ChildWindowFromPoint -> 0x200c590
+[Tfcc0] [API]   [69] GetWindowRect -> 0x20b9340
+[Tfcc0] [API]   [70] InvalidateRect -> 0x2061d50
+[Tfcc0] [API]   [71] MoveWindow -> 0x20d5950
+[Tfcc0] [API]   [72] LoadCursorA -> 0x200b780
+[Tfcc0] [API]   [73] InflateRect -> 0x2009ff0
+[Tfcc0] [API] Import DLL: GDI32.dll (IAT RVA=0x730b8, ILT RVA=0x8dff8)
+[Tfcc0] [API]   [0] ExtTextOutA -> 0x20cad60
+[Tfcc0] [API]   [1] GetTextExtentPoint32A -> 0x2061ef0
+[Tfcc0] [API]   [2] SetBkColor -> 0x202d8a0
+[Tfcc0] [API]   [3] GetTextMetricsA -> 0x2071980
+[Tfcc0] [API]   [4] DeleteObject -> 0x203d2f0
+[Tfcc0] [API]   [5] CreateSolidBrush -> 0x202cc70
+[Tfcc0] [API]   [6] CreateCompatibleDC -> 0x2039250
+[Tfcc0] [API]   [7] GetObjectA -> 0x203edf0
+[Tfcc0] [API]   [8] SetTextColor -> 0x202d720
+[Tfcc0] [API]   [9] SetBkMode -> 0x2062270
+[Tfcc0] [API]   [10] SelectObject -> 0x202d1c0
+[Tfcc0] [API]   [11] GetStockObject -> 0x202d060
+[Tfcc0] [API]   [12] CreateFontIndirectA -> 0x2018110
+[Tfcc0] [API]   [13] EndPage -> 0x20889b0
+[Tfcc0] [API]   [14] StartPage -> 0x206db60
+[Tfcc0] [API]   [15] EndDoc -> 0x20889c0
+[Tfcc0] [API]   [16] StartDocA -> 0x206da00
+[Tfcc0] [API]   [17] SetMapMode -> 0x2088400
+[Tfcc0] [API]   [18] GetDeviceCaps -> 0x202da20
+[Tfcc0] [API] Import DLL: COMDLG32.dll (IAT RVA=0x73088, ILT RVA=0x8dfc8)
+[Tfcc0] [API]   [0] FindTextA -> 0x206e680
+[Tfcc0] [API]   [1] GetSaveFileNameA -> 0x206e100
+[Tfcc0] [API]   [2] ChooseColorA -> 0x206e3c0
+[Tfcc0] [API]   [3] ChooseFontA -> 0x20887d0
+[Tfcc0] [API]   [4] PrintDlgA -> 0x200e620
+[Tfcc0] [API] Import DLL: ADVAPI32.dll (IAT RVA=0x73000, ILT RVA=0x8df40)
+[Tfcc0] [API]   [0] RegQueryValueExW -> 0x211b6a0
+[Tfcc0] [API]   [1] RegOpenKeyA -> 0x20e3240
+[Tfcc0] [API]   [2] RegCloseKey -> 0x200a660
+[Tfcc0] [API]   [3] RegOpenKeyExA -> 0x20e2fe0
+[Tfcc0] [API]   [4] LookupAccountSidW -> 0x207ae40
+[Tfcc0] [API]   [5] LookupAccountSidA -> 0x2014130
+[Tfcc0] [API]   [6] GetTokenInformation -> 0x2046b60
+[Tfcc0] [API]   [7] LookupPrivilegeValueA -> 0x206af80
+[Tfcc0] [API]   [8] AdjustTokenPrivileges -> 0x203fa70
+[Tfcc0] [API]   [9] OpenProcessToken -> 0x203f9f0
+[Tfcc0] [API]   [10] RegSetValueExA -> 0x20e6160
+[Tfcc0] [API]   [11] RegQueryValueExA -> 0x211a890
+[Tfcc0] [API]   [12] RegCreateKeyA -> 0x20e3a60
+[Tfcc0] [API] Import DLL: SHELL32.dll (IAT RVA=0x735a8, ILT RVA=0x8e4e8)
+[Tfcc0] [API]   [0] ShellExecuteA -> 0x205ad40
+[Tfcc0] [API]   [1] CommandLineToArgvW -> 0x208f870
+[Tfcc0] [API]   [2] SHGetFileInfoA -> 0x20d9f30
+[Tfcc0] [API]   [3] Shell_NotifyIconA -> 0x2064dc0
+[Tfcc0] [API] Import DLL: ole32.dll (IAT RVA=0x73848, ILT RVA=0x8e788)
+[Tfcc0] [API]   [0] CoCreateInstance -> 0x20639f0
+[Tfcc0] [API]   [1] CoSetProxyBlanket -> 0x200a1b0
+[Tfcc0] [API]   [2] CoInitialize -> 0x206ff40
+[Tfcc0] [API] Import DLL: OLEAUT32.dll (IAT RVA=0x73548, ILT RVA=0x8e488)
+[Tfcc0] [API]   [0] Ordinal 12 -> VariantChangeType (fixed ordinal)
+[Tfcc0] [API]   [0] VariantChangeType -> 0x200f170
+[Tfcc0] [API]   [1] Ordinal 9 -> VariantClear (fixed ordinal)
+[Tfcc0] [API]   [1] VariantClear -> 0x2077cb0
+[Tfcc0] [API]   [2] Ordinal 8 -> VariantInit (fixed ordinal)
+[Tfcc0] [API]   [2] VariantInit -> 0x2072110
+[Tfcc0] [API]   [3] Ordinal 25 -> SafeArrayPutElement (fixed ordinal)
+[Tfcc0] [API]   [3] SafeArrayPutElement -> 0x203f030
+[Tfcc0] [API]   [4] Ordinal 24 -> SafeArrayUnaccessData (fixed ordinal)
+[Tfcc0] [API]   [4] SafeArrayUnaccessData -> 0x208ec80
+[Tfcc0] [API]   [5] Ordinal 23 -> SafeArrayAccessData (fixed ordinal)
+[Tfcc0] [API]   [5] SafeArrayAccessData -> 0x208f130
+[Tfcc0] [API]   [6] Ordinal 20 -> SafeArrayGetLBound (fixed ordinal)
+[Tfcc0] [API]   [6] SafeArrayGetLBound -> 0x2090230
+[Tfcc0] [API]   [7] Ordinal 19 -> SafeArrayGetUBound (fixed ordinal)
+[Tfcc0] [API]   [7] SafeArrayGetUBound -> 0x20902a0
+[Tfcc0] [API]   [8] Ordinal 16 -> SafeArrayCopy (fixed ordinal)
+[Tfcc0] [API]   [8] SafeArrayCopy -> 0x20150a0
+[Tfcc0] [API]   [9] Ordinal 6 -> SysFreeString (fixed ordinal)
+[Tfcc0] [API]   [9] SysFreeString -> 0x2077ae0
+[Tfcc0] [API]   [10] Ordinal 2 -> SysAllocString (fixed ordinal)
+[Tfcc0] [API]   [10] SysAllocString -> 0x208a110
+[Tfcc0] [API] Import resolution: 259 resolved, 0 unresolved (total 259)
+[Tfcc0] [API] Exception: .pdata RVA=0x97000 Size=0x5f04 Entries=2027
+[Tfcc0] [API] [API-005] EH hacks DISABLED (default) (MINWIN_EH_HACKS=<unset>)
+[Tfcc0] [API] [API-005] CXX-EH-FIX (LSDA catch-all patch RVA 0x2010c8) skipped: MINWIN_EH_HACKS not set
+[Tfcc0] [API] SW-1297 validate_fd patch: fingerprint not found (guest unaffected)
+[Tfcc0] [API] Jumping to EP=0x14000e538
+[Tfcc0] [API] GetSystemTimeAsFileTime()
+[Tfcc0] [API] QueryPerformanceCounter()
+[Tfcc0] [API] LoadLibraryExW(flags=2048)
+[Tfcc0] [API] LoadLibraryA(api-ms-win-core-synch-l1-2-0)
+[Tfcc0] [API] GetProcAddress(module=0xdedd0000, name=InitializeCriticalSectionEx)
+[Tfcc0] [API]   -> 0x203bce0
+[Tfcc0] [API] InitializeCriticalSectionEx(spin=4000)
+[Tfcc0] [API] LoadLibraryExW(flags=2048)
+[Tfcc0] [API] LoadLibraryA(api-ms-win-core-fibers-l1-1-1)
+[Tfcc0] [API] GetProcAddress(module=0xdedd0000, name=FlsAlloc)
+[Tfcc0] [API]   -> 0x20361a0
+[Tfcc0] [API] FlsAlloc(cb=0x140010978) = 0
+[Tfcc0] [API] GetProcAddress(module=0xdedd0000, name=FlsSetValue)
+[Tfcc0] [API]   -> 0x2009610
+[Tfcc0] [API] LoadLibraryExW(flags=2048)
+[Tfcc0] [API] LoadLibraryA(api-ms-win-core-synch-l1-2-0)
+[Tfcc0] [API] GetProcAddress(module=0xdedd0000, name=InitializeCriticalSectionEx)
+[Tfcc0] [API]   -> 0x203bce0
+[Tfcc0] [API] InitializeCriticalSectionEx(spin=4000)
+[Tfcc0] [API] InitializeCriticalSectionEx(spin=4000)
+[Tfcc0] [API] InitializeCriticalSectionEx(spin=4000)
+[Tfcc0] [API] InitializeCriticalSectionEx(spin=4000)
+[Tfcc0] [API] InitializeCriticalSectionEx(spin=4000)
+[Tfcc0] [API] InitializeCriticalSectionEx(spin=4000)
+[Tfcc0] [API] InitializeCriticalSectionEx(spin=4000)
+[Tfcc0] [API] InitializeCriticalSectionEx(spin=4000)
+[Tfcc0] [API] InitializeCriticalSectionEx(spin=4000)
+[Tfcc0] [API] InitializeCriticalSectionEx(spin=4000)
+[Tfcc0] [API] InitializeCriticalSectionEx(spin=4000)
+[Tfcc0] [API] InitializeCriticalSectionEx(spin=4000)
+[Tfcc0] [API] InitializeCriticalSectionEx(spin=4000)
+[Tfcc0] [API] InitializeCriticalSectionEx(spin=4000)
+[Tfcc0] [API] LoadLibraryExW(flags=2048)
+[Tfcc0] [API] LoadLibraryA(api-ms-win-core-fibers-l1-1-1)
+[Tfcc0] [API] GetProcAddress(module=0xdedd0000, name=FlsAlloc)
+[Tfcc0] [API]   -> 0x20361a0
+[Tfcc0] [API] FlsAlloc(cb=0x1400510fc) = 1
+[Tfcc0] [API] GetLastError() = 0
+[Tfcc0] [API] GetProcAddress(module=0xdedd0000, name=FlsGetValue)
+[Tfcc0] [API]   -> 0x20095f0
+[Tfcc0] [API] GetProcAddress(module=0xdedd0000, name=FlsSetValue)
+[Tfcc0] [API]   -> 0x2009610
+[Tfcc0] [API] HeapAlloc(size=0x3c8, zero=1) = 0x4f3e720
+[Tfcc0] [API] EnterCriticalSection(0x140093938)
+[Tfcc0] [API] LeaveCriticalSection(0x140093938)
+[Tfcc0] [API] EnterCriticalSection(0x140093910)
+[Tfcc0] [API] LeaveCriticalSection(0x140093910)
+[Tfcc0] [API] SetLastError(0) caller=0x1400517a3
+[Tfcc0] [API] EnterCriticalSection(0x140093988)
+[Tfcc0] [API] EnterCriticalSection(0x140093988)
+[Tfcc0] [API] HeapAlloc(size=0x1200, zero=1) = 0x4f3eaf0
+[Tfcc0] [API] InitializeCriticalSectionEx(spin=4000)
+[Tfcc0] [API] InitializeCriticalSectionEx(spin=4000)
+[Tfcc0] [API] InitializeCriticalSectionEx(spin=4000)
+[Tfcc0] [API] InitializeCriticalSectionEx(spin=4000)
+[Tfcc0] [API] InitializeCriticalSectionEx(spin=4000)
+[Tfcc0] [API] InitializeCriticalSectionEx(spin=4000)
+[Tfcc0] [API] InitializeCriticalSectionEx(spin=4000)
+[Tfcc0] [API] InitializeCriticalSectionEx(spin=4000)
+[Tfcc0] [API] InitializeCriticalSectionEx(spin=4000)
+[Tfcc0] [API] InitializeCriticalSectionEx(spin=4000)
+[Tfcc0] [API] InitializeCriticalSectionEx(spin=4000)
+[Tfcc0] [API] InitializeCriticalSectionEx(spin=4000)
+[Tfcc0] [API] InitializeCriticalSectionEx(spin=4000)
+[Tfcc0] [API] InitializeCriticalSectionEx(spin=4000)
+[Tfcc0] [API] InitializeCriticalSectionEx(spin=4000)
+[Tfcc0] [API] InitializeCriticalSectionEx(spin=4000)
+[Tfcc0] [API] InitializeCriticalSectionEx(spin=4000)
+[Tfcc0] [API] InitializeCriticalSectionEx(spin=4000)
+[Tfcc0] [API] InitializeCriticalSectionEx(spin=4000)
+[Tfcc0] [API] InitializeCriticalSectionEx(spin=4000)
+[Tfcc0] [API] InitializeCriticalSectionEx(spin=4000)
+[Tfcc0] [API] InitializeCriticalSectionEx(spin=4000)
+[Tfcc0] [API] InitializeCriticalSectionEx(spin=4000)
+[Tfcc0] [API] InitializeCriticalSectionEx(spin=4000)
+[Tfcc0] [API] InitializeCriticalSectionEx(spin=4000)
+[Tfcc0] [API] InitializeCriticalSectionEx(spin=4000)
+[Tfcc0] [API] InitializeCriticalSectionEx(spin=4000)
+[Tfcc0] [API] InitializeCriticalSectionEx(spin=4000)
+[Tfcc0] [API] InitializeCriticalSectionEx(spin=4000)
+[Tfcc0] [API] InitializeCriticalSectionEx(spin=4000)
+[Tfcc0] [API] InitializeCriticalSectionEx(spin=4000)
+[Tfcc0] [API] InitializeCriticalSectionEx(spin=4000)
+[Tfcc0] [API] InitializeCriticalSectionEx(spin=4000)
+[Tfcc0] [API] InitializeCriticalSectionEx(spin=4000)
+[Tfcc0] [API] InitializeCriticalSectionEx(spin=4000)
+[Tfcc0] [API] InitializeCriticalSectionEx(spin=4000)
+[Tfcc0] [API] InitializeCriticalSectionEx(spin=4000)
+[Tfcc0] [API] InitializeCriticalSectionEx(spin=4000)
+[Tfcc0] [API] InitializeCriticalSectionEx(spin=4000)
+[Tfcc0] [API] InitializeCriticalSectionEx(spin=4000)
+[Tfcc0] [API] InitializeCriticalSectionEx(spin=4000)
+[Tfcc0] [API] InitializeCriticalSectionEx(spin=4000)
+[Tfcc0] [API] InitializeCriticalSectionEx(spin=4000)
+[Tfcc0] [API] InitializeCriticalSectionEx(spin=4000)
+[Tfcc0] [API] InitializeCriticalSectionEx(spin=4000)
+[Tfcc0] [API] InitializeCriticalSectionEx(spin=4000)
+[Tfcc0] [API] InitializeCriticalSectionEx(spin=4000)
+[Tfcc0] [API] InitializeCriticalSectionEx(spin=4000)
+[Tfcc0] [API] InitializeCriticalSectionEx(spin=4000)
+[Tfcc0] [API] InitializeCriticalSectionEx(spin=4000)
+[Tfcc0] [API] InitializeCriticalSectionEx(spin=4000)
+[Tfcc0] [API] InitializeCriticalSectionEx(spin=4000)
+[Tfcc0] [API] InitializeCriticalSectionEx(spin=4000)
+[Tfcc0] [API] InitializeCriticalSectionEx(spin=4000)
+[Tfcc0] [API] InitializeCriticalSectionEx(spin=4000)
+[Tfcc0] [API] InitializeCriticalSectionEx(spin=4000)
+[Tfcc0] [API] InitializeCriticalSectionEx(spin=4000)
+[Tfcc0] [API] InitializeCriticalSectionEx(spin=4000)
+[Tfcc0] [API] InitializeCriticalSectionEx(spin=4000)
+[Tfcc0] [API] InitializeCriticalSectionEx(spin=4000)
+[Tfcc0] [API] InitializeCriticalSectionEx(spin=4000)
+[Tfcc0] [API] InitializeCriticalSectionEx(spin=4000)
+[Tfcc0] [API] InitializeCriticalSectionEx(spin=4000)
+[Tfcc0] [API] InitializeCriticalSectionEx(spin=4000)
+[Tfcc0] [API] LeaveCriticalSection(0x140093988)
+[Tfcc0] [API] GetStartupInfoW()
+[Tfcc0] [API] GetStdHandle(-10) = 0x4
+[Tfcc0] [API] GetStdHandle(-11) = 0x5
+[Tfcc0] [API] GetStdHandle(-12) = 0x6
+[Tfcc0] [API] LeaveCriticalSection(0x140093988)
+[Tfcc0] [API] GetCommandLineA() = "Diskmon64.exe"
+[Tfcc0] [API] GetCommandLineW()
+[Tfcc0] [API] EnterCriticalSection(0x140093938)
+[Tfcc0] [API] LeaveCriticalSection(0x140093938)
+[Tfcc0] [API] HeapAlloc(size=0x228, zero=0) = 0x4f3fd00
+[Tfcc0] [API] GetCPInfo(cp=1252)
+[Tfcc0] [API] GetCPInfo(cp=1252)
+[Tfcc0] [API] MultiByteToWideChar(cp=1252, srclen=256, dstlen=0)
+[Tfcc0] [API] MultiByteToWideChar(cp=1252, srclen=256, dstlen=256)
+[Tfcc0] [API] MultiByteToWideChar(cp=1252, srclen=256, dstlen=0)
+[Tfcc0] [API] MultiByteToWideChar(cp=1252, srclen=256, dstlen=256)
+[Tfcc0] [API] LoadLibraryExW(flags=2048)
+[Tfcc0] [API] LoadLibraryA(api-ms-win-core-localization-l1-2-1)
+[Tfcc0] [API] GetProcAddress(module=0xdedd0000, name=LCMapStringEx)
+[Tfcc0] [API]   -> 0x20415c0
+[Tfcc0] [API] WideCharToMultiByte(cp=1252, srclen=256, dstlen=256)
+[Tfcc0] [API] MultiByteToWideChar(cp=1252, srclen=256, dstlen=0)
+[Tfcc0] [API] MultiByteToWideChar(cp=1252, srclen=256, dstlen=256)
+[Tfcc0] [API] WideCharToMultiByte(cp=1252, srclen=256, dstlen=256)
+[Tfcc0] [API] EnterCriticalSection(0x140093938)
+[Tfcc0] [API] LeaveCriticalSection(0x140093938)
+[Tfcc0] [API] EnterCriticalSection(0x1400938c0)
+[Tfcc0] [API] HeapAlloc(size=0x100, zero=0) = 0x4f3ff30
+[Tfcc0] [API] LeaveCriticalSection(0x1400938c0)
+[Tfcc0] [API] GetModuleFileNameW(cap=261)
+[Tfcc0] [API] GetModuleFileNameW out u16len=95 utf8len=95 'C:\home\z\my-project\workspace\miniwin-engineering\artifacts\sweep50\dl\diskmon64\Diskmon64.exe'
+[Tfcc0] [API] LoadLibraryExW(flags=2048)
+[Tfcc0] [API] LoadLibraryA(kernel32)
+[Tfcc0] [API] GetProcAddress(module=0xdea00000, name=AreFileApisANSI)
+[Tfcc0] [API]   -> 0x2089160
+[Tfcc0] [API] WideCharToMultiByte(cp=0, srclen=-1, dstlen=0)
+[Tfcc0] [API] WideCharToMultiByte(cp=0, srclen=-1, dstlen=260)
+[Tfcc0] [API] HeapAlloc(size=0x1e, zero=1) = 0x4f3e6f0
+[Tfcc0] [API] GetLastError() = 0
+[Tfcc0] [API] SetLastError(0) caller=0x140051627
+[Tfcc0] [API] GetEnvironmentStringsW()
+[Tfcc0] [API] WideCharToMultiByte(cp=0, srclen=2243, dstlen=0)
+[Tfcc0] [API] HeapAlloc(size=0x8c3, zero=0) = 0x4f40040
+[Tfcc0] [API] WideCharToMultiByte(cp=0, srclen=2243, dstlen=2243)
+[Tfcc0] [API] FreeEnvironmentStringsW()
+[Tfcc0] [API] HeapAlloc(size=0x258, zero=1) = 0x4f40910
+[Tfcc0] [API] HeapAlloc(size=0x1f, zero=1) = 0x4f3e620
+[Tfcc0] [API] HeapAlloc(size=0x29, zero=1) = 0x4f40b70
+[Tfcc0] [API] HeapAlloc(size=0x31, zero=1) = 0x4f40bb0
+[Tfcc0] [API] HeapAlloc(size=0x3c, zero=1) = 0x4f40bf0
+[Tfcc0] [API] HeapAlloc(size=0x31, zero=1) = 0x4f40c40
+[Tfcc0] [API] HeapAlloc(size=0x15, zero=1) = 0x4f40c80
+[Tfcc0] [API] HeapAlloc(size=0x24, zero=1) = 0x4f40ca0
+[Tfcc0] [API] HeapAlloc(size=0x32, zero=1) = 0x4f40cd0
+[Tfcc0] [API] HeapAlloc(size=0x2c, zero=1) = 0x4f40d10
+[Tfcc0] [API] HeapAlloc(size=0xe, zero=1) = 0x4f40d50
+[Tfcc0] [API] HeapAlloc(size=0x69, zero=1) = 0x4f3e090
+[Tfcc0] [API] HeapAlloc(size=0x3e, zero=1) = 0x4f40d70
+[Tfcc0] [API] HeapAlloc(size=0x1d, zero=1) = 0x4f40dc0
+[Tfcc0] [API] HeapAlloc(size=0x1b, zero=1) = 0x4f40df0
+[Tfcc0] [API] HeapAlloc(size=0x1e, zero=1) = 0x4f40e20
+[Tfcc0] [API] HeapAlloc(size=0x29, zero=1) = 0x4f40e50
+[Tfcc0] [API] HeapAlloc(size=0x1e, zero=1) = 0x4f40e90
+[Tfcc0] [API] HeapAlloc(size=0xc, zero=1) = 0x4f40ec0
+[Tfcc0] [API] HeapAlloc(size=0x17, zero=1) = 0x4f40ee0
+[Tfcc0] [API] HeapAlloc(size=0x14, zero=1) = 0x4f40f00
+[Tfcc0] [API] HeapAlloc(size=0xf, zero=1) = 0x4f40f20
+[Tfcc0] [API] HeapAlloc(size=0x16, zero=1) = 0x4f40f40
+[Tfcc0] [API] HeapAlloc(size=0x29, zero=1) = 0x4f40f60
+[Tfcc0] [API] HeapAlloc(size=0x28, zero=1) = 0x4f40fa0
+[Tfcc0] [API] HeapAlloc(size=0x13, zero=1) = 0x4f40fd0
+[Tfcc0] [API] HeapAlloc(size=0x11, zero=1) = 0x4f40ff0
+[Tfcc0] [API] HeapAlloc(size=0x1d, zero=1) = 0x4f41010
+[Tfcc0] [API] HeapAlloc(size=0x12, zero=1) = 0x4f41040
+[Tfcc0] [API] HeapAlloc(size=0x17, zero=1) = 0x4f41060
+[Tfcc0] [API] HeapAlloc(size=0x47, zero=1) = 0x4f41080
+[Tfcc0] [API] HeapAlloc(size=0x12, zero=1) = 0x4f410d0
+[Tfcc0] [API] HeapAlloc(size=0x18, zero=1) = 0x4f410f0
+[Tfcc0] [API] HeapAlloc(size=0x10, zero=1) = 0x4f41110
+[Tfcc0] [API] HeapAlloc(size=0x1b, zero=1) = 0x4f41130
+[Tfcc0] [API] HeapAlloc(size=0x13, zero=1) = 0x4f41160
+[Tfcc0] [API] HeapAlloc(size=0x32, zero=1) = 0x4f41180
+[Tfcc0] [API] HeapAlloc(size=0x19, zero=1) = 0x4f411c0
+[Tfcc0] [API] HeapAlloc(size=0x14, zero=1) = 0x4f411f0
+[Tfcc0] [API] HeapAlloc(size=0x58, zero=1) = 0x4f41210
+[Tfcc0] [API] HeapAlloc(size=0x3a, zero=1) = 0x4f41270
+[Tfcc0] [API] HeapAlloc(size=0xa, zero=1) = 0x4f412c0
+[Tfcc0] [API] HeapAlloc(size=0x16, zero=1) = 0x4f412e0
+[Tfcc0] [API] HeapAlloc(size=0xf, zero=1) = 0x4f41300
+[Tfcc0] [API] HeapAlloc(size=0x31, zero=1) = 0x4f41320
+[Tfcc0] [API] HeapAlloc(size=0x39, zero=1) = 0x4f41360
+[Tfcc0] [API] HeapAlloc(size=0xd, zero=1) = 0x4f413b0
+[Tfcc0] [API] HeapAlloc(size=0x1d, zero=1) = 0x4f413d0
+[Tfcc0] [API] HeapAlloc(size=0x1a, zero=1) = 0x4f41400
+[Tfcc0] [API] HeapAlloc(size=0x1c, zero=1) = 0x4f41430
+[Tfcc0] [API] HeapAlloc(size=0x24, zero=1) = 0x4f41460
+[Tfcc0] [API] HeapAlloc(size=0x1b, zero=1) = 0x4f41490
+[Tfcc0] [API] HeapAlloc(size=0xb, zero=1) = 0x4f414c0
+[Tfcc0] [API] HeapAlloc(size=0x11, zero=1) = 0x4f414e0
+[Tfcc0] [API] HeapAlloc(size=0x22, zero=1) = 0x4f41500
+[Tfcc0] [API] HeapAlloc(size=0xa, zero=1) = 0x4f41530
+[Tfcc0] [API] HeapAlloc(size=0x7, zero=1) = 0x4f41550
+[Tfcc0] [API] HeapAlloc(size=0x8, zero=1) = 0x4f41570
+[Tfcc0] [API] HeapAlloc(size=0x19, zero=1) = 0x4f41590
+[Tfcc0] [API] HeapAlloc(size=0x1a, zero=1) = 0x4f415c0
+[Tfcc0] [API] HeapAlloc(size=0xb, zero=1) = 0x4f415f0
+[Tfcc0] [API] HeapAlloc(size=0x1f, zero=1) = 0x4f41610
+[Tfcc0] [API] HeapAlloc(size=0x11, zero=1) = 0x4f41640
+[Tfcc0] [API] HeapAlloc(size=0x15, zero=1) = 0x4f41660
+[Tfcc0] [API] HeapAlloc(size=0x19, zero=1) = 0x4f41680
+[Tfcc0] [API] HeapAlloc(size=0x11, zero=1) = 0x4f416b0
+[Tfcc0] [API] HeapAlloc(size=0x1f, zero=1) = 0x4f416d0
+[Tfcc0] [API] HeapAlloc(size=0x1f, zero=1) = 0x4f41700
+[Tfcc0] [API] HeapAlloc(size=0x30, zero=1) = 0x4f41730
+[Tfcc0] [API] HeapAlloc(size=0x23, zero=1) = 0x4f41770
+[Tfcc0] [API] HeapAlloc(size=0x1a, zero=1) = 0x4f417a0
+[Tfcc0] [API] HeapAlloc(size=0x13, zero=1) = 0x4f417d0
+[Tfcc0] [API] HeapAlloc(size=0x10, zero=1) = 0x4f417f0
+[Tfcc0] [API] HeapAlloc(size=0x1b, zero=1) = 0x4f41810
+[Tfcc0] [API] HeapAlloc(size=0x17, zero=1) = 0x4f41840
+[Tfcc0] [API] HeapFree(0x4f40040)
+[Tfcc0] [API] HeapAlloc(size=0x1000, zero=1) = 0x4f41860
+[Tfcc0] [API] InitializeCriticalSectionEx(spin=4000)
+[Tfcc0] [API] InitializeCriticalSectionEx(spin=4000)
+[Tfcc0] [API] InitializeCriticalSectionEx(spin=4000)
+[Tfcc0] [API] SetUnhandledExceptionFilter(handler=0x14000ed10)
+[Tfcc0] [API] GetStartupInfoW()
+[Tfcc0] [API] GetCommandLineW()
+[Tfcc0] [API] CommandLineToArgvW(0x2709800)
+[Tfcc0] [API] malloc(52) = 0x4f40040
+[Tfcc0] [API] RegOpenKeyExW(miss) 'HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion' -> ERROR_PATH_NOT_FOUND
+[Tfcc0] [API] SetLastError(3) caller=0x20e2df8
+[Tfcc0] [API] RegCreateKeyExW 'HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion' -> slot 7 (created=1)
+[Tfcc0] [API] RegSetValueExW -> slot 7 'ProductName', 40 bytes stored
+[Tfcc0] [API] RegSetValueExW -> slot 7 'CurrentVersion', 8 bytes stored
+[Tfcc0] [API] RegSetValueExW -> slot 7 'CurrentBuildNumber', 10 bytes stored
+[Tfcc0] [API] RegSetValueExW -> slot 7 'CSDVersion', 30 bytes stored
+[Tfcc0] [API] reg seed: CurrentVersion identity seeded (Windows Server 2003 5.2 b3790)
+[Tfcc0] [API] RegOpenKeyExW(miss) 'HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon' -> ERROR_FILE_NOT_FOUND
+[Tfcc0] [API] SetLastError(2) caller=0x20e2df8
+[Tfcc0] [API] RegCreateKeyExW 'HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon' -> slot 8 (created=1)
+[Tfcc0] [API] RegSetValueExW -> slot 8 'AutoAdminLogon', 4 bytes stored
+[Tfcc0] [API] RegSetValueExW -> slot 8 'DefaultUserName', 26 bytes stored
+[Tfcc0] [API] RegSetValueExW -> slot 8 'DefaultDomainName', 16 bytes stored
+[Tfcc0] [API] RegSetValueExW -> slot 8 'DefaultPassword', 2 bytes stored
+[Tfcc0] [API] reg seed: Winlogon skeleton seeded
+[Tfcc0] [API] RegOpenKeyExW(miss) 'HKLM\System\CurrentControlSet\Services\EventLog\Application' -> ERROR_PATH_NOT_FOUND
+[Tfcc0] [API] SetLastError(3) caller=0x20e2df8
+[Tfcc0] [API] RegCreateKeyExW 'HKLM\System\CurrentControlSet\Services\EventLog\Application' -> slot 9 (created=1)
+[Tfcc0] [API] RegOpenKeyExW(miss) 'HKLM\System\CurrentControlSet\Services\EventLog\Security' -> ERROR_PATH_NOT_FOUND
+[Tfcc0] [API] SetLastError(3) caller=0x20e2df8
+[Tfcc0] [API] RegCreateKeyExW 'HKLM\System\CurrentControlSet\Services\EventLog\Security' -> slot 10 (created=1)
+[Tfcc0] [API] RegOpenKeyExW(miss) 'HKLM\System\CurrentControlSet\Services\EventLog\System' -> ERROR_PATH_NOT_FOUND
+[Tfcc0] [API] SetLastError(3) caller=0x20e2df8
+[Tfcc0] [API] RegCreateKeyExW 'HKLM\System\CurrentControlSet\Services\EventLog\System' -> slot 11 (created=1)
+[Tfcc0] [API] reg seed: EventLog service keys seeded (3)
+[Tfcc0] [API] RegOpenKeyExW(miss) 'HKCU\Software\WinRAR\Setup' -> ERROR_PATH_NOT_FOUND
+[Tfcc0] [API] SetLastError(3) caller=0x20e2df8
+[Tfcc0] [API] RegCreateKeyExW 'HKCU\Software\WinRAR\Setup' -> slot 12 (created=1)
+[Tfcc0] [API] reg seed: WinRAR Setup key seeded (no close: handle released at exit)
+[Tfcc0] [API] RegOpenKeyExW(miss) 'HKCU\Software\Sysinternals\PsLoglist' -> ERROR_PATH_NOT_FOUND
+[Tfcc0] [API] SetLastError(3) caller=0x20e2df8
+[Tfcc0] [API] RegCreateKeyExW 'HKCU\Software\Sysinternals\PsLoglist' -> slot 13 (created=1)
+[Tfcc0] [API] RegSetValueExW -> slot 13 'EulaAccepted', 4 bytes stored
+[Tfcc0] [API] RegOpenKeyExW(miss) 'HKCU\Software\Sysinternals\PsInfo' -> ERROR_PATH_NOT_FOUND
+[Tfcc0] [API] SetLastError(3) caller=0x20e2df8
+[Tfcc0] [API] RegCreateKeyExW 'HKCU\Software\Sysinternals\PsInfo' -> slot 14 (created=1)
+[Tfcc0] [API] RegSetValueExW -> slot 14 'EulaAccepted', 4 bytes stored
+[Tfcc0] [API] RegOpenKeyExW(miss) 'HKCU\Software\Sysinternals\PsList' -> ERROR_PATH_NOT_FOUND
+[Tfcc0] [API] SetLastError(3) caller=0x20e2df8
+[Tfcc0] [API] RegCreateKeyExW 'HKCU\Software\Sysinternals\PsList' -> slot 15 (created=1)
+[Tfcc0] [API] RegSetValueExW -> slot 15 'EulaAccepted', 4 bytes stored
+[Tfcc0] [API] RegOpenKeyExW(miss) 'HKCU\Software\Sysinternals\PsPasswd' -> ERROR_PATH_NOT_FOUND
+[Tfcc0] [API] SetLastError(3) caller=0x20e2df8
+[Tfcc0] [API] RegCreateKeyExW 'HKCU\Software\Sysinternals\PsPasswd' -> slot 16 (created=1)
+[Tfcc0] [API] RegSetValueExW -> slot 16 'EulaAccepted', 4 bytes stored
+[Tfcc0] [API] RegOpenKeyExW(miss) 'HKCU\Software\Sysinternals\PsService' -> ERROR_PATH_NOT_FOUND
+[Tfcc0] [API] SetLastError(3) caller=0x20e2df8
+[Tfcc0] [API] RegCreateKeyExW 'HKCU\Software\Sysinternals\PsService' -> slot 17 (created=1)
+[Tfcc0] [API] RegSetValueExW -> slot 17 'EulaAccepted', 4 bytes stored
+[Tfcc0] [API] RegOpenKeyExW(miss) 'HKCU\Software\Sysinternals\Coreinfo' -> ERROR_PATH_NOT_FOUND
+[Tfcc0] [API] SetLastError(3) caller=0x20e2df8
+[Tfcc0] [API] RegCreateKeyExW 'HKCU\Software\Sysinternals\Coreinfo' -> slot 18 (created=1)
+[Tfcc0] [API] RegSetValueExW -> slot 18 'EulaAccepted', 4 bytes stored
+[Tfcc0] [API] RegOpenKeyExW(miss) 'HKCU\Software\Sysinternals\RAMMap' -> ERROR_PATH_NOT_FOUND
+[Tfcc0] [API] SetLastError(3) caller=0x20e2df8
+[Tfcc0] [API] RegCreateKeyExW 'HKCU\Software\Sysinternals\RAMMap' -> slot 19 (created=1)
+[Tfcc0] [API] RegSetValueExW -> slot 19 'EulaAccepted', 4 bytes stored
+[Tfcc0] [API] RegOpenKeyExW(miss) 'HKCU\Software\Sysinternals\Process Explorer' -> ERROR_PATH_NOT_FOUND
+[Tfcc0] [API] SetLastError(3) caller=0x20e2df8
+[Tfcc0] [API] RegCreateKeyExW 'HKCU\Software\Sysinternals\Process Explorer' -> slot 20 (created=1)
+[Tfcc0] [API] RegSetValueExW -> slot 20 'EulaAccepted', 4 bytes stored
+[Tfcc0] [API] RegOpenKeyExW(miss) 'HKCU\Software\Sysinternals\Process Monitor' -> ERROR_PATH_NOT_FOUND
+[Tfcc0] [API] SetLastError(3) caller=0x20e2df8
+[Tfcc0] [API] RegCreateKeyExW 'HKCU\Software\Sysinternals\Process Monitor' -> slot 21 (created=1)
+[Tfcc0] [API] RegSetValueExW -> slot 21 'EulaAccepted', 4 bytes stored
+[Tfcc0] [API] RegOpenKeyExW(miss) 'HKCU\Software\Sysinternals\Autoruns' -> ERROR_PATH_NOT_FOUND
+[Tfcc0] [API] SetLastError(3) caller=0x20e2df8
+[Tfcc0] [API] RegCreateKeyExW 'HKCU\Software\Sysinternals\Autoruns' -> slot 22 (created=1)
+[Tfcc0] [API] RegSetValueExW -> slot 22 'EulaAccepted', 4 bytes stored
+[Tfcc0] [API] RegOpenKeyExW(miss) 'HKCU\Software\Sysinternals\ZoomIt' -> ERROR_PATH_NOT_FOUND
+[Tfcc0] [API] SetLastError(3) caller=0x20e2df8
+[Tfcc0] [API] RegCreateKeyExW 'HKCU\Software\Sysinternals\ZoomIt' -> slot 23 (created=1)
+[Tfcc0] [API] RegSetValueExW -> slot 23 'EulaAccepted', 4 bytes stored
+[Tfcc0] [API] RegOpenKeyExW(miss) 'HKCU\Software\Sysinternals\DiskMon' -> ERROR_PATH_NOT_FOUND
+[Tfcc0] [API] SetLastError(3) caller=0x20e2df8
+[Tfcc0] [API] RegCreateKeyExW 'HKCU\Software\Sysinternals\DiskMon' -> slot 24 (created=1)
+[Tfcc0] [API] RegSetValueExW -> slot 24 'EulaAccepted', 4 bytes stored
+[Tfcc0] [API] RegOpenKeyExW(miss) 'HKCU\Software\Sysinternals\BgInfo' -> ERROR_PATH_NOT_FOUND
+[Tfcc0] [API] SetLastError(3) caller=0x20e2df8
+[Tfcc0] [API] RegCreateKeyExW 'HKCU\Software\Sysinternals\BgInfo' -> slot 25 (created=1)
+[Tfcc0] [API] RegSetValueExW -> slot 25 'EulaAccepted', 4 bytes stored
+[Tfcc0] [API] RegOpenKeyExW(miss) 'HKCU\Software\Sysinternals\AdExplorer' -> ERROR_PATH_NOT_FOUND
+[Tfcc0] [API] SetLastError(3) caller=0x20e2df8
+[Tfcc0] [API] RegCreateKeyExW 'HKCU\Software\Sysinternals\AdExplorer' -> slot 26 (created=1)
+[Tfcc0] [API] RegSetValueExW -> slot 26 'EulaAccepted', 4 bytes stored
+[Tfcc0] [API] RegOpenKeyExW(miss) 'HKCU\Software\Sysinternals\AdInsight' -> ERROR_PATH_NOT_FOUND
+[Tfcc0] [API] SetLastError(3) caller=0x20e2df8
+[Tfcc0] [API] RegCreateKeyExW 'HKCU\Software\Sysinternals\AdInsight' -> slot 27 (created=1)
+[Tfcc0] [API] RegSetValueExW -> slot 27 'EulaAccepted', 4 bytes stored
+[Tfcc0] [API] RegOpenKeyExW(miss) 'HKCU\Software\Sysinternals\TcpvCon' -> ERROR_PATH_NOT_FOUND
+[Tfcc0] [API] SetLastError(3) caller=0x20e2df8
+[Tfcc0] [API] RegCreateKeyExW 'HKCU\Software\Sysinternals\TcpvCon' -> slot 28 (created=1)
+[Tfcc0] [API] RegSetValueExW -> slot 28 'EulaAccepted', 4 bytes stored
+[Tfcc0] [API] RegOpenKeyExW(miss) 'HKCU\Software\Sysinternals\Whois' -> ERROR_PATH_NOT_FOUND
+[Tfcc0] [API] SetLastError(3) caller=0x20e2df8
+[Tfcc0] [API] RegCreateKeyExW 'HKCU\Software\Sysinternals\Whois' -> slot 29 (created=1)
+[Tfcc0] [API] RegSetValueExW -> slot 29 'EulaAccepted', 4 bytes stored
+[Tfcc0] [API] reg seed: Sysinternals EulaAccepted markers seeded
+[Tfcc0] [API] RegOpenKeyExW(miss) 'HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Perflib' -> ERROR_FILE_NOT_FOUND
+[Tfcc0] [API] SetLastError(2) caller=0x20e2df8
+[Tfcc0] [API] RegCreateKeyExW 'HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Perflib' -> slot 30 (created=1)
+[Tfcc0] [API] RegSetValueExW -> slot 30 'Last Counter', 4 bytes stored
+[Tfcc0] [API] RegSetValueExW -> slot 30 'Last Help', 4 bytes stored
+[Tfcc0] [API] reg seed: Perflib Last Counter/Help = 952
+[Tfcc0] [API] RegOpenKeyExW(miss) 'HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion' -> ERROR_PATH_NOT_FOUND
+[Tfcc0] [API] SetLastError(3) caller=0x20e2df8
+[Tfcc0] [API] RegCreateKeyExW 'HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion' -> slot 31 (created=1)
+[Tfcc0] [API] RegSetValueExW -> slot 31 'ProgramFilesDir', 34 bytes stored
+[Tfcc0] [API] RegSetValueExW -> slot 31 'CommonFilesDir', 60 bytes stored
+[Tfcc0] [API] RegSetValueExW -> slot 31 'ProgramFilesPath', 34 bytes stored
+[Tfcc0] [API] RegSetValueExW -> slot 31 'DevicePath', 34 bytes stored
+[Tfcc0] [API] reg seed: HKLM Windows CurrentVersion ProgramFiles skeleton seeded
+[Tfcc0] [API] RegOpenKeyExW(miss) 'HKLM\HARDWARE\DESCRIPTION\System' -> ERROR_PATH_NOT_FOUND
+[Tfcc0] [API] SetLastError(3) caller=0x20e2df8
+[Tfcc0] [API] RegCreateKeyExW 'HKLM\HARDWARE\DESCRIPTION\System' -> slot 32 (created=1)
+[Tfcc0] [API] RegSetValueExW -> slot 32 'Identifier', 28 bytes stored
+[Tfcc0] [API] RegOpenKeyExW(miss) 'HKLM\HARDWARE\DESCRIPTION\System\CentralProcessor\0' -> ERROR_PATH_NOT_FOUND
+[Tfcc0] [API] SetLastError(3) caller=0x20e2df8
+[Tfcc0] [API] RegCreateKeyExW 'HKLM\HARDWARE\DESCRIPTION\System\CentralProcessor\0' -> slot 33 (created=1)
+[Tfcc0] [API] RegSetValueExW -> slot 33 'Identifier', 76 bytes stored
+[Tfcc0] [API] RegSetValueExW -> slot 33 'VendorIdentifier', 26 bytes stored
+[Tfcc0] [API] RegSetValueExW -> slot 33 'ProcessorNameString', 54 bytes stored
+[Tfcc0] [API] RegSetValueExW -> slot 33 '~MHz', 4 bytes stored
+[Tfcc0] [API] reg seed: CentralProcessor\0 seeded (Intel(R) Xeon(R) Processor, Intel64 Family 6 Model 173 Stepping 1, 3200 MHz)
+[Tfcc0] [API] RegOpenKeyExW(miss) 'HKLM\System\CurrentControlSet\Control\Session Manager\Environment' -> ERROR_PATH_NOT_FOUND
+[Tfcc0] [API] SetLastError(3) caller=0x20e2df8
+[Tfcc0] [API] RegCreateKeyExW 'HKLM\System\CurrentControlSet\Control\Session Manager\Environment' -> slot 34 (created=1)
+[Tfcc0] [API] RegSetValueExW -> slot 34 'PROCESSOR_ARCHITECTURE', 12 bytes stored
+[Tfcc0] [API] RegSetValueExW -> slot 34 'PROCESSOR_IDENTIFIER', 104 bytes stored
+[Tfcc0] [API] RegSetValueExW -> slot 34 'PROCESSOR_LEVEL', 4 bytes stored
+[Tfcc0] [API] RegSetValueExW -> slot 34 'PROCESSOR_REVISION', 10 bytes stored
+[Tfcc0] [API] RegSetValueExW -> slot 34 'NUMBER_OF_PROCESSORS', 4 bytes stored
+[Tfcc0] [API] reg seed: Session Manager Environment PROCESSOR_* seeded (ncpu=2)
+[Tfcc0] [API] RegOpenKeyExW(miss) 'HKLM\Software\Sysinternals' -> ERROR_PATH_NOT_FOUND
+[Tfcc0] [API] SetLastError(3) caller=0x20e2df8
+[Tfcc0] [API] RegOpenKeyExW 'HKCU\Software\Sysinternals' -> slot 35 (SW-1552 ancestor materialized, child slot 13)
+[Tfcc0] [API] RegQueryValueExW(key=0x90024 'EulaAccepted') -> ERROR_FILE_NOT_FOUND
+[Tfcc0] [API] SetLastError(2) caller=0x211a0ad
+[Tfcc0] [API] RegOpenKeyExW 'HKCU\Software\Sysinternals\Diskmon' -> handle slot 24
+[Tfcc0] [API] RegQueryValueExW(key=0x90019 'EulaAccepted') -> 0 (type=4 size=4 data='')
+[Tfcc0] [API] RegCreateKeyExW 'HKCU\Software\Sysinternals\Diskmon' -> slot 24 (created=0)
+[Tfcc0] [API] RegSetValueExW -> slot 24 'EulaAccepted' overwritten (4 bytes)
+[Tfcc0] [API] LoadIconA(h=0x140000000 name=0x140079ea8) -> NULL (no group)
+[Tfcc0] [API] GetLastError() = 2
+[Tfcc0] [API] SetLastError(2) caller=0x140051627
+[Tfcc0] [API] GetLastError() = 2
+[Tfcc0] [API] SetLastError(2) caller=0x140051627
+[Tfcc0] [API] RegisterClassA(wc=0x7ffcdc494cc0) -> ATOM 0xc001
+[Tfcc0] [API] [GDI] CreateSolidBrush(#ffffe0) -> h 0x00030000
+[Tfcc0] [API] RegisterClassA(wc=0x7ffcdc494cc0) -> ATOM 0xc002
+[Tfcc0] [API] LoadLibraryA(advapi32.dll)
+[Tfcc0] [API] GetProcAddress(module=0xdea40000, name=StartTraceA)
+[Tfcc0] [API]   -> NULL (not in dispatch table)
+[Tfcc0] [API]   -> optional-stub fallback (not in dispatch table)
+[Tfcc0] [API] LoadLibraryA(advapi32.dll)
+[Tfcc0] [API] GetProcAddress(module=0xdea40000, name=ControlTraceA)
+[Tfcc0] [API]   -> NULL (not in dispatch table)
+[Tfcc0] [API]   -> optional-stub fallback (not in dispatch table)
+[Tfcc0] [API] LoadLibraryA(advapi32.dll)
+[Tfcc0] [API] GetProcAddress(module=0xdea40000, name=OpenTraceA)
+[Tfcc0] [API]   -> NULL (not in dispatch table)
+[Tfcc0] [API]   -> optional-stub fallback (not in dispatch table)
+[Tfcc0] [API] LoadLibraryA(advapi32.dll)
+[Tfcc0] [API] GetProcAddress(module=0xdea40000, name=ProcessTrace)
+[Tfcc0] [API]   -> 0x200ea10
+[Tfcc0] [API] InitializeCriticalSection(0x140094180)
+[Tfcc0] [API] RegisterWindowMessageA() -> 0xc000
+[Tfcc0] [API] LoadIconA(h=0x140000000 name=0x140079ed0) -> NULL (no group)
+[Tfcc0] [API] LoadIconA(h=0x140000000 name=0x140079ee0) -> NULL (no group)
+[Tfcc0] [API] LoadIconA(h=0x140000000 name=0x140079ef0) -> NULL (no group)
+[Tfcc0] [API] [GDI] GetStockObject(13)
+[Tfcc0] [API] RegCreateKeyExW 'HKCU\Software\Sysinternals\Diskmon' -> slot 24 (created=0)
+[Tfcc0] [API] RegQueryValueExW(key=0x90019 'Settings') -> ERROR_FILE_NOT_FOUND
+[Tfcc0] [API] SetLastError(2) caller=0x211a0ad
+[Tfcc0] [API] RegQueryValueExW(key=0x90019 'InFilters') -> ERROR_FILE_NOT_FOUND
+[Tfcc0] [API] SetLastError(2) caller=0x211a0ad
+[Tfcc0] [API] RegQueryValueExW(key=0x90019 'ExFilters') -> ERROR_FILE_NOT_FOUND
+[Tfcc0] [API] SetLastError(2) caller=0x211a0ad
+[Tfcc0] [API] RegQueryValueExW(key=0x90019 'HiFilters') -> ERROR_FILE_NOT_FOUND
+[Tfcc0] [API] SetLastError(2) caller=0x211a0ad
+[Tfcc0] [API] CloseHandle(handle=0x90019)
+[Tfcc0] [API] [GUI] paint surface allocated 600x300 (SWEEP-005)
+[Tfcc0] [API] [GUI] main class brush snapshot: 0x10 (SW-1291b, SW-1511 A-path)
+[Tfcc0] [API] SetCapture(0x10001) -> prev (nil)
+[Tfcc0] [API] LoadLibraryA(comctl32.dll)
+[Tfcc0] [API] GetProcAddress(module=0xdeab0000, name=DllGetVersion)
+[Tfcc0] [API]   -> NULL (not in dispatch table)
+[Tfcc0] [API]   -> DllGetVersion (5.82 model)
+[Tfcc0] [API] DllGetVersion -> 5.82 (comctl32 model)
+[Tfcc0] [API] FreeLibrary()
+[Tfcc0] [API] [GUI] child TOOLBAR id=1 -> HWND 0x30001 text='0 wchars'
+[Tfcc0] [API] [GUI] CreateToolbarEx(id=1 nbtn=12) -> HWND 0x30001
+[Tfcc0] [API] InitCommonControls()
+[Tfcc0] [API] GetClientRect(hwnd=0x10001) -> 600x300
+[Tfcc0] [API] [GUI] child SysListView32 id=1000 -> HWND 0x30002 text='0 wchars'
+[Tfcc0] [API] SetWindowLongPtrW(0x30002,-4,0x140007a80) -> 0x200c560
+[Tfcc0] [API] GetSystemTime()
+[Tfcc0] [API] HeapAlloc(size=0x878, zero=0) = 0x4fe9210
+[Tfcc0] [API] HeapFree(0x4fe9210)
+[Tfcc0] [API] HeapAlloc(size=0x878, zero=0) = 0x4fe9210
+[Tfcc0] [API] HeapAlloc(size=0x28, zero=1) = 0x4f40760
+[Tfcc0] [API] GetModuleHandleExW(flags=4)
+[Tfcc0] [API] GetModuleHandleExW(FROM_ADDRESS 0x14000b470) -> <exe> base
+[Tfcc0] [API] CreateThread(fn=0x14004b370, arg=0x4f40760, flags=0x4)
+[Tfcc0] [API] _beginthreadex(start=0x14004b370, arg=0x4f40760, init=0x4)
+[Tfcc0] [API] _beginthreadex() = 0x4
+[Tfcc0] [API] CreateThread: CREATE_SUSPENDED ignored (thread runs immediately)
+[Tfcc0] [API] ResumeThread()
+[Tfcc0] [API] HeapFree(0x4fe9210)
+[Tfcc0] [API] ReleaseCapture() -> TRUE
+[Tfcc0] [API] [GUI] WM_CREATE(lparam=&CS lpParams=(nil)) -> wndproc -> 0
+[Tfcc0] [API] CreateWindowExA(ex=0x0 style=0xcf0000 cls=0x7ffcdc494e80 600x300@100,100) -> HWND 0x10001
+[Tfcc0] [API] [GUI] event pump v3 ARMED (budget=400 keys=0 every=8 clicks=0)
+[Tfcc0] [API] MoveWindow(hwnd=0x30001 main=0, 600x300@0,0) -> TRUE
+[Tfcc0] [API] MoveWindow(hwnd=0x30002 main=0, 600x272@0,28) -> TRUE
+[Tfcc0] [API] [GUI] WM_SIZE sent sync 600x300 -> 0 (SW-1287b)
+[Tfcc0] [API] ShowWindow(hwnd=0x10001 cmd=10) -> TRUE
+[Tfcc0] [API] UpdateWindow(hwnd=0x10001)
+[T16c0] [API] GetLastError() = 0
+[T16c0] [API] HeapAlloc(size=0x3c8, zero=1) = 0x7f3920000c70
+[T16c0] [API] EnterCriticalSection(0x140093938)
+[T16c0] [API] LeaveCriticalSection(0x140093938)
+[T16c0] [API] EnterCriticalSection(0x140093910)
+[T16c0] [API] LeaveCriticalSection(0x140093910)
+[T16c0] [API] SetLastError(0) caller=0x140051627
+[T16c0] [API] LoadLibraryExW(flags=2048)
+[T16c0] [API] LoadLibraryA(api-ms-win-appmodel-runtime-l1-1-2)
+[T16c0] [API] GetProcAddress(module=0xdedd0000, name=AppPolicyGetThreadInitializationType)
+[T16c0] [API]   -> 0x2076bc0
+[T16c0] [API] AppPolicyGetThreadInitializationType -> S_OK (NONE)
+[T16c0] [API] QueryPerformanceFrequency()
+[T16c0] [API] HeapAlloc(size=0x1c0, zero=0) = 0x7f3920001040
+[T16c0] [API] HeapAlloc(size=0x400, zero=0) = 0x7f3920001210
+[T16c0] [API] GetLastError() = 0
+[T16c0] [API] HeapFree(0x7f3920001210)
+[T16c0] [API] SetLastError(0) caller=0x14000b5d0
+[T16c0] [API] GetLastError() = 0
+[T16c0] [API] SetLastError(0) caller=0x1400517a3
+[T16c0] [API] CloseHandle(handle=0x4)
+[T16c0] [API] FreeLibraryAndExitThread(code=0)
+[T16c0] [API] FreeLibrary()
+[T16c0] [API] ExitThread(0)
+[T16c0] [API] _endthreadex(0)
+[Tfcc0] [API] [GUI] composite paint: 2 standard controls + menu=0 (SW-1266/1520)
+[Tfcc0] [API] [GDI] frame #1 (UpdateWindow) 600x300 framed 612x332 -> miniwin-results/Diskmon64.exe/screenshots/frame_001.bmp
+[Tfcc0] [API] [GUI] SetTimer(id=2, 10ms) -> armed (real elapse gate)
+[Tfcc0] [API] [GUI] UpdateWindow -> child id=1000 SysListView32 WM_PAINT -> 0
+[Tfcc0] [API] [GUI] InvalidateRect erase=1 -> paint pending
+[Tfcc0] [API] GetMenu(hwnd=0x10001) -> (nil)
+[Tfcc0] [API] GetMenu(hwnd=0x10001) -> (nil)
+[Tfcc0] [API] GetMenu(hwnd=0x10001) -> (nil)
+[Tfcc0] [API] [GUI] paint surface grew to 1024x768 (SW-1266)
+[Tfcc0] [API] ShowWindow(hwnd=0x10001 cmd=3) -> TRUE
+[Tfcc0] [API] [RES] find hmod=0x140000000 a=?/ACCELERATORS w=(nil)/0x9
+[Tfcc0] [API] [RES] walk depth=0 level=0x14009e000 named=0 ided=11 (base=0x14009e000)
+[Tfcc0] [API] [RES] walk depth=1 level=0x14009e148 named=1 ided=0 (base=0x14009e000)
+[Tfcc0] [API] [RES] walk depth=2 level=0x14009e358 named=0 ided=1 (base=0x14009e000)
+[Tfcc0] [API] LoadAcceleratorsA(name='ACCELERATORS') -> 0xac0001 (n=16, REAL)
+[Tfcc0] [API] [GUI-EVENT] #1 GetMessageA -> WM_PAINT
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_PAINT hwnd=0x10001 wp=0x0 -> 0
+[Tfcc0] [API] [GUI-EVENT] #2 GetMessageA -> WM_PAINT child=0x30002 (SW-1398)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_PAINT child=0x30002 -> 0 (SW-1398)
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=0ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #3 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=0ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #4 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=-1ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #5 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=0ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #6 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=0ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #7 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=0ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #8 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=0ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #9 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=0ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #10 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=0ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #11 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=-1ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #12 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=0ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #13 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=0ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #14 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=0ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #15 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=0ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #16 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=0ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #17 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=-1ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #18 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=0ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #19 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=0ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #20 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=0ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #21 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=0ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #22 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=0ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #23 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=0ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #24 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=-1ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #25 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=0ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #26 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=0ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #27 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=0ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #28 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=0ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #29 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=0ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #30 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=0ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #31 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=-1ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #32 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=0ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #33 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=0ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #34 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=0ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #35 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=0ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #36 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=0ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #37 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=-1ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #38 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=0ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #39 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=0ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #40 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=0ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #41 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=0ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #42 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=0ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #43 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=0ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #44 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=-1ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #45 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=0ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #46 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=0ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #47 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=0ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #48 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=0ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #49 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=0ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #50 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=0ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #51 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=-1ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #52 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=0ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #53 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=0ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #54 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=0ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #55 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=0ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #56 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=0ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #57 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=-1ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #58 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=0ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #59 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=0ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #60 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=0ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #61 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=0ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #62 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=0ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #63 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=0ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #64 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=0ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #65 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=0ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #66 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=0ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #67 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=0ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #68 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=0ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #69 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=0ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #70 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=0ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #71 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=-1ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #72 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=0ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #73 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=0ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #74 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=0ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #75 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=0ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #76 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=0ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #77 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=0ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #78 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=-1ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #79 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=0ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #80 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=0ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #81 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=0ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #82 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=0ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #83 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=0ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #84 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=0ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #85 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=-1ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #86 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=0ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #87 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=0ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #88 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=0ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #89 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=0ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #90 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=0ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #91 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=0ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #92 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=0ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #93 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=0ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #94 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=0ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #95 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=0ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #96 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=0ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #97 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=0ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #98 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=0ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #99 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=-1ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #100 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=0ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #101 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=0ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #102 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=0ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #103 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=0ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #104 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=0ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #105 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=0ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #106 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=-1ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #107 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=0ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #108 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=0ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #109 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=0ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #110 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=0ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #111 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=0ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #112 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=0ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #113 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=-1ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #114 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=0ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #115 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=0ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #116 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=0ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #117 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=0ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #118 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=0ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #119 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=0ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #120 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=-1ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #121 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=0ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #122 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=0ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #123 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=-1ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #124 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=0ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #125 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=0ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #126 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=0ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #127 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=0ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #128 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=-1ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #129 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=0ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #130 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=0ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #131 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=0ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #132 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=0ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #133 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=0ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #134 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=0ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #135 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=-1ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #136 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=0ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #137 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=0ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #138 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=0ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #139 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=0ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #140 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=0ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #141 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=0ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #142 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=-1ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #143 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=0ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #144 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=0ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #145 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=0ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #146 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=0ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #147 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=0ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #148 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=0ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #149 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=0ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #150 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=0ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #151 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=0ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #152 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=0ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #153 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=0ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #154 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=0ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #155 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=0ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #156 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=-1ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #157 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=0ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #158 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=0ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #159 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=0ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #160 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=0ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #161 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=0ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #162 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=-1ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #163 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=0ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #164 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=0ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #165 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=0ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #166 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=0ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #167 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=0ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #168 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=-1ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #169 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=0ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #170 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=0ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #171 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=0ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #172 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=0ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #173 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=-1ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #174 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=0ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #175 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=0ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #176 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=0ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #177 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=-1ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #178 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=0ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #179 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=0ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #180 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=0ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #181 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=0ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #182 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=0ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #183 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=-1ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #184 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=0ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #185 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=0ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #186 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=0ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #187 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=0ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #188 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=0ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #189 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=-1ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #190 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=0ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #191 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=0ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #192 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=0ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #193 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=0ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #194 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=0ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #195 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=-1ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #196 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=0ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #197 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=0ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #198 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=0ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #199 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=0ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #200 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=0ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #201 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=-1ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #202 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=0ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #203 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=0ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #204 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=0ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #205 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=0ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #206 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=0ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #207 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=-1ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #208 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=0ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #209 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=0ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #210 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=0ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #211 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=0ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #212 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=0ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #213 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=0ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #214 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=0ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #215 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=0ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #216 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=0ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #217 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=0ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #218 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=0ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #219 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=0ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #220 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=-1ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #221 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=0ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #222 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=0ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #223 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=0ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #224 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=0ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #225 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=0ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #226 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=-1ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #227 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=0ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #228 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=0ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #229 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=0ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #230 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=0ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #231 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=0ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #232 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=-1ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #233 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=0ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #234 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=0ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #235 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=0ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #236 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=0ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #237 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=-1ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #238 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=0ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #239 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=0ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #240 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=0ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #241 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=0ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #242 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=-1ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #243 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=0ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #244 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=0ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #245 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=0ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #246 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=0ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #247 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=0ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #248 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=0ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #249 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=-1ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #250 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=0ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #251 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=0ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #252 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=0ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #253 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=0ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #254 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=-1ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #255 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=0ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #256 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=0ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #257 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=0ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #258 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=0ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #259 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=0ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #260 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=0ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #261 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=-1ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #262 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=0ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #263 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=0ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #264 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=0ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #265 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=0ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #266 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=0ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #267 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=-1ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #268 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=0ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #269 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=0ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #270 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=0ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #271 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=0ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #272 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=0ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #273 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=0ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #274 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=-1ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #275 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=0ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #276 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=0ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #277 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=0ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #278 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=0ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #279 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=0ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #280 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=-1ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #281 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=0ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #282 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=0ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #283 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=0ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #284 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=0ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #285 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=0ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #286 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=0ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #287 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=-1ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #288 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=0ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #289 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=0ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #290 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=0ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #291 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=0ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #292 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=0ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #293 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=-1ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #294 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=0ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #295 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=0ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #296 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=0ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #297 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=0ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #298 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=0ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #299 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=0ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #300 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=-1ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #301 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=0ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #302 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=0ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #303 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=0ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #304 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=0ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #305 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=0ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #306 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=-1ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #307 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=0ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #308 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=0ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #309 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=0ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #310 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=0ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #311 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=0ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #312 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=-1ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #313 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=0ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #314 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=0ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #315 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=0ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #316 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=0ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #317 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=0ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #318 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=0ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #319 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=-1ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #320 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=0ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #321 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=0ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #322 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=0ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #323 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=0ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #324 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=0ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #325 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=-1ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #326 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=0ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #327 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=0ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #328 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=0ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #329 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=0ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #330 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=0ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #331 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=-1ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #332 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=0ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #333 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=0ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #334 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=0ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #335 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=0ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #336 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=0ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #337 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=-1ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #338 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=0ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #339 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=0ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #340 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=0ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #341 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=0ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #342 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=0ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #343 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=0ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #344 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=-1ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #345 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=0ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #346 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=0ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #347 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=0ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #348 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=0ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #349 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=0ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #350 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=-1ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #351 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=0ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #352 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=0ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #353 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=0ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #354 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=0ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #355 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=0ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #356 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=-1ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #357 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=0ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #358 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=0ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #359 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=0ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #360 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=0ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #361 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=-1ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #362 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=0ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #363 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=0ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #364 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=0ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #365 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=0ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #366 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=0ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #367 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=-1ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #368 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=0ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #369 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=0ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #370 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=0ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #371 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=0ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #372 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=0ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #373 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=0ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #374 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=0ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #375 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=0ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #376 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=0ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #377 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=0ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #378 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=0ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #379 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=0ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #380 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=-1ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #381 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=0ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #382 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=0ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #383 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=0ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #384 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=0ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #385 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=0ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #386 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=-1ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #387 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=0ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #388 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=0ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #389 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=0ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #390 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=0ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #391 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=0ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #392 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=0ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #393 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=0ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #394 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=0ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #395 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=0ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #396 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=0ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #397 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=0ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #398 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=-1ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #399 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] fix-F wait done spins=2 due_in=0ms live=1 quit=0
+[Tfcc0] [API] [GUI-EVENT] #400 GetMessageA -> WM_TIMER id=2 (SW-1220 tick)
+[Tfcc0] [API] [GUI-EVENT] dispatch WM_TIMER hwnd=0x10001 wp=0x2 -> 0
+[Tfcc0] [API] [GUI] event budget 400 exhausted -> WM_QUIT
+[Tfcc0] [API] GetModuleHandleW()
+[Tfcc0] [API] GetModuleHandleW()
+[Tfcc0] [API] EnterCriticalSection(0x1400938c0)
+[Tfcc0] [API] EnterCriticalSection(0x1400938c0)
+[Tfcc0] [API] HeapFree(0x4f3ff30)
+[Tfcc0] [API] LeaveCriticalSection(0x1400938c0)
+[Tfcc0] [API] EnterCriticalSection(0x140093910)
+[Tfcc0] [API] LeaveCriticalSection(0x140093910)
+[Tfcc0] [API] EnterCriticalSection(0x1400939b0)
+[Tfcc0] [API] LeaveCriticalSection(0x1400939b0)
+[Tfcc0] [API] EnterCriticalSection(0x1400939b0)
+[Tfcc0] [API] LeaveCriticalSection(0x1400939b0)
+[Tfcc0] [API] DeleteCriticalSection(0x1400905c0)
+[Tfcc0] [API] DeleteCriticalSection(0x140090618)
+[Tfcc0] [API] DeleteCriticalSection(0x140090670)
+[Tfcc0] [API] HeapFree(0x4f41860)
+[Tfcc0] [API] LeaveCriticalSection(0x1400938c0)
+[Tfcc0] [API] GetProcAddress(module=0xdedd0000, name=AppPolicyGetProcessTerminationMethod)
+[Tfcc0] [API]   -> NULL (not in dispatch table)
+[Tfcc0] [API]   -> optional-stub fallback (not in dispatch table)
+[Tfcc0] [API] GetModuleHandleExW(flags=0)
+[Tfcc0] [API] LoadLibraryA(mscoree.dll)
+[Tfcc0] [API] GetProcAddress(module=0xdebe0000, name=CorExitProcess)
+[Tfcc0] [API]   -> NULL (not in dispatch table)
+[Tfcc0] [API]   -> optional-stub fallback (not in dispatch table)
+[Tfcc0] [API] FreeLibrary()
+[Tfcc0] [API] ExitProcess(0)
+  ]
+}

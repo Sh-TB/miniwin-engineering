@@ -27,69 +27,106 @@ except ImportError:
 
 
 def parse_relay_trace(trace_path):
-    """Parse Wine +relay trace to extract API calls with thread IDs, args, and return values."""
+    """Parse Wine +relay trace to extract API calls with thread IDs, args, and return values.
+
+    Pairing discipline (APP-TEST-2 audit):
+    - Calls pair with returns per-THREAD via a LIFO STACK: Wine +relay emits
+      nested Call/Ret pairs on one tid (A calls B calls C), so a single-slot
+      pending_calls[tid] dict OVERWROTE the outer call and mated the inner
+      Ret with the outer Call's record. A stack fixes the pairing; a Ret
+      whose stack is empty is recorded as an unmatched_ret event, never
+      silently dropped and never attached to a foreign call.
+    - A Ret line with NO retval field leaves return_value=None and
+      return_value_known=False. The old code fabricated "1" for every
+      retval-less function — that invented data poisoned the JSONL stats
+      (e.g. void functions reported success).
+    """
     calls = []
-    # Simpler approach: use a single pass with line-level parsing
     call_re = re.compile(r'^([0-9a-f]+):Call\s+(.+?)\(([^)]*)\)\s+ret=([0-9a-f]+)$')
-    ret_re = re.compile(r'^([0-9a-f]+):Ret\s+(.+?)(\(\) retval=([0-9a-f]+))?\s+ret=([0-9a-f]+)$')
-    # For PE DLL lines (nested parens), use a separate pattern
-    pedll_call_re = re.compile(r'^([0-9a-f]+):Call\s+(PE DLL \(proc=([0-9a-f]+),module=([0-9a-f]+)\s+L"([^"]+)",reason=([^,]+),res=([0-9a-f]+)\))$')
-    pedll_ret_re = re.compile(r'^([0-9a-f]+):Ret\s+(PE DLL \(proc=([0-9a-f]+),module=([0-9a-f]+)\s+L"([^"]+)",reason=([^,]+),res=([0-9a-f]+)\))\s+retval=([0-9a-f]+)$')
-    
-    pending_calls = {}  # tid -> call info
-    
+    ret_re = re.compile(r'^([0-9a-f]+):Ret\s+(.+?)\s+ret=([0-9a-f]+)$')
+    retval_re = re.compile(r'retval=([0-9a-f]+)')
+    pedll_call_re = re.compile(r'^([0-9a-f]+):Call\s+(PE DLL \(proc=([0-9a-f]+),module=([0-9a-f]+)\s+L"([^"]+)",reason=([^,]+),res=([0-9a-f]+)\))\s+ret=([0-9a-f]+)$')
+    pedll_ret_re = re.compile(r'^([0-9a-f]+):Ret\s+(PE DLL \(proc=([0-9a-f]+),module=([0-9a-f]+)\s+L"([^"]+)",reason=([^,]+),res=([0-9a-f]+)\))\s+retval=([0-9a-f]+)\s+ret=([0-9a-f]+)$')
+
+    pending_stacks = defaultdict(list)  # tid -> LIFO stack of open calls
+    unmatched_rets = []                 # Ret lines with no open call on their tid
+
     with open(trace_path, 'r') as f:
         for line in f:
             line = line.rstrip('\n')
-            
-            # Try PE DLL call pattern first (nested parens)
+
             m = pedll_call_re.match(line)
             if m:
-                tid = m.group(1)
-                pending_calls[tid] = {
-                    'thread_id': tid,
+                pending_stacks[m.group(1)].append({
+                    'thread_id': m.group(1),
                     'function': f"DllMain[{m.group(5)}]",
                     'arguments': f"reason={m.group(6)},res={m.group(7)}",
                     'return_address': 'dll_main',
-                    'line_number': len(calls) + 1
-                }
+                    'line_number': len(calls) + len(unmatched_rets) + 1,
+                })
                 continue
-            
-            # Try call pattern
-            m = call_re.match(line)
-            if m:
-                tid = m.group(1)
-                func_raw = m.group(2).strip()
-                pending_calls[tid] = {
-                    'thread_id': tid,
-                    'function': func_raw,
-                    'arguments': m.group(3),
-                    'return_address': m.group(4),
-                    'line_number': len(calls) + 1
-                }
-                continue
-            
-            # Try PE DLL return pattern
+
             m = pedll_ret_re.match(line)
             if m:
-                tid = m.group(1)
-                if tid in pending_calls:
-                    call = pending_calls.pop(tid)
+                stack = pending_stacks.get(m.group(1))
+                if stack:
+                    call = stack.pop()
                     call['return_value'] = m.group(8)
+                    call['return_value_known'] = True
                     calls.append(call)
+                else:
+                    unmatched_rets.append({'thread_id': m.group(1),
+                                           'function': f"DllMain[{m.group(5)}]",
+                                           'line': line})
                 continue
-            
-            # Try return pattern
+            m = call_re.match(line)
+            if m:
+                pending_stacks[m.group(1)].append({
+                    'thread_id': m.group(1),
+                    'function': m.group(2).strip(),
+                    'arguments': m.group(3),
+                    'return_address': m.group(4),
+                    'line_number': len(calls) + len(unmatched_rets) + 1,
+                })
+                continue
+
             m = ret_re.match(line)
             if m:
-                tid = m.group(1)
-                if tid in pending_calls:
-                    call = pending_calls.pop(tid)
-                    retval = m.group(4) if m.group(4) else "1"
-                    call['return_value'] = retval
+                stack = pending_stacks.get(m.group(1))
+                if stack:
+                    call = stack.pop()
+                    rv = retval_re.search(line)
+                    if rv:
+                        call['return_value'] = rv.group(1)
+                        call['return_value_known'] = True
+                    else:
+                        call['return_value'] = None
+                        call['return_value_known'] = False
                     calls.append(call)
+                else:
+                    unmatched_rets.append({'thread_id': m.group(1),
+                                           'function': m.group(2),
+                                           'line': line})
                 continue
-    
+
+    # Any call still open at EOF: the process died inside it (crash path).
+    # Emit with return_value=None + truncated=True so downstream stats can
+    # tell "no return observed" apart from a fabricated success.
+    for tid, stack in pending_stacks.items():
+        for call in stack:
+            call['return_value'] = None
+            call['return_value_known'] = False
+            call['truncated_at_eof'] = True
+            calls.append(call)
+
+    # Surface unmatched Ret count as metadata (never silently dropped)
+    if unmatched_rets:
+        calls.append({
+            'parser_event': 'unmatched_rets',
+            'count': len(unmatched_rets),
+            'sample': unmatched_rets[:5],
+        })
+
     return calls
 
 
@@ -238,18 +275,35 @@ def parse_pe_info(exe_path):
         return {'error': str(e)}
 
 
-def run_exe_under_wine(exe_path, wine_path, wineprefix, output_dir):
-    """Execute a Windows EXE under Wine and capture all trace information."""
+def _wine_bin(wine_path, wine_bin):
+    """Resolve the wine launcher; APP-TEST-2: no longer hardcoded wine64 —
+    configurable, with an honest fallback chain and a clear failure."""
+    for cand in ([wine_bin] if wine_bin else ['wine64', 'wine']):
+        full = os.path.join(wine_path, 'bin', cand)
+        if os.path.isfile(full) and os.access(full, os.X_OK):
+            return full
+    return None
+
+
+def run_exe_under_wine(exe_path, wine_path, wineprefix, output_dir,
+                       timeout=30, wine_bin=None):
+    """Execute a Windows EXE under Wine and capture all trace information.
+
+    APP-TEST-2: wine path/binary/timeout are parameters (were hardcoded);
+    WINEPREFIX is honored exactly as passed — callers wanting isolation pass
+    a fresh prefix (see --fresh-prefix in main).
+    """
     env = os.environ.copy()
     env['WINE'] = wine_path
     env['WINEPREFIX'] = wineprefix
     env['WINEDEBUG'] = '-all'
-    
+    launcher = _wine_bin(wine_path, wine_bin)
+
     timestamp = datetime.now(timezone.utc)
     trace_id = f"TRACE-{timestamp.strftime('%Y%m%d-%H%M%S')}"
     trace_dir = Path(output_dir) / trace_id
     trace_dir.mkdir(parents=True, exist_ok=True)
-    
+
     results = {
         'trace_id': trace_id,
         'exe_path': str(exe_path),
@@ -257,31 +311,39 @@ def run_exe_under_wine(exe_path, wine_path, wineprefix, output_dir):
         'execution_backend': 'Wine',
         'wine_version': None,
         'wine_path': str(wine_path),
+        'wine_prefix': str(wineprefix),
         'exit_code': None,
         'stdout': '',
         'stderr': '',
         'stdout_raw': b'',
         'stderr_raw': b'',
         'execution_time_ms': 0,
-        'crashed': False
+        'crashed': False,
+        'timeout_s': timeout,
     }
-    
+
+    if not launcher:
+        results['exit_code'] = None
+        results['crashed'] = None
+        results['blocked'] = f"no wine launcher under {wine_path}/bin (looked for wine64/wine)"
+        return results, trace_dir
+
     # Get Wine version
     try:
         result = subprocess.run(
-            [os.path.join(wine_path, 'bin', 'wine64'), '--version'],
+            [launcher, '--version'],
             capture_output=True, text=True, env=env, timeout=10
         )
         results['wine_version'] = result.stdout.strip()
     except Exception as e:
         results['wine_version'] = f'error: {e}'
-    
+
     # Run with clean output capture
     start_time = time.time()
     try:
         proc = subprocess.run(
-            [os.path.join(wine_path, 'bin', 'wine64'), str(exe_path)],
-            capture_output=True, text=True, env=env, timeout=30
+            [launcher, str(exe_path)],
+            capture_output=True, text=True, env=env, timeout=timeout
         )
         results['exit_code'] = proc.returncode
         results['stdout'] = proc.stdout
@@ -291,43 +353,54 @@ def run_exe_under_wine(exe_path, wine_path, wineprefix, output_dir):
     except subprocess.TimeoutExpired:
         results['exit_code'] = -1
         results['crashed'] = True
-        results['stderr'] = 'Execution timed out after 30 seconds'
+        results['timed_out'] = True
+        results['stderr'] = f'Execution timed out after {timeout} seconds'
     except Exception as e:
         results['exit_code'] = -1
         results['crashed'] = True
         results['stderr'] = str(e)
-    
+
     results['execution_time_ms'] = round((time.time() - start_time) * 1000, 2)
-    
+
     return results, trace_dir
 
 
-def capture_wine_traces(exe_path, wine_path, wineprefix, output_dir):
+def capture_wine_traces(exe_path, wine_path, wineprefix, output_dir,
+                        timeout=60, wine_bin=None):
     """Run EXE under Wine with various debug channels and produce trace package."""
-    
+
+    launcher = _wine_bin(wine_path, wine_bin)
+    if not launcher:
+        exec_results, trace_dir = run_exe_under_wine(
+            exe_path, wine_path, wineprefix, output_dir, timeout, wine_bin)
+        return exec_results, [], {}, {'error': 'wine launcher unavailable (BLOCKED)'}, trace_dir
+
     print(f"[1/6] Running EXE under Wine (clean execution)...")
-    exec_results, trace_dir = run_exe_under_wine(exe_path, wine_path, wineprefix, output_dir)
-    
+    exec_results, trace_dir = run_exe_under_wine(
+        exe_path, wine_path, wineprefix, output_dir, timeout, wine_bin)
+    if exec_results.get('blocked'):
+        return exec_results, [], {}, {'error': exec_results['blocked']}, trace_dir
+
     env = os.environ.copy()
     env['WINE'] = wine_path
     env['WINEPREFIX'] = wineprefix
-    
-    # Run with +relay for API call tracing
+
+    # Run with +relay for API call tracing (bounded by the same timeout)
     relay_path = trace_dir / 'wine_relay.raw'
     print(f"[2/6] Capturing API call trace (+relay)...")
     start = time.time()
     try:
         with open(relay_path, 'w') as f:
             env['WINEDEBUG'] = '+relay'
-            proc = subprocess.run(
-                [os.path.join(wine_path, 'bin', 'wine64'), str(exe_path)],
-                stdout=f, stderr=subprocess.STDOUT, env=env, timeout=60
+            subprocess.run(
+                [launcher, str(exe_path)],
+                stdout=f, stderr=subprocess.STDOUT, env=env, timeout=timeout
             )
     except subprocess.TimeoutExpired:
         print("  WARNING: Relay trace timed out")
     relay_time = round((time.time() - start) * 1000)
     print(f"  Relay trace captured in {relay_time}ms ({os.path.getsize(relay_path)} bytes)")
-    
+
     # Run with +module for DLL loading trace
     module_path = trace_dir / 'wine_modules.raw'
     print(f"[3/6] Capturing module loading trace (+module)...")
@@ -335,8 +408,8 @@ def capture_wine_traces(exe_path, wine_path, wineprefix, output_dir):
         with open(module_path, 'w') as f:
             env['WINEDEBUG'] = '+module'
             subprocess.run(
-                [os.path.join(wine_path, 'bin', 'wine64'), str(exe_path)],
-                stdout=f, stderr=subprocess.STDOUT, env=env, timeout=60
+                [launcher, str(exe_path)],
+                stdout=f, stderr=subprocess.STDOUT, env=env, timeout=timeout
             )
     except subprocess.TimeoutExpired:
         print("  WARNING: Module trace timed out")
@@ -389,16 +462,23 @@ def build_trace_package(exec_results, api_calls, loaded_modules, pe_info, trace_
     
     # 2. api_trace.json
     # Summarize API calls: group by function, count calls
+    # (parser_event records — unmatched_rets etc. — carry diagnostics, not
+    # calls; they are summarized separately, never fabricated into calls)
     api_summary = defaultdict(lambda: {'count': 0, 'calls': []})
     for call in api_calls:
+        if 'parser_event' in call:
+            continue
         func = call['function']
         api_summary[func]['count'] += 1
         api_summary[func]['calls'].append({
             'thread': call['thread_id'],
             'args': call['arguments'],
             'retval': call['return_value'],
+            'retval_known': call.get('return_value_known'),
             'ret_addr': call['return_address']
         })
+
+    parser_events = [c for c in api_calls if 'parser_event' in c]
     
     # Also include unique functions per DLL
     dll_functions = defaultdict(set)
@@ -410,11 +490,12 @@ def build_trace_package(exec_results, api_calls, loaded_modules, pe_info, trace_
     
     api_trace = {
         'trace_id': exec_results['trace_id'],
-        'total_calls': len(api_calls),
+        'total_calls': len(api_calls) - len(parser_events),
         'unique_functions': len(api_summary),
+        'parser_events': parser_events,
         'by_function': {k: {'count': v['count']} for k, v in sorted(api_summary.items(), key=lambda x: -x[1]['count'])},
         'calls_by_dll': {dll: sorted(funcs) for dll, funcs in sorted(dll_functions.items())},
-        'sample_calls': api_calls[:200],  # First 200 calls as sample
+        'sample_calls': [c for c in api_calls if 'parser_event' not in c][:200],  # First 200 calls as sample
     }
     
     with open(trace_dir / 'api_trace.json', 'w') as f:
@@ -487,12 +568,33 @@ def build_trace_package(exec_results, api_calls, loaded_modules, pe_info, trace_
 
 
 def main():
-    # Configuration
-    EXE_PATH = sys.argv[1] if len(sys.argv) > 1 else '/home/z/my-project/tools/test-binaries-real/hello_simple.exe'
-    WINE_PATH = '/home/z/my-project/tools/wine-9.0-staging-tkg-amd64'
-    WINEPREFIX = '/home/z/.wine-runtime'
-    OUTPUT_DIR = '/home/z/my-project/traces'
-    
+    # APP-TEST-2: fully configurable via argv/env — nothing hardcoded.
+    import argparse
+    ap = argparse.ArgumentParser(description='Real Wine trace collector (no simulation)')
+    ap.add_argument('exe', nargs='?', default=os.environ.get(
+        'TRACE_EXE', '/home/z/my-project/tools/test-binaries-real/hello_simple.exe'))
+    ap.add_argument('--wine', default=os.environ.get(
+        'WINE_PATH', '/home/z/my-project/tools/wine-9.0-staging-tkg-amd64'))
+    ap.add_argument('--prefix', default=os.environ.get('WINEPREFIX', '/home/z/.wine-runtime'))
+    ap.add_argument('--wine-bin', default=os.environ.get('WINE_BIN'))
+    ap.add_argument('--timeout', type=int, default=int(os.environ.get('TRACE_TIMEOUT', '30')))
+    ap.add_argument('--out', default=os.environ.get('TRACE_OUT', '/home/z/my-project/traces'))
+    ap.add_argument('--fresh-prefix', action='store_true',
+                    help='create a DISPOSABLE prefix for this run (never touches '
+                         'the default ~/.wine; avoids polluting shared state)')
+    args = ap.parse_args()
+
+    EXE_PATH = args.exe
+    WINE_PATH = args.wine
+    OUTPUT_DIR = args.out
+
+    if args.fresh_prefix:
+        import tempfile
+        WINEPREFIX = tempfile.mkdtemp(prefix='wineprefix-fresh-')
+        print(f"Disposable prefix: {WINEPREFIX} (deleted parents keep it under /tmp for post-mortem)")
+    else:
+        WINEPREFIX = args.prefix
+
     os.environ['WINEPREFIX'] = WINEPREFIX
     
     print(f"=" * 70)
@@ -524,8 +626,15 @@ def main():
     
     # Execute and capture
     exec_results, api_calls, loaded_modules, pe_info, trace_dir = capture_wine_traces(
-        EXE_PATH, WINE_PATH, WINEPREFIX, OUTPUT_DIR
-    )
+        EXE_PATH, WINE_PATH, WINEPREFIX, OUTPUT_DIR,
+        timeout=args.timeout, wine_bin=args.wine_bin)
+
+    if exec_results.get('blocked'):
+        print(f"\nBLOCKED: {exec_results['blocked']}")
+        print("Wine is unavailable in this environment; the collector made no")
+        print("fabricated output. Re-run when a wine install is reachable:")
+        print(f"  python3 {sys.argv[0]} <exe> --wine <path> --fresh-prefix")
+        return 3
     
     # Build package
     print(f"\nBuilding trace package...")

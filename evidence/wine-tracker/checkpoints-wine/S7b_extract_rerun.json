@@ -1,0 +1,33 @@
+{
+  "id": "S7b_extract_rerun",
+  "desc": "extract the rerun archive",
+  "start": "2026-10-29T19:49:39.436+00:00",
+  "host": false,
+  "argv": [
+    "/home/z/my-project/tools/wine-10.0/bin/wine64",
+    "/home/z/my-project/workspace/miniwin-engineering/evidence/app-tests/winrar/Rar.exe",
+    "x",
+    "-y",
+    "demo2.rar",
+    "out2\\\\"
+  ],
+  "engine_used": "wine",
+  "exit_code": 0,
+  "duration_s": 4.49,
+  "stdout_bytes": 412,
+  "stderr_bytes": 0,
+  "stdout_head": "\nRAR 7.12 x64   Copyright (c) 1993-2025 Alexander Roshal   23 Jun 2025\nTrial version             Type 'rar -?' for help\n\nExtracting from demo2.rar\n\nCreating    out2                                    ",
+  "verifications": [
+    {
+      "name": "rerun_doc_a_hash_match",
+      "ok": true
+    },
+    {
+      "name": "rerun_doc_b_hash_match",
+      "ok": true
+    }
+  ],
+  "pass": true,
+  "outcome": "pass",
+  "finish": "2026-10-29T19:49:43.923+00:00"
+}

@@ -1,0 +1,34 @@
+{
+  "run_id": "winrar-console-workflow-miniwin-20261029-194944-10666",
+  "spec": "winrar-console-workflow-miniwin",
+  "engine": "miniwin",
+  "engine_detail": "MiniWin loader (merged HEAD), production C runtime",
+  "start": "2026-10-29T19:49:44.803+00:00",
+  "cwd": "/home/z/my-project/workspace/miniwin-engineering/artifacts/wine-tracker/runs/winrar-console-workflow-miniwin-20261029-194944-10666",
+  "env_keys": [
+    "MINWIN_RESULTS_DIR"
+  ],
+  "app": {
+    "name": "WinRAR console archiver (Rar.exe)",
+    "version": "7.12 x64 (24 Jun 2025)",
+    "executable": "/home/z/my-project/workspace/miniwin-engineering/evidence/app-tests/winrar/Rar.exe",
+    "sha256": "bdbe2bde697c45e02902f19415d7af07dc871f30a3ac84fb552657aeddc38714"
+  },
+  "checkpoints_planned": [
+    "S1_launch",
+    "S2_create",
+    "S3_list",
+    "S4_test",
+    "S5_extract",
+    "S6_verify_hashes",
+    "S7_repeatability",
+    "S7b_extract_rerun"
+  ],
+  "timeout_s": 90,
+  "fixture_hashes": {
+    "doc_a.txt": "085075db72ba23ea483228c1f666392c0803700dc2bee9b720952ed278c65732",
+    "doc_b.bin": "c6b2bcde7dda98b233e8ce2d9e353d49140e167de003bac9fbabe11fd03cef82"
+  },
+  "duration_s": 0.09,
+  "finish": "2026-10-29T19:49:44.896+00:00"
+}

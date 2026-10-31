@@ -1,0 +1,2 @@
+[TRACE] Command line: artifacts/sweep050/stage/everything/everything.exe
+[GDI-FRAME] #1 -> miniwin-results/everything.exe/screenshots/frame_001.bmp

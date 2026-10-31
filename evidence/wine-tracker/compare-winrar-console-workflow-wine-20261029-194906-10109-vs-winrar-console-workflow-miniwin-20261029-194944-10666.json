@@ -1,0 +1,34 @@
+{
+  "wine_run": "/home/z/my-project/workspace/miniwin-engineering/artifacts/wine-tracker/runs/winrar-console-workflow-wine-20261029-194906-10109",
+  "miniwin_run": "/home/z/my-project/workspace/miniwin-engineering/artifacts/wine-tracker/runs/winrar-console-workflow-miniwin-20261029-194944-10666",
+  "wine_api_families": 0,
+  "miniwin_api_families": 0,
+  "divergence_candidates": [
+    {
+      "candidate_id": "FS-wine",
+      "checkpoint": "filesystem",
+      "expected": "n/a (informational)",
+      "observed": {
+        "added": 6,
+        "removed": 0,
+        "changed": 0
+      },
+      "confidence": "supported",
+      "note": "observed side effects; attribution to APIs needs more evidence"
+    },
+    {
+      "candidate_id": "FS-miniwin",
+      "checkpoint": "filesystem",
+      "expected": "n/a (informational)",
+      "observed": {
+        "added": 7,
+        "removed": 0,
+        "changed": 0
+      },
+      "confidence": "supported",
+      "note": "observed side effects; attribution to APIs needs more evidence"
+    }
+  ],
+  "confirmed": [],
+  "note": "no trace-similarity percentage is produced on purpose"
+}

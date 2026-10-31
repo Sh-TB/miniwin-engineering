@@ -1,0 +1,5 @@
+test	guest	result	rc	detail
+bad_sha256_refusal	produkey	BLOCKED_SHA_MISMATCH	3	expected=deadbeef... observed=e4604e...; artifact not staged; execution refused
+offline_cache_miss	everything	BLOCKED_OFFLINE	2	MINWIN_OFFLINE=1 clear actionable message
+cache_reuse	resourcesextract	VERIFIED_CACHE	0	second run reused verified entry, no re-download
+atomic_staging	produkey	VERIFIED_DOWNLOAD	0	partial download renamed only after hash ok

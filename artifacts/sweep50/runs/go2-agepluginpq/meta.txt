@@ -1,5 +1,0 @@
-exe=age/age-plugin-pq.exe
-sha256=caa209a0573a8c0e9e9af162670ad6649fe448508249004e0c7c8ad059a580c3
-timeout=10s
-args=none
-date_utc=2026-10-17T18:39:39Z

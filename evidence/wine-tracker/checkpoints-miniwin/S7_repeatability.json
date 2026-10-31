@@ -1,0 +1,29 @@
+{
+  "id": "S7_repeatability",
+  "desc": "repeat create+extract as demo2/out2; extracted bytes must match, archive bytes compared informationally",
+  "start": "2026-10-29T19:49:44.873+00:00",
+  "host": false,
+  "argv": [
+    "/home/z/my-project/workspace/miniwin-engineering/minwin_loader",
+    "/home/z/my-project/workspace/miniwin-engineering/evidence/app-tests/winrar/Rar.exe",
+    "a",
+    "-y",
+    "demo2.rar",
+    "doc_a.txt",
+    "doc_b.bin"
+  ],
+  "engine_used": "miniwin",
+  "exit_code": 0,
+  "duration_s": 0.01,
+  "stdout_bytes": 477,
+  "stderr_bytes": 140,
+  "verifications": [
+    {
+      "name": "rerun_archive_created",
+      "ok": true
+    }
+  ],
+  "pass": true,
+  "outcome": "pass",
+  "finish": "2026-10-29T19:49:44.885+00:00"
+}

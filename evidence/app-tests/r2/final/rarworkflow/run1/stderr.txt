@@ -1,0 +1,4 @@
+[TRACE] Command line: /home/z/my-project/workspace/miniwin-engineering/artifacts/sweep50/dl/winrar/Rar.exe a -ep archive.rar ../src/hello.txt
+[WARN]   unresolved: LsaAddAccountRights
+[WARN]   unresolved: GetSecurityDescriptorLength
+[WARN] 2 imports unresolved

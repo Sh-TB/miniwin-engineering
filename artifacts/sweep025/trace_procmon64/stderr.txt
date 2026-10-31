@@ -1,8 +1,0 @@
-[TRACE] Command line: /home/z/my-project/workspace/miniwin-engineering/artifacts/sweep50/dl/procmon64/Procmon64.exe
-[WARN]   unresolved: TrackMouseEvent
-[WARN]   unresolved: CallNextHookEx
-[WARN]   unresolved: ExtractIconExW
-[WARN]   unresolved: IsCompositionActive
-[WARN] 13 imports unresolved
-[MessageBoxW] Process Monitor: Process Monitor must be run from an administrator account.
-[MessageBox] dialog #1 rendered -> miniwin-results/Procmon64.exe/screenshots/messagebox_1.bmp

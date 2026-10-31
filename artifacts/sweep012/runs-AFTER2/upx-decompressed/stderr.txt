@@ -1,1 +1,0 @@
-[TRACE] Command line: /home/z/my-project/workspace/miniwin-engineering/samples/upx_decompressed.exe

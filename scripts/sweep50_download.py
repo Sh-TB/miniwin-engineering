@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """SWEEP-50 phase 1: mass-download ~70 small Windows PE programs across spectra.
 
-Spectra covered (user directive 2026-10-18 "از هر طیفی"):
+Spectra covered (user directive 2026-10-18 (from every spectrum)):
   - toolchain: MSVC/UCRT, MSVCRT (old), MinGW, Go-static, Rust-MSVC, PyInstaller
   - subsystem: console + GUI
   - era: 2000s msvcrt (Sysinternals/GnuWin32) .. 2026

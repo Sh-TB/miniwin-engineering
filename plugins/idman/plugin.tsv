@@ -1,0 +1,17 @@
+name	idman
+arch	x86
+desc	Internet Download Manager 6.42b2 (user-named base app #2)
+source_url	https://mirror2.internetdownloadmanager.com/idman642build2.exe
+source_sha256	276aa7e4ff7682445b011ebe6ac3920e7eca6ece7d3f6723b1f1cb515164461b
+artifact	artifacts/sweep080/dl/idman642build2.exe
+unpack	none
+exe	artifacts/sweep080/dl/idman642build2.exe
+args	
+runs	3
+timeout	90
+keys	13,13
+mouse	150,150
+known	SW-1370 SW-1362 SW-1363
+note	full unpacker+registry run; renders honest log-file dialog; frontier = CreateProcessW child chain (SW-1370)
+sandbox	yes
+guest	idman.installer

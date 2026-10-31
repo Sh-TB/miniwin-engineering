@@ -1,0 +1,17 @@
+== fd.exe (Rust 1.73 MSVC, fd 9.0.0) SWEEP-045 acceptance ==
+-- --version
+fd 9.0.0
+-- no-args walk (exit 0, lists /tmp/fdtr):
+[MiniWin] Loading /home/z/my-project/workspace/miniwin-engineering/artifacts/sweep045/bin/fd.exe...
+err.txt
+err2.txt
+miniwin-results\
+miniwin-results\fd.exe\
+miniwin-results\fd.exe\analysis\
+miniwin-results\fd.exe\api_trace.json
+miniwin-results\fd.exe\binary\
+miniwin-results\fd.exe\execution\
+miniwin-results\fd.exe\screenshots\
+out.txt
+out2.txt
+-- pattern filter 'txt' exit 0, 19 lines

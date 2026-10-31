@@ -1,0 +1,8 @@
+[TRACE] Command line: artifacts/sweep050/guests/winmine/winmine.exe
+[MessageBoxW] : 
+[MessageBox] dialog #1 rendered -> miniwin-results/winmine.exe/screenshots/messagebox_1.bmp
+[MessageBoxW] : 
+[MessageBox] dialog #2 rendered -> miniwin-results/winmine.exe/screenshots/messagebox_2.bmp
+[MessageBoxW] : 
+[MessageBox] dialog #3 rendered -> miniwin-results/winmine.exe/screenshots/messagebox_3.bmp
+[GDI-FRAME] #1 -> miniwin-results/winmine.exe/screenshots/frame_001.bmp

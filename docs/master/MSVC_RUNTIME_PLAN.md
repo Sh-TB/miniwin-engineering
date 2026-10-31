@@ -1,7 +1,7 @@
 # MSVC C++ Runtime Base Plan — versions, legality, implementation strategy
 
 **Status:** ACTIVE (ADR-012). **Created:** 2026-10-17. **Driver:** user directive —
-"اکثر برنامه‌ها به MSVC C++ نیاز دارند؛ با نسخه‌های مختلف حلش کن؛ بیس کاری مهم" —
+(most programs need MSVC C++; solve it across the different versions; the base matters) —
 plus the 100-program ladder (`.agent/PROGRAM_LADDER.md`) which tells us exactly
 which CRT versions our target programs actually load.
 

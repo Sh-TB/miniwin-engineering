@@ -1,0 +1,33 @@
+{
+  "run_id": "winrar-create-relay-wine-20261029-195304-11724",
+  "spec": "winrar-create-relay-wine",
+  "engine": "wine",
+  "engine_detail": "wine-10.0 (Debian 10.0~repack-6); WINEDEBUG=+relay,+module bounded sample (measured: bare +loaddll is an invalid channel in this build and POISONS the whole WINEDEBUG spec \u2014 relay silently dies)",
+  "start": "2026-10-29T19:53:04.272+00:00",
+  "cwd": "/home/z/my-project/workspace/miniwin-engineering/artifacts/wine-tracker/runs/winrar-create-relay-wine-20261029-195304-11724",
+  "env_keys": [
+    "WINEDEBUG",
+    "WINEPREFIX"
+  ],
+  "app": {
+    "name": "WinRAR console archiver (Rar.exe)",
+    "version": "7.12 x64",
+    "executable": "/home/z/my-project/workspace/miniwin-engineering/evidence/app-tests/winrar/Rar.exe",
+    "sha256": "bdbe2bde697c45e02902f19415d7af07dc871f30a3ac84fb552657aeddc38714"
+  },
+  "checkpoints_planned": [
+    "S2_create_relayed"
+  ],
+  "timeout_s": 90,
+  "prefix_init": {
+    "exit_code": 53,
+    "system32_files": 786,
+    "patched": "seeded zlib1.dll"
+  },
+  "fixture_hashes": {
+    "doc_a.txt": "085075db72ba23ea483228c1f666392c0803700dc2bee9b720952ed278c65732",
+    "doc_b.bin": "c6b2bcde7dda98b233e8ce2d9e353d49140e167de003bac9fbabe11fd03cef82"
+  },
+  "duration_s": 34.19,
+  "finish": "2026-10-29T19:53:38.458+00:00"
+}

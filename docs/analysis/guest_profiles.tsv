@@ -1,0 +1,9 @@
+file	arch	compiler	language	crt	managed	frameworks	prerequisites	installer_markers	import_count
+winrar712.exe	x64	?	?	?	no	none	gdiplus.dll;kernel32.dll;oleaut32.dll	RAR archive/SFX payload	3
+WinRAR.exe	x64	C/C++ (CRT statically linked; toolchain not externally visible)	C/C++ (static CRT)	static	no	none	comctl32.dll;comdlg32.dll;dwmapi.dll;gdi32.dll;gdiplus.dll;kernel32.dll;msimg32.dll;ole32.dll;oleaut32.dll;powrprof.dll;shell32.dll;shlwapi.dll;user32.dll;uxtheme.dll	RAR archive/SFX payload	14
+Uninstall.exe	x64	C/C++ (CRT statically linked; toolchain not externally visible)	C/C++ (static CRT)	static	no	none	advapi32.dll;gdi32.dll;kernel32.dll;ole32.dll;oleaut32.dll;shell32.dll;user32.dll	none	7
+flood.exe	x64	Microsoft Visual C++ 2015+ (MSVC)	C/C++	UCRT (api-ms-win-crt-*)	no	none	comctl32.dll;comdlg32.dll;gdi32.dll;kernel32.dll;user32.dll;vcruntime140.dll	none	14
+npp.8.9.8.1.Installer.x64.exe	x86	?	?	?	no	none	none beyond system DLLs	NSIS installer	0
+notepad++.exe	x64	C/C++ (CRT statically linked; toolchain not externally visible)	C/C++ (static CRT)	static	no	none	advapi32.dll;bcrypt.dll;comctl32.dll;comdlg32.dll;crypt32.dll;dbghelp.dll;dwmapi.dll;gdi32.dll;imm32.dll;kernel32.dll;msimg32.dll;ole32.dll;oleaut32.dll;sensapi.dll;shell32.dll;shlwapi.dll;user32.dll;uxtheme.dll;version.dll;wininet.dll;wintrust.dll	none	21
+everything.exe	x64	C/C++ (CRT statically linked; toolchain not externally visible)	C/C++ (static CRT)	static	no	none	advapi32.dll;comctl32.dll;comdlg32.dll;gdi32.dll;kernel32.dll;ole32.dll;shell32.dll;shlwapi.dll;user32.dll;ws2_32.dll	none	10
+idman642build2.exe	x86	?	?	?	no	none	none beyond system DLLs	none	0

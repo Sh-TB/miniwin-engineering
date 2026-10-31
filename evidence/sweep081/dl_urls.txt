@@ -1,0 +1,4 @@
+everything.1.4.1.1028.x64.zip	https://www.voidtools.com/Everything-1.4.1.1028.x64.zip	1869716	4f4a9b9299b608d48b065f95fd80b9c095cdc7114cd467cd9b54944b23559dfe
+winnc11.setup.exe	https://www.winnc.com/setup.exe	12964000	bef0fcafd7ce5b111beb61923b304c3f001a53061200ba65cdbc19c441ec011a
+renamer75.portable.zip	https://www.den4b.com/download/renamer/portable/7.5 (key flow)	4565468	b11342a59f22d9c48482a7f08e060109da21bb25cfc8acdd42d2b40ea6489168
+notepad2mod.x64.zip	https://github.com/XhmikosR/notepad2-mod/releases/download/4.2.25.998/notepad2-mod.4.2.25.998_x64.zip	814355	c893ce4ac5f38ae9500d92f3ff4060542da2eae93a7d602b4bb5c4bec7562516

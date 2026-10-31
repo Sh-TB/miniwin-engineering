@@ -1,5 +1,0 @@
-exe=openssh/ssh-keyscan.exe
-sha256=32eb6a2b80443207a2481085582c0ed01bbddcfef4b1f3f2cc680aa16d0f3135
-timeout=10s
-args=none
-date_utc=2026-10-17T18:39:39Z

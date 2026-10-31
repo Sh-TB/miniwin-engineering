@@ -1,0 +1,2 @@
+[ENTRY] va=00403ab6 hit=1 prev=00403ab6 esp=3fefec50 [esp]=00000000 eax=00000000 ecx=00429ac0 edx=0121e300 ebx=00434000 ebp=00000000 esi=00436800 edi=00a0047a
+[ENTRY] va=00403dbb hit=1 prev=00403dbb esp=3fefec4c [esp]=00403abb eax=00000000 ecx=00429ac0 edx=0121e300 ebx=00434000 ebp=00000000 esi=00436800 edi=00a0047a

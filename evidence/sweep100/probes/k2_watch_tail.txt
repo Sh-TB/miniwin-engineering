@@ -1,0 +1,12 @@
+[WATCH32-R32] va=3fefec38 val=00401420 eip=00401404 esp=3fefec38 ebp=00408310 from=0x20edd7d n=11749
+[WATCH32-R32] va=3fefec44 val=00404053 eip=00401423 esp=3fefec44 ebp=00408310 from=0x20edd7d n=11750
+[WATCH32-W32] va=3fefec48 val=00000001 eip=00404054 esp=3fefec48 ebp=00408310 from=0x20edd7d n=11751
+[WATCH32-W32] va=3fefec44 val=0040405a eip=0040405a esp=3fefec44 ebp=00408310 from=0x20edd7d n=11752
+[WATCH32-W32] va=3fefec40 val=00000001 eip=00403d0c esp=3fefec40 ebp=00408310 from=0x20edd7d n=11753
+[WATCH32-R32] va=3fefec40 val=00000001 eip=00403d23 esp=3fefec40 ebp=00408310 from=0x20edd7d n=11754
+[WATCH32-R32] va=3fefec44 val=0040405a eip=00403d26 esp=3fefec44 ebp=00408310 from=0x20edd7d n=11755
+[WATCH32-R32] va=3fefec4c val=00403abb eip=0040408a esp=3fefec4c ebp=00408310 from=0x20edd7d n=11756
+[WATCH32-R32] va=3fefec50 val=00000000 eip=0040408b esp=3fefec50 ebp=00408310 from=0x20edd7d n=11757
+[WATCH32-R32] va=3fefec54 val=00000000 eip=0040408c esp=3fefec54 ebp=00408310 from=0x20edd7d n=11758
+[WATCH32-R32] va=3fefec58 val=00000000 eip=0040408d esp=3fefec58 ebp=00000000 from=0x20edd7d n=11759
+[WATCH32-R32] va=3fefec6c val=0043403a eip=00404091 esp=3fefec6c ebp=00000000 from=0x20edd7d n=11760

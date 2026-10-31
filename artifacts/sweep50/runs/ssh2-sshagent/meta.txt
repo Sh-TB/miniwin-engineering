@@ -1,5 +1,0 @@
-exe=openssh/ssh-agent.exe
-sha256=138df27c7a8c35fbadde6fee35592336b04e058f4690b03f459ad79edd68ab63
-timeout=10s
-args=none
-date_utc=2026-10-17T18:39:39Z

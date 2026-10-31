@@ -1,3 +1,0 @@
-[TRACE] Command line: ../../../../miniwin-results/snake.exe
-[ERROR] Not a regular file: ../../../../miniwin-results/snake.exe
-[ERROR] Failed to load PE

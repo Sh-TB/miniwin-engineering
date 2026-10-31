@@ -1,0 +1,51 @@
+id	name	resolved_url	license_source	size	sha256	format	arch	subsystem	path	note
+P01	blackbox	https://www.chiark.greenend.org.uk/~sgtatham/puzzles/blackbox.exe	sgtatham puzzles, MIT	162888	cae195b8ebcbf6d5708472e6673bb9d3847b0dbfd55ec5c9af0e7f5b0c65ea96	PE32+	x64	GUI	artifacts/sweep074/dl/blackbox.exe	puzzle GUI
+P02	bridges	https://www.chiark.greenend.org.uk/~sgtatham/puzzles/bridges.exe	sgtatham puzzles, MIT	183368	14e3576dae1de22c47ac92a9af457bf8e07c3a74369ae0d287a7c0dbcedc240c	PE32+	x64	GUI	artifacts/sweep074/dl/bridges.exe	puzzle GUI
+P03	cube	https://www.chiark.greenend.org.uk/~sgtatham/puzzles/cube.exe	sgtatham puzzles, MIT	165448	d485dbfcafd4ca44e047b5aafddc7cb6ec5da06e61cd1018663effd4440f43b1	PE32+	x64	GUI	artifacts/sweep074/dl/cube.exe	puzzle GUI
+P04	dominosa	https://www.chiark.greenend.org.uk/~sgtatham/puzzles/dominosa.exe	sgtatham puzzles, MIT	182344	f289f88a21c7ebd34640a0d49bd55cbddfcd91bc19450f3a58cc8e8fe08ed0b0	PE32+	x64	GUI	artifacts/sweep074/dl/dominosa.exe	puzzle GUI
+P05	fifteen	https://www.chiark.greenend.org.uk/~sgtatham/puzzles/fifteen.exe	sgtatham puzzles, MIT	155720	4e576db74c72107ec3e4eea6d1d4f6ddc34c1ebe6e14281da88d9557d71a59c5	PE32+	x64	GUI	artifacts/sweep074/dl/fifteen.exe	puzzle GUI
+P06	flood	https://www.chiark.greenend.org.uk/~sgtatham/puzzles/flood.exe	sgtatham puzzles, MIT	158792	f36da8c35b48d3f156bb1cfca08480e5d45fb17411e140443d50e9b32bc5283f	PE32+	x64	GUI	artifacts/sweep074/dl/flood.exe	puzzle GUI
+P07	guess	https://www.chiark.greenend.org.uk/~sgtatham/puzzles/guess.exe	sgtatham puzzles, MIT	161352	950d3f190d9c8bc354f19201ce5caf1578e781eb02d9fbc0d78865060f427a31	PE32+	x64	GUI	artifacts/sweep074/dl/guess.exe	puzzle GUI
+P08	lightup	https://www.chiark.greenend.org.uk/~sgtatham/puzzles/lightup.exe	sgtatham puzzles, MIT	171080	ac0b5ccc30bd3e009f49a6f3484274a153247d74c02a1daa97eaabc6d03168d4	PE32+	x64	GUI	artifacts/sweep074/dl/lightup.exe	puzzle GUI
+P09	map	https://www.chiark.greenend.org.uk/~sgtatham/puzzles/map.exe	sgtatham puzzles, MIT	178248	5f5df70b283843ee5dc022c32a2ad7013be37b36547755e9b4ef34ababa04cb5	PE32+	x64	GUI	artifacts/sweep074/dl/map.exe	puzzle GUI
+P10	mines	https://www.chiark.greenend.org.uk/~sgtatham/puzzles/mines.exe	sgtatham puzzles, MIT	353864	3ba695d8bccac02cb9e6d63e630b50be15b729a952769814bbb684f9c9f096f3	PE32+	x64	GUI	artifacts/sweep074/dl/mines.exe	puzzle GUI
+P11	netgame	https://www.chiark.greenend.org.uk/~sgtatham/puzzles/netgame.exe	sgtatham puzzles, MIT	184904	9ec8d4af3c854194e604cec8bb9516c86f440751522da2499e4d9de15d3b376d	PE32+	x64	GUI	artifacts/sweep074/dl/netgame.exe	puzzle GUI
+P12	pattern	https://www.chiark.greenend.org.uk/~sgtatham/puzzles/pattern.exe	sgtatham puzzles, MIT	173640	ed5a1bd768d4f05d6c3a5d4f82b6ffa166996b401838895b94dfe154fe8adbf3	PE32+	x64	GUI	artifacts/sweep074/dl/pattern.exe	puzzle GUI
+P13	pegs	https://www.chiark.greenend.org.uk/~sgtatham/puzzles/pegs.exe	sgtatham puzzles, MIT	165448	d093bd486964bd19ccf6147800aa2ee0cfe13bfd19ea145df2ccc62cf904ecc7	PE32+	x64	GUI	artifacts/sweep074/dl/pegs.exe	puzzle GUI
+P14	range	https://www.chiark.greenend.org.uk/~sgtatham/puzzles/range.exe	sgtatham puzzles, MIT	167496	8ddb74bb05aaf6738d5294d1cff678fd23871977e882f113e9f56d29fa4833db	PE32+	x64	GUI	artifacts/sweep074/dl/range.exe	puzzle GUI
+P15	rect	https://www.chiark.greenend.org.uk/~sgtatham/puzzles/rect.exe	sgtatham puzzles, MIT	178760	0e727e5af58679c81ebd5a755b393e4261de62ff3cf45359c88dfe2cadee93ba	PE32+	x64	GUI	artifacts/sweep074/dl/rect.exe	puzzle GUI
+P16	samegame	https://www.chiark.greenend.org.uk/~sgtatham/puzzles/samegame.exe	sgtatham puzzles, MIT	159816	fa4f1010539369d292bc3b8efa89b46718651a8d07dd58d2170d4d1891c170b9	PE32+	x64	GUI	artifacts/sweep074/dl/samegame.exe	puzzle GUI
+P17	signpost	https://www.chiark.greenend.org.uk/~sgtatham/puzzles/signpost.exe	sgtatham puzzles, MIT	175688	90d173ec7ee587b1aa2a32a8260aec4aa644f24346908b3b2d9e031be052c85d	PE32+	x64	GUI	artifacts/sweep074/dl/signpost.exe	puzzle GUI
+P18	slant	https://www.chiark.greenend.org.uk/~sgtatham/puzzles/slant.exe	sgtatham puzzles, MIT	172616	8e4003af38bdca370c240a1141f69040f294126d19ce7157154b01637341ce54	PE32+	x64	GUI	artifacts/sweep074/dl/slant.exe	puzzle GUI
+P19	solo	https://www.chiark.greenend.org.uk/~sgtatham/puzzles/solo.exe	sgtatham puzzles, MIT	217160	26b01b71ca8eeac124aed7cbcc8975ab39f665b91cfa65583a440441cade0c60	PE32+	x64	GUI	artifacts/sweep074/dl/solo.exe	puzzle GUI
+P20	towers	https://www.chiark.greenend.org.uk/~sgtatham/puzzles/towers.exe	sgtatham puzzles, MIT	186440	70eb10ee3add6e12062699f9d797fa3570ebb1ce705945b4df8db26b714336e1	PE32+	x64	GUI	artifacts/sweep074/dl/towers.exe	puzzle GUI
+U03	Notepad3 x86	github rizonesoft Notepad3 REL_7.26.602.1	Freeware, source GPL	4698424	530b7287e94da54877e68e54e57b433e7068a0c814c2dc5b907fbe2ae7e613ae	PE32	x86	GUI	artifacts/sweep074/dl/x/notepad3-x86/Notepad3.exe	utility
+U04	Notepad3 x64	github rizonesoft Notepad3 REL_7.26.602.1	Freeware, source GPL	5289272	92bc17ffc6300d7c73b4ca735f65e510dda7243a490cedef14385cf142d57a96	PE32+	x64	GUI	artifacts/sweep074/dl/x/notepad3-x64/Notepad3.exe	utility
+U07	AutoHotkey x86 (U32)	github AutoHotkey v1.1.37.02	GPLv2	914432	ba35b8b4346b79b8bb4f97360025cb6befaf501b03149a3b5fef8f07bdf265c7	PE32	x86	GUI	artifacts/sweep074/dl/x/ahk-v1/AutoHotkeyU32.exe	utility
+U08	AutoHotkey x64 (v2)	github AutoHotkey v2.0.19	GPLv2	1279488	3880f9ec464dfe78c16bbd8b9f30560227154c292280337346a30c8fd92871fe	PE32+	x64	GUI	artifacts/sweep074/dl/x/ahk-v2/AutoHotkey64.exe	utility
+U16	ZoomIt x86	live.sysinternals.com/ZoomIt.exe	Sysinternals license	137084216	e5c55414879086ac6b0b8ac7cb8e739c3615135421a870ab7806cc5f019d55ee	PE32	x86	GUI	artifacts/sweep074/dl/utils/zoomit32.exe	utility
+U17	BgInfo x64	live.sysinternals.com/Bginfo64.exe	Sysinternals license	2824984	1d00da4ecb04825ae2106adc5fe70e9317976c5ace85f335894d22c4e2c04d54	PE32+	x64	GUI	artifacts/sweep074/dl/utils/bginfo64.exe	utility
+U18	RegScanner x86	nirsoft.net/utils/regscanner.zip	Freeware	53760	b07497d6a70304dea43c1fe65a46e914307b811b658c19b3eacc5ae2a037f99f	PE32	x86	GUI	artifacts/sweep074/dl/x/regscanner-x86/RegScanner.exe	utility
+U19	RegScanner x64	nirsoft.net/utils/regscanner-x64.zip	Freeware	155136	544e5be03c0722bd98df17ef795967e94bbeb4aa14ae981fa1537fccef0649a9	PE32+	x64	GUI	artifacts/sweep074/dl/x/regscanner-x64/RegScanner.exe	utility
+U20	WhatInStartup x64	nirsoft.net/utils/whatinstartup-x64.zip	Freeware	131168	15099976118e7caa876f4d33fc948e29009509115557a62a9c897024dc62d26d	PE32+	x64	GUI	artifacts/sweep074/dl/x/wis-x64/WhatInStartup.exe	utility
+U21	ShellMenuView x64	nirsoft.net/utils/shmnview-x64.zip	Freeware	111312	681d9d7a1793cf0bce7743f0edd2724691df270b80867477a5ec3217a57ae634	PE32+	x64	GUI	artifacts/sweep074/dl/x/shmnview-x64/shmnview.exe	utility
+U22	ShellExView x64	nirsoft.net/utils/shexview-x64.zip	Freeware	183184	c388af0018fa47383090a6fe112aabaf59ab2fc8579c814f66b71879c397d957	PE32+	x64	GUI	artifacts/sweep074/dl/x/shex-x64/shexview.exe	utility
+U23	CurrPorts x64	nirsoft.net/utils/cports-x64.zip	Freeware	216064	8f16759318ad9a708dd787891de737a89063142b573d4199aeb965edb98f902e	PE32+	x64	GUI	artifacts/sweep074/dl/x/cports-x64/cports.exe	utility
+U24	FileTypesMan x64	nirsoft.net/utils/filetypesman-x64.zip	Freeware	171520	c3c83dfa2a38e7ab5fe4e69f85001001c8832aa032ed28a5098bc4679d3ced42	PE32+	x64	GUI	artifacts/sweep074/dl/x/ftm-x64/FileTypesMan.exe	utility
+U25	TcpView x64	live.sysinternals.com/Tcpview64.exe	Sysinternals license	1087368	0cbcb7ec4a042622b0d9d91b18f908e4208e4725ee1fa74a3555c4dcb622cfc1	PE32+	x64	GUI	artifacts/sweep074/dl/utils/tcpview64.exe	utility
+U26	WinObj x64	live.sysinternals.com/Winobj.exe	Sysinternals license	1443728	c8313c8ea55733451a27dd43b66f90b27ff7cee5ab207c6826387a9b79c8f8a7	PE32	x86	GUI	artifacts/sweep074/dl/utils/winobj.exe	utility
+U27	WinLister x64	nirsoft.net/utils/winlister-x64.zip	Freeware	64720	805b4fbf4243d7426441da9aedf6e0f8be1cf31f7c412f5d31950c6f058c9ce7	PE32+	x64	GUI	artifacts/sweep074/dl/x/winlister-x64/winlister.exe	utility
+U28	Sigcheck x64 (CLI)	download.sysinternals.com/files/Sigcheck.zip	Sysinternals license	528184	f3d671b4bab4714746d0034104363d4f6deef591e979e8e37170803e8960487d	PE32+	x64	CUI	artifacts/sweep074/dl/x/sigcheck/sigcheck64.exe	utility
+R2	Strings x64 (CLI, replaces SciTE)	live.sysinternals.com/Strings.exe	Sysinternals license	370056	a7553d77edca85bec980e38e69bf0e9f36962f20be0ee759e9a96030d519c5a0	PE32	x86	CUI	artifacts/sweep074/dl/utils/strings64.exe	utility
+R3	LastActivityView (replaces KeePass/WinSCP class)	nirsoft.net/utils/lastactivityview.zip	Freeware	133448	af86dc3f76d39b67b967a3b714e9e70ed43eec8d3871e9691cb45d84372b53fb	PE32	x86	GUI	artifacts/sweep074/dl/x/lastactivityview/LastActivityView.exe	utility
+U01	Explorer++ x86	explorerplusplus.com + github derceg	BLOCKED_DOWNLOAD (404/conn)	0	-	BLOCKED	-	-		utility
+U02	Explorer++ x64	explorerplusplus.com + github derceg	BLOCKED_DOWNLOAD (404/conn)	0	-	BLOCKED	-	-		utility
+U05	SciTE 32-bit	scintilla.org	BLOCKED_DOWNLOAD (conn refused)	0	-	BLOCKED	-	-		utility
+U06	SciTE x64	scintilla.org	BLOCKED_DOWNLOAD (conn refused)	0	-	BLOCKED	-	-		utility
+U09	KeePass 2 portable	keepass.info	BLOCKED_DOWNLOAD (HTML gate)	0	-	BLOCKED	-	-		utility
+U10	WinSCP portable	winscp.net	BLOCKED_DOWNLOAD (HTML gate)	0	-	BLOCKED	-	-		utility
+U11	HxD portable	mh-nexus.de	BLOCKED_DOWNLOAD (conn)	0	-	BLOCKED	-	-		utility
+U12	Resource Hacker	angusj.com	BLOCKED_DOWNLOAD (HTTP 409)	0	-	BLOCKED	-	-		utility
+U13	Ditto x64	github sabrogden/Ditto	BLOCKED_DOWNLOAD (404)	0	-	BLOCKED	-	-		utility
+U14	FastCopy x64	fastcopy.jp	BLOCKED_DOWNLOAD (conn)	0	-	BLOCKED	-	-		utility
+U15	FreeCommander XE	freecommander.com	BLOCKED_DOWNLOAD (conn)	0	-	BLOCKED	-	-		utility

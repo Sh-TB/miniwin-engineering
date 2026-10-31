@@ -1,0 +1,45 @@
+R3	run1	rc=0	frames=0	crash=0	fatal=0		LastActivityView	gui
+R3	run2	rc=0	frames=0	crash=0	fatal=0		LastActivityView	gui
+R3	run3	rc=0	frames=0	crash=0	fatal=0		LastActivityView	gui
+U03	run1	rc=0	frames=0	crash=0	fatal=0		Notepad3	gui
+U03	run2	rc=0	frames=0	crash=0	fatal=0		Notepad3	gui
+U03	run3	rc=0	frames=0	crash=0	fatal=0		Notepad3	gui
+U04	run1	rc=0	frames=0	crash=0	fatal=0		Notepad3	gui
+U04	run2	rc=0	frames=0	crash=0	fatal=0		Notepad3	gui
+U04	run3	rc=0	frames=0	crash=0	fatal=0		Notepad3	gui
+U07	run1	rc=0	frames=0	crash=0	fatal=0		AutoHotkeyU32	cli
+U07	run2	rc=0	frames=0	crash=0	fatal=0		AutoHotkeyU32	cli
+U07	run3	rc=0	frames=0	crash=0	fatal=0		AutoHotkeyU32	cli
+U16	run1	rc=0	frames=0	crash=0	fatal=0		zoomit	gui
+U16	run2	rc=0	frames=0	crash=0	fatal=0		zoomit	gui
+U16	run3	rc=0	frames=0	crash=0	fatal=0		zoomit	gui
+U18	run1	rc=139	frames=0	crash=1	fatal=0	steps=1283963	RegScanner	gui
+U18	run2	rc=139	frames=0	crash=1	fatal=0	steps=1283963	RegScanner	gui
+U18	run3	rc=139	frames=0	crash=1	fatal=0	steps=1283963	RegScanner	gui
+U25	run1	rc=124	frames=0	crash=0	fatal=0		tcpview64	gui
+U25	run2	rc=124	frames=0	crash=0	fatal=0		tcpview64	gui
+U25	run3	rc=124	frames=0	crash=0	fatal=0		tcpview64	gui
+U27	run1	rc=139	frames=0	crash=1	fatal=0		winlister	gui
+U27	run2	rc=139	frames=0	crash=1	fatal=0		winlister	gui
+U27	run3	rc=139	frames=0	crash=1	fatal=0		winlister	gui
+breakout	run1	rc=0	frames=10	crash=0	fatal=0	blob=e3b0c44298fc
+breakout	run2	rc=0	frames=10	crash=0	fatal=0	blob=e3b0c44298fc
+breakout	run3	rc=0	frames=10	crash=0	fatal=0	blob=e3b0c44298fc
+calc	run1	rc=0	frames=1	crash=0	fatal=0	blob=e3b0c44298fc
+calc	run2	rc=0	frames=1	crash=0	fatal=0	blob=e3b0c44298fc
+calc	run3	rc=0	frames=1	crash=0	fatal=0	blob=e3b0c44298fc
+freecell	run1	rc=0	frames=10	crash=0	fatal=0	blob=e3b0c44298fc
+freecell	run2	rc=0	frames=10	crash=0	fatal=0	blob=e3b0c44298fc
+freecell	run3	rc=0	frames=10	crash=0	fatal=0	blob=e3b0c44298fc
+snake	run1	rc=0	frames=13	crash=0	fatal=0	blob=e3b0c44298fc
+snake	run2	rc=0	frames=13	crash=0	fatal=0	blob=e3b0c44298fc
+snake	run3	rc=0	frames=13	crash=0	fatal=0	blob=e3b0c44298fc
+sol	run1	rc=0	frames=69	crash=0	fatal=0	blob=e3b0c44298fc
+sol	run2	rc=0	frames=69	crash=0	fatal=0	blob=e3b0c44298fc
+sol	run3	rc=0	frames=69	crash=0	fatal=0	blob=e3b0c44298fc
+spider	run1	rc=0	frames=592	crash=0	fatal=0	blob=e3b0c44298fc
+spider	run2	rc=0	frames=627	crash=0	fatal=0	blob=e3b0c44298fc
+spider	run3	rc=0	frames=628	crash=0	fatal=0	blob=e3b0c44298fc
+winmine	run1	rc=0	frames=82	crash=0	fatal=0	blob=e3b0c44298fc
+winmine	run2	rc=0	frames=82	crash=0	fatal=0	blob=e3b0c44298fc
+winmine	run3	rc=0	frames=82	crash=0	fatal=0	blob=e3b0c44298fc

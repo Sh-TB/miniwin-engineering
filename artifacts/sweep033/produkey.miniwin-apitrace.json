@@ -1,0 +1,552 @@
+{
+  "trace": [
+[Tc640] [API] PE Loader: file=/home/z/my-project/workspace/miniwin-engineering/artifacts/sweep50/dl/produkey/ProduKey.exe size=212992
+[Tc640] [API] PE Loader: ImageBase=0x140000000 EP=0x1140 SizeOfImage=0x38000 Sections=5
+[Tc640] [API] PE Loader: Mapped at 0x140000000 (forced via MAP_FIXED)
+[Tc640] [API] KUSD: mapped 0x7ffe0000 (root C:\WINDOWS, ver 5.2, qpc 1e9)
+[Tc640] [API] Section [0] .text    VA=0x00001000 VS=0x00025606 Raw=0x00025800 Ch=0x60000020
+[Tc640] [API] Section [1] .rdata   VA=0x00027000 VS=0x0000762e Raw=0x00007800 Ch=0x40000040
+[Tc640] [API] Section [2] .data    VA=0x0002f000 VS=0x000012b8 Raw=0x00000400 Ch=0xc0000040
+[Tc640] [API] Section [3] .pdata   VA=0x00031000 VS=0x00002898 Raw=0x00002a00 Ch=0x40000040
+[Tc640] [API] Section [4] .rsrc    VA=0x00034000 VS=0x00003c20 Raw=0x00003e00 Ch=0x40000040
+[Tc640] [API] Import Directory: RVA=0x2cd78 Size=0x104
+[Tc640] [API] Import DLL: COMCTL32.dll (IAT RVA=0x27068, ILT RVA=0x2cee8)
+[Tc640] [API]   [0] ImageList_Add -> 0x209f720
+[Tc640] [API]   [1] Ordinal 6 -> CreateStatusWindowA (fixed ordinal)
+[Tc640] [API]   [1] CreateStatusWindowA -> 0x20c6ba0
+[Tc640] [API]   [2] CreateToolbarEx -> 0x20c6d20
+[Tc640] [API]   [3] ImageList_Create -> 0x2051250
+[Tc640] [API]   [4] ImageList_ReplaceIcon -> 0x20978b0
+[Tc640] [API]   [5] Ordinal 17 -> InitCommonControls (fixed ordinal)
+[Tc640] [API]   [5] InitCommonControls -> 0x206f0e0
+[Tc640] [API]   [6] ImageList_AddMasked -> 0x20313f0
+[Tc640] [API]   [7] ImageList_SetImageCount -> 0x2097f20
+[Tc640] [API] Import DLL: WS2_32.dll (IAT RVA=0x27628, ILT RVA=0x2d4a8)
+[Tc640] [API]   [0] Ordinal 111 -> WSAGetLastError (fixed ordinal)
+[Tc640] [API]   [0] WSAGetLastError -> 0x200aaf0
+[Tc640] [API]   [1] Ordinal 9 -> htons (fixed ordinal)
+[Tc640] [API]   [1] htons -> 0x2020eb0
+[Tc640] [API]   [2] Ordinal 115 -> WSAStartup (fixed ordinal)
+[Tc640] [API]   [2] WSAStartup -> 0x203c5a0
+[Tc640] [API]   [3] Ordinal 116 -> WSACleanup (fixed ordinal)
+[Tc640] [API]   [3] WSACleanup -> 0x200aae0
+[Tc640] [API]   [4] Ordinal 4 -> connect (fixed ordinal)
+[Tc640] [API]   [4] connect -> 0x20210f0
+[Tc640] [API]   [5] Ordinal 101 -> WSAAsyncSelect (fixed ordinal)
+[Tc640] [API]   [5] WSAAsyncSelect -> 0x2071140
+[Tc640] [API]   [6] Ordinal 52 -> gethostbyname (fixed ordinal)
+[Tc640] [API]   [6] gethostbyname -> 0x205be50
+[Tc640] [API]   [7] Ordinal 51 -> gethostbyaddr (fixed ordinal)
+[Tc640] [API]   [7] gethostbyaddr -> 0x2039d50
+[Tc640] [API]   [8] Ordinal 3 -> closesocket (fixed ordinal)
+[Tc640] [API]   [8] closesocket -> 0x2010d10
+[Tc640] [API]   [9] Ordinal 112 -> WSASetLastError (fixed ordinal)
+[Tc640] [API]   [9] WSASetLastError -> 0x200ab00
+[Tc640] [API] Import DLL: MPR.dll (IAT RVA=0x27300, ILT RVA=0x2d180)
+[Tc640] [API]   [0] WNetOpenEnumA -> 0x206e480
+[Tc640] [API]   [1] WNetCloseEnum -> 0x200a430
+[Tc640] [API]   [2] WNetEnumResourceA -> 0x200a440
+[Tc640] [API] Import DLL: msvcrt.dll (IAT RVA=0x276a0, ILT RVA=0x2d520)
+[Tc640] [API]   [0] _mbsicmp -> 0x20237b0
+[Tc640] [API]   [1] _purecall -> 0x201b0a0
+[Tc640] [API]   [2] qsort -> 0x2055a10
+[Tc640] [API]   [3] _itoa -> 0x2009070
+[Tc640] [API]   [4] _strnicmp -> 0x201b690
+[Tc640] [API]   [5] _wcsicmp -> 0x208a440
+[Tc640] [API]   [6] _memicmp -> 0x200a460
+[Tc640] [API]   [7] malloc -> 0x2090330
+[Tc640] [API]   [8] strrchr -> 0x2012800
+[Tc640] [API]   [9] _stricmp -> 0x2012590
+[Tc640] [API]   [10] _strlwr -> 0x2023880
+[Tc640] [API]   [11] free -> 0x20ba5a0
+[Tc640] [API]   [12] _mbschr -> 0x2023850
+[Tc640] [API]   [13] _snprintf -> 0x2022f70
+[Tc640] [API]   [14] _snwprintf -> 0x2023110
+[Tc640] [API]   [15] wcschr -> 0x200a7c0
+[Tc640] [API]   [16] atoi -> 0x2010900
+[Tc640] [API]   [17] strtoul -> 0x2015bc0
+[Tc640] [API]   [18] strchr -> 0x20174c0
+[Tc640] [API]   [19] _strcmpi -> 0x200cf20
+[Tc640] [API]   [20] ??2@YAPEAX_K@Z -> 0x20a85d0
+[Tc640] [API]   [21] ??3@YAXPEAX@Z -> 0x2076ed0
+[Tc640] [API]   [22] strncat -> 0x2020ad0
+[Tc640] [API]   [23] sprintf -> 0x20531c0
+[Tc640] [API]   [24] atof -> 0x2020510
+[Tc640] [API]   [25] __dllonexit -> 0x20c5e80
+[Tc640] [API]   [26] _onexit -> 0x20298c0
+[Tc640] [API]   [27] __C_specific_handler -> 0x206bde0
+[Tc640] [API]   [28] _XcptFilter -> 0x205f920
+[Tc640] [API]   [29] _c_exit -> 0x206ecc0
+[Tc640] [API]   [30] _exit -> 0x204a5e0
+[Tc640] [API]   [31] _cexit -> 0x20372a0
+[Tc640] [API]   [32] exit -> 0x204af00
+[Tc640] [API]   [33] _acmdln -> DATA 0x30ad8e0
+[Tc640] [API]   [34] __getmainargs -> 0x2027b00
+[Tc640] [API]   [35] _initterm -> 0x20f95f0
+[Tc640] [API]   [36] memcpy -> 0x2014a80
+[Tc640] [API]   [37] memset -> 0x2010e40
+[Tc640] [API]   [38] __setusermatherr -> 0x205e3e0
+[Tc640] [API]   [39] _commode -> DATA 0x3208324
+[Tc640] [API]   [40] _fmode -> DATA 0x3208328
+[Tc640] [API]   [41] __set_app_type -> 0x205e280
+[Tc640] [API]   [42] memcmp -> 0x2011c10
+[Tc640] [API] Import DLL: KERNEL32.dll (IAT RVA=0x27140, ILT RVA=0x2cfc0)
+[Tc640] [API]   [0] ExitProcess -> 0x20f91c0
+[Tc640] [API]   [1] GetCurrentProcess -> 0x2008610
+[Tc640] [API]   [2] ReadProcessMemory -> 0x208b010
+[Tc640] [API]   [3] GetCurrentProcessId -> 0x2008620
+[Tc640] [API]   [4] ResumeThread -> 0x206aff0
+[Tc640] [API]   [5] CreateThread -> 0x20686a0
+[Tc640] [API]   [6] OpenProcess -> 0x2042090
+[Tc640] [API]   [7] Sleep -> 0x204dc70
+[Tc640] [API]   [8] GetTickCount -> 0x204bb10
+[Tc640] [API]   [9] GetComputerNameA -> 0x207a0c0
+[Tc640] [API]   [10] CompareFileTime -> 0x203ebc0
+[Tc640] [API]   [11] GetStartupInfoA -> 0x2037700
+[Tc640] [API]   [12] SetErrorMode -> 0x200a5b0
+[Tc640] [API]   [13] GetCurrentDirectoryA -> 0x203def0
+[Tc640] [API]   [14] ExpandEnvironmentStringsA -> 0x2025410
+[Tc640] [API]   [15] DeleteFileA -> 0x208de70
+[Tc640] [API]   [16] GetStdHandle -> 0x210d630
+[Tc640] [API]   [17] WritePrivateProfileStringA -> 0x2065b10
+[Tc640] [API]   [18] GetPrivateProfileStringA -> 0x2024630
+[Tc640] [API]   [19] GetPrivateProfileIntA -> 0x2087d70
+[Tc640] [API]   [20] EnumResourceNamesA -> 0x2087cf0
+[Tc640] [API]   [21] MultiByteToWideChar -> 0x204be20
+[Tc640] [API]   [22] WideCharToMultiByte -> 0x207e5f0
+[Tc640] [API]   [23] GetFileAttributesA -> 0x208da20
+[Tc640] [API]   [24] LocalFree -> 0x20cc320
+[Tc640] [API]   [25] GetTimeFormatA -> 0x2080350
+[Tc640] [API]   [26] GetProcAddress -> 0x208b550
+[Tc640] [API]   [27] GetModuleHandleA -> 0x203b0b0
+[Tc640] [API]   [28] FileTimeToSystemTime -> 0x207fb80
+[Tc640] [API]   [29] LoadLibraryA -> 0x20a1ac0
+[Tc640] [API]   [30] FreeLibrary -> 0x206c4c0
+[Tc640] [API]   [31] GetLogicalDrives -> 0x200a1d0
+[Tc640] [API]   [32] GetDriveTypeA -> 0x200a1e0
+[Tc640] [API]   [33] GetLastError -> 0x2026c20
+[Tc640] [API]   [34] GetModuleFileNameA -> 0x207eb80
+[Tc640] [API]   [35] FindNextFileA -> 0x2091ff0
+[Tc640] [API]   [36] LoadLibraryExA -> 0x20a1d80
+[Tc640] [API]   [37] GetTempFileNameA -> 0x203d3f0
+[Tc640] [API]   [38] FormatMessageA -> 0x2043b00
+[Tc640] [API]   [39] ReadFile -> 0x2058500
+[Tc640] [API]   [40] FindClose -> 0x2014090
+[Tc640] [API]   [41] GetSystemDirectoryA -> 0x203c410
+[Tc640] [API]   [42] GetWindowsDirectoryA -> 0x2080320
+[Tc640] [API]   [43] GetDateFormatA -> 0x20774f0
+[Tc640] [API]   [44] WriteFile -> 0x2058f10
+[Tc640] [API]   [45] GetVersionExA -> 0x2089d80
+[Tc640] [API]   [46] GlobalAlloc -> 0x204fff0
+[Tc640] [API]   [47] GlobalUnlock -> 0x2088860
+[Tc640] [API]   [48] GlobalLock -> 0x208c9d0
+[Tc640] [API]   [49] CloseHandle -> 0x20a48f0
+[Tc640] [API]   [50] CreateFileA -> 0x208e630
+[Tc640] [API]   [51] FileTimeToLocalFileTime -> 0x208a640
+[Tc640] [API]   [52] GetFileSize -> 0x2059b20
+[Tc640] [API]   [53] FindFirstFileA -> 0x208ee30
+[Tc640] [API]   [54] GetTempPathA -> 0x2014c00
+[Tc640] [API] Import DLL: USER32.dll (IAT RVA=0x27378, ILT RVA=0x2d1f8)
+[Tc640] [API]   [0] PostQuitMessage -> 0x2060ee0
+[Tc640] [API]   [1] SetTimer -> 0x2093e30
+[Tc640] [API]   [2] GetMessageA -> 0x20e01d0
+[Tc640] [API]   [3] PostThreadMessageA -> 0x2092200
+[Tc640] [API]   [4] MonitorFromWindow -> 0x20884a0
+[Tc640] [API]   [5] EndDeferWindowPos -> 0x2063770
+[Tc640] [API]   [6] GetMonitorInfoA -> 0x207d2a0
+[Tc640] [API]   [7] RegisterWindowMessageA -> 0x202eac0
+[Tc640] [API]   [8] GetSysColorBrush -> 0x202da20
+[Tc640] [API]   [9] ChildWindowFromPoint -> 0x200c190
+[Tc640] [API]   [10] ShowWindow -> 0x20d03f0
+[Tc640] [API]   [11] SetCursor -> 0x2088be0
+[Tc640] [API]   [12] GetDC -> 0x200b350
+[Tc640] [API]   [13] ReleaseDC -> 0x200b360
+[Tc640] [API]   [14] LoadCursorA -> 0x200b380
+[Tc640] [API]   [15] InvalidateRect -> 0x2061050
+[Tc640] [API]   [16] GetWindowPlacement -> 0x20390f0
+[Tc640] [API]   [17] SetDlgItemInt -> 0x20cf1b0
+[Tc640] [API]   [18] BeginPaint -> 0x20d2a40
+[Tc640] [API]   [19] GetWindow -> 0x20c5ef0
+[Tc640] [API]   [20] SetDlgItemTextA -> 0x20cdaf0
+[Tc640] [API]   [21] GetClientRect -> 0x20b5700
+[Tc640] [API]   [22] DrawFrameControl -> 0x200c580
+[Tc640] [API]   [23] GetDlgItemTextA -> 0x20acf90
+[Tc640] [API]   [24] SetWindowTextA -> 0x20cd7b0
+[Tc640] [API]   [25] GetSystemMetrics -> 0x2009d00
+[Tc640] [API]   [26] DeferWindowPos -> 0x20d01f0
+[Tc640] [API]   [27] SendDlgItemMessageA -> 0x20fd2a0
+[Tc640] [API]   [28] SetWindowPos -> 0x20cff90
+[Tc640] [API]   [29] GetWindowRect -> 0x20b5120
+[Tc640] [API]   [30] GetDlgItemInt -> 0x20ac820
+[Tc640] [API]   [31] EndDialog -> 0x2061840
+[Tc640] [API]   [32] GetDlgItem -> 0x204a190
+[Tc640] [API]   [33] CreateWindowExA -> 0x210e9d0
+[Tc640] [API]   [34] EndPaint -> 0x2085f40
+[Tc640] [API]   [35] RegisterClassA -> 0x20c8790
+[Tc640] [API]   [36] UpdateWindow -> 0x20fd9d0
+[Tc640] [API]   [37] PostMessageA -> 0x205a9e0
+[Tc640] [API]   [38] SetMenu -> 0x2062210
+[Tc640] [API]   [39] LoadAcceleratorsA -> 0x20c3140
+[Tc640] [API]   [40] DefWindowProcA -> 0x2088460
+[Tc640] [API]   [41] TranslateAcceleratorA -> 0x20fcbf0
+[Tc640] [API]   [42] MessageBoxA -> 0x20bc200
+[Tc640] [API]   [43] SendMessageA -> 0x20fcc30
+[Tc640] [API]   [44] SetWindowLongA -> 0x20cf7b0
+[Tc640] [API]   [45] LoadImageA -> 0x20ddb60
+[Tc640] [API]   [46] GetSysColor -> 0x202b5e0
+[Tc640] [API]   [47] GetWindowLongA -> 0x20b9de0
+[Tc640] [API]   [48] SetFocus -> 0x202e0b0
+[Tc640] [API]   [49] CheckMenuRadioItem -> 0x20728f0
+[Tc640] [API]   [50] GetMenuStringA -> 0x200e160
+[Tc640] [API]   [51] GetCursorPos -> 0x206fda0
+[Tc640] [API]   [52] SetClipboardData -> 0x202a010
+[Tc640] [API]   [53] EnableWindow -> 0x20aae50
+[Tc640] [API]   [54] MapWindowPoints -> 0x2062b70
+[Tc640] [API]   [55] GetMenu -> 0x202e220
+[Tc640] [API]   [56] GetParent -> 0x20ab7a0
+[Tc640] [API]   [57] OpenClipboard -> 0x2060010
+[Tc640] [API]   [58] MoveWindow -> 0x20cfcb0
+[Tc640] [API]   [59] GetClassNameA -> 0x2077420
+[Tc640] [API]   [60] EmptyClipboard -> 0x206cd00
+[Tc640] [API]   [61] CloseClipboard -> 0x203e9e0
+[Tc640] [API]   [62] EnableMenuItem -> 0x20626b0
+[Tc640] [API]   [63] GetSubMenu -> 0x2099330
+[Tc640] [API]   [64] CheckMenuItem -> 0x20624f0
+[Tc640] [API]   [65] GetMenuItemCount -> 0x2096910
+[Tc640] [API]   [66] CreateDialogParamA -> 0x20fd6d0
+[Tc640] [API]   [67] EnumChildWindows -> 0x200c7a0
+[Tc640] [API]   [68] DestroyWindow -> 0x20b46e0
+[Tc640] [API]   [69] GetMenuItemInfoA -> 0x2045da0
+[Tc640] [API]   [70] GetWindowTextA -> 0x20acd40
+[Tc640] [API]   [71] LoadMenuA -> 0x20c3010
+[Tc640] [API]   [72] ModifyMenuA -> 0x20a6670
+[Tc640] [API]   [73] LoadStringA -> 0x20c3ea0
+[Tc640] [API]   [74] DialogBoxParamA -> 0x20facc0
+[Tc640] [API]   [75] GetDlgCtrlID -> 0x209fca0
+[Tc640] [API]   [76] DestroyMenu -> 0x20a2ac0
+[Tc640] [API]   [77] LoadIconA -> 0x200b390
+[Tc640] [API]   [78] BeginDeferWindowPos -> 0x202fbc0
+[Tc640] [API]   [79] DispatchMessageA -> 0x20fa570
+[Tc640] [API]   [80] GetFocus -> 0x2030010
+[Tc640] [API]   [81] KillTimer -> 0x200b3a0
+[Tc640] [API]   [82] TranslateMessage -> 0x202af90
+[Tc640] [API]   [83] IsDialogMessageA -> 0x2088070
+[Tc640] [API]   [84] TrackPopupMenu -> 0x2079c70
+[Tc640] [API] Import DLL: GDI32.dll (IAT RVA=0x270b0, ILT RVA=0x2cf30)
+[Tc640] [API]   [0] SetStretchBltMode -> 0x200b210
+[Tc640] [API]   [1] GetPixel -> 0x20b1230
+[Tc640] [API]   [2] GetObjectA -> 0x203dcb0
+[Tc640] [API]   [3] DeleteDC -> 0x202ca40
+[Tc640] [API]   [4] CreateCompatibleBitmap -> 0x20b1870
+[Tc640] [API]   [5] StretchBlt -> 0x20d4880
+[Tc640] [API]   [6] SetBkColor -> 0x202c680
+[Tc640] [API]   [7] SetTextColor -> 0x202c500
+[Tc640] [API]   [8] SetPixel -> 0x20af410
+[Tc640] [API]   [9] SelectObject -> 0x202bfa0
+[Tc640] [API]   [10] CreateCompatibleDC -> 0x2038310
+[Tc640] [API]   [11] GetDeviceCaps -> 0x202c800
+[Tc640] [API]   [12] CreateFontIndirectA -> 0x2017d50
+[Tc640] [API]   [13] SetBkMode -> 0x2061570
+[Tc640] [API]   [14] DeleteObject -> 0x203c1b0
+[Tc640] [API]   [15] GetTextExtentPoint32A -> 0x20611f0
+[Tc640] [API]   [16] GetStockObject -> 0x202be40
+[Tc640] [API] Import DLL: comdlg32.dll (IAT RVA=0x27680, ILT RVA=0x2d500)
+[Tc640] [API]   [0] FindTextA -> 0x206d6c0
+[Tc640] [API]   [1] GetOpenFileNameA -> 0x206ce80
+[Tc640] [API]   [2] GetSaveFileNameA -> 0x206d140
+[Tc640] [API] Import DLL: ADVAPI32.dll (IAT RVA=0x27000, ILT RVA=0x2ce80)
+[Tc640] [API]   [0] RegDeleteKeyA -> 0x20d82f0
+[Tc640] [API]   [1] RegUnLoadKeyA -> 0x200e1a0
+[Tc640] [API]   [2] RegConnectRegistryA -> 0x200e1b0
+[Tc640] [API]   [3] RegDeleteValueA -> 0x20dabf0
+[Tc640] [API]   [4] RegQueryInfoKeyA -> 0x20dbde0
+[Tc640] [API]   [5] RegOpenKeyExA -> 0x20d73e0
+[Tc640] [API]   [6] RegEnumKeyExA -> 0x20db2b0
+[Tc640] [API]   [7] RegEnumValueA -> 0x20dba00
+[Tc640] [API]   [8] RegCloseKey -> 0x200a3e0
+[Tc640] [API]   [9] RegSetValueExA -> 0x20dca20
+[Tc640] [API]   [10] RegQueryValueExA -> 0x20d8f70
+[Tc640] [API]   [11] RegLoadKeyA -> 0x200e190
+[Tc640] [API] Import DLL: SHELL32.dll (IAT RVA=0x27340, ILT RVA=0x2d1c0)
+[Tc640] [API]   [0] ShellExecuteExA -> 0x20800c0
+[Tc640] [API]   [1] SHGetPathFromIDListA -> 0x200e180
+[Tc640] [API]   [2] SHGetMalloc -> 0x2037a90
+[Tc640] [API]   [3] SHBrowseForFolderA -> 0x206df00
+[Tc640] [API]   [4] SHGetFileInfoA -> 0x206e1c0
+[Tc640] [API]   [5] ShellExecuteA -> 0x2059ee0
+[Tc640] [API] Import DLL: ole32.dll (IAT RVA=0x27800, ILT RVA=0x2d680)
+[Tc640] [API]   [0] CoSetProxyBlanket -> 0x2009f30
+[Tc640] [API]   [1] CoUninitialize -> 0x206f980
+[Tc640] [API]   [2] CoInitialize -> 0x206f240
+[Tc640] [API]   [3] CoCreateInstance -> 0x2062cf0
+[Tc640] [API] Import DLL: OLEAUT32.dll (IAT RVA=0x27320, ILT RVA=0x2d1a0)
+[Tc640] [API]   [0] Ordinal 16 -> SafeArrayCopy (fixed ordinal)
+[Tc640] [API]   [0] SafeArrayCopy -> 0x2014de0
+[Tc640] [API]   [1] Ordinal 6 -> SysFreeString (fixed ordinal)
+[Tc640] [API]   [1] SysFreeString -> 0x2076b20
+[Tc640] [API]   [2] Ordinal 9 -> VariantClear (fixed ordinal)
+[Tc640] [API]   [2] VariantClear -> 0x2076cf0
+[Tc640] [API] Import resolution: 249 resolved, 0 unresolved (total 249)
+[Tc640] [API] Exception: .pdata RVA=0x31000 Size=0x2898 Entries=866
+[Tc640] [API] [API-005] EH hacks DISABLED (default) (MINWIN_EH_HACKS=<unset>)
+[Tc640] [API] [API-005] CXX-EH-FIX (LSDA catch-all patch RVA 0x2010c8) skipped: MINWIN_EH_HACKS not set
+[Tc640] [API] SW-1297 validate_fd patch: fingerprint not found (guest unaffected)
+[Tc640] [API] Jumping to EP=0x140001140
+[Tc640] [API] GetStartupInfoA(info=0x7fffa7e92790)
+[Tc640] [API] __set_app_type(2)
+[Tc640] [API] _initterm(start=0x140027888, end=0x140027890)
+[Tc640] [API] __getmainargs(argc=0x7fffa7e9277c, argv=0x7fffa7e92788, envp=0x7fffa7e92780)
+[Tc640] [API] _initterm(start=0x140027828, end=0x140027880)
+[Tc640] [API] _initterm: calling 0x140026210
+[Tc640] [API] _onexit(func=0x1400263f0)
+[Tc640] [API] _initterm: calling 0x140026220
+[Tc640] [API] _onexit(func=0x140026410)
+[Tc640] [API] _initterm: calling 0x140026230
+[Tc640] [API] _onexit(func=0x140026430)
+[Tc640] [API] _initterm: calling 0x140026240
+[Tc640] [API] _onexit(func=0x140026480)
+[Tc640] [API] _initterm: calling 0x140026250
+[Tc640] [API] _onexit(func=0x1400264a0)
+[Tc640] [API] _initterm: calling 0x140026260
+[Tc640] [API] _onexit(func=0x1400264c0)
+[Tc640] [API] _initterm: calling 0x140026270
+[Tc640] [API] _onexit(func=0x1400264e0)
+[Tc640] [API] _initterm: calling 0x140026280
+[Tc640] [API] _onexit(func=0x140026500)
+[Tc640] [API] _initterm: calling 0x1400262a0
+[Tc640] [API] _onexit(func=0x140026510)
+[Tc640] [API] _initterm: calling 0x1400263e0
+[Tc640] [API] _onexit(func=0x1400265e0)
+[Tc640] [API] LoadLibraryA(comctl32.dll)
+[Tc640] [API] GetProcAddress(module=0xdeab0000, name=InitCommonControlsEx)
+[Tc640] [API]   -> 0x202ae30
+[Tc640] [API] InitCommonControlsEx(dwICC=0xff) -> TRUE
+[Tc640] [API] FreeLibrary()
+[Tc640] [API] CoInitialize() -> S_OK
+[Tc640] [API] LoadLibraryA(shell32.dll)
+[Tc640] [API] GetProcAddress(module=0xdea30000, name=SHGetSpecialFolderPathA)
+[Tc640] [API]   -> 0x2083e50
+[Tc640] [API] WSAStartup(101)
+[Tc640] [API] msvcrt operator new(1444) -> 0x3dd5720
+[Tc640] [API] msvcrt operator new(3488) -> 0x3dd5cd0
+[Tc640] [API] msvcrt operator new(24) -> 0x3dd6a80
+[Tc640] [API] msvcrt operator new(24) -> 0x3dd6aa0
+[Tc640] [API] msvcrt operator new(24) -> 0x3dd6ac0
+[Tc640] [API] msvcrt operator new(24) -> 0x3dd6ae0
+[Tc640] [API] msvcrt operator new(128) -> 0x3dd6b00
+[Tc640] [API] GetModuleHandleA(name=NULL)
+[Tc640] [API] free((nil))
+[Tc640] [API] free((nil))
+[Tc640] [API] malloc(128) = 0x3dd6b90
+[Tc640] [API] malloc(256) = 0x3dd6c20
+[Tc640] [API] malloc(1024) = 0x3dd5110
+[Tc640] [API] malloc(1024) = 0x3dd6d30
+[Tc640] [API] free(0x3dd6c20)
+[Tc640] [API] GetModuleFileNameA(cap=260)
+[Tc640] [API] SetLastError(2) caller=0x208db7a
+[Tc640] [API] msvcrt operator new(192) -> 0x3dd7140
+[Tc640] [API] msvcrt operator new(192) -> 0x3dd7210
+[Tc640] [API] msvcrt operator new(32768) -> 0x3dd72e0
+[Tc640] [API] msvcrt operator new(1024) -> 0x3ddf2f0
+[Tc640] [API] msvcrt operator new(1024) -> 0x3ddf700
+[Tc640] [API] msvcrt operator new(4096) -> 0x3ddfb10
+[Tc640] [API] GetModuleHandleA(name=NULL)
+[Tc640] [API] [RES] find hmod=0x140000000 a=?/- w=0x3f/0x6
+[Tc640] [API] [RES] walk depth=0 level=0x140034000 named=0 ided=11 (base=0x140034000)
+[Tc640] [API] [RES] walk depth=1 level=0x140034120 named=0 ided=13 (base=0x140034000)
+[Tc640] [API] [RES] walk depth=2 level=0x1400343c8 named=0 ided=1 (base=0x140034000)
+[Tc640] [API] LoadStringA(id=1001) -> 12 chars (block 63 idx 9 len 12)
+[Tc640] [API] GetModuleHandleA(name=NULL)
+[Tc640] [API] [RES] find hmod=0x140000000 a=?/- w=0x3f/0x6
+[Tc640] [API] [RES] walk depth=0 level=0x140034000 named=0 ided=11 (base=0x140034000)
+[Tc640] [API] [RES] walk depth=1 level=0x140034120 named=0 ided=13 (base=0x140034000)
+[Tc640] [API] [RES] walk depth=2 level=0x1400343c8 named=0 ided=1 (base=0x140034000)
+[Tc640] [API] LoadStringA(id=1001) -> 12 chars (block 63 idx 9 len 12)
+[Tc640] [API] GetModuleHandleA(name=NULL)
+[Tc640] [API] [RES] find hmod=0x140000000 a=?/- w=0x3f/0x6
+[Tc640] [API] [RES] walk depth=0 level=0x140034000 named=0 ided=11 (base=0x140034000)
+[Tc640] [API] [RES] walk depth=1 level=0x140034120 named=0 ided=13 (base=0x140034000)
+[Tc640] [API] [RES] walk depth=2 level=0x1400343c8 named=0 ided=1 (base=0x140034000)
+[Tc640] [API] LoadStringA(id=1002) -> 10 chars (block 63 idx 10 len 10)
+[Tc640] [API] GetModuleHandleA(name=NULL)
+[Tc640] [API] [RES] find hmod=0x140000000 a=?/- w=0x3f/0x6
+[Tc640] [API] [RES] walk depth=0 level=0x140034000 named=0 ided=11 (base=0x140034000)
+[Tc640] [API] [RES] walk depth=1 level=0x140034120 named=0 ided=13 (base=0x140034000)
+[Tc640] [API] [RES] walk depth=2 level=0x1400343c8 named=0 ided=1 (base=0x140034000)
+[Tc640] [API] LoadStringA(id=1002) -> 10 chars (block 63 idx 10 len 10)
+[Tc640] [API] GetModuleHandleA(name=NULL)
+[Tc640] [API] [RES] find hmod=0x140000000 a=?/- w=0x3f/0x6
+[Tc640] [API] [RES] walk depth=0 level=0x140034000 named=0 ided=11 (base=0x140034000)
+[Tc640] [API] [RES] walk depth=1 level=0x140034120 named=0 ided=13 (base=0x140034000)
+[Tc640] [API] [RES] walk depth=2 level=0x1400343c8 named=0 ided=1 (base=0x140034000)
+[Tc640] [API] LoadStringA(id=1003) -> 11 chars (block 63 idx 11 len 11)
+[Tc640] [API] GetModuleHandleA(name=NULL)
+[Tc640] [API] [RES] find hmod=0x140000000 a=?/- w=0x3f/0x6
+[Tc640] [API] [RES] walk depth=0 level=0x140034000 named=0 ided=11 (base=0x140034000)
+[Tc640] [API] [RES] walk depth=1 level=0x140034120 named=0 ided=13 (base=0x140034000)
+[Tc640] [API] [RES] walk depth=2 level=0x1400343c8 named=0 ided=1 (base=0x140034000)
+[Tc640] [API] LoadStringA(id=1003) -> 11 chars (block 63 idx 11 len 11)
+[Tc640] [API] GetModuleHandleA(name=NULL)
+[Tc640] [API] [RES] find hmod=0x140000000 a=?/- w=0x3f/0x6
+[Tc640] [API] [RES] walk depth=0 level=0x140034000 named=0 ided=11 (base=0x140034000)
+[Tc640] [API] [RES] walk depth=1 level=0x140034120 named=0 ided=13 (base=0x140034000)
+[Tc640] [API] [RES] walk depth=2 level=0x1400343c8 named=0 ided=1 (base=0x140034000)
+[Tc640] [API] LoadStringA(id=1005) -> 20 chars (block 63 idx 13 len 20)
+[Tc640] [API] GetModuleHandleA(name=NULL)
+[Tc640] [API] [RES] find hmod=0x140000000 a=?/- w=0x3f/0x6
+[Tc640] [API] [RES] walk depth=0 level=0x140034000 named=0 ided=11 (base=0x140034000)
+[Tc640] [API] [RES] walk depth=1 level=0x140034120 named=0 ided=13 (base=0x140034000)
+[Tc640] [API] [RES] walk depth=2 level=0x1400343c8 named=0 ided=1 (base=0x140034000)
+[Tc640] [API] LoadStringA(id=1005) -> 20 chars (block 63 idx 13 len 20)
+[Tc640] [API] GetModuleHandleA(name=NULL)
+[Tc640] [API] [RES] find hmod=0x140000000 a=?/- w=0x3f/0x6
+[Tc640] [API] [RES] walk depth=0 level=0x140034000 named=0 ided=11 (base=0x140034000)
+[Tc640] [API] [RES] walk depth=1 level=0x140034120 named=0 ided=13 (base=0x140034000)
+[Tc640] [API] [RES] walk depth=2 level=0x1400343c8 named=0 ided=1 (base=0x140034000)
+[Tc640] [API] LoadStringA(id=1006) -> 12 chars (block 63 idx 14 len 12)
+[Tc640] [API] GetModuleHandleA(name=NULL)
+[Tc640] [API] [RES] find hmod=0x140000000 a=?/- w=0x3f/0x6
+[Tc640] [API] [RES] walk depth=0 level=0x140034000 named=0 ided=11 (base=0x140034000)
+[Tc640] [API] [RES] walk depth=1 level=0x140034120 named=0 ided=13 (base=0x140034000)
+[Tc640] [API] [RES] walk depth=2 level=0x1400343c8 named=0 ided=1 (base=0x140034000)
+[Tc640] [API] LoadStringA(id=1006) -> 12 chars (block 63 idx 14 len 12)
+[Tc640] [API] GetModuleHandleA(name=NULL)
+[Tc640] [API] [RES] find hmod=0x140000000 a=?/- w=0x40/0x6
+[Tc640] [API] [RES] walk depth=0 level=0x140034000 named=0 ided=11 (base=0x140034000)
+[Tc640] [API] [RES] walk depth=1 level=0x140034120 named=0 ided=13 (base=0x140034000)
+[Tc640] [API] [RES] walk depth=2 level=0x1400343e0 named=0 ided=1 (base=0x140034000)
+[Tc640] [API] LoadStringA(id=1008) -> 12 chars (block 64 idx 0 len 12)
+[Tc640] [API] GetModuleHandleA(name=NULL)
+[Tc640] [API] [RES] find hmod=0x140000000 a=?/- w=0x40/0x6
+[Tc640] [API] [RES] walk depth=0 level=0x140034000 named=0 ided=11 (base=0x140034000)
+[Tc640] [API] [RES] walk depth=1 level=0x140034120 named=0 ided=13 (base=0x140034000)
+[Tc640] [API] [RES] walk depth=2 level=0x1400343e0 named=0 ided=1 (base=0x140034000)
+[Tc640] [API] LoadStringA(id=1008) -> 12 chars (block 64 idx 0 len 12)
+[Tc640] [API] GetModuleHandleA(name=NULL)
+[Tc640] [API] [RES] find hmod=0x140000000 a=?/- w=0x3f/0x6
+[Tc640] [API] [RES] walk depth=0 level=0x140034000 named=0 ided=11 (base=0x140034000)
+[Tc640] [API] [RES] walk depth=1 level=0x140034120 named=0 ided=13 (base=0x140034000)
+[Tc640] [API] [RES] walk depth=2 level=0x1400343c8 named=0 ided=1 (base=0x140034000)
+[Tc640] [API] LoadStringA(id=1004) -> 13 chars (block 63 idx 12 len 13)
+[Tc640] [API] GetModuleHandleA(name=NULL)
+[Tc640] [API] [RES] find hmod=0x140000000 a=?/- w=0x3f/0x6
+[Tc640] [API] [RES] walk depth=0 level=0x140034000 named=0 ided=11 (base=0x140034000)
+[Tc640] [API] [RES] walk depth=1 level=0x140034120 named=0 ided=13 (base=0x140034000)
+[Tc640] [API] [RES] walk depth=2 level=0x1400343c8 named=0 ided=1 (base=0x140034000)
+[Tc640] [API] LoadStringA(id=1004) -> 13 chars (block 63 idx 12 len 13)
+[Tc640] [API] GetModuleHandleA(name=NULL)
+[Tc640] [API] [RES] find hmod=0x140000000 a=?/- w=0x3f/0x6
+[Tc640] [API] [RES] walk depth=0 level=0x140034000 named=0 ided=11 (base=0x140034000)
+[Tc640] [API] [RES] walk depth=1 level=0x140034120 named=0 ided=13 (base=0x140034000)
+[Tc640] [API] [RES] walk depth=2 level=0x1400343c8 named=0 ided=1 (base=0x140034000)
+[Tc640] [API] LoadStringA(id=1007) -> 13 chars (block 63 idx 15 len 13)
+[Tc640] [API] GetModuleHandleA(name=NULL)
+[Tc640] [API] [RES] find hmod=0x140000000 a=?/- w=0x3f/0x6
+[Tc640] [API] [RES] walk depth=0 level=0x140034000 named=0 ided=11 (base=0x140034000)
+[Tc640] [API] [RES] walk depth=1 level=0x140034120 named=0 ided=13 (base=0x140034000)
+[Tc640] [API] [RES] walk depth=2 level=0x1400343c8 named=0 ided=1 (base=0x140034000)
+[Tc640] [API] LoadStringA(id=1007) -> 13 chars (block 63 idx 15 len 13)
+[Tc640] [API] msvcrt operator new(32) -> 0x3dd56f0
+[Tc640] [API] msvcrt operator new(24) -> 0x3de0b20
+[Tc640] [API] msvcrt operator new(32) -> 0x3dd5620
+[Tc640] [API] malloc(8448) = 0x3de0b40
+[Tc640] [API] malloc(8448) = 0x3de2c50
+[Tc640] [API] malloc(8448) = 0x3de4d60
+[Tc640] [API] malloc(8448) = 0x3de6e70
+[Tc640] [API] GetModuleFileNameA(cap=260)
+[Tc640] [API] GetComputerNameA -> 'MINIWIN'
+[Tc640] [API] GetModuleHandleA(name=kernel32)
+[Tc640] [API] GetProcAddress(module=0xdea00000, name=IsWow64Process)
+[Tc640] [API]   -> 0x2039bd0
+[Tc640] [API] IsWow64Process -> TRUE, *Wow64Process=FALSE (native x64)
+[Tc640] [API] RegOpenKeyExW(miss) 'HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion' -> ERROR_FILE_NOT_FOUND
+[Tc640] [API] SetLastError(2) caller=0x20d735f
+[Tc640] [API] RegCreateKeyExW 'HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion' -> slot 7 (created=1)
+[Tc640] [API] RegSetValueExW -> slot 7 'ProductName', 40 bytes stored
+[Tc640] [API] RegSetValueExW -> slot 7 'CurrentVersion', 8 bytes stored
+[Tc640] [API] RegSetValueExW -> slot 7 'CurrentBuildNumber', 10 bytes stored
+[Tc640] [API] RegSetValueExW -> slot 7 'CSDVersion', 30 bytes stored
+[Tc640] [API] reg seed: CurrentVersion identity seeded (Windows Server 2003 5.2 b3790)
+[Tc640] [API] RegOpenKeyExW(miss) 'HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon' -> ERROR_FILE_NOT_FOUND
+[Tc640] [API] SetLastError(2) caller=0x20d735f
+[Tc640] [API] RegCreateKeyExW 'HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon' -> slot 8 (created=1)
+[Tc640] [API] RegSetValueExW -> slot 8 'AutoAdminLogon', 4 bytes stored
+[Tc640] [API] RegSetValueExW -> slot 8 'DefaultUserName', 26 bytes stored
+[Tc640] [API] RegSetValueExW -> slot 8 'DefaultDomainName', 16 bytes stored
+[Tc640] [API] RegSetValueExW -> slot 8 'DefaultPassword', 2 bytes stored
+[Tc640] [API] reg seed: Winlogon skeleton seeded
+[Tc640] [API] RegOpenKeyExW(miss) 'HKLM\System\CurrentControlSet\Services\EventLog\Application' -> ERROR_FILE_NOT_FOUND
+[Tc640] [API] SetLastError(2) caller=0x20d735f
+[Tc640] [API] RegCreateKeyExW 'HKLM\System\CurrentControlSet\Services\EventLog\Application' -> slot 9 (created=1)
+[Tc640] [API] RegOpenKeyExW(miss) 'HKLM\System\CurrentControlSet\Services\EventLog\Security' -> ERROR_FILE_NOT_FOUND
+[Tc640] [API] SetLastError(2) caller=0x20d735f
+[Tc640] [API] RegCreateKeyExW 'HKLM\System\CurrentControlSet\Services\EventLog\Security' -> slot 10 (created=1)
+[Tc640] [API] RegOpenKeyExW(miss) 'HKLM\System\CurrentControlSet\Services\EventLog\System' -> ERROR_FILE_NOT_FOUND
+[Tc640] [API] SetLastError(2) caller=0x20d735f
+[Tc640] [API] RegCreateKeyExW 'HKLM\System\CurrentControlSet\Services\EventLog\System' -> slot 11 (created=1)
+[Tc640] [API] reg seed: EventLog service keys seeded (3)
+[Tc640] [API] RegOpenKeyExW(miss) 'HKCU\Software\WinRAR\Setup' -> ERROR_FILE_NOT_FOUND
+[Tc640] [API] SetLastError(2) caller=0x20d735f
+[Tc640] [API] RegCreateKeyExW 'HKCU\Software\WinRAR\Setup' -> slot 12 (created=1)
+[Tc640] [API] reg seed: WinRAR Setup key seeded (no close: handle released at exit)
+[Tc640] [API] RegOpenKeyExW(miss) 'HKCU\Software\Sysinternals\PsLoglist' -> ERROR_FILE_NOT_FOUND
+[Tc640] [API] SetLastError(2) caller=0x20d735f
+[Tc640] [API] RegCreateKeyExW 'HKCU\Software\Sysinternals\PsLoglist' -> slot 13 (created=1)
+[Tc640] [API] RegSetValueExW -> slot 13 'EulaAccepted', 4 bytes stored
+[Tc640] [API] RegOpenKeyExW(miss) 'HKCU\Software\Sysinternals\PsInfo' -> ERROR_FILE_NOT_FOUND
+[Tc640] [API] SetLastError(2) caller=0x20d735f
+[Tc640] [API] RegCreateKeyExW 'HKCU\Software\Sysinternals\PsInfo' -> slot 14 (created=1)
+[Tc640] [API] RegSetValueExW -> slot 14 'EulaAccepted', 4 bytes stored
+[Tc640] [API] RegOpenKeyExW(miss) 'HKCU\Software\Sysinternals\PsList' -> ERROR_FILE_NOT_FOUND
+[Tc640] [API] SetLastError(2) caller=0x20d735f
+[Tc640] [API] RegCreateKeyExW 'HKCU\Software\Sysinternals\PsList' -> slot 15 (created=1)
+[Tc640] [API] RegSetValueExW -> slot 15 'EulaAccepted', 4 bytes stored
+[Tc640] [API] RegOpenKeyExW(miss) 'HKCU\Software\Sysinternals\PsPasswd' -> ERROR_FILE_NOT_FOUND
+[Tc640] [API] SetLastError(2) caller=0x20d735f
+[Tc640] [API] RegCreateKeyExW 'HKCU\Software\Sysinternals\PsPasswd' -> slot 16 (created=1)
+[Tc640] [API] RegSetValueExW -> slot 16 'EulaAccepted', 4 bytes stored
+[Tc640] [API] RegOpenKeyExW(miss) 'HKCU\Software\Sysinternals\PsService' -> ERROR_FILE_NOT_FOUND
+[Tc640] [API] SetLastError(2) caller=0x20d735f
+[Tc640] [API] RegCreateKeyExW 'HKCU\Software\Sysinternals\PsService' -> slot 17 (created=1)
+[Tc640] [API] RegSetValueExW -> slot 17 'EulaAccepted', 4 bytes stored
+[Tc640] [API] reg seed: Sysinternals EulaAccepted markers seeded
+[Tc640] [API] RegOpenKeyExW(miss) 'HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Perflib' -> ERROR_FILE_NOT_FOUND
+[Tc640] [API] SetLastError(2) caller=0x20d735f
+[Tc640] [API] RegCreateKeyExW 'HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Perflib' -> slot 18 (created=1)
+[Tc640] [API] RegSetValueExW -> slot 18 'Last Counter', 4 bytes stored
+[Tc640] [API] RegSetValueExW -> slot 18 'Last Help', 4 bytes stored
+[Tc640] [API] reg seed: Perflib Last Counter/Help = 952
+[Tc640] [API] RegOpenKeyExW(miss) 'HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion' -> ERROR_FILE_NOT_FOUND
+[Tc640] [API] SetLastError(2) caller=0x20d735f
+[Tc640] [API] RegCreateKeyExW 'HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion' -> slot 19 (created=1)
+[Tc640] [API] RegSetValueExW -> slot 19 'ProgramFilesDir', 34 bytes stored
+[Tc640] [API] RegSetValueExW -> slot 19 'CommonFilesDir', 60 bytes stored
+[Tc640] [API] RegSetValueExW -> slot 19 'ProgramFilesPath', 34 bytes stored
+[Tc640] [API] RegSetValueExW -> slot 19 'DevicePath', 34 bytes stored
+[Tc640] [API] reg seed: HKLM Windows CurrentVersion ProgramFiles skeleton seeded
+[Tc640] [API] RegOpenKeyExW(miss) 'HKLM\Software' -> ERROR_FILE_NOT_FOUND
+[Tc640] [API] SetLastError(2) caller=0x20d735f
+[Tc640] [API] GetModuleHandleA(name=kernel32.dll)
+[Tc640] [API] GetProcAddress(module=0xdea00000, name=EnumSystemFirmwareTables)
+[Tc640] [API]   -> NULL (not in dispatch table)
+[Tc640] [API]   -> optional-stub fallback (not in dispatch table)
+[Tc640] [API] GetProcAddress(module=0xdea00000, name=GetSystemFirmwareTable)
+[Tc640] [API]   -> NULL (not in dispatch table)
+[Tc640] [API]   -> optional-stub fallback (not in dispatch table)
+[Tc640] [API] qsort(base=(nil) n=0 sz=1072 cmp=0x140017620) [SW-1339 probe]
+[Tc640] [API] msvcrt operator new(32) -> 0x3dee400
+[Tc640] [API] CreateFileA(pk.txt, acc=40000000, disp=2)
+[Tc640] [API] CloseHandle(handle=0x4)
+[Tc640] [API] free(0x3de6e70)
+[Tc640] [API] free(0x3de4d60)
+[Tc640] [API] free(0x3de2c50)
+[Tc640] [API] free(0x3de0b40)
+[Tc640] [API] free((nil))
+[Tc640] [API] free(0x3dd5110)
+[Tc640] [API] free(0x3dd6d30)
+[Tc640] [API] free(0x3dd6b90)
+[Tc640] [API] free((nil))
+[Tc640] [API] free((nil))
+[Tc640] [API] exit(0)
+  ]
+}

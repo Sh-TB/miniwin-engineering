@@ -1,0 +1,86 @@
+# WinRAR 7.12 console workflow under Wine 10.0 (S1-S7)
+# Pinned app: Rar.exe 7.12 x64 sha256 bdbe2bde697c45e02902f19415d7af07dc871f30a3ac84fb552657aeddc38714
+name: winrar-console-workflow-wine
+engine: wine
+engine_detail: "wine-10.0 (Debian 10.0~repack-6), disposable per-run prefix"
+wine_path: /home/z/my-project/tools/wine-10.0
+wine_bin: wine64
+disposable_prefix: true
+timeout_s: 90
+app:
+  name: WinRAR console archiver (Rar.exe)
+  version: "7.12 x64 (24 Jun 2025)"
+  executable: /home/z/my-project/workspace/miniwin-engineering/evidence/app-tests/winrar/Rar.exe
+  sha256: bdbe2bde697c45e02902f19415d7af07dc871f30a3ac84fb552657aeddc38714
+fixtures:
+  doc_a.txt: "MiniWin wine-tracker fixture doc_a: known UTF-8 text. Archive workflow acceptance line 1.\nLine 2: deterministic content for SHA-256 comparison.\n"
+  doc_b.bin: "\x00\x01\x02\x03\x04\x05\x06\x07DETERMINISTIC-BYTES-\x00\x00\xff\xfe\x11\x22\x33\x44\x55\x66\x77\x88\x99\xaa\xbb\xcc\xdd\xee\xff"
+checkpoints:
+  - id: S1_launch
+    desc: launch pinned Rar.exe; banner + usage prove real execution
+    argv: ["/home/z/my-project/workspace/miniwin-engineering/evidence/app-tests/winrar/Rar.exe"]
+    allow_any_exit: true
+    capture_stdout_head: 500
+    verify:
+      - name: banner_says_rar712
+        expr: "'RAR 7.12' in rec.get('stdout_head','')"
+  - id: S2_create
+    desc: archive the two fixtures into demo.rar
+    argv: ["/home/z/my-project/workspace/miniwin-engineering/evidence/app-tests/winrar/Rar.exe", "a", "-y", "demo.rar", "doc_a.txt", "doc_b.bin"]
+    capture_stdout_head: 300
+    verify:
+      - name: archive_created
+        expr: "(Path(workdir)/'demo.rar').exists()"
+      - name: archive_nonempty
+        expr: "(Path(workdir)/'demo.rar').stat().st_size > 64"
+  - id: S3_list
+    desc: list archive members
+    argv: ["/home/z/my-project/workspace/miniwin-engineering/evidence/app-tests/winrar/Rar.exe", "l", "-y", "demo.rar"]
+    capture_stdout_head: 1500
+    verify:
+      - name: lists_doc_a
+        expr: "'doc_a.txt' in rec.get('stdout_head','')"
+      - name: lists_doc_b
+        expr: "'doc_b.bin' in rec.get('stdout_head','')"
+  - id: S4_test
+    desc: integrity test of the created archive
+    argv: ["/home/z/my-project/workspace/miniwin-engineering/evidence/app-tests/winrar/Rar.exe", "t", "-y", "demo.rar"]
+    capture_stdout_head: 400
+    verify:
+      - name: test_ok
+        expr: "rec.get('exit_code') == 0 and 'All OK' in (Path(run_dir)/'raw'/'stdout_S4_test.log').read_text(errors='replace')"
+  - id: S5_extract
+    desc: extract into a NEW empty directory (out/)
+    argv: ["/home/z/my-project/workspace/miniwin-engineering/evidence/app-tests/winrar/Rar.exe", "x", "-y", "demo.rar", "out\\\\"]
+    capture_stdout_head: 300
+    verify:
+      - name: extracted_doc_a
+        expr: "(Path(workdir)/'out'/'doc_a.txt').exists()"
+      - name: extracted_doc_b
+        expr: "(Path(workdir)/'out'/'doc_b.bin').exists()"
+  - id: S6_verify_hashes
+    desc: SHA-256 compare extracted vs originals (host-side, engine-independent)
+    host: true
+    argv: ["python3", "-c", "print('host-verify-only')"]
+    verify:
+      - name: doc_a_hash_match
+        expr: "sha256_file(Path(workdir)/'out'/'doc_a.txt') == sha256_file(Path(workdir)/'doc_a.txt')"
+      - name: doc_b_hash_match
+        expr: "sha256_file(Path(workdir)/'out'/'doc_b.bin') == sha256_file(Path(workdir)/'doc_b.bin')"
+      - name: no_path_traversal
+        expr: "sorted(p.name for p in (Path(workdir)/'out').iterdir()) == ['doc_a.txt','doc_b.bin']"
+  - id: S7_repeatability
+    desc: repeat create+extract as demo2/out2; extracted bytes must match, archive bytes compared informationally
+    argv: ["/home/z/my-project/workspace/miniwin-engineering/evidence/app-tests/winrar/Rar.exe", "a", "-y", "demo2.rar", "doc_a.txt", "doc_b.bin"]
+    verify:
+      - name: rerun_archive_created
+        expr: "(Path(workdir)/'demo2.rar').exists()"
+  - id: S7b_extract_rerun
+    desc: extract the rerun archive
+    argv: ["/home/z/my-project/workspace/miniwin-engineering/evidence/app-tests/winrar/Rar.exe", "x", "-y", "demo2.rar", "out2\\\\"]
+    capture_stdout_head: 200
+    verify:
+      - name: rerun_doc_a_hash_match
+        expr: "sha256_file(Path(workdir)/'out2'/'doc_a.txt') == sha256_file(Path(workdir)/'doc_a.txt')"
+      - name: rerun_doc_b_hash_match
+        expr: "sha256_file(Path(workdir)/'out2'/'doc_b.bin') == sha256_file(Path(workdir)/'doc_b.bin')"

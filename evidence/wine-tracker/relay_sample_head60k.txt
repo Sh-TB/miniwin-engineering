@@ -1,0 +1,522 @@
+002c:trace:module:get_load_order looking for L"C:\\windows\\system32\\wineboot.exe"
+002c:trace:module:get_load_order got hardcoded default for L"wineboot.exe"
+002c:trace:module:get_load_order looking for L"C:\\windows\\system32\\wineboot.exe"
+002c:trace:module:get_load_order got hardcoded default for L"wineboot.exe"
+002c:trace:module:map_image_into_view mapping PE file L"\\??\\C:\\windows\\system32\\wineboot.exe" at 0x140000000-0x140089000
+002c:trace:module:map_image_into_view mapping L"\\??\\C:\\windows\\system32\\wineboot.exe" section .text at 0x140001000 off 1000 size 8000 virt 7d60 flags 60000060
+002c:trace:module:map_image_into_view mapping L"\\??\\C:\\windows\\system32\\wineboot.exe" section .data at 0x140009000 off 9000 size 1000 virt 550 flags c0000040
+002c:trace:module:map_image_into_view mapping L"\\??\\C:\\windows\\system32\\wineboot.exe" section .rodata at 0x14000a000 off a000 size 1000 virt 140 flags c0000040
+002c:trace:module:map_image_into_view mapping L"\\??\\C:\\windows\\system32\\wineboot.exe" section .rdata at 0x14000b000 off b000 size 12000 virt 11bf0 flags 40000040
+002c:trace:module:map_image_into_view mapping L"\\??\\C:\\windows\\system32\\wineboot.exe" section .pdata at 0x14001d000 off 1d000 size 1000 virt 2dc flags 40000040
+002c:trace:module:map_image_into_view mapping L"\\??\\C:\\windows\\system32\\wineboot.exe" section .xdata at 0x14001e000 off 1e000 size 1000 virt 30c flags 40000040
+002c:trace:module:map_image_into_view mapping L"\\??\\C:\\windows\\system32\\wineboot.exe" section .bss at 0x14001f000 off 0 size 0 virt 5a0 flags c0000080
+002c:trace:module:map_image_into_view mapping L"\\??\\C:\\windows\\system32\\wineboot.exe" section .idata at 0x140020000 off 1f000 size 2000 virt 12b8 flags 40000040
+002c:trace:module:map_image_into_view mapping L"\\??\\C:\\windows\\system32\\wineboot.exe" section .rsrc at 0x140022000 off 21000 size 8000 virt 7ef0 flags 40000040
+002c:trace:module:map_image_into_view mapping L"\\??\\C:\\windows\\system32\\wineboot.exe" section .reloc at 0x14002a000 off 29000 size 1000 virt 90 flags 42000040
+002c:trace:module:map_image_into_view mapping L"\\??\\C:\\windows\\system32\\wineboot.exe" section /4 at 0x14002b000 off 2a000 size 1000 virt 430 flags 42000040
+002c:trace:module:map_image_into_view mapping L"\\??\\C:\\windows\\system32\\wineboot.exe" section /19 at 0x14002c000 off 2b000 size 40000 virt 3f3a6 flags 42000040
+002c:trace:module:map_image_into_view mapping L"\\??\\C:\\windows\\system32\\wineboot.exe" section /31 at 0x14006c000 off 6b000 size 2000 virt 1dc4 flags 42000040
+002c:trace:module:map_image_into_view mapping L"\\??\\C:\\windows\\system32\\wineboot.exe" section /45 at 0x14006e000 off 6d000 size 7000 virt 68ef flags 42000040
+002c:trace:module:map_image_into_view mapping L"\\??\\C:\\windows\\system32\\wineboot.exe" section /57 at 0x140075000 off 74000 size 1000 virt f00 flags 42000040
+002c:trace:module:map_image_into_view mapping L"\\??\\C:\\windows\\system32\\wineboot.exe" section /70 at 0x140076000 off 75000 size 1000 virt 51c flags 42000040
+002c:trace:module:map_image_into_view mapping L"\\??\\C:\\windows\\system32\\wineboot.exe" section /81 at 0x140077000 off 76000 size f000 virt e72d flags 42000040
+002c:trace:module:map_image_into_view mapping L"\\??\\C:\\windows\\system32\\wineboot.exe" section /92 at 0x140086000 off 85000 size 3000 virt 2970 flags 42000040
+002c:trace:module:map_image_into_view mapping PE file L"\\??\\C:\\windows\\system32\\ntdll.dll" at 0x6fffffc20000-0x6ffffffec000
+002c:trace:module:map_image_into_view mapping L"\\??\\C:\\windows\\system32\\ntdll.dll" section .text at 0x6fffffc21000 off 1000 size 70000 virt 6f670 flags 60000020
+002c:trace:module:map_image_into_view mapping L"\\??\\C:\\windows\\system32\\ntdll.dll" section .data at 0x6fffffc91000 off 71000 size 1000 virt d30 flags c0000040
+002c:trace:module:map_image_into_view mapping L"\\??\\C:\\windows\\system32\\ntdll.dll" section .rodata at 0x6fffffc92000 off 72000 size 3000 virt 21f0 flags c0000040
+002c:trace:module:map_image_into_view mapping L"\\??\\C:\\windows\\system32\\ntdll.dll" section .rdata at 0x6fffffc95000 off 75000 size 15000 virt 14b10 flags 40000040
+002c:trace:module:map_image_into_view mapping L"\\??\\C:\\windows\\system32\\ntdll.dll" section /4 at 0x6fffffcaa000 off 8a000 size 1000 virt 8c8 flags 40000040
+002c:trace:module:map_image_into_view mapping L"\\??\\C:\\windows\\system32\\ntdll.dll" section .pdata at 0x6fffffcab000 off 8b000 size 9000 virt 8454 flags 40000040
+002c:trace:module:map_image_into_view mapping L"\\??\\C:\\windows\\system32\\ntdll.dll" section .xdata at 0x6fffffcb4000 off 94000 size 6000 virt 536c flags 40000040
+002c:trace:module:map_image_into_view mapping L"\\??\\C:\\windows\\system32\\ntdll.dll" section .bss at 0x6fffffcba000 off 0 size 0 virt 38b0 flags c0000080
+002c:trace:module:map_image_into_view mapping L"\\??\\C:\\windows\\system32\\ntdll.dll" section .edata at 0x6fffffcbe000 off 9a000 size b000 virt a3e8 flags 40000040
+002c:trace:module:map_image_into_view mapping L"\\??\\C:\\windows\\system32\\ntdll.dll" section .idata at 0x6fffffcc9000 off a5000 size 1000 virt 18 flags 40000040
+002c:trace:module:map_image_into_view mapping L"\\??\\C:\\windows\\system32\\ntdll.dll" section .rsrc at 0x6fffffcca000 off a6000 size 1000 virt 3b0 flags 40000040
+002c:trace:module:map_image_into_view mapping L"\\??\\C:\\windows\\system32\\ntdll.dll" section .reloc at 0x6fffffccb000 off a7000 size 1000 virt 18c flags 42000040
+002c:trace:module:map_image_into_view mapping L"\\??\\C:\\windows\\system32\\ntdll.dll" section /14 at 0x6fffffccc000 off a8000 size 6000 virt 51b0 flags 42000040
+002c:trace:module:map_image_into_view mapping L"\\??\\C:\\windows\\system32\\ntdll.dll" section /29 at 0x6fffffcd2000 off ae000 size 14e000 virt 14df84 flags 42000040
+002c:trace:module:map_image_into_view mapping L"\\??\\C:\\windows\\system32\\ntdll.dll" section /41 at 0x6fffffe20000 off 1fc000 size 12000 virt 113e2 flags 42000040
+002c:trace:module:map_image_into_view mapping L"\\??\\C:\\windows\\system32\\ntdll.dll" section /55 at 0x6fffffe32000 off 20e000 size 64000 virt 6328a flags 42000040
+002c:trace:module:map_image_into_view mapping L"\\??\\C:\\windows\\system32\\ntdll.dll" section /67 at 0x6fffffe96000 off 272000 size 14000 virt 13ea8 flags 42000040
+002c:trace:module:map_image_into_view mapping L"\\??\\C:\\windows\\system32\\ntdll.dll" section /80 at 0x6fffffeaa000 off 286000 size 6000 virt 54b7 flags 42000040
+002c:trace:module:map_image_into_view mapping L"\\??\\C:\\windows\\system32\\ntdll.dll" section /91 at 0x6fffffeb0000 off 28c000 size 114000 virt 113787 flags 42000040
+002c:trace:module:map_image_into_view mapping L"\\??\\C:\\windows\\system32\\ntdll.dll" section /102 at 0x6ffffffc4000 off 3a0000 size 28000 virt 27bd0 flags 42000040
+002c:trace:module:map_image_into_view relocating L"\\??\\C:\\windows\\system32\\ntdll.dll" dynamic base 170000000 -> 6fffffc20000 mapped at 0x6fffffc20000
+002c:trace:module:load_apiset_dll loaded L"\\??\\C:\\windows\\system32\\apisetschema.dll" apiset at 0x7ffffe301000
+002c:trace:module:build_module loaded L"\\??\\C:\\windows\\system32\\wineboot.exe" 00007FFFFE322D60 0000000140000000
+002c:trace:relay:load_list L"RelayExclude" = L"ntdll.RtlEnterCriticalSection;ntdll.RtlTryEnterCriticalSection;ntdll.RtlLeaveCriticalSection;kernel32.48;kernel32.49;kernel32.94;kernel32.95;kernel32.96;kernel32.97;kernel32.98;kernel32.TlsGetValue;kernel32.TlsSetValue;kernel32.FlsGetValue;kernel32.FlsSetValue;kernel32.SetLastError"
+002c:trace:relay:load_list L"RelayFromExclude" = L"winex11.drv;winemac.drv;user32;gdi32;advapi32;kernel32"
+002c:trace:module:load_dll looking for L"kernel32.dll" in (null)
+002c:trace:module:get_load_order looking for L"C:\\windows\\system32\\kernel32.dll"
+002c:trace:module:get_load_order got hardcoded default for L"kernel32.dll"
+002c:trace:module:map_image_into_view mapping PE file L"\\??\\C:\\windows\\system32\\kernel32.dll" at 0x6fffffa40000-0x6fffffc04000
+002c:trace:module:map_image_into_view mapping L"\\??\\C:\\windows\\system32\\kernel32.dll" section .text at 0x6fffffa41000 off 1000 size 31000 virt 30450 flags 60000020
+002c:trace:module:map_image_into_view mapping L"\\??\\C:\\windows\\system32\\kernel32.dll" section .data at 0x6fffffa72000 off 32000 size 1000 virt 200 flags c0000040
+002c:trace:module:map_image_into_view mapping L"\\??\\C:\\windows\\system32\\kernel32.dll" section .rodata at 0x6fffffa73000 off 33000 size 2000 virt 1ed0 flags c0000040
+002c:trace:module:map_image_into_view mapping L"\\??\\C:\\windows\\system32\\kernel32.dll" section .rdata at 0x6fffffa75000 off 35000 size 4000 virt 3220 flags 40000040
+002c:trace:module:map_image_into_view mapping L"\\??\\C:\\windows\\system32\\kernel32.dll" section /4 at 0x6fffffa79000 off 39000 size 1000 virt 710 flags 40000040
+002c:trace:module:map_image_into_view mapping L"\\??\\C:\\windows\\system32\\kernel32.dll" section .pdata at 0x6fffffa7a000 off 3a000 size 6000 virt 5148 flags 40000040
+002c:trace:module:map_image_into_view mapping L"\\??\\C:\\windows\\system32\\kernel32.dll" section .xdata at 0x6fffffa80000 off 40000 size 3000 virt 2c2c flags 40000040
+002c:trace:module:map_image_into_view mapping L"\\??\\C:\\windows\\system32\\kernel32.dll" section .bss at 0x6fffffa83000 off 0 size 0 virt 240 flags c0000080
+002c:trace:module:map_image_into_view mapping L"\\??\\C:\\windows\\system32\\kernel32.dll" section .edata at 0x6fffffa84000 off 43000 size b000 virt a5bc flags 40000040
+002c:trace:module:map_image_into_view mapping L"\\??\\C:\\windows\\system32\\kernel32.dll" section .idata at 0x6fffffa8f000 off 4e000 size a000 virt 97d8 flags 40000040
+002c:trace:module:map_image_into_view mapping L"\\??\\C:\\windows\\system32\\kernel32.dll" section .rsrc at 0x6fffffa99000 off 58000 size 9000 virt 8198 flags 40000040
+002c:trace:module:map_image_into_view mapping L"\\??\\C:\\windows\\system32\\kernel32.dll" section .reloc at 0x6fffffaa2000 off 61000 size 1000 virt 34 flags 42000040
+002c:trace:module:map_image_into_view mapping L"\\??\\C:\\windows\\system32\\kernel32.dll" section /14 at 0x6fffffaa3000 off 62000 size 3000 virt 2290 flags 42000040
+002c:trace:module:map_image_into_view mapping L"\\??\\C:\\windows\\system32\\kernel32.dll" section /29 at 0x6fffffaa6000 off 65000 size c1000 virt c0a10 flags 42000040
+002c:trace:module:map_image_into_view mapping L"\\??\\C:\\windows\\system32\\kernel32.dll" section /41 at 0x6fffffb67000 off 126000 size b000 virt ae95 flags 42000040
+002c:trace:module:map_image_into_view mapping L"\\??\\C:\\windows\\system32\\kernel32.dll" section /55 at 0x6fffffb72000 off 131000 size 22000 virt 2160a flags 42000040
+002c:trace:module:map_image_into_view mapping L"\\??\\C:\\windows\\system32\\kernel32.dll" section /67 at 0x6fffffb94000 off 153000 size 8000 virt 7f48 flags 42000040
+002c:trace:module:map_image_into_view mapping L"\\??\\C:\\windows\\system32\\kernel32.dll" section /80 at 0x6fffffb9c000 off 15b000 size 3000 virt 20f7 flags 42000040
+002c:trace:module:map_image_into_view mapping L"\\??\\C:\\windows\\system32\\kernel32.dll" section /91 at 0x6fffffb9f000 off 15e000 size 58000 virt 57313 flags 42000040
+002c:trace:module:map_image_into_view mapping L"\\??\\C:\\windows\\system32\\kernel32.dll" section /102 at 0x6fffffbf7000 off 1b6000 size d000 virt c9a0 flags 42000040
+002c:trace:module:map_image_into_view relocating L"\\??\\C:\\windows\\system32\\kernel32.dll" dynamic base 178000000 -> 6fffffa40000 mapped at 0x6fffffa40000
+002c:trace:module:load_dll looking for L"kernelbase.dll" in (null)
+002c:trace:module:get_load_order looking for L"C:\\windows\\system32\\kernelbase.dll"
+002c:trace:module:get_load_order got hardcoded default for L"kernelbase.dll"
+002c:trace:module:map_image_into_view mapping PE file L"\\??\\C:\\windows\\system32\\kernelbase.dll" at 0x6fffff3f0000-0x6fffffa25000
+002c:trace:module:map_image_into_view mapping L"\\??\\C:\\windows\\system32\\kernelbase.dll" section .text at 0x6fffff3f1000 off 1000 size 89000 virt 884d0 flags 60000020
+002c:trace:module:map_image_into_view mapping L"\\??\\C:\\windows\\system32\\kernelbase.dll" section .data at 0x6fffff47a000 off 8a000 size 2000 virt 1e90 flags c0000040
+002c:trace:module:map_image_into_view mapping L"\\??\\C:\\windows\\system32\\kernelbase.dll" section .rodata at 0x6fffff47c000 off 8c000 size 2000 virt 1f38 flags c0000040
+002c:trace:module:map_image_into_view mapping L"\\??\\C:\\windows\\system32\\kernelbase.dll" section .rdata at 0x6fffff47e000 off 8e000 size 1d000 virt 1c220 flags 40000040
+002c:trace:module:map_image_into_view mapping L"\\??\\C:\\windows\\system32\\kernelbase.dll" section /4 at 0x6fffff49b000 off ab000 size 1000 virt 5a8 flags 40000040
+002c:trace:module:map_image_into_view mapping L"\\??\\C:\\windows\\system32\\kernelbase.dll" section .pdata at 0x6fffff49c000 off ac000 size 9000 virt 810c flags 40000040
+002c:trace:module:map_image_into_view mapping L"\\??\\C:\\windows\\system32\\kernelbase.dll" section .xdata at 0x6fffff4a5000 off b5000 size 6000 virt 5ca0 flags 40000040
+002c:trace:module:map_image_into_view mapping L"\\??\\C:\\windows\\system32\\kernelbase.dll" section .bss at 0x6fffff4ab000 off 0 size 0 virt 28c0 flags c0000080
+002c:trace:module:map_image_into_view mapping L"\\??\\C:\\windows\\system32\\kernelbase.dll" section .edata at 0x6fffff4ae000 off bb000 size b000 virt aa60 flags 40000040
+002c:trace:module:map_image_into_view mapping L"\\??\\C:\\windows\\system32\\kernelbase.dll" section .idata at 0x6fffff4b9000 off c6000 size 5000 virt 4788 flags 40000040
+002c:trace:module:map_image_into_view mapping L"\\??\\C:\\windows\\system32\\kernelbase.dll" section .rsrc at 0x6fffff4be000 off cb000 size 1cd000 virt 1cc7c0 flags 40000040
+002c:trace:module:map_image_into_view mapping L"\\??\\C:\\windows\\system32\\kernelbase.dll" section .reloc at 0x6fffff68b000 off 298000 size 1000 virt 1a4 flags 42000040
+002c:trace:module:map_image_into_view mapping L"\\??\\C:\\windows\\system32\\kernelbase.dll" section /14 at 0x6fffff68c000 off 299000 size 6000 virt 5c70 flags 42000040
+002c:trace:module:map_image_into_view mapping L"\\??\\C:\\windows\\system32\\kernelbase.dll" section /29 at 0x6fffff692000 off 29f000 size 17d000 virt 17c756 flags 42000040
+002c:trace:module:map_image_into_view mapping L"\\??\\C:\\windows\\system32\\kernelbase.dll" section /41 at 0x6fffff80f000 off 41c000 size a000 virt 9f43 flags 42000040
+002c:trace:module:map_image_into_view mapping L"\\??\\C:\\windows\\system32\\kernelbase.dll" section /55 at 0x6fffff819000 off 426000 size 79000 virt 78d76 flags 42000040
+002c:trace:module:map_image_into_view mapping L"\\??\\C:\\windows\\system32\\kernelbase.dll" section /67 at 0x6fffff892000 off 49f000 size 19000 virt 18480 flags 42000040
+002c:trace:module:map_image_into_view mapping L"\\??\\C:\\windows\\system32\\kernelbase.dll" section /80 at 0x6fffff8ab000 off 4b8000 size 4000 virt 3b84 flags 42000040
+002c:trace:module:map_image_into_view mapping L"\\??\\C:\\windows\\system32\\kernelbase.dll" section /91 at 0x6fffff8af000 off 4bc000 size 147000 virt 1466df flags 42000040
+002c:trace:module:map_image_into_view mapping L"\\??\\C:\\windows\\system32\\kernelbase.dll" section /102 at 0x6fffff9f6000 off 603000 size 2f000 virt 2e4b0 flags 42000040
+002c:trace:module:map_image_into_view relocating L"\\??\\C:\\windows\\system32\\kernelbase.dll" dynamic base 174000000 -> 6fffff3f0000 mapped at 0x6fffff3f0000
+002c:trace:module:load_dll looking for L"ntdll.dll" in (null)
+002c:trace:module:load_dll Found L"C:\\windows\\system32\\ntdll.dll" for L"ntdll.dll" at 00006FFFFFC20000, count=2
+002c:trace:module:build_module loaded L"\\??\\C:\\windows\\system32\\kernelbase.dll" 00007FFFFE3236F0 00006FFFFF3F0000
+002c:trace:module:load_dll Loaded module L"\\??\\C:\\windows\\system32\\kernelbase.dll" at 00006FFFFF3F0000
+002c:trace:module:load_dll looking for L"ntdll.dll" in (null)
+002c:trace:module:load_dll Found L"C:\\windows\\system32\\ntdll.dll" for L"ntdll.dll" at 00006FFFFFC20000, count=3
+002c:trace:module:build_module loaded L"\\??\\C:\\windows\\system32\\kernel32.dll" 00007FFFFE323460 00006FFFFFA40000
+002c:trace:module:load_dll Loaded module L"\\??\\C:\\windows\\system32\\kernel32.dll" at 00006FFFFFA40000
+002c:trace:module:needs_elevation image requested run level 0
+002c:trace:module:load_dll looking for L"advapi32.dll" in (null)
+002c:trace:module:get_load_order looking for L"C:\\windows\\system32\\advapi32.dll"
+002c:trace:module:get_load_order got hardcoded default for L"advapi32.dll"
+002c:trace:module:map_image_into_view mapping PE file L"\\??\\C:\\windows\\system32\\advapi32.dll" at 0x6fffff2b0000-0x6fffff3e0000
+002c:trace:module:map_image_into_view mapping L"\\??\\C:\\windows\\system32\\advapi32.dll" section .text at 0x6fffff2b1000 off 1000 size 24000 virt 23ed0 flags 60000060
+002c:trace:module:map_image_into_view mapping L"\\??\\C:\\windows\\system32\\advapi32.dll" section .data at 0x6fffff2d5000 off 25000 size 1000 virt 250 flags c0000040
+002c:trace:module:map_image_into_view mapping L"\\??\\C:\\windows\\system32\\advapi32.dll" section .rodata at 0x6fffff2d6000 off 26000 size 1000 virt f78 flags c0000040
+002c:trace:module:map_image_into_view mapping L"\\??\\C:\\windows\\system32\\advapi32.dll" section .rdata at 0x6fffff2d7000 off 27000 size 7000 virt 62d0 flags 40000040
+002c:trace:module:map_image_into_view mapping L"\\??\\C:\\windows\\system32\\advapi32.dll" section /4 at 0x6fffff2de000 off 2e000 size 1000 virt 360 flags 40000040
+002c:trace:module:map_image_into_view mapping L"\\??\\C:\\windows\\system32\\advapi32.dll" section .pdata at 0x6fffff2df000 off 2f000 size 3000 virt 2cac flags 40000040
+002c:trace:module:map_image_into_view mapping L"\\??\\C:\\windows\\system32\\advapi32.dll" section .xdata at 0x6fffff2e2000 off 32000 size 2000 virt 1eb0 flags 40000040
+002c:trace:module:map_image_into_view mapping L"\\??\\C:\\windows\\system32\\advapi32.dll" section .bss at 0x6fffff2e4000 off 0 size 0 virt 19a0 flags c0000080
+002c:trace:module:map_image_into_view mapping L"\\??\\C:\\windows\\system32\\advapi32.dll" section .edata at 0x6fffff2e6000 off 34000 size 5000 virt 46f4 flags 40000040
+002c:trace:module:map_image_into_view mapping L"\\??\\C:\\windows\\system32\\advapi32.dll" section .idata at 0x6fffff2eb000 off 39000 size 4000 virt 30ec flags 40000040
+002c:trace:module:map_image_into_view mapping L"\\??\\C:\\windows\\system32\\advapi32.dll" section .rsrc at 0x6fffff2ef000 off 3d000 size 1000 virt 3c8 flags 40000040
+002c:trace:module:map_image_into_view mapping L"\\??\\C:\\windows\\system32\\advapi32.dll" section .reloc at 0x6fffff2f0000 off 3e000 size 1000 virt 154 flags 42000040
+002c:trace:module:map_image_into_view mapping L"\\??\\C:\\windows\\system32\\advapi32.dll" section /14 at 0x6fffff2f1000 off 3f000 size 2000 virt 1b30 flags 42000040
+002c:trace:module:map_image_into_view mapping L"\\??\\C:\\windows\\system32\\advapi32.dll" section /29 at 0x6fffff2f3000 off 41000 size 6c000 virt 6bb0b flags 42000040
+002c:trace:module:map_image_into_view mapping L"\\??\\C:\\windows\\system32\\advapi32.dll" section /41 at 0x6fffff35f000 off ad000 size 6000 virt 59a5 flags 42000040
+002c:trace:module:map_image_into_view mapping L"\\??\\C:\\windows\\system32\\advapi32.dll" section /55 at 0x6fffff365000 off b3000 size 1c000 virt 1b420 flags 42000040
+002c:trace:module:map_image_into_view mapping L"\\??\\C:\\windows\\system32\\advapi32.dll" section /67 at 0x6fffff381000 off cf000 size 8000 virt 71e0 flags 42000040
+002c:trace:module:map_image_into_view mapping L"\\??\\C:\\windows\\system32\\advapi32.dll" section /80 at 0x6fffff389000 off d7000 size 2000 virt 175c flags 42000040
+002c:trace:module:map_image_into_view mapping L"\\??\\C:\\windows\\system32\\advapi32.dll" section /91 at 0x6fffff38b000 off d9000 size 4c000 virt 4bffa flags 42000040
+002c:trace:module:map_image_into_view mapping L"\\??\\C:\\windows\\system32\\advapi32.dll" section /102 at 0x6fffff3d7000 off 125000 size 9000 virt 8b90 flags 42000040
+002c:trace:module:map_image_into_view relocating L"\\??\\C:\\windows\\system32\\advapi32.dll" dynamic base 180000000 -> 6fffff2b0000 mapped at 0x6fffff2b0000
+002c:trace:module:load_dll looking for L"kernel32.dll" in (null)
+002c:trace:module:load_dll Found L"C:\\windows\\system32\\kernel32.dll" for L"kernel32.dll" at 00006FFFFFA40000, count=2
+002c:trace:module:load_dll looking for L"kernelbase.dll" in (null)
+002c:trace:module:load_dll Found L"C:\\windows\\system32\\kernelbase.dll" for L"kernelbase.dll" at 00006FFFFF3F0000, count=2
+002c:trace:module:load_dll looking for L"msvcrt.dll" in (null)
+002c:trace:module:get_load_order looking for L"C:\\windows\\system32\\msvcrt.dll"
+002c:trace:module:get_load_order got hardcoded default for L"msvcrt.dll"
+002c:trace:module:map_image_into_view mapping PE file L"\\??\\C:\\windows\\system32\\msvcrt.dll" at 0x6ffffef00000-0x6fffff297000
+002c:trace:module:map_image_into_view mapping L"\\??\\C:\\windows\\system32\\msvcrt.dll" section .text at 0x6ffffef01000 off 1000 size 74000 virt 73300 flags 60000060
+002c:trace:module:map_image_into_view mapping L"\\??\\C:\\windows\\system32\\msvcrt.dll" section .data at 0x6ffffef75000 off 75000 size 2000 virt 1a50 flags c0000040
+002c:trace:module:map_image_into_view mapping L"\\??\\C:\\windows\\system32\\msvcrt.dll" section .rodata at 0x6ffffef77000 off 77000 size 2000 virt 15b0 flags c0000040
+002c:trace:module:map_image_into_view mapping L"\\??\\C:\\windows\\system32\\msvcrt.dll" section .rdata at 0x6ffffef79000 off 79000 size d000 virt c120 flags 40000040
+002c:trace:module:map_image_into_view mapping L"\\??\\C:\\windows\\system32\\msvcrt.dll" section /4 at 0x6ffffef86000 off 86000 size 1000 virt 148 flags 40000040
+002c:trace:module:map_image_into_view mapping L"\\??\\C:\\windows\\system32\\msvcrt.dll" section .pdata at 0x6ffffef87000 off 87000 size 8000 virt 79d4 flags 40000040
+002c:trace:module:map_image_into_view mapping L"\\??\\C:\\windows\\system32\\msvcrt.dll" section .xdata at 0x6ffffef8f000 off 8f000 size 6000 virt 522c flags 40000040
+002c:trace:module:map_image_into_view mapping L"\\??\\C:\\windows\\system32\\msvcrt.dll" section .bss at 0x6ffffef95000 off 0 size 0 virt 1c60 flags c0000080
+002c:trace:module:map_image_into_view mapping L"\\??\\C:\\windows\\system32\\msvcrt.dll" section .edata at 0x6ffffef97000 off 95000 size 7000 virt 62f8 flags 40000040
+002c:trace:module:map_image_into_view mapping L"\\??\\C:\\windows\\system32\\msvcrt.dll" section .idata at 0x6ffffef9e000 off 9c000 size 2000 virt 1734 flags 40000040
+002c:trace:module:map_image_into_view mapping L"\\??\\C:\\windows\\system32\\msvcrt.dll" section .rsrc at 0x6ffffefa0000 off 9e000 size 1000 virt 398 flags 40000040
+002c:trace:module:map_image_into_view mapping L"\\??\\C:\\windows\\system32\\msvcrt.dll" section .reloc at 0x6ffffefa1000 off 9f000 size 1000 virt 224 flags 42000040
+002c:trace:module:map_image_into_view mapping L"\\??\\C:\\windows\\system32\\msvcrt.dll" section /14 at 0x6ffffefa2000 off a0000 size 7000 virt 6dd0 flags 42000040
+002c:trace:module:map_image_into_view mapping L"\\??\\C:\\windows\\system32\\msvcrt.dll" section /29 at 0x6ffffefa9000 off a7000 size f1000 virt f0bab flags 42000040
+002c:trace:module:map_image_into_view mapping L"\\??\\C:\\windows\\system32\\msvcrt.dll" section /41 at 0x6fffff09a000 off 198000 size 12000 virt 112cc flags 42000040
+002c:trace:module:map_image_into_view mapping L"\\??\\C:\\windows\\system32\\msvcrt.dll" section /55 at 0x6fffff0ac000 off 1aa000 size 6e000 virt 6db76 flags 42000040
+002c:trace:module:map_image_into_view mapping L"\\??\\C:\\windows\\system32\\msvcrt.dll" section /67 at 0x6fffff11a000 off 218000 size 17000 virt 166e0 flags 42000040
+002c:trace:module:map_image_into_view mapping L"\\??\\C:\\windows\\system32\\msvcrt.dll" section /80 at 0x6fffff131000 off 22f000 size 2000 virt 1924 flags 42000040
+002c:trace:module:map_image_into_view mapping L"\\??\\C:\\windows\\system32\\msvcrt.dll" section /91 at 0x6fffff133000 off 231000 size 13a000 virt 139cdc flags 42000040
+002c:trace:module:map_image_into_view mapping L"\\??\\C:\\windows\\system32\\msvcrt.dll" section /102 at 0x6fffff26d000 off 36b000 size 2a000 virt 29460 flags 42000040
+002c:trace:module:map_image_into_view relocating L"\\??\\C:\\windows\\system32\\msvcrt.dll" dynamic base 180000000 -> 6ffffef00000 mapped at 0x6ffffef00000
+002c:trace:module:load_dll looking for L"kernel32.dll" in (null)
+002c:trace:module:load_dll Found L"C:\\windows\\system32\\kernel32.dll" for L"kernel32.dll" at 00006FFFFFA40000, count=3
+002c:trace:module:load_dll looking for L"ntdll.dll" in (null)
+002c:trace:module:load_dll Found L"C:\\windows\\system32\\ntdll.dll" for L"ntdll.dll" at 00006FFFFFC20000, count=4
+002c:trace:module:build_module loaded L"\\??\\C:\\windows\\system32\\msvcrt.dll" 00007FFFFE323D30 00006FFFFEF00000
+002c:trace:module:load_dll Loaded module L"\\??\\C:\\windows\\system32\\msvcrt.dll" at 00006FFFFEF00000
+002c:trace:module:load_dll looking for L"ntdll.dll" in (null)
+002c:trace:module:load_dll Found L"C:\\windows\\system32\\ntdll.dll" for L"ntdll.dll" at 00006FFFFFC20000, count=5
+002c:trace:module:load_dll looking for L"sechost.dll" in (null)
+002c:trace:module:get_load_order looking for L"C:\\windows\\system32\\sechost.dll"
+002c:trace:module:get_load_order got hardcoded default for L"sechost.dll"
+002c:trace:module:map_image_into_view mapping PE file L"\\??\\C:\\windows\\system32\\sechost.dll" at 0x6ffffee60000-0x6ffffeeee000
+002c:trace:module:map_image_into_view mapping L"\\??\\C:\\windows\\system32\\sechost.dll" section .text at 0x6ffffee61000 off 1000 size e000 virt dc20 flags 60000060
+002c:trace:module:map_image_into_view mapping L"\\??\\C:\\windows\\system32\\sechost.dll" section .data at 0x6ffffee6f000 off f000 size 1000 virt 240 flags c0000040
+002c:trace:module:map_image_into_view mapping L"\\??\\C:\\windows\\system32\\sechost.dll" section .rodata at 0x6ffffee70000 off 10000 size 2000 virt 1030 flags c0000040
+002c:trace:module:map_image_into_view mapping L"\\??\\C:\\windows\\system32\\sechost.dll" section .rdata at 0x6ffffee72000 off 12000 size 5000 virt 4710 flags 40000040
+002c:trace:module:map_image_into_view mapping L"\\??\\C:\\windows\\system32\\sechost.dll" section /4 at 0x6ffffee77000 off 17000 size 1000 virt 978 flags 40000040
+002c:trace:module:map_image_into_view mapping L"\\??\\C:\\windows\\system32\\sechost.dll" section .pdata at 0x6ffffee78000 off 18000 size 2000 virt 111c flags 40000040
+002c:trace:module:map_image_into_view mapping L"\\??\\C:\\windows\\system32\\sechost.dll" section .xdata at 0x6ffffee7a000 off 1a000 size 1000 virt d48 flags 40000040
+002c:trace:module:map_image_into_view mapping L"\\??\\C:\\windows\\system32\\sechost.dll" section .bss at 0x6ffffee7b000 off 0 size 0 virt 1a0 flags c0000080
+002c:trace:module:map_image_into_view mapping L"\\??\\C:\\windows\\system32\\sechost.dll" section .edata at 0x6ffffee7c000 off 1b000 size 2000 virt 1e58 flags 40000040
+002c:trace:module:map_image_into_view mapping L"\\??\\C:\\windows\\system32\\sechost.dll" section .idata at 0x6ffffee7e000 off 1d000 size 1000 virt d30 flags 40000040
+002c:trace:module:map_image_into_view mapping L"\\??\\C:\\windows\\system32\\sechost.dll" section .reloc at 0x6ffffee7f000 off 1e000 size 1000 virt c0 flags 42000040
+002c:trace:module:map_image_into_view mapping L"\\??\\C:\\windows\\system32\\sechost.dll" section /14 at 0x6ffffee80000 off 1f000 size 1000 virt d40 flags 42000040
+002c:trace:module:map_image_into_view mapping L"\\??\\C:\\windows\\system32\\sechost.dll" section /29 at 0x6ffffee81000 off 20000 size 33000 virt 321aa flags 42000040
+002c:trace:module:map_image_into_view mapping L"\\??\\C:\\windows\\system32\\sechost.dll" section /41 at 0x6ffffeeb4000 off 53000 size 3000 virt 2c38 flags 42000040
+002c:trace:module:map_image_into_view mapping L"\\??\\C:\\windows\\system32\\sechost.dll" section /55 at 0x6ffffeeb7000 off 56000 size d000 virt c072 flags 42000040
+002c:trace:module:map_image_into_view mapping L"\\??\\C:\\windows\\system32\\sechost.dll" section /67 at 0x6ffffeec4000 off 63000 size 3000 virt 2bf0 flags 42000040
+002c:trace:module:map_image_into_view mapping L"\\??\\C:\\windows\\system32\\sechost.dll" section /80 at 0x6ffffeec7000 off 66000 size 1000 virt d9e flags 42000040
+002c:trace:module:map_image_into_view mapping L"\\??\\C:\\windows\\system32\\sechost.dll" section /91 at 0x6ffffeec8000 off 67000 size 20000 virt 1fda1 flags 42000040
+002c:trace:module:map_image_into_view mapping L"\\??\\C:\\windows\\system32\\sechost.dll" section /102 at 0x6ffffeee8000 off 87000 size 6000 virt 5950 flags 42000040
+002c:trace:module:map_image_into_view relocating L"\\??\\C:\\windows\\system32\\sechost.dll" dynamic base 180000000 -> 6ffffee60000 mapped at 0x6ffffee60000
+002c:trace:module:load_dll looking for L"kernel32.dll" in (null)
+002c:trace:module:load_dll Found L"C:\\windows\\system32\\kernel32.dll" for L"kernel32.dll" at 00006FFFFFA40000, count=4
+002c:trace:module:load_dll looking for L"kernelbase.dll" in (null)
+002c:trace:module:load_dll Found L"C:\\windows\\system32\\kernelbase.dll" for L"kernelbase.dll" at 00006FFFFF3F0000, count=3
+002c:trace:module:load_dll looking for L"ntdll.dll" in (null)
+002c:trace:module:load_dll Found L"C:\\windows\\system32\\ntdll.dll" for L"ntdll.dll" at 00006FFFFFC20000, count=6
+002c:trace:module:load_dll looking for L"ucrtbase.dll" in (null)
+002c:trace:module:get_load_order looking for L"C:\\windows\\system32\\ucrtbase.dll"
+002c:trace:module:get_load_order got hardcoded default for L"ucrtbase.dll"
+002c:trace:module:map_image_into_view mapping PE file L"\\??\\C:\\windows\\system32\\ucrtbase.dll" at 0x6ffffea20000-0x6ffffee50000
+002c:trace:module:map_image_into_view mapping L"\\??\\C:\\windows\\system32\\ucrtbase.dll" section .text at 0x6ffffea21000 off 1000 size 8d000 virt 8c9c0 flags 60000060
+002c:trace:module:map_image_into_view mapping L"\\??\\C:\\windows\\system32\\ucrtbase.dll" section .data at 0x6ffffeaae000 off 8e000 size 2000 virt 1dc0 flags c0000040
+002c:trace:module:map_image_into_view mapping L"\\??\\C:\\windows\\system32\\ucrtbase.dll" section .rodata at 0x6ffffeab0000 off 90000 size 4000 virt 3610 flags c0000040
+002c:trace:module:map_image_into_view mapping L"\\??\\C:\\windows\\system32\\ucrtbase.dll" section .rdata at 0x6ffffeab4000 off 94000 size 10000 virt f110 flags 40000040
+002c:trace:module:map_image_into_view mapping L"\\??\\C:\\windows\\system32\\ucrtbase.dll" section /4 at 0x6ffffeac4000 off a4000 size 2000 virt 15d0 flags 40000040
+002c:trace:module:map_image_into_view mapping L"\\??\\C:\\windows\\system32\\ucrtbase.dll" section .pdata at 0x6ffffeac6000 off a6000 size d000 virt c780 flags 40000040
+002c:trace:module:map_image_into_view mapping L"\\??\\C:\\windows\\system32\\ucrtbase.dll" section .xdata at 0x6ffffead3000 off b3000 size 8000 virt 77a4 flags 40000040
+002c:trace:module:map_image_into_view mapping L"\\??\\C:\\windows\\system32\\ucrtbase.dll" section .bss at 0x6ffffeadb000 off 0 size 0 virt 2410 flags c0000080
+002c:trace:module:map_image_into_view mapping L"\\??\\C:\\windows\\system32\\ucrtbase.dll" section .edata at 0x6ffffeade000 off bb000 size e000 virt d5e4 flags 40000040
+002c:trace:module:map_image_into_view mapping L"\\??\\C:\\windows\\system32\\ucrtbase.dll" section .idata at 0x6ffffeaec000 off c9000 size 2000 virt 18f0 flags 40000040
+002c:trace:module:map_image_into_view mapping L"\\??\\C:\\windows\\system32\\ucrtbase.dll" section .rsrc at 0x6ffffeaee000 off cb000 size 1000 virt 3c8 flags 40000040
+002c:trace:module:map_image_into_view mapping L"\\??\\C:\\windows\\system32\\ucrtbase.dll" section .reloc at 0x6ffffeaef000 off cc000 size 1000 virt 26c flags 42000040
+002c:trace:module:map_image_into_view mapping L"\\??\\C:\\windows\\system32\\ucrtbase.dll" section /14 at 0x6ffffeaf0000 off cd000 size 9000 virt 8360 flags 42000040
+002c:trace:module:map_image_into_view mapping L"\\??\\C:\\windows\\system32\\ucrtbase.dll" section /29 at 0x6ffffeaf9000 off d6000 size 11c000 virt 11ba1f flags 42000040
+002c:trace:module:map_image_into_view mapping L"\\??\\C:\\windows\\system32\\ucrtbase.dll" section /41 at 0x6ffffec15000 off 1f2000 size 16000 virt 15aac flags 42000040
+002c:trace:module:map_image_into_view mapping L"\\??\\C:\\windows\\system32\\ucrtbase.dll" section /55 at 0x6ffffec2b000 off 208000 size 7c000 virt 7b282 flags 42000040
+002c:trace:module:map_image_into_view mapping L"\\??\\C:\\windows\\system32\\ucrtbase.dll" section /67 at 0x6ffffeca7000 off 284000 size 1b000 virt 1a108 flags 42000040
+002c:trace:module:map_image_into_view mapping L"\\??\\C:\\windows\\system32\\ucrtbase.dll" section /80 at 0x6ffffecc2000 off 29f000 size 2000 virt 1dfc flags 42000040
+002c:trace:module:map_image_into_view mapping L"\\??\\C:\\windows\\system32\\ucrtbase.dll" section /91 at 0x6ffffecc4000 off 2a1000 size 15e000 virt 15d7b8 flags 42000040
+002c:trace:module:map_image_into_view mapping L"\\??\\C:\\windows\\system32\\ucrtbase.dll" section /102 at 0x6ffffee22000 off 3ff000 size 2e000 virt 2d0e0 flags 42000040
+002c:trace:module:map_image_into_view relocating L"\\??\\C:\\windows\\system32\\ucrtbase.dll" dynamic base 180000000 -> 6ffffea20000 mapped at 0x6ffffea20000
+002c:trace:module:load_dll looking for L"kernel32.dll" in (null)
+002c:trace:module:load_dll Found L"C:\\windows\\system32\\kernel32.dll" for L"kernel32.dll" at 00006FFFFFA40000, count=5
+002c:trace:module:load_dll looking for L"ntdll.dll" in (null)
+002c:trace:module:load_dll Found L"C:\\windows\\system32\\ntdll.dll" for L"ntdll.dll" at 00006FFFFFC20000, count=7
+002c:trace:module:build_module loaded L"\\??\\C:\\windows\\system32\\ucrtbase.dll" 00007FFFFE321330 00006FFFFEA20000
+002c:trace:module:load_dll Loaded module L"\\??\\C:\\windows\\system32\\ucrtbase.dll" at 00006FFFFEA20000
+002c:trace:module:build_module loaded L"\\??\\C:\\windows\\system32\\sechost.dll" 00007FFFFE3220B0 00006FFFFEE60000
+002c:trace:module:load_dll Loaded module L"\\??\\C:\\windows\\system32\\sechost.dll" at 00006FFFFEE60000
+002c:trace:module:build_module loaded L"\\??\\C:\\windows\\system32\\advapi32.dll" 00007FFFFE320E30 00006FFFFF2B0000
+002c:trace:module:load_dll Loaded module L"\\??\\C:\\windows\\system32\\advapi32.dll" at 00006FFFFF2B0000
+002c:trace:module:load_dll looking for L"kernel32.dll" in (null)
+002c:trace:module:load_dll Found L"C:\\windows\\system32\\kernel32.dll" for L"kernel32.dll" at 00006FFFFFA40000, count=6
+002c:trace:module:load_dll looking for L"kernelbase.dll" in (null)
+002c:trace:module:load_dll Found L"C:\\windows\\system32\\kernelbase.dll" for L"kernelbase.dll" at 00006FFFFF3F0000, count=4
+002c:trace:module:load_dll looking for L"ntdll.dll" in (null)
+002c:trace:module:load_dll Found L"C:\\windows\\system32\\ntdll.dll" for L"ntdll.dll" at 00006FFFFFC20000, count=8
+002c:trace:module:load_dll looking for L"ucrtbase.dll" in (null)
+002c:trace:module:load_dll Found L"C:\\windows\\system32\\ucrtbase.dll" for L"ucrtbase.dll" at 00006FFFFEA20000, count=2
+002c:trace:module:load_dll looking for L"ws2_32.dll" in (null)
+002c:trace:module:get_load_order looking for L"C:\\windows\\system32\\ws2_32.dll"
+002c:trace:module:get_load_order got hardcoded default for L"ws2_32.dll"
+002c:trace:module:map_image_into_view mapping PE file L"\\??\\C:\\windows\\system32\\ws2_32.dll" at 0x6ffffe950000-0x6ffffea02000
+002c:trace:module:map_image_into_view mapping L"\\??\\C:\\windows\\system32\\ws2_32.dll" section .text at 0x6ffffe951000 off 1000 size 14000 virt 13980 flags 60000060
+002c:trace:module:map_image_into_view mapping L"\\??\\C:\\windows\\system32\\ws2_32.dll" section .data at 0x6ffffe965000 off 15000 size 1000 virt 340 flags c0000040
+002c:trace:module:map_image_into_view mapping L"\\??\\C:\\windows\\system32\\ws2_32.dll" section .rodata at 0x6ffffe966000 off 16000 size 1000 virt 9a8 flags c0000040
+002c:trace:module:map_image_into_view mapping L"\\??\\C:\\windows\\system32\\ws2_32.dll" section .rdata at 0x6ffffe967000 off 17000 size 6000 virt 5050 flags 40000040
+002c:trace:module:map_image_into_view mapping L"\\??\\C:\\windows\\system32\\ws2_32.dll" section /4 at 0x6ffffe96d000 off 1d000 size 1000 virt 58 flags 40000040
+002c:trace:module:map_image_into_view mapping L"\\??\\C:\\windows\\system32\\ws2_32.dll" section .pdata at 0x6ffffe96e000 off 1e000 size 1000 virt fcc flags 40000040
+002c:trace:module:map_image_into_view mapping L"\\??\\C:\\windows\\system32\\ws2_32.dll" section .xdata at 0x6ffffe96f000 off 1f000 size 1000 virt cac flags 40000040
+002c:trace:module:map_image_into_view mapping L"\\??\\C:\\windows\\system32\\ws2_32.dll" section .bss at 0x6ffffe970000 off 0 size 0 virt 170 flags c0000080
+002c:trace:module:map_image_into_view mapping L"\\??\\C:\\windows\\system32\\ws2_32.dll" section .edata at 0x6ffffe971000 off 20000 size 2000 virt 13b8 flags 40000040
+002c:trace:module:map_image_into_view mapping L"\\??\\C:\\windows\\system32\\ws2_32.dll" section .idata at 0x6ffffe973000 off 22000 size 1000 virt ae4 flags 40000040
+002c:trace:module:map_image_into_view mapping L"\\??\\C:\\windows\\system32\\ws2_32.dll" section .rsrc at 0x6ffffe974000 off 23000 size 3000 virt 29b8 flags 40000040
+002c:trace:module:map_image_into_view mapping L"\\??\\C:\\windows\\system32\\ws2_32.dll" section .reloc at 0x6ffffe977000 off 26000 size 1000 virt 60 flags 42000040
+002c:trace:module:map_image_into_view mapping L"\\??\\C:\\windows\\system32\\ws2_32.dll" section /14 at 0x6ffffe978000 off 27000 size 1000 virt da0 flags 42000040
+002c:trace:module:map_image_into_view mapping L"\\??\\C:\\windows\\system32\\ws2_32.dll" section /29 at 0x6ffffe979000 off 28000 size 3a000 virt 39346 flags 42000040
+002c:trace:module:map_image_into_view mapping L"\\??\\C:\\windows\\system32\\ws2_32.dll" section /41 at 0x6ffffe9b3000 off 62000 size 3000 virt 2728 flags 42000040
+002c:trace:module:map_image_into_view mapping L"\\??\\C:\\windows\\system32\\ws2_32.dll" section /55 at 0x6ffffe9b6000 off 65000 size 12000 virt 1173a flags 42000040
+002c:trace:module:map_image_into_view mapping L"\\??\\C:\\windows\\system32\\ws2_32.dll" section /67 at 0x6ffffe9c8000 off 77000 size 4000 virt 37c0 flags 42000040
+002c:trace:module:map_image_into_view mapping L"\\??\\C:\\windows\\system32\\ws2_32.dll" section /80 at 0x6ffffe9cc000 off 7b000 size 1000 virt dc0 flags 42000040
+002c:trace:module:map_image_into_view mapping L"\\??\\C:\\windows\\system32\\ws2_32.dll" section /91 at 0x6ffffe9cd000 off 7c000 size 2f000 virt 2e565 flags 42000040
+002c:trace:module:map_image_into_view mapping L"\\??\\C:\\windows\\system32\\ws2_32.dll" section /102 at 0x6ffffe9fc000 off ab000 size 6000 virt 5e00 flags 42000040
+002c:trace:module:map_image_into_view relocating L"\\??\\C:\\windows\\system32\\ws2_32.dll" dynamic base 180000000 -> 6ffffe950000 mapped at 0x6ffffe950000
+002c:trace:module:load_dll looking for L"kernel32.dll" in (null)
+002c:trace:module:load_dll Found L"C:\\windows\\system32\\kernel32.dll" for L"kernel32.dll" at 00006FFFFFA40000, count=7
+002c:trace:module:load_dll looking for L"ntdll.dll" in (null)
+002c:trace:module:load_dll Found L"C:\\windows\\system32\\ntdll.dll" for L"ntdll.dll" at 00006FFFFFC20000, count=9
+002c:trace:module:load_dll looking for L"ucrtbase.dll" in (null)
+002c:trace:module:load_dll Found L"C:\\windows\\system32\\ucrtbase.dll" for L"ucrtbase.dll" at 00006FFFFEA20000, count=3
+002c:trace:module:build_module loaded L"\\??\\C:\\windows\\system32\\ws2_32.dll" 00007FFFFE3215C0 00006FFFFE950000
+002c:trace:module:load_dll Loaded module L"\\??\\C:\\windows\\system32\\ws2_32.dll" at 00006FFFFE950000
+002c:trace:module:process_attach (L"ntdll.dll",00007FFFFE2FFB00) - START
+002c:Call PE DLL (proc=00006FFFFFC31BD0,module=00006FFFFFC20000 L"ntdll.dll",reason=PROCESS_ATTACH,res=00007FFFFE2FFB00)
+002c:Ret  PE DLL (proc=00006FFFFFC31BD0,module=00006FFFFFC20000 L"ntdll.dll",reason=PROCESS_ATTACH,res=00007FFFFE2FFB00) retval=1
+002c:trace:module:process_attach (L"ntdll.dll",00007FFFFE2FFB00) - END
+002c:trace:module:process_attach (L"kernel32.dll",00007FFFFE2FFB00) - START
+002c:trace:module:process_attach (L"kernelbase.dll",00007FFFFE2FFB00) - START
+002c:Call PE DLL (proc=00006FFFFF408CE0,module=00006FFFFF3F0000 L"kernelbase.dll",reason=PROCESS_ATTACH,res=00007FFFFE2FFB00)
+002c:Call ntdll.LdrDisableThreadCalloutsForDll(6fffff3f0000) ret=6fffff408ac3
+002c:Ret  ntdll.LdrDisableThreadCalloutsForDll() retval=00000000 ret=6fffff408ac3
+002c:Call ntdll.NtQueryInformationProcess(ffffffffffffffff,0000001a,7ffffe2ff5d8,00000008,00000000) ret=6fffff4260d0
+002c:Ret  ntdll.NtQueryInformationProcess() retval=00000000 ret=6fffff4260d0
+002c:Call ntdll.NtAllocateVirtualMemory(ffffffffffffffff,7ffffe2ff5e8,00000000,7ffffe2ff5e0,6fff00001000,00000004) ret=6fffff46f6c0
+002c:Ret  ntdll.NtAllocateVirtualMemory() retval=00000000 ret=6fffff46f6c0
+002c:Call ntdll.RtlGetLocaleFileMappingAddress(7ffffe2ff370,6fffff4ad50c,7ffffe2ff420) ret=6fffff46f7a0
+002c:Ret  ntdll.RtlGetLocaleFileMappingAddress() retval=00000000 ret=6fffff46f7a0
+002c:Call ntdll.NtGetNlsSectionPtr(00000009,00000000,00000000,7ffffe2ff370,7ffffe2ff420) ret=6fffff46f853
+002c:Ret  ntdll.NtGetNlsSectionPtr() retval=00000000 ret=6fffff46f853
+002c:Call ntdll.RtlAllocateHeap(7ffffe320000,00000008,000021c8) ret=6fffff46f97e
+002c:Ret  ntdll.RtlAllocateHeap() retval=7ffffe35b3a0 ret=6fffff46f97e
+002c:Call ntdll.NtQueryDefaultLocale(00000001,6fffff4ad508) ret=6fffff46f9c1
+002c:Ret  ntdll.NtQueryDefaultLocale() retval=00000000 ret=6fffff46f9c1
+002c:Call ntdll.RtlInitUnicodeString(7ffffe2ff210,6fffff481ad0 L"WINEUNIXCP") ret=6fffff415537
+002c:Ret  ntdll.RtlInitUnicodeString() retval=00000016 ret=6fffff415537
+002c:Call ntdll.RtlQueryEnvironmentVariable_U(00000000,7ffffe2ff210,7ffffe2ff220) ret=6fffff415565
+002c:Ret  ntdll.RtlQueryEnvironmentVariable_U() retval=c0000100 ret=6fffff415565
+002c:Call ntdll.RtlNtStatusToDosError(c0000100) ret=6fffff4155a6
+002c:Ret  ntdll.RtlNtStatusToDosError() retval=000000cb ret=6fffff4155a6
+002c:Call ntdll.NtGetNlsSectionPtr(0000000c,00000001,00000000,6fffff4ab4a8,7ffffe2ff2c0) ret=6fffff46fa2f
+002c:Ret  ntdll.NtGetNlsSectionPtr() retval=00000000 ret=6fffff46fa2f
+002c:Call ntdll.RtlInitCodePageTable(7ffffe510000,6fffff4ad560) ret=6fffff46fa85
+002c:Ret  ntdll.RtlInitCodePageTable() retval=6fffff4ad560 ret=6fffff46fa85
+002c:Call ntdll.RtlInitCodePageTable(7ffffe530000,6fffff4ad520) ret=6fffff46fa91
+002c:Ret  ntdll.RtlInitCodePageTable() retval=6fffff4ad520 ret=6fffff46fa91
+002c:Call ntdll.RtlInitUnicodeString(7ffffe2ff200,6fffff487bd8 L"\\Registry\\Machine") ret=6fffff43bbfb
+002c:Ret  ntdll.RtlInitUnicodeString() retval=00000024 ret=6fffff43bbfb
+002c:Call ntdll.NtCreateKey(7ffffe2ff1f0,02000000,7ffffe2ff120,00000000,00000000,6fff00000000,00000000) ret=6fffff46633d
+002c:Ret  ntdll.NtCreateKey() retval=00000000 ret=6fffff46633d
+002c:Call ntdll.RtlInitUnicodeString(7ffffe2ff1f0,6fffff481ae8 L"System\\CurrentControlSet\\Control\\Nls") ret=6fffff43baed
+002c:Ret  ntdll.RtlInitUnicodeString() retval=0000004a ret=6fffff43baed
+002c:Call ntdll.RtlInitUnicodeString(7ffffe2ff200,00000000) ret=6fffff43baf6
+002c:Ret  ntdll.RtlInitUnicodeString() retval=6fffffc48090 ret=6fffff43baf6
+002c:Call ntdll.NtCreateKey(6fffff4ad4f8,000f003f,7ffffe2ff120,00000000,7ffffe2ff200,6fff00000000,00000000) ret=6fffff46633d
+002c:Ret  ntdll.NtCreateKey() retval=00000000 ret=6fffff46633d
+002c:Call ntdll.RtlNtStatusToDosError(00000000) ret=6fffff43bb3e
+002c:Ret  ntdll.RtlNtStatusToDosError() retval=00000000 ret=6fffff43bb3e
+002c:Call ntdll.RtlInitUnicodeString(7ffffe2ff1f0,6fffff481b38 L"Software\\Microsoft\\Windows NT\\CurrentVersion\\Time Zones") ret=6fffff43baed
+002c:Ret  ntdll.RtlInitUnicodeString() retval=00000070 ret=6fffff43baed
+002c:Call ntdll.RtlInitUnicodeString(7ffffe2ff200,00000000) ret=6fffff43baf6
+002c:Ret  ntdll.RtlInitUnicodeString() retval=6fffffc48090 ret=6fffff43baf6
+002c:Call ntdll.NtCreateKey(6fffff4ad4f0,000f003f,7ffffe2ff120,00000000,7ffffe2ff200,6fff00000000,00000000) ret=6fffff46633d
+002c:Ret  ntdll.NtCreateKey() retval=00000000 ret=6fffff46633d
+002c:Call ntdll.RtlNtStatusToDosError(00000000) ret=6fffff43bb3e
+002c:Ret  ntdll.RtlNtStatusToDosError() retval=00000000 ret=6fffff43bb3e
+002c:Call ntdll.RtlOpenCurrentUser(02000000,7ffffe2ff1f0) ret=6fffff43bbb5
+002c:Ret  ntdll.RtlOpenCurrentUser() retval=00000000 ret=6fffff43bbb5
+002c:Call ntdll.RtlInitUnicodeString(7ffffe2ff1f0,6fffff481ba8 L"Control Panel\\International") ret=6fffff43baed
+002c:Ret  ntdll.RtlInitUnicodeString() retval=00000038 ret=6fffff43baed
+002c:Call ntdll.RtlInitUnicodeString(7ffffe2ff200,00000000) ret=6fffff43baf6
+002c:Ret  ntdll.RtlInitUnicodeString() retval=6fffffc48090 ret=6fffff43baf6
+002c:Call ntdll.NtCreateKey(6fffff4ad500,000f003f,7ffffe2ff120,00000000,7ffffe2ff200,6fff00000000,00000000) ret=6fffff46633d
+002c:Ret  ntdll.NtCreateKey() retval=00000000 ret=6fffff46633d
+002c:Call ntdll.RtlNtStatusToDosError(00000000) ret=6fffff43bb3e
+002c:Ret  ntdll.RtlNtStatusToDosError() retval=00000000 ret=6fffff43bb3e
+002c:Call ntdll.RtlInitUnicodeString(7ffffe2ff110,6fffff480c74 L"Sorting\\Ids") ret=6fffff441bf6
+002c:Ret  ntdll.RtlInitUnicodeString() retval=00000018 ret=6fffff441bf6
+002c:Call ntdll.NtOpenKeyEx(7ffffe2ff1a8,00020019,7ffffe2fef60,00000000) ret=6fffff47228e
+002c:Ret  ntdll.NtOpenKeyEx() retval=00000000 ret=6fffff47228e
+002c:Call ntdll.RtlNtStatusToDosError(00000000) ret=6fffff441c1b
+002c:Ret  ntdll.RtlNtStatusToDosError() retval=00000000 ret=6fffff441c1b
+002c:Call ntdll.RtlInitUnicodeString(7ffffe2ff000,7ffffe491486 L"en-US") ret=6fffff443505
+002c:Ret  ntdll.RtlInitUnicodeString() retval=0000000c ret=6fffff443505
+002c:Call ntdll.NtQueryValueKey(00000028,7ffffe2ff000,00000002,7ffffe2ff010,0000005a,7ffffe2feffc) ret=6fffff44355d
+002c:Ret  ntdll.NtQueryValueKey() retval=c0000034 ret=6fffff44355d
+002c:Call ntdll.RtlNtStatusToDosError(c0000034) ret=6fffff443574
+002c:Ret  ntdll.RtlNtStatusToDosError() retval=00000002 ret=6fffff443574
+002c:Call ntdll.RtlInitUnicodeString(7ffffe2ff000,7ffffe49100c L"en") ret=6fffff443505
+002c:Ret  ntdll.RtlInitUnicodeString() retval=00000006 ret=6fffff443505
+002c:Call ntdll.NtQueryValueKey(00000028,7ffffe2ff000,00000002,7ffffe2ff010,0000005a,7ffffe2feffc) ret=6fffff44355d
+002c:Ret  ntdll.NtQueryValueKey() retval=c0000034 ret=6fffff44355d
+002c:Call ntdll.RtlNtStatusToDosError(c0000034) ret=6fffff443574
+002c:Ret  ntdll.RtlNtStatusToDosError() retval=00000002 ret=6fffff443574
+002c:Call ntdll.RtlInitUnicodeString(7ffffe2ff000,7ffffe490fbe L"") ret=6fffff443505
+002c:Ret  ntdll.RtlInitUnicodeString() retval=00000002 ret=6fffff443505
+002c:Call ntdll.NtQueryValueKey(00000028,7ffffe2ff000,00000002,7ffffe2ff010,0000005a,7ffffe2feffc) ret=6fffff44355d
+002c:Ret  ntdll.NtQueryValueKey() retval=00000000 ret=6fffff44355d
+002c:Call ntdll.memcpy(7ffffe2ff1d0,7ffffe2ff01c,0000004e) ret=6fffff443720
+002c:Ret  ntdll.memcpy() retval=7ffffe2ff1d0 ret=6fffff443720
+002c:Call ntdll.RtlNtStatusToDosError(00000000) ret=6fffff443574
+002c:Ret  ntdll.RtlNtStatusToDosError() retval=00000000 ret=6fffff443574
+002c:Call ntdll.RtlInitUnicodeString(7ffffe2ff1b0,7ffffe2ff1d0 L"{00000001-57ee-1e5c-00b4-d0000bb1e11e}") ret=6fffff46b646
+002c:Ret  ntdll.RtlInitUnicodeString() retval=0000004e ret=6fffff46b646
+002c:Call ntdll.RtlGUIDFromString(7ffffe2ff1b0,7ffffe2ff1c0) ret=6fffff46b652
+002c:Ret  ntdll.RtlGUIDFromString() retval=00000000 ret=6fffff46b652
+002c:Call ntdll.memcmp(7ffffe2ff1c0,7ffffe7c96f4,00000010) ret=6fffff467d38
+002c:Ret  ntdll.memcmp() retval=ffffffff ret=6fffff467d38
+002c:Call ntdll.memcmp(7ffffe2ff1c0,7ffffe7c9448,00000010) ret=6fffff467d38
+002c:Ret  ntdll.memcmp() retval=ffffffff ret=6fffff467d38
+002c:Call ntdll.memcmp(7ffffe2ff1c0,7ffffe7c92e0,00000010) ret=6fffff467d38
+002c:Ret  ntdll.memcmp() retval=ffffffff ret=6fffff467d38
+002c:Call ntdll.memcmp(7ffffe2ff1c0,7ffffe7c922c,00000010) ret=6fffff467d38
+002c:Ret  ntdll.memcmp() retval=ffffffff ret=6fffff467d38
+002c:Call ntdll.memcmp(7ffffe2ff1c0,7ffffe7c91e4,00000010) ret=6fffff467d38
+002c:Ret  ntdll.memcmp() retval=ffffffff ret=6fffff467d38
+002c:Call ntdll.memcmp(7ffffe2ff1c0,7ffffe7c91c0,00000010) ret=6fffff467d38
+002c:Ret  ntdll.memcmp() retval=00000000 ret=6fffff467d38
+002c:Call ntdll.NtClose(00000028) ret=6fffff43b09e
+002c:Ret  ntdll.NtClose() retval=00000000 ret=6fffff43b09e
+002c:Call ntdll.RtlNtStatusToDosError(00000000) ret=6fffff46b66f
+002c:Ret  ntdll.RtlNtStatusToDosError() retval=00000000 ret=6fffff46b66f
+002c:Call ntdll.RtlQueryDynamicTimeZoneInformation(7ffffe2ff420) ret=6fffff414df1
+002c:Ret  ntdll.RtlQueryDynamicTimeZoneInformation() retval=00000000 ret=6fffff414df1
+002c:Call ntdll.RtlInitUnicodeString(7ffffe2ff170,7ffffe2ff4cc L"Greenwich Standard Time") ret=6fffff441bf6
+002c:Ret  ntdll.RtlInitUnicodeString() retval=00000030 ret=6fffff441bf6
+002c:Call ntdll.NtOpenKeyEx(7ffffe2ff200,000f003f,7ffffe2fefc0,00000000) ret=6fffff47228e
+002c:Ret  ntdll.NtOpenKeyEx() retval=00000000 ret=6fffff47228e
+002c:Call ntdll.RtlNtStatusToDosError(00000000) ret=6fffff441c1b
+002c:Ret  ntdll.RtlNtStatusToDosError() retval=00000000 ret=6fffff441c1b
+002c:Call ntdll.RtlInitUnicodeString(7ffffe2fef60,6fffff481570 L"MUI_Std") ret=6fffff443505
+002c:Ret  ntdll.RtlInitUnicodeString() retval=00000010 ret=6fffff443505
+002c:Call ntdll.NtQueryValueKey(00000028,7ffffe2fef60,00000002,7ffffe2fef70,7fff0000000c,7ffffe2fef5c) ret=6fffff443792
+002c:Ret  ntdll.NtQueryValueKey() retval=80000005 ret=6fffff443792
+002c:Call ntdll.RtlNtStatusToDosError(00000000) ret=6fffff443574
+002c:Ret  ntdll.RtlNtStatusToDosError() retval=00000000 ret=6fffff443574
+002c:Call ntdll.RtlAllocateHeap(7ffffe320000,00000000,00000024) ret=6fffff440652
+002c:Ret  ntdll.RtlAllocateHeap() retval=7ffffe321830 ret=6fffff440652
+002c:Call ntdll.RtlInitUnicodeString(7ffffe2fef60,6fffff481570 L"MUI_Std") ret=6fffff443505
+002c:Ret  ntdll.RtlInitUnicodeString() retval=00000010 ret=6fffff443505
+002c:Call ntdll.NtQueryValueKey(00000028,7ffffe2fef60,00000002,7ffffe2fef70,6fff00000030,7ffffe2fef5c) ret=6fffff44355d
+002c:Ret  ntdll.NtQueryValueKey() retval=00000000 ret=6fffff44355d
+002c:Call ntdll.memcpy(7ffffe321830,7ffffe2fef7c,00000024) ret=6fffff443720
+002c:Ret  ntdll.memcpy() retval=7ffffe321830 ret=6fffff443720
+002c:Call ntdll.RtlNtStatusToDosError(00000000) ret=6fffff443574
+002c:Ret  ntdll.RtlNtStatusToDosError() retval=00000000 ret=6fffff443574
+002c:Call ntdll.RtlInitUnicodeString(7ffffe2ff070,7ffffe321830 L"@tzres.dll,-47168") ret=6fffff40c1c3
+002c:Ret  ntdll.RtlInitUnicodeString() retval=00000024 ret=6fffff40c1c3
+002c:Call ntdll.RtlExpandEnvironmentStrings_U(00000000,7ffffe2ff070,7ffffe2ff080,7ffffe2ff06c) ret=6fffff40c1fd
+002c:Ret  ntdll.RtlExpandEnvironmentStrings_U() retval=c0000023 ret=6fffff40c1fd
+002c:Call ntdll.RtlAllocateHeap(7ffffe320000,00000000,00000024) ret=6fffff4406f7
+002c:Ret  ntdll.RtlAllocateHeap() retval=7ffffe321860 ret=6fffff4406f7
+002c:Call ntdll.RtlInitUnicodeString(7ffffe2ff070,7ffffe321830 L"@tzres.dll,-47168") ret=6fffff40c1c3
+002c:Ret  ntdll.RtlInitUnicodeString() retval=00000024 ret=6fffff40c1c3
+002c:Call ntdll.RtlExpandEnvironmentStrings_U(00000000,7ffffe2ff070,7ffffe2ff080,7ffffe2ff06c) ret=6fffff40c1fd
+002c:Ret  ntdll.RtlExpandEnvironmentStrings_U() retval=00000000 ret=6fffff40c1fd
+002c:Call ntdll.wcsrchr(7ffffe321860 L"@tzres.dll,-47168",0000002c) ret=6fffff44072c
+002c:Ret  ntdll.wcsrchr() retval=7ffffe321874 ret=6fffff44072c
+002c:Call ntdll.wcstol(7ffffe321878 L"47168",00000000,0000000a) ret=6fffff440764
+002c:Ret  ntdll.wcstol() retval=0000b840 ret=6fffff440764
+002c:Call ntdll.RtlReAllocateHeap(7ffffe320000,00000000,7ffffe321830,0000003c) ret=6fffff440801
+002c:Ret  ntdll.RtlReAllocateHeap() retval=7ffffe3214c0 ret=6fffff440801
+002c:Call ntdll.RtlDosPathNameToNtPathName_U(7ffffe3214c0 L"C:\\windows\\system32\\tzres.dll",7ffffe2ff030,00000000,00000000) ret=6fffff415b19
+002c:Ret  ntdll.RtlDosPathNameToNtPathName_U() retval=00000001 ret=6fffff415b19
+002c:Call ntdll.NtQueryAttributesFile(7ffffe2ff070,7ffffe2ff040) ret=6fffff415b61
+002c:Ret  ntdll.NtQueryAttributesFile() retval=00000000 ret=6fffff415b61
+002c:Call ntdll.RtlFreeUnicodeString(7ffffe2ff030) ret=6fffff415b6c
+002c:Ret  ntdll.RtlFreeUnicodeString() retval=00000001 ret=6fffff415b6c
+002c:Call ntdll.RtlGetFullPathName_U(7ffffe3214c0 L"C:\\windows\\system32\\tzres.dll",00000000,00000000,00000000) ret=6fffff417e64
+002c:Ret  ntdll.RtlGetFullPathName_U() retval=0000003c ret=6fffff417e64
+002c:Call ntdll.RtlAllocateHeap(7ffffe320000,00000000,0000003c) ret=6fffff440950
+002c:Ret  ntdll.RtlAllocateHeap() retval=7ffffe3221f0 ret=6fffff440950
+002c:Call ntdll.RtlGetFullPathName_U(7ffffe3214c0 L"C:\\windows\\system32\\tzres.dll",0000003c,7ffffe3221f0,00000000) ret=6fffff417e64
+002c:Ret  ntdll.RtlGetFullPathName_U() retval=0000003a ret=6fffff417e64
+002c:Call ntdll.RtlInitUnicodeString(7ffffe2ff090,7ffffe3221f0 L"C:\\windows\\system32\\tzres.dll") ret=6fffff42780f
+002c:Ret  ntdll.RtlInitUnicodeString() retval=0000003c ret=6fffff42780f
+002c:Call ntdll.LdrGetDllPath(7ffffe3221f0 L"C:\\windows\\system32\\tzres.dll",00000022,7ffffe2ff040,7ffffe2ff048) ret=6fffff470b04
+002c:Ret  ntdll.LdrGetDllPath() retval=00000000 ret=6fffff470b04
+002c:Call ntdll.LdrGetDllHandleEx(00000000,7ffffe321e00,00000000,7ffffe2ff090,7ffffe2ff038) ret=6fffff470b5b
+002c:trace:module:LdrGetDllHandleEx flags 0, load_path 00007FFFFE321E00, dll_characteristics 0000000000000000, name 00007FFFFE2FF090, base 00007FFFFE2FF038.
+002c:trace:module:LdrGetDllHandleEx L"C:\\windows\\system32\\tzres.dll" -> 0000000000000000 (load path L"C:\\windows\\system32;C:\\windows\\system32;C:\\windows\\system;C:\\windows;.;C:\\windows\\system32;C:\\windows;C:\\windows\\system32\\wbem;C:\\windows\\system32\\WindowsPowershell\\v1.0")
+002c:Ret  ntdll.LdrGetDllHandleEx() retval=c0000135 ret=6fffff470b5b
+002c:Call ntdll.RtlDetermineDosPathNameType_U(7ffffe3221f0 L"C:\\windows\\system32\\tzres.dll") ret=6fffff449ba9
+002c:Ret  ntdll.RtlDetermineDosPathNameType_U() retval=00000002 ret=6fffff449ba9
+002c:Call ntdll.RtlDoesFileExists_U(7ffffe3221f0 L"C:\\windows\\system32\\tzres.dll") ret=6fffff449f5c
+002c:Ret  ntdll.RtlDoesFileExists_U() retval=00000001 ret=6fffff449f5c
+002c:Call ntdll.RtlGetFullPathName_U(7ffffe3221f0 L"C:\\windows\\system32\\tzres.dll",00000208,7ffffe2fedb0,00000000) ret=6fffff44a103
+002c:Ret  ntdll.RtlGetFullPathName_U() retval=0000003a ret=6fffff44a103
+002c:Call ntdll.RtlRunOnceExecuteOnce(6fffff4ad780,6fffff46f2f0,00000000,00000000) ret=6fffff4235b2
+002c:Call ntdll.RtlGetVersion(6fffff4ad7a0) ret=6fffff46f311
+002c:Ret  ntdll.RtlGetVersion() retval=00000000 ret=6fffff46f311
+002c:Call ntdll.RtlQueryInformationActivationContext(00000000,7ffffe323830,00000000,00000006,00000000,00000000,7ffffe2fe9a8) ret=6fffff46f391
+002c:Ret  ntdll.RtlQueryInformationActivationContext() retval=c0000023 ret=6fffff46f391
+002c:Call ntdll.RtlAllocateHeap(7ffffe320000,00000000,00000008) ret=6fffff46f428
+002c:Ret  ntdll.RtlAllocateHeap() retval=7ffffe321830 ret=6fffff46f428
+002c:Call ntdll.RtlQueryInformationActivationContext(00000000,7ffffe323830,00000000,00000006,7ffffe321830,00000008,7ffffe2fe9a8) ret=6fffff46f460
+002c:Ret  ntdll.RtlQueryInformationActivationContext() retval=00000000 ret=6fffff46f460
+002c:Call ntdll.RtlFreeHeap(7ffffe320000,00000000,7ffffe321830) ret=6fffff46f54c
+002c:Ret  ntdll.RtlFreeHeap() retval=00000001 ret=6fffff46f54c
+002c:Call ntdll.RtlImageNtHeader(140000000) ret=6fffff46f577
+002c:Ret  ntdll.RtlImageNtHeader() retval=140000080 ret=6fffff46f577
+002c:Ret  ntdll.RtlRunOnceExecuteOnce() retval=00000000 ret=6fffff4235b2
+002c:Call ntdll.wcscpy(7ffffe2feb04,6fffff4ad7b4 L"") ret=6fffff42023f
+002c:Ret  ntdll.wcscpy() retval=7ffffe2feb04 ret=6fffff42023f
+002c:Call ntdll.RtlDosPathNameToNtPathName_U(7ffffe2fedb0 L"C:\\windows\\system32\\tzres.dll",7ffffe2fecd0,00000000,00000000) ret=6fffff403938
+002c:Ret  ntdll.RtlDosPathNameToNtPathName_U() retval=00000001 ret=6fffff403938
+002c:Call ntdll.NtCreateFile(7ffffe2fecb8,80100080,7ffffe2fecf0,7ffffe2fece0,00000000,00000000,7fff00000005,00000001,00000060,00000000,00000000) ret=6fffff403a3e
+002c:Ret  ntdll.NtCreateFile() retval=00000000 ret=6fffff403a3e
+002c:Call ntdll.RtlFreeUnicodeString(7ffffe2fecd0) ret=6fffff403a9e
+002c:Ret  ntdll.RtlFreeUnicodeString() retval=00000001 ret=6fffff403a9e
+002c:Call ntdll.NtCreateSection(7ffffe2fece0,000f0005,7ffffe2fed00,7ffffe2fece8,00000002,01000000,0000002c) ret=6fffff40365a
+002c:Ret  ntdll.NtCreateSection() retval=00000000 ret=6fffff40365a
+002c:Call ntdll.RtlNtStatusToDosError(00000000) ret=6fffff4036f8
+002c:Ret  ntdll.RtlNtStatusToDosError() retval=00000000 ret=6fffff4036f8
+002c:Call ntdll.NtMapViewOfSection(00000030,ffffffffffffffff,7ffffe2fed58,00000000,00000000,7ffffe2fed18,7ffffe2fed50,00000001,7fff00000000,00000002) ret=6fffff429268
+002c:trace:module:get_load_order looking for L"C:\\windows\\system32\\tzres.dll"
+002c:trace:module:get_load_order got hardcoded default for L"tzres.dll"
+002c:trace:module:map_image_into_view mapping PE file L"\\??\\C:\\windows\\system32\\tzres.dll" at 0x180000000-0x180081000
+002c:trace:module:map_image_into_view mapping L"\\??\\C:\\windows\\system32\\tzres.dll" section .rsrc at 0x180001000 off 1000 size 80000 virt 7fdc8 flags 40000040
+002c:Ret  ntdll.NtMapViewOfSection() retval=00000000 ret=6fffff429268
+002c:Call ntdll.NtClose(00000030) ret=6fffff4013b5
+002c:Ret  ntdll.NtClose() retval=00000000 ret=6fffff4013b5
+002c:Call ntdll.NtClose(0000002c) ret=6fffff4013b5
+002c:Ret  ntdll.NtClose() retval=00000000 ret=6fffff4013b5
+002c:Call ntdll.RtlReleasePath(7ffffe321e00) ret=6fffff470b33
+002c:Ret  ntdll.RtlReleasePath() retval=00000001 ret=6fffff470b33
+002c:trace:module:FindResourceExW 0000000180000002 #0006 #0b85 0000
+002c:Call ntdll.LdrFindResource_U(180000002,7ffffe2feee0,00000003,7ffffe2feeb8) ret=6fffff40f07a
+002c:Ret  ntdll.LdrFindResource_U() retval=00000000 ret=6fffff40f07a
+002c:trace:module:LoadResource 0000000180000002 000000018000ED20
+002c:Call ntdll.LdrAccessResource(180000002,18000ed20,7ffffe2ff028,00000000) ret=6fffff427a8c
+002c:Ret  ntdll.LdrAccessResource() retval=00000000 ret=6fffff427a8c
+002c:Call ntdll.RtlAllocateHeap(7ffffe320000,00000008,00000028) ret=6fffff440cf4
+002c:Ret  ntdll.RtlAllocateHeap() retval=7ffffe321830 ret=6fffff440cf4
+002c:Call ntdll.RtlAllocateHeap(7ffffe320000,00000000,0000003c) ret=6fffff440d48
+002c:Ret  ntdll.RtlAllocateHeap() retval=7ffffe322240 ret=6fffff440d48
+002c:Call ntdll.RtlAllocateHeap(7ffffe320000,00000000,00000030) ret=6fffff440da8
+002c:Ret  ntdll.RtlAllocateHeap() retval=7ffffe322340 ret=6fffff440da8
+002c:Call ntdll.memcpy(7ffffe322340,18005ff62,0000002e) ret=6fffff440dc9
+002c:Ret  ntdll.memcpy() retval=7ffffe322340 ret=6fffff440dc9
+002c:Call ntdll.memcpy(7ffffe2ff424,18005ff62,0000002e) ret=6fffff440ad0
+002c:Ret  ntdll.memcpy() retval=7ffffe2ff424 ret=6fffff440ad0
+002c:Call ntdll.RtlImageNtHeader(180000000) ret=6fffff4108a8
+002c:Ret  ntdll.RtlImageNtHeader() retval=180000060 ret=6fffff4108a8
+002c:Call ntdll.RtlRunOnceExecuteOnce(6fffff4ad780,6fffff46f2f0,00000000,00000000) ret=6fffff4235b2
+002c:Ret  ntdll.RtlRunOnceExecuteOnce() retval=00000000 ret=6fffff4235b2
+002c:Call ntdll.wcscpy(7ffffe2fef24,6fffff4ad7b4 L"") ret=6fffff42023f
+002c:Ret  ntdll.wcscpy() retval=7ffffe2fef24 ret=6fffff42023f
+002c:Call ntdll.NtUnmapViewOfSection(ffffffffffffffff,180000000) ret=6fffff4559f9
+002c:Ret  ntdll.NtUnmapViewOfSection() retval=00000000 ret=6fffff4559f9
+002c:Call ntdll.RtlFreeHeap(7ffffe320000,00000000,7ffffe3221f0) ret=6fffff440b08
+002c:Ret  ntdll.RtlFreeHeap() retval=00000001 ret=6fffff440b08
+002c:Call ntdll.RtlFreeHeap(7ffffe320000,00000000,7ffffe3214c0) ret=6fffff4404c9
+002c:Ret  ntdll.RtlFreeHeap() retval=00000001 ret=6fffff4404c9
+002c:Call ntdll.RtlFreeHeap(7ffffe320000,00000000,7ffffe321860) ret=6fffff4404d9
+002c:Ret  ntdll.RtlFreeHeap() retval=00000001 ret=6fffff4404d9
+002c:Call ntdll.RtlInitUnicodeString(7ffffe2fef60,6fffff481580 L"MUI_Dlt") ret=6fffff443505
+002c:Ret  ntdll.RtlInitUnicodeString() retval=00000010 ret=6fffff443505
+002c:Call ntdll.NtQueryValueKey(00000028,

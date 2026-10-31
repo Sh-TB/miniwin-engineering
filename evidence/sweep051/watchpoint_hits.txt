@@ -1,0 +1,24 @@
+[WATCH] DR0=0x7fffe537b110 write/8B armed (max 5 hits)
+[TRACE] Command line: artifacts/sweep051/guests/soffice/soffice.bin --watch 7fffe537b110 5
+[WATCH-HIT 1] store at RIP=0x7ffff7cc7a2d RSP=0x7fffffffbc08 RAX=0x7fffe537b000 RCX=0x7fffe537b000 RDX=0x7fffe537b300 RSI=0x7fffe5404150 RDI=0x7fffe537b040 R8=0x0 R9=0x0
+[WATCH-HIT 1] stack: 209082d 7fffe5404208 7fffffffcfb0 7fffe5404010 7fffe5404118 7fff00000000 180000000 7fffe5404118
+[WATCH-HIT 1] RIP-MAP 7ffff7b74000-7ffff7cd7000 r-xp 00028000 00:29 72057594037927976          /usr/lib/x86_64-linux-gnu/libc.so.6
+[WATCH-HIT 1] RSP-MAP 7ffffffde000-7ffffffff000 rw-p 00000000 00:00 0                          [stack]
+
+[CRASH] Signal 11 at RIP=0x7fffe537c110
+  RAX=0x0 RCX=0x0 RDX=0x7fffffffba50 R8=0x7fffffffba58 R9=0x7fffffffba68
+  RSP=0x7fffffffba50 RBP=0x7fffe53cc8a0
+  g_image_base=0x140000000 g_image_size=0x29d000
+  (NOT inside loaded PE)
+  [RIP-MAP] 0x7fffe537c110 in 0x7fffe535d000-0x7fffe5404000 rwxp 
+  Bytes: 00 00 00 00 00 00 00 00 83 c4 20 5b e9 7b c3 04 
+  [DLLSLOT] msvcp140.dll base=0x7fffe537b000-0x7fffe5404000  <<-- RIP IS INSIDE
+  RSI=0x0 RDI=0x24e43a0
+  R8=0x7fffffffba58  R9=0x7fffffffba68 R10=0x7fffe537c110 R11=0x24e43a0
+  R12=0x20d6928 R13=0x24e42c0 R14=0x7fffe537c0d0 R15=0x89000
+  [STACKTOP raw] 0000000000000000 0000000000000000 00007ffff7d324e0 0000000000000000 00007fffe53cc6e8 0000000002026783 0000000000000018 0000000000000000 0000000000000000 0000000000000000 0000000000000000 0000000000000000
+  [SCAN rsp+040] 0x2026783 <LOADER>
+  Backtrace (via stack walking):
+    [0] RIP=0x7fffe537c110 (outside PE, possible shared lib)
+  Likely: NULL or invalid function pointer call
+[WATCH] exit 139

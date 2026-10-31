@@ -1,0 +1,33 @@
+{
+  "id": "S5_extract",
+  "desc": "extract into a NEW empty directory (out/)",
+  "start": "2026-10-29T19:49:30.449+00:00",
+  "host": false,
+  "argv": [
+    "/home/z/my-project/tools/wine-10.0/bin/wine64",
+    "/home/z/my-project/workspace/miniwin-engineering/evidence/app-tests/winrar/Rar.exe",
+    "x",
+    "-y",
+    "demo.rar",
+    "out\\\\"
+  ],
+  "engine_used": "wine",
+  "exit_code": 0,
+  "duration_s": 4.5,
+  "stdout_bytes": 411,
+  "stderr_bytes": 0,
+  "stdout_head": "\nRAR 7.12 x64   Copyright (c) 1993-2025 Alexander Roshal   23 Jun 2025\nTrial version             Type 'rar -?' for help\n\nExtracting from demo.rar\n\nCreating    out                                                       OK\nExtracting  out\\\\doc_a.txt                                               \b\b\b\b 71",
+  "verifications": [
+    {
+      "name": "extracted_doc_a",
+      "ok": true
+    },
+    {
+      "name": "extracted_doc_b",
+      "ok": true
+    }
+  ],
+  "pass": true,
+  "outcome": "pass",
+  "finish": "2026-10-29T19:49:34.948+00:00"
+}

@@ -1,0 +1,34 @@
+{
+  "id": "S2_create",
+  "desc": "archive the two fixtures into demo.rar",
+  "start": "2026-10-29T19:49:17.131+00:00",
+  "host": false,
+  "argv": [
+    "/home/z/my-project/tools/wine-10.0/bin/wine64",
+    "/home/z/my-project/workspace/miniwin-engineering/evidence/app-tests/winrar/Rar.exe",
+    "a",
+    "-y",
+    "demo.rar",
+    "doc_a.txt",
+    "doc_b.bin"
+  ],
+  "engine_used": "wine",
+  "exit_code": 0,
+  "duration_s": 4.44,
+  "stdout_bytes": 372,
+  "stderr_bytes": 0,
+  "stdout_head": "\nRAR 7.12 x64   Copyright (c) 1993-2025 Alexander Roshal   23 Jun 2025\nTrial version             Type 'rar -?' for help\n\nEvaluation copy. Please register.\n\nCreating archive demo.rar\n\nAdding    doc_a.txt                                                      \b\b\b\b 71%\b\b\b\b\b  OK \nAdding    doc_b.bin      ",
+  "verifications": [
+    {
+      "name": "archive_created",
+      "ok": true
+    },
+    {
+      "name": "archive_nonempty",
+      "ok": true
+    }
+  ],
+  "pass": true,
+  "outcome": "pass",
+  "finish": "2026-10-29T19:49:21.576+00:00"
+}

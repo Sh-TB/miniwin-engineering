@@ -1,0 +1,32 @@
+{
+  "id": "S3_list",
+  "desc": "list archive members",
+  "start": "2026-10-29T19:49:44.830+00:00",
+  "host": false,
+  "argv": [
+    "/home/z/my-project/workspace/miniwin-engineering/minwin_loader",
+    "/home/z/my-project/workspace/miniwin-engineering/evidence/app-tests/winrar/Rar.exe",
+    "l",
+    "-y",
+    "demo.rar"
+  ],
+  "engine_used": "miniwin",
+  "exit_code": 0,
+  "duration_s": 0.01,
+  "stdout_bytes": 543,
+  "stderr_bytes": 119,
+  "stdout_head": "[MiniWin] Loading /home/z/my-project/workspace/miniwin-engineering/evidence/app-tests/winrar/Rar.exe...\n\nRAR 7.12 x64   Copyright (c) 1993-2025 Alexander Roshal   23 Jun 2025\nTrial version             Type 'rar -?' for help\n\nArchive: demo.rar\nDetails: RAR 5\n\n Attributes      Size     Date    Time   Name\n----------- ---------  ---------- -----  ----\n    ..A....       144  2026-10-29 19:49  doc_a.txt\n    ..A....        57  2026-10-29 19:49  doc_b.bin\n----------- ---------  ---------- -----  ----\n                  201                    2\n\n",
+  "verifications": [
+    {
+      "name": "lists_doc_a",
+      "ok": true
+    },
+    {
+      "name": "lists_doc_b",
+      "ok": true
+    }
+  ],
+  "pass": true,
+  "outcome": "pass",
+  "finish": "2026-10-29T19:49:44.839+00:00"
+}

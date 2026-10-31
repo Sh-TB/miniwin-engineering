@@ -1,0 +1,3 @@
+[T64c0] [API] [GUI] tooltips_class32 (ex=0x0 style=0x80000033) -> HWND 0x30013 subclass-prop 0xC000 = 0x36bfff0
+[T64c0] [API] [GUI] tooltips_class32 (ex=0x0 style=0x80000033) -> HWND 0x30014 subclass-prop 0xC000 = 0x36c0140
+[T64c0] [API] GetPropW(hwnd=0x3000b, name=0xc000) -> 0x36bfd50

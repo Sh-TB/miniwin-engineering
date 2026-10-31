@@ -1,0 +1,360 @@
+{
+  "trace": [
+[T5640] [API] PE Loader: file=.cache/miniwin/guests/winnc.installer/winnc11.setup.exe size=12964000
+[T5640] [API] PE32 (x86/0x10b) detected -> load_pe32 interpreted path
+[T5640] [API] [PE32] host-image guard armed: 0x2000000..0x219a000 (guest access refused)
+[T5640] [API] [PE32] world up: arena 0x10000000..0x3fffffff, thunks 0xa00000..0xa0ffff
+[T5640] [API] [PE32] .cache/miniwin/guests/winnc.installer/winnc11.setup.exe: base=0x400000 EP=0xa83bc size=0xdc000 secs=11 relocs=34016 (hi=0)
+[T5640] [API]   -> 0x200a030
+[T5640] [API]   -> 0x200a600
+[T5640] [API]   -> 0x20a2570
+[T5640] [API]   -> 0x20c3d60
+[T5640] [API]   -> 0x200a670
+[T5640] [API]   -> 0x204c7e0
+[T5640] [API]   -> 0x2035df0
+[T5640] [API]   -> 0x20527a0
+[T5640] [API]   -> 0x20b3770
+[T5640] [API]   -> 0x20097d0
+[T5640] [API]   -> 0x20eea40
+[T5640] [API]   -> 0x204eff0
+[T5640] [API]   -> NULL (not in dispatch table)
+[T5640] [API] [PE32] arity('GetCPInfoExW') unknown -> under-pop 0 (caller cleans or frame resync)
+[T5640] [API] [PE32] api 'GetCPInfoExW' (kernel32.dll) UNRESOLVED -> stub thunk
+[T5640] [API]   -> 0x209b8f0
+[T5640] [API]   -> 0x2034be0
+[T5640] [API]   -> 0x2102eb0
+[T5640] [API]   -> 0x203a4e0
+[T5640] [API]   -> 0x206ab40
+[T5640] [API]   -> 0x2086b70
+[T5640] [API]   -> 0x2056cc0
+[T5640] [API]   -> 0x2042f20
+[T5640] [API]   -> 0x20260a0
+[T5640] [API]   -> 0x20ae7a0
+[T5640] [API]   -> 0x203d490
+[T5640] [API]   -> 0x20bb170
+[T5640] [API]   -> 0x2066d20
+[T5640] [API]   -> 0x201b400
+[T5640] [API]   -> 0x209ee00
+[T5640] [API]   -> 0x2090590
+[T5640] [API]   -> 0x20a8480
+[T5640] [API]   -> 0x20179a0
+[T5640] [API]   -> 0x2086ef0
+[T5640] [API]   -> 0x2008aa0
+[T5640] [API]   -> 0x2042c00
+[T5640] [API]   -> 0x2017830
+[T5640] [API]   -> 0x2090750
+[T5640] [API] [PE32] arity('GetExitCodeThread') unknown -> under-pop 0 (caller cleans or frame resync)
+[T5640] [API]   -> 0x20085f0
+[T5640] [API]   -> 0x20ba170
+[T5640] [API]   -> 0x2086ea0
+[T5640] [API]   -> 0x2008600
+[T5640] [API]   -> 0x206d080
+[T5640] [API]   -> 0x204d2c0
+[T5640] [API]   -> 0x2068760
+[T5640] [API]   -> 0x204d150
+[T5640] [API]   -> 0x208de20
+[T5640] [API]   -> 0x2057e00
+[T5640] [API]   -> 0x2029a40
+[T5640] [API]   -> 0x2069eb0
+[T5640] [API]   -> 0x204ad40
+[T5640] [API]   -> 0x20582e0
+[T5640] [API]   -> 0x2036600
+[T5640] [API]   -> 0x20aec20
+[T5640] [API]   -> 0x20749a0
+[T5640] [API]   -> 0x20385a0
+[T5640] [API] [PE32] arity('GetSystemWindowsDirectoryW') unknown -> under-pop 0 (caller cleans or frame resync)
+[T5640] [API]   -> 0x20693b0
+[T5640] [API] [PE32] arity('GetThreadPriority') unknown -> under-pop 0 (caller cleans or frame resync)
+[T5640] [API]   -> 0x2069d50
+[T5640] [API] [PE32] arity('SetThreadPriority') unknown -> under-pop 0 (caller cleans or frame resync)
+[T5640] [API]   -> 0x20085d0
+[T5640] [API]   -> 0x20a70a0
+[T5640] [API]   -> 0x207a960
+[T5640] [API]   -> 0x20553c0
+[T5640] [API]   -> 0x2066770
+[T5640] [API]   -> 0x2089970
+[T5640] [API]   -> 0x2069670
+[T5640] [API]   -> 0x2087cf0
+[T5640] [API]   -> 0x200ae40
+[T5640] [API]   -> 0x20097e0
+[T5640] [API]   -> 0x209be80
+[T5640] [API]   -> 0x203f530
+[T5640] [API]   -> 0x200ae30
+[T5640] [API]   -> 0x20b6470
+[T5640] [API]   -> 0x20a7cc0
+[T5640] [API]   -> 0x200c9d0
+[T5640] [API]   -> 0x20a78d0
+[T5640] [API]   -> 0x204aed0
+[T5640] [API]   -> 0x203f8f0
+[T5640] [API]   -> 0x20c23d0
+[T5640] [API]   -> 0x207c8f0
+[T5640] [API]   -> 0x2013c70
+[T5640] [API]   -> 0x204b050
+[T5640] [API]   -> 0x20b1c90
+[T5640] [API]   -> 0x2090870
+[T5640] [API]   -> 0x20c89d0
+[T5640] [API]   -> 0x20b0ad0
+[T5640] [API]   -> 0x209bda0
+[T5640] [API]   -> 0x20af5e0
+[T5640] [API]   -> 0x201c6a0
+[T5640] [API]   -> 0x21026c0
+[T5640] [API]   -> 0x20a0f00
+[T5640] [API]   -> 0x20576d0
+[T5640] [API]   -> 0x20552d0
+[T5640] [API]   -> 0x20749c0
+[T5640] [API]   -> 0x2026b40
+[T5640] [API]   -> 0x203dba0
+[T5640] [API]   -> 0x200a5b0
+[T5640] [API]   -> 0x200a080
+[T5640] [API] [PE32] arity('IsValidLocale') unknown -> under-pop 0 (caller cleans or frame resync)
+[T5640] [API]   -> 0x205be80
+[T5640] [API]   -> 0x20b01c0
+[T5640] [API]   -> 0x20872a0
+[T5640] [API] [PE32] arity('GetSystemDefaultUILanguage') unknown -> under-pop 0 (caller cleans or frame resync)
+[T5640] [API]   -> NULL (not in dispatch table)
+[T5640] [API] [PE32] arity('EnumCalendarInfoW') unknown -> under-pop 0 (caller cleans or frame resync)
+[T5640] [API] [PE32] api 'EnumCalendarInfoW' (kernel32.dll) UNRESOLVED -> stub thunk
+[T5640] [API]   -> 0x204f7c0
+[T5640] [API]   -> 0x2087270
+[T5640] [API]   -> 0x20aeee0
+[T5640] [API]   -> 0x2040440
+[T5640] [API]   -> 0x200a0a0
+[T5640] [API]   -> 0x2087290
+[T5640] [API]   -> 0x206d600
+[T5640] [API] [PE32] arity('InitCommonControls') unknown -> under-pop 0 (caller cleans or frame resync)
+[T5640] [API]   -> 0x2103660
+[T5640] [API]   -> 0x202a410
+[T5640] [API]   -> 0x2025520
+[T5640] [API] [PE32] arity('CharLowerBuffW') unknown -> under-pop 0 (caller cleans or frame resync)
+[T5640] [API]   -> 0x20f3d00
+[T5640] [API]   -> 0x2023620
+[T5640] [API] [PE32] arity('CharUpperW') unknown -> under-pop 0 (caller cleans or frame resync)
+[T5640] [API]   -> 0x20d5bc0
+[T5640] [API]   -> 0x2009cc0
+[T5640] [API]   -> 0x202dff0
+[T5640] [API]   -> 0x20b5440
+[T5640] [API]   -> 0x20af860
+[T5640] [API]   -> 0x2024f20
+[T5640] [API] [PE32] arity('CharUpperBuffW') unknown -> under-pop 0 (caller cleans or frame resync)
+[T5640] [API]   -> 0x200c370
+[T5640] [API]   -> 0x20d5ca0
+[T5640] [API] [PE32] arity('MsgWaitForMultipleObjects') unknown -> under-pop 0 (caller cleans or frame resync)
+[T5640] [API]   -> 0x20bbbb0
+[T5640] [API]   -> 0x200e550
+[T5640] [API]   -> 0x20efd50
+[T5640] [API]   -> 0x2015d20
+[T5640] [API] [PE32] arity('SysAllocStringLen') unknown -> under-pop 0 (caller cleans or frame resync)
+[T5640] [API]   -> NULL (not in dispatch table)
+[T5640] [API] [PE32] arity('SafeArrayPtrOfIndex') unknown -> under-pop 0 (caller cleans or frame resync)
+[T5640] [API] [PE32] api 'SafeArrayPtrOfIndex' (oleaut32.dll) UNRESOLVED -> stub thunk
+[T5640] [API]   -> 0x2079830
+[T5640] [API] [PE32] arity('VariantCopy') unknown -> under-pop 0 (caller cleans or frame resync)
+[T5640] [API]   -> 0x208efb0
+[T5640] [API] [PE32] arity('SafeArrayGetLBound') unknown -> under-pop 0 (caller cleans or frame resync)
+[T5640] [API]   -> 0x208f070
+[T5640] [API] [PE32] arity('SafeArrayGetUBound') unknown -> under-pop 0 (caller cleans or frame resync)
+[T5640] [API]   -> 0x206f930
+[T5640] [API] [PE32] arity('VariantInit') unknown -> under-pop 0 (caller cleans or frame resync)
+[T5640] [API]   -> 0x2075630
+[T5640] [API] [PE32] arity('VariantClear') unknown -> under-pop 0 (caller cleans or frame resync)
+[T5640] [API]   -> 0x2075460
+[T5640] [API]   -> 0x20863c0
+[T5640] [API] [PE32] arity('SysReAllocStringLen') unknown -> under-pop 0 (caller cleans or frame resync)
+[T5640] [API]   -> 0x200eb30
+[T5640] [API] [PE32] arity('VariantChangeType') unknown -> under-pop 0 (caller cleans or frame resync)
+[T5640] [API]   -> 0x2050d80
+[T5640] [API] [PE32] arity('SafeArrayCreate') unknown -> under-pop 0 (caller cleans or frame resync)
+[T5640] [API]   -> 0x200e4d0
+[T5640] [API] [PE32] arity('ConvertStringSecurityDescriptorToSecurityDescriptorW') unknown -> under-pop 0 (caller cleans or frame resync)
+[T5640] [API]   -> 0x2076d30
+[T5640] [API] [PE32] arity('OpenThreadToken') unknown -> under-pop 0 (caller cleans or frame resync)
+[T5640] [API]   -> 0x203da90
+[T5640] [API]   -> 0x200ab80
+[T5640] [API]   -> 0x20cd9e0
+[T5640] [API]   -> 0x203da10
+[T5640] [API]   -> 0x2075680
+[T5640] [API]   -> 0x20bc420
+[T5640] [API]   -> 0x20b8a50
+[T5640] [API]   -> 0x20cfd60
+[T5640] [API]   -> 0x2045230
+[T5640] [API]   -> 0x204fd60
+[T5640] [API]   -> 0x200a3a0
+[T5640] [API] [PE32] imports: 143 resolved, 3 unresolved (thunk page 146 APIs)
+[T5640] [API]   -> 0x200e630
+[T5640] [API] [PE32] arity('GetLogicalProcessorInformation') unknown -> under-pop 0 (caller cleans or frame resync)
+[T5640] [API] [PE32] delay-imports: 1 bound eagerly (SW-1281b)
+[T5640] [API] [PE32] TEB32 @0x10000000 PEB32 @0x10001000 stack 0x3f700000..0x3ff00000 cmdline@0x10003000
+[T5640] [API] [PE32] jumping to EP 0x4a83bc (interpreted i386)
+[T5640] [API] [PE32] GUI shims armed (x86 wndproc re-entry via cpu32_call)
+[T5640] [API] GetModuleHandleW()
+[T5640] [API] GetModuleHandleW()
+[T5640] [API] GetProcAddress(module=0xdea70000, name=wine_get_version)
+[T5640] [API]   -> NULL (not in dispatch table)
+[T5640] [API]   -> optional-stub fallback (not in dispatch table)
+[T5640] [API]   -> NULL (not in dispatch table)
+[T5640] [API] [PE32] arity('wine_get_version') unknown -> under-pop 0 (caller cleans or frame resync)
+[T5640] [API] [PE32] api 'wine_get_version' (ntdll.dll) UNRESOLVED -> stub thunk
+[T5640] [API] GetModuleHandleW()
+[T5640] [API] GetProcAddress(module=0xdea00000, name=GetLogicalProcessorInformation)
+[T5640] [API]   -> 0x200e630
+[T5640] [API] InitializeCriticalSection(0x4afc14)
+[T5640] [API] GetModuleHandleW()
+[T5640] [API] GetProcAddress(module=0xdea00000, name=GetThreadPreferredUILanguages)
+[T5640] [API]   -> NULL (not in dispatch table)
+[T5640] [API]   -> optional-stub fallback (not in dispatch table)
+[T5640] [API]   -> NULL (not in dispatch table)
+[T5640] [API] [PE32] arity('GetThreadPreferredUILanguages') unknown -> under-pop 0 (caller cleans or frame resync)
+[T5640] [API] [PE32] api 'GetThreadPreferredUILanguages' (kernel32.dll) UNRESOLVED -> stub thunk
+[T5640] [API] GetModuleHandleW()
+[T5640] [API] GetProcAddress(module=0xdea00000, name=SetThreadPreferredUILanguages)
+[T5640] [API]   -> NULL (not in dispatch table)
+[T5640] [API]   -> optional-stub fallback (not in dispatch table)
+[T5640] [API]   -> NULL (not in dispatch table)
+[T5640] [API] [PE32] arity('SetThreadPreferredUILanguages') unknown -> under-pop 0 (caller cleans or frame resync)
+[T5640] [API] [PE32] api 'SetThreadPreferredUILanguages' (kernel32.dll) UNRESOLVED -> stub thunk
+[T5640] [API] GetModuleHandleW()
+[T5640] [API] GetProcAddress(module=0xdea00000, name=GetThreadUILanguage)
+[T5640] [API]   -> NULL (not in dispatch table)
+[T5640] [API]   -> optional-stub fallback (not in dispatch table)
+[T5640] [API]   -> NULL (not in dispatch table)
+[T5640] [API] [PE32] arity('GetThreadUILanguage') unknown -> under-pop 0 (caller cleans or frame resync)
+[T5640] [API] [PE32] api 'GetThreadUILanguage' (kernel32.dll) UNRESOLVED -> stub thunk
+[T5640] [API] GetSystemInfo()
+[T5640] [API] GetCommandLineW()
+[T5640] [API] GetStartupInfoW()
+[T5640] [API] GetSystemInfo()
+[T5640] [API] VirtualQuery(addr=0x400000)
+[T5640] [API] GetCommandLineW()
+[T5640] [API] VirtualAlloc(addr=(nil), size=0x13fff0, type=0x1000, prot=0x4)
+[T5640] [API] VirtualAlloc[32](size=0x140000) = 0x11000000
+[T5640] [API] GetModuleFileNameW(cap=260)
+[T5640] [API] GetModuleFileNameW out u16len=58 utf8len=58 'C:\.cache\miniwin\guests\winnc.installer\winnc11.setup.exe'
+[T5640] [API] CreateFileW(C:\.cache\miniwin\guests\winnc.installer\winnc11.setup.exe, acc=80000000, disp=3)
+[T5640] [API] CreateFileW u16len=29 name=0x11138cec 'C:\.cache\miniwin\guests\winnc.installer\winnc11.setup.exe'
+[T5640] [API]   [0]=0043 'C'
+[T5640] [API]   [1]=003a ':'
+[T5640] [API]   [2]=005c '\'
+[T5640] [API]   [3]=002e '.'
+[T5640] [API]   [4]=0063 'c'
+[T5640] [API]   [5]=0061 'a'
+[T5640] [API]   [6]=0063 'c'
+[T5640] [API]   [7]=0068 'h'
+[T5640] [API]   [8]=0065 'e'
+[T5640] [API]   [9]=005c '\'
+[T5640] [API]   [10]=006d 'm'
+[T5640] [API]   [11]=0069 'i'
+[T5640] [API]   [12]=006e 'n'
+[T5640] [API]   [13]=0069 'i'
+[T5640] [API]   [14]=0077 'w'
+[T5640] [API]   [15]=0069 'i'
+[T5640] [API]   [16]=006e 'n'
+[T5640] [API]   [17]=005c '\'
+[T5640] [API]   [18]=0067 'g'
+[T5640] [API]   [19]=0075 'u'
+[T5640] [API]   [20]=0065 'e'
+[T5640] [API]   [21]=0073 's'
+[T5640] [API]   [22]=0074 't'
+[T5640] [API]   [23]=0073 's'
+[T5640] [API] [RES] find hmod=(nil) a=?/- w=0x2b67/0xa
+[T5640] [API] [RES] walk depth=0 level=0x4cb000 named=0 ided=6 (base=0x4cb000)
+[T5640] [API] [RES] walk depth=1 level=0x4cb120 named=2 ided=1 (base=0x4cb000)
+[T5640] [API] [RES] walk depth=2 level=0x4cb400 named=0 ided=1 (base=0x4cb000)
+[T5640] [API] LoadResource(0x4cb600)
+[T5640] [API] GetFileSize() -> 12964000
+[T5640] [API] GetFileSize() -> 12964000
+[T5640] [API] SetFilePointer(dist=11926286, whence=SET) -> 11926286
+[T5640] [API] ReadFile(n=64)
+[T5640] [API] ReadFile(n=4)
+[T5640] [API] ReadFile(n=5)
+[T5640] [API] SetFilePointer(dist=0, whence=CUR) -> 11926359
+[T5640] [API] GetFileSize() -> 12964000
+[T5640] [API] ReadFile(n=4)
+[T5640] [API] ReadFile(n=4096)
+[T5640] [API] ReadFile(fd=4, n=4096) -> 4096 got=4096 first=5d 00 00 20 00 00 0e 00
+[T5640] [API] VirtualAlloc(addr=(nil), size=0x203e6c, type=0x1000, prot=0x4)
+[T5640] [API] VirtualAlloc[32](size=0x204000) = 0x11140000
+[T5640] [API] ReadFile(n=4)
+[T5640] [API] ReadFile(n=4096)
+[T5640] [API] ReadFile(fd=4, n=4096) -> 4096 got=4096 first=3e d2 50 e7 b0 02 dd ef
+[T5640] [API] ReadFile(n=4)
+[T5640] [API] ReadFile(n=4096)
+[T5640] [API] ReadFile(fd=4, n=4096) -> 4096 got=4096 first=15 89 b9 b1 fe bf 1f bb
+[T5640] [API] ReadFile(n=4)
+[T5640] [API] ReadFile(n=4096)
+[T5640] [API] ReadFile(fd=4, n=4096) -> 4096 got=4096 first=a3 2b fd f9 f0 47 03 7a
+[T5640] [API] ReadFile(n=4)
+[T5640] [API] ReadFile(n=4096)
+[T5640] [API] ReadFile(fd=4, n=4096) -> 4096 got=4096 first=f4 11 0a 9c 4a da f1 e1
+[T5640] [API] ReadFile(n=4)
+[T5640] [API] ReadFile(n=4096)
+[T5640] [API] ReadFile(fd=4, n=4096) -> 4096 got=4096 first=6f 96 a9 da c5 fc 17 63
+[T5640] [API] ReadFile(n=4)
+[T5640] [API] ReadFile(n=4096)
+[T5640] [API] ReadFile(fd=4, n=4096) -> 4096 got=4096 first=25 bd bb 52 d2 17 56 57
+[T5640] [API] ReadFile(n=4)
+[T5640] [API] ReadFile(n=4096)
+[T5640] [API] ReadFile(fd=4, n=4096) -> 4096 got=4096 first=4a 52 fa 04 63 85 cd 2f
+[T5640] [API] ReadFile(n=4)
+[T5640] [API] ReadFile(n=4096)
+[T5640] [API] ReadFile(fd=4, n=4096) -> 4096 got=4096 first=18 87 1f 8b bb a1 d1 2f
+[T5640] [API] ReadFile(n=4)
+[T5640] [API] ReadFile(n=4096)
+[T5640] [API] ReadFile(fd=4, n=4096) -> 4096 got=4096 first=bb c9 c3 60 75 bb 78 cf
+[T5640] [API] ReadFile(n=4)
+[T5640] [API] ReadFile(n=4096)
+[T5640] [API] ReadFile(fd=4, n=4096) -> 4096 got=4096 first=74 d4 ad 4f e8 4c 70 6b
+[T5640] [API] ReadFile(n=4)
+[T5640] [API] ReadFile(n=4096)
+[T5640] [API] ReadFile(fd=4, n=4096) -> 4096 got=4096 first=db 86 7d cf e6 3c 04 9e
+[T5640] [API] ReadFile(n=4)
+[T5640] [API] ReadFile(n=4096)
+[T5640] [API] ReadFile(fd=4, n=4096) -> 4096 got=4096 first=12 c8 13 33 d1 e4 8f 06
+[T5640] [API] ReadFile(n=4)
+[T5640] [API] ReadFile(n=4096)
+[T5640] [API] ReadFile(fd=4, n=4096) -> 4096 got=4096 first=be 89 f9 0c f9 37 bb 3b
+[T5640] [API] ReadFile(n=4)
+[T5640] [API] ReadFile(n=4096)
+[T5640] [API] ReadFile(fd=4, n=4096) -> 4096 got=4096 first=58 d9 45 d8 06 47 67 5d
+[T5640] [API] ReadFile(n=4)
+[T5640] [API] ReadFile(n=4096)
+[T5640] [API] ReadFile(fd=4, n=4096) -> 4096 got=4096 first=21 94 5c 3c 72 fb 0f d9
+[T5640] [API] ReadFile(n=4)
+[T5640] [API] ReadFile(n=4096)
+[T5640] [API] ReadFile(fd=4, n=4096) -> 4096 got=4096 first=2a 3d 49 e4 f1 18 1f 5b
+[T5640] [API] ReadFile(n=4)
+[T5640] [API] ReadFile(n=4096)
+[T5640] [API] ReadFile(fd=4, n=4096) -> 4096 got=4096 first=4f 88 e6 b6 9e 35 91 2c
+[T5640] [API] ReadFile(n=4)
+[T5640] [API] ReadFile(n=4096)
+[T5640] [API] ReadFile(fd=4, n=4096) -> 4096 got=4096 first=95 06 b3 02 13 7b db 56
+[T5640] [API] ReadFile(n=4)
+[T5640] [API] ReadFile(n=4096)
+[T5640] [API] ReadFile(fd=4, n=4096) -> 4096 got=4096 first=f5 bd f4 cd 92 5b e4 bb
+[T5640] [API] ReadFile(n=4)
+[T5640] [API] ReadFile(n=4096)
+[T5640] [API] ReadFile(fd=4, n=4096) -> 4096 got=4096 first=8f 43 e7 66 89 f5 4e e2
+[T5640] [API] ReadFile(n=4)
+[T5640] [API] ReadFile(n=4096)
+[T5640] [API] ReadFile(fd=4, n=4096) -> 4096 got=4096 first=32 6a da 77 27 34 37 8e
+[T5640] [API] ReadFile(n=4)
+[T5640] [API] ReadFile(n=413)
+[T5640] [API] VirtualFree(addr=0x11140000, size=0x0, type=0x8000)
+[T5640] [API] SetFilePointer(dist=0, whence=CUR) -> 12016976
+[T5640] [API] SetFilePointer(dist=12016976, whence=SET) -> 12016976
+[T5640] [API] GetModuleHandleW()
+[T5640] [API] WideCharToMultiByte(cp=1252, srclen=24, dstlen=0)
+[T5640] [API] WideCharToMultiByte(cp=1252, srclen=24, dstlen=24)
+[T5640] [API] GetProcAddress(module=0xdea00000, name=GetUserDefaultUILanguage)
+[T5640] [API]   -> 0x200c9d0
+[T5640] [API] VirtualAlloc(addr=(nil), size=0x13fff0, type=0x1000, prot=0x4)
+[T5640] [API] VirtualAlloc[32](size=0x140000) = 0x11344000
+[T5640] [API] [PE32-SEH] RaiseException code=0eedfade flags=1 nargs=7 from=004a0462
+[T5640] [API] TlsGetValue(0) = (nil)
+[T5640] [API] GlobalAlloc[32](flags=64, bytes=0x18) = 0x11485000
+[T5640] [API] TlsSetValue(0, 0x11485000)
+[T5640] [API] TlsGetValue(0) = 0x11485000
+[T5640] [API] CloseHandle(handle=0x7)
+[T5640] [API] TlsGetValue(0) = 0x11485000
+[T5640] [API] TlsGetValue(0) = 0x11485000
+  ]
+}

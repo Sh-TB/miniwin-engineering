@@ -1,0 +1,2 @@
+[Tb4c0] [API] GlobalHandle(0x254d8c0) -> cookie 0xae0001
+[Tb4c0] [API] GlobalFree(handle=0xae0001) -> base 0x254d8c0 freed -> NULL

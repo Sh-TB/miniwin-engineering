@@ -1,9 +1,9 @@
-# SWEEP-019 — «ادامه چند ده تسک همزمان و پوش در گیت هاب» (2026-10-19)
+# SWEEP-019 — (continue dozens of tasks at once and push to GitHub) (2026-10-19)
 
 User directive: execute the queued SW-816..880 continuation queue (65 items,
-«ادامه سه برابری» x3 of the SW-817..850 list) as ONE elephant batch — dozens
+(triple-parity continuation) x3 of the SW-817..850 list) as ONE elephant batch — dozens
 of tasks simultaneously — with a measured progress table and a push to GitHub
-at the end («تغییرات بدون پیشرفت ارزشی نداره»: no change without measured
+at the end ((changes without measured progress are worthless): no change without measured
 progress).
 
 ## What landed (13 families, 74 new imports resolved + 1 family fix)

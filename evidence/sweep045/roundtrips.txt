@@ -1,0 +1,17 @@
+SWEEP-045 round trips on the final binary (sha b33ec3f7...):
+  7za  create -t7z : exit 0 (samples/real/7za.exe, archive2.7z built)
+  jq   '.a[1]'     : exit 0, output "2"
+  sqlite3 SELECT 6*7 : exit 0, output "42"
+  7za  extract     : exit 139 — PRE-EXISTING at clean HEAD 08350c3, proven by
+                     falsification run (git show HEAD:src/loader/loader.c ->
+                     clean build -> same 139); NOT a SWEEP-045 regression.
+                     Recorded as a new round-trip frontier (SW-1232).
+Game acceptances (SW-501 mandate):
+  snake    30f byte-identical 3x3 (SWEEP-005 golden EXACT)  exit 0 x3
+  breakout 381f byte-identical, bricks 40->13 (SWEEP-018 golden EXACT) exit 0 x3
+  calc     9/9 both batteries (sweep022_calc_accept)
+G1 PIN 12/12 (scripts/g1_accept.sh): evidence/master/g1/20261021_205933 and
+  20261021_210456, binary sha 9910f09c... / b33ec3f7... (final)
+Census x3 16/16 DETERMINISTIC (scripts/sweep044_census.sh -> evidence/sweep045/census.tsv):
+  15x exit-0, pageant 124 (documented daemon park), ZERO unresolved imports
+  corpus-wide, ZERO stubs, ZERO regressions.

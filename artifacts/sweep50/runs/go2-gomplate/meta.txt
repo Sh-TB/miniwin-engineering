@@ -1,5 +1,0 @@
-exe=gomplate/gomplate_windows-amd64.exe
-sha256=5fc33639e7e859befaab660d21563abe60f5810e8f98419e472599d81c06c736
-timeout=10s
-args=none
-date_utc=2026-10-17T18:39:39Z

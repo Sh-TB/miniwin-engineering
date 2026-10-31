@@ -1,0 +1,2 @@
+e451287843b3927c6046eaabd3e22b929bc1f445eec23a73b1398b115d02e4fb  artifacts/sweep50/dl/adexplorer64/adexplorer64.exe
+56536bff1e9da136a53f68c6f4f1cd51f79be919a27249a193a2bc8fc472e89a  artifacts/sweep50/dl/adexplorer64/AdExplorer.zip

@@ -1,4 +1,4 @@
-# SWEEP-025 — «ادامه فیل و یوز» elephant round (2026-10-20)
+# SWEEP-025 — (continue elephant and cheetah) elephant round (2026-10-20)
 
 Mandate: SW-1001..1020 in one batch. One edit round implementing the union
 of the three fresh-measured exit-1 gates (pageant 26, procmon64 140, putty

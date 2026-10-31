@@ -1,0 +1,22 @@
+[
+ {
+  "binary": "/home/z/my-project/workspace/miniwin-engineering/artifacts/sweep061/guests/freecell/freecell.exe",
+  "out": "/home/z/my-project/workspace/miniwin-engineering/evidence/sweep065/ghidra/freecell",
+  "targets": []
+ },
+ {
+  "binary": "/home/z/my-project/workspace/miniwin-engineering/artifacts/sweep061/guests/spider/spider.exe",
+  "out": "/home/z/my-project/workspace/miniwin-engineering/evidence/sweep065/ghidra/spider",
+  "targets": []
+ },
+ {
+  "binary": "/home/z/my-project/workspace/miniwin-engineering/artifacts/sweep061/guests/calc/calc.exe",
+  "out": "/home/z/my-project/workspace/miniwin-engineering/evidence/sweep065/ghidra/calc",
+  "targets": []
+ },
+ {
+  "binary": "/home/z/my-project/workspace/miniwin-engineering/artifacts/sweep061/guests/mspaint/mspaint.exe",
+  "out": "/home/z/my-project/workspace/miniwin-engineering/evidence/sweep065/ghidra/mspaint",
+  "targets": []
+ }
+]

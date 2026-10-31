@@ -1,0 +1,17 @@
+name	7zsetup
+arch	x86
+desc	7-Zip 25.01 x64 INSTALLER (official setup, SWEEP-088 NEW program — installer wizard simulation target #3)
+source_url	https://www.7-zip.org/a/7z2501-x64.exe
+source_sha256	78afa2a1c773caf3cf7edf62f857d2a8a5da55fb0fff5da416074c0d28b2b55f
+artifact	artifacts/sweep088/dl/7z2501-x64.exe
+unpack
+exe	7z2501-x64.exe
+args
+runs	3
+timeout	75
+keys	13,9,32
+mouse	200,300;400,300;400,450
+known	NEW
+note	7-Zip's own installer tech (not NSIS); runs INSIDE SW-1404 sandbox with install_log + registry_tree + snapshot
+sandbox	yes
+guest	7zip.installer.x64

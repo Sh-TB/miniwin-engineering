@@ -1,0 +1,25 @@
+{
+  "id": "S1_launch",
+  "desc": "launch pinned Rar.exe; banner + usage prove real execution",
+  "start": "2026-10-29T19:49:44.803+00:00",
+  "host": false,
+  "argv": [
+    "/home/z/my-project/workspace/miniwin-engineering/minwin_loader",
+    "/home/z/my-project/workspace/miniwin-engineering/evidence/app-tests/winrar/Rar.exe"
+  ],
+  "engine_used": "miniwin",
+  "exit_code": 0,
+  "duration_s": 0.01,
+  "stdout_bytes": 5862,
+  "stderr_bytes": 105,
+  "stdout_head": "[MiniWin] Loading /home/z/my-project/workspace/miniwin-engineering/evidence/app-tests/winrar/Rar.exe...\n\nRAR 7.12 x64   Copyright (c) 1993-2025 Alexander Roshal   23 Jun 2025\nTrial version             Type 'rar -?' for help\n\nUsage:     rar <command> -<switch 1> -<switch N> <archive> <files...>\n               <@listfiles...> <path_to_extract\\>\n\n<Commands>\n  a             Add files to archive\n  c             Add archive comment\n  ch            Change archive parameters\n  cw            Write archiv",
+  "verifications": [
+    {
+      "name": "banner_says_rar712",
+      "ok": true
+    }
+  ],
+  "pass": true,
+  "outcome": "pass",
+  "finish": "2026-10-29T19:49:44.816+00:00"
+}

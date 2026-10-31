@@ -1,5 +1,0 @@
-exe=delta/delta.exe
-sha256=5d8470121b68a9235eb594383dcc8ec5ac786e10f9325771da70a59bc8a57dba
-timeout=10s
-args=none
-date_utc=2026-10-17T18:39:39Z

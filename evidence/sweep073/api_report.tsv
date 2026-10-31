@@ -1,0 +1,3 @@
+guest	api	class	count	evidence
+blackbox.exe	CreateDirectoryA	UNRESOLVED	1	[T6640] [API]   [0] UNRESOLVED: CreateDirectoryA
+blackbox.exe	RemoveDirectoryA	UNRESOLVED	1	[T6640] [API]   [29] UNRESOLVED: RemoveDirectoryA

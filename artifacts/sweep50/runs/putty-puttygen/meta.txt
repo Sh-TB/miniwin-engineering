@@ -1,5 +1,0 @@
-exe=puttygen/puttygen.exe
-sha256=caa8870591712c44dcc76a639ae6723c62167eab6c4f1cb436b3a05d61741302
-timeout=10s
-args=none
-date_utc=2026-10-17T18:39:37Z

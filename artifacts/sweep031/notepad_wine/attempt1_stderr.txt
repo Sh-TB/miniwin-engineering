@@ -1,0 +1,22 @@
+[TRACE] Command line: /home/z/my-project/workspace/wine-ref/notepad-build/notepad_wine.exe
+[WARN]   unresolved: IsTextUnicode
+[WARN]   unresolved: DefSubclassProc
+[WARN]   unresolved: SetWindowSubclass
+[WARN]   unresolved: GetFileTitleW
+[WARN]   unresolved: GetCPInfoExW
+[WARN]   unresolved: lstrcatW
+[WARN]   unresolved: DragAcceptFiles
+[WARN]   unresolved: ShellAboutW
+[WARN]   unresolved: StrCmpNIW
+[WARN]   unresolved: StrCmpNW
+[WARN]   unresolved: StrRStrIW
+[WARN]   unresolved: StrStrW
+[WARN]   unresolved: wnsprintfW
+[WARN]   unresolved: GetDpiForWindow
+[WARN]   unresolved: MonitorFromRect
+[WARN] 15 imports unresolved
+[STUB] unresolved import called -> returning 0 (call #1) guest_rip=0x140002a52
+[STUB] unresolved import called -> returning 0 (call #2) guest_rip=0x1400014ca
+[STUB] unresolved import called -> returning 0 (call #3) guest_rip=0x1400045a6
+[STUB] unresolved import called -> returning 0 (call #4) guest_rip=0x1400045ae
+[STUB] unresolved import called -> returning 0 (call #5) guest_rip=0x140002c61

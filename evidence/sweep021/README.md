@@ -1,9 +1,9 @@
-# SWEEP-021 — «ادامه چند ده تسک همزمان» elephant batch (SW-881..920 remainder + GUI accounting)
+# SWEEP-021 — (continue dozens of tasks at once) elephant batch (SW-881..920 remainder + GUI accounting)
 
 Date: 2026-10-19 (UTC). Loader change: ONE batch — 24 new functions + 35 ENTRY rows.
 Build: `minwin_loader` 1,771,176 -> 1,836,696 bytes (+65,520). One `make`, zero errors.
 
-## User question answered with measured data («تونسته چیزی رو اجرا کامل بکنه؟ ۵ تا برنامه گرافیکی؟»)
+## User question answered with measured data ((did it manage to run anything completely? five graphical programs?))
 
 **YES — 6 real GUI-subsystem programs run to completion (exit 0), x3 deterministic:**
 
@@ -74,7 +74,7 @@ coreinfoex64 is the only console program in the corpus (exit 0, 0 unresolved).
 - exit1: pageant, procmon64, putty, zoomit64 (SW-553 TRAP133 family) — next batch targets.
 - produkey pump-on exit1 (SW-881..885 now landed; verify with MW_GUI_EVENTS=1 next sweep).
 
-## SW-921..960 — continuation queue (40 items, «ادامه سه برابری» standing order)
+## SW-921..960 — continuation queue (40 items, (triple-parity continuation) standing order)
 
 See `.agent/SWEEP50_WORKLIST.md` — dialog deepening x5, ListView final x5, TreeView final
 x5, GDI DIB x5, fonts x5, network x5, registry x5, CRT/COM x5.

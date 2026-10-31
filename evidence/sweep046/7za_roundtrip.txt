@@ -1,0 +1,10 @@
+SW-1232 round trip — 7za create + extract, binary 848fa108 (SWEEP-046)
+create: minwin_loader samples/real/7za.exe a -t7z <arc>.7z samples/real/7za.exe
+extract: minwin_loader samples/real/7za.exe e -y <arc>.7z -o<dir>
+run1: create=0 extract=0 sha=15d4c788c148e367
+run2: create=0 extract=0 sha=15d4c788c148e367
+run3: create=0 extract=0 sha=15d4c788c148e367
+reference: sha256(samples/real/7za.exe) = 15d4c788c148e3677e2fc1c4a01f191fb6669eba4f6acf8a465f0f1a6f1e1260
+archive size after fix: 459476 bytes (was 123 bytes with the fake CreateSemaphoreW)
+round trips on the same binary: jq '.a[1]' -> 2 (exit 0); sqlite3 "SELECT 6*7" -> 42
+(exit 0); zstd -f -z + -d round trip OK; lz4 round trip OK.

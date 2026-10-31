@@ -1,0 +1,350 @@
+#!/bin/bash
+# plugin_run.sh — MiniWin app-plugin runner (SWEEP-081).
+#
+# Every tested application lives in plugins/<name>/plugin.tsv (a manifest).
+# The runner turns one manifest into: verified artifact -> run battery ->
+# frames -> verdict + frontier -> evidence row + status.tsv update.
+# This makes each app a self-contained "plugin": its download, its input
+# probes, its known SW-numbers and its status live in ONE directory.
+#
+# Usage: scripts/plugin_run.sh <plugin-name> [runs] [timeout]
+#        scripts/plugin_run.sh --all [runs] [timeout]
+#
+# Manifest keys (TAB-separated, # = comment):
+#   name arch desc source_url source_sha256 artifact unpack exe args
+#   runs timeout keys mouse known note
+#   sandbox=yes              run with CWD inside a per-plugin sandbox (SW-1404)
+#   sandbox_tree=<dir>       stage a whole Windows-style tree into the sandbox
+#   reg_seed=<file>          SW-1419 (SWEEP-091): MWREG001 snapshot copied to
+#                            the sandbox as registry_snapshot.bin BEFORE the
+#                            runs — the installed app boots with the
+#                            installer's written registry (install→app chain)
+set -u
+REPO="$(cd "$(dirname "$0")/.." && pwd)"
+cd "$REPO" || exit 1
+SWEEP="${SWEEP:-sweep081}"
+EV="evidence/$SWEEP"
+
+say() { printf '%s\n' "$*"; }
+
+manifest_get() { # file key
+    awk -F'\t' -v k="$1" '$1==k {print $2; exit}' "$2"
+}
+
+classify() { # log rc frames diff_frame [trace_file] -> verdict string
+    local log="$1" rc="$2" frames="$3" diff="$4" trace="$5"
+    local crash steps frontier
+    crash=$(grep -ac '\[CRASH\]' "$log" 2>/dev/null)
+    steps=$(grep -aoE 'steps[= ][0-9]+' "$log" 2>/dev/null | tail -1 | grep -oE '[0-9]+')
+    if [ "$crash" -gt 0 ]; then
+        frontier=$(grep -aoE 'FRONTIER[_A-Z0-9]*|SW-[0-9]+' "$log" 2>/dev/null | tail -3 | tr '\n' ',')
+        echo "FRONTIER_SW crash=$crash ${frontier:-undecoded} steps=${steps:-?}"
+    elif [ "$rc" -eq 124 ]; then
+        # SW-1491 (SWEEP-104): an rc=124 guest is not necessarily hung. Decode
+        # the parking shape from the api_trace tail (raw text survives SIGKILL:
+        # the 64KiB stdio buffer flushed everything except the last chunk):
+        #   ALIVE_PUMP = paced message-pump park (GetMessage -> WM_TIMER/
+        #                WM_PAINT dispatch loop) — the interactive-app
+        #                contract, killed by the battery timeout like real
+        #                Windows would be.
+        #   SPIN       = unbounded busy loop (SendMessage re-fire / registry
+        #                miss re-read) — alive but burning host CPU; an
+        #                engine-modeling frontier, not a guest crash.
+        # Produkey/everything = ALIVE_PUMP (state S, hrtimer_nanosleep);
+        # tcpview64/winrarinstd = SPIN (state R, ~100% core). /proc-sampled
+        # evidence/sweep103/probes/.
+        local shape=""
+        if [ -n "$trace" ] && [ -f "$trace" ]; then
+            if tail -c 262144 "$trace" 2>/dev/null | grep -aq 'GetMessage[AW] -> WM_\|fix-F wait done'; then
+                shape="ALIVE_PUMP_AT_TIMEOUT"
+            elif tail -c 262144 "$trace" 2>/dev/null | grep -aq 'SendMessage'; then
+                shape="SPIN_AT_TIMEOUT"
+            fi
+        fi
+        echo "${shape:-TIMEOUT} frames=$frames"
+    elif [ "$frames" -gt 0 ] && [ -n "$diff" ] && [ "$rc" -eq 0 ]; then
+        echo "PASS_INPUT_STATE_CHANGE"
+    elif [ "$frames" -gt 0 ]; then
+        echo "PASS_LAUNCH_RENDER rc=$rc"
+    else
+        echo "EXIT rc=$rc frames=$frames"
+    fi
+}
+
+expand_tree() { # sandbox_tree / reg_seed placeholders (SWEEP-092)
+    case "$1" in
+        '$SANDBOX_OF:'*)   printf '%s' "$EV/${1#'$SANDBOX_OF:'}/sandbox" ;;
+        '$SNAPSHOT_OF:'*)  printf '%s' "$EV/${1#'$SNAPSHOT_OF:'}/sandbox/registry_snapshot.bin" ;;
+        *)                 printf '%s' "$1" ;;
+    esac
+}
+
+frame_stats() { # screenshots_dir -> "frames uniq first_diff"
+    python3 - "$1" <<'PYEOF'
+import sys, os, hashlib
+d = sys.argv[1]
+try:
+    fs = sorted(f for f in os.listdir(d) if f.endswith(".bmp"))
+    if not fs: print("0 0 "); raise SystemExit
+    h0 = hashlib.md5(open(f"{d}/{fs[0]}","rb").read()).hexdigest()
+    diff = [f for f in fs[1:] if hashlib.md5(open(f"{d}/{f}","rb").read()).hexdigest() != h0]
+    print(len(fs), len(set(hashlib.md5(open(f"{d}/{f}","rb").read()).hexdigest() for f in fs)), diff[0] if diff else "")
+except SystemExit: pass
+except Exception:
+    print("0 0 ")
+PYEOF
+}
+
+run_plugin() {
+    local name="$1" nruns="${2:-3}" tmo="${3:-75}"
+    local mf="plugins/$name/plugin.tsv"
+    [ -f "$mf" ] || { say "NO MANIFEST plugins/$name/plugin.tsv"; return 1; }
+    local arch desc url sha artifact unpack exe args keys mouse known
+    arch=$(manifest_get arch "$mf"); desc=$(manifest_get desc "$mf")
+    url=$(manifest_get source_url "$mf"); sha=$(manifest_get source_sha256 "$mf")
+    artifact=$(manifest_get artifact "$mf"); unpack=$(manifest_get unpack "$mf")
+    exe=$(manifest_get exe "$mf"); args=$(manifest_get args "$mf")
+    keys=$(manifest_get keys "$mf"); mouse=$(manifest_get mouse "$mf")
+    known=$(manifest_get known "$mf")
+    # SW-1468 (SWEEP-094): optional per-plugin extra environment (KEY=VAL;KEY=VAL)
+    # — e.g. MINWIN_OSVER=6.1 makes the unified version plane report Windows 7
+    # for installers that version-check. Unset = engine defaults (corpus-safe).
+    local penv="$(manifest_get env "$mf")"
+    sandbox=$(manifest_get sandbox "$mf")
+    guest=$(manifest_get guest "$mf")
+    [ -n "$keys" ] || keys="37,38,39,40,13,32,9,9"
+    [ -n "$mouse" ] || mouse="45,45;90,90;135,135"
+    # SW-1404 (SWEEP-086): installer sandbox. When the manifest sets
+    # sandbox=yes the guest runs with CWD = evidence/<sweep>/<name>/sandbox
+    # (SW-1234 drive-root = loader CWD), so guest C:\... writes land INSIDE
+    # the sandbox; MINWIN_INSTALL_LOG/REG_TREE/REG_SNAPSHOT capture the full
+    # installer ground truth. Non-sandbox plugins: byte-identical behavior.
+
+    say "== plugin: $name ($arch) — $desc"
+
+    # 0. provision chain (SWEEP-092): a missing sandbox_tree is GENERATED by
+    #    running its producer plugin once (install -> installed-app chain).
+    local stree
+    stree=$(expand_tree "$(manifest_get sandbox_tree "$mf")")
+    if [ -n "$stree" ] && [ ! -d "$stree" ]; then
+        local prov
+        prov=$(manifest_get provision "$mf")
+        if [ -n "$prov" ] && [ "$prov" != "$name" ]; then
+            say "   sandbox tree missing -> provisioning via plugin '$prov' (1 install run)"
+            run_plugin "$prov" 1 90 || say "   WARN: provision run '$prov' failed"
+            stree=$(expand_tree "$(manifest_get sandbox_tree "$mf")")
+        fi
+    fi
+    local intree=0
+    if [ -n "$stree" ] && [ -d "$stree" ] && [ -n "$exe" ] && [ -f "$stree/$exe" ]; then
+        intree=1
+    fi
+
+    # 1. artifact resolution — canonical path is the hash-pinned corpus
+    #    manifest + verified cache (SWEEP-092). Legacy repo-local paths still
+    #    work when present (hash-checked below) so local setups keep working;
+    #    a fresh clone fetches on demand and never uses committed binaries.
+    if [ -n "$guest" ]; then
+        local fout cartifact
+        if fout=$(bash "$REPO/scripts/fetch_guest.sh" "$guest" 2>&1); then
+            cartifact=$(printf '%s\n' "$fout" | awk '/^ARTIFACT /{print $2; exit}')
+            if [ -n "$cartifact" ] && [ -f "$cartifact" ]; then
+                artifact="$cartifact"
+                say "   guest $guest -> $artifact ($(printf '%s\n' "$fout" | grep -m1 '^VERIFIED' | cut -d' ' -f2))"
+            fi
+        else
+            say "   fetch_guest($guest): $(printf '%s\n' "$fout" | tail -1)"
+        fi
+    fi
+    if [ "$intree" = "0" ] && [ ! -f "$artifact" ]; then
+        say "   artifact missing: $artifact ($url)"
+        echo -e "$name\t$arch\tBLOCKED_DOWNLOAD\t$url\tno verified artifact (fetch_guest failed, no legacy copy)\t$known\t$SWEEP" >> plugins/status.tsv
+        return 2
+    fi
+    if [ "$intree" = "0" ]; then
+        local have; have=$(sha256sum "$artifact" | cut -d' ' -f1)
+        if [ -n "$sha" ] && [ "$have" != "$sha" ]; then
+            say "   SHA MISMATCH have=$have want=$sha"
+            echo -e "$name\t$arch\tBLOCKED_SHA\t$artifact\tsha mismatch\t$known\t$SWEEP" >> plugins/status.tsv
+            return 2
+        fi
+        say "   artifact ok ${have:0:12} ($(stat -c%s "$artifact")B)"
+    else
+        say "   artifact: in-tree exe staged from $stree/$exe"
+    fi
+
+    # 2. unpack if required (SWEEP-092: guest zips extract via the guarded
+    #    fetch_guest extractor; legacy local zips keep the unzip path)
+    # SW-1462 (SWEEP-094): derived installed payloads (source_url GENERATED /
+    # evidence-relative) exist ONLY inside the provisioned sandbox tree after
+    # the source-only cleanup removed artifacts/ — resolve those in-tree FIRST
+    # so the legacy artifact existence check cannot kill the install->run chain.
+    local exe_path
+    if [ "$intree" = "1" ]; then
+        exe_path="$stree/$exe"
+    elif [ "$unpack" = "zip" ]; then
+        local dest=""
+        if [ -n "$guest" ] && [ -f "$artifact" ]; then
+            dest=$(bash "$REPO/scripts/fetch_guest.sh" "$guest" --extract 2>/dev/null | awk '/^EXTRACT /{print $2; exit}')
+        fi
+        if [ -z "$dest" ]; then
+            dest="${artifact%.zip}.x"
+            if [ ! -f "$dest/$(basename "$exe")" ]; then
+                mkdir -p "$dest"
+                unzip -o -q "$artifact" -d "$dest" 2>/dev/null || { say "   unzip FAILED"; echo -e "$name\t$arch\tFAIL_UNPACK\t\t\t$known\t$SWEEP" >> plugins/status.tsv; return 2; }
+            fi
+        fi
+        exe_path="$dest/$exe"
+        # SW-1470 (SWEEP-094): a portable (zip, non-sandbox) app runs from its
+        # OWN directory on real Windows — the user cds into the folder and
+        # launches the exe. The drive-root mapping (SW-1234) maps C:\ to the
+        # process cwd, so the cwd IS the app's C:\ here. Notepad++ portable
+        # proved the need: langs.xml sits beside the exe; run from the repo
+        # root the loader's C:\ had no langs.xml -> the editor's real
+        # "Load langs.xml failed!" recovery dialog fired instead of loading it.
+        if [ "${SB:-}" = "" ] && [ "$intree" = "0" ]; then
+            PORTABLE_CWD="$dest"
+            case "$exe_path" in /*) ;; *) exe_path="$(cd "$dest" && pwd)/$exe";; esac
+        fi
+    else
+        exe_path="$artifact"
+    fi
+    [ -f "$exe_path" ] || { say "   exe missing: $exe_path"; echo -e "$name\t$arch\tFAIL_NOEXE\t\t\t$known\t$SWEEP" >> plugins/status.tsv; return 2; }
+    say "   exe: $exe_path"
+
+    # 2b. SW-1407 (SWEEP-086): sandboxed installers run from INSIDE the sandbox
+    # ("C:\Installers\<exe>") — the module self-path (GetModuleFileName ->
+    # CreateFile self-reopen for the embedded payload) then round-trips through
+    # the SW-1234 drive-root mapping; an exe outside the drive root cannot.
+    local SB=""
+    local RESROOT="miniwin-results"
+    if [ "$sandbox" = "yes" ]; then
+        SB="$EV/$name/sandbox"
+        mkdir -p "$SB"
+        SB="$(cd "$SB" && pwd)" # absolute: the guest subshell cwd IS the sandbox
+        RESROOT="$SB/miniwin-results"
+        # SW-1407b: sandbox_tree=<dir> — a whole Windows-style tree staged into
+        # the sandbox before the run (installed-program plugins need their
+        # sibling files, like a real C: drive layout). If the exe exists inside
+        # the staged tree it runs from there; otherwise it is copied to
+        # Installers/ (the installer path). $stree is placeholder-expanded and
+        # provisioned in step 0.
+        if [ -n "$stree" ] && [ -d "$stree" ]; then
+            cp -a "$stree/." "$SB/"
+        fi
+        # SW-1419 (SWEEP-091): reg_seed=<snapshot file> — stage the installer's
+        # registry snapshot so the app run sees the keys the installer wrote.
+        # This closes the install→installed-app registry chain (real Windows:
+        # HKCU keys written by setup are read by the program at first launch).
+        rseed=$(expand_tree "$(manifest_get reg_seed "$mf")")
+        if [ -n "$rseed" ] && [ -f "$rseed" ]; then
+            cp -f "$rseed" "$SB/registry_snapshot.bin"
+            say "   reg seed: $rseed ($(stat -c%s "$rseed")B)"
+        fi
+        # SW-1546 (SWEEP-111): reg_seed_extend=<script> — post-process the
+        # staged snapshot before the battery. Use case: the "prefix has one
+        # GUI run behind it" fixture. On a real box WinRAR's own first GUI
+        # run writes the default toolbar state into HKCU\...\Toolbar; the
+        # headless install run never reaches that code, so the fixture
+        # extends the installer snapshot with the measured default
+        # (scripts/sweep111_seed.py — issue #26 discriminating experiment).
+        rext=$(manifest_get reg_seed_extend "$mf")
+        if [ -n "$rext" ] && [ -f "$REPO/$rext" ] && [ -f "$SB/registry_snapshot.bin" ]; then
+            if python3 "$REPO/$rext" "$SB/registry_snapshot.bin" "$SB/registry_snapshot.bin" 2>/dev/null; then
+                say "   reg seed extend: $rext applied ($(stat -c%s "$SB/registry_snapshot.bin")B)"
+            else
+                say "   reg seed extend: $rext FAILED (snapshot left as staged)"
+            fi
+        fi
+        if [ -n "$stree" ] && [ -f "$SB/$exe" ]; then
+            exe_path="$SB/$exe"
+            say "   sandbox exe (in-tree): $exe_path"
+        else
+            mkdir -p "$SB/Installers"
+            cp -f "$exe_path" "$SB/Installers/$(basename "$exe_path")"
+            exe_path="$SB/Installers/$(basename "$exe_path")"
+            say "   sandbox exe: $exe_path"
+        fi
+    fi
+
+    # 3. battery
+    # SW-1490 (SWEEP-104): the loader writes miniwin-results/ relative to its
+    # CWD. The SW-1470 portable branch RUNS the guest from $PORTABLE_CWD, so
+    # the results land THERE — reading $RESROOT (repo root) found nothing and
+    # every portable-zip plugin (produkey/everything/tcpview64/notepad2mod...)
+    # silently lost its frame evidence (frames=0 verdicts on real renders).
+    # RESROOT_EFF = where THIS plugin's runs actually write.
+    local RESROOT_EFF="$RESROOT"
+    mkdir -p "$EV/$name" plugins/$name
+    local base run rc out crash frames uniq diff verdict result_row=""
+    for run in $(seq 1 "$nruns"); do
+        if [ -n "${PORTABLE_CWD:-}" ]; then RESROOT_EFF="$PORTABLE_CWD/miniwin-results"; fi
+        rm -rf "${RESROOT_EFF}/$(basename "$exe_path")"
+        out="/tmp/plug_${name}_r${run}.log"
+        if [ -n "$SB" ]; then
+            ( cd "$SB" && \
+            MW_GUI_EVENTS=1 MW_GUI_EVENTS_BUDGET=220 \
+            MW_GUI_KEYS="$keys" MW_GUI_KEY_EVERY=7 MW_GUI_KEYUP=1 \
+            MINWIN_MOUSE="$mouse" MINWIN_MOUSE_EVERY=6 \
+            MINWIN_INSTALL_LOG="$SB/install_log.tsv" \
+            MINWIN_REG_TREE="$SB/registry_tree" \
+            MINWIN_REG_SNAPSHOT="$SB/registry_snapshot.bin" \
+            MINWIN_WINTEMP=1 \
+            timeout "$tmo" env $penv "$REPO/minwin_loader" "$exe_path" $args ) > "$out" 2>&1
+        else
+            # SW-1493 (SWEEP-105): ${PORTABLE_CWD:-} guard — this branch only
+            # fires for non-portable AND non-sandbox plugins (e.g. winnc,
+            # unpack=none), where line 206 never ran and the variable is
+            # undefined; under `set -u` the bare reference killed the whole
+            # battery (SWEEP-105 winnc: "PORTABLE_CWD: unbound variable").
+            if [ -n "${PORTABLE_CWD:-}" ]; then
+                ( cd "$PORTABLE_CWD" && \
+                MW_GUI_EVENTS=1 MW_GUI_EVENTS_BUDGET=220 \
+                MW_GUI_KEYS="$keys" MW_GUI_KEY_EVERY=7 MW_GUI_KEYUP=1 \
+                MINWIN_MOUSE="$mouse" MINWIN_MOUSE_EVERY=6 \
+                timeout "$tmo" env $penv "$REPO/minwin_loader" "$exe_path" $args ) > "$out" 2>&1
+            else
+                MW_GUI_EVENTS=1 MW_GUI_EVENTS_BUDGET=220 \
+                MW_GUI_KEYS="$keys" MW_GUI_KEY_EVERY=7 MW_GUI_KEYUP=1 \
+                MINWIN_MOUSE="$mouse" MINWIN_MOUSE_EVERY=6 \
+                timeout "$tmo" env $penv ./minwin_loader "$exe_path" $args > "$out" 2>&1
+            fi
+        fi
+        rc=$?
+        result_row="$result_row rc=$rc"
+        cp "$out" "$EV/$name/run${run}.log"
+        say "   run$run rc=$rc crash=$(grep -ac '\[CRASH\]' "$out")"
+    done
+    read -r frames uniq diff <<< "$(frame_stats "${RESROOT_EFF}/$(basename "$exe_path")/screenshots")"
+    verdict=$(classify "$out" "$rc" "$frames" "$diff" "${RESROOT_EFF}/$(basename "$exe_path")/api_trace.json")
+
+    # 4. frames -> evidence PNG
+    local fsdir="${RESROOT_EFF}/$(basename "$exe_path")/screenshots"
+    if [ -d "$fsdir" ]; then
+        python3 - "$fsdir" "$EV/$name" <<'PYEOF'
+import sys, os
+from PIL import Image
+src, dst = sys.argv[1], sys.argv[2]
+os.makedirs(dst, exist_ok=True)
+for f in sorted(os.listdir(src)):
+    if f.endswith(".bmp"):
+        Image.open(os.path.join(src, f)).save(os.path.join(dst, f[:-4] + ".png"), optimize=True)
+PYEOF
+    fi
+
+    # 5. status row
+    echo -e "$name\t$arch\t$verdict\t$exe_path\t$result_row\tframes=$frames uniq=$uniq diff=$diff\t$known\t$SWEEP" >> plugins/status.tsv
+    say "   VERDICT: $verdict (frames=$frames uniq=$uniq)"
+}
+
+# --- main ---
+mkdir -p plugins "$EV"
+touch plugins/status.tsv
+if [ "$1" = "--all" ]; then
+    for mf in plugins/*/plugin.tsv; do
+        n=$(basename "$(dirname "$mf")")
+        run_plugin "$n" "${2:-3}" "${3:-75}"
+    done
+else
+    run_plugin "$1" "${2:-3}" "${3:-75}"
+fi

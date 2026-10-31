@@ -1,0 +1,227 @@
+name	engine_old	wine_new	args	dll
+AbortDoc	16	4	long	GDI32.DLL
+AcquireSRWLockExclusive	16	4	ptr	KERNEL32.DLL
+AcquireSRWLockShared	16	4	ptr	KERNEL32.DLL
+AdjustWindowRectEx	12	16	ptr long long long	USER32.DLL
+AreFileApisANSI	16	0		KERNEL32.DLL
+BeginPaint	16	8	long ptr	USER32.DLL
+CallWindowProcA	16	20	ptr long long long long	USER32.DLL
+CallWindowProcW	16	20	ptr long long long long	USER32.DLL
+CharPrevA	4	8	str str	USER32.DLL
+CharPrevW	4	8	wstr wstr	USER32.DLL
+CheckDlgButton	16	12	long long long	USER32.DLL
+ChildWindowFromPoint	16	12	long int64	USER32.DLL
+CloseClipboard	4	0		USER32.DLL
+CloseServiceHandle	12	4	long	ADVAPI32.DLL
+CloseThemeData	16	4	ptr	UXTHEME.DLL
+CompareStringA	12	24	long long str long str long	KERNEL32.DLL
+CompareStringW	12	24	long long wstr long wstr long	KERNEL32.DLL
+CopyIcon	8	4	long	USER32.DLL
+DebugBreak	16	0		KERNEL32.DLL
+DeleteCriticalSection	16	4	ptr	KERNEL32.DLL
+DestroyAcceleratorTable	12	4	long	USER32.DLL
+DrawFocusRect	16	8	long ptr	USER32.DLL
+DrawIconEx	16	36	long long long long long long long long long	USER32.DLL
+DrawTextA	16	20	long str long ptr long	USER32.DLL
+DrawTextExA	16	24	long str long ptr long ptr	USER32.DLL
+DrawTextExW	16	24	long wstr long ptr long ptr	USER32.DLL
+DrawTextW	16	20	long wstr long ptr long	USER32.DLL
+EmptyClipboard	4	0		USER32.DLL
+EnableWindow	4	8	long long	USER32.DLL
+EndDoc	16	4	long	GDI32.DLL
+EndMenu	16	0		USER32.DLL
+EndPage	16	4	long	GDI32.DLL
+EndPaint	16	8	long ptr	USER32.DLL
+EnterCriticalSection	16	4	ptr	KERNEL32.DLL
+EnumChildWindows	16	12	long ptr long	USER32.DLL
+EnumResourceNamesA	8	16	long str ptr long	KERNEL32.DLL
+EnumResourceNamesW	8	16	long wstr ptr long	KERNEL32.DLL
+EnumResourceTypesW	16	12	long ptr long	KERNEL32.DLL
+EnumWindows	16	8	ptr long	USER32.DLL
+FileTimeToLocalFileTime	16	8	ptr ptr	KERNEL32.DLL
+FileTimeToSystemTime	16	8	ptr ptr	KERNEL32.DLL
+FindResourceA	4	12	long str str	KERNEL32.DLL
+FindResourceExW	8	16	long wstr wstr long	KERNEL32.DLL
+FindResourceW	4	12	long wstr wstr	KERNEL32.DLL
+FindTextW	12	4	ptr	COMDLG32.DLL
+FindWindowA	16	8	str str	USER32.DLL
+FindWindowW	16	8	wstr wstr	USER32.DLL
+FlushFileBuffers	16	4	long	KERNEL32.DLL
+FlushInstructionCache	0	12	long long long	KERNEL32.DLL
+FreeLibraryAndExitThread	4	8	long long	KERNEL32.DLL
+GetActiveWindow	16	0		USER32.DLL
+GetAncestor	16	8	long long	USER32.DLL
+GetAsyncKeyState	8	4	long	USER32.DLL
+GetCPInfo	16	8	long ptr	KERNEL32.DLL
+GetClassInfoA	8	12	long str ptr	USER32.DLL
+GetClassInfoExW	8	12	long wstr ptr	USER32.DLL
+GetClassInfoW	8	12	long wstr ptr	USER32.DLL
+GetConsoleCP	4	0		KERNEL32.DLL
+GetConsoleMode	4	8	long ptr	KERNEL32.DLL
+GetConsoleOutputCP	4	0		KERNEL32.DLL
+GetCurrentDirectoryA	16	8	long ptr	KERNEL32.DLL
+GetCurrentDirectoryW	16	8	long ptr	KERNEL32.DLL
+GetCurrentObject	16	8	long long	GDI32.DLL
+GetCursor	16	0		USER32.DLL
+GetCursorPos	16	4	ptr	USER32.DLL
+GetDIBits	20	28	long long long long ptr ptr long	GDI32.DLL
+GetDateFormatA	12	24	long long ptr str ptr long	KERNEL32.DLL
+GetDateFormatW	12	24	long long ptr wstr ptr long	KERNEL32.DLL
+GetDiskFreeSpaceA	56	20	str ptr ptr ptr ptr	KERNEL32.DLL
+GetDiskFreeSpaceW	56	20	wstr ptr ptr ptr ptr	KERNEL32.DLL
+GetDlgCtrlID	12	4	long	USER32.DLL
+GetDlgItem	4	8	long long	USER32.DLL
+GetFileAttributesExW	8	12	wstr long ptr	KERNEL32.DLL
+GetFileSize	16	8	long ptr	KERNEL32.DLL
+GetKeyboardState	8	4	ptr	USER32.DLL
+GetLastError	4	0		KERNEL32.DLL
+GetLocalTime	8	4	ptr	KERNEL32.DLL
+GetMenuCheckMarkDimensions	16	0		USER32.DLL
+GetModuleHandleExW	4	12	long ptr ptr	KERNEL32.DLL
+GetNumberFormatW	12	24	long long wstr ptr ptr long	KERNEL32.DLL
+GetNumberOfConsoleInputEvents	4	8	long ptr	KERNEL32.DLL
+GetOverlappedResult	48	16	long ptr ptr long	KERNEL32.DLL
+GetPrivateProfileIntA	12	16	str str long str	KERNEL32.DLL
+GetPrivateProfileIntW	12	16	wstr wstr long wstr	KERNEL32.DLL
+GetProcessId	16	4	long	KERNEL32.DLL
+GetProcessTimes	8	20	long ptr ptr ptr ptr	KERNEL32.DLL
+GetPropA	4	8	long str	USER32.DLL
+GetPropW	4	8	long wstr	USER32.DLL
+GetStartupInfoA	8	4	ptr	KERNEL32.DLL
+GetStartupInfoW	8	4	ptr	KERNEL32.DLL
+GetStockObject	0	4	long	GDI32.DLL
+GetStringTypeA	12	20	long long str long ptr	KERNEL32.DLL
+GetStringTypeW	12	16	long wstr long ptr	KERNEL32.DLL
+GetSystemDefaultLangID	8	0		KERNEL32.DLL
+GetSystemTime	8	4	ptr	KERNEL32.DLL
+GetSystemWow64DirectoryW	4	8	ptr long	KERNEL32.DLL
+GetTextExtentExPointW	24	28	long wstr long long ptr ptr ptr	GDI32.DLL
+GetTimeFormatA	12	24	long long ptr str ptr long	KERNEL32.DLL
+GetTimeFormatW	12	24	long long ptr wstr ptr long	KERNEL32.DLL
+GetTimeZoneInformation	8	4	ptr	KERNEL32.DLL
+GetUpdateRect	8	12	long ptr long	USER32.DLL
+GetUserDefaultLCID	8	0		KERNEL32.DLL
+GetUserDefaultLangID	8	0		KERNEL32.DLL
+GetWindow	4	8	long long	USER32.DLL
+GetWindowDC	8	4	long	USER32.DLL
+GetWindowPlacement	16	8	long ptr	USER32.DLL
+GetWindowTextLengthW	8	4	long	USER32.DLL
+GlobalAddAtomW	16	4	wstr	KERNEL32.DLL
+GlobalAlloc	12	8	long long	KERNEL32.DLL
+GlobalFree	8	4	long	KERNEL32.DLL
+GlobalHandle	8	4	ptr	KERNEL32.DLL
+GlobalMemoryStatus	16	4	ptr	KERNEL32.DLL
+HeapReAlloc	20	16	long long ptr long	KERNEL32.DLL
+HeapSize	8	12	long long ptr	KERNEL32.DLL
+ImpersonateLoggedOnUser	16	4	long	ADVAPI32.DLL
+InflateRect	8	12	ptr long long	USER32.DLL
+InitializeCriticalSectionAndSpinCount	12	8	ptr long	KERNEL32.DLL
+InterlockedDecrement	8	4	ptr	KERNEL32.DLL
+InterlockedIncrement	8	4	ptr	KERNEL32.DLL
+IntersectRect	8	12	ptr ptr ptr	USER32.DLL
+IsAppThemed	16	0		UXTHEME.DLL
+IsChild	4	8	long long	USER32.DLL
+IsClipboardFormatAvailable	0	4	long	USER32.DLL
+IsProcessorFeaturePresent	0	4	long	KERNEL32.DLL
+IsRectEmpty	8	4	ptr	USER32.DLL
+IsThemeActive	16	0		UXTHEME.DLL
+IsValidCodePage	16	4	long	KERNEL32.DLL
+IsWindowEnabled	16	4	long	USER32.DLL
+LCMapStringA	12	24	long long str long ptr long	KERNEL32.DLL
+LCMapStringW	12	24	long long wstr long ptr long	KERNEL32.DLL
+LeaveCriticalSection	16	4	ptr	KERNEL32.DLL
+LocalFree	8	4	long	KERNEL32.DLL
+LockWorkStation	16	0		USER32.DLL
+LookupPrivilegeNameW	12	16	wstr ptr ptr ptr	ADVAPI32.DLL
+NetShareEnum	24	28	wstr long ptr long ptr ptr ptr	NETAPI32.DLL
+OffsetRect	8	12	ptr long long	USER32.DLL
+OpenClipboard	16	4	long	USER32.DLL
+OpenEventA	16	12	long long str	KERNEL32.DLL
+OpenEventW	16	12	long long wstr	KERNEL32.DLL
+OpenMutexA	16	12	long long str	KERNEL32.DLL
+OpenProcess	16	12	long long long	KERNEL32.DLL
+OpenProcessToken	8	12	long long ptr	ADVAPI32.DLL
+OpenSemaphoreW	16	12	long long wstr	KERNEL32.DLL
+OpenThemeData	16	8	ptr wstr	UXTHEME.DLL
+PeekConsoleInputA	12	16	ptr ptr long ptr	KERNEL32.DLL
+PrintDlgW	12	4	ptr	COMDLG32.DLL
+PtInRect	8	12	ptr int64	USER32.DLL
+PulseEvent	16	4	long	KERNEL32.DLL
+QueryPerformanceFrequency	0	4	ptr	KERNEL32.DLL
+QueryServiceStatus	12	8	long ptr	ADVAPI32.DLL
+QueryThreadCycleTime	16	8	long ptr	KERNEL32.DLL
+RaiseException	4	16	long long long ptr	KERNEL32.DLL
+ReadConsoleInputA	12	16	long ptr long ptr	KERNEL32.DLL
+ReadConsoleInputW	12	16	long ptr long ptr	KERNEL32.DLL
+ReadProcessMemory	8	20	long ptr ptr long ptr	KERNEL32.DLL
+RealizePalette	16	4	long	GDI32.DLL
+RegisterHotKey	8	16	long long long long	USER32.DLL
+RegisterWindowMessageA	8	4	str	USER32.DLL
+RegisterWindowMessageW	8	4	wstr	USER32.DLL
+ReleaseCapture	4	0		USER32.DLL
+ReleaseDC	16	8	long long	USER32.DLL
+ReleaseSRWLockExclusive	16	4	ptr	KERNEL32.DLL
+ReleaseSRWLockShared	16	4	ptr	KERNEL32.DLL
+RemovePropA	4	8	long str	USER32.DLL
+ResetEvent	8	4	long	KERNEL32.DLL
+SelectPalette	16	12	long long long	GDI32.DLL
+SendMessageTimeoutA	24	28	long long long long long long ptr	USER32.DLL
+SendMessageTimeoutW	24	28	long long long long long long ptr	USER32.DLL
+SetAbortProc	16	8	long ptr	GDI32.DLL
+SetActiveWindow	16	4	long	USER32.DLL
+SetBkMode	4	8	long long	GDI32.DLL
+SetCapture	16	4	long	USER32.DLL
+SetClipboardData	12	8	long long	USER32.DLL
+SetConsoleMode	12	8	long long	KERNEL32.DLL
+SetConsoleTitleW	12	4	wstr	KERNEL32.DLL
+SetEndOfFile	16	4	long	KERNEL32.DLL
+SetEvent	8	4	long	KERNEL32.DLL
+SetFileAttributesW	12	8	wstr long	KERNEL32.DLL
+SetFilePointer	12	16	long long ptr long	KERNEL32.DLL
+SetLayout	4	8	long long	GDI32.DLL
+SetMapMode	4	8	long long	GDI32.DLL
+SetMenuItemBitmaps	16	20	long long long long long	USER32.DLL
+SetPriorityClass	4	8	long long	KERNEL32.DLL
+SetROP2	4	8	long long	GDI32.DLL
+SetRect	8	20	ptr long long long long	USER32.DLL
+SetScrollInfo	12	16	long long ptr long	USER32.DLL
+SetStdHandle	4	8	long long	KERNEL32.DLL
+SetStretchBltMode	4	8	long long	GDI32.DLL
+SetTextAlign	4	8	long long	GDI32.DLL
+SetViewportOrgEx	12	16	long long long ptr	GDI32.DLL
+SetWaitableTimer	12	24	long ptr long ptr ptr long	KERNEL32.DLL
+SetWindowPlacement	16	8	long ptr	USER32.DLL
+ShowWindow	16	8	long long	USER32.DLL
+SizeofResource	4	8	long long	KERNEL32.DLL
+SleepConditionVariableCS	48	12	ptr ptr long	KERNEL32.DLL
+SleepConditionVariableSRW	48	16	ptr ptr long long	KERNEL32.DLL
+SleepEx	24	8	long long	KERNEL32.DLL
+StartDocA	16	8	long ptr	GDI32.DLL
+StartDocW	16	8	long ptr	GDI32.DLL
+StartPage	16	4	long	GDI32.DLL
+SystemTimeToFileTime	16	8	ptr ptr	KERNEL32.DLL
+TerminateProcess	16	8	long long	KERNEL32.DLL
+TerminateThread	16	8	long long	KERNEL32.DLL
+TlsFree	16	4	long	KERNEL32.DLL
+TlsSetValue	4	8	long ptr	KERNEL32.DLL
+TrackPopupMenu	20	28	long long long long long long ptr	USER32.DLL
+TrackPopupMenuEx	16	24	long long long long long ptr	USER32.DLL
+TryAcquireSRWLockExclusive	16	4	ptr	KERNEL32.DLL
+TryEnterCriticalSection	16	4	ptr	KERNEL32.DLL
+UnionRect	8	12	ptr ptr ptr	USER32.DLL
+UnmapViewOfFile	12	4	ptr	KERNEL32.DLL
+VerSetConditionMask	8	16	long long long long	KERNEL32.DLL
+VerifyVersionInfoA	8	16	ptr long int64	KERNEL32.DLL
+VerifyVersionInfoW	8	16	ptr long int64	KERNEL32.DLL
+VirtualQueryEx	20	16	long ptr ptr long	KERNEL32.DLL
+VkKeyScanW	8	4	long	USER32.DLL
+WTSGetActiveConsoleSessionId	8	0		KERNEL32.DLL
+WaitForSingleObjectEx	24	12	long long long	KERNEL32.DLL
+WakeAllConditionVariable	16	4	ptr	KERNEL32.DLL
+WakeConditionVariable	16	4	ptr	KERNEL32.DLL
+WinExec	16	8	str long	KERNEL32.DLL
+WindowFromPoint	16	8	int64	USER32.DLL
+WriteProcessMemory	8	20	long ptr ptr long ptr	KERNEL32.DLL
+lstrlenA	8	4	str	KERNEL32.DLL
+lstrlenW	8	4	wstr	KERNEL32.DLL
+mciSendStringW	12	16	wstr ptr long long	WINMM.DLL

@@ -1,0 +1,336 @@
+{
+  "trace": [
+[T4640] [API] PE Loader: file=/home/z/my-project/workspace/miniwin-engineering/samples/real/jq-windows-amd64.exe size=985088
+[T4640] [API] PE Loader: ImageBase=0x140000000 EP=0x13f0 SizeOfImage=0xf8000 Sections=11
+[T4640] [API] PE Loader: Mapped at 0x140000000 (forced via MAP_FIXED)
+[T4640] [API] KUSD: mapped 0x7ffe0000 (root C:\WINDOWS, ver 5.2, qpc 1e9)
+[T4640] [API] Section [0] .text    VA=0x00001000 VS=0x00082e10 Raw=0x00083000 Ch=0x60000060
+[T4640] [API] Section [1] .data    VA=0x00084000 VS=0x000051c0 Raw=0x00005200 Ch=0xc0000040
+[T4640] [API] Section [2] .rdata   VA=0x0008a000 VS=0x0005b8d0 Raw=0x0005ba00 Ch=0x40000040
+[T4640] [API] Section [3] .pdata   VA=0x000e6000 VS=0x00003e28 Raw=0x00004000 Ch=0x40000040
+[T4640] [API] Section [4] .xdata   VA=0x000ea000 VS=0x000050e0 Raw=0x00005200 Ch=0x40000040
+[T4640] [API] Section [5] .bss     VA=0x000f0000 VS=0x000010d0 Raw=0x00000000 Ch=0xc0000080
+[T4640] [API] Section [6] .idata   VA=0x000f2000 VS=0x00001f84 Raw=0x00002000 Ch=0xc0000040
+[T4640] [API] Section [7] .CRT     VA=0x000f4000 VS=0x00000068 Raw=0x00000200 Ch=0xc0000040
+[T4640] [API] Section [8] .tls     VA=0x000f5000 VS=0x00000010 Raw=0x00000200 Ch=0xc0000040
+[T4640] [API] Section [9] .rsrc    VA=0x000f6000 VS=0x000004e8 Raw=0x00000600 Ch=0x40000040
+[T4640] [API] Section [10] .reloc   VA=0x000f7000 VS=0x00000abc Raw=0x00000c00 Ch=0x42000040
+[T4640] [API] Import Directory: RVA=0xf2000 Size=0x1f84
+[T4640] [API] Import DLL: KERNEL32.dll (IAT RVA=0xf2830, ILT RVA=0xf2130)
+[T4640] [API]   [0] AreFileApisANSI -> 0x2089040
+[T4640] [API]   [1] CloseHandle -> 0x20a48f0
+[T4640] [API]   [2] CreateEventA -> 0x20412d0
+[T4640] [API]   [3] CreateSemaphoreA -> 0x2041d00
+[T4640] [API]   [4] DeleteCriticalSection -> 0x2076080
+[T4640] [API]   [5] DuplicateHandle -> 0x2026940
+[T4640] [API]   [6] EnterCriticalSection -> 0x208fcf0
+[T4640] [API]   [7] GetConsoleMode -> 0x2041ef0
+[T4640] [API]   [8] GetCurrentProcess -> 0x2008610
+[T4640] [API]   [9] GetCurrentProcessId -> 0x2008620
+[T4640] [API]   [10] GetCurrentThread -> 0x2008630
+[T4640] [API]   [11] GetCurrentThreadId -> 0x2008640
+[T4640] [API]   [12] GetHandleInformation -> 0x206a8e0
+[T4640] [API]   [13] GetLastError -> 0x2026c20
+[T4640] [API]   [14] GetModuleHandleA -> 0x203b0b0
+[T4640] [API]   [15] GetProcAddress -> 0x208b550
+[T4640] [API]   [16] GetProcessAffinityMask -> 0x2036a90
+[T4640] [API]   [17] GetStdHandle -> 0x210d630
+[T4640] [API]   [18] GetSystemTimeAsFileTime -> 0x204b7e0
+[T4640] [API]   [19] GetThreadContext -> 0x206abd0
+[T4640] [API]   [20] GetThreadPriority -> 0x206ad30
+[T4640] [API]   [21] GetTickCount -> 0x204bb10
+[T4640] [API]   [22] GetTimeZoneInformation -> 0x2037910
+[T4640] [API]   [23] InitializeCriticalSection -> 0x2076060
+[T4640] [API]   [24] IsDBCSLeadByteEx -> 0x2008740
+[T4640] [API]   [25] IsDebuggerPresent -> 0x206ae90
+[T4640] [API]   [26] IsProcessorFeaturePresent -> 0x2009f40
+[T4640] [API]   [27] LeaveCriticalSection -> 0x20680f0
+[T4640] [API]   [28] MultiByteToWideChar -> 0x204be20
+[T4640] [API]   [29] OpenProcess -> 0x2042090
+[T4640] [API]   [30] OutputDebugStringA -> 0x2027080
+[T4640] [API]   [31] QueryPerformanceCounter -> 0x204bca0
+[T4640] [API]   [32] QueryPerformanceFrequency -> 0x2036bf0
+[T4640] [API]   [33] RaiseException -> 0x2008ae0
+[T4640] [API]   [34] ReleaseSemaphore -> 0x2090d70
+[T4640] [API]   [35] ResetEvent -> 0x20926f0
+[T4640] [API]   [36] ResumeThread -> 0x206aff0
+[T4640] [API]   [37] SetConsoleMode -> 0x200a200
+[T4640] [API]   [38] SetEvent -> 0x2092bb0
+[T4640] [API]   [39] SetLastError -> 0x203e550
+[T4640] [API]   [40] SetProcessAffinityMask -> 0x206b410
+[T4640] [API]   [41] SetThreadContext -> 0x206b570
+[T4640] [API]   [42] SetThreadPriority -> 0x206b6d0
+[T4640] [API]   [43] SetUnhandledExceptionFilter -> 0x2027560
+[T4640] [API]   [44] Sleep -> 0x204dc70
+[T4640] [API]   [45] SuspendThread -> 0x206b830
+[T4640] [API]   [46] TerminateProcess -> 0x209edb0
+[T4640] [API]   [47] TlsAlloc -> 0x20350c0
+[T4640] [API]   [48] TlsGetValue -> 0x20276c0
+[T4640] [API]   [49] TlsSetValue -> 0x205d6c0
+[T4640] [API]   [50] TryEnterCriticalSection -> 0x208fee0
+[T4640] [API]   [51] VirtualProtect -> 0x203b4d0
+[T4640] [API]   [52] VirtualQuery -> 0x204dde0
+[T4640] [API]   [53] WaitForMultipleObjects -> 0x20aeec0
+[T4640] [API]   [54] WaitForSingleObject -> 0x20aed20
+[T4640] [API]   [55] WideCharToMultiByte -> 0x207e5f0
+[T4640] [API]   [56] WriteConsoleW -> 0x201a450
+[T4640] [API]   [57] WriteFile -> 0x2058f10
+[T4640] [API] Import DLL: api-ms-win-crt-convert-l1-1-0.dll (IAT RVA=0xf2a08, ILT RVA=0xf2308)
+[T4640] [API]   [0] _ultoa -> 0x20236c0
+[T4640] [API]   [1] atoi -> 0x2010900
+[T4640] [API]   [2] mbrtowc -> 0x2017a90
+[T4640] [API]   [3] wcrtomb -> 0x201d4d0
+[T4640] [API] Import DLL: api-ms-win-crt-environment-l1-1-0.dll (IAT RVA=0xf2a30, ILT RVA=0xf2330)
+[T4640] [API]   [0] __p__environ -> 0x205f1f0
+[T4640] [API]   [1] __p__wenviron -> 0x207cb20
+[T4640] [API]   [2] getenv -> 0x20107c0
+[T4640] [API] Import DLL: api-ms-win-crt-filesystem-l1-1-0.dll (IAT RVA=0xf2a50, ILT RVA=0xf2350)
+[T4640] [API]   [0] _fstat64 -> 0x2054b80
+[T4640] [API]   [1] _fullpath -> 0x203f810
+[T4640] [API]   [2] _lock_file -> 0x2088640
+[T4640] [API]   [3] _stat64 -> 0x2054d90
+[T4640] [API]   [4] _unlock_file -> 0x2088f80
+[T4640] [API] Import DLL: api-ms-win-crt-heap-l1-1-0.dll (IAT RVA=0xf2a80, ILT RVA=0xf2380)
+[T4640] [API]   [0] _set_new_mode -> 0x205e810
+[T4640] [API]   [1] calloc -> 0x2090a80
+[T4640] [API]   [2] free -> 0x20ba5a0
+[T4640] [API]   [3] malloc -> 0x2090330
+[T4640] [API]   [4] realloc -> 0x20c5a80
+[T4640] [API] Import DLL: api-ms-win-crt-locale-l1-1-0.dll (IAT RVA=0xf2ab0, ILT RVA=0xf23b0)
+[T4640] [API]   [0] localeconv -> 0x2018e10
+[T4640] [API]   [1] setlocale -> 0x205b7d0
+[T4640] [API] Import DLL: api-ms-win-crt-math-l1-1-0.dll (IAT RVA=0xf2ac8, ILT RVA=0xf23c8)
+[T4640] [API]   [0] __setusermatherr -> 0x205e3e0
+[T4640] [API]   [1] _fdopen -> 0x20a43c0
+[T4640] [API]   [2] _j0 -> 0x2021bb0
+[T4640] [API]   [3] _j1 -> 0x200a6a0
+[T4640] [API]   [4] _jn -> 0x200a6b0
+[T4640] [API]   [5] _y1 -> 0x2088c10
+[T4640] [API]   [6] _yn -> 0x2088440
+[T4640] [API]   [7] _y0 -> 0x2021c50
+[T4640] [API]   [8] acos -> 0x201d6c0
+[T4640] [API]   [9] acosh -> 0x201d800
+[T4640] [API]   [10] asin -> 0x201d8a0
+[T4640] [API]   [11] asinh -> 0x201d9e0
+[T4640] [API]   [12] atan -> 0x201db20
+[T4640] [API]   [13] atan2 -> 0x2016bb0
+[T4640] [API]   [14] atanh -> 0x201dc60
+[T4640] [API]   [15] cbrt -> 0x201dda0
+[T4640] [API]   [16] cos -> 0x2016f70
+[T4640] [API]   [17] cosh -> 0x201e030
+[T4640] [API]   [18] erf -> 0x201fd80
+[T4640] [API]   [19] erfc -> 0x2021cf0
+[T4640] [API]   [20] exp -> 0x201e0d0
+[T4640] [API]   [21] exp2 -> 0x201e170
+[T4640] [API]   [22] expm1 -> 0x201e350
+[T4640] [API]   [23] fdim -> 0x2021d90
+[T4640] [API]   [24] floor -> 0x201e3f0
+[T4640] [API]   [25] fma -> 0x201f740
+[T4640] [API]   [26] fmax -> 0x201f320
+[T4640] [API]   [27] fmin -> 0x201f460
+[T4640] [API]   [28] fmod -> 0x2016d90
+[T4640] [API]   [29] frexp -> 0x2016c50
+[T4640] [API]   [30] hypot -> 0x201f280
+[T4640] [API]   [31] log -> 0x201e4a0
+[T4640] [API]   [32] log10 -> 0x201e540
+[T4640] [API]   [33] log1p -> 0x201e680
+[T4640] [API]   [34] log2 -> 0x2016a70
+[T4640] [API]   [35] logb -> 0x2021e30
+[T4640] [API]   [36] modf -> 0x201fc40
+[T4640] [API]   [37] nearbyint -> 0x2021ed0
+[T4640] [API]   [38] nextafter -> 0x201f6a0
+[T4640] [API]   [39] pow -> 0x20169d0
+[T4640] [API]   [40] remainder -> 0x201f5a0
+[T4640] [API]   [41] round -> 0x2016cf0
+[T4640] [API]   [42] sin -> 0x2016ed0
+[T4640] [API]   [43] sinh -> 0x201eb00
+[T4640] [API]   [44] sqrt -> 0x2016920
+[T4640] [API]   [45] tan -> 0x2016b10
+[T4640] [API]   [46] tanh -> 0x201ece0
+[T4640] [API]   [47] tgamma -> 0x2021f70
+[T4640] [API] Import DLL: api-ms-win-crt-private-l1-1-0.dll (IAT RVA=0xf2c50, ILT RVA=0xf2550)
+[T4640] [API]   [0] __C_specific_handler -> 0x206bde0
+[T4640] [API]   [1] __intrinsic_setjmpex -> 0x204d7c0
+[T4640] [API]   [2] longjmp -> 0x201ab40
+[T4640] [API]   [3] memchr -> 0x2019f10
+[T4640] [API]   [4] memcmp -> 0x2011c10
+[T4640] [API]   [5] memcpy -> 0x2014a80
+[T4640] [API]   [6] memmove -> 0x20105c0
+[T4640] [API]   [7] strchr -> 0x20174c0
+[T4640] [API]   [8] strrchr -> 0x2012800
+[T4640] [API]   [9] strstr -> 0x2017360
+[T4640] [API] Import DLL: api-ms-win-crt-runtime-l1-1-0.dll (IAT RVA=0xf2ca8, ILT RVA=0xf25a8)
+[T4640] [API]   [0] __p___argc -> 0x205ef10
+[T4640] [API]   [1] __p___argv -> 0x205f080
+[T4640] [API]   [2] __p___wargv -> 0x207cc90
+[T4640] [API]   [3] _beginthreadex -> 0x2068270
+[T4640] [API]   [4] _cexit -> 0x20372a0
+[T4640] [API]   [5] _configure_narrow_argv -> 0x205e6b0
+[T4640] [API]   [6] _configure_wide_argv -> 0x20885b0
+[T4640] [API]   [7] _crt_at_quick_exit -> 0x2088650
+[T4640] [API]   [8] _crt_atexit -> 0x2029730
+[T4640] [API]   [9] _endthreadex -> 0x20567f0
+[T4640] [API]   [10] _errno -> 0x205fa80
+[T4640] [API]   [11] _exit -> 0x204a5e0
+[T4640] [API]   [12] _initialize_narrow_environment -> 0x206bf40
+[T4640] [API]   [13] _initialize_wide_environment -> 0x2088dc0
+[T4640] [API]   [14] _initterm -> 0x20f95f0
+[T4640] [API]   [15] _set_app_type -> 0x205e280
+[T4640] [API]   [16] _set_invalid_parameter_handler -> 0x205e970
+[T4640] [API]   [17] _wassert -> 0x208e070
+[T4640] [API]   [18] abort -> 0x20869a0
+[T4640] [API]   [19] exit -> 0x204af00
+[T4640] [API]   [20] perror -> 0x2007540
+[T4640] [API]   [21] raise -> 0x2020010
+[T4640] [API]   [22] signal -> 0x205ead0
+[T4640] [API]   [23] strerror -> 0x205aec0
+[T4640] [API] Import DLL: api-ms-win-crt-stdio-l1-1-0.dll (IAT RVA=0xf2d70, ILT RVA=0xf2670)
+[T4640] [API]   [0] __acrt_iob_func -> 0x2027cb0
+[T4640] [API]   [1] __p__commode -> 0x205eda0
+[T4640] [API]   [2] __p__fmode -> 0x205ec30
+[T4640] [API]   [3] __stdio_common_vfprintf -> 0x2053020
+[T4640] [API]   [4] __stdio_common_vfwprintf -> 0x206c360
+[T4640] [API]   [5] __stdio_common_vsprintf -> 0x20a39c0
+[T4640] [API]   [6] _close -> 0x20355b0
+[T4640] [API]   [7] _fileno -> 0x2029430
+[T4640] [API]   [8] _get_osfhandle -> 0x20295e0
+[T4640] [API]   [9] _isatty -> 0x203ad40
+[T4640] [API]   [10] _open -> 0x2054360
+[T4640] [API]   [11] _setmode -> 0x205f7c0
+[T4640] [API]   [12] _wfopen -> 0x20ba840
+[T4640] [API]   [13] _write -> 0x20548c0
+[T4640] [API]   [14] clearerr -> 0x2019050
+[T4640] [API]   [15] fclose -> 0x208a0b0
+[T4640] [API]   [16] feof -> 0x2028770
+[T4640] [API]   [17] ferror -> 0x20200b0
+[T4640] [API]   [18] fflush -> 0x2028e70
+[T4640] [API]   [19] fgets -> 0x2028440
+[T4640] [API]   [20] fputc -> 0x2053810
+[T4640] [API]   [21] fread -> 0x203d650
+[T4640] [API]   [22] fwrite -> 0x204a6d0
+[T4640] [API]   [23] getc -> 0x2053980
+[T4640] [API] Import DLL: api-ms-win-crt-string-l1-1-0.dll (IAT RVA=0xf2e38, ILT RVA=0xf2738)
+[T4640] [API]   [0] _strdup -> 0x2029190
+[T4640] [API]   [1] _strnicmp -> 0x201b690
+[T4640] [API]   [2] isalnum -> 0x2018860
+[T4640] [API]   [3] isalpha -> 0x2018910
+[T4640] [API]   [4] isspace -> 0x2018650
+[T4640] [API]   [5] memset -> 0x2010e40
+[T4640] [API]   [6] strcmp -> 0x20120d0
+[T4640] [API]   [7] strcpy -> 0x2019d10
+[T4640] [API]   [8] strlen -> 0x20115e0
+[T4640] [API]   [9] strncmp -> 0x20167b0
+[T4640] [API]   [10] strncpy -> 0x2020b70
+[T4640] [API]   [11] strspn -> 0x2020d50
+[T4640] [API]   [12] wcslen -> 0x2023780
+[T4640] [API] Import DLL: api-ms-win-crt-time-l1-1-0.dll (IAT RVA=0xf2ea8, ILT RVA=0xf27a8)
+[T4640] [API]   [0] __daylight -> DATA 0x320832c
+[T4640] [API]   [1] __timezone -> DATA 0x3208330
+[T4640] [API]   [2] __tzname -> DATA 0x21a8640
+[T4640] [API]   [3] _gmtime64 -> 0x201aa00
+[T4640] [API]   [4] _localtime64 -> 0x201aaa0
+[T4640] [API]   [5] _localtime64_s -> 0x2040ec0
+[T4640] [API]   [6] _mkgmtime64 -> 0x201b9c0
+[T4640] [API]   [7] _time64 -> 0x201a6e0
+[T4640] [API]   [8] _tzset -> 0x206c0a0
+[T4640] [API]   [9] strftime -> 0x20182f0
+[T4640] [API] Import DLL: api-ms-win-crt-utility-l1-1-0.dll (IAT RVA=0xf2f00, ILT RVA=0xf2800)
+[T4640] [API]   [0] qsort -> 0x2055a10
+[T4640] [API]   [1] rand -> 0x2056390
+[T4640] [API]   [2] rand_s -> 0x201a280
+[T4640] [API] Import DLL: SHLWAPI.dll (IAT RVA=0xf2f20, ILT RVA=0xf2820)
+[T4640] [API]   [0] PathIsRelativeA -> 0x200adc0
+[T4640] [API] Import resolution: 210 resolved, 0 unresolved (total 210)
+[T4640] [API] TLS: StartRaw=0x1400f5000 EndRaw=0x1400f5008 Callbacks=0x1400f4038
+[T4640] [API] TLS: static block 0x4393720 (8+0 bytes) -> slot 0
+[T4640] [API] TLS: callback[0] = 0x14007c710
+[T4640] [API] InitializeCriticalSection(0x1400f0620)
+[T4640] [API] TLS: callback[1] = 0x14007c6e0
+[T4640] [API] TLS: callback[2] = 0x140077850
+[T4640] [API] Exception: .pdata RVA=0xe6000 Size=0x3e28 Entries=1326
+[T4640] [API] [API-005] EH hacks DISABLED (default) (MINWIN_EH_HACKS=<unset>)
+[T4640] [API] [API-005] CXX-EH-FIX (LSDA catch-all patch RVA 0x2010c8) skipped: MINWIN_EH_HACKS not set
+[T4640] [API] SW-1297 validate_fd patch: fingerprint not found (guest unaffected)
+[T4640] [API] Jumping to EP=0x1400013f0
+[T4640] [API] _initterm(start=0x1400f4018, end=0x1400f4028)
+[T4640] [API] _initterm: calling 0x140001010
+[T4640] [API] __set_app_type(1)
+[T4640] [API] __p__fmode() = 0x3208328
+[T4640] [API] __p__commode() = 0x3208324
+[T4640] [API] _initterm(start=0x1400f4000, end=0x1400f4010)
+[T4640] [API] _initterm: calling 0x140001130
+[T4640] [API] __p___argc() = 0x3208340
+[T4640] [API] __p___wargv() = 0x2394160
+[T4640] [API] __p__wenviron() = 0x2394980
+[T4640] [API] _set_new_mode(0) -> 0
+[T4640] [API] SetUnhandledExceptionFilter(handler=0x14007ce60)
+[T4640] [API] _set_invalid_parameter_handler(0x140001000) -> NULL
+[T4640] [API] malloc(24) = 0x4393760
+[T4640] [API] malloc(42) = 0x4393780
+[T4640] [API] malloc(20) = 0x43937c0
+[T4640] [API] atexit(func=0x140001440)
+[T4640] [API] GetModuleHandleA(name=kernel32.dll)
+[T4640] [API] GetProcAddress(module=0xdea00000, name=GetTickCount64)
+[T4640] [API]   -> 0x2017610
+[T4640] [API] GetModuleHandleA(name=kernel32.dll)
+[T4640] [API] GetProcAddress(module=0xdea00000, name=AddVectoredExceptionHandler)
+[T4640] [API]   -> 0x20265d0
+[T4640] [API] GetProcAddress(module=0xdea00000, name=RemoveVectoredExceptionHandler)
+[T4640] [API]   -> 0x2026780
+[T4640] [API] atexit(func=0x14007c610)
+[T4640] [API] WideCharToMultiByte(cp=65001, srclen=-1, dstlen=0)
+[T4640] [API] WideCharToMultiByte(cp=65001, srclen=-1, dstlen=21)
+[T4640] [API] WideCharToMultiByte(cp=65001, srclen=-1, dstlen=0)
+[T4640] [API] WideCharToMultiByte(cp=65001, srclen=-1, dstlen=10)
+[T4640] [API] setlocale(0, )
+[T4640] [API] calloc(1, 48) = 0x4393820
+[T4640] [API] calloc(1, 176) = 0x4393860
+[T4640] [API] CreateSemaphoreA(init=0, max=2147483647, name=NULL)
+[T4640] [API] CreateSemaphoreA(init=0, max=2147483647, name=NULL)
+[T4640] [API] InitializeCriticalSection(0x4393878)
+[T4640] [API] InitializeCriticalSection(0x43938d0)
+[T4640] [API] InitializeCriticalSection(0x43938a0)
+[T4640] [API] malloc(24) = 0x4391cc0
+[T4640] [API] malloc(24) = 0x4391ca0
+[T4640] [API] realloc((nil), 8) = 0x4393920
+[T4640] [API] atexit(func=0x140031320)
+[T4640] [API] __acrt_iob_func(1) = 0x7f356454b5c0
+[T4640] [API] fflush(file=0x7f356454b5c0)
+[T4640] [API] __acrt_iob_func(2) = 0x7f356454b4e0
+[T4640] [API] fflush(file=0x7f356454b4e0)
+[T4640] [API] __acrt_iob_func(1) = 0x7f356454b5c0
+[T4640] [API] _fileno(file=0x7f356454b5c0)
+[T4640] [API] _setmode(fd=1, mode=278528)
+[T4640] [API] __acrt_iob_func(2) = 0x7f356454b4e0
+[T4640] [API] _fileno(file=0x7f356454b4e0)
+[T4640] [API] _setmode(fd=2, mode=278528)
+[T4640] [API] malloc(272) = 0x4393940
+[T4640] [API] malloc(392) = 0x4393a60
+[T4640] [API] malloc(240) = 0x4393520
+[T4640] [API] __acrt_iob_func(2) = 0x7f356454b4e0
+[T4640] [API] malloc(392) = 0x4393bf0
+[T4640] [API] __acrt_iob_func(2) = 0x7f356454b4e0
+[T4640] [API] calloc(1, 4200) = 0x4393d80
+[T4640] [API] __acrt_iob_func(1) = 0x7f356454b5c0
+[T4640] [API] _errno() = 0x30ac8d8 (value=0)
+[T4640] [API] fputc(ch=0x6a)
+[T4640] [API] fputc(ch=0x71)
+[T4640] [API] fputc(ch=0x2d)
+[T4640] [API] fputc(ch=0x31)
+[T4640] [API] fputc(ch=0x2e)
+[T4640] [API] fputc(ch=0x37)
+[T4640] [API] fputc(ch=0x2e)
+[T4640] [API] fputc(ch=0x31)
+[T4640] [API] fputc(ch=0xa)
+[T4640] [API] __acrt_iob_func(1) = 0x7f356454b5c0
+[T4640] [API] __acrt_iob_func(1) = 0x7f356454b5c0
+[T4640] [API] fclose(0x7f356454b5c0)
+[T4640] [API] free(0x4393940)
+[T4640] [API] free(0x4393a60)
+[T4640] [API] free((nil))
+[T4640] [API] free(0x4393d80)
+[T4640] [API] free(0x4393bf0)
+[T4640] [API] free(0x4393520)
+[T4640] [API] exit(0)
+  ]
+}

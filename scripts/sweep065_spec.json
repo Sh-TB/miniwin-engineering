@@ -1,0 +1,102 @@
+[
+ {
+  "binary": "/home/z/my-project/workspace/miniwin-engineering/artifacts/sweep062/dl/winrar712.exe",
+  "out": "/home/z/my-project/workspace/miniwin-engineering/evidence/sweep065/ghidra/winrar712",
+  "targets": []
+ },
+ {
+  "binary": "/home/z/my-project/workspace/miniwin-engineering/artifacts/sweep065/dl/npp/notepad++.exe",
+  "out": "/home/z/my-project/workspace/miniwin-engineering/evidence/sweep065/ghidra/notepadpp",
+  "targets": []
+ },
+ {
+  "binary": "/home/z/my-project/workspace/miniwin-engineering/artifacts/sweep065/dl/7zr.exe",
+  "out": "/home/z/my-project/workspace/miniwin-engineering/evidence/sweep065/ghidra/7zr",
+  "targets": []
+ },
+ {
+  "binary": "/home/z/my-project/workspace/miniwin-engineering/artifacts/sweep062/x/devmanview/DevManView.exe",
+  "out": "/home/z/my-project/workspace/miniwin-engineering/evidence/sweep065/ghidra/devmanview",
+  "targets": []
+ },
+ {
+  "binary": "/home/z/my-project/workspace/miniwin-engineering/artifacts/sweep062/x/dnsquerysniffer/DNSQuerySniffer.exe",
+  "out": "/home/z/my-project/workspace/miniwin-engineering/evidence/sweep065/ghidra/dnsquerysniffer",
+  "targets": []
+ },
+ {
+  "binary": "/home/z/my-project/workspace/miniwin-engineering/artifacts/sweep062/x/driverview/DriverView.exe",
+  "out": "/home/z/my-project/workspace/miniwin-engineering/evidence/sweep065/ghidra/driverview",
+  "targets": []
+ },
+ {
+  "binary": "/home/z/my-project/workspace/miniwin-engineering/artifacts/sweep062/x/faview/faview.exe",
+  "out": "/home/z/my-project/workspace/miniwin-engineering/evidence/sweep065/ghidra/faview",
+  "targets": []
+ },
+ {
+  "binary": "/home/z/my-project/workspace/miniwin-engineering/artifacts/sweep062/x/heapmemview/HeapMemView.exe",
+  "out": "/home/z/my-project/workspace/miniwin-engineering/evidence/sweep065/ghidra/heapmemview",
+  "targets": []
+ },
+ {
+  "binary": "/home/z/my-project/workspace/miniwin-engineering/artifacts/sweep062/x/htmlastext/HtmlAsText.exe",
+  "out": "/home/z/my-project/workspace/miniwin-engineering/evidence/sweep065/ghidra/htmlastext",
+  "targets": []
+ },
+ {
+  "binary": "/home/z/my-project/workspace/miniwin-engineering/artifacts/sweep062/x/iconsext/iconsext.exe",
+  "out": "/home/z/my-project/workspace/miniwin-engineering/evidence/sweep065/ghidra/iconsext",
+  "targets": []
+ },
+ {
+  "binary": "/home/z/my-project/workspace/miniwin-engineering/artifacts/sweep062/x/installedappview/InstalledAppView.exe",
+  "out": "/home/z/my-project/workspace/miniwin-engineering/evidence/sweep065/ghidra/installedappview",
+  "targets": []
+ },
+ {
+  "binary": "/home/z/my-project/workspace/miniwin-engineering/artifacts/sweep062/x/multimonitortool/MultiMonitorTool.exe",
+  "out": "/home/z/my-project/workspace/miniwin-engineering/evidence/sweep065/ghidra/multimonitortool",
+  "targets": []
+ },
+ {
+  "binary": "/home/z/my-project/workspace/miniwin-engineering/artifacts/sweep062/x/recentfilesview/RecentFilesView.exe",
+  "out": "/home/z/my-project/workspace/miniwin-engineering/evidence/sweep065/ghidra/recentfilesview",
+  "targets": []
+ },
+ {
+  "binary": "/home/z/my-project/workspace/miniwin-engineering/artifacts/sweep062/x/resourcesextract/ResourcesExtract.exe",
+  "out": "/home/z/my-project/workspace/miniwin-engineering/evidence/sweep065/ghidra/resourcesextract",
+  "targets": []
+ },
+ {
+  "binary": "/home/z/my-project/workspace/miniwin-engineering/artifacts/sweep062/x/simpleprogramdebugger/SimpleProgramDebugger.exe",
+  "out": "/home/z/my-project/workspace/miniwin-engineering/evidence/sweep065/ghidra/simpleprogramdebugger",
+  "targets": []
+ },
+ {
+  "binary": "/home/z/my-project/workspace/miniwin-engineering/artifacts/sweep062/x/urlprotocolview/URLProtocolView.exe",
+  "out": "/home/z/my-project/workspace/miniwin-engineering/evidence/sweep065/ghidra/urlprotocolview",
+  "targets": []
+ },
+ {
+  "binary": "/home/z/my-project/workspace/miniwin-engineering/artifacts/sweep061/guests/freecell/freecell.exe",
+  "out": "/home/z/my-project/workspace/miniwin-engineering/evidence/sweep065/ghidra/freecell",
+  "targets": []
+ },
+ {
+  "binary": "/home/z/my-project/workspace/miniwin-engineering/artifacts/sweep061/guests/spider/spider.exe",
+  "out": "/home/z/my-project/workspace/miniwin-engineering/evidence/sweep065/ghidra/spider",
+  "targets": []
+ },
+ {
+  "binary": "/home/z/my-project/workspace/miniwin-engineering/artifacts/sweep061/guests/calc/calc.exe",
+  "out": "/home/z/my-project/workspace/miniwin-engineering/evidence/sweep065/ghidra/calc",
+  "targets": []
+ },
+ {
+  "binary": "/home/z/my-project/workspace/miniwin-engineering/artifacts/sweep061/guests/mspaint/mspaint.exe",
+  "out": "/home/z/my-project/workspace/miniwin-engineering/evidence/sweep065/ghidra/mspaint",
+  "targets": []
+ }
+]

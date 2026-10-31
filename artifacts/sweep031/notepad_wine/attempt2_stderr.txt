@@ -1,0 +1,1 @@
+[TRACE] Command line: /home/z/my-project/workspace/wine-ref/notepad-build/notepad_wine.exe

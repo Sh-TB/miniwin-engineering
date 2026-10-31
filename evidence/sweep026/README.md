@@ -1,4 +1,4 @@
-# SWEEP-026 evidence «ادامه فیل یوز با ۵۰ تسک»
+# SWEEP-026 evidence (continue elephant-cheetah with 50 tasks)
 
 - sweep026_sweep.tsv — 16-program corpus x3 on sha 51bc4fb3 (pump-off):
   putty 9->0 (BUG-082 CLOSED), 45/45 deterministic, unresolved deltas

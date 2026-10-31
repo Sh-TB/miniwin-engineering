@@ -1,0 +1,18 @@
+[T1f80] [API]   [138] UnhookWindowsHookEx -> 0x203b860
+[T1f80] [API]   [139] SetWindowsHookExW -> 0x203e100
+[T1f80] [API] SetWindowsHookExW(id=-1, proc=0x1402bf420, hmod=(nil), tid=5678)
+[T1f80] [API]   -> HHOOK 0xb30001
+[T1f80] [API] SetWindowsHookExW(id=7, proc=0x1401645e0, hmod=0x140000000, tid=5678)
+[T1f80] [API]   -> HHOOK 0xb30002
+[T1f80] [API] SetWindowsHookExW(id=5, proc=0x1402c8f40, hmod=(nil), tid=5678)
+[T1f80] [API]   -> HHOOK 0xb30003
+[T1f80] [API] UnhookWindowsHookEx(0xb30002) -> TRUE (id=7)
+[T1f80] [API] [DISPATCH] === RtlDispatchException ===
+[T1f80] [API] [DISPATCH] ExceptionCode=0xe06d7363 RIP=0x14032126f RSP=0x7ffe709ddb70
+[T1f80] [API] [HANDLER_CALL] returned disposition=1 (0=Exec %1=Search %2=Nested %3=Collided)
+[T1f80] [API] [DISPATCH] Frame[4]: EHANDLER at RVA 0x31ffc8 (VA 0x14031ffc8)
+[T1f80] [API] RtlUnwindEx(target_frame=0x7ffe709ddd10, target_ip=0x140298df5, ctx=0x7ffe709dca50, exc=(nil))
+[T1f80] [API] RtlUnwindEx: TargetIp=0x140298df5 TargetFrame=0x7ffe709ddd10
+[T1f80] [API] RtlUnwindEx: BUG-039/B register base restored from target-frame snapshot (RDI=0x22e11da RBP=0x7ffe709dde29 RSI=0x0 RBX=0x140536f00)
+[T1f80] [API] RtlUnwindEx: longjmping to dispatcher (RIP=0x140298df5 RSP=0x7ffe709ddd10)
+[T1f80] [API] [DISPATCH] RtlUnwindEx longjmped back — unwind to RIP=0x140298df5 RSP=0x7ffe709ddd10

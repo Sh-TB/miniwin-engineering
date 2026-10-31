@@ -1,0 +1,7 @@
+[TRACE] Command line: /home/z/my-project/workspace/miniwin-engineering/artifacts/sweep50/dl/notepadpp/notepad++.exe
+[WARN] 3 imports unresolved
+[MessageBoxW] Configurator: Load langs.xml failed!Do you want to recover your langs.xml?
+[MessageBox] dialog #1 rendered -> miniwin-results/notepad++.exe/screenshots/messagebox_1.bmp
+[FASTFAIL] code=5 (ECX) caller_RA=0x0 RVA=0x0 [rsp]=0x7ffebadc4770 RSP=0x7ffebadc46d0 — fail-fast
+  [FASTFAIL rsp+40] 0x140401792 <PE RVA 0x401792>
+  [FASTFAIL rsp+104] 0x140401692 <PE RVA 0x401692>

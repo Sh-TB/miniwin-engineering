@@ -1,0 +1,2220 @@
+{
+  "trace": [
+[T3cc0] [API] PE Loader: file=Windows/Temp/IDM_Setup_Temp/IDM5.tmp size=6490992
+[T3cc0] [API] PE32 (x86/0x10b) detected -> load_pe32 interpreted path
+[T3cc0] [API] [PE32] host-image guard armed: 0x2000000..0x21b9000 (guest access refused)
+[T3cc0] [API] [PE32] world up: arena 0x10000000..0x3fffffff, thunks 0xa00000..0xa0ffff
+[T3cc0] [API] [PE32] Windows/Temp/IDM_Setup_Temp/IDM5.tmp: base=0x400000 EP=0x27f37c size=0x63b000 secs=5 relocs=94942 (hi=0)
+[T3cc0] [API] [PE32] __wgetmainargs arena: argc=1 argv=0x11000000 env=0x11005000
+[T3cc0] [API] [PE32] data-import plane: wcmdln=0x1100c000 acmdln=0x1100e000 wargv=0x11000000 argc=0x1100a000
+[T3cc0] [API]   -> 0x2089140
+[T3cc0] [API]   -> 0x20617a0
+[T3cc0] [API]   -> 0x200afd0
+[T3cc0] [API]   -> 0x20279e0
+[T3cc0] [API]   -> 0x20a5690
+[T3cc0] [API]   -> 0x20a3bc0
+[T3cc0] [API]   -> 0x204c8e0
+[T3cc0] [API]   -> 0x2034c90
+[T3cc0] [API]   -> 0x20a1c40
+[T3cc0] [API]   -> 0x2068e30
+[T3cc0] [API]   -> 0x2010890
+[T3cc0] [API]   -> 0x20088b0
+[T3cc0] [API]   -> 0x2008d60
+[T3cc0] [API]   -> 0x20d6e50
+[T3cc0] [API]   -> 0x2033650
+[T3cc0] [API]   -> 0x208c970
+[T3cc0] [API]   -> 0x2036ac0
+[T3cc0] [API]   -> 0x200a300
+[T3cc0] [API]   -> 0x208a780
+[T3cc0] [API]   -> 0x206b640
+[T3cc0] [API]   -> 0x200a830
+[T3cc0] [API]   -> 0x20666d0
+[T3cc0] [API]   -> 0x20c76f0
+[T3cc0] [API]   -> 0x209d840
+[T3cc0] [API]   -> 0x2080d20
+[T3cc0] [API]   -> 0x2078690
+[T3cc0] [API]   -> 0x20c4f80
+[T3cc0] [API]   -> 0x20af910
+[T3cc0] [API]   -> 0x20b6fc0
+[T3cc0] [API]   -> 0x204c5b0
+[T3cc0] [API]   -> 0x2038850
+[T3cc0] [API]   -> 0x20127b0
+[T3cc0] [API]   -> 0x201d2a0
+[T3cc0] [API]   -> 0x206f700
+[T3cc0] [API]   -> 0x2028620
+[T3cc0] [API]   -> 0x20b6df0
+[T3cc0] [API]   -> 0x204ff70
+[T3cc0] [API]   -> 0x207df80
+[T3cc0] [API]   -> 0x200a850
+[T3cc0] [API]   -> 0x206bd50
+[T3cc0] [API]   -> 0x20573b0
+[T3cc0] [API]   -> 0x207d000
+[T3cc0] [API]   -> 0x2038640
+[T3cc0] [API]   -> 0x204ebc0
+[T3cc0] [API]   -> 0x20ade60
+[T3cc0] [API]   -> 0x200a310
+[T3cc0] [API]   -> 0x2009aa0
+[T3cc0] [API]   -> 0x20415d0
+[T3cc0] [API]   -> 0x20413f0
+[T3cc0] [API]   -> 0x20f56f0
+[T3cc0] [API]   -> 0x200a470
+[T3cc0] [API]   -> 0x2042ed0
+[T3cc0] [API]   -> 0x20341f0
+[T3cc0] [API]   -> 0x208c1b0
+[T3cc0] [API]   -> 0x2088480
+[T3cc0] [API]   -> 0x204c210
+[T3cc0] [API]   -> 0x207eaa0
+[T3cc0] [API]   -> 0x206d740
+[T3cc0] [API]   -> 0x2079100
+[T3cc0] [API]   -> 0x206d5e0
+[T3cc0] [API]   -> 0x207f360
+[T3cc0] [API]   -> 0x201a920
+[T3cc0] [API]   -> 0x2089220
+[T3cc0] [API]   -> 0x201a770
+[T3cc0] [API]   -> 0x201bd60
+[T3cc0] [API]   -> 0x206c6f0
+[T3cc0] [API]   -> 0x206beb0
+[T3cc0] [API]   -> 0x206c590
+[T3cc0] [API]   -> 0x2040ca0
+[T3cc0] [API]   -> 0x2040fc0
+[T3cc0] [API]   -> 0x208e5c0
+[T3cc0] [API]   -> 0x2012910
+[T3cc0] [API]   -> 0x2012040
+[T3cc0] [API]   -> 0x200c7b0
+[T3cc0] [API]   -> 0x207db20
+[T3cc0] [API]   -> 0x207db10
+[T3cc0] [API]   -> 0x20089d0
+[T3cc0] [API]   -> 0x208fc90
+[T3cc0] [API]   -> 0x2044ef0
+[T3cc0] [API]   -> 0x201c910
+[T3cc0] [API]   -> 0x20418b0
+[T3cc0] [API]   -> 0x20425d0
+[T3cc0] [API]   -> 0x2041a10
+[T3cc0] [API]   -> 0x204ca70
+[T3cc0] [API]   -> 0x2037b30
+[T3cc0] [API]   -> 0x2054880
+[T3cc0] [API]   -> 0x20c9a40
+[T3cc0] [API]   -> 0x203fc50
+[T3cc0] [API]   -> 0x20d0c50
+[T3cc0] [API]   -> 0x20c0830
+[T3cc0] [API]   -> 0x20adc50
+[T3cc0] [API]   -> 0x2034b30
+[T3cc0] [API]   -> 0x20d1f10
+[T3cc0] [API]   -> 0x205a450
+[T3cc0] [API]   -> 0x20574a0
+[T3cc0] [API]   -> 0x207b260
+[T3cc0] [API]   -> 0x2088a00
+[T3cc0] [API]   -> 0x2094410
+[T3cc0] [API]   -> 0x200a2f0
+[T3cc0] [API]   -> 0x2070d70
+[T3cc0] [API]   -> 0x2089120
+[T3cc0] [API]   -> 0x20798e0
+[T3cc0] [API]   -> 0x208ec10
+[T3cc0] [API]   -> 0x2068fa0
+[T3cc0] [API]   -> 0x2069560
+[T3cc0] [API]   -> 0x2019040
+[T3cc0] [API]   -> 0x2024680
+[T3cc0] [API]   -> 0x20590a0
+[T3cc0] [API]   -> 0x20b7ed0
+[T3cc0] [API]   -> 0x20a4ed0
+[T3cc0] [API]   -> 0x20c3260
+[T3cc0] [API]   -> 0x20510d0
+[T3cc0] [API]   -> 0x2044ae0
+[T3cc0] [API]   -> 0x20b7c30
+[T3cc0] [API]   -> 0x20a4b30
+[T3cc0] [API]   -> 0x2036000
+[T3cc0] [API]   -> 0x205e3c0
+[T3cc0] [API]   -> 0x20088c0
+[T3cc0] [API]   -> 0x209df80
+[T3cc0] [API]   -> 0x200aff0
+[T3cc0] [API]   -> 0x2028780
+[T3cc0] [API]   -> 0x20bc4e0
+[T3cc0] [API]   -> 0x2080460
+[T3cc0] [API]   -> 0x2042440
+[T3cc0] [API]   -> 0x2043560
+[T3cc0] [API]   -> 0x2091f80
+[T3cc0] [API]   -> 0x20c0ee0
+[T3cc0] [API]   -> 0x2041bb0
+[T3cc0] [API]   -> 0x200a810
+[T3cc0] [API]   -> 0x2076ec0
+[T3cc0] [API]   -> 0x2076ee0
+[T3cc0] [API]   -> 0x20ad060
+[T3cc0] [API]   -> 0x207d4c0
+[T3cc0] [API]   -> 0x20a1fb0
+[T3cc0] [API]   -> 0x20c1320
+[T3cc0] [API]   -> 0x20a3e90
+[T3cc0] [API]   -> 0x2091c10
+[T3cc0] [API]   -> 0x209e8d0
+[T3cc0] [API]   -> 0x20c2d90
+[T3cc0] [API]   -> 0x20bad90
+[T3cc0] [API]   -> 0x203c610
+[T3cc0] [API]   -> 0x2012d70
+[T3cc0] [API]   -> 0x2088d80
+[T3cc0] [API]   -> 0x208e5e0
+[T3cc0] [API]   -> 0x207daf0
+[T3cc0] [API]   -> 0x207dad0
+[T3cc0] [API]   -> 0x20183b0
+[T3cc0] [API]   -> 0x203f490
+[T3cc0] [API]   -> 0x20a1980
+[T3cc0] [API]   -> 0x2091ee0
+[T3cc0] [API]   -> 0x20088a0
+[T3cc0] [API]   -> 0x20ac880
+[T3cc0] [API]   -> 0x203d550
+[T3cc0] [API]   -> 0x209e320
+[T3cc0] [API]   -> 0x20784e0
+[T3cc0] [API]   -> 0x205a1e0
+[T3cc0] [API]   -> 0x20417b0
+[T3cc0] [API]   -> 0x20a3770
+[T3cc0] [API]   -> 0x2080c00
+[T3cc0] [API]   -> 0x20b5e20
+[T3cc0] [API]   -> 0x203c1f0
+[T3cc0] [API]   -> 0x2059ab0
+[T3cc0] [API]   -> 0x2093120
+[T3cc0] [API]   -> 0x20c2fb0
+[T3cc0] [API]   -> 0x20ba7a0
+[T3cc0] [API]   -> 0x20b6b80
+[T3cc0] [API]   -> 0x205a980
+[T3cc0] [API]   -> 0x205a970
+[T3cc0] [API]   -> 0x20c3b50
+[T3cc0] [API]   -> 0x2040650
+[T3cc0] [API]   -> 0x20d11b0
+[T3cc0] [API]   -> 0x203fb00
+[T3cc0] [API]   -> 0x20aca10
+[T3cc0] [API]   -> 0x2089db0
+[T3cc0] [API]   -> 0x2014270
+[T3cc0] [API]   -> 0x20422b0
+[T3cc0] [API]   -> 0x20b22b0
+[T3cc0] [API]   -> 0x2091750
+[T3cc0] [API]   -> 0x2008890
+[T3cc0] [API]   -> 0x2058eb0
+[T3cc0] [API]   -> 0x2080780
+[T3cc0] [API]   -> 0x206c170
+[T3cc0] [API]   -> 0x2050dd0
+[T3cc0] [API]   -> 0x20cf390
+[T3cc0] [API]   -> 0x20c4480
+[T3cc0] [API]   -> 0x2009a90
+[T3cc0] [API]   -> 0x20ce2b0
+[T3cc0] [API]   -> 0x20508f0
+[T3cc0] [API]   -> 0x2043070
+[T3cc0] [API]   -> 0x2089ec0
+[T3cc0] [API]   -> 0x20a4630
+[T3cc0] [API]   -> 0x20d93e0
+[T3cc0] [API]   -> 0x206d380
+[T3cc0] [API]   -> 0x204ea50
+[T3cc0] [API]   -> 0x20428b0
+[T3cc0] [API]   -> 0x2068cb0
+[T3cc0] [API]   -> 0x20b2110
+[T3cc0] [API]   -> 0x2091dd0
+[T3cc0] [API]   -> 0x20a6920
+[T3cc0] [API]   -> 0x203c420
+[T3cc0] [API]   -> 0x208b650
+[T3cc0] [API]   -> 0x20af1d0
+[T3cc0] [API]   -> 0x208ca20
+[T3cc0] [API]   -> 0x20889b0
+[T3cc0] [API]   -> 0x20bc100
+[T3cc0] [API]   -> 0x2027cc0
+[T3cc0] [API]   -> 0x20514c0
+[T3cc0] [API]   -> 0x20cfd10
+[T3cc0] [API]   -> 0x203fcd0
+[T3cc0] [API]   -> 0x210c930
+[T3cc0] [API]   -> 0x204cbf0
+[T3cc0] [API]   -> 0x207ecf0
+[T3cc0] [API]   -> 0x20c74f0
+[T3cc0] [API]   -> 0x202b680
+[T3cc0] [API]   -> 0x2088d30
+[T3cc0] [API]   -> 0x20d0630
+[T3cc0] [API]   -> 0x202b7f0
+[T3cc0] [API]   -> 0x203a030
+[T3cc0] [API]   -> 0x20d47b0
+[T3cc0] [API]   -> 0x208c8b0
+[T3cc0] [API]   -> 0x20c6410
+[T3cc0] [API]   -> 0x200df90
+[T3cc0] [API]   -> 0x2062f10
+[T3cc0] [API]   -> 0x2063870
+[T3cc0] [API]   -> 0x200c2c0
+[T3cc0] [API]   -> 0x2081c10
+[T3cc0] [API]   -> 0x2064310
+[T3cc0] [API]   -> 0x2030de0
+[T3cc0] [API]   -> 0x200df00
+[T3cc0] [API]   -> 0x2088330
+[T3cc0] [API]   -> 0x2081de0
+[T3cc0] [API]   -> 0x200e620
+[T3cc0] [API]   -> 0x200cbb0
+[T3cc0] [API]   -> 0x20cf970
+[T3cc0] [API]   -> 0x20cfd00
+[T3cc0] [API]   -> 0x2087db0
+[T3cc0] [API]   -> 0x200ccc0
+[T3cc0] [API]   -> 0x200dfb0
+[T3cc0] [API]   -> 0x200b770
+[T3cc0] [API]   -> 0x200a680
+[T3cc0] [API]   -> 0x2026430
+[T3cc0] [API]   -> 0x2009ff0
+[T3cc0] [API]   -> 0x2090b40
+[T3cc0] [API]   -> 0x2098a80
+[T3cc0] [API]   -> 0x20883e0
+[T3cc0] [API]   -> 0x2071090
+[T3cc0] [API]   -> 0x2024860
+[T3cc0] [API]   -> 0x20887e0
+[T3cc0] [API]   -> 0x2073050
+[T3cc0] [API]   -> 0x200c7a0
+[T3cc0] [API]   -> 0x20108b0
+[T3cc0] [API]   -> 0x2061ed0
+[T3cc0] [API]   -> 0x2088060
+[T3cc0] [API]   -> 0x2030f50
+[T3cc0] [API]   -> 0x210ea00
+[T3cc0] [API]   -> 0x200df10
+[T3cc0] [API]   -> 0x20881d0
+[T3cc0] [API]   -> 0x2110e10
+[T3cc0] [API]   -> 0x20c2770
+[T3cc0] [API]   -> 0x200ccb0
+[T3cc0] [API]   -> 0x2091260
+[T3cc0] [API]   -> 0x200c980
+[T3cc0] [API]   -> 0x20909d0
+[T3cc0] [API]   -> 0x20108c0
+[T3cc0] [API]   -> 0x20ac330
+[T3cc0] [API]   -> 0x2092880
+[T3cc0] [API]   -> 0x209eb80
+[T3cc0] [API]   -> 0x202ec40
+[T3cc0] [API]   -> 0x200c970
+[T3cc0] [API]   -> 0x20e8a60
+[T3cc0] [API]   -> 0x20310c0
+[T3cc0] [API]   -> 0x2072c30
+[T3cc0] [API]   -> 0x20884a0
+[T3cc0] [API]   -> 0x2098710
+[T3cc0] [API]   -> 0x20108d0
+[T3cc0] [API]   -> 0x20d3350
+[T3cc0] [API]   -> 0x20ab4b0
+[T3cc0] [API]   -> 0x20db7c0
+[T3cc0] [API]   -> 0x20baaa0
+[T3cc0] [API]   -> 0x2088d40
+[T3cc0] [API]   -> 0x204a480
+[T3cc0] [API]   -> 0x20abb30
+[T3cc0] [API]   -> 0x20abea0
+[T3cc0] [API]   -> 0x20ac150
+[T3cc0] [API]   -> 0x20e89b0
+[T3cc0] [API]   -> 0x202c1b0
+[T3cc0] [API]   -> 0x2111480
+[T3cc0] [API]   -> 0x20885c0
+[T3cc0] [API]   -> 0x2061be0
+[T3cc0] [API]   -> 0x2078020
+[T3cc0] [API]   -> 0x20c1da0
+[T3cc0] [API]   -> 0x210d9f0
+[T3cc0] [API]   -> 0x2090c20
+[T3cc0] [API]   -> 0x2062540
+[T3cc0] [API]   -> 0x20785c0
+[T3cc0] [API]   -> 0x2065eb0
+[T3cc0] [API]   -> 0x200e710
+[T3cc0] [API]   -> 0x210d4e0
+[T3cc0] [API]   -> 0x2076a60
+[T3cc0] [API]   -> 0x20f6db0
+[T3cc0] [API]   -> 0x20f8e80
+[T3cc0] [API]   -> 0x200c610
+[T3cc0] [API]   -> 0x20b8560
+[T3cc0] [API]   -> 0x20bd760
+[T3cc0] [API]   -> 0x20da1c0
+[T3cc0] [API]   -> 0x20d6c70
+[T3cc0] [API]   -> 0x2070940
+[T3cc0] [API]   -> 0x202f440
+[T3cc0] [API]   -> 0x202fce0
+[T3cc0] [API]   -> 0x200c620
+[T3cc0] [API]   -> 0x2031b20
+[T3cc0] [API]   -> 0x209fb60
+[T3cc0] [API]   -> 0x20de5f0
+[T3cc0] [API]   -> 0x20df650
+[T3cc0] [API]   -> 0x2046800
+[T3cc0] [API]   -> 0x20a6730
+[T3cc0] [API]   -> 0x2098560
+[T3cc0] [API]   -> 0x207ae10
+[T3cc0] [API]   -> 0x2088f70
+[T3cc0] [API]   -> 0x200b780
+[T3cc0] [API]   -> 0x2088d20
+[T3cc0] [API]   -> 0x2072ac0
+[T3cc0] [API]   -> 0x2009f80
+[T3cc0] [API]   -> 0x20cdb00
+[T3cc0] [API]   -> 0x20ca240
+[T3cc0] [API]   -> 0x20ce6f0
+[T3cc0] [API]   -> 0x200cc30
+[T3cc0] [API]   -> 0x20468b0
+[T3cc0] [API]   -> 0x20d3ac0
+[T3cc0] [API]   -> 0x2111620
+[T3cc0] [API]   -> 0x20462f0
+[T3cc0] [API]   -> 0x2088730
+[T3cc0] [API]   -> 0x2088560
+[T3cc0] [API]   -> 0x2031510
+[T3cc0] [API]   -> 0x20313a0
+[T3cc0] [API]   -> 0x20884b0
+[T3cc0] [API]   -> 0x20887d0
+[T3cc0] [API]   -> 0x2063080
+[T3cc0] [API]   -> 0x20aaf10
+[T3cc0] [API]   -> 0x20633b0
+[T3cc0] [API]   -> 0x20884c0
+[T3cc0] [API]   -> 0x2092e50
+[T3cc0] [API]   -> 0x2095f90
+[T3cc0] [API]   -> 0x2091160
+[T3cc0] [API]   -> 0x2025de0
+[T3cc0] [API]   -> 0x20cc7d0
+[T3cc0] [API]   -> 0x2111520
+[T3cc0] [API]   -> 0x2088a60
+[T3cc0] [API]   -> 0x2064480
+[T3cc0] [API]   -> 0x2027090
+[T3cc0] [API]   -> 0x20bfd60
+[T3cc0] [API]   -> 0x206ae20
+[T3cc0] [API]   -> 0x20bf7e0
+[T3cc0] [API]   -> 0x200c5b0
+[T3cc0] [API]   -> 0x20df940
+[T3cc0] [API]   -> 0x20ab970
+[T3cc0] [API]   -> 0x2045ea0
+[T3cc0] [API]   -> 0x20735f0
+[T3cc0] [API]   -> 0x209b0f0
+[T3cc0] [API]   -> 0x20a7bb0
+[T3cc0] [API]   -> 0x2097020
+[T3cc0] [API]   -> 0x20ab1d0
+[T3cc0] [API]   -> 0x2070aa0
+[T3cc0] [API]   -> 0x20bb3b0
+[T3cc0] [API]   -> 0x2071cb0
+[T3cc0] [API]   -> 0x2091df0
+[T3cc0] [API]   -> 0x200b140
+[T3cc0] [API]   -> 0x200c5c0
+[T3cc0] [API]   -> 0x20e8c20
+[T3cc0] [API]   -> 0x20aefd0
+[T3cc0] [API]   -> 0x2088310
+[T3cc0] [API]   -> 0x200b790
+[T3cc0] [API]   -> 0x2092f60
+[T3cc0] [API]   -> 0x2061d50
+[T3cc0] [API]   -> 0x2031230
+[T3cc0] [API]   -> 0x202f2d0
+[T3cc0] [API]   -> 0x210f1e0
+[T3cc0] [API]   -> 0x200c2b0
+[T3cc0] [API]   -> 0x200e9e0
+[T3cc0] [API]   -> 0x2019500
+[T3cc0] [API]   -> 0x200b760
+[T3cc0] [API]   -> 0x2088cc0
+[T3cc0] [API]   -> 0x20d41d0
+[T3cc0] [API]   -> 0x20b3010
+[T3cc0] [API]   -> 0x20d49b0
+[T3cc0] [API]   -> 0x20d55c0
+[T3cc0] [API]   -> 0x20b2f90
+[T3cc0] [API]   -> 0x205b840
+[T3cc0] [API]   -> 0x209fb10
+[T3cc0] [API]   -> 0x20c2510
+[T3cc0] [API]   -> 0x20aaab0
+[T3cc0] [API]   -> 0x20f5ea0
+[T3cc0] [API]   -> 0x20d4550
+[T3cc0] [API]   -> 0x20d3000
+[T3cc0] [API]   -> 0x20b8d80
+[T3cc0] [API]   -> 0x20d51f0
+[T3cc0] [API]   -> 0x20c1b60
+[T3cc0] [API]   -> 0x20c8e20
+[T3cc0] [API]   -> 0x20885b0
+[T3cc0] [API]   -> 0x2072d90
+[T3cc0] [API]   -> 0x20ca8f0
+[T3cc0] [API]   -> 0x200b750
+[T3cc0] [API]   -> 0x2110710
+[T3cc0] [API]   -> 0x204ac10
+[T3cc0] [API]   -> 0x202c800
+[T3cc0] [API]   -> 0x20ae330
+[T3cc0] [API]   -> 0x20631f0
+[T3cc0] [API]   -> 0x2087fa0
+[T3cc0] [API]   -> 0x2088550
+[T3cc0] [API]   -> 0x20c9e70
+[T3cc0] [API]   -> 0x20ca220
+[T3cc0] [API]   -> 0x200e050
+[T3cc0] [API]   -> 0x2088e40
+[T3cc0] [API]   -> 0x200e100
+[T3cc0] [API]   -> 0x200e0a0
+[T3cc0] [API]   -> 0x200e210
+[T3cc0] [API]   -> 0x200e070
+[T3cc0] [API]   -> 0x200e1c0
+[T3cc0] [API]   -> 0x200f2c0
+[T3cc0] [API]   -> 0x2047da0
+[T3cc0] [API]   -> 0x203edf0
+[T3cc0] [API]   -> 0x200c920
+[T3cc0] [API]   -> 0x208be60
+[T3cc0] [API]   -> 0x206a200
+[T3cc0] [API]   -> 0x200e560
+[T3cc0] [API]   -> 0x20a25b0
+[T3cc0] [API]   -> 0x210f0f0
+[T3cc0] [API]   -> 0x200e140
+[T3cc0] [API]   -> 0x200e160
+[T3cc0] [API]   -> 0x20a2390
+[T3cc0] [API]   -> 0x20620e0
+[T3cc0] [API]   -> 0x202cae0
+[T3cc0] [API]   -> 0x2087e10
+[T3cc0] [API]   -> 0x200c990
+[T3cc0] [API]   -> 0x2062270
+[T3cc0] [API]   -> 0x2088410
+[T3cc0] [API]   -> 0x2088a50
+[T3cc0] [API]   -> 0x20b6f10
+[T3cc0] [API]   -> 0x2040630
+[T3cc0] [API]   -> 0x200b4e0
+[T3cc0] [API]   -> 0x200e060
+[T3cc0] [API]   -> 0x2088400
+[T3cc0] [API]   -> 0x208b2e0
+[T3cc0] [API]   -> 0x200e260
+[T3cc0] [API]   -> 0x20d2e20
+[T3cc0] [API]   -> 0x20a66f0
+[T3cc0] [API]   -> 0x2018110
+[T3cc0] [API]   -> 0x2071980
+[T3cc0] [API]   -> 0x202d060
+[T3cc0] [API]   -> 0x20b4db0
+[T3cc0] [API]   -> 0x203d2f0
+[T3cc0] [API]   -> 0x202d1c0
+[T3cc0] [API]   -> 0x20dbb40
+[T3cc0] [API]   -> 0x20daa90
+[T3cc0] [API]   -> 0x202dc60
+[T3cc0] [API]   -> 0x200cb40
+[T3cc0] [API]   -> 0x200c570
+[T3cc0] [API]   -> 0x2052350
+[T3cc0] [API]   -> 0x203e930
+[T3cc0] [API]   -> 0x204d2b0
+[T3cc0] [API]   -> 0x202da20
+[T3cc0] [API]   -> 0x202ce60
+[T3cc0] [API]   -> 0x202d720
+[T3cc0] [API]   -> 0x202d8a0
+[T3cc0] [API]   -> 0x202cc70
+[T3cc0] [API]   -> 0x20b5860
+[T3cc0] [API]   -> 0x2061ef0
+[T3cc0] [API]   -> 0x204d760
+[T3cc0] [API]   -> 0x2039250
+[T3cc0] [API]   -> 0x2088800
+[T3cc0] [API]   -> 0x2012f90
+[T3cc0] [API]   -> 0x206e100
+[T3cc0] [API]   -> 0x206dfa0
+[T3cc0] [API]   -> 0x206e260
+[T3cc0] [API]   -> 0x2044560
+[T3cc0] [API]   -> 0x2118f90
+[T3cc0] [API]   -> 0x211ab30
+[T3cc0] [API]   -> 0x20e3620
+[T3cc0] [API]   -> 0x203a7f0
+[T3cc0] [API]   -> 0x200cf00
+[T3cc0] [API]   -> 0x2063590
+[T3cc0] [API]   -> 0x20e4ee0
+[T3cc0] [API]   -> 0x20e40a0
+[T3cc0] [API]   -> 0x2049610
+[T3cc0] [API]   -> 0x20304c0
+[T3cc0] [API]   -> 0x2087e20
+[T3cc0] [API]   -> 0x20400d0
+[T3cc0] [API]   -> 0x2046b60
+[T3cc0] [API]   -> 0x2032930
+[T3cc0] [API]   -> 0x2032ac0
+[T3cc0] [API]   -> 0x20ae5e0
+[T3cc0] [API]   -> 0x207b080
+[T3cc0] [API]   -> 0x200a660
+[T3cc0] [API]   -> 0x200e670
+[T3cc0] [API]   -> 0x2044260
+[T3cc0] [API]   -> 0x20e5520
+[T3cc0] [API]   -> 0x20e3850
+[T3cc0] [API]   -> 0x20761f0
+[T3cc0] [API]   -> 0x20e44c0
+[T3cc0] [API]   -> 0x20e5910
+[T3cc0] [API]   -> 0x200a670
+[T3cc0] [API]   -> 0x203f9f0
+[T3cc0] [API]   -> 0x206af80
+[T3cc0] [API]   -> 0x203fa70
+[T3cc0] [API]   -> 0x2119da0
+[T3cc0] [API]   -> 0x20e4dd0
+[T3cc0] [API]   -> 0x20e42b0
+[T3cc0] [API]   -> 0x20e5900
+[T3cc0] [API]   -> 0x20e51b0
+[T3cc0] [API]   -> 0x20e3b90
+[T3cc0] [API]   -> 0x20e6540
+[T3cc0] [API]   -> 0x20e4710
+[T3cc0] [API]   -> 0x20e33c0
+[T3cc0] [API]   -> NULL (not in dispatch table)
+[T3cc0] [API] [PE32] arity('#ordinal') unknown -> under-pop 0 (caller cleans or frame resync)
+[T3cc0] [API] [PE32] api '#ordinal' (comctl32.dll) UNRESOLVED -> stub thunk
+[T3cc0] [API]   -> 0x20a20b0
+[T3cc0] [API]   -> 0x200d090
+[T3cc0] [API]   -> 0x2010900
+[T3cc0] [API]   -> 0x20108e0
+[T3cc0] [API]   -> 0x2024800
+[T3cc0] [API]   -> 0x20773e0
+[T3cc0] [API] [PE32] imports: 519 resolved, 1 unresolved (thunk page 520 APIs)
+[T3cc0] [API]   -> NULL (not in dispatch table)
+[T3cc0] [API] [PE32] arity('') unknown -> under-pop 0 (caller cleans or frame resync)
+[T3cc0] [API] [PE32] api '' (oleaut32.dll) UNRESOLVED -> stub thunk
+[T3cc0] [API]   -> NULL (not in dispatch table)
+[T3cc0] [API] [PE32] arity('') unknown -> under-pop 0 (caller cleans or frame resync)
+[T3cc0] [API] [PE32] api '' (oleaut32.dll) UNRESOLVED -> stub thunk
+[T3cc0] [API] [PE32] delay-imports: 2 bound eagerly (SW-1281b)
+[T3cc0] [API] [PE32] TEB32 @0x10000000 PEB32 @0x10001000 stack 0x3f700000..0x3ff00000 cmdline@0x10003000
+[T3cc0] [API] [PE32] jumping to EP 0x4027f37c (interpreted i386)
+[T3cc0] [API] [PE32] GUI shims armed (x86 wndproc re-entry via cpu32_call)
+[T3cc0] [API] GetSystemTimeAsFileTime()
+[T3cc0] [API] GetTickCount() = 2441779
+[T3cc0] [API] QueryPerformanceCounter()
+[T3cc0] [API] GetStartupInfoA(info=0x3fefef94)
+[T3cc0] [API] GetStartupInfoW()
+[T3cc0] [API] GetModuleHandleW()
+[T3cc0] [API] GetProcAddress(module=0xdea00000, name=FlsAlloc)
+[T3cc0] [API]   -> 0x20361a0
+[T3cc0] [API]   -> 0x20361a0
+[T3cc0] [API] GetProcAddress(module=0xdea00000, name=FlsGetValue)
+[T3cc0] [API]   -> 0x20095f0
+[T3cc0] [API]   -> 0x20095f0
+[T3cc0] [API] GetProcAddress(module=0xdea00000, name=FlsSetValue)
+[T3cc0] [API]   -> 0x2009610
+[T3cc0] [API]   -> 0x2009610
+[T3cc0] [API] GetProcAddress(module=0xdea00000, name=FlsFree)
+[T3cc0] [API]   -> 0x2088d10
+[T3cc0] [API]   -> 0x2088d10
+[T3cc0] [API] TlsAlloc() = 1
+[T3cc0] [API] TlsSetValue(1, 0xa0147e)
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] GetModuleHandleW()
+[T3cc0] [API] GetProcAddress(module=0xdea00000, name=EncodePointer)
+[T3cc0] [API]   -> 0x201ab20
+[T3cc0] [API]   -> 0x201ab20
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] GetModuleHandleW()
+[T3cc0] [API] GetProcAddress(module=0xdea00000, name=EncodePointer)
+[T3cc0] [API]   -> 0x201ab20
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] GetModuleHandleW()
+[T3cc0] [API] GetProcAddress(module=0xdea00000, name=EncodePointer)
+[T3cc0] [API]   -> 0x201ab20
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] GetModuleHandleW()
+[T3cc0] [API] GetProcAddress(module=0xdea00000, name=EncodePointer)
+[T3cc0] [API]   -> 0x201ab20
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] GetModuleHandleW()
+[T3cc0] [API] GetProcAddress(module=0xdea00000, name=EncodePointer)
+[T3cc0] [API]   -> 0x201ab20
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] GetModuleHandleW()
+[T3cc0] [API] GetProcAddress(module=0xdea00000, name=EncodePointer)
+[T3cc0] [API]   -> 0x201ab20
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] GetModuleHandleW()
+[T3cc0] [API] GetProcAddress(module=0xdea00000, name=EncodePointer)
+[T3cc0] [API]   -> 0x201ab20
+[T3cc0] [API] InitializeCriticalSection(0x403d0878)
+[T3cc0] [API] InitializeCriticalSection(0x403d0890)
+[T3cc0] [API] InitializeCriticalSection(0x403d08a8)
+[T3cc0] [API] InitializeCriticalSection(0x403d08c0)
+[T3cc0] [API] InitializeCriticalSection(0x403d08d8)
+[T3cc0] [API] InitializeCriticalSection(0x403d08f0)
+[T3cc0] [API] InitializeCriticalSection(0x403d0908)
+[T3cc0] [API] InitializeCriticalSection(0x403d0920)
+[T3cc0] [API] InitializeCriticalSection(0x403d0938)
+[T3cc0] [API] InitializeCriticalSection(0x403d0950)
+[T3cc0] [API] InitializeCriticalSection(0x403d0968)
+[T3cc0] [API] InitializeCriticalSection(0x403d0980)
+[T3cc0] [API] InitializeCriticalSection(0x403d0998)
+[T3cc0] [API] InitializeCriticalSection(0x403d09b0)
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] GetModuleHandleW()
+[T3cc0] [API] GetProcAddress(module=0xdea00000, name=DecodePointer)
+[T3cc0] [API]   -> 0x200a200
+[T3cc0] [API]   -> 0x200a200
+[T3cc0] [API] FlsAlloc(cb=0x40282889) = 0
+[T3cc0] [API] HeapAlloc[32](size=0x214) = 0x11015000
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] GetModuleHandleW()
+[T3cc0] [API] GetProcAddress(module=0xdea00000, name=DecodePointer)
+[T3cc0] [API]   -> 0x200a200
+[T3cc0] [API] GetModuleHandleW()
+[T3cc0] [API] GetProcAddress(module=0xdea00000, name=EncodePointer)
+[T3cc0] [API]   -> 0x201ab20
+[T3cc0] [API] GetProcAddress(module=0xdea00000, name=DecodePointer)
+[T3cc0] [API]   -> 0x200a200
+[T3cc0] [API] InitializeCriticalSection(0x403d0950)
+[T3cc0] [API] EnterCriticalSection(0x403d0950)
+[T3cc0] [API] LeaveCriticalSection(0x403d0950)
+[T3cc0] [API] InitializeCriticalSection(0x403d0938)
+[T3cc0] [API] EnterCriticalSection(0x403d0938)
+[T3cc0] [API] LeaveCriticalSection(0x403d0938)
+[T3cc0] [API] GetStartupInfoA(info=0x3fefef18)
+[T3cc0] [API] GetStartupInfoW()
+[T3cc0] [API] HeapAlloc[32](size=0x800) = 0x11016000
+[T3cc0] [API] GetStdHandle(-10) = 0x4
+[T3cc0] [API] InitializeCriticalSection(0x1101600c)
+[T3cc0] [API] GetStdHandle(-11) = 0x5
+[T3cc0] [API] InitializeCriticalSection(0x1101604c)
+[T3cc0] [API] GetStdHandle(-12) = 0x6
+[T3cc0] [API] InitializeCriticalSection(0x1101608c)
+[T3cc0] [API] SetHandleCount(32) -> 32
+[T3cc0] [API] GetCommandLineA() = "IDM5.tmp"
+[T3cc0] [API] GetEnvironmentStringsW()
+[T3cc0] [API] WideCharToMultiByte(cp=0, srclen=2204, dstlen=0)
+[T3cc0] [API] HeapAlloc[32](size=0x89c) = 0x11017000
+[T3cc0] [API] WideCharToMultiByte(cp=0, srclen=2204, dstlen=2204)
+[T3cc0] [API] FreeEnvironmentStringsW()
+[T3cc0] [API] GetLastError() = 0
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] SetLastError(0) caller=0x2112222
+[T3cc0] [API] GetLastError() = 0
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] SetLastError(0) caller=0x2112222
+[T3cc0] [API] EnterCriticalSection(0x403d0950)
+[T3cc0] [API] LeaveCriticalSection(0x403d0950)
+[T3cc0] [API] GetLastError() = 0
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] SetLastError(0) caller=0x2112222
+[T3cc0] [API] HeapAlloc[32](size=0x220) = 0x11018000
+[T3cc0] [API] GetLastError() = 0
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] SetLastError(0) caller=0x2112222
+[T3cc0] [API] GetCPInfo(cp=1252)
+[T3cc0] [API] GetCPInfo(cp=1252)
+[T3cc0] [API] GetLastError() = 0
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] SetLastError(0) caller=0x2112222
+[T3cc0] [API] MultiByteToWideChar(cp=1252, srclen=256, dstlen=0)
+[T3cc0] [API] MultiByteToWideChar(cp=1252, srclen=256, dstlen=256)
+[T3cc0] [API] GetLastError() = 0
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] SetLastError(0) caller=0x2112222
+[T3cc0] [API] MultiByteToWideChar(cp=1252, srclen=256, dstlen=0)
+[T3cc0] [API] MultiByteToWideChar(cp=1252, srclen=256, dstlen=256)
+[T3cc0] [API] WideCharToMultiByte(cp=1252, srclen=256, dstlen=256)
+[T3cc0] [API] GetLastError() = 0
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] SetLastError(0) caller=0x2112222
+[T3cc0] [API] MultiByteToWideChar(cp=1252, srclen=256, dstlen=0)
+[T3cc0] [API] MultiByteToWideChar(cp=1252, srclen=256, dstlen=256)
+[T3cc0] [API] WideCharToMultiByte(cp=1252, srclen=256, dstlen=256)
+[T3cc0] [API] EnterCriticalSection(0x403d0950)
+[T3cc0] [API] LeaveCriticalSection(0x403d0950)
+[T3cc0] [API] GetModuleFileNameA(cap=260)
+[T3cc0] [API] GetLastError() = 0
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] SetLastError(0) caller=0x2112222
+[T3cc0] [API] GetLastError() = 0
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] SetLastError(0) caller=0x2112222
+[T3cc0] [API] GetLastError() = 0
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] SetLastError(0) caller=0x2112222
+[T3cc0] [API] GetLastError() = 0
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] SetLastError(0) caller=0x2112222
+[T3cc0] [API] GetLastError() = 0
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] SetLastError(0) caller=0x2112222
+[T3cc0] [API] GetLastError() = 0
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] SetLastError(0) caller=0x2112222
+[T3cc0] [API] GetLastError() = 0
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] SetLastError(0) caller=0x2112222
+[T3cc0] [API] GetLastError() = 0
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] SetLastError(0) caller=0x2112222
+[T3cc0] [API] GetLastError() = 0
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] SetLastError(0) caller=0x2112222
+[T3cc0] [API] HeapAlloc[32](size=0x11) = 0x11019000
+[T3cc0] [API] GetLastError() = 0
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] SetLastError(0) caller=0x2112222
+[T3cc0] [API] GetLastError() = 0
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] SetLastError(0) caller=0x2112222
+[T3cc0] [API] GetLastError() = 0
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] SetLastError(0) caller=0x2112222
+[T3cc0] [API] GetLastError() = 0
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] SetLastError(0) caller=0x2112222
+[T3cc0] [API] GetLastError() = 0
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] SetLastError(0) caller=0x2112222
+[T3cc0] [API] GetLastError() = 0
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] SetLastError(0) caller=0x2112222
+[T3cc0] [API] GetLastError() = 0
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] SetLastError(0) caller=0x2112222
+[T3cc0] [API] GetLastError() = 0
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] SetLastError(0) caller=0x2112222
+[T3cc0] [API] GetLastError() = 0
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] SetLastError(0) caller=0x2112222
+[T3cc0] [API] HeapAlloc[32](size=0x128) = 0x1101a000
+[T3cc0] [API] HeapAlloc[32](size=0x1f) = 0x1101b000
+[T3cc0] [API] HeapAlloc[32](size=0x29) = 0x1101c000
+[T3cc0] [API] HeapAlloc[32](size=0x31) = 0x1101d000
+[T3cc0] [API] HeapAlloc[32](size=0x3c) = 0x1101e000
+[T3cc0] [API] HeapAlloc[32](size=0x31) = 0x1101f000
+[T3cc0] [API] HeapAlloc[32](size=0x15) = 0x11020000
+[T3cc0] [API] HeapAlloc[32](size=0x24) = 0x11021000
+[T3cc0] [API] HeapAlloc[32](size=0x32) = 0x11022000
+[T3cc0] [API] HeapAlloc[32](size=0x2c) = 0x11023000
+[T3cc0] [API] HeapAlloc[32](size=0xe) = 0x11024000
+[T3cc0] [API] HeapAlloc[32](size=0x69) = 0x11025000
+[T3cc0] [API] HeapAlloc[32](size=0x3e) = 0x11026000
+[T3cc0] [API] HeapAlloc[32](size=0x1d) = 0x11027000
+[T3cc0] [API] HeapAlloc[32](size=0x1b) = 0x11028000
+[T3cc0] [API] HeapAlloc[32](size=0x1e) = 0x11029000
+[T3cc0] [API] HeapAlloc[32](size=0x29) = 0x1102a000
+[T3cc0] [API] HeapAlloc[32](size=0x1e) = 0x1102b000
+[T3cc0] [API] HeapAlloc[32](size=0xc) = 0x1102c000
+[T3cc0] [API] HeapAlloc[32](size=0x17) = 0x1102d000
+[T3cc0] [API] HeapAlloc[32](size=0x14) = 0x1102e000
+[T3cc0] [API] HeapAlloc[32](size=0xf) = 0x1102f000
+[T3cc0] [API] HeapAlloc[32](size=0x16) = 0x11030000
+[T3cc0] [API] HeapAlloc[32](size=0x29) = 0x11031000
+[T3cc0] [API] HeapAlloc[32](size=0x28) = 0x11032000
+[T3cc0] [API] HeapAlloc[32](size=0x13) = 0x11033000
+[T3cc0] [API] HeapAlloc[32](size=0x11) = 0x11034000
+[T3cc0] [API] HeapAlloc[32](size=0x1d) = 0x11035000
+[T3cc0] [API] HeapAlloc[32](size=0x12) = 0x11036000
+[T3cc0] [API] HeapAlloc[32](size=0x17) = 0x11037000
+[T3cc0] [API] HeapAlloc[32](size=0x47) = 0x11038000
+[T3cc0] [API] HeapAlloc[32](size=0x12) = 0x11039000
+[T3cc0] [API] HeapAlloc[32](size=0x18) = 0x1103a000
+[T3cc0] [API] HeapAlloc[32](size=0xf) = 0x1103b000
+[T3cc0] [API] HeapAlloc[32](size=0x10) = 0x1103c000
+[T3cc0] [API] HeapAlloc[32](size=0x10) = 0x1103d000
+[T3cc0] [API] HeapAlloc[32](size=0x1b) = 0x1103e000
+[T3cc0] [API] HeapAlloc[32](size=0x13) = 0x1103f000
+[T3cc0] [API] HeapAlloc[32](size=0x32) = 0x11040000
+[T3cc0] [API] HeapAlloc[32](size=0x19) = 0x11041000
+[T3cc0] [API] HeapAlloc[32](size=0x14) = 0x11042000
+[T3cc0] [API] HeapAlloc[32](size=0x54) = 0x11043000
+[T3cc0] [API] HeapAlloc[32](size=0x3a) = 0x11044000
+[T3cc0] [API] HeapAlloc[32](size=0xa) = 0x11045000
+[T3cc0] [API] HeapAlloc[32](size=0x16) = 0x11046000
+[T3cc0] [API] HeapAlloc[32](size=0xf) = 0x11047000
+[T3cc0] [API] HeapAlloc[32](size=0x31) = 0x11048000
+[T3cc0] [API] HeapAlloc[32](size=0x39) = 0x11049000
+[T3cc0] [API] HeapAlloc[32](size=0xd) = 0x1104a000
+[T3cc0] [API] HeapAlloc[32](size=0x1d) = 0x1104b000
+[T3cc0] [API] HeapAlloc[32](size=0x1a) = 0x1104c000
+[T3cc0] [API] HeapAlloc[32](size=0x1c) = 0x1104d000
+[T3cc0] [API] HeapAlloc[32](size=0x24) = 0x1104e000
+[T3cc0] [API] HeapAlloc[32](size=0x1b) = 0x1104f000
+[T3cc0] [API] HeapAlloc[32](size=0xb) = 0x11050000
+[T3cc0] [API] HeapAlloc[32](size=0x11) = 0x11051000
+[T3cc0] [API] HeapAlloc[32](size=0x22) = 0x11052000
+[T3cc0] [API] HeapAlloc[32](size=0xa) = 0x11053000
+[T3cc0] [API] HeapAlloc[32](size=0x7) = 0x11054000
+[T3cc0] [API] HeapAlloc[32](size=0x8) = 0x11055000
+[T3cc0] [API] HeapAlloc[32](size=0x19) = 0x11056000
+[T3cc0] [API] HeapAlloc[32](size=0x1a) = 0x11057000
+[T3cc0] [API] HeapAlloc[32](size=0xb) = 0x11058000
+[T3cc0] [API] HeapAlloc[32](size=0x1f) = 0x11059000
+[T3cc0] [API] HeapAlloc[32](size=0x15) = 0x1105a000
+[T3cc0] [API] HeapAlloc[32](size=0x11) = 0x1105b000
+[T3cc0] [API] HeapAlloc[32](size=0x19) = 0x1105c000
+[T3cc0] [API] HeapAlloc[32](size=0x11) = 0x1105d000
+[T3cc0] [API] HeapAlloc[32](size=0x1f) = 0x1105e000
+[T3cc0] [API] HeapAlloc[32](size=0x1f) = 0x1105f000
+[T3cc0] [API] HeapAlloc[32](size=0x30) = 0x11060000
+[T3cc0] [API] HeapAlloc[32](size=0x23) = 0x11061000
+[T3cc0] [API] HeapAlloc[32](size=0x1a) = 0x11062000
+[T3cc0] [API] HeapAlloc[32](size=0x13) = 0x11063000
+[T3cc0] [API] HeapFree(0x11017000)
+[T3cc0] [API] HeapFree arena32 ptr 0x11017000 -> no-op (bump arena)
+[T3cc0] [API] GetModuleHandleA(name=KERNEL32)
+[T3cc0] [API] GetProcAddress(module=0xdea00000, name=IsProcessorFeaturePresent)
+[T3cc0] [API]   -> 0x200a1c0
+[T3cc0] [API]   -> 0x200a1c0
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] HeapAlloc[32](size=0x80) = 0x11064000
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] HeapAlloc[32](size=0x800) = 0x11065000
+[T3cc0] [API] GetModuleHandleA(name=Kernel32)
+[T3cc0] [API] GetProcAddress(module=0xdea00000, name=SetDefaultDllDirectories)
+[T3cc0] [API]   -> 0x20623d0
+[T3cc0] [API]   -> 0x20623d0
+[T3cc0] [API] SetDefaultDllDirectories(0x800) -> TRUE
+[T3cc0] [API] GetProcAddress(module=0xdea00000, name=SetDllDirectoryW)
+[T3cc0] [API]   -> 0x2027fb0
+[T3cc0] [API]   -> 0x2027fb0
+[T3cc0] [API] SetDllDirectoryW(0x402d4d18)
+[T3cc0] [API] GetProcAddress(module=0xdea00000, name=SetSearchPathMode)
+[T3cc0] [API]   -> 0x20641a0
+[T3cc0] [API]   -> 0x20641a0
+[T3cc0] [API] SetSearchPathMode(0x8001) -> TRUE
+[T3cc0] [API] GetModuleFileNameW(cap=520)
+[T3cc0] [API] GetModuleFileNameW out u16len=39 utf8len=39 'C:\Windows\Temp\IDM_Setup_Temp\IDM5.tmp'
+[T3cc0] [API] GetFileAttributesW(/home/z/my-project/workspace/miniwin-engineering/evidence/p12_idm/idman/sandbox/Windows/Temp/IDM_Setup_Temp/IDM5.tmp.Local)
+[T3cc0] [API] SetLastError(2) caller=0x20bc3b2
+[T3cc0] [API] GetFileAttributesW(/home/z/my-project/workspace/miniwin-engineering/evidence/p12_idm/idman/sandbox/Windows/Temp/IDM_Setup_Temp/shell32.dll)
+[T3cc0] [API] SetLastError(2) caller=0x20bc3b2
+[T3cc0] [API] SetUnhandledExceptionFilter(handler=0x4028ed65)
+[T3cc0] [API] InitializeCriticalSection(0x403d0908)
+[T3cc0] [API] EnterCriticalSection(0x403d0908)
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] HeapFree(0x11064000)
+[T3cc0] [API] HeapFree arena32 ptr 0x11064000 -> no-op (bump arena)
+[T3cc0] [API] HeapReAlloc arena32 0x11064000 -> 0x11066000 (size=0x10, copied 0x10)
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] LeaveCriticalSection(0x403d0908)
+[T3cc0] [API] EnterCriticalSection(0x403d0908)
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] HeapFree(0x11066000)
+[T3cc0] [API] HeapFree arena32 ptr 0x11066000 -> no-op (bump arena)
+[T3cc0] [API] HeapReAlloc arena32 0x11066000 -> 0x11067000 (size=0x10, copied 0x10)
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] LeaveCriticalSection(0x403d0908)
+[T3cc0] [API] EnterCriticalSection(0x403d0908)
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] HeapFree(0x11067000)
+[T3cc0] [API] HeapFree arena32 ptr 0x11067000 -> no-op (bump arena)
+[T3cc0] [API] HeapReAlloc arena32 0x11067000 -> 0x11068000 (size=0x10, copied 0x10)
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] LeaveCriticalSection(0x403d0908)
+[T3cc0] [API] EnterCriticalSection(0x403d0908)
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] HeapFree(0x11068000)
+[T3cc0] [API] HeapFree arena32 ptr 0x11068000 -> no-op (bump arena)
+[T3cc0] [API] HeapReAlloc arena32 0x11068000 -> 0x11069000 (size=0x10, copied 0x10)
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] LeaveCriticalSection(0x403d0908)
+[T3cc0] [API] InitializeCriticalSection(0x403d0ed0)
+[T3cc0] [API] EnterCriticalSection(0x403d0908)
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] HeapFree(0x11069000)
+[T3cc0] [API] HeapFree arena32 ptr 0x11069000 -> no-op (bump arena)
+[T3cc0] [API] HeapReAlloc arena32 0x11069000 -> 0x1106a000 (size=0x10, copied 0x10)
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] LeaveCriticalSection(0x403d0908)
+[T3cc0] [API] TlsAlloc() = 2
+[T3cc0] [API] InitializeCriticalSection(0x403d00e8)
+[T3cc0] [API] EnterCriticalSection(0x403d00e8)
+[T3cc0] [API] GlobalAlloc[32](flags=2, bytes=0x100) = 0x1106b000
+[T3cc0] [API] GlobalLock(0x1106b000) -> 0x1106b000 (SW-1546 probe)
+[T3cc0] [API] LeaveCriticalSection(0x403d00e8)
+[T3cc0] [API] EnterCriticalSection(0x403d00e8)
+[T3cc0] [API] TlsGetValue(2) = (nil)
+[T3cc0] [API] LeaveCriticalSection(0x403d00e8)
+[T3cc0] [API] GlobalAlloc[32](flags=64, bytes=0x104) = 0x1106c000
+[T3cc0] [API] EnterCriticalSection(0x403d00e8)
+[T3cc0] [API] TlsGetValue(2) = (nil)
+[T3cc0] [API] GlobalAlloc[32](flags=64, bytes=0x10) = 0x1106d000
+[T3cc0] [API] GlobalAlloc[32](flags=0, bytes=0x8) = 0x1106e000
+[T3cc0] [API] TlsSetValue(2, 0x1106d000)
+[T3cc0] [API] LeaveCriticalSection(0x403d00e8)
+[T3cc0] [API] InitializeCriticalSection(0x403d02f8)
+[T3cc0] [API] EnterCriticalSection(0x403d02f8)
+[T3cc0] [API] InitializeCriticalSection(0x403d02e0)
+[T3cc0] [API] LeaveCriticalSection(0x403d02f8)
+[T3cc0] [API] EnterCriticalSection(0x403d02e0)
+[T3cc0] [API] GlobalAlloc[32](flags=64, bytes=0x8c) = 0x1106f000
+[T3cc0] [API] HeapAlloc[32](size=0x1011) = 0x11070000
+[T3cc0] [API] HeapAlloc[32](size=0xc) = 0x11072000
+[T3cc0] [API] GlobalAlloc[32](flags=64, bytes=0x188) = 0x11073000
+[T3cc0] [API] HeapAlloc[32](size=0x1d) = 0x11074000
+[T3cc0] [API] GlobalAlloc[32](flags=64, bytes=0x64) = 0x11075000
+[T3cc0] [API] HeapAlloc[32](size=0x1d) = 0x11076000
+[T3cc0] [API] GlobalAlloc[32](flags=64, bytes=0x14) = 0x11077000
+[T3cc0] [API] HeapAlloc[32](size=0x1c) = 0x11078000
+[T3cc0] [API] LeaveCriticalSection(0x403d02e0)
+[T3cc0] [API] GetLastError() = 2
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] SetLastError(2) caller=0x2112222
+[T3cc0] [API] GetLastError() = 2
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] SetLastError(2) caller=0x2112222
+[T3cc0] [API] EnterCriticalSection(0x403d0950)
+[T3cc0] [API] LeaveCriticalSection(0x403d0950)
+[T3cc0] [API] GetLastError() = 2
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] SetLastError(2) caller=0x2112222
+[T3cc0] [API] EnterCriticalSection(0x403d0908)
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] HeapFree(0x1106a000)
+[T3cc0] [API] HeapFree arena32 ptr 0x1106a000 -> no-op (bump arena)
+[T3cc0] [API] HeapReAlloc arena32 0x1106a000 -> 0x11079000 (size=0x10, copied 0x10)
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] LeaveCriticalSection(0x403d0908)
+[T3cc0] [API] EnterCriticalSection(0x403d0908)
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] HeapFree(0x11079000)
+[T3cc0] [API] HeapFree arena32 ptr 0x11079000 -> no-op (bump arena)
+[T3cc0] [API] HeapReAlloc arena32 0x11079000 -> 0x1107a000 (size=0x10, copied 0x10)
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] LeaveCriticalSection(0x403d0908)
+[T3cc0] [API] EnterCriticalSection(0x403d0908)
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] HeapFree(0x1107a000)
+[T3cc0] [API] HeapFree arena32 ptr 0x1107a000 -> no-op (bump arena)
+[T3cc0] [API] HeapReAlloc arena32 0x1107a000 -> 0x1107b000 (size=0x10, copied 0x10)
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] LeaveCriticalSection(0x403d0908)
+[T3cc0] [API] EnterCriticalSection(0x403d0908)
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] HeapFree(0x1107b000)
+[T3cc0] [API] HeapFree arena32 ptr 0x1107b000 -> no-op (bump arena)
+[T3cc0] [API] HeapReAlloc arena32 0x1107b000 -> 0x1107c000 (size=0x10, copied 0x10)
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] LeaveCriticalSection(0x403d0908)
+[T3cc0] [API] EnterCriticalSection(0x403d0908)
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] HeapFree(0x1107c000)
+[T3cc0] [API] HeapFree arena32 ptr 0x1107c000 -> no-op (bump arena)
+[T3cc0] [API] HeapReAlloc arena32 0x1107c000 -> 0x1107d000 (size=0x10, copied 0x10)
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] LeaveCriticalSection(0x403d0908)
+[T3cc0] [API] EnterCriticalSection(0x403d0908)
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] HeapFree(0x1107d000)
+[T3cc0] [API] HeapFree arena32 ptr 0x1107d000 -> no-op (bump arena)
+[T3cc0] [API] HeapReAlloc arena32 0x1107d000 -> 0x1107e000 (size=0x10, copied 0x10)
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] LeaveCriticalSection(0x403d0908)
+[T3cc0] [API] HeapAlloc[32](size=0x7c) = 0x1107f000
+[T3cc0] [API] EnterCriticalSection(0x403d0908)
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] HeapFree(0x1107e000)
+[T3cc0] [API] HeapFree arena32 ptr 0x1107e000 -> no-op (bump arena)
+[T3cc0] [API] HeapReAlloc arena32 0x1107e000 -> 0x11080000 (size=0x10, copied 0x10)
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] LeaveCriticalSection(0x403d0908)
+[T3cc0] [API] EnterCriticalSection(0x403d0908)
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] HeapFree(0x11080000)
+[T3cc0] [API] HeapFree arena32 ptr 0x11080000 -> no-op (bump arena)
+[T3cc0] [API] HeapReAlloc arena32 0x11080000 -> 0x11081000 (size=0x10, copied 0x10)
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] LeaveCriticalSection(0x403d0908)
+[T3cc0] [API] EnterCriticalSection(0x403d0908)
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] HeapFree(0x11081000)
+[T3cc0] [API] HeapFree arena32 ptr 0x11081000 -> no-op (bump arena)
+[T3cc0] [API] HeapReAlloc arena32 0x11081000 -> 0x11082000 (size=0x10, copied 0x10)
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] LeaveCriticalSection(0x403d0908)
+[T3cc0] [API] EnterCriticalSection(0x403d0908)
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] HeapFree(0x11082000)
+[T3cc0] [API] HeapFree arena32 ptr 0x11082000 -> no-op (bump arena)
+[T3cc0] [API] HeapReAlloc arena32 0x11082000 -> 0x11083000 (size=0x10, copied 0x10)
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] LeaveCriticalSection(0x403d0908)
+[T3cc0] [API] EnterCriticalSection(0x403d0908)
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] HeapFree(0x11083000)
+[T3cc0] [API] HeapFree arena32 ptr 0x11083000 -> no-op (bump arena)
+[T3cc0] [API] HeapReAlloc arena32 0x11083000 -> 0x11084000 (size=0x10, copied 0x10)
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] LeaveCriticalSection(0x403d0908)
+[T3cc0] [API] EnterCriticalSection(0x403d0908)
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] HeapFree(0x11084000)
+[T3cc0] [API] HeapFree arena32 ptr 0x11084000 -> no-op (bump arena)
+[T3cc0] [API] HeapReAlloc arena32 0x11084000 -> 0x11085000 (size=0x10, copied 0x10)
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] LeaveCriticalSection(0x403d0908)
+[T3cc0] [API] EnterCriticalSection(0x403d0908)
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] HeapFree(0x11085000)
+[T3cc0] [API] HeapFree arena32 ptr 0x11085000 -> no-op (bump arena)
+[T3cc0] [API] HeapReAlloc arena32 0x11085000 -> 0x11086000 (size=0x10, copied 0x10)
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] LeaveCriticalSection(0x403d0908)
+[T3cc0] [API] EnterCriticalSection(0x403d0908)
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] HeapFree(0x11086000)
+[T3cc0] [API] HeapFree arena32 ptr 0x11086000 -> no-op (bump arena)
+[T3cc0] [API] HeapReAlloc arena32 0x11086000 -> 0x11087000 (size=0x10, copied 0x10)
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] LeaveCriticalSection(0x403d0908)
+[T3cc0] [API] EnterCriticalSection(0x403d0908)
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] HeapFree(0x11087000)
+[T3cc0] [API] HeapFree arena32 ptr 0x11087000 -> no-op (bump arena)
+[T3cc0] [API] HeapReAlloc arena32 0x11087000 -> 0x11088000 (size=0x10, copied 0x10)
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] LeaveCriticalSection(0x403d0908)
+[T3cc0] [API] HeapAlloc[32](size=0x14) = 0x11089000
+[T3cc0] [API] HeapAlloc[32](size=0x29) = 0x1108a000
+[T3cc0] [API] HeapAlloc[32](size=0xc) = 0x1108b000
+[T3cc0] [API] HeapAlloc[32](size=0x14) = 0x1108c000
+[T3cc0] [API] HeapAlloc[32](size=0x29) = 0x1108d000
+[T3cc0] [API] HeapAlloc[32](size=0x3c) = 0x1108e000
+[T3cc0] [API] HeapFree(0x1108b000)
+[T3cc0] [API] HeapFree arena32 ptr 0x1108b000 -> no-op (bump arena)
+[T3cc0] [API] HeapAlloc[32](size=0x14) = 0x1108f000
+[T3cc0] [API] HeapAlloc[32](size=0x29) = 0x11090000
+[T3cc0] [API] HeapAlloc[32](size=0x14) = 0x11091000
+[T3cc0] [API] HeapAlloc[32](size=0x2d) = 0x11092000
+[T3cc0] [API] HeapAlloc[32](size=0x14) = 0x11093000
+[T3cc0] [API] HeapAlloc[32](size=0x2d) = 0x11094000
+[T3cc0] [API] HeapAlloc[32](size=0x14) = 0x11095000
+[T3cc0] [API] HeapAlloc[32](size=0x2d) = 0x11096000
+[T3cc0] [API] HeapAlloc[32](size=0x6c) = 0x11097000
+[T3cc0] [API] HeapFree(0x1108e000)
+[T3cc0] [API] HeapFree arena32 ptr 0x1108e000 -> no-op (bump arena)
+[T3cc0] [API] HeapAlloc[32](size=0x14) = 0x11098000
+[T3cc0] [API] HeapAlloc[32](size=0x14) = 0x11099000
+[T3cc0] [API] HeapAlloc[32](size=0x2d) = 0x1109a000
+[T3cc0] [API] HeapAlloc[32](size=0x14) = 0x1109b000
+[T3cc0] [API] HeapAlloc[32](size=0x14) = 0x1109c000
+[T3cc0] [API] HeapAlloc[32](size=0x9c) = 0x1109d000
+[T3cc0] [API] HeapFree(0x11097000)
+[T3cc0] [API] HeapFree arena32 ptr 0x11097000 -> no-op (bump arena)
+[T3cc0] [API] HeapAlloc[32](size=0x14) = 0x1109e000
+[T3cc0] [API] HeapAlloc[32](size=0x14) = 0x1109f000
+[T3cc0] [API] HeapAlloc[32](size=0x14) = 0x110a0000
+[T3cc0] [API] HeapAlloc[32](size=0x14) = 0x110a1000
+[T3cc0] [API] HeapAlloc[32](size=0xcc) = 0x110a2000
+[T3cc0] [API] HeapFree(0x1109d000)
+[T3cc0] [API] HeapFree arena32 ptr 0x1109d000 -> no-op (bump arena)
+[T3cc0] [API] HeapAlloc[32](size=0x14) = 0x110a3000
+[T3cc0] [API] HeapAlloc[32](size=0x14) = 0x110a4000
+[T3cc0] [API] HeapAlloc[32](size=0x14) = 0x110a5000
+[T3cc0] [API] HeapAlloc[32](size=0x14) = 0x110a6000
+[T3cc0] [API] HeapAlloc[32](size=0xfc) = 0x110a7000
+[T3cc0] [API] HeapFree(0x110a2000)
+[T3cc0] [API] HeapFree arena32 ptr 0x110a2000 -> no-op (bump arena)
+[T3cc0] [API] HeapAlloc[32](size=0x14) = 0x110a8000
+[T3cc0] [API] HeapAlloc[32](size=0x14) = 0x110a9000
+[T3cc0] [API] HeapAlloc[32](size=0x14) = 0x110aa000
+[T3cc0] [API] HeapAlloc[32](size=0x14) = 0x110ab000
+[T3cc0] [API] HeapAlloc[32](size=0x12c) = 0x110ac000
+[T3cc0] [API] HeapFree(0x110a7000)
+[T3cc0] [API] HeapFree arena32 ptr 0x110a7000 -> no-op (bump arena)
+[T3cc0] [API] HeapAlloc[32](size=0x14) = 0x110ad000
+[T3cc0] [API] HeapAlloc[32](size=0x14) = 0x110ae000
+[T3cc0] [API] HeapAlloc[32](size=0x14) = 0x110af000
+[T3cc0] [API] HeapAlloc[32](size=0x14) = 0x110b0000
+[T3cc0] [API] HeapAlloc[32](size=0x15c) = 0x110b1000
+[T3cc0] [API] HeapFree(0x110ac000)
+[T3cc0] [API] HeapFree arena32 ptr 0x110ac000 -> no-op (bump arena)
+[T3cc0] [API] HeapAlloc[32](size=0x14) = 0x110b2000
+[T3cc0] [API] HeapAlloc[32](size=0x14) = 0x110b3000
+[T3cc0] [API] HeapAlloc[32](size=0x14) = 0x110b4000
+[T3cc0] [API] HeapAlloc[32](size=0x2d) = 0x110b5000
+[T3cc0] [API] HeapAlloc[32](size=0x14) = 0x110b6000
+[T3cc0] [API] HeapAlloc[32](size=0x23) = 0x110b7000
+[T3cc0] [API] HeapAlloc[32](size=0x18c) = 0x110b8000
+[T3cc0] [API] HeapFree(0x110b1000)
+[T3cc0] [API] HeapFree arena32 ptr 0x110b1000 -> no-op (bump arena)
+[T3cc0] [API] HeapAlloc[32](size=0x14) = 0x110b9000
+[T3cc0] [API] HeapAlloc[32](size=0x23) = 0x110ba000
+[T3cc0] [API] HeapAlloc[32](size=0x14) = 0x110bb000
+[T3cc0] [API] HeapAlloc[32](size=0x23) = 0x110bc000
+[T3cc0] [API] HeapAlloc[32](size=0x14) = 0x110bd000
+[T3cc0] [API] HeapAlloc[32](size=0x29) = 0x110be000
+[T3cc0] [API] HeapAlloc[32](size=0x14) = 0x110bf000
+[T3cc0] [API] HeapAlloc[32](size=0x29) = 0x110c0000
+[T3cc0] [API] HeapAlloc[32](size=0x1bc) = 0x110c1000
+[T3cc0] [API] HeapFree(0x110b8000)
+[T3cc0] [API] HeapFree arena32 ptr 0x110b8000 -> no-op (bump arena)
+[T3cc0] [API] HeapAlloc[32](size=0x14) = 0x110c2000
+[T3cc0] [API] HeapAlloc[32](size=0x14) = 0x110c3000
+[T3cc0] [API] HeapAlloc[32](size=0x14) = 0x110c4000
+[T3cc0] [API] HeapAlloc[32](size=0x14) = 0x110c5000
+[T3cc0] [API] HeapAlloc[32](size=0x1ec) = 0x110c6000
+[T3cc0] [API] HeapFree(0x110c1000)
+[T3cc0] [API] HeapFree arena32 ptr 0x110c1000 -> no-op (bump arena)
+[T3cc0] [API] HeapAlloc[32](size=0x14) = 0x110c7000
+[T3cc0] [API] HeapAlloc[32](size=0x14) = 0x110c8000
+[T3cc0] [API] HeapAlloc[32](size=0x14) = 0x110c9000
+[T3cc0] [API] HeapAlloc[32](size=0x14) = 0x110ca000
+[T3cc0] [API] HeapAlloc[32](size=0x228) = 0x110cb000
+[T3cc0] [API] HeapFree(0x110c6000)
+[T3cc0] [API] HeapFree arena32 ptr 0x110c6000 -> no-op (bump arena)
+[T3cc0] [API] HeapAlloc[32](size=0x14) = 0x110cc000
+[T3cc0] [API] HeapAlloc[32](size=0x14) = 0x110cd000
+[T3cc0] [API] HeapAlloc[32](size=0x14) = 0x110ce000
+[T3cc0] [API] HeapAlloc[32](size=0x14) = 0x110cf000
+[T3cc0] [API] HeapAlloc[32](size=0x14) = 0x110d0000
+[T3cc0] [API] HeapAlloc[32](size=0x264) = 0x110d1000
+[T3cc0] [API] HeapFree(0x110cb000)
+[T3cc0] [API] HeapFree arena32 ptr 0x110cb000 -> no-op (bump arena)
+[T3cc0] [API] HeapAlloc[32](size=0x14) = 0x110d2000
+[T3cc0] [API] HeapAlloc[32](size=0x14) = 0x110d3000
+[T3cc0] [API] HeapAlloc[32](size=0x14) = 0x110d4000
+[T3cc0] [API] HeapAlloc[32](size=0x14) = 0x110d5000
+[T3cc0] [API] HeapAlloc[32](size=0x14) = 0x110d6000
+[T3cc0] [API] HeapAlloc[32](size=0x2ac) = 0x110d7000
+[T3cc0] [API] HeapFree(0x110d1000)
+[T3cc0] [API] HeapFree arena32 ptr 0x110d1000 -> no-op (bump arena)
+[T3cc0] [API] HeapAlloc[32](size=0x14) = 0x110d8000
+[T3cc0] [API] HeapAlloc[32](size=0x14) = 0x110d9000
+[T3cc0] [API] HeapAlloc[32](size=0x14) = 0x110da000
+[T3cc0] [API] HeapAlloc[32](size=0x14) = 0x110db000
+[T3cc0] [API] HeapAlloc[32](size=0x29) = 0x110dc000
+[T3cc0] [API] HeapAlloc[32](size=0x13) = 0x110dd000
+[T3cc0] [API] HeapAlloc[32](size=0x27) = 0x110de000
+[T3cc0] [API] HeapAlloc[32](size=0x15) = 0x110df000
+[T3cc0] [API] HeapAlloc[32](size=0x300) = 0x110e0000
+[T3cc0] [API] HeapFree(0x110d7000)
+[T3cc0] [API] HeapFree arena32 ptr 0x110d7000 -> no-op (bump arena)
+[T3cc0] [API] HeapAlloc[32](size=0x15) = 0x110e1000
+[T3cc0] [API] HeapAlloc[32](size=0x23) = 0x110e2000
+[T3cc0] [API] HeapAlloc[32](size=0x14) = 0x110e3000
+[T3cc0] [API] HeapAlloc[32](size=0x23) = 0x110e4000
+[T3cc0] [API] HeapAlloc[32](size=0x14) = 0x110e5000
+[T3cc0] [API] HeapAlloc[32](size=0x22) = 0x110e6000
+[T3cc0] [API] HeapAlloc[32](size=0x14) = 0x110e7000
+[T3cc0] [API] HeapAlloc[32](size=0x22) = 0x110e8000
+[T3cc0] [API] HeapAlloc[32](size=0x14) = 0x110e9000
+[T3cc0] [API] HeapAlloc[32](size=0x1e) = 0x110ea000
+[T3cc0] [API] HeapAlloc[32](size=0x14) = 0x110eb000
+[T3cc0] [API] HeapAlloc[32](size=0x20) = 0x110ec000
+[T3cc0] [API] HeapAlloc[32](size=0x14) = 0x110ed000
+[T3cc0] [API] HeapAlloc[32](size=0x2c) = 0x110ee000
+[T3cc0] [API] HeapAlloc[32](size=0x360) = 0x110ef000
+[T3cc0] [API] HeapFree(0x110e0000)
+[T3cc0] [API] HeapFree arena32 ptr 0x110e0000 -> no-op (bump arena)
+[T3cc0] [API] HeapAlloc[32](size=0x14) = 0x110f0000
+[T3cc0] [API] HeapAlloc[32](size=0x2c) = 0x110f1000
+[T3cc0] [API] HeapAlloc[32](size=0x14) = 0x110f2000
+[T3cc0] [API] HeapAlloc[32](size=0x1b) = 0x110f3000
+[T3cc0] [API] HeapAlloc[32](size=0x14) = 0x110f4000
+[T3cc0] [API] HeapAlloc[32](size=0x1d) = 0x110f5000
+[T3cc0] [API] HeapAlloc[32](size=0x14) = 0x110f6000
+[T3cc0] [API] HeapAlloc[32](size=0x1d) = 0x110f7000
+[T3cc0] [API] HeapAlloc[32](size=0x14) = 0x110f8000
+[T3cc0] [API] HeapAlloc[32](size=0x1b) = 0x110f9000
+[T3cc0] [API] HeapAlloc[32](size=0x15) = 0x110fa000
+[T3cc0] [API] HeapAlloc[32](size=0x15) = 0x110fb000
+[T3cc0] [API] HeapAlloc[32](size=0x1d) = 0x110fc000
+[T3cc0] [API] HeapAlloc[32](size=0x15) = 0x110fd000
+[T3cc0] [API] HeapAlloc[32](size=0x3cc) = 0x110fe000
+[T3cc0] [API] HeapFree(0x110ef000)
+[T3cc0] [API] HeapFree arena32 ptr 0x110ef000 -> no-op (bump arena)
+[T3cc0] [API] HeapAlloc[32](size=0x15) = 0x110ff000
+[T3cc0] [API] HeapAlloc[32](size=0x1d) = 0x11100000
+[T3cc0] [API] HeapAlloc[32](size=0x15) = 0x11101000
+[T3cc0] [API] HeapAlloc[32](size=0x15) = 0x11102000
+[T3cc0] [API] HeapAlloc[32](size=0x1c) = 0x11103000
+[T3cc0] [API] HeapAlloc[32](size=0x15) = 0x11104000
+[T3cc0] [API] HeapAlloc[32](size=0x15) = 0x11105000
+[T3cc0] [API] HeapAlloc[32](size=0x20) = 0x11106000
+[T3cc0] [API] HeapAlloc[32](size=0x14) = 0x11107000
+[T3cc0] [API] HeapAlloc[32](size=0x14) = 0x11108000
+[T3cc0] [API] HeapAlloc[32](size=0x20) = 0x11109000
+[T3cc0] [API] HeapAlloc[32](size=0x14) = 0x1110a000
+[T3cc0] [API] HeapAlloc[32](size=0x1f) = 0x1110b000
+[T3cc0] [API] HeapAlloc[32](size=0x14) = 0x1110c000
+[T3cc0] [API] HeapAlloc[32](size=0x1f) = 0x1110d000
+[T3cc0] [API] HeapAlloc[32](size=0x444) = 0x1110e000
+[T3cc0] [API] HeapFree(0x110fe000)
+[T3cc0] [API] HeapFree arena32 ptr 0x110fe000 -> no-op (bump arena)
+[T3cc0] [API] HeapAlloc[32](size=0x15) = 0x1110f000
+[T3cc0] [API] HeapAlloc[32](size=0x15) = 0x11110000
+[T3cc0] [API] HeapAlloc[32](size=0x20) = 0x11111000
+[T3cc0] [API] HeapAlloc[32](size=0x14) = 0x11112000
+[T3cc0] [API] HeapAlloc[32](size=0x20) = 0x11113000
+[T3cc0] [API] HeapAlloc[32](size=0x14) = 0x11114000
+[T3cc0] [API] HeapAlloc[32](size=0x1c) = 0x11115000
+[T3cc0] [API] HeapAlloc[32](size=0x14) = 0x11116000
+[T3cc0] [API] HeapAlloc[32](size=0x1f) = 0x11117000
+[T3cc0] [API] HeapAlloc[32](size=0x14) = 0x11118000
+[T3cc0] [API] HeapAlloc[32](size=0x29) = 0x11119000
+[T3cc0] [API] HeapAlloc[32](size=0x14) = 0x1111a000
+[T3cc0] [API] HeapAlloc[32](size=0x29) = 0x1111b000
+[T3cc0] [API] HeapAlloc[32](size=0x14) = 0x1111c000
+[T3cc0] [API] HeapAlloc[32](size=0x2c) = 0x1111d000
+[T3cc0] [API] HeapAlloc[32](size=0x14) = 0x1111e000
+[T3cc0] [API] HeapAlloc[32](size=0x2c) = 0x1111f000
+[T3cc0] [API] HeapAlloc[32](size=0x14) = 0x11120000
+[T3cc0] [API] HeapAlloc[32](size=0x2c) = 0x11121000
+[T3cc0] [API] HeapAlloc[32](size=0x4c8) = 0x11122000
+[T3cc0] [API] HeapFree(0x1110e000)
+[T3cc0] [API] HeapFree arena32 ptr 0x1110e000 -> no-op (bump arena)
+[T3cc0] [API] HeapAlloc[32](size=0x14) = 0x11123000
+[T3cc0] [API] HeapAlloc[32](size=0x25) = 0x11124000
+[T3cc0] [API] HeapAlloc[32](size=0x14) = 0x11125000
+[T3cc0] [API] HeapAlloc[32](size=0x25) = 0x11126000
+[T3cc0] [API] HeapAlloc[32](size=0x14) = 0x11127000
+[T3cc0] [API] HeapAlloc[32](size=0x29) = 0x11128000
+[T3cc0] [API] HeapAlloc[32](size=0x14) = 0x11129000
+[T3cc0] [API] HeapAlloc[32](size=0x29) = 0x1112a000
+[T3cc0] [API] HeapAlloc[32](size=0x14) = 0x1112b000
+[T3cc0] [API] HeapAlloc[32](size=0x29) = 0x1112c000
+[T3cc0] [API] HeapAlloc[32](size=0x14) = 0x1112d000
+[T3cc0] [API] HeapAlloc[32](size=0x29) = 0x1112e000
+[T3cc0] [API] HeapAlloc[32](size=0x14) = 0x1112f000
+[T3cc0] [API] HeapAlloc[32](size=0x1c) = 0x11130000
+[T3cc0] [API] HeapAlloc[32](size=0x14) = 0x11131000
+[T3cc0] [API] HeapAlloc[32](size=0x1a) = 0x11132000
+[T3cc0] [API] HeapAlloc[32](size=0x14) = 0x11133000
+[T3cc0] [API] HeapAlloc[32](size=0x1c) = 0x11134000
+[T3cc0] [API] HeapAlloc[32](size=0x14) = 0x11135000
+[T3cc0] [API] HeapAlloc[32](size=0x24) = 0x11136000
+[T3cc0] [API] HeapAlloc[32](size=0x14) = 0x11137000
+[T3cc0] [API] HeapAlloc[32](size=0x24) = 0x11138000
+[T3cc0] [API] HeapAlloc[32](size=0x558) = 0x11139000
+[T3cc0] [API] HeapFree(0x11122000)
+[T3cc0] [API] HeapFree arena32 ptr 0x11122000 -> no-op (bump arena)
+[T3cc0] [API] HeapAlloc[32](size=0x14) = 0x1113a000
+[T3cc0] [API] HeapAlloc[32](size=0x1a) = 0x1113b000
+[T3cc0] [API] HeapAlloc[32](size=0x14) = 0x1113c000
+[T3cc0] [API] HeapAlloc[32](size=0x1c) = 0x1113d000
+[T3cc0] [API] HeapAlloc[32](size=0x14) = 0x1113e000
+[T3cc0] [API] HeapAlloc[32](size=0x1c) = 0x1113f000
+[T3cc0] [API] HeapAlloc[32](size=0x15) = 0x11140000
+[T3cc0] [API] HeapAlloc[32](size=0x1b) = 0x11141000
+[T3cc0] [API] HeapAlloc[32](size=0x15) = 0x11142000
+[T3cc0] [API] HeapAlloc[32](size=0x1b) = 0x11143000
+[T3cc0] [API] HeapAlloc[32](size=0x15) = 0x11144000
+[T3cc0] [API] HeapAlloc[32](size=0x1b) = 0x11145000
+[T3cc0] [API] HeapAlloc[32](size=0x15) = 0x11146000
+[T3cc0] [API] HeapAlloc[32](size=0x1c) = 0x11147000
+[T3cc0] [API] HeapAlloc[32](size=0x15) = 0x11148000
+[T3cc0] [API] HeapAlloc[32](size=0x1c) = 0x11149000
+[T3cc0] [API] HeapAlloc[32](size=0x15) = 0x1114a000
+[T3cc0] [API] HeapAlloc[32](size=0x1c) = 0x1114b000
+[T3cc0] [API] HeapAlloc[32](size=0x15) = 0x1114c000
+[T3cc0] [API] HeapAlloc[32](size=0x1c) = 0x1114d000
+[T3cc0] [API] HeapAlloc[32](size=0x15) = 0x1114e000
+[T3cc0] [API] HeapAlloc[32](size=0x1c) = 0x1114f000
+[T3cc0] [API] HeapAlloc[32](size=0x14) = 0x11150000
+[T3cc0] [API] HeapAlloc[32](size=0x1c) = 0x11151000
+[T3cc0] [API] HeapAlloc[32](size=0x600) = 0x11152000
+[T3cc0] [API] HeapFree(0x11139000)
+[T3cc0] [API] HeapFree arena32 ptr 0x11139000 -> no-op (bump arena)
+[T3cc0] [API] HeapAlloc[32](size=0x14) = 0x11153000
+[T3cc0] [API] HeapAlloc[32](size=0x1d) = 0x11154000
+[T3cc0] [API] HeapAlloc[32](size=0x14) = 0x11155000
+[T3cc0] [API] HeapAlloc[32](size=0x2e) = 0x11156000
+[T3cc0] [API] HeapAlloc[32](size=0x14) = 0x11157000
+[T3cc0] [API] HeapAlloc[32](size=0x2e) = 0x11158000
+[T3cc0] [API] HeapAlloc[32](size=0x14) = 0x11159000
+[T3cc0] [API] HeapAlloc[32](size=0x29) = 0x1115a000
+[T3cc0] [API] HeapAlloc[32](size=0x14) = 0x1115b000
+[T3cc0] [API] HeapAlloc[32](size=0x22) = 0x1115c000
+[T3cc0] [API] HeapAlloc[32](size=0x14) = 0x1115d000
+[T3cc0] [API] HeapAlloc[32](size=0x1d) = 0x1115e000
+[T3cc0] [API] HeapAlloc[32](size=0x14) = 0x1115f000
+[T3cc0] [API] HeapAlloc[32](size=0x1d) = 0x11160000
+[T3cc0] [API] HeapAlloc[32](size=0x14) = 0x11161000
+[T3cc0] [API] HeapAlloc[32](size=0x1c) = 0x11162000
+[T3cc0] [API] HeapAlloc[32](size=0x14) = 0x11163000
+[T3cc0] [API] HeapAlloc[32](size=0x25) = 0x11164000
+[T3cc0] [API] HeapAlloc[32](size=0x14) = 0x11165000
+[T3cc0] [API] HeapAlloc[32](size=0x25) = 0x11166000
+[T3cc0] [API] HeapAlloc[32](size=0x13) = 0x11167000
+[T3cc0] [API] HeapAlloc[32](size=0x25) = 0x11168000
+[T3cc0] [API] HeapAlloc[32](size=0x15) = 0x11169000
+[T3cc0] [API] HeapAlloc[32](size=0x25) = 0x1116a000
+[T3cc0] [API] HeapAlloc[32](size=0x15) = 0x1116b000
+[T3cc0] [API] HeapAlloc[32](size=0x2d) = 0x1116c000
+[T3cc0] [API] HeapAlloc[32](size=0x14) = 0x1116d000
+[T3cc0] [API] HeapAlloc[32](size=0x2d) = 0x1116e000
+[T3cc0] [API] HeapAlloc[32](size=0x6c0) = 0x1116f000
+[T3cc0] [API] HeapFree(0x11152000)
+[T3cc0] [API] HeapFree arena32 ptr 0x11152000 -> no-op (bump arena)
+[T3cc0] [API] HeapAlloc[32](size=0x14) = 0x11170000
+[T3cc0] [API] HeapAlloc[32](size=0x2d) = 0x11171000
+[T3cc0] [API] HeapAlloc[32](size=0x14) = 0x11172000
+[T3cc0] [API] HeapAlloc[32](size=0x2b) = 0x11173000
+[T3cc0] [API] HeapAlloc[32](size=0x14) = 0x11174000
+[T3cc0] [API] HeapAlloc[32](size=0x2b) = 0x11175000
+[T3cc0] [API] HeapAlloc[32](size=0x14) = 0x11176000
+[T3cc0] [API] HeapAlloc[32](size=0x2b) = 0x11177000
+[T3cc0] [API] HeapAlloc[32](size=0x16) = 0x11178000
+[T3cc0] [API] HeapAlloc[32](size=0x2d) = 0x11179000
+[T3cc0] [API] HeapAlloc[32](size=0x16) = 0x1117a000
+[T3cc0] [API] HeapAlloc[32](size=0x2d) = 0x1117b000
+[T3cc0] [API] HeapAlloc[32](size=0x16) = 0x1117c000
+[T3cc0] [API] HeapAlloc[32](size=0x2b) = 0x1117d000
+[T3cc0] [API] HeapAlloc[32](size=0x16) = 0x1117e000
+[T3cc0] [API] HeapAlloc[32](size=0x20) = 0x1117f000
+[T3cc0] [API] HeapAlloc[32](size=0x15) = 0x11180000
+[T3cc0] [API] HeapAlloc[32](size=0x2b) = 0x11181000
+[T3cc0] [API] HeapAlloc[32](size=0x15) = 0x11182000
+[T3cc0] [API] HeapAlloc[32](size=0x2d) = 0x11183000
+[T3cc0] [API] HeapAlloc[32](size=0x15) = 0x11184000
+[T3cc0] [API] HeapAlloc[32](size=0x2d) = 0x11185000
+[T3cc0] [API] HeapAlloc[32](size=0x15) = 0x11186000
+[T3cc0] [API] HeapAlloc[32](size=0x2b) = 0x11187000
+[T3cc0] [API] HeapAlloc[32](size=0x15) = 0x11188000
+[T3cc0] [API] HeapAlloc[32](size=0x2d) = 0x11189000
+[T3cc0] [API] HeapAlloc[32](size=0x15) = 0x1118a000
+[T3cc0] [API] HeapAlloc[32](size=0x2d) = 0x1118b000
+[T3cc0] [API] HeapAlloc[32](size=0x14) = 0x1118c000
+[T3cc0] [API] HeapAlloc[32](size=0x2b) = 0x1118d000
+[T3cc0] [API] HeapAlloc[32](size=0x14) = 0x1118e000
+[T3cc0] [API] HeapAlloc[32](size=0x2d) = 0x1118f000
+[T3cc0] [API] HeapAlloc[32](size=0x798) = 0x11190000
+[T3cc0] [API] HeapFree(0x1116f000)
+[T3cc0] [API] HeapFree arena32 ptr 0x1116f000 -> no-op (bump arena)
+[T3cc0] [API] HeapAlloc[32](size=0x1b) = 0x11191000
+[T3cc0] [API] HeapAlloc[32](size=0x2d) = 0x11192000
+[T3cc0] [API] HeapAlloc[32](size=0x1b) = 0x11193000
+[T3cc0] [API] HeapAlloc[32](size=0x2b) = 0x11194000
+[T3cc0] [API] HeapAlloc[32](size=0x1b) = 0x11195000
+[T3cc0] [API] HeapAlloc[32](size=0x2d) = 0x11196000
+[T3cc0] [API] HeapAlloc[32](size=0x1b) = 0x11197000
+[T3cc0] [API] HeapAlloc[32](size=0x2d) = 0x11198000
+[T3cc0] [API] HeapAlloc[32](size=0x14) = 0x11199000
+[T3cc0] [API] HeapAlloc[32](size=0x2b) = 0x1119a000
+[T3cc0] [API] HeapAlloc[32](size=0x14) = 0x1119b000
+[T3cc0] [API] HeapAlloc[32](size=0x2d) = 0x1119c000
+[T3cc0] [API] HeapAlloc[32](size=0x15) = 0x1119d000
+[T3cc0] [API] HeapAlloc[32](size=0x2d) = 0x1119e000
+[T3cc0] [API] HeapAlloc[32](size=0x15) = 0x1119f000
+[T3cc0] [API] HeapAlloc[32](size=0x2b) = 0x111a0000
+[T3cc0] [API] HeapAlloc[32](size=0x15) = 0x111a1000
+[T3cc0] [API] HeapAlloc[32](size=0x2d) = 0x111a2000
+[T3cc0] [API] HeapAlloc[32](size=0x15) = 0x111a3000
+[T3cc0] [API] HeapAlloc[32](size=0x2d) = 0x111a4000
+[T3cc0] [API] HeapAlloc[32](size=0x15) = 0x111a5000
+[T3cc0] [API] HeapAlloc[32](size=0x2b) = 0x111a6000
+[T3cc0] [API] HeapAlloc[32](size=0x15) = 0x111a7000
+[T3cc0] [API] HeapAlloc[32](size=0x2d) = 0x111a8000
+[T3cc0] [API] HeapAlloc[32](size=0x15) = 0x111a9000
+[T3cc0] [API] HeapAlloc[32](size=0x2d) = 0x111aa000
+[T3cc0] [API] HeapAlloc[32](size=0x15) = 0x111ab000
+[T3cc0] [API] HeapAlloc[32](size=0x2b) = 0x111ac000
+[T3cc0] [API] HeapAlloc[32](size=0x15) = 0x111ad000
+[T3cc0] [API] HeapAlloc[32](size=0x2d) = 0x111ae000
+[T3cc0] [API] HeapAlloc[32](size=0x15) = 0x111af000
+[T3cc0] [API] HeapAlloc[32](size=0x2d) = 0x111b0000
+[T3cc0] [API] HeapAlloc[32](size=0x15) = 0x111b1000
+[T3cc0] [API] HeapAlloc[32](size=0x2b) = 0x111b2000
+[T3cc0] [API] HeapAlloc[32](size=0x15) = 0x111b3000
+[T3cc0] [API] HeapAlloc[32](size=0x2d) = 0x111b4000
+[T3cc0] [API] HeapAlloc[32](size=0x888) = 0x111b5000
+[T3cc0] [API] HeapFree(0x11190000)
+[T3cc0] [API] HeapFree arena32 ptr 0x11190000 -> no-op (bump arena)
+[T3cc0] [API] HeapAlloc[32](size=0x15) = 0x111b6000
+[T3cc0] [API] HeapAlloc[32](size=0x2d) = 0x111b7000
+[T3cc0] [API] HeapAlloc[32](size=0x14) = 0x111b8000
+[T3cc0] [API] HeapAlloc[32](size=0x2b) = 0x111b9000
+[T3cc0] [API] HeapAlloc[32](size=0x14) = 0x111ba000
+[T3cc0] [API] HeapAlloc[32](size=0x2d) = 0x111bb000
+[T3cc0] [API] HeapAlloc[32](size=0x14) = 0x111bc000
+[T3cc0] [API] HeapAlloc[32](size=0x2d) = 0x111bd000
+[T3cc0] [API] HeapAlloc[32](size=0x14) = 0x111be000
+[T3cc0] [API] HeapAlloc[32](size=0x2b) = 0x111bf000
+[T3cc0] [API] HeapAlloc[32](size=0x14) = 0x111c0000
+[T3cc0] [API] HeapAlloc[32](size=0x2d) = 0x111c1000
+[T3cc0] [API] HeapAlloc[32](size=0x14) = 0x111c2000
+[T3cc0] [API] HeapAlloc[32](size=0x2d) = 0x111c3000
+[T3cc0] [API] HeapAlloc[32](size=0x14) = 0x111c4000
+[T3cc0] [API] HeapAlloc[32](size=0x2b) = 0x111c5000
+[T3cc0] [API] HeapAlloc[32](size=0x14) = 0x111c6000
+[T3cc0] [API] HeapAlloc[32](size=0x2d) = 0x111c7000
+[T3cc0] [API] HeapAlloc[32](size=0x14) = 0x111c8000
+[T3cc0] [API] HeapAlloc[32](size=0x2d) = 0x111c9000
+[T3cc0] [API] HeapAlloc[32](size=0x14) = 0x111ca000
+[T3cc0] [API] HeapAlloc[32](size=0x2b) = 0x111cb000
+[T3cc0] [API] HeapAlloc[32](size=0x14) = 0x111cc000
+[T3cc0] [API] HeapAlloc[32](size=0x2d) = 0x111cd000
+[T3cc0] [API] HeapAlloc[32](size=0x15) = 0x111ce000
+[T3cc0] [API] HeapAlloc[32](size=0x2d) = 0x111cf000
+[T3cc0] [API] HeapAlloc[32](size=0x15) = 0x111d0000
+[T3cc0] [API] HeapAlloc[32](size=0x2b) = 0x111d1000
+[T3cc0] [API] HeapAlloc[32](size=0x15) = 0x111d2000
+[T3cc0] [API] HeapAlloc[32](size=0x2d) = 0x111d3000
+[T3cc0] [API] HeapAlloc[32](size=0x15) = 0x111d4000
+[T3cc0] [API] HeapAlloc[32](size=0x2d) = 0x111d5000
+[T3cc0] [API] HeapAlloc[32](size=0x14) = 0x111d6000
+[T3cc0] [API] HeapAlloc[32](size=0x2b) = 0x111d7000
+[T3cc0] [API] HeapAlloc[32](size=0x14) = 0x111d8000
+[T3cc0] [API] HeapAlloc[32](size=0x2d) = 0x111d9000
+[T3cc0] [API] HeapAlloc[32](size=0x14) = 0x111da000
+[T3cc0] [API] HeapAlloc[32](size=0x2d) = 0x111db000
+[T3cc0] [API] HeapAlloc[32](size=0x14) = 0x111dc000
+[T3cc0] [API] HeapAlloc[32](size=0x2b) = 0x111dd000
+[T3cc0] [API] HeapAlloc[32](size=0x990) = 0x111de000
+[T3cc0] [API] HeapFree(0x111b5000)
+[T3cc0] [API] HeapFree arena32 ptr 0x111b5000 -> no-op (bump arena)
+[T3cc0] [API] HeapAlloc[32](size=0x14) = 0x111df000
+[T3cc0] [API] HeapAlloc[32](size=0x2d) = 0x111e0000
+[T3cc0] [API] HeapAlloc[32](size=0x14) = 0x111e1000
+[T3cc0] [API] HeapAlloc[32](size=0x2d) = 0x111e2000
+[T3cc0] [API] HeapAlloc[32](size=0x14) = 0x111e3000
+[T3cc0] [API] HeapAlloc[32](size=0x2b) = 0x111e4000
+[T3cc0] [API] HeapAlloc[32](size=0x14) = 0x111e5000
+[T3cc0] [API] HeapAlloc[32](size=0x2d) = 0x111e6000
+[T3cc0] [API] HeapAlloc[32](size=0x14) = 0x111e7000
+[T3cc0] [API] HeapAlloc[32](size=0x2d) = 0x111e8000
+[T3cc0] [API] HeapAlloc[32](size=0x14) = 0x111e9000
+[T3cc0] [API] HeapAlloc[32](size=0x2b) = 0x111ea000
+[T3cc0] [API] HeapAlloc[32](size=0x14) = 0x111eb000
+[T3cc0] [API] HeapAlloc[32](size=0x2d) = 0x111ec000
+[T3cc0] [API] HeapAlloc[32](size=0x14) = 0x111ed000
+[T3cc0] [API] HeapAlloc[32](size=0x2d) = 0x111ee000
+[T3cc0] [API] HeapAlloc[32](size=0x14) = 0x111ef000
+[T3cc0] [API] HeapAlloc[32](size=0x2b) = 0x111f0000
+[T3cc0] [API] HeapAlloc[32](size=0x14) = 0x111f1000
+[T3cc0] [API] HeapAlloc[32](size=0x2d) = 0x111f2000
+[T3cc0] [API] HeapAlloc[32](size=0x14) = 0x111f3000
+[T3cc0] [API] HeapAlloc[32](size=0x2d) = 0x111f4000
+[T3cc0] [API] HeapAlloc[32](size=0x13) = 0x111f5000
+[T3cc0] [API] HeapAlloc[32](size=0x2b) = 0x111f6000
+[T3cc0] [API] HeapAlloc[32](size=0x13) = 0x111f7000
+[T3cc0] [API] HeapAlloc[32](size=0x2d) = 0x111f8000
+[T3cc0] [API] HeapAlloc[32](size=0x15) = 0x111f9000
+[T3cc0] [API] HeapAlloc[32](size=0x2d) = 0x111fa000
+[T3cc0] [API] HeapAlloc[32](size=0x15) = 0x111fb000
+[T3cc0] [API] HeapAlloc[32](size=0x2b) = 0x111fc000
+[T3cc0] [API] HeapAlloc[32](size=0x15) = 0x111fd000
+[T3cc0] [API] HeapAlloc[32](size=0x2d) = 0x111fe000
+[T3cc0] [API] HeapAlloc[32](size=0x15) = 0x111ff000
+[T3cc0] [API] HeapAlloc[32](size=0x2d) = 0x11200000
+[T3cc0] [API] HeapAlloc[32](size=0x14) = 0x11201000
+[T3cc0] [API] HeapAlloc[32](size=0x1a) = 0x11202000
+[T3cc0] [API] HeapAlloc[32](size=0x15) = 0x11203000
+[T3cc0] [API] HeapAlloc[32](size=0x1b) = 0x11204000
+[T3cc0] [API] HeapAlloc[32](size=0x15) = 0x11205000
+[T3cc0] [API] HeapAlloc[32](size=0x2e) = 0x11206000
+[T3cc0] [API] HeapAlloc[32](size=0x14) = 0x11207000
+[T3cc0] [API] HeapAlloc[32](size=0x2e) = 0x11208000
+[T3cc0] [API] HeapAlloc[32](size=0x14) = 0x11209000
+[T3cc0] [API] HeapAlloc[32](size=0x2e) = 0x1120a000
+[T3cc0] [API] HeapAlloc[32](size=0xabc) = 0x1120b000
+[T3cc0] [API] HeapFree(0x111de000)
+[T3cc0] [API] HeapFree arena32 ptr 0x111de000 -> no-op (bump arena)
+[T3cc0] [API] HeapAlloc[32](size=0x14) = 0x1120c000
+[T3cc0] [API] HeapAlloc[32](size=0x1a) = 0x1120d000
+[T3cc0] [API] HeapAlloc[32](size=0x14) = 0x1120e000
+[T3cc0] [API] HeapAlloc[32](size=0x1b) = 0x1120f000
+[T3cc0] [API] HeapAlloc[32](size=0x14) = 0x11210000
+[T3cc0] [API] HeapAlloc[32](size=0x1d) = 0x11211000
+[T3cc0] [API] HeapAlloc[32](size=0x14) = 0x11212000
+[T3cc0] [API] HeapAlloc[32](size=0x1d) = 0x11213000
+[T3cc0] [API] HeapAlloc[32](size=0x14) = 0x11214000
+[T3cc0] [API] HeapAlloc[32](size=0x1c) = 0x11215000
+[T3cc0] [API] HeapAlloc[32](size=0x14) = 0x11216000
+[T3cc0] [API] HeapAlloc[32](size=0x1c) = 0x11217000
+[T3cc0] [API] HeapAlloc[32](size=0x14) = 0x11218000
+[T3cc0] [API] HeapAlloc[32](size=0x1a) = 0x11219000
+[T3cc0] [API] HeapAlloc[32](size=0x14) = 0x1121a000
+[T3cc0] [API] HeapAlloc[32](size=0x1a) = 0x1121b000
+[T3cc0] [API] HeapAlloc[32](size=0x14) = 0x1121c000
+[T3cc0] [API] HeapAlloc[32](size=0x1b) = 0x1121d000
+[T3cc0] [API] HeapAlloc[32](size=0x14) = 0x1121e000
+[T3cc0] [API] HeapAlloc[32](size=0x1f) = 0x1121f000
+[T3cc0] [API] HeapAlloc[32](size=0x14) = 0x11220000
+[T3cc0] [API] HeapAlloc[32](size=0x1f) = 0x11221000
+[T3cc0] [API] HeapAlloc[32](size=0x14) = 0x11222000
+[T3cc0] [API] HeapAlloc[32](size=0x1f) = 0x11223000
+[T3cc0] [API] HeapAlloc[32](size=0x14) = 0x11224000
+[T3cc0] [API] HeapAlloc[32](size=0x29) = 0x11225000
+[T3cc0] [API] HeapAlloc[32](size=0x13) = 0x11226000
+[T3cc0] [API] HeapAlloc[32](size=0x29) = 0x11227000
+[T3cc0] [API] HeapAlloc[32](size=0x14) = 0x11228000
+[T3cc0] [API] HeapAlloc[32](size=0x20) = 0x11229000
+[T3cc0] [API] HeapAlloc[32](size=0x14) = 0x1122a000
+[T3cc0] [API] HeapAlloc[32](size=0x34) = 0x1122b000
+[T3cc0] [API] HeapAlloc[32](size=0x14) = 0x1122c000
+[T3cc0] [API] HeapAlloc[32](size=0x34) = 0x1122d000
+[T3cc0] [API] HeapAlloc[32](size=0x14) = 0x1122e000
+[T3cc0] [API] HeapAlloc[32](size=0x29) = 0x1122f000
+[T3cc0] [API] HeapAlloc[32](size=0x14) = 0x11230000
+[T3cc0] [API] HeapAlloc[32](size=0x2b) = 0x11231000
+[T3cc0] [API] HeapAlloc[32](size=0x14) = 0x11232000
+[T3cc0] [API] HeapAlloc[32](size=0x2d) = 0x11233000
+[T3cc0] [API] HeapAlloc[32](size=0x16) = 0x11234000
+[T3cc0] [API] HeapAlloc[32](size=0x2d) = 0x11235000
+[T3cc0] [API] HeapAlloc[32](size=0x16) = 0x11236000
+[T3cc0] [API] HeapAlloc[32](size=0x2b) = 0x11237000
+[T3cc0] [API] HeapAlloc[32](size=0x16) = 0x11238000
+[T3cc0] [API] HeapAlloc[32](size=0x2d) = 0x11239000
+[T3cc0] [API] HeapAlloc[32](size=0x16) = 0x1123a000
+[T3cc0] [API] HeapAlloc[32](size=0x2d) = 0x1123b000
+[T3cc0] [API] HeapAlloc[32](size=0x14) = 0x1123c000
+[T3cc0] [API] HeapAlloc[32](size=0x20) = 0x1123d000
+[T3cc0] [API] HeapAlloc[32](size=0xc0c) = 0x1123e000
+[T3cc0] [API] HeapFree(0x1120b000)
+[T3cc0] [API] HeapFree arena32 ptr 0x1120b000 -> no-op (bump arena)
+[T3cc0] [API] HeapAlloc[32](size=0x14) = 0x1123f000
+[T3cc0] [API] HeapAlloc[32](size=0x2b) = 0x11240000
+[T3cc0] [API] HeapAlloc[32](size=0x14) = 0x11241000
+[T3cc0] [API] HeapAlloc[32](size=0x2d) = 0x11242000
+[T3cc0] [API] HeapAlloc[32](size=0x14) = 0x11243000
+[T3cc0] [API] HeapAlloc[32](size=0x2d) = 0x11244000
+[T3cc0] [API] HeapAlloc[32](size=0x14) = 0x11245000
+[T3cc0] [API] HeapAlloc[32](size=0x2b) = 0x11246000
+[T3cc0] [API] HeapAlloc[32](size=0x14) = 0x11247000
+[T3cc0] [API] HeapAlloc[32](size=0x2d) = 0x11248000
+[T3cc0] [API] HeapAlloc[32](size=0x15) = 0x11249000
+[T3cc0] [API] HeapAlloc[32](size=0x2d) = 0x1124a000
+[T3cc0] [API] HeapAlloc[32](size=0x15) = 0x1124b000
+[T3cc0] [API] HeapAlloc[32](size=0x2b) = 0x1124c000
+[T3cc0] [API] HeapAlloc[32](size=0x15) = 0x1124d000
+[T3cc0] [API] HeapAlloc[32](size=0x2d) = 0x1124e000
+[T3cc0] [API] HeapAlloc[32](size=0x15) = 0x1124f000
+[T3cc0] [API] HeapAlloc[32](size=0x2d) = 0x11250000
+[T3cc0] [API] HeapAlloc[32](size=0x14) = 0x11251000
+[T3cc0] [API] HeapAlloc[32](size=0x2d) = 0x11252000
+[T3cc0] [API] HeapAlloc[32](size=0x14) = 0x11253000
+[T3cc0] [API] HeapAlloc[32](size=0x22) = 0x11254000
+[T3cc0] [API] HeapAlloc[32](size=0x14) = 0x11255000
+[T3cc0] [API] HeapAlloc[32](size=0x22) = 0x11256000
+[T3cc0] [API] HeapAlloc[32](size=0x15) = 0x11257000
+[T3cc0] [API] HeapAlloc[32](size=0x25) = 0x11258000
+[T3cc0] [API] HeapAlloc[32](size=0x16) = 0x11259000
+[T3cc0] [API] HeapAlloc[32](size=0x25) = 0x1125a000
+[T3cc0] [API] HeapAlloc[32](size=0x16) = 0x1125b000
+[T3cc0] [API] HeapAlloc[32](size=0x25) = 0x1125c000
+[T3cc0] [API] HeapAlloc[32](size=0x15) = 0x1125d000
+[T3cc0] [API] HeapAlloc[32](size=0x19) = 0x1125e000
+[T3cc0] [API] HeapAlloc[32](size=0x16) = 0x1125f000
+[T3cc0] [API] HeapAlloc[32](size=0x19) = 0x11260000
+[T3cc0] [API] HeapAlloc[32](size=0x16) = 0x11261000
+[T3cc0] [API] HeapAlloc[32](size=0x19) = 0x11262000
+[T3cc0] [API] HeapAlloc[32](size=0x16) = 0x11263000
+[T3cc0] [API] HeapAlloc[32](size=0x1d) = 0x11264000
+[T3cc0] [API] HeapAlloc[32](size=0x16) = 0x11265000
+[T3cc0] [API] HeapAlloc[32](size=0x27) = 0x11266000
+[T3cc0] [API] RegOpenKeyExW(miss) 'HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion' -> ERROR_PATH_NOT_FOUND
+[T3cc0] [API] SetLastError(3) caller=0x20e31d8
+[T3cc0] [API] RegCreateKeyExW 'HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion' -> slot 7 (created=1)
+[T3cc0] [API] SetLastError(6) caller=0x20e5c4a
+[T3cc0] [API] SetLastError(6) caller=0x20e5c4a
+[T3cc0] [API] SetLastError(6) caller=0x20e5c4a
+[T3cc0] [API] SetLastError(6) caller=0x20e5c4a
+[T3cc0] [API] reg seed: CurrentVersion identity seeded (Windows Server 2003 5.2 b3790)
+[T3cc0] [API] RegOpenKeyExW(miss) 'HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon' -> ERROR_FILE_NOT_FOUND
+[T3cc0] [API] SetLastError(2) caller=0x20e31d8
+[T3cc0] [API] RegCreateKeyExW 'HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon' -> slot 8 (created=1)
+[T3cc0] [API] SetLastError(6) caller=0x20e5c4a
+[T3cc0] [API] SetLastError(6) caller=0x20e5c4a
+[T3cc0] [API] SetLastError(6) caller=0x20e5c4a
+[T3cc0] [API] SetLastError(6) caller=0x20e5c4a
+[T3cc0] [API] reg seed: Winlogon skeleton seeded
+[T3cc0] [API] RegOpenKeyExW(miss) 'HKLM\System\CurrentControlSet\Services\EventLog\Application' -> ERROR_PATH_NOT_FOUND
+[T3cc0] [API] SetLastError(3) caller=0x20e31d8
+[T3cc0] [API] RegCreateKeyExW 'HKLM\System\CurrentControlSet\Services\EventLog\Application' -> slot 9 (created=1)
+[T3cc0] [API] RegOpenKeyExW(miss) 'HKLM\System\CurrentControlSet\Services\EventLog\Security' -> ERROR_PATH_NOT_FOUND
+[T3cc0] [API] SetLastError(3) caller=0x20e31d8
+[T3cc0] [API] RegCreateKeyExW 'HKLM\System\CurrentControlSet\Services\EventLog\Security' -> slot 10 (created=1)
+[T3cc0] [API] RegOpenKeyExW(miss) 'HKLM\System\CurrentControlSet\Services\EventLog\System' -> ERROR_PATH_NOT_FOUND
+[T3cc0] [API] SetLastError(3) caller=0x20e31d8
+[T3cc0] [API] RegCreateKeyExW 'HKLM\System\CurrentControlSet\Services\EventLog\System' -> slot 11 (created=1)
+[T3cc0] [API] reg seed: EventLog service keys seeded (3)
+[T3cc0] [API] RegOpenKeyExW(miss) 'HKCU\Software\WinRAR\Setup' -> ERROR_PATH_NOT_FOUND
+[T3cc0] [API] SetLastError(3) caller=0x20e31d8
+[T3cc0] [API] RegCreateKeyExW 'HKCU\Software\WinRAR\Setup' -> slot 12 (created=1)
+[T3cc0] [API] reg seed: WinRAR Setup key seeded (no close: handle released at exit)
+[T3cc0] [API] RegOpenKeyExW(miss) 'HKCU\Software\Sysinternals\PsLoglist' -> ERROR_PATH_NOT_FOUND
+[T3cc0] [API] SetLastError(3) caller=0x20e31d8
+[T3cc0] [API] RegCreateKeyExW 'HKCU\Software\Sysinternals\PsLoglist' -> slot 13 (created=1)
+[T3cc0] [API] RegSetValueExW -> slot 13 'EulaAccepted', 4 bytes stored
+[T3cc0] [API] RegOpenKeyExW(miss) 'HKCU\Software\Sysinternals\PsInfo' -> ERROR_PATH_NOT_FOUND
+[T3cc0] [API] SetLastError(3) caller=0x20e31d8
+[T3cc0] [API] RegCreateKeyExW 'HKCU\Software\Sysinternals\PsInfo' -> slot 14 (created=1)
+[T3cc0] [API] RegSetValueExW -> slot 14 'EulaAccepted', 4 bytes stored
+[T3cc0] [API] RegOpenKeyExW(miss) 'HKCU\Software\Sysinternals\PsList' -> ERROR_PATH_NOT_FOUND
+[T3cc0] [API] SetLastError(3) caller=0x20e31d8
+[T3cc0] [API] RegCreateKeyExW 'HKCU\Software\Sysinternals\PsList' -> slot 15 (created=1)
+[T3cc0] [API] RegSetValueExW -> slot 15 'EulaAccepted', 4 bytes stored
+[T3cc0] [API] RegOpenKeyExW(miss) 'HKCU\Software\Sysinternals\PsPasswd' -> ERROR_PATH_NOT_FOUND
+[T3cc0] [API] SetLastError(3) caller=0x20e31d8
+[T3cc0] [API] RegCreateKeyExW 'HKCU\Software\Sysinternals\PsPasswd' -> slot 16 (created=1)
+[T3cc0] [API] RegSetValueExW -> slot 16 'EulaAccepted', 4 bytes stored
+[T3cc0] [API] RegOpenKeyExW(miss) 'HKCU\Software\Sysinternals\PsService' -> ERROR_PATH_NOT_FOUND
+[T3cc0] [API] SetLastError(3) caller=0x20e31d8
+[T3cc0] [API] RegCreateKeyExW 'HKCU\Software\Sysinternals\PsService' -> slot 17 (created=1)
+[T3cc0] [API] RegSetValueExW -> slot 17 'EulaAccepted', 4 bytes stored
+[T3cc0] [API] RegOpenKeyExW(miss) 'HKCU\Software\Sysinternals\Coreinfo' -> ERROR_PATH_NOT_FOUND
+[T3cc0] [API] SetLastError(3) caller=0x20e31d8
+[T3cc0] [API] RegCreateKeyExW 'HKCU\Software\Sysinternals\Coreinfo' -> slot 18 (created=1)
+[T3cc0] [API] RegSetValueExW -> slot 18 'EulaAccepted', 4 bytes stored
+[T3cc0] [API] RegOpenKeyExW(miss) 'HKCU\Software\Sysinternals\RAMMap' -> ERROR_PATH_NOT_FOUND
+[T3cc0] [API] SetLastError(3) caller=0x20e31d8
+[T3cc0] [API] RegCreateKeyExW 'HKCU\Software\Sysinternals\RAMMap' -> slot 19 (created=1)
+[T3cc0] [API] RegSetValueExW -> slot 19 'EulaAccepted', 4 bytes stored
+[T3cc0] [API] RegOpenKeyExW(miss) 'HKCU\Software\Sysinternals\Process Explorer' -> ERROR_PATH_NOT_FOUND
+[T3cc0] [API] SetLastError(3) caller=0x20e31d8
+[T3cc0] [API] RegCreateKeyExW 'HKCU\Software\Sysinternals\Process Explorer' -> slot 20 (created=1)
+[T3cc0] [API] RegSetValueExW -> slot 20 'EulaAccepted', 4 bytes stored
+[T3cc0] [API] RegOpenKeyExW(miss) 'HKCU\Software\Sysinternals\Process Monitor' -> ERROR_PATH_NOT_FOUND
+[T3cc0] [API] SetLastError(3) caller=0x20e31d8
+[T3cc0] [API] RegCreateKeyExW 'HKCU\Software\Sysinternals\Process Monitor' -> slot 21 (created=1)
+[T3cc0] [API] RegSetValueExW -> slot 21 'EulaAccepted', 4 bytes stored
+[T3cc0] [API] RegOpenKeyExW(miss) 'HKCU\Software\Sysinternals\Autoruns' -> ERROR_PATH_NOT_FOUND
+[T3cc0] [API] SetLastError(3) caller=0x20e31d8
+[T3cc0] [API] RegCreateKeyExW 'HKCU\Software\Sysinternals\Autoruns' -> slot 22 (created=1)
+[T3cc0] [API] RegSetValueExW -> slot 22 'EulaAccepted', 4 bytes stored
+[T3cc0] [API] RegOpenKeyExW(miss) 'HKCU\Software\Sysinternals\ZoomIt' -> ERROR_PATH_NOT_FOUND
+[T3cc0] [API] SetLastError(3) caller=0x20e31d8
+[T3cc0] [API] RegCreateKeyExW 'HKCU\Software\Sysinternals\ZoomIt' -> slot 23 (created=1)
+[T3cc0] [API] RegSetValueExW -> slot 23 'EulaAccepted', 4 bytes stored
+[T3cc0] [API] RegOpenKeyExW(miss) 'HKCU\Software\Sysinternals\DiskMon' -> ERROR_PATH_NOT_FOUND
+[T3cc0] [API] SetLastError(3) caller=0x20e31d8
+[T3cc0] [API] RegCreateKeyExW 'HKCU\Software\Sysinternals\DiskMon' -> slot 24 (created=1)
+[T3cc0] [API] RegSetValueExW -> slot 24 'EulaAccepted', 4 bytes stored
+[T3cc0] [API] RegOpenKeyExW(miss) 'HKCU\Software\Sysinternals\BgInfo' -> ERROR_PATH_NOT_FOUND
+[T3cc0] [API] SetLastError(3) caller=0x20e31d8
+[T3cc0] [API] RegCreateKeyExW 'HKCU\Software\Sysinternals\BgInfo' -> slot 25 (created=1)
+[T3cc0] [API] RegSetValueExW -> slot 25 'EulaAccepted', 4 bytes stored
+[T3cc0] [API] RegOpenKeyExW(miss) 'HKCU\Software\Sysinternals\AdExplorer' -> ERROR_PATH_NOT_FOUND
+[T3cc0] [API] SetLastError(3) caller=0x20e31d8
+[T3cc0] [API] RegCreateKeyExW 'HKCU\Software\Sysinternals\AdExplorer' -> slot 26 (created=1)
+[T3cc0] [API] RegSetValueExW -> slot 26 'EulaAccepted', 4 bytes stored
+[T3cc0] [API] RegOpenKeyExW(miss) 'HKCU\Software\Sysinternals\AdInsight' -> ERROR_PATH_NOT_FOUND
+[T3cc0] [API] SetLastError(3) caller=0x20e31d8
+[T3cc0] [API] RegCreateKeyExW 'HKCU\Software\Sysinternals\AdInsight' -> slot 27 (created=1)
+[T3cc0] [API] RegSetValueExW -> slot 27 'EulaAccepted', 4 bytes stored
+[T3cc0] [API] RegOpenKeyExW(miss) 'HKCU\Software\Sysinternals\TcpvCon' -> ERROR_PATH_NOT_FOUND
+[T3cc0] [API] SetLastError(3) caller=0x20e31d8
+[T3cc0] [API] RegCreateKeyExW 'HKCU\Software\Sysinternals\TcpvCon' -> slot 28 (created=1)
+[T3cc0] [API] RegSetValueExW -> slot 28 'EulaAccepted', 4 bytes stored
+[T3cc0] [API] RegOpenKeyExW(miss) 'HKCU\Software\Sysinternals\Whois' -> ERROR_PATH_NOT_FOUND
+[T3cc0] [API] SetLastError(3) caller=0x20e31d8
+[T3cc0] [API] RegCreateKeyExW 'HKCU\Software\Sysinternals\Whois' -> slot 29 (created=1)
+[T3cc0] [API] RegSetValueExW -> slot 29 'EulaAccepted', 4 bytes stored
+[T3cc0] [API] reg seed: Sysinternals EulaAccepted markers seeded
+[T3cc0] [API] RegOpenKeyExW(miss) 'HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Perflib' -> ERROR_FILE_NOT_FOUND
+[T3cc0] [API] SetLastError(2) caller=0x20e31d8
+[T3cc0] [API] RegCreateKeyExW 'HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Perflib' -> slot 30 (created=1)
+[T3cc0] [API] SetLastError(6) caller=0x20e5c4a
+[T3cc0] [API] SetLastError(6) caller=0x20e5c4a
+[T3cc0] [API] reg seed: Perflib Last Counter/Help = 952
+[T3cc0] [API] RegOpenKeyExW(miss) 'HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion' -> ERROR_PATH_NOT_FOUND
+[T3cc0] [API] SetLastError(3) caller=0x20e31d8
+[T3cc0] [API] RegCreateKeyExW 'HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion' -> slot 31 (created=1)
+[T3cc0] [API] SetLastError(6) caller=0x20e5c4a
+[T3cc0] [API] SetLastError(6) caller=0x20e5c4a
+[T3cc0] [API] SetLastError(6) caller=0x20e5c4a
+[T3cc0] [API] SetLastError(6) caller=0x20e5c4a
+[T3cc0] [API] reg seed: HKLM Windows CurrentVersion ProgramFiles skeleton seeded
+[T3cc0] [API] RegOpenKeyExW(miss) 'HKLM\HARDWARE\DESCRIPTION\System' -> ERROR_PATH_NOT_FOUND
+[T3cc0] [API] SetLastError(3) caller=0x20e31d8
+[T3cc0] [API] RegCreateKeyExW 'HKLM\HARDWARE\DESCRIPTION\System' -> slot 32 (created=1)
+[T3cc0] [API] SetLastError(6) caller=0x20e5c4a
+[T3cc0] [API] RegOpenKeyExW(miss) 'HKLM\HARDWARE\DESCRIPTION\System\CentralProcessor\0' -> ERROR_PATH_NOT_FOUND
+[T3cc0] [API] SetLastError(3) caller=0x20e31d8
+[T3cc0] [API] RegCreateKeyExW 'HKLM\HARDWARE\DESCRIPTION\System\CentralProcessor\0' -> slot 33 (created=1)
+[T3cc0] [API] SetLastError(6) caller=0x20e5c4a
+[T3cc0] [API] SetLastError(6) caller=0x20e5c4a
+[T3cc0] [API] SetLastError(6) caller=0x20e5c4a
+[T3cc0] [API] SetLastError(6) caller=0x20e5c4a
+[T3cc0] [API] reg seed: CentralProcessor\0 seeded (Intel(R) Xeon(R) Processor, Intel64 Family 6 Model 173 Stepping 1, 3200 MHz)
+[T3cc0] [API] RegOpenKeyExW(miss) 'HKLM\System\CurrentControlSet\Control\Session Manager\Environment' -> ERROR_PATH_NOT_FOUND
+[T3cc0] [API] SetLastError(3) caller=0x20e31d8
+[T3cc0] [API] RegCreateKeyExW 'HKLM\System\CurrentControlSet\Control\Session Manager\Environment' -> slot 34 (created=1)
+[T3cc0] [API] SetLastError(6) caller=0x20e5c4a
+[T3cc0] [API] SetLastError(6) caller=0x20e5c4a
+[T3cc0] [API] SetLastError(6) caller=0x20e5c4a
+[T3cc0] [API] SetLastError(6) caller=0x20e5c4a
+[T3cc0] [API] SetLastError(6) caller=0x20e5c4a
+[T3cc0] [API] reg seed: Session Manager Environment PROCESSOR_* seeded (ncpu=2)
+[T3cc0] [API] RegOpenKeyExW(miss) 'HKLM\SOFTWARE\Classes' -> ERROR_PATH_NOT_FOUND
+[T3cc0] [API] SetLastError(3) caller=0x20e31d8
+[T3cc0] [API] RegOpenKeyExW(miss) 'HKCR\MIME\Database\Content Type' -> ERROR_PATH_NOT_FOUND
+[T3cc0] [API] SetLastError(3) caller=0x20e31d8
+[T3cc0] [API] EnterCriticalSection(0x403d0908)
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] HeapFree(0x11088000)
+[T3cc0] [API] HeapFree arena32 ptr 0x11088000 -> no-op (bump arena)
+[T3cc0] [API] HeapReAlloc arena32 0x11088000 -> 0x11267000 (size=0x10, copied 0x10)
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] LeaveCriticalSection(0x403d0908)
+[T3cc0] [API] HeapAlloc[32](size=0xfa4) = 0x11268000
+[T3cc0] [API] HeapAlloc[32](size=0x7c) = 0x11269000
+[T3cc0] [API] HeapAlloc[32](size=0xa4) = 0x1126a000
+[T3cc0] [API] HeapAlloc[32](size=0x25c) = 0x1126b000
+[T3cc0] [API] EnterCriticalSection(0x403d0908)
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] HeapFree(0x11267000)
+[T3cc0] [API] HeapFree arena32 ptr 0x11267000 -> no-op (bump arena)
+[T3cc0] [API] HeapReAlloc arena32 0x11267000 -> 0x1126c000 (size=0x10, copied 0x10)
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] LeaveCriticalSection(0x403d0908)
+[T3cc0] [API] RegOpenKeyExW(miss) 'HKCU\Software\DownloadManager\' -> ERROR_PATH_NOT_FOUND
+[T3cc0] [API] SetLastError(3) caller=0x20e31d8
+[T3cc0] [API] RegCreateKeyExW 'HKCU\Software\DownloadManager\' -> slot 35 (created=1)
+[T3cc0] [API] SetLastError(1300) caller=0x203fa7e
+[T3cc0] [API] LoadLibraryW(shell32.dll)
+[T3cc0] [API] LoadLibraryA(shell32.dll)
+[T3cc0] [API] GetProcAddress(module=0xdea30000, name=SHGetFolderPathA)
+[T3cc0] [API]   -> 0x202fa20
+[T3cc0] [API]   -> 0x202fa20
+[T3cc0] [API] LoadLibraryA(ole32.dll)
+[T3cc0] [API] GetProcAddress(module=0xdea50000, name=CoInitialize)
+[T3cc0] [API]   -> 0x206ff40
+[T3cc0] [API]   -> 0x206ff40
+[T3cc0] [API] CoInitialize() -> S_OK
+[T3cc0] [API] SHGetFolderPathA(csidl=0x1a) -> 'C:\Users\MiniWin\AppData\Roaming' S_OK
+[T3cc0] [API] GetLastError() = 1300
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] SetLastError(1300) caller=0x2112222
+[T3cc0] [API] HeapAlloc[32](size=0x39) = 0x1126d000
+[T3cc0] [API] GetLastError() = 1300
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] SetLastError(1300) caller=0x2112222
+[T3cc0] [API] CreateDirectoryW(/home/z/my-project/workspace/miniwin-engineering/evidence/p12_idm/idman/sandbox/Users/MiniWin/AppData/Roaming/DMCache)
+[T3cc0] [API] SetLastError(183) caller=0x20b7e3a
+[T3cc0] [API] GetLastError() = 183
+[T3cc0] [API] GetLastError() = 183
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] SetLastError(183) caller=0x2112222
+[T3cc0] [API] GetLastError() = 183
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] SetLastError(183) caller=0x2112222
+[T3cc0] [API] GetProcAddress(module=0xdea50000, name=CoUninitialize)
+[T3cc0] [API]   -> 0x2070680
+[T3cc0] [API]   -> 0x2070680
+[T3cc0] [API] CoUninitialize()
+[T3cc0] [API] FreeLibrary()
+[T3cc0] [API] GetLastError() = 183
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] SetLastError(183) caller=0x2112222
+[T3cc0] [API] HeapAlloc[32](size=0x46) = 0x1126e000
+[T3cc0] [API] GetLastError() = 183
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] SetLastError(183) caller=0x2112222
+[T3cc0] [API] SetLastError(2) caller=0x20a38ca
+[T3cc0] [API] HeapFree(0x1126e000)
+[T3cc0] [API] HeapFree arena32 ptr 0x1126e000 -> no-op (bump arena)
+[T3cc0] [API] HeapFree(0x1126d000)
+[T3cc0] [API] HeapFree arena32 ptr 0x1126d000 -> no-op (bump arena)
+[T3cc0] [API] RegQueryValueExW(key=0x90024 'MaxConnectionsNumber') -> ERROR_FILE_NOT_FOUND
+[T3cc0] [API] SetLastError(2) caller=0x21187ad
+[T3cc0] [API] RegCreateKeyExW 'HKCU\Software\DownloadManager\MCN' -> slot 36 (created=1)
+[T3cc0] [API] EnterCriticalSection(0x403d0908)
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] HeapFree(0x1126c000)
+[T3cc0] [API] HeapFree arena32 ptr 0x1126c000 -> no-op (bump arena)
+[T3cc0] [API] HeapReAlloc arena32 0x1126c000 -> 0x1126f000 (size=0x10, copied 0x10)
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] LeaveCriticalSection(0x403d0908)
+[T3cc0] [API] EnterCriticalSection(0x403d0908)
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] HeapFree(0x1126f000)
+[T3cc0] [API] HeapFree arena32 ptr 0x1126f000 -> no-op (bump arena)
+[T3cc0] [API] HeapReAlloc arena32 0x1126f000 -> 0x11270000 (size=0x10, copied 0x10)
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] LeaveCriticalSection(0x403d0908)
+[T3cc0] [API] EnterCriticalSection(0x403d0908)
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] HeapFree(0x11270000)
+[T3cc0] [API] HeapFree arena32 ptr 0x11270000 -> no-op (bump arena)
+[T3cc0] [API] HeapReAlloc arena32 0x11270000 -> 0x11271000 (size=0x10, copied 0x10)
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] LeaveCriticalSection(0x403d0908)
+[T3cc0] [API] EnterCriticalSection(0x403d0908)
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] HeapFree(0x11271000)
+[T3cc0] [API] HeapFree arena32 ptr 0x11271000 -> no-op (bump arena)
+[T3cc0] [API] HeapReAlloc arena32 0x11271000 -> 0x11272000 (size=0x10, copied 0x10)
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] LeaveCriticalSection(0x403d0908)
+[T3cc0] [API] EnterCriticalSection(0x403d0908)
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] HeapFree(0x11272000)
+[T3cc0] [API] HeapFree arena32 ptr 0x11272000 -> no-op (bump arena)
+[T3cc0] [API] HeapReAlloc arena32 0x11272000 -> 0x11273000 (size=0x10, copied 0x10)
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] LeaveCriticalSection(0x403d0908)
+[T3cc0] [API] EnterCriticalSection(0x403d0908)
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] HeapFree(0x11273000)
+[T3cc0] [API] HeapFree arena32 ptr 0x11273000 -> no-op (bump arena)
+[T3cc0] [API] HeapReAlloc arena32 0x11273000 -> 0x11274000 (size=0x10, copied 0x10)
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] LeaveCriticalSection(0x403d0908)
+[T3cc0] [API] EnterCriticalSection(0x403d0908)
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] HeapFree(0x11274000)
+[T3cc0] [API] HeapFree arena32 ptr 0x11274000 -> no-op (bump arena)
+[T3cc0] [API] HeapReAlloc arena32 0x11274000 -> 0x11275000 (size=0x10, copied 0x10)
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] LeaveCriticalSection(0x403d0908)
+[T3cc0] [API] EnterCriticalSection(0x403d0908)
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] HeapFree(0x11275000)
+[T3cc0] [API] HeapFree arena32 ptr 0x11275000 -> no-op (bump arena)
+[T3cc0] [API] HeapReAlloc arena32 0x11275000 -> 0x11276000 (size=0x10, copied 0x10)
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] LeaveCriticalSection(0x403d0908)
+[T3cc0] [API] EnterCriticalSection(0x403d0908)
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] HeapFree(0x11276000)
+[T3cc0] [API] HeapFree arena32 ptr 0x11276000 -> no-op (bump arena)
+[T3cc0] [API] HeapReAlloc arena32 0x11276000 -> 0x11277000 (size=0x10, copied 0x10)
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] LeaveCriticalSection(0x403d0908)
+[T3cc0] [API] EnterCriticalSection(0x403d0908)
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] HeapFree(0x11277000)
+[T3cc0] [API] HeapFree arena32 ptr 0x11277000 -> no-op (bump arena)
+[T3cc0] [API] HeapReAlloc arena32 0x11277000 -> 0x11278000 (size=0x10, copied 0x10)
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] LeaveCriticalSection(0x403d0908)
+[T3cc0] [API] EnterCriticalSection(0x403d0908)
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] HeapFree(0x11278000)
+[T3cc0] [API] HeapFree arena32 ptr 0x11278000 -> no-op (bump arena)
+[T3cc0] [API] HeapReAlloc arena32 0x11278000 -> 0x11279000 (size=0x10, copied 0x10)
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] LeaveCriticalSection(0x403d0908)
+[T3cc0] [API] EnterCriticalSection(0x403d0908)
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] HeapFree(0x11279000)
+[T3cc0] [API] HeapFree arena32 ptr 0x11279000 -> no-op (bump arena)
+[T3cc0] [API] HeapReAlloc arena32 0x11279000 -> 0x1127a000 (size=0x10, copied 0x10)
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] LeaveCriticalSection(0x403d0908)
+[T3cc0] [API] EnterCriticalSection(0x403d0908)
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] HeapFree(0x1127a000)
+[T3cc0] [API] HeapFree arena32 ptr 0x1127a000 -> no-op (bump arena)
+[T3cc0] [API] HeapReAlloc arena32 0x1127a000 -> 0x1127b000 (size=0x10, copied 0x10)
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] LeaveCriticalSection(0x403d0908)
+[T3cc0] [API] EnterCriticalSection(0x403d0908)
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] HeapFree(0x1127b000)
+[T3cc0] [API] HeapFree arena32 ptr 0x1127b000 -> no-op (bump arena)
+[T3cc0] [API] HeapReAlloc arena32 0x1127b000 -> 0x1127c000 (size=0x10, copied 0x10)
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] LeaveCriticalSection(0x403d0908)
+[T3cc0] [API] EnterCriticalSection(0x403d0908)
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] HeapFree(0x1127c000)
+[T3cc0] [API] HeapFree arena32 ptr 0x1127c000 -> no-op (bump arena)
+[T3cc0] [API] HeapReAlloc arena32 0x1127c000 -> 0x1127d000 (size=0x10, copied 0x10)
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] LeaveCriticalSection(0x403d0908)
+[T3cc0] [API] EnterCriticalSection(0x403d0908)
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] HeapFree(0x1127d000)
+[T3cc0] [API] HeapFree arena32 ptr 0x1127d000 -> no-op (bump arena)
+[T3cc0] [API] HeapReAlloc arena32 0x1127d000 -> 0x1127e000 (size=0x10, copied 0x10)
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] TlsGetValue(1) = 0xa0147e
+[T3cc0] [API] LeaveCriticalSection(0x403d0908)
+[T3cc0] [API] GetModuleFileNameW(cap=520)
+[T3cc0] [API] GetModuleFileNameW out u16len=39 utf8len=39 'C:\Windows\Temp\IDM_Setup_Temp\IDM5.tmp'
+[T3cc0] [API] HeapAlloc[32](size=0x50) = 0x1127f000
+[T3cc0] [API] GetModuleHandleA(name=SHELL32)
+[T3cc0] [API] GetProcAddress(module=0xdea30000, name=SHGetDesktopFolder)
+[T3cc0] [API]   -> 0x203e300
+[T3cc0] [API]   -> 0x203e300
+[T3cc0] [API] GetProcAddress(module=0xdea30000, name=SHGetPathFromIDListW)
+[T3cc0] [API]   -> 0x200ca40
+[T3cc0] [API]   -> 0x200ca40
+[T3cc0] [API] GetProcAddress(module=0xdea30000, name=SHGetMalloc)
+[T3cc0] [API]   -> 0x20389d0
+[T3cc0] [API]   -> 0x20389d0
+[T3cc0] [API] SHGetDesktopFolder() -> minimal IShellFolder
+[T3cc0] [API] [PE32] cpu32_run rc=0 steps=416607 last_eip=0x00000000 esp=0x3fefe85c
+[T3cc0] [API] [PE32] eip-hist: 4004828b 4004828d 40048290 40048291 40048294 40048295 40048298 40048299 4004829b 4004829d 4004829e 400482a1 
+[T3cc0] [API] SW-1297 validate_fd patch: fingerprint not found (guest unaffected)
+[T3cc0] [API] Jumping to EP=0x0
+[T3cc0] [API] PE32 guest exit code 0
+[T3cc0] [API] Entry point returned 0
+  ]
+}

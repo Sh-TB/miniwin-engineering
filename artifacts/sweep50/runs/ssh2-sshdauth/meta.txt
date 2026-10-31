@@ -1,5 +1,0 @@
-exe=openssh/sshd-auth.exe
-sha256=71b11418681e1ae8a3eb84494658f4ca66a7dac7ccc7674f3c74a36a3a5b7d14
-timeout=10s
-args=none
-date_utc=2026-10-17T18:39:39Z

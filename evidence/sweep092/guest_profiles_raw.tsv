@@ -1,0 +1,4 @@
+file	arch	compiler	language	crt	managed	frameworks	prerequisites	installer_markers	import_count
+winrar712.exe	x64	?	?	?	no	none	gdiplus.dll;kernel32.dll;oleaut32.dll	none	3
+WinRAR.exe	x64	?	?	?	no	none	comctl32.dll;comdlg32.dll;dwmapi.dll;gdi32.dll;gdiplus.dll;kernel32.dll;msimg32.dll;ole32.dll;oleaut32.dll;powrprof.dll;shell32.dll;shlwapi.dll;user32.dll;uxtheme.dll	none	14
+flood.exe	x64	Microsoft Visual C++ 2015+ (MSVC)	C/C++	UCRT (api-ms-win-crt-*)	no	none	comctl32.dll;comdlg32.dll;gdi32.dll;kernel32.dll;user32.dll;vcruntime140.dll	none	14

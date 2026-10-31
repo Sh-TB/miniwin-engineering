@@ -1,0 +1,28 @@
+[TRACE] Command line: /home/z/my-project/workspace/miniwin-engineering/evidence/sweep094/winrarinstd/sandbox/Program Files/WinRAR/WinRAR.exe
+[WARN]   unresolved: WaitNamedPipeW
+[WARN]   unresolved: BackupRead
+[WARN]   unresolved: BackupSeek
+[WARN]   unresolved: SetThreadExecutionState
+[WARN]   unresolved: EnumResourceLanguagesW
+[WARN]   unresolved: BeginUpdateResourceW
+[WARN]   unresolved: UpdateResourceW
+[WARN]   unresolved: EndUpdateResourceW
+[WARN]   unresolved: GetCPInfoExW
+[WARN]   unresolved: GetPhysicallyInstalledSystemMemory
+[WARN]   unresolved: CharToOemBuffW
+[WARN]   unresolved: OemToCharA
+[WARN]   unresolved: GetScrollBarInfo
+[WARN]   unresolved: OemToCharBuffW
+[WARN]   unresolved: SetUserObjectInformationW
+[WARN]   unresolved: keybd_event
+[WARN]   unresolved: CreateIcon
+[WARN]   unresolved: FindExecutableW
+[WARN]   unresolved: OleSetClipboard
+[WARN]   unresolved: COMCTL32.DLL ordinal 380
+[WARN]   unresolved: GdipDrawRectangle
+[WARN]   unresolved: GdipAddPathArc
+[WARN]   unresolved: GdipAddPathLine
+[WARN]   unresolved: GdipBitmapSetPixel
+[WARN] 24 imports unresolved
+[MiniWin] Loading /home/z/my-project/workspace/miniwin-engineering/evidence/sweep094/winrarinstd/sandbox/Program Files/WinRAR/WinRAR.exe...
+[STUB] unresolved import called -> returning 0 (call #1) guest_rip=0x1401a5fdf import=user32.dll!SetUserObjectInformationW

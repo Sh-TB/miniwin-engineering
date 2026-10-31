@@ -1,0 +1,8 @@
+[TRACE] Command line: artifacts/sweep081/dl/renamer75.portable.x/ReNamer.exe
+[PE32-FATAL] opcode not implemented (step2) opcode=0x12 at EIP=0x3fefef39 base=0x400000
+  EAX=04074fc8 ECX=00000000 EDX=004127d0 EBX=0041270f ESP=3fefef90 EBP=3fefefd8 ESI=0041223f EDI=00000002
+  bytes: 28 41 00 00 00 00 00 38
+  eip-hist: 3fefef1a 3fefef1c 3fefef1e 3fefef20 3fefef22 3fefef24 3fefef26 3fefef28 3fefef2a 3fefef2c 3fefef2e 3fefef30 3fefef32 3fefef34 3fefef36 3fefef38 
+  api32 ring (last 8 of 78):
+    #38 TlsGetValue esp=3fefef3c ret=004127ea arity=4
+    #1 SetLastError esp=3fefef3c ret=00412812 arity=4

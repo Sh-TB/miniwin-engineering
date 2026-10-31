@@ -1,4 +1,4 @@
-# SWEEP-022 — «ادامه» elephant batch (SW-921..960 landed + BUG-074/075 fixes)
+# SWEEP-022 — (continue) elephant batch (SW-921..960 landed + BUG-074/075 fixes)
 
 Date: 2026-10-19 (UTC). Loader change: ONE batch — dialog walk + ListView/TreeView
 finals + GDI DIB family + fonts + registry hive + CRT radix converts, ~45 new or
@@ -48,7 +48,7 @@ zero errors.
 - TSV: `artifacts/sweep022/sweep/sweep022_sweep.tsv` (chunked via
   `scripts/sweep022_chunk.sh`).
 
-## GUI accounting (user standing question: «۵ تا برنامه گرافیکی اجرا کردی؟»)
+## GUI accounting (user standing question: (did you run five graphical programs?))
 
 **YES — 6 GUI programs with lifecycle evidence THIS sweep (>= 5 mandate):**
 
@@ -85,7 +85,7 @@ this batch (pump-off both exit 0 x3).
 - exit1: pageant, procmon64, putty, zoomit64 (SW-553 family).
 - autoruns64/rammap64 pump-on 139 — pre-existing, queued SW-971.
 
-## SW-961..1000 — continuation queue (40 items, «ادامه سه برابری» standing order)
+## SW-961..1000 — continuation queue (40 items, (triple-parity continuation) standing order)
 
 See `.agent/SWEEP50_WORKLIST.md` — crash frontier x5, exit1 family x5,
 pump-on frontier x5, ListView/Tree data x5, GDI/text x5, network x5,

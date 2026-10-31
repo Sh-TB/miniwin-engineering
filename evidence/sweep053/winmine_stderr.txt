@@ -1,0 +1,2 @@
+[TRACE] Command line: artifacts/sweep050/guests/winmine/winmine.exe
+[GDI-FRAME] #1 -> miniwin-results/winmine.exe/screenshots/frame_001.bmp

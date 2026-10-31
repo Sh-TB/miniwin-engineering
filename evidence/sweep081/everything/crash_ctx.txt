@@ -1,0 +1,4 @@
+[CRASH] Signal 11 at RIP=0x140105f9f
+  si_addr=0x98 si_code=1 (1=MAPERR 2=ACCERR)
+  RAX=0xfffffff8 RCX=0x0 RDX=0xffffffffffffffff R8=0x0 R9=0x0
+  RSP=0x7ffd5dca3210 RBP=0x30002

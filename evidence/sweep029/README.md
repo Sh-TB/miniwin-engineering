@@ -1,4 +1,4 @@
-# SWEEP-029 «قانون کلی» — cheetah/owl/elephant/glowworm/train (2026-10-20)
+# SWEEP-029 (general law) — cheetah/owl/elephant/glowworm/train (2026-10-20)
 
 The standing law, honored: inspect fast, see the tiny flaw, carry many,
 light bugs in the dark, pull dozens of wagons in one run.

@@ -1,5 +1,0 @@
-exe=si-pipelist/pipelist64.exe
-sha256=d493a763bd8783a33ac466fba08447ee54f9771a54c979d83b9ac6cb4d68f97e
-timeout=10s
-args=none
-date_utc=2026-10-17T18:39:37Z

@@ -1,0 +1,11 @@
+[TRACE] Command line: artifacts/sweep051/guests/soffice/soffice.bin
+[STUB] unresolved import called -> returning 0 (call #1) guest_rip=0x7fcf4372e37e
+[STUB] unresolved import called -> returning 0 (call #2) guest_rip=0x7fcf43891aa6
+[STUB] unresolved import called -> returning 0 (call #3) guest_rip=0x7fcf401f792e
+[STUB] unresolved import called -> returning 0 (call #4) guest_rip=0x7fcf437463b5
+[STUB] unresolved import called -> returning 0 (call #5) guest_rip=0x7fcf43734dff
+[STUB] unresolved import called -> returning 0 (call #6) guest_rip=0x7fcf43734dff
+[STUB] unresolved import called -> returning 0 (call #7) guest_rip=0x7fcf481c9c2e
+[STUB] unresolved import called -> returning 0 (call #8) guest_rip=0x7fcf481c9c2e
+[STUB] unresolved import called -> returning 0 (call #9) guest_rip=0x7fcf4373ed57
+[STUB] unresolved import called -> returning 0 (call #10) guest_rip=0x7fcf4373ed57

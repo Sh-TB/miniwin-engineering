@@ -1,0 +1,28 @@
+[TRACE] Command line: artifacts/sweep062/x/driverview/DriverView.exe
+
+[CRASH] Signal 11 at RIP=0x20db904
+  si_addr=0x4 si_code=1 (1=MAPERR 2=ACCERR)
+  RAX=0x0 RCX=0x20ebda4 RDX=0x0 R8=0x4010ea R9=0x0
+  RSP=0x7ffd2b840090 RBP=0x2000000
+  g_image_base=(nil) g_image_size=0x0
+  [PE32] guest EIP=0x004010eb ESP=0x3feff000 EBP=0x3feff000 steps=794322
+  [PE32] eip-hist: 004143d5 004143d7 004143d3 004143d5 004143d7 004143d3 004143d5 004143d7 004143d9 004143dc 0040a5fe 0040a600 0040a605 004010e4 004010e7 004010e8 
+  (NOT inside loaded PE)
+  [RIP-MAP] 0x20db904 in 0x2006000-0x20ea000 r-xp /home/z/my-project/workspace/miniwin-engineering/minwin_loader
+  Bytes: 67 8b 03 64 8b 34 25 b0 fa ff ff 8d 56 fc 64 89 
+  RSI=0x1 RDI=0x4
+  R8=0x4010ea  R9=0x0 R10=0x0 R11=0x0
+  R12=0x0 R13=0xc1edc R14=0x0 R15=0x7ffd2b8405b0
+  [STACKTOP raw] 0000000600000001 0000000400000006 0000000000000000 0000000010003000 0000000000000000 ffffffffffffffff 00000000021c1260 00000000021198c0 00000000000c1edc 0000000000000000 00007ffd2b8405b0 00000000020df9fd
+  [SCAN rsp+136] 0x200ae82 <LOADER>
+  [SCAN rsp+440] 0x2000002 <LOADER>
+  [SCAN rsp+536] 0x2002b1c <LOADER>
+  [SCAN rsp+544] 0x2002388 <LOADER>
+  [SCAN rsp+1992] 0x2007690 <LOADER>
+  [SCAN rsp+2144] 0x2007690 <LOADER>
+  [SCAN rsp+2184] 0x200b9c0 <LOADER>
+  [SCAN rsp+2216] 0x200b9e1 <LOADER>
+  [SCAN rsp+2696] 0x2000040 <LOADER>
+  [SCAN rsp+2776] 0x200b9c0 <LOADER>
+  Backtrace (via stack walking):
+    [0] RIP=0x20db904 (outside PE, possible shared lib)

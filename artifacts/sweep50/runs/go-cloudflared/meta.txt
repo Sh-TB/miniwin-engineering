@@ -1,5 +1,0 @@
-exe=cloudflared/cloudflared-windows-amd64.exe
-sha256=4d2490e74082c5d48dbfedaf92576fa5bd1702379ab88eb7faa0cfbe8dc891b6
-timeout=10s
-args=none
-date_utc=2026-10-17T18:39:38Z

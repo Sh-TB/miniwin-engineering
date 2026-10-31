@@ -1,0 +1,3275 @@
+{
+  "trace": [
+[T64c0] [API] PE Loader: file=artifacts/sweep049/stage/guests/mspaint/mspaint.exe size=570368
+[T64c0] [API] PE Loader: ImageBase=0x100000000 EP=0x5a1c0 SizeOfImage=0x90000 Sections=4
+[T64c0] [API] PE Loader: Mapped at 0x100000000 (forced via MAP_FIXED)
+[T64c0] [API] KUSD: mapped 0x7ffe0000 (root C:\WINDOWS, ver 5.2, qpc 1e9)
+[T64c0] [API] Section [0] .text    VA=0x00001000 VS=0x0006c4e0 Raw=0x0006c600 Ch=0x60000020
+[T64c0] [API] Section [1] .data    VA=0x0006e000 VS=0x00003658 Raw=0x00002400 Ch=0xc0000040
+[T64c0] [API] Section [2] .pdata   VA=0x00072000 VS=0x000062d0 Raw=0x00006400 Ch=0x40000040
+[T64c0] [API] Section [3] .rsrc    VA=0x00079000 VS=0x00016120 Raw=0x00016200 Ch=0x40000040
+[T64c0] [API] Import Directory: RVA=0x6a2d0 Size=0xf0
+[T64c0] [API] Import DLL: MFC42u.dll (IAT RVA=0x14e0, ILT RVA=0x6a8a0)
+[T64c0] [API]   [dll mfc42u.dll] SECTION MISMATCH sec2 RVA 0x134000: img=0x7f435709d368 file=0x5f8f1368
+[T64c0] [API]   -> 0x200e750
+[T64c0] [API]   -> 0x2024820
+[T64c0] [API]   -> 0x2018100
+[T64c0] [API]   -> 0x203ed90
+[T64c0] [API]   -> 0x20a7d00
+[T64c0] [API]   -> 0x20763c0
+[T64c0] [API]   -> 0x2019240
+[T64c0] [API]   -> 0x20787e0
+[T64c0] [API]   -> 0x200c6c0
+[T64c0] [API]   -> 0x2012b70
+[T64c0] [API]   -> 0x2012cf0
+[T64c0] [API]   -> 0x200e740
+[T64c0] [API]   -> 0x2012a00
+[T64c0] [API]   -> 0x201d3f0
+[T64c0] [API]   -> 0x201b240
+[T64c0] [API]   -> 0x200c5b0
+[T64c0] [API]   -> 0x201b7f0
+[T64c0] [API]   -> 0x2013ff0
+[T64c0] [API]   -> 0x2099b40
+[T64c0] [API]   -> 0x200e760
+[T64c0] [API]   -> DATA 0x24ca328
+[T64c0] [API]   -> DATA 0x21f1900
+[T64c0] [API]   -> 0x205cc20
+[T64c0] [API]   -> 0x203f0b0
+[T64c0] [API]   -> 0x2069530
+[T64c0] [API]   -> 0x2018a90
+[T64c0] [API]   -> 0x201dea0
+[T64c0] [API]   -> 0x2011010
+[T64c0] [API]   -> 0x2016e90
+[T64c0] [API]   -> 0x200e830
+[T64c0] [API]   -> 0x2020990
+[T64c0] [API]   -> 0x207b5b0
+[T64c0] [API]   -> 0x2076eb0
+[T64c0] [API]   -> 0x2018180
+[T64c0] [API]   -> 0x205fa40
+[T64c0] [API]   -> 0x2017970
+[T64c0] [API]   -> 0x201d7b0
+[T64c0] [API]   -> 0x201a190
+[T64c0] [API]   -> 0x2018b90
+[T64c0] [API]   -> 0x201a390
+[T64c0] [API]   -> 0x200e840
+[T64c0] [API]   -> 0x2022090
+[T64c0] [API]   -> 0x201fbb0
+[T64c0] [API]   -> 0x200c640
+[T64c0] [API]   -> 0x2021000
+[T64c0] [API]   -> 0x20168c0
+[T64c0] [API]   -> 0x20132e0
+[T64c0] [API]   -> 0x200e860
+[T64c0] [API]   -> 0x200c780
+[T64c0] [API]   -> 0x200c700
+[T64c0] [API]   -> 0x200c610
+[T64c0] [API]   -> 0x20220b0
+[T64c0] [API]   -> 0x20774c0
+[T64c0] [API]   -> 0x2022130
+[T64c0] [API]   -> 0x200c5c0
+[T64c0] [API]   -> 0x2022190
+[T64c0] [API]   -> 0x2077960
+[T64c0] [API]   -> 0x20a7880
+[T64c0] [API]   -> 0x2025c30
+[T64c0] [API]   -> 0x2025440
+[T64c0] [API]   -> 0x2025140
+[T64c0] [API]   -> 0x20165e0
+[T64c0] [API]   -> 0x2016980
+[T64c0] [API]   -> 0x203c9c0
+[T64c0] [API]   -> 0x2036cb0
+[T64c0] [API]   -> 0x2016750
+[T64c0] [API]   -> 0x2077180
+[T64c0] [API]   -> 0x20212d0
+[T64c0] [API]   -> 0x2088f00
+[T64c0] [API]   -> 0x2054100
+[T64c0] [API]   -> 0x20261f0
+[T64c0] [API]   -> 0x2011230
+[T64c0] [API]   -> 0x2074730
+[T64c0] [API]   -> 0x209c830
+[T64c0] [API]   -> 0x207afc0
+[T64c0] [API]   -> 0x2011cf0
+[T64c0] [API]   -> 0x2010cf0
+[T64c0] [API]   -> 0x2013930
+[T64c0] [API]   -> 0x20bbea0
+[T64c0] [API]   -> 0x20117e0
+[T64c0] [API]   -> 0x2016b70
+[T64c0] [API]   -> 0x2011de0
+[T64c0] [API]   -> 0x200c980
+[T64c0] [API]   -> 0x2039fc0
+[T64c0] [API]   -> 0x209d490
+[T64c0] [API]   -> 0x2075e20
+[T64c0] [API]   -> 0x20a6470
+[T64c0] [API]   -> 0x2096b30
+[T64c0] [API]   -> 0x2052ad0
+[T64c0] [API]   -> 0x205e560
+[T64c0] [API]   -> 0x206fa60
+[T64c0] [API]   -> 0x20792b0
+[T64c0] [API]   -> 0x205ef00
+[T64c0] [API]   -> 0x200c0c0
+[T64c0] [API]   -> 0x2044f10
+[T64c0] [API]   -> 0x204dfc0
+[T64c0] [API]   -> 0x20a82d0
+[T64c0] [API]   -> 0x204c920
+[T64c0] [API]   -> 0x206f140
+[T64c0] [API]   -> 0x2077710
+[T64c0] [API]   -> 0x203a160
+[T64c0] [API]   -> 0x205caa0
+[T64c0] [API]   -> 0x202ec50
+[T64c0] [API]   -> 0x207ab10
+[T64c0] [API]   -> 0x2024240
+[T64c0] [API]   -> 0x2068430
+[T64c0] [API]   -> 0x202f660
+[T64c0] [API]   -> 0x2053660
+[T64c0] [API]   -> 0x20a7d70
+[T64c0] [API]   -> 0x2068450
+[T64c0] [API]   -> 0x200cb90
+[T64c0] [API]   -> 0x208b9e0
+[T64c0] [API]   -> 0x2048700
+[T64c0] [API]   -> 0x207b8a0
+[T64c0] [API]   -> 0x2048090
+[T64c0] [API]   -> 0x207d480
+[T64c0] [API]   -> 0x2047c50
+[T64c0] [API]   -> 0x208bb80
+[T64c0] [API]   -> 0x205d480
+[T64c0] [API]   -> 0x2034ec0
+[T64c0] [API]   -> 0x200ea20
+[T64c0] [API]   -> 0x2060120
+[T64c0] [API]   -> 0x2083d50
+[T64c0] [API]   -> 0x2011fe0
+[T64c0] [API]   -> 0x2078670
+[T64c0] [API]   -> 0x2050fa0
+[T64c0] [API]   -> 0x200a480
+[T64c0] [API]   -> 0x200bf50
+[T64c0] [API]   -> 0x2075e70
+[T64c0] [API]   -> 0x200c420
+[T64c0] [API]   -> 0x2055fe0
+[T64c0] [API]   -> 0x20737b0
+[T64c0] [API]   -> 0x2050e80
+[T64c0] [API]   -> 0x2034cb0
+[T64c0] [API]   -> 0x2044260
+[T64c0] [API]   -> 0x202b770
+[T64c0] [API]   -> 0x2039620
+[T64c0] [API]   -> 0x2021a80
+[T64c0] [API]   -> 0x20736d0
+[T64c0] [API]   -> 0x200c450
+[T64c0] [API]   -> 0x200ea10
+[T64c0] [API]   -> 0x200de30
+[T64c0] [API]   -> 0x2079360
+[T64c0] [API]   -> 0x209e0e0
+[T64c0] [API]   -> 0x209fa50
+[T64c0] [API]   -> 0x2075e30
+[T64c0] [API]   -> 0x200bba0
+[T64c0] [API]   -> 0x2044430
+[T64c0] [API]   -> 0x2090a00
+[T64c0] [API]   -> 0x205f320
+[T64c0] [API]   -> 0x205ec40
+[T64c0] [API]   -> 0x207d2c0
+[T64c0] [API]   -> 0x205f480
+[T64c0] [API]   -> 0x20123d0
+[T64c0] [API]   -> 0x200a470
+[T64c0] [API]   -> 0x200c3b0
+[T64c0] [API]   -> 0x200e190
+[T64c0] [API]   -> 0x2021c60
+[T64c0] [API]   -> 0x20675d0
+[T64c0] [API]   -> 0x208c440
+[T64c0] [API]   -> 0x206b5f0
+[T64c0] [API]   -> 0x20388b0
+[T64c0] [API]   -> 0x20773b0
+[T64c0] [API]   -> 0x204c3a0
+[T64c0] [API]   -> 0x203f450
+[T64c0] [API]   -> 0x20398c0
+[T64c0] [API]   -> 0x20884f0
+[T64c0] [API]   -> 0x200bfc0
+[T64c0] [API]   -> 0x200c0a0
+[T64c0] [API]   -> 0x20972b0
+[T64c0] [API]   -> 0x2068bf0
+[T64c0] [API]   -> 0x2035a50
+[T64c0] [API]   -> 0x2074320
+[T64c0] [API]   -> 0x2038a40
+[T64c0] [API]   -> 0x200a460
+[T64c0] [API]   -> 0x2038580
+[T64c0] [API]   -> 0x203f2e0
+[T64c0] [API]   -> 0x2090d40
+[T64c0] [API]   -> 0x20968c0
+[T64c0] [API]   -> 0x209dde0
+[T64c0] [API]   -> 0x2090e70
+[T64c0] [API]   -> 0x2090530
+[T64c0] [API]   -> 0x2013590
+[T64c0] [API]   -> 0x20976f0
+[T64c0] [API]   -> 0x209b230
+[T64c0] [API]   -> 0x204b8b0
+[T64c0] [API]   -> 0x2052020
+[T64c0] [API]   -> 0x200a450
+[T64c0] [API]   -> 0x20234a0
+[T64c0] [API]   -> 0x208f4a0
+[T64c0] [API]   -> 0x20794a0
+[T64c0] [API]   -> 0x200de70
+[T64c0] [API]   -> 0x2076430
+[T64c0] [API]   -> 0x2022710
+[T64c0] [API]   -> 0x2097070
+[T64c0] [API]   -> 0x20a2710
+[T64c0] [API]   -> 0x20529d0
+[T64c0] [API]   -> 0x200cb70
+[T64c0] [API]   -> 0x2056a40
+[T64c0] [API]   -> 0x208c590
+[T64c0] [API]   -> 0x2052f20
+[T64c0] [API]   -> 0x2052750
+[T64c0] [API]   -> 0x20518d0
+[T64c0] [API]   -> 0x20a37e0
+[T64c0] [API]   -> 0x2011e80
+[T64c0] [API]   -> 0x2093410
+[T64c0] [API]   -> 0x2091620
+[T64c0] [API]   -> 0x2023780
+[T64c0] [API]   -> 0x2043880
+[T64c0] [API]   -> 0x2021a00
+[T64c0] [API]   -> 0x200a8e0
+[T64c0] [API]   -> 0x2023be0
+[T64c0] [API]   -> 0x206f460
+[T64c0] [API]   -> 0x20ab760
+[T64c0] [API]   -> 0x200f410
+[T64c0] [API]   -> 0x2069ac0
+[T64c0] [API]   -> 0x2095cf0
+[T64c0] [API]   -> 0x20104c0
+[T64c0] [API]   -> 0x2075d70
+[T64c0] [API]   -> 0x202d400
+[T64c0] [API]   -> 0x208d150
+[T64c0] [API]   -> 0x200dfd0
+[T64c0] [API]   -> 0x200e8b0
+[T64c0] [API]   -> 0x2075810
+[T64c0] [API]   -> 0x2078180
+[T64c0] [API]   -> 0x2075e50
+[T64c0] [API]   -> 0x2075e60
+[T64c0] [API]   -> 0x200f2f0
+[T64c0] [API]   -> 0x2075e40
+[T64c0] [API]   -> 0x20606a0
+[T64c0] [API]   -> 0x200f510
+[T64c0] [API]   -> 0x200f310
+[T64c0] [API]   -> 0x20952a0
+[T64c0] [API]   -> 0x200f2a0
+[T64c0] [API]   -> 0x20282d0
+[T64c0] [API]   -> 0x20284d0
+[T64c0] [API]   -> 0x200e990
+[T64c0] [API]   -> 0x2075a00
+[T64c0] [API]   -> 0x200e940
+[T64c0] [API]   -> 0x20104d0
+[T64c0] [API]   -> 0x200e930
+[T64c0] [API]   -> 0x20104b0
+[T64c0] [API]   -> 0x200e970
+[T64c0] [API]   -> 0x2075520
+[T64c0] [API]   -> 0x200e980
+[T64c0] [API]   -> 0x200e8a0
+[T64c0] [API]   -> 0x2010470
+[T64c0] [API]   -> 0x200df90
+[T64c0] [API]   -> 0x20603e0
+[T64c0] [API]   -> 0x2075920
+[T64c0] [API]   -> 0x208cc70
+[T64c0] [API]   -> 0x2075730
+[T64c0] [API]   -> 0x208a3b0
+[T64c0] [API]   -> 0x2075a10
+[T64c0] [API]   -> 0x2075930
+[T64c0] [API]   -> 0x20758c0
+[T64c0] [API]   -> 0x202dea0
+[T64c0] [API]   -> 0x200dd00
+[T64c0] [API]   -> 0x2027d10
+[T64c0] [API]   -> 0x2027e80
+[T64c0] [API]   -> 0x2075500
+[T64c0] [API]   -> 0x200e030
+[T64c0] [API]   -> 0x200d020
+[T64c0] [API]   -> 0x200dfc0
+[T64c0] [API]   -> 0x200f7c0
+[T64c0] [API]   -> 0x20573b0
+[T64c0] [API]   -> 0x2069fa0
+[T64c0] [API]   -> 0x200f860
+[T64c0] [API]   -> 0x208cf30
+[T64c0] [API]   -> 0x2075f00
+[T64c0] [API]   -> 0x2046910
+[T64c0] [API]   -> 0x200df60
+[T64c0] [API]   -> 0x20282e0
+[T64c0] [API]   -> 0x20ac4e0
+[T64c0] [API]   -> 0x200dc10
+[T64c0] [API]   -> 0x20a7f60
+[T64c0] [API]   -> 0x2075f90
+[T64c0] [API]   -> 0x200e8f0
+[T64c0] [API]   -> 0x200f470
+[T64c0] [API]   -> 0x200f4c0
+[T64c0] [API]   -> 0x20753e0
+[T64c0] [API]   -> 0x2028d90
+[T64c0] [API]   -> 0x20758f0
+[T64c0] [API]   -> 0x200f320
+[T64c0] [API]   -> 0x200f350
+[T64c0] [API]   -> 0x200f3b0
+[T64c0] [API]   -> 0x200f450
+[T64c0] [API]   -> 0x20761b0
+[T64c0] [API]   -> 0x200f430
+[T64c0] [API]   -> 0x200f380
+[T64c0] [API]   -> 0x2057030
+[T64c0] [API]   -> 0x200f830
+[T64c0] [API]   -> 0x2057220
+[T64c0] [API]   -> 0x200d610
+[T64c0] [API]   -> 0x2075a30
+[T64c0] [API]   -> 0x2075510
+[T64c0] [API]   -> 0x200f810
+[T64c0] [API]   -> 0x200f7f0
+[T64c0] [API]   -> 0x200f7b0
+[T64c0] [API]   -> 0x200f7e0
+[T64c0] [API]   -> 0x200dfb0
+[T64c0] [API]   -> 0x200dfa0
+[T64c0] [API]   -> 0x200f300
+[T64c0] [API]   -> 0x200f820
+[T64c0] [API]   -> 0x2075ec0
+[T64c0] [API]   -> 0x2075900
+[T64c0] [API]   -> 0x20284e0
+[T64c0] [API]   -> 0x20a4f80
+[T64c0] [API]   -> 0x20535a0
+[T64c0] [API]   -> 0x200d620
+[T64c0] [API]   -> 0x2096050
+[T64c0] [API]   -> 0x204cc40
+[T64c0] [API]   -> 0x2028fd0
+[T64c0] [API]   -> 0x20a4d60
+[T64c0] [API]   -> 0x2064a10
+[T64c0] [API]   -> 0x20980a0
+[T64c0] [API]   -> 0x20a7f60
+[T64c0] [API]   -> 0x20ad4f0
+[T64c0] [API]   -> 0x2028640
+[T64c0] [API]   -> 0x20326e0
+[T64c0] [API]   -> 0x20280e0
+[T64c0] [API]   -> 0x2036e50
+[T64c0] [API]   -> 0x2028c10
+[T64c0] [API]   -> 0x2028a90
+[T64c0] [API]   -> 0x2097ae0
+[T64c0] [API]   -> 0x200e950
+[T64c0] [API]   -> 0x200f3f0
+[T64c0] [API]   -> 0x2088bc0
+[T64c0] [API]   -> 0x2064f20
+[T64c0] [API]   -> 0x202a970
+[T64c0] [API]   -> 0x20334c0
+[T64c0] [API]   -> 0x2075c90
+[T64c0] [API]   -> 0x2044250
+[T64c0] [API]   -> 0x20a6f50
+[T64c0] [API]   -> 0x2094180
+[T64c0] [API]   -> 0x2059f00
+[T64c0] [API]   -> 0x202b5c0
+[T64c0] [API]   -> 0x207df90
+[T64c0] [API]   -> 0x2077380
+[T64c0] [API]   -> 0x200ce50
+[T64c0] [API]   -> 0x20b3360
+[T64c0] [API]   -> 0x207e3c0
+[T64c0] [API]   -> 0x2089e20
+[T64c0] [API]   -> 0x20842e0
+[T64c0] [API]   -> 0x2037e40
+[T64c0] [API]   -> 0x20ac1d0
+[T64c0] [API]   -> 0x2094e20
+[T64c0] [API]   -> 0x205e030
+[T64c0] [API]   -> 0x209d180
+[T64c0] [API]   -> 0x202ba60
+[T64c0] [API]   -> 0x207f2b0
+[T64c0] [API]   -> 0x208afd0
+[T64c0] [API]   -> 0x205a380
+[T64c0] [API]   -> 0x20a2d00
+[T64c0] [API]   -> 0x2075990
+[T64c0] [API]   -> 0x2089670
+[T64c0] [API]   -> 0x2082a90
+[T64c0] [API]   -> 0x2093c80
+[T64c0] [API]   -> 0x2058050
+[T64c0] [API]   -> 0x202a7b0
+[T64c0] [API]   -> 0x2056e90
+[T64c0] [API]   -> 0x2040f20
+[T64c0] [API]   -> 0x2027ba0
+[T64c0] [API]   -> 0x205a700
+[T64c0] [API]   -> 0x2059590
+[T64c0] [API]   -> 0x202c7f0
+[T64c0] [API]   -> 0x2066c20
+[T64c0] [API]   -> 0x200f1a0
+[T64c0] [API]   -> 0x20b0e50
+[T64c0] [API]   -> 0x2075ed0
+[T64c0] [API]   -> 0x200da60
+[T64c0] [API]   -> 0x2075a80
+[T64c0] [API]   -> 0x20889f0
+[T64c0] [API]   -> 0x200f230
+[T64c0] [API]   -> 0x2070b40
+[T64c0] [API]   -> 0x200f1f0
+[T64c0] [API]   -> 0x200f1d0
+[T64c0] [API]   -> 0x208d8b0
+[T64c0] [API]   -> 0x200ddb0
+[T64c0] [API]   -> 0x2059110
+[T64c0] [API]   -> 0x209ee00
+[T64c0] [API]   -> 0x2070640
+[T64c0] [API]   -> 0x200f1c0
+[T64c0] [API]   -> 0x205a590
+[T64c0] [API]   -> 0x20b0f30
+[T64c0] [API]   -> 0x202b3f0
+[T64c0] [API]   -> 0x20762d0
+[T64c0] [API]   -> 0x200da70
+[T64c0] [API]   -> 0x207dd30
+[T64c0] [API]   -> 0x2070810
+[T64c0] [API]   -> 0x20587c0
+[T64c0] [API]   -> 0x2084540
+[T64c0] [API]   -> 0x202c960
+[T64c0] [API]   -> 0x20ae200
+[T64c0] [API]   -> 0x20b4300
+[T64c0] [API]   -> 0x20b3d40
+[T64c0] [API]   -> 0x208e4f0
+[T64c0] [API]   -> 0x208e2b0
+[T64c0] [API]   -> 0x208e0f0
+[T64c0] [API]   -> 0x200e2b0
+[T64c0] [API]   -> 0x2049c70
+[T64c0] [API]   -> 0x20bc480
+[T64c0] [API]   -> 0x205ba80
+[T64c0] [API]   -> 0x202cab0
+[T64c0] [API]   -> 0x2029dc0
+[T64c0] [API]   -> 0x2063e80
+[T64c0] [API]   -> 0x200dde0
+[T64c0] [API]   -> 0x207e370
+[T64c0] [API]   -> 0x2066800
+[T64c0] [API]   -> 0x2078420
+[T64c0] [API]   -> 0x2058920
+[T64c0] [API]   -> 0x2075fa0
+[T64c0] [API]   -> 0x2064460
+[T64c0] [API]   -> 0x2062be0
+[T64c0] [API]   -> 0x2066530
+[T64c0] [API]   -> 0x20760d0
+[T64c0] [API]   -> 0x208aba0
+[T64c0] [API]   -> 0x207ec00
+[T64c0] [API]   -> 0x200f270
+[T64c0] [API]   -> 0x200e390
+[T64c0] [API]   -> 0x202c680
+[T64c0] [API]   -> 0x2075a70
+[T64c0] [API]   -> 0x2075980
+[T64c0] [API]   -> 0x202cc20
+[T64c0] [API]   -> 0x20666a0
+[T64c0] [API]   -> 0x200dd60
+[T64c0] [API]   -> 0x2063a40
+[T64c0] [API]   -> 0x2027a10
+[T64c0] [API]   -> 0x20b0c10
+[T64c0] [API]   -> 0x20764d0
+[T64c0] [API]   -> 0x200e360
+[T64c0] [API]   -> 0x2075440
+[T64c0] [API]   -> 0x2058a90
+[T64c0] [API]   -> 0x2075710
+[T64c0] [API]   -> 0x2062d70
+[T64c0] [API]   -> 0x200bbf0
+[T64c0] [API]   -> 0x20947c0
+[T64c0] [API]   -> 0x2097db0
+[T64c0] [API]   -> 0x202ee40
+[T64c0] [API]   -> 0x20638e0
+[T64c0] [API]   -> 0x200d050
+[T64c0] [API]   -> 0x207aae0
+[T64c0] [API]   -> 0x2093600
+[T64c0] [API]   -> 0x207c370
+[T64c0] [API]   -> 0x200d0c0
+[T64c0] [API]   -> 0x200d040
+[T64c0] [API]   -> 0x2075ca0
+[T64c0] [API]   -> 0x2093b50
+[T64c0] [API]   -> 0x208eb10
+[T64c0] [API]   -> 0x20ab420
+[T64c0] [API]   -> 0x207d8f0
+[T64c0] [API]   -> 0x2075800
+[T64c0] [API]   -> 0x200f850
+[T64c0] [API]   -> 0x2075fb0
+[T64c0] [API]   -> 0x200e9a0
+[T64c0] [API]   -> 0x20aba50
+[T64c0] [API]   -> 0x200f2d0
+[T64c0] [API]   -> 0x20a8e90
+[T64c0] [API]   -> 0x20759a0
+[T64c0] [API]   -> 0x2057680
+[T64c0] [API]   -> 0x200f1b0
+[T64c0] [API]   -> 0x20aa070
+[T64c0] [API]   -> 0x20999a0
+[T64c0] [API]   -> 0x2075e00
+[T64c0] [API]   -> 0x20a35a0
+[T64c0] [API]   -> 0x2063fe0
+[T64c0] [API]   -> 0x202e900
+[T64c0] [API]   -> 0x2093750
+[T64c0] [API]   -> 0x20716d0
+[T64c0] [API]   -> 0x202a120
+[T64c0] [API]   -> 0x205a870
+[T64c0] [API]   -> 0x20acc00
+[T64c0] [API]   -> 0x2089c40
+[T64c0] [API]   -> 0x207d510
+[T64c0] [API]   -> 0x208a090
+[T64c0] [API]   -> 0x208a050
+[T64c0] [API]   -> 0x20ad010
+[T64c0] [API]   -> 0x20acfe0
+[T64c0] [API]   -> 0x207fdc0
+[T64c0] [API]   -> 0x200dd90
+[T64c0] [API]   -> 0x2075700
+[T64c0] [API]   -> 0x2059140
+[T64c0] [API]   -> 0x200e340
+[T64c0] [API]   -> 0x2058c00
+[T64c0] [API]   -> 0x2058dc0
+[T64c0] [API]   -> 0x200e330
+[T64c0] [API]   -> 0x20a6c20
+[T64c0] [API]   -> 0x200f250
+[T64c0] [API]   -> 0x2075f20
+[T64c0] [API]   -> 0x2076000
+[T64c0] [API]   -> 0x205b7a0
+[T64c0] [API]   -> 0x2043e00
+[T64c0] [API]   -> 0x2066ac0
+[T64c0] [API]   -> 0x200c1a0
+[T64c0] [API]   -> 0x2076090
+[T64c0] [API]   -> 0x2010190
+[T64c0] [API]   -> 0x208dc60
+[T64c0] [API]   -> 0x200d060
+[T64c0] [API]   -> 0x2056d20
+[T64c0] [API]   -> 0x2066960
+[T64c0] [API]   -> 0x2075940
+[T64c0] [API]   -> 0x200e310
+[T64c0] [API]   -> 0x208fad0
+[T64c0] [API]   -> 0x2029f70
+[T64c0] [API]   -> 0x20379f0
+[T64c0] [API]   -> 0x2076290
+[T64c0] [API]   -> 0x207caf0
+[T64c0] [API]   -> 0x207edb0
+[T64c0] [API]   -> 0x200e9f0
+[T64c0] [API]   -> 0x2076280
+[T64c0] [API]   -> 0x20758d0
+[T64c0] [API]   -> 0x200de00
+[T64c0] [API]   -> 0x2075620
+[T64c0] [API]   -> 0x2032f60
+[T64c0] [API]   -> 0x209b6e0
+[T64c0] [API]   -> 0x200e1a0
+[T64c0] [API]   -> 0x2062d50
+[T64c0] [API]   -> 0x200e000
+[T64c0] [API]   -> 0x2058500
+[T64c0] [API]   -> 0x209c680
+[T64c0] [API]   -> 0x2045ed0
+[T64c0] [API]   -> 0x2021660
+[T64c0] [API]   -> 0x200bb80
+[T64c0] [API]   -> 0x209a440
+[T64c0] [API]   -> 0x202c510
+[T64c0] [API] LoadLibrary[PE-DLL] artifacts/sweep049/stage/guests/mspaint/mfc42u.dll -> base=0x7f4356fac000 size=0x169000 exp=1231184 names=10 resolved=525 unresolved=0
+[T64c0] [API] LoadLibraryA(MSVCRT.DLL)
+[T64c0] [API] GlobalAlloc(flags=0, bytes=0x2000) = 0x3ab7720
+[T64c0] [API] InitializeCriticalSection(0x7f43570eb578)
+[T64c0] [API] TlsAlloc() = 1
+[T64c0] [API] InitializeCriticalSection(0x7f43570e7da8)
+[T64c0] [API] EnterCriticalSection(0x7f43570e7da8)
+[T64c0] [API] GlobalAlloc(flags=8194, bytes=0x200) = 0x3ab7720
+[T64c0] [API] LeaveCriticalSection(0x7f43570e7da8)
+[T64c0] [API] EnterCriticalSection(0x7f43570e7da8)
+[T64c0] [API] TlsGetValue(1) = (nil)
+[T64c0] [API] LeaveCriticalSection(0x7f43570e7da8)
+[T64c0] [API] GlobalAlloc(flags=64, bytes=0x200) = 0x3ab7930
+[T64c0] [API] EnterCriticalSection(0x7f43570e7da8)
+[T64c0] [API] TlsGetValue(1) = (nil)
+[T64c0] [API] GlobalAlloc(flags=64, bytes=0x20) = 0x3ab76f0
+[T64c0] [API] GlobalAlloc(flags=0, bytes=0x10) = 0x3ab7b40
+[T64c0] [API] TlsSetValue(1, 0x3ab76f0)
+[T64c0] [API] LeaveCriticalSection(0x7f43570e7da8)
+[T64c0] [API] EnterCriticalSection(0x7f43570e7da8)
+[T64c0] [API] TlsGetValue(1) = 0x3ab76f0
+[T64c0] [API] LeaveCriticalSection(0x7f43570e7da8)
+[T64c0] [API] malloc(256) = 0x3ab7b60
+[T64c0] [API] _initterm(start=0x7f4357078088, end=0x7f4357078260)
+[T64c0] [API] _initterm: calling 0x7f4356ff7920
+[T64c0] [API] GetSystemTimeAsFileTime()
+[T64c0] [API] GetTickCount() = 4791577
+[T64c0] [API] QueryPerformanceCounter()
+[T64c0] [API] _initterm: calling 0x7f43570492fc
+[T64c0] [API] realloc(0x3ab7b60, 8) = 0x3ab7b60
+[T64c0] [API] _initterm: calling 0x7f4357049308
+[T64c0] [API] realloc(0x3ab7b60, 16) = 0x3ab7b60
+[T64c0] [API] _initterm: calling 0x7f4357049da0
+[T64c0] [API] InitializeCriticalSection(0x7f43570eb048)
+[T64c0] [API] realloc(0x3ab7b60, 24) = 0x3ab7b60
+[T64c0] [API] _initterm: calling 0x7f435704b2dc
+[T64c0] [API] InitializeCriticalSection(0x7f43570eb128)
+[T64c0] [API] realloc(0x3ab7b60, 32) = 0x3ab7c70
+[T64c0] [API] _initterm: calling 0x7f435704b768
+[T64c0] [API] InitializeCriticalSection(0x7f43570eb3e8)
+[T64c0] [API] realloc(0x3ab7c70, 40) = 0x3ab7c70
+[T64c0] [API] _initterm: calling 0x7f435704b794
+[T64c0] [API] InitializeCriticalSection(0x7f43570eb428)
+[T64c0] [API] realloc(0x3ab7c70, 48) = 0x3ab7c70
+[T64c0] [API] _initterm: calling 0x7f435704b920
+[T64c0] [API] InitializeCriticalSection(0x7f43570eb478)
+[T64c0] [API] realloc(0x3ab7c70, 56) = 0x3ab7c70
+[T64c0] [API] _initterm: calling 0x7f435704e89c
+[T64c0] [API] InitializeCriticalSection(0x7f43570eb8f8)
+[T64c0] [API] realloc(0x3ab7c70, 64) = 0x3ab7c70
+[T64c0] [API] _initterm: calling 0x7f435704b31c
+[T64c0] [API] realloc(0x3ab7c70, 72) = 0x3ab7c70
+[T64c0] [API] _initterm: calling 0x7f4357006c78
+[T64c0] [API] realloc(0x3ab7c70, 80) = 0x3ab7c70
+[T64c0] [API] _initterm: calling 0x7f435704b37c
+[T64c0] [API] realloc(0x3ab7c70, 88) = 0x3ab7c70
+[T64c0] [API] _initterm: calling 0x7f435704cd48
+[T64c0] [API] realloc(0x3ab7c70, 96) = 0x3ab7c70
+[T64c0] [API] _initterm: calling 0x7f435704cec8
+[T64c0] [API] realloc(0x3ab7c70, 104) = 0x3ab7c70
+[T64c0] [API] _initterm: calling 0x7f435704d954
+[T64c0] [API] realloc(0x3ab7c70, 112) = 0x3ab7c70
+[T64c0] [API] _initterm: calling 0x7f435704ef18
+[T64c0] [API] realloc(0x3ab7c70, 120) = 0x3ab7c70
+[T64c0] [API] _initterm: calling 0x7f435704f61c
+[T64c0] [API] realloc(0x3ab7c70, 128) = 0x3ab7c70
+[T64c0] [API] _initterm: calling 0x7f435704f64c
+[T64c0] [API] realloc(0x3ab7c70, 136) = 0x3ab7c70
+[T64c0] [API] _initterm: calling 0x7f435704fd28
+[T64c0] [API] realloc(0x3ab7c70, 144) = 0x3ab7c70
+[T64c0] [API] _initterm: calling 0x7f43570484e0
+[T64c0] [API] realloc(0x3ab7c70, 152) = 0x3ab7c70
+[T64c0] [API] _initterm: calling 0x7f43570484ec
+[T64c0] [API] realloc(0x3ab7c70, 160) = 0x3ab7c70
+[T64c0] [API] _initterm: calling 0x7f43570484f8
+[T64c0] [API] realloc(0x3ab7c70, 168) = 0x3ab7c70
+[T64c0] [API] _initterm: calling 0x7f43570485c8
+[T64c0] [API] EnterCriticalSection(0x7f43570e7da8)
+[T64c0] [API] TlsGetValue(1) = 0x3ab76f0
+[T64c0] [API] LeaveCriticalSection(0x7f43570e7da8)
+[T64c0] [API] EnterCriticalSection(0x7f43570eb578)
+[T64c0] [API] InitializeCriticalSection(0x7f43570eb5a0)
+[T64c0] [API] LeaveCriticalSection(0x7f43570eb578)
+[T64c0] [API] EnterCriticalSection(0x7f43570eb5a0)
+[T64c0] [API] LeaveCriticalSection(0x7f43570eb5a0)
+[T64c0] [API] _initterm: calling 0x7f4357048640
+[T64c0] [API] EnterCriticalSection(0x7f43570e7da8)
+[T64c0] [API] TlsGetValue(1) = 0x3ab76f0
+[T64c0] [API] LeaveCriticalSection(0x7f43570e7da8)
+[T64c0] [API] EnterCriticalSection(0x7f43570eb5a0)
+[T64c0] [API] LeaveCriticalSection(0x7f43570eb5a0)
+[T64c0] [API] _initterm: calling 0x7f43570486c0
+[T64c0] [API] EnterCriticalSection(0x7f43570e7da8)
+[T64c0] [API] TlsGetValue(1) = 0x3ab76f0
+[T64c0] [API] LeaveCriticalSection(0x7f43570e7da8)
+[T64c0] [API] EnterCriticalSection(0x7f43570eb5a0)
+[T64c0] [API] LeaveCriticalSection(0x7f43570eb5a0)
+[T64c0] [API] _initterm: calling 0x7f4357048738
+[T64c0] [API] EnterCriticalSection(0x7f43570e7da8)
+[T64c0] [API] TlsGetValue(1) = 0x3ab76f0
+[T64c0] [API] LeaveCriticalSection(0x7f43570e7da8)
+[T64c0] [API] EnterCriticalSection(0x7f43570eb5a0)
+[T64c0] [API] LeaveCriticalSection(0x7f43570eb5a0)
+[T64c0] [API] _initterm: calling 0x7f43570487b8
+[T64c0] [API] EnterCriticalSection(0x7f43570e7da8)
+[T64c0] [API] TlsGetValue(1) = 0x3ab76f0
+[T64c0] [API] LeaveCriticalSection(0x7f43570e7da8)
+[T64c0] [API] EnterCriticalSection(0x7f43570eb5a0)
+[T64c0] [API] LeaveCriticalSection(0x7f43570eb5a0)
+[T64c0] [API] _initterm: calling 0x7f4357048838
+[T64c0] [API] EnterCriticalSection(0x7f43570e7da8)
+[T64c0] [API] TlsGetValue(1) = 0x3ab76f0
+[T64c0] [API] LeaveCriticalSection(0x7f43570e7da8)
+[T64c0] [API] EnterCriticalSection(0x7f43570eb5a0)
+[T64c0] [API] LeaveCriticalSection(0x7f43570eb5a0)
+[T64c0] [API] _initterm: calling 0x7f43570488c0
+[T64c0] [API] EnterCriticalSection(0x7f43570e7da8)
+[T64c0] [API] TlsGetValue(1) = 0x3ab76f0
+[T64c0] [API] LeaveCriticalSection(0x7f43570e7da8)
+[T64c0] [API] EnterCriticalSection(0x7f43570eb5a0)
+[T64c0] [API] LeaveCriticalSection(0x7f43570eb5a0)
+[T64c0] [API] _initterm: calling 0x7f4357048954
+[T64c0] [API] EnterCriticalSection(0x7f43570e7da8)
+[T64c0] [API] TlsGetValue(1) = 0x3ab76f0
+[T64c0] [API] LeaveCriticalSection(0x7f43570e7da8)
+[T64c0] [API] EnterCriticalSection(0x7f43570eb5a0)
+[T64c0] [API] LeaveCriticalSection(0x7f43570eb5a0)
+[T64c0] [API] _initterm: calling 0x7f43570489e0
+[T64c0] [API] EnterCriticalSection(0x7f43570e7da8)
+[T64c0] [API] TlsGetValue(1) = 0x3ab76f0
+[T64c0] [API] LeaveCriticalSection(0x7f43570e7da8)
+[T64c0] [API] EnterCriticalSection(0x7f43570eb5a0)
+[T64c0] [API] LeaveCriticalSection(0x7f43570eb5a0)
+[T64c0] [API] _initterm: calling 0x7f4357048a64
+[T64c0] [API] EnterCriticalSection(0x7f43570e7da8)
+[T64c0] [API] TlsGetValue(1) = 0x3ab76f0
+[T64c0] [API] LeaveCriticalSection(0x7f43570e7da8)
+[T64c0] [API] EnterCriticalSection(0x7f43570eb5a0)
+[T64c0] [API] LeaveCriticalSection(0x7f43570eb5a0)
+[T64c0] [API] _initterm: calling 0x7f4357014498
+[T64c0] [API] RegisterWindowMessageW() -> 0xc000
+[T64c0] [API] _initterm: calling 0x7f43570144b4
+[T64c0] [API] EnterCriticalSection(0x7f43570e7da8)
+[T64c0] [API] TlsGetValue(1) = 0x3ab76f0
+[T64c0] [API] LeaveCriticalSection(0x7f43570e7da8)
+[T64c0] [API] realloc(0x3ab7c70, 176) = 0x3ab7c70
+[T64c0] [API] _initterm: calling 0x7f43570144d8
+[T64c0] [API] EnterCriticalSection(0x7f43570e7da8)
+[T64c0] [API] TlsGetValue(1) = 0x3ab76f0
+[T64c0] [API] LeaveCriticalSection(0x7f43570e7da8)
+[T64c0] [API] realloc(0x3ab7c70, 184) = 0x3ab7c70
+[T64c0] [API] _initterm: calling 0x7f4357014500
+[T64c0] [API] EnterCriticalSection(0x7f43570e7da8)
+[T64c0] [API] TlsGetValue(1) = 0x3ab76f0
+[T64c0] [API] LeaveCriticalSection(0x7f43570e7da8)
+[T64c0] [API] realloc(0x3ab7c70, 192) = 0x3ab7c70
+[T64c0] [API] _initterm: calling 0x7f4357014528
+[T64c0] [API] EnterCriticalSection(0x7f43570e7da8)
+[T64c0] [API] TlsGetValue(1) = 0x3ab76f0
+[T64c0] [API] LeaveCriticalSection(0x7f43570e7da8)
+[T64c0] [API] realloc(0x3ab7c70, 200) = 0x3ab7c70
+[T64c0] [API] _initterm: calling 0x7f4357034a24
+[T64c0] [API] _initterm: calling 0x7f43570380a8
+[T64c0] [API] realloc(0x3ab7c70, 208) = 0x3ab7c70
+[T64c0] [API] _initterm: calling 0x7f435704b198
+[T64c0] [API] EnterCriticalSection(0x7f43570e7da8)
+[T64c0] [API] TlsGetValue(1) = 0x3ab76f0
+[T64c0] [API] LeaveCriticalSection(0x7f43570e7da8)
+[T64c0] [API] EnterCriticalSection(0x7f43570eb5a0)
+[T64c0] [API] LeaveCriticalSection(0x7f43570eb5a0)
+[T64c0] [API] _initterm: calling 0x7f435703919c
+[T64c0] [API] realloc(0x3ab7c70, 216) = 0x3ab7c70
+[T64c0] [API] _initterm: calling 0x7f435704b5fc
+[T64c0] [API] realloc(0x3ab7c70, 224) = 0x3ab7c70
+[T64c0] [API] _initterm: calling 0x7f435704b7c0
+[T64c0] [API] realloc(0x3ab7c70, 232) = 0x3ab7c70
+[T64c0] [API] _initterm: calling 0x7f435704b810
+[T64c0] [API] realloc(0x3ab7c70, 240) = 0x3ab7c70
+[T64c0] [API] _initterm: calling 0x7f435703e1cc
+[T64c0] [API] realloc(0x3ab7c70, 248) = 0x3ab7c70
+[T64c0] [API] _initterm: calling 0x7f435704bab0
+[T64c0] [API] [GDI] GetDeviceCaps(88) -> 96
+[T64c0] [API] [GDI] GetDeviceCaps(90) -> 96
+[T64c0] [API] GetSysColor(15) -> 0xc0c0c0
+[T64c0] [API] GetSysColor(16) -> 0xc0c0c0
+[T64c0] [API] GetSysColor(20) -> 0xc0c0c0
+[T64c0] [API] GetSysColor(18) -> 0x000000
+[T64c0] [API] GetSysColor(6) -> 0xc0c0c0
+[T64c0] [API] GetSysColorBrush(15) -> stock 0x4000f
+[T64c0] [API] GetSysColorBrush(6) -> stock 0x40006
+[T64c0] [API] realloc(0x3ab7c70, 256) = 0x3ab7c70
+[T64c0] [API] _initterm: calling 0x7f435703fec0
+[T64c0] [API] RegisterWindowMessageW() -> 0xc001
+[T64c0] [API] _initterm: calling 0x7f435703fedc
+[T64c0] [API] realloc(0x3ab7c70, 264) = 0x3ab7c70
+[T64c0] [API] _initterm: calling 0x7f435704ed04
+[T64c0] [API] RegisterClipboardFormatW() -> 0xc000
+[T64c0] [API] RegisterClipboardFormatW() -> 0xc001
+[T64c0] [API] RegisterClipboardFormatW() -> 0xc002
+[T64c0] [API] RegisterClipboardFormatW() -> 0xc003
+[T64c0] [API] RegisterClipboardFormatW() -> 0xc004
+[T64c0] [API] RegisterClipboardFormatW() -> 0xc005
+[T64c0] [API] RegisterClipboardFormatW() -> 0xc006
+[T64c0] [API] RegisterClipboardFormatW() -> 0xc007
+[T64c0] [API] RegisterClipboardFormatW() -> 0xc008
+[T64c0] [API] RegisterClipboardFormatW() -> 0xc009
+[T64c0] [API] RegisterClipboardFormatW() -> 0xc00a
+[T64c0] [API] RegisterClipboardFormatW() -> 0xc00b
+[T64c0] [API] _initterm: calling 0x7f435704efd8
+[T64c0] [API] EnterCriticalSection(0x7f43570e7da8)
+[T64c0] [API] TlsGetValue(1) = 0x3ab76f0
+[T64c0] [API] LeaveCriticalSection(0x7f43570e7da8)
+[T64c0] [API] EnterCriticalSection(0x7f43570eb5a0)
+[T64c0] [API] LeaveCriticalSection(0x7f43570eb5a0)
+[T64c0] [API] _initterm: calling 0x7f4357044024
+[T64c0] [API] RegisterWindowMessageW() -> 0xc002
+[T64c0] [API] _initterm: calling 0x7f435704f418
+[T64c0] [API] EnterCriticalSection(0x7f43570e7da8)
+[T64c0] [API] TlsGetValue(1) = 0x3ab76f0
+[T64c0] [API] LeaveCriticalSection(0x7f43570e7da8)
+[T64c0] [API] EnterCriticalSection(0x7f43570eb5a0)
+[T64c0] [API] LeaveCriticalSection(0x7f43570eb5a0)
+[T64c0] [API] _initterm: calling 0x7f4357076300
+[T64c0] [API] realloc(0x3ab7c70, 272) = 0x3ab7c70
+[T64c0] [API] _initterm: calling 0x7f435707630c
+[T64c0] [API] realloc(0x3ab7c70, 280) = 0x3ab7c70
+[T64c0] [API] _initterm: calling 0x7f4357076318
+[T64c0] [API] EnterCriticalSection(0x7f43570e7da8)
+[T64c0] [API] TlsGetValue(1) = 0x3ab76f0
+[T64c0] [API] LeaveCriticalSection(0x7f43570e7da8)
+[T64c0] [API] EnterCriticalSection(0x7f43570eb5a0)
+[T64c0] [API] LeaveCriticalSection(0x7f43570eb5a0)
+[T64c0] [API] realloc(0x3ab7c70, 288) = 0x3ab7c70
+[T64c0] [API] _initterm: calling 0x7f4357076364
+[T64c0] [API] EnterCriticalSection(0x7f43570e7da8)
+[T64c0] [API] TlsGetValue(1) = 0x3ab76f0
+[T64c0] [API] LeaveCriticalSection(0x7f43570e7da8)
+[T64c0] [API] EnterCriticalSection(0x7f43570eb5a0)
+[T64c0] [API] LeaveCriticalSection(0x7f43570eb5a0)
+[T64c0] [API] realloc(0x3ab7c70, 296) = 0x3ab7c70
+[T64c0] [API] _initterm: calling 0x7f43570763b0
+[T64c0] [API] EnterCriticalSection(0x7f43570e7da8)
+[T64c0] [API] TlsGetValue(1) = 0x3ab76f0
+[T64c0] [API] LeaveCriticalSection(0x7f43570e7da8)
+[T64c0] [API] EnterCriticalSection(0x7f43570eb5a0)
+[T64c0] [API] LeaveCriticalSection(0x7f43570eb5a0)
+[T64c0] [API] realloc(0x3ab7c70, 304) = 0x3ab7c70
+[T64c0] [API] _initterm: calling 0x7f435704fd60
+[T64c0] [API] EnterCriticalSection(0x7f43570e7da8)
+[T64c0] [API] TlsGetValue(1) = 0x3ab76f0
+[T64c0] [API] LeaveCriticalSection(0x7f43570e7da8)
+[T64c0] [API] GetCursorPos() -> (0,0) TRUE
+[T64c0] [API] EnterCriticalSection(0x7f43570e7da8)
+[T64c0] [API] LeaveCriticalSection(0x7f43570e7da8)
+[T64c0] [API] EnterCriticalSection(0x7f43570e7da8)
+[T64c0] [API] TlsGetValue(1) = 0x3ab76f0
+[T64c0] [API] LeaveCriticalSection(0x7f43570e7da8)
+[T64c0] [API] GlobalAlloc(flags=64, bytes=0x108) = 0x3ab7db0
+[T64c0] [API] EnterCriticalSection(0x7f43570e7da8)
+[T64c0] [API] TlsGetValue(1) = 0x3ab76f0
+[T64c0] [API] realloc(0x3ab7b40, 24) = 0x3ab7b40
+[T64c0] [API] LocalReAlloc(0x3ab7b40, 24) -> 0x3ab7b40
+[T64c0] [API] TlsSetValue(1, 0x3ab76f0)
+[T64c0] [API] LeaveCriticalSection(0x7f43570e7da8)
+[T64c0] [API] realloc(0x3ab7c70, 312) = 0x3ab7c70
+[T64c0] [API] EnterCriticalSection(0x7f43570e7da8)
+[T64c0] [API] TlsGetValue(1) = 0x3ab76f0
+[T64c0] [API] LeaveCriticalSection(0x7f43570e7da8)
+[T64c0] [API] EnterCriticalSection(0x7f43570e7da8)
+[T64c0] [API] TlsGetValue(1) = 0x3ab76f0
+[T64c0] [API] LeaveCriticalSection(0x7f43570e7da8)
+[T64c0] [API] EnterCriticalSection(0x7f43570e7da8)
+[T64c0] [API] TlsGetValue(1) = 0x3ab76f0
+[T64c0] [API] LeaveCriticalSection(0x7f43570e7da8)
+[T64c0] [API] GetModuleFileNameW(cap=260)
+[T64c0] [API] EnterCriticalSection(0x7f43570e7da8)
+[T64c0] [API] TlsGetValue(1) = 0x3ab76f0
+[T64c0] [API] LeaveCriticalSection(0x7f43570e7da8)
+[T64c0] [API] EnterCriticalSection(0x7f43570eb5a0)
+[T64c0] [API] LeaveCriticalSection(0x7f43570eb5a0)
+[T64c0] [API] EnterCriticalSection(0x7f43570e7da8)
+[T64c0] [API] TlsGetValue(1) = 0x3ab76f0
+[T64c0] [API] LeaveCriticalSection(0x7f43570e7da8)
+[T64c0] [API] LoadStringW(id=57344) -> 0 (resource absent)
+[T64c0] [API] EnterCriticalSection(0x7f43570eb5a0)
+[T64c0] [API] LeaveCriticalSection(0x7f43570eb5a0)
+[T64c0] [API] EnterCriticalSection(0x7f43570e7da8)
+[T64c0] [API] TlsGetValue(1) = 0x3ab76f0
+[T64c0] [API] LeaveCriticalSection(0x7f43570e7da8)
+[T64c0] [API] EnterCriticalSection(0x7f43570e7da8)
+[T64c0] [API] TlsGetValue(1) = 0x3ab76f0
+[T64c0] [API] LeaveCriticalSection(0x7f43570e7da8)
+[T64c0] [API] EnterCriticalSection(0x7f43570eb5a0)
+[T64c0] [API] EnterCriticalSection(0x7f43570e7da8)
+[T64c0] [API] TlsGetValue(1) = 0x3ab76f0
+[T64c0] [API] LeaveCriticalSection(0x7f43570e7da8)
+[T64c0] [API] EnterCriticalSection(0x7f43570e7da8)
+[T64c0] [API] TlsGetValue(1) = 0x3ab76f0
+[T64c0] [API] LeaveCriticalSection(0x7f43570e7da8)
+[T64c0] [API] EnterCriticalSection(0x7f43570e7da8)
+[T64c0] [API] TlsGetValue(1) = 0x3ab76f0
+[T64c0] [API] LeaveCriticalSection(0x7f43570e7da8)
+[T64c0] [API] LeaveCriticalSection(0x7f43570eb5a0)
+[T64c0] [API] EnterCriticalSection(0x7f43570eb5a0)
+[T64c0] [API] LeaveCriticalSection(0x7f43570eb5a0)
+[T64c0] [API] EnterCriticalSection(0x7f43570e7da8)
+[T64c0] [API] TlsGetValue(1) = 0x3ab76f0
+[T64c0] [API] LeaveCriticalSection(0x7f43570e7da8)
+[T64c0] [API] EnterCriticalSection(0x7f43570e7da8)
+[T64c0] [API] TlsGetValue(1) = 0x3ab76f0
+[T64c0] [API] LeaveCriticalSection(0x7f43570e7da8)
+[T64c0] [API] malloc(128) = 0x3ab7f00
+[T64c0] [API] EnterCriticalSection(0x7f43570e7da8)
+[T64c0] [API] TlsGetValue(1) = 0x3ab76f0
+[T64c0] [API] LeaveCriticalSection(0x7f43570e7da8)
+[T64c0] [API] EnterCriticalSection(0x7f43570eb578)
+[T64c0] [API] InitializeCriticalSection(0x7f43570eb820)
+[T64c0] [API] LeaveCriticalSection(0x7f43570eb578)
+[T64c0] [API] EnterCriticalSection(0x7f43570eb820)
+[T64c0] [API] GlobalAlloc(flags=64, bytes=0x20f8) = 0x3ab7f90
+[T64c0] [API] LeaveCriticalSection(0x7f43570eb820)
+[T64c0] [API] EnterCriticalSection(0x7f43570eb5a0)
+[T64c0] [API] LeaveCriticalSection(0x7f43570eb5a0)
+[T64c0] [API] GetSystemDirectoryA()
+[T64c0] [API] LoadLibraryA(C:\Windows\System32\MFC42LOC.DLL)
+[T64c0] [API] SetLastError(126)
+[T64c0] [API] EnterCriticalSection(0x7f43570e7da8)
+[T64c0] [API] TlsGetValue(1) = 0x3ab76f0
+[T64c0] [API] LeaveCriticalSection(0x7f43570e7da8)
+[T64c0] [API]   dll mfc42u.dll DllMain(ATTACH) -> 1
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f4357014dd4
+[T64c0] [API]   [0] Ordinal 5245 -> dll mfc42u.dll!#5245
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f43570392e8
+[T64c0] [API]   [1] Ordinal 3003 -> dll mfc42u.dll!#3003
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f4357016b1c
+[T64c0] [API]   [2] Ordinal 2661 -> dll mfc42u.dll!#2661
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f43570166ac
+[T64c0] [API]   [3] Ordinal 3177 -> dll mfc42u.dll!#3177
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f43570167f8
+[T64c0] [API]   [4] Ordinal 4344 -> dll mfc42u.dll!#4344
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f435700fb40
+[T64c0] [API]   [5] Ordinal 2781 -> dll mfc42u.dll!#2781
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f435700f85c
+[T64c0] [API]   [6] Ordinal 620 -> dll mfc42u.dll!#620
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f43570169a4
+[T64c0] [API]   [7] Ordinal 6614 -> dll mfc42u.dll!#6614
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f4356fffe94
+[T64c0] [API]   [8] Ordinal 2846 -> dll mfc42u.dll!#2846
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f4357016654
+[T64c0] [API]   [9] Ordinal 1781 -> dll mfc42u.dll!#1781
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f435700f60c
+[T64c0] [API]   [10] Ordinal 1284 -> dll mfc42u.dll!#1284
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f435700f5b0
+[T64c0] [API]   [11] Ordinal 1287 -> dll mfc42u.dll!#1287
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f435702b750
+[T64c0] [API]   [12] Ordinal 2318 -> dll mfc42u.dll!#2318
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f435702bc6c
+[T64c0] [API]   [13] Ordinal 2376 -> dll mfc42u.dll!#2376
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f435701c084
+[T64c0] [API]   [14] Ordinal 984 -> dll mfc42u.dll!#984
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f435701bffc
+[T64c0] [API]   [15] Ordinal 525 -> dll mfc42u.dll!#525
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f435702b870
+[T64c0] [API]   [16] Ordinal 2311 -> dll mfc42u.dll!#2311
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f435702bd2c
+[T64c0] [API]   [17] Ordinal 2384 -> dll mfc42u.dll!#2384
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f435701aa1c
+[T64c0] [API]   [18] Ordinal 6559 -> dll mfc42u.dll!#6559
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f43570230cc
+[T64c0] [API]   [19] Ordinal 5575 -> dll mfc42u.dll!#5575
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f435707c730
+[T64c0] [API]   [20] Ordinal 4554 -> dll mfc42u.dll!#4554
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f4357011cf8
+[T64c0] [API]   [21] Ordinal 2393 -> dll mfc42u.dll!#2393
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f435701b28c
+[T64c0] [API]   [22] Ordinal 6131 -> dll mfc42u.dll!#6131
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f435701b240
+[T64c0] [API]   [23] Ordinal 6138 -> dll mfc42u.dll!#6138
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f435701b2e8
+[T64c0] [API]   [24] Ordinal 6130 -> dll mfc42u.dll!#6130
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f435704a0c4
+[T64c0] [API]   [25] Ordinal 4705 -> dll mfc42u.dll!#4705
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f435704a004
+[T64c0] [API]   [26] Ordinal 5670 -> dll mfc42u.dll!#5670
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f435704b090
+[T64c0] [API]   [27] Ordinal 3753 -> dll mfc42u.dll!#3753
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f4357049f50
+[T64c0] [API]   [28] Ordinal 321 -> dll mfc42u.dll!#321
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f4357022d84
+[T64c0] [API]   [29] Ordinal 837 -> dll mfc42u.dll!#837
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f4357023328
+[T64c0] [API]   [30] Ordinal 5133 -> dll mfc42u.dll!#5133
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f435704b674
+[T64c0] [API]   [31] Ordinal 3861 -> dll mfc42u.dll!#3861
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f43570169fc
+[T64c0] [API]   [32] Ordinal 4127 -> dll mfc42u.dll!#4127
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f4357068424
+[T64c0] [API]   [33] Ordinal 2084 -> dll mfc42u.dll!#2084
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f435700ca74
+[T64c0] [API]   [34] Ordinal 1561 -> dll mfc42u.dll!#1561
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f43570312f4
+[T64c0] [API]   [35] Ordinal 1498 -> dll mfc42u.dll!#1498
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f4357014ed0
+[T64c0] [API]   [36] Ordinal 4826 -> dll mfc42u.dll!#4826
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f43570167a0
+[T64c0] [API]   [37] Ordinal 6326 -> dll mfc42u.dll!#6326
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f4357016b48
+[T64c0] [API]   [38] Ordinal 6351 -> dll mfc42u.dll!#6351
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f4357016714
+[T64c0] [API]   [39] Ordinal 3180 -> dll mfc42u.dll!#3180
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f4357013304
+[T64c0] [API]   [40] Ordinal 5149 -> dll mfc42u.dll!#5149
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f43570131f8
+[T64c0] [API]   [41] Ordinal 4894 -> dll mfc42u.dll!#4894
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f435700f440
+[T64c0] [API]   [42] Ordinal 1122 -> dll mfc42u.dll!#1122
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f435700f978
+[T64c0] [API]   [43] Ordinal 1259 -> dll mfc42u.dll!#1259
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f435700cd98
+[T64c0] [API]   [44] Ordinal 5905 -> dll mfc42u.dll!#5905
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f4356fff900
+[T64c0] [API]   [45] Ordinal 4436 -> dll mfc42u.dll!#4436
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f4356ffef38
+[T64c0] [API]   [46] Ordinal 6021 -> dll mfc42u.dll!#6021
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f4356fff818
+[T64c0] [API]   [47] Ordinal 6050 -> dll mfc42u.dll!#6050
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f4356fff008
+[T64c0] [API]   [48] Ordinal 621 -> dll mfc42u.dll!#621
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f435700f7c4
+[T64c0] [API]   [49] Ordinal 4523 -> dll mfc42u.dll!#4523
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f435700cd74
+[T64c0] [API]   [50] Ordinal 5975 -> dll mfc42u.dll!#5975
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f4357063c7c
+[T64c0] [API]   [51] Ordinal 4650 -> dll mfc42u.dll!#4650
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f435701bfa4
+[T64c0] [API]   [52] Ordinal 1064 -> dll mfc42u.dll!#1064
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f435701bf1c
+[T64c0] [API]   [53] Ordinal 660 -> dll mfc42u.dll!#660
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f435701abe4
+[T64c0] [API]   [54] Ordinal 4297 -> dll mfc42u.dll!#4297
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f435701a9e4
+[T64c0] [API]   [55] Ordinal 6511 -> dll mfc42u.dll!#6511
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f435701b58c
+[T64c0] [API]   [56] Ordinal 6609 -> dll mfc42u.dll!#6609
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f4357079ff0
+[T64c0] [API]   [57] Ordinal 1950 -> dll mfc42u.dll!#1950
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f435707a020
+[T64c0] [API]   [58] Ordinal 4599 -> dll mfc42u.dll!#4599
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f435700fe14
+[T64c0] [API]   [59] Ordinal 5712 -> dll mfc42u.dll!#5712
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f4357011dd4
+[T64c0] [API]   [60] Ordinal 1067 -> dll mfc42u.dll!#1067
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f43570163d4
+[T64c0] [API]   [61] Ordinal 4544 -> dll mfc42u.dll!#4544
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f43570163d4
+[T64c0] [API]   [62] Ordinal 2595 -> dll mfc42u.dll!#2595
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f435704b8b0
+[T64c0] [API]   [63] Ordinal 3820 -> dll mfc42u.dll!#3820
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f435701647c
+[T64c0] [API]   [64] Ordinal 2449 -> dll mfc42u.dll!#2449
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f43570163b0
+[T64c0] [API]   [65] Ordinal 2903 -> dll mfc42u.dll!#2903
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f4357016400
+[T64c0] [API]   [66] Ordinal 1650 -> dll mfc42u.dll!#1650
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f4357016924
+[T64c0] [API]   [67] Ordinal 3234 -> dll mfc42u.dll!#3234
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f435700fb48
+[T64c0] [API]   [68] Ordinal 665 -> dll mfc42u.dll!#665
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f43570100fc
+[T64c0] [API]   [69] Ordinal 1537 -> dll mfc42u.dll!#1537
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f435701033c
+[T64c0] [API]   [70] Ordinal 3936 -> dll mfc42u.dll!#3936
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f43570102d4
+[T64c0] [API]   [71] Ordinal 6520 -> dll mfc42u.dll!#6520
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f4357011084
+[T64c0] [API]   [72] Ordinal 6691 -> dll mfc42u.dll!#6691
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f435701119c
+[T64c0] [API]   [73] Ordinal 3647 -> dll mfc42u.dll!#3647
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f4357011ca0
+[T64c0] [API]   [74] Ordinal 3099 -> dll mfc42u.dll!#3099
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f4357060518
+[T64c0] [API]   [75] Ordinal 4704 -> dll mfc42u.dll!#4704
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f4357060e58
+[T64c0] [API]   [76] Ordinal 5510 -> dll mfc42u.dll!#5510
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f4357060588
+[T64c0] [API]   [77] Ordinal 4799 -> dll mfc42u.dll!#4799
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f4357022394
+[T64c0] [API]   [78] Ordinal 5037 -> dll mfc42u.dll!#5037
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f4357022424
+[T64c0] [API]   [79] Ordinal 5052 -> dll mfc42u.dll!#5052
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f435708dfe8
+[T64c0] [API]   [80] Ordinal 1885 -> dll mfc42u.dll!#1885
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f435708e020
+[T64c0] [API]   [81] Ordinal 4575 -> dll mfc42u.dll!#4575
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f4357060bf4
+[T64c0] [API]   [82] Ordinal 5350 -> dll mfc42u.dll!#5350
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f4357060ed4
+[T64c0] [API]   [83] Ordinal 3357 -> dll mfc42u.dll!#3357
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f435706073c
+[T64c0] [API]   [84] Ordinal 2452 -> dll mfc42u.dll!#2452
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f435706066c
+[T64c0] [API]   [85] Ordinal 1703 -> dll mfc42u.dll!#1703
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f43570609dc
+[T64c0] [API]   [86] Ordinal 5414 -> dll mfc42u.dll!#5414
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f435706041c
+[T64c0] [API]   [87] Ordinal 4820 -> dll mfc42u.dll!#4820
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f4357032474
+[T64c0] [API]   [88] Ordinal 2750 -> dll mfc42u.dll!#2750
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f4357032354
+[T64c0] [API]   [89] Ordinal 2405 -> dll mfc42u.dll!#2405
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f4357031bc0
+[T64c0] [API]   [90] Ordinal 3141 -> dll mfc42u.dll!#3141
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f435703200c
+[T64c0] [API]   [91] Ordinal 5521 -> dll mfc42u.dll!#5521
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f4357034718
+[T64c0] [API]   [92] Ordinal 5524 -> dll mfc42u.dll!#5524
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f43570328d8
+[T64c0] [API]   [93] Ordinal 4817 -> dll mfc42u.dll!#4817
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f43570343d0
+[T64c0] [API]   [94] Ordinal 4633 -> dll mfc42u.dll!#4633
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f4357033f20
+[T64c0] [API]   [95] Ordinal 5420 -> dll mfc42u.dll!#5420
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f4357034594
+[T64c0] [API]   [96] Ordinal 1316 -> dll mfc42u.dll!#1316
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f4357060c24
+[T64c0] [API]   [97] Ordinal 5843 -> dll mfc42u.dll!#5843
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f43570321b4
+[T64c0] [API]   [98] Ordinal 3536 -> dll mfc42u.dll!#3536
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f4357032364
+[T64c0] [API]   [99] Ordinal 2920 -> dll mfc42u.dll!#2920
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f4357033528
+[T64c0] [API]   [100] Ordinal 2919 -> dll mfc42u.dll!#2919
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f4357060a94
+[T64c0] [API]   [101] Ordinal 4464 -> dll mfc42u.dll!#4464
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f43570107a4
+[T64c0] [API]   [102] Ordinal 4364 -> dll mfc42u.dll!#4364
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f4357031ca4
+[T64c0] [API]   [103] Ordinal 5659 -> dll mfc42u.dll!#5659
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f4357060474
+[T64c0] [API]   [104] Ordinal 5707 -> dll mfc42u.dll!#5707
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f4357031e70
+[T64c0] [API]   [105] Ordinal 2671 -> dll mfc42u.dll!#2671
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f4357031d00
+[T64c0] [API]   [106] Ordinal 1674 -> dll mfc42u.dll!#1674
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f43570325b0
+[T64c0] [API]   [107] Ordinal 4784 -> dll mfc42u.dll!#4784
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f4357031fb4
+[T64c0] [API]   [108] Ordinal 5674 -> dll mfc42u.dll!#5674
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f4357032e44
+[T64c0] [API]   [109] Ordinal 4774 -> dll mfc42u.dll!#4774
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f43570602c0
+[T64c0] [API]   [110] Ordinal 967 -> dll mfc42u.dll!#967
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f435706a754
+[T64c0] [API]   [111] Ordinal 975 -> dll mfc42u.dll!#975
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f4357062cf8
+[T64c0] [API]   [112] Ordinal 963 -> dll mfc42u.dll!#963
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f4357032c98
+[T64c0] [API]   [113] Ordinal 4759 -> dll mfc42u.dll!#4759
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f435702a89c
+[T64c0] [API]   [114] Ordinal 6072 -> dll mfc42u.dll!#6072
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f4357062a78
+[T64c0] [API]   [115] Ordinal 5865 -> dll mfc42u.dll!#5865
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f435706a86c
+[T64c0] [API]   [116] Ordinal 2118 -> dll mfc42u.dll!#2118
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f4357060368
+[T64c0] [API]   [117] Ordinal 4809 -> dll mfc42u.dll!#4809
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f4357060df8
+[T64c0] [API]   [118] Ordinal 5991 -> dll mfc42u.dll!#5991
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f43570602ac
+[T64c0] [API]   [119] Ordinal 5446 -> dll mfc42u.dll!#5446
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f43570635c8
+[T64c0] [API]   [120] Ordinal 485 -> dll mfc42u.dll!#485
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f435706a804
+[T64c0] [API]   [121] Ordinal 497 -> dll mfc42u.dll!#497
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f43570608c0
+[T64c0] [API]   [122] Ordinal 489 -> dll mfc42u.dll!#489
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f435707ab88
+[T64c0] [API]   [123] Ordinal 4565 -> dll mfc42u.dll!#4565
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f4357032088
+[T64c0] [API]   [124] Ordinal 5175 -> dll mfc42u.dll!#5175
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f4357033b0c
+[T64c0] [API]   [125] Ordinal 3481 -> dll mfc42u.dll!#3481
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f435703426c
+[T64c0] [API]   [126] Ordinal 5839 -> dll mfc42u.dll!#5839
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f4357032a2c
+[T64c0] [API]   [127] Ordinal 4461 -> dll mfc42u.dll!#4461
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f4357031bf8
+[T64c0] [API]   [128] Ordinal 5704 -> dll mfc42u.dll!#5704
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f4357034944
+[T64c0] [API]   [129] Ordinal 890 -> dll mfc42u.dll!#890
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f43570347e4
+[T64c0] [API]   [130] Ordinal 387 -> dll mfc42u.dll!#387
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f435703271c
+[T64c0] [API]   [131] Ordinal 2100 -> dll mfc42u.dll!#2100
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f43570346d0
+[T64c0] [API]   [132] Ordinal 4806 -> dll mfc42u.dll!#4806
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f4357033168
+[T64c0] [API]   [133] Ordinal 5468 -> dll mfc42u.dll!#5468
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f435704fde8
+[T64c0] [API]   [134] Ordinal 5519 -> dll mfc42u.dll!#5519
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f4357050318
+[T64c0] [API]   [135] Ordinal 4981 -> dll mfc42u.dll!#4981
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f4357063f0c
+[T64c0] [API]   [136] Ordinal 4979 -> dll mfc42u.dll!#4979
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f435708ed98
+[T64c0] [API]   [137] Ordinal 1893 -> dll mfc42u.dll!#1893
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f435708ee50
+[T64c0] [API]   [138] Ordinal 4578 -> dll mfc42u.dll!#4578
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f435708edd0
+[T64c0] [API]   [139] Ordinal 4288 -> dll mfc42u.dll!#4288
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f4357064154
+[T64c0] [API]   [140] Ordinal 5363 -> dll mfc42u.dll!#5363
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f435706407c
+[T64c0] [API]   [141] Ordinal 5253 -> dll mfc42u.dll!#5253
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f4357063fa4
+[T64c0] [API]   [142] Ordinal 5216 -> dll mfc42u.dll!#5216
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f4357064d28
+[T64c0] [API]   [143] Ordinal 3270 -> dll mfc42u.dll!#3270
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f4357065c9c
+[T64c0] [API]   [144] Ordinal 5354 -> dll mfc42u.dll!#5354
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f4357068130
+[T64c0] [API]   [145] Ordinal 2448 -> dll mfc42u.dll!#2448
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f4357068044
+[T64c0] [API]   [146] Ordinal 2195 -> dll mfc42u.dll!#2195
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f4357065b04
+[T64c0] [API]   [147] Ordinal 4870 -> dll mfc42u.dll!#4870
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f4357065a54
+[T64c0] [API]   [148] Ordinal 5001 -> dll mfc42u.dll!#5001
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f4357068558
+[T64c0] [API]   [149] Ordinal 5317 -> dll mfc42u.dll!#5317
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f43570643ac
+[T64c0] [API]   [150] Ordinal 5410 -> dll mfc42u.dll!#5410
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f43570642f4
+[T64c0] [API]   [151] Ordinal 4841 -> dll mfc42u.dll!#4841
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f43570650b8
+[T64c0] [API]   [152] Ordinal 5432 -> dll mfc42u.dll!#5432
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f4357068558
+[T64c0] [API]   [153] Ordinal 3191 -> dll mfc42u.dll!#3191
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f43570685ac
+[T64c0] [API]   [154] Ordinal 4964 -> dll mfc42u.dll!#4964
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f4357064d64
+[T64c0] [API]   [155] Ordinal 5408 -> dll mfc42u.dll!#5408
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f4357067f5c
+[T64c0] [API]   [156] Ordinal 4762 -> dll mfc42u.dll!#4762
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f4357061484
+[T64c0] [API]   [157] Ordinal 5871 -> dll mfc42u.dll!#5871
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f4357060fd0
+[T64c0] [API]   [158] Ordinal 4989 -> dll mfc42u.dll!#4989
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f4357060fac
+[T64c0] [API]   [159] Ordinal 3059 -> dll mfc42u.dll!#3059
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f4357063e50
+[T64c0] [API]   [160] Ordinal 3556 -> dll mfc42u.dll!#3556
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f4357061dd0
+[T64c0] [API]   [161] Ordinal 5436 -> dll mfc42u.dll!#5436
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f435705ddf8
+[T64c0] [API]   [162] Ordinal 3672 -> dll mfc42u.dll!#3672
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f4357053e7c
+[T64c0] [API]   [163] Ordinal 6777 -> dll mfc42u.dll!#6777
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f4357053ccc
+[T64c0] [API]   [164] Ordinal 5956 -> dll mfc42u.dll!#5956
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f4357053ca8
+[T64c0] [API]   [165] Ordinal 1361 -> dll mfc42u.dll!#1361
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f4357054074
+[T64c0] [API]   [166] Ordinal 3595 -> dll mfc42u.dll!#3595
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f435705406c
+[T64c0] [API]   [167] Ordinal 3994 -> dll mfc42u.dll!#3994
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f435705df44
+[T64c0] [API]   [168] Ordinal 3353 -> dll mfc42u.dll!#3353
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f4357053ed4
+[T64c0] [API]   [169] Ordinal 5064 -> dll mfc42u.dll!#5064
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f4357064e98
+[T64c0] [API]   [170] Ordinal 3142 -> dll mfc42u.dll!#3142
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f4357064e6c
+[T64c0] [API]   [171] Ordinal 3147 -> dll mfc42u.dll!#3147
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f435701cd18
+[T64c0] [API]   [172] Ordinal 6769 -> dll mfc42u.dll!#6769
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f435701cf40
+[T64c0] [API]   [173] Ordinal 2513 -> dll mfc42u.dll!#2513
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f4357054204
+[T64c0] [API]   [174] Ordinal 5666 -> dll mfc42u.dll!#5666
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f4357064fe4
+[T64c0] [API]   [175] Ordinal 4769 -> dll mfc42u.dll!#4769
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f4357064a04
+[T64c0] [API]   [176] Ordinal 2417 -> dll mfc42u.dll!#2417
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f435701cce8
+[T64c0] [API]   [177] Ordinal 4732 -> dll mfc42u.dll!#4732
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f435701e2b0
+[T64c0] [API]   [178] Ordinal 3601 -> dll mfc42u.dll!#3601
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f435701e2a8
+[T64c0] [API]   [179] Ordinal 3282 -> dll mfc42u.dll!#3282
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f4357054088
+[T64c0] [API]   [180] Ordinal 6465 -> dll mfc42u.dll!#6465
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f435701c9dc
+[T64c0] [API]   [181] Ordinal 6586 -> dll mfc42u.dll!#6586
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f4357063b70
+[T64c0] [API]   [182] Ordinal 3365 -> dll mfc42u.dll!#3365
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f435701c9d0
+[T64c0] [API]   [183] Ordinal 4984 -> dll mfc42u.dll!#4984
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f435705de5c
+[T64c0] [API]   [184] Ordinal 4777 -> dll mfc42u.dll!#4777
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f4357067e3c
+[T64c0] [API]   [185] Ordinal 977 -> dll mfc42u.dll!#977
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f4357061048
+[T64c0] [API]   [186] Ordinal 5989 -> dll mfc42u.dll!#5989
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f4357063e90
+[T64c0] [API]   [187] Ordinal 6082 -> dll mfc42u.dll!#6082
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f435701ca8c
+[T64c0] [API]   [188] Ordinal 4977 -> dll mfc42u.dll!#4977
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f4357064264
+[T64c0] [API]   [189] Ordinal 5431 -> dll mfc42u.dll!#5431
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f4357016cbc
+[T64c0] [API]   [190] Ordinal 6612 -> dll mfc42u.dll!#6612
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f4357065e9c
+[T64c0] [API]   [191] Ordinal 4844 -> dll mfc42u.dll!#4844
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f4357063d98
+[T64c0] [API]   [192] Ordinal 6078 -> dll mfc42u.dll!#6078
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f4357063ee8
+[T64c0] [API]   [193] Ordinal 4982 -> dll mfc42u.dll!#4982
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f435701caac
+[T64c0] [API]   [194] Ordinal 5894 -> dll mfc42u.dll!#5894
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f435700f078
+[T64c0] [API]   [195] Ordinal 2801 -> dll mfc42u.dll!#2801
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f4357064bfc
+[T64c0] [API]   [196] Ordinal 5021 -> dll mfc42u.dll!#5021
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f435700e7e4
+[T64c0] [API]   [197] Ordinal 1559 -> dll mfc42u.dll!#1559
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f4357056f5c
+[T64c0] [API]   [198] Ordinal 2756 -> dll mfc42u.dll!#2756
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f4357049164
+[T64c0] [API]   [199] Ordinal 287 -> dll mfc42u.dll!#287
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f4357056e4c
+[T64c0] [API]   [200] Ordinal 2754 -> dll mfc42u.dll!#2754
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f4357056eec
+[T64c0] [API]   [201] Ordinal 2757 -> dll mfc42u.dll!#2757
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f4357018f18
+[T64c0] [API]   [202] Ordinal 1296 -> dll mfc42u.dll!#1296
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f4357053ddc
+[T64c0] [API]   [203] Ordinal 2015 -> dll mfc42u.dll!#2015
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f4357056378
+[T64c0] [API]   [204] Ordinal 1301 -> dll mfc42u.dll!#1301
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f4357056530
+[T64c0] [API]   [205] Ordinal 979 -> dll mfc42u.dll!#979
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f4357019dc0
+[T64c0] [API]   [206] Ordinal 815 -> dll mfc42u.dll!#815
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f4357055528
+[T64c0] [API]   [207] Ordinal 1566 -> dll mfc42u.dll!#1566
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f4357056b58
+[T64c0] [API]   [208] Ordinal 6828 -> dll mfc42u.dll!#6828
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f43570563ac
+[T64c0] [API]   [209] Ordinal 1992 -> dll mfc42u.dll!#1992
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f43570196cc
+[T64c0] [API]   [210] Ordinal 1972 -> dll mfc42u.dll!#1972
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f4357018f88
+[T64c0] [API]   [211] Ordinal 292 -> dll mfc42u.dll!#292
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f4357056868
+[T64c0] [API]   [212] Ordinal 2272 -> dll mfc42u.dll!#2272
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f43570563e8
+[T64c0] [API]   [213] Ordinal 506 -> dll mfc42u.dll!#506
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f43570567e0
+[T64c0] [API]   [214] Ordinal 5622 -> dll mfc42u.dll!#5622
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f4357060f68
+[T64c0] [API]   [215] Ordinal 5215 -> dll mfc42u.dll!#5215
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f4357061370
+[T64c0] [API]   [216] Ordinal 5252 -> dll mfc42u.dll!#5252
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f4357064f6c
+[T64c0] [API]   [217] Ordinal 5362 -> dll mfc42u.dll!#5362
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f4357063d68
+[T64c0] [API]   [218] Ordinal 1753 -> dll mfc42u.dll!#1753
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f435706825c
+[T64c0] [API]   [219] Ordinal 504 -> dll mfc42u.dll!#504
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f4357033b90
+[T64c0] [API]   [220] Ordinal 4703 -> dll mfc42u.dll!#4703
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f4357033b50
+[T64c0] [API]   [221] Ordinal 5509 -> dll mfc42u.dll!#5509
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f4357022800
+[T64c0] [API]   [222] Ordinal 4797 -> dll mfc42u.dll!#4797
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f43570223dc
+[T64c0] [API]   [223] Ordinal 5047 -> dll mfc42u.dll!#5047
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f435701b064
+[T64c0] [API]   [224] Ordinal 1567 -> dll mfc42u.dll!#1567
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f435700fff4
+[T64c0] [API]   [225] Ordinal 1536 -> dll mfc42u.dll!#1536
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f435700ffcc
+[T64c0] [API]   [226] Ordinal 4124 -> dll mfc42u.dll!#4124
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f4357025934
+[T64c0] [API]   [227] Ordinal 3641 -> dll mfc42u.dll!#3641
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f4357032400
+[T64c0] [API]   [228] Ordinal 5269 -> dll mfc42u.dll!#5269
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f4357032438
+[T64c0] [API]   [229] Ordinal 5309 -> dll mfc42u.dll!#5309
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f4357014190
+[T64c0] [API]   [230] Ordinal 4862 -> dll mfc42u.dll!#4862
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f43570344ac
+[T64c0] [API]   [231] Ordinal 4952 -> dll mfc42u.dll!#4952
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f435703447c
+[T64c0] [API]   [232] Ordinal 5441 -> dll mfc42u.dll!#5441
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f4357033504
+[T64c0] [API]   [233] Ordinal 5402 -> dll mfc42u.dll!#5402
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f435701448c
+[T64c0] [API]   [234] Ordinal 5582 -> dll mfc42u.dll!#5582
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f435700ffe0
+[T64c0] [API]   [235] Ordinal 6610 -> dll mfc42u.dll!#6610
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f4357071df0
+[T64c0] [API]   [236] Ordinal 4976 -> dll mfc42u.dll!#4976
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f435704b664
+[T64c0] [API]   [237] Ordinal 3783 -> dll mfc42u.dll!#3783
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f4357088c20
+[T64c0] [API]   [238] Ordinal 4598 -> dll mfc42u.dll!#4598
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f4357073be4
+[T64c0] [API]   [239] Ordinal 971 -> dll mfc42u.dll!#971
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f435701841c
+[T64c0] [API]   [240] Ordinal 6813 -> dll mfc42u.dll!#6813
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f4357030f14
+[T64c0] [API]   [241] Ordinal 4836 -> dll mfc42u.dll!#4836
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f4357030dfc
+[T64c0] [API]   [242] Ordinal 2559 -> dll mfc42u.dll!#2559
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f435703115c
+[T64c0] [API]   [243] Ordinal 2515 -> dll mfc42u.dll!#2515
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f4357014d58
+[T64c0] [API]   [244] Ordinal 5077 -> dll mfc42u.dll!#5077
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f435704cfd0
+[T64c0] [API]   [245] Ordinal 4191 -> dll mfc42u.dll!#4191
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f4357030e94
+[T64c0] [API]   [246] Ordinal 1388 -> dll mfc42u.dll!#1388
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f4357017490
+[T64c0] [API]   [247] Ordinal 2412 -> dll mfc42u.dll!#2412
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f4357017868
+[T64c0] [API]   [248] Ordinal 3468 -> dll mfc42u.dll!#3468
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f4357017a18
+[T64c0] [API]   [249] Ordinal 5722 -> dll mfc42u.dll!#5722
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f43570181e4
+[T64c0] [API]   [250] Ordinal 5724 -> dll mfc42u.dll!#5724
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f43570177d8
+[T64c0] [API]   [251] Ordinal 4368 -> dll mfc42u.dll!#4368
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f43570176a0
+[T64c0] [API]   [252] Ordinal 5730 -> dll mfc42u.dll!#5730
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f43570178f8
+[T64c0] [API]   [253] Ordinal 5711 -> dll mfc42u.dll!#5711
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f43570183ec
+[T64c0] [API]   [254] Ordinal 6053 -> dll mfc42u.dll!#6053
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f435701715c
+[T64c0] [API]   [255] Ordinal 4983 -> dll mfc42u.dll!#4983
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f435704d468
+[T64c0] [API]   [256] Ordinal 3916 -> dll mfc42u.dll!#3916
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f435704d248
+[T64c0] [API]   [257] Ordinal 1063 -> dll mfc42u.dll!#1063
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f435704d418
+[T64c0] [API]   [258] Ordinal 2752 -> dll mfc42u.dll!#2752
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f43570312b0
+[T64c0] [API]   [259] Ordinal 1499 -> dll mfc42u.dll!#1499
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f43570316ac
+[T64c0] [API]   [260] Ordinal 4970 -> dll mfc42u.dll!#4970
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f4357061f08
+[T64c0] [API]   [261] Ordinal 507 -> dll mfc42u.dll!#507
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f435704d82c
+[T64c0] [API]   [262] Ordinal 659 -> dll mfc42u.dll!#659
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f435704f110
+[T64c0] [API]   [263] Ordinal 5870 -> dll mfc42u.dll!#5870
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f4357010e20
+[T64c0] [API]   [264] Ordinal 2565 -> dll mfc42u.dll!#2565
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f435704ebfc
+[T64c0] [API]   [265] Ordinal 6055 -> dll mfc42u.dll!#6055
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f435704ebcc
+[T64c0] [API]   [266] Ordinal 6056 -> dll mfc42u.dll!#6056
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f4357061f54
+[T64c0] [API]   [267] Ordinal 2036 -> dll mfc42u.dll!#2036
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f43570313a0
+[T64c0] [API]   [268] Ordinal 1337 -> dll mfc42u.dll!#1337
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f435701e3b0
+[T64c0] [API]   [269] Ordinal 6538 -> dll mfc42u.dll!#6538
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f435701ebb4
+[T64c0] [API]   [270] Ordinal 598 -> dll mfc42u.dll!#598
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f435704ec2c
+[T64c0] [API]   [271] Ordinal 1505 -> dll mfc42u.dll!#1505
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f435704e188
+[T64c0] [API]   [272] Ordinal 6509 -> dll mfc42u.dll!#6509
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f435700d618
+[T64c0] [API]   [273] Ordinal 1447 -> dll mfc42u.dll!#1447
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f435700fa00
+[T64c0] [API]   [274] Ordinal 1262 -> dll mfc42u.dll!#1262
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f435700fa98
+[T64c0] [API]   [275] Ordinal 1264 -> dll mfc42u.dll!#1264
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f4357018274
+[T64c0] [API]   [276] Ordinal 5065 -> dll mfc42u.dll!#5065
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f4357031390
+[T64c0] [API]   [277] Ordinal 3593 -> dll mfc42u.dll!#3593
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f435703136c
+[T64c0] [API]   [278] Ordinal 3280 -> dll mfc42u.dll!#3280
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f4357084da0
+[T64c0] [API]   [279] Ordinal 4273 -> dll mfc42u.dll!#4273
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f4357014c08
+[T64c0] [API]   [280] Ordinal 5654 -> dll mfc42u.dll!#5654
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f43570491a0
+[T64c0] [API]   [281] Ordinal 1472 -> dll mfc42u.dll!#1472
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f4357011da0
+[T64c0] [API]   [282] Ordinal 1575 -> dll mfc42u.dll!#1575
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f43570153dc
+[T64c0] [API]   [283] Ordinal 5690 -> dll mfc42u.dll!#5690
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f43570119e4
+[T64c0] [API]   [284] Ordinal 6661 -> dll mfc42u.dll!#6661
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f4357082ee0
+[T64c0] [API]   [285] Ordinal 1904 -> dll mfc42u.dll!#1904
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f435707ab20
+[T64c0] [API]   [286] Ordinal 1946 -> dll mfc42u.dll!#1946
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f4357086080
+[T64c0] [API]   [287] Ordinal 4597 -> dll mfc42u.dll!#4597
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f435701fd68
+[T64c0] [API]   [288] Ordinal 4946 -> dll mfc42u.dll!#4946
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f435701fab0
+[T64c0] [API]   [289] Ordinal 5496 -> dll mfc42u.dll!#5496
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f435701f8d8
+[T64c0] [API]   [290] Ordinal 4682 -> dll mfc42u.dll!#4682
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f435701f8dc
+[T64c0] [API]   [291] Ordinal 4886 -> dll mfc42u.dll!#4886
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f435701f8e4
+[T64c0] [API]   [292] Ordinal 4901 -> dll mfc42u.dll!#4901
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f435701caa8
+[T64c0] [API]   [293] Ordinal 4899 -> dll mfc42u.dll!#4899
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f435701f8d8
+[T64c0] [API]   [294] Ordinal 4881 -> dll mfc42u.dll!#4881
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f435701caa8
+[T64c0] [API]   [295] Ordinal 4884 -> dll mfc42u.dll!#4884
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f435701caa8
+[T64c0] [API]   [296] Ordinal 4879 -> dll mfc42u.dll!#4879
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f435701caa8
+[T64c0] [API]   [297] Ordinal 5370 -> dll mfc42u.dll!#5370
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f435701caa8
+[T64c0] [API]   [298] Ordinal 5367 -> dll mfc42u.dll!#5367
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f435701caa8
+[T64c0] [API]   [299] Ordinal 4405 -> dll mfc42u.dll!#4405
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f435701f76c
+[T64c0] [API]   [300] Ordinal 5662 -> dll mfc42u.dll!#5662
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f435701fbcc
+[T64c0] [API]   [301] Ordinal 3932 -> dll mfc42u.dll!#3932
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f435701f788
+[T64c0] [API]   [302] Ordinal 1735 -> dll mfc42u.dll!#1735
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f435701f638
+[T64c0] [API]   [303] Ordinal 657 -> dll mfc42u.dll!#657
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f435701f6dc
+[T64c0] [API]   [304] Ordinal 5682 -> dll mfc42u.dll!#5682
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f435701f8d8
+[T64c0] [API]   [305] Ordinal 4712 -> dll mfc42u.dll!#4712
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f435701f8a8
+[T64c0] [API]   [306] Ordinal 5297 -> dll mfc42u.dll!#5297
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f435701f8b4
+[T64c0] [API]   [307] Ordinal 4690 -> dll mfc42u.dll!#4690
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f435701f9e8
+[T64c0] [API]   [308] Ordinal 4780 -> dll mfc42u.dll!#4780
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f435706f004
+[T64c0] [API]   [309] Ordinal 4974 -> dll mfc42u.dll!#4974
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f435707182c
+[T64c0] [API]   [310] Ordinal 4975 -> dll mfc42u.dll!#4975
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f435701f664
+[T64c0] [API]   [311] Ordinal 1061 -> dll mfc42u.dll!#1061
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f4357084160
+[T64c0] [API]   [312] Ordinal 1898 -> dll mfc42u.dll!#1898
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f435701fd3c
+[T64c0] [API]   [313] Ordinal 5285 -> dll mfc42u.dll!#5285
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f435701f9ac
+[T64c0] [API]   [314] Ordinal 4813 -> dll mfc42u.dll!#4813
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f435701f72c
+[T64c0] [API]   [315] Ordinal 4859 -> dll mfc42u.dll!#4859
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f4357016a88
+[T64c0] [API]   [316] Ordinal 4623 -> dll mfc42u.dll!#4623
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f435702a824
+[T64c0] [API]   [317] Ordinal 4455 -> dll mfc42u.dll!#4455
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f4357034cb0
+[T64c0] [API]   [318] Ordinal 2497 -> dll mfc42u.dll!#2497
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f4357026130
+[T64c0] [API]   [319] Ordinal 2643 -> dll mfc42u.dll!#2643
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f4357034be8
+[T64c0] [API]   [320] Ordinal 2644 -> dll mfc42u.dll!#2644
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f4357002aa4
+[T64c0] [API]   [321] Ordinal 1665 -> dll mfc42u.dll!#1665
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f4357002bdc
+[T64c0] [API]   [322] Ordinal 4720 -> dll mfc42u.dll!#4720
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f4357001388
+[T64c0] [API]   [323] Ordinal 5244 -> dll mfc42u.dll!#5244
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f4357002648
+[T64c0] [API]   [324] Ordinal 3516 -> dll mfc42u.dll!#3516
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f4357002968
+[T64c0] [API]   [325] Ordinal 542 -> dll mfc42u.dll!#542
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f435706ed4c
+[T64c0] [API]   [326] Ordinal 2540 -> dll mfc42u.dll!#2540
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f4357002b2c
+[T64c0] [API]   [327] Ordinal 2261 -> dll mfc42u.dll!#2261
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f4357071ce4
+[T64c0] [API]   [328] Ordinal 2542 -> dll mfc42u.dll!#2542
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f4357071e58
+[T64c0] [API]   [329] Ordinal 3675 -> dll mfc42u.dll!#3675
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f4357084208
+[T64c0] [API]   [330] Ordinal 1811 -> dll mfc42u.dll!#1811
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f435701aac8
+[T64c0] [API]   [331] Ordinal 3038 -> dll mfc42u.dll!#3038
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f435701b67c
+[T64c0] [API]   [332] Ordinal 6099 -> dll mfc42u.dll!#6099
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f435701b62c
+[T64c0] [API]   [333] Ordinal 6607 -> dll mfc42u.dll!#6607
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f435701b510
+[T64c0] [API]   [334] Ordinal 6096 -> dll mfc42u.dll!#6096
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f435701b4c0
+[T64c0] [API]   [335] Ordinal 6599 -> dll mfc42u.dll!#6599
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f435701b470
+[T64c0] [API]   [336] Ordinal 4668 -> dll mfc42u.dll!#4668
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f435701b420
+[T64c0] [API]   [337] Ordinal 6603 -> dll mfc42u.dll!#6603
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f435701aa90
+[T64c0] [API]   [338] Ordinal 6407 -> dll mfc42u.dll!#6407
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f435701a8ec
+[T64c0] [API]   [339] Ordinal 6015 -> dll mfc42u.dll!#6015
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f435701a8ac
+[T64c0] [API]   [340] Ordinal 6076 -> dll mfc42u.dll!#6076
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f435701a8a0
+[T64c0] [API]   [341] Ordinal 5896 -> dll mfc42u.dll!#5896
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f435701a894
+[T64c0] [API]   [342] Ordinal 5886 -> dll mfc42u.dll!#5886
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f435701a88c
+[T64c0] [API]   [343] Ordinal 6448 -> dll mfc42u.dll!#6448
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f435701a884
+[T64c0] [API]   [344] Ordinal 6228 -> dll mfc42u.dll!#6228
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f4357071914
+[T64c0] [API]   [345] Ordinal 6136 -> dll mfc42u.dll!#6136
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f4357002410
+[T64c0] [API]   [346] Ordinal 2530 -> dll mfc42u.dll!#2530
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f435700289c
+[T64c0] [API]   [347] Ordinal 524 -> dll mfc42u.dll!#524
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f435704e408
+[T64c0] [API]   [348] Ordinal 3682 -> dll mfc42u.dll!#3682
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f435704e378
+[T64c0] [API]   [349] Ordinal 3681 -> dll mfc42u.dll!#3681
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f435704d028
+[T64c0] [API]   [350] Ordinal 4472 -> dll mfc42u.dll!#4472
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f43570314d4
+[T64c0] [API]   [351] Ordinal 6842 -> dll mfc42u.dll!#6842
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f4357031418
+[T64c0] [API]   [352] Ordinal 6841 -> dll mfc42u.dll!#6841
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f435708d0b8
+[T64c0] [API]   [353] Ordinal 1894 -> dll mfc42u.dll!#1894
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f43570692d4
+[T64c0] [API]   [354] Ordinal 5364 -> dll mfc42u.dll!#5364
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f4357068c44
+[T64c0] [API]   [355] Ordinal 3540 -> dll mfc42u.dll!#3540
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f4357068558
+[T64c0] [API]   [356] Ordinal 5397 -> dll mfc42u.dll!#5397
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f435706855c
+[T64c0] [API]   [357] Ordinal 5331 -> dll mfc42u.dll!#5331
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f435706840c
+[T64c0] [API]   [358] Ordinal 5084 -> dll mfc42u.dll!#5084
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f4357068ba4
+[T64c0] [API]   [359] Ordinal 5529 -> dll mfc42u.dll!#5529
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f4357068b58
+[T64c0] [API]   [360] Ordinal 5312 -> dll mfc42u.dll!#5312
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f4357069c04
+[T64c0] [API]   [361] Ordinal 5008 -> dll mfc42u.dll!#5008
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f4357068558
+[T64c0] [API]   [362] Ordinal 5386 -> dll mfc42u.dll!#5386
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f435706837c
+[T64c0] [API]   [363] Ordinal 4875 -> dll mfc42u.dll!#4875
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f43570683ec
+[T64c0] [API]   [364] Ordinal 4893 -> dll mfc42u.dll!#4893
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f4357064aac
+[T64c0] [API]   [365] Ordinal 5495 -> dll mfc42u.dll!#5495
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f4357068334
+[T64c0] [API]   [366] Ordinal 4320 -> dll mfc42u.dll!#4320
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f4357068580
+[T64c0] [API]   [367] Ordinal 3387 -> dll mfc42u.dll!#3387
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f43570181d4
+[T64c0] [API]   [368] Ordinal 3484 -> dll mfc42u.dll!#3484
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f4357069354
+[T64c0] [API]   [369] Ordinal 4987 -> dll mfc42u.dll!#4987
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f435706898c
+[T64c0] [API]   [370] Ordinal 978 -> dll mfc42u.dll!#978
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f4357068bf8
+[T64c0] [API]   [371] Ordinal 5428 -> dll mfc42u.dll!#5428
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f4357068c34
+[T64c0] [API]   [372] Ordinal 5055 -> dll mfc42u.dll!#5055
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f435705f084
+[T64c0] [API]   [373] Ordinal 2401 -> dll mfc42u.dll!#2401
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f435705f040
+[T64c0] [API]   [374] Ordinal 2402 -> dll mfc42u.dll!#2402
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f4357069a94
+[T64c0] [API]   [375] Ordinal 505 -> dll mfc42u.dll!#505
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f435703d6f4
+[T64c0] [API]   [376] Ordinal 2561 -> dll mfc42u.dll!#2561
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f4357068368
+[T64c0] [API]   [377] Ordinal 5016 -> dll mfc42u.dll!#5016
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f4357068354
+[T64c0] [API]   [378] Ordinal 5400 -> dll mfc42u.dll!#5400
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f4357068c20
+[T64c0] [API]   [379] Ordinal 5249 -> dll mfc42u.dll!#5249
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f43570699c0
+[T64c0] [API]   [380] Ordinal 3030 -> dll mfc42u.dll!#3030
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f435705f568
+[T64c0] [API]   [381] Ordinal 465 -> dll mfc42u.dll!#465
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f4357068558
+[T64c0] [API]   [382] Ordinal 5341 -> dll mfc42u.dll!#5341
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f4357068558
+[T64c0] [API]   [383] Ordinal 5336 -> dll mfc42u.dll!#5336
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f435707ea60
+[T64c0] [API]   [384] Ordinal 1825 -> dll mfc42u.dll!#1825
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f4357039638
+[T64c0] [API]   [385] Ordinal 867 -> dll mfc42u.dll!#867
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f435701a974
+[T64c0] [API]   [386] Ordinal 6243 -> dll mfc42u.dll!#6243
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f43570101fc
+[T64c0] [API]   [387] Ordinal 3535 -> dll mfc42u.dll!#3535
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f43570eaf30
+[T64c0] [API]   [388] Ordinal 6818 -> dll mfc42u.dll!#6818
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f435700fed8
+[T64c0] [API]   [389] Ordinal 4131 -> dll mfc42u.dll!#4131
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f43570eae30
+[T64c0] [API]   [390] Ordinal 6817 -> dll mfc42u.dll!#6817
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f43570395fc
+[T64c0] [API]   [391] Ordinal 2097 -> dll mfc42u.dll!#2097
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f435707cb98
+[T64c0] [API]   [392] Ordinal 1939 -> dll mfc42u.dll!#1939
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f435707d068
+[T64c0] [API]   [393] Ordinal 1813 -> dll mfc42u.dll!#1813
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f4357024948
+[T64c0] [API]   [394] Ordinal 6252 -> dll mfc42u.dll!#6252
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f435707cbd0
+[T64c0] [API]   [395] Ordinal 4592 -> dll mfc42u.dll!#4592
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f43570245d4
+[T64c0] [API]   [396] Ordinal 3409 -> dll mfc42u.dll!#3409
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f4357024368
+[T64c0] [API]   [397] Ordinal 4707 -> dll mfc42u.dll!#4707
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f4357024f8c
+[T64c0] [API]   [398] Ordinal 5507 -> dll mfc42u.dll!#5507
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f43570254f8
+[T64c0] [API]   [399] Ordinal 1718 -> dll mfc42u.dll!#1718
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f43570254c0
+[T64c0] [API]   [400] Ordinal 1724 -> dll mfc42u.dll!#1724
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f43570249fc
+[T64c0] [API]   [401] Ordinal 5483 -> dll mfc42u.dll!#5483
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f435704a55c
+[T64c0] [API]   [402] Ordinal 647 -> dll mfc42u.dll!#647
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f435704a28c
+[T64c0] [API]   [403] Ordinal 1053 -> dll mfc42u.dll!#1053
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f435707d0a0
+[T64c0] [API]   [404] Ordinal 4558 -> dll mfc42u.dll!#4558
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f435702aa9c
+[T64c0] [API]   [405] Ordinal 5502 -> dll mfc42u.dll!#5502
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f4357025668
+[T64c0] [API]   [406] Ordinal 1720 -> dll mfc42u.dll!#1720
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f43570256fc
+[T64c0] [API]   [407] Ordinal 6438 -> dll mfc42u.dll!#6438
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f4357025610
+[T64c0] [API]   [408] Ordinal 853 -> dll mfc42u.dll!#853
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f435703b204
+[T64c0] [API]   [409] Ordinal 2422 -> dll mfc42u.dll!#2422
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f4357039584
+[T64c0] [API]   [410] Ordinal 2023 -> dll mfc42u.dll!#2023
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f435703b204
+[T64c0] [API]   [411] Ordinal 4542 -> dll mfc42u.dll!#4542
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f435703b204
+[T64c0] [API]   [412] Ordinal 2589 -> dll mfc42u.dll!#2589
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f4357039588
+[T64c0] [API]   [413] Ordinal 4743 -> dll mfc42u.dll!#4743
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f435704b1dc
+[T64c0] [API]   [414] Ordinal 3751 -> dll mfc42u.dll!#3751
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f435703952c
+[T64c0] [API]   [415] Ordinal 832 -> dll mfc42u.dll!#832
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f435704a7a8
+[T64c0] [API]   [416] Ordinal 4459 -> dll mfc42u.dll!#4459
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f435702570c
+[T64c0] [API]   [417] Ordinal 2095 -> dll mfc42u.dll!#2095
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f4357039780
+[T64c0] [API]   [418] Ordinal 3437 -> dll mfc42u.dll!#3437
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f435704a3dc
+[T64c0] [API]   [419] Ordinal 6253 -> dll mfc42u.dll!#6253
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f435704aa34
+[T64c0] [API]   [420] Ordinal 2136 -> dll mfc42u.dll!#2136
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f43570255d8
+[T64c0] [API]   [421] Ordinal 340 -> dll mfc42u.dll!#340
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f4356ffeeac
+[T64c0] [API]   [422] Ordinal 1563 -> dll mfc42u.dll!#1563
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f4357010f3c
+[T64c0] [API]   [423] Ordinal 2474 -> dll mfc42u.dll!#2474
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f4357010eec
+[T64c0] [API]   [424] Ordinal 1657 -> dll mfc42u.dll!#1657
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f435707aae8
+[T64c0] [API]   [425] Ordinal 1808 -> dll mfc42u.dll!#1808
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f435700830c
+[T64c0] [API]   [426] Ordinal 6222 -> dll mfc42u.dll!#6222
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f4357022a8c
+[T64c0] [API]   [427] Ordinal 4847 -> dll mfc42u.dll!#4847
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f4357022e4c
+[T64c0] [API]   [428] Ordinal 1719 -> dll mfc42u.dll!#1719
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f435700844c
+[T64c0] [API]   [429] Ordinal 443 -> dll mfc42u.dll!#443
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f435701acc4
+[T64c0] [API]   [430] Ordinal 4442 -> dll mfc42u.dll!#4442
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f435701b74c
+[T64c0] [API]   [431] Ordinal 4621 -> dll mfc42u.dll!#4621
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f43570080d4
+[T64c0] [API]   [432] Ordinal 6542 -> dll mfc42u.dll!#6542
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f4356ffee88
+[T64c0] [API]   [433] Ordinal 1562 -> dll mfc42u.dll!#1562
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f435700846c
+[T64c0] [API]   [434] Ordinal 938 -> dll mfc42u.dll!#938
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f4357007638
+[T64c0] [API]   [435] Ordinal 6162 -> dll mfc42u.dll!#6162
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f435704855c
+[T64c0] [API]   [436] Ordinal 3744 -> dll mfc42u.dll!#3744
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f4357007548
+[T64c0] [API]   [437] Ordinal 823 -> dll mfc42u.dll!#823
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f43570071f4
+[T64c0] [API]   [438] Ordinal 6540 -> dll mfc42u.dll!#6540
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f4357007528
+[T64c0] [API]   [439] Ordinal 307 -> dll mfc42u.dll!#307
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f4357009894
+[T64c0] [API]   [440] Ordinal 2793 -> dll mfc42u.dll!#2793
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f4357007448
+[T64c0] [API]   [441] Ordinal 4238 -> dll mfc42u.dll!#4238
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f43570099d8
+[T64c0] [API]   [442] Ordinal 1353 -> dll mfc42u.dll!#1353
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f4357009b2c
+[T64c0] [API]   [443] Ordinal 4234 -> dll mfc42u.dll!#4234
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f435700cb6c
+[T64c0] [API]   [444] Ordinal 5807 -> dll mfc42u.dll!#5807
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f435700d4bc
+[T64c0] [API]   [445] Ordinal 3440 -> dll mfc42u.dll!#3440
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f435700f18c
+[T64c0] [API]   [446] Ordinal 1581 -> dll mfc42u.dll!#1581
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f435700d458
+[T64c0] [API]   [447] Ordinal 6823 -> dll mfc42u.dll!#6823
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f435700cd38
+[T64c0] [API]   [448] Ordinal 6398 -> dll mfc42u.dll!#6398
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f4357005600
+[T64c0] [API]   [449] Ordinal 996 -> dll mfc42u.dll!#996
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f435704b20c
+[T64c0] [API]   [450] Ordinal 3867 -> dll mfc42u.dll!#3867
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f4357017124
+[T64c0] [API]   [451] Ordinal 6018 -> dll mfc42u.dll!#6018
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f43570055a0
+[T64c0] [API]   [452] Ordinal 2122 -> dll mfc42u.dll!#2122
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f43570167cc
+[T64c0] [API]   [453] Ordinal 6328 -> dll mfc42u.dll!#6328
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f4357016680
+[T64c0] [API]   [454] Ordinal 1787 -> dll mfc42u.dll!#1787
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f43570118e4
+[T64c0] [API]   [455] Ordinal 6767 -> dll mfc42u.dll!#6767
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f435701b6f8
+[T64c0] [API]   [456] Ordinal 6123 -> dll mfc42u.dll!#6123
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f435704ad4c
+[T64c0] [API]   [457] Ordinal 2133 -> dll mfc42u.dll!#2133
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f4357014960
+[T64c0] [API]   [458] Ordinal 1584 -> dll mfc42u.dll!#1584
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f4357081800
+[T64c0] [API]   [459] Ordinal 4557 -> dll mfc42u.dll!#4557
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f435700f6d0
+[T64c0] [API]   [460] Ordinal 2979 -> dll mfc42u.dll!#2979
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f4357014b68
+[T64c0] [API]   [461] Ordinal 337 -> dll mfc42u.dll!#337
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f435704b39c
+[T64c0] [API]   [462] Ordinal 3761 -> dll mfc42u.dll!#3761
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f4357015008
+[T64c0] [API]   [463] Ordinal 4771 -> dll mfc42u.dll!#4771
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f4357010fb0
+[T64c0] [API]   [464] Ordinal 2457 -> dll mfc42u.dll!#2457
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f4357010f80
+[T64c0] [API]   [465] Ordinal 5683 -> dll mfc42u.dll!#5683
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f4357014f44
+[T64c0] [API]   [466] Ordinal 5702 -> dll mfc42u.dll!#5702
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f435704af08
+[T64c0] [API]   [467] Ordinal 6379 -> dll mfc42u.dll!#6379
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f435700c9c8
+[T64c0] [API]   [468] Ordinal 286 -> dll mfc42u.dll!#286
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f435701be3c
+[T64c0] [API]   [469] Ordinal 310 -> dll mfc42u.dll!#310
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f4357025908
+[T64c0] [API]   [470] Ordinal 3638 -> dll mfc42u.dll!#3638
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f4357025f04
+[T64c0] [API]   [471] Ordinal 6455 -> dll mfc42u.dll!#6455
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f435701bec4
+[T64c0] [API]   [472] Ordinal 826 -> dll mfc42u.dll!#826
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f43570161a4
+[T64c0] [API]   [473] Ordinal 4473 -> dll mfc42u.dll!#4473
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f435701412c
+[T64c0] [API]   [474] Ordinal 5467 -> dll mfc42u.dll!#5467
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f435704ab30
+[T64c0] [API]   [475] Ordinal 1726 -> dll mfc42u.dll!#1726
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f435701b0ac
+[T64c0] [API]   [476] Ordinal 336 -> dll mfc42u.dll!#336
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f435701b344
+[T64c0] [API]   [477] Ordinal 6133 -> dll mfc42u.dll!#6133
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f435701b15c
+[T64c0] [API]   [478] Ordinal 2420 -> dll mfc42u.dll!#2420
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f435701b180
+[T64c0] [API]   [479] Ordinal 851 -> dll mfc42u.dll!#851
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f435704aa94
+[T64c0] [API]   [480] Ordinal 613 -> dll mfc42u.dll!#613
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f435700f1e4
+[T64c0] [API]   [481] Ordinal 626 -> dll mfc42u.dll!#626
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f435704acf4
+[T64c0] [API]   [482] Ordinal 1036 -> dll mfc42u.dll!#1036
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f435700f308
+[T64c0] [API]   [483] Ordinal 1040 -> dll mfc42u.dll!#1040
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f4357016f94
+[T64c0] [API]   [484] Ordinal 4770 -> dll mfc42u.dll!#4770
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f435700fd78
+[T64c0] [API]   [485] Ordinal 4988 -> dll mfc42u.dll!#4988
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f43570107a4
+[T64c0] [API]   [486] Ordinal 4371 -> dll mfc42u.dll!#4371
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f435700cd70
+[T64c0] [API]   [487] Ordinal 3164 -> dll mfc42u.dll!#3164
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f435700cd70
+[T64c0] [API]   [488] Ordinal 4077 -> dll mfc42u.dll!#4077
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f435700cd70
+[T64c0] [API]   [489] Ordinal 4083 -> dll mfc42u.dll!#4083
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f43570170dc
+[T64c0] [API]   [490] Ordinal 4082 -> dll mfc42u.dll!#4082
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f43570171ac
+[T64c0] [API]   [491] Ordinal 3046 -> dll mfc42u.dll!#3046
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f4357017144
+[T64c0] [API]   [492] Ordinal 3166 -> dll mfc42u.dll!#3166
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f43570171a4
+[T64c0] [API]   [493] Ordinal 3052 -> dll mfc42u.dll!#3052
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f4357017154
+[T64c0] [API]   [494] Ordinal 3366 -> dll mfc42u.dll!#3366
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f435701714c
+[T64c0] [API]   [495] Ordinal 3231 -> dll mfc42u.dll!#3231
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f43570107a4
+[T64c0] [API]   [496] Ordinal 4815 -> dll mfc42u.dll!#4815
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f435700cd70
+[T64c0] [API]   [497] Ordinal 3362 -> dll mfc42u.dll!#3362
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f435700cd70
+[T64c0] [API]   [498] Ordinal 3243 -> dll mfc42u.dll!#3243
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f435700cd70
+[T64c0] [API]   [499] Ordinal 3049 -> dll mfc42u.dll!#3049
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f4357010244
+[T64c0] [API]   [500] Ordinal 6812 -> dll mfc42u.dll!#6812
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f43570163d4
+[T64c0] [API]   [501] Ordinal 5663 -> dll mfc42u.dll!#5663
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f435701441c
+[T64c0] [API]   [502] Ordinal 4752 -> dll mfc42u.dll!#4752
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f4357014e0c
+[T64c0] [API]   [503] Ordinal 1777 -> dll mfc42u.dll!#1777
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f4357014af8
+[T64c0] [API]   [504] Ordinal 6437 -> dll mfc42u.dll!#6437
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f4357015434
+[T64c0] [API]   [505] Ordinal 2517 -> dll mfc42u.dll!#2517
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f43570163d4
+[T64c0] [API]   [506] Ordinal 5406 -> dll mfc42u.dll!#5406
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f4357014e00
+[T64c0] [API]   [507] Ordinal 4721 -> dll mfc42u.dll!#4721
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f43570163d4
+[T64c0] [API]   [508] Ordinal 5687 -> dll mfc42u.dll!#5687
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f435700f62c
+[T64c0] [API]   [509] Ordinal 2975 -> dll mfc42u.dll!#2975
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f435700f688
+[T64c0] [API]   [510] Ordinal 5887 -> dll mfc42u.dll!#5887
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f435700f5e4
+[T64c0] [API]   [511] Ordinal 1286 -> dll mfc42u.dll!#1286
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f43570097d0
+[T64c0] [API]   [512] Ordinal 5949 -> dll mfc42u.dll!#5949
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f435704b65c
+[T64c0] [API]   [513] Ordinal 3742 -> dll mfc42u.dll!#3742
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f4357002c74
+[T64c0] [API]   [514] Ordinal 314 -> dll mfc42u.dll!#314
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f4357002b98
+[T64c0] [API]   [515] Ordinal 2516 -> dll mfc42u.dll!#2516
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f435707ab50
+[T64c0] [API]   [516] Ordinal 1838 -> dll mfc42u.dll!#1838
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f435700c7a4
+[T64c0] [API]   [517] Ordinal 1428 -> dll mfc42u.dll!#1428
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f43570320f0
+[T64c0] [API]   [518] Ordinal 2925 -> dll mfc42u.dll!#2925
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f4357014aa0
+[T64c0] [API]   [519] Ordinal 852 -> dll mfc42u.dll!#852
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f4357014a1c
+[T64c0] [API]   [520] Ordinal 1425 -> dll mfc42u.dll!#1425
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f43570112f8
+[T64c0] [API]   [521] Ordinal 4548 -> dll mfc42u.dll!#4548
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f435700c784
+[T64c0] [API]   [522] Ordinal 4375 -> dll mfc42u.dll!#4375
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f435700fd24
+[T64c0] [API]   [523] Ordinal 2906 -> dll mfc42u.dll!#2906
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f4357017700
+[T64c0] [API]   [524] Ordinal 1471 -> dll mfc42u.dll!#1471
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f435700f390
+[T64c0] [API]   [525] Ordinal 624 -> dll mfc42u.dll!#624
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f435700ea1c
+[T64c0] [API]   [526] Ordinal 3998 -> dll mfc42u.dll!#3998
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f435700d224
+[T64c0] [API]   [527] Ordinal 371 -> dll mfc42u.dll!#371
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f435700d7dc
+[T64c0] [API]   [528] Ordinal 5602 -> dll mfc42u.dll!#5602
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f435700d2f4
+[T64c0] [API]   [529] Ordinal 877 -> dll mfc42u.dll!#877
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f435700cc4c
+[T64c0] [API]   [530] Ordinal 1977 -> dll mfc42u.dll!#1977
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f435700cca0
+[T64c0] [API]   [531] Ordinal 1297 -> dll mfc42u.dll!#1297
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f4357009904
+[T64c0] [API]   [532] Ordinal 940 -> dll mfc42u.dll!#940
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f435701a860
+[T64c0] [API]   [533] Ordinal 2898 -> dll mfc42u.dll!#2898
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f435701c340
+[T64c0] [API]   [534] Ordinal 303 -> dll mfc42u.dll!#303
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f435701a938
+[T64c0] [API]   [535] Ordinal 6238 -> dll mfc42u.dll!#6238
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f435701aa54
+[T64c0] [API]   [536] Ordinal 6577 -> dll mfc42u.dll!#6577
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f435701c12c
+[T64c0] [API]   [537] Ordinal 2463 -> dll mfc42u.dll!#2463
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f435701b114
+[T64c0] [API]   [538] Ordinal 2461 -> dll mfc42u.dll!#2461
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f435701b3f8
+[T64c0] [API]   [539] Ordinal 6135 -> dll mfc42u.dll!#6135
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f43570098dc
+[T64c0] [API]   [540] Ordinal 445 -> dll mfc42u.dll!#445
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f4357017104
+[T64c0] [API]   [541] Ordinal 2676 -> dll mfc42u.dll!#2676
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f43570170e4
+[T64c0] [API]   [542] Ordinal 1677 -> dll mfc42u.dll!#1677
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f435704923c
+[T64c0] [API]   [543] Ordinal 1463 -> dll mfc42u.dll!#1463
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f435700c964
+[T64c0] [API]   [544] Ordinal 367 -> dll mfc42u.dll!#367
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f435700f4a0
+[T64c0] [API]   [545] Ordinal 1126 -> dll mfc42u.dll!#1126
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f4357048554
+[T64c0] [API]   [546] Ordinal 3780 -> dll mfc42u.dll!#3780
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f435700e6dc
+[T64c0] [API]   [547] Ordinal 3222 -> dll mfc42u.dll!#3222
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f435700c8f0
+[T64c0] [API]   [548] Ordinal 5986 -> dll mfc42u.dll!#5986
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f435700cafc
+[T64c0] [API]   [549] Ordinal 6886 -> dll mfc42u.dll!#6886
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f435701cba0
+[T64c0] [API]   [550] Ordinal 6762 -> dll mfc42u.dll!#6762
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f4357009848
+[T64c0] [API]   [551] Ordinal 5933 -> dll mfc42u.dll!#5933
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f43570098b4
+[T64c0] [API]   [552] Ordinal 2779 -> dll mfc42u.dll!#2779
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f4357009a14
+[T64c0] [API]   [553] Ordinal 1379 -> dll mfc42u.dll!#1379
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f43570782a0
+[T64c0] [API]   [554] Ordinal 1869 -> dll mfc42u.dll!#1869
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f43570258c0
+[T64c0] [API]   [555] Ordinal 3408 -> dll mfc42u.dll!#3408
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f435701ab30
+[T64c0] [API]   [556] Ordinal 2740 -> dll mfc42u.dll!#2740
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f4357030e6c
+[T64c0] [API]   [557] Ordinal 6071 -> dll mfc42u.dll!#6071
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f4357023ea0
+[T64c0] [API]   [558] Ordinal 2535 -> dll mfc42u.dll!#2535
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f43570163d4
+[T64c0] [API]   [559] Ordinal 5699 -> dll mfc42u.dll!#5699
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f4357013160
+[T64c0] [API]   [560] Ordinal 2140 -> dll mfc42u.dll!#2140
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f4357022ae0
+[T64c0] [API]   [561] Ordinal 2455 -> dll mfc42u.dll!#2455
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f435704aafc
+[T64c0] [API]   [562] Ordinal 5680 -> dll mfc42u.dll!#5680
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f4357010474
+[T64c0] [API]   [563] Ordinal 1736 -> dll mfc42u.dll!#1736
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f435700fe3c
+[T64c0] [API]   [564] Ordinal 5484 -> dll mfc42u.dll!#5484
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f435700cd70
+[T64c0] [API]   [565] Ordinal 3933 -> dll mfc42u.dll!#3933
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f43570133a0
+[T64c0] [API]   [566] Ordinal 6814 -> dll mfc42u.dll!#6814
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f4357010988
+[T64c0] [API]   [567] Ordinal 2060 -> dll mfc42u.dll!#2060
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f4357010990
+[T64c0] [API]   [568] Ordinal 2670 -> dll mfc42u.dll!#2670
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f4357013ea0
+[T64c0] [API]   [569] Ordinal 4789 -> dll mfc42u.dll!#4789
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f4357013f5c
+[T64c0] [API]   [570] Ordinal 5229 -> dll mfc42u.dll!#5229
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f435700fe0c
+[T64c0] [API]   [571] Ordinal 4017 -> dll mfc42u.dll!#4017
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f4357023950
+[T64c0] [API]   [572] Ordinal 5701 -> dll mfc42u.dll!#5701
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f4357016630
+[T64c0] [API]   [573] Ordinal 4694 -> dll mfc42u.dll!#4694
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f4357023b94
+[T64c0] [API]   [574] Ordinal 6806 -> dll mfc42u.dll!#6806
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f43570134e8
+[T64c0] [API]   [575] Ordinal 5586 -> dll mfc42u.dll!#5586
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f435700fd9c
+[T64c0] [API]   [576] Ordinal 2399 -> dll mfc42u.dll!#2399
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f4357022a40
+[T64c0] [API]   [577] Ordinal 5656 -> dll mfc42u.dll!#5656
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f43570259ec
+[T64c0] [API]   [578] Ordinal 4749 -> dll mfc42u.dll!#4749
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f43570107a4
+[T64c0] [API]   [579] Ordinal 1778 -> dll mfc42u.dll!#1778
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f435700cd70
+[T64c0] [API]   [580] Ordinal 4365 -> dll mfc42u.dll!#4365
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f435700cd70
+[T64c0] [API]   [581] Ordinal 6440 -> dll mfc42u.dll!#6440
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f4357022a60
+[T64c0] [API]   [582] Ordinal 1716 -> dll mfc42u.dll!#1716
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f4357025de4
+[T64c0] [API]   [583] Ordinal 5506 -> dll mfc42u.dll!#5506
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f4357022c58
+[T64c0] [API]   [584] Ordinal 2404 -> dll mfc42u.dll!#2404
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f4357022c98
+[T64c0] [API]   [585] Ordinal 4422 -> dll mfc42u.dll!#4422
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f4357022bb8
+[T64c0] [API]   [586] Ordinal 5838 -> dll mfc42u.dll!#5838
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f4357022a88
+[T64c0] [API]   [587] Ordinal 4345 -> dll mfc42u.dll!#4345
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f43570259b0
+[T64c0] [API]   [588] Ordinal 4706 -> dll mfc42u.dll!#4706
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f435702387c
+[T64c0] [API]   [589] Ordinal 6556 -> dll mfc42u.dll!#6556
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f4357021ff8
+[T64c0] [API]   [590] Ordinal 2596 -> dll mfc42u.dll!#2596
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f435701b228
+[T64c0] [API]   [591] Ordinal 6127 -> dll mfc42u.dll!#6127
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f435701b0c8
+[T64c0] [API]   [592] Ordinal 1646 -> dll mfc42u.dll!#1646
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f435704b67c
+[T64c0] [API]   [593] Ordinal 3879 -> dll mfc42u.dll!#3879
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f43570219e0
+[T64c0] [API]   [594] Ordinal 1441 -> dll mfc42u.dll!#1441
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f435701c0ec
+[T64c0] [API]   [595] Ordinal 1647 -> dll mfc42u.dll!#1647
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f435704b66c
+[T64c0] [API]   [596] Ordinal 3740 -> dll mfc42u.dll!#3740
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f435701b040
+[T64c0] [API]   [597] Ordinal 2900 -> dll mfc42u.dll!#2900
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f435704b68c
+[T64c0] [API]   [598] Ordinal 3790 -> dll mfc42u.dll!#3790
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f435700cb4c
+[T64c0] [API]   [599] Ordinal 6887 -> dll mfc42u.dll!#6887
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f435700c72c
+[T64c0] [API]   [600] Ordinal 3830 -> dll mfc42u.dll!#3830
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f43570233d0
+[T64c0] [API]   [601] Ordinal 5453 -> dll mfc42u.dll!#5453
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f43570168f4
+[T64c0] [API]   [602] Ordinal 4014 -> dll mfc42u.dll!#4014
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f4357016ac4
+[T64c0] [API]   [603] Ordinal 6632 -> dll mfc42u.dll!#6632
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f435700ca18
+[T64c0] [API]   [604] Ordinal 1574 -> dll mfc42u.dll!#1574
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f4357025a90
+[T64c0] [API]   [605] Ordinal 6457 -> dll mfc42u.dll!#6457
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f4357025ba0
+[T64c0] [API]   [606] Ordinal 1723 -> dll mfc42u.dll!#1723
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f435701c168
+[T64c0] [API]   [607] Ordinal 2427 -> dll mfc42u.dll!#2427
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f435700f894
+[T64c0] [API]   [608] Ordinal 2629 -> dll mfc42u.dll!#2629
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f4357011ec0
+[T64c0] [API]   [609] Ordinal 5195 -> dll mfc42u.dll!#5195
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f435707d320
+[T64c0] [API]   [610] Ordinal 4589 -> dll mfc42u.dll!#4589
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f4357032dd0
+[T64c0] [API]   [611] Ordinal 4849 -> dll mfc42u.dll!#4849
+[T64c0] [API]   dll-export mfc42u.dll!<ord> -> 0x7f435707d2e8
+[T64c0] [API]   [612] Ordinal 1931 -> dll mfc42u.dll!#1931
+[T64c0] [API] Import DLL: msvcrt.dll (IAT RVA=0x2b98, ILT RVA=0x6bf58)
+[T64c0] [API]   [0] __wargv -> DATA 0x21f1900
+[T64c0] [API]   [1] __argc -> DATA 0x24ca328
+[T64c0] [API]   [2] _wcsdup -> 0x2069530
+[T64c0] [API]   [3] wcschr -> 0x200c5c0
+[T64c0] [API]   [4] _itow -> 0x2012a00
+[T64c0] [API]   [5] __C_specific_handler -> 0x205fa40
+[T64c0] [API]   [6] UNRESOLVED: wcstok
+[T64c0] [API]   [7] _beginthreadex -> 0x205cc20
+[T64c0] [API]   [8] _XcptFilter -> 0x2055770
+[T64c0] [API]   [9] _c_exit -> 0x20627c0
+[T64c0] [API]   [10] _exit -> 0x2038280
+[T64c0] [API]   [11] _cexit -> 0x20319e0
+[T64c0] [API]   [12] exit -> 0x2039dc0
+[T64c0] [API]   [13] _wcmdln -> DATA 0x21333c8
+[T64c0] [API]   [14] __wgetmainargs -> 0x206b8d0
+[T64c0] [API]   [15] ?terminate@@YAXXZ -> 0x2018100
+[T64c0] [API]   [16] _onexit -> 0x203ed90
+[T64c0] [API]   [17] __CxxFrameHandler -> 0x200c980
+[T64c0] [API]   [18] memset -> 0x2011230
+[T64c0] [API]   [19] memcpy -> 0x2013930
+[T64c0] [API]   [20] _wsplitpath -> 0x2013ff0
+[T64c0] [API]   [21] _wtoi -> 0x2022090
+[T64c0] [API]   [22] _ltow -> 0x2012b70
+[T64c0] [API]   [23] _wtol -> 0x200e760
+[T64c0] [API]   [24] _CxxThrowException -> 0x20bbea0
+[T64c0] [API]   [25] free -> 0x209c830
+[T64c0] [API]   [26] _initterm -> 0x2024820
+[T64c0] [API]   [27] __setusermatherr -> 0x20543d0
+[T64c0] [API]   [28] _commode -> DATA 0x24ca30c
+[T64c0] [API]   [29] _fmode -> DATA 0x24ca310
+[T64c0] [API]   [30] __set_app_type -> 0x2054270
+[T64c0] [API]   [31] ??1type_info@@UEAA@XZ -> 0x20763c0
+[T64c0] [API]   [32] __dllonexit -> 0x20a7d00
+[T64c0] [API]   [33] _wcsicmp -> 0x2077510
+[T64c0] [API]   [34] _purecall -> 0x2018180
+[T64c0] [API]   [35] rand -> 0x20183f0
+[T64c0] [API]   [36] UNRESOLVED: _getdcwd
+[T64c0] [API] Import DLL: ADVAPI32.dll (IAT RVA=0x1000, ILT RVA=0x6a3c0)
+[T64c0] [API]   [0] RegOpenKeyExA -> 0x2099240
+[T64c0] [API]   [1] RegCloseKey -> 0x200c180
+[T64c0] [API]   [2] RegQueryValueExW -> 0x2081b10
+[T64c0] [API]   [3] RegOpenKeyExW -> 0x2087360
+[T64c0] [API]   [4] RegSetValueExW -> 0x2082510
+[T64c0] [API]   [5] RegCreateKeyExW -> 0x2087770
+[T64c0] [API]   [6] RegOpenKeyW -> 0x2087570
+[T64c0] [API]   [7] RegEnumKeyW -> 0x2092340
+[T64c0] [API]   [8] RegQueryValueExA -> 0x2099460
+[T64c0] [API] Import DLL: KERNEL32.dll (IAT RVA=0x1300, ILT RVA=0x6a6c0)
+[T64c0] [API]   [0] GetSystemTimeAsFileTime -> 0x2038580
+[T64c0] [API]   [1] GetCurrentProcessId -> 0x200a460
+[T64c0] [API]   [2] GetCurrentThreadId -> 0x200a480
+[T64c0] [API]   [3] QueryPerformanceCounter -> 0x2038a40
+[T64c0] [API]   [4] GetExitCodeThread -> 0x207d1a0
+[T64c0] [API]   [5] GlobalReAlloc -> 0x209d490
+[T64c0] [API]   [6] lstrcmpW -> 0x200de30
+[T64c0] [API]   [7] IsDBCSLeadByte -> 0x200c0a0
+[T64c0] [API]   [8] lstrcpyW -> 0x20976f0
+[T64c0] [API]   [9] LoadLibraryW -> 0x209b230
+[T64c0] [API]   [10] GetACP -> 0x200bf60
+[T64c0] [API]   [11] GetThreadLocale -> 0x2076430
+[T64c0] [API]   [12] GetModuleHandleA -> 0x2034cb0
+[T64c0] [API]   [13] GetTickCount -> 0x20388b0
+[T64c0] [API]   [14] GetModuleHandleW -> 0x2034ec0
+[T64c0] [API]   [15] lstrcpynW -> 0x2021a00
+[T64c0] [API]   [16] GetLastError -> 0x2023780
+[T64c0] [API]   [17] lstrcmpiW -> 0x200de70
+[T64c0] [API]   [18] GetProcAddress -> 0x204b8b0
+[T64c0] [API]   [19] SetEndOfFile -> 0x20529d0
+[T64c0] [API]   [20] FindFirstFileW -> 0x2090530
+[T64c0] [API]   [21] FindClose -> 0x2013590
+[T64c0] [API]   [22] SetErrorMode -> 0x200c3b0
+[T64c0] [API]   [23] TerminateProcess -> 0x2039ed0
+[T64c0] [API]   [24] LocalFree -> 0x20a82d0
+[T64c0] [API]   [25] lstrlenA -> 0x20a37e0
+[T64c0] [API]   [26] MultiByteToWideChar -> 0x204dfc0
+[T64c0] [API]   [27] GetTempPathW -> 0x2090a00
+[T64c0] [API]   [28] GetTempFileNameW -> 0x209e0e0
+[T64c0] [API]   [29] GetFileAttributesW -> 0x2096b30
+[T64c0] [API]   [30] CreateDirectoryW -> 0x20974a0
+[T64c0] [API]   [31] CreateFileW -> 0x20968c0
+[T64c0] [API]   [32] GetFileSize -> 0x2052ad0
+[T64c0] [API]   [33] GetFileTime -> 0x205e560
+[T64c0] [API]   [34] FileTimeToLocalFileTime -> 0x2077710
+[T64c0] [API]   [35] FileTimeToSystemTime -> 0x206f140
+[T64c0] [API]   [36] GetDateFormatW -> 0x204bf50
+[T64c0] [API]   [37] GetTimeFormatW -> 0x204c060
+[T64c0] [API]   [38] CloseHandle -> 0x208c590
+[T64c0] [API]   [39] GetNumberFormatW -> 0x2021ce0
+[T64c0] [API]   [40] MulDiv -> 0x2044260
+[T64c0] [API]   [41] GetLocaleInfoW -> 0x2099620
+[T64c0] [API]   [42] lstrcatW -> 0x200ea20
+[T64c0] [API]   [43] GlobalFree -> 0x20a6470
+[T64c0] [API]   [44] GlobalLock -> 0x20792b0
+[T64c0] [API]   [45] GlobalUnlock -> 0x2075e20
+[T64c0] [API]   [46] GlobalAlloc -> 0x2039fc0
+[T64c0] [API]   [47] lstrlenW -> 0x2091620
+[T64c0] [API]   [48] GetCurrentProcess -> 0x200a450
+[T64c0] [API]   [49] UnhandledExceptionFilter -> 0x2062500
+[T64c0] [API]   [50] SetUnhandledExceptionFilter -> 0x20240e0
+[T64c0] [API]   [51] RtlVirtualUnwind -> 0x2080290
+[T64c0] [API]   [52] RtlLookupFunctionEntry -> 0x2023da0
+[T64c0] [API]   [53] RtlCaptureContext -> 0x206abc0
+[T64c0] [API]   [54] LocalAlloc -> 0x203a160
+[T64c0] [API]   [55] LoadLibraryA -> 0x2083d50
+[T64c0] [API]   [56] FreeLibrary -> 0x2060120
+[T64c0] [API]   [57] RaiseException -> 0x200a8e0
+[T64c0] [API]   [58] GetStartupInfoW -> 0x2031b40
+[T64c0] [API] Import DLL: GDI32.dll (IAT RVA=0x1050, ILT RVA=0x6a410)
+[T64c0] [API]   [0] SetDIBitsToDevice -> 0x20373c0
+[T64c0] [API]   [1] GetNearestColor -> 0x200f820
+[T64c0] [API]   [2] CreatePalette -> 0x202d400
+[T64c0] [API]   [3] SetViewportExtEx -> 0x200f350
+[T64c0] [API]   [4] PlayMetaFile -> 0x2075a00
+[T64c0] [API]   [5] SaveDC -> 0x2075ec0
+[T64c0] [API]   [6] SetMapMode -> 0x20758f0
+[T64c0] [API]   [7] LPtoDP -> 0x2078180
+[T64c0] [API]   [8] RestoreDC -> 0x2075900
+[T64c0] [API]   [9] Rectangle -> 0x20ab760
+[T64c0] [API]   [10] SetDIBColorTable -> 0x200dd20
+[T64c0] [API]   [11] GetStockObject -> 0x20284e0
+[T64c0] [API]   [12] FillRgn -> 0x2088800
+[T64c0] [API]   [13] GetDIBColorTable -> 0x20753d0
+[T64c0] [API]   [14] GetCurrentObject -> 0x2028630
+[T64c0] [API]   [15] CreatePatternBrush -> 0x200df60
+[T64c0] [API]   [16] CreateSolidBrush -> 0x20280e0
+[T64c0] [API]   [17] UNRESOLVED: ResizePalette
+[T64c0] [API]   [18] GetNearestPaletteIndex -> 0x20756c0
+[T64c0] [API]   [19] SetPaletteEntries -> 0x200df80
+[T64c0] [API]   [20] GetPaletteEntries -> 0x20104c0
+[T64c0] [API]   [21] GetDeviceCaps -> 0x2028d90
+[T64c0] [API]   [22] SetDIBits -> 0x20753b0
+[T64c0] [API]   [23] DeleteObject -> 0x200d620
+[T64c0] [API]   [24] DeleteDC -> 0x2028fd0
+[T64c0] [API]   [25] CreateCompatibleBitmap -> 0x2096050
+[T64c0] [API]   [26] CreateBitmap -> 0x2046910
+[T64c0] [API]   [27] SelectPalette -> 0x200df90
+[T64c0] [API]   [28] RealizePalette -> 0x2075d70
+[T64c0] [API]   [29] SetBkMode -> 0x20573b0
+[T64c0] [API]   [30] SetTextColor -> 0x2028a90
+[T64c0] [API]   [31] SetBkColor -> 0x2028c10
+[T64c0] [API]   [32] SelectObject -> 0x2028640
+[T64c0] [API]   [33] CreateDIBSection -> 0x203a8f0
+[T64c0] [API]   [34] SetTextAlign -> 0x2027d10
+[T64c0] [API]   [35] ExtTextOutW -> 0x20a7f60
+[T64c0] [API]   [36] GetTextMetricsW -> 0x2064a10
+[T64c0] [API]   [37] GetTextExtentPoint32W -> 0x20980a0
+[T64c0] [API]   [38] BitBlt -> 0x20ad4f0
+[T64c0] [API]   [39] CreateCompatibleDC -> 0x20326e0
+[T64c0] [API]   [40] UNRESOLVED: CreateICW
+[T64c0] [API]   [41] CreateRectRgnIndirect -> 0x208cf30
+[T64c0] [API]   [42] GetObjectW -> 0x2036e50
+[T64c0] [API]   [43] CreateDIBitmap -> 0x2096370
+[T64c0] [API]   [44] StretchBlt -> 0x20aed40
+[T64c0] [API]   [45] OffsetRgn -> 0x208d150
+[T64c0] [API]   [46] Polygon -> 0x200dff0
+[T64c0] [API]   [47] GetPixel -> 0x2095cf0
+[T64c0] [API]   [48] CreateHalftonePalette -> 0x202e790
+[T64c0] [API]   [49] GetDIBits -> 0x200dd10
+[T64c0] [API]   [50] CreatePen -> 0x20282e0
+[T64c0] [API]   [51] SetPixel -> 0x2094580
+[T64c0] [API]   [52] LineTo -> 0x2027e80
+[T64c0] [API]   [53] MoveToEx -> 0x2057220
+[T64c0] [API]   [54] UnrealizeObject -> 0x2075f00
+[T64c0] [API]   [55] SetBrushOrgEx -> 0x200dfd0
+[T64c0] [API]   [56] ExtFloodFill -> 0x204aca0
+[T64c0] [API]   [57] RoundRect -> 0x208aa90
+[T64c0] [API]   [58] CreatePolygonRgn -> 0x2030290
+[T64c0] [API]   [59] CreateFontIndirectW -> 0x20a4d60
+[T64c0] [API]   [60] CreateDCW -> 0x200f860
+[T64c0] [API]   [61] PtVisible -> 0x2075510
+[T64c0] [API]   [62] RectVisible -> 0x2075a30
+[T64c0] [API]   [63] TextOutW -> 0x20a7f60
+[T64c0] [API]   [64] Escape -> 0x200f300
+[T64c0] [API]   [65] StretchDIBits -> 0x204cc40
+[T64c0] [API]   [66] TranslateCharsetInfo -> 0x200e1c0
+[T64c0] [API]   [67] GetBkMode -> 0x200dfb0
+[T64c0] [API]   [68] GetTextColor -> 0x200f810
+[T64c0] [API]   [69] EnumFontFamiliesW -> 0x2069ac0
+[T64c0] [API]   [70] EnumFontFamiliesExW -> 0x2069fa0
+[T64c0] [API]   [71] UNRESOLVED: PolyBezier
+[T64c0] [API]   [72] SetROP2 -> 0x200dfc0
+[T64c0] [API]   [73] Polyline -> 0x2075ab0
+[T64c0] [API]   [74] PatBlt -> 0x20ac4e0
+[T64c0] [API]   [75] Ellipse -> 0x20a8af0
+[T64c0] [API]   [76] SetStretchBltMode -> 0x200d020
+[T64c0] [API] Import DLL: USER32.dll (IAT RVA=0x2848, ILT RVA=0x6bc08)
+[T64c0] [API]   [0] LoadStringW -> 0x2058500
+[T64c0] [API]   [1] GetClassInfoW -> 0x205e030
+[T64c0] [API]   [2] GetKeyboardLayout -> 0x200ddc0
+[T64c0] [API]   [3] ShowCursor -> 0x202cd90
+[T64c0] [API]   [4] SetClassLongPtrW -> 0x202d080
+[T64c0] [API]   [5] GetWindowLongPtrW -> 0x207dd30
+[T64c0] [API]   [6] SetWindowLongPtrW -> 0x202b3f0
+[T64c0] [API]   [7] SendDlgItemMessageW -> 0x20b3d40
+[T64c0] [API]   [8] GetDlgItemInt -> 0x208a090
+[T64c0] [API]   [9] CheckDlgButton -> 0x2089c40
+[T64c0] [API]   [10] SetDlgItemInt -> 0x20ad010
+[T64c0] [API]   [11] GetDlgItem -> 0x2037e40
+[T64c0] [API]   [12] MsgWaitForMultipleObjects -> 0x20b0f30
+[T64c0] [API]   [13] PeekMessageW -> 0x20b0e50
+[T64c0] [API]   [14] TranslateMessage -> 0x2027a10
+[T64c0] [API]   [15] DispatchMessageW -> 0x20ae200
+[T64c0] [API]   [16] EnableScrollBar -> 0x20754c0
+[T64c0] [API]   [17] SetRectEmpty -> 0x2064460
+[T64c0] [API]   [18] InflateRect -> 0x200bbf0
+[T64c0] [API]   [19] LoadBitmapW -> 0x207aae0
+[T64c0] [API]   [20] SendMessageW -> 0x20b3360
+[T64c0] [API]   [21] GetWindowRect -> 0x202a970
+[T64c0] [API]   [22] UpdateWindow -> 0x2040f20
+[T64c0] [API]   [23] InvalidateRect -> 0x2062be0
+[T64c0] [API]   [24] EnableWindow -> 0x20889f0
+[T64c0] [API]   [25] GetSysColor -> 0x2027ba0
+[T64c0] [API]   [26] wsprintfW -> 0x209a440
+[T64c0] [API]   [27] IsWindow -> 0x2084540
+[T64c0] [API]   [28] GetSystemMetrics -> 0x200bb80
+[T64c0] [API]   [29] SetRect -> 0x2093600
+[T64c0] [API]   [30] FillRect -> 0x2097db0
+[T64c0] [API]   [31] MessageBeep -> 0x2076090
+[T64c0] [API]   [32] GetParent -> 0x2089670
+[T64c0] [API]   [33] MessageBoxW -> 0x209ee00
+[T64c0] [API]   [34] wvsprintfW -> 0x20999a0
+[T64c0] [API]   [35] SetWindowTextW -> 0x20acc00
+[T64c0] [API]   [36] ReleaseDC -> 0x200d050
+[T64c0] [API]   [37] DrawFocusRect -> 0x20759a0
+[T64c0] [API]   [38] GetDC -> 0x200d040
+[T64c0] [API]   [39] PtInRect -> 0x20947c0
+[T64c0] [API]   [40] OffsetRect -> 0x2094180
+[T64c0] [API]   [41] WinHelpW -> 0x205ba80
+[T64c0] [API]   [42] GetClientRect -> 0x2056e90
+[T64c0] [API]   [43] FrameRect -> 0x200e000
+[T64c0] [API]   [44] GetCapture -> 0x202cab0
+[T64c0] [API]   [45] IsClipboardFormatAvailable -> 0x200c1a0
+[T64c0] [API]   [46] RegisterClipboardFormatW -> 0x2029f70
+[T64c0] [API]   [47] CopyRect -> 0x2064f20
+[T64c0] [API]   [48] CharNextW -> 0x200de00
+[T64c0] [API]   [49] IntersectRect -> 0x20a6f50
+[T64c0] [API]   [50] UnionRect -> 0x20a8e90
+[T64c0] [API]   [51] ScreenToClient -> 0x2075990
+[T64c0] [API]   [52] WindowFromPoint -> 0x20666a0
+[T64c0] [API]   [53] GetCursorPos -> 0x2063a40
+[T64c0] [API]   [54] GetKeyState -> 0x200ddb0
+[T64c0] [API]   [55] IsRectEmpty -> 0x2093b50
+[T64c0] [API]   [56] EqualRect -> 0x20a2d00
+[T64c0] [API]   [57] SetTimer -> 0x207c370
+[T64c0] [API]   [58] KillTimer -> 0x200d0c0
+[T64c0] [API]   [59] ReleaseCapture -> 0x2066530
+[T64c0] [API]   [60] GetSubMenu -> 0x2082a90
+[T64c0] [API]   [61] LoadMenuW -> 0x207ec00
+[T64c0] [API]   [62] BringWindowToTop -> 0x2075fa0
+[T64c0] [API]   [63] ClientToScreen -> 0x2075980
+[T64c0] [API]   [64] SetActiveWindow -> 0x202c7f0
+[T64c0] [API]   [65] SetCapture -> 0x202cc20
+[T64c0] [API]   [66] GetFocus -> 0x202c960
+[T64c0] [API]   [67] LoadCursorW -> 0x2075a70
+[T64c0] [API]   [68] GetWindowLongW -> 0x207df90
+[T64c0] [API]   [69] SetCursor -> 0x20760d0
+[T64c0] [API]   [70] GetDesktopWindow -> 0x2066800
+[T64c0] [API]   [71] RemoveMenu -> 0x208dc60
+[T64c0] [API]   [72] PostMessageW -> 0x2058050
+[T64c0] [API]   [73] GetSystemMenu -> 0x207d8f0
+[T64c0] [API]   [74] LoadIconW -> 0x2075a80
+[T64c0] [API]   [75] DestroyCaret -> 0x200df20
+[T64c0] [API]   [76] IsWindowVisible -> 0x205a700
+[T64c0] [API]   [77] SystemParametersInfoW -> 0x2043e00
+[T64c0] [API]   [78] DestroyIcon -> 0x2075f20
+[T64c0] [API]   [79] EnableMenuItem -> 0x2058dc0
+[T64c0] [API]   [80] GetMenu -> 0x202a7b0
+[T64c0] [API]   [81] IsMenu -> 0x207ebb0
+[T64c0] [API]   [82] SetWindowLongW -> 0x202b5c0
+[T64c0] [API]   [83] TabbedTextOutW -> 0x202e900
+[T64c0] [API]   [84] DrawTextW -> 0x20aba50
+[T64c0] [API]   [85] GrayStringW -> 0x200f2d0
+[T64c0] [API]   [86] GetWindowDC -> 0x20638e0
+[T64c0] [API]   [87] CheckMenuItem -> 0x2058c00
+[T64c0] [API]   [88] BeginPaint -> 0x2093750
+[T64c0] [API]   [89] EndPaint -> 0x20716d0
+[T64c0] [API]   [90] GetUpdateRect -> 0x209ab40
+[T64c0] [API]   [91] ValidateRect -> 0x200d060
+[T64c0] [API]   [92] RedrawWindow -> 0x2062d70
+[T64c0] [API]   [93] GetWindow -> 0x2088bc0
+[T64c0] [API]   [94] GetCaretPos -> 0x205e010
+[T64c0] [API]   [95] SetCaretPos -> 0x200df30
+[T64c0] [API]   [96] HideCaret -> 0x2076680
+[T64c0] [API]   [97] ShowCaret -> 0x200df40
+[T64c0] [API]   [98] CreateCaret -> 0x2067300
+[T64c0] [API]   [99] DestroyWindow -> 0x208d8b0
+[T64c0] [API] Import DLL: comdlg32.dll (IAT RVA=0x2b70, ILT RVA=0x6bf30)
+[T64c0] [API]   [0] CommDlgExtendedError -> 0x20762c0
+[T64c0] [API]   [1] GetSaveFileNameW -> 0x2060da0
+[T64c0] [API]   [2] UNRESOLVED: GetFileTitleW
+[T64c0] [API]   [3] GetOpenFileNameW -> 0x2060ae0
+[T64c0] [API] Import DLL: ole32.dll (IAT RVA=0x2cc8, ILT RVA=0x6c088)
+[T64c0] [API]   [0] CoUninitialize -> 0x2063620
+[T64c0] [API]   [1] CoGetInterfaceAndReleaseStream -> 0x2076580
+[T64c0] [API]   [2] CoMarshalInterThreadInterfaceInStream -> 0x200ee90
+[T64c0] [API]   [3] PropVariantClear -> 0x2076d20
+[T64c0] [API]   [4] CoTaskMemFree -> 0x20358f0
+[T64c0] [API]   [5] CoCreateInstance -> 0x2059710
+[T64c0] [API]   [6] CLSIDFromString -> 0x2022490
+[T64c0] [API]   [7] UNRESOLVED: WriteClassStg
+[T64c0] [API]   [8] UNRESOLVED: WriteFmtUserTypeStg
+[T64c0] [API]   [9] OleGetClipboard -> 0x200edb0
+[T64c0] [API]   [10] ReleaseStgMedium -> 0x20763e0
+[T64c0] [API]   [11] CoInitialize -> 0x2062ee0
+[T64c0] [API] Import DLL: OLEAUT32.dll (IAT RVA=0x2810, ILT RVA=0x6bbd0)
+[T64c0] [API]   [0] Ordinal 6 -> SysFreeString (fixed ordinal)
+[T64c0] [API]   [0] SysFreeString -> 0x2068830
+[T64c0] [API]   [1] Ordinal 2 -> SysAllocString (fixed ordinal)
+[T64c0] [API]   [1] SysAllocString -> 0x20770c0
+[T64c0] [API] Import DLL: SHELL32.dll (IAT RVA=0x2828, ILT RVA=0x6bbe8)
+[T64c0] [API]   [0] SHGetFolderPathW -> 0x202acc0
+[T64c0] [API]   [1] UNRESOLVED: ShellAboutW
+[T64c0] [API]   [2] SHChangeNotify -> 0x200e100
+[T64c0] [API] Import DLL: IMM32.dll (IAT RVA=0x12c0, ILT RVA=0x6a680)
+[T64c0] [API]   [0] ImmGetCompositionStringW -> 0x200e1b0
+[T64c0] [API]   [1] UNRESOLVED: ImmGetCompositionWindow
+[T64c0] [API]   [2] ImmGetContext -> 0x2075be0
+[T64c0] [API]   [3] ImmSetCompositionWindow -> 0x20759f0
+[T64c0] [API]   [4] ImmReleaseContext -> 0x20759d0
+[T64c0] [API]   [5] UNRESOLVED: ImmAssociateContext
+[T64c0] [API]   [6] UNRESOLVED: ImmNotifyIME
+[T64c0] [API] Import resolution: 911 resolved, 12 unresolved (total 923)
+[T64c0] [API] Exception: .pdata RVA=0x72000 Size=0x62d0 Entries=2108
+[T64c0] [API] [API-005] EH hacks DISABLED (default) (MINWIN_EH_HACKS=<unset>)
+[T64c0] [API] [API-005] CXX-EH-FIX (LSDA catch-all patch RVA 0x2010c8) skipped: MINWIN_EH_HACKS not set
+[T64c0] [API] Jumping to EP=0x10005a1c0
+[T64c0] [API] GetStartupInfoW()
+[T64c0] [API] __set_app_type(2)
+[T64c0] [API] _initterm(start=0x100002e78, end=0x100002e80)
+[T64c0] [API] __wgetmainargs(argc=0x7ffd7968ff3c, wargv=0x7ffd7968ff48, wenv=0x7ffd7968ff40)
+[T64c0] [API] _initterm(start=0x100002d30, end=0x100002e70)
+[T64c0] [API] _initterm: calling 0x100058480
+[T64c0] [API] GetSystemTimeAsFileTime()
+[T64c0] [API] GetTickCount() = 4791579
+[T64c0] [API] QueryPerformanceCounter()
+[T64c0] [API] _initterm: calling 0x10005bb44
+[T64c0] [API] EnterCriticalSection(0x7f43570e7da8)
+[T64c0] [API] TlsGetValue(1) = 0x3ab76f0
+[T64c0] [API] LeaveCriticalSection(0x7f43570e7da8)
+[T64c0] [API] _initterm: calling 0x10005b210
+[T64c0] [API] _onexit(func=0x10005bbf0)
+[T64c0] [API] _initterm: calling 0x10005b340
+[T64c0] [API] _onexit(func=0x10005bc10)
+[T64c0] [API] _initterm: calling 0x10005b360
+[T64c0] [API] _onexit(func=0x10005bcb0)
+[T64c0] [API] _initterm: calling 0x10005b380
+[T64c0] [API] _onexit(func=0x10005bd20)
+[T64c0] [API] _initterm: calling 0x10005b3a0
+[T64c0] [API] _onexit(func=0x10005bd90)
+[T64c0] [API] _initterm: calling 0x10005b3c0
+[T64c0] [API] _onexit(func=0x10005be00)
+[T64c0] [API] _initterm: calling 0x10005b3e0
+[T64c0] [API] _onexit(func=0x10005c050)
+[T64c0] [API] _initterm: calling 0x10005b410
+[T64c0] [API] _onexit(func=0x10005c010)
+[T64c0] [API] _initterm: calling 0x10005b440
+[T64c0] [API] _onexit(func=0x10005c030)
+[T64c0] [API] _initterm: calling 0x10005b470
+[T64c0] [API] _onexit(func=0x10005bfd0)
+[T64c0] [API] _initterm: calling 0x10005b4a0
+[T64c0] [API] _onexit(func=0x10005bed0)
+[T64c0] [API] _initterm: calling 0x10005b4d0
+[T64c0] [API] _onexit(func=0x10005bff0)
+[T64c0] [API] _initterm: calling 0x10005b500
+[T64c0] [API] _onexit(func=0x10005bef0)
+[T64c0] [API] _initterm: calling 0x10005b530
+[T64c0] [API] _onexit(func=0x10005bf10)
+[T64c0] [API] _initterm: calling 0x10005b560
+[T64c0] [API] _onexit(func=0x10005bf30)
+[T64c0] [API] _initterm: calling 0x10005b590
+[T64c0] [API] _onexit(func=0x10005bf50)
+[T64c0] [API] _initterm: calling 0x10005b5c0
+[T64c0] [API] _onexit(func=0x10005bf70)
+[T64c0] [API] _initterm: calling 0x10005b5f0
+[T64c0] [API] GetSysColor(15) -> 0xc0c0c0
+[T64c0] [API] _onexit(func=0x10005bf90)
+[T64c0] [API] _initterm: calling 0x10005b650
+[T64c0] [API] _onexit(func=0x10005bfb0)
+[T64c0] [API] _initterm: calling 0x10005b680
+[T64c0] [API] _onexit(func=0x10005be70)
+[T64c0] [API] _initterm: calling 0x10005b6c0
+[T64c0] [API] _onexit(func=0x10005be90)
+[T64c0] [API] _initterm: calling 0x10005b700
+[T64c0] [API] _onexit(func=0x10005beb0)
+[T64c0] [API] _initterm: calling 0x10005b740
+[T64c0] [API] _onexit(func=0x10005c070)
+[T64c0] [API] _initterm: calling 0x10005b770
+[T64c0] [API] _onexit(func=0x10005c0b0)
+[T64c0] [API] _initterm: calling 0x10005b7a0
+[T64c0] [API] EnterCriticalSection(0x7f43570e7da8)
+[T64c0] [API] TlsGetValue(1) = 0x3ab76f0
+[T64c0] [API] LeaveCriticalSection(0x7f43570e7da8)
+[T64c0] [API] GetCursorPos() -> (0,0) TRUE
+[T64c0] [API] EnterCriticalSection(0x7f43570e7da8)
+[T64c0] [API] LeaveCriticalSection(0x7f43570e7da8)
+[T64c0] [API] EnterCriticalSection(0x7f43570e7da8)
+[T64c0] [API] TlsGetValue(1) = 0x3ab76f0
+[T64c0] [API] LeaveCriticalSection(0x7f43570e7da8)
+[T64c0] [API] GlobalAlloc(flags=64, bytes=0x108) = 0x3aba090
+[T64c0] [API] EnterCriticalSection(0x7f43570e7da8)
+[T64c0] [API] TlsGetValue(1) = 0x3ab76f0
+[T64c0] [API] realloc(0x3ab7b40, 32) = 0x3aba1a0
+[T64c0] [API] LocalReAlloc(0x3ab7b40, 32) -> 0x3aba1a0
+[T64c0] [API] TlsSetValue(1, 0x3ab76f0)
+[T64c0] [API] LeaveCriticalSection(0x7f43570e7da8)
+[T64c0] [API] EnterCriticalSection(0x7f43570e7da8)
+[T64c0] [API] TlsGetValue(1) = 0x3ab76f0
+[T64c0] [API] LeaveCriticalSection(0x7f43570e7da8)
+[T64c0] [API] EnterCriticalSection(0x7f43570eb5a0)
+[T64c0] [API] LeaveCriticalSection(0x7f43570eb5a0)
+[T64c0] [API] LoadLibraryA(gdiplus.dll)
+[T64c0] [API] GetProcAddress(module=0xdead0030, name=GdiplusStartup)
+[T64c0] [API]   -> 0x2064740
+[T64c0] [API] GdiplusStartup() -> Ok (token=1)
+[T64c0] [API] SetRectEmpty -> TRUE
+[T64c0] [API] GetModuleHandleW()
+[T64c0] [API] _onexit(func=0x10005c0d0)
+[T64c0] [API] _initterm: calling 0x10005b7d0
+[T64c0] [API] _initterm: calling 0x10005b800
+[T64c0] [API] _onexit(func=0x10005c0f0)
+[T64c0] [API] _initterm: calling 0x10005b820
+[T64c0] [API] _onexit(func=0x10005c160)
+[T64c0] [API] _initterm: calling 0x10005b840
+[T64c0] [API] _onexit(func=0x10005c1d0)
+[T64c0] [API] _initterm: calling 0x10005b860
+[T64c0] [API] _onexit(func=0x10005c240)
+[T64c0] [API] _initterm: calling 0x10005b880
+[T64c0] [API] _onexit(func=0x10005c2b0)
+[T64c0] [API] _initterm: calling 0x10005b8a0
+[T64c0] [API] _onexit(func=0x10005c320)
+[T64c0] [API] _initterm: calling 0x10005b8c0
+[T64c0] [API] SetRectEmpty -> TRUE
+[T64c0] [API] _onexit(func=0x10005c390)
+[T64c0] [API] _initterm: calling 0x10005b920
+[T64c0] [API] SetRectEmpty -> TRUE
+[T64c0] [API] _onexit(func=0x10005c3d0)
+[T64c0] [API] _initterm: calling 0x10005b9a0
+[T64c0] [API] SetRectEmpty -> TRUE
+[T64c0] [API] _onexit(func=0x10005c3f0)
+[T64c0] [API] _initterm: calling 0x10005ba40
+[T64c0] [API] _onexit(func=0x10005c4e0)
+[T64c0] [API] _initterm: calling 0x10005baa0
+[T64c0] [API] _onexit(func=0x10005c500)
+[T64c0] [API] EnterCriticalSection(0x7f43570e7da8)
+[T64c0] [API] TlsGetValue(1) = 0x3ab76f0
+[T64c0] [API] LeaveCriticalSection(0x7f43570e7da8)
+[T64c0] [API] EnterCriticalSection(0x7f43570e7da8)
+[T64c0] [API] TlsGetValue(1) = 0x3ab76f0
+[T64c0] [API] LeaveCriticalSection(0x7f43570e7da8)
+[T64c0] [API] EnterCriticalSection(0x7f43570e7da8)
+[T64c0] [API] TlsGetValue(1) = 0x3ab76f0
+[T64c0] [API] LeaveCriticalSection(0x7f43570e7da8)
+[T64c0] [API] EnterCriticalSection(0x7f43570e7da8)
+[T64c0] [API] TlsGetValue(1) = 0x3ab76f0
+[T64c0] [API] LeaveCriticalSection(0x7f43570e7da8)
+[T64c0] [API] EnterCriticalSection(0x7f43570e7da8)
+[T64c0] [API] TlsGetValue(1) = 0x3ab76f0
+[T64c0] [API] LeaveCriticalSection(0x7f43570e7da8)
+[T64c0] [API] GetModuleFileNameW(cap=260)
+[T64c0] [API] EnterCriticalSection(0x7f43570e7da8)
+[T64c0] [API] TlsGetValue(1) = 0x3ab76f0
+[T64c0] [API] LeaveCriticalSection(0x7f43570e7da8)
+[T64c0] [API] EnterCriticalSection(0x7f43570e7da8)
+[T64c0] [API] TlsGetValue(1) = 0x3ab76f0
+[T64c0] [API] LeaveCriticalSection(0x7f43570e7da8)
+[T64c0] [API] LoadStringW(id=57344) -> 0 (resource absent)
+[T64c0] [API] EnterCriticalSection(0x7f43570eb5a0)
+[T64c0] [API] LeaveCriticalSection(0x7f43570eb5a0)
+[T64c0] [API] EnterCriticalSection(0x7f43570eb5a0)
+[T64c0] [API] LoadStringW(id=57344) -> 0 (resource absent)
+[T64c0] [API] LeaveCriticalSection(0x7f43570eb5a0)
+[T64c0] [API] EnterCriticalSection(0x7f43570e7da8)
+[T64c0] [API] TlsGetValue(1) = 0x3ab76f0
+[T64c0] [API] LeaveCriticalSection(0x7f43570e7da8)
+[T64c0] [API] EnterCriticalSection(0x7f43570e7da8)
+[T64c0] [API] TlsGetValue(1) = 0x3ab76f0
+[T64c0] [API] LeaveCriticalSection(0x7f43570e7da8)
+[T64c0] [API] EnterCriticalSection(0x7f43570e7da8)
+[T64c0] [API] TlsGetValue(1) = 0x3ab76f0
+[T64c0] [API] LeaveCriticalSection(0x7f43570e7da8)
+[T64c0] [API] SetWindowsHookExW(id=-1, proc=0x7f4357017994, hmod=(nil), tid=5678)
+[T64c0] [API]   -> HHOOK 0xb30001
+[T64c0] [API] EnterCriticalSection(0x7f43570e7da8)
+[T64c0] [API] TlsGetValue(1) = 0x3ab76f0
+[T64c0] [API] LeaveCriticalSection(0x7f43570e7da8)
+[T64c0] [API] EnterCriticalSection(0x7f43570e7da8)
+[T64c0] [API] TlsGetValue(1) = 0x3ab76f0
+[T64c0] [API] LeaveCriticalSection(0x7f43570e7da8)
+[T64c0] [API] LoadStringW(id=57691) -> 0 (resource absent)
+[T64c0] [API] EnterCriticalSection(0x7f43570eb5a0)
+[T64c0] [API] LeaveCriticalSection(0x7f43570eb5a0)
+[T64c0] [API] EnterCriticalSection(0x7f43570eb5a0)
+[T64c0] [API] LoadStringW(id=57691) -> 0 (resource absent)
+[T64c0] [API] LeaveCriticalSection(0x7f43570eb5a0)
+[T64c0] [API] free((nil))
+[T64c0] [API] free(0x3aba690)
+[T64c0] [API] free(0x3aba690)
+[T64c0] [API] EnterCriticalSection(0x7f43570e7da8)
+[T64c0] [API] TlsGetValue(1) = 0x3ab76f0
+[T64c0] [API] LeaveCriticalSection(0x7f43570e7da8)
+[T64c0] [API] EnterCriticalSection(0x7f43570e7da8)
+[T64c0] [API] TlsGetValue(1) = 0x3ab76f0
+[T64c0] [API] LeaveCriticalSection(0x7f43570e7da8)
+[T64c0] [API] EnterCriticalSection(0x7f43570e7da8)
+[T64c0] [API] TlsGetValue(1) = 0x3ab76f0
+[T64c0] [API] LeaveCriticalSection(0x7f43570e7da8)
+[T64c0] [API] EnterCriticalSection(0x7f43570e7da8)
+[T64c0] [API] TlsGetValue(1) = 0x3ab76f0
+[T64c0] [API] LeaveCriticalSection(0x7f43570e7da8)
+[T64c0] [API] malloc(136) = 0x3aba6d0
+[T64c0] [API] EnterCriticalSection(0x7f43570e7da8)
+[T64c0] [API] TlsGetValue(1) = 0x3ab76f0
+[T64c0] [API] LeaveCriticalSection(0x7f43570e7da8)
+[T64c0] [API] EnterCriticalSection(0x7f43570e7da8)
+[T64c0] [API] TlsGetValue(1) = 0x3ab76f0
+[T64c0] [API] LeaveCriticalSection(0x7f43570e7da8)
+[T64c0] [API] EnterCriticalSection(0x7f43570e7da8)
+[T64c0] [API] TlsGetValue(1) = 0x3ab76f0
+[T64c0] [API] LeaveCriticalSection(0x7f43570e7da8)
+[T64c0] [API] EnterCriticalSection(0x7f43570e7da8)
+[T64c0] [API] TlsGetValue(1) = 0x3ab76f0
+[T64c0] [API] LeaveCriticalSection(0x7f43570e7da8)
+[T64c0] [API] EnterCriticalSection(0x7f43570eb3e8)
+[T64c0] [API] malloc(2064) = 0x3aba760
+[T64c0] [API] LeaveCriticalSection(0x7f43570eb3e8)
+[T64c0] [API] malloc(56) = 0x3abaf80
+[T64c0] [API] malloc(112) = 0x3abafc0
+[T64c0] [API] EnterCriticalSection(0x7f43570e7da8)
+[T64c0] [API] TlsGetValue(1) = 0x3ab76f0
+[T64c0] [API] LeaveCriticalSection(0x7f43570e7da8)
+[T64c0] [API] EnterCriticalSection(0x7f43570e7da8)
+[T64c0] [API] TlsGetValue(1) = 0x3ab76f0
+[T64c0] [API] LeaveCriticalSection(0x7f43570e7da8)
+[T64c0] [API] SystemParametersInfoW(SPI_GETNONCLIENTMETRICS) -> TRUE
+[T64c0] [API] CreateFontIndirectW -> HFONT 0x70001
+[T64c0] [API] EnterCriticalSection(0x7f43570e7da8)
+[T64c0] [API] TlsGetValue(1) = 0x3ab76f0
+[T64c0] [API] LeaveCriticalSection(0x7f43570e7da8)
+[T64c0] [API] EnterCriticalSection(0x7f43570e7da8)
+[T64c0] [API] TlsGetValue(1) = 0x3ab76f0
+[T64c0] [API] LeaveCriticalSection(0x7f43570e7da8)
+[T64c0] [API] EnterCriticalSection(0x7f43570e7da8)
+[T64c0] [API] TlsGetValue(1) = 0x3ab76f0
+[T64c0] [API] LeaveCriticalSection(0x7f43570e7da8)
+[T64c0] [API] EnterCriticalSection(0x7f43570e7da8)
+[T64c0] [API] TlsGetValue(1) = 0x3ab76f0
+[T64c0] [API] LeaveCriticalSection(0x7f43570e7da8)
+[T64c0] [API] malloc(136) = 0x3abb040
+[T64c0] [API] EnterCriticalSection(0x7f43570e7da8)
+[T64c0] [API] TlsGetValue(1) = 0x3ab76f0
+[T64c0] [API] LeaveCriticalSection(0x7f43570e7da8)
+[T64c0] [API] EnterCriticalSection(0x7f43570e7da8)
+[T64c0] [API] TlsGetValue(1) = 0x3ab76f0
+[T64c0] [API] LeaveCriticalSection(0x7f43570e7da8)
+[T64c0] [API] malloc(136) = 0x3abb0d0
+[T64c0] [API] malloc(256) = 0x3abb160
+[T64c0] [API] [GDI] GetDeviceCaps(4) -> 169
+[T64c0] [API] [GDI] GetDeviceCaps(6) -> 127
+[T64c0] [API] [GDI] GetDeviceCaps(8) -> 640
+[T64c0] [API] [GDI] GetDeviceCaps(10) -> 480
+[T64c0] [API] [GDI] GetDeviceCaps(88) -> 96
+[T64c0] [API] [GDI] GetDeviceCaps(90) -> 96
+[T64c0] [API] [GDI] GetDeviceCaps(12) -> 32
+[T64c0] [API] [GDI] GetDeviceCaps(14) -> 1
+[T64c0] [API] [GDI] GetDeviceCaps(38) -> 0
+[T64c0] [API] EnterCriticalSection(0x7f43570e7da8)
+[T64c0] [API] TlsGetValue(1) = 0x3ab76f0
+[T64c0] [API] LeaveCriticalSection(0x7f43570e7da8)
+[T64c0] [API] EnterCriticalSection(0x7f43570e7da8)
+[T64c0] [API] TlsGetValue(1) = 0x3ab76f0
+[T64c0] [API] LeaveCriticalSection(0x7f43570e7da8)
+[T64c0] [API] LoadStringW(id=2240) -> 0 (resource absent)
+[T64c0] [API] EnterCriticalSection(0x7f43570eb5a0)
+[T64c0] [API] LeaveCriticalSection(0x7f43570eb5a0)
+[T64c0] [API] EnterCriticalSection(0x7f43570eb5a0)
+[T64c0] [API] LoadStringW(id=2240) -> 0 (resource absent)
+[T64c0] [API] LeaveCriticalSection(0x7f43570eb5a0)
+[T64c0] [API] EnterCriticalSection(0x7f43570e7da8)
+[T64c0] [API] TlsGetValue(1) = 0x3ab76f0
+[T64c0] [API] LeaveCriticalSection(0x7f43570e7da8)
+[T64c0] [API] EnterCriticalSection(0x7f43570e7da8)
+[T64c0] [API] TlsGetValue(1) = 0x3ab76f0
+[T64c0] [API] LeaveCriticalSection(0x7f43570e7da8)
+[T64c0] [API] LoadStringW(id=2241) -> 0 (resource absent)
+[T64c0] [API] EnterCriticalSection(0x7f43570eb5a0)
+[T64c0] [API] LeaveCriticalSection(0x7f43570eb5a0)
+[T64c0] [API] EnterCriticalSection(0x7f43570eb5a0)
+[T64c0] [API] LoadStringW(id=2241) -> 0 (resource absent)
+[T64c0] [API] LeaveCriticalSection(0x7f43570eb5a0)
+[T64c0] [API] EnterCriticalSection(0x7f43570e7da8)
+[T64c0] [API] TlsGetValue(1) = 0x3ab76f0
+[T64c0] [API] LeaveCriticalSection(0x7f43570e7da8)
+[T64c0] [API] EnterCriticalSection(0x7f43570e7da8)
+[T64c0] [API] TlsGetValue(1) = 0x3ab76f0
+[T64c0] [API] LeaveCriticalSection(0x7f43570e7da8)
+[T64c0] [API] LoadLibraryA(ole32.dll)
+[T64c0] [API] GetProcAddress(module=0xdead0006, name=OleInitialize)
+[T64c0] [API]   -> 0x20634c0
+[T64c0] [API] OleInitialize() -> S_OK
+[T64c0] [API] EnterCriticalSection(0x7f43570e7da8)
+[T64c0] [API] TlsGetValue(1) = 0x3ab76f0
+[T64c0] [API] LeaveCriticalSection(0x7f43570e7da8)
+[T64c0] [API] EnterCriticalSection(0x7f43570e7da8)
+[T64c0] [API] TlsGetValue(1) = 0x3ab76f0
+[T64c0] [API] LeaveCriticalSection(0x7f43570e7da8)
+[T64c0] [API] malloc(104) = 0x3abb270
+[T64c0] [API] EnterCriticalSection(0x7f43570e7da8)
+[T64c0] [API] TlsGetValue(1) = 0x3ab76f0
+[T64c0] [API] LeaveCriticalSection(0x7f43570e7da8)
+[T64c0] [API] EnterCriticalSection(0x7f43570e7da8)
+[T64c0] [API] TlsGetValue(1) = 0x3ab76f0
+[T64c0] [API] LeaveCriticalSection(0x7f43570e7da8)
+[T64c0] [API] EnterCriticalSection(0x7f43570e7da8)
+[T64c0] [API] TlsGetValue(1) = 0x3ab76f0
+[T64c0] [API] LeaveCriticalSection(0x7f43570e7da8)
+[T64c0] [API] GetProcAddress(module=0xdead0006, name=CoRegisterMessageFilter)
+[T64c0] [API]   -> 0x2059f50
+[T64c0] [API] CoRegisterMessageFilter(0x3abb2d0) -> S_OK (prev=NULL)
+[T64c0] [API] EnterCriticalSection(0x7f43570e7da8)
+[T64c0] [API] TlsGetValue(1) = 0x3ab76f0
+[T64c0] [API] LeaveCriticalSection(0x7f43570e7da8)
+[T64c0] [API] EnterCriticalSection(0x7f43570e7da8)
+[T64c0] [API] TlsGetValue(1) = 0x3ab76f0
+[T64c0] [API] LeaveCriticalSection(0x7f43570e7da8)
+[T64c0] [API] malloc(56) = 0x3abb2e0
+[T64c0] [API] malloc(40) = 0x3ab7620
+[T64c0] [API] malloc(46) = 0x3abb320
+[T64c0] [API] malloc(26) = 0x3abb360
+[T64c0] [API] malloc(32) = 0x3abb390
+[T64c0] [API] EnterCriticalSection(0x7f43570e7da8)
+[T64c0] [API] TlsGetValue(1) = 0x3ab76f0
+[T64c0] [API] LeaveCriticalSection(0x7f43570e7da8)
+[T64c0] [API] LoadLibraryA(ADVAPI32.dll)
+[T64c0] [API] GetProcAddress(module=0xdead0005, name=RegOpenKeyExW)
+[T64c0] [API]   -> 0x2087360
+[T64c0] [API] SetLastError(2)
+[T64c0] [API] SetLastError(2)
+[T64c0] [API] SetLastError(2)
+[T64c0] [API] SetLastError(2)
+[T64c0] [API] free(0x3abb390)
+[T64c0] [API] SetLastError(2)
+[T64c0] [API] SetLastError(2)
+[T64c0] [API] SetLastError(2)
+[T64c0] [API] SetLastError(2)
+[T64c0] [API] SetLastError(2)
+[T64c0] [API] SetLastError(2)
+[T64c0] [API] RegCreateKeyExW -> slot 7 (created=1)
+[T64c0] [API] EnterCriticalSection(0x7f43570e7da8)
+[T64c0] [API] TlsGetValue(1) = 0x3ab76f0
+[T64c0] [API] LeaveCriticalSection(0x7f43570e7da8)
+[T64c0] [API] EnterCriticalSection(0x7f43570e7da8)
+[T64c0] [API] TlsGetValue(1) = 0x3ab76f0
+[T64c0] [API] LeaveCriticalSection(0x7f43570e7da8)
+[T64c0] [API] LoadStringW(id=57691) -> 0 (resource absent)
+[T64c0] [API] EnterCriticalSection(0x7f43570eb5a0)
+[T64c0] [API] LeaveCriticalSection(0x7f43570eb5a0)
+[T64c0] [API] EnterCriticalSection(0x7f43570eb5a0)
+[T64c0] [API] LoadStringW(id=57691) -> 0 (resource absent)
+[T64c0] [API] LeaveCriticalSection(0x7f43570eb5a0)
+[T64c0] [API] RegOpenKeyExW -> handle slot 7
+[T64c0] [API] GetProcAddress(module=0xdead0005, name=RegCreateKeyExW)
+[T64c0] [API]   -> 0x2087770
+[T64c0] [API] SetLastError(6)
+[T64c0] [API] GetProcAddress(module=0xdead0005, name=RegCloseKey)
+[T64c0] [API]   -> 0x200c180
+[T64c0] [API] RegOpenKeyExW -> handle slot 7
+[T64c0] [API] SetLastError(6)
+[T64c0] [API] RegOpenKeyExW -> handle slot 7
+[T64c0] [API] SetLastError(6)
+[T64c0] [API] RegOpenKeyExW -> handle slot 7
+[T64c0] [API] SetLastError(6)
+[T64c0] [API] RegOpenKeyExW -> handle slot 7
+[T64c0] [API] SetLastError(6)
+[T64c0] [API] RegOpenKeyExW -> handle slot 7
+[T64c0] [API] SetLastError(6)
+[T64c0] [API] RegOpenKeyExW -> handle slot 7
+[T64c0] [API] SetLastError(6)
+[T64c0] [API] RegOpenKeyExW -> handle slot 7
+[T64c0] [API] SetLastError(6)
+[T64c0] [API] RegOpenKeyExW -> handle slot 7
+[T64c0] [API] SetLastError(6)
+[T64c0] [API] RegOpenKeyExW -> handle slot 7
+[T64c0] [API] SetLastError(6)
+[T64c0] [API] RegOpenKeyExW -> handle slot 7
+[T64c0] [API] SetLastError(6)
+[T64c0] [API] RegOpenKeyExW -> handle slot 7
+[T64c0] [API] SetLastError(6)
+[T64c0] [API] RegOpenKeyExW -> handle slot 7
+[T64c0] [API] SetLastError(6)
+[T64c0] [API] RegOpenKeyExW -> handle slot 7
+[T64c0] [API] SetLastError(6)
+[T64c0] [API] RegOpenKeyExW -> handle slot 7
+[T64c0] [API] SetLastError(6)
+[T64c0] [API] RegOpenKeyExW -> handle slot 7
+[T64c0] [API] SetLastError(6)
+[T64c0] [API] RegOpenKeyExW -> handle slot 7
+[T64c0] [API] SetLastError(6)
+[T64c0] [API] RegOpenKeyExW -> handle slot 7
+[T64c0] [API] SetLastError(6)
+[T64c0] [API] malloc(64) = 0x3abb3c0
+[T64c0] [API] RegOpenKeyExW -> handle slot 7
+[T64c0] [API] SetLastError(6)
+[T64c0] [API] CreateBitmap(8x8x1) -> 0x30001
+[T64c0] [API] EnterCriticalSection(0x7f43570e7da8)
+[T64c0] [API] TlsGetValue(1) = 0x3ab76f0
+[T64c0] [API] LeaveCriticalSection(0x7f43570e7da8)
+[T64c0] [API] EnterCriticalSection(0x7f43570e7da8)
+[T64c0] [API] TlsGetValue(1) = 0x3ab76f0
+[T64c0] [API] LeaveCriticalSection(0x7f43570e7da8)
+[T64c0] [API] EnterCriticalSection(0x7f43570e7da8)
+[T64c0] [API] TlsGetValue(1) = 0x3ab76f0
+[T64c0] [API] LeaveCriticalSection(0x7f43570e7da8)
+[T64c0] [API] EnterCriticalSection(0x7f43570e7da8)
+[T64c0] [API] TlsGetValue(1) = 0x3ab76f0
+[T64c0] [API] LeaveCriticalSection(0x7f43570e7da8)
+[T64c0] [API] CreateBitmap(8x8x1) -> 0x30002
+[T64c0] [API] EnterCriticalSection(0x7f43570e7da8)
+[T64c0] [API] TlsGetValue(1) = 0x3ab76f0
+[T64c0] [API] LeaveCriticalSection(0x7f43570e7da8)
+[T64c0] [API] EnterCriticalSection(0x7f43570e7da8)
+[T64c0] [API] TlsGetValue(1) = 0x3ab76f0
+[T64c0] [API] LeaveCriticalSection(0x7f43570e7da8)
+[T64c0] [API] EnterCriticalSection(0x7f43570e7da8)
+[T64c0] [API] TlsGetValue(1) = 0x3ab76f0
+[T64c0] [API] LeaveCriticalSection(0x7f43570e7da8)
+[T64c0] [API] EnterCriticalSection(0x7f43570e7da8)
+[T64c0] [API] TlsGetValue(1) = 0x3ab76f0
+[T64c0] [API] LeaveCriticalSection(0x7f43570e7da8)
+[T64c0] [API] malloc(32) = 0x3abb390
+[T64c0] [API] malloc(1024) = 0x3ab7110
+[T64c0] [API] malloc(1024) = 0x3abb410
+[T64c0] [API] malloc(200) = 0x3abb820
+[T64c0] [API] EnterCriticalSection(0x7f43570e7da8)
+[T64c0] [API] TlsGetValue(1) = 0x3ab76f0
+[T64c0] [API] LeaveCriticalSection(0x7f43570e7da8)
+[T64c0] [API] EnterCriticalSection(0x7f43570e7da8)
+[T64c0] [API] TlsGetValue(1) = 0x3ab76f0
+[T64c0] [API] LeaveCriticalSection(0x7f43570e7da8)
+[T64c0] [API] EnterCriticalSection(0x7f43570e7da8)
+[T64c0] [API] TlsGetValue(1) = 0x3ab76f0
+[T64c0] [API] LeaveCriticalSection(0x7f43570e7da8)
+[T64c0] [API] LoadStringW(id=2) -> 0 (resource absent)
+[T64c0] [API] EnterCriticalSection(0x7f43570eb5a0)
+[T64c0] [API] LeaveCriticalSection(0x7f43570eb5a0)
+[T64c0] [API] EnterCriticalSection(0x7f43570eb5a0)
+[T64c0] [API] LoadStringW(id=2) -> 0 (resource absent)
+[T64c0] [API] LeaveCriticalSection(0x7f43570eb5a0)
+[T64c0] [API] EnterCriticalSection(0x7f43570e7da8)
+[T64c0] [API] TlsGetValue(1) = 0x3ab76f0
+[T64c0] [API] LeaveCriticalSection(0x7f43570e7da8)
+[T64c0] [API] EnterCriticalSection(0x7f43570e7da8)
+[T64c0] [API] TlsGetValue(1) = 0x3ab76f0
+[T64c0] [API] LeaveCriticalSection(0x7f43570e7da8)
+[T64c0] [API] LoadStringW(id=2) -> 0 (resource absent)
+[T64c0] [API] EnterCriticalSection(0x7f43570eb5a0)
+[T64c0] [API] LeaveCriticalSection(0x7f43570eb5a0)
+[T64c0] [API] EnterCriticalSection(0x7f43570eb5a0)
+[T64c0] [API] LoadStringW(id=2) -> 0 (resource absent)
+[T64c0] [API] LeaveCriticalSection(0x7f43570eb5a0)
+[T64c0] [API] EnterCriticalSection(0x7f43570e7da8)
+[T64c0] [API] TlsGetValue(1) = 0x3ab76f0
+[T64c0] [API] LeaveCriticalSection(0x7f43570e7da8)
+[T64c0] [API] EnterCriticalSection(0x7f43570e7da8)
+[T64c0] [API] TlsGetValue(1) = 0x3ab76f0
+[T64c0] [API] LeaveCriticalSection(0x7f43570e7da8)
+[T64c0] [API] LoadMenuW() -> HMENU 0x50001
+[T64c0] [API] LoadAcceleratorsW() -> NULL (no accelerators; optional sugar)
+[T64c0] [API] EnterCriticalSection(0x7f43570e7da8)
+[T64c0] [API] TlsGetValue(1) = 0x3ab76f0
+[T64c0] [API] LeaveCriticalSection(0x7f43570e7da8)
+[T64c0] [API] EnterCriticalSection(0x7f43570e7da8)
+[T64c0] [API] TlsGetValue(1) = 0x3ab76f0
+[T64c0] [API] LeaveCriticalSection(0x7f43570e7da8)
+[T64c0] [API] LoadMenuW() -> HMENU 0x50002
+[T64c0] [API] LoadAcceleratorsW() -> NULL (no accelerators; optional sugar)
+[T64c0] [API] malloc(64) = 0x3abb8f0
+[T64c0] [API] EnterCriticalSection(0x7f43570e7da8)
+[T64c0] [API] TlsGetValue(1) = 0x3ab76f0
+[T64c0] [API] LeaveCriticalSection(0x7f43570e7da8)
+[T64c0] [API] EnterCriticalSection(0x7f43570e7da8)
+[T64c0] [API] TlsGetValue(1) = 0x3ab76f0
+[T64c0] [API] LeaveCriticalSection(0x7f43570e7da8)
+[T64c0] [API] LoadStringW(id=2) -> 0 (resource absent)
+[T64c0] [API] EnterCriticalSection(0x7f43570eb5a0)
+[T64c0] [API] LeaveCriticalSection(0x7f43570eb5a0)
+[T64c0] [API] EnterCriticalSection(0x7f43570eb5a0)
+[T64c0] [API] LoadStringW(id=2) -> 0 (resource absent)
+[T64c0] [API] LeaveCriticalSection(0x7f43570eb5a0)
+[T64c0] [API] malloc(256) = 0x3abb940
+[T64c0] [API] EnterCriticalSection(0x7f43570e7da8)
+[T64c0] [API] TlsGetValue(1) = 0x3ab76f0
+[T64c0] [API] LeaveCriticalSection(0x7f43570e7da8)
+[T64c0] [API] malloc(496) = 0x3abba50
+[T64c0] [API] EnterCriticalSection(0x7f43570e7da8)
+[T64c0] [API] TlsGetValue(1) = 0x3ab76f0
+[T64c0] [API] LeaveCriticalSection(0x7f43570e7da8)
+[T64c0] [API] EnterCriticalSection(0x7f43570e7da8)
+[T64c0] [API] TlsGetValue(1) = 0x3ab76f0
+[T64c0] [API] LeaveCriticalSection(0x7f43570e7da8)
+[T64c0] [API] malloc(1384) = 0x3abbc50
+[T64c0] [API] EnterCriticalSection(0x7f43570e7da8)
+[T64c0] [API] TlsGetValue(1) = 0x3ab76f0
+[T64c0] [API] LeaveCriticalSection(0x7f43570e7da8)
+[T64c0] [API] SetRectEmpty -> TRUE
+[T64c0] [API] EnterCriticalSection(0x7f43570e7da8)
+[T64c0] [API] TlsGetValue(1) = 0x3ab76f0
+[T64c0] [API] LeaveCriticalSection(0x7f43570e7da8)
+[T64c0] [API] EnterCriticalSection(0x7f43570e7da8)
+[T64c0] [API] TlsGetValue(1) = 0x3ab76f0
+[T64c0] [API] LeaveCriticalSection(0x7f43570e7da8)
+[T64c0] [API] EnterCriticalSection(0x7f43570e7da8)
+[T64c0] [API] TlsGetValue(1) = 0x3ab76f0
+[T64c0] [API] LeaveCriticalSection(0x7f43570e7da8)
+[T64c0] [API] malloc(40) = 0x3abc1c0
+[T64c0] [API] EnterCriticalSection(0x7f43570e7da8)
+[T64c0] [API] TlsGetValue(1) = 0x3ab76f0
+[T64c0] [API] LeaveCriticalSection(0x7f43570e7da8)
+[T64c0] [API] SetRectEmpty -> TRUE
+[T64c0] [API] malloc(24) = 0x3abc1f0
+[T64c0] [API] malloc(32) = 0x3abc210
+[T64c0] [API] CoCreateInstance(clsid=0x10000dc20) -> REGDB_E_CLASSNOTFOUND (0x80040154)
+[T64c0] [API] free(0x3abc210)
+[T64c0] [API] EnterCriticalSection(0x7f43570e7da8)
+[T64c0] [API] TlsGetValue(1) = 0x3ab76f0
+[T64c0] [API] LeaveCriticalSection(0x7f43570e7da8)
+[T64c0] [API] EnterCriticalSection(0x7f43570e7da8)
+[T64c0] [API] TlsGetValue(1) = 0x3ab76f0
+[T64c0] [API] LeaveCriticalSection(0x7f43570e7da8)
+[T64c0] [API] LoadStringW(id=2) -> 0 (resource absent)
+[T64c0] [API] EnterCriticalSection(0x7f43570eb5a0)
+[T64c0] [API] LeaveCriticalSection(0x7f43570eb5a0)
+[T64c0] [API] EnterCriticalSection(0x7f43570eb5a0)
+[T64c0] [API] LoadStringW(id=2) -> 0 (resource absent)
+[T64c0] [API] LeaveCriticalSection(0x7f43570eb5a0)
+[T64c0] [API] EnterCriticalSection(0x7f43570e7da8)
+[T64c0] [API] TlsGetValue(1) = 0x3ab76f0
+[T64c0] [API] LeaveCriticalSection(0x7f43570e7da8)
+[T64c0] [API] EnterCriticalSection(0x7f43570e7da8)
+[T64c0] [API] TlsGetValue(1) = 0x3ab76f0
+[T64c0] [API] LeaveCriticalSection(0x7f43570e7da8)
+[T64c0] [API] EnterCriticalSection(0x7f43570e7da8)
+[T64c0] [API] TlsGetValue(1) = 0x3ab76f0
+[T64c0] [API] LeaveCriticalSection(0x7f43570e7da8)
+[T64c0] [API] EnterCriticalSection(0x7f43570e7da8)
+[T64c0] [API] TlsGetValue(1) = 0x3ab76f0
+[T64c0] [API] LeaveCriticalSection(0x7f43570e7da8)
+[T64c0] [API] SetLastError(1814)
+[T64c0] [API] EnterCriticalSection(0x7f43570eb5a0)
+[T64c0] [API] LeaveCriticalSection(0x7f43570eb5a0)
+[T64c0] [API] EnterCriticalSection(0x7f43570eb5a0)
+[T64c0] [API] SetLastError(1814)
+[T64c0] [API] LeaveCriticalSection(0x7f43570eb5a0)
+[T64c0] [API] EnterCriticalSection(0x7f43570e7da8)
+[T64c0] [API] TlsGetValue(1) = 0x3ab76f0
+[T64c0] [API] LeaveCriticalSection(0x7f43570e7da8)
+[T64c0] [API] EnterCriticalSection(0x7f43570e7da8)
+[T64c0] [API] TlsGetValue(1) = 0x3ab76f0
+[T64c0] [API] LeaveCriticalSection(0x7f43570e7da8)
+[T64c0] [API] EnterCriticalSection(0x7f43570e7da8)
+[T64c0] [API] TlsGetValue(1) = 0x3ab76f0
+[T64c0] [API] LeaveCriticalSection(0x7f43570e7da8)
+[T64c0] [API] EnterCriticalSection(0x7f43570e7da8)
+[T64c0] [API] TlsGetValue(1) = 0x3ab76f0
+[T64c0] [API] LeaveCriticalSection(0x7f43570e7da8)
+[T64c0] [API] EnterCriticalSection(0x7f43570e7da8)
+[T64c0] [API] TlsGetValue(1) = 0x3ab76f0
+[T64c0] [API] LeaveCriticalSection(0x7f43570e7da8)
+[T64c0] [API] EnterCriticalSection(0x7f43570e7da8)
+[T64c0] [API] TlsGetValue(1) = 0x3ab76f0
+[T64c0] [API] LeaveCriticalSection(0x7f43570e7da8)
+[T64c0] [API] EnterCriticalSection(0x7f43570e7da8)
+[T64c0] [API] TlsGetValue(1) = 0x3ab76f0
+[T64c0] [API] LeaveCriticalSection(0x7f43570e7da8)
+[T64c0] [API] EnterCriticalSection(0x7f43570e7da8)
+[T64c0] [API] TlsGetValue(1) = 0x3ab76f0
+[T64c0] [API] LeaveCriticalSection(0x7f43570e7da8)
+[T64c0] [API] EnterCriticalSection(0x7f43570e7da8)
+[T64c0] [API] TlsGetValue(1) = 0x3ab76f0
+[T64c0] [API] LeaveCriticalSection(0x7f43570e7da8)
+[T64c0] [API] EnterCriticalSection(0x7f43570e7da8)
+[T64c0] [API] TlsGetValue(1) = 0x3ab76f0
+[T64c0] [API] LeaveCriticalSection(0x7f43570e7da8)
+[T64c0] [API] LoadMenuW() -> HMENU 0x50003
+[T64c0] [API] EnterCriticalSection(0x7f43570e7da8)
+[T64c0] [API] TlsGetValue(1) = 0x3ab76f0
+[T64c0] [API] LeaveCriticalSection(0x7f43570e7da8)
+[T64c0] [API] EnterCriticalSection(0x7f43570e7da8)
+[T64c0] [API] TlsGetValue(1) = 0x3ab76f0
+[T64c0] [API] LeaveCriticalSection(0x7f43570e7da8)
+[T64c0] [API] EnterCriticalSection(0x7f43570e7da8)
+[T64c0] [API] TlsGetValue(1) = 0x3ab76f0
+[T64c0] [API] LeaveCriticalSection(0x7f43570e7da8)
+[T64c0] [API] SetWindowsHookExW(id=5, proc=0x7f4357012dd8, hmod=(nil), tid=5678)
+[T64c0] [API]   -> HHOOK 0xb30002
+[T64c0] [API] EnterCriticalSection(0x7f43570e7da8)
+[T64c0] [API] TlsGetValue(1) = 0x3ab76f0
+[T64c0] [API] LeaveCriticalSection(0x7f43570e7da8)
+[T64c0] [API] EnterCriticalSection(0x7f43570e7da8)
+[T64c0] [API] TlsGetValue(1) = 0x3ab76f0
+[T64c0] [API] LeaveCriticalSection(0x7f43570e7da8)
+[T64c0] [API] EnterCriticalSection(0x7f43570e7da8)
+[T64c0] [API] TlsGetValue(1) = 0x3ab76f0
+[T64c0] [API] LeaveCriticalSection(0x7f43570e7da8)
+[T64c0] [API] EnterCriticalSection(0x7f43570e7da8)
+[T64c0] [API] TlsGetValue(1) = 0x3ab76f0
+[T64c0] [API] LeaveCriticalSection(0x7f43570e7da8)
+[T64c0] [API] EnterCriticalSection(0x7f43570e7da8)
+[T64c0] [API] TlsGetValue(1) = 0x3ab76f0
+[T64c0] [API] LeaveCriticalSection(0x7f43570e7da8)
+[T64c0] [API] EnterCriticalSection(0x7f43570e7da8)
+[T64c0] [API] TlsGetValue(1) = 0x3ab76f0
+[T64c0] [API] LeaveCriticalSection(0x7f43570e7da8)
+[T64c0] [API] EnterCriticalSection(0x7f43570e7da8)
+[T64c0] [API] TlsGetValue(1) = 0x3ab76f0
+[T64c0] [API] LeaveCriticalSection(0x7f43570e7da8)
+[T64c0] [API] malloc(136) = 0x3abc240
+[T64c0] [API] EnterCriticalSection(0x7f43570e7da8)
+[T64c0] [API] TlsGetValue(1) = 0x3ab76f0
+[T64c0] [API] LeaveCriticalSection(0x7f43570e7da8)
+[T64c0] [API] EnterCriticalSection(0x7f43570e7da8)
+[T64c0] [API] TlsGetValue(1) = 0x3ab76f0
+[T64c0] [API] LeaveCriticalSection(0x7f43570e7da8)
+[T64c0] [API] malloc(136) = 0x3abc2d0
+[T64c0] [API] malloc(256) = 0x3abc360
+[T64c0] [API] EnterCriticalSection(0x7f43570e7da8)
+[T64c0] [API] TlsGetValue(1) = 0x3ab76f0
+[T64c0] [API] LeaveCriticalSection(0x7f43570e7da8)
+[T64c0] [API] SetWindowLongPtrW(0x10001,-4,0x7f43570491b4) -> 0x0
+[T64c0] [API] [HOOK] HCBT_CREATEWND -> hook[1] 0x7f4357012dd8 returned 0
+[T64c0] [API] [GUI] paint surface allocated 275x410 (SWEEP-005)
+[T64c0] [API] CreateWindowExW(ex=0x300 style=0x2cfc000 cls=0x10006f290 275x410@-2147483648,-2147483648) -> HWND 0x10001
+[T64c0] [API] EnterCriticalSection(0x7f43570e7da8)
+[T64c0] [API] TlsGetValue(1) = 0x3ab76f0
+[T64c0] [API] LeaveCriticalSection(0x7f43570e7da8)
+[T64c0] [API] GetMenu(hwnd=0x10001) -> (nil)
+[T64c0] [API] EnterCriticalSection(0x7f43570e7da8)
+[T64c0] [API] TlsGetValue(1) = 0x3ab76f0
+[T64c0] [API] LeaveCriticalSection(0x7f43570e7da8)
+[T64c0] [API] EnterCriticalSection(0x7f43570e7da8)
+[T64c0] [API] TlsGetValue(1) = 0x3ab76f0
+[T64c0] [API] LeaveCriticalSection(0x7f43570e7da8)
+[T64c0] [API] LoadAcceleratorsW() -> NULL (no accelerators; optional sugar)
+[T64c0] [API] EnterCriticalSection(0x7f43570e7da8)
+[T64c0] [API] TlsGetValue(1) = 0x3ab76f0
+[T64c0] [API] LeaveCriticalSection(0x7f43570e7da8)
+[T64c0] [API] EnterCriticalSection(0x7f43570e7da8)
+[T64c0] [API] TlsGetValue(1) = 0x3ab76f0
+[T64c0] [API] LeaveCriticalSection(0x7f43570e7da8)
+[T64c0] [API] SetLastError(1814)
+[T64c0] [API] EnterCriticalSection(0x7f43570eb5a0)
+[T64c0] [API] LeaveCriticalSection(0x7f43570eb5a0)
+[T64c0] [API] EnterCriticalSection(0x7f43570eb5a0)
+[T64c0] [API] SetLastError(1814)
+[T64c0] [API] LeaveCriticalSection(0x7f43570eb5a0)
+[T64c0] [API] malloc(144) = 0x3ab7650
+[T64c0] [API] EnterCriticalSection(0x7f43570e7da8)
+[T64c0] [API] TlsGetValue(1) = 0x3ab76f0
+[T64c0] [API] LeaveCriticalSection(0x7f43570e7da8)
+[T64c0] [API] EnterCriticalSection(0x7f43570e7da8)
+[T64c0] [API] TlsGetValue(1) = 0x3ab76f0
+[T64c0] [API] LeaveCriticalSection(0x7f43570e7da8)
+[T64c0] [API] GetActiveWindow() -> (nil)
+[T64c0] [API] EnterCriticalSection(0x7f43570e7da8)
+[T64c0] [API] TlsGetValue(1) = 0x3ab76f0
+[T64c0] [API] LeaveCriticalSection(0x7f43570e7da8)
+[T64c0] [API] EnterCriticalSection(0x7f43570e7da8)
+[T64c0] [API] TlsGetValue(1) = 0x3ab76f0
+[T64c0] [API] LeaveCriticalSection(0x7f43570e7da8)
+[T64c0] [API] EnterCriticalSection(0x7f43570e7da8)
+[T64c0] [API] TlsGetValue(1) = 0x3ab76f0
+[T64c0] [API] LeaveCriticalSection(0x7f43570e7da8)
+[T64c0] [API] EnterCriticalSection(0x7f43570e7da8)
+[T64c0] [API] TlsGetValue(1) = 0x3ab76f0
+[T64c0] [API] LeaveCriticalSection(0x7f43570e7da8)
+[T64c0] [API] EnterCriticalSection(0x7f43570e7da8)
+[T64c0] [API] TlsGetValue(1) = 0x3ab76f0
+[T64c0] [API] LeaveCriticalSection(0x7f43570e7da8)
+[T64c0] [API] GetDlgItem(id=59648) -> NULL (no such control)
+[T64c0] [API] GetTopWindow(0x10001) -> (nil) (0 children)
+[T64c0] [API] GetTopWindow(0x10001) -> (nil) (0 children)
+[T64c0] [API] EnterCriticalSection(0x7f43570e7da8)
+[T64c0] [API] TlsGetValue(1) = 0x3ab76f0
+[T64c0] [API] LeaveCriticalSection(0x7f43570e7da8)
+[T64c0] [API] IsWindowVisible(0x10001) -> TRUE
+[T64c0] [API] EnterCriticalSection(0x7f43570e7da8)
+[T64c0] [API] TlsGetValue(1) = 0x3ab76f0
+[T64c0] [API] LeaveCriticalSection(0x7f43570e7da8)
+[T64c0] [API] [HOOK] CBT event 5 -> hook[1] 0x7f4357012dd8 returned 0
+[T64c0] [API] ShowWindow(hwnd=0x10001 cmd=10) -> TRUE
+[T64c0] [API] GetWindowLongW(0x10001,-16) -> 0x0
+[T64c0] [API] LoadLibraryA(SHELL32.dll)
+[T64c0] [API] GetProcAddress(module=0xdead0004, name=DragAcceptFiles)
+[T64c0] [API]   -> NULL (not in dispatch table)
+[T64c0] [API]   -> optional-stub fallback (not in dispatch table)
+[T64c0] [API] IsWindowVisible(0x10001) -> TRUE
+[T64c0] [API] EnterCriticalSection(0x7f43570e7da8)
+[T64c0] [API] TlsGetValue(1) = 0x3ab76f0
+[T64c0] [API] LeaveCriticalSection(0x7f43570e7da8)
+[T64c0] [API] EnterCriticalSection(0x7f43570eb578)
+[T64c0] [API] InitializeCriticalSection(0x7f43570eb6b8)
+[T64c0] [API] LeaveCriticalSection(0x7f43570eb578)
+[T64c0] [API] EnterCriticalSection(0x7f43570eb6b8)
+[T64c0] [API] LeaveCriticalSection(0x7f43570eb6b8)
+[T64c0] [API] GetTopWindow(0x10001) -> (nil) (0 children)
+[T64c0] [API] EnterCriticalSection(0x7f43570e7da8)
+[T64c0] [API] TlsGetValue(1) = 0x3ab76f0
+[T64c0] [API] LeaveCriticalSection(0x7f43570e7da8)
+[T64c0] [API] EnterCriticalSection(0x7f43570e7da8)
+[T64c0] [API] TlsGetValue(1) = 0x3ab76f0
+[T64c0] [API] LeaveCriticalSection(0x7f43570e7da8)
+[T64c0] [API] EnterCriticalSection(0x7f43570e7da8)
+[T64c0] [API] TlsGetValue(1) = 0x3ab76f0
+[T64c0] [API] LeaveCriticalSection(0x7f43570e7da8)
+[T64c0] [API] EnterCriticalSection(0x7f43570e7da8)
+[T64c0] [API] TlsGetValue(1) = 0x3ab76f0
+[T64c0] [API] LeaveCriticalSection(0x7f43570e7da8)
+[T64c0] [API] EnterCriticalSection(0x7f43570e7da8)
+[T64c0] [API] TlsGetValue(1) = 0x3ab76f0
+[T64c0] [API] LeaveCriticalSection(0x7f43570e7da8)
+[T64c0] [API] EnterCriticalSection(0x7f43570e7da8)
+[T64c0] [API] TlsGetValue(1) = 0x3ab76f0
+[T64c0] [API] LeaveCriticalSection(0x7f43570e7da8)
+[T64c0] [API] EnterCriticalSection(0x7f43570e7da8)
+[T64c0] [API] TlsGetValue(1) = 0x3ab76f0
+[T64c0] [API] LeaveCriticalSection(0x7f43570e7da8)
+[T64c0] [API] EnterCriticalSection(0x7f43570e7da8)
+[T64c0] [API] TlsGetValue(1) = 0x3ab76f0
+[T64c0] [API] LeaveCriticalSection(0x7f43570e7da8)
+[T64c0] [API] GetTickCount() = 4791580
+[T64c0] [API] GetTickCount() = 4791580
+[T64c0] [API] EnterCriticalSection(0x7f43570eb3e8)
+[T64c0] [API] LeaveCriticalSection(0x7f43570eb3e8)
+[T64c0] [API] free(0x3abaf80)
+[T64c0] [API] free(0x3abafc0)
+[T64c0] [API] EnterCriticalSection(0x7f43570e7da8)
+[T64c0] [API] TlsGetValue(1) = 0x3ab76f0
+[T64c0] [API] LeaveCriticalSection(0x7f43570e7da8)
+[T64c0] [API] EnterCriticalSection(0x7f43570e7da8)
+[T64c0] [API] TlsGetValue(1) = 0x3ab76f0
+[T64c0] [API] LeaveCriticalSection(0x7f43570e7da8)
+[T64c0] [API] malloc(512) = 0x3b0edd0
+[T64c0] [API] GetMessageW(hwnd=(nil)) -> 0 (WM_QUIT: no event source, main-thread batch contract)
+[T64c0] [API] EnterCriticalSection(0x7f43570e7da8)
+[T64c0] [API] TlsGetValue(1) = 0x3ab76f0
+[T64c0] [API] LeaveCriticalSection(0x7f43570e7da8)
+[T64c0] [API] EnterCriticalSection(0x7f43570e7da8)
+[T64c0] [API] TlsGetValue(1) = 0x3ab76f0
+[T64c0] [API] LeaveCriticalSection(0x7f43570e7da8)
+[T64c0] [API] EnterCriticalSection(0x7f43570e7da8)
+[T64c0] [API] TlsGetValue(1) = 0x3ab76f0
+[T64c0] [API] LeaveCriticalSection(0x7f43570e7da8)
+[T64c0] [API] EnterCriticalSection(0x7f43570e7da8)
+[T64c0] [API] TlsGetValue(1) = 0x3ab76f0
+[T64c0] [API] LeaveCriticalSection(0x7f43570e7da8)
+[T64c0] [API] EnterCriticalSection(0x7f43570e7da8)
+[T64c0] [API] TlsGetValue(1) = 0x3ab76f0
+[T64c0] [API] LeaveCriticalSection(0x7f43570e7da8)
+[T64c0] [API] EnterCriticalSection(0x7f43570e7da8)
+[T64c0] [API] TlsGetValue(1) = 0x3ab76f0
+[T64c0] [API] LeaveCriticalSection(0x7f43570e7da8)
+[T64c0] [API] EnterCriticalSection(0x7f43570e7da8)
+[T64c0] [API] TlsGetValue(1) = 0x3ab76f0
+[T64c0] [API] LeaveCriticalSection(0x7f43570e7da8)
+[T64c0] [API] EnterCriticalSection(0x7f43570e7da8)
+[T64c0] [API] TlsGetValue(1) = 0x3ab76f0
+[T64c0] [API] LeaveCriticalSection(0x7f43570e7da8)
+[T64c0] [API] free(0x3ab7110)
+[T64c0] [API] free(0x3abb410)
+[T64c0] [API] free(0x3abb390)
+[T64c0] [API] EnterCriticalSection(0x7f43570e7da8)
+[T64c0] [API] TlsGetValue(1) = 0x3ab76f0
+[T64c0] [API] LeaveCriticalSection(0x7f43570e7da8)
+[T64c0] [API] EnterCriticalSection(0x7f43570e7da8)
+[T64c0] [API] TlsGetValue(1) = 0x3ab76f0
+[T64c0] [API] LeaveCriticalSection(0x7f43570e7da8)
+[T64c0] [API] free(0x3abb0d0)
+[T64c0] [API] free(0x3abb160)
+[T64c0] [API] EnterCriticalSection(0x7f43570e7da8)
+[T64c0] [API] TlsGetValue(1) = 0x3ab76f0
+[T64c0] [API] LeaveCriticalSection(0x7f43570e7da8)
+[T64c0] [API] malloc(32) = 0x3abb390
+[T64c0] [API] EnterCriticalSection(0x7f43570e7da8)
+[T64c0] [API] TlsGetValue(1) = 0x3ab76f0
+[T64c0] [API] LeaveCriticalSection(0x7f43570e7da8)
+[T64c0] [API] RegOpenKeyExW -> handle slot 7
+[T64c0] [API] SetLastError(6)
+[T64c0] [API] free(0x3abb390)
+[T64c0] [API] EnterCriticalSection(0x7f43570e7da8)
+[T64c0] [API] TlsGetValue(1) = 0x3ab76f0
+[T64c0] [API] LeaveCriticalSection(0x7f43570e7da8)
+[T64c0] [API] EnterCriticalSection(0x7f43570eb578)
+[T64c0] [API] InitializeCriticalSection(0x7f43570eb5c8)
+[T64c0] [API] LeaveCriticalSection(0x7f43570eb578)
+[T64c0] [API] EnterCriticalSection(0x7f43570eb5c8)
+[T64c0] [API] LeaveCriticalSection(0x7f43570eb5c8)
+[T64c0] [API] EnterCriticalSection(0x7f43570e7da8)
+[T64c0] [API] TlsGetValue(1) = 0x3ab76f0
+[T64c0] [API] LeaveCriticalSection(0x7f43570e7da8)
+[T64c0] [API] EnterCriticalSection(0x7f43570eb820)
+[T64c0] [API] GlobalAlloc(flags=64, bytes=0x48) = 0x3b0efe0
+[T64c0] [API] LeaveCriticalSection(0x7f43570eb820)
+[T64c0] [API] EnterCriticalSection(0x7f43570e7da8)
+[T64c0] [API] TlsGetValue(1) = 0x3ab76f0
+[T64c0] [API] LeaveCriticalSection(0x7f43570e7da8)
+[T64c0] [API] EnterCriticalSection(0x7f43570eb5a0)
+[T64c0] [API] LeaveCriticalSection(0x7f43570eb5a0)
+[T64c0] [API] EnterCriticalSection(0x7f43570eb5a0)
+[T64c0] [API] LeaveCriticalSection(0x7f43570eb5a0)
+[T64c0] [API] EnterCriticalSection(0x7f43570e7da8)
+[T64c0] [API] TlsGetValue(1) = 0x3ab76f0
+[T64c0] [API] LeaveCriticalSection(0x7f43570e7da8)
+[T64c0] [API] EnterCriticalSection(0x7f43570eb578)
+[T64c0] [API] InitializeCriticalSection(0x7f43570eb758)
+[T64c0] [API] LeaveCriticalSection(0x7f43570eb578)
+[T64c0] [API] EnterCriticalSection(0x7f43570eb758)
+[T64c0] [API] LeaveCriticalSection(0x7f43570eb758)
+[T64c0] [API] EnterCriticalSection(0x7f43570e7da8)
+[T64c0] [API] TlsGetValue(1) = 0x3ab76f0
+[T64c0] [API] LeaveCriticalSection(0x7f43570e7da8)
+[T64c0] [API] EnterCriticalSection(0x7f43570e7da8)
+[T64c0] [API] TlsGetValue(1) = 0x3ab76f0
+[T64c0] [API] LeaveCriticalSection(0x7f43570e7da8)
+[T64c0] [API] CoRegisterMessageFilter((nil)) -> S_OK (prev=NULL)
+[T64c0] [API] free(0x3abb270)
+[T64c0] [API] EnterCriticalSection(0x7f43570e7da8)
+[T64c0] [API] TlsGetValue(1) = 0x3ab76f0
+[T64c0] [API] LeaveCriticalSection(0x7f43570e7da8)
+[T64c0] [API] GetProcAddress(module=0xdead0006, name=CoFreeUnusedLibraries)
+[T64c0] [API]   -> 0x2063040
+[T64c0] [API] CoFreeUnusedLibraries() (vacuous: no delayed unloads)
+[T64c0] [API] GetProcAddress(module=0xdead0006, name=OleUninitialize)
+[T64c0] [API]   -> 0x2063780
+[T64c0] [API] OleUninitialize()
+[T64c0] [API] EnterCriticalSection(0x7f43570e7da8)
+[T64c0] [API] TlsGetValue(1) = 0x3ab76f0
+[T64c0] [API] LeaveCriticalSection(0x7f43570e7da8)
+[T64c0] [API] EnterCriticalSection(0x7f43570e7da8)
+[T64c0] [API] TlsGetValue(1) = 0x3ab76f0
+[T64c0] [API] LeaveCriticalSection(0x7f43570e7da8)
+[T64c0] [API] UnhookWindowsHookEx(0xb30001) -> TRUE (id=-1)
+[T64c0] [API] UnhookWindowsHookEx(0xb30002) -> TRUE (id=5)
+[T64c0] [API] exit(0)
+[T64c0] [API] SetRectEmpty -> TRUE
+[T64c0] [API] free((nil))
+[T64c0] [API] free((nil))
+[T64c0] [API] SetRectEmpty -> TRUE
+[T64c0] [API] free((nil))
+[T64c0] [API] free((nil))
+[T64c0] [API] SetRectEmpty -> TRUE
+[T64c0] [API] free((nil))
+[T64c0] [API] GetProcAddress(module=0xdead0030, name=GdiplusShutdown)
+[T64c0] [API]   -> 0x20648b0
+[T64c0] [API] GdiplusShutdown()
+[T64c0] [API] EnterCriticalSection(0x7f43570eb5a0)
+[T64c0] [API] LeaveCriticalSection(0x7f43570eb5a0)
+[T64c0] [API] free(0x3abb940)
+[T64c0] [API] DestroyMenu(0x50001) -> TRUE (slot 0 freed)
+[T64c0] [API] DestroyMenu(0x50002) -> TRUE (slot 1 freed)
+[T64c0] [API] free(0x3abb820)
+[T64c0] [API] free(0x3abb8f0)
+[T64c0] [API] free(0x3ab7620)
+[T64c0] [API] free(0x3abb360)
+[T64c0] [API] free(0x3abb320)
+[T64c0] [API] free(0x3abb2e0)
+[T64c0] [API] EnterCriticalSection(0x7f43570e7da8)
+[T64c0] [API] TlsGetValue(1) = 0x3ab76f0
+[T64c0] [API] LeaveCriticalSection(0x7f43570e7da8)
+[T64c0] [API] free(0x3aba5f0)
+[T64c0] [API] free(0x3aba6b0)
+[T64c0] [API] free(0x3ab7b40)
+[T64c0] [API] free(0x3aba610)
+[T64c0] [API] free(0x3aba690)
+[T64c0] [API] EnterCriticalSection(0x7f43570e7da8)
+[T64c0] [API] TlsGetValue(1) = 0x3ab76f0
+[T64c0] [API] LeaveCriticalSection(0x7f43570e7da8)
+[T64c0] [API] EnterCriticalSection(0x7f43570e7da8)
+[T64c0] [API] TlsGetValue(1) = 0x3ab76f0
+[T64c0] [API] LeaveCriticalSection(0x7f43570e7da8)
+  ]
+}

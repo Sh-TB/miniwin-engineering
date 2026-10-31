@@ -1,0 +1,10 @@
+id	tool	rc_3runs	frames_uniq	input_state_change	verdict	note
+W01	cports x64	0/0/0	1	no	PASS_LAUNCH_RENDER	
+W02	FileTypesMan x64	0/0/0	2	no	PASS_LAUNCH_RENDER	
+W03	RegScanner x64	0/0/0	1	no	PASS_LAUNCH_RENDER	
+W04	shexview x64	0/0/0	1	no	PASS_LAUNCH_RENDER	
+W05	WhatInStartup x64	0/0/0	1	no	PASS_LAUNCH_RENDER	
+W06	Winobj x86	0/0/0	0	no	FAIL_NO_FRAMES	exits clean before frame capture
+W07	RegScanner x86 (UPX)	0/0/0	0	no	PASS_LAUNCH_CLEAN	was rc=139; SW-1349/1350/1351/1352/1353 fixed
+W08	winlister x86 (UPX)	0 (standalone) / 139 x3 (GUI env)	0	yes(GUI env)	FRONTIER_SW1354	late-bound GUI API host fn garbage
+W09	ZoomIt (self-extractor shape)	0/0/0	0	no	NO_HEADLESS_UI	asset byte-identical to SWEEP-076 verified

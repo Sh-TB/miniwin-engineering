@@ -1,5 +1,0 @@
-exe=si-strings/strings64.exe
-sha256=05dbb43499bcff44424c7ac2d987ea9e9742cd90afe360e84ba0bccade17f71b
-timeout=10s
-args=none
-date_utc=2026-10-17T18:39:37Z

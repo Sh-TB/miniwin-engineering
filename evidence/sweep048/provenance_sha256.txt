@@ -1,0 +1,20 @@
+=== SWEEP-048 guest payload provenance (source -> sha256)
+XP x64 SP2 OEM ISO: archive.org crmpxoem-en (CRMPXOEM_EN.iso)
+  xp_x64.iso  19b5a382bbe1c89d62a4c56da5470b9400039ca2591bf252a0e5e56f30ff4033  artifacts/sweep048/stage/xp_x64.iso
+XP SP3 x86 ISO: archive.org en_windows_xp_professional_with_service_pack_3_x86_cd_x14-80428_202609
+  xp_sp3.iso  62b6c91563bad6cd12a352aa018627c314cfc5162d8e9f8af0756a642e602a46  artifacts/sweep048/stage/xp_sp3.iso
+guests:
+d4b3e02b0dcd71a8362c5e0b9f408f3007372c78ccfdac009c6e63f6cc756c6f  artifacts/sweep048/stage/xp64/calc.exe
+06eb48b94f309915b5a226a0d342196e0c60ed3a97238f8d4434260d134666f3  artifacts/sweep048/stage/xp64/winmine.exe
+cf99b5301b50dd8f2f3cd4f2c48ee52fce6d90e2f2aa5c2055eab214ad390d2b  artifacts/sweep048/stage/xp64/mspaint.exe
+86cd875c5c179e31282dab0f8a3c4c6313bec763592571952a6dfbc47b85db1f  artifacts/sweep048/stage/xp64/spider.exe
+f1afa609fa5d8167bf92893b99721e73364e1f6781f9f54df5bd38575affd1c8  artifacts/sweep048/stage/xp64/freecell.exe
+8fa29d8077c9590e281edfa48d589e8b649215d4d8695f77bb00d29385236639  artifacts/sweep048/stage/xp64/mshearts.exe
+65d3e1b526ff60415f716fb419f87acea67d8192234c247569d619b1294ba708  artifacts/sweep048/stage/xp64/notepad.exe
+53696b69cc8ea8200a74a748980b4a018b4d5225a70532b1022241164a42af40  artifacts/sweep048/stage/xp64/pinball.exe
+cafc5db967dbc728372d3abb1aa1e5fc5a58ba3e35e80c309a51f3e112ccce6f  artifacts/sweep048/stage/everything/everything.exe
+cb08cffda137256a95e3802c13476dd96f0f6310cb6f3e186621d8f73d7c2fa1  artifacts/sweep048/stage/lo_out/soffice.bin
+017d0c21b6e45e54c0194b58017853d8c653059cc643643c3eb831a4d309331f  artifacts/sweep048/stage/lo_out/mergedlo.dll
+engine:
+dce5784c46d6e230ac98f57e75b19a8123e01833b2e038deca41e4bfaad3e574  minwin_loader
+6175bb97315cd03f35f4b77db06f252075cc50b867615d3b51aff9afbbe5a2bc  artifacts/sweep048/stage/xp64/mfc42u.dll

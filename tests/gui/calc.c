@@ -1,5 +1,5 @@
 /* calc.c — MiniWin calculator acceptance guest (user demand 2026-10-19:
- * «حداقل یک برنامه گرافیکی ساده ماشین حساب یا برنامه دیگه رو هم تست بکن»).
+ * (test at least one simple graphical calculator or another program)).
  *
  * A REAL Win32 GUI calculator: main window + EDIT display + 16 BUTTON
  * children, WM_COMMAND routing, SendMessage text I/O, GetDlgItem,

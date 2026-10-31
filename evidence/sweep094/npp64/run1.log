@@ -1,0 +1,55 @@
+[TRACE] Command line: /home/z/my-project/workspace/miniwin-engineering/.cache/miniwin/guests/npp.portable.x64.x/notepad++.exe
+[PATCH] SW-1297: UCRT invalid-fd fail-fast site RVA 0x4021d2 (callee 0x4016dc) -> EBADF return
+[PATCH] SW-1297: UCRT invalid-fd fail-fast site RVA 0x402382 (callee 0x4016dc) -> EBADF return
+[PATCH] SW-1297: UCRT invalid-fd fail-fast site RVA 0x4026a4 (callee 0x401794) -> EBADF return
+[PATCH] SW-1297: UCRT invalid-fd fail-fast site RVA 0x402799 (callee 0x401794) -> EBADF return
+[PATCH] SW-1297: UCRT invalid-fd fail-fast site RVA 0x402960 (callee 0x401794) -> EBADF return
+[PATCH] SW-1297: UCRT invalid-fd fail-fast site RVA 0x407654 (callee 0x401794) -> EBADF return
+[PATCH] SW-1297: UCRT invalid-fd fail-fast site RVA 0x4076ca (callee 0x4016dc) -> EBADF return
+[PATCH] SW-1297: UCRT invalid-fd fail-fast site RVA 0x407746 (callee 0x4016dc) -> EBADF return
+[PATCH] SW-1297: UCRT invalid-fd fail-fast site RVA 0x407d7a (callee 0x4016dc) -> EBADF return
+[PATCH] SW-1297: UCRT invalid-fd fail-fast site RVA 0x408276 (callee 0x4016dc) -> EBADF return
+[PATCH] SW-1297: UCRT invalid-fd fail-fast site RVA 0x4082e2 (callee 0x4016dc) -> EBADF return
+[PATCH] SW-1297: UCRT invalid-fd fail-fast site RVA 0x408828 (callee 0x4016dc) -> EBADF return
+[PATCH] SW-1297: UCRT invalid-fd fail-fast site RVA 0x408c1c (callee 0x401794) -> EBADF return
+[PATCH] SW-1297: UCRT invalid-fd fail-fast site RVA 0x408d3e (callee 0x401794) -> EBADF return
+[PATCH] SW-1297: UCRT invalid-fd fail-fast site RVA 0x408f00 (callee 0x401794) -> EBADF return
+[PATCH] SW-1297: UCRT invalid-fd fail-fast site RVA 0x409694 (callee 0x401794) -> EBADF return
+[PATCH] SW-1297: UCRT invalid-fd fail-fast site RVA 0x4097bb (callee 0x401794) -> EBADF return
+[PATCH] SW-1297: UCRT invalid-fd fail-fast site RVA 0x409978 (callee 0x401794) -> EBADF return
+[PATCH] SW-1297: UCRT invalid-fd fail-fast site RVA 0x40d559 (callee 0x401794) -> EBADF return
+[PATCH] SW-1297: UCRT invalid-fd fail-fast site RVA 0x412153 (callee 0x4016dc) -> EBADF return
+[PATCH] SW-1297: UCRT invalid-fd fail-fast site RVA 0x412713 (callee 0x401794) -> EBADF return
+[PATCH] SW-1297: UCRT invalid-fd fail-fast site RVA 0x412767 (callee 0x401794) -> EBADF return
+[PATCH] SW-1297: UCRT invalid-fd fail-fast site RVA 0x412e77 (callee 0x401794) -> EBADF return
+[PATCH] SW-1297: UCRT invalid-fd fail-fast site RVA 0x41319d (callee 0x401794) -> EBADF return
+[PATCH] SW-1297: UCRT invalid-fd fail-fast site RVA 0x413248 (callee 0x401794) -> EBADF return
+[PATCH] SW-1297: UCRT invalid-fd fail-fast site RVA 0x413290 (callee 0x401794) -> EBADF return
+[PATCH] SW-1297: UCRT invalid-fd fail-fast site RVA 0x413e0c (callee 0x401794) -> EBADF return
+[PATCH] SW-1297: UCRT invalid-fd fail-fast site RVA 0x4174a3 (callee 0x401794) -> EBADF return
+[PATCH] SW-1297: UCRT invalid-fd fail-fast site RVA 0x417a11 (callee 0x401794) -> EBADF return
+[PATCH] SW-1297: UCRT invalid-fd fail-fast site RVA 0x417ab9 (callee 0x401794) -> EBADF return
+[PATCH] SW-1297: UCRT invalid-fd fail-fast site RVA 0x4181c0 (callee 0x401794) -> EBADF return
+[PATCH] SW-1297: UCRT invalid-fd fail-fast site RVA 0x418d05 (callee 0x401794) -> EBADF return
+[PATCH] SW-1297: UCRT invalid-fd fail-fast site RVA 0x41b794 (callee 0x401794) -> EBADF return
+[PATCH] SW-1297: UCRT invalid-fd fail-fast site RVA 0x41d674 (callee 0x401794) -> EBADF return
+[PATCH] SW-1297: UCRT invalid-fd fail-fast site RVA 0x41efac (callee 0x4016dc) -> EBADF return
+[PATCH] SW-1297: UCRT invalid-fd fail-fast site RVA 0x41f71a (callee 0x401794) -> EBADF return
+[PATCH] SW-1297: UCRT invalid-fd fail-fast site RVA 0x41fbf3 (callee 0x401794) -> EBADF return
+[PATCH] SW-1297: UCRT invalid-fd fail-fast site RVA 0x4201ec (callee 0x4016dc) -> EBADF return
+[PATCH] SW-1297: UCRT invalid-fd fail-fast site RVA 0x422728 (callee 0x401794) -> EBADF return
+[PATCH] SW-1297: UCRT invalid-fd fail-fast site RVA 0x423097 (callee 0x4016dc) -> EBADF return
+[PATCH] SW-1297: UCRT invalid-fd fail-fast site RVA 0x423176 (callee 0x4016dc) -> EBADF return
+[PATCH] SW-1297: UCRT invalid-fd fail-fast site RVA 0x427200 (callee 0x401794) -> EBADF return
+[PATCH] SW-1297: UCRT invalid-fd fail-fast site RVA 0x4275d3 (callee 0x4016dc) -> EBADF return
+[PATCH] SW-1297: UCRT invalid-fd fail-fast site RVA 0x428cd7 (callee 0x401794) -> EBADF return
+[PATCH] SW-1297: UCRT invalid-fd fail-fast site RVA 0x42ab74 (callee 0x401794) -> EBADF return
+[PATCH] SW-1297: UCRT invalid-fd fail-fast site RVA 0x42b53f (callee 0x401794) -> EBADF return
+[PATCH] SW-1297: UCRT invalid-fd fail-fast site RVA 0x42bbe4 (callee 0x401794) -> EBADF return
+[MiniWin] Loading /home/z/my-project/workspace/miniwin-engineering/.cache/miniwin/guests/npp.portable.x64.x/notepad++.exe...
+[MessageBoxW] Configurator: Load langs.xml failed!Do you want to recover your langs.xml?
+[MessageBox] dialog #1 rendered -> miniwin-results/notepad++.exe/screenshots/messagebox_1.bmp
+[GDI-FRAME] #1 -> miniwin-results/notepad++.exe/screenshots/frame_001.bmp
+[GDI-FRAME] #2 -> miniwin-results/notepad++.exe/screenshots/frame_002.bmp
+[GDI-FRAME] #3 -> miniwin-results/notepad++.exe/screenshots/frame_003.bmp
+[GDI-FRAME] #4 -> miniwin-results/notepad++.exe/screenshots/frame_004.bmp

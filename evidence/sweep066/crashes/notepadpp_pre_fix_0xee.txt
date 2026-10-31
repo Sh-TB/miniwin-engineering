@@ -1,0 +1,5 @@
+[TRACE] Command line: artifacts/sweep065/dl/npp/notepad++.exe
+[PE32-FATAL] opcode not implemented (step2) opcode=0xee at EIP=0x007ef329 base=0x400000
+  EAX=00000000 ECX=0078424f EDX=008b7635 EBX=008b7c74 ESP=3fefef78 EBP=007ef2e0 ESI=00a017db EDI=007f0038
+  bytes: f2 77 00 30 66 4a 00 05
+  eip-hist: 00781da5 00a006f0 00a006f5 00a00000 00781dab 00781dac 007ef318 007ef319 007ef31a 007ef31c 007ef31f 007ef322 007ef324 007ef325 007ef326 007ef328 

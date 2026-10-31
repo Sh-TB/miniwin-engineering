@@ -1,0 +1,29 @@
+{
+  "id": "S7_repeatability",
+  "desc": "repeat create+extract as demo2/out2; extracted bytes must match, archive bytes compared informationally",
+  "start": "2026-10-29T19:49:34.964+00:00",
+  "host": false,
+  "argv": [
+    "/home/z/my-project/tools/wine-10.0/bin/wine64",
+    "/home/z/my-project/workspace/miniwin-engineering/evidence/app-tests/winrar/Rar.exe",
+    "a",
+    "-y",
+    "demo2.rar",
+    "doc_a.txt",
+    "doc_b.bin"
+  ],
+  "engine_used": "wine",
+  "exit_code": 0,
+  "duration_s": 4.47,
+  "stdout_bytes": 373,
+  "stderr_bytes": 0,
+  "verifications": [
+    {
+      "name": "rerun_archive_created",
+      "ok": true
+    }
+  ],
+  "pass": true,
+  "outcome": "pass",
+  "finish": "2026-10-29T19:49:39.436+00:00"
+}

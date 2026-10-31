@@ -1,0 +1,16 @@
+[TRACE] Command line: artifacts/opensource/7zip/x64/7za.exe a /tmp/7ztest/out.7z evidence/sweep041/adexplorer64_corpus_sha256.txt
+[MiniWin] Loading artifacts/opensource/7zip/x64/7za.exe...
+
+7-Zip (a) 25.01 (x64) : Copyright (c) 1999-2025 Igor Pavlov : 2025-08-03
+
+Scanning the drive:
+1 file, 232 bytes (1 KiB)
+
+Creating archive: /tmp/7ztest/out.7z
+
+Add new data to archive: 1 file, 232 bytes (1 KiB)
+
+
+Files read from disk: 1
+Archive size: 376 bytes (1 KiB)
+Everything is Ok

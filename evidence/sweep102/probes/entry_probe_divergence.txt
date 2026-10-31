@@ -1,0 +1,1 @@
+[ENTRY] va=00403dbb hit=1 prev=00403dbb esp=3fefec30 [esp]=00403abb arg1=00000006 arg2=00000001 eax=00000000 ecx=00429ac0 edx=0121e300 ebx=00434000 ebp=00000000 esi=00436800 edi=00a0047a

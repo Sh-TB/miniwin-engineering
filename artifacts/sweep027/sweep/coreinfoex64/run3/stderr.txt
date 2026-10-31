@@ -1,6 +1,0 @@
-[TRACE] Command line: /home/z/my-project/workspace/miniwin-engineering/artifacts/sweep50/dl/coreinfoex64/Coreinfo64.exe
-
-Coreinfo v4.02 - Dump information on system CPU and memory topology
-Copyright (C) 2008-2026 Mark Russinovich
-Sysinternals - www.sysinternals.com
-

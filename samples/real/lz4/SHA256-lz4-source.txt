@@ -1,3 +1,0 @@
-source: https://github.com/lz4/lz4/releases/download/v1.10.0/lz4_win64_v1_10_0.zip
-tag: v1.10.0 (official release asset)
-acquired: 2026-10-17, license BSD/GPLv2 (lz4)

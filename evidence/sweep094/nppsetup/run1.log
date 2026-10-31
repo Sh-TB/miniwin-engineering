@@ -1,0 +1,45 @@
+[TRACE] Command line: /home/z/my-project/workspace/miniwin-engineering/evidence/sweep094/nppsetup/sandbox/Installers/npp.8.9.8.1.Installer.x64.exe
+
+[CRASH] Signal 11 at RIP=0x20e27d6
+  si_addr=0x0 si_code=1 (1=MAPERR 2=ACCERR)
+  RAX=0x1ffffff RCX=0x1 RDX=0x0 R8=0x406742 R9=0x2000000
+  RSP=0x7ffd2a710480 RBP=0x1
+  g_image_base=(nil) g_image_size=0x0
+  [PE32] guest EIP=0x00406742 ESP=0x11a54fa0 EBP=0x11a55000 steps=139972897
+  [PE32] eip-hist: 0040430e 00404310 00404312 00404313 00404318 00404668 0040466c 0040466e 00406726 0040672a 0040672d 0040672f 00406731 00406737 0040673e 00406740 
+  [PE32] api32 ring (last 8 of 66502):
+  [PE32]   #141 LoadLibraryExW esp=3fefe9f8 ret=00406ad9 arity=12
+  [PE32]   #157 GetSystemDirectoryW esp=3fefe9f8 ret=00406a8a arity=8
+  [PE32]   #66 wsprintfW esp=3fefe9f4 ret=00406ac5 arity=0
+  [PE32]   #141 LoadLibraryExW esp=3fefe9f8 ret=00406ad9 arity=12
+  [PE32]   #55 GetClassInfoW esp=3fefec40 ret=00404011 arity=12
+  [PE32]   #56 DialogBoxParamW esp=3fefec38 ret=0040404a arity=20
+  [PE32]   #70 GetDlgItem esp=11a54fc4 ret=00404304 arity=8
+  [PE32]   #70 GetDlgItem esp=11a54fc4 ret=0040430e arity=8
+  [PE32] Bytes@0x0040672d: 85 c0 7d 11 8b 0d 3c 8a 42 00 8d 04 85 04 00 00
+  [PE32] Bytes@0x0040672f: 7d 11 8b 0d 3c 8a 42 00 8d 04 85 04 00 00 00 2b
+  [PE32] Bytes@0x00406731: 8b 0d 3c 8a 42 00 8d 04 85 04 00 00 00 2b c8 8b
+  [PE32] Bytes@0x00406737: 8d 04 85 04 00 00 00 2b c8 8b 01 8b 0d 98 9a 42
+  [PE32] Bytes@0x0040673e: 2b c8 8b 01 8b 0d 98 9a 42 00 53 55 56 57 8d 3c
+  [PE32] Bytes@0x00406740: 8b 01 8b 0d 98 9a 42 00 53 55 56 57 8d 3c 41 8b
+  [PE32] Bytes@0x00406742: 8b 0d 98 9a 42 00 53 55 56 57 8d 3c 41 8b 4c 24
+  [PE32] @ESI=0x00a002cc: b8 46 00 00 00 e9 2a fd
+  [PE32] @EDI=0x00010001 (unmapped)
+  [PE32] @EBX=0x00428a00: b8 2f 10 02 00 00 00 00
+  [PE32] @EDX=0x086226aa (unmapped)
+  [PE32] @EBP=0x11a55000: 00 00 00 00 00 00 00 00
+  (NOT inside loaded PE)
+  [RIP-MAP] 0x20e27d6 in 0x2006000-0x20fe000 r-xp /home/z/my-project/workspace/miniwin-engineering/minwin_loader
+  Bytes: 67 8b 02 64 89 04 9d a0 fa ff ff e9 da e0 ff ff 
+  RSI=0x0 RDI=0x1ffffff
+  R8=0x406742  R9=0x2000000 R10=0x5 R11=0x0
+  R12=0x8b R13=0x0 R14=0x0 R15=0x0
+  [STACKTOP raw] 0000000000000007 00000000052f62c0 0000000000000000 0000000000000001 0000000000000000 00007f60def54210 00000000052f62c0 ffffffffffffffff 00000000021dd260 000000000212f760 000000000000002c fffffffffffffaa0
+  [SCAN rsp+2312] 0x2007e0e <LOADER>
+  [SCAN rsp+2584] 0x2002b46 <LOADER>
+  [SCAN rsp+2592] 0x20023a0 <LOADER>
+  [SCAN rsp+4040] 0x2007670 <LOADER>
+  Backtrace (via stack walking):
+    [0] RIP=0x20e27d6 (outside PE, possible shared lib)
+  Likely: NULL or invalid function pointer call
+[MiniWin] Loading /home/z/my-project/workspace/miniwin-engineering/evidence/sweep094/nppsetup/sandbox/Installers/npp.8.9.8.1.Installer.x64.exe...

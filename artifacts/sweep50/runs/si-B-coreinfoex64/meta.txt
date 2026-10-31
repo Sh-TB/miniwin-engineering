@@ -1,5 +1,0 @@
-exe=si-coreinfo/CoreinfoEx64.exe
-sha256=50e3237737208c97248449042739c25c5b80c92dfd648743f04e50676aa2c82e
-timeout=10s
-args=none
-date_utc=2026-10-17T18:39:37Z

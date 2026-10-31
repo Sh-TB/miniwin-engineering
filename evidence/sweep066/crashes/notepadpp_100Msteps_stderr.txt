@@ -1,0 +1,26 @@
+[TRACE] Command line: artifacts/sweep065/dl/npp/notepad++.exe
+
+[CRASH] Signal 11 at RIP=0x20d5b47
+  RAX=0xe RCX=0x5fdcb2f RDX=0x693fefee R8=0x0 R9=0x1
+  RSP=0x7ffe075a1720 RBP=0x0
+  g_image_base=(nil) g_image_size=0x0
+  [PE32] guest EIP=0x693fefee ESP=0x3fefef98 EBP=0x3fefefa8 steps=100518627
+  [PE32] eip-hist: 0078eb8f 0078eb92 0078eb78 0078eb7a 0078eb7c 0078eb8c 0078eb8f 0078eb92 0078eb78 0078eb7a 0078eb7c 0078eb7e 0078eb80 00404190 0078eb86 693fefee 
+  (NOT inside loaded PE)
+  [RIP-MAP] 0x20d5b47 in 0x2006000-0x20e3000 r-xp /home/z/my-project/workspace/miniwin-engineering/minwin_loader
+  Bytes: 67 0f b6 02 8d 72 01 3c 65 74 3e 77 cc 8d 48 da 
+  RSI=0x3 RDI=0x3
+  R8=0x0  R9=0x1 R10=0x0 R11=0x1
+  R12=0x0 R13=0x21ba260 R14=0xfffffffffffffaa0 R15=0x0
+  [STACKTOP raw] 00007ffe075a1730 00007f0dc06d9419 0000000200000003 0000000300000003 0000000000000001 00007f0dc06920a4 00007f0dc0833030 0000000003ae02c0 0000000010003000 000000003ff00000 0000000010003000 0000000000000000
+  [SCAN rsp+104] 0x200ae78 <LOADER>
+  [SCAN rsp+504] 0x2002b1c <LOADER>
+  [SCAN rsp+512] 0x2002388 <LOADER>
+  [SCAN rsp+1960] 0x2007690 <LOADER>
+  [SCAN rsp+2112] 0x2007690 <LOADER>
+  [SCAN rsp+2152] 0x200b990 <LOADER>
+  [SCAN rsp+2184] 0x200b9b1 <LOADER>
+  [SCAN rsp+2672] 0x2000040 <LOADER>
+  [SCAN rsp+2752] 0x200b990 <LOADER>
+  Backtrace (via stack walking):
+    [0] RIP=0x20d5b47 (outside PE, possible shared lib)

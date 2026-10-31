@@ -1,0 +1,946 @@
+{
+  "trace": [
+[Tb640] [API] PE Loader: file=/home/z/my-project/workspace/miniwin-engineering/artifacts/sweep50/dl/cports/cports.exe size=216064
+[Tb640] [API] PE Loader: ImageBase=0x140000000 EP=0x26710 SizeOfImage=0x3c000 Sections=5
+[Tb640] [API] PE Loader: Mapped at 0x140000000 (forced via MAP_FIXED)
+[Tb640] [API] KUSD: mapped 0x7ffe0000 (root C:\WINDOWS, ver 5.2, qpc 1e9)
+[Tb640] [API] Section [0] .text    VA=0x00001000 VS=0x0002619b Raw=0x00026200 Ch=0x60000020
+[Tb640] [API] Section [1] .rdata   VA=0x00028000 VS=0x000064ba Raw=0x00006600 Ch=0x40000040
+[Tb640] [API] Section [2] .data    VA=0x0002f000 VS=0x00004860 Raw=0x00000c00 Ch=0xc0000040
+[Tb640] [API] Section [3] .pdata   VA=0x00034000 VS=0x00001410 Raw=0x00001600 Ch=0x40000040
+[Tb640] [API] Section [4] .rsrc    VA=0x00036000 VS=0x00005d74 Raw=0x00005e00 Ch=0x40000040
+[Tb640] [API] Import Directory: RVA=0x2c9b0 Size=0xdc
+[Tb640] [API] Import DLL: msvcrt.dll (IAT RVA=0x28738, ILT RVA=0x2d1c8)
+[Tb640] [API]   [0] __set_app_type -> 0x205e280
+[Tb640] [API]   [1] _acmdln -> DATA 0x30ad8e0
+[Tb640] [API]   [2] _fmode -> DATA 0x3208328
+[Tb640] [API]   [3] _cexit -> 0x20372a0
+[Tb640] [API]   [4] _exit -> 0x204a5e0
+[Tb640] [API]   [5] _c_exit -> 0x206ecc0
+[Tb640] [API]   [6] _XcptFilter -> 0x205f920
+[Tb640] [API]   [7] __C_specific_handler -> 0x206bde0
+[Tb640] [API]   [8] _onexit -> 0x20298c0
+[Tb640] [API]   [9] __dllonexit -> 0x20c5e80
+[Tb640] [API]   [10] qsort -> 0x2055a10
+[Tb640] [API]   [11] _strlwr -> 0x2023880
+[Tb640] [API]   [12] _itoa -> 0x2009070
+[Tb640] [API]   [13] _atoi64 -> 0x20561d0
+[Tb640] [API]   [14] _mbsicmp -> 0x20237b0
+[Tb640] [API]   [15] _mbscmp -> 0x200cfa0
+[Tb640] [API]   [16] memmove -> 0x20105c0
+[Tb640] [API]   [17] _mbschr -> 0x2023850
+[Tb640] [API]   [18] strrchr -> 0x2012800
+[Tb640] [API]   [19] strcmp -> 0x20120d0
+[Tb640] [API]   [20] malloc -> 0x2090330
+[Tb640] [API]   [21] strtoul -> 0x2015bc0
+[Tb640] [API]   [22] free -> 0x20ba5a0
+[Tb640] [API]   [23] modf -> 0x201fc40
+[Tb640] [API]   [24] _stricmp -> 0x2012590
+[Tb640] [API]   [25] _commode -> DATA 0x3208324
+[Tb640] [API]   [26] __setusermatherr -> 0x205e3e0
+[Tb640] [API]   [27] _initterm -> 0x20f95f0
+[Tb640] [API]   [28] exit -> 0x204af00
+[Tb640] [API]   [29] __getmainargs -> 0x2027b00
+[Tb640] [API]   [30] _mbsrchr -> 0x20128a0
+[Tb640] [API]   [31] _memicmp -> 0x200a460
+[Tb640] [API]   [32] strchr -> 0x20174c0
+[Tb640] [API]   [33] sprintf -> 0x20531c0
+[Tb640] [API]   [34] _purecall -> 0x201b0a0
+[Tb640] [API]   [35] _ultoa -> 0x20236c0
+[Tb640] [API]   [36] strlen -> 0x20115e0
+[Tb640] [API]   [37] memcpy -> 0x2014a80
+[Tb640] [API]   [38] memcmp -> 0x2011c10
+[Tb640] [API]   [39] strncmp -> 0x20167b0
+[Tb640] [API]   [40] atoi -> 0x2010900
+[Tb640] [API]   [41] _strcmpi -> 0x200cf20
+[Tb640] [API]   [42] strcpy -> 0x2019d10
+[Tb640] [API]   [43] ??3@YAXPEAX@Z -> 0x2076ed0
+[Tb640] [API]   [44] ??2@YAPEAX_K@Z -> 0x20a85d0
+[Tb640] [API]   [45] memset -> 0x2010e40
+[Tb640] [API]   [46] _mbsnbcat -> 0x2011710
+[Tb640] [API]   [47] _snprintf -> 0x2022f70
+[Tb640] [API]   [48] strcat -> 0x2020a30
+[Tb640] [API]   [49] _errno -> 0x205fa80
+[Tb640] [API]   [50] fopen -> 0x20ad1b0
+[Tb640] [API]   [51] fread -> 0x203d650
+[Tb640] [API]   [52] fprintf -> 0x2052b70
+[Tb640] [API]   [53] ferror -> 0x20200b0
+[Tb640] [API]   [54] ftell -> 0x2028380
+[Tb640] [API]   [55] fclose -> 0x208a0b0
+[Tb640] [API] Import DLL: WS2_32.dll (IAT RVA=0x286b8, ILT RVA=0x2d148)
+[Tb640] [API]   [0] Ordinal 9 -> htons (fixed ordinal)
+[Tb640] [API]   [0] htons -> 0x2020eb0
+[Tb640] [API]   [1] Ordinal 51 -> gethostbyaddr (fixed ordinal)
+[Tb640] [API]   [1] gethostbyaddr -> 0x2039d50
+[Tb640] [API]   [2] Ordinal 101 -> WSAAsyncSelect (fixed ordinal)
+[Tb640] [API]   [2] WSAAsyncSelect -> 0x2071140
+[Tb640] [API]   [3] Ordinal 112 -> WSASetLastError (fixed ordinal)
+[Tb640] [API]   [3] WSASetLastError -> 0x200ab00
+[Tb640] [API]   [4] Ordinal 56 -> getservbyport (fixed ordinal)
+[Tb640] [API]   [4] getservbyport -> 0x2039ec0
+[Tb640] [API]   [5] Ordinal 115 -> WSAStartup (fixed ordinal)
+[Tb640] [API]   [5] WSAStartup -> 0x203c5a0
+[Tb640] [API]   [6] Ordinal 116 -> WSACleanup (fixed ordinal)
+[Tb640] [API]   [6] WSACleanup -> 0x200aae0
+[Tb640] [API]   [7] Ordinal 3 -> closesocket (fixed ordinal)
+[Tb640] [API]   [7] closesocket -> 0x2010d10
+[Tb640] [API]   [8] Ordinal 111 -> WSAGetLastError (fixed ordinal)
+[Tb640] [API]   [8] WSAGetLastError -> 0x200aaf0
+[Tb640] [API]   [9] Ordinal 11 -> inet_addr (fixed ordinal)
+[Tb640] [API]   [9] inet_addr -> 0x2020ec0
+[Tb640] [API]   [10] Ordinal 4 -> connect (fixed ordinal)
+[Tb640] [API]   [10] connect -> 0x20210f0
+[Tb640] [API] Import DLL: VERSION.dll (IAT RVA=0x28698, ILT RVA=0x2d128)
+[Tb640] [API]   [0] GetFileVersionInfoA -> 0x2077f00
+[Tb640] [API]   [1] GetFileVersionInfoSizeA -> 0x20bebe0
+[Tb640] [API]   [2] VerQueryValueA -> 0x2084ab0
+[Tb640] [API] Import DLL: COMCTL32.dll (IAT RVA=0x28010, ILT RVA=0x2caa0)
+[Tb640] [API]   [0] Ordinal 6 -> CreateStatusWindowA (fixed ordinal)
+[Tb640] [API]   [0] CreateStatusWindowA -> 0x20c6ba0
+[Tb640] [API]   [1] ImageList_Add -> 0x209f720
+[Tb640] [API]   [2] Ordinal 17 -> InitCommonControls (fixed ordinal)
+[Tb640] [API]   [2] InitCommonControls -> 0x206f0e0
+[Tb640] [API]   [3] ImageList_ReplaceIcon -> 0x20978b0
+[Tb640] [API]   [4] ImageList_Create -> 0x2051250
+[Tb640] [API]   [5] ImageList_SetImageCount -> 0x2097f20
+[Tb640] [API]   [6] ImageList_AddMasked -> 0x20313f0
+[Tb640] [API]   [7] CreateToolbarEx -> 0x20c6d20
+[Tb640] [API] Import DLL: KERNEL32.dll (IAT RVA=0x280e8, ILT RVA=0x2cb78)
+[Tb640] [API]   [0] FindFirstFileA -> 0x208ee30
+[Tb640] [API]   [1] GetStartupInfoA -> 0x2037700
+[Tb640] [API]   [2] TerminateProcess -> 0x209edb0
+[Tb640] [API]   [3] GetVersionExA -> 0x2089d80
+[Tb640] [API]   [4] CreateEventA -> 0x20412d0
+[Tb640] [API]   [5] GetThreadSelectorEntry -> 0x203eea0
+[Tb640] [API]   [6] GetProcessHeap -> 0x2009810
+[Tb640] [API]   [7] GetCurrentThread -> 0x2008630
+[Tb640] [API]   [8] HeapFree -> 0x20ca9b0
+[Tb640] [API]   [9] UnmapViewOfFile -> 0x203f6f0
+[Tb640] [API]   [10] MapViewOfFile -> 0x2082e10
+[Tb640] [API]   [11] DuplicateHandle -> 0x2026940
+[Tb640] [API]   [12] DeviceIoControl -> 0x2078740
+[Tb640] [API]   [13] CreateThread -> 0x20686a0
+[Tb640] [API]   [14] ResumeThread -> 0x206aff0
+[Tb640] [API]   [15] GetCurrentProcess -> 0x2008610
+[Tb640] [API]   [16] ExitProcess -> 0x20f91c0
+[Tb640] [API]   [17] DeleteFileA -> 0x208de70
+[Tb640] [API]   [18] GetCurrentProcessId -> 0x2008620
+[Tb640] [API]   [19] Sleep -> 0x204dc70
+[Tb640] [API]   [20] WinExec -> 0x20489f0
+[Tb640] [API]   [21] GetStdHandle -> 0x210d630
+[Tb640] [API]   [22] WritePrivateProfileStringA -> 0x2065b10
+[Tb640] [API]   [23] GetPrivateProfileStringA -> 0x2024630
+[Tb640] [API]   [24] GetPrivateProfileIntA -> 0x2087d70
+[Tb640] [API]   [25] EnumResourceNamesA -> 0x2087cf0
+[Tb640] [API]   [26] ReadFile -> 0x2058500
+[Tb640] [API]   [27] GetTempFileNameA -> 0x203d3f0
+[Tb640] [API]   [28] lstrcpyA -> 0x20b05d0
+[Tb640] [API]   [29] GetWindowsDirectoryA -> 0x2080320
+[Tb640] [API]   [30] LoadResource -> 0x202a5c0
+[Tb640] [API]   [31] GetLocaleInfoA -> 0x208f6c0
+[Tb640] [API]   [32] GetTempPathA -> 0x2014c00
+[Tb640] [API]   [33] GetNumberFormatA -> 0x20246c0
+[Tb640] [API]   [34] LocalFree -> 0x20cc320
+[Tb640] [API]   [35] GetModuleFileNameA -> 0x207eb80
+[Tb640] [API]   [36] FormatMessageA -> 0x2043b00
+[Tb640] [API]   [37] FindNextFileA -> 0x2091ff0
+[Tb640] [API]   [38] OpenProcess -> 0x2042090
+[Tb640] [API]   [39] WideCharToMultiByte -> 0x207e5f0
+[Tb640] [API]   [40] CompareFileTime -> 0x203ebc0
+[Tb640] [API]   [41] CloseHandle -> 0x20a48f0
+[Tb640] [API]   [42] FileTimeToLocalFileTime -> 0x208a640
+[Tb640] [API]   [43] GetLastError -> 0x2026c20
+[Tb640] [API]   [44] ReadProcessMemory -> 0x208b010
+[Tb640] [API]   [45] GetProcAddress -> 0x208b550
+[Tb640] [API]   [46] GetFileAttributesA -> 0x208da20
+[Tb640] [API]   [47] GetModuleHandleA -> 0x203b0b0
+[Tb640] [API]   [48] GetTickCount -> 0x204bb10
+[Tb640] [API]   [49] GetSystemTimeAsFileTime -> 0x204b7e0
+[Tb640] [API]   [50] InitializeCriticalSection -> 0x2076060
+[Tb640] [API]   [51] LeaveCriticalSection -> 0x20680f0
+[Tb640] [API]   [52] EnterCriticalSection -> 0x208fcf0
+[Tb640] [API]   [53] DeleteCriticalSection -> 0x2076080
+[Tb640] [API]   [54] GetFileSize -> 0x2059b20
+[Tb640] [API]   [55] FileTimeToSystemTime -> 0x207fb80
+[Tb640] [API]   [56] FreeLibrary -> 0x206c4c0
+[Tb640] [API]   [57] LoadLibraryA -> 0x20a1ac0
+[Tb640] [API]   [58] FindClose -> 0x2014090
+[Tb640] [API]   [59] GetDateFormatA -> 0x20774f0
+[Tb640] [API]   [60] GetSystemDirectoryA -> 0x203c410
+[Tb640] [API]   [61] WriteFile -> 0x2058f10
+[Tb640] [API]   [62] LoadLibraryExA -> 0x20a1d80
+[Tb640] [API]   [63] CreateFileA -> 0x208e630
+[Tb640] [API]   [64] GlobalAlloc -> 0x204fff0
+[Tb640] [API]   [65] GlobalLock -> 0x208c9d0
+[Tb640] [API]   [66] FindResourceA -> 0x20c2570
+[Tb640] [API]   [67] GetTimeFormatA -> 0x2080350
+[Tb640] [API]   [68] GlobalUnlock -> 0x2088860
+[Tb640] [API]   [69] SetFilePointer -> 0x2059640
+[Tb640] [API]   [70] LockResource -> 0x2088bf0
+[Tb640] [API]   [71] lstrlenA -> 0x20be440
+[Tb640] [API] Import DLL: USER32.dll (IAT RVA=0x28360, ILT RVA=0x2cdf0)
+[Tb640] [API]   [0] GetClassNameA -> 0x2077420
+[Tb640] [API]   [1] SetForegroundWindow -> 0x2088910
+[Tb640] [API]   [2] KillTimer -> 0x200b3a0
+[Tb640] [API]   [3] IsDialogMessageA -> 0x2088070
+[Tb640] [API]   [4] TranslateMessage -> 0x202af90
+[Tb640] [API]   [5] SetWindowPlacement -> 0x204cc30
+[Tb640] [API]   [6] GetMessageA -> 0x20e01d0
+[Tb640] [API]   [7] PostMessageA -> 0x205a9e0
+[Tb640] [API]   [8] RemoveMenu -> 0x20a6000
+[Tb640] [API]   [9] MessageBeep -> 0x2088b80
+[Tb640] [API]   [10] SetTimer -> 0x2093e30
+[Tb640] [API]   [11] DispatchMessageA -> 0x20fa570
+[Tb640] [API]   [12] WindowFromPoint -> 0x2071f30
+[Tb640] [API]   [13] ReleaseCapture -> 0x2071dc0
+[Tb640] [API]   [14] PostQuitMessage -> 0x2060ee0
+[Tb640] [API]   [15] TrackPopupMenu -> 0x2079c70
+[Tb640] [API]   [16] RegisterWindowMessageA -> 0x202eac0
+[Tb640] [API]   [17] InsertMenuA -> 0x20a9110
+[Tb640] [API]   [18] MonitorFromWindow -> 0x20884a0
+[Tb640] [API]   [19] GetMonitorInfoA -> 0x207d2a0
+[Tb640] [API]   [20] UpdateWindow -> 0x20fd9d0
+[Tb640] [API]   [21] DrawTextExA -> 0x20cbe20
+[Tb640] [API]   [22] SetCapture -> 0x20302f0
+[Tb640] [API]   [23] GetKeyState -> 0x200c220
+[Tb640] [API]   [24] CreatePopupMenu -> 0x2098e00
+[Tb640] [API]   [25] SetMenuItemInfoA -> 0x200c950
+[Tb640] [API]   [26] GetDlgCtrlID -> 0x209fca0
+[Tb640] [API]   [27] DialogBoxParamA -> 0x20facc0
+[Tb640] [API]   [28] ShowWindow -> 0x20d03f0
+[Tb640] [API]   [29] LoadStringA -> 0x20c3ea0
+[Tb640] [API]   [30] ChildWindowFromPoint -> 0x200c190
+[Tb640] [API]   [31] ReleaseDC -> 0x200b360
+[Tb640] [API]   [32] GetDC -> 0x200b350
+[Tb640] [API]   [33] GetSysColorBrush -> 0x202da20
+[Tb640] [API]   [34] LoadCursorA -> 0x200b380
+[Tb640] [API]   [35] SetWindowPos -> 0x20cff90
+[Tb640] [API]   [36] GetWindowPlacement -> 0x20390f0
+[Tb640] [API]   [37] GetSystemMetrics -> 0x2009d00
+[Tb640] [API]   [38] BeginPaint -> 0x20d2a40
+[Tb640] [API]   [39] GetWindow -> 0x20c5ef0
+[Tb640] [API]   [40] GetWindowTextLengthA -> 0x20af8d0
+[Tb640] [API]   [41] GetClientRect -> 0x20b5700
+[Tb640] [API]   [42] SetDlgItemTextA -> 0x20cdaf0
+[Tb640] [API]   [43] DrawFrameControl -> 0x200c580
+[Tb640] [API]   [44] GetDlgItemTextA -> 0x20acf90
+[Tb640] [API]   [45] SetWindowTextA -> 0x20cd7b0
+[Tb640] [API]   [46] DeferWindowPos -> 0x20d01f0
+[Tb640] [API]   [47] SendDlgItemMessageA -> 0x20fd2a0
+[Tb640] [API]   [48] GetWindowRect -> 0x20b5120
+[Tb640] [API]   [49] GetDlgItemInt -> 0x20ac820
+[Tb640] [API]   [50] EndDialog -> 0x2061840
+[Tb640] [API]   [51] GetDlgItem -> 0x204a190
+[Tb640] [API]   [52] EndPaint -> 0x2085f40
+[Tb640] [API]   [53] CreateWindowExA -> 0x210e9d0
+[Tb640] [API]   [54] InvalidateRect -> 0x2061050
+[Tb640] [API]   [55] SetDlgItemInt -> 0x20cf1b0
+[Tb640] [API]   [56] SetMenu -> 0x2062210
+[Tb640] [API]   [57] LoadAcceleratorsA -> 0x20c3140
+[Tb640] [API]   [58] DefWindowProcA -> 0x2088460
+[Tb640] [API]   [59] TranslateAcceleratorA -> 0x20fcbf0
+[Tb640] [API]   [60] MessageBoxA -> 0x20bc200
+[Tb640] [API]   [61] RegisterClassA -> 0x20c8790
+[Tb640] [API]   [62] GetWindowTextA -> 0x20acd40
+[Tb640] [API]   [63] FindWindowA -> 0x200aee0
+[Tb640] [API]   [64] LoadIconA -> 0x200b390
+[Tb640] [API]   [65] IsWindowVisible -> 0x20638e0
+[Tb640] [API]   [66] GetWindowThreadProcessId -> 0x200c1c0
+[Tb640] [API]   [67] EnumWindows -> 0x20fe220
+[Tb640] [API]   [68] SendMessageA -> 0x20fcc30
+[Tb640] [API]   [69] DestroyIcon -> 0x2088960
+[Tb640] [API]   [70] LoadImageA -> 0x20ddb60
+[Tb640] [API]   [71] GetSysColor -> 0x202b5e0
+[Tb640] [API]   [72] GetWindowLongA -> 0x20b9de0
+[Tb640] [API]   [73] SetWindowLongA -> 0x20cf7b0
+[Tb640] [API]   [74] EndDeferWindowPos -> 0x2063770
+[Tb640] [API]   [75] BeginDeferWindowPos -> 0x202fbc0
+[Tb640] [API]   [76] SetFocus -> 0x202e0b0
+[Tb640] [API]   [77] MoveWindow -> 0x20cfcb0
+[Tb640] [API]   [78] GetMenu -> 0x202e220
+[Tb640] [API]   [79] OpenClipboard -> 0x2060010
+[Tb640] [API]   [80] InsertMenuItemA -> 0x20cdb20
+[Tb640] [API]   [81] CheckMenuItem -> 0x20624f0
+[Tb640] [API]   [82] EmptyClipboard -> 0x206cd00
+[Tb640] [API]   [83] EnableMenuItem -> 0x20626b0
+[Tb640] [API]   [84] GetParent -> 0x20ab7a0
+[Tb640] [API]   [85] GetMenuItemCount -> 0x2096910
+[Tb640] [API]   [86] GetSubMenu -> 0x2099330
+[Tb640] [API]   [87] SetCursor -> 0x2088be0
+[Tb640] [API]   [88] CloseClipboard -> 0x203e9e0
+[Tb640] [API]   [89] GetMenuStringA -> 0x200e160
+[Tb640] [API]   [90] SetClipboardData -> 0x202a010
+[Tb640] [API]   [91] EnableWindow -> 0x20aae50
+[Tb640] [API]   [92] CheckMenuRadioItem -> 0x20728f0
+[Tb640] [API]   [93] MapWindowPoints -> 0x2062b70
+[Tb640] [API]   [94] GetCursorPos -> 0x206fda0
+[Tb640] [API]   [95] DestroyMenu -> 0x20a2ac0
+[Tb640] [API]   [96] CreateDialogParamA -> 0x20fd6d0
+[Tb640] [API]   [97] EnumChildWindows -> 0x200c7a0
+[Tb640] [API]   [98] DestroyWindow -> 0x20b46e0
+[Tb640] [API]   [99] GetMenuItemInfoA -> 0x2045da0
+[Tb640] [API]   [100] LoadMenuA -> 0x20c3010
+[Tb640] [API]   [101] ModifyMenuA -> 0x20a6670
+[Tb640] [API] Import DLL: GDI32.dll (IAT RVA=0x28058, ILT RVA=0x2cae8)
+[Tb640] [API]   [0] SetBkColor -> 0x202c680
+[Tb640] [API]   [1] GetStockObject -> 0x202be40
+[Tb640] [API]   [2] GetTextExtentPoint32A -> 0x20611f0
+[Tb640] [API]   [3] CreateCompatibleBitmap -> 0x20b1870
+[Tb640] [API]   [4] SetStretchBltMode -> 0x200b210
+[Tb640] [API]   [5] StretchBlt -> 0x20d4880
+[Tb640] [API]   [6] GetPixel -> 0x20b1230
+[Tb640] [API]   [7] GetObjectA -> 0x203dcb0
+[Tb640] [API]   [8] DeleteDC -> 0x202ca40
+[Tb640] [API]   [9] SetPixel -> 0x20af410
+[Tb640] [API]   [10] SelectObject -> 0x202bfa0
+[Tb640] [API]   [11] CreateCompatibleDC -> 0x2038310
+[Tb640] [API]   [12] SetBkMode -> 0x2061570
+[Tb640] [API]   [13] DeleteObject -> 0x203c1b0
+[Tb640] [API]   [14] SetTextColor -> 0x202c500
+[Tb640] [API]   [15] GetDeviceCaps -> 0x202c800
+[Tb640] [API]   [16] CreateFontIndirectA -> 0x2017d50
+[Tb640] [API] Import DLL: comdlg32.dll (IAT RVA=0x28718, ILT RVA=0x2d1a8)
+[Tb640] [API]   [0] GetSaveFileNameA -> 0x206d140
+[Tb640] [API]   [1] FindTextA -> 0x206d6c0
+[Tb640] [API]   [2] ChooseFontA -> 0x20886a0
+[Tb640] [API] Import DLL: ADVAPI32.dll (IAT RVA=0x28000, ILT RVA=0x2ca90)
+[Tb640] [API]   [0] RegDeleteKeyA -> 0x20d82f0
+[Tb640] [API] Import DLL: SHELL32.dll (IAT RVA=0x28330, ILT RVA=0x2cdc0)
+[Tb640] [API]   [0] ExtractIconExA -> 0x2031d50
+[Tb640] [API]   [1] ShellExecuteA -> 0x2059ee0
+[Tb640] [API]   [2] ShellExecuteExA -> 0x20800c0
+[Tb640] [API]   [3] SHGetFileInfoA -> 0x206e1c0
+[Tb640] [API]   [4] Shell_NotifyIconA -> 0x2064220
+[Tb640] [API] Import resolution: 278 resolved, 0 unresolved (total 278)
+[Tb640] [API] Exception: .pdata RVA=0x34000 Size=0x1410 Entries=428
+[Tb640] [API] [API-005] EH hacks DISABLED (default) (MINWIN_EH_HACKS=<unset>)
+[Tb640] [API] [API-005] CXX-EH-FIX (LSDA catch-all patch RVA 0x2010c8) skipped: MINWIN_EH_HACKS not set
+[Tb640] [API] SW-1297 validate_fd patch: fingerprint not found (guest unaffected)
+[Tb640] [API] Jumping to EP=0x140026710
+[Tb640] [API] GetStartupInfoA(info=0x7fff42559690)
+[Tb640] [API] __set_app_type(2)
+[Tb640] [API] _initterm(start=0x1400289b8, end=0x1400289c0)
+[Tb640] [API] __getmainargs(argc=0x7fff4255967c, argv=0x7fff42559688, envp=0x7fff42559680)
+[Tb640] [API] _initterm(start=0x140028900, end=0x1400289b0)
+[Tb640] [API] _initterm: calling 0x140026ab0
+[Tb640] [API] _onexit(func=0x140026c08)
+[Tb640] [API] _initterm: calling 0x140026abc
+[Tb640] [API] _onexit(func=0x140026c24)
+[Tb640] [API] _initterm: calling 0x140026ac8
+[Tb640] [API] _onexit(func=0x140026c40)
+[Tb640] [API] _initterm: calling 0x140026ad4
+[Tb640] [API] _onexit(func=0x140026c98)
+[Tb640] [API] _initterm: calling 0x140026ae0
+[Tb640] [API] _onexit(func=0x140026cc8)
+[Tb640] [API] _initterm: calling 0x140026aec
+[Tb640] [API] _onexit(func=0x140026d14)
+[Tb640] [API] _initterm: calling 0x140026af8
+[Tb640] [API] _onexit(func=0x140026d34)
+[Tb640] [API] _initterm: calling 0x140026b04
+[Tb640] [API] _onexit(func=0x140026e28)
+[Tb640] [API] _initterm: calling 0x140026b10
+[Tb640] [API] _onexit(func=0x140026e4c)
+[Tb640] [API] _initterm: calling 0x140026b30
+[Tb640] [API] _onexit(func=0x140026fb0)
+[Tb640] [API] _initterm: calling 0x140026b3c
+[Tb640] [API] _onexit(func=0x140027000)
+[Tb640] [API] _initterm: calling 0x140026b48
+[Tb640] [API] _onexit(func=0x14002701c)
+[Tb640] [API] _initterm: calling 0x140026b54
+[Tb640] [API] _onexit(func=0x140027020)
+[Tb640] [API] _initterm: calling 0x140026b60
+[Tb640] [API] _onexit(func=0x140027050)
+[Tb640] [API] _initterm: calling 0x140026b6c
+[Tb640] [API] _onexit(func=0x14002706c)
+[Tb640] [API] _initterm: calling 0x140026b78
+[Tb640] [API] _onexit(func=0x140027088)
+[Tb640] [API] _initterm: calling 0x140026b84
+[Tb640] [API] _onexit(func=0x1400270a4)
+[Tb640] [API] _initterm: calling 0x140026b98
+[Tb640] [API] _onexit(func=0x14002711c)
+[Tb640] [API] _initterm: calling 0x140026be4
+[Tb640] [API] _onexit(func=0x140027128)
+[Tb640] [API] _initterm: calling 0x140026bf0
+[Tb640] [API] _onexit(func=0x14002712c)
+[Tb640] [API] _initterm: calling 0x140026bfc
+[Tb640] [API] _onexit(func=0x140027178)
+[Tb640] [API] GetModuleFileNameA(cap=260)
+[Tb640] [API] GetModuleFileNameA(cap=260)
+[Tb640] [API] SetLastError(2) caller=0x208db7a
+[Tb640] [API] LoadLibraryA(comctl32.dll)
+[Tb640] [API] GetProcAddress(module=0xdeab0000, name=InitCommonControlsEx)
+[Tb640] [API]   -> 0x202ae30
+[Tb640] [API] InitCommonControlsEx(dwICC=0xff) -> TRUE
+[Tb640] [API] FreeLibrary()
+[Tb640] [API] GetSystemDirectoryA()
+[Tb640] [API] LoadLibraryA(C:\Windows\System32\shell32.dll)
+[Tb640] [API] GetProcAddress(module=0xdea30000, name=SHGetSpecialFolderPathA)
+[Tb640] [API]   -> 0x2083e50
+[Tb640] [API] LoadLibraryA(C:\Windows\System32\psapi.dll)
+[Tb640] [API] GetProcAddress(module=0xdebd0000, name=GetModuleBaseNameA)
+[Tb640] [API]   -> NULL (not in dispatch table)
+[Tb640] [API]   -> optional-stub fallback (not in dispatch table)
+[Tb640] [API] GetProcAddress(module=0xdebd0000, name=EnumProcessModules)
+[Tb640] [API]   -> NULL (not in dispatch table)
+[Tb640] [API]   -> optional-stub fallback (not in dispatch table)
+[Tb640] [API] GetProcAddress(module=0xdebd0000, name=GetModuleFileNameExA)
+[Tb640] [API]   -> NULL (not in dispatch table)
+[Tb640] [API]   -> optional-stub fallback (not in dispatch table)
+[Tb640] [API] GetProcAddress(module=0xdebd0000, name=EnumProcesses)
+[Tb640] [API]   -> NULL (not in dispatch table)
+[Tb640] [API]   -> optional-stub fallback (not in dispatch table)
+[Tb640] [API] GetProcAddress(module=0xdebd0000, name=GetModuleInformation)
+[Tb640] [API]   -> NULL (not in dispatch table)
+[Tb640] [API]   -> optional-stub fallback (not in dispatch table)
+[Tb640] [API] WSAStartup(101)
+[Tb640] [API] msvcrt operator new(2640) -> 0x38a1720
+[Tb640] [API] msvcrt operator new(24) -> 0x38a2180
+[Tb640] [API] msvcrt operator new(128) -> 0x38a21a0
+[Tb640] [API] GetModuleFileNameA(cap=260)
+[Tb640] [API] free((nil))
+[Tb640] [API] free((nil))
+[Tb640] [API] malloc(128) = 0x38a2230
+[Tb640] [API] malloc(256) = 0x38a22c0
+[Tb640] [API] malloc(1024) = 0x38a1110
+[Tb640] [API] malloc(1024) = 0x38a23d0
+[Tb640] [API] free(0x38a22c0)
+[Tb640] [API] GetModuleFileNameA(cap=260)
+[Tb640] [API] SetLastError(2) caller=0x208db7a
+[Tb640] [API] msvcrt operator new(2968) -> 0x38a27e0
+[Tb640] [API] msvcrt operator new(128) -> 0x38a3380
+[Tb640] [API] LoadLibraryA(C:\Windows\System32\advapi32.dll)
+[Tb640] [API] GetProcAddress(module=0xdea40000, name=OpenSCManagerA)
+[Tb640] [API]   -> 0x20398b0
+[Tb640] [API] GetProcAddress(module=0xdea40000, name=OpenServiceA)
+[Tb640] [API]   -> 0x200cb80
+[Tb640] [API] GetProcAddress(module=0xdea40000, name=ChangeServiceConfigA)
+[Tb640] [API]   -> NULL (not in dispatch table)
+[Tb640] [API]   -> optional-stub fallback (not in dispatch table)
+[Tb640] [API] GetProcAddress(module=0xdea40000, name=CloseServiceHandle)
+[Tb640] [API]   -> 0x2062890
+[Tb640] [API] GetProcAddress(module=0xdea40000, name=QueryServiceConfigA)
+[Tb640] [API]   -> NULL (not in dispatch table)
+[Tb640] [API]   -> optional-stub fallback (not in dispatch table)
+[Tb640] [API] GetProcAddress(module=0xdea40000, name=QueryServiceConfig2A)
+[Tb640] [API]   -> NULL (not in dispatch table)
+[Tb640] [API]   -> optional-stub fallback (not in dispatch table)
+[Tb640] [API] GetProcAddress(module=0xdea40000, name=ControlService)
+[Tb640] [API]   -> 0x206a090
+[Tb640] [API] GetProcAddress(module=0xdea40000, name=EnumServicesStatusA)
+[Tb640] [API]   -> NULL (not in dispatch table)
+[Tb640] [API]   -> optional-stub fallback (not in dispatch table)
+[Tb640] [API] GetProcAddress(module=0xdea40000, name=EnumServicesStatusExA)
+[Tb640] [API]   -> NULL (not in dispatch table)
+[Tb640] [API]   -> optional-stub fallback (not in dispatch table)
+[Tb640] [API] GetProcAddress(module=0xdea40000, name=StartServiceA)
+[Tb640] [API]   -> 0x203ef80
+[Tb640] [API] GetProcAddress(module=0xdea40000, name=QueryServiceStatus)
+[Tb640] [API]   -> 0x2024690
+[Tb640] [API] OpenSCManagerA() -> SCManager cookie (live SCM world)
+[Tb640] [API] CloseServiceHandle(0x5c0001) -> TRUE
+[Tb640] [API] FreeLibrary()
+[Tb640] [API] LoadLibraryA(C:\Windows\System32\advapi32.dll)
+[Tb640] [API] GetProcAddress(module=0xdea40000, name=OpenProcessToken)
+[Tb640] [API]   -> 0x203eab0
+[Tb640] [API] GetProcAddress(module=0xdea40000, name=LookupPrivilegeValueA)
+[Tb640] [API]   -> 0x206a0c0
+[Tb640] [API] GetProcAddress(module=0xdea40000, name=AdjustTokenPrivileges)
+[Tb640] [API]   -> 0x203eb30
+[Tb640] [API] SetLastError(1300) caller=0x203eb3e
+[Tb640] [API] GetLastError() = 1300
+[Tb640] [API] CloseHandle(handle=0x4)
+[Tb640] [API] FreeLibrary()
+[Tb640] [API] msvcrt operator new(768) -> 0x38a3410
+[Tb640] [API] msvcrt operator new(768) -> 0x38a3720
+[Tb640] [API] msvcrt operator new(32768) -> 0x38a3a30
+[Tb640] [API] msvcrt operator new(1024) -> 0x38aba40
+[Tb640] [API] msvcrt operator new(1024) -> 0x38abe50
+[Tb640] [API] msvcrt operator new(4096) -> 0x38ac260
+[Tb640] [API] [RES] find hmod=0x140000000 a=?/- w=0x272/0x6
+[Tb640] [API] [RES] walk depth=0 level=0x140036000 named=1 ided=11 (base=0x140036000)
+[Tb640] [API] [RES] walk depth=1 level=0x140036168 named=0 ided=10 (base=0x140036000)
+[Tb640] [API] [RES] walk depth=2 level=0x140036488 named=0 ided=1 (base=0x140036000)
+[Tb640] [API] LoadStringA(id=10001) -> 12 chars (block 626 idx 1 len 12)
+[Tb640] [API] [RES] find hmod=0x140000000 a=?/- w=0x272/0x6
+[Tb640] [API] [RES] walk depth=0 level=0x140036000 named=1 ided=11 (base=0x140036000)
+[Tb640] [API] [RES] walk depth=1 level=0x140036168 named=0 ided=10 (base=0x140036000)
+[Tb640] [API] [RES] walk depth=2 level=0x140036488 named=0 ided=1 (base=0x140036000)
+[Tb640] [API] LoadStringA(id=10001) -> 12 chars (block 626 idx 1 len 12)
+[Tb640] [API] [RES] find hmod=0x140000000 a=?/- w=0x272/0x6
+[Tb640] [API] [RES] walk depth=0 level=0x140036000 named=1 ided=11 (base=0x140036000)
+[Tb640] [API] [RES] walk depth=1 level=0x140036168 named=0 ided=10 (base=0x140036000)
+[Tb640] [API] [RES] walk depth=2 level=0x140036488 named=0 ided=1 (base=0x140036000)
+[Tb640] [API] LoadStringA(id=10002) -> 8 chars (block 626 idx 2 len 8)
+[Tb640] [API] [RES] find hmod=0x140000000 a=?/- w=0x272/0x6
+[Tb640] [API] [RES] walk depth=0 level=0x140036000 named=1 ided=11 (base=0x140036000)
+[Tb640] [API] [RES] walk depth=1 level=0x140036168 named=0 ided=10 (base=0x140036000)
+[Tb640] [API] [RES] walk depth=2 level=0x140036488 named=0 ided=1 (base=0x140036000)
+[Tb640] [API] LoadStringA(id=10002) -> 8 chars (block 626 idx 2 len 8)
+[Tb640] [API] [RES] find hmod=0x140000000 a=?/- w=0x272/0x6
+[Tb640] [API] [RES] walk depth=0 level=0x140036000 named=1 ided=11 (base=0x140036000)
+[Tb640] [API] [RES] walk depth=1 level=0x140036168 named=0 ided=10 (base=0x140036000)
+[Tb640] [API] [RES] walk depth=2 level=0x140036488 named=0 ided=1 (base=0x140036000)
+[Tb640] [API] LoadStringA(id=10003) -> 10 chars (block 626 idx 3 len 10)
+[Tb640] [API] [RES] find hmod=0x140000000 a=?/- w=0x272/0x6
+[Tb640] [API] [RES] walk depth=0 level=0x140036000 named=1 ided=11 (base=0x140036000)
+[Tb640] [API] [RES] walk depth=1 level=0x140036168 named=0 ided=10 (base=0x140036000)
+[Tb640] [API] [RES] walk depth=2 level=0x140036488 named=0 ided=1 (base=0x140036000)
+[Tb640] [API] LoadStringA(id=10003) -> 10 chars (block 626 idx 3 len 10)
+[Tb640] [API] [RES] find hmod=0x140000000 a=?/- w=0x272/0x6
+[Tb640] [API] [RES] walk depth=0 level=0x140036000 named=1 ided=11 (base=0x140036000)
+[Tb640] [API] [RES] walk depth=1 level=0x140036168 named=0 ided=10 (base=0x140036000)
+[Tb640] [API] [RES] walk depth=2 level=0x140036488 named=0 ided=1 (base=0x140036000)
+[Tb640] [API] LoadStringA(id=10004) -> 13 chars (block 626 idx 4 len 13)
+[Tb640] [API] [RES] find hmod=0x140000000 a=?/- w=0x272/0x6
+[Tb640] [API] [RES] walk depth=0 level=0x140036000 named=1 ided=11 (base=0x140036000)
+[Tb640] [API] [RES] walk depth=1 level=0x140036168 named=0 ided=10 (base=0x140036000)
+[Tb640] [API] [RES] walk depth=2 level=0x140036488 named=0 ided=1 (base=0x140036000)
+[Tb640] [API] LoadStringA(id=10004) -> 13 chars (block 626 idx 4 len 13)
+[Tb640] [API] [RES] find hmod=0x140000000 a=?/- w=0x272/0x6
+[Tb640] [API] [RES] walk depth=0 level=0x140036000 named=1 ided=11 (base=0x140036000)
+[Tb640] [API] [RES] walk depth=1 level=0x140036168 named=0 ided=10 (base=0x140036000)
+[Tb640] [API] [RES] walk depth=2 level=0x140036488 named=0 ided=1 (base=0x140036000)
+[Tb640] [API] LoadStringA(id=10005) -> 11 chars (block 626 idx 5 len 11)
+[Tb640] [API] [RES] find hmod=0x140000000 a=?/- w=0x272/0x6
+[Tb640] [API] [RES] walk depth=0 level=0x140036000 named=1 ided=11 (base=0x140036000)
+[Tb640] [API] [RES] walk depth=1 level=0x140036168 named=0 ided=10 (base=0x140036000)
+[Tb640] [API] [RES] walk depth=2 level=0x140036488 named=0 ided=1 (base=0x140036000)
+[Tb640] [API] LoadStringA(id=10005) -> 11 chars (block 626 idx 5 len 11)
+[Tb640] [API] [RES] find hmod=0x140000000 a=?/- w=0x272/0x6
+[Tb640] [API] [RES] walk depth=0 level=0x140036000 named=1 ided=11 (base=0x140036000)
+[Tb640] [API] [RES] walk depth=1 level=0x140036168 named=0 ided=10 (base=0x140036000)
+[Tb640] [API] [RES] walk depth=2 level=0x140036488 named=0 ided=1 (base=0x140036000)
+[Tb640] [API] LoadStringA(id=10006) -> 14 chars (block 626 idx 6 len 14)
+[Tb640] [API] [RES] find hmod=0x140000000 a=?/- w=0x272/0x6
+[Tb640] [API] [RES] walk depth=0 level=0x140036000 named=1 ided=11 (base=0x140036000)
+[Tb640] [API] [RES] walk depth=1 level=0x140036168 named=0 ided=10 (base=0x140036000)
+[Tb640] [API] [RES] walk depth=2 level=0x140036488 named=0 ided=1 (base=0x140036000)
+[Tb640] [API] LoadStringA(id=10006) -> 14 chars (block 626 idx 6 len 14)
+[Tb640] [API] [RES] find hmod=0x140000000 a=?/- w=0x272/0x6
+[Tb640] [API] [RES] walk depth=0 level=0x140036000 named=1 ided=11 (base=0x140036000)
+[Tb640] [API] [RES] walk depth=1 level=0x140036168 named=0 ided=10 (base=0x140036000)
+[Tb640] [API] [RES] walk depth=2 level=0x140036488 named=0 ided=1 (base=0x140036000)
+[Tb640] [API] LoadStringA(id=10007) -> 12 chars (block 626 idx 7 len 12)
+[Tb640] [API] [RES] find hmod=0x140000000 a=?/- w=0x272/0x6
+[Tb640] [API] [RES] walk depth=0 level=0x140036000 named=1 ided=11 (base=0x140036000)
+[Tb640] [API] [RES] walk depth=1 level=0x140036168 named=0 ided=10 (base=0x140036000)
+[Tb640] [API] [RES] walk depth=2 level=0x140036488 named=0 ided=1 (base=0x140036000)
+[Tb640] [API] LoadStringA(id=10007) -> 12 chars (block 626 idx 7 len 12)
+[Tb640] [API] [RES] find hmod=0x140000000 a=?/- w=0x272/0x6
+[Tb640] [API] [RES] walk depth=0 level=0x140036000 named=1 ided=11 (base=0x140036000)
+[Tb640] [API] [RES] walk depth=1 level=0x140036168 named=0 ided=10 (base=0x140036000)
+[Tb640] [API] [RES] walk depth=2 level=0x140036488 named=0 ided=1 (base=0x140036000)
+[Tb640] [API] LoadStringA(id=10008) -> 10 chars (block 626 idx 8 len 10)
+[Tb640] [API] [RES] find hmod=0x140000000 a=?/- w=0x272/0x6
+[Tb640] [API] [RES] walk depth=0 level=0x140036000 named=1 ided=11 (base=0x140036000)
+[Tb640] [API] [RES] walk depth=1 level=0x140036168 named=0 ided=10 (base=0x140036000)
+[Tb640] [API] [RES] walk depth=2 level=0x140036488 named=0 ided=1 (base=0x140036000)
+[Tb640] [API] LoadStringA(id=10008) -> 10 chars (block 626 idx 8 len 10)
+[Tb640] [API] [RES] find hmod=0x140000000 a=?/- w=0x272/0x6
+[Tb640] [API] [RES] walk depth=0 level=0x140036000 named=1 ided=11 (base=0x140036000)
+[Tb640] [API] [RES] walk depth=1 level=0x140036168 named=0 ided=10 (base=0x140036000)
+[Tb640] [API] [RES] walk depth=2 level=0x140036488 named=0 ided=1 (base=0x140036000)
+[Tb640] [API] LoadStringA(id=10009) -> 5 chars (block 626 idx 9 len 5)
+[Tb640] [API] [RES] find hmod=0x140000000 a=?/- w=0x272/0x6
+[Tb640] [API] [RES] walk depth=0 level=0x140036000 named=1 ided=11 (base=0x140036000)
+[Tb640] [API] [RES] walk depth=1 level=0x140036168 named=0 ided=10 (base=0x140036000)
+[Tb640] [API] [RES] walk depth=2 level=0x140036488 named=0 ided=1 (base=0x140036000)
+[Tb640] [API] LoadStringA(id=10009) -> 5 chars (block 626 idx 9 len 5)
+[Tb640] [API] [RES] find hmod=0x140000000 a=?/- w=0x273/0x6
+[Tb640] [API] [RES] walk depth=0 level=0x140036000 named=1 ided=11 (base=0x140036000)
+[Tb640] [API] [RES] walk depth=1 level=0x140036168 named=0 ided=10 (base=0x140036000)
+[Tb640] [API] [RES] walk depth=2 level=0x1400364a0 named=0 ided=1 (base=0x140036000)
+[Tb640] [API] LoadStringA(id=10025) -> 10 chars (block 627 idx 9 len 10)
+[Tb640] [API] [RES] find hmod=0x140000000 a=?/- w=0x273/0x6
+[Tb640] [API] [RES] walk depth=0 level=0x140036000 named=1 ided=11 (base=0x140036000)
+[Tb640] [API] [RES] walk depth=1 level=0x140036168 named=0 ided=10 (base=0x140036000)
+[Tb640] [API] [RES] walk depth=2 level=0x1400364a0 named=0 ided=1 (base=0x140036000)
+[Tb640] [API] LoadStringA(id=10025) -> 10 chars (block 627 idx 9 len 10)
+[Tb640] [API] [RES] find hmod=0x140000000 a=?/- w=0x273/0x6
+[Tb640] [API] [RES] walk depth=0 level=0x140036000 named=1 ided=11 (base=0x140036000)
+[Tb640] [API] [RES] walk depth=1 level=0x140036168 named=0 ided=10 (base=0x140036000)
+[Tb640] [API] [RES] walk depth=2 level=0x1400364a0 named=0 ided=1 (base=0x140036000)
+[Tb640] [API] LoadStringA(id=10026) -> 14 chars (block 627 idx 10 len 14)
+[Tb640] [API] [RES] find hmod=0x140000000 a=?/- w=0x273/0x6
+[Tb640] [API] [RES] walk depth=0 level=0x140036000 named=1 ided=11 (base=0x140036000)
+[Tb640] [API] [RES] walk depth=1 level=0x140036168 named=0 ided=10 (base=0x140036000)
+[Tb640] [API] [RES] walk depth=2 level=0x1400364a0 named=0 ided=1 (base=0x140036000)
+[Tb640] [API] LoadStringA(id=10026) -> 14 chars (block 627 idx 10 len 14)
+[Tb640] [API] [RES] find hmod=0x140000000 a=?/- w=0x273/0x6
+[Tb640] [API] [RES] walk depth=0 level=0x140036000 named=1 ided=11 (base=0x140036000)
+[Tb640] [API] [RES] walk depth=1 level=0x140036168 named=0 ided=10 (base=0x140036000)
+[Tb640] [API] [RES] walk depth=2 level=0x1400364a0 named=0 ided=1 (base=0x140036000)
+[Tb640] [API] LoadStringA(id=10027) -> 12 chars (block 627 idx 11 len 12)
+[Tb640] [API] [RES] find hmod=0x140000000 a=?/- w=0x273/0x6
+[Tb640] [API] [RES] walk depth=0 level=0x140036000 named=1 ided=11 (base=0x140036000)
+[Tb640] [API] [RES] walk depth=1 level=0x140036168 named=0 ided=10 (base=0x140036000)
+[Tb640] [API] [RES] walk depth=2 level=0x1400364a0 named=0 ided=1 (base=0x140036000)
+[Tb640] [API] LoadStringA(id=10027) -> 12 chars (block 627 idx 11 len 12)
+[Tb640] [API] [RES] find hmod=0x140000000 a=?/- w=0x273/0x6
+[Tb640] [API] [RES] walk depth=0 level=0x140036000 named=1 ided=11 (base=0x140036000)
+[Tb640] [API] [RES] walk depth=1 level=0x140036168 named=0 ided=10 (base=0x140036000)
+[Tb640] [API] [RES] walk depth=2 level=0x1400364a0 named=0 ided=1 (base=0x140036000)
+[Tb640] [API] LoadStringA(id=10028) -> 16 chars (block 627 idx 12 len 16)
+[Tb640] [API] [RES] find hmod=0x140000000 a=?/- w=0x273/0x6
+[Tb640] [API] [RES] walk depth=0 level=0x140036000 named=1 ided=11 (base=0x140036000)
+[Tb640] [API] [RES] walk depth=1 level=0x140036168 named=0 ided=10 (base=0x140036000)
+[Tb640] [API] [RES] walk depth=2 level=0x1400364a0 named=0 ided=1 (base=0x140036000)
+[Tb640] [API] LoadStringA(id=10028) -> 16 chars (block 627 idx 12 len 16)
+[Tb640] [API] [RES] find hmod=0x140000000 a=?/- w=0x272/0x6
+[Tb640] [API] [RES] walk depth=0 level=0x140036000 named=1 ided=11 (base=0x140036000)
+[Tb640] [API] [RES] walk depth=1 level=0x140036168 named=0 ided=10 (base=0x140036000)
+[Tb640] [API] [RES] walk depth=2 level=0x140036488 named=0 ided=1 (base=0x140036000)
+[Tb640] [API] LoadStringA(id=10010) -> 12 chars (block 626 idx 10 len 12)
+[Tb640] [API] [RES] find hmod=0x140000000 a=?/- w=0x272/0x6
+[Tb640] [API] [RES] walk depth=0 level=0x140036000 named=1 ided=11 (base=0x140036000)
+[Tb640] [API] [RES] walk depth=1 level=0x140036168 named=0 ided=10 (base=0x140036000)
+[Tb640] [API] [RES] walk depth=2 level=0x140036488 named=0 ided=1 (base=0x140036000)
+[Tb640] [API] LoadStringA(id=10010) -> 12 chars (block 626 idx 10 len 12)
+[Tb640] [API] [RES] find hmod=0x140000000 a=?/- w=0x272/0x6
+[Tb640] [API] [RES] walk depth=0 level=0x140036000 named=1 ided=11 (base=0x140036000)
+[Tb640] [API] [RES] walk depth=1 level=0x140036168 named=0 ided=10 (base=0x140036000)
+[Tb640] [API] [RES] walk depth=2 level=0x140036488 named=0 ided=1 (base=0x140036000)
+[Tb640] [API] LoadStringA(id=10011) -> 16 chars (block 626 idx 11 len 16)
+[Tb640] [API] [RES] find hmod=0x140000000 a=?/- w=0x272/0x6
+[Tb640] [API] [RES] walk depth=0 level=0x140036000 named=1 ided=11 (base=0x140036000)
+[Tb640] [API] [RES] walk depth=1 level=0x140036168 named=0 ided=10 (base=0x140036000)
+[Tb640] [API] [RES] walk depth=2 level=0x140036488 named=0 ided=1 (base=0x140036000)
+[Tb640] [API] LoadStringA(id=10011) -> 16 chars (block 626 idx 11 len 16)
+[Tb640] [API] [RES] find hmod=0x140000000 a=?/- w=0x272/0x6
+[Tb640] [API] [RES] walk depth=0 level=0x140036000 named=1 ided=11 (base=0x140036000)
+[Tb640] [API] [RES] walk depth=1 level=0x140036168 named=0 ided=10 (base=0x140036000)
+[Tb640] [API] [RES] walk depth=2 level=0x140036488 named=0 ided=1 (base=0x140036000)
+[Tb640] [API] LoadStringA(id=10012) -> 12 chars (block 626 idx 12 len 12)
+[Tb640] [API] [RES] find hmod=0x140000000 a=?/- w=0x272/0x6
+[Tb640] [API] [RES] walk depth=0 level=0x140036000 named=1 ided=11 (base=0x140036000)
+[Tb640] [API] [RES] walk depth=1 level=0x140036168 named=0 ided=10 (base=0x140036000)
+[Tb640] [API] [RES] walk depth=2 level=0x140036488 named=0 ided=1 (base=0x140036000)
+[Tb640] [API] LoadStringA(id=10012) -> 12 chars (block 626 idx 12 len 12)
+[Tb640] [API] [RES] find hmod=0x140000000 a=?/- w=0x272/0x6
+[Tb640] [API] [RES] walk depth=0 level=0x140036000 named=1 ided=11 (base=0x140036000)
+[Tb640] [API] [RES] walk depth=1 level=0x140036168 named=0 ided=10 (base=0x140036000)
+[Tb640] [API] [RES] walk depth=2 level=0x140036488 named=0 ided=1 (base=0x140036000)
+[Tb640] [API] LoadStringA(id=10013) -> 7 chars (block 626 idx 13 len 7)
+[Tb640] [API] [RES] find hmod=0x140000000 a=?/- w=0x272/0x6
+[Tb640] [API] [RES] walk depth=0 level=0x140036000 named=1 ided=11 (base=0x140036000)
+[Tb640] [API] [RES] walk depth=1 level=0x140036168 named=0 ided=10 (base=0x140036000)
+[Tb640] [API] [RES] walk depth=2 level=0x140036488 named=0 ided=1 (base=0x140036000)
+[Tb640] [API] LoadStringA(id=10013) -> 7 chars (block 626 idx 13 len 7)
+[Tb640] [API] [RES] find hmod=0x140000000 a=?/- w=0x272/0x6
+[Tb640] [API] [RES] walk depth=0 level=0x140036000 named=1 ided=11 (base=0x140036000)
+[Tb640] [API] [RES] walk depth=1 level=0x140036168 named=0 ided=10 (base=0x140036000)
+[Tb640] [API] [RES] walk depth=2 level=0x140036488 named=0 ided=1 (base=0x140036000)
+[Tb640] [API] LoadStringA(id=10014) -> 18 chars (block 626 idx 14 len 18)
+[Tb640] [API] [RES] find hmod=0x140000000 a=?/- w=0x272/0x6
+[Tb640] [API] [RES] walk depth=0 level=0x140036000 named=1 ided=11 (base=0x140036000)
+[Tb640] [API] [RES] walk depth=1 level=0x140036168 named=0 ided=10 (base=0x140036000)
+[Tb640] [API] [RES] walk depth=2 level=0x140036488 named=0 ided=1 (base=0x140036000)
+[Tb640] [API] LoadStringA(id=10014) -> 18 chars (block 626 idx 14 len 18)
+[Tb640] [API] [RES] find hmod=0x140000000 a=?/- w=0x272/0x6
+[Tb640] [API] [RES] walk depth=0 level=0x140036000 named=1 ided=11 (base=0x140036000)
+[Tb640] [API] [RES] walk depth=1 level=0x140036168 named=0 ided=10 (base=0x140036000)
+[Tb640] [API] [RES] walk depth=2 level=0x140036488 named=0 ided=1 (base=0x140036000)
+[Tb640] [API] LoadStringA(id=10015) -> 15 chars (block 626 idx 15 len 15)
+[Tb640] [API] [RES] find hmod=0x140000000 a=?/- w=0x272/0x6
+[Tb640] [API] [RES] walk depth=0 level=0x140036000 named=1 ided=11 (base=0x140036000)
+[Tb640] [API] [RES] walk depth=1 level=0x140036168 named=0 ided=10 (base=0x140036000)
+[Tb640] [API] [RES] walk depth=2 level=0x140036488 named=0 ided=1 (base=0x140036000)
+[Tb640] [API] LoadStringA(id=10015) -> 15 chars (block 626 idx 15 len 15)
+[Tb640] [API] [RES] find hmod=0x140000000 a=?/- w=0x273/0x6
+[Tb640] [API] [RES] walk depth=0 level=0x140036000 named=1 ided=11 (base=0x140036000)
+[Tb640] [API] [RES] walk depth=1 level=0x140036168 named=0 ided=10 (base=0x140036000)
+[Tb640] [API] [RES] walk depth=2 level=0x1400364a0 named=0 ided=1 (base=0x140036000)
+[Tb640] [API] LoadStringA(id=10016) -> 16 chars (block 627 idx 0 len 16)
+[Tb640] [API] [RES] find hmod=0x140000000 a=?/- w=0x273/0x6
+[Tb640] [API] [RES] walk depth=0 level=0x140036000 named=1 ided=11 (base=0x140036000)
+[Tb640] [API] [RES] walk depth=1 level=0x140036168 named=0 ided=10 (base=0x140036000)
+[Tb640] [API] [RES] walk depth=2 level=0x1400364a0 named=0 ided=1 (base=0x140036000)
+[Tb640] [API] LoadStringA(id=10016) -> 16 chars (block 627 idx 0 len 16)
+[Tb640] [API] [RES] find hmod=0x140000000 a=?/- w=0x273/0x6
+[Tb640] [API] [RES] walk depth=0 level=0x140036000 named=1 ided=11 (base=0x140036000)
+[Tb640] [API] [RES] walk depth=1 level=0x140036168 named=0 ided=10 (base=0x140036000)
+[Tb640] [API] [RES] walk depth=2 level=0x1400364a0 named=0 ided=1 (base=0x140036000)
+[Tb640] [API] LoadStringA(id=10017) -> 9 chars (block 627 idx 1 len 9)
+[Tb640] [API] [RES] find hmod=0x140000000 a=?/- w=0x273/0x6
+[Tb640] [API] [RES] walk depth=0 level=0x140036000 named=1 ided=11 (base=0x140036000)
+[Tb640] [API] [RES] walk depth=1 level=0x140036168 named=0 ided=10 (base=0x140036000)
+[Tb640] [API] [RES] walk depth=2 level=0x1400364a0 named=0 ided=1 (base=0x140036000)
+[Tb640] [API] LoadStringA(id=10017) -> 9 chars (block 627 idx 1 len 9)
+[Tb640] [API] [RES] find hmod=0x140000000 a=?/- w=0x273/0x6
+[Tb640] [API] [RES] walk depth=0 level=0x140036000 named=1 ided=11 (base=0x140036000)
+[Tb640] [API] [RES] walk depth=1 level=0x140036168 named=0 ided=10 (base=0x140036000)
+[Tb640] [API] [RES] walk depth=2 level=0x1400364a0 named=0 ided=1 (base=0x140036000)
+[Tb640] [API] LoadStringA(id=10018) -> 16 chars (block 627 idx 2 len 16)
+[Tb640] [API] [RES] find hmod=0x140000000 a=?/- w=0x273/0x6
+[Tb640] [API] [RES] walk depth=0 level=0x140036000 named=1 ided=11 (base=0x140036000)
+[Tb640] [API] [RES] walk depth=1 level=0x140036168 named=0 ided=10 (base=0x140036000)
+[Tb640] [API] [RES] walk depth=2 level=0x1400364a0 named=0 ided=1 (base=0x140036000)
+[Tb640] [API] LoadStringA(id=10018) -> 16 chars (block 627 idx 2 len 16)
+[Tb640] [API] [RES] find hmod=0x140000000 a=?/- w=0x273/0x6
+[Tb640] [API] [RES] walk depth=0 level=0x140036000 named=1 ided=11 (base=0x140036000)
+[Tb640] [API] [RES] walk depth=1 level=0x140036168 named=0 ided=10 (base=0x140036000)
+[Tb640] [API] [RES] walk depth=2 level=0x1400364a0 named=0 ided=1 (base=0x140036000)
+[Tb640] [API] LoadStringA(id=10019) -> 18 chars (block 627 idx 3 len 18)
+[Tb640] [API] [RES] find hmod=0x140000000 a=?/- w=0x273/0x6
+[Tb640] [API] [RES] walk depth=0 level=0x140036000 named=1 ided=11 (base=0x140036000)
+[Tb640] [API] [RES] walk depth=1 level=0x140036168 named=0 ided=10 (base=0x140036000)
+[Tb640] [API] [RES] walk depth=2 level=0x1400364a0 named=0 ided=1 (base=0x140036000)
+[Tb640] [API] LoadStringA(id=10019) -> 18 chars (block 627 idx 3 len 18)
+[Tb640] [API] [RES] find hmod=0x140000000 a=?/- w=0x273/0x6
+[Tb640] [API] [RES] walk depth=0 level=0x140036000 named=1 ided=11 (base=0x140036000)
+[Tb640] [API] [RES] walk depth=1 level=0x140036168 named=0 ided=10 (base=0x140036000)
+[Tb640] [API] [RES] walk depth=2 level=0x1400364a0 named=0 ided=1 (base=0x140036000)
+[Tb640] [API] LoadStringA(id=10020) -> 16 chars (block 627 idx 4 len 16)
+[Tb640] [API] [RES] find hmod=0x140000000 a=?/- w=0x273/0x6
+[Tb640] [API] [RES] walk depth=0 level=0x140036000 named=1 ided=11 (base=0x140036000)
+[Tb640] [API] [RES] walk depth=1 level=0x140036168 named=0 ided=10 (base=0x140036000)
+[Tb640] [API] [RES] walk depth=2 level=0x1400364a0 named=0 ided=1 (base=0x140036000)
+[Tb640] [API] LoadStringA(id=10020) -> 16 chars (block 627 idx 4 len 16)
+[Tb640] [API] [RES] find hmod=0x140000000 a=?/- w=0x273/0x6
+[Tb640] [API] [RES] walk depth=0 level=0x140036000 named=1 ided=11 (base=0x140036000)
+[Tb640] [API] [RES] walk depth=1 level=0x140036168 named=0 ided=10 (base=0x140036000)
+[Tb640] [API] [RES] walk depth=2 level=0x1400364a0 named=0 ided=1 (base=0x140036000)
+[Tb640] [API] LoadStringA(id=10021) -> 8 chars (block 627 idx 5 len 8)
+[Tb640] [API] [RES] find hmod=0x140000000 a=?/- w=0x273/0x6
+[Tb640] [API] [RES] walk depth=0 level=0x140036000 named=1 ided=11 (base=0x140036000)
+[Tb640] [API] [RES] walk depth=1 level=0x140036168 named=0 ided=10 (base=0x140036000)
+[Tb640] [API] [RES] walk depth=2 level=0x1400364a0 named=0 ided=1 (base=0x140036000)
+[Tb640] [API] LoadStringA(id=10021) -> 8 chars (block 627 idx 5 len 8)
+[Tb640] [API] [RES] find hmod=0x140000000 a=?/- w=0x273/0x6
+[Tb640] [API] [RES] walk depth=0 level=0x140036000 named=1 ided=11 (base=0x140036000)
+[Tb640] [API] [RES] walk depth=1 level=0x140036168 named=0 ided=10 (base=0x140036000)
+[Tb640] [API] [RES] walk depth=2 level=0x1400364a0 named=0 ided=1 (base=0x140036000)
+[Tb640] [API] LoadStringA(id=10029) -> 18 chars (block 627 idx 13 len 18)
+[Tb640] [API] [RES] find hmod=0x140000000 a=?/- w=0x273/0x6
+[Tb640] [API] [RES] walk depth=0 level=0x140036000 named=1 ided=11 (base=0x140036000)
+[Tb640] [API] [RES] walk depth=1 level=0x140036168 named=0 ided=10 (base=0x140036000)
+[Tb640] [API] [RES] walk depth=2 level=0x1400364a0 named=0 ided=1 (base=0x140036000)
+[Tb640] [API] LoadStringA(id=10029) -> 18 chars (block 627 idx 13 len 18)
+[Tb640] [API] [RES] find hmod=0x140000000 a=?/- w=0x273/0x6
+[Tb640] [API] [RES] walk depth=0 level=0x140036000 named=1 ided=11 (base=0x140036000)
+[Tb640] [API] [RES] walk depth=1 level=0x140036168 named=0 ided=10 (base=0x140036000)
+[Tb640] [API] [RES] walk depth=2 level=0x1400364a0 named=0 ided=1 (base=0x140036000)
+[Tb640] [API] LoadStringA(id=10022) -> 15 chars (block 627 idx 6 len 15)
+[Tb640] [API] [RES] find hmod=0x140000000 a=?/- w=0x273/0x6
+[Tb640] [API] [RES] walk depth=0 level=0x140036000 named=1 ided=11 (base=0x140036000)
+[Tb640] [API] [RES] walk depth=1 level=0x140036168 named=0 ided=10 (base=0x140036000)
+[Tb640] [API] [RES] walk depth=2 level=0x1400364a0 named=0 ided=1 (base=0x140036000)
+[Tb640] [API] LoadStringA(id=10022) -> 15 chars (block 627 idx 6 len 15)
+[Tb640] [API] [RES] find hmod=0x140000000 a=?/- w=0x273/0x6
+[Tb640] [API] [RES] walk depth=0 level=0x140036000 named=1 ided=11 (base=0x140036000)
+[Tb640] [API] [RES] walk depth=1 level=0x140036168 named=0 ided=10 (base=0x140036000)
+[Tb640] [API] [RES] walk depth=2 level=0x1400364a0 named=0 ided=1 (base=0x140036000)
+[Tb640] [API] LoadStringA(id=10023) -> 17 chars (block 627 idx 7 len 17)
+[Tb640] [API] [RES] find hmod=0x140000000 a=?/- w=0x273/0x6
+[Tb640] [API] [RES] walk depth=0 level=0x140036000 named=1 ided=11 (base=0x140036000)
+[Tb640] [API] [RES] walk depth=1 level=0x140036168 named=0 ided=10 (base=0x140036000)
+[Tb640] [API] [RES] walk depth=2 level=0x1400364a0 named=0 ided=1 (base=0x140036000)
+[Tb640] [API] LoadStringA(id=10023) -> 17 chars (block 627 idx 7 len 17)
+[Tb640] [API] [RES] find hmod=0x140000000 a=?/- w=0x273/0x6
+[Tb640] [API] [RES] walk depth=0 level=0x140036000 named=1 ided=11 (base=0x140036000)
+[Tb640] [API] [RES] walk depth=1 level=0x140036168 named=0 ided=10 (base=0x140036000)
+[Tb640] [API] [RES] walk depth=2 level=0x1400364a0 named=0 ided=1 (base=0x140036000)
+[Tb640] [API] LoadStringA(id=10030) -> 13 chars (block 627 idx 14 len 13)
+[Tb640] [API] [RES] find hmod=0x140000000 a=?/- w=0x273/0x6
+[Tb640] [API] [RES] walk depth=0 level=0x140036000 named=1 ided=11 (base=0x140036000)
+[Tb640] [API] [RES] walk depth=1 level=0x140036168 named=0 ided=10 (base=0x140036000)
+[Tb640] [API] [RES] walk depth=2 level=0x1400364a0 named=0 ided=1 (base=0x140036000)
+[Tb640] [API] LoadStringA(id=10030) -> 13 chars (block 627 idx 14 len 13)
+[Tb640] [API] [RES] find hmod=0x140000000 a=?/- w=0x273/0x6
+[Tb640] [API] [RES] walk depth=0 level=0x140036000 named=1 ided=11 (base=0x140036000)
+[Tb640] [API] [RES] walk depth=1 level=0x140036168 named=0 ided=10 (base=0x140036000)
+[Tb640] [API] [RES] walk depth=2 level=0x1400364a0 named=0 ided=1 (base=0x140036000)
+[Tb640] [API] LoadStringA(id=10031) -> 17 chars (block 627 idx 15 len 17)
+[Tb640] [API] [RES] find hmod=0x140000000 a=?/- w=0x273/0x6
+[Tb640] [API] [RES] walk depth=0 level=0x140036000 named=1 ided=11 (base=0x140036000)
+[Tb640] [API] [RES] walk depth=1 level=0x140036168 named=0 ided=10 (base=0x140036000)
+[Tb640] [API] [RES] walk depth=2 level=0x1400364a0 named=0 ided=1 (base=0x140036000)
+[Tb640] [API] LoadStringA(id=10031) -> 17 chars (block 627 idx 15 len 17)
+[Tb640] [API] [RES] find hmod=0x140000000 a=?/- w=0x273/0x6
+[Tb640] [API] [RES] walk depth=0 level=0x140036000 named=1 ided=11 (base=0x140036000)
+[Tb640] [API] [RES] walk depth=1 level=0x140036168 named=0 ided=10 (base=0x140036000)
+[Tb640] [API] [RES] walk depth=2 level=0x1400364a0 named=0 ided=1 (base=0x140036000)
+[Tb640] [API] LoadStringA(id=10024) -> 12 chars (block 627 idx 8 len 12)
+[Tb640] [API] [RES] find hmod=0x140000000 a=?/- w=0x273/0x6
+[Tb640] [API] [RES] walk depth=0 level=0x140036000 named=1 ided=11 (base=0x140036000)
+[Tb640] [API] [RES] walk depth=1 level=0x140036168 named=0 ided=10 (base=0x140036000)
+[Tb640] [API] [RES] walk depth=2 level=0x1400364a0 named=0 ided=1 (base=0x140036000)
+[Tb640] [API] LoadStringA(id=10024) -> 12 chars (block 627 idx 8 len 12)
+[Tb640] [API] [RES] find hmod=0x140000000 a=?/- w=0x274/0x6
+[Tb640] [API] [RES] walk depth=0 level=0x140036000 named=1 ided=11 (base=0x140036000)
+[Tb640] [API] [RES] walk depth=1 level=0x140036168 named=0 ided=10 (base=0x140036000)
+[Tb640] [API] [RES] walk depth=2 level=0x1400364b8 named=0 ided=1 (base=0x140036000)
+[Tb640] [API] LoadStringA(id=10032) -> 20 chars (block 628 idx 0 len 20)
+[Tb640] [API] [RES] find hmod=0x140000000 a=?/- w=0x274/0x6
+[Tb640] [API] [RES] walk depth=0 level=0x140036000 named=1 ided=11 (base=0x140036000)
+[Tb640] [API] [RES] walk depth=1 level=0x140036168 named=0 ided=10 (base=0x140036000)
+[Tb640] [API] [RES] walk depth=2 level=0x1400364b8 named=0 ided=1 (base=0x140036000)
+[Tb640] [API] LoadStringA(id=10032) -> 20 chars (block 628 idx 0 len 20)
+[Tb640] [API] msvcrt operator new(128) -> 0x38ad270
+[Tb640] [API] GetModuleFileNameA(cap=260)
+[Tb640] [API] SetLastError(2) caller=0x208db7a
+[Tb640] [API] GetModuleFileNameA(cap=260)
+[Tb640] [API] FindFirstFileA(C:\home\z\my-project\workspace\miniwin-engineering\artifacts\sweep50\dl\cports\*city-ipv4.csv)
+[Tb640] [API] FindFirstFile(/home/z/tmp/sweep033/cports/mw/home/z/my-project/workspace/miniwin-engineering/artifacts/sweep50/dl/cports/*city-ipv4.csv)
+[Tb640] [API] SetLastError(3) caller=0x208ee25
+[Tb640] [API] GetModuleFileNameA(cap=260)
+[Tb640] [API] FindFirstFileA(C:\home\z\my-project\workspace\miniwin-engineering\artifacts\sweep50\dl\cports\*city-ipv4-num.csv)
+[Tb640] [API] FindFirstFile(/home/z/tmp/sweep033/cports/mw/home/z/my-project/workspace/miniwin-engineering/artifacts/sweep50/dl/cports/*city-ipv4-num.csv)
+[Tb640] [API] SetLastError(3) caller=0x208ee25
+[Tb640] [API] GetModuleFileNameA(cap=260)
+[Tb640] [API] FindFirstFileA(C:\home\z\my-project\workspace\miniwin-engineering\artifacts\sweep50\dl\cports\*country-ipv4.csv)
+[Tb640] [API] FindFirstFile(/home/z/tmp/sweep033/cports/mw/home/z/my-project/workspace/miniwin-engineering/artifacts/sweep50/dl/cports/*country-ipv4.csv)
+[Tb640] [API] SetLastError(3) caller=0x208ee25
+[Tb640] [API] GetModuleFileNameA(cap=260)
+[Tb640] [API] FindFirstFileA(C:\home\z\my-project\workspace\miniwin-engineering\artifacts\sweep50\dl\cports\*country-ipv4-num.csv)
+[Tb640] [API] FindFirstFile(/home/z/tmp/sweep033/cports/mw/home/z/my-project/workspace/miniwin-engineering/artifacts/sweep50/dl/cports/*country-ipv4-num.csv)
+[Tb640] [API] SetLastError(3) caller=0x208ee25
+[Tb640] [API] GetModuleFileNameA(cap=260)
+[Tb640] [API] FindFirstFileA(C:\home\z\my-project\workspace\miniwin-engineering\artifacts\sweep50\dl\cports\*asn-ipv4.csv)
+[Tb640] [API] FindFirstFile(/home/z/tmp/sweep033/cports/mw/home/z/my-project/workspace/miniwin-engineering/artifacts/sweep50/dl/cports/*asn-ipv4.csv)
+[Tb640] [API] SetLastError(3) caller=0x208ee25
+[Tb640] [API] GetModuleFileNameA(cap=260)
+[Tb640] [API] FindFirstFileA(C:\home\z\my-project\workspace\miniwin-engineering\artifacts\sweep50\dl\cports\*asn-ipv4-num.csv)
+[Tb640] [API] FindFirstFile(/home/z/tmp/sweep033/cports/mw/home/z/my-project/workspace/miniwin-engineering/artifacts/sweep50/dl/cports/*asn-ipv4-num.csv)
+[Tb640] [API] SetLastError(3) caller=0x208ee25
+[Tb640] [API] GetModuleFileNameA(cap=260)
+[Tb640] [API] FindFirstFileA(C:\home\z\my-project\workspace\miniwin-engineering\artifacts\sweep50\dl\cports\*country-ipv6.csv)
+[Tb640] [API] FindFirstFile(/home/z/tmp/sweep033/cports/mw/home/z/my-project/workspace/miniwin-engineering/artifacts/sweep50/dl/cports/*country-ipv6.csv)
+[Tb640] [API] SetLastError(3) caller=0x208ee25
+[Tb640] [API] GetModuleFileNameA(cap=260)
+[Tb640] [API] FindFirstFileA(C:\home\z\my-project\workspace\miniwin-engineering\artifacts\sweep50\dl\cports\*asn-ipv6.csv)
+[Tb640] [API] FindFirstFile(/home/z/tmp/sweep033/cports/mw/home/z/my-project/workspace/miniwin-engineering/artifacts/sweep50/dl/cports/*asn-ipv6.csv)
+[Tb640] [API] SetLastError(3) caller=0x208ee25
+[Tb640] [API] GetModuleFileNameA(cap=260)
+[Tb640] [API] FindFirstFileA(C:\home\z\my-project\workspace\miniwin-engineering\artifacts\sweep50\dl\cports\*city-ipv6.csv)
+[Tb640] [API] FindFirstFile(/home/z/tmp/sweep033/cports/mw/home/z/my-project/workspace/miniwin-engineering/artifacts/sweep50/dl/cports/*city-ipv6.csv)
+[Tb640] [API] SetLastError(3) caller=0x208ee25
+[Tb640] [API] GetModuleFileNameA(cap=260)
+[Tb640] [API] SetLastError(2) caller=0x208db7a
+[Tb640] [API] SetLastError(2) caller=0x208db7a
+[Tb640] [API] GetModuleFileNameA(cap=260)
+[Tb640] [API] SetLastError(2) caller=0x208db7a
+[Tb640] [API] FindFirstFileA(C:\home\z\my-project\workspace\miniwin-engineering\artifacts\sweep50\dl\cports\GeoLite2-City-Locations*.csv)
+[Tb640] [API] FindFirstFile(/home/z/tmp/sweep033/cports/mw/home/z/my-project/workspace/miniwin-engineering/artifacts/sweep50/dl/cports/GeoLite2-City-Locations*.csv)
+[Tb640] [API] SetLastError(3) caller=0x208ee25
+[Tb640] [API] CreateFileA(C:\home\z\my-project\workspace\miniwin-engineering\artifacts\sweep50\dl\cports\GeoLite2-City-Locations-en.csv, acc=80000000, disp=3)
+[Tb640] [API] SetLastError(2) caller=0x208e2b8
+[Tb640] [API] free((nil))
+[Tb640] [API] free((nil))
+[Tb640] [API] free((nil))
+[Tb640] [API] free((nil))
+[Tb640] [API] SetLastError(2) caller=0x208db7a
+[Tb640] [API] SetLastError(2) caller=0x208db7a
+[Tb640] [API] SetLastError(2) caller=0x208db7a
+[Tb640] [API] FindFirstFileA(C:\home\z\my-project\workspace\miniwin-engineering\artifacts\sweep50\dl\cports\GeoLite2-Country-Locations*.csv)
+[Tb640] [API] FindFirstFile(/home/z/tmp/sweep033/cports/mw/home/z/my-project/workspace/miniwin-engineering/artifacts/sweep50/dl/cports/GeoLite2-Country-Locations*.csv)
+[Tb640] [API] SetLastError(3) caller=0x208ee25
+[Tb640] [API] CreateFileA(C:\home\z\my-project\workspace\miniwin-engineering\artifacts\sweep50\dl\cports\GeoLite2-Country-Locations-en.csv, acc=80000000, disp=3)
+[Tb640] [API] SetLastError(2) caller=0x208e2b8
+[Tb640] [API] free((nil))
+[Tb640] [API] free((nil))
+[Tb640] [API] free((nil))
+[Tb640] [API] free((nil))
+[Tb640] [API] SetLastError(2) caller=0x208db7a
+[Tb640] [API] SetLastError(2) caller=0x208db7a
+[Tb640] [API] GetModuleFileNameA(cap=260)
+[Tb640] [API] SetLastError(2) caller=0x208db7a
+[Tb640] [API] SetLastError(2) caller=0x208db7a
+[Tb640] [API] GetModuleFileNameA(cap=260)
+[Tb640] [API] CreateFileA(C:\home\z\my-project\workspace\miniwin-engineering\artifacts\sweep50\dl\cports\IpToCountry.csv, acc=80000000, disp=3)
+[Tb640] [API] SetLastError(2) caller=0x208e2b8
+[Tb640] [API] GetTickCount() = 10237927
+[Tb640] [API] GetModuleHandleA(name=ntdll.dll)
+[Tb640] [API] GetProcAddress(module=0xdea70000, name=NtQuerySystemInformation)
+[Tb640] [API]   -> 0x20572b0
+[Tb640] [API] GetProcAddress(module=0xdea70000, name=NtLoadDriver)
+[Tb640] [API]   -> 0x2088d70
+[Tb640] [API] GetProcAddress(module=0xdea70000, name=NtUnloadDriver)
+[Tb640] [API]   -> 0x2088d80
+[Tb640] [API] GetProcAddress(module=0xdea70000, name=NtOpenSymbolicLinkObject)
+[Tb640] [API]   -> 0x20d2700
+[Tb640] [API] GetProcAddress(module=0xdea70000, name=NtQuerySymbolicLinkObject)
+[Tb640] [API]   -> 0x2039540
+[Tb640] [API] GetProcAddress(module=0xdea70000, name=NtQueryObject)
+[Tb640] [API]   -> 0x200bf00
+[Tb640] [API] GetProcAddress(module=0xdea70000, name=NtOpenThread)
+[Tb640] [API]   -> 0x200e2f0
+[Tb640] [API] GetProcAddress(module=0xdea70000, name=NtClose)
+[Tb640] [API]   -> NULL (not in dispatch table)
+[Tb640] [API]   -> optional-stub fallback (not in dispatch table)
+[Tb640] [API] GetProcAddress(module=0xdea70000, name=NtQueryInformationThread)
+[Tb640] [API]   -> 0x20884d0
+[Tb640] [API] GetProcAddress(module=0xdea70000, name=NtSuspendThread)
+[Tb640] [API]   -> 0x200e360
+[Tb640] [API] GetProcAddress(module=0xdea70000, name=NtResumeThread)
+[Tb640] [API]   -> 0x2089340
+[Tb640] [API] GetProcAddress(module=0xdea70000, name=NtTerminateThread)
+[Tb640] [API]   -> NULL (not in dispatch table)
+[Tb640] [API]   -> optional-stub fallback (not in dispatch table)
+[Tb640] [API] GetProcAddress(module=0xdea70000, name=NtOpenProcess)
+[Tb640] [API]   -> NULL (not in dispatch table)
+[Tb640] [API]   -> optional-stub fallback (not in dispatch table)
+[Tb640] [API] NtQuerySystemInformation(SystemProcessInformation) -> 1 entry (pid 1234 'cports.exe')
+[Tb640] [API] msvcrt operator new(16278) -> 0x38ad300
+[Tb640] [API] NtQuerySystemInformation(SystemProcessInformation) -> 1 entry (pid 1234 'cports.exe')
+[Tb640] [API] WideCharToMultiByte(cp=0, srclen=-1, dstlen=260)
+[Tb640] [API] OpenProcess(pid=1234 self) -> pseudo-handle
+[Tb640] [API] GetModuleHandleA(name=ntdll.dll)
+[Tb640] [API] GetProcAddress(module=0xdea70000, name=NtQueryInformationProcess)
+[Tb640] [API]   -> 0x200e2d0
+[Tb640] [API] CloseHandle(handle=0xe0001)
+[Tb640] [API] malloc(74112) = 0x38b12a0
+[Tb640] [API] GetTickCount() = 10237927
+[Tb640] [API] LoadLibraryA(C:\Windows\System32\iphlpapi.dll)
+[Tb640] [API] GetProcAddress(module=0xdeb10000, name=GetTcpTable)
+[Tb640] [API]   -> NULL (not in dispatch table)
+[Tb640] [API]   -> optional-stub fallback (not in dispatch table)
+[Tb640] [API] GetProcAddress(module=0xdeb10000, name=GetUdpTable)
+[Tb640] [API]   -> NULL (not in dispatch table)
+[Tb640] [API]   -> optional-stub fallback (not in dispatch table)
+[Tb640] [API] GetProcAddress(module=0xdeb10000, name=SetTcpEntry)
+[Tb640] [API]   -> NULL (not in dispatch table)
+[Tb640] [API]   -> optional-stub fallback (not in dispatch table)
+[Tb640] [API] GetProcAddress(module=0xdeb10000, name=AllocateAndGetTcpExTableFromStack)
+[Tb640] [API]   -> NULL (not in dispatch table)
+[Tb640] [API]   -> optional-stub fallback (not in dispatch table)
+[Tb640] [API] GetProcAddress(module=0xdeb10000, name=AllocateAndGetUdpExTableFromStack)
+[Tb640] [API]   -> NULL (not in dispatch table)
+[Tb640] [API]   -> optional-stub fallback (not in dispatch table)
+[Tb640] [API] GetProcAddress(module=0xdeb10000, name=GetExtendedTcpTable)
+[Tb640] [API]   -> 0x200e5c0
+[Tb640] [API] GetProcAddress(module=0xdeb10000, name=GetExtendedUdpTable)
+[Tb640] [API]   -> 0x2087f20
+[Tb640] [API] LoadLibraryA(C:\Windows\System32\ntdll.dll)
+[Tb640] [API] GetProcAddress(module=0xdea70000, name=NtQuerySystemInformation)
+[Tb640] [API]   -> 0x20572b0
+[Tb640] [API] GetProcAddress(module=0xdea70000, name=RtlInitUnicodeString)
+[Tb640] [API]   -> 0x200fcd0
+[Tb640] [API] GetProcAddress(module=0xdea70000, name=ZwOpenSection)
+[Tb640] [API]   -> NULL (not in dispatch table)
+[Tb640] [API]   -> optional-stub fallback (not in dispatch table)
+[Tb640] [API] GetProcAddress(module=0xdea70000, name=ZwOpenFile)
+[Tb640] [API]   -> NULL (not in dispatch table)
+[Tb640] [API]   -> optional-stub fallback (not in dispatch table)
+[Tb640] [API] msvcrt operator new(4100) -> 0x38ad300
+[Tb640] [API] msvcrt operator new(4100) -> 0x38ad300
+[Tb640] [API] msvcrt operator new(4100) -> 0x38ad300
+[Tb640] [API] msvcrt operator new(4100) -> 0x38ad300
+[Tb640] [API] IsWindowVisible(0x10001) -> TRUE
+[Tb640] [API] GetWindowTextA -> 0 chars
+[Tb640] [API] GetClientRect(hwnd=0x10001) -> 640x480
+[Tb640] [API] FreeLibrary()
+[Tb640] [API] FreeLibrary()
+[Tb640] [API] Sleep(1000)
+[Tb640] [API] qsort(base=(nil) n=0 sz=1392 cmp=0x140012410) [SW-1339 probe]
+[Tb640] [API] CreateFileA(cp.txt, acc=40000000, disp=2)
+[Tb640] [API] CloseHandle(handle=0x4)
+[Tb640] [API] free((nil))
+[Tb640] [API] free(0x38a1110)
+[Tb640] [API] free(0x38a23d0)
+[Tb640] [API] free(0x38a2230)
+[Tb640] [API] free((nil))
+[Tb640] [API] free((nil))
+[Tb640] [API] exit(0)
+  ]
+}

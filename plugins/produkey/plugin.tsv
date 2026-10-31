@@ -1,0 +1,16 @@
+name	produkey
+arch	x64
+desc	NirSoft ProduKey x64 (SWEEP-091 NEW program - reads Windows/Office product keys from the registry)
+source_url	https://www.nirsoft.net/utils/produkey-x64.zip
+source_sha256	e4604e0ee680370448c6a832856dff4a0255ca763672825a7a67a2a4662b9909
+artifact	artifacts/sweep50/dl/produkey/produkey-x64.zip
+unpack	zip
+exe	ProduKey.exe
+args
+runs	3
+timeout	75
+keys	37,38,39,40,13
+mouse	150,150
+known	NEW
+note	registry-heavy GUI (Enumerate HKLM\\...\\DigitalProductId); unpacked exe sha 6cf9dbed273e35c0; synergy with SW-1418/1419 registry train
+guest	produkey

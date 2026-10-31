@@ -1,7 +1,0 @@
-[TRACE] Command line: mw_reg_test.exe
-[WARN]   unresolved: lstrcmpW
-[WARN] 1 imports unresolved
-[STUB] unresolved import called -> returning 0 (call #1) guest_rip=0x140001340
-[STUB] unresolved import called -> returning 0 (call #2) guest_rip=0x140001430
-[MessageBoxA] mw_reg_test: REG-TEST pass=19 fail=0
-[MessageBox] dialog #1 rendered -> miniwin-results/mw_reg_test.exe/screenshots/messagebox_1.bmp

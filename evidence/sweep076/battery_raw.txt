@@ -1,0 +1,24 @@
+R3	run1	rc=0	frames=0	crash=0	fatal=0		LastActivityView	gui
+R3	run2	rc=0	frames=0	crash=0	fatal=0		LastActivityView	gui
+R3	run3	rc=0	frames=0	crash=0	fatal=0		LastActivityView	gui
+U03	run1	rc=0	frames=0	crash=0	fatal=0		Notepad3	gui
+U03	run2	rc=0	frames=0	crash=0	fatal=0		Notepad3	gui
+U03	run3	rc=0	frames=0	crash=0	fatal=0		Notepad3	gui
+U04	run1	rc=0	frames=0	crash=0	fatal=0		Notepad3	gui
+U04	run2	rc=0	frames=0	crash=0	fatal=0		Notepad3	gui
+U04	run3	rc=0	frames=0	crash=0	fatal=0		Notepad3	gui
+U07	run1	rc=0	frames=0	crash=0	fatal=0		AutoHotkeyU32	cli
+U07	run2	rc=0	frames=0	crash=0	fatal=0		AutoHotkeyU32	cli
+U07	run3	rc=0	frames=0	crash=0	fatal=0		AutoHotkeyU32	cli
+U16	run1	rc=0	frames=0	crash=0	fatal=0		zoomit	gui
+U16	run2	rc=0	frames=0	crash=0	fatal=0		zoomit	gui
+U16	run3	rc=0	frames=0	crash=0	fatal=0		zoomit	gui
+U18	run1	rc=139	frames=0	crash=1	fatal=0	steps=1283963	RegScanner	gui
+U18	run2	rc=139	frames=0	crash=1	fatal=0	steps=1283963	RegScanner	gui
+U18	run3	rc=139	frames=0	crash=1	fatal=0	steps=1283963	RegScanner	gui
+U25	run1	rc=124	frames=0	crash=0	fatal=0		tcpview64	gui
+U25	run2	rc=124	frames=0	crash=0	fatal=0		tcpview64	gui
+U25	run3	rc=124	frames=0	crash=0	fatal=0		tcpview64	gui
+U27	run1	rc=139	frames=0	crash=1	fatal=0		winlister	gui
+U27	run2	rc=139	frames=0	crash=1	fatal=0		winlister	gui
+U27	run3	rc=139	frames=0	crash=1	fatal=0		winlister	gui

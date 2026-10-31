@@ -1,0 +1,12 @@
+id	tool	url	sha256	status	note
+U21	ShellMenuView x64	https://www.nirsoft.net/utils/shmnview.zip	bd8d233e44155100677f855b61b867b596d2006bd65b4553da6ca5e38f70d483	LAND	zip 50917B -> shmnview.exe PE32 48848B; the shmnview.zip name is the correct one (shellmenuview.zip/shmenuview-x64.zip 404)
+U15	FreeCommander XE portable	https://freecommander.com/downloads/FreeCommanderXE-32-public_portable.zip	4fe89e30e791f3e3cb1f77eedc2fe72ea3143003b92ef95cd385144498f32bef	LAND	24074106B zip (server throttled ~10KB/s; resumed); FreeCommander.exe PE32 28301936B
+P01-P20	sgtatham puzzles x20	https://www.chiark.greenend.org.uk/~sgtatham/puzzles/*.exe	(sweep074 targets.tsv)	REFETCH+MATCH	20/20 re-downloaded after sandbox artifact loss; every sha256 byte-matched the recorded manifest
+U01/U02	Explorer++	download.explorerplusplus.com/stable/1.5.0.2411/*	BLOCKED_DOWNLOAD	404 (version path); GitHub release assets not attempted this window
+U05/U06	SciTE	https://www.scintilla.org/scite.zip		BLOCKED_DOWNLOAD	http=000 (conn refused, repeat of sweep078)
+U09	KeePass 2.58	https://keepass.info/releases/file/2.58/KeePass-2.58.zip		BLOCKED_DOWNLOAD	200 but HTML redirect page, not a zip (repeat)
+U10	WinSCP	https://winscp.net/download/WinSCP-6.3.6-Portable.zip		BLOCKED_DOWNLOAD	200 but HTML download page, not the file
+U11	HxD	https://mh-nexus.de/downloads/HxDSetupEN.zip		BLOCKED_DOWNLOAD	http=000
+U12	Resource Hacker	https://www.angusj.com/resourcehacker/resource_hacker.zip		BLOCKED_DOWNLOAD	http=409
+U13	Ditto	https://github.com/sabre1035/Ditto/releases/download/v3.24.244.0/Ditto.Setup.64bit.zip		BLOCKED_DOWNLOAD	404 (asset name)
+U14	FastCopy	https://fastcopy.jp/archive/FastCopy64_5.9.13.zip		BLOCKED_DOWNLOAD	404 (version path)

@@ -1,0 +1,60 @@
+[TRACE] Command line: /home/z/my-project/workspace/miniwin-engineering/artifacts/sweep50/dl/winrar/WinRAR.exe
+[WARN] 8 imports unresolved
+
+[CRASH] Signal 11 at RIP=0x7f5fa9369fe2
+  RAX=0x2010d30 RCX=0x21051d8 RDX=0x0 R8=0x7ffcd66c8a30 R9=0x0
+  RSP=0x7ffcd66c8910 RBP=0xfffffffffffffef0
+  g_image_base=0x140000000 g_image_size=0x378000
+  (NOT inside loaded PE)
+  [RIP-MAP] 0x7f5fa9369fe2 in 0x7f5fa92ef000-0x7f5fa9452000 r-xp /usr/lib/x86_64-linux-gnu/libc.so.6
+  Bytes: 48 8b 47 f8 64 45 8b 2c 24 a8 02 0f 85 ed 00 00 
+  RSI=0x0 RDI=0xffffffffffffff00
+  R8=0x7ffcd66c8a30  R9=0x0 R10=0x4 R11=0x7f5fa936a310
+  R12=0xfffffffffffffb98 R13=0x7 R14=0x7ffcd66c9380 R15=0x7ffcd66c9180
+  [SCAN rsp+152] 0x14024abd0 <PE>
+  [SCAN rsp+200] 0x1400f4b8c <PE>
+  [SCAN rsp+216] 0x1400dda11 <PE>
+  [SCAN rsp+240] 0x14024abd0 <PE>
+  [SCAN rsp+264] 0x14012957c <PE>
+  [SCAN rsp+360] 0x14024abd0 <PE>
+  [SCAN rsp+680] 0x140127cd1 <PE>
+  [SCAN rsp+688] 0x140298728 <PE>
+  [SCAN rsp+696] 0x14024abd0 <PE>
+  [SCAN rsp+728] 0x14012985d <PE>
+  [SCAN rsp+768] 0x14024abd0 <PE>
+  [SCAN rsp+776] 0x140128fc3 <PE>
+  [SCAN rsp+968] 0x14012b1be <PE>
+  [SCAN rsp+1000] 0x1400041b9 <PE>
+  [SCAN rsp+1064] 0x140174fd8 <PE>
+  [SCAN rsp+1088] 0x14024ec90 <PE>
+  [SCAN rsp+1176] 0x140114b7d <PE>
+  [SCAN rsp+1192] 0x1401d86ca <PE>
+  [SCAN rsp+1256] 0x1401f2268 <PE>
+  [SCAN rsp+1272] 0x1400e53c6 <PE>
+  [SCAN rsp+1288] 0x14024ec90 <PE>
+  [SCAN rsp+1312] 0x14024ec90 <PE>
+  [SCAN rsp+1320] 0x1400c7988 <PE>
+  [SCAN rsp+1328] 0x140298fb8 <PE>
+  [SCAN rsp+1336] 0x1401f0000 <PE>
+  [SCAN rsp+1360] 0x1401f2268 <PE>
+  [SCAN rsp+1368] 0x140003c60 <PE>
+  [SCAN rsp+1376] 0x14024ec90 <PE>
+  [SCAN rsp+1384] 0x1401f20d8 <PE>
+  [SCAN rsp+1408] 0x1401f22b0 <PE>
+  [SCAN rsp+1416] 0x1401d8dad <PE>
+  [SCAN rsp+1448] 0x1401f22b8 <PE>
+  [SCAN rsp+1464] 0x1401c6aa8 <PE>
+  [SCAN rsp+1480] 0x1401c6ba9 <PE>
+  [SCAN rsp+1528] 0x2008149 <LOADER>
+  [SCAN rsp+1568] 0x200bc60 <LOADER>
+  [SCAN rsp+1784] 0x2000020 <LOADER>
+  [SCAN rsp+1896] 0x200280c <LOADER>
+  [SCAN rsp+1904] 0x20021c0 <LOADER>
+  [SCAN rsp+3352] 0x2006550 <LOADER>
+  [SCAN rsp+3504] 0x2006550 <LOADER>
+  [SCAN rsp+3544] 0x2008ae0 <LOADER>
+  [SCAN rsp+3576] 0x2008b01 <LOADER>
+  [SCAN rsp+4064] 0x2000040 <LOADER>
+  Backtrace (via stack walking):
+    [0] RIP=0x7f5fa9369fe2 (outside PE, possible shared lib)
+    [1] RIP=0x7f5fa9369fe2 (outside PE, possible shared lib)

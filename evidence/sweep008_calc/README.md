@@ -1,7 +1,6 @@
 # SWEEP-015 — SW-801f acceptance: MiniWinCalc (simple GUI calculator)
 
-User mandate: «حداقل یک برنامه گرافیکی ساده ماشین حساب یا برنامه دیگه رو
-هم تست بکن» — a real Win32 GUI calculator as PE x64 (zig cc, machine
+User mandate: (test at least one simple graphical calculator or another program) — a real Win32 GUI calculator as PE x64 (zig cc, machine
 0x8664), run under the loader's event pump with a scripted key sequence.
 
 ## What this proves
