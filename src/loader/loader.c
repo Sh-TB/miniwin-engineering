@@ -11502,11 +11502,41 @@ __attribute__((ms_abi)) uint32_t mw_GetFileAttributesW(const wchar_t* name) {
     }
     return a;
 }
+static uint64_t ft_from_time_t(uint64_t t); /* Wagon 20 fwd: defined ~line 11921 */
 __attribute__((ms_abi)) uint32_t mw_GetFileAttributesExW(const wchar_t* name, int cls, void* info) {
-    if (cls != 0) return 0;
+    /* Wagon 20 (2026-10-31): fill the FULL 36-byte WIN32_FILE_ATTRIBUTE_DATA,
+     * not just the attributes DWORD. The old body wrote *(uint32_t*)info and
+     * left the three FILETIMEs and nFileSizeHigh/Low untouched, so a
+     * zero-initialized guest struct observed size 0 for every file.
+     * Notepad++ 8.8.2 Parameters.cpp (langs.xml init) does exactly that:
+     *   GetFileAttributesEx(langs.xml) -> nFileSizeLow==0 -> "Load langs.xml
+     *   failed! Do you want to recover your langs.xml?" even though the file
+     *   is 535 KB. Wine kernelbase/file.c GetFileAttributesExW fills attr +
+     *   ftCreationTime + ftLastAccessTime + ftLastWriteTime + nFileSize{High,
+     *   Low} from the same stat data GetFileAttributesW uses.
+     * Layout (x64, 36 bytes): +0 attr u32, +4/+12/+20 FILETIME u64,
+     * +28 nFileSizeHigh u32, +32 nFileSizeLow u32 — the WIN32_FIND_DATAW
+     * head without the name fields. */
+    if (cls != 0) { mw_SetLastError(87); return 0; } /* GET_FILEEX_INFO_LEVELS error class */
+    if (!name || !info) { mw_SetLastError(87); return 0; }
     uint32_t a = mw_GetFileAttributesW(name);
     if (a == 0xFFFFFFFFu) return 0;
-    if (info) *(uint32_t*)info = a;
+    char n8[4096];
+    if (w3_w16_to_utf8z((const uint16_t*)name, n8, sizeof(n8)) < 0) { mw_SetLastError(87); return 0; }
+    n8[sizeof(n8) - 1] = '\0';
+    w3_normalize_path(n8);
+    struct stat st;
+    if (stat(n8, &st) != 0) { mw_SetLastError(2); return 0; }
+    uint8_t* p = (uint8_t*)info;
+    memset(p, 0, 36);
+    *(uint32_t*)(p + 0) = a;
+    *(uint64_t*)(p + 4)  = ft_from_time_t((uint64_t)st.st_ctime);
+    *(uint64_t*)(p + 12) = ft_from_time_t((uint64_t)st.st_atime);
+    *(uint64_t*)(p + 20) = ft_from_time_t((uint64_t)st.st_mtime);
+    uint64_t sz = S_ISDIR(st.st_mode) ? 0 : (uint64_t)st.st_size;
+    *(uint32_t*)(p + 28) = (uint32_t)(sz >> 32);
+    *(uint32_t*)(p + 32) = (uint32_t)sz;
+    MW_TRACE("GetFileAttributesExW(%s) -> attr=0x%08x size=%llu", n8, a, (unsigned long long)sz);
     return 1;
 }
 __attribute__((ms_abi)) int mw_SetFileAttributesW(const wchar_t* name, uint32_t attr) {
@@ -23338,6 +23368,8 @@ __attribute__((ms_abi)) void* mw_LoadCursorW(void* h, const uint16_t* name) {
 static void* mw_icon_from_group(void* hinst, const void* name, int want_cx, int want_cy);
 static void* mw_icon_from_resource(const uint8_t* dib, uint32_t size, const char* tag);
 static void* mw_icon_stock(uint32_t oic); /* SW-1544: OIC_* built-ins */
+static uint8_t* mw_png_decode(const uint8_t* data, uint32_t size, uint32_t* ow,
+                              uint32_t* oh); /* forward: PNG-compressed RT_ICON members */
 /* SW-1544: LoadIcon(NULL, IDI_*) / LoadImage(NULL, OIC_*) must return a real
  * stock icon (wine user32/icon.c maps IDI_*->OIC_* built-ins; a NULL here
  * sends MFC/CRT guests down their failure paths). IDs: 32512 IDI_APPLICATION
@@ -26881,6 +26913,52 @@ static void* mw_icon_from_resource(const uint8_t* dib, uint32_t size, const char
     if (!dib || size < 16 || mw_IsBadReadPtr(dib, 64)) goto miss;
     {
     uint32_t hdr_size = *(const uint32_t*)(const void*)dib;
+    /* Wagon 18 (2026-10-31): Vista+ PNG-compressed RT_ICON members.
+     * Wine dlls/user32/cursoricon.c create_icon_frame(): when
+     * bmi->bmiHeader.biSize == PNG_SIGN (0x474e5089) the blob is a PNG
+     * image, not a DIB — load_png() converts it to a standard
+     * BITMAPINFOHEADER DIB (biHeight = 2*h packing XOR+AND, rows written
+     * bottom-up, 24bpp gets a zeroed AND mask) and re-enters the normal
+     * DIB path. Notepad++ ships most toolbar icons (RT_GROUP_ICON
+     * 1530/1531/1533/1534/1535 and group 100 entry #4) as PNG-compressed
+     * members; without this branch the groups decode as NULL and
+     * iconList::addIcon aborts with "LoadIcon() function returns -1". */
+    if (hdr_size == 0x474e5089u /* "PNG." little-endian == PNG_SIGN */) {
+        uint32_t pw = 0, ph = 0;
+        uint8_t* rgba = mw_png_decode(dib, size, &pw, &ph);
+        if (!rgba) {
+            MW_TRACE("[ICON] %s PNG member decode failed (size=%u)", tag, size);
+            goto miss;
+        }
+        size_t fxstride = (((size_t)pw * 32u + 31u) / 32u) * 4u;
+        uint8_t* fake = (uint8_t*)malloc(40u + fxstride * ph);
+        if (!fake) { free(rgba); return 0; }
+        *(uint32_t*)(fake + 0) = 40;                    /* biSize */
+        *(int32_t*)(fake + 4) = (int32_t)pw;            /* biWidth */
+        *(int32_t*)(fake + 8) = (int32_t)ph * 2;        /* biHeight: XOR+AND */
+        *(uint16_t*)(fake + 12) = 1;                    /* biPlanes */
+        *(uint16_t*)(fake + 14) = 32;                   /* biBitCount */
+        *(uint32_t*)(fake + 16) = 0;                    /* BI_RGB */
+        *(uint32_t*)(fake + 20) = (uint32_t)(fxstride * ph);
+        *(uint32_t*)(fake + 32) = 0;                    /* biClrUsed */
+        for (uint32_t y = 0; y < ph; y++) {
+            const uint8_t* src = rgba + (size_t)y * pw * 4;            /* top-down RGBA */
+            uint8_t* dst = fake + 40 + (size_t)(ph - 1u - y) * fxstride; /* bottom-up BGRA */
+            for (uint32_t x = 0; x < pw; x++) {
+                dst[x * 4 + 0] = src[x * 4 + 2];
+                dst[x * 4 + 1] = src[x * 4 + 1];
+                dst[x * 4 + 2] = src[x * 4 + 0];
+                dst[x * 4 + 3] = src[x * 4 + 3];
+            }
+        }
+        free(rgba);
+        /* XOR plane only: the blob ends before any AND-mask area so the
+         * DIB path keeps the real 32bpp alpha (Wine: 32bpp PNG keeps
+         * alpha, mask stays unused). */
+        void* hpng = mw_icon_from_resource(fake, (uint32_t)(40u + fxstride * ph), tag);
+        free(fake);
+        return hpng;
+    }
     int32_t w, h2; uint16_t bpp; uint32_t comp = 0, clr_used = 0; int core_pal = 0;
     if (hdr_size == 12) {
         w = *(const uint16_t*)(const void*)(dib + 4);
