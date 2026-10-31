@@ -13961,7 +13961,7 @@ static void mw_dialog_write_bmp(const char* title, const char* text, uint32_t ty
     mwb_fill(&b, 0, H - 1, W, 1, MW_BORDER_RGB); mwb_fill(&b, W - 1, 0, 1, H, MW_BORDER_RGB);
     /* accent caption: title + modern close glyph */
     mwb_fill(&b, 1, 1, W - 2, cap_h, MW_ACCENT_RGB);
-    mwb_text8(&b, 10, 9, title ? title : "", white, 1);
+    mwb_text8(&b, 10, 9, title ? title : "", white, 2);
     mwb_fill(&b, W - 30, 1, 29, cap_h - 1, MW_ACCENT_RGB); /* hover zone = accent */
     for (int t = 0; t < 9; t++) {                /* thin modern X */
         mwb_fill(&b, W - 22 + t, 12 + t, 1, 1, white);
@@ -14483,6 +14483,9 @@ static MWBmp* mw_chrome_composite(MWBmp* client) {
     if (ic) mw_icon_paint(out, 8, 1 + (cap - 16) / 2, 16, 16, ic);
     char t8[256]; t8[0] = 0;
     w3_w16_to_utf8z(g_maintitle, t8, sizeof(t8));
+    /* SWEEP-032: Win10 caption text ≈ 15px — render at glyph scale 2 */
+    int title_scale = 2;
+    if (mwb_textw(t8, title_scale) > W - 130) title_scale = 1;
     if (!t8[0]) {
         /* SWEEP-033: guests that title themselves later (SetWindowText after
          * init) — fall back to the guest's own VERSIONINFO ProductName /
@@ -14515,7 +14518,7 @@ static MWBmp* mw_chrome_composite(MWBmp* client) {
             if (t8[0]) MW_TRACE("[CHROME] title from VERSIONINFO: '%s'", t8);
         }
     }
-    mwb_text8(out, 30, 1 + (cap - 8) / 2, t8, 0xFFFFFF, 1);
+    mwb_text8(out, 30, 1 + (cap - 8 * title_scale) / 2, t8, 0xFFFFFF, title_scale);
     /* caption buttons: min/max glyphs + close (only when there is room) */
     if (W >= 240) {
         int cbx = W - 100;
