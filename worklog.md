@@ -804,3 +804,50 @@ Stage Summary:
 - Next wagons: toolbar icon rasters into the band via the ImageList pixel
   path; TB message-id probe for the exact button-array carrier; JPEG/BMP
   stream codecs; GdipCreateBitmapFromFile -> PNG.
+
+---
+Task ID: SWEEP-112
+Agent: main (z.ai)
+Task: «ادامه قطار ۱۰» — continue the train on internet Wine sources: SW-1563 IDM payload frontier + corpus arity cure
+
+Work Log:
+- Sandbox recycle reality check: workspace had rolled back to SWEEP-030 (242af84);
+  rebuilt the P7-P12 class locally (IMalloc/LoadLibraryExA/CharLowerW/LoadStringW/
+  icon pipeline/CW_USEDEFAULT/dialog walkers), re-verified (G1 12/12 sha 2939ab98,
+  WinRAR exit=0, 13/13 strings, 2 RT_ICON decodes) — then reconciled with origin:
+  origin/main a6acc60 already carried TRAIN-10 (SWEEP-031, 48 numbered fixes) +
+  SWEEP-108..111r2 evolution; local re-derivations discarded, main fast-forwarded
+  to the canonical merge (no force-push anywhere).
+- SW-1563 ROOT CAUSE (issue #25, binary after a6acc60): the extracted IDM GUI
+  payload IDM5.tmp (6,490,992B PE32) died rc=9 via guest UEF TerminateProcess
+  (0xC0000409) with the trace tail showing 94 stdcall APIs at "arity unknown ->
+  under-pop 0" — stdcall callee-pops contract violated per call; frame drift ->
+  guest /GS cookie -> its own fail-fast (SW-1560 class, engine-wide). Plus 28
+  A-variant imports stubbed (only W names registered).
+- FIX: 98 arities (SDK x86 stack bytes) + 27 real A variants per Wine
+  (A = widen-then-W): file family (CopyFileA/CreateDirectoryA/MoveFileA/
+  RemoveDirectoryA), volume/mutex/console, EnumResourceLanguagesA/FindResourceExA/
+  ConvertDefaultLocale, atom family (host 4-byte wchar_t caveat documented),
+  RegQueryValueA, USER32 prop/class/dialog/draw family (GetPropA/RemovePropA/
+  SetPropA/SetClassLongA/GetClassInfoA/CloseWindow/CopyAcceleratorTableA/
+  CreateDialogIndirectParamA/DrawStateA/GrayStringA), CopyMetaFileA,
+  GetFileTitleA (real basename-minus-extension), shlwapi real trio
+  (PathFindExtensionA/PathIsUNCA/PathStripToRootA); round-2 arities
+  (ChangeClipboardChain/GetCharWidthA/SHGetFolderPathA/SetClassLongA).
+- MEASURED (G1 PIN 12/12, 20261031_094535): IDM5.tmp rc=9 -> rc=0
+  (cpu32_run rc=0 steps=416,607, 0 unresolved / 0 unknown arities, was 28/94;
+  evidence/sweep112/idm5_payload_trace.json); corpus x3 ALL exit-0 except
+  pageant ALIVE_PUMP: putty 139->0, rammap64 139->0, procexp64 139->0,
+  winmergeu 133->0, zoomit64 1->0; zero unresolved 45/45 rows; idman battery
+  rc=0 x3 crash=0 (parent 289M-step run incl. extraction + child spawn);
+  winrar SFX EXIT rc=0 held. Evidence: evidence/sweep112/; issue evidence
+  posted in ENGLISH on #25 + #22 (scripts/sweep112_issues.py, house
+  token-from-remote pattern); commits 44d312f + d25dcb3 PUSHED.
+
+Stage Summary:
+- First round where a single 32-bit-plane fix closed SIX named frontiers at once
+  (SW-1563 + putty/rammap/procexp/winmergeu/zoomit corpus cures).
+- Remaining named frontiers: SW-1562 WinRAR toolbar chain-fields decode,
+  modal pump for dialog-driven flows (WinRAR nag dialog lives inside
+  WM_INITDIALOG), NPP guest C++ EH resume CONTEXT (SW-1201 class).
+- Next wagons: SW-1562 decode, modal pump design, NPP EH.
