@@ -18855,6 +18855,41 @@ static int mw_commonctl_msg(int s, uint32_t msg, uintptr_t wp, long long lp, lon
             }
             return 1;
         }
+        /* ICON-TRAIN wagon 14 (ported): LVM_SETITEMTEXTW/A — WinRAR fills its
+         * file pane with SendMessage(hList, LVM_SETITEMTEXTW, i, &lvi) per row
+         * and only advances when the control answers TRUE; the missing case
+         * returned 0 forever and the fill loop spun (msg=0x1074). Same LVITEM
+         * layout as LVM_SETITEM: iItem@+4, iSubItem@+8, pszText@+24. */
+        case 0x1074u: { /* LVM_SETITEMTEXTW */
+            *out = 0;
+            if (!lp) return 1;
+            uint32_t iitem = (uint32_t)wp;
+            int sub = *(int*)((uint8_t*)lp + 8);
+            if (iitem < lv->items && sub >= 0 && sub < MW_LV_MAXSUB) {
+                mw_lv_store_text(lv->txt[iitem][sub],
+                                 *(const uint16_t* const*)((uint8_t*)lp + 24));
+                *out = 1;
+            }
+            return 1;
+        }
+        case 0x1075u: { /* LVM_SETITEMTEXTA (ANSI source text) */
+            *out = 0;
+            if (!lp) return 1;
+            uint32_t iitem = (uint32_t)wp;
+            int sub = *(int*)((uint8_t*)lp + 8);
+            char* src = *(char**)((uint8_t*)lp + 24);
+            if (iitem < lv->items && sub >= 0 && sub < MW_LV_MAXSUB && src) {
+                char tmp[256] = {0};
+                if (mw_probe_copy(src, 255, tmp)) {
+                    for (int k = 0; k < MW_LV_TEXTN && k < 256; k++) {
+                        if (!tmp[k]) break;
+                        lv->txt[iitem][sub][k] = (uint16_t)(uint8_t)tmp[k];
+                    }
+                    *out = 1;
+                }
+            }
+            return 1;
+        }
         /* ---- SWEEP-022 SW-926..930: ListView final ----
          * BUG-074 FIX: 0x1008 is LVM_DELETEITEM and 0x1009 is
          * LVM_DELETEALLITEMS (wine commctrl.h LVM_FIRST+8/+9); SWEEP-021
@@ -20976,6 +21011,7 @@ __attribute__((ms_abi)) long long mw_DispatchMessageW(const void* msg) {
 __attribute__((ms_abi)) long long mw_DispatchMessageA(const void* msg) {
     return mw_gui_dispatch_msg(msg); /* SWEEP-005: calls guest wndproc */
 }
+static void mw_nc_paint_frame(void); /* ICON-TRAIN wagon 8 (defined near EndPaint) */
 __attribute__((ms_abi)) long long mw_DefWindowProcW(void* hwnd, uint32_t msg,
         uintptr_t wp, long long lp) {
     (void)hwnd; (void)wp; (void)lp;
@@ -20984,14 +21020,22 @@ __attribute__((ms_abi)) long long mw_DefWindowProcW(void* hwnd, uint32_t msg,
      * forwards it (Scintilla does) saw 0 = FALSE -> CreateWindowEx cancelled
      * the creation that real Windows completes. */
     if (msg == 0x81u) return 1;  /* WM_NCCREATE -> TRUE */
+    /* ICON-TRAIN wagon 8 (ported): non-client defaults (Wine user32/nonclient.c
+     * NC_HandleNCPaint / NC_HandleNCCalcSize / WM_NCACTIVATE). */
+    if (msg == 0x85u) { mw_nc_paint_frame(); return 0; }       /* WM_NCPAINT */
+    if (msg == 0x86u) return 1;                                 /* WM_NCACTIVATE */
+    if (msg == 0x84u) return 0;                                 /* WM_NCCALCSIZE: client == window */
+    if (msg == 0x80u) {                                         /* WM_SETICON */
+        if (wp == 1) g_wicon_big = (void*)lp; else g_wicon_small = (void*)lp;
+        MW_TRACE("DefWindowProc(WM_SETICON type=%zu) -> stored", (size_t)wp);
+        return 0;
+    }
     return 0;
 }
 __attribute__((ms_abi)) long long mw_DefWindowProcA(void* hwnd, uint32_t msg,
         uintptr_t wp, long long lp) {
-    (void)hwnd; (void)wp; (void)lp;
     /* SW-1335b: A path mirrors the W path (WM_NCCREATE -> TRUE). */
-    if (msg == 0x81u) return 1;
-    return 0;
+    return mw_DefWindowProcW(hwnd, msg, wp, lp);
 }
 __attribute__((ms_abi)) void mw_PostQuitMessage(int code) {
     mw_gui_set_quit(code); /* SWEEP-005: pump honors this on next GetMessage */
@@ -22092,8 +22136,15 @@ static void mw_gui_send_size_sync(int w, int h, const char* tag) {
  * event pump so the v1 no-pump contract is unchanged. */
 static long long mw_gui_send_create(void) {
     /* SW-1513: window #1's create-seq goes through window #1's OWN class
-     * proc (g_main_class_proc snapshot), not the last-registered channel. */
-    MW_WNDPROC dp = mw_gui_events_enabled() ? mw_window_proc(MW_GUI_HWND) : NULL;
+     * proc (g_main_class_proc snapshot), not the last-registered channel.
+     * ICON-TRAIN wagon 16 (ported): the mw_gui_events_enabled() gate starved
+     * headless guests of WM_NCCREATE/WM_CREATE entirely — Notepad++'s window
+     * object never initialized and its first member call dereferenced
+     * this=NULL ([rcx+0x28], RVA 0x6fd34). Real Win32 sends the create
+     * sequence SYNCHRONOUSLY inside CreateWindowEx, unconditionally. The
+     * scripted key/click channel is loaded only when MW_GUI_EVENTS is set,
+     * so removing this gate cannot inject input in headless batch. */
+    MW_WNDPROC dp = mw_window_proc(MW_GUI_HWND);
     if (dp) {
         /* SW-802..806: real Win32 passes &CREATESTRUCT in lParam. Fields at
          * the offsets guests actually deref: +0x00 lpCreateParams (must be
@@ -22565,6 +22616,16 @@ static int mw_gui_next_event(void* msg, void* hwnd, int consume, const char* api
 
 static int mw_gui_pump_getmsg(void* msg, void* hwnd, const char* api) {
     if (!mw_gui_events_enabled()) {
+        /* ICON-TRAIN wagon 10 (exception): a REAL pending paint
+         * (InvalidateRect/UpdateWindow already ran) must be delivered even in
+         * headless batch — WinRAR's pump only wakes on messages, and its
+         * first paint is already pending when the loop starts. Programs that
+         * never invalidate keep the instant-quit batch contract below
+         * (SWEEP-035: 10 corpus programs, regression-tested 3x). */
+        if (g_paint_pending && !g_quit_flag && g_delivered < g_budget) {
+            int r = mw_gui_next_event(msg, hwnd, 1, api);
+            if (r) return r;
+        }
         /* SWEEP-035 (SW-1203/1204 chain): real GetMessageW BLOCKS until a
          * message arrives — it never fabricates WM_QUIT. Two contracts:
          *  - MAIN thread + MW_GUI_EVENTS=0 (headless batch): the pump is
@@ -23036,6 +23097,88 @@ static void mw_surface_dump(const char* kind) {
     }
     if (fr.px != g_surf.px) free(fr.px);
 }
+
+/* ============================================================
+ * ICON-TRAIN wagon 8 (ported to the SWEEP-112b line): non-client frame.
+ * Wine reference: dlls/user32/nonclient.c NC_HandleNCPaint draws the frame
+ * with GetSystemMetrics(SM_CXSIZEFRAME/SM_CYCAPTION) and COLOR_ACTIVECAPTION;
+ * dlls/winex11.drv/window.c tracks the NC rectangle per window. The engine
+ * owns the whole window surface (no window manager), so the frame is painted
+ * into the framebuffer edge ON TOP of the client area before every EndPaint
+ * dump — the guest's GetClientRect stays the full surface (WM_NCCALCSIZE
+ * reports no NC reservation, matching the engine's client==window model),
+ * while the visible frame gives the window its کادر (border + caption +
+ * title + min/max/close + caption icon from the SW-1540 icon plane).
+ * ============================================================ */
+/* icon storage reuses the SW-1542 g_wicon_big/g_wicon_small pair (set via
+ * SendMessageW(WM_SETICON) and DefWindowProc(WM_SETICON)); no new globals. */
+#define MW_NC_FRAME  3   /* SM_CXSIZEFRAME model */
+#define MW_NC_CAP_H  20  /* caption strip height inside the top frame */
+static void mw_nc_paint_frame(void) {
+    if (!g_surf.px || g_surf.w < 2 * MW_NC_FRAME + 8 || g_surf.h < MW_NC_FRAME + MW_NC_CAP_H + 8) return;
+    int W = g_surf.w, H = g_surf.h;
+    uint32_t face = 0xC0C0C0, light = 0xFFFFFF, dark = 0x808080, darkest = 0x404040;
+    uint32_t cap = 0x000080; /* COLOR_ACTIVECAPTION (Win classic) */
+    for (int i = 0; i < MW_NC_FRAME; i++) {
+        int t = MW_NC_FRAME - 1 - i;
+        mwb_fill(&g_surf, t, t, W - 2 * t, 1, (i == 0) ? light : face);
+        mwb_fill(&g_surf, t, H - 1 - t, W - 2 * t, 1, darkest);
+        mwb_fill(&g_surf, t, t, 1, H - 2 * t, (i == 0) ? light : face);
+        mwb_fill(&g_surf, W - 1 - t, t, 1, H - 2 * t, darkest);
+    }
+    mwb_fill(&g_surf, 0, 0, W, 1, dark);
+    mwb_fill(&g_surf, 0, 0, 1, H, dark);
+    mwb_fill(&g_surf, 0, H - 1, W, 1, light);
+    mwb_fill(&g_surf, W - 1, 0, 1, H, light);
+    int cx0 = MW_NC_FRAME, cy0 = MW_NC_FRAME;
+    int cw = W - 2 * MW_NC_FRAME, ch = MW_NC_CAP_H;
+    mwb_fill(&g_surf, cx0, cy0, cw, ch, cap);
+    /* caption icon (small frame from the SW-1540 BGRA icon plane) */
+    MwIconSlot* io = mw_icon_lookup(g_wicon_small);
+    int text_x = cx0 + 4;
+    if (io && io->bgra) {
+        for (int y = 0; y < io->h && y < ch; y++)
+            for (int x = 0; x < io->w && x < 20; x++) {
+                const uint8_t* p = io->bgra + ((size_t)y * io->w + x) * 4;
+                if (!p[3]) continue; /* transparent */
+                uint32_t c = ((uint32_t)p[2] << 16) | ((uint32_t)p[1] << 8) | p[0];
+                int px = cx0 + 2 + x, py = cy0 + (ch - io->h) / 2 + y;
+                if (px >= 0 && py >= 0 && px < W && py < H) mwb_set(&g_surf, px, py, c);
+            }
+        text_x = cx0 + 2 + (io->w < 20 ? 20 : io->w) + 2;
+    }
+    /* caption text (guest title, UTF-16 -> ASCII) */
+    {
+        char t[64];
+        int n = 0;
+        for (; n < 63 && g_maintitle[n]; n++) t[n] = (char)(g_maintitle[n] & 0xFF);
+        t[n] = 0;
+        if (t[0]) mwb_text8(&g_surf, text_x, cy0 + (ch - 8) / 2, t, 0xFFFFFF, 1);
+    }
+    /* caption buttons: [_][□][X] at the right end */
+    int bx = cx0 + cw - 3;
+    for (int b = 0; b < 3; b++) {
+        int bx0 = bx - (3 - b) * 16;
+        if (bx0 <= text_x) break;
+        mwb_fill(&g_surf, bx0, cy0 + 3, 15, ch - 6, face);
+        mwb_fill(&g_surf, bx0, cy0 + 3, 15, 1, light);
+        mwb_fill(&g_surf, bx0, cy0 + 3, 1, ch - 6, light);
+        mwb_fill(&g_surf, bx0, cy0 + ch - 4, 15, 1, dark);
+        mwb_fill(&g_surf, bx0 + 14, cy0 + 3, 1, ch - 6, dark);
+        int mx = bx0 + 5, my = cy0 + (ch - 6) / 2 + 2;
+        if (b == 0) mwb_fill(&g_surf, mx, my, 5, 1, darkest);
+        else if (b == 1) { mwb_fill(&g_surf, mx, my - 2, 5, 1, darkest);
+                           mwb_fill(&g_surf, mx, my + 2, 5, 1, darkest);
+                           mwb_fill(&g_surf, mx, my - 2, 1, 5, darkest);
+                           mwb_fill(&g_surf, mx + 4, my - 2, 1, 5, darkest); }
+        else { for (int k = 0; k < 6; k++) {
+                   mwb_set(&g_surf, bx0 + 4 + k, cy0 + ch / 2 - 3 + k, darkest);
+                   mwb_set(&g_surf, bx0 + 9 - k, cy0 + ch / 2 - 3 + k, darkest);
+               } }
+    }
+    MW_TRACE("[NC] frame painted %dx%d (title %s, icon %p)", W, H,
+             g_maintitle[0] ? "set" : "(empty)", g_wicon_small);
+}
 /* SW-1291e (SWEEP-062): empty-paint-pair composition guard. Snapshot of the
  * surface taken at BeginPaint (pre-erase) + right after the erase; EndPaint
  * compares and restores the pre-erase image when the guest painted NOTHING
@@ -23083,6 +23226,7 @@ static int mw_paint_snap_recover_if_untouched(void) {
 __attribute__((ms_abi)) int mw_EndPaint(void* hwnd, const void* ps) {
     (void)hwnd; (void)ps;
     mw_paint_snap_recover_if_untouched(); /* SW-1291e */
+    mw_nc_paint_frame(); /* ICON-TRAIN wagon 8: frame over the client edge before dump */
     mw_surface_dump("EndPaint");
     return 1; /* TRUE */
 }
@@ -23257,14 +23401,33 @@ __attribute__((ms_abi)) int mw_KillTimer(void* hwnd, uintptr_t id) {
 }
 __attribute__((ms_abi)) int mw_PeekMessageA(void* msg, void* hwnd, uint32_t lo, uint32_t hi, uint32_t remove) {
     (void)lo; (void)hi;
-    if (!mw_gui_events_enabled() || g_quit_flag) return 0;
+    /* ICON-TRAIN wagon 10 (ported to the SWEEP-112b line): the events_enabled
+     * hard gate made every InvalidateRect paint pending permanently invisible
+     * to PeekMessage loops (WinRAR runs Peek, not GetMessage). Scripted
+     * key/click injection is loaded ONLY when MW_GUI_EVENTS is set
+     * (mw_gui_events_enabled init), so dropping the gate here cannot inject
+     * input in headless batch — it only unblocks paint/timer/posted
+     * delivery. Budget guard added: an always-true Peek loop must still
+     * terminate. */
+    if (g_quit_flag) return 0;
+    if (g_delivered >= g_budget) {
+        MW_TRACE("[GUI] event budget %d exhausted (PeekA) -> WM_QUIT", g_budget);
+        g_quit_flag = 1;
+        return 0;
+    }
     int r = mw_gui_next_event(msg, hwnd, (int)(remove & 1u), "PeekMessageA");
     if (!r) mw_pump_yield(); /* SWEEP-026 SW-1023: idle poll yields (MsgWait) */
     return r;
 }
 __attribute__((ms_abi)) int mw_PeekMessageW(void* msg, void* hwnd, uint32_t lo, uint32_t hi, uint32_t remove) {
     (void)lo; (void)hi;
-    if (!mw_gui_events_enabled() || g_quit_flag) return 0;
+    /* wagon 10: same un-gating as the A variant (see the rationale there). */
+    if (g_quit_flag) return 0;
+    if (g_delivered >= g_budget) {
+        MW_TRACE("[GUI] event budget %d exhausted (Peek) -> WM_QUIT", g_budget);
+        g_quit_flag = 1;
+        return 0;
+    }
     int r = mw_gui_next_event(msg, hwnd, (int)(remove & 1u), "PeekMessageW");
     if (!r) mw_pump_yield(); /* SWEEP-026 SW-1023 */
     return r;
