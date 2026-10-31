@@ -35241,6 +35241,13 @@ __attribute__((ms_abi)) int mw_GetClassInfoW(void* inst, const uint16_t* cls, vo
     }
     return 1;
 }
+__attribute__((ms_abi)) int mw_GetClassInfoA(void* inst, const char* cls, void* wc) {
+    /* SW-1563: mirror of GetClassInfoW (the class name is unused by the
+     * honest v1 struct answer; the guest struct size routing is the
+     * SW-1477 contract). */
+    (void)cls;
+    return mw_GetClassInfoW(inst, NULL, wc);
+}
 __attribute__((ms_abi)) void* mw_RealChildWindowFromPoint(void* h, void* pt) { (void)pt; return h; }
 __attribute__((ms_abi)) void* mw_ChildWindowFromPointEx(void* h, void* pt, uint32_t flags) {
     (void)pt; (void)flags; return h;
@@ -41403,6 +41410,216 @@ __attribute__((ms_abi)) int mw_DwmGetColorizationColor(unsigned int* color, int*
     return (int)0x80004005LL; /* E_FAIL: DWM off -> guest uses theme colors */
 }
 
+/* ---- SW-1563 (SWEEP-112, IDM 6.42 GUI payload IDM5.tmp): the 32-bit
+ * dispatch resolved 28 A-variant imports to stub thunks because only the W
+ * names were registered. Real Windows keeps A and W side by side
+ * (Wine dlls/kernel32/path.c implements A as widen-then-W). Everything
+ * here mirrors the W body; ANSI is widened with w3_utf8_to_utf16le. ---- */
+static uint16_t* sw1563_awiden(const char* s, uint16_t* buf, int cap) {
+    if (!s) return NULL;
+    int n = w3_utf8_to_utf16le(s, strlen(s), buf, cap - 1);
+    if (n < 0) n = 0;
+    buf[n] = 0;
+    return buf;
+}
+__attribute__((ms_abi)) int mw_CopyFileA(const char* src, const char* dst, int failIfExists) {
+    uint16_t w1[520], w2[520];
+    if (!sw1563_awiden(src, w1, 520) || !sw1563_awiden(dst, w2, 520)) return 0;
+    return mw_CopyFileW(w1, w2, failIfExists);
+}
+__attribute__((ms_abi)) int mw_CreateDirectoryA(const char* path, void* sa) {
+    (void)sa;
+    uint16_t w1[520];
+    if (!sw1563_awiden(path, w1, 520)) return 0;
+    return mw_CreateDirectoryW((const wchar_t*)w1, NULL);
+}
+__attribute__((ms_abi)) int mw_MoveFileA(const char* src, const char* dst) {
+    uint16_t w1[520], w2[520];
+    if (!sw1563_awiden(src, w1, 520) || !sw1563_awiden(dst, w2, 520)) return 0;
+    return mw_MoveFileW(w1, w2);
+}
+__attribute__((ms_abi)) int mw_RemoveDirectoryA(const char* path) {
+    uint16_t w1[520];
+    if (!sw1563_awiden(path, w1, 520)) return 0;
+    return mw_RemoveDirectoryW((const wchar_t*)w1);
+}
+__attribute__((ms_abi)) int mw_GetVolumeInformationA(const char* root, char* vol, uint32_t vcap,
+        uint32_t* serial, uint32_t* maxlen, uint32_t* fsflags, char* fs, uint32_t fcap) {
+    uint16_t wvol[64], wfs[64];
+    int ok = mw_GetVolumeInformationW(NULL, (wchar_t*)wvol, 64, serial, maxlen, fsflags, (wchar_t*)wfs, 64);
+    if (ok) {
+        if (vol && vcap) { int n = w3_utf16le_to_utf8(wvol, (int)mw_w16len(wvol), vol, (int)(vcap - 1)); vol[n < 0 ? 0 : n] = 0; }
+        if (fs && fcap)  { int n = w3_utf16le_to_utf8(wfs, (int)mw_w16len(wfs), fs, (int)(fcap - 1)); fs[n < 0 ? 0 : n] = 0; }
+    }
+    (void)root;
+    return ok;
+}
+__attribute__((ms_abi)) void* mw_OpenMutexA(uint32_t access, int inherit, const char* name) {
+    /* Wine kernel32/sync.c: OpenMutex on a name that was never created ->
+     * NULL + ERROR_FILE_NOT_FOUND. The engine has no cross-process named
+     * mutex namespace; the honest single-process answer is a fresh handle
+     * (CreateMutex semantics) so the guest's release/close paths work. */
+    (void)access; (void)inherit; (void)name;
+    MW_TRACE("OpenMutexA(name=%s) -> fresh handle (single-process model)", name ? name : "(null)");
+    return (void*)(uintptr_t)0x00049001u;
+}
+__attribute__((ms_abi)) int mw_WriteConsoleA(void* out, const void* buf, uint32_t n, uint32_t* written, void* resv) {
+    /* Wine: WriteConsoleA converts to wide and forwards. */
+    uint16_t w[4096];
+    uint32_t m = n > 4095 ? 4095 : n;
+    if (buf) for (uint32_t i = 0; i < m; i++) w[i] = (uint16_t)(uint8_t)((const char*)buf)[i];
+    w[m] = 0;
+    return mw_WriteConsoleW(out, w, n, written, resv);
+}
+__attribute__((ms_abi)) int mw_EnumResourceLanguagesA(void* hmod, const char* type, const char* name,
+        void* cb, long param) {
+    /* Mirror of the W variant's honest contract (TRAIN-10 #18-33): no
+     * language enumeration model -> 0 (FALSE), GetLastError untouched. */
+    (void)hmod; (void)type; (void)name; (void)cb; (void)param;
+    MW_TRACE("EnumResourceLanguagesA(type=%s) -> 0 (no language enum)", type ? type : "?");
+    return 0;
+}
+__attribute__((ms_abi)) void* mw_FindResourceExA(void* hmod, const char* type, const char* name, uint16_t lang) {
+    (void)lang;
+    return mw_FindResourceA(hmod, name, type);
+}
+__attribute__((ms_abi)) uint32_t mw_ConvertDefaultLocale(uint32_t lcid) {
+    /* Wine kernelbase/locale.c: replaces the DEFAULT sublanguage with the
+     * thread locale; non-default LCIDs pass through unchanged. */
+    if ((lcid & 0xFFFFu) == 0x0400u || lcid == 0u) return 0x0409u; /* -> en-US */
+    return lcid;
+}
+__attribute__((ms_abi)) uint32_t mw_GlobalFindAtomA(const char* str) {
+    /* NOTE: the engine atom table stores HOST wchar_t (4-byte) names
+     * (mw_atom_find uses wcscmp), so widen byte-per-unit, not to UTF-16. */
+    if (!str || !str[0]) return 0;
+    wchar_t w[256];
+    int n = 0;
+    for (; str[n] && n < 255; n++) w[n] = (wchar_t)(unsigned char)str[n];
+    w[n] = 0;
+    return mw_GlobalFindAtomW(w);
+}
+__attribute__((ms_abi)) uint32_t mw_GlobalGetAtomNameA(uint32_t atom, char* buf, int cap) {
+    if (!buf || cap <= 0) return 0;
+    wchar_t w[256];
+    uint32_t n = mw_GlobalGetAtomNameW((uint16_t)atom, w, 256);
+    if (!n) return 0;
+    int got = 0;
+    for (; got < (int)n && got < cap - 1; got++)
+        buf[got] = (char)(w[got] & 0xFF); /* ANSI truncation is the A contract */
+    buf[got] = 0;
+    return (uint32_t)got;
+}
+__attribute__((ms_abi)) int mw_CloseWindow(void* hwnd) {
+    /* Win32: CloseWindow minimizes (does NOT destroy); headless = accepted */
+    (void)hwnd;
+    MW_TRACE("CloseWindow -> TRUE");
+    return 1;
+}
+__attribute__((ms_abi)) int mw_CopyAcceleratorTableA(void* accel, void* dst, int count) {
+    (void)accel; (void)dst;
+    return count > 0 ? count : 0; /* Wine: returns entries copied; none modeled */
+}
+__attribute__((ms_abi)) void* mw_DrawStateA(void* dc, void* fore, void* back, void* cb, long data,
+        int x, int y, int cx, int cy, uint32_t flags) {
+    /* honest: report success without pixels (frame composer handles visuals) */
+    (void)dc; (void)fore; (void)back; (void)cb; (void)data; (void)x; (void)y; (void)cx; (void)cy; (void)flags;
+    return (void*)(uintptr_t)1;
+}
+__attribute__((ms_abi)) void* mw_SetPropA(void* hwnd, const char* name, void* val) {
+    uint16_t w[128];
+    if (!sw1563_awiden(name, w, 128)) return NULL;
+    return (void*)(uintptr_t)mw_SetPropW(hwnd, w, val);
+}
+__attribute__((ms_abi)) void* mw_GetPropA(void* hwnd, const char* name) {
+    uint16_t w[128];
+    if (!sw1563_awiden(name, w, 128)) return NULL;
+    return mw_GetPropW(hwnd, w);
+}
+__attribute__((ms_abi)) void* mw_RemovePropA(void* hwnd, const char* name) {
+    uint16_t w[128];
+    if (!sw1563_awiden(name, w, 128)) return NULL;
+    return mw_RemovePropW(hwnd, w);
+}
+__attribute__((ms_abi)) long mw_SetClassLongA(void* hwnd, int idx, long val) {
+    return (long)mw_SetClassLongW(hwnd, idx, (uint32_t)val);
+}
+__attribute__((ms_abi)) int mw_GrayStringA(void* dc, void* br, void* cb, long data,
+        int len, int x, int y, int cx, int cy) {
+    (void)dc; (void)br; (void)cb; (void)data; (void)len; (void)x; (void)y; (void)cx; (void)cy;
+    return 1; /* honest: grayed text "drawn" */
+}
+__attribute__((ms_abi)) void* mw_CopyMetaFileA(void* mf, const char* file) {
+    (void)mf; (void)file;
+    mw_SetLastError(2016); /* ERROR_META_EXPANSION_TOO_LONG stand-in: no metafile model */
+    return NULL;
+}
+__attribute__((ms_abi)) int mw_GetFileTitleA(const char* file, char* title, uint16_t cap) {
+    /* Real contract (dlls/comdlg32/filedlg31.c): basename without path,
+     * extension STRIPPED; returns 0 on success. */
+    if (!file || !title || !cap) return -1;
+    const char* base = strrchr(file, '\\');
+    const char* s2 = strrchr(file, '/');
+    if (s2 > base) base = s2;
+    base = base ? base + 1 : file;
+    char tmp[256]; int n = 0;
+    for (; base[n] && n < 255; n++) tmp[n] = base[n];
+    tmp[n] = 0;
+    char* dot = strrchr(tmp, '.');
+    if (dot && dot != tmp) *dot = 0;
+    int out = 0;
+    for (; tmp[out] && out < (int)cap - 1; out++) title[out] = tmp[out];
+    title[out] = 0;
+    return 0;
+}
+__attribute__((ms_abi)) int mw_RegQueryValueA(void* key, const char* name, char* val, long* cb) {
+    /* RegQueryValueA = default (unnamed) value read; mirror RegQueryValueW's
+     * contract after widening the name. */
+    uint16_t w[256];
+    if (!sw1563_awiden(name, w, 256)) return 2; /* ERROR_FILE_NOT_FOUND */
+    return (int)mw_RegQueryValueW(key, w, val, (uint32_t*)cb);
+}
+__attribute__((ms_abi)) char* mw_PathFindExtensionA(const char* path) {
+    /* Wine shlwapi/path.c PathFindExtensionA: last '.' AFTER the filename
+     * part begins (a dot inside the directory path does not count);
+     * no extension -> points at the terminating NUL. */
+    if (!path) return (char*)"";
+    const char* base = path;
+    for (const char* p = path; *p; p++)
+        if (*p == '\\' || *p == '/' || *p == ':') base = p + 1;
+    const char* ext = NULL;
+    for (const char* p = base; *p; p++)
+        if (*p == '.') ext = p;
+    return (char*)(ext ? ext : path + strlen(path));
+}
+__attribute__((ms_abi)) int mw_PathIsUNCA(const char* path) {
+    /* Wine: exactly two leading backslashes (\\server\share). */
+    return (path && path[0] == '\\' && path[1] == '\\') ? 1 : 0;
+}
+__attribute__((ms_abi)) char* mw_PathStripToRootA(char* path) {
+    /* Wine: keep "X:\" (drive) or "\\server\share" (UNC); strip the rest. */
+    if (!path) return path;
+    if (path[0] == '\\' && path[1] == '\\') {
+        int slashes = 0, i = 2;
+        for (; path[i]; i++) {
+            if (path[i] == '\\') { slashes++; if (slashes == 2) { path[i] = 0; break; } }
+        }
+        if (!path[i]) { /* no trailing slash: keep whole UNC share */ }
+        return path;
+    }
+    if (((path[0] >= 'A' && path[0] <= 'Z') || (path[0] >= 'a' && path[0] <= 'z')) && path[1] == ':') {
+        path[2] = '\\'; path[3] = 0;
+    } else {
+        path[0] = 0;
+    }
+    return path;
+}
+__attribute__((ms_abi)) void* mw_CreateDialogIndirectParamA(void* hinst, const void* tmpl,
+        void* parent, MwDlgProc proc, intptr_t init) {
+    /* Template memory format is identical for A/W; only the proc is ANSI. */
+    return mw_CreateDialogIndirectParamW(hinst, tmpl, parent, proc, init);
+}
+
 static ImportEntry g_import_table[] = {
     /* ===== SWEEP-026: SW-1021..1100 batch (50-task elephant round) ===== */
     ENTRY("GDI32.DLL", "GetTextExtentPointW",                   mw_GetTextExtentPointW), /* SW-1069 */
@@ -44617,6 +44834,36 @@ ENTRY("GDI32.DLL", "GetCharacterPlacementW",                mw_GetCharacterPlace
     ENTRY("COMCTL32.dll", "_TrackMouseEvent",                   mw_TrackMouseEvent),
     ENTRY("KERNEL32.dll", "lstrcmpiA",                          mw_lstrcmpiA),
     ENTRY("USER32.dll", "mouse_event",                          mw_mouse_event),
+    /* -- SW-1563 (IDM 6.42 GUI payload): A-variant imports the 32-bit
+     * dispatch resolved to stub thunks -- */
+    ENTRY("KERNEL32.dll", "CopyFileA",                          mw_CopyFileA),
+    ENTRY("KERNEL32.dll", "CreateDirectoryA",                   mw_CreateDirectoryA),
+    ENTRY("KERNEL32.dll", "MoveFileA",                          mw_MoveFileA),
+    ENTRY("KERNEL32.dll", "RemoveDirectoryA",                   mw_RemoveDirectoryA),
+    ENTRY("KERNEL32.dll", "GetVolumeInformationA",              mw_GetVolumeInformationA),
+    ENTRY("KERNEL32.dll", "OpenMutexA",                         mw_OpenMutexA),
+    ENTRY("KERNEL32.dll", "WriteConsoleA",                      mw_WriteConsoleA),
+    ENTRY("KERNEL32.dll", "EnumResourceLanguagesA",             mw_EnumResourceLanguagesA),
+    ENTRY("KERNEL32.dll", "FindResourceExA",                    mw_FindResourceExA),
+    ENTRY("KERNEL32.dll", "ConvertDefaultLocale",               mw_ConvertDefaultLocale),
+    ENTRY("KERNEL32.dll", "GlobalFindAtomA",                    mw_GlobalFindAtomA),
+    ENTRY("KERNEL32.dll", "GlobalGetAtomNameA",                 mw_GlobalGetAtomNameA),
+    ENTRY("ADVAPI32.dll", "RegQueryValueA",                     mw_RegQueryValueA),
+    ENTRY("USER32.dll", "CloseWindow",                          mw_CloseWindow),
+    ENTRY("USER32.dll", "CopyAcceleratorTableA",                mw_CopyAcceleratorTableA),
+    ENTRY("USER32.dll", "CreateDialogIndirectParamA",           mw_CreateDialogIndirectParamA),
+    ENTRY("USER32.dll", "DrawStateA",                           mw_DrawStateA),
+    ENTRY("USER32.dll", "GetPropA",                             mw_GetPropA),
+    ENTRY("USER32.dll", "GetClassInfoA",                        mw_GetClassInfoA),
+    ENTRY("USER32.dll", "RemovePropA",                          mw_RemovePropA),
+    ENTRY("USER32.dll", "SetPropA",                             mw_SetPropA),
+    ENTRY("USER32.dll", "SetClassLongA",                        mw_SetClassLongA),
+    ENTRY("USER32.dll", "GrayStringA",                          mw_GrayStringA),
+    ENTRY("GDI32.dll", "CopyMetaFileA",                         mw_CopyMetaFileA),
+    ENTRY("COMDLG32.dll", "GetFileTitleA",                      mw_GetFileTitleA),
+    ENTRY("SHLWAPI.dll", "PathFindExtensionA",                  mw_PathFindExtensionA),
+    ENTRY("SHLWAPI.dll", "PathIsUNCA",                          mw_PathIsUNCA),
+    ENTRY("SHLWAPI.dll", "PathStripToRootA",                    mw_PathStripToRootA),
 };
 
 #define NUM_IMPORTS (sizeof(g_import_table) / sizeof(g_import_table[0]))
@@ -47551,6 +47798,117 @@ static const struct { const char* n; uint32_t b; } g_api32_arity[] = {
     { "StartServiceA", 12 },
     { "SystemTimeToTzSpecificLocalTime", 12 },
     { "TranslateMessage", 4 },
+    /* SW-1563 (IDM 6.42 GUI payload IDM5.tmp): the CRT/UI layer these calls
+     * come from uses stdcall throughout — every unknown arity under-popped
+     * and drifted esp until the guest's stack-cookie check raised
+     * 0xC0000409 (its UEF -> TerminateProcess, trace-tail shape). Arity
+     * values = Win32 SDK x86 stack bytes (nargs*4). */
+    { "CancelWaitableTimer", 4 },
+    { "CallNextHookEx", 16 },
+    { "CharUpperA", 4 },
+    { "CharUpperBuffW", 8 },
+    { "CheckMenuRadioItem", 20 },
+    { "ChooseFontW", 4 },
+    { "CloseWindow", 4 },
+    { "ConvertDefaultLocale", 4 },
+    { "CopyAcceleratorTableA", 12 },
+    { "CopyMetaFileA", 8 },
+    { "CreateDialogIndirectParamA", 20 },
+    { "CreateProcessAsUserW", 44 },
+    { "CreateSemaphoreW", 16 },
+    { "CreateWaitableTimerA", 12 },
+    { "DefDlgProcA", 20 },
+    { "DestroyIcon", 4 },
+    { "DPtoLP", 8 },
+    { "DrawIcon", 16 },
+    { "DrawStateA", 40 },
+    { "DuplicateHandle", 28 },
+    { "DuplicateTokenEx", 24 },
+    { "EnumFontFamiliesExA", 20 },
+    { "EnumResourceLanguagesA", 20 },
+    { "Escape", 20 },
+    { "ExtSelectClipRgn", 12 },
+    { "FindResourceExA", 16 },
+    { "GetClassInfoExA", 12 },
+    { "GetClassLongA", 8 },
+    { "GetClipBox", 8 },
+    { "GetComboBoxInfo", 8 },
+    { "GetFileInformationByHandle", 8 },
+    { "GetFileTitleA", 12 },
+    { "GetKeyState", 4 },
+    { "GetKeyboardLayoutList", 4 },
+    { "GetMapMode", 4 },
+    { "GetMenuItemID", 8 },
+    { "GetNextDlgGroupItem", 12 },
+    { "GetNextDlgTabItem", 12 },
+    { "GetProfileIntA", 12 },
+    { "GetRgnBox", 8 },
+    { "GetScrollPos", 8 },
+    { "GetSidSubAuthority", 8 },
+    { "GetSidSubAuthorityCount", 4 },
+    { "GetTextColor", 4 },
+    { "GetUserNameA", 8 },
+    { "GetUserNameW", 8 },
+    { "GetViewportExtEx", 8 },
+    { "GetWindowContextHelpId", 8 },
+    { "GetWindowExtEx", 8 },
+    { "GetWindowTextLengthA", 4 },
+    { "GlobalAddAtomA", 4 },
+    { "GlobalDeleteAtom", 4 },
+    { "GlobalFindAtomA", 4 },
+    { "GlobalFlags", 4 },
+    { "GlobalGetAtomNameA", 12 },
+    { "GlobalSize", 4 },
+    { "GrayStringA", 36 },
+    { "ImageList_GetIcon", 12 },
+    { "IntersectClipRect", 16 },
+    { "InvalidateRgn", 8 },
+    { "LocalReAlloc", 12 },
+    { "LockFile", 20 },
+    { "LPtoDP", 8 },
+    { "MapDialogRect", 8 },
+    { "ModifyMenuW", 20 },
+    { "MsgWaitForMultipleObjects", 20 },
+    { "OffsetViewportOrgEx", 12 },
+    { "PathFindExtensionA", 4 },
+    { "PathFindFileNameA", 4 },
+    { "PathIsUNCA", 4 },
+    { "PathStripToRootA", 4 },
+    { "PeekNamedPipe", 24 },
+    { "PostThreadMessageA", 16 },
+    { "ProcessIdToSessionId", 8 },
+    { "PtVisible", 8 },
+    { "RectVisible", 8 },
+    { "RegNotifyChangeKeyValue", 20 },
+    { "RegRestoreKeyA", 12 },
+    { "RegSaveKeyA", 12 },
+    { "RegisterClipboardFormatA", 4 },
+    { "RestoreDC", 8 },
+    { "ScaleViewportExtEx", 16 },
+    { "ScaleWindowExtEx", 16 },
+    { "SetClipboardViewer", 4 },
+    { "SetCursorPos", 8 },
+    { "SetDllDirectoryW", 4 },
+    { "SetFileAttributesA", 8 },
+    { "SetParent", 8 },
+    { "SetPropA", 8 },
+    { "SetPropW", 8 },
+    { "SetSearchPathMode", 4 },
+    { "SetThreadExecutionState", 4 },
+    { "SetThreadPriority", 8 },
+    { "SetViewportExtEx", 12 },
+    { "SetWindowContextHelpId", 8 },
+    { "SetWindowExtEx", 12 },
+    { "StrCmpLogicalW", 8 },
+    { "TabbedTextOutA", 32 },
+    { "TranslateCharsetInfo", 12 },
+    { "UnlockFile", 20 },
+    { "WinHelpA", 16 },
+    /* SW-1563 round 2: the four stragglers from the fixed run */
+    { "ChangeClipboardChain", 8 },
+    { "GetCharWidthA", 16 },
+    { "SHGetFolderPathA", 20 },
+    { "SetClassLongA", 12 },
 };
 static uint32_t mw32_stdcall_arity(const char* name) {
     g_arity_found = 0;
