@@ -1,0 +1,16 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "wine-behavior-tracker"
+version = "1.0.0"
+description = "Evidence-grade Wine behavior capture and Wine-vs-MiniWin differential tracker"
+requires-python = ">=3.9"
+dependencies = ["PyYAML>=5.4"]
+
+[project.optional-dependencies]
+screenshots = ["Pillow>=9.0"]
+
+[tool.setuptools.packages.find]
+include = ["wine_behavior_tracker*"]

@@ -1,0 +1,2 @@
+[TRACE] Command line: artifacts/sweep050/guests/freecell/freecell.exe
+[GDI-FRAME] #1 -> miniwin-results/freecell.exe/screenshots/frame_001.bmp

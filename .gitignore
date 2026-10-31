@@ -61,3 +61,113 @@ artifacts/sweep006/
 # SWEEP-011 raw timing runs (BMP-heavy parity captures kept out of git)
 artifacts/sweep011_perf/runs_baseline/
 artifacts/sweep011_perf/runs_fast/
+
+# SWEEP-047: staged downloads stay local (evidence TSVs + shas are committed)
+artifacts/sweep047/stage/
+artifacts/sweep047/census/
+miniwin-results/
+
+# SWEEP-050/051/052 working artifact trees (curated copies live in evidence/)
+artifacts/sweep050/
+artifacts/sweep051/
+artifacts/sweep052/
+miniwin-results/
+
+# SWEEP-055: LibreOffice payload staging stays local (MSI 375MB / CAB 355MB / extract 1.6GB / guest 419MB)
+artifacts/sweep055/stage/
+artifacts/sweep055/lo_extract/
+artifacts/sweep055/guests/
+# SWEEP-055: recovered adexplorer64 corpus stays local (sha pins in WORKLOG)
+artifacts/sweep055/dl/
+
+# SWEEP-059: download corpus + staged guests stay local (1.1GB; census + inventory TSVs are committed)
+artifacts/sweep059/dl/
+artifacts/sweep059/expanded/
+artifacts/sweep059/guests/
+artifacts/sweep059/dl_shots/
+artifacts/sweep059/shots/
+# SWEEP-059: re-staged XP guest farm stays local (xp64_raw payloads are local-only per SWEEP-056)
+artifacts/sweep056/guests/
+artifacts/sweep056/bin/
+artifacts/sweep070/dl/
+artifacts/sweep070/guests/
+artifacts/sweep073/
+artifacts/sweep074/
+/Windows/
+artifacts/sweep078/dl/x/ZoomIt.exe
+
+# ==================================================================
+# SWEEP-092 source-only repository policy (centralized).
+# Guests and generated artifacts are NEVER tracked. Guests are
+# fetched on demand and SHA-256-verified via scripts/fetch_guest.sh
+# (see tests/corpus/manifest.tsv and docs/GUEST_ARTIFACTS.md).
+# ==================================================================
+
+# Downloaded Windows guests, installers, archives, extracted trees
+.cache/
+artifacts/
+evidence/**/sandbox/
+evidence/**/Installers/
+evidence/**/dl/
+miniwin-results/
+working-tree/
+checkpoints/
+out/
+
+# Binary artifact categories (any location)
+*.exe
+*.dll
+*.zip
+*.7z
+*.msi
+*.cab
+*.sfx
+*.pdb
+*.lib
+*.a
+*.tar.gz
+*.tgz
+
+# Raw generated evidence (keep compact summaries instead)
+*.bmp
+evidence/**/raw/
+evidence/**/screenshots/
+evidence/**/*.dmp
+evidence/**/*.core
+
+# Documented exceptions (small, essential, reproducible-value fixtures)
+!samples/upx_decompressed.exe
+!tests/corpus/bin/**
+!tests/gui/**
+!tests/appcompat/**
+!tools/**
+
+# Large one-off analysis dumps (kept local; compact summaries retained)
+evidence/sweep008_rea/pageant_fatal_function.json
+evidence/sweep008_rea/puttygen_winmain_function.json
+evidence/sweep008_rea/cports_crash_function.json
+evidence/sweep008_rea/puttygen_writer_candidate.json
+evidence/sweep008_rea/autoruns64_eula_function.yaml
+evidence/sweep063/ghidra/
+evidence/sweep065/ghidra/
+scrub_persian.py
+
+# APP-TEST round: real application binaries stay local (WinRAR 7.12 / IDM 6.42 / notepad), evidence report + import-table JSONs are committed
+evidence/app-tests/*.exe
+evidence/app-tests/winrar/
+evidence/app-tests/wine-pkg/
+evidence/app-tests/fixtures/
+
+# wine-tracker: raw relay logs + parsed event streams + per-run wine work dirs stay local (83MB relay sample, 560k-event JSONL); run.json/checkpoints/snapshots/reports are committed
+artifacts/wine-tracker/runs/*/raw/*.log
+artifacts/wine-tracker/runs/*/parsed/events.jsonl
+artifacts/wine-tracker/runs/*/work/
+artifacts/wine-tracker/runs/*/prefix/
+artifacts/wine-tracker/runs/*/miniwin-results/
+tools/wine_behavior_tracker/*.egg-info/
+
+# SWEEP-110: battery sandbox trees stay local (installed apps, temp payloads)
+evidence/sweep110/*/sandbox/
+
+# SWEEP-111: seed-experiment sandbox copy stays local (guest binaries policy)
+evidence/sweep111/seedexp/

@@ -1,0 +1,262 @@
+{
+  "trace": [
+[Tf4c0] [API] PE Loader: file=artifacts/sweep050/guests/drwtsn32/drwtsn32.exe size=77312
+[Tf4c0] [API] PE Loader: ImageBase=0x400000 EP=0xd340 SizeOfImage=0x17000 Sections=4
+[Tf4c0] [API] PE Loader: Mapped at 0x400000 (forced via MAP_FIXED)
+[Tf4c0] [API] KUSD: mapped 0x7ffe0000 (root C:\WINDOWS, ver 5.2, qpc 1e9)
+[Tf4c0] [API] Section [0] .text    VA=0x00001000 VS=0x0000e5f2 Raw=0x0000e600 Ch=0x60000020
+[Tf4c0] [API] Section [1] .data    VA=0x00010000 VS=0x00001ac8 Raw=0x00000200 Ch=0xc0000040
+[Tf4c0] [API] Section [2] .pdata   VA=0x00012000 VS=0x0000072c Raw=0x00000800 Ch=0x40000040
+[Tf4c0] [API] Section [3] .rsrc    VA=0x00013000 VS=0x00003930 Raw=0x00003a00 Ch=0x40000040
+[Tf4c0] [API] Import Directory: RVA=0xe690 Size=0x8c
+[Tf4c0] [API] Import DLL: msvcrt.dll (IAT RVA=0x13c8, ILT RVA=0xeae8)
+[Tf4c0] [API]   [0] swprintf -> 0x2017b40
+[Tf4c0] [API]   [1] wprintf -> 0x209f770
+[Tf4c0] [API]   [2] isprint -> 0x2017360
+[Tf4c0] [API]   [3] sprintf -> 0x203fe90
+[Tf4c0] [API]   [4] _snwprintf -> 0x2022710
+[Tf4c0] [API]   [5] _vsnwprintf -> 0x209cc00
+[Tf4c0] [API]   [6] swscanf -> 0x2017c00
+[Tf4c0] [API]   [7] _wtoi -> 0x2023e10
+[Tf4c0] [API]   [8] _wgetcwd -> 0x2094380
+[Tf4c0] [API]   [9] _wcsicmp -> 0x2081060
+[Tf4c0] [API]   [10] tolower -> 0x2076b90
+[Tf4c0] [API]   [11] wcsncpy -> 0x20822e0
+[Tf4c0] [API]   [12] isdigit -> 0x20172b0
+[Tf4c0] [API]   [13] _wtol -> 0x200e6e0
+[Tf4c0] [API]   [14] realloc -> 0x20b2a00
+[Tf4c0] [API]   [15] _wmakepath -> 0x2010d90
+[Tf4c0] [API]   [16] free -> 0x20a79b0
+[Tf4c0] [API]   [17] _XcptFilter -> 0x205aad0
+[Tf4c0] [API]   [18] _c_exit -> 0x2069b40
+[Tf4c0] [API]   [19] _exit -> 0x203bf20
+[Tf4c0] [API]   [20] _cexit -> 0x2035320
+[Tf4c0] [API]   [21] exit -> 0x203da60
+[Tf4c0] [API]   [22] __initenv -> DATA 0x2397f60
+[Tf4c0] [API]   [23] __getmainargs -> 0x2026470
+[Tf4c0] [API]   [24] _initterm -> 0x2026620
+[Tf4c0] [API]   [25] __setusermatherr -> 0x2059730
+[Tf4c0] [API]   [26] _wsplitpath -> 0x20151b0
+[Tf4c0] [API]   [27] _commode -> DATA 0x24de30c
+[Tf4c0] [API]   [28] _fmode -> DATA 0x24de310
+[Tf4c0] [API]   [29] __set_app_type -> 0x20595d0
+[Tf4c0] [API]   [30] strchr -> 0x2015990
+[Tf4c0] [API]   [31] __C_specific_handler -> 0x2066c60
+[Tf4c0] [API]   [32] malloc -> 0x20855b0
+[Tf4c0] [API]   [33] calloc -> 0x2085ba0
+[Tf4c0] [API]   [34] memcpy -> 0x2014ad0
+[Tf4c0] [API]   [35] memset -> 0x2011d80
+[Tf4c0] [API] Import DLL: ADVAPI32.dll (IAT RVA=0x1000, ILT RVA=0xe720)
+[Tf4c0] [API]   [0] RegOpenKeyExA -> 0x20a43c0
+[Tf4c0] [API]   [1] RegQueryValueExA -> 0x20a45e0
+[Tf4c0] [API]   [2] IsTextUnicode -> 0x2032360
+[Tf4c0] [API]   [3] RegDeleteValueW -> 0x208c750
+[Tf4c0] [API]   [4] RegSetValueExW -> 0x208cc50
+[Tf4c0] [API]   [5] RegCreateKeyExW -> 0x2092010
+[Tf4c0] [API]   [6] RegCloseKey -> 0x200c140
+[Tf4c0] [API]   [7] RegQueryValueExW -> 0x208c250
+[Tf4c0] [API]   [8] RegOpenKeyExW -> 0x2091c00
+[Tf4c0] [API]   [9] DeregisterEventSource -> 0x20625a0
+[Tf4c0] [API]   [10] ReportEventW -> 0x2062420
+[Tf4c0] [API]   [11] RegisterEventSourceW -> 0x20318d0
+[Tf4c0] [API]   [12] ReadEventLogW -> 0x2010630
+[Tf4c0] [API]   [13] CloseEventLog -> 0x207f960
+[Tf4c0] [API]   [14] ClearEventLogW -> 0x2062fa0
+[Tf4c0] [API]   [15] OpenEventLogW -> 0x2010610
+[Tf4c0] [API]   [16] GetUserNameW -> 0x209c360
+[Tf4c0] [API] Import DLL: KERNEL32.dll (IAT RVA=0x10b8, ILT RVA=0xe7d8)
+[Tf4c0] [API]   [0] ExpandEnvironmentStringsW -> 0x20a8970
+[Tf4c0] [API]   [1] LoadResource -> 0x2028e30
+[Tf4c0] [API]   [2] FindResourceExW -> 0x207cde0
+[Tf4c0] [API]   [3] GetCurrentThreadId -> 0x200a440
+[Tf4c0] [API]   [4] DeleteFileW -> 0x20a1f20
+[Tf4c0] [API]   [5] CreateDirectoryW -> 0x20a2340
+[Tf4c0] [API]   [6] GetCommandLineW -> 0x2074090
+[Tf4c0] [API]   [7] TerminateThread -> 0x207eee0
+[Tf4c0] [API]   [8] ReadFile -> 0x2056c30
+[Tf4c0] [API]   [9] CreateFileW -> 0x20a1a00
+[Tf4c0] [API]   [10] WriteFile -> 0x2057380
+[Tf4c0] [API]   [11] FreeLibrary -> 0x2067340
+[Tf4c0] [API]   [12] GetModuleFileNameW -> 0x209a320
+[Tf4c0] [API]   [13] GetCurrentProcessId -> 0x200a420
+[Tf4c0] [API]   [14] GetSystemTimeAsFileTime -> 0x203c220
+[Tf4c0] [API]   [15] GetCurrentProcess -> 0x200a410
+[Tf4c0] [API]   [16] UnhandledExceptionFilter -> 0x2069880
+[Tf4c0] [API]   [17] SetUnhandledExceptionFilter -> 0x2025ee0
+[Tf4c0] [API]   [18] RtlVirtualUnwind -> 0x208a8d0
+[Tf4c0] [API]   [19] RtlLookupFunctionEntry -> 0x2025bc0
+[Tf4c0] [API]   [20] RtlCaptureContext -> 0x2073970
+[Tf4c0] [API]   [21] GetProcAddress -> 0x20502b0
+[Tf4c0] [API]   [22] LoadLibraryA -> 0x208e9a0
+[Tf4c0] [API]   [23] QueryPerformanceCounter -> 0x203c6e0
+[Tf4c0] [API]   [24] GetTickCount -> 0x203c550
+[Tf4c0] [API]   [25] DelayLoadFailureHook -> 0x2063110
+[Tf4c0] [API]   [26] GetFileAttributesW -> 0x20a1c70
+[Tf4c0] [API]   [27] lstrcpynW -> 0x2023780
+[Tf4c0] [API]   [28] GetModuleHandleW -> 0x2038980
+[Tf4c0] [API]   [29] FormatMessageW -> 0x2051400
+[Tf4c0] [API]   [30] ExitProcess -> 0x207da20
+[Tf4c0] [API]   [31] GetComputerNameW -> 0x209bff0
+[Tf4c0] [API]   [32] CreateThread -> 0x2063dc0
+[Tf4c0] [API]   [33] Sleep -> 0x203d150
+[Tf4c0] [API]   [34] WaitForSingleObject -> 0x2096660
+[Tf4c0] [API]   [35] CloseHandle -> 0x2097400
+[Tf4c0] [API]   [36] ProcessIdToSessionId -> 0x200c350
+[Tf4c0] [API]   [37] GetSystemInfo -> 0x20430f0
+[Tf4c0] [API]   [38] GetVersion -> 0x200bf10
+[Tf4c0] [API]   [39] MultiByteToWideChar -> 0x2052e20
+[Tf4c0] [API]   [40] GetLocalTime -> 0x201bcc0
+[Tf4c0] [API]   [41] GetDateFormatW -> 0x2050a30
+[Tf4c0] [API]   [42] WideCharToMultiByte -> 0x2048f60
+[Tf4c0] [API]   [43] SetErrorMode -> 0x200c370
+[Tf4c0] [API]   [44] SetEvent -> 0x20878f0
+[Tf4c0] [API]   [45] OpenProcess -> 0x2048690
+[Tf4c0] [API]   [46] TerminateProcess -> 0x203db70
+[Tf4c0] [API]   [47] LocalFree -> 0x20b3450
+[Tf4c0] [API]   [48] GetLastError -> 0x20255a0
+[Tf4c0] [API]   [49] SetFilePointer -> 0x2057ab0
+[Tf4c0] [API] Import DLL: GDI32.dll (IAT RVA=0x1090, ILT RVA=0xe7b0)
+[Tf4c0] [API]   [0] GetTextMetricsW -> 0x206bd90
+[Tf4c0] [API]   [1] SelectObject -> 0x202a5c0
+[Tf4c0] [API]   [2] GetTextExtentPointW -> 0x20a37d0
+[Tf4c0] [API]   [3] GetStockObject -> 0x202a460
+[Tf4c0] [API] Import DLL: USER32.dll (IAT RVA=0x1250, ILT RVA=0xe970)
+[Tf4c0] [API]   [0] SetDlgItemTextA -> 0x20b7d50
+[Tf4c0] [API]   [1] SendDlgItemMessageW -> 0x20beec0
+[Tf4c0] [API]   [2] AppendMenuW -> 0x20b65a0
+[Tf4c0] [API]   [3] GetSystemMenu -> 0x2087f40
+[Tf4c0] [API]   [4] ReleaseDC -> 0x200cfd0
+[Tf4c0] [API]   [5] GetDC -> 0x200cfc0
+[Tf4c0] [API]   [6] IsDlgButtonChecked -> 0x208a400
+[Tf4c0] [API]   [7] GetDlgItemTextW -> 0x2094cd0
+[Tf4c0] [API]   [8] GetDlgCtrlID -> 0x2088a00
+[Tf4c0] [API]   [9] ChildWindowFromPoint -> 0x200dcb0
+[Tf4c0] [API]   [10] ScreenToClient -> 0x207f220
+[Tf4c0] [API]   [11] GetCursorPos -> 0x206adc0
+[Tf4c0] [API]   [12] WinHelpW -> 0x2060c80
+[Tf4c0] [API]   [13] EndDialog -> 0x205c880
+[Tf4c0] [API]   [14] DialogBoxParamW -> 0x20b57f0
+[Tf4c0] [API]   [15] DefWindowProcW -> 0x200cdd0
+[Tf4c0] [API]   [16] PostQuitMessage -> 0x205bf20
+[Tf4c0] [API]   [17] KillTimer -> 0x200d040
+[Tf4c0] [API]   [18] SetTimer -> 0x20867f0
+[Tf4c0] [API]   [19] DefDlgProcW -> 0x207ec00
+[Tf4c0] [API]   [20] SetDlgItemTextW -> 0x20b8160
+[Tf4c0] [API]   [21] EnableWindow -> 0x2093270
+[Tf4c0] [API]   [22] GetDlgItem -> 0x203bae0
+[Tf4c0] [API]   [23] DispatchMessageW -> 0x20b9380
+[Tf4c0] [API]   [24] TranslateMessage -> 0x2029990
+[Tf4c0] [API]   [25] IsDialogMessageW -> 0x207ef80
+[Tf4c0] [API]   [26] GetMessageW -> 0x20bbd90
+[Tf4c0] [API]   [27] ShowWindow -> 0x2082020
+[Tf4c0] [API]   [28] MessageBeep -> 0x207fa20
+[Tf4c0] [API]   [29] CreateDialogParamW -> 0x20b54f0
+[Tf4c0] [API]   [30] RegisterClassW -> 0x209ff60
+[Tf4c0] [API]   [31] LoadCursorW -> 0x207f320
+[Tf4c0] [API]   [32] LoadIconW -> 0x207f330
+[Tf4c0] [API]   [33] SendMessageW -> 0x20be4e0
+[Tf4c0] [API]   [34] SetForegroundWindow -> 0x207f7f0
+[Tf4c0] [API]   [35] GetParent -> 0x2093ef0
+[Tf4c0] [API]   [36] PostMessageW -> 0x205d250
+[Tf4c0] [API]   [37] SetFocus -> 0x205d9c0
+[Tf4c0] [API]   [38] GetWindowLongW -> 0x20885d0
+[Tf4c0] [API]   [39] UpdateWindow -> 0x2044de0
+[Tf4c0] [API]   [40] CallWindowProcW -> 0x2080e20
+[Tf4c0] [API]   [41] SetWindowLongPtrW -> 0x202d370
+[Tf4c0] [API]   [42] EnumChildWindows -> 0x200e120
+[Tf4c0] [API]   [43] MessageBoxW -> 0x20a9f80
+[Tf4c0] [API] Import DLL: dbgeng.dll (IAT RVA=0x13b8, ILT RVA=0xead8)
+[Tf4c0] [API]   [0] DebugCreate -> 0x206fa70
+[Tf4c0] [API] Import resolution: 152 resolved, 0 unresolved (total 152)
+[Tf4c0] [API] Exception: .pdata RVA=0x12000 Size=0x72c Entries=153
+[Tf4c0] [API] [API-005] EH hacks DISABLED (default) (MINWIN_EH_HACKS=<unset>)
+[Tf4c0] [API] [API-005] CXX-EH-FIX (LSDA catch-all patch RVA 0x2010c8) skipped: MINWIN_EH_HACKS not set
+[Tf4c0] [API] Jumping to EP=0x40d340
+[Tf4c0] [API] __set_app_type(1)
+[Tf4c0] [API] _initterm(start=0x401508, end=0x401510)
+[Tf4c0] [API] __getmainargs(argc=0x7ffc1ef83430, argv=0x7ffc1ef83440, envp=0x7ffc1ef83438)
+[Tf4c0] [API] _initterm(start=0x4014f0, end=0x401500)
+[Tf4c0] [API] _initterm: calling 0x40d160
+[Tf4c0] [API] GetSystemTimeAsFileTime()
+[Tf4c0] [API] GetTickCount() = 4513546
+[Tf4c0] [API] QueryPerformanceCounter()
+[Tf4c0] [API] GetCommandLineW()
+[Tf4c0] [API] GetModuleHandleW()
+[Tf4c0] [API] RegisterClassW(wc=0x7ffc1ef83370) -> ATOM 0xc001
+[Tf4c0] [API] SetLastError(2)
+[Tf4c0] [API] SetLastError(2)
+[Tf4c0] [API] GetDlgItem(id=102) -> NULL (no such control)
+[Tf4c0] [API] GetDlgItem(id=108) -> NULL (no such control)
+[Tf4c0] [API] GetDlgItem(id=105) -> NULL (no such control)
+[Tf4c0] [API] GetDlgItem(id=111) -> NULL (no such control)
+[Tf4c0] [API] GetDlgItem(id=110) -> NULL (no such control)
+[Tf4c0] [API] GetDlgItem(id=112) -> NULL (no such control)
+[Tf4c0] [API] SendMessageW(hwnd=(nil) WM_?) -> 0
+[Tf4c0] [API] GetDlgItem(id=113) -> NULL (no such control)
+[Tf4c0] [API] SendMessageW(hwnd=(nil) WM_?) -> 0
+[Tf4c0] [API] GetDlgItem(id=114) -> NULL (no such control)
+[Tf4c0] [API] SendMessageW(hwnd=(nil) WM_?) -> 0
+[Tf4c0] [API] GetDlgItem(id=115) -> NULL (no such control)
+[Tf4c0] [API] SendMessageW(hwnd=(nil) WM_?) -> 0
+[Tf4c0] [API] GetDlgItem(id=116) -> NULL (no such control)
+[Tf4c0] [API] SendMessageW(hwnd=(nil) WM_?) -> 0
+[Tf4c0] [API] GetDlgItem(id=117) -> NULL (no such control)
+[Tf4c0] [API] SendMessageW(hwnd=(nil) WM_?) -> 0
+[Tf4c0] [API] GetDlgItem(id=130) -> NULL (no such control)
+[Tf4c0] [API] SendMessageW(hwnd=(nil) WM_?) -> 0
+[Tf4c0] [API] GetDlgItem(id=131) -> NULL (no such control)
+[Tf4c0] [API] SendMessageW(hwnd=(nil) WM_?) -> 0
+[Tf4c0] [API] GetDlgItem(id=132) -> NULL (no such control)
+[Tf4c0] [API] SendMessageW(hwnd=(nil) WM_?) -> 0
+[Tf4c0] [API] LoadLibraryA(WINMM.dll)
+[Tf4c0] [API] GetProcAddress(module=0xdead0013, name=waveOutGetNumDevs)
+[Tf4c0] [API]   -> 0x207fcd0
+[Tf4c0] [API] GetDlgItem(id=107) -> NULL (no such control)
+[Tf4c0] [API] EnableWindow((nil),0) -> prev 1
+[Tf4c0] [API] GetDlgItem(id=108) -> NULL (no such control)
+[Tf4c0] [API] EnableWindow((nil),0) -> prev 1
+[Tf4c0] [API] GetDlgItem(id=109) -> NULL (no such control)
+[Tf4c0] [API] EnableWindow((nil),0) -> prev 1
+[Tf4c0] [API] GetDlgItem(id=104) -> NULL (no such control)
+[Tf4c0] [API] EnableWindow((nil),0) -> prev 1
+[Tf4c0] [API] GetDlgItem(id=105) -> NULL (no such control)
+[Tf4c0] [API] EnableWindow((nil),0) -> prev 1
+[Tf4c0] [API] GetDlgItem(id=106) -> NULL (no such control)
+[Tf4c0] [API] EnableWindow((nil),0) -> prev 1
+[Tf4c0] [API] GetDlgItem(id=129) -> NULL (no such control)
+[Tf4c0] [API] EnableWindow((nil),0) -> prev 1
+[Tf4c0] [API] GetDlgItem(id=130) -> NULL (no such control)
+[Tf4c0] [API] EnableWindow((nil),0) -> prev 1
+[Tf4c0] [API] GetDlgItem(id=131) -> NULL (no such control)
+[Tf4c0] [API] EnableWindow((nil),0) -> prev 1
+[Tf4c0] [API] GetDlgItem(id=132) -> NULL (no such control)
+[Tf4c0] [API] EnableWindow((nil),0) -> prev 1
+[Tf4c0] [API] GetDlgItem(id=120) -> NULL (no such control)
+[Tf4c0] [API] SendMessageW(hwnd=(nil) WM_?) -> 0
+[Tf4c0] [API] SendMessageW(hwnd=(nil) WM_?) -> 0
+[Tf4c0] [API] GetModuleHandleW()
+[Tf4c0] [API] LoadResource(0x4133c0)
+[Tf4c0] [API] calloc(8192, 2) = 0x2509720
+[Tf4c0] [API] GetLastError() = 2
+[Tf4c0] [API] free(0x2509720)
+[Tf4c0] [API] SendMessageW(hwnd=(nil) WM_?) -> 0
+[Tf4c0] [API] GetTextMetricsW -> 8x8 real offsets (ave@20 weight@28) TRUE
+[Tf4c0] [API] SendMessageW(hwnd=(nil) WM_?) -> 0
+[Tf4c0] [API] SendMessageW(hwnd=(nil) WM_?) -> 0
+[Tf4c0] [API] GetDlgItem(id=120) -> NULL (no such control)
+[Tf4c0] [API] SendMessageW(hwnd=(nil) WM_?) -> 0
+[Tf4c0] [API] GetDlgItem(id=119) -> NULL (no such control)
+[Tf4c0] [API] EnableWindow((nil),0) -> prev 1
+[Tf4c0] [API] GetDlgItem(id=118) -> NULL (no such control)
+[Tf4c0] [API] EnableWindow((nil),0) -> prev 1
+[Tf4c0] [API] AppendMenuW(menu=0x50001 flags=0x800 id=0) count->1
+[Tf4c0] [API] GetModuleHandleW()
+[Tf4c0] [API] LoadResource(0x4133d0)
+[Tf4c0] [API] AppendMenuW(menu=0x50001 flags=0 id=128) count->2
+[Tf4c0] [API] CreateDialogParamW(name=0x1f6, proc=0x40b100) -> hwnd 0x10002 (modeless)
+[Tf4c0] [API] ShowWindow(hwnd=0x10002 cmd=1) -> TRUE
+[Tf4c0] [API] [GUI] event pump v3 ARMED (budget=200 keys=0 every=8 clicks=0)
+[Tf4c0] [API] GetMessageW() -> 0 (no event source: no timer/paint/keys left)
+[Tf4c0] [API] exit(0)
+  ]
+}

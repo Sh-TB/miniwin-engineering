@@ -1,0 +1,54 @@
+[TRACE] Command line: /home/z/my-project/workspace/miniwin-engineering/artifacts/sweep50/dl/winrar/WinRAR.exe
+[WARN]   unresolved: SHRestricted
+[WARN]   unresolved: QISearch
+[WARN]   unresolved: IUnknown_QueryService
+[WARN]   unresolved: comctl32_stub380
+[WARN]   unresolved: comctl32_stub381
+[WARN]   unresolved: DefSubclassProc
+[WARN]   unresolved: RemoveWindowSubclass
+[WARN]   unresolved: SetWindowSubclass
+[WARN] 8 imports unresolved
+
+[CRASH] Signal 11 at RIP=0x0
+  RAX=0x0 RCX=0xffffffff80000001 RDX=0x26c1510 R8=0x0 R9=0x9
+  RSP=0x7ffe4498d898 RBP=0x7ffe4498d910
+  g_image_base=0x140000000 g_image_size=0x378000
+  (NOT inside loaded PE)
+  [RIP-MAP] no mapping contains RIP
+  RSI=0x7ffe4498d9c0 RDI=0x0
+  R8=0x0  R9=0x9 R10=0x0 R11=0x7ffe4498d800
+  R12=0x7 R13=0x233e000 R14=0x7ffe4498dfc0 R15=0x7ffe4498ddc0
+  [SCAN rsp+000] 0x14012c7b1 <PE>
+  [SCAN rsp+128] 0x14012b1da <PE>
+  [SCAN rsp+224] 0x140174fd8 <PE>
+  [SCAN rsp+248] 0x14024ec90 <PE>
+  [SCAN rsp+336] 0x140114b7d <PE>
+  [SCAN rsp+352] 0x1401d86ca <PE>
+  [SCAN rsp+416] 0x1401f2268 <PE>
+  [SCAN rsp+432] 0x1400e53c6 <PE>
+  [SCAN rsp+448] 0x14024ec90 <PE>
+  [SCAN rsp+472] 0x14024ec90 <PE>
+  [SCAN rsp+480] 0x1400c7988 <PE>
+  [SCAN rsp+488] 0x140298fb8 <PE>
+  [SCAN rsp+496] 0x1401f0000 <PE>
+  [SCAN rsp+520] 0x1401f2268 <PE>
+  [SCAN rsp+528] 0x140003c60 <PE>
+  [SCAN rsp+536] 0x14024ec90 <PE>
+  [SCAN rsp+544] 0x1401f20d8 <PE>
+  [SCAN rsp+568] 0x1401f22b0 <PE>
+  [SCAN rsp+576] 0x1401d8dad <PE>
+  [SCAN rsp+608] 0x1401f22b8 <PE>
+  [SCAN rsp+624] 0x1401c6aa8 <PE>
+  [SCAN rsp+640] 0x1401c6ba9 <PE>
+  [SCAN rsp+688] 0x2008149 <LOADER>
+  [SCAN rsp+728] 0x200bcc0 <LOADER>
+  [SCAN rsp+1056] 0x200280c <LOADER>
+  [SCAN rsp+1064] 0x20021c0 <LOADER>
+  [SCAN rsp+2512] 0x2006550 <LOADER>
+  [SCAN rsp+2664] 0x2006550 <LOADER>
+  [SCAN rsp+2704] 0x2008ae0 <LOADER>
+  [SCAN rsp+2736] 0x2008b01 <LOADER>
+  [SCAN rsp+3224] 0x2000040 <LOADER>
+  [SCAN rsp+3304] 0x2008ae0 <LOADER>
+  Backtrace (via stack walking):
+  Likely: NULL or invalid function pointer call

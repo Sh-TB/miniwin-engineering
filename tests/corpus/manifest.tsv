@@ -1,0 +1,59 @@
+# tests/corpus/manifest.tsv -- canonical hash-pinned guest artifact manifest.
+#
+# Storage rule: this repository stores guest METADATA (URLs, versions, SHA-256,
+# sizes, licenses), never the downloaded bytes. Guests are fetched on demand
+# with scripts/fetch_guest.sh into .cache/miniwin/guests/<id>/ and are
+# SHA-256-verified before extraction or execution. Never track guest
+# binaries, installers, archives, or extracted trees in Git.
+#
+# Columns (TAB-separated):
+#   id                      unique guest id (used by scripts/fetch_guest.sh)
+#   version                 upstream version string
+#   arch                    x64 | x86 | mixed
+#   source_url              direct download URL (official upstream when possible)
+#   source_page_url         human-facing provenance page
+#   filename                file name stored in the cache
+#   sha256                  pinned SHA-256 of the exact artifact
+#   size_bytes              exact artifact size in bytes
+#   license                 upstream license / distribution terms
+#   redistribution_notes    acquisition constraints and status flags
+#   extraction_subdirectory top-level dir created on extraction ("." = flat)
+#   launch_target           guest exe path relative to the extraction root
+#   test_profile            gui | cli | installer | game
+#
+# Status flags in redistribution_notes:
+#   VERIFIED        URL reachable and hash pinned from the actual artifact
+#   UNVERIFIED_URL  hash pinned from a previously measured artifact; exact
+#                   download URL not re-verifiable today -- fetch_guest
+#                   refuses any off-manifest substitute until re-pinned
+#   SEED            no legitimate public download exists (Microsoft Windows
+#                   XP system binaries). Acquire from your own licensed XP
+#                   media into the local seed dir (docs/GUEST_ARTIFACTS.md);
+#                   fetch_guest verifies the pinned SHA-256 before any use.
+#   BLOCKED         download currently unavailable; do not fake a substitute
+xp.winmine	5.1.2600	x86	SEED	SEED	Winmine_XP_sp3.exe	06eb48b94f309915b5a226a0d342196e0c60ed3a97238f8d4434260d134666f3	139264	Microsoft EULA (Windows XP)	SEED: copy from licensed Windows XP media; not redistributable	.	winmine.exe	game
+xp.sol	5.1.2600	x86	SEED	SEED	Sol_XP_sp3.exe	428258596838f8db9e32b35080268b9d9a940e9d69d13c3e9170350353dae299	78336	Microsoft EULA (Windows XP)	SEED: copy from licensed Windows XP media; not redistributable	.	sol.exe	game
+xp.freecell	5.1.2600	x86	SEED	SEED	Freecell_XP_sp3.exe	f1afa609fa5d8167bf92893b99721e73364e1f6781f9f54df5bd38575affd1c8	74752	Microsoft EULA (Windows XP)	SEED: copy from licensed Windows XP media; not redistributable	.	freecell.exe	game
+xp.calc	5.1.2600	x86	SEED	SEED	calc_XP_sp3.exe	d4b3e02b0dcd71a8362c5e0b9f408f3007372c78ccfdac009c6e63f6cc756c6f	151040	Microsoft EULA (Windows XP)	SEED: copy from licensed Windows XP media; not redistributable	.	calc.exe	gui
+xp.spider	5.1.2600	x86	SEED	SEED	Spider_XP_sp3.exe	86cd875c5c179e31282dab0f8a3c4c6313bec763592571952a6dfbc47b85db1f	573440	Microsoft EULA (Windows XP)	SEED: copy from licensed Windows XP media; not redistributable	.	spider.exe	game
+mini.breakout	1.0	x86	SEED	SEED	breakout.exe	8fe4233ac74a422ce8a2e804b8dcd9a9527a23fd3b1a6fe6a7fae60f57bb2c5f	227328	Project-internal test game	SEED: MiniWin-authored test game, pinned by SHA-256	.	breakout.exe	game
+mini.snake	1.0	x86	SEED	SEED	snake.exe	f1739688805a8e3c3924d74e50b85cfe24892502002b18d7700e16a42624cdcb	224256	Project-internal test game	SEED: MiniWin-authored test game, pinned by SHA-256	.	snake.exe	game
+puzzles	20250409	x64	https://www.chiark.greenend.org.uk/~sgtatham/puzzles/puzzles.zip	https://www.chiark.greenend.org.uk/~sgtatham/puzzles/	puzzles.zip	a5b00f6301510b7ab19eea92af91f71db71b59391f8d24d4801efde648db9707	3499359	MIT-style (Simon Tatham puzzles)	Freely redistributable; sources published at chiark	.	flood.exe	game
+7zip.installer.x64	25.01	x64	https://www.7-zip.org/a/7z2501-x64.exe	https://www.7-zip.org/	7z2501-x64.exe	78afa2a1c773caf3cf7edf62f857d2a8a5da55fb0fff5da416074c0d28b2b55f	1643509	LGPL-2.1 + unRAR restriction	Freely redistributable	.	7z2501-x64.exe	installer
+tcpview64	3.11	x64	https://download.sysinternals.com/files/TCPView.zip	https://learn.microsoft.com/sysinternals/downloads/tcpview	TCPView.zip	4fc5ceba3e1b27ad95a24df35d094b454ec5f9478e12a8ca2b1b222705b9683b	1604604	Sysinternals Freeware	Redistributable per Sysinternals license terms	TCPView	tcpview64.exe	gui
+everything	1.4.1.1028	x64	https://www.voidtools.com/Everything-1.4.1.1028.x64.zip	https://www.voidtools.com/downloads/	Everything-1.4.1.1028.x64.zip	4f4a9b9299b608d48b065f95fd80b9c095cdc7114cd467cd9b54944b23559dfe	1869716	MIT (voidtools Everything)	Freely redistributable	.	everything.exe	gui
+idman.installer	6.42.2	x86	https://www.tonec.com/download/idman642build2.exe	https://www.internetdownloadmanager.com/download.html	idman642build2.exe	276aa7e4ff7682445b011ebe6ac3920e7eca6ece7d3f6723b1f1cb515164461b	12698904	Tonec trial EULA	40-day trial; public download; do not redistribute	.	idman642build2.exe	installer
+resourcesextract	1.19	x64	https://www.nirsoft.net/utils/resourcesextract.zip	https://www.nirsoft.net/utils/resources_extract.html	resourcesextract.zip	cdccfe0063a66f95cb47127f351416423c960df6260c321ab587f33df0d8a417	30136	NirSoft Freeware	Freely redistributable per NirSoft terms	.	ResourcesExtract.exe	gui
+produkey	1.98	x64	https://www.nirsoft.net/utils/produkey-x64.zip	https://www.nirsoft.net/utils/product_key_viewer.html	produkey-x64.zip	e4604e0ee680370448c6a832856dff4a0255ca763672825a7a67a2a4662b9909	109290	NirSoft Freeware	Freely redistributable per NirSoft terms	.	ProduKey.exe	gui
+winrar.installer.x64	7.12	x64	https://www.rarlab.com/rar/winrar-x64-712.exe	https://www.rarlab.com/download.htm	winrar712.exe	80ab68244a0d86600ab250e8dba551b87f7f8b4603e2300b3bcbd7e870e90f91	3741848	RARLAB trial (40 days)	Public download; do not redistribute	.	winrar712.exe	installer
+shexview	2.10	x64	https://www.nirsoft.net/utils/shexview-x64.zip	https://www.nirsoft.net/utils/shexview.html	shexview-x64.zip	73248fb48ee6387cadbd6bdde5265cbef465cea7fca8f3b72eac5c408f4e7ccb	103904	NirSoft Freeware	VERIFIED_URL (SWEEP-105): exact pinned URL re-downloaded from nirsoft, SHA-256 re-pinned + size measured 103904 B (was UNKNOWN_REPIN_REQUIRED after artifact deletion)	.	shexview.exe	gui
+npp.portable.x64	8.9.8.1	x64	https://github.com/notepad-plus-plus/notepad-plus-plus/releases/download/v8.9.8.1/npp.8.9.8.1.portable.x64.zip	https://github.com/notepad-plus-plus/notepad-plus-plus/releases/tag/v8.9.8.1	npp.portable.x64.zip	beddf5548e75c97930d1575ba1c7d113e6e2b33d0a200310e734ca08e225f414	8250001	GPL-2.0+	UNVERIFIED_URL: official release asset URL changed; hash pinned from prior verified download	.	URL re-pinned SWEEP-094: exact asset downloaded, SHA-256 re-measured and matched the pinned hash byte-for-byte (2026-10-28)	gui
+npp.installer.x64	8.9.8.1	x64	https://github.com/notepad-plus-plus/notepad-plus-plus/releases/download/v8.9.8.1/npp.8.9.8.1.Installer.x64.exe	https://github.com/notepad-plus-plus/notepad-plus-plus/releases/tag/v8.9.8.1	npp.8.9.8.1.Installer.x64.exe	26f3bcced788fadbac4e7e577b430ea2ce6060cf3bcad993ef4612ecd7d743da	6963432	GPL-2.0+	UNVERIFIED_URL: release asset URL not resolvable today; hash pinned from prior verified download	.	URL re-pinned SWEEP-094: exact asset downloaded, SHA-256 re-measured and matched the pinned hash byte-for-byte (2026-10-28)	installer
+notepad2mod.portable	4.2.25.998	x64	https://github.com/XhmikosR/notepad2-mod/releases/download/4.2.25.998/notepad2-mod.4.2.25.998_x64.zip	https://github.com/XUJINKAI/Notepad2-mod/releases	notepad2mod.x64.zip	c893ce4ac5f38ae9500d92f3ff4060542da2eae93a7d602b4bb5c4bec7562516	814355	BSD-3-Clause	exact URL re-verified by SHA match 2026-10-28 (SWEEP-103); hash pinned from prior verified download	.	Notepad2.exe	gui
+renamer.portable	7.5	x86	https://www.den4b.com/download/renamer/portable/7.5	https://www.den4b.com/downloads/renamer	renamer75.portable.zip	b11342a59f22d9c48482a7f08e060109da21bb25cfc8acdd42d2b40ea6489168	4565468	Infonautics freeware/trial	VERIFIED_URL (SWEEP-105): den4b two-step key-flow fetch re-verified, SHA-256 + size match; fetch_guest.sh tokenized-retry support	.	ReNamer.exe	gui
+winnc.installer	11	x86	https://www.winnc.com/setup.exe	https://www.winnc.com/download/	winnc11.setup.exe	bef0fcafd7ce5b111beb61923b304c3f001a53061200ba65cdbc19c441ec011a	12964000	WinNc shareware trial	VERIFIED_URL (SWEEP-105): winnc.com direct download re-verified, SHA-256 + size match (winnc.de is dead)	.	winnc11.setup.exe	installer
+hxd.portable.setup	4.1.0	mixed	BLOCKED	https://mh-nexus.de/en/hxd/	HxDPortableSetup.zip	UNKNOWN_REPIN_REQUIRED	0	MH-Nexus freeware	BLOCKED: download unavailable at manifest time; acquisition page recorded; re-pin hash after obtaining the artifact	.	HxD/HxD.exe	gui
+winrar.installed.payload	7.12	x64	GENERATED	GENERATED	WinRAR.exe	7415b18099d47a37d187e6c94371ae81b2e600c412b215704d709348d331a3a4	3162624	RARLAB trial	Generated by running winrar.installer.x64 inside the MiniWin installer sandbox (plugin winrar); provenance = sandbox install tree	.	WinRAR/WinRAR.exe	gui
+winrar.installed.uninstaller	7.12	x64	GENERATED	GENERATED	Uninstall.exe	b43fd9fac0cc21fa1264df073ceff32741ef560f52c989f984d94fe84030d6bf	392848	RARLAB trial	Generated in-sandbox by the winrar installer run; hash recovered from SWEEP-089 evidence before artifact deletion	.	WinRAR/Uninstall.exe	installer
+mini.flood	1.0	x64	SEED	SEED	mini_flood.exe	9b06ed2c28e87dcc94de23b2eb324b4603c5f93305d2a4def76bbd207d2d2905	223744	Project-internal test game	SEED: MiniWin-authored test game (tests/games/miniwin_flood.c) built with zig cc; sha pins the SWEEP-105 rebuild (ziglang 0.17.0, tests/games/miniwin_flood.c unchanged; output size byte-count matches the SWEEP-093 pin exactly at 223744B; zig embeds build timestamps so rebuilds are not byte-reproducible -- SWEEP-098/099/100/105 gate verified the rebuilt game in-run)	.	mini_flood.exe	game
+psloglist64	2.82	x64	https://live.sysinternals.com/psloglist64.exe	https://learn.microsoft.com/sysinternals/downloads/pstools	psloglist64.exe	5e55b4caf47a248a10abd009617684e969dbe5c448d087ee8178262aaab68636	378776	Freeware (Sysinternals Software License Terms)	direct-exe URL downloaded and hash-verified 2026-10-27 (live.sysinternals.com serves the exact pinned bytes)	.	psloglist64.exe	cli

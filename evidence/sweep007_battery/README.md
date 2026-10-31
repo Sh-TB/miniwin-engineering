@@ -1,6 +1,6 @@
 # SWEEP-007 — SW-562 event-pump battery (2026-10-18)
 
-User directive: «ادامه بده» (continue). SW-562 was the next open worklist item:
+User directive: (continue) (continue). SW-562 was the next open worklist item:
 run every SWEEP-003 GUI program under the real event pump (MW_GUI_EVENTS=1)
 and map which ones survive real message delivery — the honest post-SWEEP-005/006
 frontier measurement.

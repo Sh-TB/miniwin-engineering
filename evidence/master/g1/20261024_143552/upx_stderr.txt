@@ -1,0 +1,1 @@
+[TRACE] Command line: samples/upx_decompressed.exe --version

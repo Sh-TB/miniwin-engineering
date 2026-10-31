@@ -1,0 +1,40 @@
+{
+  "run_id": "winrar-console-workflow-wine-20261029-194906-10109",
+  "spec": "winrar-console-workflow-wine",
+  "engine": "wine",
+  "engine_detail": "wine-10.0 (Debian 10.0~repack-6), disposable per-run prefix",
+  "start": "2026-10-29T19:49:06.042+00:00",
+  "cwd": "/home/z/my-project/workspace/miniwin-engineering/artifacts/wine-tracker/runs/winrar-console-workflow-wine-20261029-194906-10109",
+  "env_keys": [
+    "WINEDEBUG",
+    "WINEPREFIX"
+  ],
+  "app": {
+    "name": "WinRAR console archiver (Rar.exe)",
+    "version": "7.12 x64 (24 Jun 2025)",
+    "executable": "/home/z/my-project/workspace/miniwin-engineering/evidence/app-tests/winrar/Rar.exe",
+    "sha256": "bdbe2bde697c45e02902f19415d7af07dc871f30a3ac84fb552657aeddc38714"
+  },
+  "checkpoints_planned": [
+    "S1_launch",
+    "S2_create",
+    "S3_list",
+    "S4_test",
+    "S5_extract",
+    "S6_verify_hashes",
+    "S7_repeatability",
+    "S7b_extract_rerun"
+  ],
+  "timeout_s": 90,
+  "prefix_init": {
+    "exit_code": 53,
+    "system32_files": 786,
+    "patched": "seeded zlib1.dll"
+  },
+  "fixture_hashes": {
+    "doc_a.txt": "085075db72ba23ea483228c1f666392c0803700dc2bee9b720952ed278c65732",
+    "doc_b.bin": "c6b2bcde7dda98b233e8ce2d9e353d49140e167de003bac9fbabe11fd03cef82"
+  },
+  "duration_s": 37.88,
+  "finish": "2026-10-29T19:49:43.925+00:00"
+}

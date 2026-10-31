@@ -1,0 +1,3 @@
+[TRACE] Command line: artifacts/opensource/jq/jq.exe .a[1]
+[MiniWin] Loading artifacts/opensource/jq/jq.exe...
+2

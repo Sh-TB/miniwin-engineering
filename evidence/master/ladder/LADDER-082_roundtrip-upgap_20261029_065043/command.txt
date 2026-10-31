@@ -1,0 +1,4 @@
+command=bash scripts/ladder082_roundtrip.sh
+phase=roundtrip-upgap
+workdir=/tmp/ladder_LADDER-082_Zi0016
+timestamp_utc=20261029_065043

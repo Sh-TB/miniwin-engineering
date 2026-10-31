@@ -1,0 +1,19 @@
+program	bits	bytes	budget	rc	frames	msgbox	steps	flags	class
+bat	x64	6320128	60	0	0	0	0	---	CLEAN EXIT (Rust CLI, honest no-args exit)
+sharex	x86	2262528	150	0	0	0	0	---	CLEAN EXIT (.NET Framework app — full CRT+CLR load path)
+putty	x64	1706136	120	0	0	1	0	---	REAL dialog rendered: 'PuTTY Error: Unable to open connection to...' (genuine network-fail path)
+ripgrep	x64	5332480	60	2	0	0	0	---	Real CLI usage exit (rg without args)
+7zip	x86	1624144	120	139	0	0	47478	--B	DEEPEST x86 installer penetration (47,478 steps)
+everything	x86	1959088	150	139	0	0	4953	--B	Deep x86 penetration (4,953 steps)
+audacity	x86	16087032	150	139	0	0	565	--B	551-565-step common-signature family (NSIS installer init frontier)
+cpuz	x86	3565416	150	139	0	0	551	--B	551-step family
+mpchc	x86	22145361	150	139	0	0	551	--B	551-step family
+nvm	x86	5784456	120	139	0	0	565	--B	565-step family
+qbittorrent	x86	35628661	150	139	0	0	0	--B	Early backtrace (35MB installer)
+vlc	x86	44943296	150	139	0	0	0	--B	Early backtrace (45MB installer)
+ytdlp	x64	17880111	60	139	0	0	0	--B	PyInstaller x64 bootstrap frontier
+nssm64	x64	331264	60	139	0	0	0	--B	unres=2 imports (x64 service tool)
+stockfish	x64	70183936	60	134	0	0	0	--B	Loaded 70MB (over old 64MB cap!), deep run, SIGABRT host-side
+idm	x86	12698904	150	86	0	0	0	-P-	PE32-FATAL class (x86 frontier — same family as npp86/winmerge)
+steamcmd	x86	1687464	60	86	0	0	0	-P-	PE32-FATAL class
+winmerge	x86	9504280	150	86	0	0	0	-P-	PE32-FATAL class (2.16.36 new version; 2.16.x worklog frontier was x64)

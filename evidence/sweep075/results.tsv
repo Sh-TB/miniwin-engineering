@@ -1,0 +1,21 @@
+id	name	launch_rc0_3runs	frames_max	input_state_change	verdict	note
+P01	blackbox	yes	2	no	PASS_LAUNCH_RENDER	
+P02	bridges	yes	2	no	PASS_LAUNCH_RENDER	
+P03	cube	yes	18	no	PASS_LAUNCH_RENDER	
+P04	dominosa	yes	2	no	PASS_LAUNCH_RENDER	
+P05	fifteen	yes	16	yes	PASS_INPUT_STATE_CHANGE	click slides segment; before/after frames in frames/
+P06	flood	yes	2	no	PASS_LAUNCH_RENDER	
+P07	guess	yes	2	no	PASS_LAUNCH_RENDER	
+P08	lightup	yes	2	no	PASS_LAUNCH_RENDER	
+P09	map	yes	2	no	PASS_LAUNCH_RENDER	
+P10	mines	yes	6	yes	PASS_INPUT_STATE_CHANGE	click reveals cells
+P11	netgame	yes	16	no	PASS_LAUNCH_RENDER	needs a network peer; UI runs, no headless board change
+P12	pattern	yes	2	no	PASS_LAUNCH_RENDER	
+P13	pegs	yes	2	no	PASS_LAUNCH_RENDER	
+P14	range	yes	2	no	PASS_LAUNCH_RENDER	
+P15	rect	yes	2	no	PASS_LAUNCH_RENDER	
+P16	samegame	yes	2	no	PASS_LAUNCH_RENDER	
+P17	signpost	yes	2	no	PASS_LAUNCH_RENDER	
+P18	slant	yes	2	no	PASS_LAUNCH_RENDER	
+P19	solo	yes	2	no	PASS_LAUNCH_RENDER	
+P20	towers	yes	2	no	PASS_LAUNCH_RENDER	

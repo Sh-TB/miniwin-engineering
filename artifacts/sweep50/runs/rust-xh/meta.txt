@@ -1,5 +1,0 @@
-exe=xh/xh.exe
-sha256=d7ed76fc8f171d9b487434d27c0134bd886122232d5a950a43774a4190e8f207
-timeout=10s
-args=none
-date_utc=2026-10-17T18:39:38Z

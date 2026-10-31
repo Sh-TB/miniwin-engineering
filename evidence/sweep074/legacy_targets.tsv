@@ -1,0 +1,27 @@
+id	family	name	official_source	license	binary_hash_status	core_apis_exercised	probe	binary
+LT01	native-win32	blackbox.exe	chiark sgtatham puzzles	MIT	in targets.tsv (sha256)	GDI BeginPaint/EndPaint, RegisterClass, timers	initial board render + click	P01
+LT02	native-win32	mines.exe (sgtatham)	chiark sgtatham puzzles	MIT	in targets.tsv	menu+bitmap buttons	initial render + cell click	P10
+LT03	native-win32	solo.exe	chiark sgtatham puzzles	MIT	in targets.tsv	comdlg32 open/save, GDI text	initial render + digit entry	P19
+LT04	native-win32	Notepad3 x86	github rizonesoft	Freeware/GPL src	in targets.tsv	edit control, file IO, common dialogs	edit/save/reopen UTF-8	U03
+LT05	native-win32	Notepad3 x64	github rizonesoft	Freeware/GPL src	in targets.tsv	same on PE32+	same	U04
+LT06	native-win32	AutoHotkey v2 x64	github AutoHotkey	GPLv2	in targets.tsv	script engine, GUI commands	marker script + GUI	U08
+LT07	sysinternals	BgInfo x64	live.sysinternals.com	Sysinternals	in targets.tsv	window text, popup config	/popup probe	U17
+LT08	nirsoft	RegScanner x64	nirsoft.net	Freeware	in targets.tsv	registry enumeration	read-only seeded search	U19
+LT09	nirsoft	WhatInStartup x64	nirsoft.net	Freeware	in targets.tsv	Run-key enumeration	read-only list	U20
+LT10	nirsoft	ShellMenuView x64	nirsoft.net	Freeware	in targets.tsv	shell registration read	read-only list	U21
+LT11	nirsoft	ShellExView x64	nirsoft.net	Freeware	in targets.tsv	shell extension inventory	read-only list	U22
+LT12	nirsoft	CurrPorts x64	nirsoft.net	Freeware	in targets.tsv	tcp table enumeration	loopback listener lookup	U23
+LT13	nirsoft	FileTypesMan x64	nirsoft.net	Freeware	in targets.tsv	associations read	read-only list	U24
+LT14	sysinternals	TcpView x64	live.sysinternals.com	Sysinternals	in targets.tsv	tcp/udp table	controlled connection	U25
+LT15	sysinternals	WinObj	live.sysinternals.com	Sysinternals	in targets.tsv	NT namespace startup	startup + record U13 API	U26
+LT16	sysinternals	Sigcheck x64	download.sysinternals.com	Sysinternals	in targets.tsv	version metadata CLI	bounded PE probe	U28
+LT17	sysinternals	Strings x64	live.sysinternals.com	Sysinternals	in targets.tsv	console file scan	fixture scan + assert	R2
+LT18	nirsoft	LastActivityView	nirsoft.net	Freeware	in targets.tsv	event-log-ish enumeration	startup read	R3
+LT19	dos-candidate	Freedos-class MZ tools	FDOS kernel (GPL oracle only)	GPL-2.0 oracle	none — backend decision document	INT 21h subset	MiniDOS prototype gate (SW proposal)	none
+LT20	vb6-detect	VB6-native sample (TBD user-supplied or OSS)	user-supplied / OSS only	varies	not yet included	detection only: msvbvm60 + 'VB5!' header	detection probe (no execution claim)	none
+NOTES: 20 puzzle targets P01-P20 all count in the native-win32 family (MIT,
+official URL recorded in targets.tsv). Win16/NE and managed .NET deliberately
+NOT selected (no realistic execution plan — honest scope statement).
+KeePass/WinSCP/HxD/ResourceHacker/Ditto/FastCopy/FreeCommander/SciTE/
+Explorer++ are BLOCKED_DOWNLOAD this sweep (hosts 404/refused/gated) and are
+recorded as such in results.tsv rather than silently replaced by web builds.

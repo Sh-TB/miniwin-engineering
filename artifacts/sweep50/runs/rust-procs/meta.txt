@@ -1,5 +1,0 @@
-exe=procs/procs.exe
-sha256=3c561388a113b648a022a8654b4155344152794c73c57057aa0a31915ddc0b30
-timeout=10s
-args=none
-date_utc=2026-10-17T18:39:38Z

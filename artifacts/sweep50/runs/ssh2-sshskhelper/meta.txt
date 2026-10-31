@@ -1,5 +1,0 @@
-exe=openssh/ssh-sk-helper.exe
-sha256=4550082d459bccc5baf13cfe43c36c1e484bb012c4e0efb3990ae33a79e71c96
-timeout=10s
-args=none
-date_utc=2026-10-17T18:39:39Z

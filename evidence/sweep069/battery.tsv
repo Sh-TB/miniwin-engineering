@@ -1,0 +1,30 @@
+program	budget	exe	rc	frames	msgbox	steps	class
+drwtsn32	120	XP/drwtsn32.exe	0	0	0	-	CLEAN EXIT (new baseline)
+regedt32	120	XP/regedt32.exe	0	0	0	-	CLEAN EXIT (new baseline)
+sndvol32	120	XP/sndvol32.exe	0	0	1	-	CLEAN EXIT + real 'This program will now close.' MessageBox rendered
+devmanview	120	NirSoft/DevManView.exe	139	0	0	26	PE32 early-crash class (usbdeview 27-step family)
+dnsquerysniffer	120	NirSoft/DNSQuerySniffer.exe	139	0	0	26	PE32 early-crash class
+installedappview	120	NirSoft/InstalledAppView.exe	139	0	0	26	PE32 early-crash class
+multimonitortool	120	NirSoft/MultiMonitorTool.exe	139	0	0	26	PE32 early-crash class
+simpleprogramdebugger	120	NirSoft/SimpleProgramDebugger.exe	139	0	0	26	PE32 early-crash class
+faview	120	NirSoft/faview.exe	0	0	0	-	CLEAN EXIT — NEW vs SWEEP-065's blanket 13x rc=139 (engine gains paid off)
+recentfilesview	120	NirSoft/RecentFilesView.exe	0	0	0	-	CLEAN EXIT — NEW vs SWEEP-065's blanket 13x rc=139
+resourcesextract	120	NirSoft/ResourcesExtract.exe	86	0	0	-	PE32-FATAL class (rc=86, SW-1297 x86 frontier family)
+urlprotocolview	120	NirSoft/URLProtocolView.exe	86	0	0	-	PE32-FATAL class (rc=86)
+heapmemview	120	NirSoft/HeapMemView.exe	139	0	0	794277	DEEP — past UPX stub into real OEP code (driverview-class depth)
+htmlastext	120	NirSoft/HtmlAsText.exe	139	0	0	460750	DEEP — real NirSoft OEP penetration
+iconsext	120	NirSoft/iconsext.exe	139	0	0	603019	DEEP — real NirSoft OEP penetration
+accesschk64	60	Sysinternals/accesschk64.exe	1	0	0	-	Real usage-error exit
+autologon64	60	Sysinternals/autologon64.exe	0	0	0	-	CLEAN EXIT (new baseline)
+curl	60	Sysinternals/curl.exe	2	0	0	-	REAL CLI behavior: printed 'curl: try curl --help or curl --manual' + honest exit 2
+du64	60	Sysinternals/du64.exe	255	0	0	-	Printed real usage banner; own error exit (no console device path)
+listdlls64	60	Sysinternals/listdlls64.exe	0	0	0	-	CLEAN EXIT (new baseline)
+logonsessions64	60	Sysinternals/logonsessions64.exe	133	0	0	-	EH-chain terminate->int3 class (SW-1201 frontier family, winmergeu exit-133 signature)
+pipelist64	60	Sysinternals/pipelist64.exe	0	0	0	-	CLEAN EXIT (new baseline)
+psloggedon64	60	Sysinternals/psloggedon64.exe	0	0	0	-	CLEAN EXIT (new baseline)
+psinfo64	60	Sysinternals/PsInfo64.exe	255	0	0	-	Printed real usage; own error exit
+psservice64	60	Sysinternals/PsService64.exe	0	0	0	-	CLEAN EXIT (new baseline)
+sdelete64	60	Sysinternals/sdelete64.exe	255	0	0	-	Printed real usage; own error exit
+strings64	60	Sysinternals/strings64.exe	255	0	0	-	Printed real usage banner ('Do not display the startup banner...'); own error exit
+whois64	60	Sysinternals/whois64.exe	1	0	0	-	Real usage-error exit
+gup	120	N++/updater/GUP.exe	139	0	0	2450	EXACT notepadpp-2450 signature (same codebase -> same frontier)

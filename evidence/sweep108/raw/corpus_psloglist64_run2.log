@@ -1,0 +1,9 @@
+[TRACE] Command line: .cache/miniwin/guests/psloglist64/psloglist64.exe
+[MiniWin] Loading .cache/miniwin/guests/psloglist64/psloglist64.exe...
+
+PsLoglist v2.82 - local and remote event log viewer
+Copyright (C) 2000-2023 Mark Russinovich
+Sysinternals - www.sysinternals.com
+
+System log on \\:
+Error reading System event log on :

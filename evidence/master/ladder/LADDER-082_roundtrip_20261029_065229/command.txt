@@ -1,0 +1,4 @@
+command=bash scripts/ladder082_roundtrip.sh
+phase=roundtrip
+workdir=/tmp/ladder_LADDER-082_TKxZkV
+timestamp_utc=20261029_065229

@@ -1,0 +1,6 @@
+[TRACE] Command line: /home/z/my-project/workspace/miniwin-engineering/artifacts/sweep50/dl/notepadpp/notepad++.exe
+[WARN] 3 imports unresolved
+[FASTFAIL] code=5 (ECX) caller_RA=0x0 RVA=0x0 [rsp]=0x7ffde1edcec0 RSP=0x7ffde1edce20 — fail-fast
+  [FASTFAIL args] RDX=0x0 R8=0x0 R9=0x0 RBP=0x0 RDI=0x0 RSI=0x0 R10=0x0
+  [FASTFAIL rsp+40] 0x140401792 <PE RVA 0x401792>
+  [FASTFAIL rsp+104] 0x140401692 <PE RVA 0x401692>

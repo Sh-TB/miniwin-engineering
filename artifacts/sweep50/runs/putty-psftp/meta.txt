@@ -1,5 +1,0 @@
-exe=psftp/psftp.exe
-sha256=3930ec27082481ea955890202f19b4cb34310fa872888064cbed4a2dd16ffe6d
-timeout=10s
-args=none
-date_utc=2026-10-17T18:39:37Z

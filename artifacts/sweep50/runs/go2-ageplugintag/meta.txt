@@ -1,5 +1,0 @@
-exe=age/age-plugin-tag.exe
-sha256=d34fcd6823fa7340a86f1f68de2a2c851e7511fa7c40bb57de95ca10333c27ea
-timeout=10s
-args=none
-date_utc=2026-10-17T18:39:39Z

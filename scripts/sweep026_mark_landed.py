@@ -59,8 +59,8 @@ txt = '\n'.join(out)
 
 # Section header refresh
 txt = txt.replace(
- '## SW-1021..SW-1100 — SWEEP-025 continuation queue (80 items, «ادامه سه برابری» standing order: 26 landed + 80 queued = 106 this round)',
- '## SW-1021..SW-1100 — SWEEP-025 continuation queue — 32 LANDED in SWEEP-026 «ادامه فیل یوز با ۵۰ تسک» one batch (see -> LANDED SWEEP-026 marks); 48 remain queued below')
+ '## SW-1021..SW-1100 — SWEEP-025 continuation queue (80 items, (triple-parity continuation) standing order: 26 landed + 80 queued = 106 this round)',
+ '## SW-1021..SW-1100 — SWEEP-025 continuation queue — 32 LANDED in SWEEP-026 (continue elephant-cheetah with 50 tasks) one batch (see -> LANDED SWEEP-026 marks); 48 remain queued below')
 
 open(WL, 'w', encoding='utf-8').write(txt)
 print(f"marked {len(marked)} items: {sorted(marked)}")

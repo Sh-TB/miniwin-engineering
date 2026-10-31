@@ -1,0 +1,16 @@
+name	renamer
+arch	x86
+desc	den4b ReNamer 7.5 portable (tiny, SWEEP-081)
+source_url	https://www.den4b.com/download/renamer/portable/7.5 (key flow)
+source_sha256	b11342a59f22d9c48482a7f08e060109da21bb25cfc8acdd42d2b40ea6489168
+artifact	artifacts/sweep081/dl/renamer75.portable.zip
+unpack	zip
+exe	ReNamer.exe
+args	
+runs	3
+timeout	75
+keys	37,38,39,40,13
+mouse	150,150
+known	NEW
+note	rename utility, Delphi-era UI
+guest	renamer.portable

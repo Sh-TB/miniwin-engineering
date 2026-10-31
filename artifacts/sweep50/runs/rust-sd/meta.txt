@@ -1,5 +1,0 @@
-exe=sd/sd.exe
-sha256=68a3be6e02d688ff8ecaf80ef6473cf2516442f01070a4d1a5eb69daa3db5234
-timeout=10s
-args=none
-date_utc=2026-10-17T18:39:38Z

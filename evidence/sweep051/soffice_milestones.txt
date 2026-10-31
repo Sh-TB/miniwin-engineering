@@ -1,0 +1,130 @@
+[Tb4c0] [API] LoadLibrary[PE-DLL] artifacts/sweep051/guests/soffice/vcruntime140.dll -> base=0x7f8284a2b000 size=0x1e000 exp=95856 names=71 resolved=47 unresolved=0
+[Tb4c0] [API] LoadLibrary[PE-DLL] artifacts/sweep051/guests/soffice/clewlo.dll -> base=0x7f8284a49000 size=0xb000 exp=22528 names=68 resolved=38 unresolved=0
+[Tb4c0] [API] LoadLibrary[PE-DLL] artifacts/sweep051/guests/soffice/vcruntime140_1.dll -> base=0x7f8284430000 size=0xc000 exp=28080 names=3 resolved=41 unresolved=0
+[Tb4c0] [API]   dll-export vcruntime140_1.dll!__CxxFrameHandler4 -> 0x7f8284433fd0
+[Tb4c0] [API] LoadLibrary[PE-DLL] artifacts/sweep051/guests/soffice/msvcp140.dll -> base=0x7f828443c000 size=0x89000 exp=389968 names=1515 resolved=198 unresolved=0
+[Tb4c0] [API]   dll-export vcruntime140_1.dll!__CxxFrameHandler4 -> 0x7f8284433fd0
+[Tb4c0] [API] LoadLibrary[PE-DLL] artifacts/sweep051/guests/soffice/clucene.dll -> base=0x7f828454e000 size=0x26f000 exp=2146448 names=2604 resolved=174 unresolved=3
+[Tb4c0] [API]   dll clucene.dll TLS: slot=1 block=0x3117720 raw=8 zerofill=0 idx->0x7f8284798980
+[Tb4c0] [API] LoadLibrary[PE-DLL] artifacts/sweep051/guests/soffice/msvcp140_1.dll -> base=0x7f82848b3000 size=0x9000 exp=16384 names=7 resolved=34 unresolved=0
+[Tb4c0] [API]   dll-export vcruntime140_1.dll!__CxxFrameHandler4 -> 0x7f8284433fd0
+[Tb4c0] [API] LoadLibrary[PE-DLL] artifacts/sweep051/guests/soffice/sal3.dll -> base=0x7f82848bc000 size=0xde000 exp=799984 names=598 resolved=344 unresolved=54
+[Tb4c0] [API]   dll sal3.dll TLS: slot=2 block=0x327fe60 raw=14 zerofill=0 idx->0x7f8284988d60
+[Tb4c0] [API]   dll-export vcruntime140_1.dll!__CxxFrameHandler4 -> 0x7f8284433fd0
+[Tb4c0] [API] LoadLibrary[PE-DLL] artifacts/sweep051/guests/soffice/salhelper3MSC.dll -> base=0x7f828489e000 size=0x15000 exp=59584 names=59 resolved=139 unresolved=0
+[Tb4c0] [API]   dll salhelper3msc.dll TLS: slot=3 block=0x3280050 raw=8 zerofill=0 idx->0x7f82848afce8
+[Tb4c0] [API]   dll-export vcruntime140_1.dll!__CxxFrameHandler4 -> 0x7f8284433fd0
+[Tb4c0] [API] LoadLibrary[PE-DLL] artifacts/sweep051/guests/soffice/cppu3.dll -> base=0x7f828499a000 size=0x91000 exp=540304 names=100 resolved=182 unresolved=0
+[Tb4c0] [API]   dll cppu3.dll TLS: slot=4 block=0x3280090 raw=348 zerofill=0 idx->0x7f8284a21ba0
+[Tb4c0] [API]   dll-export vcruntime140_1.dll!__CxxFrameHandler4 -> 0x7f8284433fd0
+[Tb4c0] [API] LoadLibrary[PE-DLL] artifacts/sweep051/guests/soffice/storelo.dll -> base=0x7f8284822000 size=0x2b000 exp=143744 names=13 resolved=143 unresolved=0
+[Tb4c0] [API]   dll storelo.dll TLS: slot=5 block=0x3280430 raw=8 zerofill=0 idx->0x7f8284847f90
+[Tb4c0] [API]   dll-export vcruntime140_1.dll!__CxxFrameHandler4 -> 0x7f8284433fd0
+[Tb4c0] [API] LoadLibrary[PE-DLL] artifacts/sweep051/guests/soffice/reglo.dll -> base=0x7f828484d000 size=0x51000 exp=292768 names=41 resolved=145 unresolved=0
+[Tb4c0] [API]   dll-export vcruntime140_1.dll!__CxxFrameHandler4 -> 0x7f8284433fd0
+[Tb4c0] [API] LoadLibrary[PE-DLL] artifacts/sweep051/guests/soffice/unoidllo.dll -> base=0x7f82841d3000 size=0xed000 exp=879520 names=101 resolved=196 unresolved=0
+[Tb4c0] [API]   dll-export vcruntime140_1.dll!__CxxFrameHandler4 -> 0x7f8284433fd0
+[Tb4c0] [API] LoadLibrary[PE-DLL] artifacts/sweep051/guests/soffice/xmlreaderlo.dll -> base=0x7f8284804000 size=0x1e000 exp=93040 names=48 resolved=128 unresolved=0
+[Tb4c0] [API]   dll xmlreaderlo.dll TLS: slot=6 block=0x3280470 raw=8 zerofill=0 idx->0x7f828481d9a0
+[Tb4c0] [API]   dll-export vcruntime140_1.dll!__CxxFrameHandler4 -> 0x7f8284433fd0
+[Tb4c0] [API] LoadLibrary[PE-DLL] artifacts/sweep051/guests/soffice/cppuhelper3MSC.dll -> base=0x7f82842c0000 size=0x170000 exp=1336208 names=341 resolved=291 unresolved=0
+[Tb4c0] [API]   dll cppuhelper3msc.dll TLS: slot=7 block=0x32804b0 raw=8 zerofill=0 idx->0x7f8284416d20
+[Tb4c0] [API] LoadLibrary[PE-DLL] artifacts/sweep051/guests/soffice/epoxy.dll -> base=0x7f8283ff5000 size=0x1de000 exp=1581280 names=3417 resolved=51 unresolved=0
+[Tb4c0] [API]   dll-export vcruntime140_1.dll!__CxxFrameHandler4 -> 0x7f8284433fd0
+[Tb4c0] [API] LoadLibrary[PE-DLL] artifacts/sweep051/guests/soffice/revenge.dll -> base=0x7f82844d6000 size=0x78000 exp=431120 names=190 resolved=116 unresolved=0
+[Tb4c0] [API] LoadLibrary[PE-DLL] artifacts/sweep051/guests/soffice/icudt78.dll -> base=0x7f827f3c1000 size=0x1f95000 exp=33111360 names=1 resolved=0 unresolved=0
+[Tb4c0] [API]   dll-export vcruntime140_1.dll!__CxxFrameHandler4 -> 0x7f8284433fd0
+[Tb4c0] [API] LoadLibrary[PE-DLL] artifacts/sweep051/guests/soffice/icuuc78.dll -> base=0x7f82832ed000 size=0x250000 exp=2151968 names=3033 resolved=105 unresolved=3
+[Tb4c0] [API]   dll icuuc78.dll TLS: slot=8 block=0x32809e0 raw=8 zerofill=0 idx->0x7f8283527868
+[Tb4c0] [API] LoadLibrary[PE-DLL] artifacts/sweep051/guests/soffice/libxml2.dll -> base=0x7f828353d000 size=0x12c000 exp=1109648 names=1390 resolved=91 unresolved=0
+[Tb4c0] [API]   dll-export vcruntime140_1.dll!__CxxFrameHandler4 -> 0x7f8284433fd0
+[Tb4c0] [API] LoadLibrary[PE-DLL] artifacts/sweep051/guests/soffice/etonyek.dll -> base=0x7f8283669000 size=0x4c7000 exp=4466176 names=4 resolved=217 unresolved=1
+[Tb4c0] [API]   dll etonyek.dll TLS: slot=9 block=0x3280a20 raw=8 zerofill=0 idx->0x7f8283ad5c40
+[Tb4c0] [API]   dll-export vcruntime140_1.dll!__CxxFrameHandler4 -> 0x7f8284433fd0
+[Tb4c0] [API] LoadLibrary[PE-DLL] artifacts/sweep051/guests/soffice/gpgmepp.dll -> base=0x7f8283ed2000 size=0x123000 exp=1000352 names=977 resolved=257 unresolved=24
+[Tb4c0] [API]   dll gpgmepp.dll TLS: slot=10 block=0x3239700 raw=8 zerofill=0 idx->0x7f8283fe4c90
+[Tb4c0] [API]   dll-export vcruntime140_1.dll!__CxxFrameHandler4 -> 0x7f8284433fd0
+[Tb4c0] [API] LoadLibrary[PE-DLL] artifacts/sweep051/guests/soffice/i18nlangtag.dll -> base=0x7f8283e50000 size=0x82000 exp=468848 names=119 resolved=201 unresolved=0
+[Tb4c0] [API]   dll i18nlangtag.dll TLS: slot=11 block=0x3239740 raw=424 zerofill=0 idx->0x7f8283ec8f70
+[Tb4c0] [API]   dll-export vcruntime140_1.dll!__CxxFrameHandler4 -> 0x7f8284433fd0
+[Tb4c0] [API] LoadLibrary[PE-DLL] artifacts/sweep051/guests/soffice/jvmaccesslo.dll -> base=0x7f82847ec000 size=0x18000 exp=67344 names=20 resolved=128 unresolved=0
+[Tb4c0] [API]   dll jvmaccesslo.dll TLS: slot=12 block=0x324fa00 raw=8 zerofill=0 idx->0x7f82847ffb70
+[Tb4c0] [API]   dll-export vcruntime140_1.dll!__CxxFrameHandler4 -> 0x7f8284433fd0
+[Tb4c0] [API] LoadLibrary[PE-DLL] artifacts/sweep051/guests/soffice/jvmfwklo.dll -> base=0x7f8283de4000 size=0x6c000 exp=389104 names=19 resolved=252 unresolved=0
+[Tb4c0] [API]   dll jvmfwklo.dll TLS: slot=13 block=0x3239aa0 raw=8 zerofill=0 idx->0x7f8283e47afc
+[Tb4c0] [API]   dll-export vcruntime140_1.dll!__CxxFrameHandler4 -> 0x7f8284433fd0
+[Tb4c0] [API] LoadLibrary[PE-DLL] artifacts/sweep051/guests/soffice/mwaw.dll -> base=0x7f8282806000 size=0xae7000 exp=10659072 names=8 resolved=205 unresolved=2
+[Tb4c0] [API]   dll mwaw.dll TLS: slot=14 block=0x3239ae0 raw=8 zerofill=0 idx->0x7f8283246f30
+[Tb4c0] [API]   dll-export vcruntime140_1.dll!__CxxFrameHandler4 -> 0x7f8284433fd0
+[Tb4c0] [API] LoadLibrary[PE-DLL] artifacts/sweep051/guests/soffice/odfgen.dll -> base=0x7f8283c68000 size=0x17c000 exp=1389360 names=303 resolved=195 unresolved=0
+[Tb4c0] [API]   dll odfgen.dll TLS: slot=15 block=0x3239b20 raw=8 zerofill=0 idx->0x7f8283dc4b58
+[Tb4c0] [API]   dll-export vcruntime140_1.dll!__CxxFrameHandler4 -> 0x7f8284433fd0
+[Tb4c0] [API] LoadLibrary[PE-DLL] artifacts/sweep051/guests/soffice/orcus-parser.dll -> base=0x7f8283bb1000 size=0xb7000 exp=652672 names=488 resolved=205 unresolved=1
+[Tb4c0] [API]   dll orcus-parser.dll TLS: slot=16 block=0x3239b60 raw=8 zerofill=0 idx->0x7f8283c5c310
+[Tb4c0] [API]   dll-export msvcp140.dll!_Cnd_do_broadcast_at_thread_exit -> 0x7f828444ec00
+[Tb4c0] [API]   dll-export vcruntime140_1.dll!__CxxFrameHandler4 -> 0x7f8284433fd0
+[Tb4c0] [API] LoadLibrary[PE-DLL] artifacts/sweep051/guests/soffice/orcus.dll -> base=0x7f82825ae000 size=0x258000 exp=2167184 names=676 resolved=423 unresolved=0
+[Tb4c0] [API]   dll orcus.dll TLS: slot=17 block=0x3239ba0 raw=8 zerofill=0 idx->0x7f82827d9030
+[Tb4c0] [API] LoadLibrary[PE-DLL] artifacts/sweep051/guests/soffice/lcms2.dll -> base=0x7f8281ece000 size=0x91000 exp=530816 names=382 resolved=85 unresolved=0
+[Tb4c0] [API]   dll-export vcruntime140_1.dll!__CxxFrameHandler4 -> 0x7f8284433fd0
+[Tb4c0] [API] LoadLibrary[PE-DLL] artifacts/sweep051/guests/soffice/pdfiumlo.dll -> base=0x7f8281f5f000 size=0x64f000 exp=6345840 names=496 resolved=241 unresolved=15
+[Tb4c0] [API]   dll pdfiumlo.dll TLS: slot=18 block=0x31e2be0 raw=8 zerofill=0 idx->0x7f828257794c
+[Tb4c0] [API] LoadLibrary[PE-DLL] artifacts/sweep051/guests/soffice/raptor2.dll -> base=0x7f8283b5a000 size=0x57000 exp=308096 names=378 resolved=108 unresolved=0
+[Tb4c0] [API] LoadLibrary[PE-DLL] artifacts/sweep051/guests/soffice/rasqal.dll -> base=0x7f8281e15000 size=0x84000 exp=481936 names=290 resolved=229 unresolved=0
+[Tb4c0] [API] LoadLibrary[PE-DLL] artifacts/sweep051/guests/soffice/librdf.dll -> base=0x7f8281e99000 size=0x35000 exp=167088 names=385 resolved=231 unresolved=0
+[Tb4c0] [API]   dll-export msvcp140.dll!_Cnd_do_broadcast_at_thread_exit -> 0x7f828444ec00
+[Tb4c0] [API]   dll-export vcruntime140_1.dll!__CxxFrameHandler4 -> 0x7f8284433fd0
+[Tb4c0] [API] LoadLibrary[PE-DLL] artifacts/sweep051/guests/soffice/skialo.dll -> base=0x7f8281520000 size=0x8f5000 exp=8619088 names=3953 resolved=266 unresolved=16
+[Tb4c0] [API]   dll skialo.dll TLS: slot=19 block=0x31e2c20 raw=44 zerofill=0 idx->0x7f8281db1f88
+[Tb4c0] [API]   dll-export vcruntime140_1.dll!__CxxFrameHandler4 -> 0x7f8284433fd0
+[Tb4c0] [API] LoadLibrary[PE-DLL] artifacts/sweep051/guests/soffice/staroffice.dll -> base=0x7f827f077000 size=0x34a000 exp=3188816 names=8 resolved=195 unresolved=0
+[Tb4c0] [API]   dll staroffice.dll TLS: slot=20 block=0x31e2cd0 raw=8 zerofill=0 idx->0x7f827f38d744
+[Tb4c0] [API]   dll-export vcruntime140_1.dll!__CxxFrameHandler4 -> 0x7f8284433fd0
+[Tb4c0] [API] LoadLibrary[PE-DLL] artifacts/sweep051/guests/soffice/wpd.dll -> base=0x7f8281425000 size=0xfb000 exp=945616 names=4 resolved=101 unresolved=1
+[Tb4c0] [API]   dll-export vcruntime140_1.dll!__CxxFrameHandler4 -> 0x7f8284433fd0
+[Tb4c0] [API] LoadLibrary[PE-DLL] artifacts/sweep051/guests/soffice/wpg.dll -> base=0x7f82847be000 size=0x2e000 exp=155184 names=2 resolved=99 unresolved=0
+[Tb4c0] [API]   dll wpg.dll TLS: slot=21 block=0x31e3430 raw=8 zerofill=0 idx->0x7f82847e69b4
+[Tb4c0] [API]   dll-export vcruntime140_1.dll!__CxxFrameHandler4 -> 0x7f8284433fd0
+[Tb4c0] [API] LoadLibrary[PE-DLL] artifacts/sweep051/guests/soffice/wps.dll -> base=0x7f827ed1c000 size=0x35b000 exp=3251856 names=3 resolved=217 unresolved=1
+[Tb4c0] [API]   dll wps.dll TLS: slot=22 block=0x31e7db0 raw=8 zerofill=0 idx->0x7f827f03d9f8
+[Tb4c0] [API] LoadLibrary[PE-DLL] artifacts/sweep051/guests/soffice/Argon2OptDll.dll -> base=0x7f82844c9000 size=0xd000 exp=34096 names=22 resolved=36 unresolved=0
+[Tb4c0] [API]   dll-export vcruntime140_1.dll!__CxxFrameHandler4 -> 0x7f8284433fd0
+[Tb4c0] [API] LoadLibrary[PE-DLL] artifacts/sweep051/guests/soffice/CoinMP.dll -> base=0x7f827e993000 size=0x389000 exp=3508192 names=250 resolved=162 unresolved=2
+[Tb4c0] [API]   dll coinmp.dll TLS: slot=23 block=0x31e7e20 raw=8 zerofill=0 idx->0x7f827ed036f0
+[Tb4c0] [API] LoadLibrary[PE-DLL] artifacts/sweep051/guests/soffice/libcurl.dll -> base=0x7f8281389000 size=0x9c000 exp=585136 names=100 resolved=129 unresolved=37
+[Tb4c0] [API]   dll-export vcruntime140_1.dll!__CxxFrameHandler4 -> 0x7f8284433fd0
+[Tb4c0] [API] LoadLibrary[PE-DLL] artifacts/sweep051/guests/soffice/ifbclient.dll -> base=0x7f827e754000 size=0x23f000 exp=1939312 names=285 resolved=222 unresolved=47
+[Tb4c0] [API]   dll ifbclient.dll TLS: slot=24 block=0x311e210 raw=520 zerofill=0 idx->0x7f827e96f4e4
+[Tb4c0] [API]   dll-export vcruntime140_1.dll!__CxxFrameHandler4 -> 0x7f8284433fd0
+[Tb4c0] [API] LoadLibrary[PE-DLL] artifacts/sweep051/guests/soffice/icuin78.dll -> base=0x7f827e3d1000 size=0x383000 exp=2993520 names=5851 resolved=996 unresolved=7
+[Tb4c0] [API]   dll icuin78.dll TLS: slot=25 block=0x31fc7d0 raw=8 zerofill=0 idx->0x7f827e72b128
+[Tb4c0] [API] LoadLibrary[PE-DLL] artifacts/sweep051/guests/soffice/libxslt.dll -> base=0x7f827e395000 size=0x3c000 exp=208448 names=252 resolved=233 unresolved=1
+[Tb4c0] [API] LoadLibrary[PE-DLL] artifacts/sweep051/guests/soffice/libexslt.dll -> base=0x7f8281370000 size=0x19000 exp=77472 names=18 resolved=178 unresolved=4
+[Tb4c0] [API] LoadLibrary[PE-DLL] artifacts/sweep051/guests/soffice/lpsolve55.dll -> base=0x7f827e2e8000 size=0xad000 exp=564192 names=282 resolved=98 unresolved=2
+[Tb4c0] [API] LoadLibrary[PE-DLL] artifacts/sweep051/guests/soffice/nspr4.dll -> base=0x7f827e2b2000 size=0x36000 exp=170000 names=417 resolved=148 unresolved=40
+[Tb4c0] [API] LoadLibrary[PE-DLL] artifacts/sweep051/guests/soffice/plc4.dll -> base=0x7f8283b30000 size=0xa000 exp=19840 names=41 resolved=45 unresolved=0
+[Tb4c0] [API] LoadLibrary[PE-DLL] artifacts/sweep051/guests/soffice/plds4.dll -> base=0x7f8281367000 size=0x9000 exp=15264 names=26 resolved=29 unresolved=0
+[Tb4c0] [API] LoadLibrary[PE-DLL] artifacts/sweep051/guests/soffice/nssutil3.dll -> base=0x7f827e168000 size=0x2e000 exp=156528 names=220 resolved=108 unresolved=0
+[Tb4c0] [API] LoadLibrary[PE-DLL] artifacts/sweep051/guests/soffice/nss3.dll -> base=0x7f827e196000 size=0x11c000 exp=1050768 names=885 resolved=331 unresolved=0
+[Tb4c0] [API] LoadLibrary[PE-DLL] artifacts/sweep051/guests/soffice/libcrypto-3.dll -> base=0x7f827da7d000 size=0x6eb000 exp=6669584 names=5872 resolved=158 unresolved=40
+[Tb4c0] [API] LoadLibrary[PE-DLL] artifacts/sweep051/guests/soffice/libssl-3.dll -> base=0x7f827d937000 size=0x146000 exp=1186192 names=603 resolved=621 unresolved=13
+[Tb4c0] [API] LoadLibrary[PE-DLL] artifacts/sweep051/guests/soffice/libxmlsec.dll -> base=0x7f827d861000 size=0x85000 exp=463392 names=1118 resolved=145 unresolved=2
+[Tb4c0] [API] LoadLibrary[PE-DLL] artifacts/sweep051/guests/soffice/libxmlsec-mscng.dll -> base=0x7f827d8e6000 size=0x51000 exp=278064 names=547 resolved=189 unresolved=49
+[Tb4c0] [API]   dll-export msvcp140.dll!_Cnd_do_broadcast_at_thread_exit -> 0x7f828444ec00
+[Tb4c0] [API]   dll-export vcruntime140_1.dll!__CxxFrameHandler4 -> 0x7f8284433fd0
+[Tb4c0] [API] LoadLibrary[PE-DLL] artifacts/sweep051/guests/soffice/msvcp140_2.dll -> base=0x7f827d81d000 size=0x44000 exp=243120 names=44 resolved=101 unresolved=1
+[Tb4c0] [API]   dll-export vcruntime140_1.dll!__CxxFrameHandler4 -> 0x7f8284433fd0
+[Tb4c0] [API] LoadLibrary[PE-DLL] artifacts/sweep051/guests/soffice/mergedlo.dll -> base=0x7f8284a54000 size=0x914f000 exp=136094752 names=50142 resolved=3194 unresolved=238
+[Tb4c0] [API]   dll mergedlo.dll TLS: slot=26 block=0x31fc810 raw=423 zerofill=0 idx->0x7f828d19e0c8
+[Tb4c0] [API]   [1] _seh_filter_exe -> 0x205b820
+[Tb4c0] [API]   [9] _exit -> 0x203c2a0
+[Tb4c0] [API]   [10] _crt_at_quick_exit -> 0x207f810
+[Tb4c0] [API]   [12] _c_exit -> 0x2069ec0
+[Tb4c0] [API]   dll-export vcruntime140_1.dll!__CxxFrameHandler4 -> 0x7f8284433fd0
+[Tb4c0] [API] LoadLibrary[PE-DLL] artifacts/sweep051/guests/soffice/vclplug_winlo.dll -> base=0x7f829632a000 size=0x3d0000 exp=3661200 names=27 resolved=1375 unresolved=77
+[Tb4c0] [API]   dll vclplug_winlo.dll TLS: slot=27 block=0x3210550 raw=9 zerofill=0 idx->0x7f82966bf3f8
+[Tb4c0] [API] [GUI] WM_CREATE(lparam=&CS lpParams=0x21afbc0) -> wndproc -> 0
+[Tb4c0] [API] CreateWindowExW(ex=0x80 style=0x80000000 cls=0x7f829664e618 0x0@0,0) -> HWND 0x10001
+[Tb4c0] [API] [DISPATCH] === RtlDispatchException ===
+[Tb4c0] [API] _seh_filter_exe(code=e06d7363)
+[Tb4c0] [API] _exit(code=-529697949)

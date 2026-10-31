@@ -1,5 +1,0 @@
-exe=age/age-inspect.exe
-sha256=bd5943884f62e5bcaff5323c078a574ab9fbcd08186914465a7a8acd7550bd93
-timeout=10s
-args=none
-date_utc=2026-10-17T18:39:39Z

@@ -1,0 +1,2610 @@
+{
+  "trace": [
+[Te640] [API] PE Loader: file=/home/z/tmp/corpus/wr-out/UnRAR.exe size=544400
+[Te640] [API] PE Loader: ImageBase=0x140000000 EP=0x44310 SizeOfImage=0x92000 Sections=6
+[Te640] [API] PE Loader: Mapped at 0x140000000 (forced via MAP_FIXED)
+[Te640] [API] KUSD: mapped 0x7ffe0000 (root C:\WINDOWS, ver 5.2, qpc 1e9)
+[Te640] [API] Section [0] .text    VA=0x00001000 VS=0x0005e5fe Raw=0x0005e600 Ch=0x60000020
+[Te640] [API] Section [1] .rdata   VA=0x00060000 VS=0x00013d38 Raw=0x00013e00 Ch=0x40000040
+[Te640] [API] Section [2] .data    VA=0x00074000 VS=0x0000f684 Raw=0x00003000 Ch=0xc0000040
+[Te640] [API] Section [3] .pdata   VA=0x00084000 VS=0x000038dc Raw=0x00003a00 Ch=0x40000040
+[Te640] [API] Section [4] .rsrc    VA=0x00088000 VS=0x00008640 Raw=0x00008800 Ch=0x40000040
+[Te640] [API] Section [5] .reloc   VA=0x00091000 VS=0x00000a70 Raw=0x00000c00 Ch=0x42000040
+[Te640] [API] Import Directory: RVA=0x72a6c Size=0xa0
+[Te640] [API] Import DLL: KERNEL32.dll (IAT RVA=0x60088, ILT RVA=0x72b98)
+[Te640] [API]   [0] CreateHardLinkW -> 0x20c09a0
+[Te640] [API]   [1] GetLongPathNameW -> 0x2014b20
+[Te640] [API]   [2] GetShortPathNameW -> 0x208cd00
+[Te640] [API]   [3] MoveFileW -> 0x20bec50
+[Te640] [API]   [4] FlushFileBuffers -> 0x2040bd0
+[Te640] [API]   [5] ReadFile -> 0x2058500
+[Te640] [API]   [6] SetEndOfFile -> 0x20407d0
+[Te640] [API]   [7] SetFilePointer -> 0x2059640
+[Te640] [API]   [8] CreateDirectoryW -> 0x20b5450
+[Te640] [API]   [9] GetDiskFreeSpaceExW -> 0x20afe90
+[Te640] [API]   [10] GetDriveTypeW -> 0x2088c40
+[Te640] [API]   [11] GetFileAttributesW -> 0x20b8780
+[Te640] [API]   [12] GetVolumeInformationW -> 0x20aa770
+[Te640] [API]   [13] SetFileAttributesW -> 0x20bd560
+[Te640] [API]   [14] GetCurrentProcessId -> 0x2008620
+[Te640] [API]   [15] FindClose -> 0x2014090
+[Te640] [API]   [16] FindFirstFileW -> 0x20a9ef0
+[Te640] [API]   [17] FindNextFileW -> 0x2089c70
+[Te640] [API]   [18] GetVersionExW -> 0x2089a70
+[Te640] [API]   [19] GetCurrentProcess -> 0x2008610
+[Te640] [API]   [20] VirtualAlloc -> 0x20a96c0
+[Te640] [API]   [21] VirtualFree -> 0x2053e00
+[Te640] [API]   [22] GetModuleHandleW -> 0x203b2e0
+[Te640] [API]   [23] GetProcAddress -> 0x208b550
+[Te640] [API]   [24] GetCurrentDirectoryW -> 0x20a4be0
+[Te640] [API]   [25] GetFullPathNameW -> 0x20b9df0
+[Te640] [API]   [26] GetModuleFileNameW -> 0x20b2ae0
+[Te640] [API]   [27] FoldStringW -> 0x20a92d0
+[Te640] [API]   [28] SetErrorMode -> 0x200a5b0
+[Te640] [API]   [29] FreeLibrary -> 0x206c4c0
+[Te640] [API]   [30] LoadLibraryExW -> 0x20c1770
+[Te640] [API]   [31] ExpandEnvironmentStringsW -> 0x20b9810
+[Te640] [API]   [32] CreateEventW -> 0x20415f0
+[Te640] [API]   [33] GetCurrentThread -> 0x2008630
+[Te640] [API]   [34] DeviceIoControl -> 0x2078740
+[Te640] [API]   [35] SetPriorityClass -> 0x2060750
+[Te640] [API]   [36] GetSystemDirectoryW -> 0x209e780
+[Te640] [API]   [37] LoadLibraryW -> 0x20b7770
+[Te640] [API]   [38] SetThreadExecutionState -> 0x2033bf0
+[Te640] [API]   [39] InitializeCriticalSection -> 0x2076060
+[Te640] [API]   [40] EnterCriticalSection -> 0x208fcf0
+[Te640] [API]   [41] LeaveCriticalSection -> 0x20680f0
+[Te640] [API]   [42] DeleteCriticalSection -> 0x2076080
+[Te640] [API]   [43] SetEvent -> 0x2092bb0
+[Te640] [API]   [44] ResetEvent -> 0x20926f0
+[Te640] [API]   [45] ReleaseSemaphore -> 0x2090d70
+[Te640] [API]   [46] WaitForSingleObject -> 0x20aed20
+[Te640] [API]   [47] CreateSemaphoreW -> 0x2043f10
+[Te640] [API]   [48] CreateThread -> 0x20686a0
+[Te640] [API]   [49] GetProcessAffinityMask -> 0x2036a90
+[Te640] [API]   [50] FileTimeToLocalFileTime -> 0x208a640
+[Te640] [API]   [51] LocalFileTimeToFileTime -> 0x20804a0
+[Te640] [API]   [52] GetSystemTime -> 0x2058310
+[Te640] [API]   [53] SystemTimeToTzSpecificLocalTime -> 0x200ada0
+[Te640] [API]   [54] TzSpecificLocalTimeToSystemTime -> 0x2042ab0
+[Te640] [API]   [55] FileTimeToSystemTime -> 0x207fb80
+[Te640] [API]   [56] SystemTimeToFileTime -> 0x207fea0
+[Te640] [API]   [57] CompareStringW -> 0x201ba60
+[Te640] [API]   [58] MultiByteToWideChar -> 0x204be20
+[Te640] [API]   [59] WideCharToMultiByte -> 0x207e5f0
+[Te640] [API]   [60] GetCPInfo -> 0x2035b80
+[Te640] [API]   [61] IsDBCSLeadByte -> 0x200a1b0
+[Te640] [API]   [62] HeapSize -> 0x20aa980
+[Te640] [API]   [63] SetFilePointerEx -> 0x20598b0
+[Te640] [API]   [64] GetStringTypeW -> 0x207e3a0
+[Te640] [API]   [65] GetProcessHeap -> 0x2009810
+[Te640] [API]   [66] SetEnvironmentVariableW -> 0x20c06f0
+[Te640] [API]   [67] FreeEnvironmentStringsW -> 0x206c620
+[Te640] [API]   [68] GetEnvironmentStringsW -> 0x207d9f0
+[Te640] [API]   [69] GetOEMCP -> 0x200a080
+[Te640] [API]   [70] GetACP -> 0x200a070
+[Te640] [API]   [71] CloseHandle -> 0x20a48f0
+[Te640] [API]   [72] SetFileTime -> 0x206b2b0
+[Te640] [API]   [73] GetCommandLineW -> 0x207c640
+[Te640] [API]   [74] RemoveDirectoryW -> 0x20b3840
+[Te640] [API]   [75] DeleteFileW -> 0x20b7170
+[Te640] [API]   [76] CreateFileW -> 0x20d1c30
+[Te640] [API]   [77] SetConsoleCtrlHandler -> 0x200a240
+[Te640] [API]   [78] FormatMessageW -> 0x20506e0
+[Te640] [API]   [79] LocalFree -> 0x20cc320
+[Te640] [API]   [80] Sleep -> 0x204dc70
+[Te640] [API]   [81] SetLastError -> 0x203e550
+[Te640] [API]   [82] GetLastError -> 0x2026c20
+[Te640] [API]   [83] WriteConsoleW -> 0x201a450
+[Te640] [API]   [84] ReadConsoleW -> 0x2058a30
+[Te640] [API]   [85] SetConsoleMode -> 0x200a200
+[Te640] [API]   [86] GetConsoleMode -> 0x2041ef0
+[Te640] [API]   [87] WriteFile -> 0x2058f10
+[Te640] [API]   [88] GetFileType -> 0x201c610
+[Te640] [API]   [89] GetStdHandle -> 0x210d630
+[Te640] [API]   [90] SetThreadPriority -> 0x206b6d0
+[Te640] [API]   [91] IsValidCodePage -> 0x200a090
+[Te640] [API]   [92] FindFirstFileExW -> 0x20aa3f0
+[Te640] [API]   [93] HeapReAlloc -> 0x20ccc30
+[Te640] [API]   [94] SetStdHandle -> 0x2088320
+[Te640] [API]   [95] GetConsoleOutputCP -> 0x20890e0
+[Te640] [API]   [96] LCMapStringW -> 0x2040410
+[Te640] [API]   [97] FlsFree -> 0x2088bd0
+[Te640] [API]   [98] FlsSetValue -> 0x2009390
+[Te640] [API]   [99] FlsGetValue -> 0x2009370
+[Te640] [API]   [100] RtlCaptureContext -> 0x207b4f0
+[Te640] [API]   [101] RtlLookupFunctionEntry -> 0x2027240
+[Te640] [API]   [102] RtlVirtualUnwind -> 0x2098190
+[Te640] [API]   [103] UnhandledExceptionFilter -> 0x206ea00
+[Te640] [API]   [104] SetUnhandledExceptionFilter -> 0x2027560
+[Te640] [API]   [105] TerminateProcess -> 0x209edb0
+[Te640] [API]   [106] IsProcessorFeaturePresent -> 0x2009f40
+[Te640] [API]   [107] ReleaseSRWLockExclusive -> 0x207f460
+[Te640] [API]   [108] AcquireSRWLockExclusive -> 0x207f300
+[Te640] [API]   [109] WakeAllConditionVariable -> 0x207d610
+[Te640] [API]   [110] SleepConditionVariableSRW -> 0x2055d70
+[Te640] [API]   [111] IsDebuggerPresent -> 0x206ae90
+[Te640] [API]   [112] GetStartupInfoW -> 0x2037400
+[Te640] [API]   [113] QueryPerformanceCounter -> 0x204bca0
+[Te640] [API]   [114] GetCurrentThreadId -> 0x2008640
+[Te640] [API]   [115] GetSystemTimeAsFileTime -> 0x204b7e0
+[Te640] [API]   [116] InitializeSListHead -> 0x2009fa0
+[Te640] [API]   [117] RtlPcToFileHeader -> 0x2083a80
+[Te640] [API]   [118] RaiseException -> 0x2008ae0
+[Te640] [API]   [119] RtlUnwindEx -> 0x209d1e0
+[Te640] [API]   [120] EncodePointer -> 0x201a780
+[Te640] [API]   [121] InitializeCriticalSectionAndSpinCount -> 0x208c0b0
+[Te640] [API]   [122] TlsAlloc -> 0x20350c0
+[Te640] [API]   [123] TlsGetValue -> 0x20276c0
+[Te640] [API]   [124] TlsSetValue -> 0x205d6c0
+[Te640] [API]   [125] TlsFree -> 0x200ad90
+[Te640] [API]   [126] ExitProcess -> 0x20f91c0
+[Te640] [API]   [127] GetModuleHandleExW -> 0x20c7e40
+[Te640] [API]   [128] QueryPerformanceFrequency -> 0x2036bf0
+[Te640] [API]   [129] GetCommandLineA -> 0x207c180
+[Te640] [API]   [130] HeapFree -> 0x20ca9b0
+[Te640] [API]   [131] HeapAlloc -> 0x204fb10
+[Te640] [API]   [132] FlsAlloc -> 0x2035260
+[Te640] [API] Import DLL: USER32.dll (IAT RVA=0x60510, ILT RVA=0x73020)
+[Te640] [API]   [0] CharUpperW -> 0x2023de0
+[Te640] [API]   [1] CharToOemBuffW -> 0x2025f80
+[Te640] [API]   [2] CharToOemA -> 0x2019db0
+[Te640] [API]   [3] OemToCharBuffA -> 0x208a770
+[Te640] [API]   [4] OemToCharA -> 0x208a2d0
+[Te640] [API]   [5] ExitWindowsEx -> 0x200e500
+[Te640] [API]   [6] MessageBeep -> 0x2088b80
+[Te640] [API]   [7] LoadStringW -> 0x20c39b0
+[Te640] [API]   [8] CharLowerW -> 0x2024110
+[Te640] [API] Import DLL: ADVAPI32.dll (IAT RVA=0x60000, ILT RVA=0x72b10)
+[Te640] [API]   [0] LookupPrivilegeValueW -> 0x200ab60
+[Te640] [API]   [1] FreeSid -> 0x2076d40
+[Te640] [API]   [2] CheckTokenMembership -> 0x20bff70
+[Te640] [API]   [3] AllocateAndInitializeSid -> 0x20c42e0
+[Te640] [API]   [4] AdjustTokenPrivileges -> 0x203eb30
+[Te640] [API]   [5] RegQueryValueExW -> 0x20d95f0
+[Te640] [API]   [6] RegOpenKeyExW -> 0x20d70c0
+[Te640] [API]   [7] RegCloseKey -> 0x200a3e0
+[Te640] [API]   [8] LsaAddAccountRights -> 0x200f530
+[Te640] [API]   [9] LsaOpenPolicy -> 0x20712a0
+[Te640] [API]   [10] LsaClose -> 0x200e3a0
+[Te640] [API]   [11] ConvertStringSidToSidW -> 0x20bddd0
+[Te640] [API]   [12] ConvertSidToStringSidW -> 0x2050bf0
+[Te640] [API]   [13] GetTokenInformation -> 0x20460f0
+[Te640] [API]   [14] OpenProcessToken -> 0x203eab0
+[Te640] [API]   [15] SetFileSecurityW -> 0x203eb80
+[Te640] [API] Import DLL: SHELL32.dll (IAT RVA=0x604e8, ILT RVA=0x72ff8)
+[Te640] [API]   [0] ShellExecuteExW -> 0x20b95c0
+[Te640] [API]   [1] SHGetPathFromIDListW -> 0x200c6c0
+[Te640] [API]   [2] SHGetMalloc -> 0x2037a90
+[Te640] [API]   [3] SHGetSpecialFolderLocation -> 0x200c680
+[Te640] [API] Import DLL: ole32.dll (IAT RVA=0x60560, ILT RVA=0x73070)
+[Te640] [API]   [0] CoCreateInstance -> 0x2062cf0
+[Te640] [API]   [1] CoSetProxyBlanket -> 0x2009f30
+[Te640] [API] Import DLL: OLEAUT32.dll (IAT RVA=0x604b8, ILT RVA=0x72fc8)
+[Te640] [API]   [0] Ordinal 9 -> VariantClear (fixed ordinal)
+[Te640] [API]   [0] VariantClear -> 0x2076cf0
+[Te640] [API]   [1] Ordinal 6 -> SysFreeString (fixed ordinal)
+[Te640] [API]   [1] SysFreeString -> 0x2076b20
+[Te640] [API]   [2] Ordinal 2 -> SysAllocString (fixed ordinal)
+[Te640] [API]   [2] SysAllocString -> 0x2089ff0
+[Te640] [API] Import DLL: POWRPROF.dll (IAT RVA=0x604d8, ILT RVA=0x72fe8)
+[Te640] [API]   [0] SetSuspendState -> 0x200e510
+[Te640] [API] Import resolution: 168 resolved, 0 unresolved (total 168)
+[Te640] [API] TLS: StartRaw=0x14006d550 EndRaw=0x14006d558 Callbacks=0x140060658
+[Te640] [API] TLS: static block 0x402c720 (8+0 bytes) -> slot 0
+[Te640] [API] Exception: .pdata RVA=0x84000 Size=0x38dc Entries=1213
+[Te640] [API] [API-005] EH hacks DISABLED (default) (MINWIN_EH_HACKS=<unset>)
+[Te640] [API] [API-005] CXX-EH-FIX (LSDA catch-all patch RVA 0x2010c8) skipped: MINWIN_EH_HACKS not set
+[Te640] [API] SW-1297 validate_fd patch: fingerprint not found (guest unaffected)
+[Te640] [API] Jumping to EP=0x140044310
+[Te640] [API] GetSystemTimeAsFileTime()
+[Te640] [API] QueryPerformanceCounter()
+[Te640] [API] LoadLibraryExW(flags=2048)
+[Te640] [API] LoadLibraryA(api-ms-win-core-synch-l1-2-0)
+[Te640] [API] GetProcAddress(module=0xdedd0000, name=InitializeCriticalSectionEx)
+[Te640] [API]   -> 0x203aba0
+[Te640] [API] InitializeCriticalSectionEx(spin=4000)
+[Te640] [API] LoadLibraryExW(flags=2048)
+[Te640] [API] LoadLibraryA(api-ms-win-core-fibers-l1-1-1)
+[Te640] [API] GetProcAddress(module=0xdedd0000, name=FlsAlloc)
+[Te640] [API]   -> 0x2035260
+[Te640] [API] FlsAlloc(cb=0x140045f60) = 0
+[Te640] [API] GetProcAddress(module=0xdedd0000, name=FlsSetValue)
+[Te640] [API]   -> 0x2009390
+[Te640] [API] LoadLibraryExW(flags=2048)
+[Te640] [API] LoadLibraryA(api-ms-win-core-synch-l1-2-0)
+[Te640] [API] GetProcAddress(module=0xdedd0000, name=InitializeCriticalSectionEx)
+[Te640] [API]   -> 0x203aba0
+[Te640] [API] InitializeCriticalSectionEx(spin=4000)
+[Te640] [API] InitializeCriticalSectionEx(spin=4000)
+[Te640] [API] InitializeCriticalSectionEx(spin=4000)
+[Te640] [API] InitializeCriticalSectionEx(spin=4000)
+[Te640] [API] InitializeCriticalSectionEx(spin=4000)
+[Te640] [API] InitializeCriticalSectionEx(spin=4000)
+[Te640] [API] InitializeCriticalSectionEx(spin=4000)
+[Te640] [API] InitializeCriticalSectionEx(spin=4000)
+[Te640] [API] InitializeCriticalSectionEx(spin=4000)
+[Te640] [API] InitializeCriticalSectionEx(spin=4000)
+[Te640] [API] InitializeCriticalSectionEx(spin=4000)
+[Te640] [API] InitializeCriticalSectionEx(spin=4000)
+[Te640] [API] InitializeCriticalSectionEx(spin=4000)
+[Te640] [API] InitializeCriticalSectionEx(spin=4000)
+[Te640] [API] FlsAlloc(cb=0x1400518c0) = 1
+[Te640] [API] GetLastError() = 0
+[Te640] [API] HeapAlloc(size=0x3c8, zero=1) = 0x402c760
+[Te640] [API] EnterCriticalSection(0x140082eb8)
+[Te640] [API] LeaveCriticalSection(0x140082eb8)
+[Te640] [API] EnterCriticalSection(0x140082e90)
+[Te640] [API] LeaveCriticalSection(0x140082e90)
+[Te640] [API] SetLastError(0) caller=0x140051c6d
+[Te640] [API] EnterCriticalSection(0x140082f08)
+[Te640] [API] EnterCriticalSection(0x140082f08)
+[Te640] [API] HeapAlloc(size=0x1200, zero=1) = 0x402cb30
+[Te640] [API] InitializeCriticalSectionEx(spin=4000)
+[Te640] [API] InitializeCriticalSectionEx(spin=4000)
+[Te640] [API] InitializeCriticalSectionEx(spin=4000)
+[Te640] [API] InitializeCriticalSectionEx(spin=4000)
+[Te640] [API] InitializeCriticalSectionEx(spin=4000)
+[Te640] [API] InitializeCriticalSectionEx(spin=4000)
+[Te640] [API] InitializeCriticalSectionEx(spin=4000)
+[Te640] [API] InitializeCriticalSectionEx(spin=4000)
+[Te640] [API] InitializeCriticalSectionEx(spin=4000)
+[Te640] [API] InitializeCriticalSectionEx(spin=4000)
+[Te640] [API] InitializeCriticalSectionEx(spin=4000)
+[Te640] [API] InitializeCriticalSectionEx(spin=4000)
+[Te640] [API] InitializeCriticalSectionEx(spin=4000)
+[Te640] [API] InitializeCriticalSectionEx(spin=4000)
+[Te640] [API] InitializeCriticalSectionEx(spin=4000)
+[Te640] [API] InitializeCriticalSectionEx(spin=4000)
+[Te640] [API] InitializeCriticalSectionEx(spin=4000)
+[Te640] [API] InitializeCriticalSectionEx(spin=4000)
+[Te640] [API] InitializeCriticalSectionEx(spin=4000)
+[Te640] [API] InitializeCriticalSectionEx(spin=4000)
+[Te640] [API] InitializeCriticalSectionEx(spin=4000)
+[Te640] [API] InitializeCriticalSectionEx(spin=4000)
+[Te640] [API] InitializeCriticalSectionEx(spin=4000)
+[Te640] [API] InitializeCriticalSectionEx(spin=4000)
+[Te640] [API] InitializeCriticalSectionEx(spin=4000)
+[Te640] [API] InitializeCriticalSectionEx(spin=4000)
+[Te640] [API] InitializeCriticalSectionEx(spin=4000)
+[Te640] [API] InitializeCriticalSectionEx(spin=4000)
+[Te640] [API] InitializeCriticalSectionEx(spin=4000)
+[Te640] [API] InitializeCriticalSectionEx(spin=4000)
+[Te640] [API] InitializeCriticalSectionEx(spin=4000)
+[Te640] [API] InitializeCriticalSectionEx(spin=4000)
+[Te640] [API] InitializeCriticalSectionEx(spin=4000)
+[Te640] [API] InitializeCriticalSectionEx(spin=4000)
+[Te640] [API] InitializeCriticalSectionEx(spin=4000)
+[Te640] [API] InitializeCriticalSectionEx(spin=4000)
+[Te640] [API] InitializeCriticalSectionEx(spin=4000)
+[Te640] [API] InitializeCriticalSectionEx(spin=4000)
+[Te640] [API] InitializeCriticalSectionEx(spin=4000)
+[Te640] [API] InitializeCriticalSectionEx(spin=4000)
+[Te640] [API] InitializeCriticalSectionEx(spin=4000)
+[Te640] [API] InitializeCriticalSectionEx(spin=4000)
+[Te640] [API] InitializeCriticalSectionEx(spin=4000)
+[Te640] [API] InitializeCriticalSectionEx(spin=4000)
+[Te640] [API] InitializeCriticalSectionEx(spin=4000)
+[Te640] [API] InitializeCriticalSectionEx(spin=4000)
+[Te640] [API] InitializeCriticalSectionEx(spin=4000)
+[Te640] [API] InitializeCriticalSectionEx(spin=4000)
+[Te640] [API] InitializeCriticalSectionEx(spin=4000)
+[Te640] [API] InitializeCriticalSectionEx(spin=4000)
+[Te640] [API] InitializeCriticalSectionEx(spin=4000)
+[Te640] [API] InitializeCriticalSectionEx(spin=4000)
+[Te640] [API] InitializeCriticalSectionEx(spin=4000)
+[Te640] [API] InitializeCriticalSectionEx(spin=4000)
+[Te640] [API] InitializeCriticalSectionEx(spin=4000)
+[Te640] [API] InitializeCriticalSectionEx(spin=4000)
+[Te640] [API] InitializeCriticalSectionEx(spin=4000)
+[Te640] [API] InitializeCriticalSectionEx(spin=4000)
+[Te640] [API] InitializeCriticalSectionEx(spin=4000)
+[Te640] [API] InitializeCriticalSectionEx(spin=4000)
+[Te640] [API] InitializeCriticalSectionEx(spin=4000)
+[Te640] [API] InitializeCriticalSectionEx(spin=4000)
+[Te640] [API] InitializeCriticalSectionEx(spin=4000)
+[Te640] [API] InitializeCriticalSectionEx(spin=4000)
+[Te640] [API] LeaveCriticalSection(0x140082f08)
+[Te640] [API] GetStartupInfoW()
+[Te640] [API] GetStdHandle(-10) = 0x4
+[Te640] [API] GetStdHandle(-11) = 0x5
+[Te640] [API] GetStdHandle(-12) = 0x6
+[Te640] [API] LeaveCriticalSection(0x140082f08)
+[Te640] [API] GetCommandLineA() = "UnRAR.exe"
+[Te640] [API] GetCommandLineW()
+[Te640] [API] EnterCriticalSection(0x140082eb8)
+[Te640] [API] LeaveCriticalSection(0x140082eb8)
+[Te640] [API] HeapAlloc(size=0x228, zero=0) = 0x402dd40
+[Te640] [API] GetCPInfo(cp=1252)
+[Te640] [API] GetCPInfo(cp=1252)
+[Te640] [API] MultiByteToWideChar(cp=1252, srclen=256, dstlen=0)
+[Te640] [API] MultiByteToWideChar(cp=1252, srclen=256, dstlen=256)
+[Te640] [API] MultiByteToWideChar(cp=1252, srclen=256, dstlen=0)
+[Te640] [API] MultiByteToWideChar(cp=1252, srclen=256, dstlen=256)
+[Te640] [API] LoadLibraryExW(flags=2048)
+[Te640] [API] LoadLibraryA(api-ms-win-core-localization-l1-2-1)
+[Te640] [API] GetProcAddress(module=0xdedd0000, name=LCMapStringEx)
+[Te640] [API]   -> 0x20405e0
+[Te640] [API] WideCharToMultiByte(cp=1252, srclen=256, dstlen=256)
+[Te640] [API] MultiByteToWideChar(cp=1252, srclen=256, dstlen=0)
+[Te640] [API] MultiByteToWideChar(cp=1252, srclen=256, dstlen=256)
+[Te640] [API] WideCharToMultiByte(cp=1252, srclen=256, dstlen=256)
+[Te640] [API] EnterCriticalSection(0x140082eb8)
+[Te640] [API] LeaveCriticalSection(0x140082eb8)
+[Te640] [API] EnterCriticalSection(0x140082e40)
+[Te640] [API] HeapAlloc(size=0x100, zero=0) = 0x402df70
+[Te640] [API] LeaveCriticalSection(0x140082e40)
+[Te640] [API] GetModuleFileNameW(cap=261)
+[Te640] [API] GetModuleFileNameW out u16len=37 utf8len=37 'C:\home\z\tmp\corpus\wr-out\UnRAR.exe'
+[Te640] [API] LoadLibraryExW(flags=2048)
+[Te640] [API] LoadLibraryA(kernel32)
+[Te640] [API] GetProcAddress(module=0xdea00000, name=AreFileApisANSI)
+[Te640] [API]   -> 0x2089040
+[Te640] [API] WideCharToMultiByte(cp=0, srclen=-1, dstlen=0)
+[Te640] [API] WideCharToMultiByte(cp=0, srclen=-1, dstlen=260)
+[Te640] [API] HeapAlloc(size=0x1a, zero=1) = 0x402c6f0
+[Te640] [API] GetLastError() = 0
+[Te640] [API] SetLastError(0) caller=0x140051af5
+[Te640] [API] GetEnvironmentStringsW()
+[Te640] [API] WideCharToMultiByte(cp=0, srclen=2151, dstlen=0)
+[Te640] [API] HeapAlloc(size=0x867, zero=0) = 0x402e080
+[Te640] [API] WideCharToMultiByte(cp=0, srclen=2151, dstlen=2151)
+[Te640] [API] FreeEnvironmentStringsW()
+[Te640] [API] HeapAlloc(size=0x240, zero=1) = 0x402e8f0
+[Te640] [API] HeapAlloc(size=0x1f, zero=1) = 0x402c620
+[Te640] [API] HeapAlloc(size=0x29, zero=1) = 0x402eb40
+[Te640] [API] HeapAlloc(size=0x31, zero=1) = 0x402eb80
+[Te640] [API] HeapAlloc(size=0x3c, zero=1) = 0x402ebc0
+[Te640] [API] HeapAlloc(size=0x31, zero=1) = 0x402ec10
+[Te640] [API] HeapAlloc(size=0x15, zero=1) = 0x402ec50
+[Te640] [API] HeapAlloc(size=0x24, zero=1) = 0x402ec70
+[Te640] [API] HeapAlloc(size=0x32, zero=1) = 0x402eca0
+[Te640] [API] HeapAlloc(size=0x2c, zero=1) = 0x402ece0
+[Te640] [API] HeapAlloc(size=0xe, zero=1) = 0x402ed20
+[Te640] [API] HeapAlloc(size=0x69, zero=1) = 0x402c090
+[Te640] [API] HeapAlloc(size=0x3e, zero=1) = 0x402ed40
+[Te640] [API] HeapAlloc(size=0x1d, zero=1) = 0x402ed90
+[Te640] [API] HeapAlloc(size=0x1b, zero=1) = 0x402edc0
+[Te640] [API] HeapAlloc(size=0x1e, zero=1) = 0x402edf0
+[Te640] [API] HeapAlloc(size=0x29, zero=1) = 0x402ee20
+[Te640] [API] HeapAlloc(size=0x1e, zero=1) = 0x402ee60
+[Te640] [API] HeapAlloc(size=0xc, zero=1) = 0x402ee90
+[Te640] [API] HeapAlloc(size=0x17, zero=1) = 0x402eeb0
+[Te640] [API] HeapAlloc(size=0x14, zero=1) = 0x402eed0
+[Te640] [API] HeapAlloc(size=0xf, zero=1) = 0x402eef0
+[Te640] [API] HeapAlloc(size=0x16, zero=1) = 0x402ef10
+[Te640] [API] HeapAlloc(size=0x29, zero=1) = 0x402ef30
+[Te640] [API] HeapAlloc(size=0x28, zero=1) = 0x402ef70
+[Te640] [API] HeapAlloc(size=0x13, zero=1) = 0x402efa0
+[Te640] [API] HeapAlloc(size=0x11, zero=1) = 0x402efc0
+[Te640] [API] HeapAlloc(size=0x1d, zero=1) = 0x402efe0
+[Te640] [API] HeapAlloc(size=0x12, zero=1) = 0x402f010
+[Te640] [API] HeapAlloc(size=0x17, zero=1) = 0x402f030
+[Te640] [API] HeapAlloc(size=0x47, zero=1) = 0x402f050
+[Te640] [API] HeapAlloc(size=0x12, zero=1) = 0x402f0a0
+[Te640] [API] HeapAlloc(size=0x18, zero=1) = 0x402f0c0
+[Te640] [API] HeapAlloc(size=0x10, zero=1) = 0x402f0e0
+[Te640] [API] HeapAlloc(size=0x1b, zero=1) = 0x402f100
+[Te640] [API] HeapAlloc(size=0x13, zero=1) = 0x402f130
+[Te640] [API] HeapAlloc(size=0x32, zero=1) = 0x402f150
+[Te640] [API] HeapAlloc(size=0x19, zero=1) = 0x402f190
+[Te640] [API] HeapAlloc(size=0x14, zero=1) = 0x402f1c0
+[Te640] [API] HeapAlloc(size=0x35, zero=1) = 0x402f1e0
+[Te640] [API] HeapAlloc(size=0x3a, zero=1) = 0x402f220
+[Te640] [API] HeapAlloc(size=0xa, zero=1) = 0x402f270
+[Te640] [API] HeapAlloc(size=0x16, zero=1) = 0x402f290
+[Te640] [API] HeapAlloc(size=0xf, zero=1) = 0x402f2b0
+[Te640] [API] HeapAlloc(size=0x31, zero=1) = 0x402f2d0
+[Te640] [API] HeapAlloc(size=0x39, zero=1) = 0x402f310
+[Te640] [API] HeapAlloc(size=0xd, zero=1) = 0x402f360
+[Te640] [API] HeapAlloc(size=0x1d, zero=1) = 0x402f380
+[Te640] [API] HeapAlloc(size=0x1a, zero=1) = 0x402f3b0
+[Te640] [API] HeapAlloc(size=0x1c, zero=1) = 0x402f3e0
+[Te640] [API] HeapAlloc(size=0x24, zero=1) = 0x402f410
+[Te640] [API] HeapAlloc(size=0x1b, zero=1) = 0x402f440
+[Te640] [API] HeapAlloc(size=0xb, zero=1) = 0x402f470
+[Te640] [API] HeapAlloc(size=0x11, zero=1) = 0x402f490
+[Te640] [API] HeapAlloc(size=0x22, zero=1) = 0x402f4b0
+[Te640] [API] HeapAlloc(size=0xa, zero=1) = 0x402f4e0
+[Te640] [API] HeapAlloc(size=0x7, zero=1) = 0x402f500
+[Te640] [API] HeapAlloc(size=0x8, zero=1) = 0x402f520
+[Te640] [API] HeapAlloc(size=0x19, zero=1) = 0x402f540
+[Te640] [API] HeapAlloc(size=0x1a, zero=1) = 0x402f570
+[Te640] [API] HeapAlloc(size=0xb, zero=1) = 0x402f5a0
+[Te640] [API] HeapAlloc(size=0x1f, zero=1) = 0x402f5c0
+[Te640] [API] HeapAlloc(size=0x15, zero=1) = 0x402f5f0
+[Te640] [API] HeapAlloc(size=0x11, zero=1) = 0x402f610
+[Te640] [API] HeapAlloc(size=0x19, zero=1) = 0x402f630
+[Te640] [API] HeapAlloc(size=0x11, zero=1) = 0x402f660
+[Te640] [API] HeapAlloc(size=0x1f, zero=1) = 0x402f680
+[Te640] [API] HeapAlloc(size=0x1f, zero=1) = 0x402f6b0
+[Te640] [API] HeapAlloc(size=0x30, zero=1) = 0x402f6e0
+[Te640] [API] HeapAlloc(size=0x23, zero=1) = 0x402f720
+[Te640] [API] HeapAlloc(size=0x1a, zero=1) = 0x402f750
+[Te640] [API] HeapAlloc(size=0x1c, zero=1) = 0x402f780
+[Te640] [API] HeapFree(0x402e080)
+[Te640] [API] HeapAlloc(size=0x1000, zero=1) = 0x402f7b0
+[Te640] [API] InitializeCriticalSectionEx(spin=4000)
+[Te640] [API] InitializeCriticalSectionEx(spin=4000)
+[Te640] [API] InitializeCriticalSectionEx(spin=4000)
+[Te640] [API] QueryPerformanceFrequency()
+[Te640] [API] QueryPerformanceCounter()
+[Te640] [API] SetUnhandledExceptionFilter(handler=0x140044870)
+[Te640] [API] EnterCriticalSection(0x140082e40)
+[Te640] [API] LeaveCriticalSection(0x140082e40)
+[Te640] [API] EnterCriticalSection(0x140082e40)
+[Te640] [API] LeaveCriticalSection(0x140082e40)
+[Te640] [API] EnterCriticalSection(0x140082e40)
+[Te640] [API] LeaveCriticalSection(0x140082e40)
+[Te640] [API] GetCPInfo(cp=0)
+[Te640] [API] EnterCriticalSection(0x140082e40)
+[Te640] [API] LeaveCriticalSection(0x140082e40)
+[Te640] [API] GetModuleHandleW()
+[Te640] [API] GetProcAddress(module=0xdea00000, name=SetDllDirectoryW)
+[Te640] [API]   -> 0x2026f10
+[Te640] [API] SetDllDirectoryW(0x140064074)
+[Te640] [API] GetProcAddress(module=0xdea00000, name=SetDefaultDllDirectories)
+[Te640] [API]   -> 0x20616d0
+[Te640] [API] EnterCriticalSection(0x1400764d8)
+[Te640] [API] LeaveCriticalSection(0x1400764d8)
+[Te640] [API] EnterCriticalSection(0x140076530)
+[Te640] [API] LeaveCriticalSection(0x140076530)
+[Te640] [API] GetStdHandle(-11) = 0x5
+[Te640] [API] GetStdHandle(-12) = 0x6
+[Te640] [API] GetStdHandle(-10) = 0x4
+[Te640] [API] GetModuleHandleW()
+[Te640] [API] HeapAlloc(size=0x20, zero=0) = 0x402e080
+[Te640] [API] HeapAlloc(size=0x200, zero=0) = 0x402e0b0
+[Te640] [API] GetModuleFileNameW(cap=256)
+[Te640] [API] GetModuleFileNameW out u16len=37 utf8len=37 'C:\home\z\tmp\corpus\wr-out\UnRAR.exe'
+[Te640] [API] HeapAlloc(size=0x50, zero=0) = 0x402e2c0
+[Te640] [API] HeapFree(0x402e0b0)
+[Te640] [API] HeapFree(0x402e080)
+[Te640] [API] LoadLibraryExW(flags=64)
+[Te640] [API] LoadLibraryA(C:\home\z\tmp\corpus\wr-out\rarlng.dll)
+[Te640] [API] SetLastError(126) caller=0x20a1c55
+[Te640] [API] HeapFree(0x402e2c0)
+[Te640] [API] HeapAlloc(size=0x200, zero=0) = 0x402e0b0
+[Te640] [API] GetModuleFileNameW(cap=256)
+[Te640] [API] GetModuleFileNameW out u16len=37 utf8len=37 'C:\home\z\tmp\corpus\wr-out\UnRAR.exe'
+[Te640] [API] HeapAlloc(size=0x50, zero=0) = 0x402e2c0
+[Te640] [API] HeapFree(0x402e0b0)
+[Te640] [API] CreateFileW(C:\home\z\tmp\corpus\wr-out\rar.lng, acc=80000000, disp=3)
+[Te640] [API] CreateFileW caller=<exe>+0x1a7c4
+[Te640] [API] CreateFileW u16len=23 name=0x402e2c0 'C:\home\z\tmp\corpus\wr-out\rar.lng'
+[Te640] [API]   [0]=0043 'C'
+[Te640] [API]   [1]=003a ':'
+[Te640] [API]   [2]=005c '\'
+[Te640] [API]   [3]=0068 'h'
+[Te640] [API]   [4]=006f 'o'
+[Te640] [API]   [5]=006d 'm'
+[Te640] [API]   [6]=0065 'e'
+[Te640] [API]   [7]=005c '\'
+[Te640] [API]   [8]=007a 'z'
+[Te640] [API]   [9]=005c '\'
+[Te640] [API]   [10]=0074 't'
+[Te640] [API]   [11]=006d 'm'
+[Te640] [API]   [12]=0070 'p'
+[Te640] [API]   [13]=005c '\'
+[Te640] [API]   [14]=0063 'c'
+[Te640] [API]   [15]=006f 'o'
+[Te640] [API]   [16]=0072 'r'
+[Te640] [API]   [17]=0070 'p'
+[Te640] [API]   [18]=0075 'u'
+[Te640] [API]   [19]=0073 's'
+[Te640] [API]   [20]=005c '\'
+[Te640] [API]   [21]=0077 'w'
+[Te640] [API]   [22]=0072 'r'
+[Te640] [API]   [23]=002d '-'
+[Te640] [API] SetLastError(2) caller=0x208e2b8
+[Te640] [API] GetLastError() = 2
+[Te640] [API] HeapAlloc(size=0x50, zero=0) = 0x402e320
+[Te640] [API] CreateFileW(\\?\C:\home\z\tmp\corpus\wr-out\rar.lng, acc=80000000, disp=3)
+[Te640] [API] CreateFileW caller=<exe>+0x1a839
+[Te640] [API] CreateFileW u16len=23 name=0x402e320 '\\?\C:\home\z\tmp\corpus\wr-out\rar.lng'
+[Te640] [API]   [0]=005c '\'
+[Te640] [API]   [1]=005c '\'
+[Te640] [API]   [2]=003f '?'
+[Te640] [API]   [3]=005c '\'
+[Te640] [API]   [4]=0043 'C'
+[Te640] [API]   [5]=003a ':'
+[Te640] [API]   [6]=005c '\'
+[Te640] [API]   [7]=0068 'h'
+[Te640] [API]   [8]=006f 'o'
+[Te640] [API]   [9]=006d 'm'
+[Te640] [API]   [10]=0065 'e'
+[Te640] [API]   [11]=005c '\'
+[Te640] [API]   [12]=007a 'z'
+[Te640] [API]   [13]=005c '\'
+[Te640] [API]   [14]=0074 't'
+[Te640] [API]   [15]=006d 'm'
+[Te640] [API]   [16]=0070 'p'
+[Te640] [API]   [17]=005c '\'
+[Te640] [API]   [18]=0063 'c'
+[Te640] [API]   [19]=006f 'o'
+[Te640] [API]   [20]=0072 'r'
+[Te640] [API]   [21]=0070 'p'
+[Te640] [API]   [22]=0075 'u'
+[Te640] [API]   [23]=0073 's'
+[Te640] [API] SetLastError(2) caller=0x208e2b8
+[Te640] [API] GetLastError() = 2
+[Te640] [API] HeapFree(0x402e320)
+[Te640] [API] HeapFree(0x402e2c0)
+[Te640] [API] HeapAlloc(size=0x9b8, zero=0) = 0x40307c0
+[Te640] [API] GetProcessAffinityMask()
+[Te640] [API] HeapAlloc(size=0x400, zero=0) = 0x402c110
+[Te640] [API] GetProcessAffinityMask()
+[Te640] [API] GetCommandLineW()
+[Te640] [API] HeapAlloc(size=0x20, zero=0) = 0x402e080
+[Te640] [API] HeapAlloc(size=0x20, zero=0) = 0x402e380
+[Te640] [API] HeapFree(0x402e380)
+[Te640] [API] HeapFree(0x402e080)
+[Te640] [API] RegOpenKeyExW(miss) 'HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion' -> ERROR_FILE_NOT_FOUND
+[Te640] [API] SetLastError(2) caller=0x20d735f
+[Te640] [API] RegCreateKeyExW 'HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion' -> slot 7 (created=1)
+[Te640] [API] RegSetValueExW -> slot 7 'ProductName', 40 bytes stored
+[Te640] [API] RegSetValueExW -> slot 7 'CurrentVersion', 8 bytes stored
+[Te640] [API] RegSetValueExW -> slot 7 'CurrentBuildNumber', 10 bytes stored
+[Te640] [API] RegSetValueExW -> slot 7 'CSDVersion', 30 bytes stored
+[Te640] [API] reg seed: CurrentVersion identity seeded (Windows Server 2003 5.2 b3790)
+[Te640] [API] RegOpenKeyExW(miss) 'HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon' -> ERROR_FILE_NOT_FOUND
+[Te640] [API] SetLastError(2) caller=0x20d735f
+[Te640] [API] RegCreateKeyExW 'HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon' -> slot 8 (created=1)
+[Te640] [API] RegSetValueExW -> slot 8 'AutoAdminLogon', 4 bytes stored
+[Te640] [API] RegSetValueExW -> slot 8 'DefaultUserName', 26 bytes stored
+[Te640] [API] RegSetValueExW -> slot 8 'DefaultDomainName', 16 bytes stored
+[Te640] [API] RegSetValueExW -> slot 8 'DefaultPassword', 2 bytes stored
+[Te640] [API] reg seed: Winlogon skeleton seeded
+[Te640] [API] RegOpenKeyExW(miss) 'HKLM\System\CurrentControlSet\Services\EventLog\Application' -> ERROR_FILE_NOT_FOUND
+[Te640] [API] SetLastError(2) caller=0x20d735f
+[Te640] [API] RegCreateKeyExW 'HKLM\System\CurrentControlSet\Services\EventLog\Application' -> slot 9 (created=1)
+[Te640] [API] RegOpenKeyExW(miss) 'HKLM\System\CurrentControlSet\Services\EventLog\Security' -> ERROR_FILE_NOT_FOUND
+[Te640] [API] SetLastError(2) caller=0x20d735f
+[Te640] [API] RegCreateKeyExW 'HKLM\System\CurrentControlSet\Services\EventLog\Security' -> slot 10 (created=1)
+[Te640] [API] RegOpenKeyExW(miss) 'HKLM\System\CurrentControlSet\Services\EventLog\System' -> ERROR_FILE_NOT_FOUND
+[Te640] [API] SetLastError(2) caller=0x20d735f
+[Te640] [API] RegCreateKeyExW 'HKLM\System\CurrentControlSet\Services\EventLog\System' -> slot 11 (created=1)
+[Te640] [API] reg seed: EventLog service keys seeded (3)
+[Te640] [API] RegOpenKeyExW(miss) 'HKCU\Software\WinRAR\Setup' -> ERROR_FILE_NOT_FOUND
+[Te640] [API] SetLastError(2) caller=0x20d735f
+[Te640] [API] RegCreateKeyExW 'HKCU\Software\WinRAR\Setup' -> slot 12 (created=1)
+[Te640] [API] reg seed: WinRAR Setup key seeded (no close: handle released at exit)
+[Te640] [API] RegOpenKeyExW(miss) 'HKCU\Software\Sysinternals\PsLoglist' -> ERROR_FILE_NOT_FOUND
+[Te640] [API] SetLastError(2) caller=0x20d735f
+[Te640] [API] RegCreateKeyExW 'HKCU\Software\Sysinternals\PsLoglist' -> slot 13 (created=1)
+[Te640] [API] RegSetValueExW -> slot 13 'EulaAccepted', 4 bytes stored
+[Te640] [API] RegOpenKeyExW(miss) 'HKCU\Software\Sysinternals\PsInfo' -> ERROR_FILE_NOT_FOUND
+[Te640] [API] SetLastError(2) caller=0x20d735f
+[Te640] [API] RegCreateKeyExW 'HKCU\Software\Sysinternals\PsInfo' -> slot 14 (created=1)
+[Te640] [API] RegSetValueExW -> slot 14 'EulaAccepted', 4 bytes stored
+[Te640] [API] RegOpenKeyExW(miss) 'HKCU\Software\Sysinternals\PsList' -> ERROR_FILE_NOT_FOUND
+[Te640] [API] SetLastError(2) caller=0x20d735f
+[Te640] [API] RegCreateKeyExW 'HKCU\Software\Sysinternals\PsList' -> slot 15 (created=1)
+[Te640] [API] RegSetValueExW -> slot 15 'EulaAccepted', 4 bytes stored
+[Te640] [API] RegOpenKeyExW(miss) 'HKCU\Software\Sysinternals\PsPasswd' -> ERROR_FILE_NOT_FOUND
+[Te640] [API] SetLastError(2) caller=0x20d735f
+[Te640] [API] RegCreateKeyExW 'HKCU\Software\Sysinternals\PsPasswd' -> slot 16 (created=1)
+[Te640] [API] RegSetValueExW -> slot 16 'EulaAccepted', 4 bytes stored
+[Te640] [API] RegOpenKeyExW(miss) 'HKCU\Software\Sysinternals\PsService' -> ERROR_FILE_NOT_FOUND
+[Te640] [API] SetLastError(2) caller=0x20d735f
+[Te640] [API] RegCreateKeyExW 'HKCU\Software\Sysinternals\PsService' -> slot 17 (created=1)
+[Te640] [API] RegSetValueExW -> slot 17 'EulaAccepted', 4 bytes stored
+[Te640] [API] reg seed: Sysinternals EulaAccepted markers seeded
+[Te640] [API] RegOpenKeyExW(miss) 'HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Perflib' -> ERROR_FILE_NOT_FOUND
+[Te640] [API] SetLastError(2) caller=0x20d735f
+[Te640] [API] RegCreateKeyExW 'HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Perflib' -> slot 18 (created=1)
+[Te640] [API] RegSetValueExW -> slot 18 'Last Counter', 4 bytes stored
+[Te640] [API] RegSetValueExW -> slot 18 'Last Help', 4 bytes stored
+[Te640] [API] reg seed: Perflib Last Counter/Help = 952
+[Te640] [API] RegOpenKeyExW(miss) 'HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion' -> ERROR_FILE_NOT_FOUND
+[Te640] [API] SetLastError(2) caller=0x20d735f
+[Te640] [API] RegCreateKeyExW 'HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion' -> slot 19 (created=1)
+[Te640] [API] RegSetValueExW -> slot 19 'ProgramFilesDir', 34 bytes stored
+[Te640] [API] RegSetValueExW -> slot 19 'CommonFilesDir', 60 bytes stored
+[Te640] [API] RegSetValueExW -> slot 19 'ProgramFilesPath', 34 bytes stored
+[Te640] [API] RegSetValueExW -> slot 19 'DevicePath', 34 bytes stored
+[Te640] [API] reg seed: HKLM Windows CurrentVersion ProgramFiles skeleton seeded
+[Te640] [API] RegOpenKeyExW(miss) 'HKCU\Software\WinRAR\Paths' -> ERROR_FILE_NOT_FOUND
+[Te640] [API] SetLastError(2) caller=0x20d735f
+[Te640] [API] SHGetMalloc() -> S_OK (malloc-backed IMalloc)
+[Te640] [API] HeapAlloc(size=0x200, zero=0) = 0x402e0b0
+[Te640] [API] GetModuleFileNameW(cap=256)
+[Te640] [API] GetModuleFileNameW out u16len=37 utf8len=37 'C:\home\z\tmp\corpus\wr-out\UnRAR.exe'
+[Te640] [API] HeapAlloc(size=0x50, zero=0) = 0x402e2c0
+[Te640] [API] HeapFree(0x402e0b0)
+[Te640] [API] HeapAlloc(size=0x40, zero=0) = 0x402e640
+[Te640] [API] HeapAlloc(size=0x5e, zero=0) = 0x402e690
+[Te640] [API] HeapFree(0x402e640)
+[Te640] [API] HeapAlloc(size=0x50, zero=0) = 0x402e320
+[Te640] [API] HeapFree(0x402e690)
+[Te640] [API] GetFileAttributesW(/home/z/tmp/sweep033/unrar/mw/home/z/tmp/corpus/wr-out/rar.ini)
+[Te640] [API] SetLastError(3) caller=0x20b8b1d
+[Te640] [API] HeapAlloc(size=0x50, zero=0) = 0x402e700
+[Te640] [API] GetFileAttributesW(//?/C:/home/z/tmp/corpus/wr-out/rar.ini)
+[Te640] [API] SetLastError(3) caller=0x20b8b1d
+[Te640] [API] HeapFree(0x402e700)
+[Te640] [API] HeapFree(0x402e2c0)
+[Te640] [API] HeapAlloc(size=0x200, zero=0) = 0x402e0b0
+[Te640] [API] GetModuleFileNameW(cap=256)
+[Te640] [API] GetModuleFileNameW out u16len=37 utf8len=37 'C:\home\z\tmp\corpus\wr-out\UnRAR.exe'
+[Te640] [API] HeapAlloc(size=0x50, zero=0) = 0x402e2c0
+[Te640] [API] HeapFree(0x402e0b0)
+[Te640] [API] HeapAlloc(size=0x40, zero=0) = 0x402e640
+[Te640] [API] HeapAlloc(size=0x5e, zero=0) = 0x402e690
+[Te640] [API] HeapFree(0x402e640)
+[Te640] [API] HeapFree(0x402e690)
+[Te640] [API] GetFileAttributesW(/home/z/tmp/sweep033/unrar/mw/home/z/tmp/corpus/wr-out/rar.ini)
+[Te640] [API] SetLastError(3) caller=0x20b8b1d
+[Te640] [API] HeapAlloc(size=0x50, zero=0) = 0x402e700
+[Te640] [API] GetFileAttributesW(//?/C:/home/z/tmp/corpus/wr-out/rar.ini)
+[Te640] [API] SetLastError(3) caller=0x20b8b1d
+[Te640] [API] HeapFree(0x402e700)
+[Te640] [API] HeapFree(0x402e2c0)
+[Te640] [API] CreateFileW(C:\home\z\tmp\corpus\wr-out\rar.ini, acc=80000000, disp=3)
+[Te640] [API] CreateFileW caller=<exe>+0x1a7c4
+[Te640] [API] CreateFileW u16len=23 name=0x402e320 'C:\home\z\tmp\corpus\wr-out\rar.ini'
+[Te640] [API]   [0]=0043 'C'
+[Te640] [API]   [1]=003a ':'
+[Te640] [API]   [2]=005c '\'
+[Te640] [API]   [3]=0068 'h'
+[Te640] [API]   [4]=006f 'o'
+[Te640] [API]   [5]=006d 'm'
+[Te640] [API]   [6]=0065 'e'
+[Te640] [API]   [7]=005c '\'
+[Te640] [API]   [8]=007a 'z'
+[Te640] [API]   [9]=005c '\'
+[Te640] [API]   [10]=0074 't'
+[Te640] [API]   [11]=006d 'm'
+[Te640] [API]   [12]=0070 'p'
+[Te640] [API]   [13]=005c '\'
+[Te640] [API]   [14]=0063 'c'
+[Te640] [API]   [15]=006f 'o'
+[Te640] [API]   [16]=0072 'r'
+[Te640] [API]   [17]=0070 'p'
+[Te640] [API]   [18]=0075 'u'
+[Te640] [API]   [19]=0073 's'
+[Te640] [API]   [20]=005c '\'
+[Te640] [API]   [21]=0077 'w'
+[Te640] [API]   [22]=0072 'r'
+[Te640] [API]   [23]=002d '-'
+[Te640] [API] SetLastError(2) caller=0x208e2b8
+[Te640] [API] GetLastError() = 2
+[Te640] [API] HeapAlloc(size=0x50, zero=0) = 0x402e2c0
+[Te640] [API] CreateFileW(\\?\C:\home\z\tmp\corpus\wr-out\rar.ini, acc=80000000, disp=3)
+[Te640] [API] CreateFileW caller=<exe>+0x1a839
+[Te640] [API] CreateFileW u16len=23 name=0x402e2c0 '\\?\C:\home\z\tmp\corpus\wr-out\rar.ini'
+[Te640] [API]   [0]=005c '\'
+[Te640] [API]   [1]=005c '\'
+[Te640] [API]   [2]=003f '?'
+[Te640] [API]   [3]=005c '\'
+[Te640] [API]   [4]=0043 'C'
+[Te640] [API]   [5]=003a ':'
+[Te640] [API]   [6]=005c '\'
+[Te640] [API]   [7]=0068 'h'
+[Te640] [API]   [8]=006f 'o'
+[Te640] [API]   [9]=006d 'm'
+[Te640] [API]   [10]=0065 'e'
+[Te640] [API]   [11]=005c '\'
+[Te640] [API]   [12]=007a 'z'
+[Te640] [API]   [13]=005c '\'
+[Te640] [API]   [14]=0074 't'
+[Te640] [API]   [15]=006d 'm'
+[Te640] [API]   [16]=0070 'p'
+[Te640] [API]   [17]=005c '\'
+[Te640] [API]   [18]=0063 'c'
+[Te640] [API]   [19]=006f 'o'
+[Te640] [API]   [20]=0072 'r'
+[Te640] [API]   [21]=0070 'p'
+[Te640] [API]   [22]=0075 'u'
+[Te640] [API]   [23]=0073 's'
+[Te640] [API] SetLastError(2) caller=0x208e2b8
+[Te640] [API] GetLastError() = 2
+[Te640] [API] HeapFree(0x402e2c0)
+[Te640] [API] HeapFree(0x402e320)
+[Te640] [API] EnterCriticalSection(0x140082fa8)
+[Te640] [API] LeaveCriticalSection(0x140082fa8)
+[Te640] [API] GetCommandLineW()
+[Te640] [API] HeapAlloc(size=0x20, zero=0) = 0x402e760
+[Te640] [API] HeapAlloc(size=0x20, zero=0) = 0x402e790
+[Te640] [API] HeapAlloc(size=0x4, zero=0) = 0x402e7c0
+[Te640] [API] HeapFree(0x402e790)
+[Te640] [API] HeapFree(0x402e760)
+[Te640] [API] AcquireSRWLockExclusive(0x140082a50)
+[Te640] [API] ReleaseSRWLockExclusive(0x140082a50)
+[Te640] [API] HeapAlloc(size=0x48, zero=0) = 0x402e640
+[Te640] [API] EnterCriticalSection(0x140082e40)
+[Te640] [API] LeaveCriticalSection(0x140082e40)
+[Te640] [API] AcquireSRWLockExclusive(0x140082a50)
+[Te640] [API] ReleaseSRWLockExclusive(0x140082a50)
+[Te640] [API] WakeAllConditionVariable(0x140082a48)
+[Te640] [API] [RES] find hmod=0x140000000 a=?/- w=0xbe/0x6
+[Te640] [API] [RES] walk depth=0 level=0x140088000 named=0 ided=3 (base=0x140088000)
+[Te640] [API] [RES] walk depth=1 level=0x140088028 named=0 ided=52 (base=0x140088000)
+[Te640] [API] [RES] walk depth=2 level=0x140088238 named=0 ided=1 (base=0x140088000)
+[Te640] [API] LoadStringW(id=3030) -> 3 wchars (block 190 idx 6 len 3)
+[Te640] [API] HeapAlloc(size=0x48, zero=0) = 0x402e7e0
+[Te640] [API] [RES] find hmod=0x140000000 a=?/- w=0xbe/0x6
+[Te640] [API] [RES] walk depth=0 level=0x140088000 named=0 ided=3 (base=0x140088000)
+[Te640] [API] [RES] walk depth=1 level=0x140088028 named=0 ided=52 (base=0x140088000)
+[Te640] [API] [RES] walk depth=2 level=0x140088238 named=0 ided=1 (base=0x140088000)
+[Te640] [API] LoadStringW(id=3024) -> 63 wchars (block 190 idx 0 len 63)
+[Te640] [API] HeapAlloc(size=0x80, zero=0) = 0x402e830
+[Te640] [API] HeapAlloc(size=0x48, zero=0) = 0x4036310
+[Te640] [API] HeapAlloc(size=0x20, zero=0) = 0x402e760
+[Te640] [API] HeapAlloc(size=0x30, zero=0) = 0x4036360
+[Te640] [API] HeapFree(0x402e760)
+[Te640] [API] HeapAlloc(size=0x46, zero=0) = 0x40363a0
+[Te640] [API] HeapFree(0x4036360)
+[Te640] [API] HeapAlloc(size=0x68, zero=0) = 0x402e690
+[Te640] [API] HeapFree(0x40363a0)
+[Te640] [API] HeapAlloc(size=0x9a, zero=0) = 0x40363f0
+[Te640] [API] HeapFree(0x402e690)
+[Te640] [API] HeapAlloc(size=0x210, zero=0) = 0x40364a0
+[Te640] [API] HeapFree(0x40363f0)
+[Te640] [API] GetStdHandle(-11) = 0x5
+[Te640] [API] HeapAlloc(size=0x125, zero=0) = 0x40366c0
+[Te640] [API] WideCharToMultiByte(cp=0, srclen=-1, dstlen=293)
+[Te640] [API] HeapAlloc(size=0x50, zero=0) = 0x402e320
+[Te640] [API] HeapFree(0x40366c0)
+[Te640] [API] WriteFile(n=73)
+[Te640] [API] HeapFree(0x402e320)
+[Te640] [API] HeapFree(0x40364a0)
+[Te640] [API] [RES] find hmod=0x140000000 a=?/- w=0xc0/0x6
+[Te640] [API] [RES] walk depth=0 level=0x140088000 named=0 ided=3 (base=0x140088000)
+[Te640] [API] [RES] walk depth=1 level=0x140088028 named=0 ided=52 (base=0x140088000)
+[Te640] [API] [RES] walk depth=2 level=0x140088268 named=0 ided=1 (base=0x140088000)
+[Te640] [API] LoadStringW(id=3058) -> 72 wchars (block 192 idx 2 len 72)
+[Te640] [API] HeapAlloc(size=0xa0, zero=0) = 0x40363f0
+[Te640] [API] HeapAlloc(size=0x48, zero=0) = 0x40363a0
+[Te640] [API] HeapAlloc(size=0x20, zero=0) = 0x402e760
+[Te640] [API] HeapAlloc(size=0x30, zero=0) = 0x4036360
+[Te640] [API] HeapFree(0x402e760)
+[Te640] [API] HeapAlloc(size=0x46, zero=0) = 0x40367f0
+[Te640] [API] HeapFree(0x4036360)
+[Te640] [API] HeapAlloc(size=0x68, zero=0) = 0x402e690
+[Te640] [API] HeapFree(0x40367f0)
+[Te640] [API] HeapAlloc(size=0x9a, zero=0) = 0x4036840
+[Te640] [API] HeapFree(0x402e690)
+[Te640] [API] HeapAlloc(size=0x210, zero=0) = 0x40364a0
+[Te640] [API] HeapFree(0x4036840)
+[Te640] [API] GetStdHandle(-11) = 0x5
+[Te640] [API] HeapAlloc(size=0x125, zero=0) = 0x40366c0
+[Te640] [API] WideCharToMultiByte(cp=0, srclen=-1, dstlen=293)
+[Te640] [API] HeapAlloc(size=0x50, zero=0) = 0x402e320
+[Te640] [API] HeapFree(0x40366c0)
+[Te640] [API] WriteFile(n=73)
+[Te640] [API] HeapFree(0x402e320)
+[Te640] [API] HeapFree(0x40364a0)
+[Te640] [API] [RES] find hmod=0x140000000 a=?/- w=0xc0/0x6
+[Te640] [API] [RES] walk depth=0 level=0x140088000 named=0 ided=3 (base=0x140088000)
+[Te640] [API] [RES] walk depth=1 level=0x140088028 named=0 ided=52 (base=0x140088000)
+[Te640] [API] [RES] walk depth=2 level=0x140088268 named=0 ided=1 (base=0x140088000)
+[Te640] [API] LoadStringW(id=3060) -> 50 wchars (block 192 idx 4 len 50)
+[Te640] [API] HeapAlloc(size=0x70, zero=0) = 0x40368f0
+[Te640] [API] HeapAlloc(size=0x48, zero=0) = 0x40367f0
+[Te640] [API] HeapAlloc(size=0x20, zero=0) = 0x402e760
+[Te640] [API] HeapAlloc(size=0x30, zero=0) = 0x4036360
+[Te640] [API] HeapFree(0x402e760)
+[Te640] [API] HeapAlloc(size=0x46, zero=0) = 0x4036970
+[Te640] [API] HeapFree(0x4036360)
+[Te640] [API] HeapAlloc(size=0x68, zero=0) = 0x402e690
+[Te640] [API] HeapFree(0x4036970)
+[Te640] [API] HeapAlloc(size=0x210, zero=0) = 0x40364a0
+[Te640] [API] HeapFree(0x402e690)
+[Te640] [API] GetStdHandle(-11) = 0x5
+[Te640] [API] HeapAlloc(size=0xcd, zero=0) = 0x40369c0
+[Te640] [API] WideCharToMultiByte(cp=0, srclen=-1, dstlen=205)
+[Te640] [API] HeapAlloc(size=0x40, zero=0) = 0x4036970
+[Te640] [API] HeapFree(0x40369c0)
+[Te640] [API] WriteFile(n=51)
+[Te640] [API] HeapFree(0x4036970)
+[Te640] [API] HeapFree(0x40364a0)
+[Te640] [API] [RES] find hmod=0x140000000 a=?/- w=0xc0/0x6
+[Te640] [API] [RES] walk depth=0 level=0x140088000 named=0 ided=3 (base=0x140088000)
+[Te640] [API] [RES] walk depth=1 level=0x140088028 named=0 ided=52 (base=0x140088000)
+[Te640] [API] [RES] walk depth=2 level=0x140088268 named=0 ided=1 (base=0x140088000)
+[Te640] [API] LoadStringW(id=3064) -> 12 wchars (block 192 idx 8 len 12)
+[Te640] [API] HeapAlloc(size=0x20, zero=0) = 0x402e760
+[Te640] [API] HeapAlloc(size=0x48, zero=0) = 0x4036970
+[Te640] [API] HeapAlloc(size=0x20, zero=0) = 0x402e790
+[Te640] [API] HeapAlloc(size=0x210, zero=0) = 0x40364a0
+[Te640] [API] HeapFree(0x402e790)
+[Te640] [API] GetStdHandle(-11) = 0x5
+[Te640] [API] HeapAlloc(size=0x39, zero=0) = 0x4036aa0
+[Te640] [API] WideCharToMultiByte(cp=0, srclen=-1, dstlen=57)
+[Te640] [API] HeapFree(0x4036aa0)
+[Te640] [API] WriteFile(n=14)
+[Te640] [API] HeapFree(0x40364a0)
+[Te640] [API] [RES] find hmod=0x140000000 a=?/- w=0xc1/0x6
+[Te640] [API] [RES] walk depth=0 level=0x140088000 named=0 ided=3 (base=0x140088000)
+[Te640] [API] [RES] walk depth=1 level=0x140088028 named=0 ided=52 (base=0x140088000)
+[Te640] [API] [RES] walk depth=2 level=0x140088280 named=0 ided=1 (base=0x140088000)
+[Te640] [API] LoadStringW(id=3076) -> 53 wchars (block 193 idx 4 len 53)
+[Te640] [API] HeapAlloc(size=0x70, zero=0) = 0x4036af0
+[Te640] [API] HeapAlloc(size=0x48, zero=0) = 0x4036aa0
+[Te640] [API] HeapAlloc(size=0x20, zero=0) = 0x402e790
+[Te640] [API] HeapAlloc(size=0x30, zero=0) = 0x4036360
+[Te640] [API] HeapFree(0x402e790)
+[Te640] [API] HeapAlloc(size=0x46, zero=0) = 0x4036b70
+[Te640] [API] HeapFree(0x4036360)
+[Te640] [API] HeapAlloc(size=0x68, zero=0) = 0x402e690
+[Te640] [API] HeapFree(0x4036b70)
+[Te640] [API] HeapAlloc(size=0x9a, zero=0) = 0x4036840
+[Te640] [API] HeapFree(0x402e690)
+[Te640] [API] HeapAlloc(size=0x210, zero=0) = 0x40364a0
+[Te640] [API] HeapFree(0x4036840)
+[Te640] [API] GetStdHandle(-11) = 0x5
+[Te640] [API] HeapAlloc(size=0xd9, zero=0) = 0x4036bc0
+[Te640] [API] WideCharToMultiByte(cp=0, srclen=-1, dstlen=217)
+[Te640] [API] HeapAlloc(size=0x40, zero=0) = 0x4036b70
+[Te640] [API] HeapFree(0x4036bc0)
+[Te640] [API] WriteFile(n=54)
+[Te640] [API] HeapFree(0x4036b70)
+[Te640] [API] HeapFree(0x40364a0)
+[Te640] [API] [RES] find hmod=0x140000000 a=?/- w=0xc1/0x6
+[Te640] [API] [RES] walk depth=0 level=0x140088000 named=0 ided=3 (base=0x140088000)
+[Te640] [API] [RES] walk depth=1 level=0x140088028 named=0 ided=52 (base=0x140088000)
+[Te640] [API] [RES] walk depth=2 level=0x140088280 named=0 ided=1 (base=0x140088000)
+[Te640] [API] LoadStringW(id=3084) -> 61 wchars (block 193 idx 12 len 61)
+[Te640] [API] HeapAlloc(size=0x80, zero=0) = 0x4036cb0
+[Te640] [API] HeapAlloc(size=0x48, zero=0) = 0x4036b70
+[Te640] [API] HeapAlloc(size=0x20, zero=0) = 0x402e790
+[Te640] [API] HeapAlloc(size=0x30, zero=0) = 0x4036360
+[Te640] [API] HeapFree(0x402e790)
+[Te640] [API] HeapAlloc(size=0x46, zero=0) = 0x4036d40
+[Te640] [API] HeapFree(0x4036360)
+[Te640] [API] HeapAlloc(size=0x68, zero=0) = 0x402e690
+[Te640] [API] HeapFree(0x4036d40)
+[Te640] [API] HeapAlloc(size=0x9a, zero=0) = 0x4036840
+[Te640] [API] HeapFree(0x402e690)
+[Te640] [API] HeapAlloc(size=0x210, zero=0) = 0x40364a0
+[Te640] [API] HeapFree(0x4036840)
+[Te640] [API] GetStdHandle(-11) = 0x5
+[Te640] [API] HeapAlloc(size=0xf9, zero=0) = 0x4036d90
+[Te640] [API] WideCharToMultiByte(cp=0, srclen=-1, dstlen=249)
+[Te640] [API] HeapAlloc(size=0x40, zero=0) = 0x4036d40
+[Te640] [API] HeapFree(0x4036d90)
+[Te640] [API] WriteFile(n=62)
+[Te640] [API] HeapFree(0x4036d40)
+[Te640] [API] HeapFree(0x40364a0)
+[Te640] [API] [RES] find hmod=0x140000000 a=?/- w=0xc2/0x6
+[Te640] [API] [RES] walk depth=0 level=0x140088000 named=0 ided=3 (base=0x140088000)
+[Te640] [API] [RES] walk depth=1 level=0x140088028 named=0 ided=52 (base=0x140088000)
+[Te640] [API] [RES] walk depth=2 level=0x140088298 named=0 ided=1 (base=0x140088000)
+[Te640] [API] LoadStringW(id=3088) -> 37 wchars (block 194 idx 0 len 37)
+[Te640] [API] HeapAlloc(size=0x50, zero=0) = 0x402e320
+[Te640] [API] HeapAlloc(size=0x48, zero=0) = 0x4036d40
+[Te640] [API] HeapAlloc(size=0x20, zero=0) = 0x402e790
+[Te640] [API] HeapAlloc(size=0x30, zero=0) = 0x4036360
+[Te640] [API] HeapFree(0x402e790)
+[Te640] [API] HeapAlloc(size=0x46, zero=0) = 0x4036ea0
+[Te640] [API] HeapFree(0x4036360)
+[Te640] [API] HeapAlloc(size=0x68, zero=0) = 0x402e690
+[Te640] [API] HeapFree(0x4036ea0)
+[Te640] [API] HeapAlloc(size=0x210, zero=0) = 0x40364a0
+[Te640] [API] HeapFree(0x402e690)
+[Te640] [API] GetStdHandle(-11) = 0x5
+[Te640] [API] HeapAlloc(size=0x99, zero=0) = 0x4036840
+[Te640] [API] WideCharToMultiByte(cp=0, srclen=-1, dstlen=153)
+[Te640] [API] HeapAlloc(size=0x30, zero=0) = 0x4036360
+[Te640] [API] HeapFree(0x4036840)
+[Te640] [API] WriteFile(n=38)
+[Te640] [API] HeapFree(0x4036360)
+[Te640] [API] HeapFree(0x40364a0)
+[Te640] [API] [RES] find hmod=0x140000000 a=?/- w=0xc2/0x6
+[Te640] [API] [RES] walk depth=0 level=0x140088000 named=0 ided=3 (base=0x140088000)
+[Te640] [API] [RES] walk depth=1 level=0x140088028 named=0 ided=52 (base=0x140088000)
+[Te640] [API] [RES] walk depth=2 level=0x140088298 named=0 ided=1 (base=0x140088000)
+[Te640] [API] LoadStringW(id=3102) -> 35 wchars (block 194 idx 14 len 35)
+[Te640] [API] HeapAlloc(size=0x50, zero=0) = 0x402e2c0
+[Te640] [API] HeapAlloc(size=0x48, zero=0) = 0x4036ea0
+[Te640] [API] HeapAlloc(size=0x20, zero=0) = 0x402e790
+[Te640] [API] HeapAlloc(size=0x30, zero=0) = 0x4036360
+[Te640] [API] HeapFree(0x402e790)
+[Te640] [API] HeapAlloc(size=0x46, zero=0) = 0x4036ef0
+[Te640] [API] HeapFree(0x4036360)
+[Te640] [API] HeapAlloc(size=0x68, zero=0) = 0x402e690
+[Te640] [API] HeapFree(0x4036ef0)
+[Te640] [API] HeapAlloc(size=0x210, zero=0) = 0x40364a0
+[Te640] [API] HeapFree(0x402e690)
+[Te640] [API] GetStdHandle(-11) = 0x5
+[Te640] [API] HeapAlloc(size=0x91, zero=0) = 0x402c650
+[Te640] [API] WideCharToMultiByte(cp=0, srclen=-1, dstlen=145)
+[Te640] [API] HeapAlloc(size=0x30, zero=0) = 0x4036360
+[Te640] [API] HeapFree(0x402c650)
+[Te640] [API] WriteFile(n=36)
+[Te640] [API] HeapFree(0x4036360)
+[Te640] [API] HeapFree(0x40364a0)
+[Te640] [API] [RES] find hmod=0x140000000 a=?/- w=0xc3/0x6
+[Te640] [API] [RES] walk depth=0 level=0x140088000 named=0 ided=3 (base=0x140088000)
+[Te640] [API] [RES] walk depth=1 level=0x140088028 named=0 ided=52 (base=0x140088000)
+[Te640] [API] [RES] walk depth=2 level=0x1400882b0 named=0 ided=1 (base=0x140088000)
+[Te640] [API] LoadStringW(id=3106) -> 70 wchars (block 195 idx 2 len 70)
+[Te640] [API] HeapAlloc(size=0x90, zero=0) = 0x402c650
+[Te640] [API] HeapAlloc(size=0x48, zero=0) = 0x4036ef0
+[Te640] [API] HeapAlloc(size=0x20, zero=0) = 0x402e790
+[Te640] [API] HeapAlloc(size=0x30, zero=0) = 0x4036360
+[Te640] [API] HeapFree(0x402e790)
+[Te640] [API] HeapAlloc(size=0x46, zero=0) = 0x4036f40
+[Te640] [API] HeapFree(0x4036360)
+[Te640] [API] HeapAlloc(size=0x68, zero=0) = 0x402e690
+[Te640] [API] HeapFree(0x4036f40)
+[Te640] [API] HeapAlloc(size=0x9a, zero=0) = 0x4036840
+[Te640] [API] HeapFree(0x402e690)
+[Te640] [API] HeapAlloc(size=0x210, zero=0) = 0x40364a0
+[Te640] [API] HeapFree(0x4036840)
+[Te640] [API] GetStdHandle(-11) = 0x5
+[Te640] [API] HeapAlloc(size=0x11d, zero=0) = 0x40366c0
+[Te640] [API] WideCharToMultiByte(cp=0, srclen=-1, dstlen=285)
+[Te640] [API] HeapAlloc(size=0x50, zero=0) = 0x402e700
+[Te640] [API] HeapFree(0x40366c0)
+[Te640] [API] WriteFile(n=71)
+[Te640] [API] HeapFree(0x402e700)
+[Te640] [API] HeapFree(0x40364a0)
+[Te640] [API] [RES] find hmod=0x140000000 a=?/- w=0xc3/0x6
+[Te640] [API] [RES] walk depth=0 level=0x140088000 named=0 ided=3 (base=0x140088000)
+[Te640] [API] [RES] walk depth=1 level=0x140088028 named=0 ided=52 (base=0x140088000)
+[Te640] [API] [RES] walk depth=2 level=0x1400882b0 named=0 ided=1 (base=0x140088000)
+[Te640] [API] LoadStringW(id=3108) -> 45 wchars (block 195 idx 4 len 45)
+[Te640] [API] HeapAlloc(size=0x60, zero=0) = 0x402e690
+[Te640] [API] HeapAlloc(size=0x48, zero=0) = 0x4036f40
+[Te640] [API] HeapAlloc(size=0x20, zero=0) = 0x402e790
+[Te640] [API] HeapAlloc(size=0x30, zero=0) = 0x4036360
+[Te640] [API] HeapFree(0x402e790)
+[Te640] [API] HeapAlloc(size=0x46, zero=0) = 0x4036f90
+[Te640] [API] HeapFree(0x4036360)
+[Te640] [API] HeapAlloc(size=0x68, zero=0) = 0x4036fe0
+[Te640] [API] HeapFree(0x4036f90)
+[Te640] [API] HeapAlloc(size=0x210, zero=0) = 0x40364a0
+[Te640] [API] HeapFree(0x4036fe0)
+[Te640] [API] GetStdHandle(-11) = 0x5
+[Te640] [API] HeapAlloc(size=0xb9, zero=0) = 0x4037050
+[Te640] [API] WideCharToMultiByte(cp=0, srclen=-1, dstlen=185)
+[Te640] [API] HeapAlloc(size=0x30, zero=0) = 0x4036360
+[Te640] [API] HeapFree(0x4037050)
+[Te640] [API] WriteFile(n=46)
+[Te640] [API] HeapFree(0x4036360)
+[Te640] [API] HeapFree(0x40364a0)
+[Te640] [API] [RES] find hmod=0x140000000 a=?/- w=0xc3/0x6
+[Te640] [API] [RES] walk depth=0 level=0x140088000 named=0 ided=3 (base=0x140088000)
+[Te640] [API] [RES] walk depth=1 level=0x140088028 named=0 ided=52 (base=0x140088000)
+[Te640] [API] [RES] walk depth=2 level=0x1400882b0 named=0 ided=1 (base=0x140088000)
+[Te640] [API] LoadStringW(id=3110) -> 12 wchars (block 195 idx 6 len 12)
+[Te640] [API] HeapAlloc(size=0x20, zero=0) = 0x402e790
+[Te640] [API] HeapAlloc(size=0x48, zero=0) = 0x4036f90
+[Te640] [API] HeapAlloc(size=0x20, zero=0) = 0x402e8c0
+[Te640] [API] HeapAlloc(size=0x210, zero=0) = 0x40364a0
+[Te640] [API] HeapFree(0x402e8c0)
+[Te640] [API] GetStdHandle(-11) = 0x5
+[Te640] [API] HeapAlloc(size=0x39, zero=0) = 0x4037120
+[Te640] [API] WideCharToMultiByte(cp=0, srclen=-1, dstlen=57)
+[Te640] [API] HeapFree(0x4037120)
+[Te640] [API] WriteFile(n=14)
+[Te640] [API] HeapFree(0x40364a0)
+[Te640] [API] [RES] find hmod=0x140000000 a=?/- w=0xc3/0x6
+[Te640] [API] [RES] walk depth=0 level=0x140088000 named=0 ided=3 (base=0x140088000)
+[Te640] [API] [RES] walk depth=1 level=0x140088028 named=0 ided=52 (base=0x140088000)
+[Te640] [API] [RES] walk depth=2 level=0x1400882b0 named=0 ided=1 (base=0x140088000)
+[Te640] [API] LoadStringW(id=3112) -> 39 wchars (block 195 idx 8 len 39)
+[Te640] [API] HeapAlloc(size=0x50, zero=0) = 0x402e700
+[Te640] [API] HeapAlloc(size=0x48, zero=0) = 0x4037120
+[Te640] [API] HeapAlloc(size=0x20, zero=0) = 0x402e8c0
+[Te640] [API] HeapAlloc(size=0x30, zero=0) = 0x4036360
+[Te640] [API] HeapFree(0x402e8c0)
+[Te640] [API] HeapAlloc(size=0x46, zero=0) = 0x4037170
+[Te640] [API] HeapFree(0x4036360)
+[Te640] [API] HeapAlloc(size=0x68, zero=0) = 0x4036fe0
+[Te640] [API] HeapFree(0x4037170)
+[Te640] [API] HeapAlloc(size=0x210, zero=0) = 0x40364a0
+[Te640] [API] HeapFree(0x4036fe0)
+[Te640] [API] GetStdHandle(-11) = 0x5
+[Te640] [API] HeapAlloc(size=0xa1, zero=0) = 0x4036840
+[Te640] [API] WideCharToMultiByte(cp=0, srclen=-1, dstlen=161)
+[Te640] [API] HeapAlloc(size=0x30, zero=0) = 0x4036360
+[Te640] [API] HeapFree(0x4036840)
+[Te640] [API] WriteFile(n=40)
+[Te640] [API] HeapFree(0x4036360)
+[Te640] [API] HeapFree(0x40364a0)
+[Te640] [API] [RES] find hmod=0x140000000 a=?/- w=0xc3/0x6
+[Te640] [API] [RES] walk depth=0 level=0x140088000 named=0 ided=3 (base=0x140088000)
+[Te640] [API] [RES] walk depth=1 level=0x140088028 named=0 ided=52 (base=0x140088000)
+[Te640] [API] [RES] walk depth=2 level=0x1400882b0 named=0 ided=1 (base=0x140088000)
+[Te640] [API] LoadStringW(id=3114) -> 44 wchars (block 195 idx 10 len 44)
+[Te640] [API] HeapAlloc(size=0x60, zero=0) = 0x4036fe0
+[Te640] [API] HeapAlloc(size=0x48, zero=0) = 0x4037170
+[Te640] [API] HeapAlloc(size=0x20, zero=0) = 0x402e8c0
+[Te640] [API] HeapAlloc(size=0x30, zero=0) = 0x4036360
+[Te640] [API] HeapFree(0x402e8c0)
+[Te640] [API] HeapAlloc(size=0x46, zero=0) = 0x40371c0
+[Te640] [API] HeapFree(0x4036360)
+[Te640] [API] HeapAlloc(size=0x68, zero=0) = 0x4037210
+[Te640] [API] HeapFree(0x40371c0)
+[Te640] [API] HeapAlloc(size=0x210, zero=0) = 0x40364a0
+[Te640] [API] HeapFree(0x4037210)
+[Te640] [API] GetStdHandle(-11) = 0x5
+[Te640] [API] HeapAlloc(size=0xb5, zero=0) = 0x4037280
+[Te640] [API] WideCharToMultiByte(cp=0, srclen=-1, dstlen=181)
+[Te640] [API] HeapAlloc(size=0x30, zero=0) = 0x4036360
+[Te640] [API] HeapFree(0x4037280)
+[Te640] [API] WriteFile(n=45)
+[Te640] [API] HeapFree(0x4036360)
+[Te640] [API] HeapFree(0x40364a0)
+[Te640] [API] [RES] find hmod=0x140000000 a=?/- w=0xc3/0x6
+[Te640] [API] [RES] walk depth=0 level=0x140088000 named=0 ided=3 (base=0x140088000)
+[Te640] [API] [RES] walk depth=1 level=0x140088028 named=0 ided=52 (base=0x140088000)
+[Te640] [API] [RES] walk depth=2 level=0x1400882b0 named=0 ided=1 (base=0x140088000)
+[Te640] [API] LoadStringW(id=3116) -> 72 wchars (block 195 idx 12 len 72)
+[Te640] [API] HeapAlloc(size=0xa0, zero=0) = 0x4036840
+[Te640] [API] HeapAlloc(size=0x48, zero=0) = 0x40371c0
+[Te640] [API] HeapAlloc(size=0x20, zero=0) = 0x402e8c0
+[Te640] [API] HeapAlloc(size=0x30, zero=0) = 0x4036360
+[Te640] [API] HeapFree(0x402e8c0)
+[Te640] [API] HeapAlloc(size=0x46, zero=0) = 0x4037340
+[Te640] [API] HeapFree(0x4036360)
+[Te640] [API] HeapAlloc(size=0x68, zero=0) = 0x4037210
+[Te640] [API] HeapFree(0x4037340)
+[Te640] [API] HeapAlloc(size=0x9a, zero=0) = 0x4037390
+[Te640] [API] HeapFree(0x4037210)
+[Te640] [API] HeapAlloc(size=0x210, zero=0) = 0x40364a0
+[Te640] [API] HeapFree(0x4037390)
+[Te640] [API] GetStdHandle(-11) = 0x5
+[Te640] [API] HeapAlloc(size=0x125, zero=0) = 0x40366c0
+[Te640] [API] WideCharToMultiByte(cp=0, srclen=-1, dstlen=293)
+[Te640] [API] HeapAlloc(size=0x50, zero=0) = 0x4037440
+[Te640] [API] HeapFree(0x40366c0)
+[Te640] [API] WriteFile(n=73)
+[Te640] [API] HeapFree(0x4037440)
+[Te640] [API] HeapFree(0x40364a0)
+[Te640] [API] [RES] find hmod=0x140000000 a=?/- w=0xc3/0x6
+[Te640] [API] [RES] walk depth=0 level=0x140088000 named=0 ided=3 (base=0x140088000)
+[Te640] [API] [RES] walk depth=1 level=0x140088028 named=0 ided=52 (base=0x140088000)
+[Te640] [API] [RES] walk depth=2 level=0x1400882b0 named=0 ided=1 (base=0x140088000)
+[Te640] [API] LoadStringW(id=3118) -> 43 wchars (block 195 idx 14 len 43)
+[Te640] [API] HeapAlloc(size=0x60, zero=0) = 0x4037210
+[Te640] [API] HeapAlloc(size=0x48, zero=0) = 0x4037340
+[Te640] [API] HeapAlloc(size=0x20, zero=0) = 0x402e8c0
+[Te640] [API] HeapAlloc(size=0x30, zero=0) = 0x4036360
+[Te640] [API] HeapFree(0x402e8c0)
+[Te640] [API] HeapAlloc(size=0x46, zero=0) = 0x40374a0
+[Te640] [API] HeapFree(0x4036360)
+[Te640] [API] HeapAlloc(size=0x68, zero=0) = 0x40374f0
+[Te640] [API] HeapFree(0x40374a0)
+[Te640] [API] HeapAlloc(size=0x210, zero=0) = 0x40364a0
+[Te640] [API] HeapFree(0x40374f0)
+[Te640] [API] GetStdHandle(-11) = 0x5
+[Te640] [API] HeapAlloc(size=0xb1, zero=0) = 0x4037280
+[Te640] [API] WideCharToMultiByte(cp=0, srclen=-1, dstlen=177)
+[Te640] [API] HeapAlloc(size=0x30, zero=0) = 0x4036360
+[Te640] [API] HeapFree(0x4037280)
+[Te640] [API] WriteFile(n=44)
+[Te640] [API] HeapFree(0x4036360)
+[Te640] [API] HeapFree(0x40364a0)
+[Te640] [API] [RES] find hmod=0x140000000 a=?/- w=0xc4/0x6
+[Te640] [API] [RES] walk depth=0 level=0x140088000 named=0 ided=3 (base=0x140088000)
+[Te640] [API] [RES] walk depth=1 level=0x140088028 named=0 ided=52 (base=0x140088000)
+[Te640] [API] [RES] walk depth=2 level=0x1400882c8 named=0 ided=1 (base=0x140088000)
+[Te640] [API] LoadStringW(id=3120) -> 61 wchars (block 196 idx 0 len 61)
+[Te640] [API] HeapAlloc(size=0x80, zero=0) = 0x4037560
+[Te640] [API] HeapAlloc(size=0x48, zero=0) = 0x40374a0
+[Te640] [API] HeapAlloc(size=0x20, zero=0) = 0x402e8c0
+[Te640] [API] HeapAlloc(size=0x30, zero=0) = 0x4036360
+[Te640] [API] HeapFree(0x402e8c0)
+[Te640] [API] HeapAlloc(size=0x46, zero=0) = 0x40375f0
+[Te640] [API] HeapFree(0x4036360)
+[Te640] [API] HeapAlloc(size=0x68, zero=0) = 0x40374f0
+[Te640] [API] HeapFree(0x40375f0)
+[Te640] [API] HeapAlloc(size=0x9a, zero=0) = 0x4037390
+[Te640] [API] HeapFree(0x40374f0)
+[Te640] [API] HeapAlloc(size=0x210, zero=0) = 0x40364a0
+[Te640] [API] HeapFree(0x4037390)
+[Te640] [API] GetStdHandle(-11) = 0x5
+[Te640] [API] HeapAlloc(size=0xf9, zero=0) = 0x4036d90
+[Te640] [API] WideCharToMultiByte(cp=0, srclen=-1, dstlen=249)
+[Te640] [API] HeapAlloc(size=0x40, zero=0) = 0x40375f0
+[Te640] [API] HeapFree(0x4036d90)
+[Te640] [API] WriteFile(n=62)
+[Te640] [API] HeapFree(0x40375f0)
+[Te640] [API] HeapFree(0x40364a0)
+[Te640] [API] [RES] find hmod=0x140000000 a=?/- w=0xc4/0x6
+[Te640] [API] [RES] walk depth=0 level=0x140088000 named=0 ided=3 (base=0x140088000)
+[Te640] [API] [RES] walk depth=1 level=0x140088028 named=0 ided=52 (base=0x140088000)
+[Te640] [API] [RES] walk depth=2 level=0x1400882c8 named=0 ided=1 (base=0x140088000)
+[Te640] [API] LoadStringW(id=3122) -> 39 wchars (block 196 idx 2 len 39)
+[Te640] [API] HeapAlloc(size=0x50, zero=0) = 0x4037440
+[Te640] [API] HeapAlloc(size=0x48, zero=0) = 0x40375f0
+[Te640] [API] HeapAlloc(size=0x20, zero=0) = 0x402e8c0
+[Te640] [API] HeapAlloc(size=0x30, zero=0) = 0x4036360
+[Te640] [API] HeapFree(0x402e8c0)
+[Te640] [API] HeapAlloc(size=0x46, zero=0) = 0x4037640
+[Te640] [API] HeapFree(0x4036360)
+[Te640] [API] HeapAlloc(size=0x68, zero=0) = 0x40374f0
+[Te640] [API] HeapFree(0x4037640)
+[Te640] [API] HeapAlloc(size=0x210, zero=0) = 0x40364a0
+[Te640] [API] HeapFree(0x40374f0)
+[Te640] [API] GetStdHandle(-11) = 0x5
+[Te640] [API] HeapAlloc(size=0xa1, zero=0) = 0x4037390
+[Te640] [API] WideCharToMultiByte(cp=0, srclen=-1, dstlen=161)
+[Te640] [API] HeapAlloc(size=0x30, zero=0) = 0x4036360
+[Te640] [API] HeapFree(0x4037390)
+[Te640] [API] WriteFile(n=40)
+[Te640] [API] HeapFree(0x4036360)
+[Te640] [API] HeapFree(0x40364a0)
+[Te640] [API] [RES] find hmod=0x140000000 a=?/- w=0xc4/0x6
+[Te640] [API] [RES] walk depth=0 level=0x140088000 named=0 ided=3 (base=0x140088000)
+[Te640] [API] [RES] walk depth=1 level=0x140088028 named=0 ided=52 (base=0x140088000)
+[Te640] [API] [RES] walk depth=2 level=0x1400882c8 named=0 ided=1 (base=0x140088000)
+[Te640] [API] LoadStringW(id=3128) -> 40 wchars (block 196 idx 8 len 40)
+[Te640] [API] HeapAlloc(size=0x60, zero=0) = 0x40374f0
+[Te640] [API] HeapAlloc(size=0x48, zero=0) = 0x4037640
+[Te640] [API] HeapAlloc(size=0x20, zero=0) = 0x402e8c0
+[Te640] [API] HeapAlloc(size=0x30, zero=0) = 0x4036360
+[Te640] [API] HeapFree(0x402e8c0)
+[Te640] [API] HeapAlloc(size=0x46, zero=0) = 0x4037690
+[Te640] [API] HeapFree(0x4036360)
+[Te640] [API] HeapAlloc(size=0x68, zero=0) = 0x40376e0
+[Te640] [API] HeapFree(0x4037690)
+[Te640] [API] HeapAlloc(size=0x210, zero=0) = 0x40364a0
+[Te640] [API] HeapFree(0x40376e0)
+[Te640] [API] GetStdHandle(-11) = 0x5
+[Te640] [API] HeapAlloc(size=0xa5, zero=0) = 0x4037390
+[Te640] [API] WideCharToMultiByte(cp=0, srclen=-1, dstlen=165)
+[Te640] [API] HeapAlloc(size=0x30, zero=0) = 0x4036360
+[Te640] [API] HeapFree(0x4037390)
+[Te640] [API] WriteFile(n=41)
+[Te640] [API] HeapFree(0x4036360)
+[Te640] [API] HeapFree(0x40364a0)
+[Te640] [API] [RES] find hmod=0x140000000 a=?/- w=0xc4/0x6
+[Te640] [API] [RES] walk depth=0 level=0x140088000 named=0 ided=3 (base=0x140088000)
+[Te640] [API] [RES] walk depth=1 level=0x140088028 named=0 ided=52 (base=0x140088000)
+[Te640] [API] [RES] walk depth=2 level=0x1400882c8 named=0 ided=1 (base=0x140088000)
+[Te640] [API] LoadStringW(id=3132) -> 38 wchars (block 196 idx 12 len 38)
+[Te640] [API] HeapAlloc(size=0x50, zero=0) = 0x4037750
+[Te640] [API] HeapAlloc(size=0x48, zero=0) = 0x4037690
+[Te640] [API] HeapAlloc(size=0x20, zero=0) = 0x402e8c0
+[Te640] [API] HeapAlloc(size=0x30, zero=0) = 0x4036360
+[Te640] [API] HeapFree(0x402e8c0)
+[Te640] [API] HeapAlloc(size=0x46, zero=0) = 0x40377b0
+[Te640] [API] HeapFree(0x4036360)
+[Te640] [API] HeapAlloc(size=0x68, zero=0) = 0x40376e0
+[Te640] [API] HeapFree(0x40377b0)
+[Te640] [API] HeapAlloc(size=0x210, zero=0) = 0x40364a0
+[Te640] [API] HeapFree(0x40376e0)
+[Te640] [API] GetStdHandle(-11) = 0x5
+[Te640] [API] HeapAlloc(size=0x9d, zero=0) = 0x4037390
+[Te640] [API] WideCharToMultiByte(cp=0, srclen=-1, dstlen=157)
+[Te640] [API] HeapAlloc(size=0x30, zero=0) = 0x4036360
+[Te640] [API] HeapFree(0x4037390)
+[Te640] [API] WriteFile(n=39)
+[Te640] [API] HeapFree(0x4036360)
+[Te640] [API] HeapFree(0x40364a0)
+[Te640] [API] [RES] find hmod=0x140000000 a=?/- w=0xc4/0x6
+[Te640] [API] [RES] walk depth=0 level=0x140088000 named=0 ided=3 (base=0x140088000)
+[Te640] [API] [RES] walk depth=1 level=0x140088028 named=0 ided=52 (base=0x140088000)
+[Te640] [API] [RES] walk depth=2 level=0x1400882c8 named=0 ided=1 (base=0x140088000)
+[Te640] [API] LoadStringW(id=3134) -> 43 wchars (block 196 idx 14 len 43)
+[Te640] [API] HeapAlloc(size=0x60, zero=0) = 0x40376e0
+[Te640] [API] HeapAlloc(size=0x48, zero=0) = 0x40377b0
+[Te640] [API] HeapAlloc(size=0x20, zero=0) = 0x402e8c0
+[Te640] [API] HeapAlloc(size=0x30, zero=0) = 0x4036360
+[Te640] [API] HeapFree(0x402e8c0)
+[Te640] [API] HeapAlloc(size=0x46, zero=0) = 0x4037800
+[Te640] [API] HeapFree(0x4036360)
+[Te640] [API] HeapAlloc(size=0x68, zero=0) = 0x4037850
+[Te640] [API] HeapFree(0x4037800)
+[Te640] [API] HeapAlloc(size=0x210, zero=0) = 0x40364a0
+[Te640] [API] HeapFree(0x4037850)
+[Te640] [API] GetStdHandle(-11) = 0x5
+[Te640] [API] HeapAlloc(size=0xb1, zero=0) = 0x4037280
+[Te640] [API] WideCharToMultiByte(cp=0, srclen=-1, dstlen=177)
+[Te640] [API] HeapAlloc(size=0x30, zero=0) = 0x4036360
+[Te640] [API] HeapFree(0x4037280)
+[Te640] [API] WriteFile(n=44)
+[Te640] [API] HeapFree(0x4036360)
+[Te640] [API] HeapFree(0x40364a0)
+[Te640] [API] [RES] find hmod=0x140000000 a=?/- w=0xc5/0x6
+[Te640] [API] [RES] walk depth=0 level=0x140088000 named=0 ided=3 (base=0x140088000)
+[Te640] [API] [RES] walk depth=1 level=0x140088028 named=0 ided=52 (base=0x140088000)
+[Te640] [API] [RES] walk depth=2 level=0x1400882e0 named=0 ided=1 (base=0x140088000)
+[Te640] [API] LoadStringW(id=3136) -> 44 wchars (block 197 idx 0 len 44)
+[Te640] [API] HeapAlloc(size=0x60, zero=0) = 0x4037850
+[Te640] [API] HeapAlloc(size=0x48, zero=0) = 0x4037800
+[Te640] [API] HeapAlloc(size=0x20, zero=0) = 0x402e8c0
+[Te640] [API] HeapAlloc(size=0x30, zero=0) = 0x4036360
+[Te640] [API] HeapFree(0x402e8c0)
+[Te640] [API] HeapAlloc(size=0x46, zero=0) = 0x40378c0
+[Te640] [API] HeapFree(0x4036360)
+[Te640] [API] HeapAlloc(size=0x68, zero=0) = 0x4037910
+[Te640] [API] HeapFree(0x40378c0)
+[Te640] [API] HeapAlloc(size=0x210, zero=0) = 0x40364a0
+[Te640] [API] HeapFree(0x4037910)
+[Te640] [API] GetStdHandle(-11) = 0x5
+[Te640] [API] HeapAlloc(size=0xb5, zero=0) = 0x4037280
+[Te640] [API] WideCharToMultiByte(cp=0, srclen=-1, dstlen=181)
+[Te640] [API] HeapAlloc(size=0x30, zero=0) = 0x4036360
+[Te640] [API] HeapFree(0x4037280)
+[Te640] [API] WriteFile(n=45)
+[Te640] [API] HeapFree(0x4036360)
+[Te640] [API] HeapFree(0x40364a0)
+[Te640] [API] [RES] find hmod=0x140000000 a=?/- w=0xc5/0x6
+[Te640] [API] [RES] walk depth=0 level=0x140088000 named=0 ided=3 (base=0x140088000)
+[Te640] [API] [RES] walk depth=1 level=0x140088028 named=0 ided=52 (base=0x140088000)
+[Te640] [API] [RES] walk depth=2 level=0x1400882e0 named=0 ided=1 (base=0x140088000)
+[Te640] [API] LoadStringW(id=3138) -> 44 wchars (block 197 idx 2 len 44)
+[Te640] [API] HeapAlloc(size=0x60, zero=0) = 0x4037910
+[Te640] [API] HeapAlloc(size=0x48, zero=0) = 0x40378c0
+[Te640] [API] HeapAlloc(size=0x20, zero=0) = 0x402e8c0
+[Te640] [API] HeapAlloc(size=0x30, zero=0) = 0x4036360
+[Te640] [API] HeapFree(0x402e8c0)
+[Te640] [API] HeapAlloc(size=0x46, zero=0) = 0x4037980
+[Te640] [API] HeapFree(0x4036360)
+[Te640] [API] HeapAlloc(size=0x68, zero=0) = 0x40379d0
+[Te640] [API] HeapFree(0x4037980)
+[Te640] [API] HeapAlloc(size=0x210, zero=0) = 0x40364a0
+[Te640] [API] HeapFree(0x40379d0)
+[Te640] [API] GetStdHandle(-11) = 0x5
+[Te640] [API] HeapAlloc(size=0xb5, zero=0) = 0x4037280
+[Te640] [API] WideCharToMultiByte(cp=0, srclen=-1, dstlen=181)
+[Te640] [API] HeapAlloc(size=0x30, zero=0) = 0x4036360
+[Te640] [API] HeapFree(0x4037280)
+[Te640] [API] WriteFile(n=45)
+[Te640] [API] HeapFree(0x4036360)
+[Te640] [API] HeapFree(0x40364a0)
+[Te640] [API] [RES] find hmod=0x140000000 a=?/- w=0xc5/0x6
+[Te640] [API] [RES] walk depth=0 level=0x140088000 named=0 ided=3 (base=0x140088000)
+[Te640] [API] [RES] walk depth=1 level=0x140088028 named=0 ided=52 (base=0x140088000)
+[Te640] [API] [RES] walk depth=2 level=0x1400882e0 named=0 ided=1 (base=0x140088000)
+[Te640] [API] LoadStringW(id=3142) -> 34 wchars (block 197 idx 6 len 34)
+[Te640] [API] HeapAlloc(size=0x50, zero=0) = 0x4037a40
+[Te640] [API] HeapAlloc(size=0x48, zero=0) = 0x4037980
+[Te640] [API] HeapAlloc(size=0x20, zero=0) = 0x402e8c0
+[Te640] [API] HeapAlloc(size=0x30, zero=0) = 0x4036360
+[Te640] [API] HeapFree(0x402e8c0)
+[Te640] [API] HeapAlloc(size=0x46, zero=0) = 0x4037aa0
+[Te640] [API] HeapFree(0x4036360)
+[Te640] [API] HeapAlloc(size=0x68, zero=0) = 0x40379d0
+[Te640] [API] HeapFree(0x4037aa0)
+[Te640] [API] HeapAlloc(size=0x210, zero=0) = 0x40364a0
+[Te640] [API] HeapFree(0x40379d0)
+[Te640] [API] GetStdHandle(-11) = 0x5
+[Te640] [API] HeapAlloc(size=0x8d, zero=0) = 0x4037af0
+[Te640] [API] WideCharToMultiByte(cp=0, srclen=-1, dstlen=141)
+[Te640] [API] HeapAlloc(size=0x30, zero=0) = 0x4036360
+[Te640] [API] HeapFree(0x4037af0)
+[Te640] [API] WriteFile(n=35)
+[Te640] [API] HeapFree(0x4036360)
+[Te640] [API] HeapFree(0x40364a0)
+[Te640] [API] [RES] find hmod=0x140000000 a=?/- w=0xc6/0x6
+[Te640] [API] [RES] walk depth=0 level=0x140088000 named=0 ided=3 (base=0x140088000)
+[Te640] [API] [RES] walk depth=1 level=0x140088028 named=0 ided=52 (base=0x140088000)
+[Te640] [API] [RES] walk depth=2 level=0x1400882f8 named=0 ided=1 (base=0x140088000)
+[Te640] [API] LoadStringW(id=3154) -> 41 wchars (block 198 idx 2 len 41)
+[Te640] [API] HeapAlloc(size=0x60, zero=0) = 0x40379d0
+[Te640] [API] HeapAlloc(size=0x48, zero=0) = 0x4037aa0
+[Te640] [API] HeapAlloc(size=0x20, zero=0) = 0x402e8c0
+[Te640] [API] HeapAlloc(size=0x30, zero=0) = 0x4036360
+[Te640] [API] HeapFree(0x402e8c0)
+[Te640] [API] HeapAlloc(size=0x46, zero=0) = 0x4037b90
+[Te640] [API] HeapFree(0x4036360)
+[Te640] [API] HeapAlloc(size=0x68, zero=0) = 0x4037be0
+[Te640] [API] HeapFree(0x4037b90)
+[Te640] [API] HeapAlloc(size=0x210, zero=0) = 0x40364a0
+[Te640] [API] HeapFree(0x4037be0)
+[Te640] [API] GetStdHandle(-11) = 0x5
+[Te640] [API] HeapAlloc(size=0xa9, zero=0) = 0x4037280
+[Te640] [API] WideCharToMultiByte(cp=0, srclen=-1, dstlen=169)
+[Te640] [API] HeapAlloc(size=0x30, zero=0) = 0x4036360
+[Te640] [API] HeapFree(0x4037280)
+[Te640] [API] WriteFile(n=42)
+[Te640] [API] HeapFree(0x4036360)
+[Te640] [API] HeapFree(0x40364a0)
+[Te640] [API] [RES] find hmod=0x140000000 a=?/- w=0xc6/0x6
+[Te640] [API] [RES] walk depth=0 level=0x140088000 named=0 ided=3 (base=0x140088000)
+[Te640] [API] [RES] walk depth=1 level=0x140088028 named=0 ided=52 (base=0x140088000)
+[Te640] [API] [RES] walk depth=2 level=0x1400882f8 named=0 ided=1 (base=0x140088000)
+[Te640] [API] LoadStringW(id=3160) -> 64 wchars (block 198 idx 8 len 64)
+[Te640] [API] HeapAlloc(size=0x90, zero=0) = 0x4037af0
+[Te640] [API] HeapAlloc(size=0x48, zero=0) = 0x4037b90
+[Te640] [API] HeapAlloc(size=0x20, zero=0) = 0x402e8c0
+[Te640] [API] HeapAlloc(size=0x30, zero=0) = 0x4036360
+[Te640] [API] HeapFree(0x402e8c0)
+[Te640] [API] HeapAlloc(size=0x46, zero=0) = 0x4037c50
+[Te640] [API] HeapFree(0x4036360)
+[Te640] [API] HeapAlloc(size=0x68, zero=0) = 0x4037be0
+[Te640] [API] HeapFree(0x4037c50)
+[Te640] [API] HeapAlloc(size=0x9a, zero=0) = 0x4037390
+[Te640] [API] HeapFree(0x4037be0)
+[Te640] [API] HeapAlloc(size=0x210, zero=0) = 0x40364a0
+[Te640] [API] HeapFree(0x4037390)
+[Te640] [API] GetStdHandle(-11) = 0x5
+[Te640] [API] HeapAlloc(size=0x105, zero=0) = 0x4036d90
+[Te640] [API] WideCharToMultiByte(cp=0, srclen=-1, dstlen=261)
+[Te640] [API] HeapAlloc(size=0x50, zero=0) = 0x4037ca0
+[Te640] [API] HeapFree(0x4036d90)
+[Te640] [API] WriteFile(n=65)
+[Te640] [API] HeapFree(0x4037ca0)
+[Te640] [API] HeapFree(0x40364a0)
+[Te640] [API] [RES] find hmod=0x140000000 a=?/- w=0xc6/0x6
+[Te640] [API] [RES] walk depth=0 level=0x140088000 named=0 ided=3 (base=0x140088000)
+[Te640] [API] [RES] walk depth=1 level=0x140088028 named=0 ided=52 (base=0x140088000)
+[Te640] [API] [RES] walk depth=2 level=0x1400882f8 named=0 ided=1 (base=0x140088000)
+[Te640] [API] LoadStringW(id=3162) -> 51 wchars (block 198 idx 10 len 51)
+[Te640] [API] HeapAlloc(size=0x70, zero=0) = 0x4037d00
+[Te640] [API] HeapAlloc(size=0x48, zero=0) = 0x4037c50
+[Te640] [API] HeapAlloc(size=0x20, zero=0) = 0x402e8c0
+[Te640] [API] HeapAlloc(size=0x30, zero=0) = 0x4036360
+[Te640] [API] HeapFree(0x402e8c0)
+[Te640] [API] HeapAlloc(size=0x46, zero=0) = 0x4037d80
+[Te640] [API] HeapFree(0x4036360)
+[Te640] [API] HeapAlloc(size=0x68, zero=0) = 0x4037be0
+[Te640] [API] HeapFree(0x4037d80)
+[Te640] [API] HeapAlloc(size=0x9a, zero=0) = 0x4037390
+[Te640] [API] HeapFree(0x4037be0)
+[Te640] [API] HeapAlloc(size=0x210, zero=0) = 0x40364a0
+[Te640] [API] HeapFree(0x4037390)
+[Te640] [API] GetStdHandle(-11) = 0x5
+[Te640] [API] HeapAlloc(size=0xd1, zero=0) = 0x40369c0
+[Te640] [API] WideCharToMultiByte(cp=0, srclen=-1, dstlen=209)
+[Te640] [API] HeapAlloc(size=0x40, zero=0) = 0x4037d80
+[Te640] [API] HeapFree(0x40369c0)
+[Te640] [API] WriteFile(n=52)
+[Te640] [API] HeapFree(0x4037d80)
+[Te640] [API] HeapFree(0x40364a0)
+[Te640] [API] [RES] find hmod=0x140000000 a=?/- w=0xc6/0x6
+[Te640] [API] [RES] walk depth=0 level=0x140088000 named=0 ided=3 (base=0x140088000)
+[Te640] [API] [RES] walk depth=1 level=0x140088028 named=0 ided=52 (base=0x140088000)
+[Te640] [API] [RES] walk depth=2 level=0x1400882f8 named=0 ided=1 (base=0x140088000)
+[Te640] [API] LoadStringW(id=3164) -> 30 wchars (block 198 idx 12 len 30)
+[Te640] [API] HeapAlloc(size=0x40, zero=0) = 0x4037d80
+[Te640] [API] HeapAlloc(size=0x48, zero=0) = 0x4037dd0
+[Te640] [API] HeapAlloc(size=0x20, zero=0) = 0x402e8c0
+[Te640] [API] HeapAlloc(size=0x30, zero=0) = 0x4036360
+[Te640] [API] HeapFree(0x402e8c0)
+[Te640] [API] HeapAlloc(size=0x46, zero=0) = 0x4037e20
+[Te640] [API] HeapFree(0x4036360)
+[Te640] [API] HeapAlloc(size=0x210, zero=0) = 0x40364a0
+[Te640] [API] HeapFree(0x4037e20)
+[Te640] [API] GetStdHandle(-11) = 0x5
+[Te640] [API] HeapAlloc(size=0x7d, zero=0) = 0x4037e70
+[Te640] [API] WideCharToMultiByte(cp=0, srclen=-1, dstlen=125)
+[Te640] [API] HeapAlloc(size=0x20, zero=0) = 0x402e8c0
+[Te640] [API] HeapFree(0x4037e70)
+[Te640] [API] WriteFile(n=31)
+[Te640] [API] HeapFree(0x402e8c0)
+[Te640] [API] HeapFree(0x40364a0)
+[Te640] [API] [RES] find hmod=0x140000000 a=?/- w=0xc7/0x6
+[Te640] [API] [RES] walk depth=0 level=0x140088000 named=0 ided=3 (base=0x140088000)
+[Te640] [API] [RES] walk depth=1 level=0x140088028 named=0 ided=52 (base=0x140088000)
+[Te640] [API] [RES] walk depth=2 level=0x140088310 named=0 ided=1 (base=0x140088000)
+[Te640] [API] LoadStringW(id=3170) -> 44 wchars (block 199 idx 2 len 44)
+[Te640] [API] HeapAlloc(size=0x60, zero=0) = 0x4037be0
+[Te640] [API] HeapAlloc(size=0x48, zero=0) = 0x4037e20
+[Te640] [API] HeapAlloc(size=0x20, zero=0) = 0x402e8c0
+[Te640] [API] HeapAlloc(size=0x30, zero=0) = 0x4036360
+[Te640] [API] HeapFree(0x402e8c0)
+[Te640] [API] HeapAlloc(size=0x46, zero=0) = 0x4037f00
+[Te640] [API] HeapFree(0x4036360)
+[Te640] [API] HeapAlloc(size=0x68, zero=0) = 0x4037f50
+[Te640] [API] HeapFree(0x4037f00)
+[Te640] [API] HeapAlloc(size=0x210, zero=0) = 0x40364a0
+[Te640] [API] HeapFree(0x4037f50)
+[Te640] [API] GetStdHandle(-11) = 0x5
+[Te640] [API] HeapAlloc(size=0xb5, zero=0) = 0x4037280
+[Te640] [API] WideCharToMultiByte(cp=0, srclen=-1, dstlen=181)
+[Te640] [API] HeapAlloc(size=0x30, zero=0) = 0x4036360
+[Te640] [API] HeapFree(0x4037280)
+[Te640] [API] WriteFile(n=45)
+[Te640] [API] HeapFree(0x4036360)
+[Te640] [API] HeapFree(0x40364a0)
+[Te640] [API] [RES] find hmod=0x140000000 a=?/- w=0xc7/0x6
+[Te640] [API] [RES] walk depth=0 level=0x140088000 named=0 ided=3 (base=0x140088000)
+[Te640] [API] [RES] walk depth=1 level=0x140088028 named=0 ided=52 (base=0x140088000)
+[Te640] [API] [RES] walk depth=2 level=0x140088310 named=0 ided=1 (base=0x140088000)
+[Te640] [API] LoadStringW(id=3174) -> 44 wchars (block 199 idx 6 len 44)
+[Te640] [API] HeapAlloc(size=0x60, zero=0) = 0x4037f50
+[Te640] [API] HeapAlloc(size=0x48, zero=0) = 0x4037f00
+[Te640] [API] HeapAlloc(size=0x20, zero=0) = 0x402e8c0
+[Te640] [API] HeapAlloc(size=0x30, zero=0) = 0x4036360
+[Te640] [API] HeapFree(0x402e8c0)
+[Te640] [API] HeapAlloc(size=0x46, zero=0) = 0x4037fc0
+[Te640] [API] HeapFree(0x4036360)
+[Te640] [API] HeapAlloc(size=0x68, zero=0) = 0x4038010
+[Te640] [API] HeapFree(0x4037fc0)
+[Te640] [API] HeapAlloc(size=0x210, zero=0) = 0x40364a0
+[Te640] [API] HeapFree(0x4038010)
+[Te640] [API] GetStdHandle(-11) = 0x5
+[Te640] [API] HeapAlloc(size=0xb5, zero=0) = 0x4037280
+[Te640] [API] WideCharToMultiByte(cp=0, srclen=-1, dstlen=181)
+[Te640] [API] HeapAlloc(size=0x30, zero=0) = 0x4036360
+[Te640] [API] HeapFree(0x4037280)
+[Te640] [API] WriteFile(n=45)
+[Te640] [API] HeapFree(0x4036360)
+[Te640] [API] HeapFree(0x40364a0)
+[Te640] [API] [RES] find hmod=0x140000000 a=?/- w=0xc7/0x6
+[Te640] [API] [RES] walk depth=0 level=0x140088000 named=0 ided=3 (base=0x140088000)
+[Te640] [API] [RES] walk depth=1 level=0x140088028 named=0 ided=52 (base=0x140088000)
+[Te640] [API] [RES] walk depth=2 level=0x140088310 named=0 ided=1 (base=0x140088000)
+[Te640] [API] LoadStringW(id=3178) -> 37 wchars (block 199 idx 10 len 37)
+[Te640] [API] HeapAlloc(size=0x50, zero=0) = 0x4037ca0
+[Te640] [API] HeapAlloc(size=0x48, zero=0) = 0x4037fc0
+[Te640] [API] HeapAlloc(size=0x20, zero=0) = 0x402e8c0
+[Te640] [API] HeapAlloc(size=0x30, zero=0) = 0x4036360
+[Te640] [API] HeapFree(0x402e8c0)
+[Te640] [API] HeapAlloc(size=0x46, zero=0) = 0x4038080
+[Te640] [API] HeapFree(0x4036360)
+[Te640] [API] HeapAlloc(size=0x68, zero=0) = 0x4038010
+[Te640] [API] HeapFree(0x4038080)
+[Te640] [API] HeapAlloc(size=0x210, zero=0) = 0x40364a0
+[Te640] [API] HeapFree(0x4038010)
+[Te640] [API] GetStdHandle(-11) = 0x5
+[Te640] [API] HeapAlloc(size=0x99, zero=0) = 0x4037390
+[Te640] [API] WideCharToMultiByte(cp=0, srclen=-1, dstlen=153)
+[Te640] [API] HeapAlloc(size=0x30, zero=0) = 0x4036360
+[Te640] [API] HeapFree(0x4037390)
+[Te640] [API] WriteFile(n=38)
+[Te640] [API] HeapFree(0x4036360)
+[Te640] [API] HeapFree(0x40364a0)
+[Te640] [API] [RES] find hmod=0x140000000 a=?/- w=0xc7/0x6
+[Te640] [API] [RES] walk depth=0 level=0x140088000 named=0 ided=3 (base=0x140088000)
+[Te640] [API] [RES] walk depth=1 level=0x140088028 named=0 ided=52 (base=0x140088000)
+[Te640] [API] [RES] walk depth=2 level=0x140088310 named=0 ided=1 (base=0x140088000)
+[Te640] [API] LoadStringW(id=3180) -> 58 wchars (block 199 idx 12 len 58)
+[Te640] [API] HeapAlloc(size=0x80, zero=0) = 0x4037e70
+[Te640] [API] HeapAlloc(size=0x48, zero=0) = 0x4038080
+[Te640] [API] HeapAlloc(size=0x20, zero=0) = 0x402e8c0
+[Te640] [API] HeapAlloc(size=0x30, zero=0) = 0x4036360
+[Te640] [API] HeapFree(0x402e8c0)
+[Te640] [API] HeapAlloc(size=0x46, zero=0) = 0x40380d0
+[Te640] [API] HeapFree(0x4036360)
+[Te640] [API] HeapAlloc(size=0x68, zero=0) = 0x4038010
+[Te640] [API] HeapFree(0x40380d0)
+[Te640] [API] HeapAlloc(size=0x9a, zero=0) = 0x4037390
+[Te640] [API] HeapFree(0x4038010)
+[Te640] [API] HeapAlloc(size=0x210, zero=0) = 0x40364a0
+[Te640] [API] HeapFree(0x4037390)
+[Te640] [API] GetStdHandle(-11) = 0x5
+[Te640] [API] HeapAlloc(size=0xed, zero=0) = 0x402c520
+[Te640] [API] WideCharToMultiByte(cp=0, srclen=-1, dstlen=237)
+[Te640] [API] HeapAlloc(size=0x40, zero=0) = 0x40380d0
+[Te640] [API] HeapFree(0x402c520)
+[Te640] [API] WriteFile(n=59)
+[Te640] [API] HeapFree(0x40380d0)
+[Te640] [API] HeapFree(0x40364a0)
+[Te640] [API] [RES] find hmod=0x140000000 a=?/- w=0xc8/0x6
+[Te640] [API] [RES] walk depth=0 level=0x140088000 named=0 ided=3 (base=0x140088000)
+[Te640] [API] [RES] walk depth=1 level=0x140088028 named=0 ided=52 (base=0x140088000)
+[Te640] [API] [RES] walk depth=2 level=0x140088328 named=0 ided=1 (base=0x140088000)
+[Te640] [API] LoadStringW(id=3188) -> 44 wchars (block 200 idx 4 len 44)
+[Te640] [API] HeapAlloc(size=0x60, zero=0) = 0x4038010
+[Te640] [API] HeapAlloc(size=0x48, zero=0) = 0x40380d0
+[Te640] [API] HeapAlloc(size=0x20, zero=0) = 0x402e8c0
+[Te640] [API] HeapAlloc(size=0x30, zero=0) = 0x4036360
+[Te640] [API] HeapFree(0x402e8c0)
+[Te640] [API] HeapAlloc(size=0x46, zero=0) = 0x4038120
+[Te640] [API] HeapFree(0x4036360)
+[Te640] [API] HeapAlloc(size=0x68, zero=0) = 0x4038170
+[Te640] [API] HeapFree(0x4038120)
+[Te640] [API] HeapAlloc(size=0x210, zero=0) = 0x40364a0
+[Te640] [API] HeapFree(0x4038170)
+[Te640] [API] GetStdHandle(-11) = 0x5
+[Te640] [API] HeapAlloc(size=0xb5, zero=0) = 0x4037280
+[Te640] [API] WideCharToMultiByte(cp=0, srclen=-1, dstlen=181)
+[Te640] [API] HeapAlloc(size=0x30, zero=0) = 0x4036360
+[Te640] [API] HeapFree(0x4037280)
+[Te640] [API] WriteFile(n=45)
+[Te640] [API] HeapFree(0x4036360)
+[Te640] [API] HeapFree(0x40364a0)
+[Te640] [API] [RES] find hmod=0x140000000 a=?/- w=0xc8/0x6
+[Te640] [API] [RES] walk depth=0 level=0x140088000 named=0 ided=3 (base=0x140088000)
+[Te640] [API] [RES] walk depth=1 level=0x140088028 named=0 ided=52 (base=0x140088000)
+[Te640] [API] [RES] walk depth=2 level=0x140088328 named=0 ided=1 (base=0x140088000)
+[Te640] [API] LoadStringW(id=3198) -> 42 wchars (block 200 idx 14 len 42)
+[Te640] [API] HeapAlloc(size=0x60, zero=0) = 0x4038170
+[Te640] [API] HeapAlloc(size=0x48, zero=0) = 0x4038120
+[Te640] [API] HeapAlloc(size=0x20, zero=0) = 0x402e8c0
+[Te640] [API] HeapAlloc(size=0x30, zero=0) = 0x4036360
+[Te640] [API] HeapFree(0x402e8c0)
+[Te640] [API] HeapAlloc(size=0x46, zero=0) = 0x40381e0
+[Te640] [API] HeapFree(0x4036360)
+[Te640] [API] HeapAlloc(size=0x68, zero=0) = 0x4038230
+[Te640] [API] HeapFree(0x40381e0)
+[Te640] [API] HeapAlloc(size=0x210, zero=0) = 0x40364a0
+[Te640] [API] HeapFree(0x4038230)
+[Te640] [API] GetStdHandle(-11) = 0x5
+[Te640] [API] HeapAlloc(size=0xad, zero=0) = 0x4037280
+[Te640] [API] WideCharToMultiByte(cp=0, srclen=-1, dstlen=173)
+[Te640] [API] HeapAlloc(size=0x30, zero=0) = 0x4036360
+[Te640] [API] HeapFree(0x4037280)
+[Te640] [API] WriteFile(n=43)
+[Te640] [API] HeapFree(0x4036360)
+[Te640] [API] HeapFree(0x40364a0)
+[Te640] [API] [RES] find hmod=0x140000000 a=?/- w=0xc9/0x6
+[Te640] [API] [RES] walk depth=0 level=0x140088000 named=0 ided=3 (base=0x140088000)
+[Te640] [API] [RES] walk depth=1 level=0x140088028 named=0 ided=52 (base=0x140088000)
+[Te640] [API] [RES] walk depth=2 level=0x140088340 named=0 ided=1 (base=0x140088000)
+[Te640] [API] LoadStringW(id=3200) -> 39 wchars (block 201 idx 0 len 39)
+[Te640] [API] HeapAlloc(size=0x50, zero=0) = 0x40382a0
+[Te640] [API] HeapAlloc(size=0x48, zero=0) = 0x40381e0
+[Te640] [API] HeapAlloc(size=0x20, zero=0) = 0x402e8c0
+[Te640] [API] HeapAlloc(size=0x30, zero=0) = 0x4036360
+[Te640] [API] HeapFree(0x402e8c0)
+[Te640] [API] HeapAlloc(size=0x46, zero=0) = 0x4038300
+[Te640] [API] HeapFree(0x4036360)
+[Te640] [API] HeapAlloc(size=0x68, zero=0) = 0x4038230
+[Te640] [API] HeapFree(0x4038300)
+[Te640] [API] HeapAlloc(size=0x210, zero=0) = 0x40364a0
+[Te640] [API] HeapFree(0x4038230)
+[Te640] [API] GetStdHandle(-11) = 0x5
+[Te640] [API] HeapAlloc(size=0xa1, zero=0) = 0x4037390
+[Te640] [API] WideCharToMultiByte(cp=0, srclen=-1, dstlen=161)
+[Te640] [API] HeapAlloc(size=0x30, zero=0) = 0x4036360
+[Te640] [API] HeapFree(0x4037390)
+[Te640] [API] WriteFile(n=40)
+[Te640] [API] HeapFree(0x4036360)
+[Te640] [API] HeapFree(0x40364a0)
+[Te640] [API] [RES] find hmod=0x140000000 a=?/- w=0xc9/0x6
+[Te640] [API] [RES] walk depth=0 level=0x140088000 named=0 ided=3 (base=0x140088000)
+[Te640] [API] [RES] walk depth=1 level=0x140088028 named=0 ided=52 (base=0x140088000)
+[Te640] [API] [RES] walk depth=2 level=0x140088340 named=0 ided=1 (base=0x140088000)
+[Te640] [API] LoadStringW(id=3206) -> 51 wchars (block 201 idx 6 len 51)
+[Te640] [API] HeapAlloc(size=0x70, zero=0) = 0x4038350
+[Te640] [API] HeapAlloc(size=0x48, zero=0) = 0x4038300
+[Te640] [API] HeapAlloc(size=0x20, zero=0) = 0x402e8c0
+[Te640] [API] HeapAlloc(size=0x30, zero=0) = 0x4036360
+[Te640] [API] HeapFree(0x402e8c0)
+[Te640] [API] HeapAlloc(size=0x46, zero=0) = 0x40383d0
+[Te640] [API] HeapFree(0x4036360)
+[Te640] [API] HeapAlloc(size=0x68, zero=0) = 0x4038230
+[Te640] [API] HeapFree(0x40383d0)
+[Te640] [API] HeapAlloc(size=0x9a, zero=0) = 0x4037390
+[Te640] [API] HeapFree(0x4038230)
+[Te640] [API] HeapAlloc(size=0x210, zero=0) = 0x40364a0
+[Te640] [API] HeapFree(0x4037390)
+[Te640] [API] GetStdHandle(-11) = 0x5
+[Te640] [API] HeapAlloc(size=0xd1, zero=0) = 0x40369c0
+[Te640] [API] WideCharToMultiByte(cp=0, srclen=-1, dstlen=209)
+[Te640] [API] HeapAlloc(size=0x40, zero=0) = 0x40383d0
+[Te640] [API] HeapFree(0x40369c0)
+[Te640] [API] WriteFile(n=52)
+[Te640] [API] HeapFree(0x40383d0)
+[Te640] [API] HeapFree(0x40364a0)
+[Te640] [API] [RES] find hmod=0x140000000 a=?/- w=0xc9/0x6
+[Te640] [API] [RES] walk depth=0 level=0x140088000 named=0 ided=3 (base=0x140088000)
+[Te640] [API] [RES] walk depth=1 level=0x140088028 named=0 ided=52 (base=0x140088000)
+[Te640] [API] [RES] walk depth=2 level=0x140088340 named=0 ided=1 (base=0x140088000)
+[Te640] [API] LoadStringW(id=3208) -> 56 wchars (block 201 idx 8 len 56)
+[Te640] [API] HeapAlloc(size=0x80, zero=0) = 0x4038420
+[Te640] [API] HeapAlloc(size=0x48, zero=0) = 0x40383d0
+[Te640] [API] HeapAlloc(size=0x20, zero=0) = 0x402e8c0
+[Te640] [API] HeapAlloc(size=0x30, zero=0) = 0x4036360
+[Te640] [API] HeapFree(0x402e8c0)
+[Te640] [API] HeapAlloc(size=0x46, zero=0) = 0x40384b0
+[Te640] [API] HeapFree(0x4036360)
+[Te640] [API] HeapAlloc(size=0x68, zero=0) = 0x4038230
+[Te640] [API] HeapFree(0x40384b0)
+[Te640] [API] HeapAlloc(size=0x9a, zero=0) = 0x4037390
+[Te640] [API] HeapFree(0x4038230)
+[Te640] [API] HeapAlloc(size=0x210, zero=0) = 0x40364a0
+[Te640] [API] HeapFree(0x4037390)
+[Te640] [API] GetStdHandle(-11) = 0x5
+[Te640] [API] HeapAlloc(size=0xe5, zero=0) = 0x4036bc0
+[Te640] [API] WideCharToMultiByte(cp=0, srclen=-1, dstlen=229)
+[Te640] [API] HeapAlloc(size=0x40, zero=0) = 0x40384b0
+[Te640] [API] HeapFree(0x4036bc0)
+[Te640] [API] WriteFile(n=57)
+[Te640] [API] HeapFree(0x40384b0)
+[Te640] [API] HeapFree(0x40364a0)
+[Te640] [API] [RES] find hmod=0x140000000 a=?/- w=0xc9/0x6
+[Te640] [API] [RES] walk depth=0 level=0x140088000 named=0 ided=3 (base=0x140088000)
+[Te640] [API] [RES] walk depth=1 level=0x140088028 named=0 ided=52 (base=0x140088000)
+[Te640] [API] [RES] walk depth=2 level=0x140088340 named=0 ided=1 (base=0x140088000)
+[Te640] [API] LoadStringW(id=3210) -> 60 wchars (block 201 idx 10 len 60)
+[Te640] [API] HeapAlloc(size=0x80, zero=0) = 0x4038500
+[Te640] [API] HeapAlloc(size=0x48, zero=0) = 0x40384b0
+[Te640] [API] HeapAlloc(size=0x20, zero=0) = 0x402e8c0
+[Te640] [API] HeapAlloc(size=0x30, zero=0) = 0x4036360
+[Te640] [API] HeapFree(0x402e8c0)
+[Te640] [API] HeapAlloc(size=0x46, zero=0) = 0x4038590
+[Te640] [API] HeapFree(0x4036360)
+[Te640] [API] HeapAlloc(size=0x68, zero=0) = 0x4038230
+[Te640] [API] HeapFree(0x4038590)
+[Te640] [API] HeapAlloc(size=0x9a, zero=0) = 0x4037390
+[Te640] [API] HeapFree(0x4038230)
+[Te640] [API] HeapAlloc(size=0x210, zero=0) = 0x40364a0
+[Te640] [API] HeapFree(0x4037390)
+[Te640] [API] GetStdHandle(-11) = 0x5
+[Te640] [API] HeapAlloc(size=0xf5, zero=0) = 0x402c520
+[Te640] [API] WideCharToMultiByte(cp=0, srclen=-1, dstlen=245)
+[Te640] [API] HeapAlloc(size=0x40, zero=0) = 0x4038590
+[Te640] [API] HeapFree(0x402c520)
+[Te640] [API] WriteFile(n=61)
+[Te640] [API] HeapFree(0x4038590)
+[Te640] [API] HeapFree(0x40364a0)
+[Te640] [API] [RES] find hmod=0x140000000 a=?/- w=0xc9/0x6
+[Te640] [API] [RES] walk depth=0 level=0x140088000 named=0 ided=3 (base=0x140088000)
+[Te640] [API] [RES] walk depth=1 level=0x140088028 named=0 ided=52 (base=0x140088000)
+[Te640] [API] [RES] walk depth=2 level=0x140088340 named=0 ided=1 (base=0x140088000)
+[Te640] [API] LoadStringW(id=3212) -> 39 wchars (block 201 idx 12 len 39)
+[Te640] [API] HeapAlloc(size=0x50, zero=0) = 0x40385e0
+[Te640] [API] HeapAlloc(size=0x48, zero=0) = 0x4038590
+[Te640] [API] HeapAlloc(size=0x20, zero=0) = 0x402e8c0
+[Te640] [API] HeapAlloc(size=0x30, zero=0) = 0x4036360
+[Te640] [API] HeapFree(0x402e8c0)
+[Te640] [API] HeapAlloc(size=0x46, zero=0) = 0x4038640
+[Te640] [API] HeapFree(0x4036360)
+[Te640] [API] HeapAlloc(size=0x68, zero=0) = 0x4038230
+[Te640] [API] HeapFree(0x4038640)
+[Te640] [API] HeapAlloc(size=0x210, zero=0) = 0x40364a0
+[Te640] [API] HeapFree(0x4038230)
+[Te640] [API] GetStdHandle(-11) = 0x5
+[Te640] [API] HeapAlloc(size=0xa1, zero=0) = 0x4037390
+[Te640] [API] WideCharToMultiByte(cp=0, srclen=-1, dstlen=161)
+[Te640] [API] HeapAlloc(size=0x30, zero=0) = 0x4036360
+[Te640] [API] HeapFree(0x4037390)
+[Te640] [API] WriteFile(n=40)
+[Te640] [API] HeapFree(0x4036360)
+[Te640] [API] HeapFree(0x40364a0)
+[Te640] [API] [RES] find hmod=0x140000000 a=?/- w=0xc9/0x6
+[Te640] [API] [RES] walk depth=0 level=0x140088000 named=0 ided=3 (base=0x140088000)
+[Te640] [API] [RES] walk depth=1 level=0x140088028 named=0 ided=52 (base=0x140088000)
+[Te640] [API] [RES] walk depth=2 level=0x140088340 named=0 ided=1 (base=0x140088000)
+[Te640] [API] LoadStringW(id=3214) -> 46 wchars (block 201 idx 14 len 46)
+[Te640] [API] HeapAlloc(size=0x60, zero=0) = 0x4038230
+[Te640] [API] HeapAlloc(size=0x48, zero=0) = 0x4038640
+[Te640] [API] HeapAlloc(size=0x20, zero=0) = 0x402e8c0
+[Te640] [API] HeapAlloc(size=0x30, zero=0) = 0x4036360
+[Te640] [API] HeapFree(0x402e8c0)
+[Te640] [API] HeapAlloc(size=0x46, zero=0) = 0x4038690
+[Te640] [API] HeapFree(0x4036360)
+[Te640] [API] HeapAlloc(size=0x68, zero=0) = 0x40386e0
+[Te640] [API] HeapFree(0x4038690)
+[Te640] [API] HeapAlloc(size=0x210, zero=0) = 0x40364a0
+[Te640] [API] HeapFree(0x40386e0)
+[Te640] [API] GetStdHandle(-11) = 0x5
+[Te640] [API] HeapAlloc(size=0xbd, zero=0) = 0x4037050
+[Te640] [API] WideCharToMultiByte(cp=0, srclen=-1, dstlen=189)
+[Te640] [API] HeapAlloc(size=0x30, zero=0) = 0x4036360
+[Te640] [API] HeapFree(0x4037050)
+[Te640] [API] WriteFile(n=47)
+[Te640] [API] HeapFree(0x4036360)
+[Te640] [API] HeapFree(0x40364a0)
+[Te640] [API] [RES] find hmod=0x140000000 a=?/- w=0xca/0x6
+[Te640] [API] [RES] walk depth=0 level=0x140088000 named=0 ided=3 (base=0x140088000)
+[Te640] [API] [RES] walk depth=1 level=0x140088028 named=0 ided=52 (base=0x140088000)
+[Te640] [API] [RES] walk depth=2 level=0x140088358 named=0 ided=1 (base=0x140088000)
+[Te640] [API] LoadStringW(id=3220) -> 74 wchars (block 202 idx 4 len 74)
+[Te640] [API] HeapAlloc(size=0xa0, zero=0) = 0x4037390
+[Te640] [API] HeapAlloc(size=0x48, zero=0) = 0x4038690
+[Te640] [API] HeapAlloc(size=0x20, zero=0) = 0x402e8c0
+[Te640] [API] HeapAlloc(size=0x30, zero=0) = 0x4036360
+[Te640] [API] HeapFree(0x402e8c0)
+[Te640] [API] HeapAlloc(size=0x46, zero=0) = 0x4038750
+[Te640] [API] HeapFree(0x4036360)
+[Te640] [API] HeapAlloc(size=0x68, zero=0) = 0x40386e0
+[Te640] [API] HeapFree(0x4038750)
+[Te640] [API] HeapAlloc(size=0x9a, zero=0) = 0x40387a0
+[Te640] [API] HeapFree(0x40386e0)
+[Te640] [API] HeapAlloc(size=0x210, zero=0) = 0x40364a0
+[Te640] [API] HeapFree(0x40387a0)
+[Te640] [API] GetStdHandle(-11) = 0x5
+[Te640] [API] HeapAlloc(size=0x12d, zero=0) = 0x4038850
+[Te640] [API] WideCharToMultiByte(cp=0, srclen=-1, dstlen=301)
+[Te640] [API] HeapAlloc(size=0x50, zero=0) = 0x4038990
+[Te640] [API] HeapFree(0x4038850)
+[Te640] [API] WriteFile(n=75)
+[Te640] [API] HeapFree(0x4038990)
+[Te640] [API] HeapFree(0x40364a0)
+[Te640] [API] [RES] find hmod=0x140000000 a=?/- w=0xca/0x6
+[Te640] [API] [RES] walk depth=0 level=0x140088000 named=0 ided=3 (base=0x140088000)
+[Te640] [API] [RES] walk depth=1 level=0x140088028 named=0 ided=52 (base=0x140088000)
+[Te640] [API] [RES] walk depth=2 level=0x140088358 named=0 ided=1 (base=0x140088000)
+[Te640] [API] LoadStringW(id=3222) -> 42 wchars (block 202 idx 6 len 42)
+[Te640] [API] HeapAlloc(size=0x60, zero=0) = 0x40386e0
+[Te640] [API] HeapAlloc(size=0x48, zero=0) = 0x4038750
+[Te640] [API] HeapAlloc(size=0x20, zero=0) = 0x402e8c0
+[Te640] [API] HeapAlloc(size=0x30, zero=0) = 0x4036360
+[Te640] [API] HeapFree(0x402e8c0)
+[Te640] [API] HeapAlloc(size=0x46, zero=0) = 0x40389f0
+[Te640] [API] HeapFree(0x4036360)
+[Te640] [API] HeapAlloc(size=0x68, zero=0) = 0x4038a40
+[Te640] [API] HeapFree(0x40389f0)
+[Te640] [API] HeapAlloc(size=0x210, zero=0) = 0x40364a0
+[Te640] [API] HeapFree(0x4038a40)
+[Te640] [API] GetStdHandle(-11) = 0x5
+[Te640] [API] HeapAlloc(size=0xad, zero=0) = 0x4037280
+[Te640] [API] WideCharToMultiByte(cp=0, srclen=-1, dstlen=173)
+[Te640] [API] HeapAlloc(size=0x30, zero=0) = 0x4036360
+[Te640] [API] HeapFree(0x4037280)
+[Te640] [API] WriteFile(n=43)
+[Te640] [API] HeapFree(0x4036360)
+[Te640] [API] HeapFree(0x40364a0)
+[Te640] [API] [RES] find hmod=0x140000000 a=?/- w=0xca/0x6
+[Te640] [API] [RES] walk depth=0 level=0x140088000 named=0 ided=3 (base=0x140088000)
+[Te640] [API] [RES] walk depth=1 level=0x140088028 named=0 ided=52 (base=0x140088000)
+[Te640] [API] [RES] walk depth=2 level=0x140088358 named=0 ided=1 (base=0x140088000)
+[Te640] [API] LoadStringW(id=3226) -> 56 wchars (block 202 idx 10 len 56)
+[Te640] [API] HeapAlloc(size=0x80, zero=0) = 0x4038ab0
+[Te640] [API] HeapAlloc(size=0x48, zero=0) = 0x40389f0
+[Te640] [API] HeapAlloc(size=0x20, zero=0) = 0x402e8c0
+[Te640] [API] HeapAlloc(size=0x30, zero=0) = 0x4036360
+[Te640] [API] HeapFree(0x402e8c0)
+[Te640] [API] HeapAlloc(size=0x46, zero=0) = 0x4038b40
+[Te640] [API] HeapFree(0x4036360)
+[Te640] [API] HeapAlloc(size=0x68, zero=0) = 0x4038a40
+[Te640] [API] HeapFree(0x4038b40)
+[Te640] [API] HeapAlloc(size=0x9a, zero=0) = 0x40387a0
+[Te640] [API] HeapFree(0x4038a40)
+[Te640] [API] HeapAlloc(size=0x210, zero=0) = 0x40364a0
+[Te640] [API] HeapFree(0x40387a0)
+[Te640] [API] GetStdHandle(-11) = 0x5
+[Te640] [API] HeapAlloc(size=0xe5, zero=0) = 0x4036bc0
+[Te640] [API] WideCharToMultiByte(cp=0, srclen=-1, dstlen=229)
+[Te640] [API] HeapAlloc(size=0x40, zero=0) = 0x4038b40
+[Te640] [API] HeapFree(0x4036bc0)
+[Te640] [API] WriteFile(n=57)
+[Te640] [API] HeapFree(0x4038b40)
+[Te640] [API] HeapFree(0x40364a0)
+[Te640] [API] [RES] find hmod=0x140000000 a=?/- w=0xca/0x6
+[Te640] [API] [RES] walk depth=0 level=0x140088000 named=0 ided=3 (base=0x140088000)
+[Te640] [API] [RES] walk depth=1 level=0x140088028 named=0 ided=52 (base=0x140088000)
+[Te640] [API] [RES] walk depth=2 level=0x140088358 named=0 ided=1 (base=0x140088000)
+[Te640] [API] LoadStringW(id=3228) -> 43 wchars (block 202 idx 12 len 43)
+[Te640] [API] HeapAlloc(size=0x60, zero=0) = 0x4038a40
+[Te640] [API] HeapAlloc(size=0x48, zero=0) = 0x4038b40
+[Te640] [API] HeapAlloc(size=0x20, zero=0) = 0x402e8c0
+[Te640] [API] HeapAlloc(size=0x30, zero=0) = 0x4036360
+[Te640] [API] HeapFree(0x402e8c0)
+[Te640] [API] HeapAlloc(size=0x46, zero=0) = 0x4038b90
+[Te640] [API] HeapFree(0x4036360)
+[Te640] [API] HeapAlloc(size=0x68, zero=0) = 0x4038be0
+[Te640] [API] HeapFree(0x4038b90)
+[Te640] [API] HeapAlloc(size=0x210, zero=0) = 0x40364a0
+[Te640] [API] HeapFree(0x4038be0)
+[Te640] [API] GetStdHandle(-11) = 0x5
+[Te640] [API] HeapAlloc(size=0xb1, zero=0) = 0x4037280
+[Te640] [API] WideCharToMultiByte(cp=0, srclen=-1, dstlen=177)
+[Te640] [API] HeapAlloc(size=0x30, zero=0) = 0x4036360
+[Te640] [API] HeapFree(0x4037280)
+[Te640] [API] WriteFile(n=44)
+[Te640] [API] HeapFree(0x4036360)
+[Te640] [API] HeapFree(0x40364a0)
+[Te640] [API] [RES] find hmod=0x140000000 a=?/- w=0xcb/0x6
+[Te640] [API] [RES] walk depth=0 level=0x140088000 named=0 ided=3 (base=0x140088000)
+[Te640] [API] [RES] walk depth=1 level=0x140088028 named=0 ided=52 (base=0x140088000)
+[Te640] [API] [RES] walk depth=2 level=0x140088370 named=0 ided=1 (base=0x140088000)
+[Te640] [API] LoadStringW(id=3232) -> 53 wchars (block 203 idx 0 len 53)
+[Te640] [API] HeapAlloc(size=0x70, zero=0) = 0x4038c50
+[Te640] [API] HeapAlloc(size=0x48, zero=0) = 0x4038b90
+[Te640] [API] HeapAlloc(size=0x20, zero=0) = 0x402e8c0
+[Te640] [API] HeapAlloc(size=0x30, zero=0) = 0x4036360
+[Te640] [API] HeapFree(0x402e8c0)
+[Te640] [API] HeapAlloc(size=0x46, zero=0) = 0x4038cd0
+[Te640] [API] HeapFree(0x4036360)
+[Te640] [API] HeapAlloc(size=0x68, zero=0) = 0x4038be0
+[Te640] [API] HeapFree(0x4038cd0)
+[Te640] [API] HeapAlloc(size=0x9a, zero=0) = 0x40387a0
+[Te640] [API] HeapFree(0x4038be0)
+[Te640] [API] HeapAlloc(size=0x210, zero=0) = 0x40364a0
+[Te640] [API] HeapFree(0x40387a0)
+[Te640] [API] GetStdHandle(-11) = 0x5
+[Te640] [API] HeapAlloc(size=0xd9, zero=0) = 0x4036bc0
+[Te640] [API] WideCharToMultiByte(cp=0, srclen=-1, dstlen=217)
+[Te640] [API] HeapAlloc(size=0x40, zero=0) = 0x4038cd0
+[Te640] [API] HeapFree(0x4036bc0)
+[Te640] [API] WriteFile(n=54)
+[Te640] [API] HeapFree(0x4038cd0)
+[Te640] [API] HeapFree(0x40364a0)
+[Te640] [API] [RES] find hmod=0x140000000 a=?/- w=0xcb/0x6
+[Te640] [API] [RES] walk depth=0 level=0x140088000 named=0 ided=3 (base=0x140088000)
+[Te640] [API] [RES] walk depth=1 level=0x140088028 named=0 ided=52 (base=0x140088000)
+[Te640] [API] [RES] walk depth=2 level=0x140088370 named=0 ided=1 (base=0x140088000)
+[Te640] [API] LoadStringW(id=3234) -> 29 wchars (block 203 idx 2 len 29)
+[Te640] [API] HeapAlloc(size=0x40, zero=0) = 0x4038cd0
+[Te640] [API] HeapAlloc(size=0x48, zero=0) = 0x4038d20
+[Te640] [API] HeapAlloc(size=0x20, zero=0) = 0x402e8c0
+[Te640] [API] HeapAlloc(size=0x30, zero=0) = 0x4036360
+[Te640] [API] HeapFree(0x402e8c0)
+[Te640] [API] HeapAlloc(size=0x46, zero=0) = 0x4038d70
+[Te640] [API] HeapFree(0x4036360)
+[Te640] [API] HeapAlloc(size=0x210, zero=0) = 0x40364a0
+[Te640] [API] HeapFree(0x4038d70)
+[Te640] [API] GetStdHandle(-11) = 0x5
+[Te640] [API] HeapAlloc(size=0x79, zero=0) = 0x4038dc0
+[Te640] [API] WideCharToMultiByte(cp=0, srclen=-1, dstlen=121)
+[Te640] [API] HeapAlloc(size=0x20, zero=0) = 0x402e8c0
+[Te640] [API] HeapFree(0x4038dc0)
+[Te640] [API] WriteFile(n=30)
+[Te640] [API] HeapFree(0x402e8c0)
+[Te640] [API] HeapFree(0x40364a0)
+[Te640] [API] [RES] find hmod=0x140000000 a=?/- w=0xcb/0x6
+[Te640] [API] [RES] walk depth=0 level=0x140088000 named=0 ided=3 (base=0x140088000)
+[Te640] [API] [RES] walk depth=1 level=0x140088028 named=0 ided=52 (base=0x140088000)
+[Te640] [API] [RES] walk depth=2 level=0x140088370 named=0 ided=1 (base=0x140088000)
+[Te640] [API] LoadStringW(id=3238) -> 39 wchars (block 203 idx 6 len 39)
+[Te640] [API] HeapAlloc(size=0x50, zero=0) = 0x4038990
+[Te640] [API] HeapAlloc(size=0x48, zero=0) = 0x4038d70
+[Te640] [API] HeapAlloc(size=0x20, zero=0) = 0x402e8c0
+[Te640] [API] HeapAlloc(size=0x30, zero=0) = 0x4036360
+[Te640] [API] HeapFree(0x402e8c0)
+[Te640] [API] HeapAlloc(size=0x46, zero=0) = 0x4038e50
+[Te640] [API] HeapFree(0x4036360)
+[Te640] [API] HeapAlloc(size=0x68, zero=0) = 0x4038be0
+[Te640] [API] HeapFree(0x4038e50)
+[Te640] [API] HeapAlloc(size=0x210, zero=0) = 0x40364a0
+[Te640] [API] HeapFree(0x4038be0)
+[Te640] [API] GetStdHandle(-11) = 0x5
+[Te640] [API] HeapAlloc(size=0xa1, zero=0) = 0x40387a0
+[Te640] [API] WideCharToMultiByte(cp=0, srclen=-1, dstlen=161)
+[Te640] [API] HeapAlloc(size=0x30, zero=0) = 0x4036360
+[Te640] [API] HeapFree(0x40387a0)
+[Te640] [API] WriteFile(n=40)
+[Te640] [API] HeapFree(0x4036360)
+[Te640] [API] HeapFree(0x40364a0)
+[Te640] [API] [RES] find hmod=0x140000000 a=?/- w=0xcb/0x6
+[Te640] [API] [RES] walk depth=0 level=0x140088000 named=0 ided=3 (base=0x140088000)
+[Te640] [API] [RES] walk depth=1 level=0x140088028 named=0 ided=52 (base=0x140088000)
+[Te640] [API] [RES] walk depth=2 level=0x140088370 named=0 ided=1 (base=0x140088000)
+[Te640] [API] LoadStringW(id=3244) -> 76 wchars (block 203 idx 12 len 76)
+[Te640] [API] HeapAlloc(size=0xa0, zero=0) = 0x40387a0
+[Te640] [API] HeapAlloc(size=0x48, zero=0) = 0x4038e50
+[Te640] [API] HeapAlloc(size=0x20, zero=0) = 0x402e8c0
+[Te640] [API] HeapAlloc(size=0x30, zero=0) = 0x4036360
+[Te640] [API] HeapFree(0x402e8c0)
+[Te640] [API] HeapAlloc(size=0x46, zero=0) = 0x4038ea0
+[Te640] [API] HeapFree(0x4036360)
+[Te640] [API] HeapAlloc(size=0x68, zero=0) = 0x4038be0
+[Te640] [API] HeapFree(0x4038ea0)
+[Te640] [API] HeapAlloc(size=0x9a, zero=0) = 0x4038ef0
+[Te640] [API] HeapFree(0x4038be0)
+[Te640] [API] HeapAlloc(size=0xe6, zero=0) = 0x4036bc0
+[Te640] [API] HeapFree(0x4038ef0)
+[Te640] [API] HeapAlloc(size=0x210, zero=0) = 0x40364a0
+[Te640] [API] HeapFree(0x4036bc0)
+[Te640] [API] GetStdHandle(-11) = 0x5
+[Te640] [API] HeapAlloc(size=0x135, zero=0) = 0x4038850
+[Te640] [API] WideCharToMultiByte(cp=0, srclen=-1, dstlen=309)
+[Te640] [API] HeapAlloc(size=0x50, zero=0) = 0x4038fa0
+[Te640] [API] HeapFree(0x4038850)
+[Te640] [API] WriteFile(n=77)
+[Te640] [API] HeapFree(0x4038fa0)
+[Te640] [API] HeapFree(0x40364a0)
+[Te640] [API] [RES] find hmod=0x140000000 a=?/- w=0xcc/0x6
+[Te640] [API] [RES] walk depth=0 level=0x140088000 named=0 ided=3 (base=0x140088000)
+[Te640] [API] [RES] walk depth=1 level=0x140088028 named=0 ided=52 (base=0x140088000)
+[Te640] [API] [RES] walk depth=2 level=0x140088388 named=0 ided=1 (base=0x140088000)
+[Te640] [API] LoadStringW(id=3254) -> 42 wchars (block 204 idx 6 len 42)
+[Te640] [API] HeapAlloc(size=0x60, zero=0) = 0x4038be0
+[Te640] [API] HeapAlloc(size=0x48, zero=0) = 0x4038ea0
+[Te640] [API] HeapAlloc(size=0x20, zero=0) = 0x402e8c0
+[Te640] [API] HeapAlloc(size=0x30, zero=0) = 0x4036360
+[Te640] [API] HeapFree(0x402e8c0)
+[Te640] [API] HeapAlloc(size=0x46, zero=0) = 0x4039000
+[Te640] [API] HeapFree(0x4036360)
+[Te640] [API] HeapAlloc(size=0x68, zero=0) = 0x4039050
+[Te640] [API] HeapFree(0x4039000)
+[Te640] [API] HeapAlloc(size=0x210, zero=0) = 0x40364a0
+[Te640] [API] HeapFree(0x4039050)
+[Te640] [API] GetStdHandle(-11) = 0x5
+[Te640] [API] HeapAlloc(size=0xad, zero=0) = 0x4037280
+[Te640] [API] WideCharToMultiByte(cp=0, srclen=-1, dstlen=173)
+[Te640] [API] HeapAlloc(size=0x30, zero=0) = 0x4036360
+[Te640] [API] HeapFree(0x4037280)
+[Te640] [API] WriteFile(n=43)
+[Te640] [API] HeapFree(0x4036360)
+[Te640] [API] HeapFree(0x40364a0)
+[Te640] [API] [RES] find hmod=0x140000000 a=?/- w=0xcc/0x6
+[Te640] [API] [RES] walk depth=0 level=0x140088000 named=0 ided=3 (base=0x140088000)
+[Te640] [API] [RES] walk depth=1 level=0x140088028 named=0 ided=52 (base=0x140088000)
+[Te640] [API] [RES] walk depth=2 level=0x140088388 named=0 ided=1 (base=0x140088000)
+[Te640] [API] LoadStringW(id=3258) -> 54 wchars (block 204 idx 10 len 54)
+[Te640] [API] HeapAlloc(size=0x70, zero=0) = 0x40390c0
+[Te640] [API] HeapAlloc(size=0x48, zero=0) = 0x4039000
+[Te640] [API] HeapAlloc(size=0x20, zero=0) = 0x402e8c0
+[Te640] [API] HeapAlloc(size=0x30, zero=0) = 0x4036360
+[Te640] [API] HeapFree(0x402e8c0)
+[Te640] [API] HeapAlloc(size=0x46, zero=0) = 0x4039140
+[Te640] [API] HeapFree(0x4036360)
+[Te640] [API] HeapAlloc(size=0x68, zero=0) = 0x4039050
+[Te640] [API] HeapFree(0x4039140)
+[Te640] [API] HeapAlloc(size=0x9a, zero=0) = 0x4038ef0
+[Te640] [API] HeapFree(0x4039050)
+[Te640] [API] HeapAlloc(size=0x210, zero=0) = 0x40364a0
+[Te640] [API] HeapFree(0x4038ef0)
+[Te640] [API] GetStdHandle(-11) = 0x5
+[Te640] [API] HeapAlloc(size=0xdd, zero=0) = 0x4036bc0
+[Te640] [API] WideCharToMultiByte(cp=0, srclen=-1, dstlen=221)
+[Te640] [API] HeapAlloc(size=0x40, zero=0) = 0x4039140
+[Te640] [API] HeapFree(0x4036bc0)
+[Te640] [API] WriteFile(n=55)
+[Te640] [API] HeapFree(0x4039140)
+[Te640] [API] HeapFree(0x40364a0)
+[Te640] [API] [RES] find hmod=0x140000000 a=?/- w=0xcc/0x6
+[Te640] [API] [RES] walk depth=0 level=0x140088000 named=0 ided=3 (base=0x140088000)
+[Te640] [API] [RES] walk depth=1 level=0x140088028 named=0 ided=52 (base=0x140088000)
+[Te640] [API] [RES] walk depth=2 level=0x140088388 named=0 ided=1 (base=0x140088000)
+[Te640] [API] LoadStringW(id=3260) -> 60 wchars (block 204 idx 12 len 60)
+[Te640] [API] HeapAlloc(size=0x80, zero=0) = 0x4038dc0
+[Te640] [API] HeapAlloc(size=0x48, zero=0) = 0x4039140
+[Te640] [API] HeapAlloc(size=0x20, zero=0) = 0x402e8c0
+[Te640] [API] HeapAlloc(size=0x30, zero=0) = 0x4036360
+[Te640] [API] HeapFree(0x402e8c0)
+[Te640] [API] HeapAlloc(size=0x46, zero=0) = 0x4039190
+[Te640] [API] HeapFree(0x4036360)
+[Te640] [API] HeapAlloc(size=0x68, zero=0) = 0x4039050
+[Te640] [API] HeapFree(0x4039190)
+[Te640] [API] HeapAlloc(size=0x9a, zero=0) = 0x4038ef0
+[Te640] [API] HeapFree(0x4039050)
+[Te640] [API] HeapAlloc(size=0x210, zero=0) = 0x40364a0
+[Te640] [API] HeapFree(0x4038ef0)
+[Te640] [API] GetStdHandle(-11) = 0x5
+[Te640] [API] HeapAlloc(size=0xf5, zero=0) = 0x402c520
+[Te640] [API] WideCharToMultiByte(cp=0, srclen=-1, dstlen=245)
+[Te640] [API] HeapAlloc(size=0x40, zero=0) = 0x4039190
+[Te640] [API] HeapFree(0x402c520)
+[Te640] [API] WriteFile(n=61)
+[Te640] [API] HeapFree(0x4039190)
+[Te640] [API] HeapFree(0x40364a0)
+[Te640] [API] [RES] find hmod=0x140000000 a=?/- w=0xcc/0x6
+[Te640] [API] [RES] walk depth=0 level=0x140088000 named=0 ided=3 (base=0x140088000)
+[Te640] [API] [RES] walk depth=1 level=0x140088028 named=0 ided=52 (base=0x140088000)
+[Te640] [API] [RES] walk depth=2 level=0x140088388 named=0 ided=1 (base=0x140088000)
+[Te640] [API] LoadStringW(id=3262) -> 60 wchars (block 204 idx 14 len 60)
+[Te640] [API] HeapAlloc(size=0x80, zero=0) = 0x40391e0
+[Te640] [API] HeapAlloc(size=0x48, zero=0) = 0x4039190
+[Te640] [API] HeapAlloc(size=0x20, zero=0) = 0x402e8c0
+[Te640] [API] HeapAlloc(size=0x30, zero=0) = 0x4036360
+[Te640] [API] HeapFree(0x402e8c0)
+[Te640] [API] HeapAlloc(size=0x46, zero=0) = 0x4039270
+[Te640] [API] HeapFree(0x4036360)
+[Te640] [API] HeapAlloc(size=0x68, zero=0) = 0x4039050
+[Te640] [API] HeapFree(0x4039270)
+[Te640] [API] HeapAlloc(size=0x9a, zero=0) = 0x4038ef0
+[Te640] [API] HeapFree(0x4039050)
+[Te640] [API] HeapAlloc(size=0x210, zero=0) = 0x40364a0
+[Te640] [API] HeapFree(0x4038ef0)
+[Te640] [API] GetStdHandle(-11) = 0x5
+[Te640] [API] HeapAlloc(size=0xf5, zero=0) = 0x402c520
+[Te640] [API] WideCharToMultiByte(cp=0, srclen=-1, dstlen=245)
+[Te640] [API] HeapAlloc(size=0x40, zero=0) = 0x4039270
+[Te640] [API] HeapFree(0x402c520)
+[Te640] [API] WriteFile(n=61)
+[Te640] [API] HeapFree(0x4039270)
+[Te640] [API] HeapFree(0x40364a0)
+[Te640] [API] [RES] find hmod=0x140000000 a=?/- w=0xcd/0x6
+[Te640] [API] [RES] walk depth=0 level=0x140088000 named=0 ided=3 (base=0x140088000)
+[Te640] [API] [RES] walk depth=1 level=0x140088028 named=0 ided=52 (base=0x140088000)
+[Te640] [API] [RES] walk depth=2 level=0x1400883a0 named=0 ided=1 (base=0x140088000)
+[Te640] [API] LoadStringW(id=3274) -> 69 wchars (block 205 idx 10 len 69)
+[Te640] [API] HeapAlloc(size=0x90, zero=0) = 0x40392c0
+[Te640] [API] HeapAlloc(size=0x48, zero=0) = 0x4039270
+[Te640] [API] HeapAlloc(size=0x20, zero=0) = 0x402e8c0
+[Te640] [API] HeapAlloc(size=0x30, zero=0) = 0x4036360
+[Te640] [API] HeapFree(0x402e8c0)
+[Te640] [API] HeapAlloc(size=0x46, zero=0) = 0x4039360
+[Te640] [API] HeapFree(0x4036360)
+[Te640] [API] HeapAlloc(size=0x68, zero=0) = 0x4039050
+[Te640] [API] HeapFree(0x4039360)
+[Te640] [API] HeapAlloc(size=0x9a, zero=0) = 0x4038ef0
+[Te640] [API] HeapFree(0x4039050)
+[Te640] [API] HeapAlloc(size=0x210, zero=0) = 0x40364a0
+[Te640] [API] HeapFree(0x4038ef0)
+[Te640] [API] GetStdHandle(-11) = 0x5
+[Te640] [API] HeapAlloc(size=0x119, zero=0) = 0x40366c0
+[Te640] [API] WideCharToMultiByte(cp=0, srclen=-1, dstlen=281)
+[Te640] [API] HeapAlloc(size=0x50, zero=0) = 0x4038fa0
+[Te640] [API] HeapFree(0x40366c0)
+[Te640] [API] WriteFile(n=70)
+[Te640] [API] HeapFree(0x4038fa0)
+[Te640] [API] HeapFree(0x40364a0)
+[Te640] [API] [RES] find hmod=0x140000000 a=?/- w=0xcd/0x6
+[Te640] [API] [RES] walk depth=0 level=0x140088000 named=0 ided=3 (base=0x140088000)
+[Te640] [API] [RES] walk depth=1 level=0x140088028 named=0 ided=52 (base=0x140088000)
+[Te640] [API] [RES] walk depth=2 level=0x1400883a0 named=0 ided=1 (base=0x140088000)
+[Te640] [API] LoadStringW(id=3276) -> 70 wchars (block 205 idx 12 len 70)
+[Te640] [API] HeapAlloc(size=0x90, zero=0) = 0x40393b0
+[Te640] [API] HeapAlloc(size=0x48, zero=0) = 0x4039360
+[Te640] [API] HeapAlloc(size=0x20, zero=0) = 0x402e8c0
+[Te640] [API] HeapAlloc(size=0x30, zero=0) = 0x4036360
+[Te640] [API] HeapFree(0x402e8c0)
+[Te640] [API] HeapAlloc(size=0x46, zero=0) = 0x4039450
+[Te640] [API] HeapFree(0x4036360)
+[Te640] [API] HeapAlloc(size=0x68, zero=0) = 0x4039050
+[Te640] [API] HeapFree(0x4039450)
+[Te640] [API] HeapAlloc(size=0x9a, zero=0) = 0x4038ef0
+[Te640] [API] HeapFree(0x4039050)
+[Te640] [API] HeapAlloc(size=0x210, zero=0) = 0x40364a0
+[Te640] [API] HeapFree(0x4038ef0)
+[Te640] [API] GetStdHandle(-11) = 0x5
+[Te640] [API] HeapAlloc(size=0x11d, zero=0) = 0x40366c0
+[Te640] [API] WideCharToMultiByte(cp=0, srclen=-1, dstlen=285)
+[Te640] [API] HeapAlloc(size=0x50, zero=0) = 0x4038fa0
+[Te640] [API] HeapFree(0x40366c0)
+[Te640] [API] WriteFile(n=71)
+[Te640] [API] HeapFree(0x4038fa0)
+[Te640] [API] HeapFree(0x40364a0)
+[Te640] [API] [RES] find hmod=0x140000000 a=?/- w=0xcd/0x6
+[Te640] [API] [RES] walk depth=0 level=0x140088000 named=0 ided=3 (base=0x140088000)
+[Te640] [API] [RES] walk depth=1 level=0x140088028 named=0 ided=52 (base=0x140088000)
+[Te640] [API] [RES] walk depth=2 level=0x1400883a0 named=0 ided=1 (base=0x140088000)
+[Te640] [API] LoadStringW(id=3270) -> 50 wchars (block 205 idx 6 len 50)
+[Te640] [API] HeapAlloc(size=0x70, zero=0) = 0x40394a0
+[Te640] [API] HeapAlloc(size=0x48, zero=0) = 0x4039450
+[Te640] [API] HeapAlloc(size=0x20, zero=0) = 0x402e8c0
+[Te640] [API] HeapAlloc(size=0x30, zero=0) = 0x4036360
+[Te640] [API] HeapFree(0x402e8c0)
+[Te640] [API] HeapAlloc(size=0x46, zero=0) = 0x4039520
+[Te640] [API] HeapFree(0x4036360)
+[Te640] [API] HeapAlloc(size=0x68, zero=0) = 0x4039050
+[Te640] [API] HeapFree(0x4039520)
+[Te640] [API] HeapAlloc(size=0x210, zero=0) = 0x40364a0
+[Te640] [API] HeapFree(0x4039050)
+[Te640] [API] GetStdHandle(-11) = 0x5
+[Te640] [API] HeapAlloc(size=0xcd, zero=0) = 0x40369c0
+[Te640] [API] WideCharToMultiByte(cp=0, srclen=-1, dstlen=205)
+[Te640] [API] HeapAlloc(size=0x40, zero=0) = 0x4039520
+[Te640] [API] HeapFree(0x40369c0)
+[Te640] [API] WriteFile(n=51)
+[Te640] [API] HeapFree(0x4039520)
+[Te640] [API] HeapFree(0x40364a0)
+[Te640] [API] [RES] find hmod=0x140000000 a=?/- w=0xcd/0x6
+[Te640] [API] [RES] walk depth=0 level=0x140088000 named=0 ided=3 (base=0x140088000)
+[Te640] [API] [RES] walk depth=1 level=0x140088028 named=0 ided=52 (base=0x140088000)
+[Te640] [API] [RES] walk depth=2 level=0x1400883a0 named=0 ided=1 (base=0x140088000)
+[Te640] [API] LoadStringW(id=3272) -> 50 wchars (block 205 idx 8 len 50)
+[Te640] [API] HeapAlloc(size=0x70, zero=0) = 0x4039570
+[Te640] [API] HeapAlloc(size=0x48, zero=0) = 0x4039520
+[Te640] [API] HeapAlloc(size=0x20, zero=0) = 0x402e8c0
+[Te640] [API] HeapAlloc(size=0x30, zero=0) = 0x4036360
+[Te640] [API] HeapFree(0x402e8c0)
+[Te640] [API] HeapAlloc(size=0x46, zero=0) = 0x40395f0
+[Te640] [API] HeapFree(0x4036360)
+[Te640] [API] HeapAlloc(size=0x68, zero=0) = 0x4039050
+[Te640] [API] HeapFree(0x40395f0)
+[Te640] [API] HeapAlloc(size=0x210, zero=0) = 0x40364a0
+[Te640] [API] HeapFree(0x4039050)
+[Te640] [API] GetStdHandle(-11) = 0x5
+[Te640] [API] HeapAlloc(size=0xcd, zero=0) = 0x40369c0
+[Te640] [API] WideCharToMultiByte(cp=0, srclen=-1, dstlen=205)
+[Te640] [API] HeapAlloc(size=0x40, zero=0) = 0x40395f0
+[Te640] [API] HeapFree(0x40369c0)
+[Te640] [API] WriteFile(n=51)
+[Te640] [API] HeapFree(0x40395f0)
+[Te640] [API] HeapFree(0x40364a0)
+[Te640] [API] [RES] find hmod=0x140000000 a=?/- w=0xcd/0x6
+[Te640] [API] [RES] walk depth=0 level=0x140088000 named=0 ided=3 (base=0x140088000)
+[Te640] [API] [RES] walk depth=1 level=0x140088028 named=0 ided=52 (base=0x140088000)
+[Te640] [API] [RES] walk depth=2 level=0x1400883a0 named=0 ided=1 (base=0x140088000)
+[Te640] [API] LoadStringW(id=3278) -> 80 wchars (block 205 idx 14 len 80)
+[Te640] [API] HeapAlloc(size=0xb0, zero=0) = 0x4037280
+[Te640] [API] HeapAlloc(size=0x48, zero=0) = 0x40395f0
+[Te640] [API] HeapAlloc(size=0x20, zero=0) = 0x402e8c0
+[Te640] [API] HeapAlloc(size=0x30, zero=0) = 0x4036360
+[Te640] [API] HeapFree(0x402e8c0)
+[Te640] [API] HeapAlloc(size=0x46, zero=0) = 0x4039640
+[Te640] [API] HeapFree(0x4036360)
+[Te640] [API] HeapAlloc(size=0x68, zero=0) = 0x4039050
+[Te640] [API] HeapFree(0x4039640)
+[Te640] [API] HeapAlloc(size=0x9a, zero=0) = 0x4038ef0
+[Te640] [API] HeapFree(0x4039050)
+[Te640] [API] HeapAlloc(size=0xe6, zero=0) = 0x4036bc0
+[Te640] [API] HeapFree(0x4038ef0)
+[Te640] [API] HeapAlloc(size=0x210, zero=0) = 0x40364a0
+[Te640] [API] HeapFree(0x4036bc0)
+[Te640] [API] GetStdHandle(-11) = 0x5
+[Te640] [API] HeapAlloc(size=0x145, zero=0) = 0x4039690
+[Te640] [API] WideCharToMultiByte(cp=0, srclen=-1, dstlen=325)
+[Te640] [API] HeapAlloc(size=0x60, zero=0) = 0x4039050
+[Te640] [API] HeapFree(0x4039690)
+[Te640] [API] WriteFile(n=81)
+[Te640] [API] HeapFree(0x4039050)
+[Te640] [API] HeapFree(0x40364a0)
+[Te640] [API] [RES] find hmod=0x140000000 a=?/- w=0xce/0x6
+[Te640] [API] [RES] walk depth=0 level=0x140088000 named=0 ided=3 (base=0x140088000)
+[Te640] [API] [RES] walk depth=1 level=0x140088028 named=0 ided=52 (base=0x140088000)
+[Te640] [API] [RES] walk depth=2 level=0x1400883b8 named=0 ided=1 (base=0x140088000)
+[Te640] [API] LoadStringW(id=3280) -> 29 wchars (block 206 idx 0 len 29)
+[Te640] [API] HeapAlloc(size=0x40, zero=0) = 0x4039640
+[Te640] [API] HeapAlloc(size=0x48, zero=0) = 0x40397e0
+[Te640] [API] HeapAlloc(size=0x20, zero=0) = 0x402e8c0
+[Te640] [API] HeapAlloc(size=0x30, zero=0) = 0x4036360
+[Te640] [API] HeapFree(0x402e8c0)
+[Te640] [API] HeapAlloc(size=0x46, zero=0) = 0x4039830
+[Te640] [API] HeapFree(0x4036360)
+[Te640] [API] HeapAlloc(size=0x210, zero=0) = 0x40364a0
+[Te640] [API] HeapFree(0x4039830)
+[Te640] [API] GetStdHandle(-11) = 0x5
+[Te640] [API] HeapAlloc(size=0x79, zero=0) = 0x4039880
+[Te640] [API] WideCharToMultiByte(cp=0, srclen=-1, dstlen=121)
+[Te640] [API] HeapAlloc(size=0x20, zero=0) = 0x402e8c0
+[Te640] [API] HeapFree(0x4039880)
+[Te640] [API] WriteFile(n=30)
+[Te640] [API] HeapFree(0x402e8c0)
+[Te640] [API] HeapFree(0x40364a0)
+[Te640] [API] [RES] find hmod=0x140000000 a=?/- w=0xce/0x6
+[Te640] [API] [RES] walk depth=0 level=0x140088000 named=0 ided=3 (base=0x140088000)
+[Te640] [API] [RES] walk depth=1 level=0x140088028 named=0 ided=52 (base=0x140088000)
+[Te640] [API] [RES] walk depth=2 level=0x1400883b8 named=0 ided=1 (base=0x140088000)
+[Te640] [API] LoadStringW(id=3284) -> 33 wchars (block 206 idx 4 len 33)
+[Te640] [API] HeapAlloc(size=0x50, zero=0) = 0x4038fa0
+[Te640] [API] HeapAlloc(size=0x48, zero=0) = 0x4039830
+[Te640] [API] HeapAlloc(size=0x20, zero=0) = 0x402e8c0
+[Te640] [API] HeapAlloc(size=0x30, zero=0) = 0x4036360
+[Te640] [API] HeapFree(0x402e8c0)
+[Te640] [API] HeapAlloc(size=0x46, zero=0) = 0x4039910
+[Te640] [API] HeapFree(0x4036360)
+[Te640] [API] HeapAlloc(size=0x210, zero=0) = 0x40364a0
+[Te640] [API] HeapFree(0x4039910)
+[Te640] [API] GetStdHandle(-11) = 0x5
+[Te640] [API] HeapAlloc(size=0x89, zero=0) = 0x4039960
+[Te640] [API] WideCharToMultiByte(cp=0, srclen=-1, dstlen=137)
+[Te640] [API] HeapAlloc(size=0x30, zero=0) = 0x4036360
+[Te640] [API] HeapFree(0x4039960)
+[Te640] [API] WriteFile(n=34)
+[Te640] [API] HeapFree(0x4036360)
+[Te640] [API] HeapFree(0x40364a0)
+[Te640] [API] [RES] find hmod=0x140000000 a=?/- w=0xce/0x6
+[Te640] [API] [RES] walk depth=0 level=0x140088000 named=0 ided=3 (base=0x140088000)
+[Te640] [API] [RES] walk depth=1 level=0x140088028 named=0 ided=52 (base=0x140088000)
+[Te640] [API] [RES] walk depth=2 level=0x1400883b8 named=0 ided=1 (base=0x140088000)
+[Te640] [API] LoadStringW(id=3290) -> 37 wchars (block 206 idx 10 len 37)
+[Te640] [API] HeapAlloc(size=0x50, zero=0) = 0x4039a00
+[Te640] [API] HeapAlloc(size=0x48, zero=0) = 0x4039910
+[Te640] [API] HeapAlloc(size=0x20, zero=0) = 0x402e8c0
+[Te640] [API] HeapAlloc(size=0x30, zero=0) = 0x4036360
+[Te640] [API] HeapFree(0x402e8c0)
+[Te640] [API] HeapAlloc(size=0x46, zero=0) = 0x4039a60
+[Te640] [API] HeapFree(0x4036360)
+[Te640] [API] HeapAlloc(size=0x68, zero=0) = 0x4039050
+[Te640] [API] HeapFree(0x4039a60)
+[Te640] [API] HeapAlloc(size=0x210, zero=0) = 0x40364a0
+[Te640] [API] HeapFree(0x4039050)
+[Te640] [API] GetStdHandle(-11) = 0x5
+[Te640] [API] HeapAlloc(size=0x99, zero=0) = 0x4038ef0
+[Te640] [API] WideCharToMultiByte(cp=0, srclen=-1, dstlen=153)
+[Te640] [API] HeapAlloc(size=0x30, zero=0) = 0x4036360
+[Te640] [API] HeapFree(0x4038ef0)
+[Te640] [API] WriteFile(n=38)
+[Te640] [API] HeapFree(0x4036360)
+[Te640] [API] HeapFree(0x40364a0)
+[Te640] [API] [RES] find hmod=0x140000000 a=?/- w=0xce/0x6
+[Te640] [API] [RES] walk depth=0 level=0x140088000 named=0 ided=3 (base=0x140088000)
+[Te640] [API] [RES] walk depth=1 level=0x140088028 named=0 ided=52 (base=0x140088000)
+[Te640] [API] [RES] walk depth=2 level=0x1400883b8 named=0 ided=1 (base=0x140088000)
+[Te640] [API] LoadStringW(id=3292) -> 41 wchars (block 206 idx 12 len 41)
+[Te640] [API] HeapAlloc(size=0x60, zero=0) = 0x4039050
+[Te640] [API] HeapAlloc(size=0x48, zero=0) = 0x4039a60
+[Te640] [API] HeapAlloc(size=0x20, zero=0) = 0x402e8c0
+[Te640] [API] HeapAlloc(size=0x30, zero=0) = 0x4036360
+[Te640] [API] HeapFree(0x402e8c0)
+[Te640] [API] HeapAlloc(size=0x46, zero=0) = 0x4039ab0
+[Te640] [API] HeapFree(0x4036360)
+[Te640] [API] HeapAlloc(size=0x68, zero=0) = 0x4039b00
+[Te640] [API] HeapFree(0x4039ab0)
+[Te640] [API] HeapAlloc(size=0x210, zero=0) = 0x40364a0
+[Te640] [API] HeapFree(0x4039b00)
+[Te640] [API] GetStdHandle(-11) = 0x5
+[Te640] [API] HeapAlloc(size=0xa9, zero=0) = 0x4039b70
+[Te640] [API] WideCharToMultiByte(cp=0, srclen=-1, dstlen=169)
+[Te640] [API] HeapAlloc(size=0x30, zero=0) = 0x4036360
+[Te640] [API] HeapFree(0x4039b70)
+[Te640] [API] WriteFile(n=42)
+[Te640] [API] HeapFree(0x4036360)
+[Te640] [API] HeapFree(0x40364a0)
+[Te640] [API] [RES] find hmod=0x140000000 a=?/- w=0xcf/0x6
+[Te640] [API] [RES] walk depth=0 level=0x140088000 named=0 ided=3 (base=0x140088000)
+[Te640] [API] [RES] walk depth=1 level=0x140088028 named=0 ided=52 (base=0x140088000)
+[Te640] [API] [RES] walk depth=2 level=0x1400883d0 named=0 ided=1 (base=0x140088000)
+[Te640] [API] LoadStringW(id=3296) -> 39 wchars (block 207 idx 0 len 39)
+[Te640] [API] HeapAlloc(size=0x50, zero=0) = 0x4039c30
+[Te640] [API] HeapAlloc(size=0x48, zero=0) = 0x4039ab0
+[Te640] [API] HeapAlloc(size=0x20, zero=0) = 0x402e8c0
+[Te640] [API] HeapAlloc(size=0x30, zero=0) = 0x4036360
+[Te640] [API] HeapFree(0x402e8c0)
+[Te640] [API] HeapAlloc(size=0x46, zero=0) = 0x4039c90
+[Te640] [API] HeapFree(0x4036360)
+[Te640] [API] HeapAlloc(size=0x68, zero=0) = 0x4039b00
+[Te640] [API] HeapFree(0x4039c90)
+[Te640] [API] HeapAlloc(size=0x210, zero=0) = 0x40364a0
+[Te640] [API] HeapFree(0x4039b00)
+[Te640] [API] GetStdHandle(-11) = 0x5
+[Te640] [API] HeapAlloc(size=0xa1, zero=0) = 0x4038ef0
+[Te640] [API] WideCharToMultiByte(cp=0, srclen=-1, dstlen=161)
+[Te640] [API] HeapAlloc(size=0x30, zero=0) = 0x4036360
+[Te640] [API] HeapFree(0x4038ef0)
+[Te640] [API] WriteFile(n=40)
+[Te640] [API] HeapFree(0x4036360)
+[Te640] [API] HeapFree(0x40364a0)
+[Te640] [API] [RES] find hmod=0x140000000 a=?/- w=0xcf/0x6
+[Te640] [API] [RES] walk depth=0 level=0x140088000 named=0 ided=3 (base=0x140088000)
+[Te640] [API] [RES] walk depth=1 level=0x140088028 named=0 ided=52 (base=0x140088000)
+[Te640] [API] [RES] walk depth=2 level=0x1400883d0 named=0 ided=1 (base=0x140088000)
+[Te640] [API] LoadStringW(id=3298) -> 54 wchars (block 207 idx 2 len 54)
+[Te640] [API] HeapAlloc(size=0x70, zero=0) = 0x4039ce0
+[Te640] [API] HeapAlloc(size=0x48, zero=0) = 0x4039c90
+[Te640] [API] HeapAlloc(size=0x20, zero=0) = 0x402e8c0
+[Te640] [API] HeapAlloc(size=0x30, zero=0) = 0x4036360
+[Te640] [API] HeapFree(0x402e8c0)
+[Te640] [API] HeapAlloc(size=0x46, zero=0) = 0x4039d60
+[Te640] [API] HeapFree(0x4036360)
+[Te640] [API] HeapAlloc(size=0x68, zero=0) = 0x4039b00
+[Te640] [API] HeapFree(0x4039d60)
+[Te640] [API] HeapAlloc(size=0x9a, zero=0) = 0x4038ef0
+[Te640] [API] HeapFree(0x4039b00)
+[Te640] [API] HeapAlloc(size=0x210, zero=0) = 0x40364a0
+[Te640] [API] HeapFree(0x4038ef0)
+[Te640] [API] GetStdHandle(-11) = 0x5
+[Te640] [API] HeapAlloc(size=0xdd, zero=0) = 0x4036bc0
+[Te640] [API] WideCharToMultiByte(cp=0, srclen=-1, dstlen=221)
+[Te640] [API] HeapAlloc(size=0x40, zero=0) = 0x4039d60
+[Te640] [API] HeapFree(0x4036bc0)
+[Te640] [API] WriteFile(n=55)
+[Te640] [API] HeapFree(0x4039d60)
+[Te640] [API] HeapFree(0x40364a0)
+[Te640] [API] [RES] find hmod=0x140000000 a=?/- w=0xcf/0x6
+[Te640] [API] [RES] walk depth=0 level=0x140088000 named=0 ided=3 (base=0x140088000)
+[Te640] [API] [RES] walk depth=1 level=0x140088028 named=0 ided=52 (base=0x140088000)
+[Te640] [API] [RES] walk depth=2 level=0x1400883d0 named=0 ided=1 (base=0x140088000)
+[Te640] [API] LoadStringW(id=3300) -> 60 wchars (block 207 idx 4 len 60)
+[Te640] [API] HeapAlloc(size=0x80, zero=0) = 0x4039880
+[Te640] [API] HeapAlloc(size=0x48, zero=0) = 0x4039d60
+[Te640] [API] HeapAlloc(size=0x20, zero=0) = 0x402e8c0
+[Te640] [API] HeapAlloc(size=0x30, zero=0) = 0x4036360
+[Te640] [API] HeapFree(0x402e8c0)
+[Te640] [API] HeapAlloc(size=0x46, zero=0) = 0x4039db0
+[Te640] [API] HeapFree(0x4036360)
+[Te640] [API] HeapAlloc(size=0x68, zero=0) = 0x4039b00
+[Te640] [API] HeapFree(0x4039db0)
+[Te640] [API] HeapAlloc(size=0x9a, zero=0) = 0x4038ef0
+[Te640] [API] HeapFree(0x4039b00)
+[Te640] [API] HeapAlloc(size=0x210, zero=0) = 0x40364a0
+[Te640] [API] HeapFree(0x4038ef0)
+[Te640] [API] GetStdHandle(-11) = 0x5
+[Te640] [API] HeapAlloc(size=0xf5, zero=0) = 0x402c520
+[Te640] [API] WideCharToMultiByte(cp=0, srclen=-1, dstlen=245)
+[Te640] [API] HeapAlloc(size=0x40, zero=0) = 0x4039db0
+[Te640] [API] HeapFree(0x402c520)
+[Te640] [API] WriteFile(n=61)
+[Te640] [API] HeapFree(0x4039db0)
+[Te640] [API] HeapFree(0x40364a0)
+[Te640] [API] [RES] find hmod=0x140000000 a=?/- w=0xcf/0x6
+[Te640] [API] [RES] walk depth=0 level=0x140088000 named=0 ided=3 (base=0x140088000)
+[Te640] [API] [RES] walk depth=1 level=0x140088028 named=0 ided=52 (base=0x140088000)
+[Te640] [API] [RES] walk depth=2 level=0x1400883d0 named=0 ided=1 (base=0x140088000)
+[Te640] [API] LoadStringW(id=3302) -> 42 wchars (block 207 idx 6 len 42)
+[Te640] [API] HeapAlloc(size=0x60, zero=0) = 0x4039b00
+[Te640] [API] HeapAlloc(size=0x48, zero=0) = 0x4039db0
+[Te640] [API] HeapAlloc(size=0x20, zero=0) = 0x402e8c0
+[Te640] [API] HeapAlloc(size=0x30, zero=0) = 0x4036360
+[Te640] [API] HeapFree(0x402e8c0)
+[Te640] [API] HeapAlloc(size=0x46, zero=0) = 0x4039e00
+[Te640] [API] HeapFree(0x4036360)
+[Te640] [API] HeapAlloc(size=0x68, zero=0) = 0x4039e50
+[Te640] [API] HeapFree(0x4039e00)
+[Te640] [API] HeapAlloc(size=0x210, zero=0) = 0x40364a0
+[Te640] [API] HeapFree(0x4039e50)
+[Te640] [API] GetStdHandle(-11) = 0x5
+[Te640] [API] HeapAlloc(size=0xad, zero=0) = 0x4039b70
+[Te640] [API] WideCharToMultiByte(cp=0, srclen=-1, dstlen=173)
+[Te640] [API] HeapAlloc(size=0x30, zero=0) = 0x4036360
+[Te640] [API] HeapFree(0x4039b70)
+[Te640] [API] WriteFile(n=43)
+[Te640] [API] HeapFree(0x4036360)
+[Te640] [API] HeapFree(0x40364a0)
+[Te640] [API] HeapAlloc(size=0x210, zero=0) = 0x40364a0
+[Te640] [API] GetStdHandle(-11) = 0x5
+[Te640] [API] HeapAlloc(size=0x9, zero=0) = 0x4039ec0
+[Te640] [API] WideCharToMultiByte(cp=0, srclen=-1, dstlen=9)
+[Te640] [API] HeapFree(0x4039ec0)
+[Te640] [API] WriteFile(n=2)
+[Te640] [API] HeapFree(0x40364a0)
+[Te640] [API] [DISPATCH] === RtlDispatchException ===
+[Te640] [API] [DISPATCH] ExceptionCode=0xe06d7363 RIP=0x140044d03 RSP=0x7ffdc7a66d90
+[Te640] [API] [EXC_STATE] EXCEPTION_BEGIN
+[Te640] [API] [EXC_STATE] Code: 0xe06d7363
+[Te640] [API] [EXC_STATE] Flags: 0x1
+[Te640] [API] [EXC_STATE] Address: 0x140044d03
+[Te640] [API] [EXC_STATE] NumParams: 4
+[Te640] [API] [EXC_STATE] Param[0]: 0x19930520
+[Te640] [API] [EXC_STATE] Param[1]: 0x7ffdc7a66e28
+[Te640] [API] [EXC_STATE] Param[2]: 0x140072830
+[Te640] [API] [EXC_STATE] Param[3]: 0x140000000
+[Te640] [API] [EXC_STATE] g_cap_args ptr: 0x7ffdc7a66db8
+[Te640] [API] [EXC_STATE] MSVC C++ EH magic @ Param[0]=0x19930520 (not a pointer)
+[Te640] [API] [EXC_STATE] Exception object @ 0x7ffdc7a66e28 (first 32 bytes):
+[Te640] [API] [EXC_STATE]   00 00 00 00 00 00 00 00
+[Te640] [API] [EXC_STATE]   01 00 00 00 00 00 00 00
+[Te640] [API] [EXC_STATE]   d6 8a a6 c7 fd 7f 00 00
+[Te640] [API] [EXC_STATE]   60 8b 20 03 00 00 00 00
+[Te640] [API] [EXC_STATE] Exception class (u64): 0x0000000000000000
+[Te640] [API] [EXC_STATE] EXCEPTION_END
+[Te640] [API] [CXEH] throw image=<exe> base=0x140000000 ThrowInfo4@RVA=0x72830 attrs=0x0 unwind_rva=0x0 fwd_rva=0x0 cta_rva=0x72850 EI3(throw base)=0x140000000
+[Te640] [API] [CXEH] catchable[0] rva=0x72860 props=0x1 mdisp=0 pdisp=-1 vdisp=0 size=4 type='.?AW4RAR_EXIT@@'
+[Te640] [API] [CXEH] object vftable=0x0: OWNING MODULE NOT FOUND — RTTI base-class matching CANNOT succeed
+[Te640] [API] [DISPATCH] VEH chain: 0 handlers
+[Te640] [API] [DISPATCH] Frame[0]: RIP=0x140044d03 RVA=0x44d03 CTX.Rsp=0x7ffdc7a66d90
+[Te640] [API] [DISPATCH] Frame[0]: image base=0x140000000
+[Te640] [API] [DISPATCH] Frame[0]: RF begin=0x44c6c end=0x44d13 ui=0x71760
+[Te640] [API] [DISPATCH] Unwind: pc=0x140044d03 begin=0x44c6c handler=0x0 est=0x7ffdc7a66de8
+[Te640] [API] [DISPATCH] Frame[0]: Unwind est=0x7ffdc7a66de8 CTX.Rsp_after=0x7ffdc7a66de8 alloc=0x0
+[Te640] [API] [DISPATCH] Frame[0]: no handler, parent RIP=0x140011a37 RVA=0x11a37
+[Te640] [API] [DISPATCH] Frame[0]: est=0x7ffdc7a66de8 CTX.Rsp=0x7ffdc7a66de8 delta=0x0
+[Te640] [API] [DISPATCH] Frame[1]: RIP=0x140011a37 RVA=0x11a37 CTX.Rsp=0x7ffdc7a66df0
+[Te640] [API] [DISPATCH] Frame[1]: image base=0x140000000
+[Te640] [API] [DISPATCH] Frame[1]: RF begin=0x119c0 end=0x11a38 ui=0x6d568
+[Te640] [API] [DISPATCH] Unwind: pc=0x140011a37 begin=0x119c0 handler=0x0 est=0x7ffdc7a66e18
+[Te640] [API] [DISPATCH] Frame[1]: Unwind est=0x7ffdc7a66e18 CTX.Rsp_after=0x7ffdc7a66e18 alloc=0x0
+[Te640] [API] [DISPATCH] Frame[1]: no handler, parent RIP=0x14000b26d RVA=0xb26d
+[Te640] [API] [DISPATCH] Frame[1]: est=0x7ffdc7a66e18 CTX.Rsp=0x7ffdc7a66e18 delta=0x0
+[Te640] [API] [DISPATCH] Frame[2]: RIP=0x14000b26d RVA=0xb26d CTX.Rsp=0x7ffdc7a66e20
+[Te640] [API] [DISPATCH] Frame[2]: image base=0x140000000
+[Te640] [API] [DISPATCH] Frame[2]: RF begin=0xb19c end=0xb64b ui=0x6e054
+[Te640] [API] [DISPATCH] Unwind: pc=0x14000b26d begin=0xb19c handler=0x438d8 est=0x7ffdc7a67228
+[Te640] [API] [DISPATCH] Frame[2]: Unwind est=0x7ffdc7a67228 CTX.Rsp_after=0x7ffdc7a67228 alloc=0x0
+[Te640] [API] [DISPATCH] Frame[2]: EHANDLER at RVA 0x438d8 (VA 0x1400438d8)
+[Te640] [API] [DISPATCH] Frame[2]: establisher=0x7ffdc7a67228 CTX.Rsp=0x7ffdc7a67228 lsda=0x14006e078
+[Te640] [API] [HANDLER_CALL] Frame[2] BEGIN
+[Te640] [API] [HANDLER_CALL] RCX (EXCEPTION_RECORD*) = 0x7ffdc7a662b0
+[Te640] [API] [HANDLER_CALL] RDX (EstablisherFrame) = 0x7ffdc7a66e20
+[Te640] [API] [HANDLER_CALL] R8  (CONTEXT*)       = 0x7ffdc7a66350
+[Te640] [API] [HANDLER_CALL] R9  (DISPATCHER_CONTEXT*) = 0x7ffdc7a66260
+[Te640] [API] [HANDLER_CALL] Handler VA = 0x1400438d8  RVA = 0x438d8
+[Te640] [API] [HANDLER_CALL] HandlerData (LSDA) = 0x14006e078
+[Te640] [API] [HANDLER_CALL] ER.Code=0xe06d7363 ER.Flags=0x1 ER.NumParams=4
+[Te640] [API] [HANDLER_CALL] ER.Param[0]=0x19930520 ER.Param[1]=0x7ffdc7a66e28 ER.Param[2]=0x140072830
+[Te640] [API] [HANDLER_CALL] Handler bytes [0:16]: 48 8b c4 48 89 58 08 48 89 68 10 48 89 70 18 48
+[Te640] [API] [HANDLER_CALL] Handler bytes[16:32]: 89 78 20 41 56 48 83 ec 20 49 8b 59 38 48 8b f2
+[Te640] [API] [HANDLER_CALL] Handler bytes[32:48]: 4d 8b f0 48 8b e9 49 8b d1 48 8b ce 49 8b f9 4c
+[Te640] [API] [LSDA] raw[0:16]:  80 e0 06 00 d2 03 00 00 28 89 e0 06 00 ab e0 06
+[Te640] [API] [LSDA] raw[16:32]: 00 0a 0a 34 1b 00 00 60 3a 20 97 00 00 01 03 3a
+[Te640] [API] [LSDA] raw[32:48]: 24 f2 02 00 c1 05 3a 34 1b 00 00 a0 da 2c 50 01
+[Te640] [API] [LSDA] raw[48:64]: 00 c1 05 1a 31 03 00 85 02 02 40 00 69 02 02 2a
+[Te640] [API] [LSDA] raw[64:80]: 00 90 04 5c 06 62 08 68 06 a5 02 00 ce 0a 14 00
+[Te640] [API] [LSDA] raw[80:96]: f0 06 00 00 19 26 09 00 18 34 32 00 18 01 2c 00
+[Te640] [API] [LSDA] raw[96:112]: 0c f0 0a e0 08 70 07 60 06 50 00 00 d8 38 04 00
+[Te640] [API] [LSDA] raw[112:128]: f0 e0 06 00 52 01 00 00 28 5d df 06 00 f9 e0 06
+[Te640] [API] [LSDA] LPStart_enc=0x80 (present)
+[Te640] [API] [LSDA] TType_enc=0xe0
+[Te640] [API] [LSDA] CS_enc=0x06
+[Te640] [API] [HANDLER_CALL] CTX.Rip=0x14000b26d CTX.Rsp=0x7ffdc7a67228 CTX.Rbp=0x7ffdc7a67980
+[Te640] [API] [HANDLER_CALL] calling...
+[Te640] [API] [HANDLER_CALL] returned disposition=1 (0=Exec %1=Search %2=Nested %3=Collided)
+[Te640] [API] [HANDLER_CALL] Frame[2] END
+[Te640] [API] [DISPATCH] Handler returned ContinueSearch — walking to parent
+[Te640] [API] [DISPATCH] Frame[2]: parent RIP=0x140026662 RVA=0x26662
+[Te640] [API] [DISPATCH] Frame[3]: RIP=0x140026662 RVA=0x26662 CTX.Rsp=0x7ffdc7a67230
+[Te640] [API] [DISPATCH] Frame[3]: image base=0x140000000
+[Te640] [API] [DISPATCH] Frame[3]: RF begin=0x264cc end=0x266d7 ui=0x70018
+[Te640] [API] [DISPATCH] Unwind: pc=0x140026662 begin=0x264cc handler=0x438d8 est=0x7ffdc7a67298
+[Te640] [API] [DISPATCH] Frame[3]: Unwind est=0x7ffdc7a67298 CTX.Rsp_after=0x7ffdc7a67298 alloc=0x0
+[Te640] [API] [DISPATCH] Frame[3]: EHANDLER at RVA 0x438d8 (VA 0x1400438d8)
+[Te640] [API] [DISPATCH] Frame[3]: establisher=0x7ffdc7a67298 CTX.Rsp=0x7ffdc7a67298 lsda=0x14007002c
+[Te640] [API] [HANDLER_CALL] Frame[3] BEGIN
+[Te640] [API] [HANDLER_CALL] RCX (EXCEPTION_RECORD*) = 0x7ffdc7a662b0
+[Te640] [API] [HANDLER_CALL] RDX (EstablisherFrame) = 0x7ffdc7a67230
+[Te640] [API] [HANDLER_CALL] R8  (CONTEXT*)       = 0x7ffdc7a66350
+[Te640] [API] [HANDLER_CALL] R9  (DISPATCHER_CONTEXT*) = 0x7ffdc7a66260
+[Te640] [API] [HANDLER_CALL] Handler VA = 0x1400438d8  RVA = 0x438d8
+[Te640] [API] [HANDLER_CALL] HandlerData (LSDA) = 0x14007002c
+[Te640] [API] [HANDLER_CALL] ER.Code=0xe06d7363 ER.Flags=0x1 ER.NumParams=4
+[Te640] [API] [HANDLER_CALL] ER.Param[0]=0x19930520 ER.Param[1]=0x7ffdc7a66e28 ER.Param[2]=0x140072830
+[Te640] [API] [HANDLER_CALL] Handler bytes [0:16]: 48 8b c4 48 89 58 08 48 89 68 10 48 89 70 18 48
+[Te640] [API] [HANDLER_CALL] Handler bytes[16:32]: 89 78 20 41 56 48 83 ec 20 49 8b 59 38 48 8b f2
+[Te640] [API] [HANDLER_CALL] Handler bytes[32:48]: 4d 8b f0 48 8b e9 49 8b d1 48 8b ce 49 8b f9 4c
+[Te640] [API] [LSDA] raw[0:16]:  34 00 07 00 53 00 00 00 38 41 00 07 00 55 00 07
+[Te640] [API] [LSDA] raw[16:32]: 00 7e 00 07 00 0a 0a 34 1b 00 00 60 38 0e b3 e7
+[Te640] [API] [LSDA] raw[32:48]: 05 00 32 a0 64 02 00 50 98 02 02 06 08 5d 00 07
+[Te640] [API] [LSDA] raw[48:64]: 00 06 16 78 6e 07 00 48 dc e7 05 00 bd 06 13 10
+[Te640] [API] [LSDA] raw[64:80]: 50 6e 07 00 0a e8 05 00 0d 08 11 80 46 e8 05 00
+[Te640] [API] [LSDA] raw[80:96]: bd 06 10 4a 00 c6 02 24 00 98 04 24 06 38 08 0d
+[Te640] [API] [LSDA] raw[96:112]: 02 04 56 00 01 12 08 00 12 54 0a 00 12 34 09 00
+[Te640] [API] [LSDA] raw[112:128]: 12 32 0e e0 0c 70 0b 60 11 0f 04 00 0f 34 08 00
+[Te640] [API] [LSDA] LPStart_enc=0x34 (present)
+[Te640] [API] [LSDA] TType_enc=0x00
+[Te640] [API] [LSDA] CS_enc=0x07
+[Te640] [API] [HANDLER_CALL] CTX.Rip=0x140026662 CTX.Rsp=0x7ffdc7a67298 CTX.Rbp=0x7ffdc7a67980
+[Te640] [API] [HANDLER_CALL] calling...
+[Te640] [API] GetLastError() = 2
+[Te640] [API] GetProcAddress(module=0xdedd0000, name=FlsGetValue)
+[Te640] [API]   -> 0x2009370
+[Te640] [API] SetLastError(2) caller=0x140046048
+[Te640] [API] GetLastError() = 2
+[Te640] [API] SetLastError(2) caller=0x140046048
+[Te640] [API] GetLastError() = 2
+[Te640] [API] SetLastError(2) caller=0x140046048
+[Te640] [API] GetLastError() = 2
+[Te640] [API] SetLastError(2) caller=0x140046048
+[Te640] [API] GetLastError() = 2
+[Te640] [API] SetLastError(2) caller=0x140046048
+[Te640] [API] GetLastError() = 2
+[Te640] [API] SetLastError(2) caller=0x140046048
+[Te640] [API] GetLastError() = 2
+[Te640] [API] SetLastError(2) caller=0x140046048
+[Te640] [API] GetLastError() = 2
+[Te640] [API] SetLastError(2) caller=0x140046048
+[Te640] [API] GetLastError() = 2
+[Te640] [API] SetLastError(2) caller=0x140046048
+[Te640] [API] GetLastError() = 2
+[Te640] [API] SetLastError(2) caller=0x140046048
+[Te640] [API] GetLastError() = 2
+[Te640] [API] SetLastError(2) caller=0x140046048
+[Te640] [API] GetLastError() = 2
+[Te640] [API] SetLastError(2) caller=0x140046048
+[Te640] [API] GetLastError() = 2
+[Te640] [API] SetLastError(2) caller=0x140046048
+[Te640] [API] GetLastError() = 2
+[Te640] [API] SetLastError(2) caller=0x140046048
+[Te640] [API] GetLastError() = 2
+[Te640] [API] SetLastError(2) caller=0x140046048
+[Te640] [API] RtlUnwindEx(target_frame=0x7ffdc7a67230, target_ip=0x140026662, ctx=0x7ffdc7a65c20, exc=(nil))
+[Te640] [API] RtlUnwindEx: TargetIp=0x140026662 TargetFrame=0x7ffdc7a67230
+[Te640] [API] RtlUnwindEx: BUG-039/B register base restored from target-frame snapshot (RDI=0x0 RBP=0x7ffdc7a67980 RSI=0x402c6f0 RBX=0x40307c0)
+[Te640] [API] RtlUnwindEx: longjmping to dispatcher (RIP=0x140026662 RSP=0x7ffdc7a67230)
+[Te640] [API] RtlUnwindEx DIAG: tgt_frame(post-prologue RSP)=0x7ffdc7a67230
+[Te640] [API] RtlUnwindEx DIAG: [tgt_frame+0x30]=0x2e007200610072 (expect global _onexit ptr)
+[Te640] [API] RtlUnwindEx DIAG: [tgt_frame+0x38]=0x67006e006c (expect _pfirst ptr)
+[Te640] [API] RtlUnwindEx DIAG: [tgt_frame+0x40]=0x7 (expect count)
+[Te640] [API] [DISPATCH] RtlUnwindEx longjmped back — unwind to RIP=0x140026662 RSP=0x7ffdc7a67230
+[Te640] [API] [DISPATCH] CONTEXT after longjmp: Rax=0x140000000 (saved to g_unwind_regs)
+[Te640] [API] HeapFree(0x402c110)
+[Te640] [API] HeapFree(0x402e7c0)
+[Te640] [API] HeapFree(0x40307c0)
+[Te640] [API] GetModuleHandleW()
+[Te640] [API] GetModuleHandleW()
+[Te640] [API] EnterCriticalSection(0x140082e40)
+[Te640] [API] EnterCriticalSection(0x140082e40)
+[Te640] [API] HeapFree(0x4039b00)
+[Te640] [API] HeapFree(0x4039db0)
+[Te640] [API] HeapFree(0x4039880)
+[Te640] [API] HeapFree(0x4039d60)
+[Te640] [API] HeapFree(0x4039ce0)
+[Te640] [API] HeapFree(0x4039c90)
+[Te640] [API] HeapFree(0x4039c30)
+[Te640] [API] HeapFree(0x4039ab0)
+[Te640] [API] HeapFree(0x4039050)
+[Te640] [API] HeapFree(0x4039a60)
+[Te640] [API] HeapFree(0x4039a00)
+[Te640] [API] HeapFree(0x4039910)
+[Te640] [API] HeapFree(0x4038fa0)
+[Te640] [API] HeapFree(0x4039830)
+[Te640] [API] HeapFree(0x4039640)
+[Te640] [API] HeapFree(0x40397e0)
+[Te640] [API] HeapFree(0x4037280)
+[Te640] [API] HeapFree(0x40395f0)
+[Te640] [API] HeapFree(0x40393b0)
+[Te640] [API] HeapFree(0x4039360)
+[Te640] [API] HeapFree(0x40392c0)
+[Te640] [API] HeapFree(0x4039270)
+[Te640] [API] HeapFree(0x4039570)
+[Te640] [API] HeapFree(0x4039520)
+[Te640] [API] HeapFree(0x40394a0)
+[Te640] [API] HeapFree(0x4039450)
+[Te640] [API] HeapFree(0x40391e0)
+[Te640] [API] HeapFree(0x4039190)
+[Te640] [API] HeapFree(0x4038dc0)
+[Te640] [API] HeapFree(0x4039140)
+[Te640] [API] HeapFree(0x40390c0)
+[Te640] [API] HeapFree(0x4039000)
+[Te640] [API] HeapFree(0x4038be0)
+[Te640] [API] HeapFree(0x4038ea0)
+[Te640] [API] HeapFree(0x40387a0)
+[Te640] [API] HeapFree(0x4038e50)
+[Te640] [API] HeapFree(0x4038990)
+[Te640] [API] HeapFree(0x4038d70)
+[Te640] [API] HeapFree(0x4038cd0)
+[Te640] [API] HeapFree(0x4038d20)
+[Te640] [API] HeapFree(0x4038c50)
+[Te640] [API] HeapFree(0x4038b90)
+[Te640] [API] HeapFree(0x4038a40)
+[Te640] [API] HeapFree(0x4038b40)
+[Te640] [API] HeapFree(0x4038ab0)
+[Te640] [API] HeapFree(0x40389f0)
+[Te640] [API] HeapFree(0x40386e0)
+[Te640] [API] HeapFree(0x4038750)
+[Te640] [API] HeapFree(0x4037390)
+[Te640] [API] HeapFree(0x4038690)
+[Te640] [API] HeapFree(0x4038230)
+[Te640] [API] HeapFree(0x4038640)
+[Te640] [API] HeapFree(0x40385e0)
+[Te640] [API] HeapFree(0x4038590)
+[Te640] [API] HeapFree(0x4038500)
+[Te640] [API] HeapFree(0x40384b0)
+[Te640] [API] HeapFree(0x4038420)
+[Te640] [API] HeapFree(0x40383d0)
+[Te640] [API] HeapFree(0x4038350)
+[Te640] [API] HeapFree(0x4038300)
+[Te640] [API] HeapFree(0x40382a0)
+[Te640] [API] HeapFree(0x40381e0)
+[Te640] [API] HeapFree(0x4038170)
+[Te640] [API] HeapFree(0x4038120)
+[Te640] [API] HeapFree(0x4038010)
+[Te640] [API] HeapFree(0x40380d0)
+[Te640] [API] HeapFree(0x4037e70)
+[Te640] [API] HeapFree(0x4038080)
+[Te640] [API] HeapFree(0x4037ca0)
+[Te640] [API] HeapFree(0x4037fc0)
+[Te640] [API] HeapFree(0x4037f50)
+[Te640] [API] HeapFree(0x4037f00)
+[Te640] [API] HeapFree(0x4037be0)
+[Te640] [API] HeapFree(0x4037e20)
+[Te640] [API] HeapFree(0x4037d80)
+[Te640] [API] HeapFree(0x4037dd0)
+[Te640] [API] HeapFree(0x4037d00)
+[Te640] [API] HeapFree(0x4037c50)
+[Te640] [API] HeapFree(0x4037af0)
+[Te640] [API] HeapFree(0x4037b90)
+[Te640] [API] HeapFree(0x40379d0)
+[Te640] [API] HeapFree(0x4037aa0)
+[Te640] [API] HeapFree(0x4037a40)
+[Te640] [API] HeapFree(0x4037980)
+[Te640] [API] HeapFree(0x4037910)
+[Te640] [API] HeapFree(0x40378c0)
+[Te640] [API] HeapFree(0x4037850)
+[Te640] [API] HeapFree(0x4037800)
+[Te640] [API] HeapFree(0x40376e0)
+[Te640] [API] HeapFree(0x40377b0)
+[Te640] [API] HeapFree(0x4037750)
+[Te640] [API] HeapFree(0x4037690)
+[Te640] [API] HeapFree(0x40374f0)
+[Te640] [API] HeapFree(0x4037640)
+[Te640] [API] HeapFree(0x4037440)
+[Te640] [API] HeapFree(0x40375f0)
+[Te640] [API] HeapFree(0x4037560)
+[Te640] [API] HeapFree(0x40374a0)
+[Te640] [API] HeapFree(0x4037210)
+[Te640] [API] HeapFree(0x4037340)
+[Te640] [API] HeapFree(0x4036840)
+[Te640] [API] HeapFree(0x40371c0)
+[Te640] [API] HeapFree(0x4036fe0)
+[Te640] [API] HeapFree(0x4037170)
+[Te640] [API] HeapFree(0x402e700)
+[Te640] [API] HeapFree(0x4037120)
+[Te640] [API] HeapFree(0x402e790)
+[Te640] [API] HeapFree(0x4036f90)
+[Te640] [API] HeapFree(0x402e690)
+[Te640] [API] HeapFree(0x4036f40)
+[Te640] [API] HeapFree(0x402c650)
+[Te640] [API] HeapFree(0x4036ef0)
+[Te640] [API] HeapFree(0x402e2c0)
+[Te640] [API] HeapFree(0x4036ea0)
+[Te640] [API] HeapFree(0x402e320)
+[Te640] [API] HeapFree(0x4036d40)
+[Te640] [API] HeapFree(0x4036cb0)
+[Te640] [API] HeapFree(0x4036b70)
+[Te640] [API] HeapFree(0x4036af0)
+[Te640] [API] HeapFree(0x4036aa0)
+[Te640] [API] HeapFree(0x402e760)
+[Te640] [API] HeapFree(0x4036970)
+[Te640] [API] HeapFree(0x40368f0)
+[Te640] [API] HeapFree(0x40367f0)
+[Te640] [API] HeapFree(0x40363f0)
+[Te640] [API] HeapFree(0x40363a0)
+[Te640] [API] HeapFree(0x402e7e0)
+[Te640] [API] HeapFree(0x402e830)
+[Te640] [API] HeapFree(0x4036310)
+[Te640] [API] HeapFree(0x402e640)
+[Te640] [API] HeapFree(0x402df70)
+[Te640] [API] LeaveCriticalSection(0x140082e40)
+[Te640] [API] EnterCriticalSection(0x140082e90)
+[Te640] [API] LeaveCriticalSection(0x140082e90)
+[Te640] [API] EnterCriticalSection(0x140082f30)
+[Te640] [API] LeaveCriticalSection(0x140082f30)
+[Te640] [API] EnterCriticalSection(0x140082f30)
+[Te640] [API] LeaveCriticalSection(0x140082f30)
+[Te640] [API] DeleteCriticalSection(0x140076480)
+[Te640] [API] DeleteCriticalSection(0x1400764d8)
+[Te640] [API] DeleteCriticalSection(0x140076530)
+[Te640] [API] HeapFree(0x402f7b0)
+[Te640] [API] LeaveCriticalSection(0x140082e40)
+[Te640] [API] LoadLibraryExW(flags=2048)
+[Te640] [API] LoadLibraryA(api-ms-win-appmodel-runtime-l1-1-2)
+[Te640] [API] GetProcAddress(module=0xdedd0000, name=AppPolicyGetProcessTerminationMethod)
+[Te640] [API]   -> NULL (not in dispatch table)
+[Te640] [API]   -> optional-stub fallback (not in dispatch table)
+[Te640] [API] GetModuleHandleExW(flags=0)
+[Te640] [API] LoadLibraryA(mscoree.dll)
+[Te640] [API] GetProcAddress(module=0xdebe0000, name=CorExitProcess)
+[Te640] [API]   -> NULL (not in dispatch table)
+[Te640] [API]   -> optional-stub fallback (not in dispatch table)
+[Te640] [API] FreeLibrary()
+[Te640] [API] ExitProcess(0)
+  ]
+}

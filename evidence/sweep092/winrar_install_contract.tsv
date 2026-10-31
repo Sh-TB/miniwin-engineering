@@ -1,0 +1,71 @@
+# install contract: WinRAR 7.12 (installed by official installer in MiniWin, SWEEP-092 provision chain)
+section	item	count_or_value
+FILES	directories created	2
+FILES	files created (non-temp)	29
+FILES	root: Descript.ion	1
+FILES	root: ReadMe.txt	1
+FILES	root: License.txt	1
+FILES	root: Rar.txt	1
+FILES	root: WhatsNew.txt	1
+FILES	root: Order.htm	1
+FILES	root: RarFiles.lst	1
+FILES	root: Uninstall.lst	1
+FILES	root: Rar.exe	1
+FILES	root: Uninstall.exe	1
+FILES	root: UnRAR.exe	1
+FILES	root: WinRAR.exe	1
+FILES	root: 7zxa.dll	1
+FILES	root: RarExt.dll	1
+FILES	root: WinRAR.chm	1
+FILES	root: Default32.SFX	1
+FILES	root: WinCon32.SFX	1
+FILES	root: Zip32.SFX	1
+FILES	root: RarExtInstaller.exe	1
+FILES	root: RarExt32.dll	1
+FILES	root: RarExtPackage.msix	1
+FILES	root: RarExtLogo.altform-unplated_targetsize-32.png	1
+FILES	root: RarExtLogo.altform-unplated_targetsize-48.png	1
+FILES	root: RarExtLogo.altform-unplated_targetsize-64.png	1
+FILES	root: Resources.pri	1
+FILES	root: Default.SFX	1
+FILES	root: WinCon.SFX	1
+FILES	root: Zip.SFX	1
+FILES	root: C:	1
+FILES	extension .sfx	6
+FILES	extension .exe	5
+FILES	extension .txt	4
+FILES	extension .dll	3
+FILES	extension .png	3
+FILES	extension .lst	2
+FILES	extension .ion	1
+FILES	extension .htm	1
+FILES	extension .chm	1
+FILES	extension .msix	1
+FILES	notable payload	Rar.exe
+FILES	notable payload	Uninstall.exe
+FILES	notable payload	UnRAR.exe
+FILES	notable payload	WinRAR.exe
+FILES	notable payload	7zxa.dll
+FILES	notable payload	RarExt.dll
+FILES	notable payload	RarExtInstaller.exe
+FILES	notable payload	RarExt32.dll
+REGISTRY-WRITE	hive HKLM: values	14
+REGISTRY-WRITE	hive HKCU: values	1
+REGISTRY-WRITE	total keys	0
+REGISTRY-WRITE	total values	15
+REGISTRY-WRITE	notable	HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion @ ProgramFilesDir
+REGISTRY-WRITE	notable	HKCU\Software\WinRAR SFX @ C%%Program Files%WinRAR
+REGISTRY-READ	distinct keys opened at run	12
+REGISTRY-READ	297x	miss
+REGISTRY-READ	4x	key=0x9000d 'Name') -> 0 (type=1 size=32 data='Default Profile'
+REGISTRY-READ	3x	key=0x9000e 'Name') -> 0 (type=1 size=50 data='Create e-mail attachment'
+REGISTRY-READ	2x	key=0x9000f 'Name') -> 0 (type=1 size=44 data='Backup selected files'
+REGISTRY-READ	2x	key=0x90012 'LastFolder'
+REGISTRY-READ	1x	key=0x90010 'Name') -> 0 (type=1 size=42 data='Create 10 MB volumes'
+REGISTRY-READ	1x	key=0x90012 'Priority'
+REGISTRY-READ	1x	key=0x90012 'Threads'
+REGISTRY-READ	1x	key=0x90012 'LargePages'
+REGISTRY-READ	1x	key=0x90012 'OnTop'
+REGISTRY-READ	1x	key=0x90012 'RestoreFolder'
+REGISTRY-READ	1x	key=0x9000b 'ProgramFilesDir') -> 0 (type=1 size=32 data='C:\Program Files'
+REGISTRY-READ	open misses (NOT_FOUND)	297

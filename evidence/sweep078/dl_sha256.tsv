@@ -1,0 +1,17 @@
+id	tool	url	sha256	status
+U22	CurrPorts x64	https://www.nirsoft.net/utils/cports-x64.zip	8f16759318ad9a708dd787891de737a89063142b573d4199aeb965edb98f902e	PASS
+U24	FileTypesMan x64	https://www.nirsoft.net/utils/filetypesman-x64.zip	c3c83dfa2a38e7ab5fe4e69f85001001c8832aa032ed28a5098bc4679d3ced42	PASS
+U18	RegScanner x64	https://www.nirsoft.net/utils/regscanner-x64.zip	544e5be03c0722bd98df17ef795967e94bbeb4aa14ae981fa1537fccef0649a9	PASS
+U18	RegScanner x86	https://www.nirsoft.net/utils/regscanner.zip	b07497d6a70304dea43c1fe65a46e914307b811b658c19b3eacc5ae2a037f99f	PASS sha == SWEEP-076
+U21	ShellExView x64	https://www.nirsoft.net/utils/shexview-x64.zip	c388af0018fa47383090a6fe112aabaf59ab2fc8579c814f66b71879c397d957	PASS
+U19	WhatInStartup x64	https://www.nirsoft.net/utils/whatinstartup-x64.zip	15099976118e7caa876f4d33fc948e29009509115557a62a9c897024dc62d26d	PASS
+U27	WinLister x86	https://www.nirsoft.net/utils/winlister.zip	1659abf390ba781c91f337029521f647b934a37671af73b47079050ae07a4f3e	PASS
+U16	ZoomIt	https://live.sysinternals.com/ZoomIt.exe	e5c55414879086ac6b0b8ac7cb8e739c3615135421a870ab7806cc5f019d55ee	PASS sha == SWEEP-076
+U26	WinObj	https://live.sysinternals.com/Winobj.exe	c8313c8ea55733451a27dd43b66f90b27ff7cee5ab207c6826387a9b79c8f8a7	PASS
+U05	SciTE 32	https://www.scintilla.org/scite.zip		BLOCKED_DOWNLOAD http=000
+U12	Resource Hacker	https://www.angusj.com/resourcehacker/resource_hacker.zip		BLOCKED_DOWNLOAD http=409
+U09	KeePass 2.58	https://keepass.info/releases/file/2.58/KeePass-2.58.zip		BLOCKED_DOWNLOAD HTML not zip
+U11	HxD	https://mh-nexus.de/downloads/HxDSetupEN.zip		BLOCKED_DOWNLOAD http=000
+U20	ShellMenuView	https://www.nirsoft.net/utils/shellmenuview.zip		BLOCKED_DOWNLOAD 404 both names
+U03	Notepad3 x86	https://github.com/rizonesoft/Notepad3/releases/download/RELEASE_6.24.1122.1/...x86_Portable.zip		BLOCKED_DOWNLOAD 404 upstream
+U04	Notepad3 x64	https://github.com/rizonesoft/Notepad3/releases/download/RELEASE_6.24.1122.1/...x64_Portable.zip		BLOCKED_DOWNLOAD 404 upstream

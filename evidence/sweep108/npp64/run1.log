@@ -1,0 +1,264 @@
+[TRACE] Command line: /home/z/my-project/workspace/miniwin-engineering/.cache/miniwin/guests/npp.portable.x64.x/notepad++.exe
+[PATCH] SW-1297: UCRT invalid-fd fail-fast site RVA 0x4021d2 (callee 0x4016dc) -> EBADF return
+[PATCH] SW-1297: UCRT invalid-fd fail-fast site RVA 0x402382 (callee 0x4016dc) -> EBADF return
+[PATCH] SW-1297: UCRT invalid-fd fail-fast site RVA 0x4026a4 (callee 0x401794) -> EBADF return
+[PATCH] SW-1297: UCRT invalid-fd fail-fast site RVA 0x402799 (callee 0x401794) -> EBADF return
+[PATCH] SW-1297: UCRT invalid-fd fail-fast site RVA 0x402960 (callee 0x401794) -> EBADF return
+[PATCH] SW-1297: UCRT invalid-fd fail-fast site RVA 0x407654 (callee 0x401794) -> EBADF return
+[PATCH] SW-1297: UCRT invalid-fd fail-fast site RVA 0x4076ca (callee 0x4016dc) -> EBADF return
+[PATCH] SW-1297: UCRT invalid-fd fail-fast site RVA 0x407746 (callee 0x4016dc) -> EBADF return
+[PATCH] SW-1297: UCRT invalid-fd fail-fast site RVA 0x407d7a (callee 0x4016dc) -> EBADF return
+[PATCH] SW-1297: UCRT invalid-fd fail-fast site RVA 0x408276 (callee 0x4016dc) -> EBADF return
+[PATCH] SW-1297: UCRT invalid-fd fail-fast site RVA 0x4082e2 (callee 0x4016dc) -> EBADF return
+[PATCH] SW-1297: UCRT invalid-fd fail-fast site RVA 0x408828 (callee 0x4016dc) -> EBADF return
+[PATCH] SW-1297: UCRT invalid-fd fail-fast site RVA 0x408c1c (callee 0x401794) -> EBADF return
+[PATCH] SW-1297: UCRT invalid-fd fail-fast site RVA 0x408d3e (callee 0x401794) -> EBADF return
+[PATCH] SW-1297: UCRT invalid-fd fail-fast site RVA 0x408f00 (callee 0x401794) -> EBADF return
+[PATCH] SW-1297: UCRT invalid-fd fail-fast site RVA 0x409694 (callee 0x401794) -> EBADF return
+[PATCH] SW-1297: UCRT invalid-fd fail-fast site RVA 0x4097bb (callee 0x401794) -> EBADF return
+[PATCH] SW-1297: UCRT invalid-fd fail-fast site RVA 0x409978 (callee 0x401794) -> EBADF return
+[PATCH] SW-1297: UCRT invalid-fd fail-fast site RVA 0x40d559 (callee 0x401794) -> EBADF return
+[PATCH] SW-1297: UCRT invalid-fd fail-fast site RVA 0x412153 (callee 0x4016dc) -> EBADF return
+[PATCH] SW-1297: UCRT invalid-fd fail-fast site RVA 0x412713 (callee 0x401794) -> EBADF return
+[PATCH] SW-1297: UCRT invalid-fd fail-fast site RVA 0x412767 (callee 0x401794) -> EBADF return
+[PATCH] SW-1297: UCRT invalid-fd fail-fast site RVA 0x412e77 (callee 0x401794) -> EBADF return
+[PATCH] SW-1297: UCRT invalid-fd fail-fast site RVA 0x41319d (callee 0x401794) -> EBADF return
+[PATCH] SW-1297: UCRT invalid-fd fail-fast site RVA 0x413248 (callee 0x401794) -> EBADF return
+[PATCH] SW-1297: UCRT invalid-fd fail-fast site RVA 0x413290 (callee 0x401794) -> EBADF return
+[PATCH] SW-1297: UCRT invalid-fd fail-fast site RVA 0x413e0c (callee 0x401794) -> EBADF return
+[PATCH] SW-1297: UCRT invalid-fd fail-fast site RVA 0x4174a3 (callee 0x401794) -> EBADF return
+[PATCH] SW-1297: UCRT invalid-fd fail-fast site RVA 0x417a11 (callee 0x401794) -> EBADF return
+[PATCH] SW-1297: UCRT invalid-fd fail-fast site RVA 0x417ab9 (callee 0x401794) -> EBADF return
+[PATCH] SW-1297: UCRT invalid-fd fail-fast site RVA 0x4181c0 (callee 0x401794) -> EBADF return
+[PATCH] SW-1297: UCRT invalid-fd fail-fast site RVA 0x418d05 (callee 0x401794) -> EBADF return
+[PATCH] SW-1297: UCRT invalid-fd fail-fast site RVA 0x41b794 (callee 0x401794) -> EBADF return
+[PATCH] SW-1297: UCRT invalid-fd fail-fast site RVA 0x41d674 (callee 0x401794) -> EBADF return
+[PATCH] SW-1297: UCRT invalid-fd fail-fast site RVA 0x41efac (callee 0x4016dc) -> EBADF return
+[PATCH] SW-1297: UCRT invalid-fd fail-fast site RVA 0x41f71a (callee 0x401794) -> EBADF return
+[PATCH] SW-1297: UCRT invalid-fd fail-fast site RVA 0x41fbf3 (callee 0x401794) -> EBADF return
+[PATCH] SW-1297: UCRT invalid-fd fail-fast site RVA 0x4201ec (callee 0x4016dc) -> EBADF return
+[PATCH] SW-1297: UCRT invalid-fd fail-fast site RVA 0x422728 (callee 0x401794) -> EBADF return
+[PATCH] SW-1297: UCRT invalid-fd fail-fast site RVA 0x423097 (callee 0x4016dc) -> EBADF return
+[PATCH] SW-1297: UCRT invalid-fd fail-fast site RVA 0x423176 (callee 0x4016dc) -> EBADF return
+[PATCH] SW-1297: UCRT invalid-fd fail-fast site RVA 0x427200 (callee 0x401794) -> EBADF return
+[PATCH] SW-1297: UCRT invalid-fd fail-fast site RVA 0x4275d3 (callee 0x4016dc) -> EBADF return
+[PATCH] SW-1297: UCRT invalid-fd fail-fast site RVA 0x428cd7 (callee 0x401794) -> EBADF return
+[PATCH] SW-1297: UCRT invalid-fd fail-fast site RVA 0x42ab74 (callee 0x401794) -> EBADF return
+[PATCH] SW-1297: UCRT invalid-fd fail-fast site RVA 0x42b53f (callee 0x401794) -> EBADF return
+[PATCH] SW-1297: UCRT invalid-fd fail-fast site RVA 0x42bbe4 (callee 0x401794) -> EBADF return
+[MiniWin] Loading /home/z/my-project/workspace/miniwin-engineering/.cache/miniwin/guests/npp.portable.x64.x/notepad++.exe...
+[MessageBoxW] 501: IconList::addIcon : LoadIcon() function return null.
+Ignore the error?
+
+"Yes": ignore the error and launch Notepad++
+"No": Quit Notepad++
+"Cancel": display all errors
+[MessageBox] dialog #1 rendered -> miniwin-results/notepad++.exe/screenshots/messagebox_1.bmp
+[MessageBoxW] 502: IconList::addIcon : LoadIcon() function return null.
+Ignore the error?
+
+"Yes": ignore the error and launch Notepad++
+"No": Quit Notepad++
+"Cancel": display all errors
+[MessageBox] dialog #2 rendered -> miniwin-results/notepad++.exe/screenshots/messagebox_2.bmp
+[MessageBoxW] 503: IconList::addIcon : LoadIcon() function return null.
+Ignore the error?
+
+"Yes": ignore the error and launch Notepad++
+"No": Quit Notepad++
+"Cancel": display all errors
+[MessageBox] dialog #3 rendered -> miniwin-results/notepad++.exe/screenshots/messagebox_3.bmp
+[MessageBoxW] 513: IconList::addIcon : LoadIcon() function return null.
+Ignore the error?
+
+"Yes": ignore the error and launch Notepad++
+"No": Quit Notepad++
+"Cancel": display all errors
+[MessageBox] dialog #4 rendered -> miniwin-results/notepad++.exe/screenshots/messagebox_4.bmp
+[MessageBoxW] 505: IconList::addIcon : LoadIcon() function return null.
+Ignore the error?
+
+"Yes": ignore the error and launch Notepad++
+"No": Quit Notepad++
+"Cancel": display all errors
+[MessageBox] dialog #5 rendered -> miniwin-results/notepad++.exe/screenshots/messagebox_5.bmp
+[MessageBoxW] 506: IconList::addIcon : LoadIcon() function return null.
+Ignore the error?
+
+"Yes": ignore the error and launch Notepad++
+"No": Quit Notepad++
+"Cancel": display all errors
+[MessageBox] dialog #6 rendered -> miniwin-results/notepad++.exe/screenshots/messagebox_6.bmp
+[MessageBoxW] 507: IconList::addIcon : LoadIcon() function return null.
+Ignore the error?
+
+"Yes": ignore the error and launch Notepad++
+"No": Quit Notepad++
+"Cancel": display all errors
+[MessageBox] dialog #7 rendered -> miniwin-results/notepad++.exe/screenshots/messagebox_7.bmp
+[MessageBoxW] 508: IconList::addIcon : LoadIcon() function return null.
+Ignore the error?
+
+"Yes": ignore the error and launch Notepad++
+"No": Quit Notepad++
+"Cancel": display all errors
+[MessageBox] dialog #8 rendered -> miniwin-results/notepad++.exe/screenshots/messagebox_8.bmp
+[MessageBoxW] 515: IconList::addIcon : LoadIcon() function return null.
+Ignore the error?
+
+"Yes": ignore the error and launch Notepad++
+"No": Quit Notepad++
+"Cancel": display all errors
+[MessageBox] dialog #9 rendered -> miniwin-results/notepad++.exe/screenshots/messagebox_9.bmp
+[MessageBoxW] 505: IconList::addIcon : LoadIcon() function return null.
+Ignore the error?
+
+"Yes": ignore the error and launch Notepad++
+"No": Quit Notepad++
+"Cancel": display all errors
+[MessageBox] dialog #10 rendered -> miniwin-results/notepad++.exe/screenshots/messagebox_10.bmp
+[MessageBoxW] 509: IconList::addIcon : LoadIcon() function return null.
+Ignore the error?
+
+"Yes": ignore the error and launch Notepad++
+"No": Quit Notepad++
+"Cancel": display all errors
+[MessageBox] dialog #11 rendered -> miniwin-results/notepad++.exe/screenshots/messagebox_11.bmp
+[MessageBoxW] 510: IconList::addIcon : LoadIcon() function return null.
+Ignore the error?
+
+"Yes": ignore the error and launch Notepad++
+"No": Quit Notepad++
+"Cancel": display all errors
+[MessageBox] dialog #12 rendered -> miniwin-results/notepad++.exe/screenshots/messagebox_12.bmp
+[MessageBoxW] 512: IconList::addIcon : LoadIcon() function return null.
+Ignore the error?
+
+"Yes": ignore the error and launch Notepad++
+"No": Quit Notepad++
+"Cancel": display all errors
+[MessageBox] dialog #13 rendered -> miniwin-results/notepad++.exe/screenshots/messagebox_13.bmp
+[MessageBoxW] 514: IconList::addIcon : LoadIcon() function return null.
+Ignore the error?
+
+"Yes": ignore the error and launch Notepad++
+"No": Quit Notepad++
+"Cancel": display all errors
+[MessageBox] dialog #14 rendered -> miniwin-results/notepad++.exe/screenshots/messagebox_14.bmp
+[MessageBoxW] 511: IconList::addIcon : LoadIcon() function return null.
+Ignore the error?
+
+"Yes": ignore the error and launch Notepad++
+"No": Quit Notepad++
+"Cancel": display all errors
+[MessageBox] dialog #15 rendered -> miniwin-results/notepad++.exe/screenshots/messagebox_15.bmp
+[MessageBoxW] 501: IconList::addIcon : LoadIcon() function return null.
+Ignore the error?
+
+"Yes": ignore the error and launch Notepad++
+"No": Quit Notepad++
+"Cancel": display all errors
+[MessageBox] dialog #16 rendered -> miniwin-results/notepad++.exe/screenshots/messagebox_16.bmp
+[MessageBoxW] 502: IconList::addIcon : LoadIcon() function return null.
+Ignore the error?
+
+"Yes": ignore the error and launch Notepad++
+"No": Quit Notepad++
+"Cancel": display all errors
+[MessageBox] dialog #17 rendered -> miniwin-results/notepad++.exe/screenshots/messagebox_17.bmp
+[MessageBoxW] 503: IconList::addIcon : LoadIcon() function return null.
+Ignore the error?
+
+"Yes": ignore the error and launch Notepad++
+"No": Quit Notepad++
+"Cancel": display all errors
+[MessageBox] dialog #18 rendered -> miniwin-results/notepad++.exe/screenshots/messagebox_18.bmp
+[MessageBoxW] 513: IconList::addIcon : LoadIcon() function return null.
+Ignore the error?
+
+"Yes": ignore the error and launch Notepad++
+"No": Quit Notepad++
+"Cancel": display all errors
+[MessageBox] dialog #19 rendered -> miniwin-results/notepad++.exe/screenshots/messagebox_19.bmp
+[MessageBoxW] 505: IconList::addIcon : LoadIcon() function return null.
+Ignore the error?
+
+"Yes": ignore the error and launch Notepad++
+"No": Quit Notepad++
+"Cancel": display all errors
+[MessageBox] dialog #20 rendered -> miniwin-results/notepad++.exe/screenshots/messagebox_20.bmp
+[MessageBoxW] 506: IconList::addIcon : LoadIcon() function return null.
+Ignore the error?
+
+"Yes": ignore the error and launch Notepad++
+"No": Quit Notepad++
+"Cancel": display all errors
+[MessageBox] dialog #21 rendered -> miniwin-results/notepad++.exe/screenshots/messagebox_21.bmp
+[MessageBoxW] 507: IconList::addIcon : LoadIcon() function return null.
+Ignore the error?
+
+"Yes": ignore the error and launch Notepad++
+"No": Quit Notepad++
+"Cancel": display all errors
+[MessageBox] dialog #22 rendered -> miniwin-results/notepad++.exe/screenshots/messagebox_22.bmp
+[MessageBoxW] 508: IconList::addIcon : LoadIcon() function return null.
+Ignore the error?
+
+"Yes": ignore the error and launch Notepad++
+"No": Quit Notepad++
+"Cancel": display all errors
+[MessageBox] dialog #23 rendered -> miniwin-results/notepad++.exe/screenshots/messagebox_23.bmp
+[MessageBoxW] 515: IconList::addIcon : LoadIcon() function return null.
+Ignore the error?
+
+"Yes": ignore the error and launch Notepad++
+"No": Quit Notepad++
+"Cancel": display all errors
+[MessageBox] dialog #24 rendered -> miniwin-results/notepad++.exe/screenshots/messagebox_24.bmp
+[MessageBoxW] 505: IconList::addIcon : LoadIcon() function return null.
+Ignore the error?
+
+"Yes": ignore the error and launch Notepad++
+"No": Quit Notepad++
+"Cancel": display all errors
+[MessageBox] dialog #25 rendered -> miniwin-results/notepad++.exe/screenshots/messagebox_25.bmp
+[MessageBoxW] 509: IconList::addIcon : LoadIcon() function return null.
+Ignore the error?
+
+"Yes": ignore the error and launch Notepad++
+"No": Quit Notepad++
+"Cancel": display all errors
+[MessageBox] dialog #26 rendered -> miniwin-results/notepad++.exe/screenshots/messagebox_26.bmp
+[MessageBoxW] 510: IconList::addIcon : LoadIcon() function return null.
+Ignore the error?
+
+"Yes": ignore the error and launch Notepad++
+"No": Quit Notepad++
+"Cancel": display all errors
+[MessageBox] dialog #27 rendered -> miniwin-results/notepad++.exe/screenshots/messagebox_27.bmp
+[MessageBoxW] 512: IconList::addIcon : LoadIcon() function return null.
+Ignore the error?
+
+"Yes": ignore the error and launch Notepad++
+"No": Quit Notepad++
+"Cancel": display all errors
+[MessageBox] dialog #28 rendered -> miniwin-results/notepad++.exe/screenshots/messagebox_28.bmp
+[MessageBoxW] 514: IconList::addIcon : LoadIcon() function return null.
+Ignore the error?
+
+"Yes": ignore the error and launch Notepad++
+"No": Quit Notepad++
+"Cancel": display all errors
+[MessageBox] dialog #29 rendered -> miniwin-results/notepad++.exe/screenshots/messagebox_29.bmp
+[MessageBoxW] 511: IconList::addIcon : LoadIcon() function return null.
+Ignore the error?
+
+"Yes": ignore the error and launch Notepad++
+"No": Quit Notepad++
+"Cancel": display all errors
+[MessageBox] dialog #30 rendered -> miniwin-results/notepad++.exe/screenshots/messagebox_30.bmp
+[GDI-FRAME] #1 -> miniwin-results/notepad++.exe/screenshots/frame_001.bmp
+[GDI-FRAME] #2 -> miniwin-results/notepad++.exe/screenshots/frame_002.bmp
+[GDI-FRAME] #3 -> miniwin-results/notepad++.exe/screenshots/frame_003.bmp
+[GDI-FRAME] #4 -> miniwin-results/notepad++.exe/screenshots/frame_004.bmp
+[GDI-FRAME] #5 -> miniwin-results/notepad++.exe/screenshots/frame_005.bmp

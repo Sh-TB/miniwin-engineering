@@ -120,7 +120,7 @@ Stage Summary:
 ---
 Task ID: SWEEP-007 (SW-562)
 Agent: Super Z (engineering agent)
-Task: User «ادامه بده» — continue per worklist: SW-562 battery (all GUI programs
+Task: User (continue) — continue per worklist: SW-562 battery (all GUI programs
       under MW_GUI_EVENTS=1), honest post-SWEEP-005/006 frontier measurement.
 
 Work Log:
@@ -232,7 +232,7 @@ Stage Summary:
 ---
 Task ID: SWEEP-009
 Agent: Super Z (main session)
-Task: «ادامه» — land the queued honest-stub batch (SW-555), re-measure the
+Task: (continue) — land the queued honest-stub batch (SW-555), re-measure the
   three gate programs, push.
 
 Work Log:
@@ -264,7 +264,7 @@ Stage Summary:
 ---
 Task ID: SWEEP-010
 Agent: Super Z (main session)
-Task: «ادامه» — procexp64 UI-init batch (GetSystemMetrics + ImageList_* +
+Task: (continue) — procexp64 UI-init batch (GetSystemMetrics + ImageList_* +
   SetDefaultDllDirectories), re-measure gates, push.
 
 Work Log:
@@ -329,7 +329,7 @@ artifacts/sweep011_perf/ (TSVs, COMPARISON.md, funcmaps/), 4 new scripts,
 ---
 Task ID: SWEEP-012
 Agent: Super Z (main agent)
-Task: User directive 2026-10-18: "از اون لیست ۱۰۰ نرم افزاری هر چی میتونی تست بکن، ببین چقدر پیشرفت اجرا داشتن — تغییرات بدون پیشرفت ارزشی نداره" (test as many of the 100-program list as available; measure EXECUTION PROGRESS; changes without progress are worthless).
+Task: User directive 2026-10-18: (test as many of the 100-program list as you can, measure the execution progress — changes without progress are worthless) (test as many of the 100-program list as available; measure EXECUTION PROGRESS; changes without progress are worthless).
 
 Work Log:
 - Built scripts/sweep012_progsweep.sh (full-pool discovery, resumable, MINWIN_SCREENSHOT=0, api_trace ON) + scripts/sweep012_progress.py (guest_rip -> dll!import decoder via FF15/disp32/IAT + progress score 0..5 + named-gate clusterer + before/after differ).
@@ -411,7 +411,7 @@ Stage Summary:
 - Next lever: SW-601 InvalidateRgn (RAMMap64), SW-602/608/609 guest-level
   crash symbolization, SW-603 Bginfo64 8-stub family.
 
-## 2026-10-18 (SWEEP-014) — «ادامه سه برابری»: batch #4 + 3x queue + calc scenario D
+## 2026-10-18 (SWEEP-014) — (triple-parity continuation): batch #4 + 3x queue + calc scenario D
 - **BUG-069 CLOSED (fixed)**: sweep012_progress.py decoder handled only direct
   `FF 15` calls; ProduKey/cports/7zG/sqlite3_analyzer call imports via
   `E8 rel32 -> FF 25` jmp-thunks, so their gates printed ??NOT-FF15??.
@@ -468,7 +468,7 @@ Stage Summary:
 ---
 Task ID: SWEEP-015
 Agent: Super Z (main agent)
-Task: «ادامه سه برابری» — honest-stub continuation, broad sweep, GUI calc, worklist x3
+Task: (triple-parity continuation) — honest-stub continuation, broad sweep, GUI calc, worklist x3
 
 Work Log:
 - Discovered upstream had advanced to f64290e (SWEEP-014) via `git fetch` — local b783c44 was stale; fast-forwarded main to f64290e (clean ff, no divergence).
@@ -496,7 +496,7 @@ Stage Summary:
 
 ---
 
-## SWEEP-018 (2026-10-19) — «ادامه و پوش» elephant batch: 5x139->exit0, G1 green
+## SWEEP-018 (2026-10-19) — (continue and push) elephant batch: 5x139->exit0, G1 green
 
 Work Log:
 - Decoded produkey/cports/diskmon64/rammap64/searchmyfiles crash RIPs with
@@ -524,7 +524,7 @@ Work Log:
   breakout 3x (bricks 40->13); miniwin_calc rebuilt (lost untracked binary,
   SW-801h class) 3x exit0 4 frames SHA 7e8821ae x3.
 - New evidence: evidence/sweep018/README.md; artifacts/sweep018/.
-- Worklist: SW-812..815 filed; «ادامه سه برابری» queue SW-816..880 (65 items)
+- Worklist: SW-812..815 filed; (triple-parity continuation) queue SW-816..880 (65 items)
   appended to .agent/SWEEP50_WORKLIST.md.
 
 Stage Summary:
@@ -536,7 +536,7 @@ Stage Summary:
 ---
 Task ID: SWEEP-019
 Agent: main agent
-Task: «ادامه چند ده تسک همزمان و پوش در گیت هاب» — execute the queued
+Task: (continue dozens of tasks at once and push to GitHub) — execute the queued
   SW-816..880 continuation queue (65 items, 13 families) as ONE elephant
   batch, measured sweep, push to GitHub.
 
@@ -588,7 +588,7 @@ Stage Summary:
 - Evidence: evidence/master/g1/20261019_173159, fresh
   artifacts/sweep019/sweep/sweep019_sweep.tsv + acceptance outputs.
 
-## SWEEP-021 — 2026-10-19 — «ادامه چند ده تسک همزمان» elephant batch
+## SWEEP-021 — 2026-10-19 — (continue dozens of tasks at once) elephant batch
 - LANDED (one batch): SW-881..920 remainder — 24 new functions + 35 ENTRY rows in
   src/loader/loader.c: menu deepening (InsertMenuItemA/W, RemoveMenu, DeleteMenu,
   GetMenuItemRect, TrackPopupMenuEx), ListView deepening (LVM_GETNEXTITEM/SETITEM/
@@ -610,7 +610,7 @@ Stage Summary:
   order). Carried open: SW-800, SW-801i/j, SW-807/809/814/815 crash signatures.
 - evidence/sweep021/README.md + scripts/sweep021_chunk.sh + sweep021_gui_evidence.py.
 
-## SWEEP-022 (2026-10-19) — «ادامه» elephant batch: SW-921..960 LANDED + BUG-074/075
+## SWEEP-022 (2026-10-19) — (continue) elephant batch: SW-921..960 LANDED + BUG-074/075
 
 - Synced local to origin/main 0bc6ba3 (SWEEP-021; local had been rewound to b783c44).
 - ONE loader.c batch (~45 new/updated imports):
@@ -642,7 +642,7 @@ Stage Summary:
 - evidence/sweep022/README.md + scripts/sweep022_chunk.sh + sweep022_calc_accept.sh;
   artifacts/sweep022/{sweep,pumpon,pumpon_baseline} + artifacts/sweep022_calc.
 
-## SWEEP-023 (2026-10-19) — «ادامه ۶۰ تسک رو یکی یکی اجرا بکن» 60-task batch: SW-961..1000 LANDED + SW-1001..1020 queued
+## SWEEP-023 (2026-10-19) — (continue: execute 60 tasks one by one) 60-task batch: SW-961..1000 LANDED + SW-1001..1020 queued
 
 - ONE loader.c batch (~25 new/updated imports + 3 data models + 1 REAL bug fix):
   * ListView: per-item LPARAM store (insert/set/get/delete-shift) + LVM_SORTITEMS
@@ -711,7 +711,7 @@ Stage Summary:
   sweep008-local-divergent-3.
 
 ---
-SWEEP-025 (2026-10-20) «ادامه فیل و یوز» — SW-1001..1020 + 10 root-cause fixes
+SWEEP-025 (2026-10-20) (continue elephant and cheetah) — SW-1001..1020 + 10 root-cause fixes
 - Gates: pageant 1->124 daemon, procmon64 1->0, putty 1->9, puttygen 139->0.
 - Root causes: LoadLibraryA full-path + no-ext, TokenUser/TokenGroups,
   OpenProcess self, SetEntriesInAclA, GetUserNameExA SPN, BUG-081 GCP fix.
@@ -722,7 +722,7 @@ SWEEP-025 (2026-10-20) «ادامه فیل و یوز» — SW-1001..1020 + 10 ro
 - BUG-082 open (putty GS-cookie; Ghidra env lost -> requeue SW-1022/1030).
 
 ---
-SWEEP-026 (2026-10-20) «ادامه فیل یوز با ۵۰ تسک» — resumed interrupted batch, closed it
+SWEEP-026 (2026-10-20) (continue elephant-cheetah with 50 tasks) — resumed interrupted batch, closed it
 - Found SWEEP-026 mid-flight at session resume: 764 lines uncommitted in
   loader.c (SW-1021..1097 batch + SW-1023 timer + SW-1090 trace cap).
 - Build fix: mw_SetDIBitsToDevice called the wrong-direction row helper
@@ -740,7 +740,7 @@ SWEEP-026 (2026-10-20) «ادامه فیل یوز با ۵۰ تسک» — resumed
   sweep026 scripts committed (sweep.sh, gui_battery.sh, mark_landed.py).
 
 ---
-SWEEP-027 (2026-10-20) «واگن های قطار» — one wagon batch on reconciled tree
+SWEEP-027 (2026-10-20) (train wagons) — one wagon batch on reconciled tree
 - Env reset detected (local 55b3982): reset to origin 3cd11c0; deterministic
   rebuild reproduced SWEEP-026 pin sha 51bc4fb3 EXACTLY before new work.
 - 45 imports + _wcmdln data import in one splice (scripts/sweep027_impl.c
@@ -751,7 +751,7 @@ SWEEP-027 (2026-10-20) «واگن های قطار» — one wagon batch on recon
 - Pushed as one commit; worklist marks + summary appended.
 
 ---
-SWEEP-030 (2026-10-20) «قانون کلی قطار» — SW-1151 engine double-fix + fastfail honesty
+SWEEP-030 (2026-10-20) (general train law) — SW-1151 engine double-fix + fastfail honesty
 - SW-1151 full decode: Frame[7] func 0x2279a0 personality = __GSHandlerCheck_EH
   shim 0x319158 -> GS-check core 0x319070 ([EstFrame+0x570] cookie slot, tail-jmp
   __security_check_cookie 0x318660) -> __report_gsfailure 0x318730 ->
@@ -778,3 +778,1335 @@ SWEEP-030 (2026-10-20) «قانون کلی قطار» — SW-1151 engine double-
 - MEASURED sha ddfa14a0: G1 PIN 12/12 (evidence/master/g1/20261020_130641);
   corpus x3 16/16 deterministic, ZERO unresolved, ZERO regressions; 7za/zstd/lz4
   round trips + jq re-verified. Loader 2,698,920 bytes. evidence/sweep030/.
+
+---
+SWEEP-038 (2026-10-21) (continue from where it was left incomplete, and push) — RECONCILE train 2: local interrupted session merged into remote chain
+- Context: local session (base 242af84) independently re-landed SW-1106 + SW-1201
+  while a parallel remote chain (SWEEP-031..037) had already landed the SAME
+  wagons with deeper decodes. Push rejected (non-FF). Precedent: SWEEP-037
+  reconcile protocol.
+- CONVERGENCE (two independent sessions, same root causes — strong evidence):
+  (1) SW-1106 = 64MB file-size cap rejecting zoomit64 68MB BEFORE parse (not a
+  decision-API failure); (2) SW-1201 root cause = SetWindowsHookExW(5) NULL ->
+  guest C++ throw -> EH chain failure (local decoded the unwind side: resume at
+  TargetIp=RA-1 mid-instruction; remote decoded the resume fix: -1 offset is
+  GCC-ONLY, MSVC gets TRUE RA + FH4 catch-and-resume at 0x140298df5);
+  (3) procexp64 exit-139 wild jump RIP=0x6f00690074006e = UTF-16 bytes — local
+  read it as a string-blob IAT jump; remote SWEEP-033 decoded the full class:
+  guest copies CLR perf-counter names ('# bytes in all heaps', 'contentions')
+  through stack frames, one overruns, RET consumes 'ntio'. Both decodes agree
+  the bytes are 'ntio' from 'contentions'.
+- RECONCILE actions: main reset to origin/main 92cb959 (SWEEP-037); local
+  c455913 preserved as backup/sweep032-local-50qatar (contains: alternative EH
+  variant — ReactOS L709-734 target-frame EH_TARGET_UNWIND final call inside
+  seh_walk_intermediate_cleanups + walk-for-all-0xe06d7363 + MW_MAX_IMAGE_MB
+  env-overridable cap; NOT ported: remote's True-RA fix is measured end-to-end
+  (986K pump iterations), porting the second mechanism risks regression);
+  UNIQUE delta re-landed: worklist SWEEP-030 summary stale throw-point
+  0x14032126f corrected (EH-machinery C++-magic check, not throw site).
+- MEASURED: deterministic rebuild reproduced sha 2464ad23 BYTE-EXACT (0 errors);
+  G1 PIN 12/12 (evidence/master/g1/20261021_095409).
+
+---
+SWEEP-039 (2026-10-21) (continue 50 trains and wagons) — SW-1102 train: SystemHandleInformation + ETW symbols + static decode
+- ENV-RESET RECONCILE first: workspace rolled back to 242af84 (local objects for
+  SWEEP-031..038 lost) while origin/main carried 1490f96 — reset to origin/main,
+  deterministic rebuild reproduced sha 2464ad23 BYTE-EXACT, G1 green; batch then
+  built on 1490f96.
+- SW-1102a SystemHandleInformation (class 64) + SystemExtendedHandleInformation
+  (76): real enumeration of the loader's live handle table (g_handle_table with
+  payload-kind verification: g_mw_events/g_mw_sems used-flag; generic bucket for
+  thread/other payloads). Headers 4B/8B, entries 16B legacy (PID 1234 = guest
+  GetCurrentProcessId, objtype 5 event / 6 sem / 8 generic, Object truncated) /
+  32B EX (full Object ptr). Two-pass contract: short buffer -> 0xC0000004 +
+  *retlen = needed — the size-retry loop procexp's NtQuerySystemInformation
+  wrapper implements. Old INVALID_INFO_CLASS answer seen once in run-1 trace
+  before the SCM/driver section.
+- SW-1102b ETW symbols: the window right before the fatal name-copy does
+  LoadLibraryA(Advapi32.dll) + GetProcAddress(EnableTraceEx) -> NULL (missing
+  from dispatch) — a not-on-Windows signal. Landed EnableTraceEx/Ex2/
+  EnableTrace/RegisterTraceGuidsW (family-typed 1168 + registration 0/synthetic
+  handle), dual-case entries. GetProcAddress now resolves. DUPLICATE guard:
+  StartTraceW/ControlTraceW/ProcessTrace/OpenTraceW/CloseTrace/FlushTraceW
+  already existed (typed 1168) — kept as-is.
+- SW-1102 STATIC DECODE (new evidence): embedded names at .rdata
+  0x14015ad10/40/70; rip-rel xrefs cluster in 0x1400a04xx (name search via call
+  0x1401025d8 over table r15={count, array}) and 0x1400a06xx-a08xx; crash-frame
+  stack holds the names packed sequentially ("...ns\0# bytes in all heaps\0\0#
+  Gen 0 collections\0" + 'Total # of contentions' in R12-R15) — copy overrun
+  clobbers frame RA with 'ntio' of 'contentions'. procexp64 still exit 139 x3
+  (deterministic) — final offending copy loop open, instrumentation next.
+- MEASURED sha 256d1e92: G1 PIN 12/12 (evidence/master/g1/20261021_123620);
+  census x3 15/15 DETERMINISTIC (sweep039): 11x exit0 unchanged, pageant 124 +
+  winmergeu 124 daemons unchanged, procexp64 139 frontier preserved,
+  autoruns64/searchmyfiles 1 K-U each (SWEEP-037 state), zoomit64 0. ZERO
+  regressions. Census-script bug (missing run dirs -> bogus exit-1) caught and
+  fixed before any conclusion was drawn — rerun clean.
+
+## SWEEP-040 (50-car train) (2026-10-21) — SW-1206 + SW-1205 + SW-1102c
+Start: origin/main 8c3ede7 (SWEEP-039+addendum). Three wagons landed,
+two new frontiers registered (SW-1207/SW-1208), corpus 15->16.
+- SW-1206: adexplorer64 corpus recovered (AdExplorer.zip re-fetched;
+  e4512878...); crash chain fully decoded (MAIN dialog template,
+  id=1002/1070 children, NULL GetDlgItem -> r14 cache-append crash);
+  engine now parses the guest's OWN DLGTEMPLATE/DLGTEMPLATEEX resources
+  (EX parser bounds-checked; STD delegates to SW-921) on all four
+  Create/DialogBoxParam entries with distinct per-dialog identities;
+  adexplorer64 exit 139 -> 32 full lifecycle. rammap64 regression
+  (0->139) decoded and converted into a forward move: per-page dialogs
+  now real, comctl32 tooltips_class32 frontier = SW-1207.
+- SW-1205: per-thread win-ids + real thread-message queues +
+  PostThreadMessageW/A honest contract + worker-park drain; winmergeu
+  worker woke via guest's own PostThreadMessage(WM_QUIT,5679) and the
+  main thread left the 0x140220068 poll loop for the first time since
+  SWEEP-031 (124 -> heap-trap exit 4 on GlobalFree(0xae0001));
+  w3_aligned_base_of probe-hardened (loader must never die on a guest
+  pointer). 0xae0001 provenance = SW-1208.
+- SW-1102c: crash_handler BUG-078 auto-decode (RIP-as-UTF16 "ntio" +
+  packed-UTF-16 stack-run scan; 32-byte record stride with 8-byte gaps,
+  RBP=0). Copy-loop static hunt = SW-1102d.
+- MEASURED sha a0d9e9c8: G1 12/12 (evidence/master/g1/20261021_133926),
+  census x3 16/16 deterministic, 7za/jq/sqlite3 round trips green on the
+  final binary. Evidence: artifacts/sweep040/ (census.tsv, adexplorer64
+  run1-3, roundtrip/). No force-push.
+
+## SWEEP-041 (continue 20 trains) — 2026-10-21 (sha 4ecab4c2, G1 12/12, pushed)
+Two open frontiers from SWEEP-040 cleared in one round, both to FULL LIFECYCLE:
+- SW-1207 (rammap64 139 -> 0): tooltips_class32 was landing on MW_GUI_HWND; the
+  guest's GetPropW(tooltip, atom 0xC000) NULL-fed its comctl32 subclass branch
+  into a null-page absolute read. Engine now mints a distinct tooltip identity
+  and auto-performs the CC32SubclassInfo prop contract (registered zeroed
+  0x140 block at atom 0xC000) before CreateWindowEx returns — the same
+  synchronous contract real comctl32 performs in WM_NCCREATE.
+- SW-1208 (winmergeu 4 -> 0): GlobalHandle cookies were minted and forgotten;
+  the guest's GlobalFree(0xae0001) hit the HEAP-TRAP. Engine now keeps a
+  64-slot cookie->base registry (GlobalLock/Flags/Free/ReAlloc all resolve),
+  and untracked frees degrade to the documented Win32 contract
+  (return value + ERROR_INVALID_HANDLE) instead of terminating.
+- Census x3 16/16 deterministic; all deltas forward; pageant/procexp64/
+  adexplorer64 preserved. adexplorer64 corpus re-recovered (3rd loss) with
+  sha-verified one-shot procedure now documented.
+- Round trips: 7za byte-exact, jq-1.7.1 + query, sqlite3 in-memory 42.
+- SW-1102d advanced (round 3): RA candidates classified; three .text functions
+  identified (0x140066130 / 0x1400a1380 / 0x1400c3340 = CLR perf-counter master
+  init with count*0x30/0x18/0x8 record arrays); crash-stack stride is 0x28
+  (32B name + 8B) — writer still open.
+- Lesson kept: the census caught nothing this time because the two fixes are
+  pure forward motion; the 7za/jq/sqlite trio plus G1 regression 12/12 remain
+  the regression net for the engine-wide surfaces (heap, windows, props).
+
+## SWEEP-042 (10 trains, dozens of micro-wagons) — 10 trains, ~42 micro-wagons (2026-10-22, HEAD 9e30c16d)
+Directive: (10 trains, dozens of micro-wagons) — 10 trains carrying several dozen SMALL
+wagons. Base: origin/main a06f45b (SWEEP-041), tree clean. The micro-wagon
+veins came from mining the post-SWEEP-041 surfaces: adexplorer64's 23
+unresolved imports (9 named + 14 ordinals — the ordinals were invisible for
+rounds because the SWEEP-001 unresolved path counted but never printed them),
+winmergeu's full-lifecycle trace (SWEEP-041's own open note), putty's
+FormatMessage stale last error, pageant's CryptProtectMemory probe, and the
+adexplorer64 ExitProcess(48925984) anomaly.
+
+KEY DECODE — the 23/23 adexplorer64 import surface (SW-1209): wine spec
+re-probe with the SWEEP-037 stale notes corrected. activeds.spec (wine DOES
+ship it) carries EXPLICIT ordinals: 7/9/12/13/15/20 = ADsBuildVarArrayStr/
+ADsOpenObject/ADsSetLastError/ADsGetLastError/FreeADsMem/ADsEncodeBinaryData;
+wldap32.spec explicit 13/14/73/88/118/145/155/188 = ldap_unbind/
+ldap_set_optionW/ldap_bind_sW/ldap_connect/ldap_err2stringW/ldap_initW/
+ldap_modify_ext_sW/ldap_rename_ext_sW; shell32.spec 88 = SHDoDragDrop (the
+SWEEP-037 note claiming the spec lacks 88 was simply wrong — lesson: re-probe
+beats remembered absence). Spec sha256s recorded; all implementations typed-
+honest per the established contract families (no HEAP-TRAP, no returning-0
+lies where a real ABI shape exists).
+
+KEY FIX — putty's real-Windows parity (SW-1211): FormatMessage miss used to
+leave the STALE last error; putty's fallback string rendered "returned 2" (a
+leaked ERROR_FILE_NOT_FOUND). Real Windows sets 317 ERROR_MR_MID_NOT_FOUND on
+a failed format; after the fix putty renders "(unable to format: FormatMessage
+returned 317)" — the same string a real Windows putty prints for its private
+error -2. Plus a 12-entry canonical FROM_SYSTEM table for common Win32 errors.
+
+KEY DECODE — adexplorer64 exit 32 (SW-1212): new ExitProcess instrumentation
+logs the caller RA when code > 0xFFFF (exit-0 traces byte-identical). Two runs
+gave codes 0x2EA8D20 / 0x2565D20 — varying HEAP POINTERS with stable low byte
+0x20; census exit 32 = code & 0xFF. Caller RA 0x1400403f5 -> guest RVA 0x403f5
+(the guest's entry path returns an uninitialized/handle variable). Engine
+behavior is honest passthrough; the anomaly is guest-side and now PROVEN, not
+guessed.
+
+MEASURED sha 9e30c16d G1 PIN 12/12 (evidence/master/g1/20261021_164933):
+census x3 16/16 DETERMINISTIC, deltas all forward (adexplorer64 23->0
+unresolved, searchmyfiles 1->0, autoruns64's remaining 1 now NAMED in stderr
+via the new ordinal diagnosability); exits preserved (adexplorer64 32, pageant
+124 daemon, procexp64 139, 12x exit-0). Round trips on the final binary: 7za
+x64 create+extract BYTE-EXACT (cmp), jq-1.7.1 version + query = 2, sqlite3
+in-memory 42 exit 0 (paths: samples/real/7za.exe — NOTE 7z_x64/7za.exe is a
+32-bit trap, samples/real/jq-windows-amd64.exe, artifacts/opensource/sqlite/
+sqlite3.exe). ucrt Ex-family probes that returned NULL for rounds now RESOLVE
+in winmergeu's trace (GetTempPath2W/FlsGetValue2/EnumSystemLocalesEx/
+GetDateFormatEx/GetTimeFormatEx/GetUserDefaultLocaleName/IsValidLocaleName/
+LocaleNameToLCID); winmergeu SPI_GETNONCLIENTMETRICS -> TRUE (2x). pageant
+calls CryptProtectMemory(cb=16) 2x and keeps its (correct) daemon park.
+Evidence: evidence/sweep042/{wine_specs,census.tsv,roundtrips,binary_sha256}.
+Open: SW-1102d copy-loop store instruction, ole32.277/16 + COMCTL32.344
+(Rule-1), SW-791 libcurl-x64.dll, procexp64 139 frontier.
+
+## SWEEP-043 (continue the train) — BUG-078 solved, procexp64 139 -> 0 (2026-10-22)
+- Reconcile first (origin had advanced to SWEEP-042 339cc60 incl. the
+  (10 trains, dozens of micro-wagons) batch; workspace reset mid-round): reset --hard +
+  scripts/sweep043_apply.py re-lands 11 patches, assert-verified.
+- SW-1102e/g: the 'ntio' writer = mw_IsBadStringPtrW's own
+  mw_probe_copy(s+off, chunk*2, tmp[256]) overflow (1024B into 512B), proved
+  by the MW_BUG078_DIAG single-fire stack dump + static decode of the
+  0x1400a8a30/0x1400a1380/0x1400c3340 chain (RegQueryValueExW two-pass,
+  tokenizer L",", formatter "%u "/"%s ", CLR name pool .rdata 0x14015ad10+).
+- SW-1102h HKPD PERF_DATA_BLOCK (two-pass, empty block, NumObjectTypes 0);
+  SW-1102j WinStationGetProcessSid rc!=0 failure shape; SW-1102k
+  I_QueryTagInformation honest 1168 + optional-stub fallback trace;
+  SW-1102l NtQuerySystemInformation class 5 (SystemProcessInformation,
+  guest PID 1234 entry, two-pass).
+- SW-1102f: RegQueryValueExW hit+miss MW_TRACE (probe surface now visible:
+  98 Settings probes, HKPD chain).
+- adexplorer64 corpus re-recovered (4th), shas recorded.
+- MEASURED sha 89ce3cd9 G1 12/12; census x3 16/16 DETERMINISTIC;
+  procexp64 139 -> 0 (graceful ExitProcess(0)); 13x exit-0; round trips
+  7za byte-exact / jq '.a[1]'=2 / sqlite3 42. evidence/sweep043/. No
+  force-push.
+- Open frontiers: ole32.277/16 + COMCTL32.344 (Rule-1), SW-791 curl
+  libcurl-x64.dll, pageant 124 park (correct), adexplorer64 exit-32
+  (guest-side, proven).
+
+---
+
+## SWEEP-044 (continue the train) — 15/16 exit-0, 0 unresolved, Go+Rust frontiers breached (2026-10-22)
+
+Directive: continue the train (micro-wagon format). Start state: HEAD 7d0f8e5
+(SWEEP-043), binary 89ce3cd9, corpus 14x exit-0 + adexplorer64 32 + pageant 124,
+1 unresolved import (COMCTL32.344).
+
+Work Log:
+- Re-verified baseline at HEAD (single-pass census) before any change.
+- SW-1215: adexplorer64 exit-32 root cause = main-thread headless WM_QUIT path
+  returned 0 WITHOUT filling the guest MSG struct; guest `return (int)
+  msg.wParam` read a stale heap pointer (0x3ad3d20) -> ExitProcess(garbage).
+  Fixed: mw_gui_fill_msg(hwnd=NULL, WM_QUIT, g_quit_code, 0). 32 -> 0.
+- SW-1216: MsgWaitForMultipleObjects traced (pageant loop was invisible);
+  full-timeout honored; INFINITE = 20ms slices.
+- SW-1217: ConnectNamedPipe real state machine (name registry + client attach
+  via CreateFile pipe-path hook in w3_create_file + 535/995 error shapes).
+  Phantom-client storm (256 calls, dozens of threads) -> ONE park.
+- SW-1218: COMCTL32.344 = TaskDialog (Geoff Chappell 6.10 Named Exports, two
+  independent loader-error reports) -> corpus unresolved 1 -> 0.
+- SW-1220: timer-aware pump (BUG-079): gate-bypass no longer fires when a
+  timer is armed; pump waits for the tick and delivers WM_TIMER first.
+  snake 30f / breakout 381f 40->13 bricks / calc 9/9 — ALL golden numbers
+  restored byte-identical 3x3. Falsification proof: breakout was already
+  broken at clean HEAD (BUG-080, pre-existing).
+- SW-1221..1227 Go chain (bombardier Go 1.20.3): LoadLibraryExA delegate;
+  per-thread TEBs with real stack bounds; honest VirtualQuery (stack VMA /
+  image / free); 8 KiB TEBs + TEB-routed Tls family (x64 TlsSlots 0x1480);
+  TEB+0x68 lasterror (Go asmstdcall reads it directly); ConnectEx plane with
+  captured WSAID_CONNECTEX bytes + IOCP associations + WSAGetOverlappedResult;
+  ntdll NtWaitForSingleObject/RtlGetNtVersionNumbers/Power*.
+  Result: usage path exit 2 clean; benchmark loop runs ("Bombarding ... Done!
+  Statistics") exit 0; data path crash left OPEN as SW-1228.
+- SW-1229: Rust fail-fast layer 1 (CreateNamedPipeW, ReadFileEx/WriteFileEx
+  sync v1, ProcThreadAttributeList family). fd.exe advanced to layer 2
+  (12 APIs) = SW-1230 open.
+- Measurement: census x3 deterministic (sweep044_census.sh), 15x exit-0 +
+  pageant 124; ZERO unresolved; G1 PIN sha 71d19afd 12/12
+  (evidence/master/g1/20261021_192040); round trips 7za byte-exact / jq 2 /
+  sqlite 42; snake+breakout+calc acceptances all green.
+
+Stage Summary:
+- Corpus: 15/16 exit-0 (only pageant 124 = honest daemon park remains).
+- Imports: 0 unresolved corpus-wide (first time in project history).
+- Next frontiers: SW-1228 (Go data plane), SW-1230 (Rust layer 2), SW-1219
+  (famous game download, blocked by SW-509), SW-509 (PE-DLL loader).
+
+## SWEEP-045 (5 big trains in parallel) — 5 big trains in parallel (2026-10-22, HEAD 08350c3 → b33ec3f7)
+Directive: (5 big trains at once, continue the 5-way rail) — five BIG trains on one rail.
+Base: origin/main 08350c3 (SWEEP-044). Env-reset reconcile first (workspace
+rolled back to 242af84 for the 5th time; adexplorer64 corpus re-recovered for
+the 5th time, sha-verified one-shot). Baseline rebuilt byte-exact: 71d19afd.
+
+Train 2 (SW-1230) — the round's headline: fd.exe (Rust 1.73 MSVC, fd 9.0.0,
+3.4 MB) went from fail-fast layer 2 to FULL LIFECYCLE:
+- 16 imports landed (12 named by SWEEP-044 + TzSpecificLocalTimeToSystemTime,
+  terminate, _initialize_onexit_table, _register_onexit_function, _set_fmode).
+- The boot blocker was MY OWN first-draft bug pattern: SetThreadStackGuarantee
+  with an invented "<64KiB invalid" gate — Rust std requests 0x5000 (20 KiB)
+  in stack_overflow.rs Handler::new and panics the process when it fails.
+  Real contract: *in = request, *out = previous. (Web source quoted; the
+  gate was deleted before landing.)
+- Three deep engine bugs surfaced one layer at a time, each caught by the
+  guest's own error output: (1) GetFileInformationByHandle hardcoded
+  ARCHIVE attributes — directories never reported DIRECTORY, so Rust
+  fs::metadata().is_dir() was false (fd: "Could not retrieve current
+  directory"); (2) nFileSizeHigh/nFileSizeLow REVERSED in
+  BY_HANDLE_FILE_INFORMATION — an 82-byte file read as 352 GB and Rust's
+  read_to_end preallocation died ("memory allocation of 352187318272 bytes
+  failed" = 0x5200000000, the .gitconfig byte count in the high dword —
+  the diagnostic that cracked it was a HeapAlloc[GIANT] guest-RA trace);
+  (3) spawned guest threads had NO implicit TLS (g_thread_tls[ti][0] NULL)
+  — real Windows copies the module static TLS block per thread; the first
+  draft copied the LIVE main block and inherited main's thread_info pointer
+  (Rust thread_info assertion) → pristine image snapshot is correct.
+- fd acceptance: --version → "fd 9.0.0" exit 0; no-args walk exit 0 with a
+  real sorted listing; 'fd txt' filter exit 0; --help exit 0.
+- Honest revert kept in history: the naked _CxxThrowException caller-RA
+  capture (which let fd's Rust panics really unwind to the Rust personality
+  at Frame[2]) was unwired the same round — the import table is name-only,
+  so mingw guests were captured too and 7za's swallowed-throw contract
+  broke. v2 = DLL-aware EH routing (registered as the SW-1230 note).
+
+Train 3 (SW-509 v1) — real PE-DLL loader, first slice:
+- ssh.exe + libcrypto.dll staged; the EXE import loop disk-loads unknown
+  descriptors; load_pe_dll: map → relocations (DIR64) → imports (513/550
+  against the engine table, honest stubs for the rest) → export directory →
+  DllMain(ATTACH) → the DLL's CRT boots deep into UCRT startup
+  (GetCommandLineA "ssh.exe -V" printed FROM the DLL's init).
+- GetProcAddress: DLL-image handles resolve first (names + ordinals).
+- Two guards learned the hard way: section table = optional-header END
+  (oh+SizeOfOptionalHeader — oh+112 is the data-directory start; the first
+  draft OOB-memcpy'd); *.exe/*.sys descriptors are NOT disk-loaded (procmon64
+  imports its OWN Procmon64.exe — self-load re-ran its CRT and 0→139'd the
+  census; the guard restored 15x exit-0 immediately).
+- V2 frontier (SW-1233): DLL-CRT-in-DllMain — ucrt data imports of the DLL,
+  DLL TLS, __scrt conventions (Signal 11 at libcrypto RVA 0x10312c).
+
+Train 1 (SW-1228) — decode round: the bombardier data-plane crash is in
+Go 1.20 initLongPathSupport's 10.0-build≥15063 branch; the chain
+0x434460→0x434380 (mOS cluster m+0x278..0x2b8) consumes global 0xd477e0
+(BSS-NULL) and the result is used as a GC-bitmap base (+3, OR 0x80).
+Next: pclntab symbolization, then whatever osinit step must initialize it.
+
+Train 5 — bookkeeping: fd.exe staged as the Rust-MSVC representative;
+SW-1232 registered (7za extract 139 — falsification-proven PRE-EXISTING at
+clean 08350c3, create still byte-exact); curl.se's mingw build is fully
+static so SW-791 needs the DLL-linked MSVC build of curl.
+
+Measurement: census x3 16/16 DETERMINISTIC (15x exit-0, pageant 124 park,
+ZERO unresolved corpus-wide, ZERO regressions); G1 PIN 12/12 twice
+(20261021_205933 sha 9910f09c pre-revert, final 20261021_210456
+sha b33ec3f7); round trips jq→2 sqlite3→42 7za-create byte-exact;
+games snake 30f / breakout 381f+13bricks / calc 9/9 — all green.
+
+Lesson kept: each fd.exe layer peeled exactly one engine lie (invented
+API-contract gate → hardcoded struct field → reversed field order →
+missing per-thread TLS init), and the guest's own error strings were the
+oracle at every step. The census caught the two real regressions I
+introduced (procmon64 self-load, 7za CxxThrow capture) and the falsification
+run on clean HEAD correctly exonerated the engine for 7za-extract.
+
+## SWEEP-046 (20 trains) — 20 trains (2026-10-22, binary 848fa108, pushed)
+Directive: (20 trains, continue) — 20 trains. Base: origin/main 3ff438c (SWEEP-045);
+fast-forward (local had 0 unique commits), adexplorer64 corpus re-recovered for
+the 6th time (AdExplorer.zip sha 56536bff byte-exact, exe e4512878 pinned),
+baseline rebuilt byte-exact b33ec3f7, census x3 green.
+
+Train 1 — SW-1233 DLL-CRT-in-DllMain (ssh.exe + libcrypto.dll 1.9 MB):
+Five engine root causes, each decoded off the guest's own behavior:
+1. TEB/GS ordering: setup_teb_peb() ran AFTER load_pe(), but the EXE import
+   loop INSIDE load_pe() disk-loads DLLs and runs their DllMain — the first
+   guest gs:[0x10] probe (libcrypto _chkstk RVA 0x10312c) faulted with GS=0.
+   Real Windows builds the TEB before any import resolves. FIX: TEB/PEB
+   before load_pe + PEB.ImageBaseAddress refresh after.
+2. mw_dll_export: export-directory arrays read TWO slots off
+   (ed[9]/ed[10]/ed[11]; also exp_base=ed[8], nfuncs/nnames off-by-one).
+   Correct IMAGE_EXPORT_DIRECTORY as uint32 words: ed[4]=Base ed[5]=nfuncs
+   ed[6]=nnames ed[7]=AddressOfFunctions ed[8]=AddressOfNames
+   ed[9]=AddressOfNameOrdinals (byte-verified vs libcrypto: aof=0x194f78
+   aon=0x198978 aoo=0x19c378, base=1, 3712/3712). The old crash: libc
+   __strcmp_evex on a wild pointer (RDI=b+0x1F001E). Never exercised before
+   because DllMain crashed first (the "513/550" was the DLL's OWN imports).
+3. GetModuleFileNameW/A returned Unix paths — UCRT _wpgmptr init does
+   wcschr(path,'\\') + byte-terminate (ssh.exe RVA 0x411bb): NULL-store crash.
+   FIX: win32_module_path() — C:\-prefixed backslash form (./ stripped).
+4. Windows BASE environment absent — Win32-OpenSSH w32fd.c init_prog_paths
+   (CRT static initializer, BEFORE main) fail-fasts "couldn't find ProgramData
+   environment variable" (w32fd.c:217) -> ExitProcess(255) pre-main, zero
+   stdio calls. Decoded via the ExitProcess exit-scan (RVA chain ->
+   _invalid_parameter-style helper with file/line/expr strings). FIX:
+   g_win_base_env (ProgramData/SystemRoot/windir/PATH/ComSpec/PUBLIC/
+   PROCESSOR_* from host /proc/cpuinfo, NUMBER_OF_PROCESSORS from sysconf)
+   merged ahead of host environ; GetEnvironmentVariableA/W + the W block
+   share mw_env_lookup_a.
+5. w32posix init chain: CreateWaitableTimerA/W (ssh imports the A-form),
+   CancelWaitableTimer, QueueUserAPC (w32posix checks the BOOL; parked-v1,
+   honest) landed. "failed to initialize w32posix wrapper" no longer blocks
+   the boot path.
+RESULT: ssh.exe -V exit 0 x3 DETERMINISTIC (was instant pre-main fail-fast).
+Frontier (documented): w32posix fd-monitor thread select emulation + the
+OpenSSH version banner still pending; LoadLibraryW(L"a") probe = handled
+harmlessly by the engine exactly like real Windows (NULL + lasterror).
+
+Train 2 — SW-509 v2 + SW-1230v2 DLL-aware EH routing:
+- mw_dll_image_for_pc / mw_img_base_for_pc / seh_lookup_rf_for_pc: the
+  dispatcher walks frames inside LOADED DLL images (MwDllImage now records
+  .pdata rva/count from dir[3] at load). seh_internal_virtual_unwind +
+  seh_total_prologue_alloc are image-base threaded (vw_img_base from the
+  control PC).
+- mw_cxx_throw_dll: naked _CxxThrowException twin (same slot geometry as the
+  proven mw_RaiseException asm, BUG-031 volatile capture) GATED to throws
+  whose caller lives in a DLL image — EXE throws keep the v1 swallow
+  (mingw/7za contract intact; fd.exe full lifecycle intact). 7z.dll throw
+  trace: Frame[0] RIP in the DLL, RF found in the DLL's own pdata.
+- 7z.exe (full 7-Zip 25.01 + 7z.dll): usage banner exit 0 — the PE-DLL
+  loader's motivating case works end-to-end through the DLL's DllMain CRT.
+- Frontier: `7z i`/`7z a` — the throw chain reaches the guest's own
+  (statically-linked) FH4 in the main image, which returns
+  ExceptionContinueExecution at Frame[8] -> honest int3. Needs the
+  FH4-funcinfo depth SW-1201 gave winmergeu. Registered as the SW-1230v2 tail.
+
+Train 3 — SW-1232 SOLVED (see worklist; the one-line CreateSemaphoreW fix
+restored byte-exact create+extract of a 1.3 MB payload).
+
+Bookkeeping trains: adexplorer64 corpus recovery #6 (sha-pinned); census x3;
+G1 pin x2; round trips; games battery; 4 trivial -Waddress/-Wcomment fixes
+(SW-1093: 97 -Wformat sites left, recorded as the dedicated ticket);
+temporary round diagnostics removed before landing.
+
+MEASUREMENT (final binary 848fa108da262351429caca7d5cf7244c65e75b1a9e02a9409d89ab6aa15a045):
+- census x3 16/16 DETERMINISTIC: 15x exit-0, pageant 124 park, ZERO
+  unresolved corpus-wide, ZERO regressions (evidence/sweep046/census.tsv)
+- G1 PIN 12/12 (evidence/master/g1/20261022_032424)
+- round trips: jq '.a[1]'->2, sqlite3 6*7->42, zstd OK, lz4 OK,
+  7za create+extract byte-exact x3 (evidence/sweep046/7za_roundtrip.txt)
+- games: snake 30f byte-identical 3x3, breakout 381f + 13 bricks, calc 9/9
+- no force-push; fast-forward base, single-round increment
+
+## SWEEP-047 (continue the train) — 20 trains (2026-10-22, binary 3dbc56d5, pushed)
+Directive: (continue the train) — standing 20-train mandate. Base: origin/main a418e5c
+(SWEEP-046); fast-forward, baseline rebuilt byte-exact 848fa108, adexplorer64
+corpus recovery #7 (sha-pinned). 16 NEW x64 guests staged (Sysinternals set +
+curl 8.23.0 mingw with libcurl-x64.dll) — each guest = a train.
+
+Train 1 — SW-791 curl --version exit 0: three root causes decoded off the
+guest's own behavior (UCRT 3-import tail; SSPI InitSecurityInterfaceA NULL ->
+real 28-slot wine-layout SecurityFunctionTableA with NTLM typed model; and
+the BUG-035 TWIN: glibc bsearch invoked curl's ms_abi comparator SysV-style
+— crash mov (%rcx),%rcx with RCX=0x61 from a qsort-comparator for a
+char** table — fixed with the qsort_r bridge pattern). Full real version
+banner: "curl 8.23.0 ... LibreSSL/4.3.3 ... HTTP3". Tail: HTTP thrdpool
+resolver starvation (socket plane real, WSAStartup ran, getaddrinfo wired).
+
+Train 2 — SW-1234 drive-path mapping: the (null) v(null) shared banner class
+root-caused to the "X:\..." mapping landing at host-root; now maps to the
+loader process cwd on THREE surfaces (normalize/CreateFile plane, CRT
+fopen/_wfopen plane, w_ver_read_from_file). Zero corpus regressions.
+
+Train 3 — SW-1235 version plane: VerQueryValueA now transcodes UTF-16 ->
+ANSI (guest %s read 1 char), binary pass-through fixed (Translation),
+16-slot pointer ring (all-queries-aliased-one-buffer bug caught because the
+guest saves five pointers then prints). Real "Whois v1.21" banner.
+
+Train 4 — SW-1236 gate batch: GetComputerNameExA/W, LogonUserA/W (1326),
+FindFirstFileExA, FillConsoleOutputCharacterA, WNetAdd/CancelConnection2A/W.
+
+Train 5 — SW-1237 real DNS: gethostbyname delegates to host getaddrinfo,
+winsock hostent built; whois64 resolved 3 real hosts (2+1+2 addrs). Tail:
+post-DNS socket stall.
+
+Trains 6-15 — corpus: listdlls64/pipelist64/psloggedon64 = NEW full
+lifecycles (exit 0 x3, zero staging); psinfo64 real EULA text; trurl real
+error path; usage/EULA paths real for du/strings/sdelete/psservice;
+frontiers registered SW-1238 (accesschk64 16-import ACL/LSA surface),
+SW-1239 (pslist64 PDH perf-counter), SW-1240 (logonsessions64 LSA),
+SW-1241 (autologon64 Winlogon), SW-1242 (handle64 139).
+
+MEASUREMENT (final 3dbc56d53bcf...): census x3 31 programs DETERMINISTIC
+(15x exit-0 + pageant 124 corpus, ZERO unresolved, ZERO regressions);
+G1 PIN 12/12 (20261022_050538); round trips jq 2 / sqlite 42 / zstd / lz4 /
+7za create+extract BYTE-EXACT; games snake 30f + breakout 381f/13bricks +
+calc 15/15; ssh -V falsified-unchanged vs HEAD (same message + exit 0);
+fd 9.0.0 intact. Lesson kept: the census caught nothing this round either
+— every fix is forward motion; the regression net (7za/jq/sqlite/G1/games)
+covered the engine-wide path-mapping change (SW-1234 was the riskiest).
+
+## SWEEP-048 (four graphics trains) (2026-10-22) — four GUI trains
+
+Directive: test four GUI programs — ODF viewer, Windows calculator, a
+Windows-only program (free choice), an XP game. Start state: origin/main =
+bf0b9c9 (SWEEP-047), env had rolled back to 242af84 again (4th time);
+reconciled via reset --hard, baseline binary sha 3dbc56d5 reproduced.
+
+Payload sourcing: XP Pro x64 SP2 OEM ISO (crmpxoem-en) + XP SP3 x86 ISO
+(x14-80428) from archive.org via a 6-stream ranged downloader
+(scripts/sweep048_iso_dl.py, 617MB in 59s); pycdlib for i386/AMD64 listing;
+.EX_ expansion done BY THE ENGINE's own 7za (9/10; CARDS.DL_ = SW-1243).
+Everything x64 from voidtools; LibreOffice 26.8.1 x64 MSI from
+documentfoundation (375MB), CAB carved with olefile, expanded via the engine
+(19,427 files) after SW-1244.
+
+Engine work (all in src/loader/loader.c):
+1. SW-1244 handle table 64→8192 + CloseHandle w3-slot recycling — the 7za
+   63-file wall broken (811 errors → 0; 874/874). MINWIN_HEAP_TRAP=warn diag.
+2. SW-1245 case-insensitive disk DLL search (mw_dir_casefind) — MFC42U.DLL
+   now found despite case mismatch.
+3. SW-1246 crash_handler out-of-PE walker bounds — handler no longer dies on
+   garbage RBP frames (mspaint's libc crash exposed it).
+4. SW-1247 MFC42U x64 as real PE-DLL for mspaint + the whole msvcrt gap
+   (_ltow..fputws) + gdi32/user32/kernel32 tail + __argc/__wargv data plane.
+   mspaint: 633 unresolved → 0; crash 139 → abort-at-AfxInit 134.
+5. SW-1250 load_pe_dll recursive dep disk-load + msvcp140/vcruntime140 de-
+   pseudo'd — LibreOffice import forest 2,862 → 0 unresolved (mergedlo 50,142
+   export names = largest DLL ever loaded).
+6. SW-1251 UCRT tail (31 entries: stdio/locale/math/runtime/string).
+
+Four-train scoreboard (census x3 deterministic, artifacts/sweep048/census/):
+- calc.exe (XP x64 5.2.3790): exit 0; dialog cdit=30 resolved; scripted clicks
+  delivered as WM_COMMAND into the guest's own wndproc.
+- winmine.exe (XP x64): exit 0, ZERO stub calls, 3 MessageBox dialogs rendered
+  (messagebox_1..3.bmp) + GDI frame (frame_001.bmp) — evidence/sweep048/.
+- everything.exe x64: message-loop park 124 (honest GUI app behavior).
+- soffice.bin x64: SW-1252 frontier (msvcp140 DllMain zeroes 8 bytes of own
+  .text at RVA 0x1110; .text verified image==file pre-DllMain).
+- mspaint/mshearts: SW-1247-open (MFC AfxInit "corrupted top size" with 100%
+  import resolution).
+- spider/freecell/notepad/pinball: exit 0 (pinball = DirectDraw-era typed
+  stub plane, 200 stub calls, no crash).
+
+Gates: G1 PIN 12/12 (sha dce5784c), corpus census x3 15/15 deterministic ZERO
+regressions, batteries snake 30f byte-identical / calc 9/9 + 15/15 / breakout
+381f-13bricks / BUG-054b 3/3 — ALL GREEN on the final binary. Evidence:
+evidence/sweep048/ (README + provenance shas + screenshots + census). ASan
+diagnostic build attempted (blocked by guest-base/shadow-gap collision +
+RBP-asm — noted in SW-1249 notes).
+
+## SWEEP-049 (2026-10-22) (continue with real programs) — five wagons, one root cause, three programs resurrected
+
+User directive: (continue, great, this way is better — with real programs) — continue
+with REAL programs. Reconciled first: local was 20 behind origin/main (remote
+chain SWEEP-031..048 incl. the four-GUI-train round); ff-pulled to 13969d7;
+verified binary reproducibility dce5784c byte-exact vs SWEEP-048 provenance.
+
+Payload re-staging (the gitignored stage dir was wiped between rounds):
+XP Pro x64 SP2 OEM ISO re-downloaded via the 6-stream ranged downloader
+(628,617,216B, sha 19b5a382... EXACT provenance match), pycdlib 2.x keyword
+API adaptation, 23 payloads expanded BY THE ENGINE's own 7za (the round
+doubles as a 7za-under-miniwin exercise; 7z.exe 25.01 dies with 124 stubs —
+samples/real/7za.exe 26.04 is the honest corpus entry). LO 26.8.1 MSI +
+Everything 1.4.1.1028 zip fetched for SWEEP-050 staging.
+
+Wagon chain (each unlocked the next):
+1. SW-1253 KUSER_SHARED_DATA page — winver 139→0 (first-block
+   mov rax,[0x7ffe02c8] unmapped; RW-fill-then-seal, qpc 1e9 matches mw_QPF).
+2. SW-1254 raw ordinals vs real disk-DLL exports — mspaint's 613 MFC42U
+   ordinals never bound (SWEEP-048 "0 unresolved" was an early-death
+   artifact: the process died in mfc42u DllMain BEFORE the MFC import
+   descriptor was processed — single "Import DLL" line in the trace proves
+   it). Static ordinal map stays as fallback for system DLLs.
+3. SW-1255 GetDeviceCaps HORZSIZE/VERTSIZE — 0 → idiv-by-zero SIGFPE in
+   mspaint RVA 0x35e8e; now real mm math (169/127 @ 640x480 96dpi).
+4. SW-1256 window-tree honesty — the ancestral single-handle model
+   (every top-level window = MW_GUI_HWND; GetTopWindow always non-NULL;
+   GetWindow always NULL) made MFC's GetDescendantWindow self-loop
+   (104,715 x GetDlgItem(0xE900) = exact 8MB/0x50 stack division). Nested
+   window creation now mints distinct registered identities; GW_* relations
+   are registry-backed and honest (empty = NULL).
+5. SW-1257 end-placed heap guard → caught mw___dllonexit writing 1 byte
+   past a FULL 256-byte onexit table = THE SW-1247 'corrupted top size'
+   writer. Fixed with the real CRT contract (realloc-grow + append +
+   reseat begin/end) through mw_realloc for guard-registry consistency.
+   v1 guard's page slack had been ABSORBING this overflow (guard-mode
+   mspaint exited 0 with the writer uncaught) — end-placement is the
+   diagnostic that works.
+
+Measurement (binary a29ca1e7): census x3 DETERMINISTIC over 29 guests —
+DL corpus 14x exit-0 + pageant 124 (ZERO regressions vs SWEEP-048), new
+guests mspaint 134→0, mshearts 139→0, winver 139→0, plus charmap/clipbrd/
+write/sol/taskmgr/regedit/sndvol32 exit-0 (small unresolved tails remain,
+honest), net rc=2 / ping rc=1 (honest usage errors), wordpad 139 (SW-1258),
+drwtsn32 139 (SW-1259); G1 PIN 12/12 (evidence/master/g1/20261022_144016);
+calc battery 15/15. evidence/sweep049/ (census.tsv + expand_log.tsv +
+provenance_sha256.txt + mspaint trace + 2 rendered messageboxes). No
+force-push. Open: SW-1258/1259 decode, tails, SW-1252 (LO staged),
+SW-1243 (needs x86 SP3 ISO), Everything full lifecycle.
+
+## SWEEP-050 (2026-10-22) (train with real programs) — five trains, two root causes, everything resurrected
+
+User directive: (continue, great, this way is better — with real programs) + «continue-continue».
+Reconciled first: local was 20 commits behind (origin advanced 242af84 -> 4aab7be,
+SWEEP-031..049 incl. the four-GUI-train rounds); pure ff-merge, binary reproduced
+byte-exact (a29ca1e7 = SWEEP-049 provenance). Payload re-staging: XP Pro x64 SP2
+OEM ISO (628,617,216B, sha 19b5a382 EXACT), LibreOffice 26.8.1.1 x64 MSI
+(374,870,016B, sha c6298b10 EXACT), Everything 1.4.1.1028 x64 zip (sha 4f4a9b92
+EXACT) — all sha-pinned vs evidence/sweep049. 23 XP payloads extracted (pycdlib)
+and expanded BY THE ENGINE's own 7za (21 rc=0).
+
+Train 1 — Everything 1.4.1 (SWEEP-048 park-124 -> exit 0): 25-import tail honest
++ SHELL32.16 = ILFindLastID (wine shell32.spec 4.72). Live pump -> budget exit 0 x3.
+Train 2 — wordpad (SW-1258 139 -> exit 0): three-layer decode — RICHED20 disk-DLL
+16-name surface, SHLWAPI.231 ZoneCheckUrlExW stub-0 -> virtual-call NULL deref
+(MINWIN_VTBL_DUMP diagnostic added), and the WM_CREATE=-1 contract (CreateWindowEx
+W/A now return NULL on base AND nested paths; MFC InitInstance=FALSE -> exit(0)).
+Train 3 — mshearts (139 -> exit 0): real hMenu contract — top-level
+CreateWindowExW attaches the guest menu (GetMenu==NULL crashed EnableMenuItem at
+RVA 0x9d5f). SWEEP-049's "mshearts exit-0" was measured under MW_GUI_EVENTS=0
+(no WM_CREATE delivery at all); the events=1 census exposed the gap.
+Train 4 — drwtsn32 (SW-1259 139 -> exit 0): ONE ROOT CAUSE = LoadResource returns
+the DATA POINTER on real Windows (LockResource = documented no-op); the engine
+returned the DATA_ENTRY VA so drwtsn32's RT_STRING walker read the entry header
+as string lengths (SIGSEGV RVA 0x5cb3, fault 0x41f932 > image end). Fixed
+LoadResource + LockResource identity (v2 heuristic "first u32 < image_size"
+misfired on 'BM' bitmap data — caught and removed same round).
+Train 5 — residual tails (~180 names, three waves): real implementations
+(LineDDA Bresenham + guest callback, IsTextUnicode, wcstok/_wmakepath/swscanf/
+sscanf, Rtl string plane, Net* workgroup-empty, GetFileTitleW, FoldStringW,
+DllGetVersion 5.82, GetCalendarInfoW, GetRegionData); honest-miss families
+(winmm no-hardware, DDEML no-server, NDDEAPI empty DB per wine nddeapi.spec
+500-512, setupapi, ICMP, ole32 storage). Ordinals from shipped wine specs:
+SHELL32.16/61/100, SHLWAPI.231/413/437, COMCTL32.2/8. KNOWN-UNKNOWN stays
+(Rule 1): NDDEAPI.609-612, SHELL32.236/241/245. SW-1250 section-verify made
+reloc-aware (riched20 sec1 false positive killed; the SW-1252 msvcp140 .text
+zeroing signal survives).
+
+Measurement (binary c1d45aac): census x3 ALL DETERMINISTIC over 19 SWEEP-050
+guests — everything/mspaint/mshearts/wordpad/drwtsn32/calc/winmine/notepad/
+write/winver/sol/freecell/charmap/clipbrd/sndvol32/taskmgr/regedt32 exit-0,
+net rc=2 + ping rc=1 honest usage; ZERO stub calls; DL corpus 14x exit-0 +
+pageant 124 ZERO regressions; G1 PIN 12/12 (evidence/master/g1/20261022_170026);
+calc battery 15/15. evidence/sweep050/ (census.tsv + expand_log.tsv +
+payloads_sha256.txt + wordpad/drwtsn32/everything traces). No force-push.
+Open: SW-1260 wordpad OnCreate -1 producer, SW-1261 soffice decode (LO MSI
+staged), Everything UI interaction.
+
+## SWEEP-051 (2026-10-22) — (train with real programs) Train: LibreOffice SW-1261 stage 1
+
+The user-mandated four real-graphical-program wagons: calc ✓ (battery 15/15),
+Windows-only Everything ✓ (exit-0, SWEEP-050), XP games ✓ (mshearts/winmine/
+sol/freecell exit-0), and the ODF display program = **this round's train**.
+
+- Payload: LO 26.8.1.1 x64 MSI (c6298b10, staged SWEEP-050) -> largest OLE
+  stream = MS-CAB **LZX** (typeComp 0x1503; the +4-shifted CFHEADER has
+  cFolders@0x1a, cFiles@0x1c=19427, flags=4, 128-byte MSI reserve, and
+  0xb0=176 at 0x10 = CFFOLDER byte offset). No cabextract/7z x64 available
+  and no root: **built libmspack from source** (gcc, no autotools needed for
+  the mspack core) + a 40-line extractor (scripts/sweep051_lo_extract.c) ->
+  19427/19427 files, 0 failures.
+- Guest staging: soffice.bin (2.7MB, 51 static imports) + sal3 + mergedlo
+  (151MB) + 54 more DLLs; MSI underscore-vs-hyphen renames handled
+  (orcus_parser->orcus-parser, libcrypto_3->libcrypto-3, libssl_3,
+  libxmlsec_mscng); VC runtime from the MSI's own amd64 payloads.
+- SIX root causes landed (instruments, not guesses): 4-arg
+  _get_stream_buffer_pointers (wine spec L380; the v1 8-arg stub zeroed
+  msvcp140 .text at its own return address — ptrace DR0 watchpoint made the
+  writer's RIP undeniable); disk-DLL static TLS plane (sal3 0x6D654);
+  MW_DLL_MAX 128 + early registration (re-entrancy dedupe); alloc registry
+  512K (HEAP-TRAP exit(4) killed mergedlo's init wave); DLL .pdata cap 4M
+  (mergedlo 756,578 entries — FH4 unwinding through mergedlo now works);
+  TlsAlloc static-TLS collision (cppu3 0x13fc5).
+- MEASURED binary **0d3b46b9**: soffice.bin x3 deterministic rc=99 / 10 stubs
+  — 57 DLLs mapped once each, msvcp140/sal3/mergedlo CRT init survive,
+  CreateWindowExW -> HWND 0x10001 + WM_CREATE, guest C++ throw unwinds via
+  REAL vcruntime140_1 __CxxFrameHandler4 through DLL frames to the UCRT
+  _seh_filter_exe -> _exit(0xE06D7363). Frontier SW-1262 = cross-DLL C++
+  catch-type matching (uno::Exception catch in mergedlo).
+- Gates: G1 PIN 12/12 (evidence/master/g1/20261022_184613); calc battery
+  15/15; census x3 zero regressions (19 SWEEP-050 guests byte-identical; DL
+  corpus = HEAD — autoruns64/zoomit64 139 A/B-verified pre-existing at
+  c1d45aac, not a SWEEP-051 regression).
+- Engine diagnostics added (env-gated): MINWIN_DLL_VERIFY (full reloc-aware
+  section verify), MINWIN_DLL_TRACE (memcpy/[SBPTR]/[WCSDUP] logs), [DLLSLOT]
+  crash-dump attribution; ptrace watchpoint tracer scripts/sweep051_watch.c.
+- evidence/sweep051/ (README with the full decode chain, milestones,
+  payloads_sha256, watchpoint hits, rc4/rc99 stderr); no force-push.
+
+## SWEEP-051 Train 2 — SW-1261b winmine INTERACTION battery (9/9)
+
+- New engine channel: MINWIN_MOUSE="x,y;x,y;..." — coordinate WM_LBUTTONDOWN/
+  WM_LBUTTONUP pairs paced through the GUI pump (the id-based MINWIN_CLICKS
+  cannot drive custom-drawn boards). Label-phase fix included.
+- winmine (XP Minesweeper) x3: click at (24,64) delivered as a DOWN/UP pair ->
+  the guest's own WndProc arms SetTimer(id=1,1000ms) (the real game-clock
+  contract: the clock starts on the first left click) and repaints the board
+  (88-110 16x16 BitBlts); exit 0, zero crashes. 9/9 (3 checks x 3 runs).
+- G1 PIN 12/12 re-pinned on binary 0402f7de (evidence/master/g1/20261022_185323).
+
+## SWEEP-052 Train 1 — SW-1262 cross-DLL C++ catch matching LANDED
+
+- Inherited frontier: soffice rc=99, "mergedlo catch handlers do not claim
+  the cppuhelper3msc throw". Decoded with three instruments built this train:
+  (a) disk ThrowInfo4/CatchableTypeArray decoder (scripts/sweep052_eh_decode.py),
+  (b) [CXEH] dispatch-time FH4 throw decoder in the engine (throw image,
+  catchable type names, uno::Exception Message UTF-16 dump, object RTTI
+  probe), (c) DR0 hardware-watchpoint runs (scripts/mw_watch).
+- FH4 throw record disassembly (guest's REAL vcruntime140/_CxxThrowException
+  RVA 0x5230): EI[3] = RtlPcToFileHeader(ThrowInfo) = throwing image base;
+  EI[0]=0x1994000 only when that lookup FAILS; ThrowInfo4 = image-relative
+  DWORD RVAs in both cases. __CxxFrameHandler4 prologue confirmed:
+  FuncInfo4 = dc->ImageBase + *(DWORD*)dc->HandlerData.
+- ROOT CAUSE #1: engine RtlPcToFileHeader v1 = EXE-only. Fixed via
+  mw_module_of (guest-DLL registry). MEASURED: mergedlo's FH4 handler now
+  CLAIMS the DeploymentException throw and RtlUnwindEx unwinds to the
+  mergedlo catch landing pad — cross-DLL catch(uno::Exception&) matching
+  works end to end.
+- ROOT CAUSE #2: AccessCheck v1 = unconditional FALSE; sal3's pre-open gate
+  (GetNamedSecurityInfoW -> DuplicateToken -> AccessCheck) then denied
+  uno.ini/services.rdb. Fixed: AccessCheck v2 real DACL semantics (NULL-DACL
+  grant-all per Windows contract, DENIED-then-ALLOWED ACE walk, session
+  user+Administrators SIDs, generic->file mapping), DuplicateTokenEx v2 real
+  handle duplication, DuplicateToken (3-arg) table entry. SW-1261 staging
+  gap closed: uno.ini/fundamental.ini/types.rdb/services.rdb staged.
+- MEASURED binary 69a015b9: soffice x3 deterministic rc=99 stub 8 (was 10;
+  the -2 = DuplicateToken now resolved); regression census ZERO deltas vs
+  SWEEP-051 baseline (procexp64 124 IS its baseline); G1 PIN 12/12
+  (evidence/master/g1/20261022_195936); calc battery unchanged.
+- NEW FRONTIER registered SW-1263: sal3's osl_openFile receives truncated
+  directory prefixes of the services.rdb path; cut point moves with allocator
+  layout (heap-guard A/B moves it to '...sweep051\gu') = corrupt rtl_uString
+  length/header in the bootstrap string chain. GetModuleFileNameW verified
+  clean; corruption is downstream (allocator interaction class).
+- evidence/sweep052/ (README decode chain, cxeh_decode.log, catch_claimed.txt,
+  regression.tsv); worklist SW-1262 marked + SW-1263 registered; no force-push.
+
+## SWEEP-052 Train 2 — SW-1263 root cause #3: per-module handle contract
+
+- The DR0 watchpoint data from Train 1 pointed at a corrupted rtl_uString
+  flowing into sal3's URL->system-path conversion. Cross-checked the guest's
+  own provenance chain: GetModuleHandleExW(flags=6 = FROM_ADDRESS|UNCHANGED_
+  REFCOUNT) appeared in the trace immediately before the poisoned
+  GetModuleFileNameW reads.
+- ROOT CAUSE #3: mw_GetModuleHandleExW v1 answered FROM_ADDRESS with the EXE
+  base unconditionally, and mw_GetModuleFileNameW v1 ignored the handle
+  entirely (EXE path for EVERY module query). Real Windows returns the module
+  containing the address and that module's path. The UNO bootstrap derives
+  per-module install dirs through exactly this pair.
+- Fix: FROM_ADDRESS -> mw_module_of(address) over the guest-DLL registry;
+  GetModuleFileNameW -> MwDllImage.path for guest-DLL handles (C:\-form), EXE
+  fallback unchanged.
+- MEASURED binary 565b0803 (G1 PIN 12/12, evidence/master/g1/20261022_203645):
+  FROM_ADDRESS answers cppuhelper3msc.dll / mergedlo.dll; per-module paths
+  exact (mergedlo.dll u16len=49, cppuhelper3MSC.dll u16len=55); bootstrap
+  file-I/O volume 63 -> 186 CreateFileW per run; soffice still rc=99 x-class
+  ('Cannot obtain UNO_SERVICES') with the truncated rtl_uString now
+  constructed downstream of the fixed queries (cut at 14/22/23 chars —
+  allocator/length-header class, SW-1263 continues).
+- Regression: calc/winmine/mspaint x1 exit-0 zero-stubs after the change.
+- evidence/sweep052/train2_decode.log + train2_opens.tsv; no force-push.
+
+## SWEEP-052 Train 3 — SW-1261b Everything 1.4.1 INTERACTION battery 9/9
+
+- Everything (the Windows-exclusive NTFS instant-search program; no Linux
+  equivalent) now driven through the coordinate-mouse channel built for
+  winmine: MINWIN_MOUSE="400,20;400,100" delivers WM_LBUTTONDOWN/UP pairs
+  into the search-box and listview coordinates through the live GUI pump.
+- The guest's own WndProc REACTS like real Everything: WM_PAINT dispatched
+  directly after the search-box click, then the WM_TIMER pump continues
+  (195 dispatches per run), then a clean budget exit.
+- Battery (scripts/sweep052_everything_battery.sh): 3 runs x 3 checks =
+  A both click pairs delivered, B paint reaction + timer pump alive,
+  C exit 0 no [CRASH] -> 9/9 PASS deterministic
+  (evidence/sweep052/everything_battery_9of9.log).
+- Note: the pump budget is the census baseline (MW_GUI_EVENTS_BUDGET=200);
+  at 300 the app outlives a 60s timeout (it is a long-running indexer), so
+  the battery pins the deterministic census profile.
+
+## SWEEP-052 batch close — gates
+
+- calc battery 15/15 (scripts/sweep023_calc_battery.sh) on the SWEEP-052
+  binary 565b0803.
+- Four-program mandate state after SWEEP-052: (1) ODF display = LibreOffice
+  bootstrap advanced two root causes deep (SW-1262 LANDED: cross-DLL catch
+  matching works; SW-1263 root cause #3 landed, allocator-class truncation
+  frontier continues); (2) Windows calculator = calc battery 15/15; (3)
+  Windows-exclusive = Everything exit-0 + NEW interaction battery 9/9
+  (SW-1261b LANDED); (4) XP game = winmine interaction battery 9/9
+  (SWEEP-051, unchanged this sweep).
+- Census snapshot (evidence/sweep052/regression.tsv): ZERO deltas vs the
+  SWEEP-051 baseline across 15 guests x3 (soffice stub 10 -> 8 is the
+  DuplicateToken fix, the only intended delta).
+- G1 PINs: 69a015b9 (Train 1), 565b0803 (Train 2/3) both 12/12.
+- Open cars: SW-1263 (soffice rtl_uString truncation -> services.rdb ->
+  VCL pump), SW-1260 (wordpad LoadStringW(61443) resource work), SW-1247-
+  residual per-guest import tails (clipbrd 49 / charmap 9 / sndvol32 5 /
+  sol 3 / net 4).
+
+## SWEEP-053 — real-program SCREENSHOTS batch (SW-1264/1265/1266/1266b)
+
+- Mandate: (continue: also show screenshots of the programs running) — make the
+  four-program targets VISIBLE. Corpus re-staged from pins (XP ISO
+  19b5a382, LO MSI c6298b10 -> CAB 71dfff0b -> 19427/19427, soffice.bin
+  cb08cffd / mergedlo.dll 017d0c21 byte-exact); staging gaps fixed
+  (mfc42u beside mspaint/mshearts/wordpad — the MFC ordinal imports crash
+  the guests without it; riched20 beside wordpad; cards beside the card
+  games).
+- SW-1264: engine-internal resource consumers (mw_dlg_from_resource,
+  mw_loadimage_bitmap_dib) read the IMAGE_RESOURCE_DATA_ENTRY header as
+  the resource data (LockResource identity vs LoadResource conversion —
+  SW-1259 contract honored only on the guest path). XP calc's dialog
+  template 0x66 was unreadable -> zero children. Fix: entry -> data
+  conversion. MEASURED: cdit=30, 30 children with template rects.
+- SW-1265: real LoadStringW/A (RT_STRING blocks). calc's 86 label loads
+  resolve.
+- SW-1266: per-window subclass chain (engine defproc answer for
+  GetWindowLongPtrW(GWLP_WNDPROC), per-window store, SendMessageW routing,
+  UpdateWindow child-paint delivery + standard-control compositor,
+  template-sized grow-only surface, SW-1266b MoveWindow/SetWindowPos
+  grow). MEASURED: **XP calc renders (338x258, 30 controls, real face)**;
+  winmine board + 3 Win95 dialogs; Everything 778x605; freecell 640x480
+  card blits.
+- Gates: G1 12/12 (20261022_215001); census zero deltas vs SWEEP-052
+  (11 XP guests x2 + everything + soffice; soffice rc=99 stub 8 = its
+  baseline). Binary 4e6e4a44. Screenshots: evidence/sweep053/shots_png/.
+- New cars: SW-1267 (sol/mshearts surface sizing order), SW-1268
+  (Everything content paint via fake index); SW-1263 (soffice rtl_uString
+  truncation) remains the ODF frontier.
+
+---
+
+## SWEEP-054 (2026-10-23) — (10 famous programs and 5 famous old 2D games) + screenshots
+
+Reconcile: origin/main 0f7bd36 (SWEEP-053) fast-forwarded before work (user
+rule #1: GitHub first, verify pushes). Local stale loader rebuilt to the
+byte-exact SWEEP-053 pin 4e6e4a44 first — the stale Oct-21 binary was
+masking SW-1264/65/66 (15-guest census went 139-crash -> all-exit-0 after
+rebuild: staging was never the problem).
+
+Payload re-staging: XP x64 ISO 19b5a382 (628 MB, byte-verified) -> 26/29
+payloads (NEW: SPIDER.EX_ 268 KB) -> 22/22 expanded rc=0 via engine 7za;
+Everything zip 4f4a9b92 verified; LibreOffice archive URL 404 (SW-1273).
+
+Engine wagons (all trace/disassembly-root-caused):
+- SW-1269(+b) ShowWindow first-show WM_PAINT + SW_MAXIMIZE 1024x768 surface
+  grow — spider white-screen root cause (pump "no event source" quit).
+- SW-1270 posted-message queue (PostMessage A/W) — spider's own WM_COMMAND
+  deal action was dropped headlessly; now delivered first, real priority.
+- SW-1271 REAL accelerators — spider disassembly 0x10000bebf:
+  `test rbx,hAccel; je loop` skips Translate/Dispatch for main-window
+  messages when hAccel==NULL; RT_ACCELERATOR 16 entries now load for real
+  and TranslateAcceleratorW translates + sends WM_COMMAND. Pre-landing
+  regression (MAKEINTRESOURCE '%s' trace SEGV) caught via ProduKey/cports
+  0->139, bisected, IS_INTRESOURCE-guarded.
+- SW-1272(+b) BitBlt-into-window-surface frame capture + FRAME_EVERY
+  throttle (8.6 GB first capture filled the disk).
+- SW-1274 REAL timeGetTime — deal-animation clock froze at 0.
+
+MEASURED: XP spider renders REAL CARDS (5♥ 2♦ 10♣ + spider deck), deal
+completes rc=0 — first spider render ever; winmine 82 frames with
+mouse-revealed cells; mspaint fixed by SW-1269; 15 screenshots in
+evidence/sweep054/shots_png/; census 15 guests x3 45/45 exit-0 ZERO stubs;
+DL corpus 45/45 deterministic; G1 PIN 12/12
+(evidence/master/g1/20261023_030335, binary 09c33df201af8ade).
+Open: SW-1275 spider brush/card-face, SW-1273 LO mirror, SW-1206 corpus.
+
+
+## SWEEP-055 (2026-10-23) — (continue) SW-1275 spider board + SW-1273 LO mirror + SW-1206 corpus
+
+Rule #1 (user standing law): git fetch first — origin/main = c59811a (SWEEP-054)
+= local HEAD; worked on the true tip; tree had only untracked artifacts.
+
+- **SW-1275 LANDED — XP SPIDER RENDERS THE FULL GREEN BOARD (first ever).
+  Three engine root causes, all disassembly-decoded**:
+  1. OS/2 BITMAPCOREHEADER DIBs: 29 of spider's 56 RT_BITMAPs (CARD2/12/13/24,
+     71x96, 1/4bpp) carry the 12-byte core header — the v1 "hdr_size >= 40"
+     INFOHEADER gate rejected them all -> 16x16 placeholders -> SelectObject
+     of an IMAGE-space handle -> board-DC BitBlt "bad dst/src DC" -> blank
+     faces. mw_loadimage_bitmap_dib decodes both formats (core: WORD w/h,
+     3-byte BGR palette triples) + miss diagnostics in LoadImage/FindResource.
+  2. Bitmap slot pool: MW_MEMDC_MAX 32 -> 256 (v&0xFF handle ceiling; every
+     LoadImageW decode leaks its slot for the process life) + mw_DeleteObject
+     now frees unselected HBITMAP slots (selected-in-memDC refuse = real GDI).
+  3. mw_engine_paint_children wiped the WHOLE surface gray on UpdateWindow
+     even with ZERO children (spider erased its own guest-blitted board);
+     the dialog-face fill now requires >=1 live child (calc unchanged).
+  MEASURED (binary c5635ee8): green felt board 645 frames; 10 columns striped
+  backs; faces A♠ 3♦ 2♦ Q♥ 8♦ 4♥ 8♠ A♠ 4♥ 4♠ with real art; spider-logo deck;
+  census 3x exit-0 ZERO stubs; screenshots evidence/sweep055/shots_png/
+  (+ user copy /home/z/my-project/download/spider_sweep055.png).
+- **SW-1273 CORE LANDED — LibreOffice mirror resolved, payload byte-exact**:
+  downloadarchive .../old/26.8.1.1/ ALIVE (26.8.1.2 404s); MSI 374,870,016 B
+  sha c6298b10 MATCH (sweep055_lo_restage.py); CAB carved via MSCF-magic
+  stream scan (binary-UTF16 stream names) sha 71dfff0b MATCH
+  (sweep055_lo_carve.py); expanded BY THE ENGINE's 7za 19,427/19,427 rc=0;
+  pins cb08cffd (soffice.bin) / 017d0c21 (mergedlo.dll) verified
+  (sweep055_lo_stage.sh). Closure analysis: soffice.bin's 51 static imports
+  are all host DLLs — mergedlo/sal3 load dynamically. Fresh 251-file staging:
+  deterministic 139/8 (bisect: HEAD binary identical -> staging-driven) —
+  the libxslt/lpsolve55/libcrypto-3/libssl-3 wave dies in a CRT _initterm
+  jumping to a bogus RIP -> new car SW-1276; SW-1263 rtl_uString continues.
+- **SW-1206 LANDED — adexplorer64 corpus recovered (8th)**: zip 56536bff /
+  exe e4512878 sha-verified via the documented one-shot procedure; census
+  3x exit-0 ZERO stubs ZERO unresolved.
+- **SW-1268 PARTIAL (5 contracts landed)**: FindFirstVolumeW (fixture GUID
+  volume), GetVolumePathNamesForVolumeNameW + GetVolumeNameForVolumeMountPointW
+  (volume<->"C:\" mapping), CreateFileW volume handles (0x000B0000 namespace),
+  DeviceIoControl FSCTL contracts (GET_NTFS_VOLUME_DATA / ENUM_USN_DATA with
+  MFT_ENUM_DATA_V0 cursor protocol + 11-record FRN fixture / READ_USN_JOURNAL /
+  IS_VOLUME_MOUNTED), GetOverlappedResult InternalHigh. Trace-verified:
+  Everything enumerates + maps the volume. Remaining gate decoded: its
+  internal volume-DB walker (0x1400d24e0) + user-mode checks
+  (0x1400d6df0/0x1400d6f30) fail before any API call -> new car SW-1278.
+- Census (artifacts/sweep055/census/census.tsv): 16 guests x3 deterministic —
+  15 x exit-0 ZERO stubs ZERO unresolved (SWEEP-054 baseline preserved),
+  adexplorer64 exit-0 (SW-1206), soffice 139/8/8 (documented fresh-staging
+  profile).
+- G1 PIN 12/12 (evidence/master/g1/20261023_045212, binary c5635ee82bd5dd2b).
+Open: SW-1278 (Everything volume-DB), SW-1276 (soffice initterm), SW-1277
+(sol cards.dll layout), SW-1267/1268, SW-1273 render frontier (SW-1263).
+
+## SWEEP-056 (several trains, several wagons, move) — per-module resources + sol's REAL metrics (2026-10-23)
+
+**Rule #1 (standing law)**: fetched origin BEFORE work — remote had advanced
+242af84 -> 2156eed (SWEEP-039..055 landed by the parallel chain: four-program
+mandate covered, screenshots, 10+5 corpus). Fast-forward synced, no RECONCILE
+needed (local had no unique commits). This batch = SWEEP-056 on top of 2156eed.
+
+**Corpus re-staging train (wagons 1-4)**: the gitignored guest payloads were
+gone again (SW-1206 pattern, 9th recovery): xp_x64.iso re-downloaded
+(628,617,216 B, sha 19b5a382 MATCH, resumable 6-stream), 26/29 AMD64 payloads
+extracted (pycdlib), expanded BY THE ENGINE's own 7za, staged 14 guests
+(winmine/sol/freecell/mshearts/spider/calc/mspaint/notepad/wordpad/charmap/
+clipbrd/write/winver/sndvol32 + cards.dll/riched20/mfc42u/mspaint.chm).
+STAGING CONTRACT learned (register for the farm playbook): mshearts AND
+mspaint need mfc42u.dll in their OWN dir (MFC apps; without it every MFC42U
+ordinal stubs -> mspaint SIGSEGV RVA 0x5bb4d = the SW-1245 comment's crash).
+Everything 1.4.1.1028 re-staged from the pinned zip (4f4a9b92, host-python
+unzip; the engine's 7za mangles this zip's UTF-8 names + rc=134).
+
+**Train: SW-1277 LANDED — two engine root causes**:
+1. w3_res_find ignored hmod — walked the MAIN EXE's .rsrc for every module.
+   cards.dll!cdtInit does LoadBitmapA(hinst_cards, 0x35/0x43/0x44) and takes
+   the card metrics from GetObject's bmWidth/bmHeight; the v1 walk searched
+   sol.exe's resource dir (8 TYPE ids, none RT_BITMAP) -> miss -> 16x16
+   placeholder -> metrics 16x16 -> window 152x64 (the SWEEP-054 mystery).
+   The v2 half-fix (rsrc_rva from hmod's header but base = g_image_base +
+   rsrc_rva) walked sol's .text as a resource dir -> SIGSEGV (named=9332
+   garbage) — caught by the [RES] walk probe, fixed by hoisting pe.
+2. GetObjectW/A knew only MW_IMAGE_BASE (0x60000) placeholder handles;
+   mw_loadimage_bitmap_dib returns MW_HBITMAP_BASE (0x52000) handles ->
+   cdtInit's GetObjectA returned 0 -> metrics from stack garbage (31x0).
+   Added the HBITMAP family decode (g_bitmap_obj, bi=(v&0xFF)-1).
+   Applied mw_res_pe_base across ALL 7 hrsrc data-resolution sites.
+MEASURED (binary bd7747c2): GetObjectW(HBITMAP 52001) -> BITMAP 71x96;
+sol CreateWindowExW 585x384 (SWEEP-054: 152x64); LoadBitmapA(0x35/0x43/0x44)
+-> real DIB decodes 0x52001/2/3 from cards.dll's 74-bitmap dir; sol status
+bar renders (Time: 0 / Score: 0).
+
+**Train: SW-1278 decode progress**: check-a = SetErrorMode+GetVolumeInformationW
+wrapper (IAT 0x1401b0370), check-b = stricmp(fs,"ntfs"); both PASS with the
+current fixtures (the SWEEP-055 "no API calls" half was wrong); GetDriveTypeW
+gate {2,3,6} passes; enumeration verified in trace. Frontier -> post-
+registration in-memory DB state. SetLastError(2) floods = guest internal
+signaling, NOT failed FindFirstFileW (theory disproven).
+
+**Train: census + evidence**: 14 guests x3 = 42/42 exit-0, ZERO stubs, ZERO
+unresolved, deterministic. Regression battery green (spider 651 frames real
+cards, winmine 82, freecell 10, mshearts 2). Screenshots 9 PNGs ->
+evidence/sweep056/shots_png/. G1 PIN 12/12 (evidence/master/g1/20261023_060132).
+
+**New wagons registered**: SW-1279 (sol deal chain: cdtDraw imported, never
+called; WM_COMMAND 0x3e8 dispatch -> 0; client 587x32 vs surface 587x384
+bookkeeping); SW-1276 open (LibreOffice re-stage for the initterm decode —
+download interrupted, next train). SW-1268/SW-1278 continue.
+
+## SWEEP-057 Train 1 (2026-10-23) — SW-1279 sol deal/paint: SIX ROOT CAUSES
+Task: (10 train-wagons continue) — Train 1 of 10. Rule #1: fetched origin first
+(242af84 -> a23f69e, parallel chain SWEEP-039..056 landed 34 commits; ff-only,
+staged sweep030/031 artifacts moved aside, no RECONCILE needed).
+Decode method (SWEEP-011 discipline): sol.exe is x64 PE32+ base 0x100000000.
+WndProc 0x100001bc0 (from RegisterClassExW proc= trace), message switch:
+cmp edx,0x200 / sub eax,0x53 / 0xad / 0x11 -> WM_COMMAND -> movzx ecx,r8w ->
+sub ecx,0x3e8 -> deal handler 0x100001f2e: time(0)&0x7fff -> srand ->
+game-obj [0x10000C298] -> fn 0x100007CF0(obj, 8, 0, 0) -> jump table RVA
+0x7E94 idx 5 -> 0x100007d68 -> Game_Deal 0x100006d00 (guard 0x1000016c0 =
+lazy GetDC init; stock painter 0x100002c10 = the 71x96 deck blits).
+ROOT CAUSES (engine, loader.c):
+A. WS_CHILD+unknown-class creations took the TOP-LEVEL path: sol statusbar
+   "Stat" 587x10 clamped g_win_h to 32 -> every GetClientRect 587x32 stale.
+   Guard: store_window only when (!(style&0x40000000) && !parent).
+B. Same class now routes into the child registry (STATUSBAR 0x87) — real
+   Win32: WS_CHILD is never a top-level; no main-hwnd identity theft.
+C. THE DEAL KILLER: RegisterClass* overwrote the single g_wndproc_fwd —
+   "Stat" (0x100008f20) stole all dispatches from "Solitaire" (0x100001bc0):
+   WM_COMMAND 0x3e8 answered by the statusbar proc (dispatch -> 0, ZERO
+   guest API calls). Fix: per-class {name->proc} registry (16 slots,
+   mw_probe_copy'd names) + g_main_class_proc snapshot at top-level
+   creation; SetWindowLongPtrW subclass updates the snapshot.
+D. BeginPaint wiped the surface WHITE every paint — real BeginPaint only
+   sets fErase. The wipe destroyed the dealt board after the trailing
+   no-op WM_PAINT. Removed (fix D).
+E. GetClientRect returned the MAIN rect for children: sol's statusbar
+   paint PatBlt'd its gray LTGRAY panel 585x384 over the whole board
+   (216k gray px). mw_child_set_rect stores creation geometry; child
+   GetClientRect = (x, y, x+w, y+h) in surface coords.
+F. Pump quit at the first idle GetMessage despite a live timer (the
+   SW-1220 wait required keys||clicks pending): sol's 250ms id=666 clock
+   starved. Wait for the tick unconditionally (bounded 4s, quit-checked):
+   120 WM_TIMER delivered -> budget-exhaust -> WM_QUIT -> exit 0.
+STAGING: mshearts+mspaint need mfc42u.dll in-dir (the SWEEP-056 contract,
+documented in its commit message) — re-applied + stage script fixed; the
+"regression" seen mid-round was the staging artifact, not the engine.
+MEASURED (binary ae4339bc): sol renders the CLASSIC BOARD — green felt
+(0,128,0) 94% of surface + dealt deck fan (real cards.dll 71x96 faces) +
+status-bar strip; trace: srand(time) -> green PatBlt -> 52-rand shuffle ->
+card blits @0,0..@24,15. Census 42/42 exit-0 ZERO stubs ZERO unresolved
+x3 deterministic (stderr deltas = tick-count trace noise only); G1 PIN
+12/12 (evidence/master/g1/20261023_190202). 14 screenshots ->
+evidence/sweep057/shots_png/. NEXT (SWEEP-058): SW-1279 layer 2 — the
+tableau piles (slot->vfn draw chain + deal-animation timer), Everything
+SW-1278 DB state, soffice SW-1276.
+
+## SWEEP-057 Train 2 (2026-10-23) — SW-1278 QueryDosDeviceW root cause
+Corpus: Everything 1.4.1.1028 re-staged from the pinned zip (4f4a9b92
+sha-verified re-download; host-python unzip per the staging contract).
+Method: caller-attribution instrumentation on mw_SetLastError
+(__builtin_return_address -> addr2line) named the flood source — the
+ENGINE's own mw_QueryDosDeviceW stub (loader.c), called ~20x per scan
+pass by the guest's post-volume-registration chain (its 'set last error
+%d' logger sites 0x1400e9432..0x1400eb612 all fired with 2).
+FIX: real QueryDosDeviceW model ("C:" -> \Device\HarddiskVolume1;
+NULL -> full DOS-device list; unknown -> 0 + ERROR_FILE_NOT_FOUND),
+seeded from the SW-1268 fixture world.
+MEASURED: chain advances — guest reaches its own signaling sites
+(0x1401aa429), probes Everything.db/USN paths via CreateFileW /
+GetFileAttributesW (absent on fresh install = real), volume walks
+6 -> 52, rc=0 at budget 60 (was a budget-200 stall).
+NEW FRONTIER SW-1278b: worker-thread race — a worker parks on
+WaitForSingleObject(0x5, INFINITE); under the fix-F timer-wait pump the
+run is rc=124-nondeterministic; the FSCTL_ENUM_USN_DATA MFT phase never
+starts. Also: fix-F + this guest = 250ms tick pacing dominates wall time
+(census unaffected — everything is not in the 14-guest set).
+
+## SWEEP-057 Train 3 (2026-10-23) — SW-1276 soffice: 3 layers moved
+Rule #1: LO archive URL corrected to the ALIVE mirror (26.8.1.1); MSI
+re-staged sha c6298b10 EXACT (374,870,016B); CAB carve sha 71dfff0b MATCH;
+engine-7za 19,427/19,427 rc=0; soffice.bin cb08cffd / mergedlo 017d0c21
+pins verified; 251->263 guest files.
+1. STAGING: real VC runtime (msvcp140/vcruntime140/vcruntime140_1/
+   msvcp140_1 from MSI-mangled names) -> the SW-1252 _Mtx/_Lockit stub
+   chain GONE (the 139 at mergedlo 0x8335d2 cmp rbx,[rdx+0x18] RDX=0
+   resolved by the REAL msvcp140).
+2. ENGINE: _control87/_controlfp, _wputenv_s (real setenv),
+   __stdio_common_vswprintf_s/_vswprintf (UCRT 6-arg over mw_vfmt_w16),
+   _beginthread, _sopen_dispatch, Sym* trio, CoWaitForMultipleHandles,
+   WerAddExcludedApplication.
+3. WS2_32: DLL-on-known-DLL ORDINAL imports had no resolution path —
+   g_dll_fixed_ord fallback map + InetPtonW/GetAddrInfoW. sal3 binds
+   ws2_32 by ordinal (7/8/9/14/18/21/...): all bind now.
+4. URE: *.rdb staging contract (services.rdb = the service factory).
+5. DECODE: rc=99 = _exit(0xE06D7363) = unclaimed
+   uno::DeploymentException 'null process service factory'; root cause
+   chain: sal3 osl_getSystemPathFromFileURL returns TRUNCATED paths
+   (component-boundary cuts, rtl_uString length-field 15 vs 29-char
+   content) -> CreateFileW(dir-ish) -> ReadFile ERROR_BROKEN_PIPE(109)
+   -> configmgr bootstrap fails -> throw -> no catch -> terminate.
+MEASURED: 139 -> 99 with only d2d1!#1 stub left (skia probe, harmless);
+census 42/42 x3 green; G1 12/12 (evidence/master/g1/20261023_194817).
+
+## SWEEP-057 Train 4 (2026-10-23) — SW-1242 handle64 first decode
+Crash: SIGSEGV 0x14000636a, cmp word [rax+rsi], r13w; RAX=0x6a8980 (=
+word[idx]*128 from word[entry+0x1E] = 0xD513 garbage), RSI = the 128-byte-
+stride type table at .data 0x14005cf00 (lea rsi,[rip+0x56bb8] @0x140006341).
+Guest parse helpers: count = [rcx] dword @0x1400078f0; entry walker
+@0x140007900 has TWO modes keyed by a global byte @0x14005ef08: EX =
+stride 40 + 16 hdr, returns entry ptr; LEGACY = stride 24, no hdr skip,
+reads fields +8/+A/+C/+D/+E/+10(q)/+18(w?) — the caller then reads
+word[entry+0x1E] as the type index into the 128B table.
+ENGINE FIX: class-64 writer 16B -> the REAL 24-byte x64 layout (phnt):
+UniqueProcessId@0 CreatorBackTraceIndex@2 ObjectTypeIndex@4
+HandleAttributes@5 HandleValue@6 Object@8(8B) GrantedAccess@16.
+RESULT: crash RIP unchanged (the guest's internal-array parse contract
+still mismatches — next layer: decode the NtQuery call site that fills
+the internal buffer global); census 42/42 x3; procexp64 139->124 (fix-F
+timer-wait = keep-running, deterministic); G1 12/12.
+
+## SWEEP-058 (10 train-wagons continue) / (continue from where it was cut off and left incomplete) (2026-10-24)
+Rule #1: fetched origin — parallel chain had advanced 242af84 -> 989e77b
+(SWEEP-031..057); reset to 989e77b, worked on top. Guest farm re-staged
+(sweep056_stage_guests.sh).
+
+DISCOVERY (the "cut off and left incomplete"): SWEEP-057 Train 5 (989e77b) committed only
+its scripts — the loader.c engine deltas (SW-1241 hive seeding + SW-1240 LSA
+groundwork) never landed. SWEEP-058 re-lands them.
+
+Train 1 — SW-1239 pslist64 FULL LIFECYCLE (rc=0, real process table):
+perflib plane (Counter 009/Explain 009/objects processor/process/system),
+7 contracts decoded (NULL-probe=SUCCESS+size; HeaderLength=first-object
+offset; DefinitionLength=instances offset; CounterOffset from block-struct
+start; 8-aligned records, block 112; stack garbage fill SW-1239b;
+/proc comm parse). G1 12/12 (evidence/master/g1/20261024_051355, e24b56fa);
+procexp64 124 -> 0 FULL LIFECYCLE.
+Train 2 — SW-1240: Windows dir skeleton seeding (PROCEXP152.SYS drop now
+writes); LSA x64 layout corrected (16B LSA_UNICODE_STRING, 0x88 header);
+exit 1 -> 133 = new frontier SW-1240b (guest session walker).
+Train 3 — SW-1238a: 15-import security/Net/eventlog plane typed; live SCM
+cookie. Train 4 — SW-1238b: '-c 0' crash fixed (rc=0); SW-1238c frontier
+(-d C:\ named-object SD plane).
+Train 5 — SW-1241 re-land: autologon64 rc=1 -> 0 FULL LIFECYCLE x3.
+Trains 6-7 (handle64 v2 / sol tableau) NOT started this round — deferred;
+frontiers unchanged (SW-1242 next layer, SW-1279 layer 2).
+Train 8 — screenshots: evidence/sweep058/shots_png/ (winmine 82f, sol board,
+spider 658f, calc, freecell, mshearts, wordpad + sndvol32 dialogs).
+Train 9 — census 19/19 programs x3 DETERMINISTIC, 48/57 exit-0, ZERO stubs,
+ZERO unresolved (artifacts/sweep058/census/census.tsv).
+Train 10 — this commit + push + origin verify.
+
+NEXT (SWEEP-059): Everything re-stage (SW-1278b; artifacts/sweep050/stage/
+everything gone — pinned zip 4f4a9b92 re-download needed), soffice SW-1276
+layer-2, sol SW-1279 tableau, handle64 SW-1242b, logonsessions SW-1240b,
+accesschk SW-1238c.
+
+## SWEEP-059 (2026-10-24) — (continue from where it was cut off and left incomplete) → the bomb-game
+graphics fix + the real-program battery the user asked for.
+
+### Rule #1 trail
+fetched origin first: parallel chain had advanced 242af84 → ecc1b73
+(SWEEP-031..058). Reset local main onto origin/main (ecc1b73), re-staged the
+XP guest farm from artifacts/sweep056/xp64_raw via scripts/sweep056_stage_guests.sh
+(the guests/ dirs were lost between rounds), read the SWEEP-058 shot battery,
+and reproduced the user's complaint on the current HEAD: minesweeper renders
+its panel but every tile/LED/face is a BLACK rectangle.
+
+### SW-1280 — winmine all-black root cause + fix (the user's #1 wagon)
+winmine imports NO LoadBitmap — it FindResourceW/LoadResource/LockResource
+then SetDIBitsToDevice straight from the resource DIBs (16 tiles 16x256,
+LED digits 13x276, faces 24x120, all 4bpp + 16-entry RGBQUAD tables) and
+LineTo/SetPixel for the bevels. Two engine bugs stacked:
+1. mw_dib_row_to_bgr24(memset black) for every 1/4/8bpp row — fixed with
+   mw_dib_materialize_ctab + mw_dib_row_to_bgr24_pal (RGBQUAD/COREHEADER/
+   DIB_PAL_COLORS) wired into SetDIBitsToDevice + StretchDIBits;
+2. the scan-line window: winmine pre-advances the bits pointer per tile
+   (disassembly 0x100002f1f: r11 += rax before the call, startScan slot =
+   ebp = 0) — the v1 fileRow = biHeight-1-(startScan+r) formula then read
+   PAST the tile (red noise). Contract fixed: flip within
+   [startScan, startScan+scanLines) relative to the caller's bits pointer.
+MEASURED (binary sha256 5450ba3a…, G1 PIN 12/12 evidence/master/g1/20261024_143552):
+startup frame = LED 010 + smiley + 000 + raised gray bevel grid; click
+battery reveals 1/2/3 numbers in blue/green/red + spiked black bombs +
+red exploded cell + LED 012. Original XP minesweeper look achieved.
+
+### The 108-guest download battery (Trains 3-7)
+60 downloads → 122 PEs → 99 staged guests → census_dl.tsv (108 rows run):
+- archive.org: winamp295_full_noaod (Winamp 2.95), WEP.zip (the Microsoft
+  Best-of-Windows Entertainment Pack: Chips/JezzBall/Tetris/SkiFree/Pipe/
+  Rodent…), 3D Pinball Space Cadet (pinball_202110).
+- sysinternals live: 28 tool zips; nirsoft: 15 tool zips; GitHub:
+  chocolate-doom/heretic/hexen/strife 3.1.1 win64.
+- RESULT split: 51 x64 → 14 exit-0, screenshots for ADExplorer64,
+  Cacheset64 (honest "Could not obtain cache settings" dialog), RegScanner,
+  shexview, RAMMap64 (3 frames), dbgview64; 57 x86 → ALL blocked by the
+  PE32+ loader gate = SW-1281 evidence; WEP games are Win16 NE = SW-1282;
+  chocolate-doom VirtualProtect 0xcb = SW-1283; modern common-controls
+  sparseness = SW-1284.
+Scripts kept: scripts/sweep059_download{,2,3}.sh, sweep059_expand.py,
+sweep059_stage.py, sweep059_chunk.sh, sweep059_games.sh, sweep059_shots.sh.
+
+---
+## SWEEP-061 Train A (2026-10-24) — sol full-deal fidelity + SW-1286..1289
+
+Rule #1: fetched origin first — parallel chain had advanced 242af84 ->
+dc19a0f (SWEEP-031..060); fast-forward synced (local untracked
+artifacts/sweep030|031 backed aside), no RECONCILE. Engine rebuilt clean.
+
+Decoded (probe-driven, sol.exe + cards.dll):
+- SW-1286 guest-DLL export probes (MW_GUEST_DLL_PROBE) — first arg/retval
+  visibility into guest->guest DLL calls. Caught TWO wrapper pitfalls:
+  (1) real-fn stored via out-param to a dead local -> global stayed NULL ->
+  GCC IPA eliminated the forward call (41 calls -> 0); (2) wrapping cdtInit
+  perturbs cards.dll state init (bitmaps never load, sol aborts via
+  messagebox). Both recorded on the worklist; fixed = store into the
+  global, wrap draw entry points only.
+- sol deal chain: WM_COMMAND 0x3e8 -> srand -> fn(8) -> Game_Deal ->
+  shuffle (261 rand) -> pile loop — the game-state deal COMPLETES (probe:
+  piles 1..7 cards, deck 24) but the DRAW collapsed: all cdtDrawExt
+  targets at (0,0..18) instead of the tableau.
+- ROOT CAUSE = the engine never delivered WM_SIZE (sol's layout runs
+  there). Chain landed: SW-1287 sync first-show WM_SIZE (inside
+  ShowWindow, before posted messages), 1287c resize WM_SIZE from
+  MoveWindow/SetWindowPos (winmine's 170x2156 relayout), 1287d convergence
+  guards (no re-entry + same-dims dedup — sol's fit-to-board loop),
+  SW-1288 child resize isolation (statusbar 587x32 shrink kill) + the
+  mw_child_slot -1 sentinel lesson, SW-1289 grow-wipe removal.
+
+Measured (XP corpus, this round's binary):
+- 13/13 rc=0, zero regressions; winmine 82 frames (baseline restored),
+  sol 38 frames = FULL CLASSIC DEAL (7 tableau piles real faces + stack
+  edges + frog-back deck + foundations + status bar) — first complete XP
+  solitaire board; spider 638, freecell 10, calc face.
+- Screenshots: evidence/sweep061/shots_png/ (6 PNGs).
+- Guest farm re-staged: artifacts/sweep061/guests (17 guests,
+  scripts/sweep061_stage_xp.sh).
+New cars: SW-1290 (sol felt strip / post-WM_SIZE repaint), SW-1291
+(winmine surface tail). Open: SW-1284, SW-1283b, SW-1281c/d.
+
+---
+## SWEEP-061 Train B (2026-10-24) — SW-1290 class-brush erase
+
+RegisterClass{,Ex}{W,A} now records hbrBackground (x64 offset 48);
+BeginPaint's erase phase fills with the solid class brush (real
+DefWindowProc WM_ERASEBKGND semantics). sol felt = full board; 17/17 XP
+corpus rc=0 zero regressions; evidence/sweep061/shots_png refreshed.
+Open: SW-1291 (cosmetic), SW-1290 layer-2 (guests whose erase must skip
+incremental frames), SW-1284/1283b/1281c/d.
+
+---
+## SWEEP-063 (2026-10-24) — Ghidra tooling train: hours -> minutes, SW-1292 decoded
+
+Rule #1: fetched origin first — 97503e7 (SWEEP-062 Train 4) both sides, clean tree.
+
+Toolchain (user mandate: (use the auxiliary tools)): Ghidra 12.2 from NSA
+GitHub (requires JDK 25 — Temurin 25.0.5 installed; JAVA_HOME_OVERRIDE), PyGhidra
+3.2.0 via bundled cp312 wheel. analyzeHeadless has NO PyGhidra runtime → wrote
+scripts/sweep063_driver.py using the pyghidra API directly (probe script retained).
+Exports per binary: functions/imports(+ordinal flag)/exports/entrypoints/
+resources/strings + targeted decompilation. 37 evidence files.
+
+Measured effect ((see whether it really had an effect or not)): procexp64 5.2MB full
+analysis 129s -> 2939 functions; four small binaries seconds; ~150s total for
+five programs, six export classes, plus decompilation of the full sol paint
+chain. Manual equivalent previously spanned SWEEP-060..062.
+
+SW-1292 DECODED (Ghidra): FUN_100007cf0 cmd7 -> default -> FUN_1000047a0 case7
+-> FUN_100003f10 (first stmt: FUN_100001690(ps.hdc) — unconditional [c2a0]
+store; per-pile virtual vfn[1] loop; DC restore). FUN_100001690 = pure setter,
+no branches. Since runtime shows [c2a0] NULL + zero guest APIs + no fault,
+control never reached FUN_100003f10: the indirect `call *(%r11)` @0x100001d8d
+silently no-ops in the engine. Frontier narrowed to that single call site
+(SW-1292b next).
+
+SW-1204: complete procexp64 ordinal import table extracted and cross-validated
+against SW-1223/1225 decodes (OLEAUT32.16/277 match). SW-1293: usbdeview CRT
+entry checklist decoded (MZ/PE, 0x10b magic, RvaAndSizes>=14, SEH). winmine
+.rsrc audit: bomb/LED bitmaps all intact (11 RT_BITMAP). Engine health: winmine
+rc=0 / 82 frames. New cars SW-1292b, SW-1204b, SW-1293b. No engine code changed
+this train. no force-push.
+
+---
+## SWEEP-064 (2026-10-24) — SW-1292 closed (phantom gap), SW-1204b cross-val + COMCTL32.17 fix
+
+Rule #1: fetched origin first — 71febd8 both sides, clean tree.
+
+SW-1292 CLOSED — the "engine-internal gap" was a probe misread. SWEEP-063's
+Ghidra decompile shows FUN_100003f10 is SAVE/RESTORE: first stmt stores ps.hdc
+into [c2a0], LAST stmt stores the OLD value back. Post-paint [c2a0]=NULL is the
+correct steady state whether or not the chain ran; "zero guest API calls" is
+expected (DC swap = pure stores; pile draws go guest->guest cards.dll).
+Decisive experiment: sol GUI-pump run = 38 frames (= SWEEP-061 full-deal
+baseline) and the final frame shows the COMPLETE board (felt, deck, 4
+foundations, 7 tableau cascades with real faces, status bar).
+evidence/sweep064/shots_png/sol_board_sweep064.png. SW-1292b PC-sampler car
+cancelled — chain is alive.
+
+SW-1204b: independent cross-validation of the whole procexp64 ordinal set
+(Ghidra 12.2 enumeration x wine-mirror specs fetched 2026-10-24). Every map
+entry matches (OLEAUT32 2/4/6/7/8/9/12/16/19/20/23/24/25/150/277, WS2_32
+8/9/14/15/51/56/115, SHLWAPI.176, COMCTL32.345/410/413, ACLUI.1). ONE
+correction: COMCTL32.17 ImageList_Create -> InitCommonControls (wine
+comctl32.spec line 21; the old name was a SWEEP-014 slot-neighborhood guess,
+Rule-1 violation). Corroborating evidence: usbdeview imports Ordinal_6 AND
+ImageList_Create BY NAME — NirSoft imports ImageList APIs by name, never as
+ordinal 17. Map comment updated in loader.c; rebuilt; regression battery all
+baseline (winmine 82 / sol 38 / freecell 10 / spider 630 / calc 1 / notepad
+rc=0). Verdict file: evidence/sweep064/SW1292_SW1204B_VERDICT.md. no force-push.
+
+---
+## SWEEP-065 (2026-10-25) — 20-program mass audit: tooling = lubricant + jet fuel
+
+Rule #1: fetched origin first — e21e078 (SWEEP-064) both sides, clean tree.
+Ghidra latest re-checked (12.2 still latest). Notepad++ latest release via
+GitHub API: v8.9.8.1.
+
+Batch (user mandate: 20 programs incl. WinRAR + GitHub's most-popular Windows
+program): WinRAR 7.12 x64, Notepad++ 8.9.8.1 x86 (portable.7z via py7zr),
+7-Zip 7zr 19.00, 13 NirSoft tools, 4 XP classics (freecell/spider/calc/mspaint).
+7z1900-extra.7z un-extractable under py7zr (BCJ2) -> replaced with official
+7zr.exe direct download.
+
+Ghidra batch via sweep063_driver.py + 4 spec chunks (background nohup dies
+under the tool runner — foreground chunks required): 20/20 programs, 30,289
+functions, 3,778 imports, 163,774 resource entries, ~726s total. notepadpp
+486.8s/19,048 fn = biggest guest ever analyzed; winrar 40.5s/1,855 fn.
+Evidence: evidence/sweep065/ghidra/<prog>/ 120 files.
+
+Engine battery (scripts/sweep065_battery.sh): freecell 10 / spider 621 / calc
+1 frames rc=0; winrar rc=1 + engine-rendered Error dialog «folder is not
+accessible» (messagebox_1.bmp — battery now harvests messagebox_*.bmp too);
+notepadpp rc=86 = deepest x86 penetration (PE32-FATAL opcode 0xee OUT DX,AL @
+EIP=0x7ef329) -> SW-1297; 13 NirSoft rc=139 unchanged (SW-1293 frontier);
+mspaint rc=0 clean exit (same as SWEEP-061, not a regression).
+
+Cross-validation: driverview imports COMCTL32.Ordinal_17 == InitCommonControls
+(SW-1204c corroborated by an opposite import style in the same vendor family).
+New cars: SW-1296 (tiny-tool Ghidra function discovery), SW-1297 (npp 0xee),
+SW-1298 (spider 87,992-resource audit). Report: artifacts/sweep065/
+BATCH20_REPORT.md. no force-push.
+
+---
+## SWEEP-066 (2026-10-25) — SW-1297 closed: reloc-delta + 226 arity fixes, npp hits 100M steps
+
+Rule #1: fetched origin first — 180c249 (SWEEP-065) both sides. ENV-RESET
+reconcile: sandbox had rolled workspace back to SWEEP-030; hard-reset to
+origin/main (documented protocol), rebuilt, regression re-pinned.
+
+SW-1297 root cause (two stacked bugs, both fixed in load_pe32/gate):
+(1) HIGHLOW relocations applied +image_base while mapped AT the preferred
+base — delta must be 0; npp EIP 0x7ef329 = 0x3ef329+0x400000 (.rdata).
+(2) g_api32_arity[] cross-validated vs wine .spec (8345 names, 23 DLLs,
+new scripts/sweep066_arity_check.py): 226 wrong pop-bytes (EnterCS 16->4,
+BeginPaint 16->8, ShowWindow 16->8, DebugBreak 16->0, ...). npp chain
+decoded via new fatal eip-ring: call [0x7cb388]=EnterCS -> pop ebp; ret
+-> garbage ret 0x7ef318 -> data-as-code.
+
+Diagnostics: cpu32_fatal + crash_handler now print guest EIP/ring;
+m32_* host-image guard (guest writes into non-PIE host span refused);
+import-hint bounds check. SList-ECX family + RtlUnwind excluded -> SW-1299.
+
+Measured: notepadpp 100,518,627 steps (was 86-fatal at CRT); driverview
+794,071 steps (was 139 at 0); usbdeview real .text; x64 regression ALL
+BASELINE (winmine 82/sol 38/freecell 10/spider 618/calc 1/notepad 0/
+wordpad 0/winrar rc=1+dialog). Report: artifacts/sweep066/
+SW1297_ARITY_REPORT.md. Evidence: evidence/sweep066/. no force-push.
+
+---
+Task ID: SWEEP-066-x64
+Agent: main (z.ai)
+Task: (continue the train) — wagon SW-1297 x64/PE32+ track: bring the 64-bit
+Notepad++ 8.9.8.1 (x64 build) to the GUI window under the x64 loader.
+Complements upstream SWEEP-066's x86/PE32 track (that one closed SW-1297
+for the 32-bit npp; this landing does it for the 64-bit binary).
+
+Work Log:
+- notepad++ x64 8.9.8.1 downloaded (portable zip; sweep50 had only resolved
+  the version). Run1 exit 9 __fastfail(5), 67 unresolved imports. Chain
+  decoded via .pdata + 128-slot FASTFAIL stack window: N++ settings/copy
+  manager 0x14f6c0 (imports CopyFileW/ReplaceFileW/MoveFileExW) -> copy
+  setup 0x38070 -> stream copier 0x37800 -> CRT _read(fd) -> UCRT
+  _get_handle 0x428c70 -> EBADF -> _invalid_parameter_noinfo_noreturn ->
+  int 0x29.
+- ENGINE FIX GetStartupInfoW: advertised STARTF_USESTDHANDLES std handles
+  0x4/0x8/0xC while the w3files pool's real std handles are 0x4/0x5/0x6 —
+  static-UCRT _ioinit registers fd0/1/2 DIRECTLY from STARTUPINFO
+  (bypassing GetStdHandle), so fd1/fd2 never existed in the guest's own
+  __pioinfo table -> std fd ops fail-fasted. mw_stdhandles_ensure()
+  pre-allocates the three std handles; GetStartupInfoW now advertises the
+  identical identities GetStdHandle returns.
+- Fingerprint-guarded guest patch (stderr-logged, inert without the exact
+  pattern): pre-EP scan for `call _invalid_parameter{,_noinfo_noreturn}`
+  sites followed by a -1-materialize recovery tail (48 83 c8 ff / 83 c8 ff /
+  eb rel8); the call is rewritten into the same materialization (EBADF=9
+  already stored by the guest) — classic msvcrt/wine semantics. 4 sites in
+  notepad++ x64: 0x4201ec 0x423097 0x428cd7 0x42bbe4.
+- 46 new imports (14 deduped in upstream's favor — see reconcile log):
+  SHLWAPI path family REAL per wine, InternetCrackUrlW REAL (wine
+  URL_COMPONENTSW x64 layout), ImageNtHeader REAL, CopyFileExW REAL,
+  typed-honest CRYPT32/WINTRUST/IMM32/UxTheme-anim/DWM/SENSAPI/COM-shell
+  tails; unresolved 67 -> 7.
+- RESULT: RegisterClassW -> ATOM 0xc001; CreateWindowExW -> HWND 0x10001
+  (main window); TWO real MessageBox frames rendered (pump-on):
+  "Configurator / Load langs.xml failed!" + "Load stylers.xml failed!" —
+  honest real-Windows first-run behavior for a broken config dir.
+  evidence/sweep066x64/screenshots/*.bmp.
+- Gates on the merged build (rebased onto e482146, 4,295,928 bytes):
+  G1 PIN 12/12 sha 049876c0 (evidence/master/g1/20261025_132524); corpus
+  x3 clean-dir deterministic: 13 exit0 + pageant 124 + notepadpp 139 (new
+  frontier: SIGSEGV RVA 0x3b94 NULL callback-ctx from [obj+0x9b0] after
+  the failed config loads -> SW-1298-x64) + rammap64 139 (= origin/main
+  parity, A/B-verified loader_origin vs loader_merged); putty=9 artifact
+  root-caused to a stale miniwin-results registry hive in reused sweep
+  dirs (clean dirs -> 0==0 parity).
+
+Stage Summary:
+- SW-1297-x64 LANDED: 64-bit Notepad++ renders real GUI windows.
+- Lesson: sweep dirs must be cleaned between batches (per-exe registry
+  hive persistence changes guest flow); A/B baselines must be built from
+  the true origin ref. Evidence: evidence/sweep066x64/.

@@ -1,0 +1,23 @@
+[TRACE] Command line: /home/z/my-project/workspace/miniwin-engineering/artifacts/opensource/_dl/7z-extra/x64/7za.exe x arc.7z -y
+[MiniWin] Loading /home/z/my-project/workspace/miniwin-engineering/artifacts/opensource/_dl/7z-extra/x64/7za.exe...
+
+7-Zip (a) 25.01 (x64) : Copyright (c) 1999-2025 Igor Pavlov : 2025-08-03
+
+Scanning the drive for archives:
+1 file, 194 bytes (1 KiB)
+
+Extracting archive: arc.7z
+--
+Path = arc.7z
+Type = 7z
+Physical Size = 194
+Headers Size = 151
+Method = LZMA2:12
+Solid = +
+Blocks = 1
+
+Everything is Ok
+
+Files: 2
+Size:       56
+Compressed: 194

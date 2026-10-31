@@ -1,5 +1,0 @@
-exe=si-psexec/PsExec64.exe
-sha256=edfae1a69522f87b12c6dac3225d930e4848832e3c551ee1e7d31736bf4525ef
-timeout=10s
-args=none
-date_utc=2026-10-17T18:39:37Z
