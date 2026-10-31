@@ -21004,9 +21004,20 @@ __attribute__((ms_abi)) int mw_UpdateWindow(void* hwnd) {
     for (int i = 0; i < MW_CHILD_MAX; i++) {
         if (!g_child[i].live || g_child[i].parent != hwnd) continue;
         int wl = mw_wndlong_slot(g_child[i].hwnd, -4, 0);
-        if (wl < 0 || !g_wndlong[wl].value ||
-            g_wndlong[wl].value == (uintptr_t)&mw_engine_defproc) continue;
-        long long r = mw_call_cb4((void*)(uintptr_t)g_wndlong[wl].value,
+        void* proc = (wl >= 0 && g_wndlong[wl].value &&
+                      g_wndlong[wl].value != (uintptr_t)&mw_engine_defproc)
+                     ? (void*)(uintptr_t)g_wndlong[wl].value : NULL;
+        /* Wagon 25 (2026-10-31): fall back to the CAPTURED CLASS PROC
+         * (SW-1334 channel). Real Win32 routes every window message —
+         * WM_PAINT included — to the window's class wndproc; the dispatch
+         * here only knew the SetWindowLongPtr subclass channel, so guests
+         * whose children carry guest-registered classes (Notepad++ 8.8.2's
+         * Scintilla etc. — 11 captured procs) never received WM_PAINT and
+         * the whole client area stayed engine-white. SendMessage already
+         * routes via class_proc (SW-1383); paint dispatch now agrees. */
+        if (!proc && g_child[i].class_proc) proc = g_child[i].class_proc;
+        if (!proc) continue;
+        long long r = mw_call_cb4(proc,
             (uint32_t)(uintptr_t)g_child[i].hwnd, 0x000Fu /* WM_PAINT */, 0, 0);
         MW_TRACE("[GUI] UpdateWindow -> child id=%lu %s WM_PAINT -> %lld",
                  (unsigned long)g_child[i].id, g_child[i].cls, r);
