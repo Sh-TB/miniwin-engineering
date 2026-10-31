@@ -18080,7 +18080,12 @@ static void mw_surface_dump(const char* kind);
 static const char* mw_wm_name(uint32_t m); /* defined in the pump block */
 /* SW-1520: menu band texts for the composite painter (model lives later in
  * the file; the painter only consumes top-level item texts). */
-static int mw_menu_band_items(uint16_t out[][32], int maxi);
+static int mw_menu_band_items(uint16_t out[][32], uint16_t outopt[], uint32_t outid[], int maxi); /* Wagon 23: + flags/ids out */
+static char mw_band_glyph(uint16_t c); /* Wagon 23: defined with the menu model */
+static void mw_band_draw(int y, int W, int H); /* Wagon 23: shared NC band renderer */
+static int mw_menu_slot(void* hmenu); /* Wagon 23b fwd: menu model registry */
+#define MW_NC_FRAME  3   /* SM_CXSIZEFRAME model (Wagon 23: hoisted above the band renderer) */
+#define MW_NC_CAP_H  20  /* caption strip height inside the top frame */
 
 static int mw_child_slot(void* hwnd) {
     uintptr_t v = (uintptr_t)hwnd;
@@ -21296,6 +21301,62 @@ static void mwb_text8(MWBmp* b, int x, int y, const char* s, uint32_t c, int sca
     }
 }
 static int mwb_textw(const char* s, int scale); /* fwd: defined right below */
+static void mw_band_draw(int y, int W, int H) {
+    /* Wagon 23 shared band renderer: left-flow text menus, MF_HELP entries
+     * right-justified (real Windows: MF_HELP items hug the menu-bar's right
+     * edge — NPP's tab '+' / drop-down / close gadgets live there). */
+    uint16_t mtxt[24][32]; uint16_t mopt[24]; uint32_t mid[24];
+    int mitems = mw_menu_band_items(mtxt, mopt, mid, 24);
+    struct { int x; int w; char s[24]; } L[24]; int nl = 0;
+    struct { int w; char s[24]; } R[24]; int nr = 0;
+    /* Wagon 23b: NPP parks three tab-bar gadgets at the menu bar's right
+     * edge. In the resource their titles are TAB-prefixed shortcut hints
+     * ("\tCtrl+N" id=0xa029, POPUP "\x25BC" tab-list, "\tCtrl+W" id=0xa02b)
+     * and real NPP owner-draws them as '+' / 'v' / 'x'. Windows also
+     * right-justifies MF_HELP items; the POPUP gadget has no MF_HELP, so
+     * the right-group test is: MF_HELP, or a TAB-prefixed title, or the
+     * tab-list triangle — matching what ships in the resource. */
+    for (int mi = 0; mi < mitems; mi++) {
+        char mt[24]; int k = 0;
+        int gadget = (mtxt[mi][0] == 0x0009u) || (mtxt[mi][0] == 0x25BCu);
+        for (int j = 0; j < 31 && mtxt[mi][j]; j++) {
+            uint16_t mc = mtxt[mi][j];
+            if (mc == '&') continue; /* accelerator marker hidden */
+            if (k < 23) mt[k++] = mw_band_glyph(mc);
+        }
+        mt[k] = 0;
+        if (!mt[0]) continue;
+        int tw = mwb_textw(mt, 1);
+        int right = (mopt[mi] & 0x4000u /* MF_HELP */) || gadget;
+        if (right) {
+            /* owner-draw glyphs for the two known NPP gadget command ids;
+             * other tab-prefixed items show the post-tab hint text */
+            if (mopt[mi] & 0x4000u) {
+                if (mid[mi] == 0xa029u) mt[0] = '+', mt[1] = 0;
+                else if (mid[mi] == 0xa02bu) mt[0] = 'x', mt[1] = 0;
+            }
+            for (int c = 0; c < 24; c++) R[nr].s[c] = mt[c];
+            R[nr].w = mwb_textw(mt, 1); nr++;
+        } else {
+            for (int c = 0; c < 24; c++) L[nl].s[c] = mt[c];
+            L[nl].x = 0; L[nl].w = tw; nl++;
+        }
+    }
+    int mx = MW_NC_FRAME + 8;
+    for (int i = 0; i < nl && mx < W - 120; i++) {
+        mwb_text8(&g_surf, mx, y + 6, L[i].s, 0x000000, 1);
+        mx += L[i].w + 24;
+    }
+    /* right group drawn in MODEL order (+ v x, like real NPP) */
+    int rgw = 12;
+    for (int i = 0; i < nr; i++) rgw += R[i].w + 14;
+    int rx = W - MW_NC_FRAME - rgw;
+    for (int i = 0; i < nr && rx > mx; i++) {
+        mwb_text8(&g_surf, rx, y + 6, R[i].s, 0x000000, 1);
+        rx += R[i].w + 14;
+    }
+    (void)H;
+}
 static void mw_engine_paint_children(void* hwnd) {
     if (!hwnd || !g_surf.px) return;
     /* SW-1275 (SWEEP-055): the dialog-face fill wiped the WHOLE surface on
@@ -21315,21 +21376,7 @@ static void mw_engine_paint_children(void* hwnd) {
     /* SW-1520: the app menu band — top-level item texts from the RT_MENU
      * model (File Commands Favorites Options View Help for WinRAR). */
     if (band) {
-        uint16_t mtxt[16][32];
-        int mitems = mw_menu_band_items(mtxt, 16);
-        int mx = 8;
-        for (int mi = 0; mi < mitems && mx < g_surf.w - 40; mi++) {
-            char mt[24]; int k = 0;
-            for (int j = 0; j < 31 && mtxt[mi][j]; j++) {
-                uint16_t ch = mtxt[mi][j];
-                if (ch == '&') continue; /* accelerator marker hidden */
-                if (k < 23) mt[k++] = (ch >= 0x20 && ch < 0x7F) ? (char)ch : '?';
-            }
-            mt[k] = 0;
-            if (!mt[0]) continue;
-            mwb_text8(&g_surf, mx, 6, mt, 0x000000, 1);
-            mx += mwb_textw(mt, 1) + 24;
-        }
+        mw_band_draw(0, g_surf.w, g_surf.h);
         mwb_fill(&g_surf, 0, band - 2, g_surf.w, 2, 0x808080); /* band underline */
     }
     for (int i = 0; i < MW_CHILD_MAX; i++) {
@@ -23174,8 +23221,7 @@ static void mw_surface_dump(const char* kind) {
  * ============================================================ */
 /* icon storage reuses the SW-1542 g_wicon_big/g_wicon_small pair (set via
  * SendMessageW(WM_SETICON) and DefWindowProc(WM_SETICON)); no new globals. */
-#define MW_NC_FRAME  3   /* SM_CXSIZEFRAME model */
-#define MW_NC_CAP_H  20  /* caption strip height inside the top frame */
+/* MW_NC_FRAME / MW_NC_CAP_H hoisted above mw_band_draw (Wagon 23) */
 static void mw_nc_paint_frame(void) {
     if (!g_surf.px || g_surf.w < 2 * MW_NC_FRAME + 8 || g_surf.h < MW_NC_FRAME + MW_NC_CAP_H + 8) return;
     int W = g_surf.w, H = g_surf.h;
@@ -23253,21 +23299,7 @@ static void mw_nc_paint_frame(void) {
             int by = MW_NC_FRAME + MW_NC_CAP_H;
             if (by + band <= H) {
                 mwb_fill(&g_surf, MW_NC_FRAME, by, W - 2 * MW_NC_FRAME, band, face);
-                uint16_t mtxt[16][32];
-                int mitems = mw_menu_band_items(mtxt, 16);
-                int mx = MW_NC_FRAME + 8;
-                for (int mi = 0; mi < mitems && mx < W - 40; mi++) {
-                    char mt[24]; int k = 0;
-                    for (int j = 0; j < 31 && mtxt[mi][j]; j++) {
-                        uint16_t mc = mtxt[mi][j];
-                        if (mc == '&') continue; /* accelerator marker hidden */
-                        if (k < 23) mt[k++] = (mc >= 0x20 && mc < 0x7F) ? (char)mc : '?';
-                    }
-                    mt[k] = 0;
-                    if (!mt[0]) continue;
-                    mwb_text8(&g_surf, mx, by + 6, mt, 0x000000, 1);
-                    mx += mwb_textw(mt, 1) + 24;
-                }
+                mw_band_draw(by, W, H);
                 mwb_fill(&g_surf, MW_NC_FRAME, by + band - 2, W - 2 * MW_NC_FRAME, 2, 0x808080);
             }
         }
@@ -26242,11 +26274,20 @@ __attribute__((ms_abi)) int mw_CheckRadioButton(void* dlg, uint32_t first, uint3
  * calls) traced back to that hole. Model: 8 slots x 16 items (id, state,
  * text, submenu); MF_BYCOMMAND matches by id, MF_BYPOSITION by index. */
 #define MW_MENU_BASE 0x00050000u
-#define MW_MENU_NSLOT 8
-#define MW_MENU_NITEM 16
+/* Wagon 23 (2026-10-31): caps sized to real guest menus — Wine keeps dynamic
+ * lists (dlls/user32/menu.c AppendMenuW into a growing MENUITEM array), so a
+ * fixed registry must exceed what ships inside a real app. Measured in
+ * Notepad++ 8.8.2 RT_MENU 1500: 17 TOP-LEVEL entries (14 text menus + the
+ * tab-bar gadgets '+' 0xFF0B / drop-down 0x25BC / close 0x2715, all
+ * MF_HELP-right-aligned), Edit holds 40+ items, Language ~80. The old
+ * 8x16 silently truncated at 16 — the 17th top entry ('✕' close-tab) was
+ * dropped and the parse looked corrupt. */
+#define MW_MENU_NSLOT 24
+#define MW_MENU_NITEM 64
 typedef struct {
     uint32_t id;
     uint16_t state;      /* MF_CHECKED | MF_GRAYED | MF_DISABLED */
+    uint16_t opt;        /* raw mtOption bits: MF_POPUP | MF_END | MF_HELP(0x4000) */
     void*    sub;        /* MF_POPUP submenu handle */
     uint16_t txt[32];
 } MwMenuItem;
@@ -26272,15 +26313,31 @@ static int mw_menu_band(void) {
     if (slot < 0 || g_menus[slot].popup || g_menus[slot].count == 0) return 0;
     return MW_MENU_BAND_PX;
 }
-/* SW-1520: top-level item texts of the MAIN menu for the painter. */
-static int mw_menu_band_items(uint16_t out[][32], int maxi) {
+/* SW-1520: top-level item texts of the MAIN menu for the painter.
+ * Wagon 23: also exports each item's opt bits so the band can right-align
+ * MF_HELP(0x4000) entries — Notepad++ parks its tab-bar gadgets
+ * ('＋' U+FF0B, '▼' U+25BC, '✕' U+2715) at the RIGHT end of the menu bar
+ * via MF_HELP right-justification; a left-flowing band rendered them
+ * inline as '?' and dropped the 17th item to the old 16-cap. */
+static int mw_menu_band_items(uint16_t out[][32], uint16_t outopt[], uint32_t outid[], int maxi) {
     int slot = mw_menu_slot(g_main_menu);
     if (slot < 0 || !out) return 0;
     int n = (int)g_menus[slot].count;
     if (n > maxi) n = maxi;
-    for (int i = 0; i < n; i++)
+    for (int i = 0; i < n; i++) {
         for (int k = 0; k < 32; k++) out[i][k] = g_menus[slot].item[i].txt[k];
+        if (outopt) outopt[i] = g_menus[slot].item[i].opt;
+        if (outid) outid[i] = g_menus[slot].item[i].id;
+    }
     return n;
+}
+/* Wagon 23: band glyph mapping — the 8x8 font is ASCII-only; the NPP tab
+ * gadgets get their honest ASCII shapes instead of a row of '?' */
+static char mw_band_glyph(uint16_t c) {
+    if (c == 0xFF0Bu) return '+';  /* FULLWIDTH PLUS SIGN  = new tab   */
+    if (c == 0x25BCu) return 'v';  /* BLACK DOWN TRIANGLE  = tab list  */
+    if (c == 0x2715u) return 'x';  /* MULTIPLICATION X     = close tab */
+    return (c >= 0x20 && c < 0x7F) ? (char)c : '?';
 }
 static void* mw_menu_alloc(int popup) {
     for (int i = 0; i < MW_MENU_NSLOT; i++) {
@@ -26315,6 +26372,7 @@ static int mw_menu_add_item(int slot, uint32_t id, uint32_t flags, const uint16_
     /* MENUITEMTEMPLATE options -> stored state uses the same Win32 MF_ bits
      * the rest of the menu model keeps (MF_CHECKED=8 MF_GRAYED=1 MF_DISABLED=2) */
     it->state = (uint16_t)(flags & (8u | 1u | 2u));
+    it->opt = (uint16_t)(flags & (0x10u | 0x80u | 0x4000u)); /* POPUP | END | HELP */
     size_t n = 0;
     while (txt[n] && n < 31) { it->txt[n] = txt[n]; n++; }
     it->txt[n] = 0;
@@ -26370,6 +26428,20 @@ static void* mw_menu_load_from_res(void* hinst, const uint16_t* name) {
             void* h = mw_menu_alloc(0);
             int slot = (int)((uintptr_t)h & 0xFFFFu) - 1;
             if (mw_menu_parse_items(&items, end, slot) == 0) {
+                for (unsigned ti = 0; ti < g_menus[slot].count && ti < 24; ti++) {
+                    char dbg[24]; unsigned dk = 0;
+                    for (int tj = 0; tj < 31 && g_menus[slot].item[ti].txt[tj] && dk < 20; tj++) {
+                        uint16_t tc = g_menus[slot].item[ti].txt[tj];
+                        if (tc == '&') continue;
+                        dbg[dk++] = (tc == 0xFF0Bu) ? '+' : (tc == 0x25BCu) ? 'v'
+                                  : (tc == 0x2715u) ? 'x'
+                                  : (tc >= 0x20 && tc < 0x7F) ? (char)tc : '?';
+                    }
+                    dbg[dk] = 0;
+                    MW_TRACE("[MENU] top[%u] id=%#x opt=%#x '%s'",
+                             ti, g_menus[slot].item[ti].id,
+                             g_menus[slot].item[ti].opt, dbg);
+                }
                 MW_TRACE("LoadMenuW(RT_MENU ver=%u) -> HMENU %p (%u top items)",
                          ver, h, g_menus[slot].count);
                 return h;
