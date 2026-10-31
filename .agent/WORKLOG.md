@@ -2110,3 +2110,28 @@ Stage Summary:
 - Lesson: sweep dirs must be cleaned between batches (per-exe registry
   hive persistence changes guest flow); A/B baselines must be built from
   the true origin ref. Evidence: evidence/sweep066x64/.
+
+## SWEEP-031b «تولبار — ادغام با قطار اصلی» — trio GUI evidence on origin/main (2026-10-31)
+- Local SWEEP-031 session (built on the stale 242af84 base) independently
+  re-derived the toolbar/menu chain: CW_USEDEFAULT real window, armed-timer
+  live pump, post-WM_PAINT frame dump, CreateToolbarEx TBBUTTON chrome,
+  LoadMenu RT_MENU template walk (3 parser bugs found vs python byte
+  cross-checks: .rsrc-BASE-relative subdir RVAs, mtID on every
+  MENUITEMTEMPLATE item, MF_END-on-POPUP deferred ascension). Push was
+  rejected: origin/main is 153 wagons ahead (SWEEP-031 TRAIN-10 line,
+  Wagons 21-25) and already carries the full chain — the remote loader
+  (5,273,600 bytes, libpng/libsqlite3 linked) supersedes every local fix.
+- Reconciliation per the a6acc60 precedent: local main reset to origin/main
+  (local engine commit preserved on branch sweep031-local-backup), loader.c
+  takes the remote evolution, THIS commit is evidence-only.
+- Fresh trio evidence on the origin/main engine (artifacts/sweep031b,
+  3x discipline): produkey/cports alive-pump rc=124 x3, diskmon64 exit0 x3;
+  stdout/stderr byte-identical x3; frame_001 sha256-identical x3; G1
+  regression suite 12/12 PASS on the remote loader.
+- Deliverables for the user's visual review (evidence/sweep031b/screenshots):
+  1_putty_messagebox.png + 2_pageant_messagebox.png (real guest dialog text)
+  and 3_nirsoft_toolbar_trio_frames.png — produkey caption+menubar+list
+  headers, cports columns, diskmon64 real header row (#/Time/Duration/Disk/
+  Request/Sector/Length); also uploaded to uguu.se/tmpfiles.org for direct
+  browser review. Honesty note on the sheet: '?' captions = non-ASCII text
+  beyond the 8x8 ASCII raster; white client = ListView body painting open.

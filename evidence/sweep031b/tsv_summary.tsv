@@ -1,0 +1,10 @@
+program	run	exit	frames	stdout_bytes	stderr_bytes
+produkey	1	124	1	113	187
+produkey	2	124	1	113	187
+produkey	3	124	1	113	187
+cports	1	124	1	109	181
+cports	2	124	1	109	181
+cports	3	124	1	109	181
+diskmon64	1	0	1	115	190
+diskmon64	2	0	1	115	190
+diskmon64	3	0	1	115	190
