@@ -105,7 +105,7 @@ static const uint8_t mw_font_n_bm[] = {
   0x00,0x00,0x00,0x00,0x00,0x08,0xdf,0xc7,0x20,0x4c,0x68,0x10,0x49,0xef,0xc4,0x00,0x00,0x00,0x00,0x00, /* '~' */
 };
 static const MwFontGlyph mw_font_n_g[95] = {
-  {0,0,0,0,0,mw_font_n_bm+0}, /* 32 ' ' */
+  {0,0,0,0,4,mw_font_n_bm+0}, /* 32 ' ' (SW-GUI10: real space advance) */
   {2,3,2,11,6,mw_font_n_bm+1}, /* 33 '!' */
   {1,3,5,4,7,mw_font_n_bm+12}, /* 34 '"' */
   {1,3,11,11,13,mw_font_n_bm+24}, /* 35 '#' */
@@ -300,7 +300,7 @@ static const uint8_t mw_font_b_bm[] = {
   0x00,0x00,0x00,0x00,0x00,0x07,0xdf,0xc7,0x20,0x3c,0x6f,0xff,0xff,0xff,0xff,0x68,0x10,0x49,0xef,0xb3,0x00,0x00,0x00,0x00,0x00, /* '~' */
 };
 static const MwFontGlyph mw_font_b_g[95] = {
-  {0,0,0,0,0,mw_font_b_bm+0}, /* 32 ' ' */
+  {0,0,0,0,4,mw_font_b_bm+0}, /* 32 ' ' (SW-GUI10: real space advance) */
   {2,3,3,11,7,mw_font_b_bm+1}, /* 33 '!' */
   {1,3,6,4,8,mw_font_b_bm+23}, /* 34 '"' */
   {1,3,11,11,13,mw_font_b_bm+35}, /* 35 '#' */
@@ -495,7 +495,7 @@ static const uint8_t mw_font_s_bm[] = {
   0x00,0x00,0x00,0x00,0x3c,0xfc,0x50,0x39,0x73,0x05,0xbf,0xc3, /* '~' */
 };
 static const MwFontGlyph mw_font_s_g[95] = {
-  {0,0,0,0,0,mw_font_s_bm+0}, /* 32 ' ' */
+  {0,0,0,0,3,mw_font_s_bm+0}, /* 32 ' ' (SW-GUI10: real space advance) */
   {1,3,2,9,5,mw_font_s_bm+1}, /* 33 '!' */
   {1,3,4,3,6,mw_font_s_bm+10}, /* 34 '"' */
   {0,4,10,8,10,mw_font_s_bm+16}, /* 35 '#' */

@@ -31,6 +31,7 @@ def render(path, px):
         l, t, r, b = bb
         crop = im.crop(bb)
         adv = font.getlength(chr(ch))
+        if ch == 32: adv = max(adv, round(size * 0.30))  # space must advance
         glyphs.append((int(l) - px, int(t) - px // 2, r - l, b - t, crop.tobytes(), int(round(adv))))
     return glyphs
 
