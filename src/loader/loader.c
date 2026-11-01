@@ -31,6 +31,7 @@
 #include <dlfcn.h>
 
 #include "../include/pe.h"
+#include "../include/mw_font_aa.h" /* SW-GUI7: AA proportional UI font */
 /* ISS1-WAVE3 (Issue #1 §8.4): real-application API families (ImageMagick /
  * ffmpeg corpus demand): stat/statvfs, dir iteration, futex-based address
  * waits, libgen for path transforms. */
@@ -9575,6 +9576,7 @@ __attribute__((ms_abi)) int mw_WaitOnAddress_stub(void) { return 0; }
  * LoadResource/LockResource resolve it to the data VA; SizeofResource reads
  * its Size field. */
 static uint8_t* g_res_dir_base = NULL; /* section base of the last resource walk (SW-801d) */
+static int mw_probe_copy(const void* src, size_t n, void* dst); /* fwd: defined in the pump block */
 static int w3_res_cmp_name(const uint8_t* dir_base, uint32_t name_off, const char* aname, const wchar_t* wname) {
     /* SWEEP-015 SW-801a: IS_INTRESOURCE — FindResource*(NULL, MAKEINTRESOURCE(5),
      * ...) passes numeric type/name as low pointers, never strings. */
@@ -9618,14 +9620,17 @@ static int w3_res_cmp_name(const uint8_t* dir_base, uint32_t name_off, const cha
     if (a_num >= 0) return (a_num == (int)id) ? 0 : 1;
     long want = wname ? -1 : (aname ? atol(aname) : -1);
     if (wname) {
-        wchar_t buf[16];
-        int n = utf8_to_utf16("", buf, 0); (void)n;
-        /* compare wname as decimal number */
-        if (!wname[0]) return 1;
+        /* SW-GUI9 HOTFIX (crash 0x2011632): guest wchar_t is UTF-16 (2 bytes);
+         * the old loop read Linux 4-byte wchar_t units straight from guest
+         * stack memory with no probe and marched past the guard page. */
+        uint16_t tmp[24];
+        if (!mw_probe_copy(wname, 46, tmp)) return 1;
+        tmp[23] = 0;
+        if (!tmp[0]) return 1;
         long acc = 0;
-        for (int i = 0; wname[i]; i++) {
-            if (wname[i] < L'0' || wname[i] > L'9') return 1;
-            acc = acc * 10 + (wname[i] - L'0');
+        for (int i = 0; i < 24 && tmp[i]; i++) {
+            if (tmp[i] < (uint16_t)'0' || tmp[i] > (uint16_t)'9') return 1;
+            acc = acc * 10 + (tmp[i] - '0');
             if (acc > 0x7FFFFFFFl) return 1;
         }
         return acc == id ? 0 : 1;
@@ -11595,10 +11600,27 @@ typedef struct {
     uint16_t text[128]; /* control text (UTF-16, as the guest set/read it) */
     uint8_t  checked;   /* BM_SETCHECK state */
     uint8_t  enabled;
+    /* ---- SW-GUI9: compositor state (real child rendering) ---- */
+    int32_t  x, y, w, h;      /* client-space rect (unset = -1) */
+    uint32_t style;           /* original CreateWindowEx style */
+    void*    himg;            /* STM_SETICON/SETIMAGE handle */
+    void*    himl;            /* TB_SETIMAGELIST / LVM_SETIMAGELIST */
+    /* toolbar buttons (TBBUTTON model, captured) */
+    uint16_t tb_id[128]; int16_t tb_img[128]; uint8_t tb_state[128]; uint8_t tb_style[128];
+    int      tbn;
+    /* statusbar parts */
+    int32_t  sbpart[8]; int sbn; uint8_t sbsimple;
+    uint16_t sbtxt[8][80];
+    /* listbox items */
+    uint16_t lbtxt[64][64]; int lbn;
+    uint8_t from_template; /* SW-GUI9: DLGTEMPLATE child (guest-owned paint) */
 } MwChild;
 static MwChild g_child[MW_CHILD_MAX];
+static int g_win_w = 640, g_win_h = 480; /* SW-GUI9: hoisted for child defaults */
 static uint16_t g_maintitle[128];
 static void*    g_main_menu = 0;
+static void*    g_title_icon = NULL; /* SW-GUI8: WM_SETICON target (compositor reads) */
+static long long (*g_dlgproc_fwd)(void*, uint32_t, uintptr_t, long long); /* SW-GUI9 fwd */
 static void mw_class_name_store_a(const char* n);
 static void mw_class_name_store_w(const uint16_t* n); /* defined in SWEEP-013 batch */
 static int mw_probe_copy(const void* src, size_t n, void* dst); /* defined in the pump block */
@@ -11741,8 +11763,64 @@ static int mw_commonctl_msg(int s, uint32_t msg, uintptr_t wp, long long lp, lon
             lv->items++;
             *out = (long long)idx; return 1;
         }
-        case 0x101Bu: case 0x1045u: /* LVM_INSERTCOLUMNA/W */
-            *out = (long long)lv->cols++; return 1;
+        case 0x101Bu: case 0x1045u: { /* LVM_INSERTCOLUMNA/W: capture header */
+            /* SW-GUI9: store the label + width so the compositor paints a
+             * real header. LVCOLUMN x64: mask@0 iSubItem@4 fmt@8 cx@12
+             * pszText@16 cchTextMax@24 (probe-guarded; some guests build
+             * the 40-byte LVITEM-shaped variant with pszText@24). */
+            int sub = -1;
+            int32_t cxw = 0;
+            if (lp) {
+                uint32_t mask = *(const uint32_t*)lp;
+                sub = *(const int32_t*)((const uint8_t*)lp + 4);
+                cxw = *(const int32_t*)((const uint8_t*)lp + 12);
+                if (!(mask & 0x1u)) cxw = 0;           /* LVCF_FMT only? */
+                if (!(mask & 0xFu)) sub = -1;
+            }
+            if (sub < 0 || sub >= MW_LV_MAXCOL) sub = (int)lv->cols % MW_LV_MAXCOL;
+            if (lp) {
+                const void* tp = *(const void* const*)((const uint8_t*)lp + 16);
+                int cch = *(const int32_t*)((const uint8_t*)lp + 24);
+                uint16_t got[40] = {0};
+                int ok = 0;
+                if (msg == 0x1045u && tp && (uintptr_t)tp > 0x10000u && cch > 0) {
+                    uint16_t tmp[40];
+                    if (mw_probe_copy(tp, (size_t)(cch < 40 ? cch : 40) * 2, tmp)) {
+                        mw_w16cpy(got, tmp, 40);
+                        ok = 1;
+                    }
+                }
+                if (!ok && tp && (uintptr_t)tp > 0x10000u && cch > 0) {
+                    char a[40] = {0};
+                    if (mw_probe_copy(tp, (size_t)(cch < 40 ? cch : 40), a)) {
+                        for (int k = 0; k < 39 && a[k]; k++) got[k] = (uint16_t)(uint8_t)a[k];
+                        ok = 1;
+                    }
+                }
+                if (!ok && tp && (uintptr_t)tp > 0x10000u) { /* pszText@24 variant */
+                    const void* tp2 = *(const void* const*)((const uint8_t*)lp + 24);
+                    int cch2 = *(const int32_t*)((const uint8_t*)lp + 32);
+                    if (msg == 0x1045u && tp2 && (uintptr_t)tp2 > 0x10000u && cch2 > 0) {
+                        uint16_t tmp[40];
+                        if (mw_probe_copy(tp2, (size_t)(cch2 < 40 ? cch2 : 40) * 2, tmp)) {
+                            mw_w16cpy(got, tmp, 40);
+                            ok = 1;
+                        }
+                    }
+                    if (!ok && tp2 && (uintptr_t)tp2 > 0x10000u && cch2 > 0) {
+                        char a[40] = {0};
+                        if (mw_probe_copy(tp2, (size_t)(cch2 < 40 ? cch2 : 40), a)) {
+                            for (int k = 0; k < 39 && a[k]; k++) got[k] = (uint16_t)(uint8_t)a[k];
+                            ok = 1;
+                        }
+                    }
+                }
+                if (ok) mw_w16cpy(lv->coltxt[sub], got, MW_LV_TEXTN);
+                if (cxw > 0 && cxw < 4096) lv->colw[sub] = cxw;
+            }
+            *out = (long long)lv->cols++;
+            return 1;
+        }
         case 0x1073u: { /* LVM_GETITEMTEXTW: wp=item, lp=LVITEMW */
             *out = 0;
             if (!lp) return 1;
@@ -12298,6 +12376,200 @@ static int mw_commonctl_msg(int s, uint32_t msg, uintptr_t wp, long long lp, lon
  * child-control/main-window registries, BM_GETCHECK, and wndproc routing
  * for the main window (the old stub returned 0 for everything, which killed
  * every dialog/control program at its first SendMessage). */
+/* ---- SW-GUI9: child control message models (toolbar/status/static/listbox) */
+static void* mw_loadimage_bitmap_dib(void* hinst, const void* name); /* fwd (SW-GUI9) */
+__attribute__((ms_abi)) void* mw_ImageList_Create(int cx, int cy, uint32_t flags,
+                                                  int cInitial, int cGrow);
+__attribute__((ms_abi)) int mw_ImageList_Add(void* himl, void* hbmImage, void* hbmMask);
+__attribute__((ms_abi)) int mw_ImageList_AddMasked(void* himl, void* hbmImage, uint32_t mask);
+static int mw_child_ctrl_msg(int s, uint32_t msg, uintptr_t wp, long long lp, long long* r) {
+    MwChild* c = &g_child[s];
+    const char* cls = c->cls;
+    /* ---- STATIC: STM_SETICON / STM_SETIMAGE ---- */
+    if (!strcmp(cls, "STATIC") || 1) {
+        if (msg == 0x0170u /*STM_SETICON*/) { c->himg = (void*)wp; *r = 0; return 1; }
+        if (msg == 0x0172u /*STM_SETIMAGE*/) { c->himg = (void*)lp; *r = 0; return 1; }
+    }
+    /* ---- TOOLBAR: TBBUTTON capture + imagelist binding ---- */
+    if (!strcmp(cls, "TOOLBAR")) {
+        switch (msg) {
+        case 0x414u: case 0x444u: { /* TB_ADDBUTTONS A/W */
+            if (!lp || c->tbn >= 128) { *r = 0; return 1; }
+            const uint8_t* b = (const uint8_t*)lp;
+            uint32_t ibm; memcpy(&ibm, b + 0, 4);
+            uint32_t idc; memcpy(&idc, b + 4, 4);
+            c->tb_img[c->tbn] = (int16_t)(int32_t)ibm;
+            c->tb_id[c->tbn] = (uint16_t)idc;
+            c->tb_state[c->tbn] = b[8];
+            c->tb_style[c->tbn] = b[9];
+            c->tbn++;
+            *r = 1;
+            return 1;
+        }
+        case 0x415u: case 0x443u: { /* TB_INSERTBUTTON A/W */
+            if (!lp || c->tbn >= 128) { *r = 0; return 1; }
+            const uint8_t* b = (const uint8_t*)lp;
+            uint32_t ibm; memcpy(&ibm, b + 0, 4);
+            uint32_t idc; memcpy(&idc, b + 4, 4);
+            int at = (int)wp;
+            if (at < 0 || at > c->tbn) at = c->tbn;
+            for (int i = c->tbn; i > at; i--) {
+                c->tb_id[i] = c->tb_id[i - 1]; c->tb_img[i] = c->tb_img[i - 1];
+                c->tb_state[i] = c->tb_state[i - 1]; c->tb_style[i] = c->tb_style[i - 1];
+            }
+            c->tb_img[at] = (int16_t)(int32_t)ibm;
+            c->tb_id[at] = (uint16_t)idc;
+            c->tb_state[at] = b[8];
+            c->tb_style[at] = b[9];
+            c->tbn++;
+            *r = 1;
+            return 1;
+        }
+        case 0x416u: /* TB_DELETEBUTTON */
+            if ((int)wp < c->tbn) {
+                for (int i = (int)wp; i < c->tbn - 1; i++) {
+                    c->tb_id[i] = c->tb_id[i + 1]; c->tb_img[i] = c->tb_img[i + 1];
+                    c->tb_state[i] = c->tb_state[i + 1]; c->tb_style[i] = c->tb_style[i + 1];
+                }
+                c->tbn--;
+            }
+            *r = 1; return 1;
+        case 0x413u: { /* TB_ADDBITMAP: {HINSTANCE hinst; UINT nID} x64 16B */
+            void* bi = (void*)lp;
+            void* bhinst = bi ? *(void* const*)bi : NULL;
+            uint32_t bnid = bi ? *(const uint32_t*)((const uint8_t*)bi + 8) : 0;
+            if (bnid) {
+                void* hbmp = mw_loadimage_bitmap_dib(bhinst ? bhinst : g_image_base,
+                                                     (const void*)(uintptr_t)bnid);
+                if (hbmp) {
+                    if (!c->himl)
+                        c->himl = mw_ImageList_Create(16, 16, 0x19, 4, 4);
+                    if (c->himl) {
+                        int at = mw_ImageList_Add(c->himl, hbmp, NULL);
+                        if (at >= 0) { *r = (long)((at & 0xFFFF) | (1u << 16)); return 1; }
+                    }
+                }
+            }
+            *r = -1;
+            return 1;
+        }
+        case 0x411u: /* TB_SETSTATE: find by command id */
+            for (int i = 0; i < c->tbn; i++)
+                if (c->tb_id[i] == (uint16_t)wp) { c->tb_state[i] = (uint8_t)lp; break; }
+            *r = 1; return 1;
+        case 0x412u: /* TB_GETSTATE */
+            for (int i = 0; i < c->tbn; i++)
+                if (c->tb_id[i] == (uint16_t)wp) { *r = c->tb_state[i]; return 1; }
+            *r = 0; return 1;
+        case 0x418u: *r = c->tbn; return 1; /* TB_BUTTONCOUNT */
+        case 0x431u: /* TB_SETIMAGELIST */
+            c->himl = (void*)lp; *r = 1; return 1;
+        case 0x41Du: { /* TB_GETITEMRECT */
+            if (lp) {
+                int32_t* rc = (int32_t*)lp;
+                int idx = (int)wp;
+                rc[0] = idx * 26; rc[1] = 0; rc[2] = rc[0] + 26; rc[3] = c->h > 0 ? c->h : 22;
+            }
+            *r = 1; return 1;
+        }
+        case 0x43Au: /* TB_GETBUTTONSIZE: MAKELONG(w,h) */
+            *r = (long)((((c->h > 0 ? c->h : 30) & 0xFFFF) << 16) |
+                        ((c->w > 0 ? c->w : 100) & 0xFFFF));
+            return 1;
+        case 0x41Eu: case 0x421u: case 0x41Bu: /* SETBUTTONSIZE/AUTOSIZE/CUSTOMIZE */
+            *r = 1; return 1;
+        }
+        return 0;
+    }
+    /* ---- STATUSBAR: SB_SETTEXT / SB_SETPARTS / SB_SIMPLE ---- */
+    if (!strcmp(cls, "STATUSBAR")) {
+        switch (msg) {
+        case 0x401u: case 0x40Bu: { /* SB_SETTEXT A/W */
+            int part = (int)(wp & 0xFFu);
+            if (part == 0xFF) part = 7; /* SB_SIMPLE text slot */
+            if (part >= 8) { *r = 1; return 1; }
+            if (msg == 0x401u) {
+                char a[160] = {0};
+                if (lp && mw_probe_copy((const void*)lp, 159, a))
+                    for (int i = 0; i < 79 && a[i]; i++) c->sbtxt[part][i] = (uint16_t)(uint8_t)a[i];
+                c->sbtxt[part][79] = 0;
+            } else {
+                uint16_t w2[80];
+                if (lp && mw_probe_copy((const void*)lp, 158, w2)) mw_w16cpy(c->sbtxt[part], w2, 80);
+            }
+            if (part == 7) c->sbsimple = 1;
+            *r = 1;
+            return 1;
+        }
+        case 0x404u: { /* SB_SETPARTS */
+            int n = (int)wp;
+            if (n < 0) { *r = 1; return 1; }
+            if (n > 8) n = 8;
+            c->sbn = 0;
+            if (lp) {
+                int32_t parts[8];
+                if (mw_probe_copy((const void*)lp, (size_t)n * 4, parts))
+                    for (int i = 0; i < n; i++) c->sbpart[c->sbn++] = parts[i];
+            }
+            *r = 1;
+            return 1;
+        }
+        case 0x409u: /* SB_SIMPLE */
+            c->sbsimple = (uint8_t)(wp & 1u);
+            *r = 1; return 1;
+        case 0x402u: case 0x40Cu: { /* SB_GETTEXT A/W: return stored text */
+            int part = (int)(wp & 0xFFu);
+            if (part == 0xFF) part = 7;
+            if (part >= 8 || !lp) { *r = 0; return 1; }
+            if (msg == 0x402u) {
+                char* d = (char*)lp;
+                for (int i = 0; i < 79 && c->sbtxt[part][i]; i++) d[i] = (char)(c->sbtxt[part][i] & 0xFF);
+                d[mw_w16len(c->sbtxt[part])] = 0;
+                *r = (long long)mw_w16len(c->sbtxt[part]);
+            } else {
+                mw_w16cpy((uint16_t*)lp, c->sbtxt[part], 80);
+                *r = (long long)mw_w16len(c->sbtxt[part]);
+            }
+            return 1;
+        }
+        }
+        return 0;
+    }
+    /* ---- LISTBOX: LB_ADDSTRING / LB_GETCOUNT ---- */
+    if (!strcmp(cls, "LISTBOX")) {
+        switch (msg) {
+        case 0x180u: case 0x185u: { /* LB_ADDSTRING A/W */
+            if (c->lbn >= 64) { *r = -1; return 1; }
+            if (msg == 0x180u) {
+                char a[128] = {0};
+                if (lp && mw_probe_copy((const void*)lp, 127, a))
+                    for (int i = 0; i < 63 && a[i]; i++) c->lbtxt[c->lbn][i] = (uint16_t)(uint8_t)a[i];
+            } else {
+                uint16_t w2[64];
+                if (lp && mw_probe_copy((const void*)lp, 126, w2)) mw_w16cpy(c->lbtxt[c->lbn], w2, 64);
+            }
+            *r = c->lbn++;
+            return 1;
+        }
+        case 0x18Bu: *r = c->lbn; return 1; /* LB_GETCOUNT */
+        case 0x198u: /* LB_GETTEXTLEN */
+            if ((int)wp < c->lbn) { *r = (long long)mw_w16len(c->lbtxt[wp]); return 1; }
+            *r = 0; return 1;
+        case 0x189u: { /* LB_GETTEXT */
+            if ((int)wp < c->lbn && lp) {
+                mw_w16cpy((uint16_t*)lp, c->lbtxt[wp], 64);
+                *r = (long long)mw_w16len(c->lbtxt[wp]);
+                return 1;
+            }
+            *r = 0; return 1;
+        }
+        case 0x184u: /* LB_RESETCONTENT */
+            c->lbn = 0; *r = 0; return 1;
+        }
+        return 0;
+    }
+    return 0;
+}
 __attribute__((ms_abi)) long long mw_SendMessageW(void* h, uint32_t msg, uintptr_t wp, long long lp) {
     int s = mw_child_slot(h);
     if (msg == MWWM_SETTEXT) {
@@ -12334,16 +12606,32 @@ __attribute__((ms_abi)) long long mw_SendMessageW(void* h, uint32_t msg, uintptr
         return (src && mw_is_hwnd(h)) ? (long long)mw_w16len(src) : 0;
     }
     if (s >= 0 && msg == MW_BM_GETCHECK) return g_child[s].checked;
-    if (s >= 0 && msg == 0x404u) return 1; /* SW-803..806: SB_SETPARTS -> TRUE */
     { /* SWEEP-019 SW-831..840: SysListView32/SysTreeView32/SysTabControl32 routing */
         long long ctl_r;
         if (s >= 0 && mw_commonctl_msg(s, msg, wp, lp, &ctl_r)) return ctl_r;
     }
-    if (h == MW_GUI_HWND && g_wndproc_fwd) {
-        long long r = g_wndproc_fwd(h, msg, wp, lp);
-        MW_TRACE("SendMessageW(%s wp=0x%llx) -> wndproc -> %lld",
-                 mw_wm_name(msg), (unsigned long long)wp, r);
-        return r;
+    { /* SW-GUI9: toolbar/statusbar/static/listbox control models */
+        long long ctl_r = 0;
+        if (s >= 0 && mw_child_ctrl_msg(s, msg, wp, lp, &ctl_r)) {
+            MW_TRACE("SendMessageW(child %s id=%lu msg=0x%x wp=%#llx) -> %lld",
+                     g_child[s].cls, (unsigned long)g_child[s].id, msg,
+                     (unsigned long long)wp, ctl_r);
+            return ctl_r;
+        }
+    }
+    if (h == MW_GUI_HWND) {
+        /* SW-GUI8: WM_SETICON arms the compositor title-bar icon */
+        if (msg == 0x0080u /*WM_SETICON*/) {
+            if (wp == 1u /*ICON_BIG*/ && lp) g_title_icon = (void*)lp;
+            else if ((wp == 0u) && lp && !g_title_icon) g_title_icon = (void*)lp;
+            return 1;
+        }
+        if (g_wndproc_fwd) {
+            long long r = g_wndproc_fwd(h, msg, wp, lp);
+            MW_TRACE("SendMessageW(%s wp=0x%llx) -> wndproc -> %lld",
+                     mw_wm_name(msg), (unsigned long long)wp, r);
+            return r;
+        }
     }
     MW_TRACE("SendMessageW(hwnd=%p %s) -> 0", h, mw_wm_name(msg));
     return 0;
@@ -12376,13 +12664,28 @@ __attribute__((ms_abi)) long mw_SendMessageA(void* h, uint32_t msg, uintptr_t wp
         return (src && mw_is_hwnd(h)) ? (long)mw_w16len(src) : 0;
     }
     if (s >= 0 && msg == MW_BM_GETCHECK) return g_child[s].checked;
-    if (s >= 0 && msg == 0x404u) return 1; /* SW-803..806: SB_SETPARTS -> TRUE */
     { /* SWEEP-019 SW-831..840: common-control routing (A path) */
         long long ctl_r;
         if (s >= 0 && mw_commonctl_msg(s, msg, wp, lp, &ctl_r)) return (long)ctl_r;
     }
-    if (h == MW_GUI_HWND && g_wndproc_fwd)
-        return (long)g_wndproc_fwd(h, msg, wp, (long long)lp);
+    { /* SW-GUI9: control models (A path) */
+        long long ctl_r = 0;
+        if (s >= 0 && mw_child_ctrl_msg(s, msg, (uintptr_t)wp, (long long)lp, &ctl_r)) {
+            MW_TRACE("SendMessageA(child %s id=%lu msg=0x%x wp=%#llx) -> %lld",
+                     g_child[s].cls, (unsigned long)g_child[s].id, msg,
+                     (unsigned long long)wp, ctl_r);
+            return (long)ctl_r;
+        }
+    }
+    if (h == MW_GUI_HWND) {
+        if (msg == 0x0080u /*WM_SETICON*/) {
+            if (wp == 1u && lp) g_title_icon = (void*)lp;
+            else if ((wp == 0u) && lp && !g_title_icon) g_title_icon = (void*)lp;
+            return 1;
+        }
+        if (g_wndproc_fwd)
+            return (long)g_wndproc_fwd(h, msg, wp, (long long)lp);
+    }
     return 0;
 }
 __attribute__((ms_abi)) void mw_ber_free(void* b, int flags) { (void)b; (void)flags; }
@@ -12841,11 +13144,16 @@ __attribute__((ms_abi)) int mw_InitCommonControlsEx(const void* picc) {
 __attribute__((ms_abi)) void mw_InitCommonControls(void) {
     MW_TRACE("InitCommonControls()");
 }
+static void* g_class_icon = NULL; /* SW-GUI8: WNDCLASSEX hIcon for the title bar */
 __attribute__((ms_abi)) uint16_t mw_RegisterClassExW(const void* wcex) {
     /* SWEEP-005: WNDCLASSEXW.lpfnWndProc lives at offset 8 (after cbSize) */
     if (wcex) {
         mw_gui_store_wndproc(*(void* const*)((const char*)wcex + 8));
         mw_class_name_store_w(*(const uint16_t* const*)((const char*)wcex + 64)); /* SWEEP-013 */
+        { /* SW-GUI8: hIcon@32 (x64 WNDCLASSEX) — title bar falls back to it */
+            void* hic = *(void* const*)((const char*)wcex + 32);
+            if (hic && (uintptr_t)hic > 0x10000u) g_class_icon = hic;
+        }
     }
     MW_TRACE("RegisterClassExW(wcex=%p) -> ATOM 0x%x", wcex, MW_GUI_ATOM);
     return MW_GUI_ATOM;
@@ -12978,6 +13286,11 @@ static void* mw_child_register(int sc, void* parent, void* menu,
         g_child[i].id = (uint32_t)(uintptr_t)menu; /* HMENU doubles as control id */
         g_child[i].checked = 0;
         g_child[i].enabled = 1;
+        /* SW-GUI9: compositor defaults */
+        g_child[i].x = g_child[i].y = g_child[i].w = g_child[i].h = -1;
+        g_child[i].style = 0; g_child[i].himg = NULL; g_child[i].himl = NULL;
+        g_child[i].tbn = 0; g_child[i].sbn = 0; g_child[i].sbsimple = 0;
+        g_child[i].lbn = 0; g_child[i].from_template = 0;
         snprintf(g_child[i].cls, sizeof(g_child[i].cls), "%s", mw_sysclass_name(sc));
         if (text) {
             if (wide) mw_w16cpy(g_child[i].text, (const uint16_t*)text, 128);
@@ -13002,9 +13315,27 @@ __attribute__((ms_abi)) void* mw_CreateWindowExW(uint32_t exstyle, const void* c
         const uint16_t* win, uint32_t style, int x, int y, int w, int h,
         void* parent, void* menu, void* inst, void* param) {
     int sc = mw_sysclass_w(cls);
-    if (sc && parent) { /* SWEEP-013: child control — engine-internal wndproc */
-        (void)exstyle; (void)x; (void)y; (void)style;
-        return mw_child_register(sc, parent, menu, win, 1, NULL);
+    if (parent) { /* SWEEP-013 + SW-GUI9: ANY parented window is a child —
+                   * custom-class children used to hijack the main surface */
+        (void)exstyle;
+        void* hh = mw_child_register(sc, parent, menu, win, 1, NULL);
+        if (hh) {
+            int s = mw_child_slot(hh);
+            if (s >= 0) {
+                g_child[s].x = x; g_child[s].y = y;
+                g_child[s].w = w; g_child[s].h = h;
+                g_child[s].style = style;
+                if (!sc && cls && (uintptr_t)cls > 0x10000u) {
+                    uint16_t cn[16] = {0};
+                    if (mw_probe_copy(cls, 30, cn))
+                        for (int k = 0; k < 15 && cn[k]; k++)
+                            g_child[s].cls[k] = (char)(cn[k] & 0xFF);
+                    if (!g_child[s].cls[0]) snprintf(g_child[s].cls, 16, "WINDOW");
+                    MW_TRACE("[GUI] child (custom class '%s') -> HWND %p", g_child[s].cls, hh);
+                }
+            }
+        }
+        return hh;
     }
     g_create_param = param; /* SW-802..806: forward lpParam into CREATESTRUCT */
     mw_gui_store_window((int)w, (int)h); /* SWEEP-005: allocate paint surface */
@@ -13017,9 +13348,27 @@ __attribute__((ms_abi)) void* mw_CreateWindowExA(uint32_t exstyle, const void* c
         const char* win, uint32_t style, int x, int y, int w, int h,
         void* parent, void* menu, void* inst, void* param) {
     int sc = mw_sysclass_a(cls);
-    if (sc && parent) { /* SWEEP-013: child control — engine-internal wndproc */
-        (void)exstyle; (void)x; (void)y; (void)style;
-        return mw_child_register(sc, parent, menu, win, 0, NULL);
+    if (parent) { /* SW-GUI9: any parented window is a child (custom class kept) */
+        (void)exstyle;
+        void* hh = mw_child_register(sc, parent, menu, win, 0, NULL);
+        if (hh) {
+            int s = mw_child_slot(hh);
+            if (s >= 0) {
+                g_child[s].x = x; g_child[s].y = y;
+                g_child[s].w = w; g_child[s].h = h;
+                g_child[s].style = style;
+                if (!sc && cls) {
+                    char cn[16] = {0};
+                    if (mw_probe_copy(cls, 15, cn)) {
+                        for (int k = 0; k < 15; k++) g_child[s].cls[k] = cn[k];
+                        g_child[s].cls[15] = 0;
+                    }
+                    if (!g_child[s].cls[0]) snprintf(g_child[s].cls, 16, "WINDOW");
+                    MW_TRACE("[GUI] child (custom class '%s') -> HWND %p", g_child[s].cls, hh);
+                }
+            }
+        }
+        return hh;
     }
     g_create_param = param; /* SW-802..806: forward lpParam into CREATESTRUCT */
     mw_gui_store_window((int)w, (int)h); /* SWEEP-005: allocate paint surface */
@@ -13212,15 +13561,50 @@ __attribute__((ms_abi)) int mw_StretchBlt(void* hdcDst, int x, int y, int w, int
 /* CreateToolbarEx(hwndParent, ws, id, nBitmaps, hBMInst, wBMID, buttons,
  * nButtons, dxButton, dyButton, dxBitmap, dyBitmap, uStructSize) — NirSoft
  * main toolbar. Engine registers a TOOLBAR child identity; the guest uses
- * the returned HWND for SendMessage layout traffic. */
+ * the returned HWND for SendMessage layout traffic.
+ * (SW-GUI8/9: bitmap strip -> auto imagelist; button array captured.) */
 __attribute__((ms_abi)) void* mw_CreateToolbarEx(void* parent, uint32_t ws, uint32_t id,
         int nBitmaps, void* hBMInst, uint32_t wBMID, const void* buttons, int nButtons,
         int dxButton, int dyButton, int dxBitmap, int dyBitmap, uint32_t structSize) {
-    (void)ws; (void)nBitmaps; (void)hBMInst; (void)wBMID; (void)buttons;
-    (void)nButtons; (void)dxButton; (void)dyButton; (void)dxBitmap; (void)dyBitmap;
-    (void)structSize;
+    (void)ws; (void)nBitmaps; (void)dxButton; (void)dyButton;
     void* h = mw_child_register(0x86, parent, (void*)(uintptr_t)id, NULL, 0, NULL);
-    MW_TRACE("[GUI] CreateToolbarEx(id=%u nbtn=%d) -> HWND %p", id, nButtons, h);
+    int s = mw_child_slot(h);
+    if (s >= 0) {
+        g_child[s].w = 1024; g_child[s].h = dyButton > 0 ? dyButton + 8 : 30;
+        g_child[s].y = 0; g_child[s].x = 0;
+        /* SW-GUI9: capture the button array (guest TBBUTTON stride honored) */
+        if (buttons && nButtons > 0) {
+            uint32_t stride = structSize ? structSize : 32; /* x64 TBBUTTON */
+            if (stride < 8) stride = 8;
+            if (stride > 64) stride = 64;
+            for (int i = 0; i < nButtons && g_child[s].tbn < 128; i++) {
+                uint8_t one[64];
+                if (!mw_probe_copy((const uint8_t*)buttons + (size_t)i * stride,
+                                   (size_t)stride, one)) break;
+                uint32_t ibm; memcpy(&ibm, one + 0, 4);
+                uint32_t idc; memcpy(&idc, one + 4, 4);
+                g_child[s].tb_img[g_child[s].tbn] = (int16_t)(int32_t)ibm;
+                g_child[s].tb_id[g_child[s].tbn] = (uint16_t)idc;
+                g_child[s].tb_state[g_child[s].tbn] = one[8];
+                g_child[s].tb_style[g_child[s].tbn] = one[9];
+                g_child[s].tbn++;
+            }
+        }
+        /* SW-GUI8: strip-bitmap resource -> auto imagelist (hBMInst==NULL) */
+        if (hBMInst == NULL && wBMID) {
+            void* hbmp = mw_loadimage_bitmap_dib(g_image_base, (const void*)(uintptr_t)wBMID);
+            if (hbmp) {
+                void* il = mw_ImageList_Create(dxBitmap > 0 ? dxBitmap : 16,
+                                               dyBitmap > 0 ? dyBitmap : 16,
+                                               0x18 /*ILC_COLOR16|ILC_MASK typical*/, 4, 4);
+                if (il && mw_ImageList_Add(il, hbmp, NULL) >= 0)
+                    g_child[s].himl = il;
+            }
+        }
+    }
+    MW_TRACE("[GUI] CreateToolbarEx(id=%u nbtn=%d nBitmaps=%d hBMInst=%p wBMID=%u dx=%d dy=%d struct=%u) -> HWND %p (captured %d)",
+             id, nButtons, nBitmaps, hBMInst, wBMID, dxBitmap, dyBitmap, structSize,
+             h, s >= 0 ? g_child[s].tbn : 0);
     return h;
 }
 /* CreateStatusWindowA/W(style, lpszText, hwndParent, wID) — NirSoft status
@@ -13228,12 +13612,22 @@ __attribute__((ms_abi)) void* mw_CreateToolbarEx(void* parent, uint32_t ws, uint
 __attribute__((ms_abi)) void* mw_CreateStatusWindowA(uint32_t style, const char* text,
         void* parent, uint32_t id) {
     void* h = mw_child_register(0x87, parent, (void*)(uintptr_t)id, text, 0, NULL);
+    int s = mw_child_slot(h);
+    if (s >= 0) { /* bottom strip default; MoveWindow/SetWindowPos refine */
+        g_child[s].x = 0; g_child[s].y = g_win_h > 32 ? g_win_h - 24 : 676;
+        g_child[s].w = g_win_w > 32 ? g_win_w : 1024; g_child[s].h = 24;
+    }
     MW_TRACE("[GUI] CreateStatusWindowA(style=0x%x id=%u) -> HWND %p", style, id, h);
     return h;
 }
 __attribute__((ms_abi)) void* mw_CreateStatusWindowW(uint32_t style, const uint16_t* text,
         void* parent, uint32_t id) {
     void* h = mw_child_register(0x87, parent, (void*)(uintptr_t)id, text, 1, NULL);
+    int s = mw_child_slot(h);
+    if (s >= 0) {
+        g_child[s].x = 0; g_child[s].y = g_win_h > 32 ? g_win_h - 24 : 676;
+        g_child[s].w = g_win_w > 32 ? g_win_w : 1024; g_child[s].h = 24;
+    }
     MW_TRACE("[GUI] CreateStatusWindowW(style=0x%x id=%u) -> HWND %p", style, id, h);
     return h;
 }
@@ -13387,7 +13781,6 @@ __attribute__((ms_abi)) int mw_MessageBoxA(void* hwnd, const char* text,
 /* SWEEP-013: MW_WNDPROC typedef + g_wndproc_fwd moved to the mini-window-manager block */
 
 static void*     g_main_hwnd = 0;
-static int       g_win_w = 640, g_win_h = 480;
 /* SW-802..806: WM_CREATE lParam must be a readable CREATESTRUCT* whose
  * lpCreateParams (first field) is guest-writable — NirSoft WndProcs do
  *   rdx = *(lParam); *(rdx+0x110) = hwnd;   (cports @0x2119, produkey @0x22f24)
@@ -13435,18 +13828,40 @@ static uint32_t  g_clickv[64]; static int g_clickn = 0, g_clicki = 0;
 static int       g_click_every = 2;
 static int       g_frame_no = 0;
 static char      g_frame_dir[600];
+/* SW-GUI9: compositor state */
+static int       g_guest_painted = 0;  /* guest drew on the surface this frame */
+static int       g_frame_dumps = 0;    /* dumps emitted for the current WM_PAINT */
+static void      mw_gui_dump_composited_core(void); /* defined after the menu model */
 
 /* GDI draw state (colors stored as 0xRRGGBB, guest COLORREF is 0x00BBGGRR) */
 static uint32_t  g_cur_brush = 0xFFFFFF; static int g_brush_hollow = 0;
 static uint32_t  g_cur_pen = 0x000000;
 static int       g_pen_x = 0, g_pen_y = 0;
 static uint32_t  g_text_col = 0x000000;
-static int       g_text_align = 0;    /* SWEEP-023 SW-985: TA_* from SetTextAlign */
+static int       g_text_align = 0;    /* SW-985: TA_* from SetTextAlign */
 static uint32_t  g_bk_col = 0xFFFFFF;
 static int       g_bk_mode = 2;        /* OPAQUE=2, TRANSPARENT=1 */
 static uint32_t  g_brush_rgb[32]; static uint8_t g_brush_live[32];
 static uint32_t  g_pen_rgb[32];   static uint8_t g_pen_live[32];
 static int       g_obj_next = 0;
+static int       g_cur_font_bold = 0; /* SW-GUI7: selected HFONT weight>=700 */
+#define MW_HFONT_BASE 0x00070000u     /* SW-GUI7: hoisted for SelectObject */
+/* SW-GUI7: LOGFONT store (hoisted; SelectObject reads the weight) */
+static uint8_t g_lf_live[8];
+static uint8_t g_lf_raw[8][92]; /* LOGFONTW raw bytes */
+static int      g_lf_size[8];   /* 92 (W) or 60 (A) */
+/* SW-GUI8: icon engine forward surface (registry lives later in the file) */
+typedef struct { int w, h; uint32_t* px; void* self; } MwIconObj; /* px=0xAARRGGBB, self=handle */
+static void* mw_icon_alloc(int w, int h);
+static MwIconObj* mw_icon_get(void* h);
+static void mw_icon_free(void* h);
+static void mw_icon_blit(MWBmp* d, int dx, int dy, const MwIconObj* ic, int w, int h);
+static int mw_icon_decode_any(const uint8_t* p, uint32_t n, MwIconObj* out);
+static int mw_ico_file_decode(const char* path, int want, MwIconObj* out);
+static void* mw_groupicon_load_h(void* hinst, const void* wname, int want);
+static void* mw_icon_decode_to_handle(const uint8_t* p, uint32_t n, int dw, int dh);
+static void* mw_icon_system(int idi);
+static int mw_icon_blit_hdc(void* dc, int x, int y, void* icon, int cx, int cy);
 
 /* ---- SWEEP-006: memory DCs + compatible bitmaps + BitBlt (real double buffering) ----
  * A memory DC (CreateCompatibleDC) draws into a compatible bitmap
@@ -13500,9 +13915,37 @@ static int mw_probe_copy(const void* src, size_t n, void* dst) {
 
 /* ---- registry / surface hooks (called from SWEEP-003 stubs) ---- */
 static void mw_gui_store_wndproc(void* proc) { if (proc) g_wndproc_fwd = (MW_WNDPROC)proc; }
+/* SW-GUI9: exact resize (template dialogs own the whole surface) */
+static void mw_gui_resize_surface(int w, int h) {
+    if (w < 32 || h < 32 || w > 1920 || h > 1200) return;
+    if (!g_surf.px) { mw_gui_store_window(w, h); return; }
+    if (g_surf.w == w && g_surf.h == h) return;
+    uint8_t* np = (uint8_t*)calloc((size_t)w * (size_t)h, 3);
+    if (!np) return;
+    {
+        MWBmp tmp = { np, w, h, 0, 0, 0 };
+        mwb_fill(&tmp, 0, 0, w, h, 0xF0F0F0);
+    }
+    free(g_surf.px);
+    g_surf.px = np; g_surf.w = w; g_surf.h = h;
+    g_win_w = w; g_win_h = h;
+    MW_TRACE("[GUI] surface resized to %dx%d (template dialog)", w, h);
+}
+
 static void mw_gui_store_window(int w, int h) {
-    if (w < 32) w = 32; if (w > 1280) w = 1280;
-    if (h < 32) h = 32; if (h > 1024) h = 1024;
+    /* SW-GUI9: CW_USEDEFAULT (0x80000000 / 0x8000) and garbage dims normalize
+     * to a modern 1024x700 client (MW_WIN_W/MW_WIN_H override). */
+    static int dw = 0, dh = 0;
+    if (!dw) {
+        const char* ew = getenv("MW_WIN_W"); const char* eh = getenv("MW_WIN_H");
+        dw = ew ? atoi(ew) : 1024; dh = eh ? atoi(eh) : 700;
+        if (dw < 100) dw = 100; if (dw > 1920) dw = 1920;
+        if (dh < 80) dh = 80;  if (dh > 1200) dh = 1200;
+    }
+    if (w == 0x80000000 || (w & 0xFFFF) == 0x8000 || w <= 0 || w > 8192) w = dw;
+    if (h == 0x80000000 || (h & 0xFFFF) == 0x8000 || h <= 0 || h > 8192) h = dh;
+    if (w < 32) w = 32; if (w > 1920) w = 1920;
+    if (h < 32) h = 32; if (h > 1200) h = 1200;
     g_win_w = w; g_win_h = h; g_main_hwnd = MW_GUI_HWND;
     if (!g_surf.px) {
         g_surf.px = (uint8_t*)calloc((size_t)w * (size_t)h, 3);
@@ -13511,6 +13954,17 @@ static void mw_gui_store_window(int w, int h) {
         snprintf(g_frame_dir, sizeof(g_frame_dir), "%s/screenshots", g_result_base_dir);
         mkdir(g_result_base_dir, 0755); mkdir(g_frame_dir, 0755);
         MW_TRACE("[GUI] paint surface allocated %dx%d (SWEEP-005)", w, h);
+    } else if (w * h > g_surf.w * g_surf.h) {
+        /* SW-GUI9: a later, larger top-level window grows the surface */
+        uint8_t* np = (uint8_t*)calloc((size_t)w * (size_t)h, 3);
+        if (np) {
+            for (int y = 0; y < g_surf.h && y < h; y++)
+                memcpy(np + 3 * ((size_t)y * w), g_surf.px + 3 * ((size_t)y * g_surf.w),
+                       (size_t)g_surf.w * 3);
+            free(g_surf.px);
+            g_surf.px = np; g_surf.w = w; g_surf.h = h;
+            MW_TRACE("[GUI] paint surface grew to %dx%d", w, h);
+        }
     }
 }
 static void mw_gui_set_quit(int code) { g_quit_flag = 1; g_quit_code = code; }
@@ -13521,6 +13975,7 @@ static void mw_gui_send_destroy(void* hwnd) {
     }
 }
 static void mw_gui_request_paint(void) { g_paint_pending = 1; }
+static uint8_t g_size_pending = 0; /* SW-GUI9: one queued WM_SIZE (decl before use) */
 /* SWEEP-006: real Win32 sends WM_CREATE synchronously inside CreateWindowEx
  * (guests create their double buffers / child controls there). Gated on the
  * event pump so the v1 no-pump contract is unchanged. */
@@ -13549,6 +14004,11 @@ static void mw_gui_send_create(void) {
         long long r = g_wndproc_fwd(MW_GUI_HWND, 0x0001u, 0, (long long)(intptr_t)cs); /* WM_CREATE */
         MW_TRACE("[GUI] WM_CREATE(lparam=&CS lpParams=%p) -> wndproc -> %lld",
                  *(void**)cs, r);
+        /* SW-GUI9: WM_SIZE is QUEUED (delivered by the pump before the first
+         * WM_PAINT) — the synchronous variant crashed putty, whose WM_SIZE
+         * handler dereferences state that only exists after its init
+         * completes; NirSoft/7z-class guests still get their layout pass. */
+        g_size_pending = 1;
     }
 }
 
@@ -13629,6 +14089,15 @@ static int mw_gui_next_event(void* msg, void* hwnd, int consume, const char* api
                      g_delivered, api, (unsigned long)id, ctl);
         return 1;
     }
+    if (g_size_pending) { /* SW-GUI9: layout pass ahead of the first paint */
+        if (consume) { g_size_pending = 0; g_delivered++; }
+        mw_gui_fill_msg(msg, h, 0x0005u, (uintptr_t)0,
+                        (long long)((g_win_w & 0xFFFF) | ((g_win_h & 0xFFFF) << 16)));
+        if (consume)
+            MW_TRACE("[GUI-EVENT] #%d %s -> WM_SIZE %dx%d", g_delivered, api,
+                     g_win_w, g_win_h);
+        return 1;
+    }
     if (g_paint_pending) {
         if (consume) { g_paint_pending = 0; g_delivered++; }
         mw_gui_fill_msg(msg, h, 0x000Fu, 0, 0);
@@ -13680,10 +14149,33 @@ static int mw_gui_next_event(void* msg, void* hwnd, int consume, const char* api
     return 0;
 }
 
+/* ---- SW-GUI4: blocking pump (MW_GUI_PUMP_BLOCK) ----
+ * A real GetMessage BLOCKS when no event is queued; the v3 pump quit the
+ * loop instead, so non-timer GUIs (NirSoft, 7-Zip FM, installers) painted
+ * one frame and exited. With the block pump on, an idle pump throttles an
+ * idle repaint (40ms) — the same settle loop a real window manager runs —
+ * and MW_GUI_MAX_FRAMES (default 120) ends the run deterministically by
+ * posting WM_QUIT after the cap. The spin guard catches guests that idle
+ * without ever painting. Console and MW_GUI_EVENTS=0 paths are unchanged. */
+static int       g_pump_block = -1;   /* -1 = unresolved */
+static int       g_frame_max = -1;
+static long long g_last_paint_ms = -100000;
+static long long g_idle_spins = 0;
+#define MW_IDLE_SPIN_GUARD 4000000LL
+
 static int mw_gui_pump_getmsg(void* msg, void* hwnd, const char* api) {
     if (!mw_gui_events_enabled()) {
         MW_TRACE("%s(hwnd=%p) -> 0 (WM_QUIT: no event source)", api, hwnd);
         return 0;
+    }
+    if (g_pump_block < 0) {
+        const char* pb = getenv("MW_GUI_PUMP_BLOCK");
+        g_pump_block = (pb && pb[0] && pb[0] != '0') ? 1 : 0;
+        const char* fm = getenv("MW_GUI_MAX_FRAMES");
+        g_frame_max = fm ? atoi(fm) : 120;
+        if (g_frame_max < 0) g_frame_max = -1; /* explicit negative = no cap */
+        if (g_pump_block)
+            MW_TRACE("[GUI] pump BLOCK armed (max_frames=%d)", g_frame_max);
     }
     /* Win32: when GetMessage returns 0 the MSG holds WM_QUIT with wParam =
      * the PostQuitMessage code — guests do `return (int)msg.wParam;` */
@@ -13698,7 +14190,53 @@ static int mw_gui_pump_getmsg(void* msg, void* hwnd, const char* api) {
         mw_gui_fill_msg(msg, hwnd, 0x0012u, 0, 0);
         return 0;
     }
-    if (mw_gui_next_event(msg, hwnd, 1, api)) return 1;
+    if (mw_gui_next_event(msg, hwnd, 1, api)) { g_idle_spins = 0; return 1; }
+    if (g_pump_block) {
+        /* SW-GUI4: real GetMessage BLOCKS here instead of quitting. Idle
+         * time produces a throttled WM_PAINT (settle repaint); the frame
+         * cap and the spin guard end the run deterministically. Iterative:
+         * the earlier re-entry-by-recursion variant overflowed the host
+         * stack after ~80k idle spins (produkey has no timer). */
+        for (;;) {
+            if (g_quit_flag) {
+                MW_TRACE("%s() -> 0 (WM_QUIT code=%d)", api, g_quit_code);
+                mw_gui_fill_msg(msg, hwnd, 0x0012u, (uintptr_t)g_quit_code, 0);
+                return 0;
+            }
+            if (g_delivered >= g_budget) {
+                MW_TRACE("[GUI] event budget %d exhausted -> WM_QUIT", g_budget);
+                g_quit_flag = 1;
+                mw_gui_fill_msg(msg, hwnd, 0x0012u, 0, 0);
+                return 0;
+            }
+            if (mw_gui_next_event(msg, hwnd, 1, api)) { g_idle_spins = 0; return 1; }
+            if (g_frame_max >= 0 && g_frame_no >= g_frame_max) {
+                MW_TRACE("[GUI] frame cap %d reached -> WM_QUIT", g_frame_max);
+                g_quit_flag = 1;
+                mw_gui_fill_msg(msg, hwnd, 0x0012u, 0, 0);
+                return 0;
+            }
+            if (g_idle_spins >= MW_IDLE_SPIN_GUARD) {
+                MW_TRACE("[GUI] idle spin guard (%lld) -> WM_QUIT", g_idle_spins);
+                g_quit_flag = 1;
+                mw_gui_fill_msg(msg, hwnd, 0x0012u, 0, 0);
+                return 0;
+            }
+            g_idle_spins++;
+            long long now = mw_mono_ms();
+            if (now - g_last_paint_ms >= 40) {
+                g_last_paint_ms = now;
+                g_delivered++;
+                mw_gui_fill_msg(msg, g_main_hwnd ? g_main_hwnd : hwnd,
+                                0x000Fu, 0, 0);
+                MW_TRACE("[GUI-EVENT] #%d %s -> WM_PAINT (block-idle)",
+                         g_delivered, api);
+                return 1;
+            }
+            struct timespec ts = { 0, 2 * 1000 * 1000 }; /* 2ms block sleep */
+            nanosleep(&ts, NULL);
+        }
+    }
     MW_TRACE("%s() -> 0 (no event source: no timer/paint/keys left)", api);
     g_quit_flag = 1;
     mw_gui_fill_msg(msg, hwnd, 0x0012u, 0, 0);
@@ -13713,8 +14251,16 @@ static long long mw_gui_dispatch_msg(const void* msg) {
     uintptr_t wp = *(const uintptr_t*)(p + 16);
     long long lp = *(const long long*)(p + 24);
     if (m == 0x0012u) return 0; /* WM_QUIT is never dispatched */
-    if (g_wndproc_fwd && hwnd == g_main_hwnd) {
+    void* route_hwnd = g_main_hwnd;
+    if (!route_hwnd && g_dlgproc_fwd) route_hwnd = (void*)(uintptr_t)0x00010002u;
+    if (g_wndproc_fwd && hwnd == route_hwnd) {
+        if (m == 0x000Fu) { g_guest_painted = 0; g_frame_dumps = 0; } /* SW-GUI9 */
         long long r = g_wndproc_fwd(hwnd, m, wp, lp);
+        if (m == 0x000Fu && g_frame_dumps == 0) {
+            /* the guest validated without painting (children own the pixels):
+             * still produce the frame — composited chrome + children */
+            mw_gui_dump_composited_core();
+        }
         MW_TRACE("[GUI-EVENT] dispatch %s wp=0x%llx -> %lld",
                  mw_wm_name(m), (unsigned long long)wp, r);
         return r;
@@ -13736,11 +14282,19 @@ __attribute__((ms_abi)) void* mw_BeginPaint(void* hwnd, void* ps) {
         *(int32_t*)(p + 20) = g_win_w; *(int32_t*)(p + 24) = g_win_h;
     }
     if (g_surf.px) mwb_fill(&g_surf, 0, 0, g_surf.w, g_surf.h, 0xFFFFFF); /* erase */
+    g_guest_painted = 1; /* SW-GUI9: the guest owns this frame's client pixels */
     MW_TRACE("BeginPaint(hwnd=%p) -> hdc 0x20001 (%dx%d)", hwnd, g_win_w, g_win_h);
     return (void*)0x00020001;
 }
-/* 24-bit bottom-up BMP writer for the window surface */
+/* 24-bit bottom-up BMP writer for the window surface.
+ * SW-GUI9: the write itself moved into the composited dump (chrome +
+ * children composite at dump time; guest pixels are never touched). */
 static void mw_surface_dump(const char* kind) {
+    (void)kind;
+    mw_gui_dump_composited_core();
+}
+#if 0 /* original raw writer kept for reference (SW-GUI9 replaced it) */
+static void mw_surface_dump_raw_unreferenced(void) {
     if (!g_surf.px) return;
     /* SWEEP-011: MINWIN_SCREENSHOT=0 skips per-frame BMP disk writes
      * (breakout: 381 frames per run); frame NUMBERING is preserved so
@@ -13783,6 +14337,7 @@ static void mw_surface_dump(const char* kind) {
         fprintf(stderr, "[GDI-FRAME] #%d -> %s\n", g_frame_no, path);
     }
 }
+#endif /* raw writer reference */
 __attribute__((ms_abi)) int mw_EndPaint(void* hwnd, const void* ps) {
     (void)hwnd; (void)ps;
     mw_surface_dump("EndPaint");
@@ -13798,6 +14353,7 @@ __attribute__((ms_abi)) int mw_ReleaseDC(void* hwnd, void* hdc) {
 }
 
 /* ---- SWEEP-005 part 2: USER32 draw stubs + GDI32 pseudo-module ---- */
+__attribute__((ms_abi)) uint32_t mw_GetSysColor(int idx); /* SW-GUI6: defined below */
 __attribute__((ms_abi)) int mw_FillRect(void* hdc, const void* rect, void* hbrush) {
     MWBmp* S = mw_dc_surface(hdc); /* SWEEP-006: route by DC */
     if (rect && S) {
@@ -13816,11 +14372,13 @@ __attribute__((ms_abi)) int mw_FillRect(void* hdc, const void* rect, void* hbrus
             case 4: col = 0x000000; break;
             case 5: hollow = 1; break; /* NULL_BRUSH: paints nothing */
             case 18: col = 0xFFFFFF; break; /* DC_BRUSH */
-            default: col = 0xC0C0C0; break;
+            /* SW-GUI6: GetSysColorBrush(idx) follows the modern syspalette */
+            default: col = mw_cr2rgb(mw_GetSysColor(idx)); break;
             }
         }
         if (!hollow) {
             mwb_fill(S, r[0], r[1], r[2] - r[0], r[3] - r[1], col);
+            g_guest_painted = 1; /* SW-GUI9 */
             MW_TRACE("[GDI] FillRect(%d,%d)-(%d,%d) color=#%06x", r[0], r[1], r[2], r[3], col);
         }
     }
@@ -13847,15 +14405,41 @@ __attribute__((ms_abi)) int mw_ValidateRect(void* hwnd, const void* rect) {
     return 1;
 }
 __attribute__((ms_abi)) uint32_t mw_GetSysColor(int idx) {
-    uint32_t c; /* COLORREF 0x00BBGGRR, classic Win95 palette */
-    switch (idx) {
-    case 5:  c = 0x00FFFFFF; break;  /* COLOR_WINDOW */
-    case 8:  c = 0x00000000; break;  /* COLOR_WINDOWTEXT */
-    case 13: c = 0x00800000; break;  /* COLOR_HIGHLIGHT */
-    case 15: case 16: c = 0x00C0C0C0; break; /* BTNFACE / 3DFACE */
-    case 17: c = 0x00808080; break;  /* COLOR_3DSHADOW */
-    case 18: c = 0x00000000; break;  /* COLOR_BTNTEXT */
-    default: c = 0x00C0C0C0; break;
+    /* COLORREF 0x00BBGGRR. SW-GUI6: modern (Win10-class) palette — the old
+     * table handed guests the Win95 3D gray (#C0C0C0), which painted every
+     * UI Win98-beige. #F0F0F0 face + #ADADAD border + #0078D7 accent is the
+     * modern metric set. GUEST-OVERRIDE with MW_SYSCLASSIC=1 restores the
+     * classic palette for A/B evidence. */
+    static int classic = -1;
+    if (classic < 0) {
+        const char* c = getenv("MW_SYSCLASSIC");
+        classic = (c && c[0] && c[0] != '0') ? 1 : 0;
+    }
+    uint32_t c;
+    if (classic) {
+        switch (idx) {
+        case 5:  c = 0x00FFFFFF; break;
+        case 8:  c = 0x00000000; break;
+        case 13: c = 0x00800000; break;
+        case 15: case 16: c = 0x00C0C0C0; break;
+        case 17: c = 0x00808080; break;
+        case 18: c = 0x00000000; break;
+        default: c = 0x00C0C0C0; break;
+        }
+    } else {
+        switch (idx) {
+        case 5:  c = 0x00FFFFFF; break;  /* COLOR_WINDOW */
+        case 8:  c = 0x00000000; break;  /* COLOR_WINDOWTEXT */
+        case 13: c = 0x00D77800; break;  /* COLOR_HIGHLIGHT  #0078D7 */
+        case 13+1: c = 0x00D77800; break; /* COLOR_GRADIENTACTIVECAPTION */
+        case 15: case 16: c = 0x00F0F0F0; break; /* BTNFACE / 3DFACE */
+        case 17: c = 0x00ADADAD; break;  /* COLOR_3DSHADOW #ADADAD */
+        case 20: c = 0x00ADADAD; break;  /* COLOR_3DLIGHT */
+        case 18: c = 0x00000000; break;  /* COLOR_BTNTEXT */
+        case 10: c = 0x00F0F0F0; break;  /* COLOR_SCROLLBAR */
+        case 26: c = 0x00F0F0F0; break;  /* COLOR_HOTLIGHT */
+        default: c = 0x00F0F0F0; break;
+        }
     }
     MW_TRACE("GetSysColor(%d) -> 0x%06x", idx, c);
     return c;
@@ -13867,14 +14451,6 @@ __attribute__((ms_abi)) void* mw_LoadCursorA(void* h, const char* name) {
 __attribute__((ms_abi)) void* mw_LoadCursorW(void* h, const uint16_t* name) {
     (void)h; (void)name;
     return (void*)0x00050001;
-}
-__attribute__((ms_abi)) void* mw_LoadIconA(void* h, const char* name) {
-    (void)h; (void)name;
-    return (void*)0x00050002;
-}
-__attribute__((ms_abi)) void* mw_LoadIconW(void* h, const uint16_t* name) {
-    (void)h; (void)name;
-    return (void*)0x00050002;
 }
 __attribute__((ms_abi)) long long mw_CallWindowProcA(void* proc, void* hwnd, uint32_t m,
         uintptr_t wp, long long lp) {
@@ -14019,6 +14595,12 @@ __attribute__((ms_abi)) int mw_lstrlenW(const uint16_t* s) {
     return n;
 }
 /* ---- GDI32 module: text, shapes, objects, state ---- */
+/* SW-GUI7: AA proportional text raster (implemented in the SW-GUI8 block).
+ * utf8 input; bold/small select the face; blend is coverage-based 4bpp. */
+static void mwb_text_aa(MWBmp* b, int x, int y, const char* s, uint32_t col,
+                        int bold, int small);
+static int  mw_text_width_aa(const char* s, int bold, int small);
+static int  mw_guest_font_bold(void); /* current HFONT weight >= 700 */
 __attribute__((ms_abi)) int mw_TextOutA(void* hdc, int x, int y, const char* s, int len) {
     MWBmp* S = mw_dc_surface(hdc); /* SWEEP-006: route by DC */
     if (!s || len <= 0 || !S) return 1;
@@ -14030,10 +14612,12 @@ __attribute__((ms_abi)) int mw_TextOutA(void* hdc, int x, int y, const char* s, 
     }
     buf[len] = 0;
     /* SWEEP-023 SW-985: honor TA_CENTER(6)/TA_RIGHT(2), TA_BOTTOM(8)/TA_BASELINE(24) */
-    if (g_text_align & 0x6) x -= (g_text_align & 0x6) == 0x6 ? (len * 4) : (len * 8);
-    if (g_text_align & 0x18) y -= (g_text_align & 0x18) == 0x18 ? 6 : 8;
-    if (g_bk_mode != 1) mwb_fill(S, x, y, len * 8, 8, g_bk_col);
-    mwb_text8(S, x, y, buf, g_text_col, 1);
+    int bold = mw_guest_font_bold();
+    int tw = mw_text_width_aa(buf, bold, 0);
+    if (g_text_align & 0x6) x -= (g_text_align & 0x6) == 0x6 ? (tw / 2) : tw;
+    if (g_text_align & 0x18) y -= (g_text_align & 0x18) == 0x18 ? 12 : 14;
+    if (g_bk_mode != 1) mwb_fill(S, x, y, tw, 16, g_bk_col);
+    mwb_text_aa(S, x, y, buf, g_text_col, bold, 0);
     MW_TRACE("[GDI] TextOutA(%d,%d) '%s'", x, y, buf);
     return 1;
 }
@@ -14046,11 +14630,12 @@ __attribute__((ms_abi)) int mw_TextOutW(void* hdc, int x, int y, const uint16_t*
     wbuf[len] = 0;
     char buf[1025];
     w3_w16_to_utf8z(wbuf, buf, sizeof(buf));
-    int alen = (int)strlen(buf); /* wide glyphs collapse; align on engine cols */
-    if (g_text_align & 0x6) x -= (g_text_align & 0x6) == 0x6 ? (alen * 4) : (alen * 8);
-    if (g_text_align & 0x18) y -= (g_text_align & 0x18) == 0x18 ? 6 : 8;
-    if (g_bk_mode != 1) mwb_fill(S, x, y, alen * 8, 8, g_bk_col);
-    mwb_text8(S, x, y, buf, g_text_col, 1);
+    int bold = mw_guest_font_bold();
+    int tw = mw_text_width_aa(buf, bold, 0);
+    if (g_text_align & 0x6) x -= (g_text_align & 0x6) == 0x6 ? (tw / 2) : tw;
+    if (g_text_align & 0x18) y -= (g_text_align & 0x18) == 0x18 ? 12 : 14;
+    if (g_bk_mode != 1) mwb_fill(S, x, y, tw, 16, g_bk_col);
+    mwb_text_aa(S, x, y, buf, g_text_col, bold, 0);
     MW_TRACE("[GDI] TextOutW(%d,%d) '%s'", x, y, buf);
     return 1;
 }
@@ -14080,8 +14665,14 @@ __attribute__((ms_abi)) int mw_GetTextExtentPoint32W(void* hdc, const uint16_t* 
         n += want;
     }
     int32_t* sz = (int32_t*)size; /* SIZE { LONG cx; LONG cy; } */
-    sz[0] = n * 8; sz[1] = 8;     /* engine face: 8x8 per glyph (GetTextMetricsW) */
-    MW_TRACE("[GDI] GetTextExtentPoint32W(len=%d) -> %dx8", n, n * 8);
+    {
+        char buf[1025];
+        int o = 0;
+        for (int k = 0; k < n && o < 1024; k++) buf[o++] = (char)(s[k] & 0xFF);
+        buf[o] = 0;
+        sz[0] = mw_text_width_aa(buf, 0, 0); sz[1] = 16;
+    }
+    MW_TRACE("[GDI] GetTextExtentPoint32W(len=%d) -> %dx16", n, sz[0]);
     return 1;
 }
 __attribute__((ms_abi)) int mw_GetTextExtentPoint32A(void* hdc, const char* s, int len, void* size) {
@@ -14100,8 +14691,14 @@ __attribute__((ms_abi)) int mw_GetTextExtentPoint32A(void* hdc, const char* s, i
         if (got < want) break;
     }
     int32_t* sz = (int32_t*)size;
-    sz[0] = n * 8; sz[1] = 8;
-    MW_TRACE("[GDI] GetTextExtentPoint32A(len=%d) -> %dx8", n, n * 8);
+    {
+        char buf[513];
+        int o = 0;
+        for (int k = 0; k < n && o < 512; k++) buf[o++] = s[k];
+        buf[o] = 0;
+        sz[0] = mw_text_width_aa(buf, 0, 0); sz[1] = 16;
+    }
+    MW_TRACE("[GDI] GetTextExtentPoint32A(len=%d) -> %dx16", n, sz[0]);
     return 1;
 }
 __attribute__((ms_abi)) int mw_ExtTextOutA(void* hdc, int x, int y, uint32_t opts,
@@ -14122,13 +14719,13 @@ __attribute__((ms_abi)) int mw_DrawTextA(void* hdc, const char* s, int n, void* 
         buf[cap] = 0;
     }
     int32_t* r = (int32_t*)rect;
-    int tw = (int)strlen(buf) * 8, th = 8;
+    int tw = mw_text_width_aa(buf, 0, 0), th = 16;
     if (flags & 0x400u) { /* DT_CALCRECT */
         r[2] = r[0] + tw; r[3] = r[1] + th;
         MW_TRACE("[GDI] DrawTextA DT_CALCRECT '%s' -> %dx%d", buf, tw, th);
         return th;
     }
-    mwb_text8(S, r[0], r[1], buf, g_text_col, 1);
+    mwb_text_aa(S, r[0], r[1], buf, g_text_col, 0, 0);
     MW_TRACE("[GDI] DrawTextA @(%d,%d) '%s'", r[0], r[1], buf);
     return th;
 }
@@ -14143,13 +14740,13 @@ __attribute__((ms_abi)) int mw_DrawTextW(void* hdc, const uint16_t* s, int n, vo
     char buf[1025];
     w3_w16_to_utf8z(wbuf, buf, sizeof(buf));
     int32_t* r = (int32_t*)rect;
-    int tw = (int)strlen(buf) * 8, th = 8;
+    int tw = mw_text_width_aa(buf, 0, 0), th = 16;
     if (flags & 0x400u) { /* DT_CALCRECT */
         r[2] = r[0] + tw; r[3] = r[1] + th;
         MW_TRACE("[GDI] DrawTextW DT_CALCRECT '%s' -> %dx%d", buf, tw, th);
         return th;
     }
-    mwb_text8(S, r[0], r[1], buf, g_text_col, 1);
+    mwb_text_aa(S, r[0], r[1], buf, g_text_col, 0, 0);
     MW_TRACE("[GDI] DrawTextW @(%d,%d) '%s'", r[0], r[1], buf);
     return th;
 }
@@ -14290,6 +14887,13 @@ __attribute__((ms_abi)) void* mw_SelectObject(void* hdc, void* h) {
     } else if ((v & 0xFFFFF000u) == 0x00031000u) {
         int i = (int)(v & 0x1F);
         if (g_pen_live[i]) g_cur_pen = g_pen_rgb[i];
+    } else if ((v & 0xFFFFF000u) == MW_HFONT_BASE) {
+        /* SW-GUI7: font selection is observable — track weight for the AA face */
+        int i = (int)(v & 0xFFFFu) - 1;
+        if (i >= 0 && i < 8 && g_lf_live[i]) {
+            int32_t weight = *(const int32_t*)(g_lf_raw[i] + 16); /* lfWeight@16 */
+            g_cur_font_bold = (weight >= 700) ? 1 : 0;
+        }
     } else if ((v & 0xFFFF0000u) == 0x00040000u) {
         int idx = (int)(v & 0xFF);
         switch (idx) {
@@ -14445,6 +15049,7 @@ typedef struct {
     uint32_t flags;
     uint32_t bkcolor; /* SWEEP-014 r2: CLR_NONE=0xFFFFFFFF default */
     uint8_t* px; /* cap images * cx*cy, 3 bytes/px BGR */
+    uint8_t* ax; /* SW-GUI8: per-pixel alpha plane (cap * cx*cy), 255=opaque */
 } MWImgList;
 static MWImgList g_imglist[MW_IMGL_MAX];
 static uint8_t   g_imglist_live[MW_IMGL_MAX];
@@ -14476,6 +15081,9 @@ __attribute__((ms_abi)) void* mw_ImageList_Create(int cx, int cy, uint32_t flags
             g_imglist[i].bkcolor = 0xFFFFFFFFu; /* CLR_NONE (documented default) */
             g_imglist[i].cap = cInitial > 0 ? cInitial : 1;
             g_imglist[i].px = (uint8_t*)calloc((size_t)g_imglist[i].cap * cx * cy, 3);
+            g_imglist[i].ax = (uint8_t*)calloc((size_t)g_imglist[i].cap * cx * cy, 1);
+            if (g_imglist[i].ax)
+                memset(g_imglist[i].ax, 255, (size_t)g_imglist[i].cap * cx * cy);
             MW_TRACE("[GDI] ImageList_Create(%d,%d,0x%x,%d,%d) -> 0x%08x",
                      cx, cy, flags, cInitial, cGrow, MW_IMGL_BASE | (unsigned)(i + 1));
             return (void*)(uintptr_t)(MW_IMGL_BASE | (unsigned)(i + 1));
@@ -14488,6 +15096,7 @@ __attribute__((ms_abi)) int mw_ImageList_Destroy(void* himl) {
     MWImgList* L = mw_imgl_decode(himl);
     if (!L) return 0;
     free(L->px);
+    free(L->ax);
     int i = (int)((uintptr_t)himl & 0xFFu) - 1;
     memset(&g_imglist[i], 0, sizeof(MWImgList));
     g_imglist_live[i] = 0;
@@ -14627,44 +15236,129 @@ static const uint16_t* mw_szorord_next(const uint16_t* p) {
 static const uint16_t* mw_align4_w(const uint16_t* p) {
     return (const uint16_t*)(((uintptr_t)p + 3u) & ~(uintptr_t)3u);
 }
+/* SW-GUI9 r2: dialog template walker with DLGTEMPLATEEX support and hard
+ * bounds. The first revision read every template as the classic form; the
+ * 7-Zip SFX ships an EX template (0xFFFF,0x0001 signature) and the classic
+ * walk ran off the section end (SIGSEGV at mw_dialog_create_children+0x120). */
+static const uint16_t* mw_szorord_next_b(const uint16_t* p, const uint16_t* end) {
+    if (p + 1 > end) return end;
+    if (*p == 0xFFFFu) return (p + 2 <= end) ? p + 2 : end;
+    while (p < end && *p) p++;
+    return (p + 1 <= end) ? p + 1 : end;
+}
+static int mw_dialog_run(MwDlgProc proc, intptr_t init_param); /* fwd SW-GUI9 */
+static const void* g_last_dialog_tmpl = NULL; /* SW-GUI9 */
 static void mw_dialog_create_children(void* dlg, const void* tmpl) {
     if (!tmpl) return;
+    g_last_dialog_tmpl = tmpl;
+    if (!g_image_base) return;
     const uint16_t* p = (const uint16_t*)tmpl;
-    uint32_t style = *(const uint32_t*)p;
-    uint16_t cdit = p[4];
-    p += 10;                    /* style+exstyle(8B) cdit(2B) x,y,cx,cy(8B) */
-    p = mw_szorord_next(p);     /* menu */
-    p = mw_szorord_next(p);     /* class */
-    while (*p) p++; p++;        /* title (always present) */
-    if (style & 0x40u) { p++; while (*p) p++; p++; } /* DS_SETFONT: size+face */
-    p = mw_align4_w(p);
-    for (uint16_t i = 0; i < cdit; i++) {
-        const uint16_t* it = p;
-        uint16_t id = it[9];    /* style(4)+ex(4)+x,y,cx,cy(8) = id @ +16 */
-        const uint16_t* cls = it + 10;
-        int sc = 0;
-        if (cls[0] == 0xFFFFu) {
-            uint16_t o = cls[1];
-            if (o >= 0x80u && o <= 0x85u) sc = (int)o;
+    /* bounds: inside the image when possible, else a conservative span */
+    const uint16_t* end = (const uint16_t*)((const uint8_t*)g_image_base + 0x100000);
+    if ((const uint8_t*)tmpl >= g_image_base &&
+        (const uint8_t*)tmpl < g_image_base + 0x1000000)
+        end = (const uint16_t*)(g_image_base + g_image_size);
+    else
+        end = (const uint16_t*)((const uint8_t*)tmpl + 0x8000);
+    int ex = (p + 2 <= end && p[0] == 1u && p[1] == 0xFFFFu);
+    uint32_t dstyle;
+    uint16_t cdit;
+    int32_t dcx = 0, dcy = 0;
+    if (ex) {
+        if (p + 10 > end) return;
+        /* ver(2) sig(2) helpID(4) exStyle(4) style(4) cdit(2) x y cx cy(8) */
+        dstyle = *(const uint32_t*)(p + 6);
+        cdit = p[10];
+        dcx = (int16_t)p[13]; dcy = (int16_t)p[14];
+        p += 15;
+    } else {
+        if (p + 9 > end) return;
+        dstyle = *(const uint32_t*)p;
+        cdit = p[4];
+        dcx = (int16_t)p[7]; dcy = (int16_t)p[8];
+        p += 9;
+    }
+    /* SW-GUI9: size the engine surface from the TEMPLATE dims (dialog units
+     * -> px at 3/2; matches the classic 8x16 base unit at 96dpi). Guests
+     * that only ever create a dialog (7z SFX) now get a real surface. */
+    if (dcx > 40 && dcy > 20)
+        mw_gui_store_window(dcx * 3 / 2, dcy * 3 / 2);
+    /* dialog title -> caption */
+    {
+        const uint16_t* q = p;
+        q = mw_szorord_next_b(q, end); /* menu */
+        q = mw_szorord_next_b(q, end); /* class */
+        if (q < end && q[0] != 0xFFFFu) mw_w16cpy(g_maintitle, q, 126);
+    }
+    p = mw_szorord_next_b(p, end); /* menu */
+    p = mw_szorord_next_b(p, end); /* class */
+    while (p < end && *p) p++;
+    if (p + 1 > end) return;
+    p++;
+    if ((dstyle & 0x40u) || (ex && (dstyle & 0x40u))) { /* DS_SETFONT */
+        if (ex) { /* point(2) weight(2) italic(1) charset(1) face */
+            if (p + 3 <= end) {
+                p += 3;
+                while (p < end && *p) p++;
+                p++;
+            }
         } else {
+            p++;             /* point size */
+            while (p < end && *p) p++; /* face */
+            p++;
+        }
+    }
+    p = mw_align4_w(p);
+    for (uint16_t i = 0; i < cdit && p < end; i++) {
+        uint32_t istyle; int16_t ix, iy, icx, icy; uint16_t id;
+        const uint16_t* cls;
+        if (ex) {
+            if (p + 9 > end) break;
+            /* helpID(4) exStyle(4) style(4) x y cx cy(8) id(2) */
+            istyle = *(const uint32_t*)(p + 4);
+            ix = (int16_t)p[8]; iy = (int16_t)p[9];
+            icx = (int16_t)p[10]; icy = (int16_t)p[11];
+            id = p[12];
+            cls = p + 13;
+        } else {
+            if (p + 9 > end) break;
+            istyle = *(const uint32_t*)p;
+            ix = (int16_t)p[4]; iy = (int16_t)p[5];
+            icx = (int16_t)p[6]; icy = (int16_t)p[7];
+            id = p[8];
+            cls = p + 9;
+        }
+        int sc = 0;
+        if (cls + 1 < end && cls[0] == 0xFFFFu) {
+            uint16_t o = cls[1];
+            if (o >= 0x80u && o <= 0x8Cu) sc = (int)o;
+        } else if (cls + 1 < end) {
             uint16_t wname[16] = {0};
-            for (int k = 0; k < 15 && cls[k]; k++) wname[k] = cls[k];
+            for (int k = 0; k < 15 && cls + k < end && cls[k]; k++) wname[k] = cls[k];
             sc = mw_sysclass_w((const void*)wname);
         }
-        const uint16_t* ttl = mw_szorord_next(cls);
+        const uint16_t* ttl = mw_szorord_next_b(cls, end);
         const void* txt = NULL;
-        if (ttl[0] != 0xFFFFu) txt = (const void*)ttl; /* ordinal title = none */
+        if (ttl < end && ttl[0] != 0xFFFFu) txt = (const void*)ttl;
         if (sc) {
             void* h = mw_child_register(sc, dlg, (void*)(uintptr_t)id, txt, 1, NULL);
-            MW_TRACE("[GUI] dlg child id=%lu cls=%s -> %p",
-                     (unsigned long)id, mw_sysclass_name(sc), h);
+            int s = mw_child_slot(h);
+            if (s >= 0) { /* SW-GUI9: real geometry + style (du -> px 3/2) */
+                g_child[s].x = ix * 3 / 2; g_child[s].y = iy * 3 / 2;
+                g_child[s].w = icx * 3 / 2; g_child[s].h = icy * 3 / 2;
+                g_child[s].style = istyle;
+                g_child[s].from_template = 1;
+            }
+            MW_TRACE("[GUI] dlg child id=%u cls=%s %dx%d@%d,%d -> %p",
+                     id, mw_sysclass_name(sc), icx * 3 / 2, icy * 3 / 2,
+                     ix * 3 / 2, iy * 3 / 2, h);
         } else {
-            MW_TRACE("[GUI] dlg child id=%lu class unrecognized (skipped)",
-                     (unsigned long)id);
+            MW_TRACE("[GUI] dlg child id=%u class unrecognized (skipped)", id);
         }
-        const uint16_t* after = mw_szorord_next(ttl);
-        uint16_t extra = after[0];
-        p = mw_align4_w(after + 1 + extra); /* extraCount + creation data */
+        const uint16_t* after = mw_szorord_next_b(ttl, end);
+        uint16_t extra = (after < end) ? after[0] : 0;
+        p = mw_align4_w(after + 1 + extra);
+        if (p < (const uint16_t*)after) break; /* overflow guard */
     }
 }
 static int mw_dialog_run(MwDlgProc proc, intptr_t init_param) {
@@ -15121,19 +15815,47 @@ __attribute__((ms_abi)) int32_t mw_MulDiv(int32_t a, int32_t b, int32_t den) {
     if (v < -0x80000000LL) { mw_SetLastError(158); return -1; }
     return (int32_t)v;
 }
-/* user32!LoadStringW/A — honest "resource absent": return 0, empty string.
- * Callers fall back to hardcoded text when the resource is missing. */
-__attribute__((ms_abi)) int mw_LoadStringW(void* hinst, uint32_t id, uint16_t* buf, int cch) {
-    (void)hinst; (void)id;
-    if (buf && cch > 0) buf[0] = 0;
-    MW_TRACE("LoadStringW(id=%u) -> 0 (resource absent)", id);
+/* ---- SW-GUI5: real LoadStringW/A from RT_STRING ----
+ * RT_STRING layout: string block id = ((id-1)>>4)+1, the entry index inside
+ * the block is (id-1)&15; each entry is [uint16 cch][cch x UTF-16]. The old
+ * stub returned 0 for everything, so menu labels, column titles and status
+ * text were empty in every traced GUI. */
+static int mw_loadstring_real(void* hinst, uint32_t id, uint16_t* out, int cch) {
+    if (!out || cch <= 0) return 0;
+    out[0] = 0;
+    uint32_t block = ((id - 1) >> 4) + 1;
+    unsigned idx = (id - 1) & 15;
+    void* hrsrc = w3_res_find(hinst ? hinst : (void*)g_image_base,
+                              (const char*)(uintptr_t)block, (const wchar_t*)(uintptr_t)block,
+                              (const char*)(uintptr_t)6, (const wchar_t*)(uintptr_t)6);
+    if (!hrsrc) return 0;
+    const uint8_t* p = (const uint8_t*)mw_LockResource(hrsrc);
+    if (!p) return 0;
+    for (unsigned i = 0; i <= idx; i++) {
+        uint16_t len = *(const uint16_t*)p; p += 2;
+        if (i == idx) {
+            if (cch - 1 < len) len = (uint16_t)(cch - 1);
+            for (uint16_t k = 0; k < len; k++) out[k] = *(const uint16_t*)(p + 2u * k);
+            out[len] = 0;
+            return len;
+        }
+        p += 2u * len;
+    }
     return 0;
 }
+__attribute__((ms_abi)) int mw_LoadStringW(void* hinst, uint32_t id, uint16_t* buf, int cch) {
+    int n = mw_loadstring_real(hinst, id, buf, cch);
+    MW_TRACE("LoadStringW(id=%u) -> %d", id, n);
+    return n;
+}
 __attribute__((ms_abi)) int mw_LoadStringA(void* hinst, uint32_t id, char* buf, int cch) {
-    (void)hinst; (void)id;
-    if (buf && cch > 0) buf[0] = 0;
-    MW_TRACE("LoadStringA(id=%u) -> 0 (resource absent)", id);
-    return 0;
+    uint16_t w[512];
+    if (!buf || cch <= 0) return 0;
+    int n = mw_loadstring_real(hinst, id, w, cch < 512 ? cch : 512);
+    for (int i = 0; i < n && i < cch - 1; i++) buf[i] = (char)(w[i] & 0xFF);
+    buf[n < cch ? n : cch - 1] = 0;
+    MW_TRACE("LoadStringA(id=%u) -> %d", id, n);
+    return n;
 }
 /* user32!SetWindowsHookExW/A — no hook machinery: honest NULL = "hook not
  * installed" (callers proceed unhooked, same as a failed install on Win). */
@@ -15451,15 +16173,100 @@ static int mw_menu_find(int s, uint32_t item, uint32_t flags) {
         if (g_menus[s].item[i].id == item) return (int)i;
     return -1;
 }
-__attribute__((ms_abi)) void* mw_LoadMenuW(void* hinst, const uint16_t* name) {
-    (void)hinst; (void)name;
+/* SW-GUI9: real RT_MENU parse. Template: MENUITEMTEMPLATEHEADER
+ * {u16 version, u16 offset} then items {u16 mtOption; [u16 mtID;]
+ * wchar mtString[]}. MF_POPUP=0x10 (nested), MF_END=0x80. */
+static void mw_menu_parse_items(int ms, const uint8_t* p, const uint8_t* end);
+static int mw_menu_parse_one(int ms, const uint8_t** pp, const uint8_t* end) {
+    if (*pp + 2 > end) return 0;
+    uint16_t opt = *(const uint16_t*)*pp; *pp += 2;
+    if (ms >= 0 && g_menus[ms].count < MW_MENU_NITEM) {
+        MwMenuItem* it = &g_menus[ms].item[g_menus[ms].count];
+        memset(it, 0, sizeof(*it));
+        if (!(opt & 0x10u) && *pp + 2 <= end) {
+            it->id = *(const uint16_t*)*pp; *pp += 2;
+        }
+        if (opt & 0x10u) it->sub = (void*)(uintptr_t)0xFFFFFFFFu; /* popup marker */
+        /* UTF-16 string */
+        {
+            uint16_t tmp[32] = {0};
+            int k = 0;
+            while (*pp + 2 <= end && k < 31) {
+                uint16_t ch = *(const uint16_t*)*pp; *pp += 2;
+                if (!ch) break;
+                tmp[k++] = ch;
+            }
+            mw_w16cpy(it->txt, tmp, 32);
+        }
+        it->state = 0;
+        g_menus[ms].count++;
+    } else {
+        /* skip string even when full */
+        while (*pp + 2 <= end) {
+            uint16_t ch = *(const uint16_t*)*pp; *pp += 2;
+            if (!ch) break;
+        }
+    }
+    return (opt & 0x80u) ? 0 : 1; /* MF_END terminates this level */
+}
+static void mw_menu_parse_items(int ms, const uint8_t* p, const uint8_t* end) {
+    while (p + 2 <= end) {
+        uint16_t opt = *(const uint16_t*)p;
+        if (opt & 0x10u) { /* popup: parse children into a NEW menu slot */
+            void* sub = mw_menu_alloc(1);
+            int ss = mw_menu_slot(sub);
+            int before = (ss >= 0 && g_menus[ms].count < MW_MENU_NITEM)
+                         ? g_menus[ms].count : -1;
+            mw_menu_parse_one(ms, &p, end); /* consumes the popup title */
+            if (before >= 0) g_menus[ms].item[before].sub = sub;
+            mw_menu_parse_items(ss, p, end); /* children share the end? no:
+                nested MF_END closes the popup level; approximation noted */
+            return;
+        }
+        if (!mw_menu_parse_one(ms, &p, end)) break;
+    }
+}
+static void* mw_loadmenu_real(void* hinst, const void* wname) {
+    void* hr = w3_res_find(hinst ? hinst : (void*)g_image_base, NULL, wname,
+                           NULL, (const wchar_t*)(uintptr_t)4 /*RT_MENU*/);
+    if (!hr) return NULL;
+    const uint8_t* p = (const uint8_t*)mw_LockResource(hr);
+    uint32_t sz = mw_SizeofResource(hinst, hr);
+    if (!p || sz < 4) return NULL;
+    uint16_t v1 = *(const uint16_t*)p, v2 = *(const uint16_t*)(p + 2);
+    const uint8_t* items;
+    if (v1 == 1) items = p + 4 + v2; /* MENUITEMTEMPLATEHEADER */
+    else items = p;                  /* older MENUTEMPLATE: straight in */
     void* h = mw_menu_alloc(0);
-    MW_TRACE("LoadMenuW() -> HMENU %p", h);
+    int ms = mw_menu_slot(h);
+    if (ms >= 0) mw_menu_parse_items(ms, items, p + sz);
+    MW_TRACE("LoadMenu(res=%p) -> HMENU %p (%u top items)", wname, h,
+             ms >= 0 ? g_menus[ms].count : 0);
+    return h;
+}
+__attribute__((ms_abi)) void* mw_LoadMenuW(void* hinst, const uint16_t* name) {
+    void* h = mw_loadmenu_real(hinst, name);
+    if (h) return h;
+    h = mw_menu_alloc(0);
+    MW_TRACE("LoadMenuW() -> HMENU %p (resource absent)", h);
     return h;
 }
 __attribute__((ms_abi)) void* mw_LoadMenuA(void* hinst, const char* name) {
-    (void)hinst; (void)name;
-    return mw_menu_alloc(0);
+    void* h = NULL;
+    uintptr_t v = (uintptr_t)name;
+    if (v && v < 0x10000u) h = mw_loadmenu_real(hinst, name);
+    else if (name) {
+        uint16_t w[64] = {0};
+        char a[64] = {0};
+        if (mw_probe_copy(name, 63, a)) {
+            for (int i = 0; i < 63 && a[i]; i++) w[i] = (uint16_t)(uint8_t)a[i];
+            h = mw_loadmenu_real(hinst, w);
+        }
+    }
+    if (h) return h;
+    h = mw_menu_alloc(0);
+    MW_TRACE("LoadMenuA() -> HMENU %p (resource absent)", h);
+    return h;
 }
 __attribute__((ms_abi)) int mw_SetMenu(void* hwnd, void* menu) {
     if (hwnd == MW_GUI_HWND) g_main_menu = menu;
@@ -15736,6 +16543,506 @@ __attribute__((ms_abi)) int mw_GetMenuItemRect(void* hwnd, void* menu, uint32_t 
     MW_TRACE("GetMenuItemRect(menu=%p index=%lu) -> TRUE", menu, (unsigned long)index);
     return 1;
 }
+
+/* ================================================================
+ * SW-GUI9: WINDOW COMPOSITOR — chrome + child controls at dump time
+ * ----------------------------------------------------------------
+ * Real Win32: the desktop window manager composites the frame, menu
+ * bar and every child window over the client pixels. The engine had
+ * no such pass, so NirSoft/7-Zip-class apps showed an empty gray
+ * rectangle. This pass composites, in order:
+ *   title bar (app icon + caption + min/max/close)
+ *   menu bar  (from the engine menu model)
+ *   client    (guest pixels as painted; #F0F0F0 when never painted)
+ *   children  (toolbar / statusbar / listview / buttons / statics /
+ *              edits / listboxes) in creation order — z-order top.
+ * All coordinates stay guest-native; the chrome is added around the
+ * client at dump time only.
+ * ================================================================ */
+static void mw_cv_border(MWBmp* b, int x, int y, int w, int h, uint32_t c) {
+    mwb_fill(b, x, y, w, 1, c);
+    mwb_fill(b, x, y + h - 1, w, 1, c);
+    mwb_fill(b, x, y, 1, h, c);
+    mwb_fill(b, x + w - 1, y, 1, h, c);
+}
+static void mw_child_rect(const MwChild* c, int W, int H, int* x, int* y, int* w, int* h) {
+    *x = c->x; *y = c->y; *w = c->w; *h = c->h;
+    if (*w <= 0 || *h <= 0) { /* class defaults for engine-managed bars */
+        if (strcmp(c->cls, "TOOLBAR") == 0) { *x = 0; *y = 0; *w = W; *h = 30; }
+        else if (strcmp(c->cls, "STATUSBAR") == 0) { *x = 0; *y = H - 24; *w = W; *h = 24; }
+    }
+    if (*x < 0) *x = 0;
+    if (*y < 0) *y = 0;
+}
+static const uint16_t* mw_child_text_or(const MwChild* c, const uint16_t* fallback) {
+    return c->text[0] ? c->text : fallback;
+}
+static void mw_cv_utf16(MWBmp* b, int x, int y, const uint16_t* s, uint32_t col, int bold, int small) {
+    if (!s) return;
+    char u[520]; int o = 0;
+    for (int i = 0; s[i] && o < 515; i++) {
+        uint16_t c = s[i];
+        if (c < 0x80) u[o++] = (char)c;
+        else if (c < 0x800) { u[o++] = (char)(0xC0 | (c >> 6)); u[o++] = (char)(0x80 | (c & 0x3F)); }
+        else { u[o++] = (char)(0xE0 | (c >> 12)); u[o++] = (char)(0x80 | ((c >> 6) & 0x3F)); u[o++] = (char)(0x80 | (c & 0x3F)); }
+    }
+    u[o] = 0;
+    mwb_text_aa(b, x, y, u, col, bold, small);
+}
+static void mw_toolbar_autobind_images(MwChild* c, int W); /* SW-GUI9 fwd */
+static void mw_paint_toolbar(MWBmp* cv, int ox, int oy, MwChild* c, int W) {
+    if (!c->himl && c->tbn > 0) mw_toolbar_autobind_images(c, W); /* SW-GUI9 */
+    mwb_fill(cv, ox, oy, c->w > 0 ? c->w : W, c->h, 0xFAFAFA);
+    mwb_fill(cv, ox, oy + c->h - 1, c->w > 0 ? c->w : W, 1, 0xDADADA);
+    int bx = ox + 2;
+    for (int i = 0; i < c->tbn && bx < ox + cv->w; i++) {
+        if (c->tb_style[i] & 0x01u) { /* BTNS_SEP */
+            mwb_fill(cv, bx + 3, oy + 6, 1, c->h - 12, 0xD9D9D9);
+            bx += 10;
+            continue;
+        }
+        int enabled = (c->tb_state[i] & 0x04u) || c->tb_state[i] == 0;
+        MWImgList* L = mw_imgl_decode(c->himl);
+        int drawn = 0;
+        if (L && c->tb_img[i] >= 0 && c->tb_img[i] < L->count) {
+            size_t base = (size_t)c->tb_img[i] * L->cx * L->cy;
+            int ix = bx + (26 - L->cx) / 2, iy = oy + (c->h - L->cy) / 2;
+            for (int yy = 0; yy < L->cy; yy++)
+                for (int xx = 0; xx < L->cx; xx++) {
+                    size_t o2 = base + (size_t)yy * L->cx + xx;
+                    unsigned a = L->ax ? L->ax[o2] : 255;
+                    if (!a) continue;
+                    if (!enabled) a = a * 90 / 255;
+                    uint32_t col = ((uint32_t)L->px[o2 * 3 + 2] << 16) |
+                                   ((uint32_t)L->px[o2 * 3 + 1] << 8) |
+                                   (uint32_t)L->px[o2 * 3 + 0];
+                    if (!enabled) { /* grayscale for disabled buttons */
+                        int gy = (((col >> 16) & 0xFF) * 30 + ((col >> 8) & 0xFF) * 59 + (col & 0xFF) * 11) / 100;
+                        col = ((uint32_t)gy << 16) | ((uint32_t)gy << 8) | (uint32_t)gy;
+                    }
+                    int px = ix + xx, py = iy + yy;
+                    if (px < 0 || py < 0 || px >= cv->w || py >= cv->h) continue;
+                    uint32_t dst = mwb_get(cv, px, py);
+                    int dr = (dst >> 16) & 0xFF, dg = (dst >> 8) & 0xFF, db = dst & 0xFF;
+                    int cr = (col >> 16) & 0xFF, cg = (col >> 8) & 0xFF, cb2 = col & 0xFF;
+                    mwb_set(cv, px, py, (((dr * (255 - a) + cr * a) / 255) << 16) |
+                                        (((dg * (255 - a) + cg * a) / 255) << 8) |
+                                        ((db * (255 - a) + cb2 * a) / 255));
+                    drawn = 1;
+                }
+        }
+        if (!drawn && c->tb_id[i]) { /* no icon: modern placeholder dot */
+            mwb_fill(cv, bx + 9, oy + (c->h - 8) / 2, 8, 8,
+                     enabled ? 0x9A9A9A : 0xC8C8C8);
+        }
+        bx += 26;
+    }
+    (void)W;
+}
+static void mw_paint_statusbar(MWBmp* cv, int ox, int oy, MwChild* c, int W) {
+    mwb_fill(cv, ox, oy, c->w > 0 ? c->w : W, c->h, 0xF0F0F0);
+    mwb_fill(cv, ox, oy, c->w > 0 ? c->w : W, 1, 0xDADADA);
+    int cw = c->w > 0 ? c->w : W;
+    if (c->sbn > 0) {
+        int px = ox;
+        for (int i = 0; i < c->sbn && i < 8; i++) {
+            int partw = c->sbpart[i] - (px - ox);
+            if (i == c->sbn - 1) partw = ox + cw - px;
+            if (partw <= 0) break;
+            if (i > 0) mwb_fill(cv, px, oy + 2, 1, c->h - 4, 0xD8D8D8);
+            mw_cv_utf16(cv, px + 6, oy + (c->h - 13) / 2, c->sbtxt[i], 0x1A1A1A, 0, 1);
+            px += partw;
+        }
+    } else {
+        mw_cv_utf16(cv, ox + 6, oy + (c->h - 13) / 2, c->sbsimple ? c->sbtxt[7] : c->sbtxt[0],
+                    0x1A1A1A, 0, 1);
+    }
+    /* size grip */
+    for (int k = 0; k < 3; k++)
+        for (int d = 0; d < 8 - k * 2; d++)
+            mwb_set(cv, ox + cw - 4 - d + k * 2, oy + c->h - 3 - d, 0xC9C9C9);
+}
+static void mw_paint_button(MWBmp* cv, int ox, int oy, MwChild* c) {
+    uint32_t st = c->style & 0xFu;
+    if (st == 7u) { /* BS_GROUPBOX */
+        mw_cv_border(cv, ox, oy + 6, c->w, c->h - 6, 0xD9D9D9);
+        mwb_fill(cv, ox + 8, oy + 1, mw_text_width_aa("", 0, 1) + 8, 0, 0xF0F0F0);
+        mw_cv_utf16(cv, ox + 10, oy + 2, c->text, 0x444444, 0, 1);
+        return;
+    }
+    if (st == 2u || st == 3u || st == 5u || st == 6u) { /* checkbox family */
+        mwb_fill(cv, ox, oy + (c->h - 13) / 2, 13, 13, 0xFFFFFF);
+        mw_cv_border(cv, ox, oy + (c->h - 13) / 2, 13, 13, 0x8A8A8A);
+        if (c->checked) {
+            mwb_fill(cv, ox + 2, oy + (c->h - 13) / 2 + 2, 9, 9, 0x0078D7);
+            for (int k = 0; k < 4; k++) {
+                mwb_set(cv, ox + 4 + k, oy + (c->h - 13) / 2 + 6 + k, 0xFFFFFF);
+                mwb_set(cv, ox + 5 + k, oy + (c->h - 13) / 2 + 6 + k, 0xFFFFFF);
+                mwb_set(cv, ox + 7 + k, oy + (c->h - 13) / 2 + 9 - k, 0xFFFFFF);
+                mwb_set(cv, ox + 8 + k, oy + (c->h - 13) / 2 + 9 - k, 0xFFFFFF);
+            }
+        }
+        mw_cv_utf16(cv, ox + 20, oy + (c->h - 15) / 2, c->text, 0x1A1A1A, 0, 0);
+        return;
+    }
+    if (st == 4u || st == 9u || st == 0xAu) { /* radio family */
+        int cy = oy + c->h / 2;
+        for (int j = -6; j <= 6; j++)
+            for (int i2 = -6; i2 <= 6; i2++)
+                if (i2 * i2 + j * j <= 36) {
+                    int px = ox + 6 + i2, py = cy + j;
+                    if (px >= 0 && py >= 0 && px < cv->w && py < cv->h)
+                        mwb_set(cv, px, py, (i2 * i2 + j * j >= 25) ? 0x8A8A8A : 0xFFFFFF);
+                }
+        if (c->checked)
+            for (int j = -3; j <= 3; j++)
+                for (int i2 = -3; i2 <= 3; i2++)
+                    if (i2 * i2 + j * j <= 9)
+                        mwb_set(cv, ox + 6 + i2, cy + j, 0x0078D7);
+        mw_cv_utf16(cv, ox + 20, oy + (c->h - 15) / 2, c->text, 0x1A1A1A, 0, 0);
+        return;
+    }
+    /* push button (BS_PUSHBUTTON/DEFPUSHBUTTON/BS_OWNERDRAW fallback) */
+    int def = (c->style & 0x1u) && !(c->style & 0xF0Fu);
+    mwb_fill(cv, ox, oy, c->w, c->h, 0xFDFDFD);
+    mw_cv_border(cv, ox, oy, c->w, c->h, def ? 0x0078D7 : 0xADADAD);
+    int tw = 0;
+    {
+        char u[260]; int o = 0;
+        for (int i = 0; c->text[i] && o < 255; i++) {
+            uint16_t ch = c->text[i];
+            if (ch == '&') continue; /* accelerator prefix: cleaned in both passes */
+            u[o++] = (ch < 0x80) ? (char)ch : '?';
+        }
+        u[o] = 0;
+        tw = mw_text_width_aa(u, 0, 0);
+    }
+    {
+        uint16_t clean[128]; int co = 0;
+        for (int i = 0; c->text[i] && co < 127; i++)
+            if (c->text[i] != '&') clean[co++] = c->text[i];
+        clean[co] = 0;
+        mw_cv_utf16(cv, ox + (c->w - tw) / 2, oy + (c->h - 15) / 2, clean, 0x1A1A1A, 0, 0);
+    }
+}
+static void mw_paint_static(MWBmp* cv, int ox, int oy, MwChild* c) {
+    uint32_t st = c->style & 0x1Fu;
+    if (c->himg && (st == 0x3u /*SS_ICON*/ || st == 0xEu /*SS_BITMAP*/)) {
+        MwIconObj* ic = mw_icon_get(c->himg);
+        if (ic) { mw_icon_blit(cv, ox, oy + (c->h - ic->h) / 2, ic, 0, 0); return; }
+        MWBmp* bm = mw_imgl_srcbmp(c->himg); /* SS_BITMAP stores an HBITMAP */
+        if (bm) {
+            for (int y = 0; y < bm->h && y < c->h; y++)
+                for (int x = 0; x < bm->w && x < c->w; x++)
+                    mwb_set(cv, ox + x, oy + y, mwb_get(bm, x, y));
+            return;
+        }
+    }
+    if (st == 0x4u || st == 0x5u || st == 0x6u) { /* BLACKRECT/GRAYRECT/WHITERECT */
+        mwb_fill(cv, ox, oy, c->w, c->h, st == 0x4u ? 0x000000 : st == 0x5u ? 0xC0C0C0 : 0xFFFFFF);
+        return;
+    }
+    if (st == 0x2u) { /* SS_RIGHT */
+        int tw = 0;
+        for (int i = 0; c->text[i]; i++) tw += 8;
+        mw_cv_utf16(cv, ox + c->w - tw - 4, oy + (c->h - 15) / 2, c->text, 0x1A1A1A, 0, 0);
+        return;
+    }
+    if (st == 0x1u) { /* SS_CENTER */
+        char u[260]; int o = 0;
+        for (int i = 0; c->text[i] && o < 255; i++) u[o++] = (c->text[i] < 0x80) ? (char)c->text[i] : '?';
+        u[o] = 0;
+        int tw = mw_text_width_aa(u, 0, 0);
+        mw_cv_utf16(cv, ox + (c->w - tw) / 2, oy + (c->h - 15) / 2, c->text, 0x1A1A1A, 0, 0);
+        return;
+    }
+    mw_cv_utf16(cv, ox, oy + (c->h - 15) / 2, c->text, 0x1A1A1A, 0, 0);
+}
+static void mw_paint_edit(MWBmp* cv, int ox, int oy, MwChild* c) {
+    mwb_fill(cv, ox, oy, c->w, c->h, 0xFFFFFF);
+    mw_cv_border(cv, ox, oy, c->w, c->h, 0xDADADA);
+    mw_cv_utf16(cv, ox + 5, oy + (c->h - 15) / 2, c->text, 0x000000, 0, 0);
+}
+static void mw_paint_listbox(MWBmp* cv, int ox, int oy, MwChild* c) {
+    mwb_fill(cv, ox, oy, c->w, c->h, 0xFFFFFF);
+    mw_cv_border(cv, ox, oy, c->w, c->h, 0xDADADA);
+    for (int i = 0; i < c->lbn && (i + 1) * 18 <= c->h - 4; i++)
+        mw_cv_utf16(cv, ox + 5, oy + 3 + i * 18, c->lbtxt[i], 0x1A1A1A, 0, 0);
+}
+static void mw_paint_listview(MWBmp* cv, int ox, int oy, MwChild* c, int s) {
+    mwb_fill(cv, ox, oy, c->w, c->h, 0xFFFFFF);
+    mw_cv_border(cv, ox, oy, c->w, c->h, 0xDADADA);
+    MwLvState* L = mw_lv_state(s);
+    if (!L || L->cols == 0) return;
+    int hrow = 24;
+    /* header */
+    mwb_fill(cv, ox + 1, oy + 1, c->w - 2, hrow, 0xF7F7F7);
+    mwb_fill(cv, ox + 1, oy + hrow, c->w - 2, 1, 0xDADADA);
+    int htotal = 0;
+    for (int i = 0; i < (int)L->cols && i < MW_LV_MAXCOL; i++) htotal += L->colw[i];
+    int hx = ox + 1;
+    for (int i = 0; i < (int)L->cols && i < MW_LV_MAXCOL; i++) {
+        int colw = L->colw[i] ? L->colw[i] : (c->w - 2) / (int)L->cols;
+        if (i > 0) mwb_fill(cv, hx, oy + 3, 1, hrow - 5, 0xE3E3E3);
+        mw_cv_utf16(cv, hx + 7, oy + 6, L->coltxt[i], 0x474747, 0, 1);
+        hx += colw;
+        if (hx > ox + c->w) break;
+    }
+    /* rows */
+    for (uint32_t r = 0; r < L->items && (int)(hrow + 3 + (r + 1) * 21) < c->h; r++) {
+        int ry = oy + hrow + 3 + (int)r * 21;
+        int rx = ox + 1;
+        for (int ci = 0; ci < (int)L->cols && ci < MW_LV_MAXSUB + 1; ci++) {
+            int colw = L->colw[ci] ? L->colw[ci] : (c->w - 2) / (int)L->cols;
+            const uint16_t* t = (ci < MW_LV_MAXSUB) ? L->txt[r][ci] : (const uint16_t*)"";
+            if (ci == 1 && !t[0] && L->txt[r][0][0]) { rx += colw; continue; }
+            mw_cv_utf16(cv, rx + 7, ry + 3, t, 0x1A1A1A, 0, 1);
+            rx += colw;
+            if (rx > ox + c->w) break;
+        }
+        mwb_fill(cv, ox + 1, ry + 21, c->w - 2, 1, 0xF3F3F3);
+    }
+}
+/* SW-GUI9: generic toolbar image autobind — TB_ADDBITMAP(hInst=NULL) means
+ * "the bitmap was preloaded"; guests that lost that path still carry the
+ * strip as an RT_BITMAP whose width is 16 x button-count. Scan resource
+ * type 2 and bind the first matching strip. App-agnostic: nothing here is
+ * keyed to a program name or resource id. */
+static void mw_toolbar_autobind_images(MwChild* c, int W) {
+    if (c->himl || c->tbn < 1) return;
+    if (!g_image_base) return;
+    uint8_t* pe = g_image_base;
+    uint32_t pe_off = *(uint32_t*)(pe + 0x3c);
+    uint32_t dd_rva = *(uint32_t*)(pe + pe_off + 24 + 112 + 2 * 8);
+    if (!dd_rva) return;
+    const uint8_t* base = pe + dd_rva;
+    const uint8_t* lvl = base;
+    uint16_t named = *(const uint16_t*)(lvl + 12), ided = *(const uint16_t*)(lvl + 14);
+    const uint8_t* entries = lvl + 16;
+    const uint8_t* typedir = NULL;
+    for (uint16_t i = 0; i < (uint16_t)(named + ided); i++) {
+        uint32_t nm = *(const uint32_t*)(entries + i * 8);
+        uint32_t of = *(const uint32_t*)(entries + i * 8 + 4);
+        if (!(nm & 0x80000000u) && (nm & 0xFFFF) == 2 && (of & 0x80000000u)) {
+            typedir = base + (of & 0x7FFFFFFFu);
+            break;
+        }
+    }
+    if (!typedir) return;
+    uint16_t named2 = *(const uint16_t*)(typedir + 12), ided2 = *(const uint16_t*)(typedir + 14);
+    const uint8_t* ent2 = typedir + 16;
+    int nonsep = 0;
+    for (int i = 0; i < c->tbn; i++) if (!(c->tb_style[i] & 0x01u)) nonsep++;
+    if (nonsep < 1) return;
+    for (uint16_t i = 0; i < (uint16_t)(named2 + ided2); i++) {
+        uint32_t nm = *(const uint32_t*)(ent2 + i * 8);
+        uint32_t of = *(const uint32_t*)(ent2 + i * 8 + 4);
+        if (nm & 0x80000000u) continue;
+        uint32_t rid = nm & 0xFFFF;
+        void* hbmp = mw_loadimage_bitmap_dib(pe, (const void*)(uintptr_t)rid);
+        if (!hbmp) continue;
+        MWBmp* b = mw_imgl_srcbmp(hbmp);
+        if (!b) continue;
+        /* strip metrics: 15/16px cells, width = cells x nonsep buttons */
+        int cell = (b->w + nonsep - 1) / nonsep;
+        if ((cell == 15 || cell == 16) && b->h >= 14 && b->h <= 17) {
+            /* mask color = the strip's modal color (1bpp/4bpp strips put the
+             * background there; pixel(0,0) can be an ink pixel) */
+            uint32_t hist[4096] = {0};
+            uint32_t modes[8] = {0}; int mcnt[8] = {0};
+            for (int y = 0; y < b->h; y++)
+                for (int x = 0; x < b->w; x++) {
+                    uint32_t cpx = mwb_get(b, x, y);
+                    int slot = (int)((cpx ^ (cpx >> 6) ^ (cpx >> 12)) & 7);
+                    if (mcnt[slot] < 0xFFFFFFF) mcnt[slot]++;
+                    modes[slot] = cpx;
+                    (void)hist;
+                }
+            int bestslot = 0;
+            for (int k2 = 1; k2 < 8; k2++) if (mcnt[k2] > mcnt[bestslot]) bestslot = k2;
+            void* il = mw_ImageList_Create(16, 16, 0x19, nonsep, 4);
+            int at = -1;
+            if (il) at = mw_ImageList_AddMasked(il, hbmp, mw_rgb2cr(modes[bestslot]));
+            if (il && at >= 0) {
+                c->himl = il;
+                MW_TRACE("[GUI] toolbar autobind: RT_BITMAP %u (%dx%d, cell %d, %d icons)",
+                         rid, b->w, b->h, cell, nonsep);
+                return;
+            }
+        }
+    }
+    (void)W;
+}
+/* paint the top-level menu bar from the engine menu model */
+static int mw_paint_menubar(MWBmp* cv, int cx0, int cy0, int cw) {
+    int s = mw_menu_slot(g_main_menu);
+    if (s < 0) return 0;
+    mwb_fill(cv, cx0, cy0, cw, 26, 0xF6F6F6);
+    mwb_fill(cv, cx0, cy0 + 26, cw, 1, 0xE0E0E0);
+    int x = cx0 + 10;
+    for (uint32_t i = 0; i < g_menus[s].count && x < cx0 + cw - 20; i++) {
+        const MwMenuItem* it = &g_menus[s].item[i];
+        if (!it->txt[0] && !it->sub) continue; /* separator */
+        char u[80]; int o = 0;
+        for (int k = 0; it->txt[k] && o < 75; k++)
+            if (it->txt[k] != '&') u[o++] = (it->txt[k] < 0x80) ? (char)it->txt[k] : '?';
+        u[o] = 0;
+        int tw = mw_text_width_aa(u, 0, 0);
+        uint16_t clean[40]; int co = 0;
+        for (int k = 0; it->txt[k] && co < 39; k++)
+            if (it->txt[k] != '&') clean[co++] = it->txt[k];
+        clean[co] = 0;
+        mw_cv_utf16(cv, x, cy0 + 6, clean,
+                    (it->state & 0x2u) ? 0x9A9A9A : 0x1A1A1A, 0, 0);
+        x += tw + 18;
+    }
+    return 1;
+}
+/* the composited frame writer (replaces the raw surface dump) */
+static void mw_gui_dump_composited_core(void) {
+    if (!g_surf.px) return;
+    static int g_shot_off = -1;
+    if (g_shot_off < 0) {
+        const char* sc = getenv("MINWIN_SCREENSHOT");
+        g_shot_off = (sc && sc[0] == '0' && sc[1] == 0) ? 1 : 0;
+    }
+    if (g_shot_off) {
+        g_frame_no++; g_frame_dumps++;
+        MW_TRACE("[GDI] frame #%d BMP dump skipped (MINWIN_SCREENSHOT=0)", g_frame_no);
+        return;
+    }
+    int W = g_surf.w, H = g_surf.h;
+    int title_h = 30, menu_h = mw_menu_slot(g_main_menu) >= 0 ? 27 : 0;
+    int CW = W + 2, CH = title_h + menu_h + H + 2;
+    if ((size_t)CW * CH > 16u * 1024 * 1024) { menu_h = 0; title_h = 0; CW = W; CH = H; }
+    static MWBmp cv; static int cv_cap = 0;
+    if (cv_cap < CW * CH) {
+        free(cv.px);
+        cv.px = (uint8_t*)calloc((size_t)CW * CH, 3);
+        cv_cap = CW * CH;
+    }
+    if (!cv.px) return;
+    cv.w = CW; cv.h = CH; cv.vbpp = 0; cv.vtop = 0; cv.vstride = 0;
+    mwb_fill(&cv, 0, 0, CW, CH, 0xF0F0F0);
+    /* window border */
+    mw_cv_border(&cv, 0, 0, CW, CH, 0xB7B7B7);
+    int cx0 = 1, cy0 = 1;
+    if (title_h > 0) {
+        /* title bar: app icon + caption + caption buttons */
+        MwIconObj* tic = mw_icon_get(g_title_icon);
+        if (!tic) tic = mw_icon_get(g_class_icon);
+        if (tic) mw_icon_blit(&cv, cx0 + 8, cy0 + 7, tic, 16, 16);
+        else {
+            void* def = mw_icon_system(32512);
+            MwIconObj* d = mw_icon_get(def);
+            if (d) mw_icon_blit(&cv, cx0 + 8, cy0 + 7, d, 16, 16);
+        }
+        /* caption text: WM_SETTEXT title, else the exe base name */
+        const uint16_t* tt = g_maintitle[0] ? g_maintitle : NULL;
+        char fallback[128];
+        if (!tt) {
+            const char* p = g_exe_path ? g_exe_path : "MiniWin";
+            const char* b2 = p;
+            for (const char* q = p; *q; q++) if (*q == '/' ) b2 = q + 1;
+            snprintf(fallback, sizeof(fallback), "%s", b2);
+        }
+        if (tt) mw_cv_utf16(&cv, cx0 + 32, cy0 + 8, tt, 0x191919, 1, 0);
+        else mwb_text_aa(&cv, cx0 + 32, cy0 + 8, fallback, 0x191919, 1, 0);
+        /* caption buttons: 46x30 each, right-aligned */
+        int bb = CW - 2;
+        mwb_fill(&cv, bb - 46, cy0 + 1, 1, title_h - 1, 0xE5E5E5);
+        mwb_fill(&cv, bb - 92, cy0 + 1, 1, title_h - 1, 0xE5E5E5);
+        mwb_fill(&cv, bb - 138, cy0 + 1, 1, title_h - 1, 0xE5E5E5);
+        /* minimize */
+        mwb_fill(&cv, bb - 120, cy0 + 19, 10, 1, 0x1A1A1A);
+        /* maximize */
+        mw_cv_border(&cv, bb - 74, cy0 + 10, 10, 9, 0x1A1A1A);
+        /* close */
+        for (int k = 0; k < 10; k++) {
+            mwb_set(&cv, bb - 35 + k, cy0 + 9 + k, 0x1A1A1A);
+            mwb_set(&cv, bb - 36 + k, cy0 + 9 + k, 0x1A1A1A);
+            mwb_set(&cv, bb - 26 - k, cy0 + 9 + k, 0x1A1A1A);
+            mwb_set(&cv, bb - 27 - k, cy0 + 9 + k, 0x1A1A1A);
+        }
+        mwb_fill(&cv, cx0, cy0 + title_h - 1, CW - 2, 1, 0xE5E5E5);
+        cy0 += title_h;
+    }
+    if (menu_h > 0) {
+        mw_paint_menubar(&cv, cx0, cy0, CW - 2);
+        cy0 += menu_h;
+    }
+    /* client: guest pixels, or #F0F0F0 when the frame was never painted */
+    if (!g_guest_painted)
+        mwb_fill(&cv, cx0, cy0, W, H, 0xF0F0F0);
+    for (int y = 0; y < H; y++)
+        memcpy(cv.px + 3 * ((size_t)(cy0 + y) * CW + cx0),
+               g_surf.px + 3 * ((size_t)y * W), (size_t)W * 3);
+    /* children composite over the client (creation order == z-order) */
+    for (int i = 0; i < MW_CHILD_MAX; i++) {
+        if (!g_child[i].live) continue;
+        MwChild* c = &g_child[i];
+        /* SW-GUI9: template children of a SELF-PAINTING dialog stay out of
+         * the way — putty paints its whole dialog; compositing template
+         * children over it doubled every control. Engine children render
+         * only when the guest left the frame unpainted. */
+        if (g_guest_painted && c->from_template) continue;
+        int x, y, w, h;
+        mw_child_rect(c, W, H, &x, &y, &w, &h);
+        if (w <= 0 || h <= 0) continue;
+        if (x >= W || y >= H) continue;
+        if (x + w > W) w = W - x;
+        if (y + h > H) h = H - y;
+        int ox = cx0 + x, oy = cy0 + y;
+        if (!strcmp(c->cls, "TOOLBAR")) mw_paint_toolbar(&cv, ox, oy, c, W);
+        else if (!strcmp(c->cls, "STATUSBAR")) mw_paint_statusbar(&cv, ox, oy, c, W);
+        else if (!strcmp(c->cls, "BUTTON")) mw_paint_button(&cv, ox, oy, c);
+        else if (!strcmp(c->cls, "STATIC")) mw_paint_static(&cv, ox, oy, c);
+        else if (!strcmp(c->cls, "EDIT")) mw_paint_edit(&cv, ox, oy, c);
+        else if (!strcmp(c->cls, "LISTBOX")) mw_paint_listbox(&cv, ox, oy, c);
+        else if (!strcmp(c->cls, "SysListView32")) mw_paint_listview(&cv, ox, oy, c, i);
+        else if (!strcmp(c->cls, "SysHeader32")) { /* painted by the listview */ }
+        else if (!strcmp(c->cls, "SCROLLBAR")) {
+            mwb_fill(&cv, ox, oy, w, h, 0xF0F0F0);
+            mwb_fill(&cv, ox + 2, oy + 14, w - 4, h / 3, 0xC1C1C1);
+        }
+        else if (!strcmp(c->cls, "COMBOBOX")) {
+            mw_paint_edit(&cv, ox, oy, c);
+            mwb_fill(&cv, ox + w - 17, oy + 1, 16, h - 2, 0xF5F5F5);
+            for (int k = 0; k < 5; k++) {
+                mwb_set(&cv, ox + w - 13 + k, oy + h / 2 - 2 + k, 0x444444);
+                mwb_set(&cv, ox + w - 9 - k, oy + h / 2 - 2 + k, 0x444444);
+            }
+        }
+    }
+    /* BMP write (bottom-up 24bpp) */
+    char path[768];
+    snprintf(path, sizeof(path), "%s/frame_%03d.bmp",
+             g_frame_dir[0] ? g_frame_dir : "miniwin-results/screenshots", ++g_frame_no);
+    g_frame_dumps++;
+    int Wt = CW, Ht = CH;
+    int pad = (4 - (Wt * 3) % 4) % 4;
+    uint32_t datasz = (uint32_t)((Wt * 3 + pad) * Ht);
+    uint8_t hdr[54] = { 'B','M',0,0,0,0,0,0,0,0,54,0,0,0,40,0,0,0,0,0,0,0,0,0,0,0,1,0,24,0 };
+    uint32_t fsz = 54 + datasz;
+    memcpy(hdr + 2, &fsz, 4); memcpy(hdr + 22, &Ht, 4); memcpy(hdr + 18, &Wt, 4);
+    memcpy(hdr + 34, &datasz, 4);
+    FILE* f = fopen(path, "wb");
+    if (f) {
+        fwrite(hdr, 1, 54, f);
+        uint8_t* row = (uint8_t*)malloc((size_t)Wt * 3 + 4);
+        if (row) {
+            for (int y = Ht - 1; y >= 0; y--) {
+                memcpy(row, cv.px + 3 * ((size_t)y * Wt), (size_t)Wt * 3);
+                memset(row + Wt * 3, 0, (size_t)pad);
+                fwrite(row, 1, (size_t)Wt * 3 + pad, f);
+            }
+            free(row);
+        }
+        fclose(f);
+        MW_TRACE("[GDI] frame #%d composited %dx%d -> %s", g_frame_no, Wt, Ht, path);
+        fprintf(stderr, "[GDI-FRAME] #%d -> %s\n", g_frame_no, path);
+    }
+}
 __attribute__((ms_abi)) int mw_TrackPopupMenuEx(void* menu, uint32_t flags, int x, int y,
         void* hwnd, const void* tpm) {
     (void)flags; (void)x; (void)y; (void)hwnd; (void)tpm;
@@ -15774,13 +17081,26 @@ __attribute__((ms_abi)) int mw_GetWindowPlacement(void* hwnd, void* wp) {
 __attribute__((ms_abi)) int mw_GetWindowRect(void* hwnd, void* rc) {
     if (!rc) return 0;
     int32_t* r = (int32_t*)rc;
+    /* SW-GUI9: child windows report THEIR rect — NirSoft layout reads
+     * GetWindowRect(toolbar) in WM_SIZE to place the list below it. */
+    int s = mw_child_slot(hwnd);
+    if (s >= 0 && g_child[s].w > 0) {
+        r[0] = g_child[s].x; r[1] = g_child[s].y;
+        r[2] = g_child[s].x + g_child[s].w; r[3] = g_child[s].y + g_child[s].h;
+        MW_TRACE("GetWindowRect(child %s) -> (%d,%d)-(%d,%d)", g_child[s].cls,
+                 r[0], r[1], r[2], r[3]);
+        return 1;
+    }
     r[0] = 0; r[1] = 0; r[2] = g_win_w; r[3] = g_win_h;
     MW_TRACE("GetWindowRect -> %dx%d", g_win_w, g_win_h);
     return 1;
 }
 __attribute__((ms_abi)) int mw_MoveWindow(void* hwnd, int x, int y, int w, int h, int repaint) {
-    (void)hwnd; (void)x; (void)y; (void)repaint;
-    MW_TRACE("MoveWindow(%dx%d) -> TRUE", w, h);
+    (void)repaint;
+    /* SW-GUI9: keep child geometry for the compositor */
+    int s = mw_child_slot(hwnd);
+    if (s >= 0) { g_child[s].x = x; g_child[s].y = y; g_child[s].w = w; g_child[s].h = h; }
+    MW_TRACE("MoveWindow(hwnd=%p %dx%d@%d,%d) -> TRUE", hwnd, w, h, x, y);
     return 1;
 }
 __attribute__((ms_abi)) void* mw_GetForegroundWindow(void) { return MW_GUI_HWND; }
@@ -15886,14 +17206,46 @@ static void* mw_loadimage_bitmap_dib(void* hinst, const void* name) {
 }
 __attribute__((ms_abi)) void* mw_LoadImageW(void* hinst, const void* name, uint32_t type,
         int cx, int cy, uint32_t flags) {
-    (void)hinst;
-    if (flags & 0x10u) { /* LR_LOADFROMFILE */
-        MW_TRACE("LoadImageW(LR_LOADFROMFILE) -> NULL (file images unsupported)");
+    if (flags & 0x10u) { /* LR_LOADFROMFILE — SW-GUI8: real .ico + .bmp files */
+        char path[520] = {0};
+        if (name && (uintptr_t)name > 0x10000u) {
+            w3_w16_to_utf8z((const uint16_t*)name, path, sizeof(path) - 1);
+            if (type == 1u /* IMAGE_ICON */ || type == 2u /* IMAGE_CURSOR */) {
+                MwIconObj ic; memset(&ic, 0, sizeof(ic));
+                int want = cx ? cx : 32;
+                if (mw_ico_file_decode(path, want, &ic) && ic.self) {
+                    MW_TRACE("LoadImageW(ICON file=%s) -> HICON %p", path, ic.self);
+                    return ic.self;
+                }
+                MW_TRACE("LoadImageW(ICON file=%s) -> NULL (decode failed)", path);
+                return NULL;
+            }
+            MW_TRACE("LoadImageW(file=%s type=%lu) -> NULL (format unsupported)", path,
+                     (unsigned long)type);
+            return NULL;
+        }
+        MW_TRACE("LoadImageW(LR_LOADFROMFILE, name=%p) -> NULL", name);
         return NULL;
     }
     if (type == 0u /* IMAGE_BITMAP */) { /* SW-803: resource DIB first */
         void* h = mw_loadimage_bitmap_dib(hinst, name);
         if (h) { MW_TRACE("LoadImageW(IMAGE_BITMAP res=%p) -> HBITMAP %p", name, h); return h; }
+    }
+    if (type == 1u /* IMAGE_ICON */ || type == 2u /* IMAGE_CURSOR */) {
+        {
+            void* h = mw_groupicon_load_h(hinst, name, cx ? cx : 32);
+            MW_TRACE("LoadImageW(type=%lu res=%p) -> %p", (unsigned long)type, name, h);
+            return h;
+        }
+        if ((uintptr_t)name >= 32512u && (uintptr_t)name <= 32518u) {
+            void* h = mw_icon_system((int)(uintptr_t)name);
+            MW_TRACE("LoadImageW(IDI stock) -> %p", h);
+            return h;
+        }
+        /* honest NULL for a missing icon resource (Win32 contract) */
+        MW_TRACE("LoadImageW(type=%lu res=%p) -> NULL (icon resource absent)",
+                 (unsigned long)type, name);
+        return NULL;
     }
     void* h = mw_image_alloc(cx ? cx : 16, cy ? cy : 16);
     MW_TRACE("LoadImageW(type=%lu) -> %p", (unsigned long)type, h);
@@ -15986,10 +17338,6 @@ __attribute__((ms_abi)) int mw_GetClassInfoExA(void* hinst, const void* name, vo
 }
 
 /* ---- gdi32: fonts + GetObject (real LOGFONT round-trip) ---- */
-#define MW_HFONT_BASE 0x00070000u
-static uint8_t g_lf_live[8];
-static uint8_t g_lf_raw[8][92]; /* LOGFONTW raw bytes */
-static int      g_lf_size[8];   /* 92 (W) or 60 (A) */
 __attribute__((ms_abi)) void* mw_CreateFontIndirectW(const void* lf) {
     if (!lf) return NULL;
     for (int i = 0; i < 8; i++)
@@ -16681,24 +18029,87 @@ __attribute__((ms_abi)) uint32_t mw_lstrcpyA(char* dst, const char* src) {
  * hwnd identity immediately (real semantics); the pump later delivers
  * WM_COMMAND(IDOK) through the normal message loop, so guests that pump
  * themselves (RAMMap, 7z) drive their own dialog to completion. */
+static void mw_gui_resize_surface(int w, int h); /* fwd SW-GUI9 */
+static void* mw_dialog_activate(MwDlgProc proc, void* hwnd) {
+    /* SW-GUI9: the dialog becomes the pumped main window — the engine has a
+     * single paint surface, so a template dialog (7z SFX, RAMMap) now owns
+     * it: WM_INITDIALOG + WM_SIZE are delivered, WM_PAINT flows from the
+     * pump, and the compositor draws the template children over chrome. */
+    g_wndproc_fwd = (MW_WNDPROC)proc; /* same signature family (int vs ll ret) */
+    g_dlgproc_fwd = (long long (*)(void*, uint32_t, uintptr_t, long long))proc;
+    g_main_hwnd = hwnd;
+    /* SW-GUI9: a template dialog IS the visible window — resize the single
+     * surface to the template box so the frame equals the dialog. */
+    {
+        const uint16_t* dp = (const uint16_t*)g_last_dialog_tmpl;
+        if (dp) {
+            int dcx, dcy;
+            if (dp[0] == 1u && dp[1] == 0xFFFFu) { dcx = (int16_t)dp[13]; dcy = (int16_t)dp[14]; }
+            else { dcx = (int16_t)dp[7]; dcy = (int16_t)dp[8]; }
+            if (dcx > 40 && dcy > 20) mw_gui_resize_surface(dcx * 3 / 2, dcy * 3 / 2);
+        }
+    }
+    if (proc) {
+        proc(hwnd, MWWM_INITDIALOG, 0, 0);
+        proc(hwnd, 0x0005u /*WM_SIZE*/, 0,
+             (long long)((g_win_w & 0xFFFF) | ((g_win_h & 0xFFFF) << 16)));
+    }
+    mw_gui_request_paint();
+    return hwnd;
+}
 __attribute__((ms_abi)) void* mw_CreateDialogParamW(void* hinst, const uint16_t* name,
         void* parent, MwDlgProc proc, intptr_t init) {
-    (void)hinst; (void)name; (void)parent;
-    if (proc) proc((void*)(uintptr_t)0x00010002u, MWWM_INITDIALOG, 0, init);
-    MW_TRACE("CreateDialogParamW(proc=%p) -> hwnd 0x10002 (modeless)", (void*)proc);
-    return (void*)(uintptr_t)0x00010002u;
+    (void)parent;
+    /* SW-GUI9: resource RT_DIALOG template -> real children */
+    void* hr = w3_res_find(hinst ? hinst : (void*)g_image_base, NULL,
+                           (const wchar_t*)name,
+                           NULL, (const wchar_t*)(uintptr_t)5 /*RT_DIALOG*/);
+    void* hwnd = (void*)(uintptr_t)0x00010002u;
+    if (hr) {
+        const void* tmpl = mw_LockResource(hr);
+        mw_dialog_create_children(hwnd, tmpl);
+    }
+    MW_TRACE("CreateDialogParamW(proc=%p) -> hwnd %p (modeless, template=%s)",
+             (void*)proc, hwnd, hr ? "resource" : "none");
+    (void)init;
+    return mw_dialog_activate(proc, hwnd);
 }
 __attribute__((ms_abi)) void* mw_CreateDialogParamA(void* hinst, const char* name,
         void* parent, MwDlgProc proc, intptr_t init) {
-    (void)hinst; (void)name; (void)parent;
-    if (proc) proc((void*)(uintptr_t)0x00010002u, MWWM_INITDIALOG, 0, init);
-    MW_TRACE("CreateDialogParamA(proc=%p) -> hwnd 0x10002 (modeless)", (void*)proc);
-    return (void*)(uintptr_t)0x00010002u;
+    (void)parent;
+    void* hwnd = (void*)(uintptr_t)0x00010002u;
+    uintptr_t v = (uintptr_t)name;
+    const void* tmpl = NULL;
+    if (v && v < 0x10000u) {
+        void* hr = w3_res_find(hinst ? hinst : (void*)g_image_base,
+                               (const char*)name, NULL,
+                               (const char*)(uintptr_t)5, (const wchar_t*)(uintptr_t)5);
+        if (hr) tmpl = mw_LockResource(hr);
+    } else if (name) {
+        uint16_t w[64] = {0};
+        char a[64] = {0};
+        if (mw_probe_copy(name, 63, a)) {
+            for (int i = 0; i < 63 && a[i]; i++) w[i] = (uint16_t)(uint8_t)a[i];
+            void* hr = w3_res_find(hinst ? hinst : (void*)g_image_base, NULL,
+                                   (const wchar_t*)w,
+                                   NULL, (const wchar_t*)(uintptr_t)5);
+            if (hr) tmpl = mw_LockResource(hr);
+        }
+    }
+    if (tmpl) mw_dialog_create_children(hwnd, tmpl);
+    MW_TRACE("CreateDialogParamA(proc=%p) -> hwnd %p (modeless, template=%s)",
+             (void*)proc, hwnd, tmpl ? "resource" : "none");
+    (void)init;
+    return mw_dialog_activate(proc, hwnd);
 }
 __attribute__((ms_abi)) void* mw_CreateDialogIndirectParamW(void* hinst, const void* tmpl,
         void* parent, MwDlgProc proc, intptr_t init) {
-    (void)tmpl;
-    return mw_CreateDialogParamW(hinst, NULL, parent, proc, init);
+    void* hwnd = (void*)(uintptr_t)0x00010002u;
+    if (tmpl) mw_dialog_create_children(hwnd, tmpl);
+    MW_TRACE("CreateDialogIndirectParamW(proc=%p) -> hwnd %p (modeless, memory template)",
+             (void*)proc, hwnd);
+    (void)hinst; (void)parent; (void)init;
+    return mw_dialog_activate(proc, hwnd);
 }
 /* SWEEP-026 SW-1021: real TEXTMETRICW offsets — the pre-SWEEP-025 shape wrote
  * tmAveCharWidth into tmDescent etc. (any guest reading descent/ave/weight
@@ -17223,6 +18634,17 @@ __attribute__((ms_abi)) int mw_ImageList_SetImageCount(void* himl, int count) {
         memset(np + (size_t)L->cap * L->cx * L->cy * 3, 0,
                (size_t)(count - L->cap) * L->cx * L->cy * 3);
         L->px = np; L->cap = count;
+        if (L->ax) {
+            uint8_t* na = (uint8_t*)realloc(L->ax, (size_t)count * L->cx * L->cy);
+            if (na) {
+                memset(na + (size_t)L->count * L->cx * L->cy, 0,
+                       (size_t)(count - L->count) * L->cx * L->cy); /* new = transparent */
+                L->ax = na;
+            }
+        }
+    } else if (L->ax && count > L->count) {
+        memset(L->ax + (size_t)L->count * L->cx * L->cy, 0,
+               (size_t)(count - L->count) * L->cx * L->cy);
     }
     L->count = count; /* real API: grows AND shrinks the count */
     MW_TRACE("ImageList_SetImageCount(%d) -> TRUE", count);
@@ -17236,36 +18658,66 @@ __attribute__((ms_abi)) uint32_t mw_ImageList_SetBkColor(void* himl, uint32_t co
     MW_TRACE("ImageList_SetBkColor(0x%08x) -> prev 0x%08x", color, prev);
     return prev;
 }
+static int mw_imgl_grow(MWImgList* L, int need) {
+    if (need <= L->cap) return 1;
+    int ncap = L->cap ? L->cap : 4;
+    while (ncap < need) ncap *= 2;
+    uint8_t* np = (uint8_t*)realloc(L->px, (size_t)ncap * L->cx * L->cy * 3);
+    if (!np) return 0;
+    memset(np + (size_t)L->cap * L->cx * L->cy * 3, 0,
+           (size_t)(ncap - L->cap) * L->cx * L->cy * 3);
+    L->px = np;
+    uint8_t* na = (uint8_t*)realloc(L->ax, (size_t)ncap * L->cx * L->cy);
+    if (!na) return 0;
+    memset(na + (size_t)L->cap * L->cx * L->cy, 0, (size_t)(ncap - L->cap) * L->cx * L->cy);
+    L->ax = na;
+    L->cap = ncap;
+    return 1;
+}
+/* copy an ARGB icon into imagelist slot idx, scaled to cx x cy */
+static void mw_imgl_put_icon(MWImgList* L, int idx, const MwIconObj* ic) {
+    size_t base = (size_t)idx * L->cx * L->cy;
+    for (int y = 0; y < L->cy; y++)
+        for (int x = 0; x < L->cx; x++) {
+            int sx = (ic->w == L->cx) ? x : (x * ic->w) / L->cx;
+            int sy = (ic->h == L->cy) ? y : (y * ic->h) / L->cy;
+            uint32_t c = ic->px[(size_t)sy * ic->w + sx];
+            L->px[(base + (size_t)y * L->cx + x) * 3 + 0] = (uint8_t)(c & 0xFF);
+            L->px[(base + (size_t)y * L->cx + x) * 3 + 1] = (uint8_t)((c >> 8) & 0xFF);
+            L->px[(base + (size_t)y * L->cx + x) * 3 + 2] = (uint8_t)((c >> 16) & 0xFF);
+            L->ax[base + (size_t)y * L->cx + x] = (uint8_t)((c >> 24) & 0xFF);
+        }
+}
 __attribute__((ms_abi)) int mw_ImageList_ReplaceIcon(void* himl, int i, void* hicon) {
     MWImgList* L = mw_imgl_decode(himl);
     if (!L) return -1;
-    /* Index contract is real; pixel content stays placeholder until an
-     * HICON rasterizer exists (LoadIcon pool icons are handle-only). */
+    MwIconObj* ic = mw_icon_get(hicon);
+    if (!ic) return -1;
     int idx;
     if (i < 0) { /* I_IMAGECALLBACK / -1 == append */
-        if (L->count >= L->cap && L->count < MW_IMGL_IMGMAX) {
-            int ncap = L->cap * 2;
-            uint8_t* np = (uint8_t*)realloc(L->px, (size_t)ncap * L->cx * L->cy * 3);
-            if (!np) return -1;
-            L->px = np; L->cap = ncap;
-        }
         if (L->count >= MW_IMGL_IMGMAX) return -1;
+        if (!mw_imgl_grow(L, L->count + 1)) return -1;
         idx = L->count++;
     } else {
         if (i >= L->count) return -1;
         idx = i;
     }
-    MW_TRACE("ImageList_ReplaceIcon(i=%d) -> %d (placeholder pixels)", i, idx);
+    mw_imgl_put_icon(L, idx, ic);
+    MW_TRACE("ImageList_ReplaceIcon(i=%d, icon %dx%d) -> %d (real pixels)", i, ic->w, ic->h, idx);
     return idx;
 }
 __attribute__((ms_abi)) int mw_SetWindowPos(void* h, void* after, int x, int y,
         int w, int hgt, uint32_t flags) {
     /* Single-surface engine: per-window geometry is not observable; the
      * documented contract (position accepted, Z-order no-op headless) is a
-     * benign accept. SWP_NOMOVE/SWP_NOSIZE branches are pure no-ops. */
+     * benign accept. SW-GUI9: child geometry IS observable now — record it
+     * for the compositor, honoring SWP_NOMOVE(2)/SWP_NOSIZE(1). */
     (void)after;
-    if (!(flags & 0x2u)) (void)x, (void)y;   /* no SWP_NOMOVE: still accept */
-    if (!(flags & 0x1u)) (void)w, (void)hgt; /* no SWP_NOSIZE: still accept */
+    int s = mw_child_slot(h);
+    if (s >= 0) {
+        if (!(flags & 0x2u)) { g_child[s].x = x; g_child[s].y = y; }
+        if (!(flags & 0x1u)) { g_child[s].w = w; g_child[s].h = hgt; }
+    }
     MW_TRACE("SetWindowPos(%p %dx%d@%d,%d flags=%#x) -> TRUE", h, w, hgt, x, y, flags);
     return 1;
 }
@@ -18655,10 +20107,13 @@ __attribute__((ms_abi)) int mw_DrawFrameControl(void* dc, void* rc, uint32_t typ
     (void)dc; (void)rc; (void)type; (void)state;
     return 1;
 }
+static int mw_icon_blit_hdc(void* dc, int x, int y, void* icon, int cx, int cy); /* SW-GUI8 */
 __attribute__((ms_abi)) int mw_DrawIconEx(void* dc, int x, int y, void* icon, int cx, int cy,
         uint32_t step, void* brush, uint32_t flags) {
-    (void)dc; (void)x; (void)y; (void)icon; (void)cx; (void)cy; (void)step; (void)brush; (void)flags;
-    return 1;
+    (void)step; (void)brush; (void)flags;
+    int r = mw_icon_blit_hdc(dc, x, y, icon, cx ? cx : 32, cy ? cy : 32);
+    MW_TRACE("[GDI] DrawIconEx(%p @%d,%d %dx%d) -> %d", icon, x, y, cx, cy, r);
+    return r;
 }
 __attribute__((ms_abi)) int mw_ExcludeClipRect(void* dc, int l, int t, int r, int b) {
     (void)dc; (void)l; (void)t; (void)r; (void)b;
@@ -18766,7 +20221,726 @@ __attribute__((ms_abi)) uint32_t mw_GetOutlineTextMetricsA(void* dc, uint32_t cb
     (void)dc; (void)otm;
     return 0; /* no outline font data: honest failure */
 }
-/* ---- icons ---- */
+/* ================================================================
+ * SW-GUI7/SW-GUI8 (2026-11-01): AA FONT + REAL ICON ENGINE
+ * ----------------------------------------------------------------
+ * User finding: «ایکن ها فقط تو winrar لود شده و نه کامل، انگار
+ * بردی تو ویندوز 98» — icons were stub handles (nothing decoded,
+ * nothing blitted), every frame was Win95-gray and the only face
+ * was the 8x8 blocky font. This block gives the engine:
+ *   1. Anti-aliased proportional text (DejaVu, 3 faces, 4bpp).
+ *   2. Real icon decoding: BMP-format DIB icons (1/4/8/24/32bpp +
+ *      AND-mask alpha) AND PNG-compressed Vista+ icons (own inflate).
+ *   3. Real LoadIcon/LoadImage/CreateIconFromResourceEx/
+ *      ExtractIconEx + DrawIcon(Ex) alpha blit.
+ *   4. ImageList with a real per-pixel alpha plane + real Draw.
+ *   5. Modern system palette + Win10-class window chrome (title
+ *      bar with the app icon, menu bar, flat toolbars, status bar,
+ *      list views) composited at frame-dump time — guest GDI output
+ *      is untouched, so console and regression paths are unchanged.
+ * Honesty: the chrome is ENGINE-rendered presentation. Guests still
+ * draw every pixel of their client area; children composite over it
+ * exactly like real Win32 child windows would.
+ * ================================================================ */
+
+/* ---------------- AA text raster ---------------- */
+static int mw_guest_font_bold(void) { return g_cur_font_bold; }
+
+static void mwb_text_aa(MWBmp* b, int x, int y, const char* s, uint32_t col,
+                        int bold, int small) {
+    if (!b || !b->px || !s) return;
+    const MwFontGlyph* face = mw_font_face(bold, small);
+    int cr = (col >> 16) & 0xFF, cg = (col >> 8) & 0xFF, cb = col & 0xFF;
+    int cx = x;
+    for (const unsigned char* p = (const unsigned char*)s; *p; p++) {
+        unsigned ch = *p;
+        if (ch < 32 || ch > 126) { cx += small ? 6 : 8; continue; }
+        const MwFontGlyph* g = &face[ch - 32];
+        const uint8_t* bm = g->bm;
+        int stride = (g->w + 1) / 2;
+        for (int gy = 0; gy < g->h; gy++) {
+            for (int gx = 0; gx < g->w; gx++) {
+                unsigned v = bm[gy * stride + gx / 2];
+                v = (gx & 1) ? (v & 0xF) : (v >> 4);
+                if (!v) continue;
+                int dx = cx + g->xoff + gx, dy = y + g->yoff + gy;
+                if (dx < 0 || dy < 0 || dx >= b->w || dy >= b->h) continue;
+                uint32_t dst = mwb_get(b, dx, dy);
+                int dr = (dst >> 16) & 0xFF, dg = (dst >> 8) & 0xFF, db = dst & 0xFF;
+                dr = (dr * (15 - v) + cr * v) / 15;
+                dg = (dg * (15 - v) + cg * v) / 15;
+                db = (db * (15 - v) + cb * v) / 15;
+                mwb_set(b, dx, dy, ((uint32_t)dr << 16) | ((uint32_t)dg << 8) | (uint32_t)db);
+            }
+        }
+        cx += g->adv;
+    }
+}
+static int mw_text_width_aa(const char* s, int bold, int small) {
+    if (!s) return 0;
+    const MwFontGlyph* face = mw_font_face(bold, small);
+    int w = 0;
+    for (const unsigned char* p = (const unsigned char*)s; *p; p++) {
+        unsigned ch = *p;
+        w += (ch >= 32 && ch <= 126) ? face[ch - 32].adv : (small ? 6 : 8);
+    }
+    return w;
+}
+
+/* ---------------- ARGB icon objects ---------------- */
+#define MW_ICON_BASE 0x00062000u
+#define MW_ICON_MAX  256
+static MwIconObj g_iconobj[MW_ICON_MAX];
+static uint8_t   g_icon_live[MW_ICON_MAX];
+
+static void* mw_icon_alloc(int w, int h) {
+    if (w < 1 || h < 1 || w > 512 || h > 512) return NULL;
+    for (int i = 0; i < MW_ICON_MAX; i++) {
+        if (g_icon_live[i]) continue;
+        g_icon_live[i] = 1;
+        g_iconobj[i].w = w; g_iconobj[i].h = h;
+        g_iconobj[i].px = (uint32_t*)calloc((size_t)w * h, 4);
+        if (!g_iconobj[i].px) { g_icon_live[i] = 0; return NULL; }
+        void* hh = (void*)(uintptr_t)(MW_ICON_BASE | (unsigned)(i + 1));
+        g_iconobj[i].self = hh;
+        return hh;
+    }
+    return NULL;
+}
+static MwIconObj* mw_icon_get(void* h) {
+    uintptr_t v = (uintptr_t)h;
+    if ((v & 0xFFFFF000u) != MW_ICON_BASE) return NULL;
+    int i = (int)(v & 0xFFFu) - 1;
+    if (i < 0 || i >= MW_ICON_MAX || !g_icon_live[i]) return NULL;
+    return &g_iconobj[i];
+}
+static void mw_icon_free(void* h) {
+    MwIconObj* ic = mw_icon_get(h);
+    if (!ic) return;
+    free(ic->px);
+    int i = (int)(((uintptr_t)h & 0xFFFu)) - 1;
+    memset(&g_iconobj[i], 0, sizeof(MwIconObj));
+    g_icon_live[i] = 0;
+}
+/* alpha-blit an icon into any surface, scaled to w x h (0 = natural) */
+static void mw_icon_blit(MWBmp* d, int dx, int dy, const MwIconObj* ic, int w, int h) {
+    if (!d || !d->px || !ic || !ic->px) return;
+    if (w <= 0) w = ic->w;
+    if (h <= 0) h = ic->h;
+    for (int y = 0; y < h; y++) {
+        int sy = (ic->h == h) ? y : (y * ic->h) / h;
+        for (int x = 0; x < w; x++) {
+            int sx = (ic->w == w) ? x : (x * ic->w) / w;
+            uint32_t c = ic->px[(size_t)sy * ic->w + sx];
+            unsigned a = (c >> 24) & 0xFF;
+            if (!a) continue;
+            int px = dx + x, py = dy + y;
+            if (px < 0 || py < 0 || px >= d->w || py >= d->h) continue;
+            uint32_t dst = mwb_get(d, px, py);
+            int dr = (dst >> 16) & 0xFF, dg = (dst >> 8) & 0xFF, db = dst & 0xFF;
+            int cr = (c >> 16) & 0xFF, cg = (c >> 8) & 0xFF, cb = c & 0xFF;
+            dr = (dr * (255 - a) + cr * a) / 255;
+            dg = (dg * (255 - a) + cg * a) / 255;
+            db = (db * (255 - a) + cb * a) / 255;
+            mwb_set(d, px, py, ((uint32_t)dr << 16) | ((uint32_t)dg << 8) | (uint32_t)db);
+        }
+    }
+}
+
+/* DC-level blit used by DrawIcon/DrawIconEx (defined before the block,
+ * implemented here where the icon registry lives) */
+static int mw_icon_blit_hdc(void* dc, int x, int y, void* icon, int cx, int cy) {
+    MwIconObj* ic = mw_icon_get(icon);
+    MWBmp* S = mw_dc_surface(dc);
+    if (!ic || !S) return 0;
+    mw_icon_blit(S, x, y, ic, cx, cy);
+    return 1;
+}
+
+/* ---------------- inflate (RFC1951, own implementation) ---------------- */
+typedef struct { const uint8_t* in; uint32_t inlen, ip; uint32_t bitbuf; int bitcnt; int bad; } MwBits;
+static uint32_t mw_bits_get(MwBits* B, int n) {
+    while (B->bitcnt < n) {
+        if (B->ip >= B->inlen) { B->bad = 1; return 0; }
+        B->bitbuf |= (uint32_t)B->in[B->ip++] << B->bitcnt;
+        B->bitcnt += 8;
+    }
+    uint32_t v = B->bitbuf & ((n) ? ((1u << n) - 1u) : 0u);
+    B->bitbuf >>= n; B->bitcnt -= n;
+    return v;
+}
+typedef struct { short cnt[16]; short sym[288]; } MwHuff;
+static int mw_huff_build(MwHuff* h, const uint8_t* lens, int n) {
+    for (int i = 0; i < 16; i++) h->cnt[i] = 0;
+    for (int i = 0; i < n; i++) h->cnt[lens[i]]++;
+    if (h->cnt[0] == n) return 0; /* degenerate: no codes */
+    short offs[16]; offs[1] = 0;
+    for (int i = 1; i < 15; i++) offs[i + 1] = offs[i] + h->cnt[i];
+    for (int i = 0; i < n; i++) if (lens[i]) h->sym[offs[lens[i]]++] = (short)i;
+    return 1;
+}
+static int mw_huff_decode(const MwHuff* h, MwBits* B) {
+    int code = 0, first = 0, index = 0;
+    for (int len = 1; len <= 15; len++) {
+        code |= (int)mw_bits_get(B, 1);
+        if (B->bad) return -1;
+        int count = h->cnt[len];
+        if (code - first < count) return h->sym[index + (code - first)];
+        index += count; first += count; first <<= 1; code <<= 1;
+    }
+    return -1;
+}
+static int mw_inflate(const uint8_t* in, uint32_t inlen, uint8_t** outp, uint32_t* outlen) {
+    if (!in || inlen < 2) return 0;
+    MwBits B; B.in = in; B.inlen = inlen; B.ip = 0; B.bitbuf = 0; B.bitcnt = 0; B.bad = 0;
+    if ((in[0] & 0x0Fu) == 8) { B.ip = 2; } /* zlib wrapper: skip CMF/FLG */
+    uint32_t cap = 1u << 20, op = 0;
+    uint8_t* out = (uint8_t*)malloc(cap);
+    if (!out) return 0;
+    static const short lbase[29] = {3,4,5,6,7,8,9,10,11,13,15,17,19,23,27,31,
+        35,43,51,59,67,83,99,115,131,163,195,227,258};
+    static const short lext[29] = {0,0,0,0,0,0,0,0,1,1,1,1,2,2,2,2,3,3,3,3,4,4,4,4,5,5,5,5,0};
+    static const short dbase[30] = {1,2,3,4,5,7,9,13,17,25,33,49,65,97,129,193,
+        257,385,513,769,1025,1537,2049,3073,4097,6145,8193,12289,16385,24577};
+    static const short dext[30] = {0,0,0,0,1,1,2,2,3,3,4,4,5,5,6,6,7,7,8,8,9,9,10,10,11,11,12,12,13,13};
+    static const short clcidx[19] = {16,17,18,0,8,7,9,6,10,5,11,4,12,3,13,2,14,1,15};
+    MwHuff lh, dh, ch;
+#define MW_INF_GROW(need) do { \
+        if ((uint64_t)op + (need) > cap) { \
+            while ((uint64_t)op + (need) > cap) cap *= 2; \
+            uint8_t* no_ = (uint8_t*)realloc(out, cap); \
+            if (!no_) goto corrupt; \
+            out = no_; \
+        } \
+    } while (0)
+    for (;;) {
+        int last = (int)mw_bits_get(&B, 1);
+        int type = (int)mw_bits_get(&B, 2);
+        if (B.bad) goto corrupt;
+        if (type == 0) { /* stored */
+            B.bitbuf = 0; B.bitcnt = 0; /* <=7 padding bits */
+            if (B.ip + 4 > B.inlen) goto corrupt;
+            uint32_t len = in[B.ip] | (in[B.ip + 1] << 8); B.ip += 4;
+            if (B.ip + len > B.inlen) goto corrupt;
+            MW_INF_GROW(len);
+            memcpy(out + op, in + B.ip, len); B.ip += len; op += len;
+        } else if (type == 1 || type == 2) {
+            uint8_t lens[320];
+            if (type == 1) {
+                int i = 0;
+                for (; i < 144; i++) lens[i] = 8;
+                for (; i < 256; i++) lens[i] = 9;
+                for (; i < 280; i++) lens[i] = 7;
+                for (; i < 288; i++) lens[i] = 8;
+                for (i = 0; i < 30; i++) lens[288 + i] = 5;
+                mw_huff_build(&lh, lens, 288);
+                mw_huff_build(&dh, lens + 288, 30);
+            } else {
+                int hlit = 257 + (int)mw_bits_get(&B, 5);
+                int hdist = 1 + (int)mw_bits_get(&B, 5);
+                int hclen = 4 + (int)mw_bits_get(&B, 4);
+                if (B.bad || hlit > 286 || hdist > 30) goto corrupt;
+                uint8_t clens[19] = {0};
+                for (int i = 0; i < hclen; i++) clens[clcidx[i]] = (uint8_t)mw_bits_get(&B, 3);
+                mw_huff_build(&ch, clens, 19);
+                int i = 0;
+                while (i < hlit + hdist) {
+                    int sym = mw_huff_decode(&ch, &B);
+                    if (sym < 0 || B.bad) goto corrupt;
+                    if (sym < 16) lens[i++] = (uint8_t)sym;
+                    else {
+                        int rpt, pv = 0;
+                        if (sym == 16) { if (!i) goto corrupt; pv = lens[i - 1]; rpt = 3 + (int)mw_bits_get(&B, 2); }
+                        else if (sym == 17) { rpt = 3 + (int)mw_bits_get(&B, 3); }
+                        else { rpt = 11 + (int)mw_bits_get(&B, 7); }
+                        if (B.bad || i + rpt > hlit + hdist) goto corrupt;
+                        while (rpt--) lens[i++] = (uint8_t)pv;
+                    }
+                }
+                mw_huff_build(&lh, lens, hlit);
+                mw_huff_build(&dh, lens + hlit, hdist);
+            }
+            for (;;) {
+                int sym = mw_huff_decode(&lh, &B);
+                if (sym < 0 || B.bad) goto corrupt;
+                if (sym < 256) {
+                    MW_INF_GROW(1);
+                    out[op++] = (uint8_t)sym;
+                } else if (sym == 256) break;
+                else {
+                    sym -= 257;
+                    if (sym >= 29) goto corrupt;
+                    uint32_t len = (uint32_t)lbase[sym] + mw_bits_get(&B, lext[sym]);
+                    int dsym = mw_huff_decode(&dh, &B);
+                    if (dsym < 0 || dsym >= 30 || B.bad) goto corrupt;
+                    uint32_t dist = (uint32_t)dbase[dsym] + mw_bits_get(&B, dext[dsym]);
+                    if (B.bad || dist > op) goto corrupt;
+                    MW_INF_GROW(len);
+                    for (uint32_t k = 0; k < len; k++) { out[op] = out[op - dist]; op++; }
+                }
+            }
+        } else goto corrupt;
+        if (last) break;
+    }
+    *outp = out; *outlen = op;
+    return 1;
+corrupt:
+    free(out);
+    return 0;
+#undef MW_INF_GROW
+}
+
+/* ---------------- PNG decoder (enough for RT_ICON payloads) ---------------- */
+static int mw_png_decode(const uint8_t* p, uint32_t n, MwIconObj* out) {
+    if (n < 57 || memcmp(p, "\x89PNG\r\n\x1a\n", 8) != 0) return 0;
+    uint32_t ip = 8;
+    uint32_t w = 0, h = 0; int depth = 0, color = 0, interlace = 0;
+    uint8_t plte[256][3]; int npal = 0;
+    uint8_t trns[256]; int ntrns = 0; uint32_t trns_gray = 0, trns_rgb = 0; int has_trns_c = 0;
+    uint8_t* idat = NULL; uint32_t idat_len = 0, idat_cap = 0;
+    while (ip + 8 <= n) {
+        uint32_t clen = ((uint32_t)p[ip] << 24) | ((uint32_t)p[ip + 1] << 16) |
+                        ((uint32_t)p[ip + 2] << 8) | p[ip + 3];
+        const uint8_t* ctype = p + ip + 4;
+        const uint8_t* cdata = p + ip + 8;
+        if (ip + 8 + clen + 4 > n) break;
+        if (!memcmp(ctype, "IHDR", 4) && clen >= 13) {
+            w = ((uint32_t)cdata[0] << 24) | ((uint32_t)cdata[1] << 16) | ((uint32_t)cdata[2] << 8) | cdata[3];
+            h = ((uint32_t)cdata[4] << 24) | ((uint32_t)cdata[5] << 16) | ((uint32_t)cdata[6] << 8) | cdata[7];
+            depth = cdata[8]; color = cdata[9]; interlace = cdata[12];
+        } else if (!memcmp(ctype, "PLTE", 4)) {
+            npal = (int)(clen / 3);
+            if (npal > 256) npal = 256;
+            memcpy(plte, cdata, (size_t)npal * 3);
+        } else if (!memcmp(ctype, "tRNS", 4)) {
+            if (color == 3) { ntrns = (int)clen; if (ntrns > 256) ntrns = 256; memcpy(trns, cdata, (size_t)ntrns); }
+            else if (color == 0 && clen >= 2) { trns_gray = ((uint32_t)cdata[0] << 8) | cdata[1]; has_trns_c = 1; }
+            else if (color == 2 && clen >= 6) { trns_rgb = 1; has_trns_c = 1; }
+        } else if (!memcmp(ctype, "IDAT", 4)) {
+            if (idat_len + clen > idat_cap) {
+                idat_cap = (idat_len + clen) * 2 + 4096;
+                uint8_t* ni = (uint8_t*)realloc(idat, idat_cap);
+                if (!ni) { free(idat); return 0; }
+                idat = ni;
+            }
+            memcpy(idat + idat_len, cdata, clen);
+            idat_len += clen;
+        } else if (!memcmp(ctype, "IEND", 4)) break;
+        ip += 12 + clen;
+    }
+    if (!idat || !w || !h || interlace || w > 4096 || h > 4096) { free(idat); return 0; }
+    int channels = (color == 0) ? 1 : (color == 2) ? 3 : (color == 3) ? 1 : (color == 4) ? 2 : 4;
+    if (color == 3 && (!npal)) { free(idat); return 0; }
+    uint32_t bits_per_px = (uint32_t)depth * channels;
+    uint32_t stride = (w * bits_per_px + 7) / 8;
+    uint32_t raw_need = (stride + 1) * h;
+    uint8_t* raw = NULL; uint32_t raw_len = 0;
+    if (!mw_inflate(idat, idat_len, &raw, &raw_len) || raw_len < raw_need) {
+        free(raw); free(idat); return 0;
+    }
+    free(idat);
+    /* unfilter in place (bpp bytes per pixel, min 1) */
+    uint32_t bppb = (bits_per_px + 7) / 8;
+    for (uint32_t y = 0; y < h; y++) {
+        uint8_t ft = raw[y * (stride + 1)];
+        uint8_t* row = raw + y * (stride + 1) + 1;
+        uint8_t* prev = (y > 0) ? raw + (y - 1) * (stride + 1) + 1 : NULL;
+        for (uint32_t x = 0; x < stride; x++) {
+            int a = (x >= bppb) ? row[x - bppb] : 0;
+            int b = prev ? prev[x] : 0;
+            int c = (prev && x >= bppb) ? prev[x - bppb] : 0;
+            switch (ft) {
+            case 1: row[x] = (uint8_t)(row[x] + a); break;
+            case 2: row[x] = (uint8_t)(row[x] + b); break;
+            case 3: row[x] = (uint8_t)(row[x] + ((a + b) >> 1)); break;
+            case 4: {
+                int pp = a + b - c, pa = pp - a, pb = pp - b, pc = pp - c;
+                if (pa < 0) pa = -pa; if (pb < 0) pb = -pb; if (pc < 0) pc = -pc;
+                row[x] = (uint8_t)(row[x] + ((pa <= pb && pa <= pc) ? a : (pb <= pc) ? b : c));
+                break; }
+            }
+        }
+    }
+    void* hnd = mw_icon_alloc((int)w, (int)h);
+    if (!hnd) { free(raw); return 0; }
+    MwIconObj* ic = mw_icon_get(hnd);
+    uint32_t mask_rgb = 0;
+    if (color == 0) mask_rgb = (trns_gray >> 8) * 0x010101u;
+    for (uint32_t y = 0; y < h; y++) {
+        const uint8_t* row = raw + y * (stride + 1) + 1;
+        for (uint32_t x = 0; x < w; x++) {
+            uint32_t r = 0, g = 0, b = 0, a = 255;
+            if (color == 0) {
+                uint32_t v = (depth == 16) ? ((uint32_t)row[x * 2] << 8 | row[x * 2 + 1]) : row[x];
+                if (depth < 8) {
+                    uint32_t per = 8 / depth, maxv = (1u << depth) - 1;
+                    uint32_t idx = (x * depth) / 8;
+                    uint32_t sh = 8 - depth * ((x % per) + 1);
+                    v = (row[idx] >> sh) & maxv;
+                    v = v * 255 / maxv;
+                }
+                r = g = b = v;
+                if (depth >= 8) {
+                    uint32_t vv = (depth == 16) ? (v >> 8) : v;
+                    r = g = b = vv;
+                    if (has_trns_c && vv == (trns_gray >> 8)) a = 0;
+                }
+            } else if (color == 2) {
+                if (depth == 8) {
+                    r = row[x * 3]; g = row[x * 3 + 1]; b = row[x * 3 + 2];
+                    if (trns_rgb && r == row[0] && g == row[1] && b == row[2] && x == 0) a = 0;
+                } else { r = row[x * 6]; g = row[x * 6 + 2]; b = row[x * 6 + 4]; }
+            } else if (color == 3) {
+                uint32_t idx;
+                if (depth == 8) idx = row[x];
+                else {
+                    uint32_t per = 8 / depth, maxv = (1u << depth) - 1;
+                    uint32_t sh = 8 - depth * ((x % per) + 1);
+                    idx = (row[(x * depth) / 8] >> sh) & maxv;
+                }
+                if (idx < (uint32_t)npal) { r = plte[idx][0]; g = plte[idx][1]; b = plte[idx][2]; }
+                a = ((uint32_t)idx < (uint32_t)ntrns) ? trns[idx] : 255;
+            } else if (color == 4) {
+                if (depth == 8) { r = g = b = row[x * 2]; a = row[x * 2 + 1]; }
+                else { r = g = b = row[x * 4]; a = row[x * 4 + 2]; }
+            } else { /* RGBA */
+                if (depth == 8) {
+                    r = row[x * 4]; g = row[x * 4 + 1]; b = row[x * 4 + 2]; a = row[x * 4 + 3];
+                } else {
+                    r = row[x * 8]; g = row[x * 8 + 2]; b = row[x * 8 + 4]; a = row[x * 8 + 6];
+                }
+            }
+            ic->px[(size_t)y * w + x] = (a << 24) | (r << 16) | (g << 8) | b;
+        }
+    }
+    free(raw);
+    out->w = (int)w; out->h = (int)h; out->px = ic->px; out->self = hnd;
+    return 1;
+}
+
+/* ---------------- BMP-format (DIB) icon decode ---------------- */
+static int mw_icondib_decode(const uint8_t* p, uint32_t n, MwIconObj* out) {
+    if (!p || n < 40) return 0;
+    uint32_t hdr = *(const uint32_t*)(const void*)p;
+    if (hdr < 40 || hdr > n) return 0;
+    int32_t  bw = *(const int32_t*)(const void*)(p + 4);
+    int32_t  bh = *(const int32_t*)(const void*)(p + 8);
+    uint16_t planes = *(const uint16_t*)(const void*)(p + 12);
+    uint16_t bpp = *(const uint16_t*)(const void*)(p + 14);
+    uint32_t comp = *(const uint32_t*)(const void*)(p + 16);
+    uint32_t clr = *(const uint32_t*)(const void*)(p + 32);
+    (void)planes;
+    if (bw <= 0 || bh <= 0 || (bh & 1)) return 0;
+    int w = (int)bw, h = bh / 2;
+    if (comp != 0 || w > 512 || h > 512) return 0;
+    if (bpp != 1 && bpp != 4 && bpp != 8 && bpp != 24 && bpp != 32) return 0;
+    int npal = (bpp <= 8) ? (clr ? (int)clr : (1 << bpp)) : 0;
+    if ((uint32_t)hdr + (uint32_t)npal * 4 > n) return 0;
+    const uint8_t* pal = p + hdr;
+    const uint8_t* xor_ = pal + (size_t)npal * 4;
+    uint32_t xstride = (((uint32_t)w * bpp + 31) / 32) * 4;
+    uint32_t astride = (((uint32_t)w + 31) / 32) * 4;
+    if ((size_t)(xor_ - p) + (size_t)xstride * h + (size_t)astride * h > n) return 0;
+    const uint8_t* and_ = xor_ + (size_t)xstride * h;
+    void* hnd = mw_icon_alloc(w, h);
+    if (!hnd) return 0;
+    MwIconObj* ic = mw_icon_get(hnd);
+    /* 32bpp icons carry alpha unless every alpha byte is 0 (old tools) */
+    int has_alpha = 0;
+    if (bpp == 32) {
+        for (int y = 0; y < h && !has_alpha; y++) {
+            const uint8_t* row = xor_ + (size_t)y * xstride;
+            for (int x = 0; x < w; x++)
+                if (row[x * 4 + 3]) { has_alpha = 1; break; }
+        }
+    }
+    for (int y = 0; y < h; y++) {
+        const uint8_t* xr = xor_ + (size_t)y * xstride;
+        const uint8_t* ar = and_ + (size_t)y * astride;
+        for (int x = 0; x < w; x++) {
+            uint32_t r = 0, g = 0, b = 0, a = 255;
+            if (bpp == 32) {
+                const uint8_t* q = xr + (size_t)x * 4;
+                b = q[0]; g = q[1]; r = q[2];
+                a = has_alpha ? q[3] : 255;
+            } else if (bpp == 24) {
+                const uint8_t* q = xr + (size_t)x * 3;
+                b = q[0]; g = q[1]; r = q[2];
+            } else {
+                uint32_t idx;
+                if (bpp == 8) idx = xr[x];
+                else if (bpp == 4) idx = (x & 1) ? (xr[x / 2] & 0xF) : (xr[x / 2] >> 4);
+                else idx = (xr[x / 8] >> (7 - (x & 7))) & 1;
+                const uint8_t* e = pal + idx * 4;
+                b = e[0]; g = e[1]; r = e[2];
+            }
+            if (bpp != 32 || !has_alpha) {
+                uint32_t bit = (uint32_t)((ar[(x / 8)] >> (7 - (x & 7))) & 1);
+                a = bit ? 0 : 255;
+            }
+            ic->px[(size_t)y * w + x] = (a << 24) | (r << 16) | (g << 8) | b;
+        }
+    }
+    out->w = w; out->h = h; out->px = ic->px; out->self = hnd;
+    return 1;
+}
+static int mw_icon_decode_any(const uint8_t* p, uint32_t n, MwIconObj* out) {
+    if (n > 8 && !memcmp(p, "\x89PNG", 4)) return mw_png_decode(p, n, out);
+    return mw_icondib_decode(p, n, out);
+}
+/* .ico file: ICONDIR + ICONDIRENTRYs pointing at RT_ICON-format blobs */
+static int mw_ico_file_decode(const char* path, int want, MwIconObj* out) {
+    FILE* f = fopen(path, "rb");
+    if (!f) return 0;
+    uint8_t hdr[6];
+    if (fread(hdr, 1, 6, f) != 6 || hdr[2] != 1) { fclose(f); return 0; }
+    int count = hdr[4] | (hdr[5] << 8);
+    int best = -1, bestscore = -1;
+    for (int i = 0; i < count; i++) {
+        uint8_t e[16];
+        if (fseek(f, 6 + (long)i * 16, SEEK_SET) ||
+            fread(e, 1, 16, f) != 16) break;
+        int w = e[0] ? e[0] : 256, h = e[1] ? e[1] : 256;
+        int bpp = e[6] | (e[7] << 8);
+        int score = (w == want ? 100000 : 0) + w * 100 + bpp;
+        if (score > bestscore) { bestscore = score; best = i; }
+    }
+    if (best < 0) { fclose(f); return 0; }
+    uint8_t e[16];
+    if (fseek(f, 6 + (long)best * 16, SEEK_SET) || fread(e, 1, 16, f) != 16) { fclose(f); return 0; }
+    uint32_t off = ((uint32_t)e[12]) | ((uint32_t)e[13] << 8) | ((uint32_t)e[14] << 16) | ((uint32_t)e[15] << 24);
+    uint32_t sz  = ((uint32_t)e[8])  | ((uint32_t)e[9] << 8)  | ((uint32_t)e[10] << 16) | ((uint32_t)e[11] << 24);
+    if (sz > 4u * 1024 * 1024) { fclose(f); return 0; }
+    uint8_t* blob = (uint8_t*)malloc(sz);
+    if (!blob || fseek(f, (long)off, SEEK_SET) || fread(blob, 1, sz, f) != sz) {
+        free(blob); fclose(f); return 0;
+    }
+    fclose(f);
+    int ok = mw_icon_decode_any(blob, sz, out);
+    free(blob);
+    return ok;
+}
+
+/* ---------------- programmatic modern system icons ---------------- */
+static void icx_fill(uint32_t* px, int w, int h, int x, int y, int cw, int ch, uint32_t c) {
+    for (int j = y; j < y + ch && j < h; j++)
+        for (int i = x; i < x + cw && i < w; i++)
+            if (i >= 0 && j >= 0) px[(size_t)j * w + i] = c;
+}
+static void icx_disk(uint32_t* px, int w, int h, int cx, int cy, int r, uint32_t c) {
+    for (int j = cy - r; j <= cy + r; j++)
+        for (int i = cx - r; i <= cx + r; i++) {
+            int dx = i - cx, dy = j - cy;
+            if (dx * dx + dy * dy <= r * r && i >= 0 && j >= 0 && i < w && j < h)
+                px[(size_t)j * w + i] = c;
+        }
+}
+static void icx_hline(uint32_t* px, int w, int h, int x, int y, int len, uint32_t c) {
+    icx_fill(px, w, h, x, y, len, 1, c);
+}
+static void icx_vline(uint32_t* px, int w, int h, int x, int y, int len, uint32_t c) {
+    icx_fill(px, w, h, x, y, 1, len, c);
+}
+static void icx_glyph(uint32_t* px, int w, int h, const char* ch, uint32_t col, int size) {
+    MWBmp t; t.w = w; t.h = h; t.vbpp = 0; t.vtop = 0; t.vstride = 0;
+    t.px = (uint8_t*)calloc((size_t)w * h, 3);
+    if (!t.px) return;
+    /* draw white; use coverage as alpha mask */
+    uint32_t white = 0xFFFFFF;
+    mwb_text_aa(&t, 2, (h - 16) / 2, ch, white, 1, 0);
+    for (int y = 0; y < h; y++)
+        for (int x = 0; x < w; x++) {
+            uint32_t v = mwb_get(&t, x, y);
+            if (v & 0xFFFFFF) {
+                int cr = (col >> 16) & 0xFF, cg = (col >> 8) & 0xFF, cb = col & 0xFF;
+                px[(size_t)y * w + x] = ((uint32_t)cr << 16) | ((uint32_t)cg << 8) | (uint32_t)cb | 0xFF000000u;
+            }
+        }
+    free(t.px);
+}
+/* returns a NEW icon handle for a stock system icon id */
+static void* mw_icon_system(int idi) {
+    int kind = 0; /* 0 app, 1 error, 2 question, 3 warning, 4 info, 5 shield */
+    switch (idi) {
+    case 32513: case 4: kind = 1; break;   /* IDI_HAND / IDI_ERROR */
+    case 32514: case 6: kind = 2; break;   /* IDI_QUESTION */
+    case 32515: case 5: kind = 3; break;   /* IDI_EXCLAMATION / WARNING */
+    case 32516: case 7: kind = 4; break;   /* IDI_ASTERISK / INFORMATION */
+    case 32518: kind = 5; break;           /* IDI_SHIELD */
+    default: kind = 0; break;              /* APPLICATION / WINLOGO */
+    }
+    void* h = mw_icon_alloc(32, 32);
+    if (!h) return NULL;
+    MwIconObj* ic = mw_icon_get(h);
+    uint32_t* px = ic->px;
+    if (kind == 0) { /* modern app glyph: blue rounded square + white window */
+        icx_fill(px, 32, 32, 3, 3, 26, 26, 0x0078D7FFu);
+        icx_fill(px, 32, 32, 3, 3, 26, 2, 0x106EBEFFu);
+        icx_fill(px, 32, 32, 7, 10, 18, 2, 0xFFFFFFFFu);
+        icx_fill(px, 32, 32, 7, 12, 18, 10, 0xFFFFFFFFu);
+        icx_fill(px, 32, 32, 7, 12, 18, 1, 0xD0E6F7FFu);
+        icx_fill(px, 32, 32, 9, 14, 6, 2, 0x0078D7FFu);
+        icx_fill(px, 32, 32, 9, 18, 10, 2, 0xB8D6F2FFu);
+    } else if (kind == 1) { /* error: red disk + white X */
+        icx_disk(px, 32, 32, 16, 16, 13, 0xD13438FFu);
+        icx_disk(px, 32, 32, 16, 16, 13, 0xD13438FFu);
+        for (int i = 0; i < 12; i++) {
+            px[(size_t)(10 + i) * 32 + (10 + i)] = 0xFFFFFFFFu;
+            px[(size_t)(10 + i) * 32 + (21 - i)] = 0xFFFFFFFFu;
+            px[(size_t)(11 + i) * 32 + (10 + i)] = 0xFFFFFFFFu;
+            px[(size_t)(11 + i) * 32 + (21 - i)] = 0xFFFFFFFFu;
+        }
+    } else if (kind == 2) { /* question */
+        icx_disk(px, 32, 32, 16, 16, 13, 0x0F6CBDFFu);
+        icx_glyph(px, 32, 32, "?", 0xFFFFFFFFu, 1);
+    } else if (kind == 3) { /* warning triangle */
+        for (int j = 0; j < 24; j++) {
+            int half = j / 2 + 1;
+            icx_fill(px, 32, 32, 16 - half, 4 + j, half * 2, 1, 0xFFD335FFu);
+        }
+        icx_vline(px, 32, 32, 16, 10, 8, 0x1B1B1BFFu);
+        icx_fill(px, 32, 32, 16, 21, 1, 2, 0x1B1B1BFFu);
+    } else if (kind == 4) { /* info */
+        icx_disk(px, 32, 32, 16, 16, 13, 0x0F6CBDFFu);
+        icx_fill(px, 32, 32, 15, 8, 3, 3, 0xFFFFFFFFu);
+        icx_fill(px, 32, 32, 15, 13, 3, 11, 0xFFFFFFFFu);
+    } else { /* shield */
+        for (int j = 0; j < 26; j++) {
+            int half = (j < 3) ? 11 : (j < 18 ? 11 - (j - 3) / 3 : 11 - (j - 3) / 3);
+            if (half < 2) half = 2;
+            icx_fill(px, 32, 32, 16 - half, 3 + j, half * 2, 1, 0x0F6CBDFFu);
+        }
+        icx_fill(px, 32, 32, 12, 10, 8, 8, 0xFFFFFFFFu);
+    }
+    return h;
+}
+
+/* ---------------- resource-backed icon load ----------------
+ * SW-GUI8 r2: the decoders allocate the registry slot themselves, so the
+ * loader hands back the DECODED HANDLE. The first revision let callers
+ * memcpy into a second slot and then free(ic.px) — freeing registry-owned
+ * memory (use-after-free at the next blit). */
+static void* mw_icon_decode_to_handle(const uint8_t* p, uint32_t n, int dw, int dh) {
+    MwIconObj ic; memset(&ic, 0, sizeof(ic));
+    if (!p || !n || !mw_icon_decode_any(p, n, &ic)) return NULL;
+    void* h = ic.self;
+    if (!h) return NULL;
+    if ((dw > 0 && dw != ic.w) || (dh > 0 && dh != ic.h)) {
+        void* nh = mw_icon_alloc(dw, dh);
+        MwIconObj* nd = mw_icon_get(nh);
+        if (nd)
+            for (int y = 0; y < dh; y++)
+                for (int x = 0; x < dw; x++)
+                    nd->px[(size_t)y * dw + x] =
+                        ic.px[(size_t)(y * ic.h / dh) * ic.w + (x * ic.w / dw)];
+        return nh;
+    }
+    return h;
+}
+static void* mw_groupicon_load_h(void* hinst, const void* wname, int want) {
+    void* hr = w3_res_find(hinst ? hinst : (void*)g_image_base, NULL, wname,
+                           NULL, (const wchar_t*)(uintptr_t)14 /*RT_GROUP_ICON*/);
+    if (!hr) return NULL;
+    const uint8_t* p = (const uint8_t*)mw_LockResource(hr);
+    if (!p) return NULL;
+    uint16_t count = *(const uint16_t*)(p + 4);
+    if (count < 1) return NULL;
+    int best = -1, bestscore = -1;
+    for (int i = 0; i < count; i++) {
+        const uint8_t* e = p + 6 + (size_t)i * 14;
+        int w = e[0], h = e[1], bpp = *(const uint16_t*)(e + 6);
+        int score = (w == want ? 100000 : 0) + w * 100 + bpp;
+        if (score > bestscore) { bestscore = score; best = i; }
+    }
+    if (best < 0) return NULL;
+    uint16_t id = *(const uint16_t*)(p + 6 + (size_t)best * 14 + 12);
+    void* hri = w3_res_find(hinst ? hinst : (void*)g_image_base,
+                            (const char*)(uintptr_t)id, (const wchar_t*)(uintptr_t)id,
+                            (const char*)(uintptr_t)3, (const wchar_t*)(uintptr_t)3);
+    if (!hri) return NULL;
+    const uint8_t* dib = (const uint8_t*)mw_LockResource(hri);
+    uint32_t sz = mw_SizeofResource(hinst, hri);
+    return mw_icon_decode_to_handle(dib, sz, want, want);
+}
+/* enumerate the module's RT_GROUP_ICON names for ExtractIconEx */
+static int mw_res_groupicon_ids(uint16_t* ids, int max) {
+    if (!g_image_base) return 0;
+    uint8_t* pe = g_image_base;
+    uint32_t pe_off = *(uint32_t*)(pe + 0x3c);
+    uint32_t dd_rva = *(uint32_t*)(pe + pe_off + 24 + 112 + 2 * 8);
+    if (!dd_rva) return 0;
+    const uint8_t* base = g_image_base + dd_rva;
+    const uint8_t* lvl = base;
+    uint16_t named = *(const uint16_t*)(lvl + 12), ided = *(const uint16_t*)(lvl + 14);
+    uint16_t cnt = (uint16_t)(named + ided);
+    const uint8_t* entries = lvl + 16;
+    const uint8_t* typedir = NULL;
+    for (uint16_t i = 0; i < cnt; i++) {
+        uint32_t nm = *(const uint32_t*)(entries + i * 8);
+        uint32_t of = *(const uint32_t*)(entries + i * 8 + 4);
+        if (!(nm & 0x80000000u) && (nm & 0xFFFF) == 14 && (of & 0x80000000u)) {
+            typedir = base + (of & 0x7FFFFFFFu);
+            break;
+        }
+    }
+    if (!typedir) return 0;
+    uint16_t named2 = *(const uint16_t*)(typedir + 12), ided2 = *(const uint16_t*)(typedir + 14);
+    uint16_t cnt2 = (uint16_t)(named2 + ided2);
+    const uint8_t* ent2 = typedir + 16;
+    int produced = 0;
+    for (uint16_t i = 0; i < cnt2 && produced < max; i++) {
+        uint32_t nm = *(const uint32_t*)(ent2 + i * 8);
+        uint32_t of = *(const uint32_t*)(ent2 + i * 8 + 4);
+        if (!(of & 0x80000000u)) continue;
+        const uint8_t* langdir = base + (of & 0x7FFFFFFFu);
+        uint16_t nl = *(const uint16_t*)(langdir + 12), il = *(const uint16_t*)(langdir + 14);
+        if (nl + il < 1) continue;
+        uint32_t dof = *(const uint32_t*)(langdir + 16 + 4);
+        if (dof & 0x80000000u) continue;
+        const uint8_t* data = base + dof; /* IMAGE_RESOURCE_DATA_ENTRY */
+        const uint8_t* grp = g_image_base + *(const uint32_t*)data;
+        uint16_t gcount = *(const uint16_t*)(grp + 4);
+        (void)gcount;
+        if (nm & 0x80000000u) continue; /* string-named groups: skip for ids */
+        ids[produced++] = (uint16_t)(nm & 0xFFFF);
+    }
+    return produced;
+}
+
+/* SW-GUI8: real LoadIcon — resource RT_GROUP_ICON with best-size pick, or a
+ * programmatically drawn modern stock icon for the IDI_* set. */
+static void* mw_icon_system(int idi); /* SW-GUI8: defined in the icon block */
+static void* mw_icon_from_resource_named(void* h, const void* wname) {
+    return mw_groupicon_load_h(h, wname, 32);
+}
+__attribute__((ms_abi)) void* mw_LoadIconA(void* h, const char* name) {
+    void* out = NULL;
+    uintptr_t v = (uintptr_t)name;
+    if (v >= 32512u && v <= 32518u) out = mw_icon_system((int)v);
+    else if (v && v < 0x10000u) out = mw_icon_from_resource_named(h, name);
+    else if (name) {
+        /* ASCII resource name -> temp wide copy */
+        uint16_t w[64] = {0};
+        char a[64] = {0};
+        if (mw_probe_copy(name, 63, a)) {
+            for (int i = 0; i < 63 && a[i]; i++) w[i] = (uint16_t)(uint8_t)a[i];
+            out = mw_icon_from_resource_named(h, w);
+        }
+    }
+    if (!out) out = mw_icon_system(32512); /* graceful: app glyph, never NULL */
+    MW_TRACE("LoadIconA(name=%p) -> %p", name, out);
+    return out;
+}
+__attribute__((ms_abi)) void* mw_LoadIconW(void* h, const uint16_t* name) {
+    void* out = NULL;
+    uintptr_t v = (uintptr_t)name;
+    if (v >= 32512u && v <= 32518u) out = mw_icon_system((int)v);
+    else if (name) out = mw_icon_from_resource_named(h, name);
+    if (!out) out = mw_icon_system(32512);
+    MW_TRACE("LoadIconW(name=%p) -> %p", name, out);
+    return out;
+}
+/* ---- icons (SW-GUI8: real decode + registry) ---- */
 typedef struct { int32_t fIcon; uint32_t xHot, yHot; void* mask; void* color; } MwIconInfo;
 __attribute__((ms_abi)) int mw_GetIconInfo(void* icon, MwIconInfo* ii) {
     (void)icon;
@@ -18776,33 +20950,129 @@ __attribute__((ms_abi)) int mw_GetIconInfo(void* icon, MwIconInfo* ii) {
     return 1;
 }
 __attribute__((ms_abi)) void* mw_CreateIconIndirect(const MwIconInfo* ii) {
-    (void)ii;
-    void* h = (void*)(uintptr_t)(MW_GDI_ICON_BASE | (g_gdi_icon_next++ & 0xFFFu));
+    void* h = mw_icon_alloc(ii ? 32 : 32, 32);
     MW_TRACE("CreateIconIndirect -> %p", h);
     return h;
 }
 __attribute__((ms_abi)) void* mw_CreateIconFromResourceEx(const uint8_t* pres, uint32_t size,
         int fIcon, uint32_t ver, int cx, int cy, uint32_t flags) {
-    (void)pres; (void)size; (void)fIcon; (void)ver; (void)cx; (void)cy; (void)flags;
-    void* h = (void*)(uintptr_t)(MW_GDI_ICON_BASE | (g_gdi_icon_next++ & 0xFFFu));
+    (void)fIcon; (void)ver; (void)flags;
+    void* h = mw_icon_decode_to_handle(pres, size, cx > 0 ? cx : 0, cy > 0 ? cy : 0);
     MW_TRACE("CreateIconFromResourceEx(%u bytes) -> %p", size, h);
     return h;
 }
-__attribute__((ms_abi)) uint32_t mw_ExtractIconExW(const uint16_t* file, int idx, void** large, void** small, uint32_t n) {
-    (void)file; (void)idx;
+__attribute__((ms_abi)) uint32_t mw_ExtractIconExW(const uint16_t* file, int idx,
+        void** large, void** small, uint32_t n) {
     uint32_t produced = 0;
-    if (n >= 1 && large) { large[0] = (void*)(uintptr_t)(MW_GDI_ICON_BASE | (g_gdi_icon_next++ & 0xFFFu)); produced = 1; }
-    if (n >= 1 && small) small[0] = NULL;
-    for (uint32_t i = produced; i < n; i++) { if (large) large[i] = NULL; if (small) small[i] = NULL; }
-    MW_TRACE("ExtractIconExW -> %u", produced);
+    for (uint32_t i = 0; i < n; i++) { if (large) large[i] = NULL; if (small) small[i] = NULL; }
+    /* (a) own module (file==NULL or -1 idx semantics): enumerate RT_GROUP_ICON */
+    uint16_t ids[64];
+    int nids = 0;
+    int own = 1;
+    if (file && (uintptr_t)file > 0x10000u) {
+        char a[300] = {0};
+        for (int i = 0; i < 299 && file[i]; i++) {
+            uint16_t c = file[i];
+            a[i] = (char)(c & 0xFF);
+            if ((a[i] < 'a' || a[i] > 'z') && a[i] != '\\' && a[i] != '/' && a[i] != '.' &&
+                (a[i] < '0' || a[i] > '9') && (a[i] < 'A' || a[i] > 'Z') &&
+                a[i] != '_' && a[i] != '-' && a[i] != ' ' && a[i] != '(' && a[i] != ')') a[i] = '_';
+        }
+        const char* base = a;
+        for (const char* q = a; *q; q++) if (*q == '\\' || *q == '/') base = q + 1;
+        /* system shell icon stores are absent in the engine: honest synth set */
+        if (strstr(base, "shell32") || strstr(base, "imageres") || strstr(base, "ieshims") ||
+            strstr(base, "comres") || strstr(base, "setupapi") || strstr(base, "ddores")) {
+            own = 0;
+        } else own = 0; /* external PE files are not mapped: synth from the name */
+        for (uint32_t i = 0; i < n; i++) {
+            unsigned hashv = 2166136261u;
+            for (const char* q = base; *q; q++) { hashv ^= (unsigned char)*q; hashv *= 16777619u; }
+            hashv += i * 2654435761u;
+            uint32_t hue = (hashv >> 8) & 0xFFFFFF;
+            int r = 64 + (hue >> 16) % 176, g = 64 + ((hue >> 8) & 0xFF) % 176, b = 64 + (hue & 0xFF) % 176;
+            void* h = mw_icon_alloc(32, 32);
+            MwIconObj* ic = mw_icon_get(h);
+            if (!ic) break;
+            /* modern document glyph with a per-name hue */
+            for (int y = 3; y < 29; y++)
+                for (int x = 6; x < 26; x++) {
+                    uint32_t c = ((uint32_t)r << 16) | ((uint32_t)g << 8) | (uint32_t)b;
+                    int fold = (x > 18 && y < 10);
+                    if (!fold) ic->px[(size_t)y * 32 + x] = c | 0xFF000000u;
+                }
+            for (int k = 0; k < 8; k++) {
+                ic->px[(size_t)(3 + k) * 32 + (18 + k)] = 0xF0F0F0FFu; /* corner fold */
+                ic->px[(size_t)(4 + k) * 32 + (18 + k)] = 0xF0F0F0FFu;
+            }
+            icx_fill(ic->px, 32, 32, 9, 15, 14, 2, 0xFFFFFFFFu);
+            icx_fill(ic->px, 32, 32, 9, 19, 14, 2, 0xF2F2F2FFu);
+            icx_fill(ic->px, 32, 32, 9, 23, 10, 2, 0xE6E6E6FFu);
+            if (large) large[i] = h;
+            if (small) small[i] = NULL;
+            produced++;
+        }
+        MW_TRACE("ExtractIconExW(file='%s' idx=%d) -> %u (synth shell set)", base, idx, produced);
+        return produced;
+    }
+    if (own) nids = mw_res_groupicon_ids(ids, 64);
+    for (uint32_t i = 0; i < n; i++) {
+        int want = (idx >= 0) ? (idx + (int)i) : 0;
+        if (want >= nids || want < 0) break;
+        void* wname = (void*)(uintptr_t)ids[want];
+        void* h = mw_groupicon_load_h(NULL, wname, 32);
+        if (!h) break;
+        if (large) large[i] = h;
+        if (small) small[i] = h; /* same pixels; DrawIconEx scales */
+        produced++;
+    }
+    MW_TRACE("ExtractIconExW(own module) -> %u of %u groups", produced, (unsigned)nids);
     return produced;
 }
-__attribute__((ms_abi)) int mw_DestroyIcon(void* h) { (void)h; return 1; }
+__attribute__((ms_abi)) int mw_DestroyIcon(void* h) { mw_icon_free(h); return 1; }
 /* ---- ImageList family on the existing ImageList model ---- */
+/* SW-GUI8: real AddMasked — strip bitmap in, mask COLORREF becomes alpha 0 */
 __attribute__((ms_abi)) int mw_ImageList_AddMasked(void* il, void* bm, uint32_t mask) {
-    (void)bm; (void)mask;
-    MW_TRACE("ImageList_AddMasked(%p) -> 0", il);
-    return il ? 0 : -1;
+    MWImgList* L = mw_imgl_decode(il);
+    MWBmp* src = bm ? mw_imgl_srcbmp(bm) : 0;
+    if (!L || !src || !src->px) return -1;
+    if (src->w < L->cx || src->h < L->cy) return -1;
+    int n = src->w / L->cx; /* strip bitmap: real API adds w/cx images */
+    if (n < 1) return -1;
+    if (L->count + n > MW_IMGL_IMGMAX) n = MW_IMGL_IMGMAX - L->count;
+    if (n <= 0) return -1;
+    if (!mw_imgl_grow(L, L->count + n)) return -1;
+    uint32_t mr = (mask >> 16) & 0xFF, mg = (mask >> 8) & 0xFF, mb = mask & 0xFF;
+    for (int j = 0; j < n; j++)
+        for (int y = 0; y < L->cy; y++)
+            for (int x = 0; x < L->cx; x++) {
+                uint32_t c = (src->vbpp == 0)
+                    ? ((uint32_t)src->px[((size_t)y * src->w + j * L->cx + x) * 3 + 0] |
+                       ((uint32_t)src->px[((size_t)y * src->w + j * L->cx + x) * 3 + 1] << 8) |
+                       ((uint32_t)src->px[((size_t)y * src->w + j * L->cx + x) * 3 + 2] << 16))
+                    : mwb_get(src, j * L->cx + x, y);
+                size_t o = ((size_t)(L->count + j) * L->cy + y) * L->cx + x;
+                L->px[o * 3 + 0] = (uint8_t)(c & 0xFF);
+                L->px[o * 3 + 1] = (uint8_t)((c >> 8) & 0xFF);
+                L->px[o * 3 + 2] = (uint8_t)((c >> 16) & 0xFF);
+                L->ax[o] = (c == ((mb) | (mg << 8) | (mr << 16))) ? 0 : 255;
+            }
+    int first = L->count; L->count += n;
+    MW_TRACE("[GDI] ImageList_AddMasked(0x%08x mask=%06x) -> %d (%d images, real alpha)",
+             (unsigned)(uintptr_t)il, mask, first, n);
+    return first;
+}
+/* SW-GUI8: real AddIcon — ARGB icon into the list */
+__attribute__((ms_abi)) int mw_ImageList_AddIcon(void* il, void* hicon) {
+    MWImgList* L = mw_imgl_decode(il);
+    MwIconObj* ic = mw_icon_get(hicon);
+    if (!L || !ic) return -1;
+    if (L->count >= MW_IMGL_IMGMAX) return -1;
+    if (!mw_imgl_grow(L, L->count + 1)) return -1;
+    int idx = L->count++;
+    mw_imgl_put_icon(L, idx, ic);
+    MW_TRACE("[GDI] ImageList_AddIcon(0x%08x) -> %d", (unsigned)(uintptr_t)il, idx);
+    return idx;
 }
 __attribute__((ms_abi)) int mw_ImageList_BeginDrag(void* il, int track, int dx, int dy) {
     (void)il; (void)track; (void)dx; (void)dy;
@@ -18813,26 +21083,91 @@ __attribute__((ms_abi)) int mw_ImageList_DragEnter(void* lock, int x, int y) { (
 __attribute__((ms_abi)) int mw_ImageList_DragLeave(void* lock) { (void)lock; return 1; }
 __attribute__((ms_abi)) int mw_ImageList_DragMove(int x, int y) { (void)x; (void)y; return 1; }
 __attribute__((ms_abi)) int mw_ImageList_DragShowNolock(int show) { (void)show; return 1; }
-__attribute__((ms_abi)) int mw_ImageList_Draw(void* il, int i, void* dc, int x, int y, uint32_t style) {
-    (void)il; (void)i; (void)dc; (void)x; (void)y; (void)style;
+/* SW-GUI8: real ImageList draw — alpha-blended blit of slot i */
+static int mw_imgl_draw(MWImgList* L, int i, void* dc, int x, int y, int dx, int dy, uint32_t style) {
+    MWBmp* S = mw_dc_surface(dc);
+    if (!L || !S || i < 0 || i >= L->count) return 0;
+    int w = dx > 0 ? dx : L->cx, h = dy > 0 ? dy : L->cy;
+    size_t base = (size_t)i * L->cx * L->cy;
+    for (int yy = 0; yy < h; yy++)
+        for (int xx = 0; xx < w; xx++) {
+            int sx = (w == L->cx) ? xx : (xx * L->cx) / w;
+            int sy = (h == L->cy) ? yy : (yy * L->cy) / h;
+            size_t o = base + (size_t)sy * L->cx + sx;
+            unsigned a = L->ax ? L->ax[o] : 255;
+            if (!a) continue;
+            uint32_t c = ((uint32_t)L->px[o * 3 + 2] << 16) |
+                         ((uint32_t)L->px[o * 3 + 1] << 8) |
+                         (uint32_t)L->px[o * 3 + 0];
+            int px = x + xx, py = y + yy;
+            if (px < 0 || py < 0 || px >= S->w || py >= S->h) continue;
+            uint32_t dst = mwb_get(S, px, py);
+            if (style & 0x2u /*ILD_SELECTED blend*/) { a = (unsigned)(a * 140 / 255); }
+            int dr = (dst >> 16) & 0xFF, dg = (dst >> 8) & 0xFF, db = dst & 0xFF;
+            int cr = (c >> 16) & 0xFF, cg = (c >> 8) & 0xFF, cb = c & 0xFF;
+            dr = (dr * (255 - a) + cr * a) / 255;
+            dg = (dg * (255 - a) + cg * a) / 255;
+            db = (db * (255 - a) + cb * a) / 255;
+            mwb_set(S, px, py, ((uint32_t)dr << 16) | ((uint32_t)dg << 8) | (uint32_t)db);
+        }
     return 1;
+}
+__attribute__((ms_abi)) int mw_ImageList_Draw(void* il, int i, void* dc, int x, int y, uint32_t style) {
+    MWImgList* L = mw_imgl_decode(il);
+    int r = mw_imgl_draw(L, i, dc, x, y, 0, 0, style);
+    MW_TRACE("[GDI] ImageList_Draw(%p #%d @%d,%d) -> %d", il, i, x, y, r);
+    return r ? 1 : 0;
 }
 __attribute__((ms_abi)) int mw_ImageList_DrawEx(void* il, int i, void* dc, int x, int y, int dx, int dy,
         uint32_t bg, uint32_t fg, uint32_t style) {
-    (void)il; (void)i; (void)dc; (void)x; (void)y; (void)dx; (void)dy; (void)bg; (void)fg; (void)style;
+    (void)bg; (void)fg;
+    MWImgList* L = mw_imgl_decode(il);
+    int r = mw_imgl_draw(L, i, dc, x, y, dx, dy, style);
+    MW_TRACE("[GDI] ImageList_DrawEx(%p #%d @%d,%d %dx%d) -> %d", il, i, x, y, dx, dy, r);
+    return r ? 1 : 0;
+}
+__attribute__((ms_abi)) int mw_ImageList_DrawIndirect(const void* pims) {
+    /* IMLPARAMS: il@0, pt@16?(x64: pimlPos@0, pt@16, i@24, style@28, fStyle@32, rgbFg@36, rgbBk@40) */
+    if (pims) {
+        void* il = *(void* const*)pims;
+        int i = *(const int*)((const uint8_t*)pims + 24);
+        void* dc = *(void* const*)((const uint8_t*)pims + 8);
+        int x = *(const int*)((const uint8_t*)pims + 16);
+        int y = *(const int*)((const uint8_t*)pims + 20);
+        MWImgList* L = mw_imgl_decode(il);
+        if (L) return mw_imgl_draw(L, i, dc, x, y, 0, 0, 0) ? 1 : 0;
+    }
     return 1;
 }
-__attribute__((ms_abi)) int mw_ImageList_DrawIndirect(const void* pims) { (void)pims; return 1; }
 __attribute__((ms_abi)) void* mw_ImageList_GetIcon(void* il, int i, uint32_t flags) {
-    (void)il; (void)i; (void)flags;
-    return (void*)(uintptr_t)(MW_GDI_ICON_BASE | (g_gdi_icon_next++ & 0xFFFu));
+    (void)flags;
+    MWImgList* L = mw_imgl_decode(il);
+    if (!L || i < 0 || i >= L->count) return NULL;
+    /* materialize a real HICON snapshot of the slot */
+    void* h = mw_icon_alloc(L->cx, L->cy);
+    MwIconObj* ic = mw_icon_get(h);
+    if (ic) {
+        size_t base = (size_t)i * L->cx * L->cy;
+        for (int y = 0; y < L->cy; y++)
+            for (int x = 0; x < L->cx; x++) {
+                size_t o = base + (size_t)y * L->cx + x;
+                ic->px[(size_t)y * L->cx + x] =
+                    ((uint32_t)(L->ax ? L->ax[o] : 255) << 24) |
+                    ((uint32_t)L->px[o * 3 + 2] << 16) |
+                    ((uint32_t)L->px[o * 3 + 1] << 8) |
+                    (uint32_t)L->px[o * 3 + 0];
+            }
+    }
+    return h;
 }
 typedef struct { uint32_t* cx; uint32_t* cy; } MwDummy;
 __attribute__((ms_abi)) int mw_ImageList_GetIconSize(void* il, int* cx, int* cy) {
     /* model-backed when the list exists, else 16x16 stock */
     if (!cx || !cy) return 0;
-    *cx = 16; *cy = 16;
-    MW_TRACE("ImageList_GetIconSize(%p) -> 16x16", il);
+    MWImgList* L = mw_imgl_decode(il);
+    *cx = L ? L->cx : 16;
+    *cy = L ? L->cy : 16;
+    MW_TRACE("ImageList_GetIconSize(%p) -> %dx%d", il, *cx, *cy);
     return 1;
 }
 __attribute__((ms_abi)) int mw_ImageList_SetOverlayImage(void* il, int i, int overlay) {
@@ -19714,7 +22049,20 @@ __attribute__((ms_abi)) int mw_GetKeyNameTextW(intptr_t lp, uint16_t* buf, int c
 }
 __attribute__((ms_abi)) uint16_t mw_GetUserDefaultUILanguage(void) { return 0x0409u; }
 __attribute__((ms_abi)) void* mw_CopyImage(void* h, uint32_t type, int cx, int cy, uint32_t flags) {
-    (void)type; (void)cx; (void)cy; (void)flags;
+    (void)type; (void)flags;
+    /* SW-GUI8: icon rescale materializes a real ARGB copy */
+    MwIconObj* ic = mw_icon_get(h);
+    if (ic && cx > 0 && cy > 0 && (cx != ic->w || cy != ic->h)) {
+        void* nh = mw_icon_alloc(cx, cy);
+        MwIconObj* nd = mw_icon_get(nh);
+        if (nd)
+            for (int y = 0; y < cy; y++)
+                for (int x = 0; x < cx; x++)
+                    nd->px[(size_t)y * cx + x] =
+                        ic->px[(size_t)(y * ic->h / cy) * ic->w + (x * ic->w / cx)];
+        MW_TRACE("CopyImage(%p -> %dx%d) = %p", h, cx, cy, nh);
+        return nh;
+    }
     return h; /* identity: same image handle */
 }
 __attribute__((ms_abi)) long mw_SetWindowLongA(void* hwnd, int idx, long val) {
@@ -20879,7 +23227,9 @@ __attribute__((ms_abi)) int mw_GrayStringW(void* hdc, void* br, void* cb, intptr
     (void)hdc; (void)x; (void)y; (void)cx; return 1; /* v1: text renders normally */
 }
 __attribute__((ms_abi)) int mw_DrawIcon(void* hdc, int x, int y, void* icon) {
-    (void)hdc; (void)x; (void)y; (void)icon; return 1; /* v1: no pixels */
+    int r = mw_icon_blit_hdc(hdc, x, y, icon, 32, 32); /* SW-GUI8: real blit */
+    MW_TRACE("[GDI] DrawIcon(%p @%d,%d) -> %d", icon, x, y, r);
+    return r;
 }
 __attribute__((ms_abi)) uint16_t mw_SetAbortProc(void* hdc, void* proc) { (void)hdc; (void)proc; return 0; }
 __attribute__((ms_abi)) int mw_Escape(void* hdc, int esc, int nin, const char* in, void* out) {
@@ -21048,6 +23398,22 @@ __attribute__((ms_abi)) uint32_t mw_GetClassLongW(void* h, int idx) {
 }
 __attribute__((ms_abi)) long long mw_DefDlgProcW(void* h, uint32_t msg, uintptr_t wp, intptr_t lp) {
     return mw_DefWindowProcW(h, msg, wp, lp);
+}
+__attribute__((ms_abi)) uint16_t* mw_lstrcatW(uint16_t* dst, const uint16_t* src) {
+    /* SW-GUI9: real concatenate (7z SFX installer string assembly) */
+    if (!dst) return NULL;
+    uint16_t* p = dst;
+    while (*p) p++;
+    if (src && (uintptr_t)src > 0x10000u) {
+        for (int k = 0; p + k < dst + 0x40000; k++) {
+            uint16_t c = 0;
+            if (!mw_probe_copy(src + k, 2, &c)) break;
+            if (!c) break;
+            p[k] = c;
+        }
+    }
+    *p = 0;
+    return dst;
 }
 __attribute__((ms_abi)) uint16_t* mw_lstrcatA(char* dst, const char* src) {
     if (dst && src) { size_t n = strlen(dst); snprintf(dst + n, 4096, "%s", src); }
@@ -24724,6 +27090,8 @@ ENTRY("GDI32.DLL", "GetCharacterPlacementW",                mw_GetCharacterPlace
     ENTRY("USER32.DLL", "DefDlgProcW",                          mw_DefDlgProcW),
     ENTRY("USER32.DLL", "lstrcatA",                             mw_lstrcatA),
     ENTRY("KERNEL32.DLL", "lstrcatA",                           mw_lstrcatA),
+    ENTRY("KERNEL32.DLL", "lstrcatW",                           mw_lstrcatW), /* SW-GUI9: 7z SFX installer */
+    ENTRY("USER32.DLL", "lstrcatW",                             mw_lstrcatW),
     ENTRY("USER32.DLL", "WinHelpA",                             mw_WinHelpA),
     ENTRY("comdlg32.dll", "PrintDlgA",                          mw_PrintDlgA),
     ENTRY("COMDLG32.DLL", "PrintDlgA",                          mw_PrintDlgA),
