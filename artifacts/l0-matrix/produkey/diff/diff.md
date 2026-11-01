@@ -1,8 +1,8 @@
 # Wine vs MiniWin differential
 
-- generated: 2026-11-01T06:44:43.514169+00:00
-- wine events: 37136 (682 unique functions)
-- miniwin events: 174 (31 unique functions)
+- generated: 2026-11-01T08:08:14.213188+00:00
+- wine events: 36934 (682 unique functions)
+- miniwin events: 105 (25 unique functions)
 
 ## First meaningful divergence
 
@@ -109,7 +109,6 @@ the compat database before treating it as a gap.
 | KERNEL32.FlsAlloc | 4 | False |
 | KERNEL32.FlsSetValue | 10 | False |
 | KERNEL32.FlushFileBuffers | 2 | False |
-| msvcrt.free | 2 | False |
 | ws2_32.freeaddrinfo | 1 | False |
 | KERNEL32.FreeEnvironmentStringsA | 8 | False |
 | KERNEL32.FreeEnvironmentStringsW | 2 | False |
@@ -117,6 +116,7 @@ the compat database before treating it as a gap.
 | kernelbase.FreeResource | 84 | False |
 | KERNEL32.GetACP | 8 | False |
 | ws2_32.getaddrinfo | 1 | False |
+| user32.GetAncestor | 12 | False |
 
 ## Return-value mismatches (deterministic functions)
 
@@ -126,37 +126,30 @@ differences count.
 
 | function | wine | miniwin |
 |---|---|---|
+| user32.CheckMenuItem | 00000000 | prev 0 |
 | ole32.CoInitialize | 00000000 | S_OK |
 | user32.CreateWindowExA | 00000000 | HWND 0x10001 |
-| user32.GetClientRect | 00000001 | 1024x768 |
+| user32.EnableMenuItem | 00000000 | prev 0 |
 | gdi32.GetObjectW | 00000020 | BITMAP 112x16 |
-| user32.GetWindowRect | 00000001 | 0x0@0,0 |
 | comctl32.ImageList_ReplaceIcon | 00000000 | 0 (blit 16x16) |
 | comctl32.ImageList_SetImageCount | 00000001 | TRUE |
 | comctl32.InitCommonControlsEx | 00000001 | TRUE |
 | user32.LoadAcceleratorsA | 00030050 | 0xac0001 (n=14, REAL) |
 | user32.RegisterClassA | 0000c036 | ATOM 0xc001 |
 | user32.RegisterWindowMessageA | 0000c03b | 0xc000 |
+| user32.SetFocus | 00000000 | prev (nil) |
 | user32.SetMenu | 00000001 | TRUE |
-| user32.SetWindowPos | 00000001 | TRUE |
 | user32.ShowWindow | 00000000 | TRUE |
 
 ## Frequency deltas
 
 | function | wine | miniwin |
 |---|---|---|
-| user32.CheckMenuItem | 16 | 32 |
 | ole32.CoInitialize | 2 | 1 |
 | user32.CreateWindowExA | 3 | 1 |
-| user32.EnableMenuItem | 10 | 20 |
-| user32.GetClientRect | 10 | 1 |
-| user32.GetMenu | 27 | 54 |
+| msvcrt.free | 2 | 1 |
 | gdi32.GetObjectW | 8 | 3 |
-| kernelbase.GetProcAddress | 30 | 5 |
+| kernelbase.GetProcAddress | 30 | 2 |
 | user32.GetSysColor | 20 | 3 |
-| user32.GetWindowRect | 3 | 2 |
 | user32.LoadImageW | 6 | 4 |
-| user32.LoadStringA | 16 | 17 |
-| user32.SetFocus | 1 | 2 |
-| user32.SetWindowPos | 4 | 3 |
 | kernelbase.SizeofResource | 85 | 1 |

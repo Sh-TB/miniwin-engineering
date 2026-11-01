@@ -1,6 +1,6 @@
 # Wine vs MiniWin differential
 
-- generated: 2026-11-01T06:42:20.582728+00:00
+- generated: 2026-11-01T08:06:26.154143+00:00
 - wine events: 30788 (422 unique functions)
 - miniwin events: 1539 (8 unique functions)
 

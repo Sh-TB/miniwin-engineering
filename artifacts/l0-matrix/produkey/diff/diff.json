@@ -1,14 +1,14 @@
 {
   "diff_version": "1.0",
-  "generated_utc": "2026-11-01T06:44:43.514169+00:00",
+  "generated_utc": "2026-11-01T08:08:14.213188+00:00",
   "summary": {
-    "wine_events": 37136,
-    "miniwin_events": 174,
+    "wine_events": 36934,
+    "miniwin_events": 105,
     "wine_unique_functions": 682,
-    "miniwin_unique_functions": 31,
-    "missing_count": 536,
-    "extra_count": 5,
-    "freq_delta_count": 15,
+    "miniwin_unique_functions": 25,
+    "missing_count": 538,
+    "extra_count": 1,
+    "freq_delta_count": 8,
     "retval_mismatch_count": 14,
     "first_divergence": null
   },
@@ -474,11 +474,6 @@
       "app_attributed": false
     },
     {
-      "function": "msvcrt.free",
-      "wine_calls": 2,
-      "app_attributed": false
-    },
-    {
       "function": "ws2_32.freeaddrinfo",
       "wine_calls": 1,
       "app_attributed": false
@@ -521,6 +516,11 @@
     {
       "function": "KERNEL32.GetAtomNameW",
       "wine_calls": 15,
+      "app_attributed": false
+    },
+    {
+      "function": "user32.GetClientRect",
+      "wine_calls": 10,
       "app_attributed": false
     },
     {
@@ -794,6 +794,11 @@
       "app_attributed": false
     },
     {
+      "function": "user32.GetWindowRect",
+      "wine_calls": 3,
+      "app_attributed": false
+    },
+    {
       "function": "kernelbase.GetWindowsDirectoryW",
       "wine_calls": 2,
       "app_attributed": false
@@ -835,7 +840,7 @@
     },
     {
       "function": "KERNEL32.HeapFree",
-      "wine_calls": 5132,
+      "wine_calls": 5042,
       "app_attributed": false
     },
     {
@@ -1150,7 +1155,7 @@
     },
     {
       "function": "ntdll.NtDelayExecution",
-      "wine_calls": 2,
+      "wine_calls": 1,
       "app_attributed": false
     },
     {
@@ -2130,7 +2135,7 @@
     },
     {
       "function": "ntdll.RtlFreeHeap",
-      "wine_calls": 5397,
+      "wine_calls": 5307,
       "app_attributed": false
     },
     {
@@ -2155,7 +2160,7 @@
     },
     {
       "function": "ntdll.RtlGetSystemTimePrecise",
-      "wine_calls": 4,
+      "wine_calls": 2,
       "app_attributed": false
     },
     {
@@ -2479,6 +2484,11 @@
       "app_attributed": false
     },
     {
+      "function": "user32.SetWindowPos",
+      "wine_calls": 4,
+      "app_attributed": false
+    },
+    {
       "function": "shell32.SHGetDesktopFolder",
       "wine_calls": 1,
       "app_attributed": false
@@ -2490,7 +2500,7 @@
     },
     {
       "function": "kernelbase.Sleep",
-      "wine_calls": 2,
+      "wine_calls": 1,
       "app_attributed": false
     },
     {
@@ -2555,7 +2565,7 @@
     },
     {
       "function": "KERNEL32.TlsGetValue",
-      "wine_calls": 520,
+      "wine_calls": 511,
       "app_attributed": false
     },
     {
@@ -2696,32 +2706,11 @@
   ],
   "extra": [
     {
-      "function": "BeginDeferWindowPos",
-      "miniwin_calls": 1
-    },
-    {
-      "function": "DeferWindowPos",
-      "miniwin_calls": 3
-    },
-    {
-      "function": "EndDeferWindowPos",
-      "miniwin_calls": 1
-    },
-    {
       "function": "LoadMenuW",
       "miniwin_calls": 2
-    },
-    {
-      "function": "sprintf",
-      "miniwin_calls": 1
     }
   ],
   "frequency_deltas": [
-    {
-      "function": "user32.CheckMenuItem",
-      "wine": 16,
-      "miniwin": 32
-    },
     {
       "function": "ole32.CoInitialize",
       "wine": 2,
@@ -2733,19 +2722,9 @@
       "miniwin": 1
     },
     {
-      "function": "user32.EnableMenuItem",
-      "wine": 10,
-      "miniwin": 20
-    },
-    {
-      "function": "user32.GetClientRect",
-      "wine": 10,
+      "function": "msvcrt.free",
+      "wine": 2,
       "miniwin": 1
-    },
-    {
-      "function": "user32.GetMenu",
-      "wine": 27,
-      "miniwin": 54
     },
     {
       "function": "gdi32.GetObjectW",
@@ -2755,7 +2734,7 @@
     {
       "function": "kernelbase.GetProcAddress",
       "wine": 30,
-      "miniwin": 5
+      "miniwin": 2
     },
     {
       "function": "user32.GetSysColor",
@@ -2763,29 +2742,9 @@
       "miniwin": 3
     },
     {
-      "function": "user32.GetWindowRect",
-      "wine": 3,
-      "miniwin": 2
-    },
-    {
       "function": "user32.LoadImageW",
       "wine": 6,
       "miniwin": 4
-    },
-    {
-      "function": "user32.LoadStringA",
-      "wine": 16,
-      "miniwin": 17
-    },
-    {
-      "function": "user32.SetFocus",
-      "wine": 1,
-      "miniwin": 2
-    },
-    {
-      "function": "user32.SetWindowPos",
-      "wine": 4,
-      "miniwin": 3
     },
     {
       "function": "kernelbase.SizeofResource",
@@ -2794,6 +2753,13 @@
     }
   ],
   "retval_mismatches": [
+    {
+      "function": "user32.CheckMenuItem",
+      "wine": "00000000",
+      "miniwin": "prev 0",
+      "wine_n": 16,
+      "miniwin_n": 16
+    },
     {
       "function": "ole32.CoInitialize",
       "wine": "00000000",
@@ -2809,11 +2775,11 @@
       "miniwin_n": 1
     },
     {
-      "function": "user32.GetClientRect",
-      "wine": "00000001",
-      "miniwin": "1024x768",
+      "function": "user32.EnableMenuItem",
+      "wine": "00000000",
+      "miniwin": "prev 0",
       "wine_n": 10,
-      "miniwin_n": 1
+      "miniwin_n": 10
     },
     {
       "function": "gdi32.GetObjectW",
@@ -2821,13 +2787,6 @@
       "miniwin": "BITMAP 112x16",
       "wine_n": 8,
       "miniwin_n": 3
-    },
-    {
-      "function": "user32.GetWindowRect",
-      "wine": "00000001",
-      "miniwin": "0x0@0,0",
-      "wine_n": 3,
-      "miniwin_n": 2
     },
     {
       "function": "comctl32.ImageList_ReplaceIcon",
@@ -2872,18 +2831,18 @@
       "miniwin_n": 1
     },
     {
+      "function": "user32.SetFocus",
+      "wine": "00000000",
+      "miniwin": "prev (nil)",
+      "wine_n": 1,
+      "miniwin_n": 1
+    },
+    {
       "function": "user32.SetMenu",
       "wine": "00000001",
       "miniwin": "TRUE",
       "wine_n": 1,
       "miniwin_n": 1
-    },
-    {
-      "function": "user32.SetWindowPos",
-      "wine": "00000001",
-      "miniwin": "TRUE",
-      "wine_n": 4,
-      "miniwin_n": 3
     },
     {
       "function": "user32.ShowWindow",

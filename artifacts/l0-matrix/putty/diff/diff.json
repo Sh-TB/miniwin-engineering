@@ -1,14 +1,14 @@
 {
   "diff_version": "1.0",
-  "generated_utc": "2026-11-01T06:43:16.181103+00:00",
+  "generated_utc": "2026-11-01T08:07:20.083967+00:00",
   "summary": {
-    "wine_events": 28061,
-    "miniwin_events": 6374,
+    "wine_events": 27860,
+    "miniwin_events": 6364,
     "wine_unique_functions": 641,
-    "miniwin_unique_functions": 42,
+    "miniwin_unique_functions": 40,
     "missing_count": 480,
-    "extra_count": 22,
-    "freq_delta_count": 12,
+    "extra_count": 20,
+    "freq_delta_count": 13,
     "retval_mismatch_count": 7,
     "first_divergence": {
       "position": 500,
@@ -499,6 +499,11 @@
       "app_attributed": true
     },
     {
+      "function": "kernelbase.GetEnvironmentVariableA",
+      "wine_calls": 2,
+      "app_attributed": false
+    },
+    {
       "function": "KERNEL32.GetEnvironmentVariableW",
       "wine_calls": 1,
       "app_attributed": false
@@ -705,7 +710,7 @@
     },
     {
       "function": "KERNEL32.HeapFree",
-      "wine_calls": 5390,
+      "wine_calls": 5300,
       "app_attributed": true
     },
     {
@@ -1594,11 +1599,6 @@
       "app_attributed": false
     },
     {
-      "function": "KERNEL32.ReadFile",
-      "wine_calls": 1,
-      "app_attributed": false
-    },
-    {
       "function": "ucrtbase.realloc",
       "wine_calls": 3,
       "app_attributed": false
@@ -1775,7 +1775,7 @@
     },
     {
       "function": "ntdll.RtlAllocateHeap",
-      "wine_calls": 3292,
+      "wine_calls": 3289,
       "app_attributed": true
     },
     {
@@ -1890,7 +1890,7 @@
     },
     {
       "function": "ntdll.RtlFreeHeap",
-      "wine_calls": 5783,
+      "wine_calls": 5693,
       "app_attributed": false
     },
     {
@@ -2290,7 +2290,7 @@
     },
     {
       "function": "KERNEL32.TlsGetValue",
-      "wine_calls": 525,
+      "wine_calls": 516,
       "app_attributed": false
     },
     {
@@ -2457,10 +2457,6 @@
       "miniwin_calls": 39
     },
     {
-      "function": "GetMessageA",
-      "miniwin_calls": 1
-    },
-    {
       "function": "GetObjectA",
       "miniwin_calls": 1
     },
@@ -2473,16 +2469,12 @@
       "miniwin_calls": 3
     },
     {
-      "function": "GetWindowLongPtrW",
-      "miniwin_calls": 3
-    },
-    {
       "function": "GetWindowRect",
       "miniwin_calls": 7
     },
     {
       "function": "HeapAlloc",
-      "miniwin_calls": 6063
+      "miniwin_calls": 6058
     },
     {
       "function": "HeapReAlloc",
@@ -2506,7 +2498,7 @@
     },
     {
       "function": "SHGetFolderPathA",
-      "miniwin_calls": 3
+      "miniwin_calls": 2
     }
   ],
   "frequency_deltas": [
@@ -2544,6 +2536,11 @@
       "function": "user32.LoadImageW",
       "wine": 6,
       "miniwin": 1
+    },
+    {
+      "function": "KERNEL32.ReadFile",
+      "wine": 1,
+      "miniwin": 2
     },
     {
       "function": "user32.RegisterClassW",

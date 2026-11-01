@@ -1,8 +1,8 @@
 # Wine vs MiniWin differential
 
-- generated: 2026-11-01T06:43:16.181103+00:00
-- wine events: 28061 (641 unique functions)
-- miniwin events: 6374 (42 unique functions)
+- generated: 2026-11-01T08:07:20.083967+00:00
+- wine events: 27860 (641 unique functions)
+- miniwin events: 6364 (40 unique functions)
 
 ## First meaningful divergence
 
@@ -113,10 +113,10 @@ the compat database before treating it as a gap.
 | user32.GetDC | 1 | False |
 | KERNEL32.GetEnvironmentStringsA | 8 | False |
 | KERNEL32.GetEnvironmentStringsW | 3 | True |
+| kernelbase.GetEnvironmentVariableA | 2 | False |
 | KERNEL32.GetEnvironmentVariableW | 1 | False |
 | kernelbase.GetFileSize | 6 | False |
 | kernelbase.GetFileTime | 6 | False |
-| KERNEL32.GetFileType | 30 | True |
 
 ## Return-value mismatches (deterministic functions)
 
@@ -145,6 +145,7 @@ differences count.
 | KERNEL32.GetStdHandle | 27 | 3 |
 | secur32.GetUserNameExA | 3 | 1 |
 | user32.LoadImageW | 6 | 1 |
+| KERNEL32.ReadFile | 1 | 2 |
 | user32.RegisterClassW | 25 | 1 |
 | user32.SetWindowLongPtrW | 1 | 2 |
 | user32.SetWindowPos | 1 | 5 |
