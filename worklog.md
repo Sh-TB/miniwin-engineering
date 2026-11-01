@@ -851,3 +851,48 @@ Stage Summary:
   modal pump for dialog-driven flows (WinRAR nag dialog lives inside
   WM_INITDIALOG), NPP guest C++ EH resume CONTEXT (SW-1201 class).
 - Next wagons: SW-1562 decode, modal pump design, NPP EH.
+
+---
+Task ID: SWEEP-036 (TRAIN-20)
+Agent: main (z.ai)
+Task: «ادامه قطار ۲۰ قطار» — continue the train: 20-wagon batch on the merged origin/main engine
+
+Work Log:
+- Stale-local recovery (SWEEP-090 protocol): workspace rolled back to 242af84
+  while origin/main advanced to 8663b4f (SWEEP-034+035); zero local-only
+  commits -> ff-only merge; untracked sweep030/031 census dirs moved to
+  /tmp/stalelocal (kept, not deleted).
+- FOUND THE STALE-BINARY TRAP: the workspace `minwin_loader` was an untracked
+  2.7MB SWEEP-030-era binary; a census on it reported phantom unresolved
+  imports for procexp64. `make -B` from the tracked 8663b4f source reproduced
+  the pinned sha 59af5251 byte-exactly (build==source proven), and the REAL
+  census showed ZERO unresolved imports corpus-wide (winmergeu 133->0).
+- SW-1572 LANDED (wine-9.0 rebar.c port): RBBS_BREAK rows, row height =
+  max band height, band height = cyChild (x64 REBARBANDINFOW cyChild@0x4C
+  present iff cbSize>=0x50 — old code read 0x38=RBBIM_SIZE cx, poisoning
+  height with width) else max(cyMinChild, child's own height, 23);
+  RB_GETBARHEIGHT=sum rows, RB_GETROWHEIGHT(row), RB_GETRECT rows-stacked;
+  rebar SELF-SIZES (REBAR_SizeToHeight) + RBN_HEIGHTCHANGE trace.
+  RESULT: WinRAR 7.12 installed — the settled frame now shows the toolbar
+  (20 labeled buttons, app's own art) with the file-list pane BELOW it
+  (was covering the strip; W7 symptom closed).
+- t17_rebar_contract guest PE: 11/11 PASS x3 exit=0 (locks cyChild offset,
+  V3 0x4C band, row stacking, self-height, GETBANDINFO round-trip).
+- Corpus first contacts: autoruns64 GUI exit=0 (real menubar, list paint =
+  new SW-1580), bginfo64 full dialog exit=0, adexplorer64 downloaded from
+  live.sysinternals (661,912B e4512878) exit=0 license window; zoomit64
+  classified INSTALLER_BUNDLE (live.sysinternals serves the same 68MB MSIX
+  bundle; engine types version-info 1813 honestly, then guest-side NULL
+  deref RVA 0xab63 = SW-1581).
+- Gates: G1 PIN 12/12 (evidence/master/g1/20261101_101900, sha 81d81bb4);
+  recon census 15 programs x3 zero deltas; corpus_gate 15 rows rc=0 in 9
+  crash 0; 3-program battery x3 green (winrarinstd ALIVE_PUMP + toolbar,
+  winrar EXIT 0, npp64 PASS, idman EXIT 0).
+- Internet: evidence PNGs uploaded for browser review (tmpfiles.org):
+  winrar_sw1572_settled https://tmpfiles.org/wbA2TcESmHeO/winrar_sw1572_settled.png
+  autoruns_gui      https://tmpfiles.org/wWABTjEnmSfx/autoruns_gui.png
+  bginfo_gui        https://tmpfiles.org/wHAuT0EHmGlU/bginfo_gui.png
+  adexplorer        https://tmpfiles.org/w6AdTUExmG6D/adexplorer_license.png
+  t17 pass sheet    https://tmpfiles.org/w6AITSEemmZ4/t17_rebar_contract_pass.png
+- Next wagons: SW-1580 autoruns list paint, SW-1581 zoomit bundle frontier,
+  SW-1582 toolbar label truncation model.

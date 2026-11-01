@@ -18335,17 +18335,73 @@ static MwRebar* mw_rebar_of(int s) {
         }
     return NULL;
 }
-/* REBAR_Layout essence (wine REBAR_CalcHorzBand): bands share one row; each
- * band's child is MoveWindow'd to (x,0,width,height) with width from
- * RBBIM_SIZE cx (else cxMinChild), height from cyMinChild (else default). */
+static void mw_child_set_rect(void* h, int x, int y, int w, int hgt); /* fwd: defined below (SW-1572 self-size) */
+/* SW-1572: REBAR row model — wine-9.0 dlls/comctl32/rebar.c.
+ * REBAR_SetBandsHeight: a row's height = max(band heights in the row);
+ * REBAR_Layout: bands with RBBS_BREAK (0x1) start a new row; rows stack
+ * (yPos += row height per row). update_min_band_height: a band with a
+ * child is at least cyChild (+child edges) tall; the W7/WinRAR measured
+ * fallback below keeps a child band honest when CHILDSIZE carried no
+ * cyChild (cbSize 0x4C = V3 prefix cannot): the child window's OWN
+ * recorded height (combo band measured 1000x37), else 23 (standard
+ * toolbar row). Bar height = sum of row heights = RB_GETBARHEIGHT. */
+static int mw_rebar_band_h(MwRbBand* b) {
+    if (b->cychild > 0) return (int)b->cychild;
+    int h = b->cymin ? (int)b->cymin : 0;
+    if (b->child) {
+        int cs = mw_child_slot(b->child);
+        if (cs >= 0 && g_child[cs].live && g_child[cs].rh > h) h = g_child[cs].rh;
+    }
+    return h > 0 ? h : 23;
+}
+static int mw_rebar_rows(MwRebar* rb, int* row_of, int* row_top, int* row_h) {
+    int nrows = 0;
+    for (int i = 0; i < rb->n; i++) {
+        if (i == 0 || (rb->b[i].fStyle & 0x1u)) {
+            nrows++;
+            row_top[nrows - 1] = 0;
+            row_h[nrows - 1] = 0;
+        }
+        row_of[i] = nrows - 1;
+        int h = mw_rebar_band_h(&rb->b[i]);
+        if (h > row_h[nrows - 1]) row_h[nrows - 1] = h;
+    }
+    int y = 0;
+    for (int r = 0; r < nrows; r++) { row_top[r] = y; y += row_h[r]; }
+    return y; /* total bar height (rows stacked) */
+}
+/* wine REBAR_Layout/REBAR_SizeToHeight tail: the rebar RESIZES ITSELF to
+ * the computed height and fires RBN_HEIGHTCHANGE to the parent (WinRAR
+ * reads the bar height back to position the file-list pane below it —
+ * the crushed 1024x2-3px toolbar children were the W7 measured symptom). */
+static void mw_rebar_selfsize(int s, MwRebar* rb) {
+    int row_of[16], row_top[16], row_h[16];
+    int tot = mw_rebar_rows(rb, row_of, row_top, row_h);
+    int nrows = 0;
+    for (int i = 0; i < rb->n; i++) if (i == 0 || (rb->b[i].fStyle & 0x1u)) nrows++;
+    if (s >= 0 && s < MW_CHILD_MAX && g_child[s].live && tot > 0 && g_child[s].rh != tot) {
+        int old = g_child[s].rh;
+        mw_child_set_rect((void*)(uintptr_t)(MW_CHILD_BASE + (uintptr_t)s + 1),
+                          g_child[s].rx, g_child[s].ry, g_child[s].rw, tot);
+        MW_TRACE("[REBAR] self-height %d -> %d (bands=%d rows=%d) RBN_HEIGHTCHANGE",
+                 old, tot, rb->n, nrows);
+    }
+}
+/* REBAR_Layout essence (wine REBAR_CalcHorzBand + REBAR_SetBandsHeight):
+ * each band's child fills its band rect — x from the per-row cursor,
+ * width from RBBIM_SIZE cx (else cxMinChild), y/height = its ROW's
+ * top/height (bands in one row share the band rect height). */
 static void mw_rebar_layout(MwRebar* rb) {
-    int x = 0;
+    int row_of[16], row_top[16], row_h[16];
+    mw_rebar_rows(rb, row_of, row_top, row_h);
+    int x[16] = {0};
     for (int i = 0; i < rb->n; i++) {
         MwRbBand* b = &rb->b[i];
+        int r = row_of[i];
         int w = b->cx ? (int)b->cx : (b->cxmin ? (int)b->cxmin : 64);
-        int h = b->cymin ? (int)b->cymin : 24;
-        if (b->child && w > 0 && h > 0) mw_MoveWindow(b->child, x, 0, w, h, 1);
-        x += w;
+        if (b->child && w > 0 && row_h[r] > 0)
+            mw_MoveWindow(b->child, x[r], row_top[r], w, row_h[r], 1);
+        x[r] += w;
     }
 }
 static int mw_rebar_copy_fields(MwRbBand* b, const uint8_t* bi, uint32_t fMask, int wide) {
@@ -18357,7 +18413,13 @@ static int mw_rebar_copy_fields(MwRbBand* b, const uint8_t* bi, uint32_t fMask, 
     if (fMask & 0x20u) {
         memcpy(&b->cxmin, bi + 0x30, 4);
         memcpy(&b->cymin, bi + 0x34, 4);
-        if (*(uint32_t*)(bi + 0) >= 0x40) memcpy(&b->cychild, bi + 0x38, 4);
+        /* SW-1572: x64 REBARBANDINFOW (wine-9.0 include/commctrl.h) —
+         * cyChild lives at 0x4C and is only PRESENT when the caller's
+         * cbSize >= 0x50 (the V3 prefix ends at wID 0x48+4 = 0x4C). The
+         * old read took 0x38 when cbSize >= 0x40 — that offset is
+         * RBBIM_SIZE cx, so any band carrying both SIZE and CHILDSIZE
+         * had its child height poisoned by its own width. */
+        if (*(uint32_t*)(bi + 0) >= 0x50) memcpy(&b->cychild, bi + 0x4C, 4);
     }
     if (fMask & 0x40u) memcpy(&b->cx, bi + 0x38, 4);
     if ((fMask & 0x100u) && *(uint32_t*)(bi + 0) >= 0x50) memcpy(&b->wID, bi + 0x48, 4);
@@ -18403,6 +18465,7 @@ static int mw_rebar_msg(int s, uint32_t msg, uintptr_t wp, long long lp, long lo
         for (int i = rb->n; i > idx; i--) rb->b[i] = rb->b[i - 1];
         rb->b[idx] = nb; rb->n++;
         mw_rebar_layout(rb);
+        mw_rebar_selfsize(s, rb); /* SW-1572: wine REBAR_SizeToHeight */
         mw_InvalidateRect(MW_CHILD_BASE ? (void*)(uintptr_t)(MW_CHILD_BASE + (uintptr_t)s + 1) : NULL, NULL, 1);
         *out = 1;
         return 1;
@@ -18419,6 +18482,7 @@ static int mw_rebar_msg(int s, uint32_t msg, uintptr_t wp, long long lp, long lo
         if (cbSize < 0x30) return 1;
         mw_rebar_copy_fields(&rb->b[idx], bi, fMask, msg == 0x40Bu);
         mw_rebar_layout(rb);
+        mw_rebar_selfsize(s, rb); /* SW-1572: wine REBAR_SizeToHeight */
         MW_TRACE("RB_SETBANDINFO%c band=%d mask=%#x -> TRUE",
                  msg == 0x40Bu ? 'W' : 'A', idx, fMask);
         *out = 1;
@@ -18442,8 +18506,18 @@ static int mw_rebar_msg(int s, uint32_t msg, uintptr_t wp, long long lp, long lo
     case 0x40Cu: *out = rb->n; return 1;             /* RB_GETBANDCOUNT */
     case 0x40Du: *out = (rb->n > 0) ? 1 : 0; return 1; /* RB_GETROWCOUNT */
     case 0x41Eu: case 0x41Fu: *out = 1; return 1;    /* RB_MINIMIZEBAND / RB_MAXIMIZEBAND */
-    case 0x40Eu: case 0x41Bu: { /* RB_GETROWHEIGHT / RB_GETBARHEIGHT */
-        *out = (rb->n && rb->b[0].cymin) ? rb->b[0].cymin : 24;
+    case 0x40Eu: { /* RB_GETROWHEIGHT: wParam = row index (wine commctrl.h) */
+        int row_of[16], row_top[16], row_h[16];
+        mw_rebar_rows(rb, row_of, row_top, row_h);
+        int nrows = 0;
+        for (int i = 0; i < rb->n; i++) if (i == 0 || (rb->b[i].fStyle & 0x1u)) nrows++;
+        int r = (int)wp; if (r < 0 || r >= nrows) r = 0;
+        *out = nrows ? row_h[r] : 0;
+        return 1;
+    }
+    case 0x41Bu: { /* RB_GETBARHEIGHT: sum of row heights (wine rebar.c) */
+        int row_of[16], row_top[16], row_h[16];
+        *out = mw_rebar_rows(rb, row_of, row_top, row_h);
         return 1;
     }
     case 0x409u: { /* RB_GETRECT: band rect (single row layout) */
@@ -18451,13 +18525,17 @@ static int mw_rebar_msg(int s, uint32_t msg, uintptr_t wp, long long lp, long lo
         int idx = (int)wp;
         if (!lp || idx < 0 || idx >= rb->n) return 1;
         int x = 0;
+        int row_of[16], row_top[16], row_h[16];
+        mw_rebar_rows(rb, row_of, row_top, row_h);
+        /* x accumulates only WITHIN the band's own row (SW-1572) */
         for (int i = 0; i < idx; i++)
-            x += rb->b[i].cx ? (int)rb->b[i].cx : (rb->b[i].cxmin ? (int)rb->b[i].cxmin : 64);
+            if (row_of[i] == row_of[idx])
+                x += rb->b[i].cx ? (int)rb->b[i].cx : (rb->b[i].cxmin ? (int)rb->b[i].cxmin : 64);
         int w = rb->b[idx].cx ? (int)rb->b[idx].cx
                 : (rb->b[idx].cxmin ? (int)rb->b[idx].cxmin : 64);
-        int h = rb->b[idx].cymin ? (int)rb->b[idx].cymin : 24;
         int32_t* r = (int32_t*)(uintptr_t)lp;
-        r[0] = x; r[1] = 0; r[2] = x + w; r[3] = h;
+        r[0] = x; r[1] = row_top[row_of[idx]];
+        r[2] = x + w; r[3] = row_top[row_of[idx]] + row_h[row_of[idx]];
         *out = 1; return 1;
     }
     case 0x410u: { /* RB_IDTOINDEX */
@@ -18478,9 +18556,13 @@ static int mw_rebar_msg(int s, uint32_t msg, uintptr_t wp, long long lp, long lo
         uint32_t fMask;
         memcpy(&fMask, hdr + 4, 4);
         MwRbBand* b = &rb->b[idx];
+        uint32_t cb_out = 0; memcpy(&cb_out, bi + 0, 4);
         if (fMask & 0x01u) memcpy(bi + 0x08, &b->fStyle, 4);
         if (fMask & 0x08u) memcpy(bi + 0x24, &b->iImage, 4);
-        if (fMask & 0x20u) { memcpy(bi + 0x30, &b->cxmin, 4); memcpy(bi + 0x34, &b->cymin, 4); }
+        if (fMask & 0x20u) {
+            memcpy(bi + 0x30, &b->cxmin, 4); memcpy(bi + 0x34, &b->cymin, 4);
+            if (cb_out >= 0x50) memcpy(bi + 0x4C, &b->cychild, 4); /* SW-1572 */
+        }
         if (fMask & 0x40u) memcpy(bi + 0x38, &b->cx, 4);
         if (fMask & 0x100u) memcpy(bi + 0x48, &b->wID, 4);
         *out = 1; return 1;
