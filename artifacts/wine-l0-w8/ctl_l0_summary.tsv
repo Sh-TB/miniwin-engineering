@@ -1,0 +1,16 @@
+mode	name	pass	fail	deterministic	event_stream_sha16	events	frames
+1	tooltip_direct	10	0	True	fa8f40417fe9896a	11	3
+2	tooltip_callback	8	0	True	5f2e2d93794e3ad9	6	3
+3	tooltip_toolbar	9	0	True	0583d485593fb4e1	14	4
+4	tooltip_menu	7	0	True	3179ee79b8f80daf	6	3
+5	tooltip_track	9	0	True	314b7e2d268d8872	10	3
+6	scrollbar_h	12	0	True	d8331f85b5f8fbbb	6	2
+7	scrollbar_v	8	0	True	b5e5feb22e514e60	5	2
+8	buttons	8	0	True	e3b0c44298fc1c14	0	2
+9	static_frames	16	0	True	e3b0c44298fc1c14	0	2
+10	static_icon	6	0	True	612085ee366695db	2	2
+11	button_icon	6	0	True	e3b0c44298fc1c14	0	2
+12	listbox	9	0	True	c2f896d51fc09dc3	4	2
+13	combobox	6	0	True	e3b0c44298fc1c14	0	2
+14	edit_scroll	8	0	True	8eb13ec74ba8a6f0	1	2
+15	progress_track	15	0	True	f44c8df91a1ea242	6	2

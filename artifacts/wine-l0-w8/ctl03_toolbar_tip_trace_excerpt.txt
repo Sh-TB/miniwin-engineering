@@ -1,0 +1,5 @@
+[T9cc0] [API] [TIP] TTM_ADDTOOLW tool#0 hwnd=0x30001 uId=0x65 rect=[0,0 46,26] flags=0 text=TEXTCALLBACK '0 wchars'
+[T9cc0] [API] [TIP] TTM_ADDTOOLW tool#1 hwnd=0x30001 uId=0x66 rect=[46,0 92,26] flags=0 text=TEXTCALLBACK '0 wchars'
+[T9cc0] [API] [TIP] toolbar TTN_GETDISPINFOW idCommand=101 -> button text (TOOLBAR_TTGetDispInfo)
+[T9cc0] [API] [TIP] show tool#0 hwnd=0x30001 uId=0x65 rect=[0,0 46,26] flags=0 '4 wchars' at (10,10) -> TTN_SHOW delivered
+[T9cc0] [API] [TIP] toolbar TTN_GETDISPINFOW idCommand=102 -> button text (TOOLBAR_TTGetDispInfo)
