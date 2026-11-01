@@ -87,8 +87,12 @@ def normalize_mw_trace(api_trace_path):
         m = MW_CONT_RE.match(line)
         if m and pending is not None:
             rest = m.group('rest').strip()
-            val, known = _mw_value(rest)
-            pending['retval'], pending['retval_known'] = val, known
+            # the separator was already consumed by MW_CONT_RE; only strip
+            # engine annotations like '(handle=4)' from the value
+            val = re.sub(r'\s+\((?:value|handle|retval)=[^)]*\)\s*$', '',
+                         rest).strip()
+            pending['retval'] = val or None
+            pending['retval_known'] = bool(val)
             events.append(pending)
             pending = None
             continue

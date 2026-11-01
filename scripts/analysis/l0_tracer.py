@@ -521,8 +521,22 @@ def run_experiment(args):
         if os.environ.get('L0_XVFB') == '1':
             from shutil import which as _which
             xv = _which('xvfb-run')
-            if xv:
+            xauth_missing = xv and not _which('xauth')
+            if xv and not xauth_missing:
                 cmd = [xv, '-a'] + cmd
+            elif xv and xauth_missing:
+                # xvfb-run refuses without xauth; spawn Xvfb directly and
+                # point DISPLAY at it (no auth needed on /tmp sockets).
+                import subprocess as _sp
+                xvfb_proc = _sp.Popen(['Xvfb', ':97', '-screen', '0',
+                                       '1280x1024x24'],
+                                      stdout=subprocess.DEVNULL,
+                                      stderr=subprocess.DEVNULL,
+                                      start_new_session=True)
+                time.sleep(1.0)
+                env['DISPLAY'] = ':97'
+                env['_l0_xvfb_pid'] = str(xvfb_proc.pid)
+                print('   Xvfb :97 spawned (pid %d)' % xvfb_proc.pid)
             else:
                 print('   WARN: L0_XVFB=1 but xvfb-run not found')
         cap_mb = args.relay_max_mb if ch == 'relay' else args.channel_max_mb
@@ -571,15 +585,51 @@ def run_experiment(args):
     with open(out / 'experiment.json', 'w') as f:
         json.dump(spec, f, indent=2, default=str)
 
-    # ---- replay check: hash first N events of each channel ----------------
+    # ---- replay checks -----------------------------------------------------
+    # head hash: raw bytes of the first events (includes volatile addresses)
+    # seq hash: ASLR-normalized shape hash — hex tokens collapsed, so the
+    # same application run yields the same sequence across repeated runs.
+    HEX_TOK = re.compile(r'\b[0-9a-fA-F]{4,}\b')
+
+    def seq_shape(path, n=20000):
+        # Per-THREAD call-sequence hash: cross-thread interleaving is
+        # scheduler-dependent (wineserver races), so a global order is not
+        # a stable invariant — but each thread's own order is. Threads are
+        # hashed independently and combined in sorted-tid order.
+        per_tid = {}
+        cnt = 0
+        with open(path, encoding='utf-8', errors='replace') as f:
+            for line in f:
+                if cnt >= n:
+                    break
+                try:
+                    ev = json.loads(line)
+                except json.JSONDecodeError:
+                    continue
+                if ev.get('kind') != 'call_pair':
+                    continue
+                tid = ev.get('tid') or '?'
+                per_tid.setdefault(tid, [])
+                per_tid[tid].append(ev.get('function') or '')
+                cnt += 1
+        h = hashlib.sha256()
+        for tid in sorted(per_tid):
+            h.update(tid.encode() + b':')
+            h.update('\n'.join(per_tid[tid]).encode('utf-8', 'replace'))
+            h.update(b'\n##\n')
+        return h.hexdigest()[:16]
+
     replay = {}
+    seqhash = {}
     for ch in channels:
         ev = out / 'events' / f'{ch}.jsonl'
         if ev.exists():
             with open(ev, 'rb') as f:
                 head = f.read(1 << 20)
             replay[ch] = hashlib.sha256(head).hexdigest()[:16]
+            seqhash[ch] = seq_shape(ev)
     spec['replay_head_hash'] = replay
+    spec['replay_seq_hash'] = seqhash
     with open(out / 'experiment.json', 'w') as f:
         json.dump(spec, f, indent=2, default=str)
 
@@ -604,6 +654,12 @@ def run_experiment(args):
     if not args.keep_prefixes:
         for p in [out / 'prefixes']:
             shutil.rmtree(p, ignore_errors=True)
+    # shut down the shared Xvfb if we spawned one (xauth-less path)
+    if '_l0_xvfb_pid' in env:
+        try:
+            os.kill(int(env['_l0_xvfb_pid']), signal.SIGTERM)
+        except (ValueError, ProcessLookupError):
+            pass
 
     print(f'== done: {out}')
     return 0
