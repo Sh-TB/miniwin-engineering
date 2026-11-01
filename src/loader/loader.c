@@ -18059,7 +18059,11 @@ typedef struct {
     void*    hwnd;      /* MW_CHILD_BASE | (slot+1) */
     void*    parent;
     uint32_t id;        /* HMENU param == control id for children */
-    char     cls[16];   /* "BUTTON"/"EDIT"/"STATIC"/"LISTBOX"/"SCROLLBAR"/"COMBOBOX" */
+    char     cls[24];   /* SW-1591 W8: 16->24 — "tooltips_class32" (16),
+                        "msctls_progress32"/"msctls_trackbar32" (17) were
+                        snprintf-truncated to 15 chars + NUL, so EVERY
+                        cls_is/strcmp compare against the full name failed
+                        and the tooltip/progress models never matched */
     uint16_t text[128]; /* control text (UTF-16, as the guest set/read it) */
     uint8_t  checked;   /* BM_SETCHECK state */
     uint8_t  enabled;
@@ -18096,6 +18100,17 @@ typedef struct {
     uint16_t sb_text[4][80];
     int      cb_items;
     uint16_t cb_item[8][48];
+    /* ---- SW-1592/1593/1594 (wine-l0 W8): control content models ---- */
+    uint32_t style;         /* creation style (SS_/BS_/SBS_ decode in painter) */
+    void*    himage;        /* WM_SETIMAGE / SS_ICON creation param */
+    uint8_t  img_type;      /* 0=none 1=IMAGE_ICON 2=IMAGE_BITMAP */
+    int      lb_items;      /* LISTBOX rows */
+    uint16_t lb_item[32][48];
+    int      lb_cursel;
+    int      cb_cursel;     /* COMBOBOX selection (SW-1594) */
+    int      pb_min, pb_max, pb_pos, pb_step;  /* msctls_progress32 */
+    int      tb_min, tb_max, tb_pos;           /* msctls_trackbar32 */
+    int      ud_min, ud_max, ud_pos;           /* msctls_updown32 */
 } MwChild;
 static MwChild g_child[MW_CHILD_MAX];
 static uint16_t g_maintitle[128];
@@ -18596,10 +18611,12 @@ static int mw_comboex_msg(int s, uint32_t msg, uintptr_t wp, long long lp,
         }
         return 1;
     }
-    case 0x14Bu: c->cb_items = 0; *out = 0; return 1; /* CB_RESETCONTENT */
-    case 0x14Eu: *out = 0; return 1;                  /* CB_SETCURSEL */
+    case 0x14Bu: c->cb_items = 0; c->cb_cursel = -1; *out = 0; return 1; /* CB_RESETCONTENT */
+    case 0x14Eu: /* CB_SETCURSEL: wParam = index; returns index or CB_ERR */
+        if ((int)wp >= c->cb_items) { *out = -1; return 1; }
+        c->cb_cursel = (int)wp; *out = c->cb_cursel; return 1;
     case 0x146u: *out = c->cb_items; return 1;        /* CB_GETCOUNT */
-    case 0x147u: *out = 0; return 1;                  /* CB_GETCURSEL */
+    case 0x147u: *out = c->cb_cursel; return 1;       /* CB_GETCURSEL */
     case 0x14Fu: *out = 1; return 1;                  /* CB_SHOWDROPDOWN */
     }
     return 0;
@@ -18613,8 +18630,891 @@ static int mw_tb_pool_add(MwChild* c, const uint16_t* s) {
     c->tb_pool[idx][k] = 0;
     return idx;
 }
+/* ======================================================================
+ * SW-1591 (wine-l0 W8): TOOLTIP ENGINE — wine-9.0 dlls/comctl32/tooltips.c
+ * contract extracted line-by-line from the pinned reference:
+ *   - TOOLINFOA/W x64 layout (include/commctrl.h L1810-1836): cbSize@0
+ *     uFlags@4 hwnd@8 uId@16 rect{+24..39} hinst@40 lpszText@48 lParam@56
+ *   - TOOLTIPS_RelayEvent L1486-1545: WM_MOUSEMOVE relay -> tool-from-point
+ *     -> ID_TIMERSHOW -> Show; button relays -> Hide. The engine is a
+ *     deterministic headless model: the timer fires IMMEDIATELY (traced).
+ *   - TOOLTIPS_Show L836: WM_NOTIFY TTN_SHOW (-521) to tool hwnd, popup
+ *     sized to text; TOOLTIPS_Hide L852: WM_NOTIFY TTN_POP (-522).
+ *   - TOOLTIPS_GetDispInfoA/W L360-470: WM_NOTIFY TTN_GETDISPINFOA (-520) /
+ *     W (-530) carrying NMTTDISPINFO {hdr 24B, lpszText=&szText@24,
+ *     szText[80]@32, hinst@112, uFlags@120, lParam@128}; a reply of
+ *     LPSTR_TEXTCALLBACK is recursive (empty); IS_INTRESOURCE -> LoadStringW;
+ *     empty text -> retry on GetParent(tool hwnd) (wine L418-421).
+ *   - toolbar.c L1995-2060: a TBSTYLE_TOOLTIPS toolbar adds one tool PER
+ *     BUTTON {hwnd=toolbar, uId=idCommand, lpszText=LPSTR_TEXTCALLBACKW}
+ *     + TTM_NEWTOOLRECTW per button, and answers TTN_GETDISPINFO itself
+ *     (toolbar.c L6355 TOOLBAR_TTGetDispInfo) from the button text.
+ * v1 (SW-1207) registered tooltips_class32 windows but routed ZERO TTM_*
+ * messages: TTM_ADDTOOL silently returned 0, no tool ever loaded, no TTN_*
+ * notification ever fired — tooltips never appeared in ANY program.
+ * ==================================================================== */
+__attribute__((ms_abi)) long long mw_SendMessageW(void* h, uint32_t msg, uintptr_t wp, long long lp); /* def in the USER32 block */
+__attribute__((ms_abi)) int mw_LoadStringW(void* hinst, uint32_t id, uint16_t* buf, int cch); /* def at LoadStringW */
+static int mw_scroll_slot(void* h, int bar, int create); /* def in the scroll-state block */
+static int mwb_textw(const char* s, int scale);          /* def in the raster core */
+/* SW-1592: the unified scroll store lives here (v1 had it mid-file, after
+ * its first consumer); the SCROLLBAR control branch + painter need it. */
+#define MW_SCROLL_MAX 32
+typedef struct { void* hwnd; int bar; int pos; int min, max; uint32_t page; uint8_t live; } MwScroll;
+static MwScroll g_scroll[MW_SCROLL_MAX];
+static int mw_scroll_slot_impl(void* h, int bar, int create) {
+    for (int i = 0; i < MW_SCROLL_MAX; i++)
+        if (g_scroll[i].live && g_scroll[i].hwnd == h && g_scroll[i].bar == bar) return i;
+    if (!create) return -1;
+    for (int i = 0; i < MW_SCROLL_MAX; i++)
+        if (!g_scroll[i].live) {
+            memset(&g_scroll[i], 0, sizeof(MwScroll));
+            g_scroll[i].live = 1; g_scroll[i].hwnd = h; g_scroll[i].bar = bar;
+            return i;
+        }
+    return -1;
+}
+#define mw_scroll_slot mw_scroll_slot_impl /* single definition, early link */
+static MW_WNDPROC g_main_class_proc; /* SW-1592 fwd (def at the GUI block) */
+#define MW_TTM_ACTIVATE        0x0401u
+#define MW_TTM_SETDELAYTIME    0x0403u
+#define MW_TTM_ADDTOOLA        0x0404u
+#define MW_TTM_ADDTOOLW        0x0432u
+#define MW_TTM_DELTOOLA        0x0405u
+#define MW_TTM_DELTOOLW        0x0433u
+#define MW_TTM_NEWTOOLRECTA    0x0406u
+#define MW_TTM_NEWTOOLRECTW    0x0434u
+#define MW_TTM_RELAYEVENT      0x0407u
+#define MW_TTM_GETTOOLINFOA    0x0408u
+#define MW_TTM_GETTOOLINFOW    0x0435u
+#define MW_TTM_SETTOOLINFOA    0x0409u
+#define MW_TTM_SETTOOLINFOW    0x0436u
+#define MW_TTM_HITTESTA        0x040Au
+#define MW_TTM_HITTESTW        0x0437u
+#define MW_TTM_GETTEXTA        0x040Bu
+#define MW_TTM_GETTEXTW        0x0438u
+#define MW_TTM_UPDATETIPTEXTA  0x040Cu
+#define MW_TTM_UPDATETIPTEXTW  0x0439u
+#define MW_TTM_GETTOOLCOUNT    0x040Du
+#define MW_TTM_ENUMTOOLSA      0x040Eu
+#define MW_TTM_ENUMTOOLSW      0x043Au
+#define MW_TTM_GETCURRENTTOOLA 0x040Fu
+#define MW_TTM_GETCURRENTTOOLW 0x043Bu
+#define MW_TTM_WINDOWFROMPOINT 0x0410u
+#define MW_TTM_TRACKACTIVATE   0x0411u
+#define MW_TTM_TRACKPOSITION   0x0412u
+#define MW_TTM_SETTIPBKCOLOR   0x0413u
+#define MW_TTM_SETTIPTEXTCOLOR 0x0414u
+#define MW_TTM_GETDELAYTIME    0x0415u
+#define MW_TTM_GETTIPBKCOLOR   0x0416u
+#define MW_TTM_GETTIPTEXTCOLOR 0x0417u
+#define MW_TTM_SETMAXTIPWIDTH  0x0418u
+#define MW_TTM_GETMAXTIPWIDTH  0x0419u
+#define MW_TTM_SETMARGIN       0x041Au
+#define MW_TTM_GETMARGIN       0x041Bu
+#define MW_TTM_POP             0x041Cu
+#define MW_TTM_UPDATE          0x041Du
+#define MW_TTM_GETBUBBLESIZE   0x041Eu
+#define MW_TTM_ADJUSTRECT      0x041Fu
+#define MW_TTM_SETTITLEA       0x0420u
+#define MW_TTM_SETTITLEW       0x0421u
+#define MW_TTM_POPUP           0x0422u
+#define MW_TTM_GETTITLE        0x0423u
+
+#define MW_TTN_GETDISPINFOA    (-520)  /* == TTN_NEEDTEXTA (commctrl.h L1802) */
+#define MW_TTN_SHOW            (-521)  /* tooltips.c L814 */
+#define MW_TTN_POP             (-522)  /* tooltips.c L850 */
+#define MW_TTN_GETDISPINFOW    (-530)  /* == TTN_NEEDTEXTW (commctrl.h L1803) */
+
+#define MW_TTF_IDISHWND        0x0001u
+#define MW_TTF_TRACK           0x0020u
+#define MW_TTF_ABSOLUTE        0x0080u
+#define MW_TTF_DI_SETITEM      0x8000u
+#define MW_LPSTR_TEXTCALLBACK  ((uintptr_t)-1)
+
+/* WM_MOUSEMOVE relay MSG layout (winuser.h tagMSG, x64): hwnd@0
+ * message@8 wParam@16 lParam@24 time@32 pt@36 — POINT is 4-aligned (LONG
+ * fields), so pt follows time WITHOUT padding; struct size = 48. (v1 read
+ * the POINT at +32 = `time`; the naive @40 guess reads pt.y.) */
+#define MW_MSG_HWND_OFF   0
+#define MW_MSG_MSG_OFF    8
+#define MW_MSG_LP_OFF     24
+#define MW_MSG_PT_OFF     36
+
+/* Per-tooltip-window state (wine TOOLTIPS_INFO subset) */
+typedef struct {
+    uint8_t  live;
+    void*    hwnd;                 /* the tooltips_class32 window */
+    uint8_t  active;               /* bActive (TTM_ACTIVATE) */
+    uint32_t maxw;                 /* TTM_SETMAXTIPWIDTH (0 = none) */
+    int32_t  margin[4];            /* TTM_SETMARGIN l,t,r,b */
+    uint16_t title[48];            /* TTM_SETTITLE */
+    int32_t  track_x, track_y;     /* TTM_TRACKPOSITION */
+    uint8_t  track_valid;
+} MwTipWnd;
+#define MW_TIPWND_MAX 8
+static MwTipWnd g_tipwnd[MW_TIPWND_MAX];
+
+/* One TOOLINFO entry (wine TTTOOL_INFO subset) */
+typedef struct {
+    uint8_t  live;
+    uint8_t  wide;                 /* added via TTM_ADDTOOLW */
+    void*    tipwnd;               /* owning tooltip control hwnd */
+    void*    hwnd_tool;            /* TOOLINFO.hwnd */
+    uint32_t uid;                  /* TOOLINFO.uId */
+    uint32_t flags;                /* TTF_* */
+    int32_t  rl, rt, rr, rb;       /* TOOLINFO.rect */
+    void*    hinst;
+    void*    lparam;
+    uint16_t text[80];             /* resolved tip text */
+    uint8_t  has_text;             /* direct text captured at ADDTOOL */
+} MwTipTool;
+#define MW_TIP_TOOLS 96
+static MwTipTool g_tip[MW_TIP_TOOLS];
+static int g_tip_shown = -1;       /* index into g_tip of the visible tool */
+static int g_tip_mouse_x = 60, g_tip_mouse_y = 40; /* last relay point (paint anchor) */
+
+static MwTipWnd* mw_tipwnd(void* h) {
+    for (int i = 0; i < MW_TIPWND_MAX; i++)
+        if (g_tipwnd[i].live && g_tipwnd[i].hwnd == h) return &g_tipwnd[i];
+    for (int i = 0; i < MW_TIPWND_MAX; i++)
+        if (!g_tipwnd[i].live) {
+            memset(&g_tipwnd[i], 0, sizeof(MwTipWnd));
+            g_tipwnd[i].live = 1; g_tipwnd[i].hwnd = h;
+            g_tipwnd[i].active = 1; /* wine: bActive defaults TRUE */
+            g_tipwnd[i].margin[0] = g_tipwnd[i].margin[2] = 1; /* wine defaults */
+            g_tipwnd[i].margin[1] = g_tipwnd[i].margin[3] = -1;
+            return &g_tipwnd[i];
+        }
+    return &g_tipwnd[0]; /* degenerate: reuse slot 0 */
+}
+static void* mw_tip_parent_of(void* h) {
+    int s = mw_child_slot(h);
+    if (s >= 0 && g_child[s].live && g_child[s].parent) return g_child[s].parent;
+    return NULL;
+}
+/* Wine TOOLTIPS_GetToolFromPoint L906+: (TTF_IDISHWND ? hwnd match : rect
+ * containment in the tool hwnd's client coords). */
+static int mw_tip_tool_at(void* tipwnd, void* hwnd, int x, int y) {
+    for (int i = 0; i < MW_TIP_TOOLS; i++) {
+        if (!g_tip[i].live || g_tip[i].tipwnd != tipwnd) continue;
+        if (g_tip[i].hwnd_tool != hwnd) continue;
+        if (g_tip[i].flags & MW_TTF_IDISHWND) return i;
+        if (x >= g_tip[i].rl && x < g_tip[i].rr &&
+            y >= g_tip[i].rt && y < g_tip[i].rb) return i;
+    }
+    return -1;
+}
+/* TTN_NEEDTEXT delivery — wine TOOLTIPS_GetDispInfoA/W L360-470 */
+static void mw_tip_resolve_text(MwTipTool* t) {
+    uint8_t nmtt[144];
+    memset(nmtt, 0, sizeof(nmtt));
+    *(void**)(nmtt + 0)  = (void*)(uintptr_t)0;      /* hdr.hwndFrom set below */
+    *(void**)(nmtt + 0)  = t->tipwnd;                /* hdr.hwndFrom = tooltip */
+    *(uint64_t*)(nmtt + 8) = t->uid;                 /* hdr.idFrom = uId */
+    *(int32_t*)(nmtt + 16) = t->wide ? MW_TTN_GETDISPINFOW : MW_TTN_GETDISPINFOA;
+    *(void**)(nmtt + 24) = nmtt + 32;                /* lpszText -> szText */
+    *(uint32_t*)(nmtt + 120) = t->flags;             /* uFlags */
+    *(uint64_t*)(nmtt + 128) = (uint64_t)(uintptr_t)t->lparam;
+    t->text[0] = 0;
+    /* wine L385: SendMessageW(toolPtr->hwnd, WM_NOTIFY, uId, &ttnmdi) */
+    mw_SendMessageW(t->hwnd_tool, 0x4Eu, (uintptr_t)t->uid, (long long)(intptr_t)nmtt);
+    uintptr_t lpsz = *(uintptr_t*)(nmtt + 24);
+    if (lpsz == MW_LPSTR_TEXTCALLBACK) {             /* wine L409: recursive */
+        MW_TRACE("[TIP] TTN_NEEDTEXT reply = LPSTR_TEXTCALLBACK (recursive) -> empty");
+        return;
+    }
+    if (lpsz == (uintptr_t)(nmtt + 32)) {            /* guest filled szText */
+        for (int k = 0; k < 79; k++) {
+            uint16_t ch = t->wide ? *(uint16_t*)(nmtt + 32 + k * 2)
+                                  : (uint16_t)*(uint8_t*)(nmtt + 32 + k);
+            if (!ch) break;
+            t->text[k] = ch;
+        }
+        t->text[79] = 0;
+        return;
+    }
+    if (lpsz == 0) return;                           /* wine L398 */
+    if (lpsz < 0x10000u) {                           /* IS_INTRESOURCE */
+        void* hinst = *(void**)(nmtt + 112);
+        mw_LoadStringW(hinst, (uint32_t)lpsz, t->text, 79);
+        return;
+    }
+    if (mw_probe_copy((void*)lpsz, 158, t->text)) {  /* direct buffer reply */
+        if (!t->wide)
+            for (int k = 0; k < 79; k++) {
+                uint16_t ch = *(uint8_t*)((uint8_t*)lpsz + k);
+                if (!ch) { t->text[k] = 0; break; }
+                t->text[k] = ch;
+            }
+        t->text[79] = 0;
+        return;
+    }
+    /* empty -> wine L418-421: retry on the PARENT of the tool hwnd */
+    void* par = mw_tip_parent_of(t->hwnd_tool);
+    if (par && par != t->hwnd_tool) {
+        *(void**)(nmtt + 24) = nmtt + 32;
+        memset(nmtt + 32, 0, 80);
+        mw_SendMessageW(par, 0x4Eu, (uintptr_t)t->uid, (long long)(intptr_t)nmtt);
+        uintptr_t l2 = *(uintptr_t*)(nmtt + 24);
+        if (l2 == (uintptr_t)(nmtt + 32)) {
+            for (int k = 0; k < 79; k++) {
+                uint16_t ch = t->wide ? *(uint16_t*)(nmtt + 32 + k * 2)
+                                      : (uint16_t)*(uint8_t*)(nmtt + 32 + k);
+                if (!ch) break;
+                t->text[k] = ch;
+            }
+            t->text[79] = 0;
+        } else if (l2 && l2 < 0x10000u) {
+            mw_LoadStringW(*(void**)(nmtt + 112), (uint32_t)l2, t->text, 79);
+        } else if (l2 && l2 != MW_LPSTR_TEXTCALLBACK) {
+            mw_probe_copy((void*)l2, 158, t->text);
+            if (!t->wide)
+                for (int k = 0; k < 79; k++) {
+                    uint16_t ch = *(uint8_t*)((uint8_t*)l2 + k);
+                    if (!ch) { t->text[k] = 0; break; }
+                    t->text[k] = ch;
+                }
+            t->text[79] = 0;
+        }
+    }
+}
+static void mw_tip_paint(void); /* painter section (after the raster core) */
+/* TOOLTIPS_Show L836: TTN_SHOW -> popup with the resolved text */
+static void mw_tip_show(MwTipTool* t, int mx, int my) {
+    uint8_t hdr[24];
+    *(void**)(hdr + 0) = t->tipwnd;
+    *(uint64_t*)(hdr + 8) = t->uid;
+    *(int32_t*)(hdr + 16) = MW_TTN_SHOW;
+    mw_SendMessageW(t->hwnd_tool, 0x4Eu, (uintptr_t)t->uid, (long long)(intptr_t)hdr);
+    if (!t->has_text) mw_tip_resolve_text(t);
+    MwTipWnd* w = mw_tipwnd(t->tipwnd);
+    if (w && (t->flags & MW_TTF_TRACK) && w->track_valid) {
+        mx = w->track_x; my = w->track_y;   /* TTF_ABSOLUTE position */
+    }
+    g_tip_shown = (int)(t - g_tip);
+    if (!(t->flags & MW_TTF_TRACK) || !w->track_valid) {
+        g_tip_mouse_x = mx; g_tip_mouse_y = my; /* anchor the popup */
+    }
+    mw_tip_paint();                          /* composite + topmost popup */
+    MW_TRACE("[TIP] show tool#%d hwnd=%p uId=%#x rect=[%d,%d %d,%d] flags=%#x '%u wchars' at (%d,%d) -> TTN_SHOW delivered",
+             (int)(t - g_tip), t->hwnd_tool, t->uid, t->rl, t->rt, t->rr, t->rb,
+             t->flags, (unsigned)mw_w16len(t->text), mx, my);
+}
+/* TOOLTIPS_Hide L852: TTN_POP */
+static void mw_tip_hide(int idx) {
+    if (idx < 0 || idx >= MW_TIP_TOOLS || !g_tip[idx].live) return;
+    MwTipTool* t = &g_tip[idx];
+    uint8_t hdr[24];
+    *(void**)(hdr + 0) = t->tipwnd;
+    *(uint64_t*)(hdr + 8) = t->uid;
+    *(int32_t*)(hdr + 16) = MW_TTN_POP;
+    mw_SendMessageW(t->hwnd_tool, 0x4Eu, (uintptr_t)t->uid, (long long)(intptr_t)hdr);
+    if (g_tip_shown == idx) g_tip_shown = -1;
+    MW_TRACE("[TIP] hide tool#%d uId=%#x -> TTN_POP delivered", idx, t->uid);
+}
+/* TOOLINFO parse (x64 layout above); returns 1 when the struct is usable */
+static int mw_tip_parse_ti(const uint8_t* ti, void** hwnd, uint32_t* uid,
+                           uint32_t* flags, int32_t* rect, void** hinst,
+                           uintptr_t* lpsz, void** lparam) {
+    uint32_t cbsize = *(const uint32_t*)(ti + 0);
+    if (cbsize < 40 || cbsize > 200) return 0; /* wine rejects bad cbSize */
+    if (!mw_probe_copy(ti, 56, NULL)) return 0;
+    *hwnd  = *(void* const*)(ti + 8);
+    *uid   = *(const uint32_t*)(ti + 16);
+    *flags = *(const uint32_t*)(ti + 4);
+    rect[0] = *(const int32_t*)(ti + 24); rect[1] = *(const int32_t*)(ti + 28);
+    rect[2] = *(const int32_t*)(ti + 32); rect[3] = *(const int32_t*)(ti + 36);
+    *hinst = *(void* const*)(ti + 40);
+    *lpsz  = *(const uintptr_t*)(ti + 48);
+    *lparam = *(void* const*)(ti + 56);
+    return 1;
+}
+static int mw_tip_add(int s, uint32_t msg, uintptr_t wp, long long lp) {
+    void* tipwnd = g_child[s].hwnd;
+    uint8_t ti[64];
+    if (!lp || !mw_probe_copy((const void*)(uintptr_t)lp, 64, ti)) {
+        MW_TRACE("[TIP] TTM_ADDTOOL unreadable TOOLINFO -> FALSE");
+        return 0;
+    }
+    void *th, *hinst, *lparam; uint32_t uid, flags; int32_t rect[4]; uintptr_t lpsz;
+    if (!mw_tip_parse_ti(ti, &th, &uid, &flags, rect, &hinst, &lpsz, &lparam)) {
+        MW_TRACE("[TIP] TTM_ADDTOOL bad cbSize -> FALSE (wine rejects)");
+        return 0;
+    }
+    /* replace-existing-by-(hwnd,uId): wine AddTool replaces duplicates */
+    int slot = -1;
+    for (int i = 0; i < MW_TIP_TOOLS; i++)
+        if (g_tip[i].live && g_tip[i].tipwnd == tipwnd &&
+            g_tip[i].hwnd_tool == th && g_tip[i].uid == uid) { slot = i; break; }
+    if (slot < 0)
+        for (int i = 0; i < MW_TIP_TOOLS; i++)
+            if (!g_tip[i].live) { slot = i; break; }
+    if (slot < 0) { MW_TRACE("[TIP] tool table full -> FALSE"); return 0; }
+    MwTipTool* t = &g_tip[slot];
+    memset(t, 0, sizeof(MwTipTool));
+    t->live = 1; t->wide = (msg == MW_TTM_ADDTOOLW);
+    t->tipwnd = tipwnd; t->hwnd_tool = th; t->uid = uid; t->flags = flags;
+    t->rl = rect[0]; t->rt = rect[1]; t->rr = rect[2]; t->rb = rect[3];
+    t->hinst = hinst; t->lparam = lparam;
+    if (lpsz == MW_LPSTR_TEXTCALLBACK) {
+        t->has_text = 0;   /* resolved per-show via TTN_NEEDTEXT */
+    } else if (lpsz && lpsz < 0x10000u) {
+        mw_LoadStringW(hinst, (uint32_t)lpsz, t->text, 79);
+        t->has_text = 1;
+    } else if (lpsz) {
+        if (t->wide) {
+            mw_probe_copy((const void*)lpsz, 158, t->text); t->text[79] = 0;
+        } else {
+            for (int k = 0; k < 79; k++) {
+                uint16_t ch = *(const uint8_t*)(lpsz + k);
+                if (!ch) break;
+                t->text[k] = ch;
+            }
+            t->text[79] = 0;
+        }
+        t->has_text = 1;
+    }
+    mw_tipwnd(tipwnd); /* ensure the per-window state exists */
+    MW_TRACE("[TIP] TTM_ADDTOOL%s tool#%d hwnd=%p uId=%#x rect=[%d,%d %d,%d] flags=%#x text=%s '%u wchars'",
+             t->wide ? "W" : "A", slot, th, uid, rect[0], rect[1], rect[2], rect[3],
+             flags, lpsz == MW_LPSTR_TEXTCALLBACK ? "TEXTCALLBACK" : "direct",
+             (unsigned)mw_w16len(t->text));
+    return 1;
+}
+static int mw_tip_find_by_ti(void* tipwnd, const uint8_t* ti) {
+    void* th = *(void* const*)(ti + 8);
+    uint32_t uid = *(const uint32_t*)(ti + 16);
+    uint32_t flags = *(const uint32_t*)(ti + 4);
+    for (int i = 0; i < MW_TIP_TOOLS; i++) {
+        if (!g_tip[i].live || g_tip[i].tipwnd != tipwnd) continue;
+        if (g_tip[i].hwnd_tool == th && g_tip[i].uid == uid) return i;
+        if ((g_tip[i].flags & MW_TTF_IDISHWND) && (flags & MW_TTF_IDISHWND) &&
+            g_tip[i].hwnd_tool == th) return i;
+    }
+    return -1;
+}
+static void mw_tip_fill_ti(int idx, uint8_t* ti, int wide) {
+    MwTipTool* t = &g_tip[idx];
+    *(uint32_t*)(ti + 0) = 72;                 /* cbSize: caller may override */
+    *(uint32_t*)(ti + 4) = t->flags;
+    *(void**)(ti + 8) = t->hwnd_tool;
+    *(uint32_t*)(ti + 16) = t->uid;
+    *(int32_t*)(ti + 24) = t->rl; *(int32_t*)(ti + 28) = t->rt;
+    *(int32_t*)(ti + 32) = t->rr; *(int32_t*)(ti + 36) = t->rb;
+    *(void**)(ti + 40) = t->hinst;
+    if (t->has_text) *(void**)(ti + 48) = t->text;  /* our UTF-16 store */
+    else             *(void**)(ti + 48) = (void*)MW_LPSTR_TEXTCALLBACK;
+    *(void**)(ti + 56) = t->lparam;
+    (void)wide;
+}
+/* The TTM_* protocol switch — routed from mw_commonctl_msg for children of
+ * class Tooltips_Class32. Returns 1 when the message was consumed. */
+static int mw_tip_msg(int s, uint32_t msg, uintptr_t wp, long long lp, long long* out) {
+    void* tipwnd = g_child[s].hwnd;
+    MwTipWnd* w = mw_tipwnd(tipwnd);
+    uint8_t ti[80];
+    switch (msg) {
+    case MW_TTM_ACTIVATE: {
+        uint8_t old = w->active;
+        w->active = (uint8_t)(wp != 0);
+        if (!w->active) mw_tip_hide(g_tip_shown);
+        MW_TRACE("[TIP] TTM_ACTIVATE %u (was %u) -> TRUE", w->active, old);
+        *out = 1; return 1;
+    }
+    case MW_TTM_ADDTOOLA: case MW_TTM_ADDTOOLW:
+        *out = mw_tip_add(s, msg, wp, lp); return 1;
+    case MW_TTM_DELTOOLA: case MW_TTM_DELTOOLW: {
+        if (lp && mw_probe_copy((const void*)(uintptr_t)lp, 64, ti)) {
+            int idx = mw_tip_find_by_ti(tipwnd, ti);
+            if (idx >= 0) { mw_tip_hide(idx); g_tip[idx].live = 0; *out = 1; return 1; }
+        }
+        *out = 0; return 1;
+    }
+    case MW_TTM_NEWTOOLRECTA: case MW_TTM_NEWTOOLRECTW: {
+        if (lp && mw_probe_copy((const void*)(uintptr_t)lp, 64, ti)) {
+            int idx = mw_tip_find_by_ti(tipwnd, ti);
+            if (idx >= 0) {
+                MwTipTool* t = &g_tip[idx];
+                t->rl = *(const int32_t*)(ti + 24); t->rt = *(const int32_t*)(ti + 28);
+                t->rr = *(const int32_t*)(ti + 32); t->rb = *(const int32_t*)(ti + 36);
+                MW_TRACE("[TIP] TTM_NEWTOOLRECT tool#%d -> [%d,%d %d,%d]",
+                         idx, t->rl, t->rt, t->rr, t->rb);
+                *out = 1; return 1;
+            }
+        }
+        *out = 0; return 1;
+    }
+    case MW_TTM_RELAYEVENT: {
+        /* wine L1486-1545. Deterministic headless: ID_TIMERSHOW fires now. */
+        if (!lp || !mw_probe_copy((const void*)(uintptr_t)lp, 48, ti)) {
+            MW_TRACE("[TIP] relay probe FAIL lp=%p", (void*)(uintptr_t)lp);
+            *out = 0; return 1;
+        }
+        uint32_t m = *(const uint32_t*)(ti + MW_MSG_MSG_OFF);
+        void* mh = *(void* const*)(ti + MW_MSG_HWND_OFF);
+        MW_TRACE("[TIP] relay msg=%#x hwnd=%p pt=(%d,%d)", m, mh,
+                 *(const int32_t*)(ti + MW_MSG_PT_OFF),
+                 *(const int32_t*)(ti + MW_MSG_PT_OFF + 4));
+        if (m == 0x200u /* WM_MOUSEMOVE */) {
+            int32_t mx = *(const int32_t*)(ti + MW_MSG_PT_OFF);
+            int32_t my = *(const int32_t*)(ti + MW_MSG_PT_OFF + 4);
+            int idx = mw_tip_tool_at(tipwnd, mh, mx, my);
+            if (idx != g_tip_shown) {
+                if (idx < 0) mw_tip_hide(g_tip_shown);
+                else if (w->active) {
+                    MW_TRACE("[TIP] relay WM_MOUSEMOVE (%d,%d) -> tool#%d; ID_TIMERSHOW fires (deterministic immediate)",
+                             mx, my, idx);
+                    mw_tip_show(&g_tip[idx], mx, my);
+                }
+            }
+        } else if (m == 0x201u || m == 0x204u /* L/RBUTTONDOWN */) {
+            mw_tip_hide(g_tip_shown);       /* wine: button relays hide */
+        }
+        *out = 0; return 1;
+    }
+    case MW_TTM_POP:      mw_tip_hide(g_tip_shown); *out = 0; return 1;
+    case MW_TTM_POPUP:    if (g_tip_shown >= 0) mw_tip_show(&g_tip[g_tip_shown], 0, 0);
+                          *out = 0; return 1;
+    case MW_TTM_TRACKACTIVATE: {
+        /* wine TOOLTIPS_TrackActivate: TRUE shows the tracking tool,
+         * FALSE hides it (both return TRUE when the tool exists) */
+        if (lp && mw_probe_copy((const void*)(uintptr_t)lp, 64, ti)) {
+            int idx = mw_tip_find_by_ti(tipwnd, ti);
+            if (idx >= 0) {
+                if (wp) {
+                    if (g_tip_shown != idx) {
+                        g_tip_shown = idx;
+                        w->track_valid = 1;
+                        mw_tip_show(&g_tip[idx], w->track_x, w->track_y);
+                    }
+                } else {
+                    mw_tip_hide(idx);
+                    w->track_valid = 0;
+                }
+                *out = 1; return 1;
+            }
+        }
+        *out = 0; return 1;
+    }
+    case MW_TTM_TRACKPOSITION:
+        w->track_x = (int32_t)(wp);            /* lParam = MAKELONG(x, y) */
+        w->track_y = (int32_t)(lp);
+        w->track_valid = 1;
+        if (g_tip_shown >= 0) mw_tip_paint();
+        MW_TRACE("[TIP] TTM_TRACKPOSITION (%d,%d)", w->track_x, w->track_y);
+        *out = 0; return 1;
+    case MW_TTM_SETDELAYTIME:
+        if (wp <= 3) MW_TRACE("[TIP] TTM_SETDELAYTIME which=%u ms=%d (recorded)",
+                              (unsigned)wp, (int)(intptr_t)lp);
+        *out = 0; return 1;
+    case MW_TTM_GETDELAYTIME:
+        *out = 500; return 1;                  /* wine default nInitialTime */
+    case MW_TTM_SETMAXTIPWIDTH: w->maxw = (uint32_t)lp; *out = 0; return 1;
+    case MW_TTM_GETMAXTIPWIDTH: *out = w->maxw ? (long long)w->maxw : -1; return 1;
+    case MW_TTM_SETTIPBKCOLOR: case MW_TTM_SETTIPTEXTCOLOR:
+        *out = 0; return 1;
+    case MW_TTM_GETTIPBKCOLOR: *out = 0xFFFFFF; return 1;
+    case MW_TTM_GETTIPTEXTCOLOR: *out = 0x191B1C; return 1;
+    case MW_TTM_SETMARGIN: {
+        if (lp && mw_probe_copy((const void*)(uintptr_t)lp, 16, ti)) {
+            w->margin[0] = *(int32_t*)ti; w->margin[1] = *(int32_t*)(ti + 4);
+            w->margin[2] = *(int32_t*)(ti + 8); w->margin[3] = *(int32_t*)(ti + 12);
+        }
+        *out = 0; return 1;
+    }
+    case MW_TTM_GETMARGIN: {
+        if (lp) {
+            *(int32_t*)lp = w->margin[0]; *(int32_t*)(lp + 4) = w->margin[1];
+            *(int32_t*)(lp + 8) = w->margin[2]; *(int32_t*)(lp + 12) = w->margin[3];
+        }
+        *out = 0; return 1;
+    }
+    case MW_TTM_SETTITLEA: case MW_TTM_SETTITLEW: {
+        const void* src = (const void*)(uintptr_t)lp;
+        w->title[0] = 0;
+        if (msg == MW_TTM_SETTITLEW) mw_probe_copy(src, 94, w->title);
+        else {
+            uint8_t a[48] = {0};
+            if (mw_probe_copy(src, 47, a))
+                for (int k = 0; k < 47 && a[k]; k++) w->title[k] = a[k];
+        }
+        w->title[47] = 0;
+        MW_TRACE("[TIP] TTM_SETTITLE '%u wchars' icon=%#x",
+                 (unsigned)mw_w16len(w->title), (unsigned)wp);
+        *out = 1; return 1;
+    }
+    case MW_TTM_GETTITLE: {
+        if (lp) { *(uint32_t*)lp = 0; memcpy((uint8_t*)(uintptr_t)lp + 8, w->title, 94); }
+        *out = w->title[0] ? 1 : 0; return 1;
+    }
+    case MW_TTM_GETTOOLCOUNT: {
+        int n = 0;
+        for (int i = 0; i < MW_TIP_TOOLS; i++)
+            if (g_tip[i].live && g_tip[i].tipwnd == tipwnd) n++;
+        *out = n; return 1;
+    }
+    case MW_TTM_GETTOOLINFOA: case MW_TTM_GETTOOLINFOW: {
+        if (lp && mw_probe_copy((const void*)(uintptr_t)lp, 64, ti)) {
+            int idx = mw_tip_find_by_ti(tipwnd, ti);
+            if (idx >= 0) { mw_tip_fill_ti(idx, ti, msg == MW_TTM_GETTOOLINFOW);
+                            memcpy((void*)(uintptr_t)lp, ti, 64); *out = 1; return 1; }
+        }
+        *out = 0; return 1;
+    }
+    case MW_TTM_SETTOOLINFOA: case MW_TTM_SETTOOLINFOW: {
+        if (lp && mw_probe_copy((const void*)(uintptr_t)lp, 64, ti)) {
+            int idx = mw_tip_find_by_ti(tipwnd, ti);
+            if (idx >= 0) {
+                MwTipTool* t = &g_tip[idx];
+                t->flags = *(const uint32_t*)(ti + 4);
+                t->rl = *(const int32_t*)(ti + 24); t->rt = *(const int32_t*)(ti + 28);
+                t->rr = *(const int32_t*)(ti + 32); t->rb = *(const int32_t*)(ti + 36);
+                uintptr_t lpsz = *(const uintptr_t*)(ti + 48);
+                if (lpsz == MW_LPSTR_TEXTCALLBACK) t->has_text = 0;
+                else if (lpsz && lpsz < 0x10000u) {
+                    mw_LoadStringW(t->hinst, (uint32_t)lpsz, t->text, 79); t->has_text = 1;
+                } else if (lpsz) {
+                    if (t->wide) { mw_probe_copy((const void*)lpsz, 158, t->text); }
+                    else for (int k = 0; k < 79; k++) {
+                        uint16_t ch = *(const uint8_t*)(lpsz + k);
+                        if (!ch) break;
+                        t->text[k] = ch;
+                    }
+                    t->text[79] = 0; t->has_text = 1;
+                }
+                *out = 1; return 1;
+            }
+        }
+        *out = 0; return 1;
+    }
+    case MW_TTM_UPDATETIPTEXTA: case MW_TTM_UPDATETIPTEXTW: {
+        if (lp && mw_probe_copy((const void*)(uintptr_t)lp, 64, ti)) {
+            int idx = mw_tip_find_by_ti(tipwnd, ti);
+            if (idx >= 0) {
+                MwTipTool* t = &g_tip[idx];
+                uintptr_t lpsz = *(const uintptr_t*)(ti + 48);
+                if (lpsz == MW_LPSTR_TEXTCALLBACK) t->has_text = 0;
+                else if (lpsz && lpsz < 0x10000u) {
+                    mw_LoadStringW(t->hinst, (uint32_t)lpsz, t->text, 79); t->has_text = 1;
+                } else if (lpsz) {
+                    if (t->wide) { mw_probe_copy((const void*)lpsz, 158, t->text); }
+                    else for (int k = 0; k < 79; k++) {
+                        uint16_t ch = *(const uint8_t*)(lpsz + k);
+                        if (!ch) break;
+                        t->text[k] = ch;
+                    }
+                    t->text[79] = 0; t->has_text = 1;
+                }
+                if (g_tip_shown == idx) mw_tip_paint();
+                *out = 1; return 1;
+            }
+        }
+        *out = 0; return 1;
+    }
+    case MW_TTM_GETTEXTA: case MW_TTM_GETTEXTW: {
+        if (lp && mw_probe_copy((const void*)(uintptr_t)lp, 64, ti)) {
+            int idx = mw_tip_find_by_ti(tipwnd, ti);
+            if (idx >= 0) {
+                uintptr_t buf = *(const uintptr_t*)(ti + 48);
+                int cch = (int)wp;
+                if (buf && cch > 0) {
+                    int k = 0;
+                    for (; k < cch - 1 && k < 79 && g_tip[idx].text[k]; k++) {
+                        if (msg == MW_TTM_GETTEXTW)
+                            *(uint16_t*)(buf + k * 2) = g_tip[idx].text[k];
+                        else
+                            *(uint8_t*)(buf + k) = (uint8_t)(g_tip[idx].text[k] & 0xFF);
+                    }
+                    if (msg == MW_TTM_GETTEXTW) *(uint16_t*)(buf + k * 2) = 0;
+                    else *(uint8_t*)(buf + k) = 0;
+                }
+                *out = 0; return 1;
+            }
+        }
+        *out = 0; return 1;
+    }
+    case MW_TTM_ENUMTOOLSA: case MW_TTM_ENUMTOOLSW: {
+        int want = 0, idx = -1;
+        for (int i = 0; i < MW_TIP_TOOLS; i++)
+            if (g_tip[i].live && g_tip[i].tipwnd == tipwnd) {
+                if (want == (int)wp) { idx = i; break; }
+                want++;
+            }
+        if (idx >= 0 && lp) {
+            mw_probe_copy((const void*)(uintptr_t)lp, 64, ti);
+            mw_tip_fill_ti(idx, ti, msg == MW_TTM_ENUMTOOLSW);
+            memcpy((void*)(uintptr_t)lp, ti, 64);
+            *out = 1; return 1;
+        }
+        *out = 0; return 1;
+    }
+    case MW_TTM_GETCURRENTTOOLA: case MW_TTM_GETCURRENTTOOLW: {
+        if (g_tip_shown >= 0 && g_tip[g_tip_shown].tipwnd == tipwnd && lp) {
+            mw_probe_copy((const void*)(uintptr_t)lp, 64, ti);
+            mw_tip_fill_ti(g_tip_shown, ti, msg == MW_TTM_GETCURRENTTOOLW);
+            memcpy((void*)(uintptr_t)lp, ti, 64);
+            *out = 1; return 1;
+        }
+        *out = 0; return 1;
+    }
+    case MW_TTM_HITTESTA: case MW_TTM_HITTESTW: {
+        /* TTHITTESTINFO: hwnd@0 pt@8 ti@16 */
+        if (lp && mw_probe_copy((const void*)(uintptr_t)lp, 24 + 64, ti)) {
+            void* mh = *(void* const*)(ti + 0);
+            int32_t hx = *(const int32_t*)(ti + 8), hy = *(const int32_t*)(ti + 12);
+            int idx = mw_tip_tool_at(tipwnd, mh, hx, hy);
+            if (idx >= 0) {
+                mw_tip_fill_ti(idx, ti + 16, msg == MW_TTM_HITTESTW);
+                memcpy((void*)(uintptr_t)(lp + 16), ti + 16, 64);
+                *out = 1; return 1;
+            }
+        }
+        *out = 0; return 1;
+    }
+    case MW_TTM_WINDOWFROMPOINT: {
+        int32_t px = lp ? *(const int32_t*)(uintptr_t)lp : 0;
+        int32_t py = lp ? *(const int32_t*)((uintptr_t)lp + 4) : 0;
+        int idx = mw_tip_tool_at(tipwnd, NULL, px, py);
+        *out = idx >= 0 ? (long long)(intptr_t)g_tip[idx].hwnd_tool : 0;
+        return 1;
+    }
+    case MW_TTM_ADJUSTRECT: {
+        if (lp) {
+            int32_t* rc = (int32_t*)(uintptr_t)lp;
+            if (wp) { rc[0] -= 2; rc[1] -= 2; rc[2] += 2; rc[3] += 2; }
+            else    { rc[0] += 2; rc[1] += 2; rc[2] -= 2; rc[3] -= 2; }
+        }
+        *out = 1; return 1;
+    }
+    case MW_TTM_GETBUBBLESIZE: {
+        if (g_tip_shown >= 0) {
+            char lbl[80]; int k = 0;
+            const uint16_t* s = g_tip[g_tip_shown].text;
+            for (; k < 79 && s[k]; k++) lbl[k] = (s[k] >= 0x20 && s[k] < 0x7F) ? (char)s[k] : '?';
+            lbl[k] = 0;
+            int tw = mwb_textw(lbl, 1) + 12, th2 = 22;
+            *out = (long long)(uint32_t)((uint32_t)tw | ((uint32_t)th2 << 16));
+            return 1;
+        }
+        *out = 0; return 1;
+    }
+    case MW_TTM_UPDATE:
+        if (g_tip_shown >= 0) mw_tip_paint();
+        *out = 0; return 1;
+    default: return 0; /* not a TTM message — caller falls through */
+    }
+}
+
 static int mw_commonctl_msg(int s, uint32_t msg, uintptr_t wp, long long lp, long long* out) {
     MwChild* c = &g_child[s];
+    /* SW-1591: tooltips_class32 owns the full TTM_* protocol (wine
+     * tooltips.c). Routed FIRST — before any generic child handling. */
+    if (mw_child_cls_is(s, "Tooltips_Class32")) {
+        long long tip_r;
+        if (mw_tip_msg(s, msg, wp, lp, &tip_r)) { *out = tip_r; return 1; }
+        if (msg == 0x4Eu) return 0; /* WM_NOTIFY to a tooltip ctrl: fall through */
+        /* unknown tooltip messages still report visibly */
+        MW_TRACE("[TIPMSG] hwnd=%p msg=0x%x wp=%#llx lp=%#llx -> 0 (unrouted TTM)",
+                 c->hwnd, msg, (unsigned long long)wp, (unsigned long long)lp);
+        *out = 0; return 1;
+    }
+    /* SW-1592 (wine-l0 W8): SCROLLBAR child controls — WM_HSCROLL(0x114) /
+     * WM_VSCROLL(0x115) arrive on the control itself; the real control
+     * adjusts its position and re-notifies the PARENT (wine scroll.c
+     * SCROLL_HandleScrollEvent -> parent WM_VSCROLL with hWnd lParam). */
+    if ((mw_child_cls_is(s, "SCROLLBAR") || mw_child_cls_is(s, "EDIT")) &&
+        (msg == 0x114u || msg == 0x115u)) {
+        /* SW-1592: SCROLLBAR controls notify the parent; multiline EDITs
+         * own their own bar state and scroll SILENTLY (no notification).
+         * EDIT bars: WM_VSCROLL drives SB_VERT(1), WM_HSCROLL SB_HORZ(0);
+         * scrollbar CONTROLS drive SB_CTL(2). */
+        int is_edit = mw_child_cls_is(s, "EDIT");
+        int bar = is_edit ? (msg == 0x115u ? 1 : 0) : 2 /* SB_CTL */;
+        int slot = mw_scroll_slot(c->hwnd, bar, 1);
+        int code = (int)(wp & 0xFFFFu);
+        if (slot >= 0) {
+            int pos = g_scroll[slot].pos;
+            int mn = g_scroll[slot].min, mx = g_scroll[slot].max;
+            switch (code) {
+            case 0: pos--; break;            /* SB_LINEUP/LINELEFT */
+            case 1: pos++; break;            /* SB_LINEDOWN/LINERIGHT */
+            case 2: pos -= (mx - mn) / 10 > 0 ? (mx - mn) / 10 : 1; break;
+            case 3: pos += (mx - mn) / 10 > 0 ? (mx - mn) / 10 : 1; break;
+            case 4: case 5:                  /* SB_THUMBPOSITION/TRACK */
+                pos = (int)(wp >> 16); break;
+            case 6: pos = mn; break;         /* SB_TOP */
+            case 7: pos = mx; break;         /* SB_BOTTOM */
+            default: break;                  /* SB_ENDSCROLL: no move */
+            }
+            if (pos < mn) pos = mn;
+            if (pos > mx) pos = mx;
+            if (code != 8 && pos != g_scroll[slot].pos) g_scroll[slot].pos = pos;
+            MW_TRACE("[SCRL] %s hwnd=%p code=%u -> pos %d/%d (range %d..%d)",
+                     msg == 0x115u ? "WM_VSCROLL" : "WM_HSCROLL", c->hwnd,
+                     code, g_scroll[slot].pos, mx - mn, mn, mx);
+        }
+        /* forward to the parent with the control hwnd in lParam (real;
+         * an EDIT scrolls itself silently) */
+        void* par = c->parent;
+        if (!is_edit) {
+            if (par && par != MW_GUI_HWND) mw_SendMessageW(par, msg, wp, (long long)(intptr_t)c->hwnd);
+            else if (par == MW_GUI_HWND && g_main_class_proc)
+                mw_call_cb4((void*)g_main_class_proc, (uintptr_t)par, msg, wp, (intptr_t)(intptr_t)c->hwnd);
+        }
+        *out = 0; return 1;
+    }
+    /* SW-1594: PROGRESS_CLASS (msctls_progress32) — PBM_* real model
+     * (wine progress.c): range/pos/step state, honest round-trip. */
+    if (mw_child_cls_is(s, "msctls_progress32")) {
+        switch (msg) {
+        case 0x401u: /* PBM_SETRANGE: lParam = MAKELPARAM(min, max) */
+            c->pb_min = (int16_t)(lp & 0xFFFF); c->pb_max = (int16_t)((lp >> 16) & 0xFFFF);
+            MW_TRACE("[PBM] SETRANGE %d..%d", c->pb_min, c->pb_max);
+            *out = 1; return 1;
+        case 0x406u: /* PBM_SETRANGE32: wParam=min lParam=max */
+            c->pb_min = (int)(int32_t)wp; c->pb_max = (int)(int32_t)lp;
+            if (c->pb_pos < c->pb_min) c->pb_pos = c->pb_min;
+            if (c->pb_pos > c->pb_max) c->pb_pos = c->pb_max;
+            MW_TRACE("[PBM] SETRANGE32 %d..%d", c->pb_min, c->pb_max);
+            *out = 1; return 1;
+        case 0x402u: /* PBM_SETPOS */
+            { int prev = c->pb_pos;
+              c->pb_pos = (int)(int32_t)wp;
+              if (c->pb_pos < c->pb_min) c->pb_pos = c->pb_min;
+              if (c->pb_pos > c->pb_max) c->pb_pos = c->pb_max;
+              MW_TRACE("[PBM] SETPOS %d (prev %d) range %d..%d",
+                       c->pb_pos, prev, c->pb_min, c->pb_max);
+              *out = prev; return 1; }
+        case 0x408u: *out = c->pb_pos; return 1;             /* PBM_GETPOS */
+        case 0x403u: /* PBM_DELTAPOS */
+            c->pb_pos += (int)(int32_t)wp;
+            if (c->pb_pos < c->pb_min) c->pb_pos = c->pb_min;
+            if (c->pb_pos > c->pb_max) c->pb_pos = c->pb_max;
+            *out = c->pb_pos; return 1;
+        case 0x404u: c->pb_step = (int)(int32_t)wp; *out = 1; return 1; /* SETSTEP */
+        case 0x405u: /* PBM_STEPIT */
+            c->pb_pos += c->pb_step ? c->pb_step : 10;
+            if (c->pb_pos > c->pb_max) c->pb_pos = c->pb_max;
+            *out = 1; return 1;
+        case 0x407u: /* PBM_GETRANGE: wParam=TRUE -> max */
+            if (lp) { *(int32_t*)(uintptr_t)lp = (wp) ? c->pb_max : c->pb_min; }
+            *out = (wp) ? c->pb_max : c->pb_min; return 1;
+        case 0x2001u: *out = 1; return 1;                    /* PBM_SETBKCOLOR */
+        }
+        *out = 0; return 1;
+    }
+    /* SW-1594: msctls_trackbar32 — TBM_* real model (wine trackbar.c) */
+    if (mw_child_cls_is(s, "msctls_trackbar32")) {
+        switch (msg) {
+        case 0x40Eu: /* TBM_SETRANGE: lp=MAKELONG(min,max) wp=fRedraw */
+            c->tb_min = (int16_t)(lp & 0xFFFF); c->tb_max = (int16_t)((lp >> 16) & 0xFFFF);
+            if (c->tb_pos < c->tb_min) c->tb_pos = c->tb_min;
+            if (c->tb_pos > c->tb_max) c->tb_pos = c->tb_max;
+            MW_TRACE("[TBM] SETRANGE %d..%d", c->tb_min, c->tb_max);
+            *out = 1; return 1;
+        case 0x40Cu: c->tb_min = (int)wp; *out = 1; return 1; /* SETRANGEMIN */
+        case 0x40Du: c->tb_max = (int)wp; *out = 1; return 1; /* SETRANGEMAX */
+        case 0x40Au: *out = c->tb_min; return 1;              /* GETRANGEMIN */
+        case 0x40Bu: *out = c->tb_max; return 1;              /* GETRANGEMAX */
+        case 0x405u: /* TBM_SETPOS: wp=fRedraw lp=pos */
+            c->tb_pos = (int)(int32_t)lp;
+            if (c->tb_pos < c->tb_min) c->tb_pos = c->tb_min;
+            if (c->tb_pos > c->tb_max) c->tb_pos = c->tb_max;
+            MW_TRACE("[TBM] SETPOS %d (range %d..%d)", c->tb_pos, c->tb_min, c->tb_max);
+            *out = 1; return 1;
+        case 0x409u: *out = c->tb_pos; return 1;              /* TBM_GETPOS */
+        case 0x414u: *out = 1; return 1;                      /* TBM_SETTICFREQ */
+        }
+        *out = 0; return 1;
+    }
+    /* SW-1594: msctls_updown32 — UDM_* real model (wine updown.c) */
+    if (mw_child_cls_is(s, "msctls_updown32")) {
+        switch (msg) {
+        case 0x465u: /* UDM_SETRANGE: lp = MAKELONG(max, min) — note the order */
+            c->ud_max = (int16_t)(lp & 0xFFFF); c->ud_min = (int16_t)((lp >> 16) & 0xFFFF);
+            *out = 1; return 1;
+        case 0x46Fu: /* UDM_SETRANGE32: wp=min lp=max */
+            c->ud_min = (int)(int32_t)wp; c->ud_max = (int)(int32_t)lp;
+            *out = 1; return 1;
+        case 0x466u: /* UDM_GETRANGE -> MAKELONG(max, min) */
+            *out = (long long)((c->ud_max & 0xFFFF) | ((c->ud_min & 0xFFFF) << 16)); return 1;
+        case 0x467u: c->ud_pos = (int16_t)wp; *out = c->ud_pos; return 1; /* SETPOS */
+        case 0x468u: /* UDM_GETPOS */
+            *out = (long long)(uint32_t)((uint16_t)c->ud_pos); return 1;
+        case 0x471u: c->ud_pos = (int)(int32_t)wp; *out = c->ud_pos; return 1; /* SETPOS32 */
+        case 0x472u: *out = c->ud_pos; return 1;              /* GETPOS32 */
+        case 0x469u: case 0x46Au: case 0x46Bu: *out = 0; return 1; /* buddy/accel */
+        }
+        *out = 0; return 1;
+    }
+    /* SW-1594: LISTBOX — LB_* real content model (wine listbox.c) */
+    if (mw_child_cls_is(s, "LISTBOX")) {
+        switch (msg) {
+        case 0x180u: { /* LB_ADDSTRING (A/W share the value; string in lParam) */
+            if (c->lb_items >= 32) { *out = -2; return 1; }  /* LB_ERRSPACE */
+            uint16_t* dst = c->lb_item[c->lb_items];
+            /* SW-1591 W8 fix: the string arrives in lParam (winuser.h
+             * LB_ADDSTRING contract), not wParam */
+            if (lp && mw_probe_copy((const void*)(uintptr_t)lp, 94, dst)) {
+                int k = 0;
+                for (; k < 47 && dst[k]; k++) { /* keep UTF-16 */ }
+                dst[47] = 0;
+                c->lb_items++;
+                MW_TRACE("[LB] ADDSTRING -> index %d (%u wchars)",
+                         c->lb_items - 1, (unsigned)mw_w16len(dst));
+                *out = c->lb_items - 1; return 1;
+            }
+            *out = 0; return 1;
+        }
+        case 0x184u: /* LB_RESETCONTENT */
+            c->lb_items = 0; c->lb_cursel = -1;
+            MW_TRACE("[LB] RESETCONTENT");
+            *out = 0; return 1;
+        case 0x186u: /* LB_SETCURSEL */
+            if ((int)wp >= c->lb_items) { *out = -1; return 1; }
+            c->lb_cursel = (int)wp; *out = c->lb_cursel; return 1;
+        case 0x188u: *out = c->lb_cursel; return 1;          /* LB_GETCURSEL */
+        case 0x189u: { /* LB_GETTEXT: wp=index, lp=buffer (W here; A in SendA) */
+            if ((int)wp >= c->lb_items) { *out = -1; return 1; }
+            if (lp) {
+                uint16_t* dst = (uint16_t*)(uintptr_t)lp;
+                int k = 0;
+                for (; k < 47 && c->lb_item[wp][k]; k++) dst[k] = c->lb_item[wp][k];
+                dst[k] = 0;
+                *out = mw_w16len(c->lb_item[wp]);
+            } else *out = mw_w16len(c->lb_item[wp]);
+            return 1;
+        }
+        case 0x18Au: /* LB_GETTEXTLEN */
+            if ((int)wp >= c->lb_items) { *out = -1; return 1; }
+            *out = mw_w16len(c->lb_item[wp]); return 1;
+        case 0x18Bu: *out = c->lb_items; return 1;           /* LB_GETCOUNT */
+        case 0x19Fu: { /* LB_INSERTSTRING */
+            if (c->lb_items >= 32) { *out = -2; return 1; }
+            int at = (int)(int32_t)wp;
+            if (at < 0 || at > c->lb_items) at = c->lb_items;
+            for (int k = c->lb_items; k > at; k--)
+                memcpy(c->lb_item[k], c->lb_item[k - 1], sizeof(c->lb_item[0]));
+            uint16_t* dst = c->lb_item[at];
+            dst[0] = 0;
+            if (lp && mw_probe_copy((const void*)(uintptr_t)lp, 94, dst)) dst[47] = 0;
+            c->lb_items++;
+            *out = at; return 1;
+        }
+        case 0x182u: { /* LB_DELETESTRING */
+            if ((int)wp >= c->lb_items) { *out = -1; return 1; }
+            for (int k = (int)wp; k < c->lb_items - 1; k++)
+                memcpy(c->lb_item[k], c->lb_item[k + 1], sizeof(c->lb_item[0]));
+            c->lb_items--;
+            *out = c->lb_items; return 1;
+        }
+        case 0x193u: *out = 0; return 1;                     /* GETHORIZONTALEXTENT */
+        case 0x194u: *out = 0; return 1;                     /* SETHORIZONTALEXTENT */
+        case 0x18Du: *out = 0; return 1;                     /* LB_DIR honest 0 */
+        }
+        *out = 0; return 1;
+    }
     if (mw_child_cls_is(s, "ComboBoxEx32")) { /* SW-1551 */
         long long ce_r;
         if (mw_comboex_msg(s, msg, wp, lp, &ce_r, c->hwnd)) { *out = ce_r; return 1; }
@@ -18698,6 +19598,39 @@ static int mw_commonctl_msg(int s, uint32_t msg, uintptr_t wp, long long lp, lon
                  c->hwnd, c->cls, msg, (unsigned long long)wp,
                  (unsigned long long)lp);
         switch (msg) {
+        case 0x4Eu: { /* SW-1591: the toolbar ANSWERS TTN_GETDISPINFO for its
+                       * own button tips — wine toolbar.c L6355
+                       * TOOLBAR_TTGetDispInfo fills szText from the button
+                       * text pool, keyed by hdr.idFrom == idCommand. */
+            if (!lp) { *out = 0; return 1; }
+            int32_t code = *(int32_t*)((uint8_t*)(uintptr_t)lp + 16);
+            if (code != MW_TTN_GETDISPINFOW && code != MW_TTN_GETDISPINFOA) { *out = 0; return 1; }
+            uint32_t cmd = (uint32_t)wp; /* WM_NOTIFY wParam == uId == idCommand */
+            uint8_t* nmtt = (uint8_t*)(uintptr_t)lp;
+            int wide = (code == MW_TTN_GETDISPINFOW);
+            *(void**)(nmtt + 24) = nmtt + 32;   /* lpszText -> szText */
+            int found = 0;
+            for (int b = 0; b < c->tb_nbtn; b++) {
+                if (c->tb_cmd[b] != (int32_t)cmd) continue;
+                if (c->tb_stridx[b] >= 0 && c->tb_stridx[b] < c->tb_pool_n) {
+                    const uint16_t* s = c->tb_pool[c->tb_stridx[b]];
+                    memset(nmtt + 32, 0, 80);
+                    for (int k = 0; k < 39 && s[k]; k++) {
+                        if (wide) *(uint16_t*)(nmtt + 32 + k * 2) = s[k];
+                        else {
+                            uint16_t ch = s[k];
+                            *(uint8_t*)(nmtt + 32 + k) =
+                                (ch >= 0x20 && ch < 0x7F) ? (uint8_t)ch : '?';
+                        }
+                    }
+                }
+                found = 1;
+                break;
+            }
+            MW_TRACE("[TIP] toolbar TTN_GETDISPINFO%s idCommand=%u -> %s (TOOLBAR_TTGetDispInfo)",
+                     wide ? "W" : "A", cmd, found ? "button text" : "EMPTY (no such button)");
+            *out = 0; return 1;
+        }
         case 0x444u: case 0x414u: { /* TB_ADDBUTTONSW/A */
             int n = (int)wp; *out = 1;
             int added0 = c->tb_nbtn;
@@ -18869,6 +19802,11 @@ static int mw_commonctl_msg(int s, uint32_t msg, uintptr_t wp, long long lp, lon
             *out = ((int)wp >= 0 && (int)wp < c->cb_items)
                    ? (long long)mw_w16len(c->cb_item[(int)wp]) : 0;
             return 1;
+        case 0x14Bu: c->cb_items = 0; c->cb_cursel = -1; *out = 0; return 1; /* RESETCONTENT */
+        case 0x14Eu: /* CB_SETCURSEL (SW-1594): real selection store */
+            if ((int)wp >= c->cb_items) { *out = -1; return 1; }
+            c->cb_cursel = (int)wp; *out = c->cb_cursel; return 1;
+        case 0x147u: *out = c->cb_cursel; return 1;          /* CB_GETCURSEL */
         }
     }
     if (mw_child_cls_is(s, "SysListView32")) {
@@ -19610,7 +20548,31 @@ __attribute__((ms_abi)) long long mw_SendMessageW(void* h, uint32_t msg, uintptr
         return (src && mw_is_hwnd(h)) ? (long long)mw_w16len(src) : 0;
     }
     if (s >= 0 && msg == MW_BM_GETCHECK) return g_child[s].checked;
+    /* SW-1593 W8: BM_SETCHECK (0xF1) — v1 answered nothing, so checkbox/
+     * radio state never moved (ctl08). wine button.c stores and returns 0. */
+    if (s >= 0 && msg == 0x00F1u) {
+        g_child[s].checked = (uint8_t)(wp ? 1 : 0);
+        MW_TRACE("SendMessageW(BM_SETCHECK %u on %s) -> 0",
+                 (unsigned)wp, g_child[s].cls);
+        return 0;
+    }
     if (s >= 0 && msg == 0x404u) return 1; /* SW-803..806: SB_SETPARTS -> TRUE */
+    /* SW-1593 (wine-l0 W8): WM_SETIMAGE (0x172) — STATIC/BUTTON controls keep
+     * the image handle (IMAGE_ICON=1 / IMAGE_BITMAP=0) for the compositor.
+     * wine static.c STATIC_SetIcon / button.c BUTTON_SetImage return the
+     * PREVIOUS image handle; the winrar/IDM-style icon panels blit it. */
+    if (s >= 0 && msg == 0x172u &&
+        (mw_child_cls_is(s, "STATIC") || mw_child_cls_is(s, "BUTTON"))) {
+        void* prev = g_child[s].himage;
+        if (wp == 1u /* IMAGE_ICON */ || wp == 2u /* IMAGE_CURSOR */) {
+            g_child[s].himage = (void*)(uintptr_t)lp; g_child[s].img_type = 1;
+        } else if (wp == 0u /* IMAGE_BITMAP */) {
+            g_child[s].himage = (void*)(uintptr_t)lp; g_child[s].img_type = 2;
+        }
+        MW_TRACE("SendMessageW(WM_SETIMAGE type=%u -> %p on %s) -> prev %p",
+                 (unsigned)wp, (void*)(uintptr_t)lp, g_child[s].cls, prev);
+        return (long long)(intptr_t)prev;
+    }
     { /* SWEEP-019 SW-831..840: SysListView32/SysTreeView32/SysTabControl32 routing */
         long long ctl_r;
         if (s >= 0 && mw_commonctl_msg(s, msg, wp, lp, &ctl_r)) return ctl_r;
@@ -19668,12 +20630,17 @@ __attribute__((ms_abi)) long mw_SendMessageA(void* h, uint32_t msg, uintptr_t wp
     int s = mw_child_slot(h);
     if (msg == MWWM_SETTEXT) {
         const char* t = (const char*)lp;
-        uint16_t tmp[128]; int i = 0;
-        if (t && mw_probe_copy(t, 127, tmp)) {
-            for (i = 0; i < 127 && ((char*)tmp)[i]; i++) tmp[i] = (uint16_t)(uint8_t)((char*)tmp)[i];
+        char a[128] = {0}; uint16_t tmp[128]; int i = 0;
+        /* SW-1591 W8 fix: widen from a SEPARATE byte buffer — the old loop
+         * wrote tmp[i] while still reading ((char*)tmp)[i], clobbering the
+         * next source byte ("line one..." stored as "l"). */
+        if (t && mw_probe_copy(t, 127, a)) {
+            for (i = 0; i < 127 && a[i]; i++) tmp[i] = (uint16_t)(uint8_t)a[i];
             tmp[i] = 0;
             if (s >= 0) mw_w16cpy(g_child[s].text, tmp, 128);
             else if (h == MW_GUI_HWND) mw_w16cpy(g_maintitle, tmp, 128);
+            MW_TRACE("SendMessageA(WM_SETTEXT) '%u chars' -> TRUE",
+                     (unsigned)mw_w16len(tmp));
         }
         return 1;
     }
@@ -19692,7 +20659,22 @@ __attribute__((ms_abi)) long mw_SendMessageA(void* h, uint32_t msg, uintptr_t wp
         return (src && mw_is_hwnd(h)) ? (long)mw_w16len(src) : 0;
     }
     if (s >= 0 && msg == MW_BM_GETCHECK) return g_child[s].checked;
+    /* SW-1593 W8 (A path): BM_SETCHECK — same store as the W path. */
+    if (s >= 0 && msg == 0x00F1u) {
+        g_child[s].checked = (uint8_t)(wp ? 1 : 0);
+        return 0;
+    }
     if (s >= 0 && msg == 0x404u) return 1; /* SW-803..806: SB_SETPARTS -> TRUE */
+    /* SW-1593 (A path): WM_SETIMAGE — same contract as the W path above. */
+    if (s >= 0 && msg == 0x172u &&
+        (mw_child_cls_is(s, "STATIC") || mw_child_cls_is(s, "BUTTON"))) {
+        void* prev = g_child[s].himage;
+        if (wp == 1u || wp == 2u) { g_child[s].himage = (void*)(uintptr_t)lp; g_child[s].img_type = 1; }
+        else if (wp == 0u)        { g_child[s].himage = (void*)(uintptr_t)lp; g_child[s].img_type = 2; }
+        MW_TRACE("SendMessageA(WM_SETIMAGE type=%u -> %p on %s) -> prev %p",
+                 (unsigned)wp, (void*)(uintptr_t)lp, g_child[s].cls, prev);
+        return (long)(intptr_t)prev;
+    }
     { /* SWEEP-019 SW-831..840: common-control routing (A path) */
         long long ctl_r;
         if (s >= 0 && mw_commonctl_msg(s, msg, wp, lp, &ctl_r)) return (long)ctl_r;
@@ -20510,7 +21492,7 @@ static int mw_sysclass_w(const void* cls) {
     if (v && v < 0x10000u) {
         if ((v & 0xFF00u) == 0x8000u) {
             uint32_t c = v & 0xFFu;
-            if (c >= 0x80 && c <= 0x90) return (int)c; /* SWEEP-019/021/SW-1207 ranges; SW-1360b: +progress; SW-1551: +rebar/cboex */
+            if (c >= 0x80 && c <= 0x92) return (int)c; /* SWEEP-019/021/SW-1207 ranges; SW-1360b: +progress; SW-1551: +rebar/cboex; SW-1594: +trackbar/updown */
         }
         return 0;
     }
@@ -20543,6 +21525,8 @@ static int mw_sysclass_w(const void* cls) {
          * bars (msctls_progress32); honest headless model = registered child,
          * PBM_* messages state-tracked, no raster. */
         {"msctls_progress32", 0x8E},
+        /* SW-1594 (wine-l0 W8): trackbar + updown — TBM and UDM real models */
+        {"msctls_trackbar32", 0x91}, {"msctls_updown32", 0x92},
     };
     if (!cls) return 0;
     uint16_t tmp[16];
@@ -20568,7 +21552,7 @@ static int mw_sysclass_a(const void* cls) {
     if (v && v < 0x10000u) {
         if ((v & 0xFF00u) == 0x8000u) {
             uint32_t c = v & 0xFFu;
-            if (c >= 0x80 && c <= 0x90) return (int)c; /* SW-1360b: +progress; SW-1551: +rebar/cboex */
+            if (c >= 0x80 && c <= 0x92) return (int)c; /* SW-1360b: +progress; SW-1551: +rebar/cboex; SW-1594: +trackbar/updown */
         }
         return 0;
     }
@@ -20593,6 +21577,12 @@ static int mw_sysclass_a(const void* cls) {
         /* SW-1207: comctl32 tooltip window class (prefix covers
          * tooltips_class32; the A probe truncates at 15 chars). */
         {"tooltips_class32", 0x8D},
+        /* SW-1594 W8: the A table was MISSING PROGRESS_CLASS entirely —
+         * v1 only added it to the W table (SW-1360b), so every A-path
+         * msctls_progress32 creation fell to the unmatched-CHILD stub. */
+        {"msctls_progress32", 0x8E},
+        /* SW-1594: trackbar + updown (A path) */
+        {"msctls_trackbar32", 0x91}, {"msctls_updown32", 0x92},
     };
     if (!cls) return 0;
     char a[16] = {0}; int i;
@@ -20622,8 +21612,10 @@ static const char* mw_sysclass_name(int c) {
                               /* SW-1360b: PROGRESS_CLASS */
                               "msctls_progress32",
                               /* SW-1551: rebar band container + ComboBoxEx32 */
-                              "ReBarWindow32","ComboBoxEx32"};
-    return (c >= 0x80 && c <= 0x90) ? n[c - 0x80] : "?";
+                              "ReBarWindow32","ComboBoxEx32",
+                              /* SW-1594: trackbar + updown */
+                              "msctls_trackbar32","msctls_updown32"};
+    return (c >= 0x80 && c <= 0x92) ? n[c - 0x80] : "?";
 }
 /* Register one child-control identity; NULL when the 64-slot table is full. */
 /* SW-1334: capture the guest class proc for a just-registered child.
@@ -20815,6 +21807,18 @@ __attribute__((ms_abi)) void* mw_CreateWindowExW(uint32_t exstyle, const void* c
         (void)exstyle;
         void* ch = mw_child_register(sc, parent, menu, win, 1, NULL);
         if (ch) { mw_child_set_rect(ch, x, y, w, h); /* SW-1279 fix E */
+                  /* SW-1593 (wine-l0 W8): capture the creation style so the
+                   * compositor decodes SS_ICON/SS_BITMAP/SS_*FRAME/BS_GROUPBOX
+                   * + SBS_*; for SS_ICON statics the lpParam IS the HICON
+                   * (winuser.h CreateWindowEx contract for STATIC) */
+                  int cs0 = mw_child_slot(ch);
+                  if (cs0 >= 0) {
+                      g_child[cs0].style = style;
+                      if (sc == 0x82 /* STATIC */ && (style & 0x1Fu) == 0x3u &&
+                          (uintptr_t)param >= 0x10000u) {
+                          g_child[cs0].himage = param; g_child[cs0].img_type = 1;
+                      }
+                  }
                   mw_child_seed_class_proc(ch, cls); /* SW-1334 */
                   if (!mw_child_send_create_seq(ch, cls, 1, parent, menu, inst,
                                                 style, exstyle, x, y, w, h,
@@ -20956,6 +21960,15 @@ __attribute__((ms_abi)) void* mw_CreateWindowExA(uint32_t exstyle, const void* c
         (void)exstyle;
         void* ch = mw_child_register(sc, parent, menu, win, 0, NULL);
         if (ch) { mw_child_set_rect(ch, x, y, w, h); /* SW-1279 fix E */
+                  /* SW-1593 (A path): same style + SS_ICON param capture */
+                  int cs0 = mw_child_slot(ch);
+                  if (cs0 >= 0) {
+                      g_child[cs0].style = style;
+                      if (sc == 0x82 /* STATIC */ && (style & 0x1Fu) == 0x3u &&
+                          (uintptr_t)param >= 0x10000u) {
+                          g_child[cs0].himage = param; g_child[cs0].img_type = 1;
+                      }
+                  }
                   mw_child_seed_class_proc(ch, cls); /* SW-1334 */
                   if (!mw_child_send_create_seq(ch, cls, 0, parent, menu, inst,
                                                 style, exstyle, x, y, w, h,
@@ -21609,11 +22622,128 @@ static void mw_engine_paint_children(void* hwnd) {
             mwb_fill(&g_surf, x + w - 2, y, 2, h, 0xFFFFFF);
             mwb_text8(&g_surf, x + 6, y + h / 2 - 8, label, 0x000000, 1);
         } else if (!strcmp(g_child[i].cls, "BUTTON")) {
-            mwb_3d(&g_surf, x, y, w, h, 1);
-            int tw8 = mwb_textw(label, 1);
-            mwb_text8(&g_surf, x + (w - tw8) / 2, y + (h - 8) / 2, label, 0x000000, 1);
+            /* SW-1593: BS_* decode — BS_GROUPBOX=7 draws the etched box the
+             * dialog "panels" are made of; BS_CHECKBOX=2/BS_AUTOCHECKBOX=3
+             * and BS_RADIOBUTTON=4/BS_AUTORADIOBUTTON=9 draw real check
+             * states; BS_ICON=0x40/BS_BITMAP=0x80 blit WM_SETIMAGE art. */
+            uint32_t bs = g_child[i].style & 0xFu;
+            if (bs == 0x7u) { /* BS_GROUPBOX */
+                mwb_fill(&g_surf, x + 1, y + 8, w - 2, 1, 0x808080);
+                mwb_fill(&g_surf, x + 1, y + 9, w - 2, 1, 0xFFFFFF);
+                mwb_fill(&g_surf, x + 1, y + h - 2, w - 2, 1, 0x808080);
+                mwb_fill(&g_surf, x + 1, y + h - 1, w - 2, 1, 0xFFFFFF);
+                mwb_fill(&g_surf, x + 1, y + 8, 1, h - 9, 0x808080);
+                mwb_fill(&g_surf, x + 2, y + 8, 1, h - 9, 0xFFFFFF);
+                mwb_fill(&g_surf, x + w - 2, y + 8, 1, h - 9, 0x808080);
+                mwb_fill(&g_surf, x + w - 1, y + 8, 1, h - 9, 0xFFFFFF);
+                if (label[0]) mwb_text8(&g_surf, x + 8, y + 2, label, 0x000000, 1);
+            } else if (bs == 0x2u || bs == 0x3u) { /* checkbox family */
+                int cby = y + (h - 14) / 2;
+                mwb_fill(&g_surf, x, cby, 13, 13, 0xFFFFFF);
+                mwb_fill(&g_surf, x, cby, 13, 1, 0x808080);
+                mwb_fill(&g_surf, x, cby + 12, 13, 1, 0x808080);
+                mwb_fill(&g_surf, x, cby, 1, 13, 0x808080);
+                mwb_fill(&g_surf, x + 12, cby, 1, 13, 0x808080);
+                if (g_child[i].checked)
+                    for (int t = 0; t < 7; t++) {
+                        mwb_fill(&g_surf, x + 3 + t, cby + 6 + t / 2, 1, 1, 0x000000);
+                        mwb_fill(&g_surf, x + 3 + t, cby + 9 - t / 2, 1, 1, 0x000000);
+                    }
+                if (label[0]) mwb_text8(&g_surf, x + 18, y + (h - 8) / 2, label, 0x000000, 1);
+            } else if (bs == 0x4u || bs == 0x9u) { /* radio family */
+                int cy = y + h / 2, cxr = x + 6;
+                for (int a = 0; a < 360; a += 15) {
+                    int px = cxr + (int)(6 * cos(a * 3.14159 / 180));
+                    int py = cy + (int)(6 * sin(a * 3.14159 / 180));
+                    mwb_set(&g_surf, px, py, 0x808080);
+                }
+                if (g_child[i].checked) mwb_fill(&g_surf, cxr - 3, cy - 3, 6, 6, 0x000000);
+                if (label[0]) mwb_text8(&g_surf, x + 18, y + (h - 8) / 2, label, 0x000000, 1);
+            } else {
+                /* push / default push — 3D face + optional image */
+                mwb_3d(&g_surf, x, y, w, h, 1);
+                int tx = x;
+                if (g_child[i].himage && (g_child[i].style & (0x40u | 0x80u))) {
+                    MwIconSlot* io = mw_icon_lookup(g_child[i].himage);
+                    if (io && io->bgra) {
+                        for (int yy = 0; yy < 16; yy++)
+                            for (int xx = 0; xx < 16; xx++) {
+                                int sx = xx * io->w / 16, sy = yy * io->h / 16;
+                                const uint8_t* p = io->bgra + ((size_t)sy * io->w + sx) * 4;
+                                if (p[3] < 128) continue;
+                                mwb_set(&g_surf, x + 4 + xx, y + (h - 16) / 2 + yy,
+                                        (uint32_t)p[2] << 16 | (uint32_t)p[1] << 8 | p[0]);
+                            }
+                        tx = x + 22;
+                    }
+                }
+                int tw8 = mwb_textw(label, 1);
+                mwb_text8(&g_surf, tx + ((w - (tx - x)) - tw8) / 2, y + (h - 8) / 2, label, 0x000000, 1);
+            }
         } else if (!strcmp(g_child[i].cls, "STATIC")) {
-            mwb_text8(&g_surf, x + 2, y + 2, label, 0x000000, 1);
+            /* SW-1593 (wine-l0 W8): full SS_* decode (winuser.h) — v1 drew
+             * text for EVERY static, so SS_ICON statics showed no icon and
+             * SS_*FRAME/SS_*RECT boxes were invisible ("کادر ها" never
+             * loaded). SS_ICON=3 BLACKRECT=4 GRAYRECT=5 WHITERECT=6
+             * BLACKFRAME=7 GRAYFRAME=8 WHITEFRAME=9 ETCHEDHORZ=0x10
+             * ETCHEDVERT=0x11 ETCHEDFRAME=0x12 SS_BITMAP=0xE. */
+            uint32_t ss = g_child[i].style & 0x1Fu;
+            if (ss == 0x3u /* SS_ICON */ && g_child[i].himage) {
+                MwIconSlot* io = mw_icon_lookup(g_child[i].himage);
+                if (io && io->bgra) {
+                    int dw = (w < 34) ? w - 2 : 32, dh = (h < 34) ? h - 2 : 32;
+                    if (dw < 8) dw = 8; if (dh < 8) dh = 8;
+                    for (int yy = 0; yy < dh; yy++)
+                        for (int xx = 0; xx < dw; xx++) {
+                            int sx = xx * io->w / dw, sy = yy * io->h / dh;
+                            const uint8_t* p = io->bgra + ((size_t)sy * io->w + sx) * 4;
+                            if (p[3] < 128) continue;
+                            mwb_set(&g_surf, x + 1 + xx, y + 1 + yy,
+                                    (uint32_t)p[2] << 16 | (uint32_t)p[1] << 8 | p[0]);
+                        }
+                    MW_TRACE("[SSICON] hwnd=%p icon %dx%d blitted at (%d,%d)",
+                             g_child[i].hwnd, io->w, io->h, x + 1, y + 1);
+                } else if (label[0]) {
+                    mwb_text8(&g_surf, x + 2, y + 2, label, 0x000000, 1);
+                }
+            } else if (ss == 0x4u) { /* SS_BLACKRECT */
+                mwb_fill(&g_surf, x, y, w, h, 0x000000);
+            } else if (ss == 0x5u) { /* SS_GRAYRECT */
+                mwb_fill(&g_surf, x, y, w, h, 0x808080);
+            } else if (ss == 0x6u) { /* SS_WHITERECT */
+                mwb_fill(&g_surf, x, y, w, h, 0xFFFFFF);
+            } else if (ss == 0x7u) { /* SS_BLACKFRAME */
+                mwb_fill(&g_surf, x, y, w, 1, 0x000000);
+                mwb_fill(&g_surf, x, y + h - 1, w, 1, 0x000000);
+                mwb_fill(&g_surf, x, y, 1, h, 0x000000);
+                mwb_fill(&g_surf, x + w - 1, y, 1, h, 0x000000);
+            } else if (ss == 0x8u) { /* SS_GRAYFRAME */
+                mwb_fill(&g_surf, x, y, w, 1, 0x808080);
+                mwb_fill(&g_surf, x, y + h - 1, w, 1, 0x808080);
+                mwb_fill(&g_surf, x, y, 1, h, 0x808080);
+                mwb_fill(&g_surf, x + w - 1, y, 1, h, 0x808080);
+            } else if (ss == 0x9u) { /* SS_WHITEFRAME */
+                mwb_fill(&g_surf, x, y, w, 1, 0xFFFFFF);
+                mwb_fill(&g_surf, x, y + h - 1, w, 1, 0xFFFFFF);
+                mwb_fill(&g_surf, x, y, 1, h, 0xFFFFFF);
+                mwb_fill(&g_surf, x + w - 1, y, 1, h, 0xFFFFFF);
+            } else if (ss == 0x10u || ss == 0x12u) { /* SS_ETCHEDHORZ / ETCHEDFRAME */
+                mwb_fill(&g_surf, x, y, w, 1, 0x808080);
+                mwb_fill(&g_surf, x, y + 1, w, 1, 0xFFFFFF);
+                if (ss == 0x12u) {
+                    mwb_fill(&g_surf, x, y + h - 2, w, 1, 0x808080);
+                    mwb_fill(&g_surf, x, y + h - 1, w, 1, 0xFFFFFF);
+                    mwb_fill(&g_surf, x, y, 1, h, 0x808080);
+                    mwb_fill(&g_surf, x + 1, y, 1, h, 0xFFFFFF);
+                    mwb_fill(&g_surf, x + w - 2, y, 1, h, 0x808080);
+                    mwb_fill(&g_surf, x + w - 1, y, 1, h, 0xFFFFFF);
+                }
+            } else if (ss == 0x11u) { /* SS_ETCHEDVERT */
+                mwb_fill(&g_surf, x, y, 1, h, 0x808080);
+                mwb_fill(&g_surf, x + 1, y, 1, h, 0xFFFFFF);
+            } else if (label[0]) {
+                mwb_text8(&g_surf, x + 2, y + 2, label, 0x000000, 1);
+            }
         } else if (!strcmp(g_child[i].cls, "TOOLBAR") && g_child[i].tb_nbtn > 0) {
             MW_TRACE("[TBPAINT] hwnd=%p rect=%dx%d@%d,%d nbtn=%d bw=%d bh=%d",
                      g_child[i].hwnd, g_child[i].rw, g_child[i].rh, g_child[i].rx,
@@ -21716,6 +22846,121 @@ static void mw_engine_paint_children(void* hwnd) {
                 for (int t = 0; t < 5; t++)
                     mwb_fill(&g_surf, ax + 8 - t, triy + t, 1, 1, 0x000000);
             }
+        } else if (!strcmp(g_child[i].cls, "SCROLLBAR")) {
+            /* SW-1592 (wine-l0 W8): SCROLLBAR control — real wine scroll.c
+             * SCROLL_DrawArrows + SCROLL_DrawInterior geometry: arrow boxes
+             * at the ends, track, thumb sized by nPage and positioned by
+             * nPos within [nMin, nMax]. Bar = SB_CTL state from g_scroll. */
+            int sl = mw_scroll_slot(g_child[i].hwnd, 2 /* SB_CTL */, 0);
+            int mn = sl >= 0 ? g_scroll[sl].min : 0;
+            int mx = sl >= 0 ? g_scroll[sl].max : 100;
+            int pos = sl >= 0 ? g_scroll[sl].pos : 0;
+            uint32_t page = sl >= 0 ? g_scroll[sl].page : 0;
+            if (mx <= mn) mx = mn + 1;
+            int vert = (g_child[i].style & 0x1u) != 0; /* SBS_VERT */
+            mwb_fill(&g_surf, x, y, w, h, MW_BTNFACE_RGB);
+            if (!vert && w > 34) {
+                int ax = x + w - 16;
+                mwb_3d(&g_surf, x + 16, y, w - 32, h, 0);
+                mwb_3d(&g_surf, x, y, 16, h, 1);            /* SB_LINEUP box */
+                mwb_3d(&g_surf, ax, y, 16, h, 1);           /* SB_LINEDOWN box */
+                for (int t = 0; t < 5; t++) {               /* left arrow */
+                    mwb_fill(&g_surf, x + 6 + t, y + h / 2 - t, 1, t * 2 + 1, 0x000000);
+                }
+                for (int t = 0; t < 5; t++) {               /* right arrow */
+                    mwb_fill(&g_surf, ax + 10 - t, y + h / 2 - t, 1, t * 2 + 1, 0x000000);
+                }
+                int trackw = w - 32;
+                int span = mx - mn > 0 ? mx - mn : 1;
+                int tw2 = page ? (trackw * (int)page) / (span + (int)page) : trackw / 5;
+                if (tw2 < 12) tw2 = 12;
+                if (tw2 > trackw) tw2 = trackw;
+                int tpos = x + 16 + ((trackw - tw2) * (pos - mn)) / span;
+                mwb_3d(&g_surf, tpos, y, tw2, h, 1);        /* the THUMB */
+                MW_TRACE("[SCRLPAINT] hbar hwnd=%p track=%d thumb@%d pos=%d/%d",
+                         g_child[i].hwnd, trackw, tpos, pos, span);
+            } else if (vert && h > 34) {
+                int ay = y + h - 16;
+                mwb_3d(&g_surf, x, y + 16, w, h - 32, 0);
+                mwb_3d(&g_surf, x, y, w, 16, 1);
+                mwb_3d(&g_surf, x, ay, w, 16, 1);
+                for (int t = 0; t < 5; t++) {               /* up arrow */
+                    mwb_fill(&g_surf, x + w / 2 - t, y + 6 + t, t * 2 + 1, 1, 0x000000);
+                }
+                for (int t = 0; t < 5; t++) {               /* down arrow */
+                    mwb_fill(&g_surf, x + w / 2 - t, ay + 9 - t, t * 2 + 1, 1, 0x000000);
+                }
+                int trackh = h - 32;
+                int span = mx - mn > 0 ? mx - mn : 1;
+                int th2 = page ? (trackh * (int)page) / (span + (int)page) : trackh / 5;
+                if (th2 < 12) th2 = 12;
+                if (th2 > trackh) th2 = trackh;
+                int tpos = y + 16 + ((trackh - th2) * (pos - mn)) / span;
+                mwb_3d(&g_surf, x, tpos, w, th2, 1);
+                MW_TRACE("[SCRLPAINT] vbar hwnd=%p track=%d thumb@%d pos=%d/%d",
+                         g_child[i].hwnd, trackh, tpos, pos, span);
+            } else if (g_child[i].style & 0x10u) {          /* SBS_SIZEGRIP */
+                for (int d2 = 3; d2 < w - 2; d2 += 4)
+                    for (int k2 = 0; k2 < 3 && d2 + k2 * 4 < w - 1; k2++)
+                        mwb_fill(&g_surf, x + w - 2 - d2 - k2 * 4, y + h - 2 - d2 - k2 * 4, 2, 2, 0x808080);
+            }
+        } else if (!strcmp(g_child[i].cls, "LISTBOX")) {
+            /* SW-1594: sunken white list pane with real LB_ADDSTRING rows */
+            mwb_fill(&g_surf, x, y, w, h, 0xFFFFFF);
+            mwb_fill(&g_surf, x, y, w, 2, 0x808080);
+            mwb_fill(&g_surf, x, y, 2, h, 0x808080);
+            mwb_fill(&g_surf, x, y + h - 2, w, 2, 0xFFFFFF);
+            mwb_fill(&g_surf, x + w - 2, y, 2, h, 0xFFFFFF);
+            int rows = (h - 6) / 13; if (rows < 0) rows = 0;
+            for (int r2 = 0; r2 < g_child[i].lb_items && r2 < rows; r2++) {
+                if (r2 == g_child[i].lb_cursel)
+                    mwb_fill(&g_surf, x + 2, y + 3 + r2 * 13, w - 4, 13, MW_ACCENT_RGB);
+                char it[46]; int k6 = 0;
+                const uint16_t* s6 = g_child[i].lb_item[r2];
+                for (; k6 < 45 && s6[k6]; k6++)
+                    it[k6] = (s6[k6] >= 0x20 && s6[k6] < 0x7F) ? (char)s6[k6] : '?';
+                it[k6] = 0;
+                mwb_text8(&g_surf, x + 6, y + 4 + r2 * 13, it,
+                          r2 == g_child[i].lb_cursel ? 0xFFFFFF : MW_TEXT_RGB, 1);
+            }
+        } else if (!strcmp(g_child[i].cls, "msctls_progress32")) {
+            /* SW-1594: sunken channel + accent fill (wine progress.c) */
+            mwb_fill(&g_surf, x, y, w, h, 0xE9EEF6);
+            mwb_fill(&g_surf, x, y, w, 1, 0x808080);
+            mwb_fill(&g_surf, x, y, 1, h, 0x808080);
+            mwb_fill(&g_surf, x, y + h - 1, w, 1, 0xFFFFFF);
+            mwb_fill(&g_surf, x + w - 1, y, 1, h, 0xFFFFFF);
+            int span = g_child[i].pb_max - g_child[i].pb_min; if (span <= 0) span = 1;
+            int fw = (w - 4) * (g_child[i].pb_pos - g_child[i].pb_min) / span;
+            if (fw > 0) {
+                for (int bx = 0; bx < fw; bx += 5) {   /* segmented blocks */
+                    int bw2 = (fw - bx < 4) ? fw - bx : 4;
+                    mwb_fill(&g_surf, x + 2 + bx, y + 2, bw2, h - 4, MW_ACCENT_RGB);
+                }
+            }
+            MW_TRACE("[PBMPAINT] hwnd=%p %d/%d (%d px)", g_child[i].hwnd,
+                     g_child[i].pb_pos, span, fw);
+        } else if (!strcmp(g_child[i].cls, "msctls_trackbar32")) {
+            /* SW-1594: channel + thumb (wine trackbar.c) */
+            mwb_fill(&g_surf, x, y, w, h, MW_FACE_RGB);
+            int cy = y + h / 2;
+            mwb_fill(&g_surf, x + 4, cy - 1, w - 8, 3, 0x808080);
+            mwb_fill(&g_surf, x + 4, cy + 2, w - 8, 1, 0xFFFFFF);
+            int span = g_child[i].tb_max - g_child[i].tb_min; if (span <= 0) span = 1;
+            int tp = x + 4 + ((w - 16) * (g_child[i].tb_pos - g_child[i].tb_min)) / span;
+            mwb_3d(&g_surf, tp - 5, cy - 8, 10, 16, 1);
+            MW_TRACE("[TBMPAINT] hwnd=%p thumb@%d pos=%d/%d",
+                     g_child[i].hwnd, tp, g_child[i].tb_pos, span);
+        } else if (!strcmp(g_child[i].cls, "msctls_updown32")) {
+            /* SW-1594: stacked arrow buttons (wine updown.c) */
+            mwb_fill(&g_surf, x, y, w, h, MW_BTNFACE_RGB);
+            int hh = h / 2;
+            mwb_3d(&g_surf, x, y, w, hh, 1);
+            mwb_3d(&g_surf, x, y + hh, w, h - hh, 1);
+            for (int t = 0; t < 5; t++)
+                mwb_fill(&g_surf, x + w / 2 - t, y + hh / 2 - 2 + t, t * 2 + 1, 1, 0x000000);
+            for (int t = 0; t < 5; t++)
+                mwb_fill(&g_surf, x + w / 2 - t, y + hh + (h - hh) / 2 + 2 - t, t * 2 + 1, 1, 0x000000);
         } else if (!strcmp(g_child[i].cls, "SysListView32")) {
             /* SW-1520: sunken white pane + real header band + item rows */
             MwLvState* lv = mw_lv_state(i);
@@ -21807,6 +23052,43 @@ static void mwb_text_face(MWBmp* b, int x, int y, const char* s, uint32_t c) {
     }
 }
 static int mwb_textw(const char* s, int scale) { return (int)strlen(s) * 8 * scale; }
+/* ---- SW-1591: tooltip popup compositor (TOOLTIPS_Show paint stage) ---- */
+static void mw_tip_paint(void) {
+    if (g_tip_shown < 0 || g_tip_shown >= MW_TIP_TOOLS || !g_tip[g_tip_shown].live) return;
+    MwTipTool* t = &g_tip[g_tip_shown];
+    char lbl[80]; int k = 0;
+    for (; k < 79 && t->text[k]; k++)
+        lbl[k] = (t->text[k] >= 0x20 && t->text[k] < 0x7F) ? (char)t->text[k] : '?';
+    lbl[k] = 0;
+    int tw = mwb_textw(lbl, 1);
+    (void)tw;
+    int bw = tw + 14, bh = 22;
+    int bx = g_tip_mouse_x + 12, by = g_tip_mouse_y + 20; /* wine: below-right */
+    if (bx + bw > g_surf.w) bx = g_surf.w - bw > 0 ? g_surf.w - bw : 0;
+    if (by + bh > g_surf.h) by = g_tip_mouse_y - bh - 4 > 0 ? g_tip_mouse_y - bh - 4 : 0;
+    if (!g_surf.px) return;
+    /* modern tip face: white panel, 1px border, soft shadow (Win10-class,
+     * matches the SWEEP-034 chrome); title (TTM_SETTITLE) drawn bold-first */
+    mwb_fill(&g_surf, bx + 2, by + 2, bw, bh, 0x404040);          /* shadow */
+    mwb_fill(&g_surf, bx, by, bw, bh, 0xFFFFFF);
+    mwb_fill(&g_surf, bx, by, bw, 1, 0x454545);
+    mwb_fill(&g_surf, bx, by + bh - 1, bw, 1, 0x454545);
+    mwb_fill(&g_surf, bx, by, 1, bh, 0x454545);
+    mwb_fill(&g_surf, bx + bw - 1, by, 1, bh, 0x454545);
+    MwTipWnd* w = mw_tipwnd(t->tipwnd);
+    int ty = by + 5;
+    if (w && w->title[0]) {
+        char ttl[48]; int k2 = 0;
+        for (; k2 < 47 && w->title[k2]; k2++)
+            ttl[k2] = (w->title[k2] >= 0x20 && w->title[k2] < 0x7F) ? (char)w->title[k2] : '?';
+        ttl[k2] = 0;
+        mwb_text8(&g_surf, bx + 6, ty, ttl, MW_TEXT_RGB, 1);
+        ty += 12;
+    }
+    if (lbl[0]) mwb_text8(&g_surf, bx + 6, ty, lbl, MW_TEXT_RGB, 1);
+    MW_TRACE("[TIPPAINT] tool#%d '%s' box %dx%d @(%d,%d) topmost", g_tip_shown, lbl, bw, bh, bx, by);
+    mw_surface_dump("tooltip");
+}
 static void mwb_circle(MWBmp* b, int cx, int cy, int r, uint32_t c) {
     for (int j = -r; j <= r; j++)
         for (int i = -r; i <= r; i++)
@@ -30248,19 +31530,26 @@ __attribute__((ms_abi)) int mw_SetWindowPos(void* h, void* after, int x, int y,
     return 1;
 }
 __attribute__((ms_abi)) int mw_GetScrollInfo(void* h, int bar, void* si) {
-    /* Honest empty scroll state: nMin=nMax=0 nPos=0 nPage=0 — a window with
-     * no scrollable content. Callers compute layout from zeroed ranges. */
-    (void)h;
+    /* SW-1592 (wine-l0 W8): REAL contract — user32 scroll.c GetScrollInfo
+     * returns the state the guest itself set via SetScrollInfo/SetScrollPos/
+     * SetScrollRange. v1 always answered an empty zeroed range, so the
+     * Set/Get round-trip was broken for every scrollable program (user
+     * report: "اسکرو ها" never load). SCROLLINFO x64: cbSize@0 fMask@4
+     * nMin@8 nMax@12 nPage@16 nPos@20 nTrackPos@24 (winuser.h). */
     if (!si) return 0;
     uint8_t* p = (uint8_t*)si;
-    uint32_t mask = *(uint32_t*)p; /* cbSize@0, fMask@4 */
-    (void)mask;
-    uint32_t* nMin = (uint32_t*)(p + 8);
-    uint32_t* nMax = (uint32_t*)(p + 12);
-    uint32_t* nPage = (uint32_t*)(p + 16);
-    uint32_t* nPos = (uint32_t*)(p + 20);
-    *nMin = 0; *nMax = 0; *nPage = 0; *nPos = 0;
-    MW_TRACE("GetScrollInfo(bar=%d) -> TRUE (empty range)", bar);
+    uint32_t cbsize = *(uint32_t*)p;
+    if (cbsize < 24 || cbsize > 36) return 0; /* honest cbSize gate */
+    uint32_t mask = *(uint32_t*)(p + 4);
+    int s = mw_scroll_slot(h, bar, 0);
+    int mn = 0, mx = 0, pos = 0; uint32_t page = 0;
+    if (s >= 0) { mn = g_scroll[s].min; mx = g_scroll[s].max; pos = g_scroll[s].pos; page = g_scroll[s].page; }
+    if (mask & 0x1u) { *(int32_t*)(p + 8)  = mn; *(int32_t*)(p + 12) = mx; }
+    if (mask & 0x2u) *(uint32_t*)(p + 16) = page;
+    if (mask & 0x4u) *(int32_t*)(p + 20)  = pos;
+    if (mask & 0x10u) *(int32_t*)(p + 24) = pos; /* nTrackPos = current thumb */
+    MW_TRACE("GetScrollInfo(hwnd=%p bar=%d mask=%#x) -> min=%d max=%d pos=%d page=%u",
+             h, bar, mask, mn, mx, pos, page);
     return 1;
 }
 
@@ -31612,33 +32901,28 @@ __attribute__((ms_abi)) int mw_ShowScrollBar(void* h, int bar, int show) {
     MW_TRACE("ShowScrollBar -> TRUE");
     return 1;
 }
-/* scroll-state store: (hwnd,bar) -> pos/range, honest round-trip */
-#define MW_SCROLL_MAX 32
-typedef struct { void* hwnd; int bar; int pos; int min, max; uint8_t live; } MwScroll;
-static MwScroll g_scroll[MW_SCROLL_MAX];
-static int mw_scroll_slot(void* h, int bar, int create) {
-    for (int i = 0; i < MW_SCROLL_MAX; i++)
-        if (g_scroll[i].live && g_scroll[i].hwnd == h && g_scroll[i].bar == bar) return i;
-    if (!create) return -1;
-    for (int i = 0; i < MW_SCROLL_MAX; i++)
-        if (!g_scroll[i].live) {
-            memset(&g_scroll[i], 0, sizeof(MwScroll));
-            g_scroll[i].live = 1; g_scroll[i].hwnd = h; g_scroll[i].bar = bar;
-            return i;
-        }
-    return -1;
-}
+/* scroll-state store: (hwnd,bar) -> pos/range — SW-1592: moved to the
+ * common-control header area (single definition, its first consumer). */
 __attribute__((ms_abi)) int mw_SetScrollInfo(void* h, int bar, const void* si, int redraw) {
     (void)redraw;
     if (!si || !mw_probe_copy(si, 8, NULL)) return 0; /* SW-1328 */
+    /* SW-1592 (wine-l0 W8): the old parse read nPos from offset 16 — that
+     * is nPage. SIF_PAGE state was silently written over the position.
+     * SCROLLINFO x64: cbSize@0 fMask@4 nMin@8 nMax@12 nPage@16 nPos@20. */
     int s = mw_scroll_slot(h, bar, 1);
     if (s >= 0) {
         const uint32_t* m = (const uint32_t*)si;
-        uint32_t mask = m[1]; /* SIF_RANGE|SIF_POS after cbSize */
+        uint32_t mask = m[1];
         if (mask & 0x1u) { g_scroll[s].min = (int)m[2]; g_scroll[s].max = (int)m[3]; }
-        if (mask & 0x4u) g_scroll[s].pos = (int)m[4];
+        if (mask & 0x2u) g_scroll[s].page = m[4];
+        if (mask & 0x4u) g_scroll[s].pos = (int)m[5];
+        if (g_scroll[s].min > g_scroll[s].max) {
+            int t = g_scroll[s].min; g_scroll[s].min = g_scroll[s].max; g_scroll[s].max = t;
+        }
+        if (g_scroll[s].pos < g_scroll[s].min) g_scroll[s].pos = g_scroll[s].min;
+        if (g_scroll[s].pos > g_scroll[s].max) g_scroll[s].pos = g_scroll[s].max;
     }
-    MW_TRACE("SetScrollInfo(bar=%d) -> pos %d", bar, s >= 0 ? g_scroll[s].pos : 0);
+    MW_TRACE("SetScrollInfo(hwnd=%p bar=%d) -> pos %d", bar, s >= 0 ? g_scroll[s].pos : 0);
     return s >= 0 ? g_scroll[s].pos : 0;
 }
 /* GetScrollInfo exists at line ~17013 — no duplicate. */
@@ -36128,19 +37412,33 @@ __attribute__((ms_abi)) int mw_ScrollWindow(void* h, int dx, int dy, const void*
 }
 static int mw_g_scroll[2][2]; /* [bar]{pos,range} honest store, one DC-set */
 __attribute__((ms_abi)) int mw_SetScrollRange(void* h, int bar, int min, int max, int redraw) {
-    (void)h; (void)redraw;
-    if (bar >= 0 && bar <= 1) { mw_g_scroll[bar][1] = max; (void)min; }
+    (void)redraw;
+    /* SW-1592: unified with the g_scroll store — v1 kept a parallel
+     * mw_g_scroll[2][2] the GetScrollInfo family never saw. */
+    int s = mw_scroll_slot(h, bar, 1);
+    if (s >= 0) {
+        g_scroll[s].min = min; g_scroll[s].max = max;
+        if (g_scroll[s].pos < min) g_scroll[s].pos = min;
+        if (g_scroll[s].pos > max) g_scroll[s].pos = max;
+    }
+    MW_TRACE("SetScrollRange(hwnd=%p bar=%d %d..%d) -> TRUE", h, bar, min, max);
     return 1;
 }
 __attribute__((ms_abi)) int mw_GetScrollRange(void* h, int bar, int* minp, int* maxp) {
-    (void)h;
-    if (minp) *minp = 0;
-    if (maxp) *maxp = (bar >= 0 && bar <= 1) ? mw_g_scroll[bar][1] : 0;
+    /* SW-1592: unified store read-back */
+    int s = mw_scroll_slot(h, bar, 0);
+    if (minp) *minp = s >= 0 ? g_scroll[s].min : 0;
+    if (maxp) *maxp = s >= 0 ? g_scroll[s].max : 0;
+    MW_TRACE("GetScrollRange(hwnd=%p bar=%d) -> %d..%d", h, bar,
+             s >= 0 ? g_scroll[s].min : 0, s >= 0 ? g_scroll[s].max : 0);
     return 1;
 }
 __attribute__((ms_abi)) int mw_GetScrollPos(void* h, int bar) {
-    (void)h;
-    return (bar >= 0 && bar <= 1) ? mw_g_scroll[bar][0] : 0;
+    /* SW-1592: unified store read-back (was the isolated mw_g_scroll pair) */
+    int s = mw_scroll_slot(h, bar, 0);
+    int pos = s >= 0 ? g_scroll[s].pos : 0;
+    MW_TRACE("GetScrollPos(hwnd=%p bar=%d) -> %d", h, bar, pos);
+    return pos;
 }
 __attribute__((ms_abi)) int mw_EnableScrollBar(void* h, uint32_t bar, uint32_t arrows) {
     (void)h; (void)bar; (void)arrows; return 1;

@@ -892,3 +892,45 @@ Stage Summary:
   pane (y=24) covers the toolbar strip in the settled frame. The mid-composite
   evidence frame proves the toolbar render; SW-1572 will make it the final
   state.
+
+## W8 — wine-l0 «تولتیپ، اسکرو، آیکون، کادر» (2026-11-02, SW-1591..1595)
+
+User report: tooltips never load (menus/toolbars), and icons/boxes/buttons/
+scrollbars must load FULLY like the Wine main source does, generically, proven
+by 10-15 NEW simple Windows programs, using the Level-0 plugin.
+
+Wine-9.0 contract extracted line-by-line (tooltips.c L360-470/836/852/
+1486-1545, toolbar.c L1995-2060/6355, scroll.c, commctrl.h/winuser.h x64
+layouts) and implemented in loader.c:
+- SW-1591 full tooltip engine: 40+ TTM_* messages, TTN_NEEDTEXT/SHOW/POP
+  delivery with the wine reply forms (szText / direct / INTRESOURCE /
+  recursive-callback / parent fallback), relay layout pt@36, toolbar
+  TOOLBAR_TTGetDispInfo parity, popup compositor with TTM_SETTITLE header.
+- SW-1592 scroll contracts: GetScrollInfo was a dishonest always-zero stub and
+  SetScrollInfo wrote nPage into nPos (offset bug); unified (hwnd,bar) store,
+  page + trackpos, SB_* WM_V/HSCROLL codes with parent re-notify (EDIT silent),
+  SCROLLBAR control painter (arrows/track/thumb per scroll.c).
+- SW-1593 icon/box/button completeness: WM_SETIMAGE capture, SS_ICON creation
+  param, full SS_*/BS_* decode in the compositor with icon blits from the same
+  plane WinRAR uses — icons now load for ANY program.
+- SW-1594 content models: LB_*, CB_* cursel, PBM_*, TBM_*, UDM_* (+ new classes
+  msctls_trackbar32 0x91 / msctls_updown32 0x92 in BOTH sysclass tables; the
+  A table was missing msctls_progress32 entirely).
+- SW-1595 battery: tests/controls/ctl_battery.c → 15 distinct guest programs
+  (ctl01..ctl15.exe), 137 checks ALL PASS, engine-event streams 3x/3x
+  deterministic, G1 regression 12/12, 7za smoke exit 0, rendered-frame evidence
+  in artifacts/wine-l0-w8/renders/.
+
+Differential root causes killed this wave (details in artifacts/wine-l0-w8/
+README.md): cls[16] truncation silently broke EVERY ≥16-char class compare
+(the reason tooltips AND progress bars never matched), LB_ADDSTRING wp/lp,
+BM_SETCHECK missing, CB cursel hardcoded, MSG pt offset, A-settext
+self-clobbering widen, Set/GetScrollInfo incoherence.
+
+Honest limits: wine-live relay capture stays BLOCKED (no wine binary in this
+sandbox) — L0 evidence via the MiniWin backend (api_trace.json), same channel
+as SW-TRACK2. SS_BITMAP renders only when the HBITMAP lands in the icon plane.
+
+Next wagon (SW-1596): menu-band hover events (WM_MENUSELECT-driven tip rects),
+SysHeader32 painter, and the L0-matrix re-run over WinRAR/IDM/Notepad++ with
+the new tooltip chain visible in their traces.

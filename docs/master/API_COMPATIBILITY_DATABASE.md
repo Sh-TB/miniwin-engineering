@@ -56,6 +56,35 @@ Counts: KERNEL32.DLL = 70 code imports; msvcrt.dll = 91 code imports; msvcrt dat
 
 **Unresolved-import policy:** slot left unchanged (holds name RVA) + stderr WARN. This policy turned BUG-025's missing stubs into a jump-to-name-RVA crash for the packed target. The general rule should be: on unresolved import, patch the IAT with a trap stub that reports and aborts loudly (Phase-6 backlog item).
 
+
+## wine-l0 W8 additions (2026-11-02, tooltip/scroll/icon/control wave — SW-1591..1595)
+
+Contract: wine-9.0 `dlls/comctl32/tooltips.c` (L360-470 GetDispInfo, L836 Show, L852 Hide, L1486-1545 RelayEvent), `dlls/comctl32/toolbar.c` (L1995-2060 per-button tools, L6355 TOOLBAR_TTGetDispInfo), `dlls/user32/scroll.c`, `include/commctrl.h` (TTM_/TTN_/TTF_ x64 values), `winuser.h` (SCROLLINFO/MSG/LB_/CB_/SS_/BS_ x64 layouts). Evidence: `artifacts/wine-l0-w8/` (15 programs, 137 checks, 3x determinism, G1 12/12).
+
+| API / message family | Dll | Status | Notes |
+| --- | --- | --- | --- |
+| TTM_ADDTOOL A(0x404)/W(0x432) + TOOLINFO x64 parse | comctl32 (engine) | **REAL** | replace-by-(hwnd,uId); direct text / INTRESOURCE→LoadStringW / LPSTR_TEXTCALLBACK deferred; bad cbSize honestly rejected |
+| TTM_DELTOOL / NEWTOOLRECT / GETTOOLINFO / SETTOOLINFO / UPDATETIPTEXT / GETTEXT / ENUMTOOLS / GETCURRENTTOOL / HITTEST / GETTOOLCOUNT / ADJUSTRECT / GETBUBBLESIZE / WINDOWFROMPOINT / SET-GETMARGIN / SET-GETTIPCOLOR / SET-GETDELAYTIME / SET-GETMAXTIPWIDTH / SETTITLE / ACTIVATE / POP / POPUP / UPDATE | comctl32 (engine) | **REAL** | full TTM protocol on Tooltips_Class32 children; deterministic immediate ID_TIMERSHOW (traced) |
+| TTM_RELAYEVENT (0x407) | comctl32 (engine) | **REAL** | winuser.h MSG x64 layout: pt@36 (v1 read `time`); WM_MOUSEMOVE→tool-from-point→show, button-down→hide |
+| TTN_NEEDTEXT (GETDISPINFO A −520 / W −530) | comctl32 (engine) | **REAL** | NMTTDISPINFO x64 136B delivered to tool hwnd; szText/direct/INTRESOURCE/recursive-callback/parent-fallback reply forms per wine L360-470 |
+| TTN_SHOW (−521) / TTN_POP (−522) | comctl32 (engine) | **REAL** | delivered to the tool hwnd; toolbar-owned tools consume internally (wine toolbar.c L6355 parity) |
+| Toolbar button tips (TBSTYLE_TOOLTIPS) | comctl32 (engine) | **REAL** | TOOLBAR_TTGetDispInfo model: szText filled from the TB_ADDSTRINGW pool by idCommand |
+| SetScrollInfo / GetScrollInfo | user32 | **REAL** (was STUB-FAKE) | SCROLLINFO x64 offsets fixed (nPos@20 not nPage@16); SIF_RANGE/PAGE/POS/TRACKPOS honored; unified (hwnd,bar) store — v1 GetScrollInfo always returned zeros |
+| SetScrollRange/GetScrollRange/SetScrollPos/GetScrollPos | user32 | **REAL** | unified with the g_scroll store (v1 had a parallel pair the Info family never saw) |
+| WM_HSCROLL/WM_VSCROLL on SCROLLBAR ctl + EDIT | user32 | **REAL** | SB_LINEUP..SB_ENDSCROLL codes adjust pos (thumb param, clamp); SCROLLBAR re-notifies parent (hWnd lParam), EDIT scrolls silently |
+| SCROLLBAR control painting (SBS_HORZ/SBS_VERT/SBS_SIZEGRIP) | user32 | **REAL** | arrows/track/thumb geometry per scroll.c DrawArrows/DrawInterior; thumb sized by nPage, positioned by nPos |
+| BM_SETCHECK (0xF1) | user32 | **REAL** (was missing) | checkbox/radio state stored; returns 0 (wine button.c) |
+| WM_SETIMAGE (0x172) on STATIC/BUTTON | user32 | **REAL** | IMAGE_ICON/BITMAP stored, returns PREVIOUS image (wine static.c/button.c) |
+| SS_ICON creation param + SS_*FRAME/SS_*RECT/ETCHED* painting | user32 | **REAL** | full SS_ decode in the compositor; icon blit via the mw_icon plane (same source as WinRAR art) |
+| BS_GROUPBOX/BS_ICON/checkbox/radio painting | user32 | **REAL** | etched group frames, real check states, icon buttons |
+| LB_ADDSTRING/INSERTSTRING/DELETESTRING/RESETCONTENT/SET-GETCURSEL/GETTEXT/GETTEXTLEN/GETCOUNT | user32 | **REAL** | LB_ADDSTRING reads lParam (v1 read wParam); 32x48 UTF-16 row store + painter |
+| CB_SETCURSEL/GETCURSEL (plain COMBOBOX + ComboBoxEx32) | user32 | **REAL** (was hardcoded 0) | cb_cursel store |
+| PBM_SETRANGE/SETRANGE32/SETPOS/GETPOS/DELTAPOS/SETSTEP/STEPIT/GETRANGE | comctl32 (engine) | **REAL** | range/pos/step model + segmented painter |
+| TBM_SETRANGE/SETRANGEMIN/MAX/GETRANGEMIN/MAX/SETPOS/GETPOS | comctl32 (engine) | **REAL** | class msctls_trackbar32 added to W+A tables (0x91) + painter |
+| UDM_SETRANGE/GETRANGE/SETRANGE32/SETPOS32/GETPOS32 | comctl32 (engine) | **REAL** | class msctls_updown32 added (0x92); MAKELONG(max,min) getrange contract |
+| MwChild.cls 16→24 | engine | **FIX** | "tooltips_class32"(16)/"msctls_progress32"(17)/"msctls_trackbar32"(17) were snprintf-truncated to 15+NUL — every cls_is/strcmp silently failed |
+| SendMessageA WM_SETTEXT widen | user32 | **FIX** | self-clobbering tmp loop stored "l" for "line one…"; separate byte buffer now |
+
 ## Data imports (4): `_acmdln`, `__initenv`, `_commode`, `_fmode` — pointer patching to loader-owned storage (REAL). `_errno` explicitly removed (function, not data).
 
 ## Ownership & memory-effect notes (where established)
