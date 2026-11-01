@@ -283,7 +283,7 @@ run_plugin() {
         out="/tmp/plug_${name}_r${run}.log"
         if [ -n "$SB" ]; then
             ( cd "$SB" && \
-            MW_GUI_EVENTS=1 MW_GUI_EVENTS_BUDGET=220 \
+            MW_GUI_EVENTS=1 MW_GUI_EVENTS_BUDGET=220 MW_GUI_EVENTS_PARK=1 \
             MW_GUI_KEYS="$keys" MW_GUI_KEY_EVERY=7 MW_GUI_KEYUP=1 \
             MINWIN_MOUSE="$mouse" MINWIN_MOUSE_EVERY=6 \
             MINWIN_INSTALL_LOG="$SB/install_log.tsv" \
@@ -299,12 +299,12 @@ run_plugin() {
             # battery (SWEEP-105 winnc: "PORTABLE_CWD: unbound variable").
             if [ -n "${PORTABLE_CWD:-}" ]; then
                 ( cd "$PORTABLE_CWD" && \
-                MW_GUI_EVENTS=1 MW_GUI_EVENTS_BUDGET=220 \
+                MW_GUI_EVENTS=1 MW_GUI_EVENTS_BUDGET=220 MW_GUI_EVENTS_PARK=1 \
                 MW_GUI_KEYS="$keys" MW_GUI_KEY_EVERY=7 MW_GUI_KEYUP=1 \
                 MINWIN_MOUSE="$mouse" MINWIN_MOUSE_EVERY=6 \
                 timeout "$tmo" env $penv "$REPO/minwin_loader" "$exe_path" $args ) > "$out" 2>&1
             else
-                MW_GUI_EVENTS=1 MW_GUI_EVENTS_BUDGET=220 \
+                MW_GUI_EVENTS=1 MW_GUI_EVENTS_BUDGET=220 MW_GUI_EVENTS_PARK=1 \
                 MW_GUI_KEYS="$keys" MW_GUI_KEY_EVERY=7 MW_GUI_KEYUP=1 \
                 MINWIN_MOUSE="$mouse" MINWIN_MOUSE_EVERY=6 \
                 timeout "$tmo" env $penv ./minwin_loader "$exe_path" $args > "$out" 2>&1

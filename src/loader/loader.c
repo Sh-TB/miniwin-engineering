@@ -18046,6 +18046,11 @@ typedef struct {
     int      tb_stridx[40];         /* tb_pool index, -1 = no label */
     int      tb_pool_n;
     uint16_t tb_pool[64][20];
+    /* SW-1583: TB_SETIMAGELIST (0x430) — real comctl32 toolbars draw each
+     * button's art from the image list at TBBUTTON.iBitmap; without this
+     * handle the painter can only fall back to the placeholder glyph. */
+    void*    tb_himl;
+    int      tb_bitcx, tb_bitcy;   /* TB_SETBITMAPSIZE (SW-1584); 0 = default */
     int      sb_parts;
     int32_t  sb_partx[4];
     uint16_t sb_text[4][80];
@@ -18202,9 +18207,9 @@ static const uint16_t* mw_hwnd_text(void* h) {
  *   Header:   column count
  * Unmodelled messages fall through to the old paths (trace + 0). */
 #define MW_LV_MAXITEM 512 /* SWEEP-023 SW-977: 64 overflowed on real corpus lists */
-#define MW_LV_MAXSUB  2
 #define MW_LV_TEXTN   40
-#define MW_LV_MAXCOL  8 /* SWEEP-022 SW-926..930: column header store */
+#define MW_LV_MAXCOL  16 /* SW-1583: WinRAR restores up to 12 columns; 8 truncated */
+#define MW_LV_MAXSUB  4  /* SW-1583: report rows carry Name+Size+Type+Modified */
 typedef struct {
     uint32_t items, cols;
     uint16_t txt[MW_LV_MAXITEM][MW_LV_MAXSUB][MW_LV_TEXTN];
@@ -18212,6 +18217,10 @@ typedef struct {
     /* SWEEP-022 SW-926..930: LVM_SET/GETCOLUMN header text + width */
     int32_t  colw[MW_LV_MAXCOL];
     uint16_t coltxt[MW_LV_MAXCOL][MW_LV_TEXTN];
+    /* SW-1583: wine dlls/comctl32/listview.c observable state. Wine
+     * LISTVIEW_Init defaults: clrText = CLR_DEFAULT, clrTextBk = CLR_NONE,
+     * clrBk = CLR_NONE (the guest reads these back before populating). */
+    uint32_t clr_bk, clr_text, clr_textbk, exstyle;
 } MwLvState;
 static MwLvState* g_lvstate[MW_CHILD_MAX];
 static uint32_t   g_tree_items[MW_CHILD_MAX];
@@ -18253,7 +18262,14 @@ static uintptr_t mw_lv_sort_lp[MW_LV_MAXITEM];
 #define MW_TREE_BASE 0x00070000u
 static MwLvState* mw_lv_state(int s) {
     if (s < 0 || s >= MW_CHILD_MAX) return NULL;
-    if (!g_lvstate[s]) g_lvstate[s] = (MwLvState*)calloc(1, sizeof(MwLvState));
+    if (!g_lvstate[s]) {
+        g_lvstate[s] = (MwLvState*)calloc(1, sizeof(MwLvState));
+        if (g_lvstate[s]) { /* SW-1583: wine LISTVIEW_Init color defaults */
+            g_lvstate[s]->clr_bk = 0xFFFFFFFFu;      /* CLR_NONE */
+            g_lvstate[s]->clr_text = 0xFF000000u;    /* CLR_DEFAULT */
+            g_lvstate[s]->clr_textbk = 0xFFFFFFFFu;  /* CLR_NONE */
+        }
+    }
     return g_lvstate[s];
 }
 static int mw_child_cls_is(int s, const char* cls) {
@@ -18286,7 +18302,76 @@ static void mw_lv_store_text(uint16_t* dst, const uint16_t* src) {
 #define MW_SB_H        23   /* real statusbar height px */
 #define MW_TB_BTN_DEF  23   /* default button width px */
 #define MW_TB_H_DEF    21   /* default toolbar band height px */
+/* ---- SWEEP-010: comctl32 ImageList_Create/Destroy/Add/GetImageCount ----
+ * Honest handle-based image lists (procexp64 creates 2 while sizing its
+ * toolbar; SWEEP-009 stub map @0x140001f0f/0x140001fab + Destroy x2 at
+ * comctl32 internals 0x140132d5e/0x140132d2e). Storage mirrors the MWBmp
+ * raster (3 bytes/px BGR, stride = w*3) so ImageList_Add can copy real
+ * pixels from any HBITMAP created by our GDI (CreateCompatibleBitmap /
+ * LoadImage pool). Slot caps documented; Create validates dimensions.
+ * SW-1583: the pool/decoder now live HERE, above the toolbar layout
+ * helpers and the composite painter, so both read real geometry. */
+#define MW_IMGL_MAX   16 /* SW-803: 8 overflowed (produkey toolbar imagelist + per-child lists) */
+#define MW_IMGL_BASE  0x00061000u  /* HIMAGELIST handles 0x00061001+i */
+#define MW_IMGL_IMGMAX 512
+typedef struct {
+    int cx, cy, count, cap;
+    uint32_t flags;
+    uint32_t bkcolor; /* SWEEP-014 r2: CLR_NONE=0xFFFFFFFF default */
+    uint8_t* px; /* cap images * cx*cy, 3 bytes/px BGR */
+} MWImgList;
+static MWImgList g_imglist[MW_IMGL_MAX];
+static uint8_t   g_imglist_live[MW_IMGL_MAX];
+
+static MWImgList* mw_imgl_decode(void* h) {
+    uintptr_t v = (uintptr_t)h;
+    if ((v & 0xFFFFF000u) != MW_IMGL_BASE) return 0;
+    int i = (int)(v & 0xFFu) - 1; /* handle = base|(slot+1) */
+    if (i < 0 || i >= MW_IMGL_MAX || !g_imglist_live[i]) return 0;
+    return &g_imglist[i];
+}
 typedef __attribute__((ms_abi)) uint32_t (*MW_STREAM_CB)(uintptr_t, uint8_t*, int32_t, int32_t*);
+/* SW-1583: shared toolbar layout model. Real comctl32 toolbars lay out
+ * big-icon-over-label buttons sized to max(icon, label); the SAME model is
+ * used by TB_GETITEMRECT (what the GUEST reads back to size its WM_SIZE
+ * layout) and by the composite painter (what we render) — otherwise the
+ * guest positions children against a layout the painter never drew.
+ * Width = max(TB_SETBUTTONSIZE w, label*8+6, icon_cx+8), separators = 6.
+ * Height = max(TB_SETBUTTONSIZE h, icon_cy + label band + 8). */
+static int mw_tb_labw(const uint16_t* s) {
+    int n = 0;
+    while (n < 19 && s && s[n]) n++;
+    return n * 8;
+}
+static MWImgList* mw_tb_imglist(const MwChild* c) {
+    return c->tb_himl ? mw_imgl_decode(c->tb_himl) : NULL;
+}
+static int mw_tb_btn_w(const MwChild* c, int idx) {
+    if (idx < 0 || idx >= c->tb_nbtn) return 0;
+    if (c->tb_style[idx] & 0x01u) return 6; /* BTNS_SEP */
+    int w = c->tb_bw ? c->tb_bw : MW_TB_BTN_DEF;
+    if (c->tb_stridx[idx] >= 0 && c->tb_stridx[idx] < c->tb_pool_n) {
+        int lw = mw_tb_labw(c->tb_pool[c->tb_stridx[idx]]) + 6;
+        if (lw > w) w = lw;
+    }
+    MWImgList* L = mw_tb_imglist(c);
+    if (L && L->cx + 8 > w) w = L->cx + 8;
+    return w;
+}
+static int mw_tb_btn_h(const MwChild* c) {
+    int hgt = c->tb_bh ? c->tb_bh : MW_TB_H_DEF;
+    MWImgList* L = mw_tb_imglist(c);
+    if (L && L->cy + 16 > hgt) hgt = L->cy + 16; /* icon + label band */
+    return hgt;
+}
+/* SW-1584 fwd decls (definitions live in the GDI/image-list block below) */
+struct MWBmp; /* file-scope tag: completes at the GDI block typedef below */
+static int mw_tb_imglist_append(MwChild* c, const struct MWBmp* src, int ncell,
+                                int bcx, int bcy);
+static struct MWBmp* mw_imgl_srcbmp(void* hbmp);
+static int mw_tb_addbitmap_msg(MwChild* c, uintptr_t lp);
+__attribute__((ms_abi)) void* mw_ImageList_Create(int cx, int cy, uint32_t flags,
+                                                  int cInitial, int cGrow);
 static int mw_tbbtn_parse(uintptr_t lp, int wide, int32_t* bmp, int32_t* cmd,
                           uint8_t* st, long long* istr) {
     if (!lp) return 0;
@@ -18349,8 +18434,25 @@ static int mw_rebar_band_h(MwRbBand* b) {
     if (b->cychild > 0) return (int)b->cychild;
     int h = b->cymin ? (int)b->cymin : 0;
     if (b->child) {
+        /* SW-1584: use the child's IDEAL height (wine REBAR_Layout asks the
+         * child, not its creation rect): toolbar -> its own button height;
+         * combobox family -> the CLOSED height (the recorded rh of a combo
+         * includes the DROP-DOWN list and poisoned WinRAR's address-bar row
+         * to 240px); anything else keeps the recorded height but capped at
+         * 64 (a dropdown-sized creation height is not a row height). */
         int cs = mw_child_slot(b->child);
-        if (cs >= 0 && g_child[cs].live && g_child[cs].rh > h) h = g_child[cs].rh;
+        if (cs >= 0 && g_child[cs].live) {
+            int ideal;
+            if (strncmp(g_child[cs].cls, "TOOLBAR", 7) == 0)
+                ideal = mw_tb_btn_h(&g_child[cs]);
+            else if (strncmp(g_child[cs].cls, "COMBOBOX", 8) == 0 ||
+                     strncmp(g_child[cs].cls, "ComboBoxEx32", 12) == 0)
+                ideal = 24;
+            else
+                ideal = (g_child[cs].rh > 0 && g_child[cs].rh < 64)
+                        ? g_child[cs].rh : 64;
+            if (ideal > h) h = ideal;
+        }
     }
     return h > 0 ? h : 23;
 }
@@ -18795,27 +18897,44 @@ static int mw_commonctl_msg(int s, uint32_t msg, uintptr_t wp, long long lp, lon
             c->tb_bw = (int16_t)(lp & 0xFFFFu);
             c->tb_bh = (int16_t)((lp >> 16) & 0xFFFFu);
             *out = 1; return 1;
-        case 0x420u: *out = 1; return 1;                     /* TB_SETBITMAPSIZE */
-        case 0x413u: { /* TB_ADDBITMAP: honest monotonic image index */
-            static int tb_bmidx;
-            *out = tb_bmidx++ & 0xFFFFu; return 1;
+        case 0x413u: /* TB_ADDBITMAP (SW-1584): real strip->image-list append;
+             * contract + decode in mw_tb_addbitmap_msg (defined with the
+             * GDI block; body needs the complete MWBmp type). */
+            *out = mw_tb_addbitmap_msg(c, (uintptr_t)lp); return 1;
+        case 0x420u: /* TB_SETBITMAPSIZE: lp = MAKELONG(cx, cy) */
+            c->tb_bitcx = (int)(uint16_t)(lp & 0xFFFF);
+            c->tb_bitcy = (int)(uint16_t)((lp >> 16) & 0xFFFF);
+            MW_TRACE("[TB] SETBITMAPSIZE %dx%d", c->tb_bitcx, c->tb_bitcy);
+            *out = 1; return 1;
+        case 0x430u: { /* TB_SETIMAGELIST (SW-1583): real comctl32 stores the
+             * HIMAGELIST and returns the PREVIOUS one; the painter then
+             * draws button art from it at TBBUTTON.iBitmap. */
+            void* prev = c->tb_himl;
+            c->tb_himl = (void*)(uintptr_t)lp;
+            MWImgList* L = mw_imgl_decode(c->tb_himl);
+            MW_TRACE("[TB] SETIMAGELIST -> %p (%s cx=%d cy=%d count=%d)",
+                     c->tb_himl, L ? "real" : "undecodable",
+                     L ? L->cx : 0, L ? L->cy : 0, L ? L->count : 0);
+            *out = (long long)(uintptr_t)prev; return 1;
         }
-        case 0x43Au: /* TB_GETBUTTONSIZE */
+        case 0x42Au: /* TB_GETIMAGELIST */
+            *out = (long long)(uintptr_t)c->tb_himl; return 1;
+        case 0x43Au: /* TB_GETBUTTONSIZE — SW-1583 model (icon-aware) */
             *out = (long long)(uint32_t)
-                   (((c->tb_bh ? c->tb_bh : MW_TB_H_DEF) << 16) |
+                   ((mw_tb_btn_h(c) << 16) |
                     (c->tb_bw ? c->tb_bw : MW_TB_BTN_DEF));
             return 1;
-        case 0x41Du: { /* TB_GETITEMRECT: cumulative real layout */
+        case 0x41Du: { /* TB_GETITEMRECT: cumulative real layout (SW-1583
+             * model shared with the painter — see mw_tb_btn_w) */
             *out = 1;
             if (lp) {
                 int32_t* rct = (int32_t*)(uintptr_t)lp;
                 int idx = (int)wp;
-                int bw = c->tb_bw ? c->tb_bw : MW_TB_BTN_DEF;
-                int bh = c->tb_bh ? c->tb_bh : MW_TB_H_DEF;
+                int bh = mw_tb_btn_h(c);
                 int x = 0;
                 for (int i = 0; i < idx && i < c->tb_nbtn; i++)
-                    x += (c->tb_style[i] & 0x01u) ? 6 : bw;
-                int w = (idx < c->tb_nbtn && (c->tb_style[idx] & 0x01u)) ? 6 : bw;
+                    x += mw_tb_btn_w(c, i);
+                int w = mw_tb_btn_w(c, idx);
                 rct[0] = x; rct[1] = 0; rct[2] = x + w; rct[3] = bh;
             }
             return 1;
@@ -18873,6 +18992,36 @@ static int mw_commonctl_msg(int s, uint32_t msg, uintptr_t wp, long long lp, lon
         switch (msg) {
         case 0x1004u: /* LVM_GETITEMCOUNT */
             *out = (long long)lv->items; return 1;
+        /* SW-1583: wine listview.c color + extended-style observables.
+         * Defaults per wine LISTVIEW_Init; SET* return TRUE (nonzero),
+         * GET* return the stored value; SETEXTENDEDLISTVIEWSTYLE returns
+         * the PREVIOUS style ((prev&~mask)|(new&mask) stored). */
+        case 0x1000u: /* LVM_GETBKCOLOR */
+            *out = (long long)(uint32_t)lv->clr_bk; return 1;
+        case 0x1001u: /* LVM_SETBKCOLOR */
+            lv->clr_bk = (uint32_t)lp; *out = 1; return 1;
+        case 0x1023u: /* LVM_GETTEXTCOLOR */
+            *out = (long long)(uint32_t)lv->clr_text; return 1;
+        case 0x1024u: /* LVM_SETTEXTCOLOR */
+            lv->clr_text = (uint32_t)lp; *out = 1; return 1;
+        case 0x1025u: /* LVM_GETTEXTBKCOLOR */
+            *out = (long long)(uint32_t)lv->clr_textbk; return 1;
+        case 0x1026u: /* LVM_SETTEXTBKCOLOR */
+            lv->clr_textbk = (uint32_t)lp; *out = 1; return 1;
+        case 0x1036u: { /* LVM_SETEXTENDEDLISTVIEWSTYLE */
+            uint32_t prev = lv->exstyle;
+            uint32_t mask = (uint32_t)wp, val = (uint32_t)lp;
+            lv->exstyle = (prev & ~mask) | (val & mask);
+            *out = (long long)(uint32_t)prev; return 1;
+        }
+        case 0x1037u: /* LVM_GETEXTENDEDLISTVIEWSTYLE */
+            *out = (long long)(uint32_t)lv->exstyle; return 1;
+        case 0x101Du: { /* LVM_GETCOLUMNWIDTH */
+            int idx = (int)wp;
+            *out = (idx >= 0 && idx < MW_LV_MAXCOL && (uint32_t)idx < lv->cols)
+                   ? (long long)lv->colw[idx] : 0;
+            return 1;
+        }
         case 0x1007u: case 0x104Du: { /* LVM_INSERTITEMA/W: real insert+shift (SW-976/977) */
             if (lv->items >= MW_LV_MAXITEM) { *out = -1; return 1; }
             uint32_t iitem = 0xFFFFFFFFu; int sub = -1;
@@ -18899,8 +19048,16 @@ static int mw_commonctl_msg(int s, uint32_t msg, uintptr_t wp, long long lp, lon
             lv->items++;
             *out = (long long)idx; return 1;
         }
-        case 0x101Bu: case 0x1045u: { /* LVM_INSERTCOLUMNA/W: SW-1520 capture
-             * header text + width (painter draws the real header band) */
+        case 0x101Bu: case 0x1061u: { /* LVM_INSERTCOLUMNA/W: SW-1520 capture
+             * header text + width (painter draws the real header band).
+             * SW-1583 FIRST-DIVERGENCE FIX (wine-9.0 include/commctrl.h):
+             * LVM_INSERTCOLUMNW = LVM_FIRST+97 = 0x1061. The old code named
+             * 0x1045 (= LVM_FIRST+69 = LVM_GETBKIMAGEA) as the W variant, so
+             * every wide insert (WinRAR's default Name/Size/Type/Modified
+             * columns, LoadStringW ids 110/111/112/114) fell through and
+             * returned 0 — the guest aborted list population and the file
+             * pane stayed white. A/W split verified against the pinned
+             * wine-9.0 header this sweep. */
             *out = (long long)lv->cols++;
             if (lp) {
                 int idx = (int)(int32_t)wp;
@@ -18908,8 +19065,8 @@ static int mw_commonctl_msg(int s, uint32_t msg, uintptr_t wp, long long lp, lon
                 if (idx >= 0 && idx < MW_LV_MAXCOL) {
                     lv->colw[idx] = *(int32_t*)((uint8_t*)lp + 8);
                     const void* tp = *(void* const*)((uint8_t*)lp + 16);
-                    if ((*(uint32_t*)lp & 0x1u) && tp) { /* LVCF_TEXT */
-                        if (msg == 0x1045u) {
+                    if ((*(uint32_t*)lp & 0x4u) && tp) { /* LVCF_TEXT = 0x4 (wine commctrl.h) */
+                        if (msg == 0x1061u) {
                             mw_lv_store_text(lv->coltxt[idx], (const uint16_t*)tp);
                         } else {
                             char a[MW_LV_TEXTN];
@@ -19092,15 +19249,34 @@ static int mw_commonctl_msg(int s, uint32_t msg, uintptr_t wp, long long lp, lon
             }
             return 1;
         }
-        case 0x101Au: case 0x105Au: { /* LVM_SETCOLUMNA/W: store header */
+        case 0x101Au: case 0x105Au: case 0x1060u: {
+            /* LVM_SETCOLUMNA/W: store header. SW-1583: SETCOLUMNW is
+             * LVM_FIRST+96 = 0x1060 (0x105A kept as legacy alias); text read
+             * mask-gated LVCF_TEXT(0x4) at LVCOLUMN.pszText = +16. */
             *out = 1;
             if (!lp) return 1;
-            int32_t cx = *(int32_t*)((uint8_t*)lp + 8);
-            int sub = *(int*)((uint8_t*)lp + 36);
-            if (sub >= 0 && sub < MW_LV_MAXCOL) {
-                lv->colw[sub] = cx;
-                mw_lv_store_text(lv->coltxt[sub],
-                                 *(const uint16_t* const*)((uint8_t*)lp + 24));
+            int idx = (int)(int32_t)wp;
+            if (idx < 0 || idx >= MW_LV_MAXCOL) idx = (int)lv->cols - 1;
+            if (idx >= 0 && idx < MW_LV_MAXCOL) {
+                uint32_t lmask = *(uint32_t*)(uintptr_t)lp;
+                if (lmask & 0x2u) /* LVCF_WIDTH */
+                    lv->colw[idx] = *(int32_t*)((uint8_t*)(uintptr_t)lp + 8);
+                if (lmask & 0x4u) { /* LVCF_TEXT */
+                    const void* tp = *(void* const*)((uint8_t*)(uintptr_t)lp + 16);
+                    if (tp) {
+                        if (msg != 0x101Au)
+                            mw_lv_store_text(lv->coltxt[idx], (const uint16_t*)tp);
+                        else {
+                            char a[MW_LV_TEXTN];
+                            if (mw_probe_copy(tp, MW_LV_TEXTN - 1, a)) {
+                                int j;
+                                for (j = 0; j < MW_LV_TEXTN - 1 && a[j]; j++)
+                                    lv->coltxt[idx][j] = (uint16_t)(uint8_t)a[j];
+                                lv->coltxt[idx][j] = 0;
+                            }
+                        }
+                    }
+                }
             }
             return 1;
         }
@@ -19607,9 +19783,16 @@ __attribute__((ms_abi)) long long mw_SendMessageW(void* h, uint32_t msg, uintptr
     }
     if (s >= 0 && msg == MW_BM_GETCHECK) return g_child[s].checked;
     if (s >= 0 && msg == 0x404u) return 1; /* SW-803..806: SB_SETPARTS -> TRUE */
-    { /* SWEEP-019 SW-831..840: SysListView32/SysTreeView32/SysTabControl32 routing */
+    { /* SWEEP-019 SW-831..840: SysListView32/SysTreeView32/SysTabControl32 routing.
+         SW-1584 OBSERVABILITY: child-handled messages were silent at this
+         boundary (only the fallthrough path traced), which made handled
+         TB_/LVM_ traffic INVISIBLE in the api trace and cost a full
+         bisection round (sweep113). Every child-handled send now traces. */
         long long ctl_r;
-        if (s >= 0 && mw_commonctl_msg(s, msg, wp, lp, &ctl_r)) return ctl_r;
+        if (s >= 0 && mw_commonctl_msg(s, msg, wp, lp, &ctl_r)) {
+            MW_TRACE("[CHILD] hwnd=%p slot=%d msg=0x%x -> %lld", h, s, msg, ctl_r);
+            return ctl_r;
+        }
     }
     /* SW-1334: guest-registered class proc for this child window — real
      * Windows routes every message to the window's class wndproc. Only
@@ -21216,7 +21399,7 @@ static int  g_dialog_count = 0;
  * previously underflowed calloc((size_t)w*(size_t)h,3) with h<0 -> NULL ->
  * guest RGBA loop wrote at NULL+off (SIGSEGV RVA 0x12d0c2, x3 deterministic).
  * Even non-NULL 32bpp requests overflowed the 3B/px allocation. */
-typedef struct { uint8_t* px; int w, h; uint16_t vbpp; uint16_t vtop; uint32_t vstride; } MWBmp;
+typedef struct MWBmp { uint8_t* px; int w, h; uint16_t vbpp; uint16_t vtop; uint32_t vstride; } MWBmp;
 
 /* SW-1301: shared GDI draw state declared early — StretchBlt (rop-aware)
  * runs before the original declaration site below. */
@@ -21364,6 +21547,96 @@ __attribute__((ms_abi)) void* mw_CreateStatusWindowW(uint32_t style, const uint1
     void* h = mw_child_register(0x87, parent, (void*)(uintptr_t)id, text, 1, NULL);
     MW_TRACE("[GUI] CreateStatusWindowW(style=0x%x id=%u) -> HWND %p", style, id, h);
     return h;
+}
+/* SW-1584: append ncell slices (each bcx*bcy, left-to-right) of src into the
+ * toolbar's image list, creating the list lazily (real comctl32 owns a
+ * per-toolbar image list; TB_SETIMAGELIST may later replace it). Returns
+ * the index of the first new image, -1 on failure (TB_ADDBITMAP contract). */
+static int mw_tb_imglist_append(MwChild* c, const struct MWBmp* src, int ncell,
+                                int bcx, int bcy) {
+    if (!src || !src->px || bcx < 1 || bcy < 1 || ncell < 1) return -1;
+    MWImgList* L = mw_tb_imglist(c);
+    if (!L) { /* lazy create: ImageList_Create(bcx, bcy, ILC_COLOR24, n, g) */
+        void* h = mw_ImageList_Create(bcx, bcy, 0, ncell, 4);
+        if (!h) return -1;
+        c->tb_himl = h;             /* store BEFORE decoding (SW-1584 fix) */
+        L = mw_tb_imglist(c);
+        if (!L) return -1;
+    }
+    if (L->cx != bcx || L->cy != bcy) return -1; /* cell size is fixed once */
+    if (L->count + ncell > MW_IMGL_IMGMAX) ncell = MW_IMGL_IMGMAX - L->count;
+    if (ncell <= 0) return -1;
+    if (L->count + ncell > L->cap) {
+        int ncap = L->cap ? L->cap : 1;
+        while (ncap < L->count + ncell) ncap *= 2;
+        uint8_t* np = (uint8_t*)realloc(L->px, (size_t)ncap * bcx * bcy * 3);
+        if (!np) return -1;
+        memset(np + (size_t)L->cap * bcx * bcy * 3, 0,
+               (size_t)(ncap - L->cap) * bcx * bcy * 3);
+        L->px = np; L->cap = ncap;
+    }
+    int first = L->count;
+    for (int j = 0; j < ncell; j++)
+        for (int y = 0; y < bcy; y++) {
+            uint8_t* dst = L->px + ((size_t)(first + j) * bcy + y) * bcx * 3;
+            const uint8_t* srow = src->px + ((size_t)y * src->w + (size_t)j * bcx) * 3;
+            memcpy(dst, srow, (size_t)bcx * 3);
+        }
+    L->count += ncell;
+    return first;
+}
+/* SW-1584: TB_ADDBITMAP body. lp = TBADDBITMAP {HINSTANCE hInst @0;
+ * UINT nID @8}. Real comctl32 (wine toolbar.c TOOLBAR_AddBitmap):
+ * hInst NULL -> nID IS an HBITMAP handle; hInst non-NULL -> nID is a
+ * RT_BITMAP resource id; HINST_COMMCTRL (-1) -> builtin sets (honest
+ * generic glyphs here). The strip is sliced into tb_bitcx x tb_bitcy
+ * cells (TB_SETBITMAPSIZE, else GetObjectW dims) and appended to the
+ * toolbar's image list; return = index of the FIRST new image, -1 on
+ * failure. This is how WinRAR's GDI+ PNG icons (22x 48x36 HBITMAPs,
+ * measured sweep113) reach the buttons. */
+static int mw_tb_addbitmap_msg(MwChild* c, uintptr_t lp) {
+    uintptr_t hinst = 0, nid = 0;
+    if (lp && mw_probe_copy((void*)lp, 16, (uint8_t*)&hinst))
+        memcpy(&nid, (uint8_t*)lp + 8, 8);
+    else if (lp) { uint32_t h32 = 0, n32 = 0;
+        if (mw_probe_copy((void*)lp, 4, &h32) &&
+            mw_probe_copy((void*)(lp + 4), 4, &n32)) {
+            hinst = h32; nid = n32; /* x86 TBADDBITMAP */
+        }
+    }
+    int first = -1;
+    struct MWBmp tmpb;
+    memset(&tmpb, 0, sizeof(tmpb));
+    if ((uintptr_t)(int64_t)hinst == (uintptr_t)-1) {
+        /* HINST_COMMCTRL: builtin std set — honest generic glyph */
+        int bcx = c->tb_bitcx ? c->tb_bitcx : 16;
+        int bcy = c->tb_bitcy ? c->tb_bitcy : 15;
+        tmpb.w = bcx; tmpb.h = bcy;
+        tmpb.px = (uint8_t*)malloc((size_t)bcx * bcy * 3);
+        if (tmpb.px) {
+            for (int yy = 0; yy < bcy; yy++)
+                for (int xx = 0; xx < bcx; xx++) {
+                    uint32_t cl = 0xC0C0C0;
+                    if (xx > 1 && xx < bcx - 2 && yy > 1 && yy < bcy - 3)
+                        cl = 0x0078D7;
+                    mwb_set(&tmpb, xx, yy, cl);
+                }
+            first = mw_tb_imglist_append(c, &tmpb, 1, bcx, bcy);
+            free(tmpb.px);
+        }
+    } else if ((void*)(uintptr_t)nid != NULL) {
+        struct MWBmp* src = mw_imgl_srcbmp((void*)(uintptr_t)nid);
+        if (src) {
+            int bcx = c->tb_bitcx ? c->tb_bitcx : src->w;
+            int bcy = c->tb_bitcy ? c->tb_bitcy : src->h;
+            int ncell = (bcx > 0 && src->w >= bcx) ? src->w / bcx : 1;
+            if (ncell < 1) ncell = 1;
+            first = mw_tb_imglist_append(c, src, ncell, bcx, bcy);
+        }
+    }
+    MW_TRACE("[TB] ADDBITMAP hinst=%p nid=%p -> %d", (void*)hinst,
+             (void*)nid, first);
+    return first;
 }
 /* Win95 3D chrome: raised (out) or sunken (in) */
 static void mwb_3d(MWBmp* b, int x, int y, int w, int h, int raised) {
@@ -21553,7 +21826,15 @@ static void mw_engine_paint_children(void* hwnd) {
         if (g_child[i].rw <= 0 || g_child[i].rh <= 0) continue;
         int x = g_child[i].rx, y = g_child[i].ry;
         int w = g_child[i].rw, h = g_child[i].rh;
-        if (x + w > g_surf.w || y + h > g_surf.h) continue; /* bounds */
+        /* SW-1584: CLIP, don't skip. A guest may size a child wider/taller
+         * than the surface (WinRAR's toolbar: 1160px wide from the sum of
+         * real TB_GETITEMRECT widths on a 1024px window). Skipping the
+         * whole child erased the toolbar from the frame; real Windows
+         * clips the child at the window edge. */ {
+            if (x >= g_surf.w || y >= g_surf.h) continue;
+            if (x + w > g_surf.w) w = g_surf.w - x;
+            if (y + h > g_surf.h) h = g_surf.h - y;
+        }
         /* ASCII label from the UTF-16 store */
         char label[24]; int li = 0;
         for (; li < 23 && g_child[i].text[li]; li++) {
@@ -21576,27 +21857,62 @@ static void mw_engine_paint_children(void* hwnd) {
         } else if (!strcmp(g_child[i].cls, "STATIC")) {
             mwb_text8(&g_surf, x + 2, y + 2, label, 0x000000, 1);
         } else if (!strcmp(g_child[i].cls, "TOOLBAR") && g_child[i].tb_nbtn > 0) {
-            /* SW-1520: raised button row with captured labels/glyphs */
-            int bw = g_child[i].tb_bw ? g_child[i].tb_bw : 23;
-            int bh = g_child[i].tb_bh ? g_child[i].tb_bh : 21;
+            /* SW-1520 raised button row; SW-1583 real art: when the guest set
+             * an image list (TB_SETIMAGELIST) each button draws its OWN icon
+             * pixels at TBBUTTON.iBitmap, icon-over-label, with per-button
+             * width = the shared layout model (no truncation, no overlap). */
+            MwChild* tc = &g_child[i];
+            MWImgList* L = mw_tb_imglist(tc);
+            int bh = mw_tb_btn_h(tc);
             if (bh > h) bh = h;
             mwb_fill(&g_surf, x, y, w, h, 0xC0C0C0);
             int bx = x + 2;
-            for (int b = 0; b < g_child[i].tb_nbtn && bx + 8 < x + w; b++) {
-                if (g_child[i].tb_style[b] & 0x01u) { bx += 6; continue; } /* BTNS_SEP */
+            for (int b = 0; b < tc->tb_nbtn && bx + 8 < x + w; b++) {
+                int bw = mw_tb_btn_w(tc, b);
+                if (tc->tb_style[b] & 0x01u) { /* BTNS_SEP divider */
+                    mwb_fill(&g_surf, bx + 2, y + 4, 1, bh - 8, 0x808080);
+                    bx += bw; continue;
+                }
                 mwb_3d(&g_surf, bx, y + 1, bw, bh - 2, 1);
-                /* deterministic mini glyph: icon square + slash */
-                uint32_t gc = 0x404040u + (uint32_t)((g_child[i].tb_cmd[b] * 97) & 0x3Fu) * 0x010101u;
-                mwb_fill(&g_surf, bx + (bw - 12) / 2, y + 1 + (bh - 4 - 12) / 2 + 1, 12, 12, gc);
-                mwb_fill(&g_surf, bx + (bw - 12) / 2 + 2, y + 1 + (bh - 4 - 12) / 2 + 9, 8, 2, 0xFFFFFF);
-                if (g_child[i].tb_stridx[b] >= 0 &&
-                    g_child[i].tb_stridx[b] < g_child[i].tb_pool_n) {
+                const uint16_t* lab = (tc->tb_stridx[b] >= 0 &&
+                                       tc->tb_stridx[b] < tc->tb_pool_n)
+                                      ? tc->tb_pool[tc->tb_stridx[b]] : NULL;
+                int drawn = 0;
+                if (L && tc->tb_bmp[b] >= 0 && tc->tb_bmp[b] < L->count) {
+                    const uint8_t* cell = L->px +
+                        (size_t)tc->tb_bmp[b] * L->cx * L->cy * 3;
+                    int iy = y + 2;
+                    int ix = bx + (bw - L->cx) / 2;
+                    for (int py = 0; py < L->cy && iy + py < y + bh - 11; py++)
+                        for (int px2 = 0; px2 < L->cx; px2++) {
+                            const uint8_t* p3 = cell +
+                                ((size_t)py * L->cx + px2) * 3;
+                            /* ReplaceIcon flattens alpha onto white; a pure
+                             * white pixel is the transparent mask color */
+                            if (p3[0] == 0xFF && p3[1] == 0xFF && p3[2] == 0xFF)
+                                continue;
+                            mwb_set(&g_surf, ix + px2, iy + py,
+                                    ((uint32_t)p3[2] << 16) |
+                                    ((uint32_t)p3[1] << 8) | (uint32_t)p3[0]);
+                        }
+                    drawn = 1;
+                }
+                if (!drawn) {
+                    /* no image list: honest placeholder glyph (SW-1520) */
+                    uint32_t gc = 0x404040u +
+                        (uint32_t)((tc->tb_cmd[b] * 97) & 0x3Fu) * 0x010101u;
+                    mwb_fill(&g_surf, bx + (bw - 12) / 2, y + 3, 12, 12, gc);
+                    mwb_fill(&g_surf, bx + (bw - 12) / 2 + 2, y + 11, 8, 2, 0xFFFFFF);
+                }
+                if (lab && lab[0]) {
                     char bl[18]; int kk = 0;
-                    const uint16_t* s = g_child[i].tb_pool[g_child[i].tb_stridx[b]];
-                    for (; kk < 17 && s[kk]; kk++)
-                        bl[kk] = (s[kk] >= 0x20 && s[kk] < 0x7F) ? (char)s[kk] : '?';
+                    for (; kk < 17 && lab[kk]; kk++)
+                        bl[kk] = (lab[kk] >= 0x20 && lab[kk] < 0x7F) ? (char)lab[kk] : '?';
                     bl[kk] = 0;
-                    if (bl[0]) mwb_text8(&g_surf, bx + 2, y + bh - 9, bl, 0x000000, 1);
+                    int lw8 = mw_tb_labw(lab);
+                    int tx = bx + (bw - lw8) / 2;
+                    if (tx < bx + 1) tx = bx + 1;
+                    mwb_text8(&g_surf, tx, y + bh - 9, bl, 0x000000, 1);
                 }
                 bx += bw;
             }
@@ -21675,16 +21991,20 @@ static void mw_engine_paint_children(void* hwnd) {
             int rows = lv ? (int)lv->items : 0;
             if (rows > (h - (ry2 - y)) / 12) rows = (h - (ry2 - y)) / 12;
             for (int r2 = 0; r2 < rows; r2++) {
-                for (int sub = 0; sub < 2; sub++) {
-                    char it[32]; int k5 = 0;
+                int ix = x + 6;
+                for (int sub = 0; sub < MW_LV_MAXSUB; sub++) { /* SW-1583: all subitems */
+                    char it[44]; int k5 = 0;
                     const uint16_t* s5 = lv->txt[r2][sub];
-                    for (; k5 < 31 && s5[k5]; k5++)
+                    for (; k5 < 43 && s5[k5]; k5++)
                         it[k5] = (s5[k5] >= 0x20 && s5[k5] < 0x7F) ? (char)s5[k5] : '?';
                     it[k5] = 0;
                     if (!it[0]) continue;
-                    int ix = x + 6;
-                    if (sub == 1 && lv->colw[0] > 10) ix = x + 6 + lv->colw[0];
                     mwb_text8(&g_surf, ix, ry2 + 2 + r2 * 12, it, 0x000000, 1);
+                    /* advance by this subitem's column width */
+                    int cw2 = (sub < MW_LV_MAXCOL && lv->colw[sub] > 10)
+                              ? lv->colw[sub] : 100;
+                    ix += cw2;
+                    if (ix > x + w - 8) break;
                 }
                 mwb_fill(&g_surf, x + 2, ry2 + 2 + r2 * 12 + 10, w - 4, 1, 0xF0F0F0);
             }
@@ -24399,31 +24719,8 @@ __attribute__((ms_abi)) void* mw_CreateCompatibleBitmap(void* hdc, int w, int h)
 }
 
 /* ---- SWEEP-010: comctl32 ImageList_Create/Destroy/Add/GetImageCount ----
- * Honest handle-based image lists (procexp64 creates 2 while sizing its
- * toolbar; SWEEP-009 stub map @0x140001f0f/0x140001fab + Destroy x2 at
- * comctl32 internals 0x140132d5e/0x140132d2e). Storage mirrors the MWBmp
- * raster (3 bytes/px BGR, stride = w*3) so ImageList_Add can copy real
- * pixels from any HBITMAP created by our GDI (CreateCompatibleBitmap /
- * LoadImage pool). Slot caps documented; Create validates dimensions. */
-#define MW_IMGL_MAX   16 /* SW-803: 8 overflowed (produkey toolbar imagelist + per-child lists) */
-#define MW_IMGL_BASE  0x00061000u  /* HIMAGELIST handles 0x00061001+i */
-#define MW_IMGL_IMGMAX 512
-typedef struct {
-    int cx, cy, count, cap;
-    uint32_t flags;
-    uint32_t bkcolor; /* SWEEP-014 r2: CLR_NONE=0xFFFFFFFF default */
-    uint8_t* px; /* cap images * cx*cy, 3 bytes/px BGR */
-} MWImgList;
-static MWImgList g_imglist[MW_IMGL_MAX];
-static uint8_t   g_imglist_live[MW_IMGL_MAX];
-
-static MWImgList* mw_imgl_decode(void* h) {
-    uintptr_t v = (uintptr_t)h;
-    if ((v & 0xFFFFF000u) != MW_IMGL_BASE) return 0;
-    int i = (int)(v & 0xFFu) - 1; /* handle = base|(slot+1) */
-    if (i < 0 || i >= MW_IMGL_MAX || !g_imglist_live[i]) return 0;
-    return &g_imglist[i];
-}
+ * Storage pool + decoder moved ABOVE the SW-1583 toolbar layout helpers
+ * (they read image-list geometry; the API entry points stay here). */
 /* source-bitmap decode: HBITMAP from the CreateCompatibleBitmap pool */
 static MWBmp* mw_imgl_srcbmp(void* hbmp) {
     uintptr_t v = (uintptr_t)hbmp;
