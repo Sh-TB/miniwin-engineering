@@ -1,0 +1,17 @@
+{
+  "format": "PE32",
+  "machine": 332,
+  "image_base": 4194304,
+  "size_of_image": 110592,
+  "entry_rva": 23418,
+  "dlls": [
+    {"dll": "ADVAPI32.dll", "imports": 4, "ordinals": 0},
+    {"dll": "USER32.dll", "imports": 14, "ordinals": 0},
+    {"dll": "SHELL32.dll", "imports": 2, "ordinals": 0},
+    {"dll": "KERNEL32.dll", "imports": 84, "ordinals": 0},
+  ],
+  "total_imports": 104,
+  "resolvable_names": 104,
+  "ordinal_imports": 0,
+  "execution": "not-implemented (x86-32 substrate missing)"
+}

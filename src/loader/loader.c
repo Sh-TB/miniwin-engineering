@@ -26154,6 +26154,38 @@ __attribute__((ms_abi)) long mw_LoadIconMetric(void* hinst, const uint16_t* name
 
 
 
+/* ==== SW-IDM2: PE32-classic CRT imports (IDM installer gap list, 6/6) ==== */
+__attribute__((ms_abi)) int mw_GetStringTypeA(uint32_t lcid, uint32_t type, const char* src, int cch, uint16_t* out) {
+    return mw_GetStringTypeExA(lcid, type, src, cch, out); /* same CT_CTYPE1 model */
+}
+__attribute__((ms_abi)) long mw_InterlockedIncrement(long* p) {
+    if (!p) return 0;
+    return __sync_add_and_fetch(p, 1);
+}
+__attribute__((ms_abi)) long mw_InterlockedDecrement(long* p) {
+    if (!p) return 0;
+    return __sync_sub_and_fetch(p, 1);
+}
+/* FreeEnvironmentStringsA already exists at the environment block (0x6325) */
+/* ANSI env block: same engine environment, ASCII projection */
+__attribute__((ms_abi)) char* mw_GetEnvironmentStrings(void) {
+    static char a_block[8192];
+    size_t o = 0;
+    for (char** e = environ; *e && o < sizeof a_block - 2; e++) {
+        size_t n = strlen(*e);
+        if (o + n + 2 > sizeof a_block) break;
+        memcpy(a_block + o, *e, n);
+        o += n;
+        a_block[o++] = 0;
+    }
+    a_block[o] = 0;
+    return a_block;
+}
+__attribute__((ms_abi)) uint32_t mw_SetHandleCount(uint32_t n) {
+    return n; /* classic CRT: number of available handles — engine grants the request */
+}
+/* ==== SW-IDM2 IMPL END ==== */
+
 static ImportEntry g_import_table[] = {
     /* ===== SWEEP-026: SW-1021..1100 batch (50-task elephant round) ===== */
     ENTRY("GDI32.DLL", "GetTextExtentPointW",                   mw_GetTextExtentPointW), /* SW-1069 */
@@ -28679,6 +28711,13 @@ ENTRY("GDI32.DLL", "GetCharacterPlacementW",                mw_GetCharacterPlace
     ENTRY("SHLWAPI.DLL", "IUnknown_QueryService",               mw_IUnknown_QueryService),
     ENTRY("SHLWAPI.DLL", "QISearch",                            mw_QISearch),
     ENTRY("COMCTL32.DLL", "LoadIconMetric",                     mw_LoadIconMetric),
+    /* -- SW-IDM2: PE32-classic CRT gap list (IDM installer) -- */
+    ENTRY("KERNEL32.DLL", "GetStringTypeA",                     mw_GetStringTypeA),
+    ENTRY("KERNEL32.DLL", "InterlockedIncrement",               mw_InterlockedIncrement),
+    ENTRY("KERNEL32.DLL", "InterlockedDecrement",               mw_InterlockedDecrement),
+    ENTRY("KERNEL32.DLL", "FreeEnvironmentStringsA",            mw_FreeEnvironmentStringsA),
+    ENTRY("KERNEL32.DLL", "GetEnvironmentStrings",              mw_GetEnvironmentStrings),
+    ENTRY("KERNEL32.DLL", "SetHandleCount",                     mw_SetHandleCount),
 };
 
 #define NUM_IMPORTS (sizeof(g_import_table) / sizeof(g_import_table[0]))
@@ -28843,6 +28882,139 @@ static void iat_patch_slot(uint64_t iat_off, int slot, void* target) {
  * PE Loading
  * ============================================================ */
 
+/* ============================================================
+ * SW-IDM1 — PE32 (x86-32) analysis pipeline.
+ * IDM 6.43 (idman643build16.exe, sha256 276aa7e4ff7682445b011ebe6ac3920e...)
+ * and the whole portable-suite class are PE32; the engine previously hard-
+ * failed at the optional-header magic. This pipeline parses headers,
+ * sections, the full import table, and audits every import name against the
+ * engine dispatch table (g_import_table) — the x86 bring-up gap map — into
+ * miniwin-results/<exe>/analysis/pe32_report.json + stderr summary.
+ * Execution of 32-bit guest code is NOT implemented (engine x64-only):
+ * this is the honest parsed frontier, not an emulation claim.
+ * ============================================================ */
+static int analyze_pe32(const char* filepath, uint8_t* filedata, long fsize, uint32_t pe_off) {
+    CoffHeader* coff = (CoffHeader*)(filedata + pe_off + 4);
+    PeOptHeader32* opt = (PeOptHeader32*)(filedata + pe_off + 4 + sizeof(CoffHeader));
+    if (opt->Magic != PE32_MAGIC) {
+        fprintf(stderr, "[ERROR] Unknown PE optional header magic 0x%x\n", opt->Magic);
+        return -1;
+    }
+    uint32_t image_base = opt->ImageBase;
+    uint32_t ep_rva = opt->AddressOfEntryPoint;
+    uint32_t num_dd = opt->NumberOfRvaAndSizes;
+    uint32_t nsec = coff->NumberOfSections;
+    /* section table sits after SizeOfOptionalHeader (224 for PE32), NOT after
+     * the fixed struct — the first run read garbage section headers */
+    SectionHeader* sec = (SectionHeader*)((uint8_t*)coff + sizeof(CoffHeader) + coff->SizeOfOptionalHeader);
+
+    printf("[PE32] machine=0x%x (i386) subsystem=%u\n", coff->Machine, opt->Subsystem);
+    printf("[PE32] image_base=0x%x size_of_image=0x%x entry_rva=0x%x sections=%u dd=%u\n",
+           image_base, opt->SizeOfImage, ep_rva, nsec, num_dd);
+    for (uint32_t i = 0; i < nsec; i++) {
+        char nm[9]; memcpy(nm, sec[i].Name, 8); nm[8] = 0;
+        printf("[PE32]   section %-8.8s va=0x%05x vsz=0x%05x raw=0x%05x fl=0x%08x\n",
+               nm, sec[i].VirtualAddress, sec[i].VirtualSize, sec[i].SizeOfRawData, sec[i].Characteristics);
+    }
+
+    /* ---- import table audit against the engine dispatch table ---- */
+    DataDirectory* dd = (DataDirectory*)(opt + 1);
+    uint32_t imp_rva = (num_dd > 1) ? dd[1].VirtualAddress : 0;
+    uint32_t imp_sz = (num_dd > 1) ? dd[1].Size : 0;
+    uint32_t total_names = 0, total_resolvable = 0, ordinals = 0;
+    FILE* rep = NULL;
+    char path[512];
+    if (g_result_base_dir[0]) {
+        snprintf(path, sizeof path, "%s/analysis/pe32_report.json", g_result_base_dir);
+        rep = fopen(path, "w");
+    }
+    if (rep) fprintf(rep, "{\n  \"format\": \"PE32\",\n  \"machine\": %u,\n  \"image_base\": %u,\n  \"size_of_image\": %u,\n  \"entry_rva\": %u,\n  \"dlls\": [\n", coff->Machine, image_base, opt->SizeOfImage, ep_rva);
+    printf("[PE32] import table audit (engine x64 dispatch coverage):\n");
+    if (imp_rva && fsize > 0) {
+        /* map RVA->file offset via sections */
+        for (uint32_t d = 0, off = 0; ; d++, off += 20) {
+            if (off + 20 > imp_sz || imp_rva + off + 20 > (uint32_t)fsize) break;
+            uint32_t dofs = imp_rva + off;
+            /* find file offset for dofs */
+            uint8_t* pd = NULL;
+            for (uint32_t s = 0; s < nsec; s++) {
+                if (dofs >= sec[s].VirtualAddress && dofs < sec[s].VirtualAddress + sec[s].SizeOfRawData) {
+                    pd = filedata + sec[s].PointerToRawData + (dofs - sec[s].VirtualAddress);
+                    break;
+                }
+            }
+            if (!pd) break;
+            ImportDirectoryEntry* ide = (ImportDirectoryEntry*)pd;
+            if (!ide->Name && !ide->FirstThunk) break;
+            char dll[64] = "?";
+            for (uint32_t s = 0; s < nsec; s++) {
+                if (ide->Name >= sec[s].VirtualAddress && ide->Name < sec[s].VirtualAddress + sec[s].SizeOfRawData) {
+                    uint8_t* nm = filedata + sec[s].PointerToRawData + (ide->Name - sec[s].VirtualAddress);
+                    size_t k = 0;
+                    for (; k < 63 && nm[k]; k++) dll[k] = (char)nm[k];
+                    dll[k] = 0;
+                    break;
+                }
+            }
+            uint32_t ndll = 0, nres = 0, nord = 0;
+            uint32_t thunk_rva = ide->OriginalFirstThunk ? ide->OriginalFirstThunk : ide->FirstThunk;
+            for (uint32_t t = 0; ; t++) {
+                uint32_t tofs = thunk_rva + t * 4;
+                uint8_t* pt = NULL;
+                for (uint32_t s = 0; s < nsec; s++) {
+                    if (tofs >= sec[s].VirtualAddress && tofs < sec[s].VirtualAddress + sec[s].SizeOfRawData) {
+                        pt = filedata + sec[s].PointerToRawData + (tofs - sec[s].VirtualAddress);
+                        break;
+                    }
+                }
+                if (!pt) break;
+                uint32_t thunk;
+                memcpy(&thunk, pt, 4);
+                if (!thunk) break;
+                total_names++;
+                ndll++;
+                if (thunk & 0x80000000u) { ordinals++; nord++; continue; }
+                uint32_t hofs = thunk + 2; /* skip Hint */
+                uint8_t* pn = NULL;
+                for (uint32_t s = 0; s < nsec; s++) {
+                    if (hofs >= sec[s].VirtualAddress && hofs < sec[s].VirtualAddress + sec[s].SizeOfRawData) {
+                        pn = filedata + sec[s].PointerToRawData + (hofs - sec[s].VirtualAddress);
+                        break;
+                    }
+                }
+                if (!pn) continue;
+                char name[128];
+                size_t k = 0;
+                for (; k < 127 && pn[k]; k++) name[k] = (char)pn[k];
+                name[k] = 0;
+                int found = 0;
+                for (size_t t2 = 0; t2 < NUM_IMPORTS; t2++)
+                    if (strcmp(g_import_table[t2].name, name) == 0) { found = 1; break; }
+                if (found) total_resolvable++;
+                else {
+                    printf("[PE32]   gap: %s!%s\n", dll, name);
+                    if (rep) fprintf(rep, "    {\"dll\": \"%s\", \"name\": \"%s\", \"resolved\": false}%s\n",
+                                     dll, name, "");
+                }
+            }
+            printf("[PE32]   %-16s imports=%u resolvable=%u ordinals=%u\n", dll, ndll, ndll - nord, nord);
+            if (rep) fprintf(rep, "    {\"dll\": \"%s\", \"imports\": %u, \"ordinals\": %u},\n", dll, ndll, nord);
+        }
+    }
+    printf("[PE32] TOTAL imports=%u engine-resolvable=%u (%.1f%%) ordinals=%u\n",
+           total_names, total_resolvable, total_names ? 100.0 * total_resolvable / total_names : 0.0, ordinals);
+    printf("[PE32] EXECUTION FRONTIER: x86-32 guest code cannot execute on the x64 engine\n");
+    printf("[PE32] (32-bit compat-mode substrate not implemented). PE32 headers, sections\n");
+    printf("[PE32] and import plan parsed honestly; gap list above = the x86 bring-up map.\n");
+    if (rep) {
+        fprintf(rep, "  ],\n  \"total_imports\": %u,\n  \"resolvable_names\": %u,\n  \"ordinal_imports\": %u,\n  \"execution\": \"not-implemented (x86-32 substrate missing)\"\n}\n", total_names, total_resolvable, ordinals);
+        fclose(rep);
+        printf("[PE32] report: %s/analysis/pe32_report.json\n", g_result_base_dir);
+    }
+    fflush(stdout);
+    return 2; /* signal main: analyzed, do not execute */
+}
+
 static int load_pe(const char* filepath) {
     /* BUG-072: fopen() on a DIRECTORY succeeds on Linux, but ftell() then
      * fails (returns -1) and malloc((size_t)-1) returns NULL -> SEGV at the
@@ -28898,6 +29070,15 @@ static int load_pe(const char* filepath) {
     }
 
     CoffHeader* coff = (CoffHeader*)(filedata + pe_off + 4);
+    {
+        /* SW-IDM1: PE32 (x86-32) branch — analyze instead of hard-fail */
+        uint16_t magic;
+        memcpy(&magic, filedata + pe_off + 4 + sizeof(CoffHeader), 2);
+        if (magic == PE32_MAGIC) {
+            free(filedata);
+            return 2; /* main runs analyze_pe32 with a fresh read */
+        }
+    }
     PeOptHeader64* opt = (PeOptHeader64*)(filedata + pe_off + 4 + sizeof(CoffHeader));
 
     if (opt->Magic != PE32PLUS_MAGIC) {
@@ -29779,7 +29960,25 @@ int main(int argc, char* argv[]) {
     resolve_proc_init();
 
     /* Load PE */
-    if (load_pe(exe_path) != 0) {
+    int lrc = load_pe(exe_path);
+    if (lrc == 2) {
+        /* SW-IDM1: PE32 — run the analysis pipeline, exit honestly */
+        FILE* f = fopen(exe_path, "rb");
+        if (!f) return 95;
+        fseek(f, 0, SEEK_END);
+        long fsize = ftell(f);
+        fseek(f, 0, SEEK_SET);
+        uint8_t* fd = (uint8_t*)malloc((size_t)fsize);
+        if (!fd || fread(fd, 1, (size_t)fsize, f) != (size_t)fsize) { fclose(f); free(fd); return 95; }
+        fclose(f);
+        uint32_t pe_off;
+        memcpy(&pe_off, fd + 0x3C, 4);
+        int arc = analyze_pe32(exe_path, fd, fsize, pe_off);
+        free(fd);
+        if (g_trace_log) { fprintf(g_trace_log, "  ]\n}\n"); fclose(g_trace_log); g_trace_log = NULL; }
+        return arc == 2 ? 95 : (arc ? 95 : 0);
+    }
+    if (lrc != 0) {
         fprintf(stderr, "[ERROR] Failed to load PE\n");
         return 1;
     }
