@@ -1,0 +1,5 @@
+[TRACE] Command line: /tmp/npp/notepad++.exe
+[MessageBoxW] Configurator: Load langs.xml failed!
+[MessageBox] dialog #1 rendered -> miniwin-results/notepad++.exe/screenshots/messagebox_1.bmp
+[MessageBoxW] Load stylers.xml failed: C:\Users\MiniWin\AppData\Roaming\Notepad++\stylers.xml
+[MessageBox] dialog #2 rendered -> miniwin-results/notepad++.exe/screenshots/messagebox_2.bmp

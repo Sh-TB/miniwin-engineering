@@ -1,0 +1,10 @@
+== L0 L0-20261101-064443-notepad++: wine=/home/z/my-project/tools/wine-10.1-amd64/bin/wine64 (wine-10.1)
+   exe=/tmp/npp/notepad++.exe channels=['relay', 'module'] prefix=/home/z/my-project/workspace/miniwin-engineering/artifacts/l0-matrix/notepadpp/L0-20261101-064443-notepad++/prefix-template
+   booting prefix template ...
+   capture relay: WINEDEBUG=+relay cap=48.0MB t=20.0s
+     -> 12360707 bytes, exit=255
+   capture module: WINEDEBUG=+module,+loaddll cap=64MB t=20.0s
+     -> 535858 bytes, exit=255
+   normalize relay ...
+   normalize module ...
+== done: /home/z/my-project/workspace/miniwin-engineering/artifacts/l0-matrix/notepadpp/L0-20261101-064443-notepad++

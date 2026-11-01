@@ -1,0 +1,1554 @@
+{
+  "diff_version": "1.0",
+  "generated_utc": "2026-11-01T06:42:20.582728+00:00",
+  "summary": {
+    "wine_events": 30788,
+    "miniwin_events": 1539,
+    "wine_unique_functions": 422,
+    "miniwin_unique_functions": 8,
+    "missing_count": 298,
+    "extra_count": 0,
+    "freq_delta_count": 6,
+    "retval_mismatch_count": 1,
+    "first_divergence": {
+      "position": 328,
+      "function": "msvcrt.__set_app_type",
+      "wine_calls_total": 1,
+      "why": "app-attributed call with zero MiniWin calls"
+    }
+  },
+  "missing": [
+    {
+      "function": "msvcrt.__getmainargs",
+      "wine_calls": 1,
+      "app_attributed": true
+    },
+    {
+      "function": "ucrtbase.__p___argc",
+      "wine_calls": 2,
+      "app_attributed": false
+    },
+    {
+      "function": "ucrtbase.__p___argv",
+      "wine_calls": 2,
+      "app_attributed": false
+    },
+    {
+      "function": "msvcrt.__set_app_type",
+      "wine_calls": 1,
+      "app_attributed": true
+    },
+    {
+      "function": "ucrtbase.__stdio_common_vswprintf",
+      "wine_calls": 8,
+      "app_attributed": false
+    },
+    {
+      "function": "ucrtbase._close",
+      "wine_calls": 2,
+      "app_attributed": false
+    },
+    {
+      "function": "ucrtbase._configure_narrow_argv",
+      "wine_calls": 2,
+      "app_attributed": false
+    },
+    {
+      "function": "ucrtbase._fstat64i32",
+      "wine_calls": 1,
+      "app_attributed": false
+    },
+    {
+      "function": "ucrtbase._get_initial_narrow_environment",
+      "wine_calls": 2,
+      "app_attributed": false
+    },
+    {
+      "function": "ucrtbase._initialize_narrow_environment",
+      "wine_calls": 2,
+      "app_attributed": false
+    },
+    {
+      "function": "msvcrt._initterm",
+      "wine_calls": 2,
+      "app_attributed": true
+    },
+    {
+      "function": "msvcrt._isatty",
+      "wine_calls": 3,
+      "app_attributed": true
+    },
+    {
+      "function": "msvcrt._onexit",
+      "wine_calls": 7,
+      "app_attributed": true
+    },
+    {
+      "function": "ucrtbase._read",
+      "wine_calls": 1,
+      "app_attributed": false
+    },
+    {
+      "function": "ucrtbase._set_app_type",
+      "wine_calls": 2,
+      "app_attributed": false
+    },
+    {
+      "function": "ucrtbase._strdup",
+      "wine_calls": 3,
+      "app_attributed": false
+    },
+    {
+      "function": "ucrtbase._stricmp",
+      "wine_calls": 1,
+      "app_attributed": false
+    },
+    {
+      "function": "ntdll._vsnwprintf",
+      "wine_calls": 25,
+      "app_attributed": false
+    },
+    {
+      "function": "ucrtbase._wcsdup",
+      "wine_calls": 3,
+      "app_attributed": false
+    },
+    {
+      "function": "msvcrt._wcsicmp",
+      "wine_calls": 60,
+      "app_attributed": false
+    },
+    {
+      "function": "ucrtbase._wcsnicmp",
+      "wine_calls": 12,
+      "app_attributed": false
+    },
+    {
+      "function": "ucrtbase._wgetenv",
+      "wine_calls": 3,
+      "app_attributed": false
+    },
+    {
+      "function": "advapi32.AdjustTokenPrivileges",
+      "wine_calls": 3,
+      "app_attributed": true
+    },
+    {
+      "function": "KERNEL32.BaseThreadInitThunk",
+      "wine_calls": 2,
+      "app_attributed": false
+    },
+    {
+      "function": "ucrtbase.calloc",
+      "wine_calls": 6,
+      "app_attributed": false
+    },
+    {
+      "function": "KERNEL32.CloseHandle",
+      "wine_calls": 26,
+      "app_attributed": true
+    },
+    {
+      "function": "combase.CoGetMalloc",
+      "wine_calls": 1,
+      "app_attributed": false
+    },
+    {
+      "function": "KERNEL32.CompareFileTime",
+      "wine_calls": 1,
+      "app_attributed": true
+    },
+    {
+      "function": "combase.CoTaskMemAlloc",
+      "wine_calls": 4,
+      "app_attributed": false
+    },
+    {
+      "function": "KERNEL32.CreateEventW",
+      "wine_calls": 13,
+      "app_attributed": true
+    },
+    {
+      "function": "KERNEL32.CreateFileW",
+      "wine_calls": 6,
+      "app_attributed": true
+    },
+    {
+      "function": "KERNEL32.CreateIoCompletionPort",
+      "wine_calls": 1,
+      "app_attributed": false
+    },
+    {
+      "function": "KERNEL32.CreateJobObjectW",
+      "wine_calls": 1,
+      "app_attributed": false
+    },
+    {
+      "function": "KERNEL32.CreateMutexW",
+      "wine_calls": 1,
+      "app_attributed": false
+    },
+    {
+      "function": "KERNEL32.CreateNamedPipeA",
+      "wine_calls": 1,
+      "app_attributed": false
+    },
+    {
+      "function": "kernelbase.CreateNamedPipeW",
+      "wine_calls": 1,
+      "app_attributed": false
+    },
+    {
+      "function": "kernelbase.CreateProcessW",
+      "wine_calls": 1,
+      "app_attributed": false
+    },
+    {
+      "function": "KERNEL32.CreateSemaphoreW",
+      "wine_calls": 5,
+      "app_attributed": true
+    },
+    {
+      "function": "KERNEL32.CreateThread",
+      "wine_calls": 5,
+      "app_attributed": false
+    },
+    {
+      "function": "KERNEL32.CreateThreadpoolCleanupGroup",
+      "wine_calls": 1,
+      "app_attributed": false
+    },
+    {
+      "function": "KERNEL32.DeleteFileW",
+      "wine_calls": 1,
+      "app_attributed": true
+    },
+    {
+      "function": "KERNEL32.DisableThreadLibraryCalls",
+      "wine_calls": 14,
+      "app_attributed": false
+    },
+    {
+      "function": "DllMain[OLEAUT32.dll]",
+      "wine_calls": 2,
+      "app_attributed": false
+    },
+    {
+      "function": "msvcrt.fflush",
+      "wine_calls": 1,
+      "app_attributed": true
+    },
+    {
+      "function": "KERNEL32.FindClose",
+      "wine_calls": 6,
+      "app_attributed": true
+    },
+    {
+      "function": "KERNEL32.FindFirstFileW",
+      "wine_calls": 6,
+      "app_attributed": true
+    },
+    {
+      "function": "KERNEL32.FlsAlloc",
+      "wine_calls": 3,
+      "app_attributed": false
+    },
+    {
+      "function": "KERNEL32.FlsSetValue",
+      "wine_calls": 8,
+      "app_attributed": false
+    },
+    {
+      "function": "msvcrt.fputc",
+      "wine_calls": 19,
+      "app_attributed": true
+    },
+    {
+      "function": "msvcrt.fputs",
+      "wine_calls": 33,
+      "app_attributed": true
+    },
+    {
+      "function": "ws2_32.freeaddrinfo",
+      "wine_calls": 1,
+      "app_attributed": false
+    },
+    {
+      "function": "KERNEL32.FreeEnvironmentStringsA",
+      "wine_calls": 6,
+      "app_attributed": false
+    },
+    {
+      "function": "KERNEL32.FreeEnvironmentStringsW",
+      "wine_calls": 1,
+      "app_attributed": false
+    },
+    {
+      "function": "kernelbase.FreeLibrary",
+      "wine_calls": 2,
+      "app_attributed": false
+    },
+    {
+      "function": "KERNEL32.GetACP",
+      "wine_calls": 6,
+      "app_attributed": false
+    },
+    {
+      "function": "KERNEL32.GetActiveProcessorCount",
+      "wine_calls": 1,
+      "app_attributed": true
+    },
+    {
+      "function": "KERNEL32.GetActiveProcessorGroupCount",
+      "wine_calls": 1,
+      "app_attributed": true
+    },
+    {
+      "function": "ws2_32.getaddrinfo",
+      "wine_calls": 1,
+      "app_attributed": false
+    },
+    {
+      "function": "KERNEL32.GetCommandLineA",
+      "wine_calls": 6,
+      "app_attributed": false
+    },
+    {
+      "function": "KERNEL32.GetCommandLineW",
+      "wine_calls": 13,
+      "app_attributed": true
+    },
+    {
+      "function": "kernelbase.GetComputerNameExW",
+      "wine_calls": 1,
+      "app_attributed": false
+    },
+    {
+      "function": "KERNEL32.GetComputerNameW",
+      "wine_calls": 1,
+      "app_attributed": false
+    },
+    {
+      "function": "KERNEL32.GetCPInfo",
+      "wine_calls": 12,
+      "app_attributed": false
+    },
+    {
+      "function": "KERNEL32.GetCurrentDirectoryW",
+      "wine_calls": 2,
+      "app_attributed": true
+    },
+    {
+      "function": "KERNEL32.GetEnvironmentStringsA",
+      "wine_calls": 6,
+      "app_attributed": false
+    },
+    {
+      "function": "KERNEL32.GetEnvironmentStringsW",
+      "wine_calls": 1,
+      "app_attributed": false
+    },
+    {
+      "function": "KERNEL32.GetEnvironmentVariableW",
+      "wine_calls": 1,
+      "app_attributed": false
+    },
+    {
+      "function": "KERNEL32.GetFileAttributesW",
+      "wine_calls": 2,
+      "app_attributed": true
+    },
+    {
+      "function": "KERNEL32.GetFileInformationByHandle",
+      "wine_calls": 1,
+      "app_attributed": true
+    },
+    {
+      "function": "KERNEL32.GetFileType",
+      "wine_calls": 21,
+      "app_attributed": false
+    },
+    {
+      "function": "ws2_32.gethostname",
+      "wine_calls": 1,
+      "app_attributed": false
+    },
+    {
+      "function": "kernelbase.GetLogicalProcessorInformationEx",
+      "wine_calls": 4,
+      "app_attributed": false
+    },
+    {
+      "function": "KERNEL32.GetModuleFileNameA",
+      "wine_calls": 6,
+      "app_attributed": false
+    },
+    {
+      "function": "KERNEL32.GetModuleFileNameW",
+      "wine_calls": 7,
+      "app_attributed": false
+    },
+    {
+      "function": "KERNEL32.GetModuleHandleA",
+      "wine_calls": 1,
+      "app_attributed": true
+    },
+    {
+      "function": "KERNEL32.GetModuleHandleW",
+      "wine_calls": 21,
+      "app_attributed": true
+    },
+    {
+      "function": "KERNEL32.GetPrivateProfileSectionW",
+      "wine_calls": 1,
+      "app_attributed": false
+    },
+    {
+      "function": "KERNEL32.GetProcessAffinityMask",
+      "wine_calls": 1,
+      "app_attributed": true
+    },
+    {
+      "function": "KERNEL32.GetStartupInfoA",
+      "wine_calls": 6,
+      "app_attributed": false
+    },
+    {
+      "function": "KERNEL32.GetStdHandle",
+      "wine_calls": 18,
+      "app_attributed": false
+    },
+    {
+      "function": "KERNEL32.GetStringTypeW",
+      "wine_calls": 12,
+      "app_attributed": false
+    },
+    {
+      "function": "KERNEL32.GetSystemDirectoryW",
+      "wine_calls": 3,
+      "app_attributed": false
+    },
+    {
+      "function": "kernelbase.GetSystemFirmwareTable",
+      "wine_calls": 2,
+      "app_attributed": false
+    },
+    {
+      "function": "KERNEL32.GetUserDefaultLocaleName",
+      "wine_calls": 6,
+      "app_attributed": false
+    },
+    {
+      "function": "advapi32.GetUserNameW",
+      "wine_calls": 4,
+      "app_attributed": false
+    },
+    {
+      "function": "KERNEL32.GetVersion",
+      "wine_calls": 1,
+      "app_attributed": true
+    },
+    {
+      "function": "KERNEL32.GetVersionExW",
+      "wine_calls": 6,
+      "app_attributed": false
+    },
+    {
+      "function": "kernelbase.GetWindowsDirectoryW",
+      "wine_calls": 2,
+      "app_attributed": false
+    },
+    {
+      "function": "KERNEL32.GlobalMemoryStatusEx",
+      "wine_calls": 1,
+      "app_attributed": true
+    },
+    {
+      "function": "KERNEL32.HeapCreate",
+      "wine_calls": 3,
+      "app_attributed": false
+    },
+    {
+      "function": "KERNEL32.HeapFree",
+      "wine_calls": 4191,
+      "app_attributed": false
+    },
+    {
+      "function": "KERNEL32.InitializeCriticalSectionEx",
+      "wine_calls": 38,
+      "app_attributed": false
+    },
+    {
+      "function": "KERNEL32.IsBadStringPtrW",
+      "wine_calls": 13,
+      "app_attributed": false
+    },
+    {
+      "function": "KERNEL32.IsProcessorFeaturePresent",
+      "wine_calls": 9,
+      "app_attributed": true
+    },
+    {
+      "function": "KERNEL32.IsValidCodePage",
+      "wine_calls": 6,
+      "app_attributed": false
+    },
+    {
+      "function": "kernelbase.IsWow64Process",
+      "wine_calls": 1,
+      "app_attributed": false
+    },
+    {
+      "function": "kernelbase.KernelBaseGetGlobalData",
+      "wine_calls": 3,
+      "app_attributed": false
+    },
+    {
+      "function": "KERNEL32.LCMapStringW",
+      "wine_calls": 24,
+      "app_attributed": false
+    },
+    {
+      "function": "ntdll.LdrAddRefDll",
+      "wine_calls": 3,
+      "app_attributed": false
+    },
+    {
+      "function": "ntdll.LdrDisableThreadCalloutsForDll",
+      "wine_calls": 24,
+      "app_attributed": false
+    },
+    {
+      "function": "ntdll.LdrGetDllFullName",
+      "wine_calls": 13,
+      "app_attributed": false
+    },
+    {
+      "function": "ntdll.LdrGetDllHandle",
+      "wine_calls": 5,
+      "app_attributed": false
+    },
+    {
+      "function": "ntdll.LdrGetDllHandleEx",
+      "wine_calls": 32,
+      "app_attributed": false
+    },
+    {
+      "function": "ntdll.LdrGetDllPath",
+      "wine_calls": 2,
+      "app_attributed": false
+    },
+    {
+      "function": "ntdll.LdrGetProcedureAddress",
+      "wine_calls": 32,
+      "app_attributed": false
+    },
+    {
+      "function": "ntdll.LdrLoadDll",
+      "wine_calls": 2,
+      "app_attributed": false
+    },
+    {
+      "function": "ntdll.LdrQueryImageFileExecutionOptions",
+      "wine_calls": 2,
+      "app_attributed": false
+    },
+    {
+      "function": "ntdll.LdrResolveDelayLoadedAPI",
+      "wine_calls": 4,
+      "app_attributed": false
+    },
+    {
+      "function": "ntdll.LdrSetDefaultDllDirectories",
+      "wine_calls": 1,
+      "app_attributed": false
+    },
+    {
+      "function": "ntdll.LdrUnloadDll",
+      "wine_calls": 2,
+      "app_attributed": false
+    },
+    {
+      "function": "kernelbase.LoadLibraryW",
+      "wine_calls": 2,
+      "app_attributed": false
+    },
+    {
+      "function": "KERNEL32.LocaleNameToLCID",
+      "wine_calls": 6,
+      "app_attributed": false
+    },
+    {
+      "function": "advapi32.LookupPrivilegeValueW",
+      "wine_calls": 4,
+      "app_attributed": true
+    },
+    {
+      "function": "kernelbase.MapViewOfFile",
+      "wine_calls": 1,
+      "app_attributed": false
+    },
+    {
+      "function": "msvcrt.memcmp",
+      "wine_calls": 175,
+      "app_attributed": true
+    },
+    {
+      "function": "ucrtbase.memcpy",
+      "wine_calls": 3,
+      "app_attributed": true
+    },
+    {
+      "function": "msvcrt.memmove",
+      "wine_calls": 41,
+      "app_attributed": true
+    },
+    {
+      "function": "ucrtbase.memset",
+      "wine_calls": 2,
+      "app_attributed": true
+    },
+    {
+      "function": "KERNEL32.MoveFileWithProgressW",
+      "wine_calls": 1,
+      "app_attributed": true
+    },
+    {
+      "function": "KERNEL32.MultiByteToWideChar",
+      "wine_calls": 12,
+      "app_attributed": false
+    },
+    {
+      "function": "ntdll.NtAdjustPrivilegesToken",
+      "wine_calls": 3,
+      "app_attributed": false
+    },
+    {
+      "function": "ntdll.NtAllocateVirtualMemory",
+      "wine_calls": 8,
+      "app_attributed": false
+    },
+    {
+      "function": "ntdll.NtClose",
+      "wine_calls": 146,
+      "app_attributed": false
+    },
+    {
+      "function": "ntdll.NtCreateEvent",
+      "wine_calls": 15,
+      "app_attributed": false
+    },
+    {
+      "function": "ntdll.NtCreateFile",
+      "wine_calls": 9,
+      "app_attributed": false
+    },
+    {
+      "function": "ntdll.NtCreateIoCompletion",
+      "wine_calls": 1,
+      "app_attributed": false
+    },
+    {
+      "function": "ntdll.NtCreateJobObject",
+      "wine_calls": 1,
+      "app_attributed": false
+    },
+    {
+      "function": "ntdll.NtCreateKey",
+      "wine_calls": 90,
+      "app_attributed": false
+    },
+    {
+      "function": "ntdll.NtCreateMutant",
+      "wine_calls": 1,
+      "app_attributed": false
+    },
+    {
+      "function": "ntdll.NtCreateNamedPipeFile",
+      "wine_calls": 1,
+      "app_attributed": false
+    },
+    {
+      "function": "ntdll.NtCreateSemaphore",
+      "wine_calls": 5,
+      "app_attributed": false
+    },
+    {
+      "function": "ntdll.NtCreateUserProcess",
+      "wine_calls": 1,
+      "app_attributed": false
+    },
+    {
+      "function": "ntdll.NtDelayExecution",
+      "wine_calls": 2,
+      "app_attributed": false
+    },
+    {
+      "function": "ntdll.NtEnumerateKey",
+      "wine_calls": 2,
+      "app_attributed": false
+    },
+    {
+      "function": "ntdll.NtFreeVirtualMemory",
+      "wine_calls": 5,
+      "app_attributed": false
+    },
+    {
+      "function": "ntdll.NtFsControlFile",
+      "wine_calls": 1,
+      "app_attributed": false
+    },
+    {
+      "function": "ntdll.NtGetNlsSectionPtr",
+      "wine_calls": 9,
+      "app_attributed": false
+    },
+    {
+      "function": "ntdll.NtGetTickCount",
+      "wine_calls": 2,
+      "app_attributed": false
+    },
+    {
+      "function": "ntdll.NtMapViewOfSection",
+      "wine_calls": 1,
+      "app_attributed": false
+    },
+    {
+      "function": "ntdll.NtOpenDirectoryObject",
+      "wine_calls": 2,
+      "app_attributed": false
+    },
+    {
+      "function": "ntdll.NtOpenFile",
+      "wine_calls": 11,
+      "app_attributed": false
+    },
+    {
+      "function": "ntdll.NtOpenKeyEx",
+      "wine_calls": 73,
+      "app_attributed": false
+    },
+    {
+      "function": "ntdll.NtOpenProcessToken",
+      "wine_calls": 4,
+      "app_attributed": false
+    },
+    {
+      "function": "ntdll.NtOpenSection",
+      "wine_calls": 1,
+      "app_attributed": false
+    },
+    {
+      "function": "ntdll.NtPowerInformation",
+      "wine_calls": 1,
+      "app_attributed": false
+    },
+    {
+      "function": "ntdll.NtQueryAttributesFile",
+      "wine_calls": 5,
+      "app_attributed": false
+    },
+    {
+      "function": "ntdll.NtQueryDefaultLocale",
+      "wine_calls": 3,
+      "app_attributed": false
+    },
+    {
+      "function": "ntdll.NtQueryDirectoryFile",
+      "wine_calls": 9,
+      "app_attributed": false
+    },
+    {
+      "function": "ntdll.NtQueryInformationFile",
+      "wine_calls": 10,
+      "app_attributed": false
+    },
+    {
+      "function": "ntdll.NtQueryInformationProcess",
+      "wine_calls": 12,
+      "app_attributed": false
+    },
+    {
+      "function": "ntdll.NtQueryKey",
+      "wine_calls": 9,
+      "app_attributed": false
+    },
+    {
+      "function": "ntdll.NtQuerySystemInformation",
+      "wine_calls": 11,
+      "app_attributed": false
+    },
+    {
+      "function": "ntdll.NtQuerySystemInformationEx",
+      "wine_calls": 4,
+      "app_attributed": false
+    },
+    {
+      "function": "ntdll.NtQuerySystemTime",
+      "wine_calls": 9,
+      "app_attributed": false
+    },
+    {
+      "function": "ntdll.NtQueryValueKey",
+      "wine_calls": 38,
+      "app_attributed": false
+    },
+    {
+      "function": "ntdll.NtQueryVirtualMemory",
+      "wine_calls": 3,
+      "app_attributed": false
+    },
+    {
+      "function": "ntdll.NtQueryVolumeInformationFile",
+      "wine_calls": 22,
+      "app_attributed": false
+    },
+    {
+      "function": "ntdll.NtReadFile",
+      "wine_calls": 9,
+      "app_attributed": false
+    },
+    {
+      "function": "ntdll.NtReleaseMutant",
+      "wine_calls": 1,
+      "app_attributed": false
+    },
+    {
+      "function": "ntdll.NtReleaseSemaphore",
+      "wine_calls": 353,
+      "app_attributed": false
+    },
+    {
+      "function": "ntdll.NtResetEvent",
+      "wine_calls": 3,
+      "app_attributed": false
+    },
+    {
+      "function": "ntdll.NtResumeThread",
+      "wine_calls": 6,
+      "app_attributed": false
+    },
+    {
+      "function": "ntdll.NtSetEvent",
+      "wine_calls": 17,
+      "app_attributed": false
+    },
+    {
+      "function": "ntdll.NtSetInformationFile",
+      "wine_calls": 8,
+      "app_attributed": false
+    },
+    {
+      "function": "ntdll.NtSetInformationJobObject",
+      "wine_calls": 2,
+      "app_attributed": false
+    },
+    {
+      "function": "ntdll.NtSetInformationProcess",
+      "wine_calls": 7,
+      "app_attributed": false
+    },
+    {
+      "function": "ntdll.NtSetInformationThread",
+      "wine_calls": 1,
+      "app_attributed": false
+    },
+    {
+      "function": "ntdll.NtSetValueKey",
+      "wine_calls": 103,
+      "app_attributed": false
+    },
+    {
+      "function": "ntdll.NtUnmapViewOfSection",
+      "wine_calls": 1,
+      "app_attributed": false
+    },
+    {
+      "function": "win32u.NtUserCallNoParam",
+      "wine_calls": 6,
+      "app_attributed": false
+    },
+    {
+      "function": "win32u.NtUserGetSystemDpiForProcess",
+      "wine_calls": 2,
+      "app_attributed": false
+    },
+    {
+      "function": "win32u.NtUserInitializeClientPfnArrays",
+      "wine_calls": 2,
+      "app_attributed": false
+    },
+    {
+      "function": "win32u.NtUserSetProcessDpiAwarenessContext",
+      "wine_calls": 1,
+      "app_attributed": false
+    },
+    {
+      "function": "ntdll.NtWaitForMultipleObjects",
+      "wine_calls": 373,
+      "app_attributed": false
+    },
+    {
+      "function": "ntdll.NtWriteFile",
+      "wine_calls": 31,
+      "app_attributed": false
+    },
+    {
+      "function": "advapi32.OpenProcessToken",
+      "wine_calls": 4,
+      "app_attributed": true
+    },
+    {
+      "function": "shlwapi.PathAddBackslashW",
+      "wine_calls": 2,
+      "app_attributed": false
+    },
+    {
+      "function": "shlwapi.PathAppendW",
+      "wine_calls": 6,
+      "app_attributed": false
+    },
+    {
+      "function": "shlwapi.PathFileExistsW",
+      "wine_calls": 3,
+      "app_attributed": false
+    },
+    {
+      "function": "ucrtbase.qsort",
+      "wine_calls": 1,
+      "app_attributed": false
+    },
+    {
+      "function": "kernelbase.QueryActCtxSettingsW",
+      "wine_calls": 4,
+      "app_attributed": false
+    },
+    {
+      "function": "msvcrt.realloc",
+      "wine_calls": 2,
+      "app_attributed": true
+    },
+    {
+      "function": "advapi32.RegCloseKey",
+      "wine_calls": 47,
+      "app_attributed": false
+    },
+    {
+      "function": "advapi32.RegCreateKeyExW",
+      "wine_calls": 30,
+      "app_attributed": false
+    },
+    {
+      "function": "advapi32.RegCreateKeyW",
+      "wine_calls": 13,
+      "app_attributed": false
+    },
+    {
+      "function": "kernelbase.RegEnumKeyExW",
+      "wine_calls": 2,
+      "app_attributed": false
+    },
+    {
+      "function": "advapi32.RegEnumKeyW",
+      "wine_calls": 2,
+      "app_attributed": false
+    },
+    {
+      "function": "KERNEL32.RegisterWaitForInputIdle",
+      "wine_calls": 2,
+      "app_attributed": false
+    },
+    {
+      "function": "advapi32.RegOpenKeyExW",
+      "wine_calls": 3,
+      "app_attributed": false
+    },
+    {
+      "function": "advapi32.RegOpenKeyW",
+      "wine_calls": 4,
+      "app_attributed": false
+    },
+    {
+      "function": "advapi32.RegQueryInfoKeyW",
+      "wine_calls": 3,
+      "app_attributed": false
+    },
+    {
+      "function": "advapi32.RegQueryValueExW",
+      "wine_calls": 28,
+      "app_attributed": false
+    },
+    {
+      "function": "advapi32.RegSetValueExW",
+      "wine_calls": 47,
+      "app_attributed": false
+    },
+    {
+      "function": "KERNEL32.ReleaseMutex",
+      "wine_calls": 1,
+      "app_attributed": false
+    },
+    {
+      "function": "KERNEL32.ReleaseSemaphore",
+      "wine_calls": 353,
+      "app_attributed": true
+    },
+    {
+      "function": "KERNEL32.ResetEvent",
+      "wine_calls": 2,
+      "app_attributed": true
+    },
+    {
+      "function": "rpcrt4.RpcServerListen",
+      "wine_calls": 1,
+      "app_attributed": false
+    },
+    {
+      "function": "rpcrt4.RpcServerRegisterIf",
+      "wine_calls": 1,
+      "app_attributed": false
+    },
+    {
+      "function": "rpcrt4.RpcServerUseProtseqEpW",
+      "wine_calls": 1,
+      "app_attributed": false
+    },
+    {
+      "function": "ntdll.RtlAcquirePebLock",
+      "wine_calls": 17,
+      "app_attributed": false
+    },
+    {
+      "function": "ntdll.RtlAllocateHeap",
+      "wine_calls": 1762,
+      "app_attributed": false
+    },
+    {
+      "function": "ntdll.RtlCreateHeap",
+      "wine_calls": 3,
+      "app_attributed": false
+    },
+    {
+      "function": "ntdll.RtlCreateProcessParametersEx",
+      "wine_calls": 1,
+      "app_attributed": false
+    },
+    {
+      "function": "ntdll.RtlCreateUserThread",
+      "wine_calls": 5,
+      "app_attributed": false
+    },
+    {
+      "function": "ntdll.RtlDeleteCriticalSection",
+      "wine_calls": 157,
+      "app_attributed": true
+    },
+    {
+      "function": "ntdll.RtlDestroyProcessParameters",
+      "wine_calls": 1,
+      "app_attributed": false
+    },
+    {
+      "function": "ntdll.RtlDetermineDosPathNameType_U",
+      "wine_calls": 1,
+      "app_attributed": false
+    },
+    {
+      "function": "ntdll.RtlDosPathNameToNtPathName_U",
+      "wine_calls": 27,
+      "app_attributed": false
+    },
+    {
+      "function": "ntdll.RtlDosPathNameToNtPathName_U_WithStatus",
+      "wine_calls": 1,
+      "app_attributed": false
+    },
+    {
+      "function": "ntdll.RtlEnterCriticalSection",
+      "wine_calls": 607,
+      "app_attributed": true
+    },
+    {
+      "function": "ntdll.RtlFindClearBitsAndSet",
+      "wine_calls": 7,
+      "app_attributed": false
+    },
+    {
+      "function": "ntdll.RtlFindExportedRoutineByName",
+      "wine_calls": 5,
+      "app_attributed": false
+    },
+    {
+      "function": "ntdll.RtlFlsAlloc",
+      "wine_calls": 3,
+      "app_attributed": false
+    },
+    {
+      "function": "ntdll.RtlFlsSetValue",
+      "wine_calls": 8,
+      "app_attributed": false
+    },
+    {
+      "function": "ntdll.RtlFreeHeap",
+      "wine_calls": 4242,
+      "app_attributed": false
+    },
+    {
+      "function": "ntdll.RtlFreeUnicodeString",
+      "wine_calls": 29,
+      "app_attributed": false
+    },
+    {
+      "function": "ntdll.RtlGetCurrentDirectory_U",
+      "wine_calls": 2,
+      "app_attributed": false
+    },
+    {
+      "function": "ntdll.RtlGetCurrentPeb",
+      "wine_calls": 3,
+      "app_attributed": false
+    },
+    {
+      "function": "ntdll.RtlGetFullPathName_U",
+      "wine_calls": 1,
+      "app_attributed": false
+    },
+    {
+      "function": "ntdll.RtlGetLocaleFileMappingAddress",
+      "wine_calls": 3,
+      "app_attributed": false
+    },
+    {
+      "function": "ntdll.RtlGetSystemTimePrecise",
+      "wine_calls": 4,
+      "app_attributed": false
+    },
+    {
+      "function": "ntdll.RtlGetVersion",
+      "wine_calls": 4,
+      "app_attributed": false
+    },
+    {
+      "function": "ntdll.RtlImageNtHeader",
+      "wine_calls": 2,
+      "app_attributed": false
+    },
+    {
+      "function": "ntdll.RtlInitAnsiString",
+      "wine_calls": 33,
+      "app_attributed": false
+    },
+    {
+      "function": "ntdll.RtlInitCodePageTable",
+      "wine_calls": 9,
+      "app_attributed": false
+    },
+    {
+      "function": "ntdll.RtlInitializeCriticalSection",
+      "wine_calls": 209,
+      "app_attributed": true
+    },
+    {
+      "function": "ntdll.RtlInitializeCriticalSectionEx",
+      "wine_calls": 47,
+      "app_attributed": false
+    },
+    {
+      "function": "ntdll.RtlInitializeNtUserPfn",
+      "wine_calls": 2,
+      "app_attributed": false
+    },
+    {
+      "function": "ntdll.RtlInitUnicodeString",
+      "wine_calls": 347,
+      "app_attributed": false
+    },
+    {
+      "function": "ntdll.RtlIsNameLegalDOS8Dot3",
+      "wine_calls": 3,
+      "app_attributed": false
+    },
+    {
+      "function": "ntdll.RtlIsProcessorFeaturePresent",
+      "wine_calls": 9,
+      "app_attributed": false
+    },
+    {
+      "function": "ntdll.RtlLeaveCriticalSection",
+      "wine_calls": 615,
+      "app_attributed": true
+    },
+    {
+      "function": "ntdll.RtlNormalizeProcessParams",
+      "wine_calls": 1,
+      "app_attributed": false
+    },
+    {
+      "function": "ntdll.RtlNtStatusToDosError",
+      "wine_calls": 341,
+      "app_attributed": false
+    },
+    {
+      "function": "ntdll.RtlOemStringToUnicodeString",
+      "wine_calls": 1,
+      "app_attributed": false
+    },
+    {
+      "function": "ntdll.RtlOpenCurrentUser",
+      "wine_calls": 3,
+      "app_attributed": false
+    },
+    {
+      "function": "ntdll.RtlQueryActivationContextApplicationSettings",
+      "wine_calls": 4,
+      "app_attributed": false
+    },
+    {
+      "function": "ntdll.RtlQueryDynamicTimeZoneInformation",
+      "wine_calls": 3,
+      "app_attributed": false
+    },
+    {
+      "function": "ntdll.RtlQueryEnvironmentVariable_U",
+      "wine_calls": 8,
+      "app_attributed": false
+    },
+    {
+      "function": "ntdll.RtlQueryInformationActivationContext",
+      "wine_calls": 6,
+      "app_attributed": false
+    },
+    {
+      "function": "ntdll.RtlReAllocateHeap",
+      "wine_calls": 1,
+      "app_attributed": false
+    },
+    {
+      "function": "ntdll.RtlReleasePath",
+      "wine_calls": 2,
+      "app_attributed": false
+    },
+    {
+      "function": "ntdll.RtlReleasePebLock",
+      "wine_calls": 17,
+      "app_attributed": false
+    },
+    {
+      "function": "ntdll.RtlRetrieveNtUserPfn",
+      "wine_calls": 2,
+      "app_attributed": false
+    },
+    {
+      "function": "ntdll.RtlRunOnceExecuteOnce",
+      "wine_calls": 17,
+      "app_attributed": false
+    },
+    {
+      "function": "ntdll.RtlSetCurrentDirectory_U",
+      "wine_calls": 1,
+      "app_attributed": false
+    },
+    {
+      "function": "ntdll.RtlSetUnhandledExceptionFilter",
+      "wine_calls": 3,
+      "app_attributed": false
+    },
+    {
+      "function": "ntdll.RtlSizeHeap",
+      "wine_calls": 5,
+      "app_attributed": false
+    },
+    {
+      "function": "ntdll.RtlTimeToSecondsSince1970",
+      "wine_calls": 2,
+      "app_attributed": false
+    },
+    {
+      "function": "ntdll.RtlTryEnterCriticalSection",
+      "wine_calls": 8,
+      "app_attributed": false
+    },
+    {
+      "function": "ntdll.RtlUnicodeStringToAnsiString",
+      "wine_calls": 9,
+      "app_attributed": false
+    },
+    {
+      "function": "ntdll.RtlUnicodeToMultiByteN",
+      "wine_calls": 6,
+      "app_attributed": false
+    },
+    {
+      "function": "kernelbase.SetComputerNameExA",
+      "wine_calls": 2,
+      "app_attributed": false
+    },
+    {
+      "function": "KERNEL32.SetConsoleCtrlHandler",
+      "wine_calls": 8,
+      "app_attributed": true
+    },
+    {
+      "function": "kernelbase.SetCurrentDirectoryW",
+      "wine_calls": 1,
+      "app_attributed": false
+    },
+    {
+      "function": "KERNEL32.SetDefaultDllDirectories",
+      "wine_calls": 1,
+      "app_attributed": true
+    },
+    {
+      "function": "KERNEL32.SetEvent",
+      "wine_calls": 16,
+      "app_attributed": true
+    },
+    {
+      "function": "KERNEL32.SetFileApisToOEM",
+      "wine_calls": 1,
+      "app_attributed": true
+    },
+    {
+      "function": "KERNEL32.SetFileTime",
+      "wine_calls": 1,
+      "app_attributed": true
+    },
+    {
+      "function": "KERNEL32.SetInformationJobObject",
+      "wine_calls": 2,
+      "app_attributed": false
+    },
+    {
+      "function": "KERNEL32.SetStdHandle",
+      "wine_calls": 8,
+      "app_attributed": false
+    },
+    {
+      "function": "KERNEL32.SetThreadDescription",
+      "wine_calls": 1,
+      "app_attributed": false
+    },
+    {
+      "function": "setupapi.SetupDiDestroyDeviceInfoList",
+      "wine_calls": 1,
+      "app_attributed": false
+    },
+    {
+      "function": "setupapi.SetupDiGetClassDevsW",
+      "wine_calls": 1,
+      "app_attributed": false
+    },
+    {
+      "function": "shell32.SHGetFolderPathW",
+      "wine_calls": 3,
+      "app_attributed": false
+    },
+    {
+      "function": "kernelbase.Sleep",
+      "wine_calls": 2,
+      "app_attributed": false
+    },
+    {
+      "function": "ucrtbase.strchr",
+      "wine_calls": 1,
+      "app_attributed": false
+    },
+    {
+      "function": "ucrtbase.strcmp",
+      "wine_calls": 7,
+      "app_attributed": false
+    },
+    {
+      "function": "ucrtbase.strcpy",
+      "wine_calls": 2,
+      "app_attributed": false
+    },
+    {
+      "function": "combase.StringFromGUID2",
+      "wine_calls": 1,
+      "app_attributed": false
+    },
+    {
+      "function": "msvcrt.strlen",
+      "wine_calls": 2,
+      "app_attributed": true
+    },
+    {
+      "function": "ucrtbase.strncmp",
+      "wine_calls": 1,
+      "app_attributed": false
+    },
+    {
+      "function": "ucrtbase.strtoul",
+      "wine_calls": 1,
+      "app_attributed": false
+    },
+    {
+      "function": "oleaut32.SysAllocString",
+      "wine_calls": 1,
+      "app_attributed": true
+    },
+    {
+      "function": "oleaut32.SysAllocStringLen",
+      "wine_calls": 3,
+      "app_attributed": true
+    },
+    {
+      "function": "oleaut32.SysFreeString",
+      "wine_calls": 6,
+      "app_attributed": true
+    },
+    {
+      "function": "oleaut32.SysStringLen",
+      "wine_calls": 2,
+      "app_attributed": true
+    },
+    {
+      "function": "KERNEL32.TlsAlloc",
+      "wine_calls": 7,
+      "app_attributed": false
+    },
+    {
+      "function": "KERNEL32.TlsGetValue",
+      "wine_calls": 283,
+      "app_attributed": false
+    },
+    {
+      "function": "KERNEL32.TlsSetValue",
+      "wine_calls": 9,
+      "app_attributed": false
+    },
+    {
+      "function": "ntdll.TpAllocCleanupGroup",
+      "wine_calls": 1,
+      "app_attributed": false
+    },
+    {
+      "function": "kernelbase.UnmapViewOfFile",
+      "wine_calls": 1,
+      "app_attributed": false
+    },
+    {
+      "function": "user32.User32InitializeImmEntryTable",
+      "wine_calls": 2,
+      "app_attributed": false
+    },
+    {
+      "function": "oleaut32.VariantClear",
+      "wine_calls": 4,
+      "app_attributed": true
+    },
+    {
+      "function": "oleaut32.VariantCopy",
+      "wine_calls": 1,
+      "app_attributed": true
+    },
+    {
+      "function": "KERNEL32.VirtualAlloc",
+      "wine_calls": 5,
+      "app_attributed": true
+    },
+    {
+      "function": "KERNEL32.VirtualFree",
+      "wine_calls": 5,
+      "app_attributed": true
+    },
+    {
+      "function": "kernelbase.WaitForMultipleObjects",
+      "wine_calls": 1,
+      "app_attributed": false
+    },
+    {
+      "function": "KERNEL32.WaitForMultipleObjectsEx",
+      "wine_calls": 1,
+      "app_attributed": false
+    },
+    {
+      "function": "KERNEL32.WaitForSingleObject",
+      "wine_calls": 371,
+      "app_attributed": true
+    },
+    {
+      "function": "ntdll.wcschr",
+      "wine_calls": 12,
+      "app_attributed": false
+    },
+    {
+      "function": "ntdll.wcschr(6fffffc95820 L\"ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&')",
+      "wine_calls": 10,
+      "app_attributed": false
+    },
+    {
+      "function": "msvcrt.wcscmp",
+      "wine_calls": 44,
+      "app_attributed": true
+    },
+    {
+      "function": "ucrtbase.wcscpy",
+      "wine_calls": 1,
+      "app_attributed": false
+    },
+    {
+      "function": "ucrtbase.wcslen",
+      "wine_calls": 2,
+      "app_attributed": false
+    },
+    {
+      "function": "ntdll.wcspbrk",
+      "wine_calls": 11,
+      "app_attributed": false
+    },
+    {
+      "function": "KERNEL32.WideCharToMultiByte",
+      "wine_calls": 76,
+      "app_attributed": true
+    },
+    {
+      "function": "KERNEL32.WriteFile",
+      "wine_calls": 31,
+      "app_attributed": true
+    }
+  ],
+  "extra": [],
+  "frequency_deltas": [
+    {
+      "function": "msvcrt._beginthreadex",
+      "wine": 3,
+      "miniwin": 1
+    },
+    {
+      "function": "msvcrt.free",
+      "wine": 1904,
+      "miniwin": 1
+    },
+    {
+      "function": "KERNEL32.GetLastError",
+      "wine": 3,
+      "miniwin": 4
+    },
+    {
+      "function": "kernelbase.GetProcAddress",
+      "wine": 14,
+      "miniwin": 2
+    },
+    {
+      "function": "msvcrt.malloc",
+      "wine": 1529,
+      "miniwin": 1517
+    },
+    {
+      "function": "KERNEL32.ReadFile",
+      "wine": 8,
+      "miniwin": 5
+    }
+  ],
+  "retval_mismatches": [
+    {
+      "function": "KERNEL32.GetLastError",
+      "wine": "00000000",
+      "miniwin": "1300",
+      "wine_n": 3,
+      "miniwin_n": 4
+    }
+  ]
+}

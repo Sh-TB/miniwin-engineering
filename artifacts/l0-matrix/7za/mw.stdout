@@ -1,0 +1,25 @@
+[MiniWin] Loading /home/z/my-project/workspace/miniwin-engineering/artifacts/l0-matrix/apps/7za.exe...
+
+7-Zip (a) 25.01 (x64) : Copyright (c) 1999-2025 Igor Pavlov : 2025-08-03
+
+Open archive: out.7z
+--
+Path = out.7z
+Type = 7z
+Physical Size = 505292
+Headers Size = 162
+Method = LZMA2:3m BCJ
+Solid = -
+Blocks = 1
+
+Scanning the drive:
+1 file, 2140672 bytes (2091 KiB)
+
+Updating archive: out.7z
+
+Add new data to archive: 1 file, 2140672 bytes (2091 KiB)
+
+
+Files read from disk: 1
+Archive size: 505292 bytes (494 KiB)
+Everything is Ok

@@ -1,0 +1,10 @@
+== L0 L0-20261101-064454-Autoruns64: wine=/home/z/my-project/tools/wine-10.1-amd64/bin/wine64 (wine-10.1)
+   exe=/home/z/my-project/workspace/miniwin-engineering/artifacts/sweep50/dl/autoruns64/Autoruns64.exe channels=['relay', 'module'] prefix=/home/z/my-project/workspace/miniwin-engineering/artifacts/l0-matrix/autoruns64/L0-20261101-064454-Autoruns64/prefix-template
+   booting prefix template ...
+   capture relay: WINEDEBUG=+relay cap=48.0MB t=20.0s
+     -> 52996652 bytes, exit=-9 TRUNCATED
+   capture module: WINEDEBUG=+module,+loaddll cap=64MB t=20.0s
+     -> 530600 bytes, exit=-9 TIMEOUT
+   normalize relay ...
+   normalize module ...
+== done: /home/z/my-project/workspace/miniwin-engineering/artifacts/l0-matrix/autoruns64/L0-20261101-064454-Autoruns64
