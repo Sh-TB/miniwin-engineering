@@ -1,0 +1,115 @@
+{
+  "trace_id": "minwin-9be4610a",
+  "source": "MiniWin loader api_trace.json (NOT Wine relay)",
+  "exe": "WinRAR.exe",
+  "total_api_calls": 1176,
+  "threads": {
+    "T9f80": 1176
+  },
+  "frontier_events": [
+    "Import resolution: 510 resolved, 0 unresolved (total 510)",
+    "IMalloc::Free(external 0xffffffff80000000) \u2014 NOT freed (SW-1207 crash vector closed; honest leak)"
+  ],
+  "per_function_top": [
+    [
+      "HeapAlloc",
+      149
+    ],
+    [
+      "HeapFree",
+      87
+    ],
+    [
+      "InitializeCriticalSectionEx",
+      83
+    ],
+    [
+      "GetProcAddress",
+      47
+    ],
+    [
+      "EnterCriticalSection",
+      36
+    ],
+    [
+      "LeaveCriticalSection",
+      36
+    ],
+    [
+      "SetLastError",
+      24
+    ],
+    [
+      "GetModuleHandleW",
+      20
+    ],
+    [
+      "-> 0x205d1c0",
+      18
+    ],
+    [
+      "-> 0x200af10",
+      18
+    ],
+    [
+      "GetProcessAffinityMask",
+      18
+    ],
+    [
+      "VirtualProtect",
+      9
+    ],
+    [
+      "LoadLibraryA",
+      6
+    ],
+    [
+      "MultiByteToWideChar",
+      6
+    ],
+    [
+      "WideCharToMultiByte",
+      6
+    ],
+    [
+      "LoadLibraryExW",
+      5
+    ],
+    [
+      "GetFileAttributesW",
+      4
+    ],
+    [
+      "GetStdHandle",
+      3
+    ],
+    [
+      "AcquireSRWLockExclusive",
+      3
+    ],
+    [
+      "ReleaseSRWLockExclusive",
+      3
+    ],
+    [
+      "GetSysColor",
+      3
+    ],
+    [
+      "QueryPerformanceCounter",
+      2
+    ],
+    [
+      "FlsAlloc",
+      2
+    ],
+    [
+      "-> NULL ",
+      2
+    ],
+    [
+      "GetLastError",
+      2
+    ]
+  ]
+}

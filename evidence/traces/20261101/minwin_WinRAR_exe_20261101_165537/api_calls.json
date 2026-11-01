@@ -1,0 +1,5882 @@
+[
+  {
+    "thread_id": "T9f80",
+    "function": "PE Loader: file=miniwin-results/WinRAR.exe/binary/WinRAR.exe size=3354320",
+    "line_number": 1
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "PE Loader: ImageBase=0x140000000 EP=0x1cb590 SizeOfImage=0x381000 Sections=8",
+    "line_number": 2
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "PE Loader: Mapped at 0x140000000 (forced via MAP_FIXED)",
+    "line_number": 3
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "Section [0] .text    VA=0x00001000 VS=0x001f4341 Raw=0x001f4400 Ch=0x60000020",
+    "line_number": 4
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "Section [1] .rdata   VA=0x001f6000 VS=0x000536ca Raw=0x00053800 Ch=0x40000040",
+    "line_number": 5
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "Section [2] .data    VA=0x0024a000 VS=0x0005792c Raw=0x0000b200 Ch=0xc0000040",
+    "line_number": 6
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "Section [3] .pdata   VA=0x002a2000 VS=0x0000cedc Raw=0x0000d000 Ch=0x40000040",
+    "line_number": 7
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "Section [4] .didat   VA=0x002af000 VS=0x00000130 Raw=0x00000200 Ch=0xc0000040",
+    "line_number": 8
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "Section [5] .fptable VA=0x002b0000 VS=0x00000100 Raw=0x00000200 Ch=0xc0000040",
+    "line_number": 9
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "Section [6] .rsrc    VA=0x002b1000 VS=0x000cdf00 Raw=0x000ce000 Ch=0x40000040",
+    "line_number": 10
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "Section [7] .reloc   VA=0x0037f000 VS=0x00001e18 Raw=0x00002000 Ch=0x42000040",
+    "line_number": 11
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "Import Directory: RVA=0x246128 Size=0x12c",
+    "line_number": 12
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "Import DLL: KERNEL32.dll (IAT RVA=0x1f61a0, ILT RVA=0x2463f8)",
+    "line_number": 13
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[0] OpenSemaphoreW -> 0x203a160",
+    "line_number": 14
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[1] CreateMutexExW -> 0x2025dd0",
+    "line_number": 15
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[2] CreateSemaphoreExW -> 0x203b9b0",
+    "line_number": 16
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[3] GetModuleFileNameA -> 0x2067bb0",
+    "line_number": 17
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[4] GetModuleHandleExW -> 0x2090ec0",
+    "line_number": 18
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[5] FormatMessageW -> 0x2046e50",
+    "line_number": 19
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[6] WideCharToMultiByte -> 0x203a3e0",
+    "line_number": 20
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[7] GetDiskFreeSpaceW -> 0x208c9b0",
+    "line_number": 21
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[8] FindCloseChangeNotification -> 0x20626e0",
+    "line_number": 22
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[9] FindFirstChangeNotificationW -> 0x200ea60",
+    "line_number": 23
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[10] GetCompressedFileSizeW -> 0x2069170",
+    "line_number": 24
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[11] GetLocalTime -> 0x2016050",
+    "line_number": 25
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[12] ConnectNamedPipe -> 0x204a7d0",
+    "line_number": 26
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[13] DisconnectNamedPipe -> 0x204a960",
+    "line_number": 27
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[14] PeekNamedPipe -> 0x200a890",
+    "line_number": 28
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[15] CreateNamedPipeW -> 0x203a180",
+    "line_number": 29
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[16] WaitNamedPipeW -> 0x2062bc0",
+    "line_number": 30
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[17] GetOverlappedResult -> 0x2039cd0",
+    "line_number": 31
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[18] CreateEventW -> 0x2022ae0",
+    "line_number": 32
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[19] LoadResource -> 0x2046fb0",
+    "line_number": 33
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[20] SizeofResource -> 0x200a910",
+    "line_number": 34
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[21] FindResourceW -> 0x209af90",
+    "line_number": 35
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[22] GetFileInformationByHandle -> 0x20441d0",
+    "line_number": 36
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[23] LocalFree -> 0x2085e50",
+    "line_number": 37
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[24] DeleteFileW -> 0x2082d40",
+    "line_number": 38
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[25] RemoveDirectoryW -> 0x2082400",
+    "line_number": 39
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[26] DeviceIoControl -> 0x20399c0",
+    "line_number": 40
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[27] BackupRead -> 0x203a0b0",
+    "line_number": 41
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[28] BackupSeek -> 0x203a0e0",
+    "line_number": 42
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[29] GetLongPathNameW -> 0x2011050",
+    "line_number": 43
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[30] GetShortPathNameW -> 0x2065a20",
+    "line_number": 44
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[31] GetStdHandle -> 0x20aef50",
+    "line_number": 45
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[32] FlushFileBuffers -> 0x2044370",
+    "line_number": 46
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[33] GetFileType -> 0x2015820",
+    "line_number": 47
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[34] GetFileTime -> 0x204ed20",
+    "line_number": 48
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[35] CreateDirectoryW -> 0x2082f80",
+    "line_number": 49
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[36] GetDiskFreeSpaceExW -> 0x2080c80",
+    "line_number": 50
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[37] GetFileAttributesW -> 0x2082a90",
+    "line_number": 51
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[38] SetFileAttributesW -> 0x200a5c0",
+    "line_number": 52
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[39] FindNextFileW -> 0x205a380",
+    "line_number": 53
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[40] VirtualAlloc -> 0x20415c0",
+    "line_number": 54
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[41] VirtualFree -> 0x2041890",
+    "line_number": 55
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[42] SetCurrentDirectoryW -> 0x2083850",
+    "line_number": 56
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[43] GetCurrentDirectoryW -> 0x2072e90",
+    "line_number": 57
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[44] GetFullPathNameW -> 0x2089d70",
+    "line_number": 58
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[45] GetModuleFileNameW -> 0x2079a40",
+    "line_number": 59
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[46] FoldStringW -> 0x20660a0",
+    "line_number": 60
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[47] LoadLibraryExW -> 0x2087f20",
+    "line_number": 61
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[48] ExpandEnvironmentStringsW -> 0x2089a60",
+    "line_number": 62
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[49] CompareStringA -> 0x200f930",
+    "line_number": 63
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[50] GetCurrentThread -> 0x2008c70",
+    "line_number": 64
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[51] SetThreadPriority -> 0x204fae0",
+    "line_number": 65
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[52] SetPriorityClass -> 0x2047550",
+    "line_number": 66
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[53] GetSystemDirectoryW -> 0x206c8f0",
+    "line_number": 67
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[54] SetThreadExecutionState -> 0x204d530",
+    "line_number": 68
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[55] InitializeCriticalSection -> 0x2057ba0",
+    "line_number": 69
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[56] EnterCriticalSection -> 0x2066960",
+    "line_number": 70
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[57] LeaveCriticalSection -> 0x204dac0",
+    "line_number": 71
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[58] DeleteCriticalSection -> 0x2057bc0",
+    "line_number": 72
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[59] SetEvent -> 0x2068e30",
+    "line_number": 73
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[60] ResetEvent -> 0x2068b60",
+    "line_number": 74
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[61] CreateSemaphoreW -> 0x203a980",
+    "line_number": 75
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[62] CreateThread -> 0x2042310",
+    "line_number": 76
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[63] GetProcessAffinityMask -> 0x202b240",
+    "line_number": 77
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[64] FileTimeToLocalFileTime -> 0x2063e50",
+    "line_number": 78
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[65] GetSystemTime -> 0x2037600",
+    "line_number": 79
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[66] SystemTimeToTzSpecificLocalTime -> 0x200af70",
+    "line_number": 80
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[67] TzSpecificLocalTimeToSystemTime -> 0x2063410",
+    "line_number": 81
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[68] FileTimeToSystemTime -> 0x205d280",
+    "line_number": 82
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[69] SystemTimeToFileTime -> 0x205d5a0",
+    "line_number": 83
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[70] CompareStringW -> 0x2014ec0",
+    "line_number": 84
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[71] GetCPInfo -> 0x202ac50",
+    "line_number": 85
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[72] IsDBCSLeadByte -> 0x200a5a0",
+    "line_number": 86
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[73] EnumResourceNamesW -> 0x200a930",
+    "line_number": 87
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[74] EnumResourceLanguagesW -> 0x200ea00",
+    "line_number": 88
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[75] BeginUpdateResourceW -> 0x203a100",
+    "line_number": 89
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[76] UpdateResourceW -> 0x203a120",
+    "line_number": 90
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[77] EndUpdateResourceW -> 0x203a140",
+    "line_number": 91
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[78] GetLocaleInfoW -> 0x2040430",
+    "line_number": 92
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[79] GetNumberFormatW -> 0x201d9c0",
+    "line_number": 93
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[80] GetLogicalDrives -> 0x200a5d0",
+    "line_number": 94
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[81] GetTempPathW -> 0x2078b80",
+    "line_number": 95
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[82] SetEnvironmentVariableW -> 0x208f5e0",
+    "line_number": 96
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[83] GlobalMemoryStatusEx -> 0x205ce80",
+    "line_number": 97
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[84] LockResource -> 0x200a8e0",
+    "line_number": 98
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[85] GetDateFormatW -> 0x203ec90",
+    "line_number": 99
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[86] GetTimeFormatW -> 0x203eda0",
+    "line_number": 100
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[87] SuspendThread -> 0x204fc40",
+    "line_number": 101
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[88] ResumeThread -> 0x204f400",
+    "line_number": 102
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[89] ReleaseSemaphore -> 0x2067900",
+    "line_number": 103
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[90] GetSystemTimeAsFileTime -> 0x202fec0",
+    "line_number": 104
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[91] Beep -> 0x204b560",
+    "line_number": 105
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[92] FindNextChangeNotification -> 0x20626d0",
+    "line_number": 106
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[93] SetErrorMode -> 0x200a870",
+    "line_number": 107
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[94] GetThreadPriority -> 0x204f140",
+    "line_number": 108
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[95] GetPriorityClass -> 0x200ea10",
+    "line_number": 109
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[96] CompareFileTime -> 0x2039b60",
+    "line_number": 110
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[97] WaitForMultipleObjects -> 0x2070e00",
+    "line_number": 111
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[98] MulDiv -> 0x2039d20",
+    "line_number": 112
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[99] OutputDebugStringA -> 0x201ff30",
+    "line_number": 113
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[100] GetEnvironmentVariableW -> 0x2088de0",
+    "line_number": 114
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[101] HeapSize -> 0x2074b90",
+    "line_number": 115
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[102] WriteConsoleW -> 0x2013870",
+    "line_number": 116
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[103] GetStringTypeW -> 0x205b200",
+    "line_number": 117
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[104] FreeEnvironmentStringsW -> 0x20505e0",
+    "line_number": 118
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[105] GetEnvironmentStringsW -> 0x2030500",
+    "line_number": 119
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[106] GetCommandLineA -> 0x2058a80",
+    "line_number": 120
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[107] IsValidCodePage -> 0x200a480",
+    "line_number": 121
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[108] FindFirstFileExW -> 0x2079ec0",
+    "line_number": 122
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[109] SetStdHandle -> 0x2062000",
+    "line_number": 123
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[110] LCMapStringW -> 0x20432e0",
+    "line_number": 124
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[111] FlsFree -> 0x2062740",
+    "line_number": 125
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[112] FlsSetValue -> 0x2009710",
+    "line_number": 126
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[113] FlsGetValue -> 0x20096f0",
+    "line_number": 127
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[114] FlsAlloc -> 0x202a440",
+    "line_number": 128
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[115] HeapReAlloc -> 0x208d8a0",
+    "line_number": 129
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[116] GetFileSizeEx -> 0x2044080",
+    "line_number": 130
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[117] ExitProcess -> 0x2060be0",
+    "line_number": 131
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[118] GetConsoleOutputCP -> 0x2062b70",
+    "line_number": 132
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[119] ReadConsoleW -> 0x2043910",
+    "line_number": 133
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[120] GetConsoleMode -> 0x203e3d0",
+    "line_number": 134
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[121] SetFilePointerEx -> 0x2043ce0",
+    "line_number": 135
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[122] FreeLibraryAndExitThread -> 0x2060e20",
+    "line_number": 136
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[123] ExitThread -> 0x2036fc0",
+    "line_number": 137
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[124] TlsFree -> 0x200af60",
+    "line_number": 138
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[125] TlsSetValue -> 0x2044ca0",
+    "line_number": 139
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[126] TlsGetValue -> 0x2020580",
+    "line_number": 140
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[127] TlsAlloc -> 0x202a2b0",
+    "line_number": 141
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[128] InitializeCriticalSectionAndSpinCount -> 0x2065050",
+    "line_number": 142
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[129] EncodePointer -> 0x2013dd0",
+    "line_number": 143
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[130] RtlUnwindEx -> 0x206e0b0",
+    "line_number": 144
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[131] RtlPcToFileHeader -> 0x200a300",
+    "line_number": 145
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[132] InitializeSListHead -> 0x200a370",
+    "line_number": 146
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[133] IsProcessorFeaturePresent -> 0x200a2c0",
+    "line_number": 147
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[134] TerminateProcess -> 0x2031a40",
+    "line_number": 148
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[135] SetUnhandledExceptionFilter -> 0x2020420",
+    "line_number": 149
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[136] UnhandledExceptionFilter -> 0x20529c0",
+    "line_number": 150
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[137] RtlVirtualUnwind -> 0x206a4a0",
+    "line_number": 151
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[138] RtlLookupFunctionEntry -> 0x20200f0",
+    "line_number": 152
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[139] RtlCaptureContext -> 0x205e1e0",
+    "line_number": 153
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[140] SleepConditionVariableSRW -> 0x20361d0",
+    "line_number": 154
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[141] WakeAllConditionVariable -> 0x205aaf0",
+    "line_number": 155
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[142] InitializeCriticalSectionEx -> 0x202da50",
+    "line_number": 156
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[143] QueryPerformanceFrequency -> 0x202b3a0",
+    "line_number": 157
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[144] QueryPerformanceCounter -> 0x2030380",
+    "line_number": 158
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[145] TryAcquireSRWLockExclusive -> 0x2036030",
+    "line_number": 159
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[146] AcquireSRWLockExclusive -> 0x205ca00",
+    "line_number": 160
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[147] ReleaseSRWLockExclusive -> 0x205cb60",
+    "line_number": 161
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[148] LoadLibraryExA -> 0x203e800",
+    "line_number": 162
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[149] VirtualQuery -> 0x202aa90",
+    "line_number": 163
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[150] VirtualProtect -> 0x2031430",
+    "line_number": 164
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[151] GetSystemInfo -> 0x20370b0",
+    "line_number": 165
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[152] RaiseException -> 0x2008f60",
+    "line_number": 166
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[153] GetProcessHeap -> 0x2009b90",
+    "line_number": 167
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[154] OutputDebugStringW -> 0x207da10",
+    "line_number": 168
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[155] DebugBreak -> 0x204ebc0",
+    "line_number": 169
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[156] IsDebuggerPresent -> 0x204f2a0",
+    "line_number": 170
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[157] CreateHardLinkW -> 0x208f890",
+    "line_number": 171
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[158] SetLastError -> 0x20397b0",
+    "line_number": 172
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[159] DosDateTimeToFileTime -> 0x2043140",
+    "line_number": 173
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[160] HeapFree -> 0x208c5f0",
+    "line_number": 174
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[161] HeapAlloc -> 0x20412b0",
+    "line_number": 175
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[162] HeapDestroy -> 0x20624d0",
+    "line_number": 176
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[163] HeapCreate -> 0x2009ba0",
+    "line_number": 177
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[164] LocalFileTimeToFileTime -> 0x205db70",
+    "line_number": 178
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[165] LoadLibraryW -> 0x2087cd0",
+    "line_number": 179
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[166] FreeLibrary -> 0x2050480",
+    "line_number": 180
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[167] Sleep -> 0x20312d0",
+    "line_number": 181
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[168] WriteFile -> 0x2043930",
+    "line_number": 182
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[169] SetFileTime -> 0x204f6c0",
+    "line_number": 183
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[170] SetFilePointer -> 0x2043ba0",
+    "line_number": 184
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[171] WaitForSingleObjectEx -> 0x2070dc0",
+    "line_number": 185
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[172] SetEndOfFile -> 0x2043e30",
+    "line_number": 186
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[173] ReadFile -> 0x20436a0",
+    "line_number": 187
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[174] GetFileSize -> 0x2043f30",
+    "line_number": 188
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[175] CreateFileW -> 0x2082820",
+    "line_number": 189
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[176] MoveFileW -> 0x208e880",
+    "line_number": 190
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[177] GetTickCount -> 0x20301f0",
+    "line_number": 191
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[178] GetCPInfoExW -> 0x203bb70",
+    "line_number": 192
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[179] GetOEMCP -> 0x200a470",
+    "line_number": 193
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[180] GetACP -> 0x200a460",
+    "line_number": 194
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[181] GetCurrentProcess -> 0x2008c50",
+    "line_number": 195
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[182] GetVolumeInformationW -> 0x20790b0",
+    "line_number": 196
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[183] GetDriveTypeW -> 0x20627b0",
+    "line_number": 197
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[184] GlobalFree -> 0x207a880",
+    "line_number": 198
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[185] GlobalLock -> 0x200a0a0",
+    "line_number": 199
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[186] GlobalUnlock -> 0x2062470",
+    "line_number": 200
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[187] GlobalSize -> 0x2074cb0",
+    "line_number": 201
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[188] GlobalAlloc -> 0x2031b30",
+    "line_number": 202
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[189] CreateMutexW -> 0x20238b0",
+    "line_number": 203
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[190] ReleaseMutex -> 0x2068ff0",
+    "line_number": 204
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[191] GetLastError -> 0x201f760",
+    "line_number": 205
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[192] MultiByteToWideChar -> 0x203ffa0",
+    "line_number": 206
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[193] GetProcAddress -> 0x201f8b0",
+    "line_number": 207
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[194] GetModuleHandleW -> 0x202e180",
+    "line_number": 208
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[195] GetVersionExW -> 0x2063a50",
+    "line_number": 209
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[196] GetCurrentThreadId -> 0x2008c80",
+    "line_number": 210
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[197] GetCurrentProcessId -> 0x2008c60",
+    "line_number": 211
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[198] CopyFileW -> 0x20710b0",
+    "line_number": 212
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[199] WaitForSingleObject -> 0x2070c60",
+    "line_number": 213
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[200] RtlUnwind -> 0x206f1a0",
+    "line_number": 214
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[201] CloseHandle -> 0x2072fe0",
+    "line_number": 215
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[202] GetCommandLineW -> 0x205a060",
+    "line_number": 216
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[203] GetPhysicallyInstalledSystemMemory -> 0x2014d00",
+    "line_number": 217
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[204] FindFirstFileW -> 0x2079d80",
+    "line_number": 218
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[205] GetStartupInfoW -> 0x202ba50",
+    "line_number": 219
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[206] FindClose -> 0x2015d30",
+    "line_number": 220
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "Import DLL: USER32.dll (IAT RVA=0x1f6948, ILT RVA=0x246ba0)",
+    "line_number": 221
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[0] OemToCharBuffA -> 0x2063f80",
+    "line_number": 222
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[1] OemToCharA -> 0x2063b90",
+    "line_number": 223
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[2] GetScrollBarInfo -> 0x200ea20",
+    "line_number": 224
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[3] IsDialogMessageW -> 0x2061d70",
+    "line_number": 225
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[4] CreateDialogIndirectParamW -> 0x2098140",
+    "line_number": 226
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[5] PostQuitMessage -> 0x2047b10",
+    "line_number": 227
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[6] DispatchMessageW -> 0x20a3820",
+    "line_number": 228
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[7] TranslateMessage -> 0x2023bd0",
+    "line_number": 229
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[8] GetMessageW -> 0x2076520",
+    "line_number": 230
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[9] MessageBeep -> 0x2062710",
+    "line_number": 231
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[10] CharToOemA -> 0x20128e0",
+    "line_number": 232
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[11] EmptyClipboard -> 0x2050cd0",
+    "line_number": 233
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[12] PeekMessageW -> 0x2076760",
+    "line_number": 234
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[13] MapDialogRect -> 0x208ef80",
+    "line_number": 235
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[14] GetSystemMenu -> 0x206a2c0",
+    "line_number": 236
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[15] DialogBoxIndirectParamW -> 0x2097e40",
+    "line_number": 237
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[16] GetScrollInfo -> 0x20275a0",
+    "line_number": 238
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[17] EnableMenuItem -> 0x2049580",
+    "line_number": 239
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[18] CheckMenuItem -> 0x20493c0",
+    "line_number": 240
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[19] MoveWindow -> 0x2078460",
+    "line_number": 241
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[20] PostMessageW -> 0x20489e0",
+    "line_number": 242
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[21] AppendMenuW -> 0x2094560",
+    "line_number": 243
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[22] GetMenuItemCount -> 0x206c8a0",
+    "line_number": 244
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[23] DrawMenuBar -> 0x2049250",
+    "line_number": 245
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[24] ClientToScreen -> 0x2062020",
+    "line_number": 246
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[25] CallWindowProcW -> 0x2063a20",
+    "line_number": 247
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[26] InsertMenuItemW -> 0x2096ff0",
+    "line_number": 248
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[27] DeleteMenu -> 0x207b010",
+    "line_number": 249
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[28] InsertMenuW -> 0x207c3b0",
+    "line_number": 250
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[29] GetSubMenu -> 0x2070840",
+    "line_number": 251
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[30] DestroyMenu -> 0x2076a80",
+    "line_number": 252
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[31] CreatePopupMenu -> 0x206f760",
+    "line_number": 253
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[32] IsWindow -> 0x2071850",
+    "line_number": 254
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[33] LoadCursorW -> 0x2062100",
+    "line_number": 255
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[34] WindowFromPoint -> 0x2056110",
+    "line_number": 256
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[35] GetMenuItemID -> 0x2077890",
+    "line_number": 257
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[36] SetMenu -> 0x20490e0",
+    "line_number": 258
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[37] OemToCharBuffW -> 0x201ee30",
+    "line_number": 259
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[38] LoadAcceleratorsW -> 0x2053eb0",
+    "line_number": 260
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[39] SendInput -> 0x204d6a0",
+    "line_number": 261
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[40] IsChild -> 0x2061d50",
+    "line_number": 262
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[41] SetUserObjectInformationW -> 0x2061a60",
+    "line_number": 263
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[42] GetClipboardData -> 0x2023000",
+    "line_number": 264
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[43] LoadIconW -> 0x209e900",
+    "line_number": 265
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[44] CreateDialogParamW -> 0x209a130",
+    "line_number": 266
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[45] SetScrollRange -> 0x200ccc0",
+    "line_number": 267
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[46] SetScrollPos -> 0x205e6c0",
+    "line_number": 268
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[47] ScrollWindowEx -> 0x200bae0",
+    "line_number": 269
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[48] CreateIconIndirect -> 0x2082630",
+    "line_number": 270
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[49] FindWindowW -> 0x2056530",
+    "line_number": 271
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[50] TranslateAcceleratorW -> 0x200bb30",
+    "line_number": 272
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[51] BringWindowToTop -> 0x20625d0",
+    "line_number": 273
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[52] FlashWindow -> 0x2061cc0",
+    "line_number": 274
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[53] EnumDisplayMonitors -> 0x202cc70",
+    "line_number": 275
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[54] SetProcessDefaultLayout -> 0x2062730",
+    "line_number": 276
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[55] GetIconInfo -> 0x200beb0",
+    "line_number": 277
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[56] MessageBoxW -> 0x208bfe0",
+    "line_number": 278
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[57] GetForegroundWindow -> 0x200b690",
+    "line_number": 279
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[58] SendMessageW -> 0x20a6e40",
+    "line_number": 280
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[59] DefWindowProcW -> 0x200b1f0",
+    "line_number": 281
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[60] CreateWindowExW -> 0x209fe40",
+    "line_number": 282
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[61] DestroyWindow -> 0x207ec40",
+    "line_number": 283
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[62] SetFocus -> 0x2048f80",
+    "line_number": 284
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[63] GetClientRect -> 0x2047c80",
+    "line_number": 285
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[64] DrawFocusRect -> 0x2062040",
+    "line_number": 286
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[65] FillRect -> 0x2088950",
+    "line_number": 287
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[66] GetWindowLongW -> 0x2069930",
+    "line_number": 288
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[67] SetWindowLongW -> 0x2026f80",
+    "line_number": 289
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[68] GetComboBoxInfo -> 0x204e7a0",
+    "line_number": 290
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[69] SetWindowPos -> 0x2079220",
+    "line_number": 291
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[70] keybd_event -> 0x204d800",
+    "line_number": 292
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[71] FlashWindowEx -> 0x204b0f0",
+    "line_number": 293
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[72] CreateIcon -> 0x2032060",
+    "line_number": 294
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[73] EnumWindows -> 0x200d3f0",
+    "line_number": 295
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[74] SetForegroundWindow -> 0x2062530",
+    "line_number": 296
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[75] IsCharAlphaW -> 0x2063350",
+    "line_number": 297
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[76] CopyRect -> 0x2054f50",
+    "line_number": 298
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[77] LoadStringW -> 0x209ab10",
+    "line_number": 299
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[78] ExitWindowsEx -> 0x200d870",
+    "line_number": 300
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[79] CharUpperW -> 0x201cca0",
+    "line_number": 301
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[80] CharLowerW -> 0x201d250",
+    "line_number": 302
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[81] LoadMenuW -> 0x209a570",
+    "line_number": 303
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[82] GetLastActivePopup -> 0x200cc90",
+    "line_number": 304
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[83] RegisterClassExW -> 0x2081040",
+    "line_number": 305
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[84] DrawEdge -> 0x2088430",
+    "line_number": 306
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[85] SetCursor -> 0x2062760",
+    "line_number": 307
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[86] GetKeyState -> 0x200bb00",
+    "line_number": 308
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[87] RegisterClipboardFormatW -> 0x2025ac0",
+    "line_number": 309
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[88] GetClassNameW -> 0x204af20",
+    "line_number": 310
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[89] GetDesktopWindow -> 0x2056270",
+    "line_number": 311
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[90] IntersectRect -> 0x2092010",
+    "line_number": 312
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[91] GetWindowTextLengthW -> 0x207a000",
+    "line_number": 313
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[92] GetWindowTextW -> 0x2086870",
+    "line_number": 314
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[93] EnableWindow -> 0x2076e60",
+    "line_number": 315
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[94] IsIconic -> 0x20622f0",
+    "line_number": 316
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[95] UnhookWinEvent -> 0x20626c0",
+    "line_number": 317
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[96] GetWindowPlacement -> 0x202c620",
+    "line_number": 318
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[97] SetWindowPlacement -> 0x2096960",
+    "line_number": 319
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[98] IsWindowVisible -> 0x204adb0",
+    "line_number": 320
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[99] DialogBoxParamW -> 0x2025630",
+    "line_number": 321
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[100] EndDialog -> 0x20485a0",
+    "line_number": 322
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[101] GetDlgItem -> 0x20260c0",
+    "line_number": 323
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[102] SetDlgItemInt -> 0x2099890",
+    "line_number": 324
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[103] GetDlgItemInt -> 0x2086af0",
+    "line_number": 325
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[104] SetDlgItemTextW -> 0x2099860",
+    "line_number": 326
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[105] IsDlgButtonChecked -> 0x2072680",
+    "line_number": 327
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[106] SendDlgItemMessageW -> 0x20a7980",
+    "line_number": 328
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[107] GetWindowRect -> 0x2080250",
+    "line_number": 329
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[108] MapWindowPoints -> 0x2049be0",
+    "line_number": 330
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[109] GetParent -> 0x206cb00",
+    "line_number": 331
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[110] DestroyIcon -> 0x206a340",
+    "line_number": 332
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[111] ShowWindow -> 0x20479a0",
+    "line_number": 333
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[112] UpdateWindow -> 0x20383b0",
+    "line_number": 334
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[113] GetDlgItemTextW -> 0x2086ab0",
+    "line_number": 335
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[114] CheckDlgButton -> 0x2079660",
+    "line_number": 336
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[115] OpenClipboard -> 0x2050b60",
+    "line_number": 337
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[116] CloseClipboard -> 0x2039950",
+    "line_number": 338
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[117] SetClipboardData -> 0x2022e70",
+    "line_number": 339
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[118] SetTimer -> 0x2065c40",
+    "line_number": 340
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[119] KillTimer -> 0x200b450",
+    "line_number": 341
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[120] GetWindowDC -> 0x2053a80",
+    "line_number": 342
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[121] SetWindowTextW -> 0x2099480",
+    "line_number": 343
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[122] CharToOemBuffA -> 0x2059ce0",
+    "line_number": 344
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[123] WaitForInputIdle -> 0x2061cf0",
+    "line_number": 345
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[124] IsWindowEnabled -> 0x206cab0",
+    "line_number": 346
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[125] RegisterWindowMessageW -> 0x2025910",
+    "line_number": 347
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[126] RegisterClassW -> 0x20811e0",
+    "line_number": 348
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[127] GetFocus -> 0x2028320",
+    "line_number": 349
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[128] GetAsyncKeyState -> 0x2062460",
+    "line_number": 350
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[129] GetSystemMetrics -> 0x200a080",
+    "line_number": 351
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[130] GetMenu -> 0x2026350",
+    "line_number": 352
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[131] TrackPopupMenu -> 0x20498d0",
+    "line_number": 353
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[132] SetMenuInfo -> 0x20567f0",
+    "line_number": 354
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[133] GetMenuItemInfoW -> 0x209fae0",
+    "line_number": 355
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[134] SetMenuItemInfoW -> 0x207a400",
+    "line_number": 356
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[135] DrawTextW -> 0x2095c50",
+    "line_number": 357
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[136] GetDC -> 0x200b3e0",
+    "line_number": 358
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[137] ReleaseDC -> 0x200b3f0",
+    "line_number": 359
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[138] BeginPaint -> 0x20821e0",
+    "line_number": 360
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[139] EndPaint -> 0x20a3960",
+    "line_number": 361
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[140] InvalidateRect -> 0x20530a0",
+    "line_number": 362
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[141] RedrawWindow -> 0x2053230",
+    "line_number": 363
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[142] SetPropW -> 0x207d110",
+    "line_number": 364
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[143] ValidateRect -> 0x200b400",
+    "line_number": 365
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[144] DrawIconEx -> 0x2073210",
+    "line_number": 366
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[145] LoadImageW -> 0x209d470",
+    "line_number": 367
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[146] GetPropW -> 0x207d2c0",
+    "line_number": 368
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[147] RemovePropW -> 0x207d4d0",
+    "line_number": 369
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[148] SetWinEventHook -> 0x202d8f0",
+    "line_number": 370
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[149] SystemParametersInfoW -> 0x2048b50",
+    "line_number": 371
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[150] CopyImage -> 0x2084e50",
+    "line_number": 372
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[151] CallNextHookEx -> 0x200c0c0",
+    "line_number": 373
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[152] UnhookWindowsHookEx -> 0x2062520",
+    "line_number": 374
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[153] SetWindowsHookExW -> 0x2048cc0",
+    "line_number": 375
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[154] GetWindow -> 0x204ac50",
+    "line_number": 376
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[155] GetWindowThreadProcessId -> 0x200bab0",
+    "line_number": 377
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[156] FindWindowExW -> 0x200baa0",
+    "line_number": 378
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[157] SetWindowLongPtrW -> 0x2026db0",
+    "line_number": 379
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[158] GetWindowLongPtrW -> 0x20696d0",
+    "line_number": 380
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[159] PtInRect -> 0x2080b50",
+    "line_number": 381
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[160] GetSysColor -> 0x2023d60",
+    "line_number": 382
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[161] ScreenToClient -> 0x2062030",
+    "line_number": 383
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[162] GetCursorPos -> 0x2053be0",
+    "line_number": 384
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[163] CharToOemBuffW -> 0x201ede0",
+    "line_number": 385
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "Import DLL: GDI32.dll (IAT RVA=0x1f6090, ILT RVA=0x2462e8)",
+    "line_number": 386
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[0] CreateFontW -> 0x20901c0",
+    "line_number": 387
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[1] GetTextFaceW -> 0x200b860",
+    "line_number": 388
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[2] LineTo -> 0x2024140",
+    "line_number": 389
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[3] MoveToEx -> 0x2048140",
+    "line_number": 390
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[4] CreateBitmap -> 0x203af70",
+    "line_number": 391
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[5] TextOutW -> 0x2092940",
+    "line_number": 392
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[6] GetMapMode -> 0x200cdf0",
+    "line_number": 393
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[7] SetMapMode -> 0x2061fa0",
+    "line_number": 394
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[8] StretchBlt -> 0x209ef90",
+    "line_number": 395
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[9] DPtoLP -> 0x200cff0",
+    "line_number": 396
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[10] GetPixel -> 0x20820b0",
+    "line_number": 397
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[11] CreateDIBSection -> 0x2032580",
+    "line_number": 398
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[12] SetPixel -> 0x2080910",
+    "line_number": 399
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[13] TextOutA -> 0x2091880",
+    "line_number": 400
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[14] GetObjectW -> 0x202f150",
+    "line_number": 401
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[15] Rectangle -> 0x2096670",
+    "line_number": 402
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[16] GetTextExtentPoint32W -> 0x207f5b0",
+    "line_number": 403
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[17] ExcludeClipRect -> 0x200bd80",
+    "line_number": 404
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[18] GetStockObject -> 0x2024790",
+    "line_number": 405
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[19] CreateSolidBrush -> 0x20243a0",
+    "line_number": 406
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[20] CreatePen -> 0x20245a0",
+    "line_number": 407
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[21] CreateFontIndirectW -> 0x208ffa0",
+    "line_number": 408
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[22] SelectObject -> 0x20248f0",
+    "line_number": 409
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[23] DeleteObject -> 0x200b470",
+    "line_number": 410
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[24] DeleteDC -> 0x2025290",
+    "line_number": 411
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[25] CreateCompatibleDC -> 0x202c3c0",
+    "line_number": 412
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[26] CreateCompatibleBitmap -> 0x2085960",
+    "line_number": 413
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[27] BitBlt -> 0x2098670",
+    "line_number": 414
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[28] ExtTextOutW -> 0x2092940",
+    "line_number": 415
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[29] GetTextMetricsW -> 0x2054a40",
+    "line_number": 416
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[30] GetDeviceCaps -> 0x20250a0",
+    "line_number": 417
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[31] SetBkColor -> 0x2024f20",
+    "line_number": 418
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[32] SetTextColor -> 0x2024da0",
+    "line_number": 419
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "Import DLL: COMDLG32.dll (IAT RVA=0x1f6068, ILT RVA=0x2462c0)",
+    "line_number": 420
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[0] CommDlgExtendedError -> 0x2062920",
+    "line_number": 421
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[1] GetSaveFileNameW -> 0x2051260",
+    "line_number": 422
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[2] GetOpenFileNameW -> 0x2050fa0",
+    "line_number": 423
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[3] ChooseFontW -> 0x2062320",
+    "line_number": 424
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "Import DLL: SHELL32.dll (IAT RVA=0x1f6878, ILT RVA=0x246ad0)",
+    "line_number": 425
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[0] DragFinish -> 0x2062380",
+    "line_number": 426
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[1] DragAcceptFiles -> 0x20627a0",
+    "line_number": 427
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[2] Shell_NotifyIconW -> 0x2049a70",
+    "line_number": 428
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[3] SHGetFolderPathW -> 0x2026680",
+    "line_number": 429
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[4] DragQueryFileW -> 0x200bf60",
+    "line_number": 430
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[5] ShellExecuteW -> 0x208ad30",
+    "line_number": 431
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[6] SHGetSpecialFolderLocation -> 0x200bf20",
+    "line_number": 432
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[7] SHGetMalloc -> 0x202bd70",
+    "line_number": 433
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[8] SHAddToRecentDocs -> 0x200dc80",
+    "line_number": 434
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[9] Ordinal 100 -> SHRestricted (fixed ordinal)",
+    "line_number": 435
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[9] SHRestricted -> 0x204d960",
+    "line_number": 436
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[10] SHGetPathFromIDListW -> 0x200bf40",
+    "line_number": 437
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[11] SHFileOperationW -> 0x20571a0",
+    "line_number": 438
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[12] ShellExecuteExW -> 0x208b300",
+    "line_number": 439
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[13] SHCreateItemFromParsingName -> 0x203e260",
+    "line_number": 440
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[14] SHChangeNotify -> 0x200bf10",
+    "line_number": 441
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[15] SHGetDesktopFolder -> 0x202ebe0",
+    "line_number": 442
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[16] SHGetFolderLocation -> 0x200ea40",
+    "line_number": 443
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[17] SHGetFileInfoW -> 0x20522e0",
+    "line_number": 444
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[18] SHGetStockIconInfo -> 0x200dc90",
+    "line_number": 445
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "Import DLL: ole32.dll (IAT RVA=0x1f6fe8, ILT RVA=0x247240)",
+    "line_number": 446
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[0] RegisterDragDrop -> 0x200bf50",
+    "line_number": 447
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[1] OleUninitialize -> 0x2053920",
+    "line_number": 448
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[2] OleInitialize -> 0x2053660",
+    "line_number": 449
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[3] CLSIDFromString -> 0x201de30",
+    "line_number": 450
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[4] CreateStreamOnHGlobal -> 0x200c850",
+    "line_number": 451
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[5] CoTaskMemAlloc -> 0x20651e0",
+    "line_number": 452
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[6] RevokeDragDrop -> 0x20623e0",
+    "line_number": 453
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[7] DoDragDrop -> 0x200c910",
+    "line_number": 454
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[8] CoTaskMemFree -> 0x2068180",
+    "line_number": 455
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[9] CoInitializeEx -> 0x2048710",
+    "line_number": 456
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[10] CoUninitialize -> 0x20537c0",
+    "line_number": 457
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[11] CoCreateInstance -> 0x2049d60",
+    "line_number": 458
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[12] CoSetProxyBlanket -> 0x200a2b0",
+    "line_number": 459
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[13] OleSetClipboard -> 0x200ea30",
+    "line_number": 460
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "Import DLL: OLEAUT32.dll (IAT RVA=0x1f6838, ILT RVA=0x246a90)",
+    "line_number": 461
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[0] Ordinal 10 -> VariantCopy (fixed ordinal)",
+    "line_number": 462
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[0] VariantCopy -> 0x2058d10",
+    "line_number": 463
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[1] Ordinal 9 -> VariantClear (fixed ordinal)",
+    "line_number": 464
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[1] VariantClear -> 0x20582d0",
+    "line_number": 465
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[2] Ordinal 8 -> VariantInit (fixed ordinal)",
+    "line_number": 466
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[2] VariantInit -> 0x20553b0",
+    "line_number": 467
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[3] Ordinal 6 -> SysFreeString (fixed ordinal)",
+    "line_number": 468
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[3] SysFreeString -> 0x2058100",
+    "line_number": 469
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[4] Ordinal 2 -> SysAllocString (fixed ordinal)",
+    "line_number": 470
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[4] SysAllocString -> 0x2063760",
+    "line_number": 471
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "Import DLL: SHLWAPI.dll (IAT RVA=0x1f6918, ILT RVA=0x246b70)",
+    "line_number": 472
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[0] StrCmpLogicalW -> 0x200c390",
+    "line_number": 473
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[1] Ordinal 219 -> QISearch (fixed ordinal)",
+    "line_number": 474
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[1] QISearch -> 0x2057e60",
+    "line_number": 475
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[2] Ordinal 176 -> IUnknown_QueryService (fixed ordinal)",
+    "line_number": 476
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[2] IUnknown_QueryService -> 0x200eae0",
+    "line_number": 477
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[3] SHAutoComplete -> 0x2054610",
+    "line_number": 478
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[4] AssocQueryStringW -> 0x2039fe0",
+    "line_number": 479
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "Import DLL: POWRPROF.dll (IAT RVA=0x1f6868, ILT RVA=0x246ac0)",
+    "line_number": 480
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[0] SetSuspendState -> 0x200d880",
+    "line_number": 481
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "Import DLL: COMCTL32.dll (IAT RVA=0x1f6000, ILT RVA=0x246258)",
+    "line_number": 482
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[0] InitCommonControlsEx -> 0x2023a70",
+    "line_number": 483
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[1] ImageList_ReplaceIcon -> 0x2077600",
+    "line_number": 484
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[2] ImageList_Create -> 0x2032230",
+    "line_number": 485
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[3] CreateStatusWindowW -> 0x2095490",
+    "line_number": 486
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[4] Ordinal 380 -> LoadIconMetric (fixed ordinal)",
+    "line_number": 487
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[4] LoadIconMetric -> 0x209ec50",
+    "line_number": 488
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[5] PropertySheetW -> 0x200d5f0",
+    "line_number": 489
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[6] Ordinal 381 -> LoadIconWithScaleDown (fixed ordinal)",
+    "line_number": 490
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[6] LoadIconWithScaleDown -> 0x209eab0",
+    "line_number": 491
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[7] Ordinal 413 -> DefSubclassProc (fixed ordinal)",
+    "line_number": 492
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[7] DefSubclassProc -> 0x2061ad0",
+    "line_number": 493
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[8] Ordinal 412 -> RemoveWindowSubclass (fixed ordinal)",
+    "line_number": 494
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[8] RemoveWindowSubclass -> 0x200e950",
+    "line_number": 495
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[9] Ordinal 410 -> SetWindowSubclass (fixed ordinal)",
+    "line_number": 496
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[9] SetWindowSubclass -> 0x201ec80",
+    "line_number": 497
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[10] ImageList_GetIconSize -> 0x2078110",
+    "line_number": 498
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[11] ImageList_Draw -> 0x2073cd0",
+    "line_number": 499
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "Import DLL: UxTheme.dll (IAT RVA=0x1f6e70, ILT RVA=0x2470c8)",
+    "line_number": 500
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[0] IsAppThemed -> 0x2062af0",
+    "line_number": 501
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[1] OpenThemeData -> 0x2057300",
+    "line_number": 502
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[2] CloseThemeData -> 0x2062360",
+    "line_number": 503
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[3] GetThemePartSize -> 0x200c720",
+    "line_number": 504
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[4] SetWindowTheme -> 0x200bc50",
+    "line_number": 505
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[5] IsThemeActive -> 0x2062ae0",
+    "line_number": 506
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "Import DLL: gdiplus.dll (IAT RVA=0x1f6eb8, ILT RVA=0x247110)",
+    "line_number": 507
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[0] GdipCreateBitmapFromFile -> 0x200dbb0",
+    "line_number": 508
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[1] GdipCreateBitmapFromStream -> 0x204a670",
+    "line_number": 509
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[2] GdipDisposeImage -> 0x2055c00",
+    "line_number": 510
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[3] GdipCloneImage -> 0x2062cc0",
+    "line_number": 511
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[4] GdipFillPath -> 0x2061c20",
+    "line_number": 512
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[5] GdipFillEllipse -> 0x2061a10",
+    "line_number": 513
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[6] GdipFillPolygon -> 0x200ea90",
+    "line_number": 514
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[7] GdipFillRectangle -> 0x2061a20",
+    "line_number": 515
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[8] GdipDrawPath -> 0x2061c10",
+    "line_number": 516
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[9] GdipDrawEllipse -> 0x2061a00",
+    "line_number": 517
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[10] GdipDrawRectangle -> 0x20619f0",
+    "line_number": 518
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[11] GdipDrawLineI -> 0x200db60",
+    "line_number": 519
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[12] GdipDrawLine -> 0x200db70",
+    "line_number": 520
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[13] GdipSetSmoothingMode -> 0x2061ef0",
+    "line_number": 521
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[14] GdipDeleteGraphics -> 0x200da30",
+    "line_number": 522
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[15] GdipCreateFromHDC -> 0x2066cd0",
+    "line_number": 523
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[16] GdipSetPenLineJoin -> 0x2061ed0",
+    "line_number": 524
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[17] GdipSetPenEndCap -> 0x2061eb0",
+    "line_number": 525
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[18] GdipSetPenStartCap -> 0x2061ec0",
+    "line_number": 526
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[19] GdipDeletePen -> 0x200da70",
+    "line_number": 527
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[20] GdipCreatePen1 -> 0x2066d50",
+    "line_number": 528
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[21] GdipCreateSolidFill -> 0x2066dd0",
+    "line_number": 529
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[22] GdipCloneBrush -> 0x201e480",
+    "line_number": 530
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[23] GdipAddPathArc -> 0x200ea80",
+    "line_number": 531
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[24] GdipAddPathLine -> 0x200ea70",
+    "line_number": 532
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[25] GdipClosePathFigure -> 0x2062430",
+    "line_number": 533
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[26] GdipDeletePath -> 0x200daf0",
+    "line_number": 534
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[27] GdipCreatePath -> 0x2066e50",
+    "line_number": 535
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[28] GdipFree -> 0x20630c0",
+    "line_number": 536
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[29] GdipAlloc -> 0x20125a0",
+    "line_number": 537
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[30] GdipCreateHBITMAPFromBitmap -> 0x200dbd0",
+    "line_number": 538
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[31] GdiplusStartup -> 0x2054770",
+    "line_number": 539
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[32] GdiplusShutdown -> 0x20548e0",
+    "line_number": 540
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[33] GdipCreateBitmapFromHBITMAP -> 0x2066ed0",
+    "line_number": 541
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[34] GdipBitmapGetPixel -> 0x200eab0",
+    "line_number": 542
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[35] GdipBitmapSetPixel -> 0x200ead0",
+    "line_number": 543
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[36] GdipDeleteBrush -> 0x200dab0",
+    "line_number": 544
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "Import DLL: MSIMG32.dll (IAT RVA=0x1f6820, ILT RVA=0x246a78)",
+    "line_number": 545
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[0] AlphaBlend -> 0x209f4c0",
+    "line_number": 546
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[1] GradientFill -> 0x2076970",
+    "line_number": 547
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "Import DLL: dwmapi.dll (IAT RVA=0x1f6ea8, ILT RVA=0x247100)",
+    "line_number": 548
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[0] DwmSetWindowAttribute -> 0x200bc60",
+    "line_number": 549
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "Import resolution: 510 resolved, 0 unresolved (total 510)",
+    "line_number": 550
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "TLS: StartRaw=0x14021f320 EndRaw=0x14021f328 Callbacks=0x1401f72c8",
+    "line_number": 551
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "TLS: static block 0x38b6090 (8+0 bytes) -> slot 0",
+    "line_number": 552
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "Exception: .pdata RVA=0x2a2000 Size=0xcedc Entries=4413",
+    "line_number": 553
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[API-005] EH hacks DISABLED (default) (MINWIN_EH_HACKS=<unset>)",
+    "line_number": 554
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "[API-005] CXX-EH-FIX (LSDA catch-all patch RVA 0x2010c8) skipped: MINWIN_EH_HACKS not set",
+    "line_number": 555
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "Jumping to EP=0x1401cb590",
+    "line_number": 556
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "GetSystemTimeAsFileTime()",
+    "line_number": 557
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "QueryPerformanceCounter()",
+    "line_number": 558
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "LoadLibraryExW(flags=2048)",
+    "line_number": 559
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "LoadLibraryA(api-ms-win-core-synch-l1-2-0)",
+    "line_number": 560
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "GetProcAddress(module=0xdead0002, name=InitializeCriticalSectionEx)",
+    "line_number": 561
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "-> 0x202da50",
+    "line_number": 562
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "InitializeCriticalSectionEx(spin=4000)",
+    "line_number": 563
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "LoadLibraryExW(flags=2048)",
+    "line_number": 564
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "LoadLibraryA(api-ms-win-core-fibers-l1-1-1)",
+    "line_number": 565
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "GetProcAddress(module=0xdead0002, name=FlsAlloc)",
+    "line_number": 566
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "-> 0x202a440",
+    "line_number": 567
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "FlsAlloc(cb=0x1401cd2a0) = 0",
+    "line_number": 568
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "GetProcAddress(module=0xdead0002, name=FlsSetValue)",
+    "line_number": 569
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "-> 0x2009710",
+    "line_number": 570
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "VirtualProtect(addr=0x1402b0000, size=0x100, prot=0x2)",
+    "line_number": 571
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "InitializeCriticalSectionEx(spin=4000)",
+    "line_number": 572
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "InitializeCriticalSectionEx(spin=4000)",
+    "line_number": 573
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "InitializeCriticalSectionEx(spin=4000)",
+    "line_number": 574
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "InitializeCriticalSectionEx(spin=4000)",
+    "line_number": 575
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "InitializeCriticalSectionEx(spin=4000)",
+    "line_number": 576
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "InitializeCriticalSectionEx(spin=4000)",
+    "line_number": 577
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "InitializeCriticalSectionEx(spin=4000)",
+    "line_number": 578
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "InitializeCriticalSectionEx(spin=4000)",
+    "line_number": 579
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "InitializeCriticalSectionEx(spin=4000)",
+    "line_number": 580
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "InitializeCriticalSectionEx(spin=4000)",
+    "line_number": 581
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "InitializeCriticalSectionEx(spin=4000)",
+    "line_number": 582
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "InitializeCriticalSectionEx(spin=4000)",
+    "line_number": 583
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "InitializeCriticalSectionEx(spin=4000)",
+    "line_number": 584
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "InitializeCriticalSectionEx(spin=4000)",
+    "line_number": 585
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "InitializeCriticalSectionEx(spin=4000)",
+    "line_number": 586
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "LoadLibraryExW(flags=2048)",
+    "line_number": 587
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "LoadLibraryA(api-ms-win-core-fibers-l1-1-2)",
+    "line_number": 588
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "GetProcAddress(module=0xdead0002, name=FlsGetValue2)",
+    "line_number": 589
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "-> NULL (not in dispatch table)",
+    "line_number": 590
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "EnterCriticalSection(0x1402a1860)",
+    "line_number": 591
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "VirtualProtect(addr=0x1402b0000, size=0x100, prot=0x4)",
+    "line_number": 592
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "VirtualProtect(addr=0x1402b0000, size=0x100, prot=0x2)",
+    "line_number": 593
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "LeaveCriticalSection(0x1402a1860)",
+    "line_number": 594
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "FlsAlloc(cb=0x1401ddc10) = 1",
+    "line_number": 595
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "GetLastError() = 0",
+    "line_number": 596
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "HeapAlloc(size=0x3c8, zero=1) = 0x38b6740",
+    "line_number": 597
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "EnterCriticalSection(0x1402a16f8)",
+    "line_number": 598
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "LeaveCriticalSection(0x1402a16f8)",
+    "line_number": 599
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "EnterCriticalSection(0x1402a16d0)",
+    "line_number": 600
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "LeaveCriticalSection(0x1402a16d0)",
+    "line_number": 601
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "SetLastError(0)",
+    "line_number": 602
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "EnterCriticalSection(0x1402a1748)",
+    "line_number": 603
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "EnterCriticalSection(0x1402a1748)",
+    "line_number": 604
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "HeapAlloc(size=0x1200, zero=1) = 0x38b6b10",
+    "line_number": 605
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "InitializeCriticalSectionEx(spin=4000)",
+    "line_number": 606
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "InitializeCriticalSectionEx(spin=4000)",
+    "line_number": 607
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "InitializeCriticalSectionEx(spin=4000)",
+    "line_number": 608
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "InitializeCriticalSectionEx(spin=4000)",
+    "line_number": 609
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "InitializeCriticalSectionEx(spin=4000)",
+    "line_number": 610
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "InitializeCriticalSectionEx(spin=4000)",
+    "line_number": 611
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "InitializeCriticalSectionEx(spin=4000)",
+    "line_number": 612
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "InitializeCriticalSectionEx(spin=4000)",
+    "line_number": 613
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "InitializeCriticalSectionEx(spin=4000)",
+    "line_number": 614
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "InitializeCriticalSectionEx(spin=4000)",
+    "line_number": 615
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "InitializeCriticalSectionEx(spin=4000)",
+    "line_number": 616
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "InitializeCriticalSectionEx(spin=4000)",
+    "line_number": 617
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "InitializeCriticalSectionEx(spin=4000)",
+    "line_number": 618
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "InitializeCriticalSectionEx(spin=4000)",
+    "line_number": 619
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "InitializeCriticalSectionEx(spin=4000)",
+    "line_number": 620
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "InitializeCriticalSectionEx(spin=4000)",
+    "line_number": 621
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "InitializeCriticalSectionEx(spin=4000)",
+    "line_number": 622
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "InitializeCriticalSectionEx(spin=4000)",
+    "line_number": 623
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "InitializeCriticalSectionEx(spin=4000)",
+    "line_number": 624
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "InitializeCriticalSectionEx(spin=4000)",
+    "line_number": 625
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "InitializeCriticalSectionEx(spin=4000)",
+    "line_number": 626
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "InitializeCriticalSectionEx(spin=4000)",
+    "line_number": 627
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "InitializeCriticalSectionEx(spin=4000)",
+    "line_number": 628
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "InitializeCriticalSectionEx(spin=4000)",
+    "line_number": 629
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "InitializeCriticalSectionEx(spin=4000)",
+    "line_number": 630
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "InitializeCriticalSectionEx(spin=4000)",
+    "line_number": 631
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "InitializeCriticalSectionEx(spin=4000)",
+    "line_number": 632
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "InitializeCriticalSectionEx(spin=4000)",
+    "line_number": 633
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "InitializeCriticalSectionEx(spin=4000)",
+    "line_number": 634
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "InitializeCriticalSectionEx(spin=4000)",
+    "line_number": 635
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "InitializeCriticalSectionEx(spin=4000)",
+    "line_number": 636
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "InitializeCriticalSectionEx(spin=4000)",
+    "line_number": 637
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "InitializeCriticalSectionEx(spin=4000)",
+    "line_number": 638
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "InitializeCriticalSectionEx(spin=4000)",
+    "line_number": 639
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "InitializeCriticalSectionEx(spin=4000)",
+    "line_number": 640
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "InitializeCriticalSectionEx(spin=4000)",
+    "line_number": 641
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "InitializeCriticalSectionEx(spin=4000)",
+    "line_number": 642
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "InitializeCriticalSectionEx(spin=4000)",
+    "line_number": 643
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "InitializeCriticalSectionEx(spin=4000)",
+    "line_number": 644
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "InitializeCriticalSectionEx(spin=4000)",
+    "line_number": 645
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "InitializeCriticalSectionEx(spin=4000)",
+    "line_number": 646
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "InitializeCriticalSectionEx(spin=4000)",
+    "line_number": 647
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "InitializeCriticalSectionEx(spin=4000)",
+    "line_number": 648
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "InitializeCriticalSectionEx(spin=4000)",
+    "line_number": 649
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "InitializeCriticalSectionEx(spin=4000)",
+    "line_number": 650
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "InitializeCriticalSectionEx(spin=4000)",
+    "line_number": 651
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "InitializeCriticalSectionEx(spin=4000)",
+    "line_number": 652
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "InitializeCriticalSectionEx(spin=4000)",
+    "line_number": 653
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "InitializeCriticalSectionEx(spin=4000)",
+    "line_number": 654
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "InitializeCriticalSectionEx(spin=4000)",
+    "line_number": 655
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "InitializeCriticalSectionEx(spin=4000)",
+    "line_number": 656
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "InitializeCriticalSectionEx(spin=4000)",
+    "line_number": 657
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "InitializeCriticalSectionEx(spin=4000)",
+    "line_number": 658
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "InitializeCriticalSectionEx(spin=4000)",
+    "line_number": 659
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "InitializeCriticalSectionEx(spin=4000)",
+    "line_number": 660
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "InitializeCriticalSectionEx(spin=4000)",
+    "line_number": 661
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "InitializeCriticalSectionEx(spin=4000)",
+    "line_number": 662
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "InitializeCriticalSectionEx(spin=4000)",
+    "line_number": 663
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "InitializeCriticalSectionEx(spin=4000)",
+    "line_number": 664
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "InitializeCriticalSectionEx(spin=4000)",
+    "line_number": 665
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "InitializeCriticalSectionEx(spin=4000)",
+    "line_number": 666
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "InitializeCriticalSectionEx(spin=4000)",
+    "line_number": 667
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "InitializeCriticalSectionEx(spin=4000)",
+    "line_number": 668
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "InitializeCriticalSectionEx(spin=4000)",
+    "line_number": 669
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "LeaveCriticalSection(0x1402a1748)",
+    "line_number": 670
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "GetStartupInfoW()",
+    "line_number": 671
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "GetStdHandle(-10) = 0x4",
+    "line_number": 672
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "GetStdHandle(-11) = 0x5",
+    "line_number": 673
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "GetStdHandle(-12) = 0x6",
+    "line_number": 674
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "LeaveCriticalSection(0x1402a1748)",
+    "line_number": 675
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "GetCommandLineA() = \"WinRAR.exe\"",
+    "line_number": 676
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "GetCommandLineW()",
+    "line_number": 677
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "EnterCriticalSection(0x1402a16f8)",
+    "line_number": 678
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "LeaveCriticalSection(0x1402a16f8)",
+    "line_number": 679
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "HeapAlloc(size=0x228, zero=0) = 0x38b7d20",
+    "line_number": 680
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "GetCPInfo(cp=1252)",
+    "line_number": 681
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "GetCPInfo(cp=1252)",
+    "line_number": 682
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "MultiByteToWideChar(cp=1252, srclen=256, dstlen=0)",
+    "line_number": 683
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "MultiByteToWideChar(cp=1252, srclen=256, dstlen=256)",
+    "line_number": 684
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "MultiByteToWideChar(cp=1252, srclen=256, dstlen=0)",
+    "line_number": 685
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "MultiByteToWideChar(cp=1252, srclen=256, dstlen=256)",
+    "line_number": 686
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "LoadLibraryExW(flags=2048)",
+    "line_number": 687
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "LoadLibraryA(api-ms-win-core-localization-l1-2-1)",
+    "line_number": 688
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "GetProcAddress(module=0xdead0002, name=LCMapStringEx)",
+    "line_number": 689
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "-> 0x20434b0",
+    "line_number": 690
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "EnterCriticalSection(0x1402a1860)",
+    "line_number": 691
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "VirtualProtect(addr=0x1402b0000, size=0x100, prot=0x4)",
+    "line_number": 692
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "VirtualProtect(addr=0x1402b0000, size=0x100, prot=0x2)",
+    "line_number": 693
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "LeaveCriticalSection(0x1402a1860)",
+    "line_number": 694
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "WideCharToMultiByte(cp=1252, srclen=256, dstlen=256)",
+    "line_number": 695
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "MultiByteToWideChar(cp=1252, srclen=256, dstlen=0)",
+    "line_number": 696
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "MultiByteToWideChar(cp=1252, srclen=256, dstlen=256)",
+    "line_number": 697
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "WideCharToMultiByte(cp=1252, srclen=256, dstlen=256)",
+    "line_number": 698
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "EnterCriticalSection(0x1402a16f8)",
+    "line_number": 699
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "LeaveCriticalSection(0x1402a16f8)",
+    "line_number": 700
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "EnterCriticalSection(0x1402a1680)",
+    "line_number": 701
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "HeapAlloc(size=0x100, zero=0) = 0x38b7f50",
+    "line_number": 702
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "LeaveCriticalSection(0x1402a1680)",
+    "line_number": 703
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "GetModuleFileNameW(cap=261)",
+    "line_number": 704
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "LoadLibraryExW(flags=2048)",
+    "line_number": 705
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "LoadLibraryA(kernel32)",
+    "line_number": 706
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "GetProcAddress(module=0xdead0001, name=AreFileApisANSI)",
+    "line_number": 707
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "-> 0x2062ad0",
+    "line_number": 708
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "EnterCriticalSection(0x1402a1860)",
+    "line_number": 709
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "VirtualProtect(addr=0x1402b0000, size=0x100, prot=0x4)",
+    "line_number": 710
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "VirtualProtect(addr=0x1402b0000, size=0x100, prot=0x2)",
+    "line_number": 711
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "LeaveCriticalSection(0x1402a1860)",
+    "line_number": 712
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "WideCharToMultiByte(cp=0, srclen=-1, dstlen=0)",
+    "line_number": 713
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "WideCharToMultiByte(cp=0, srclen=-1, dstlen=260)",
+    "line_number": 714
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "HeapAlloc(size=0x1b, zero=1) = 0x38b6710",
+    "line_number": 715
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "GetLastError() = 0",
+    "line_number": 716
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "HeapAlloc(size=0x3c8, zero=1) = 0x38b8060",
+    "line_number": 717
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "EnterCriticalSection(0x1402a16f8)",
+    "line_number": 718
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "LeaveCriticalSection(0x1402a16f8)",
+    "line_number": 719
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "EnterCriticalSection(0x1402a16d0)",
+    "line_number": 720
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "LeaveCriticalSection(0x1402a16d0)",
+    "line_number": 721
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "SetLastError(0)",
+    "line_number": 722
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "GetEnvironmentStringsW()",
+    "line_number": 723
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "WideCharToMultiByte(cp=0, srclen=1264, dstlen=0)",
+    "line_number": 724
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "HeapAlloc(size=0x4f0, zero=0) = 0x38b8430",
+    "line_number": 725
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "WideCharToMultiByte(cp=0, srclen=1264, dstlen=1264)",
+    "line_number": 726
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "FreeEnvironmentStringsW()",
+    "line_number": 727
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "HeapAlloc(size=0x160, zero=1) = 0x38b8930",
+    "line_number": 728
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "HeapAlloc(size=0x14, zero=1) = 0x38b8aa0",
+    "line_number": 729
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "HeapAlloc(size=0x15, zero=1) = 0x38b8ac0",
+    "line_number": 730
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "HeapAlloc(size=0x10, zero=1) = 0x38b8ae0",
+    "line_number": 731
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "HeapAlloc(size=0x10, zero=1) = 0x38b8b00",
+    "line_number": 732
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "HeapAlloc(size=0x1b, zero=1) = 0x38b6640",
+    "line_number": 733
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "HeapAlloc(size=0x13, zero=1) = 0x38b8b20",
+    "line_number": 734
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "HeapAlloc(size=0x32, zero=1) = 0x38b8b40",
+    "line_number": 735
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "HeapAlloc(size=0x19, zero=1) = 0x38b8b80",
+    "line_number": 736
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "HeapAlloc(size=0x14, zero=1) = 0x38b8bb0",
+    "line_number": 737
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "HeapAlloc(size=0x35, zero=1) = 0x38b8bd0",
+    "line_number": 738
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "HeapAlloc(size=0x3a, zero=1) = 0x38b8c10",
+    "line_number": 739
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "HeapAlloc(size=0xa, zero=1) = 0x38b8c60",
+    "line_number": 740
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "HeapAlloc(size=0x16, zero=1) = 0x38b8c80",
+    "line_number": 741
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "HeapAlloc(size=0xf, zero=1) = 0x38b8ca0",
+    "line_number": 742
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "HeapAlloc(size=0x31, zero=1) = 0x38b8cc0",
+    "line_number": 743
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "HeapAlloc(size=0x39, zero=1) = 0x38b8d00",
+    "line_number": 744
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "HeapAlloc(size=0xd, zero=1) = 0x38b8d50",
+    "line_number": 745
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "HeapAlloc(size=0x1d, zero=1) = 0x38b8d70",
+    "line_number": 746
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "HeapAlloc(size=0x1a, zero=1) = 0x38b8da0",
+    "line_number": 747
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "HeapAlloc(size=0x1c, zero=1) = 0x38b8dd0",
+    "line_number": 748
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "HeapAlloc(size=0x24, zero=1) = 0x38b8e00",
+    "line_number": 749
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "HeapAlloc(size=0x1b, zero=1) = 0x38b8e30",
+    "line_number": 750
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "HeapAlloc(size=0xb, zero=1) = 0x38b8e60",
+    "line_number": 751
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "HeapAlloc(size=0x11, zero=1) = 0x38b8e80",
+    "line_number": 752
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "HeapAlloc(size=0x22, zero=1) = 0x38b8ea0",
+    "line_number": 753
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "HeapAlloc(size=0xa, zero=1) = 0x38b8ed0",
+    "line_number": 754
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "HeapAlloc(size=0x7, zero=1) = 0x38b8ef0",
+    "line_number": 755
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "HeapAlloc(size=0x8, zero=1) = 0x38b8f10",
+    "line_number": 756
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "HeapAlloc(size=0x19, zero=1) = 0x38b8f30",
+    "line_number": 757
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "HeapAlloc(size=0x1a, zero=1) = 0x38b8f60",
+    "line_number": 758
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "HeapAlloc(size=0xb, zero=1) = 0x38b8f90",
+    "line_number": 759
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "HeapAlloc(size=0x1f, zero=1) = 0x38b8fb0",
+    "line_number": 760
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "HeapAlloc(size=0x15, zero=1) = 0x38b8fe0",
+    "line_number": 761
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "HeapAlloc(size=0x11, zero=1) = 0x38b9000",
+    "line_number": 762
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "HeapAlloc(size=0x19, zero=1) = 0x38b9020",
+    "line_number": 763
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "HeapAlloc(size=0xb0, zero=1) = 0x38b9050",
+    "line_number": 764
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "HeapAlloc(size=0x11, zero=1) = 0x38b9110",
+    "line_number": 765
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "HeapAlloc(size=0x1f, zero=1) = 0x38b9130",
+    "line_number": 766
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "HeapAlloc(size=0x1f, zero=1) = 0x38b9160",
+    "line_number": 767
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "HeapAlloc(size=0x30, zero=1) = 0x38b9190",
+    "line_number": 768
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "HeapAlloc(size=0x23, zero=1) = 0x38b91d0",
+    "line_number": 769
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "HeapAlloc(size=0x1a, zero=1) = 0x38b9200",
+    "line_number": 770
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "HeapAlloc(size=0x13, zero=1) = 0x38b9230",
+    "line_number": 771
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "HeapFree(0x38b8430)",
+    "line_number": 772
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "GetModuleHandleW()",
+    "line_number": 773
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "GetProcAddress(module=0xdead0001, name=GetSystemTimePreciseAsFileTime)",
+    "line_number": 774
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "-> 0x2030050",
+    "line_number": 775
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "GetProcAddress(module=0xdead0001, name=GetTempPath2W)",
+    "line_number": 776
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "-> NULL (not in dispatch table)",
+    "line_number": 777
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "QueryPerformanceFrequency()",
+    "line_number": 778
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "QueryPerformanceCounter()",
+    "line_number": 779
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "HeapAlloc(size=0x1000, zero=1) = 0x38b9250",
+    "line_number": 780
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "InitializeCriticalSectionEx(spin=4000)",
+    "line_number": 781
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "InitializeCriticalSectionEx(spin=4000)",
+    "line_number": 782
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "InitializeCriticalSectionEx(spin=4000)",
+    "line_number": 783
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "SetUnhandledExceptionFilter(handler=0x1401cba70)",
+    "line_number": 784
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "EnterCriticalSection(0x1402a1680)",
+    "line_number": 785
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "LeaveCriticalSection(0x1402a1680)",
+    "line_number": 786
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "EnterCriticalSection(0x1402a1680)",
+    "line_number": 787
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "LeaveCriticalSection(0x1402a1680)",
+    "line_number": 788
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "EnterCriticalSection(0x1402a1680)",
+    "line_number": 789
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "LeaveCriticalSection(0x1402a1680)",
+    "line_number": 790
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "EnterCriticalSection(0x1402a1680)",
+    "line_number": 791
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "LeaveCriticalSection(0x1402a1680)",
+    "line_number": 792
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "GetModuleHandleW()",
+    "line_number": 793
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "GetProcAddress(module=0xdead0001, name=GetActiveProcessorCount)",
+    "line_number": 794
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "-> 0x205d1c0",
+    "line_number": 795
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "GetProcAddress(module=0xdead0001, name=GetActiveProcessorGroupCount)",
+    "line_number": 796
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "-> 0x200af10",
+    "line_number": 797
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "GetProcessAffinityMask()",
+    "line_number": 798
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "GetModuleHandleW()",
+    "line_number": 799
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "GetProcAddress(module=0xdead0001, name=GetActiveProcessorCount)",
+    "line_number": 800
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "-> 0x205d1c0",
+    "line_number": 801
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "GetProcAddress(module=0xdead0001, name=GetActiveProcessorGroupCount)",
+    "line_number": 802
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "-> 0x200af10",
+    "line_number": 803
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "GetProcessAffinityMask()",
+    "line_number": 804
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "GetModuleHandleW()",
+    "line_number": 805
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "GetProcAddress(module=0xdead0001, name=GetActiveProcessorCount)",
+    "line_number": 806
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "-> 0x205d1c0",
+    "line_number": 807
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "GetProcAddress(module=0xdead0001, name=GetActiveProcessorGroupCount)",
+    "line_number": 808
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "-> 0x200af10",
+    "line_number": 809
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "GetProcessAffinityMask()",
+    "line_number": 810
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "AcquireSRWLockExclusive(0x1402a0890)",
+    "line_number": 811
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "ReleaseSRWLockExclusive(0x1402a0890)",
+    "line_number": 812
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "EnterCriticalSection(0x1402a1680)",
+    "line_number": 813
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "LeaveCriticalSection(0x1402a1680)",
+    "line_number": 814
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "AcquireSRWLockExclusive(0x1402a0890)",
+    "line_number": 815
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "ReleaseSRWLockExclusive(0x1402a0890)",
+    "line_number": 816
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "WakeAllConditionVariable(0x1402a0888)",
+    "line_number": 817
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "HeapAlloc(size=0x20, zero=0) = 0x38b8430",
+    "line_number": 818
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "HeapAlloc(size=0x200, zero=0) = 0x38b8460",
+    "line_number": 819
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "GetModuleFileNameW(cap=256)",
+    "line_number": 820
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "HeapAlloc(size=0x60, zero=0) = 0x38b8670",
+    "line_number": 821
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "HeapFree(0x38b8460)",
+    "line_number": 822
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "HeapFree(0x38b8430)",
+    "line_number": 823
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "GetFileAttributesW(miniwin-results/WinRAR.exe/binary/WinRAR.ini)",
+    "line_number": 824
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "SetLastError(2)",
+    "line_number": 825
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "HeapAlloc(size=0x62, zero=0) = 0x38b86e0",
+    "line_number": 826
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "HeapAlloc(size=0x70, zero=0) = 0x38b60b0",
+    "line_number": 827
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "HeapFree(0x38b86e0)",
+    "line_number": 828
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "HeapAlloc(size=0x70, zero=0) = 0x38b8750",
+    "line_number": 829
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "HeapAlloc(size=0x60, zero=0) = 0x38b86e0",
+    "line_number": 830
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "HeapAlloc(size=0xd0, zero=0) = 0x38b87d0",
+    "line_number": 831
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "HeapFree(0x38b8750)",
+    "line_number": 832
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "HeapFree(0x38b86e0)",
+    "line_number": 833
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "HeapFree(0x38b60b0)",
+    "line_number": 834
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "GetFileAttributesW(\\\\?\\/home/z/my-project/workspace/miniwin-engineering\\miniwin-results/WinRAR.exe/binary/WinRAR.ini)",
+    "line_number": 835
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "SetLastError(2)",
+    "line_number": 836
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "HeapFree(0x38b87d0)",
+    "line_number": 837
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "SHGetMalloc() -> S_OK (wine-contract IMalloc, ownership registry)",
+    "line_number": 838
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "IMalloc::Free(external 0xffffffff80000000) \u2014 NOT freed (SW-1207 crash vector closed; honest leak)",
+    "line_number": 839
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "HeapAlloc(size=0x20, zero=0) = 0x38b8430",
+    "line_number": 840
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "HeapAlloc(size=0x20, zero=0) = 0x38b88b0",
+    "line_number": 841
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "HeapFree(0x38b88b0)",
+    "line_number": 842
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "HeapFree(0x38b8430)",
+    "line_number": 843
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "GetFileAttributesW(WinRAR.ini)",
+    "line_number": 844
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "SetLastError(2)",
+    "line_number": 845
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "HeapAlloc(size=0x62, zero=0) = 0x38b86e0",
+    "line_number": 846
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "HeapAlloc(size=0x70, zero=0) = 0x38b60b0",
+    "line_number": 847
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "HeapFree(0x38b86e0)",
+    "line_number": 848
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "HeapAlloc(size=0x70, zero=0) = 0x38b8750",
+    "line_number": 849
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "HeapAlloc(size=0x20, zero=0) = 0x38b8430",
+    "line_number": 850
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "HeapAlloc(size=0xa6, zero=0) = 0x38ba260",
+    "line_number": 851
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "HeapFree(0x38b8750)",
+    "line_number": 852
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "HeapFree(0x38b8430)",
+    "line_number": 853
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "HeapFree(0x38b60b0)",
+    "line_number": 854
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "GetFileAttributesW(\\\\?\\/home/z/my-project/workspace/miniwin-engineering\\WinRAR.ini)",
+    "line_number": 855
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "SetLastError(2)",
+    "line_number": 856
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "HeapFree(0x38ba260)",
+    "line_number": 857
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "HeapAlloc(size=0x20, zero=0) = 0x38b8430",
+    "line_number": 858
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "HeapAlloc(size=0x20, zero=0) = 0x38b88b0",
+    "line_number": 859
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "HeapAlloc(size=0x30, zero=0) = 0x38b88e0",
+    "line_number": 860
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "HeapFree(0x38b8430)",
+    "line_number": 861
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "HeapFree(0x38b88b0)",
+    "line_number": 862
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "LoadLibraryExA(ADVAPI32.dll, flags=0)",
+    "line_number": 863
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "LoadLibraryA(ADVAPI32.dll)",
+    "line_number": 864
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "GetProcAddress(module=0xdead0005, name=RegOpenKeyExW)",
+    "line_number": 865
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "-> 0x206fc40",
+    "line_number": 866
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "GetModuleHandleW()",
+    "line_number": 867
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "GetProcAddress(module=0xdead0001, name=AcquireSRWLockExclusive)",
+    "line_number": 868
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "-> 0x205ca00",
+    "line_number": 869
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "GetProcAddress(module=0xdead0001, name=ReleaseSRWLockExclusive)",
+    "line_number": 870
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "-> 0x205cb60",
+    "line_number": 871
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "AcquireSRWLockExclusive(0x1402a0818)",
+    "line_number": 872
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "VirtualQuery(addr=0x1402af000)",
+    "line_number": 873
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "GetSystemInfo()",
+    "line_number": 874
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "VirtualProtect(addr=0x1402af0a0, size=0x8, prot=0x4)",
+    "line_number": 875
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "VirtualProtect(addr=0x1402af0a0, size=0x8, prot=0x40)",
+    "line_number": 876
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "ReleaseSRWLockExclusive(0x1402a0818)",
+    "line_number": 877
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "SetLastError(2)",
+    "line_number": 878
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "HeapFree(0x38b88e0)",
+    "line_number": 879
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "HeapAlloc(size=0x20, zero=0) = 0x38b88b0",
+    "line_number": 880
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "HeapAlloc(size=0x20, zero=0) = 0x38b8430",
+    "line_number": 881
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "HeapAlloc(size=0x20, zero=0) = 0x38ba310",
+    "line_number": 882
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "HeapAlloc(size=0x30, zero=0) = 0x38ba340",
+    "line_number": 883
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "HeapFree(0x38b8430)",
+    "line_number": 884
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "HeapFree(0x38ba310)",
+    "line_number": 885
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "SetLastError(2)",
+    "line_number": 886
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "HeapFree(0x38ba340)",
+    "line_number": 887
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "HeapFree(0x38b88b0)",
+    "line_number": 888
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "HeapAlloc(size=0x20, zero=0) = 0x38b88b0",
+    "line_number": 889
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "HeapAlloc(size=0x20, zero=0) = 0x38ba310",
+    "line_number": 890
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "HeapAlloc(size=0x20, zero=0) = 0x38b8430",
+    "line_number": 891
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "HeapAlloc(size=0x20, zero=0) = 0x38ba380",
+    "line_number": 892
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "HeapAlloc(size=0x40, zero=0) = 0x38b88e0",
+    "line_number": 893
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "HeapFree(0x38b8430)",
+    "line_number": 894
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "HeapFree(0x38ba380)",
+    "line_number": 895
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "SetLastError(2)",
+    "line_number": 896
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "HeapFree(0x38b88e0)",
+    "line_number": 897
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "HeapFree(0x38ba310)",
+    "line_number": 898
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "HeapFree(0x38b88b0)",
+    "line_number": 899
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "HeapAlloc(size=0x400, zero=0) = 0x38b6130",
+    "line_number": 900
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "GetModuleHandleW()",
+    "line_number": 901
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "GetProcAddress(module=0xdead0001, name=GetActiveProcessorCount)",
+    "line_number": 902
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "-> 0x205d1c0",
+    "line_number": 903
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "GetProcAddress(module=0xdead0001, name=GetActiveProcessorGroupCount)",
+    "line_number": 904
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "-> 0x200af10",
+    "line_number": 905
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "GetProcessAffinityMask()",
+    "line_number": 906
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "GetModuleHandleW()",
+    "line_number": 907
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "GetProcAddress(module=0xdead0001, name=GetActiveProcessorCount)",
+    "line_number": 908
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "-> 0x205d1c0",
+    "line_number": 909
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "GetProcAddress(module=0xdead0001, name=GetActiveProcessorGroupCount)",
+    "line_number": 910
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "-> 0x200af10",
+    "line_number": 911
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "GetProcessAffinityMask()",
+    "line_number": 912
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "GetModuleHandleW()",
+    "line_number": 913
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "GetProcAddress(module=0xdead0001, name=GetActiveProcessorCount)",
+    "line_number": 914
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "-> 0x205d1c0",
+    "line_number": 915
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "GetProcAddress(module=0xdead0001, name=GetActiveProcessorGroupCount)",
+    "line_number": 916
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "-> 0x200af10",
+    "line_number": 917
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "GetProcessAffinityMask()",
+    "line_number": 918
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "HeapAlloc(size=0x20, zero=0) = 0x38b88b0",
+    "line_number": 919
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "HeapAlloc(size=0x20, zero=0) = 0x38ba310",
+    "line_number": 920
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "HeapAlloc(size=0x30, zero=0) = 0x38ba340",
+    "line_number": 921
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "HeapFree(0x38b88b0)",
+    "line_number": 922
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "HeapFree(0x38ba310)",
+    "line_number": 923
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "SetLastError(2)",
+    "line_number": 924
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "HeapFree(0x38ba340)",
+    "line_number": 925
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "HeapAlloc(size=0x20, zero=0) = 0x38ba310",
+    "line_number": 926
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "HeapAlloc(size=0x20, zero=0) = 0x38b88b0",
+    "line_number": 927
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "HeapAlloc(size=0x20, zero=0) = 0x38ba380",
+    "line_number": 928
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "HeapAlloc(size=0x30, zero=0) = 0x38ba340",
+    "line_number": 929
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "HeapFree(0x38b88b0)",
+    "line_number": 930
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "HeapFree(0x38ba380)",
+    "line_number": 931
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "SetLastError(2)",
+    "line_number": 932
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "HeapFree(0x38ba340)",
+    "line_number": 933
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "HeapFree(0x38ba310)",
+    "line_number": 934
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "HeapAlloc(size=0x20, zero=0) = 0x38ba310",
+    "line_number": 935
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "HeapAlloc(size=0x20, zero=0) = 0x38ba380",
+    "line_number": 936
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "HeapAlloc(size=0x20, zero=0) = 0x38b88b0",
+    "line_number": 937
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "HeapAlloc(size=0x20, zero=0) = 0x38b8430",
+    "line_number": 938
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "HeapAlloc(size=0x40, zero=0) = 0x38b88e0",
+    "line_number": 939
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "HeapFree(0x38b88b0)",
+    "line_number": 940
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "HeapFree(0x38b8430)",
+    "line_number": 941
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "SetLastError(2)",
+    "line_number": 942
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "HeapFree(0x38b88e0)",
+    "line_number": 943
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "HeapFree(0x38ba380)",
+    "line_number": 944
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "HeapFree(0x38ba310)",
+    "line_number": 945
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "EnterCriticalSection(0x1402a1680)",
+    "line_number": 946
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "LeaveCriticalSection(0x1402a1680)",
+    "line_number": 947
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "GetModuleHandleW()",
+    "line_number": 948
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "GetProcAddress(module=0xdead0001, name=GetActiveProcessorCount)",
+    "line_number": 949
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "-> 0x205d1c0",
+    "line_number": 950
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "GetProcAddress(module=0xdead0001, name=GetActiveProcessorGroupCount)",
+    "line_number": 951
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "-> 0x200af10",
+    "line_number": 952
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "GetProcessAffinityMask()",
+    "line_number": 953
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "GetModuleHandleW()",
+    "line_number": 954
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "GetProcAddress(module=0xdead0001, name=GetActiveProcessorCount)",
+    "line_number": 955
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "-> 0x205d1c0",
+    "line_number": 956
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "GetProcAddress(module=0xdead0001, name=GetActiveProcessorGroupCount)",
+    "line_number": 957
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "-> 0x200af10",
+    "line_number": 958
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "GetProcessAffinityMask()",
+    "line_number": 959
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "GetModuleHandleW()",
+    "line_number": 960
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "GetProcAddress(module=0xdead0001, name=GetActiveProcessorCount)",
+    "line_number": 961
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "-> 0x205d1c0",
+    "line_number": 962
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "GetProcAddress(module=0xdead0001, name=GetActiveProcessorGroupCount)",
+    "line_number": 963
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "-> 0x200af10",
+    "line_number": 964
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "GetProcessAffinityMask()",
+    "line_number": 965
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "HeapAlloc(size=0x20, zero=0) = 0x38ba310",
+    "line_number": 966
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "HeapAlloc(size=0x20, zero=0) = 0x38ba380",
+    "line_number": 967
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "HeapAlloc(size=0x30, zero=0) = 0x38ba340",
+    "line_number": 968
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "HeapFree(0x38ba310)",
+    "line_number": 969
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "HeapFree(0x38ba380)",
+    "line_number": 970
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "SetLastError(2)",
+    "line_number": 971
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "HeapFree(0x38ba340)",
+    "line_number": 972
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "HeapAlloc(size=0x20, zero=0) = 0x38ba380",
+    "line_number": 973
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "HeapAlloc(size=0x20, zero=0) = 0x38ba310",
+    "line_number": 974
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "HeapAlloc(size=0x20, zero=0) = 0x38b8430",
+    "line_number": 975
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "HeapAlloc(size=0x30, zero=0) = 0x38ba340",
+    "line_number": 976
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "HeapFree(0x38ba310)",
+    "line_number": 977
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "HeapFree(0x38b8430)",
+    "line_number": 978
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "SetLastError(2)",
+    "line_number": 979
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "HeapFree(0x38ba340)",
+    "line_number": 980
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "HeapFree(0x38ba380)",
+    "line_number": 981
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "HeapAlloc(size=0x20, zero=0) = 0x38ba380",
+    "line_number": 982
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "HeapAlloc(size=0x20, zero=0) = 0x38b8430",
+    "line_number": 983
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "HeapAlloc(size=0x20, zero=0) = 0x38ba310",
+    "line_number": 984
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "HeapAlloc(size=0x20, zero=0) = 0x38b88b0",
+    "line_number": 985
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "HeapAlloc(size=0x40, zero=0) = 0x38b88e0",
+    "line_number": 986
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "HeapFree(0x38ba310)",
+    "line_number": 987
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "HeapFree(0x38b88b0)",
+    "line_number": 988
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "SetLastError(2)",
+    "line_number": 989
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "HeapFree(0x38b88e0)",
+    "line_number": 990
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "HeapFree(0x38b8430)",
+    "line_number": 991
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "HeapFree(0x38ba380)",
+    "line_number": 992
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "HeapAlloc(size=0x400, zero=0) = 0x38ba3b0",
+    "line_number": 993
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "GetModuleHandleW()",
+    "line_number": 994
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "GetProcAddress(module=0xdead0001, name=GetActiveProcessorCount)",
+    "line_number": 995
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "-> 0x205d1c0",
+    "line_number": 996
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "GetProcAddress(module=0xdead0001, name=GetActiveProcessorGroupCount)",
+    "line_number": 997
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "-> 0x200af10",
+    "line_number": 998
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "GetProcessAffinityMask()",
+    "line_number": 999
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "GetModuleHandleW()",
+    "line_number": 1000
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "GetProcAddress(module=0xdead0001, name=GetActiveProcessorCount)",
+    "line_number": 1001
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "-> 0x205d1c0",
+    "line_number": 1002
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "GetProcAddress(module=0xdead0001, name=GetActiveProcessorGroupCount)",
+    "line_number": 1003
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "-> 0x200af10",
+    "line_number": 1004
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "GetProcessAffinityMask()",
+    "line_number": 1005
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "GetModuleHandleW()",
+    "line_number": 1006
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "GetProcAddress(module=0xdead0001, name=GetActiveProcessorCount)",
+    "line_number": 1007
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "-> 0x205d1c0",
+    "line_number": 1008
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "GetProcAddress(module=0xdead0001, name=GetActiveProcessorGroupCount)",
+    "line_number": 1009
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "-> 0x200af10",
+    "line_number": 1010
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "GetProcessAffinityMask()",
+    "line_number": 1011
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "HeapAlloc(size=0x20, zero=0) = 0x38ba380",
+    "line_number": 1012
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "HeapAlloc(size=0x20, zero=0) = 0x38b8430",
+    "line_number": 1013
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "HeapAlloc(size=0x30, zero=0) = 0x38ba340",
+    "line_number": 1014
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "HeapFree(0x38ba380)",
+    "line_number": 1015
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "HeapFree(0x38b8430)",
+    "line_number": 1016
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "SetLastError(2)",
+    "line_number": 1017
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "HeapFree(0x38ba340)",
+    "line_number": 1018
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "HeapAlloc(size=0x20, zero=0) = 0x38b8430",
+    "line_number": 1019
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "HeapAlloc(size=0x20, zero=0) = 0x38ba380",
+    "line_number": 1020
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "HeapAlloc(size=0x20, zero=0) = 0x38b88b0",
+    "line_number": 1021
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "HeapAlloc(size=0x30, zero=0) = 0x38ba340",
+    "line_number": 1022
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "HeapFree(0x38ba380)",
+    "line_number": 1023
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "HeapFree(0x38b88b0)",
+    "line_number": 1024
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "SetLastError(2)",
+    "line_number": 1025
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "HeapFree(0x38ba340)",
+    "line_number": 1026
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "HeapFree(0x38b8430)",
+    "line_number": 1027
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "HeapAlloc(size=0x20, zero=0) = 0x38b8430",
+    "line_number": 1028
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "HeapAlloc(size=0x20, zero=0) = 0x38b88b0",
+    "line_number": 1029
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "HeapAlloc(size=0x20, zero=0) = 0x38ba380",
+    "line_number": 1030
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "HeapAlloc(size=0x20, zero=0) = 0x38ba310",
+    "line_number": 1031
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "HeapAlloc(size=0x40, zero=0) = 0x38b88e0",
+    "line_number": 1032
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "HeapFree(0x38ba380)",
+    "line_number": 1033
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "HeapFree(0x38ba310)",
+    "line_number": 1034
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "SetLastError(2)",
+    "line_number": 1035
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "HeapFree(0x38b88e0)",
+    "line_number": 1036
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "HeapFree(0x38b88b0)",
+    "line_number": 1037
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "HeapFree(0x38b8430)",
+    "line_number": 1038
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "EnterCriticalSection(0x1402a1680)",
+    "line_number": 1039
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "LeaveCriticalSection(0x1402a1680)",
+    "line_number": 1040
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "GetModuleHandleW()",
+    "line_number": 1041
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "GetProcAddress(module=0xdead0001, name=GetActiveProcessorCount)",
+    "line_number": 1042
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "-> 0x205d1c0",
+    "line_number": 1043
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "GetProcAddress(module=0xdead0001, name=GetActiveProcessorGroupCount)",
+    "line_number": 1044
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "-> 0x200af10",
+    "line_number": 1045
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "GetProcessAffinityMask()",
+    "line_number": 1046
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "GetModuleHandleW()",
+    "line_number": 1047
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "GetProcAddress(module=0xdead0001, name=GetActiveProcessorCount)",
+    "line_number": 1048
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "-> 0x205d1c0",
+    "line_number": 1049
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "GetProcAddress(module=0xdead0001, name=GetActiveProcessorGroupCount)",
+    "line_number": 1050
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "-> 0x200af10",
+    "line_number": 1051
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "GetProcessAffinityMask()",
+    "line_number": 1052
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "GetModuleHandleW()",
+    "line_number": 1053
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "GetProcAddress(module=0xdead0001, name=GetActiveProcessorCount)",
+    "line_number": 1054
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "-> 0x205d1c0",
+    "line_number": 1055
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "GetProcAddress(module=0xdead0001, name=GetActiveProcessorGroupCount)",
+    "line_number": 1056
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "-> 0x200af10",
+    "line_number": 1057
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "GetProcessAffinityMask()",
+    "line_number": 1058
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "HeapAlloc(size=0x20, zero=0) = 0x38b8430",
+    "line_number": 1059
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "HeapAlloc(size=0x20, zero=0) = 0x38b88b0",
+    "line_number": 1060
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "HeapAlloc(size=0x30, zero=0) = 0x38ba340",
+    "line_number": 1061
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "HeapFree(0x38b8430)",
+    "line_number": 1062
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "HeapFree(0x38b88b0)",
+    "line_number": 1063
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "SetLastError(2)",
+    "line_number": 1064
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "HeapFree(0x38ba340)",
+    "line_number": 1065
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "HeapAlloc(size=0x20, zero=0) = 0x38b88b0",
+    "line_number": 1066
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "HeapAlloc(size=0x20, zero=0) = 0x38b8430",
+    "line_number": 1067
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "HeapAlloc(size=0x20, zero=0) = 0x38ba310",
+    "line_number": 1068
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "HeapAlloc(size=0x30, zero=0) = 0x38ba340",
+    "line_number": 1069
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "HeapFree(0x38b8430)",
+    "line_number": 1070
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "HeapFree(0x38ba310)",
+    "line_number": 1071
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "SetLastError(2)",
+    "line_number": 1072
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "HeapFree(0x38ba340)",
+    "line_number": 1073
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "HeapFree(0x38b88b0)",
+    "line_number": 1074
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "HeapAlloc(size=0x20, zero=0) = 0x38b88b0",
+    "line_number": 1075
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "HeapAlloc(size=0x20, zero=0) = 0x38ba310",
+    "line_number": 1076
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "HeapAlloc(size=0x20, zero=0) = 0x38b8430",
+    "line_number": 1077
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "HeapAlloc(size=0x20, zero=0) = 0x38ba380",
+    "line_number": 1078
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "HeapAlloc(size=0x40, zero=0) = 0x38b88e0",
+    "line_number": 1079
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "HeapFree(0x38b8430)",
+    "line_number": 1080
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "HeapFree(0x38ba380)",
+    "line_number": 1081
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "SetLastError(2)",
+    "line_number": 1082
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "HeapFree(0x38b88e0)",
+    "line_number": 1083
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "HeapFree(0x38ba310)",
+    "line_number": 1084
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "HeapFree(0x38b88b0)",
+    "line_number": 1085
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "HeapAlloc(size=0x400, zero=0) = 0x38ba7c0",
+    "line_number": 1086
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "GetModuleHandleW()",
+    "line_number": 1087
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "GetProcAddress(module=0xdead0001, name=GetActiveProcessorCount)",
+    "line_number": 1088
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "-> 0x205d1c0",
+    "line_number": 1089
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "GetProcAddress(module=0xdead0001, name=GetActiveProcessorGroupCount)",
+    "line_number": 1090
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "-> 0x200af10",
+    "line_number": 1091
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "GetProcessAffinityMask()",
+    "line_number": 1092
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "GetModuleHandleW()",
+    "line_number": 1093
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "GetProcAddress(module=0xdead0001, name=GetActiveProcessorCount)",
+    "line_number": 1094
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "-> 0x205d1c0",
+    "line_number": 1095
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "GetProcAddress(module=0xdead0001, name=GetActiveProcessorGroupCount)",
+    "line_number": 1096
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "-> 0x200af10",
+    "line_number": 1097
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "GetProcessAffinityMask()",
+    "line_number": 1098
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "GetModuleHandleW()",
+    "line_number": 1099
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "GetProcAddress(module=0xdead0001, name=GetActiveProcessorCount)",
+    "line_number": 1100
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "-> 0x205d1c0",
+    "line_number": 1101
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "GetProcAddress(module=0xdead0001, name=GetActiveProcessorGroupCount)",
+    "line_number": 1102
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "-> 0x200af10",
+    "line_number": 1103
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "GetProcessAffinityMask()",
+    "line_number": 1104
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "HeapAlloc(size=0x20, zero=0) = 0x38b88b0",
+    "line_number": 1105
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "HeapAlloc(size=0x20, zero=0) = 0x38ba310",
+    "line_number": 1106
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "HeapAlloc(size=0x30, zero=0) = 0x38ba340",
+    "line_number": 1107
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "HeapFree(0x38b88b0)",
+    "line_number": 1108
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "HeapFree(0x38ba310)",
+    "line_number": 1109
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "SetLastError(2)",
+    "line_number": 1110
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "HeapFree(0x38ba340)",
+    "line_number": 1111
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "HeapAlloc(size=0x20, zero=0) = 0x38ba310",
+    "line_number": 1112
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "HeapAlloc(size=0x20, zero=0) = 0x38b88b0",
+    "line_number": 1113
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "HeapAlloc(size=0x20, zero=0) = 0x38ba380",
+    "line_number": 1114
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "HeapAlloc(size=0x30, zero=0) = 0x38ba340",
+    "line_number": 1115
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "HeapFree(0x38b88b0)",
+    "line_number": 1116
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "HeapFree(0x38ba380)",
+    "line_number": 1117
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "SetLastError(2)",
+    "line_number": 1118
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "HeapFree(0x38ba340)",
+    "line_number": 1119
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "HeapFree(0x38ba310)",
+    "line_number": 1120
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "HeapAlloc(size=0x20, zero=0) = 0x38ba310",
+    "line_number": 1121
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "HeapAlloc(size=0x20, zero=0) = 0x38ba380",
+    "line_number": 1122
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "HeapAlloc(size=0x20, zero=0) = 0x38b88b0",
+    "line_number": 1123
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "HeapAlloc(size=0x20, zero=0) = 0x38b8430",
+    "line_number": 1124
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "HeapAlloc(size=0x40, zero=0) = 0x38b88e0",
+    "line_number": 1125
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "HeapFree(0x38b88b0)",
+    "line_number": 1126
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "HeapFree(0x38b8430)",
+    "line_number": 1127
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "SetLastError(2)",
+    "line_number": 1128
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "HeapFree(0x38b88e0)",
+    "line_number": 1129
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "HeapFree(0x38ba380)",
+    "line_number": 1130
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "HeapFree(0x38ba310)",
+    "line_number": 1131
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "EnterCriticalSection(0x1402a1680)",
+    "line_number": 1132
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "LeaveCriticalSection(0x1402a1680)",
+    "line_number": 1133
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "EnterCriticalSection(0x1402a1680)",
+    "line_number": 1134
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "LeaveCriticalSection(0x1402a1680)",
+    "line_number": 1135
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "GetSysColor(5) -> 0xffffff",
+    "line_number": 1136
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "GetSysColor(5) -> 0xffffff",
+    "line_number": 1137
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "GetSysColor(8) -> 0x000000",
+    "line_number": 1138
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "SystemParametersInfoW(action=0x100e) -> FALSE (unsupported; caller falls back)",
+    "line_number": 1139
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "EnterCriticalSection(0x1402a1680)",
+    "line_number": 1140
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "LeaveCriticalSection(0x1402a1680)",
+    "line_number": 1141
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "EnterCriticalSection(0x1402a1680)",
+    "line_number": 1142
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "LeaveCriticalSection(0x1402a1680)",
+    "line_number": 1143
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "EnterCriticalSection(0x1402a1680)",
+    "line_number": 1144
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "LeaveCriticalSection(0x1402a1680)",
+    "line_number": 1145
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "EnterCriticalSection(0x1402a1680)",
+    "line_number": 1146
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "LeaveCriticalSection(0x1402a1680)",
+    "line_number": 1147
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "EnterCriticalSection(0x1402a1680)",
+    "line_number": 1148
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "LeaveCriticalSection(0x1402a1680)",
+    "line_number": 1149
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "HeapAlloc(size=0x38, zero=0) = 0x38ba340",
+    "line_number": 1150
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "HeapAlloc(size=0x80, zero=0) = 0x38babd0",
+    "line_number": 1151
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "HeapAlloc(size=0x400, zero=0) = 0x38bac60",
+    "line_number": 1152
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "EnterCriticalSection(0x1402a1680)",
+    "line_number": 1153
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "LeaveCriticalSection(0x1402a1680)",
+    "line_number": 1154
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "EnterCriticalSection(0x1402a1680)",
+    "line_number": 1155
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "LeaveCriticalSection(0x1402a1680)",
+    "line_number": 1156
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "EnterCriticalSection(0x1402a1680)",
+    "line_number": 1157
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "LeaveCriticalSection(0x1402a1680)",
+    "line_number": 1158
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "EnterCriticalSection(0x1402a1680)",
+    "line_number": 1159
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "LeaveCriticalSection(0x1402a1680)",
+    "line_number": 1160
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "HeapAlloc(size=0x400, zero=0) = 0x38bb070",
+    "line_number": 1161
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "EnterCriticalSection(0x1402a1680)",
+    "line_number": 1162
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "LeaveCriticalSection(0x1402a1680)",
+    "line_number": 1163
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "HeapAlloc(size=0x400, zero=0) = 0x38bb480",
+    "line_number": 1164
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "EnterCriticalSection(0x1402a1680)",
+    "line_number": 1165
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "LeaveCriticalSection(0x1402a1680)",
+    "line_number": 1166
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "HeapAlloc(size=0x400, zero=0) = 0x38bb890",
+    "line_number": 1167
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "EnterCriticalSection(0x1402a1680)",
+    "line_number": 1168
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "LeaveCriticalSection(0x1402a1680)",
+    "line_number": 1169
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "EnterCriticalSection(0x1402a1680)",
+    "line_number": 1170
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "LeaveCriticalSection(0x1402a1680)",
+    "line_number": 1171
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "EnterCriticalSection(0x1402a1680)",
+    "line_number": 1172
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "LeaveCriticalSection(0x1402a1680)",
+    "line_number": 1173
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "EnterCriticalSection(0x1402a1680)",
+    "line_number": 1174
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "LeaveCriticalSection(0x1402a1680)",
+    "line_number": 1175
+  },
+  {
+    "thread_id": "T9f80",
+    "function": "HeapAlloc(size=0x20000, zero=0) = 0x38bbca0",
+    "line_number": 1176
+  }
+]

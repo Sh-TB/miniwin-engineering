@@ -1,0 +1,116 @@
+{
+  "trace_id": "minwin-f3920122",
+  "source": "MiniWin loader api_trace.json (NOT Wine relay)",
+  "exe": "notepad++.exe",
+  "total_api_calls": 7421,
+  "threads": {
+    "Tf80": 7385,
+    "T26c0": 36
+  },
+  "frontier_events": [
+    "Import resolution: 624 resolved, 0 unresolved (total 624)",
+    "[FASTFAIL] code=5 caller_RA=0x0 RVA=0x0 RSP=0x7fffbc759500 \u2014 fail-fast"
+  ],
+  "per_function_top": [
+    [
+      "[GDI] GetDeviceCaps",
+      2172
+    ],
+    [
+      "HeapAlloc",
+      1721
+    ],
+    [
+      "HeapFree",
+      1146
+    ],
+    [
+      "MultiByteToWideChar",
+      792
+    ],
+    [
+      "WideCharToMultiByte",
+      402
+    ],
+    [
+      "InitializeCriticalSectionEx",
+      92
+    ],
+    [
+      "[GDI] CreateSolidBrush",
+      72
+    ],
+    [
+      "EnterCriticalSection",
+      68
+    ],
+    [
+      "LeaveCriticalSection",
+      67
+    ],
+    [
+      "SetLastError",
+      33
+    ],
+    [
+      "[GDI] CreatePen",
+      32
+    ],
+    [
+      "GetLastError",
+      19
+    ],
+    [
+      "_beginthreadex",
+      18
+    ],
+    [
+      "CreateThread",
+      9
+    ],
+    [
+      "WaitForSingleObject",
+      9
+    ],
+    [
+      "GetFileAttributesW",
+      9
+    ],
+    [
+      "CloseHandle",
+      9
+    ],
+    [
+      "GetProcAddress",
+      8
+    ],
+    [
+      "VirtualProtect",
+      5
+    ],
+    [
+      "CreateDirectoryW",
+      5
+    ],
+    [
+      "LoadLibraryExW",
+      4
+    ],
+    [
+      "LoadLibraryA",
+      4
+    ],
+    [
+      "AcquireSRWLockExclusive",
+      4
+    ],
+    [
+      "ReleaseSRWLockExclusive",
+      4
+    ],
+    [
+      "GetStdHandle",
+      3
+    ]
+  ]
+}

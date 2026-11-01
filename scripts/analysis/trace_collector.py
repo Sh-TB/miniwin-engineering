@@ -486,7 +486,69 @@ def build_trace_package(exec_results, api_calls, loaded_modules, pe_info, trace_
     return trace_dir
 
 
+# ----------------------------------------------------------------------
+# MiniWin backend (SW-TRACK2): parses the loader's api_trace.json into the
+# same structured trace-package shape. Source is clearly labeled "MiniWin"
+ # (the loader emits the calls) — Wine relay collection stays the primary
+# backend and remains blocked in wine-less sandboxes. NO SIMULATION: every
+# line comes from a real recorded run file.
+# ----------------------------------------------------------------------
+def collect_minwin(api_trace_path, out_root='/home/z/my-project/traces'):
+    import hashlib as _h
+    raw = open(api_trace_path, 'r', errors='replace').read()
+    sha = _h.sha256(raw.encode()).hexdigest()[:12]
+    calls = []
+    tid_counts = {}
+    frontier = []
+    for line in raw.splitlines():
+        if '[API]' not in line:
+            continue
+        # [Txxyy] [API] Name(args...)
+        tid_start = line.find('[') + 1
+        tid = line[tid_start:line.find(']', tid_start)]
+        body = line.split('[API]', 1)[1].strip()
+        calls.append({'thread_id': tid, 'function': body[:160], 'line_number': len(calls) + 1})
+        tid_counts[tid] = tid_counts.get(tid, 0) + 1
+        low = body.lower()
+        if any(k in low for k in ('fail', 'crash', 'fastfail', 'e_notimpl', 'noimplement', 'unresolved', 'frontier')):
+            frontier.append(body[:160])
+    exe_name = os.path.basename(os.path.dirname(api_trace_path))
+    stamp = datetime.now(timezone.utc).strftime('%Y%m%d_%H%M%S')
+    pkg = os.path.join(out_root, f"minwin_{exe_name.replace('.', '_')}_{stamp}")
+    os.makedirs(pkg, exist_ok=True)
+    summary = {
+        'trace_id': f"minwin-{sha[:8]}",
+        'source': 'MiniWin loader api_trace.json (NOT Wine relay)',
+        'exe': exe_name,
+        'total_api_calls': len(calls),
+        'threads': tid_counts,
+        'frontier_events': frontier[:200],
+        'per_function_top': _top_functions(calls, 25),
+    }
+    with open(os.path.join(pkg, 'summary.json'), 'w') as f:
+        json.dump(summary, f, indent=2)
+    with open(os.path.join(pkg, 'api_calls.json'), 'w') as f:
+        json.dump(calls, f, indent=2)
+    print(f"MiniWin trace package: {pkg}")
+    print(f"  calls={len(calls)} threads={len(tid_counts)} frontier_events={len(frontier)}")
+    return pkg
+
+
+def _top_functions(calls, n):
+    import re as _re
+    counts = {}
+    for c in calls:
+        m = _re.match(r'([A-Za-z_][A-Za-z0-9_]*)\(', c['function'])
+        name = m.group(1) if m else c['function'].split('(')[0]
+        counts[name] = counts.get(name, 0) + 1
+    return sorted(counts.items(), key=lambda kv: -kv[1])[:n]
+
+
 def main():
+    # SW-TRACK2: --minwin <api_trace.json> parses a recorded MiniWin run
+    if len(sys.argv) >= 3 and sys.argv[1] == '--minwin':
+        collect_minwin(sys.argv[2])
+        return
     # Configuration
     EXE_PATH = sys.argv[1] if len(sys.argv) > 1 else '/home/z/my-project/tools/test-binaries-real/hello_simple.exe'
     WINE_PATH = '/home/z/my-project/tools/wine-9.0-staging-tkg-amd64'

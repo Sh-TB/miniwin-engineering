@@ -1,0 +1,114 @@
+{
+  "trace_id": "minwin-15aae266",
+  "source": "MiniWin loader api_trace.json (NOT Wine relay)",
+  "exe": "trains.exe",
+  "total_api_calls": 4595,
+  "threads": {
+    "Tbf80": 4595
+  },
+  "frontier_events": [
+    "Import resolution: 72 resolved, 0 unresolved (total 72)"
+  ],
+  "per_function_top": [
+    [
+      "[GDI] SelectObject",
+      1007
+    ],
+    [
+      "[GDI] CreateSolidBrush",
+      937
+    ],
+    [
+      "[GDI] Ellipse",
+      491
+    ],
+    [
+      "[GDI] FillRect",
+      448
+    ],
+    [
+      "[GDI] MoveToEx",
+      357
+    ],
+    [
+      "[GDI] LineTo",
+      357
+    ],
+    [
+      "[GDI] CreatePen",
+      273
+    ],
+    [
+      "[GDI] Rectangle",
+      231
+    ],
+    [
+      "[GDI] TextOutA",
+      98
+    ],
+    [
+      "[GDI] SetTextColor",
+      91
+    ],
+    [
+      "[GDI] SetBkMode",
+      84
+    ],
+    [
+      "BeginPaint",
+      7
+    ],
+    [
+      "[GUI-EVENT] dispatch WM_PAINT wp=0x0 -> 0",
+      7
+    ],
+    [
+      "[GUI] InvalidateRect -> paint pending",
+      6
+    ],
+    [
+      "[GUI-EVENT] TranslateMessage WM_KEYDOWN VK=0x26 -> WM_CHAR queued",
+      4
+    ],
+    [
+      "[GUI-EVENT] dispatch WM_KEYDOWN wp=0x26 -> 0",
+      4
+    ],
+    [
+      "[GUI-EVENT] dispatch WM_CHAR wp=0x26 -> 0",
+      4
+    ],
+    [
+      "[GUI-EVENT] dispatch WM_KEYDOWN wp=0x9 -> 0",
+      3
+    ],
+    [
+      "[GUI-EVENT] dispatch WM_TIMER wp=0x1 -> 0",
+      3
+    ],
+    [
+      "atexit",
+      2
+    ],
+    [
+      "malloc",
+      2
+    ],
+    [
+      "PE Loader: file=artifacts/trains/trains.exe size=230912",
+      1
+    ],
+    [
+      "PE Loader: ImageBase=0x140000000 EP=0x33e0 SizeOfImage=0x3f000 Sections=7",
+      1
+    ],
+    [
+      "PE Loader: Mapped at 0x140000000 ",
+      1
+    ],
+    [
+      "Section [0] .text    VA=0x00001000 VS=0x0002a1b6 Raw=0x0002a200 Ch=0x60000020",
+      1
+    ]
+  ]
+}
