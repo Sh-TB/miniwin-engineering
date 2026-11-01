@@ -851,3 +851,44 @@ Stage Summary:
   modal pump for dialog-driven flows (WinRAR nag dialog lives inside
   WM_INITDIALOG), NPP guest C++ EH resume CONTEXT (SW-1201 class).
 - Next wagons: SW-1562 decode, modal pump design, NPP EH.
+
+---
+Task ID: SWEEP-W7 (SW-1571)
+Agent: main (z.ai)
+Task: «ادامه قطار وینه سورس کد اینترنت ۳ برنامه چند برنامه ریز تست» — continue the internet-Wine-source train: WinRAR toolbar end-to-end + 3 named programs + small test PEs
+
+Work Log:
+- Re-ran the Wine 10.1 oracle for WinRAR 7.12 x64 (relay-only, 70s, L0_XVFB=1):
+  383k pairs. ROOT-CAUSE of the two worthless 23MB/exit=0 captures: L0_XVFB was
+  unset so Wine ran headless and the GUI guest took its early-exit path. The
+  good capture gives the full toolbar oracle: ReBarWindow32@188873 ->
+  ComboBox family -> ImageList_Create x5 -> ReplaceIcon x20 -> Toolbar#1 ->
+  20 button PNG decodes -> Toolbar#2 -> statusbar/listview; per-button
+  SendMessage pattern 0x413/0x44D/0x417/0x444 measured with retvals.
+- Instrumented MiniWin (honest, always-on traces): child-registration site +
+  parent, TBMSG protocol line, TB_ADDBUTTONS field line, TBPAINT composite
+  line. Result: ALL SIX WinRAR child windows are guest-created (site=
+  mw_CreateWindowExW child path), and the guest's toolbar message protocol
+  measures at FULL Wine parity (counts identical per message). The historical
+  "guest never sends TB_ADDBUTTONSW" state is SUPERSEDED (pre-Wagon-24).
+- Generic fixes landed (details in the commit message): toolbar-art renderer
+  (app's own decoded PNG art by TBBUTTON.iBitmap), WS_CLIPCHILDREN emulation
+  in EndPaint, first-pump forced WM_SIZE, SIGTERM final evidence frame, 0x44D
+  wide-reader + idempotent pool, fsState round-trip.
+- Small test PEs (چند برنامه ریز تست): t15_toolbar_contract (33/33), 
+  t16_child_rect (18/18) — both compile via zig cc x86_64-windows-gnu, both
+  exit 0 under the engine, both locked the two real contract gaps the test
+  run itself uncovered (0x44D double-pool, fsState drop).
+- Gates: G1 PIN 12/12 x2 (20261101_092446 + _093750); 3-program battery on
+  the final binary all green (winrarinstd ALIVE_PUMP x3, npp64 PASS x2,
+  idman EXIT x2). Evidence: evidence/w7_toolbar/ + evidence/w7final2/.
+
+Stage Summary:
+- WinRAR's toolbar is now REAL application-generated UI: the guest's own
+  CreateWindowExW + TB_ADDBUTTONSW data + the app's own decoded button art,
+  zero hardcoding. Protocol at Wine parity, measured.
+- Registered SW-1572 (next wagon): rebar/combo height model — the guest's
+  layout computes rebar 2->3->4px (+1 rounds; Wine: 83px), so the file-list
+  pane (y=24) covers the toolbar strip in the settled frame. The mid-composite
+  evidence frame proves the toolbar render; SW-1572 will make it the final
+  state.
