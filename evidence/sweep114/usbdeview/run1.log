@@ -1,0 +1,7 @@
+[TRACE] Command line: /home/z/my-project/workspace/miniwin-engineering/.cache/miniwin/guests/usbdeview.x/USBDeview.exe
+[WARN]   unresolved: WS2_32.DLL ordinal 103
+[WARN] 1 imports unresolved
+[MiniWin] Loading /home/z/my-project/workspace/miniwin-engineering/.cache/miniwin/guests/usbdeview.x/USBDeview.exe...
+[GDI-FRAME] #1 -> miniwin-results/USBDeview.exe/screenshots/frame_001.bmp
+[MessageBoxA] Error: Error 3: The system cannot find the path specified.
+[MessageBox] dialog #1 rendered -> miniwin-results/USBDeview.exe/screenshots/messagebox_1.bmp

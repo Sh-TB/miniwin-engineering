@@ -1,0 +1,6 @@
+[TRACE] Command line: /home/z/my-project/workspace/miniwin-engineering/.cache/miniwin/guests/devmanview.x/DevManView.exe
+[WARN]   unresolved: ChangeServiceConfigW
+[WARN]   unresolved: RegSetKeySecurity
+[WARN] 2 imports unresolved
+[MiniWin] Loading /home/z/my-project/workspace/miniwin-engineering/.cache/miniwin/guests/devmanview.x/DevManView.exe...
+[GDI-FRAME] #1 -> miniwin-results/DevManView.exe/screenshots/frame_001.bmp
