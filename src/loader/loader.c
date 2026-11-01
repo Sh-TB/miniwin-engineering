@@ -12843,8 +12843,9 @@ __attribute__((ms_abi)) int32_t mw_RegOpenKeyExW(void* key, const wchar_t* sub, 
                 err = (mw_reg_find_path(anc) >= 0) ? 2 : 3;
             }
         }
-        MW_TRACE("RegOpenKeyExW(miss) '%s' -> ERROR_%s", pb,
-                 err == 3 ? "PATH_NOT_FOUND" : "FILE_NOT_FOUND");
+        MW_TRACE("RegOpenKeyExW(miss) '%s' -> ERROR_%s caller=%p", pb,
+                 err == 3 ? "PATH_NOT_FOUND" : "FILE_NOT_FOUND",
+                 __builtin_return_address(0)); /* W7: which guest site probed */
         mw32_sentinel_check_at("RegOpen-pre-SLE"); /* SW-1558 */
         mw_SetLastError(err);
         mw32_sentinel_check_at("RegOpen-post-SLE"); /* SW-1558 */
@@ -18084,6 +18085,7 @@ typedef struct {
     int      tb_bw, tb_bh;          /* TB_SETBUTTONSIZE; 0 -> engine default */
     int      tb_bsize;              /* TB_BUTTONSTRUCTSIZE (SW-1562) */
     uint8_t  tb_style[40];          /* BTNS_SEP = 0x01 */
+    uint8_t  tb_state[40];          /* W7 (SW-1571): fsState byte (TB_GETBUTTON b[8]) */
     int32_t  tb_cmd[40];
     int32_t  tb_bmp[40];
     int      tb_stridx[40];         /* tb_pool index, -1 = no label */
@@ -18337,6 +18339,8 @@ static int mw_tbbtn_parse(uintptr_t lp, int wide, int32_t* bmp, int32_t* cmd,
     if (wide) {
         if (!mw_probe_copy((void*)lp, 32, b)) return 0;
         memcpy(bmp, b, 4); memcpy(cmd, b + 4, 4); *st = b[9];
+        /* W7 (SW-1571): expose fsState (b[8]) through the high bit of *st is
+         * wrong; callers read b[8] themselves via tb_state — keep st=style */
         memcpy(istr, b + 24, 8);
         return 1;
     }
@@ -18344,6 +18348,12 @@ static int mw_tbbtn_parse(uintptr_t lp, int wide, int32_t* bmp, int32_t* cmd,
     memcpy(bmp, b, 4); memcpy(cmd, b + 4, 4); *st = b[9];
     { int32_t d = 0; memcpy(&d, b + 16, 4); *istr = d; }
     return 1;
+}
+/* W7 (SW-1571): read the TBBUTTON.fsState byte (offset 8) directly */
+static uint8_t mw_tbbtn_state(uintptr_t lp) {
+    uint8_t st8 = 0;
+    if (lp && mw_probe_copy((void*)(lp + 8), 1, &st8)) return st8;
+    return 0;
 }
 
 /* ============================================================
@@ -18681,15 +18691,23 @@ static int mw_commonctl_msg(int s, uint32_t msg, uintptr_t wp, long long lp, lon
             /* non-RB traffic keeps the SW-1521 TB_ identity: fall through
                to the TOOLBAR switch below */
         }
+        /* W7: make the toolbar message protocol VISIBLE — the silent
+         * handled-return below (TB_SETBITMAPSIZE etc.) hid the guest's
+         * real Wine-parity traffic from the trace (SW-1571). */
+        MW_TRACE("TBMSG hwnd=%p cls=%s msg=0x%x wp=%#llx lp=%#llx",
+                 c->hwnd, c->cls, msg, (unsigned long long)wp,
+                 (unsigned long long)lp);
         switch (msg) {
         case 0x444u: case 0x414u: { /* TB_ADDBUTTONSW/A */
             int n = (int)wp; *out = 1;
+            int added0 = c->tb_nbtn;
             for (int i = 0; i < n && c->tb_nbtn < 40; i++) {
                 int32_t bmp = 0, cmd = 0; uint8_t st = 0; long long istr = 0;
                 if (!mw_tbbtn_parse((uintptr_t)lp + (uintptr_t)i * 32,
                                     1, &bmp, &cmd, &st, &istr)) break;
                 int bi = c->tb_nbtn++;
                 c->tb_bmp[bi] = bmp; c->tb_cmd[bi] = cmd; c->tb_style[bi] = st;
+                c->tb_state[bi] = mw_tbbtn_state((uintptr_t)lp + (uintptr_t)i * 32);
                 c->tb_stridx[bi] = -1;
                 if (istr > 0xFFFFull) { /* direct string pointer */
                     uint16_t tmp[20] = {0};
@@ -18697,7 +18715,11 @@ static int mw_commonctl_msg(int s, uint32_t msg, uintptr_t wp, long long lp, lon
                         c->tb_stridx[bi] = mw_tb_pool_add(c, tmp);
                 } else if (istr >= 0)
                     c->tb_stridx[bi] = (int)istr;
+                /* W7 (SW-1571): visible protocol — this was silent before */
+                MW_TRACE("TB_ADDBUTTONS[%d] bmp=%d cmd=%#x style=%#x str=%d",
+                         bi, bmp, cmd, st, c->tb_stridx[bi]);
             }
+            (void)added0;
             return 1;
         }
         /* Wagon 24 (2026-10-31): accept TB_INSERTBUTTON (WM_USER+1 = 0x401).
@@ -18711,13 +18733,33 @@ static int mw_commonctl_msg(int s, uint32_t msg, uintptr_t wp, long long lp, lon
                 c->tb_nbtn < 40) {
                 int bi = c->tb_nbtn++;
                 c->tb_bmp[bi] = bmp; c->tb_cmd[bi] = cmd; c->tb_style[bi] = st;
+                c->tb_state[bi] = mw_tbbtn_state((uintptr_t)lp);
                 c->tb_stridx[bi] = (istr >= 0 && istr < 0x10000) ? (int)istr : -1;
                 MW_TRACE("TB_INSERTBUTTON[%d] bmp=%d cmd=%#x style=%#x",
                          bi, bmp, cmd, st);
             }
             return 1;
         }
-        case 0x41Cu: case 0x44Du: { /* TB_ADDSTRINGA/W: pool the labels */
+        case 0x41Cu: case 0x44Du: { /* TB_ADDSTRINGA/W: pool the labels.
+         * W7 (SW-1571): 0x44D is ALWAYS the wide reader — the measured
+         * WinRAR 7.12 x64 guest passes a UTF-16 buffer through SendMessageA
+         * family calls too (the relay lp is a wide str); reading it as ANSI
+         * doubled the pool per call and skewed every base index.
+         * Wine-observed return contract (oracle relay): per-button calls
+         * return 0,1,2,... — but WinRAR ALSO hands the same label pointer
+         * to TB_ADDBUTTONSW, which pools it first. An idempotent batch
+         * (first string already pooled -> return its index, add nothing)
+         * reproduces the Wine sequence without duplicating pool slots. */
+            const uint16_t* w0 = (msg == 0x44Du)
+                                 ? (const uint16_t*)lp : NULL;
+            if (w0 && *w0) {
+                for (int pi = 0; pi < c->tb_pool_n; pi++) {
+                    const uint16_t* a = c->tb_pool[pi];
+                    const uint16_t* b2 = w0;
+                    while (*a && *b2 && *a == *b2) { a++; b2++; }
+                    if (*a == 0 && *b2 == 0) { *out = pi; return 1; }
+                }
+            }
             *out = c->tb_pool_n; /* returned base index */
             if (msg == 0x44Du) {
                 const uint16_t* t = (const uint16_t*)lp;
@@ -18788,6 +18830,7 @@ static int mw_commonctl_msg(int s, uint32_t msg, uintptr_t wp, long long lp, lon
                 uint8_t b[32] = {0};
                 memcpy(b, &c->tb_bmp[idx], 4);
                 memcpy(b + 4, &c->tb_cmd[idx], 4);
+                b[8] = c->tb_state[idx]; /* W7: fsState round-trip */
                 b[9] = c->tb_style[idx];
                 long long istr = (c->tb_stridx[idx] >= 0) ? c->tb_stridx[idx] : 0;
                 memcpy(b + 24, &istr, 8);
@@ -20662,9 +20705,14 @@ static void* mw_child_register(int sc, void* parent, void* menu,
                 }
             }
         }
-        MW_TRACE("[GUI] child %s id=%lu -> HWND %p text='%u wchars'",
+        /* W7 (SW-1571): record WHO registered the child — the return address
+         * disambiguates guest CreateWindowExW/A traffic from engine-internal
+         * callers (dialog-template walker, CreateToolbarEx, ...). Zero-cost
+         * one-line honest instrumentation; logged always. */
+        MW_TRACE("[GUI] child %s id=%lu -> HWND %p text='%u wchars' site=%p parent=%p",
                  g_child[i].cls, (unsigned long)g_child[i].id, g_child[i].hwnd,
-                 (unsigned)mw_w16len(g_child[i].text));
+                 (unsigned)mw_w16len(g_child[i].text),
+                 __builtin_return_address(0), parent);
         return g_child[i].hwnd;
     }
     MW_TRACE("[GUI] child table full -> NULL");
@@ -21101,8 +21149,30 @@ __attribute__((ms_abi)) int mw_DestroyWindow(void* hwnd) {
     mw_gui_send_destroy(hwnd);
     return 1;
 }
+static int mw_gui_events_enabled(void); /* W7 fwd (def in the pump block) */
+static void mw_gui_send_size_sync(int w, int h, const char* tag);
+static MW_WNDPROC mw_window_proc(void* hwnd); /* W7 fwd */
+static int mw_gui_size_force_once = 0; /* W7: bypass same-size guard once */
+static int g_win_w, g_win_h; /* W7 tentative decl: paint-surface metrics */
 __attribute__((ms_abi)) int mw_GetMessageW(void* msg, void* hwnd, uint32_t lo, uint32_t hi) {
     (void)lo; (void)hi;
+    /* W7 (SW-1571): first-pump WM_SIZE. WinRAR-class guests create their
+     * layout children (statusbar, file list) AFTER arming the pump but
+     * BEFORE the first GetMessage, sizing them at 0x0 for the parent's
+     * WM_SIZE layout. The engine's SW-1287b sync WM_SIZE fires at
+     * ShowWindow — BEFORE those children exist — so the layout pass never
+     * repositions them (the file list stayed 1024x745@(0,23) and its white
+     * pane covered the toolbar in every composite). Real Windows: the
+     * window is shown, sized and laid out before the loop pumps. One sync
+     * WM_SIZE on the first GetMessage, once. */
+    static signed char first_size_done = -1;
+    if (first_size_done == -1) {
+        first_size_done = 1;
+        if (mw_gui_events_enabled() && mw_window_proc(g_main_hwnd)) {
+            mw_gui_size_force_once = 1; /* W7: relayout late-created children */
+            mw_gui_send_size_sync(g_win_w, g_win_h, "SW-1571 first-pump");
+        }
+    }
     return mw_gui_pump_getmsg(msg, hwnd, "GetMessageW");
 }
 __attribute__((ms_abi)) int mw_GetMessageA(void* msg, void* hwnd, uint32_t lo, uint32_t hi) {
@@ -21493,6 +21563,8 @@ static void mw_band_draw(int y, int W, int H) {
     }
     (void)H;
 }
+static void mw_engine_paint_children(void* hwnd);
+static MWBmp* mw_tb_art_bitmap(int idx); /* W7 fwd: def next to the art registry */
 static void mw_engine_paint_children(void* hwnd) {
     if (!hwnd || !g_surf.px) return;
     /* SW-1275 (SWEEP-055): the dialog-face fill wiped the WHOLE surface on
@@ -21543,19 +21615,48 @@ static void mw_engine_paint_children(void* hwnd) {
         } else if (!strcmp(g_child[i].cls, "STATIC")) {
             mwb_text8(&g_surf, x + 2, y + 2, label, 0x000000, 1);
         } else if (!strcmp(g_child[i].cls, "TOOLBAR") && g_child[i].tb_nbtn > 0) {
-            /* SW-1520: raised button row with captured labels/glyphs */
+            MW_TRACE("[TBPAINT] hwnd=%p rect=%dx%d@%d,%d nbtn=%d bw=%d bh=%d",
+                     g_child[i].hwnd, g_child[i].rw, g_child[i].rh, g_child[i].rx,
+                     g_child[i].ry, g_child[i].tb_nbtn,
+                     g_child[i].tb_bw, g_child[i].tb_bh);
+            if (getenv("MINWIN_TBART_DEBUG")) mw_surface_dump("tbar-debug");
+            /* SW-1520: raised button row. W7 (SW-1571): the face icon is
+             * now the app's OWN decoded toolbar art (GdipCreateBitmapFrom
+             * Stream decodes registered in order) selected by the button's
+             * TBBUTTON.iBitmap — the same index the guest uses against its
+             * image list under real comctl32. The synthetic glyph remains
+             * the fallback only for buttons without art. */
             int bw = g_child[i].tb_bw ? g_child[i].tb_bw : 23;
             int bh = g_child[i].tb_bh ? g_child[i].tb_bh : 21;
             if (bh > h) bh = h;
-            mwb_fill(&g_surf, x, y, w, h, 0xC0C0C0);
+            if (bw > w) bw = w;
+            mwb_fill(&g_surf, x, y, w, h, MW_BTNFACE_RGB);
             int bx = x + 2;
             for (int b = 0; b < g_child[i].tb_nbtn && bx + 8 < x + w; b++) {
                 if (g_child[i].tb_style[b] & 0x01u) { bx += 6; continue; } /* BTNS_SEP */
                 mwb_3d(&g_surf, bx, y + 1, bw, bh - 2, 1);
-                /* deterministic mini glyph: icon square + slash */
-                uint32_t gc = 0x404040u + (uint32_t)((g_child[i].tb_cmd[b] * 97) & 0x3Fu) * 0x010101u;
-                mwb_fill(&g_surf, bx + (bw - 12) / 2, y + 1 + (bh - 4 - 12) / 2 + 1, 12, 12, gc);
-                mwb_fill(&g_surf, bx + (bw - 12) / 2 + 2, y + 1 + (bh - 4 - 12) / 2 + 9, 8, 2, 0xFFFFFF);
+                int ibmp = g_child[i].tb_bmp[b];
+                MWBmp* art = mw_tb_art_bitmap(ibmp);
+                if (art) {
+                    /* near-neighbor blit, centered in the face, alpha>127 kept */
+                    int aw = art->w, ah = art->h;
+                    if (aw > bw - 4) aw = bw - 4;
+                    if (ah > bh - 6) ah = bh - 6;
+                    if (aw > 0 && ah > 0) {
+                        int ax = bx + (bw - aw) / 2, ay = y + 1 + (bh - 2 - ah) / 2;
+                        for (int yy = 0; yy < ah; yy++)
+                            for (int xx = 0; xx < aw; xx++) {
+                                int sx = xx * art->w / aw, sy = yy * art->h / ah;
+                                uint32_t c = mwb_get(art, sx, sy);
+                                if (c) mwb_set(&g_surf, ax + xx, ay + yy, c);
+                            }
+                    }
+                } else {
+                    /* deterministic mini glyph: icon square + slash */
+                    uint32_t gc = 0x404040u + (uint32_t)((g_child[i].tb_cmd[b] * 97) & 0x3Fu) * 0x010101u;
+                    mwb_fill(&g_surf, bx + (bw - 12) / 2, y + 1 + (bh - 4 - 12) / 2 + 1, 12, 12, gc);
+                    mwb_fill(&g_surf, bx + (bw - 12) / 2 + 2, y + 1 + (bh - 4 - 12) / 2 + 9, 8, 2, 0xFFFFFF);
+                }
                 if (g_child[i].tb_stridx[b] >= 0 &&
                     g_child[i].tb_stridx[b] < g_child[i].tb_pool_n) {
                     char bl[18]; int kk = 0;
@@ -21567,6 +21668,8 @@ static void mw_engine_paint_children(void* hwnd) {
                 }
                 bx += bw;
             }
+            if (bx > x + 2 && getenv("MINWIN_TBART_DEBUG"))
+                mw_surface_dump("tbar-done"); /* W7: post-draw evidence */
         } else if (!strcmp(g_child[i].cls, "STATUSBAR")) {
             /* SW-1520: sunken cell band with captured cell texts */
             mwb_fill(&g_surf, x, y, w, h, 0xC0C0C0);
@@ -21996,6 +22099,25 @@ static uint8_t g_bitmap_live[MW_MEMDC_MAX];
 static int     g_memdc_sel[MW_MEMDC_MAX];  /* selected bitmap index, -1 = none */
 static uint8_t g_memdc_live[MW_MEMDC_MAX];
 
+/* W7 (SW-1571): ordered registry of decoded toolbar-art bitmaps. Every
+ * GdipCreateBitmapFromStream -> GdipCreateHBITMAPFromBitmap decode lands
+ * here IN DECODE ORDER, so an app's toolbar renderer (TBBUTTON.iBitmap is
+ * an index into the toolbar image list under real comctl32) can blit the
+ * app's OWN decoded button art. Generic: driven by whatever the guest
+ * decodes, never by app-specific tables. */
+#define MW_TB_ART_MAX 64
+static void* g_tb_art[MW_TB_ART_MAX];
+static int   g_tb_art_n;
+static MWBmp* mw_tb_art_bitmap(int idx) { /* W7 accessor (fwd-decl at the painter) */
+    if (idx < 0 || idx >= g_tb_art_n) return NULL;
+    void* hb = g_tb_art[idx];
+    if (((uintptr_t)hb & 0xFFFFF000u) != MW_HBITMAP_BASE) return NULL;
+    int asl = (int)((uintptr_t)hb & 0xFF) - 1;
+    if (asl < 0 || asl >= MW_MEMDC_MAX || !g_bitmap_live[asl] || !g_bitmap_obj[asl].px)
+        return NULL;
+    return &g_bitmap_obj[asl];
+}
+
 /* target surface of a DC: the window DC (0x20001 — BeginPaint/GetDC) draws
  * into the window framebuffer; a memory DC draws into its selected bitmap. */
 static MWBmp* mw_dc_surface(void* hdc) {
@@ -22355,6 +22477,7 @@ static void mw_gui_request_paint(void) { g_paint_pending = 1; }
  * returning. winmine's board sizing depends on it (MoveWindow(170x1024)
  * must relayout the board; without the send its WM_SIZE handler only ever
  * saw the 32x32 helper dims). */
+static int mw_gui_size_force_once; /* W7: bypass same-size guard once (tentative; init at 21139) */
 static void mw_gui_send_size_sync(int w, int h, const char* tag) {
     /* SW-1513: dispatch through the TARGET window's own proc — putty's
      * timer-window main hwnd must not receive its sibling's WM_SIZE through
@@ -22365,11 +22488,16 @@ static void mw_gui_send_size_sync(int w, int h, const char* tag) {
      * WM_SIZE handler that itself calls SetWindowPos/MoveWindow must not
      * recursively re-enter WM_SIZE delivery (sol's fit-to-board math looped
      +2px per round until the clamp). (2) real Windows only SENDS WM_SIZE
-     * when the size actually CHANGED — same-dims no-ops are silent. */
+     * when the size actually CHANGED — same-dims no-ops are silent.
+     * W7 (SW-1571): mw_gui_size_force_once bypasses (2) for exactly one
+     * send — the first-pump layout pass, which guests with children created
+     * after ShowWindow need even though the main size did not change. */
     static int g_in_size_sync;
     static int g_last_sw = -1, g_last_sh = -1;
     if (g_in_size_sync) return;
-    if (w == g_last_sw && h == g_last_sh) return;
+    int force = mw_gui_size_force_once;
+    mw_gui_size_force_once = 0;
+    if (!force && w == g_last_sw && h == g_last_sh) return;
     g_in_size_sync = 1;
     /* SW-1520: WM_SIZE lParam carries the CLIENT size (winuser.h) — the
      * menu band is non-client and excluded on the menu'd main window. */
@@ -23560,9 +23688,34 @@ static int mw_paint_snap_recover_if_untouched(void) {
 __attribute__((ms_abi)) int mw_EndPaint(void* hwnd, const void* ps) {
     (void)hwnd; (void)ps;
     mw_paint_snap_recover_if_untouched(); /* SW-1291e */
+    /* W7 (SW-1571): WS_CLIPCHILDREN emulation. Real Windows keeps child
+     * windows on separate surfaces — a parent's WM_ERASEBKGND/white fill
+     * can never erase them (WinRAR's main window is created WS_CLIPCHILDREN
+     * and its own WM_PAINT white fill used to wipe the engine-composited
+     * toolbar/menuband panels after UpdateWindow). Re-composite the
+     * engine-owned child panels after the guest's paint, then dump. */
+    void* parent = hwnd ? hwnd : g_main_hwnd;
+    if (parent) mw_engine_paint_children(parent);
     mw_nc_paint_frame(); /* ICON-TRAIN wagon 8: frame over the client edge before dump */
     mw_surface_dump("EndPaint");
     return 1; /* TRUE */
+}
+/* W7 (SW-1571): battery-timeout final evidence frame. The guest is dead or
+ * dying when this runs; the surface holds the last WM_PAINT state (WinRAR's
+ * toolbar lands here after the RedrawWindow dump). Handler-safe enough for
+ * evidence: async-signal-safety is best-effort (single write() path inside
+ * the BMP writer uses stdio — accepted for a dying process, same trade the
+ * crash handler makes). Re-raises the default action so the battery still
+ * observes the expected signal death. */
+static volatile sig_atomic_t g_sigterm_dumped = 0;
+static void mw_sigterm_final_frame(int sig) {
+    if (!g_sigterm_dumped) {
+        g_sigterm_dumped = 1;
+        mw_nc_paint_frame();
+        mw_surface_dump("sigterm-final");
+    }
+    signal(sig, SIG_DFL);
+    raise(sig);
 }
 __attribute__((ms_abi)) void* mw_GetDC(void* hwnd) {
     (void)hwnd;
@@ -37682,6 +37835,8 @@ __attribute__((ms_abi)) uint32_t mw_GdipCreateHBITMAPFromBitmap(void* bmp, void*
             q[0] = (uint8_t)(eng & 0xFF); q[1] = (uint8_t)((eng >> 8) & 0xFF); q[2] = (uint8_t)((eng >> 16) & 0xFF);
         }
     *hbm = (void*)(uintptr_t)(MW_HBITMAP_BASE | (unsigned)(slot + 1));
+    /* W7 (SW-1571): register in decode order for the toolbar-art renderer */
+    if (g_tb_art_n < MW_TB_ART_MAX) g_tb_art[g_tb_art_n++] = *hbm;
     MW_TRACE("[GDI+] CreateHBITMAPFromBitmap -> HBITMAP %p (%ux%u)", *hbm, s->w, s->h);
     return MW_GDIPLUS_OK;
 }
@@ -51593,6 +51748,14 @@ static int load_pe32(const char* filepath) {
 int main(int argc, char* argv[]) {
     /* full Unicode through wcstombs/wcstombs (Wave-3B conversion APIs) */
     setlocale(LC_ALL, "C.UTF-8");
+    /* W7 (SW-1571): the battery kills long-lived GUI guests with SIGTERM
+     * after the timeout. Without a handler the process dies with NO final
+     * evidence frame, so late WM_PAINT work (e.g. WinRAR's toolbar painted
+     * into the surface after the RedrawWindow dump) never reaches disk.
+     * Dump the last observed surface once on SIGINT/SIGTERM — evidence
+     * plane only, zero guest-visible change. */
+    signal(SIGTERM, mw_sigterm_final_frame);
+    signal(SIGINT, mw_sigterm_final_frame);
     mw_install_watchdog(0);
     if (argc < 2) {
         printf("MiniWin PE Loader v0.1\n");
