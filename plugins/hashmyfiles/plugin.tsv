@@ -1,0 +1,16 @@
+name	hashmyfiles
+arch	x64
+desc	NirSoft HashMyFiles x64 (SWEEP-114 NEW - user ask: small icon-heavy Windows program; hash calculator GUI)
+source_url	https://www.nirsoft.net/utils/hashmyfiles-x64.zip
+source_sha256	892b7ce8d40e50bcfa2619110828eb76b2733145f5f3dd392d6e1fc97563261b
+artifact	artifacts/sweep114/dl/hashmyfiles-x64.zip
+unpack	zip
+exe	HashMyFiles.exe
+args
+runs	3
+timeout	75
+keys	37,38,39,40,13
+mouse	150,150
+known	NEW
+note	unpacked exe sha e1cd8b61969a5e8f; icon toolbar + file list (SW-1584 chain user: HashMyFiles.exe)
+guest	hashmyfiles

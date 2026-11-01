@@ -1,0 +1,16 @@
+name	usbdeview
+arch	x64
+desc	NirSoft USBDeview x64 (SWEEP-114 NEW - user ask: small icon-heavy Windows program; USB device list GUI)
+source_url	https://www.nirsoft.net/utils/usbdeview-x64.zip
+source_sha256	7eb383f7fbdde8b48ecba07cd97adda515e8ffc04839b0427cc89ced893c161b
+artifact	artifacts/sweep114/dl/usbdeview-x64.zip
+unpack	zip
+exe	USBDeview.exe
+args
+runs	3
+timeout	75
+keys	37,38,39,40,13
+mouse	150,150
+known	NEW
+note	unpacked exe sha 15daa515ee5ecd1c; icon toolbar + device list (SW-1584 chain user: USBDeview.exe)
+guest	usbdeview

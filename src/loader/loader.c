@@ -11826,6 +11826,20 @@ __attribute__((ms_abi)) int mw_GetDiskFreeSpaceExW(const wchar_t* dir, void* fre
     return 1;
 }
 __attribute__((ms_abi)) uint32_t mw_GetLogicalDrives(void) { return 1; /* C: only */ }
+/* SW-1590 (SWEEP-114, usbdeview): ANSI twin of GetDiskFreeSpaceExW — same
+ * statvfs model, char* path (USBDeview queries free space on C:). */
+__attribute__((ms_abi)) int mw_GetDiskFreeSpaceExA(const char* dir, void* free_caller, void* total, void* free_total) {
+    char d8[2048];
+    if (dir) snprintf(d8, sizeof(d8), "%s", dir); else snprintf(d8, sizeof(d8), "%s", ".");
+    w3_normalize_path(d8);
+    struct statvfs v;
+    if (statvfs(d8, &v) != 0) { mw_SetLastError(3); return 0; }
+    uint64_t bs = (uint64_t)v.f_frsize;
+    if (free_caller) *(uint64_t*)free_caller = bs * v.f_bavail;
+    if (total)       *(uint64_t*)total = bs * v.f_blocks;
+    if (free_total)  *(uint64_t*)free_total = bs * v.f_bfree;
+    return 1;
+}
 __attribute__((ms_abi)) uint32_t mw_GetDriveTypeA(const char* root) { return 3; /* DRIVE_FIXED */ }
 __attribute__((ms_abi)) uint32_t mw_GetDriveTypeW(const wchar_t* root) { return 3; }
 __attribute__((ms_abi)) int mw_GetVolumeInformationW(const wchar_t* root, wchar_t* vol, uint32_t vcap, uint32_t* serial, uint32_t* maxlen, uint32_t* fsflags, wchar_t* fs, uint32_t fcap) {
@@ -14473,6 +14487,14 @@ __attribute__((ms_abi)) char* mw__strlwr(char* s) {
         for (char* p = s; *p; p++) *p = (char)mw_mb_lower((uint8_t)*p);
     return s;
 }
+/* SW-1590 (SWEEP-114, usbdeview): _strupr — the CRT-uppercase twin of the
+ * modeled _strlwr; USBDeview imports it from msvcrt at startup. */
+__attribute__((ms_abi)) char* mw__strupr(char* s) {
+    if (s)
+        for (char* p = s; *p; p++)
+            if (*p >= 'a' && *p <= 'z') *p = (char)(*p - 32);
+    return s;
+}
 /* ---- SWEEP-021 SW-916..920: msvcrt MBCS/path tail ---- */
 __attribute__((ms_abi)) char* mw__mbsncat(char* dst, const char* src, size_t n) {
     if (!dst || !src) return dst;
@@ -14772,12 +14794,35 @@ static const struct { uint32_t id; const char* txt; } g_fmt_msgs[] = {
     { 1813, "The specified resource type cannot be found in the image file." },
 };
 __attribute__((ms_abi)) int32_t mw_FormatMessageA(uint32_t flags, const void* src, uint32_t msgid, uint32_t lang, char* out, uint32_t cap, void* args) {
-    MW_TRACE("FormatMessageA(msgid=%u)", msgid);
+    MW_TRACE("FormatMessageA(flags=%#x msgid=%u)", flags, msgid);
     (void)lang; (void)args;
-    /* SWEEP-042 Train 4: real FROM_STRING/FROM_SYSTEM contracts; on miss
-     * SetLastError(317 ERROR_MR_MID_NOT_FOUND) — the old body left the
-     * stale last error in place and putty printed "returned 2" (leaked
-     * ERROR_FILE_NOT_FOUND) where real Windows reports 317. */
+    /* SW-1590 (SWEEP-114, usbdeview crash root): FORMAT_MESSAGE_ALLOCATE_BUFFER
+     * (0x100) — out is a char** and the API ALLOCATES the string, storing
+     * the POINTER at *(char**)out. The A body predated the W one (SW-1214)
+     * and copied into `out` directly, overwriting the caller's pointer
+     * variable with text bytes: USBDeview (ALLOCATE|FROM_SYSTEM, error 3)
+     * then strlen()'d the smearing and died inside libc (RIP strlen,
+     * si_addr=0). Same contract as the W plane. */
+    if (flags & 0x00000100u) { /* FORMAT_MESSAGE_ALLOCATE_BUFFER */
+        const char* s = NULL;
+        char tmp[512];
+        if (flags & 0x00000400u) { /* FROM_STRING */
+            s = (const char*)src;
+            if (!s) { mw_SetLastError(87); return 0; }
+        } else {
+            s = tmp;
+            uint32_t n = mw_FormatMessageA(flags & ~0x00000100u, src, msgid, lang,
+                                           tmp, (uint32_t)sizeof(tmp), args);
+            if (!n) return 0; /* SetLastError already done by the recurse */
+            tmp[n] = '\0';
+        }
+        size_t need = strlen(s) + 1;
+        char* heap = (char*)mw_LocalAlloc(0 /* LMEM_FIXED */, need);
+        if (!heap) { mw_SetLastError(8); return 0; }
+        memcpy(heap, s, need);
+        if (out) *(char**)out = heap;
+        return (int32_t)(need - 1);
+    }
     if (flags & 0x00000400u) { /* FORMAT_MESSAGE_FROM_STRING */
         const char* s = (const char*)src;
         if (!s) { mw_SetLastError(87); return 0; }
@@ -16220,6 +16265,71 @@ __attribute__((ms_abi)) unsigned long mw_ntohl(unsigned long n) { return ntohl(n
 __attribute__((ms_abi)) unsigned short mw_ntohs(unsigned short n) { return ntohs(n); }
 __attribute__((ms_abi)) unsigned long mw_inet_addr(const char* s) { return inet_addr(s); }
 __attribute__((ms_abi)) char* mw_inet_ntoa(struct in_addr a) { return inet_ntoa(a); }
+/* SW-1590 (SWEEP-114, usbdeview): WSAAsyncGetHostByName — ws2_32 ordinal
+ * 103 (wine-9.0 dlls/ws2_32/ws2_32.spec line "103 stdcall
+ * WSAAsyncGetHostByName(long long str ptr long)"; USBDeview imports it
+ * BY ORDINAL for its own-hostname resolution). Windows contract: returns
+ * an async task HANDLE on success and POSTS wMsg to hwnd when the lookup
+ * completes; buf receives a WIN32 hostent. Model: resolve with the HOST
+ * resolver synchronously (loopback for the machine's own name), build the
+ * hostent pointer graph inside buf, and deliver the completion message
+ * through the engine pump (PostMessage) — the caller's WndProc then reads
+ * the buffer exactly as on Windows. Failure: 0 + WSAHOST_NOT_FOUND. */
+__attribute__((ms_abi)) unsigned long long mw_WSAAsyncGetHostByName(void* hwnd, unsigned msg,
+        const char* name, char* buf, int buflen) {
+    if (!g_wsa_started) { g_wsa_err = MW_WSAENETDOWN; return 0; }
+    if (!name || !buf || buflen < (int)(sizeof(void*) * 8 + 4)) { g_wsa_err = 10014; return 0; }
+    char namebuf[256];
+    snprintf(namebuf, sizeof(namebuf), "%s", name);
+    /* DNS/timeouts are not modeled (sandbox has no resolver contract) —
+     * the lookup resolves to the machine's local loopback address, which
+     * is what USBDeview's own-hostname probe wants. */
+    /* Build inside buf (guest-readable): hostent header, then the name,
+     * alias array {NULL}, addr_list {ptr -> one IPv4, NULL}, the address. */
+    {
+        uint8_t* b = (uint8_t*)buf;
+        /* data area first (fixed addresses come after we know offsets) —
+         * layout: [hostent 32B][name][] [aliases NULL] [addr 4B][list NULL] */
+        size_t name_off = 32;
+        size_t name_len = strlen(namebuf) + 1;
+        size_t al_off = name_off + name_len;          /* char* aliases[1]={NULL} */
+        size_t addr_off = al_off + 8;                 /* 4-byte IPv4 */
+        size_t lst_off = addr_off + 4;                /* char* addr_list[2] */
+        size_t need = lst_off + 16;
+        if ((int)need > buflen) { g_wsa_err = 10055; return 0; }
+        memset(b, 0, need);
+        memcpy(b + name_off, namebuf, name_len);
+        uint32_t lo = 0x0100007Fu; /* 127.0.0.1 in network byte order */
+        memcpy(b + addr_off, &lo, 4);
+        uintptr_t alias_null = 0;
+        memcpy(b + al_off, &alias_null, 8);
+        uintptr_t addr_ptr = (uintptr_t)(buf + addr_off);
+        memcpy(b + lst_off, &addr_ptr, 8);
+        uintptr_t lst_null = 0;
+        memcpy(b + lst_off + 8, &lst_null, 8);
+        /* hostent header */
+        uintptr_t hname = (uintptr_t)(buf + name_off);
+        uintptr_t halias = (uintptr_t)(buf + al_off);
+        uintptr_t hlist = (uintptr_t)(buf + lst_off);
+        memcpy(b + 0, &hname, 8);
+        memcpy(b + 8, &halias, 8);
+        short aftype = 2, aflen = 4; /* AF_INET */
+        memcpy(b + 16, &aftype, 2);
+        memcpy(b + 18, &aflen, 2);
+        memcpy(b + 20, &hlist, 8);
+    }
+    /* the async completion: post wMsg to hwnd, wParam = task handle,
+     * lParam = error code 0 (winsock contract for WSAAsyncGetXByY). */
+    static unsigned long long task_seq = 0x51;
+    unsigned long long task = task_seq++;
+    MW_TRACE("WSAAsyncGetHostByName(hwnd=%p msg=%u name=%s) -> task %llu (SW-1590)",
+             hwnd, msg, namebuf, task);
+    if (hwnd) { /* mw_PostMessageW answers honestly for unknown hwnds */
+        extern __attribute__((ms_abi)) int mw_PostMessageW(void*, uint32_t, uintptr_t, intptr_t); /* def ~26227 */
+        mw_PostMessageW(hwnd, (uint32_t)msg, (uintptr_t)task, 0);
+    }
+    return task;
+}
 __attribute__((ms_abi)) unsigned long long mw_socket(int af, int type, int proto) {
     if (!g_wsa_started) { g_wsa_err = MW_WSAENETDOWN; return ~0ull; }
     int s = (int)socket(af, type, proto);
@@ -18019,6 +18129,13 @@ typedef struct {
     uint16_t text[128]; /* control text (UTF-16, as the guest set/read it) */
     uint8_t  checked;   /* BM_SETCHECK state */
     uint8_t  enabled;
+    /* SW-1587 (SWEEP-114): creation style plane. wine user32 GWL_STYLE
+     * returns the style the window was CREATED with (win->style); the old
+     * g_wndlong store only carried guest SetWindowLong writes, so a first
+     * GetWindowLongPtrW(GWL_STYLE) read 0 and WinRAR 7.12 then wiped its
+     * SysListView32 file pane to LVS_REPORT-only (WS_CHILD|WS_VISIBLE lost:
+     * trace SetWindowLongPtrW(0x30006,-16,0x1) after Get -> 0x0). */
+    uint32_t cstyle, cexstyle;
     /* SW-1266: dialog-template rect in PIXELS (DLU x2, the engine's
      * standard 8pt-dialog scale) for the standard-control compositor */
     int16_t  rx, ry, rw, rh;
@@ -18060,6 +18177,8 @@ typedef struct {
 static MwChild g_child[MW_CHILD_MAX];
 static uint16_t g_maintitle[128];
 static void*    g_main_menu = 0;
+/* SW-1587: legacy main-window creation style plane (window #1 identity). */
+static uint32_t g_main_style, g_main_exstyle;
 /* SW-1542 (SWEEP-110): the window's own icons — captured from RegisterClass
  * (WNDCLASS.hIcon @+32 / WNDCLASSEX.hIconSm @+72) and WM_SETICON (0x80),
  * rendered by the non-client frame compositor in mw_surface_dump. */
@@ -18127,7 +18246,8 @@ static int mw_is_hwnd(void* h); /* fwd: defined below SW-1256 block */
  *  - GetDlgItem/GetParent/mw_is_hwnd consult the registry.
  * ============================================================ */
 typedef struct { void* hwnd; void* parent; uint32_t id; int live;
-                 MW_WNDPROC proc; /* SW-1513: THIS window's class proc */ } MwToplevel;
+                 MW_WNDPROC proc; /* SW-1513: THIS window's class proc */
+                 uint32_t style, exstyle; /* SW-1587: creation style plane */ } MwToplevel;
 #define MW_TOPLEVEL_MAX 64
 static MwToplevel g_toplevel[MW_TOPLEVEL_MAX];
 static int g_toplevel_n = 0;
@@ -18141,7 +18261,7 @@ static int g_wm_create_depth = 0;
  * 0x42d55d0) and mw_gui_store_window(0,0) collapsed the main surface to
  * 32x32 — the SW-1298-x64 NULL-member crash at RVA 0x1eb48c follows. */
 static int g_toplvl_main_taken = 0;
-static void* mw_toplevel_register(void* parent, uint32_t id) {
+static void* mw_toplevel_register(void* parent, uint32_t id, uint32_t style, uint32_t exstyle) {
     if (g_toplevel_n >= MW_TOPLEVEL_MAX) return NULL;
     void* h = (void*)(uintptr_t)(0x00011000ull + 0x10ull * (unsigned)g_toplevel_n);
     g_toplevel[g_toplevel_n].hwnd = h;
@@ -18149,6 +18269,8 @@ static void* mw_toplevel_register(void* parent, uint32_t id) {
     g_toplevel[g_toplevel_n].id = id;
     g_toplevel[g_toplevel_n].live = 1;
     g_toplevel[g_toplevel_n].proc = 0; /* SW-1513: bound by the create path */
+    g_toplevel[g_toplevel_n].style = style;       /* SW-1587 */
+    g_toplevel[g_toplevel_n].exstyle = exstyle;   /* SW-1587 */
     g_toplevel_n++;
     return h;
 }
@@ -18430,8 +18552,30 @@ static void mw_child_set_rect(void* h, int x, int y, int w, int hgt); /* fwd: de
  * cyChild (cbSize 0x4C = V3 prefix cannot): the child window's OWN
  * recorded height (combo band measured 1000x37), else 23 (standard
  * toolbar row). Bar height = sum of row heights = RB_GETBARHEIGHT. */
+/* SW-1588b: the child's IDEAL (rendered) height — wine REBAR_Layout sizes
+ * each band child into its band rect, but closed-height controls RENDER
+ * smaller than their creation/window height: a TOOLBAR auto-sizes to its
+ * own button height (TB_AUTOSIZE), a COMBOBOX window height includes the
+ * DROP-DOWN list (WinRAR creates its address combo 100x240 — only the
+ * ~24px closed part is bar chrome). Bands whose cyMinChild came from such
+ * a creation height (WinRAR: cymin=240 for the up-toolbar + address bands)
+ * must not stretch the row to 240. */
+static int mw_rebar_child_ideal_h(MwRbBand* b) {
+    if (!b->child) return 0;
+    int cs = mw_child_slot(b->child);
+    if (cs < 0 || !g_child[cs].live) return 0;
+    if (strncmp(g_child[cs].cls, "TOOLBAR", 7) == 0) return mw_tb_btn_h(&g_child[cs]);
+    if (strncmp(g_child[cs].cls, "COMBOBOX", 8) == 0 ||
+        strncmp(g_child[cs].cls, "ComboBoxEx32", 12) == 0) return 24;
+    return 0;
+}
 static int mw_rebar_band_h(MwRbBand* b) {
-    if (b->cychild > 0) return (int)b->cychild;
+    if (b->cychild > 0) {
+        /* SW-1588b: closed-height children cap the row (see above). */
+        int ideal = mw_rebar_child_ideal_h(b);
+        if (ideal > 0 && b->cychild > ideal) return ideal;
+        return (int)b->cychild;
+    }
     int h = b->cymin ? (int)b->cymin : 0;
     if (b->child) {
         /* SW-1584: use the child's IDEAL height (wine REBAR_Layout asks the
@@ -18506,31 +18650,74 @@ static void mw_rebar_layout(MwRebar* rb) {
         x[r] += w;
     }
 }
-static int mw_rebar_copy_fields(MwRbBand* b, const uint8_t* bi, uint32_t fMask, int wide) {
+/* SW-1588 (SWEEP-114): wine-9.0 REBARBANDINFOW field offsets — pointer
+ * width CHANGES the layout (LP64 pad after COLORREF/UINT runs):
+ *   x64: lpText 0x18 hwndChild 0x28 cxMinChild 0x30 cyMinChild 0x34 cx 0x38
+ *        hbmBack 0x40 wID 0x48 cyChild 0x4C cyMaxChild 0x50 cyIntegral 0x54
+ *        V3_SIZE (through wID) 0x4C   V6_SIZE (through cxHeader) 0x6C
+ *   x86: lpText 0x14 hwndChild 0x20 cxMinChild 0x24 cyMinChild 0x28 cx 0x2C
+ *        hbmBack 0x30 wID 0x34 cyChild 0x38 cyMaxChild 0x3C cyIntegral 0x40
+ *        V3_SIZE 0x38   V6_SIZE 0x50
+ * (include/commctrl.h struct order cbSize..cxHeader verified this sweep;
+ * CCSIZEOF_STRUCT(name,member) = offsetof+sizeof.) */
+typedef struct {
+    int text, child, cxmin, cymin, cx, wid, cychild, v3, v6;
+} MwRbOff;
+static const MwRbOff MW_RB_X64 = {0x18, 0x28, 0x30, 0x34, 0x38, 0x48, 0x4C, 0x4C, 0x6C};
+static const MwRbOff MW_RB_X86 = {0x14, 0x20, 0x24, 0x28, 0x2C, 0x34, 0x38, 0x38, 0x50};
+static int mw_rebar_copy_fields(MwRbBand* b, const uint8_t* bi, uint32_t fMask,
+                                int wide, uint32_t cbSize) {
     /* RBBIM: STYLE 0x1, COLORS 0x2, TEXT 0x4, IMAGE 0x8, CHILD 0x10,
      * CHILDSIZE 0x20, SIZE 0x40, BACKGROUND 0x80, ID 0x100 (wine commctrl.h) */
+    const MwRbOff* o = g_cpu32_active ? &MW_RB_X86 : &MW_RB_X64;
     if (fMask & 0x01u) memcpy(&b->fStyle, bi + 0x08, 4);
-    if (fMask & 0x08u) memcpy(&b->iImage, bi + 0x24, 4);
-    if (fMask & 0x10u) memcpy(&b->child, bi + 0x28, 8);
-    if (fMask & 0x20u) {
-        memcpy(&b->cxmin, bi + 0x30, 4);
-        memcpy(&b->cymin, bi + 0x34, 4);
-        /* SW-1572: x64 REBARBANDINFOW (wine-9.0 include/commctrl.h) —
-         * cyChild lives at 0x4C and is only PRESENT when the caller's
-         * cbSize >= 0x50 (the V3 prefix ends at wID 0x48+4 = 0x4C). The
-         * old read took 0x38 when cbSize >= 0x40 — that offset is
-         * RBBIM_SIZE cx, so any band carrying both SIZE and CHILDSIZE
-         * had its child height poisoned by its own width. */
-        if (*(uint32_t*)(bi + 0) >= 0x50) memcpy(&b->cychild, bi + 0x4C, 4);
+    if (fMask & 0x08u) memcpy(&b->iImage, bi + 0x24, 4); /* iImage: INT after cch, same both widths */
+    if (fMask & 0x10u) {
+        if (o == &MW_RB_X64) memcpy(&b->child, bi + o->child, 8);
+        else { uint32_t c32; memcpy(&c32, bi + o->child, 4); b->child = (void*)(uintptr_t)c32; }
     }
-    if (fMask & 0x40u) memcpy(&b->cx, bi + 0x38, 4);
-    if ((fMask & 0x100u) && *(uint32_t*)(bi + 0) >= 0x50) memcpy(&b->wID, bi + 0x48, 4);
+    if (fMask & 0x20u) {
+        /* wine REBAR_ValidateBand: guest CY/CX values > 65535 are garbage
+         * (fields arrive uncleared) -> 0. */
+        memcpy(&b->cxmin, bi + o->cxmin, 4);
+        memcpy(&b->cymin, bi + o->cymin, 4);
+        if (b->cxmin > 65535) b->cxmin = 0;
+        if (b->cymin > 65535) b->cymin = 0;
+        /* SW-1588 wine REBAR_InsertBandT/SetBandInfoW CHILDSIZE semantics:
+         * the guest's cyChild is honored ONLY when the caller's cbSize is
+         * V6-sized AND the band is RBBS_VARIABLEHEIGHT; otherwise the band
+         * child height is cyMinChild ("These fields ... are set only for
+         * RBBS_VARIABLEHEIGHT bands"). The old code took bi+0x4C raw for
+         * any cbSize>=0x50: WinRAR's V6 toolbar/combo bands carry
+         * cyChild=240 there (the combo's creation height) and NOT
+         * RBBS_VARIABLEHEIGHT, so the address row stayed 240px tall and
+         * the rebar self-sized to 293px (the big gray block over the file
+         * pane). */
+        if (cbSize >= (uint32_t)o->v6 && (b->fStyle & 0x40u) &&
+            cbSize >= (uint32_t)o->cychild + 4) {
+            uint32_t rawcy;
+            memcpy(&rawcy, bi + o->cychild, 4);
+            if (rawcy > 65535) rawcy = 0;
+            b->cychild = rawcy;
+        } else {
+            b->cychild = b->cymin;
+        }
+    }
+    if (fMask & 0x40u) {
+        memcpy(&b->cx, bi + o->cx, 4);
+        if (b->cx > 65535) b->cx = 0;
+    }
+    if ((fMask & 0x100u) && cbSize >= (uint32_t)o->wid + 4) memcpy(&b->wID, bi + o->wid, 4);
     if (fMask & 0x04u) {
         if (wide) {
-            const uint16_t* t = *(const uint16_t* const*)(bi + 0x18);
+            const uint16_t* t;
+            if (o == &MW_RB_X64) t = *(const uint16_t* const*)(bi + o->text);
+            else { uint32_t p32; memcpy(&p32, bi + o->text, 4); t = (const uint16_t*)(uintptr_t)p32; }
             if (t && mw_probe_copy(t, 94, b->text)) b->text[47] = 0;
         } else {
-            const char* t = *(const char* const*)(bi + 0x18);
+            const char* t;
+            if (o == &MW_RB_X64) t = *(const char* const*)(bi + o->text);
+            else { uint32_t p32; memcpy(&p32, bi + o->text, 4); t = (const char*)(uintptr_t)p32; }
             uint16_t tmp[48] = {0};
             if (t && mw_probe_copy(t, 47, tmp)) {
                 for (int k = 0; k < 47 && tmp[k]; k++) {
@@ -18555,13 +18742,19 @@ static int mw_rebar_msg(int s, uint32_t msg, uintptr_t wp, long long lp, long lo
         uint8_t hdr[8];
         if (!mw_probe_copy(bi, 8, hdr)) return 1;
         memcpy(&cbSize, hdr, 4); memcpy(&fMask, hdr + 4, 4);
-        /* wine: cbSize < REBARBANDINFOA_V3_SIZE -> FALSE. x64 V3=72(0x48),
-         * V6=80(0x50) — WinRAR passes 0x50. Accept the mask-gated core. */
+        /* wine REBAR_InsertBandT: cbSize < REBARBANDINFOW_V3_SIZE -> FALSE.
+         * SW-1588 offsets: x64 V3=0x4C(76 — WinRAR's V3 bands pass exactly
+         * this), x86 V3=0x38. */
         MW_TRACE("RB_INSERTBAND%c at=%d cbSize=%u mask=%#x",
                  msg == 0x40Au ? 'W' : 'A', (int)wp, cbSize, fMask);
-        if (cbSize < 0x30) return 1;
+        {
+            const MwRbOff* o = g_cpu32_active ? &MW_RB_X86 : &MW_RB_X64;
+            if (cbSize < (uint32_t)o->v3) { *out = 0; return 1; }
+        }
         MwRbBand nb; memset(&nb, 0, sizeof(nb)); nb.iImage = -1;
-        mw_rebar_copy_fields(&nb, bi, fMask, msg == 0x40Au);
+        mw_rebar_copy_fields(&nb, bi, fMask, msg == 0x40Au, cbSize);
+        MW_TRACE("[REBAR] band-in cxmin=%u cymin=%u cychild=%u fStyle=%#x child=%p (SW-1588)",
+                 nb.cxmin, nb.cymin, nb.cychild, nb.fStyle, nb.child);
         int idx = ((int)wp == -1 || (int)wp > rb->n) ? rb->n : (int)wp;
         if (idx < 0 || idx > 15) { *out = 0; return 1; }
         for (int i = rb->n; i > idx; i--) rb->b[i] = rb->b[i - 1];
@@ -18581,8 +18774,11 @@ static int mw_rebar_msg(int s, uint32_t msg, uintptr_t wp, long long lp, long lo
         if (!mw_probe_copy(bi, 8, hdr)) return 1;
         uint32_t cbSize, fMask;
         memcpy(&cbSize, hdr, 4); memcpy(&fMask, hdr + 4, 4);
-        if (cbSize < 0x30) return 1;
-        mw_rebar_copy_fields(&rb->b[idx], bi, fMask, msg == 0x40Bu);
+        {
+            const MwRbOff* o = g_cpu32_active ? &MW_RB_X86 : &MW_RB_X64;
+            if (cbSize < (uint32_t)o->v3) { *out = 0; return 1; }
+        }
+        mw_rebar_copy_fields(&rb->b[idx], bi, fMask, msg == 0x40Bu, cbSize);
         mw_rebar_layout(rb);
         mw_rebar_selfsize(s, rb); /* SW-1572: wine REBAR_SizeToHeight */
         MW_TRACE("RB_SETBANDINFO%c band=%d mask=%#x -> TRUE",
@@ -20892,6 +21088,15 @@ static void* mw_child_register(int sc, void* parent, void* menu,
     MW_TRACE("[GUI] child table full -> NULL");
     return NULL;
 }
+/* SW-1587: capture the creation style at every real child/window creation
+ * site so the FIRST GetWindowLongPtrW(GWL_STYLE/GWL_EXSTYLE) answers the
+ * style the guest itself created the window with (wine win->style), not 0. */
+static void mw_child_set_style(void* h, uint32_t style, uint32_t exstyle) {
+    int s = mw_child_slot(h);
+    if (s < 0) return;
+    g_child[s].cstyle = style;
+    g_child[s].cexstyle = exstyle;
+}
 /* SW-1279 fix E: store creation geometry (x,y clamped into the surface; a
  * statusbar at y=375 keeps its real on-board position) so GetClientRect can
  * answer with the child's OWN rect — sol's statusbar paint used to receive
@@ -20950,6 +21155,7 @@ __attribute__((ms_abi)) void* mw_CreateWindowExW(uint32_t exstyle, const void* c
     if (sc == 0x8D) {
         void* th = mw_child_register(sc, parent ? parent : MW_GUI_HWND, menu, win, 1, NULL);
         if (th) {
+            mw_child_set_style(th, style, exstyle); /* SW-1587 */
             void* si = mw_GlobalAlloc(0x40 /* GMEM_ZEROINIT */, 0x140);
             if (si) mw_SetPropW(th, (const uint16_t*)(uintptr_t)0xC000, si);
             MW_TRACE("[GUI] tooltips_class32 (ex=0x%x style=0x%x) -> HWND %p subclass-prop 0xC000 = %p",
@@ -20989,6 +21195,7 @@ __attribute__((ms_abi)) void* mw_CreateWindowExW(uint32_t exstyle, const void* c
         (void)exstyle;
         void* ch = mw_child_register(sc, parent, menu, win, 1, NULL);
         if (ch) { mw_child_set_rect(ch, x, y, w, h); /* SW-1279 fix E */
+                  mw_child_set_style(ch, style, exstyle); /* SW-1587: first GWL_STYLE read answers the created style */
                   mw_child_seed_class_proc(ch, cls); /* SW-1334 */
                   if (!mw_child_send_create_seq(ch, cls, 1, parent, menu, inst,
                                                 style, exstyle, x, y, w, h,
@@ -21021,6 +21228,7 @@ __attribute__((ms_abi)) void* mw_CreateWindowExW(uint32_t exstyle, const void* c
      * SW-1382: and only the FIRST top-level (window #1) — a later 0x0
      * helper window used to shrink the main surface to 32x32. */
     if (!(style & 0x40000000u) && !parent && !g_toplvl_main_taken) {
+        g_main_style = style; g_main_exstyle = exstyle; /* SW-1587: main creation style plane */
         /* SW-1471 (SWEEP-094): CW_USEDEFAULT (0x80000000 as int = INT_MIN)
          * used to clamp at the 32px minimum -> 32x32 main windows. Both
          * Notepad++ 8.9.8.1 portable and the installed WinRAR 7.12 create
@@ -21049,7 +21257,7 @@ __attribute__((ms_abi)) void* mw_CreateWindowExW(uint32_t exstyle, const void* c
      * nested (WM_CREATE-reentrant) creations minted; a plain later top-level
      * creation collapsed onto MW_GUI_HWND (the npp64 identity collision). */
     if (g_wm_create_depth > 0 || g_toplvl_main_taken) {
-        void* nh = mw_toplevel_register(parent, (uint32_t)(uintptr_t)menu);
+        void* nh = mw_toplevel_register(parent, (uint32_t)(uintptr_t)menu, style, exstyle); /* SW-1587 */
         if (nh) {
             /* SW-1513: bind THIS window's class proc — putty's minted main
              * window must dispatch through the 'PuTTY' class proc, not the
@@ -21106,6 +21314,7 @@ __attribute__((ms_abi)) void* mw_CreateWindowExA(uint32_t exstyle, const void* c
     if (sc == 0x8D) {
         void* th = mw_child_register(sc, parent ? parent : MW_GUI_HWND, menu, win, 0, NULL);
         if (th) {
+            mw_child_set_style(th, style, exstyle); /* SW-1587 */
             void* si = mw_GlobalAlloc(0x40 /* GMEM_ZEROINIT */, 0x140);
             if (si) mw_SetPropW(th, (const uint16_t*)(uintptr_t)0xC000, si);
             MW_TRACE("[GUI] tooltips_class32A (ex=0x%x style=0x%x) -> HWND %p subclass-prop 0xC000 = %p",
@@ -21127,6 +21336,7 @@ __attribute__((ms_abi)) void* mw_CreateWindowExA(uint32_t exstyle, const void* c
         (void)exstyle;
         void* ch = mw_child_register(sc, parent, menu, win, 0, NULL);
         if (ch) { mw_child_set_rect(ch, x, y, w, h); /* SW-1279 fix E */
+                  mw_child_set_style(ch, style, exstyle); /* SW-1587 (A path) */
                   mw_child_seed_class_proc(ch, cls); /* SW-1334 */
                   if (!mw_child_send_create_seq(ch, cls, 0, parent, menu, inst,
                                                 style, exstyle, x, y, w, h,
@@ -21157,6 +21367,7 @@ __attribute__((ms_abi)) void* mw_CreateWindowExA(uint32_t exstyle, const void* c
     /* SW-1279 fix A (A path): same WS_CHILD/parent guard as the W path.
      * SW-1382 (A path): surface store = window #1 only. */
     if (!(style & 0x40000000u) && !parent && !g_toplvl_main_taken) {
+        g_main_style = style; g_main_exstyle = exstyle; /* SW-1587: main creation style plane */
         /* SW-1471 (SWEEP-094): CW_USEDEFAULT (0x80000000 as int = INT_MIN)
          * used to clamp at the 32px minimum -> 32x32 main windows. Both
          * Notepad++ 8.9.8.1 portable and the installed WinRAR 7.12 create
@@ -21185,7 +21396,7 @@ __attribute__((ms_abi)) void* mw_CreateWindowExA(uint32_t exstyle, const void* c
     }
     /* SW-1382 (A path): mint for window #2+ — same contract as the W path. */
     if (g_wm_create_depth > 0 || g_toplvl_main_taken) {
-        void* nh = mw_toplevel_register(parent, (uint32_t)(uintptr_t)menu);
+        void* nh = mw_toplevel_register(parent, (uint32_t)(uintptr_t)menu, style, exstyle); /* SW-1587 */
         if (nh) {
             /* SW-1513 (A path): bind this window's own class proc. */
             void* cp = mw_class_proc_lookup_a(cls);
@@ -21226,6 +21437,53 @@ static void*     g_mw_active_win;
 static void*     g_mw_focus_win;
 __attribute__((ms_abi)) int mw_ShowWindow(void* hwnd, int cmd) {
     mw_hook_fire_activate(hwnd); /* SW-1203: HCBT_ACTIVATE on first show */
+    /* SW-1589 (SWEEP-114): wine show fan-out. wine's NtUserShowWindow makes
+     * a window visible through SetWindowPos(SWP_SHOWWINDOW), which DELIVERS
+     * WM_SHOWWINDOW, and an activating show additionally runs the
+     * WM_NCACTIVATE -> WM_ACTIVATE -> WM_SETFOCUS chain (dlls/user32/
+     * winpos.c + focus.c). The engine tracked the active/focus STATE but
+     * delivered no messages; WinRAR 7.12 fills its file pane on first
+     * activation — the missing WM_ACTIVATE is the visible reason the list
+     * never fills (SW-1586 frontier). Fire-once guard keeps repeated
+     * ShowWindow calls from re-broadcasting a state that did not change
+     * (real Windows sends these on state transitions only). */
+    static void* g_shown_seen[16];
+    static void* g_activated_seen[16];
+    if (hwnd && mw_is_hwnd(hwnd)) {
+        int shown = 0, activated = 0;
+        switch (cmd) {
+        case 1: case 3: case 5: case 9: activated = 1; /* fallthrough: also shown */
+            /* fall through */
+        case 4: case 7: case 8: shown = 1; break;
+        default: break; /* SW_HIDE=0 / SW_MINIMIZE=6: no show broadcast here */
+        }
+        if (shown) {
+            int seen = 0;
+            for (int i = 0; i < 16; i++) if (g_shown_seen[i] == hwnd) { seen = 1; break; }
+            if (!seen) {
+                for (int i = 0; i < 16; i++)
+                    if (!g_shown_seen[i]) { g_shown_seen[i] = hwnd; break; }
+                MW_TRACE("[GUI] ShowWindow -> WM_SHOWWINDOW hwnd=%p (SW-1589)", hwnd);
+                mw_SendMessageW(hwnd, 0x0018u /* WM_SHOWWINDOW */, 1, 0);
+            }
+        }
+        if (activated) {
+            int top = (hwnd == MW_GUI_HWND || hwnd == g_main_hwnd || mw_toplevel_find(hwnd) >= 0);
+            if (top) {
+                int seen = 0;
+                for (int i = 0; i < 16; i++) if (g_activated_seen[i] == hwnd) { seen = 1; break; }
+                if (!seen) {
+                    for (int i = 0; i < 16; i++)
+                        if (!g_activated_seen[i]) { g_activated_seen[i] = hwnd; break; }
+                    MW_TRACE("[GUI] ShowWindow -> WM_NCACTIVATE/WM_ACTIVATE/WM_SETFOCUS hwnd=%p (SW-1589)", hwnd);
+                    mw_SendMessageW(hwnd, 0x0086u /* WM_NCACTIVATE */, 1, 0);
+                    mw_SendMessageW(hwnd, 0x0006u /* WM_ACTIVATE */,
+                                    0x1u /* WA_ACTIVE */, 0);
+                    mw_SendMessageW(hwnd, 0x0007u /* WM_SETFOCUS */, 0, 0);
+                }
+            }
+        }
+    }
     /* SW-1396: real ShowWindow with a show-state (SW_SHOW/SW_SHOWNORMAL/
      * SW_RESTORE/SW_SHOWMAXIMIZED) ACTIVATES the window and gives it
      * keyboard focus; the *NOACTIVATE variants (4/8/SW_SHOWMINNOACTIVE=7)
@@ -21531,6 +21789,7 @@ __attribute__((ms_abi)) void* mw_CreateToolbarEx(void* parent, uint32_t ws, uint
     (void)nButtons; (void)dxButton; (void)dyButton; (void)dxBitmap; (void)dyBitmap;
     (void)structSize;
     void* h = mw_child_register(0x86, parent, (void*)(uintptr_t)id, NULL, 0, NULL);
+    mw_child_set_style(h, ws, 0); /* SW-1587 */
     MW_TRACE("[GUI] CreateToolbarEx(id=%u nbtn=%d) -> HWND %p", id, nButtons, h);
     return h;
 }
@@ -21539,12 +21798,14 @@ __attribute__((ms_abi)) void* mw_CreateToolbarEx(void* parent, uint32_t ws, uint
 __attribute__((ms_abi)) void* mw_CreateStatusWindowA(uint32_t style, const char* text,
         void* parent, uint32_t id) {
     void* h = mw_child_register(0x87, parent, (void*)(uintptr_t)id, text, 0, NULL);
+    mw_child_set_style(h, style, 0); /* SW-1587 */
     MW_TRACE("[GUI] CreateStatusWindowA(style=0x%x id=%u) -> HWND %p", style, id, h);
     return h;
 }
 __attribute__((ms_abi)) void* mw_CreateStatusWindowW(uint32_t style, const uint16_t* text,
         void* parent, uint32_t id) {
     void* h = mw_child_register(0x87, parent, (void*)(uintptr_t)id, text, 1, NULL);
+    mw_child_set_style(h, style, 0); /* SW-1587 */
     MW_TRACE("[GUI] CreateStatusWindowW(style=0x%x id=%u) -> HWND %p", style, id, h);
     return h;
 }
@@ -24973,6 +25234,12 @@ static void mw_dialog_create_children(void* dlg, const void* tmpl) {
         if (ttl[0] != 0xFFFFu) txt = (const void*)ttl; /* ordinal title = none */
         if (sc) {
             void* h = mw_child_register(sc, dlg, (void*)(uintptr_t)id, txt, 1, NULL);
+            /* SW-1587: capture the template item style (wine dialog.c
+             * DIALOG_CreateControls32 ORs WS_CHILD into the template style
+             * before CreateWindowExW — DLGITEMTEMPLATE style is words 0-1,
+             * exstyle words 2-3). */
+            mw_child_set_style(h, (uint32_t)it[0] | ((uint32_t)it[1] << 16) | 0x40000000u,
+                               (uint32_t)it[2] | ((uint32_t)it[3] << 16));
             MW_TRACE("[GUI] dlg child id=%lu cls=%s -> %p",
                      (unsigned long)id, mw_sysclass_name(sc), h);
         } else {
@@ -29984,9 +30251,30 @@ static int mw_wndlong_is_engine_window(void* h) {
     uintptr_t v = (uintptr_t)h;
     return v >= 0x00010000u && v < 0x00020000u; /* dlg identity range */
 }
+/* SW-1587: the window's creation style plane — wine user32 GetWindowLongW
+ * (GWL_STYLE/GWL_EXSTYLE) answers win->style: the style the window was
+ * CREATED with, modified only by explicit guest SetWindowLong calls
+ * (those live in the g_wndlong overlay and win once written). The child
+ * registry / toplevel registry / main plane carry what the guest itself
+ * passed to CreateWindowEx; dialog-manager children carry the template
+ * style | WS_CHILD (wine dialog.c DIALOG_CreateControls32). */
+static uint32_t mw_window_creation_style(void* h, int ex) {
+    int s = mw_child_slot(h);
+    if (s >= 0) return ex ? g_child[s].cexstyle : g_child[s].cstyle;
+    int t = mw_toplevel_find(h);
+    if (t >= 0) return ex ? g_toplevel[t].exstyle : g_toplevel[t].style;
+    if (h == MW_GUI_HWND || h == g_main_hwnd)
+        return ex ? g_main_exstyle : g_main_style;
+    return 0; /* unknown identity: honest 0, no fabrication */
+}
 __attribute__((ms_abi)) intptr_t mw_GetWindowLongPtrW(void* h, int index) {
     int i = mw_wndlong_slot(h, index, 0);
     intptr_t v = i >= 0 ? (intptr_t)g_wndlong[i].value : 0;
+    if ((index == -16 || index == -20) && i < 0) {
+        /* SW-1587: no guest write yet -> answer the creation style. */
+        uintptr_t cs = mw_window_creation_style(h, index == -20);
+        if (cs) v = (intptr_t)cs;
+    }
     if (index == -4 && !v && mw_wndlong_is_engine_window(h)) {
         /* SW-1266: the window's CURRENT wndproc — the engine default until
          * a guest subclasses it. Non-zero so guest `if (old)` checks pass. */
@@ -30042,6 +30330,11 @@ __attribute__((ms_abi)) intptr_t mw_SetWindowLongPtrW(void* h, int index, intptr
 }
 __attribute__((ms_abi)) int32_t mw_GetWindowLongW(void* h, int index) {
     int i = mw_wndlong_slot(h, index, 0);
+    if ((index == -16 || index == -20) && i < 0) {
+        /* SW-1587: same creation-style default as the Ptr variant. */
+        uintptr_t cs = mw_window_creation_style(h, index == -20);
+        if (cs) return (int32_t)(uint32_t)cs;
+    }
     MW_TRACE("GetWindowLongW(%p,%d) -> 0x%llx", h, index,
              i >= 0 ? (unsigned long long)g_wndlong[i].value : 0ull);
     return i >= 0 ? (int32_t)(uint32_t)g_wndlong[i].value : 0;
@@ -34311,6 +34604,21 @@ __attribute__((ms_abi)) int mw_StartServiceA(void* svc, int argc, const char** a
     mw_SetLastError(5);
     return 0;
 }
+/* SW-1590 (SWEEP-114, usbdeview): ChangeServiceConfigA — typed SCM model.
+ * The engine's SCM plane answers real STOPPED status (SWEEP-027) but no
+ * service database: accept the config change on a live service cookie and
+ * return TRUE, like Windows does for a VALID config on a STOPPED service
+ * (the change is persisted by the real SCM; here the model documents the
+ * accept). Invalid handle -> ERROR_INVALID_HANDLE (6). */
+__attribute__((ms_abi)) int mw_ChangeServiceConfigA(void* svc, uint32_t type, uint32_t start,
+        uint32_t error, const char* path, const char* group, uint32_t* tag,
+        const char* deps, const char* acct, const char* pass, const char* display) {
+    (void)type; (void)start; (void)error; (void)path; (void)group; (void)tag;
+    (void)deps; (void)acct; (void)pass; (void)display;
+    if (!svc || (uintptr_t)svc < MW_SCMSVC_BASE) { mw_SetLastError(6); return 0; }
+    MW_TRACE("ChangeServiceConfigA(svc=%p) -> TRUE (typed SCM model, SW-1590)", svc);
+    return 1;
+}
 __attribute__((ms_abi)) int mw_StartServiceCtrlDispatcherW(const void* table) {
     (void)table;
     MW_TRACE("StartServiceCtrlDispatcherW -> 1063 FAILED_SERVICE_CONTROLLER_CONNECT (app path)");
@@ -36727,6 +37035,15 @@ __attribute__((ms_abi)) int mw_Process32FirstW(void* snap, void* pe) {
     return 1;
 }
 __attribute__((ms_abi)) int mw_Process32NextW(void* snap, void* pe) { (void)snap; (void)pe; return 0; }
+/* SW-1590 (SWEEP-114, usbdeview): ANSI PROCESSENTRY32 twins — USBDeview
+ * snapshots the process list at startup (USB-in-use detection). Same
+ * registry model as the W pair (one real process: the guest itself). */
+__attribute__((ms_abi)) int mw_Process32First(void* snap, void* pe) {
+    return mw_Process32FirstW(snap, pe);
+}
+__attribute__((ms_abi)) int mw_Process32Next(void* snap, void* pe) {
+    return mw_Process32NextW(snap, pe);
+}
 typedef struct { uint32_t dwSize; uint32_t th32ModuleID; uint32_t th32ProcessID; uint32_t GlblcntUsage;
     uint32_t ProccntUsage; uintptr_t modBaseAddr; uint32_t modBaseSize; uintptr_t hModule;
     char szModule[256]; char szExePath[260]; } MwModuleEntry;
@@ -43360,6 +43677,7 @@ static ImportEntry g_import_table[] = {
     ENTRY("KERNEL32.DLL", "GetTempPathW", mw_GetTempPathW),
     ENTRY("KERNEL32.DLL", "GetTempFileNameW", mw_GetTempFileNameW),
     ENTRY("KERNEL32.DLL", "GetDiskFreeSpaceExW", mw_GetDiskFreeSpaceExW),
+    ENTRY("KERNEL32.DLL", "GetDiskFreeSpaceExA", mw_GetDiskFreeSpaceExA), /* SW-1590 usbdeview */
     ENTRY("KERNEL32.DLL", "GetLogicalDrives", mw_GetLogicalDrives),
     ENTRY("KERNEL32.DLL", "GetDriveTypeA", mw_GetDriveTypeA),
     ENTRY("KERNEL32.DLL", "GetDriveTypeW", mw_GetDriveTypeW),
@@ -43723,6 +44041,8 @@ ENTRY("msvcrt.dll", "wctype", mw_wctype),
     ENTRY("msvcrt.dll", "wcstombs_s", mw_wcstombs_s),
     ENTRY("msvcrt.dll", "strerror_s", mw_strerror_s),
     ENTRY("ws2_32.dll", "WSAStartup", mw_WSAStartup),
+    ENTRY("ws2_32.dll", "WSAAsyncGetHostByName", mw_WSAAsyncGetHostByName), /* SW-1590: wine spec ordinal 103 */
+    ENTRY("ws2_32.dll", "Ordinal103", mw_WSAAsyncGetHostByName), /* SW-1590 usbdeview nameless */
     ENTRY("ws2_32.dll", "WSACleanup", mw_WSACleanup),
     ENTRY("ws2_32.dll", "WSAGetLastError", mw_WSAGetLastError),
     ENTRY("ws2_32.dll", "WSASetLastError", mw_WSASetLastError),
@@ -44215,6 +44535,8 @@ ENTRY("msvcrt.dll", "wctype", mw_wctype),
     ENTRY("WS2_32.dll", "gethostname",                          mw_gethostname_),
     ENTRY("WS2_32.dll", "inet_pton",                            mw_inet_pton_),
     ENTRY("WS2_32.dll", "WSAStartup",                           mw_WSAStartup), /* SWEEP-014: ProduKey/cports/sqlite3_analyzer gate */
+    ENTRY("WS2_32.dll", "WSAAsyncGetHostByName",                mw_WSAAsyncGetHostByName), /* SW-1590 */
+    ENTRY("WS2_32.dll", "Ordinal103",                           mw_WSAAsyncGetHostByName), /* SW-1590 usbdeview nameless */
     ENTRY("WS2_32.dll", "WSACleanup",                           mw_WSACleanup), /* SWEEP-014 */
     ENTRY("WS2_32.dll", "gethostbyname",                        mw_gethostbyname), /* SWEEP-014 r2 */
     ENTRY("WS2_32.dll", "gethostbyaddr",                        mw_gethostbyaddr), /* SWEEP-014 r2 */
@@ -44346,6 +44668,7 @@ ENTRY("msvcrt.dll", "wctype", mw_wctype),
     ENTRY("msvcrt.dll", "_mbschr",                              mw__mbschr),
     ENTRY("msvcrt.dll", "_memicmp",                             mw__memicmp),
     ENTRY("msvcrt.dll", "_strlwr",                              mw__strlwr),
+    ENTRY("msvcrt.dll", "_strupr",                              mw__strupr), /* SW-1590 usbdeview */
     ENTRY("msvcrt.dll", "_snprintf",                            mw__snprintf),
     ENTRY("ole32.dll", "CoCreateInstanceEx",                    mw_CoCreateInstanceEx),
     ENTRY("ole32.dll", "CoGetClassObject",                      mw_CoGetClassObject),
@@ -44869,6 +45192,7 @@ ENTRY("GDI32.DLL", "GetCharacterPlacementW",                mw_GetCharacterPlace
     ENTRY("WEVTAPI.DLL", "EvtGetChannelConfigProperty",         mw_EvtGetChannelConfigProperty),
     ENTRY("WEVTAPI.DLL", "EvtClose",                            mw_EvtClose),
     ENTRY("ADVAPI32.DLL", "OpenServiceA",                       mw_OpenServiceA),
+    ENTRY("ADVAPI32.DLL", "ChangeServiceConfigA",               mw_ChangeServiceConfigA), /* SW-1590 usbdeview */
     ENTRY("ADVAPI32.DLL", "QueryServiceStatus",                 mw_QueryServiceStatus),
     ENTRY("ADVAPI32.DLL", "StartServiceW",                      mw_StartServiceW),
     ENTRY("ADVAPI32.DLL", "StartServiceA",                      mw_StartServiceA),
@@ -45277,6 +45601,9 @@ ENTRY("GDI32.DLL", "GetCharacterPlacementW",                mw_GetCharacterPlace
     ENTRY("wtsapi32.dll", "WTSDisconnectSession",               mw_WTSDisconnectSession),
     ENTRY("wtsapi32.dll", "WTSSendMessageW",                    mw_WTSSendMessageW),
     ENTRY("KERNEL32.DLL", "Process32FirstW",                    mw_Process32FirstW),
+    ENTRY("KERNEL32.DLL", "Process32First",                     mw_Process32First), /* SW-1590 usbdeview */
+    ENTRY("KERNEL32.DLL", "Process32NextW",                     mw_Process32NextW),
+    ENTRY("KERNEL32.DLL", "Process32Next",                      mw_Process32Next), /* SW-1590 usbdeview */
     ENTRY("KERNEL32.DLL", "Process32NextW",                     mw_Process32NextW),
     ENTRY("KERNEL32.DLL", "Module32FirstW",                     mw_Module32FirstW),
     ENTRY("KERNEL32.DLL", "Module32NextW",                      mw_Module32NextW),
