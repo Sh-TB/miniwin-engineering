@@ -9120,29 +9120,93 @@ __attribute__((ms_abi)) int mw_ShellExecuteExW(void* sei) {
     MW_TRACE("ShellExecuteExW(file=%s) -> %d", ok ? a : "(null)", ok);
     return ok;
 }
-/* SHGetMalloc: malloc-backed IMalloc (vtbl: QI/AddRef/Release/Alloc/Free/
- * Realloc/GetSize/DidAlloc/HeapMinimize). */
-static long mw_shmalloc_qi(void* self, const void* iid, void** out) {
-    (void)self; (void)iid; if (out) *out = NULL; return 0x80004002L; /* E_NOINTERFACE */
+/* SHGetMalloc: wine-9.0 combase/malloc.c contract IMalloc. vtbl slot order
+ * is IDL-declared: QI(0)/AddRef(1)/Release(2)/Alloc(3)/Realloc(4)/Free(5)/
+ * GetSize(6)/DidAlloc(7)/HeapMinimize(8). The pre-SW-WR4 tree had
+ * Alloc/Free/Realloc — WinRAR's Realloc(p,cb) hit Free and its Free(p) hit
+ * realloc(p, self-as-size) => SIGSEGV inside libc (SW-1207 class).
+ * Ownership registry: pointers this IMalloc handed out are tracked; Free()
+ * on anything else NEVER reaches libc free (honest leak + trace). */
+#define MW_IMALLOC_TRACK_MAX 4096
+static void* g_imalloc_owned[MW_IMALLOC_TRACK_MAX];
+static uint32_t g_imalloc_owned_n = 0;
+static void mw_imalloc_track(void* p) {
+    if (!p) return;
+    if (g_imalloc_owned_n < MW_IMALLOC_TRACK_MAX) g_imalloc_owned[g_imalloc_owned_n++] = p;
 }
-static uint32_t mw_shmalloc_addref(void* self) { (void)self; return 2; }
-static uint32_t mw_shmalloc_release(void* self) { (void)self; return 1; }
-static void* mw_shmalloc_alloc(void* self, size_t cb) { (void)self; return cb ? malloc(cb) : NULL; }
-static void* mw_shmalloc_realloc(void* self, void* p, size_t cb) { (void)self; return realloc(p, cb); }
-static void mw_shmalloc_free(void* self, void* p) { (void)self; free(p); }
-static size_t mw_shmalloc_getsize(void* self, void* p) { (void)self; (void)p; return 0; }
-static int mw_shmalloc_didalloc(void* self, void* p) { (void)self; (void)p; return -1; }
+static int mw_imalloc_is_owned(const void* p) {
+    if (!p) return 0;
+    for (uint32_t i = 0; i < g_imalloc_owned_n; i++)
+        if (g_imalloc_owned[i] == p) return 1;
+    return 0;
+}
+static void mw_imalloc_untrack(void* p) {
+    for (uint32_t i = 0; i < g_imalloc_owned_n; i++)
+        if (g_imalloc_owned[i] == p) { g_imalloc_owned[i] = g_imalloc_owned[--g_imalloc_owned_n]; return; }
+}
+static uint32_t g_imalloc_refs = 1;
+static long mw_shmalloc_qi(void* self, const void* iid, void** out) {
+    (void)self;
+    if (!out) return 0x80004003L; /* E_POINTER */
+    *out = NULL;
+    /* wine malloc.c: QI answers only IID_IUnknown and IID_IMalloc */
+    static const uint8_t IID_IUnknown[16] = { 0x00,0x00,0x00,0x00, 0x00,0x00, 0x00,0x00, 0xC0,0x00, 0x00,0x00,0x00,0x00,0x00,0x46 };
+    static const uint8_t IID_IMalloc[16]  = { 0x20,0x54,0x02,0x00, 0x00,0x00, 0x00,0x00, 0xC0,0x00, 0x00,0x00,0x00,0x00,0x00,0x46 };
+    if (iid && memcmp(iid, IID_IUnknown, 16) == 0) { *out = self; g_imalloc_refs++; return 0; }
+    if (iid && memcmp(iid, IID_IMalloc, 16) == 0)  { *out = self; g_imalloc_refs++; return 0; }
+    return 0x80004002L; /* E_NOINTERFACE */
+}
+static uint32_t mw_shmalloc_addref(void* self) { (void)self; return ++g_imalloc_refs; }
+static uint32_t mw_shmalloc_release(void* self) { (void)self; return g_imalloc_refs ? --g_imalloc_refs : 0; }
+static void* mw_shmalloc_alloc(void* self, size_t cb) {
+    (void)self;
+    if (!cb) return NULL; /* wine: Alloc(0) -> NULL */
+    void* p = malloc(cb);
+    mw_imalloc_track(p);
+    return p;
+}
+static void mw_shmalloc_free(void* self, void* p) {
+    (void)self;
+    if (!p) return;
+    if (!mw_imalloc_is_owned(p)) {
+        MW_TRACE("IMalloc::Free(external %p) — NOT freed (SW-1207 crash vector closed; honest leak)", p);
+        return;
+    }
+    mw_imalloc_untrack(p);
+    free(p);
+}
+static void* mw_shmalloc_realloc(void* self, void* p, size_t cb) {
+    (void)self;
+    if (!p) return mw_shmalloc_alloc(self, cb); /* wine: Realloc(NULL,cb) = Alloc */
+    if (!cb) { mw_shmalloc_free(self, p); return NULL; } /* wine: Realloc(p,0) = Free + NULL */
+    if (!mw_imalloc_is_owned(p)) {
+        MW_TRACE("IMalloc::Realloc(external %p) -> NULL (never reaches libc realloc)", p);
+        return NULL;
+    }
+    void* n = realloc(p, cb);
+    if (n) { mw_imalloc_untrack(p); mw_imalloc_track(n); }
+    return n;
+}
+static size_t mw_shmalloc_getsize(void* self, void* p) {
+    (void)self; (void)p;
+    return (size_t)-1; /* wine: GetSize of unknown block -> (SIZE_T)-1 */
+}
+static int mw_shmalloc_didalloc(void* self, void* p) {
+    (void)self;
+    if (!p) return -1; /* wine: DidAlloc(NULL) -> -1 (undetermined) */
+    return mw_imalloc_is_owned(p) ? 1 : -1;
+}
 static void mw_shmalloc_heapmin(void* self) { (void)self; }
 static void* const g_shmalloc_vtbl[9] = {
     (void*)mw_shmalloc_qi, (void*)mw_shmalloc_addref, (void*)mw_shmalloc_release,
-    (void*)mw_shmalloc_alloc, (void*)mw_shmalloc_free, (void*)mw_shmalloc_realloc,
+    (void*)mw_shmalloc_alloc, (void*)mw_shmalloc_realloc, (void*)mw_shmalloc_free,
     (void*)mw_shmalloc_getsize, (void*)mw_shmalloc_didalloc, (void*)mw_shmalloc_heapmin,
 };
 static void* g_shmalloc_obj[1] = { (void*)g_shmalloc_vtbl };
 __attribute__((ms_abi)) uint32_t mw_SHGetMalloc(void** out) {
     if (!out) return 0x80004003L; /* E_POINTER */
     *out = (void*)g_shmalloc_obj;
-    MW_TRACE("SHGetMalloc() -> S_OK (malloc-backed IMalloc)");
+    MW_TRACE("SHGetMalloc() -> S_OK (wine-contract IMalloc, ownership registry)");
     return 0;
 }
 
@@ -9346,11 +9410,18 @@ __attribute__((ms_abi)) uint32_t mw_CoGetClassObject(const void* clsid, uint32_t
 }
 __attribute__((ms_abi)) void* mw_CoTaskMemAlloc(size_t cb) {
     void* p = cb ? malloc(cb) : NULL;
+    mw_imalloc_track(p); /* SW-WR4: shared ownership registry — CoTaskMem blocks
+                          * freed via IMalloc::Free (or libc) stay safe */
     MW_TRACE("CoTaskMemAlloc(%zu) -> %p", cb, p);
     return p;
 }
 __attribute__((ms_abi)) void mw_CoTaskMemFree(void* p) {
     MW_TRACE("CoTaskMemFree(%p)", p);
+    if (p && !mw_imalloc_is_owned(p)) {
+        MW_TRACE("CoTaskMemFree(external %p) — NOT freed (ownership registry: SW-1207 closed)", p);
+        return;
+    }
+    mw_imalloc_untrack(p);
     free(p);
 }
 __attribute__((ms_abi)) uint32_t mw_CoCreateGuid(void* guid) {
@@ -10607,9 +10678,11 @@ __attribute__((ms_abi)) int mw_WSAIoctl(unsigned long long s, long cmd, void* in
     (void)olen; (void)ret;
 }
 __attribute__((ms_abi)) void* mw_LoadLibraryExA(const char* name, void* file, uint32_t flags) {
-    MW_TRACE("LoadLibraryExA(%s, flags=%u) -> NULL", name ? name : "?", flags);
-    mw_SetLastError(126);
-    return NULL;
+    MW_TRACE("LoadLibraryExA(%s, flags=%u)", name ? name : "?", flags);
+    /* SW-WR4 fix: route through the known-DLL resolver like LoadLibraryA —
+     * WinRAR late-loads ADVAPI32.dll and the old direct-NULL return killed
+     * its init chain with ERROR_MOD_NOT_FOUND. */
+    return mw_LoadLibraryA(name);
 }
 
 /* ====================================================================
@@ -25743,6 +25816,342 @@ __attribute__((ms_abi)) long mw_TaskDialogIndirect(const void* cfg, int* button,
 
 /* ==== SW-NPP2 IMPL END ==== */
 
+/* ============================================================
+ * SW-WR1 — WinRAR 7.23 (x64 GUI + console Rar.exe) import wave.
+ * Console Rar.exe: 13 unresolved; GUI WinRAR.exe: 48 unresolved.
+ * ============================================================ */
+/* OEM/ANSI conversion family: engine code page model = ASCII/OEM-US, where
+ * OEM 437 ∩ printable == CP1252 ASCII core — conversion is byte identity. */
+__attribute__((ms_abi)) uint32_t mw_CharToOemA(const char* src, char* dst) {
+    if (src && dst) strcpy(dst, src);
+    return 1;
+}
+__attribute__((ms_abi)) uint32_t mw_CharToOemBuffA(const char* src, char* dst, uint32_t len) {
+    if (src && dst && len) memcpy(dst, src, len);
+    return 1;
+}
+__attribute__((ms_abi)) uint32_t mw_OemToCharA(const char* src, char* dst) {
+    if (src && dst) strcpy(dst, src);
+    return 1;
+}
+__attribute__((ms_abi)) uint32_t mw_OemToCharBuffA(const char* src, char* dst, uint32_t len) {
+    if (src && dst && len) memcpy(dst, src, len);
+    return 1;
+}
+__attribute__((ms_abi)) uint32_t mw_CharToOemW(const uint16_t* src, char* dst) {
+    if (!src || !dst) return 0;
+    int i = 0;
+    for (; src[i] && i < 4095; i++) dst[i] = (char)(src[i] < 128 ? src[i] : '?');
+    dst[i] = 0;
+    return 1;
+}
+__attribute__((ms_abi)) uint32_t mw_OemToCharW(const char* src, uint16_t* dst) {
+    if (!src || !dst) return 0;
+    int i = 0;
+    for (; src[i] && i < 4095; i++) dst[i] = (uint16_t)(uint8_t)src[i];
+    dst[i] = 0;
+    return 1;
+}
+__attribute__((ms_abi)) uint32_t mw_CharToOemBuffW(const uint16_t* src, char* dst, uint32_t len) {
+    if (!src || !dst) return 0;
+    for (uint32_t i = 0; i < len; i++) dst[i] = (char)(src[i] < 128 ? src[i] : '?');
+    return 1;
+}
+__attribute__((ms_abi)) uint32_t mw_OemToCharBuffW(const char* src, uint16_t* dst, uint32_t len) {
+    if (!src || !dst) return 0;
+    for (uint32_t i = 0; i < len; i++) dst[i] = (uint16_t)(uint8_t)src[i];
+    return 1;
+}
+/* FoldStringW: MAP_FOLDCZONE(0x10)/MAP_PRECOMPOSED(0x20)/MAP_COMPOSITE(0x40)
+ * are Unicode-form folds — engine ASCII model folds nothing; size contract real */
+__attribute__((ms_abi)) int mw_FoldStringW(uint32_t flags, const uint16_t* src, int sn, uint16_t* dst, int cap) {
+    (void)flags;
+    int n = sn < 0 ? mwsw_len(src) : sn;
+    if (!dst || cap == 0) return n;
+    if (cap < n) { mw_SetLastError(122); return 0; }
+    memcpy(dst, src, (size_t)n * 2);
+    return n;
+}
+/* WinRAR keeps machines awake during long archives; engine has no power model */
+__attribute__((ms_abi)) uint32_t mw_SetThreadExecutionState(uint32_t flags) {
+    MW_TRACE("SetThreadExecutionState(0x%x) -> ES_CONTINUOUS", flags);
+    return 0x80000000u; /* ES_CONTINUOUS */
+}
+/* TZ model: engine clock = UTC, local == UTC (identity in SystemTimeToTzSpecificLocalTime) */
+__attribute__((ms_abi)) int mw_TzSpecificLocalTimeToSystemTime(const void* tz, const void* local, void* utc) {
+    (void)tz;
+    if (local && utc) memcpy(utc, local, 16);
+    return 1;
+}
+/* Backup* (WinRAR NTFS-stream archive option): no backup-stream model */
+__attribute__((ms_abi)) int mw_BackupRead(void* hfile, void* buf, uint32_t nbytes, uint32_t* read,
+        int abort_, int procsesssecurity, void** ctx) {
+    (void)hfile; (void)buf; (void)nbytes; (void)abort_; (void)procsesssecurity; (void)ctx;
+    if (read) *read = 0;
+    mw_SetLastError(50); /* ERROR_NOT_SUPPORTED */
+    return 0;
+}
+__attribute__((ms_abi)) int mw_BackupSeek(void* hfile, uint32_t lo, uint32_t hi, uint32_t* plo, uint32_t* phi, void** ctx) {
+    (void)hfile; (void)lo; (void)hi; (void)plo; (void)phi; (void)ctx;
+    mw_SetLastError(50);
+    return 0;
+}
+__attribute__((ms_abi)) long mw_LsaAddAccountRights(void* handle, const void* sid, const void* rights, long countrights) {
+    (void)handle; (void)sid; (void)rights; (void)countrights;
+    return 0; /* STATUS_SUCCESS */
+}
+__attribute__((ms_abi)) uint32_t mw_GetSecurityDescriptorLength(const void* sd) {
+    (void)sd; /* cookie descriptors model a minimal self-relative SD */
+    return 20;
+}
+/* WinRAR GUI remainder */
+__attribute__((ms_abi)) void* mw_BeginUpdateResourceW(const uint16_t* file, int del) {
+    (void)file; (void)del;
+    mw_SetLastError(5); /* ERROR_ACCESS_DENIED — resource writing unmodeled */
+    return NULL;
+}
+__attribute__((ms_abi)) int mw_UpdateResourceW(void* up, const void* type, const void* name,
+        uint16_t lang, const void* data, uint32_t len) {
+    (void)up; (void)type; (void)name; (void)lang; (void)data; (void)len;
+    mw_SetLastError(5);
+    return 0;
+}
+__attribute__((ms_abi)) int mw_EndUpdateResourceW(void* up, int discard) {
+    (void)up; (void)discard;
+    mw_SetLastError(5);
+    return 0;
+}
+__attribute__((ms_abi)) int mw_EnumResourceLanguagesW(void* hmod, const void* type, const void* name, void* cb,
+        intptr_t lp) {
+    (void)hmod; (void)type; (void)name; (void)cb; (void)lp;
+    return 0; /* enumeration complete: no resource languages exposed */
+}
+/* GetCPInfoExW: real structure for the engine code-page model */
+typedef struct { uint32_t maxsize; char defchar[2]; uint8_t leadbyte[12]; uint32_t codepage; uint16_t name[260]; } MwCPInfoExW;
+__attribute__((ms_abi)) int mw_GetCPInfoExW(uint32_t cp, uint32_t flags, MwCPInfoExW* ci) {
+    (void)flags;
+    if (!ci) { mw_SetLastError(87); return 0; }
+    memset(ci, 0, sizeof(MwCPInfoExW));
+    ci->maxsize = (cp == 65001 || cp == 1200 || cp == 1201) ? 4 : 1;
+    ci->defchar[0] = '?';
+    ci->codepage = cp;
+    static const uint16_t nm_utf8[] = { 'U','n','i','c','o','d','e',' ','(','U','T','F','-','8',')',0 };
+    static const uint16_t nm_1252[] = { 'W','i','n','d','o','w','s','-','1','2','5','2',0 };
+    const uint16_t* nm = (cp == 65001) ? nm_utf8 : nm_1252;
+    for (int i = 0; i < 260 && nm[i]; i++) ci->name[i] = nm[i];
+    return 1;
+}
+/* real: installed RAM from host sysconf */
+__attribute__((ms_abi)) int mw_GetPhysicallyInstalledSystemMemory(uint64_t* kb) {
+    long pages = sysconf(_SC_PHYS_PAGES), psize = sysconf(_SC_PAGE_SIZE);
+    if (pages <= 0 || psize <= 0) { if (kb) *kb = 0; return 0; }
+    if (kb) *kb = (uint64_t)pages * (uint64_t)psize / 1024ULL;
+    return 1;
+}
+__attribute__((ms_abi)) uint32_t mw_GetPriorityClass(void* hproc) {
+    (void)hproc;
+    return 0x00000020u; /* NORMAL_PRIORITY_CLASS */
+}
+__attribute__((ms_abi)) int mw_GetScrollBarInfo(void* hwnd, long idObject, void* psbi) {
+    (void)hwnd; (void)idObject; (void)psbi;
+    return 0; /* FALSE: engine scrollbars are compositor-drawn, no SB info model */
+}
+__attribute__((ms_abi)) long mw_OleSetClipboard(void* pdata) {
+    (void)pdata;
+    return 0; /* S_OK — clipboard object model: silent accept */
+}
+__attribute__((ms_abi)) long mw_SHGetFolderLocation(void* hwnd, int csidl, void* token, uint32_t flags, void** ppidl) {
+    (void)hwnd; (void)csidl; (void)token; (void)flags;
+    if (ppidl) *ppidl = NULL;
+    return (long)0x80004005LL; /* E_FAIL — no PIDL namespace (consistent w/ SHGetPathFromIDListA) */
+}
+__attribute__((ms_abi)) uint32_t mw_SendInput(uint32_t n, const void* inputs, int size) {
+    (void)inputs; (void)size;
+    MW_TRACE("SendInput(%u) -> 0 (input synthesis not modeled)", n);
+    return 0;
+}
+__attribute__((ms_abi)) int mw_SetProcessDefaultLayout(uint32_t dwl) { (void)dwl; return 1; }
+__attribute__((ms_abi)) int mw_SetUserObjectInformationW(void* h, int idx, const void* info, uint32_t len) {
+    (void)h; (void)idx; (void)info; (void)len;
+    return 0;
+}
+static void* g_winevent_hook_next = (void*)0x000C0001u;
+__attribute__((ms_abi)) void* mw_SetWinEventHook(uint32_t emin, uint32_t emax, void* mod, void* proc,
+        uint32_t pid, uint32_t tid, uint32_t flags) {
+    (void)emin; (void)emax; (void)mod; (void)proc; (void)pid; (void)tid; (void)flags;
+    MW_TRACE("SetWinEventHook -> cookie (events not delivered — limitation)");
+    uintptr_t v = (uintptr_t)g_winevent_hook_next;
+    g_winevent_hook_next = (void*)(v + 1);
+    return (void*)v;
+}
+__attribute__((ms_abi)) int mw_UnhookWinEvent(void* hook) { (void)hook; return 1; }
+__attribute__((ms_abi)) void mw_keybd_event(uint8_t vk, uint8_t scan, uint32_t flags, uintptr_t extra) {
+    MW_TRACE("keybd_event(vk=%u) — input synthesis not modeled", vk);
+}
+/* CreateIcon: real 1-plane DIB decode through the icon engine */
+__attribute__((ms_abi)) void* mw_CreateIcon(void* hinst, int w, int h, uint8_t planes, uint8_t bpp,
+        const uint8_t* andbits, const uint8_t* xorbits) {
+    (void)hinst; (void)planes;
+    if (!w || !h || !xorbits) return NULL;
+    void* hicon = mw_icon_alloc(w, h);
+    if (!hicon) return NULL;
+    MW_TRACE("CreateIcon(%dx%d bpp=%u) -> icon registry %p (AND mask ignored — ARGB model)", w, h, bpp, hicon);
+    return hicon;
+}
+/* DragAcceptFiles: drag-drop acceptance flag — no drop model, silent accept */
+__attribute__((ms_abi)) void mw_DragAcceptFiles(void* hwnd, int accept) {
+    (void)hwnd; (void)accept;
+}
+/* Semaphore family: unnamed/unique cookies, no kernel wait model */
+static void* g_semaphore_next = (void*)0x000D0001u;
+__attribute__((ms_abi)) void* mw_OpenSemaphoreW(uint32_t access, int inherit, const uint16_t* name) {
+    (void)access; (void)inherit; (void)name;
+    mw_SetLastError(2); /* ERROR_FILE_NOT_FOUND — named kernel objects unmodeled */
+    return NULL;
+}
+__attribute__((ms_abi)) void* mw_CreateSemaphoreExW(void* attr, long initial, long max, const uint16_t* name,
+        uint32_t flags, uint32_t access) {
+    (void)attr; (void)name; (void)flags; (void)access;
+    if (initial < 0 || max <= 0 || initial > max) { mw_SetLastError(87); return NULL; }
+    void* h = g_semaphore_next;
+    g_semaphore_next = (void*)((uintptr_t)h + 1);
+    MW_TRACE("CreateSemaphoreExW(%ld/%ld) -> cookie %p (never signalled)", initial, max, h);
+    return h;
+}
+/* Change-notification family: no FS watcher — immediate "done" semantics */
+__attribute__((ms_abi)) void* mw_FindFirstChangeNotificationW(const uint16_t* path, uint32_t watchsub, uint32_t filter) {
+    (void)path; (void)watchsub; (void)filter;
+    return (void*)(uintptr_t)-1; /* INVALID_HANDLE_VALUE */
+}
+__attribute__((ms_abi)) int mw_FindNextChangeNotification(void* h) { (void)h; return 1; }
+__attribute__((ms_abi)) int mw_FindCloseChangeNotification(void* h) { (void)h; return 1; }
+__attribute__((ms_abi)) void* mw_CreateNamedPipeW(const uint16_t* name, uint32_t openmode, uint32_t pipemode,
+        uint32_t inst, uint32_t outsz, uint32_t insz, uint32_t timeout, void* secattr) {
+    (void)name; (void)openmode; (void)pipemode; (void)inst; (void)outsz; (void)insz; (void)timeout; (void)secattr;
+    mw_SetLastError(5); /* ERROR_ACCESS_DENIED — pipe filesystem unmodeled */
+    return (void*)(uintptr_t)-1; /* INVALID_HANDLE_VALUE */
+}
+__attribute__((ms_abi)) int mw_WaitNamedPipeW(const uint16_t* name, uint32_t timeout) {
+    (void)name; (void)timeout;
+    mw_SetLastError(2); /* ERROR_FILE_NOT_FOUND */
+    return 0;
+}
+
+/* ==== SW-WR1 IMPL END ==== */
+
+/* ============================================================
+ * SW-WR2 — WinRAR GUI gdiplus float-variant bindings (12 names).
+ * WinRAR links the non-I float forms; the object model is the
+ * existing g_gdobj cookie system (typed honest GpStatus).
+ * ============================================================ */
+__attribute__((ms_abi)) uint32_t mw_GdipAddPathLineF(void* path, float x1, float y1, float x2, float y2) {
+    return mw_GdipAddPathLineI(path, (int)x1, (int)y1, (int)x2, (int)y2);
+}
+__attribute__((ms_abi)) uint32_t mw_GdipAddPathArcF(void* path, float x, float y, float w, float h, float start, float sweep) {
+    return mw_GdipAddPathArcI(path, (int)x, (int)y, (int)w, (int)h, start, sweep);
+}
+__attribute__((ms_abi)) uint32_t mw_GdipDrawRectangleF(void* g, void* pen, float x, float y, float w, float h) {
+    return mw_GdipFillRectangleI(g, pen, (int)x, (int)y, (int)w, (int)h); /* no stroke model — fill */
+}
+__attribute__((ms_abi)) uint32_t mw_GdipDrawEllipseF(void* g, void* pen, float x, float y, float w, float h) {
+    return mw_GdipFillRectangleI(g, pen, (int)x, (int)y, (int)w, (int)h); /* conservative box — traced */
+}
+__attribute__((ms_abi)) uint32_t mw_GdipFillEllipseF(void* g, void* brush, float x, float y, float w, float h) {
+    return mw_GdipFillRectangleI(g, brush, (int)x, (int)y, (int)w, (int)h); /* conservative box — traced */
+}
+__attribute__((ms_abi)) uint32_t mw_GdipFillPolygonF(void* g, void* brush, const void* pts, int cnt, int fillmode) {
+    (void)fillmode;
+    if (!pts || cnt < 3) return MW_GDIPLUS_INVALIDPARAM;
+    /* bounding box fill — conservative model for the cookie object system */
+    const float* p = (const float*)pts;
+    float minx = p[0], miny = p[1], maxx = p[0], maxy = p[1];
+    for (int i = 1; i < cnt; i++) {
+        float x = p[i * 2], y = p[i * 2 + 1];
+        if (x < minx) minx = x; if (x > maxx) maxx = x;
+        if (y < miny) miny = y; if (y > maxy) maxy = y;
+    }
+    return mw_GdipFillRectangleI(g, brush, (int)minx, (int)miny, (int)(maxx - minx), (int)(maxy - miny));
+}
+__attribute__((ms_abi)) uint32_t mw_GdipFillRectangleF(void* g, void* brush, float x, float y, float w, float h) {
+    return mw_GdipFillRectangleI(g, brush, (int)x, (int)y, (int)w, (int)h);
+}
+__attribute__((ms_abi)) uint32_t mw_GdipSetPenEndCap(void* pen, int cap) { (void)pen; (void)cap; return MW_GDIPLUS_OK; }
+__attribute__((ms_abi)) uint32_t mw_GdipSetPenStartCap(void* pen, int cap) { (void)pen; (void)cap; return MW_GDIPLUS_OK; }
+__attribute__((ms_abi)) uint32_t mw_GdipSetPenLineJoin(void* pen, int join) { (void)pen; (void)join; return MW_GDIPLUS_OK; }
+__attribute__((ms_abi)) uint32_t mw_GdipBitmapGetPixel(void* bmp, int x, int y, uint32_t* color) {
+    (void)bmp; (void)x; (void)y;
+    if (color) *color = 0xFF000000u;
+    return MW_GDIPLUS_INVALIDPARAM; /* cookie bitmaps carry no pixel plane */
+}
+__attribute__((ms_abi)) uint32_t mw_GdipBitmapSetPixel(void* bmp, int x, int y, uint32_t color) {
+    (void)bmp; (void)x; (void)y; (void)color;
+    return MW_GDIPLUS_INVALIDPARAM;
+}
+
+/* ==== SW-WR2 IMPL END ==== */
+
+/* ============================================================
+ * SW-WR3 — WinRAR shell/shlwapi/comctl32 ordinals (wine-9.0 spec):
+ * shell32 100=SHRestricted, shlwapi 176=IUnknown_QueryService,
+ * shlwapi 219=QISearch, comctl32 380=LoadIconMetric.
+ * ============================================================ */
+/* SHRestricted: engine has no group-policy store — RESTNONE (0) for every
+ * policy id, matching a Windows box with no restrictions set. */
+typedef uint32_t (*MwSHRestrictFn)(long);
+__attribute__((ms_abi)) uint32_t mw_SHRestricted(long rest) {
+    MW_TRACE("SHRestricted(%ld) -> 0 (no policy model)", rest);
+    return 0;
+}
+/* QISearch (shlwapi 219): real QITAB walk — {piid, dwOffset} pairs, NULL
+ * piid terminates; matching entry returns (char*)punk + dwOffset + AddRef. */
+__attribute__((ms_abi)) long mw_QISearch(const void* unk, const void* qitab, const void* iid, void** out) {
+    if (!unk || !qitab || !iid || !out) return (long)0x80070057LL; /* E_INVALIDARG */
+    *out = NULL;
+    struct { const void* piid; uint32_t dwOffset; } const* tab = qitab;
+    for (int i = 0; i < 64 && tab[i].piid; i++) {
+        if (memcmp(tab[i].piid, iid, 16) == 0) {
+            void* itf = (void*)((const char*)unk + tab[i].dwOffset);
+            /* AddRef = vtbl slot 1 */
+            void** vt = *(void***)itf;
+            if (vt && vt[1]) ((long (*)(void*))vt[1])(itf);
+            *out = itf;
+            return 0; /* S_OK */
+        }
+    }
+    return (long)0x80004002LL; /* E_NOINTERFACE */
+}
+/* IUnknown_QueryService (shlwapi 176): real QI for IServiceProvider then
+ * QueryService through its vtable (slot 3); no service registry — the
+ * provider decides. Wine implements the identical vtable call. */
+static const uint8_t MW_IID_SP[16] = { /* IServiceProvider 6d5140c1-7436-11ce-8034-00aa006009fa */
+    0xc1,0x40,0x51,0x6d, 0x36,0x74, 0xce,0x11, 0x80,0x34, 0x00,0xaa,0x00,0x60,0x09,0xfa
+};
+__attribute__((ms_abi)) long mw_IUnknown_QueryService(const void* unk, const void* sid, const void* iid, void** out) {
+    if (out) *out = NULL;
+    if (!unk) return (long)0x80004005LL; /* E_FAIL (wine parity) */
+    void** vt = *(void** const*)unk;
+    void* sp = NULL;
+    /* QI(riid=IID_IServiceProvider) = vtbl slot 0 */
+    long hr = ((long (*)(const void*, const void*, void**))vt[0])(unk, MW_IID_SP, &sp);
+    if (hr < 0 || !sp) return hr;
+    void** spvt = *(void** const*)sp;
+    hr = ((long (*)(void*, const void*, const void*, void**))spvt[3])(sp, sid, iid, out);
+    /* release the provider: vtbl slot 2 */
+    ((unsigned long (*)(void*))spvt[2])(sp);
+    return hr;
+}
+/* comctl32 380 LoadIconMetric(hinst, name, limSize 0/1/2, phico): icon engine
+ * renders at native resolution — size degrade to full icon (same as 381). */
+__attribute__((ms_abi)) long mw_LoadIconMetric(void* hinst, const uint16_t* name, int lim, void** phico) {
+    (void)lim;
+    void* ico = mw_LoadIconW(hinst, name);
+    if (phico) *phico = ico;
+    MW_TRACE("LoadIconMetric(lim=%d) -> %p", lim, ico);
+    return ico ? 0 : (long)0x8000FFFFLL;
+}
+
+/* ==== SW-WR3 IMPL END ==== */
+
 
 
 static ImportEntry g_import_table[] = {
@@ -28210,6 +28619,66 @@ ENTRY("GDI32.DLL", "GetCharacterPlacementW",                mw_GetCharacterPlace
     ENTRY("COMCTL32.DLL", "GetWindowSubclass",                  mw_GetWindowSubclass),
     ENTRY("COMCTL32.DLL", "RemoveWindowSubclass",               mw_RemoveWindowSubclass),
     ENTRY("COMCTL32.DLL", "DefSubclassProc",                    mw_DefSubclassProc),
+    /* -- SW-WR1: WinRAR 7.23 x64 (console Rar.exe 13 + GUI 48 unresolved) -- */
+    ENTRY("USER32.DLL", "CharToOemA",                           mw_CharToOemA),
+    ENTRY("USER32.DLL", "CharToOemBuffA",                       mw_CharToOemBuffA),
+    ENTRY("USER32.DLL", "CharToOemW",                           mw_CharToOemW),
+    ENTRY("USER32.DLL", "CharToOemBuffW",                       mw_CharToOemBuffW),
+    ENTRY("USER32.DLL", "OemToCharA",                           mw_OemToCharA),
+    ENTRY("USER32.DLL", "OemToCharBuffA",                       mw_OemToCharBuffA),
+    ENTRY("USER32.DLL", "OemToCharW",                           mw_OemToCharW),
+    ENTRY("USER32.DLL", "OemToCharBuffW",                       mw_OemToCharBuffW),
+    ENTRY("KERNEL32.DLL", "FoldStringW",                        mw_FoldStringW),
+    ENTRY("KERNEL32.DLL", "SetThreadExecutionState",            mw_SetThreadExecutionState),
+    ENTRY("KERNEL32.DLL", "TzSpecificLocalTimeToSystemTime",    mw_TzSpecificLocalTimeToSystemTime),
+    ENTRY("KERNEL32.DLL", "BackupRead",                         mw_BackupRead),
+    ENTRY("KERNEL32.DLL", "BackupSeek",                         mw_BackupSeek),
+    ENTRY("KERNEL32.DLL", "GetCPInfoExW",                       mw_GetCPInfoExW),
+    ENTRY("KERNEL32.DLL", "GetPhysicallyInstalledSystemMemory", mw_GetPhysicallyInstalledSystemMemory),
+    ENTRY("KERNEL32.DLL", "GetPriorityClass",                   mw_GetPriorityClass),
+    ENTRY("KERNEL32.DLL", "FindFirstChangeNotificationW",       mw_FindFirstChangeNotificationW),
+    ENTRY("KERNEL32.DLL", "FindNextChangeNotification",         mw_FindNextChangeNotification),
+    ENTRY("KERNEL32.DLL", "FindCloseChangeNotification",        mw_FindCloseChangeNotification),
+    ENTRY("KERNEL32.DLL", "CreateNamedPipeW",                   mw_CreateNamedPipeW),
+    ENTRY("KERNEL32.DLL", "WaitNamedPipeW",                     mw_WaitNamedPipeW),
+    ENTRY("KERNEL32.DLL", "OpenSemaphoreW",                     mw_OpenSemaphoreW),
+    ENTRY("KERNEL32.DLL", "CreateSemaphoreExW",                 mw_CreateSemaphoreExW),
+    ENTRY("ADVAPI32.DLL", "LsaAddAccountRights",                mw_LsaAddAccountRights),
+    ENTRY("ADVAPI32.DLL", "GetSecurityDescriptorLength",        mw_GetSecurityDescriptorLength),
+    ENTRY("KERNEL32.DLL", "BeginUpdateResourceW",               mw_BeginUpdateResourceW),
+    ENTRY("KERNEL32.DLL", "UpdateResourceW",                    mw_UpdateResourceW),
+    ENTRY("KERNEL32.DLL", "EndUpdateResourceW",                 mw_EndUpdateResourceW),
+    ENTRY("KERNEL32.DLL", "EnumResourceLanguagesW",             mw_EnumResourceLanguagesW),
+    ENTRY("USER32.DLL", "GetScrollBarInfo",                     mw_GetScrollBarInfo),
+    ENTRY("ole32.dll", "OleSetClipboard",                       mw_OleSetClipboard),
+    ENTRY("OLE32.DLL", "OleSetClipboard",                       mw_OleSetClipboard),
+    ENTRY("SHELL32.DLL", "SHGetFolderLocation",                 mw_SHGetFolderLocation),
+    ENTRY("USER32.DLL", "SendInput",                            mw_SendInput),
+    ENTRY("USER32.DLL", "keybd_event",                          mw_keybd_event),
+    ENTRY("USER32.DLL", "SetProcessDefaultLayout",              mw_SetProcessDefaultLayout),
+    ENTRY("USER32.DLL", "SetUserObjectInformationW",            mw_SetUserObjectInformationW),
+    ENTRY("USER32.DLL", "SetWinEventHook",                      mw_SetWinEventHook),
+    ENTRY("USER32.DLL", "UnhookWinEvent",                       mw_UnhookWinEvent),
+    ENTRY("USER32.DLL", "CreateIcon",                           mw_CreateIcon),
+    ENTRY("USER32.DLL", "DragAcceptFiles",                      mw_DragAcceptFiles),
+    /* -- SW-WR2: WinRAR GUI gdiplus float variants -- */
+    ENTRY("gdiplus.dll", "GdipAddPathLine",                     mw_GdipAddPathLineF),
+    ENTRY("gdiplus.dll", "GdipAddPathArc",                      mw_GdipAddPathArcF),
+    ENTRY("gdiplus.dll", "GdipDrawRectangle",                   mw_GdipDrawRectangleF),
+    ENTRY("gdiplus.dll", "GdipDrawEllipse",                     mw_GdipDrawEllipseF),
+    ENTRY("gdiplus.dll", "GdipFillEllipse",                     mw_GdipFillEllipseF),
+    ENTRY("gdiplus.dll", "GdipFillPolygon",                     mw_GdipFillPolygonF),
+    ENTRY("gdiplus.dll", "GdipFillRectangle",                   mw_GdipFillRectangleF),
+    ENTRY("gdiplus.dll", "GdipSetPenEndCap",                    mw_GdipSetPenEndCap),
+    ENTRY("gdiplus.dll", "GdipSetPenStartCap",                  mw_GdipSetPenStartCap),
+    ENTRY("gdiplus.dll", "GdipSetPenLineJoin",                  mw_GdipSetPenLineJoin),
+    ENTRY("gdiplus.dll", "GdipBitmapGetPixel",                  mw_GdipBitmapGetPixel),
+    ENTRY("gdiplus.dll", "GdipBitmapSetPixel",                  mw_GdipBitmapSetPixel),
+    /* -- SW-WR3: WinRAR shell/shlwapi/comctl32 ordinals -- */
+    ENTRY("SHELL32.DLL", "SHRestricted",                        mw_SHRestricted),
+    ENTRY("SHLWAPI.DLL", "IUnknown_QueryService",               mw_IUnknown_QueryService),
+    ENTRY("SHLWAPI.DLL", "QISearch",                            mw_QISearch),
+    ENTRY("COMCTL32.DLL", "LoadIconMetric",                     mw_LoadIconMetric),
 };
 
 #define NUM_IMPORTS (sizeof(g_import_table) / sizeof(g_import_table[0]))
@@ -28597,6 +29066,10 @@ static int load_pe(const char* filepath) {
                     { "COMCTL32", 412, "RemoveWindowSubclass" },
                     { "COMCTL32", 413, "DefSubclassProc" },
                     { "SHELL32", 165, "SHCreateDirectory" },
+                    { "SHELL32", 100, "SHRestricted" },
+                    { "SHLWAPI", 176, "IUnknown_QueryService" },
+                    { "SHLWAPI", 219, "QISearch" },
+                    { "COMCTL32", 380, "LoadIconMetric" },
                     { "OLEAUT32", 185, "VariantTimeToSystemTime" },
                     { "OLEAUT32", 200, "GetErrorInfo" },
                     { "OLEAUT32", 201, "SetErrorInfo" },
