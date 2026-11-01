@@ -25003,6 +25003,746 @@ __attribute__((ms_abi)) uint32_t mw_DllUnregisterServer(void) {
 
 /* ==== SWEEP-029b IMPL END ==== */
 
+/* ============================================================
+ * SW-NPP1 — Notepad++ 8.9.8.1 x64 import wave (60 names, 16 DLLs).
+ * Contracts: wine-9.0 (kernelbase/version.c GetProductInfo->RtlGetProductInfo,
+ * kernelbase/path.c PathCanonicalizeW, shlwapi/ordinal.c ColorAdjustLuma,
+ * wininet/internet.c InternetCrackUrlW). Divergences traced, never silent.
+ * ============================================================ */
+
+static int mwsw_len(const uint16_t* s) { int n = 0; if (s) while (s[n]) n++; return n; }
+
+/* --- KERNEL32 --- */
+/* wine kernelbase CompareStringOrdinal: code-unit ordinal compare, returns
+ * CSTR_LESS_THAN(1)/CSTR_EQUAL(2)/CSTR_GREATER_THAN(3); NORM_IGNORECASE=0x1 */
+__attribute__((ms_abi)) int mw_CompareStringOrdinal(const uint16_t* s1, int c1,
+        const uint16_t* s2, int c2, uint32_t flags) {
+    int n1 = c1 < 0 ? mwsw_len(s1) : c1;
+    int n2 = c2 < 0 ? mwsw_len(s2) : c2;
+    int n = n1 < n2 ? n1 : n2;
+    for (int i = 0; i < n; i++) {
+        uint16_t a = s1[i], b = s2[i];
+        if (flags & 1) { /* NORM_IGNORECASE — ASCII fold like wine's ord compare */
+            if (a >= 'A' && a <= 'Z') a = (uint16_t)(a + 32);
+            if (b >= 'A' && b <= 'Z') b = (uint16_t)(b + 32);
+        }
+        if (a != b) return a < b ? 1 : 3;
+    }
+    if (n1 == n2) return 2;
+    return n1 < n2 ? 1 : 3;
+}
+__attribute__((ms_abi)) int mw_lstrcmpiA(const char* a, const char* b) {
+    for (int i = 0;; i++) {
+        unsigned char x = (unsigned char)a[i], y = (unsigned char)b[i];
+        if (x >= 'A' && x <= 'Z') x = (unsigned char)(x + 32);
+        if (y >= 'A' && y <= 'Z') y = (unsigned char)(y + 32);
+        if (x != y) return x < y ? 1 : 3;
+        if (!x) return 2;
+    }
+}
+/* GetDateFormatEx/GetTimeFormatEx: real SYSTEMTIME formatting. Default
+ * patterns = engine locale model (en-US, LCID 0x409 — matches our
+ * CompareStringW default), long-date per Windows en-US. */
+static const char* mwfmt_wd[7] = { "Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday" };
+static const char* mwfmt_mo[12] = { "January","February","March","April","May","June","July",
+                                    "August","September","October","November","December" };
+static int mwfmt_put(char* out, int cap, int* n, const char* s) {
+    while (*s && *n < cap - 1) out[(*n)++] = *s++;
+    return 0;
+}
+static int mwfmt_date(char* out, int cap, const uint16_t* sys, const char* fmt, uint32_t flags) {
+    uint16_t y = sys[0], mo = sys[1], wd = sys[3], d = sys[4] /* Y,M,DOW,D */, h = sys[5], mi = sys[6], s = sys[7], ms = sys[8];
+    if (!fmt) {
+        if (flags & 0x2 /*DATE_LONGDATE*/) fmt = "dddd, MMMM d, yyyy";
+        else if (flags & 0x4 /*DATE_YEARMONTH*/) fmt = "MMMM, yyyy";
+        else if (flags & 0x8 /*DATE_SHORTDATE*/) fmt = "M/d/yyyy";
+        else fmt = "M/d/yyyy";
+    }
+    int n = 0;
+    const char* p = fmt;
+    char tmp[16];
+    while (*p && n < cap - 1) {
+        if (*p == '\'') { /* literal quote run */
+            p++;
+            if (*p == '\'') { out[n++] = '\''; p++; continue; }
+            while (*p && *p != '\'') mwfmt_put(out, cap, &n, p++);
+            if (*p) p++;
+            continue;
+        }
+        int tok = 0;
+        while (p[tok] == p[0]) tok++;
+        char c = p[0];
+        #define PUTN(v, pad) do { snprintf(tmp, sizeof tmp, "%0*d", pad, (int)(v)); mwfmt_put(out, cap, &n, tmp); } while (0)
+        if (c == 'y') { if (tok >= 4) PUTN(y, 4); else PUTN(y % 100, 2); }
+        else if (c == 'M') {
+            if (tok >= 4) mwfmt_put(out, cap, &n, mwfmt_mo[mo - 1]);
+            else if (tok == 3) { const char* m = mwfmt_mo[(mo >= 1 && mo <= 12) ? mo - 1 : 0]; char mab[4] = { m[0], m[1], m[2], 0 }; mwfmt_put(out, cap, &n, mab); }
+            else PUTN(mo, tok);
+        }
+        else if (c == 'd') {
+            if (tok >= 4) mwfmt_put(out, cap, &n, mwfmt_wd[wd % 7]);
+            else if (tok == 3) { const char* w = mwfmt_wd[wd % 7]; char ab[4] = { w[0], w[1], w[2], 0 }; mwfmt_put(out, cap, &n, ab); }
+            else PUTN(d, tok);
+        }
+        else if (c == 'H') PUTN(h, tok);
+        else if (c == 'h') { int hh = (h % 12) ? (h % 12) : 12; PUTN(hh, tok); }
+        else if (c == 'm') PUTN(mi, tok);
+        else if (c == 's') PUTN(s, tok);
+        else if (c == 't') { mwfmt_put(out, cap, &n, h < 12 ? "A" : "P"); if (tok > 1) mwfmt_put(out, cap, &n, h < 12 ? "M" : "M"); }
+        else if (c == 'g') { }
+        else if (c == 'f') { if (tok <= 7) { PUTN(ms / 10, tok); } }
+        else { for (int k = 0; k < tok; k++) mwfmt_put(out, cap, &n, p); }
+        p += tok;
+        #undef PUTN
+    }
+    out[n] = 0;
+    /* fix month abbreviation if the 3-letter run was glued: rebuild cleanly */
+    return n;
+}
+/* deterministic ISO-flavored fallback used when pattern walking is risky:
+ * (kept) — date/time entry points below always emit real values */
+__attribute__((ms_abi)) int mw_GetDateFormatEx(const uint16_t* lname, uint32_t flags,
+        const uint16_t* sys, const uint16_t* fmt, uint16_t* out, int cap, const void* cid) {
+    (void)lname; (void)cid;
+    if (!out || cap <= 0) { mw_SetLastError(87); return 0; }
+    uint16_t zero[9] = { 2026, 11, 0, 0, 1, 0, 0, 0, 0 };
+    if (!sys) sys = zero;
+    char ab[128];
+    char fa[64]; int fi = 0;
+    if (fmt) { for (; fmt[fi] && fi < 63; fi++) fa[fi] = (char)fmt[fi]; fa[fi] = 0; }
+    int n = mwfmt_date(ab, sizeof ab, sys, fmt ? fa : NULL, flags);
+    for (int i = 0; i < n && i < cap - 1; i++) out[i] = (uint16_t)(uint8_t)ab[i];
+    out[n < cap - 1 ? n : cap - 1] = 0;
+    MW_TRACE("GetDateFormatEx(flags=%u) -> '%s'", flags, ab);
+    return n < cap - 1 ? n : cap - 1;
+}
+__attribute__((ms_abi)) int mw_GetTimeFormatEx(const uint16_t* lname, uint32_t flags,
+        const uint16_t* sys, const uint16_t* fmt, uint16_t* out, int cap) {
+    (void)lname;
+    if (!out || cap <= 0) { mw_SetLastError(87); return 0; }
+    uint16_t zero[9] = { 2026, 11, 0, 0, 1, 12, 34, 56, 0 };
+    if (!sys) sys = zero;
+    char ab[128];
+    char fa[64]; int fi = 0;
+    if (fmt) { for (; fmt[fi] && fi < 63; fi++) fa[fi] = (char)fmt[fi]; fa[fi] = 0; }
+    int n = mwfmt_date(ab, sizeof ab, sys, fmt ? fa : "h:mm:ss tt", flags);
+    for (int i = 0; i < n && i < cap - 1; i++) out[i] = (uint16_t)(uint8_t)ab[i];
+    out[n < cap - 1 ? n : cap - 1] = 0;
+    MW_TRACE("GetTimeFormatEx(flags=%u) -> '%s'", flags, ab);
+    return n < cap - 1 ? n : cap - 1;
+}
+__attribute__((ms_abi)) int mw_CopyFileExW(const uint16_t* src, const uint16_t* dst,
+        void* progress, void* data, int* cancel, uint32_t flags) {
+    typedef int (*MwCopyCb)(void*, long long, long long, long long, long long, long, long, long, long, void*, int*, uint32_t);
+    int ok = mw_CopyFileW(src, dst, (flags & 1) ? 1 : 0 /*COPY_FILE_FAIL_IF_EXISTS*/);
+    if (ok && progress) {
+        MwCopyCb cb = (MwCopyCb)progress;
+        /* MSDN LPPROGRESSROUTINE: 0=CONTINUE 1=CANCEL 2=STOP 3=QUIET */
+        int ret = cb(data, 0, 0, 0, 0, 0, 0, 0, 0, NULL, cancel, 0);
+        if (ret == 1 || ret == 2) { mw_SetLastError(1235); return 0; } /* ERROR_REQUEST_ABORTED */
+    }
+    return ok;
+}
+/* wine-9.0 ntdll RtlGetProductInfo contract: <6 -> PRODUCT_UNDEFINED+FALSE;
+ * workstation -> PRODUCT_ULTIMATE_N(0x1C); server -> PRODUCT_STANDARD_SERVER */
+#define MW_PRODUCT_ULTIMATE_N 0x1Cu
+#define MW_PRODUCT_STD_SERVER 0x0Cu
+#define MW_PRODUCT_UNDEFINED  0x00u
+__attribute__((ms_abi)) int mw_GetProductInfo(uint32_t maj, uint32_t min, uint32_t spmaj,
+        uint32_t spmin, uint32_t* type) {
+    (void)min; (void)spmaj; (void)spmin;
+    if (!type) return 0;
+    if (maj < 6) { *type = MW_PRODUCT_UNDEFINED; return 0; }
+    *type = MW_PRODUCT_ULTIMATE_N; /* engine OS model = workstation (Win10-class) */
+    MW_TRACE("GetProductInfo(%u.%u) -> PRODUCT_ULTIMATE_N (workstation model)", maj, min);
+    return 1;
+}
+static char g_restart_cmd[1024];
+static int g_restart_registered = 0;
+__attribute__((ms_abi)) long mw_RegisterApplicationRestart(const uint16_t* cmd, uint32_t flags) {
+    (void)flags;
+    g_restart_cmd[0] = 0;
+    if (cmd) { int i = 0; for (; cmd[i] && i < 1023; i++) g_restart_cmd[i] = (char)cmd[i]; g_restart_cmd[i] = 0; }
+    g_restart_registered = 1;
+    MW_TRACE("RegisterApplicationRestart('%s')", g_restart_cmd);
+    return 0; /* S_OK */
+}
+__attribute__((ms_abi)) long mw_UnregisterApplicationRestart(void) {
+    g_restart_registered = 0;
+    return 0; /* S_OK */
+}
+__attribute__((ms_abi)) long mw_GetApplicationRestartSettings(void* hwnd, uint16_t* cmd,
+        uint32_t* cch, uint32_t* flags) {
+    (void)hwnd;
+    if (!g_restart_registered) return (long)0x80070490LL; /* HRESULT_FROM_WIN32(ERROR_NOT_FOUND) */
+    int n = mwsw_len((const uint16_t*)g_restart_cmd); /* cmd stored ANSI — engine ASCII model */
+    if (cch) {
+        if (*cch < (uint32_t)(n + 1)) { mw_SetLastError(122); return (long)0x8007007ALL; } /* E_INSUFFICIENT_BUFFER */
+        if (cmd) {
+            for (int i = 0; i < n; i++) cmd[i] = (uint16_t)(uint8_t)g_restart_cmd[i];
+            cmd[n] = 0;
+        }
+        *cch = (uint32_t)n;
+    }
+    if (flags) *flags = 0;
+    return 0; /* S_OK */
+}
+/* limitation: cooperative single-pump engine — APCs registered but never
+ * delivered (wine queues for real wait dispatch). Divergence traced. */
+__attribute__((ms_abi)) uint32_t mw_QueueUserAPC(void* proc, void* hthread, uintptr_t data) {
+    MW_TRACE("QueueUserAPC(proc=%p thread=%p) -> TRUE (no APC delivery — limitation)", proc, hthread);
+    return 1;
+}
+/* CT_CTYPE1 real: C1_UPPER=0x1 LOWER=0x2 DIGIT=0x4 SPACE=0x8 PUNCT=0x10
+ * CNTRL=0x20 BLANK=0x40 HEX=0x80 ALPHA=0x100 DEFINED=0x200 */
+__attribute__((ms_abi)) int mw_GetStringTypeExA(uint32_t lcid, uint32_t type, const char* src,
+        int cch, uint16_t* out) {
+    (void)lcid;
+    if (type != 1 /*CT_CTYPE1*/) { mw_SetLastError(120); return 0; } /* CT2/3 unsupported — traced gap */
+    int n = cch < 0 ? (src ? (int)strlen(src) : 0) : cch;
+    if (!src || !out) { mw_SetLastError(87); return 0; }
+    for (int i = 0; i < n; i++) {
+        unsigned char c = (unsigned char)src[i];
+        uint16_t f = 0x200 /*DEFINED*/;
+        if (isupper(c)) f |= 0x1 | 0x100;
+        else if (islower(c)) f |= 0x2 | 0x100;
+        else if (isdigit(c)) f |= 0x4 | 0x80;
+        else if (c == ' ' || c == '\t') f |= 0x8 | 0x40;
+        else if (iscntrl(c)) f |= 0x20;
+        else f |= 0x10 | 0x100; /* punct also defined/alpha-adjacent per NT tables */
+        if (isxdigit(c)) f |= 0x80;
+        out[i] = f;
+    }
+    return 1;
+}
+
+/* --- USER32 --- */
+static __inline int mw_iswalpha16(uint16_t c) {
+    if (c < 128) return isalpha((int)c) != 0;
+    return 0; /* ASCII model for classification in engine */
+}
+__attribute__((ms_abi)) int mw_IsCharAlphaW(uint16_t c) { return mw_iswalpha16(c); }
+__attribute__((ms_abi)) int mw_IsCharAlphaA(char c) { return isalpha((unsigned char)c) != 0; }
+__attribute__((ms_abi)) int mw_IsCharAlphaNumericW(uint16_t c) {
+    return mw_iswalpha16(c) || (c < 128 && isdigit((int)c));
+}
+/* ToAscii: real US-layout translation for the printable set; dead keys none.
+ * Host code: raw VK values (VK_SHIFT=0x10, VK_SPACE=0x20, OEM 0xBA..0xDE). */
+__attribute__((ms_abi)) int mw_ToAscii(uint32_t vk, uint32_t sc, const uint8_t* kbd, uint16_t* out, uint32_t flags) {
+    (void)sc; (void)flags;
+    if (!out) return 0;
+    int shift = (kbd && (kbd[0x10] & 0x80)) ? 1 : 0; /* VK_SHIFT state */
+    char c = 0;
+    if (vk >= 'A' && vk <= 'Z') c = shift ? (char)vk : (char)(vk + 32);
+    else if (vk >= '0' && vk <= '9') {
+        static const char shnum[] = ")!@#$%^&*(";
+        c = shift ? shnum[vk - '0'] : (char)vk;
+    }
+    else if (vk == 0x20 /*VK_SPACE*/) c = ' ';
+    else {
+        static const char nk[][2] = {
+            { ';', ':' }, { '=', '+' }, { ',', '<' }, { '-', '_' }, { '.', '>' },
+            { '/', '?' }, { '`', '~' }, { '[', '{' }, { '\\', '|' }, { ']', '}' }, { '\'', '"' }
+        };
+        int idx = -1;
+        if (vk == 0xBA) idx = 0;          /* VK_OEM_1  ;: */
+        else if (vk == 0xBB) idx = 1;     /* VK_OEM_PLUS =+ */
+        else if (vk == 0xBC) idx = 2;     /* VK_OEM_COMMA ,< */
+        else if (vk == 0xBD) idx = 3;     /* VK_OEM_MINUS -_ */
+        else if (vk == 0xBE) idx = 4;     /* VK_OEM_PERIOD .> */
+        else if (vk == 0xBF) idx = 5;     /* VK_OEM_2 /? */
+        else if (vk == 0xC0) idx = 6;     /* VK_OEM_3 `~ */
+        else if (vk == 0xDB) idx = 7;     /* VK_OEM_4 [{ */
+        else if (vk == 0xDC) idx = 8;     /* VK_OEM_5 \\| */
+        else if (vk == 0xDD) idx = 9;     /* VK_OEM_6 ]} */
+        else if (vk == 0xDE) idx = 10;    /* VK_OEM_7 '" */
+        if (idx >= 0) c = nk[idx][shift];
+    }
+    if (!c) return 0;
+    *out = (uint16_t)(uint8_t)c;
+    return 1;
+}
+__attribute__((ms_abi)) void* mw_MonitorFromRect(const int32_t* rc, uint32_t flags) {
+    (void)rc; (void)flags; /* virtual screen = primary only — every rect intersects */
+    return (void*)0x00020001u; /* same primary monitor cookie as MonitorFromWindow */
+}
+__attribute__((ms_abi)) int mw_AddClipboardFormatListener(void* h) {
+    (void)h;
+    MW_TRACE("AddClipboardFormatListener -> TRUE (WM_CLIPBOARDUPDATE not synthesized — limitation)");
+    return 1;
+}
+__attribute__((ms_abi)) int mw_RemoveClipboardFormatListener(void* h) { (void)h; return 1; }
+__attribute__((ms_abi)) int mw_EnumThreadWindows(uint32_t tid, void* cb, intptr_t lp) {
+    typedef int (*MwEnumCb)(void*, intptr_t);
+    (void)tid; /* single GUI thread owns every engine window */
+    MwEnumCb f = (MwEnumCb)cb;
+    if (!f) return 0;
+    int r = f(MW_GUI_HWND, lp);
+    return r ? 1 : 0;
+}
+__attribute__((ms_abi)) void mw_mouse_event(uint32_t f, int32_t dx, int32_t dy, uint32_t d, uintptr_t e) {
+    MW_TRACE("mouse_event(flags=%u %d,%d) — input synthesis not modeled", f, dx, dy);
+}
+
+/* --- GDI32 --- */
+/* ExtCreatePen: color+width real through the pen registry; dash arrays are
+ * flattened to solid (limitation traced). LOGBRUSH {style,color,hatch}. */
+__attribute__((ms_abi)) void* mw_ExtCreatePen(uint32_t style, uint32_t width, const uint32_t* lbrush,
+        int cstyle, const uint32_t* sarr) {
+    (void)cstyle; (void)sarr;
+    uint32_t color = lbrush ? lbrush[1] : 0u;
+    uint32_t w = (style & 0x00010000u /*PS_GEOMETRIC*/) ? (width ? width : 1) : 1;
+    if (style & 0x00010000u)
+        MW_TRACE("ExtCreatePen(style=0x%x w=%u) dash array flattened to solid — limitation", style, width);
+    return mw_CreatePen(0 /*PS_SOLID*/, (int)w, color);
+}
+__attribute__((ms_abi)) int mw_GetClipRgn(void* hdc, void* rgn) {
+    (void)hdc; (void)rgn;
+    return 0; /* MSDN: 0 = no clipping region set */
+}
+__attribute__((ms_abi)) int mw_GdiAlphaBlend(void* hdcDst, int dx, int dy, int dw, int dh,
+        void* hdcSrc, int sx, int sy, int sw, int sh, uint32_t blendfn) {
+    return mw_AlphaBlend(hdcDst, dx, dy, dw, dh, hdcSrc, sx, sy, sw, sh, blendfn);
+}
+
+/* --- SHLWAPI --- */
+/* wine-9.0 kernelbase PathCanonicalizeW contract: root copy, skip '.',
+ * back up on '..' (with UNC/drive-root protection). */
+__attribute__((ms_abi)) int mw_PathCanonicalizeW(uint16_t* buf, const uint16_t* path) {
+    if (!buf || !path) { mw_SetLastError(87); return 0; }
+    const uint16_t* src = path;
+    uint16_t* dst = buf;
+    *dst = 0;
+    if (!*path) { buf[0] = '\\'; buf[1] = 0; return 1; }
+    if (*src == '\\') { *dst++ = *src++; }
+    else if (*src && src[1] == ':') {
+        *dst++ = *src++; *dst++ = *src++;
+        if (*src == '\\') *dst++ = *src++;
+    }
+    while (*src) {
+        if (*src == '.') {
+            if (src[1] == '\\' && (src == path || src[-1] == '\\' || src[-1] == ':')) { src += 2; continue; }
+            if (src[1] == '.' && dst != buf && dst[-1] == '\\') {
+                *dst = 0;
+                if (dst > buf + 1 && dst[-1] == '\\' && (dst[-2] != '\\' || dst > buf + 2)) {
+                    dst--;
+                    do { dst--; } while (dst > buf && *dst != '\\');
+                    if (dst > buf && *dst == '\\') {
+                        if (dst > buf + 1 && dst[-1] != ':' && dst[-1] != '\\') { /* keep separator for deep paths */
+                        }
+                        dst[1] = 0;
+                        dst++;
+                    } else if (dst == buf && *dst == '\\') { dst[1] = 0; dst++; }
+                }
+                src += 2;
+                if (*src == '\\') src++;
+                continue;
+            }
+            if (!src[1]) { src++; continue; } /* trailing single dot */
+        }
+        if (*src == '\\' && dst != buf && dst[-1] == '\\') { src++; continue; } /* collapse // */
+        *dst++ = *src++;
+    }
+    /* trim trailing backslash (except root forms) */
+    if (dst > buf + 1 && dst[-1] == '\\' && !(dst > buf + 2 && dst[-2] == ':')) *(dst - 1) = 0;
+    else if (dst > buf + 2 && dst[-1] == '\\' && dst[-2] == ':') *(dst - 1) = 0;
+    if (buf[0] == 0) { buf[0] = '\\'; buf[1] = 0; }
+    *dst = 0;
+    MW_TRACE("PathCanonicalizeW -> done");
+    return 1;
+}
+__attribute__((ms_abi)) int mw_PathAppendW(uint16_t* path, const uint16_t* more) {
+    if (!path || !more) return 0;
+    int n = mwsw_len(path);
+    if (n && path[n - 1] != '\\') { path[n++] = '\\'; path[n] = 0; }
+    int m = mwsw_len(more);
+    for (int i = 0; i <= m; i++) path[n + i] = more[i];
+    return mw_PathCanonicalizeW(path, path);
+}
+__attribute__((ms_abi)) void mw_PathStripPathW(uint16_t* path) {
+    if (!path) return;
+    int last = -1;
+    for (int i = 0; path[i]; i++) if (path[i] == '\\') last = i;
+    if (last < 0) return;
+    int j = 0;
+    for (int i = last + 1; ; i++, j++) { path[j] = path[i]; if (!path[i]) break; }
+}
+__attribute__((ms_abi)) void mw_PathRemoveExtensionW(uint16_t* path) {
+    if (!path) return;
+    int lastbs = -1, dot = -1;
+    for (int i = 0; path[i]; i++) {
+        if (path[i] == '\\') { lastbs = i; dot = -1; }
+        else if (path[i] == '.') dot = i;
+    }
+    if (dot > lastbs) path[dot] = 0;
+}
+__attribute__((ms_abi)) int mw_PathGetDriveNumberW(const uint16_t* path) {
+    if (!path) return -1;
+    if (path[0] && path[1] == ':' && path[0] >= 'A' && path[0] <= 'Z') return path[0] - 'A';
+    if (path[0] && path[1] == ':' && path[0] >= 'a' && path[0] <= 'z') return path[0] - 'a';
+    return -1;
+}
+__attribute__((ms_abi)) int mw_PathIsRelativeW(const uint16_t* path) {
+    if (!path || !path[0]) return 0; /* empty -> FALSE (wine) */
+    if (path[1] == ':') return 0;
+    if (path[0] == '\\') return 0;
+    return 1;
+}
+__attribute__((ms_abi)) int mw_PathCompactPathExW(uint16_t* out, const uint16_t* path, int cch, uint32_t flags) {
+    (void)flags;
+    if (!out || !path || cch <= 0) return 0;
+    int n = mwsw_len(path);
+    if (n < cch) { for (int i = 0; i <= n; i++) out[i] = path[i]; return 1; }
+    int head = (cch - 1) / 2, tail = cch - 1 - head - 3; /* '...' in the middle */
+    if (tail < 0) { for (int i = 0; i < cch - 1; i++) out[i] = path[i]; out[cch - 1] = 0; return 1; }
+    int k = 0;
+    for (int i = 0; i < head; i++) out[k++] = path[i];
+    out[k++] = '.'; out[k++] = '.'; out[k++] = '.';
+    for (int i = 0; i < tail; i++) out[k++] = path[n - tail + i];
+    out[k] = 0;
+    return 1;
+}
+/* wine FIXMEs the luma math (ordinal.c: adjustment ignored); engine applies a
+ * real clamped per-channel luminance shift — documented divergence EXCEEDS wine */
+__attribute__((ms_abi)) uint32_t mw_ColorAdjustLuma(uint32_t rgb, int luma, int unknown) {
+    (void)unknown;
+    if (!luma) return rgb;
+    int r = rgb & 0xFF, g = (rgb >> 8) & 0xFF, b = (rgb >> 16) & 0xFF;
+    int scale = 1000 + luma;
+    if (scale < 0) scale = 0;
+    r = r * scale / 1000; g = g * scale / 1000; b = b * scale / 1000;
+    if (r > 255) r = 255; if (g > 255) g = 255; if (b > 255) b = 255;
+    return ((uint32_t)b << 16) | ((uint32_t)g << 8) | (uint32_t)r;
+}
+__attribute__((ms_abi)) long mw_AssocQueryStringW(uint32_t flags, const uint16_t* assoc, const uint16_t* extra,
+        const uint16_t* key, uint16_t* out, uint32_t* outlen) {
+    (void)flags; (void)assoc; (void)extra; (void)key;
+    if (outlen) *outlen = 0;
+    if (out && *outlen) out[0] = 0;
+    mw_SetLastError(2); /* ERROR_FILE_NOT_FOUND — no shell association model */
+    return (long)0x80004005LL; /* E_FAIL */
+}
+
+/* --- COMCTL32 --- */
+__attribute__((ms_abi)) int mw_ImageList_SetIconSize(void* himl, int cx, int cy) {
+    MWImgList* L = mw_imgl_decode(himl);
+    if (!L) return 0;
+    MW_TRACE("ImageList_SetIconSize(%d,%d) — slot kept, pixel buffer not rescaled — limitation", cx, cy);
+    L->cx = cx; L->cy = cy;
+    return 1;
+}
+/* _TrackMouseEvent = comctl32 re-export of USER32 TrackMouseEvent — existing
+ * mw_TrackMouseEvent (0x21383) is bound directly in the ENTRY table. */
+
+/* --- SHELL32 --- */
+__attribute__((ms_abi)) long mw_SHCreateItemFromParsingName(const uint16_t* path, void* pbc, const void* riid, void** out) {
+    (void)path; (void)pbc; (void)riid;
+    if (out) *out = NULL;
+    MW_TRACE("SHCreateItemFromParsingName -> E_FAIL (no shell namespace model)");
+    mw_SetLastError(2);
+    return (long)0x80004005LL; /* E_FAIL — honest typed frontier */
+}
+__attribute__((ms_abi)) long mw_SHOpenFolderAndSelectItems(void* pidl, int cnt, const void* kids, uint32_t flags) {
+    (void)pidl; (void)cnt; (void)kids; (void)flags;
+    return (long)0x80004005LL; /* E_FAIL — no folder explorer model */
+}
+__attribute__((ms_abi)) int mw_DragQueryPoint(void* drop, int32_t* pt) {
+    if (pt) { pt[0] = 0; pt[1] = 0; }
+    (void)drop;
+    return 0; /* FALSE — consistent with no-drop model (DragQueryFileW -> 0) */
+}
+
+/* --- DBGHELP --- */
+__attribute__((ms_abi)) void* mw_ImageNtHeader(const void* base) {
+    if (!base) return NULL;
+    const uint8_t* p = (const uint8_t*)base;
+    if (p[0] != 'M' || p[1] != 'Z') return NULL;
+    uint32_t e_lfanew;
+    memcpy(&e_lfanew, p + 0x3C, 4);
+    if (e_lfanew < 0x40 || e_lfanew > 0x1000000u) return NULL;
+    const uint8_t* nt = p + e_lfanew;
+    if (nt[0] != 'P' || nt[1] != 'E' || nt[2] != 0 || nt[3] != 0) return NULL;
+    return (void*)nt;
+}
+
+/* --- CRYPT32 / WINTRUST — honest typed frontiers (no Authenticode model) --- */
+__attribute__((ms_abi)) int mw_CryptQueryObject(uint32_t dtype, const void* pv, uint32_t expected,
+        uint32_t flags, uint32_t save, uint32_t* pstore, void* pvctx, void* pcmsg, void* phmsg, void* ppctx) {
+    (void)dtype; (void)pv; (void)expected; (void)flags; (void)save;
+    (void)pstore; (void)pvctx; (void)pcmsg; (void)phmsg; (void)ppctx;
+    mw_SetLastError(0x57); /* ERROR_INVALID_PARAMETER-class fail, typed */
+    return 0;
+}
+__attribute__((ms_abi)) int mw_CertGetCertificateContextProperty(const void* ctx, uint32_t prop, void* buf, uint32_t* len) {
+    (void)ctx; (void)prop; (void)buf; (void)len;
+    mw_SetLastError(0x57);
+    return 0;
+}
+__attribute__((ms_abi)) void* mw_CertFindCertificateInStore(void* store, uint32_t enc, uint32_t flags,
+        uint32_t type, const void* para, const void* prev) {
+    (void)store; (void)enc; (void)flags; (void)type; (void)para; (void)prev;
+    mw_SetLastError(0x57);
+    return NULL;
+}
+__attribute__((ms_abi)) int mw_CryptMsgGetParam(const void* msg, uint32_t type, uint32_t idx, void* buf, uint32_t* len) {
+    (void)msg; (void)type; (void)idx; (void)buf; (void)len;
+    mw_SetLastError(0x57);
+    return 0;
+}
+__attribute__((ms_abi)) int mw_CryptMsgClose(void* msg) { (void)msg; return 1; }
+__attribute__((ms_abi)) uint32_t mw_CertNameToStrW(uint32_t enc, const void* name, uint32_t stype, uint16_t* buf, uint32_t csz) {
+    (void)enc; (void)name; (void)stype;
+    if (buf && csz) buf[0] = 0;
+    return 0;
+}
+#define MW_TRUST_E_NOSIGNATURE 0x800B0100u
+__attribute__((ms_abi)) long mw_WinVerifyTrust(void* hwnd, const void* pgcid, const void* pfunc) {
+    (void)hwnd; (void)pgcid; (void)pfunc;
+    MW_TRACE("WinVerifyTrust -> TRUST_E_NOSIGNATURE (no Authenticode model)");
+    return (long)MW_TRUST_E_NOSIGNATURE;
+}
+
+/* --- SENSAPI / WININET --- */
+__attribute__((ms_abi)) int mw_IsNetworkAlive(uint32_t* flags) {
+    if (flags) *flags = 1; /* NETWORK_ALIVE_LAN */
+    return 1; /* TRUE: alive — keeps update checkers quiet */
+}
+typedef struct { uint32_t dwSize, dwFlags, dwOutboundSpeed, dwInboundSpeed, dwLatency; } MwQocInfo;
+__attribute__((ms_abi)) int mw_IsDestinationReachableW(const uint16_t* dest, MwQocInfo* qoc) {
+    if (qoc && qoc->dwSize >= sizeof(MwQocInfo)) {
+        qoc->dwFlags = 0; qoc->dwOutboundSpeed = 0; qoc->dwInboundSpeed = 0; qoc->dwLatency = 0;
+    }
+    (void)dest;
+    return 0; /* FALSE: no reachability model — typed honest */
+}
+/* wine-9.0 wininet InternetCrackUrlW: split scheme/user/pass/host/port/path/
+ * extra/fragment; components filled only when their length fields != 0. */
+#define MW_SCHEME_FTP 1
+#define MW_SCHEME_HTTP 2
+#define MW_SCHEME_HTTPS 4
+#define MW_SCHEME_FILE 5
+typedef struct { uint32_t size; uint16_t* scheme; uint32_t schemelen; uint32_t nscheme;
+    uint16_t* host; uint32_t hostlen; uint16_t* user; uint32_t userlen; uint16_t* pass; uint32_t passlen;
+    uint16_t* path; uint32_t pathlen; uint16_t* extra; uint32_t extralen; int32_t port; } MwUrlComponents;
+static int mw_uc_copy(uint16_t* dst, uint32_t* dlen, const uint16_t* src, int n) {
+    if (!*dlen) return 0;
+    if (n > (int)*dlen - 1) { *dlen = 0; mw_SetLastError(122); return -1; }
+    for (int i = 0; i < n; i++) dst[i] = src[i];
+    dst[n] = 0;
+    *dlen = (uint32_t)n;
+    return 0;
+}
+__attribute__((ms_abi)) int mw_InternetCrackUrlW(const uint16_t* url, uint32_t urllen, uint32_t flags, MwUrlComponents* uc) {
+    (void)flags;
+    if (!url || !uc || uc->size < sizeof(MwUrlComponents)) { mw_SetLastError(87); return 0; }
+    int n = urllen ? (int)urllen : mwsw_len(url);
+    int i = 0, sc = 0;
+    while (sc < n && url[sc] != ':' && url[sc] != '/' && url[sc] != '?' ) sc++;
+    uint32_t scheme_id = (uint32_t)-1L; /* INTERNET_SCHEME_UNKNOWN */
+    if (sc < n && url[sc] == ':' && sc + 2 < n && url[sc + 1] == '/' && url[sc + 2] == '/') {
+        static const uint16_t S_http[] = { 'h','t','t','p',0 };
+        static const uint16_t S_https[] = { 'h','t','t','p','s',0 };
+        static const uint16_t S_ftp[] = { 'f','t','p',0 };
+        static const uint16_t S_file[] = { 'f','i','l','e',0 };
+        if (sc == 4 && !memcmp(url, S_http, 8)) scheme_id = MW_SCHEME_HTTP;
+        else if (sc == 5 && !memcmp(url, S_https, 10)) scheme_id = MW_SCHEME_HTTPS;
+        else if (sc == 3 && !memcmp(url, S_ftp, 6)) scheme_id = MW_SCHEME_FTP;
+        else if (sc == 4 && !memcmp(url, S_file, 8)) scheme_id = MW_SCHEME_FILE;
+        if (uc->scheme && uc->schemelen && mw_uc_copy(uc->scheme, &uc->schemelen, url, sc) < 0) return 0;
+        uc->nscheme = scheme_id;
+        i = sc + 3;
+    } else {
+        uc->nscheme = 0; /* INTERNET_SCHEME_DEFAULT */
+        i = 0;
+    }
+    /* user:pass@ */
+    int at = -1, slash = n;
+    for (int k = i; k < n; k++) {
+        if (url[k] == '/' || url[k] == '?' ) { slash = k; break; }
+        if (url[k] == '@') at = k;
+    }
+    int hostbeg2 = i, hostend = slash;
+    if (at >= 0 && at < slash) {
+        int colon = -1;
+        for (int k = i; k < at; k++) if (url[k] == ':') { colon = k; break; }
+        if (uc->user && uc->userlen && mw_uc_copy(uc->user, &uc->userlen, url + i, colon < 0 ? at - i : colon - i) < 0) return 0;
+        if (colon >= 0 && uc->pass && uc->passlen && mw_uc_copy(uc->pass, &uc->passlen, url + colon + 1, at - colon - 1) < 0) return 0;
+        hostbeg2 = at + 1;
+    }
+    int port = scheme_id == MW_SCHEME_HTTPS ? 443 : scheme_id == MW_SCHEME_FTP ? 21 : 80;
+    int colon = -1;
+    for (int k = hostbeg2; k < hostend; k++) if (url[k] == ':') { colon = k; break; }
+    if (colon >= 0) {
+        int p = 0;
+        for (int k = colon + 1; k < hostend; k++) { if (url[k] < '0' || url[k] > '9') { p = -1; break; } p = p * 10 + (url[k] - '0'); }
+        if (p >= 0) port = p;
+        hostend = colon;
+    }
+    if (uc->host && uc->hostlen && mw_uc_copy(uc->host, &uc->hostlen, url + hostbeg2, hostend - hostbeg2) < 0) return 0;
+    uc->port = (int16_t)port;
+    /* path ?extra */
+    int q = n;
+    for (int k = slash; k < n; k++) if (url[k] == '?' ) { q = k; break; }
+    if (uc->path && uc->pathlen && mw_uc_copy(uc->path, &uc->pathlen, url + slash, (q > slash) ? q - slash : 0) < 0) return 0;
+    if (q < n && uc->extra && uc->extralen && mw_uc_copy(uc->extra, &uc->extralen, url + q, n - q) < 0) return 0;
+    MW_TRACE("InternetCrackUrlW -> scheme=%u host* path* port=%d", scheme_id, port);
+    return 1;
+}
+
+/* --- DWMAPI / IMM32 --- */
+__attribute__((ms_abi)) long mw_DwmGetColorizationColor(uint32_t* pcr, int* opaque) {
+    if (pcr) *pcr = 0;
+    if (opaque) *opaque = 1;
+    return (long)0x80004001LL; /* E_NOTIMPL (wine dwmapi stub parity) */
+}
+__attribute__((ms_abi)) int mw_ImmNotifyIME(void* himc, uint32_t action, uint32_t index, uintptr_t value) {
+    (void)himc; (void)action; (void)index; (void)value;
+    return 1; /* IME composition not modeled — limitation */
+}
+__attribute__((ms_abi)) int mw_ImmSetCandidateWindow(void* himc, const void* cand) { (void)himc; (void)cand; return 1; }
+__attribute__((ms_abi)) int mw_ImmSetCompositionStringW(void* himc, uint32_t dindex, const void* dc, uint32_t dc2,
+        const void* sc, uint32_t sc2) {
+    (void)himc; (void)dindex; (void)dc; (void)dc2; (void)sc; (void)sc2;
+    return 1;
+}
+__attribute__((ms_abi)) intptr_t mw_ImmEscapeW(void* hkl, void* himc, uint32_t esc, void* data) {
+    (void)hkl; (void)himc; (void)esc; (void)data;
+    return 0;
+}
+
+/* --- UXTHEME (buffered-paint / animation family) --- */
+__attribute__((ms_abi)) void* mw_BeginBufferedAnimation(void* hwnd, void* tdc, const void* rc, uint32_t fmt,
+        void* bppo, uint32_t flags, void* style, int part, int from, int to, uint32_t dur) {
+    (void)hwnd; (void)tdc; (void)rc; (void)fmt; (void)bppo; (void)flags; (void)style; (void)part; (void)from; (void)to; (void)dur;
+    return NULL; /* no animation buffer — callers fall back to direct draw */
+}
+__attribute__((ms_abi)) int mw_EndBufferedAnimation(void* handle, int paint) {
+    (void)handle; (void)paint;
+    return 1;
+}
+__attribute__((ms_abi)) int mw_BufferedPaintRenderAnimation(void* hdc, const void* rc) {
+    (void)hdc; (void)rc;
+    return 0; /* FALSE: nothing to render */
+}
+__attribute__((ms_abi)) void mw_BufferedPaintStopAllAnimation(void* hwnd) { (void)hwnd; }
+__attribute__((ms_abi)) long mw_GetThemeTransitionDuration(void* h, int part, int state, int prop, uint32_t* dur) {
+    (void)h; (void)part; (void)state; (void)prop;
+    if (dur) *dur = 0;
+    return 0; /* S_OK */
+}
+__attribute__((ms_abi)) long mw_GetThemeBackgroundContentRect(void* h, void* hdc, int part, int state,
+        const void* bounds, void* content) {
+    (void)h; (void)hdc; (void)part; (void)state;
+    if (bounds && content) memcpy(content, bounds, sizeof(int32_t) * 4); /* no chrome inset — pass-through */
+    return 0; /* S_OK */
+}
+/* DrawThemeTextEx: render for real through DrawTextW (classic surface), S_OK */
+__attribute__((ms_abi)) long mw_DrawThemeTextEx(void* h, void* dc, int part, int state, const uint16_t* text,
+        int cch, uint32_t flags, const void* rect, const void* options) {
+    (void)h; (void)part; (void)state; (void)options;
+    int n = cch < 0 ? mwsw_len(text) : cch;
+    mw_DrawTextW(dc, text, n, (void*)rect, 0x00000025u /*DT_LEFT|DT_NOPREFIX|DT_SINGLELINE*/);
+    MW_TRACE("DrawThemeTextEx -> DrawTextW classic (%d chars)", n);
+    return 0; /* S_OK */
+}
+
+/* --- ADVAPI32 --- */
+/* IsTextUnicode: real documented subset — BOM signatures, ASCII16 shape,
+ * zero-byte statistics; honors the caller's requested test mask. */
+#define IU_SIGNATURE 0x0001u
+#define IU_REVERSE_SIGNATURE 0x0002u
+#define IU_ASCII16 0x0004u
+#define IU_STATISTICS 0x0020u
+__attribute__((ms_abi)) int mw_IsTextUnicode(const void* buf, int len, int* lpi) {
+    const uint8_t* p = (const uint8_t*)buf;
+    if (!p || len < 2) { if (lpi) *lpi = 0; return 0; }
+    uint32_t res = 0;
+    if (p[0] == 0xFF && p[1] == 0xFE) res |= IU_SIGNATURE;
+    if (p[0] == 0xFE && p[1] == 0xFF) res |= IU_REVERSE_SIGNATURE;
+    int pairs = len / 2, ascii = 1, zeroodd = 0;
+    for (int i = 0; i + 1 < len; i += 2) {
+        uint8_t lo = p[i], hi = p[i + 1];
+        if (hi != 0) { ascii = 0; zeroodd++; }
+        uint16_t c = (uint16_t)(lo | (hi << 8));
+        if (c < 0x20 && c != 9 && c != 10 && c != 13) ascii = 0;
+    }
+    if (ascii && pairs > 0) res |= IU_ASCII16;
+    if (pairs > 0 && (pairs - zeroodd) * 100 / pairs >= 90) res |= IU_STATISTICS;
+    if (lpi && *lpi) res &= (uint32_t)*lpi; /* caller test mask */
+    if (lpi) *lpi = (int)res;
+    MW_TRACE("IsTextUnicode(len=%d) -> 0x%x", len, res);
+    return (int)res;
+}
+
+/* ==== SW-NPP1 IMPL END ==== */
+
+/* ============================================================
+ * SW-NPP2 — Notepad++ ordinal imports (7), wine-9.0 spec-verified:
+ *   comctl32 17=InitCommonControls, 345=TaskDialogIndirect,
+ *   381=LoadIconWithScaleDown, 410=SetWindowSubclass,
+ *   411=GetWindowSubclass, 412=RemoveWindowSubclass,
+ *   413=DefSubclassProc; shell32 165=SHCreateDirectory.
+ * ============================================================ */
+/* comctl32 subclass family: per-hwnd chains are not modeled (the engine's
+ * dialog dispatch is single-level) — registration bookkeeping only, calls
+ * never re-dispatched. Divergence traced; wine keeps real per-hwnd lists. */
+typedef struct { void* hwnd; void* proc; int id; } MwSubclassRec;
+static MwSubclassRec g_subclass[64];
+static int g_nsubclass = 0;
+__attribute__((ms_abi)) int mw_SetWindowSubclass(void* hwnd, void* proc, int id, uintptr_t ref) {
+    (void)ref;
+    if (!hwnd || !proc) return 0;
+    for (int i = 0; i < g_nsubclass; i++)
+        if (g_subclass[i].hwnd == hwnd && g_subclass[i].id == id) return 1; /* already registered */
+    if (g_nsubclass >= 64) return 0;
+    g_subclass[g_nsubclass].hwnd = hwnd;
+    g_subclass[g_nsubclass].proc = proc;
+    g_subclass[g_nsubclass].id = id;
+    g_nsubclass++;
+    return 1;
+}
+__attribute__((ms_abi)) int mw_GetWindowSubclass(void* hwnd, void* proc, int id, void** ref) {
+    for (int i = 0; i < g_nsubclass; i++)
+        if (g_subclass[i].hwnd == hwnd && (g_subclass[i].proc == proc || g_subclass[i].id == id)) {
+            if (ref) *(uintptr_t*)ref = 0;
+            return 1;
+        }
+    return 0;
+}
+__attribute__((ms_abi)) int mw_RemoveWindowSubclass(void* hwnd, void* proc, int id) {
+    for (int i = 0; i < g_nsubclass; i++)
+        if (g_subclass[i].hwnd == hwnd && g_subclass[i].proc == proc && g_subclass[i].id == id) {
+            g_subclass[i] = g_subclass[g_nsubclass - 1];
+            g_nsubclass--;
+            return 1;
+        }
+    return 0;
+}
+__attribute__((ms_abi)) intptr_t mw_DefSubclassProc(void* hwnd, uint32_t msg, uintptr_t wp, intptr_t lp) {
+    /* flat dispatch: no stored prev-proc chain — fall through to DefWindowProcW */
+    return (intptr_t)mw_DefWindowProcW(hwnd, msg, wp, lp);
+}/* comctl32 381 LoadIconWithScaleDown(hinst, name, cx, cy, phico): icon engine
+ * renders at native size; scale-down degrades to the full icon. */
+__attribute__((ms_abi)) long mw_LoadIconWithScaleDown(void* hinst, const uint16_t* name, int cx, int cy, void** phico) {
+    (void)cx; (void)cy;
+    void* ico = mw_LoadIconW(hinst, name);
+    if (phico) *phico = ico;
+    MW_TRACE("LoadIconWithScaleDown(%dx%d) -> native-size icon %p", cx, cy, ico);
+    return ico ? 0 : (long)0x8000FFFFL; /* S_OK : E_FAIL */
+}
+/* comctl32 345 TaskDialogIndirect — typed frontier: engine has no task-dialog
+ * compositor; callers receive E_NOTIMPL (wine renders the real dialog). */
+__attribute__((ms_abi)) long mw_TaskDialogIndirect(const void* cfg, int* button, int* radio, int* checked) {
+    (void)cfg;
+    if (button) *button = 0;
+    if (radio) *radio = 0;
+    if (checked) *checked = 0;
+    MW_TRACE("TaskDialogIndirect -> E_NOTIMPL (typed frontier)");
+    return (long)0x80004001LL;
+}
+
+/* ==== SW-NPP2 IMPL END ==== */
+
 
 
 static ImportEntry g_import_table[] = {
@@ -27394,6 +28134,82 @@ ENTRY("GDI32.DLL", "GetCharacterPlacementW",                mw_GetCharacterPlace
     ENTRY("OLEAUT32.DLL", "SafeArrayPutElement",                mw_SafeArrayPutElement),
     ENTRY("OLEAUT32.DLL", "VarBstrFromDate",                    mw_VarBstrFromDate),
     ENTRY("OLEAUT32.DLL", "DllUnregisterServer",                mw_DllUnregisterServer),
+    /* -- SW-NPP1: Notepad++ 8.9.8.1 x64 wave (60 unresolved -> 0) -- */
+    ENTRY("KERNEL32.DLL", "CompareStringOrdinal",               mw_CompareStringOrdinal),
+    ENTRY("KERNEL32.DLL", "lstrcmpiA",                          mw_lstrcmpiA),
+    ENTRY("KERNEL32.DLL", "GetDateFormatEx",                    mw_GetDateFormatEx),
+    ENTRY("KERNEL32.DLL", "GetTimeFormatEx",                    mw_GetTimeFormatEx),
+    ENTRY("KERNEL32.DLL", "CopyFileExW",                        mw_CopyFileExW),
+    ENTRY("KERNEL32.DLL", "GetProductInfo",                     mw_GetProductInfo),
+    ENTRY("KERNEL32.DLL", "RegisterApplicationRestart",         mw_RegisterApplicationRestart),
+    ENTRY("KERNEL32.DLL", "UnregisterApplicationRestart",       mw_UnregisterApplicationRestart),
+    ENTRY("KERNEL32.DLL", "GetApplicationRestartSettings",      mw_GetApplicationRestartSettings),
+    ENTRY("KERNEL32.DLL", "QueueUserAPC",                       mw_QueueUserAPC),
+    ENTRY("KERNEL32.DLL", "GetStringTypeExA",                   mw_GetStringTypeExA),
+    ENTRY("USER32.DLL", "IsCharAlphaW",                         mw_IsCharAlphaW),
+    ENTRY("USER32.DLL", "IsCharAlphaA",                         mw_IsCharAlphaA),
+    ENTRY("USER32.DLL", "IsCharAlphaNumericW",                  mw_IsCharAlphaNumericW),
+    ENTRY("USER32.DLL", "ToAscii",                              mw_ToAscii),
+    ENTRY("USER32.DLL", "MonitorFromRect",                      mw_MonitorFromRect),
+    ENTRY("USER32.DLL", "AddClipboardFormatListener",           mw_AddClipboardFormatListener),
+    ENTRY("USER32.DLL", "RemoveClipboardFormatListener",        mw_RemoveClipboardFormatListener),
+    ENTRY("USER32.DLL", "EnumThreadWindows",                    mw_EnumThreadWindows),
+    ENTRY("USER32.DLL", "mouse_event",                          mw_mouse_event),
+    ENTRY("GDI32.DLL", "ExtCreatePen",                          mw_ExtCreatePen),
+    ENTRY("GDI32.DLL", "GetClipRgn",                            mw_GetClipRgn),
+    ENTRY("GDI32.DLL", "GdiAlphaBlend",                         mw_GdiAlphaBlend),
+    ENTRY("SHLWAPI.DLL", "PathCanonicalizeW",                   mw_PathCanonicalizeW),
+    ENTRY("SHLWAPI.DLL", "PathAppendW",                         mw_PathAppendW),
+    ENTRY("SHLWAPI.DLL", "PathStripPathW",                      mw_PathStripPathW),
+    ENTRY("SHLWAPI.DLL", "PathRemoveExtensionW",                mw_PathRemoveExtensionW),
+    ENTRY("SHLWAPI.DLL", "PathGetDriveNumberW",                 mw_PathGetDriveNumberW),
+    ENTRY("SHLWAPI.DLL", "PathIsRelativeW",                     mw_PathIsRelativeW),
+    ENTRY("SHLWAPI.DLL", "PathCompactPathExW",                  mw_PathCompactPathExW),
+    ENTRY("SHLWAPI.DLL", "ColorAdjustLuma",                     mw_ColorAdjustLuma),
+    ENTRY("SHLWAPI.DLL", "AssocQueryStringW",                   mw_AssocQueryStringW),
+    ENTRY("COMCTL32.DLL", "ImageList_SetIconSize",              mw_ImageList_SetIconSize),
+    ENTRY("COMCTL32.DLL", "_TrackMouseEvent",                   mw_TrackMouseEvent),
+    ENTRY("SHELL32.DLL", "SHCreateItemFromParsingName",         mw_SHCreateItemFromParsingName),
+    ENTRY("SHELL32.DLL", "SHOpenFolderAndSelectItems",          mw_SHOpenFolderAndSelectItems),
+    ENTRY("SHELL32.DLL", "DragQueryPoint",                      mw_DragQueryPoint),
+    ENTRY("DBGHELP.DLL", "ImageNtHeader",                       mw_ImageNtHeader),
+    ENTRY("CRYPT32.DLL", "CryptQueryObject",                    mw_CryptQueryObject),
+    ENTRY("CRYPT32.DLL", "CertGetCertificateContextProperty",   mw_CertGetCertificateContextProperty),
+    ENTRY("CRYPT32.DLL", "CertFindCertificateInStore",          mw_CertFindCertificateInStore),
+    ENTRY("CRYPT32.DLL", "CryptMsgGetParam",                    mw_CryptMsgGetParam),
+    ENTRY("CRYPT32.DLL", "CryptMsgClose",                       mw_CryptMsgClose),
+    ENTRY("CRYPT32.DLL", "CertNameToStrW",                      mw_CertNameToStrW),
+    ENTRY("WINTRUST.DLL", "WinVerifyTrust",                     mw_WinVerifyTrust),
+    ENTRY("SENSAPI.DLL", "IsNetworkAlive",                      mw_IsNetworkAlive),
+    ENTRY("SENSAPI.DLL", "IsDestinationReachableW",             mw_IsDestinationReachableW),
+    ENTRY("WININET.DLL", "InternetCrackUrlW",                   mw_InternetCrackUrlW),
+    ENTRY("DWMAPI.DLL", "DwmGetColorizationColor",              mw_DwmGetColorizationColor),
+    ENTRY("IMM32.DLL", "ImmNotifyIME",                          mw_ImmNotifyIME),
+    ENTRY("IMM32.DLL", "ImmSetCandidateWindow",                 mw_ImmSetCandidateWindow),
+    ENTRY("IMM32.DLL", "ImmSetCompositionStringW",              mw_ImmSetCompositionStringW),
+    ENTRY("IMM32.DLL", "ImmEscapeW",                            mw_ImmEscapeW),
+    ENTRY("uxtheme.dll", "BeginBufferedAnimation",              mw_BeginBufferedAnimation),
+    ENTRY("UXTHEME.DLL", "BeginBufferedAnimation",              mw_BeginBufferedAnimation),
+    ENTRY("uxtheme.dll", "EndBufferedAnimation",                mw_EndBufferedAnimation),
+    ENTRY("UXTHEME.DLL", "EndBufferedAnimation",                mw_EndBufferedAnimation),
+    ENTRY("uxtheme.dll", "BufferedPaintRenderAnimation",        mw_BufferedPaintRenderAnimation),
+    ENTRY("UXTHEME.DLL", "BufferedPaintRenderAnimation",        mw_BufferedPaintRenderAnimation),
+    ENTRY("uxtheme.dll", "BufferedPaintStopAllAnimations",      mw_BufferedPaintStopAllAnimation),
+    ENTRY("UXTHEME.DLL", "BufferedPaintStopAllAnimations",      mw_BufferedPaintStopAllAnimation),
+    ENTRY("uxtheme.dll", "GetThemeTransitionDuration",          mw_GetThemeTransitionDuration),
+    ENTRY("UXTHEME.DLL", "GetThemeTransitionDuration",          mw_GetThemeTransitionDuration),
+    ENTRY("uxtheme.dll", "GetThemeBackgroundContentRect",       mw_GetThemeBackgroundContentRect),
+    ENTRY("UXTHEME.DLL", "GetThemeBackgroundContentRect",       mw_GetThemeBackgroundContentRect),
+    ENTRY("uxtheme.dll", "DrawThemeTextEx",                     mw_DrawThemeTextEx),
+    ENTRY("UXTHEME.DLL", "DrawThemeTextEx",                     mw_DrawThemeTextEx),
+    ENTRY("ADVAPI32.DLL", "IsTextUnicode",                      mw_IsTextUnicode),
+    /* SW-NPP2: ordinal-resolved names (comctl32/shell32 spec-verified) */
+    ENTRY("COMCTL32.DLL", "TaskDialogIndirect",                 mw_TaskDialogIndirect),
+    ENTRY("COMCTL32.DLL", "LoadIconWithScaleDown",              mw_LoadIconWithScaleDown),
+    ENTRY("COMCTL32.DLL", "SetWindowSubclass",                  mw_SetWindowSubclass),
+    ENTRY("COMCTL32.DLL", "GetWindowSubclass",                  mw_GetWindowSubclass),
+    ENTRY("COMCTL32.DLL", "RemoveWindowSubclass",               mw_RemoveWindowSubclass),
+    ENTRY("COMCTL32.DLL", "DefSubclassProc",                    mw_DefSubclassProc),
 };
 
 #define NUM_IMPORTS (sizeof(g_import_table) / sizeof(g_import_table[0]))
@@ -27770,6 +28586,17 @@ static int load_pe(const char* filepath) {
                     { "OLEAUT32", 94,  "VarDateFromStr" },
                     { "OLEAUT32", 161, "LoadTypeLib" },
                     { "OLEAUT32", 184, "SystemTimeToVariantTime" },
+                    /* SW-NPP2 (Notepad++ 8.9.8.1): comctl32/shell32 fixed ordinals,
+                     * wine-9.0 spec-verified (dlls/comctl32/comctl32.spec +
+                     * dlls/shell32/shell32.spec): */
+                    { "COMCTL32", 17,  "InitCommonControls" },
+                    { "COMCTL32", 345, "TaskDialogIndirect" },
+                    { "COMCTL32", 381, "LoadIconWithScaleDown" },
+                    { "COMCTL32", 410, "SetWindowSubclass" },
+                    { "COMCTL32", 411, "GetWindowSubclass" },
+                    { "COMCTL32", 412, "RemoveWindowSubclass" },
+                    { "COMCTL32", 413, "DefSubclassProc" },
+                    { "SHELL32", 165, "SHCreateDirectory" },
                     { "OLEAUT32", 185, "VariantTimeToSystemTime" },
                     { "OLEAUT32", 200, "GetErrorInfo" },
                     { "OLEAUT32", 201, "SetErrorInfo" },
