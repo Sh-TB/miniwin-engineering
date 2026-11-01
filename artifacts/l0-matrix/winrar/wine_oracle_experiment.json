@@ -1,0 +1,1569 @@
+{
+  "experiment_id": "L0-20261101-065049-WinRAR",
+  "tracer_version": "1.0",
+  "created_utc": "2026-11-01T06:50:49.426407+00:00",
+  "exe": "/home/z/my-project/workspace/miniwin-engineering/artifacts/app3/winrar/WinRAR.exe",
+  "exe_sha256": "7415b18099d47a37d187e6c94371ae81b2e600c412b215704d709348d331a3a4",
+  "exe_args": [],
+  "wine_binary": "/home/z/my-project/tools/wine-10.1-amd64/bin/wine64",
+  "wine_resolution": "--wine file",
+  "prefix_mode": "fresh",
+  "channels": [
+    "relay",
+    "module"
+  ],
+  "caps": {
+    "relay_max_mb": 200.0,
+    "channel_max_mb": 64,
+    "timeout_s": 40.0
+  },
+  "max_events": 2000000,
+  "wine_version": "wine-10.1",
+  "prefix_boot": {
+    "exit_code": 0,
+    "timed_out": false,
+    "elapsed_ms": 2154.4
+  },
+  "module_map_entries": 177,
+  "captures": {
+    "relay": {
+      "timed_out": true,
+      "truncated": false,
+      "bytes": 50559473,
+      "exit_code": -9,
+      "elapsed_ms": 40048.12
+    },
+    "module": {
+      "timed_out": true,
+      "truncated": false,
+      "bytes": 1001431,
+      "exit_code": -9,
+      "elapsed_ms": 40003.49
+    }
+  },
+  "normalization": {
+    "relay": {
+      "parser": "l0-relay",
+      "version": "1.0",
+      "total_lines": 722166,
+      "skipped_lines": 8233,
+      "completed_pairs": 358041,
+      "unmatched_rets": 45,
+      "open_calls_at_eof": 29,
+      "limitations": {
+        "skipped_line": 8233,
+        "ret_addr_mismatch": 20,
+        "unmatched_return": 45,
+        "orphaned_call": 2223,
+        "unmatched_call": 29
+      },
+      "limitation_samples": {
+        "skipped_line": {
+          "count": 8233,
+          "samples": [
+            {
+              "line_number": 1675,
+              "detail": "no grammar match",
+              "raw": "002c:Starting thread proc 0000000140003580 (arg=000000007FFD0000)"
+            },
+            {
+              "line_number": 2129,
+              "detail": "no grammar match",
+              "raw": "002c:Call kernelbase.MultiByteToWideChar(00000000,00000000,7ffffe35ecd7 \"Intel(R) Xeon(R) Processor\",ffffffff,00000000,6fff00000000) ret=14000300b"
+            },
+            {
+              "line_number": 2130,
+              "detail": "no grammar match",
+              "raw": "002c:Call ntdll.strlen(7ffffe35ecd7 \"Intel(R) Xeon(R) Processor\") ret=6fffffc399c9"
+            },
+            {
+              "line_number": 2137,
+              "detail": "no grammar match",
+              "raw": "002c:Call kernelbase.MultiByteToWideChar(00000000,00000000,7ffffe35ecd7 \"Intel(R) Xeon(R) Processor\",ffffffff,7ffffe35ed60,6fff0000001b) ret=14000303a"
+            },
+            {
+              "line_number": 2138,
+              "detail": "no grammar match",
+              "raw": "002c:Call ntdll.strlen(7ffffe35ecd7 \"Intel(R) Xeon(R) Processor\") ret=6fffffc399c9"
+            },
+            {
+              "line_number": 4733,
+              "detail": "no grammar match",
+              "raw": "0034:Starting thread proc 0000000140003160 (arg=000000007FFD0000)"
+            },
+            {
+              "line_number": 5393,
+              "detail": "no grammar match",
+              "raw": "0038:Starting thread proc 00006FFFFF909860 (arg=00007FFFFE360050)"
+            },
+            {
+              "line_number": 5593,
+              "detail": "no grammar match",
+              "raw": "003c:Starting thread proc 0000000140003500 (arg=0000000000000000)"
+            },
+            {
+              "line_number": 17951,
+              "detail": "no grammar match",
+              "raw": "0044:Starting thread proc 00000001400111E0 (arg=000000007FFD0000)"
+            },
+            {
+              "line_number": 19169,
+              "detail": "no grammar match",
+              "raw": "Call window proc 00006FFFFFF478F0 (hwnd=0000000000010020,msg=WM_NCCREATE,wp=00000000,lp=7ffffe2feb98)"
+            },
+            {
+              "line_number": 19174,
+              "detail": "no grammar match",
+              "raw": "0044:Ret  window proc 00006FFFFFF478F0 (hwnd=0000000000010020,msg=WM_NCCREATE,wp=00000000,lp=7ffffe2feb98) retval=00000001"
+            },
+            {
+              "line_number": 19178,
+              "detail": "no grammar match",
+              "raw": "0044:Call window proc 00006FFFFFF478F0 (hwnd=0000000000010020,msg=WM_NCCALCSIZE,wp=00000000,lp=7ffffe2febd8)"
+            },
+            {
+              "line_number": 19183,
+              "detail": "no grammar match",
+              "raw": "0044:Ret  window proc 00006FFFFFF478F0 (hwnd=0000000000010020,msg=WM_NCCALCSIZE,wp=00000000,lp=7ffffe2febd8) retval=00000000"
+            },
+            {
+              "line_number": 19187,
+              "detail": "no grammar match",
+              "raw": "0044:Call window proc 00006FFFFFF478F0 (hwnd=0000000000010020,msg=WM_CREATE,wp=00000000,lp=7ffffe2feb98)"
+            },
+            {
+              "line_number": 19206,
+              "detail": "no grammar match",
+              "raw": "0044:Ret  window proc 00006FFFFFF478F0 (hwnd=0000000000010020,msg=WM_CREATE,wp=00000000,lp=7ffffe2feb98) retval=00000000"
+            },
+            {
+              "line_number": 19210,
+              "detail": "no grammar match",
+              "raw": "0044:Call window proc 00006FFFFFF478F0 (hwnd=0000000000010020,msg=WM_SIZE,wp=00000000,lp=00000000)"
+            },
+            {
+              "line_number": 19217,
+              "detail": "no grammar match",
+              "raw": "0044:Ret  window proc 00006FFFFFF478F0 (hwnd=0000000000010020,msg=WM_SIZE,wp=00000000,lp=00000000) retval=00000000"
+            },
+            {
+              "line_number": 19221,
+              "detail": "no grammar match",
+              "raw": "0044:Call window proc 00006FFFFFF478F0 (hwnd=0000000000010020,msg=WM_MOVE,wp=00000000,lp=00000000)"
+            },
+            {
+              "line_number": 19228,
+              "detail": "no grammar match",
+              "raw": "0044:Ret  window proc 00006FFFFFF478F0 (hwnd=0000000000010020,msg=WM_MOVE,wp=00000000,lp=00000000) retval=00000000"
+            },
+            {
+              "line_number": 19522,
+              "detail": "no grammar match",
+              "raw": "0044:Call window proc 00006FFFFFF479F0 (hwnd=0000000000010028,msg=WM_NCCREATE,wp=00000000,lp=7ffffe2feb88)"
+            },
+            {
+              "line_number": 19525,
+              "detail": "no grammar match",
+              "raw": "0044:Ret  window proc 00006FFFFFF479F0 (hwnd=0000000000010028,msg=WM_NCCREATE,wp=00000000,lp=7ffffe2feb88) retval=00000001"
+            },
+            {
+              "line_number": 19529,
+              "detail": "no grammar match",
+              "raw": "0044:Call window proc 00006FFFFFF479F0 (hwnd=0000000000010028,msg=WM_NCCALCSIZE,wp=00000000,lp=7ffffe2febd8)"
+            },
+            {
+              "line_number": 19532,
+              "detail": "no grammar match",
+              "raw": "0044:Ret  window proc 00006FFFFFF479F0 (hwnd=0000000000010028,msg=WM_NCCALCSIZE,wp=00000000,lp=7ffffe2febd8) retval=00000000"
+            },
+            {
+              "line_number": 19536,
+              "detail": "no grammar match",
+              "raw": "0044:Call window proc 00006FFFFFF479F0 (hwnd=0000000000010028,msg=WM_CREATE,wp=00000000,lp=7ffffe2feb88)"
+            },
+            {
+              "line_number": 19539,
+              "detail": "no grammar match",
+              "raw": "0044:Ret  window proc 00006FFFFFF479F0 (hwnd=0000000000010028,msg=WM_CREATE,wp=00000000,lp=7ffffe2feb88) retval=00000000"
+            },
+            {
+              "line_number": 19543,
+              "detail": "no grammar match",
+              "raw": "0044:Call window proc 00006FFFFFF479F0 (hwnd=0000000000010028,msg=WM_SIZE,wp=00000000,lp=00640064)"
+            },
+            {
+              "line_number": 19546,
+              "detail": "no grammar match",
+              "raw": "0044:Ret  window proc 00006FFFFFF479F0 (hwnd=0000000000010028,msg=WM_SIZE,wp=00000000,lp=00640064) retval=00000000"
+            },
+            {
+              "line_number": 19550,
+              "detail": "no grammar match",
+              "raw": "0044:Call window proc 00006FFFFFF479F0 (hwnd=0000000000010028,msg=WM_MOVE,wp=00000000,lp=00000000)"
+            },
+            {
+              "line_number": 19553,
+              "detail": "no grammar match",
+              "raw": "0044:Ret  window proc 00006FFFFFF479F0 (hwnd=0000000000010028,msg=WM_MOVE,wp=00000000,lp=00000000) retval=00000000"
+            },
+            {
+              "line_number": 19666,
+              "detail": "no grammar match",
+              "raw": "0044:Call window proc 00000001400039E0 (hwnd=0000000000010020,msg=WM_SETICON,wp=00000001,lp=0001002a)"
+            },
+            {
+              "line_number": 19798,
+              "detail": "no grammar match",
+              "raw": "0044:Ret  window proc 00000001400039E0 (hwnd=0000000000010020,msg=WM_SETICON,wp=00000001,lp=0001002a) retval=00000000"
+            },
+            {
+              "line_number": 19820,
+              "detail": "no grammar match",
+              "raw": "0044:Call window proc 00000001400039E0 (hwnd=0000000000010020,msg=WM_WINDOWPOSCHANGING,wp=00000000,lp=7ffffe2feeb8)"
+            },
+            {
+              "line_number": 19827,
+              "detail": "no grammar match",
+              "raw": "0044:Ret  window proc 00000001400039E0 (hwnd=0000000000010020,msg=WM_WINDOWPOSCHANGING,wp=00000000,lp=7ffffe2feeb8) retval=00000000"
+            },
+            {
+              "line_number": 19831,
+              "detail": "no grammar match",
+              "raw": "0044:Call window proc 00000001400039E0 (hwnd=0000000000010020,msg=WM_NCCALCSIZE,wp=00000001,lp=7ffffe2fee88)"
+            },
+            {
+              "line_number": 19836,
+              "detail": "no grammar match",
+              "raw": "0044:Ret  window proc 00000001400039E0 (hwnd=0000000000010020,msg=WM_NCCALCSIZE,wp=00000001,lp=7ffffe2fee88) retval=00000000"
+            },
+            {
+              "line_number": 19840,
+              "detail": "no grammar match",
+              "raw": "0044:Call window proc 00000001400039E0 (hwnd=0000000000010020,msg=WM_QUERYNEWPALETTE,wp=00000000,lp=00000000)"
+            },
+            {
+              "line_number": 19847,
+              "detail": "no grammar match",
+              "raw": "0044:Ret  window proc 00000001400039E0 (hwnd=0000000000010020,msg=WM_QUERYNEWPALETTE,wp=00000000,lp=00000000) retval=00000000"
+            },
+            {
+              "line_number": 19851,
+              "detail": "no grammar match",
+              "raw": "0044:Call window proc 00000001400039E0 (hwnd=0000000000010020,msg=WM_NCACTIVATE,wp=00000001,lp=00000000)"
+            },
+            {
+              "line_number": 19858,
+              "detail": "no grammar match",
+              "raw": "0044:Ret  window proc 00000001400039E0 (hwnd=0000000000010020,msg=WM_NCACTIVATE,wp=00000001,lp=00000000) retval=00000001"
+            },
+            {
+              "line_number": 19862,
+              "detail": "no grammar match",
+              "raw": "0044:Call window proc 00000001400039E0 (hwnd=0000000000010020,msg=WM_ACTIVATE,wp=00000001,lp=00000000)"
+            },
+            {
+              "line_number": 19868,
+              "detail": "no grammar match",
+              "raw": "0044:Call window proc 00000001400039E0 (hwnd=0000000000010020,msg=WM_SETFOCUS,wp=00000000,lp=00000000)"
+            },
+            {
+              "line_number": 19875,
+              "detail": "no grammar match",
+              "raw": "0044:Ret  window proc 00000001400039E0 (hwnd=0000000000010020,msg=WM_SETFOCUS,wp=00000000,lp=00000000) retval=00000000"
+            },
+            {
+              "line_number": 19880,
+              "detail": "no grammar match",
+              "raw": "0044:Ret  window proc 00000001400039E0 (hwnd=0000000000010020,msg=WM_ACTIVATE,wp=00000001,lp=00000000) retval=00000000"
+            },
+            {
+              "line_number": 19884,
+              "detail": "no grammar match",
+              "raw": "0044:Call window proc 00000001400039E0 (hwnd=0000000000010020,msg=WM_WINDOWPOSCHANGED,wp=00000000,lp=7ffffe2feeb8)"
+            },
+            {
+              "line_number": 19890,
+              "detail": "no grammar match",
+              "raw": "0044:Call window proc 00000001400039E0 (hwnd=0000000000010020,msg=WM_SIZE,wp=00000000,lp=04000500)"
+            },
+            {
+              "line_number": 19897,
+              "detail": "no grammar match",
+              "raw": "0044:Ret  window proc 00000001400039E0 (hwnd=0000000000010020,msg=WM_SIZE,wp=00000000,lp=04000500) retval=00000000"
+            },
+            {
+              "line_number": 19902,
+              "detail": "no grammar match",
+              "raw": "0044:Ret  window proc 00000001400039E0 (hwnd=0000000000010020,msg=WM_WINDOWPOSCHANGED,wp=00000000,lp=7ffffe2feeb8) retval=00000000"
+            },
+            {
+              "line_number": 19947,
+              "detail": "no grammar match",
+              "raw": "0048:Starting thread proc 0000000140003510 (arg=0000000000000000)"
+            },
+            {
+              "line_number": 20813,
+              "detail": "no grammar match",
+              "raw": "004c:Starting thread proc 0000000140004070 (arg=0000000000000000)"
+            },
+            {
+              "line_number": 21904,
+              "detail": "no grammar match",
+              "raw": "0044:Call window proc 0000000140002D70 (hwnd=000000000001002E,msg=WM_GETMINMAXINFO,wp=00000000,lp=7ffffe2feaf8)"
+            },
+            {
+              "line_number": 21913,
+              "detail": "no grammar match",
+              "raw": "0044:Ret  window proc 0000000140002D70 (hwnd=000000000001002E,msg=WM_GETMINMAXINFO,wp=00000000,lp=7ffffe2feaf8) retval=00000000"
+            },
+            {
+              "line_number": 21919,
+              "detail": "no grammar match",
+              "raw": "0044:Call window proc 0000000140002D70 (hwnd=000000000001002E,msg=WM_NCCREATE,wp=00000000,lp=7ffffe2feaa8)"
+            },
+            {
+              "line_number": 21928,
+              "detail": "no grammar match",
+              "raw": "0044:Ret  window proc 0000000140002D70 (hwnd=000000000001002E,msg=WM_NCCREATE,wp=00000000,lp=7ffffe2feaa8) retval=00000001"
+            },
+            {
+              "line_number": 21932,
+              "detail": "no grammar match",
+              "raw": "0044:Call window proc 0000000140002D70 (hwnd=000000000001002E,msg=WM_NCCALCSIZE,wp=00000000,lp=7ffffe2feb18)"
+            },
+            {
+              "line_number": 21939,
+              "detail": "no grammar match",
+              "raw": "0048:Call window proc 00000001400036D0 (hwnd=0000000000010030,msg=WM_GETMINMAXINFO,wp=00000000,lp=7ffffeeff9c8)"
+            },
+            {
+              "line_number": 21951,
+              "detail": "no grammar match",
+              "raw": "0048:Ret  window proc 00000001400036D0 (hwnd=0000000000010030,msg=WM_GETMINMAXINFO,wp=00000000,lp=7ffffeeff9c8) retval=00000000"
+            },
+            {
+              "line_number": 21954,
+              "detail": "no grammar match",
+              "raw": "0044:Ret  window proc 0000000140002D70 (hwnd=000000000001002E,msg=WM_NCCALCSIZE,wp=00000000,lp=7ffffe2feb18) retval=00000000"
+            },
+            {
+              "line_number": 21962,
+              "detail": "no grammar match",
+              "raw": "0048:Call window proc 00000001400036D0 (hwnd=0000000000010030,msg=WM_NCCREATE,wp=00000000,lp=7ffffeeff968)"
+            },
+            {
+              "line_number": 21968,
+              "detail": "no grammar match",
+              "raw": "0044:Call window proc 0000000140002D70 (hwnd=000000000001002E,msg=WM_CREATE,wp=00000000,lp=7ffffe2feaa8)"
+            },
+            {
+              "line_number": 21977,
+              "detail": "no grammar match",
+              "raw": "0044:Ret  window proc 0000000140002D70 (hwnd=000000000001002E,msg=WM_CREATE,wp=00000000,lp=7ffffe2feaa8) retval=00000000"
+            },
+            {
+              "line_number": 22396,
+              "detail": "no grammar match",
+              "raw": "004c:Call window proc 0000000140004310 (hwnd=0000000000010034,msg=WM_GETMINMAXINFO,wp=00000000,lp=7fffff1ff9d8)"
+            },
+            {
+              "line_number": 22441,
+              "detail": "no grammar match",
+              "raw": "004c:Ret  window proc 0000000140004310 (hwnd=0000000000010034,msg=WM_GETMINMAXINFO,wp=00000000,lp=7fffff1ff9d8) retval=00000000"
+            },
+            {
+              "line_number": 23417,
+              "detail": "no grammar match",
+              "raw": "0044:Call window proc 00000001400099C0 (hwnd=0000000000030038,msg=WM_GETMINMAXINFO,wp=00000000,lp=7ffffe2feaf8)"
+            },
+            {
+              "line_number": 23426,
+              "detail": "no grammar match",
+              "raw": "0044:Ret  window proc 00000001400099C0 (hwnd=0000000000030038,msg=WM_GETMINMAXINFO,wp=00000000,lp=7ffffe2feaf8) retval=00000000"
+            },
+            {
+              "line_number": 23432,
+              "detail": "no grammar match",
+              "raw": "0044:Call window proc 00000001400099C0 (hwnd=0000000000030038,msg=WM_NCCREATE,wp=00000000,lp=7ffffe2feab8)"
+            },
+            {
+              "line_number": 23441,
+              "detail": "no grammar match",
+              "raw": "0044:Ret  window proc 00000001400099C0 (hwnd=0000000000030038,msg=WM_NCCREATE,wp=00000000,lp=7ffffe2feab8) retval=00000001"
+            },
+            {
+              "line_number": 23447,
+              "detail": "no grammar match",
+              "raw": "0044:Call window proc 00006FFFFFF47990 (hwnd=0000000000010042,msg=WM_NCCREATE,wp=00000000,lp=7ffffe2feab8)"
+            },
+            {
+              "line_number": 23458,
+              "detail": "no grammar match",
+              "raw": "0044:Ret  window proc 00006FFFFFF47990 (hwnd=0000000000010042,msg=WM_NCCREATE,wp=00000000,lp=7ffffe2feab8) retval=00000001"
+            },
+            {
+              "line_number": 23462,
+              "detail": "no grammar match",
+              "raw": "0044:Call window proc 00006FFFFFF47990 (hwnd=0000000000010042,msg=WM_NCCALCSIZE,wp=00000000,lp=7ffffe2feb18)"
+            },
+            {
+              "line_number": 23473,
+              "detail": "no grammar match",
+              "raw": "0044:Ret  window proc 00006FFFFFF47990 (hwnd=0000000000010042,msg=WM_NCCALCSIZE,wp=00000000,lp=7ffffe2feb18) retval=00000000"
+            },
+            {
+              "line_number": 23479,
+              "detail": "no grammar match",
+              "raw": "0044:Call window proc 00006FFFFFF47990 (hwnd=0000000000010042,msg=WM_CREATE,wp=00000000,lp=7ffffe2feab8)"
+            },
+            {
+              "line_number": 23528,
+              "detail": "no grammar match",
+              "raw": "0044:Ret  window proc 00006FFFFFF47990 (hwnd=0000000000010042,msg=WM_CREATE,wp=00000000,lp=7ffffe2feab8) retval=00000001"
+            },
+            {
+              "line_number": 23532,
+              "detail": "no grammar match",
+              "raw": "0044:Call window proc 00006FFFFFF47990 (hwnd=0000000000010042,msg=WM_SIZE,wp=00000000,lp=00010001)"
+            },
+            {
+              "line_number": 23543,
+              "detail": "no grammar match",
+              "raw": "0044:Ret  window proc 00006FFFFFF47990 (hwnd=0000000000010042,msg=WM_SIZE,wp=00000000,lp=00010001) retval=00000000"
+            },
+            {
+              "line_number": 23547,
+              "detail": "no grammar match",
+              "raw": "0044:Call window proc 00006FFFFFF47990 (hwnd=0000000000010042,msg=WM_MOVE,wp=00000000,lp=00000000)"
+            },
+            {
+              "line_number": 23558,
+              "detail": "no grammar match",
+              "raw": "0044:Ret  window proc 00006FFFFFF47990 (hwnd=0000000000010042,msg=WM_MOVE,wp=00000000,lp=00000000) retval=00000000"
+            },
+            {
+              "line_number": 23562,
+              "detail": "no grammar match",
+              "raw": "0044:Call window proc 00000001400099C0 (hwnd=0000000000030038,msg=WM_NCCALCSIZE,wp=00000000,lp=7ffffe2feb18)"
+            },
+            {
+              "line_number": 23571,
+              "detail": "no grammar match",
+              "raw": "0044:Ret  window proc 00000001400099C0 (hwnd=0000000000030038,msg=WM_NCCALCSIZE,wp=00000000,lp=7ffffe2feb18) retval=00000000"
+            },
+            {
+              "line_number": 23577,
+              "detail": "no grammar match",
+              "raw": "0044:Call window proc 00000001400099C0 (hwnd=0000000000030038,msg=WM_CREATE,wp=00000000,lp=7ffffe2feab8)"
+            },
+            {
+              "line_number": 23586,
+              "detail": "no grammar match",
+              "raw": "0044:Ret  window proc 00000001400099C0 (hwnd=0000000000030038,msg=WM_CREATE,wp=00000000,lp=7ffffe2feab8) retval=00000000"
+            },
+            {
+              "line_number": 24397,
+              "detail": "no grammar match",
+              "raw": "0044:Call window proc 00006FFFFF68C510 (hwnd=0000000000010044,msg=WM_NCCREATE,wp=00000000,lp=7ffffe2fe9b8)"
+            },
+            {
+              "line_number": 24404,
+              "detail": "no grammar match",
+              "raw": "0044:Ret  window proc 00006FFFFF68C510 (hwnd=0000000000010044,msg=WM_NCCREATE,wp=00000000,lp=7ffffe2fe9b8) retval=00000001"
+            },
+            {
+              "line_number": 24408,
+              "detail": "no grammar match",
+              "raw": "0044:Call window proc 00006FFFFF68C510 (hwnd=0000000000010044,msg=WM_NCCALCSIZE,wp=00000000,lp=7ffffe2fea28)"
+            },
+            {
+              "line_number": 24414,
+              "detail": "no grammar match",
+              "raw": "004c:Call window proc 0000000140004310 (hwnd=0000000000010034,msg=WM_NCCREATE,wp=00000000,lp=7fffff1ff968)"
+            },
+            {
+              "line_number": 24422,
+              "detail": "no grammar match",
+              "raw": "0044:Ret  window proc 00006FFFFF68C510 (hwnd=0000000000010044,msg=WM_NCCALCSIZE,wp=00000000,lp=7ffffe2fea28) retval=00000000"
+            },
+            {
+              "line_number": 24428,
+              "detail": "no grammar match",
+              "raw": "004c:Ret  window proc 0000000140004310 (hwnd=0000000000010034,msg=WM_NCCREATE,wp=00000000,lp=7fffff1ff968) retval=00000001"
+            },
+            {
+              "line_number": 24432,
+              "detail": "no grammar match",
+              "raw": "004c:Call window proc 0000000140004310 (hwnd=0000000000010034,msg=WM_NCCALCSIZE,wp=00000000,lp=7fffff1ff9f8)"
+            },
+            {
+              "line_number": 24441,
+              "detail": "no grammar match",
+              "raw": "004c:Ret  window proc 0000000140004310 (hwnd=0000000000010034,msg=WM_NCCALCSIZE,wp=00000000,lp=7fffff1ff9f8) retval=00000000"
+            },
+            {
+              "line_number": 24445,
+              "detail": "no grammar match",
+              "raw": "004c:Call window proc 0000000140004310 (hwnd=0000000000010034,msg=WM_CREATE,wp=00000000,lp=7fffff1ff968)"
+            },
+            {
+              "line_number": 24454,
+              "detail": "no grammar match",
+              "raw": "004c:Ret  window proc 0000000140004310 (hwnd=0000000000010034,msg=WM_CREATE,wp=00000000,lp=7fffff1ff968) retval=00000000"
+            },
+            {
+              "line_number": 24462,
+              "detail": "no grammar match",
+              "raw": "0044:Call window proc 00006FFFFF68C510 (hwnd=0000000000010044,msg=WM_CREATE,wp=00000000,lp=7ffffe2fe9b8)"
+            },
+            {
+              "line_number": 24469,
+              "detail": "no grammar match",
+              "raw": "0044:Ret  window proc 00006FFFFF68C510 (hwnd=0000000000010044,msg=WM_CREATE,wp=00000000,lp=7ffffe2fe9b8) retval=00000000"
+            },
+            {
+              "line_number": 24473,
+              "detail": "no grammar match",
+              "raw": "0044:Call window proc 00006FFFFF68C510 (hwnd=0000000000010044,msg=WM_SIZE,wp=00000000,lp=00000000)"
+            },
+            {
+              "line_number": 24480,
+              "detail": "no grammar match",
+              "raw": "0044:Ret  window proc 00006FFFFF68C510 (hwnd=0000000000010044,msg=WM_SIZE,wp=00000000,lp=00000000) retval=00000000"
+            },
+            {
+              "line_number": 24484,
+              "detail": "no grammar match",
+              "raw": "0044:Call window proc 00006FFFFF68C510 (hwnd=0000000000010044,msg=WM_MOVE,wp=00000000,lp=00000000)"
+            },
+            {
+              "line_number": 24491,
+              "detail": "no grammar match",
+              "raw": "0044:Ret  window proc 00006FFFFF68C510 (hwnd=0000000000010044,msg=WM_MOVE,wp=00000000,lp=00000000) retval=00000000"
+            },
+            {
+              "line_number": 24600,
+              "detail": "no grammar match",
+              "raw": "0044:Call ucrtbase.__stdio_common_vswprintf(00000004,7ffffe2feba0,00000100,6fffff6de322 L\"%s(0x%*x)\",00000000,7ffffe2fe988) ret=6fffff6cfa2c"
+            },
+            {
+              "line_number": 24606,
+              "detail": "no grammar match",
+              "raw": "0044:Call KERNEL32.AddAtomW(7ffffe2feba0 L\"Folders(0x              40)\") ret=6fffff68bfb8"
+            },
+            {
+              "line_number": 24607,
+              "detail": "no grammar match",
+              "raw": "0044:Call ntdll.RtlAddAtomToAtomTable(7ffffe37e080,7ffffe2feba0 L\"Folders(0x              40)\",7ffffe2fe88e) ret=6fffffec454d"
+            },
+            {
+              "line_number": 24628,
+              "detail": "no grammar match",
+              "raw": "0044:Call KERNEL32.GlobalAddAtomW(7ffffe2fe750 L\"Folders(0x              40)\") ret=6fffff68dfb9"
+            }
+          ]
+        },
+        "ret_addr_mismatch": {
+          "count": 20,
+          "samples": [
+            {
+              "line_number": 2131,
+              "detail": "call ret=6ffffff3facb vs Ret ret=6fffffc399c9",
+              "raw": "002c:Ret  ntdll.strlen() retval=0000001a ret=6fffffc399c9"
+            },
+            {
+              "line_number": 24601,
+              "detail": "call ret=6ffffe9e8bdc vs Ret ret=6fffff6cfa2c",
+              "raw": "0044:Ret  ucrtbase.__stdio_common_vswprintf() retval=0000001b ret=6fffff6cfa2c"
+            },
+            {
+              "line_number": 24608,
+              "detail": "call ret=140007a9e vs Ret ret=6fffffec454d",
+              "raw": "0044:Ret  ntdll.RtlAddAtomToAtomTable() retval=00000000 ret=6fffffec454d"
+            },
+            {
+              "line_number": 24609,
+              "detail": "call ret=6ffffff3facb vs Ret ret=6fffff68bfb8",
+              "raw": "0044:Ret  KERNEL32.AddAtomW() retval=0000c006 ret=6fffff68bfb8"
+            },
+            {
+              "line_number": 25614,
+              "detail": "call ret=6ffffe9e8bf4 vs Ret ret=6fffff6cfa2c",
+              "raw": "0044:Ret  ucrtbase.__stdio_common_vswprintf() retval=0000001b ret=6fffff6cfa2c"
+            },
+            {
+              "line_number": 26705,
+              "detail": "call ret=6ffffff3d88f vs Ret ret=6fffff6cfa2c",
+              "raw": "0044:Ret  ucrtbase.__stdio_common_vswprintf() retval=00000019 ret=6fffff6cfa2c"
+            },
+            {
+              "line_number": 29327,
+              "detail": "call ret=140007bd5 vs Ret ret=6ffffe7546f1",
+              "raw": "0044:Ret  KERNEL32.GetModuleHandleW() retval=6ffffff30000 ret=6ffffe7546f1"
+            },
+            {
+              "line_number": 29620,
+              "detail": "call ret=140007c95 vs Ret ret=6fffffec454d",
+              "raw": "0044:Ret  ntdll.RtlAddAtomToAtomTable() retval=00000000 ret=6fffffec454d"
+            },
+            {
+              "line_number": 29706,
+              "detail": "call ret=140007c95 vs Ret ret=6fffffec454d",
+              "raw": "0044:Ret  ntdll.RtlAddAtomToAtomTable() retval=00000000 ret=6fffffec454d"
+            },
+            {
+              "line_number": 29792,
+              "detail": "call ret=140007c95 vs Ret ret=6fffffec454d",
+              "raw": "0044:Ret  ntdll.RtlAddAtomToAtomTable() retval=00000000 ret=6fffffec454d"
+            },
+            {
+              "line_number": 36774,
+              "detail": "call ret=6ffffff3facb vs Ret ret=6ffffff3d88f",
+              "raw": "0024:Ret  kernelbase.MultiByteToWideChar() retval=00000100 ret=6ffffff3d88f"
+            },
+            {
+              "line_number": 348177,
+              "detail": "call ret=14002d32c vs Ret ret=6ffffe492721",
+              "raw": "0024:Ret  KERNEL32.GetModuleHandleW() retval=6ffffff30000 ret=6ffffe492721"
+            },
+            {
+              "line_number": 348185,
+              "detail": "call ret=6fffff68a302 vs Ret ret=14002d32c",
+              "raw": "0024:Ret  dwmapi.DwmSetWindowAttribute() retval=00000000 ret=14002d32c"
+            },
+            {
+              "line_number": 355277,
+              "detail": "call ret=6ffffe7d37d6 vs Ret ret=6ffffe7546f1",
+              "raw": "0024:Ret  KERNEL32.GetModuleHandleW() retval=6ffffff30000 ret=6ffffe7546f1"
+            },
+            {
+              "line_number": 355292,
+              "detail": "call ret=1401a1d52 vs Ret ret=6ffffe7d37d6",
+              "raw": "0024:Ret  combase.CoMarshalInterface() retval=80004002 ret=6ffffe7d37d6"
+            },
+            {
+              "line_number": 355317,
+              "detail": "call ret=6fffff68a2ad vs Ret ret=1401a1d52",
+              "raw": "0024:Ret  ole32.RegisterDragDrop() retval=80004002 ret=1401a1d52"
+            },
+            {
+              "line_number": 362597,
+              "detail": "call ret=6ffffff3d88f vs Ret ret=6fffffc2111d",
+              "raw": "0024:Ret  ntdll.wcscpy() retval=7ffffe1ff538 ret=6fffffc2111d"
+            },
+            {
+              "line_number": 362598,
+              "detail": "call ret=14003303b vs Ret ret=6ffffff3d88f",
+              "raw": "0024:Ret  kernelbase.GetCPInfoExW() retval=00000001 ret=6ffffff3d88f"
+            },
+            {
+              "line_number": 385027,
+              "detail": "call ret=140179a80 vs Ret ret=6ffffe93a0e1",
+              "raw": "0024:Ret  kernelbase.GetModuleHandleW() retval=6ffffff30000 ret=6ffffe93a0e1"
+            },
+            {
+              "line_number": 385035,
+              "detail": "call ret=1401a694e vs Ret ret=140179a80",
+              "raw": "0024:Ret  shlwapi.SHAutoComplete() retval=00000001 ret=140179a80"
+            }
+          ]
+        },
+        "unmatched_return": {
+          "count": 45,
+          "samples": [
+            {
+              "line_number": 2132,
+              "detail": "kernelbase.MultiByteToWideChar",
+              "raw": "002c:Ret  kernelbase.MultiByteToWideChar() retval=0000001b ret=14000300b"
+            },
+            {
+              "line_number": 2139,
+              "detail": "ntdll.strlen",
+              "raw": "002c:Ret  ntdll.strlen() retval=0000001a ret=6fffffc399c9"
+            },
+            {
+              "line_number": 2140,
+              "detail": "kernelbase.MultiByteToWideChar",
+              "raw": "002c:Ret  kernelbase.MultiByteToWideChar() retval=0000001b ret=14000303a"
+            },
+            {
+              "line_number": 24631,
+              "detail": "KERNEL32.GlobalAddAtomW",
+              "raw": "0044:Ret  KERNEL32.GlobalAddAtomW() retval=0000c01d ret=6fffff68dfb9"
+            },
+            {
+              "line_number": 25595,
+              "detail": "user32.DdeNameService",
+              "raw": "0044:Ret  user32.DdeNameService() retval=00000001 ret=6ffffe9e8bdc"
+            },
+            {
+              "line_number": 25621,
+              "detail": "ntdll.RtlAddAtomToAtomTable",
+              "raw": "0044:Ret  ntdll.RtlAddAtomToAtomTable() retval=00000000 ret=6fffffec454d"
+            },
+            {
+              "line_number": 25622,
+              "detail": "KERNEL32.AddAtomW",
+              "raw": "0044:Ret  KERNEL32.AddAtomW() retval=0000c007 ret=6fffff68bfb8"
+            },
+            {
+              "line_number": 25644,
+              "detail": "KERNEL32.GlobalAddAtomW",
+              "raw": "0044:Ret  KERNEL32.GlobalAddAtomW() retval=0000c020 ret=6fffff68dfb9"
+            },
+            {
+              "line_number": 26686,
+              "detail": "user32.DdeNameService",
+              "raw": "0044:Ret  user32.DdeNameService() retval=00000001 ret=6ffffe9e8bf4"
+            },
+            {
+              "line_number": 26712,
+              "detail": "ntdll.RtlAddAtomToAtomTable",
+              "raw": "0044:Ret  ntdll.RtlAddAtomToAtomTable() retval=00000000 ret=6fffffec454d"
+            },
+            {
+              "line_number": 26713,
+              "detail": "KERNEL32.AddAtomW",
+              "raw": "0044:Ret  KERNEL32.AddAtomW() retval=0000c008 ret=6fffff68bfb8"
+            },
+            {
+              "line_number": 26735,
+              "detail": "KERNEL32.GlobalAddAtomW",
+              "raw": "0044:Ret  KERNEL32.GlobalAddAtomW() retval=0000c022 ret=6fffff68dfb9"
+            },
+            {
+              "line_number": 27859,
+              "detail": "user32.DdeNameService",
+              "raw": "0044:Ret  user32.DdeNameService() retval=00000001 ret=6ffffff3d88f"
+            },
+            {
+              "line_number": 27860,
+              "detail": "shell32.188",
+              "raw": "0044:Ret  shell32.188() retval=00000001 ret=140007a9e"
+            },
+            {
+              "line_number": 29377,
+              "detail": "combase.CoRegisterClassObject",
+              "raw": "0044:Ret  combase.CoRegisterClassObject() retval=80004002 ret=140007bd5"
+            },
+            {
+              "line_number": 29621,
+              "detail": "KERNEL32.AddAtomW",
+              "raw": "0044:Ret  KERNEL32.AddAtomW() retval=0000c006 ret=6fffff68bfb8"
+            },
+            {
+              "line_number": 29639,
+              "detail": "user32.DispatchMessageW",
+              "raw": "0044:Ret  user32.DispatchMessageW() retval=00000000 ret=140007c95"
+            },
+            {
+              "line_number": 29707,
+              "detail": "KERNEL32.AddAtomW",
+              "raw": "0044:Ret  KERNEL32.AddAtomW() retval=0000c007 ret=6fffff68bfb8"
+            },
+            {
+              "line_number": 29725,
+              "detail": "user32.DispatchMessageW",
+              "raw": "0044:Ret  user32.DispatchMessageW() retval=00000000 ret=140007c95"
+            },
+            {
+              "line_number": 29793,
+              "detail": "KERNEL32.AddAtomW",
+              "raw": "0044:Ret  KERNEL32.AddAtomW() retval=0000c008 ret=6fffff68bfb8"
+            },
+            {
+              "line_number": 29811,
+              "detail": "user32.DispatchMessageW",
+              "raw": "0044:Ret  user32.DispatchMessageW() retval=00000000 ret=140007c95"
+            },
+            {
+              "line_number": 36775,
+              "detail": "KERNEL32.MultiByteToWideChar",
+              "raw": "0024:Ret  KERNEL32.MultiByteToWideChar() retval=00000100 ret=1401e0314"
+            },
+            {
+              "line_number": 36778,
+              "detail": "kernelbase.MultiByteToWideChar",
+              "raw": "0024:Ret  kernelbase.MultiByteToWideChar() retval=00000100 ret=6ffffff3d88f"
+            },
+            {
+              "line_number": 36779,
+              "detail": "KERNEL32.MultiByteToWideChar",
+              "raw": "0024:Ret  KERNEL32.MultiByteToWideChar() retval=00000100 ret=1401e03ba"
+            },
+            {
+              "line_number": 36782,
+              "detail": "kernelbase.GetStringTypeW",
+              "raw": "0024:Ret  kernelbase.GetStringTypeW() retval=00000001 ret=6ffffff3d88f"
+            },
+            {
+              "line_number": 36783,
+              "detail": "KERNEL32.GetStringTypeW",
+              "raw": "0024:Ret  KERNEL32.GetStringTypeW() retval=00000001 ret=1401e03d4"
+            },
+            {
+              "line_number": 36786,
+              "detail": "kernelbase.MultiByteToWideChar",
+              "raw": "0024:Ret  kernelbase.MultiByteToWideChar() retval=00000100 ret=6ffffff3d88f"
+            },
+            {
+              "line_number": 36787,
+              "detail": "KERNEL32.MultiByteToWideChar",
+              "raw": "0024:Ret  KERNEL32.MultiByteToWideChar() retval=00000100 ret=1401db7c7"
+            },
+            {
+              "line_number": 36790,
+              "detail": "kernelbase.MultiByteToWideChar",
+              "raw": "0024:Ret  kernelbase.MultiByteToWideChar() retval=00000100 ret=6ffffff3d88f"
+            },
+            {
+              "line_number": 36791,
+              "detail": "KERNEL32.MultiByteToWideChar",
+              "raw": "0024:Ret  KERNEL32.MultiByteToWideChar() retval=00000100 ret=1401db872"
+            },
+            {
+              "line_number": 36811,
+              "detail": "kernelbase.LCMapStringEx",
+              "raw": "0024:Ret  kernelbase.LCMapStringEx() retval=00000100 ret=1401dc1ef"
+            },
+            {
+              "line_number": 36813,
+              "detail": "kernelbase.LCMapStringEx",
+              "raw": "0024:Ret  kernelbase.LCMapStringEx() retval=00000100 ret=1401dc1ef"
+            },
+            {
+              "line_number": 36816,
+              "detail": "kernelbase.WideCharToMultiByte",
+              "raw": "0024:Ret  kernelbase.WideCharToMultiByte() retval=00000100 ret=6ffffff3d88f"
+            },
+            {
+              "line_number": 36817,
+              "detail": "KERNEL32.WideCharToMultiByte",
+              "raw": "0024:Ret  KERNEL32.WideCharToMultiByte() retval=00000100 ret=1401db9f4"
+            },
+            {
+              "line_number": 36820,
+              "detail": "kernelbase.MultiByteToWideChar",
+              "raw": "0024:Ret  kernelbase.MultiByteToWideChar() retval=00000100 ret=6ffffff3d88f"
+            },
+            {
+              "line_number": 36821,
+              "detail": "KERNEL32.MultiByteToWideChar",
+              "raw": "0024:Ret  KERNEL32.MultiByteToWideChar() retval=00000100 ret=1401db7c7"
+            },
+            {
+              "line_number": 36824,
+              "detail": "kernelbase.MultiByteToWideChar",
+              "raw": "0024:Ret  kernelbase.MultiByteToWideChar() retval=00000100 ret=6ffffff3d88f"
+            },
+            {
+              "line_number": 36825,
+              "detail": "KERNEL32.MultiByteToWideChar",
+              "raw": "0024:Ret  KERNEL32.MultiByteToWideChar() retval=00000100 ret=1401db872"
+            },
+            {
+              "line_number": 36827,
+              "detail": "kernelbase.LCMapStringEx",
+              "raw": "0024:Ret  kernelbase.LCMapStringEx() retval=00000100 ret=1401dc1ef"
+            },
+            {
+              "line_number": 36829,
+              "detail": "kernelbase.LCMapStringEx",
+              "raw": "0024:Ret  kernelbase.LCMapStringEx() retval=00000100 ret=1401dc1ef"
+            },
+            {
+              "line_number": 36832,
+              "detail": "kernelbase.WideCharToMultiByte",
+              "raw": "0024:Ret  kernelbase.WideCharToMultiByte() retval=00000100 ret=6ffffff3d88f"
+            },
+            {
+              "line_number": 36833,
+              "detail": "KERNEL32.WideCharToMultiByte",
+              "raw": "0024:Ret  KERNEL32.WideCharToMultiByte() retval=00000100 ret=1401db9f4"
+            },
+            {
+              "line_number": 362599,
+              "detail": "KERNEL32.GetCPInfoExW",
+              "raw": "0024:Ret  KERNEL32.GetCPInfoExW() retval=00000001 ret=14003303b"
+            },
+            {
+              "line_number": 453926,
+              "detail": "user32.SendMessageW",
+              "raw": "0024:Ret  user32.SendMessageW() retval=00000000 ret=1401a694e"
+            },
+            {
+              "line_number": 454266,
+              "detail": "user32.SetWindowTextW",
+              "raw": "0024:Ret  user32.SetWindowTextW() retval=00000001 ret=1401a5ee1"
+            }
+          ]
+        },
+        "orphaned_call": {
+          "count": 2223,
+          "samples": [
+            {
+              "line_number": 19230,
+              "detail": "lost inner return (ret-addr repair)",
+              "raw": ""
+            },
+            {
+              "line_number": 19230,
+              "detail": "lost inner return (ret-addr repair)",
+              "raw": ""
+            },
+            {
+              "line_number": 19230,
+              "detail": "lost inner return (ret-addr repair)",
+              "raw": ""
+            },
+            {
+              "line_number": 19230,
+              "detail": "lost inner return (ret-addr repair)",
+              "raw": ""
+            },
+            {
+              "line_number": 19230,
+              "detail": "lost inner return (ret-addr repair)",
+              "raw": ""
+            },
+            {
+              "line_number": 19230,
+              "detail": "lost inner return (ret-addr repair)",
+              "raw": ""
+            },
+            {
+              "line_number": 19230,
+              "detail": "lost inner return (ret-addr repair)",
+              "raw": ""
+            },
+            {
+              "line_number": 19230,
+              "detail": "lost inner return (ret-addr repair)",
+              "raw": ""
+            },
+            {
+              "line_number": 19230,
+              "detail": "lost inner return (ret-addr repair)",
+              "raw": ""
+            },
+            {
+              "line_number": 19230,
+              "detail": "lost inner return (ret-addr repair)",
+              "raw": ""
+            },
+            {
+              "line_number": 19230,
+              "detail": "lost inner return (ret-addr repair)",
+              "raw": ""
+            },
+            {
+              "line_number": 19230,
+              "detail": "lost inner return (ret-addr repair)",
+              "raw": ""
+            },
+            {
+              "line_number": 19230,
+              "detail": "lost inner return (ret-addr repair)",
+              "raw": ""
+            },
+            {
+              "line_number": 19230,
+              "detail": "lost inner return (ret-addr repair)",
+              "raw": ""
+            },
+            {
+              "line_number": 19230,
+              "detail": "lost inner return (ret-addr repair)",
+              "raw": ""
+            },
+            {
+              "line_number": 19230,
+              "detail": "lost inner return (ret-addr repair)",
+              "raw": ""
+            },
+            {
+              "line_number": 19230,
+              "detail": "lost inner return (ret-addr repair)",
+              "raw": ""
+            },
+            {
+              "line_number": 19555,
+              "detail": "lost inner return (ret-addr repair)",
+              "raw": ""
+            },
+            {
+              "line_number": 19555,
+              "detail": "lost inner return (ret-addr repair)",
+              "raw": ""
+            },
+            {
+              "line_number": 19555,
+              "detail": "lost inner return (ret-addr repair)",
+              "raw": ""
+            },
+            {
+              "line_number": 19555,
+              "detail": "lost inner return (ret-addr repair)",
+              "raw": ""
+            },
+            {
+              "line_number": 19555,
+              "detail": "lost inner return (ret-addr repair)",
+              "raw": ""
+            },
+            {
+              "line_number": 19795,
+              "detail": "lost inner return (ret-addr repair)",
+              "raw": ""
+            },
+            {
+              "line_number": 19877,
+              "detail": "lost inner return (ret-addr repair)",
+              "raw": ""
+            },
+            {
+              "line_number": 19899,
+              "detail": "lost inner return (ret-addr repair)",
+              "raw": ""
+            },
+            {
+              "line_number": 19904,
+              "detail": "lost inner return (ret-addr repair)",
+              "raw": ""
+            },
+            {
+              "line_number": 19904,
+              "detail": "lost inner return (ret-addr repair)",
+              "raw": ""
+            },
+            {
+              "line_number": 19904,
+              "detail": "lost inner return (ret-addr repair)",
+              "raw": ""
+            },
+            {
+              "line_number": 19904,
+              "detail": "lost inner return (ret-addr repair)",
+              "raw": ""
+            },
+            {
+              "line_number": 19904,
+              "detail": "lost inner return (ret-addr repair)",
+              "raw": ""
+            },
+            {
+              "line_number": 19904,
+              "detail": "lost inner return (ret-addr repair)",
+              "raw": ""
+            },
+            {
+              "line_number": 21979,
+              "detail": "lost inner return (ret-addr repair)",
+              "raw": ""
+            },
+            {
+              "line_number": 21979,
+              "detail": "lost inner return (ret-addr repair)",
+              "raw": ""
+            },
+            {
+              "line_number": 21979,
+              "detail": "lost inner return (ret-addr repair)",
+              "raw": ""
+            },
+            {
+              "line_number": 21979,
+              "detail": "lost inner return (ret-addr repair)",
+              "raw": ""
+            },
+            {
+              "line_number": 22577,
+              "detail": "lost inner return (ret-addr repair)",
+              "raw": ""
+            },
+            {
+              "line_number": 23040,
+              "detail": "lost inner return (ret-addr repair)",
+              "raw": ""
+            },
+            {
+              "line_number": 23588,
+              "detail": "lost inner return (ret-addr repair)",
+              "raw": ""
+            },
+            {
+              "line_number": 23588,
+              "detail": "lost inner return (ret-addr repair)",
+              "raw": ""
+            },
+            {
+              "line_number": 23588,
+              "detail": "lost inner return (ret-addr repair)",
+              "raw": ""
+            },
+            {
+              "line_number": 23588,
+              "detail": "lost inner return (ret-addr repair)",
+              "raw": ""
+            },
+            {
+              "line_number": 23588,
+              "detail": "lost inner return (ret-addr repair)",
+              "raw": ""
+            },
+            {
+              "line_number": 23588,
+              "detail": "lost inner return (ret-addr repair)",
+              "raw": ""
+            },
+            {
+              "line_number": 23588,
+              "detail": "lost inner return (ret-addr repair)",
+              "raw": ""
+            },
+            {
+              "line_number": 23588,
+              "detail": "lost inner return (ret-addr repair)",
+              "raw": ""
+            },
+            {
+              "line_number": 23588,
+              "detail": "lost inner return (ret-addr repair)",
+              "raw": ""
+            },
+            {
+              "line_number": 23588,
+              "detail": "lost inner return (ret-addr repair)",
+              "raw": ""
+            },
+            {
+              "line_number": 24456,
+              "detail": "lost inner return (ret-addr repair)",
+              "raw": ""
+            },
+            {
+              "line_number": 24456,
+              "detail": "lost inner return (ret-addr repair)",
+              "raw": ""
+            },
+            {
+              "line_number": 24456,
+              "detail": "lost inner return (ret-addr repair)",
+              "raw": ""
+            },
+            {
+              "line_number": 24456,
+              "detail": "lost inner return (ret-addr repair)",
+              "raw": ""
+            },
+            {
+              "line_number": 24493,
+              "detail": "lost inner return (ret-addr repair)",
+              "raw": ""
+            },
+            {
+              "line_number": 24493,
+              "detail": "lost inner return (ret-addr repair)",
+              "raw": ""
+            },
+            {
+              "line_number": 24493,
+              "detail": "lost inner return (ret-addr repair)",
+              "raw": ""
+            },
+            {
+              "line_number": 24493,
+              "detail": "lost inner return (ret-addr repair)",
+              "raw": ""
+            },
+            {
+              "line_number": 24493,
+              "detail": "lost inner return (ret-addr repair)",
+              "raw": ""
+            },
+            {
+              "line_number": 25588,
+              "detail": "lost inner return (ret-addr repair)",
+              "raw": ""
+            },
+            {
+              "line_number": 25588,
+              "detail": "lost inner return (ret-addr repair)",
+              "raw": ""
+            },
+            {
+              "line_number": 25588,
+              "detail": "lost inner return (ret-addr repair)",
+              "raw": ""
+            },
+            {
+              "line_number": 25588,
+              "detail": "lost inner return (ret-addr repair)",
+              "raw": ""
+            },
+            {
+              "line_number": 25588,
+              "detail": "lost inner return (ret-addr repair)",
+              "raw": ""
+            },
+            {
+              "line_number": 26679,
+              "detail": "lost inner return (ret-addr repair)",
+              "raw": ""
+            },
+            {
+              "line_number": 26679,
+              "detail": "lost inner return (ret-addr repair)",
+              "raw": ""
+            },
+            {
+              "line_number": 26679,
+              "detail": "lost inner return (ret-addr repair)",
+              "raw": ""
+            },
+            {
+              "line_number": 26679,
+              "detail": "lost inner return (ret-addr repair)",
+              "raw": ""
+            },
+            {
+              "line_number": 26679,
+              "detail": "lost inner return (ret-addr repair)",
+              "raw": ""
+            },
+            {
+              "line_number": 27852,
+              "detail": "lost inner return (ret-addr repair)",
+              "raw": ""
+            },
+            {
+              "line_number": 27852,
+              "detail": "lost inner return (ret-addr repair)",
+              "raw": ""
+            },
+            {
+              "line_number": 27852,
+              "detail": "lost inner return (ret-addr repair)",
+              "raw": ""
+            },
+            {
+              "line_number": 27852,
+              "detail": "lost inner return (ret-addr repair)",
+              "raw": ""
+            },
+            {
+              "line_number": 27852,
+              "detail": "lost inner return (ret-addr repair)",
+              "raw": ""
+            },
+            {
+              "line_number": 28947,
+              "detail": "lost inner return (ret-addr repair)",
+              "raw": ""
+            },
+            {
+              "line_number": 28947,
+              "detail": "lost inner return (ret-addr repair)",
+              "raw": ""
+            },
+            {
+              "line_number": 28947,
+              "detail": "lost inner return (ret-addr repair)",
+              "raw": ""
+            },
+            {
+              "line_number": 28947,
+              "detail": "lost inner return (ret-addr repair)",
+              "raw": ""
+            },
+            {
+              "line_number": 29447,
+              "detail": "lost inner return (ret-addr repair)",
+              "raw": ""
+            },
+            {
+              "line_number": 29447,
+              "detail": "lost inner return (ret-addr repair)",
+              "raw": ""
+            },
+            {
+              "line_number": 29447,
+              "detail": "lost inner return (ret-addr repair)",
+              "raw": ""
+            },
+            {
+              "line_number": 29447,
+              "detail": "lost inner return (ret-addr repair)",
+              "raw": ""
+            },
+            {
+              "line_number": 29474,
+              "detail": "lost inner return (ret-addr repair)",
+              "raw": ""
+            },
+            {
+              "line_number": 29474,
+              "detail": "lost inner return (ret-addr repair)",
+              "raw": ""
+            },
+            {
+              "line_number": 29474,
+              "detail": "lost inner return (ret-addr repair)",
+              "raw": ""
+            },
+            {
+              "line_number": 29500,
+              "detail": "lost inner return (ret-addr repair)",
+              "raw": ""
+            },
+            {
+              "line_number": 30732,
+              "detail": "lost inner return (ret-addr repair)",
+              "raw": ""
+            },
+            {
+              "line_number": 30732,
+              "detail": "lost inner return (ret-addr repair)",
+              "raw": ""
+            },
+            {
+              "line_number": 30732,
+              "detail": "lost inner return (ret-addr repair)",
+              "raw": ""
+            },
+            {
+              "line_number": 30732,
+              "detail": "lost inner return (ret-addr repair)",
+              "raw": ""
+            },
+            {
+              "line_number": 30732,
+              "detail": "lost inner return (ret-addr repair)",
+              "raw": ""
+            },
+            {
+              "line_number": 30732,
+              "detail": "lost inner return (ret-addr repair)",
+              "raw": ""
+            },
+            {
+              "line_number": 30732,
+              "detail": "lost inner return (ret-addr repair)",
+              "raw": ""
+            },
+            {
+              "line_number": 30732,
+              "detail": "lost inner return (ret-addr repair)",
+              "raw": ""
+            },
+            {
+              "line_number": 30732,
+              "detail": "lost inner return (ret-addr repair)",
+              "raw": ""
+            },
+            {
+              "line_number": 30732,
+              "detail": "lost inner return (ret-addr repair)",
+              "raw": ""
+            },
+            {
+              "line_number": 30732,
+              "detail": "lost inner return (ret-addr repair)",
+              "raw": ""
+            },
+            {
+              "line_number": 30732,
+              "detail": "lost inner return (ret-addr repair)",
+              "raw": ""
+            },
+            {
+              "line_number": 309715,
+              "detail": "lost inner return (ret-addr repair)",
+              "raw": ""
+            },
+            {
+              "line_number": 310258,
+              "detail": "lost inner return (ret-addr repair)",
+              "raw": ""
+            },
+            {
+              "line_number": 310801,
+              "detail": "lost inner return (ret-addr repair)",
+              "raw": ""
+            },
+            {
+              "line_number": 311344,
+              "detail": "lost inner return (ret-addr repair)",
+              "raw": ""
+            },
+            {
+              "line_number": 311887,
+              "detail": "lost inner return (ret-addr repair)",
+              "raw": ""
+            }
+          ]
+        },
+        "unmatched_call": {
+          "count": 29,
+          "samples": [
+            {
+              "line_number": 13918,
+              "detail": "call never returned (ucrtbase.exit)",
+              "raw": ""
+            },
+            {
+              "line_number": 13947,
+              "detail": "call never returned (KERNEL32.ExitProcess)",
+              "raw": ""
+            },
+            {
+              "line_number": 13948,
+              "detail": "call never returned (ntdll.RtlExitUserProcess)",
+              "raw": ""
+            },
+            {
+              "line_number": 4734,
+              "detail": "call never returned (KERNEL32.BaseThreadInitThunk)",
+              "raw": ""
+            },
+            {
+              "line_number": 721126,
+              "detail": "call never returned (ucrtbase.exit)",
+              "raw": ""
+            },
+            {
+              "line_number": 721155,
+              "detail": "call never returned (KERNEL32.ExitProcess)",
+              "raw": ""
+            },
+            {
+              "line_number": 721156,
+              "detail": "call never returned (ntdll.RtlExitUserProcess)",
+              "raw": ""
+            },
+            {
+              "line_number": 5394,
+              "detail": "call never returned (KERNEL32.BaseThreadInitThunk)",
+              "raw": ""
+            },
+            {
+              "line_number": 721029,
+              "detail": "call never returned (ntdll.RtlExitUserThread)",
+              "raw": ""
+            },
+            {
+              "line_number": 5982,
+              "detail": "call never returned (KERNEL32.BaseThreadInitThunk)",
+              "raw": ""
+            },
+            {
+              "line_number": 720914,
+              "detail": "call never returned (ntdll.RtlExitUserThread)",
+              "raw": ""
+            },
+            {
+              "line_number": 715361,
+              "detail": "call never returned (user32.GetMessageW)",
+              "raw": ""
+            },
+            {
+              "line_number": 715362,
+              "detail": "call never returned (win32u.NtUserGetMessage)",
+              "raw": ""
+            },
+            {
+              "line_number": 717565,
+              "detail": "call never returned (KERNEL32.ExitProcess)",
+              "raw": ""
+            },
+            {
+              "line_number": 717566,
+              "detail": "call never returned (ntdll.RtlExitUserProcess)",
+              "raw": ""
+            },
+            {
+              "line_number": 717571,
+              "detail": "call never returned (DllMain[combase.dll])",
+              "raw": ""
+            },
+            {
+              "line_number": 717862,
+              "detail": "call never returned (KERNEL32.RaiseException)",
+              "raw": ""
+            },
+            {
+              "line_number": 20108,
+              "detail": "call never returned (KERNEL32.BaseThreadInitThunk)",
+              "raw": ""
+            },
+            {
+              "line_number": 29482,
+              "detail": "call never returned (user32.GetMessageW)",
+              "raw": ""
+            },
+            {
+              "line_number": 29483,
+              "detail": "call never returned (win32u.NtUserGetMessage)",
+              "raw": ""
+            },
+            {
+              "line_number": 21301,
+              "detail": "call never returned (KERNEL32.BaseThreadInitThunk)",
+              "raw": ""
+            },
+            {
+              "line_number": 25531,
+              "detail": "call never returned (user32.MsgWaitForMultipleObjects)",
+              "raw": ""
+            },
+            {
+              "line_number": 25532,
+              "detail": "call never returned (win32u.NtUserMsgWaitForMultipleObjectsEx)",
+              "raw": ""
+            },
+            {
+              "line_number": 483369,
+              "detail": "call never returned (KERNEL32.BaseThreadInitThunk)",
+              "raw": ""
+            },
+            {
+              "line_number": 483732,
+              "detail": "call never returned (KERNEL32.FreeLibraryAndExitThread)",
+              "raw": ""
+            },
+            {
+              "line_number": 483737,
+              "detail": "call never returned (ntdll.RtlExitUserThread)",
+              "raw": ""
+            },
+            {
+              "line_number": 718288,
+              "detail": "call never returned (KERNEL32.BaseThreadInitThunk)",
+              "raw": ""
+            },
+            {
+              "line_number": 720864,
+              "detail": "call never returned (ntdll.RtlExitUserThread)",
+              "raw": ""
+            },
+            {
+              "line_number": 718655,
+              "detail": "call never returned (KERNEL32.BaseThreadInitThunk)",
+              "raw": ""
+            }
+          ]
+        }
+      }
+    },
+    "module": {
+      "parser": "l0-channel",
+      "channel": "module",
+      "total_lines": 8298,
+      "events": 8293
+    }
+  },
+  "replay_head_hash": {
+    "relay": "680ea1bf760d95e8",
+    "module": "164f58598341e582"
+  }
+}
