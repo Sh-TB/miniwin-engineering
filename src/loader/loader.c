@@ -14315,7 +14315,7 @@ __attribute__((ms_abi)) static long mw_shmalloc_qi(void* self, const void* iid, 
     static const unsigned char iid_iunknown[16] = {
         0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0xC0,0x00,0x00,0x00,0x00,0x00,0x00,0x46 };
     static const unsigned char iid_imalloc[16] = {
-        0xDA,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0xC0,0x00,0x00,0x00,0x00,0x00,0x00,0x46 };
+        0x18,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0xC0,0x00,0x00,0x00,0x00,0x00,0x00,0x46 };
     if (!out) return 0x80004003L; /* E_POINTER */
     *out = NULL;
     if (!iid) return 0x80004003L;
@@ -14329,7 +14329,7 @@ __attribute__((ms_abi)) static uint32_t mw_shmalloc_addref(void* self) { (void)s
 __attribute__((ms_abi)) static uint32_t mw_shmalloc_release(void* self) { (void)self; return 1; }
 __attribute__((ms_abi)) static void* mw_shmalloc_alloc(void* self, size_t cb) {
     (void)self;
-    void* p = cb ? malloc(cb) : NULL;
+    void* p = malloc(cb); /* wine-audit W1: Alloc(0) non-NULL (Wine malloc.c L114-140 HeapAlloc parity) */
     if (p) mw_cotask_track(p);
     return p;
 }
@@ -14360,7 +14360,7 @@ __attribute__((ms_abi)) static void mw_shmalloc_free(void* self, void* p) {
  * itself returns garbage for foreign pointers, 0 is the honest refusal). */
 __attribute__((ms_abi)) static size_t mw_shmalloc_getsize(void* self, void* p) {
     (void)self;
-    if (!p || !mw_cotask_owned(p)) return 0;
+    if (!p || !mw_cotask_owned(p)) return (size_t)-1; /* W1: Wine L218-239 unknown -> -1 */
     return malloc_usable_size(p);
 }
 __attribute__((ms_abi)) static int mw_shmalloc_didalloc(void* self, void* p) {
@@ -14589,7 +14589,7 @@ __attribute__((ms_abi)) uint32_t mw_CoGetClassObject(const void* clsid, uint32_t
     return 0x80040154u;
 }
 __attribute__((ms_abi)) void* mw_CoTaskMemAlloc(size_t cb) {
-    void* p = cb ? malloc(cb) : NULL;
+    void* p = malloc(cb); /* wine-audit W1: Alloc(0) non-NULL (Wine malloc.c L114-140 HeapAlloc parity) */
     if (p) mw_cotask_track(p); /* SW-1412: boundary ownership */
     MW_TRACE("CoTaskMemAlloc(%zu) -> %p", cb, p);
     return p;
@@ -41094,7 +41094,7 @@ __attribute__((ms_abi)) static int32_t mw_ole_malloc_release(void* self) { (void
  * same crash class as SHGetMalloc's (guest pointer value is untrusted). */
 __attribute__((ms_abi)) static void* mw_ole_malloc_alloc(void* self, uint32_t cb) {
     (void)self;
-    void* p = cb ? malloc(cb) : NULL;
+    void* p = malloc(cb); /* wine-audit W1: Alloc(0) non-NULL (Wine malloc.c L114-140 HeapAlloc parity) */
     if (p) mw_cotask_track(p);
     return p;
 }
@@ -41133,7 +41133,7 @@ __attribute__((ms_abi)) static int32_t mw_ole_malloc_qi(void* self, const void* 
     static const unsigned char iid_iunknown[16] = {
         0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0xC0,0x00,0x00,0x00,0x00,0x00,0x00,0x46 };
     static const unsigned char iid_imalloc[16] = {
-        0xDA,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0xC0,0x00,0x00,0x00,0x00,0x00,0x00,0x46 };
+        0x18,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0xC0,0x00,0x00,0x00,0x00,0x00,0x00,0x46 };
     if (!out) return 0x80004003L; /* E_POINTER */
     *out = NULL;
     if (!iid) return 0x80004003L;
@@ -41149,33 +41149,29 @@ __attribute__((ms_abi)) static int32_t mw_ole_malloc_qi(void* self, const void* 
  * HeapMinimize-at-wrong-index. Added GetSize + full 9-slot layout. */
 __attribute__((ms_abi)) static size_t mw_ole_malloc_getsize(void* self, void* p) {
     (void)self;
-    if (!p || !mw_cotask_owned(p)) return 0;
+    if (!p || !mw_cotask_owned(p)) return (size_t)-1; /* W1: Wine L218-239 unknown -> -1 */
     return malloc_usable_size(p);
 }
 __attribute__((ms_abi)) uint32_t mw_CoGetMalloc(uint32_t ctx, void** out) {
-    (void)ctx;
-    /* APP-TEST-2 (SW-1501): full 9-slot Microsoft IMalloc layout
-     * (objidl.h / Wine dlls/ole32/imalloc.c):
-     *   [0]QI [1]AddRef [2]Release [3]Alloc [4]Realloc [5]Free
-     *   [6]GetSize [7]DidAlloc [8]HeapMinimize. */
-    static void* vtbl[9];
-    static void* obj[2];
-    if (!vtbl[0]) {
-        vtbl[0] = (void*)mw_ole_malloc_qi;
-        vtbl[1] = (void*)mw_ole_malloc_addref;
-        vtbl[2] = (void*)mw_ole_malloc_release;
-        vtbl[3] = (void*)mw_ole_malloc_alloc;
-        vtbl[4] = (void*)mw_ole_malloc_realloc;
-        vtbl[5] = (void*)mw_ole_malloc_free;
-        vtbl[6] = (void*)mw_ole_malloc_getsize;
-        vtbl[7] = (void*)mw_ole_malloc_didalloc;
-        vtbl[8] = (void*)mw_ole_malloc_heapminimize;
-        obj[0] = vtbl;
-        obj[1] = NULL;
+    /* wine-audit W1 (wine-9.0 combase/malloc.c):
+     *   L293-302 CoGetMalloc: context must be MEMCTX_TASK(1), anything
+     *   else -> *out = NULL + E_INVALIDARG;
+     *   L32/L300 single static `allocator` shared by the whole process —
+     *   shell32's SHGetMalloc is a CoGetMalloc wrapper, so BOTH providers
+     *   hand out THE SAME IMalloc instance. The previous per-provider
+     *   static objects broke that identity (CoGetMalloc's private vtbl
+     *   also had a 32-bit Alloc signature vs the SIZE_T ABI guests call
+     *   with). CoGetMalloc now returns the shared g_shmalloc_obj; the
+     *   ole_malloc_* family stays as the SW-1412/1501 record. */
+    if (!out) return 0x80004003u; /* E_POINTER — engine hardening */
+    if (ctx != 1u /* MEMCTX_TASK */) {
+        *out = NULL;
+        MW_TRACE("CoGetMalloc(ctx=%u) -> E_INVALIDARG", ctx);
+        return 0x80070057u;
     }
-    if (!out) return 0x80004003L; /* E_POINTER (APP-TEST-2) */
-    *out = obj;
-    return 0; /* S_OK */
+    *out = (void*)g_shmalloc_obj;
+    MW_TRACE("CoGetMalloc(MEMCTX_TASK) -> S_OK (shared engine IMalloc)");
+    return 0;
 }
 /* ntdll — RtlInitUnicodeString: real initializer. */
 __attribute__((ms_abi)) void mw_RtlInitUnicodeString(void* us, const uint16_t* s) {
