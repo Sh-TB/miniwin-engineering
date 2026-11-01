@@ -1914,6 +1914,37 @@ static void* mw_loadlibrary_disk_dll(const char* low, const char* base) {
     return NULL;
 }
 
+/* wine-audit W4: shared LoadLibraryEx contract (wine-9.0
+ * dlls/kernelbase/loader.c, pinned in the wine-source audit):
+ *   NULL name -> ERROR_INVALID_PARAMETER(87), NULL (loader.c checks !name);
+ *   empty name -> ERROR_MOD_NOT_FOUND(126);
+ *   LOAD_LIBRARY_AS_DATAFILE(0x2) / AS_IMAGE_RESOURCE(0x20) /
+ *   DATAFILE_EXCLUSIVE(0x40) are MAPPING loads the engine does not
+ *   implement -> documented+tested failure 126 (never the export-
+ *   resolving pseudo-handle, which would be a misleading success);
+ *   search-path flags (0x8, 0x100+) and DONT_RESOLVE_DLL_REFERENCES(0x1)
+ *   only affect the file search the engine does not perform -> proceed.
+ * The known-DLL pseudo-handle stays the documented engine technique. */
+__attribute__((ms_abi)) static void* mw_loadlibrary_contract(const char* name, uint32_t flags, const char* tag) {
+    if (!name) {                                  /* Wine: NULL -> 87 */
+        MW_TRACE("%s(NULL) -> ERROR_INVALID_PARAMETER", tag);
+        mw_SetLastError(87);
+        return NULL;
+    }
+    MW_TRACE("%s(%s, flags=0x%x)", tag, name[0] ? name : "(empty)", flags);
+    if (!name[0]) {                               /* empty -> not found */
+        mw_SetLastError(126);
+        return NULL;
+    }
+    if (flags & 0x2u || flags & 0x20u || flags & 0x40u) {
+        MW_TRACE("%s: datafile/image-resource mapping unsupported -> "
+                 "ERROR_MOD_NOT_FOUND (documented, tested failure)", tag);
+        mw_SetLastError(126);
+        return NULL;
+    }
+    return NULL; /* caller falls through to its own resolve path */
+}
+
 __attribute__((ms_abi)) void* mw_LoadLibraryA(const char* name) {
     MW_TRACE("LoadLibraryA(%s)", name ? name : "NULL");
     /* Known system DLLs (case-insensitive, extension optional): pseudo-
@@ -9003,9 +9034,19 @@ __attribute__((ms_abi)) void* mw_LoadLibraryW(const wchar_t* name) {
     return mw_LoadLibraryA(n8);
 }
 __attribute__((ms_abi)) void* mw_LoadLibraryExW(const wchar_t* name, void* file, uint32_t flags) {
-    MW_TRACE("LoadLibraryExW(flags=%u)", flags);
+    /* wine-audit W4: forward the NULL distinction — Wine's ExW gives
+     * ERROR_INVALID_PARAMETER for NULL but 126 for an empty name; datafile/
+     * image-resource flags are a documented typed failure. */
     char n8[256] = {0};
     if (name) w3_w16_to_utf8z((const uint16_t*)name, n8, sizeof(n8));
+    if (!name) { mw_SetLastError(87); MW_TRACE("LoadLibraryExW(NULL) -> 87"); return NULL; }
+    if (!n8[0]) { mw_SetLastError(126); return NULL; }
+    if (flags & 0x2u || flags & 0x20u || flags & 0x40u) {
+        MW_TRACE("LoadLibraryExW: datafile/image-resource mapping unsupported"
+                 " -> ERROR_MOD_NOT_FOUND (documented, tested failure)");
+        mw_SetLastError(126);
+        return NULL;
+    }
     /* SW-1469 diag (temporary): garbage-name probe — when the converted
      * name contains '?' where ASCII should be, dump the raw wide bytes so
      * the guest-side string corruption is decodable from the trace. */
@@ -16378,10 +16419,12 @@ __attribute__((ms_abi)) void* mw_LoadLibraryExA(const char* name, void* file, ui
      * "advapi32.dll not found" on NULL ("fatal error: advapi32.dll not
      * found / runtime: panic before malloc heap initialized" = bombardier
      * crash). The W variant delegates to mw_LoadLibraryA — do the same. */
-    char n8[256] = {0};
-    if (name) snprintf(n8, sizeof(n8), "%s", name);
-    MW_TRACE("LoadLibraryExA(%s, flags=%u)", n8, flags);
-    return mw_LoadLibraryA(n8);
+    /* wine-audit W4: contract gates first (NULL/empty/datafile-flags),
+     * then the SW-1221 resolve path. */
+    void* gated = mw_loadlibrary_contract(name, flags, "LoadLibraryExA");
+    if (name && name[0] && !(flags & 0x2u) && !(flags & 0x20u) && !(flags & 0x40u))
+        return mw_LoadLibraryA(name);
+    return gated;
 }
 
 /* ====================================================================
@@ -20764,8 +20807,11 @@ __attribute__((ms_abi)) void* mw_CreateWindowExW(uint32_t exstyle, const void* c
          * work area — use the engine's classic 1024x768 metric (the same
          * metric SW-1269b picked for SW_MAXIMIZE). */
         int cw_w = (int)w, cw_h = (int)h;
-        if (cw_w == (int)0x80000000u || cw_w == 0) cw_w = 1024;
-        if (cw_h == (int)0x80000000u || cw_h == 0) cw_h = 768;
+        /* wine-audit W4: Wine win32u is_default_coord accepts BOTH
+         * sentinels — 0x80000000 (INT_MIN) AND 0x8000. The 0x8000 form
+         * used to fall through and clamp at the 32px minimum. */
+        if (cw_w == (int)0x80000000u || cw_w == 0x8000 || cw_w == 0) cw_w = 1024;
+        if (cw_h == (int)0x80000000u || cw_h == 0x8000 || cw_h == 0) cw_h = 768;
         mw_gui_store_window(cw_w, cw_h); /* SWEEP-005: allocate paint surface */
         /* SW-1279 fix C: snapshot THIS top-level's class proc as the main
          * dispatch channel. Later RegisterClass* calls (sol's "Stat"
@@ -20900,8 +20946,11 @@ __attribute__((ms_abi)) void* mw_CreateWindowExA(uint32_t exstyle, const void* c
          * work area — use the engine's classic 1024x768 metric (the same
          * metric SW-1269b picked for SW_MAXIMIZE). */
         int cw_w = (int)w, cw_h = (int)h;
-        if (cw_w == (int)0x80000000u || cw_w == 0) cw_w = 1024;
-        if (cw_h == (int)0x80000000u || cw_h == 0) cw_h = 768;
+        /* wine-audit W4: Wine win32u is_default_coord accepts BOTH
+         * sentinels — 0x80000000 (INT_MIN) AND 0x8000. The 0x8000 form
+         * used to fall through and clamp at the 32px minimum. */
+        if (cw_w == (int)0x80000000u || cw_w == 0x8000 || cw_w == 0) cw_w = 1024;
+        if (cw_h == (int)0x80000000u || cw_h == 0x8000 || cw_h == 0) cw_h = 768;
         mw_gui_store_window(cw_w, cw_h); /* SWEEP-005: allocate paint surface */
         /* SW-1279 fix C (A path): same class-proc snapshot as the W path.
          * SW-1291b (A path): same per-class background-brush snapshot.

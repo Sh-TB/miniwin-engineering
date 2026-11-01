@@ -516,6 +516,15 @@ def run_experiment(args):
             env['WINEPREFIX'] = str(base_prefix)
         cmd = [wine_exe] + [exe_path] + [str(a) for a in args.args]
         env['WINEDEBUG'] = WINEDEBUG_FOR[ch]
+        # GUI applications need a display; xvfb-run wraps the whole wine
+        # process group (applies to every capture of this experiment).
+        if os.environ.get('L0_XVFB') == '1':
+            from shutil import which as _which
+            xv = _which('xvfb-run')
+            if xv:
+                cmd = [xv, '-a'] + cmd
+            else:
+                print('   WARN: L0_XVFB=1 but xvfb-run not found')
         cap_mb = args.relay_max_mb if ch == 'relay' else args.channel_max_mb
         tmo = args.timeout
         print(f'   capture {ch}: WINEDEBUG={env["WINEDEBUG"]} cap={cap_mb}MB t={tmo}s')
